@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,16 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, copied from
- * xpfe/appshell/public/nsIAppShellService.idl
+ * The Original Code is the Mozilla Firefox browser.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Benjamin Smedberg <benjamin@smedbergs.us>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,39 +37,16 @@
 
 #include "nsISupports.idl"
 
-interface nsICmdLineService;
+interface nsICommandLine;
 
-[scriptable, uuid(e9b0f89b-0529-4d96-98a8-eb5b2b9a8383)]
-interface nsIAppStartup : nsISupports
+[scriptable, uuid(8D3F5A9D-118D-4548-A137-CF7718679069)]
+interface nsIBrowserHandler : nsISupports
 {
-    /**
-     * Create the hidden window.
-     */
-    void createHiddenWindow();
+  attribute AUTF8String startPage;
 
-    /**
-     * Runs an application event loop: normally the main event pump which
-     * defines the lifetime of the application.
-     */
-    void run();
-
-    /**
-     * During application startup (and at other times!) we may temporarily
-     * encounter a situation where all application windows will be closed
-     * but we don't want to take this as a signal to quit the app. Bracket
-     * the code where the last window could close with these.
-     * (And at application startup, on platforms that don't normally quit
-     * when the last window has closed, call Enter once, but not Exit)
-     */
-    void enterLastWindowClosingSurvivalArea();
-    void exitLastWindowClosingSurvivalArea();
-
-    const PRUint32 eConsiderQuit = 1; // attempt to quit if all windows are closed
-    const PRUint32 eAttemptQuit = 2;  // try to close all windows, then quit if successful
-    const PRUint32 eForceQuit = 3;    // quit, damnit
-
-    /**
-     * Exit the event loop, shut down the app
-     */
-    void quit(in PRUint32 aFerocity);
+  /**
+   * Extract the width and height specified on the command line, if present.
+   * @return A feature string with a prepended comma, e.g. ",width=500,height=400"
+   */
+  AUTF8String getFeatures(in nsICommandLine aCmdLine);
 };

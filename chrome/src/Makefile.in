@@ -67,6 +67,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  appstartup \
 		  appcomps \
+		  toolkitcomps \
 		  caps \
 		  pref \
 		  docshell \

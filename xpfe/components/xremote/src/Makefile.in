@@ -61,6 +61,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  necko \
 		  appshell \
+		  toolkitcomps \
 		  appcomps \
 		  rdf \
 		  exthandler \

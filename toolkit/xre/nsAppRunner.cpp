@@ -62,8 +62,7 @@
 #include "nsIArray.h"
 #include "nsICategoryManager.h"
 #include "nsIChromeRegistry.h"
-#include "nsICmdLineHandler.h"
-#include "nsICmdLineService.h"
+#include "nsICommandLineRunner.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIContentHandler.h"
@@ -88,6 +87,8 @@
 
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsNetUtil.h"
 #include "nsXPCOM.h"
 #include "nsXPIDLString.h"
@@ -138,10 +139,6 @@
 
 #if defined (XP_MACOSX)
 #include <Processes.h>
-#endif
-
-#if defined(DEBUG_pra)
-#define DEBUG_CMD_LINE
 #endif
 
 extern "C" void ShowOSAlert(const char* aMessage);
@@ -331,6 +328,15 @@ enum ArgResult {
   ARG_BAD   = 2 // you wanted a param, but there isn't one
 };
 
+static void RemoveArg(char **argv)
+{
+  do {
+    *argv = *(++argv);
+  } while (*argv);
+
+  --gArgc;
+}
+
 /**
  * Check for a commandline flag. If the flag takes a parameter, the
  * parameter is returned in aParam. Flags may be in the form -arg or
@@ -358,9 +364,12 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
         ++arg;
 
       if (strimatch(aArg, arg)) {
-        if (!aParam) return ARG_FOUND;
+        RemoveArg(curarg);
+        if (!aParam) {
+          return ARG_FOUND;
+        }
 
-        if (*(++curarg)) {
+        if (*curarg) {
           if (**curarg == '-'
 #if defined(XP_WIN) || defined(XP_OS2)
               || **curarg == '/'
@@ -369,6 +378,7 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
             return ARG_BAD;
 
           *aParam = *curarg;
+          RemoveArg(curarg);
           return ARG_FOUND;
         }
         return ARG_BAD;
@@ -379,380 +389,6 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
   }
 
   return ARG_NONE;
-}
-
-static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
-                           const nsAFlatString& aAppArgs,
-                           PRInt32 aWidth, PRInt32 aHeight);
-
-static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
-                           const nsAFlatString& aAppArgs)
-{
-  return OpenWindow(aChromeURL, aAppArgs,
-                    nsIAppShellService::SIZE_TO_CONTENT,
-                    nsIAppShellService::SIZE_TO_CONTENT);
-}
-
-static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
-                           PRInt32 aWidth, PRInt32 aHeight)
-{
-  return OpenWindow(aChromeURL, EmptyString(), aWidth, aHeight);
-}
-
-static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
-                           const nsAFlatString& aAppArgs,
-                           PRInt32 aWidth, PRInt32 aHeight)
-{
-
-#ifdef DEBUG_CMD_LINE
-  printf("OpenWindow(%s, %s, %d, %d)\n", aChromeURL.get(),
-                                         NS_ConvertUCS2toUTF8(aAppArgs).get(),
-                                         aWidth, aHeight);
-#endif /* DEBUG_CMD_LINE */
-
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-  nsCOMPtr<nsISupportsString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
-  if (!wwatch || !sarg)
-    return NS_ERROR_FAILURE;
-
-  sarg->SetData(aAppArgs);
-
-  nsCAutoString features("chrome,dialog=no,all");
-  if (aHeight != nsIAppShellService::SIZE_TO_CONTENT) {
-    features.Append(",height=");
-    features.AppendInt(aHeight);
-  }
-  if (aWidth != nsIAppShellService::SIZE_TO_CONTENT) {
-    features.Append(",width=");
-    features.AppendInt(aWidth);
-  }
-
-#ifdef DEBUG_CMD_LINE
-  printf("features: %s...\n", features.get());
-#endif /* DEBUG_CMD_LINE */
-
-  nsCOMPtr<nsIDOMWindow> newWindow;
-  return wwatch->OpenWindow(0, aChromeURL.get(), "_blank",
-                            features.get(), sarg,
-                            getter_AddRefs(newWindow));
-}
-
-static void DumpArbitraryHelp()
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if(NS_SUCCEEDED(rv) && catman) {
-    nsCOMPtr<nsISimpleEnumerator> e;
-    rv = catman->EnumerateCategory(COMMAND_LINE_ARGUMENT_HANDLERS, getter_AddRefs(e));
-    if(NS_SUCCEEDED(rv) && e) {
-      while (PR_TRUE) {
-        nsCOMPtr<nsISupportsCString> catEntry;
-        rv = e->GetNext(getter_AddRefs(catEntry));
-        if (NS_FAILED(rv) || !catEntry) break;
-
-        nsCAutoString entryString;
-        rv = catEntry->GetData(entryString);
-        if (NS_FAILED(rv) || entryString.IsEmpty()) break;
-
-        nsXPIDLCString contractidString;
-        rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,
-                                      entryString.get(),
-                                      getter_Copies(contractidString));
-        if (NS_FAILED(rv) || !((const char *)contractidString)) break;
-
-#ifdef DEBUG_CMD_LINE
-        printf("cmd line handler contractid = %s\n", (const char *)contractidString);
-#endif /* DEBUG_CMD_LINE */
-
-        nsCOMPtr <nsICmdLineHandler> handler(do_GetService((const char *)contractidString, &rv));
-
-        if (handler) {
-          nsXPIDLCString commandLineArg;
-          rv = handler->GetCommandLineArgument(getter_Copies(commandLineArg));
-          if (NS_FAILED(rv)) continue;
-
-          nsXPIDLCString helpText;
-          rv = handler->GetHelpText(getter_Copies(helpText));
-          if (NS_FAILED(rv)) continue;
-
-          if ((const char *)commandLineArg) {
-            printf("%s%s", HELP_SPACER_1,(const char *)commandLineArg);
-
-            PRBool handlesArgs = PR_FALSE;
-            rv = handler->GetHandlesArgs(&handlesArgs);
-            if (NS_SUCCEEDED(rv) && handlesArgs) {
-              printf(" <url>");
-            }
-            if ((const char *)helpText) {
-              printf("%s%s\n",HELP_SPACER_2,(const char *)helpText);
-            }
-          }
-        }
-
-      }
-    }
-  }
-  return;
-}
-
-static nsresult
-LaunchApplicationWithArgs(const char *commandLineArg,
-                          nsICmdLineService *cmdLineArgs,
-                          const char *aParam,
-                          PRInt32 height, PRInt32 width, PRBool *windowOpened)
-{
-  NS_ENSURE_ARG(commandLineArg);
-  NS_ENSURE_ARG(cmdLineArgs);
-  NS_ENSURE_ARG(aParam);
-  NS_ENSURE_ARG(windowOpened);
-
-  nsresult rv;
-
-  nsCOMPtr<nsICmdLineService> cmdLine =
-    do_GetService("@mozilla.org/app-startup/commandLineService;1",&rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr <nsICmdLineHandler> handler;
-  rv = cmdLine->GetHandlerForParam(aParam, getter_AddRefs(handler));
-  if (NS_FAILED(rv)) return rv;
-
-  if (!handler) return NS_ERROR_FAILURE;
-
-  nsXPIDLCString chromeUrlForTask;
-  rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
-  if (NS_FAILED(rv)) return rv;
-
-#ifdef DEBUG_CMD_LINE
-  printf("XXX got this one:\t%s\n\t%s\n\n",commandLineArg,(const char *)chromeUrlForTask);
-#endif /* DEBUG_CMD_LINE */
-
-  nsXPIDLCString cmdResult;
-  rv = cmdLineArgs->GetCmdLineValue(commandLineArg, getter_Copies(cmdResult));
-  if (NS_FAILED(rv)) return rv;
-#ifdef DEBUG_CMD_LINE
-  printf("%s, cmdResult = %s\n",commandLineArg,(const char *)cmdResult);
-#endif /* DEBUG_CMD_LINE */
-
-  PRBool handlesArgs = PR_FALSE;
-  rv = handler->GetHandlesArgs(&handlesArgs);
-  if (handlesArgs) {
-    if ((const char *)cmdResult) {
-      if (PL_strcmp("1",(const char *)cmdResult)) {
-        PRBool openWindowWithArgs = PR_TRUE;
-        rv = handler->GetOpenWindowWithArgs(&openWindowWithArgs);
-        if (NS_FAILED(rv)) return rv;
-
-        if (openWindowWithArgs) {
-          nsAutoString cmdArgs; cmdArgs.AssignWithConversion(cmdResult);
-#ifdef DEBUG_CMD_LINE
-          printf("opening %s with %s\n", chromeUrlForTask.get(), "OpenWindow");
-#endif /* DEBUG_CMD_LINE */
-          rv = OpenWindow(chromeUrlForTask, cmdArgs);
-        }
-        else {
-#ifdef DEBUG_CMD_LINE
-          printf("opening %s with %s\n", cmdResult.get(), "OpenWindow");
-#endif /* DEBUG_CMD_LINE */
-          rv = OpenWindow(cmdResult, width, height);
-          if (NS_FAILED(rv)) return rv;
-        }
-        // If we get here without an error, then a window was opened OK.
-        if (NS_SUCCEEDED(rv)) {
-          *windowOpened = PR_TRUE;
-        }
-      }
-      else {
-        nsXPIDLString defaultArgs;
-        rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = OpenWindow(chromeUrlForTask, defaultArgs);
-        if (NS_FAILED(rv)) return rv;
-        // Window was opened OK.
-        *windowOpened = PR_TRUE;
-      }
-    }
-  }
-  else {
-    if (NS_SUCCEEDED(rv) && (const char*)cmdResult) {
-      if (PL_strcmp("1",cmdResult) == 0) {
-        rv = OpenWindow(chromeUrlForTask, width, height);
-        if (NS_FAILED(rv)) return rv;
-      }
-      else {
-        rv = OpenWindow(cmdResult, width, height);
-        if (NS_FAILED(rv)) return rv;
-      }
-      // If we get here without an error, then a window was opened OK.
-      if (NS_SUCCEEDED(rv)) {
-        *windowOpened = PR_TRUE;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-static PRBool IsStartupCommand(const char *arg)
-{
-  if (!arg) return PR_FALSE;
-
-  if (PL_strlen(arg) <= 1) return PR_FALSE;
-
-  // windows allows /mail or -mail
-  if ((arg[0] == '-')
-#if defined(XP_WIN) || defined(XP_OS2)
-      || (arg[0] == '/')
-#endif /* XP_WIN || XP_OS2 */
-      ) {
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-
-// This should be done by app shell enumeration someday
-nsresult
-DoCommandLines(nsICmdLineService* cmdLineArgs, PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
-{
-  NS_ENSURE_ARG(windowOpened);
-  *windowOpened = PR_FALSE;
-
-  nsresult rv;
-
-	PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
-	PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
-	nsXPIDLCString tempString;
-
-	// Get the value of -width option
-	rv = cmdLineArgs->GetCmdLineValue("-width", getter_Copies(tempString));
-	if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
-    PR_sscanf(tempString.get(), "%d", &width);
-
-	// Get the value of -height option
-	rv = cmdLineArgs->GetCmdLineValue("-height", getter_Copies(tempString));
-	if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
-    PR_sscanf(tempString.get(), "%d", &height);
-  
-  if (heedGeneralStartupPrefs) {
-    nsCOMPtr<nsIAppStartup> appStartup
-      (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = appStartup->CreateStartupState(width, height, windowOpened);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    PRInt32 argc = 0;
-    rv = cmdLineArgs->GetArgc(&argc);
-    if (NS_FAILED(rv)) return rv;
-
-    char **argv = nsnull;
-    rv = cmdLineArgs->GetArgv(&argv);
-    if (NS_FAILED(rv)) return rv;
-
-    PRInt32 i = 0;
-    for (i=1;i<argc;i++) {
-#ifdef DEBUG_CMD_LINE
-      printf("XXX argv[%d] = %s\n",i,argv[i]);
-#endif /* DEBUG_CMD_LINE */
-      if (IsStartupCommand(argv[i])) {
-
-        // skip over the - (or / on windows)
-        char *command = argv[i] + 1;
-#ifdef XP_UNIX
-        // unix allows -mail and --mail
-        if ((argv[i][0] == '-') && (argv[i][1] == '-')) {
-          command = argv[i] + 2;
-        }
-#endif /* XP_UNIX */
-
-        // this can fail, as someone could do -foo, where -foo is not handled
-        rv = LaunchApplicationWithArgs((const char *)(argv[i]),
-                                       cmdLineArgs, command,
-                                       height, width, windowOpened);
-        if (rv == NS_ERROR_NOT_AVAILABLE || rv == NS_ERROR_ABORT)
-          return rv;
-      }
-    }
-  }
-  return NS_OK;
-}
-
-// English text needs to go into a dtd file.
-// But when this is called we have no components etc. These strings must either be
-// here, or in a native resource file.
-static void
-DumpHelp()
-{
-  printf("Usage: %s [ options ... ] [URL]\n", gArgv[0]);
-  printf("       where options include:\n");
-  printf("\n");
-
-#ifdef MOZ_WIDGET_GTK
-  /* insert gtk options above moz options, like any other gtk app
-   *
-   * note: this isn't a very cool way to do things -- i'd rather get
-   * these straight from a user's gtk version -- but it seems to be
-   * what most gtk apps do. -dr
-   */
-
-  printf("GTK options\n");
-  printf("%s--gdk-debug=FLAGS%sGdk debugging flags to set\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s--gdk-no-debug=FLAGS%sGdk debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s--gtk-debug=FLAGS%sGtk+ debugging flags to set\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s--gtk-no-debug=FLAGS%sGtk+ debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s--gtk-module=MODULE%sLoad an additional Gtk module\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s-install%sInstall a private colormap\n", HELP_SPACER_1, HELP_SPACER_2);
-
-  /* end gtk toolkit options */
-#endif /* MOZ_WIDGET_GTK */
-#if MOZ_WIDGET_XLIB
-  printf("Xlib options\n");
-  printf("%s-display=DISPLAY%sX display to use\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s-visual=VISUALID%sX visual to use\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s-install_colormap%sInstall own colormap\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s-sync%sMake X calls synchronous\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s-no-xshm%sDon't use X shared memory extension\n", HELP_SPACER_1, HELP_SPACER_2);
-
-  /* end xlib toolkit options */
-#endif /* MOZ_WIDGET_XLIB */
-#ifdef MOZ_X11
-  printf("X11 options\n");
-  printf("%s--display=DISPLAY%sX display to use\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s--sync%sMake X calls synchronous\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s--no-xshm%sDon't use X shared memory extension\n", HELP_SPACER_1, HELP_SPACER_2);
-  printf("%s--xim-preedit=STYLE\n", HELP_SPACER_1);
-  printf("%s--xim-status=STYLE\n", HELP_SPACER_1);
-#endif
-#ifdef XP_UNIX
-  printf("%s--g-fatal-warnings%sMake all warnings fatal\n", HELP_SPACER_1, HELP_SPACER_2);
-
-  printf("\nMozilla options\n");
-#endif
-
-  printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-h or -help%sPrint this message.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-width <value>%sSet width of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-v or -version%sPrint %s version.\n",HELP_SPACER_1,HELP_SPACER_2, gAppData->appName);
-  printf("%s-P <profile>%sStart with <profile>.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-UILocale <locale>%sStart with <locale> resources as UI Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-contentLocale <locale>%sStart with <locale> resources as content Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
-#ifdef XP_WIN
-  printf("%s-console%sStart Mozilla with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2);
-#endif
-#ifdef MOZ_ENABLE_XREMOTE
-  printf("%s-remote <command>%sExecute <command> in an already running\n"
-         "%sMozilla process.  For more info, see:\n"
-         "\n%shttp://www.mozilla.org/unix/remote.html\n\n",
-         HELP_SPACER_1,HELP_SPACER_1,HELP_SPACER_4,HELP_SPACER_2);
-#endif
-
-  // this works, but only after the components have registered.  so if you drop in a new command line handler, -help
-  // won't not until the second run.
-  // out of the bug, because we ship a component.reg file, it works correctly.
-  DumpArbitraryHelp();
 }
 
 /**
@@ -1036,20 +672,6 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
                                   nativeFactory);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Initialize the cmd line service
-  nsCOMPtr<nsICmdLineService> cmdLineArgs
-    (do_GetService("@mozilla.org/app-startup/commandLineService;1"));
-  NS_ENSURE_TRUE(cmdLineArgs, NS_ERROR_FAILURE);
-
-  rv = cmdLineArgs->Initialize(gArgc, gArgv);
-
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_INVALID_ARG)
-      DumpHelp();
-
-    return rv;
-  }
-
   nsCOMPtr<nsIWindowCreator> creator (do_GetService(NS_APPSTARTUP_CONTRACTID));
   if (!creator) return NS_ERROR_UNEXPECTED;
 
@@ -1058,6 +680,104 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return wwatch->SetWindowCreator(creator);
+}
+
+static void DumpArbitraryHelp()
+{
+  nsresult rv;
+
+  nsXREDirProvider dirProvider;
+  dirProvider.Initialize(nsnull);
+
+  ScopedXPCOMStartup xpcom;
+  xpcom.Initialize();
+  xpcom.DoAutoreg();
+
+  nsCOMPtr<nsICommandLineRunner> cmdline
+    (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+  if (!cmdline)
+    return;
+
+  nsCString text;
+  rv = cmdline->GetHelpText(text);
+  if (NS_SUCCEEDED(rv))
+    printf("%s", text.get());
+}
+
+// English text needs to go into a dtd file.
+// But when this is called we have no components etc. These strings must either be
+// here, or in a native resource file.
+static void
+DumpHelp()
+{
+  printf("Usage: %s [ options ... ] [URL]\n", gArgv[0]);
+  printf("       where options include:\n");
+  printf("\n");
+
+#ifdef MOZ_WIDGET_GTK
+  /* insert gtk options above moz options, like any other gtk app
+   *
+   * note: this isn't a very cool way to do things -- i'd rather get
+   * these straight from a user's gtk version -- but it seems to be
+   * what most gtk apps do. -dr
+   */
+
+  printf("GTK options\n");
+  printf("%s--gdk-debug=FLAGS%sGdk debugging flags to set\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gdk-no-debug=FLAGS%sGdk debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gtk-debug=FLAGS%sGtk+ debugging flags to set\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gtk-no-debug=FLAGS%sGtk+ debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gtk-module=MODULE%sLoad an additional Gtk module\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-install%sInstall a private colormap\n", HELP_SPACER_1, HELP_SPACER_2);
+
+  /* end gtk toolkit options */
+#endif /* MOZ_WIDGET_GTK */
+#if MOZ_WIDGET_XLIB
+  printf("Xlib options\n");
+  printf("%s-display=DISPLAY%sX display to use\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-visual=VISUALID%sX visual to use\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-install_colormap%sInstall own colormap\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-sync%sMake X calls synchronous\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-no-xshm%sDon't use X shared memory extension\n", HELP_SPACER_1, HELP_SPACER_2);
+
+  /* end xlib toolkit options */
+#endif /* MOZ_WIDGET_XLIB */
+#ifdef MOZ_X11
+  printf("X11 options\n");
+  printf("%s--display=DISPLAY%sX display to use\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--sync%sMake X calls synchronous\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--no-xshm%sDon't use X shared memory extension\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--xim-preedit=STYLE\n", HELP_SPACER_1);
+  printf("%s--xim-status=STYLE\n", HELP_SPACER_1);
+#endif
+#ifdef XP_UNIX
+  printf("%s--g-fatal-warnings%sMake all warnings fatal\n", HELP_SPACER_1, HELP_SPACER_2);
+
+  printf("\nMozilla options\n");
+#endif
+
+  printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-h or -help%sPrint this message.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-width <value>%sSet width of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-v or -version%sPrint %s version.\n",HELP_SPACER_1,HELP_SPACER_2, gAppData->appName);
+  printf("%s-P <profile>%sStart with <profile>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-UILocale <locale>%sStart with <locale> resources as UI Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-contentLocale <locale>%sStart with <locale> resources as content Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
+#ifdef XP_WIN
+  printf("%s-console%sStart Mozilla with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2);
+#endif
+#ifdef MOZ_ENABLE_XREMOTE
+  printf("%s-remote <command>%sExecute <command> in an already running\n"
+         "%sMozilla process.  For more info, see:\n"
+         "\n%shttp://www.mozilla.org/unix/remote.html\n\n",
+         HELP_SPACER_1,HELP_SPACER_1,HELP_SPACER_4,HELP_SPACER_2);
+#endif
+
+  // this works, but only after the components have registered.  so if you drop in a new command line handler, -help
+  // won't not until the second run.
+  // out of the bug, because we ship a component.reg file, it works correctly.
+  DumpArbitraryHelp();
 }
 
 // don't modify aAppDir directly... clone it first
@@ -2049,6 +1769,26 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
       }
       dirProvider.DoStartup();
 
+      nsCOMPtr<nsICommandLineRunner> cmdLine
+        (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+      NS_ENSURE_TRUE(cmdLine, 1);
+
+      nsCOMPtr<nsIFile> workingDir;
+      rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
+      NS_ENSURE_SUCCESS(rv, 1);
+
+      rv = cmdLine->Init(gArgc, gArgv,
+                         workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
+      NS_ENSURE_SUCCESS(rv, 1);
+
+      /* Special-case services that need early access to the command
+         line. */
+      nsCOMPtr<nsIObserver> chromeObserver
+        (do_GetService("@mozilla.org/chrome/chrome-registry;1"));
+      if (chromeObserver) {
+        chromeObserver->Observe(cmdLine, "command-line-startup", nsnull);
+      }
+
       NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
       rv = appStartup->CreateHiddenWindow();
       NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
@@ -2063,7 +1803,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
             CheckArg("install-global-theme") || CheckArg("list-global-items") || 
             CheckArg("lock-item") || CheckArg("unlock-item")) {
           // Do the required processing and then shut down.
-          em->HandleCommandLineArgs();
+          em->HandleCommandLineArgs(cmdLine);
           return 0;
         }
 
@@ -2079,7 +1819,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         }
 
         if (noRestart || (!upgraded || !needsRestart))
-          em->Start(componentsListChanged, &needsRestart);
+          em->Start(cmdLine, componentsListChanged, &needsRestart);
       }
 
       if (noRestart || (!upgraded && !needsRestart)) {
@@ -2098,54 +1838,49 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         UpdatePrebinding();
 #endif
 
-        nsCOMPtr<nsICmdLineService> cmdLineArgs
-          (do_GetService("@mozilla.org/app-startup/commandLineService;1"));
-        NS_ENSURE_TRUE(cmdLineArgs, 1);
-
-        // This will go away once Components are handling their own commandlines
-        // if we have no command line arguments, we need to heed the
-        // "general.startup.*" prefs
-        // if we had no command line arguments, argc == 1.
-
-        PRBool windowOpened = PR_FALSE;
-        rv = DoCommandLines(cmdLineArgs,
-                            aAppData->flags & NS_XRE_USE_STARTUP_PREFS,
-                            &windowOpened);
+        rv = cmdLine->Run();
         NS_ENSURE_SUCCESS(rv, 1);
-      
+
+        nsCOMPtr<nsIWindowMediator> windowMediator
+          (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, 1);
+
         // Make sure there exists at least 1 window.
-        NS_TIMELINE_ENTER("Ensure1Window");
-        rv = appStartup->Ensure1Window(cmdLineArgs);
-        NS_TIMELINE_LEAVE("Ensure1Window");
+        nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+        rv = windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
         NS_ENSURE_SUCCESS(rv, 1);
 
+        PRBool more;
+        windowEnumerator->HasMoreElements(&more);
+        if (more) {
 #ifndef XP_MACOSX
-        appStartup->ExitLastWindowClosingSurvivalArea();
+          appStartup->ExitLastWindowClosingSurvivalArea();
 #endif
 
 #ifdef MOZ_ENABLE_XREMOTE
-        // if we have X remote support and we have our one window up and
-        // running start listening for requests on the proxy window.
-        nsCOMPtr<nsIXRemoteService> remoteService;
-        remoteService = do_GetService(NS_IXREMOTESERVICE_CONTRACTID);
-        if (remoteService)
-          remoteService->Startup(aAppData->appName);
+          // if we have X remote support and we have our one window up and
+          // running start listening for requests on the proxy window.
+          nsCOMPtr<nsIXRemoteService> remoteService;
+          remoteService = do_GetService(NS_IXREMOTESERVICE_CONTRACTID);
+          if (remoteService)
+            remoteService->Startup(aAppData->appName);
 #endif /* MOZ_ENABLE_XREMOTE */
 
-        // enable win32 DDE responses and Mac appleevents responses
-        nativeApp->Enable();
+          // enable win32 DDE responses and Mac appleevents responses
+          nativeApp->Enable();
 
-        // Start main event loop
-        NS_TIMELINE_ENTER("appStartup->Run");
-        rv = appStartup->Run();
-        NS_TIMELINE_LEAVE("appStartup->Run");
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appstartup");
+          // Start main event loop
+          NS_TIMELINE_ENTER("appStartup->Run");
+          rv = appStartup->Run();
+          NS_TIMELINE_LEAVE("appStartup->Run");
+          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appstartup");
 
 #ifdef MOZ_ENABLE_XREMOTE
-        // shut down the x remote proxy window
-        if (remoteService)
-          remoteService->Shutdown();
+          // shut down the x remote proxy window
+          if (remoteService)
+            remoteService->Shutdown();
 #endif /* MOZ_ENABLE_XREMOTE */
+        }
 
 #ifdef MOZ_TIMELINE
         // Make sure we print this out even if timeline is runtime disabled

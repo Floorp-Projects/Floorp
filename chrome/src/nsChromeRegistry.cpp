@@ -97,11 +97,11 @@
 #include "nsIJARURI.h"
 #include "nsIFileURL.h"
 #include "nsILocaleService.h"
-#include "nsICmdLineService.h"
+#include "nsICommandLine.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 
-#define UILOCALE_CMD_LINE_ARG "-UILocale"
+#define UILOCALE_CMD_LINE_ARG "UILocale"
 
 #define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
 #define SELECTED_LOCALE_PREF "general.useragent.locale"
@@ -288,20 +288,9 @@ nsChromeRegistry::Init()
     NS_WARNING("Could not get pref service!");
   }
   
-  nsXPIDLCString uiLocale;
   PRBool useLocalePref = PR_TRUE;
 
-  nsCOMPtr<nsICmdLineService> cmdLineArgs
-    (do_GetService("@mozilla.org/appshell/commandLineService;1"));
-
-  if (cmdLineArgs)
-    cmdLineArgs->GetCmdLineValue(UILOCALE_CMD_LINE_ARG, getter_Copies(uiLocale));
-
-  if (uiLocale) {
-    useLocalePref = PR_FALSE;
-    mSelectedLocale = uiLocale;
-  }
-  else if (prefs) {
+  if (prefs) {
     // check the pref first
     PRBool matchOS = PR_FALSE;
     rv = prefs->GetBoolPref(MATCH_OS_LOCALE_PREF, &matchOS);
@@ -309,6 +298,7 @@ nsChromeRegistry::Init()
     // match os locale
     if (NS_SUCCEEDED(rv) && matchOS) {
       // compute lang and region code only when needed!
+      nsCAutoString uiLocale;
       rv = getUILangCountry(uiLocale);
       if (NS_SUCCEEDED(rv)) {
         useLocalePref = PR_FALSE;
@@ -2943,6 +2933,21 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
   else if (!strcmp("profile-after-change", aTopic)) {
     if (!mProfileInitialized) {
       rv = LoadProfileDataSource();
+    }
+  }
+  else if (!strcmp("command-line-startup", aTopic)) {
+    nsCOMPtr<nsICommandLine> cmdLine (do_QueryInterface(aSubject));
+    if (cmdLine) {
+      nsAutoString uiLocale;
+      rv = cmdLine->HandleFlagWithParam(NS_LITERAL_STRING(UILOCALE_CMD_LINE_ARG),
+                                        PR_FALSE, uiLocale);
+      if (NS_SUCCEEDED(rv) && !uiLocale.IsEmpty()) {
+        CopyUTF16toUTF8(uiLocale, mSelectedLocale);
+        nsCOMPtr<nsIPrefBranchInternal> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
+        if (prefs) {
+          prefs->RemoveObserver(SELECTED_LOCALE_PREF, this);
+        }
+      }
     }
   }
   else if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {

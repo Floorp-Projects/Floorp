@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:expandtab:shiftwidth=4:tabstop=4:
  */
 /* ***** BEGIN LICENSE BLOCK *****
@@ -73,7 +73,12 @@
 #include <nsCExternalHandlerService.h>
 #include <nsIExternalProtocolService.h>
 #include <nsIProfile.h>
-#include <nsICmdLineHandler.h>
+
+#ifdef MOZ_XUL_APP
+#include "nsICommandLineRunner.h"
+#else
+#include "nsICmdLineHandler.h"
+#endif
 
 NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 
@@ -1032,6 +1037,19 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
 
   // open a new browser window
   else if (aArgument.LowerCaseEqualsLiteral("openbrowser")) {
+#ifdef MOZ_XUL_APP
+    char* argc = "-browser";
+
+    nsCOMPtr<nsICommandLineRunner> cmdLine
+      (do_GetService("@mozilla.org/toolkit/command-line;1"));
+    NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
+
+    rv = cmdLine->Init(1, &argc, nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = cmdLine->Run();
+
+#else
     // Get the browser URL and the default start page URL.
     nsCOMPtr<nsICmdLineHandler> browserHandler =
         do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser");
@@ -1050,6 +1068,7 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
     nsCOMPtr<nsIDOMWindow> newWindow;
     rv = OpenChromeWindow(0, browserLocation, "chrome,all,dialog=no",
                           arg, getter_AddRefs(newWindow));
+#endif
   }
 
   // open a new compose window

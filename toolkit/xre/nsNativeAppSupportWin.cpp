@@ -42,12 +42,11 @@
 #include "nsXULAppAPI.h"
 #include "nsString.h"
 #include "nsIBrowserDOMWindow.h"
-#include "nsICmdLineService.h"
+#include "nsICommandLineRunner.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsICmdLineHandler.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsXPCOM.h"
@@ -84,13 +83,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <io.h>
+#include <direct.h>
 #include <fcntl.h>
-
-#define kMailtoUrlScheme "mailto:"
-
-#ifdef MOZ_THUNDERBIRD
-#define MAPI_STARTUP_ARG       "/MAPIStartUp"
-#endif
 
 static HWND hwndForDOMWindow( nsISupports * );
 
@@ -296,7 +290,7 @@ private:
                                                     HDDEDATA hdata,
                                                     ULONG    dwData1,
                                                     ULONG    dwData2 );
-    static void HandleRequest( LPBYTE request, PRBool newWindow = PR_TRUE );
+    static void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir, PRUint32 aState);
     static void ParseDDEArg( HSZ args, int index, nsCString& string);
     static void ParseDDEArg( const char* args, int index, nsCString& aString);
     static void ActivateLastWindow();
@@ -304,11 +298,9 @@ private:
     static HDDEDATA CreateDDEData( LPBYTE value, DWORD len );
     static PRBool   InitTopicStrings();
     static int      FindTopic( HSZ topic );
-    static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
     static nsresult OpenWindow( const char *urlstr, const char *args );
-    static nsresult OpenBrowserWindow( const char *args, PRBool newWindow = PR_TRUE );
+    static nsresult OpenBrowserWindow();
     static nsresult ReParent( nsISupports *window, HWND newParent );
-    static nsresult GetStartupURL(nsICmdLineService *args, nsCString& taskURL);
     static void     SetupSysTrayIcon();
     static void     RemoveSysTrayIcon();
 
@@ -524,7 +516,22 @@ struct MessageWindow {
 
     // SendRequest: Pass string via WM_COPYDATA to message window.
     NS_IMETHOD SendRequest( const char *cmd ) {
-        COPYDATASTRUCT cds = { 0, ::strlen( cmd ) + 1, (void*)cmd };
+        // Construct a data buffer <commandline>\0<workingdir>\0
+        int cmdlen = strlen(cmd);
+        char* cmdbuf = (char*) malloc(cmdlen + MAX_PATH + 1);
+        if (!cmdbuf)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        strcpy(cmdbuf, cmd);
+        _getcwd(cmdbuf + cmdlen + 1, MAX_PATH);
+
+        // We used to set dwData to zero, when we didn't send the working dir.
+        // Now we're using it as a version number.
+        COPYDATASTRUCT cds = {
+            1,
+            cmdlen + strlen(cmdbuf + cmdlen + 1) + 2,
+            (void*) cmdbuf
+        };
         HWND newWin = (HWND)::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
         if ( newWin ) {
             // Restore the window if it is minimized.
@@ -533,6 +540,7 @@ struct MessageWindow {
             }
             ::SetForegroundWindow( newWin );
         }
+        free (cmdbuf);
         return NS_OK;
     }
 
@@ -547,39 +555,49 @@ struct MessageWindow {
 #if MOZ_DEBUG_DDE
             printf( "Incoming request: %s\n", (const char*)cds->lpData );
 #endif
-            (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)cds->lpData );
+            nsCOMPtr<nsILocalFile> workingDir;
+
+            if (1 >= cds->dwData) {
+                char* wdpath = (char*) cds->lpData;
+                // skip the command line, and get the working dir of the
+                // other process, which is after the first null char
+                while (*wdpath)
+                    ++wdpath;
+
+                ++wdpath;
+
+#ifdef MOZ_DEBUG_DDE
+                printf( "Working dir: %s\n", wdpath);
+#endif
+
+                NS_NewNativeLocalFile(nsDependentCString(wdpath),
+                                      PR_FALSE,
+                                      getter_AddRefs(workingDir));
+            }
+            (void)nsNativeAppSupportWin::HandleCommandLine((char*)cds->lpData, workingDir, nsICommandLine::STATE_REMOTE_AUTO);
 
             // Get current window and return its window handle.
             nsCOMPtr<nsIDOMWindowInternal> win;
             GetMostRecentWindow( 0, getter_AddRefs( win ) );
             return win ? (long)hwndForDOMWindow( win ) : 0;
-  } else if ( msg == WM_QUERYENDSESSION ) {
-    if (!nsNativeAppSupportWin::mCanHandleRequests)
-        return 0;
-    // Invoke "-killAll" cmd line handler.  That will close all open windows,
-    // and display dialog asking whether to save/don't save/cancel.  If the
-    // user says cancel, then we pass that indicator along to the system
-    // in order to stop the system shutdown/logoff.
-    nsCOMPtr<nsICmdLineHandler>
-        killAll( do_CreateInstance( "@mozilla.org/commandlinehandler/general-startup;1?type=killAll" ) );
-    if ( killAll ) {
-        nsXPIDLCString unused;
-        // Note: "GetChromeUrlForTask" is a euphemism for
-        //       "ProcessYourCommandLineSwitch".  The interface was written
-        //       presuming a less general-purpose role for command line
-        //       handlers than it ought to have.
-        nsresult rv = killAll->GetChromeUrlForTask( getter_Copies( unused ) );
-        if ( rv == NS_ERROR_ABORT ) {
-            // User cancelled shutdown/logoff.
-            return FALSE;
-        } else {
-            // Shutdown/logoff OK.
-            return TRUE;
+        } else if ( msg == WM_QUERYENDSESSION ) {
+            if (!nsNativeAppSupportWin::mCanHandleRequests)
+                return 0;
+            // Invoke "-killAll" cmd line handler.  That will close all open windows,
+            // and display dialog asking whether to save/don't save/cancel.  If the
+            // user says cancel, then we pass that indicator along to the system
+            // in order to stop the system shutdown/logoff.
+            nsCOMPtr<nsICommandLineRunner> cmdLine
+                (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+            char* argv[] = { "-killAll", 0 };
+            if (cmdLine &&
+                NS_SUCCEEDED(cmdLine->Init(1, argv, nsnull,
+                                           nsICommandLine::STATE_REMOTE_AUTO))) {
+                return cmdLine->Run() != NS_ERROR_ABORT;
+            }
         }
+        return DefWindowProc( msgWindow, msg, wp, lp );
     }
-  }
-  return DefWindowProc( msgWindow, msg, wp, lp );
-}
 
 private:
     HWND mHandle;
@@ -978,28 +996,27 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                 case topicOpenURL: {
                     // Open a given URL...
 
-                    // Default is to open in current window.
-                    PRBool new_window = PR_FALSE;
-
                     // Get the URL from the first argument in the command.
                     nsCAutoString url;
                     ParseDDEArg(hsz2, 0, url);
+
                     // Read the 3rd argument in the command to determine if a
                     // new window is to be used.
                     nsCAutoString windowID;
                     ParseDDEArg(hsz2, 2, windowID);
-                    // "0" means to open the URL in a new window.
-                    if ( windowID.Equals( "0" ) ) {
-                        new_window = PR_TRUE;
+                    // "" means to open the URL in a new window.
+                    if ( windowID.Equals( "" ) ) {
+                        url.Insert("mozilla -new-window ", 0);
+                    }
+                    else {
+                        url.Insert("mozilla -url ", 0);
                     }
 
-                    // Make it look like command line args.
-                    url.Insert( "mozilla -url ", 0 );
 #if MOZ_DEBUG_DDE
                     printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
 #endif
                     // Now handle it.
-                    HandleRequest( LPBYTE( url.get() ), new_window );
+                    HandleCommandLine(url.get(), nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
                     // Return pseudo window ID.
                     result = CreateDDEData( 1 );
                     break;
@@ -1158,18 +1175,18 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
             nsCAutoString windowID;
             ParseDDEArg((const char*) request, 2, windowID);
 
-            // "0" means to open the URL in a new window.
-            if ( windowID.Equals( "0" ) ) {
-                new_window = PR_TRUE;
+            // "" means to open the URL in a new window.
+            if ( windowID.Equals( "" ) ) {
+                url.Insert("mozilla -new-window ", 0);
             }
-
-            // Make it look like command line args.
-            url.Insert( "mozilla -url ", 0 );
+            else {
+                url.Insert("mozilla -url ", 0);
+            }
 #if MOZ_DEBUG_DDE
             printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
 #endif
             // Now handle it.
-            HandleRequest( LPBYTE( url.get() ), new_window );
+            HandleCommandLine(url.get(), nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
 
             // Release the data.
             DdeUnaccessData( hdata );
@@ -1269,7 +1286,7 @@ void nsNativeAppSupportWin::ActivateLastWindow() {
         activateWindow( navWin );
     } else {
         // Need to create a Navigator window, then.
-        OpenBrowserWindow( "about:blank" );
+        OpenBrowserWindow();
     }
 }
 
@@ -1288,122 +1305,12 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( LPBYTE value, DWORD len ) {
     return result;
 }
 
-// Handle DDE request.  The argument is the command line received by the
-// DDE client process.  We convert that string to an nsICmdLineService
-// object via GetCmdLineArgs.  Then, we look for certain well-known cmd
-// arguments.  This replicates code elsewhere, to some extent,
-// unfortunately (if you can fix that, please do).
 void
-nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
-
-    // Parse command line.
-
-    nsCOMPtr<nsICmdLineService> args;
+nsNativeAppSupportWin::HandleCommandLine(const char* aCmdLineString,
+                                         nsIFile* aWorkingDir,
+                                         PRUint32 aState)
+{
     nsresult rv;
-
-    rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
-    if (NS_FAILED(rv)) return;
-
-    // first see if there is a url
-    nsXPIDLCString arg;
-    rv = args->GetURLToLoad(getter_Copies(arg));
-    if (NS_SUCCEEDED(rv) && (const char*)arg ) {
-      // Launch browser.
-#if MOZ_DEBUG_DDE
-      printf( "Launching browser on url [%s]...\n", (const char*)arg );
-#endif
-      OpenBrowserWindow( arg, PR_FALSE ); // newWindow = false means use prefs
-      return;
-    }
-
-
-    // ok, let's try the -chrome argument
-    rv = args->GetCmdLineValue("-chrome", getter_Copies(arg));
-    if (NS_SUCCEEDED(rv) && (const char*)arg ) {
-      // Launch chrome.
-#if MOZ_DEBUG_DDE
-      printf( "Launching chrome url [%s]...\n", (const char*)arg );
-#endif
-      (void)OpenWindow( arg, "" );
-      return;
-    }
-
-#ifdef MOZ_THUNDERBIRD
-    // check wheather it is a MAPI request.  If yes, don't open any new
-    // windows and just return.
-    rv = args->GetCmdLineValue(MAPI_STARTUP_ARG, getter_Copies(arg));
-    if (NS_SUCCEEDED(rv) && (const char*)arg) {
-      return;
-    }
-#endif
-
-    // Try standard startup's command-line handling logic from nsAppRunner.cpp...
-
-    // This will tell us whether the command line processing opened a window.
-    PRBool windowOpened = PR_FALSE;
-
-    // If there are no command line arguments, then we want to open windows
-    // based on startup prefs (which say to open navigator and/or mailnews
-    // and/or composer), or, open just a Navigator window.  We do the former
-    // if there are no open windows (i.e., we're in turbo mode), the latter
-    // if there are open windows.  Note that we call DoCommandLines in the
-    // case where there are no command line args but there are windows open
-    // (i.e., with heedStartupPrefs==PR_FALSE) despite the fact that it may
-    // not actually do anything in that case.  That way we're covered if the
-    // logic in DoCommandLines changes.  Note that we cover this case below
-    // by opening a navigator window if DoCommandLines doesn't open one.  We
-    // have to cover that case anyway, because DoCommandLines won't open a
-    // window when given "mozilla -foobar" or the like.
-    PRBool heedStartupPrefs = PR_FALSE;
-    PRInt32 argc = 0;
-    args->GetArgc( &argc );
-    if ( argc <= 1 ) {
-        // Use startup prefs iff there are no windows currently open.
-        nsCOMPtr<nsIDOMWindowInternal> win;
-        GetMostRecentWindow( 0, getter_AddRefs( win ) );
-        if ( !win ) {
-            heedStartupPrefs = PR_TRUE;
-        }
-    }
-
-    // Process command line options.
-    rv = DoCommandLines( args, heedStartupPrefs, &windowOpened );
-
-    // If a window was opened, then we're done.
-    // Note that we keep on trying in the unlikely event of an error.
-    if (rv == NS_ERROR_NOT_AVAILABLE || rv == NS_ERROR_ABORT || windowOpened) {
-      return;
-    }
-
-    // ok, no idea what the param is.
-#if MOZ_DEBUG_DDE
-    printf( "Unknown request [%s]\n", (char*) request );
-#endif
-    // if all else fails, open a browser window
-    const char * const contractID =
-      "@mozilla.org/commandlinehandler/general-startup;1?type=browser";
-    nsCOMPtr<nsICmdLineHandler> handler = do_GetService(contractID, &rv);
-    if (NS_FAILED(rv)) return;
-
-    nsXPIDLString defaultArgs;
-    rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
-    if (NS_FAILED(rv) || !defaultArgs) return;
-
-    if (defaultArgs) {
-      nsCAutoString url;
-      url.AssignWithConversion( defaultArgs );
-      OpenBrowserWindow(url.get());
-    } else {
-      OpenBrowserWindow("about:blank");
-    }
-}
-
-// Parse command line args according to MS spec
-// (see "Parsing C++ Command-Line Arguments" at
-// http://msdn.microsoft.com/library/devprods/vs6/visualc/vclang/_pluslang_parsing_c.2b2b_.command.2d.line_arguments.htm).
-nsresult
-nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult ) {
-    nsresult rv = NS_OK;
 
     int justCounting = 1;
     char **argv = 0;
@@ -1411,15 +1318,24 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     int init = 1;
     int between, quoted, bSlashCount;
     int argc;
-    char *p;
+    const char *p;
     nsCAutoString arg;
-    nsDependentCString mailtoUrlScheme (kMailtoUrlScheme);
 
+    nsCOMPtr<nsICommandLineRunner> cmdLine
+        (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+    if (!cmdLine) {
+        NS_ERROR("Couldn't create command line!");
+        return;
+    }
+
+    // Parse command line args according to MS spec
+    // (see "Parsing C++ Command-Line Arguments" at
+    // http://msdn.microsoft.com/library/devprods/vs6/visualc/vclang/_pluslang_parsing_c.2b2b_.command.2d.line_arguments.htm).
     // We loop if we've not finished the second pass through.
     while ( 1 ) {
         // Initialize if required.
         if ( init ) {
-            p = (char*)request;
+            p = aCmdLineString;
             between = 1;
             argc = quoted = bSlashCount = 0;
 
@@ -1452,9 +1368,7 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
         } else {
             // We are processing the contents of an argument.
             // Check for whitespace or end.
-            // if the argument we are parsing is a mailto url then all of the remaining command line data
-            // needs to be part of the mailto url even if it has spaces. See Bug #231032
-            if ( *p == 0 || ( !quoted && isspace( *p ) && !StringBeginsWith(arg, mailtoUrlScheme, nsCaseInsensitiveCStringComparator()) ) ) {
+            if ( *p == 0 || ( !quoted && isspace( *p ) ) ) {
                 // Process pending backslashes (interpret them
                 // literally since they're not followed by a ").
                 while( bSlashCount ) {
@@ -1537,18 +1451,7 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
         }
     }
 
-    // OK, now create nsICmdLineService object from argc/argv.
-    nsCOMPtr<nsIComponentManager> compMgr;
-    NS_GetComponentManager(getter_AddRefs(compMgr));
-    rv = compMgr->CreateInstanceByContractID("@mozilla.org/app-startup/commandLineService;1",
-                                             0, NS_GET_IID( nsICmdLineService ),
-                                             (void**) aResult);
-
-    if ( NS_FAILED( rv ) || NS_FAILED( ( rv = (*aResult)->Initialize( argc, argv ) ) ) ) {
-#if MOZ_DEBUG_DDE
-        printf( "Error creating command line service = 0x%08X (argc=%d, argv=0x%08X)\n", (int)rv, (int)argc, (void*)argv );
-#endif
-    }
+    rv = cmdLine->Init(argc, argv, aWorkingDir, aState);
 
     // Cleanup.
     while ( argc ) {
@@ -1556,7 +1459,12 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     }
     delete [] argv;
 
-    return rv;
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Error initializing command line.");
+        return;
+    }
+
+    cmdLine->Run();
 }
 
 nsresult
@@ -1647,8 +1555,8 @@ nsresult SafeJSContext::Push() {
 
 
 nsresult
-nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
-
+nsNativeAppSupportWin::OpenBrowserWindow()
+{
     nsresult rv = NS_OK;
 
     // Open the argument URL in the most recently used Navigator window.
@@ -1664,9 +1572,6 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
     // out to the OpenWindow call when things go awry.
     do {
         // If caller requires a new window, then don't use an existing one.
-        if ( newWindow ) {
-            break;
-        }
         if ( !navWin ) {
             // Have to open a new one.
             break;
@@ -1687,8 +1592,7 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
         }
         if ( bwin ) {
           nsCOMPtr<nsIURI> uri;
-          nsDependentCString urlStr( args );
-          NS_NewURI( getter_AddRefs( uri ), urlStr, 0, 0 );
+          NS_NewURI( getter_AddRefs( uri ), NS_LITERAL_CSTRING("about:blank"), 0, 0 );
           if ( uri ) {
             nsCOMPtr<nsIDOMWindow> container;
             rv = bwin->OpenURI( uri, 0,
@@ -1705,14 +1609,14 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
 
     // open a new window if caller requested it or if anything above failed
 
-    nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));
-    if (NS_FAILED(rv)) return rv;
+    char* argv[] = { 0 };
+    nsCOMPtr<nsICommandLineRunner> cmdLine
+        (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+    NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
 
-    nsXPIDLCString chromeUrlForTask;
-    rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
-    if (NS_FAILED(rv)) return rv;
+    rv = cmdLine->Init(0, argv, nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // Last resort is to open a brand new window.
-    return OpenWindow( chromeUrlForTask, args );
+    return cmdLine->Run();
 }
 

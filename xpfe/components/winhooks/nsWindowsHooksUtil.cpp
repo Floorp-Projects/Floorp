@@ -50,6 +50,7 @@
 #include "nsNativeAppSupportWin.h"
 #else
 #include "nsINativeAppSupportWin.h"
+#include "nsICmdLineHandler.h"
 #endif
 
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
@@ -871,6 +872,7 @@ nsresult FileTypeRegistryEntry::reset() {
 // "edit" entry a SavedRegistryEntry).
 nsresult EditableFileTypeRegistryEntry::set() {
     nsresult rv = FileTypeRegistryEntry::set();
+#ifndef MOZ_XUL_APP
     if ( NS_SUCCEEDED( rv ) ) {
         // only set this if we support "-edit" on the command-line
         nsCOMPtr<nsICmdLineHandler> editorService =
@@ -884,6 +886,7 @@ nsresult EditableFileTypeRegistryEntry::set() {
             rv = RegistryEntry( HKEY_LOCAL_MACHINE, editKey.get(), "", editor.get() ).set();
         }
     }
+#endif
     return rv;
 }
 

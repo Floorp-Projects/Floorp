@@ -45,7 +45,6 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
-#include "nsICmdLineService.h"
 #include "nsINativeAppSupport.h"
 #include "nsIAppShell.h"
 
@@ -79,14 +78,6 @@ private:
   // A "last event" that is used to flush the appshell's event queue.
   PR_STATIC_CALLBACK(void*) HandleExitEvent(PLEvent* aEvent);
   PR_STATIC_CALLBACK(void) DestroyExitEvent(PLEvent* aEvent);
-
-  nsresult LaunchTask(const char* aParam,
-                      PRInt32 height, PRInt32 width,
-                      PRBool *windowOpened);
-  nsresult OpenWindow(const nsAFlatCString& aChromeURL,
-                      const nsAFlatString& aAppArgs,
-                      PRInt32 aWidth, PRInt32 aHeight);
-  nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width);
 
   nsCOMPtr<nsIAppShell> mAppShell;
 

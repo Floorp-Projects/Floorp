@@ -1,1 +1,1 @@
-pref("browser.chromeURL", "chrome://simple/content/simple.xul");
+pref("toolkit.defaultChromeURI", "chrome://simple/content/simple.xul");

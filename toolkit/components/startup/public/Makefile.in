@@ -49,8 +49,6 @@ XPIDL_MODULE = appstartup
 XPIDLSRCS = \
   nsIAppStartup.idl \
   nsICloseAllWindows.idl \
-  nsICmdLineHandler.idl \
-  nsICmdLineService.idl \
   nsIUserInfo.idl \
   $(NULL)
 
