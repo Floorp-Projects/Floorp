@@ -2021,14 +2021,14 @@ nsChromeRegistry::SelectProviderForPackage(const nsACString& aProviderType,
                                            PRBool aUseProfile, PRBool aIsAdding)
 {
   nsCAutoString package( "urn:mozilla:package:" );
-  package.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, package);
 
   nsCAutoString provider( "urn:mozilla:" );
   provider += aProviderType;
   provider += ":";
   provider += aProviderName;
   provider += ":";
-  provider.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, provider);
 
   // Obtain the package resource.
   nsresult rv = NS_OK;
@@ -2177,14 +2177,14 @@ nsChromeRegistry::IsProviderSelectedForPackage(const nsACString& aProviderType,
 {
   *aResult = PR_FALSE;
   nsCAutoString package( "urn:mozilla:package:" );
-  package.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, package);
 
   nsCAutoString provider( "urn:mozilla:" );
   provider += aProviderType;
   provider += ":";
   provider += aProviderName;
   provider += ":";
-  provider.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, provider);
 
   // Obtain the package resource.
   nsresult rv = NS_OK;
@@ -2607,7 +2607,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
 NS_IMETHODIMP nsChromeRegistry::SetAllowOverlaysForPackage(const PRUnichar *aPackageName, PRBool allowOverlays)
 {
   nsCAutoString package("urn:mozilla:package:");
-  package.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, package);
 
   // Obtain the package resource.
   nsCOMPtr<nsIRDFResource> packageResource;
