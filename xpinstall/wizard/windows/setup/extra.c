@@ -486,7 +486,12 @@ BOOL LocateJar(siC *siCObject)
   lstrcpy(szSEADirTemp, sgProduct.szAlternateArchiveSearchPath);
   AppendBackSlash(szSEADirTemp, sizeof(szSEADirTemp));
   lstrcat(szSEADirTemp, siCObject->szArchiveName);
-  if(FileExists(szSEADirTemp))
+
+  /* XXX_QUICK_FIX 
+   * checking sgProduct.szAlternateArchiveSearchPath for empty string
+   * should be done prior to AppendBackSlash() above.
+   * This is a quick fix for the time frame that we are currently in. */
+  if((*sgProduct.szAlternateArchiveSearchPath != '\0') && (FileExists(szSEADirTemp)))
   {
     /* jar file found.  Unset attribute to download from the net */
     siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
@@ -689,7 +694,14 @@ void AppendBackSlash(LPSTR szInput, DWORD dwInputSize)
 {
   if(szInput != NULL)
   {
-    if(szInput[strlen(szInput) - 1] != '\\')
+    if(*szInput == '\0')
+    {
+      if(((DWORD)lstrlen(szInput) + 1) < dwInputSize)
+      {
+        lstrcat(szInput, "\\");
+      }
+    }
+    else if(szInput[strlen(szInput) - 1] != '\\')
     {
       if(((DWORD)lstrlen(szInput) + 1) < dwInputSize)
       {
@@ -1312,6 +1324,7 @@ void SiCNodeDelete(siC *siCTemp)
     FreeMemory(&(siCTemp->szDestinationPath));
     FreeMemory(&(siCTemp->szArchivePath));
     FreeMemory(&(siCTemp->szArchiveName));
+    FreeMemory(&(siCTemp->szParameter));
     FreeMemory(&(siCTemp->szDescriptionLong));
     FreeMemory(&(siCTemp->szDescriptionShort));
     FreeMemory(&siCTemp);
@@ -3414,21 +3427,23 @@ void STGetComponents(LPSTR szSection, st *stSetupType, LPSTR szFileIniConfig)
   }
 }
 
-void GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwSize)
+void GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwReturnValueSize)
 {
   HKEY  hkResult;
   DWORD dwErr;
+  DWORD dwSize;
   char  szBuf[MAX_BUF];
 
   ZeroMemory(szBuf, sizeof(szBuf));
-  ZeroMemory(szReturnValue, dwSize);
+  ZeroMemory(szReturnValue, dwReturnValueSize);
 
   if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
+    dwSize = sizeof(szBuf);
     dwErr = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
 
     if((*szBuf != '\0') && (dwErr == ERROR_SUCCESS))
-      ExpandEnvironmentStrings(szBuf, szReturnValue, MAX_BUF);
+      ExpandEnvironmentStrings(szBuf, szReturnValue, dwReturnValueSize);
     else
       *szReturnValue = '\0';
 
@@ -4182,6 +4197,7 @@ BOOL CheckProcessNT4(LPSTR szProcessName, DWORD dwProcessNameSize)
                   &hKey) != ERROR_SUCCESS)
     return(bRv);
 
+  dwSize = sizeof(dwTitleLastIdx);
   if(RegQueryValueEx(hKey, TEXT("Last Counter"), 0, &dwType, (LPBYTE)&dwTitleLastIdx, &dwSize) != ERROR_SUCCESS)
   {
     RegCloseKey(hKey);
@@ -4189,6 +4205,7 @@ BOOL CheckProcessNT4(LPSTR szProcessName, DWORD dwProcessNameSize)
   }
     
 
+  dwSize = sizeof(dwTemp);
   if(RegQueryValueEx(hKey, TEXT("Version"), 0, &dwType, (LPBYTE)&dwTemp, &dwSize) != ERROR_SUCCESS)
   {
     RegCloseKey(hKey);
@@ -4203,12 +4220,13 @@ BOOL CheckProcessNT4(LPSTR szProcessName, DWORD dwProcessNameSize)
   else
   {
     RegCloseKey(hKey);
-    szCounterValueName  = TEXT("Counter 009");
-    hKey                = HKEY_PERFORMANCE_DATA;
+    szCounterValueName = TEXT("Counter 009");
+    hKey = HKEY_PERFORMANCE_DATA;
   }
 
   // Find out the size of the data.
   //
+  dwSize = 0;
   if(RegQueryValueEx(hKey, szCounterValueName, 0, &dwType, 0, &dwSize) != ERROR_SUCCESS)
     return(bRv);
 
