@@ -31,6 +31,9 @@ static   NS_DEFINE_CID(kCMimeRFC822HTMLConverterCID, NS_RFC822_HTML_STREAM_CONVE
 #include "nsMimeObjectClassAccess.h"
 static   NS_DEFINE_CID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID);
 
+#include "nsMimeHeaderConverter.h"
+static   NS_DEFINE_CID(kCMimeHeaderConverterCID, NS_MIME_HEADER_CONVERTER_CID);
+
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -119,6 +122,12 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 		if (res != NS_OK)  // was there a problem creating the object ?
 		  return res;   
   }
+  else if (mClassID.Equals(kCMimeHeaderConverterCID))
+  {
+    res = NS_NewMimeHeaderConverter((nsIMimeHeaderConverter **) &inst);
+		if (res != NS_OK)  // was there a problem creating the object ?
+		  return res;   
+  }
 
 	// End of checking the interface ID code....
 	if (inst)
@@ -188,14 +197,8 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char
                                 PR_TRUE, PR_TRUE);
   nsRepository::RegisterComponent(kCMimeRFC822HTMLConverterCID, NULL, NULL, path, 
                                 PR_TRUE, PR_TRUE);
-
-  /*
-   * For now, do the old netlib call so we don't have to dork around
-   * with hacking every viewer in the world.
-   */
-	NET_RegisterContentTypeConverter(MESSAGE_RFC822, FO_NGLAYOUT, NULL, MIME_MessageConverter);
-	NET_RegisterContentTypeConverter(MESSAGE_RFC822, FO_CACHE_AND_NGLAYOUT, NULL, MIME_MessageConverter);
-  
+  nsRepository::RegisterComponent(kCMimeHeaderConverterCID, NULL, NULL, path, 
+                                PR_TRUE, PR_TRUE);
   return NS_OK;
 }
 
@@ -204,6 +207,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const ch
   printf("*** Mime being unregistered\n");
   nsRepository::UnregisterComponent(kCMimeMimeObjectClassAccessCID, path);
   nsRepository::UnregisterComponent(kCMimeRFC822HTMLConverterCID, path);
+  nsRepository::UnregisterComponent(kCMimeHeaderConverterCID, path);
   return NS_OK;
 }
 

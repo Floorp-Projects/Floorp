@@ -64,11 +64,12 @@ DEFINES= -DEBUG_rhp -DHAVE_MIME_DATA_SLOT -D_IMPL_NS_HTML
 #//------------------------------------------------------------------------
 OBJS=							\
 #
-# Code for XP-COM Factory creation...
+# Code for XP-COM Factory creation and interfaces...
 #
 			.\$(OBJDIR)\nsMimeFactory.obj	\
 			.\$(OBJDIR)\nsRFC822toHTMLStreamConverter.obj	\
-			.\$(OBJDIR)\nsMimeObjectClassAccess.obj			\
+			.\$(OBJDIR)\nsMimeObjectClassAccess.obj		\
+			.\$(OBJDIR)\nsMimeHeaderConverter.obj		\
 # MIME parsing code
 			.\$(OBJDIR)\mimecont.obj	\
 			.\$(OBJDIR)\mimeebod.obj	\

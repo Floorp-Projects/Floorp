@@ -46,13 +46,13 @@ public:
 
   // Decode routine
   NS_IMETHOD DecodeMimePartIIStr(const char *header, 
-                                 const char *charset, 
-                                 char *decodedString);
+                                 char       *charset, 
+                                 char **decodedString);
   // Encode routine
   NS_IMETHOD EncodeMimePartIIStr(const char *header, 
                                  const char *mailCharset, 
                                  PRInt32     encodedWordSize, 
-                                 char       *encodedString);
+                                 char       **encodedString);
 }; 
 
 /* this function will be used by the factory to generate an class access object....*/

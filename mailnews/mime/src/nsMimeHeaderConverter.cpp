@@ -21,6 +21,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsMimeHeaderConverter.h"
+#include "comi18n.h"
 
 /* 
  * This function will be used by the factory to generate an 
@@ -34,9 +35,9 @@ nsresult NS_NewMimeHeaderConverter(nsIMimeHeaderConverter ** aInstancePtrResult)
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
 	if (nsnull != aInstancePtrResult)
 	{
-		nsMimeObjectClassAccess *obj = new nsMimeObjectClassAccess();
+		nsMimeHeaderConverter *obj = new nsMimeHeaderConverter();
 		if (obj)
-			return obj->QueryInterface(nsIMimeObjectClassAccess::IID(), (void**) aInstancePtrResult);
+			return obj->QueryInterface(nsIMimeHeaderConverter::IID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -48,78 +49,54 @@ nsresult NS_NewMimeHeaderConverter(nsIMimeHeaderConverter ** aInstancePtrResult)
  * The following macros actually implement addref, release and 
  * query interface for our component. 
  */
-NS_IMPL_ADDREF(nsMimeObjectClassAccess)
-NS_IMPL_RELEASE(nsMimeObjectClassAccess)
-NS_IMPL_QUERY_INTERFACE(nsMimeObjectClassAccess, nsIMimeObjectClassAccess::IID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_ADDREF(nsMimeHeaderConverter)
+NS_IMPL_RELEASE(nsMimeHeaderConverter)
+NS_IMPL_QUERY_INTERFACE(nsMimeHeaderConverter, nsIMimeHeaderConverter::IID()); /* we need to pass in the interface ID of this interface */
 
 /*
- * nsMimeObjectClassAccess definitions....
+ * nsMimeHeaderConverter definitions....
  */
 
 /* 
- * Inherited methods for nsMimeObjectClassAccess
+ * Inherited methods for nsMimeHeaderConverter
  */
-nsMimeObjectClassAccess::nsMimeObjectClassAccess()
+nsMimeHeaderConverter::nsMimeHeaderConverter()
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
 }
 
-nsMimeObjectClassAccess::~nsMimeObjectClassAccess()
+nsMimeHeaderConverter::~nsMimeHeaderConverter()
 {
 }
 
 nsresult
-nsMimeObjectClassAccess::MimeObjectWrite(void *mimeObject, 
-                                char *data, 
-                                PRInt32 length, 
-                                PRBool user_visible_p)
+nsMimeHeaderConverter::DecodeMimePartIIStr(const char *header, 
+                                           char       *charset, 
+                                           char **decodedString)
 {
-  int rc = XPCOM_MimeObject_write(mimeObject, data, length, user_visible_p);
-  if (rc < 0)
+  char *retString = MIME_DecodeMimePartIIStr(header, charset); 
+  if (retString == NULL)
     return NS_ERROR_FAILURE;
   else
+  {
+    *decodedString = retString;
     return NS_OK;
+  }
 }
 
-nsresult 
-nsMimeObjectClassAccess::GetmimeInlineTextClass(void **ptr)
+nsresult
+nsMimeHeaderConverter::EncodeMimePartIIStr(const char *header, 
+                                           const char *mailCharset, 
+                                           PRInt32     encodedWordSize, 
+                                           char       **encodedString)
 {
-  *ptr = XPCOM_GetmimeInlineTextClass();
-  return NS_OK;
-}
-
-nsresult 
-nsMimeObjectClassAccess::GetmimeLeafClass(void **ptr)
-{
-  *ptr = XPCOM_GetmimeLeafClass();
-  return NS_OK;
-}
-
-nsresult 
-nsMimeObjectClassAccess::GetmimeObjectClass(void **ptr)
-{
-  *ptr = XPCOM_GetmimeObjectClass();
-  return NS_OK;
-}
-
-nsresult 
-nsMimeObjectClassAccess::GetmimeContainerClass(void **ptr)
-{
-  *ptr = XPCOM_GetmimeContainerClass();
-  return NS_OK;
-}
-
-nsresult 
-nsMimeObjectClassAccess::GetmimeMultipartClass(void **ptr)
-{
-  *ptr = XPCOM_GetmimeMultipartClass();
-  return NS_OK;
-}
-
-nsresult 
-nsMimeObjectClassAccess::GetmimeMultipartSignedClass(void **ptr)
-{
-  *ptr = XPCOM_GetmimeMultipartSignedClass();
-  return NS_OK;
+  char *retString = MIME_EncodeMimePartIIStr(header, mailCharset, encodedWordSize);
+  if (retString == NULL)
+    return NS_ERROR_FAILURE;
+  else
+  {
+    *encodedString = retString;
+    return NS_OK;
+  }
 }
