@@ -47,6 +47,7 @@ static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID,		NS_DATETIMEFORMAT_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 nsIRDFResource* nsMsgMessageDataSource::kNC_Subject = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_SubjectCollation = nsnull;
@@ -56,8 +57,10 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Recipient= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_RecipientCollation = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Date= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Status= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_StatusString= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Flagged= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Priority= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_PriorityString= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_PrioritySort= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Size= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_SizeSort= nsnull;
@@ -90,6 +93,7 @@ nsMsgMessageDataSource::nsMsgMessageDataSource():
   mInitialized(PR_FALSE),
   mHeaderParser(nsnull)
 {
+	mStringBundle = nsnull;
 
 }
 
@@ -116,8 +120,10 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_RecipientCollation, refcnt);
 		NS_RELEASE2(kNC_Date, refcnt);
 		NS_RELEASE2(kNC_Status, refcnt);
+		NS_RELEASE2(kNC_StatusString, refcnt);
 		NS_RELEASE2(kNC_Flagged, refcnt);
 		NS_RELEASE2(kNC_Priority, refcnt);
+		NS_RELEASE2(kNC_PriorityString, refcnt);
 		NS_RELEASE2(kNC_PrioritySort, refcnt);
 		NS_RELEASE2(kNC_Size, refcnt);
 		NS_RELEASE2(kNC_SizeSort, refcnt);
@@ -177,8 +183,10 @@ nsresult nsMsgMessageDataSource::Init()
 		rdf->GetResource(NC_RDF_RECIPIENT_COLLATION_SORT, &kNC_RecipientCollation);
 		rdf->GetResource(NC_RDF_DATE, &kNC_Date);
 		rdf->GetResource(NC_RDF_STATUS, &kNC_Status);
+		rdf->GetResource(NC_RDF_STATUS_STRING, &kNC_StatusString);
 		rdf->GetResource(NC_RDF_FLAGGED, &kNC_Flagged);
 		rdf->GetResource(NC_RDF_PRIORITY, &kNC_Priority);
+		rdf->GetResource(NC_RDF_PRIORITY_STRING, &kNC_PriorityString);
 		rdf->GetResource(NC_RDF_PRIORITY_SORT, &kNC_PrioritySort);
 		rdf->GetResource(NC_RDF_SIZE, &kNC_Size);
 		rdf->GetResource(NC_RDF_SIZE_SORT, &kNC_SizeSort);
@@ -216,16 +224,39 @@ nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
     // STRING USE WARNING: more of a suggestion, really -- perhaps using |NS_ConvertASCIItoUCS2| right in the |createNode| calls
     //  would be cleaner.  It should generate identical code
 
+	PRUnichar *prustr = nsnull;
+
 	nsAutoString str; str.AssignWithConversion(" ");
 	createNode(str, getter_AddRefs(kEmptyStringLiteral), rdf);
+
 	str.AssignWithConversion("lowest");
 	createNode(str, getter_AddRefs(kLowestLiteral), rdf);
+
+	prustr = GetString(NS_LITERAL_STRING("priorityLowest"));
+	str.Assign(prustr);
+	createNode(str, getter_AddRefs(kLowestLiteralDisplayString), rdf);
+
 	str.AssignWithConversion("low");
 	createNode(str, getter_AddRefs(kLowLiteral), rdf);
+
+	prustr = GetString(NS_LITERAL_STRING("priorityLow"));
+	str.Assign(prustr);
+	createNode(str, getter_AddRefs(kLowLiteralDisplayString), rdf);
+	
 	str.AssignWithConversion("high");
 	createNode(str, getter_AddRefs(kHighLiteral), rdf);
+
+	prustr = GetString(NS_LITERAL_STRING("priorityHigh"));
+	str.Assign(prustr);
+	createNode(str, getter_AddRefs(kHighLiteralDisplayString), rdf);
+
 	str.AssignWithConversion("highest");
 	createNode(str, getter_AddRefs(kHighestLiteral), rdf);
+
+	prustr = GetString(NS_LITERAL_STRING("priorityHighest"));
+	str.Assign(prustr);
+	createNode(str, getter_AddRefs(kHighestLiteralDisplayString), rdf);
+
 	str.AssignWithConversion("4");
 	createNode(str, getter_AddRefs(kLowestSortLiteral), rdf);
 	str.AssignWithConversion("3");
@@ -236,26 +267,55 @@ nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 	createNode(str, getter_AddRefs(kHighSortLiteral), rdf);
 	str.AssignWithConversion("0");
 	createNode(str, getter_AddRefs(kHighestSortLiteral), rdf);
+
 	str.AssignWithConversion("flagged");
 	createNode(str, getter_AddRefs(kFlaggedLiteral), rdf);
+	
 	str.AssignWithConversion("unflagged");
 	createNode(str, getter_AddRefs(kUnflaggedLiteral), rdf);
+	
 	str.AssignWithConversion("replied");
 	createNode(str, getter_AddRefs(kRepliedLiteral), rdf);
+
+	prustr = GetString(NS_LITERAL_STRING("replied"));
+	str.Assign(prustr);
+	createNode(str, getter_AddRefs(kRepliedLiteralDisplayString), rdf);
+	
 	str.AssignWithConversion("fowarded");
 	createNode(str, getter_AddRefs(kForwardedLiteral), rdf);
+
+	prustr = GetString(NS_LITERAL_STRING("forwarded"));
+	str.Assign(prustr);
+	createNode(str, getter_AddRefs(kForwardedLiteralDisplayString), rdf);
+	
 	str.AssignWithConversion("new");
 	createNode(str, getter_AddRefs(kNewLiteral), rdf);
+
+	prustr = GetString(NS_LITERAL_STRING("new"));
+	str.Assign(prustr);
+	createNode(str, getter_AddRefs(kNewLiteralDisplayString), rdf);
+	
 	str.AssignWithConversion("read");
 	createNode(str, getter_AddRefs(kReadLiteral), rdf);
+
+	prustr = GetString(NS_LITERAL_STRING("read"));
+	str.Assign(prustr);
+	createNode(str, getter_AddRefs(kReadLiteralDisplayString), rdf);
+	
 	str.AssignWithConversion("true");
 	createNode(str, getter_AddRefs(kTrueLiteral), rdf);
+	
 	str.AssignWithConversion("false");
 	createNode(str, getter_AddRefs(kFalseLiteral), rdf);
+	
 	str.AssignWithConversion("news");
 	createNode(str, getter_AddRefs(kNewsLiteral), rdf);
+	
 	str.AssignWithConversion("mail");
 	createNode(str, getter_AddRefs(kMailLiteral), rdf);
+
+	if(prustr != nsnull)
+		nsCRT::free(prustr);
 	return NS_OK;
 }
 
@@ -341,6 +401,33 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTarget(nsIRDFResource* source,
   
 }
 
+PRUnichar *
+nsMsgMessageDataSource::GetString(const PRUnichar *aStringName)
+{
+	nsresult    res = NS_OK;
+	PRUnichar   *ptrv = nsnull;
+
+	if (!mStringBundle)
+	{
+		char    *propertyURL = MESSENGER_STRING_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
+			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(mStringBundle));
+		}
+	}
+
+	if (mStringBundle)
+		res = mStringBundle->GetStringFromName(aStringName, &ptrv);
+
+	if ( NS_SUCCEEDED(res) && (ptrv) )
+		return ptrv;
+	else
+		return nsCRT::strdup(aStringName);
+}
+
 //sender is the string we need to parse.  senderuserName is the parsed user name we get back.
 nsresult nsMsgMessageDataSource::GetSenderName(const PRUnichar *sender, nsAutoString *senderUserName)
 {
@@ -415,6 +502,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 
 		if((kNC_Subject == property) || (kNC_Date == property) ||
 				(kNC_Status == property) || (kNC_Flagged == property) ||
+				(kNC_PriorityString == property) || (kNC_StatusString) ||
 				(kNC_Priority == property) || (kNC_Size == property) ||
 				(kNC_IsUnread == property) || (kNC_IsImapDeleted == property) || 
 				(kNC_OrderReceived == property) || (kNC_HasAttachment == property) ||
@@ -554,8 +642,10 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(PRBool showThreads,
 	(*arcs)->AppendElement(kNC_Recipient);
 	(*arcs)->AppendElement(kNC_Date);
 	(*arcs)->AppendElement(kNC_Status);
+	(*arcs)->AppendElement(kNC_StatusString);
 	(*arcs)->AppendElement(kNC_Flagged);
-	(*arcs)->AppendElement(kNC_Priority);
+	(*arcs)->AppendElement(kNC_Priority); 
+	(*arcs)->AppendElement(kNC_PriorityString);
 	(*arcs)->AppendElement(kNC_Size);
 	(*arcs)->AppendElement(kNC_IsUnread);
 	(*arcs)->AppendElement(kNC_HasAttachment);
@@ -576,7 +666,7 @@ nsMsgMessageDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 
 NS_IMETHODIMP
 nsMsgMessageDataSource::GetAllCommands(nsIRDFResource* source,
-                                      nsIEnumerator/*<nsIRDFResource>*/** commands)
+                                      nsIEnumerator/*<nsIRDFResource>*/ ** commands)
 {
   nsresult rv;
 
@@ -595,16 +685,16 @@ nsMsgMessageDataSource::GetAllCommands(nsIRDFResource* source,
 
 NS_IMETHODIMP
 nsMsgMessageDataSource::GetAllCmds(nsIRDFResource* source,
-                                      nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
+                                      nsISimpleEnumerator/*<nsIRDFResource>*/ ** commands)
 {
   NS_NOTYETIMPLEMENTED("sorry!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMsgMessageDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+nsMsgMessageDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/ * aSources,
                                         nsIRDFResource*   aCommand,
-                                        nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                        nsISupportsArray/*<nsIRDFResource>*/ * aArguments,
                                         PRBool* aResult)
 {
   nsCOMPtr<nsIMessage> message;
@@ -628,9 +718,9 @@ nsMsgMessageDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* a
 }
 
 NS_IMETHODIMP
-nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/ * aSources,
                                  nsIRDFResource*   aCommand,
-                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+                                 nsISupportsArray/*<nsIRDFResource>*/ * aArguments)
 {
 	nsresult rv = NS_OK;
 
@@ -821,11 +911,16 @@ nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *item,
 		}
 		else if(kFlaggedAtom == property)
 		{
-			nsCAutoString newFlaggedStr;
+			nsAutoString newFlaggedStr;
 			rv = createFlaggedStringFromFlag(newFlag, newFlaggedStr);
 			if(NS_FAILED(rv))
 				return rv;
-			rv = NotifyPropertyChanged(resource, kNC_Flagged, newFlaggedStr);
+			nsCOMPtr<nsIRDFNode> newNode;
+			//rv = createNode(newFlaggedStr, newNode, getRDFService());
+			rv = createNode(newFlaggedStr, getter_AddRefs(newNode), getRDFService());
+			
+			if(NS_SUCCEEDED(rv))
+				rv = NotifyPropertyChanged(resource, kNC_Flagged, /*newFlaggedStr*/ newNode);
 		}
 	}
 	return rv;
@@ -866,12 +961,23 @@ nsresult nsMsgMessageDataSource::OnChangeStatusString(nsIRDFResource *resource, 
 {
 
 	nsresult rv;
-	nsCAutoString newStatusStr;
-	rv = createStatusStringFromFlag(newFlag, newStatusStr);
+	nsCOMPtr<nsIRDFNode> newNode;
+
+	rv = createStatusNodeFromFlag(newFlag, getter_AddRefs(newNode), PR_FALSE);
 	if(NS_FAILED(rv))
 		return rv;
-	rv = NotifyPropertyChanged(resource, kNC_Status, newStatusStr);
 
+	rv = NotifyPropertyChanged(resource, kNC_Status, newNode);
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = createStatusNodeFromFlag(newFlag, getter_AddRefs(newNode), PR_TRUE);
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = NotifyPropertyChanged(resource, kNC_StatusString, newNode);
 	
 	return rv;
 }
@@ -989,11 +1095,15 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 	else if ((kNC_Date == property))
 		rv = createMessageDateNode(message, target);
 	else if ((kNC_Status == property))
-		rv = createMessageStatusNode(message, target);
+		rv = createMessageStatusNode(message, target, PR_FALSE);
+	else if ((kNC_StatusString == property))
+		rv = createMessageStatusNode(message, target, PR_TRUE);
 	else if ((kNC_Flagged == property))
 		rv = createMessageFlaggedNode(message, target);
 	else if ((kNC_Priority == property))
-		rv = createMessagePriorityNode(message, target);
+		rv = createMessagePriorityNode(message, target, PR_FALSE);
+	else if ((kNC_PriorityString == property))
+		rv = createMessagePriorityNode(message, target, PR_TRUE);
 	else if ((kNC_PrioritySort == property))
 		rv = createMessagePrioritySortNode(message, target);
 	else if ((kNC_Size == property))
@@ -1147,7 +1257,8 @@ nsMsgMessageDataSource::createMessageDateNode(nsIMessage *message,
 
 nsresult
 nsMsgMessageDataSource::createMessageStatusNode(nsIMessage *message,
-                                               nsIRDFNode **target)
+                                               nsIRDFNode **target,
+																							 PRBool needDisplayString)
 {
 	nsresult rv;
 	PRUint32 flags;
@@ -1156,13 +1267,13 @@ nsMsgMessageDataSource::createMessageStatusNode(nsIMessage *message,
 		return rv;
 	*target = kEmptyStringLiteral;
 	if(flags & MSG_FLAG_REPLIED)
-		*target = kRepliedLiteral;
+		*target = (needDisplayString) ? kRepliedLiteralDisplayString : kRepliedLiteral;
 	else if(flags & MSG_FLAG_FORWARDED)
-		*target = kForwardedLiteral;
+		*target = (needDisplayString) ? kForwardedLiteralDisplayString : kForwardedLiteral;
 	else if(flags & MSG_FLAG_NEW)
-		*target = kNewLiteral;
+		*target = (needDisplayString) ? kNewLiteralDisplayString : kNewLiteral;
 	else if(flags & MSG_FLAG_READ)
-		*target = kReadLiteral;
+		*target = (needDisplayString) ? kReadLiteralDisplayString : kReadLiteral;
 
 	NS_IF_ADDREF(*target);
 	return NS_OK;
@@ -1279,63 +1390,76 @@ nsMsgMessageDataSource::createMessageFlaggedNode(nsIMessage *message,
 }
 
 nsresult 
-nsMsgMessageDataSource::createStatusStringFromFlag(PRUint32 flags, nsCAutoString &statusStr)
+nsMsgMessageDataSource::createStatusNodeFromFlag(PRUint32 flags, /*nsAutoString &statusStr*/ nsIRDFNode **node, PRBool needDisplayString)
 {
 	nsresult rv = NS_OK;
-	statusStr = " ";
+	*node = kEmptyStringLiteral;
+
 	if(flags & MSG_FLAG_REPLIED)
-		statusStr = "replied";
+		*node = (needDisplayString) ? kRepliedLiteralDisplayString : kRepliedLiteral;
 	else if(flags & MSG_FLAG_FORWARDED)
-		statusStr = "forwarded";
+		*node = (needDisplayString) ? kForwardedLiteralDisplayString : kForwardedLiteral;
 	else if(flags & MSG_FLAG_NEW)
-		statusStr = "new";
+		*node = (needDisplayString) ? kNewLiteralDisplayString : kNewLiteral;
 	else if(flags & MSG_FLAG_READ)
-		statusStr = "read";
+		*node = (needDisplayString) ? kReadLiteralDisplayString : kReadLiteral;
 	return rv;
 }
 
 nsresult 
-nsMsgMessageDataSource::createFlaggedStringFromFlag(PRUint32 flags, nsCAutoString &statusStr)
+nsMsgMessageDataSource::createFlaggedStringFromFlag(PRUint32 flags, nsAutoString &flaggedStr)
 {
 	nsresult rv = NS_OK;
+	flaggedStr.AssignWithConversion(" ");
 	if(flags & MSG_FLAG_MARKED)
-		statusStr = "flagged";
+		flaggedStr.AssignWithConversion("flagged");
 	else 
-		statusStr = "unflagged";
+		flaggedStr.AssignWithConversion("unflagged");
 	return rv;
 }
 
 nsresult 
-nsMsgMessageDataSource::createPriorityString(nsMsgPriorityValue priority, nsCAutoString &priorityStr)
+nsMsgMessageDataSource::createPriorityString(nsMsgPriorityValue priority, nsAutoString &priorityStr)
 {
 	nsresult rv = NS_OK;
-	priorityStr = " ";
+	PRUnichar *prustr;
+	priorityStr.AssignWithConversion(" ");
 	switch (priority)
 	{
 		case nsMsgPriority::notSet:
 		case nsMsgPriority::none:
 		case nsMsgPriority::normal:
-			priorityStr = " ";
+			priorityStr.AssignWithConversion(" ");
 			break;
 		case nsMsgPriority::lowest:
-			priorityStr = "Lowest";
+			//priorityStr = "Lowest";
+			prustr = GetString(NS_LITERAL_STRING("Lowest"));
+			priorityStr.Assign(prustr);
 			break;
 		case nsMsgPriority::low:
-			priorityStr = "Low";
+			//priorityStr = "Low";
+			prustr = GetString(NS_LITERAL_STRING("Low"));
+			priorityStr.Assign(prustr);
 			break;
 		case nsMsgPriority::high:
-			priorityStr = "High";
+			//priorityStr = "High";
+			prustr = GetString(NS_LITERAL_STRING("High"));
+			priorityStr.Assign(prustr);
 			break;
 		case nsMsgPriority::highest:
-			priorityStr = "Highest";
+			//priorityStr = "Highest";
+			prustr = GetString(NS_LITERAL_STRING("Highest"));
+			priorityStr.Assign(prustr);
 			break;
 	}
+	if(prustr != nsnull)
+		nsCRT::free(prustr);
 	return rv;
 }
 
 nsresult
 nsMsgMessageDataSource::createMessagePriorityNode(nsIMessage *message,
-                                               nsIRDFNode **target)
+                                               nsIRDFNode **target, PRBool needDisplayString)
 {
 	nsresult rv;
 	nsMsgPriorityValue priority;
@@ -1351,16 +1475,16 @@ nsMsgMessageDataSource::createMessagePriorityNode(nsIMessage *message,
 			*target = kEmptyStringLiteral;
 			break;
 		case nsMsgPriority::lowest:
-			*target = kLowestLiteral;
+			*target = (needDisplayString) ? kLowestLiteralDisplayString : kLowestLiteral; 
 			break;
 		case nsMsgPriority::low:
-			*target = kLowLiteral;
+			*target = (needDisplayString) ? kLowLiteralDisplayString : kLowLiteral;
 			break;
 		case nsMsgPriority::high:
-			*target = kHighLiteral;
+			*target = (needDisplayString) ? kHighLiteralDisplayString : kHighLiteral;
 			break;
 		case nsMsgPriority::highest:
-			*target = kHighestLiteral;
+			*target = (needDisplayString) ? kHighestLiteralDisplayString : kHighestLiteral;
 			break;
 	}
 	

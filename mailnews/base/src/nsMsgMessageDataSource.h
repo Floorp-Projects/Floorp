@@ -31,6 +31,11 @@
 #include "MailNewsTypes.h"
 #include "nsIMsgThread.h"
 
+#include "nsIStringBundle.h"
+
+#define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
+
+
 /**
  * The mail message source.
  */
@@ -97,20 +102,23 @@ public:
 	NS_IMETHOD GetAllResources(nsISimpleEnumerator** aCursor);
 
 	NS_IMETHOD GetAllCommands(nsIRDFResource* source,
-							nsIEnumerator/*<nsIRDFResource>*/** commands);
+							nsIEnumerator/*<nsIRDFResource>*/ ** commands);
 	NS_IMETHOD GetAllCmds(nsIRDFResource* source,
-							nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
+							nsISimpleEnumerator/*<nsIRDFResource>*/ ** commands);
 
-	NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+	NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/ * aSources,
 							  nsIRDFResource*   aCommand,
-							  nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+							  nsISupportsArray/*<nsIRDFResource>*/ * aArguments,
 							  PRBool* aResult);
 
-	NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+	NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/ * aSources,
 					   nsIRDFResource*   aCommand,
-					   nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+					   nsISupportsArray/*<nsIRDFResource>*/ * aArguments);
 
 protected:
+	PRUnichar *GetString(const PRUnichar *aStringName);
+	//String bundle:
+	nsCOMPtr<nsIStringBundle>   mStringBundle;
 
 	nsresult  GetSenderName(const PRUnichar *sender, nsAutoString *senderUserName);
 
@@ -132,19 +140,19 @@ protected:
 	nsresult createMessageDateNode(nsIMessage *message,
 								 nsIRDFNode **target);
 	nsresult createMessageStatusNode(nsIMessage *message,
-								   nsIRDFNode **target);
-	nsresult createStatusStringFromFlag(PRUint32 flags, nsCAutoString &statusStr);
+								   nsIRDFNode **target, PRBool needDisplayString);
+	nsresult createStatusNodeFromFlag(PRUint32 flags, /*nsAutoString &statusStr*/ nsIRDFNode **node, PRBool needDisplayString);
 
 	nsresult createMessageFlaggedNode(nsIMessage *message,
 								   nsIRDFNode **target);
-	nsresult createFlaggedStringFromFlag(PRUint32 flags, nsCAutoString &statusStr);
+	nsresult createFlaggedStringFromFlag(PRUint32 flags, nsAutoString &statusStr);
 
 	nsresult createMessagePriorityNode(nsIMessage *message,
-								   nsIRDFNode **target);
+								   nsIRDFNode **target, PRBool needDisplayString);
 
 	nsresult createMessagePrioritySortNode(nsIMessage *message, nsIRDFNode **target);
 
-	nsresult createPriorityString(nsMsgPriorityValue priority, nsCAutoString &priorityStr);
+	nsresult createPriorityString(nsMsgPriorityValue priority, nsAutoString &priorityStr);
 
 	nsresult createMessageSizeNode(nsIMessage *message, nsIRDFNode **target, PRBool sort);
 
@@ -212,8 +220,10 @@ protected:
 	static nsIRDFResource* kNC_RecipientCollation;
 	static nsIRDFResource* kNC_Date;
 	static nsIRDFResource* kNC_Status;
+	static nsIRDFResource* kNC_StatusString;
 	static nsIRDFResource* kNC_Flagged;
 	static nsIRDFResource* kNC_Priority;
+	static nsIRDFResource* kNC_PriorityString;
 	static nsIRDFResource* kNC_PrioritySort;
 	static nsIRDFResource* kNC_Size;
 	static nsIRDFResource* kNC_SizeSort;
@@ -238,9 +248,14 @@ protected:
 	//Cached literals
 	nsCOMPtr<nsIRDFNode> kEmptyStringLiteral;
 	nsCOMPtr<nsIRDFNode> kLowestLiteral;
+	nsCOMPtr<nsIRDFNode> kLowestLiteralDisplayString;
 	nsCOMPtr<nsIRDFNode> kLowLiteral;
+	nsCOMPtr<nsIRDFNode> kLowLiteralDisplayString;
 	nsCOMPtr<nsIRDFNode> kHighLiteral;
+	nsCOMPtr<nsIRDFNode> kHighLiteralDisplayString;
 	nsCOMPtr<nsIRDFNode> kHighestLiteral;
+	nsCOMPtr<nsIRDFNode> kHighestLiteralDisplayString;
+
 	nsCOMPtr<nsIRDFNode> kLowestSortLiteral;
 	nsCOMPtr<nsIRDFNode> kLowSortLiteral;
 	nsCOMPtr<nsIRDFNode> kNormalSortLiteral;
@@ -248,10 +263,16 @@ protected:
 	nsCOMPtr<nsIRDFNode> kHighestSortLiteral;
 	nsCOMPtr<nsIRDFNode> kFlaggedLiteral;
 	nsCOMPtr<nsIRDFNode> kUnflaggedLiteral;
+
 	nsCOMPtr<nsIRDFNode> kRepliedLiteral;
+	nsCOMPtr<nsIRDFNode> kRepliedLiteralDisplayString;
 	nsCOMPtr<nsIRDFNode> kForwardedLiteral;
+	nsCOMPtr<nsIRDFNode> kForwardedLiteralDisplayString;
 	nsCOMPtr<nsIRDFNode> kNewLiteral;
+	nsCOMPtr<nsIRDFNode> kNewLiteralDisplayString;
 	nsCOMPtr<nsIRDFNode> kReadLiteral;
+	nsCOMPtr<nsIRDFNode> kReadLiteralDisplayString;
+
 	nsCOMPtr<nsIRDFNode> kTrueLiteral;
 	nsCOMPtr<nsIRDFNode> kFalseLiteral;
 	nsCOMPtr<nsIRDFNode> kNewsLiteral;

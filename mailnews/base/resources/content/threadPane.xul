@@ -50,7 +50,7 @@ Rights Reserved.
 		<treeitem uri="..."
 			 Status="rdf:http://home.netscape.com/NC-rdf#Status"
   			 Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
-  		     Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
+  		     Priority="rdf:http://home.netscape.com/NC-rdf#Priority" 
 			 IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread"
 			 HasAttachment="rdf:http://home.netscape.com/NC-rdf#HasAttachment"
 			 IsImapDeleted="rdf:http://home.netscape.com/NC-rdf#IsImapDeleted"
@@ -72,11 +72,12 @@ Rights Reserved.
                   value="rdf:http://home.netscape.com/NC-rdf#IsUnread"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Date"/>
 				<treecell class="tree-cell-image prioritycol" 
-                  value="rdf:http://home.netscape.com/NC-rdf#Priority"/>
+  		            Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
+                  value="rdf:http://home.netscape.com/NC-rdf#PriorityString"/>
 				<treecell allowevents="true" class="flagcol treecell-image" 
                   onclick="return top.ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode)"
                   value="rdf:http://home.netscape.com/NC-rdf#Flagged" />
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#Status"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#StatusString"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size" class="treecell-align-right"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
