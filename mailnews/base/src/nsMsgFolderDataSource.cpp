@@ -1163,7 +1163,6 @@ nsresult
 nsMsgFolderDataSource::createServerIsDeferredNode(nsIMsgFolder* folder,
                                                   nsIRDFNode **target)
 {
-  nsresult rv;
   PRBool isDeferred = PR_FALSE;
   nsCOMPtr <nsIMsgIncomingServer> incomingServer;
   folder->GetServer(getter_AddRefs(incomingServer));
