@@ -148,8 +148,7 @@ nsUnknownDecoder::OnDataAvailable(nsIChannel *aChannel,
       // will make the first OnDataAvailable(...) call with an offset of 0.
       // So, this offset needs to be adjusted to reflect that...
       //
-      NS_ASSERTION(aSourceOffset >= mBufferLen, "Invalid source offset.");
-      aSourceOffset -= mBufferLen;
+      aSourceOffset += mBufferLen;
 
       DetermineContentType();
 
