@@ -4763,7 +4763,7 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKe
         char   pPercentOfWhat[256] = "";
         int32  iWidth = m_Rect.right - m_Rect.left;
         int32  iHeight = m_Rect.bottom - m_Rect.top;
-        int32  iPercent;
+        int32  iPercent = 0;
 
         XP_Bool bDoWidth = (m_iStyle & ED_SIZE_LEFT) || (m_iStyle & ED_SIZE_RIGHT);
         XP_Bool bDoHeight = (m_iStyle & ED_SIZE_TOP) || (m_iStyle & ED_SIZE_BOTTOM);
