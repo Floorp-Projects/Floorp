@@ -18,8 +18,9 @@
 
 package netscape.asw;
 
-import netscape.npasw.*;
-import netscape.asw.ProgressApplet;
+import netscape.npasw.CPGenerator;
+import netscape.npasw.ServerDownload;
+
 import java.lang.*;
 //import AMDProgressBar;
 
@@ -33,6 +34,7 @@ public class CPGeneratorProgress extends ProgressApplet
     final static String WAITING = "Waiting for response...";
     final static String RECEIVING_RESPONSE = "Receiving server data...";
     final static String ABORT = "There were problems with the server connection...";
+    final static String DIALING_STRING = "Calling registration server...";
 
     protected int getState()
     {
@@ -42,6 +44,12 @@ public class CPGeneratorProgress extends ProgressApplet
             return ServerDownload.getState();
     }
 
+	public void init()
+	{
+		super.init();
+		progress.setText( DIALING_STRING );
+	}
+	
     public void run()
     {
         try

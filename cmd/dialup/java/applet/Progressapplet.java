@@ -17,7 +17,7 @@
  */
 package netscape.asw;
 
-import netscape.npasw.*;
+import netscape.npasw.Trace;
 import java.awt.*;
 import java.applet.*;
 //import AMDProgressBar;
@@ -27,8 +27,6 @@ public class ProgressApplet extends Applet implements Runnable
     Label               status;
     Label               progress;
     Button              cancel;
-
-    final String        DIALING_STRING = "Calling registration server...";
 
     final static Font   TEXTFONT = new Font( "Dialog", Font.BOLD, 12 );
     final static Font   BARFONT = new Font( "Helvetica", Font.PLAIN, 9 );
@@ -54,7 +52,7 @@ public class ProgressApplet extends Applet implements Runnable
         resize( insets().left + insets().right + 360, insets().top + insets().bottom + 120 );
         setFont( TEXTFONT );
 
-        status = new java.awt.Label( DIALING_STRING );
+        status = new java.awt.Label( "" );
         status.reshape( insets().left + 12, insets().top + 8, 340, 24 );
         status.setFont( TEXTFONT );
         add( status );
