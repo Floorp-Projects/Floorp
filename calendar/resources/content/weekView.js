@@ -452,8 +452,11 @@ WeekView.prototype.switchTo = function( )
 WeekView.prototype.refreshDisplay = function( )
 {
    
+   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   var defaultWeekStart = categoriesStringBundle.GetStringFromName("defaultWeekStart" );
+      
    // Set the from-to title string, based on the selected date
-   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", 0 );
+   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
    
    var viewDay = this.calendarWindow.getSelectedDate().getDay();
    var viewDayOfMonth = this.calendarWindow.getSelectedDate().getDate();

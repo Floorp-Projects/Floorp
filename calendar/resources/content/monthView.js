@@ -422,7 +422,10 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    }
 	document.getElementById( "0-year-title" ).setAttribute( "value" , newYear );
    
-   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", 0 );
+   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   var defaultWeekStart = categoriesStringBundle.GetStringFromName("defaultWeekStart" );
+      
+   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
    
    var NewArrayOfDayNames = new Array();
    
