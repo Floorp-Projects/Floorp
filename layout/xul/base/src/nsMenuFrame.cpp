@@ -1321,12 +1321,6 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
 
 }
 
-NS_IMETHODIMP
-nsMenuFrame::CreateAnonymousContent(nsIPresContext* aPresContext, nsISupportsArray& aAnonymousChildren)
-{
-  return NS_OK;
-}
-
 void 
 nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 {
