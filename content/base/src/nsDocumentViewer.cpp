@@ -451,6 +451,7 @@ public:
   PRBool                      mIsCachingPresentation;
   CachedPresentationObj*      mCachedPresObj;
 
+  PRUnichar*            mBrandName; //  needed as a substitute name for a document
 
 #ifdef DEBUG_PRINTING
   FILE *           mDebugFD;
@@ -521,6 +522,7 @@ public:
   enum eDocTitleDefault {eDocTitleDefNone, eDocTitleDefBlank, eDocTitleDefDocument, eDocTitleDefURLDoc};
   static void GetDisplayTitleAndURL(PrintObject*      aPO, 
                                     nsIPrintSettings* aPrintSettings, 
+                                    const PRUnichar*  aBrandName,
                                     PRUnichar**       aTitle, 
                                     PRUnichar**       aURLStr,
                                     eDocTitleDefault  aDefType = eDocTitleDefNone);
@@ -846,11 +848,25 @@ PrintData::PrintData() :
   mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),
   mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(NULL), 
-  mIsCachingPresentation(PR_FALSE), mCachedPresObj(nsnull)
+  mIsCachingPresentation(PR_FALSE), mCachedPresObj(nsnull), mBrandName(nsnull)
 {
 #ifdef DEBUG_PRINTING
   mDebugFD = fopen("printing.log", "w");
 #endif
+
+  nsCOMPtr<nsIStringBundle> brandBundle;
+  nsCOMPtr<nsIStringBundleService> svc( do_GetService( NS_STRINGBUNDLE_CONTRACTID ) );
+  if (svc) {
+    svc->CreateBundle( "chrome://global/locale/brand.properties", getter_AddRefs( brandBundle ) );
+    if (brandBundle) {
+      brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), &mBrandName );
+    }
+  }
+
+  if (!mBrandName) {
+    mBrandName = ToNewUnicode(NS_LITERAL_STRING("Mozilla Document"));
+  }
+
 }
 
 PrintData::~PrintData() 
@@ -894,6 +910,10 @@ PrintData::~PrintData()
   if (mPrintDocList != nsnull) {
     mPrintDocList->Clear();
     delete mPrintDocList;
+  }
+
+  if (mBrandName) {
+    nsCRT::free(mBrandName);
   }
 
 #ifdef DEBUG_PRINTING
@@ -2123,9 +2143,10 @@ static void GetDocTitleAndURL(PrintObject* aPO, char *& aDocStr, char *& aURLStr
   aDocStr = nsnull;
   aURLStr = nsnull;
 
+  PRUnichar * mozillaDoc = ToNewUnicode(NS_LITERAL_STRING("Mozilla Document"));
   PRUnichar * docTitleStr;
   PRUnichar * docURLStr;
-  DocumentViewerImpl::GetDisplayTitleAndURL(aPO, nsnull, &docTitleStr, &docURLStr, DocumentViewerImpl::eDocTitleDefURLDoc); 
+  DocumentViewerImpl::GetDisplayTitleAndURL(aPO, nsnull, mozillaDoc, &docTitleStr, &docURLStr, DocumentViewerImpl::eDocTitleDefURLDoc); 
 
   if (docTitleStr) {
     nsAutoString strDocTitle(docTitleStr);
@@ -2137,6 +2158,10 @@ static void GetDocTitleAndURL(PrintObject* aPO, char *& aDocStr, char *& aURLStr
     nsAutoString strURL(docURLStr);
     aURLStr = ToNewCString(strURL);
     nsMemory::Free(docURLStr);
+  }
+
+  if (mozillaDoc) {
+    nsMemory::Free(mozillaDoc);
   }
 }
 
@@ -2555,12 +2580,14 @@ DocumentViewerImpl::GetWebShellTitleAndURL(nsIWebShell * aWebShell,
 // then if not title is there we will make sure we send something back
 // depending on the situation.
 void
-DocumentViewerImpl::GetDisplayTitleAndURL(PrintObject* aPO,
+DocumentViewerImpl::GetDisplayTitleAndURL(PrintObject*      aPO,
                                           nsIPrintSettings* aPrintSettings,
+                                          const PRUnichar*  aBrandName,
                                           PRUnichar**       aTitle, 
                                           PRUnichar**       aURLStr,
                                           eDocTitleDefault  aDefType)
 {
+  NS_ASSERTION(aBrandName, "Pointer is null!");
   NS_ASSERTION(aPO, "Pointer is null!");
   NS_ASSERTION(aTitle, "Pointer is null!");
   NS_ASSERTION(aURLStr, "Pointer is null!");
@@ -2604,14 +2631,14 @@ DocumentViewerImpl::GetDisplayTitleAndURL(PrintObject* aPO,
         case eDocTitleDefBlank: *aTitle = ToNewUnicode(NS_LITERAL_STRING(""));
           break;
 
-        case eDocTitleDefDocument: *aTitle = ToNewUnicode(NS_LITERAL_STRING("Mozilla Document"));
+        case eDocTitleDefDocument: if (aBrandName) *aTitle = nsCRT::strdup(aBrandName);
           break;
 
         case eDocTitleDefURLDoc: 
           if (*aURLStr) {
             *aTitle = nsCRT::strdup(*aURLStr);
           } else {
-            *aTitle = ToNewUnicode(NS_LITERAL_STRING("Mozilla Document"));
+            if (aBrandName) *aTitle = nsCRT::strdup(aBrandName);
           }
           break;
 
@@ -4281,7 +4308,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
         if (!skipSetTitle) {
           PRUnichar * docTitleStr;
           PRUnichar * docURLStr;
-          GetDisplayTitleAndURL(aPO, mPrt->mPrintSettings, &docTitleStr, &docURLStr, eDocTitleDefBlank); 
+          GetDisplayTitleAndURL(aPO, mPrt->mPrintSettings, mPrt->mBrandName, &docTitleStr, &docURLStr, eDocTitleDefBlank); 
 
           // Set them down into the PrintOptions so 
           // they can used by the DeviceContext
@@ -6066,7 +6093,7 @@ DocumentViewerImpl::SetDocAndURLIntoProgress(PrintObject* aPO, nsIPrintProgressP
 
   PRUnichar * docTitleStr;
   PRUnichar * docURLStr;
-  GetDisplayTitleAndURL(aPO, mPrt->mPrintSettings, &docTitleStr, &docURLStr, eDocTitleDefDocument);
+  GetDisplayTitleAndURL(aPO, mPrt->mPrintSettings, mPrt->mBrandName, &docTitleStr, &docURLStr, eDocTitleDefDocument);
 
   // Make sure the URLS don't get too long for the progress dialog
   if (docURLStr && nsCRT::strlen(docURLStr) > kTitleLength) {
@@ -6489,7 +6516,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
             PRUnichar * docTitleStr;
             PRUnichar * docURLStr;
-            GetDisplayTitleAndURL(mPrt->mPrintObject, mPrt->mPrintSettings, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
+            GetDisplayTitleAndURL(mPrt->mPrintObject, mPrt->mPrintSettings, mPrt->mBrandName, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
 
             // BeginDocument may pass back a FAILURE code
             // i.e. On Windows, if you are printing to a file and hit "Cancel" 
