@@ -86,7 +86,7 @@ nsPopupWindowManager::Init()
     if (NS_FAILED(rv)) {
       permission = PR_FALSE;
     }
-    mPolicy = permission ? DENY_POPUP : ALLOW_POPUP;
+    mPolicy = permission ? (PRUint32) DENY_POPUP : (PRUint32) ALLOW_POPUP;
 
     nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(mPrefBranch, &rv);
     if (NS_SUCCEEDED(rv)) {
@@ -159,7 +159,7 @@ nsPopupWindowManager::Observe(nsISupports *aSubject,
     if (mPrefBranch) {
       mPrefBranch->GetBoolPref(kPopupDisablePref, &permission);
     }
-    mPolicy = permission ? DENY_POPUP : ALLOW_POPUP;
+    mPolicy = permission ? (PRUint32) DENY_POPUP : (PRUint32) ALLOW_POPUP;
   }
   return NS_OK;
 }
