@@ -239,6 +239,11 @@ ifeq (,$(filter BeOS HP-UX WINNT OpenVMS,$(OS_ARCH)))
 LDFLAGS		+= -lm
 endif
 
+# Prevent floating point errors caused by VC++ optimizations
+ifeq ($(OS_ARCH),WINNT)
+CFLAGS += /Op
+endif # WINNT
+
 ifeq ($(OS_ARCH),FreeBSD)
 LDFLAGS		+= -pthread
 endif

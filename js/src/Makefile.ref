@@ -83,6 +83,11 @@ ifndef NO_LIBM
 LDFLAGS += -lm
 endif
 
+# Prevent floating point errors caused by VC++ optimizations
+ifeq ($(OS_ARCH),WINNT)
+CFLAGS += /Op
+endif # WINNT
+
 #
 # Ask perl what flags it was built with, so we can build js with similar flags
 # and link properly.  Viva gmake.
