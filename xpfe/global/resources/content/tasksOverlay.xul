@@ -75,6 +75,7 @@
               <menuitem value="&historyCmd.label;" oncommand="toHistory()"/>
               <menuitem value="&importUtilCmd.label;" oncommand="toImport()"/>
               <menuitem value="&javaConsoleCmd.label;" oncommand="toJavaConsole()"/>
+              <menuitem value="&javaScriptConsoleCmd.label;" oncommand="toJavaScriptConsole();"/>
             </menupopup>
           </menu>
           <menuseparator/>

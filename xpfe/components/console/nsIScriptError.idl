@@ -50,6 +50,12 @@ interface nsIScriptError : nsIConsoleMessage
     readonly attribute PRUint32 columnNumber;
     readonly attribute PRUint32 flags;
 
+    /**
+     * Categories I know about -
+     * XUL javascript
+     * content javascript (both of these from nsDocShell, currently)
+     * component javascript (errors in JS components)
+     */
     readonly attribute string category;
 
     void init(in wstring message,
