@@ -2721,15 +2721,16 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
                     NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr<nsIMsgIncomingServer> aServer;
+    nsCOMPtr<nsIMsgIncomingServer> server;
     rv = accountManager->FindServer(userName, hostName, "imap",
-                                    getter_AddRefs(aServer));
+                                    getter_AddRefs(server));
     // if we can't extract the imap server from this url then give up!!!
     if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
 
     // now try to get the folder in question...
     nsCOMPtr<nsIFolder> aRootFolder;
-    aServer->GetRootFolder(getter_AddRefs(aRootFolder));
+    server->GetRootFolder(getter_AddRefs(aRootFolder));
 
     if (aRootFolder && folderName && (* ((const char *) folderName)) )
     {
