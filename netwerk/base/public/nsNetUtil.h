@@ -80,6 +80,7 @@
 #include "nsIInputStreamPump.h"
 #include "nsIAsyncStreamCopier.h"
 #include "nsIPersistentProperties2.h"
+#include "nsISyncStreamListener.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByCID
@@ -444,6 +445,47 @@ NS_NewUnicharStreamLoader(nsIUnicharStreamLoader        **aResult,
         rv = loader->Init(aChannel, aObserver, aContext, aSegmentSize);
         if (NS_SUCCEEDED(rv))
             NS_ADDREF(*aResult = loader);
+    }
+    return rv;
+}
+
+inline nsresult
+NS_NewSyncStreamListener(nsIStreamListener **aResult,
+                         nsIInputStream    **aStream)
+{
+    nsresult rv;
+    static NS_DEFINE_CID(kSyncStreamListenerCID, NS_SYNCSTREAMLISTENER_CID);
+    nsCOMPtr<nsISyncStreamListener> listener =
+        do_CreateInstance(kSyncStreamListenerCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = listener->GetInputStream(aStream);
+        if (NS_SUCCEEDED(rv))
+            NS_ADDREF(*aResult = listener);
+    }
+    return rv;
+}
+
+/**
+ * Implement the nsIChannel::Open(nsIInputStream**) method using the channel's
+ * AsyncOpen method.
+ */
+inline nsresult
+NS_ImplementChannelOpen(nsIChannel      *aChannel,
+                        nsIInputStream **aResult)
+{
+    nsCOMPtr<nsIStreamListener> listener;
+    nsCOMPtr<nsIInputStream> stream;
+    nsresult rv = NS_NewSyncStreamListener(getter_AddRefs(listener),
+                                           getter_AddRefs(stream));
+    if (NS_SUCCEEDED(rv)) {
+        rv = aChannel->AsyncOpen(listener, nsnull);
+        if (NS_SUCCEEDED(rv)) {
+            PRUint32 n;
+            // block until the initial response is received or an error occurs.
+            rv = stream->Available(&n);
+            if (NS_SUCCEEDED(rv))
+                NS_ADDREF(*aResult = stream);
+        }
     }
     return rv;
 }

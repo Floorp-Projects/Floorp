@@ -166,8 +166,7 @@ nsDateTimeChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsDateTimeChannel::Open(nsIInputStream **_retval)
 {
-    NS_NOTREACHED("nsDateTimeChannel::Open");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ImplementChannelOpen(this, _retval);
 }
 
 NS_IMETHODIMP

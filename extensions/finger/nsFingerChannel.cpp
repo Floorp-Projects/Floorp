@@ -185,8 +185,7 @@ nsFingerChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsFingerChannel::Open(nsIInputStream **_retval)
 {
-    NS_NOTREACHED("nsFingerChannel::Open");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ImplementChannelOpen(this, _retval);
 }
 
 NS_IMETHODIMP

@@ -253,8 +253,7 @@ nsFTPChannel::GetURI(nsIURI* *aURL)
 NS_IMETHODIMP
 nsFTPChannel::Open(nsIInputStream **result)
 {
-    NS_NOTREACHED("nsFTPChannel::Open");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ImplementChannelOpen(this, result);
 }
 
 nsresult

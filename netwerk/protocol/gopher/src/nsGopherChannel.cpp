@@ -236,8 +236,7 @@ nsGopherChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsGopherChannel::Open(nsIInputStream **_retval)
 {
-    NS_NOTREACHED("nsGopherChannel::Open");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ImplementChannelOpen(this, _retval);
 }
 
 NS_IMETHODIMP

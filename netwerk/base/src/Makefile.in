@@ -61,6 +61,7 @@ CPPSRCS		= \
 		nsSocketTransportService2.cpp \
 		nsStreamListenerTee.cpp \
 		nsStreamLoader.cpp \
+		nsSyncStreamListener.cpp \
 		nsUnicharStreamLoader.cpp \
 		nsURIChecker.cpp \
 		nsURLHelper.cpp \
