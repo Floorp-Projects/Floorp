@@ -760,7 +760,24 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 //-------------------------------------------------------------------------
 nsIRenderingContext* nsWindow::GetRenderingContext()
 {
-  return nsnull ;
+  nsIRenderingContext * ctx = nsnull;
+
+  if (GetNativeData(NS_NATIVE_WIDGET)) {
+    nsresult  res;
+    
+    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+    static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+    
+    res = NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
+    
+    if (NS_OK == res)
+      ctx->Init(mContext, this);
+    
+    NS_ASSERTION(NULL != ctx, "Null rendering context");
+  }
+  
+  return ctx;
+
 }
 
 //-------------------------------------------------------------------------
