@@ -2037,12 +2037,13 @@ nsMsgAccountManager::OnStartRunningUrl(nsIURI * aUrl)
 NS_IMETHODIMP
 nsMsgAccountManager::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
-  if (m_folderDoingEmptyTrash)
+  if (m_folderDoingEmptyTrash) 
   {
     PR_CEnterMonitor(m_folderDoingEmptyTrash);
     PR_CNotifyAll(m_folderDoingEmptyTrash);
     m_emptyTrashInProgress = PR_FALSE;
     PR_CExitMonitor(m_folderDoingEmptyTrash);
+    m_folderDoingEmptyTrash = nsnull;  //reset to nsnull;
   }
   else if (m_folderDoingCleanupInbox)
   {
@@ -2050,6 +2051,7 @@ nsMsgAccountManager::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
     PR_CNotifyAll(m_folderDoingCleanupInbox);
     m_cleanupInboxInProgress = PR_FALSE;
     PR_CExitMonitor(m_folderDoingCleanupInbox);
+    m_folderDoingCleanupInbox=nsnull;   //reset to nsnull
   }
   return NS_OK;
 }
