@@ -3017,7 +3017,6 @@ main
     }
 #endif
 
-  NPL_Init();
 
 #ifdef NSPR_SPLASH
   if (fe_globalData.show_splash)
@@ -3058,6 +3057,8 @@ main
     XP_FREEIF(rdf_params.globalHistoryURL);
   }
 #endif /*XFE_RDF*/
+
+  NPL_Init();
 
   /* Do some late initialization */
   fe_late_init();
