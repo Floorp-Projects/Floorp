@@ -40,7 +40,7 @@ public class CPGenerator
 	public static final int			DONE = 0;
 	public static final int			ABORT = -1;
 	
-	public static final String		FEATURE_STRING = "FEATURES";
+	public static final String		FEATURE_STRING = "Features";
 	public static final int			FEATURE_COUNT = 8;
 	public static final boolean		DEBUG = true;
 	
@@ -655,34 +655,34 @@ public class CPGenerator
     //          "CST_AREA_CODE_3=408" } );
     }
 
-    private static void parseFeatureSet( NameValueSet ispSet, NameValueSet featureMapping )
-    {
-        String      featureList = ispSet.getValue( FEATURE_STRING );
-        //Trace.TRACE( "features: " + featureList );
+	private static void parseFeatureSet( NameValueSet ispSet, NameValueSet featureMapping )
+	{
+		String      featureList = ispSet.getValue( FEATURE_STRING );
+		Trace.TRACE( "features: " + featureList );
 
-        for ( int i = 1; i <= FEATURE_COUNT; i++ )
-        {
-            String      featureName = "feature" + i;
-            String      featureMappedName = featureMapping.getValue( featureName );
-
-            //Trace.TRACE( featureName + " mapped to " + featureMappedName );
-
-            // * featureMappedName will be something like "hosting" or "freetime"
+		for ( int i = 1; i <= FEATURE_COUNT; i++ )
+		{
+		    String      featureName = "feature" + i;
+			String      featureMappedName = featureMapping.getValue( featureName );
+			
+			Trace.TRACE( featureName + " mapped to " + featureMappedName );
+			
+			// * featureMappedName will be something like "hosting" or "freetime"
             if (    featureMappedName != null &&
                     featureList != null &&
                     featureMappedName.compareTo( "" ) != 0 &&
                     featureList.indexOf( featureMappedName ) != -1 )
             {
-                //Trace.TRACE( "going to show" );
-                ispSet.setValue( featureName, "SHOW" );
-            }
+				Trace.TRACE( "showing " +  featureName );
+				ispSet.setValue( featureName, "SHOW" );
+			}
             else
             {
-                //Trace.TRACE( "going to hide" );
-                ispSet.setValue( featureName, "HIDE" );
-            }
-        }
-    }
+				Trace.TRACE( "hiding " + featureName );
+				ispSet.setValue( featureName, "HIDE" );
+			}
+		}
+	}
 
 	private static void downloadAndUnzipMetadata( String rootURL ) throws Throwable
 	{
