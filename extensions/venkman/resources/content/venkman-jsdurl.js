@@ -163,16 +163,7 @@ function con_loadservicetpl (name, sections, callback)
     }
     
     var url = console.prefs[prefName];
-    try
-    {
-        var data = loadURLNow (url);
-        onComplete (data, url, Components.results.NS_OK);
-    }
-    catch (ex)
-    {
-        dd ("forced to load " + url + " async.");
-        loadURLAsync (url, { onComplete: onComplete });
-    }
+    loadURLAsync (url, { onComplete: onComplete });
 }
         
 console.asyncOpenJSDURL = asyncOpenJSDURL;

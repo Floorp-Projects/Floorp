@@ -1178,20 +1178,15 @@ function st_loadsrc (cb)
     var ex;
     var src;
     var url = this.url;
-    try
+    if (url.search (/^javascript:/i) == 0)
     {
-        if (url.search (/^javascript:/i) == 0)
-            src = url;
-        else
-            src = loadURLNow(url);
+        src = url;
         delete this.isLoading;
     }
-    catch (ex)
+    else
     {
-        /* if we can't load it now, try to load it later */
         try
         {
-            // dd ("trying async");
             loadURLAsync (url, { onComplete: onComplete });
             return;
         }

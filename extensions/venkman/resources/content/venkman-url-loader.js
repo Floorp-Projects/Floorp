@@ -59,7 +59,13 @@ function loadURLNow (url)
         Components.classes[SIS_CTRID].createInstance(nsIScriptableInputStream);
     instream.init (chan.open());
 
-    return instream.read (instream.available());
+    var result = "";
+    var avail;
+
+    while ((avail = instream.available()) > 0)
+        result += instream.read(avail);
+
+    return result;
 }
 
 function loadURLAsync (url, observer)
