@@ -674,6 +674,11 @@ oeICalImpl::SetServer( const char *str ) {
 
     icalset *stream;
     
+    //UGLY HACK TO ADD DEPENDANCY TO stat() in libc. ( -lc didn't work )
+    int dummy=0;
+    if( dummy )
+        stat(NULL,NULL);
+
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
         #ifdef ICAL_DEBUG
