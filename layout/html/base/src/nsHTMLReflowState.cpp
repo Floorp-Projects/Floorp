@@ -205,11 +205,11 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* aContaining
         aComputedRightMargin = availMarginSpace - aComputedLeftMargin;
       }
     } else {
-      aComputedLeftMargin = PR_MAX(0, availMarginSpace - aComputedRightMargin);
+      aComputedLeftMargin = availMarginSpace - aComputedRightMargin;
     }
 
   } else if (isAutoRightMargin) {
-    aComputedRightMargin = PR_MAX(0, availMarginSpace - aComputedLeftMargin);
+    aComputedRightMargin = availMarginSpace - aComputedLeftMargin;
   }
 }
 
