@@ -606,6 +606,25 @@ nsExpatDriver::HandleEndDoctypeDecl()
   return NS_OK;
 }
 
+static NS_METHOD
+ExternalDTDStreamReaderFunc(nsIUnicharInputStream* aIn,
+                            void* aClosure,
+                            const PRUnichar* aFromSegment,
+                            PRUint32 aToOffset,
+                            PRUint32 aCount,
+                            PRUint32 *aWriteCount)
+{
+  // Pass the buffer to expat for parsing. XML_Parse returns 0 for
+  // fatal errors.
+  if (XML_Parse((XML_Parser)aClosure, (char *)aFromSegment, 
+                aCount * sizeof(PRUnichar), 0)) {
+    *aWriteCount = aCount;
+    return NS_OK;
+  }
+  *aWriteCount = 0;
+  return NS_ERROR_FAILURE;
+}
+
 int 
 nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
                                        const PRUnichar *base,
@@ -650,24 +669,17 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
         (const XML_Char*) NS_LITERAL_STRING("UTF-16").get());
 
     if (entParser) {
-      PRUint32 readCount = 0;
-      PRUnichar uniBuff[1024] = {0};
-
       XML_SetBase(entParser, (const XML_Char*) absURL.get());
 
       mInExternalDTD = PR_TRUE;
 
-      while (NS_SUCCEEDED(uniIn->Read(uniBuff, 1024, &readCount)) && result) {
-        if (readCount) {
-          // Pass the buffer to expat for parsing
-          result = XML_Parse(entParser, (char *)uniBuff,  readCount * sizeof(PRUnichar), 0);
-        }
-        else {
-          // done reading
-          result = XML_Parse(entParser, nsnull, 0, 1);
-          break;
-        }
-      }
+      PRUint32 totalRead;
+      do {
+        rv = uniIn->ReadSegments(ExternalDTDStreamReaderFunc, 
+                                 (void*)entParser, PRUint32(-1), &totalRead);
+      } while (NS_SUCCEEDED(rv) && totalRead > 0);
+
+      result = XML_Parse(entParser, nsnull, 0, 1);
 
       mInExternalDTD = PR_FALSE;
 
