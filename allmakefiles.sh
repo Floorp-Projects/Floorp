@@ -812,6 +812,7 @@ embedding/tests/mfcembed/components/Makefile
 
 MAKEFILES_minimo="
 embedding/minimo/Makefile
+embedding/minimo/app/Makefile
 embedding/minimo/chromelite/Makefile
 "
 
