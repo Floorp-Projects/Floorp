@@ -2119,7 +2119,7 @@ nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsFrame::WillReflow(nsIPresContext* aPresContext)
 {
-#ifdef DEBUG_dbaron
+#ifdef DEBUG_dbaron_off
   // bug 81268
   NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
                "nsFrame::WillReflow: frame is already in reflow");

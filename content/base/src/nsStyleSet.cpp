@@ -930,7 +930,7 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
 #if defined(DEBUG_warren) || defined(DEBUG_attinasi)
     printf( "%s Quirk StyleSheet\n", aEnable ? "Enabling" : "Disabling" );
 #endif
-#ifdef DEBUG_dbaron // XXX Make this |DEBUG| once it stops firing.
+#ifdef DEBUG_dbaron_off // XXX Make this |DEBUG| once it stops firing.
     PRUint32 count = 0;
     if (mAgentRuleProcessors)
       mAgentRuleProcessors->Count(&count);
