@@ -27,6 +27,7 @@
 
 #include "MoreFilesExtras.h"
 #include "MoreDesktopMgr.h"
+#include "IterateDirectory.h"
 
 OSErr DTSetAPPL(Str255 volName,
                 short vRefNum,
@@ -203,7 +204,72 @@ nsAppleSingleDecoder::Decode(FSSpec *inSpec, FSSpec *outSpec)
 	
 	return err;
 }
- 
+
+pascal void
+DecodeDirIterateFilter(const CInfoPBRec * const cpbPtr, Boolean *quitFlag, void *yourDataPtr)
+{	
+	OSErr					err = noErr;
+	FSSpec 					currFSp, outFSp;
+	nsAppleSingleDecoder* 	thisObj = NULL;
+	Boolean					isDir = false;
+	long					dummy;
+	
+	// param check
+	if (!yourDataPtr || !cpbPtr || !quitFlag)
+		return;
+		
+	*quitFlag = false;
+	
+	// extract 'this' -- an nsAppleSingleDecoder instance
+	thisObj = (nsAppleSingleDecoder*) yourDataPtr;
+	
+	// make an FSSpec from the CInfoPBRec*
+	err = FSMakeFSSpec(cpbPtr->hFileInfo.ioVRefNum, cpbPtr->hFileInfo.ioFlParID, 
+						cpbPtr->hFileInfo.ioNamePtr, &currFSp);
+	if (err == noErr)
+	{
+		FSpGetDirectoryID(&currFSp, &dummy, &isDir);
+		
+		// if current FSSpec is file
+		if (!isDir)
+		{
+			// if file is in AppleSingle format
+			if (nsAppleSingleDecoder::IsAppleSingleFile(&currFSp))
+			{
+				// decode file
+				thisObj->Decode(&currFSp, &outFSp);
+			}
+		}
+		else
+		{
+			// else if current FSSpec is folder ignore
+			// XXX never reached?
+			return;
+		}
+	}
+}
+
+OSErr 
+nsAppleSingleDecoder::DecodeFolder(FSSpec *aFolder)
+{
+	OSErr	err = noErr;
+	long	dummy;
+	Boolean	isDir = false;
+	
+	// check that FSSpec is folder
+	if (aFolder)
+	{
+		FSpGetDirectoryID(aFolder, &dummy, &isDir);
+		if (!isDir)
+			return dirNFErr;
+	}
+	
+	// recursively enumerate contents of folder (maxLevels=0 means recurse all)
+	FSpIterateDirectory(aFolder, 0, DecodeDirIterateFilter, (void*)this);
+			
+	return err;
+}
+
 Boolean
 nsAppleSingleDecoder::IsAppleSingleFile(FSSpec *inSpec)
 {
