@@ -4993,7 +4993,7 @@ EOF
     GFXWIN_DLL='\"gfx_$(MOZ_GFX_TOOLKIT)$(DLL_SUFFIX)\"'
     MOZ_ENABLE_POSTSCRIPT=
     RC=rc.exe
-    RCFLAGS=-n -x2
+    RCFLAGS='-n -x2'
 
     # EMX/GCC build
     if test "$GNU_CC"; then
