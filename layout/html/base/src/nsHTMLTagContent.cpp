@@ -169,6 +169,7 @@ nsContentAttr nsHTMLTagContent::GetAttribute(const nsString& aName,
     case eHTMLUnit_Percent:
       aResult.Truncate(0);
       aResult.Append(PRInt32(value.GetPercentValue() * 100.0f), 10);
+      aResult.Append('%');
       break;
 
     case eHTMLUnit_Color:
@@ -618,9 +619,10 @@ PRBool nsHTMLTagContent::TableAlignParamToString(const nsHTMLValue& aValue,
   return EnumValueToString(aValue, kTableAlignTable, aResult);
 }
 
-void nsHTMLTagContent::ParseValueOrPercent(const nsString& aString,
-                                           nsHTMLValue& aResult, 
-                                           nsHTMLUnit aValueUnit)
+void
+nsHTMLTagContent::ParseValueOrPercent(const nsString& aString,
+                                      nsHTMLValue& aResult, 
+                                      nsHTMLUnit aValueUnit)
 { // XXX should vave min/max values?
   nsAutoString tmp(aString);
   tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
@@ -639,14 +641,15 @@ void nsHTMLTagContent::ParseValueOrPercent(const nsString& aString,
   }
 }
 
-/* used to parser attribute values that could be either:
+/* used to parse attribute values that could be either:
  *   integer  (n), 
  *   percent  (n%),
  *   or proportional (n*)
  */
-void nsHTMLTagContent::ParseValueOrPercentOrProportional(const nsString& aString,
-    																										 nsHTMLValue& aResult, 
-																												 nsHTMLUnit aValueUnit)
+void
+nsHTMLTagContent::ParseValueOrPercentOrProportional(const nsString& aString,
+                                                    nsHTMLValue& aResult, 
+                                                    nsHTMLUnit aValueUnit)
 { // XXX should have min/max values?
   nsAutoString tmp(aString);
   tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
@@ -668,8 +671,9 @@ void nsHTMLTagContent::ParseValueOrPercentOrProportional(const nsString& aString
   }
 }
 
-PRBool nsHTMLTagContent::ValueOrPercentToString(const nsHTMLValue& aValue,
-                                                nsString& aResult)
+PRBool
+nsHTMLTagContent::ValueOrPercentToString(const nsHTMLValue& aValue,
+                                         nsString& aResult)
 {
   aResult.Truncate(0);
   switch (aValue.GetUnit()) {
@@ -687,8 +691,9 @@ PRBool nsHTMLTagContent::ValueOrPercentToString(const nsHTMLValue& aValue,
   return PR_FALSE;
 }
 
-void nsHTMLTagContent::ParseValue(const nsString& aString, PRInt32 aMin,
-                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
+void
+nsHTMLTagContent::ParseValue(const nsString& aString, PRInt32 aMin,
+                             nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
 {
   PRInt32 ec, val = aString.ToInteger(&ec);
   if (val < aMin) val = aMin;
