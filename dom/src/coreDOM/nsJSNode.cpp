@@ -740,7 +740,7 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
 
   nsAutoString b0;
-  nsIDOMEventListener* b1;
+  nsIDOMEventListenerPtr b1;
   PRBool b2;
 
   *rval = JSVAL_NULL;
@@ -769,7 +769,7 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-    if (!nsJSUtils::nsConvertJSValToFunc(&b1,
+    if (!nsJSUtils::nsConvertJSValToFunc((nsIDOMEventListener**)(nsISupports**) &b1,
                                          cx,
                                          obj,
                                          argv[1])) {
@@ -805,7 +805,7 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
 
   nsAutoString b0;
-  nsIDOMEventListener* b1;
+  nsIDOMEventListenerPtr b1;
   PRBool b2;
 
   *rval = JSVAL_NULL;
@@ -834,7 +834,7 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-    if (!nsJSUtils::nsConvertJSValToFunc(&b1,
+    if (!nsJSUtils::nsConvertJSValToFunc((nsIDOMEventListener**)(nsISupports**) &b1,
                                          cx,
                                          obj,
                                          argv[1])) {
