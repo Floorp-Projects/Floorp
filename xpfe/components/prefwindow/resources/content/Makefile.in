@@ -69,6 +69,7 @@ CHROME_CONTENT = \
 		pref-proxy-manual.xul \
 		pref-mousewheel.xul \
 		pref-wallet.xul \
+		pref-passwords.xul \
 		pref-search.js \
 		pref-search.xul \
 		pref-smart_browsing.xul \

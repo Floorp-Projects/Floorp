@@ -55,6 +55,7 @@ CHROME_L10N = \
 	.\preftree.dtd \
 	.\pref.dtd \
 	.\pref-wallet.dtd \
+	.\pref-passwords.dtd \
 	.\pref-mousewheel.dtd \
 	.\pref-winhooks.dtd \
 	$(NULL)

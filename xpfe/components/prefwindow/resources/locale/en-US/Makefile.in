@@ -58,6 +58,7 @@ CHROME_L10N = \
 		pref-smartupdate.dtd \
 		pref-mousewheel.dtd	\
 		pref-wallet.dtd	\
+		pref-passwords.dtd	\
 		prefutilities.properties	\
 		preftree.dtd \
 		pref.dtd \
