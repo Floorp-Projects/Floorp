@@ -451,18 +451,16 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     nsAllocator::Free(buffer);
 
     // send the converted data out.
-    nsIInputStream *inputData = nsnull;
-    nsISupports *inputDataSup = nsnull;
+    nsCOMPtr<nsIInputStream> inputData;
+    nsCOMPtr<nsISupports>    inputDataSup;
 
-    rv = NS_NewStringInputStream(&inputDataSup, indexFormat);
+    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), indexFormat);
     if (NS_FAILED(rv)) return rv;
 
-    rv = inputDataSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inputData);
-    NS_RELEASE(inputDataSup);
+    inputData = do_QueryInterface(inputDataSup, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = mFinalListener->OnDataAvailable(mPartChannel, ctxt, inputData, 0, indexFormat.Length());
-    NS_RELEASE(inputData);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -994,6 +992,10 @@ nsFTPDirListingConv::InitPRExplodedTime(PRExplodedTime& aTime) {
     aTime.tm_mday = 0;
     aTime.tm_month= 0;
     aTime.tm_year = 0;
+    aTime.tm_wday = 0;
+    aTime.tm_yday = 0;
+    aTime.tm_params.tp_gmt_offset = 0;
+    aTime.tm_params.tp_dst_offset = 0;
 
     // localize this sucker.
     PRTimeParameters params = PR_LocalTimeParameters(&aTime);
