@@ -900,8 +900,8 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 		LL_I2L(million, PR_USEC_PER_SEC);
 		LL_MUL(dateVal, temp, million);		// convert from seconds to microseconds (PRTime)
 
-		nsIRDFDate	*dateLiteral;
-		if (NS_FAILED(rv = gRDF->GetDateLiteral(dateVal, &dateLiteral)))
+		nsCOMPtr<nsIRDFDate>	dateLiteral;
+		if (NS_FAILED(rv = gRDF->GetDateLiteral(dateVal, getter_AddRefs(dateLiteral))))
 		{
 			NS_ERROR("unable to get date literal for time");
 			return(rv);
@@ -909,8 +909,6 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 
 		rv = mDataSource->Assert(aSource, aLabel, dateLiteral, PR_TRUE);
 		NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert time");
-
-		NS_RELEASE(dateLiteral);
 	}
 	return(rv);
 }
@@ -934,6 +932,7 @@ protected:
 	nsresult WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root);
 	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *container, PRInt32 level);
 	nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
+	nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
 	nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *node,
 					 nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst);
 	PRBool CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
@@ -1214,6 +1213,34 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 
 
 
+nsresult
+nsBookmarksService::UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource)
+{
+	nsCOMPtr<nsIRDFDate>	now;
+	nsresult		rv;
+
+	if (NS_SUCCEEDED(rv = gRDF->GetDateLiteral(PR_Now(), getter_AddRefs(now))))
+	{
+		nsCOMPtr<nsIRDFNode>	lastMod;
+
+		// Note: always use mInner!! Otherwise, could get into an infinite loop
+		// due to Assert/Change calling UpdateBookmarkLastModifiedDate()
+
+		if (NS_SUCCEEDED(rv = mInner->GetTarget(aSource, kWEB_LastModifiedDate, PR_TRUE,
+			getter_AddRefs(lastMod))) && (rv != NS_RDF_NO_VALUE))
+		{
+			rv = mInner->Change(aSource, kWEB_LastModifiedDate, lastMod, now);
+		}
+		else
+		{
+			rv = mInner->Assert(aSource, kWEB_LastModifiedDate, now, PR_TRUE);
+		}
+	}
+	return(rv);
+}
+
+
+
 NS_IMETHODIMP
 nsBookmarksService::FindShortcut(const PRUnichar *aUserInput, char **aShortcutURL)
 {
@@ -1374,12 +1401,16 @@ nsBookmarksService::Assert(nsIRDFResource* aSource,
 			   nsIRDFNode* aTarget,
 			   PRBool aTruthValue)
 {
-	if (CanAccept(aSource, aProperty, aTarget)) {
-		return mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
+	nsresult	rv = NS_RDF_ASSERTION_REJECTED;
+
+	if (CanAccept(aSource, aProperty, aTarget))
+	{
+		if (NS_SUCCEEDED(rv = mInner->Assert(aSource, aProperty, aTarget, aTruthValue)))
+		{
+			UpdateBookmarkLastModifiedDate(aSource);
+		}
 	}
-	else {
-		return NS_RDF_ASSERTION_REJECTED;
-	}
+	return(rv);
 }
 
 
@@ -1389,12 +1420,16 @@ nsBookmarksService::Unassert(nsIRDFResource* aSource,
 			     nsIRDFResource* aProperty,
 			     nsIRDFNode* aTarget)
 {
-	if (CanAccept(aSource, aProperty, aTarget)) {
-		return mInner->Unassert(aSource, aProperty, aTarget);
+	nsresult	rv = NS_RDF_ASSERTION_REJECTED;
+
+	if (CanAccept(aSource, aProperty, aTarget))
+	{
+		if (NS_SUCCEEDED(rv = mInner->Unassert(aSource, aProperty, aTarget)))
+		{
+			UpdateBookmarkLastModifiedDate(aSource);
+		}
 	}
-	else {
-		return NS_RDF_ASSERTION_REJECTED;
-	}
+	return(rv);
 }
 
 
@@ -1405,12 +1440,16 @@ nsBookmarksService::Change(nsIRDFResource* aSource,
 			   nsIRDFNode* aOldTarget,
 			   nsIRDFNode* aNewTarget)
 {
-	if (CanAccept(aSource, aProperty, aNewTarget)) {
-		return mInner->Change(aSource, aProperty, aOldTarget, aNewTarget);
+	nsresult	rv = NS_RDF_ASSERTION_REJECTED;
+
+	if (CanAccept(aSource, aProperty, aNewTarget))
+	{
+		if (NS_SUCCEEDED(rv = mInner->Change(aSource, aProperty, aOldTarget, aNewTarget)))
+		{
+			UpdateBookmarkLastModifiedDate(aSource);
+		}
 	}
-	else {
-		return NS_RDF_ASSERTION_REJECTED;
-	}
+	return(rv);
 }
 
 
@@ -1421,12 +1460,17 @@ nsBookmarksService::Move(nsIRDFResource* aOldSource,
 			 nsIRDFResource* aProperty,
 			 nsIRDFNode* aTarget)
 {
-	if (CanAccept(aNewSource, aProperty, aTarget)) {
-		return mInner->Move(aOldSource, aNewSource, aProperty, aTarget);
+	nsresult	rv = NS_RDF_ASSERTION_REJECTED;
+
+	if (CanAccept(aNewSource, aProperty, aTarget))
+	{
+		if (NS_SUCCEEDED(rv = mInner->Move(aOldSource, aNewSource, aProperty, aTarget)))
+		{
+			UpdateBookmarkLastModifiedDate(aOldSource);
+			UpdateBookmarkLastModifiedDate(aNewSource);
+		}
 	}
-	else {
-		return NS_RDF_ASSERTION_REJECTED;
-	}
+	return(rv);
 }
 
 
