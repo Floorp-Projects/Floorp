@@ -552,7 +552,6 @@ nsTextFrame::Paint(nsIPresContext& aPresContext,
   if ((0 != (mFlags & TEXT_BLINK_ON)) && gBlinkTextOff) {
     return NS_OK;
   }
-
   nsIStyleContext* sc = mStyleContext;
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     sc->GetStyleData(eStyleStruct_Display);
@@ -1835,7 +1834,7 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   nsFrameState  frameState;
   GetFrameState(&frameState);
   PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
-  if (aSelected == isSelected) //allready set thanks
+  if (!aSelected && !isSelected) //already set thanks
   {
     return NS_OK;
   }
@@ -2196,6 +2195,20 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
   }
     break;
   case eSelectLine : 
+#if 0
+    {
+      // Cleanup
+      if (paintBuf != paintBufMem) {
+        delete [] paintBuf;
+      }
+      if (ip != indicies) {
+        delete [] ip;
+      }
+      return nsFrame::PeekOffset(aAmount, aDirection, aStartOffset,
+                        aResultContent, aContentOffset, aEatingWS) 
+    }
+    break;
+#endif
   default: result = NS_ERROR_FAILURE; break;
   }
   // Cleanup

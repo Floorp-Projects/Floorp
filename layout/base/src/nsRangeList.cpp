@@ -59,7 +59,7 @@ static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *a
 
 
 
-#if 1
+#if 0
 #define DEBUG_OUT_RANGE(x)  printRange(x)
 #else
 #define DEBUG_OUT_RANGE(x)  
@@ -612,10 +612,9 @@ void nsRangeList::setAnchorFocusRange(PRInt32 index)
 nsIDOMNode*
 nsRangeList::FetchAnchorNode()
 {  //where did the selection begin
-  nsCOMPtr<nsIDOMNode>retval;
-  if (NS_SUCCEEDED(GetAnchorNode(getter_AddRefs(retval))))//this queries
-    return retval;
-  return nsnull;
+  nsCOMPtr<nsIDOMNode>returnval;
+  GetAnchorNode(getter_AddRefs(returnval));//this queries
+  return returnval;
 }//at end it will release, no addreff was called
 
 
@@ -623,9 +622,9 @@ nsRangeList::FetchAnchorNode()
 PRInt32
 nsRangeList::FetchAnchorOffset()
 {
-  PRInt32 retval;
-  if (NS_SUCCEEDED(GetAnchorOffset(&retval)))//this queries
-    return retval;
+  PRInt32 returnval;
+  if (NS_SUCCEEDED(GetAnchorOffset(&returnval)))//this queries
+    return returnval;
   return 0;
 }
 
@@ -634,11 +633,10 @@ nsRangeList::FetchAnchorOffset()
 nsIDOMNode*
 nsRangeList::FetchOriginalAnchorNode()  //where did the ORIGINAL selection begin
 {
-  nsCOMPtr<nsIDOMNode>retval;
+  nsCOMPtr<nsIDOMNode>returnval;
   PRInt32 unused;
-  if (NS_SUCCEEDED(GetOriginalAnchorPoint(getter_AddRefs(retval), &unused)))//this queries
-    return retval;
-  return nsnull;
+  GetOriginalAnchorPoint(getter_AddRefs(returnval), &unused);//this queries
+  return returnval;
 }
 
 
@@ -647,9 +645,9 @@ PRInt32
 nsRangeList::FetchOriginalAnchorOffset()
 {
   nsCOMPtr<nsIDOMNode>unused;
-  PRInt32 retval;
-  if (NS_SUCCEEDED(GetOriginalAnchorPoint(getter_AddRefs(unused), &retval)))//this queries
-    return retval;
+  PRInt32 returnval;
+  if (NS_SUCCEEDED(GetOriginalAnchorPoint(getter_AddRefs(unused), &returnval)))//this queries
+    return returnval;
   return 0;
 }
 
@@ -658,10 +656,9 @@ nsRangeList::FetchOriginalAnchorOffset()
 nsIDOMNode*
 nsRangeList::FetchFocusNode()
 {   //where is the carret
-  nsCOMPtr<nsIDOMNode>retval;
-  if (NS_SUCCEEDED(GetFocusNode(getter_AddRefs(retval))))//this queries
-    return retval;
-  return nsnull;
+  nsCOMPtr<nsIDOMNode>returnval;
+  GetFocusNode(getter_AddRefs(returnval));//this queries
+  return returnval;
 }//at end it will release, no addreff was called
 
 
@@ -669,9 +666,9 @@ nsRangeList::FetchFocusNode()
 PRInt32
 nsRangeList::FetchFocusOffset()
 {
-  PRInt32 retval;
-  if (NS_SUCCEEDED(GetFocusOffset(&retval)))//this queries
-    return retval;
+  PRInt32 returnval;
+  if (NS_SUCCEEDED(GetFocusOffset(&returnval)))//this queries
+    return returnval;
   return 0;
 }
 
@@ -682,8 +679,8 @@ nsRangeList::FetchStartParent(nsIDOMRange *aRange)   //skip all the com stuff an
 {
   if (!aRange)
     return nsnull;
-  nsIDOMNode *returnval;
-  aRange->GetStartParent(&returnval);
+  nsCOMPtr<nsIDOMNode> returnval;
+  aRange->GetStartParent(getter_AddRefs(returnval));
   return returnval;
 }
 
@@ -695,8 +692,9 @@ nsRangeList::FetchStartOffset(nsIDOMRange *aRange)
   if (!aRange)
     return nsnull;
   PRInt32 returnval;
-  aRange->GetStartOffset(&returnval);
-  return returnval;
+  if (NS_SUCCEEDED(aRange->GetStartOffset(&returnval)))
+    return returnval;
+  return 0;
 }
 
 
@@ -706,8 +704,8 @@ nsRangeList::FetchEndParent(nsIDOMRange *aRange)     //skip all the com stuff an
 {
   if (!aRange)
     return nsnull;
-  nsIDOMNode *returnval;
-  aRange->GetEndParent(&returnval);
+  nsCOMPtr<nsIDOMNode> returnval;
+  aRange->GetEndParent(getter_AddRefs(returnval));
   return returnval;
 }
 
@@ -719,8 +717,9 @@ nsRangeList::FetchEndOffset(nsIDOMRange *aRange)
   if (!aRange)
     return nsnull;
   PRInt32 returnval;
-  aRange->GetEndOffset(&returnval);
-  return returnval;
+  if (NS_SUCCEEDED(aRange->GetEndOffset(&returnval)))
+    return returnval;
+  return 0;
 }
 
 
@@ -969,9 +968,32 @@ if (!aGuiEvent)
         }
        break;
       case nsIDOMUIEvent::VK_UP : 
+        {
+#if 0        //we need to look for the previous PAINTED location to move the cursor to.
+          amount = eSelectLine;
 #ifdef DEBUG_NAVIGATION
-        printf("debug vk up\n");
+        printf("debug vk left\n");
 #endif
+        if (keyEvent->isShift || (GetDirection() == eDirPrevious)) { //f,a
+          offsetused = FetchFocusOffset();
+          weakNodeUsed = FetchFocusNode();
+        }
+        else {
+          offsetused = FetchAnchorOffset();
+          weakNodeUsed = FetchAnchorNode();
+        }
+        if (weakNodeUsed && offsetused >=0){
+          nsIFrame *frame;
+          nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
+          if (content){
+            result = mTracker->GetPrimaryFrameFor(content, &frame);
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && content){
+              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
+            }
+            result = ScrollIntoView();
+          }
+#endif //0
+        }
         break;
       case nsIDOMUIEvent::VK_DOWN : 
 #ifdef DEBUG_NAVIGATION
@@ -1986,12 +2008,12 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   }
 
   DEBUG_OUT_RANGE(range);
-//DEBUG
+#if 0
   if (eDirNext == mDirection)
     printf("    direction = 1  LEFT TO RIGHT\n");
   else
     printf("    direction = 0  RIGHT TO LEFT\n");
-//ENDDEBUG
+#endif 0
   SetDirection(dir);
   /*hack*/
   range->GetStartParent(getter_AddRefs(startNode));
