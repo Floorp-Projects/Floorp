@@ -1213,11 +1213,10 @@ nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
       case NS_MOUSE_MOVE:
       case NS_KEY_UP:
       case NS_KEY_DOWN:
-      //case set cursor must be here:
-        //anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
-        return rv;
       case NS_GOTFOCUS:
       case NS_LOSTFOCUS:
+      //case set cursor should be here too:
+        anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
         return rv;
       default:
         break;
