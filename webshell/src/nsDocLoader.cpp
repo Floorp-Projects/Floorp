@@ -41,6 +41,7 @@
 #include "nsIURLGroup.h"
 #include "nsIServiceManager.h"
 #include "nsINetService.h"
+#include "nsXPComFactory.h"
 
 // XXX: Only needed for dummy factory...
 #include "nsIDocument.h"
@@ -1784,111 +1785,75 @@ nsDocumentBindInfo::CancelRefreshURLTimers(void)
 }
 
 /*******************************************
- *  nsDocLoaderFactory
+ *  nsDocLoaderServiceFactory
  *******************************************/
+static nsDocLoaderImpl* gServiceInstance = nsnull;
 
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kCDocumentLoader, NS_DOCUMENTLOADER_CID);
-
-class nsDocumentLoaderFactory : public nsIFactory
+class nsDocLoaderServiceFactory : public nsFactory<nsDocLoaderImpl>
 {
 public:
-    nsDocumentLoaderFactory();
-
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-
-protected:
-    virtual ~nsDocumentLoaderFactory();
+  NS_IMETHOD CreateInstance(nsISupports *aOuter,
+                            const nsIID &aIID,
+                            void **aResult);
 };
 
-nsDocumentLoaderFactory::nsDocumentLoaderFactory()
-{
-    NS_INIT_REFCNT();
-}
-
-nsDocumentLoaderFactory::~nsDocumentLoaderFactory()
-{
-}
-
-/*
- * Implementation of ISupports methods...
- */
-NS_IMPL_ISUPPORTS(nsDocumentLoaderFactory,kIFactoryIID);
-
-
 NS_IMETHODIMP
-nsDocumentLoaderFactory::CreateInstance(nsISupports* aOuter,
-                                        const nsIID& aIID,
-                                        void** aResult)
+nsDocLoaderServiceFactory::CreateInstance(nsISupports *aOuter,
+                                          const nsIID &aIID,
+                                          void **aResult)
 {
-    nsresult rv;
-    nsIDocumentLoader* inst;
-    static nsDocLoaderImpl* gGlobalDocLoader = nsnull;
+  nsresult rv;
+  nsDocLoaderImpl* inst;
 
+  // Parameter validation...
+  if (NULL == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+    goto done;
+  }
+  // Do not support aggregatable components...
+  *aResult = NULL;
+  if (NULL != aOuter) {
+    rv = NS_ERROR_NO_AGGREGATION;
+    goto done;
+  }
 
-    if (nsnull == aResult) {
-        rv = NS_ERROR_NULL_POINTER;
-        goto done;
+  if (NULL == gServiceInstance) {
+    // Create a new instance of the component...
+    NS_NEWXPCOM(gServiceInstance, nsDocLoaderImpl);
+    if (NULL == gServiceInstance) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      goto done;
     }
-    *aResult = nsnull;
+    NS_ADDREF(gServiceInstance);
+  }
 
-    if (nsnull != aOuter) {
-        rv = NS_ERROR_NO_AGGREGATION;
-        goto done;
-    }
+  // If the QI fails, the component will be destroyed...
+  //
+  // Use a local copy so the NS_RELEASE() will not null the global
+  // pointer...
+  inst = gServiceInstance;
 
-    if (nsnull == gGlobalDocLoader) {
-        NS_NEWXPCOM(gGlobalDocLoader, nsDocLoaderImpl);
-        if (nsnull == gGlobalDocLoader) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            goto done;
-        }
-
-        NS_ADDREF(gGlobalDocLoader);    // RefCount = 1
-    }
-
-    rv = gGlobalDocLoader->CreateDocumentLoader(&inst);
-    if (NS_OK != rv) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto done;
-    }
-    *aResult = inst;
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
 
 done:
-    return rv;
+  return rv;
 }
 
-NS_IMETHODIMP
-nsDocumentLoaderFactory::LockFactory(PRBool aLock)
+
+// Entry point to create nsEventQueueService factory instances...
+
+nsresult NS_NewDocLoaderServiceFactory(nsIFactory** aResult)
 {
-    // Not implemented in simplest case.
-    return NS_OK;
+  nsresult rv = NS_OK;
+  nsIFactory* inst = new nsDocLoaderServiceFactory();
+  if (NULL == inst) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else {
+    NS_ADDREF(inst);
+  }
+  *aResult = inst;
+  return rv;
 }
-
-extern "C" NS_WEB nsresult
-NS_NewDocumentLoaderFactory(nsIFactory** aFactory)
-{
-    if (nsnull == aFactory) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    nsDocumentLoaderFactory* it;
-    NS_NEWXPCOM(it, nsDocumentLoaderFactory);
-    *aFactory = it;
-    if (nsnull == *aFactory) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(*aFactory);
-
-    return NS_OK;
-}
-
-
