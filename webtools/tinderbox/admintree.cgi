@@ -41,6 +41,7 @@ tb_load_data();
 if (defined($tree)) {
     if( -r "$tree/mod.pl" ){
         require "$tree/mod.pl";
+        $message_of_day =~ s/\s*$//;  # Trim trailing whitespace;
     }
     else {
         $message_of_day = "";
