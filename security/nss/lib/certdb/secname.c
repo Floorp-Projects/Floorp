@@ -446,19 +446,90 @@ CERT_CopyName(PRArenaPool *arena, CERTName *to, CERTName *from)
 
 /************************************************************************/
 
+static void
+canonicalize(SECItem * foo)
+{
+    int ch, lastch, len, src, dest;
+
+    /* strip trailing whitespace. */
+    len = foo->len;
+    while (len > 0 && ((ch = foo->data[len - 1]) == ' ' || 
+           ch == '\t' || ch == '\r' || ch == '\n')) {
+	len--;
+    }
+
+    src = 0;
+    /* strip leading whitespace. */
+    while (src < len && ((ch = foo->data[src]) == ' ' || 
+           ch == '\t' || ch == '\r' || ch == '\n')) {
+	src++;
+    }
+    dest = 0; lastch = ' ';
+    while (src < len) {
+        ch = foo->data[src++];
+	if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
+	    ch = ' ';
+	    if (ch == lastch)
+	        continue;
+	} else if (ch >= 'A' && ch <= 'Z') {
+	    ch |= 0x20;  /* downshift */
+	}
+	foo->data[dest++] = lastch = ch;
+    }
+    foo->len = dest;
+}
+
+/* SECItems a and b contain DER-encoded printable strings. */
 SECComparison
-CERT_CompareAVA(CERTAVA *a, CERTAVA *b)
+CERT_CompareDERPrintableStrings(const SECItem *a, const SECItem *b)
+{
+    SECComparison rv = SECLessThan;
+    SECItem * aVal = CERT_DecodeAVAValue(a);
+    SECItem * bVal = CERT_DecodeAVAValue(b);
+
+    if (aVal && aVal->len && aVal->data &&
+	bVal && bVal->len && bVal->data) {
+	canonicalize(aVal);
+	canonicalize(bVal);
+	rv = SECITEM_CompareItem(aVal, bVal);
+    }
+    SECITEM_FreeItem(aVal, PR_TRUE);
+    SECITEM_FreeItem(bVal, PR_TRUE);
+    return rv;
+}
+
+SECComparison
+CERT_CompareAVA(const CERTAVA *a, const CERTAVA *b)
 {
     SECComparison rv;
 
     rv = SECITEM_CompareItem(&a->type, &b->type);
-    if (rv) {
-	/*
-	** XXX for now we are going to just assume that a bitwise
-	** comparison of the value codes will do the trick.
-	*/
-    }
+    if (SECEqual != rv)
+	return rv;  /* Attribute types don't match. */
+    /* Let's be optimistic.  Maybe the values will just compare equal. */
     rv = SECITEM_CompareItem(&a->value, &b->value);
+    if (SECEqual == rv)
+        return rv;  /* values compared exactly. */
+    if (a->value.len && a->value.data && b->value.len && b->value.data) {
+	/* Here, the values did not match.  
+	** If the values had different encodings, convert them to the same
+	** encoding and compare that way.
+	*/
+	if (a->value.data[0] != b->value.data[0]) {
+	    /* encodings differ.  Convert both to UTF-8 and compare. */
+	    SECItem * aVal = CERT_DecodeAVAValue(&a->value);
+	    SECItem * bVal = CERT_DecodeAVAValue(&b->value);
+	    if (aVal && aVal->len && aVal->data &&
+	        bVal && bVal->len && bVal->data) {
+		rv = SECITEM_CompareItem(aVal, bVal);
+	    }
+	    SECITEM_FreeItem(aVal, PR_TRUE);
+	    SECITEM_FreeItem(bVal, PR_TRUE);
+	} else if (a->value.data[0] == 0x13) { /* both are printable strings. */
+	    /* printable strings */
+	    rv = CERT_CompareDERPrintableStrings(&a->value, &b->value);
+	}
+    }
     return rv;
 }
 
@@ -528,7 +599,7 @@ CERT_CompareName(CERTName *a, CERTName *b)
 
 /* Moved from certhtml.c */
 SECItem *
-CERT_DecodeAVAValue(SECItem *derAVAValue)
+CERT_DecodeAVAValue(const SECItem *derAVAValue)
 {
           SECItem          *retItem; 
     const SEC_ASN1Template *theTemplate       = NULL;
@@ -537,7 +608,7 @@ CERT_DecodeAVAValue(SECItem *derAVAValue)
           SECItem           avaValue          = {siBuffer, 0}; 
           PLArenaPool      *newarena          = NULL;
 
-    if(!derAVAValue) {
+    if (!derAVAValue || !derAVAValue->len || !derAVAValue->data) {
 	return NULL;
     }
 
