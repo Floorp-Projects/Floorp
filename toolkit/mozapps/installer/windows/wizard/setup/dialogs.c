@@ -519,6 +519,21 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
 #define BIF_USENEWUI 0x50
 #endif
 
+int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+  if (uMsg == BFFM_INITIALIZED)
+  {
+    char * filePath = (char *) lpData;
+    if (filePath)
+    {
+      SendMessage(hwnd, BFFM_SETSELECTION, TRUE /* true because lpData is a path string */, lpData);
+      free(filePath);
+    }
+  }
+
+  return 0;
+}
+
 void BrowseForDirectory(HWND hParent)
 { 
 	LPITEMIDLIST  itemIDList;
@@ -534,6 +549,13 @@ void BrowseForDirectory(HWND hParent)
 	browseInfo.ulFlags			  = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
 	browseInfo.lpfn				    = NULL;
 	browseInfo.lParam			    = 0;
+
+  if (currDir[0]) {
+    browseInfo.lParam = (LPARAM) strdup(currDir);
+    browseInfo.lpfn = &BrowseCallbackProc;
+  }
+  else
+    browseInfo.lParam = 0;
 	
 	// Show the dialog
 	itemIDList = SHBrowseForFolder(&browseInfo);
