@@ -54,11 +54,17 @@ nsContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
   NS_PRECONDITION(mFrames.IsEmpty(), "already initialized");
 
   nsresult  result;
-  if (nsnull != mFrames.FirstChild()) {
+  if (!mFrames.IsEmpty()) {
+    // We already have child frames which means we've already been
+    // initialized
     result = NS_ERROR_UNEXPECTED;
-  } else if (nsnull != aListName) {
+  } else if (aListName) {
+    // All we know about is the unnamed principal child list
     result = NS_ERROR_INVALID_ARG;
   } else {
+#ifdef NS_DEBUG
+    nsFrame::VerifyDirtyBitSet(aChildList);
+#endif
     mFrames.SetFrames(aChildList);
     result = NS_OK;
   }
