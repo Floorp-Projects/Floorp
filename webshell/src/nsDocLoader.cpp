@@ -262,7 +262,7 @@ nsDocFactoryImpl::QueryInterface( REFNSIID aIID, void** aInstancePtr )
 			*result = NS_STATIC_CAST(nsIDocumentLoaderFactory*, this);
 	  else if ( aIID.Equals(nsIDocStreamLoaderFactory::GetIID()) )
 			*result = NS_STATIC_CAST(nsIDocStreamLoaderFactory*, this);
-		else if ( aIID.Equals(nsISupports::GetIID()) )
+		else if ( aIID.Equals(kISupportsIID) )
 			*result = NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIDocumentLoaderFactory*, this));
 		else
 			*result = 0;
