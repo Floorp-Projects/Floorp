@@ -65,6 +65,7 @@ CPPSRCS		= \
 		  BookmarkView.cpp \
 		  BrowserDrop.cpp \
 		  BrowserFrame.cpp \
+		  BrowserView.cpp \
 		  ColorDialog.cpp \
 		  Command.cpp \
 		  Component.cpp \
