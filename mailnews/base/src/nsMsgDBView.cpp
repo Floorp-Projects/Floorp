@@ -1949,9 +1949,6 @@ NS_IMETHODIMP nsMsgDBView::GetURIsForSelection(char ***uris, PRUint32 *length)
 {
   nsresult rv = NS_OK;
 
-#ifdef DEBUG_mscott
-  printf("inside GetURIsForSelection\n");
-#endif
   NS_ENSURE_ARG_POINTER(length);
   *length = 0;
   NS_ENSURE_ARG_POINTER(uris);
@@ -5617,9 +5614,6 @@ nsMsgDBView::GetURIForFirstSelectedMessage(char **uri)
 {
   NS_ENSURE_ARG_POINTER(uri);
 
-#ifdef DEBUG_mscott
-  printf("inside GetURIForFirstSelectedMessage\n");
-#endif
   nsresult rv;
   nsMsgViewIndex viewIndex;
   rv = GetViewIndexForFirstSelectedMsg(&viewIndex);
