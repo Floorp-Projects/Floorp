@@ -771,3 +771,9 @@ endif # WINNT
 
 # Use nsinstall in copy mode to install files on the system
 SYSINSTALL	= $(NSINSTALL) -t
+
+ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(CYGDRIVE_MOUNT))
+export CYGDRIVE_MOUNT
+endif
+endif
