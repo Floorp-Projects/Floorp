@@ -37,6 +37,7 @@ viewer:Mozilla Profile Manager
 viewer:Mozilla Profile Wizard
 viewer:Mozilla Select Profile
 viewer:NSPR Logging
+viewer:Plugins:*
 
 viewer:Essential Files:gfx.shlb 
 viewer:Essential Files:libimg.shlb 
@@ -58,7 +59,6 @@ viewer:Components:chardet.shlb
 viewer:Components:ChomeRegistry.shlb 
 viewer:Components:chrome.xpt
 viewer:Components:Cookie.shlb 
-viewer:Components:cookieviewer.xpt 
 viewer:Components:data.shlb 
 viewer:Components:data.shlb 
 viewer:Components:data.xpt 
@@ -128,7 +128,6 @@ viewer:Components:res.xpt
 viewer:Components:resource.shlb
 viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
-viewer:Components:signonviewer.xpt 
 viewer:Components:streamconv.shlb 
 viewer:Components:streamconv.xpt 
 viewer:Components:strres.shlb 
@@ -153,8 +152,6 @@ viewer:Components:uriloader.xpt
 viewer:Components:view.shlb 
 viewer:Components:Wallet.shlb 
 viewer:Components:wallet.xpt 
-viewer:Components:walleteditor.xpt 
-viewer:Components:walletpreview.xpt 
 viewer:Components:WalletViewers.shlb 
 viewer:Components:widget.xpt 
 viewer:Components:xfer.shlb 
@@ -180,7 +177,10 @@ viewer:chrome:editor:*
 viewer:chrome:directory:* 
 viewer:chrome:global:* 
 viewer:chrome:history:* 
+viewer:chrome:htmlBindings.xml
 viewer:chrome:navigator:* 
+viewer:chrome:layout:* 
+viewer:chrome:platformHTMLBindings.xml
 viewer:chrome:pref:* 
 viewer:chrome:profile:* 
 viewer:chrome:related:* 
@@ -189,11 +189,8 @@ viewer:chrome:Search:*
 viewer:chrome:sidebar:* 
 viewer:chrome:wallet:*
 viewer:chrome:xpinstall:* 
-viewer:chrome:layout:* 
 viewer:chrome:xul.css
 viewer:chrome:xulBindings.xml
-viewer:chrome:htmlBindings.xml
-viewer:chrome:platformHTMLBindings.xml
 viewer:defaults:pref:all.js 
 viewer:defaults:pref:config.js 
 viewer:defaults:Pref:editor.js
@@ -250,7 +247,6 @@ viewer:res:strres-test.xul
 viewer:res:throbber:*
 viewer:res:ua.css
 viewer:res:URLFieldSchema.tbl
-viewer:res:xpinstall:*
 
 [mail] 
 viewer:Components:MsgAddrbook.shlb 
