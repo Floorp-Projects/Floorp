@@ -42,7 +42,7 @@
       do_GetService("@mozilla.org/autocompleteSession;1?type=history");
     mAutoComplete = session;
     if (!mAutoComplete)
-      printf("CRAP CRAP!\n");
+      printf("Could not find autocomplete!\n");
   }
 }
 
