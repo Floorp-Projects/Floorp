@@ -197,38 +197,66 @@ nsresult nsExternalHelperAppService::InitDataSource()
 /* boolean canHandleContent (in string aMimeContentType); */
 NS_IMETHODIMP nsExternalHelperAppService::CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = PR_FALSE;
+  return NS_OK;
 }
 
-// it's ESSENTIAL that this method return an error code if we were unable to determine how this content should be handle
-// this allows derived OS implementations of Docontent to step in and look for OS specific solutions.
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
-  InitDataSource();
-
-  // (1) try to get a mime info object for the content type....if we don't know anything about the type, then
-  // we certainly can't handle it and we'll just return without creating a stream listener.
-  *aStreamListener = nsnull;
-
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  nsresult rv = GetMIMEInfoForMimeTypeFromDS(aMimeContentType, getter_AddRefs(mimeInfo));
+  nsXPIDLCString fileExtension;
 
-  if (NS_SUCCEEDED(rv) && mimeInfo)
+  // (1) Try to find a mime object by looking the mime type
+  nsresult rv = GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
+
+  // here's a nifty little trick. If we got a match back for the content type; but the content type is
+  // unknown or octet (both of these are pretty much unhelpful mime objects), then see if the file extension
+  // produces a better mime object...
+  if (((nsCRT::strcmp(aMimeContentType, UNKNOWN_CONTENT_TYPE) == 0) ||
+       (nsCRT::strcmp(aMimeContentType, APPLICATION_OCTET_STREAM) == 0) || 
+       !mimeInfo))
   {
-    // ask the OS specific subclass to create a stream listener for us that binds this suggested application
-    // even if this fails, return NS_OK...
-    nsXPIDLCString fileExtension;
-    mimeInfo->FirstExtension(getter_Copies(fileExtension));
-    nsExternalAppHandler * app = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
-    if (app)
-      app->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
-    return NS_OK;
+    // if we couldn't find one, don't give up yet! Try and see if there is an extension in the 
+    // url itself...
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+    if (url)
+    {
+      url->GetFileExtension(getter_Copies(fileExtension));    
+      nsCOMPtr<nsIMIMEInfo> tempMIMEObject;
+      GetFromExtension(fileExtension, getter_AddRefs(tempMIMEObject));
+      // only over write mimeInfo if we got a non-null temp mime info object.
+      if (tempMIMEObject)
+        mimeInfo = tempMIMEObject;
+    }
   }
 
-  // if we made it here, then we were unable to handle this ourselves..return an error so the
-  // derived class will know to try OS specific wonders on it.
-  return NS_ERROR_FAILURE;
+  // (3) if we STILL don't have a mime object for this content type then give up
+  // and create a new mime info object for it and use it
+  if (!mimeInfo)
+  {
+    mimeInfo = do_CreateInstance(NS_MIMEINFO_CONTRACTID);
+    if (mimeInfo)
+    {
+      // the file extension was conviently already filled in by our call to FindOSMimeInfoForType.
+      mimeInfo->SetFileExtensions(fileExtension);
+      mimeInfo->SetMIMEType(aMimeContentType);
+      // we may need to add a new method to nsIMIMEService so we can add this mime info object to our mime service.
+    }
+  }
+
+  *aStreamListener = nsnull;
+  if (mimeInfo)
+  {
+    // ensure that the file extension field is always filled in
+    mimeInfo->FirstExtension(getter_Copies(fileExtension));
+
+    // this code is incomplete and just here to get things started..
+    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
+    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMimeInfo, nsIFile * aTempFile)

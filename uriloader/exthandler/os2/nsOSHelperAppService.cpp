@@ -39,23 +39,6 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
 
-
-NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool * aCanHandleContent)
-{
-  // once we have user over ride stuff working, we need to first call up to our base class
-  // and ask the base class if we can handle the content. This will take care of looking for user specified 
-  // apps for content types.
-
-  *aCanHandleContent = PR_FALSE;
-  nsresult rv = nsExternalHelperAppService::CanHandleContent(aMimeContentType, aURI,aCanHandleContent);
-
-  if (NS_FAILED(rv) || *aCanHandleContent == PR_FALSE)
-  {
-
-  }
-  return NS_OK;
-}
-
 nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo)
 {
   nsresult rv = NS_OK;
@@ -104,41 +87,6 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
      // this is the ONLY code path which leads to success where we should set our return variables...
      *aFileExtension = fileExtension.ToNewCString();
   } // if we got an entry out of the registry...
-
-  return rv;
-}
-
-NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
-                                                    PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
-{
-  nsresult rv = NS_OK;
-
-  // see if we have user specified information for handling this content type by giving the base class
-  // first crack at it...
-
-  rv = nsExternalHelperAppService::DoContent(aMimeContentType, aURI, aWindowContext, aAbortProcess, aStreamListener);
-  
-  // this is important!! if do content for the base class returned any success code, then assume we are done
-  // and don't even play around with 
-  if (NS_SUCCEEDED(rv)) return NS_OK;
-
-  // okay the base class couldn't do anything so now it's our turn!!!
-
-  // ACK!!! we've done all this work to discover the content type just to find out that windows
-  // registery uses the extension to figure out the right helper app....that's a bummer...
-  // now we need to try to get the extension for the content type...
-
-  nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  nsXPIDLCString fileExtension;
-  rv = FindOSMimeInfoForType(aMimeContentType, aURI, getter_Copies(fileExtension), getter_AddRefs(mimeInfo));
-
-  *aStreamListener = nsnull;
-  if (NS_SUCCEEDED(rv) && mimeInfo)
-  {
-    // this code is incomplete and just here to get things started..
-    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
-    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
-  }
 
   return rv;
 }
