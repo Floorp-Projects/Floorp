@@ -17,12 +17,13 @@
 // Copyright (C) 2000 Netscape Communications Corporation. All
 // Rights Reserved.
 
-#include "gc_allocator.h"
-
 #include <iostream>
 #include <string>
 #include <vector>
 #include <algorithm>
+
+#include "gc_allocator.h"
+#include "gc_container.h"
 
 /*
 namespace JavaScript {
@@ -47,19 +48,6 @@ void gc_allocator<T>::deallocate(gc_allocator<T>::pointer ptr, gc_allocator<T>::
 // test driver for standalone GC development.
 
 namespace JS = JavaScript;
-
-#ifdef __GNUC__
-// grr, what kind of standard is this?
-template <class T> struct gc_types {
-	typedef basic_string<T, string_char_traits<T>, JS::gc_allocator<T> > string;
-	typedef std::vector<T, JS::gc_allocator<T> > vector;
-};
-#else
-template <class T> struct gc_types {
-	typedef std::basic_string<T, std::char_traits<T>, JS::gc_allocator<T> > string;
-	typedef typename std::vector<T, JS::gc_allocator<T> > vector;
-};
-#endif
 
 template <class T>
 void* operator new(std::size_t, const JS::gc_allocator<T>& alloc)
@@ -112,7 +100,7 @@ int main(int /* argc */, char* /* argv[] */)
 
 #ifdef XP_MAC
 	// allocate a string, using the GC, and owned by an auto_ptr, that knows how to correctly destroy the string.
-	typedef gc_types<char>::string char_string;
+	typedef gc_container<char>::string char_string;
 	typedef gc_allocator<char_string> char_string_alloc;
 	auto_ptr<char_string, char_string_alloc> ptr(new(char_string_alloc()) char_string("This is a garbage collectable string."));
 	const char_string& str = *ptr;
@@ -122,7 +110,7 @@ int main(int /* argc */, char* /* argv[] */)
 	// question, how can we partially evaluate a template?
 	// can we say, typedef template <class T> vector<typename T>.
 	// typedef vector<int, gc_allocator<int> > int_vector;
-	typedef gc_types<int>::vector int_vector;
+	typedef gc_container<int>::vector int_vector;
 	
 	// generate 1000 random values.
 	int_vector values;
