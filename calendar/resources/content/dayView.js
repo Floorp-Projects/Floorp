@@ -91,7 +91,7 @@ function DayView( calendarWindow )
    
    var dayViewEventSelectionObserver =
    {
-      onSelectionChanged : function( EventSelectionArray )
+      onSelectionChanged : function dv_EventSelectionObserver_OnSelectionChanged( EventSelectionArray )
       {
          for( i = 0; i < EventSelectionArray.length; i++ )
          {
