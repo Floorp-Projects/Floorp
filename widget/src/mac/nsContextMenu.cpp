@@ -156,7 +156,7 @@ NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignmen
                                 const nsString& anAnchorAlignment)
 {
   mParent = aParent;
-  mMacMenuHandle = ::NewMenu(mMacMenuIDCount, (const unsigned char *)"");
+  mMacMenuHandle = ::NewMenu(mMacMenuIDCount, "\p");
   mMacMenuID = mMacMenuIDCount;
   mMacMenuIDCount++;
   return NS_OK;
