@@ -254,6 +254,9 @@ sub BuildDist()
 	#LIBPREF
     InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",					"$distdirectory:libpref:");
 
+	#LIBPREF
+    InstallFromManifest(":mozilla:profile:public:MANIFEST",							"$distdirectory:profile:");
+
 	#LIBIMAGE
     InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",						"$distdirectory:libimg:");
     InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",						"$distdirectory:libimg:");
@@ -542,6 +545,8 @@ sub BuildCommonProjects()
 
 	BuildOneProject(":mozilla:base:macbuild:base.mcp",							"base$D.shlb", "base.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
+	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+
 	# International projects
 	BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",					"uconv$D.shlb", "uconv.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
@@ -619,7 +624,7 @@ sub BuildFolderResourceAliases($$)
 #// Make resource aliases
 #//--------------------------------------------------------------------------------------------------
 
-sub MakeResouceAliases()
+sub MakeResourceAliases()
 {
 	unless( $main::build{resources} ) { return; }
 	_assertRightDirectory();
@@ -849,7 +854,7 @@ sub BuildProjects()
 	BuildCommonProjects();
 	BuildLayoutProjects();
 	BuildEditorProjects();
-	MakeResouceAliases();
+	MakeResourceAliases();
 	BuildViewerProjects();
 	BuildXPAppProjects();
 	BuildMailNewsProjects();
