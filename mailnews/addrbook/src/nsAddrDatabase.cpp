@@ -49,7 +49,6 @@ extern const char *kCardDataSourceRoot;
 /* The definition is nsAddrDatabase.cpp */
 extern const char *kMainPersonalAddressBook;
 
-
 #define ID_PAB_TABLE		1
 #define ID_ANONYMOUS_TABLE	2
 
@@ -1123,8 +1122,37 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 	return err;
 }
 
+nsresult nsAddrDatabase::FindAttributeRow(nsIMdbTable* pTable, mdb_token columnToken, nsIMdbRow** row)
+{
+	nsIMdbTableRowCursor* rowCursor = nsnull;
+	nsIMdbRow* findRow = nsnull;
+	nsIMdbCell* valueCell = nsnull;
+ 	mdb_pos	rowPos = 0;
+	nsresult err = NS_ERROR_FAILURE;
+
+	err = pTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+
+	if (NS_FAILED(err) || !rowCursor)
+		return NS_ERROR_FAILURE;
+	do
+	{
+		err = rowCursor->NextRow(GetEnv(), &findRow, &rowPos);
+		if (NS_SUCCEEDED(err) && findRow)
+		{
+			err = findRow->GetCell(GetEnv(), columnToken, &valueCell);
+			if (NS_SUCCEEDED(err) && valueCell)
+			{
+				*row = findRow;
+				return NS_OK;
+			}
+		}
+	} while (findRow);
+
+	return NS_ERROR_FAILURE;
+}
+
 nsresult nsAddrDatabase::DoStringAnonymousTransaction
-(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd)
+(nsVoidArray* pAttributes, nsVoidArray* pValues, AB_NOTIFY_CODE code)
 {
 	nsresult err = NS_OK;
 
@@ -1140,7 +1168,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 			char* pValueStr = (char*)pValues->ElementAt(i);
 
 			nsIMdbRow	*anonymousRow = nsnull;
-			if (bAdd)
+			if (code == AB_NotifyInserted)
 			{
 				err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
 				if (NS_SUCCEEDED(err) && anonymousRow)
@@ -1149,7 +1177,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
 				}
 			}
-			else
+			else if (code == AB_NotifyDeleted)
 			{
 				struct mdbYarn yarn;
 				mdbOid rowOid;
@@ -1160,13 +1188,24 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 				if (NS_SUCCEEDED(err) && anonymousRow)
 					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
 			}
+			else /* Edit */
+			{
+				err = FindAttributeRow(m_mdbAnonymousTable, anonymousColumnToken, &anonymousRow);
+				if (NS_SUCCEEDED(err) && anonymousRow)
+				{
+					AddStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
+					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+					return NS_OK;
+				} 
+				err = NS_ERROR_FAILURE;
+			}
  		}
 	}
 	return err;
 }
 
 nsresult nsAddrDatabase::DoIntAnonymousTransaction
-(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd)
+(nsVoidArray* pAttributes, nsVoidArray* pValues, AB_NOTIFY_CODE code)
 {
 	nsresult err = NS_OK;
 	if (pAttributes && pValues)
@@ -1182,7 +1221,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 			PRUint32 value = *pValue;
 
 			nsIMdbRow	*anonymousRow = nsnull;
-			if (bAdd)
+			if (code == AB_NotifyInserted)
 			{
 				err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
 				if (NS_SUCCEEDED(err) && anonymousRow)
@@ -1191,7 +1230,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
 				}
 			}
-			else
+			else if (code == AB_NotifyDeleted)
 			{
 				struct mdbYarn yarn;
 				mdbOid rowOid;
@@ -1204,13 +1243,24 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 				if (NS_SUCCEEDED(err) && anonymousRow)
 					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
 			}
+			else
+			{
+				err = FindAttributeRow(m_mdbAnonymousTable, anonymousColumnToken, &anonymousRow);
+				if (NS_SUCCEEDED(err) && anonymousRow)
+				{
+					AddIntColumn(anonymousRow, anonymousColumnToken, value);
+					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+					return NS_OK;
+				} 
+				err = NS_ERROR_FAILURE;
+			}
  		}
 	}
 	return err;
 }
 
 nsresult nsAddrDatabase::DoBoolAnonymousTransaction
-(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd)
+(nsVoidArray* pAttributes, nsVoidArray* pValues, AB_NOTIFY_CODE code)
 {
 	nsresult err = NS_OK;
 	if (pAttributes && pValues)
@@ -1231,7 +1281,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 				nBoolValue = 0;
 
 			nsIMdbRow	*anonymousRow = nsnull;
-			if (bAdd)
+			if (code == AB_NotifyInserted)
 			{
 				err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
 				if (NS_SUCCEEDED(err) && anonymousRow)
@@ -1240,7 +1290,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
 				}
 			}
-			else
+			else if (code == AB_NotifyDeleted)
 			{
 				struct mdbYarn yarn;
 				mdbOid rowOid;
@@ -1253,12 +1303,23 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 				if (NS_SUCCEEDED(err) && anonymousRow)
 					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
 			}
+			else
+			{
+				err = FindAttributeRow(m_mdbAnonymousTable, anonymousColumnToken, &anonymousRow);
+				if (NS_SUCCEEDED(err) && anonymousRow)
+				{
+					AddIntColumn(anonymousRow, anonymousColumnToken, nBoolValue);
+					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+					return NS_OK;
+				} 
+				err = NS_ERROR_FAILURE;
+			}
  		}
 	}
 	return err;
 }
 
-nsresult nsAddrDatabase::DoAnonymousAttributesTransaction(PRBool bAdd)
+nsresult nsAddrDatabase::DoAnonymousAttributesTransaction(AB_NOTIFY_CODE code)
 {
 	nsresult err = NS_OK;
 		  
@@ -1268,59 +1329,62 @@ nsresult nsAddrDatabase::DoAnonymousAttributesTransaction(PRBool bAdd)
 	if (NS_FAILED(err) || !m_mdbAnonymousTable)
 		return NS_ERROR_FAILURE;
 
-	DoStringAnonymousTransaction(m_pAnonymousStrAttributes, m_pAnonymousStrValues, bAdd);
-	DoIntAnonymousTransaction(m_pAnonymousIntAttributes, m_pAnonymousIntValues, bAdd);
-	DoBoolAnonymousTransaction(m_pAnonymousBoolAttributes, m_pAnonymousBoolValues, bAdd);
+	DoStringAnonymousTransaction(m_pAnonymousStrAttributes, m_pAnonymousStrValues, code);
+	DoIntAnonymousTransaction(m_pAnonymousIntAttributes, m_pAnonymousIntValues, code);
+	DoBoolAnonymousTransaction(m_pAnonymousBoolAttributes, m_pAnonymousBoolValues, code);
 
 	Commit(kSessionCommit);
 	return err;
 }
 
-NS_IMETHODIMP nsAddrDatabase::AddAnonymousAttributesFromCard(nsIAbCard* card)
+void nsAddrDatabase::GetAnonymousAttributesFromCard(nsIAbCard* card)
 {
+	nsresult err = NS_OK;
 	RemoveAnonymousList(m_pAnonymousStrAttributes);
 	RemoveAnonymousList(m_pAnonymousStrValues);
 	RemoveAnonymousList(m_pAnonymousIntAttributes);
 	RemoveAnonymousList(m_pAnonymousIntValues);
 	RemoveAnonymousList(m_pAnonymousBoolAttributes);
 	RemoveAnonymousList(m_pAnonymousBoolValues);
-	nsresult err = card->GetAnonymousStrAttrubutesList(&m_pAnonymousStrAttributes);
+	err = card->GetAnonymousStrAttrubutesList(&m_pAnonymousStrAttributes);
 	err = card->GetAnonymousStrValuesList(&m_pAnonymousStrValues);
 	err = card->GetAnonymousIntAttrubutesList(&m_pAnonymousIntAttributes);
 	err = card->GetAnonymousIntValuesList(&m_pAnonymousIntValues);
 	err = card->GetAnonymousBoolAttrubutesList(&m_pAnonymousBoolAttributes);
 	err = card->GetAnonymousBoolValuesList(&m_pAnonymousBoolValues);
-	err = DoAnonymousAttributesTransaction(PR_TRUE);
+}
 
-	return NS_OK;
+NS_IMETHODIMP nsAddrDatabase::AddAnonymousAttributesFromCard(nsIAbCard* card)
+{
+	GetAnonymousAttributesFromCard(card);
+	return DoAnonymousAttributesTransaction(AB_NotifyInserted);
 }
 
 NS_IMETHODIMP nsAddrDatabase::AddAnonymousAttributesToDB()
 {
-	return DoAnonymousAttributesTransaction(PR_TRUE);
+	return DoAnonymousAttributesTransaction(AB_NotifyInserted);
 }
 
 NS_IMETHODIMP nsAddrDatabase::RemoveAnonymousAttributesFromCard(nsIAbCard *card)
 {
-	RemoveAnonymousList(m_pAnonymousStrAttributes);
-	RemoveAnonymousList(m_pAnonymousStrValues);
-	RemoveAnonymousList(m_pAnonymousIntAttributes);
-	RemoveAnonymousList(m_pAnonymousIntValues);
-	RemoveAnonymousList(m_pAnonymousBoolAttributes);
-	RemoveAnonymousList(m_pAnonymousBoolValues);
-	nsresult err = card->GetAnonymousStrAttrubutesList(&m_pAnonymousStrAttributes);
-	err = card->GetAnonymousStrValuesList(&m_pAnonymousStrValues);
-	err = card->GetAnonymousIntAttrubutesList(&m_pAnonymousIntAttributes);
-	err = card->GetAnonymousIntValuesList(&m_pAnonymousIntValues);
-	err = card->GetAnonymousBoolAttrubutesList(&m_pAnonymousBoolAttributes);
-	err = card->GetAnonymousBoolValuesList(&m_pAnonymousBoolValues);
-	err = DoAnonymousAttributesTransaction(PR_FALSE);
-	return err;
+	GetAnonymousAttributesFromCard(card);
+	return DoAnonymousAttributesTransaction(AB_NotifyDeleted);
 }
 
 NS_IMETHODIMP nsAddrDatabase::RemoveAnonymousAttributesFromDB()
 {
-	return DoAnonymousAttributesTransaction(PR_FALSE);
+	return DoAnonymousAttributesTransaction(AB_NotifyDeleted);
+}
+
+NS_IMETHODIMP nsAddrDatabase::EditAnonymousAttributesFromCard(nsIAbCard* card)
+{
+	GetAnonymousAttributesFromCard(card);
+	return DoAnonymousAttributesTransaction(AB_NotifyPropertyChanged);
+}
+
+NS_IMETHODIMP nsAddrDatabase::EditAnonymousAttributesInDB()
+{
+	return DoAnonymousAttributesTransaction(AB_NotifyPropertyChanged);
 }
 
 NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)

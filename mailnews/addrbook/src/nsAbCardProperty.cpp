@@ -618,6 +618,17 @@ NS_IMETHODIMP nsAbCardProperty::AddAnonymousAttributesToDB()
 	return rv;
 }
 
+NS_IMETHODIMP nsAbCardProperty::EditAnonymousAttributesToDB()
+{
+	nsresult rv = NS_OK;
+	if (mDatabase)
+		mDatabase = null_nsCOMPtr();
+	rv = GetCardDatabase("abdirectory://abook.mab");
+	if (NS_SUCCEEDED(rv) && mDatabase)
+		rv = mDatabase->EditAnonymousAttributesFromCard(this);
+	return rv;
+}
+
 /* caller need to PR_smprintf_free *uri */
 NS_IMETHODIMP nsAbCardProperty::GetCardURI(char **uri)
 {

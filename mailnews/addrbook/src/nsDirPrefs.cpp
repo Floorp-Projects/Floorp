@@ -312,7 +312,7 @@ static nsresult dir_ConvertToMabFileName()
 			{
 				nsString name(server->fileName);
 				PRInt32 pos = name.Find(ABFileName_kPreviousSuffix);
-				if (pos)
+				if (pos > 0)
 				{
 					//Move old abook.na2 to end of the list anf change the description
 					DIR_Server * newServer = nsnull;

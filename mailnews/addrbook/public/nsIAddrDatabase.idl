@@ -60,6 +60,9 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void GetAnonymousBoolAttribute(in string attrname, out boolean value);
 	void AddAnonymousAttributesToDB();
 	void RemoveAnonymousAttributesFromDB();
+	void EditAnonymousAttributesInDB();
 	void AddAnonymousAttributesFromCard(in nsIAbCard card);
 	void RemoveAnonymousAttributesFromCard(in nsIAbCard card);
+	void EditAnonymousAttributesFromCard(in nsIAbCard card);
+	
 };

@@ -84,6 +84,7 @@ interface nsIAbCard : nsISupports {
 	void SetAnonymousIntAttribute(in string attrname, in unsigned long value);
 	void SetAnonymousBoolAttribute(in string attrname, in boolean value);
 	void AddAnonymousAttributesToDB();
+	void EditAnonymousAttributesToDB();
 
 	void GetCardURI(out string uri);
 	void AddCardToDatabase(in string uri);

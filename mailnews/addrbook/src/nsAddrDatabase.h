@@ -94,8 +94,11 @@ public:
 	NS_IMETHOD GetAnonymousBoolAttribute(const char *attrname, PRBool* value);
 	NS_IMETHOD AddAnonymousAttributesToDB();
 	NS_IMETHOD RemoveAnonymousAttributesFromDB();
+	NS_IMETHOD EditAnonymousAttributesInDB();
+
 	NS_IMETHOD AddAnonymousAttributesFromCard(nsIAbCard *card);
 	NS_IMETHOD RemoveAnonymousAttributesFromCard(nsIAbCard *card);
+	NS_IMETHOD EditAnonymousAttributesFromCard(nsIAbCard *card);
 
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
@@ -148,10 +151,12 @@ protected:
 	nsresult RemoveAnonymousList(nsVoidArray* pArray);
 	nsresult SetAnonymousAttribute(nsVoidArray** pAttrAray, 
 							nsVoidArray** pValueArray, void *attrname, void *value);
-	nsresult DoAnonymousAttributesTransaction(PRBool bAdd);
-	nsresult DoStringAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd);
-	nsresult DoIntAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd);
-	nsresult DoBoolAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd);
+	nsresult DoAnonymousAttributesTransaction(AB_NOTIFY_CODE code);
+	nsresult DoStringAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, AB_NOTIFY_CODE code);
+	nsresult DoIntAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, AB_NOTIFY_CODE code);
+	nsresult DoBoolAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, AB_NOTIFY_CODE code);
+	void GetAnonymousAttributesFromCard(nsIAbCard* card);
+	nsresult FindAttributeRow(nsIMdbTable* pTable, mdb_token columnToken, nsIMdbRow** row);
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;
