@@ -329,7 +329,7 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
                            const nsString& aPopupAlignment)
 {
   // First fire the popupshowing event.
-  if (!OnCreate(aPopupContent))
+  if (!OnCreate(aXPos, aYPos, aPopupContent))
     return NS_OK;
         
   // See if we already have an entry in our list.  We must create a new one on a miss.
@@ -373,7 +373,7 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
   OpenPopup(entry, PR_TRUE);
 
   // Now fire the popupshown event.
-  OnCreated(aPopupContent);
+  OnCreated(aXPos, aYPos, aPopupContent);
 
   return NS_OK;
 }
@@ -520,7 +520,7 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
 }
 
 PRBool
-nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
+nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
@@ -532,6 +532,8 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
   event.isMeta = PR_FALSE;
   event.clickCount = 0;
   event.widget = nsnull;
+  event.point.x = aX;
+  event.point.y = aY;
 
   if (aPopupContent) {
     nsCOMPtr<nsIPresShell> shell;
@@ -599,7 +601,7 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
 }
 
 PRBool
-nsPopupSetFrame::OnCreated(nsIContent* aPopupContent)
+nsPopupSetFrame::OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
@@ -611,6 +613,8 @@ nsPopupSetFrame::OnCreated(nsIContent* aPopupContent)
   event.isMeta = PR_FALSE;
   event.clickCount = 0;
   event.widget = nsnull;
+  event.point.x = aX;
+  event.point.y = aY;
 
   if (aPopupContent) {
     nsCOMPtr<nsIPresShell> shell;

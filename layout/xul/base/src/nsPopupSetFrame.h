@@ -99,9 +99,9 @@ public:
   NS_IMETHOD AddPopupFrame(nsIFrame* aPopup);
   NS_IMETHOD RemovePopupFrame(nsIFrame* aPopup);
   
-  PRBool OnCreate(nsIContent* aPopupContent);
+  PRBool OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent);
   PRBool OnDestroy(nsIContent* aPopupContent);
-  PRBool OnCreated(nsIContent* aPopupContent);
+  PRBool OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent);
   PRBool OnDestroyed(nsIContent* aPopupContent);
 
   void ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag);

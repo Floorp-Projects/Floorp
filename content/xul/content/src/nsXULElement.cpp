@@ -2060,8 +2060,7 @@ nsXULElement::AddListenerFor(nsINodeInfo *aNodeInfo,
         nsCOMPtr<nsIAtom> attr;
         aNodeInfo->GetNameAtom(*getter_AddRefs(attr));
 
-        if (attr == nsXULAtoms::tooltip ||
-            attr == nsXULAtoms::menu ||
+        if (attr == nsXULAtoms::menu ||
             attr == nsXULAtoms::contextmenu ||
             // XXXdwh popup and context are deprecated
             attr == nsXULAtoms::popup ||
@@ -4576,10 +4575,7 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     if (NS_FAILED(rv)) return rv;
 
     XULPopupType popupType;
-    if (aName == nsXULAtoms::tooltip) {
-        popupType = eXULPopupType_tooltip;
-    }
-    else if (aName == nsXULAtoms::context || aName == nsXULAtoms::contextmenu) {
+    if (aName == nsXULAtoms::context || aName == nsXULAtoms::contextmenu) {
         popupType = eXULPopupType_context;
     }
     else {
@@ -4592,15 +4588,8 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     // Add the popup as a listener on this element.
     nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
 
-    if (popupType == eXULPopupType_tooltip) {
-        AddEventListener(NS_LITERAL_STRING("mouseout"), eventListener, PR_FALSE);
-        AddEventListener(NS_LITERAL_STRING("mousemove"), eventListener, PR_FALSE);
-        AddEventListener(NS_LITERAL_STRING("keydown"), eventListener, PR_FALSE);
-    }
-    else {
-        AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE);
-        AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE);
-    }
+    AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE);
+    AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE);
 
     return NS_OK;
 }

@@ -42,6 +42,7 @@
 
 #include "nsISupports.h"
 class nsIFrame;
+class nsIContent;
 
 // {DF05F6AB-320B-4e06-AFB3-E39E632A7555}
 #define NS_IROOTBOX_IID \
@@ -54,6 +55,12 @@ public:
 
   NS_IMETHOD GetPopupSetFrame(nsIFrame** aResult)=0;
   NS_IMETHOD SetPopupSetFrame(nsIFrame* aPopupSet)=0;
+
+  NS_IMETHOD GetDefaultTooltip(nsIContent** aResult)=0;
+  NS_IMETHOD SetDefaultTooltip(nsIContent* aTooltip)=0;
+
+  NS_IMETHOD AddTooltipSupport(nsIContent* aNode)=0;
+  NS_IMETHOD RemoveTooltipSupport(nsIContent* aNode)=0;
 };
 
 #endif
