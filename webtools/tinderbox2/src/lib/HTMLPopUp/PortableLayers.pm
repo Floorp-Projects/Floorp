@@ -4,8 +4,8 @@
 # windows using javascript layers written by Elena Dykhno.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2001/12/06 15:59:07 $ 
+# $Revision: 1.2 $ 
+# $Date: 2002/02/25 19:32:42 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/PortableLayers.pm,v $ 
 # $Name:  $ 
@@ -123,9 +123,9 @@ function whichAgent()
      this.dom = document.getElementById?1:0;
      this.ie5 = (this.version.indexOf("MSIE 5")>-1 && this.dom)?1:0;
      this.ie4 = (document.all && !this.dom)?1:0;
-     this.ns5 = (this.dom && parseInt(this.version) >= 5) ?1:0;
+     this.ns5 = (this.dom && parseInt(this.version) >= 5)?1:0;
      this.ns4 = (document.layers && !this.dom)?1:0;
-     this.browser = (this.ie5 || this.ie4 || this.ns4 || this.ns5)
+     this.browser = (this.ie5 || this.ie4 || this.ns5 || this.ns4)
      return this;
      }
 browser  =   new whichAgent();
@@ -154,8 +154,8 @@ function popUp(txt)
          }
 function move(evt)
      {
-         x = browser.ns4?evt.pageX:event.x;
-         y = browser.ns4?evt.pageY:event.y;
+         x = browser.ns4?evt.pageX:evt.x;
+         y = browser.ns4?evt.pageY:evt.y;
      }
 
 function popupInit()
@@ -278,6 +278,8 @@ sub Link {
     }
 
     if ($args{'windowtxt'}) {
+	# COUNTER of '' is 0
+	( $COUNTER < 1 ) && ( $COUNTER = 0 );
 	$out .= (
 		 "onMouseOver=\"popup($COUNTER,\'$args{'windowtxt'}\')\" ".
 		 "onMouseOut=\"popdown($COUNTER)\" "
