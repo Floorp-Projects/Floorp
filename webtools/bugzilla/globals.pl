@@ -1034,9 +1034,9 @@ sub GetBugLink {
                 $post = "</i>";
             }
             elsif (! IsOpenedState($bug_state)) {
-                $pre = "<strike>";
+                $pre = '<span class="bz_closed">';
                 $title .= " $bug_res";
-                $post = "</strike>";
+                $post = '</span>';
             }
             if (CanSeeBug($bug_num, $::userid)) {
                 $title .= " - $bug_desc";

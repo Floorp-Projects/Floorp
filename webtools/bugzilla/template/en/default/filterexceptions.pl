@@ -197,7 +197,7 @@
 'list/edit-multiple.html.tmpl' => [
   'group.id', 
   'group.description',
-  'group.description FILTER strike', 
+  'group.description FILTER inactive', 
   'knum', 
   'menuname', 
 ],

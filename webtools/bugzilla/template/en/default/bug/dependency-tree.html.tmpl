@@ -26,7 +26,6 @@
 [% PROCESS global/header.html.tmpl
    title = "Dependency tree for $terms.Bug $bugid"
    h1    = "Dependency tree for <a href=\"show_bug.cgi?id=$bugid\">$terms.Bug $bugid</a>"
-   style = "strike { background-color: #d9d9d9; color: #000000; }"
 %]
 
 [% PROCESS depthControlToolbar %]
@@ -92,7 +91,8 @@
     <li>
       [% "<script>document.write('<a href=\"#\" class=\"toggle\" onclick=\"listToggle(event); return false\">[-]</a>')</script>"
          IF dep.dependencies.size > 0 && !dep.seen %]
-      [% "<strike>" IF !dep.open %]
+      [% isclosed = !dep.open %]
+      [% FILTER closed(isclosed) %]
       <a href="show_bug.cgi?id=[% dep_id %]">[% dep_id %]
         [[% IF dep.milestone %][% dep.milestone FILTER html %], [% END %]
         [% dep.assignee_email FILTER html %]] -
@@ -101,7 +101,7 @@
         [% ELSE %]
           [% dep.summary FILTER html %].</a>
         [% END %]
-      [% "</strike>" IF !dep.open %]
+      [% END %]
       [% INCLUDE display_tree bug_id=dep_id
            IF dep.dependencies.size > 0 && !dep.seen %]
     </li>

@@ -36,7 +36,7 @@
         [% IF !attachment.isprivate || canseeprivate %]
     <tr [% "class=\"bz_private\"" IF attachment.isprivate %]>
       <td valign="top">
-        <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=view" [% "class=\"bz_obsolete\"" IF attachment.isobsolete %]>[% attachment.description FILTER html %]</a>
+        <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=view">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
       </td>
 
       <td valign="top">

@@ -351,8 +351,8 @@ if ($action eq 'list') {
         my $s = "";
         my $e = "";
         if ($disabledtext) {
-            $s = "<STRIKE>";
-            $e = "</STRIKE>";
+            $s = '<span class="bz_inactive">';
+            $e = '</span>';
         }
         $realname = ($realname ? html_quote($realname) : "<FONT COLOR=\"red\">missing</FONT>");
         print "<TR>\n";

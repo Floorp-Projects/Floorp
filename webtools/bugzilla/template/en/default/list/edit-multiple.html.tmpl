@@ -219,7 +219,7 @@
         [% IF group.isactive %]
           [% group.description %]
         [% ELSE %]
-          [% group.description FILTER strike %]
+          [% group.description FILTER inactive %]
         [% END %]
       </td>
 
@@ -229,8 +229,8 @@
   </table>
 
   [% IF foundinactive %]
-    <font size="-1">(Note: [% terms.Bugs %] may not be added to <strike>inactive
-    groups</strike>, only removed.)</font><br>
+    <font size="-1">(Note: [% terms.Bugs %] may not be added to [% FILTER inactive %]inactive
+    groups[% END %], only removed.)</font><br>
   [% END %]
 
 [% END %]

@@ -89,10 +89,9 @@
               [% END %]
             </td>
             <td align="right">
-              [% "<strike>" IF NOT bug.opened %]
+              [% isclosed = !bug.opened %]
                 <a href="show_bug.cgi?id=[% bug.id %]">
-                  [% bug.id %]</a>
-              [% "</strike>" IF NOT bug.opened %]
+                  [% bug.id FILTER closed(isclosed) %]</a>
             </td>
             <td>
               <a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.id %]">

@@ -2,6 +2,8 @@
 .bz_private { color: darkred ; background : #f3eeee ; }
 .bz_disabled { color: #a0a0a0 ; }
 
-.bz_obsolete { text-decoration: line-through underline; }
+.bz_obsolete { text-decoration: line-through; }
+.bz_inactive { text-decoration: line-through; }
+.bz_closed { text-decoration: line-through; }
 
 table#flags th, table#flags td { vertical-align: baseline; text-align: left; }
