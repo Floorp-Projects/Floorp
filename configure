@@ -6045,7 +6045,7 @@ else
   cat > conftest.$ac_ext <<EOF
 #line 6047 "configure"
 #include "confdefs.h"
-#include <stdlib.h>
+#include <stddef.h>
                  int main () {
                    return (sizeof(wchar_t) != 2) ||
                           (wchar_t)-1 < (wchar_t) 0 ; } 
@@ -6098,7 +6098,7 @@ else
 #ifdef __cplusplus
 extern "C" void exit(int);
 #endif
-#include <stdlib.h>
+#include <stddef.h>
                      int main () {
                        return (sizeof(wchar_t) != 2) ||
                               (wchar_t)-1 < (wchar_t) 0 ; } 
