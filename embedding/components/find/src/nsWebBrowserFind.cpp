@@ -856,12 +856,20 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow,
   }
 
   nsCOMPtr<nsISelectionController> selCon;
-  if (!frame) {
-    selCon = do_QueryInterface(presShell);
-  }
-  else {
+  if (frame) {
     frame->GetSelectionController(presContext, getter_AddRefs(selCon));
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSel);
+    if (*aSel) {
+      PRInt32 count = -1;
+      (*aSel)->GetRangeCount(&count);
+      if (count > 0) {
+        return;
+      }
+      NS_RELEASE(*aSel);
+    }
   }
+
+  selCon = do_QueryInterface(presShell);
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSel);
 }
 
