@@ -965,9 +965,11 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
         nsAutoString alternate;
         nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
 
-        ProcessStyleLink(nsnull /* XXX need a node here */,
+        nsresult rv = ProcessStyleLink(nsnull /* XXX need a node here */,
                          href, alternate.EqualsWithConversion("yes"),  /* XXX ignore case? */
                          title, type, media);
+        if (NS_FAILED(rv))
+          return rv; // Important! A failure can indicate that the parser should block!
     }
 
     return NS_OK;
