@@ -424,9 +424,14 @@
         // initialize the status picker
         this.initialize(document.getAnonymousNodes(this)[2], bundle);
 
-        // preflight the date picker to today's date
         var datePicker = document.getAnonymousNodes(this)[3];
-        var time = new Date();
+        var searchAttribute = this.searchAttribute;
+        var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+        var time;
+        if (searchAttribute == nsMsgSearchAttrib.Date)
+         time = datePicker.value;
+        else
+         time = new Date();
         datePicker.setAttribute("value",convertDateToString(time));
       ]]>
       </constructor>
