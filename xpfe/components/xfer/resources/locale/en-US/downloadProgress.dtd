@@ -1,0 +1,11 @@
+<!-- extracted from downloadProgress.xul -->
+
+<!ENTITY downloadWindow.title "Saving file"> 
+<!ENTITY  location "Location"> 
+<!ENTITY  saving "Saving"> 
+<!ENTITY  status "Status:"> 
+<!ENTITY  dialogStatus.label "( nn.nK of mm.mK bytes )"> 
+<!ENTITY  timeLeft "Time Left:">
+<!ENTITY dialogTimeLeft.label "?"> 
+<!ENTITY dialogCancel.label "Cancel"> 
+

@@ -1,0 +1,9 @@
+<!-- extracted from finddialog.xul -->
+
+<!ENTITY findDialog.title "Find on Page">
+<!ENTITY findField.label "Find:">
+<!ENTITY caseSensitiveCheckbox.label "Case Sensitive">
+<!ENTITY wrapCheckbox.label "Wrap">
+<!ENTITY backwardsCheckbox.label "Backwards">
+<!ENTITY cancelButton.label "Cancel">
+<!ENTITY findButton.label "Find">
