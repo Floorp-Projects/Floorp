@@ -1112,7 +1112,7 @@ inline
 int
 Compare( const basic_nsAReadableString<CharT>& lhs, const CharT* rhs )
   {
-    return Compare(lhs, basic_nsLiteralString<CharT>(rhs));
+    return Compare(lhs, NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, basic_nsLiteralString<CharT>(rhs)));
   }
 
 template <class CharT>
@@ -1120,7 +1120,7 @@ inline
 int
 Compare( const CharT* lhs, const basic_nsAReadableString<CharT>& rhs )
   {
-    return Compare(basic_nsLiteralString<CharT>(lhs), rhs);
+    return Compare(NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, basic_nsLiteralString<CharT>(lhs)), rhs);
   }
 
 
