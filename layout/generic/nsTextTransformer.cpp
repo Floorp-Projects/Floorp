@@ -102,6 +102,11 @@ nsresult
 nsTextTransformer::Initialize()
 {
   nsresult res = NS_OK;
+  return res;
+}
+static nsresult EnsureCaseConv()
+{
+  nsresult res = NS_OK;
   if (!gCaseConv) {
     res = nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),
                                        (nsISupports**)&gCaseConv);
@@ -880,7 +885,8 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
       if (!isWhitespace) {
         switch (mTextTransform) {
         case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
-          gCaseConv->ToTitle(result, result, wordLen, !aInWord);
+          if(NS_SUCCEEDED(EnsureCaseConv()))
+            gCaseConv->ToTitle(result, result, wordLen, !aInWord);
           // if the first character is szlig
           if(kSzlig == *result)
           {
@@ -900,11 +906,13 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           }
           break;
         case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-          gCaseConv->ToLower(result, result, wordLen);
+          if(NS_SUCCEEDED(EnsureCaseConv()))
+            gCaseConv->ToLower(result, result, wordLen);
           break;
         case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
           {
-            gCaseConv->ToUpper(result, result, wordLen);
+            if(NS_SUCCEEDED(EnsureCaseConv()))
+              gCaseConv->ToUpper(result, result, wordLen);
 
             // first we search for German Szlig
             PRInt32 szligCnt = CountGermanSzlig(result, wordLen);
@@ -1248,13 +1256,16 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
     if (!isWhitespace) {
       switch (mTextTransform) {
         case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
-          gCaseConv->ToTitle(result, result, wordLen, !aInWord);
+          if(NS_SUCCEEDED(EnsureCaseConv()))
+            gCaseConv->ToTitle(result, result, wordLen, !aInWord);
           break;
         case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-          gCaseConv->ToLower(result, result, wordLen);
+          if(NS_SUCCEEDED(EnsureCaseConv()))
+            gCaseConv->ToLower(result, result, wordLen);
           break;
         case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-          gCaseConv->ToUpper(result, result, wordLen);
+          if(NS_SUCCEEDED(EnsureCaseConv()))
+            gCaseConv->ToUpper(result, result, wordLen);
           break;
       }
     }
