@@ -12,6 +12,7 @@ nsIDocumentContainer.h
 nsIDocumentEncoder.h
 nsIDocumentObserver.h
 nsIDocumentViewer.h
+nsIElementFactory.h
 nsIFocusTracker.h
 nsIFrame.h
 nsIFrameDebug.h
