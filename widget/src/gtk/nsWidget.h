@@ -245,7 +245,7 @@ protected:
   virtual void OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent);
   virtual void OnFocusInSignal(GdkEventFocus * aGdkFocusEvent);
   virtual void OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent);
-  virtual void OnRealize();
+  virtual void OnRealize(GtkWidget *aWidget);
 
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 

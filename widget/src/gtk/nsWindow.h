@@ -110,7 +110,7 @@ protected:
                          gpointer       aData);
 
   virtual gint OnDrawSignal(GdkRectangle * aArea);
-  virtual void OnRealize();
+  virtual void OnRealize(GtkWidget *aWidget);
 
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
