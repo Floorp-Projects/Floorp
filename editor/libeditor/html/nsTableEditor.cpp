@@ -3120,47 +3120,23 @@ nsHTMLEditor::GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIn
   if (NS_FAILED(res)) return res;
   if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
-  PRInt32 startRowIndex, startColIndex;
-  res = GetCellIndexes(cell, startRowIndex, startColIndex);
-  if(NS_FAILED(res)) return res;
+  *aCell = cell.get();
+  NS_ADDREF(*aCell);
 
-  // Start with first cell selected
-  nsCOMPtr<nsIDOMElement> firstCell = cell;
-  PRInt32 firstRowIndex = startRowIndex;
-  PRInt32 firstColIndex = startColIndex;
-
-  while (cell)
+  // Also return the row and/or column if requested
+  if (aRowIndex || aColIndex)
   {
-    res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
-    if (NS_FAILED(res)) return res;
-    if (cell)
-    {
-      res = GetCellIndexes(cell, startRowIndex, startColIndex);
-      if(NS_FAILED(res)) return res;
-      // Find the topmost row
-      if (startRowIndex <= firstRowIndex)
-      {
-        // Then save the left-most cell in that row
-        if (startRowIndex < firstRowIndex || 
-            startColIndex < firstColIndex)
-        {
-          firstCell = cell;
-          firstRowIndex = startRowIndex;
-          firstColIndex = startColIndex;
-        }
-      }
-    }
-  }
-  if (NS_SUCCEEDED(res))
-  {
-    *aCell = firstCell.get();
-    NS_ADDREF(*aCell);
+    PRInt32 startRowIndex, startColIndex;
+    res = GetCellIndexes(cell, startRowIndex, startColIndex);
+    if(NS_FAILED(res)) return res;
 
     if (aRowIndex)
-      *aRowIndex = firstRowIndex;
+      *aRowIndex = startRowIndex;
+
     if (aColIndex)
-      *aColIndex = firstColIndex;
+      *aColIndex = startColIndex;
   }
+
   return res;
 }
 
