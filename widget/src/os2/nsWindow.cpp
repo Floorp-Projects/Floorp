@@ -1798,6 +1798,10 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
             event.isShift = PR_FALSE;  // OS2TODO - Why do we need this?
             event.keyCode = 0;
          }
+         else if (usChar != ' ')
+         {
+            event.charCode = 0;
+         }
       }
    }
 
@@ -2661,7 +2665,12 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
    else if( flags & KC_VIRTUALKEY)
    {
       USHORT vk = SHORT2FROMMP( mp2);
-      if( !(flags & KC_CHAR) ||
+      if( (flags & KC_ALT) && isNumPadScanCode(CHAR4FROMMP(mp1)) )
+      {
+          // No virtual key value for Alt+NumPad keystrokes
+          rc = 0;
+      }
+      else if( !(flags & KC_CHAR) ||
           (vk == VK_BACKSPACE) || (vk == VK_TAB) || 
           (vk == VK_ENTER) || (vk == VK_NEWLINE) || (vk == VK_SPACE) )
       {
