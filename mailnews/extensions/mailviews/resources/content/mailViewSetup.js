@@ -121,6 +121,11 @@ function initializeMailViewOverrides()
   //andButton.setAttribute('label', 'All of the following');
 }
 
+function UpdateAfterCustomHeaderChange()
+{
+  updateSearchAttributes();
+}
+
 function doEnabling()
 {
   if (dialog.nameField.value) 
