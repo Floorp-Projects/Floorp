@@ -128,7 +128,7 @@ function DomainAlreadyPresent(obj, domain_name, dup)
 {
   var errorTitle;
   var errorMsg;
-  var pref_string = obj.domain_pref.getAttribute('label');
+  var pref_string = obj.domain_pref.getAttribute('value');
   var found = false;
   try {
     var arrayOfPrefs = pref_string.split(',');
