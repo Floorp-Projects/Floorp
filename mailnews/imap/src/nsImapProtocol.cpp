@@ -946,7 +946,6 @@ NS_IMETHODIMP nsImapProtocol::Run()
   me->m_runningUrl = nsnull;
   CloseStreams();
   me->m_sinkEventQueue = nsnull;
-  me->m_server = nsnull;
   me->m_imapMailFolderSink = nsnull;
   me->m_imapMessageSink = nsnull;
   m_iThread = nsnull;
@@ -979,6 +978,7 @@ void nsImapProtocol::CloseStreams()
   }
   m_channelInputStream = nsnull;
   m_channelOutputStream = nsnull;
+  m_server = nsnull;
 }
 
 
@@ -1874,6 +1874,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
   m_runningUrl->GetMsgFlags(&msgFlags);
   
   res = CreateServerSourceFolderPathString(getter_Copies(mailboxName));
+  if (NS_FAILED(res))
+    Log("ProcessSelectedStateURL", nsnull, "error getting source folder path string");
   
   if (NS_SUCCEEDED(res) && !DeathSignalReceived())
   {
@@ -1946,11 +1948,14 @@ void nsImapProtocol::ProcessSelectedStateURL()
       
     }
     
+    if (!uidValidityOk)
+      Log("ProcessSelectedStateURL", nsnull, "uid validity not ok");
     if (GetServerStateParser().LastCommandSuccessful() && !DeathSignalReceived() && (uidValidityOk || m_imapAction == nsIImapUrl::nsImapDeleteAllMsgs))
     {
       
       if (GetServerStateParser().CurrentFolderReadOnly())
       {
+        Log("ProcessSelectedStateURL", nsnull, "current folder read only");
         if (m_imapAction == nsIImapUrl::nsImapAddMsgFlags ||
           m_imapAction == nsIImapUrl::nsImapSubtractMsgFlags) 
         {
