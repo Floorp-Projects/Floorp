@@ -139,11 +139,4 @@ static const nsModuleComponentInfo components[] = {
     },
 };
 
-PR_STATIC_CALLBACK(void)
-cookieModuleDtor(nsIModule *aSelf)
-{
-  // Release our singletons
-  nsCookieService::FreeSingleton();
-}
-
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsCookieModule, components, cookieModuleDtor)
+NS_IMPL_NSGETMODULE(nsCookieModule, components)
