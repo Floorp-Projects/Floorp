@@ -636,6 +636,8 @@ static void DisplayErrorDialog ( OSErr err )
 
 static void DisplayExceptionCodeDialog ( ExceptionCode err )
 {
+	if (err == userCanceledErr) return;
+	
 	if (::GetResource('ALRT', ALRT_ErrorOccurred) && ::GetResource('STR#', 7098))
 	{
 		short stringIndex;
@@ -650,7 +652,11 @@ static void DisplayExceptionCodeDialog ( ExceptionCode err )
 				stringIndex = 2;  //"of an unknown error."
 				break;
 		}
-		CStr255 p0, p1 = (long)err; // the "long" constructor prints the 4 character OSType.
+		CStr255 p0, p1;
+		
+		::NumToString(err, p1);     // The error is supposed to be numeric, not an OSType
+									// Initializing it in the CStr255 constructor doesn't handle this properly
+
 		::GetIndString(p0, 7098, stringIndex);
 		::ParamText(p0, p1, nil, nil);
 		::CautionAlert(ALRT_ErrorOccurred, nil);
