@@ -231,6 +231,9 @@ private:
         RemoveFromIdleList(sock);
         return AddToPollList(sock);
     }
+    
+    // returns PR_FALSE to stop processing the main loop
+    PRBool ServiceEventQ();
 
     //-------------------------------------------------------------------------
     // poll list (socket thread only)
@@ -241,6 +244,7 @@ private:
     PRPollDesc mPollList[ NS_SOCKET_MAX_COUNT + 1 ];
 
     PRUint32 PollCount() { return mActiveCount + 1; }
+    PRInt32  Poll(); // calls PR_Poll
 
     //-------------------------------------------------------------------------
     // mHostDB maps host:port -> nsHostEntry

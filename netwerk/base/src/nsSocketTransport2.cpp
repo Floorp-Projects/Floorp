@@ -1223,32 +1223,30 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 pollFlags)
     LOG(("nsSocketTransport::OnSocketReady [this=%x pollflags=%hd]\n",
         this, pollFlags));
 
-    if (mState == STATE_TRANSFERRING) {
-        // check poll flags for errors
-        if ((pollFlags & PR_POLL_ERR) ||
-            (pollFlags & PR_POLL_EXCEPT)) {
-            // the network connection was abruptly closed
-            mCondition = NS_ERROR_NET_RESET;
+    // check poll flags for errors
+    if ((pollFlags & PR_POLL_ERR) ||
+        (pollFlags & PR_POLL_EXCEPT)) {
+        // the network connection was abruptly closed
+        mCondition = NS_ERROR_NET_RESET;
+    }
+    else if (pollFlags & PR_POLL_HUP) {
+        // the network connection was gracefully closed
+        mCondition = NS_BASE_STREAM_CLOSED;
+    }
+    else if (mState == STATE_TRANSFERRING) {
+        if (pollFlags & PR_POLL_WRITE) {
+            SendStatus(STATUS_SENDING_TO);
+            // assume that we won't need to poll any longer (the stream will
+            // request that we poll again if it is still pending).
+            mPollFlags &= ~PR_POLL_WRITE;
+            mOutput.OnSocketReady(NS_OK);
         }
-        else if (pollFlags & PR_POLL_HUP) {
-            // the network connection was gracefully closed
-            mCondition = NS_BASE_STREAM_CLOSED;
-        }
-        else {
-            if (pollFlags & PR_POLL_WRITE) {
-                SendStatus(STATUS_SENDING_TO);
-                // assume that we won't need to poll any longer (the stream will
-                // request that we poll again if it is still pending).
-                mPollFlags &= ~PR_POLL_WRITE;
-                mOutput.OnSocketReady(NS_OK);
-            }
-            if (pollFlags & PR_POLL_READ) {
-                SendStatus(STATUS_RECEIVING_FROM);
-                // assume that we won't need to poll any longer (the stream will
-                // request that we poll again if it is still pending).
-                mPollFlags &= ~PR_POLL_READ;
-                mInput.OnSocketReady(NS_OK);
-            }
+        if (pollFlags & PR_POLL_READ) {
+            SendStatus(STATUS_RECEIVING_FROM);
+            // assume that we won't need to poll any longer (the stream will
+            // request that we poll again if it is still pending).
+            mPollFlags &= ~PR_POLL_READ;
+            mInput.OnSocketReady(NS_OK);
         }
     }
     else if (mState == STATE_CONNECTING) {
