@@ -148,7 +148,7 @@ NS_IMETHODIMP nsDeviceContextGTK :: GetSystemAttribute(nsSystemAttrID anID, Syst
         break;
     case eSystemAttr_Color_TextSelectBackground:
         *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_SELECTED]);
-        aColor;
+        break;
     case eSystemAttr_Color_TextSelectForeground:
         *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->text[GTK_STATE_SELECTED]);
         break;
