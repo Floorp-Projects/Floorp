@@ -154,6 +154,13 @@ public:
 
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
+  /**
+   * Turn a GUI mouse event into a mouse event targeted at the specified
+   * content and frame.  Do NOT call if you are not planning to target the
+   * mouse event at an element that is not the current target frame or a parent
+   * thereof--or if you do, fix the crash protection inside (for bug 185850)
+   * to work with other frames.
+   */
   void DispatchMouseEvent(nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage, nsIContent* aTargetContent, nsIFrame* aTargetFrame, nsIContent* aRelatedContent);
   void MaybeDispatchMouseEventToIframe(nsIPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
