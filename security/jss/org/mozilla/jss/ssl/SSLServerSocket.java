@@ -187,6 +187,14 @@ public class SSLServerSocket extends java.net.ServerSocket {
         close();
     }
 
+
+    /**
+     * @return The local port.
+     */
+    public int getLocalPort() {
+        return base.getLocalPort();
+    }
+
     /**
      * Closes this socket.
      */
