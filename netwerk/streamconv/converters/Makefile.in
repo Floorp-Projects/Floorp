@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  uconv \
 		  exthandler \
+		  imglib2 \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 

@@ -61,6 +61,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  nkcache \
 		  pipnss \
+		  imglib2 \
 		  $(NULL)
 
 ifdef BUILD_SMIME

@@ -118,7 +118,7 @@ private:
   PRUint32 mImageStatus;
   PRUint32 mState;
 
-  nsCString mContentType;
+  nsXPIDLCString mContentType;
 
   nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to this so long as we have observers */
 

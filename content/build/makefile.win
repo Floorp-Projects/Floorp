@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  content_xul \
 		  caps \
 		  xpconnect \
+		  imglib2 \
 		  $(NULL)
 
 LCFLAGS = \

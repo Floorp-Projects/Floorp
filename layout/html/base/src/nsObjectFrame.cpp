@@ -123,7 +123,7 @@
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsICategoryManager.h"
-#include "nsIComponentRegistrar.h"
+#include "imgILoader.h"
 
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
@@ -435,13 +435,8 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
   nsresult rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
   {
-    nsCOMPtr<nsIComponentRegistrar> reg;
-    NS_GetComponentRegistrar(getter_AddRefs(reg));
-    PRBool isReg = PR_FALSE;
-    nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + NS_LossyConvertUCS2toASCII(type));
-    reg->IsContractIDRegistered(decoderId.get(), &isReg);
-    if (isReg)
-      *aImage = PR_TRUE;
+    nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
+    loader->SupportImageWithMimeType(NS_LossyConvertUCS2toASCII(type).get(), aImage);
     return;
   }
 

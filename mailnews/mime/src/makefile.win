@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 !if defined(BUILD_SMIME)
 		  msgsmime	\
 !endif
+		  imglib2 \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

@@ -78,7 +78,7 @@
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
 #include "nsMsgUtils.h"
-#include "nsIComponentRegistrar.h"
+#include "imgILoader.h"
 
 #define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
 
@@ -444,11 +444,9 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
     /* The magic image types which we are able to display internally...
     */
     else if (!nsCRT::strncasecmp(content_type,		"image/", 6)) {
-        nsCOMPtr<nsIComponentRegistrar> reg;
-        NS_GetComponentRegistrar(getter_AddRefs(reg));
+        nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
         PRBool isReg = PR_FALSE;
-        nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + nsDependentCString(content_type));
-        reg->IsContractIDRegistered(decoderId.get(), &isReg);
+        loader->SupportImageWithMimeType(content_type, &isReg);
         if (isReg)
           clazz = (MimeObjectClass *)&mimeInlineImageClass;
     }

@@ -64,6 +64,7 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  caps \
 		  xpconnect \
+		  imglib2 \
 		  $(NULL)
 
 CPPSRCS		= \
