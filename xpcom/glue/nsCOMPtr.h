@@ -913,7 +913,8 @@ getter_AddRefs( nsCOMPtr<T>& aSmartPtr )
   }
 
 
-class NSCAP_Zero;
+
+  // Comparing two |nsCOMPtr|s
 
 template <class T, class U>
 inline
@@ -922,6 +923,20 @@ operator==( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   {
     return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(const void*, rhs.get());
   }
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
+  {
+    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs.get());
+  }
+
+
+
+#ifndef NSCAP_NSCOMPTR_TO_RAW_COMPARISONS_ARE_AMBIGUOUS
+
+  // Comparing an |nsCOMPtr| to a raw pointer
 
 template <class T, class U>
 inline
@@ -939,6 +954,29 @@ operator==( const U* lhs, const nsCOMPtr<T>& rhs )
     return NS_STATIC_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
   }
 
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
+  {
+    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs);
+  }
+
+template <class T, class U>
+inline
+NSCAP_BOOL
+operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
+  {
+    return NS_STATIC_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
+  }
+#endif // !defined(NSCAP_NSCOMPTR_TO_RAW_COMPARISONS_ARE_AMBIGUOUS)
+
+
+
+  // Comparing an |nsCOMPtr| to |0|
+
+class NSCAP_Zero;
+
 template <class T>
 inline
 NSCAP_BOOL
@@ -955,30 +993,6 @@ operator==( NSCAP_Zero* lhs, const nsCOMPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
     return NS_REINTERPRET_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
-  }
-
-template <class T, class U>
-inline
-NSCAP_BOOL
-operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
-  {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs.get());
-  }
-
-template <class T, class U>
-inline
-NSCAP_BOOL
-operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
-  {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs);
-  }
-
-template <class T, class U>
-inline
-NSCAP_BOOL
-operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
-  {
-    return NS_STATIC_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
   }
 
 template <class T>
@@ -999,12 +1013,18 @@ operator!=( NSCAP_Zero* lhs, const nsCOMPtr<T>& rhs )
     return NS_REINTERPRET_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
   }
 
+
+
+  // Comparing any two [XP]COM objects for identity
+
 inline
 NSCAP_BOOL
 SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
   {
     return nsCOMPtr<nsISupports>( do_QueryInterface(lhs) ) == nsCOMPtr<nsISupports>( do_QueryInterface(rhs) );
   }
+
+
 
 template <class SourceType, class DestinationType>
 inline
