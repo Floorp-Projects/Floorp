@@ -4685,6 +4685,26 @@ PRBool nsTableFrame::IsCellMapValid() const
   return firstInFlow->mCellMapValid;
 }
 
+static void InvalidateCellMapForRowGroup(nsIFrame* aRowGroupFrame)
+{
+  nsIFrame *rowFrame;
+  aRowGroupFrame->FirstChild(nsnull, &rowFrame);
+  for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(&rowFrame))
+  {
+    const nsStyleDisplay *rowDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
+    if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay)
+    {
+      ((nsTableRowFrame *)rowFrame)->ResetInitChildren();
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay)
+    {
+      InvalidateCellMapForRowGroup(rowFrame);
+    }
+  }
+
+}
+
 void nsTableFrame::InvalidateCellMap()
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
@@ -4698,17 +4718,7 @@ void nsTableFrame::InvalidateCellMap()
     rowGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowGroupDisplay);
     if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
     {
-      nsIFrame *rowFrame;
-      rowGroupFrame->FirstChild(nsnull, &rowFrame);
-      for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(&rowFrame))
-      {
-        const nsStyleDisplay *rowDisplay;
-        rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
-        if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay)
-        {
-          ((nsTableRowFrame *)rowFrame)->ResetInitChildren();
-        }
-      }
+      InvalidateCellMapForRowGroup(rowGroupFrame);
     }
   }
   if (PR_TRUE==gsDebugIR) printf("TIF: CellMap invalidated.\n");
