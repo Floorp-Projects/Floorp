@@ -23,6 +23,31 @@ DEPTH=..\..\..
 
 LIBRARY_NAME=libbaseeditor_s
 
+REQUIRES        = xpcom \
+                  string \
+                  dom \
+                  locale \
+                  layout \
+                  content \
+                  content_xul \
+                  uriloader \
+                  txmgr \
+                  htmlparser \
+                  necko \
+                  pref \
+                  view \
+                  appshell \
+                  rdf \
+                  webshell \
+                  timer \
+                  txtsvc \
+                  intl \
+                  docshell \
+                  gfx \
+                  widget \
+                  xuldoc \
+                  $(NULL)
+
 CPPSRCS =                          \
           ChangeAttributeTxn.cpp   \
           CreateElementTxn.cpp     \

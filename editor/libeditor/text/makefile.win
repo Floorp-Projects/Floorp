@@ -23,6 +23,28 @@ DEPTH=..\..\..
 
 LIBRARY_NAME=libtexteditor_s
 
+REQUIRES        = xpcom \
+                  string \
+                  dom \
+                  locale \
+                  layout \
+                  content \
+                  uriloader \
+                  txmgr \
+                  htmlparser \
+                  necko \
+                  pref \
+                  view \
+                  webshell \
+                  timer \
+                  txtsvc \
+                  intl \
+                  lwbrk \
+                  docshell \
+                  gfx \
+                  widget \
+                  $(NULL)
+
 CPPSRCS =                             \
           nsAOLCiter.cpp              \
           nsEditorEventListeners.cpp  \
