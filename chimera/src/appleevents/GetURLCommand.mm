@@ -28,7 +28,7 @@
 
 - (id)performDefaultImplementation {
   id controller = [[NSApp delegate] openBrowserWindowWithURLString: [self directParameter]];
-  [[[controller getMyBrowserView] getBrowserView] setActive: YES];
+  [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
   return nil;
 }
 @end

@@ -388,6 +388,8 @@
 				F57074BF026D80DF01A80166,
 				F51B70B8026EC98B01A80166,
 				F5C3AB830270072A01A80166,
+				F541495C02711A8301A80166,
+				F541496002711B0101A80166,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -474,6 +476,8 @@
 				F57074C0026D80DF01A80166,
 				F51B70B9026EC98B01A80166,
 				F5C3AB840270072A01A80166,
+				F541495D02711A8301A80166,
+				F541496102711B0101A80166,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -798,7 +802,7 @@
 		};
 		F5125A110202064D01FAFD9F = {
 			isa = PBXFileReference;
-			path = MyBrowserView.h;
+			path = CHBrowserWrapper.h;
 			refType = 4;
 		};
 		F5125A140202064D01FAFD9F = {
@@ -809,7 +813,7 @@
 		};
 		F5137A1102676B9101026D05 = {
 			isa = PBXFileReference;
-			path = Find.h;
+			path = CHFind.h;
 			refType = 4;
 		};
 		F5137A1202676B9101026D05 = {
@@ -1591,6 +1595,50 @@
 			settings = {
 			};
 		};
+		F541495A02711A8301A80166 = {
+			isa = PBXFileReference;
+			path = CHToolbarAdditions.h;
+			refType = 4;
+		};
+		F541495B02711A8301A80166 = {
+			isa = PBXFileReference;
+			path = CHToolbarAdditions.m;
+			refType = 4;
+		};
+		F541495C02711A8301A80166 = {
+			fileRef = F541495A02711A8301A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F541495D02711A8301A80166 = {
+			fileRef = F541495B02711A8301A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F541495E02711B0001A80166 = {
+			isa = PBXFileReference;
+			path = CHImageAdditions.h;
+			refType = 2;
+		};
+		F541495F02711B0001A80166 = {
+			isa = PBXFileReference;
+			path = CHImageAdditions.m;
+			refType = 2;
+		};
+		F541496002711B0101A80166 = {
+			fileRef = F541495E02711B0001A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F541496102711B0101A80166 = {
+			fileRef = F541495F02711B0001A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F54EF7ED022A2F9C01A80165 = {
 			isa = PBXFileReference;
 			name = pipnss.jar;
@@ -1755,6 +1803,10 @@
 				F564873A023C3857010001CA,
 				F5C3AB810270072A01A80166,
 				F5C3AB820270072A01A80166,
+				F541495A02711A8301A80166,
+				F541495B02711A8301A80166,
+				F541495E02711B0001A80166,
+				F541495F02711B0001A80166,
 			);
 			isa = PBXGroup;
 			name = "Categories and Extensions";
@@ -1798,7 +1850,7 @@
 		};
 		F5607CB5023944AD01A967DF = {
 			isa = PBXFileReference;
-			path = GeckoUtils.h;
+			path = CHGeckoUtils.h;
 			refType = 2;
 		};
 		F5607CB6023944AE01A967DF = {
@@ -1949,12 +2001,12 @@
 		};
 		F57074B5026BA85F01A80166 = {
 			isa = PBXFileReference;
-			path = BookmarksToolbar.h;
+			path = CHBookmarksToolbar.h;
 			refType = 4;
 		};
 		F57074B6026BA85F01A80166 = {
 			isa = PBXFileReference;
-			path = BookmarksToolbar.mm;
+			path = CHBookmarksToolbar.mm;
 			refType = 4;
 		};
 		F57074B7026BA85F01A80166 = {
@@ -1971,12 +2023,12 @@
 		};
 		F57074B9026BFD0101A80166 = {
 			isa = PBXFileReference;
-			path = BookmarksButton.h;
+			path = CHBookmarksButton.h;
 			refType = 4;
 		};
 		F57074BA026BFD0101A80166 = {
 			isa = PBXFileReference;
-			path = BookmarksButton.mm;
+			path = CHBookmarksButton.mm;
 			refType = 4;
 		};
 		F57074BB026BFD0201A80166 = {
@@ -2497,7 +2549,7 @@
 		};
 		F5DE10E70209DC0601A967DF = {
 			isa = PBXFileReference;
-			path = NSBrowserView.h;
+			path = CHBrowserView.h;
 			refType = 4;
 		};
 		F5DE10E80209DC0601A967DF = {
@@ -2512,7 +2564,7 @@
 		};
 		F5DE10EA0209DC0601A967DF = {
 			isa = PBXFileReference;
-			path = NSBrowserView.mm;
+			path = CHBrowserView.mm;
 			refType = 4;
 		};
 		F5DE10EB0209DC0601A967DF = {
@@ -2742,7 +2794,7 @@
 		};
 		F6BA6D4E01B2F8A601A962F7 = {
 			isa = PBXFileReference;
-			path = MyBrowserView.mm;
+			path = CHBrowserWrapper.mm;
 			refType = 2;
 		};
 		F6BA6D4F01B2F8A601A962F7 = {
