@@ -63,9 +63,6 @@ EXTRA_SHARED_LIBS += \
 	-lnspr4 \
 	$(NULL)
 else # ! NS_USE_GCC
-ifdef MOZILLA_BSAFE_BUILD
-	EXTRA_LIBS+=$(DIST)/lib/bsafe$(BSAFEVER).lib
-endif
 
 EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
@@ -75,10 +72,6 @@ EXTRA_SHARED_LIBS += \
 endif # NS_USE_GCC
 
 else
-
-ifdef MOZILLA_BSAFE_BUILD
-	EXTRA_LIBS+=$(DIST)/lib/$(LIB_PREFIX)bsafe.$(LIB_SUFFIX)
-endif
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
