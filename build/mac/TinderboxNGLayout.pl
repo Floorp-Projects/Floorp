@@ -31,6 +31,7 @@ $DEBUG 					= 1;
 $ALIAS_SYM_FILES 		= 0;
 $CLOBBER_LIBS 			= 1;
 $MOZ_FULLCIRCLE 		= 0;
+$GC_LEAK_DETECTOR		= 0;	# turn on to use GC leak detection
 
 # The following two options will delete all files, but leave the directory structure intact.
 $CLOBBER_DIST_ALL 		= 0;	# turn on to clobber all files inside dist (headers, xsym and libs)
