@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.51 [en] (WinNT; U) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
    <meta name="Author" content="Suresh Duddi">
    <title>TODO List for XPCOM</title>
 </head>
@@ -47,7 +47,9 @@ Mostly, there is equivalence between NR_*() calls and nsRegistry calls.&nbsp;</t
 
 <td>Nick Ambrose &lt;<a href="mailto:nicka87@hotmail.com">nicka87@hotmail.com</a>></td>
 
-<td>3/22/1999 started</td>
+<td>3/22/1999 started
+<br>3/27/1999 Patch submitted
+<br>4/1/1999 Espected date of landing</td>
 </tr>
 
 <tr>
@@ -97,7 +99,12 @@ Bandhauer</a></td>
 <tr>
 <td>Path handling: Use nsFileSpec instead of file path names. Char * pathnames
 are not intl, and cannot be stored in the registry. Plus that wont support
-mac aliases.</td>
+mac aliases.
+<ul>
+<li>
+Possibly move autoreg out of xpcom</li>
+</ul>
+</td>
 
 <td>P1</td>
 
@@ -112,6 +119,27 @@ mac aliases.</td>
 (or) better yet an rdf data source for the registry.</td>
 
 <td>P3</td>
+
+<td></td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>Replace use of nsVector (PL_Vector) with nsISupportsArray</td>
+
+<td>P3</td>
+
+<td><a href="mailto:warren"></a></td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>PATH&nbsp;argument to NSRegisterSelf() and NSUnregisterSelf() to be
+a nsISupports</td>
+
+<td>P1</td>
 
 <td></td>
 
