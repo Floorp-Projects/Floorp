@@ -10,11 +10,11 @@
 
 /* starting interface:    nsIImapIncomingServer */
 
-/* {758a8970-e628-11d2-b7fc-00805f05ffa5} */
-#define NS_IIMAPINCOMINGSERVER_IID_STR "758a8970-e628-11d2-b7fc-00805f05ffa5"
+/* {3d2e7e38-f9d8-11d2-af8f-001083002da8} */
+#define NS_IIMAPINCOMINGSERVER_IID_STR "3d2e7e38-f9d8-11d2-af8f-001083002da8"
 #define NS_IIMAPINCOMINGSERVER_IID \
-  {0x758a8970, 0xe628, 0x11d2, \
-    { 0xb7, 0xfc, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5 }}
+  {0x3d2e7e38, 0xf9d8, 0x11d2, \
+    { 0xaf, 0x8f, 0x00, 0x10, 0x83, 0x00, 0x2d, 0xa8 }}
 
 class nsIImapIncomingServer : public nsISupports {
  public: 
