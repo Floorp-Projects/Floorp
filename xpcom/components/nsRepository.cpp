@@ -235,7 +235,7 @@ static nsresult platformDeleteKey(HREG hreg, RKEY rootkey, const char *hierarchy
     while (NR_RegEnumSubkeys(hreg, key, &state, keyname, n, REGENUM_DEPTH_FIRST) == REGERR_OK)
     {
         PR_LOG(logmodule, PR_LOG_ALWAYS,
-               ("nsRepository: ...enum %s", keyname));
+               ("nsRepository: ...deleting %s", keyname));
         err = NR_RegDeleteKey(hreg, key, keyname);
         if (err != REGERR_OK)
         {
@@ -292,8 +292,9 @@ static nsresult platformVersionCheck()
     if (err != REGERR_OK || PL_strcmp(buf, NS_XPCOM_REPOSITORY_VERSION_STRING))
     {
         PR_LOG(logmodule, PR_LOG_ALWAYS,
-               ("nsRepository: Registry version mismatch (%s vs %s). Nuking xpcom "
-                "registry hierarchy.", buf, NS_XPCOM_REPOSITORY_VERSION_STRING));
+               ("nsRepository: platformVersionCheck() failed. "
+                "Mismatch (%s vs %s). "
+                "Nuking xpcom registry hierarchy.", buf, NS_XPCOM_REPOSITORY_VERSION_STRING));
 
         // Delete the XPCOM and CLSID hierarchy
         platformDeleteKey(hreg, ROOTKEY_COMMON, "Software/Netscape/XPCOM");
@@ -304,6 +305,11 @@ static nsresult platformVersionCheck()
         NR_RegAddKey(hreg, ROOTKEY_COMMON, "Classes/CLSID", NULL);
 
         NR_RegSetEntryString(hreg, xpcomKey, "VersionString", NS_XPCOM_REPOSITORY_VERSION_STRING);
+    }
+    else
+    {
+        PR_LOG(logmodule, PR_LOG_ALWAYS,
+               ("nsRepository: platformVersionCheck() passed."));
     }
 
     NR_RegClose(hreg);
@@ -750,6 +756,15 @@ static nsresult platformCLSIDToProgID(nsCID *aClass,
 
 /***************************************************************************/
 
+/**
+ * LoadFactory()
+ *
+ * Given a FactoryEntry, this loads the dll if it has to, find the NSGetFactory
+ * symbol, calls the routine to create a new factory and returns it to the
+ * caller.
+ *
+ * No attempt is made to store the factory in any form anywhere.
+ */
 nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
 								   nsIFactory **aFactory)
 {
@@ -790,7 +805,7 @@ nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
 
 		nsIServiceManager* serviceMgr = NULL;
 		nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-        NS_ASSERTION(res == NS_OK, "no service manager");
+        NS_ASSERTION(NS_SUCCEEDED(res), "no service manager");
 
         res = proc(serviceMgr, aEntry->cid, className, progID, aFactory);
 
@@ -805,6 +820,16 @@ nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
 	return NS_ERROR_FACTORY_NOT_LOADED;
 }
 
+
+/**
+ * FindFactory()
+ *
+ * Given a classID, this finds the factory for this CID by first searching the
+ * local CID<->factory mapping. Next it searches for a Dll that implements
+ * this classID and calls LoadFactory() to create the factory.
+ *
+ * Again, no attempt is made at storing the factory.
+ */
 nsresult nsRepository::FindFactory(const nsCID &aClass,
                                    nsIFactory **aFactory) 
 {
@@ -859,13 +884,21 @@ nsresult nsRepository::FindFactory(const nsCID &aClass,
 		}
 	}
 	
-	PR_LOG(logmodule, PR_LOG_WARNING, ("nsRepository: FindFactory() %s",
-		res == NS_OK ? "succeeded" : "FAILED"));
+	PR_LOG(logmodule, PR_LOG_WARNING,
+           ("\t\tFindFactory() %s",
+            NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
 	
 	return res;
 }
 
 
+/**
+ * ProgIDToCLSID()
+ *
+ * Mapping function from a ProgID to a classID. Directly talks to the registry.
+ *
+ * XXX We need to add a cache this translation as this is done a lot.
+ */
 nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
                                      nsCID *aClass) 
 {
@@ -873,22 +906,34 @@ nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
 
 	checkInitialized();
 
-	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
-	{
-		PR_LogPrint("nsRepository: ProgIDToCLSID(%s)", aProgID);
-	}
-
 #ifdef USE_REGISTRY
     res = platformProgIDToCLSID(aProgID, aClass);
 #endif /* USE_REGISTRY */
 
-	PR_LOG(logmodule, PR_LOG_WARNING, ("nsRepository: ProgIDToCLSID() %s",
-		res == NS_OK ? "succeeded" : "FAILED"));
+	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
+    {
+        char *buf;
+        if (NS_SUCCEEDED(res))
+            buf = aClass->ToString();
+        PR_LOG(logmodule, PR_LOG_ALWAYS,
+               ("nsRepository: ProgIDToCLSID(%s)->%s", aProgID,
+                NS_SUCCEEDED(res) ? buf : "[FAILED]"));
+        if (NS_SUCCEEDED(res))
+            delete [] buf;
+    }
 	
 	return res;
 }
 
 
+/**
+ * CLSIDToProgID()
+ *
+ * Translates a classID to a {ProgID, Class Name}. Does direct registry
+ * access to do the translation.
+ *
+ * XXX Would be nice to hook in a cache here too.
+ */
 nsresult nsRepository::CLSIDToProgID(nsCID *aClass,
                                      char* *aClassName,
                                      char* *aProgID)
@@ -897,22 +942,32 @@ nsresult nsRepository::CLSIDToProgID(nsCID *aClass,
 
 	checkInitialized();
 
-	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
-	{
-		char *buf = aClass->ToString();
-		PR_LogPrint("nsRepository: CLSIDToProgID(%s)", buf);
-		delete [] buf;
-	}
-
 #ifdef USE_REGISTRY
     res = platformCLSIDToProgID(aClass, aClassName, aProgID);
 #endif /* USE_REGISTRY */
 
-	PR_LOG(logmodule, PR_LOG_WARNING, ("nsRepository: CLSIDToProgID() %s",
-		res == NS_OK ? "succeeded" : "FAILED"));
-	return res;
+	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
+    {
+		char *buf = aClass->ToString();
+        PR_LOG(logmodule, PR_LOG_WARNING,
+               ("nsRepository: CLSIDToProgID(%s)->%s", buf,
+                NS_SUCCEEDED(res) ? *aProgID : "[FAILED]"));
+        delete [] buf;
+    }
+
+    return res;
 }
 
+
+/**
+ * checkInitialized()
+ *
+ * Local function to make sure the repository is initialized. The repository
+ * is mostly full of static functions. We dont want to initialize ourselves
+ * with a static constructor as that wont make the code portable. Hence,
+ * in all our public entry points, we check if we are initialized and
+ * initialize ourselves if we aren't already.
+ */
 nsresult nsRepository::checkInitialized(void) 
 {
 	nsresult res = NS_OK;
@@ -923,6 +978,17 @@ nsresult nsRepository::checkInitialized(void)
 	return res;
 }
 
+
+/**
+ * Initialize()
+ *
+ * Initialization of our global pointers. Also, the libreg/ is started here and
+ * if the xpcom hierarchy in the registry isn't the same as the version that we
+ * expect, it is nuked.
+ *
+ * XXX Plus for now autoregistration() begins here. We will remove it once the
+ * XXX application takes control of it.
+ */
 nsresult nsRepository::Initialize(void) 
 {
 	if (factories == NULL)
@@ -956,6 +1022,14 @@ nsresult nsRepository::Initialize(void)
 	return NS_OK;
 }
 
+
+/**
+ * CreateInstance()
+ *
+ * Create an instance of an object that implements an interface and belongs
+ * to the implementation aClass using the factory. The factory is immediately
+ * released and not held onto for any longer.
+ */
 nsresult nsRepository::CreateInstance(const nsCID &aClass, 
                                       nsISupports *aDelegate,
                                       const nsIID &aIID,
@@ -988,6 +1062,18 @@ nsresult nsRepository::CreateInstance(const nsCID &aClass,
 	return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
 
+
+/**
+ * CreateInstance()
+ *
+ * An overload of CreateInstance() that creates an instance of the object that
+ * implements the interface aIID and whose implementation has a progID aProgID.
+ *
+ * This is only a convenience routine that turns around can calls the
+ * CreateInstance() with classid and iid.
+ *
+ * XXX This is a function overload. We need to remove it.
+ */
 nsresult nsRepository::CreateInstance(const char *aProgID,
                                       nsISupports *aDelegate,
                                       const nsIID &aIID,
@@ -1050,6 +1136,24 @@ nsresult nsRepository::CreateInstance2(const nsCID &aClass,
 */
 #endif /* 0 */
 
+
+/**
+ * RegisterFactory()
+ *
+ * Register a factory to be responsible for creation of implementation of
+ * classID aClass. Plus creates as association of aClassName and aProgID
+ * to the classID. If replace is PR_TRUE, we replace any existing registrations
+ * with this one.
+ *
+ * Once registration is complete, we add the class to the factories cache
+ * that we maintain. The factories cache is the ONLY place where these
+ * registrations are ever kept.
+ *
+ * XXX This uses FindFactory() to test if a factory already exists. This
+ * XXX has the bad side effect of loading the factory if the previous
+ * XXX registration was a dll for this class. We might be able to do away
+ * XXX with such a load.
+ */
 nsresult nsRepository::RegisterFactory(const nsCID &aClass,
                                        const char *aClassName,
                                        const char *aProgID,
