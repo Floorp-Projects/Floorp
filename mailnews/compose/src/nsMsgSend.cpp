@@ -3418,7 +3418,17 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   // see GenericSendMessage() in MsgComposeCommands.js for the reverse logic
   // if we choose to send both (html and plain) remember html.
   if (forcePlainText && !useMultipartAlternative)
-    sendFormat = nsIAbPreferMailFormat::plaintext;
+  {
+    // for now, don't remember the "plaintext" decision.
+    // we could get in here because while sending html mail
+    // the body was "convertible", but that doesn't mean
+    // we intended to force plain text here.
+    // so for now, use "unknown" which will have no effect on the
+    // prefers html attribute in the ab.
+    // see bug #245520 for more details
+    // sendFormat = nsIAbPreferMailFormat::plaintext;
+    sendFormat = nsIAbPreferMailFormat::unknown;
+  }
   else if (!forcePlainText)
     sendFormat = nsIAbPreferMailFormat::html;
   else

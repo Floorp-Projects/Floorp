@@ -268,7 +268,7 @@ nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * ctxt, nsresult aStatus)
 {
 #if defined(DEBUG_ducarroz)
