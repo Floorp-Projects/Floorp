@@ -1,5 +1,6 @@
 messenger.jar:
 +   content/messenger/messengercompose/pref-composing_messages.xul     (content/pref-composing_messages.xul)
+    content/messenger/messengercompose/pref-composing_html.xul         (content/pref-composing_html.xul)
     content/messenger/messengercompose/pref-sendOptions.xul            (content/pref-sendOptions.xul)
 +   content/messenger/pref-viewing_messages.xul                        (content/pref-viewing_messages.xul)
 *+  content/messenger/pref-mailnews.xul                                (content/pref-mailnews.xul)
@@ -23,6 +24,7 @@ en-US.jar:
 +   locale/en-US/communicator/pref/pref-fonts.dtd                      (locale/pref-fonts.dtd)
 +   locale/en-US/communicator/pref/pref-themes.dtd                     (locale/pref-themes.dtd)
 +   locale/en-US/messenger/messengercompose/pref-composing_messages.dtd (locale/pref-composing_messages.dtd)
+    locale/en-US/messenger/messengercompose/pref-composing_html.dtd    (locale/pref-composing_html.dtd)
     locale/en-US/messenger/messengercompose/pref-sendOptions.dtd       (locale/pref-sendOptions.dtd)
 +   locale/en-US/messenger/pref-mailnews.dtd                           (locale/pref-mailnews.dtd)
 *+  locale/en-US/messenger/mailPrefsOverlay.dtd                        (locale/mailPrefsOverlay.dtd)
