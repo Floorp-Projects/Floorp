@@ -356,6 +356,18 @@ nsObjectHashtable::Reset()
     nsHashtable::Reset(mDestroyElementFun, mDestroyElementClosure);
 }
 
+PRBool
+nsObjectHashtable::RemoveAndDelete(nsHashKey *aKey)
+{
+    void *value = Remove(aKey);
+    if (value && mDestroyElementFun)
+    {
+        return (*mDestroyElementFun)(aKey, value, mDestroyElementClosure);
+    }
+    else
+        return PR_FALSE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsSupportsHashtable: an nsHashtable where the elements are nsISupports*
 
