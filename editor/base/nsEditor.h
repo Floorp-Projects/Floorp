@@ -110,6 +110,7 @@ public:
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
   NS_IMETHOD GetPresShell(nsIPresShell **aPS);
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);
+  NS_IMETHOD GetBodyElement(nsIDOMElement **aElement);
   
   NS_IMETHOD EnableUndo(PRBool aEnable);
   NS_IMETHOD Do(nsITransaction *aTxn);
@@ -220,8 +221,6 @@ public:
 protected:
 
 
-  // why not use the one in nsHTMLDocument?
-  NS_IMETHOD GetBodyElement(nsIDOMElement **aElement);
 
   //NOTE: Most callers are dealing with Nodes,
   //  but these objects must supports nsIDOMElement
@@ -592,8 +591,18 @@ public:
   static nsresult GetEndNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
 
   nsresult IsPreformatted(nsIDOMNode *aNode, PRBool *aResult);
-  nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
-  nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
+  nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, 
+                                PRInt32 aOffset, 
+                                PRBool *outIsSpace, 
+                                PRBool *outIsNBSP,
+                                nsCOMPtr<nsIDOMNode> *outNode = 0,
+                                PRInt32 *outOffset = 0);
+  nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, 
+                                PRInt32 aOffset, 
+                                PRBool *outIsSpace, 
+                                PRBool *outIsNBSP,
+                                nsCOMPtr<nsIDOMNode> *outNode = 0,
+                                PRInt32 *outOffset = 0);
 
   nsresult SplitNodeDeep(nsIDOMNode *aNode, nsIDOMNode *aSplitPointParent, PRInt32 aSplitPointOffset, PRInt32 *outOffset);
   nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsCOMPtr<nsIDOMNode> *aOutJoinNode, PRInt32 *outOffset); 

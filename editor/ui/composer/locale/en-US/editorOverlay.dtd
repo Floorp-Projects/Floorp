@@ -319,12 +319,14 @@
 <!ENTITY formatparagraphmenu.accesskey "p">
 <!ENTITY paragraphNormalCmd.label "Normal">
 <!ENTITY paragraphnormal.accesskey "n">
+<!ENTITY paragraphParagraphCmd.label "Paragraph">  
+<!ENTITY paragraphparagraph.accesskey "p">
 <!ENTITY paragraphBlockquoteCmd.label "Blockquote">
 <!ENTITY paragraphblockquote.accesskey "b">
 <!ENTITY paragraphAddressCmd.label "Address">
 <!ENTITY paragraphaddress.accesskey "a">
 <!ENTITY paragraphPreformatCmd.label "Preformat">
-<!ENTITY paragraphpreformat.accesskey "p">
+<!ENTITY paragraphpreformat.accesskey "f">
 <!ENTITY paragraphListCmd.label "List item">
 <!ENTITY paragraphlist.accesskey "l">
 <!ENTITY paragraphDfnTermCmd.label "Term">

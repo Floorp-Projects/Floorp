@@ -135,7 +135,7 @@ static const PRBool gNoisy = PR_FALSE;
 #endif
 
 
-
+const unsigned char nbsp = 160;
 PRInt32 nsEditor::gInstanceCount = 0;
 
 
@@ -675,7 +675,8 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
         if (firstNode)
         {
           // if firstNode is text, set selection to beginning of the text node
-          if (IsTextNode(firstNode)) {
+          if (IsTextNode(firstNode)) 
+          {
             result = selection->Collapse(firstNode, 0);
           }
           else
@@ -690,6 +691,11 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
             result = selection->Collapse(parentNode, offsetInParent);
           }
           ScrollIntoView(PR_TRUE);
+        }
+        else
+        {
+          // just the body node, set selection to inside the body
+          result = selection->Collapse(bodyNode, 0);
         }
       }
     }
@@ -736,6 +742,11 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
           }
           result = selection->Collapse(lastChild, offset);
           ScrollIntoView(PR_FALSE);
+        }
+        else
+        {
+          // just the body node, set selection to inside the body
+          result = selection->Collapse(bodyNode, 0);
         }
       }
     }
@@ -907,6 +918,19 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
                                    PRInt32         aPosition,
                                    nsIDOMNode **   aNewNode)
 {
+  PRInt32 i;
+  nsIEditActionListener *listener;
+
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+        listener->WillCreateNode(aTag, aParent, aPosition);
+    }
+  }
+
   CreateElementTxn *txn;
   nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition, &txn);
   if (NS_SUCCEEDED(result)) 
@@ -920,6 +944,17 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
   }
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
+  
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+        listener->DidCreateNode(aTag, *aNewNode, aParent, aPosition, result);
+    }
+  }
+
   return result;
 }
 
@@ -1614,6 +1649,20 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
 	}
 	if (NS_FAILED(result)) return result;
 	if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
+	
+	// let listeners know whats up
+    PRInt32 i;
+    nsIEditActionListener *listener;
+    if (mActionListeners)
+    {
+      for (i = 0; i < mActionListeners->Count(); i++)
+      {
+        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+        if (listener)
+          listener->WillInsertText(nodeAsText, offset, aStringToInsert);
+      }
+    }
+    
     BeginUpdateViewBatch();
     result = Do(aggTxn);
     result = Do(txn);
@@ -1621,6 +1670,18 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
     // aggTxn released at end of routine.
     NS_IF_RELEASE(txn);
     EndUpdateViewBatch();
+
+	// let listeners know what happened
+    if (mActionListeners)
+    {
+      for (i = 0; i < mActionListeners->Count(); i++)
+      {
+        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+        if (listener)
+          listener->DidInsertText(nodeAsText, offset, aStringToInsert, result);
+      }
+    }
+    
   }
   else if (NS_ERROR_EDITOR_NO_SELECTION==result)  
   {
@@ -1783,7 +1844,7 @@ nsresult nsEditor::GetFirstEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> 
     node = next;
   }
   
-  *outFirstNode = node;
+  if (node.get() != aRoot) *outFirstNode = node;
 
   return rv;
 }
@@ -1805,7 +1866,7 @@ nsresult nsEditor::GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *
     node = next;
   }
   
-  *outLastNode = node;
+  if (node.get() != aRoot) *outLastNode = node;
 
   return rv;
 }
@@ -1974,8 +2035,34 @@ NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
               {
                 result = CreateTxnForInsertText(aStringToInsert, newTextNode, 0, (InsertTextTxn**)&txn); 
               }
-              if (NS_SUCCEEDED(result)) {
+              if (NS_SUCCEEDED(result)) 
+              {
+				// let listeners know whats up
+			    PRInt32 i;
+			    nsIEditActionListener *listener;
+			    if (mActionListeners)
+			    {
+			      for (i = 0; i < mActionListeners->Count(); i++)
+			      {
+			        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+			        if (listener)
+			          listener->WillInsertText(newTextNode, 0, aStringToInsert);
+			      }
+			    }
+    
                 result = Do(insertTxn);
+                
+				// let listeners know what happened
+			    if (mActionListeners)
+			    {
+			      for (i = 0; i < mActionListeners->Count(); i++)
+			      {
+			        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+			        if (listener)
+			          listener->DidInsertText(newTextNode, 0, aStringToInsert, result);
+			      }
+			    }
+    
               }
               // The transaction system (if any) has taken ownwership of txn
               NS_IF_RELEASE(insertTxn);
@@ -1999,9 +2086,33 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
 {
   DeleteTextTxn *txn;
   nsresult result = CreateTxnForDeleteText(aElement, aOffset, aLength, &txn);
-  if (NS_SUCCEEDED(result))  {
-    result = Do(txn);  
-    // HACKForceRedraw();
+  if (NS_SUCCEEDED(result))  
+  {
+	// let listeners know whats up
+    PRInt32 i;
+    nsIEditActionListener *listener;
+    if (mActionListeners)
+    {
+      for (i = 0; i < mActionListeners->Count(); i++)
+      {
+        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+        if (listener)
+          listener->WillDeleteText(aElement, aOffset, aLength);
+      }
+    }
+    
+    result = Do(txn); 
+    
+	// let listeners know what happened
+    if (mActionListeners)
+    {
+      for (i = 0; i < mActionListeners->Count(); i++)
+      {
+        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+        if (listener)
+          listener->DidDeleteText(aElement, aOffset, aLength, result);
+      }
+    }
   }
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
@@ -2715,7 +2826,6 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
   if (child)
   {
     result = GetLeftmostChild(child, aResultNode);
-
     if (NS_FAILED(result)) return result;
     if (!aEditableNode) return result;
     if (IsEditable(*aResultNode))  return result;
@@ -3621,16 +3731,22 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
 
 ///////////////////////////////////////////////////////////////////////////
 // IsNextCharWhitespace: checks the adjacent content in the same block
-//                       to see if following selection is whitespace
+//                       to see if following selection is whitespace or nbsp
 nsresult 
 nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode, 
                                       PRInt32 aOffset,
-                                      PRBool *aResult)
+                                      PRBool *outIsSpace,
+                                      PRBool *outIsNBSP,
+                                      nsCOMPtr<nsIDOMNode> *outNode,
+                                      PRInt32 *outOffset)
 {
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-  *aResult = PR_FALSE;
+  if (!outIsSpace || !outIsNBSP) return NS_ERROR_NULL_POINTER;
+  *outIsSpace = PR_FALSE;
+  *outIsNBSP = PR_FALSE;
+  if (outNode) *outNode = nsnull;
+  if (outOffset) *outOffset = -1;
   
-  nsString tempString;
+  nsAutoString tempString;
   PRUint32 strLength;
   nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aParentNode);
   if (textNode)
@@ -3640,7 +3756,10 @@ nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode,
     {
       // easy case: next char is in same node
       textNode->SubstringData(aOffset,aOffset+1,tempString);
-      *aResult = nsString::IsSpace(tempString.First());
+      *outIsSpace = nsString::IsSpace(tempString.First());
+      *outIsNBSP = (tempString.First() == nbsp);
+      if (outNode) *outNode = do_QueryInterface(aParentNode);
+      if (outOffset) *outOffset = aOffset+1;  // yes, this is _past_ the character; 
       return NS_OK;
     }
   }
@@ -3660,7 +3779,10 @@ nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode,
         {
           // you could use nsITextContent::IsOnlyWhitespace here
           textNode->SubstringData(0,1,tempString);
-          *aResult = nsString::IsSpace(tempString.First());
+          *outIsSpace = nsString::IsSpace(tempString.First());
+          *outIsNBSP = (tempString.First() == nbsp);
+          if (outNode) *outNode = do_QueryInterface(node);
+          if (outOffset) *outOffset = 1;  // yes, this is _past_ the character; 
           return NS_OK;
         }
         // else it's an empty text node, or not editable; skip it.
@@ -3684,10 +3806,16 @@ nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode,
 nsresult 
 nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode, 
                                       PRInt32 aOffset,
-                                      PRBool *aResult)
+                                      PRBool *outIsSpace,
+                                      PRBool *outIsNBSP,
+                                      nsCOMPtr<nsIDOMNode> *outNode,
+                                      PRInt32 *outOffset)
 {
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-  *aResult = PR_FALSE;
+  if (!outIsSpace || !outIsNBSP) return NS_ERROR_NULL_POINTER;
+  *outIsSpace = PR_FALSE;
+  *outIsNBSP = PR_FALSE;
+  if (outNode) *outNode = nsnull;
+  if (outOffset) *outOffset = -1;
   
   nsAutoString tempString;
   PRUint32 strLength;
@@ -3698,7 +3826,10 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
     {
       // easy case: prev char is in same node
       textNode->SubstringData(aOffset-1,aOffset,tempString);
-      *aResult = nsString::IsSpace(tempString.First());
+      *outIsSpace = nsString::IsSpace(tempString.First());
+      *outIsNBSP = (tempString.First() == nbsp);
+      if (outNode) *outNode = do_QueryInterface(aParentNode);
+      if (outOffset) *outOffset = aOffset-1;  
       return NS_OK;
     }
   }
@@ -3718,7 +3849,10 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
         {
           // you could use nsITextContent::IsOnlyWhitespace here
           textNode->SubstringData(strLength-1,strLength,tempString);
-          *aResult = nsString::IsSpace(tempString.First());
+          *outIsSpace = nsString::IsSpace(tempString.First());
+          *outIsNBSP = (tempString.First() == nbsp);
+          if (outNode) *outNode = do_QueryInterface(aParentNode);
+          if (outOffset) *outOffset = strLength-1;  
           return NS_OK;
         }
         // else it's an empty text node, or not editable; skip it.
@@ -3743,7 +3877,7 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
 //                appropriate.  The place to split is represented by
 //                a dom point at {splitPointParent, splitPointOffset}.
 //                That dom point must be inside aNode, which is the node to 
-//                split.  outOffset is set to the offset in aNode where
+//                split.  outOffset is set to the offset in the parent of aNode where
 //                the split terminates - where you would want to insert 
 //                a new element, for instance, if thats why you were splitting 
 //                the node.
@@ -4410,7 +4544,6 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     }
     else
     { // we're either deleting a node or some text, need to dig into the next/prev node to find out
-
       nsCOMPtr<nsIDOMNode> selectedNode;
       if (eDeletePrevious==aAction)
       {
@@ -4421,61 +4554,33 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
         result = GetNextNode(node, offset, PR_TRUE, getter_AddRefs(selectedNode));
       }
       if (NS_FAILED(result)) { return result; }
-
       if (selectedNode) 
-
       {
-
         nsCOMPtr<nsIDOMCharacterData> selectedNodeAsText;
-
         selectedNodeAsText = do_QueryInterface(selectedNode);
-
         if (selectedNodeAsText)
-
         { // we are deleting from a text node, so do a text deletion
-
           PRInt32 begin = 0;    // default for forward delete
-
           if (eDeletePrevious==aAction)
-
           {
-
             PRUint32 length=0;
-
             selectedNodeAsText->GetLength(&length);
-
             if (0<length)
-
               begin = length-1;
-
           }
-
           DeleteTextTxn *delTextTxn;
-
           result = CreateTxnForDeleteText(selectedNodeAsText, begin, 1, &delTextTxn);
-
           if (NS_FAILED(result))  { return result; }
-
           if (!delTextTxn) { return NS_ERROR_NULL_POINTER; }
-
           aTxn->AppendChild(delTextTxn);
-
         }
-
         else
-
         {
-
           DeleteElementTxn *delElementTxn;
-
           result = CreateTxnForDeleteElement(selectedNode, &delElementTxn);
-
           if (NS_FAILED(result))  { return result; }
-
           if (!delElementTxn) { return NS_ERROR_NULL_POINTER; }
-
           aTxn->AppendChild(delElementTxn);
-
         }
       }
     }

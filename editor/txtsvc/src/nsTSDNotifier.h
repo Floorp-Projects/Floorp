@@ -73,7 +73,13 @@ public:
                           nsIDOMNode  *aRightNode,
                           nsIDOMNode  *aParent,
                           nsresult     aResult);
-
+  // these listen methods are unused:                        
+  NS_IMETHOD WillCreateNode(const nsString& aTag, nsIDOMNode *aParent, PRInt32 aPosition);
+  NS_IMETHOD DidCreateNode(const nsString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult);
+  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString);
+  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString, nsresult aResult);
+  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
+  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult);
 };
 
 #endif // nsTSDNotifier_h__
