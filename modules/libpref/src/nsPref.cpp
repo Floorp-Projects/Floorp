@@ -153,7 +153,7 @@ protected:
     // mObserverDomains[i]
     nsCOMPtr<nsISupportsArray> mObservers;
     nsCStringArray mObserverDomains;
-    
+
 }; // class nsPref
 
 nsPref* nsPref::gInstance = NULL;
@@ -736,7 +736,7 @@ NS_IMETHODIMP nsPref::SavePrefFile()
 //----------------------------------------------------------------------------------------
 {
     if (!gHashTable || !mFileSpec)
-        return PREF_NOT_INITIALIZED;
+        return _convertRes(PREF_NOT_INITIALIZED);
     return _convertRes(PREF_SavePrefFileSpecWith(mFileSpec, (PLHashEnumerator)pref_savePref));
 }
 
@@ -1390,7 +1390,7 @@ NS_IMETHODIMP nsPref::CreateChildList(const char* parent_node, char **child_list
 	else
 		pcs.parent = PL_strdup("");
 	if (!pcs.parent || !pcs.childList)
-		return PREF_OUT_OF_MEMORY;
+		return _convertRes(PREF_OUT_OF_MEMORY);
 	pcs.childList[0] = '\0';
 
 	PL_HashTableEnumerateEntries(gHashTable, pref_addChild, &pcs);

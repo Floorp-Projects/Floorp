@@ -136,11 +136,11 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id)
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
-JSTaskState *       gMochaTaskState = NULL;
-JSContext *         gMochaContext = NULL;
-JSObject *          gMochaPrefObject = NULL;
-JSObject *          gGlobalConfigObject = NULL;
-JSClass             global_class = {
+JSRuntime *       gMochaTaskState = NULL;
+JSContext *       gMochaContext = NULL;
+JSObject *        gMochaPrefObject = NULL;
+JSObject *        gGlobalConfigObject = NULL;
+JSClass           global_class = {
                     "global", 0,
                     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
                     global_enumerate, global_resolve, JS_ConvertStub, JS_FinalizeStub,
@@ -272,7 +272,7 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
 }
 PRBool PREF_Init(const char *filename)
 {
-    PRBool ok = PR_TRUE;
+    PRBool ok = PR_TRUE, request = PR_FALSE;
     extern JSRuntime* PREF_GetJSRuntime(void);
 
     /* --ML hash test */
@@ -287,13 +287,18 @@ PRBool PREF_Init(const char *filename)
 
     if (!gMochaContext)
     {
-        gMochaContext = JS_NewContext(gMochaTaskState, 8192);  /* ???? What size? */
+        ok = PR_FALSE;
+        gMochaContext = JS_NewContext(gMochaTaskState, 8192);
         if (!gMochaContext)
-            return PR_FALSE;
+            goto out;
 
-        gGlobalConfigObject = JS_NewObject(gMochaContext, &global_class, NULL, NULL);
+        JS_BeginRequest(gMochaContext);
+        request = PR_TRUE;
+
+        gGlobalConfigObject = JS_NewObject(gMochaContext, &global_class, NULL,
+                                           NULL);
         if (!gGlobalConfigObject)
-            return PR_FALSE;
+            goto out;
 
         /* MLM - need a global object for set version call now. */
         JS_SetGlobalObject(gMochaContext, gGlobalConfigObject);
@@ -316,20 +321,25 @@ PRBool PREF_Init(const char *filename)
                                      gMochaPrefObject,
                                      autoconf_props))
             {
-                return PR_FALSE;
+                goto out;
             }
             if (!JS_DefineFunctions(gMochaContext,
                                     gMochaPrefObject,
                                     autoconf_methods))
             {
-                return PR_FALSE;
+                goto out;
             }
         }
 
         ok = pref_InitInitialObjects();
     }
+ out:
+    if (request)
+        JS_EndRequest(gMochaContext);
+
     if (!ok)
         gErrorOpeningUserPrefs = PR_TRUE;
+
     return ok;
 } /*PREF_Init*/
 
@@ -390,6 +400,8 @@ void PREF_CleanupPrefs()
     gMochaTaskState = NULL; /* We -don't- destroy this. */
 
     if (gMochaContext) {
+        extern JSRuntime* PREF_GetJSRuntime(void);
+        JSRuntime *rt;
         gMochaPrefObject = NULL;
 
         if (gGlobalConfigObject) {
@@ -397,8 +409,13 @@ void PREF_CleanupPrefs()
             gGlobalConfigObject = NULL;
         }
 
-        JS_DestroyContext(gMochaContext);
-        gMochaContext = NULL;
+        rt = PREF_GetJSRuntime();
+        if (rt == JS_GetRuntime(gMochaContext)) {
+            JS_DestroyContext(gMochaContext);
+            gMochaContext = NULL;
+        } else {
+            fputs("Runtime mismatch, so leaking context!\n", stderr);
+        }
     }
 
     if (gHashTable)
@@ -484,8 +501,10 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
         js_buffer += i;
     }
 
+    JS_BeginRequest(gMochaContext);
     ok = JS_EvaluateScript(gMochaContext, scope,
             js_buffer, length, filename, 0, &result);
+    JS_EndRequest(gMochaContext);
     
     gCallbacksEnabled = PR_TRUE;        /* ?? want to enable after reading user/lock file */
     JS_SetErrorReporter(gMochaContext, errReporter);
@@ -931,7 +950,7 @@ PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *
     
     if (result == PREF_NOERROR)
     {
-        int r, g, b;
+        unsigned int r, g, b;
         sscanf(colstr, "#%02x%02x%02x", &r, &g, &b);
         *red = r;
         *green = g;
@@ -1899,24 +1918,6 @@ pref_BranchCallback(JSContext *cx, JSScript *script)
     if ( (++count & MAYBE_GC_BRANCH_COUNT_MASK) == 0 )
         JS_MaybeGC(cx); 
 
-#ifdef LATER
-    JSDecoder *decoder;
-    char *message;
-    JSBool ok = JS_TRUE;
-
-    decoder = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
-    if (decoder->window_context && ++decoder->branch_count == 1000000)
-    {
-        decoder->branch_count = 0;
-        message = PR_smprintf("Lengthy %s still running.  Continue?",
-                  lglanguage_name);
-        if (message)
-        {
-            ok = FE_Confirm(decoder->window_context, message);
-            PR_Free(message);
-        }
-    }
-#endif
     return JS_TRUE;
 }
 
