@@ -947,12 +947,15 @@ nsSprocketLayout::InvalidateComputedSizes(nsComputedBoxSize* aComputedBoxSizes)
 PRInt32 
 nsSprocketLayout::Round(PRInt32 aCoord, PRInt32 aOnePixel)
 {
+/*
   PRInt32 newCoordPx = aCoord/aOnePixel;
   PRInt32 diff = aCoord - (newCoordPx*aOnePixel);
   if (diff > aOnePixel/2)
      newCoordPx++;
 
   return newCoordPx*aOnePixel;
+*/
+  return aCoord;
 }
 
 void
