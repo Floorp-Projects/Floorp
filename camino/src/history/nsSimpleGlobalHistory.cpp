@@ -803,6 +803,7 @@ nsSimpleGlobalHistory::StartBatching()
     NotifyObserversBatchingStarted();
 
   ++mBatchesInProgress;
+  return NS_OK;
 }
 
 nsresult
@@ -813,6 +814,8 @@ nsSimpleGlobalHistory::EndBatching()
 
   if (mBatchesInProgress == 0)
     NotifyObserversBatchingFinished();
+
+  return NS_OK;
 }
 
 nsresult
@@ -830,6 +833,7 @@ nsSimpleGlobalHistory::NotifyObserversHistoryLoaded()
     if (historyObserver)
       historyObserver->HistoryLoaded(); 
   }
+  return NS_OK;
 }
 
 nsresult
@@ -946,6 +950,8 @@ nsSimpleGlobalHistory::NotifyObserversBatchingFinished()
     if (historyObserver)
       historyObserver->EndBatchChanges(); 
   }
+
+  return NS_OK;
 }
 
 #pragma mark -
@@ -1464,6 +1470,7 @@ NS_IMETHODIMP
 nsSimpleGlobalHistory::Flush()
 {
   Sync();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -88,6 +88,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   return comp;
 }
 
+
 #pragma mark -
 
 // base class for a 'builder' object. This one just builds a flat list
@@ -162,9 +163,41 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 - (HistorySiteItem*)itemWithIdentifier:(NSString*)identifier;
 - (NSString*)relativeDataStringForDate:(NSDate*)date;
 
+- (void)checkForNewDay;
+
+@end
+
+#pragma mark -
+
+// this little object exists simply to avoid a ref cycle between the refresh
+// timer and the data source.
+@interface HistoryTimerProxy : NSObject
+{
+  HistoryDataSource*    mHistoryDataSource;   // NOT owned
+}
+
 - (void)refreshTimerFired:(NSTimer*)timer;
 
 @end
+
+@implementation HistoryTimerProxy
+
+- (id)initWithHistoryDataSource:(HistoryDataSource*)inDataSource
+{
+  if ((self = [super init]))
+  {
+    mHistoryDataSource = inDataSource;
+  }
+  return self;
+}
+
+- (void)refreshTimerFired:(NSTimer*)timer
+{
+  [mHistoryDataSource checkForNewDay];
+}
+
+@end // HistoryTimerProxy
+
 
 #pragma mark -
 #pragma mark --HistoryTreeBuilder--
@@ -625,8 +658,12 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
     // Set up a timer to fire every 30 secs, to refresh the dates when midnight rolls around.
     // You might think it would be better to set up a timer to fire just after midnight,
     // but that might not be robust to clock adjustments.
+
+    // the proxy avoids a ref cycle between the timer and self.
+    // the timer retains its target, thus owning the proxy.
+    HistoryTimerProxy* timerProxy = [[[HistoryTimerProxy alloc] initWithHistoryDataSource:self] autorelease];
     mRefreshTimer = [[NSTimer scheduledTimerWithTimeInterval:30.0
-                                                      target:self
+                                                      target:timerProxy   // takes ownership
                                                     selector:@selector(refreshTimerFired:)
                                                     userInfo:nil
                                                      repeats:YES] retain];
@@ -888,7 +925,7 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
   return [calendarDate relativeDateDescription];
 }
 
-- (void)refreshTimerFired:(NSTimer*)timer
+- (void)checkForNewDay
 {
   int curDayOfCommonEra = [[NSCalendarDate calendarDate] dayOfCommonEra];
   // it's a brand new day...
