@@ -26,6 +26,7 @@
 #include "nsID.h"
 #include "nsIID.h"
 #include "nsError.h"
+#include "pratom.h" /* needed for PR_AtomicIncrement and PR_AtomicDecrement */
 
 #if defined(NS_MT_SUPPORTED)
 #include "prcmon.h"
@@ -370,59 +371,31 @@ NS_IMETHODIMP Class::QueryInterface(REFNSIID aIID, void** aInstancePtr)         
  * Use this macro to implement the AddRef method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
  */
-#if defined(XP_PC)
-#define NS_IMPL_THREADSAFE_ADDREF(_class)                                   \
-NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                               \
-{                                                                           \
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
-  return InterlockedIncrement((LONG*)&mRefCnt);                             \
-}
 
-#else /* ! XP_PC */
 #define NS_IMPL_THREADSAFE_ADDREF(_class)                                   \
-nsrefcnt _class::AddRef(void)                                               \
+NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                               \
 {                                                                           \
-  nsrefcnt count;                                                           \
-  NS_LOCK_INSTANCE();                                                       \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
-  count = ++mRefCnt;                                                        \
-  NS_UNLOCK_INSTANCE();                                                     \
-  return count;                                                             \
+  return PR_AtomicIncrement((PRInt32*)&mRefCnt);                            \
 }
-#endif /* ! XP_PC */
 
 /**
  * Use this macro to implement the Release method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
  */
-#if defined(XP_PC)
-#define NS_IMPL_THREADSAFE_RELEASE(_class)             \
-NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                         \
-{                                                      \
-  NS_PRECONDITION(0 != mRefCnt, "dup release");        \
-  if (0 == InterlockedDecrement((LONG*)&mRefCnt)) {    \
-    NS_DELETEXPCOM(this);                              \
-    return 0;                                          \
-  }                                                    \
-  return mRefCnt; /* Not threadsafe but who cares. */  \
-}
 
-#else /* ! XP_PC */
 #define NS_IMPL_THREADSAFE_RELEASE(_class)             \
 nsrefcnt _class::Release(void)                         \
 {                                                      \
   nsrefcnt count;                                      \
   NS_PRECONDITION(0 != mRefCnt, "dup release");        \
-  NS_LOCK_INSTANCE();                                  \
-  count = --mRefCnt;                                   \
-  NS_UNLOCK_INSTANCE();                                \
+  count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);     \
   if (0 == count) {                                    \
     NS_DELETEXPCOM(this);                              \
     return 0;                                          \
   }                                                    \
   return count;                                        \
 }
-#endif /* ! XP_PC */
 
 ////////////////////////////////////////////////////////////////////////////////
 
