@@ -175,11 +175,11 @@ public:
   static PRBool ValueOrPercentToString(const nsHTMLValue& aValue,
                                        nsString& aResult);
 
-  static void ParseValue(const nsString& aString, PRInt32 aMin,
-                         nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
+  static PRBool ParseValue(const nsString& aString, PRInt32 aMin,
+                           nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
-  static void ParseValue(const nsString& aString, PRInt32 aMin, PRInt32 aMax,
-                         nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
+  static PRBool ParseValue(const nsString& aString, PRInt32 aMin, PRInt32 aMax,
+                           nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
   static PRBool ParseColor(const nsString& aString, nsHTMLValue& aResult);
 
