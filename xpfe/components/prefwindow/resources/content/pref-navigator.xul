@@ -77,7 +77,7 @@
 			<html:div>
 				<spring flex="100%"/>
 				<titledbutton name="starts" type="button" value="&useCurrent;" onclick="SetHomePageToCurrentPage();" />
-				<titledbutton name="browse" type="button" value="&browseFile;" />
+				<titledbutton name="browse" type="button" value="&browseFile;" onclick="PrefNavSelectFile()"/>
 			</html:div>		
 		</html:fieldset>  
 	</box> 
