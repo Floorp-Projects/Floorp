@@ -1008,7 +1008,9 @@ struct nsFileDownloadDialog : public nsIXULWindowCallbacks,
     // nsFileDownloadDialog stuff
     nsFileDownloadDialog( nsIURL *aURL, const char *aContentType );
     ~nsFileDownloadDialog() { delete mOutput; delete [] mBuffer; }
-    void OnOK( nsIContent *aContent );
+    void OnSave();
+    void OnMore();
+    void OnPick();
     void OnClose();
     void OnStart();
     void OnStop();
@@ -1225,8 +1227,12 @@ nsFileDownloadDialog::AttributeChanged( nsIDocument *aDocument,
         aContent->GetAttribute( kNameSpaceID_None, atomCommand, cmd );
         // Reset (immediately, to prevent feedback loop).
         aContent->SetAttribute( kNameSpaceID_None, atomCommand, "", PR_FALSE );
-        if ( cmd == "ok" ) {
-            OnOK( aContent );
+        if ( cmd == "save" ) {
+            OnSave();
+        } else if ( cmd == "more" ) {
+            OnMore();
+        } else if ( cmd == "pick" ) {
+            OnPick();
         } else if ( cmd == "start" ) {
             OnStart();
         } else if ( cmd == "stop" ) {
@@ -1240,21 +1246,42 @@ nsFileDownloadDialog::AttributeChanged( nsIDocument *aDocument,
     return rv;
 }
 
-// OnOK
+// OnSave
 void
-nsFileDownloadDialog::OnOK( nsIContent *aContent ) {
-    // Show progress.
-    if ( mWebShell ) {
-        nsString fileName;
-nsCOMPtr<nsIAtom> atomFileName = nsDontQueryInterface<nsIAtom>( NS_NewAtom("filename") );
-        aContent->GetAttribute( kNameSpaceID_None, atomFileName, fileName );
-        mFileName = fileName;
+nsFileDownloadDialog::OnSave() {
+    // Prompt user for file name.
+    nsCOMPtr<nsIFileWidget> fileWidget;
+  
+    nsString title("Save File");
+
+    nsComponentManager::CreateInstance( kCFileWidgetCID,
+                                        nsnull,
+                                        kIFileWidgetIID,
+                                        (void**)getter_AddRefs(fileWidget) );
+    
+    nsFileSpec fileSpec;
+    nsFileDlgResults result = fileWidget->PutFile( nsnull, title, fileSpec );
+    if ( result == nsFileDlgResults_OK || result == nsFileDlgResults_Replace ) {
+        // Save the stream into the specified file...
+        mFileName = fileSpec;
         mMode = kProgress;
         nsString progressXUL = "resource:/res/samples/downloadProgress.xul";
         mWebShell->LoadURL( progressXUL.GetUnicode() );
+        // Open output file stream.
+        mOutput = new nsOutputFileStream( mFileName );
     }
-    // Open output file stream.
-    mOutput = new nsOutputFileStream( mFileName );
+}
+
+// OnMore
+void
+nsFileDownloadDialog::OnMore() {
+    printf( "nsFileDownloadDialog::OnMore not implemented yet\n" );
+}
+
+// OnPick
+void
+nsFileDownloadDialog::OnPick() {
+    printf( "nsFileDownloadDialog::OnPick not implemented yet\n" );
 }
 
 void
@@ -1315,7 +1342,7 @@ nsBrowserAppCore::HandleUnknownContentType( nsIURL *aURL,
 
         // Make url for dialog xul.
         nsIURL *url;
-        rv = NS_NewURL( &url, "resource:/res/samples/saveToDisk.xul" );
+        rv = NS_NewURL( &url, "resource:/res/samples/unknownContent.xul" );
 
         if ( NS_SUCCEEDED(rv) ) {
             // Create "save to disk" nsIXULCallbacks...
