@@ -124,7 +124,7 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     nsIView*           view;
     GetView(&view);
     if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
-      scrollingView->ComputeContainerSize();
+      scrollingView->ComputeScrollOffsets(PR_TRUE);
     }
   }
 
