@@ -1573,7 +1573,8 @@ static JSBool
 its_item(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     *rval = OBJECT_TO_JSVAL(obj);
-    JS_SetCallReturnValue2(cx, argv[0]);
+    if (argc != 0)
+        JS_SetCallReturnValue2(cx, argv[0]);
     return JS_TRUE;
 }
 
