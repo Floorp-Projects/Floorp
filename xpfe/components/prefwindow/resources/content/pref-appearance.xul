@@ -42,7 +42,7 @@
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
     // the first elements in this array will be poked from chromeregistry loaded
     // overlays once overlays.rdf works properly 
-    _elementIDs = ["generalStartupBrowser", "generalStartupEditor", /*"toolbarStyle" */];
+    _elementIDs = ["generalStartupBrowser", /*"toolbarStyle" */];
   ]]>
   </script>
           
@@ -55,13 +55,6 @@
     <checkbox id="generalStartupBrowser" wsm_persist="true"
               value="&navCheck.label;" accesskey="&navCheck.accesskey;"
               pref="true" preftype="bool" prefstring="general.startup.browser"
-              prefattribute="checked"/>
-    <!-- XXX -->
-
-    <!-- XXX remove when editor overlays.rdf works -->
-    <checkbox id="generalStartupEditor" wsm_persist="true"
-              value="&compCheck.label;" accesskey="&compCheck.accesskey;"
-              pref="true" preftype="bool" prefstring="general.startup.editor"
               prefattribute="checked"/>
     <!-- XXX -->
     

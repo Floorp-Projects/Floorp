@@ -51,11 +51,8 @@ CHROME_CONTENT = \
 		pref-colors.js \
 		pref-themes.xul \
 		pref-themes.js \
-		pref-composer.xul \
-		pref-composer.js \
 		pref-debug.xul \
 		pref-download.xul \
-		pref-editing.xul \
 		pref-fonts.xul \
 		pref-fonts.js \
 		pref-history.xul \
@@ -69,7 +66,6 @@ CHROME_CONTENT = \
 		pref-proxies.js \
 		pref-proxies.xul \
 		pref-proxy-manual.xul \
-		pref-publish.xul \
 		pref-mousewheel.xul \
 		pref-wallet.xul \
 		pref-search.js \
