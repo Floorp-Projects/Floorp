@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.3 $ $Date: 2002/01/03 20:09:24 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.4 $ $Date: 2002/01/10 14:34:36 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -305,10 +305,12 @@ nssCertificateStore_Remove
 )
 {
     PZ_Lock(store->lock);
-    remove_certificate_entry(store, cert);
-    remove_subject_entry(store, cert);
+    if (nssHash_Exists(store->issuer_and_serial, cert)) {
+	remove_certificate_entry(store, cert);
+	remove_subject_entry(store, cert);
+	NSSCertificate_Destroy(cert); /* release the store's reference */
+    }
     PZ_Unlock(store->lock);
-    NSSCertificate_Destroy(cert); /* release the store's reference */
 }
 
 NSS_IMPLEMENT NSSCertificate **
