@@ -42,6 +42,10 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 extern String
 XfeDebugXmStringToStaticPSZ			(XmString		xmstring);
 /*----------------------------------------------------------------------*/
+extern String
+XfeDebugGetStaticWidgetString		(Widget		w,
+									 String		name);
+/*----------------------------------------------------------------------*/
 extern void
 XfeDebugPrintArgVector				(FILE *			fp,
 									 String			prefix,

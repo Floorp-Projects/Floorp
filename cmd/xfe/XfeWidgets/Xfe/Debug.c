@@ -62,18 +62,20 @@ DebugGetBuffer(void)
 
 /*----------------------------------------------------------------------*/
 /* extern */ String
-XfeDebugXmStringToStaticPSZ(XmString xmstring)
+XfeDebugXmStringToStaticPSZ(XmString xmstr)
 {
 	String		result = DebugGetBuffer();
 	String		psz_string;
 
 	result[0] = '\0';
 
-	if (xmstring)
-	{
-		psz_string = XfeXmStringGetPSZ(xmstring,XmFONTLIST_DEFAULT_TAG);
+    assert( xmstr != NULL );
 
-		if (psz_string)
+	if (xmstr != NULL)
+	{
+		psz_string = XfeXmStringGetPSZ(xmstr,XmFONTLIST_DEFAULT_TAG);
+
+		if (psz_string != NULL)
 		{
 			strcpy(result,psz_string);
 
@@ -205,16 +207,21 @@ XfeDebugRepTypeIndexToValue(String rep_type,Cardinal i)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ String
-XfeDebugGetWidgetString(Widget w,String name)
+XfeDebugGetStaticWidgetString(Widget w,String name)
 {
-	XmString xmstr = (XmString) XfeGetValue(w,name);
+	String		str = NULL;
+	XmString	xmstr = (XmString) XfeGetValue(w,name);
 
-	if (xmstr)
+    assert( xmstr != NULL );
+
+	if (xmstr != NULL)
 	{
-		return XfeDebugXmStringToStaticPSZ(xmstr);
+		str = XfeDebugXmStringToStaticPSZ(xmstr);
+		
+		XmStringFree(xmstr);
 	}
 
-	return NULL;
+	return str;
 }
 /*----------------------------------------------------------------------*/
 
