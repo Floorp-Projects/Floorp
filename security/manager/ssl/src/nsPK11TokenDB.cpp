@@ -120,7 +120,7 @@ NS_IMETHODIMP nsPK11Token::InitPassword(const PRUnichar *initialPassword)
     nsresult rv = NS_OK;
     SECStatus status;
 
-    status = PK11_InitPin(mSlot, "", NS_ConvertUCS2toUTF8(initialPassword));
+    status = PK11_InitPin(mSlot, "", NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(initialPassword).get()));
     if (status == SECFailure) { rv = NS_ERROR_FAILURE; goto done; }
 
 done:
@@ -204,7 +204,7 @@ FindTokenByName(const PRUnichar* tokenName, nsIPK11Token **_retval)
 {
   nsresult rv = NS_OK;
   PK11SlotInfo *slot = 0;
-  slot = PK11_FindSlotByName(NS_ConvertUCS2toUTF8(tokenName));
+  slot = PK11_FindSlotByName(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(tokenName).get()));
   if (!slot) { rv = NS_ERROR_FAILURE; goto done; }
 
   *_retval = new nsPK11Token(slot);
