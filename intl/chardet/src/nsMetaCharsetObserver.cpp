@@ -256,6 +256,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                                             if(nsnull != charsetInCStr) {
                                                res = NotifyWebShell(aDocumentID, charsetInCStr, kCharsetFromMetaTag );
                                                delete [] (char*)charsetInCStr;
+                                               return res;
                                             }
                                         } // if check for GetPreferred
                                   } // if check res for Equals
@@ -269,7 +270,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
           } // for ( numOfAttributes )
       } // if check nsCharsetSource
     } // if 
-    return res;
+    return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -307,7 +308,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::NotifyWebShell(
    if(NS_FAILED(rv = wss->ReloadDocument(charset, source)))
      goto done;
  
-   res = NS_ERROR_ABORT;
+   res = NS_ERROR_HTMLPARSER_STOPPARSING;
 #endif
 done:
    if(docLoader) {
