@@ -57,10 +57,6 @@
 /**************************************************/
 #ifdef XP_UNIX
 #include <stdio.h>
-
-#define HIBYTE(i) (i >> 8)
-#define LOBYTE(i) (i & 0xff)
-
 #endif //XP_UNIX
 
 /**************************************************/
@@ -78,9 +74,6 @@
 #include <ToolUtils.h>
 
 #include "jri.h"
-
-#define HIBYTE(i) (i >> 8)
-#define LOBYTE(i) (i & 0xff)
 
 // The Mixed Mode procInfos defined in npupp.h assume Think C-
 // style calling conventions.  These conventions are used by
@@ -145,5 +138,13 @@ NPError Private_GetValue(NPP instance, NPPVariable variable, void *result);
 NPError Private_SetValue(NPP instance, NPNVariable variable, void *value);
 
 #endif //XP_MAC
+
+#ifndef HIBYTE
+#define HIBYTE(i) (i >> 8)
+#endif
+
+#ifndef LOBYTE
+#define LOBYTE(i) (i & 0xff)
+#endif
 
 #endif //_NPPLAT_H_
