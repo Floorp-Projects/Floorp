@@ -217,9 +217,9 @@ nsFtpConnectionThread::Process() {
                         crlf[2] = '\0';
                         // see if this is the last line
                         if (tmpBuffer[3] != '-' &&
-                            nsString::IsDigit(tmpBuffer[0]) &&
-                            nsString::IsDigit(tmpBuffer[1]) &&
-                            nsString::IsDigit(tmpBuffer[2]) ) {
+                            nsCRT::IsAsciiDigit(tmpBuffer[0]) &&
+                            nsCRT::IsAsciiDigit(tmpBuffer[1]) &&
+                            nsCRT::IsAsciiDigit(tmpBuffer[2]) ) {
                             lastLine = PR_TRUE;
                         }
                         mResponseMsg += tmpBuffer+4; // skip over the code and '-'
