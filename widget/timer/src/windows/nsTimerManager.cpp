@@ -122,7 +122,8 @@ NS_IMETHODIMP_(void) nsTimerManager::FireNextReadyTimer(PRUint32 minTimerPriorit
 NS_IMETHODIMP_(void) nsTimerManager::AddTimer(UINT timerID, nsTimer* timer)
 {
   if (mTimers != nsnull) {
-    mTimers->Put(new nsVoidKey((void*)timerID), timer);
+    nsVoidKey key((void *) timerID);
+    mTimers->Put(&key, timer);
   }
 }
 
@@ -130,13 +131,17 @@ NS_IMETHODIMP_(void) nsTimerManager::AddTimer(UINT timerID, nsTimer* timer)
 NS_IMETHODIMP_(void) nsTimerManager::RemoveTimer(UINT timerID)
 {
   if (mTimers != nsnull) {
-    mTimers->Remove(new nsVoidKey((void*)timerID));
+    nsVoidKey key((void *) timerID);
+    mTimers->Remove(&key);
   }
 }
 
 
-NS_IMETHODIMP_(nsTimer*) nsTimerManager::GetTimer(UINT id)
+NS_IMETHODIMP_(nsTimer*) nsTimerManager::GetTimer(UINT timerID)
 {
-  return (nsTimer*) (mTimers != nsnull ? 
-      (nsTimer*)mTimers->Get(new nsVoidKey((void*)id)) : nsnull);
+  if (mTimers != nsnull) {
+    nsVoidKey key((void *) timerID);
+    return (nsTimer *) mTimers->Get(&key);
+  }
+  return nsnull;
 }
