@@ -29,6 +29,7 @@
 
 interface nsISimpleEnumerator;
 interface nsICacheListener;
+interface nsIFile;
 
 [scriptable, uuid(49c1a11d-f5d2-4f09-8262-551e64908ada)]
 interface nsICacheEntryDescriptor : nsISupports
@@ -94,6 +95,11 @@ interface nsICacheEntryDescriptor : nsISupports
      * the definitions of the storage policies.
      */
     attribute nsCacheStoragePolicy storagePolicy;
+
+    /**
+     * Get the disk file associated with the cache entry.
+     */
+    readonly attribute nsIFile file;
     
     /**
      * Doom the cache entry this descriptor references in order to slate it for 
