@@ -693,6 +693,9 @@ js_GC(JSContext *cx)
     JSGCThing *thing, *final, **flp, **oflp;
     GCFinalizeOp finalizer;
     JSBool a_all_clear, f_all_clear;
+#ifdef JS_THREADSAFE
+    jsword currentThread;
+#endif
 
     rt = cx->runtime;
     if (rt->gcDisabled)
@@ -720,8 +723,9 @@ js_GC(JSContext *cx)
     METER(rt->gcStats.poke++);
 
 #ifdef JS_THREADSAFE
-    /* Bump gcLevel and return rather than nest on this context. */
-    if (cx->gcActive) {
+    /* Bump gcLevel and return rather than nest on this thread. */
+    currentThread = js_CurrentThreadId();
+    if (rt->gcThread == currentThread) {
 	rt->gcLevel++;
 	METER(if (rt->gcLevel > rt->gcStats.maxlevel)
 		  rt->gcStats.maxlevel = rt->gcLevel);
@@ -739,8 +743,11 @@ js_GC(JSContext *cx)
 
     /* If another thread is already in GC, don't attempt GC; wait instead. */
     if (rt->gcLevel > 0) {
-	while (rt->gcLevel > 0)
-	    JS_AWAIT_GC_DONE(rt);
+        /* If we are destroying this context return early to avoid deadlock. */
+        if (!cx->destroying) {
+	    while (rt->gcLevel > 0)
+	        JS_AWAIT_GC_DONE(rt);
+	}
 	if (cx->requestDepth)
 	    rt->requestCount++;
 	JS_UNLOCK_GC(rt);
@@ -750,8 +757,8 @@ js_GC(JSContext *cx)
     /* No other thread is in GC, so indicate that we're now in GC. */
     rt->gcLevel = 1;
 
-    /* Also indicate that GC is active on this context. */
-    cx->gcActive = JS_TRUE;
+    /* Also indicate that GC is active on this thread. */
+    rt->gcThread = currentThread;
 
     /* Wait for all other requests to finish. */
     while (rt->requestCount > 0)
@@ -972,7 +979,7 @@ out:
     /* If we were invoked during a request, undo the temporary decrement. */
     if (cx->requestDepth)
 	rt->requestCount++;
-    cx->gcActive = JS_FALSE;
+    rt->gcThread = 0;
     JS_NOTIFY_GC_DONE(rt);
     JS_UNLOCK_GC(rt);
 #endif
