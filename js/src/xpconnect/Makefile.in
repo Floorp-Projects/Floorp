@@ -38,7 +38,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public idl src loader shell
+DIRS		= public idl loader src shell
 
 ifdef ENABLE_TESTS
 DIRS		+= tests

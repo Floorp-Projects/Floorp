@@ -37,6 +37,8 @@
 
 #include "xpcprivate.h"
 
+#include "mozJSLoaderConstructors.h"
+
 /* Module implementation for the xpconnect library. */
 
 NS_DECL_CLASSINFO(XPCVariant)
@@ -63,6 +65,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCComponents_Interfaces)
 
 NS_DECL_CLASSINFO(nsXPCException)
 
+#ifdef XPCONNECT_STANDALONE
+#define NO_SUBSCRIPT_LOADER
+#endif
+
 static const nsModuleComponentInfo components[] = {
   {nsnull, NS_JS_ID_CID,                         XPC_ID_CONTRACTID,            nsJSIDConstructor             },
   {nsnull, NS_XPCONNECT_CID,                     XPC_XPCONNECT_CONTRACTID,     nsIXPConnectConstructor       },
@@ -71,7 +77,16 @@ static const nsModuleComponentInfo components[] = {
   {nsnull, NS_JS_RUNTIME_SERVICE_CID,            XPC_RUNTIME_CONTRACTID,       nsIJSRuntimeServiceConstructor},
   {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_CONTRACTID,    nsScriptErrorConstructor      },
   {nsnull, SCRIPTABLE_INTERFACES_CID,            NS_SCRIPTABLE_INTERFACES_CONTRACTID,        nsXPCComponents_InterfacesConstructor },
-  {nsnull, XPCVARIANT_CID,                       XPCVARIANT_CONTRACTID,        nsnull, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(XPCVariant), nsnull, &NS_CLASSINFO_NAME(XPCVariant)}
+  {nsnull, XPCVARIANT_CID,                       XPCVARIANT_CONTRACTID,        nsnull, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(XPCVariant), nsnull, &NS_CLASSINFO_NAME(XPCVariant)},
+
+  // jsloader stuff
+  { "JS component loader", MOZJSCOMPONENTLOADER_CID,
+    mozJSComponentLoaderContractID, mozJSComponentLoaderConstructor,
+    RegisterJSLoader, UnregisterJSLoader },
+#ifndef NO_SUBSCRIPT_LOADER
+  { "JS subscript loader", MOZ_JSSUBSCRIPTLOADER_CID,
+    mozJSSubScriptLoadContractID, mozJSSubScriptLoaderConstructor },
+#endif
 };
 
 PR_STATIC_CALLBACK(void)

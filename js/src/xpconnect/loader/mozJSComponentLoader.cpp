@@ -21,10 +21,6 @@
  *   Robert Ginda <rginda@netscape.com>
  */
 
-#ifdef XPCONNECT_STANDALONE
-#define NO_SUBSCRIPT_LOADER
-#endif
-
 #include "prlog.h"
 
 #include "nsCOMPtr.h"
@@ -52,9 +48,6 @@
 #include "nsIStandardURL.h"
 #include "nsNetUtil.h"
 #endif
-#ifndef NO_SUBSCRIPT_LOADER
-#include "mozJSSubScriptLoader.h"
-#endif
 #include "nsIComponentLoaderManager.h"
 // For reporting errors with the console service
 #include "nsIScriptError.h"
@@ -62,10 +55,6 @@
 
 const char mozJSComponentLoaderContractID[] = "@mozilla.org/moz/jsloader;1";
 const char jsComponentTypeName[] = "text/javascript";
-
-#ifndef NO_SUBSCRIPT_LOADER
-const char mozJSSubScriptLoadContractID[] = "@mozilla.org/moz/jssubscript-loader;1";
-#endif
 
 // same as in nsComponentManager.cpp (but without the JS)
 const char JSfileSizeValueName[] = "FileSize";
@@ -1230,57 +1219,3 @@ JSCLAutoContext::~JSCLAutoContext()
 //----------------------------------------------------------------------
 
 /* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
-static NS_METHOD
-RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                 const char *registryLocation, const char *componentType,
-                 const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString previous;
-    return catman->AddCategoryEntry("component-loader", jsComponentTypeName,
-                                    mozJSComponentLoaderContractID,
-                                    PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
-
-static NS_METHOD
-UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                   const char *registryLocation,
-                   const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString jsLoader;
-    rv = catman->GetCategoryEntry("component-loader", jsComponentTypeName,
-                                  getter_Copies(jsLoader));
-    if (NS_FAILED(rv)) return rv;
-
-    // only unregister if we're the current JS component loader
-    if (!strcmp(jsLoader, mozJSComponentLoaderContractID)) {
-        return catman->DeleteCategoryEntry("component-loader",
-                                           jsComponentTypeName, PR_TRUE);
-    }
-    return NS_OK;
-}
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader);
-
-#ifndef NO_SUBSCRIPT_LOADER
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader);
-#endif
-
-static const nsModuleComponentInfo components[] = {
-    { "JS component loader", MOZJSCOMPONENTLOADER_CID,
-      mozJSComponentLoaderContractID, mozJSComponentLoaderConstructor,
-      RegisterJSLoader, UnregisterJSLoader },
-#ifndef NO_SUBSCRIPT_LOADER
-   { "JS subscript loader", MOZ_JSSUBSCRIPTLOADER_CID,
-      mozJSSubScriptLoadContractID, mozJSSubScriptLoaderConstructor }
-#endif
-};
-
-NS_IMPL_NSGETMODULE(JS_component_loader, components);
