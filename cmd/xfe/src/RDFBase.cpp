@@ -124,7 +124,9 @@ XFE_RDFBase::updateRoot()
 /*virtual*/ void
 XFE_RDFBase::notify(HT_Resource n, HT_Event whatHappened)
 {
+#ifdef DEBUG
   debugEvent(n, whatHappened);
+#endif
 }
 //////////////////////////////////////////////////////////////////////////
 //
