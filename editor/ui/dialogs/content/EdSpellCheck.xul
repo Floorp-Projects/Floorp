@@ -83,7 +83,7 @@
       </td>
     </tr>
     <tr>
-      <td>
+      <td colspan="2">
         <select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
           <option>English
           </option>
@@ -91,9 +91,6 @@
       </td>
       <td>
         <button id="Close" onclick="Close()">Close</button>
-      </td>
-      <td>
-        <button id="Help" onclick="Help()">Help</button>
       </td>
     </tr>
   </table>

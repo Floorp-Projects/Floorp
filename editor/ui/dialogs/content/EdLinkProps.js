@@ -1,12 +1,8 @@
-// OnOK(), Undo(), and Cancel() are in EdDialogCommon.js
-// applyChanges() must be implemented here
-
 var appCore;
 var anchorElement = null;
 var insertNew = true;
 var needLinkText = false;
 var selection;
-var undoCount = 0;
 var insertLinkAroundSelection = false;
 
 // NOTE: Use "HREF" instead of "A" to distinguish from Named Anchor
@@ -127,23 +123,10 @@ function chooseFile()
   dialog.hrefInput.focus();
 }
 
-function onOK() {
-  if (applyChanges()) {
-    window.close();
-  }
-}
-
-function onCancel() {
-  // Undo all actions performed within the dialog
-  // TODO: We need to suppress reflow/redraw untill all levels are undone
-  while (undoCount > 0) {
-    onUndo();
-  }
-  window.close();
-}
-
-function applyChanges()
+function onOK()
 {
+  // TODO: VALIDATE FIELDS BEFORE COMMITING CHANGES
+
   // Coalesce into one undo transaction
   appCore.beginBatchChanges();
 
@@ -167,12 +150,8 @@ function applyChanges()
     dump("Setting link around selected text\n");
     appCore.insertLinkAroundSelection(anchorElement);
   }
-  undoCount = undoCount + 1;
   appCore.endBatchChanges();
 
-  // Reinitialize dialog data
-  initDialog();
-  
-  // TODO: Return false if any data validation tests fail
-  return true;
+  window.close();
 }
+

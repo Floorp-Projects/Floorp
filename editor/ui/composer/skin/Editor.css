@@ -1,9 +1,3 @@
-/* These are critical - should be in xul.css */
-window#main-window {
-   width: 100%; 
-   height: 100%;
-}
-
 box#outer-box {
   width: 100%;
   height: 100%;
@@ -28,31 +22,10 @@ select.combobox {
   //background: silver;
 }
 
-select[pseudoclass~="hover"] {
-/* NOT WORKING */
-  background: red;
-}
-
-/* Make the buttons butt up against each other 
-   Bug: When hover over, width decreases by 1 pixel,
-        causing horizontal jump for rest of controls in toolbar
-*/
 titledbutton#TextColorPopup {
   margin-right: -2px;
-  border-right: 0px;
 }
+
 titledbutton#BackColorPopup {
   margin-left: -2px;
-  border-left: 0px;
-}
-
-/* trying to fix hover width problem, but hover detection not working */
-titledbutton#TextColorPopup[pseudoclass~="hover"] {
-  margin-right: -1px;
-  border-right: 0px;
-}
-
-titledbutton#BackColorPopup[pseudoclass~="hover"] {
-  margin-left: -1px;
-  border-left: 0px;
 }

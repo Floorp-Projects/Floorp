@@ -152,11 +152,6 @@ function Close()
   window.close();
 }
 
-function Help()
-{
-  dump("SpellCheck: Help me Rhonda, help, help me Rhonda\n");
-}
-
 function FillSuggestedList(firstWord)
 {
   list = dialog.suggestedList;

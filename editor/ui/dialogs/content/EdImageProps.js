@@ -1,20 +1,16 @@
-// OnOK(), Undo(), and Cancel() are in EdDialogCommon.js
-// applyChanges() must be implemented here
-
 var appCore;
 var insertNew = true;
 var imageWasInserted = false;
-var undoCount = 0;
 var imageElement;
 var tagName = "img"
-var advanced = false;
+var advanced = true;
 
 // dialog initialization code
 function Startup()
 {
   dump("Doing Startup...\n");
   
-  // New metho: parameters passed via window.openDialog, which puts
+  // New method: parameters passed via window.openDialog, which puts
   //  arguments in the array "arguments"
   var editorName = window.arguments[0];
   dump("Got editorAppCore called " + editorName + "\n");
@@ -37,9 +33,14 @@ function Startup()
   dialog.AdvancedButton = document.getElementById("AdvancedButton");
   dialog.AdvancedRow = document.getElementById("AdvancedRow");
   
-  // Start in "basic" mode
-  dialog.AdvancedRow.style.display = "none";
-
+  // Start in the mode initialized in the "advanced" var above
+  // THIS IS NOT WORKING NOW - After switching to "basic" mode,
+  // then back to 
+  if (advanced) {
+    dialog.AdvancedRow.style.visibility = "visible";
+  } else {
+    dialog.AdvancedRow.style.visibility = "collapse";
+  }
 
   if (null == dialog.srcInput || 
       null == dialog.altTextInput )
@@ -91,48 +92,38 @@ function chooseFile()
 
 function onAdvanced()
 {
-  if (dialog.AdvancedRow) {
-    dump("AdvancedRow still exists ****\n");
-  }
-
   if (advanced) {
     dump("Changing to BASIC mode\n");
     advanced = false;
     // BUG: This works to hide the row, but
     //   setting visibility to "show" doesn't bring it back
-    //dialog.AdvancedRow.style.visibility = "collapse";
-    dialog.AdvancedRow.style.display = "none";
+    dialog.AdvancedRow.style.visibility = "collapse";
+    //dialog.AdvancedRow.style.display = "none";
   } else {
     dump("Changing to ADVANCED mode\n");
     advanced = true;
-    dialog.AdvancedRow.style.display = "table-row";
+    //dialog.AdvancedRow.style.display = "table-row";
+    dialog.AdvancedRow.style.visibility = "visible";
   }
 
 }
 
-function onOK() {
-  if (applyChanges()) {
-    if (imageWasInserted) {
-      // We selected the object, undo it by
-      //  setting caret to just after the inserted element
-      appCore.setCaretAfterElement(imageElement);
-    }
-    window.close();
-  }
+function SelectWidthUnits()
+{
+   list = document.getElementByID("WidthUnits");
+   value = list.options[list.selectedIndex].value;
+   dump("Selected item: "+value+"\n");
 }
 
-function onCancel() {
-  // Undo all actions performed within the dialog
-  // TODO: We need to suppress reflow/redraw untill all levels are undone
-  while (undoCount > 0) {
-    onUndo();
-  }
-  window.close();
+function OnChangeSrc()
+{
+  dump("*** Changed SRC field\n");
 }
 
-function applyChanges()
+function onOK()
 {
   // TODO: BE SURE Src AND AltText are completed!
+
   imageElement.setAttribute("src",dialog.srcInput.value);
   // We must convert to "file:///" format else image doesn't load!
   imageElement.setAttribute("alt",dialog.altTextInput.value);  
@@ -145,9 +136,10 @@ function applyChanges()
     //  when dialog closes
     imageWasInserted = true;
   }
-  // Reinitialize dialog data
-  initDialog();
-
-  // TODO: Return false if any data validation tests fail
-  return true;
+  if (imageWasInserted) {
+    // We selected the object, undo it by
+    //  setting caret to just after the inserted element
+    appCore.setCaretAfterElement(imageElement);
+  }
+  window.close();
 }

@@ -102,18 +102,6 @@ CPP_OBJS =					\
 
 MODULE=editor 
 
-REQUIRES=xpcom raptor dom base netlib pref
-
-LINCS=-I$(PUBLIC)\editor \
-    -I$(PUBLIC)\xpcom \
-    -I$(PUBLIC)\raptor \
-    -I$(PUBLIC)\js \
-    -I$(PUBLIC)\pref \
-    -I$(PUBLIC)\txmgr \
-    -I$(PUBLIC)\netlib \
-    -I$(PUBLIC)\pref \
-    -I$(PUBLIC)\dom
-
 MAKE_OBJ_TYPE = DLL
 DLLNAME = ender
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
@@ -129,6 +117,7 @@ LLIBS=				\
  $(DIST)\lib\plc3.lib       \
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\raptorwidget_s.lib		\
+ $(DIST)\lib\netlib.lib           \
  $(LIBNSPR)  
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib

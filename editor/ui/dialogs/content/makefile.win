@@ -25,10 +25,10 @@ install::
 	$(MAKE_INSTALL) EdLinkProps.js        $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdImageProps.xul      $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdImageProps.js       $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdCharacterProps.xul  $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdCharacterProps.js   $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdSpellCheck.xul   $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdSpellCheck.js    $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdHLineProps.xul      $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdHLineProps.js       $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdSpellCheck.xul      $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdSpellCheck.js       $(DIST)\bin\chrome\editor\dialogs\content\default
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdDialogCommon.js
@@ -36,7 +36,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdLinkProps.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdImageProps.xul	
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdImageProps.js
-  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdCharacterProps.xul	
-  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdCharacterProps.js
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdHLineProps.xul	
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdHLineProps.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdSpellCheck.xul
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdSpellCheck.js
