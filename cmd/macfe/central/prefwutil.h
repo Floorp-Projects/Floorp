@@ -139,6 +139,8 @@ protected:
 class LArrowGroup: public LView, public LListener
 {
 public:
+	enum { msg_ArrowsHit = 700 } ;
+
 						LArrowGroup( LStream* inStream );
 
 	void				ListenToMessage( MessageT message, void* ioParam );	
