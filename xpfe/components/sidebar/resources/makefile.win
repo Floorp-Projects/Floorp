@@ -28,6 +28,9 @@ CHROME_CONTENT = \
         .\flash-registry.rdf \
         .\flash.js \
         .\flash.xul \
+	.\preview.css \
+	.\preview.js \
+	.\preview.xul \
         .\sidebar-browser.rdf \
         .\sidebar-browser.xul \
         .\sidebar-registry.rdf \
@@ -48,6 +51,7 @@ CHROME_SKIN = \
 CHROME_L10N = \
         .\locale\en-US\customize.dtd \
         .\locale\en-US\flash.dtd \
+	.\locale\en-US\preview.dtd \
         .\locale\en-US\sidebar-browser-rdf.dtd \
         .\locale\en-US\sidebar-browser.dtd \
         .\locale\en-US\sidebar-registry-rdf.dtd \

@@ -4,6 +4,9 @@ dummy-flash.rdf
 flash-registry.rdf
 flash.js
 flash.xul
+preview.css
+preview.js
+preview.xul
 sidebar-browser.rdf
 sidebar-browser.xul
 sidebar-registry.rdf

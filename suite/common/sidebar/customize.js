@@ -295,6 +295,31 @@ function AddPanel()
   enableSave();
 }
 
+function PreviewPanel() 
+{
+  var tree = document.getElementById('other-panels');
+  var database = tree.database;
+  var select_list = document.getElementsByAttribute("selected", "true");
+  for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
+    var node = select_list[nodeIndex];
+    if (!node)    break;
+    var id = node.getAttribute("id");
+    if (!id)      break;
+    var rdfNode = RDF.GetResource(id);
+    if (!rdfNode) break;
+
+    var preview_name = getAttr(database, rdfNode, 'title');
+    var preview_URL  = getAttr(database, rdfNode, 'content');
+    if (!preview_URL || !preview_name) break;
+
+    var preview = window.open("chrome://sidebar/content/preview.xul",
+			      "PanelPreview", "chrome");
+    preview.panel_name = preview_name;
+    preview.panel_URL = preview_URL;
+  }
+  enableSave();
+}
+
 function enableSave() {
   var save_button = document.getElementById('save_button');
   save_button.setAttribute('disabled','');  
