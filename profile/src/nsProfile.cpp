@@ -2010,11 +2010,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 		*regLocation += "Preferences";
 		*regLocation += oldMacReg;
 		
-		// WARNING
-		// regNSPRPath and regFile need to have the same scope
-		// since the regFile will point to data in regNSPRPath
-        nsNSPRPath regNSPRPath(*regLocation);
-        PL_strcpy(oldRegFile, (const char *) regNSPRPath);
+        PL_strcpy(oldRegFile, regLocation->GetNativePathCString());
 #endif
 		rv = m_reg->Open(oldRegFile);
 
