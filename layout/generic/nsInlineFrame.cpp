@@ -322,35 +322,6 @@ nsInlineFrame::DeleteFrame(nsIPresContext& aPresContext)
 //////////////////////////////////////////////////////////////////////
 // nsInlineFrame child management
 
-#if XXX
-nsresult
-nsInlineFrame::MoveOutOfFlow(nsIPresContext& aPresContext,
-                             nsIFrame* aFrameList)
-{
-  nsIFrame* prevFrame = nsnull;
-  nsIFrame* frame = aFrameList;
-  while (nsnull != frame) {
-    const nsStyleDisplay* dpy;
-    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) dpy);
-    const nsStylePosition* pos;
-    frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) pos);
-
-    // See if we need to move the frame outside of the flow, and insert a
-    // placeholder frame in its place
-    nsIFrame* placeholder;
-    if (MoveFrameOutOfFlow(aPresContext, frame, dpy, pos, placeholder)) {
-      if (nsnull != prevFrame) {
-        prevFrame->SetNextSibling(placeholder);
-      }
-      frame = placeholder;
-    }
-    prevFrame = frame;
-    frame->GetNextSibling(&frame);
-  }
-  return NS_OK;
-}
-#endif
-
 // Find the first inline frame, looking backwards starting at "this",
 // that contains an anonymous block. Return nsnull if an anonymous
 // block is not found.
@@ -472,15 +443,7 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
                             PRBool aGenerateReflowCommands)
 {
   nsresult rv = NS_OK;
-#if XXX
-  rv = MoveOutOfFlow(aPresContext, aFrameList);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-#endif
-
   SectionData sd(aFrameList);
-
   if (sd.HasABlock()) {
     nsFrameList section1, section2, section3;
     sd.SplitFrameList(section1, section2, section3);
@@ -619,13 +582,6 @@ nsInlineFrame::InsertFrames(nsIPresContext& aPresContext,
   }
 
   nsresult rv = NS_OK;
-#if XXX
-  rv = MoveOutOfFlow(aPresContext, aFrameList);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-#endif
-
   SectionData sd(aFrameList);
   if (sd.HasABlock()) {
     // Break insertion up into 3 pieces
