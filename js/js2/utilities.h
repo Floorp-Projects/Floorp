@@ -25,6 +25,7 @@
 #include <iostream>
 #include "systemtypes.h"
 
+using std::size_t;
 using std::string;
 using std::istream;
 using std::ostream;
@@ -72,25 +73,16 @@ namespace JavaScript {
 // Unicode UTF-16 characters and strings
 //
 
-	// A UTF-16 character
-	// Use wchar_t on platforms on which wchar_t has 16 bits; otherwise use uint16.
-	// Note that in C++ wchar_t is a distinct type rather than a typedef for some integral type.
-	// Like char, a char16 can be either signed or unsigned at the implementation's discretion.
-	typedef wchar_t char16;
-	typedef unsigned wchar_t uchar16;
-
 	// A string of UTF-16 characters.  Nulls are allowed just like any other character.
 	// The string is not null-terminated.
 	// Use wstring if char16 is wchar_t.  Otherwise use basic_string<uint16>.
 	typedef std::basic_string<char16> String;
 
-  #if 0
-	using std::wint_t;
-	const wint_t ueof = WEOF;
-  #else
-	typedef int32 wint_t;	// A type that can hold any char16 plus one special value: ueof.
-	const wint_t ueof = -1;
-  #endif
+	typedef uint32 char16orEOF;		// A type that can hold any char16 plus one special value: ueof.
+	const char16orEOF char16eof = static_cast<char16orEOF>(-1);
+
+	// If c is a char16, return it; if c is char16eof, return the character \uFFFF.
+	inline char16 char16orEOFToChar16(char16orEOF c) {return static_cast<char16>(c);}
 
 	// Special char16s
 	namespace uni {
@@ -100,11 +92,20 @@ namespace JavaScript {
 		const char16 ls = 0x2028;
 		const char16 ps = 0x2029;
 	}
+	const uint16 firstFormatChar = 0x200C;	// Lowest Unicode Cf character
 	
 	inline char16 widen(char ch) {return static_cast<char16>(static_cast<uchar>(ch));}
 
+	String widenCString(const char *cstr);
+	void appendChars(String &str, const char *chars, size_t length);
+	String &operator+=(String &str, const char *cstr);
+	String operator+(const String &str, const char *cstr);
+	String operator+(const char *cstr, const String &str);
+
 
 	class CharInfo {
+		uint32 info;					// Word from table a.
+
 		// Unicode character attribute lookup tables
 		static const uint8 x[];
 		static const uint8 y[];
@@ -152,43 +153,49 @@ namespace JavaScript {
 		    LineBreakGroup		// 5  Line break character  [LineBreakGroup & -2 == WhiteGroup]
 		};
 
-		// Character classifying and mapping macros, based on java.lang.Character
-		static uint32 cCode(char16 c) {return a[y[x[static_cast<uint16>(c)>>6]<<6 | c&0x3F]];}
-		static Type cType(char16 c) {return static_cast<Type>(cCode(c) & 0x1F);}
-		static Group cGroup(char16 c) {return static_cast<Group>(cCode(c) >> 16 & 7);}
+		CharInfo() {}
+		CharInfo(char16 c): info(a[y[x[static_cast<uint16>(c)>>6]<<6 | c&0x3F]]) {}
+		CharInfo(const CharInfo &ci): info(ci.info) {}
+
+		friend Type cType(const CharInfo &ci) {return static_cast<Type>(ci.info & 0x1F);}
+		friend Group cGroup(const CharInfo &ci) {return static_cast<Group>(ci.info >> 16 & 7);}
+
+		friend bool isAlpha(const CharInfo &ci)
+		{
+			return ((((1 << UppercaseLetter) | (1 << LowercaseLetter) | (1 << TitlecaseLetter) | (1 << ModifierLetter) | (1 << OtherLetter))
+					 >> cType(ci)) & 1) != 0;
+		}
+
+		friend bool isAlphanumeric(const CharInfo &ci)
+		{
+			return ((((1 << UppercaseLetter) | (1 << LowercaseLetter) | (1 << TitlecaseLetter) | (1 << ModifierLetter) | (1 << OtherLetter) |
+					  (1 << DecimalDigitNumber) | (1 << LetterNumber))
+					 >> cType(ci)) & 1) != 0;
+		}
+
+		// Return true if this character can start a JavaScript identifier
+		friend bool isIdLeading(const CharInfo &ci) {return cGroup(ci) == IdGroup;}
+		// Return true if this character can continue a JavaScript identifier
+		friend bool isIdContinuing(const CharInfo &ci) {return cGroup(ci) & -2 == IdGroup;}
+
+		// Return true if this character is a Unicode decimal digit (Nd) character
+		friend bool isDecimalDigit(const CharInfo &ci) {return cType(ci) == DecimalDigitNumber;}
+		// Return true if this character is a Unicode white space or line break character
+		friend bool isSpace(const CharInfo &ci) {return cGroup(ci) & -2 == WhiteGroup;}
+		// Return true if this character is a Unicode line break character (LF, CR, LS, or PS)
+		friend bool isLineBreak(const CharInfo &ci) {return cGroup(ci) == LineBreakGroup;}
+		// Return true if this character is a Unicode format control character (Cf)
+		friend bool isFormat(const CharInfo &ci) {return cGroup(ci) == FormatGroup;}
+
+		friend bool isUpper(const CharInfo &ci) {return cType(ci) == UppercaseLetter;}
+		friend bool isLower(const CharInfo &ci) {return cType(ci) == LowercaseLetter;}
+
+		friend char16 toUpper(char16 c);
+		friend char16 toLower(char16 c);
 	};
-
-	inline bool isAlpha(char16 c)
-	{
-		return ((((1 << CharInfo::UppercaseLetter) | (1 << CharInfo::LowercaseLetter) | (1 << CharInfo::TitlecaseLetter) |
-				  (1 << CharInfo::ModifierLetter) | (1 << CharInfo::OtherLetter))
-				 >> CharInfo::cType(c)) & 1) != 0;
-	}
-
-	inline bool isAlphanumeric(char16 c)
-	{
-		return ((((1 << CharInfo::UppercaseLetter) | (1 << CharInfo::LowercaseLetter) | (1 << CharInfo::TitlecaseLetter) |
-				  (1 << CharInfo::ModifierLetter) | (1 << CharInfo::OtherLetter) | (1 << CharInfo::DecimalDigitNumber))
-				 >> CharInfo::cType(c)) & 1) != 0;
-	}
-
-	// Return true if c can start a JavaScript identifier
-	inline bool isIdLeading(char16 c) {return CharInfo::cGroup(c) == CharInfo::IdGroup;}
-	// Return true if c can continue a JavaScript identifier
-	inline bool isIdContinuing(char16 c) {return CharInfo::cGroup(c) & -2 == CharInfo::IdGroup;}
-
-	// Return true if c is a Unicode decimal digit (Nd) character
-	inline bool isDecimalDigit(char16 c) {return CharInfo::cType(c) == CharInfo::DecimalDigitNumber;}
-	// Return true if c is a Unicode white space or line break character
-	inline bool isSpace(char16 c) {return CharInfo::cGroup(c) & -2 == CharInfo::WhiteGroup;}
-	// Return true if c is a Unicode line break character (LF, CR, LS, or PS)
-	inline bool isLineBreak(char16 c) {return CharInfo::cGroup(c) == CharInfo::LineBreakGroup;}
-
-	inline bool isUpper(char16 c) {return CharInfo::cType(c) == CharInfo::UppercaseLetter;}
-	inline bool isLower(char16 c) {return CharInfo::cType(c) == CharInfo::LowercaseLetter;}
-
-	char16 toUpper(char16 c);
-	char16 toLower(char16 c);
+	
+	inline bool isASCIIDecimalDigit(char16 c) {return c >= '0' && c <= '9';}
+	bool isASCIIHexDigit(char16 c, uint &digit);
 
 
 //
@@ -197,8 +204,7 @@ namespace JavaScript {
 
 	// private
 	template <typename T>
-	class ProtoArrayBuffer
-	{
+	class ProtoArrayBuffer {
 	  protected:
 	    T *buffer;
 	    int32 length;
@@ -237,8 +243,7 @@ namespace JavaScript {
 	// ArrayBuffer allocates the array from the heap.
 	// Use append to append nElts elements to the end of the ArrayBuffer.
 	template <typename T, int32 cacheSize>
-	class ArrayBuffer: public ProtoArrayBuffer<T>
-	{
+	class ArrayBuffer: public ProtoArrayBuffer<T> {
 	    T cache[cacheSize];
 
 	  public:
@@ -283,8 +288,7 @@ namespace JavaScript {
 
 	// A class to remember the format of an ostream so that a function may modify it internally
 	// without changing it for the caller.
-	class SaveFormat
-	{
+	class SaveFormat {
 		ostream &o;
 		std::ios_base::fmtflags flags;
 		char fill;
@@ -304,5 +308,31 @@ namespace JavaScript {
 	}
 	void showString(ostream &out, const String &str);
 
+
+//
+// Exceptions
+//
+
+	// A JavaScript exception (other than out-of-memory, for which we use the standard C++
+	// exception bad_alloc).
+	struct Exception {
+		enum Kind {
+			SyntaxError
+		};
+		
+		Kind kind;						// The exception's kind
+		String message;					// The detailed message
+		String sourceFile;				// A description of the source code that caused the error
+		uint32 lineNum;					// One-based source line number; 0 if unknown
+		uint32 charPos;					// Zero-based character offset within the line
+		String sourceLine;				// The text of the source line
+
+		Exception(Kind kind, const String &message): kind(kind), message(message), lineNum(0) {}
+		Exception(Kind kind, const String &message, const String &sourceFile, uint32 lineNum, uint32 charPos, const String sourceLine):
+			kind(kind), message(message), sourceFile(sourceFile), lineNum(lineNum), charPos(charPos), sourceLine(sourceLine) {}
+			
+		const char *kindString() const;
+		String fullMessage() const;
+	};
 }
 #endif

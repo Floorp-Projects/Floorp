@@ -17,8 +17,10 @@
 // Copyright (C) 1998 Netscape Communications Corporation. All
 // Rights Reserved.
 
+#include <cstring>
 #include <new>
 #include <iomanip>
+#include <algorithm>
 #include "utilities.h"
 
 #ifdef WIN32
@@ -159,7 +161,52 @@ uint JS::floorLog2(uint32 n)
 //
 
 
-// From java.lang.Character.java:
+// Return a String containing the characters of the null-terminated C string cstr
+// (without the trailing null).
+JS::String JS::widenCString(const char *cstr)
+{
+	size_t len = std::strlen(cstr);
+	String s(len, uni::null);
+	std::transform(cstr, cstr+len, s.begin(), widen);
+	return s;
+}
+
+
+// Widen and append length characters starting at chars to the end of str.
+void JS::appendChars(String &str, const char *chars, size_t length)
+{
+	String::size_type strLen = str.size();
+	str.append(length, uni::null);
+	std::transform(chars, chars+length, str.begin()+strLen, widen);
+}
+
+
+// Widen and append the null-terminated string cstr to the end of str.
+// Return str.
+JS::String &JS::operator+=(String &str, const char *cstr)
+{
+	appendChars(str, cstr, std::strlen(cstr));
+	return str;
+}
+
+
+// Return the concatenation of str and the null-terminated string cstr.
+JS::String JS::operator+(const String &str, const char *cstr)
+{
+	String s = widenCString(cstr);
+	return str + s;
+}
+
+
+// Return the concatenation of the null-terminated string cstr and str.
+JS::String JS::operator+(const char *cstr, const String &str)
+{
+	String s = widenCString(cstr);
+	return s += str;
+}
+
+
+// From java.lang.Character:
 //
 // The character properties are currently encoded into 32 bits in the
 // following manner:
@@ -1433,24 +1480,45 @@ const uint32 JS::CharInfo::a[] = {
 
 // Return c converted to upper case.  If c cannot be converted to upper case,
 // return c unchanged.
-JS::char16 JS::toUpper(char16 c)
+char16 JS::toUpper(char16 c)
 {
-	uint32 code = CharInfo::cCode(c);
-	if (code & 0x00100000)
-		c = static_cast<char16>(static_cast<int32>(c) - (static_cast<int32>(code) >> 22));
+	CharInfo ci(c);
+	if (ci.info & 0x00100000)
+		c = static_cast<char16>(static_cast<int32>(c) - (static_cast<int32>(ci.info) >> 22));
 	return c;
 }
 
 
 // Return c converted to lower case.  If c cannot be converted to lower case,
 // return c unchanged.
-JS::char16 JS::toLower(char16 c)
+char16 JS::toLower(char16 c)
 {
-	uint32 code = CharInfo::cCode(c);
-	if (code & 0x00200000)
-		c = static_cast<char16>(static_cast<int32>(c) + (static_cast<int32>(code) >> 22));
+	CharInfo ci(c);
+	if (ci.info & 0x00200000)
+		c = static_cast<char16>(static_cast<int32>(c) + (static_cast<int32>(ci.info) >> 22));
 	return c;
 }
+
+
+// Return true if c is an ASCII hexadecimal digit, in which case store the digit's numeric value in d.
+bool JS::isASCIIHexDigit(char16 c, uint &digit)
+{
+	uint cv = c;
+
+	if (cv < '0')
+		return false;
+	if (cv <= '9') {
+		digit = cv - '0';
+		return true;
+	}
+	cv |= 0x20;
+	if (cv >= 'a' && cv <= 'f') {
+		digit = cv - 'a' + 10;
+		return true;
+	}
+	return false;
+}
+
 
 
 //
@@ -1476,6 +1544,29 @@ void JS::showChar(ostream &out, char16 ch)
 void JS::showString(ostream &out, const String &str)
 {
 	showString(out, str.begin(), str.end());
+}
+
+
+//
+// Exceptions
+//
+
+
+static const char *const kindStrings[] = {
+	"Syntax error"				// SyntaxError
+};
+
+// Return a null-terminated string describing the exception's kind.
+const char *JS::Exception::kindString() const
+{
+	return kindStrings[kind];
+}
+
+
+// Return the full error message.
+JS::String JS::Exception::fullMessage() const
+{
+	return kindString() + (": " + message);
 }
 
 
