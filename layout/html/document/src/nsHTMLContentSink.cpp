@@ -79,13 +79,15 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
     if (SINK_LOG_TEST(gSinkLogModuleInfo,_bit)) {            \
       char cbuf[40];                                         \
       const char* cp;                                        \
-      if ((_node).GetNodeType() != eHTMLTag_userdefined) {   \
+      PRInt32 nt = (_node).GetNodeType();                    \
+      if ((nt > PRInt32(eHTMLTag_unknown)) &&                \
+          (nt < PRInt32(eHTMLTag_text))) {                   \
         cp = NS_EnumToTag(nsHTMLTag((_node).GetNodeType())); \
       } else {                                               \
         (_node).GetText().ToCString(cbuf, sizeof(cbuf));     \
         cp = cbuf;                                           \
       }                                                      \
-      PR_LogPrint("%s: node='%s'", _msg, cp);                \
+      PR_LogPrint("%s: this=%p node='%s'", _msg, this, cp);  \
     }                                                        \
   PR_END_MACRO
 
@@ -341,6 +343,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   }
   mRoot->AppendChild(mHead, PR_FALSE);
 
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::Init: this=%p url='%s'",
+              this, aDocURL->GetSpec()));
   return rv;
 }
 
@@ -450,6 +455,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
   mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
 
   // Make body container
+NS_ASSERTION(nsnull == mBody, "yikes");
   NS_IF_RELEASE(mBody);
   nsIAtom* atom = NS_NewAtom("BODY");
   if (nsnull == atom) {
@@ -842,6 +848,11 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
     NS_NOTREACHED("bad parser: map's in CloseContainer");
     NS_IF_RELEASE(mCurrentMap);
     return NS_OK;
+  case eHTMLTag_body:
+  case eHTMLTag_html:
+  case eHTMLTag_head:
+    NS_NOTREACHED("bad parser: calling CloseContainer for bad tag");
+    return NS_OK;
   }
 
   // XXX we could assert things about the top tag name
@@ -935,6 +946,7 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
       }
 #endif
     }
+NS_ASSERTION(container != mBody, "whoops");
     NS_RELEASE(container);
   }
 
@@ -1015,6 +1027,8 @@ ScrollToRef();
 NS_IMETHODIMP
 HTMLContentSink::WillInterrupt(void)
 {
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::WillInterrupt: this=%p", this));
   return NS_OK;
 }
 
@@ -1027,6 +1041,8 @@ HTMLContentSink::WillInterrupt(void)
 NS_IMETHODIMP
 HTMLContentSink::WillResume(void)
 {
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::WillResume: this=%p", this));
   return NS_OK;
 }
 
@@ -1970,15 +1986,19 @@ nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
 nsresult HTMLContentSink::ProcessFrameTag(nsIHTMLContent** aInstancePtrResult,
                                           const nsIParserNode& aNode)
 {
-  nsAutoString tmp("FRAME");
-  nsIAtom* atom = NS_NewAtom(tmp);
+  // XXX kipp was here: ignore frame tags that aren't in a frameset!
+  nsresult rv = NS_OK;
+  if (nsnull != mFrameset) {
+    nsAutoString tmp("FRAME");
+    nsIAtom* atom = NS_NewAtom(tmp);
 
-  nsresult rv = NS_NewHTMLFrame(aInstancePtrResult, atom, mWebShell);
-  if (NS_OK == rv) {
-    rv = AddAttributes(aNode, *aInstancePtrResult);
+    rv = NS_NewHTMLFrame(aInstancePtrResult, atom, mWebShell);
+    if (NS_OK == rv) {
+      rv = AddAttributes(aNode, *aInstancePtrResult);
+    }
+
+    NS_RELEASE(atom);
   }
-
-  NS_RELEASE(atom);
   return rv;
 }
 
