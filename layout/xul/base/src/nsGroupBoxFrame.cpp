@@ -69,7 +69,7 @@ public:
   virtual PRBool GetInitialVAlignment(Valignment& aValign)  { aValign = vAlign_Top; return PR_TRUE; } 
   virtual PRBool GetInitialAutoStretch(PRBool& aStretch)    { aStretch = PR_TRUE; return PR_TRUE; } 
 
-  nsIBox* GetTitleBox(nsIPresContext* aPresContext, nsRect& aRect);
+  nsIBox* GetCaptionBox(nsIPresContext* aPresContext, nsRect& aCaptionRect);
 };
 
 /*
@@ -139,25 +139,25 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
 
         nscoord yoff = 0;
 
-        nsRect titleRect;
-        nsIBox* titleBox = GetTitleBox(aPresContext, titleRect);
+        nsRect groupRect;
+        nsIBox* groupBox = GetCaptionBox(aPresContext, groupRect);
 
-        if (titleBox) {        
-            nsIFrame* titleFrame;
-            titleBox->GetFrame(&titleFrame);
+        if (groupBox) {        
+            nsIFrame* groupFrame;
+            groupBox->GetFrame(&groupFrame);
 
             // if the border is smaller than the legend. Move the border down
             // to be centered on the legend. 
-            const nsStyleMargin* titleMarginData;
-            titleFrame->GetStyleData(eStyleStruct_Margin,
-                                    (const nsStyleStruct*&) titleMarginData);
+            const nsStyleMargin* groupMarginData;
+            groupFrame->GetStyleData(eStyleStruct_Margin,
+                                     (const nsStyleStruct*&) groupMarginData);
 
-            nsMargin titleMargin;
-            titleMarginData->GetMargin(titleMargin);
-            titleRect.Inflate(titleMargin);
+            nsMargin groupMargin;
+            groupMarginData->GetMargin(groupMargin);
+            groupRect.Inflate(groupMargin);
          
-            if (border.top < titleRect.height)
-                yoff = (titleRect.height - border.top)/2 + titleRect.y;
+            if (border.top < groupRect.height)
+                yoff = (groupRect.height - border.top)/2 + groupRect.y;
         }
 
         nsRect rect(0, yoff, mRect.width, mRect.height - yoff);
@@ -166,7 +166,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
                                         aDirtyRect, rect, *color, *borderStyleData, 0, 0);
 
 
-        if (titleBox) {
+        if (groupBox) {
 
           // we should probably use PaintBorderEdges to do this but for now just use clipping
           // to achieve the same effect.
@@ -174,7 +174,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
 
           // draw left side
           nsRect clipRect(rect);
-          clipRect.width = titleRect.x - rect.x;
+          clipRect.width = groupRect.x - rect.x;
           clipRect.height = border.top;
 
           aRenderingContext.PushState();
@@ -187,8 +187,8 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
 
           // draw right side
           clipRect = rect;
-          clipRect.x = titleRect.x + titleRect.width;
-          clipRect.width -= (titleRect.x + titleRect.width);
+          clipRect.x = groupRect.x + groupRect.width;
+          clipRect.width -= (groupRect.x + groupRect.width);
           clipRect.height = border.top;
 
           aRenderingContext.PushState();
@@ -241,9 +241,9 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 nsIBox*
-nsGroupBoxFrame::GetTitleBox(nsIPresContext* aPresContext, nsRect& aTitleRect)
+nsGroupBoxFrame::GetCaptionBox(nsIPresContext* aPresContext, nsRect& aCaptionRect)
 {
-    // first child is out titled area
+    // first child is our grouped area
     nsIBox* box;
     GetChildBox(&box);
 
@@ -251,14 +251,14 @@ nsGroupBoxFrame::GetTitleBox(nsIPresContext* aPresContext, nsRect& aTitleRect)
     if (!box)
       return nsnull;
 
-    // get the first child in the titled area that is the title
+    // get the first child in the grouped area, that is the caption
     box->GetChildBox(&box);
 
     // nothing in the area? fail
     if (!box)
       return nsnull;
 
-    // now get the title itself. It is in the title frame.
+    // now get the caption itself. It is in the caption frame.
     nsIBox* child = nsnull;
     box->GetChildBox(&child);
 
@@ -266,9 +266,9 @@ nsGroupBoxFrame::GetTitleBox(nsIPresContext* aPresContext, nsRect& aTitleRect)
        // convert to our coordinates.
        nsRect parentRect;
        box->GetBounds(parentRect);
-       child->GetBounds(aTitleRect);
-       aTitleRect.x += parentRect.x;
-       aTitleRect.y += parentRect.y;
+       child->GetBounds(aCaptionRect);
+       aCaptionRect.x += parentRect.x;
+       aCaptionRect.y += parentRect.y;
     }
 
     return child;
