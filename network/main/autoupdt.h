@@ -102,7 +102,7 @@ PR_PUBLIC_API(void)
 #else
 PUBLIC void
 #endif
-checkForAutoUpdate(void *cx, char* url, int32 file_size, int32 bytes_range, uint32 interval);
+checkForAutoUpdate(void *cx, char* url, int32 file_size);
 
 PR_END_EXTERN_C
 
