@@ -1359,10 +1359,10 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
     // Check whether it wants to floated or absolutely positioned
     if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
       AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
-      kidFrame->SetStyleContext(kidSC);
+      kidFrame->SetStyleContext(aCX,kidSC);
     } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
       PlaceholderFrame::NewFrame(&kidFrame, kid, kidIndex, this);
-      kidFrame->SetStyleContext(kidSC);
+      kidFrame->SetStyleContext(aCX,kidSC);
     } else if (nsnull == kidPrevInFlow) {
       // Create initial frame for the child
       nsIContentDelegate* kidDel;
@@ -1397,7 +1397,7 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
         nsFrame::NewFrame(&kidFrame, kid, kidIndex, this);
         break;
       }
-      kidFrame->SetStyleContext(kidSC);
+      kidFrame->SetStyleContext(aCX,kidSC);
     } else {
       // Since kid has a prev-in-flow, use that to create the next
       // frame.
@@ -2099,7 +2099,7 @@ NS_METHOD nsBlockFrame::ContentAppended(nsIPresShell* aShell,
         break;
       }
     }
-    kidFrame->SetStyleContext(kidSC);
+    kidFrame->SetStyleContext(aCX,kidSC);
 
     // Link child frame into the list of children
     if (nsnull != prevKidFrame) {

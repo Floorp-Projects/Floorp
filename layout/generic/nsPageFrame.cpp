@@ -46,7 +46,7 @@ void PageFrame::CreateFirstChild(nsIPresContext* aPresContext)
           // Resolve style and set the style context
           nsIStyleContext* kidStyleContext =
             aPresContext->ResolveStyleContextFor(child, this);
-          mFirstChild->SetStyleContext(kidStyleContext);
+          mFirstChild->SetStyleContext(aPresContext,kidStyleContext);
           NS_RELEASE(kidStyleContext);
         }
         NS_RELEASE(cd);

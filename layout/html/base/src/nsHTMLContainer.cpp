@@ -214,7 +214,7 @@ nsIFrame* nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
     break;
   }
 
-  rv->SetStyleContext(styleContext);
+  rv->SetStyleContext(aPresContext,styleContext);
   NS_RELEASE(styleContext);
   return rv;
 }

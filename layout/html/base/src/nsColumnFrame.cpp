@@ -688,7 +688,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
     // Create a child frame
     if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
       AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
-      kidFrame->SetStyleContext(kidStyleContext);
+      kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else if (nsnull == kidPrevInFlow) {
       // Figure out how to treat the content
       nsIContentDelegate* kidDel = nsnull;
@@ -718,7 +718,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
         pseudoFrame->SetFirstContentOffset(kidIndex);
         break;
       }
-      kidFrame->SetStyleContext(kidStyleContext);
+      kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else {
       kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
       if (ChildIsPseudoFrame(kidFrame)) {
@@ -1232,7 +1232,7 @@ NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
       case NS_STYLE_DISPLAY_NONE:
         // Create place holder frame
         nsFrame::NewFrame(&kidFrame, kid, kidIndex, this);
-        kidFrame->SetStyleContext(kidStyleContext);
+        kidFrame->SetStyleContext(aPresContext,kidStyleContext);
   
         // Append it to the child list
         if (nsnull == prevKidFrame) {
@@ -1255,7 +1255,7 @@ NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
         del = kid->GetDelegate(aPresContext);
         kidFrame = del->CreateFrame(aPresContext, kid, kidIndex, this);
         NS_RELEASE(del);
-        kidFrame->SetStyleContext(kidStyleContext);
+        kidFrame->SetStyleContext(aPresContext,kidStyleContext);
   
         // Append it to the child list
         if (nsnull == prevKidFrame) {
@@ -1279,7 +1279,7 @@ NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
   
           // Resolve style for the pseudo-frame (kid's style won't do)
           kidStyleContext = aPresContext->ResolveStyleContextFor(mContent, this);
-          kidFrame->SetStyleContext(kidStyleContext);
+          kidFrame->SetStyleContext(aPresContext,kidStyleContext);
   
           // Append the pseudo frame to the child list
           pseudoFrame = (nsBlockFrame*) kidFrame;

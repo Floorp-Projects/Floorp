@@ -573,10 +573,10 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
     // Check whether it wants to floated or absolutely positioned
     if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
       AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
-      kidFrame->SetStyleContext(kidStyleContext);
+      kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
       PlaceholderFrame::NewFrame(&kidFrame, kid, kidIndex, this);
-      kidFrame->SetStyleContext(kidStyleContext);
+      kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel;
       switch (kidDisplay->mDisplay) {
@@ -638,7 +638,7 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
         nsFrame::NewFrame(&kidFrame, kid, kidIndex, this);
         break;
       }
-      kidFrame->SetStyleContext(kidStyleContext);
+      kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else {
       kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
     }

@@ -105,7 +105,7 @@ NS_METHOD RootFrame::ResizeReflow(nsIPresContext* aPresContext,
     mFirstChild = new RootContentFrame(mContent, mIndexInParent, this);
     mChildCount = 1;
     nsIStyleContext* style = aPresContext->ResolveStyleContextFor(mContent, this);
-    mFirstChild->SetStyleContext(style);
+    mFirstChild->SetStyleContext(aPresContext,style);
     NS_RELEASE(style);
   }
 
@@ -277,7 +277,7 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
             // Resolve style and set the style context
             nsIStyleContext* kidStyleContext =
               aPresContext->ResolveStyleContextFor(child, this);
-            mFirstChild->SetStyleContext(kidStyleContext);
+            mFirstChild->SetStyleContext(aPresContext,kidStyleContext);
             NS_RELEASE(kidStyleContext);
           }
           NS_RELEASE(cd);
