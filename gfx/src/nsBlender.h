@@ -42,34 +42,37 @@ class nsBlender : public nsIBlender
 public:
  /** --------------------------------------------------------------------------
   * General constructor for a nsBlender object
-  * @update dc - 10/29/98
   */
   nsBlender();
 
   NS_DECL_ISUPPORTS
   
   NS_IMETHOD Init(nsIDeviceContext *aContext);
+  NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
+                   nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                   nsDrawingSurface aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
+                   nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0));
+  NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsIRenderingContext *aSrc,
+                   nsIRenderingContext *aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                   nsIRenderingContext *aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
+                   nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0));
 
 protected:
 
  /** --------------------------------------------------------------------------
   * Destructor for a nsBlender object
-  * @update dwc - 10/29/98
   */
   virtual ~nsBlender();
 
-  /** --------------------------------------------------------------------------
-   * Calculate how many bytes per span for a given depth
-   * @update dwc - 10/29/98
-   * @param aWidth -- width of the line
-   * @param aBitsPixel -- how many bytes per pixel in the bitmap
-   * @result The number of bytes per line
-   */
-  PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
+  //called by nsIBlender Blend() functions
+  nsresult Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride, PRInt32 aSrcBytes,
+                 PRUint8 *aDestBits, PRInt32 aDestStride, PRInt32 aDestBytes,
+                 PRUint8 *aSecondSrcBits, PRInt32 aSecondSrcStride, PRInt32 aSecondSrcBytes,
+                 PRInt32 aLines, PRInt32 aAlpha, nsPixelFormat &aPixFormat,
+                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
 
   /** --------------------------------------------------------------------------
    * Blend two 32 bit image arrays
-   * @update dwc - 10/29/98
    * @param aNumlines  Number of lines to blend
    * @param aNumberBytes Number of bytes per line to blend
    * @param aSImage Pointer to beginning of the source bytes
@@ -87,7 +90,6 @@ protected:
 
   /** --------------------------------------------------------------------------
    * Blend two 24 bit image arrays using an 8 bit alpha mask
-   * @update dwc - 10/29/98
    * @param aNumlines  Number of lines to blend
    * @param aNumberBytes Number of bytes per line to blend
    * @param aSImage Pointer to beginning of the source bytes
@@ -103,7 +105,6 @@ protected:
 
  /** --------------------------------------------------------------------------
   * Blend two 24 bit image arrays using a passed in blend value
-  * @update dwc - 10/29/98
   * @param aNumlines  Number of lines to blend
   * @param aNumberBytes Number of bytes per line to blend
   * @param aSImage Pointer to beginning of the source bytes
@@ -121,7 +122,6 @@ protected:
 
  /** --------------------------------------------------------------------------
   * Blend two 16 bit image arrays using a passed in blend value
-  * @update dwc - 10/29/98
   * @param aNumlines  Number of lines to blend
   * @param aNumberBytes Number of bytes per line to blend
   * @param aSImage Pointer to beginning of the source bytes
@@ -138,7 +138,6 @@ protected:
 
  /** --------------------------------------------------------------------------
   * Blend two 8 bit image arrays using an 8 bit alpha mask
-  * @update dwc - 10/29/98
   * @param aNumlines  Number of lines to blend
   * @param aNumberBytes Number of bytes per line to blend
   * @param aSImage Pointer to beginning of the source bytes
@@ -153,7 +152,6 @@ protected:
                 PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
 
  /** --------------------------------------------------------------------------
-  * @update dwc - 10/29/98
   * Blend two 8 bit image arrays using a passed in blend value
   * @param aNumlines  Number of lines to blend
   * @param aNumberBytes Number of bytes per line to blend
@@ -169,8 +167,49 @@ protected:
                 PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,
                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
 
+#if 0
+  /** --------------------------------------------------------------------------
+   * Calculate the metrics for the alpha layer before the blend
+   * @param aSrcInfo -- a pointer to a source bitmap
+   * @param aDestInfo -- a pointer to the destination bitmap
+   * @param aSrcUL -- upperleft for the source blend
+   * @param aMaskInfo -- a pointer to the mask bitmap
+   * @param aMaskUL -- upperleft for the mask bitmap
+   * @param aWidth -- width of the blend
+   * @param aHeight -- heigth of the blend
+   * @param aNumLines -- a pointer to number of lines to do for the blend
+   * @param aNumbytes -- a pointer to the number of bytes per line for the blend
+   * @param aSImage -- a pointer to a the bit pointer for the source
+   * @param aDImage -- a pointer to a the bit pointer for the destination 
+   * @param aMImage -- a pointer to a the bit pointer for the mask 
+   * @param aSLSpan -- number of bytes per span for the source
+   * @param aDLSpan -- number of bytes per span for the destination
+   * @param aMLSpan -- number of bytes per span for the mask
+   * @result PR_TRUE if calculation was succesful
+   */
+  PRBool CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo,
+                          BITMAP *aSecondSrcInfo, nsPoint *ASrcUL,
+                          BITMAP  *aMapInfo,nsPoint *aMaskUL,
+                          PRInt32 aWidth,PRInt32 aHeight,
+                          PRInt32 *aNumlines,
+                          PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
+                          PRUint8 **aSecondSImage,
+                          PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan);
+#endif
 
   nsIDeviceContext  *mContext;
+
+  PRUint8             *mSrcBytes;
+  PRUint8             *mSecondSrcBytes;
+  PRUint8             *mDestBytes;
+
+  PRInt32             mSrcRowBytes;
+  PRInt32             mSecondSrcRowBytes;
+  PRInt32             mDestRowBytes;
+
+  PRInt32             mSrcSpan;
+  PRInt32             mSecondSrcSpan;
+  PRInt32             mDestSpan;
 };
 
 #endif

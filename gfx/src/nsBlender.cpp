@@ -18,17 +18,30 @@
 
 #include "nsBlender.h"
 #include "nsIDeviceContext.h"
+#include "il_util.h"
 
 static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 
 /** --------------------------------------------------------------------------
 * General constructor for a nsBlender object
-* @update dc - 10/29/98
 */
 nsBlender :: nsBlender()
 {
   NS_INIT_REFCNT();
+
   mContext = nsnull;
+
+  mSrcBytes = nsnull;
+  mSecondSrcBytes = nsnull;
+  mDestBytes = nsnull;
+
+  mSrcRowBytes = 0;
+  mDestRowBytes = 0;
+  mSecondSrcRowBytes = 0;
+
+  mSrcSpan = 0;
+  mDestSpan = 0;
+  mSecondSrcSpan = 0;
 }
 
 nsBlender::~nsBlender() 
@@ -50,31 +63,280 @@ nsBlender::Init(nsIDeviceContext *aContext)
   return NS_OK;
 }
 
-/** --------------------------------------------------------------------------
-* Calculate how many bytes per span for a given depth
-* @update dc - 10/29/98
-* @param aWidth -- width of the line
-* @param aBitsPixel -- how many bytes per pixel in the bitmap
-* @result The number of bytes per line
-*/
-PRInt32  
-nsBlender :: CalcBytesSpan(PRUint32 aWidth, PRUint32 aBitsPixel)
+NS_IMETHODIMP
+nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
+                    nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                    nsDrawingSurface aSecondSrc, nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
-  PRInt32 spanbytes;
+  nsresult      result = NS_ERROR_FAILURE;
+  nsPoint       srcloc, maskloc;
+  PRInt32       dlinespan, slinespan, mlinespan, numbytes, numlines, level;
+  PRUint8       *s1, *d1, *m1, *mask = NULL, *ssl = NULL;
+  PRBool        srcissurf = PR_FALSE;
+  PRBool        secondsrcissurf = PR_FALSE;
+  PRBool        dstissurf = PR_FALSE;
+  nsPixelFormat pixformat;
+  nsIDrawingSurface   *SrcSurf, *DstSurf, *SecondSrcSurf;
 
-  spanbytes = (aWidth * aBitsPixel) >> 5;
+  SrcSurf = (nsIDrawingSurface *)aSrc;
+  DstSurf = (nsIDrawingSurface *)aDst;
+  SecondSrcSurf = (nsIDrawingSurface *)aSecondSrc;
 
-	if ((aWidth * aBitsPixel) & 0x1F) 
-		spanbytes++;
+  mSrcBytes = mSecondSrcBytes = mDestBytes = nsnull;
 
-	spanbytes <<= 2;
+  if (NS_OK == SrcSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY))
+  {
+    if (NS_OK == DstSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0))
+    {
+      if (SecondSrcSurf)
+        SecondSrcSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSecondSrcBytes, &mSecondSrcRowBytes, &mSecondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
 
-  return spanbytes;
+      srcloc.x = 0;
+      srcloc.y = 0;
+
+      maskloc.x = 0;
+      maskloc.y = 0;
+
+      SrcSurf->GetPixelFormat(&pixformat);
+
+      result = Blend(mSrcBytes, mSrcRowBytes, mSrcSpan,
+                     mDestBytes, mDestRowBytes, mDestSpan,
+                     mSecondSrcBytes, mSecondSrcRowBytes, mSecondSrcSpan,
+                     aHeight, (PRInt32)(aSrcOpacity * 100), pixformat,
+                     aSrcBackColor, aSecondSrcBackColor);
+
+      DstSurf->Unlock();
+
+      if (SecondSrcSurf)
+        SecondSrcSurf->Unlock();
+    }
+
+    SrcSurf->Unlock();
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsIRenderingContext *aSrc,
+                   nsIRenderingContext *aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                   nsIRenderingContext *aSecondSrc, nscolor aSrcBackColor,
+                   nscolor aSecondSrcBackColor)
+{
+  nsresult      result = NS_ERROR_FAILURE;
+  nsPoint       srcloc, maskloc;
+  PRInt32       dlinespan, slinespan, mlinespan, numbytes, numlines, level;
+  PRUint8       *s1, *d1, *m1, *mask = NULL, *ssl = NULL;
+  PRBool        srcissurf = PR_FALSE;
+  PRBool        secondsrcissurf = PR_FALSE;
+  PRBool        dstissurf = PR_FALSE;
+  nsPixelFormat pixformat;
+  nsDrawingSurface srcsurf;
+
+  mSrcBytes = mSecondSrcBytes = mDestBytes = nsnull;
+
+  if (NS_OK == aSrc->LockDrawingSurface(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY))
+  {
+    if (NS_OK == aDest->LockDrawingSurface(aSX, aSY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0))
+    {
+      if (aSecondSrc)
+        aSecondSrc->LockDrawingSurface(aSX, aSY, aWidth, aHeight, (void **)&mSecondSrcBytes, &mSecondSrcRowBytes, &mSecondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
+
+      srcloc.x = 0;
+      srcloc.y = 0;
+
+      maskloc.x = 0;
+      maskloc.y = 0;
+
+      aSrc->GetDrawingSurface(&srcsurf);
+      ((nsIDrawingSurface *)srcsurf)->GetPixelFormat(&pixformat);
+
+      result = Blend(mSrcBytes, mSrcRowBytes, mSrcSpan,
+                     mDestBytes, mDestRowBytes, mDestSpan,
+                     mSecondSrcBytes, mSecondSrcRowBytes, mSecondSrcSpan,
+                     aHeight, (PRInt32)(aSrcOpacity * 100), pixformat,
+                     aSrcBackColor, aSecondSrcBackColor);
+
+      aDest->UnlockDrawingSurface();
+
+      if (aSecondSrc)
+        aSecondSrc->UnlockDrawingSurface();
+    }
+
+    aSrc->UnlockDrawingSurface();
+  }
+
+  return result;
+}
+
+nsresult nsBlender::Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride, PRInt32 aSrcBytes,
+                               PRUint8 *aDestBits, PRInt32 aDestStride, PRInt32 aDestBytes,
+                               PRUint8 *aSecondSrcBits, PRInt32 aSecondSrcStride, PRInt32 aSecondSrcBytes,
+                               PRInt32 aLines, PRInt32 aAlpha, nsPixelFormat &aPixFormat,
+                               nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+{
+  nsresult  result = NS_OK;
+
+//  if (CalcAlphaMetrics(&mSrcInfo, &mDstInfo,
+//                       ((nsnull != mSecondSrcbinfo) || (PR_TRUE == secondsrcissurf)) ? &mSecondSrcInfo : nsnull,
+//                       &srcloc, NULL, &maskloc, aWidth, aHeight, &numlines, &numbytes,
+//                       &s1, &d1, &ssl, &m1, &slinespan, &dlinespan, &mlinespan))
+if (1)
+  {
+//    if (mSrcInfo.bmBitsPixel == mDstInfo.bmBitsPixel)
+if (1)
+    {
+      PRUint32 depth;
+      mContext->GetDepth(depth);
+      // now do the blend
+      switch (depth)
+      {
+        case 32:
+//          if (!mask){
+            Do32Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                      aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
+                      aSrcBackColor, aSecondSrcBackColor, aPixFormat);
+            result = NS_OK;
+//          }else
+//            result = NS_ERROR_FAILURE;
+          break;
+
+        case 24:
+//          if (mask){
+//            Do24BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
+//                              NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
+//            result = NS_OK;
+//          }else{
+            Do24Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                      aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
+                      aSrcBackColor, aSecondSrcBackColor, aPixFormat);
+//            result = NS_OK;
+//          }
+          break;
+
+        case 16:
+//          if (!mask){
+            Do16Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                      aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
+                      aSrcBackColor, aSecondSrcBackColor, aPixFormat);
+//            result = NS_OK;
+//          }
+//          else
+//            result = NS_ERROR_FAILURE;
+          break;
+
+        case 8:
+        {
+          IL_ColorSpace *thespace = nsnull;
+
+//          if (mask){
+//            Do8BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
+//                             NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
+//            result = NS_OK;
+//          }else{
+            if ((result = mContext->GetILColorSpace(thespace)) == NS_OK){
+              Do8Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                       aSecondSrcBits, aSrcStride, aDestStride, thespace,
+                       nsHighQual, aSrcBackColor, aSecondSrcBackColor);
+              IL_ReleaseColorSpace(thespace);
+            }
+//          }
+          break;
+        }
+      }
+    }
+    else
+      result = NS_ERROR_FAILURE;
+  }
+
+  return result;
 }
 
 /** --------------------------------------------------------------------------
+ * Calculate the metrics for the alpha layer before the blend
+ * @param aSrcInfo -- a pointer to a source bitmap
+ * @param aDestInfo -- a pointer to the destination bitmap
+ * @param aSrcUL -- upperleft for the source blend
+ * @param aMaskInfo -- a pointer to the mask bitmap
+ * @param aMaskUL -- upperleft for the mask bitmap
+ * @param aWidth -- width of the blend
+ * @param aHeight -- heigth of the blend
+ * @param aNumLines -- a pointer to number of lines to do for the blend
+ * @param aNumbytes -- a pointer to the number of bytes per line for the blend
+ * @param aSImage -- a pointer to a the bit pointer for the source
+ * @param aDImage -- a pointer to a the bit pointer for the destination 
+ * @param aMImage -- a pointer to a the bit pointer for the mask 
+ * @param aSLSpan -- number of bytes per span for the source
+ * @param aDLSpan -- number of bytes per span for the destination
+ * @param aMLSpan -- number of bytes per span for the mask
+ * @result PR_TRUE if calculation was succesful
+ */
+#if 0
+PRBool nsBlender::CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo, BITMAP *aSecondSrcInfo,
+                              nsPoint *aSrcUL,
+                              BITMAP  *aMaskInfo,nsPoint *aMaskUL,
+                              PRInt32 aWidth,PRInt32 aHeight,
+                              PRInt32 *aNumlines,
+                              PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
+                              PRUint8 **aSecondSImage,
+                              PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan)
+{
+PRBool    doalpha = PR_FALSE;
+nsRect    srect,drect,irect;
+PRInt32   startx,starty;
+nsRect    trect;
+
+  if(aMaskInfo){
+    drect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
+    trect.SetRect(aMaskUL->x,aMaskUL->y,aMaskInfo->bmWidth,aSrcInfo->bmHeight);
+    drect.IntersectRect(drect, trect);
+  }else{
+    //arect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
+    //srect.SetRect(aMaskUL->x,aMaskUL->y,aWidth,aHeight);
+    //arect.IntersectRect(arect,srect);
+
+    drect.SetRect(0, 0, aDestInfo->bmWidth, aDestInfo->bmHeight);
+    trect.SetRect(aSrcUL->x, aSrcUL->y, aWidth, aHeight);
+    drect.IntersectRect(drect, trect);
+  }
+
+  srect.SetRect(0, 0, aSrcInfo->bmWidth, aSrcInfo->bmHeight);
+  trect.SetRect(aSrcUL->x, aSrcUL->y, aWidth, aHeight);
+  srect.IntersectRect(srect, trect);
+
+  if (irect.IntersectRect(srect, drect)){
+    *aNumbytes = CalcBytesSpan(irect.width, aDestInfo->bmBitsPixel);
+    *aNumlines = irect.height;
+
+    startx = irect.x;
+    starty = irect.y;
+
+    // calculate destination information
+    *aDLSpan = mDRowBytes;
+    *aDImage = ((PRUint8*)aDestInfo->bmBits) + (starty * (*aDLSpan)) + ((aDestInfo->bmBitsPixel >> 3) * startx);
+
+    *aSLSpan = mSRowBytes;
+    *aSImage = ((PRUint8*)aSrcInfo->bmBits) + (starty * (*aSLSpan)) + ((aSrcInfo->bmBitsPixel >> 3) * startx);
+
+    if (nsnull != aSecondSrcInfo)
+      *aSecondSImage = ((PRUint8*)aSecondSrcInfo->bmBits) + (starty * (*aSLSpan)) + ((aSrcInfo->bmBitsPixel >> 3) * startx);
+
+    doalpha = PR_TRUE;
+
+    if(aMaskInfo){
+      *aMLSpan = aMaskInfo->bmWidthBytes;
+      *aMImage = (PRUint8*)aMaskInfo->bmBits;
+    }else{
+      aMLSpan = 0;
+      *aMImage = nsnull;
+    }
+  }
+
+  return doalpha;
+}
+#endif
+
+/** --------------------------------------------------------------------------
  * Blend two 32 bit image arrays
- * @update dc - 10/29/98
  * @param aNumlines  Number of lines to blend
  * @param aNumberBytes Number of bytes per line to blend
  * @param aSImage Pointer to beginning of the source bytes
@@ -127,7 +389,6 @@ PRInt32   x,y,temp1,numlines,xinc,yinc;
 
 /** --------------------------------------------------------------------------
  * Blend two 24 bit image arrays using an 8 bit alpha mask
- * @update dc - 10/29/98
  * @param aNumlines  Number of lines to blend
  * @param aNumberBytes Number of bytes per line to blend
  * @param aSImage Pointer to beginning of the source bytes
@@ -199,7 +460,6 @@ PRInt32   sspan,dspan,mspan;
 
 /** --------------------------------------------------------------------------
  * Blend two 24 bit image arrays using a passed in blend value
- * @update dc - 10/29/98
  * @param aNumlines  Number of lines to blend
  * @param aNumberBytes Number of bytes per line to blend
  * @param aSImage Pointer to beginning of the source bytes
@@ -270,7 +530,6 @@ PRUint16  srccolor,secsrccolor;
 
 /** --------------------------------------------------------------------------
  * Blend two 16 bit image arrays using a passed in blend value
- * @update dc - 10/29/98
  * @param aNumlines  Number of lines to blend
  * @param aNumberBytes Number of bytes per line to blend
  * @param aSImage Pointer to beginning of the source bytes
@@ -399,7 +658,6 @@ PRInt16     dspan,sspan,span;
 
 /** --------------------------------------------------------------------------
  * Blend two 8 bit image arrays using an 8 bit alpha mask
- * @update dc - 10/29/98
  * @param aNumlines  Number of lines to blend
  * @param aNumberBytes Number of bytes per line to blend
  * @param aSImage Pointer to beginning of the source bytes
@@ -460,7 +718,6 @@ extern void inv_colormap(PRInt16 colors,PRUint8 *aCMap,PRInt16 bits,PRUint32 *di
 
 /** --------------------------------------------------------------------------
  * Blend two 8 bit image arrays using a passed in blend value
- * @update dc - 10/29/98
  * @param aNumlines  Number of lines to blend
  * @param aNumberBytes Number of bytes per line to blend
  * @param aSImage Pointer to beginning of the source bytes
@@ -598,7 +855,6 @@ static PRInt32 blueloop( PRInt32 );
 
 /** --------------------------------------------------------------------------
  * Create an inverse colormap for a given color table
- * @update dc - 10/29/98
  * @param colors -- Number of colors
  * @param aCMap -- The color map
  * @param aBits -- Resolution in bits for the inverse map
@@ -650,7 +906,6 @@ PRUint32        r,g,b;
 
 /** --------------------------------------------------------------------------
  * find a red max or min value in a color cube
- * @update dc - 10/29/98
  * @return  a red component in a certain span
  */
 static PRInt32
@@ -693,7 +948,6 @@ static PRInt32 rxx;
 
 /** --------------------------------------------------------------------------
  * find a green max or min value in a color cube
- * @update dc - 10/29/98
  * @return  a red component in a certain span
  */
 static PRInt32
@@ -773,7 +1027,6 @@ static  PRUint8   *gcrgbp;
 
 /** --------------------------------------------------------------------------
  * find a blue max or min value in a color cube
- * @update dc - 10/29/98
  * @return  a red component in a certain span
  */
 static PRInt32
@@ -864,7 +1117,6 @@ rgbp = grgbp - 1;
 
 /** --------------------------------------------------------------------------
  * fill in a span with a max value
- * @update dc - 10/29/98
  * @return  VOID
  */
 static void
