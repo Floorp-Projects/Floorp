@@ -586,6 +586,7 @@ NS_IMETHODIMP nsWindowMediator::UpdateWindowTimeStamp( nsIXULWindow* inWindow )
       info->mTimeStamp = ++mTimeStamp;
       return NS_OK;
     }
+    info = info->mYounger;
     listEnd = mOldestWindow;
   }
   return NS_ERROR_FAILURE; 
