@@ -147,7 +147,7 @@ printf("calling back to caller!\n\n");
                                   kProxyObjectManagerIID,
                                   (nsISupports **)&manager);
 
-    printf("ProxyObjectManager: %d \n", manager);
+    printf("ProxyObjectManager: %p \n", manager);
     
     PR_ASSERT(manager);
 
