@@ -725,6 +725,13 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
     // Reset and set up the document
     URIUtils::ResetWithSource(doc, aSourceDocument);
 
+    // Set the charset
+    if (!mOutputFormat.mEncoding.IsEmpty()) {
+        doc->SetDocumentCharacterSet(
+            NS_LossyConvertUTF16toASCII(mOutputFormat.mEncoding));
+        doc->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+    }
+
     // Set the mime-type
     if (!mOutputFormat.mMediaType.IsEmpty()) {
         doc->SetContentType(mOutputFormat.mMediaType);
