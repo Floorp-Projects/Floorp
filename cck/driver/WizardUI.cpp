@@ -698,7 +698,7 @@ void CWizardUI::CreateControls()
 		}
 		else if (widgetType == "ComboBox") {
 			curWidget->control = new CComboBox;
-			rv = ((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP, tmpRect, this, ID);
+			rv = ((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP|WS_VSCROLL   , tmpRect, this, ID);
 
 		}
 		else if ((widgetType == "GroupBox") || (widgetType == "BoldGroup")) {

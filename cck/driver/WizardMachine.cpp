@@ -1168,6 +1168,7 @@ void CWizardMachineApp::CreateNewCache()
 		if (CompareValue)
 		{	
 			if (GlobalWidgetArray[i].type != "RadioButton" 
+			&& GlobalWidgetArray[i].type != "RadioGroup" 
 			&& GlobalWidgetArray[i].type != "Text" 
 			&& GlobalWidgetArray[i].type != "BoldText" 
 			&& GlobalWidgetArray[i].type != "Button" 
@@ -1183,6 +1184,7 @@ void CWizardMachineApp::CreateNewCache()
 			}
 		}
 		else if (GlobalWidgetArray[i].type != "RadioButton" 
+			&& GlobalWidgetArray[i].type != "RadioGroup" 
 			&& GlobalWidgetArray[i].type != "Text" 
 			&& GlobalWidgetArray[i].type != "BoldText" 
 			&& GlobalWidgetArray[i].type != "Button" 

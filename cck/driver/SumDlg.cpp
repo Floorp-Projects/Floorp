@@ -64,12 +64,15 @@ BOOL CSumDlg::OnInitDialog()
 
 	for(int i=0; i< GlobalArrayIndex; i++)
 	{
+		str2 = GlobalWidgetArray[i].name;
 		if (GlobalWidgetArray[i].type != "RadioButton" 
+			&& GlobalWidgetArray[i].type != "RadioGroup"
 			&& GlobalWidgetArray[i].type != "Text" 
 			&& GlobalWidgetArray[i].type != "BoldText" 
 			&& GlobalWidgetArray[i].type != "Button" 
 			&& GlobalWidgetArray[i].type != "GroupBox" 
-			&& GlobalWidgetArray[i].type != "BoldGroup" )
+			&& GlobalWidgetArray[i].type != "BoldGroup" 
+			&& str2.Left(1) != "_")
 		{
 			if (GlobalWidgetArray[i].name != "")
 			{
