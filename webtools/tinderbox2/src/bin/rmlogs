@@ -1,12 +1,12 @@
-#!#perl# --
+#!#perl# -T --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
 # rmlogs - remove the log files which are older then the number of
 #          days set in TinderConfig.  This program should be run from cron.
 
-# $Revision: 1.1 $ 
-# $Date: 2000/09/10 17:30:40 $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/11/06 15:39:53 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/rmlogs,v $ 
 # $Name:  $ 
@@ -60,55 +60,65 @@ $FULL_TRIM = $TinderConfig::FULL_LOG_TRIM_DAYS || 7;
 # $old_days, we remove the file.
 
 sub rm_logfile {
-  my ($old_days, $file) = @_;
+  my ($old_days, $dir, $file) = @_;
+  my $full_path = join('/', $dir, $file);
 
-  # there may be other files in the directory besides our logs, 
-  # skip them.
-  
-  ($file =~ m/\.html\.gz$/) || 
+  ($full_path =~ m/\.html\.gz$/) ||
     return 1;
-  
+
+  # untaint path
+  $full_path = extract_filename_chars($full_path);
+
   # save stat info for the file, incase we need it in the future.
 
-  my ($dev,$ino,$mode,$nlink,$uid,$gid) = lstat($file);
-  
+  my ($dev,$ino,$mode,$nlink,$uid,$gid) = lstat($full_path);
+
+  # There may be other files in the directory besides our logs, skip
+  # them.  If our file name is not a file skip it as well (security
+  # issues).
+
   ( -f _ ) ||
     return 1;
-      
+
   # Remove files older than 7 days
   if ( -M _ > $old_days) {
-    unlink($_) || 
-      die("Could not remove file: $_\n;");
+    unlink($full_path) || 
+      die("Could not remove file: $full_path\n;");
   }
 
   return 1;
 }
 
 
-# search all the log file directories for files which need to be removed.
+# search all the log file directories for files which need to be
+# removed.
 
 sub rm_old_logs {
-  my ($dir_type, $old_days, @dirs) = @_;
+  my ($dir_type, $old_days) = @_;
 
   my (@trees) = TreeData::get_all_trees();
   my (%dirs) = ();
-  
+
+  # find the set of directories to search.  We one to raverse each
+  # directory only once even if it is used for multiple trees.
+
   foreach $tree (@trees) {
     my ($dir_full) = FileStructure::get_filename($tree, $dir_type);
     $dirs{$dir_full} = 1;
   } 
 
-  # we traverse each directory only once.
+  # Traverse each directory and remove log files which are old.
+
   foreach $dir (keys %dirs) {
-    
+
     opendir(DIR, $dir) ||
       die("Could not open: $dir. $!\n");
-    
+
     while (defined ($file = readdir(DIR))) {
-      rm_logfile($old_days, $file);
+      rm_logfile($old_days, $dir, $file);
     }
     
-    close(DIR) ||
+    closedir(DIR) ||
       die("Could not close: $dir. $!\n");
     
   }
@@ -123,8 +133,8 @@ sub rm_old_logs {
   set_static_vars();
   get_env();
 
-  rm_old_logs('full-log', $FULL_TRIM, (keys %dirs));
-  rm_old_logs('brief-log', $BRIEF_TRIM, (keys %dirs));
+  rm_old_logs('full-log', $FULL_TRIM);
+  rm_old_logs('brief-log', $BRIEF_TRIM);
 
   exit 0;
 }
