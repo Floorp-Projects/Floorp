@@ -415,7 +415,7 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   serverProgID += type;
   
   // finally, create the server
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("serverProgID = %s\n", (const char *)serverProgID);
 #endif
   rv = nsComponentManager::CreateInstance(serverProgID,

@@ -1147,4 +1147,4 @@ nsNntpService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
     return NS_OK;
 }
 
-CMDLINEHANDLER_IMPL(nsNntpService,"-news","general.startup.news","chrome://messenger/content/","Start with news window.",NS_NNTPSERVICE_PROGID,"News Cmd Line Handler")
+CMDLINEHANDLER_IMPL(nsNntpService,"-news","general.startup.news","chrome://messenger/content/","Start with news window.",NS_NNTPSERVICE_PROGID,"News Cmd Line Handler", PR_FALSE,"")

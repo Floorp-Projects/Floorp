@@ -24,18 +24,21 @@
 #include "nsISupportsArray.h"
 #include "nsIContentHandler.h"
 #include "nsCOMPtr.h"
+#include "nsICmdLineHandler.h"
 
-class nsMsgComposeService : public nsIMsgComposeService, public nsIContentHandler
+class nsMsgComposeService : public nsIMsgComposeService, public nsIContentHandler, public nsICmdLineHandler
 {
 public: 
 	nsMsgComposeService();
 	virtual ~nsMsgComposeService();
 
-	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGCOMPOSESERVICE
   NS_DECL_NSICONTENTHANDLER
-  
+
+  NS_DECL_NSICMDLINEHANDLER
+  CMDLINEHANDLER_REGISTERPROC_DECLS 
+
 private:
 	nsCOMPtr<nsISupportsArray> m_msgQueue;
 };

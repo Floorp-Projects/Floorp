@@ -33,6 +33,7 @@
 #include "nsIDOMRange.h"
 #include "nsHTMLEditorLog.h"
 #include "nsCOMPtr.h"
+#include "nsICmdLineHandler.h"
 
 #include "nsEditorTxnLog.h"
 
@@ -64,6 +65,11 @@ nsHTMLEditorLog::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   if (aIID.Equals(NS_GET_IID(nsIEditorLogging))) {
     *aInstancePtr = (void*)(nsIEditorLogging*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsICmdLineHandler))) {
+    *aInstancePtr = (void*)(nsICmdLineHandler*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -1239,3 +1245,5 @@ function EditorSetSelectionFromOffsets(selRanges)
 }
 
 #endif
+
+CMDLINEHANDLER_IMPL(nsHTMLEditorLog,"-edit","general.startup.editor","chrome://editor/content/","Start with editor","component://netscape/editor/htmleditor","Editor Cmd Line Handler", PR_TRUE,"about:blank")

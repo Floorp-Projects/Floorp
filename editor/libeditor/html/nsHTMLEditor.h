@@ -39,7 +39,7 @@
 
 #include "TypeInState.h"
 #include "nsEditRules.h"
-
+ 
 class nsIDOMKeyEvent;
 
 /**
@@ -52,6 +52,7 @@ class nsHTMLEditor : public nsEditor,
                      public nsITableEditor,
                      public nsIEditorStyleSheets,
                      public nsICSSLoaderObserver
+                    
 {
 
   typedef enum {eNoOp, eReplaceParent=1, eInsertParent=2} BlockTransformationType;
@@ -77,6 +78,7 @@ public:
 //NOTE macro used is for classes that inherit from 
 // another class. Only the base class should use NS_DECL_ISUPPORTS
   NS_DECL_ISUPPORTS_INHERITED
+
 
            nsHTMLEditor();
   virtual  ~nsHTMLEditor();

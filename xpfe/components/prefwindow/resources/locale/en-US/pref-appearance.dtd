@@ -12,8 +12,6 @@
 <!ENTITY mesCheck.label "Messenger">
 <!--LOCALIZATION NOTE (compCheck.label): DONT_TRANSLATE -->
 <!ENTITY compCheck.label "Composer">
-<!--LOCALIZATION NOTE (calCheck.label): DONT_TRANSLATE -->
-<!ENTITY calCheck.label "Calendar">
 <!ENTITY showToolsLegend.label "Show toolbars as">
 <!ENTITY picsNtextRadio.label "Pictures and Text">
 <!ENTITY picsOnlyRadio.label "Pictures Only">

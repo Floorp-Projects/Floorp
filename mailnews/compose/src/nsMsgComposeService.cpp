@@ -49,6 +49,8 @@ nsMsgComposeService::nsMsgComposeService()
     rv = NS_NewISupportsArray(getter_AddRefs(m_msgQueue));
 }
 
+/* the following macro actually implement addref, release and query interface for our component. */
+NS_IMPL_ISUPPORTS3(nsMsgComposeService, nsIMsgComposeService, nsIContentHandler,nsICmdLineHandler);
 
 nsMsgComposeService::~nsMsgComposeService()
 {
@@ -85,9 +87,6 @@ static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
     }
     return rv;
 }
-
-/* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS2(nsMsgComposeService, nsIMsgComposeService, nsIContentHandler);
 
 nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI,
 	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity)
@@ -370,3 +369,6 @@ NS_IMETHODIMP nsMsgComposeService::HandleContent(const char * aContentType, cons
 
   return rv;
 }
+
+CMDLINEHANDLER_IMPL(nsMsgComposeService,"-compose","general.startup.messengercompose","chrome://messengercompose/content/","Start with messenger compose",NS_MSGCOMPOSESERVICE_PROGID,"Messenger Compose Cmd Line Handler", PR_TRUE, "about:blank")
+
