@@ -1,12 +1,11 @@
 implementation
 --------------
-* get the mac build glue wired up, and make the mac build work (in
-  progress: Peter.VanderBeken)
-
 * get the windows build glue wired up, and make the windows build work
 
 housecleaning
 ------------- 
+* sort out nsldap.h vs. nsLDAP.h.  can the former go away?
+
 * I have a sneaking suspicion that the thread might be getting killed
   but not cleaned up when the last nsILDAPConnection::Release is
   called.  But I don't know if that's really the case.  Need to check
@@ -42,7 +41,7 @@ housecleaning
 * many of the instance vars in the various class are probably not 
   initialized correctly.  audit for this and fix.
 
-* implement nsIPipeObserver in case pipe fills up?
+* implement nsIPipeObserver in nsLDAPChannel in case pipe fills up?
 
 * audit for and implement any appropriate NOT_IMPLEMENTED functions
   (eg nsLDAPChannel::Cancel() and friends)
