@@ -244,11 +244,11 @@ nsrefcnt _class::AddRef(void)                                \
 #ifdef MOZ_TRACE_XPCOM_REFCNT
 #define NS_RELEASE(_ptr)                                                \
  nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), __FILE__, __LINE__); \
- (_ptr) = NULL
+ (_ptr) = 0
 #else
 #define NS_RELEASE(_ptr) \
  (_ptr)->Release();      \
- (_ptr) = NULL
+ (_ptr) = 0
 #endif
 
 /**
@@ -268,11 +268,11 @@ nsrefcnt _class::AddRef(void)                                \
 #define NS_RELEASE2(_ptr, _result)                                       \
  _result = ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
                                               __FILE__, __LINE__));      \
- if (0 == (_result)) (_ptr) = NULL
+ if (0 == (_result)) (_ptr) = 0
 #else
 #define NS_RELEASE2(_ptr, _result) \
  _result = (_ptr)->Release();      \
- if (0 == (_result)) (_ptr) = NULL
+ if (0 == (_result)) (_ptr) = 0
 
 #endif
 
@@ -292,11 +292,11 @@ nsrefcnt _class::AddRef(void)                                \
    ? ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
                                         __FILE__, __LINE__))       \
    : 0);                                                           \
-  (_ptr) = NULL
+  (_ptr) = 0
 #else
 #define NS_IF_RELEASE(_ptr)                \
   ((0 != (_ptr)) ? (_ptr)->Release() : 0); \
-  (_ptr) = NULL
+  (_ptr) = 0
 #endif
 
 /**
