@@ -43,42 +43,45 @@
 // then writes it on updates. External changes to the file will be
 // ignored and overwritten.
 //
-// XXX Should do locks, so that external changes ore not overwritten.
+// XXX Should do locks, so that external changes are not overwritten.
 
 const calIOperationListener = Components.interfaces.calIOperationListener;
 const calICalendar = Components.interfaces.calICalendar;
 
-// calICSCalendar inherits from calMemoryCalendar. This is done in
-// createInstance.
-
 function calICSCalendar () {
     this.wrappedJSObject = this;
     this.initICSCalendar();
+
     this.unmappedComponents = [];
     this.unmappedProperties = [];
+    this.queue = new Array();
 }
 
 calICSCalendar.prototype = {
     mICSService: null,
-    mInitializing: false,
     mObserver: null,
+    locked: false,
 
     QueryInterface: function (aIID) {
-        if (aIID.equals(Components.interfaces.nsIStreamListener))
-            return this;
-        if (aIID.equals(Components.interfaces.nsIStreamLoaderObserver))
-            return this;
-        if (aIID.equals(Components.interfaces.nsIInterfaceRequestor))
-            return this;
-        if (aIID.equals(Components.interfaces.calICalendar))
-            return this;
+        if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.calICalendar) &&
+            !aIID.equals(Components.interfaces.nsIStreamListener) &&
+            !aIID.equals(Components.interfaces.nsIStreamLoaderObserver) &&
+            !aIID.equals(Components.interfaces.nsIInterfaceRequestor)) {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
+
+        return this;
     },
     
     initICSCalendar: function() {
-        this.initMemoryCalendar();
+        this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
+                                         .createInstance(Components.interfaces.calICalendar);
         this.mICSService = Components.classes["@mozilla.org/calendar/ics-service;1"]
                                      .getService(Components.interfaces.calIICSService);
+
         this.mObserver = new calICSObserver(this);
+        this.mMemoryCalendar.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
     },
 
     name: "",
@@ -88,21 +91,11 @@ calICSCalendar.prototype = {
     mUri: null,
     get uri() { return this.mUri },
     set uri(aUri) {
-        return this.setICSUri(aUri);
-    },
+        // Lock other changes to the item list.
+        this.locked = true;
+        // set to prevent writing after loading, without any changes
+        this.loading = true;
 
-    calendarPromotedProps: {
-        "PRODID": true,
-        "VERSION": true
-    },
-
-    setICSUri: function(aUri) {
-        // XXX Make it impossible for the UI to edit the calendar while
-        //     loading.
-
-        // Removing the observer because the file should not be written
-        // while loading.
-        this.removeObserver(this.mObserver);
         this.mUri = aUri;
         
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
@@ -117,15 +110,24 @@ calICSCalendar.prototype = {
         streamLoader.init(channel, this, this);
     },
 
+    calendarPromotedProps: {
+        "PRODID": true,
+        "VERSION": true
+    },
+
     // nsIStreamLoaderObserver impl
     // Listener for download. Parse the downloaded file
 
     // XXX use the onError observer calls
     onStreamComplete: function(loader, ctxt, status, resultLength, result)
     {
-        // XXX ?? Is this ok?
-        this.mItems = new Array();
-        this.observeOnStartBatch();
+        // Create a new calendar, to get rid of all the old events
+        this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
+                                         .createInstance(Components.interfaces.calICalendar);
+        // And don't forget to add our observer
+        this.mMemoryCalendar.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
+
+        this.mObserver.onStartBatch();
 
         var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
                                          .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
@@ -137,9 +139,7 @@ calICSCalendar.prototype = {
         // for non-existing or empty files, but not good for invalid files.
         // We should not accidently overwrite third party files.
         // XXX Fix that
-        // XXX try disabled for debugging all the other possible problems.
-        //     that's more important then file at the moment.
-        //try {
+        try {
             var calComp = this.mICSService.parseICS(str);
 
             // Get unknown properties
@@ -159,7 +159,7 @@ calICSCalendar.prototype = {
                     var event = Components.classes["@mozilla.org/calendar/event;1"]
                                           .createInstance(Components.interfaces.calIEvent);
                     event.icalComponent = subComp;
-                    this.addItem(event, null);
+                    this.mMemoryCalendar.addItem(event, null);
                     break;
                 case "VTODO":
                     // XXX Last time i tried, vtodo didn't work. Sadly no time to
@@ -167,7 +167,7 @@ calICSCalendar.prototype = {
                     var todo = Components.classes["@mozilla.org/calendar/todo;1"]
                                          .createInstance(Components.interfaces.calITodo);
                     todo.icalComponent = subComp;
-                    this.addItem(todo, null);
+                    this.mMemoryCalendar.addItem(todo, null);
                     break;
                 default:
                     this.unmappedComponents.push(subComp);
@@ -176,15 +176,26 @@ calICSCalendar.prototype = {
                 subComp = calComp.getNextSubcomponent("ANY");
             }
             
-        //} catch(e) { dump(e+"\n");}
+        } catch(e) { dump(e+"\n");}
 
-        this.observeOnEndBatch();
-
-        this.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
-        this.observeOnLoad();
+        this.mObserver.onEndBatch();
+        this.mObserver.onLoad();
+        this.locked = false;
+        this.processQueue();
     },
 
     writeICS: function () {
+        // Don't save right after loading. There are no changes anyway.
+        if (this.loading) {
+            this.loading = false;
+            return;
+        }
+
+        this.locked = true;
+
+        if (!this.mUri)
+            throw Components.results.NS_ERROR_FAILURE;
+
         var savedthis = this;
         var listener =
         {
@@ -215,9 +226,6 @@ calICSCalendar.prototype = {
             }
         };
 
-        if (!this.mUri)
-            throw Components.results.NS_ERROR_FAILURE;
-
         var calComp = this.mICSService.createIcalComponent("VCALENDAR");
         calComp.version = "2.0";
         calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN";
@@ -237,7 +245,6 @@ calICSCalendar.prototype = {
 
     // nsIStreamListener impl
     // For after publishing. Do error checks here
-    
     onStartRequest: function(request, ctxt) {},
     onDataAvailable: function(request, ctxt, inStream, sourceOffset, count) {},
     onStopRequest: function(request, ctxt, status, errorMsg)
@@ -251,36 +258,75 @@ calICSCalendar.prototype = {
         }
 
         if (channel && !channel.requestSucceeded) {
-            ctxt.observeOnError(null,
-                                "Publishing the calendar file failed\n" +
-                                  "Status code: "+channel.responseStatus+": "+channel.responseStatusText+"\n");
+            ctxt.mObserver.onError(null,
+                                   "Publishing the calendar file failed\n" +
+                                       "Status code: "+channel.responseStatus+": "+channel.responseStatusText+"\n");
         }
 
         else if (!channel && !Components.isSuccessCode(request.status)) {
-            ctxt.observeOnError(null,
-                                "Publishing the calendar file failed\n" +
-                                  "Status code: "+request.status.toString(16)+"\n");
+            ctxt.mObserver.onError(null,
+                                   "Publishing the calendar file failed\n" +
+                                       "Status code: "+request.status.toString(16)+"\n");
         }
+        ctxt.locked = false;
+        ctxt.processQueue();
     },
 
-    observeOnLoad: function () {
-        for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onLoad ();
+    addObserver: function (aObserver, aItemFilter) {
+        this.mObserver.addObserver(aObserver, aItemFilter);
+    },
+    removeObserver: function (aObserver) {
+        this.mObserver.removeObserver(aObserver);
     },
 
-    observeOnError: function (aErrNo, aMessage) {
-        for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onError (aErrNo, aMessage);
+    // Always use the queue, just to reduce the amount of places where
+    // this.mMemoryCalendar.addItem() and friends are called. less
+    // copied code.
+    addItem: function (aItem, aListener) {
+        this.queue.push({action:'add', item:aItem, listener:aListener});
+        this.processQueue();
     },
 
-    observeOnStartBatch: function () {
-        for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onStartBatch ();
+    modifyItem: function (aItem, aListener) {
+        this.queue.push({action:'modify', item:aItem, listener:aListener});
+        this.processQueue();
     },
 
-    observeOnEndBatch: function () {
-        for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onEndBatch ();
+    deleteItem: function (aItem, aListener) {
+        this.queue.push({action:'delete', item:aItem, listener:aListener});
+        this.processQueue();
+    },
+
+    getItem: function (aId, aListener) {
+        return this.mMemoryCalendar.getItem(aId, aListener);
+    },
+
+    getItems: function (aItemFilter, aCount,
+                        aRangeStart, aRangeEnd, aListener)
+    {
+        return this.mMemoryCalendar.getItems(aItemFilter, aCount,
+                                             aRangeStart, aRangeEnd,
+                                             aListener);
+    },
+
+    processQueue: function ()
+    {
+        if (this.locked)
+            return;
+        var a;
+        while ((a = this.queue.shift())) {
+            switch (a.action) {
+                case 'add':
+                    this.mMemoryCalendar.addItem(a.item, a.listener);
+                    break;
+                case 'modify':
+                    this.mMemoryCalendar.modifyItem(a.item, a.listener);
+                    break;
+                case 'delete':
+                    this.mMemoryCalendar.deleteItem(a.item, a.listener);
+                    break;
+            }
+        }
     },
 
     // nsIInterfaceRequestor impl
@@ -304,6 +350,7 @@ calICSCalendar.prototype = {
 
 function calICSObserver(aCalendar) {
     this.mCalendar = aCalendar;
+    this.mObservers = new Array();
 }
 
 calICSObserver.prototype = {
@@ -311,35 +358,78 @@ calICSObserver.prototype = {
     mInBatch: false,
 
     onStartBatch: function() {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onStartBatch();
         this.mInBatch = true;
     },
     onEndBatch: function() {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onEndBatch();
+
         this.mInBatch = false;
-        // XXX Should this be done?
         this.mCalendar.writeICS();
     },
-    onLoad: function() {},
+    onLoad: function() {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onLoad();
+    },
     onAddItem: function(aItem) {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onAddItem(aItem);
+
         if (!this.mInBatch)
             this.mCalendar.writeICS();
     },
     onModifyItem: function(aNewItem, aOldItem) {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onAddItem(aNewItem, aOldItem);
+
         if (!this.mInBatch)
             this.mCalendar.writeICS();
     },
     onDeleteItem: function(aDeletedItem) {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onDeleteItem(aItem);
+
         if (!this.mInBatch)
             this.mCalendar.writeICS();
     },
-    onAlarm: function(aAlarmItem) {},
-    onError: function(aMessage) {}
+    onAlarm: function(aAlarmItem) {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onAlarm(aAlarmItem);
+    },
+    onError: function(aMessage) {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onError(aMessage);
+    },
+
+    // This observer functions as proxy for all the other observers
+    // So need addObserver and removeObserver here
+    addObserver: function (aObserver, aItemFilter) {
+        for (var i = 0; i < this.mObservers.length; i++) {
+            if (this.mObservers[i].observer == aObserver &&
+                this.mObservers[i].filter == aItemFilter)
+            {
+                return;
+            }
+        }
+
+        this.mObservers.push( {observer: aObserver, filter: aItemFilter} );
+    },
+
+    removeObserver: function (aObserver) {
+        var newObservers = Array();
+        for (var i = 0; i < this.mObservers.length; i++) {
+            if (this.mObservers[i].observer != aObserver)
+                newObservers.push(this.mObservers[i]);
+        }
+        this.mObservers = newObservers;
+    }
 };
 
 /****
  **** module registration
  ****/
-
-var gWiredUpPrototype = false;
 
 var calICSCalendarModule = {
 
@@ -370,11 +460,6 @@ var calICSCalendarModule = {
         createInstance: function (outer, iid) {
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
-            if (!gWiredUpPrototype) {
-                var memCal = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
-                                       .createInstance(Components.interfaces.calICalendar);
-                calICSCalendar.prototype.__proto__ = memCal.wrappedJSObject.__proto__;
-            }
             return (new calICSCalendar()).QueryInterface(iid);
         }
     },
