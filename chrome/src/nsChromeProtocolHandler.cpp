@@ -183,8 +183,11 @@ nsCachedChromeChannel::GetOriginalURI(nsIURI* *aOriginalURI)
 NS_IMETHODIMP
 nsCachedChromeChannel::SetOriginalURI(nsIURI* aOriginalURI)
 {
+  // don't stp on a uri if we already have one there...this is a work around fix
+  // for Bug #34769.
+  if (!mURI)
     mURI = aOriginalURI;
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
