@@ -791,7 +791,7 @@ NS_IMETHODIMP
 nsBrowserAppCore::Copy()
 { 
   
-#define NEW_CLIPBOARD_SUPPORT
+//#define NEW_CLIPBOARD_SUPPORT
 
 #ifdef NEW_CLIPBOARD_SUPPORT
   nsIPresShell * presShell = GetPresShellFor(mWebShell);
