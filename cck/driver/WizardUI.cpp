@@ -66,6 +66,7 @@ extern char customizationPath[MAX_SIZE];
 
 extern BOOL IsNewValue;
 BOOL Validate = TRUE;
+CString numericMessage;
 
 extern _declspec (dllimport) WIDGET ptr_ga[1000];
 CCriticalSection nextSyncCodeSegment;
@@ -171,7 +172,9 @@ LRESULT CWizardUI::OnWizardBack()
 	// TODO: Add your specialized code here and/or call the base class
 	if (!Validate)
 	{
-		AfxMessageBox("You Must Enter Only Numeric Values", MB_OK);
+		AfxMessageBox(numericMessage, MB_OK);
+		UpdateGlobals();
+		DestroyCurrentScreenWidgets();
 		return FALSE;
 	}
 	if (!prevLock.IsLocked())
@@ -194,7 +197,9 @@ LRESULT CWizardUI::OnWizardNext()
 	// TODO: Add your specialized code here and/or call the base class
 	if (!Validate)
 	{
-		AfxMessageBox("You Must Enter Only Numeric Values", MB_OK);
+		AfxMessageBox(numericMessage, MB_OK);
+		UpdateGlobals();
+		DestroyCurrentScreenWidgets();
 		return FALSE;
 	}
 
