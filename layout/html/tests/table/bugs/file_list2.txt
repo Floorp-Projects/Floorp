@@ -1,0 +1,15 @@
+file:///s:/mozilla/layout/html/tests/table/bugs/bug2973.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug4427.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug4501.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug4576.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug5188.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug5797.html
+
+
+
+
+
+
+
+
+
