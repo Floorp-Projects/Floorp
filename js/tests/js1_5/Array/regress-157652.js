@@ -93,7 +93,6 @@ a1=null;
 /*
  * Let's try another one -
  */
-printBugNumber(bug);
 var a2=Array(0x10000000/4);
 a2.sort();
 a2=null;
@@ -102,7 +101,6 @@ a2=null;
 /*
  * Let's try the biggest possible one (see above)
  */
-printBugNumber(bug);
 var a3=Array(0xFFFFFFFF);
 a3.sort();
 a3 = null;
