@@ -1173,11 +1173,8 @@ nsHTMLSelectElement::GetPresState(nsIPresState** aPresState,
   *aPresState  = nsnull;
 
   // Retrieve the presentation state instead.
-  nsIPresState* presState;
-  PRInt32 type;
-  GetType(&type);
-  nsresult rv = GetPrimaryPresState(this, nsIStatefulFrame::eSelectType, 
-                                    &presState);
+  nsCOMPtr<nsIPresState> presState;
+  nsresult rv = GetPrimaryPresState(this, getter_AddRefs(presState));
 
   // Obtain the value property from the presentation state.
   if (NS_FAILED(rv) || !presState) {
@@ -1198,6 +1195,7 @@ nsHTMLSelectElement::GetPresState(nsIPresState** aPresState,
   }
 
   *aPresState = presState;
+  NS_ADDREF(*aPresState);
 
   return rv;
 }

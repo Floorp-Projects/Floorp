@@ -1289,13 +1289,15 @@ nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows)
   // Determine if it is safe to flush the sink
   // by determining if it safe to flush all the presshells.
   PRBool isSafeToFlush = PR_TRUE;
-  PRInt32 i = 0, n = mPresShells.Count();
-  while ((i < n) && (isSafeToFlush)) {
-    nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
-    if (shell) {
-      shell->IsSafeToFlush(isSafeToFlush);
+  if (aFlushReflows) {
+    PRInt32 i = 0, n = mPresShells.Count();
+    while ((i < n) && (isSafeToFlush)) {
+      nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+      if (shell) {
+        shell->IsSafeToFlush(isSafeToFlush);
+      }
+      ++i;
     }
-    i++;
   }
 
   nsresult result = NS_OK;
@@ -2571,6 +2573,25 @@ nsHTMLDocument::GetElementsByName(const nsAReadableString& aElementName,
 {
   nsContentList* elements = new nsContentList(this, MatchNameAttribute,
                                               aElementName);
+  NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
+
+  *aReturn = elements;
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
+}
+
+PRBool
+nsHTMLDocument::MatchFormControls(nsIContent* aContent, nsString* aData)
+{
+  return aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetFormControlElements(nsIDOMNodeList** aReturn)
+{
+  nsContentList* elements = nsnull;
+  elements = new nsContentList(this, MatchFormControls, nsString());
   NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
 
   *aReturn = elements;

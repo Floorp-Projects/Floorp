@@ -91,6 +91,7 @@ public:
                                     const nsAReadableString& aName);
   NS_IMETHOD ResolveName(const nsAReadableString& aName,
                          nsISupports **aReturn);
+  NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
   // nsIContent
@@ -140,6 +141,8 @@ public:
                              const nsAReadableString& aName);
   nsresult RemoveElementFromTable(nsIFormControl* aChild,
                                   const nsAReadableString& aName);
+  nsresult IndexOfControl(nsIFormControl* aControl,
+                          PRInt32* aIndex);
 
 #ifdef DEBUG
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -631,6 +634,13 @@ nsHTMLFormElement::GetLength(PRInt32* aLength)
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex)
+{
+  NS_ENSURE_TRUE(mControls, NS_ERROR_FAILURE);
+  return mControls->IndexOfControl(aControl, aIndex);
+}
+
 //----------------------------------------------------------------------
 
 // nsFormControlList implementation, this could go away if there were
@@ -876,7 +886,7 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
                                            (nsIDOMNodeList *)nodeList.get());
 
       PRInt32 oldIndex = -1;
-      list->IndexOf(newChild, oldIndex);
+      list->IndexOf(newChild, oldIndex, PR_TRUE);
 
       // Add the new child only if it's not in our list already
       if (oldIndex < 0) {
@@ -884,6 +894,17 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
       }
     }
   }
+
+  return NS_OK;
+}
+
+nsresult
+nsFormControlList::IndexOfControl(nsIFormControl* aControl,
+                                  PRInt32* aIndex)
+{
+  NS_ENSURE_ARG_POINTER(aIndex);
+
+  *aIndex = mElements.IndexOf(aControl);
 
   return NS_OK;
 }

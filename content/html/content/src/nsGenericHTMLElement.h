@@ -320,7 +320,6 @@ public:
                                   nsIFormControlFrame *&aFormControlFrame,
                                   PRBool aFlushNotifications=PR_TRUE);
   static nsresult GetPrimaryPresState(nsIHTMLContent* aContent,
-                                      nsIStatefulFrame::StateType aStateType,
                                       nsIPresState** aPresState);
   static nsresult GetPresContext(nsIHTMLContent* aContent,
                                  nsIPresContext** aPresContext);

@@ -1024,17 +1024,8 @@ nsScrollFrame::GetSkipSides() const
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsScrollFrame::GetStateType(nsIPresContext* aPresContext,
-                                 nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType = nsIStatefulFrame::eScrollType;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP
 nsScrollFrame::SaveState(nsIPresContext* aPresContext,
-                              nsIPresState** aState)
+                         nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
   nsCOMPtr<nsIPresState> state;

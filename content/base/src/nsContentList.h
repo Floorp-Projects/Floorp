@@ -28,6 +28,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDocumentObserver.h"
+#include "nsIContentList.h"
 
 typedef PRBool (*nsContentListMatchFunc)(nsIContent* aContent,
                                          nsString* aData);
@@ -75,7 +76,8 @@ public:
 
 class nsContentList : public nsBaseContentList,
                       public nsIDOMHTMLCollection,
-                      public nsIDocumentObserver
+                      public nsIDocumentObserver,
+                      public nsIContentList
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -96,6 +98,15 @@ public:
   NS_IMETHOD GetLength(PRUint32* aLength);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
   NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
+
+  /// nsIContentList
+  NS_IMETHOD GetLength(PRUint32* aLength, PRBool aDoFlush);
+  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn,
+                  PRBool aDoFlush);
+  NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn,
+                       PRBool aDoFlush);
+  NS_IMETHOD IndexOf(nsIContent *aContent, PRInt32& aIndex,
+                     PRBool aDoFlush);
 
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }

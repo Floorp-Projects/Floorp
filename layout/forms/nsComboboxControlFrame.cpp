@@ -2504,14 +2504,6 @@ nsComboboxControlFrame::Rollup()
 //     the ListControlFrame, our child...
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::GetStateType(nsIPresContext* aPresContext,
-                                     nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType = nsIStatefulFrame::eSelectType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   if (!mListControlFrame) {

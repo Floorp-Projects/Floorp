@@ -135,7 +135,6 @@ public:
 #endif
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 

@@ -569,13 +569,6 @@ nsIsIndexFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder, n
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsIsIndexFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType = nsIStatefulFrame::eFileType; // XXX eIsIndexType
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsIsIndexFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);

@@ -205,7 +205,6 @@ public:
 protected:
   // Helper method
   void SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
-                           nsIStatefulFrame::StateType aStateType,
                            PRBool aValue);
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
@@ -437,8 +436,7 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
     else {
       // Retrieve the presentation state instead.
       nsCOMPtr<nsIPresState> presState;
-      GetPrimaryPresState(this, nsIStatefulFrame::eTextType,
-                          getter_AddRefs(presState));
+      GetPrimaryPresState(this, getter_AddRefs(presState));
 
       // Obtain the value property from the presentation state.
       if (presState) {
@@ -507,8 +505,7 @@ nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
     else {
       // Retrieve the presentation state instead.
       nsCOMPtr<nsIPresState> presState;
-      GetPrimaryPresState(this, nsIStatefulFrame::eTextType,
-                          getter_AddRefs(presState));
+      GetPrimaryPresState(this, getter_AddRefs(presState));
 
       // Obtain the value property from the presentation state.
       if (presState) {
@@ -537,18 +534,7 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
   else {
     // Retrieve the presentation state instead.
     nsCOMPtr<nsIPresState> presState;
-    PRInt32 type;
-    GetType(&type);
-    nsIStatefulFrame::StateType stateType;
-
-    if (type == NS_FORM_INPUT_CHECKBOX) {
-      stateType = nsIStatefulFrame::eCheckboxType;
-    }
-    else {
-      stateType = nsIStatefulFrame::eRadioType;
-    }
-
-    GetPrimaryPresState(this, stateType, getter_AddRefs(presState));
+    GetPrimaryPresState(this, getter_AddRefs(presState));
 
     // Obtain the value property from the presentation state.
     if (presState) {
@@ -567,11 +553,10 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
 
 void
 nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
-                                        nsIStatefulFrame::StateType aStateType,
                                         PRBool aValue)
 {
   nsCOMPtr<nsIPresState> presState;
-  GetPrimaryPresState(aHTMLContent, aStateType, getter_AddRefs(presState));
+  GetPrimaryPresState(aHTMLContent, getter_AddRefs(presState));
 
   // Obtain the value property from the presentation state.
   if (presState) {
@@ -603,22 +588,11 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
     formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, val);
   }
   else {
-    // Retrieve the presentation state instead.
-    nsCOMPtr<nsIPresState> presState;
+    SetPresStateChecked(this, aValue);
+
     PRInt32 type;
     GetType(&type);
-
-    nsIStatefulFrame::StateType stateType;
-
-    if (type == NS_FORM_INPUT_CHECKBOX) {
-      stateType = nsIStatefulFrame::eCheckboxType;
-    } else {
-      stateType = nsIStatefulFrame::eRadioType;
-    }
-
-    SetPresStateChecked(this, stateType, aValue);
-
-    if (stateType == nsIStatefulFrame::eRadioType) {
+    if (type == NS_FORM_INPUT_RADIO) {
       nsAutoString name;
       GetName(name);
 
@@ -653,9 +627,7 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
                     nsCOMPtr<nsIHTMLContent>
                       htmlContent(do_QueryInterface(inputElement));
 
-                    SetPresStateChecked(htmlContent,
-                                        nsIStatefulFrame::eRadioType,
-                                        PR_FALSE);
+                    SetPresStateChecked(htmlContent, PR_FALSE);
                   }
                 }
               }

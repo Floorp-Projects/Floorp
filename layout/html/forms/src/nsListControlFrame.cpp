@@ -3985,15 +3985,6 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::GetStateType(nsIPresContext* aPresContext,
-                                 nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType = nsIStatefulFrame::eSelectType;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP
 nsListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   // Don't save state before we are initialized

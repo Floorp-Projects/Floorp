@@ -115,7 +115,8 @@ public:
     * @return NS_OK if the element was successfully removed.  */
   NS_IMETHOD ResolveName(const nsAReadableString& aName,
                          nsISupports **aResult) = 0;
-  
+
+  NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex) = 0;
 
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
 };

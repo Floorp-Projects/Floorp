@@ -151,6 +151,8 @@ public:
                          nsIDOMHTMLFormElement *aForm,
                          nsISupports **aResult);
 
+  NS_IMETHOD GetFormControlElements(nsIDOMNodeList** aReturn);
+
 protected:
   nsresult GetPixelDimensions(nsIPresShell* aShell,
                               PRInt32* aWidth,
@@ -180,6 +182,7 @@ protected:
   static PRBool MatchAnchors(nsIContent *aContent, nsString* aData);
   static PRBool MatchLayers(nsIContent *aContent, nsString* aData);
   static PRBool MatchNameAttribute(nsIContent* aContent, nsString* aData);
+  static PRBool MatchFormControls(nsIContent* aContent, nsString* aData);
 
   nsresult GetSourceDocumentURL(JSContext* cx, nsIURI** sourceURL);
 

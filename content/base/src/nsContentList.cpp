@@ -34,6 +34,7 @@
 
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIContentList.h"
 
 nsBaseContentList::nsBaseContentList()
 {
@@ -371,6 +372,7 @@ NS_CLASSINFO_MAP_END
 // QueryInterface implementation for nsContentList
 NS_INTERFACE_MAP_BEGIN(nsContentList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
+  NS_INTERFACE_MAP_ENTRY(nsIContentList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLCollection)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 
@@ -380,11 +382,11 @@ NS_IMPL_RELEASE_INHERITED(nsContentList, nsBaseContentList)
 
 
 NS_IMETHODIMP 
-nsContentList::GetLength(PRUint32* aLength)
+nsContentList::GetLength(PRUint32* aLength, PRBool aDoFlush)
 {
   nsresult result = CheckDocumentExistence();
   if (NS_SUCCEEDED(result)) {
-    if (mDocument) {
+    if (mDocument && aDoFlush) {
       mDocument->FlushPendingNotifications(PR_FALSE);
     }
 
@@ -395,11 +397,11 @@ nsContentList::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP 
-nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn, PRBool aDoFlush)
 {
   nsresult result = CheckDocumentExistence();
   if (NS_SUCCEEDED(result)) {
-    if (mDocument) {
+    if (mDocument && aDoFlush) {
       // Flush pending content changes Bug 4891
       mDocument->FlushPendingNotifications(PR_FALSE);
     }
@@ -419,12 +421,12 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn, PRBool aDoFlush)
 {
   nsresult result = CheckDocumentExistence();
 
   if (NS_SUCCEEDED(result)) {
-    if (mDocument) {
+    if (mDocument && aDoFlush) {
       mDocument->FlushPendingNotifications(PR_FALSE); // Flush pending content changes Bug 4891
     }
 
@@ -448,6 +450,39 @@ nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 
   *aReturn = nsnull;
   return result;
+}
+
+NS_IMETHODIMP
+nsContentList::IndexOf(nsIContent *aContent, PRInt32& aIndex, PRBool aDoFlush)
+{
+  nsresult result = CheckDocumentExistence();
+  if (NS_SUCCEEDED(result)) {
+    if (mDocument && aDoFlush) {
+      mDocument->FlushPendingNotifications(PR_FALSE);
+    }
+
+    aIndex = mElements.IndexOf(aContent);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsContentList::GetLength(PRUint32* aLength)
+{
+  return GetLength(aLength, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  return Item(aIndex, aReturn, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+{
+  return NamedItem(aName, aReturn, PR_TRUE);
 }
 
 NS_IMETHODIMP 

@@ -691,17 +691,8 @@ nsScrollBoxFrame::Release(void)
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsScrollBoxFrame::GetStateType(nsIPresContext* aPresContext,
-                                 nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType = nsIStatefulFrame::eScrollType;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP
 nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
-                              nsIPresState** aState)
+                            nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 

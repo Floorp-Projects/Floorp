@@ -62,9 +62,9 @@
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
 
-#include "nsIStatefulFrame.h"
 #include "nsIPresState.h"
 #include "nsILayoutHistoryState.h"
+#include "nsIFrameManager.h"
 
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLParts.h"
@@ -2567,7 +2567,6 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
 
 nsresult
 nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
-                                          nsIStatefulFrame::StateType aStateType,
                                           nsIPresState** aPresState)
 {
   NS_ENSURE_ARG_POINTER(aPresState);
@@ -2575,28 +2574,39 @@ nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
 
   nsresult result = NS_OK;
 
-   // Get the document
+  // Generate the state key
   nsCOMPtr<nsIDocument> doc;
   result = aContent->GetDocument(*getter_AddRefs(doc));
-  if (doc) {
-     // Get presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
-    if (presShell) {
-      nsCOMPtr<nsILayoutHistoryState> history;
-      result = presShell->GetHistoryState(getter_AddRefs(history));
-      if (NS_SUCCEEDED(result) && history) {
-        PRUint32 ID;
-        aContent->GetContentID(&ID);
-        result = history->GetState(ID, aPresState, aStateType);
-        if (!*aPresState) {
-          result = nsComponentManager::CreateInstance(kPresStateCID, nsnull,
-                                                      NS_GET_IID(nsIPresState),
-                                                      (void**)aPresState);
-          if (NS_SUCCEEDED(result)) {
-            result = history->AddState(ID, *aPresState, aStateType);
-          }
-        }
-      }
+  if (!doc) {
+    return result;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIFrameManager> frameManager;
+  presShell->GetFrameManager(getter_AddRefs(frameManager));
+  NS_ENSURE_TRUE(frameManager, NS_ERROR_FAILURE);
+
+  nsCAutoString stateKey;
+  result = frameManager->GenerateStateKey(aContent, nsIStatefulFrame::eNoID, stateKey);
+  NS_ENSURE_TRUE((NS_SUCCEEDED(result) && !stateKey.IsEmpty()), result);
+
+  // Get the pres state for this key, if it doesn't exist, create one
+  //
+  // Return early if we can't get history - we don't want to create a
+  // new history state that is free-floating, not in history.
+  nsCOMPtr<nsILayoutHistoryState> history;
+  result = presShell->GetHistoryState(getter_AddRefs(history));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(result) && history, result);
+
+  history->GetState(stateKey, aPresState);
+  if (!*aPresState) {
+    result = nsComponentManager::CreateInstance(kPresStateCID, nsnull,
+                                                NS_GET_IID(nsIPresState),
+                                                (void**)aPresState);
+    if (NS_SUCCEEDED(result)) {
+      result = history->AddState(stateKey, *aPresState);
     }
   }
 
