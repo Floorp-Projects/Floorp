@@ -898,6 +898,7 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
       CToken *theEndToken=mTokenAllocator->CreateTokenOfType(eToken_end,aChildTag); 
       if(theEndToken) {
         result=HandleEndToken(theEndToken);
+        IF_FREE(theEndToken);
       }
     }
   }
