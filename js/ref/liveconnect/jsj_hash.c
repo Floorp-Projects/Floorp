@@ -1,20 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+/* -*- Mode: C; tab-width: 8 -*-
+ * Copyright (C) 1998 Netscape Communications Corporation, All Rights Reserved.
  */
  
 /*
@@ -26,11 +11,17 @@
  * been renamed from their original NSPR names to protect the innocent.
  */
 
-#include "jsj_hash.h"
-#include "prtypes.h"
-#include "prassert.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include "jsj_hash.h"
+#include "prtypes.h"
+#ifdef NSPR20
+#    include "prlog.h"
+#    include "prbit.h"
+#else
+#    include "prassert.h"
+#endif
 
 /* Compute the number of buckets in ht */
 #define NBUCKETS(ht)    (1 << (JSJ_HASH_BITS - (ht)->shift))
@@ -114,7 +105,7 @@ JSJ_NewHashTable(PRUint32 n, JSJHashFunction keyHash,
 
     ht = (*allocOps->allocTable)(allocPriv, sizeof *ht);
     if (!ht)
-	return 0;
+    return 0;
     memset(ht, 0, sizeof *ht);
     ht->shift = JSJ_HASH_BITS - n;
     n = 1 << n;
@@ -248,7 +239,7 @@ JSJ_HashTableRawAdd(JSJHashTable *ht, JSJHashEntry **hep,
     /* Make a new key value entry */
     he = (*ht->allocOps->allocEntry)(ht->allocPriv, key);
     if (!he)
-	return 0;
+    return 0;
     he->keyHash = keyHash;
     he->key = key;
     he->value = value;

@@ -1,20 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+/* -*- Mode: C; tab-width: 8 -*-
+ * Copyright (C) 1998 Netscape Communications Corporation, All Rights Reserved.
  */
  
 /*
@@ -26,9 +11,6 @@
  */
 
 #include <stdlib.h>
-#include "prtypes.h"
-#include "prprintf.h"
-#include "prassert.h"
 
 #include "jsj_private.h"      /* LiveConnect internals */
 
@@ -249,7 +231,7 @@ jsj_GetJavaFieldValue(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field_spec,
         java_value.member =                                                  \
             (*jEnv)->Get##Type##Field(jEnv, java_obj, fieldID);              \
     if ((*jEnv)->ExceptionOccurred(jEnv)) {                                  \
-        jsj_ReportJavaError(cx, jEnv, "Error reading Java field");           \
+        jsj_UnexpectedJavaError(cx, jEnv, "Error reading Java field");           \
         return JS_FALSE;                                                     \
     }                                                                        \
     PR_END_MACRO
@@ -325,7 +307,7 @@ jsj_SetJavaFieldValue(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field_spec,
         (*jEnv)->Set##Type##Field(jEnv, java_obj, fieldID,java_value.member);\
     }                                                                        \
     if ((*jEnv)->ExceptionOccurred(jEnv)) {                                  \
-        jsj_ReportJavaError(cx, jEnv, "Error assigning to Java field");      \
+        jsj_UnexpectedJavaError(cx, jEnv, "Error assigning to Java field");      \
         return JS_FALSE;                                                     \
     }                                                                        \
     PR_END_MACRO
@@ -372,7 +354,7 @@ jsj_SetJavaFieldValue(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field_spec,
     case JAVA_SIGNATURE_CLASS:
     case JAVA_SIGNATURE_ARRAY:
         SET_JAVA_FIELD(Object,l);
-        if (is_local_ref)                                                           \
+        if (is_local_ref)
             (*jEnv)->DeleteLocalRef(jEnv, java_value.l);
         break;
 

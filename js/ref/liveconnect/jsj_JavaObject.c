@@ -1,20 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+/* -*- Mode: C; tab-width: 8 -*-
+ * Copyright (C) 1998 Netscape Communications Corporation, All Rights Reserved.
  */
 
 /*
@@ -28,10 +13,10 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "prassert.h"
 
 #include "jsj_private.h"      /* LiveConnect internals */
 #include "jsj_hash.h"         /* Hash table with Java object as key */
+#include "jscntxt.h"          /* for error reporting */
 
 
 /*
@@ -229,9 +214,13 @@ enumerate_remove_java_obj(JSJHashEntry *he, PRIntn i, void *arg)
 void
 jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
 {
-    JSJ_HashTableEnumerateEntries(java_obj_reflections,
-                                  enumerate_remove_java_obj,
-                                  (void*)jEnv);
+    if (java_obj_reflections) {
+        JSJ_HashTableEnumerateEntries(java_obj_reflections,
+                                      enumerate_remove_java_obj,
+                                      (void*)jEnv);
+        JSJ_HashTableDestroy(java_obj_reflections);
+        java_obj_reflections = NULL;
+    }
 }
 
 PR_CALLBACK JSBool
@@ -254,7 +243,7 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
             return JS_TRUE;
         }
         
-        JS_ReportError(cx, "illegal operation on JavaObject prototype object");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_BAD_OP_JOBJECT);
         return JS_FALSE;
     }
 
@@ -267,7 +256,7 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         return JS_TRUE;
 
     case JSTYPE_FUNCTION:
-        JS_ReportError(cx, "can't convert Java object to function");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_CONVERT_TO_FUNC);
         return JS_FALSE;
 
     case JSTYPE_VOID:
@@ -278,11 +267,11 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
     case JSTYPE_NUMBER:
         /* Call Java doubleValue() method, if applicable */
-        return jsj_ConvertJavaObjectToJSNumber(cx, jEnv, java_obj, vp);
+        return jsj_ConvertJavaObjectToJSNumber(cx, jEnv, class_descriptor, java_obj, vp);
 
     case JSTYPE_BOOLEAN:
         /* Call booleanValue() method, if applicable */
-        return jsj_ConvertJavaObjectToJSBoolean(cx, jEnv, java_obj, vp);
+        return jsj_ConvertJavaObjectToJSBoolean(cx, jEnv, class_descriptor, java_obj, vp);
 
     default:
         PR_ASSERT(0);
@@ -312,7 +301,7 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
                 return JS_TRUE;
             }
         }
-        JS_ReportError(cx, "illegal operation on JavaObject prototype object");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_BAD_OP_JOBJECT);
         return JS_FALSE;
     }
 
@@ -324,16 +313,16 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
     if (!member_descriptor) {
         JS_IdToValue(cx, id, &idval);
         if (!JSVAL_IS_STRING(idval)) {
-            JS_ReportError(cx, "invalid JavaObject property expression. "
-                "(methods and field properties of a JavaObject object can only be strings)");
+            JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+                                            JSJMSG_BAD_JOBJECT_EXPR);
             return JS_FALSE;
         }
 
         member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
 
-        JS_ReportError(cx, "Java class %s has no public instance field or "
-                           "method named \"%s\"",
-                       class_descriptor->name, member_name);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+                    JSJMSG_NO_INSTANCE_NAME,
+                    class_descriptor->name, member_name);
         return JS_FALSE;
     }
 
@@ -353,6 +342,8 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     JavaObjectWrapper *java_wrapper;
     JNIEnv *jEnv;
     JSObject *funobj;
+    jsval field_val, method_val;
+    JSBool success;
 
     /* printf("In JavaObject_getProperty\n"); */
 
@@ -372,22 +363,56 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 
     java_obj = java_wrapper->java_obj;
+    field_val = method_val = JSVAL_VOID;
+
+    /* If a field member, get the value of the field */
     if (member_descriptor->field) {
-        if (!member_descriptor->methods) {
-            return jsj_GetJavaFieldValue(cx, jEnv, member_descriptor->field, java_obj, vp);
-        } else {
-            PR_ASSERT(0);
-        }
-    } else {
+        success = jsj_GetJavaFieldValue(cx, jEnv, member_descriptor->field, java_obj, &field_val);
+        if (!success)
+            return JS_FALSE;
+    }
+
+    /* If a method member, build a wrapper around the Java method */
+    if (member_descriptor->methods) {
         /* Create a function object with this JavaObject as its parent, so that
            JSFUN_BOUND_METHOD binds it as the default 'this' for the function. */
         funobj = JS_CloneFunctionObject(cx, member_descriptor->invoke_func_obj, obj);
-        if (funobj) {
-            *vp = OBJECT_TO_JSVAL(funobj);
-            return JS_TRUE;
-        }
-        return JS_FALSE;
+        if (!funobj)
+            return JS_FALSE;
+        method_val = OBJECT_TO_JSVAL(funobj);
     }
+
+#if TEST_JAVAMEMBER
+    /* Always create a JavaMember object, even though it's inefficient */
+    obj = jsj_CreateJavaMember(cx, method_val, field_val);
+    if (!obj)
+        return JS_FALSE;
+    *vp = OBJECT_TO_JSVAL(obj);
+#else   /* !TEST_JAVAMEMBER */
+
+    if (member_descriptor->field) {
+        if (!member_descriptor->methods) {
+            /* Return value of Java field */
+            *vp = field_val;
+        } else {
+            /* Handle special case of access to a property that could refer
+               to either a Java field or a method that share the same name.
+               In Java, such ambiguity is not possible because the compiler 
+               can statically determine which is being accessed. */
+            obj = jsj_CreateJavaMember(cx, method_val, field_val);
+            if (!obj)
+                return JS_FALSE;
+            *vp = OBJECT_TO_JSVAL(obj);
+        }
+
+    } else {
+        /* Return wrapper around Java method */
+        *vp = method_val;
+    }
+
+#endif  /* !TEST_JAVAMEMBER */
+
+    return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
@@ -427,42 +452,10 @@ no_such_field:
         JS_IdToValue(cx, id, &idval);
         member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
         class_descriptor = java_wrapper->class_descriptor;
-        JS_ReportError(cx, "No instance field named \"%s\" in Java class %s",
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_NO_NAME_IN_CLASS,
                        member_name, class_descriptor->name);
         return JS_FALSE;
 }
-
-PR_CALLBACK JSBool
-JavaObject_enumerate(JSContext *cx, JSObject *obj)
-{
-    JavaObjectWrapper *java_wrapper;
-    JavaClassDescriptor *class_descriptor;
-    JavaMemberDescriptor *member_descriptor;
-    JNIEnv *jEnv;
-    
-/*    printf("In JavaObject_enumerate\n"); */
-
-    java_wrapper = JS_GetPrivate(cx, obj);
-
-    /* Check if this is the prototype object */
-    if (!java_wrapper)
-        return JS_TRUE;
-
-    /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_MapJSContextToJSJThread(cx, &jEnv);
-    if (!jEnv)
-        return JS_FALSE;
-
-    class_descriptor = java_wrapper->class_descriptor;
-    member_descriptor = jsj_GetClassInstanceMembers(cx, jEnv, class_descriptor);
-    while (member_descriptor) {
-        JS_DefineProperty(cx, obj, member_descriptor->name, JSVAL_VOID, 0, 0,
-                          JSPROP_PERMANENT|JSPROP_ENUMERATE);
-        member_descriptor = member_descriptor->next;
-    }
-    return JS_TRUE;
-}
-
 
 static JSBool
 JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
@@ -473,6 +466,7 @@ JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                             )
 {
     JNIEnv *jEnv;
+    JSErrorReporter old_reporter;
 
     /* printf("In JavaObject_lookupProperty()\n"); */
     
@@ -481,10 +475,16 @@ JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     if (!jEnv)
         return JS_FALSE;
 
-    if (!lookup_member_by_id(cx, jEnv, obj, NULL, id, NULL))
-        return JS_FALSE;
-    *objp = obj;
-    *propp = (JSProperty*)1;
+    old_reporter = JS_SetErrorReporter(cx, NULL);
+    if (lookup_member_by_id(cx, jEnv, obj, NULL, id, NULL)) {
+        *objp = obj;
+        *propp = (JSProperty*)1;
+    } else {
+        *objp = NULL;
+        *propp = NULL;
+    }
+
+    JS_SetErrorReporter(cx, old_reporter);
     return JS_TRUE;
 }
 
@@ -493,7 +493,7 @@ JavaObject_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportError(cx, "Cannot define a new property in a JavaObject");
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_JOBJECT_PROP_DEFINE);
     return JS_FALSE;
 }
 
@@ -511,7 +511,7 @@ JavaObject_setAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
     /* We don't maintain JS property attributes for Java class members */
-    if (*attrsp != JSPROP_PERMANENT|JSPROP_ENUMERATE) {
+    if (*attrsp != (JSPROP_PERMANENT|JSPROP_ENUMERATE)) {
         PR_ASSERT(0);
         return JS_FALSE;
     }
@@ -528,7 +528,8 @@ JavaObject_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     *vp = JSVAL_FALSE;
 
     if (!JSVERSION_IS_ECMA(version)) {
-        JS_ReportError(cx, "Properties of JavaObject objects may not be deleted");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+                                        JSJMSG_JOBJECT_PROP_DELETE);
         return JS_FALSE;
     } else {
         /* Attempts to delete permanent properties are silently ignored
@@ -541,7 +542,7 @@ static JSBool
 JavaObject_defaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     /* printf("In JavaObject_defaultValue()\n"); */
-    return JavaObject_convert(cx, obj, JSTYPE_STRING, vp);
+    return JavaObject_convert(cx, obj, type, vp);
 }
 
 static JSBool
@@ -604,11 +605,13 @@ JavaObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 {
     switch (mode) {
     case JSACC_WATCH:
-        JS_ReportError(cx, "Cannot place watchpoints on JavaObject object properties");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
+                                                JSJMSG_JOBJECT_PROP_WATCH);
         return JS_FALSE;
 
     case JSACC_IMPORT:
-        JS_ReportError(cx, "Cannot export a JavaObject object's properties");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+                                                JSJMSG_JOBJECT_PROP_EXPORT);
         return JS_FALSE;
 
     default:
@@ -653,7 +656,7 @@ JSClass JavaObject_class = {
     JavaObject_getObjectOps,
 };
 
-extern PR_IMPORT_DATA(JSObjectOps) js_ObjectOps;
+extern JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
 
 
 JSBool

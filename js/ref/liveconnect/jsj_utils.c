@@ -1,20 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+/* -*- Mode: C; tab-width: 8 -*-
+ * Copyright (C) 1998 Netscape Communications Corporation, All Rights Reserved.
  */
 
 /*
@@ -27,11 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "prtypes.h"
-#include "prprintf.h"
-#include "prassert.h"
-#include "prosdep.h"
-
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"             /* External LiveConnect API */
 
@@ -43,7 +23,7 @@
 PR_CALLBACK JSJHashNumber
 jsj_HashJavaObject(const void *key, void* env)
 {
-    prhashcode hash_code;
+    PRHashNumber hash_code;
     jobject java_obj;
     JNIEnv *jEnv;
 
@@ -161,7 +141,7 @@ jsj_GetJavaErrorMessage(JNIEnv *jEnv)
     jstring java_exception_jstring;
 
     exception = (*jEnv)->ExceptionOccurred(jEnv);
-    if (exception) {
+    if (exception && jlThrowable_toString) {
         java_exception_jstring =
             (*jEnv)->CallObjectMethod(jEnv, exception, jlThrowable_toString);
         java_error_msg = (*jEnv)->GetStringUTFChars(jEnv, java_exception_jstring, NULL);
@@ -312,6 +292,31 @@ jsj_LogError(const char *error_msg)
         fputs(error_msg, stderr);
 }
 
+/*
+	Error number handling. 
+
+	jsj_ErrorFormatString is an array of format strings mapped
+	by error number. It is initialized by the contents of jsj_msg.def
+
+	jsj_GetErrorMessage is invoked by the engine whenever it wants 
+	to convert an error number into an error format string.
+*/
+JSErrorFormatString jsj_ErrorFormatString[JSJ_Err_Limit] = {
+#define MSG_DEF(name, number, count, format) \
+    { format, count } ,
+#include "jsj_msg.def"
+#undef MSG_DEF
+};
+
+const JSErrorFormatString *
+jsj_GetErrorMessage(const uintN errorNumber)
+{
+    if ((errorNumber > 0) && (errorNumber < JSJ_Err_Limit))
+	    return &jsj_ErrorFormatString[errorNumber];
+	else
+	    return NULL;
+}
+
 jsize
 jsj_GetJavaArrayLength(JSContext *cx, JNIEnv *jEnv, jarray java_array)
 {
@@ -339,7 +344,6 @@ jsj_MapJSContextToJSJThread(JSContext *cx, JNIEnv **envp)
         }
         return NULL;
     }
-    if (envp)
-        *envp = jsj_env->jEnv;
+    *envp = jsj_env->jEnv;
     return jsj_env;
 }

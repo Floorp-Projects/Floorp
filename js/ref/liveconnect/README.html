@@ -9,9 +9,9 @@
 
 <H2>
 Introduction</H2>
-This is the README file for the JavaScript LiveConnect implementation.&nbsp;
-It consists of build conventions and instructions, source code conventions,
-and a brief file-by-file description of the source.
+This is the README file for the JavaScript LiveConnect Version 2 ("LC2")
+implementation.&nbsp; It consists of build conventions and instructions,
+source code conventions, and a brief file-by-file description of the source.
 
 <P>This document assumes basic familiarity with JSRef, the reference implementation
 of JavaScript, and with the LiveConnect technology&nbsp; (LiveConnect allows
@@ -21,13 +21,13 @@ for Java to access JavaScript object properties and evaluate JavaScript.&nbsp;
 More information on LiveConnect can be found by searching the index on
 Netscape's <A HREF="http://developer.netscape.com">DevEdge site</A>.)
 
-<P>JSRef builds a library or DLL containing the JavaScript runtime (compiler,
-interpreter, decompiler, garbage collector, atom manager, standard classes).&nbsp;
-The LiveConnect project/makefiles build a library that links both with
-JSRef and with a Java Virtual Machine (JVM) that implements the Java Native
-Interface (JNI), as specified by JavaSoft.&nbsp; It then compiles a small
-"shell" program and links that with the library to make an interpreter
-that can be used interactively and with test scripts.
+<P>JSRef project/makefiles build a library or DLL containing the JavaScript
+runtime (compiler, interpreter, decompiler, garbage collector, atom manager,
+standard classes).&nbsp; The LiveConnect project/makefiles build a library
+that links both with JSRef and with a Java Virtual Machine (JVM) that implements
+the Java Native Interface (JNI), as specified by JavaSoft.&nbsp; It then
+compiles a small "shell" program and links that with the library to make
+an interpreter that can be used interactively and with test scripts.
 
 <P><I>Scott Furman, 4/8/98</I>
 <H2>
@@ -46,37 +46,35 @@ if they refer to the same instance, by using the `==' operator.&nbsp; Instead,
 developers must now use the <TT>equals()</TT>method of <I>netscape.javascript.JSObject</I>
 for comparison, a method that overrides <TT>java.lang.Object.equals()</TT>.&nbsp;
 Using <TT>equals()</TT> instead of `==' should work the same on both LC1
-and LC2.&nbsp;<BR>
-<BR>
-It is not possible to replicate the identity behavior of the `==' operator
+and LC2.</LI>
+
+
+<P>It is not possible to replicate the identity behavior of the `==' operator
 that LC1 provides without the use of "weak" references, i.e. references
 that do not contribute to making a Java object reachable for purposes of
 garbage collection, but which nonetheless allow reference to an object
 as long as it is reachable by other means.&nbsp; The use of weak references
 is not portable, however.&nbsp; It is not part of the JNI or the JDK and
 it is not provided on all JVMs.&nbsp; The JDK1.2 release will include standard
-support for weak references.<BR>
-<BR></LI>
-
+support for weak references.
 <LI>
 It's possible that, in a set of overloaded Java methods, more than one
-is compatible with the types of the actual arguments in a call from JavaScript
-via LiveConnect.&nbsp; LC1 resolved these ambiguities in a simplistic manner,
-by simply invoking whatever method was enumerated first by the JVM.&nbsp;
-The enumeration order of reflected methods using <I>java.lang.reflect</I>&nbsp;
+method is compatible with the types of the actual arguments in a call from
+JavaScript via LiveConnect.&nbsp; LC1 resolved these ambiguities in a simplistic
+manner, by simply invoking whatever method was enumerated first by the
+JVM.&nbsp; The enumeration order of reflected methods using <I>java.lang.reflect</I>&nbsp;
 is not specified by Sun and may differ among vendor's JVMs, i.e. enumeration
 could be in order of classfile appearance, hashtable order, etc.&nbsp;&nbsp;&nbsp;
 With the Netscape and Sun JVMs, it is possible to change the behavior of
 an LC1 program by changing the order that Java methods appear in a source
 file, thus changing the method enumeration order.&nbsp; Hence, the Java
 method chosen when there is more than one compatible method may vary depending
-on the JVM.<BR>
-<BR>
-A future release of LiveConnect will provide a new algorithm for overloaded
-Java method resolution that is both independent of the JVM used and more
-likely than LC1 to invoke the method that the developer expects.<BR>
-<BR></LI>
+on the JVM.</LI>
 
+
+<P>A future release of LiveConnect will provide a new algorithm for overloaded
+Java method resolution that is both independent of the JVM used and more
+likely than LC1 to invoke the method that the developer expects.
 <LI>
 There are several minor changes in error handling to make LiveConnect more
 conformant to ECMAScript.&nbsp; These include, for example, making any
@@ -92,7 +90,6 @@ New Features</H2>
 Several minor features have been added to this release of LiveConnect.&nbsp;
 These features were not available in the versions of LiveConnect that were
 integrated with Netscape Naviagtor versions 4.x and earlier.
-<BR>&nbsp;
 <BLOCKQUOTE>
 <LI>
 The Java methods of <I>java.lang.Object</I> are now invokeable methods
@@ -194,8 +191,9 @@ in the JDK's bin directory.</LI>
 Use any Java compiler to compile the java source files in the <TT><FONT SIZE=+1>js/ref/liveconnect/classes/netscape/javascript</FONT></TT>
 directory.</LI>
 </UL>
-<BR>
-<B>Mac OS</B>
+
+
+<P><B>Mac OS</B>
 <UL>
 <LI>
 Using CodeWarrior Pro 3 is recommended.&nbsp; With some modifications,
@@ -226,38 +224,17 @@ Build <TT><FONT SIZE=+1>liveconnect.jar</FONT></TT> with <TT><FONT SIZE=+1>js/re
 
 <LI>
 Make an alias to <TT><FONT SIZE=+1>liveconnect.jar</FONT></TT> and place
-it in "<TT><FONT SIZE=+1>{SystemFolder}Extensions:MRJ Libraries:MRJClasses</FONT></TT>".<BR>
-<BR></LI>
+it in "<TT><FONT SIZE=+1>{SystemFolder}Extensions:MRJ Libraries:MRJClasses</FONT></TT>".</LI>
 </UL>
 <B>Unix</B>
 <UL>
 <LI>
-<FONT COLOR="#FF0000">No Makefiles have been completed yet.&nbsp; These
-notes are a work in progress.</FONT></LI>
-
-<LI>
-Use vendor cc or gcc (ftp://prep.ai.mit.edu/pub/gnu) for compiling,&nbsp;
+Use vendor cc or <A HREF="ftp://prep.ai.mit.edu/pub/gnu">gcc</A> for compiling,&nbsp;
 and use gmake for building.</LI>
 
 <LI>
-To compile optimized code, set BUILD_OPT=1 on the nmake/gmake command line
-or preset it in the environment or makefile.&nbsp; The C preprocessor macro
-DEBUG&nbsp; will be undefined, and NDEBUG (archaic Unix-ism for "No Debugging")
-will be defined.&nbsp; Without BUILD_OPT, DEBUG is predefined and NDEBUG
-is undefined.</LI>
-
-<LI>
-Your own debug flag, DEBUG_$USER, will be defined or undefined as BUILD_OPT
-is unset or set.</LI>
-
-<LI>
-To add C compiler options from the make command line, set XCFLAGS=-Dfoo.</LI>
-
-<LI>
-To predefine -D or -U options in the makefile, set DEFINES.</LI>
-
-<LI>
-To predefine -I options in the makefile, set INCLUDES.</LI>
+Makefile has only been tested on Solaris 5.5.&nbsp; To build on other platforms
+you must add a .mk file to the ref/liveconnect/config subdir.</LI>
 </UL>
 </UL>
 
@@ -392,6 +369,15 @@ of JavaClass are used to reflect Java classes.</TD>
 <TD>Implementation of the JavaScript JavaObject class.&nbsp;&nbsp; Instances
 of JavaObject are used to reflect Java objects, except for Java arrays,
 although some of the code in this file is used by the JavaArray code.</TD>
+</TR>
+
+<TR>
+<TD>jsj_JavaMember.c</TD>
+
+<TD>Implementation of the JavaScript JavaMember class.&nbsp; JavaMember's
+are a strange beast required only to handle the special case of a public
+field and a public method that appear in the same Java class and which
+have the same name.</TD>
 </TR>
 
 <TR>

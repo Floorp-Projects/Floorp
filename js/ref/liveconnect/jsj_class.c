@@ -1,20 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+/* -*- Mode: C; tab-width: 8 -*-
+ * Copyright (C) 1998 Netscape Communications Corporation, All Rights Reserved.
  */
 
 /*
@@ -30,12 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "prtypes.h"
-#include "prprintf.h"
-#include "prassert.h"
-
 #include "jsj_private.h"        /* LiveConnect internals */
-
 #include "jsj_hash.h"           /* Hash tables */
 
 /* A one-to-one mapping between all referenced java.lang.Class objects and
@@ -301,9 +281,9 @@ destroy_class_descriptor(JSContext *cx, JNIEnv *jEnv, JavaClassDescriptor *class
 {
     JS_FREE_IF(cx, (char *)class_descriptor->name);
     if (class_descriptor->java_class) {
-        (*jEnv)->DeleteGlobalRef(jEnv, class_descriptor->java_class);
         JSJ_HashTableRemove(java_class_reflections,
                             class_descriptor->java_class, (void*)jEnv);
+        (*jEnv)->DeleteGlobalRef(jEnv, class_descriptor->java_class);
     }
 
     if (class_descriptor->array_component_signature)
@@ -331,7 +311,7 @@ new_class_descriptor(JSContext *cx, JNIEnv *jEnv, jclass java_class)
 
     java_class = (*jEnv)->NewGlobalRef(jEnv, java_class);
     if (!java_class) {
-        jsj_ReportJavaError(cx, jEnv, "Unable to reference Java class");
+        jsj_UnexpectedJavaError(cx, jEnv, "Unable to reference Java class");
         goto error;
     }
     class_descriptor->java_class = java_class;
@@ -377,9 +357,13 @@ enumerate_remove_java_class(JSJHashEntry *he, PRIntn i, void *arg)
 void
 jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
 {
-    JSJ_HashTableEnumerateEntries(java_class_reflections,
-                                  enumerate_remove_java_class,
-                                  (void*)jEnv);
+    if (java_class_reflections) {
+        JSJ_HashTableEnumerateEntries(java_class_reflections,
+                                      enumerate_remove_java_class,
+                                      (void*)jEnv);
+        JSJ_HashTableDestroy(java_class_reflections);
+        java_class_reflections = NULL;
+    }
 }
 
 extern JavaClassDescriptor *

@@ -1,20 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+/* -*- Mode: C; tab-width: 8 -*-
+ * Copyright (C) 1998 Netscape Communications Corporation, All Rights Reserved.
  */
  
 /*
@@ -27,10 +12,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "prtypes.h"
-#include "prassert.h"
-#include "prprintf.h"
-#include "prosdep.h"
 
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"             /* LiveConnect external API */
@@ -131,6 +112,7 @@ jfieldID njJSException_filename;        /* netscape.javascript.JSException.filen
     {                                                                        \
         jclass _##class = (*jEnv)->FindClass(jEnv, #qualified_name);         \
         if (_##class == 0) {                                                 \
+            (*jEnv)->ExceptionClear(jEnv);                                   \
             report_java_initialization_error(jEnv,                           \
                 "Can't load class " #qualified_name);                        \
             return JS_FALSE;                                                 \
@@ -261,7 +243,42 @@ init_java_VM_reflection(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
 
     LOAD_FIELD_OBJ(java.lang.Void,          TYPE,               "Ljava/lang/Class;",            jlVoid);
   
+    return JS_TRUE;
 }
+
+#if XP_MAC
+
+/**
+ * Workaround for the fact that MRJ loads a different instance of the shared library.
+ */
+
+#include "netscape_javascript_JSObject.h"
+
+static JSObject_RegisterNativeMethods(JNIEnv* jEnv)
+{
+    // Manually load the required native methods.
+    static JNINativeMethod nativeMethods[] = {
+        "initClass", "()V", (void*)&Java_netscape_javascript_JSObject_initClass,
+        "getMember", "(Ljava/lang/String;)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_getMember,
+        "getSlot", "(I)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_getSlot,
+        "setMember", "(Ljava/lang/String;Ljava/lang/Object;)V", (void*)&Java_netscape_javascript_JSObject_setMember,
+        "setSlot", "(ILjava/lang/Object;)V", (void*)&Java_netscape_javascript_JSObject_setSlot,
+        "removeMember", "(Ljava/lang/String;)V", (void*)&Java_netscape_javascript_JSObject_removeMember,
+        "call", "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_call,
+        "eval", "(Ljava/lang/String;)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_eval,
+        
+        "toString", "()Ljava/lang/String;", (void*)&Java_netscape_javascript_JSObject_toString,
+        "getWindow", "(Ljava/applet/Applet;)Lnetscape/javascript/JSObject;", (void*)&Java_netscape_javascript_JSObject_getWindow,
+        "finalize", "()V", (void*)&Java_netscape_javascript_JSObject_finalize,
+        "equals", "(Ljava/lang/Object;)Z", (void*)&Java_netscape_javascript_JSObject_equals
+    };
+    (*jEnv)->RegisterNatives(jEnv, njJSObject, nativeMethods, sizeof(nativeMethods) / sizeof(JNINativeMethod));
+    
+    // call the initClass method, since we nailed the static initializer for testing.
+    Java_netscape_javascript_JSObject_initClass(jEnv, njJSObject);
+}
+
+#endif
 
 /* Load Netscape-specific Java extension classes, methods, and fields */
 static JSBool
@@ -270,6 +287,10 @@ init_netscape_java_classes(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
     LOAD_CLASS(netscape/javascript/JSObject,    njJSObject);
     LOAD_CLASS(netscape/javascript/JSException, njJSException);
     LOAD_CLASS(netscape/javascript/JSUtil,      njJSUtil);
+
+#if XP_MAC
+    JSObject_RegisterNativeMethods(jEnv);
+#endif
 
     LOAD_CONSTRUCTOR(netscape.javascript.JSObject,
                                             JSObject,           "(I)V",                         njJSObject);
@@ -307,7 +328,6 @@ JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
 {
     JavaVM *java_vm;
     JSJavaVM *jsjava_vm;
-    const char *full_classpath;
     JNIEnv *jEnv;
 
     jsjava_vm = (JSJavaVM*)malloc(sizeof(JSJavaVM));
@@ -324,7 +344,25 @@ JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
             free(jsjava_vm);
             return NULL;
         }
-    } else {
+    } else if ( JSJ_callbacks && JSJ_callbacks->get_java_vm != NULL ) {
+        char* err_msg = NULL;
+        java_vm = JSJ_callbacks->get_java_vm(&err_msg);
+        PR_ASSERT( java_vm );
+        if (!java_vm) {
+            free(jsjava_vm);
+            if (err_msg)
+                free(err_msg);
+            return NULL;
+        }
+
+        if ((*java_vm)->AttachCurrentThread(java_vm, &jEnv, NULL) < 0) {
+            jsj_LogError("Failed to attach to Java VM thread\n");
+            free(jsjava_vm);
+            return NULL;
+        }
+    } 
+#ifndef OJI
+    else {
         /* No Java VM supplied, so create our own */
         JDK1_1InitArgs vm_args;
         
@@ -334,7 +372,11 @@ JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
         
         /* Prepend the classpath argument to the default JVM classpath */
         if (user_classpath) {
-            full_classpath = PR_smprintf("%s;%s", user_classpath, vm_args.classpath);
+#ifdef XP_UNIX
+            const char *full_classpath = PR_smprintf("%s:%s", user_classpath, vm_args.classpath);
+#else
+            const char *full_classpath = PR_smprintf("%s;%s", user_classpath, vm_args.classpath);
+#endif
             if (!full_classpath) {
                 free(jsjava_vm);
                 return NULL;
@@ -352,6 +394,7 @@ JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
         /* Remember that we created the VM so that we know to destroy it later */
         jsjava_vm->jsj_created_java_vm = JS_TRUE;
     }
+#endif /* !OJI */
     jsjava_vm->java_vm = java_vm;
     jsjava_vm->main_thread_env = jEnv;
     
@@ -417,6 +460,9 @@ JSJ_InitJSContext(JSContext *cx, JSObject *global_obj,
     if (!jsj_init_JavaArray(cx, global_obj))
         return JS_FALSE;
 
+    if (!jsj_init_JavaMember(cx, global_obj))
+        return JS_FALSE;
+    
     return JS_TRUE;
 }
 
@@ -438,6 +484,7 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
 {
     JNIEnv *jEnv;
     JavaVM *java_vm;
+    JSJavaVM *j, **jp;
     
     java_vm = jsjava_vm->java_vm;
     (*java_vm)->AttachCurrentThread(java_vm, &jEnv, NULL);
@@ -464,6 +511,18 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
         UNLOAD_CLASS(netscape/javascript/JSException, njJSException);
         UNLOAD_CLASS(netscape/javascript/JSUtil,      njJSUtil);
     }
+
+
+    /* Remove this VM from the list of all JSJavaVM objects. */
+    for (jp = &jsjava_vm_list; j = *jp; jp = &j->next) {
+        if (j == jsjava_vm) {
+            *jp = jsjava_vm->next;
+            break;
+        }
+    }
+    PR_ASSERT(j);
+    
+    free(jsjava_vm);
 }
 
 static JSJavaThreadState *thread_list = NULL;
@@ -515,7 +574,7 @@ find_jsjava_thread(JNIEnv *jEnv)
     return jsj_env;
 }
 
-PR_PUBLIC_API(JSJavaThreadState *)
+PR_IMPLEMENT(JSJavaThreadState *)
 JSJ_AttachCurrentThreadToJava(JSJavaVM *jsjava_vm, const char *name, JNIEnv **java_envp)
 {
     JNIEnv *jEnv;
@@ -604,7 +663,7 @@ jsj_MapJavaThreadToJSJavaThreadState(JNIEnv *jEnv, char **errp)
  * before Java is invoked on that thread.)  The return value is the previous
  * context associated with the given Java thread.
  */
-PR_PUBLIC_API(JSContext *)
+PR_IMPLEMENT(JSContext *)
 JSJ_SetDefaultJSContextForJavaThread(JSContext *cx, JSJavaThreadState *jsj_env)
 {
     JSContext *old_context;
@@ -613,7 +672,7 @@ JSJ_SetDefaultJSContextForJavaThread(JSContext *cx, JSJavaThreadState *jsj_env)
     return old_context;
 }
 
-PR_PUBLIC_API(JSBool)
+PR_IMPLEMENT(JSBool)
 JSJ_DetachCurrentThreadFromJava(JSJavaThreadState *jsj_env)
 {
     JavaVM *java_vm;
@@ -649,10 +708,12 @@ JSJ_ConvertJavaObjectToJSValue(JSContext *cx, jobject java_obj, jsval *vp)
     if (!jEnv)
         return JS_FALSE;
 
-    jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, vp);
+    return jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, vp);
 }
 
 /*===========================================================================*/
+
+#ifndef OJI
 
 /* The convenience functions below present a complete, but simplified
    LiveConnect API which is designed to handle the special case of a single 
@@ -674,7 +735,7 @@ default_map_js_context_to_jsj_thread(JSContext *cx, char **errp)
 
 /* Trivial implementation of callback function */
 static JSContext *
-default_map_jsj_thread_to_js_context(JSJavaThreadState *jsj_env, char **errp)
+default_map_jsj_thread_to_js_context(JSJavaThreadState *jsj_env, JNIEnv *jEnv, char **errp)
 {
     return the_cx;
 }
@@ -720,7 +781,7 @@ JSJ_SimpleInit(JSContext *cx, JSObject *global_obj, JavaVM *java_vm, const char 
     the_jsj_thread = JSJ_AttachCurrentThreadToJava(the_jsj_vm, "main thread", &jEnv);
     if (!the_jsj_thread)
         goto error;
-
+    JSJ_SetDefaultJSContextForJavaThread(cx, the_jsj_thread);
     return JS_TRUE;
 
 error:
@@ -732,7 +793,7 @@ error:
  * Free up all LiveConnect resources.  Destroy the Java VM if it was
  * created by LiveConnect.
  */
-PR_PUBLIC_API(void)
+PR_IMPLEMENT(void)
 JSJ_SimpleShutdown()
 {
     PR_ASSERT(the_jsj_vm);
@@ -743,3 +804,4 @@ JSJ_SimpleShutdown()
     the_jsj_thread = NULL;
 }
 
+#endif /* !OJI */

@@ -122,6 +122,10 @@ SOURCE=.\jsj_JavaClass.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\jsj_JavaMember.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\jsj_JavaObject.c
 # End Source File
 # Begin Source File
@@ -131,6 +135,15 @@ SOURCE=.\jsj_JavaPackage.c
 # Begin Source File
 
 SOURCE=.\jsj_JSObject.c
+
+!IF  "$(CFG)" == "LiveConnect - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "LiveConnect - Win32 Debug"
+
+# ADD CPP /I ".\_jni"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 

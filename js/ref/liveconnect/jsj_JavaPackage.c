@@ -1,20 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+/* -*- Mode: C; tab-width: 8 -*-
+ * Copyright (C) 1998 Netscape Communications Corporation, All Rights Reserved.
  */
 
 /* This file is part of the Java-vendor-neutral implementation of LiveConnect
@@ -36,12 +21,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "prtypes.h"
-#include "prprintf.h"
-#include "prosdep.h"
-
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"
+#include "jscntxt.h"            /* for error reporting */
 
 
 JSClass JavaPackage_class;      /* Forward declaration */
@@ -99,11 +81,11 @@ JavaPackage_setProperty(JSContext *cx, JSObject *obj, jsval slot, jsval *vp)
 {
     JavaPackage_Private *package = JS_GetPrivate(cx, obj);
     if (!package) {
-        JS_ReportError(cx, "illegal attempt to add property to "
-                           "JavaPackage prototype object");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+                                                JSJMSG_BAD_ADD_TO_PACKAGE);
         return JS_FALSE;
     }
-    JS_ReportError(cx, "You may not add properties to a JavaPackage object");
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, JSJMSG_DONT_ADD_TO_PACKAGE);
     return JS_FALSE;
 }
 
@@ -121,13 +103,17 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     char *subPath, *newPath;
     const char *path;
     JNIEnv *jEnv;
-    
+
+    /* Painful hack for pre_define_java_packages() */
+    if (quiet_resolve_failure)
+        return JS_FALSE;
+                
     package = (JavaPackage_Private *)JS_GetPrivate(cx, obj);
     if (!package)
         return JS_TRUE;
 
     if (!JSVAL_IS_STRING(id))
-	return JS_TRUE;
+    return JS_TRUE;
     subPath = JS_GetStringBytes(JSVAL_TO_STRING(id));
 
     /*
@@ -186,6 +172,11 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
         }
     } else {
 
+        /* We assume that any failed attempt to load a class is because it
+           doesn't exist.  If we wanted to do a better job, we would check
+           the exception type and make sure that it's NoClassDefFoundError */
+        (*jEnv)->ExceptionClear(jEnv);
+
         /*
          * If there's no class of the given name, then we must be referring to
          * a package.  However, don't allow bogus sub-packages of pre-defined
@@ -197,14 +188,12 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
             package = JS_GetPrivate(cx, obj);
             if (package->flags & PKG_SYSTEM) {
                 char *msg, *cp;
-
-                /* Painful hack for pre_define_java_packages() */
-                if (quiet_resolve_failure)
-                    return JS_FALSE;
-
+/*
                 msg = PR_smprintf("No Java system package with name \"%s\" was identified "
                                   "and no Java class with that name exists either",
                                   newPath);
+*/
+		msg = JS_strdup(cx, newPath);
 
                 /* Check for OOM */
                 if (msg) {
@@ -212,10 +201,10 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
                     for (cp = msg; *cp != '\0'; cp++)
                         if (*cp == '/')
                             *cp = '.';
-                    JS_ReportError(cx, msg);
+		    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, 
+                                                JSJMSG_MISSING_PACKAGE, msg);
                     free((char*)msg);
                 }
-                               
                 return JS_FALSE;
             }
         }
@@ -357,7 +346,8 @@ standard_java_packages[] = {
 
     {"sun",                 NULL,   PKG_USER},
     {"Packages",            "",     PKG_USER},
-    0
+
+    {NULL,                  NULL,   0}
 };
 
 /*
@@ -394,7 +384,8 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
             jsval v;
 
             if (!simple_name) {
-                JS_ReportError(cx, "Package %s defined twice ?", package_name);
+                JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+                                        JSJMSG_DOUBLE_SHIPPING, package_name);
                 goto error;
             }
 
@@ -410,7 +401,8 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
                 /* New package objects should only be created at the terminal
                    sub-package in a fully-qualified package-name */
                 if (strtok(NULL, ".")) {
-                    JS_ReportError(cx, "Illegal predefined package definition for %s",
+                    JS_ReportErrorNumber(cx, jsj_GetErrorMessage,
+                                    JSJMSG_BAD_PACKAGE_PREDEF,
                                    package_def->name);
                     goto error;
                 }
@@ -458,7 +450,7 @@ error:
 
 static JSBool
 JavaPackage_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	             jsval *rval)
+                 jsval *rval)
 {
     if (!JS_InstanceOf(cx, obj, &JavaPackage_class, argv))
         return JS_FALSE;

@@ -1,20 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+/* -*- Mode: C; tab-width: 8 -*-
+ * Copyright (C) 1998 Netscape Communications Corporation, All Rights Reserved.
  */
 
 /*
@@ -29,10 +14,28 @@
 #ifndef _JSJAVA_PVT_H
 #define _JSJAVA_PVT_H
 
+#include "prtypes.h"
+
+/* NSPR1 compatibility definitions */
+#ifdef NSPR20
+#   include "prprf.h"
+#   include "prlog.h"
+#   include "plhash.h"          /* NSPR hash-tables      */
+#else
+#   include "prprintf.h"
+#   include "prassert.h"
+#   include "prhash.h"          /* NSPR hash-tables      */
+#   define PRHashNumber prhashcode
+#endif
+
+#ifdef XP_MAC
+#    include "prosdep.h"
+#endif
+
 #include "jsj_hash.h"        /* Hash tables */
-#include "prhash.h"          /* NSPR hash-tables      */
 #include "jni.h"             /* Java Native Interface */
 #include "jsapi.h"           /* JavaScript engine API */
+#include "jsjava.h"          /* LiveConnect public API */
 
 
 /*************************** Type Declarations ******************************/
@@ -42,11 +45,7 @@ typedef struct JavaMemberDescriptor JavaMemberDescriptor;
 typedef struct JavaMethodSpec JavaMethodSpec;
 typedef struct JavaClassDescriptor JavaClassDescriptor;
 typedef struct JavaClassDescriptor JavaSignature;
-typedef struct JSJCallbacks JSJCallbacks;
 typedef struct CapturedJSError CapturedJSError;
-typedef struct JavaPackageDef JavaPackageDef;
-typedef struct JSJavaThreadState JSJavaThreadState;
-typedef struct JSJavaVM JSJavaVM;
 typedef struct JavaMemberVal JavaMemberVal;
 
 /*
@@ -86,12 +85,12 @@ typedef struct JavaFieldSpec {
 
 /* A descriptor for the reflection of a single Java method.
    Each overloaded method has a separate corresponding JavaMethodSpec. */
-typedef struct JavaMethodSpec {
+struct JavaMethodSpec {
     jmethodID               methodID;   /* JVM opaque access handle for method */
     JavaMethodSignature     signature;
     const char *            name;       /* UTF8; TODO - Should support Unicode method names */
     JavaMethodSpec *        next;       /* next method in chain of overloaded methods */
-} JavaMethodSpec;
+};
 
 /*
  * A descriptor for the reflection of a single member of a Java object.
@@ -100,17 +99,17 @@ typedef struct JavaMethodSpec {
  * they are overloaded methods sharing the same simple name.)  This same
  * descriptor type is used for both static or instance members.
  */
-typedef struct JavaMemberDescriptor {
+struct JavaMemberDescriptor {
     const char *            name;       /* simple name of field and/or method */
     jsid                    id;         /* hashed name for quick JS property lookup */
     JavaFieldSpec *         field;      /* field with the given name, if any */
     JavaMethodSpec *        methods;    /* Overloaded methods which share the same name, if any */
     JavaMemberDescriptor *  next;       /* next descriptor in same defining class */
     JSObject *              invoke_func_obj; /* If non-null, JSFunction obj to invoke method */
-} JavaMemberDescriptor;
+};
 
 /* This is the native portion of a reflected Java class */
-typedef struct JavaClassDescriptor {
+struct JavaClassDescriptor {
     const char *            name;       /* Name of class, e.g. "java/lang/Byte" */
     JavaSignatureChar       type;       /* class category: primitive type, object, array */
     jclass                  java_class; /* Opaque JVM handle to corresponding java.lang.Class */
@@ -125,18 +124,18 @@ typedef struct JavaClassDescriptor {
                                            e.g. abstract, private */
     int                     ref_count;  /* # of references to this struct */
     JavaSignature *         array_component_signature; /* Only non-NULL for array classes */
-} JavaClassDescriptor;
+};
 
 /* This is the native portion of a reflected Java method or field */
-typedef struct JavaMemberVal {
+struct JavaMemberVal {
     jsval                   field_val;              /* Captured value of Java field */
     jsval                   invoke_method_func_val; /* JSFunction wrapper around Java method invoker */
     JavaMemberDescriptor *  descriptor;
     JavaMemberVal *         next;
-} JavaMemberVal;
+};
 
 /* This is the native portion of a reflected Java object */
-typedef struct {
+typedef struct JavaObjectWrapper {
     jobject                 java_obj;           /* Opaque JVM ref to Java object */
     JavaClassDescriptor *   class_descriptor;   /* Java class info */
 } JavaObjectWrapper;
@@ -152,7 +151,7 @@ typedef struct {
 
 /* A JSJavaVM structure must be created for each Java VM that is accessed
    via LiveConnect */
-typedef struct JSJavaVM {
+struct JSJavaVM {
 /* TODO -  all LiveConnect global variables should be migrated into this
            structure in order to allow more than one LiveConnect-enabled
            Java VM to exist within the same process. */
@@ -161,17 +160,17 @@ typedef struct JSJavaVM {
     JSBool              jsj_created_java_vm;
     int                 num_attached_threads;
     JSJavaVM *          next;           /* next VM among all created VMs */
-} JSJavaVM;
+};
 
 /* Per-thread state that encapsulates the connection to the Java VM */
-typedef struct JSJavaThreadState {
+struct JSJavaThreadState {
     const char *        name;           /* Thread name, for debugging */
     JSJavaVM *          jsjava_vm;      /* All per-JVM state */
     JNIEnv *            jEnv;           /* Per-thread opaque handle to Java VM */
     CapturedJSError *   pending_js_errors; /* JS errors to be thrown as Java exceptions */
     JSContext *         cx;             /* current JS context for thread */
     JSJavaThreadState * next;           /* next thread state among all created threads */
-} JSJavaThreadState;
+};
 
 /******************************** Globals ***********************************/
 
@@ -181,6 +180,7 @@ extern JSJCallbacks *JSJ_callbacks;
 extern JSClass JavaObject_class;
 extern JSClass JavaArray_class;
 extern JSClass JavaClass_class;
+extern JSClass JavaMember_class;
 
 /*
  * Opaque JVM handles to Java classes, methods and objects required for
@@ -291,9 +291,11 @@ jsj_ConvertJavaObjectToJSString(JSContext *cx, JNIEnv *jEnv,
                                 jobject java_obj, jsval *vp);
 extern JSBool
 jsj_ConvertJavaObjectToJSNumber(JSContext *cx, JNIEnv *jEnv,
+                                JavaClassDescriptor *class_descriptor,
                                 jobject java_obj, jsval *vp);
 extern JSBool
 jsj_ConvertJavaObjectToJSBoolean(JSContext *cx, JNIEnv *jEnv,
+                                 JavaClassDescriptor *class_descriptor,
                                  jobject java_obj, jsval *vp);
 
 /************************ Java package reflection **************************/
@@ -402,6 +404,9 @@ extern JSBool
 jsj_ReflectJavaMethodsAndFields(JSContext *cx, JavaClassDescriptor *class_descriptor,
                                 JSBool reflect_only_statics);
 
+extern JSObject *
+jsj_CreateJavaMember(JSContext *cx, jsval method_val, jsval field_val);
+
 /************************* Java object reflection **************************/
 extern JSBool
 jsj_init_JavaObject(JSContext *, JSObject *);
@@ -420,9 +425,6 @@ JavaObject_finalize(JSContext *cx, JSObject *obj);
 
 extern JSBool
 JavaObject_resolve(JSContext *cx, JSObject *obj, jsval id);
-
-extern JSBool
-JavaObject_enumerate(JSContext *cx, JSObject *obj);
 
 extern JSBool
 JavaObject_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
@@ -448,6 +450,9 @@ jsj_SetJavaArrayElement(JSContext *cx, JNIEnv *jEnv, jarray java_array,
 extern jobject
 jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj);
 
+extern JSObject *
+jsj_UnwrapJSObjectWrapper(JNIEnv *jEnv, jobject java_wrapper_obj);
+
 extern void
 jsj_ClearPendingJSErrors(JSJavaThreadState *jsj_env);
 
@@ -466,6 +471,9 @@ jsj_GetJavaErrorMessage(JNIEnv *env);
 
 extern void
 jsj_LogError(const char *error_msg);
+
+extern const JSErrorFormatString * 
+jsj_GetErrorMessage(const uintN errorNumber);
 
 PR_CALLBACK JSJHashNumber
 jsj_HashJavaObject(const void *key, void* env);
@@ -503,5 +511,15 @@ jsj_MapJSContextToJSJThread(JSContext *cx, JNIEnv **envp);
         if (x)                                                              \
             JS_free(cx, x);                                                 \
     PR_END_MACRO
+
+
+enum JSJErrNum {
+#define MSG_DEF(name, number, format, count) \
+    name = number,
+#include "jsj_msg.def"
+#undef MSG_DEF
+    JSJ_Err_Limit
+#undef MSGDEF
+};
 
 #endif   /* _JSJAVA_PVT_H */

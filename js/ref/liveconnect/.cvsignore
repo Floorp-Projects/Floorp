@@ -1,4 +1,5 @@
-*.ncb
-*.opt
 Debug
 Release
+*.opt
+*.plg
+*.ncb
