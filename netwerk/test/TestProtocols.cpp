@@ -56,6 +56,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 static PRTime gElapsedTime;
 static int gKeepRunning = 0;
+static PRBool gVerbose = PR_FALSE;
 static nsIEventQueue* gEventQ = nsnull;
 
 class TestHTTPEventSink : public nsIHTTPEventSink
@@ -204,7 +205,18 @@ NS_IMPL_ISUPPORTS(InputTestConsumer,nsIStreamListener::GetIID());
 NS_IMETHODIMP
 InputTestConsumer::OnStartBinding(nsISupports* context)
 {
-  printf("\n+++ InputTestConsumer::OnStartBinding +++\n");
+  nsCOMPtr<nsIURI> pURI(do_QueryInterface(context));
+  char* location = nsnull;
+
+  if (pURI) {
+    pURI->GetSpec(&location);
+  }
+
+  printf("\nStarted loading: %s\n", location ? location : "UNKNOWN URL");
+  if (location) {
+    nsCRT::free(location);
+  }
+
   return NS_OK;
 }
 
@@ -223,8 +235,10 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
     rv = aIStream->Read(buf, 1024, &amt);
     if (rv == NS_BASE_STREAM_EOF) break;
     if (NS_FAILED(rv)) return rv;
-    buf[amt] = '\0';
-    puts(buf);
+    if (gVerbose) {
+      buf[amt] = '\0';
+      puts(buf);
+    }
   } while (amt);
 
   return NS_OK;
@@ -236,8 +250,20 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
                                  nsresult aStatus,
                                  const PRUnichar* aMsg)
 {
+  nsCOMPtr<nsIURI> pURI(do_QueryInterface(context));
+  char* location = nsnull;
+
+  if (pURI) {
+    pURI->GetSpec(&location);
+  }
+
+  printf("\nFinished loading: %s.  Status Code: %x\n", location ? location : "UNKNOWN URL", aStatus);
+
+  if (location) {
+    nsCRT::free(location);
+  }
+
   gKeepRunning -= 1;
-  printf("\n+++ InputTestConsumer::OnStopBinding (status = %x) +++\n", aStatus);
   return NS_OK;
 }
 
@@ -333,7 +359,7 @@ nsresult StartLoadingURL(const char* aUrlString)
 
         rv = pChannel->AsyncRead(0,         // staring position
                                  -1,        // number of bytes to read
-                                 nsnull,    // ISupports context
+                                 pURL,      // ISupports context
                                  gEventQ,   // nsIEventQ for marshalling
                                  listener); // IStreamListener consumer
 
@@ -387,6 +413,13 @@ main(int argc, char* argv[])
 
     int i;
     for (i=1; i<argc; i++) {
+        // Turn on netlib tracing...
+        if (PL_strcasecmp(argv[i], "-verbose") == 0) {
+            gVerbose = PR_TRUE;
+            continue;
+        } 
+
+
         rv = StartLoadingURL(argv[i]);
         if (NS_FAILED(rv)) return rv;
         gKeepRunning += 1;
