@@ -39,6 +39,7 @@ Editor interface to outside world
 enum PROPERTIES{NONE = 0,BOLD = 1,NUMPROPERTIES};
 
 class nsIDOMDocument;
+class nsIPresShell;
 class nsString;
 
 /**
@@ -52,13 +53,16 @@ class nsString;
 class nsIEditor  : public nsISupports{
 public:
 
+  typedef enum {eLTR=0, eRTL=1} Direction;
+
   static const nsIID& IID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
 
   /**
    * Init tells is to tell the implementation of nsIEditor to begin its services
    * @param aDomInterface The dom interface being observed
    */
-  virtual nsresult Init(nsIDOMDocument *aDomInterface) = 0;
+  virtual nsresult Init(nsIDOMDocument *aDomInterface,
+                        nsIPresShell   *aPresShell) = 0;
 
   /**
    * GetDomInterface() WILL NOT RETURN AN ADDREFFED POINTER
