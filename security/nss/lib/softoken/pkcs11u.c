@@ -2095,10 +2095,6 @@ pk11_GetObjectFromList(PRBool *hasLocks, PRBool optimizeSpace,
     int size = 0;
 
     if (!optimizeSpace) {
-	if (list->lock == NULL) {
-	    list->lock = PZ_NewLock(nssILockObject);
-	}
-
 	PK11_USE_THREADS(PZ_Lock(list->lock));
 	object = list->head;
 	if (object) {
@@ -2160,6 +2156,22 @@ pk11_freeObjectData(PK11Object *object) {
 
    PORT_Free(object);
    return next;
+}
+
+static void
+pk11_InitFreeList(PK11ObjectFreeList *list)
+{
+#ifdef PKCS11_USE_THREADS
+    list->lock = PZ_NewLock(nssILockObject);
+#else
+    list->lock = NULL;
+#endif
+}
+
+void pk11_InitFreeLists(void)
+{
+    pk11_InitFreeList(&sessionObjectList);
+    pk11_InitFreeList(&tokenObjectList);
 }
    
 static void
