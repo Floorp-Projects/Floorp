@@ -54,6 +54,7 @@ typedef int PRInt32;
 #define CLASS_NAME_SETUP_DLG            "MozillaSetupDlg"
 #define FILE_INI_SETUP                  "setup.ini"
 #define FILE_INI_CONFIG                 "config.ini"
+#define FILE_INI_INSTALL                "install.ini"
 #define FILE_IDI_GETCONFIGINI           "getconfigini.idi"
 #define FILE_IDI_GETARCHIVES            "getarchives.idi"
 #define FILE_IDI_GETREDIRECT            "getredirect.idi"
@@ -423,6 +424,47 @@ struct ssInfo
   ssi   *Next;
   ssi   *Prev;
 };
+
+typedef struct dlgInstall
+{
+    char szOk_[MAX_BUF];
+    char szOk[MAX_BUF];
+    char szCancel_[MAX_BUF];
+    char szCancel[MAX_BUF];
+    char szNext_[MAX_BUF];
+    char szBack_[MAX_BUF];
+    char szProxySettings_[MAX_BUF];
+    char szProxySettings[MAX_BUF];
+    char szServer[MAX_BUF];
+    char szPort[MAX_BUF];
+    char szUserId[MAX_BUF];
+    char szPassword[MAX_BUF];
+    char szSelectDirectory[MAX_BUF];
+    char szDirectories_[MAX_BUF];
+    char szDrives_[MAX_BUF];
+    char szStatus[MAX_BUF];
+    char szFile[MAX_BUF];
+    char szUrl[MAX_BUF];
+    char szAccept_[MAX_BUF];
+    char szNo_[MAX_BUF];
+    char szProgramFolder_[MAX_BUF];
+    char szExistingFolder_[MAX_BUF];
+    char szSetupMessage[MAX_BUF];
+    char szYesRestart[MAX_BUF];
+    char szNoRestart[MAX_BUF];
+    char szAdditionalComponents_[MAX_BUF];
+    char szDescription[MAX_BUF];
+    char szTotalDownloadSize[MAX_BUF];
+    char szSpaceAvailable[MAX_BUF];
+    char szComponents_[MAX_BUF];
+    char szDestinationDirectory[MAX_BUF];
+    char szBrowse_[MAX_BUF];
+    char szCurrentSettings[MAX_BUF];
+    char szInstall_[MAX_BUF];
+    char szDelete_[MAX_BUF];
+    char szExtracting[MAX_BUF];
+    char szReadme_[MAX_BUF];
+} installGui;
 
 /* structure message stream */
 typedef struct sEMsgStream sems;

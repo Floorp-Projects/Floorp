@@ -46,9 +46,9 @@ BOOL AskCancelDlg(HWND hDlg)
 
   if((sgProduct.dwMode != SILENT) && (sgProduct.dwMode != AUTO))
   {
-    if(NS_LoadString(hSetupRscInst, IDS_DLGQUITTITLE, szDlgQuitTitle, MAX_BUF) != WIZ_OK)
+    if(!GetPrivateProfileString("Messages", "DLGQUITTITLE", "", szDlgQuitTitle, sizeof(szDlgQuitTitle), szFileIniInstall))
       PostQuitMessage(1);
-    else if(NS_LoadString(hSetupRscInst, IDS_DLGQUITMSG, szDlgQuitMsg, MAX_BUF) != WIZ_OK)
+    else if(!GetPrivateProfileString("Messages", "DLGQUITMSG", "", szDlgQuitMsg, sizeof(szDlgQuitMsg), szFileIniInstall))
       PostQuitMessage(1);
     else if(MessageBox(hDlg, szDlgQuitMsg, szDlgQuitTitle, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_APPLMODAL | MB_SETFOREGROUND) == IDYES)
     {
@@ -104,6 +104,13 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
                      0,
                      SWP_NOSIZE);
 
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SendDlgItemMessage (hDlg, IDC_STATIC0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
       break;
 
     case WM_COMMAND:
@@ -175,6 +182,15 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
                      0,
                      SWP_NOSIZE);
 
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szAccept_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szNo_);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_EDIT_LICENSE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
       break;
 
     case WM_COMMAND:
@@ -241,6 +257,20 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
       OldListBoxWndProc    = SubclassWindow(hwndLBFolders, (WNDPROC)ListBoxBrowseWndProc);
       gdwIndexLastSelected = SendDlgItemMessage(hDlg, 1121, LB_GETCURSEL, 0, (LPARAM)0);
+
+      SetWindowText(hDlg, sgInstallGui.szSelectDirectory);
+      SetDlgItemText(hDlg, 1092, sgInstallGui.szDirectories_);
+      SetDlgItemText(hDlg, 1091, sgInstallGui.szDrives_);
+      SetDlgItemText(hDlg, 1, sgInstallGui.szOk);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel);
+      SendDlgItemMessage (hDlg, DLG_BROWSE_DIR, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, 1092, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, 1091, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, 1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDC_EDIT_DESTINATION, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, 1121, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, 1137, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
       break;
 
     case WM_COMMAND:
@@ -284,7 +314,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
           {
             char szEDestinationPath[MAX_BUF];
 
-            NS_LoadString(hSetupRscInst, IDS_ERROR_DESTINATION_PATH, szEDestinationPath, MAX_BUF);
+            GetPrivateProfileString("Messages", "ERROR_DESTINATION_PATH", "", szEDestinationPath, sizeof(szEDestinationPath), szFileIniInstall);
             MessageBox(hDlg, szEDestinationPath, NULL, MB_OK | MB_ICONEXCLAMATION);
             break;
           }
@@ -297,8 +327,8 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             char szBufTemp[MAX_BUF];
             char szBufTemp2[MAX_BUF];
 
-            NS_LoadString(hSetupRscInst, IDS_STR_CREATE_DIRECTORY, szStrCreateDirectory, MAX_BUF);
-            if(NS_LoadString(hSetupRscInst, IDS_MSG_CREATE_DIRECTORY, szMsgCreateDirectory, MAX_BUF) == WIZ_OK)
+            GetPrivateProfileString("Messages", "STR_CREATE_DIRECTORY", "", szStrCreateDirectory, sizeof(szStrCreateDirectory), szFileIniInstall);
+            if(GetPrivateProfileString("Messages", "MSG_CREATE_DIRECTORY", "", szMsgCreateDirectory, sizeof(szMsgCreateDirectory), szFileIniInstall))
             {
               lstrcpy(szBufTemp, "\n\n");
               lstrcat(szBufTemp, szBuf);
@@ -320,7 +350,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                 RemoveBackSlash(szBufTemp);
                 lstrcat(szBufTemp, "\n\n");
 
-                if(NS_LoadString(hSetupRscInst, IDS_ERROR_CREATE_DIRECTORY, szECreateDirectory, MAX_BUF) == WIZ_OK)
+                if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
                   wsprintf(szBuf, szECreateDirectory, szBufTemp);
 
                 MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
@@ -371,7 +401,7 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
   GetCurrentDirectory(MAX_BUF, szCDir);
 
   ZeroMemory(szDlgBrowseTitle, sizeof(szDlgBrowseTitle));
-  NS_LoadString(hSetupRscInst, IDS_DLGBROWSETITLE, szDlgBrowseTitle, MAX_BUF);
+  GetPrivateProfileString("Messages", "DLGBROWSETITLE", "", szDlgBrowseTitle, sizeof(szDlgBrowseTitle), szFileIniInstall);
 
   lstrcpy(szSearchPathBuf, szCurrDir);
   if((*szSearchPathBuf != '\0') && ((lstrlen(szSearchPathBuf) != 1) || (*szSearchPathBuf != '\\')))
@@ -601,6 +631,29 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       else
         ShowWindow(hReadme, SW_SHOW);
 
+      SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szDestinationDirectory);
+      SetDlgItemText(hDlg, IDC_BUTTON_BROWSE, sgInstallGui.szBrowse_);
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SetDlgItemText(hDlg, IDC_README, sgInstallGui.szReadme_);
+      SendDlgItemMessage (hDlg, IDC_STATIC_MSG0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_RADIO_ST0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_RADIO_ST1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_RADIO_ST2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_RADIO_ST3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC_ST0_DESCRIPTION, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC_ST1_DESCRIPTION, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC_ST2_DESCRIPTION, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC_ST3_DESCRIPTION, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_EDIT_DESTINATION, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_BUTTON_BROWSE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_README, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+
       if(sgProduct.bLockPath)
         EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_BROWSE), FALSE);
       else
@@ -648,8 +701,8 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             char szMsgCreateDirectory[MAX_BUF];
             char szStrCreateDirectory[MAX_BUF];
 
-            NS_LoadString(hSetupRscInst, IDS_STR_CREATE_DIRECTORY, szStrCreateDirectory, MAX_BUF);
-            if(NS_LoadString(hSetupRscInst, IDS_MSG_CREATE_DIRECTORY, szMsgCreateDirectory, MAX_BUF) == WIZ_OK)
+            GetPrivateProfileString("Messages", "STR_CREATE_DIRECTORY", "", szStrCreateDirectory, sizeof(szStrCreateDirectory), szFileIniInstall);
+            if(GetPrivateProfileString("Messages", "MSG_CREATE_DIRECTORY", "", szMsgCreateDirectory, sizeof(szMsgCreateDirectory), szFileIniInstall))
             {
               lstrcpy(szBufTemp, "\n\n");
               lstrcat(szBufTemp, szBuf);
@@ -671,7 +724,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
                 RemoveBackSlash(szBufTemp);
                 lstrcat(szBufTemp, "\n\n");
 
-                if(NS_LoadString(hSetupRscInst, IDS_ERROR_CREATE_DIRECTORY, szECreateDirectory, MAX_BUF) == WIZ_OK)
+                if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
                   wsprintf(szBuf, szECreateDirectory, szBufTemp);
 
                 MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
@@ -989,6 +1042,26 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       lstrcat(szBuf, " KB");
       SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
 
+      SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szComponents_);
+      SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szDescription);
+      SetDlgItemText(hDlg, IDC_STATIC3, sgInstallGui.szTotalDownloadSize);
+      SetDlgItemText(hDlg, IDC_STATIC4, sgInstallGui.szSpaceAvailable);
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC4, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_LIST_COMPONENTS, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC_DESCRIPTION, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_DOWNLOAD_SIZE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_SPACE_AVAILABLE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+
       gdwACFlag = AC_COMPONENTS;
       OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
       break;
@@ -1172,6 +1245,26 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
       lstrcat(szBuf, tchBuffer);
       lstrcat(szBuf, " KB");
       SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
+
+      SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szAdditionalComponents_);
+      SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szDescription);
+      SetDlgItemText(hDlg, IDC_STATIC3, sgInstallGui.szTotalDownloadSize);
+      SetDlgItemText(hDlg, IDC_STATIC4, sgInstallGui.szSpaceAvailable);
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC4, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_LIST_COMPONENTS, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC_DESCRIPTION, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_DOWNLOAD_SIZE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_SPACE_AVAILABLE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
 
       gdwACFlag = AC_ADDITIONAL_COMPONENTS;
       OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
@@ -1359,6 +1452,18 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
                      0,
                      SWP_NOSIZE);
 
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_CHECK0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_CHECK1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_CHECK2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_CHECK3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
       break;
 
     case WM_COMMAND:
@@ -1467,6 +1572,19 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
                      0,
                      SWP_NOSIZE);
 
+      SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szProgramFolder_);
+      SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szExistingFolder_);
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_EDIT_PROGRAM_FOLDER, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_LIST, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
       break;
 
     case WM_COMMAND:
@@ -1478,7 +1596,7 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
           {
             char szEProgramFolderName[MAX_BUF];
 
-            NS_LoadString(hSetupRscInst, IDS_ERROR_PROGRAM_FOLDER_NAME, szEProgramFolderName, MAX_BUF);
+            GetPrivateProfileString("Messages", "ERROR_PROGRAM_FOLDER_NAME", "", szEProgramFolderName, sizeof(szEProgramFolderName), szFileIniInstall);
             MessageBox(hDlg, szEProgramFolderName, NULL, MB_OK | MB_ICONEXCLAMATION);
             break;
           }
@@ -1538,6 +1656,25 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
                      0,
                      SWP_NOSIZE);
 
+      SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szProxySettings);
+      SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szServer);
+      SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szPort);
+      SetDlgItemText(hDlg, IDC_STATIC3, sgInstallGui.szUserId);
+      SetDlgItemText(hDlg, IDC_STATIC4, sgInstallGui.szPassword);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szOk_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_STATIC4, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_SERVER, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_PORT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_USER, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_PASSWD, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
       break;
 
     case WM_COMMAND:
@@ -1620,6 +1757,22 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
       GetSaveInstallerPath(szBuf, sizeof(szBuf));
       SetDlgItemText(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, szBuf);
 
+      SetDlgItemText(hDlg, IDC_BUTTON_PROXY_SETTINGS, sgInstallGui.szProxySettings_);
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SendDlgItemMessage (hDlg, IDC_BUTTON_PROXY_SETTINGS, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_LIST_SITE_SELECTOR, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_USE_FTP, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_USE_HTTP, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg,
                      HWND_TOP,
@@ -1641,7 +1794,7 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
 
       if((szSiteSelectorDescription == NULL) || (*szSiteSelectorDescription == '\0'))
       {
-        if((NS_LoadString(hSetupRscInst, IDS_CB_DEFAULT, szCBDefault, MAX_BUF) == WIZ_OK) &&
+          if(GetPrivateProfileString("Messages", "CB_DEFAULT", "", szCBDefault, sizeof(szCBDefault), szFileIniInstall) &&
           ((iIndex = SendMessage(hwndCBSiteSelector, CB_SELECTSTRING, -1, (LPARAM)szCBDefault)) != CB_ERR))
           SendMessage(hwndCBSiteSelector, CB_SETCURSEL, (WPARAM)iIndex, 0);
         else
@@ -1756,7 +1909,7 @@ LPSTR GetStartInstallMessage()
   dwBufSize = 0;
 
   /* setup type */
-  if(NS_LoadString(hSetupRscInst, IDS_STR_SETUP_TYPE, szBuf, MAX_BUF) == WIZ_OK)
+  if(GetPrivateProfileString("Messages", "STR_SETUP_TYPE", "", szBuf, sizeof(szBuf), szFileIniInstall))
     dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
   dwBufSize += 4; // take into account 4 indentation spaces
 
@@ -1781,7 +1934,7 @@ LPSTR GetStartInstallMessage()
   dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
 
   /* selected components */
-  if(NS_LoadString(hSetupRscInst, IDS_STR_SELECTED_COMPONENTS, szBuf, MAX_BUF) == WIZ_OK)
+  if(GetPrivateProfileString("Messages", "STR_SELECTED_COMPONENTS", "", szBuf, sizeof(szBuf), szFileIniInstall))
     dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
 
   dwIndex0 = 0;
@@ -1813,7 +1966,7 @@ LPSTR GetStartInstallMessage()
   dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
 
   /* destination path */
-  if(NS_LoadString(hSetupRscInst, IDS_STR_DESTINATION_DIRECTORY, szBuf, MAX_BUF) == WIZ_OK)
+  if(GetPrivateProfileString("Messages", "STR_DESTINATION_DIRECTORY", "", szBuf, sizeof(szBuf), szFileIniInstall))
     dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
 
   dwBufSize += 4; // take into account 4 indentation spaces
@@ -1821,7 +1974,7 @@ LPSTR GetStartInstallMessage()
   dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
 
   /* program folder */
-  if(NS_LoadString(hSetupRscInst, IDS_STR_PROGRAM_FOLDER, szBuf, MAX_BUF) == WIZ_OK)
+  if(GetPrivateProfileString("Messages", "STR_PROGRAM_FOLDER", "", szBuf, sizeof(szBuf), szFileIniInstall))
     dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
 
   dwBufSize += 4; // take into account 4 indentation spaces
@@ -1832,7 +1985,7 @@ LPSTR GetStartInstallMessage()
     dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
 
     /* site selector info */
-    if(NS_LoadString(hSetupRscInst, IDS_STR_DOWNLOAD_SITE, szBuf, MAX_BUF) == WIZ_OK)
+    if(GetPrivateProfileString("Messages", "STR_DOWNLOAD_SITE", "", szBuf, sizeof(szBuf), szFileIniInstall))
       dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
 
     dwBufSize += 4; // take into account 4 indentation spaces
@@ -1843,7 +1996,7 @@ LPSTR GetStartInstallMessage()
       dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
 
       /* site selector info */
-      if(NS_LoadString(hSetupRscInst, IDS_STR_SAVE_INSTALLER_FILES, szBuf, MAX_BUF) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "STR_SAVE_INSTALLER_FILES", "", szBuf, sizeof(szBuf), szFileIniInstall))
         dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
 
       GetSaveInstallerPath(szBuf, sizeof(szBuf));
@@ -1865,7 +2018,7 @@ LPSTR GetStartInstallMessage()
     ZeroMemory(szMessageBuf, dwBufSize);
 
     /* Setup Type */
-    if(NS_LoadString(hSetupRscInst, IDS_STR_SETUP_TYPE, szBuf, MAX_BUF) == WIZ_OK)
+    if(GetPrivateProfileString("Messages", "STR_SETUP_TYPE", "", szBuf, sizeof(szBuf), szFileIniInstall))
     {
       lstrcat(szMessageBuf, szBuf);
       lstrcat(szMessageBuf, "\r\n");
@@ -1893,7 +2046,7 @@ LPSTR GetStartInstallMessage()
     lstrcat(szMessageBuf, "\r\n\r\n");
 
     /* Selected Components */
-    if(NS_LoadString(hSetupRscInst, IDS_STR_SELECTED_COMPONENTS, szBuf, MAX_BUF) == WIZ_OK)
+    if(GetPrivateProfileString("Messages", "STR_SELECTED_COMPONENTS", "", szBuf, sizeof(szBuf), szFileIniInstall))
     {
       lstrcat(szMessageBuf, szBuf);
       lstrcat(szMessageBuf, "\r\n");
@@ -1928,7 +2081,7 @@ LPSTR GetStartInstallMessage()
     lstrcat(szMessageBuf, "\r\n");
 
     /* destination directory */
-    if(NS_LoadString(hSetupRscInst, IDS_STR_DESTINATION_DIRECTORY, szBuf, MAX_BUF) == WIZ_OK)
+    if(GetPrivateProfileString("Messages", "STR_DESTINATION_DIRECTORY", "", szBuf, sizeof(szBuf), szFileIniInstall))
     {
       lstrcat(szMessageBuf, szBuf);
       lstrcat(szMessageBuf, "\r\n");
@@ -1938,7 +2091,7 @@ LPSTR GetStartInstallMessage()
     lstrcat(szMessageBuf, "\r\n\r\n");
 
     /* program folder */
-    if(NS_LoadString(hSetupRscInst, IDS_STR_PROGRAM_FOLDER, szBuf, MAX_BUF) == WIZ_OK)
+    if(GetPrivateProfileString("Messages", "STR_PROGRAM_FOLDER", "", szBuf, sizeof(szBuf), szFileIniInstall))
     {
       lstrcat(szMessageBuf, szBuf);
       lstrcat(szMessageBuf, "\r\n");
@@ -1952,7 +2105,7 @@ LPSTR GetStartInstallMessage()
       lstrcat(szMessageBuf, "\r\n");
 
       /* site selector info */
-      if(NS_LoadString(hSetupRscInst, IDS_STR_DOWNLOAD_SITE, szBuf, MAX_BUF) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "STR_DOWNLOAD_SITE", "", szBuf, sizeof(szBuf), szFileIniInstall))
       {
         lstrcat(szMessageBuf, szBuf);
         lstrcat(szMessageBuf, "\r\n");
@@ -1967,7 +2120,7 @@ LPSTR GetStartInstallMessage()
         lstrcat(szMessageBuf, "\r\n");
 
         /* site selector info */
-        if(NS_LoadString(hSetupRscInst, IDS_STR_SAVE_INSTALLER_FILES, szBuf, MAX_BUF) == WIZ_OK)
+        if(GetPrivateProfileString("Messages", "STR_SAVE_INSTALLER_FILES", "", szBuf, sizeof(szBuf), szFileIniInstall))
         {
           lstrcat(szMessageBuf, szBuf);
           lstrcat(szMessageBuf, "\r\n");
@@ -1994,6 +2147,17 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
     case WM_INITDIALOG:
       DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diStartInstall.szTitle);
+
+      SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szInstall_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_CURRENT_SETTINGS, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg,
@@ -2079,6 +2243,14 @@ LRESULT CALLBACK DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
                      0,
                      SWP_NOSIZE);
 
+      SetDlgItemText(hDlg, 202, sgInstallGui.szSetupMessage);
+      SetDlgItemText(hDlg, IDC_RADIO_YES, sgInstallGui.szYesRestart);
+      SetDlgItemText(hDlg, IDC_RADIO_NO, sgInstallGui.szNoRestart);
+      SetDlgItemText(hDlg, IDOK, sgInstallGui.szOk);
+      SendDlgItemMessage (hDlg, 202, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_RADIO_YES, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_RADIO_NO, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDOK, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
       break;
 
     case WM_COMMAND:
@@ -2143,7 +2315,7 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   switch(msg)
   {
     case WM_INITDIALOG:
-      if(NS_LoadString(hSetupRscInst, IDS_STR_MESSAGEBOX_TITLE, szBuf2, sizeof(szBuf2)) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "STR_MESSAGEBOX_TITLE", "", szBuf2, sizeof(szBuf2), szFileIniInstall))
       {
         if((sgProduct.szProductName != NULL) && (*sgProduct.szProductName != '\0'))
           wsprintf(szBuf, szBuf2, sgProduct.szProductName);
@@ -2223,15 +2395,16 @@ void ProcessWindowsMessages()
 void ShowMessage(LPSTR szMessage, BOOL bShow)
 {
   char szBuf[MAX_BUF];
-
+ 
   if(sgProduct.dwMode != SILENT)
   {
     if((bShow) && (hDlgMessage == NULL))
     {
       ZeroMemory(szBuf, sizeof(szBuf));
-      NS_LoadString(hSetupRscInst, IDS_MB_MESSAGE_STR, szBuf, MAX_BUF);
+      GetPrivateProfileString("Messages", "MB_MESSAGE_STR", "", szBuf, sizeof(szBuf), szFileIniInstall);
       hDlgMessage = InstantiateDialog(hWndMain, DLG_MESSAGE, szBuf, DlgProcMessage);
       SendMessage(hDlgMessage, WM_COMMAND, IDC_MESSAGE, (LPARAM)szMessage);
+      SendDlgItemMessage (hDlgMessage, IDC_MESSAGE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
     }
     else if(!bShow && hDlgMessage)
     {
@@ -2250,7 +2423,7 @@ HWND InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlg
   {
     char szEDialogCreate[MAX_BUF];
 
-    if(NS_LoadString(hSetupRscInst, IDS_ERROR_DIALOG_CREATE, szEDialogCreate, MAX_BUF) == WIZ_OK)
+    if(GetPrivateProfileString("Messages", "ERROR_DIALOG_CREATE", "", szEDialogCreate, sizeof(szEDialogCreate), szFileIniInstall))
     {
       wsprintf(szBuf, szEDialogCreate, szTitle);
       PrintError(szBuf, ERROR_CODE_SHOW);
@@ -2684,3 +2857,13 @@ void DlgSequencePrev()
   } while(!bDone);
 }
 
+HFONT myGetSysFont()
+{
+  LOGFONT lf;
+  HFONT fontDlg;
+
+  SystemParametersInfo(SPI_GETICONTITLELOGFONT,sizeof(LOGFONT),&lf,0);
+  fontDlg = CreateFontIndirect( &lf ); 
+
+  return fontDlg;
+}

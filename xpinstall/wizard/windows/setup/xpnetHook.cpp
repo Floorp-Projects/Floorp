@@ -146,6 +146,7 @@ void SetStatusFile(void)
   /* Set the download dialog status*/
   SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_FILE, gszCurrentDownloadFileDescription);
   SetStatusStatus();
+
 }
 
 void SetStatusUrl(void)
@@ -641,12 +642,25 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch (msg)
   {
 		case WM_INITDIALOG:
-      DisableSystemMenuItems(hWndDlg, FALSE);
-			CenterWindow(hWndDlg);
-      if(gbShowDownloadRetryMsg)
-        SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
-      else
-        SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageDownload0);
+		  DisableSystemMenuItems(hWndDlg, FALSE);
+				CenterWindow(hWndDlg);
+		  if(gbShowDownloadRetryMsg)
+			SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
+		  else
+			SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageDownload0);
+
+		  SetDlgItemText(hWndDlg, IDC_STATIC1, sgInstallGui.szStatus);
+		  SetDlgItemText(hWndDlg, IDC_STATIC2, sgInstallGui.szFile);
+		  SetDlgItemText(hWndDlg, IDC_STATIC3, sgInstallGui.szUrl);
+		  SetDlgItemText(hWndDlg, IDCANCEL, sgInstallGui.szCancel);
+		  SendDlgItemMessage (hWndDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+		  SendDlgItemMessage (hWndDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+		  SendDlgItemMessage (hWndDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+		  SendDlgItemMessage (hWndDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+		  SendDlgItemMessage (hWndDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+		  SendDlgItemMessage (hWndDlg, IDC_STATUS_STATUS, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+		  SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+		  SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
 
 			return FALSE;
 

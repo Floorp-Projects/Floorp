@@ -89,6 +89,13 @@ LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       SetWindowText(hDlg, diUninstall.szTitle);
       wsprintf(szBuf, diUninstall.szMessage0, ugUninstall.szDescription);
       SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "Uninstall", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      SetDlgItemText(hDlg, IDWIZNEXT, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "Cancel", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      SetDlgItemText(hDlg, IDCANCEL, szBuf);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -127,11 +134,35 @@ LRESULT CALLBACK DlgProcWhatToDo(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam
   switch(msg)
   {
     case WM_INITDIALOG:
-      NS_LoadString(hInst, IDS_DLG_REMOVE_FILE_TITLE, szBuf, MAX_BUF);
+      GetPrivateProfileString("Messages", "DLG_REMOVE_FILE_TITLE", "", szBuf, sizeof(szBuf), szFileIniUninstall);
       SetWindowText(hDlg, szBuf);
 
       if((LPSTR)lParam != NULL)
         SetDlgItemText(hDlg, IDC_STATIC_SHARED_FILENAME, (LPSTR)lParam);
+
+      GetPrivateProfileString("Dialog Uninstall", "Message1", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "Message2", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      SetDlgItemText(hDlg, IDC_MESSAGE1, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "FileName", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      SetDlgItemText(hDlg, IDC_STATIC, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "No", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      SetDlgItemText(hDlg, ID_NO, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "NoToAll", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      SetDlgItemText(hDlg, ID_NO_TO_ALL, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "Yes", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      SetDlgItemText(hDlg, ID_YES, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "YesToAll", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      SetDlgItemText(hDlg, ID_YES_TO_ALL, szBuf);
+
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDC_STATIC_SHARED_FILENAME, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, ID_NO, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, ID_NO_TO_ALL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, ID_YES, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, ID_YES_TO_ALL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -179,6 +210,7 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   switch(msg)
   {
     case WM_INITDIALOG:
+          SendDlgItemMessage (hDlg, IDC_MESSAGE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
       break;
 
     case WM_COMMAND:
@@ -249,7 +281,7 @@ void ShowMessage(LPSTR szMessage, BOOL bShow)
     if((bShow) && (hDlgMessage == NULL))
     {
       ZeroMemory(szBuf, sizeof(szBuf));
-      NS_LoadString(hInst, IDS_MB_MESSAGE_STR, szBuf, MAX_BUF);
+      GetPrivateProfileString("Messages", "MB_MESSAGE_STR", "", szBuf, sizeof(szBuf), szFileIniUninstall);
       hDlgMessage = InstantiateDialog(hWndMain, DLG_MESSAGE, szBuf, DlgProcMessage);
       SendMessage(hDlgMessage, WM_COMMAND, IDC_MESSAGE, (LPARAM)szMessage);
     }
@@ -270,7 +302,7 @@ HWND InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlg
   {
     char szEDialogCreate[MAX_BUF];
 
-    if(NS_LoadString(hInst, IDS_ERROR_DIALOG_CREATE, szEDialogCreate, MAX_BUF) == WIZ_OK)
+    if(GetPrivateProfileString("Messages", "ERROR_DIALOG_CREATE", "", szEDialogCreate, sizeof(szEDialogCreate), szFileIniUninstall))
     {
       wsprintf(szBuf, szEDialogCreate, szTitle);
       PrintError(szBuf, ERROR_CODE_SHOW);
@@ -282,3 +314,13 @@ HWND InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlg
   return(hDlg);
 }
 
+HFONT myGetSysFont()
+{
+  LOGFONT lf;
+  HFONT fontDlg;
+
+  SystemParametersInfo(SPI_GETICONTITLELOGFONT,sizeof(LOGFONT),&lf,0);
+  fontDlg = CreateFontIndirect( &lf ); 
+
+  return fontDlg;
+}
