@@ -2559,7 +2559,7 @@ public:
     nsresult
     GetFlags();
 
-    friend static PRBool
+    static PRBool
     IsTemplateElement(nsIContent* aContent);
 
     nsresult
@@ -7169,8 +7169,8 @@ nsXULTemplateBuilder::GetFlags()
 }
 
 
-static PRBool
-IsTemplateElement(nsIContent* aContent)
+PRBool
+nsXULTemplateBuilder::IsTemplateElement(nsIContent* aContent)
 {
     PRInt32 nameSpaceID;
     aContent->GetNameSpaceID(nameSpaceID);
