@@ -263,6 +263,30 @@ void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)
   ProcessSetVersionRegistry(dwTiming, szSectionPrefix);
 }
 
+void ProcessFileOpsForSelectedComponents(DWORD dwTiming)
+{
+  DWORD dwIndex0;
+  siC   *siCObject = NULL;
+
+  dwIndex0  = 0;
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  while(siCObject)
+  {
+    if(siCObject->dwAttributes & SIC_SELECTED)
+      /* Since the archive is selected, we need to process the file ops here */
+      ProcessFileOps(dwTiming, siCObject->szReferenceName);
+
+    ++dwIndex0;
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  } /* while(siCObject) */
+}
+
+void ProcessFileOpsForAll(DWORD dwTiming)
+{
+  ProcessFileOps(dwTiming, NULL);
+  ProcessFileOpsForSelectedComponents(dwTiming);
+}
+
 int VerifyArchive(LPSTR szArchive)
 {
   void *vZip;
