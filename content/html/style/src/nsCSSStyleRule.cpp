@@ -172,6 +172,7 @@ protected:
 CSSImportantRule::CSSImportantRule(nsICSSDeclaration* aDeclaration)
   : mDeclaration(aDeclaration)
 {
+  NS_INIT_REFCNT();
   NS_IF_ADDREF(mDeclaration);
 }
 
