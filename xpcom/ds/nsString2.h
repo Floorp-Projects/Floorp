@@ -675,6 +675,10 @@ static  PRBool IsAlpha(PRUnichar ch);
  */
 static  PRBool IsDigit(PRUnichar ch);
 
+#if 0
+static  void        Recycle(nsString2* aString);
+static  nsString2*  NewString(eCharSize aCharSize=eTwoByte);
+#endif
 
 static void   SelfTest();
 virtual void  DebugDump(ostream& aStream) const;

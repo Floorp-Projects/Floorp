@@ -28,6 +28,7 @@
 #include "nsISizeOfHandler.h"
 #include "prprf.h"
 #include "prdtoa.h"
+#include "nsDeque.h"
 
 #include "nsUnicharUtilCIID.h"
 #include "nsIServiceManager.h"
@@ -1566,6 +1567,64 @@ PRBool nsString2::IsDigit(PRUnichar aChar) {
   return PRBool((aChar >= '0') && (aChar <= '9'));
 }
 
+
+/****************************************************************************
+ * This class, appropriately enough, creates and recycles nsString2 objects..
+ ****************************************************************************/
+
+#if 0
+
+class nsStringRecycler {
+public:
+  nsStringRecycler() : mDeque(0) {
+  }
+
+  void Recycle(nsString2* aString) {
+    mDeque.Push(aString);
+  }
+
+  nsString2* NewString(eCharSize aCharSize){
+    nsString2* result=(nsString2*)mDeque.Pop();
+    if(!result)
+      result=new nsString2(aCharSize);
+    return result;
+  }
+  nsDeque mDeque;
+};
+
+/**
+ * 
+ * @update	gess 01/04/99
+ * @param 
+ * @return
+ */
+nsStringRecycler& GetRecycler(void){
+  static nsStringRecycler gRecycler;
+  return gRecycler;
+}
+
+/**
+ * Call this mehod when you're done 
+ * @update	gess 01/04/99
+ * @param 
+ * @return
+ */
+nsString2* nsString2::NewString(eCharSize aCharSize){
+  nsString2* result=GetRecycler().NewString(aCharSize);
+  return result;
+}
+
+/**
+ * Call this mehod when you're done 
+ * @update	gess 01/04/99
+ * @param 
+ * @return
+ */
+void nsString2::Recycle(nsString2* aString){
+  GetRecycler().Recycle(aString);
+}
+
+#endif
 
 /**
  * 
