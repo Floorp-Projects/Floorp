@@ -460,8 +460,19 @@ function loadStartFolder(initialUri)
         if (!initialUri && isLoginAtStartUpEnabled)
         {
             // Perform biff on the server to check for new mail, except for imap
-            if (defaultServer.type != "imap") 
-              defaultServer.PerformBiff();
+            if (defaultServer.type != "imap" )
+            {
+               var localFolder = inboxFolder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
+               if (localFolder)
+               { 
+                 if (!localFolder.parsingInbox)
+                   defaultServer.PerformBiff();
+                 else
+                   localFolder.checkForNewMessagesAfterParsing = true;
+               }              
+               else  //it can be only nntp
+                   defaultServer.PerformBiff();
+            }
         } 
 
         // because the "open" state persists, we'll call

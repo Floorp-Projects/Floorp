@@ -138,7 +138,9 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
 
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
   : mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
-    mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull)
+    mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull),
+    mCheckForNewMessagesAfterParsing(PR_FALSE), mParsingInbox(PR_FALSE)
+
 {
 //  NS_INIT_REFCNT(); done by superclass
 }
@@ -555,6 +557,8 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING ||
          folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
 			{
+              if(mFlags & MSG_FOLDER_FLAG_INBOX)
+                mParsingInbox = PR_TRUE;
 				if(NS_FAILED(rv = ParseFolder(aMsgWindow, this)))
 					return rv;
 				else
@@ -1617,7 +1621,6 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
     NS_ASSERTION(0, "Destination is the root folder. Cannot move/copy here");
     return NS_OK;
   }
-
   nsCOMPtr <nsITransactionManager> txnMgr;
 
   if (msgWindow && allowUndo)   // no undo for folder move/copy or from the search window
@@ -2019,9 +2022,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 		PRUint32 numFolders;
 		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
 	}
-
-  if (inbox)
-    rv = localMailServer->GetNewMail(aWindow, nsnull, inbox, nsnull); 
+  PRBool parsingInbox;
+  nsCOMPtr<nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
+  if (NS_SUCCEEDED(rv) && localInbox)
+  {
+    rv = localInbox->GetParsingInbox(&parsingInbox);
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!parsingInbox)
+      rv = localMailServer->GetNewMail(aWindow, nsnull, inbox, nsnull); 
+    else
+      rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+  }
   return rv;
 }
 
@@ -2256,7 +2267,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     ClearCopyState(PR_FALSE);
     return NS_OK;
   }
-     
+   
   nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
   nsCOMPtr<nsIMsgWindow> msgWindow;
   PRBool multipleCopiesFinished = (mCopyState->m_curCopyIndex >= mCopyState->m_totalMsgCount);
@@ -2891,11 +2902,15 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
   if (NS_SUCCEEDED(aExitCode))
   {
+    nsresult rv;
+    nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;	
+    nsCOMPtr<nsIMsgWindow> msgWindow;
+    rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
     nsXPIDLCString aSpec;
     aUrl->GetSpec(getter_Copies(aSpec));
     if (PL_strstr(aSpec, "uidl="))
     {
-      nsresult rv;
       nsCOMPtr<nsIPop3URL> popurl = do_QueryInterface(aUrl, &rv);
       if (NS_SUCCEEDED(rv))
       {
@@ -2917,14 +2932,7 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
             if (NS_SUCCEEDED(rv))
             {
               pop3sink->GetMessageUri(getter_Copies(newMessageUri));
-              NS_WITH_SERVICE(nsIMsgMailSession, mailSession,
-                              kMsgMailSessionCID, &rv);
-              if (NS_FAILED(rv)) return rv;
-	
-              nsCOMPtr<nsIMsgWindow> msgWindow;
-
-              rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
-              if(NS_SUCCEEDED(rv))
+              if(msgWindow)
               {
                 msgWindow->SelectMessage(newMessageUri);
               }
@@ -2933,7 +2941,18 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
         }
       }
     }
+    if (mParsingInbox)
+    {
+      mParsingInbox = PR_FALSE;
+      if (mCheckForNewMessagesAfterParsing)
+      {
+        if (msgWindow)
+           rv = GetNewMessages(msgWindow);
+        mCheckForNewMessagesAfterParsing = PR_FALSE;
+      }
+    }
   }
+  mParsingInbox = PR_FALSE;  //make sure we turn off this flag even if parsing fails or else it will be a deadlock
   return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
 }
 
@@ -3051,5 +3070,25 @@ nsMsgLocalMailFolder::setSubfolderFlag(PRUnichar* aFolderName,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetCheckForNewMessagesAfterParsing(PRBool *aCheckForNewMessagesAfterParsing)
+{
+  NS_ENSURE_ARG(aCheckForNewMessagesAfterParsing);
+  *aCheckForNewMessagesAfterParsing = mCheckForNewMessagesAfterParsing;
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsMsgLocalMailFolder::SetCheckForNewMessagesAfterParsing(PRBool aCheckForNewMessagesAfterParsing)
+{
+  mCheckForNewMessagesAfterParsing = aCheckForNewMessagesAfterParsing;
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetParsingInbox(PRBool *aParsingInbox)
+{
+  NS_ENSURE_ARG(aParsingInbox);
+  *aParsingInbox = mParsingInbox;
+  return NS_OK;
+}

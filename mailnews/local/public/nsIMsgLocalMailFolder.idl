@@ -37,4 +37,6 @@ interface nsIMsgLocalMailFolder : nsISupports {
   void setFlagsOnDefaultMailboxes(in unsigned long flags);
   nsIMsgDatabase getDatabaseWOReparse();
   void parseFolder(in nsIMsgWindow aMsgWindow, in nsIUrlListener listener);
+  readonly attribute boolean parsingInbox;
+  attribute boolean checkForNewMessagesAfterParsing;
 };

@@ -196,7 +196,6 @@ protected:
                          PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow, PRBool isMoveFolder, PRBool allowUndo);
   void ClearCopyState(PRBool moveCopySucceeded);
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
-
 protected:
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;
@@ -205,6 +204,8 @@ protected:
                                     //time
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   const char *mType;
+  PRBool      mCheckForNewMessagesAfterParsing;
+  PRBool      mParsingInbox;
   nsCOMPtr<nsIMsgStringService> mMsgStringService;
 
   nsresult setSubfolderFlag(PRUnichar *aFolderName, PRUint32 flags);
