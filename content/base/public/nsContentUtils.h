@@ -267,6 +267,7 @@ public:
   }
   
   static nsresult GenerateStateKey(nsIContent* aContent,
+                                   nsIDocument* aDocument,
                                    nsIStatefulFrame::SpecialStateID aID,
                                    nsACString& aKey);
 

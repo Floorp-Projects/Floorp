@@ -4705,6 +4705,22 @@ nsDocShell::CreateContentViewer(const char *aContentType,
 
     mEODForCurrentDocument = PR_FALSE;
 
+    // if this document is part of a multipart document,
+    // the ID can be used to distinguish it from the other parts.
+    nsCOMPtr<nsIMultiPartChannel> multiPartChannel(do_QueryInterface(request));
+    if (multiPartChannel) {
+      nsCOMPtr<nsIPresShell> shell;
+      rv = GetPresShell(getter_AddRefs(shell));
+      if (NS_SUCCEEDED(rv) && shell) {
+        nsIDocument *doc = shell->GetDocument();
+        if (doc) {
+          PRUint32 partID;
+          multiPartChannel->GetPartID(&partID);
+          doc->SetPartID(partID);
+        }
+      }
+    }
+
     // Give hint to native plevent dispatch mechanism. If a document
     // is loading the native plevent dispatch mechanism should favor
     // performance over normal native event dispatch priorities.

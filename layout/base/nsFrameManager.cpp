@@ -1719,7 +1719,9 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   // Generate the hash key to store the state under
   // Exit early if we get empty key
   nsCAutoString stateKey;
-  rv = nsContentUtils::GenerateStateKey(aFrame->GetContent(), aID, stateKey);
+  nsIContent* content = aFrame->GetContent();
+  nsIDocument* doc = content ? content->GetCurrentDoc() : nsnull;
+  rv = nsContentUtils::GenerateStateKey(content, doc, aID, stateKey);
   if(NS_FAILED(rv) || stateKey.IsEmpty()) {
     return;
   }
@@ -1779,7 +1781,8 @@ nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
   }
 
   nsCAutoString stateKey;
-  nsresult rv = nsContentUtils::GenerateStateKey(content, aID, stateKey);
+  nsIDocument* doc = content->GetCurrentDoc();
+  nsresult rv = nsContentUtils::GenerateStateKey(content, doc, aID, stateKey);
   if (NS_FAILED(rv) || stateKey.IsEmpty()) {
     return;
   }
