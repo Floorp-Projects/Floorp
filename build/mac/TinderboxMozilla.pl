@@ -20,6 +20,8 @@
 	use Moz;
 	use BuildList;
 
+$DEBUG = 1;
+
 $MOZ_LITE   = 0;
 $MOZ_MEDIUM = 1;
 $MOZ_DARK   = 0;
