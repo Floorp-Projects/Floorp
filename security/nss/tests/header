@@ -463,7 +463,14 @@ tbx_dirs()
     fi
     TBX_DAILY_BUILD=`cd ../../../../..;pwd`
     NSS_VER_DIR="${TBX_DAILY_BUILD}/../.." 
-    TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
+    if [ "$O_WIN" = "ON" ] ; then
+        TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/stalker_NT"
+    else
+        TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
+    fi
+    echo "QA results in $RESULTDIR" >${TBX_LOGFILE_DIR}/qa.log
+    O_FILE=ON
+    FILENAME=${TBX_LOGFILE_DIR}/qa.log
     set_daily_build_dirs
     UX_MASTERDIR=`cd ../../../..;pwd`
     NT_MASTERDIR=$UX_MASTERDIR
@@ -1238,8 +1245,6 @@ Exit()
     fi
     #chmod a+rw ${RESULTDIR} ${RESULTDIR}/* ${RESULTDIR}/*/* &
     if [ -n "$O_TBX" -a "$O_TBX" = "ON" ] ; then
-        echo "QA results in ${HTML_PATH}" >${TBX_LOGFILE_DIR}/qa.log
-        cat ${NEWFILENAME} >>${TBX_LOGFILE_DIR}/qa.log 2>/dev/null
         exit $TBX_EXIT
     else
         exit
