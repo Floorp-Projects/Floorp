@@ -176,6 +176,13 @@
   [% ELSIF error == "request_queue_group_invalid" %]
     The group field <em>[% group FILTER html %]</em> is invalid.
 
+  [% ELSIF error == "report_axis_invalid" %]
+    <em>[% variables.val FILTER html %]</em> is not a valid value for 
+    [%+ IF    variables.fld == "x" %]the horizontal axis
+    [%+ ELSIF variables.fld == "y" %]the vertical axis
+    [%+ ELSIF variables.fld == "z" %]the multiple tables/images
+    [%+ ELSE %]a report axis[% END %] field.
+
   [% ELSIF error == "token_generation_error" %]
     Something is seriously wrong with the token generation system.
 

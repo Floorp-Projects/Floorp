@@ -109,6 +109,17 @@ $columns{'target_milestone'} = "bugs.target_milestone";
 # so that we always select 3 items in the query.
 $columns{''}                 = "42217354";
 
+# Validate the values in the axis fields or throw an error.
+!$row_field 
+  || ($columns{$row_field} && trick_taint($row_field))
+  || ThrowCodeError("report_axis_invalid", { fld=>"x", val=>$row_field });
+!$col_field 
+  || ($columns{$col_field} && trick_taint($col_field))
+  || ThrowCodeError("report_axis_invalid", { fld=>"y", val=>$col_field });
+!$tbl_field 
+  || ($columns{$tbl_field} && trick_taint($tbl_field))
+  || ThrowCodeError("report_axis_invalid", { fld=>"z", val=>$tbl_field });
+
 my @axis_fields = ($row_field, $col_field, $tbl_field);
 
 my @selectnames = map($columns{$_}, @axis_fields);
