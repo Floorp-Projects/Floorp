@@ -116,10 +116,10 @@ void txOutputFormat::setFromDefaults()
         case eXMLOutput:
         {
             if (mVersion.isEmpty())
-                mVersion = "1.0";
+                mVersion.append("1.0");
 
             if (mEncoding.isEmpty())
-                mEncoding = "UTF-8";
+                mEncoding.append("UTF-8");
 
             if (mOmitXMLDeclaration == eNotSet)
                 mOmitXMLDeclaration = eFalse;
@@ -128,33 +128,33 @@ void txOutputFormat::setFromDefaults()
                 mIndent = eFalse;
 
             if (mMediaType.isEmpty())
-                mMediaType = "text/xml";
+                mMediaType.append("text/xml");
 
             break;
         }
         case eHTMLOutput:
         {
             if (mVersion.isEmpty())
-                mVersion = "4.0";
+                mVersion.append("4.0");
 
             if (mEncoding.isEmpty())
-                mEncoding = "UTF-8";
+                mEncoding.append("UTF-8");
 
             if (mIndent == eNotSet)
                 mIndent = eTrue;
 
             if (mMediaType.isEmpty())
-                mMediaType = "text/html";
+                mMediaType.append("text/html");
 
             break;
         }
         case eTextOutput:
         {
             if (mEncoding.isEmpty())
-                mEncoding = "UTF-8";
+                mEncoding.append("UTF-8");
 
             if (mMediaType.isEmpty())
-                mMediaType = "text/plain";
+                mMediaType.append("text/plain");
 
             break;
         }

@@ -471,13 +471,13 @@ class CharacterData : public Node
 
         const String& getData();
         void setData(const String& aSource);
-        PRInt32 getLength() const;
+        PRUint32 getLength() const;
 
-        String& substringData(PRInt32 aOffset, PRInt32 aCount, String& aDest);
+        String& substringData(PRUint32 aOffset, PRUint32 aCount, String& aDest);
         void appendData(const String& aSource);
-        void insertData(PRInt32 aOffset, const String& aSource);
-        void deleteData(PRInt32 aOffset, PRInt32 aCount);
-        void replaceData(PRInt32 aOffset, PRInt32 aCount, const String& aSource);
+        void insertData(PRUint32 aOffset, const String& aSource);
+        void deleteData(PRUint32 aOffset, PRUint32 aCount);
+        void replaceData(PRUint32 aOffset, PRUint32 aCount, const String& aSource);
 
     private:
         String nodeValue;
@@ -492,7 +492,7 @@ class Text : public CharacterData
         Text(nsIDOMText* aText, Document* aOwner);
         ~Text();
 
-        Text* splitText(PRInt32 aOffset);
+        Text* splitText(PRUint32 aOffset);
 };
 
 /*

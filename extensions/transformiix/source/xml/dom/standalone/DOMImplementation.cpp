@@ -30,10 +30,9 @@
 
 #include "dom.h"
 
-DOMImplementation::DOMImplementation()
+DOMImplementation::DOMImplementation() : implFeature("XML"),
+                                         implVersion("1.0")
 {
-  implFeature = "XML";
-  implVersion = "1.0";
 }
 
 DOMImplementation::~DOMImplementation()
@@ -45,7 +44,7 @@ DOMImplementation::~DOMImplementation()
 //functionality of this DOM implementation/version.
 //
 MBool DOMImplementation::hasFeature(String feature,
-                                     const String& version) const
+                                    const String& version) const
 {
   feature.toUpperCase();
 

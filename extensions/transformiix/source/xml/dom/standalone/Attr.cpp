@@ -38,7 +38,7 @@ Attr::Attr(const String& name, Document* owner):
   specified = MB_FALSE;
 
   int idx = nodeName.indexOf(':');
-  if (idx == NOT_FOUND) {
+  if (idx == kNotFound) {
     mLocalName = TX_GET_ATOM(nodeName);
     if (mLocalName == txXMLAtoms::xmlns)
       mNamespaceID = kNameSpaceID_XMLNS;

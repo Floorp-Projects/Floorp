@@ -56,8 +56,8 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
     if (attValue.isEmpty())
         return avt; //XXX should return 0, but that causes crash in lre12
 
-    PRInt32 size = attValue.length();
-    int cc = 0;
+    PRUint32 size = attValue.length();
+    PRUint32 cc = 0;
     UNICODE_CHAR nextCh;
     UNICODE_CHAR ch;
     String buffer;
@@ -956,14 +956,14 @@ nsresult ExprParser::resolveQName(const String& aQName,
 {
     aNamespace = kNameSpaceID_None;
     String prefix, lName;
-    int idx = aQName.indexOf(':');
+    PRInt32 idx = aQName.indexOf(':');
     if (idx > 0) {
-        aQName.subString(0, idx, prefix);
+        aQName.subString(0, (PRUint32)idx, prefix);
         aPrefix = TX_GET_ATOM(prefix);
         if (!aPrefix) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        aQName.subString(idx + 1, lName);
+        aQName.subString((PRUint32)idx + 1, lName);
         aLocalName = TX_GET_ATOM(lName);
         if (!aLocalName) {
             TX_RELEASE_ATOM(aPrefix);

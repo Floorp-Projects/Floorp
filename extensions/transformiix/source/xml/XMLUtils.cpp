@@ -39,17 +39,17 @@ nsresult txExpandedName::init(const String& aQName,
     if (!XMLUtils::isValidQName(aQName))
         return NS_ERROR_FAILURE;
 
-    int idx = aQName.indexOf(':');
-    if (idx >= 0) {
+    PRInt32 idx = aQName.indexOf(':');
+    if (idx != kNotFound) {
         String localName, prefixStr;
-        aQName.subString(0, idx, prefixStr);
+        aQName.subString(0, (PRUint32)idx, prefixStr);
         txAtom* prefix = TX_GET_ATOM(prefixStr);
         PRInt32 namespaceID = aResolver->lookupNamespaceID(prefix);
         if (namespaceID == kNameSpaceID_Unknown)
             return NS_ERROR_FAILURE;
         mNamespaceID = namespaceID;
 
-        aQName.subString(idx+1, localName);
+        aQName.subString((PRUint32)idx + 1, localName);
         TX_IF_RELEASE_ATOM(mLocalName);
         mLocalName = TX_GET_ATOM(localName);
     }
@@ -68,33 +68,36 @@ nsresult txExpandedName::init(const String& aQName,
  //- Implementation of XMLUtils -/
 //------------------------------/
 
-void XMLUtils::getPrefix(const String& src, String& dest) {
-
-    //-- anything preceding ':' is the namespace part of the name
-    int idx = src.indexOf(':');
-    if ( idx > 0 ) {
-        //-- create new String to prevent any chars in dest from being
-        //-- lost
-        String tmp;
-        src.subString(0,idx, tmp);
-        dest.append(tmp);
+void XMLUtils::getPrefix(const String& src, String& dest)
+{
+    // Anything preceding ':' is the namespace part of the name
+    PRInt32 idx = src.indexOf(':');
+    if (idx == kNotFound) {
+        return;
     }
-    else dest.append("");
-
+    // Use a temporary String to prevent any chars in dest
+    // from being lost.
+    NS_ASSERTION(idx > 0, "This QName looks invalid.");
+    String tmp;
+    src.subString(0, (PRUint32)idx, tmp);
+    dest.append(tmp);
 }
 
-void XMLUtils::getLocalPart(const String& src, String& dest) {
-
-    //-- anything after ':' is the local part of the name
-    int idx = src.indexOf(':');
-    if ( idx < -1 ) idx = -1;
-    //-- create new String to prevent any chars in dest from being
-    //-- lost
+void XMLUtils::getLocalPart(const String& src, String& dest)
+{
+    // Anything after ':' is the local part of the name
+    PRInt32 idx = src.indexOf(':');
+    if (idx == kNotFound) {
+        dest.append(src);
+        return;
+    }
+    // Use a temporary String to prevent any chars in dest
+    // from being lost.
+    NS_ASSERTION(idx > 0, "This QName looks invalid.");
     String tmp;
-    src.subString(idx+1, tmp);
+    src.subString((PRUint32)idx + 1, tmp);
     dest.append(tmp);
-
-} //-- getLocalPart
+}
 
 MBool XMLUtils::isValidQName(const String& aName)
 {
@@ -139,74 +142,49 @@ MBool XMLUtils::isValidQName(const String& aName)
 /**
  * Returns true if the given string has only whitespace characters
 **/
-MBool XMLUtils::isWhitespace(const String& text) {
-    for ( int i = 0; i < text.length(); i++ ) {
-        PRInt32 ch = text.charAt(i);
-        switch ( ch ) {
-            case ' '  :
-            case '\n' :
-            case '\r' :
-            case '\t' :
-                break;
-            default:
-                return MB_FALSE;
+MBool XMLUtils::isWhitespace(const String& aText)
+{
+    PRUint32 size = aText.length();
+    PRUint32 i;
+    for (i = 0; i < size; ++i) {
+        if (!isWhitespace(aText.charAt(i))) {
+            return MB_FALSE;
         }
     }
     return MB_TRUE;
-} //-- isWhitespace
+}
 
 /**
  * Normalizes the value of a XML processing instruction
 **/
-void XMLUtils::normalizePIValue(String& piValue) {
-    PRInt32 size = piValue.length();
-    //-- make copy of chars
-    UNICODE_CHAR* chars = new UNICODE_CHAR[size];
-    piValue.toUnicode(chars);
-    //-- clear attValue
+void XMLUtils::normalizePIValue(String& piValue)
+{
+    String origValue(piValue);
+    PRUint32 origLength = origValue.length();
+    PRUint32 conversionLoop = 0;
+    UNICODE_CHAR prevCh = 0;
     piValue.clear();
 
-    PRInt32 cc = 0;
-    UNICODE_CHAR prevCh = 0x0000;
-    while ( cc < size) {
-        UNICODE_CHAR ch = chars[cc++];
+    while (conversionLoop < origLength) {
+        UNICODE_CHAR ch = origValue.charAt(conversionLoop);
         switch (ch) {
             case '>':
-                if ( prevCh == '?' ) {
+            {
+                if (prevCh == '?') {
                     piValue.append(' ');
                 }
-                piValue.append(ch);
                 break;
+            }
             default:
-                piValue.append(ch);
+            {
                 break;
+            }
         }
+        piValue.append(ch);
         prevCh = ch;
+        ++conversionLoop;
     }
-    delete chars;
-} //-- noramlizePIValue
-
-/**
- * Is this a whitespace string to be stripped?
- * Newlines (#xD), tabs (#x9), spaces (#x20), CRs (#xA) only?
- * @param data the String to test for whitespace
-**/
-MBool XMLUtils::shouldStripTextnode (const String& data){
-    MBool toStrip = MB_TRUE;
-    for (PRInt32 i=0;toStrip && i<data.length();i++){
-        switch(data.charAt(i)) {
-            case 0x0020: // space
-            case 0x0009: // tab
-            case 0x000A: // LF
-            case 0x000D: // CR
-                break;
-            default:
-                toStrip = MB_FALSE;
-                break;
-        }
-    }
-    return toStrip;
-} //-- shouldStripTextnode
+}
 
 // macros for inclusion of char range headers
 #define TX_CHAR_RANGE(ch, a, b) if (ch < a) return MB_FALSE; \

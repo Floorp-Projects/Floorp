@@ -44,6 +44,7 @@
 #include "nsReadableUtils.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
+#include "XMLUtils.h"
 #endif
 
 /*
@@ -317,8 +318,6 @@ void txRootPattern::toString(String& aDest)
  * argument.
  */
 
-#define TX_IS_WHITE(c) (c == ' ' || c == '\r' || c == '\n'|| c == '\t')
-
 txIdPattern::txIdPattern(const String aString)
 {
 #ifdef TX_EXE
@@ -330,12 +329,12 @@ txIdPattern::txIdPattern(const String aString)
     ids.EndReading(end);
     pos = begin;
     while (pos != end) {
-        while (pos != end && TX_IS_WHITE(*pos))
+        while (pos != end && XMLUtils::isWhitespace(*pos))
             ++pos;
         begin = pos;
         if (!mIds.IsEmpty())
             mIds += PRUnichar(' ');
-        while (pos != end && !TX_IS_WHITE(*pos))
+        while (pos != end && !XMLUtils::isWhitespace(*pos))
             ++pos;
         mIds += Substring(begin, pos);
     }
@@ -413,7 +412,7 @@ void txIdPattern::toString(String& aDest)
 #ifdef TX_EXE
     aDest.append(mIds);
 #else
-    aDest.append(mIds.get());
+    aDest.getNSString().Append(mIds);
 #endif
     aDest.append("')");
 #ifdef DEBUG

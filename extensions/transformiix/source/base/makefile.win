@@ -48,17 +48,13 @@ CPP_OBJS=                                       \
 	.\$(OBJDIR)\Tokenizer.obj		\
 	.\$(OBJDIR)\txAtoms.obj			\
 	.\$(OBJDIR)\txExpandedNameMap.obj	\
-	.\$(OBJDIR)\txURIUtils.obj
+	$(NULL)
 
-!ifndef TX_EXE
-CPP_OBJS = $(CPP_OBJS)			\
-	.\$(OBJDIR)\MozillaString.obj	\
-	$(NULL)
-!else
-CPP_OBJS = $(CPP_OBJS)			        \
+!ifdef TX_EXE
+CPP_OBJS =	\
 	.\$(OBJDIR)\CommandLineUtils.obj	\
-	.\$(OBJDIR)\TxString.obj	        \
-	$(NULL)
+	.\$(OBJDIR)\TxString.obj	\
+	$(CPP_OBJS)
 !endif
 
 EXPORTS = 					\

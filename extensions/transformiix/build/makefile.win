@@ -50,7 +50,6 @@ CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\Tokenizer.obj \
 	..\source\base\$(OBJDIR)\txAtoms.obj \
 	..\source\base\$(OBJDIR)\txExpandedNameMap.obj \
-	..\source\base\$(OBJDIR)\MozillaString.obj \
 	..\source\base\$(OBJDIR)\txURIUtils.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaObjectWrapper.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaAttr.obj \

@@ -58,7 +58,7 @@ void CharacterData::setData(const String& source)
 //
 //Returns the length of the data object.
 //
-PRInt32 CharacterData::getLength() const
+PRUint32 CharacterData::getLength() const
 {
   return nodeValue.length();
 }
@@ -68,9 +68,9 @@ PRInt32 CharacterData::getLength() const
 //characters away.
 //    NOTE:  An empty string will be returned in the event of an error.
 //
-String& CharacterData::substringData(PRInt32 offset, PRInt32 count, String& dest)
+String& CharacterData::substringData(PRUint32 offset, PRUint32 count, String& dest)
 {
-  if ((offset >= 0) && (offset < nodeValue.length()) && (count > 0))
+  if ((offset < nodeValue.length()) && (count > 0))
     return nodeValue.subString(offset, offset+count, dest);
   else
     {
@@ -84,23 +84,23 @@ void CharacterData::appendData(const String& arg)
   nodeValue.append(arg);
 }
 
-void CharacterData::insertData(PRInt32 offset, const String& arg)
+void CharacterData::insertData(PRUint32 offset, const String& arg)
 {
-  if ((offset >= 0) && (offset < nodeValue.length()))
+  if (offset < nodeValue.length())
     nodeValue.insert(offset, arg);
 }
 
-void CharacterData::deleteData(PRInt32 offset, PRInt32 count)
+void CharacterData::deleteData(PRUint32 offset, PRUint32 count)
 {
-  if ((offset >= 0) && (offset < nodeValue.length()) && (count > 0))
+  if ((offset < nodeValue.length()) && (count > 0))
     nodeValue.deleteChars(offset, count);
 }
 
-void CharacterData::replaceData(PRInt32 offset, PRInt32 count, const String& arg)
+void CharacterData::replaceData(PRUint32 offset, PRUint32 count, const String& arg)
 {
   String tempString;
 
-  if ((offset >= 0) && (offset < nodeValue.length()) && (count > 0))
+  if ((offset < nodeValue.length()) && (count > 0))
     {
       if (count < arg.length())
         {

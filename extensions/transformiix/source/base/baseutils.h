@@ -66,5 +66,9 @@
   #define MB_FALSE PR_FALSE
 #endif
 
+#ifndef NULL
+ #define NULL 0
+#endif
+
 #endif
 

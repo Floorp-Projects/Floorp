@@ -93,9 +93,9 @@ void txXMLOutput::characters(const String& aData)
     closeStartTag(MB_FALSE);
 
     if (mInCDATASection) {
-        PRInt32 i = 0;
-        PRInt32 j = 0;
-        PRInt32 length = aData.length();
+        PRUint32 i = 0;
+        PRUint32 j = 0;
+        PRUint32 length = aData.length();
 
         *mOut << CDATA_START;
 
@@ -317,7 +317,7 @@ void txXMLOutput::printUTF8Char(DOM_CHAR& ch)
 void txXMLOutput::printUTF8Chars(const String& aData)
 {
     DOM_CHAR currChar;
-    PRInt32 i = 0;
+    PRUint32 i = 0;
 
     while (i < aData.length()) {
         currChar = aData.charAt(i++);
@@ -329,7 +329,7 @@ void txXMLOutput::printWithXMLEntities(const String& aData,
                                        MBool aAttribute)
 {
     DOM_CHAR currChar;
-    PRInt32 i;
+    PRUint32 i;
 
     if (&aData == &NULL_STRING)
         return;

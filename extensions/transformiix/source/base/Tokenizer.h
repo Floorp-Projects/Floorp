@@ -61,8 +61,8 @@ public:
 
 private:
 
-    PRInt32 mCurrentPos;
-    PRInt32 mSize;
+    PRUint32 mCurrentPos;
+    PRUint32 mSize;
     String mSource;
 
 };

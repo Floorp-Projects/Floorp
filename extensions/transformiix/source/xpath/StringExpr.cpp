@@ -59,7 +59,7 @@ ExprResult* StringExpr::evaluate(txIEvalContext* aContext)
 **/
 void StringExpr::toString(String& str) {
     UNICODE_CHAR ch = '\'';
-    if (value.indexOf(ch) != NOT_FOUND)
+    if (value.indexOf(ch) != kNotFound)
         ch = '\"';
     str.append(ch);
     str.append(value);

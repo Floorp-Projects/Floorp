@@ -168,8 +168,6 @@ void startElement(void *userData, const XML_Char *name, const XML_Char **atts)
 {
   ParserState* ps = (ParserState*)userData;
   Element* newElement;
-  XML_Char* attName;
-  XML_Char* attValue;
   XML_Char** theAtts = (XML_Char**)atts;
 
   String nodeName((UNICODE_CHAR *)name);
@@ -177,9 +175,9 @@ void startElement(void *userData, const XML_Char *name, const XML_Char **atts)
 
   while (*theAtts)
     {
-      attName  = *theAtts++;
-      attValue = *theAtts++;
-      newElement->setAttribute((UNICODE_CHAR *)attName, (UNICODE_CHAR *)attValue);
+      String attName((UNICODE_CHAR *)*theAtts++);
+      String attValue((UNICODE_CHAR *)*theAtts++);
+      newElement->setAttribute(attName, attValue);
     }
 
     ps->currentNode->appendChild(newElement);
@@ -197,8 +195,7 @@ void endElement(void *userData, const XML_Char* name)
 void charData(void* userData, const XML_Char* s, int len)
 {
     ParserState* ps = (ParserState*)userData;
-    String data;
-    data.append((UNICODE_CHAR*)s, len);
+    String data((UNICODE_CHAR*)s, len);
     Node* prevSib = ps->currentNode->getLastChild();
     if (prevSib && prevSib->getNodeType()==Node::TEXT_NODE){
       ((CharacterData*)prevSib)->appendData(data);

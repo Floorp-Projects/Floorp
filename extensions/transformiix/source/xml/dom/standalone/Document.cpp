@@ -38,7 +38,7 @@
 //node constructor is called to identify the node type.
 //
 Document::Document(DocumentType* theDoctype) :
-          NodeDefinition(Node::DOCUMENT_NODE, "#document", NULL_STRING, NULL)
+          NodeDefinition(Node::DOCUMENT_NODE, String("#document"), NULL_STRING, NULL)
 {
   documentElement = NULL;
   doctype = theDoctype;
@@ -195,7 +195,7 @@ Node* Document::removeChild(Node* oldChild)
 //
 DocumentFragment* Document::createDocumentFragment()
 {
-  return new DocumentFragment("#document-fragment", NULL_STRING, this);
+  return new DocumentFragment(String("#document-fragment"), NULL_STRING, this);
 }
 
 //
