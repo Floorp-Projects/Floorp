@@ -65,7 +65,7 @@
  *
  */
 
-class NS_COM nsDequeFunctor{
+class nsDequeFunctor{
 public:
   virtual void* operator()(void* anObject)=0;
 };
