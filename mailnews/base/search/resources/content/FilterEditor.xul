@@ -56,7 +56,7 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-  <hbox align="start">
+  <hbox align="center">
     <label value="&filterName.label;" accesskey="&filterName.accesskey;" control="filterName"/>
     <textbox flex="50%" id="filterName"/>
     <spacer flex="50%"/>
