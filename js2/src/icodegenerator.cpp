@@ -298,7 +298,7 @@ void ICodeGenerator::move(Register destination, Register source)
     iCode->push_back(instr);
 }
 
-Register ICodeGenerator::not(Register source)
+Register ICodeGenerator::logicalNot(Register source)
 {
     Register dest = getRegister();
     Not *instr = new Not(dest, source);
@@ -1220,7 +1220,7 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
                 }
             }
             else
-                ret = not(ret);
+                ret = logicalNot(ret);
 
         }
         break;

@@ -188,7 +188,7 @@ namespace ICG {
         
         ICodeModule *complete();
 
-        Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch = false,
+        Register genExpr(ExprNode *p, bool needBoolValueInBranch = false,
                     Label *trueBranch = NULL, 
                     Label *falseBranch = NULL);
 
@@ -212,7 +212,7 @@ namespace ICG {
         void callVoid(Register target, RegisterList args);
 
         void move(Register destination, Register source);
-        Register not(Register source);
+        Register logicalNot(Register source);
         Register test(Register source);
         
         Register compare(ICodeOp op, Register source1, Register source2);
