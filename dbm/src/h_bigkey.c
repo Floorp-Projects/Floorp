@@ -92,7 +92,7 @@ extern int
 __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
 {
 	register uint16 *p;
-	int key_size, n, val_size;
+	uint key_size, n, val_size;
 	uint16 space, move_bytes, off;
 	char *cp, *key_data, *val_data;
 
@@ -313,7 +313,7 @@ __find_last_page(HTAB *hashp, BUFHEAD **bpp)
 {
 	BUFHEAD *bufp;
 	uint16 *bp, pageno;
-	int n;
+	uint n;
 
 	bufp = *bpp;
 	bp = (uint16 *)bufp->page;

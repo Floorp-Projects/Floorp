@@ -281,15 +281,17 @@ void nsTreeView::HandleMouseUp(nsGUIEvent* aEvent)
 		  {
 			  // Fetch each column.
 			  nsTreeColumn* pColumn = mDataModel->GetNthColumn(n);
-			  int pixelWidth = pColumn->GetPixelWidth();
-			  remainingSpace -= pixelWidth;
-			  currentPosition += pixelWidth;
+			  if (pColumn) {
+          int pixelWidth = pColumn->GetPixelWidth();
+          remainingSpace -= pixelWidth;
+          currentPosition += pixelWidth;
 
-			  // TODO: See if we hit this column header
-			  if (mCachedMovePoint.x < currentPosition)
-			  {
-				  // We hit this column header.
-				  return;
+          // TODO: See if we hit this column header
+          if (mCachedMovePoint.x < currentPosition)
+          {
+            // We hit this column header.
+            return;
+          }
 			  }
 		  }
 		  

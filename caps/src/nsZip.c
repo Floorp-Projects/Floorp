@@ -310,7 +310,7 @@ static PRBool
 nsZipFindEnd(ns_zip_t *zip, char *endbuf)
 {
     char buf[INBUFSIZ+SIGSIZ], *bp;
-    PRInt32 len, off, mark;
+    PRUint32 len, off, mark;
 
     /* Need to search backwards from end of file */
     if ((len = PR_Seek(zip->fd, 0, SEEK_END)) == -1) {
