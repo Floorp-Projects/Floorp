@@ -27,6 +27,7 @@
 #define nsIXULPrototypeCache_h__
 
 #include "nsISupports.h"
+class nsICSSStyleSheet;
 class nsIURI;
 class nsIXULPrototypeDocument;
 
@@ -40,8 +41,20 @@ class nsIXULPrototypeCache : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPECACHE_IID);
 
-    NS_IMETHOD Get(nsIURI* aURI, nsIXULPrototypeDocument** _result) = 0;
-    NS_IMETHOD Put(nsIURI* aURI, nsIXULPrototypeDocument* aDocument) = 0;
+    NS_IMETHOD GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _result) = 0;
+    NS_IMETHOD PutPrototype(nsIXULPrototypeDocument* aDocument) = 0;
+
+    NS_IMETHOD GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result) = 0;
+    NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet) = 0;
+
+    NS_IMETHOD GetScript(nsIURI* aURI, nsString& aScript, const char** aVersion) = 0;
+    NS_IMETHOD PutScript(nsIURI* aURI, const nsString& aScript, const char* aVersion) = 0;
+
+    /**
+     * Flush the cache; remove all XUL prototype documents, style
+     * sheets, and scripts.
+     */
+    NS_IMETHOD Flush() = 0;
 };
 
 

@@ -98,6 +98,12 @@ public:
 
     NS_IMETHOD
     GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound) = 0;
+
+    /**
+     * Returns <code>PR_TRUE</code> if the XUL cache should be used
+     */
+    NS_IMETHOD_(PRBool)
+    UseXULCache() = 0;
 };
 
 

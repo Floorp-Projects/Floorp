@@ -53,6 +53,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
 #include "nsIContentViewer.h"
+#include "nsICSSStyleSheet.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
@@ -196,7 +197,7 @@ nsINameSpaceManager* nsXULDocument::gNameSpaceManager;
 PRInt32 nsXULDocument::kNameSpaceID_XUL;
 
 nsIXULContentUtils* nsXULDocument::gXULUtils;
-nsIXULPrototypeCache* nsXULDocument::gXULPrototypeCache;
+nsIXULPrototypeCache* nsXULDocument::gXULCache;
 
 PRLogModuleInfo* nsXULDocument::gXULLog;
 
@@ -330,9 +331,9 @@ nsXULDocument::~nsXULDocument()
             gXULUtils = nsnull;
         }
 
-        if (gXULPrototypeCache) {
-            nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULPrototypeCache);
-            gXULPrototypeCache = nsnull;
+        if (gXULCache) {
+            nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULCache);
+            gXULCache = nsnull;
         }
     }
 }
@@ -517,6 +518,10 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
                                  nsIStreamListener **aDocListener)
 {
     nsresult rv;
+
+#if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
+    mLoadStart = PR_Now();
+#endif
 
     nsCOMPtr<nsIURI> url;
     rv = aChannel->GetURI(getter_AddRefs(url));
@@ -866,6 +871,15 @@ nsXULDocument::AddStyleSheet(nsIStyleSheet* aSheet)
       else {
         mStyleSheets.AppendElement(aSheet);
       }
+
+      // Put the style sheet into the XUL cache if the XUL cache is
+      // actually enabled and the document is chrome.
+      if (gXULUtils->UseXULCache() && IsChromeURI(mDocumentURL)) {
+          nsCOMPtr<nsICSSStyleSheet> css = do_QueryInterface(aSheet);
+          if (css) {
+              gXULCache->PutStyleSheet(css);
+          }
+      }
     }
     NS_ADDREF(aSheet);
 
@@ -902,6 +916,16 @@ NS_IMETHODIMP
 nsXULDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aSheet, "null ptr");
+
+  // Put the style sheet into the XUL cache if the XUL cache is
+  // actually enabled and the document is chrome.
+  if (gXULUtils->UseXULCache() && IsChromeURI(mDocumentURL)) {
+      nsCOMPtr<nsICSSStyleSheet> css = do_QueryInterface(aSheet);
+      if (css) {
+          gXULCache->PutStyleSheet(css);
+      }
+  }
+
   mStyleSheets.InsertElementAt(aSheet, aIndex + 1); // offset by one for attribute sheet
 
   NS_ADDREF(aSheet);
@@ -932,6 +956,7 @@ nsXULDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool 
       }
     }
   }
+
   return NS_OK;
 }
 
@@ -1055,6 +1080,22 @@ NS_IMETHODIMP
 nsXULDocument::EndLoad()
 {
     nsresult rv;
+
+    // Whack the prototype document into the cache so that the next
+    // time somebody asks for it, they don't need to load it by hand.
+    nsCOMPtr<nsIURI> uri;
+    rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    if (gXULUtils->UseXULCache() && IsChromeURI(mDocumentURL)) {
+        // If it's a 'chrome:' prototype document, then put it into
+        // the prototype cache; other XUL documents will be reloaded
+        // each time.
+        rv = gXULCache->PutPrototype(mCurrentPrototype);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Now walk the prototype to build content.
     rv = PrepareToWalk();
     if (NS_FAILED(rv)) return rv;
 
@@ -1856,9 +1897,11 @@ nsXULDocument::CreateFromPrototype(const char* aCommand,
 
     rv = PrepareStyleSheets(mDocumentURL);
     if (NS_FAILED(rv)) return rv;
-    return NS_OK;
 
     mCommand = aCommand;
+
+    rv = AddPrototypeSheets();
+    if (NS_FAILED(rv)) return rv;
 
     // Now create the delegates from the prototype
     rv = PrepareToWalk();
@@ -3097,7 +3140,7 @@ static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
 
         rv = nsServiceManager::GetService(kXULPrototypeCacheCID,
                                           NS_GET_IID(nsIXULPrototypeCache),
-                                          (nsISupports**) &gXULPrototypeCache);
+                                          (nsISupports**) &gXULCache);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -4102,14 +4145,17 @@ nsXULDocument::PrepareToWalk()
     // Push the overlay references onto our overlay processing
     // stack. GetOverlayReferences() will return an ordered array of
     // overlay references...
-    nsVoidArray overlays;
-    rv = mCurrentPrototype->GetOverlayReferences(overlays);
+    nsCOMPtr<nsISupportsArray> overlays;
+    rv = mCurrentPrototype->GetOverlayReferences(getter_AddRefs(overlays));
     if (NS_FAILED(rv)) return rv;
 
     // ...and we preserve this ordering by appending to our
     // mUnloadedOverlays array in reverse order
-    for (PRInt32 i = overlays.Count() - 1; i >= 0; --i) {
-        mUnloadedOverlays->AppendElement(NS_REINTERPRET_CAST(nsIURI*, overlays[i]));
+    PRUint32 count;
+    overlays->Count(&count);
+    for (PRInt32 i = count - 1; i >= 0; --i) {
+        nsCOMPtr<nsISupports> isupports = dont_AddRef(overlays->ElementAt(i));
+        mUnloadedOverlays->AppendElement(isupports);
     }
 
 
@@ -4422,11 +4468,15 @@ nsXULDocument::ResumeWalk()
 
         // Look in the prototype cache for the prototype document with
         // the specified URI.
-        rv = gXULPrototypeCache->Get(uri, getter_AddRefs(mCurrentPrototype));
+        rv = gXULCache->GetPrototype(uri, getter_AddRefs(mCurrentPrototype));
         if (NS_FAILED(rv)) return rv;
 
-        if (mCurrentPrototype) {
-            // Found the overlay's prototype in the cache: walk it!
+        if (gXULUtils->UseXULCache() && mCurrentPrototype) {
+            // Found the overlay's prototype in the cache.
+            rv = AddPrototypeSheets();
+            if (NS_FAILED(rv)) return rv;
+
+            // Now prepare to walk the prototype to create its content
             rv = PrepareToWalk();
             if (NS_FAILED(rv)) return rv;
 
@@ -4460,6 +4510,15 @@ nsXULDocument::ResumeWalk()
 
     // If we get here, there is nothing left for us to walk. The content
     // model is built and ready for layout.
+#if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
+    {
+        nsTime finish = PR_Now();
+        nsInt64 diff64 = finish - mLoadStart;
+        PRInt32 diff = PRInt32(diff64 / nsInt64(1000));
+        printf("***** XUL document loaded in %ldmsec\n", diff);
+    }
+#endif
+
     rv = ResolveForwardReferences();
     if (NS_FAILED(rv)) return rv;
 
@@ -4476,6 +4535,21 @@ nsXULDocument::ResumeWalk()
         }
     }
 
+#if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
+    {
+        nsTime finish = PR_Now();
+        nsInt64 diff64 = finish - mLoadStart;
+        PRInt32 diff = PRInt32(diff64 / nsInt64(1000));
+        printf("***** XUL document flowed in %ldmsec\n", diff);
+    }
+
+    {
+        nsInt64 now(PR_Now());
+        now /= nsInt64(1000);
+        printf("### ResumeWalk complete %ld\n", PRInt32(now));
+    }
+#endif
+
     return rv;
 }
 
@@ -4487,11 +4561,17 @@ nsXULDocument::LoadScript(nsIURI* aURI, const char* aVersion, PRBool* aBlock)
     nsresult rv;
 
     // XXX Look in a script cache to see if we already have it
+    nsAutoString script;
+    const char* version;
+    rv = gXULCache->GetScript(aURI, script, &version);
+    if (NS_FAILED(rv)) return rv;
 
-    if (/* cached */ PR_FALSE) {
+    if (gXULUtils->UseXULCache() && script.Length()) {
+        // We've found it in the cache. Just re-evaluate it.
+        rv = EvaluateScript(aURI, script, 1, version);
+        if (NS_FAILED(rv)) return rv;
+
         *aBlock = PR_FALSE;
-
-        // XXX brendan, shaver: do some magic here
     }
     else {
         // Set the current script URL so that the DoneLoadingScript()
@@ -4538,6 +4618,12 @@ nsXULDocument::DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
     if (NS_SUCCEEDED(aStatus)) {
         rv = doc->EvaluateScript(doc->mCurrentScriptURL, aData, 1,
 				 doc->mCurrentScriptLanguageVersion);
+
+        if (IsChromeURI(doc->mDocumentURL)) {
+            gXULCache->PutScript(doc->mCurrentScriptURL,
+                                 aData,
+                                 doc->mCurrentScriptLanguageVersion);
+        }
     }
 
     // balance the addref we added in LoadScript()
@@ -4842,10 +4928,23 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set builder's database");
     if (NS_FAILED(rv)) return rv;
 
-    // Force construction of immediate template sub-content _now_.
-    rv = builder->CreateContents(aElement);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create template contents");
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    if (xulcontent) {
+        // Mark the XUL element as being lazy, so the template builder
+        // will run when layout first asks for these nodes.
+        //
+        //rv = xulcontent->ClearLazyState(eTemplateContentsBuilt | eContainerContentsBuilt);
+        //if (NS_FAILED(rv)) return rv;
+
+        xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        // Force construction of immediate template sub-content _now_.
+        rv = builder->CreateContents(aElement);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create template contents");
+        if (NS_FAILED(rv)) return rv;
+    }
 
     return NS_OK;
 }
@@ -4889,6 +4988,45 @@ nsXULDocument::CheckBroadcasterHookup(nsIContent* aElement)
 
         rv = AddForwardReference(hookup);
         if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+nsXULDocument::AddPrototypeSheets()
+{
+    // Add mCurrentPrototype's style sheets to the document.
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsArray> sheets;
+    rv = mCurrentPrototype->GetStyleSheetReferences(getter_AddRefs(sheets));
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 count;
+    sheets->Count(&count);
+    for (PRUint32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsISupports> isupports = dont_AddRef(sheets->ElementAt(i));
+
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(isupports);
+        NS_ASSERTION(uri != nsnull, "not a URI!!!");
+        if (! uri)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+        rv = gXULCache->GetStyleSheet(uri, getter_AddRefs(sheet));
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(sheet != nsnull, "uh oh, sheet wasn't in the cache. go reload it");
+        if (! sheet)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsICSSStyleSheet> newsheet;
+        rv = sheet->Clone(*getter_AddRefs(newsheet));
+        if (NS_FAILED(rv)) return rv;
+
+        AddStyleSheet(newsheet);
     }
 
     return NS_OK;
@@ -5324,3 +5462,19 @@ nsXULDocument::ProcessCommonAttributes(nsIContent* aElement)
     return NS_OK;
 }
 
+
+
+PRBool
+nsXULDocument::IsChromeURI(nsIURI* aURI)
+{
+    nsresult rv;
+    nsXPIDLCString protocol;
+    rv = aURI->GetScheme(getter_Copies(protocol));
+    if (NS_SUCCEEDED(rv)) {
+        if (PL_strcmp(protocol, "chrome") == 0) {
+            return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
+}

@@ -43,12 +43,14 @@
 #include "nsIRDFNode.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsIPref.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
 #include "nsIURL.h"
 #include "nsIXMLContent.h"
 #include "nsIXULContentUtils.h"
+#include "nsIXULPrototypeCache.h"
 #include "nsLayoutCID.h"
 #include "nsNeckoUtil.h"
 #include "nsRDFCID.h"
@@ -67,23 +69,15 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsIScriptableDateFormat.h"
 
-static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFIntIID,      NS_IRDFINT_IID);
-static NS_DEFINE_IID(kIRDFDateIID,     NS_IRDFDATE_IID);
-static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID); // XXX grr...
-static NS_DEFINE_CID(kTextNodeCID,     NS_TEXTNODE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,   NS_RDFSERVICE_CID);
 
-static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
-static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
-static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
-static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
-static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
-
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-static NS_DEFINE_CID(kDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
+static NS_DEFINE_CID(kDateTimeFormatIID,    NS_IDATETIMEFORMAT_IID);
+static NS_DEFINE_CID(kLocaleCID,            NS_LOCALE_CID);
+static NS_DEFINE_CID(kLocaleFactoryCID,     NS_LOCALEFACTORY_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kTextNodeCID,          NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
 
 //------------------------------------------------------------------------
 
@@ -112,6 +106,11 @@ protected:
     };
 
     static EventHandlerMapEntry kEventHandlerMap[];
+
+    static PRBool gDisableXULCache;
+
+    static int
+    DisableXULCacheChangedCallback(const char* aPrefName, void* aClosure);
 
 public:
     // nsISupports methods
@@ -170,6 +169,9 @@ public:
 
     NS_IMETHOD
     GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
+
+    NS_IMETHOD_(PRBool)
+    UseXULCache();
 };
 
 nsrefcnt nsXULContentUtils::gRefCnt;
@@ -227,9 +229,15 @@ nsXULContentUtils::kEventHandlerMap[] = {
 };
 
 
+// Enabled by default. Must be over-ridden to disable
+PRBool nsXULContentUtils::gDisableXULCache = PR_FALSE;
+
+
+static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
+
 //------------------------------------------------------------------------
 // Constructors n' stuff
-
+//
 
 nsXULContentUtils::nsXULContentUtils()
 {
@@ -242,19 +250,19 @@ nsXULContentUtils::Init()
     if (gRefCnt++ == 0) {
         nsresult rv;
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsCOMTypeInfo<nsIRDFService>::GetIID(),
+                                          NS_GET_IID(nsIRDFService),
                                           (nsISupports**) &gRDF);
         if (NS_FAILED(rv)) return rv;
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
-                                                nsCOMTypeInfo<nsINameSpaceManager>::GetIID(),
+                                                NS_GET_IID(nsINameSpaceManager),
                                                 (void**) &gNameSpaceManager);
         if (NS_FAILED(rv)) return rv;
 
         rv = nsComponentManager::CreateInstance(kDateTimeFormatCID,
                                                 nsnull,
-                                                nsCOMTypeInfo<nsIDateTimeFormat>::GetIID(),
+                                                NS_GET_IID(nsIDateTimeFormat),
                                                 (void**) &gFormat);
 
         if (NS_FAILED(rv)) return rv;
@@ -266,6 +274,13 @@ nsXULContentUtils::Init()
         while (entry->mAttributeName) {
             entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
             ++entry;
+        }
+
+        NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            // XXX Ignore return values.
+            prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
+            prefs->RegisterCallback(kDisableXULCachePref, DisableXULCacheChangedCallback, nsnull);
         }
     }
     return NS_OK;
@@ -332,7 +347,7 @@ NS_NewXULContentUtils(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 //------------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS(nsXULContentUtils, nsCOMTypeInfo<nsIXULContentUtils>::GetIID());
+NS_IMPL_ISUPPORTS(nsXULContentUtils, NS_GET_IID(nsIXULContentUtils));
 
 //------------------------------------------------------------------------
 // nsIXULContentUtils methods
@@ -349,7 +364,7 @@ nsXULContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
     nsCOMPtr<nsITextContent> text;
     rv = nsComponentManager::CreateInstance(kTextNodeCID,
                                             nsnull,
-                                            nsITextContent::GetIID(),
+                                            NS_GET_IID(nsITextContent),
                                             getter_AddRefs(text));
     if (NS_FAILED(rv)) return rv;
 
@@ -947,4 +962,33 @@ nsXULContentUtils::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFoun
     }
 
     return NS_OK;
+}
+
+
+NS_IMETHODIMP_(PRBool)
+nsXULContentUtils::UseXULCache()
+{
+    return !gDisableXULCache;
+}
+
+
+//----------------------------------------------------------------------
+
+int
+nsXULContentUtils::DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
+{
+    nsresult rv;
+
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
+    }
+
+    // Flush the cache, regardless
+    NS_WITH_SERVICE(nsIXULPrototypeCache, cache, kXULPrototypeCacheCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        cache->Flush();
+    }
+
+    return 0;
 }
