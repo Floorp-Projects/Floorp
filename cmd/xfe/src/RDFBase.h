@@ -49,7 +49,10 @@ public:
     // Pane creation methods.
     void                  newPane               ();
     void                  newToolbarPane        ();
-    void                  newPaneFromURL        (char * url);
+    void                  newPaneFromURL        (char * url, 
+												 int param_count = 0,
+												 char **param_names = NULL,
+												 char **param_values = NULL);
     void                  newPaneFromResource   (HT_Resource node);
     void                  newPaneFromResource   (RDF_Resource node);
 

@@ -25,7 +25,7 @@
 #include "xp_str.h"
 #include "xpassert.h"
 
-#if DEBUG_slamm
+#if DEBUG_mcafee
 #define D(x) x
 #else
 #define D(x)
@@ -90,12 +90,11 @@ XFE_RDFBase::newPane()
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_RDFBase::newPaneFromURL(char *url)
+XFE_RDFBase::newPaneFromURL(char *url,
+							int  param_count,
+							char **param_names,
+							char **param_values)
 {
-    int32 param_count = 0;
-    char ** param_names = NULL;
-    char ** param_values = NULL;
-
     startPaneCreate();
 
     _ht_pane = HT_PaneFromURL(NULL, url, _ht_ns, 0,
