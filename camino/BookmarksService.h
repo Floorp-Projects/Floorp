@@ -45,6 +45,7 @@
 #import "CHBookmarksToolbar.h"
 #import "CHExtendedOutlineView.h"
 
+@class BookmarkItem;
 class BookmarksService;
 class nsIAtom;
 
@@ -93,6 +94,10 @@ class nsIAtom;
 - (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
 - (void)outlineView:(NSOutlineView *)outlineView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
 
+- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard;
+- (NSDragOperation)outlineView:(NSOutlineView*)ov validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index;
+- (BOOL)outlineView:(NSOutlineView*)ov acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index;
+
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
 
 // Delegate methods
@@ -106,8 +111,9 @@ class nsIAtom;
   nsIContent* mContentNode;
 }
 
--(nsIContent*)contentNode;
--(void)setContentNode: (nsIContent*)aContentNode;
+- (nsIContent*)contentNode;
+- (void)setContentNode: (nsIContent*)aContentNode;
+- (NSNumber*)contentID;
 - (id)copyWithZone:(NSZone *)aZone;
 @end
 
@@ -123,9 +129,9 @@ public:
   void AddObserver();
   void RemoveObserver();
 
-  static void BookmarkAdded(nsIContent* aContainer, nsIContent* aChild);
-  static void BookmarkChanged(nsIContent* aItem);
-  static void BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild);
+  static void BookmarkAdded(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush = true);
+  static void BookmarkChanged(nsIContent* aItem, bool shouldFlush = true);
+  static void BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush = true);
 
   static void AddBookmarkToFolder(nsString& aURL, nsString& aTitle, nsIDOMElement* aFolder, nsIDOMElement* aBeforeElt);
   static void MoveBookmarkToFolder(nsIDOMElement* aBookmark, nsIDOMElement* aFolder, nsIDOMElement* aBeforeElt);
@@ -133,7 +139,9 @@ public:
   
 public:
   static void GetRootContent(nsIContent** aResult);
+  static BookmarkItem* GetRootItem();
   static BookmarkItem* GetWrapperFor(nsIContent* aItem);
+  static BookmarkItem* GetWrapperFor(PRUint32 contentID);
   static void FlushBookmarks();
 
   static void ConstructBookmarksMenu(NSMenu* aMenu, nsIContent* aContent);
@@ -153,10 +161,12 @@ public:
   static NSString* ResolveKeyword(NSString* aKeyword);
 
   static NSImage* CreateIconForBookmark(nsIDOMElement* aElement);
+
+  static BOOL DoAncestorsIncludeNode(BookmarkItem* bookmark, BookmarkItem* searchItem);
+  static bool IsBookmarkDropValid(BookmarkItem* proposedParent, int index, NSArray* draggedIDs);
+  static bool PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* draggedIDs);
   
-  static void DragBookmark(nsIDOMElement* aElement, NSView* aView, NSEvent* aEvent);
-  static void CompleteBookmarkDrag(NSPasteboard* aPasteboard, nsIDOMElement* aFolderElt, nsIDOMElement* aBeforeElt, int aPosition);
-  
+  static void DropURL(NSString* title, NSURL* url, BookmarkItem* parent, int index);
   
 public:
   // Global counter and pointers to our singletons.

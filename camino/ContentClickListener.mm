@@ -104,7 +104,7 @@ static void FindOptionWithContentID(nsIDOMHTMLSelectElement* aSel, PRUint32 aID,
 
 -(id)initWithSelect:(nsIDOMHTMLSelectElement*)aSel
 {
-  if (self = [super init]) {
+  if ( (self = [super init]) ) {
     mSelectElt = aSel;
   }
   return self;

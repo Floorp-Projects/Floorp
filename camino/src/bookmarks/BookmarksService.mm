@@ -182,11 +182,11 @@
   NSPopUpButton* popup = [mBrowserWindowController getAddBookmarkFolder];
   BookmarksService::ConstructAddBookmarkFolderList(popup, item);
   
-  [NSApp beginSheet:	[mBrowserWindowController getAddBookmarkSheetWindow]
-     modalForWindow:	[mBrowserWindowController window]
-      modalDelegate:	nil //self
-     didEndSelector:	nil //@selector(sheetDidEnd:)
-        contextInfo:	nil];
+  [NSApp beginSheet: [mBrowserWindowController getAddBookmarkSheetWindow]
+     modalForWindow: [mBrowserWindowController window]
+      modalDelegate: nil //self
+     didEndSelector: nil //@selector(sheetDidEnd:)
+        contextInfo: nil];
 }
 
 -(void)endAddBookmark: (int)aCode
@@ -299,10 +299,10 @@
     int count = [itemsToDelete count];
     for (int i = 0; i < count; i++) {
       BookmarkItem* item = [itemsToDelete objectAtIndex: i];
-      [self deleteBookmark: item];	
+      [self deleteBookmark: item];
     }
   }
-}	
+}
 
 -(void)deleteBookmark:(id)aItem
 {
@@ -346,7 +346,7 @@
     content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
     if (!href.IsEmpty()) {
       NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
-      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI:[NSURL URLWithString: url] flags:			NSLoadFlagsNone];
+      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI:[NSURL URLWithString: url] flags: NSLoadFlagsNone];
       // Focus and activate our content area.
       [[[mBrowserWindowController getBrowserWrapper] getBrowserView] setActive: YES];
     }
@@ -367,7 +367,7 @@
 //
 - (BOOL)outlineView:(NSOutlineView *)outlineView shouldEditTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
-	return NO;
+  return NO;
 }
 
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item
@@ -436,12 +436,12 @@
 
 - (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
 {
-    NSString 					*columnName = [tableColumn identifier];
-    NSMutableAttributedString 	*cellValue = [[NSMutableAttributedString alloc] init];
-    NSFileWrapper				*fileWrapper = [[NSFileWrapper alloc] initRegularFileWithContents:nil];
-    NSTextAttachment			*textAttachment = [[NSTextAttachment alloc] initWithFileWrapper:fileWrapper];
-    NSMutableAttributedString   *attachmentAttrString = nil;
-    NSCell 						*attachmentAttrStringCell;
+    NSString *columnName = [tableColumn identifier];
+    NSMutableAttributedString *cellValue = [[NSMutableAttributedString alloc] init];
+    NSFileWrapper *fileWrapper = [[NSFileWrapper alloc] initRegularFileWithContents:nil];
+    NSTextAttachment *textAttachment = [[NSTextAttachment alloc] initWithFileWrapper:fileWrapper];
+    NSMutableAttributedString *attachmentAttrString = nil;
+    NSCell *attachmentAttrStringCell;
 
     if ([columnName isEqualToString: @"name"]) {
         nsIContent* content = [item contentNode];
@@ -449,8 +449,7 @@
         content->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, nameAttr);
         
         //Set cell's textual contents
-        [cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length])
-                                 withString:[NSString stringWithCharacters: nameAttr.get() length: nameAttr.Length()]];
+        [cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWithCharacters: nameAttr.get() length: nameAttr.Length()]];
         
         //Create an attributed string to hold the empty attachment, then release the components.
         attachmentAttrString = [[NSMutableAttributedString attributedStringWithAttachment:textAttachment] retain];
@@ -458,9 +457,7 @@
         [fileWrapper release];
 
         //Get the cell of the text attachment.
-        attachmentAttrStringCell = (NSCell *)[(NSTextAttachment *)[attachmentAttrString attribute:NSAttachmentAttributeName
-                                                                                          atIndex:0
-                                                                                   effectiveRange:nil] attachmentCell];
+        attachmentAttrStringCell = (NSCell *)[(NSTextAttachment *)[attachmentAttrString attribute:NSAttachmentAttributeName atIndex:0 effectiveRange:nil] attachmentCell];
         //Figure out which image to add, and set the cell's image.
         // Use the bookmark groups image for groups.
         if ([self outlineView:outlineView isItemExpandable:item]) {
@@ -521,73 +518,97 @@
 #endif
 }
 
-- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren
-{
-    printf("Reloading?\n");
-    if (!item)
-        [mOutlineView reloadData];
-    else if ([mOutlineView isItemExpanded: item])
-        [mOutlineView reloadItem: item reloadChildren: aReloadChildren];
-}
 
-- (BOOL)outlineView:(NSOutlineView*)outlineView acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index
+- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard 
 {
-  BookmarkItem* beforeItem = nil;
-  nsCOMPtr<nsIDOMElement> beforeElt;
-  nsCOMPtr<nsIDOMElement> folderElt;
-  nsCOMPtr<nsIContent> folderContent;
-  
-  if (index == NSOutlineViewDropOnItemIndex)
+  if (!mBookmarks || [mOutlineView selectedRow] == -1) {
     return NO;
+  }
+ 
+#ifdef FILTER_DESCENDANT_ON_DRAG
+  NSArray *toDrag = BookmarksService::FilterOutDescendantsForDrag(items);
+#else
+  NSArray *toDrag = items;
+#endif
+  int count = [toDrag count];
+  if (count > 0) {
+    // Create Pasteboard Data
+    NSMutableArray *draggedID = [NSMutableArray arrayWithCapacity: count];
+    for (int i = 0; i < count; i++)
+      [draggedID addObject: [[toDrag objectAtIndex: i] contentID]];
+    [pboard declareTypes: [NSArray arrayWithObject: @"MozBookmarkType"] owner: self];
+    [pboard setPropertyList: draggedID forType: @"MozBookmarkType"];
+    return YES;
+  }
 
-  // get the folder element
-  if (!item)
-      mBookmarks->GetRootContent(getter_AddRefs(folderContent));
-  else 
-      folderContent = [item contentNode];
-  folderElt = do_QueryInterface(folderContent);
-
-  // get the element to insert before, if there is one
-  PRInt32 childCount = 0;
-  folderContent->ChildCount(childCount);
-  if (index < childCount)
-    beforeItem = [[outlineView dataSource] outlineView:outlineView child:index ofItem:item];
-  if (beforeItem)
-    beforeElt = do_QueryInterface([beforeItem contentNode]);
-  
-  // insert the dragged stuff into bookmarks
-  BookmarksService::CompleteBookmarkDrag([info draggingPasteboard], folderElt, beforeElt, 
-                                         BookmarksService::CHInsertBefore);
-
-  return YES;
+  return NO;
 }
 
-- (NSDragOperation)outlineView:(NSOutlineView*)outlineView validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index
+
+- (NSDragOperation)outlineView:(NSOutlineView*)ov validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index 
 {
+  NSArray* types = [[info draggingPasteboard] types];
+
+  //  if the index is -1, deny the drop
   if (index == NSOutlineViewDropOnItemIndex)
     return NSDragOperationNone;
 
-  return NSDragOperationGeneric;
-}
-
-- (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard
-{
-  NSMutableArray* contentIds = [NSMutableArray array];
-  
-  for (unsigned int i = 0; i < [items count]; ++i) {
-    nsCOMPtr<nsIContent> content = [[items objectAtIndex:i] contentNode];
-    PRUint32 contentId;
-    content->GetContentID(&contentId);
-    [contentIds addObject:[NSNumber numberWithInt:contentId]];
+  if ([types containsObject: @"MozBookmarkType"]) {
+    NSArray *draggedIDs = [[info draggingPasteboard] propertyListForType: @"MozBookmarkType"];
+    BookmarkItem* parent;
+    parent = (item) ? item : BookmarksService::GetRootItem();
+    return (BookmarksService::IsBookmarkDropValid(parent, index, draggedIDs)) ? NSDragOperationGeneric : NSDragOperationNone;
+  } else if ([types containsObject: @"MozURLType"]) {
+    return NSDragOperationGeneric;
   }
-  
-  [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:outlineView];
-  [pboard setPropertyList:contentIds forType:@"MozBookmarkType"];
 
-  return YES;
+  return NSDragOperationNone;
 }
 
+- (BOOL)outlineView:(NSOutlineView*)ov acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index {
+  NSArray *types = [[info draggingPasteboard] types];
+  BookmarkItem* parent = (item) ? item : BookmarksService::GetRootItem();
 
+  if ([types containsObject: @"MozBookmarkType"]) {
+    NSArray *draggedItems = [[info draggingPasteboard] propertyListForType: @"MozBookmarkType"];
+    BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
+    return YES;
+  } else if ([types containsObject: @"MozURLType"]) {
+    NSDictionary* data = [[info draggingPasteboard] propertyListForType: @"MozURLType"];
+    nsCOMPtr<nsIDOMElement> parentElt;
+    parentElt = do_QueryInterface([parent contentNode]);
+
+    PRInt32 childCount = 0;
+    [item contentNode]->ChildCount(childCount);
+  
+    if (index >= childCount)
+      return NO;
+
+    BookmarkItem* beforeItem;
+    beforeItem = [[ov dataSource] outlineView:ov child:index ofItem:item];
+
+    if (!beforeItem)
+      return NO;
+
+    nsCOMPtr<nsIDOMElement> beforeElt;
+    beforeElt = do_QueryInterface([beforeItem contentNode]);
+
+    nsAutoString url; url.AssignWithConversion([[data objectForKey:@"url"] cString]);
+    nsAutoString title; title.AssignWithConversion([[data objectForKey:@"title"] cString]);
+    BookmarksService::AddBookmarkToFolder(url, title, parentElt, beforeElt);
+    return YES;
+  }
+
+  return NO;
+}
+
+- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren
+{
+  if (!item)
+    [mOutlineView reloadData];
+  else if ([mOutlineView isItemExpanded: item])
+    [mOutlineView reloadItem: item reloadChildren: aReloadChildren];
+}
 
 -(IBAction)openBookmarkInNewTab:(id)aSender
 {
@@ -711,19 +732,36 @@
 @implementation BookmarkItem
 -(nsIContent*)contentNode
 {
-    return mContentNode;
+  return mContentNode;
+}
+
+- (NSNumber*)contentID
+{
+  PRUint32 contentID = 0;
+  mContentNode->GetContentID(&contentID);
+  return [NSNumber numberWithInt: contentID];
+}
+
+- (NSString *)description
+{
+  nsCOMPtr<nsIContent> item = [self contentNode];
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(item));
+  nsAutoString href;
+  element->GetAttribute(NS_LITERAL_STRING("name"), href);
+  NSString* info = [NSString stringWithCharacters: href.get() length: href.Length()];
+  return [NSString stringWithFormat:@"<BookmarkItem, name = \"%@\">", info];
 }
 
 -(void)setContentNode: (nsIContent*)aContentNode
 {
-    mContentNode = aContentNode;
+  mContentNode = aContentNode;
 }
 
 - (id)copyWithZone:(NSZone *)aZone
 {
-    BookmarkItem* copy = [[[self class] allocWithZone: aZone] init];
-    [copy setContentNode: mContentNode];
-    return copy;
+  BookmarkItem* copy = [[[self class] allocWithZone: aZone] init];
+  [copy setContentNode: mContentNode];
+  return copy;
 }
 
 @end
@@ -732,25 +770,26 @@
 static void
 StripWhitespaceNodes(nsIContent* aElement)
 {
-    PRInt32 childCount;
-    aElement->ChildCount(childCount);
-    for (PRInt32 i = 0; i < childCount; i++) {
-        nsCOMPtr<nsIContent> child;
-        aElement->ChildAt(i, *getter_AddRefs(child));
-        nsCOMPtr<nsITextContent> text = do_QueryInterface(child);
-        if (text) {
-            PRBool isEmpty;
-            text->IsOnlyWhitespace(&isEmpty);
-            if (isEmpty) {
-                // This node contained nothing but whitespace.
-                // Remove it from the content model.
-                aElement->RemoveChildAt(i, PR_TRUE);
-                i--; // Decrement our count, since we just removed this child.
-                childCount--; // Also decrement our total count.
-            }
-        }
-        else StripWhitespaceNodes(child);
+  PRInt32 childCount = 0;
+  aElement->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aElement->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsITextContent> text = do_QueryInterface(child);
+    if (text) {
+      PRBool isEmpty = PR_FALSE;
+      text->IsOnlyWhitespace(&isEmpty);
+      if (isEmpty) {
+        // This node contained nothing but whitespace.
+        // Remove it from the content model.
+        aElement->RemoveChildAt(i, PR_TRUE);
+        i--; // Decrement our count, since we just removed this child.
+        childCount--; // Also decrement our total count.
+      }
     }
+    else
+      StripWhitespaceNodes(child);
+  }
 }
 
 PRUint32 BookmarksService::gRefCnt = 0;
@@ -792,34 +831,50 @@ BookmarksService::~BookmarksService()
 void
 BookmarksService::GetRootContent(nsIContent** aResult)
 {
-    *aResult = nsnull;
-    if (gBookmarks) {
-        nsCOMPtr<nsIDOMElement> elt;
-        nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
-        domDoc->GetDocumentElement(getter_AddRefs(elt));
-        elt->QueryInterface(NS_GET_IID(nsIContent), (void**)aResult); // Addref happens here.
-    }
+  *aResult = nsnull;
+  if (gBookmarks) {
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
+    if (!domDoc) return;
+
+    nsCOMPtr<nsIDOMElement> elt;
+    domDoc->GetDocumentElement(getter_AddRefs(elt));
+    if (elt)
+      elt->QueryInterface(NS_GET_IID(nsIContent), (void**)aResult); // Addref happens here.
+  }
+}
+
+BookmarkItem*
+BookmarksService::GetRootItem() {
+  nsCOMPtr<nsIContent> rootContent;
+  BookmarksService::GetRootContent(getter_AddRefs(rootContent));
+  BookmarkItem* rootItem = BookmarksService::GetWrapperFor(rootContent);
+  return rootItem;
 }
 
 BookmarkItem*
 BookmarksService::GetWrapperFor(nsIContent* aContent)
 {
-    if (!gDictionary)
-        gDictionary = [[NSMutableDictionary alloc] initWithCapacity: 30];
-    
-    PRUint32 contentID;
-    aContent->GetContentID(&contentID);
-    
-    BookmarkItem* item = [gDictionary objectForKey: [NSNumber numberWithInt: contentID]];
-    if (item)
-        return item;
-    else {
-        // Create an item.
-        item = [[[BookmarkItem alloc] init] autorelease]; // The dictionary retains us.
-        [item setContentNode: aContent];
-        [gDictionary setObject: item forKey: [NSNumber numberWithInt: contentID]];
-    }
+  if (!gDictionary)
+    gDictionary = [[NSMutableDictionary alloc] initWithCapacity: 30];
+
+  PRUint32 contentID = 0;
+  aContent->GetContentID(&contentID);
+
+  BookmarkItem* item = [gDictionary objectForKey: [NSNumber numberWithInt: contentID]];
+  if (item)
     return item;
+
+  // Create an item.
+  item = [[[BookmarkItem alloc] init] autorelease]; // The dictionary retains us.
+  [item setContentNode: aContent];
+  [gDictionary setObject: item forKey: [NSNumber numberWithInt: contentID]];
+  return item;
+}
+
+BookmarkItem*
+BookmarksService::GetWrapperFor(PRUint32 contentID) {
+  BookmarkItem* item = [gDictionary objectForKey: [NSNumber numberWithUnsignedInt: contentID]];
+  return item;
 }
 
 NSMenu*
@@ -841,7 +896,7 @@ BookmarksService::LocateMenu(nsIContent* aContent)
 }
 
 void
-BookmarksService::BookmarkAdded(nsIContent* aContainer, nsIContent* aChild)
+BookmarksService::BookmarkAdded(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush = true)
 {
   if (!gInstances || !gDictionary)
     return;
@@ -883,11 +938,12 @@ BookmarksService::BookmarkAdded(nsIContent* aContainer, nsIContent* aChild)
     }
   }
   
-  FlushBookmarks();  
+  if (shouldFlush)
+    FlushBookmarks();  
 }
 
 void
-BookmarksService::BookmarkChanged(nsIContent* aItem)
+BookmarksService::BookmarkChanged(nsIContent* aItem, bool shouldFlush = true)
 {
   if (!gInstances || !gDictionary)
     return;
@@ -902,11 +958,12 @@ BookmarksService::BookmarkChanged(nsIContent* aItem)
     }
   }
 
-  FlushBookmarks();  
+  if (shouldFlush)
+    FlushBookmarks();  
 }
 
 void
-BookmarksService::BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild)
+BookmarksService::BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush = true)
 {
   if (!gInstances)
     return;
@@ -940,14 +997,15 @@ BookmarksService::BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild)
     else {
       // We're the menu.
       NSMenu* menu = LocateMenu(aContainer);
-      PRUint32 contentID;
+      PRUint32 contentID = 0;
       aChild->GetContentID(&contentID);
       NSMenuItem* childItem = [menu itemWithTag: contentID];
       [menu removeItem: childItem];
     }
   }
 
-  FlushBookmarks(); 
+  if (shouldFlush)
+      FlushBookmarks(); 
 }
 
 void
@@ -969,7 +1027,7 @@ BookmarksService::AddObserver()
         NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
         profileDir->Append(NS_LITERAL_STRING("bookmarks.xml"));
     
-        PRBool fileExists;
+        PRBool fileExists = PR_FALSE;
         profileDir->Exists(&fileExists);
 
         // If the bookmarks file does not exist, copy from the defaults so we don't
@@ -1119,9 +1177,10 @@ BookmarksService::FlushBookmarks()
     nsCOMPtr<nsIOutputStream> outputStream;
     NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), bookmarksFile);
 
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
-    
-    nsCOMPtr<nsIDOMSerializer> domSerializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID));
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
+
+  nsCOMPtr<nsIDOMSerializer> domSerializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID));
+  if (domSerializer)
     domSerializer->SerializeToStream(domDoc, outputStream, nsnull);
 }
 
@@ -1592,63 +1651,160 @@ BookmarksService::CreateIconForBookmark(nsIDOMElement* aElement)
   return [NSImage imageNamed:@"groupbookmark"];
 }
 
-void
-BookmarksService::DragBookmark(nsIDOMElement* aElement, NSView* aView, NSEvent* aEvent)
+// Is searchItem equal to bookmark or bookmark's parent, grandparent, etc?
+BOOL
+BookmarksService::DoAncestorsIncludeNode(BookmarkItem* bookmark, BookmarkItem* searchItem) {
+  nsCOMPtr<nsIContent> search = [searchItem contentNode];
+  nsCOMPtr<nsIContent> current = [bookmark contentNode];
+  nsCOMPtr<nsIContent> root;
+  GetRootContent(getter_AddRefs(root));
+    
+  // If the search item is the root node, return yes immediatly
+  if (search == root)
+    return YES;
+
+  //  for each ancestor
+  while (current) {
+    // If this is the root node we can't search farther, and there was no match
+    if (current == root)
+      return NO;
+    
+    // If the two nodes match, then the search term is an ancestor of the given bookmark
+    if (search == current)
+      return YES;
+
+    // If a match wasn't found, set up the next node to compare
+    nsCOMPtr<nsIContent> oldCurrent = current;
+    oldCurrent->GetParent(*getter_AddRefs(current));
+  }
+  
+  return NO;
+}
+
+
+#ifdef FILTER_DESCENDANT_ON_DRAG
+/*
+this has been disabled because it is too slow, and can cause a large
+delay when the user is dragging lots of items.  this needs to get
+fixed someday.
+
+It should filter out every node whose parent is also being dragged.
+*/
+
+NSArray*
+BookmarksService::FilterOutDescendantsForDrag(NSArray* nodes)
 {
-  NSPasteboard *pboard;
-  NSString* title;
+  NSMutableArray *toDrag = [NSMutableArray arrayWithArray: nodes];
+  unsigned int i = 0;
+
+  while (i < [toDrag count]) {
+    BookmarkItem* item = [toDrag objectAtIndex: i];
+    bool matchFound = false;
+    
+    for (unsigned int j = 0; j < [toDrag count] && matchFound == NO; j++) {
+      if (i != j) // Don't compare to self, will always match
+        matchFound = BookmarksService::DoAncestorsIncludeNode(item, [toDrag objectAtIndex: j]);
+    }
+    
+    //  if a match was found, remove the node from the array
+    if (matchFound)
+      [toDrag removeObjectAtIndex: i];
+    else
+      i++;
+  }
   
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  PRUint32 contentId;
-  content->GetContentID(&contentId);
+  return toDrag;
+}
+#endif
+
+bool
+BookmarksService::IsBookmarkDropValid(BookmarkItem* proposedParent, int index, NSArray* draggedIDs) {
+  NSMutableArray *draggedItems = [NSMutableArray arrayWithCapacity: [draggedIDs count]];
+  BOOL toolbarRootMoving = NO;
   
-  pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-  [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:aView];
-  [pboard setPropertyList:[NSArray arrayWithObject:[NSNumber numberWithInt:contentId]] forType:@"MozBookmarkType"];
+  for (unsigned int i = 0; i < [draggedIDs count]; i++) {
+    NSNumber* contentID = [draggedIDs objectAtIndex: i];
+    BookmarkItem* bookmarkItem = BookmarksService::GetWrapperFor([contentID unsignedIntValue]);
+    nsCOMPtr<nsIContent> itemContent = [bookmarkItem contentNode];    
+    nsCOMPtr<nsIDOMElement> itemElement(do_QueryInterface(itemContent));
+
+    if (itemElement == BookmarksService::gToolbarRoot)
+      toolbarRootMoving = YES;
+
+    if (bookmarkItem)
+      [draggedItems addObject: bookmarkItem];
+  }
+      
+  // If we are being dropped into the top level, allow it
+  if ([proposedParent contentNode] == [BookmarksService::GetRootItem() contentNode])
+    return true;
+    
+  // If we are not being dropped on the top level, and the toolbar root is being moved, disallow
+  if (toolbarRootMoving)
+    return false;
+
+  // Make sure that we are not being dropped into one of our own children
+  // If the proposed parent, or any of it's ancestors matches one of the nodes being dragged
+  // then deny the drag.
   
-  nsAutoString nameStr;
-  aElement->GetAttribute(NS_LITERAL_STRING("name"), nameStr);
-  title = [NSString stringWithCharacters: nameStr.get() length: nameStr.Length()];
+  for (unsigned int i = 0; i < [draggedItems count]; i++) {
+    if (BookmarksService::DoAncestorsIncludeNode(proposedParent, [draggedItems objectAtIndex: i])) {
+      return false;
+    }
+  }
   
-  [aView dragImage: [MainController createImageForDragging: CreateIconForBookmark(aElement) title:title]
-                    at:NSMakePoint(0,0) offset:NSMakeSize(0,0)
-                    event:aEvent pasteboard:pboard source:aView slideBack:YES];
+  return true;
+}
+
+
+bool
+BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* draggedIDs) {
+  NSEnumerator *enumerator = [draggedIDs reverseObjectEnumerator];
+  NSNumber *contentID;
+  
+  //  for each item being dragged
+  while ( (contentID = [enumerator nextObject]) ) {
+  
+    //  get dragged node
+    nsCOMPtr<nsIContent> draggedNode = [GetWrapperFor([contentID unsignedIntValue]) contentNode];
+    
+    //  get the dragged nodes parent
+    nsCOMPtr<nsIContent> draggedParent;
+    if (draggedNode)
+      draggedNode->GetParent(*getter_AddRefs(draggedParent));
+
+    //  get the proposed parent
+    nsCOMPtr<nsIContent> proposedParent = [parent contentNode];
+
+    PRInt32 existingIndex = 0;
+    if (draggedParent)
+      draggedParent->IndexOf(draggedNode, existingIndex);
+    
+    //  if the deleted nodes parent and the proposed parents are equal
+    //  and if the deleted point is eariler in the list than the inserted point
+    if (proposedParent == draggedParent && existingIndex < index) {
+      index--;  //  if so, move the inserted point up one to compensate
+    }
+    
+    //  remove it from the tree
+    if (draggedParent)
+      draggedParent->RemoveChildAt(existingIndex, PR_TRUE);
+    BookmarkRemoved(draggedParent, draggedNode, false);
+    
+    //  insert into new position
+    if (proposedParent)
+      proposedParent->InsertChildAt(draggedNode, index, PR_TRUE, PR_TRUE);
+    BookmarkAdded(proposedParent, draggedNode, false);
+  }
+
+  FlushBookmarks();
+  
+  return true;
 }
 
 void
-BookmarksService::CompleteBookmarkDrag(NSPasteboard* aPasteboard, nsIDOMElement* aFolderElt,
-                                       nsIDOMElement* aBeforeElt, int aPosition)
+BookmarksService::DropURL(NSString* title, NSURL* url, BookmarkItem* parent, int index) 
 {
-  NSArray* contentIds;
-  
-  nsCOMPtr<nsIDOMElement> beforeElt = aBeforeElt;
-  if (aPosition == BookmarksService::CHInsertAfter && aBeforeElt) {
-    nsCOMPtr<nsIDOMNode> beforeNode;
-    aBeforeElt->GetNextSibling(getter_AddRefs(beforeNode));
-    beforeElt = do_QueryInterface(beforeNode);
-  }
-  
-  if (aPosition == BookmarksService::CHInsertInto) {
-    aFolderElt = aBeforeElt;
-    beforeElt = nsnull;
-  }
-    
-  // check for recognized drag types
-  contentIds = [aPasteboard propertyListForType: @"MozBookmarkType"];
-  if (contentIds) {
-    // drag type is chimera bookmarks
-    for (unsigned int i = 0; i < [contentIds count]; ++i) {
-      BookmarkItem* item = [gDictionary objectForKey: [contentIds objectAtIndex:i]];
-      nsCOMPtr<nsIDOMElement> bookmarkElt = do_QueryInterface([item contentNode]);
-      MoveBookmarkToFolder(bookmarkElt, aFolderElt, beforeElt);
-    }
-  } else {
-    // add bookmark for chimera url type
-    NSDictionary* data = [aPasteboard propertyListForType: @"MozURLType"];
-    nsAutoString url; url.AssignWithConversion([[data objectForKey:@"url"] cString]);
-    nsAutoString title; title.AssignWithConversion([[data objectForKey:@"title"] cString]);
-    
-    AddBookmarkToFolder(url, title, aFolderElt, beforeElt);
-  }
+  NSLog(@"DropURL not implemented yet\n");
 }
 

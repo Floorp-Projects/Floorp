@@ -40,7 +40,7 @@
   if (operation == NSDragOperationDelete) {
     NSArray* contentIds = nil;
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-    contentIds = [pboard propertyListForType:@"MozBookmarkType"];
+    contentIds = [pboard propertyListForType: @"MozBookmarkType"];
     if (contentIds) {
       for (unsigned int i = 0; i < [contentIds count]; ++i) {
         BookmarkItem* item = [BookmarksService::gDictionary objectForKey: [contentIds objectAtIndex:i]];
