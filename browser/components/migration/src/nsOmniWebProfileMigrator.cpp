@@ -77,7 +77,9 @@ nsOmniWebProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnic
 }
 
 NS_IMETHODIMP
-nsOmniWebProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+nsOmniWebProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
+                                         PRBool aReplace,
+                                         PRUint32* aResult)
 {
   *aResult = 0; // XXXben implement me
   return NS_OK;

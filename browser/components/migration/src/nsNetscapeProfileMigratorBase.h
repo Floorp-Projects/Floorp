@@ -90,6 +90,11 @@ protected:
   nsresult ImportNetscapeBookmarks(const nsAString& aBookmarksFileName,
                                    const PRUnichar* aImportSourceNameKey);
 
+  nsresult ImportNetscapeCookies(nsIFile* aCookiesFile);
+
+  nsresult GetSignonFileName(PRBool aReplace, char** aFileName);
+  nsresult LocateSignonsFile(char** aResult);
+
 protected:
   nsCOMPtr<nsILocalFile> mSourceProfile;
   nsCOMPtr<nsILocalFile> mTargetProfile;

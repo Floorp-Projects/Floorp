@@ -64,4 +64,10 @@ void ParseOverrideServers(char* aServers, nsIPrefBranch* aBranch);
 void SetProxyPref(const nsACString& aHostPort, const char* aPref, 
                   const char* aPortPref, nsIPrefBranch* aPrefs);
 
+typedef struct { 
+  PRUnichar* fileName; 
+  PRUint32 sourceFlag;
+  PRBool replaceOnly;
+} MIGRATIONDATA;
+
 #endif

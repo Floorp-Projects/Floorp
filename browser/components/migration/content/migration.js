@@ -72,7 +72,18 @@ var MigrationWizard = {
       this._source = newSource;
 
     // check for more than one source profile
-    this._wiz.currentPage.next = this._migrator.sourceHasMultipleProfiles ? "selectProfile" : "importItems";
+    if (this._migrator.sourceHasMultipleProfiles)
+      this._wiz.currentPage.next = "selectProfile";
+    else {
+      this._wiz.currentPage.next = "importItems";
+      var sourceProfiles = this._migrator.sourceProfiles;
+      if (sourceProfiles && sourceProfiles.Count() == 1) {
+        var profileName = sourceProfiles.QueryElementAt(0, Components.interfaces.nsISupportsString);
+        this._selectedProfile = profileName.data;
+      }
+      else
+        this._selectedProfile = "";
+    }
   },
   
   // 2 - [Profile Selection]
@@ -123,7 +134,7 @@ var MigrationWizard = {
     
     var bundle = document.getElementById("bundle");
     
-    var items = this._migrator.getMigrateData(this._selectedProfile);
+    var items = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
     for (var i = 0; i < 32; ++i) {
       var itemID = (items >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {

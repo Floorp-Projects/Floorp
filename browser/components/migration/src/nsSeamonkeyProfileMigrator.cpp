@@ -46,7 +46,6 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsSeamonkeyProfileMigrator.h"
@@ -110,31 +109,62 @@ nsSeamonkeyProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUn
 }
 
 NS_IMETHODIMP
-nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
+                                           PRBool aReplace, 
+                                           PRUint32* aResult)
 {
   if (!mSourceProfile) 
     GetSourceProfile(aProfile);
 
-  PRBool exists;
-  const PRUnichar* fileNames[] = { FILE_NAME_PREFS.get(), 
-                                   FILE_NAME_COOKIES.get(),
-                                   FILE_NAME_HISTORY.get(),
-                                   FILE_NAME_BOOKMARKS.get(),
-                                   FILE_NAME_DOWNLOADS.get(),
-                                   FILE_NAME_MIMETYPES.get() };
-  const PRUint32 sourceFlags[] = { nsIBrowserProfileMigrator::SETTINGS, 
+  const MIGRATIONDATA data[] = { { ToNewUnicode(FILE_NAME_PREFS),
+                                   nsIBrowserProfileMigrator::SETTINGS,
+                                   PR_TRUE },
+                                 { ToNewUnicode(FILE_NAME_COOKIES),
                                    nsIBrowserProfileMigrator::COOKIES,
+                                   PR_FALSE },
+                                 { ToNewUnicode(FILE_NAME_HISTORY),
                                    nsIBrowserProfileMigrator::HISTORY,
+                                   PR_TRUE },
+                                 { ToNewUnicode(FILE_NAME_BOOKMARKS),
                                    nsIBrowserProfileMigrator::BOOKMARKS,
+                                   PR_FALSE },
+                                 { ToNewUnicode(FILE_NAME_DOWNLOADS),
                                    nsIBrowserProfileMigrator::OTHERDATA,
-                                   nsIBrowserProfileMigrator::OTHERDATA };
+                                   PR_TRUE },
+                                 { ToNewUnicode(FILE_NAME_MIMETYPES),
+                                   nsIBrowserProfileMigrator::OTHERDATA,
+                                   PR_TRUE } };
+                                                                  
   nsCOMPtr<nsIFile> sourceFile; 
+  PRBool exists;
   for (PRInt32 i = 0; i < 6; ++i) {
+    // Don't list items that can only be imported in replace-mode when
+    // we aren't being run in replace-mode.
+    if (!aReplace && data[i].replaceOnly) 
+      continue;
+
     mSourceProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(nsDependentString(fileNames[i]));
+    sourceFile->Append(nsDependentString(data[i].fileName));
     sourceFile->Exists(&exists);
     if (exists)
-      *aResult |= sourceFlags[i];
+      *aResult |= data[i].sourceFlag;
+
+    nsCRT::free(data[i].fileName);
+  }
+
+  // Now locate passwords
+  nsXPIDLCString signonsFileName;
+  GetSignonFileName(aReplace, getter_Copies(signonsFileName));
+
+  if (!signonsFileName.IsEmpty()) {
+    nsAutoString fileName; fileName.AssignWithConversion(signonsFileName);
+    nsCOMPtr<nsIFile> sourcePasswordsFile;
+    mSourceProfile->Clone(getter_AddRefs(sourcePasswordsFile));
+    sourcePasswordsFile->Append(fileName);
+    
+    sourcePasswordsFile->Exists(&exists);
+    if (exists)
+      *aResult |= nsIBrowserProfileMigrator::PASSWORDS;
   }
 
   return NS_OK;
@@ -556,15 +586,11 @@ nsSeamonkeyProfileMigrator::CopyCookies(PRBool aReplace)
   if (aReplace)
     rv = CopyFile(FILE_NAME_COOKIES, FILE_NAME_COOKIES);
   else {
-    nsCOMPtr<nsICookieManager2> cookieManager(do_GetService(NS_COOKIEMANAGER_CONTRACTID));
-    if (!cookieManager)
-      return NS_ERROR_OUT_OF_MEMORY;
-
     nsCOMPtr<nsIFile> seamonkeyCookiesFile;
     mSourceProfile->Clone(getter_AddRefs(seamonkeyCookiesFile));
     seamonkeyCookiesFile->Append(FILE_NAME_COOKIES);
 
-    rv = cookieManager->ReadCookies(seamonkeyCookiesFile);
+    rv = ImportNetscapeCookies(seamonkeyCookiesFile);
   }
   return rv;
 }
@@ -581,22 +607,7 @@ nsSeamonkeyProfileMigrator::CopyPasswords(PRBool aReplace)
   nsresult rv;
 
   nsXPIDLCString signonsFileName;
-  if (aReplace) {
-    // Find out what the signons file was called, this is stored in a pref
-    // in Seamonkey.
-    nsCOMPtr<nsIPrefService> psvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    psvc->ResetPrefs();
-
-    nsCOMPtr<nsIFile> seamonkeyPrefsFile;
-    mSourceProfile->Clone(getter_AddRefs(seamonkeyPrefsFile));
-    seamonkeyPrefsFile->Append(FILE_NAME_PREFS);
-    psvc->ReadUserPrefs(seamonkeyPrefsFile);
-
-    nsCOMPtr<nsIPrefBranch> branch(do_QueryInterface(psvc));
-    rv = branch->GetCharPref("signon.SignonFileName", getter_Copies(signonsFileName));
-  }
-  else 
-    LocateSignonsFile(getter_Copies(signonsFileName));
+  GetSignonFileName(aReplace, getter_Copies(signonsFileName));
 
   if (signonsFileName.IsEmpty())
     return NS_ERROR_FILE_NOT_FOUND;
@@ -613,45 +624,6 @@ nsSeamonkeyProfileMigrator::CopyPasswords(PRBool aReplace)
     rv = pmi->ReadPasswords(seamonkeyPasswordsFile);
   }
   return rv;
-}
-
-nsresult
-nsSeamonkeyProfileMigrator::LocateSignonsFile(char** aResult)
-{
-  nsCOMPtr<nsISimpleEnumerator> entries;
-  nsresult rv = mSourceProfile->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCAutoString fileName;
-  do {
-    PRBool hasMore = PR_FALSE;
-    rv = entries->HasMoreElements(&hasMore);
-    if (NS_FAILED(rv) || !hasMore) break;
-
-    nsCOMPtr<nsISupports> supp;
-    rv = entries->GetNext(getter_AddRefs(supp));
-    if (NS_FAILED(rv)) break;
-
-    nsCOMPtr<nsIFile> currFile(do_QueryInterface(supp));
-
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewFileURI(getter_AddRefs(uri), currFile);
-    if (NS_FAILED(rv)) break;
-    nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-
-    nsCAutoString extn;
-    url->GetFileExtension(extn);
-
-    if (extn.EqualsIgnoreCase("s")) {
-      url->GetFileName(fileName);
-      break;
-    }
-  }
-  while (1);
-
-  *aResult = ToNewCString(fileName);
-
-  return NS_OK;
 }
 
 nsresult
