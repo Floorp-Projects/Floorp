@@ -22,6 +22,7 @@
 
 class nsTreeCellFrame;
 class nsTreeRowGroupFrame;
+class nsTreeTwistyListener;
 
 class nsTreeFrame : public nsTableFrame
 {
@@ -55,11 +56,19 @@ public:
                              nsGUIEvent*     aEvent,
                              nsEventStatus&  aEventStatus);
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
+
 protected:
   nsTreeFrame();
   virtual ~nsTreeFrame();
 
 protected: // Data Members
   PRBool mSlatedForReflow; // If set, don't waste time scheduling excess reflows.
+  nsTreeTwistyListener* mTwistyListener;
 
 }; // class nsTreeFrame
