@@ -2,10 +2,13 @@
  **/
 
 @import url(chrome://communicator/skin/);
+@import url(chrome://communicator/skin/bookmarks/bookmarks.css);
 
-box#sidebar-parent {
-	margin-right: 2px;
-}
+
+#sidebar-parent 
+  {
+	  margin-right          : 2px;
+  }
 
 /*
  * Rules for 'hiding' portions of the chrome for special
@@ -38,141 +41,78 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 /*
  * Images for the main buttons
  */
-#back-button {
-	list-style-image: url("chrome://navigator/skin/back.gif");
-}
+#back-button 
+  {
+	  list-style-image      : url("chrome://navigator/skin/back.gif");
+  }
 
-#forward-button {
-	list-style-image: url("chrome://navigator/skin/forward.gif");
-}
+#forward-button 
+  {
+	  list-style-image      : url("chrome://navigator/skin/forward.gif");
+  }
 
-#stop-button {
-	list-style-image: url("chrome://navigator/skin/stop.gif");
-} 
+#stop-button 
+  {
+	  list-style-image      : url("chrome://navigator/skin/stop.gif");
+  } 
 
-#reload-button {
-	list-style-image: url("chrome://navigator/skin/reload.gif");
-}
+#reload-button 
+  {
+	  list-style-image      : url("chrome://navigator/skin/reload.gif");
+  }
 
 /*all the urlbar stuff*/
-#page-proxy-button { 
-	background-color: white; 
-	margin: 0px; 
-	min-width: 10px;
-	border: none; 
-	list-style-image:url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
-} 
+#page-proxy-button 
+  {
+	  list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
+  } 
 
-#urlbar { 
-	width: 100%; 
-	vertical-align: middle;
-	padding: 0px;
-	margin: 0px; 
-	font: inherit;
-	border: none;
-} 
+#sessionhist-popup 
+  {
+	  margin                : 0px 4px 0px 0px;
+	  width                 : 10px; 
+	  list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+  } 
 
-box#url-bar-box {
-	border: 2px solid white;
-	margin: 0px;
-	margin-left: 10px;
-	padding: 0px;
-	background-color: white;
-	-moz-border-radius: 5px;
-	margin-bottom: 8px;
-	font: inherit;
-}
+#action-popup 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+	  margin                : 0px; 
+	  -moz-border-radius    : 4px;
+  }
 
-box#searchbutton {
-	margin: 0px;
-	margin-left: 5px;
-	padding: 0px;
-	margin-bottom: 10px;
-	font: inherit;
-}
+#content-frame 
+  {
+    min-width             : 0px;
+    min-height            : 0px;
+  }
 
-#sessionhist-popup { 
-	background-color: #99CCCC; 
-	margin: 0px 4px 0px 0px;
-	width: 10px; 
-	border: none; 
-	-moz-border-radius: 4px;
-	list-style-image:url("chrome://global/skin/scroll-down.gif"); 
-} 
-
-#action-popup { 
-	list-style-image:url("chrome://global/skin/scroll-down.gif"); 
-	background-color: #99CCCC;
-	margin: 0px; 
-	-moz-border-radius: 4px;
-}
-/*end urlbar stuff*/
-
-
-iframe#content-frame {
- min-width: 0px;
- min-height: 0px;
-}
-
-#urlbar {
-   min-width: 10em;
-}
-
-
-/**
- * Toolbox
- */
-toolbox#main-toolbox {
-	min-width: 10px;
-	background-color: #CCCCCC;
-	margin-right: 2px;
-}
-
-toolbox#main-toolbox:toolbox-normal {
-	background-color: #CCCCCC;
-}
-
-toolbox#main-toolbox:toolbox-rollover {
-	background-color: #CCCCCC;
-}
-
-
-/**
- * PersonalToolbar
- */
-toolbar#PersonalToolbar {
-	overflow: hidden;
-	min-width: 1px;
-    color: white;
-    background-color: #003366;
-    padding: 0px;
-    padding-right: 0px;
-    min-height: 1em;
-    border: none;
-}
-
-toolbar#PersonalToolbar:-moz-drop-marker {
-   color: white;
-}
-
-#personaltoolbar-endcap { 
-	background-color: #CCCCCC;
-	min-width: 68px;
-	max-width: 68px;
-	background-image: url("chrome://navigator/skin/n-box-persbar.gif");
-	background-repeat: no-repeat;
-	background-position: 100% 0%;
-}
-
-spring.personaltoolbarspacer {
-   max-width: 1em;
-   min-width: 0.3em;
-   width: 1em;
-}
-
-/**
- * toolbox
- */
-:toolbox-normal { 
-	background-color: #003366; 
-} 
+#statusbar-icon 
+  {
+    width                 : 100px;
+  }
+  
+#go-button  
+  {
+    display               : none;
+  }
+  
+#nav-bar-inner
+  {
+    padding-left          : 6px;
+  }
+  
+#search-button
+  {
+    margin-right          : 1px;
+  }
+  
+#homebutton
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
+  }
+  
+.menuitem-iconic
+  {
+    padding               : 2px;
+  }
