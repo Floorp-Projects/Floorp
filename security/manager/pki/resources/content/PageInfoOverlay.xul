@@ -51,6 +51,12 @@
         else
           w = window.opener.frames[0];
 
+        var hName = null;
+        try
+        {
+           hName = w.location.host;
+        } catch(exception){}
+
         var ui = security._getSecurityUI();
         var sp = ui.QueryInterface(nsISSLStatusProvider);
         var status = sp.SSLStatus;
@@ -60,9 +66,9 @@
 
           issuerName = this.mapIssuerOrganization(cert.issuerOrganization);
           if (!issuerName) issuerName = cert.issuerName;
-
+        
           return {
-            hostName : w.location.host,
+            hostName : hName,
             cAName : issuerName,
             encryptionAlgorithm : status.cipherName,
             encryptionStrength : status.secretKeyLength,
@@ -70,7 +76,7 @@
           };
         } else {
           return {
-            hostName : w.location.host,
+            hostName : hName,
             cAName : "",
             encryptionAlgorithm : "",
             encryptionStrength : 0,
@@ -161,8 +167,11 @@
         hdr = bundle.GetStringFromName("pageInfo_NoEncryption");
         document.getElementById("security-privacy").setAttribute("value", hdr);
 
-        msg1 = bundle.formatStringFromName("pageInfo_Privacy_None1",
-                                               [ info.hostName ], 1);
+        if(info.hostName != null)
+          msg1 = bundle.formatStringFromName("pageInfo_Privacy_None1", [ info.hostName ], 1);
+        else
+          msg1 = bundle.GetStringFromName("pageInfo_Privacy_None3");
+
         setText("security-privacy-msg1", msg1);
 
         msg2 = bundle.GetStringFromName("pageInfo_Privacy_None2");
