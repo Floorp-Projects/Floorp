@@ -56,7 +56,10 @@ function StartUp()
   }
   catch(e) {
   }
-  
+
+  var profileTree = document.getElementById("profiles");
+  profileTree.focus();
+    
   DoEnabling();
 }
 
