@@ -252,7 +252,8 @@ MSG_MimeRelatedSubpart::MSG_MimeRelatedSubpart(MSG_MimeRelatedSaver *parent,
 											   char *pMime, int16 part_csid, char *pFilename)
 	: MSG_SendPart(NULL, part_csid), m_pOriginalURL(NULL), 
 	  m_pLocalURL(NULL), m_pParentFS(parent),
-	  m_pContentID(NULL), m_pContentName(NULL), m_rootPart(FALSE) , m_pStreamOut(NULL), m_pEncoding(NULL)
+	  m_pContentID(NULL), m_pEncoding(NULL), m_pContentName(NULL),
+	  m_pStreamOut(NULL), m_rootPart(FALSE)
 {
 	m_filetype = xpFileToPost;
 	
@@ -335,10 +336,10 @@ MSG_MimeRelatedSubpart::WriteEncodedMessageBody(const char *buf, int32 size,
 	int returnVal = 0;
 
 	XP_ASSERT(subpart->m_state != NULL);
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
   if (subpart->m_state)
 		returnVal = mime_write_message_body(subpart->m_state, (char *) buf, size);
-#endif
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 
 	return returnVal;
 }
@@ -432,7 +433,7 @@ MSG_MimeRelatedSubpart::Write(void)
 	// that isn't text.
 	if (m_type && (!m_rootPart))
 	{
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
     // Uuencode only if we have to, otherwise use base64
 		if (m_pParentFS->m_pPane->
 			GetCompBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK))
@@ -455,7 +456,7 @@ MSG_MimeRelatedSubpart::Write(void)
 								 WriteEncodedMessageBody,
 								 this));
 		}
-#endif /*MOZ_ENDER_MAIL*/
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 	}
 
 	// Horrible hack: if we got a local filename then we're the root lump,
@@ -561,6 +562,7 @@ extern "C" int mimer_output_func(const char *p_buffer,int32 p_size,void *closure
 void
 MSG_MimeRelatedStreamSaver::Complete( Bool bSuccess, EDT_ITapeFileSystemComplete *pfComplete, void *pArg )
 {
+ 	int32 i;
  	m_pEditorCompletionFunc = pfComplete;
 	m_pEditorCompletionArg = pArg;
 
@@ -575,7 +577,7 @@ MSG_MimeRelatedStreamSaver::Complete( Bool bSuccess, EDT_ITapeFileSystemComplete
     {
       t_file = XP_FileOpen(m_pFilename,xpTemporary,XP_FILE_WRITE);
       GenericMimeRelatedData *t_data = GenericMime_Init(mime_make_separator(""),mimer_output_func,t_file);
-      for (int32 i=0;i< m_pPart->GetNumChildren();i++)
+      for (i=0;i< m_pPart->GetNumChildren();i++)
       {
         MSG_MimeRelatedSubpart *t_part;
         t_part = (MSG_MimeRelatedSubpart *)m_pPart->GetChild(i);
@@ -628,7 +630,7 @@ MSG_MimeRelatedSaver
 */
 
 extern char * msg_generate_message_id(void);
-#ifdef MOZ_ENDER_MIME
+#if defined(MOZ_ENDER_MIME) && !defined(MOZ_MAIL_COMPOSE)
 char *
 msg_generate_message_id (void)
 {
@@ -663,7 +665,7 @@ msg_generate_message_id (void)
   return PR_smprintf("<%lX.%lX@%s>",
 					 (unsigned long) now, (unsigned long) salt, host);
 }
-#endif //MOZ_ENDER_MIME
+#endif //MOZ_ENDER_MIME && !MOZ_MAIL_COMPOSE
 // Constructor
 MSG_MimeRelatedSaver::MSG_MimeRelatedSaver(MSG_CompositionPane *pane, 
 										   MWContext *context, 
@@ -675,10 +677,10 @@ MSG_MimeRelatedSaver::MSG_MimeRelatedSaver(MSG_CompositionPane *pane,
 										   MSG_AttachedFile *attachedFiles,
 										   DeliveryDoneCallback cb,
 										   char **ppOriginalRootURL)
-	: m_pContext(context), m_pBaseURL(NULL), m_pPane(pane),
-	  m_pFields(fields), m_digest(digest_p), m_deliverMode(deliver_mode),
-	  m_pBody(body), m_bodyLength(body_length), 
-	  m_pAttachedFiles(attachedFiles), m_cbDeliveryDone(cb), m_pSourceBaseURL(NULL)
+	: m_pContext(context), m_pBaseURL(NULL), m_pSourceBaseURL(NULL),
+	  m_pPane(pane), m_pFields(fields), m_digest(digest_p),
+	  m_deliverMode(deliver_mode), m_pBody(body), m_bodyLength(body_length), 
+	  m_pAttachedFiles(attachedFiles), m_cbDeliveryDone(cb)
 
 {
   // Generate the message ID.
@@ -960,9 +962,10 @@ MSG_MimeRelatedSaver::CopyURLInfo(intn iFileIndex, const URL_Struct *pURL)
 // FALSE if it failed.
 void
 MSG_MimeRelatedSaver::Complete(Bool bSuccess, 
-                                                       EDT_ITapeFileSystemComplete *pfComplete, void *pArg )
+                               EDT_ITapeFileSystemComplete *pfComplete,
+                               void *pArg )
 {
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
  	m_pEditorCompletionFunc = pfComplete;
 	m_pEditorCompletionArg = pArg;
 
@@ -1001,7 +1004,7 @@ MSG_MimeRelatedSaver::Complete(Bool bSuccess,
     // Call our UrlExit routine to perform cleanup.
     UrlExit(m_pPane->GetContext(), this, MK_INTERRUPTED, NULL);
 	}
-#endif //#ifndef MOZ_ENDER_MIME
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 }
 
 void

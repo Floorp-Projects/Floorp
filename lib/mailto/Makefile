@@ -29,6 +29,7 @@ CSRCS	= \
 	appledbl.c \
 	bh_strm.c \
 	m_binhex.c \
+	mprmime.c \
 	msgutils.c \
 	$(NULL)
 

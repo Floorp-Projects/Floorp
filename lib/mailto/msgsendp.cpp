@@ -229,7 +229,7 @@ MSG_SendPart* MSG_SendPart::GetChild(int32 which)
 
 int MSG_SendPart::PushBody(char* buffer, int32 length)
 {
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
   int status = 0;
 	char* encoded_data = buffer;
 
@@ -346,7 +346,7 @@ int MSG_SendPart::PushBody(char* buffer, int32 length)
 	return status;
 #else
   return 0;
-#endif //MOZ_ENDER_MIME
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 }
 
 
@@ -486,7 +486,7 @@ static int divide_content_headers(const char *headers,
 extern "C" {
 extern char *mime_make_separator(const char *prefix);
 }
-#ifdef MOZ_ENDER_MIME
+#if defined(MOZ_ENDER_MIME) && ! defined(MOZ_MAIL_COMPOSE)
 //moved this here
 extern "C" char *
 mime_make_separator(const char *prefix)
@@ -502,12 +502,12 @@ mime_make_separator(const char *prefix)
 					 rand_buf[4], rand_buf[5], rand_buf[6], rand_buf[7],
 					 rand_buf[8], rand_buf[9], rand_buf[10], rand_buf[11]);
 }
-#endif
+#endif //MOZ_ENDER_MIME && !MOZ_MAIL_COMPOSE
 
 
 int MSG_SendPart::Write()
 {
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
   int status = 0;
     char *separator = 0;
     XP_File file = NULL;
@@ -804,5 +804,5 @@ FAIL:
     return status;
 #else
     return 0;
-#endif //MOZ_ENDER_MIME
+#endif //!MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE
 }
