@@ -132,8 +132,8 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
                            : ":-moz-math-font-style-normal";
     nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontStyle)));
     nsCOMPtr<nsIStyleContext> newStyleContext;
-    aPresContext.ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
-                                              PR_FALSE, getter_AddRefs(newStyleContext));          
+    aPresContext->ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
+                                               PR_FALSE, getter_AddRefs(newStyleContext));          
     
     if (newStyleContext && newStyleContext.get() != mStyleContext) {
     
@@ -147,7 +147,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
       nsIFrame* childFrame = firstChild;
       while (childFrame) {
         childFrame->SetParent(newFrame);
-        aPresContext.ReParentStyleContext(childFrame, newStyleContext);
+        aPresContext->ReParentStyleContext(childFrame, newStyleContext);
         childFrame->GetNextSibling(&childFrame);
       }
       newFrame->SetInitialChildList(aPresContext, nsnull, firstChild);
