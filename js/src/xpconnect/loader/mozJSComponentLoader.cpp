@@ -1141,7 +1141,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         // what I want to do here is QI for a Component Registration Manager.  Since this 
         // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
         nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
-        if (obsoleteManager)
+        if (!obsoleteManager)
             return nsnull;
 
         if (NS_FAILED(obsoleteManager->SpecForRegistryLocation(aLocation, &component)))
