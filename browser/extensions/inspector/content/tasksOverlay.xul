@@ -6,6 +6,26 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
+  
+  <script type="application/x-javascript">
+  <![CDATA[
+    function inspectorWindowLoad()
+    {
+      setTimeout("initWindowMediator()", 0);
+    }
+    
+    function initWindowMediator()
+    {
+      // Load the Window DataSource so that browser windows opened subsequent to DOM
+      // Inspector show up in the DOM Inspector's window list.
+      var windowDS = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
+                               .getService(Components.interfaces.nsIWindowDataSource);
+    }
+  
+    window.addEventListener("load", inspectorWindowLoad, false);
+  
+  ]]>
+  </script>
 
   <commandset id="mainCommandSet">
     <command id="Tasks:Inspector" oncommand="inspectDOMDocument();"/>
