@@ -62,6 +62,17 @@ public:
   NS_IMETHOD NewFrameData(gfxIImageFrame *aFrame, const nsRect * aRect);
 
 private:
+  /** "Disposal" method indicates how the image should be handled before the 
+   *   subsequent image is displayed. 
+   */
+  enum {
+    DISPOSE_CLEAR_ALL       = -1, //!< Clear the whole image, revealing
+                                  //!  what was there before the gif displayed
+    DISPOSE_NOT_SPECIFIED    = 0, //!< Leave frame, let new frame draw on top
+    DISPOSE_KEEP             = 1, //!< Leave frame, let new frame draw on top
+    DISPOSE_CLEAR            = 2, //!< Clear the frame's area, revealing bg
+    DISPOSE_RESTORE_PREVIOUS = 3  //!< Restore the previous (composited) frame
+  };
 
   inline PRUint32 inlinedGetNumFrames() {
     PRUint32 nframes;
@@ -78,12 +89,11 @@ private:
   }
 
   inline nsresult inlinedGetCurrentFrame(gfxIImageFrame **_retval) {
-    if (mCompositingFrame) {
+    if (mLastCompositedFrameIndex == mCurrentAnimationFrameIndex) {
       *_retval = mCompositingFrame;
       NS_ADDREF(*_retval);
       return NS_OK;
     }
-
     return inlinedGetFrameAt(mCurrentAnimationFrameIndex, _retval);
   }
 
@@ -147,9 +157,13 @@ private:
   nsSupportsArray      mFrames;
   //! Size of GIF (not necessarily the frame)
   nsSize               mSize;
+  //! Area of the first frame that needs to be redrawn on subsequent loops
+  nsRect               mFirstFrameRefreshArea;
 
   PRInt32              mCurrentDecodingFrameIndex; // 0 to numFrames-1
   PRInt32              mCurrentAnimationFrameIndex; // 0 to numFrames-1
+  //! Track the last composited frame for Optimizations (See DoComposite code)
+  PRInt32              mLastCompositedFrameIndex;
   PRBool               mCurrentFrameIsFinishedDecoding;
   //! Whether we can assume there will be no more frames
   //! (and thus loop the animation)
@@ -169,6 +183,9 @@ private:
    *
    * Some GIF animations will use the mCompositeFrame to composite images
    * and just hand this back to the caller when it is time to draw the frame.
+   * NOTE: When clearing mCompositingFrame, remember to set 
+   *       mLastCompositedFrameIndex to -1.  Code assume that if
+   *       mLastCompositedFrameIndex >= 0 then mCompositingFrame exists.
    */
   nsCOMPtr<gfxIImageFrame> mCompositingFrame;
 

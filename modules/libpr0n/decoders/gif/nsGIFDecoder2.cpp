@@ -68,8 +68,7 @@ static int PR_CALLBACK BeginImageFrame(
 static int PR_CALLBACK EndImageFrame(
   void*    aClientData, 
   PRUint32 aFrameNumber,
-  PRUint32 aDelayTimeout,
-  PRUint32 aDisposal);
+  PRUint32 aDelayTimeout);
 static int PR_CALLBACK SetupColorspaceConverter();
 static int PR_CALLBACK ResetPalette();
 static int PR_CALLBACK InitTransparentPixel();
@@ -366,8 +365,7 @@ int BeginImageFrame(
 int EndImageFrame(
   void*    aClientData, 
   PRUint32 aFrameNumber,
-  PRUint32 aDelayTimeout,
-  PRUint32 aDisposal)  /* Time this frame should be displayed before the next frame 
+  PRUint32 aDelayTimeout)  /* Time this frame should be displayed before the next frame 
                               we can't have this in the image frame init because it doesn't
                               show up in the GIF frame header, it shows up in a sub control
                               block.*/
@@ -389,8 +387,6 @@ int EndImageFrame(
   decoder->mImageContainer->EndFrameDecode(aFrameNumber, aDelayTimeout);
     
   if (decoder->mObserver && decoder->mImageFrame) {
-    decoder->mImageFrame->SetFrameDisposalMethod(aDisposal);
-
     decoder->FlushImageData();
 
     if (aFrameNumber == 1) {
@@ -471,6 +467,7 @@ int HaveDecodedRow(
       return 0;
     }
 
+    decoder->mImageFrame->SetFrameDisposalMethod(decoder->mGIFStruct->disposal_method);
     decoder->mImageContainer->AppendFrame(decoder->mImageFrame);
 
     if (decoder->mObserver)
