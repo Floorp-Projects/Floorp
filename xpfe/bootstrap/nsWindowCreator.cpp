@@ -117,7 +117,7 @@ nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;
 
-  PRUint32         allow = nsIPopupWindowManager::eAllow;
+  PRUint32         allow = nsIPopupWindowManager::ALLOW_POPUP;
   nsCOMPtr<nsIURI> parentURI;
 
   GetParentURI(aParent, getter_AddRefs(parentURI));
@@ -127,9 +127,9 @@ nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
   nsCOMPtr<nsIXULWindow> newWindow;
 
   if (aParent) {
-    if (allow == nsIPopupWindowManager::eDisallow)
+    if (allow == nsIPopupWindowManager::DENY_POPUP)
       return NS_OK; // ruse to not give scripts a catchable error
-    if (allow == nsIPopupWindowManager::eAllow &&
+    if (allow == nsIPopupWindowManager::ALLOW_POPUP &&
         (aContextFlags & PARENT_IS_LOADING_OR_RUNNING_TIMEOUT))
       aContextFlags &= ~PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
 
@@ -172,12 +172,12 @@ nsWindowCreator::AllowWindowCreation(nsIURI *aURI)
 {
   nsCOMPtr<nsIPopupWindowManager> pm(do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID));
   if (!pm)
-    return nsIPopupWindowManager::eAllow;
+    return nsIPopupWindowManager::ALLOW_POPUP;
 
   PRUint32 permission;
   if (NS_SUCCEEDED(pm->TestPermission(aURI, &permission)))
     return permission;
-  return nsIPopupWindowManager::eAllow;
+  return nsIPopupWindowManager::ALLOW_POPUP;
 }
 
 void
