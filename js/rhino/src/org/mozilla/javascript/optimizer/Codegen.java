@@ -134,7 +134,7 @@ public class Codegen extends Interpreter
         if (e != null)
             throw new RuntimeException("Malformed optimizer package " + e);
 
-        if (scriptOrFn.getType() == Token.FUNCTION) {
+        if (returnFunction) {
             NativeFunction f;
             try {
                 Constructor ctor = result.getConstructors()[0];
@@ -144,8 +144,8 @@ public class Codegen extends Interpreter
                 throw new RuntimeException
                     ("Unable to instantiate compiled class:"+ex.toString());
             }
-            int ftype = ((FunctionNode)scriptOrFn).getFunctionType();
-            OptRuntime.initFunction(f, ftype, scope, cx);
+            OptRuntime.initFunction(
+                f, FunctionNode.FUNCTION_STATEMENT, scope, cx);
             return f;
         } else {
             Script script;
