@@ -4154,8 +4154,9 @@ nsXULDocument::PrepareToWalk()
     PRUint32 count;
     overlays->Count(&count);
     for (PRInt32 i = count - 1; i >= 0; --i) {
-        nsCOMPtr<nsISupports> isupports = dont_AddRef(overlays->ElementAt(i));
+        nsISupports* isupports = overlays->ElementAt(i);
         mUnloadedOverlays->AppendElement(isupports);
+        NS_IF_RELEASE(isupports);
     }
 
 
@@ -5007,9 +5008,10 @@ nsXULDocument::AddPrototypeSheets()
     PRUint32 count;
     sheets->Count(&count);
     for (PRUint32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsISupports> isupports = dont_AddRef(sheets->ElementAt(i));
-
+        nsISupports* isupports = sheets->ElementAt(i);
         nsCOMPtr<nsIURI> uri = do_QueryInterface(isupports);
+		NS_IF_RELEASE(isupports);
+
         NS_ASSERTION(uri != nsnull, "not a URI!!!");
         if (! uri)
             return NS_ERROR_UNEXPECTED;
