@@ -146,6 +146,32 @@ createNavCenterVocab () {
   gNavCenter->RDF_resultType = RDF_GetResource (gCoreDB, "resultType", true);
   gNavCenter->RDF_HTMLType = RDF_GetResource (gCoreDB, "HTMLPage", true);
   gNavCenter->RDF_Command = RDF_GetResource (gCoreDB, "Command", true);
+
+  /* NavCenter appearance styles */
+
+  gNavCenter->treeFGColor = RDF_GetResource (gCoreDB, "treeFGColor", true);
+  gNavCenter->treeBGColor = RDF_GetResource (gCoreDB, "treeBGColor", true);
+  gNavCenter->treeBGURL = RDF_GetResource (gCoreDB, "treeBGURL", true);
+  gNavCenter->showTreeConnections = RDF_GetResource (gCoreDB, "showTreeConnections", true);
+  gNavCenter->treeConnectionFGColor = RDF_GetResource (gCoreDB, "treeConnectionFGColor", true);
+  gNavCenter->treeOpenTriggerIconURL = RDF_GetResource (gCoreDB, "treeOpenTriggerIconURL", true);
+  gNavCenter->treeClosedTriggerIconURL = RDF_GetResource (gCoreDB, "treeClosedTriggerIconURL", true);
+
+  gNavCenter->selectionFGColor = RDF_GetResource (gCoreDB, "selectionFGColor", true);
+  gNavCenter->selectionBGColor = RDF_GetResource (gCoreDB, "selectionBGColor", true);
+
+  gNavCenter->columnHeaderFGColor = RDF_GetResource (gCoreDB, "columnHeaderFGColor", true);
+  gNavCenter->columnHeaderBGColor = RDF_GetResource (gCoreDB, "columnHeaderBGColor", true);
+  gNavCenter->columnHeaderBGURL = RDF_GetResource (gCoreDB, "columnHeaderBGURL", true);
+  gNavCenter->showColumnHeaders = RDF_GetResource (gCoreDB, "showColumnHeaders", true);
+  gNavCenter->showColumnHeaderDividers = RDF_GetResource (gCoreDB, "showColumnHeaderDividers", true);
+
+  gNavCenter->sortColumnFGColor = RDF_GetResource (gCoreDB, "sortColumnFGColor", true);
+  gNavCenter->sortColumnBGColor = RDF_GetResource (gCoreDB, "sortColumnBGColor", true);
+
+  gNavCenter->titleBarFGColor = RDF_GetResource (gCoreDB, "titleBarFGColor", true);
+  gNavCenter->titleBarBGColor = RDF_GetResource (gCoreDB, "titleBarBGColor", true);
+  gNavCenter->titleBarBGURL = RDF_GetResource (gCoreDB, "titleBarBGURL", true);
 }
 
 

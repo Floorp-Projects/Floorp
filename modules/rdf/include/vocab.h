@@ -90,6 +90,28 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_resultType;
   RDF_Resource RDF_HTMLType;
   RDF_Resource RDF_Command;
+
+  /* NavCenter appearance styles */
+
+  RDF_Resource treeFGColor;
+  RDF_Resource treeBGColor;
+  RDF_Resource treeBGURL;
+  RDF_Resource showTreeConnections;
+  RDF_Resource treeConnectionFGColor;
+  RDF_Resource treeOpenTriggerIconURL;
+  RDF_Resource treeClosedTriggerIconURL;
+  RDF_Resource selectionFGColor;
+  RDF_Resource selectionBGColor;
+  RDF_Resource columnHeaderFGColor;
+  RDF_Resource columnHeaderBGColor;
+  RDF_Resource columnHeaderBGURL;
+  RDF_Resource showColumnHeaders;
+  RDF_Resource showColumnHeaderDividers;
+  RDF_Resource sortColumnFGColor;
+  RDF_Resource sortColumnBGColor;
+  RDF_Resource titleBarFGColor;
+  RDF_Resource titleBarBGColor;
+  RDF_Resource titleBarBGURL;
 } RDF_NCVocabStruct;
 
 typedef RDF_NCVocabStruct* RDF_NCVocab;
