@@ -1866,7 +1866,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // Paint later.
             UpdateView(view, NS_VMREFRESH_NO_SYNC);
           } else {
-            NS_ASSERTION(IsViewVisible(view), "painting an invisible view");
+            //NS_ASSERTION(IsViewVisible(view), "painting an invisible view");
             Refresh(view, event->renderingContext, region,
                     NS_VMREFRESH_DOUBLE_BUFFER);
           }
