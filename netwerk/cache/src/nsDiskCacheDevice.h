@@ -29,6 +29,7 @@
 #include "nsCacheEntry.h"
 
 class DiskCacheEntry;
+class nsISupportsArray;
 
 class nsDiskCacheDevice : public nsCacheDevice {
 public:
@@ -75,6 +76,9 @@ private:
 
     nsresult deleteDiskCacheEntry(DiskCacheEntry * diskEntry);
     nsresult scavengeDiskCacheEntries(DiskCacheEntry * diskEntry);
+
+    nsresult scanDiskCacheEntries(nsISupportsArray ** result);
+    nsresult evictDiskCacheEntries();
 
 private:
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
