@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.1 $ $Date: 2001/11/28 16:23:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.2 $ $Date: 2001/12/06 18:21:35 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -457,19 +457,13 @@ nssToken_ImportCertificate
     return add_object_instance(&cert->object, tok, handle, td, cc);
 }
 
-struct cert_search_index_str
-{
-    NSSDER issuer;
-    NSSDER serial;
-};
-
 static PRBool 
 compare_cert_by_issuer_sn(void *a, void *b)
 {
-    NSSCertificate *c = (NSSCertificate *)a;
-    struct cert_search_index_str *csi = (struct cert_search_index_str *)b;
-    return  (nssItem_Equal(&c->issuer, &csi->issuer, NULL) &&
-             nssItem_Equal(&c->serial, &csi->serial, NULL));
+    NSSCertificate *c1 = (NSSCertificate *)a;
+    NSSCertificate *c2 = (NSSCertificate *)b;
+    return  (nssItem_Equal(&c1->issuer, &c2->issuer, NULL) &&
+             nssItem_Equal(&c1->serial, &c2->serial, NULL));
 }
 
 static PRStatus
@@ -479,7 +473,6 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
     PRBool found;
     nssTokenCertSearch *search = (nssTokenCertSearch *)arg;
     NSSCertificate *cert = NULL;
-    struct cert_search_index_str csi;
     nssListIterator *instances;
     nssPKIObjectInstance *oi;
     CK_ATTRIBUTE issuersn_tmpl[] = {
@@ -488,6 +481,7 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
     };
     CK_ULONG ist_size = sizeof(issuersn_tmpl) / sizeof(issuersn_tmpl[0]);
     if (search->cached) {
+	NSSCertificate csi; /* a fake cert for indexing */
 	nssrv = nssCKObject_GetAttributes(h, issuersn_tmpl, ist_size,
 	                                  NULL, session, t->slot);
 	NSS_CK_ATTRIBUTE_TO_ITEM(&issuersn_tmpl[0], &csi.issuer);
@@ -603,17 +597,16 @@ nssToken_TraverseCertificatesByNickname
     if (nssrv != PR_SUCCESS) {
 	return nssrv;
     }
-#if 0
     /* This is to workaround the fact that PKCS#11 doesn't specify
      * whether the '\0' should be included.  XXX Is that still true?
      * im - this is not needed by the current softoken.  However, I'm 
      * leaving it in until I have surveyed more tokens to see if it needed.
+     * well, its needed by the builtin token...
      */
     nick_tmpl[1].ulValueLen++;
     nssrv = traverse_objects_by_template(token, sessionOpt,
 	                                 nick_tmpl, ntsize,
                                          retrieve_cert, search);
-#endif
     return nssrv;
 }
 
