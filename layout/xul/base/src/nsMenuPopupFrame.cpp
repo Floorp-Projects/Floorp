@@ -18,7 +18,7 @@
 
 
 #include "nsMenuPopupFrame.h"
-
+#include "nsXULAtoms.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -56,3 +56,22 @@ nsMenuPopupFrame::nsMenuPopupFrame()
 
 } // cntr
 
+NS_IMETHODIMP
+nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
+                       nsIContent*      aContent,
+                       nsIFrame*        aParent,
+                       nsIStyleContext* aContext,
+                       nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  nsCOMPtr<nsIStyleContext> menuStyle;
+  rv = aPresContext.ResolvePseudoStyleContextFor(aContent, 
+                                                  nsXULAtoms::dropDownMenuPseudo, 
+                                                  aContext,
+                                                  PR_FALSE,
+                                                  getter_AddRefs(menuStyle));
+
+  CreateViewForFrame(aPresContext, this, menuStyle, PR_TRUE);
+  return rv;
+}

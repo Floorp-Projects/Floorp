@@ -37,6 +37,12 @@ class nsMenuPopupFrame : public nsBoxFrame
 public:
   nsMenuPopupFrame();
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                       nsIContent*      aContent,
+                       nsIFrame*        aParent,
+                       nsIStyleContext* aContext,
+                       nsIFrame*        aPrevInFlow);
+
 protected:
 
 }; // class nsMenuPopupFrame
