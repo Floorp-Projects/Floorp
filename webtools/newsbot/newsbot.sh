@@ -21,15 +21,15 @@ if [ \( /var/mail/newsbot -nt /opt/newsbot/newsbot.html \) -o  \
      \( /opt/newsbot/newsbot.pl -nt /opt/newsbot/newsbot.html \) ]
 then
     echo "rebuilding newsbot file"
-    /opt/newsbot/newsbot.pl /var/mail/newsbot /opt/newsbot/newsbot.rdf > /opt/newsbot/newsbot.html
+    /opt/newsbot/newsbot.pl /var/mail/newsbot /opt/newsbot/newsbot.rdf.tmp > /opt/newsbot/newsbot.html
 
     # wrap file and place in newsbot directory
     /opt/newsbot/wrapnews.pl
 
-    # copy the wrappped file into the live web site.
-    cp /opt/newsbot/wrapped.html /e/docs/newsbot/index.html
+    # copy the wrappped file into file used by web site.
+    cp /opt/newsbot/wrapped.html /opt/newsbot/index.html
 
-    # copy the rdf file into the live web site.
-    cp /opt/newsbot/newsbot.rdf /e/docs/newsbot/newsbot.rdf
+    # copy the rdf file into file used by web site
+    cp /opt/newsbot/newsbot.rdf.tmp /opt/newsbot/newsbot.rdf
 
 fi
