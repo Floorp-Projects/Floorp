@@ -65,6 +65,17 @@ BOOL CSumDlg::OnInitDialog()
 	for(int i=0; i< GlobalArrayIndex; i++)
 	{
 		str2 = GlobalWidgetArray[i].name;
+		// Remove unnecessary keys (customizations not visible) in 
+		// Show Configuration Information dialog 
+		if ((str2=="Root") || (str2=="inifile") || (str2=="DefaultName") 
+			|| (str2=="Organization") || (str2=="Department") 
+			|| (str2=="Feedback") || (str2=="FeedbackChoice") 
+			|| (str2=="FeedbackButtonName") || (str2=="CustomizationList") 
+			|| (str2=="CreateReadmeIcon") || (str2=="CreateLicenseIcon") 
+			|| (str2=="IntSetupBgBitmap") || (str2=="Company_Name") 
+			|| (str2=="TechSupportNumber") || (str2=="NCIFileList") 
+			|| (str2=="NCIFileEditor"))
+			continue;
 		if (GlobalWidgetArray[i].type != "RadioButton" 
 			&& GlobalWidgetArray[i].type != "RadioGroup"
 			&& GlobalWidgetArray[i].type != "Text" 
@@ -77,6 +88,8 @@ BOOL CSumDlg::OnInitDialog()
 		{
 			if (GlobalWidgetArray[i].name != "")
 			{
+			// Display only visible customizations in the Show 
+			// Configuration Information dialog
 			tmp1=GlobalWidgetArray[i].name;
 			tmp2=GlobalWidgetArray[i].value;
 			str1 += tmp1;
