@@ -370,6 +370,7 @@ protected:
     nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode *aNode);
     nsresult        HandleSavedTokens(PRInt32 anIndex);
     nsresult        HandleKeyGen(nsIParserNode *aNode);
+    PRBool          IsAlternateTag(eHTMLTags aTag);
     
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;

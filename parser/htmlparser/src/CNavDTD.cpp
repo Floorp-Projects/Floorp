@@ -883,6 +883,23 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                 //We're going to move it to the body by storing it temporarily on the misplaced stack.
                 //However, in quirks mode, a few tags request, ambiguosly, for a BODY. - Bugs 18928, 24204.-
                 PushIntoMisplacedStack(aToken);
+                
+                if (IsAlternateTag(theTag)) {
+                  // These tags' contents are consumed as CDATA. If we simply
+                  // pushed them on the misplaced content stack, the CDATA
+                  // contents would force us to open a body, which could be
+                  // wrong. So we collect the whole tag as misplaced in one
+                  // gulp. Note that the tokenizer guarantees that there will
+                  // be an end tag.
+                  while (aToken->GetTokenType() != eToken_end ||
+                         aToken->GetTypeID() != theTag) {
+                    aToken = NS_STATIC_CAST(CHTMLToken *, mTokenizer->PopToken());
+                    PushIntoMisplacedStack(aToken);
+                  }
+
+                  return result;
+                }
+
                 if(DoesRequireBody(aToken,mTokenizer)) {
                   CToken* theBodyToken=NS_STATIC_CAST(CToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
                   result=HandleToken(theBodyToken,aParser);
@@ -1558,6 +1575,19 @@ nsresult CNavDTD::HandleKeyGen(nsIParserNode* aNode) {
   return result; 
 } 
 
+PRBool CNavDTD::IsAlternateTag(eHTMLTags aTag) {
+  switch (aTag) {
+    case eHTMLTag_noembed:
+      return PR_TRUE;
+    case eHTMLTag_noscript:
+      return (mFlags & NS_IPARSER_FLAG_SCRIPT_ENABLED) != 0;
+    case eHTMLTag_iframe:
+    case eHTMLTag_noframes:
+      return (mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED) != 0;
+    default:
+      return PR_FALSE;
+  }
+}
 
 /**
  *  This method gets called when a start token has been 
