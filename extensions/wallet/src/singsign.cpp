@@ -64,8 +64,8 @@ static int signon_lock_count = 0;
 
 /* load states */
 
-static PRBool si_PartiallyLoaded = FALSE;
-static PRBool si_FullyLoaded = FALSE;
+static PRBool si_PartiallyLoaded = PR_FALSE;
+static PRBool si_FullyLoaded = PR_FALSE;
 
 /* apple keychain stuff */
 
@@ -516,7 +516,7 @@ si_RegisterSignonPrefCallbacks(void) {
   static PRBool first_time = PR_TRUE;
   if(first_time) {
     first_time = PR_FALSE;
-    SI_LoadSignonData(FALSE);
+    SI_LoadSignonData(PR_FALSE);
     x = SI_GetBoolPref(pref_Notified, PR_FALSE);
     si_SetNotificationPref(x);        
     x = SI_GetBoolPref(pref_rememberSignons, PR_FALSE);
@@ -537,17 +537,17 @@ si_GetSignonRememberingPref(void) {
      * calls si_GetSignonRememberingPref
      */
     si_list_invalid = PR_FALSE;
-    SI_LoadSignonData(FALSE);
+    SI_LoadSignonData(PR_FALSE);
   }
 #endif
 
   si_RegisterSignonPrefCallbacks();
 
   /*
-   * We initially want the rememberSignons pref to be FALSE.  But this will
+   * We initially want the rememberSignons pref to be PR_FALSE.  But this will
    * prevent the notification message from ever occurring.  To get around
-   * this problem, if the signon pref is FALSE and no notification has
-   * ever been given, we will treat this as if the signon pref were TRUE.
+   * this problem, if the signon pref is PR_FALSE and no notification has
+   * ever been given, we will treat this as if the signon pref were PR_TRUE.
    */
   if (!si_RememberSignons && !si_GetNotificationPref()) {
     return PR_TRUE;
@@ -991,7 +991,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
         user_count++;
       }
       if (user_count > 1) {
-        SI_LoadSignonData(TRUE);
+        SI_LoadSignonData(PR_TRUE);
         url = si_GetURL(URLName);
         if (url == NULL) {
           /* This will happen if user fails to unlock database in SI_LoadSignonData above */
@@ -1178,8 +1178,8 @@ si_RemoveAllSignonData() {
     while (si_RemoveUser(NULL, NULL, PR_FALSE)) {
     }
   }
-  si_PartiallyLoaded = FALSE;
-  si_FullyLoaded = FALSE;
+  si_PartiallyLoaded = PR_FALSE;
+  si_FullyLoaded = PR_FALSE;
 }
 
 
@@ -1631,7 +1631,7 @@ si_ReadLine
 PUBLIC int
 SI_LoadSignonData(PRBool fullLoad) {
   /*
-   * This routine is called initially with fullLoad set to FALSE.  That will cause
+   * This routine is called initially with fullLoad set to PR_FALSE.  That will cause
    * the main file (consisting of URLs and usernames but having dummy passwords) to
    * be read in.  Later, when a password is needed for the first time, the internal
    * table is flushed and this routine is called again to read in the main file
@@ -1692,14 +1692,14 @@ SI_LoadSignonData(PRBool fullLoad) {
 
   /* read the reject list */
   si_lock_signon_list();
-  while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
+  while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
     if (buffer[0] == '.') {
       break; /* end of reject list */
     }
     si_StripLF(buffer);
     URLName = NULL;
     StrAllocCopy(URLName, buffer);
-    if (NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
+    if (NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
       /* error in input file so give up */
       badInput = PR_TRUE;
       break;
@@ -1715,7 +1715,7 @@ SI_LoadSignonData(PRBool fullLoad) {
   submit.type_array = (PA_Block)type_array;
 
   /* read the URL line */
-  while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
+  while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
     si_StripLF(buffer);
     URLName = NULL;
     StrAllocCopy(URLName, buffer);
@@ -1724,7 +1724,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     submit.value_cnt = 0;
     badInput = PR_FALSE;
 
-    while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
+    while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, PR_FALSE))) {
 
       /* line starting with . terminates the pairs for this URL entry */
       if (buffer[0] == '.') {
@@ -1744,7 +1744,7 @@ SI_LoadSignonData(PRBool fullLoad) {
       } else {
         type_array[submit.value_cnt] = FORM_TYPE_TEXT;
         StrAllocCopy(name_array[submit.value_cnt], buffer);
-        ret = si_ReadLine(strm, strmx, buffer, FALSE);
+        ret = si_ReadLine(strm, strmx, buffer, PR_FALSE);
       }
 
       /* read in and save the value part */
@@ -1784,7 +1784,7 @@ SI_LoadSignonData(PRBool fullLoad) {
   }
 
   si_unlock_signon_list();
-  si_PartiallyLoaded = TRUE;
+  si_PartiallyLoaded = PR_TRUE;
   si_FullyLoaded = fullLoad;
   return(0);
 }
@@ -1885,11 +1885,11 @@ si_SaveSignonDataLocked(PRBool fullSave) {
     PRInt32 rejectCount = LIST_COUNT(si_reject_list);
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-      si_WriteLine(strm, strmx, reject->URLName, FALSE);
-      si_WriteLine(strm, strmx, reject->userName, FALSE);
+      si_WriteLine(strm, strmx, reject->URLName, PR_FALSE);
+      si_WriteLine(strm, strmx, reject->userName, PR_FALSE);
     }
   }
-  si_WriteLine(strm, strmx, ".", FALSE);
+  si_WriteLine(strm, strmx, ".", PR_FALSE);
 
   /* format for cached logins shall be:
    * url LINEBREAK {name LINEBREAK value LINEBREAK}*  . LINEBREAK
@@ -1906,7 +1906,7 @@ si_SaveSignonDataLocked(PRBool fullSave) {
       PRInt32 userCount = LIST_COUNT(url->signonUser_list);
       for (PRInt32 i3=0; i3<userCount; i3++) {
         user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i3));
-        si_WriteLine(strm, strmx, url->URLName, FALSE);
+        si_WriteLine(strm, strmx, url->URLName, PR_FALSE);
 
         /* write out each data node of the user node */
         PRInt32 dataCount = LIST_COUNT(user->signonData_list);
@@ -1914,16 +1914,16 @@ si_SaveSignonDataLocked(PRBool fullSave) {
           data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i4));
           if (data->isPassword) {
             si_WriteChar(strm, '*');
-            si_WriteLine(strm, strmx, data->name, FALSE);
+            si_WriteLine(strm, strmx, data->name, PR_FALSE);
             if (fullSave) {
-              si_WriteLine(strm, strmx, data->value, TRUE);
+              si_WriteLine(strm, strmx, data->value, PR_TRUE);
             }
           } else {
-            si_WriteLine(strm, strmx, data->name, FALSE);
-            si_WriteLine(strm, strmx, data->value, FALSE);
+            si_WriteLine(strm, strmx, data->name, PR_FALSE);
+            si_WriteLine(strm, strmx, data->value, PR_FALSE);
           }
         }
-        si_WriteLine(strm, strmx, ".", FALSE);
+        si_WriteLine(strm, strmx, ".", PR_FALSE);
       }
     }
   }
@@ -2058,7 +2058,7 @@ SINGSIGN_RememberSignonData
 
     if ((j<submit.value_cnt) && si_OkToSave(URLName, /* urlname */
         ((char **)submit.value_array)[j] /* username */)) {
-      SI_LoadSignonData(TRUE);
+      SI_LoadSignonData(PR_TRUE);
       si_PutData(URLName, &submit, PR_TRUE);
     }
   } else if (passwordCount == 2) {
@@ -2089,7 +2089,7 @@ SINGSIGN_RememberSignonData
     }
 
     /* get to password being saved */
-    SI_LoadSignonData(TRUE); /* this destroys "user" so we need to recalculate it */
+    SI_LoadSignonData(PR_TRUE); /* this destroys "user" so we need to recalculate it */
     user = si_GetURLAndUserForChangeForm(((char **)submit.value_array)[pswd[0]]);
     if (!user) { /* this should never happen but just in case */
       si_unlock_signon_list();
@@ -2202,7 +2202,7 @@ if (!keySet) user=0; else
 
   user = si_GetUser(URLName, PR_FALSE, name);
   if (user) {
-    SI_LoadSignonData(TRUE); /* this destroys user so need to recaculate it */
+    SI_LoadSignonData(PR_TRUE); /* this destroys user so need to recaculate it */
     user = si_GetUser(URLName, PR_TRUE, name);
     if (user) { /* this should always be true but just in case */
       PRInt32 dataCount = LIST_COUNT(user->signonData_list);
@@ -2253,7 +2253,7 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password) 
   type_array[1] = FORM_TYPE_PASSWORD;
 
   /* Save the signon data */
-  SI_LoadSignonData(TRUE);
+  SI_LoadSignonData(PR_TRUE);
   si_PutData(URLName, &submit, PR_TRUE);
 
   /* Free up the data memory just allocated */
@@ -2281,7 +2281,7 @@ si_RestoreOldSignonDataFromBrowser
     si_unlock_signon_list();
     return;
   }
-  SI_LoadSignonData(TRUE); /* this destroys "user" so need to recalculate it */
+  SI_LoadSignonData(PR_TRUE); /* this destroys "user" so need to recalculate it */
   user = si_GetUser(URLName, pickFirstUser, "username");
   if (!user) {
     si_unlock_signon_list();
