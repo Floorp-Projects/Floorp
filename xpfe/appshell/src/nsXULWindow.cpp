@@ -65,7 +65,7 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsITimelineService.h"
-
+#include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 
 // XXX Get rid of this
@@ -800,6 +800,7 @@ void nsXULWindow::OnChromeLoaded()
     mContentTreeOwner->ApplyChromeFlags();
 
   LoadTitleFromXUL();
+  LoadWindowClassFromXUL();
   LoadIconFromXUL();
   LoadSizeFromXUL();
   if(mIntrinsicallySized) {
@@ -1109,6 +1110,40 @@ NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
    mChromeTreeOwner->SetTitle(windowTitle.get());
 
    return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::LoadWindowClassFromXUL()
+{
+  if (mWindow->GetWindowClass(nsnull)==NS_ERROR_NOT_IMPLEMENTED)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> docShellElement;
+  GetWindowDOMElement(getter_AddRefs(docShellElement));
+  NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
+
+  nsAutoString windowClass;
+
+  docShellElement->GetAttribute(NS_LITERAL_STRING("windowtype"),
+                                windowClass);
+
+  if (!windowClass.IsEmpty())
+  {
+    PRBool persistPosition;
+    PRBool persistSize;
+    PRBool persistSizeMode;
+
+    if (NS_SUCCEEDED(
+         mContentTreeOwner->
+           GetPersistence(&persistPosition, &persistSize, &persistSizeMode)
+        ) && !persistPosition && !persistSize && !persistSizeMode)
+      windowClass.Append(NS_LITERAL_STRING("-jsSpamPopupCrap"));
+
+    char *windowClass_cstr = ToNewCString(windowClass);
+    mWindow->SetWindowClass(windowClass_cstr);
+    nsMemory::Free(windowClass_cstr);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()

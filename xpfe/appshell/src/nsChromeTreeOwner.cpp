@@ -37,6 +37,13 @@
 #include "nsIAuthPrompt.h"
 #include "nsIWebProgress.h"
 #include "nsIWindowMediator.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMXULElement.h"
+#include "nsIXULBrowserWindow.h"
+#include "nsPIDOMWindow.h"
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -189,12 +196,49 @@ NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    return mXULWindow->SizeShellTo(aShellItem, aCX, aCY);
 }
 
+NS_NAMED_LITERAL_STRING(gLiteralPersist,"persist");
+NS_NAMED_LITERAL_STRING(gLiteralScreenX,"screenX");
+NS_NAMED_LITERAL_STRING(gLiteralScreenY,"screenY");
+NS_NAMED_LITERAL_STRING(gLiteralWidth,"width");
+NS_NAMED_LITERAL_STRING(gLiteralHeight,"height");
+NS_NAMED_LITERAL_STRING(gLiteralSizemode,"sizemode");
+NS_NAMED_LITERAL_STRING(gLiteralSpace," ");
+
 NS_IMETHODIMP
 nsChromeTreeOwner::SetPersistence(PRBool aPersistPosition,
                                   PRBool aPersistSize,
                                   PRBool aPersistSizeMode)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMElement> docShellElement;
+  mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
+  if (!docShellElement)
+    return NS_ERROR_FAILURE;
+
+  nsAutoString persistString;
+  docShellElement->GetAttribute(gLiteralPersist, persistString);
+
+  PRBool saveString = PR_FALSE;
+  PRInt32 index;
+
+#define FIND_PERSIST_STRING(aString, aCond)      \
+  index = persistString.Find(aString);           \
+  if (!aCond && index > kNotFound) {             \
+    persistString.Cut(index, aString.Length());  \
+    saveString = PR_TRUE;                        \
+  } else if (aCond && index == kNotFound) {      \
+    persistString.Append(gLiteralSpace+aString); \
+    saveString = PR_TRUE;                        \
+  }
+  FIND_PERSIST_STRING(gLiteralScreenX,  aPersistPosition);
+  FIND_PERSIST_STRING(gLiteralScreenY,  aPersistPosition);
+  FIND_PERSIST_STRING(gLiteralWidth,    aPersistSize);
+  FIND_PERSIST_STRING(gLiteralHeight,   aPersistSize);
+  FIND_PERSIST_STRING(gLiteralSizemode, aPersistSizeMode);
+
+  if (saveString) 
+    docShellElement->SetAttribute(gLiteralPersist, persistString);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -202,7 +246,26 @@ nsChromeTreeOwner::GetPersistence(PRBool* aPersistPosition,
                                   PRBool* aPersistSize,
                                   PRBool* aPersistSizeMode)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMElement> docShellElement;
+  mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
+  if (!docShellElement) 
+    return NS_ERROR_FAILURE;
+
+  nsAutoString persistString;
+  docShellElement->GetAttribute(gLiteralPersist, persistString);
+
+  // data structure doesn't quite match the question, but it's close enough
+  // for what we want (since this method is never actually called...)
+  if (aPersistPosition)
+    *aPersistPosition = persistString.Find(gLiteralScreenX) > kNotFound ||
+                        persistString.Find(gLiteralScreenY) > kNotFound;
+  if (aPersistSize)
+    *aPersistSize = persistString.Find(gLiteralWidth) > kNotFound ||
+                    persistString.Find(gLiteralHeight) > kNotFound;
+  if (aPersistSizeMode)
+    *aPersistSizeMode = persistString.Find(gLiteralSizemode) > kNotFound;
+
+  return NS_OK;
 }
 
 //*****************************************************************************

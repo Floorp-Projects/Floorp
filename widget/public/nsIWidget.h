@@ -452,7 +452,7 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD Enable(PRBool aState) = 0;
 
-    /*
+    /**
      * Ask whether the widget is enabled
      * @param aState returns PR_TRUE if the widget is enabled
      */
@@ -484,7 +484,7 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD GetScreenBounds(nsRect &aRect) = 0;
 
 
-  /**
+    /**
      * Get this widget's client area dimensions, if the window has a 3D border appearance
      * this returns the area inside the border, The x and y are always zero
      *
@@ -761,7 +761,7 @@ class nsIWidget : public nsISupports {
 
     NS_IMETHOD ShowMenuBar(PRBool aShow) = 0;
 
-     /**
+    /**
      * Convert from this widget coordinates to screen coordinates.
      *
      * @param  aOldRect  widget coordinates stored in the x,y members
@@ -838,38 +838,50 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD CaptureMouse(PRBool aCapture) = 0;
 
-	/**
-	 * Enables/Disables system capture of any and all events that would cause a
-	 * dropdown to be rolled up, This method ignores the aConsumeRollupEvent 
-   * parameter when aDoCapture is FALSE
-	 * @param aCapture PR_TRUE enables capture, PR_FALSE disables capture 
-	 * @param aConsumeRollupEvent PR_TRUE consumes the rollup event, PR_FALSE dispatches rollup event
-	 *
-	 */
+    /**
+     * Gets the window class
+     * implemented in gtk
+     */
+    NS_IMETHOD GetWindowClass(char *aClass) = 0;
+
+    /**
+     * Sets the window class
+     * implemented in gtk
+     */
+    NS_IMETHOD SetWindowClass(char *aClass) = 0;
+
+    /**
+     * Enables/Disables system capture of any and all events that would cause a
+     * dropdown to be rolled up, This method ignores the aConsumeRollupEvent 
+     * parameter when aDoCapture is FALSE
+     * @param aCapture PR_TRUE enables capture, PR_FALSE disables capture 
+     * @param aConsumeRollupEvent PR_TRUE consumes the rollup event, PR_FALSE dispatches rollup event
+     *
+     */
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent) = 0;
 
-  /**
-   *   Determine whether a given event should be processed assuming we are
-   * the currently active modal window.
-   *   Note that the exact semantics of this method are platform-dependent.
-   * The Macintosh, for instance, cares deeply that this method do exactly
-   * as advertised. Gtk, for instance, handles modality in a completely
-   * different fashion and does little if anything with this method.
-   * @param aRealEvent event is real or a null placeholder (Macintosh)
-   * @param aEvent void pointer to native event structure
-   * @param aForWindow return value. PR_TRUE iff event should be processed.
-   */
-  NS_IMETHOD ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow) = 0;
+    /**
+     *   Determine whether a given event should be processed assuming we are
+     * the currently active modal window.
+     *   Note that the exact semantics of this method are platform-dependent.
+     * The Macintosh, for instance, cares deeply that this method do exactly
+     * as advertised. Gtk, for instance, handles modality in a completely
+     * different fashion and does little if anything with this method.
+     * @param aRealEvent event is real or a null placeholder (Macintosh)
+     * @param aEvent void pointer to native event structure
+     * @param aForWindow return value. PR_TRUE iff event should be processed.
+     */
+    NS_IMETHOD ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow) = 0;
 
-  /**
-   * Bring this window to the user's attention.  This is intended to be a more
-   * gentle notification than popping the window to the top or putting up an
-   * alert.  See, for example, Win32 FlashWindow or the NotificationManager on
-   * the Mac.  The notification should be suppressed if the window is already
-   * in the foreground and should be dismissed when the user brings this window
-   * to the foreground.
-   */
-  NS_IMETHOD GetAttention() = 0;
+    /**
+     * Bring this window to the user's attention.  This is intended to be a more
+     * gentle notification than popping the window to the top or putting up an
+     * alert.  See, for example, Win32 FlashWindow or the NotificationManager on
+     * the Mac.  The notification should be suppressed if the window is already
+     * in the foreground and should be dismissed when the user brings this window
+     * to the foreground.
+     */
+    NS_IMETHOD GetAttention() = 0;
 
 };
 

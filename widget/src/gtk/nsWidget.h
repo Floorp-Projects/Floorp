@@ -161,6 +161,8 @@ public:
   // *could* be done on a widget, but that would be silly wouldn't it?
   NS_IMETHOD CaptureMouse(PRBool aCapture) { return NS_ERROR_FAILURE; }
 
+  NS_IMETHOD GetWindowClass(char *aClass);
+  NS_IMETHOD SetWindowClass(char *aClass);
 
   NS_IMETHOD Validate();
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
