@@ -19,6 +19,7 @@
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
 #include "nsIFloaterContainer.h"
+#include "nsBodyFrame.h"
 
 static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
 
@@ -66,14 +67,23 @@ NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
 
   // Have we created the anchored item yet?
   if (nsnull == mAnchoredItem) {
-    // Create the anchored item
-    nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
-    nsresult rv = delegate->CreateFrame(aPresContext, mContent,
-                                        mGeometricParent, mStyleContext,
-                                        mAnchoredItem);
-    NS_RELEASE(delegate);
-    if (NS_OK != rv) {
-      return rv;
+    // If the content object is a container then wrap it in a body pseudo-frame
+    if (mContent->CanContainChildren()) {
+      nsBodyFrame::NewFrame(&mAnchoredItem, mContent, this);
+
+      // Use our style context for the pseudo-frame
+      mAnchoredItem->SetStyleContext(aPresContext, mStyleContext);
+
+    } else {
+      // Create the anchored item
+      nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
+      nsresult rv = delegate->CreateFrame(aPresContext, mContent,
+                                          mGeometricParent, mStyleContext,
+                                          mAnchoredItem);
+      NS_RELEASE(delegate);
+      if (NS_OK != rv) {
+        return rv;
+      }
     }
 
     // Resize reflow the anchored item into the available space
