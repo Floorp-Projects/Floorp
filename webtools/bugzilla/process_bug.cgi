@@ -109,6 +109,8 @@ if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
 
 ValidateComment($::FORM{'comment'});
 
+$::FORM{'dontchange'} = '' unless exists $::FORM{'dontchange'};
+
 # If the bug(s) being modified have dependencies, validate them
 # and rebuild the list with the validated values.  This is important
 # because there are situations where validation changes the value
@@ -730,20 +732,21 @@ if (defined $::FORM{'qa_contact'}) {
 }
 
 # jeff.hedlund@matrixsi.com time tracking data processing:
-foreach my $field ("estimated_time", "remaining_time") {
-
-    if (defined $::FORM{$field}) {
-        my $er_time = trim($::FORM{$field});
-        if ($er_time ne $::FORM{'dontchange'}) {
-            if ($er_time > 99999.99) {
-                ThrowUserError("value_out_of_range", {field => $field});
-            }
-            if ($er_time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/) {
-                DoComma();
-                $::query .= "$field = " . SqlQuote($er_time);
-            } else {
-                $vars->{'field'} = $field;
-                ThrowUserError("need_positive_number");
+if (UserInGroup(Param('timetrackinggroup'))) {
+    foreach my $field ("estimated_time", "remaining_time") {
+        if (defined $::FORM{$field}) {
+            my $er_time = trim($::FORM{$field});
+            if ($er_time ne $::FORM{'dontchange'}) {
+                if ($er_time > 99999.99) {
+                    ThrowUserError("value_out_of_range", {field => $field});
+                }
+                if ($er_time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/) {
+                    DoComma();
+                    $::query .= "$field = " . SqlQuote($er_time);
+                } else {
+                    $vars->{'field'} = $field;
+                    ThrowUserError("need_positive_number");
+                }
             }
         }
     }
@@ -1202,18 +1205,19 @@ foreach my $id (@idlist) {
     SendSQL("select now()");
     $timestamp = FetchOneColumn();
 
-    if ($::FORM{'work_time'} > 99999.99) {
+    delete $::FORM{'work_time'} unless UserInGroup(Param('timetrackinggroup'));
+
+    if ($::FORM{'work_time'} && $::FORM{'work_time'} > 99999.99) {
         ThrowUserError("value_out_of_range", {field => 'work_time'});
     }
-    if (defined $::FORM{'comment'} || defined $::FORM{'work_time'}) {
-        if ($::FORM{'work_time'} != 0 && 
+    if ($::FORM{'comment'} || $::FORM{'work_time'}) {
+        if ($::FORM{'work_time'} && 
             (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/)) {
-        
             ThrowUserError('comment_required');
         } else {
             AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
-                $::FORM{'commentprivacy'}, $timestamp, $::FORM{'work_time'});
-            if ($::FORM{'work_time'} != 0) {
+                          $::FORM{'commentprivacy'}, $timestamp, $::FORM{'work_time'});
+            if ($::FORM{'work_time'}) {
                 LogActivityEntry($id, "work_time", "", $::FORM{'work_time'},
                                  $whoid, $timestamp);
                 $bug_changed = 1;
