@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.7 1998/06/16 08:42:22 jwz Exp $
+# $Id: Common.pm,v 1.8 1998/06/16 19:53:43 jwz Exp $
 
 package LXR::Common;
 
@@ -213,10 +213,16 @@ sub markupfile {
 #	&$outfun("</pre>\n");
 	untie(%xref);
 
-    } elsif ($fname =~ /\.(gif|jpg)$/) {
-       &$outfun("<img src=\"$Conf->{virtroot}/source".$virtp.$fname.
-                &urlargs("raw=1")."\" border=\"0\" alt=\"$fname\" align=middle>\n");
+    } elsif ($fname =~ /\.(gif|jpg|jpeg|pjpg|pjpeg|xbm)$/i) {
 
+	&$outfun("</PRE>");
+	&$outfun("<UL><TABLE><TR><TH VALIGN=CENTER><B>Image: </B></TH>");
+	&$outfun("<TD VALIGN=CENTER>");
+
+	&$outfun("<img src=\"$Conf->{virtroot}/source".$virtp.$fname.
+		 &urlargs("raw=1")."\" border=\"0\" alt=\"$fname\">");
+
+	&$outfun("</TR></TD></TABLE></UL><PRE>");
 
     } elsif ($fname eq 'CREDITS') {
 	while (<$INFILE>) {
@@ -230,13 +236,42 @@ sub markupfile {
 	    &$outfun(&linetag($virtp.$fname, $.).$_);
 	}
     } else {
-	while (<$INFILE>) {
-	    &SimpleParse::untabify($_);
-	    &markspecials($_);
-	    &htmlquote($_);
-	    &freetextmarkup($_);
+
+	my $first_line = <$INFILE>;
+	my $is_binary = -1;
+
+	$_ = $first_line;
+	if ( m/^\#!/ ) {			# it's a script
+	    $is_binary = 0;
+	} elsif ( m/-\*-.*mode:/i ) {		# has an emacs mode spec
+	    $is_binary = 0;
+	} elsif (length($_) > 132) {		# no linebreaks
+	    $is_binary = 1;
+	} elsif ( m/[\000-\010\013\014\016-\037\200-Ÿ]/ ) {	# ctrl or ctrl+
+	    $is_binary = 1;
+	} else {				# no idea, but assume text.
+	    $is_binary = 0;
+	}
+
+	if ( $is_binary ) {
+
+	    &$outfun("</PRE>");
+	    &$outfun("<UL><B>Binary File: ");
+	    &$outfun("<A HREF=\"$Conf->{virtroot}/source".$virtp.$fname.
+		     &urlargs("raw=1")."\">");
+	    &$outfun("$fname</A></B>");
+	    &$outfun("</UL><PRE>");
+
+	} else {
+	    $_ = $first_line;
+	    do {
+		&SimpleParse::untabify($_);
+		&markspecials($_);
+		&htmlquote($_);
+		&freetextmarkup($_);
 #	    &$outfun("<a name=\"L$.\"><\/a>".$_);
-	    &$outfun(&linetag($virtp.$fname, $.).$_);
+		&$outfun(&linetag($virtp.$fname, $.).$_);
+	    } while (<$INFILE>);
 	}
     }
 }
