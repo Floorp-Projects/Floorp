@@ -47,7 +47,10 @@
 #include "nsIWindowMediator.h"
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
+#include "nsIScrollable.h"
 #include "nsIPref.h"
+
+#include "nsStyleConsts.h"
 
 // XXX Get rid of this
 #pragma message("WARNING: XXX bad include, remove it.")
@@ -1225,6 +1228,20 @@ PRBool nsXULWindow::ConstrainToZLevel(
   }
 
   return altered;
+}
+
+/* Disable scrollbars in the primary content shell (to open a browser window
+   without scrollbars, for example)
+*/
+void nsXULWindow::KillContentScrollbars() {
+
+  nsCOMPtr<nsIDocShellTreeItem> content;
+  if (NS_SUCCEEDED(GetPrimaryContentShell(getter_AddRefs(content))) && content) {
+    nsCOMPtr<nsIScrollable> shell(do_QueryInterface(content));
+    if (shell)
+      shell->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, NS_STYLE_OVERFLOW_HIDDEN);
+      shell->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, NS_STYLE_OVERFLOW_HIDDEN);
+  }
 }
 
 //*****************************************************************************

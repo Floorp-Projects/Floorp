@@ -88,10 +88,10 @@ protected:
       nsIDocShellTreeItem** aDocShellTreeItem);
    NS_IMETHOD NotifyObservers(const PRUnichar* aTopic, const PRUnichar* aData);
 
-protected:
    void EnableParent(PRBool aEnable);
    PRBool ConstrainToZLevel(PRBool aImmediate, nsWindowZ *aPlacement,
             nsIWidget *aReqBelow, nsIWidget **aActualBelow);
+   void                    KillContentScrollbars();
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
