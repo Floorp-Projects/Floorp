@@ -69,7 +69,7 @@
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsStringHashKey : protected PLDHashEntryHdr
+class NS_COM nsStringHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const nsAString& KeyType;
@@ -102,7 +102,7 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsCStringHashKey : protected PLDHashEntryHdr
+class NS_COM nsCStringHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const nsACString& KeyType;
@@ -133,10 +133,10 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsUint32HashKey : protected PLDHashEntryHdr
+class NS_COM nsUint32HashKey : public PLDHashEntryHdr
 {
 public:
-  typedef PRUint32 KeyType;
+  typedef const PRUint32& KeyType;
   typedef const PRUint32* KeyTypePointer;
   
   nsUint32HashKey(KeyTypePointer aKey) : mValue(*aKey) { }
@@ -160,7 +160,7 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsISupportsHashKey : protected PLDHashEntryHdr
+class NS_COM nsISupportsHashKey : public PLDHashEntryHdr
 {
 public:
   typedef nsISupports* KeyType;
@@ -192,7 +192,7 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsIDHashKey : protected PLDHashEntryHdr
+class NS_COM nsIDHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const nsID& KeyType;
