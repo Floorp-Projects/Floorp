@@ -584,7 +584,11 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
 #ifdef XP_MAC
-    PRBool isSpecialAccessKeyDown = keyEvent->isMeta;
+    // (pinkerton, joki, saari) IE5 for mac uses Control for access keys. The HTML4 spec
+    // suggests to use command on mac, but this really sucks (imagine someone having a "q"
+    // as an access key and not letting you quit the app!). As a result, we've made a 
+    // command decision 1 day before tree lockdown to change it to the control key.
+    PRBool isSpecialAccessKeyDown = keyEvent->isControl;
 #else
     PRBool isSpecialAccessKeyDown = keyEvent->isAlt;
 #endif
