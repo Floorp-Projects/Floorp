@@ -301,9 +301,6 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
       if (NS_SUCCEEDED(res)) {
         mCharset = mappedCharset;
       }
-      
-      // get a system charset (used when getting date/time strings as default)
-      res = platformCharset->GetCharset(kPlatformCharsetSel_FileName, mSystemCharset);      
     }
   }
 
@@ -312,8 +309,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   nsCOMPtr <nsICharsetConverterManager>  charsetConverterManager;
   charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
-    res = charsetConverterManager->GetUnicodeDecoder(mUseDefaultLocale ? mSystemCharset.get() : 
-                                                     mCharset.get(), 
+    res = charsetConverterManager->GetUnicodeDecoder(mCharset.get(),
                                                      getter_AddRefs(mDecoder));
   }
   
