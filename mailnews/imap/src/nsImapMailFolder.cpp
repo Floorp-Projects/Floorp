@@ -287,6 +287,12 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 	nsAutoString currentFolderNameStr;		// online name
 	nsAutoString currentFolderDBNameStr;	// possibly munged name
 	nsCOMPtr<nsIMsgFolder> child;
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	nsCOMPtr<nsIImapIncomingServer> imapServer;
+
+	if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
+		imapServer = do_QueryInterface(server);
+
 	char *folderName;
 	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) 
 	{
@@ -321,11 +327,19 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 				rv = cacheElement->GetStringProperty("onlineName", getter_Copies(onlineName));
 				if (NS_SUCCEEDED(rv) && (const char *) onlineName && nsCRT::strlen((const char *) onlineName))
 				{
-					currentFolderNameStr = onlineName;
+					if (imapServer)
+					{
+						nsXPIDLString nonUtf7Name;
+						imapServer->CreatePRUnicharStringFromUTF7(onlineName, getter_Copies(nonUtf7Name));
+						currentFolderNameStr = nonUtf7Name;
+
+					}
+					else
+						currentFolderNameStr = onlineName;
+
 					PRInt32 leafPos = currentFolderNameStr.RFindChar('/');
 					if (leafPos > 0)
 						currentFolderNameStr.Cut(0, leafPos + 1);
-
 				}
 			}
 		}
@@ -856,11 +870,12 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::Rename (const char *newName)
+NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName)
 {
     nsresult rv = NS_ERROR_FAILURE;
-
-    rv = RenameLocal(newName);
+	char *utf7Name = CreateUtf7ConvertedStringFromUnicode(newName);
+    rv = RenameLocal(utf7Name);
+	nsCRT::free(utf7Name);
 
     NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv))

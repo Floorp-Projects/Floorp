@@ -1553,7 +1553,7 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
 
 NS_IMETHODIMP
 nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
-                          const char* newLeafName, nsIUrlListener* urlListener,
+                          const PRUnichar* newLeafName, nsIUrlListener* urlListener,
                           nsIURI** url)
 {
     NS_ASSERTION(eventQueue && srcFolder && newLeafName && *newLeafName,
@@ -1581,6 +1581,9 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             urlSpec.Append((const char *) folderName);
             urlSpec.Append('>');
             urlSpec.Append(hierarchySeparator);
+
+			char *utfNewName = CreateUtf7ConvertedStringFromUnicode( newLeafName);
+
 			nsCAutoString cStrFolderName = (const char *) folderName;
             PRInt32 leafNameStart = 
                 cStrFolderName.RFindChar('/'); // ** troublesome hierarchyseparator
@@ -1589,7 +1592,11 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
                 cStrFolderName.SetLength(leafNameStart+1);
                 urlSpec.Append(cStrFolderName.GetBuffer());
             }
-            urlSpec.Append(newLeafName);
+
+            urlSpec.Append(utfNewName);
+
+			nsCRT::free(utfNewName);
+
             rv = uri->SetSpec((char*) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
             {

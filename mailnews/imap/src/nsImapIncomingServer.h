@@ -61,8 +61,6 @@ protected:
 	PRBool NoDescendentsAreVerified(nsIFolder *parentFolder);
 	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
 
-	nsresult CreatePRUnicharStringFromUTF7(const char * aSourceString, PRUnichar **aUnicodeStr);
-
 private:
     nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,

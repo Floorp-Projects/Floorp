@@ -735,10 +735,13 @@ NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
 NS_IMETHODIMP nsMsgFolder::SetName(const PRUnichar * name)
 {
   // override the URI-generated name
-	mName = name;
+	if (!mName.Equals(name))
+	{
+	  mName = name;
   
   // old/new value doesn't matter here
-  NotifyUnicharPropertyChanged(kNameAtom, name, name);
+	  NotifyUnicharPropertyChanged(kNameAtom, name, name);
+	}
 	return NS_OK;
 }
 
@@ -1034,7 +1037,7 @@ NS_IMETHODIMP nsMsgFolder::EmptyTrash()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::Rename(const char *name)
+NS_IMETHODIMP nsMsgFolder::Rename(const PRUnichar *name)
 {
     nsresult status = NS_OK;
 	nsAutoString2 unicharString(name);

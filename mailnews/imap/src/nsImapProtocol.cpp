@@ -1825,10 +1825,10 @@ void nsImapProtocol::ProcessSelectedStateURL()
             char *canonicalName = NULL;
             if (nameStruct)
             {
-              const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
-              if (mailboxName )
+              const char *selectedMailboxName = GetServerStateParser().GetSelectedMailboxName();
+              if (selectedMailboxName )
               {
-                m_runningUrl->AllocateCanonicalPath(mailboxName,
+                m_runningUrl->AllocateCanonicalPath(selectedMailboxName,
                   kOnlineHierarchySeparatorUnknown, &canonicalName);
               }
             }
@@ -5105,17 +5105,15 @@ void nsImapProtocol::FolderRenamed(const char *oldName,
     (m_hierarchyNameState == kListingForInfoAndDiscovery))
 
     {
-      char *oldName, *newName;
+		nsXPIDLCString canonicalOldName, canonicalNewName;
             m_runningUrl->AllocateCanonicalPath(oldName,
                                                 onlineDelimiter,
-                                                &oldName);
+                                                getter_Copies(canonicalOldName));
             m_runningUrl->AllocateCanonicalPath(newName,
                                                 onlineDelimiter,
-                                                &newName);
+                                                getter_Copies(canonicalNewName));
 
-            m_imapServerSink->OnlineFolderRename(oldName, newName);
-            PR_FREEIF (oldName);
-            PR_FREEIF(newName);
+            m_imapServerSink->OnlineFolderRename(canonicalOldName, canonicalNewName);
     }
 }
 

@@ -132,7 +132,7 @@ interface nsIMsgFolder : nsIFolder {
    *
    * @param name the new name of the folder
    */
-	void rename(in string name);
+	void rename(in wstring name);
 	void adopt(in nsIMsgFolder srcFolder, out unsigned long outPos);
 
   /**

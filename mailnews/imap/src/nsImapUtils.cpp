@@ -467,7 +467,6 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
     nsString aCharset("x-imap4-modified-utf7");
-    PRUnichar *unichars = nsnull;
     PRInt32 unicharLength;
 
       // convert from 8 bit ascii string to modified utf7

@@ -848,7 +848,7 @@ nsMessenger::MarkMessagesFlagged(nsIRDFCompositeDataSource *database,
 
 NS_IMETHODIMP
 nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIRDFResource *parentFolderResource,
-						const char *name)
+						const PRUnichar *name)
 {
 	nsresult rv;
 	nsCOMPtr<nsISupportsArray> nameArray, folderArray;
@@ -884,23 +884,25 @@ nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIRDFResource *pare
 NS_IMETHODIMP
 nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
                           nsIRDFResource* folderResource,
-                          const char* name)
+                          const PRUnichar* name)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   if (!db || !folderResource || !name || !*name) return rv;
-  nsCOMPtr<nsISupports> streamSupport;
-  rv = NS_NewCharInputStream(getter_AddRefs(streamSupport), name);
-  if (NS_SUCCEEDED(rv))
-  {
     nsCOMPtr<nsISupportsArray> folderArray;
     nsCOMPtr<nsISupportsArray> argsArray;
 
-    rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
-    if (NS_FAILED(rv)) return rv;
-    folderArray->AppendElement(folderResource);
-    rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
-    if (NS_FAILED(rv)) return rv;
-    argsArray->AppendElement(streamSupport);
+  rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+  if (NS_FAILED(rv)) return rv;
+  folderArray->AppendElement(folderResource);
+  rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
+  if (NS_FAILED(rv)) return rv;
+  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  if(NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIRDFLiteral> nameLiteral;
+
+    rdfService->GetLiteral(name, getter_AddRefs(nameLiteral));
+    argsArray->AppendElement(nameLiteral);
     rv = DoCommand(db, NC_RDF_RENAME, folderArray, argsArray);
   }
   return rv;

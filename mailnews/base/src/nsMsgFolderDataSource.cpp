@@ -678,28 +678,16 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if ((aCommand == kNC_Rename))
       {
-        nsCOMPtr<nsISupports> streamSupport = getter_AddRefs(aArguments->ElementAt(0));
-        if (streamSupport)
-        {
-          nsCOMPtr<nsIInputStream> charInputStream = do_QueryInterface(streamSupport);
-          if (charInputStream)
-          {
-            PRUint32 length = 0;
-            rv = charInputStream->Available(&length);
-            if (NS_SUCCEEDED(rv) && length > 0)
-            {
-              char *newName = (char*) PR_MALLOC(length+1);
-              PRUint32 readCount = 0;
-              rv = charInputStream->Read(newName, length, &readCount);
-              if(NS_SUCCEEDED(rv) && readCount > 0)
-              {
-                newName[readCount] = 0;
-                rv = folder->Rename(newName);
-              }
-              PR_FREEIF(newName);
-            }
-          }
-        }
+        nsCOMPtr<nsISupports> elem = getter_AddRefs(aArguments->ElementAt(0));
+        nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
+        if(NS_SUCCEEDED(rv))
+		{
+		  PRUnichar *name;
+		  literal->GetValue(&name);
+
+          rv = folder->Rename(name);
+          PR_FREEIF(name);
+		}
       }
     }
   }

@@ -80,10 +80,10 @@ interface nsIMessenger : nsISupports {
 
 	void NewFolder(in nsIRDFCompositeDataSource database,
                    in nsIRDFResource parentFolder,
-				   in string name);
+				   in wstring name);
 
     void RenameFolder(in nsIRDFCompositeDataSource db, 
-                      in nsIRDFResource folder, in string name);
+                      in nsIRDFResource folder, in wstring name);
     void CompactFolder(in nsIRDFCompositeDataSource db,
                        in nsIRDFResource folder);
     void EmptyTrash(in nsIRDFCompositeDataSource db,

@@ -166,7 +166,7 @@ public:
                           nsIURI** aUrl) = 0;
     NS_IMETHOD RenameLeaf(nsIEventQueue* aClientEventQ,
                           nsIMsgFolder* srcFolder,
-                          const char* leafName,
+                          const PRUnichar* leafName,
                           nsIUrlListener* urlListener,
                           nsIURI** url) = 0;
     NS_IMETHOD DeleteFolder(nsIEventQueue* aClientEventQ,
