@@ -63,16 +63,18 @@ nsresult  theResult = NS_ERROR_FAILURE;
 THPrint		prtRec;
 GrafPtr		oldport;
 
+	::GetPort(&oldport);
+	
 	// open the printing manager
 	::PrOpen();
 	if(::PrError() == noErr){
 		mPrintManagerOpen = PR_TRUE;
-		prtRec = (THPrint) NewHandle(sizeof(TPrint));
+		prtRec = (THPrint)::NewHandle(sizeof(TPrint));
 		if(prtRec!=nsnull){
 			::PrintDefault(prtRec);
 		
 			// standard print dialog, if true print
-			if(PrJobDialog(prtRec)){
+			if(::PrJobDialog(prtRec)){
 				// have the print record
 				theResult = NS_OK;
 				mPrtRec = prtRec;
