@@ -413,7 +413,7 @@ nsClipboard::Observe(nsISupports *aSubject, const char *aTopic,
   // This will be called on shutdown.
 
   // make sure we have a good transferable
-  if (!mTransferable || aWhichClipboard != kGlobalClipboard)
+  if (!mTransferable)
     return NS_ERROR_FAILURE;
 
   if (WinOpenClipbrd(0/*hab*/)) {
