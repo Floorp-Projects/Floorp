@@ -206,11 +206,11 @@ static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
 static PRUint32 gVerifyReflowFlags;
 
 struct VerifyReflowFlags {
-  char*    name;
+  const char*    name;
   PRUint32 bit;
 };
 
-static VerifyReflowFlags gFlags[] = {
+static const VerifyReflowFlags gFlags[] = {
   { "verify",                VERIFY_REFLOW_ON },
   { "reflow",                VERIFY_REFLOW_NOISY },
   { "all",                   VERIFY_REFLOW_ALL },
@@ -227,8 +227,8 @@ static void
 ShowVerifyReflowFlags()
 {
   printf("Here are the available GECKO_VERIFY_REFLOW_FLAGS:\n");
-  VerifyReflowFlags* flag = gFlags;
-  VerifyReflowFlags* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
+  const VerifyReflowFlags* flag = gFlags;
+  const VerifyReflowFlags* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
   while (flag < limit) {
     printf("  %s\n", flag->name);
     ++flag;
@@ -1430,8 +1430,8 @@ nsIPresShell::GetVerifyReflowEnable()
           *comma = '\0';
 
         PRBool found = PR_FALSE;
-        VerifyReflowFlags* flag = gFlags;
-        VerifyReflowFlags* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
+        const VerifyReflowFlags* flag = gFlags;
+        const VerifyReflowFlags* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
         while (flag < limit) {
           if (PL_strcasecmp(flag->name, flags) == 0) {
             gVerifyReflowFlags |= flag->bit;
@@ -1592,6 +1592,13 @@ PresShell::~PresShell()
 
   NS_ASSERTION(mCurrentEventContentStack.Count() == 0,
                "Huh, event content left on the stack in pres shell dtor!");
+  NS_ASSERTION(mFirstDOMEventRequest == nsnull &&
+               mLastDOMEventRequest == nsnull &&
+               mFirstAttributeRequest == nsnull &&
+               mLastAttributeRequest == nsnull &&
+               mFirstCallbackEventRequest == nsnull &&
+               mLastCallbackEventRequest == nsnull,
+               "post-reflow queues not empty.  This means we're leaking");
 
   NS_IF_RELEASE(mCurrentEventContent);
 
@@ -2819,6 +2826,10 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
   DidCauseReflow();
 
+  HandlePostedDOMEvents();
+  HandlePostedAttributeChanges();
+  HandlePostedReflowCallbacks();
+
   if (mViewManager && mCaret && !mViewEventListener) {
     nsIScrollableView* scrollingView = nsnull;
     mViewManager->GetRootScrollableView(&scrollingView);
@@ -2879,12 +2890,10 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
   PRBool firstReflow = PR_FALSE;
 
-  mViewManager->CacheWidgetChanges(PR_TRUE);
+  WillCauseReflow();
 
   if (mCaret)
     mCaret->EraseCaret();
-
-  WillCauseReflow();
 
   if (mPresContext) {
     nsRect r(0, 0, aWidth, aHeight);
@@ -2966,7 +2975,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   }
 #endif
   
-  mViewManager->CacheWidgetChanges(PR_FALSE);
   HandlePostedDOMEvents();
   HandlePostedAttributeChanges();
   HandlePostedReflowCallbacks();
@@ -3486,6 +3494,10 @@ PresShell::StyleChangeReflow()
   }
 
   DidCauseReflow();
+
+  HandlePostedDOMEvents();
+  HandlePostedAttributeChanges();
+  HandlePostedReflowCallbacks();
 
   return NS_OK; //XXX this needs to be real. MMP
 }
