@@ -53,21 +53,9 @@ protected:
 	PRInt32					m_lastPercent;
 	PRInt64					m_lastProgressTime;
 
-  PRInt32 mQueuedMeteorStarts;
-  PRInt32 mQueuedMeteorStops;
-  nsCOMPtr<nsITimer> mStartTimer;
-  nsCOMPtr<nsITimer> mStopTimer;
 
   void BeginObserving();
   void EndObserving();
-
-  // timer callbacks
-  static void notifyStartMeteors(nsITimer *aTimer, void *aClosure);
-  static void notifyStopMeteors(nsITimer *aTimer, void *aClosure);
-
-  // timer callbacks w/resolved closure
-  void NotifyStartMeteors(nsITimer *aTimer);
-  void NotifyStopMeteors(nsITimer *aTimer);
 
   // the JS status feedback implementation object...eventually this object
   // will replace this very C++ class you are looking at.

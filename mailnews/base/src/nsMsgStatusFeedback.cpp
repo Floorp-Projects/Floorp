@@ -46,10 +46,7 @@ nsrefcnt nsMsgStatusFeedback::gInstanceCount = 0;
 nsCOMPtr<nsIStringBundle> nsMsgStatusFeedback::mBundle;
 
 nsMsgStatusFeedback::nsMsgStatusFeedback() :
-  m_meteorsSpinning(PR_FALSE),
-  m_lastPercent(0),
-  mQueuedMeteorStarts(0),
-  mQueuedMeteorStops(0)
+  m_lastPercent(0)
 {
 	NS_INIT_REFCNT();
 	LL_I2L(m_lastProgressTime, 0);
@@ -209,61 +206,16 @@ nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 NS_IMETHODIMP
 nsMsgStatusFeedback::StartMeteors()
 {
-
-  // cancel outstanding starts
-  if (mQueuedMeteorStarts>0) {
-    mQueuedMeteorStarts--;
-    NS_ASSERTION(mQueuedMeteorStarts == 0, "destroying unfired/uncanceled start timer");
-	if(mStartTimer)
-	  mStartTimer->Cancel();
-  }
-
-    //If there is an outstanding stop timer still then we might as well cancel it since we are
-  //just going to start it.  This will prevent there being a start and stop timer outstanding in
-  //which case the start could go before the stop and cause the meteors to never start.
-  if(mQueuedMeteorStops > 0) {
-    mQueuedMeteorStops--;
-	if(mStopTimer)
-	  mStopTimer->Cancel();
-  }
-
-  //only run the start timer if the meteors aren't spinning.
-  if(!m_meteorsSpinning)
-  {
-    NotifyStartMeteors(nsnull);
-  }
+  if (mStatusFeedback)
+    mStatusFeedback->StartMeteors();
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsMsgStatusFeedback::StopMeteors()
 {
-
-  // cancel outstanding stops
-  if (mQueuedMeteorStops>0) {
-    mQueuedMeteorStops--;
-    NS_ASSERTION(mQueuedMeteorStops == 0, "destroying unfired/uncanceled stop");
-    if(mStopTimer)
-	  mStopTimer->Cancel();
-  }
-  
-  //If there is an outstanding start timer still then we might as well cancel it since we are
-  //just going to stop it.  This will prevent there being a start and stop timer outstanding in
-  //which case the stop could go before the start and cause the meteors to never stop.
-  if(mQueuedMeteorStarts > 0) {
-    mQueuedMeteorStarts--;
-	if(mStartTimer)
-	  mStartTimer->Cancel();
-  }
-
-
-  //only run the stop timer if the meteors are actually spinning.
-  if(m_meteorsSpinning)
-  {
-    NotifyStopMeteors(nsnull);
-	  mQueuedMeteorStops++;
-  }
+  if (mStatusFeedback)
+    mStatusFeedback->StopMeteors();
   return NS_OK;
 }
 
@@ -292,64 +244,6 @@ NS_IMETHODIMP nsMsgStatusFeedback::SetDocShell(nsIDocShell *shell, nsIDOMWindowI
 
 	mWindow = aWindow;
 	return NS_OK;
-}
-
-//
-// timer callbacks that resolve closure
-//
-void
-nsMsgStatusFeedback::notifyStartMeteors(nsITimer *aTimer, void *aClosure)
-{
-  NS_ASSERTION(aClosure, "Start meteors: bad nsIMsgStatusFeedback!\n");
-  if (!aClosure) return;
-  ((nsMsgStatusFeedback*)aClosure)->NotifyStartMeteors(aTimer);
-}
-
-void
-nsMsgStatusFeedback::notifyStopMeteors(nsITimer *aTimer, void *aClosure)
-{
-  NS_ASSERTION(aClosure, "Stop meteors: bad nsMsgStatusFeedback!\n");
-  if (!aClosure) return;
-  ((nsMsgStatusFeedback*)aClosure)->NotifyStopMeteors(aTimer);
-}
-
-//
-// actual timer callbacks
-//
-void
-nsMsgStatusFeedback::NotifyStartMeteors(nsITimer *aTimer)
-{
-  if (mQueuedMeteorStarts > 0)
-    mQueuedMeteorStarts--;
-  
-  // meteors already spinning, so noop
-  if (m_meteorsSpinning) return;
-
-  // we'll be stopping them soon, don't bother starting.
-  if (mQueuedMeteorStops > 0) return;
-  
-  m_meteorsSpinning = PR_TRUE;
-  // actually start the meteors
-  if (mStatusFeedback)
-    mStatusFeedback->StartMeteors();
-}
-
-void
-nsMsgStatusFeedback::NotifyStopMeteors(nsITimer* aTimer)
-{
-  if (mQueuedMeteorStops > 0)
-    mQueuedMeteorStops--;
-  
-  // meteors not spinning
-  if (!m_meteorsSpinning) return;
-
-  // there is at least one more timer firing soon
-  if (mQueuedMeteorStarts > 0) return;
-
-  // actually stop the meteors
-  if (mStatusFeedback)
-    mStatusFeedback->StopMeteors();
-  m_meteorsSpinning = PR_FALSE;
 }
 
 NS_IMETHODIMP nsMsgStatusFeedback::OnProgress(nsIChannel* channel, nsISupports* ctxt, 
