@@ -231,10 +231,17 @@ FileSystemDataSource::isDirURI(nsIRDFResource* source)
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
     if (!fileURL)   return(PR_FALSE);
-    
+
     nsCOMPtr<nsIFile> aDir;
     rv = fileURL->GetFile(getter_AddRefs(aDir));
     if (NS_FAILED(rv))  return(PR_FALSE);
+
+    // ensure that we DO NOT resolve aliases
+    nsCOMPtr<nsILocalFile>  aDirLocal = do_QueryInterface(aDir);
+    if (aDirLocal)
+    {
+        aDirLocal->SetFollowLinks(PR_FALSE);
+    }
 
     PRBool isDirFlag = PR_FALSE;
 
@@ -1186,6 +1193,13 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aDir))))
 		return(rv);
 
+    // ensure that we DO NOT resolve aliases
+    nsCOMPtr<nsILocalFile>  aDirLocal = do_QueryInterface(aDir);
+    if (aDirLocal)
+    {
+        aDirLocal->SetFollowLinks(PR_FALSE);
+    }
+
 	nsCOMPtr<nsISimpleEnumerator>	dirContents;
 	if (NS_FAILED(rv = aDir->GetDirectoryEntries(getter_AddRefs(dirContents))))
 		return(rv);
@@ -1308,6 +1322,13 @@ FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
 		return(rv);
 	if (!aFile)		return(NS_ERROR_UNEXPECTED);
 
+    // ensure that we DO NOT resolve aliases
+    nsCOMPtr<nsILocalFile>  aFileLocal = do_QueryInterface(aFile);
+    if (aFileLocal)
+    {
+        aFileLocal->SetFollowLinks(PR_FALSE);
+    }
+
     PRInt64 lastModDate;
     if (NS_FAILED(rv = aFile->GetLastModificationDate(&lastModDate)))
         return(rv);
@@ -1346,6 +1367,13 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
 		return(rv);
 	if (!aFile)		return(NS_ERROR_UNEXPECTED);
+
+    // ensure that we DO NOT resolve aliases
+    nsCOMPtr<nsILocalFile>  aFileLocal = do_QueryInterface(aFile);
+    if (aFileLocal)
+    {
+        aFileLocal->SetFollowLinks(PR_FALSE);
+    }
 
     // don't do anything with directories
     PRBool  isDir = PR_FALSE;
@@ -1398,6 +1426,13 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
     if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
 		return(rv);
 	if (!aFile)		return(NS_ERROR_UNEXPECTED);
+
+    // ensure that we DO NOT resolve aliases
+    nsCOMPtr<nsILocalFile>  aFileLocal = do_QueryInterface(aFile);
+    if (aFileLocal)
+    {
+        aFileLocal->SetFollowLinks(PR_FALSE);
+    }
 
 	PRUnichar		*nameUni = nsnull;
 	if (NS_FAILED(rv = aFile->GetUnicodeLeafName(&nameUni)))
