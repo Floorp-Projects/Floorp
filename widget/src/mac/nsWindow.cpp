@@ -73,6 +73,8 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this)
   SetForegroundColor(NS_RGB(0, 0, 0));
 
   mPluginPort = nsnull;
+
+  AcceptFocusOnClick(PR_TRUE);
 }
 
 

@@ -64,6 +64,8 @@ nsTextAreaWidget::nsTextAreaWidget(): nsWindow()
   mTE_Data = nsnull;
   strcpy(gInstanceClassName, "nsTextAreaWidget");
   //mBackground = NS_RGB(124, 124, 124);
+
+  AcceptFocusOnClick(PR_TRUE);
 }
 
 

@@ -139,6 +139,8 @@ public:
 
  	 	virtual PRBool			DispatchWindowEvent(nsGUIEvent& event);
   	virtual nsresult		HandleUpdateEvent();
+  	virtual void				AcceptFocusOnClick(PRBool aBool)	{ mAcceptFocusOnClick = aBool;};
+  	PRBool							AcceptFocusOnClick()							{ return mAcceptFocusOnClick;};
 
 protected:
 
@@ -174,6 +176,8 @@ protected:
   PRBool									mTempRenderingContextMadeHere;
   	
   nsPluginPort*			mPluginPort;
+
+	PRBool						mAcceptFocusOnClick;
 };
 
 //-------------------------------------------------------------------------

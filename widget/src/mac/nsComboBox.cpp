@@ -332,7 +332,6 @@ nsresult nsComboBox::Deselect()
 //-------------------------------------------------------------------------
 PRBool nsComboBox::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
-	PRBool eatEvent = PR_FALSE;
 	switch (aEvent.message)
 	{
 		case NS_MOUSE_LEFT_DOUBLECLICK:
@@ -345,15 +344,10 @@ PRBool nsComboBox::DispatchMouseEvent(nsMouseEvent &aEvent)
 				::TrackControl(mControl, thePoint, nil);
 				ControlChanged(::GetControlValue(mControl));
 				//¥TODO: the mouseUp event is eaten by TrackControl.
-				//¥ We must create it and dispatch it after the mouseDown;
-				eatEvent = PR_TRUE;
+				//¥ We should create it and dispatch it after the mouseDown;
 			}
 			EndDraw();
 			break;
 	}
-
-	if (eatEvent)
-		return PR_TRUE;
 	return (Inherited::DispatchMouseEvent(aEvent));
-
 }

@@ -59,6 +59,8 @@ nsListBox::nsListBox() : nsMacControl(), nsIListWidget(), nsIListBox()
 
 	mListHandle	= nsnull;
 	mMultiSelect = PR_FALSE;
+
+  AcceptFocusOnClick(PR_TRUE);
 }
 
 //-------------------------------------------------------------------------
@@ -510,7 +512,6 @@ nsresult nsListBox::Deselect()
 //-------------------------------------------------------------------------
 PRBool nsListBox::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
-	PRBool eatEvent = PR_FALSE;
 	switch (aEvent.message)
 	{
 		case NS_MOUSE_LEFT_DOUBLECLICK:
@@ -529,15 +530,10 @@ PRBool nsListBox::DispatchMouseEvent(nsMouseEvent &aEvent)
 					ControlChanged(GetSelectedIndex());
 				}
 				//¥TODO: the mouseUp event is eaten by TrackControl.
-				//¥ We must create it and dispatch it after the mouseDown;
-				eatEvent = PR_TRUE;
+				//¥ We should create it and dispatch it after the mouseDown;
 			}
 			EndDraw();
 			break;
 	}
-
-	if (eatEvent)
-		return PR_TRUE;
 	return (Inherited::DispatchMouseEvent(aEvent));
-
 }
