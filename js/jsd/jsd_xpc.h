@@ -290,14 +290,6 @@ class jsdValue : public jsdIValue
  * debugger service
  ******************************************************************************/
 
-#define JSDSERVICE_CID                               \
-{ /* f1299dc2-1dd1-11b2-a347-ee6b7660e048 */         \
-     0xf1299dc2,                                     \
-     0x1dd1,                                         \
-     0x11b2,                                         \
-    {0xa3, 0x47, 0xee, 0x6b, 0x76, 0x60, 0xe0, 0x48} \
-}
-
 class jsdService : public jsdIDebuggerService
 {
   public:
