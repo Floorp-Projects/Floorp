@@ -3672,14 +3672,37 @@ void CEditBuffer::IndentContainer( CEditContainerElement *pContainer, CEditListE
                 pTag->type = P_BLOCKQUOTE;
                 break;
         }
-        CEditElement *pEle = new CEditListElement( 0, pTag, GetRAMCharSetID() );
-        PA_FreeTag( pTag );
 
-        pEle->InsertAfter( pContainer );
-        pContainer->Unlink();
-        pContainer->InsertAsFirstChild( pEle );
-        // Return the new list created
-        pList = (CEditListElement*)pEle;
+        if (pTag->type == P_BLOCKQUOTE && pPrev
+            && pPrev->GetType() == pTag->type)
+        {
+            CEditElement *pChild = pPrev->GetLastChild();
+            if( pChild )
+            {
+                pContainer->Unlink();
+                pContainer->InsertAfter( pChild );
+            }
+            else
+            {
+                pContainer->Unlink();
+                pContainer->InsertAsFirstChild( pPrev );
+            }
+            if( pNext && pNext->IsList() )
+            {
+                pPrev->Merge( pNext );
+            }
+        }
+        else
+        {
+            CEditElement *pEle = new CEditListElement( 0, pTag, GetRAMCharSetID() );
+            pEle->InsertAfter( pContainer );
+            pContainer->Unlink();
+            pContainer->InsertAsFirstChild( pEle );
+            // Return the new list created
+            pList = (CEditListElement*)pEle;
+        }
+
+        PA_FreeTag( pTag );
     }
 }
 
