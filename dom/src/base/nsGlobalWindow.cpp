@@ -1155,8 +1155,6 @@ GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
 
 NS_IMETHODIMP GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
-  nsCOMPtr<nsIDOMWindowInternal> parent;
-
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerWidth = 0;
   if (docShellWin)
@@ -1195,8 +1193,6 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 
 NS_IMETHODIMP GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 {
-  nsCOMPtr<nsIDOMWindowInternal> parent;
-
   FlushPendingNotifications();
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
@@ -1399,8 +1395,6 @@ nsresult
 GlobalWindowImpl::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
 {
   // This one is harder.  We have to get the screen size and window dimensions.
-  PRInt32 screenWidth = 0, screenHeight = 0;
-  PRInt32 winWidth, winHeight;
 
   // Check security state for use in determing window dimensions
   nsCOMPtr<nsIScriptSecurityManager>
@@ -1415,32 +1409,57 @@ GlobalWindowImpl::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
   }
 
   if (!enabled) {
-    // Get the screen dimensions
-    // XXX This should use nsIScreenManager once its fully fleshed out.
-    nsCOMPtr<nsIDOMScreen> screen;
-    if (NS_SUCCEEDED(GetScreen(getter_AddRefs(screen)))) {
-      screen->GetAvailWidth(&screenWidth);
-      screen->GetAvailHeight(&screenHeight);
-    }
-
-    // Get the window size
-    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
+    PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
+    PRInt32 winLeft, winTop, winWidth, winHeight;
 
     FlushPendingNotifications();
-    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&winWidth, &winHeight),
-                      NS_ERROR_FAILURE);
 
-    if (aLeft) {
-      *aLeft =
-        screenWidth < *aLeft + winWidth ? screenWidth - winWidth : *aLeft;
-      *aLeft = *aLeft < 0 ? 0 : *aLeft;
+    // Get the window size
+    nsCOMPtr<nsIBaseWindow> treeOwner;
+    GetTreeOwner(getter_AddRefs(treeOwner));
+    if (treeOwner)
+      treeOwner->GetPositionAndSize(&winLeft, &winTop, &winWidth, &winHeight);
+
+    // Get the screen dimensions
+    // XXX This should use nsIScreenManager once it's fully fleshed out.
+    nsCOMPtr<nsIDOMScreen> screen;
+    GetScreen(getter_AddRefs(screen));
+    if (screen) {
+      screen->GetAvailLeft(&screenLeft);
+      screen->GetAvailWidth(&screenWidth);
+      screen->GetAvailHeight(&screenHeight);
+#ifdef XP_MAC
+      /* The mac's coordinate system is different from the assumed Windows'
+         system. It offsets by the height of the menubar so that a window
+         placed at (0,0) will be entirely visible. Unfortunately that
+         correction is made elsewhere (in Widget) and the meaning of
+         the Avail... coordinates is overloaded. Here we allow a window
+         to be placed at (0,0) because it does make sense to do so.
+      */
+      screen->GetTop(&screenTop);
+#else
+      screen->GetAvailTop(&screenTop);
+#endif
     }
-    if (aTop) {
-      *aTop =
-        screenHeight < *aTop + winHeight ? screenHeight - winHeight : *aTop;
-      *aTop = *aTop < 0 ? 0 : *aTop;
+
+    if (screen && treeOwner) {
+      if (aLeft) {
+        if (screenLeft+screenWidth < *aLeft+winWidth)
+          *aLeft = screenLeft+screenWidth - winWidth;
+        if (screenLeft > *aLeft)
+          *aLeft = screenLeft;
+      }
+      if (aTop) {
+        if (screenTop+screenHeight < *aTop+winHeight)
+          *aTop = screenTop+screenHeight - winHeight;
+        if (screenTop > *aTop)
+          *aTop = screenTop;
+      }
+    } else {
+      if (aLeft)
+        *aLeft = 0;
+      if (aTop)
+        *aTop = 0;
     }
   }
 
