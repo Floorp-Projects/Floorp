@@ -368,8 +368,9 @@ public class ScriptRuntime {
         for(int i = 0, L = s.length(); i != L; ++i) {
             int c = s.charAt(i);
 
-            if (' ' <= c && c <= '~' && c != '"') {
+            if (' ' <= c && c <= '~' && c != '"' && c != '\\') {
                 // an ordinary print character (like C isprint()) and not "
+                // or \ . Note single quote ' is not escaped
                 if (sb != null) {
                     sb.append((char)c);
                 }
@@ -391,7 +392,7 @@ public class ScriptRuntime {
                 case 0xb:   escape = 'v';  break; // Java lacks \v.
                 case '"':   escape = '"';  break;
                 case ' ':   escape = ' ';  break;
-                case '\'':  escape = '\''; break;
+                case '\\':  escape = '\\'; break;
             }
             if (escape >= 0) {
                 // an \escaped sort of character
