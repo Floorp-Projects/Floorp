@@ -275,7 +275,7 @@ NS_IMETHODIMP nsMailDatabase::EndBatch()
 NS_IMETHODIMP nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator)
 {
 	nsresult ret = NS_OK;
-  if (!m_folderStream)
+  if (!m_folderStream && m_folder)
   {
     PRBool isLocked;
     m_folder->GetLocked(&isLocked);
