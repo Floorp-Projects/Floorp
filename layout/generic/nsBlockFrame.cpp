@@ -5109,6 +5109,14 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     }
   }
 
+  if (floatFrame->GetType() == nsLayoutAtoms::letterFrame) {
+    // We never split floating first letters; an incomplete state for
+    // such frames simply means that there is more content to be
+    // reflowed on the line.
+    if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus)) 
+      aReflowStatus = NS_FRAME_COMPLETE;
+  }
+
   // Remove the float from the reflow tree.
   if (aState.mReflowState.path)
     aState.mReflowState.path->RemoveChild(floatFrame);
