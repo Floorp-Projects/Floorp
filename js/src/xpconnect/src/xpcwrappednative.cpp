@@ -1114,12 +1114,12 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
     {
         JSObject* funObjParent = JS_GetParent(cx, funobj);
         NS_ASSERTION(funObjParent, "funobj has no parent");
-        NS_ASSERTION(JS_GetParent(cx, funObjParent), "funobj's parent is global");
 
         JSClass* funObjParentClass = JS_GET_CLASS(cx, funObjParent);
 
         if(IS_PROTO_CLASS(funObjParentClass))
         {
+            NS_ASSERTION(JS_GetParent(cx, funObjParent), "funobj's parent (proto) is global");
             proto = (XPCWrappedNativeProto*) JS_GetPrivate(cx, funObjParent);
         }
         else if(IS_WRAPPER_CLASS(funObjParentClass))
@@ -1129,6 +1129,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         }
         else if(IS_TEAROFF_CLASS(funObjParentClass))
         {
+            NS_ASSERTION(JS_GetParent(cx, funObjParent), "funobj's parent (tearoff) is global");
             cur = funObjParent;
             goto return_tearoff;
         }
