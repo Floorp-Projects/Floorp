@@ -15,5 +15,5 @@ messenger.jar:
 *+  content/messenger/addressbook/abNewCardDialog.xul           (content/abNewCardDialog.xul)
 
 en-US.jar:
-*+  locale/en-US/messenger/addressbook/abMainWindow.dtd         (locale/abMainWindow.dtd)
-*+  locale/en-US/messenger/addressbook/abNewCardDialog.dtd      (locale/abNewCardDialog.dtd)
++  locale/en-US/messenger/addressbook/abMainWindow.dtd          (locale/abMainWindow.dtd)
++  locale/en-US/messenger/addressbook/abNewCardDialog.dtd       (locale/abNewCardDialog.dtd)
