@@ -45,23 +45,23 @@ extern PLHashTable*			gHashTable;
 extern char *               gSavedLine;       
 extern PLHashAllocOps       pref_HashAllocOps;
 
-PR_EXTERN(JSBool) PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
-PR_EXTERN(PrefResult) pref_savePref(PLHashEntry *he, int i, void *arg);
-PR_EXTERN(PrefResult) pref_saveLIPref(PLHashEntry *he, int i, void *arg);
-PR_EXTERN(PRBool) pref_VerifyLockFile(char* buf, long buflen);
+JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
+PrefResult pref_savePref(PLHashEntry *he, int i, void *arg);
+PrefResult pref_saveLIPref(PLHashEntry *he, int i, void *arg);
+PRBool pref_VerifyLockFile(char* buf, long buflen);
 
 #ifdef MOZ_OLD_UI_STUFF
-PR_EXTERN(PrefResult) PREF_SetSpecialPrefsLocal(void);
+PrefResult PREF_SetSpecialPrefsLocal(void);
 #endif /* MOZ_OLD_UI_STUFF */
 
-PR_EXTERN(int) pref_CompareStrings(const void *v1, const void *v2, void* unused);
+int pref_CompareStrings(const void *v1, const void *v2, void* unused);
 extern JSBool pref_InitInitialObjects(void);
 
 NSPR_END_EXTERN_C
 
 /* Possibly exportable */
 #if defined(__cplusplus)
-PR_EXTERN(PrefResult) PREF_SavePrefFileSpecWith(
+PrefResult PREF_SavePrefFileSpecWith(
 	nsIFileSpec* fileSpec,
 	PLHashEnumerator heSaveProc);
 #endif /*__cplusplus*/
