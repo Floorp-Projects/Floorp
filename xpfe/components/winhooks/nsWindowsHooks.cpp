@@ -25,6 +25,7 @@
  *  Joe Elwell     <jelwell@netscape.com>
  *  Håkan Waara    <hwaara@chello.se>
  *  Aaron Kaluszka <ask@swva.net>
+ *  Jeremy Morton  <jez9999@runbox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -82,12 +83,12 @@ static ProtocolRegistryEntry
     ftp( "ftp" ),
     chrome( "chrome" ),
     gopher( "gopher" );
-const char *jpgExts[]  = { ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", 0 };
+const char *jpgExts[]  = { ".jpg", ".jpe", ".jpeg", ".jfif", ".pjpeg", ".pjp", 0 };
 const char *gifExts[]  = { ".gif", 0 };
 const char *pngExts[]  = { ".png", 0 };
 const char *mngExts[]  = { ".mng", 0 };
 const char *xbmExts[]  = { ".xbm", 0 };
-const char *bmpExts[]  = { ".bmp", 0 };
+const char *bmpExts[]  = { ".bmp", ".rle", ".dib", 0 };
 const char *icoExts[]  = { ".ico", 0 };
 const char *xmlExts[]  = { ".xml", 0 };
 const char *xhtmExts[] = { ".xht", ".xhtml", 0 };
@@ -95,19 +96,19 @@ const char *xulExts[]  = { ".xul", 0 };
 const char *htmExts[]  = { ".htm", ".html", ".shtml", 0 };
 
 static FileTypeRegistryEntry
-    jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",           "jpegfile", "image-file.ico"),
-    gif(   gifExts,  "MozillaGIF",   "GIF Image",            "giffile",  "image-file.ico"),
+    jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",           "jpegfile", "jpeg-file.ico"),
+    gif(   gifExts,  "MozillaGIF",   "GIF Image",            "giffile",  "gif-file.ico"),
     png(   pngExts,  "MozillaPNG",   "PNG Image",            "pngfile",  "image-file.ico"),
     mng(   mngExts,  "MozillaMNG",   "MNG Image",            "",         "image-file.ico"),
     xbm(   xbmExts,  "MozillaXBM",   "XBM Image",            "xbmfile",  "image-file.ico"),
     bmp(   bmpExts,  "MozillaBMP",   "BMP Image",            "",         "image-file.ico"),
     ico(   icoExts,  "MozillaICO",   "Icon",                 "icofile",  "%1"),
-    xml(   xmlExts,  "MozillaXML",   "XML Document",         "xmlfile",  "doc-file.ico"),
-    xhtml( xhtmExts, "MozillaXHTML", "XHTML Document",       "",         "doc-file.ico"),
-    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL Document", "",         "doc-file.ico");
+    xml(   xmlExts,  "MozillaXML",   "XML Document",         "xmlfile",  "xml-file.ico"),
+    xhtml( xhtmExts, "MozillaXHTML", "XHTML Document",       "",         "misc-file.ico"),
+    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL Document", "",         "xul-file.ico");
 
 static EditableFileTypeRegistryEntry
-    mozillaMarkup( htmExts, "MozillaHTML", "HTML Document", "htmlfile",  "doc-file.ico");
+    mozillaMarkup( htmExts, "MozillaHTML", "HTML Document", "htmlfile",  "html-file.ico");
 
 // Implementation of the nsIWindowsHooksSettings interface.
 // Use standard implementation of nsISupports stuff.
