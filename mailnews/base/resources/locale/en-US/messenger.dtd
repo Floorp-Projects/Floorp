@@ -38,8 +38,8 @@ Rights Reserved.
 <!ENTITY saveAsFileCmd.accesskey		"f">  
 <!ENTITY saveAsTemplateCmd.label		"Template">  
 <!ENTITY saveAsTemplateCmd.accesskey	"t">  
-<!ENTITY getNewMsgCmd.label				"Get New Messages">  
-<!ENTITY getNewMsgCmd.accesskey			"m">  
+<!ENTITY getNewMsgCmd.label				"Get New Messages">
+<!ENTITY getNewMsgCmd.accesskey			"g">  
 <!ENTITY sendUnsentCmd.label			"Send Unsent Messages">  
 <!ENTITY sendUnsentCmd.accesskey		"d">  
 <!ENTITY loadFirstDraft.label			"Load First Draft Message">
@@ -70,10 +70,10 @@ Rights Reserved.
 <!ENTITY selectFlaggedCmd.label ".Flagged Messages">  
 <!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
 <!ENTITY filtersCmd.label "Message Filters...">  
-<!ENTITY filtersCmd.accesskey "m">  
+<!ENTITY filtersCmd.accesskey "i">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
 <!ENTITY accountManagerCmd.label "Mail/News Account Settings">
-<!ENTITY accountManagerCmd.accesskey "a">
+<!ENTITY accountManagerCmd.accesskey "m">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
 <!ENTITY redoDeleteMsgCmd.label "Redo Delete Message">
 <!ENTITY undoMoveMsgCmd.label "Undo Move Message">
