@@ -97,6 +97,7 @@ en-US.jar:
         locale/en-US/help/images/wink.gif                  (locale/en-US/images/wink.gif)
         locale/en-US/help/images/pen.gif                   (locale/en-US/images/pen.gif)
         locale/en-US/help/images/key.gif                   (locale/en-US/images/key.gif)
+        locale/en-US/help/shortcuts.html                   (locale/en-US/shortcuts.html)
 
 modern.jar:
         skin/modern/communicator/help.css                    (skin/modern/help.css)
