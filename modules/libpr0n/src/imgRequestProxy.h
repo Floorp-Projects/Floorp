@@ -96,6 +96,10 @@ protected:
   void OnStartRequest(nsIRequest *request, nsISupports *ctxt);
   void OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode); 
 
+  inline PRBool HasObserver() const {
+    return mListener != nsnull;
+  }
+  
 private:
   friend class imgCacheValidator;
 

@@ -155,13 +155,13 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
     proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED);
   }
 
+  if (mImage && !HaveProxyWithObserver(nsnull)) {
+    LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "stopping animation");
+
+    mImage->StopAnimation();
+  }
+
   if (mObservers.Count() == 0) {
-    if (mImage) {
-      LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "stopping animation");
-
-      mImage->StopAnimation();
-    }
-
     /* If |aStatus| is a failure code, then cancel the load if it is still in progress.
        Otherwise, let the load continue, keeping 'this' in the cache with no observers.
        This way, if a proxy is destroyed without calling cancel on it, it won't leak
@@ -238,7 +238,7 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
   if (mState & onStopDecode)
     proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
 
-  if (mImage && (mObservers.Count() == 1)) {
+  if (mImage && !HaveProxyWithObserver(proxy) && proxy->HasObserver()) {
     LOG_MSG(gImgLog, "imgRequest::AddProxy", "resetting animation");
 
     mImage->ResetAnimation();
@@ -310,6 +310,21 @@ void imgRequest::RemoveFromCache()
   }
 }
 
+PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
+{
+  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
+    imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    if (proxy == aProxyToIgnore) {
+      continue;
+    }
+    
+    if (proxy->HasObserver()) {
+      return PR_TRUE;
+    }
+  }
+  
+  return PR_FALSE;
+}
 
 /** imgILoad methods **/
 
