@@ -4982,14 +4982,3 @@ nsEditorShell::DoControllerCommand(const nsAReadableString& aCommand)
   return rv;
 }
 
-nsresult
-nsEditorShell::CSSPrefChangedCallback(PRBool aIsCSSPrefChecked)
-{
-  nsresult  err = NS_NOINTERFACE;
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-  {
-    err = htmlEditor->SetCSSEnabled(aIsCSSPrefChecked);
-  }
-  return err;
-}

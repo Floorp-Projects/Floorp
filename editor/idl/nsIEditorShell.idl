@@ -514,7 +514,6 @@ interface nsIEditorShell : nsISupports
   wstring GetAlignment(out boolean mixed);
 
   void ApplyStyleSheet(in wstring url);
-  void CSSPrefChangedCallback(in boolean isCSSPrefChecked);
 
   /** Set the display mode for editing
     * displayMode
