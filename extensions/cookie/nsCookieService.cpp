@@ -2094,7 +2094,7 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
   // 2) disallow mailnews, if pref set
   // 3) perform a permissionlist lookup to see if an entry exists for this host
   //    (a match here will override defaults in 4)
-  // 4) go thru enumerated permissions to see which one we have:
+  // 4) go through enumerated permissions to see which one we have:
   // -> cookies disabled: return
   // -> dontacceptforeign: check if cookie is foreign
   // -> p3p: check p3p cookie data
