@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.221 $ ';
+$::UtilsVersion = '$Revision: 1.222 $ ';
 
 package TinderUtils;
 
@@ -328,6 +328,12 @@ sub SetupEnv {
     if($Settings::MailBloatTest) {
         $ENV{BUILD_MAIL_SMOKETEST} = "1";
     }
+
+    # Codesighs/codesize test needs this to pull the right stuff.
+    if ($Settings::CodesizeTest or $Settings::EmbedCodesizeTest) {
+      $ENV{MOZ_MAPINFO} = "1";
+    }
+
 }
 
 sub SetupPath {
