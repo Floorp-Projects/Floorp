@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.201 $ ';
+$::UtilsVersion = '$Revision: 1.202 $ ';
 
 package TinderUtils;
 
@@ -900,14 +900,16 @@ sub get_profile_dir {
     return $profile_dir;
 }
 
+#
+# Given profile directory, find pref file hidden in salt directory.
+# profile $Settings::MozProfileName must exist before calling this sub.
+#
 sub find_pref_file {
-    my $build_dir = shift;
-
-    # profile $Settings::MozProfileName must exist before calling this sub
+    my $profile_dir = shift;
 
     # default to *nix
     my $pref_file = "prefs.js";
-    my $profile_dir = get_profile_dir($build_dir);
+
     unless (-e $profile_dir) {
         print_log "ERROR: profile $profile_dir does not exist\n";
         #XXX should make 'run_all_tests' throw a 'testfailed' exception
@@ -1354,16 +1356,10 @@ sub run_all_tests {
                   $Settings::RegxpcomTestTimeout);
     }
 
-    my $all_profiles_dir;  # All Profiles directory.
-    my $profiledir;        # Profile directory.
-
-    if($Settings::OS eq 'Darwin') {
-       $all_profiles_dir="~/Library/Mozilla/Profiles";
-    } else {
-       $all_profiles_dir="$build_dir/.mozilla";
-    }
-    
-    $profiledir = get_profile_dir($build_dir);
+    # Profile directory.  This lives in way-different places
+    # depending on the OS.
+    #
+    my $profiledir = get_profile_dir($build_dir);
 
 
     #
@@ -1374,9 +1370,7 @@ sub run_all_tests {
     # MacOSX/Darwin stores profiles in ~/Library/Mozilla/Profiles.
     my $cp_result = 0;
 
-    print "XXXX all_profiles_dir = $all_profiles_dir\n";
     print "XXXX profiledir = $profiledir\n";
-    print "XXXX Settings::OS = $Settings::OS\n";
 
     unless (-d "$profiledir") {
         print_log "No profile found, creating profile.\n";
@@ -1386,8 +1380,8 @@ sub run_all_tests {
 
         # Recreate profile if we have $Settings::CleanProfile set.
         if ($Settings::CleanProfile) {
-            my $deletedir = $all_profiles_dir;
-            $deletedir = $profiledir if ($Settings::OS eq "BeOS" || $Settings::OS =~ /^WIN/);
+            my $deletedir = $profiledir;
+
             print_log "Creating clean profile ...\n";
             print_log "Deleting $deletedir ...\n";
             File::Path::rmtree([$deletedir], 0, 0);
@@ -1578,7 +1572,7 @@ sub run_all_tests {
                       "Test passed", 1, 0);  # Timeout means failure.
 
       if ($test_result eq 'testfailed') {
-        print_log "XpcomGlueTest: If this fails ask dougt\@netscape.com for help.";
+        print_log "XpcomGlueTest: If this fails ask dougt\@netscape.com for help.\n";
       }
     }
 
