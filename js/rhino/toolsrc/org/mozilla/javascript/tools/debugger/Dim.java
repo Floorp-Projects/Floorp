@@ -120,12 +120,12 @@ class Dim {
             this.fsource = fsource;
             this.breakpoints = fsource.sourceInfo().breakpoints;
             this.lineNumber = fsource.firstLine();
-            contextData.pushFrame(this);
         }
 
         public void onEnter(Context cx, Scriptable scope,
                             Scriptable thisObj, Object[] args)
         {
+            contextData.pushFrame(this);
             this.scope = scope;
             this.thisObj = thisObj;
             if (dim.breakOnEnter) {
@@ -992,20 +992,20 @@ class Dim {
         }
 
         if (recursiveEventThreadCall) {
-			// XXX: For now the foolowing is commented out as on Linux 
-			// too deep recursion of dispatchNextGuiEvent causes GUI lockout.
-			// Note: it can make GUI unresponsive if long-running script
-			// will be called on GUI thread while processing another interrupt
-			if (false) {
+            // XXX: For now the foolowing is commented out as on Linux
+            // too deep recursion of dispatchNextGuiEvent causes GUI lockout.
+            // Note: it can make GUI unresponsive if long-running script
+            // will be called on GUI thread while processing another interrupt
+            if (false) {
                // Run event dispatch until gui sets a flag to exit the initial
                // call to interrupted.
-            	while (this.returnValue == -1) {
-                	try {
-                    	callback.dispatchNextGuiEvent();
-                	} catch (InterruptedException exc) {
-                	}
-            	}
-			}
+                while (this.returnValue == -1) {
+                    try {
+                        callback.dispatchNextGuiEvent();
+                    } catch (InterruptedException exc) {
+                    }
+                }
+            }
             return;
         }
 
