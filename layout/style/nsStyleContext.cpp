@@ -2909,14 +2909,14 @@ static STYLEDATA(XUL)     				 gStructXUL[kStructIndexMax];
 //#insert new style structs here#
 
 nsStyleStruct* gStructPointer[eStyleStruct_Max][kStructIndexMax];
-bool           gStructBusy[eStyleStruct_Max][kStructIndexMax];
+PRBool         gStructBusy[eStyleStruct_Max][kStructIndexMax];
 
 
 static nsStyleStruct* GetNewMutableStyleStruct(nsStyleStructID aSID) {
 
   nsStyleStruct*  result = nsnull;
 
-  static bool initialized = false;
+  static PRBool initialized = false;
   if (!initialized) {
     initialized = true;
     for (short structType = 0; structType < eStyleStruct_Max; structType++) {
