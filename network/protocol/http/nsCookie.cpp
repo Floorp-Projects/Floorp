@@ -1545,6 +1545,7 @@ net_IntSetCookieString(MWContext * context,
         prev_cookie->path = path_from_header;
         prev_cookie->host = host_from_header;
         prev_cookie->name = name_from_header;
+        prev_cookie->xxx = FALSE;
         HG83263
         prev_cookie->is_domain = is_domain;
 		prev_cookie->last_accessed = time(NULL);
