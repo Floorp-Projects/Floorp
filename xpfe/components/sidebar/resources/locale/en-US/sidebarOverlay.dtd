@@ -56,7 +56,7 @@
 
 <!ENTITY sidebar.no-panels.state     "The sidebar is currently empty.">
 <!ENTITY sidebar.no-panels.add       'You may add tabs by clicking on the "Tabs" button above.'>
-<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide the Sidebar, click on the "View" menu above, and select "Sidebar."'>
+<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide the Sidebar, click on the "View" menu above, and select "Sidebar" from the "Show/Hide" sub-menu.'>
 <!ENTITY sidebar.sbDirectory.label   "Sidebar Directory...">
 
 <!ENTITY sidebar.pagenotfound.label  "This tab is not available right now.">
