@@ -576,7 +576,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
             case NS_STYLE_FONT_WEIGHT_BOLDER:
             case NS_STYLE_FONT_WEIGHT_LIGHTER:
               font->mFont.weight = (parentFont->mFont.weight + value);
-              font->mFixedFont.weight = (parentFont->mFont.weight + value);
+              font->mFixedFont.weight = (parentFont->mFixedFont.weight + value);
               break;
           }
         }
@@ -617,7 +617,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
               if (parentFont->mFont.size > (nscoord)((float)normal.size * kFontScale[index]))
                 break;
             font->mFont.size = (nscoord)((float)normal.size * kFontScale[index]);
-            font->mFixedFont.size = (nscoord)((float)normal.size * kFontScale[index]);
+            font->mFixedFont.size = (nscoord)((float)normalFixed.size * kFontScale[index]);
           }
         }
         else if (ourFont->mSize.IsLengthUnit()) {
@@ -626,7 +626,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         }
         else if (ourFont->mSize.GetUnit() == eCSSUnit_Percent) {
           font->mFont.size = (nscoord)((float)(parentFont->mFont.size) * ourFont->mSize.GetPercentValue());
-          font->mFixedFont.size = (nscoord)((float)(parentFont->mFont.size) * ourFont->mSize.GetPercentValue());
+          font->mFixedFont.size = (nscoord)((float)(parentFont->mFixedFont.size) * ourFont->mSize.GetPercentValue());
         }
 
         NS_IF_RELEASE(parentContext);
