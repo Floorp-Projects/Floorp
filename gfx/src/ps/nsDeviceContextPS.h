@@ -77,10 +77,6 @@ public:
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
-  void        SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
-  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
-
-
   NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
   NS_IMETHOD  GetDepth(PRUint32& aDepth);
   NS_IMETHOD  ConvertPixel(nscolor aColor, PRUint32 & aPixel);

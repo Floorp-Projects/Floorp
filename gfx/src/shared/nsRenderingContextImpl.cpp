@@ -120,7 +120,7 @@ nsTransform2D       *theTransform;
     // create a new drawing surface... using pixels as the size
     vrect.height = (nscoord)(tvrect.height * t2p);
     vrect.width = (nscoord)(tvrect.width * t2p);
-    this->CreateDrawingSurface(&vrect,dsFlag,(nsDrawingSurface&)ts);
+    this->CreateDrawingSurface(vrect,dsFlag,(nsDrawingSurface&)ts);
 
     if (nsnull != ts) {
       this->SelectOffScreenDrawingSurface(ts);
@@ -488,7 +488,7 @@ nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize
         gBackbuffer = nsnull;
       }
 
-      rv = CreateDrawingSurface(&newBounds, 0, gBackbuffer);
+      rv = CreateDrawingSurface(newBounds, 0, gBackbuffer);
       //   printf("Allocating a new drawing surface %d %d\n", newBounds.width, newBounds.height);
       if (NS_SUCCEEDED(rv)) {
         gBackbufferBounds = newBounds;

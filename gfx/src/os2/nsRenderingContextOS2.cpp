@@ -825,7 +825,7 @@ NS_IMETHODIMP nsRenderingContextOS2::GetCurrentTransform( nsTransform2D *&aTrans
 // I'm reliably told that 'aBounds' is in device units, and that the
 // position oughtn't to be ignored, but for all intents & purposes can be.
 //
-NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface( nsRect *aBounds,
+NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface(const nsRect& aBounds,
                              PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
    nsresult rc = NS_ERROR_FAILURE;
@@ -835,7 +835,7 @@ NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface( nsRect *aBounds,
    if (!surf)
      return NS_ERROR_OUT_OF_MEMORY;
 
-   rc = surf->Init( mMainSurface->GetPS (), aBounds->width, aBounds->height, aSurfFlags);
+   rc = surf->Init( mMainSurface->GetPS (), aBounds.width, aBounds.height, aSurfFlags);
 
    if(NS_SUCCEEDED(rc))
    {

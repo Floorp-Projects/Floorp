@@ -744,7 +744,7 @@ nsRenderingContextXlib::GetCurrentTransform(nsTransform2D *&aTransform)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds,
+nsRenderingContextXlib::CreateDrawingSurface(const nsRect& aBounds,
                                              PRUint32 aSurfFlags,
                                              nsDrawingSurface &aSurface)
 {
@@ -755,8 +755,7 @@ nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds,
     return NS_ERROR_FAILURE;
   }
 
-  NS_ENSURE_TRUE(aBounds != nsnull, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE((aBounds->width > 0) && (aBounds->height > 0), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE((aBounds.width > 0) && (aBounds.height > 0), NS_ERROR_FAILURE);
  
   nsresult rv = NS_ERROR_FAILURE;
   nsDrawingSurfaceXlibImpl *surf = new nsDrawingSurfaceXlibImpl();
@@ -765,7 +764,7 @@ nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds,
   {
     NS_ADDREF(surf);
     UpdateGC();
-    rv = surf->Init(mXlibRgbHandle, mGC, aBounds->width, aBounds->height, aSurfFlags);    
+    rv = surf->Init(mXlibRgbHandle, mGC, aBounds.width, aBounds.height, aSurfFlags);    
   }
 
   aSurface = (nsDrawingSurface)surf;

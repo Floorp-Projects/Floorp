@@ -593,7 +593,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetCurrentTransform( nsTransform2D *&aTran
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface ) 
+NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface ) 
 {
 	if( nsnull == mSurface ) {
 		aSurface = nsnull;
@@ -603,7 +603,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( nsRect *aBounds, PRU
 	nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
 	if( surf ) {
 		NS_ADDREF(surf);
-		surf->Init( aBounds->width, aBounds->height, aSurfFlags );
+		surf->Init( aBounds.width, aBounds.height, aSurfFlags );
 	}
 	else 
 		return NS_ERROR_FAILURE;

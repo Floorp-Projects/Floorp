@@ -258,18 +258,6 @@ NS_IMETHODIMP nsDeviceContextPS::GetScrollBarDimensions(float &aWidth, float &aH
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS::GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
-{
-  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDrawingSurface()\n"));
-
-  aSurface = nsnull;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
- */
 NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDepth(mDepth=%d)\n", mDepth));

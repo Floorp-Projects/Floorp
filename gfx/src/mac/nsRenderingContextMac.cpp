@@ -503,7 +503,7 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+NS_IMETHODIMP nsRenderingContextMac::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
 	aSurface = nsnull;
 
@@ -513,13 +513,8 @@ NS_IMETHODIMP nsRenderingContextMac::CreateDrawingSurface(nsRect *aBounds, PRUin
 
 	// get rect
 	Rect macRect;
-	if (aBounds != nsnull) {
-  		// fyi, aBounds->x and aBounds->y are always 0 here
-  		::SetRect(&macRect, aBounds->x, aBounds->y, aBounds->XMost(), aBounds->YMost());
-	} else {
-	  NS_ASSERTION(0, "Creating empty surface");
-		::SetRect(&macRect, 0, 0, 2, 2);
-  }
+  // fyi, aBounds->x and aBounds->y are always 0 here
+  ::SetRect(&macRect, aBounds.x, aBounds.y, aBounds.XMost(), aBounds.YMost());
   
 	nsDrawingSurfaceMac* surface = new nsDrawingSurfaceMac();
 	if (!surface)

@@ -278,7 +278,7 @@ void nsSVGRenderingContext::InitializeBuffer()
   PRBool clipEmpty;
   mRenderingContext->SetClipRect(r,nsClipCombine_kReplace,clipEmpty);
 
-  mRenderingContext->CreateDrawingSurface(&mDirtyRect,
+  mRenderingContext->CreateDrawingSurface(mDirtyRect,
                                           NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS,
                                           (void*&)*getter_AddRefs(mBuffer));
   nsCOMPtr<nsIDeviceContext> dc;

@@ -107,7 +107,7 @@ public:
 	NS_IMETHOD Scale(float aSx, float aSy);
 	NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform);
 	
-	NS_IMETHOD CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
+	NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
 	NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
 	
 	NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);

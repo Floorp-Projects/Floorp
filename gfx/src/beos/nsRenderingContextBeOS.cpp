@@ -444,7 +444,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetCurrentTransform(nsTransform2D *&aTrans
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags,
+NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags,
 	nsDrawingSurface &aSurface) {
 	
 	if (nsnull == mSurface) {
@@ -452,8 +452,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(nsRect *aBounds, PRUi
 		return NS_ERROR_FAILURE;
 	}
 	
-	if (aBounds == nsnull) return NS_ERROR_FAILURE;
-	if ((aBounds->width <= 0) || (aBounds->height <= 0)) {
+	if ((aBounds.width <= 0) || (aBounds.height <= 0)) {
 		return NS_ERROR_FAILURE;
 	}
 	
@@ -466,7 +465,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(nsRect *aBounds, PRUi
 		    if (mView) 
 		        mView->UnlockLooper();
 		}
-		surf->Init(mView, aBounds->width, aBounds->height, aSurfFlags);
+		surf->Init(mView, aBounds.width, aBounds.height, aSurfFlags);
 	}
 	aSurface = (nsDrawingSurface)surf;
 	return NS_OK;

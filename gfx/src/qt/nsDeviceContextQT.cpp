@@ -327,16 +327,6 @@ nsDeviceContextQT::GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
   return status;
 }
 
-NS_IMETHODIMP 
-nsDeviceContextQT::GetDrawingSurface(nsIRenderingContext &aContext, 
-                                     nsDrawingSurface &aSurface)
-{
-  dmsg(ENTER, "GetDrawingSurface");
-  aContext.CreateDrawingSurface(nsnull,0,aSurface);
-  return (nsnull == aSurface) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;  
-  dmsg(EXIT, "GetDrawingSurface");
-}
-
 NS_IMETHODIMP nsDeviceContextQT::ConvertPixel(nscolor aColor, 
                                               PRUint32 &aPixel)
 {

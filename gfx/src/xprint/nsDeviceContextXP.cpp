@@ -243,19 +243,6 @@ NS_IMETHODIMP nsDeviceContextXp :: GetScrollBarDimensions(float &aWidth,
   return NS_OK;
 }
 
-void  nsDeviceContextXp :: SetDrawingSurface(nsDrawingSurface  aSurface) 
-{ 
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- */
-NS_IMETHODIMP nsDeviceContextXp :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
-{
-  aSurface = nsnull;
-  return NS_OK;
-}
-
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *        @update 12/21/98 dwc

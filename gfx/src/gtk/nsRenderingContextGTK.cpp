@@ -777,7 +777,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetCurrentTransform(nsTransform2D *&aTransf
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
+NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(const nsRect &aBounds,
                                                           PRUint32 aSurfFlags,
                                                           nsDrawingSurface &aSurface)
 {
@@ -786,8 +786,7 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
     return NS_ERROR_FAILURE;
   }
 
-  g_return_val_if_fail (aBounds != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail ((aBounds->width > 0) && (aBounds->height > 0), NS_ERROR_FAILURE);
+  g_return_val_if_fail ((aBounds.width > 0) && (aBounds.height > 0), NS_ERROR_FAILURE);
  
   nsresult rv = NS_OK;
   nsDrawingSurfaceGTK *surf = new nsDrawingSurfaceGTK();
@@ -796,7 +795,7 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
   {
     NS_ADDREF(surf);
     UpdateGC();
-    rv = surf->Init(mGC, aBounds->width, aBounds->height, aSurfFlags);    
+    rv = surf->Init(mGC, aBounds.width, aBounds.height, aSurfFlags);    
   } else {
     rv = NS_ERROR_FAILURE;
   }
