@@ -165,7 +165,6 @@ nsBinHexDecoder::OnDataAvailable(nsIRequest* request,
   if (mOutputStream && mDataBuffer && aCount > 0)
   {
     PRUint32 numBytesRead = 0; 
-    PRUint32 numBytesWritten = 0;
     while (aCount > 0) // while we still have bytes to copy...
     {
       aStream->Read(mDataBuffer, PR_MIN(aCount, DATA_BUFFER_SIZE - 1), &numBytesRead);
@@ -255,7 +254,7 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 				{
           PRUint32 numBytesWritten = 0; 
           mOutputStream->Write(mOutgoingBuffer, mPosOutputBuff, &numBytesWritten);
-          if (numBytesWritten != mPosOutputBuff) 
+          if (PRInt32(numBytesWritten) != mPosOutputBuff)
             status = NS_ERROR_FAILURE;
 
           // now propagate the data we just wrote
@@ -269,9 +268,7 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 				if (status != NS_OK)
 					mState = BINHEX_STATE_DONE;
 				else
-				{
 					mState ++;
-				}
 				
         mInCRC = 1;
 			}
@@ -281,7 +278,7 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 				{
           PRUint32 numBytesWritten = 0; 
           mOutputStream->Write(mOutgoingBuffer, mPosOutputBuff, &numBytesWritten);
-          if (numBytesWritten != mPosOutputBuff) 
+          if (PRInt32(numBytesWritten) != mPosOutputBuff)
             status = NS_ERROR_FAILURE;
 
           mNextListener->OnDataAvailable(aRequest, aContext, mInputStream, 0, numBytesWritten);
@@ -294,9 +291,7 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 		case BINHEX_STATE_DCRC:
 		case BINHEX_STATE_RCRC:
 			if (!mCount++) 
-			{
 				mFileCRC = (unsigned short) c << 8;
-			} 
 			else 
 			{
 				if ((mFileCRC | c) != mCRC) 
@@ -319,9 +314,7 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 				}
 				
 				if (mState == BINHEX_STATE_DFORK) 
-				{			
 					mCount = PR_ntohl(mHeader.dlen);
-				}
 				else
 				{
           // we aren't processing the resurce Fork. uncomment this line if we make this converter
@@ -331,14 +324,10 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 				}
 				
 				if (mCount) 
-				{
 					mInCRC = 0;						
-				} 
 				else 
-				{
 					/* nothing inside, so skip to the next state. */
 					mState ++;
-				}
 			}
 			break;
 	}
@@ -396,7 +385,7 @@ nsresult nsBinHexDecoder::ProcessNextChunk(nsIRequest * aRequest, nsISupports * 
 			c = GetNextChar(numBytesInBuffer);
 			if (c == 0)	return NS_OK;
 				 
-			if ((val = BHEXVAL(c)) == -1) 
+			if ((val = BHEXVAL(c)) == PRUint32(-1))
 			{
 				/* we incount an invalid character.	*/
 				if (c) 
@@ -437,9 +426,7 @@ nsresult nsBinHexDecoder::ProcessNextChunk(nsIRequest * aRequest, nsISupports * 
 				else 
 				{
 					while (--c > 0)				/* we are in the run lenght mode */ 
-					{
 						ProcessNextState(aRequest, aContext);
-					}
 				}
 				mMarker = 0;
 			} 
