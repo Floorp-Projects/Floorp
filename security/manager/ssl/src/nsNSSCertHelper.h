@@ -39,30 +39,6 @@
 
 #include "nsNSSCertHeader.h"
 
-class nsINSSComponent;
-class nsIASN1PrintableItem;
-
-nsresult
-ProcessVersion(SECItem         *versionItem,
-               nsINSSComponent *nssComponent,
-               nsIASN1PrintableItem **retItem);
-
-nsresult 
-ProcessSerialNumberDER(SECItem         *serialItem, 
-                       nsINSSComponent *nssComponent,
-                       nsIASN1PrintableItem **retItem);
-
-nsresult
-GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text);
-
-nsresult
-ProcessRawBytes(SECItem *data, nsAString &text);
-
-nsresult
-ProcessSingleExtension(CERTCertExtension *extension,
-                       nsINSSComponent *nssComponent,
-                       nsIASN1PrintableItem **retExtension);
-
 PRUint32
 getCertType(CERTCertificate *cert);
 
