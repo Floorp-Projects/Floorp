@@ -31,8 +31,10 @@ EXPORT_RESOURCE_SKIN = \
 EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/images/ED_Bold.gif \
 	$(srcdir)/images/ED_Bullets.gif \
+	$(srcdir)/images/ED_Left.gif \
 	$(srcdir)/images/ED_Center.gif \
-	$(srcdir)/images/ED_ClearStyle.gif \
+	$(srcdir)/images/ED_Right.gif \
+	$(srcdir)/images/ED_Justify.gif \
 	$(srcdir)/images/ED_Copy.gif \
 	$(srcdir)/images/ED_Cut.gif \
 	$(srcdir)/images/ED_Outdent.gif \
@@ -41,12 +43,10 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/images/ED_Image.gif \
 	$(srcdir)/images/ED_Indent.gif \
 	$(srcdir)/images/ED_Italic.gif \
-	$(srcdir)/images/ED_Left.gif \
 	$(srcdir)/images/ED_Link.gif \
 	$(srcdir)/images/ED_Numbers.gif \
 	$(srcdir)/images/ED_Paste.gif \
 	$(srcdir)/images/ED_Redo.gif \
-	$(srcdir)/images/ED_Right.gif \
 	$(srcdir)/images/ED_Spell.gif \
 	$(srcdir)/images/ED_Table.gif \
 	$(srcdir)/images/ED_Target.gif \

@@ -324,7 +324,7 @@
 	  </toolbar>
       <toolbar id="FormatToolbar">
 		    <titledbutton id="ParagraphPopup" value="Paragraph" class="popup" align="left" popup="ParagraphMenu"/>
-		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popup="FontFaceMenu"/>
+		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popup="FontFaceWindow"/>
 		    <titledbutton id="FontSizePopup" value="Size" class="popup" align="left" popup="FontSizeMenu"/>
 		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu"/>
 		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu"/>
@@ -344,7 +344,7 @@
 	      <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="bottom" onclick="EditorInsertList('ol')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="bottom" onclick="EditorIndent('outdent')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="bottom" class="popup" popup="AlignmentMenu"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="bottom" class="popup" popup="AlignmentWindow"/>
 		  <spring flex="100%"/>
 	  </toolbar>
     </toolbox>
@@ -447,15 +447,23 @@
   </menu>
 </popup>
 
-
-//-- Bug? If any other popups placed after this, they don't get used
+// Use these afer popup windows are working correctly:
 <popup id="FontFaceWindow">
    <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="40" height="40">
-     <titledbutton value="Default Variable Width" onclick="opener.EditorSetFontFace(''); window.close();"/>
-     <titledbutton value="Default Fixed Width"    onclick="opener.EditorSetFontFace('tt'); window.close();"/>
-     <titledbutton value="Arial, Helvetica"       onclick="opener.EditorSetFontFace('Arial, Helvetica, sans-serif'); window.close();"/>
-     <titledbutton value="Times"                  onclick="opener.EditorSetFontFace('Times New Roman, Times, serif'); window.close();"/>
-     <titledbutton value="Courier"                onclick="opener.EditorSetFontFace('Courier New, Courier, mono'); window.close();"/>
+     <titledbutton value="Default Variable Width" onclick="opener.EditorSetFontFace(''); window.close();"/><html:br/>
+     <titledbutton value="Default Fixed Width"    onclick="opener.EditorSetFontFace('tt'); window.close();"/><html:br/>
+     <titledbutton value="Arial, Helvetica"       onclick="opener.EditorSetFontFace('Arial, Helvetica, sans-serif'); window.close();"/><html:br/>
+     <titledbutton value="Times"                  onclick="opener.EditorSetFontFace('Times New Roman, Times, serif'); window.close();"/><html:br/>
+     <titledbutton value="Courier"                onclick="opener.EditorSetFontFace('Courier New, Courier, mono'); window.close();"/><html:br/>
+   </window>
+</popup>
+
+<popup id="AlignmentWindow" oncreate="OnCreateAlignmentPopup()">
+   <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="2" height="2">
+     <titledbutton class="AlignButton" id="LeftAlign" value="Left"   align="right" onclick="opener.EditorAlign('left'); window.close();"/><html:br/>
+     <titledbutton class="AlignButton" id="CenterAlign" value="Center" align="right" onclick="opener.EditorAlign('center'); window.close();"/><html:br/>
+     <titledbutton class="AlignButton" id="RightAlign" value="Right"  align="right" onclick="opener.EditorAlign('right'); window.close();"/><html:br/>
+     <titledbutton class="AlignButton" id="JustifyAlign" value="Justify"  align="right" onclick="opener.EditorAlign('justify'); window.close();"/><html:br/>
    </window>
 </popup>
 

@@ -23,7 +23,7 @@ titledbutton#BackColorPopup {
 titledbutton#BoldButton {
   min-width: 16px; 
   font-size: 19px; 
-  font-weight: 900; 
+  font-weight: bold; 
   font-family: times, serif, sans-serif;
 }
 
@@ -34,7 +34,7 @@ titledbutton#BoldButton:hover {
 titledbutton#ItalicButton {
   min-width: 16px; 
   font-size: 19px; 
-  font-weight: 500; 
+  font-weight: bold; 
   font-family: times, serif, sans-serif; 
   font-style:  italic;
 }
@@ -46,8 +46,39 @@ titledbutton#ItalicButton:hover {
 titledbutton#UnderlineButton {
   min-width: 16px; 
   font-size: 19px; 
-  font-weight: 500; 
+  font-weight: bold; 
   font-family: times, serif, sans-serif; 
   text-decoration: underline;
+}
+
+titledbutton.AlignButton {
+  margin: 0px;  
+  min-width: 20em;
+  border: 1px solid transparent;
+}
+
+titledbutton.AlignButton:hover {
+  border: 1px outset white;
+  text-decoration: none;
+}
+
+titledbutton.AlignButton:active {
+  border: 1px inset;
+}
+
+titledbutton#LeftAlign {
+	list-style-image:url(chrome://editor/skin/images/ED_Left.gif);
+}
+
+titledbutton#CenterAlign {
+	list-style-image:url(chrome://editor/skin/images/ED_Center.gif);
+}
+
+titledbutton#RightAlign {
+	list-style-image:url(chrome://editor/skin/images/ED_Right.gif);
+}
+
+titledbutton#JustifyAlign {
+	list-style-image:url(chrome://editor/skin/images/ED_Justify.gif);
 }
 
