@@ -612,7 +612,7 @@ JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSBool)
 JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->fun && fp->fun->native;
+    return !fp->script;
 }
 
 /* this is deprecated, use JS_GetFrameScopeChain instead */
@@ -670,7 +670,7 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp)
+JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 {
     return (fp->flags & JSFRAME_CONSTRUCTING) != 0;
 }

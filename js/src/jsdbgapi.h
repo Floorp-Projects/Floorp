@@ -161,8 +161,10 @@ JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp);
 
+/* XXXrginda Initially published with typo */
+#define JS_IsContructorFrame JS_IsConstructorFrame
 extern JS_PUBLIC_API(JSBool)
-JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp);
+JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp);
