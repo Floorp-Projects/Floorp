@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.44 2002/04/26 22:36:05 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.45 2002/05/01 01:04:41 jpierre%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -274,26 +274,68 @@ static const char *dllname =
 /* Should we have platform ifdefs here??? */
 #define FILE_SEP '/'
 
-static void
-nss_FindExternalRoot(const char *dbpath)
+static void nss_FindExternalRootPaths(const char *dbpath, const char* secmodprefix,
+                              char** retoldpath, char** retnewpath)
 {
-	char *path;
-	int len, path_len;
+    char *path, *oldpath, *lastsep;
+    int len, path_len, secmod_len, dll_len;
 
-	path_len = PORT_Strlen(dbpath);
-	len = path_len + PORT_Strlen(dllname) + 2; /* FILE_SEP + NULL */
-	
-	path = PORT_Alloc(len);
-	if (path == NULL) return;
+    path_len = PORT_Strlen(dbpath);
+    secmod_len = PORT_Strlen(secmodprefix);
+    dll_len = PORT_Strlen(dllname);
+    len = path_len + secmod_len + dll_len + 2; /* FILE_SEP + NULL */
 
-	/* back up to the top of the directory */
-	PORT_Memcpy(path,dbpath,path_len);
-	if (path[path_len-1] != FILE_SEP) {
-	    path[path_len++] = FILE_SEP;
-	}
-	PORT_Strcpy(&path[path_len],dllname);
-	(void) SECMOD_AddNewModule("Root Certs",path, 0, 0);
-	PORT_Free(path);
+    path = PORT_Alloc(len);
+    if (path == NULL) return;
+    oldpath = PORT_Alloc(len);
+    if (oldpath == NULL) {
+        PORT_Free(path);
+        return;
+    }
+
+    /* back up to the top of the directory */
+    PORT_Memcpy(path,dbpath,path_len);
+    if (path[path_len-1] != FILE_SEP) {
+        path[path_len++] = FILE_SEP;
+    }
+    PORT_Strcpy(oldpath, path);
+    PORT_Strcpy(&path[path_len],dllname);
+    if (secmodprefix) {
+        lastsep = PORT_Strrchr(secmodprefix, FILE_SEP);
+        if (lastsep) {
+            PORT_Strncpy(&oldpath[path_len],secmodprefix,
+                         lastsep-secmodprefix+1); /* FILE_SEP */
+        }
+    }
+    PORT_Strcat(oldpath, dllname);
+    *retoldpath = oldpath;
+    *retnewpath = path;
+    return;
+}
+
+static void nss_FreeExternalRootPaths(char* oldpath, char* path)
+{
+    if (path) {
+        PORT_Free(path);
+    }
+    if (oldpath) {
+        PORT_Free(oldpath);
+    }
+}
+
+static void
+nss_FindExternalRoot(const char *dbpath, const char* secmodprefix)
+{
+	char *path = NULL;
+        char *oldpath = NULL;
+        nss_FindExternalRootPaths(dbpath, secmodprefix, &oldpath, &path);
+        if (oldpath) {
+            (void) SECMOD_AddNewModule("Root Certs",oldpath, 0, 0);
+        }
+        if (path && !SECMOD_HasRootCerts()) {
+	    (void) SECMOD_AddNewModule("Root Certs",path, 0, 0);
+        }
+        nss_FreeExternalRootPaths(oldpath, path);
 	return;
 }
 #endif
@@ -390,7 +432,7 @@ loser:
 	/* only servers need this. We currently do not have a mac server */
 	if ((!noModDB) && (!noCertDB) && (!noRootInit)) {
 	    if (!SECMOD_HasRootCerts()) {
-		nss_FindExternalRoot(configdir);
+		nss_FindExternalRoot(configdir, secmodName);
 	    }
 	}
 #endif
