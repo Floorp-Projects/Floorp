@@ -204,11 +204,10 @@ registers, or set the value of a single register."},
         
             reader.readLine(line);
 
-            if (line.size() == 0)
+            if (line == "\n")
                 line = lastLine;
             else
             {
-                line.append("\n");
                 lastLine = line;
             }
 
