@@ -1,36 +1,12 @@
  
-/******* ToolBox & ToolBar *****
+/******* ToolBox & ToolBar *******/
 
-toolbar
+.toolbar-primary
   {
-    background-color      : #DDDDDD;
-    border-top            : 1px solid #FFFFFF;
-    border-left           : 1px solid #FFFFFF;
-    border-right          : 1px solid #9D9D9D;
-    border-bottom         : 1px solid #9D9D9D;
+    background-image      : url("chrome://communicator/skin/toolbar-bg-mac.gif");
   }
-
-toolbargrippy 
-  { 
-    background-image      : url("chrome://global/skin/taskbar-tab-trans.gif"); 
-    background-repeat     : no-repeat;
-    border-top            : 1px solid #FFFFFF;
-    border-left           : 1px solid #FFFFFF;
-    border-right          : 1px solid #9D9D9D;
-    border-bottom         : 1px solid #9D9D9D;
-    background-color      : #DDDDDD;
-    width                 : 10px;
-    height                : 10px;
-  } 
-
-toolbar[collapsed="true"] > toolbargrippy 
+  
+.toolbar-primary > toolbargrippy 
   {
-    width                 : 30px;
+    background-image      : url("chrome://communicator/skin/toolbar-bg-mac.gif");
   }
-
-toolbargrippy:hover 
-  {
-    background-color      : #CCCCFF !important; 
-    background-image      : url("chrome://global/skin/taskbar-tab-trans.gif") !important;
-  } 
-*/

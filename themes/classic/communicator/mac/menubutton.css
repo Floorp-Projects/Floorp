@@ -58,7 +58,7 @@
  menubutton.button-toolbar, menubutton.button-toolbar-4
   {
     behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
-    border                  : 1px solid #DDDDDD;
+    border                  : 1px solid transparent;
   }
   
 menubutton.button-toolbar:hover, menubutton.button-toolbar-4:hover
@@ -69,7 +69,7 @@ menubutton.button-toolbar:hover, menubutton.button-toolbar-4:hover
   
 .menubutton-toolbar-single-internal-box
   {
-    border                  : 1px solid #DDDDDD;
+    border                  : 1px solid transparent;
     padding                 : 1px 4px 1px 4px;
   }  
   

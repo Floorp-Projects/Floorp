@@ -129,4 +129,12 @@
     </content>
   </binding>  
   
+  <binding id="menubutton-icon">
+    <content excludes="menupopup">
+      <xul:box class="menubutton-icon-box">
+        <xul:image inherits="src" class="menubutton-icon-image"/>
+      </xul:box>
+    </content>
+  </binding>
+  
 </bindings>

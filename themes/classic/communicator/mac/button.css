@@ -43,7 +43,7 @@
       padding             : 2px 8px 2px 7px;
       vertical-align      : middle;
       text-align          : center;
-      border              : 1px solid #DDDDDD;
+      border              : 1px solid transparent;
     }    
   
   .button-toolbar > .button-internal-box > .button-text-container
@@ -57,13 +57,13 @@
       padding             : 1px 4px 1px 3px;
       vertical-align      : middle;
       text-align          : center;
-      border              : 1px solid #DDDDDD;
+      border              : 1px solid transparent;
     }
   
   .button-toolbar:hover:active > .button-internal-box
     {
       padding             : 1px 5px 1px 4px;
-      color				  : #FF0000;
+      color               : #FF0000;
     }
   
   .button-toolbar-1[disabled="true"],
@@ -79,7 +79,7 @@
   .button-toolbar-4[disabled="true"]:hover,
   .button-toolbar-4[disabled="true"]:hover:active
     {
-      border              : 1px solid #DDDDDD;
+      border              : 1px solid transparent;
       color               : #777777;
     }
     
@@ -143,8 +143,8 @@
   .button-toolbar-4[disabled="true"]:hover:active > .button-internal-box
     {
       padding             : 2px 8px 2px 7px !important;
-      border              : 1px solid #DDDDDD !important;
-      color				  : #777777;
+      border              : 1px solid transparent !important;
+      color	              : #777777;
     }
       
 
