@@ -611,7 +611,7 @@ function setFormElementValue(formElement, value) {
     } else {
       if (formElement.defaultValue)
         formElement.value = formElement.defaultValue;
-
+    }
   }
 
   // let the form figure out what to do with it
