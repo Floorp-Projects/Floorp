@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=mailnews
+LIBRARY_NAME=msgdb
 MODULE= mailnews
 REQUIRES=rdf
 
