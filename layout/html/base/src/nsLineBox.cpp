@@ -27,6 +27,11 @@
 #include "nsLayoutAtoms.h"
 #endif
 
+#ifdef DEBUG
+static PRInt32 ctorCount;
+PRInt32 nsLineBox::GetCtorCount() { return ctorCount; }
+#endif
+
 MOZ_DECL_CTOR_COUNTER(nsLineBox);
 
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
@@ -37,6 +42,9 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
     mData(nsnull)
 {
   MOZ_COUNT_CTOR(nsLineBox);
+#ifdef DEBUG
+  ++ctorCount;
+#endif
 
   mAllFlags = 0;
 #if NS_STYLE_CLEAR_NONE > 0
@@ -50,7 +58,12 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
 nsLineBox::~nsLineBox()
 {
   MOZ_COUNT_DTOR(nsLineBox);
+  Cleanup();
+}
 
+void
+nsLineBox::Cleanup()
+{
   if (IsBlock()) {
     if (mBlockData) {
       delete mBlockData;
@@ -61,6 +74,24 @@ nsLineBox::~nsLineBox()
       delete mInlineData;
     }
   }
+  mData = nsnull;
+}
+
+void
+nsLineBox::Reset(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
+{
+  Cleanup();
+  mFirstChild = aFrame;
+  mNext = nsnull;
+  mBounds.SetRect(0, 0, 0, 0);
+  mMaxElementWidth = 0;
+  mAllFlags = 0;
+#if NS_STYLE_CLEAR_NONE > 0
+  mFlags.mBreakType = NS_STYLE_CLEAR_NONE;
+#endif
+  SetChildCount(aCount);
+  MarkDirty();
+  mFlags.mBlock = aIsBlock;
 }
 
 static void
@@ -358,6 +389,17 @@ nsLineBox::GetCombinedArea(nsRect* aResult)
 }
 
 #ifdef DEBUG
+PRInt32
+nsLineBox::ListLength(nsLineBox* aLine)
+{
+  PRInt32 count = 0;
+  while (aLine) {
+    count++;
+    aLine = aLine->mNext;
+  }
+  return count;
+}
+
 nsIAtom*
 nsLineBox::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

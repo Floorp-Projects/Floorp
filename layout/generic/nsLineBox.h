@@ -149,6 +149,8 @@ public:
   nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
   ~nsLineBox();
 
+  void Reset(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
+
   // mBlock bit
   PRBool IsBlock() const {
     return mFlags.mBlock;
@@ -223,9 +225,14 @@ public:
   void AppendFloaters(nsFloaterCacheFreeList& aFreeList);
   PRBool RemoveFloater(nsIFrame* aFrame);
 
+  // Combined area
   void SetCombinedArea(const nsRect& aCombinedArea);
-
   void GetCombinedArea(nsRect* aResult);
+  PRBool CombinedAreaIntersects(const nsRect& aDamageRect) {
+    nsRect* ca = (mData ? &mData->mCombinedArea : &mBounds);
+    return !((ca->YMost() <= aDamageRect.y) ||
+             (ca->y >= aDamageRect.YMost()));
+  }
 
   void SlideBy(nscoord aDY) {
     mBounds.y += aDY;
@@ -263,6 +270,8 @@ public:
 
 #ifdef DEBUG
   nsIAtom* SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  static PRInt32 GetCtorCount();
+  static PRInt32 ListLength(nsLineBox* aLine);
 #endif
 
   nsIFrame* mFirstChild;
@@ -313,6 +322,7 @@ protected:
     ExtraInlineData* mInlineData;
   };
 
+  void Cleanup();
   void MaybeFreeData();
 };
 
