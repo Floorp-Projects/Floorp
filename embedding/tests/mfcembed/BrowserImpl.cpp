@@ -122,6 +122,7 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
    NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow2)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -382,3 +383,11 @@ NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
     return NS_OK;
 }
 
+//*****************************************************************************
+// CBrowserImpl::nsIEmbeddingSiteWindow2
+//*****************************************************************************   
+
+NS_IMETHODIMP CBrowserImpl::Blur()
+{
+    return NS_OK;
+}
