@@ -253,7 +253,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   // if the client wants us to forget our cached id arrays, they
   // should build a new view. If this isn't good enough, we
   // need a method to do that.
-  if (sortType != m_sortType || !m_sortValid )
+  if (sortType != m_sortType || !m_sortValid || sortThreads)
   {
     SaveSortInfo(sortType, sortOrder);
     if (sortType == nsMsgViewSortType::byThread)  
