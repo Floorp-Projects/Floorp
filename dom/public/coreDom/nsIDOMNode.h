@@ -39,7 +39,7 @@ class nsIDOMNodeList;
 
 class NS_NO_VTABLE nsIDOMNode : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNODE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNODE_IID)
   enum {
     ELEMENT_NODE = 1,
     ATTRIBUTE_NODE = 2,

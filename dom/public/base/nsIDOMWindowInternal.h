@@ -48,7 +48,7 @@ class nsIControllers;
 
 class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMWINDOWINTERNAL_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMWINDOWINTERNAL_IID)
 
   NS_IMETHOD    GetWindow(nsIDOMWindowInternal** aWindow)=0;
 

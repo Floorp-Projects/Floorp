@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLStyleElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLSTYLEELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLSTYLEELEMENT_IID)
 
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;

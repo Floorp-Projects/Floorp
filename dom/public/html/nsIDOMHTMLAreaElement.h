@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLAreaElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLAREAELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLAREAELEMENT_IID)
 
   NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey)=0;
   NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey)=0;

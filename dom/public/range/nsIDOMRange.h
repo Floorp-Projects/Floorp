@@ -38,7 +38,7 @@ class nsIDOMRange;
 
 class NS_NO_VTABLE nsIDOMRange : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMRANGE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMRANGE_IID)
   enum {
     START_TO_START = 0,
     START_TO_END = 1,

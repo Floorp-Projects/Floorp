@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLDirectoryElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLDIRECTORYELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLDIRECTORYELEMENT_IID)
 
   NS_IMETHOD    GetCompact(PRBool* aCompact)=0;
   NS_IMETHOD    SetCompact(PRBool aCompact)=0;

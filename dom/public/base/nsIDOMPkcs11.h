@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMPkcs11 : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMPKCS11_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMPKCS11_IID)
 
   NS_IMETHOD    Deletemodule(const nsAReadableString& aModuleName, PRInt32* aReturn)=0;
 

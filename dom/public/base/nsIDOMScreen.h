@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMScreen : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMSCREEN_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMSCREEN_IID)
 
   NS_IMETHOD    GetTop(PRInt32* aTop)=0;
 

@@ -38,7 +38,7 @@ class nsIDOMHTMLCollection;
 
 class NS_NO_VTABLE nsIDOMHTMLTableSectionElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLTABLESECTIONELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLTABLESECTIONELEMENT_IID)
 
   NS_IMETHOD    GetAlign(nsAWritableString& aAlign)=0;
   NS_IMETHOD    SetAlign(const nsAReadableString& aAlign)=0;

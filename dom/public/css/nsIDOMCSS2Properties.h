@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMCSS2Properties : public nsIDOMCSSStyleDeclaration {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSS2PROPERTIES_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSS2PROPERTIES_IID)
 
   NS_IMETHOD    GetAzimuth(nsAWritableString& aAzimuth)=0;
   NS_IMETHOD    SetAzimuth(const nsAReadableString& aAzimuth)=0;

@@ -40,7 +40,7 @@ class nsIDOMRange;
 
 class NS_NO_VTABLE nsIDOMNSDocument : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSDOCUMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSDOCUMENT_IID)
 
   NS_IMETHOD    GetCharacterSet(nsAWritableString& aCharacterSet)=0;
 

@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMNotation : public nsIDOMNode {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNOTATION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNOTATION_IID)
 
   NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId)=0;
 

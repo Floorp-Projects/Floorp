@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMNSLocation : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSLOCATION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSLOCATION_IID)
 
   NS_IMETHOD    Reload(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 

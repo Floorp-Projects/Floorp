@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMProcessingInstruction : public nsIDOMNode {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMPROCESSINGINSTRUCTION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMPROCESSINGINSTRUCTION_IID)
 
   NS_IMETHOD    GetTarget(nsAWritableString& aTarget)=0;
 

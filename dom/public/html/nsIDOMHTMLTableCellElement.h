@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLTableCellElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLTABLECELLELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLTABLECELLELEMENT_IID)
 
   NS_IMETHOD    GetCellIndex(PRInt32* aCellIndex)=0;
   NS_IMETHOD    SetCellIndex(PRInt32 aCellIndex)=0;

@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMDOMException : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOMEXCEPTION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDOMEXCEPTION_IID)
   enum {
     INDEX_SIZE_ERR = 1,
     DOMSTRING_SIZE_ERR = 2,

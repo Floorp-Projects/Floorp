@@ -37,7 +37,7 @@ class nsIDOMAbstractView;
 
 class NS_NO_VTABLE nsIDOMUIEvent : public nsIDOMEvent {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMUIEVENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMUIEVENT_IID)
 
   NS_IMETHOD    GetView(nsIDOMAbstractView** aView)=0;
 

@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMCRMFObject : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCRMFOBJECT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCRMFOBJECT_IID)
 
   NS_IMETHOD    GetRequest(nsAWritableString& aRequest)=0;
 };

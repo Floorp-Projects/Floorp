@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMMediaList : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMMEDIALIST_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMEDIALIST_IID)
 
   NS_IMETHOD    GetMediaText(nsAWritableString& aMediaText)=0;
   NS_IMETHOD    SetMediaText(const nsAReadableString& aMediaText)=0;

@@ -38,7 +38,7 @@ class nsIDOMCSSStyleDeclaration;
 
 class NS_NO_VTABLE nsIDOMDocumentCSS : public nsIDOMDocumentStyle {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTCSS_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENTCSS_IID)
 
   NS_IMETHOD    GetOverrideStyle(nsIDOMElement* aElt, const nsAReadableString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn)=0;
 };

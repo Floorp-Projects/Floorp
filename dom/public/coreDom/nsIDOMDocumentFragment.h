@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMDocumentFragment : public nsIDOMNode {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTFRAGMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENTFRAGMENT_IID)
 };
 
 

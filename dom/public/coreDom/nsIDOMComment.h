@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMComment : public nsIDOMCharacterData {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCOMMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCOMMENT_IID)
 };
 
 

@@ -38,7 +38,7 @@ class nsIDOMHTMLCollection;
 
 class NS_NO_VTABLE nsIDOMHTMLTableRowElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLTABLEROWELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLTABLEROWELEMENT_IID)
 
   NS_IMETHOD    GetRowIndex(PRInt32* aRowIndex)=0;
   NS_IMETHOD    SetRowIndex(PRInt32 aRowIndex)=0;

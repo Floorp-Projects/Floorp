@@ -37,7 +37,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLFormControlList : public nsIDOMHTMLCollection {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLFORMCONTROLLIST_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLFORMCONTROLLIST_IID)
 
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)=0;
 

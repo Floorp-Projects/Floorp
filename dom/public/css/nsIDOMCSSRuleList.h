@@ -36,7 +36,7 @@ class nsIDOMCSSRule;
 
 class NS_NO_VTABLE nsIDOMCSSRuleList : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSRULELIST_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSSRULELIST_IID)
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 

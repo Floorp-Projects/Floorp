@@ -40,7 +40,7 @@ class nsIDOMNodeList;
 
 class NS_NO_VTABLE nsIDOMXULDocument : public nsIDOMDocument {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULDOCUMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMXULDOCUMENT_IID)
 
   NS_IMETHOD    GetPopupNode(nsIDOMNode** aPopupNode)=0;
   NS_IMETHOD    SetPopupNode(nsIDOMNode* aPopupNode)=0;

@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLBodyElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLBODYELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLBODYELEMENT_IID)
 
   NS_IMETHOD    GetALink(nsAWritableString& aALink)=0;
   NS_IMETHOD    SetALink(const nsAReadableString& aALink)=0;

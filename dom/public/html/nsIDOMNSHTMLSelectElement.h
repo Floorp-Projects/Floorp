@@ -36,7 +36,7 @@ class nsIDOMNode;
 
 class NS_NO_VTABLE nsIDOMNSHTMLSelectElement : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLSELECTELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSHTMLSELECTELEMENT_IID)
 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
 

@@ -37,7 +37,7 @@ class nsIDOMNode;
 
 class NS_NO_VTABLE nsIDOMNSHTMLOptionCollection : public nsIDOMHTMLCollection {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLOPTIONCOLLECTION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSHTMLOPTIONCOLLECTION_IID)
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
   NS_IMETHOD    SetLength(PRUint32 aLength)=0;

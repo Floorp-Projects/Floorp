@@ -39,7 +39,7 @@ class nsIDOMHTMLFormElement;
 
 class NS_NO_VTABLE nsIDOMHTMLSelectElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLSELECTELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLSELECTELEMENT_IID)
 
   NS_IMETHOD    GetType(nsAWritableString& aType)=0;
 

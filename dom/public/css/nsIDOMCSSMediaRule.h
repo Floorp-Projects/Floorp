@@ -38,7 +38,7 @@ class nsIDOMCSSRuleList;
 
 class NS_NO_VTABLE nsIDOMCSSMediaRule : public nsIDOMCSSRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSMEDIARULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSSMEDIARULE_IID)
 
   NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia)=0;
 

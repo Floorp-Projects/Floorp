@@ -39,7 +39,7 @@ class nsIControllers;
 
 class NS_NO_VTABLE nsIDOMXULCommandDispatcher : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULCOMMANDDISPATCHER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMXULCOMMANDDISPATCHER_IID)
 
   NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement)=0;
   NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement)=0;

@@ -37,7 +37,7 @@ class nsIDOMNamedNodeMap;
 
 class NS_NO_VTABLE nsIDOMDocumentType : public nsIDOMNode {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTTYPE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENTTYPE_IID)
 
   NS_IMETHOD    GetName(nsAWritableString& aName)=0;
 

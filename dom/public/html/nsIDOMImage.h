@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMImage : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMIMAGE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMIMAGE_IID)
 
   NS_IMETHOD    GetLowsrc(nsAWritableString& aLowsrc)=0;
   NS_IMETHOD    SetLowsrc(const nsAReadableString& aLowsrc)=0;

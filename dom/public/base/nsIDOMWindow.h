@@ -40,7 +40,7 @@ class nsIDOMWindow;
 
 class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMWINDOW_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMWINDOW_IID)
 
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument)=0;
 

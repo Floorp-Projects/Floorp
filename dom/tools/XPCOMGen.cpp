@@ -66,7 +66,7 @@ static const char *kClassDeclStr = "class NS_NO_VTABLE nsIDOM%s : ";
 static const char *kBaseClassStr = "public nsIDOM%s";
 static const char *kNoBaseClassStr = "public nsISupports";
 static const char *kClassPrologStr = " {\npublic:\n";
-static const char *kStaticIIDStr = "  static const nsIID& GetIID() { static nsIID iid = %s; return iid; }\n";
+static const char *kStaticIIDStr = "  NS_DEFINE_STATIC_IID_ACCESSOR(%s)\n";
 static const char *kEnumDeclBeginStr = "  enum {\n";
 static const char *kEnumEntryStr = "    %s = %d%s\n";
 static const char *kEnumDeclEndStr = "  };\n";

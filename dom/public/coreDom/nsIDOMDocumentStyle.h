@@ -36,7 +36,7 @@ class nsIDOMStyleSheetList;
 
 class NS_NO_VTABLE nsIDOMDocumentStyle : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTSTYLE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENTSTYLE_IID)
 
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)=0;
 };

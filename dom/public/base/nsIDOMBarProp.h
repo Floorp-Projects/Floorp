@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMBarProp : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMBARPROP_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMBARPROP_IID)
 
   NS_IMETHOD    GetVisible(PRBool* aVisible)=0;
   NS_IMETHOD    SetVisible(PRBool aVisible)=0;

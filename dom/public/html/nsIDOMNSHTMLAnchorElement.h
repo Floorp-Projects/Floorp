@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMNSHTMLAnchorElement : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLANCHORELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSHTMLANCHORELEMENT_IID)
 
   NS_IMETHOD    GetProtocol(nsAWritableString& aProtocol)=0;
 

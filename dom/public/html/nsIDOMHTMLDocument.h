@@ -39,7 +39,7 @@ class nsIDOMNodeList;
 
 class NS_NO_VTABLE nsIDOMHTMLDocument : public nsIDOMDocument {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLDOCUMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLDOCUMENT_IID)
 
   NS_IMETHOD    GetTitle(nsAWritableString& aTitle)=0;
   NS_IMETHOD    SetTitle(const nsAReadableString& aTitle)=0;

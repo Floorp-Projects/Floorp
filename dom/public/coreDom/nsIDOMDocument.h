@@ -48,7 +48,7 @@ class nsIDOMNodeList;
 
 class NS_NO_VTABLE nsIDOMDocument : public nsIDOMNode {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENT_IID)
 
   NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype)=0;
 

@@ -38,7 +38,7 @@ class nsIDOMNodeList;
 
 class NS_NO_VTABLE nsIDOMXULTreeElement : public nsIDOMXULElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULTREEELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMXULTREEELEMENT_IID)
 
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems)=0;
 

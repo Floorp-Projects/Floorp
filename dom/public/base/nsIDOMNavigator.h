@@ -38,7 +38,7 @@ class nsIDOMMimeTypeArray;
 
 class NS_NO_VTABLE nsIDOMNavigator : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNAVIGATOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNAVIGATOR_IID)
 
   NS_IMETHOD    GetAppCodeName(nsAWritableString& aAppCodeName)=0;
 

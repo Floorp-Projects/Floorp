@@ -35,7 +35,7 @@ class nsIDOMPlugin;
 
 class NS_NO_VTABLE nsIDOMPluginArray : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMPLUGINARRAY_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMPLUGINARRAY_IID)
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 

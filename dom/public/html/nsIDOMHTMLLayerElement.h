@@ -37,7 +37,7 @@ class nsIDOMDocument;
 
 class NS_NO_VTABLE nsIDOMHTMLLayerElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLLAYERELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLLAYERELEMENT_IID)
 
   NS_IMETHOD    GetTop(PRInt32* aTop)=0;
   NS_IMETHOD    SetTop(PRInt32 aTop)=0;

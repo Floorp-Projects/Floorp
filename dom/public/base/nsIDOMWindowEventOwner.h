@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMWindowEventOwner : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMWINDOWEVENTOWNER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMWINDOWEVENTOWNER_IID)
 
   NS_IMETHOD    GetOnmousedown(jsval* aOnmousedown)=0;
   NS_IMETHOD    SetOnmousedown(jsval aOnmousedown)=0;

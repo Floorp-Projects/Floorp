@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLHtmlElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLHTMLELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLHTMLELEMENT_IID)
 
   NS_IMETHOD    GetVersion(nsAWritableString& aVersion)=0;
   NS_IMETHOD    SetVersion(const nsAReadableString& aVersion)=0;

@@ -36,7 +36,7 @@ class nsIControllers;
 
 class NS_NO_VTABLE nsIDOMNSHTMLTextAreaElement : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLTEXTAREAELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSHTMLTEXTAREAELEMENT_IID)
 
   NS_IMETHOD    GetControllers(nsIControllers** aControllers)=0;
 };

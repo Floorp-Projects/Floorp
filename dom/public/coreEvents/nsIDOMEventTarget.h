@@ -37,7 +37,7 @@ class nsIDOMEvent;
 
 class NS_NO_VTABLE nsIDOMEventTarget : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENTTARGET_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENTTARGET_IID)
 
   NS_IMETHOD    AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)=0;
 
