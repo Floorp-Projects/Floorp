@@ -50,6 +50,7 @@
 // Local Includes
 #include "ApplIDs.h"
 #include "UMacUnicode.h"
+#include "CBrowserChrome.h"
 
 // PowerPlant
 #include <LStaticText.h>
@@ -70,9 +71,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROMPTSERVICE
-  
-protected:
-  LCommander* GetParentCommander(nsIDOMWindow* aDOMWindow);
 };
 
 //*****************************************************************************   
@@ -88,34 +86,11 @@ CPromptService::~CPromptService()
 {
 }
 
-LCommander* CPromptService::GetParentCommander(nsIDOMWindow* aDOMWindow)
-{
-  nsresult rv;
-  LCommander *resultCommander = LCommander::GetDefaultCommander(); 
-  
-	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-	if (!wwatch) return nsnull;
-	
-	nsCOMPtr<nsIWebBrowserChrome> windowChrome;
-	rv = wwatch->GetChromeForWindow(aDOMWindow, getter_AddRefs(windowChrome));
-	if (NS_FAILED(rv)) return nsnull;
-	
-	nsCOMPtr<nsIEmbeddingSiteWindow> window(do_QueryInterface(windowChrome, &rv));
-	if (NS_FAILED(rv)) return nsnull;
-	
-	WindowPtr macWindow;
-	rv = window->GetSiteWindow((void **)&macWindow);
-	if (NS_FAILED(rv)) return nsnull;
-	
-	resultCommander = LWindow::FetchWindowObject(macWindow);
-	NS_ASSERTION(resultCommander, "Couldn't get PowerPlant window");
-	return resultCommander;
-}
 
 NS_IMETHODIMP CPromptService::Alert(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
                                     const PRUnichar *text)
 {    
-    StDialogHandler	 theHandler(dlog_Alert, GetParentCommander(parent));
+    StDialogHandler	 theHandler(dlog_Alert, CBrowserChrome::GetLWindowForDOMWindow(parent));
     LWindow			 *theDialog = theHandler.GetDialog();
     nsCAutoString    cStr;
     Str255           pStr;
@@ -148,7 +123,7 @@ NS_IMETHODIMP CPromptService::AlertCheck(nsIDOMWindow *parent, const PRUnichar *
 {
     NS_ENSURE_ARG_POINTER(checkValue);
 
-    StDialogHandler	theHandler(dlog_ConfirmCheck, GetParentCommander(parent));
+    StDialogHandler	theHandler(dlog_ConfirmCheck, CBrowserChrome::GetLWindowForDOMWindow(parent));
     LWindow			 *theDialog = theHandler.GetDialog();
     nsCAutoString    cStr;
     Str255           pStr;
@@ -189,7 +164,7 @@ NS_IMETHODIMP CPromptService::Confirm(nsIDOMWindow *parent, const PRUnichar *dia
 {
     NS_ENSURE_ARG_POINTER(_retval);
     
-    StDialogHandler	theHandler(dlog_Confirm, GetParentCommander(parent));
+    StDialogHandler	theHandler(dlog_Confirm, CBrowserChrome::GetLWindowForDOMWindow(parent));
     LWindow			 *theDialog = theHandler.GetDialog();
     nsCAutoString    cStr;
     Str255           pStr;
@@ -232,7 +207,7 @@ NS_IMETHODIMP CPromptService::ConfirmCheck(nsIDOMWindow *parent, const PRUnichar
     NS_ENSURE_ARG_POINTER(checkValue);
     NS_ENSURE_ARG_POINTER(_retval);
 
-    StDialogHandler	theHandler(dlog_ConfirmCheck, GetParentCommander(parent));
+    StDialogHandler	theHandler(dlog_ConfirmCheck, CBrowserChrome::GetLWindowForDOMWindow(parent));
     LWindow			 *theDialog = theHandler.GetDialog();
     nsCAutoString    cStr;
     Str255           pStr;
@@ -294,7 +269,7 @@ NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent, const PRUnichar *dial
 
     nsresult resultErr = NS_OK;
 
-    StDialogHandler	theHandler(dlog_Prompt, GetParentCommander(parent));
+    StDialogHandler	theHandler(dlog_Prompt, CBrowserChrome::GetLWindowForDOMWindow(parent));
     LWindow			 *theDialog = theHandler.GetDialog();
     LCheckBox        *checkbox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
     nsCAutoString   cStr;
@@ -374,7 +349,7 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent, co
 
     nsresult resultErr = NS_OK;
 
-    StDialogHandler	theHandler(dlog_PromptNameAndPass, GetParentCommander(parent));
+    StDialogHandler	theHandler(dlog_PromptNameAndPass, CBrowserChrome::GetLWindowForDOMWindow(parent));
     LWindow			 *theDialog = theHandler.GetDialog();
     LCheckBox        *checkbox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
     nsCAutoString   cStr;
@@ -469,7 +444,7 @@ NS_IMETHODIMP CPromptService::PromptPassword(nsIDOMWindow *parent, const PRUnich
     
     nsresult resultErr = NS_OK;
 
-    StDialogHandler	 theHandler(dlog_PromptPassword, GetParentCommander(parent));
+    StDialogHandler	 theHandler(dlog_PromptPassword, CBrowserChrome::GetLWindowForDOMWindow(parent));
     LWindow			 *theDialog = theHandler.GetDialog();
     LCheckBox        *checkbox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
     nsCAutoString    cStr;

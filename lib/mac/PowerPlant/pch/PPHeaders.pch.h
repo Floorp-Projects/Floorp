@@ -45,6 +45,7 @@
         // PowerPlant definitions
 		#define PP_Uses_PowerPlant_Namespace		0
 		#define PP_Suppress_Notes_22                1
+		#define PP_Uses_Aqua_MenuBar                1
         		
         #if !defined(TARGET_CARBON) || !TARGET_CARBON
             #define ACCESSOR_CALLS_ARE_FUNCTIONS 1		

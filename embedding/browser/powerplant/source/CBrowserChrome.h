@@ -85,6 +85,9 @@ public:
     // LListener
 	virtual void	    ListenToMessage(MessageT inMessage,
                                         void* ioParam);
+                                        
+    // Utility
+    static LWindow*     GetLWindowForDOMWindow(nsIDOMWindow* aDOMWindow);
   
 protected:    
                         CBrowserChrome(CBrowserShell* aShell,

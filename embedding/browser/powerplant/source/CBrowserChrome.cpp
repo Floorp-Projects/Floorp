@@ -53,6 +53,8 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIWindowWatcher.h"
+#include "nsIServiceManagerUtils.h"
 
 #include "UMacUnicode.h"
 #include "ApplIDs.h"
@@ -521,3 +523,31 @@ void CBrowserChrome::ListenToMessage(MessageT inMessage, void* ioParam)
             break;
     }
 }
+
+//*****************************************************************************
+// Static Utility Method
+//*****************************************************************************
+
+LWindow* CBrowserChrome::GetLWindowForDOMWindow(nsIDOMWindow* aDOMWindow)
+{
+    if (!aDOMWindow)
+        return nsnull;
+        
+    nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (!windowWatcher)
+        return nsnull;
+    nsCOMPtr<nsIWebBrowserChrome> windowChrome;
+    windowWatcher->GetChromeForWindow(aDOMWindow, getter_AddRefs(windowChrome));
+    if (!windowChrome)
+        return nsnull;        
+    nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_QueryInterface(windowChrome));
+    if (!siteWindow)
+        return nsnull;
+    WindowPtr macWindow = nsnull;
+    siteWindow->GetSiteWindow((void **)&macWindow);
+    if (!macWindow)
+        return nsnull;
+    
+    return LWindow::FetchWindowObject(macWindow);
+}
+

@@ -71,6 +71,13 @@ protected:
 	virtual void            StartUp();			// override startup functions
 	virtual nsresult        OverrideComponents();
 	virtual void		    MakeMenuBar();
+	
+#if TARGET_CARBON
+  virtual void            InstallCarbonEventHandlers();
+  static pascal OSStatus  AppEventHandler(EventHandlerCallRef myHandlerChain,
+                                          EventRef event,
+                                          void* userData);
+#endif
 
 	virtual nsresult        InitializePrefs();
 
