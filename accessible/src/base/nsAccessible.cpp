@@ -651,6 +651,7 @@ NS_IMETHODIMP nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
   else if (gLastFocusedNode) {
     nsCOMPtr<nsIAccessibilityService> accService =
       do_GetService("@mozilla.org/accessibilityService;1");
+    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
     accService->GetAccessibleInWeakShell(gLastFocusedNode, mWeakShell, 
                                          getter_AddRefs(focusedChild));
     if (focusedChild) {
@@ -990,109 +991,93 @@ nsresult nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const nsAS
 
 nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString)
 {
-  nsAutoString textEquivalent;
-  if (aContent->IsContentOfType(nsIContent::eXUL)) {
-    aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tooltiptext, textEquivalent);
-    textEquivalent.CompressWhitespace();
-    return AppendStringWithSpaces(aFlatString, textEquivalent);
-  }
+  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
+    nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
+    NS_ASSERTION(textContent, "No text content for text content type");
+    // If it's a text node, append the text
+    PRBool isHTMLBlock = PR_FALSE;
+    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    if (!shell) {
+      return NS_ERROR_FAILURE;  
+    }
 
-  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
-  if (textContent) {
-    // If it's a text node, but not a comment node, append the text
-    nsCOMPtr<nsIDOMComment> commentNode(do_QueryInterface(aContent));
-    if (!commentNode) {
-      PRBool isHTMLBlock = PR_FALSE;
-      nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
-      if (!shell) {
-         return NS_ERROR_FAILURE;  
-      }
-
-      nsCOMPtr<nsIContent> parentContent = aContent->GetParent();
-      nsCOMPtr<nsIContent> appendedSubtreeStart(do_QueryInterface(mDOMNode));
-      if (parentContent && parentContent != appendedSubtreeStart) {
-        nsIFrame *frame;
-        shell->GetPrimaryFrameFor(parentContent, &frame);
-        if (frame) {
-          // If this text is inside a block level frame (as opposed to span level), we need to add spaces around that 
-          // block's text, so we don't get words jammed together in final name
-          // Extra spaces will be trimmed out later
-          const nsStyleDisplay* display = frame->GetStyleDisplay();
-          if (display->IsBlockLevel() ||
-              display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)
-          {
-              isHTMLBlock = PR_TRUE;
-              if (!aFlatString->IsEmpty())
-                aFlatString->Append(PRUnichar(' '));
+    nsIContent *parentContent = aContent->GetParent();
+    nsCOMPtr<nsIContent> appendedSubtreeStart(do_QueryInterface(mDOMNode));
+    if (parentContent && parentContent != appendedSubtreeStart) {
+      nsIFrame *frame;
+      shell->GetPrimaryFrameFor(parentContent, &frame);
+      if (frame) {
+        // If this text is inside a block level frame (as opposed to span level), we need to add spaces around that 
+        // block's text, so we don't get words jammed together in final name
+        // Extra spaces will be trimmed out later
+        const nsStyleDisplay* display = frame->GetStyleDisplay();
+        if (display->IsBlockLevel() ||
+          display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
+          isHTMLBlock = PR_TRUE;
+          if (!aFlatString->IsEmpty()) {
+            aFlatString->Append(PRUnichar(' '));
           }
         }
       }
-
-      if (textContent->TextLength() > 0) {
-        nsAutoString text;
-        textContent->AppendTextTo(text);
-        text.CompressWhitespace();
-        if (!text.IsEmpty())
-          aFlatString->Append(text);
-        if (isHTMLBlock && !aFlatString->IsEmpty())
-          aFlatString->Append(PRUnichar(' '));
-      }
+    }
+    if (textContent->TextLength() > 0) {
+      nsAutoString text;
+      textContent->AppendTextTo(text);
+      text.CompressWhitespace();
+      if (!text.IsEmpty())
+        aFlatString->Append(text);
+      if (isHTMLBlock && !aFlatString->IsEmpty())
+        aFlatString->Append(PRUnichar(' '));
     }
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMHTMLBRElement> brElement(do_QueryInterface(aContent));
-  if (brElement) {   // If it's a line break, insert a space so that words aren't jammed together
+  nsAutoString textEquivalent;
+  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
+    if (aContent->IsContentOfType(nsIContent::eXUL)) {
+      aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tooltiptext, textEquivalent);
+      textEquivalent.CompressWhitespace();
+      return AppendStringWithSpaces(aFlatString, textEquivalent);
+    }
+    return NS_OK; // Not HTML and not XUL -- we don't handle it yet
+  }
+  if (aContent->Tag() == nsAccessibilityAtoms::img) {
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aContent));
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIAccessible> accessible;
+    accService->GetAccessibleInWeakShell(domNode, mWeakShell, getter_AddRefs(accessible));
+    if (accessible) {
+      accessible->GetName(textEquivalent);
+    }
+  }
+  else if (aContent->Tag() == nsAccessibilityAtoms::input) {
+    // Treat separately from image, because we will never use link-based repair
+    if (NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttr(kNameSpaceID_None,
+                                                       nsAccessibilityAtoms::alt,
+                                                       textEquivalent) &&
+        NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttr(kNameSpaceID_None,
+                                                       nsAccessibilityAtoms::title,
+                                                       textEquivalent) &&
+        NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttr(kNameSpaceID_None,
+                                                       nsAccessibilityAtoms::src,
+                                                       textEquivalent)) {
+      aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::data, textEquivalent);
+    }
+  }
+  else if (aContent->Tag() == nsAccessibilityAtoms::object && !aContent->GetChildCount()) {
+    // If object has no alternative content children, try title
+    aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, textEquivalent);
+  }
+  else if (aContent->Tag() == nsAccessibilityAtoms::br) {
+    // If it's a line break, insert a space so that words aren't jammed together
     aFlatString->AppendLiteral("\r\n");
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMHTMLInputElement> inputContent;
-  nsCOMPtr<nsIDOMHTMLObjectElement> objectContent;
-  nsCOMPtr<nsIDOMHTMLImageElement> imageContent(do_QueryInterface(aContent));
-  if (!imageContent) {
-    inputContent = do_QueryInterface(aContent);
-    if (!inputContent)
-      objectContent = do_QueryInterface(aContent);
-  }
-  if (imageContent || inputContent || objectContent) {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContent));
-    NS_ASSERTION(elt, "No DOM element for content node!");
-    elt->GetAttribute(NS_LITERAL_STRING("alt"), textEquivalent);
-    if (textEquivalent.IsEmpty())
-      elt->GetAttribute(NS_LITERAL_STRING("title"), textEquivalent);
-    else {
-      // If we're in an image document (an image viewed by itself)
-      // then the image's alt text is generated text,
-      // so that an error shows when the image doesn't load.
-      // We don't want that text.
-
-      nsCOMPtr<nsIImageDocument> imageDoc(do_QueryInterface(aContent->GetDocument()));
-      if (imageDoc)  // We don't want this faux error text
-        textEquivalent.Truncate();
-    }
-    if (textEquivalent.IsEmpty() && imageContent) {
-      nsCOMPtr<nsIImageLoadingContent> imageNode(do_QueryInterface(aContent));
-      if (imageNode) {
-        nsCOMPtr<nsIURI> uri;
-        imageNode->GetCurrentURI(getter_AddRefs(uri));
-        if (uri) {
-          nsCAutoString spec;
-          uri->GetSpec(spec);
-          CopyUTF8toUTF16(spec, textEquivalent);
-        }
-      }
-    }
-    if (textEquivalent.IsEmpty())
-      elt->GetAttribute(NS_LITERAL_STRING("src"), textEquivalent);
-
-    if (textEquivalent.IsEmpty())
-      elt->GetAttribute(NS_LITERAL_STRING("data"), textEquivalent); // for <object>s with images
-    textEquivalent.CompressWhitespace();
-    return AppendStringWithSpaces(aFlatString, textEquivalent);
-  }
-
-  return NS_OK;
+  textEquivalent.CompressWhitespace();
+  return AppendStringWithSpaces(aFlatString, textEquivalent);
 }
 
 

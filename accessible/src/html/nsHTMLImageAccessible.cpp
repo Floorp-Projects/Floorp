@@ -39,6 +39,7 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsHTMLImageAccessible.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsIAccessibilityService.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDocument.h"
@@ -101,21 +102,23 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetState(PRUint32 *_retval)
 
 
 /* wstring getName (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsHTMLImageAccessible::GetName(nsAString& aName)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContent> imageContent(do_QueryInterface(mDOMNode));
-  if (imageContent) {
-    nsAutoString name;
-    rv = AppendFlatStringFromContentNode(imageContent, &name);
-    if (NS_SUCCEEDED(rv)) {
-      // Temp var needed until CompressWhitespace built for nsAString
-      name.CompressWhitespace();
-      _retval.Assign(name);
-    }
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node has been shut down
   }
-  return rv;
+
+  if (NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
+                                                    nsAccessibilityAtoms::alt,
+                                                    aName) &&
+      NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
+                                                    nsAccessibilityAtoms::title,
+                                                    aName)) {
+    aName.SetIsVoid(PR_TRUE); // No alt or title
+  }
+
+  return NS_OK;
 }
 
 /* wstring getRole (); */
