@@ -469,6 +469,13 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         someWindow = (nsWindow*)::GetWindowLong(pnmh->hwndFrom, GWL_USERDATA); 
       }
     }
+    // Do the same for combo box change notifications.
+    else if (msg == WM_COMMAND) {
+      WORD wNotifyCode = HIWORD(wParam); // notification code
+      if ((CBN_SELENDOK == wNotifyCode) || (CBN_SELENDCANCEL == wNotifyCode)) {
+        someWindow = (nsWindow*)::GetWindowLong((HWND) lParam, GWL_USERDATA);
+      }
+    }
 
 
     if (nsnull != someWindow) {
@@ -2122,7 +2129,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_COMMAND: {
           WORD wNotifyCode = HIWORD(wParam); // notification code 
-          if (wNotifyCode == 0) { // Menu selection
+          if ((CBN_SELENDOK == wNotifyCode) || (CBN_SELENDCANCEL == wNotifyCode)) { // Combo box change
+            nsGUIEvent event;
+            event.eventStructType = NS_GUI_EVENT;
+            nsPoint point(0,0);
+            InitEvent(event, NS_CONTROL_CHANGE, &point); // this add ref's event.widget
+            result = DispatchWindowEvent(&event);
+            NS_RELEASE(event.widget);
+          } else if (wNotifyCode == 0) { // Menu selection
             nsMenuEvent event;
             event.mCommand = LOWORD(wParam);
             event.eventStructType = NS_MENU_EVENT;
