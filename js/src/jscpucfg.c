@@ -151,6 +151,13 @@ static void BitsPerByte(void)
     bpb = 8;
 }
 
+static int StackGrowthDirection(int *dummy1addr)
+{
+    int dummy2;
+
+    return (&dummy2 < dummy1addr) ? -1 : 1;
+}
+
 int main(int argc, char **argv)
 {
     int sizeof_char, sizeof_short, sizeof_int, sizeof_int64, sizeof_long,
@@ -158,6 +165,7 @@ int main(int argc, char **argv)
     int bits_per_int64_log2, align_of_short, align_of_int, align_of_long,
         align_of_int64, align_of_float, align_of_double, align_of_pointer,
         align_of_word;
+    int dummy1;
 
     BitsPerByte();
 
@@ -352,6 +360,12 @@ int main(int argc, char **argv)
     printf("#define JS_BYTES_PER_WORD_LOG2   %dL\n", Log2(sizeof_word));
     printf("#define JS_BYTES_PER_DWORD_LOG2  %dL\n", Log2(sizeof_dword));
     printf("#define JS_WORDS_PER_DWORD_LOG2  %dL\n", Log2(sizeof_dword/sizeof_word));
+    printf("\n");
+
+    printf("#define JS_STACK_GROWTH_DIRECTION (%d)\n", StackGrowthDirection(&dummy1));
+
+    /* XXX is there an efficient-to-compute, consistent-across-time limit? */
+    printf("#define JS_DEFAULT_STACK_SIZE_LIMIT %luU\n", (unsigned long)1 << 20);
     printf("\n");
 
     printf("#endif /* js_cpucfg___ */\n");

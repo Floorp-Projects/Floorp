@@ -638,7 +638,7 @@ JS_NewRuntime(uint32 maxbytes)
     rt = (JSRuntime *) malloc(sizeof(JSRuntime));
     if (!rt)
         return NULL;
-    
+
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     memset(rt, 0, sizeof(JSRuntime));
     JS_INIT_CLIST(&rt->contextList);
@@ -1755,6 +1755,12 @@ JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
         return (intN)type;
     JS_ASSERT(type == GCX_STRING || type == GCX_MUTABLE_STRING);
     return -1;
+}
+
+JS_PUBLIC_API(void)
+JS_SetStackSizeLimit(JSContext *cx, jsuword stackSizeLimit)
+{
+    js_SetStackSizeLimit(cx, stackSizeLimit);
 }
 
 /************************************************************************/

@@ -298,6 +298,9 @@ struct JSContext {
     /* Interpreter activation count. */
     uintN               interpLevel;
 
+    /* Limit pointer for checking stack consumption during recursion. */
+    jsuword             stackLimit;
+
     /* Runtime version control identifier and equality operators. */
     JSVersion           version;
     jsbytecode          jsop_eq;
@@ -466,6 +469,22 @@ extern void
 js_ReportIsNotDefined(JSContext *cx, const char *name);
 
 extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
+
+extern void
+js_SetStackSizeLimit(JSContext *cx, jsuword stackSizeLimit);
+
+/*
+ * See js_SetStackSizeLimit in jscntxt.c, where we assert that the stack grows
+ * in the expected direction.  On Unix-y systems, JS_STACK_GROWTH_DIRECTION is
+ * computed on the build host by jscpucfg.c and written into jsautocfg.h.  The
+ * macro is hardcoded in jscpucfg.h on Windows and Mac systems (for historical
+ * reasons pre-dating autoconf usage).
+ */
+#if JS_STACK_GROWTH_DIRECTION > 0
+# define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) < (cx)->stackLimit)
+#else
+# define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) > (cx)->stackLimit)
+#endif
 
 JS_END_EXTERN_C
 

@@ -174,7 +174,7 @@ static JSClass prop_iterator_class = {
  * depth slots below the operands.
  *
  * NB: PUSH_OPND uses sp, depth, and pc from its lexical environment.  See
- * Interpret for these local variables' declarations and uses.
+ * js_Interpret for these local variables' declarations and uses.
  */
 #define PUSH_OPND(v)    (sp[-depth] = (jsval)pc, PUSH(v))
 #define STORE_OPND(n,v) (sp[(n)-depth] = (jsval)pc, sp[n] = (v))
@@ -1304,6 +1304,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #if JS_HAS_GETTER_SETTER
     JSPropertyOp getter, setter;
 #endif
+    int stackDummy;
 
     *result = JSVAL_VOID;
     rt = cx->runtime;
@@ -1357,12 +1358,20 @@ js_Interpret(JSContext *cx, jsval *result)
 
     pc = script->code;
     endpc = pc + script->length;
+    depth = (jsint) script->depth;
     len = -1;
+
+    /* Check for too much js_Interpret nesting, or too deep a C stack. */
+    if (++cx->interpLevel == MAX_INTERP_LEVEL ||
+        !JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        ok = JS_FALSE;
+        goto out;
+    }
 
     /*
      * Allocate operand and pc stack slots for the script's worst-case depth.
      */
-    depth = (jsint) script->depth;
     newsp = js_AllocRawStack(cx, (uintN)(2 * depth), &mark);
     if (!newsp) {
         ok = JS_FALSE;
@@ -1371,12 +1380,6 @@ js_Interpret(JSContext *cx, jsval *result)
     sp = newsp + depth;
     fp->spbase = sp;
     SAVE_SP(fp);
-
-    if (++cx->interpLevel == MAX_INTERP_LEVEL) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
-        ok = JS_FALSE;
-        goto out;
-    }
 
     while (pc < endpc) {
         fp->pc = pc;

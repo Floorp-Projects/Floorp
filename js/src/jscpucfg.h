@@ -188,4 +188,12 @@
 
 #endif
 
+#ifndef JS_STACK_GROWTH_DIRECTION
+#define JS_STACK_GROWTH_DIRECTION (-1)
+#endif
+
+#ifndef JS_DEFAULT_STACK_SIZE_LIMIT
+#define JS_DEFAULT_STACK_SIZE_LIMIT JS_BIT(20)
+#endif
+
 #endif /* js_cpucfg___ */

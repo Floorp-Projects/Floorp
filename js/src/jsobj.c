@@ -620,6 +620,12 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *gsop[2];
     JSAtom *atom;
     JSString *idstr, *valstr, *str;
+    int stackDummy;
+
+    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        return JS_FALSE;
+    }
 
     /*
      * obj_toString for 1.2 calls toSource, and doesn't want the extra parens
