@@ -18,7 +18,7 @@
 
 #include "nsDragSource.h"
 #include "nsITransferable.h"
-#include "DROPSRC.h"
+//#include "DROPSRC.h"
 
 
 static NS_DEFINE_IID(kIDragSourceIID,   NS_IDRAGSOURCE_IID);
