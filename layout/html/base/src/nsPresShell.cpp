@@ -379,8 +379,8 @@ protected:
   PRBool                        mPendingReflowEvent;
   nsCOMPtr<nsIEventQueue>       mEventQueue;
 
-  MOZ_TIMER_DECLARE(mReflowWatch);  // Used for measuring time spent in reflow
-  MOZ_TIMER_DECLARE(mFrameCreationWatch);  // Used for measuring time spent in frame creation
+  MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
+  MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation
 
 #ifdef DEBUG_nisheeth
   PRInt32 mReflows;

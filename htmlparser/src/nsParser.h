@@ -384,9 +384,9 @@ protected:
     CObserverService    mObserverService;
 
 public:    
-    MOZ_TIMER_DECLARE(mParseTime);
-    MOZ_TIMER_DECLARE(mDTDTime);
-    MOZ_TIMER_DECLARE(mTokenizeTime);
+    MOZ_TIMER_DECLARE(mParseTime)
+    MOZ_TIMER_DECLARE(mDTDTime)
+    MOZ_TIMER_DECLARE(mTokenizeTime)
 };
 
 #endif 
