@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.181 $ ';
+$::UtilsVersion = '$Revision: 1.182 $ ';
 
 package TinderUtils;
 
@@ -298,7 +298,7 @@ sub SetupEnv {
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
 
     if ($Settings::ObjDir ne '') {
-        $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin`:" . "$ENV{LD_LIBRARY_PATH}";
+        $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:" . "$ENV{LD_LIBRARY_PATH}";
     } else {
         $ENV{LD_LIBRARY_PATH} = "$topsrcdir/$Settings::DistBin:" . "$ENV{LD_LIBRARY_PATH}";
     }
