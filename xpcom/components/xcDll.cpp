@@ -35,6 +35,7 @@
 #include "nsILocalFile.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
+#include "nsString.h"
 
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL),
@@ -310,7 +311,6 @@ PRBool nsDll::Load(void)
 
         if (localFile)
             localFile->Load(&m_instance);
-    
         
 #ifdef NS_BUILD_REFCNT_LOGGING
         if (m_instance) {
@@ -322,8 +322,6 @@ PRBool nsDll::Load(void)
             nsAllocator::Free(displayPath);
         }
 #endif
-    
-    
     }
     else if (m_dllName)
     {
@@ -337,9 +335,14 @@ PRBool nsDll::Load(void)
             nsTraceRefcnt::LoadLibrarySymbols(m_dllName, m_instance);
         }
 #endif    
-    
-    
     }
+
+#if defined(DEBUG) && defined(XP_UNIX)
+    // Debugging help for components. Component dlls need to have their
+    // symbols loaded before we can put a breakpoint in the debugger.
+    // This will help figureing out the point when the dll was loaded.
+    BreakAfterLoad(GetDisplayPath());
+#endif
 
     return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
 }
@@ -438,4 +441,55 @@ nsresult nsDll::Shutdown(void)
     }
     return NS_OK;
 
+}
+
+void nsDll::BreakAfterLoad(const char *nsprPath)
+{
+#ifdef DEBUG
+    static PRBool firstTime = PR_TRUE;
+    static nsCString breakList[16];
+    static int count = 0;
+
+    // return if invalid input
+    if (!nsprPath || !*nsprPath) return;
+
+    // return if nothing to break on
+    if (!firstTime && count == 0) return;
+
+    if (firstTime)
+    {
+        firstTime = PR_FALSE;
+        // Form the list of dlls to break on load
+        nsCAutoString envList(getenv("XPCOM_BREAK_ON_LOAD"));
+        if (envList.IsEmpty()) return;
+        PRInt32 ofset = 0;
+        PRInt32 start = 0;
+        do
+        {
+            ofset = envList.FindChar(':', PR_TRUE, start);
+            envList.Mid(breakList[count], start, ofset);
+            count++;
+            start = ofset + 1;
+        }
+        while (ofset != -1 && count < 16);
+    }
+
+    // Find the dllname part of the string
+    nsCString currentPath(nsprPath);
+    PRInt32 lastSep = currentPath.RFindCharInSet(":\\/");
+
+    for (int i=0; i<count; i++)
+        if (currentPath.Find(breakList[i], PR_TRUE, lastSep) > 0)
+        {
+            // Loading a dll that we want to break on
+            // Put your breakpoint here
+            printf("...Loading module %s\n", nsprPath);
+#ifdef XP_UNIX
+            // Break in the debugger here.
+            asm("int $3");
+#endif
+
+        }
+#endif /* DEBUG */
+    return;
 }
