@@ -558,7 +558,7 @@ nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars, PRInt32 aOffset)
   }
   else {
     end = start;
-    end.advance(aNumChars + aOffset);
+    end.advance(aNumChars);
   }
 
   CopyUnicodeTo(start, end, aStr);
