@@ -775,12 +775,14 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
   iframe->GetRect(iframeRect);
   
   if (iframeRect.x > 0) {
+    // Adjust for the iframe offset before we do scaling.
+    sr.x -= iframeRect.x;
+
     nscoord scaled_x = sr.x;
     if (dr.width != sr.width) {
       PRFloat64 scale_ratio = PRFloat64(dr.width) / PRFloat64(sr.width);
       scaled_x = NSToCoordRound(scaled_x * scale_ratio);
     }
-    sr.x -= iframeRect.x;
     if (sr.x < 0) {
       dr.x -= scaled_x;
       sr.width += sr.x;
@@ -794,14 +796,14 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
   }
 
   if (iframeRect.y > 0) {
+    // Adjust for the iframe offset before we do scaling.
+    sr.y -= iframeRect.y;
+
     nscoord scaled_y = sr.y;
     if (dr.height != sr.height) {
       PRFloat64 scale_ratio = PRFloat64(dr.height) / PRFloat64(sr.height);
       scaled_y = NSToCoordRound(scaled_y * scale_ratio);
     }
-
-    // adjust for offset  
-    sr.y -= iframeRect.y;
     if (sr.y < 0) {
       dr.y -= scaled_y;
       sr.height += sr.y;
