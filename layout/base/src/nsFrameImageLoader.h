@@ -22,6 +22,8 @@
 #include "nsSize.h"
 #include "nsString.h"
 
+struct nsRect;
+
 /**
  * An image loader for frame's.
  */
@@ -62,7 +64,7 @@ protected:
 
   void ReflowFrame();
 
-  void DamageRepairFrame();
+  void DamageRepairFrame(const nsRect* aDamageRect);
 
   nsString mURL;
   nsIImage* mImage;
