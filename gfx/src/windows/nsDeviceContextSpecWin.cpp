@@ -22,6 +22,8 @@
 
 nsDeviceContextSpecWin :: nsDeviceContextSpecWin()
 {
+  NS_INIT_REFCNT();
+
   mDriverName = nsnull;
   mDeviceName = nsnull;
   mDEVMODE = NULL;
