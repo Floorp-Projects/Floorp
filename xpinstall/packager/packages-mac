@@ -40,7 +40,6 @@ viewer:Essential Files:LiveConnect.shlb
 viewer:Essential Files:NSPR20.shlb 
 viewer:Essential Files:NSRuntime.shlb 
 viewer:Essential Files:NSStdLib.shlb 
-viewer:Essential Files:oji.shlb 
 viewer:Essential Files:xpcom.shlb 
 viewer:Essential Files:xpistub.shlb 
 viewer:Essential Files:zlib.shlb 
@@ -82,8 +81,6 @@ viewer:Components:ChomeRegistry.shlb
 viewer:Components:chrome.xpt
 viewer:Components:content.shlb
 viewer:Components:content.xpt
-viewer:Components:xuldoc.xpt
-viewer:Components:xultmpl.xpt
 viewer:Components:cookie.xpt 
 viewer:Components:Cookie.shlb 
 viewer:Components:appcomps.shlb 
@@ -101,7 +98,6 @@ viewer:Components:dom_stylesheets.xpt
 viewer:Components:dom_views.xpt
 viewer:Components:dom_xbl.xpt
 viewer:Components:dom_xul.xpt
-viewer:Components:domds.xpt
 viewer:Components:editor.xpt 
 viewer:Components:EditorCore.shlb 
 viewer:Components:EditorTxmgr.shlb 
@@ -118,9 +114,6 @@ viewer:Components:jsurl.shlb
 viewer:Components:jsurl.xpt
 viewer:Components:layout.shlb 
 viewer:Components:layout.xpt
-viewer:Components:layout_base.xpt
-viewer:Components:layout_xul.xpt
-viewer:Components:layout_xul_outliner.xpt
 viewer:Components:chardet.xpt
 viewer:Components:libjar.xpt 
 viewer:Components:libpref.shlb 
@@ -162,7 +155,6 @@ viewer:Components:tmbm.xpt
 viewer:Components:txmgr.xpt 
 viewer:Components:uconv.shlb 
 viewer:Components:uconv.xpt 
-viewer:Components:ucth.shlb 
 viewer:Components:ucvcn.shlb 
 viewer:Components:ucvibm.shlb 
 viewer:Components:ucvja.shlb 
@@ -173,7 +165,6 @@ viewer:Components:ucvtw2.shlb
 viewer:Components:unicharutil.xpt 
 viewer:Components:uriloader.shlb 
 viewer:Components:uriloader.xpt 
-viewer:Components:exthandler.xpt 
 viewer:Components:urlbarhistory.xpt
 viewer:Components:view.shlb 
 viewer:Components:Wallet.shlb 
@@ -184,7 +175,6 @@ viewer:Components:embeddingbrowser.xpt
 viewer:Components:widget.xpt 
 viewer:Components:xfer.shlb 
 viewer:Components:xpcom.xpt 
-viewer:Components:xpcom_xpti.xpt 
 viewer:Components:XPConnect.shlb 
 viewer:Components:xpconnect.xpt 
 viewer:Components:xpinstall.xpt 
@@ -220,17 +210,8 @@ viewer:chrome:modern.jar
 viewer:chrome:classic.jar
 viewer:chrome:pippki.jar
 viewer:chrome:pipnss.jar
--viewer:chrome:comm:content:editor:EditorInitPage.html
--viewer:chrome:comm:content:editor:EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
 ;-viewer:chrome:comm:content:editor:TextEditorAppShell.xul
--viewer:chrome:comm:content:editor:sb-bookmarks-panel.xul
--viewer:chrome:comm:content:editor:sb-bookmarks.js
--viewer:chrome:comm:content:editor:sb-file-contextMenu.js
--viewer:chrome:comm:content:editor:sb-file-panel.js
--viewer:chrome:comm:content:editor:sb-file-panel.xul
--viewer:chrome:comm:content:editor:sb-FileWidgetFileHandler.js
--viewer:chrome:comm:content:communicator:domviewer
 
 ; all the pref files must be part of base
 ; to prevent migration bugs
@@ -317,7 +298,6 @@ viewer:Components:MsgNews.shlb
 viewer:Components:MsgNews.xpt 
 viewer:Components:vcard.shlb 
 viewer:Components:smime.shlb
-viewer:Components:signed.shlb
 viewer:Components:msgImport.shlb
 viewer:Components:msgImport.xpt
 viewer:Components:msgImportText.shlb
@@ -328,7 +308,6 @@ viewer:Components:mozldap.shlb
 viewer:Components:mozldap.xpt
 viewer:Components:ldapAutoComplete.xpt
 viewer:Essential Files:LDAPClient.shlb
-viewer:res:Mailnews:*
 
 [chatzilla]
 viewer:Components:chatzilla-service.js
