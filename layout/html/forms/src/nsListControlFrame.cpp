@@ -100,6 +100,14 @@ const PRInt32 kNoSizeSpecified          = -1;
 
 nsListControlFrame * nsListControlFrame::mFocused = nsnull;
 
+// Using for incremental typing navigation
+#define INCREMENTAL_SEARCH_KEYPRESS_TIME 1000
+// XXX, kyle.yuan@sun.com, there are 4 definitions for the same purpose:
+//  nsMenuPopupFrame.h, nsListControlFrame.cpp, listbox.xml, tree.xml
+//  need to find a good place to put them together.
+//  if someone changes one, please also change the other.
+
+static DOMTimeStamp gLastKeyTime = 0;
 
 //---------------------------------------------------------
 nsresult
@@ -2288,6 +2296,8 @@ nsListControlFrame::UpdateSelection()
 NS_IMETHODIMP
 nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
 {
+  gLastKeyTime = 0;
+
   if (mComboboxFrame) {
     PerformSelection(aIndex, PR_FALSE, PR_FALSE);
 
@@ -3219,6 +3229,13 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 startIndex,
   anNewIndex     = newIndex;
 }
 
+nsAString& 
+nsListControlFrame::GetIncrementalString()
+{ 
+  static nsString incrementalString;
+  return incrementalString; 
+}
+
 nsresult
 nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
@@ -3300,6 +3317,9 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     nsevent->PreventBubble();
   }
 
+  // Whether we did an incremental search or another action
+  PRBool didIncrementalSearch = PR_FALSE;
+  
   // this is the new index to set
   // DOM_VK_RETURN & DOM_VK_ESCAPE will not set this
   PRInt32  newIndex = kNothingSelected;
@@ -3409,29 +3429,64 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         return NS_OK;
       }
 
-      PRUint32 charcode = 0;
-      keyEvent->GetCharCode(&charcode);
-      charcode = (PRUint32)nsCRT::ToLower((char)charcode);
-      PRInt32 selectedIndex;
-      GetSelectedIndex(&selectedIndex);
-      if (selectedIndex == kNothingSelected) {
-        selectedIndex = 0;
-      } else {
-        selectedIndex = (selectedIndex+1) % numOptions;
+      didIncrementalSearch = PR_TRUE;
+
+      PRUint32 charCode, keyCode;
+      keyEvent->GetCharCode(&charCode);
+      keyEvent->GetKeyCode(&keyCode);
+      charCode = (PRUint32)nsCRT::ToLower((char)charCode);
+
+      if (charCode == 0) {
+        // Backspace key will delete the last char in the string
+        if (keyCode == NS_VK_BACK && !GetIncrementalString().IsEmpty()) {
+          GetIncrementalString().Truncate(GetIncrementalString().Length() - 1);
+        }
+        return NS_OK;
       }
-      PRInt32 startedAtIndex    = selectedIndex;
-      PRBool  loopedAround  = PR_FALSE;
-      while ((selectedIndex < startedAtIndex && loopedAround) || !loopedAround) {
-        nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(
-            getter_AddRefs(GetOption(*options, selectedIndex)));
+
+      DOMTimeStamp keyTime;
+      aKeyEvent->GetTimeStamp(&keyTime);
+
+      // Incremental Search: if time elapsed is below INCREMENTAL_SEARCH_KEYPRESS_TIME,
+      // append this keystroke to the search string we will use to find options and start
+      // searching at the current keystroke.	Otherwise, Truncate the string if it's been
+      // a long time since our last keypress.
+      if (keyTime - gLastKeyTime > INCREMENTAL_SEARCH_KEYPRESS_TIME) {
+        GetIncrementalString().Truncate();
+      }
+      gLastKeyTime = keyTime;
+
+      // Append this keystroke to the string. 
+      // Exception: If the user types the same key repeatedly, we'll cycle through all
+      // options beginning with that char, rather than appending it.
+      if (!(GetIncrementalString().Length() == 1 &&
+            GetIncrementalString().First() == NS_STATIC_CAST(PRUnichar, charCode))) {
+        GetIncrementalString().Append(NS_STATIC_CAST(PRUnichar, charCode));
+      }
+
+      // Determine where we're going to start reading the string
+      // If we have multiple characters to look for, we start looking *at* the
+      // current option.  If we have only one character to look for, we start looking
+      // *after* the current option.	
+      // Exception: if there is no option selected to start at, we always start *at* 0.
+      PRInt32 startIndex;
+      GetSelectedIndex(&startIndex);
+      if (startIndex == kNothingSelected) {
+        startIndex = 0;
+      } else if (GetIncrementalString().Length() == 1) {
+        startIndex++;
+      }
+
+      PRUint32 i, index;
+      for (i = 0; i < numOptions; i++) {
+        index = (i + startIndex) % numOptions;
+        nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(getter_AddRefs(GetOption(*options, index)));
         if (optionElement) {
           nsAutoString text;
           if (NS_OK == optionElement->GetText(text)) {
-            ToLowerCase(text);
-            PRUnichar firstChar = text.CharAt(0);
-            if (firstChar == (PRUnichar)charcode) {
-              PRBool wasChanged = PerformSelection(selectedIndex,
-                                                   isShift, isControl);
+            if (Substring(text, 0, GetIncrementalString().Length()).Equals(GetIncrementalString(), 
+              nsCaseInsensitiveStringComparator())) {
+              PRBool wasChanged = PerformSelection(index, isShift, isControl);
               if (wasChanged) {
                 UpdateSelection(); // dispatch event, update combobox, etc.
               }
@@ -3439,15 +3494,14 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
             }
           }
         }
-        selectedIndex++;
-        if (selectedIndex == (PRInt32)numOptions) {
-          selectedIndex = 0;
-          loopedAround = PR_TRUE;
-        }
-
       } // while
     } break;//case
   } // switch
+
+  // If we didn't do an incremental search, clear the string
+  if (!didIncrementalSearch) {
+    GetIncrementalString().Truncate();
+  }
   
   // Actually process the new index and let the selection code
   // do the scrolling for us

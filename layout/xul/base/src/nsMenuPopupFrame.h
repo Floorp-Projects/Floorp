@@ -57,8 +57,12 @@
 
 #include "nsITimer.h"
 
-#define INC_TYP_INTERVAL  2500  // 2.5s. If the interval of two typings is shorter than this, 
+#define INC_TYP_INTERVAL  1000  // 1s. If the interval between two keypresses is shorter than this, 
                                 //   treat as a continue typing
+// XXX, kyle.yuan@sun.com, there are 4 definitions for the same purpose:
+//  nsMenuPopupFrame.h, nsListControlFrame.cpp, listbox.xml, tree.xml
+//  need to find a good place to put them together.
+//  if someone changes one, please also change the other.
 
 nsresult NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
