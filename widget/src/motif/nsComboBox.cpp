@@ -94,7 +94,7 @@ void nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
   if (mNumItems == mMaxNumItems) {
     // [TODO] Grow array here by ITEMS_GROWSIZE
   }
-  mItems[mNumItems++] = (long)btn;
+  mItems[mNumItems++] = btn;
 
   NS_FREE_STR_BUF(val);
 }
