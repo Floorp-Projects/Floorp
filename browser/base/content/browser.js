@@ -842,20 +842,6 @@ function BrowserLoadURL(aTriggeringEvent)
   if (url.match(/^view-source:/)) {
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
   } else {
-    if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
-        aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
-        aTriggeringEvent.shiftKey)
-      // Tack http://www. and .org on.
-      url = gURLBar.value = "http://www." + url + ".org/";
-    else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
-        aTriggeringEvent.ctrlKey)
-      // Tack www. and .com on.
-      url = gURLBar.value = "http://www." + url + ".com/";
-    else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
-        aTriggeringEvent.shiftKey)
-      // Tack www. and .org on.
-      url = gURLBar.value = "http://www." + url + ".net/";
-
     if (getBrowser().localName == "tabbrowser" &&
         aTriggeringEvent && 'altKey' in aTriggeringEvent &&
         aTriggeringEvent.altKey) {
@@ -1221,6 +1207,8 @@ function handleURLBarRevert()
 
 function handleURLBarCommand(aTriggeringEvent)
 {
+  canonizeUrl(aTriggeringEvent);
+
   try { 
     addToUrlbarHistory();
   } catch (ex) {
@@ -1229,6 +1217,26 @@ function handleURLBarCommand(aTriggeringEvent)
   }
   
   BrowserLoadURL(aTriggeringEvent); 
+}
+
+function canonizeUrl(aTriggeringEvent)
+{
+  if (!gURLBar)
+    return;
+  
+  if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
+      aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
+      aTriggeringEvent.shiftKey)
+    // Tack http://www. and .org on.
+    gURLBar.value = "http://www." + gURLBar.value + ".org/";
+  else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
+      aTriggeringEvent.ctrlKey)
+    // Tack www. and .com on.
+    gURLBar.value = "http://www." + gURLBar.value + ".com/";
+  else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
+      aTriggeringEvent.shiftKey)
+    // Tack www. and .org on.
+    gURLBar.value = "http://www." + gURLBar.value + ".net/";
 }
 
 function UpdatePageProxyState()
