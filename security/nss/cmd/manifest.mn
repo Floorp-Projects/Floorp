@@ -45,6 +45,7 @@ DIRS = lib  \
  certutil  \
  checkcert  \
  crlutil  \
+ dbtest \
  derdump  \
  digest  \
  makepqg  \
