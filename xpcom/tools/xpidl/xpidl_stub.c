@@ -137,7 +137,7 @@ js_convert_arguments_format(IDL_tree type)
       case IDLN_TYPE_STRING:
         return 's';
       case IDLN_TYPE_WIDE_STRING:
-        return 'S';
+        return 'W';
       case IDLN_TYPE_BOOLEAN:
         return 'b';
       case IDLN_IDENT:
@@ -149,32 +149,36 @@ js_convert_arguments_format(IDL_tree type)
 
 static gboolean
 emit_convert_result(TreeState *state, const char *from, const char *to,
-                    const char *extra_space)
+                    const char *extra_indent)
 {
     switch (IDL_NODE_TYPE(state->tree)) {
       case IDLN_TYPE_INTEGER:
         fprintf(state->file,
                 "%s  if (!JS_NewNumberValue(cx, (jsdouble) %s, %s))\n"
                 "%s    return JS_FALSE;\n",
-                extra_space, from, to,
-                extra_space);
+                extra_indent, from, to,
+                extra_indent);
         break;
       case IDLN_TYPE_STRING:
-        /* XXXbe must free 'from' using priv's nsIAllocator iff not weak! */
         fprintf(state->file,
-                "%s  JSString *str = JS_NewStringCopyZ(cx, %s);\n"
+                "%s  JSString *str = JS_NewStringCopyZ(cx, %s);\n",
+                extra_indent, from);
+        /* XXXbe must free 'from' using priv's nsIAllocator iff not weak! */
+        if (IDL_tree_property_get(state->tree, "shared") != NULL) {
+            fputs("oink\n", state->file);
+        }
+        fprintf(state->file,
                 "%s  if (!str)\n"
                 "%s    return JS_FALSE;\n"
                 "%s  *%s = STRING_TO_JSVAL(str);\n",
-                extra_space, from,
-                extra_space,
-                extra_space,
-                extra_space, to);
+                extra_indent,
+                extra_indent,
+                extra_indent, to);
         break;
       case IDLN_TYPE_BOOLEAN:
         fprintf(state->file,
                 "%s  *%s = BOOLEAN_TO_JSVAL(%s);\n",
-                extra_space, to, from);
+                extra_indent, to, from);
         break;
       case IDLN_IDENT:
         if (IDL_NODE_UP(state->tree) &&
@@ -182,14 +186,14 @@ emit_convert_result(TreeState *state, const char *from, const char *to,
             /* XXXbe issue warning, method should have been noscript? */
             fprintf(state->file,
                     "%s  *%s = JSVAL_NULL;\n",
-                    extra_space, to);
+                    extra_indent, to);
             break;
         }
         fprintf(state->file,
                 "%s  *%s = OBJECT_TO_JSVAL(%s::GetJSObject(cx, %s));\n"
                 "%s  NS_RELEASE(%s);\n",
-                extra_space, to, IDL_IDENT(state->tree).str, from,
-                extra_space, from);
+                extra_indent, to, IDL_IDENT(state->tree).str, from,
+                extra_indent, from);
         break;
       default:
         assert(0); /* XXXbe */
