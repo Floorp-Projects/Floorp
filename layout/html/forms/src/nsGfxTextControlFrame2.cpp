@@ -2002,6 +2002,22 @@ nsGfxTextControlFrame2::GetSizeFromContent(PRInt32* aSize) const
     }
     NS_RELEASE(content);
   }
+  if (*aSize < 1) {
+    // This is part of bug 46224
+    // when we can get a PresContent (may be cache it) 
+    // then we can check the compatibility mode
+#ifdef FUTURE_ADDITIONAL_FIX_FOR_46224
+    nsCompatibility mode;
+    mPresContext->GetCompatibilityMode(&mode); 
+    if (eCompatibility_NavQuirks == mode) {
+      *aSize = 1;
+    } else {
+      *aSize = 20;
+    }
+#else
+      *aSize = 1;
+#endif
+  }
   return result;
 }
 
