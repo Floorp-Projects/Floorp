@@ -526,6 +526,9 @@ nsSocketTransport::CompleteAsyncRead()
     mReadRequest->OnStop();
     NS_RELEASE(mReadRequest);
     mReadRequest = nsnull;
+
+    if (mReuseCount == 0)
+        mCloseConnectionOnceDone = PR_TRUE;
 }
 
 void
@@ -936,6 +939,7 @@ nsSocketTransport::doReadWrite(PRInt16 aSelectFlags)
     }
     if (PR_POLL_HUP & aSelectFlags) {
         LOG(("nsSocketTransport: [this=%x] received PR_POLL_HUP\n", this));
+        mCloseConnectionOnceDone = PR_TRUE;
         return NS_OK;
     }
 
@@ -1044,6 +1048,8 @@ nsresult nsSocketTransport::CloseConnection(PRBool bNow)
         mCurrentState = eSocketState_Closed;
         return NS_OK;
     }
+
+    LOG(("nsSocketTransport::CloseConnection [this=%x] Calling PR_Close\n", this));
     
     status = PR_Close(mSocketFD);
     if (PR_SUCCESS != status)
