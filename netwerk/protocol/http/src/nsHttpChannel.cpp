@@ -312,7 +312,7 @@ nsHttpChannel::SetupTransaction()
         requestURI = mSpec.get();
 
     // trim off the #ref portion if any...
-    char *p = PL_strrchr(requestURI, '#');
+    char *p = PL_strchr(requestURI, '#');
     if (p) *p = 0;
 
     mRequestHead.SetVersion(nsHttpHandler::get()->DefaultVersion());
