@@ -69,7 +69,7 @@
 <!ENTITY pref.dateformat.label      "Formato de Texto de Data:" >
 <!ENTITY pref.dateformat.long       "Longo" >
 <!ENTITY pref.dateformat.short      "Curto"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
+<!ENTITY pref.dateformat.storeingmt "Armazenar datas em Hora Universal (GMT)" >
 <!ENTITY pref.defaultlength.label   "Dura&#xE7;&#xE3;o padr&#xE3;o de Evento:" >
 <!ENTITY pref.defaultsnoozelength.label   "Dura&#xE7;&#xE3;o padr&#xE3;o de Soneca:" >
 
