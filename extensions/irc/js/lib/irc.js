@@ -1,60 +1,41 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *   
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * The Original Code is JSIRC Library
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is New Dimensions Consulting,
- * Inc. Portions created by New Dimensions Consulting, Inc. are
- * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
- * Rights Reserved.
+ * The Original Code is JSIRC Library.
+ *
+ * The Initial Developer of the Original Code is
+ * New Dimensions Consulting, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Robert Ginda, rginda@ndcico.com, original author
+ *   Robert Ginda, rginda@ndcico.com, original author
  *
- ****
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * depends on utils.js, events.js, and connection.js
- *
- * IRC(RFC 1459) library.
- * Contains the following classes:
- *
- * CIRCNetwork
- * Networtk object.  Takes care of logging into a "primary" server given a
- * list of potential hostnames for an IRC network.  (among other things.)
- *
- * CIRCServer
- * Server object.  Requires an initialized bsIConnection object for
- * communicating with the irc server.
- * Server.sayTo queues outgoing PRIVMSGs for sending to the server.  Using
- * sayTo takes care not to send lines faster than one every 1.5 seconds.
- * Server.connection.sendData sends raw lines over the connection, avoiding the
- * queue.
- *
- * CIRCUser
- * User objects.  Children of server objects.
- *
- * CIRCChannel
- * Channel object.  Children of server objects.
- *
- * CIRCChanMode
- * Channel mode object.  Children of channel objects
- *
- * CIRCChanUser
- * Channel User objects.  Children of channel objects, with __proto__ set
- * to a CIRCUser object (automatically.)
- *
- * 1999-09-15 rginda@ndcico.com           v1.0
- *
- */
+ * ***** END LICENSE BLOCK ***** */
 
 const JSIRC_ERR_NO_SOCKET = "JSIRCE:NS";
 const JSIRC_ERR_EXHAUSTED = "JSIRCE:E";
