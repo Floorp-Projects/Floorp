@@ -72,7 +72,8 @@ static nsIImageRequest  *gImageReq = nsnull;
 #define FILE_URL_PREFIX "file:///"
 #endif
 
-
+#define COLOR_FIELDS_X		50
+#define COLOR_FIELDS_Y		350
 
 static nsIImage		*gImage = nsnull;
 static PRBool			gInstalledColorMap = PR_FALSE;
@@ -182,7 +183,7 @@ nsEventStatus PR_CALLBACK HandleEventControlPane(nsGUIEvent *aEvent)
                          12);
             drawCtx->SetFont(font);
 
-            int y = 351;
+            int y = COLOR_FIELDS_Y + TEXT_HEIGHT/2 - font.size/2;
             nsString red("Red");
             drawCtx->SetColor(NS_RGB(255, 0, 0));
             drawCtx->DrawString(red, 50, y, 200);
@@ -523,7 +524,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     //
     // create the main window
     //
-    nsRepository::CreateInstance(kCWindowCID, nsnull, kIWindowIID, //еее
+    nsRepository::CreateInstance(kCWindowCID, nsnull, kIWindowIID,
                                  (void **)&(scribbleData.mainWindow));
     nsRect rect(100, 100, 600, 700);
     scribbleData.mainWindow->Create((nsIWidget*)NULL, 
@@ -620,7 +621,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     // Add the color section
     //
 
-    int y = 350;
+    int y = COLOR_FIELDS_Y;
     // create the "red" text widget
     rect.SetRect(100, y, 50, TEXT_HEIGHT);  
 
