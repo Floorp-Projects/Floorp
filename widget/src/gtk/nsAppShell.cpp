@@ -20,11 +20,6 @@
 #include "nsIAppShell.h"
 #include <stdlib.h>
 
-extern XtAppContext gAppContext;
-
-//XtAppContext nsAppShell::gAppContext = NULL;
-
-
 //-------------------------------------------------------------------------
 //
 // nsISupports implementation macro
@@ -51,20 +46,12 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
   gtk_set_locale ();
 
-  gtk_init (&argc, &argv);
+  gtk_init (argc, &argv);
 
   gdk_rgb_init ();
   
   mTopLevel = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   /* we should probibly set even handlers here */
-/* 
-  XtSetLanguageProc(NULL, NULL, NULL);
-  mTopLevel = XtVaAppInitialize(&mAppContext, "nsAppShell", NULL, 
-                                0, argc, argv, NULL, NULL);
-*/
-  // SP (what is this supposed to do?)
-  // XXX This is BAD -- needs to be fixed
-  gAppContext = mAppContext;
 
   return NS_OK;
 }
@@ -77,17 +64,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 
 NS_METHOD nsAppShell::Run()
 {
-/*
-  XtRealizeWidget(mTopLevel);
 
-  XEvent event;
-  for (;;) {
-    XtAppNextEvent(mAppContext, &event);
-    XtDispatchEvent(&event);
-    if (mDispatchListener)
-      mDispatchListener->AfterDispatch();
-  } 
-*/
   gtk_main();
 
   return NS_OK;
@@ -104,8 +81,6 @@ NS_METHOD nsAppShell::Exit()
   gtk_widget_destroy (mTopLevel);
   gtk_main_quit ();
  
- /* this shouldn't be needed */
-  exit(0);
   return NS_OK;
 }
 

@@ -20,8 +20,7 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
-
-#include <Xm/MainW.h>
+#include <gtk/gtk.h>
 
 /**
  * Native MOTIF Application shell wrapper
@@ -30,9 +29,8 @@
 class nsAppShell : public nsIAppShell
 {
   private:
-    GtkWidget           mTopLevel;
-    XtAppContext        mAppContext;
-    nsDispatchListener* mDispatchListener;
+    GtkWidget          *mTopLevel;
+    nsDispatchListener *mDispatchListener;
 
   public:
     nsAppShell();
@@ -48,7 +46,6 @@ class nsAppShell : public nsIAppShell
     virtual void*     GetNativeData(PRUint32 aDataType);
 
     // Public global
-    //static XtAppContext gAppContext;
 };
 
 #endif // nsAppShell_h__
