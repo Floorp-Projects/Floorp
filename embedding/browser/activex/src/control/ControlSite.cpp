@@ -731,7 +731,13 @@ HRESULT STDMETHODCALLTYPE CControlSite::GetDC(/* [in] */ LPCRECT pRect, /* [in] 
 		return E_INVALIDARG;
 	}
 
-	// Can't do nested painting
+    if (grfFlags & OLEDC_NODRAW)
+    {
+        *phDC = m_hDCBuffer;
+        return S_OK;
+    }
+   
+   	// Can't do nested painting
 	if (m_hDCBuffer != NULL)
 	{
 		return E_UNEXPECTED;
