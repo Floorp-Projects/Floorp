@@ -237,13 +237,10 @@ nsresult
 nsMsgDraft::OpenDraftMsg(const PRUnichar *msgURI, nsIMessage **aMsgToReplace,
                          nsIMsgIdentity * identity, PRBool addInlineHeaders)
 {
-PRUnichar     *HackUpAURIToPlayWith(nsIMsgIdentity*);      // RICHIE - forward declare for now
-
+  // We should really never get here, but if we do, just return 
+  // with an error
   if (!msgURI)
-  {
-    printf("RICHIE: DO THIS UNTIL THE FE CAN REALLY SUPPORT US!\n");
-    msgURI = HackUpAURIToPlayWith(identity);
-  }
+    return NS_ERROR_FAILURE;
   
   mAddInlineHeaders = addInlineHeaders;
   return ProcessDraftOrTemplateOperation(msgURI, nsMimeOutput::nsMimeMessageDraftOrTemplate, 
@@ -258,67 +255,3 @@ nsMsgDraft::OpenEditorTemplate(const PRUnichar *msgURI, nsIMessage **aMsgToRepla
                                          identity, aMsgToReplace);
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-// RICHIE - This is a temp routine to get a URI from the Drafts folder and use that
-// for loading into the compose window.
-//////////////////////////////////////////////////////////////////////////////////////////
-// RICHIE - EVERYTHING AFTER THIS COMMENT IS A TEMP HACK!!!
-//////////////////////////////////////////////////////////////////////////////////////////
-PRUnichar *
-HackUpAURIToPlayWith(nsIMsgIdentity *identity)
-{
-  //PRUnichar           *playURI = nsnull;
-  char                *folderURI = nsnull;
-  nsresult            rv = NS_OK;
-
-  if (!identity) return nsnull;
-  // 
-  // Find the users drafts folder...
-  //
-  identity->GetDraftFolder(&folderURI);
-
-  // 
-  // Now, get the drafts folder...
-  //
-  nsCOMPtr <nsIMsgFolder> folder;
-  rv = LocateMessageFolder(identity, nsMsgSaveAsDraft, folderURI, getter_AddRefs(folder));
-  PR_FREEIF(folderURI);
-  if (NS_FAILED(rv) || !folder)
-    return nsnull;
-
-  nsCOMPtr <nsISimpleEnumerator> enumerator;
-  rv = folder->GetMessages(nsnull, getter_AddRefs(enumerator));
-  if (NS_FAILED(rv) || (!enumerator))
-  {
-    // RICHIE - Possible bug that will bite us in this hack...
-    printf("*** NOTICE *** If you failed, more than likely, this is the problem\ndescribed by Bug #10344.\n\7");    
-    return nsnull;
-  }
-
-  PRBool hasMore = PR_FALSE;
-  rv = enumerator->HasMoreElements(&hasMore);
-
-  if (!NS_SUCCEEDED(rv) || !hasMore) 
-    return nsnull;
-
-  nsCOMPtr<nsISupports>   currentItem;
-  rv = enumerator->GetNext(getter_AddRefs(currentItem));
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  nsCOMPtr<nsIMessage>      message;
-  message = do_QueryInterface(currentItem); 
-  if (!message)
-    return nsnull;
-
-  nsCOMPtr<nsIRDFResource>  myRDFNode;
-  myRDFNode = do_QueryInterface(message, &rv);
-  if (NS_FAILED(rv) || (!myRDFNode))
-    return nsnull;
-
-  char    *tURI;
-  myRDFNode->GetValue(&tURI);
-  nsString   workURI(tURI);
-  nsAllocator::Free(tURI);
-  return workURI.ToNewUnicode(); 
-}

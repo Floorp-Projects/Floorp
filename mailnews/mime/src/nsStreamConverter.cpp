@@ -257,6 +257,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       char *ptr5 = PL_strcasestr ("none", (header+lenOfHeader));
       char *ptr6 = PL_strcasestr ("print", (header+lenOfHeader));
       char *ptr7 = PL_strcasestr ("saveas", (header+lenOfHeader));
+      char *ptr8 = PL_strcasestr ("src", (header+lenOfHeader));
       if (ptr5)
       {
         PR_FREEIF(mOutputFormat);
@@ -292,6 +293,12 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
         PR_FREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageSaveAs;
+      }
+      else if (ptr8)
+      {
+        PR_FREEIF(mOutputFormat);
+        mOutputFormat = nsCRT::strdup("text/html");
+        *aNewType = nsMimeOutput::nsMimeMessageSource;
       }
     }
     else
@@ -375,171 +382,214 @@ NS_IMPL_ISUPPORTS4(nsStreamConverter, nsIStreamListener, nsIStreamObserver, nsIS
 
 NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutListener, nsIChannel *aChannel)
 {
-	nsresult rv = NS_OK;
-
-	mOutListener = aOutListener;
+  nsresult rv = NS_OK;
+  
+  mOutListener = aOutListener;
   mDesiredOutputType = nsnull;
-
-	// mscott --> we need to look at the url and figure out what the correct output type is...
-	nsMimeOutputType newType;
-
-	if (!mAlreadyKnowOutputType)
-	{
-		nsXPIDLCString urlSpec;
-		rv = aURI->GetSpec(getter_Copies(urlSpec));
-		DetermineOutputFormat(urlSpec, &newType);
-		mAlreadyKnowOutputType = PR_TRUE;
-	}
-	else
-		newType = mOutputType;
-
-	  switch (newType)
-	  {
-    case nsMimeOutput::nsMimeMessageXULDisplay:
-			PR_FREEIF(mOutputFormat);
-			mOutputFormat = nsCRT::strdup("text/xul");
-      break;
+  
+  // mscott --> we need to look at the url and figure out what the correct output type is...
+  nsMimeOutputType newType;
+  
+  if (!mAlreadyKnowOutputType)
+  {
+    nsXPIDLCString urlSpec;
+    rv = aURI->GetSpec(getter_Copies(urlSpec));
+    DetermineOutputFormat(urlSpec, &newType);
+    mAlreadyKnowOutputType = PR_TRUE;
+  }
+  else
+    newType = mOutputType;
+  
+  mOutputType = newType;  
+  switch (newType)
+  {
+  case nsMimeOutput::nsMimeMessageXULDisplay:
+    PR_FREEIF(mOutputFormat);
+    mOutputFormat = nsCRT::strdup("text/xul");
+    break;
 		case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
-			mWrapperOutput = PR_TRUE;
-			PR_FREEIF(mOutputFormat);
-			mOutputFormat = nsCRT::strdup("text/html");
-			break;
-		case nsMimeOutput::nsMimeMessageHeaderDisplay:   // the split header/body display
-			PR_FREEIF(mOutputFormat);
-			mOutputFormat = nsCRT::strdup("text/xml");
-			break;
-		case nsMimeOutput::nsMimeMessageBodyDisplay:   // the split header/body display
-			PR_FREEIF(mOutputFormat);
-			mOutputFormat = nsCRT::strdup("text/html");
-			break;
-
-		case nsMimeOutput::nsMimeMessageQuoting:   		// all HTML quoted output
-		case nsMimeOutput::nsMimeMessageSaveAs:   		// Save as operation
-		case nsMimeOutput::nsMimeMessageBodyQuoting: 	// only HTML body quoted output
-		case nsMimeOutput::nsMimeMessagePrintOutput:  // all Printing output
-			PR_FREEIF(mOutputFormat);
-			mOutputFormat = nsCRT::strdup("text/html");
-			break;
-
-		case nsMimeOutput::nsMimeMessageRaw:       // the raw RFC822 data (view source) and attachments
-			PR_FREEIF(mOutputFormat);
-			mOutputFormat = nsCRT::strdup("raw");
-			break;
-
-		case nsMimeOutput::nsMimeMessageDraftOrTemplate:       // Loading drafts & templates
-			PR_FREEIF(mOutputFormat);
-			mOutputFormat = nsCRT::strdup("message/draft");
-			break;
-
-		case nsMimeOutput::nsMimeMessageEditorTemplate:       // Loading templates into editor
-			PR_FREEIF(mOutputFormat);
-			mOutputFormat = nsCRT::strdup("text/html");
-			break;
-		default:
-			NS_ASSERTION(0, "this means I made a mistake in my assumptions");
-	  }
-
-
-	// the following output channel stream is used to fake the content type for people who later
-	// call into us..
+      mWrapperOutput = PR_TRUE;
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("text/html");
+      break;
+    case nsMimeOutput::nsMimeMessageHeaderDisplay:   // the split header/body display
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("text/xml");
+      break;
+    case nsMimeOutput::nsMimeMessageBodyDisplay:   // the split header/body display
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("text/html");
+      break;
+      
+    case nsMimeOutput::nsMimeMessageQuoting:   		// all HTML quoted output
+    case nsMimeOutput::nsMimeMessageSaveAs:   		// Save as operation
+    case nsMimeOutput::nsMimeMessageBodyQuoting: 	// only HTML body quoted output
+    case nsMimeOutput::nsMimeMessagePrintOutput:  // all Printing output
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("text/html");
+      break;
+      
+    case nsMimeOutput::nsMimeMessageRaw:       // the raw RFC822 data (view source) and attachments
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("raw");
+      break;
+      
+    case nsMimeOutput::nsMimeMessageSource:    // the raw RFC822 data (view source) and attachments
+      PR_FREEIF(mOutputFormat);
+      PR_FREEIF(mOverrideFormat);
+      mOutputFormat = nsCRT::strdup("text/html");
+      mOverrideFormat = nsCRT::strdup("raw");
+      break;
+      
+    case nsMimeOutput::nsMimeMessageDraftOrTemplate:       // Loading drafts & templates
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("message/draft");
+      break;
+      
+    case nsMimeOutput::nsMimeMessageEditorTemplate:       // Loading templates into editor
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("text/html");
+      break;
+    default:
+      NS_ASSERTION(0, "this means I made a mistake in my assumptions");
+  }
+  
+  
+  // the following output channel stream is used to fake the content type for people who later
+  // call into us..
   rv = NS_NewInputStreamChannel(aURI, mOutputFormat,
-                                -1,     // XXX fix contentLength
-                                nsnull, // inputStream
-                                nsnull, // loadGroup
-                                nsnull, // notificationCallbacks
-                                nsIChannel::LOAD_NORMAL,
-                                nsnull, // originalURI
-                                0, 0,
-                                getter_AddRefs(mOutgoingChannel));
+    -1,     // XXX fix contentLength
+    nsnull, // inputStream
+    nsnull, // loadGroup
+    nsnull, // notificationCallbacks
+    nsIChannel::LOAD_NORMAL,
+    nsnull, // originalURI
+    0, 0,
+    getter_AddRefs(mOutgoingChannel));
   if (NS_FAILED(rv)) 
-		return rv;
-
-	// Set system principal for this document, which will be dynamically generated 
-	NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-	if (NS_FAILED(rv)) 
-		return rv;
-	nsCOMPtr<nsIPrincipal> principal;
-	if (NS_FAILED(rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal))))
-		return rv;
-	nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
-	if (NS_FAILED(rv = mOutgoingChannel->SetOwner(owner)))
-		return rv;
-	
-	// We will first find an appropriate emitter in the repository that supports 
-	// the requested output format...note, the special exceptions are nsMimeMessageDraftOrTemplate
-	// or nsMimeMessageEditorTemplate where we don't need any emitters
-	//
-
-	if ( (newType != nsMimeOutput::nsMimeMessageDraftOrTemplate) && 
-             (newType != nsMimeOutput::nsMimeMessageEditorTemplate) )
-	{
-		nsCAutoString progID = "component://netscape/messenger/mimeemitter;type=";
-		if (mOverrideFormat)
-		progID += mOverrideFormat;
-		else
-		progID += mOutputFormat;
-
-		rv = nsComponentManager::CreateInstance(progID, nsnull,
-										                         NS_GET_IID(nsIMimeEmitter),
-										                         (void **) getter_AddRefs(mEmitter));
-		if ((NS_FAILED(rv)) || (!mEmitter))
-		{
+    return rv;
+  
+  // Set system principal for this document, which will be dynamically generated 
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
+  nsCOMPtr<nsIPrincipal> principal;
+  if (NS_FAILED(rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal))))
+    return rv;
+  nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+  if (NS_FAILED(rv = mOutgoingChannel->SetOwner(owner)))
+    return rv;
+  
+  // We will first find an appropriate emitter in the repository that supports 
+  // the requested output format...note, the special exceptions are nsMimeMessageDraftOrTemplate
+  // or nsMimeMessageEditorTemplate where we don't need any emitters
+  //
+  
+  if ( (newType != nsMimeOutput::nsMimeMessageDraftOrTemplate) && 
+    (newType != nsMimeOutput::nsMimeMessageEditorTemplate) )
+  {
+    nsCAutoString progID = "component://netscape/messenger/mimeemitter;type=";
+    if (mOverrideFormat)
+      progID += mOverrideFormat;
+    else
+      progID += mOutputFormat;
+    
+    rv = nsComponentManager::CreateInstance(progID, nsnull,
+      NS_GET_IID(nsIMimeEmitter),
+      (void **) getter_AddRefs(mEmitter));
+    if ((NS_FAILED(rv)) || (!mEmitter))
+    {
 #ifdef DEBUG_rhp
-			printf("Unable to create the correct converter!\n");
+      printf("Unable to create the correct converter!\n");
 #endif
-		return NS_ERROR_OUT_OF_MEMORY;
-		}
-	}
-
-	SetStreamURI(aURI);
-	// now we want to create a pipe which we'll use for converting the data...
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  
+  SetStreamURI(aURI);
+  // now we want to create a pipe which we'll use for converting the data...
   nsCOMPtr<nsIPipeObserver> pipeObserver = do_QueryInterface(mEmitter);
-	rv = NS_NewPipe(getter_AddRefs(mInputStream), getter_AddRefs(mOutputStream),
-                  pipeObserver,
-                  NS_STREAM_CONVERTER_SEGMENT_SIZE,
-                  NS_STREAM_CONVERTER_BUFFER_SIZE);
-
+  rv = NS_NewPipe(getter_AddRefs(mInputStream), getter_AddRefs(mOutputStream),
+    pipeObserver,
+    NS_STREAM_CONVERTER_SEGMENT_SIZE,
+    NS_STREAM_CONVERTER_BUFFER_SIZE);
+  
   if (NS_SUCCEEDED(rv))
   {
-      mInputStream->SetNonBlocking(PR_TRUE);
-      mOutputStream->SetNonBlocking(PR_TRUE);
+    mInputStream->SetNonBlocking(PR_TRUE);
+    mOutputStream->SetNonBlocking(PR_TRUE);
+  }
+  
+  // initialize our emitter
+  if (NS_SUCCEEDED(rv) && mEmitter)
+  {
+    mEmitter->Initialize(aURI, mOutgoingChannel, newType);
+    mEmitter->SetPipe(mInputStream, mOutputStream);
+    mEmitter->SetOutputListener(aOutListener);
+  }
+  
+  PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
+  PRBool enable_emoticons = PR_TRUE;
+  PRBool enable_structs = PR_TRUE;
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_SUCCEEDED(rv) && prefs) 
+  {
+    rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_GLYPH,&enable_emoticons);
+    if (NS_FAILED(rv) || enable_emoticons) 
+    {
+    	whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
+    }
+    rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_STRUCT,&enable_structs);
+    if (NS_FAILED(rv) || enable_structs) 
+    {
+    	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
+    }
   }
 
-	// initialize our emitter
+  // initialize our emitter
 	if (NS_SUCCEEDED(rv) && mEmitter)
 	{
 	  mEmitter->Initialize(aURI, mOutgoingChannel, newType);
 	  mEmitter->SetPipe(mInputStream, mOutputStream);
 	  mEmitter->SetOutputListener(aOutListener);
 	}
+
+  if (mOutputType == nsMimeOutput::nsMimeMessageSource)
+    return NS_OK;
+  else
+  {
+    mBridgeStream = bridge_create_stream(mEmitter, this, aURI, newType, whattodo, mOutgoingChannel);
+    if (!mBridgeStream)
+      return NS_ERROR_OUT_OF_MEMORY;
+    else
+    {
+      //Do we need to setup an Mime Stream Converter Listener?
+      if (mMimeStreamConverterListener)
+        bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, mMimeStreamConverterListener);
+      return rv;
+      
+      PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
+      PRBool enable_emoticons = PR_TRUE;
+      PRBool enable_structs = PR_TRUE;
   
-    PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
-    PRBool enable_emoticons = PR_TRUE;
-    PRBool enable_structs = PR_TRUE;
-
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-    if (NS_SUCCEEDED(rv) && prefs) {
-      rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_GLYPH,&enable_emoticons);
-      if (NS_FAILED(rv) || enable_emoticons) {
-	whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
-      }
-      rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_STRUCT,&enable_structs);
-      if (NS_FAILED(rv) || enable_structs) {
-      	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
-      }
+      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+      if (NS_SUCCEEDED(rv) && prefs) 
+      {
+        rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_GLYPH,&enable_emoticons);
+        if (NS_FAILED(rv) || enable_emoticons) 
+        {
+  	      whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
+        }
+        rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_STRUCT,&enable_structs);
+        if (NS_FAILED(rv) || enable_structs) 
+        {
+        	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
+        }
+      }      
     }
-	mBridgeStream = bridge_create_stream(mEmitter, this, aURI, newType, whattodo, mOutgoingChannel);
-
-	if (!mBridgeStream)
-		return NS_ERROR_OUT_OF_MEMORY;
-	else
-	{
-		//Do we need to setup an Mime Stream Converter Listener?
-		if (mMimeStreamConverterListener)
- 			bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, mMimeStreamConverterListener);
-		return rv;
-	}
+  }
 }
 
 NS_IMETHODIMP nsStreamConverter::GetContentType(char **aOutputContentType)
@@ -651,12 +701,12 @@ nsStreamConverter::OnDataAvailable(nsIChannel * /* aChannel */, nsISupports    *
 {
   nsresult        rc=NS_OK;     // should this be an error instead?
   PRUint32        readLen = aLength;
+  PRUint32        written;
 
   // If this is the first time through and we are supposed to be 
   // outputting the wrapper two pane URL, then do it now.
   if (mWrapperOutput)
   {
-    PRUint32    written;
     char        outBuf[1024];
 char *output = "\
 <HTML>\
@@ -688,7 +738,13 @@ char *output = "\
   readLen = aLength;
   aIStream->Read(buf, aLength, &readLen);
 
-  if (mBridgeStream)
+  if (mOutputType == nsMimeOutput::nsMimeMessageSource)
+  {
+    rc = NS_OK;
+    if (mEmitter)
+      rc = mEmitter->Write(buf, readLen, &written);
+  }
+  else if (mBridgeStream)
   {
     nsMIMESession   *tSession = (nsMIMESession *) mBridgeStream;
     rc = tSession->put_block((nsMIMESession *)mBridgeStream, buf, readLen);

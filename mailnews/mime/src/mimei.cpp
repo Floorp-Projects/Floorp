@@ -317,6 +317,8 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
         clazz = (MimeObjectClass *)&mimeInlineTextEnrichedClass;
       else if (!nsCRT::strcasecmp(content_type+5,		"richtext"))
         clazz = (MimeObjectClass *)&mimeInlineTextRichtextClass;
+      else if      (!nsCRT::strcasecmp(content_type+5,		"rtf"))
+        clazz = (MimeObjectClass *)&mimeExternalObjectClass;
       else if (!nsCRT::strcasecmp(content_type+5,		"plain"))
       {
         // Check for format=flowed, damn, it is already stripped away from
@@ -336,7 +338,14 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
           (content_type_row
            ? MimeHeaders_get_parameter(content_type_row, "format", NULL, NULL)
            : 0);
-        if(content_type_format && (!nsCRT::strcasecmp(content_type_format, "flowed")))
+
+        PRBool doFormatFlowed = PR_TRUE;
+        if ( (opts) && ( (opts->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
+                         (opts->format_out == nsMimeOutput::nsMimeMessageBodyQuoting)) )
+          doFormatFlowed = PR_FALSE;
+
+        if ( content_type_format && (!nsCRT::strcasecmp(content_type_format, "flowed")) 
+             && doFormatFlowed)
           clazz = (MimeObjectClass *)&mimeInlineTextPlainFlowedClass;
         else
           clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;

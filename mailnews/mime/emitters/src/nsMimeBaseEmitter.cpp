@@ -553,7 +553,8 @@ nsMimeBaseEmitter::AddHeaderField(const char *field, const char *value)
   {
     ptr->name = nsCRT::strdup(field);
 
-    if ( (mDocHeader) || (mFormat == nsMimeOutput::nsMimeMessageSaveAs) )
+    if ( ( (mDocHeader) || (mFormat == nsMimeOutput::nsMimeMessageSaveAs) ) &&
+         (mFormat != nsMimeOutput::nsMimeMessagePrintOutput) )
       ptr->value = nsCRT::strdup(value);
     else
       ptr->value = nsAutoString(value).ToNewUTF8String();

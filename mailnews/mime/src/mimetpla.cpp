@@ -73,11 +73,22 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
 	  char* strs[4];
 	  char* s;
 	  strs[0] = "<PRE>";
-	  strs[1] = "<PRE VARIABLE>";
-	  strs[2] = "<PRE WRAP>";
-	  strs[3] = "<PRE VARIABLE WRAP>";
-	  s = nsCRT::strdup(strs[(obj->options->variable_width_plaintext_p ? 1 : 0) +
-						(obj->options->wrap_long_lines_p ? 2 : 0)]);
+	  strs[1] = "<PRE style=\"font-family: serif;\">";
+	  strs[2] = "<PRE>";
+	  strs[3] = "<PRE style=\"font-family: serif;>";
+
+    // For quoting, keep it simple...
+    if ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
+         (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) )
+    {
+      s = nsCRT::strdup(strs[0]);
+    }
+    else
+    {
+  	  s = nsCRT::strdup(strs[(obj->options->variable_width_plaintext_p ? 1 : 0) +
+	  					(obj->options->wrap_long_lines_p ? 2 : 0)]);
+    }
+
 	  if (!s) return MIME_OUT_OF_MEMORY;
 	  status = MimeObject_write(obj, s, nsCRT::strlen(s), PR_FALSE);
 	  PR_Free(s);

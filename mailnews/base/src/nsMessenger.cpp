@@ -99,12 +99,21 @@
 // Printing
 #include "nsMsgPrintEngine.h"
 
+// Save As
+#include "nsIFileWidget.h"
+#include "nsIStringBundle.h"
+#include "nsWidgetsCID.h"
+
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kMsgPrintEngineCID,		NS_MSG_PRINTENGINE_CID);
+static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
+
+/* This is the next generation string retrieval call */
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_) || defined(DEBUG_jefft)
 #define DEBUG_MESSENGER
@@ -217,6 +226,7 @@ nsMessenger::nsMessenger()
 	mWindow = nsnull;
   mMsgWindow = nsnull;
   mCharsetInitialized = PR_FALSE;
+  mStringBundle = nsnull;
 
   //	InitializeFolderRoot();
 }
@@ -448,7 +458,7 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
               goto done;
             }
             nsAutoString from, to;
-            from = "message/rfc822";
+            from = MESSAGE_RFC822;
             to = "text/xul";
             NS_WITH_SERVICE(nsIStreamConverterService,
                             streamConverterService,  
@@ -490,51 +500,132 @@ done:
 NS_IMETHODIMP
 nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
 {
-	nsresult rv = NS_OK;
+  	nsresult rv = NS_OK;
     nsIMsgMessageService* messageService = nsnull;
     
     if (url)
     {
       rv = GetMessageServiceFromURI(url, &messageService);
-
       if (NS_SUCCEEDED(rv) && messageService)
       {
         nsCOMPtr<nsIFileSpec> aSpec;
-        PRUint32 saveAsFileType = 0; // 0 - raw, 1 = html, 2 = text;
-        char      *defaultFile = "msgTemp.eml";
+        PRInt16               saveAsFileType = 0; // 0 - raw, 1 = html, 2 = text;
+        char                  *defaultFile = "mail";
 
         if (asFile)
         {
-          nsCOMPtr<nsIFileSpecWithUI>
-            fileSpec(getter_AddRefs(NS_CreateFileSpecWithUI()));
- 
-          if (!fileSpec) {
-            rv = NS_ERROR_FAILURE;
-            goto done;
+          nsCOMPtr<nsIFileWidget>  fileWidget;
+          rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, NS_GET_IID(nsIFileWidget), getter_AddRefs(fileWidget));
+          if (NS_SUCCEEDED(rv) && fileWidget)
+          {
+            nsAutoString  promptString = GetString(nsString("SaveMailAs").GetUnicode());
+            
+            nsString* titles = nsnull;
+            nsString* filters = nsnull;
+            nsString* nextTitle;
+            nsString* nextFilter;
+            nsAutoString HTMLFiles;
+            nsAutoString TextFiles;
+            nsFileSpec parentPath;
+            
+            titles = new nsString[3];
+            if (!titles)
+            {
+              rv = NS_ERROR_OUT_OF_MEMORY;
+              goto SkipFilters;
+            }
+            filters = new nsString[3];
+            if (!filters)
+            {
+              rv = NS_ERROR_OUT_OF_MEMORY;
+              goto SkipFilters;
+            }
+            nextTitle = titles;
+            nextFilter = filters;
+            // The names of the file types are localizable
+            HTMLFiles = GetString(nsString("HTMLFiles").GetUnicode());
+            TextFiles = GetString(nsString("TextFiles").GetUnicode());
+            if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
+              goto SkipFilters;
+            
+            *nextTitle++ = GetString(nsString("EMLFiles").GetUnicode());
+            *nextFilter++ = "*.eml";
+            *nextTitle++ = HTMLFiles;
+            *nextFilter++ = "*.htm; *.html; *.shtml";
+            *nextTitle++ = TextFiles;
+            *nextFilter++ = "*.txt";
+            fileWidget->SetFilterList(3, titles, filters);              
+            fileWidget->SetDefaultString(nsString(defaultFile));
+            
+SkipFilters:
+            nsFileDlgResults dialogResult;
+            // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
+            nsFileSpec    tFileSpec;
+            dialogResult = fileWidget->PutFile(nsnull, promptString, tFileSpec);
+            delete [] titles;
+            delete [] filters;
+            
+            if (dialogResult == nsFileDlgResults_Cancel)
+            {
+              goto done;
+            }
+            
+            nsFileSpec fileSpec;
+            if (NS_FAILED(fileWidget->GetFile(fileSpec)) )
+              goto done;
+            
+            char *fileName = fileSpec.GetLeafName();
+            nsCString tmpFilenameString = fileName;
+            nsCString extString;
+            nsCRT::free(fileName);
+            
+            // First, check if they put ANY extension on the file, if not,
+            // then we should look at the type of file they have chosen and
+            // tack on the file extension for them.
+            //
+            if (tmpFilenameString.RFind(".", PR_TRUE) == -1)
+            {
+              fileWidget->GetSelectedType(saveAsFileType);
+              switch (saveAsFileType) {
+              case  2:
+                extString = ".html";
+                break;
+              case  3:
+                extString = ".txt";
+                break;
+              default:
+              case  1: 
+                extString = ".eml";
+                break;
+              }
+  
+              // Doing this since the GetSelectedType() is not zero
+              // relative
+              saveAsFileType--;
+
+              // No append the extension and create the output stream
+              tmpFilenameString.Append(extString);
+              rv = NS_NewFileSpecWithSpec(nsFileSpec(tmpFilenameString.GetBuffer()), getter_AddRefs(aSpec));
+            }
+            else
+            {
+              if (tmpFilenameString.RFind(".htm", PR_TRUE) != -1)
+                saveAsFileType = 1;
+              else if (tmpFilenameString.RFind(".txt", PR_TRUE) != -1)
+                saveAsFileType = 2;
+              else
+                saveAsFileType = 0;   // .eml type
+
+              rv = NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(aSpec));
+            }
           }
-
-          rv = fileSpec->ChooseOutputFile("Save Message", defaultFile,
-                                nsIFileSpecWithUI::eAllMailOutputFilters);
-          if (NS_FAILED(rv)) goto done;
-          char *fileName = nsnull;
-          fileSpec->GetLeafName(&fileName);
-
-          nsCString tmpFilenameString = fileName;
-      
-          nsCRT::free(fileName);
-
-          if (tmpFilenameString.RFind(".htm", PR_TRUE) != -1)
-            saveAsFileType = 1;
-          else if (tmpFilenameString.RFind(".txt", PR_TRUE) != -1)
-            saveAsFileType = 2;
+          else
+          {
+            nsFileSpec tmpFileSpec(defaultFile);
+            rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(aSpec));
+          }
+        }  
           
-          aSpec = do_QueryInterface(fileSpec, &rv);
-        }
-        else
-        {
-          nsFileSpec tmpFileSpec(defaultFile);
-          rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(aSpec));
-        }
         if (NS_FAILED(rv)) goto done;
         nsCOMPtr<nsIUrlListener> urlListener;
         if (aSpec)
@@ -560,7 +651,13 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                   nsAutoString urlString = url;
 
                   // Setup the URL for a "Save As..." Operation...
-                  urlString += "?header=saveas";
+                  // For now, if this is a save as TEXT operation, then do
+                  // a "printing" operation
+                  //
+                  if (saveAsFileType == 1)
+                    urlString += "?header=saveas";
+                  else
+                    urlString += "?header=print";
 
                   char *urlCString = urlString.ToNewCString();
                   rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
@@ -1475,7 +1572,18 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
       {
         if ( (m_doCharsetConversion) && (m_outputFormat == TEXT_PLAIN) )
         {
-          m_msgBuffer.Append(m_dataBuffer, readCount);
+          PRUnichar       *u = nsnull; 
+          nsAutoString    fmt("%s");
+          
+          u = nsTextFormatter::smprintf(fmt.GetUnicode(), m_dataBuffer); // this converts UTF-8 to UCS-2 
+          if (u)
+          {
+            PRInt32   newLen = nsCRT::strlen(u);
+            m_msgBuffer.Append(u, newLen);
+            PR_FREEIF(u);
+          }
+          else
+            m_msgBuffer.Append(m_dataBuffer, readCount);
         }
         else
         {
@@ -1487,4 +1595,33 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
     }
   }
   return rv;
+}
+
+#define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
+
+PRUnichar *
+nsMessenger::GetString(const PRUnichar *aStringName)
+{
+	nsresult    res = NS_OK;
+  PRUnichar   *ptrv = nsnull;
+
+	if (!mStringBundle)
+	{
+		char    *propertyURL = MESSENGER_STRING_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
+			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(mStringBundle));
+		}
+	}
+
+	if (mStringBundle)
+		res = mStringBundle->GetStringFromName(aStringName, &ptrv);
+
+  if ( NS_SUCCEEDED(res) && (ptrv) )
+    return ptrv;
+  else
+    return nsCRT::strdup(aStringName);
 }

@@ -66,11 +66,18 @@
 #include "nsTextFormatter.h"
 #include "nsIWebShell.h"
 #include "nsINetPrompt.h"
+#include "nsIAppShellService.h"
+
+// This will go away once select is passed a prompter interface
+#include "nsAppShellCIDs.h" // TODO remove later
+#include "nsIAppShellService.h" // TODO remove later
+#include "nsIWebShellWindow.h" // TODO remove later
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
 // for these two interfaces 
 //
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
@@ -113,7 +120,7 @@ static char* NET_GetURLFromLocalFile(char *filename)
 
 #endif /* XP_MAC */
 
-static PRBool mime_use_quoted_printable_p = PR_TRUE;
+static PRBool mime_use_quoted_printable_p = PR_FALSE;
 
 //
 // Ugh, we need to do this currently to access this boolean.
@@ -180,6 +187,7 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
 	m_plaintext = nsnull;
 	m_related_part = nsnull;
   m_related_body_part = nsnull;
+  mOriginalHTMLBody = nsnull;
 
   // These are for temp file creation and return
   mReturnFileSpec = nsnull;
@@ -227,6 +235,7 @@ nsMsgComposeAndSend::Clear()
 	PR_FREEIF (m_attachment1_type);
 	PR_FREEIF (m_attachment1_encoding);
 	PR_FREEIF (m_attachment1_body);
+  PR_FREEIF (mOriginalHTMLBody);
 
 	if (m_attachment1_encoder_data) 
   {
@@ -533,13 +542,17 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 			goto FAIL;
 		}
 
-		status = tempfile.write(m_attachment1_body, m_attachment1_body_length);
-		if (status < int(m_attachment1_body_length)) 
+    if (mOriginalHTMLBody)
     {
-			if (status >= 0)
-				status = NS_MSG_ERROR_WRITING_FILE;
-			goto FAIL;
-		}
+      PRUint32    origLen = nsCRT::strlen(mOriginalHTMLBody);
+      status = tempfile.write(mOriginalHTMLBody, origLen);
+		  if (status < int(origLen)) 
+      {
+			  if (status >= 0)
+				  status = NS_MSG_ERROR_WRITING_FILE;
+			  goto FAIL;
+		  }
+    }
 
 		if (tempfile.failed()) 
       goto FAIL;
@@ -1216,6 +1229,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   PRUint32  flags = 0;
   PRUnichar *bodyText = NULL;
   nsresult rv;
+  PRUnichar *origHTMLBody = nsnull;
 
   // Ok, get the body...the DOM should have been whacked with 
   // Content ID's already
@@ -1256,13 +1270,15 @@ nsMsgComposeAndSend::GetBodyFromEditor()
       rv = conv->ScanHTML(bodyText, whattodo, &wresult);
       if (NS_SUCCEEDED(rv))
       {
-        Recycle(bodyText);
+        // Save the original body for possible attachment as plain text
+        // We should have what the user typed in stored in mOriginalHTMLBody
+        origHTMLBody = bodyText;
         bodyText = wresult;
       }
     }
   }
-  
-	// Convert body to mail charset
+	
+  // Convert body to mail charset
 	char      *outCString;
   nsString  aCharset = mCompFields->GetCharacterSet();
 
@@ -1272,16 +1288,39 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     // If later Editor generates entities then we can remove this.
     char charset[65];
     rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), bodyText, &outCString);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv)) 
+    {
       PR_FREEIF(attachment1_body);
       attachment1_body = outCString;
       Recycle(bodyText);
+    }
+
+    // If we have an origHTMLBody that is not null, this means that it is
+    // different than the bodyText because of formatting conversions. Because of
+    // this we need to do the charset conversion on this part separately
+    if (origHTMLBody)
+    {
+      char      *newBody = nsnull;
+      rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), origHTMLBody, &newBody);
+      if (NS_SUCCEEDED(rv)) 
+      {
+        PR_FREEIF(origHTMLBody);
+        origHTMLBody = (PRUnichar *)newBody;
+      }
     }
   }
   else
   {
     attachment1_body = (char *)bodyText;
   }
+
+  // If our holder for the orignal body text is STILL null, then just 
+  // just copy what we have as the original body text.
+  //
+  if (!origHTMLBody)
+    mOriginalHTMLBody = nsCRT::strdup(attachment1_body);
+  else
+    mOriginalHTMLBody = (char *)origHTMLBody;
 
   attachment1_body_length = PL_strlen(attachment1_body);
   return SnarfAndCopyBody(attachment1_body, attachment1_body_length, attachment1_type);
@@ -2682,7 +2721,6 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 						   10);
 	if (!buf) 
   {
-    // RICHIE_TODO: message loss here
     PRUnichar *eMsg = ComposeGetStringByID(NS_ERROR_OUT_OF_MEMORY);
     Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
     NotifyListenersOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
@@ -2746,7 +2784,6 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 
     if (!mMailSendListener)
     {
-      // RICHIE_TODO - message loss here?
       if (mGUINotificationEnabled)
         nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
@@ -2758,10 +2795,43 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   	NS_ADDREF_THIS(); // why are we forcing an addref on ourselves? this doesn't look right to me
 	  nsCOMPtr<nsIFileSpec> aFileSpec;
 	  NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
+
+    // rhp: we don't always have a mWebShell...
+    nsCOMPtr<nsINetPrompt> netPrompt = nsnull;
+    if (mWebShell)
+    {
       nsCOMPtr<nsIWebShellContainer> topLevelWindow;
       rv = mWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-      nsCOMPtr<nsINetPrompt> netPrompt = 
-          do_QueryInterface(topLevelWindow, &rv);
+      netPrompt = do_QueryInterface(topLevelWindow, &rv);
+    }
+    else
+    {
+      NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
+      if(NS_SUCCEEDED(rv)) 
+      {
+        nsCOMPtr<nsIWebShellWindow>     webshellwindow;
+        nsCOMPtr<nsIWebShellContainer>  topLevelWindow;
+        nsIWebShell                     *webShell;
+
+        appshellservice->GetHiddenWindow(getter_AddRefs(webshellwindow));
+        if (webshellwindow)
+        {
+          webshellwindow->GetWebShell(webShell);
+          if (webShell)
+          {
+            rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+            netPrompt = do_QueryInterface(topLevelWindow, &rv);
+            NS_RELEASE(webShell);
+          }
+        }
+      }
+    }
+
+    // Tell the user we are sending the message!
+    PRUnichar *msg = ComposeGetStringByID(NS_MSG_SENDING_MESSAGE);
+    SetStatusMessage( msg );
+    PR_FREEIF(msg);
+
     rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity,
                                       mMailSendListener, nsnull, 
                                       netPrompt, nsnull);
@@ -2787,7 +2857,6 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 
     if (!mNewsPostListener)
     {
-      // RICHIE_TODO - message loss here?
       if (mGUINotificationEnabled)
         nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
@@ -2802,6 +2871,12 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 	
 	rv = NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(fileToPost));
 	if (NS_FAILED(rv)) return rv;
+
+    // Tell the user we are posting the message!
+    PRUnichar *msg = ComposeGetStringByID(NS_MSG_POSTING_MESSAGE);
+    SetStatusMessage( msg );
+    PR_FREEIF(msg);
+
     rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mNewsPostListener, nsnull);
   }
 
@@ -2846,12 +2921,11 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckF
   printf("\nMessage Delivery Failed!\n");
 #endif
 
-    // RICHIE_TODO - message lost here!
     PRUnichar * eMsg = ComposeGetStringByID(aExitCode);
     
     Fail(aExitCode, eMsg);
     NotifyListenersOnStopSending(nsnull, aExitCode, nsnull, nsnull);
-	nsCRT::free(eMsg);
+  	nsCRT::free(eMsg);
     return;
   }
 #ifdef NS_DEBUG
@@ -3498,13 +3572,7 @@ nsMsgComposeAndSend::SendToMagicFolder(nsMsgDeliverMode mode)
     // The caller of MimeDoFCC needs to deal with failure.
     //
     if (NS_FAILED(rv))
-    {
-      // RICHIE_TODO: message loss here
-      PRUnichar * eMsg = ComposeGetStringByID(rv);
-      Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
       NotifyListenersOnStopCopy(rv);
-	    nsCRT::free(eMsg);
-    }
     
     return rv;
 }
@@ -3999,13 +4067,8 @@ nsMsgComposeAndSend::SetStatusMessage(PRUnichar *aMsgString)
   if ( (!mFeedback) || (!aMsgString) || (!mGUINotificationEnabled) )
     return NS_OK;
 
-  nsString  formattedString(aMsgString);
-
-  // lossy, but what can we do?
-  nsCAutoString cProgressString(aMsgString);
-  progressMsg = nsCRT::strdup(formattedString.GetUnicode());
+  progressMsg = nsCRT::strdup(aMsgString);
   mFeedback->ShowStatusString(progressMsg);
-
   return NS_OK;
 }
 

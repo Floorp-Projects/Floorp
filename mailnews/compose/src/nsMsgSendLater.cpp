@@ -396,7 +396,6 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
     }
     else
     {
-      // RICHIE - do we do the message loss here?
       nsMsgDisplayMessageByID(NS_ERROR_SEND_FAILED);
     }
 

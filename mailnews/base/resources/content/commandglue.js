@@ -208,8 +208,14 @@ function LoadMessage(messageNode)
 {
   var uri = messageNode.getAttribute('id');
   dump(uri);
+
   if(uri != gCurrentDisplayedMessage)
   {
+    var resource = RDF.GetResource(uri);
+    var message = resource.QueryInterface(Components.interfaces.nsIMessage); 
+    if (message)
+      setTitleFromFolder(message.GetMsgFolder(), message.subject);
+
 	  gCurrentDisplayedMessage = uri;
 	  OpenURL(uri);
   }
@@ -226,18 +232,22 @@ function ChangeFolderByDOMNode(folderNode)
 	  ChangeFolderByURI(uri, isThreaded == "true", "");
 }
 
-function setTitleFromFolder(msgfolder)
+function setTitleFromFolder(msgfolder, subject)
 {
     if (!msgfolder) return;
 
     var title;
     var server = msgfolder.server;
 
+    if (null != subject)
+      title = subject+" - ";
+    else
+      title = "";
+
     if (msgfolder.isServer) {
             // <hostname>
-            title = server.hostName;
+            title += server.hostName;
     }
-
     else {
         var middle;
         var end;
@@ -254,13 +264,11 @@ function setTitleFromFolder(msgfolder)
             end = identity.email;
         }
 
-        title = msgfolder.prettyName + " " + middle + " " + end;
+        title += msgfolder.prettyName + " " + middle + " " + end;
     }
-    
-    title += " - " + BrandBundle.GetStringFromName("brandShortName");
-    
-    window.title = title;
 
+    title += " - " + BrandBundle.GetStringFromName("brandShortName");
+    window.title = title;
 }
 
 function ChangeFolderByURI(uri, isThreaded, sortID)
@@ -271,7 +279,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID)
       resource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
   try {
-      setTitleFromFolder(msgfolder);
+      setTitleFromFolder(msgfolder, null);
   } catch (ex) {
       dump("error setting title: " + ex + "\n");
   }

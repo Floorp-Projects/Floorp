@@ -124,7 +124,7 @@ Rights Reserved.
 <!ENTITY reloadCmd.label ".Reload">  
 <!ENTITY showImagesCmd.label ".Show Images">  
 <!ENTITY stopCmd.label ".Stop">  
-<!ENTITY pageSourceCmd.label ".Page Source">  
+<!ENTITY pageSourceCmd.label "Page Source">  
 <!ENTITY pageInfoCmd.label ".Page Info">  
 <!ENTITY charSetMenu.label "Character Set"> 
 <!ENTITY translateMenu.label ".Translate"> 

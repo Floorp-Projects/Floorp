@@ -128,12 +128,6 @@ private:
 
   nsCOMPtr<nsIMessage>      mMessage;
 
-  // RICHIE 
-  // Theses are here for the hack temp file we need
-  // to do...this will go away!!!
-  nsFileSpec                *mHackTempFileSpec;
-  nsIFileSpec               *mHackTempIFileSpec;
-
   //
   // File output stuff...
   //

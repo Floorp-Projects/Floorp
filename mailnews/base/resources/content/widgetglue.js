@@ -962,7 +962,23 @@ function MsgReload()
 
 function MsgShowImages() {}
 function MsgRefresh() {}
-function MsgViewPageSource() {}
+
+function MsgViewPageSource() 
+{
+	dump("MsgViewPageSource(); \n ");
+	
+	var uri = window.frames["messagepane"].location+"?header=src";
+	dump('URI=' + uri);
+	
+  // Use a browser window to view source
+  window.openDialog( "chrome://navigator/content/",
+                     "_blank",
+                     "chrome,menubar,status,dialog=no,resizable",
+                     uri,
+                     "view-source" );
+
+}
+
 function MsgViewPageInfo() {}
 function MsgFirstUnreadMessage() {}
 function MsgFirstFlaggedMessage() {}

@@ -384,6 +384,7 @@ public:
   MimeEncoderData         *m_attachment1_encoder_data;
   char                    *m_attachment1_body;
   PRUint32                m_attachment1_body_length;
+  char                    *mOriginalHTMLBody;
 
   // The plaintext form of the first attachment, if needed.
   nsMsgAttachmentHandler  *m_plaintext;

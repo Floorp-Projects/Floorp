@@ -354,8 +354,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 		convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pFrom, charset,
 										nsMsgMIMEGetConformToStandard());
 
-    // RICHIE SHERRY mason!!!! WE NEED TO MAKE SURE NO ILLEGAL CHARS GO OUT WITH THIS FIELD!!!
-
 		if (convbuf) {    /* MIME-PartII conversion */
 			PUSH_STRING (convbuf);
 			PR_Free(convbuf);
@@ -429,14 +427,24 @@ mime_generate_headers (nsMsgCompFields *fields,
 	NS_WITH_SERVICE(nsIHTTPProtocolHandler, pHTTPHandler, kHTTPHandlerCID, &rv); 
 	if (NS_SUCCEEDED(rv) && pHTTPHandler)
 	{
-		nsCAutoString cStr("Netscape");
+    PRUnichar       *aAppName = nsnull;
+    nsCAutoString   cStr;
+
+    if (NS_SUCCEEDED(pHTTPHandler->GetAppName(&aAppName)))
+    {
+  		cStr = aAppName;
+      PR_FREEIF(aAppName);
+    }
+    else
+      cStr = "Netscape";
+
 		if (!cStr.IsEmpty()) 
 		{
 			// PUSH_STRING ("X-Mailer: ");  // To be more standards compliant
 			PUSH_STRING ("User-Agent: ");  
 			PUSH_STRING(cStr);
 
-            nsXPIDLString appInfo;
+      nsXPIDLString appInfo;
 			pHTTPHandler->GetAppVersion(getter_Copies(appInfo));
 			nsCAutoString cStr2 (appInfo);
 			if (!cStr2.IsEmpty()) 
@@ -1966,7 +1974,7 @@ ConvertBufToPlainText(nsString &aConBuf)
       if(NS_FAILED(rv2) || sendflowed) // Unless explicitly forbidden...
         converterFlags |= nsIDocumentEncoder::OutputFormatFlowed;
     }    
-    
+
     rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, wrapWidth, converterFlags);
     if (sink && NS_SUCCEEDED(rv)) 
     {  

@@ -99,7 +99,7 @@ nsMsgCompose::nsMsgCompose()
 
   mEntityConversionDone = PR_FALSE;
 	mQuotingToFollow = PR_FALSE;
-	mWhatHolder = 1;                // RICHIE - hack for old quoting
+	mWhatHolder = 1;
 	mQuoteURI = "";
 	mDocumentListener = nsnull;
 	mMsgSend = nsnull;
@@ -219,28 +219,6 @@ GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *o
   return result;
 }
 
-nsresult
-RICHIEDumpBody(nsString aConBuf)
-{
-  char      *tBuf = nsnull;
-  PRUint32   i;
-
-  if (aConBuf == "")
-    return NS_OK;
-
-  tBuf = aConBuf.ToNewCString();
-  if (!tBuf)
-    return NS_ERROR_FAILURE;
-
-  for (i=0; i<nsCRT::strlen(tBuf); i++)
-  {
-    printf("%c", tBuf[i]);
-  }
-
-  PR_FREEIF(tBuf);
-  return NS_OK;
-}
-
 nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aPrefix, nsString aBuf, 
                                                    nsString aSignature, PRBool aQuoted, PRBool aHTMLEditor)
 {
@@ -257,7 +235,6 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   if (editor)
     editor->EnableUndo(PR_FALSE);
 
-  // RICHIE TODO
   // Ok - now we need to figure out the charset of the aBuf we are going to send
   // into the editor shell. There are I18N calls to sniff the data and then we need
   // to call the new routine in the editor that will allow us to send in the charset
@@ -276,14 +253,6 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
 
     if (!aBuf.IsEmpty())
     {
-//
-// Akkana: change this if to 1 and it will dump out the contents of
-// what I am trying to insert. I am seeing a long string of HTML for
-// the bug in question, but it gets truncated on insert
-//
-#if 0
-      RICHIEDumpBody(aBuf);
-#endif
       aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), &nodeInserted);
     }
 

@@ -27,7 +27,8 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsCRT.h"
-
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeInlineText, MimeInlineTextClass, mimeInlineTextClass,
@@ -56,6 +57,8 @@ MimeInlineTextClassInitialize(MimeInlineTextClass *clazz)
   lclass->parse_decoded_buffer = MimeInlineText_parse_decoded_buffer;
   return 0;
 }
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 static int
 MimeInlineText_initialize (MimeObject *obj)
@@ -99,7 +102,20 @@ MimeInlineText_initialize (MimeObject *obj)
         if (obj->options && obj->options->default_charset)
           text->charset = nsCRT::strdup(obj->options->default_charset);
         else
+        {
+          // New change for falling back to a default view charset
+          nsresult        rv;
+          NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+          if ( NS_SUCCEEDED(rv) && prefs)
+          {
+            prefs->CopyCharPref("mailnews.view_default_charset", &(text->defaultCharset));
+          }
+
+          if (!text->defaultCharset)
+            text->defaultCharset = nsCRT::strdup("");
+
           text->charset = nsCRT::strdup("");
+        }
       }
     }
   }
@@ -117,6 +133,7 @@ MimeInlineText_finalize (MimeObject *obj)
   obj->clazz->parse_end (obj, PR_FALSE);
 
   PR_FREEIF(text->charset);
+  PR_FREEIF(text->defaultCharset);
 
   /* Should have been freed by parse_eof, but just in case... */
   PR_ASSERT(!text->cbuffer);
@@ -306,7 +323,10 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
         input_charset = text->charset;
       else 
       {
-        input_charset = obj->options->default_charset;
+        if (obj->options->default_charset)
+          input_charset = obj->options->default_charset;
+        else
+          input_charset = text->defaultCharset;
         input_autodetect = PR_TRUE;
       }
     }

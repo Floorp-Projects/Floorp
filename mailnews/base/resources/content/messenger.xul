@@ -480,7 +480,7 @@ Rights Reserved.
       <menuitem value="&showImagesCmd.label;" disabled="true" oncommand="MsgShowImages();"/>
       <menuitem value="&stopCmd.label;" disabled="true" oncommand="MsgStop();"/>
       <menuseparator/>
-      <menuitem value="&pageSourceCmd.label;" disabled="true" oncommand="MsgViewPageSource();"/>
+      <menuitem value="&pageSourceCmd.label;" oncommand="MsgViewPageSource();"/>
       <menuitem value="&pageInfoCmd.label;" disabled="true" oncommand="MsgViewPageInfo();"/>
       <menuseparator/>
                 <menu value="&dcharMenu.label;">

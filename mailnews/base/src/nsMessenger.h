@@ -31,6 +31,7 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsFileSpec.h"
 #include "nsIWebShell.h"
+#include "nsIStringBundle.h"
 
 class nsMessenger : public nsIMessenger
 {
@@ -48,8 +49,9 @@ protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
 					   nsISupportsArray *arguments);
+  PRUnichar *GetString(const PRUnichar *aStringName);
+
 private:
-  
   nsString mId;
   void *mScriptObject;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
@@ -58,6 +60,9 @@ private:
   nsIDOMWindow              *mWindow;
   nsCOMPtr<nsIMsgWindow>    mMsgWindow;
   nsCOMPtr<nsIWebShell>     mWebShell;
+
+  // String bundles...
+  nsCOMPtr<nsIStringBundle>   mStringBundle;
 
   nsCOMPtr <nsIDocumentLoaderObserver> m_docLoaderObserver;
 
