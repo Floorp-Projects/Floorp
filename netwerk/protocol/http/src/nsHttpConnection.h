@@ -46,8 +46,7 @@
 // accessed from any other thread.
 //-----------------------------------------------------------------------------
 
-class nsHttpConnection : public nsAHttpConnection
-                       , public nsAHttpSegmentReader
+class nsHttpConnection : public nsAHttpSegmentReader
                        , public nsAHttpSegmentWriter
                        , public nsIInputStreamNotify
                        , public nsIOutputStreamNotify
@@ -56,6 +55,8 @@ class nsHttpConnection : public nsAHttpConnection
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSAHTTPSEGMENTREADER
+    NS_DECL_NSAHTTPSEGMENTWRITER
     NS_DECL_NSIINPUTSTREAMNOTIFY
     NS_DECL_NSIOUTPUTSTREAMNOTIFY
     NS_DECL_NSITRANSPORTEVENTSINK
@@ -92,7 +93,7 @@ public:
     nsAHttpTransaction   *Transaction()    { return mTransaction; }
     nsHttpConnectionInfo *ConnectionInfo() { return mConnInfo; }
 
-    // nsAHttpConnection methods:
+    // nsAHttpConnection compatible methods (non-virtual):
     nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, PRBool *reset);
     void     CloseTransaction(nsAHttpTransaction *, nsresult reason);
     void     GetConnectionInfo(nsHttpConnectionInfo **ci) { NS_IF_ADDREF(*ci = mConnInfo); }
@@ -103,12 +104,6 @@ public:
     nsresult ResumeSend();
     nsresult ResumeRecv();
 
-    // nsAHttpSegmentReader methods:
-    nsresult OnReadSegment(const char *, PRUint32, PRUint32 *);
-
-    // nsAHttpSegmentWriter methods:
-    nsresult OnWriteSegment(char *, PRUint32, PRUint32 *);
- 
     static NS_METHOD ReadFromStream(nsIInputStream *, void *, const char *,
                                     PRUint32, PRUint32, PRUint32 *);
 
@@ -146,9 +141,6 @@ private:
     PRUint32                        mLastReadTime;
     PRUint16                        mMaxHangTime;    // max download time before dropping keep-alive status
     PRUint16                        mIdleTimeout;    // value of keep-alive: timeout=
-
-    nsresult                        mTransactionStatus;
-    PRPackedBool                    mTransactionDone;
 
     PRPackedBool                    mKeepAlive;
     PRPackedBool                    mKeepAliveMask;

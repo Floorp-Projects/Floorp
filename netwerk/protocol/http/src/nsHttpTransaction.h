@@ -56,6 +56,7 @@ class nsHttpTransaction : public nsAHttpTransaction
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSAHTTPTRANSACTION
     NS_DECL_NSIOUTPUTSTREAMNOTIFY
     NS_DECL_NSISOCKETEVENTHANDLER
 
@@ -112,27 +113,6 @@ public:
 
     // Called to find out if the transaction generated a complete response.
     PRBool ResponseIsComplete() { return mResponseIsComplete; }
-
-    //-------------------------------------------------------------------------
-    // nsAHttpTransaction methods:
-    //-------------------------------------------------------------------------
-
-    void SetConnection(nsAHttpConnection *conn)
-    {
-        NS_IF_RELEASE(mConnection);
-        NS_IF_ADDREF(mConnection = conn);
-    }
-    void GetSecurityCallbacks(nsIInterfaceRequestor **cb)
-    {
-        NS_IF_ADDREF(*cb = mCallbacks);
-    }
-    void     OnTransportStatus(nsresult status, PRUint32 progress);
-    PRBool   IsDone() { return mTransactionDone; }
-    nsresult Status() { return mStatus; }
-    PRUint32 Available();
-    nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *);
-    nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *);
-    void     Close(nsresult);
 
 private:
     nsresult Restart();
@@ -191,21 +171,22 @@ private:
     nsresult                        mTransportStatus;
     PRUint32                        mTransportProgress;
     PRUint32                        mTransportProgressMax;
-    PRPackedBool                    mTransportStatusInProgress;
 
     PRUint16                        mRestartCount;        // the number of times this transaction has been restarted
     PRUint8                         mCaps;
 
-    PRPackedBool                    mConnected;
-    PRPackedBool                    mHaveStatusLine;
-    PRPackedBool                    mHaveAllHeaders;
-    PRPackedBool                    mTransactionDone;
-    PRPackedBool                    mResponseIsComplete;  // == mTransactionDone && NS_SUCCEEDED(mStatus) ?
-    PRPackedBool                    mDidContentStart;
-    PRPackedBool                    mNoContent;           // expecting an empty entity body?
-    PRPackedBool                    mReceivedData;
-    PRPackedBool                    mDestroying;
-    PRPackedBool                    mClosed;
+    // state flags
+    PRUint32                        mClosed             : 1;
+    PRUint32                        mDestroying         : 1;
+    PRUint32                        mConnected          : 1;
+    PRUint32                        mHaveStatusLine     : 1;
+    PRUint32                        mHaveAllHeaders     : 1;
+    PRUint32                        mTransactionDone    : 1;
+    PRUint32                        mResponseIsComplete : 1;
+    PRUint32                        mDidContentStart    : 1;
+    PRUint32                        mNoContent          : 1; // expecting an empty entity body
+    PRUint32                        mReceivedData       : 1;
+    PRUint32                        mStatusEventPending : 1;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

@@ -111,9 +111,10 @@ nsHttpTransaction::nsHttpTransaction()
     , mTransportStatus(0)
     , mTransportProgress(0)
     , mTransportProgressMax(0)
-    , mTransportStatusInProgress(PR_FALSE)
     , mRestartCount(0)
     , mCaps(0)
+    , mClosed(PR_FALSE)
+    , mDestroying(PR_FALSE)
     , mConnected(PR_FALSE)
     , mHaveStatusLine(PR_FALSE)
     , mHaveAllHeaders(PR_FALSE)
@@ -122,8 +123,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mDidContentStart(PR_FALSE)
     , mNoContent(PR_FALSE)
     , mReceivedData(PR_FALSE)
-    , mDestroying(PR_FALSE)
-    , mClosed(PR_FALSE)
+    , mStatusEventPending(PR_FALSE)
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
 }
@@ -250,6 +250,19 @@ nsHttpTransaction::TakeResponseHead()
 //----------------------------------------------------------------------------
 
 void
+nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
+{
+    NS_IF_RELEASE(mConnection);
+    NS_IF_ADDREF(mConnection = conn);
+}
+
+void
+nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb)
+{
+    NS_IF_ADDREF(*cb = mCallbacks);
+}
+
+void
 nsHttpTransaction::OnTransportStatus(nsresult status, PRUint32 progress)
 {
     LOG(("nsHttpTransaction::OnSocketStatus [this=%x status=%x progress=%u]\n",
@@ -283,8 +296,8 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint32 progress)
             mTransportProgressMax = 0;
         }
 
-        postEvent = !mTransportStatusInProgress;
-        mTransportStatusInProgress = PR_TRUE;
+        postEvent = !mStatusEventPending;
+        mStatusEventPending = PR_TRUE;
     }
 
     // only post an event if there is not already an event in progress.  we
@@ -298,6 +311,18 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint32 progress)
             delete ev;
         }
     }
+}
+
+PRBool
+nsHttpTransaction::IsDone()
+{
+    return mTransactionDone;
+}
+
+nsresult
+nsHttpTransaction::Status()
+{
+    return mStatus;
 }
 
 PRUint32
@@ -414,10 +439,8 @@ nsHttpTransaction::Close(nsresult reason)
     // we must no longer reference the connection!  find out if the 
     // connection was being reused before letting it go.
     PRBool connReused = PR_FALSE;
-    if (mConnection) {
+    if (mConnection)
         connReused = mConnection->IsReused();
-        NS_RELEASE(mConnection);
-    }
     mConnected = PR_FALSE;
 
     //
@@ -434,18 +457,36 @@ nsHttpTransaction::Close(nsresult reason)
             return;
     }
 
-    if (NS_SUCCEEDED(reason) && !mHaveAllHeaders && !mLineBuf.IsEmpty()) {
+    PRBool relConn = PR_TRUE;
+    if (NS_SUCCEEDED(reason)) {
         // the server has not sent the final \r\n terminating the header section,
         // and there is still a header line unparsed.  let's make sure we parse
         // the remaining header line, and then hopefully, the response will be
         // usable (see bug 88792).
-        ParseLineSegment("\n", 1);
-    }
+        if (!mHaveAllHeaders && !mLineBuf.IsEmpty())
+            ParseLineSegment("\n", 1);
 
-    mTransactionDone = PR_TRUE; // force this flag
+        // honor the sticky connection flag...
+        if (mCaps & NS_HTTP_STICKY_CONNECTION)
+            relConn = PR_FALSE;
+    }
+    if (relConn && mConnection)
+        NS_RELEASE(mConnection);
+
     mStatus = reason;
+    mTransactionDone = PR_TRUE; // force this flag
     mClosed = PR_TRUE;
 
+    // release some resources that we no longer need
+    mRequestStream = nsnull;
+    mReqHeaderBuf.Truncate();
+    mLineBuf.Truncate();
+    if (mChunkedDecoder) {
+        delete mChunkedDecoder;
+        mChunkedDecoder = nsnull;
+    }
+
+    // closing this pipe signals triggers the channel's OnStopRequest method.
     mPipeOut->CloseEx(reason);
 }
 
@@ -471,8 +512,9 @@ nsHttpTransaction::Restart()
     if (seekable)
         seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
 
-    // clear the old socket info
+    // clear old connection state...
     mSecurityInfo = 0;
+    NS_IF_RELEASE(mConnection);
 
     return gHttpHandler->InitiateTransaction(this);
 }
@@ -829,7 +871,7 @@ nsHttpTransaction::TransportStatus_Handler(PLEvent *ev)
         progress = trans->mTransportProgress;
         progressMax = trans->mTransportProgressMax;
 
-        trans->mTransportStatusInProgress = PR_FALSE;
+        trans->mStatusEventPending = PR_FALSE;
     }
 
     trans->mTransportSink->OnTransportStatus(nsnull, status, progress, progressMax);

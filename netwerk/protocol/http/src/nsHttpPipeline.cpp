@@ -223,6 +223,18 @@ nsHttpPipeline::GetSecurityInfo(nsISupports **result)
     mConnection->GetSecurityInfo(result);
 }
 
+PRBool
+nsHttpPipeline::IsPersistent()
+{
+    return PR_TRUE; // pipelining requires this
+}
+
+PRBool
+nsHttpPipeline::IsReused()
+{
+    return PR_TRUE; // pipelining requires this
+}
+
 nsresult
 nsHttpPipeline::PushBack(const char *data, PRUint32 length)
 {

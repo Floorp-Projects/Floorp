@@ -86,6 +86,17 @@ public:
     virtual void Close(nsresult reason) = 0;
 };
 
+#define NS_DECL_NSAHTTPTRANSACTION \
+    void SetConnection(nsAHttpConnection *); \
+    void GetSecurityCallbacks(nsIInterfaceRequestor **); \
+    void OnTransportStatus(nsresult status, PRUint32 progress); \
+    PRBool   IsDone(); \
+    nsresult Status(); \
+    PRUint32 Available(); \
+    nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *); \
+    nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *); \
+    void     Close(nsresult reason);
+
 //-----------------------------------------------------------------------------
 // nsAHttpSegmentReader
 //-----------------------------------------------------------------------------
@@ -99,6 +110,9 @@ public:
                                    PRUint32 *countRead) = 0;
 };
 
+#define NS_DECL_NSAHTTPSEGMENTREADER \
+    nsresult OnReadSegment(const char *, PRUint32, PRUint32 *);
+
 //-----------------------------------------------------------------------------
 // nsAHttpSegmentWriter
 //-----------------------------------------------------------------------------
@@ -111,5 +125,8 @@ public:
                                     PRUint32 count,
                                     PRUint32 *countWritten) = 0;
 };
+
+#define NS_DECL_NSAHTTPSEGMENTWRITER \
+    nsresult OnWriteSegment(char *, PRUint32, PRUint32 *);
 
 #endif // nsAHttpTransaction_h__

@@ -111,15 +111,18 @@ nsHttpAuthManager::SetAuthIdentity(const nsACString & aHost,
                                    const nsAString & aUserName,
                                    const nsAString & aUserPassword)
 {
+  nsHttpAuthIdentity ident(PromiseFlatString(aUserDomain).get(),
+                           PromiseFlatString(aUserName).get(),
+                           PromiseFlatString(aUserPassword).get());
+
   return mAuthCache->SetAuthEntry(PromiseFlatCString(aHost).get(),
                                   aPort,
                                   PromiseFlatCString(aPath).get(),
                                   PromiseFlatCString(aRealm).get(),
-                                  nsnull,
-                                  PromiseFlatString(aUserName).get(),
-                                  PromiseFlatString(aUserPassword).get(),
-                                  nsnull,
-                                  nsnull);
+                                  nsnull,  // credentials
+                                  nsnull,  // challenge
+                                  ident,
+                                  nsnull); // metadata
 }
 
 NS_IMETHODIMP

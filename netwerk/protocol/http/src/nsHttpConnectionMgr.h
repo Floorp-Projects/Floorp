@@ -39,15 +39,13 @@
 #define nsHttpConnectionMgr_h__
 
 #include "nsHttpConnectionInfo.h"
+#include "nsHttpConnection.h"
 #include "nsHttpTransaction.h"
 #include "nsHashtable.h"
 #include "prmon.h"
 
 #include "nsISocketTransportService.h"
 
-//-----------------------------------------------------------------------------
-
-class nsHttpConnection;
 class nsHttpPipeline;
 
 //-----------------------------------------------------------------------------
@@ -93,16 +91,18 @@ public:
     // transport service is not available when the connection manager is down.
     nsresult GetSTS(nsISocketTransportService **);
 
+    // called when a connection is done processing a transaction.  if the 
+    // connection can be reused then it will be added to the idle list, else
+    // it will be closed.
+    nsresult ReclaimConnection(nsHttpConnection *conn);
+
     //-------------------------------------------------------------------------
     // NOTE: functions below may be called only on the socket thread.
     //-------------------------------------------------------------------------
 
     // removes the next transaction for the specified connection from the
     // pending transaction queue.
-    void     AddTransactionToPipeline(nsHttpPipeline *);
-
-    // called by a connection when it has been closed or when it becomes idle.
-    nsresult ReclaimConnection(nsHttpConnection *conn);
+    void AddTransactionToPipeline(nsHttpPipeline *);
 
     // called to force the transaction queue to be processed once more, giving
     // preference to the specified connection.
@@ -115,9 +115,16 @@ private:
         MSG_NEW_TRANSACTION,
         MSG_CANCEL_TRANSACTION,
         MSG_PROCESS_PENDING_Q,
-        MSG_PRUNE_DEAD_CONNECTIONS
+        MSG_PRUNE_DEAD_CONNECTIONS,
+        MSG_RECLAIM_CONNECTION
     };
 
+    // nsConnectionEntry
+    //
+    // mCT maps connection info hash key to nsConnectionEntry object, which
+    // contains list of active and idle connections as well as the list of
+    // pending transactions.
+    //
     struct nsConnectionEntry
     {
         nsConnectionEntry(nsHttpConnectionInfo *ci)
@@ -131,6 +138,27 @@ private:
         nsVoidArray           mPendingQ;    // pending transaction queue
         nsVoidArray           mActiveConns; // active connections
         nsVoidArray           mIdleConns;   // idle persistent connections
+    };
+
+    // nsConnectionHandle
+    //
+    // thin wrapper around a real connection, used to keep track of references
+    // to the connection to determine when the connection may be reused.  the
+    // transaction (or pipeline) owns a reference to this handle.  this extra
+    // layer of indirection greatly simplifies consumer code, avoiding the
+    // need for consumer code to know when to give the connection back to the
+    // connection manager.
+    //
+    class nsConnectionHandle : public nsAHttpConnection
+    {
+    public:
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSAHTTPCONNECTION
+
+        nsConnectionHandle(nsHttpConnection *conn) { NS_ADDREF(mConn = conn); }
+        virtual ~nsConnectionHandle();
+
+        nsHttpConnection *mConn;
     };
 
     //-------------------------------------------------------------------------
@@ -171,6 +199,7 @@ private:
     void     OnMsgCancelTransaction(nsHttpTransaction *trans, nsresult reason);
     void     OnMsgProcessPendingQ(nsHttpConnectionInfo *ci);
     void     OnMsgPruneDeadConnections();
+    void     OnMsgReclaimConnection(nsHttpConnection *);
 
     // counters
     PRUint16 mNumActiveConns;

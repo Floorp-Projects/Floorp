@@ -107,4 +107,15 @@ public:
     virtual nsresult PushBack(const char *data, PRUint32 length) = 0;
 };
 
+#define NS_DECL_NSAHTTPCONNECTION \
+    nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, PRBool *reset); \
+    nsresult ResumeSend(); \
+    nsresult ResumeRecv(); \
+    void CloseTransaction(nsAHttpTransaction *, nsresult); \
+    void GetConnectionInfo(nsHttpConnectionInfo **); \
+    void GetSecurityInfo(nsISupports **); \
+    PRBool IsPersistent(); \
+    PRBool IsReused(); \
+    nsresult PushBack(const char *, PRUint32);
+
 #endif // nsAHttpConnection_h__

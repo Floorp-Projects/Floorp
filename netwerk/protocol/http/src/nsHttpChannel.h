@@ -26,6 +26,7 @@
 
 #include "nsHttpTransaction.h"
 #include "nsHttpRequestHead.h"
+#include "nsHttpAuthCache.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 
@@ -54,7 +55,7 @@
 #include "nsIPrompt.h"
 
 class nsHttpResponseHead;
-class nsHttpAuthCache;
+class nsAHttpConnection;
 class nsIHttpAuthenticator;
 class nsIProxyInfo;
 
@@ -140,15 +141,16 @@ private:
 
     // auth specific methods
     nsresult GetCredentials(const char *challenges, PRBool proxyAuth, nsAFlatCString &creds);
-    nsresult SelectChallenge(const char *challenges, nsAFlatCString &challenge, nsIHttpAuthenticator **); 
+    nsresult SelectChallenge(const char *challenges, nsCString &challenge, nsCString &scheme, nsIHttpAuthenticator **); 
     nsresult GetAuthenticator(const char *scheme, nsIHttpAuthenticator **);
-    void     GetUserPassFromURI(PRUnichar **user, PRUnichar **pass);
     void     ParseRealm(const char *challenge, nsACString &realm);
-    nsresult PromptForUserPass(const char *host, PRInt32 port, PRBool proxyAuth, const char *realm, PRUnichar **user, PRUnichar **pass);
-    void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header, const char *host, PRInt32 port, const char *path, PRUnichar **user, PRUnichar **pass);
+    void     GetIdentityFromURI(PRUint32 authFlags, nsHttpAuthIdentity&);
+    nsresult PromptForIdentity(const char *host, PRInt32 port, PRBool proxyAuth, const char *realm, const char *scheme, PRUint32 authFlags, nsHttpAuthIdentity &);
+    void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header, const char *host, PRInt32 port, const char *path, nsHttpAuthIdentity &ident);
     void     AddAuthorizationHeaders();
     nsresult GetCurrentPath(nsACString &);
     void     ClearPasswordManagerEntry(const char *host, PRInt32 port, const char *realm, const PRUnichar *user);
+    nsresult DoAuthRetry(nsAHttpConnection *);
 
     static void *PR_CALLBACK AsyncCall_EventHandlerFunc(PLEvent *);
     static void  PR_CALLBACK AsyncCall_EventCleanupFunc(PLEvent *);
@@ -173,9 +175,7 @@ private:
     nsHttpResponseHead               *mResponseHead;
 
     nsCOMPtr<nsIInputStreamPump>      mTransactionPump;
-    nsCOMPtr<nsIInputStreamPump>      mPrevTransactionPump;
     nsHttpTransaction                *mTransaction;     // hard ref
-    nsHttpTransaction                *mPrevTransaction; // hard ref
     nsHttpConnectionInfo             *mConnectionInfo;  // hard ref
 
     nsCString                         mSpec; // ASCII encoded URL spec
@@ -194,22 +194,24 @@ private:
     PRUint32                          mRequestTime;
 
     // auth specific data
-    nsXPIDLString                     mUser;
-    nsXPIDLString                     mPass;
-    nsXPIDLString                     mProxyUser;
-    nsXPIDLString                     mProxyPass;
+    nsISupports                      *mAuthContinuationState;
+    nsHttpAuthIdentity                mIdent;
+    nsHttpAuthIdentity                mProxyIdent;
 
     // redirection specific data.
     PRUint8                           mRedirectionLimit;
 
-    PRPackedBool                      mIsPending;
-    PRPackedBool                      mApplyConversion;
-    PRPackedBool                      mAllowPipelining;
-    PRPackedBool                      mCachedContentIsValid;
-    PRPackedBool                      mCachedContentIsPartial;
-    PRPackedBool                      mResponseHeadersModified;
-    PRPackedBool                      mCanceled;
-    PRPackedBool                      mUploadStreamHasHeaders;
+    // state flags
+    PRUint32                          mIsPending                : 1;
+    PRUint32                          mApplyConversion          : 1;
+    PRUint32                          mAllowPipelining          : 1;
+    PRUint32                          mCachedContentIsValid     : 1;
+    PRUint32                          mCachedContentIsPartial   : 1;
+    PRUint32                          mResponseHeadersModified  : 1;
+    PRUint32                          mCanceled                 : 1;
+    PRUint32                          mTransactionReplaced      : 1;
+    PRUint32                          mUploadStreamHasHeaders   : 1;
+    PRUint32                          mAuthRetryPending         : 1;
 
     class nsContentEncodings : public nsISimpleEnumerator
     {
