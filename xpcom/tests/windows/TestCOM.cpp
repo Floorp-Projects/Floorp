@@ -134,14 +134,13 @@ nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
+  NS_ADDREF(t)
   nsresult res = t->QueryInterface(aIID, aResult);
+  NS_RELEASE(t);
 
-  if (NS_FAILED(res)) {
-    *aResult = NULL;
-    delete t;
+  if (NS_SUCCEEDED(res)) {
+    cout << "nsTestComFactory: successfully created nsTestCom instance\n";
   }
-
-  cout << "nsTestComFactory: successfully created nsTestCom instance\n";
 
   return res;
 }
