@@ -48,7 +48,7 @@ function TemplatePage() {}
 function WizardPage() {}
 function CharacterSet(){}
 
-function MessengerSetDefaultCharacterSet(aCharset)
+function MessengerSetForcedCharacterSet(aCharset)
 {
 //    dump(aCharset);dump("\n");
   messenger.SetDocumentCharset(aCharset);

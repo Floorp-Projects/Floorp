@@ -31,13 +31,13 @@ function MailMultiplexHandler(event)
     } else if (name == 'charsetGroup') {
         var charset = node.getAttribute('id');
         charset = charset.substring('charset.'.length, charset.length)
-        MessengerSetDefaultCharacterSet(charset);
+        MessengerSetForcedCharacterSet(charset);
     } else if (name == 'charsetCustomize') {
         // please remove this else statement, once the charset prefs moves to the pref window
         window.openDialog("chrome://communicator/content/pref/pref-charset.xul",
                           "_blank", "chrome,modal,resizable", "browser");
     } else {
-        MessengerSetDefaultCharacterSet(node.getAttribute('id'));
+        MessengerSetForcedCharacterSet(node.getAttribute('id'));
     }
 }
 
