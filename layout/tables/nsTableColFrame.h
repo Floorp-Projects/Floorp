@@ -24,6 +24,9 @@
 
 class nsTableColFrame : public nsFrame {
 public:
+
+  void Init(PRInt32 aColIndex, PRInt32 aRepeat);
+
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
                            nsIFrame*   aParent);
@@ -37,8 +40,11 @@ public:
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
-  /** return the index of the column this content object represents.  always >= 0 */
+  /** return the index of the column the col represents.  always >= 0 */
   virtual int GetColumnIndex ();
+
+  /** return the number of the columns the col represents.  always >= 0 */
+  virtual int GetRepeat ();
 
 protected:
 
@@ -46,7 +52,29 @@ protected:
 
   ~nsTableColFrame();
 
+  /** the starting index of the column (starting at 0) that this col object represents */
+  PRInt32            mColIndex;
+
+  /** the number of columns that the attributes of this column extend to */
+  PRInt32            mRepeat;
+
 };
+
+
+inline void nsTableColFrame::Init(PRInt32 aColIndex, PRInt32 aRepeat)
+{
+  NS_ASSERTION(0<=aColIndex, "bad col index param");
+  NS_ASSERTION(0<=aRepeat, "bad repeat param");
+
+  mColIndex = aColIndex;
+  mRepeat = aRepeat;
+}
+
+inline nsTableColFrame::GetColumnIndex()
+{ return mColIndex; }
+
+inline nsTableColFrame::GetRepeat()
+{ return mRepeat; }
 
 #endif
 

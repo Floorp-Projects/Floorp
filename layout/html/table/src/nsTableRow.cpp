@@ -321,6 +321,7 @@ nsTableRow::CreateFrame(nsIPresContext* aPresContext,
   if (NS_OK != rv) {
     return rv;
   }
+  ((nsTableRowFrame*)frame)->Init(mRowIndex);
   frame->SetStyleContext(aPresContext, aStyleContext);
   aResult = frame;
   return rv;
