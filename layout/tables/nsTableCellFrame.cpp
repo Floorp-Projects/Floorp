@@ -427,10 +427,14 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleS
   aSpacingStyle.mBorder.SetBottom(width);
   aSpacingStyle.mBorder.SetRight(width);
 
+  // XXX This should come from the default style sheet (ua.css), and
+  // not be hardcoded. Using solid causes the borders not to show up...
+#if 0
   aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_SOLID; 
   aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_SOLID; 
   aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_SOLID; 
   aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_SOLID; 
+#endif
   
   nsTableFrame*     tableFrame = GetTableFrame();
   nsIStyleContext*  styleContext = nsnull;
