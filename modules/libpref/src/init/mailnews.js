@@ -377,6 +377,7 @@ pref("mail.update_compose_title_as_you_type", true);
 pref("mail.collect_email_address", true);
 pref("mail.collect_email_address_incoming", true);
 pref("mail.collect_email_address_outgoing", true);
+pref("mail.collect_email_address_newsgroup", false);
 pref("mail.collect_email_address_enable_size_limit", true);
 pref("mail.collect_email_address_size_limit", 700);
 pref("mail.default_sendlater_uri","mailbox://nobody@Local Folders/Unsent Messages");
