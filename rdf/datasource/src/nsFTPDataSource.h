@@ -81,6 +81,8 @@ private:
     // pseudo-constants
 	static nsIRDFResource	*kNC_Child;
 
+	char			*mLine;
+
 public:
 
 	NS_DECL_ISUPPORTS
