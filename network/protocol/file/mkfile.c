@@ -61,6 +61,10 @@ extern void ProcessCookiesAndTrustLabels( ActiveEntry *ce );
 #include "progress.h"
 #endif
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>  /* for SEEK_SET on some platforms */
+#endif
+
 /* for XP_GetString() */
 #include "xpgetstr.h"
 extern int XP_ALERT_OUTMEMORY;

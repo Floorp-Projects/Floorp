@@ -39,6 +39,10 @@
 #include <stat.h>
 #endif
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>  /* for SEEK_SET and SEEK_END on some platforms */
+#endif
+
 #include "prlog.h"
 #include "prio.h"
 #include "prdtoa.h"
