@@ -116,7 +116,7 @@ interface calIItemBase : nsISupports
   // an icalComponent for this item, suitable for serialization.
   // the icalComponent returned is not live: changes in it or this
   // item will not be reflected in the other.
-  readonly attribute calIIcalComponent icalComponent;
+  attribute calIIcalComponent icalComponent;
 
   //
   // alarms

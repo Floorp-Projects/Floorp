@@ -112,27 +112,7 @@ calEvent.prototype = {
     { cal: "mStampDate", ics: "stampTime" } ],
 
     set icalString(value) {
-        if (this.mImmutable)
-            throw Components.results.NS_ERROR_FAILURE;
-        var event = icalFromString(value);
-        if (event.componentType != "VEVENT"); {
-            event = event.getFirstSubcomponent("VEVENT");
-            if (!event)
-                // throw Components.results.NS_ERROR_CALENDAR_WRONG_COMPONENT_TYPE;
-                throw Components.results.NS_ERROR_INVALID_ARG;
-        }
-
-        this.setItemBaseFromICS(event);
-        this.mapPropsFromICS(event, this.icsEventPropMap);
-        this.mIsAllDay = this.mStartDate && this.mStartDate.isDate;
-
-        var promotedProps = {
-            "DTSTART": true,
-            "DTEND": true,
-            "DTSTAMP": true,
-            __proto__: this.itemBasePromotedProps
-        };
-        this.importUnpromotedProperties(event, promotedProps);
+        this.icalComponent = icalFromString(value);
     },
 
     get icalString() {
@@ -168,4 +148,27 @@ calEvent.prototype = {
         }
         return icalcomp;
     },
+    
+    set icalComponent(event) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        if (event.componentType != "VEVENT"); {
+            event = event.getFirstSubcomponent("VEVENT");
+            if (!event)
+                // throw Components.results.NS_ERROR_CALENDAR_WRONG_COMPONENT_TYPE;
+                throw Components.results.NS_ERROR_INVALID_ARG;
+        }
+
+        this.setItemBaseFromICS(event);
+        this.mapPropsFromICS(event, this.icsEventPropMap);
+        this.mIsAllDay = this.mStartDate && this.mStartDate.isDate;
+
+        var promotedProps = {
+            "DTSTART": true,
+            "DTEND": true,
+            "DTSTAMP": true,
+            __proto__: this.itemBasePromotedProps
+        };
+        this.importUnpromotedProperties(event, promotedProps);
+    }
 };
