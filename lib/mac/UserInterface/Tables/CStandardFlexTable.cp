@@ -1908,10 +1908,21 @@ void CStandardFlexTable::DrawCell(
 	insetRect.right--;
 	EraseCellBackground ( inCell, inLocalRect );
 
-	// Save pen state
+	// If we are inline-editing, don't redraw the cell that is being edited. However, there
+	// is a problem where if a refresh occurs before the inline becomes visible, the icon of
+	// the row being edited never gets drawn (because we don't call DrawCellContents(), duh!).
+	// If that is the case, just draw the icon. The best fix is to not have that redraw happen,
+	// but this can tide us over until we can get all the extra redraws out (just in case we
+	// have to ship before that happens). I guess making it stink would get those extra redraw
+	// bugs fixed faster, but that is another debate for another time.... 
 	ApplyTextStyle(inCell.row);
 	if ( mRowBeingEdited != inCell.row )
 		DrawCellContents(inCell, insetRect);
+	else {
+		if ( inCell.col == GetHiliteColumn() )
+			DrawIcons ( inCell, inLocalRect );
+	}
+	
 } // CStandardFlexTable::DrawCell
 
 
