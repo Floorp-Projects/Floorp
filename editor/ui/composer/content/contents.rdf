@@ -21,6 +21,7 @@
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/pref-appearance.xul"/>
     <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
+    <RDF:li resource="chrome://messenger/content/mailWindowOverlay.xul"/>
   </RDF:Seq>
 
   <!-- editor preferences branches -->
@@ -36,6 +37,11 @@
   <!-- editor items for Navigator -->
   <RDF:Seq about="chrome://navigator/content/navigatorOverlay.xul">
     <RDF:li>chrome://editor/content/editorNavigatorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- editor items for Mail -->
+  <RDF:Seq about="chrome://messenger/content/mailWindowOverlay.xul">
+    <RDF:li>chrome://editor/content/editorMailOverlay.xul</RDF:li>
   </RDF:Seq>
 
 
