@@ -369,7 +369,7 @@ if ($#ARGV == 1) {
 
 if ($ARGV[0] eq "rescanall") {
     print "<br> Collecting bug ids...\n";
-    SendSQL("select bug_id from bugs order by bug_id");
+    SendSQL("select bug_id from bugs where to_days(now()) - to_days(delta_ts) <= 2 order by bug_id");
     my @list;
     while (my @row = FetchSQLData()) {
         push @list, $row[0];
