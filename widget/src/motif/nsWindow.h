@@ -43,7 +43,7 @@
  * Native Motif window wrapper. 
  */
 
-class nsWindow : public nsObject, public nsIWidget
+class nsWindow : public nsIWidget
 {
 
 public:
@@ -53,9 +53,11 @@ public:
     virtual ~nsWindow();
 
     // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+    //NS_IMETHOD_(nsrefcnt) AddRef();
+    //NS_IMETHOD_(nsrefcnt) Release();
+    //NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+    NS_DECL_ISUPPORTS
+
 
     virtual void            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
     // nsIWidget interface
