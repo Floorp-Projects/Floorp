@@ -93,6 +93,10 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
   -I..\..\..\base\src \
   -I..\..\..\xul\content\src \
   -I..\..\..\xul\base\src \
+!ifdef MOZ_MATHML
+  -I..\..\..\mathml\content\src \
+  -I..\..\..\mathml\base\src \
+!endif
   -I..\..\base\src -I..\..\table\src -I..\..\content\src -I$(PUBLIC)\js -I$(PUBLIC)\dom
 
 LCFLAGS = \
