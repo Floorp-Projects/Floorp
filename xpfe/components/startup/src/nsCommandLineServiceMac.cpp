@@ -227,27 +227,27 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
         Boolean foundArgs = false;
         Boolean foundEnv = false;
         char chars[1024];
-        const char* kCommandLinePrefix = "ARGS:";
-        const char* kEnvVarLinePrefix = "ENV:";
+        static const char kCommandLinePrefix[] = "ARGS:";
+        static const char kEnvVarLinePrefix[] = "ENV:";
         s.readline(chars, sizeof(chars));
 
         do
         {       // See if there are any command line or environment var settings
           if (PL_strstr(chars, kCommandLinePrefix) == chars)
           {
-            (void)AddToCommandLine(chars + PL_strlen(kCommandLinePrefix));
+            (void)AddToCommandLine(chars + sizeof(kCommandLinePrefix) - 1);
             foundArgs = true;
           }
           else if (PL_strstr(chars, kEnvVarLinePrefix) == chars)
           {
-            (void)AddToEnvironmentVars(chars + PL_strlen(kEnvVarLinePrefix));
+            (void)AddToEnvironmentVars(chars + sizeof(kEnvVarLinePrefix) - 1);
             foundEnv = true;
           }
 
           // Clear the buffer and get the next line from the command line file
           chars[0] = '\0';
           s.readline(chars, sizeof(chars));
-        } while (PL_strlen(chars));
+        } while (chars && (chars[0] != '\0'));
 
         // If we found any environment vars we need to re-init NSPR's logging
         // so that it knows what the new vars are
