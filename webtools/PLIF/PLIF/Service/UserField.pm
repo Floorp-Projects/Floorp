@@ -72,6 +72,16 @@ sub validate {
     return 1;
 }
 
+# deletes this field from the database
+sub remove {
+    my $self = shift;
+    $self->{'_DELETE'} = 1;
+    $self->{'_DIRTY'} = 1;
+}
+
+
+# Methods specifically for 'contact' category fields
+
 # contact fields have usernames made of the field type data part
 # followed by the field data itself
 sub username {
@@ -80,12 +90,25 @@ sub username {
     return $self->typeData.$self->data;
 }
 
-# deletes this field from the database
-sub remove {
+sub address {
     my $self = shift;
-    $self->{'_DELETE'} = 1;
-    $self->{'_DIRTY'} = 1;
+    $self->assert($self->category eq 'contact', 1, 'Tried to get the address of the non-contact field \''.($self->fieldID).'\'');
+    if ($self->propertyExists('newAddress')) {
+        return $self->newAddress;
+    } else {
+        return $self->data;
+    }
 }
+
+sub prepareAddressChange {
+    my $self = shift;
+    my($newAddress) = @_;
+    $self->assert($self->category eq 'contact', 1, 'Tried to change the address of the non-contact field \''.($self->fieldID).'\'');
+    $self->{'newAddress'} = $newAddress; # access directly so as not to set the _DIRTY flag
+}
+
+
+# Internal Routines
 
 sub propertySet {
     my $self = shift;

@@ -109,7 +109,6 @@ sub objectInit {
     $self->groups({%$groups}); # hash of groupID => groupName
     $self->rights(map {$_ => 1} @$rights); # map a list of strings into a hash for easy access
     $self->{'_DIRTY'} = {};
-    $self->{'_FAKE'} = 0;
 }
 
 sub hasRight {
@@ -150,7 +149,7 @@ sub getAddress {
     my($protocol) = @_;
     my $field = $self->hasField('contact', $protocol);
     if (defined($field)) {
-        return $field->data;
+        return $field->address;
     } else {
         return undef;
     }
@@ -163,16 +162,8 @@ sub prepareAddressChange {
         $self->newFieldID($field->fieldID);
         $self->newFieldValue($newAddress);
         $self->newFieldPassword($password);
-        # XXX I don't like the way this is done. A better way would be
-        # to clone $self, then tweak the one field being changed. This
-        # still doesn't deal with telling the fields and the user
-        # object not to write themselves to the database though. XXX
-        my $session = $self->objectCreate($self->app, $self->userID, $self->mode, $self->adminMessage, 
-                                          $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
-                                          # XXX need to pass the other fields in
-                                          {$field->FieldID => $newAddress}, $self->{'groups'}, keys(%{$self->rights}));
-        $session->{'_FAKE'} = 1;
-        return $session;
+        $field->prepareAddressChange($newAddress);
+        return $self;
     } else {
         return undef;
     }
@@ -182,23 +173,15 @@ sub prepareAddressAddition {
     my $self = shift;
     my($fieldName, $newAddress, $password) = @_;
     my $field = $self->insertField($self->app->getService('user.fieldFactory')->createFieldByName($self->app, $self, 'contact', $fieldName, undef));
-    if ($field->validate($newAddress)) {
-        $self->newFieldID($field->fieldID);
-        $self->newFieldValue($newAddress);
-        $self->newFieldPassword($password);
-        # XXX see comment above
-        my $session = $self->objectCreate($self->app, $self->userID, $self->mode, $self->adminMessage, 
-                                          $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
-                                          # XXX need to pass the other fields in
-                                          {$field->FieldID => $newAddress}, $self->{'groups'}, keys(%{$self->rights}));
-    } else {
-        return undef;
-    }
+    return $self->prepareAddressChange($field, $newAddress, $password);
 }
 
 sub doAddressChange {
     my $self = shift;
     my($password) = @_;
+    # it is defined that if $password is undefined, then this method
+    # will reset the fields to prevent multiple attempts. See the
+    # resetAddressChange() method.
     if ($self->newFieldID) {
         my $field = $self->fieldsByID->{$self->newFieldID};
         $self->assert(defined($field), 1, 'Database integrity error: newFieldID doesn\'t map to a field!');
@@ -299,14 +282,12 @@ sub propertyGet {
 
 sub DESTROY {
     my $self = shift;
-    if (not $self->{'_FAKE'}) {
-        if ($self->{'_DIRTY'}->{'properties'}) {
-            $self->writeProperties();
-        }
-        if ($self->{'_DIRTY'}->{'groups'}) {
-            $self->writeGroups();
-        }
-    } # else, this is a fake user, don't save the data. Note: Fields still save data! XXX
+    if ($self->{'_DIRTY'}->{'properties'}) {
+        $self->writeProperties();
+    }
+    if ($self->{'_DIRTY'}->{'groups'}) {
+        $self->writeGroups();
+    }
 }
 
 sub writeProperties {
