@@ -913,9 +913,8 @@ atomToName(nsIAtom* aAtom)
 // fonts are too large to use is western fonts.
 // To update the list, see one of files included below. (bug 180266)
 //
-static const PRUint16 gDoubleByteSpecialCharsCCMap[] = {
 #include "dbyte_special_chars.ccmap"
-};
+DEFINE_CCMAP(gDoubleByteSpecialCharsCCMap, const);
 	  
 static PRBool
 FreeCharSetMap(nsHashKey* aKey, void* aData, void* aClosure)

@@ -353,4 +353,23 @@ protected:
 #define CCMAP_HAS_CHAR_EXT(m, ucs4)  (((ucs4)&0xffff0000) ?  \
                                       (CCMAP_FLAG(m) & CCMAP_SURROGATE_FLAG) && CCMAP_HAS_CHAR(CCMAP_FOR_PLANE_EXT((m), CCMAP_PLANE(ucs4)), (ucs4) & 0xffff) : \
                                       CCMAP_HAS_CHAR(m, (PRUnichar)(ucs4)) )
+
+// macros to ensure that the array defining a pre-compiled CCMap starts
+// at an ALU_TYPE boundary instead of just a PRUint16 boundary.
+// When invoking the macro, 'typequal' should be either 'const' 
+// or empty (NULL). see bug 224337.
+     
+#define DEFINE_ANY_CCMAP(var, extra, typequal)              \
+static typequal union {                                     \
+  PRUint16 array[var ## _SIZE];                             \
+  ALU_TYPE align;                                           \
+} var ## Union =                                            \
+{                                                           \
+  { var ## _INITIALIZER }                                   \
+};                                                          \
+static typequal PRUint16* var = var ## Union.array + extra
+
+#define DEFINE_CCMAP(var, typequal)   DEFINE_ANY_CCMAP(var, 0, typequal)
+#define DEFINE_X_CCMAP(var, typequal) DEFINE_ANY_CCMAP(var, CCMAP_EXTRA, typequal)
+
 #endif // NSCOMPRESSEDCHARMAP_H 

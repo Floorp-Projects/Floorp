@@ -4547,10 +4547,8 @@ nsTextFrame::EstimateNumChars(PRUint32 aAvailableWidth,
 // Replaced by precompiled CCMap (see bug 180266). To update the list
 // of characters, see one of files included below. As for the way
 // the original list of characters was obtained by Frank Tang, see bug 54467.
-static const PRUint16 gPuncCharsCCMap[] = 
-{
 #include "punct_marks.ccmap"
-};
+DEFINE_CCMAP(gPuncCharsCCMap, const);
   
 #define IsPunctuationMark(ch) (CCMAP_HAS_CHAR(gPuncCharsCCMap, ch))
 
