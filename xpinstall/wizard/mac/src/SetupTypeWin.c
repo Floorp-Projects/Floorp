@@ -741,7 +741,10 @@ EnableSetupTypeWin(void)
 {
 	EnableNavButtons();
 
-	// TO DO
+	if (gControls->stw->instType)
+		HiliteControl(gControls->stw->instType, kEnableControl);
+	if (gControls->stw->destLoc)
+		HiliteControl(gControls->stw->destLoc, kEnableControl);
 }
 
 void
@@ -749,5 +752,8 @@ DisableSetupTypeWin(void)
 {
 	DisableNavButtons();
 	
-	// TO DO
+	if (gControls->stw->instType)
+		HiliteControl(gControls->stw->instType, kDisableControl);
+	if (gControls->stw->destLoc)
+		HiliteControl(gControls->stw->destLoc, kDisableControl);
 }

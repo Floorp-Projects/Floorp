@@ -82,7 +82,8 @@ if (err) 								\
 #define kWelcomeID		1
 #define kSetupTypeID	2
 #define kComponentsID	3
-#define	kTerminalID		4
+#define kAdditionsID	4
+#define	kTerminalID		5
 
 #define kMIWMagic		0x0F00BAA0
 
@@ -319,9 +320,10 @@ typedef struct Config {
 	SetupType	st[kMaxSetupTypes];
 	short   	numSetupTypes;
 	
-	/* ComponentsWin */
+	/* ComponentsWin and AdditionsWin */
 	short		numComps;
 	Handle		selCompMsg;
+	Handle 		selAddMsg;
 	InstComp	comp[kMaxComponents];
 	
 	/* TerminalWin */
@@ -345,7 +347,7 @@ typedef struct Options {
 	long			dirID;
 	unsigned char*	folder;
 		
-	/* from ComponentsWin */
+	/* from ComponentsWin and AdditionsWin */
 	short			compSelected[ kMaxComponents ];
 	short			numCompSelected;
 		/* NOTE: if instChoice is not last (i.e. not Custom) then populate
@@ -556,6 +558,15 @@ void		UpdateDependencies(int, EventRecord*);
 void		EnableComponentsWin(void);
 void		DisableComponentsWin(void);
 
+/*-----------------------------------------------------------*
+ *   AdditionsWin
+ *-----------------------------------------------------------*/
+void		ShowAdditionsWin(void); 
+void		InAdditionsContent(EventRecord*, WindowPtr);
+void		UpdateAdditionsWin(void);
+void		EnableAdditionsWin(void);
+void		DisableAdditionsWin(void);
+ 
 /*-----------------------------------------------------------*
  *   TerminalWin
  *-----------------------------------------------------------*/

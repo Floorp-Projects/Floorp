@@ -138,6 +138,15 @@ void HandleKeyDown(EventRecord* evt)
 					gControls->cw->compListBox.top = 0;
 					EraseRect(&gControls->cw->compListBox);
 					ClearDiskSpaceMsgs();
+					// if additions exist				// XXX_ADD
+						// show additions dialog
+					// else
+						ShowTerminalWin();
+					return;
+				case kAdditionsID:
+					KillControls(gWPtr);
+					// reinit top of listbox
+					// erase any thing and clear disk space msgs
 					ShowTerminalWin();
 					return;
 				case kTerminalID:
@@ -218,6 +227,9 @@ void HandleUpdateEvt(EventRecord* evt)
 			case kComponentsID:
 				UpdateCompWin();
 				break;
+			case kAdditionsID:
+				UpdateAdditionsWin();
+				break;
 			case kTerminalID:
 				UpdateTerminalWin();
 				break;
@@ -272,6 +284,9 @@ void HandleOSEvt(EventRecord* evt)
 					case kComponentsID:
 						EnableComponentsWin();
 						break;
+					case kAdditionsID:
+						EnableAdditionsWin();
+						break;
 					case kTerminalID:
 						EnableTerminalWin();
 						break;
@@ -294,6 +309,9 @@ void HandleOSEvt(EventRecord* evt)
 						break;
 					case kComponentsID:
 						DisableComponentsWin();
+						break;
+					case kAdditionsID:
+						DisableAdditionsWin();
 						break;
 					case kTerminalID:
 						DisableTerminalWin();
@@ -335,6 +353,10 @@ void React2InContent(EventRecord* evt, WindowPtr wCurrPtr)
 			InComponentsContent(evt, gWPtr);
 			break;
 		
+		case kAdditionsID:
+			InAdditionsContent(evt, gWPtr);
+			break;
+			
 		case kTerminalID:
 			InTerminalContent(evt, gWPtr);
 			break;
@@ -344,6 +366,5 @@ void React2InContent(EventRecord* evt, WindowPtr wCurrPtr)
 			break;
 	}
 }
-			
-			
-			
+
+

@@ -288,6 +288,10 @@ void
 EnableWelcomeWin(void)
 {
 	EnableNavButtons();
+	
+	if (gControls->cfg->bReadme)
+		if (gControls->ww->readmeButton)
+			HiliteControl(gControls->ww->readmeButton, kEnableControl);
 
 	if(gControls->ww->scrollBar)
 		HiliteControl(gControls->ww->scrollBar, kEnableControl);
@@ -298,6 +302,10 @@ DisableWelcomeWin(void)
 {
 	DisableNavButtons();
 	
+	if (gControls->cfg->bReadme)
+		if (gControls->ww->readmeButton)
+			HiliteControl(gControls->ww->readmeButton, kDisableControl);
+			
 	if(gControls->ww->scrollBar)
 		HiliteControl(gControls->ww->scrollBar, kDisableControl);
 }
