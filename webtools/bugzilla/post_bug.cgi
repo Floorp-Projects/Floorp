@@ -78,12 +78,13 @@ $template->process($format->{'template'}, $vars, \$comment)
 
 ValidateComment($comment);
 
+# Check that the product exists and that the user
+# is allowed to submit bugs in this product.
 my $product = $::FORM{'product'};
-my $product_id = get_product_id($product);
-if (!$product_id) {
-    ThrowUserError("invalid_product_name",
-                   { product => $product });
+if (!CanEnterProduct($product)) {
+    ThrowUserError("entry_access_denied", {product => $product});
 }
+my $product_id = get_product_id($product);
 
 # Set cookies
 if (exists $::FORM{'product'}) {
@@ -106,10 +107,6 @@ if (defined $::FORM{'maketemplate'}) {
 umask 0;
 
 # Some sanity checking
-if (!CanEnterProduct($product)) {
-    ThrowUserError("entry_access_denied", {product => $product});
-}
-
 my $component_id = get_component_id($product_id, $::FORM{component});
 $component_id || ThrowUserError("require_component");
 
