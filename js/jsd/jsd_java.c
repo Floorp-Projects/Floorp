@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/* this is all going away... replaced by code in js/jsd/java */
+
+#if 0
+
 #include "native.h"
 #include "jsdebug.h"
 
@@ -794,4 +798,4 @@ void netscape_jsdebug_JSSourceTextProvider_refreshSourceTextVector(struct Hnetsc
 }    
 
 
-
+#endif
