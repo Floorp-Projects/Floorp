@@ -334,8 +334,6 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
-static const char sWatcherServiceContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
-
 
 #include "nsNativeAppSupport.h"
 
@@ -456,7 +454,7 @@ static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
                                          aWidth, aHeight);
 #endif /* DEBUG_CMD_LINE */
 
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsISupportsString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   if (!wwatch || !sarg)
     return NS_ERROR_FAILURE;
@@ -1182,7 +1180,7 @@ static nsresult InitializeWindowCreator()
 
   nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
   if (windowCreator) {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWatcherServiceContractID));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (wwatch) {
       wwatch->SetWindowCreator(windowCreator);
       return NS_OK;

@@ -66,7 +66,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, con
                                                      const PRUnichar * aAlertCookie,
                                                      nsIAlertListener * aAlertListener)
 {
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsIDOMWindow> newWindow;
   nsresult rv;
 

@@ -770,7 +770,7 @@ NS_IMETHODIMP nsXULWindow::EnsurePrompter()
    nsCOMPtr<nsIDOMWindowInternal> ourWindow;
    nsresult rv = GetWindowDOMWindow(getter_AddRefs(ourWindow));
    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       if (wwatch)
          wwatch->GetNewPrompter(ourWindow, getter_AddRefs(mPrompter));
    }
@@ -785,7 +785,7 @@ NS_IMETHODIMP nsXULWindow::EnsureAuthPrompter()
    nsCOMPtr<nsIDOMWindowInternal> ourWindow;
    nsresult rv = GetWindowDOMWindow(getter_AddRefs(ourWindow));
    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       if (wwatch)
          wwatch->GetNewAuthPrompter(ourWindow, getter_AddRefs(mAuthPrompter));
    }

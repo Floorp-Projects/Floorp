@@ -831,7 +831,7 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   nsCAutoString spec;
   uri->GetSpec(spec);
 
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (wwatch) {
     nsCOMPtr<nsIDOMWindow> newWindow;
     wwatch->OpenWindow(parentWindow, spec.get(), "", 0, 0,

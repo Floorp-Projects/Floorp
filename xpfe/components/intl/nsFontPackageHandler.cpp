@@ -127,7 +127,7 @@ NS_IMETHODIMP nsFontPackageHandler::NeedFontPackage(const char *aFontPackID)
   if (NS_FAILED(rv)) 
     return rv;
 
-  nsCOMPtr<nsIWindowWatcher> windowWatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> windowWatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   NS_ENSURE_TRUE(windowWatch, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMWindow> dialog;

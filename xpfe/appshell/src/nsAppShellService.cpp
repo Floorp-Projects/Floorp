@@ -54,6 +54,7 @@
 
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
+#include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
@@ -95,7 +96,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 
-#define sWindowWatcherContractID "@mozilla.org/embedcomp/window-watcher;1"
 #define gEQActivatedNotification "nsIEventQueueActivated"
 #define gEQDestroyedNotification "nsIEventQueueDestroyed"
 #define gSkinSelectedTopic       "skin-selected"
@@ -178,7 +178,7 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
  
   // enable window mediation (and fail if we can't get the mediator)
   mWindowMediator = do_GetService(kWindowMediatorCID, &rv);
-  mWindowWatcher = do_GetService(sWindowWatcherContractID);
+  mWindowWatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
 
 done:
   return rv;
