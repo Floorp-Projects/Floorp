@@ -222,15 +222,8 @@ nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, nsCString& uri
 	
 	uri.Append(baseURI);
 	uri.Append('#');
-	char *keyStr = PR_smprintf("%u", key);
-	if(!keyStr)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	uri.Append(keyStr);
-
-	PR_smprintf_free(keyStr);
+	uri.AppendInt(key);
 	return NS_OK;
-
 }
 
 nsresult nsCreateImapBaseMessageURI(const char *baseURI, char **baseMessageURI)
