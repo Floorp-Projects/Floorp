@@ -251,7 +251,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
   }
   else {
     mTextValue=aChar;
-    nsresult result=aScanner.ReadIdentifier(mTextValue);
+    result=aScanner.ReadIdentifier(mTextValue);
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 

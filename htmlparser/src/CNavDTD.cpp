@@ -480,8 +480,8 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
 
           if(mIsText) {
               //we do this little trick for text files, in both normal and viewsource mode...
-            CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre);
-            HandleStartToken(theToken); 
+            CStartToken *theToken2=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre);
+            HandleStartToken(theToken2); 
           }
 
         }

@@ -673,6 +673,8 @@ nsresult nsScanner::GetIdentifier(nsSubsumeStr& aString) {
         found=PR_TRUE;
       else if(('0'<=theChar) && (theChar<='9'))
         found=PR_TRUE;
+      else if('_'==theChar)
+        found=PR_TRUE;
 
       if(!found) {
         mOffset-=1;

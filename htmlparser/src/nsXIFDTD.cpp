@@ -1444,7 +1444,7 @@ void nsXIFDTD::ProcessDocumentInfoTag(const nsIParserNode& aNode)
 
   if (GetAttribute(aNode,key,value))
   {
-    nsString tmpString("XIF_DOC_INFO");
+    nsString tmpString("document_info");
     PushNodeAndToken(tmpString);
     nsIParserNode* top = PeekNode();
     if (top != nsnull)
