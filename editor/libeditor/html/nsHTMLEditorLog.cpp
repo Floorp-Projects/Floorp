@@ -344,7 +344,7 @@ nsHTMLEditorLog::Copy()
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::Paste()
+nsHTMLEditorLog::Paste(PRInt32 aSelectionType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -355,11 +355,11 @@ nsHTMLEditorLog::Paste()
     Flush();
   }
 
-  return nsHTMLEditor::Paste();
+  return nsHTMLEditor::Paste(aSelectionType);
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::PasteAsQuotation()
+nsHTMLEditorLog::PasteAsQuotation(PRInt32 aSelectionType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -370,11 +370,11 @@ nsHTMLEditorLog::PasteAsQuotation()
     Flush();
   }
 
-  return nsHTMLEditor::PasteAsQuotation();
+  return nsHTMLEditor::PasteAsQuotation(aSelectionType);
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::PasteAsPlaintextQuotation()
+nsHTMLEditorLog::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -385,11 +385,12 @@ nsHTMLEditorLog::PasteAsPlaintextQuotation()
     Flush();
   }
 
-  return nsHTMLEditor::PasteAsPlaintextQuotation();
+  return nsHTMLEditor::PasteAsPlaintextQuotation(aSelectionType);
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::PasteAsCitedQuotation(const nsString& aCitation)
+nsHTMLEditorLog::PasteAsCitedQuotation(const nsString& aCitation,
+                                       PRInt32 aSelectionType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -402,7 +403,7 @@ nsHTMLEditorLog::PasteAsCitedQuotation(const nsString& aCitation)
     Flush();
   }
 
-  return nsHTMLEditor::PasteAsCitedQuotation(aCitation);
+  return nsHTMLEditor::PasteAsCitedQuotation(aCitation, aSelectionType);
 }
 
 NS_IMETHODIMP

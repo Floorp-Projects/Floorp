@@ -138,9 +138,9 @@ interface nsIEditorShell : nsISupports
   
   void Cut();
   void Copy();
-  void Paste();
-  void PasteAsQuotation();
-  void PasteAsCitedQuotation(in wstring cite);
+  void Paste(in long selectionType);
+  void PasteAsQuotation(in long selectionType);
+  void PasteAsCitedQuotation(in wstring cite, in long selectionType);
   
   void InsertAsQuotation(in wstring quotedText, out nsIDOMNode nodeInserted);
   void InsertAsCitedQuotation(in wstring quotedText, in wstring cite,

@@ -52,6 +52,7 @@
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
@@ -305,7 +306,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         // XXX: hard-coded paste
         case (PRUint32)('v'):
           if (mEditor)
-            mEditor->Paste();
+            mEditor->Paste(nsIClipboard::kGlobalClipboard);
           break;
 
         // XXX: hard-coded undo
@@ -525,9 +526,9 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
           mailEditor = do_QueryInterface(mEditor);
 
         if (mailEditor)
-          mailEditor->PasteAsQuotation();
+          mailEditor->PasteAsQuotation(nsIClipboard::kSelectionClipboard);
         else
-          editor->Paste();
+          editor->Paste(nsIClipboard::kSelectionClipboard);
 
         // We processed the event, whether paste succeeded or not:
         return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".

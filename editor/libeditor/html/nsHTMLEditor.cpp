@@ -4227,7 +4227,7 @@ NS_IMETHODIMP nsHTMLEditor::CanCopy(PRBool &aCanCopy)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLEditor::Paste()
+NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 {
   ForceCompositionEnd();
   nsAutoString stuffToPaste;
@@ -4258,7 +4258,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
       trans->AddDataFlavor(kUnicodeMime);
 
       // Get the Data from the clipboard
-      if (NS_SUCCEEDED(clipboard->GetData(trans, nsIClipboard::kGlobalClipboard)))
+      if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)))
       {
         char* bestFlavor = nsnull;
         nsCOMPtr<nsISupports> genericDataObj;
@@ -4319,7 +4319,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::CanPaste(PRBool &aCanPaste)
+NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)
 {
   aCanPaste = PR_FALSE;
   
@@ -4369,7 +4369,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRBool &aCanPaste)
   }
   
   PRBool haveFlavors;
-  rv = clipboard->HasDataMatchingFlavors(flavorsList, nsIClipboard::kGlobalClipboard, &haveFlavors);
+  rv = clipboard->HasDataMatchingFlavors(flavorsList, aSelectionType, &haveFlavors);
   if (NS_FAILED(rv)) return rv;
   
   aCanPaste = haveFlavors;
@@ -4380,16 +4380,17 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRBool &aCanPaste)
 // 
 // HTML PasteAsQuotation: Paste in a blockquote type=cite
 //
-NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation()
+NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation(PRInt32 aSelectionType)
 {
   if (mFlags & eEditorPlaintextMask)
-    return PasteAsPlaintextQuotation();
+    return PasteAsPlaintextQuotation(aSelectionType);
 
   nsAutoString citation("");
-  return PasteAsCitedQuotation(citation);
+  return PasteAsCitedQuotation(citation, aSelectionType);
 }
 
-NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
+NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation,
+                                                  PRInt32 aSelectionType)
 {
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
@@ -4433,7 +4434,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
       // XXX: error result:  should res be returned here?
     }
 
-    res = Paste();
+    res = Paste(aSelectionType);
   }
   return res;
 }
@@ -4441,7 +4442,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
 //
 // Paste a plaintext quotation
 //
-NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
+NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
 {
   // Get Clipboard Service
   nsresult rv;
@@ -4459,7 +4460,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
     trans->AddDataFlavor(kUnicodeMime);
 
     // Get the Data from the clipboard
-    clipboard->GetData(trans, nsIClipboard::kGlobalClipboard);
+    clipboard->GetData(trans, aSelectionType);
 
     // Now we ask the transferable for the data
     // it still owns the data, we just have a pointer to it.

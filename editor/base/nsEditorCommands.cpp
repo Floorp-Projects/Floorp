@@ -28,6 +28,7 @@
 #include "nsIEditorMailSupport.h"
 #include "nsISelectionController.h"
 #include "nsIPresShell.h"
+#include "nsIClipboard.h"
 
 #include "nsEditorCommands.h"
 
@@ -147,7 +148,7 @@ nsPasteCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon
   nsCOMPtr<nsIEditor> aEditor = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
   if (aEditor)
-    return aEditor->CanPaste(*outCmdEnabled);
+    return aEditor->CanPaste(nsIClipboard::kGlobalClipboard, *outCmdEnabled);
 
   return NS_OK;
 }
@@ -163,12 +164,12 @@ nsPasteCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
   nsresult rv = NS_OK;
   nsAutoString cmdString(aCommand);
   if (cmdString.Equals("cmd_paste"))
-    rv = aEditor->Paste();
+    rv = aEditor->Paste(nsIClipboard::kGlobalClipboard);
   else if (cmdString.Equals("cmd_pasteQuote"))
   {
     nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(aEditor, &rv);
     if (mailEditor)
-      rv = mailEditor->PasteAsQuotation();
+      rv = mailEditor->PasteAsQuotation(nsIClipboard::kGlobalClipboard);
   }
     
   return rv;

@@ -2016,7 +2016,7 @@ nsEditorShell::Copy()
 }
 
 NS_IMETHODIMP    
-nsEditorShell::Paste()
+nsEditorShell::Paste(PRInt32 aSelectionType)
 {  
   nsresult  err = NS_NOINTERFACE;
   
@@ -2027,7 +2027,7 @@ nsEditorShell::Paste()
       {
         nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
         if (editor)
-          err = editor->Paste();
+          err = editor->Paste(aSelectionType);
       }
       break;
 
@@ -2039,7 +2039,7 @@ nsEditorShell::Paste()
 }
 
 NS_IMETHODIMP    
-nsEditorShell::PasteAsQuotation()
+nsEditorShell::PasteAsQuotation(PRInt32 aSelectionType)
 {  
   nsresult  err = NS_NOINTERFACE;
   
@@ -2050,7 +2050,7 @@ nsEditorShell::PasteAsQuotation()
       {
         nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
         if (mailEditor)
-          err = mailEditor->PasteAsQuotation();
+          err = mailEditor->PasteAsQuotation(aSelectionType);
       }
       break;
 
@@ -2062,7 +2062,7 @@ nsEditorShell::PasteAsQuotation()
 }
 
 NS_IMETHODIMP    
-nsEditorShell::PasteAsCitedQuotation(const PRUnichar *cite)
+nsEditorShell::PasteAsCitedQuotation(const PRUnichar *cite, PRInt32 aSelectionType)
 {  
   nsresult  err = NS_NOINTERFACE;
   
@@ -2075,7 +2075,7 @@ nsEditorShell::PasteAsCitedQuotation(const PRUnichar *cite)
       {
         nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
         if (mailEditor)
-          err = mailEditor->PasteAsCitedQuotation(aCiteString);
+          err = mailEditor->PasteAsCitedQuotation(aCiteString, aSelectionType);
       }
       break;
 

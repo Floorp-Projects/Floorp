@@ -57,7 +57,7 @@ public:
     * replacing the selected text (if any)
     * @param aCitation  The "mid" URL of the source message
     */
-  NS_IMETHOD PasteAsQuotation()=0;
+  NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType)=0;
 
   /** insert a string as quoted text,
     * as a quotation (whose representation is dependant on the editor type),
@@ -72,7 +72,8 @@ public:
    * Document me!
    * 
    */
-  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation)=0;
+  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation,
+                                   PRInt32 aSelectionType)=0;
 
   /**
    * Document me!

@@ -165,9 +165,10 @@ public:
 
   NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn);
   NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn);
-  NS_IMETHOD PasteAsQuotation();
+  NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText, nsIDOMNode **aNodeInserted);
-  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation);
+  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation,
+                                   PRInt32 aSelectionType);
   NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText,
                                     const nsString& aCitation,
                                     PRBool aInsertHTML,
@@ -257,8 +258,8 @@ public:
   NS_IMETHOD CanCut(PRBool &aCanCut);
   NS_IMETHOD Copy();
   NS_IMETHOD CanCopy(PRBool &aCanCopy);
-  NS_IMETHOD Paste();
-  NS_IMETHOD CanPaste(PRBool &aCanPaste);
+  NS_IMETHOD Paste(PRInt32 aSelectionType);
+  NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste);
 
   NS_IMETHOD OutputToString(nsString& aOutputString,
                             const nsString& aFormatType,
@@ -444,7 +445,7 @@ protected:
 
 
   // Methods for handling plaintext quotations
-  NS_IMETHOD PasteAsPlaintextQuotation();
+  NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);
   NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText,
                                         nsIDOMNode **aNodeInserted);
 

@@ -223,8 +223,8 @@ public:
   NS_IMETHOD CanCut(PRBool &aCanCut)=0;
   NS_IMETHOD Copy() = 0;
   NS_IMETHOD CanCopy(PRBool &aCanCopy)=0;
-  NS_IMETHOD Paste() = 0;
-  NS_IMETHOD CanPaste(PRBool &aCanPaste)=0;
+  NS_IMETHOD Paste(PRInt32 aSelectionType) = 0;
+  NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)=0;
 
   NS_IMETHOD SelectAll();
 
