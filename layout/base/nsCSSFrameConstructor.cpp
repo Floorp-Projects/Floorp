@@ -11236,16 +11236,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
                                                 nsIContent* aContent)                                   
 {
   nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIAtom> atom;
-  aContent->GetTag(*getter_AddRefs(atom));
-  if (atom) {
-    nsString str;
-    atom->ToString(str);
-    char* ch = str.ToNewCString();
-    printf("NOOOOO! %s\n", ch);
-  }
-
   nsIContent* container;
   rv = aContent->GetParent(container);
   if (NS_SUCCEEDED(rv) && container) {
