@@ -50,7 +50,6 @@ chrome/en-US-mail.jar
 ;;a static installed-chrome.txt
 chrome/en-unix.jar
 ;;chrome/en-unix.jar
-chrome/overlayinfo/messenger/content/overlays.rdf
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

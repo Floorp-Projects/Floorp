@@ -54,7 +54,6 @@ components\msgsmime.dll
 chrome\qute.jar
 chrome\en-US-mail.jar
 chrome\en-win.jar
-chrome\overlayinfo\messenger\content\overlays.rdf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Default Profile Settings
