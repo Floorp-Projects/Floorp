@@ -27,6 +27,7 @@
 
 class nsCSSBlockFrame;
 struct nsCSSInlineLayout;
+class nsPlaceholderFrame;
 struct LineData;
 
 /* 52b33130-0b99-11d2-932e-00805f8add32 */
@@ -51,11 +52,15 @@ struct nsCSSBlockReflowState : public nsReflowState {
    */
   void GetAvailableSpace();
 
-  void PlaceCurrentLineFloater(nsIFrame* aFloater);
+  void AddFloater(nsPlaceholderFrame* aPlaceholderFrame);
 
-  void PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaterList);
+  void PlaceFloater(nsPlaceholderFrame* aFloater);
+
+  void PlaceFloaters(nsVoidArray* aFloaters);
 
   void ClearFloaters(PRUint8 aBreakType);
+
+  PRBool IsLeftMostChild(nsIFrame* aFrame);
 
   nsIPresContext* mPresContext;
   nsISpaceManager* mSpaceManager;
@@ -101,7 +106,9 @@ struct nsCSSBlockReflowState : public nsReflowState {
   LineData* mFreeList;
 
   nsVoidArray mPendingFloaters;
+  nscoord mSpaceManagerX, mSpaceManagerY;
 
+  LineData* mCurrentLine;
   LineData* mPrevLine;
 
   // XXX The next list ordinal for counting list bullets
@@ -131,6 +138,12 @@ struct nsCSSBlockReflowState : public nsReflowState {
 
   BlockBandData mCurrentBand;
 };
+
+inline void
+nsCSSLineLayout::AddFloater(nsPlaceholderFrame* aFrame)
+{
+  mBlockReflowState->AddFloater(aFrame);
+}
 
 extern nsresult NS_NewCSSBlockFrame(nsIFrame**  aInstancePtrResult,
                                     nsIContent* aContent,

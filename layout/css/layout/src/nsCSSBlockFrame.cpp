@@ -241,8 +241,6 @@ protected:
                      nsCSSBlockReflowState& aState,
                      nsIFrame*              aFloaterFrame);
 
-  PRBool IsLeftMostChild(nsIFrame* aFrame);
-
   void PaintChildren(nsIPresContext&      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect);
@@ -256,7 +254,7 @@ protected:
   LineData* mOverflowLines;
 
   // placeholder frames for floaters to display at the top line
-  nsVoidArray* mRunInFloaters;
+//  nsVoidArray* mRunInFloaters;
 
   // Text run information
   nsCSSTextRun* mTextRuns;
@@ -390,6 +388,7 @@ ListFloaters(FILE* out, nsVoidArray* aFloaters)
   for (i = 0; i < n; i++) {
     nsIFrame* frame = (nsIFrame*) aFloaters->ElementAt(i);
     frame->ListTag(out);
+    if (i < n - 1) fputs(" ", out);
   }
 }
 
@@ -695,10 +694,15 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
     mLineLayout(aPresContext, aSpaceManager),
     mInlineLayout(mLineLayout, aBlock, aBlockSC)
 {
+  mLineLayout.Init(this);
   mInlineLayout.Init(this);
 
-  mPresContext = aPresContext;
   mSpaceManager = aSpaceManager;
+
+  // Save away the outer coordinate system origin for later
+  mSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
+
+  mPresContext = aPresContext;
   mBlock = aBlock;
   mBlockIsPseudo = aBlock->IsPseudoFrame();
   aBlock->GetNextInFlow((nsIFrame*&)mNextInFlow);
@@ -822,6 +826,9 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
     mBottomEdge = maxSize.height;
   }
 
+  // Now translate in by our border and padding
+  mSpaceManager->Translate(mBorderPadding.left, mBorderPadding.top);
+
   mPrevChild = nsnull;
   mFreeList = nsnull;
   mPrevLine = nsnull;
@@ -850,6 +857,9 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
 
 nsCSSBlockReflowState::~nsCSSBlockReflowState()
 {
+  // Restore the coordinate system
+  mSpaceManager->Translate(-mBorderPadding.left, -mBorderPadding.top);
+
   LineData* line = mFreeList;
   while (nsnull != line) {
     NS_ASSERTION((0 == line->mChildCount) && (nsnull == line->mFirstChild),
@@ -860,29 +870,35 @@ nsCSSBlockReflowState::~nsCSSBlockReflowState()
   }
 }
 
-// XXX I think the handling of mBorderPadding.left is weird here.
+// Get the available reflow space for the current y coordinate. The
+// available space is relative to our coordinate system (0,0) is our
+// upper left corner.
 void
 nsCSSBlockReflowState::GetAvailableSpace()
 {
   nsISpaceManager* sm = mSpaceManager;
 
-  // Fill in band data for the specific Y coordinate. Note: We don't
-  // translate by Y so that the band will be absolute (at least in y);
-  // this makes the implementation of ClearFloaters simpler.
-  sm->Translate(mBorderPadding.left, 0);
+#ifdef NS_DEBUG
+  // Verify that the caller setup the coordinate system properly
+  nscoord wx, wy;
+  sm->GetTranslation(wx, wy);
+  nscoord cx = mSpaceManagerX + mBorderPadding.left;
+  nscoord cy = mSpaceManagerY + mBorderPadding.top;
+  NS_ASSERTION((wx == cx) && (wy == cy), "bad coord system");
+#endif
+
+  // Fill in band data for the specific Y coordinate
   sm->GetBandData(mY, mInnerSize, mCurrentBand);
-  sm->Translate(-mBorderPadding.left, 0);
 
   // Compute the bounding rect of the available space, i.e. space
-  // between any left and right floaters. The availSpace is translated
-  // after it's computed to be fully absolute.
+  // between any left and right floaters.
   mCurrentBand.ComputeAvailSpaceRect();
-  mCurrentBand.availSpace.MoveBy(mBorderPadding.left, 0);
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-     ("nsCSSBlockReflowState::GetAvailableSpace: band={%d,%d,%d,%d}",
+     ("nsCSSBlockReflowState::GetAvailableSpace: band={%d,%d,%d,%d} count=%d",
       mCurrentBand.availSpace.x, mCurrentBand.availSpace.y,
-      mCurrentBand.availSpace.width, mCurrentBand.availSpace.height));
+      mCurrentBand.availSpace.width, mCurrentBand.availSpace.height,
+      mCurrentBand.count));
 }
 
 //----------------------------------------------------------------------
@@ -913,9 +929,9 @@ nsCSSBlockFrame::~nsCSSBlockFrame()
 {
   DeleteLineList(mLines);
   DeleteLineList(mOverflowLines);
-  if (nsnull != mRunInFloaters) {
-    delete mRunInFloaters;
-  }
+//  if (nsnull != mRunInFloaters) {
+//    delete mRunInFloaters;
+//  }
   nsCSSTextRun::DeleteTextRuns(mTextRuns);
 }
 
@@ -1038,6 +1054,7 @@ nsCSSBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " [state=%08x]", mState);
   }
 
+#if XXX
   // Dump run-in floaters
   if (nsnull != mRunInFloaters) {
     fputs(" run-in-floaters=<", out);
@@ -1045,6 +1062,7 @@ nsCSSBlockFrame::List(FILE* out, PRInt32 aIndent) const
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
     fputs(">", out);
   }
+#endif
 
   // Output the children, one line at a time
   if (nsnull != mLines) {
@@ -1487,6 +1505,49 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
       aState.mBorderPadding.right;
     aMetrics.maxElementSize->height += aState.mBorderPadding.top +
       aState.mBorderPadding.bottom;
+
+    // Factor in any left and right floaters as well
+    LineData* line = mLines;
+    PRInt32 maxLeft = 0, maxRight = 0;
+    while (nsnull != line) {
+      if (nsnull != line->mFloaters) {
+        nsRect r;
+        nsMargin floaterMargin;
+        PRInt32 leftSum = 0, rightSum = 0;
+        PRInt32 n = line->mFloaters->Count();
+        for (PRInt32 i = 0; i < n; i++) {
+          nsPlaceholderFrame* placeholder = (nsPlaceholderFrame*)
+            line->mFloaters->ElementAt(i);
+          nsIFrame* floater = placeholder->GetAnchoredItem();
+          floater->GetRect(r);
+          const nsStyleDisplay* floaterDisplay;
+          const nsStyleSpacing* floaterSpacing;
+          floater->GetStyleData(eStyleStruct_Display,
+                                (const nsStyleStruct*&)floaterDisplay);
+          floater->GetStyleData(eStyleStruct_Spacing,
+                                (const nsStyleStruct*&)floaterSpacing);
+          floaterSpacing->CalcMarginFor(floater, floaterMargin);
+          nscoord width = r.width + floaterMargin.left + floaterMargin.right;
+          switch (floaterDisplay->mFloats) {
+          default:
+            NS_NOTYETIMPLEMENTED("Unsupported floater type");
+            // FALL THROUGH
+
+          case NS_STYLE_FLOAT_LEFT:
+            leftSum += width;
+            break;
+
+          case NS_STYLE_FLOAT_RIGHT:
+            rightSum += width;
+            break;
+          }
+        }
+        if (leftSum > maxLeft) maxLeft = leftSum;
+        if (rightSum > maxRight) maxRight = rightSum;
+      }
+      line = line->mNext;
+    }
+    aMetrics.maxElementSize->width += maxLeft + maxRight;
   }
   NS_ASSERTION(aDesiredRect.width < 1000000, "whoops");
 }
@@ -1581,7 +1642,8 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
 
     // Place any floaters the line has
     if (nsnull != lastCleanLine->mFloaters) {
-      aState.PlaceBelowCurrentLineFloaters(lastCleanLine->mFloaters);
+      aState.mCurrentLine = lastCleanLine;
+      aState.PlaceFloaters(lastCleanLine->mFloaters);
     }
   }
 
@@ -1884,9 +1946,11 @@ nsCSSBlockFrame::ResizeReflow(nsCSSBlockReflowState& aState)
 nsresult
 nsCSSBlockFrame::ReflowLinesAt(nsCSSBlockReflowState& aState, LineData* aLine)
 {
+#if XXX
   if ((nsnull != mRunInFloaters) && (aLine == mLines)) {
     aState.PlaceBelowCurrentLineFloaters(mRunInFloaters);
   }
+#endif
 
   // Reflow the lines that are already ours
   while (nsnull != aLine) {
@@ -1993,9 +2057,16 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
 
   PRBool keepGoing = PR_FALSE;
   nsCSSBlockFrame* nextInFlow;
+  aState.mCurrentLine = aLine;
   aState.mInlineLayoutPrepared = PR_FALSE;
   aLine->ClearDirty();
   aLine->SetNeedDidReflow();
+
+  // XXX temporary SLOW code
+  if (nsnull != aLine->mFloaters) {
+    delete aLine->mFloaters;
+    aLine->mFloaters = nsnull;
+  }
 
   // Reflow mapped frames in the line
   PRInt32 n = aLine->mChildCount;
@@ -2253,6 +2324,14 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
                         reflowStatus);
     aState.mSpaceManager->Translate(-x, -y);
   }
+
+// XXX we need to do this because blocks depend on it; we shouldn't expect
+// the child frame to deal with it.
+  if (eReflowReason_Initial == reason) {
+    aFrame->GetFrameState(state);
+    aFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
+  }
+
   if (NS_IS_REFLOW_ERROR(rv)) {
     aReflowResult = nsInlineReflowStatus(rv);
     return PR_FALSE;
@@ -2361,6 +2440,11 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
                                         aFrame, 1);
   aState.mPrevChild = aFrame;
 
+  // Refresh our available space in case a floater was placed by our
+  // child.
+  // XXX expensive!
+  aState.GetAvailableSpace();
+
   if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus)) {
     // Some of the block fit. We need to have the block frame
     // continued, so we make sure that it has a next-in-flow now.
@@ -2439,6 +2523,7 @@ nsCSSBlockFrame::ReflowInlineFrame(nsCSSBlockReflowState& aState,
   if (NS_IS_REFLOW_ERROR(aReflowResult)) {
     return PR_FALSE;
   }
+
   PRBool lineWasComplete = aLine->GetLastContentIsComplete();
   if (!NS_INLINE_IS_BREAK(aReflowResult)) {
     aState.mPrevChild = aFrame;
@@ -2680,24 +2765,11 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
   }
   aState.mY = newY;
 
-#if XXX_remove_me
-  // XXX We really want to know whether this is the initial reflow (reflow
-  // unmapped) or a subsequent reflow in which case we only need to offset
-  // the existing floaters...
-  if (aState.mPendingFloaters.Count() > 0) {
-    if (nsnull == aLine->mFloaters) {
-      aLine->mFloaters = new nsVoidArray;
-    }
-    aLine->mFloaters->operator=(aState.mPendingFloaters);
-    aState.mPendingFloaters.Clear();
-  }
-#else
-  FindFloaters(aLine);
-#endif
-
   // Any below current line floaters to place?
-  if (nsnull != aLine->mFloaters) {
-    aState.PlaceBelowCurrentLineFloaters(aLine->mFloaters);
+  if (0 != aState.mPendingFloaters.Count()) {
+    aState.PlaceFloaters(&aState.mPendingFloaters);
+    aState.mPendingFloaters.Clear();
+
     // XXX Factor in the height of the floaters as well when considering
     // whether the line fits.
     // The default policy is that if there isn't room for the floaters then
@@ -2724,11 +2796,11 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
     // XXX page breaks, etc, need to be passed upwards too!
   }
 
-  if (aState.mY >= aState.mCurrentBand.availSpace.YMost()) {
+//  if (aState.mY >= aState.mCurrentBand.availSpace.YMost()) {
     // The current y coordinate is now past our available space
     // rectangle. Get a new band of space.
     aState.GetAvailableSpace();
-  }
+//  }
   return PR_TRUE;
 }
 
@@ -2780,6 +2852,7 @@ nsCSSBlockFrame::FindFloaters(LineData* aLine)
 
   aLine->mFloaters = floaters;
 
+#if XXX
   if ((mLines == aLine) && (nsnull != mRunInFloaters) &&
       (nsnull != floaters)) {
     // Special check for the first line: remove any floaters that are
@@ -2794,6 +2867,7 @@ nsCSSBlockFrame::FindFloaters(LineData* aLine)
       }
     }
   }
+#endif
 
   // Get rid of floater array if we don't need it
   if (nsnull != floaters) {
@@ -3576,19 +3650,20 @@ nsCSSBlockFrame::AddFloater(nsIPresContext*      aPresContext,
                                    nsIAnchoredItems::anHTMLFloater,
                                    this);
 
-    // Reflow the floater
+    // Reflow the floater (the first time we do it here; later on it's
+    // done during the reflow of the line that contains the floater)
     ReflowFloater(aPresContext, *state, aFloater);
 
+#if XXX_remove_me
     // Determine whether we place it at the top or we place it below the
     // current line
-    if (IsLeftMostChild(aPlaceholder)) {
-      if (nsnull == mRunInFloaters) {
-        mRunInFloaters = new nsVoidArray;
-      }
-      mRunInFloaters->AppendElement(aPlaceholder);
-      state->PlaceCurrentLineFloater(aFloater);
-    }
-#if XXX_remove_me
+//    if (IsLeftMostChild(aPlaceholder)) {
+//      if (nsnull == mRunInFloaters) {
+//        mRunInFloaters = new nsVoidArray;
+//      }
+//      mRunInFloaters->AppendElement(aPlaceholder);
+//      state->PlaceCurrentLineFloater(aFloater);
+//    }
     else {
       // Add the placeholder to our to-do list
       state->mPendingFloaters.AppendElement(aPlaceholder);
@@ -3600,57 +3675,145 @@ nsCSSBlockFrame::AddFloater(nsIPresContext*      aPresContext,
   return PR_FALSE;
 }
 
-PRBool
-nsCSSBlockFrame::IsLeftMostChild(nsIFrame* aFrame)
+// This is called by the line layout's AddFloater method when a
+// place-holder frame is reflowed in a line. If the floater is a
+// left-most child (it's x coordinate is at the line's left margin)
+// then the floater is place immediately, otherwise the floater
+// placement is deferred until the line has been reflowed.
+void
+nsCSSBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
 {
-  do {
+  // Update the current line's floater array
+  NS_ASSERTION(nsnull != mCurrentLine, "null ptr");
+  if (nsnull == mCurrentLine->mFloaters) {
+    mCurrentLine->mFloaters = new nsVoidArray();
+  }
+  mCurrentLine->mFloaters->AppendElement(aPlaceholder);
+
+  // Now place the floater immediately if possible. Otherwise stash it
+  // away in mPendingFloaters and place it later.
+  if (IsLeftMostChild(aPlaceholder)) {
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+       ("nsCSSBlockReflowState::AddFloater: IsLeftMostChild, placeHolder=%p",
+        aPlaceholder));
+
+    // Because we are in the middle of reflowing a placeholder frame
+    // within a line (and possibly nested in an inline frame or two
+    // that's a child of our block) we need to restore the space
+    // manager's translation to the space that the block resides in
+    // before placing the floater.
+    nscoord ox, oy;
+    mSpaceManager->GetTranslation(ox, oy);
+    nscoord dx = ox - mSpaceManagerX;
+    nscoord dy = oy - mSpaceManagerY;
+    mSpaceManager->Translate(-dx, -dy);
+    PlaceFloater(aPlaceholder);
+
+    // Pass on updated available space to the current line
+    GetAvailableSpace();
+    mInlineLayout.SetReflowSpace(mCurrentBand.availSpace.x, mY,
+                                 mCurrentBand.availSpace.width,
+                                 mCurrentBand.availSpace.height);
+
+    // Restore coordinate system
+    mSpaceManager->Translate(dx, dy);
+  }
+  else {
+    // This floater will be placed after the line is done (it is a
+    // below current line floater).
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+       ("nsCSSBlockReflowState::AddFloater: pending, placeHolder=%p",
+        aPlaceholder));
+    mPendingFloaters.AppendElement(aPlaceholder);
+  }
+}
+
+// XXX Inline frame layout and block layout need to be more
+// coordinated; IsFirstChild in the inline code is doing much the same
+// thing as below; firstness should be well known.
+PRBool
+nsCSSBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
+{
+  for (;;) {
     nsIFrame* parent;
     aFrame->GetGeometricParent(parent);
-  
-    // See if there are any non-zero sized child frames that precede
-    // aFrame in the child list
-    nsIFrame* child;
-    parent->FirstChild(child);
-    while ((nsnull != child) && (aFrame != child)) {
-      nsSize  size;
+    if (parent == mBlock) {
+      nsIFrame* child = mCurrentLine->mFirstChild;
+      PRInt32 n = mCurrentLine->mChildCount;
+      while ((nsnull != child) && (aFrame != child) && (--n >= 0)) {
+        nsSize  size;
 
-      // Is the child zero-sized?
-      child->GetSize(size);
-      if ((size.width > 0) || (size.height > 0)) {
-        // We found a non-zero sized child frame that precedes aFrame
-        return PR_FALSE;
+        // Is the child zero-sized?
+        child->GetSize(size);
+        if (size.width > 0) {
+          // We found a non-zero sized child frame that precedes aFrame
+          return PR_FALSE;
+        }
+        child->GetNextSibling(child);
       }
-      child->GetNextSibling(child);
+      break;
+    }
+    else {
+      // See if there are any non-zero sized child frames that precede
+      // aFrame in the child list
+      nsIFrame* child;
+      parent->FirstChild(child);
+      while ((nsnull != child) && (aFrame != child)) {
+        nsSize  size;
+
+        // Is the child zero-sized?
+        child->GetSize(size);
+        if (size.width > 0) {
+          // We found a non-zero sized child frame that precedes aFrame
+          return PR_FALSE;
+        }
+        child->GetNextSibling(child);
+      }
     }
   
     // aFrame is the left-most non-zero sized frame in its geometric parent.
     // Walk up one level and check that its parent is left-most as well
     aFrame = parent;
-  } while (aFrame != this);
+  }
   return PR_TRUE;
 }
 
-// Used when placing run-in floaters (floaters displayed at the top of
-// the block as supposed to below the current line)
 void
-nsCSSBlockReflowState::PlaceCurrentLineFloater(nsIFrame* aFloater)
+nsCSSBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder)
 {
   nsISpaceManager* sm = mSpaceManager;
+  nsIFrame* floater = aPlaceholder->GetAnchoredItem();
+
+  // Remove floaters old placement from the space manager
+  sm->RemoveRegion(floater);
+
+  // Reflow the floater if it's targetted for a reflow
+  if (nsnull != reflowCommand) {
+    nsIFrame* target;
+    reflowCommand->GetTarget(target);
+    if (floater == target) {
+      mBlock->ReflowFloater(mPresContext, *this, floater);
+    }
+  }
+
+  // Get the band of available space
+  GetAvailableSpace();
 
   // Get the type of floater
   const nsStyleDisplay* floaterDisplay;
-  aFloater->GetStyleData(eStyleStruct_Display,
-                         (const nsStyleStruct*&)floaterDisplay);
   const nsStyleSpacing* floaterSpacing;
-  aFloater->GetStyleData(eStyleStruct_Spacing,
-                         (const nsStyleStruct*&)floaterSpacing);
+  floater->GetStyleData(eStyleStruct_Display,
+                        (const nsStyleStruct*&)floaterDisplay);
+  floater->GetStyleData(eStyleStruct_Spacing,
+                        (const nsStyleStruct*&)floaterSpacing);
 
-  // Commit some space in the space manager, and adjust our current
-  // band of available space.
+  // Get the floaters bounding box and margin information
   nsRect region;
-  aFloater->GetRect(region);
+  floater->GetRect(region);
   nsMargin floaterMargin;
-  floaterSpacing->CalcMarginFor(aFloater, floaterMargin);
+  floaterSpacing->CalcMarginFor(floater, floaterMargin);
+
+  // Compute the size of the region that will impact the space manager
   region.y = mY;
   switch (floaterDisplay->mFloats) {
   default:
@@ -3673,112 +3836,45 @@ nsCSSBlockReflowState::PlaceCurrentLineFloater(nsIFrame* aFloater)
   // Factor in the floaters margins
   region.width += floaterMargin.left + floaterMargin.right;
   region.height += floaterMargin.top + floaterMargin.bottom;
-  sm->AddRectRegion(aFloater, region);
+  sm->AddRectRegion(floater, region);
 
   // Set the origin of the floater in world coordinates
-  nscoord worldX, worldY;
-  sm->GetTranslation(worldX, worldY);
-  aFloater->WillReflow(*mPresContext);
+  nscoord worldX = mSpaceManagerX;
+  nscoord worldY = mSpaceManagerY;
   if (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats) {
-    aFloater->MoveTo(region.x + worldX + floaterMargin.left,
-                     region.y + worldY + floaterMargin.top);
+    floater->MoveTo(region.x + worldX + floaterMargin.left,
+                    region.y + worldY + floaterMargin.top);
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+       ("nsCSSBlockReflowState::PlaceFloater: right, placeHolder=%p xy=%d,%d worldxy=%d,%d",
+        aPlaceholder, region.x + worldX + floaterMargin.left,
+        region.y + worldY + floaterMargin.top,
+        worldX, worldY));
   }
   else {
-    aFloater->MoveTo(region.x + worldX + floaterMargin.left + mBulletPadding,
-                     region.y + worldY + floaterMargin.top);
+    floater->MoveTo(region.x + worldX + floaterMargin.left + mBulletPadding,
+                    region.y + worldY + floaterMargin.top);
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+       ("nsCSSBlockReflowState::PlaceFloater: left, placeHolder=%p xy=%d,%d worldxy=%d,%d",
+        aPlaceholder, region.x + worldX + floaterMargin.left + mBulletPadding,
+        region.y + worldY + floaterMargin.top,
+        worldX, worldY));
   }
-  aFloater->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
-
-  // Update the band of available space to reflect space taken up by
-  // the floater
-  GetAvailableSpace();
-
-  // XXX if the floater is a child of an inline frame then this won't
-  // work because we won't update the correct nsCSSInlineLayout.
-  mInlineLayout.SetReflowSpace(mCurrentBand.availSpace.x, mY,
-                               mCurrentBand.availSpace.width,
-                               mCurrentBand.availSpace.height);
 }
 
 void
-nsCSSBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaterList)
+nsCSSBlockReflowState::PlaceFloaters(nsVoidArray* aFloaters)
 {
-  NS_PRECONDITION(aFloaterList->Count() > 0, "no floaters");
+  NS_PRECONDITION(aFloaters->Count() > 0, "no floaters");
 
-  nsISpaceManager* sm = mSpaceManager;
-
-  // XXX Factor this code with PlaceCurrentLineFloater()...
-  nsRect region;
-  PRInt32 numFloaters = aFloaterList->Count();
+  PRInt32 numFloaters = aFloaters->Count();
   for (PRInt32 i = 0; i < numFloaters; i++) {
     nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)
-      aFloaterList->ElementAt(i);
-    nsIFrame* floater = placeholderFrame->GetAnchoredItem();
-
-    // Remove floaters old placement from the space manager
-    sm->RemoveRegion(floater);
-
-    // Reflow the floater if it's targetted for a reflow
-    if (nsnull != reflowCommand) {
-      nsIFrame* target;
-      reflowCommand->GetTarget(target);
-      if (floater == target) {
-        mBlock->ReflowFloater(mPresContext, *this, floater);
-      }
+      aFloaters->ElementAt(i);
+    if (IsLeftMostChild(placeholderFrame)) {
+      // Left-most children are placed during the line's reflow
+      continue;
     }
-
-    // Get the band of available space
-    GetAvailableSpace();
-
-    // Get the type of floater
-    const nsStyleDisplay* floaterDisplay;
-    const nsStyleSpacing* floaterSpacing;
-    floater->GetStyleData(eStyleStruct_Display,
-                          (const nsStyleStruct*&)floaterDisplay);
-    floater->GetStyleData(eStyleStruct_Spacing,
-                          (const nsStyleStruct*&)floaterSpacing);
-
-    // Get the floaters bounding box and margin information
-    floater->GetRect(region);
-    nsMargin floaterMargin;
-    floaterSpacing->CalcMarginFor(floater, floaterMargin);
-
-    // Compute the size of the region that will impact the space manager
-    region.y = mCurrentBand.availSpace.y;
-    switch (floaterDisplay->mFloats) {
-    default:
-      NS_NOTYETIMPLEMENTED("Unsupported floater type");
-      // FALL THROUGH
-
-    case NS_STYLE_FLOAT_LEFT:
-      region.x = mCurrentBand.availSpace.x;
-      region.width += mBulletPadding;
-      break;
-
-    case NS_STYLE_FLOAT_RIGHT:
-      region.x = mCurrentBand.availSpace.XMost() - region.width;
-      region.x -= floaterMargin.right;
-      if (region.x < 0) {
-        region.x = 0;
-      }
-    }
-
-    // Factor in the floaters margins
-    region.width += floaterMargin.left + floaterMargin.right;
-    region.height += floaterMargin.top + floaterMargin.bottom;
-    sm->AddRectRegion(floater, region);
-
-    // Set the origin of the floater in world coordinates
-    nscoord worldX, worldY;
-    sm->GetTranslation(worldX, worldY);
-    if (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats) {
-      floater->MoveTo(region.x + worldX + floaterMargin.left,
-                      region.y + worldY + floaterMargin.top);
-    }
-    else {
-      floater->MoveTo(region.x + worldX + floaterMargin.left + mBulletPadding,
-                      region.y + worldY + floaterMargin.top);
-    }
+    PlaceFloater(placeholderFrame);
   }
 
   // Pass on updated available space to the current line
@@ -3792,11 +3888,7 @@ void
 nsCSSBlockReflowState::ClearFloaters(PRUint8 aBreakType)
 {
   for (;;) {
-    if (mCurrentBand.count <= 1) {
-      // No floaters in this band therefore nothing to clear
-      break;
-    }
-
+    PRBool haveFloater = PR_FALSE;
     // Find the Y coordinate to clear to. Note that the band trapezoid
     // coordinates are relative to the last translation. Since we
     // never translate by Y before getting a band, we can use absolute
@@ -3814,6 +3906,7 @@ nsCSSBlockReflowState::ClearFloaters(PRUint8 aBreakType)
          ("nsCSSBlockReflowState::ClearFloaters: trap=%d state=%d",
           i, trapezoid->state));
       if (nsBandTrapezoid::Available != trapezoid->state) {
+        haveFloater = PR_TRUE;
         if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
           PRInt32 fn, numFrames = trapezoid->frames->Count();
           NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
@@ -3893,6 +3986,9 @@ NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
           }
         }
       }
+    }
+    if (!haveFloater) {
+      break;
     }
 
     if (clearYMost == mY) {
