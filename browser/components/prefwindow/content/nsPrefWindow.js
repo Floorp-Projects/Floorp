@@ -187,13 +187,11 @@ nsPrefWindow.prototype =
             for( var pageTag in this.wsm.dataManager.pageData )
               {
                 var pageData = this.wsm.dataManager.getPageData( pageTag );
-                if ("initialized" in pageData && pageData.initialized)
+                if ("initialized" in pageData && pageData.initialized && "elementIDs" in pageData)
                   {
-                for( var elementID in pageData )
+                for( var elementID in pageData.elementIDs )
                   {
-                    if (elementID == "initialized") continue;
-                    var itemObject = pageData[elementID];
-                    if (typeof(itemObject) != "object") break;
+                    var itemObject = pageData.elementIDs[elementID];
                     if ( "prefstring" in itemObject && itemObject.prefstring )
                       {
                         var elt = itemObject.localname;
@@ -308,10 +306,11 @@ nsPrefWindow.prototype =
                                   aWindow.document.documentElement.getAttribute("headertitle"));
             }
             
-            if( !(aPageTag in this.wsm.dataManager.pageData) )
+            var pageData = this.wsm.dataManager.getPageData(aPageTag);
+            if(!('initialized' in pageData))
               {
                 var prefElements = aWindow.document.getElementsByAttribute( "prefstring", "*" );
-                this.wsm.dataManager.pageData[aPageTag] = [];
+                
                 for( var i = 0; i < prefElements.length; i++ )
                   {
                     var prefstring    = prefElements[i].getAttribute( "prefstring" );
@@ -350,12 +349,11 @@ nsPrefWindow.prototype =
                   }
               }      
             this.wsm.setPageData( aPageTag, aWindow );  // do not set extra elements, accept hard coded defaults
-            
             if( 'Startup' in aWindow)
               {
                 aWindow.Startup();
               }
-            this.wsm.dataManager.pageData[aPageTag].initialized=true;
+            this.wsm.dataManager.pageData[aPageTag].initialized = true;
           }
   };
 

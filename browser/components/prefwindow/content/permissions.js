@@ -39,7 +39,7 @@ function GetFields()
   return dataObject;
 }
 
-function SetFields()
+function SetFields(data)
 {
   var win;
   if ('opener' in window && window.opener)
@@ -47,14 +47,11 @@ function SetFields()
   else
     win = window.top;
 
-  var dataObject = win.hPrefWindow.wsm.dataManager.pageData[window.location.href];
-  if ('permissions' in dataObject)
-    permissions = dataObject.permissions;  
+  if ('permissions' in data)
+    permissions = data.permissions;  
 
-  if ('deletedPermissions' in dataObject)
-    deletedPermissions = dataObject.deletedPermissions;
-  
-  return true;
+  if ('deletedPermissions' in data)
+    deletedPermissions = data.deletedPermissions;
 }
  
 var permissionsTreeView = {
@@ -137,7 +134,7 @@ function loadPermissions() {
   else
     win = window.top;
 
-  var dataObject = win.hPrefWindow.wsm.dataManager.pageData[window.location.href];
+  var dataObject = win.hPrefWindow.wsm.dataManager.pageData[window.location.href].userData;
 
   // load permissions into a table
   if (!('permissions' in dataObject)) {

@@ -51,6 +51,13 @@ function nsWidgetStateManager (aFrameID)
     {
       if (!(aPageTag in this.pageData))
         this.pageData[aPageTag] = { };
+
+      if (!('elementIDs' in this.pageData[aPageTag]))
+        this.pageData[aPageTag].elementIDs = new Object();
+
+      if (!('userData' in this.pageData[aPageTag]))
+        this.pageData[aPageTag].userData = new Object();
+
       return this.pageData[aPageTag];
     },
 
@@ -58,14 +65,15 @@ function nsWidgetStateManager (aFrameID)
     {
       if (!(aPageTag in this.pageData))
         this.pageData[aPageTag] = new Object();
-      this.pageData[aPageTag][aItemID] = aDataObject;
+      
+      this.pageData[aPageTag].elementIDs[aItemID] = aDataObject;
     },
 
     getItemData: function (aPageTag, aItemID)
     {
-      if (!(aItemID in this.pageData[aPageTag]))
-        this.pageData[aPageTag][aItemID] = new Object();
-      return this.pageData[aPageTag][aItemID];
+      if (!(aItemID in this.pageData[aPageTag].elementIDs))
+        this.pageData[aPageTag].elementIDs[aItemID] = new Object();
+      return this.pageData[aPageTag].elementIDs[aItemID];
     }
   }
 
@@ -115,8 +123,8 @@ nsWidgetStateManager.prototype =
     if ("GetFields" in gCurrentWindow) {
       // save page data based on user supplied function in content area
       var dataObject = gCurrentWindow.GetFields();
-      if (dataObject)
-        this.dataManager.setPageData(aPageTag, dataObject);
+      if (dataObject)        
+        this.dataManager.pageData[aPageTag].userData = dataObject;
     }
 
     // Automatic element retrieval. This is done in two ways.
@@ -145,11 +153,7 @@ nsWidgetStateManager.prototype =
     for (var ii = 0; ii < elements.length; ii++) {
       var elementID   = elements[ii].id;
       var elementType = elements[ii].localName;
-      
-      if (!(aPageTag in this.dataManager.pageData) )
-        this.dataManager.pageData[aPageTag] = new Object();
-      this.dataManager.pageData[aPageTag][elementID] = new Object();
-      
+ 
       // persist attributes
       var get_Func = (elementType in this.handlers) ?
       this.handlers[elementType].get :
@@ -163,22 +167,20 @@ nsWidgetStateManager.prototype =
     gCurrentWindow = aWindow || this.contentArea;
 
     var pageData = this.dataManager.getPageData(aPageTag);
-    if ("SetFields" in gCurrentWindow) {
-      if (!gCurrentWindow.SetFields(pageData)) {
-        // If the function returns false (or null/undefined) then it
-        // doesn't want *us* to process the page data.
-        return;
-      }
-    }
+    if ("SetFields" in gCurrentWindow)
+      gCurrentWindow.SetFields(pageData.userData)
 
-    for (var elementID in pageData) {
+    if (!('elementIDs' in pageData))
+      return;
+
+    for (var elementID in pageData.elementIDs) {
       var element = gCurrentWindow.document.getElementById(elementID);
       if (element) {
         var elementType = element.localName;
         var set_Func = (elementType in this.handlers) ?
           this.handlers[elementType].set :
           this.handlers.default_handler.set;
-        set_Func(elementID, pageData[elementID]);
+        set_Func(elementID, pageData.elementIDs[elementID]);
       }
     }
   },
@@ -376,4 +378,4 @@ nsWidgetStateManager.prototype =
 # there is no way out of here
 # [The Master is] not dead as you know it. He is with us always..
 # My name is Torgo, I take care of the place while the Master is away. 
-
+# The car won't start

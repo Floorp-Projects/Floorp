@@ -121,7 +121,7 @@ function showFontsAndColors()
 
 function saveFontPrefs()
 {
-  var dataObject = top.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"];
+  var dataObject = top.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"].userData;
   var pref = top.hPrefWindow.pref;
   for (var language in dataObject.languageData) {
     for (var type in dataObject.languageData[language].types) {
@@ -188,7 +188,7 @@ function saveFontPrefs()
   }
   items = ["browserUseSystemColors", "browserUnderlineAnchors"];
   prefs = ["browser.display.use_system_colors", "browser.underline_anchors"];
-  for (var i = 0; i < items.length; ++i) {
+  for (i = 0; i < items.length; ++i) {
     prefvalue = dataObject.dataEls[items[i]].checked;
     pref.SetBoolPref(prefs[i], prefvalue)
   }
@@ -199,7 +199,7 @@ function onPopupPrefsOK()
   var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
   permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
 
-  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData[window.location.href];
+  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-features.xul"].userData;
   if ('deletedPermissions' in dataObject) {
     for (var p = 0; p < dataObject.deletedPermissions.length; ++p) {
       permissionmanager.remove(dataObject.deletedPermissions[p].host, dataObject.deletedPermissions[p].type);
@@ -223,7 +223,7 @@ function onImagePrefsOK()
   var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
   permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
 
-  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-features-images.xul"];
+  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-features-images.xul"].userData;
   if ('deletedPermissions' in dataObject) {
     for (var p = 0; p < dataObject.deletedPermissions.length; ++p) {
       permissionmanager.remove(dataObject.deletedPermissions[p].host, dataObject.deletedPermissions[p].type);
