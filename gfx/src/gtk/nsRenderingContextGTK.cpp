@@ -22,10 +22,6 @@
 #include "nsGfxCIID.h"
 #include <math.h>
 
-typedef unsigned char BYTE;
-
-#define RGB(r,g,b) ((unsigned long) (((BYTE) (r) | ((unsigned long) ((BYTE) (g)) <<8)) | (((unsigned long)(BYTE)(b)) << 16)))
-
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
 #define NSRECT_TO_GDKRECT(ns,gdk) \
@@ -387,10 +383,17 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 
 NS_IMETHODIMP nsRenderingContextGTK::SetColor(nscolor aColor)
 {
+  if (nsnull == mContext)  
+    return NS_ERROR_FAILURE;
+      
   mCurrentColor = aColor;
 
-  ::gdk_rgb_gc_set_foreground(mRenderingSurface->gc, NS_TO_GDK_RGB(aColor));
-
+/* as per the motif code.. probibly shouldn't set both of these in the same
+ * function (pav)
+ */
+  ::gdk_rgb_gc_set_foreground(mRenderingSurface->gc, NS_TO_GDK_RGB(mCurrentColor));
+  ::gdk_rgb_gc_set_background(mRenderingSurface->gc, NS_TO_GDK_RGB(mCurrentColor));
+  
   return NS_OK;
 }
 
@@ -428,10 +431,46 @@ NS_IMETHODIMP nsRenderingContextGTK::SetFont(nsIFontMetrics *aFontMetrics)
 
 NS_IMETHODIMP nsRenderingContextGTK::SetLineStyle(nsLineStyle aLineStyle)
 {
+  if (aLineStyle != mCurrentLineStyle)
+  {
+    XGCValues values ;
+
+    switch(aLineStyle)
+    { 
+      case nsLineStyle_kSolid:
+        ::gdk_gc_set_line_attributes(mRenderingSurface->gc,
+                          1, GDK_LINE_SOLID, (GdkCapStyle)0, (GdkJoinStyle)0);
+        break;
+
+      case nsLineStyle_kDashed: {
+        static char dashed[2] = {4,4};
+
+        ::gdk_gc_set_dashes(mRenderingSurface->gc, 
+                     0, dashed, 2);
+        } break;
+
+      case nsLineStyle_kDotted: {
+        static char dotted[2] = {3,1};
+
+        ::gdk_gc_set_dashes(mRenderingSurface->gc, 
+                     0, dotted, 2);
+         }break;
+
+      default:
+        break;
+
+    }
+    
+    mCurrentLineStyle = aLineStyle ;
+  }
+
+  return NS_OK;
+
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetLineStyle(nsLineStyle &aLineStyle)
 {
+  aLineStyle = mCurrentLineStyle;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
@@ -474,10 +513,9 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
     return NS_ERROR_FAILURE;
   }
  
- pixmap = ::gdk_pixmap_new(mRenderingSurface->drawable, aBounds->width, aBounds->height, -1);
- nsDrawingSurfaceGTK * surface = new nsDrawingSurfaceGTK();
+  pixmap = ::gdk_pixmap_new(mRenderingSurface->drawable, aBounds->width, aBounds->height, -1);
+  nsDrawingSurfaceGTK * surface = new nsDrawingSurfaceGTK();
 
-// surface->drawable = mRenderingSurface->drawable;
   surface->drawable = pixmap;
   surface->gc       = mRenderingSurface->gc;
 
@@ -514,6 +552,26 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  PRUint32 i ;
+
+  GdkPoint *pts = new GdkPoint[aNumPoints];
+	for (PRInt32 i = 0; i < aNumPoints; i++)
+  {
+    nsPoint p = aPoints[i];
+    mTMatrix->TransformCoord(&p.x,&p.y);
+    pts[i].x = p.x;
+    pts[i].y = p.y;
+  }
+
+  ::gdk_draw_lines(mRenderingSurface->drawable,
+                   mRenderingSurface->gc,
+                   pts, aNumPoints);
+
+  delete[] pts;
+
   return NS_OK;
 }
 
