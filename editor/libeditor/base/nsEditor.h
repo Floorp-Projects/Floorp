@@ -34,6 +34,7 @@
 #include "nsIComponentManager.h"
 #include "nsIEditProperty.h"
 #include "nsIFileSpec.h"
+#include "nsIDOMCharacterData.h"
 
 class nsIEditActionListener;
 class nsIDOMCharacterData;
