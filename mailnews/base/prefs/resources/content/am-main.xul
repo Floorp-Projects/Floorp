@@ -1,8 +1,10 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
-<!DOCTYPE window [
 
+
+<!DOCTYPE window
+[
 <!ENTITY accountTitle.label "Account Settings">
 <!ENTITY accountName.label "Account Name:">
 <!ENTITY accountNameDesc.label "The account name identitifies each account">
@@ -20,11 +22,12 @@
 <!ENTITY attachVCard.label "Attach my vCard to messages">
 ]>
 
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-     style="height: 100%; width: 100%;"
-     onload = ""> 
-    <box align="vertical" flex="100%" style="height: 100%; width: 100%;">
+     style="height:100%; width:100%"
+     align="vertical"> 
+     
     <html:div>&accountTitle.label;</html:div>
 
     <box align="vertical" flex="100%" class="cleanborder">
@@ -39,8 +42,7 @@
 
     <html:div>&identityTitle.label;</html:div>
     <box align="vertical" flex="100%" class="cleanborder">
-    <html:div>&identityDesc.label;
-    </html:div>
+    <html:div>&identityDesc.label;</html:div>
     <box align="horizonal">
       <spring flex="100%"/>
       <html:div>&name.label;</html:div>
@@ -77,5 +79,5 @@
       </html:select>
     </html:div>
     </box>
-  </box>
-</xul:window>
+
+</window>

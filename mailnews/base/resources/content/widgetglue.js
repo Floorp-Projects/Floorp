@@ -226,7 +226,7 @@ function MsgNewFolder()
 function MsgAccountManager()
 {
     dump('Opening account manager..\n');
-    window.openDialog("chrome://messenger/content/AccountManager.xul", "AccountManager", "chrome");
+    window.open("chrome://messenger/content/AccountManager.xul", "AccountManager", "chrome");
 }
 
 function MsgSubscribe()

@@ -7,18 +7,23 @@
 <!ENTITY accountManagerTitle.label "Account Manager">
 
 ]>
-<xul:window id="account-manager" xmlns:html="http://www.w3.org/TR/REC-html40"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="Startup()" title="&accountManagerTitle.label;"
-    style="width:100%; height:100%">
 
-<html:script language="javascript" src="AccountManager.js"/>
+
+<window	id="account-manager" xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		title="&accountManagerTitle.label;"
+        width="600" height="420"
+		align="horizontal">
+
+	<html:script language="javascript" src="AccountManager.js"/>
+
 	<box align="horizontal" flex="100%">
 		<box align="vertical" flex="25%">
-			<html:iframe flex="100%" id="accounttree" name="accounttree" style="border:none; border-bottom:thin solid" src="chrome://messenger/content/accounttree.xul"/> 
+			<html:iframe flex="100%" name="accounttree" style="border:none; border-bottom:thin solid" src="chrome://messenger/content/accounttree.xul"/> 
 		</box>
 		<box align="vertical" flex="75%">
-			<html:iframe flex="100%" id="prefframe" name="prefframe" style="border:none; border-bottom:thin solid" src="chrome://messenger/content/am-main.xul"/> 
+			<html:iframe flex="100%" name="prefframe" style="border:none; border-bottom:thin solid" src="chrome://messenger/content/am-main.xul"/> 
 		</box>
 	</box>
-</xul:window>
+
+</window>
