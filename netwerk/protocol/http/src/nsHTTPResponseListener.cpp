@@ -217,14 +217,13 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandle
                       mHeadersDone(PR_FALSE),
                       mBytesReceived(0),
                       mBodyBytesReceived (0),
-                      mCompressHeaderChecked (PR_FALSE)
+                      mCompressHeaderChecked (PR_FALSE),
+                      mChunkHeaderChecked (PR_FALSE)
 {
     mChannel->mHTTPServerListener = this;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPServerListener [this=%x].\n", this));
-
-	mChunkConverterPushed = PR_FALSE;
 }
 
 nsHTTPServerListener::~nsHTTPServerListener()
@@ -367,39 +366,48 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 					    trans -> SetBytesExpected (0);
 				}
 
-				if (!mChunkConverterPushed && mResponse -> isChunkedResponse ())
-				{
-					NS_WITH_SERVICE (nsIStreamConverterService, 
-                            StreamConvService, kStreamConverterServiceCID, &rv);
-					if (NS_FAILED(rv)) return rv;
+                if (!mChunkHeaderChecked)
+                {
+                    mChunkHeaderChecked = PR_TRUE;
+                    
+                    nsXPIDLCString chunkHeader;
+                    rv = mResponse -> GetHeader (nsHTTPAtoms::Transfer_Encoding, getter_Copies (chunkHeader));
+                    
+                    if (NS_SUCCEEDED (rv) && chunkHeader)
+                    {
+    					NS_WITH_SERVICE (nsIStreamConverterService, 
+                                StreamConvService, kStreamConverterServiceCID, &rv);
+		    			if (NS_FAILED(rv)) return rv;
 
-					nsString2 fromStr ( "chunked" );
-					nsString2 toStr   ("unchunked");
-				    nsCOMPtr<nsIStreamListener> converterListener;
-					rv = StreamConvService->AsyncConvertData(
-                            fromStr.GetUnicode(), 
-                            toStr.GetUnicode(), 
-                            mResponseDataListener, 
-                            channel, 
-                            getter_AddRefs (converterListener));
-					if (NS_FAILED(rv)) return rv;
-					mResponseDataListener = converterListener;
-					mChunkConverterPushed = PR_TRUE;
+			    		nsString2 fromStr ( chunkHeader);
+				    	nsString2 toStr   ("unchunked" );
+				    
+                        nsCOMPtr<nsIStreamListener> converterListener;
+					    rv = StreamConvService->AsyncConvertData(
+                                fromStr.GetUnicode(), 
+                                toStr.GetUnicode(), 
+                                mResponseDataListener, 
+                                channel, 
+                                getter_AddRefs (converterListener));
+					    if (NS_FAILED(rv)) return rv;
+					    mResponseDataListener = converterListener;
+                    }
 				}
 
                 if (!mCompressHeaderChecked)
                 {
-                    rv = mResponse -> GetHeader (nsHTTPAtoms::Content_Encoding, getter_Copies (mCompressHeader));
+                    nsXPIDLCString compressHeader;
+                    rv = mResponse -> GetHeader (nsHTTPAtoms::Content_Encoding, getter_Copies (compressHeader));
                     mCompressHeaderChecked = PR_TRUE;
 
-                    if (NS_SUCCEEDED (rv) && mCompressHeader)
+                    if (NS_SUCCEEDED (rv) && compressHeader)
                     {
     					NS_WITH_SERVICE (nsIStreamConverterService, 
                                 StreamConvService, kStreamConverterServiceCID, &rv);
 					    if (NS_FAILED(rv)) return rv;
 
-					    nsString2 fromStr ( mCompressHeader );
-					    nsString2 toStr   (  "uncompressed" );
+					    nsString2 fromStr ( compressHeader );
+					    nsString2 toStr   ( "uncompressed" );
 				    
                         nsCOMPtr<nsIStreamListener> converterListener;
 					    rv = StreamConvService->AsyncConvertData(
@@ -502,18 +510,29 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel,
             rv = mResponse -> GetServerVersion (&ver);
             if (NS_SUCCEEDED (rv))
             {
-                HTTPConnectionToken token = mResponse -> GetHttpConnectionToken ();
+                nsXPIDLCString connectionHeader;
+                PRBool usingProxy = PR_FALSE;
+                
+                if (mChannel)
+                    mChannel -> GetUsingProxy (&usingProxy);
+
+                if (usingProxy)
+                    rv = mResponse -> GetHeader (nsHTTPAtoms::Proxy_Connection, getter_Copies (connectionHeader));
+                else
+                    rv = mResponse -> GetHeader (nsHTTPAtoms::Connection      , getter_Copies (connectionHeader));
 
                 if (ver == HTTP_ONE_ONE )
                 {
                     // ruslan: some older incorrect 1.1 servers may do this
-                    if (token != HTTP_CONNECTION_TOKEN_CLOSE)
-                        keepAlive = PR_TRUE;
+                    if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcmp (connectionHeader,    "close"  ))
+                        keepAlive = PR_FALSE;
+                    else
+                        keepAlive =  PR_TRUE;
                 }
                 else
                 if (ver == HTTP_ONE_ZERO)
                 {
-                    if (token == HTTP_CONNECTION_TOKEN_KEEPALIVE)
+                    if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcmp (connectionHeader, "keep-alive"))
                         keepAlive = PR_TRUE;
                 }
             }
