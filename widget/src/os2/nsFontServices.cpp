@@ -251,7 +251,7 @@ class nsFontNameIterator : public nsIFontNameIterator
       nsresult rc = NS_ERROR_FAILURE;
       if( mCurrent)
       {
-         aString->SetString( mCurrent->GetName());
+         aString->AssignWithConversion( mCurrent->GetName());
          rc = NS_OK;
       }
       return rc;

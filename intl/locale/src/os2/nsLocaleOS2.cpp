@@ -83,12 +83,12 @@ static int GetLocaleCategory( const nsString *aCat)
 {
    int category = -1;
 
-   if( aCat->Equals( "NSILOCALE_TIME"))          category = LC_TIME;
-   else if( aCat->Equals( "NSILOCALE_COLLATE"))  category = LC_COLLATE;
-   else if( aCat->Equals( "NSILOCALE_CTYPE"))    category = LC_CTYPE;
-   else if( aCat->Equals( "NSILOCALE_MONETARY")) category = LC_MONETARY;
-   else if( aCat->Equals( "NSILOCALE_MESSAGES")) category = LC_MESSAGES;
-   else if( aCat->Equals( "NSILOCALE_NUMERIC"))  category = LC_NUMERIC;
+   if( aCat->EqualsWithConversion( "NSILOCALE_TIME"))          category = LC_TIME;
+   else if( aCat->EqualsWithConversion( "NSILOCALE_COLLATE"))  category = LC_COLLATE;
+   else if( aCat->EqualsWithConversion( "NSILOCALE_CTYPE"))    category = LC_CTYPE;
+   else if( aCat->EqualsWithConversion( "NSILOCALE_MONETARY")) category = LC_MONETARY;
+   else if( aCat->EqualsWithConversion( "NSILOCALE_MESSAGES")) category = LC_MESSAGES;
+   else if( aCat->EqualsWithConversion( "NSILOCALE_NUMERIC"))  category = LC_NUMERIC;
 
    return category;
 }
@@ -241,7 +241,7 @@ nsresult nsOS2Locale::GetCategory( const nsString *aCat, nsString *aLocale)
       UniQueryLocaleObject( mLocaleObject, category,
                             UNI_MBS_STRING_POINTER,
                             (void**) &pszLocale);
-      aLocale->SetString( pszLocale);
+      aLocale->AssignWithConversion( pszLocale);
       UniFreeMem( pszLocale);
    }
 

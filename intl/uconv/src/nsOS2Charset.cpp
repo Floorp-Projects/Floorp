@@ -68,7 +68,7 @@ nsOS2Charset::nsOS2Charset()
   UniQueryLocaleItem( locale_object, (LocaleItem)109, &pString);
 
   // This is something like ISO8859-1
-  mCharset.SetString( (PRUnichar*) pString);
+  mCharset.Assign( (PRUnichar*) pString);
 
   UniFreeMem( pString);
   UniFreeLocaleObject( locale_object);

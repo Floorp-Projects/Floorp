@@ -98,6 +98,7 @@ class nsMenuItem : public nsIMenuItem, public nsIMenuListener
    nsIMenuListener *mMenuListener;
    nsString         mCmdString;    // JS command
    nsIDOMElement   *mDOMElement;   // dom element for item
+   nsIDOMNode      *mDOMNode;
    nsIWebShell     *mWebShell;
    EMenuItemType    mMenuType;
 };

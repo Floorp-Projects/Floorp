@@ -72,7 +72,7 @@ nsresult nsCollationOS2::GetSortKeyLen( const nsCollationStrength  aStrength,
    if( !aOutLen)
       return NS_ERROR_NULL_POINTER;
 
-   // XXXX M15 LAUNCH HACK: TODO: track down why we get here before Initialize has been called...OS2TODO 
+   // XXXX M15 LAUNCH HACK: TODO: track down why we get here before Initialize has been called...
    if (!mLocaleObject)
      UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar*)L"", &mLocaleObject);
 
@@ -158,7 +158,7 @@ nsresult nsCollationOS2::CreateSortKey( const nsCollationStrength  aStrength,
    {
       key = new PRUint8[ length];
       CreateRawSortKey( aStrength, aStringIn, key, &length);
-      aKey.SetString( (PRUnichar*) key);
+      aKey.Assign( (PRUnichar*) key);
       delete [] key;
    }
  

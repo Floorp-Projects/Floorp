@@ -111,6 +111,7 @@ class nsDynamicMenu : public nsMenuBase
    // Common methods
    NS_IMETHOD AddMenuListener( nsIMenuListener *aMenuListener);
    NS_IMETHOD RemoveMenuListener( nsIMenuListener *aMenuListener);
+   NS_IMETHOD GetDOMNode( nsIDOMNode ** aMenuNode);
    NS_IMETHOD SetDOMNode( nsIDOMNode *aMenuNode);
    NS_IMETHOD SetDOMElement( nsIDOMElement *aMenuElement);
    NS_IMETHOD SetWebShell( nsIWebShell *aWebShell);
@@ -131,6 +132,8 @@ class nsDynamicMenu : public nsMenuBase
      { return nsDynamicMenu::AddMenuListener( aMenuListener); }              \
    NS_IMETHOD RemoveMenuListener( nsIMenuListener *aMenuListener)            \
      { return nsDynamicMenu::RemoveMenuListener( aMenuListener); }           \
+   NS_IMETHOD GetDOMNode( nsIDOMNode **aMenuNode)                            \
+     { return nsDynamicMenu::GetDOMNode( aMenuNode); }                       \
    NS_IMETHOD SetDOMNode( nsIDOMNode *aMenuNode)                             \
      { return nsDynamicMenu::SetDOMNode( aMenuNode); }                       \
    NS_IMETHOD SetDOMElement( nsIDOMElement *aMenuElement)                    \

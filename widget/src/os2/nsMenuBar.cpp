@@ -212,10 +212,12 @@ nsEventStatus nsMenuBar::MenuConstruct( const nsMenuEvent &aMenuEvent,
       {
          nsString nodeType, menuName;
          pMenuElement->GetNodeName( nodeType);
-         if( nodeType.Equals( "menu"))
+         if( nodeType.EqualsWithConversion( "menu"))
          {
             // new submenu
-            pMenuElement->GetAttribute( nsAutoString( "value"), menuName);
+	    nsString val;
+	    val.AssignWithConversion("value");
+            pMenuElement->GetAttribute( val, menuName);
             nsIMenu *pMenu = new nsMenu;
             NS_ADDREF(pMenu);
             pMenu->Create( (nsIMenuBar*)this, menuName);

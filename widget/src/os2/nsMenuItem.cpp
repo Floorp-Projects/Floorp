@@ -343,6 +343,21 @@ nsresult nsMenuItem::GetDOMElement( nsIDOMElement **aDOMElement)
    return NS_OK;
 }
 
+nsresult nsMenuItem::GetDOMNode(nsIDOMNode ** menuNode)
+{
+  if(menuNode) {
+    *menuNode = mDOMNode;
+    //    NS_IF_ADDREF(menuNode);
+  }
+  return NS_OK;
+}
+
+nsresult nsMenuItem::SetDOMNode(nsIDOMNode * menuNode)
+{
+  mDOMNode = menuNode;
+  return NS_OK;
+}
+
 nsresult nsMenuItem::SetWebShell( nsIWebShell *aWebShell)
 {
    mWebShell = aWebShell;
@@ -377,16 +392,6 @@ nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
 nsEventStatus nsMenuItem::MenuDestruct( const nsMenuEvent &aMenuEvent)
 {
    return nsEventStatus_eIgnore;
-}
-
-nsresult nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
-{
-  return NS_OK;
-}
-
-nsresult nsMenuItem::SetDOMNode(nsIDOMNode * aDOMNode)
-{
-  return NS_OK;
 }
 
 nsresult nsMenuItem::SetShortcutChar(const nsString &aText)

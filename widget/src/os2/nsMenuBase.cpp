@@ -153,7 +153,7 @@ nsresult nsMenuBase::InsertItemAt( nsISupports *aThing, PRUint32 aPos)
 
       nsString aString;
       pMenu->GetLabel( aString);
-      pStr = gModuleData.ConvertFromUcs( aString);
+      pStr.AssignWithConversion( gModuleData.ConvertFromUcs( aString));
 
       mI.afStyle |= MIS_SUBMENU | MIS_TEXT;
 
@@ -180,7 +180,7 @@ nsresult nsMenuBase::InsertItemAt( nsISupports *aThing, PRUint32 aPos)
       {
          mI.afStyle |= MIS_TEXT;
          pPMItem->GetLabel( aString);
-         pStr = gModuleData.ConvertFromUcs( aString);
+         pStr.AssignWithConversion( gModuleData.ConvertFromUcs( aString));
       }
       NS_RELEASE(pItem);
    }
@@ -284,6 +284,7 @@ BOOL nsMenuBase::VerifyIndex( PRUint32 index)
    return index == NS_MIT_END || index < count;
 }
 
+
 // Dummy nsIMenuListener implementation
 
 nsEventStatus nsMenuBase::MenuItemSelected( const nsMenuEvent &aMenuEvent)
@@ -382,36 +383,44 @@ nsEventStatus nsDynamicMenu::MenuSelected( const nsMenuEvent &aMenuEvent)
       {
          nsString nodeType;
          pItemElement->GetNodeName( nodeType);
-         if( nodeType.Equals( "menuitem"))
+         if( nodeType.EqualsWithConversion( "menuitem"))
          {
             // find attributes of menu item & create gui peer
             nsString itemName;
             nsIMenuItem *pItem = new nsMenuItem;
             NS_ADDREF(pItem);
-            pItemElement->GetAttribute( nsAutoString("value"), itemName);
+	    nsString val;
+	    val.AssignWithConversion("value");
+            pItemElement->GetAttribute( val, itemName);
             pItem->Create( (nsIMenu*)this, itemName, PR_FALSE);
             InsertItemAt( pItem);
 
             nsString itemCmd, disabled, checked;
-            pItemElement->GetAttribute( nsAutoString("oncommand"), itemCmd);
-            pItemElement->GetAttribute( nsAutoString("disabled"), disabled);
-            pItemElement->GetAttribute( nsAutoString("checked"), checked);
+	    val.AssignWithConversion("oncommand");
+            pItemElement->GetAttribute( val, itemCmd);
+	    val.AssignWithConversion("disabled");
+            pItemElement->GetAttribute( val, disabled);
+	    val.AssignWithConversion("checked");
+            pItemElement->GetAttribute( val, checked);
             pItem->SetCommand( itemCmd);
             pItem->SetWebShell( mWebShell);
             pItem->SetDOMElement( pItemElement);
-            pItem->SetEnabled( !disabled.Equals( nsAutoString("true")));
-            pItem->SetChecked( checked.Equals( nsAutoString("true")));
+	    val.AssignWithConversion("true");
+            pItem->SetEnabled( !disabled.Equals( val));
+            pItem->SetChecked( checked.Equals( val));
             NS_RELEASE(pItem); // ownership of the item has passed to nsMenuBase
          }
-         else if( nodeType.Equals( "menuseparator"))
+         else if( nodeType.EqualsWithConversion( "menuseparator"))
             InsertItemAt( 0);
-         else if( nodeType.Equals( "menu"))
+         else if( nodeType.EqualsWithConversion( "menu"))
          {
             // new submenu
             nsString menuName;
             nsIMenu *pMenu = new nsMenu;
             NS_ADDREF(pMenu);
-            pItemElement->GetAttribute( nsAutoString("value"), menuName);
+	    nsString val;
+	    val.AssignWithConversion("value");
+            pItemElement->GetAttribute( val, menuName);
             pMenu->Create( (nsIMenu*)this, menuName);
             pMenu->SetDOMNode( pItemNode);
             pMenu->SetDOMElement( pItemElement);
@@ -427,4 +436,13 @@ nsEventStatus nsDynamicMenu::MenuSelected( const nsMenuEvent &aMenuEvent)
    }
 
    return nsEventStatus_eIgnore;
+}
+
+nsresult nsDynamicMenu::GetDOMNode(nsIDOMNode ** menuNode)
+{
+  if(menuNode) {
+    *menuNode = mDOMNode;
+    //    NS_IF_ADDREF(menuNode);
+  }
+  return NS_OK;
 }
