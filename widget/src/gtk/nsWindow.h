@@ -45,6 +45,12 @@ public:
     nsWindow();
     virtual ~nsWindow();
 
+    // nsIsupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  
+
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
     NS_IMETHOD           PreCreateWidget(nsWidgetInitData *aWidgetInitData);

@@ -33,9 +33,6 @@
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
-PRBool nsWidget::OnResizing = PR_FALSE;
-PRBool nsWidget::OnMoving = PR_FALSE;
-
 //#define DBG 1
 
 nsWidget::nsWidget()
@@ -59,9 +56,15 @@ nsWidget::nsWidget()
   mBounds.height = 0;
   mIsDestroying = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
-  mMoveEventsPending = 0;
-  mResizeEventsPending = 0;
   mIsToplevel = PR_FALSE;
+  mRequestedSize.x = 0;
+  mRequestedSize.y = 0;
+  mRequestedSize.width = 0;
+  mRequestedSize.height = 0;
+  mOldSize.x = 0;
+  mOldSize.y = 0;
+  mOldSize.width = 0;
+  mOldSize.height = 0;
 }
 
 nsWidget::~nsWidget()
@@ -178,7 +181,6 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
   mBounds.x = aX;
   mBounds.y = aY;
-  mMoveEventsPending++;
   ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
   return NS_OK;
 }
@@ -186,20 +188,21 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 #if 0
-  printf("nsWidget::Resize %s (%p) to %d %d %d events pending %s\n",
+  printf("nsWidget::Resize %s (%p) to %d %d\n",
          gtk_widget_get_name(mWidget), this,
-         aWidth, aHeight, mResizeEventsPending,
-         ( nsWidget::OnResizing ? "OnResize in progress" : "" ));
+         aWidth, aHeight);
 #endif
-  if (nsWidget::OnResizing && mBounds.width == aWidth &&  mBounds.height == aHeight) {
-    //    printf("Skipping resize because we're in an OnResize and we just got set to the same size.\n");
-  }
-  else {
-    mBounds.width  = aWidth;
-    mBounds.height = aHeight;
-    mResizeEventsPending++;
-    ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
-  }
+  mOldSize.x = mBounds.x;
+  mOldSize.y = mBounds.y;
+  mOldSize.width = aWidth;
+  mOldSize.height = aWidth;
+  mRequestedSize.x = mBounds.x;
+  mRequestedSize.y = mBounds.y;
+  mRequestedSize.width = aWidth;
+  mRequestedSize.height = aHeight;
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
 
   if (aRepaint)
     if (GTK_WIDGET_VISIBLE (mWidget))
@@ -536,6 +539,19 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsNativeWidget aNativeParent)
 {
   GtkWidget *parentWidget = nsnull;
+  nsWidget  *blah = NULL;
+
+#if 0
+  if (aParent)
+    g_print("nsWidget::CreateWidget (%p) nsIWidget parent\n",
+            this);
+  else if (aNativeParent)
+    g_print("nsWidget::CreateWidget (%p) native parent\n",
+            this);
+  else if(aAppShell)
+    g_print("nsWidget::CreateWidget (%p) nsAppShell parent\n",
+            this);
+#endif
 
   gtk_widget_push_colormap(gdk_rgb_get_cmap());
   gtk_widget_push_visual(gdk_rgb_get_visual());
@@ -554,6 +570,9 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   }
 
   mBounds = aRect;
+  // if we came from a native parent, make sure to catch the resize events.
+  if (aNativeParent == NULL)
+    mIsToplevel = PR_TRUE;
   CreateNative (parentWidget);
 
   Resize(aRect.width, aRect.height, PR_FALSE);
@@ -561,12 +580,15 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   if (parentWidget)
     gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
 
+  // this is handled now in the nsWindow class
+#if 0
   // connect the size allocate to the
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "size_allocate",
-                     GTK_SIGNAL_FUNC(handle_size_allocate),
-                     this);
-
+  if (mIsToplevel)
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+                       "size_allocate",
+                       GTK_SIGNAL_FUNC(handle_size_allocate),
+                       this);
+#endif
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 

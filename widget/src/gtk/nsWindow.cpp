@@ -38,7 +38,34 @@
 
 //#define DBG 0
 
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+// for nsISupports
+NS_IMPL_ADDREF(nsWindow)
+NS_IMPL_RELEASE(nsWindow)
+
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @modify gpk 8/4/98
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ *
+*/
+nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    static NS_DEFINE_IID(kCWindow, NS_WINDOW_CID);
+    if (aIID.Equals(kCWindow)) {
+        *aInstancePtr = (void*) ((nsWindow*)this);
+        AddRef();
+        return NS_OK;
+    }
+    return nsWidget::QueryInterface(aIID,aInstancePtr);
+}
+
+
 
 //-------------------------------------------------------------------------
 //
@@ -151,6 +178,7 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 {
+  gchar *name = NULL;
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
   GTK_WIDGET_SET_FLAGS(mWidget, GTK_CAN_FOCUS);
   gtk_widget_set_app_paintable(mWidget, PR_TRUE);
@@ -180,7 +208,8 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mShell), mVBox);
     gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
-    mIsToplevel = PR_TRUE;
+    // this is done in CreateWidget now...
+    //mIsToplevel = PR_TRUE;
     gtk_signal_connect(GTK_OBJECT(mShell),
                      "delete_event",
                      GTK_SIGNAL_FUNC(handle_delete_event),
@@ -189,7 +218,13 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   }
 
   // Force cursor to default setting
-  gtk_widget_set_name(mWidget, "nsWindow");
+  name = (char *)g_malloc(50);
+  memset(name, 0, 50);
+  if (mIsToplevel)
+    sprintf(name, "nsWindow (%p) (TopLevel)", this);
+  else
+    sprintf(name, "nsWindow (%p)", this);
+  gtk_widget_set_name(mWidget, name);
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
   return NS_OK;
@@ -203,12 +238,10 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
-#if 0
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
                      "size_allocate",
                      GTK_SIGNAL_FUNC(handle_size_allocate),
                      this);
-#endif
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
                      "button_press_event",
 		     GTK_SIGNAL_FUNC(handle_button_press_event),

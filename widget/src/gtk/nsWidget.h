@@ -113,14 +113,10 @@ class nsWidget : public nsBaseWidget
     PRBool     ConvertStatus(nsEventStatus aStatus);
     PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
     PRBool     DispatchStandardEvent(PRUint32 aMsg);
-  // keep track of the events pending...
-    PRUint32   mMoveEventsPending;
-    PRUint32   mResizeEventsPending;
   // are we a "top level" widget?
     PRBool     mIsToplevel;
-  // are we doing a OnResize or OnMove?  Be careful not to recurse.
-    static PRBool OnResizing;
-    static PRBool OnMoving;
+    nsRect     mRequestedSize;
+    nsRect     mOldSize;
  protected:
     virtual void InitCallbacks(char * aName = nsnull);
     virtual void OnDestroy();

@@ -37,6 +37,14 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
+static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
+
+struct EventInfo {
+  nsWidget *widget;  // the widget
+  nsRect   *rect;    // the rect
+};
+
 struct nsKeyConverter {
   int vkCode; // Platform independent key code
   int keysym; // GDK keysym key code
@@ -328,10 +336,29 @@ void InitFocusEvent(GdkEventFocus *aGEF,
   =============================================================
   ==============================================================*/
 
+// this function will clear the queue of any resize
+// or move events
+static gint
+idle_resize_cb(gpointer data)
+{
+  EventInfo *info = (EventInfo *)data;
+  //  g_print("idle_resize_cb: sending event for %p\n",
+  //          info->widget);
+  info->widget->OnResize(*info->rect);
+  NS_RELEASE(info->widget);
+  g_free(info);
+  // this will return 0 if the list is
+  // empty.  that will remove this idle timeout.
+  // if it's > 1 then it will be restarted and
+  // this will be run again.
+  return FALSE;
+}
+
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
-  nsWidget *widget = (nsWidget *)p;
-  nsRect   rect;
+  nsWindow *widget = (nsWindow *)p;
+  EventInfo *eventinfo = NULL;
+  PRBool is_window = PR_FALSE;
 #if 0
   g_print("size_allocate: %s (%p), {x=%i, y=%i, w=%i, h=%i}\n",
           gtk_widget_get_name(w),
@@ -340,44 +367,60 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
           alloc->y,
           alloc->width,
           alloc->height);
+  g_print("size_allocate: old size: {x=%i, y=%i, w=%i, h=%i}\n",
+          widget->mOldSize.x,
+          widget->mOldSize.y,
+          widget->mOldSize.width,
+          widget->mOldSize.height);
+  g_print("size_allocate: requested size: {x=%i, y=%i, w=%i, h=%i}\n",
+          widget->mRequestedSize.x,
+          widget->mRequestedSize.y,
+          widget->mRequestedSize.width,
+          widget->mRequestedSize.height);
 #endif
-  rect.x = 0;
-  rect.y = 0;
-  rect.width = alloc->width;
-  rect.height = alloc->height;
-  // always send toplevel resize events and don't lock it.
-  if (widget->mIsToplevel) {
-    printf("handle_size_allocate: top level resize\n");
-    widget->mResizeEventsPending = 0;
-    widget->OnResizing = PR_TRUE;
-    widget->OnResize(rect);
-    widget->OnResizing = PR_FALSE;
+  // only send the event if someone requested this...
+  if (widget->mRequestedSize.x != 0 &&
+      widget->mRequestedSize.y != 0 &&
+      widget->mRequestedSize.width != 0 &&
+      widget->mRequestedSize.height != 0 ) {
+    //    g_print("size_allocate: sending event because it was requested....\n");
+    eventinfo = (EventInfo *)g_malloc(sizeof(struct EventInfo));
+    eventinfo->rect = new nsRect();
+    eventinfo->rect->x = 0;
+    eventinfo->rect->y = 0;
+    // lying!
+    eventinfo->rect->width = widget->mRequestedSize.width;
+    eventinfo->rect->height = widget->mRequestedSize.height;
+    eventinfo->widget = widget;
+    // don't go destroying my widget until I'm done with it, dammit.
+    NS_ADDREF(widget);
+    gtk_idle_add(idle_resize_cb, eventinfo);
+    widget->mOldSize.x = alloc->x;
+    widget->mOldSize.y = alloc->y;
+    widget->mOldSize.width = alloc->width;
+    widget->mOldSize.height = alloc->height;
   }
-  else if (widget->mResizeEventsPending) {
-    //    printf("%d resize events pending.\n", widget->mResizeEventsPending);
-    // reset the counter
-    widget->mResizeEventsPending = 0;
-    // only send the event it we are not already doing a move
-    if (widget->OnResizing == PR_FALSE) {
-      widget->OnResizing = PR_TRUE;
-      widget->OnResize(rect);
-      widget->OnResizing = PR_FALSE;
-    } else {
-      printf("handle_size_allocate: skipping notification of resize event - OnResize already in progress.\n");
-    }
+  else if (widget->mIsToplevel &&
+           (widget->mOldSize.width != alloc->width ||
+            widget->mOldSize.height != alloc->height)) {
+    //g_print("size_allocate: sending event for toplevel....\n");
+    eventinfo = (EventInfo *)g_malloc(sizeof(struct EventInfo));
+    eventinfo->rect = new nsRect();
+    eventinfo->rect->x = 0;
+    eventinfo->rect->y = 0;
+    // lying!
+    eventinfo->rect->width = alloc->width;
+    eventinfo->rect->height = alloc->height;
+    eventinfo->widget = widget;
+    // don't go destroying my widget until I'm done with it, dammit.
+    NS_ADDREF(widget);
+    gtk_idle_add(idle_resize_cb, eventinfo);
+    widget->mOldSize.x = alloc->x;
+    widget->mOldSize.y = alloc->y;
+    widget->mOldSize.width = alloc->width;
+    widget->mOldSize.height = alloc->height;
   }
-  if (widget->mMoveEventsPending) {
-    // reset the counter
-    widget->mMoveEventsPending = 0;
-    // careful not to reenter the resizing
-    if (widget->OnMoving == PR_FALSE) {
-      widget->OnMoving = PR_TRUE;
-      widget->OnMove(alloc->x, alloc->y);
-      widget->OnMoving = PR_FALSE;
-    } else {
-      printf("handle_size_allocate: skipping notification of move event - OnMove already in progress.\n");
-    }
-  }
+  memset(&widget->mRequestedSize, 0, sizeof(nsRect));
 }
 
 #if 0
