@@ -337,8 +337,15 @@ if ($action eq 'new') {
             SqlQuote($product) . "," .
             SqlQuote($description) . "," .
             SqlQuote($milestoneurl) . "," .
-            $disallownew . "," .
-            "$votesperuser, $maxvotesperbug, $votestoconfirm, " .
+            # had tainting issues under cygwin, IIS 5.0, perl -T %s %s
+            # see bug 208647. http://bugzilla.mozilla.org/show_bug.cgi?id=208647
+            # had to de-taint $disallownew, $votesperuser, $maxvotesperbug,
+            #  and $votestoconfirm w/ SqlQuote()
+            # - jpyeron@pyerotechnics.com
+            SqlQuote($disallownew) . "," .
+            SqlQuote($votesperuser) . "," .
+            SqlQuote($maxvotesperbug) . "," .
+            SqlQuote($votestoconfirm) . "," .
             SqlQuote($defaultmilestone) . ")");
     SendSQL("SELECT LAST_INSERT_ID()");
     my $product_id = FetchOneColumn();
