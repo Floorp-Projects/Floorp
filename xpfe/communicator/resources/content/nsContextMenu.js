@@ -62,6 +62,11 @@ nsContextMenu.prototype = {
     },
     // Initialize context menu.
     initMenu : function ( popup ) {
+        const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        if ( document.popupNode.namespaceURI == xulNS ) {
+          this.shouldDisplay = false;
+          return;
+        }
         // Save menu.
         this.menu = popup;
 
@@ -226,11 +231,6 @@ nsContextMenu.prototype = {
     },
     // Set various context menu attributes based on the state of the world.
     setTarget : function ( node ) {
-        const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-        if ( node.namespaceURI == xulNS ) {
-          this.shouldDisplay = false;
-          return;
-        }
         // Initialize contextual info.
         this.onImage    = false;
         this.onStandaloneImage = false;
