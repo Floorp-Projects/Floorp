@@ -23,12 +23,14 @@
 #ifndef nsLogging_h__
 #define nsLogging_h__
 
-#include "nsILoggingService.h"
+#include "nslog.h"
 
 #ifdef NS_ENABLE_LOGGING
 
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
+
+////////////////////////////////////////////////////////////////////////////////
 
 class nsLoggingService : public nsILoggingService
 {
@@ -52,58 +54,41 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsTimingData {
-public:
-    nsTimingData()
-        : mStartTime(0),
-          mTotalTime(0),
-          mTotalSquaredTime(0),
-          mTimingSamples(0) {
-    }
-    PRIntervalTime              mStartTime;
-    double                      mTotalTime;
-    double                      mTotalSquaredTime;
-    PRUint32                    mTimingSamples;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 class nsLog : public nsILog
 {
 public:
+    nsLog();
+    virtual ~nsLog();
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSILOG
 
-    nsLog();
-    virtual ~nsLog();
+    NS_IMETHOD Printf(const char* format, ...);
+    NS_IMETHOD Vprintf(const char* format, va_list args);
 
     nsresult Init(const char* name, PRUint32 controlFlags, nsILogEventSink* sink);
 
 protected:
     char*                       mName;
-    PRUint32                    mControlFlags;
     PRUint32                    mIndentLevel;
-    PRUintn                     mThreadTimingDataIndex;
-    nsTimingData                mTimingData;
     nsCOMPtr<nsILogEventSink>   mSink;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsStandardLogEventSink : public nsIStandardLogEventSink
+class nsFileLogEventSink : public nsIFileLogEventSink
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSILOGEVENTSINK
-    NS_DECL_NSISTANDARDLOGEVENTSINK
+    NS_DECL_NSIFILELOGEVENTSINK
 
-    nsStandardLogEventSink();
-    virtual ~nsStandardLogEventSink();
+    nsFileLogEventSink();
+    virtual ~nsFileLogEventSink();
 
 protected:
     char*       mName;
     FILE*       mOutput;
-    PRUint32    mDebugLevel;
     PRBool      mBeginningOfLine;
     PRBool      mCloseFile;
 };

@@ -31,6 +31,7 @@ XPIDL_MODULE	= xpcom_base
 LIBRARY_NAME	= xpcombase_s
 
 CPPSRCS		= \
+		nsLogging.cpp \
 		nsAllocator.cpp \
 		nsMemoryImpl.cpp \
 		nsErrorService.cpp \
@@ -67,6 +68,7 @@ EXPORTS		= \
 		nsWeakReference.h \
 		nsWeakPtr.h \
 		nscore.h \
+		nslog.h \
 		$(NULL)
 
 ifdef NS_TRACE_MALLOC
@@ -81,6 +83,7 @@ endif
 
 XPIDLSRCS	= \
 		nsrootidl.idl \
+		nsILoggingService.idl \
 		nsISupports.idl \
 		nsIMemory.idl \
 		nsIErrorService.idl \

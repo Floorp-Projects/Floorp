@@ -32,6 +32,7 @@
 
 #include "nsMemoryImpl.h"
 #include "nsErrorService.h"
+#include "nsLogging.h"
 #include "nsArena.h"
 #include "nsByteBuffer.h"
 #ifdef PAGE_MANAGER
@@ -83,6 +84,7 @@
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_CID(kConsoleServiceCID, NS_CONSOLESERVICE_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
+static NS_DEFINE_CID(kLoggingServiceCID, NS_LOGGINGSERVICE_CID);
 // ds
 static NS_DEFINE_CID(kArenaCID, NS_ARENA_CID);
 static NS_DEFINE_CID(kByteBufferCID, NS_BYTEBUFFER_CID);
@@ -346,6 +348,14 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
                                 nsErrorService::Create);
     if (NS_FAILED(rv)) return rv;
 
+#ifdef NS_ENABLE_LOGGING
+    rv = RegisterGenericFactory(compMgr, kLoggingServiceCID,
+                                NS_LOGGINGSERVICE_CLASSNAME,
+                                NS_LOGGINGSERVICE_CONTRACTID,
+                                nsLoggingService::Create);
+    if (NS_FAILED(rv)) return rv;
+#endif
+
     rv = RegisterGenericFactory(compMgr, kArenaCID,
                                 NS_ARENA_CLASSNAME,
                                 NS_ARENA_CONTRACTID,
@@ -588,6 +598,11 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
     nsIInterfaceInfoManager* iim = XPTI_GetInterfaceInfoManager();
     NS_IF_RELEASE(iim);
 
+    // get the logging service so that it gets registered with the service 
+    // manager, and later unregistered
+#ifdef NS_ENABLE_LOGGING
+    nsCOMPtr<nsILoggingService> logServ = do_GetService(kLoggingServiceCID, &rv);
+#endif
     return rv;
 }
 

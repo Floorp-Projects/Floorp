@@ -68,6 +68,8 @@
 #include "pure.h"
 #endif
 #include "pldhash.h"
+#include "nsLogging.h"
+
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
   virtual PRInt32 operator()(void* anItem1,void* anItem2)
@@ -151,4 +153,7 @@ void XXXNeverCalled()
     ToNewCString(str1);
     ToNewCString(str2);
     PL_DHashTableFinish(NULL);
+#ifdef NS_ENABLE_LOGGING
+    nsLog();
+#endif
 }
