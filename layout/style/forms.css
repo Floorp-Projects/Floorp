@@ -107,6 +107,13 @@ select {
   -moz-box-sizing: border-box;
 }
 
+select[size] {
+  padding: 1px 0 1px 0;
+}
+select[size="1"] {
+  padding: 0;
+}
+
 select > input[type="button"] {
   position: static ! important;
   white-space: nowrap;
@@ -148,11 +155,7 @@ option {
   -moz-user-focus: none;
 }
 
-select[size] > option {
-  padding: 0 5px 0 5px;
-}
-
-select > option, select[size="1"] > option {
+select > option {
   padding: 0 5px 0 3px;
 }
 
@@ -252,8 +255,9 @@ input[type="checkbox"] {
   width: 13px;
   height: 13px;
   cursor: default;
-  vertical-align: baseline;
+  vertical-align: bottom;
   -moz-binding: none;
+  margin: 3px 4px 3px 4px;
 }
 
 /* common features of radio buttons and check boxes */
