@@ -60,21 +60,27 @@ function isPhishingURL(aLinkNode, aSilentMode)
   var href = aLinkNode.href;
   var linkTextURL = {};
   var unobscuredHostName = {};
+  var isPhishingURL = false;
 
   var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
   hrefURL  = ioService.newURI(href, null, null);
   
-  unobscuredHostName.value = hrefURL.host;
+  // only check for phishing urls if the url is an http or https link. 
+  // this prevents us from flagging imap and other internally handled urls
+  if (hrefURL.schemeIs('http') || hrefURL.schemeIs('https'))
+  {
+    unobscuredHostName.value = hrefURL.host;
   
-  if (hostNameIsIPAddress(hrefURL.host, unobscuredHostName))
-    phishingType = kPhishingWithIPAddress;
-  else if (misMatchedHostWithLinkText(aLinkNode, hrefURL, linkTextURL))
-    phishingType = kPhishingWithMismatchedHosts;
+    if (hostNameIsIPAddress(hrefURL.host, unobscuredHostName))
+      phishingType = kPhishingWithIPAddress;
+    else if (misMatchedHostWithLinkText(aLinkNode, hrefURL, linkTextURL))
+      phishingType = kPhishingWithMismatchedHosts;
 
-  var isPhishingURL = phishingType != kPhishingNotSuspicious;
+    isPhishingURL = phishingType != kPhishingNotSuspicious;
 
-  if (!aSilentMode && isPhishingURL) // allow the user to over ride the decision
-    isPhishingURL = confirmSuspiciousURL(phishingType, unobscuredHostName.value);
+    if (!aSilentMode && isPhishingURL) // allow the user to over ride the decision
+      isPhishingURL = confirmSuspiciousURL(phishingType, unobscuredHostName.value);
+  }
 
   return isPhishingURL;
 }
@@ -87,7 +93,7 @@ function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
 {
   var linkNodeText = gatherTextUnder(aLinkNode);    
   // only worry about http and https urls
-  if (linkNodeText && (aHrefURL.schemeIs('http') || aHrefURL.schemeIs('https')))
+  if (linkNodeText)
   {
     // does the link text look like a http url?
      if (linkNodeText.search(/(^http:|^https:)/) != -1)
