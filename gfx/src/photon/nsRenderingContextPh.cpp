@@ -90,7 +90,7 @@ nsRenderingContextPh :: nsRenderingContextPh()
 	mStateCache       = new nsVoidArray();
 	
 	if( mPtGC == nsnull ) mPtGC = PgGetGC();
-	
+	mPtDC = PhDCGetCurrent();
 	mInitialized   = PR_FALSE;
 	PushState();
 }
@@ -118,13 +118,9 @@ nsRenderingContextPh :: ~nsRenderingContextPh()
 
 	/* Go back to the default Photon DrawContext */
 	/* This allows the photon widgets under Viewer to work right */
+	PhDCSetCurrent(mPtDC);
 	PgSetGC( mPtGC );
 	PgSetRegion( mPtGC->rid );
-	
-	if( mGC ) {
-		PgDestroyGC( mGC );		/* this causes crashes */
-		mGC = nsnull;
-	}
 	if( mPhotonFontName ) 
 		delete [] mPhotonFontName;
 }
@@ -147,23 +143,15 @@ NS_IMETHODIMP nsRenderingContextPh :: Init( nsIDeviceContext* aContext, nsIWidge
 	
 	PhRid_t rid = PtWidgetRid( mWidget );
 	if( rid ) {
-		mGC = PgCreateGC(0);
-		if( !mGC ) 
-			return NS_ERROR_FAILURE;
-		PgSetDrawBufferSize(65000);
-		
-		/* Make sure the new GC is reset to the default settings */  
-		PgDefaultGC( mGC );
-		
 		mSurface = new nsDrawingSurfacePh();
 		if( mSurface ) {
-			res = mSurface->Init( mGC );
+			res = mSurface->Init();
 			if( res != NS_OK )
 				return NS_ERROR_FAILURE;
 			
 			mOffscreenSurface = mSurface;
 			NS_ADDREF( mSurface );
-			
+			mGC = mSurface->GetGC();
 			/* hack up code to setup new GC for on screen drawing */
 			PgSetGC( mGC );
 			PgSetRegion( rid );
@@ -614,8 +602,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( nsRect *aBounds, PRU
 	nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
 	if( surf ) {
 		NS_ADDREF(surf);
-		PhGC_t *gc = mSurface->GetGC();
-		surf->Init( gc, aBounds->width, aBounds->height, aSurfFlags );
+		surf->Init( aBounds->width, aBounds->height, aSurfFlags );
 	}
 	else 
 		return NS_ERROR_FAILURE;

@@ -66,10 +66,10 @@ public:
   //nsIDrawingSurfacePh interface
 
   /* Initialize a On-Screen Drawing Surface */
-  NS_IMETHOD Init(PhGC_t * &aGC);
+  NS_IMETHOD Init();
 
   /* Initizlize a Off-Screen Drawing Surface */
-  NS_IMETHOD Init(PhGC_t * &aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
+  NS_IMETHOD Init(PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
 
   /* Make this DrawingSurface active */
   NS_IMETHOD Select(void);
