@@ -37,14 +37,14 @@ Rights Reserved.
           coalesceduplicatearcs="false"
           multiple="true"
           ondragover="return DragOverTree(event);"
-          ondragdrop="return DropOnDirectoryTree(event);"
-          persist="sortColumn sortKey sortDirection">
+          ondragdrop="return DropOnDirectoryTree(event);">
 		
 		<template>
 			<rule>
 	          <treechildren>
 				<treeitem uri="..."
-					IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList">
+					IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"
+                                        persist="sortColumn sortKey sortDirection">
 				  <treerow>
 				    <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#DirName"
 								     IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"/>
