@@ -626,7 +626,7 @@ nsXMLElement::GetID(nsIAtom** aResult) const
   *aResult = nsnull;
   if (NS_SUCCEEDED(rv) && atom) {
     nsAutoString value;
-    rv = nsGenericContainerElement::GetAttr(kNameSpaceID_Unknown, atom,
+    rv = nsGenericContainerElement::GetAttr(kNameSpaceID_None, atom,
                                             value);
     if (NS_SUCCEEDED(rv)) {
       *aResult = NS_NewAtom(value);

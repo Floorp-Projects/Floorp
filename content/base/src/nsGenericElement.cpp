@@ -3571,8 +3571,7 @@ nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     PRInt32 index;
     for (index = 0; index < count; index++) {
       const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);
-      if ((aNameSpaceID == kNameSpaceID_Unknown ||
-           attr->mNodeInfo->NamespaceEquals(aNameSpaceID)) &&
+      if (attr->mNodeInfo->NamespaceEquals(aNameSpaceID) &&
           (attr->mNodeInfo->Equals(aName))) {
         *aPrefix = attr->mNodeInfo->GetPrefixAtom().get();
         aResult.Assign(attr->mValue);
