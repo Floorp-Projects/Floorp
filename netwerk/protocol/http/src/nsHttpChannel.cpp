@@ -449,12 +449,6 @@ nsHttpChannel::ProcessNormal()
         mResponseHead->SetHeader(nsHttp::Content_Encoding, nsnull); 
     }
 
-    // install cache listener if we still have a cache entry open
-    if (mCacheEntry) {
-        rv = CacheReceivedResponse();
-        if (NS_FAILED(rv)) return rv;
-    }
-
     // notify nsIHttpNotify implementations
     rv = nsHttpHandler::get()->OnExamineResponse(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnExamineResponse failed");
@@ -464,6 +458,13 @@ nsHttpChannel::ProcessNormal()
 
     // install stream converter if required
     ApplyContentConversions();
+
+    // install cache listener if we still have a cache entry open
+    if (mCacheEntry) {
+        rv = CacheReceivedResponse();
+        if (NS_FAILED(rv)) return rv;
+    }
+
     return NS_OK;
 }
 
@@ -2065,6 +2066,7 @@ nsHttpChannel::GetApplyConversion(PRBool *value)
 NS_IMETHODIMP
 nsHttpChannel::SetApplyConversion(PRBool value)
 {
+    LOG(("nsHttpChannel::SetApplyConversion [this=%x value=%d]\n", this, value));
     mApplyConversion = value;
     return NS_OK;
 }
