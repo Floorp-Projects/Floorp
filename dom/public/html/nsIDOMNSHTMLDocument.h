@@ -40,6 +40,10 @@ class nsIDOMNSHTMLDocument : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLDOCUMENT_IID; return iid; }
 
+  NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
+
+  NS_IMETHOD    GetHeight(PRInt32* aHeight)=0;
+
   NS_IMETHOD    GetAlinkColor(nsString& aAlinkColor)=0;
   NS_IMETHOD    SetAlinkColor(const nsString& aAlinkColor)=0;
 
@@ -80,6 +84,8 @@ public:
 
 
 #define NS_DECL_IDOMNSHTMLDOCUMENT   \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth);  \
+  NS_IMETHOD    GetHeight(PRInt32* aHeight);  \
   NS_IMETHOD    GetAlinkColor(nsString& aAlinkColor);  \
   NS_IMETHOD    SetAlinkColor(const nsString& aAlinkColor);  \
   NS_IMETHOD    GetLinkColor(nsString& aLinkColor);  \
@@ -105,6 +111,8 @@ public:
 
 
 #define NS_FORWARD_IDOMNSHTMLDOCUMENT(_to)  \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    GetHeight(PRInt32* aHeight) { return _to GetHeight(aHeight); } \
   NS_IMETHOD    GetAlinkColor(nsString& aAlinkColor) { return _to GetAlinkColor(aAlinkColor); } \
   NS_IMETHOD    SetAlinkColor(const nsString& aAlinkColor) { return _to SetAlinkColor(aAlinkColor); } \
   NS_IMETHOD    GetLinkColor(nsString& aLinkColor) { return _to GetLinkColor(aLinkColor); } \
