@@ -2231,13 +2231,13 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
       /* we need to find out the destination length of the run,
                which will not include the Bidi control characters */
         PRInt32 length=srcLength;
-        PRUnichar c;
+        PRUnichar ch;
         PRBool isBidiControl;
 
         i=0;
         do {
-          c=*src++;
-          bidiUtils->IsBidiControl(c, &isBidiControl);
+          ch=*src++;
+          bidiUtils->IsBidiControl(ch, &isBidiControl);
           if(!isBidiControl) {
             ++i;
           }
@@ -2277,8 +2277,11 @@ static PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
           /* mirror only the base character */
           if (!bidiUtils)
             ; /* default to the original form */
-          else
-            bidiUtils->SymmSwap((PRUnichar*)&c);
+          else {
+            PRUnichar ch = (PRUnichar)c;
+            bidiUtils->SymmSwap(&ch);
+            c = ch;
+          }
           PRInt32 k=0;
           UTF_APPEND_CHAR_UNSAFE(dest, k, c);
           dest+=k;
