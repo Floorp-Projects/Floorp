@@ -4178,8 +4178,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // fits; we'll assume it does, so that the maximum width will get
   // updated below. The line will be reflowed again and pushed then
   // if necessary.
-  if ((mLines.front() != aLine) && (newY > aState.mBottomEdge)
-      && !aUpdateMaximumWidth) {
+  if (mLines.front() != aLine &&
+      newY > aState.mBottomEdge &&
+      aState.mBottomEdge != NS_UNCONSTRAINEDSIZE &&
+      !aUpdateMaximumWidth) {
     // Push this line and all of it's children and anything else that
     // follows to our next-in-flow
     NS_ASSERTION((aState.mCurrentLine == aLine), "oops");
