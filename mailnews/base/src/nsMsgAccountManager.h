@@ -62,7 +62,7 @@ private:
   
   nsCOMPtr <nsIMsgFolderCache>	m_msgFolderCache;
   nsCOMPtr<nsIAtom> kDefaultServerAtom;
-  nsISupportsArray *m_accounts;
+  nsCOMPtr<nsISupportsArray> m_accounts;
   nsHashtable m_identities;
   nsHashtable m_incomingServers;
   nsCOMPtr<nsIMsgAccount> m_defaultAccount;

@@ -144,14 +144,13 @@ nsMsgAccountManager::~nsMsgAccountManager()
 	}
   }
 
-  NS_IF_RELEASE(m_accounts);
 }
 
 nsresult nsMsgAccountManager::Init()
 {
   nsresult rv;
 
-  rv = NS_NewISupportsArray(&m_accounts);
+  rv = NS_NewISupportsArray(getter_AddRefs(m_accounts));
   if(NS_FAILED(rv)) return rv;
 
   rv = NS_NewISupportsArray(getter_AddRefs(m_incomingServerListeners));
