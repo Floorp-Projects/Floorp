@@ -114,6 +114,7 @@ public:
   NS_IMETHOD NextBlock();
   NS_IMETHOD IsDone(PRBool *aIsDone);
   NS_IMETHOD SetSelection(PRInt32 aOffset, PRInt32 aLength);
+  NS_IMETHOD ScrollSelectionIntoView();
   NS_IMETHOD DeleteSelection();
   NS_IMETHOD InsertText(const nsString *aText);
   NS_IMETHOD SetDisplayStyle(TSDDisplayStyle aStyle);

@@ -1698,6 +1698,23 @@ nsTextServicesDocument::SetSelection(PRInt32 aOffset, PRInt32 aLength)
 }
 
 NS_IMETHODIMP
+nsTextServicesDocument::ScrollSelectionIntoView()
+{
+  nsresult result;
+
+  if (!mPresShell)
+    return NS_ERROR_FAILURE;
+
+  LOCK_DOC(this);
+
+  result = mPresShell->ScrollSelectionIntoView(SELECTION_NORMAL, SELECTION_FOCUS_REGION);
+
+  UNLOCK_DOC(this);
+
+  return result;
+}
+
+NS_IMETHODIMP
 nsTextServicesDocument::DeleteSelection()
 {
   nsresult result = NS_OK;
