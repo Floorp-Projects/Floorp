@@ -13361,7 +13361,7 @@ fi
 
 
 if test -n "$MOZ_STATIC_COMPONENTS" && test -n "$MOZ_META_COMPONENTS"; then
-    { echo "configure: error: Simultaneous use of static-components & meta-components is not supported." 1>&2; exit 1; }
+    { echo "configure: error: Simultaneous use of meta-module-components & meta-components is not supported." 1>&2; exit 1; }
 fi
 
 case "$target" in
