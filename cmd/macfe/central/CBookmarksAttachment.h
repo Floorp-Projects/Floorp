@@ -32,6 +32,7 @@
 #include <LMenu.h>
 #include <LArray.h>
 
+
 /***********************************************************************************
  * CBookmarksAttachment
  * Processes bookmark menu commands -- should be attached to application
@@ -44,7 +45,6 @@ public:
 	// ¥¥Êevents
 	virtual void		ExecuteSelf( MessageT inMessage, void* ioParam );
 
-//	static void			AddToBookmarks( BM_Entry* newBookmark );
 	static void			AddToBookmarks( const char* url, const CStr255& title );
 
 	static LMenu*		GetMenu();
@@ -57,6 +57,7 @@ public:
 	void				InitQuickfileView ( ) ;
 
 protected:
+
 	static void			FillMenuFromList( HT_Resource top, LMenu* newMenu, int& nextMenuID, int whichItem, int depth );
 
 	virtual	void		HandleNotification( HT_Notification	notifyStruct, HT_Resource node, HT_Event event, void *token, uint32 tokenType);

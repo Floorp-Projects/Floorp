@@ -35,9 +35,6 @@
 #include <Icons.h>
 #include <Sound.h>
 
-#define PERM_BOOKMARK_ITEMS 4
-
-const CommandT cmd_BookmarkHierItem = BOOKMARKS_MENU_BASE_LAST;
 
 LMenu *CBookmarksAttachment::sMenu = NULL;
 Boolean CBookmarksAttachment::sInvalidMenu = true;
@@ -45,6 +42,8 @@ LArray CBookmarksAttachment::sMenusList; // this will use the default constructo
 
 HT_View CBookmarksAttachment::sQuickfileView = NULL;
 
+const uint32 PERM_BOOKMARK_ITEMS = 2;
+const CommandT cmd_BookmarkHierItem = BOOKMARKS_MENU_BASE_LAST;
 
 
 //===========================================================
@@ -384,7 +383,8 @@ void CBookmarksAttachment::InstallMenus()
 				}
 				StValueChanger<EDebugAction> okayToFail(gDebugThrow, debugAction_Nothing);
 				currentMenuBar->InstallMenu(sMenu, InstallMenu_AtEnd);
-				
+#if 0
+// no more Guide menu. Leave this here in case mktg wants to replace it with something (pinkerton).			
 				LMenu *directoryMenu = currentMenuBar->FetchMenu(cDirectoryMenuID);
 				
 				if (directoryMenu)
@@ -394,6 +394,7 @@ void CBookmarksAttachment::InstallMenus()
 					for (short index2 = CountMItems(directoryMenu->GetMacMenuH()); index2 > 0; --index2)
 						directoryMenu->SetCommand(index2, DIR_MENU_BASE + index2 - 1);
 				}
+#endif
 			}
 		}
 	}
