@@ -318,6 +318,8 @@ nsWidget::~nsWidget()
   printf("nsWidget::~nsWidget:%p\n", this);
 #endif
 
+  sWidgetCount--;
+
   // it's safe to always call Destroy() because it will only allow itself
   // to be called once
   Destroy();
