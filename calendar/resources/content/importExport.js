@@ -126,6 +126,7 @@ function loadEventsFromFile()
       var i;
       var tempEventArray;
       var date = new Date();
+      var intoCalName = getSelectedCalendarNameOrDefault();
       
       while (filesToAppend.hasMoreElements())
       {
@@ -162,7 +163,8 @@ function loadEventsFromFile()
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(); 
       promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
       var result = {value:0}; 
-      var importText = gCalendarBundle.getFormattedString( "aboutToImport", [calendarEventArray.length]);
+      var fromFileName = currentFile.leafName;
+      var importText = gCalendarBundle.getFormattedString( "aboutToImport", [calendarEventArray.length, fromFileName, intoCalName]);
       var dupeText = gCalendarBundle.getFormattedString( "aboutToImportDupes", [duplicateEventArray.length]);
       var importAllStr = gCalendarBundle.getString( "importAll" );
       var promptStr = gCalendarBundle.getString( "promptForEach" );
@@ -294,6 +296,31 @@ function getSelectedCalendarPathOrDefault()
     calendarPath = gCalendarWindow.calendarManager.getDefaultServer();
   }
   return calendarPath;
+}
+
+
+/** Return the calendarPath of the calendar selected in list-calendars-listbox,
+    or the default calendarPath if none selected. **/
+function getSelectedCalendarNameOrDefault()
+{
+  var calendarName = null;
+  //see if there's a server selected in the calendar window first
+  //get the selected calendar
+  if( document.getElementById( "list-calendars-listbox" ) )
+  {
+    var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;
+    if( selectedCalendarItem )
+    {
+      var listCell = selectedCalendarItem.firstChild;
+      if ( listCell ) 
+        calendarName = listCell.getAttribute( "label" );
+    }
+  }
+  if( ! calendarName ) // null, "", or false
+  {
+    calendarName = gCalendarWindow.calendarManager.getDefaultCalendarName();
+  }
+  return calendarName;
 }
 
 
