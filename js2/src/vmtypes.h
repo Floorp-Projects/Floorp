@@ -652,7 +652,7 @@ namespace VM {
             Instruction_3<TypedRegister, JSClass*, uint32>
             (GET_STATIC, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[GET_STATIC] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'" << ", " << mOp3;
+            f << opcodeNames[GET_STATIC] << "\t" << "R" << mOp1.first << ", " << mOp2->getName() << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1084,7 +1084,7 @@ namespace VM {
             Instruction_3<JSClass*, uint32, TypedRegister>
             (SET_STATIC, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SET_STATIC] << "\t" << "'" << *mOp1 << "'" << ", " << mOp2 << ", " << "R" << mOp3.first;
+            f << opcodeNames[SET_STATIC] << "\t" << mOp1->getName() << ", " << mOp2 << ", " << "R" << mOp3.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1134,7 +1134,7 @@ namespace VM {
             Instruction_4<TypedRegister, JSClass*, const StringAtom*, RegisterList>
             (STATIC_CALL, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[STATIC_CALL] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'" << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
+            f << opcodeNames[STATIC_CALL] << "\t" << "R" << mOp1.first << ", " << mOp2->getName() << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1150,7 +1150,7 @@ namespace VM {
             Instruction_4<TypedRegister, JSClass*, uint32, double>
             (STATIC_XCR, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[STATIC_XCR] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'" << ", " << mOp3 << ", " << mOp4;
+            f << opcodeNames[STATIC_XCR] << "\t" << "R" << mOp1.first << ", " << mOp2->getName() << ", " << mOp3 << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1312,6 +1312,7 @@ namespace VM {
             (XOR, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
+
 
 } /* namespace VM */
 

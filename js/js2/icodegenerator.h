@@ -111,6 +111,8 @@ namespace ICG {
     // converts it into an ICodeModule, ready for execution.
     
     class ICodeGenerator {
+    public:
+        typedef enum { kNoFlags = 0, kIsTopLevel = 0x01, kIsStaticMethod = 0x02, kIsWithinWith = 0x04 } ICodeGeneratorFlags;
     private:
         InstructionStream *iCode;
         bool iCodeOwner;
@@ -130,9 +132,8 @@ namespace ICG {
                                         // maps source position to instruction index
         InstructionMap *mInstructionMap;
 
-        bool mWithinWith;               // state from genStmt that indicates generating code beneath a with statement
-        bool mAtTopLevel;               // compiling at top level
         JSClass *mClass;                // enclosing class when generating code for methods
+        ICodeGeneratorFlags mFlags;     // assorted flags
 
         void markMaxRegister()
         { if (topRegister > maxRegister) maxRegister = topRegister; }
@@ -180,11 +181,20 @@ namespace ICG {
             return result;
         }
 
+
+        bool isTopLevel()       { return (mFlags & kIsTopLevel) != 0; }
+        bool isWithinWith()     { return (mFlags & kIsWithinWith) != 0; }
+        bool isStaticMethod()   { return (mFlags & kIsStaticMethod) != 0; }
+
+        void setFlag(uint32 flag, bool v) { mFlags = (ICodeGeneratorFlags)((v) ? mFlags | flag : mFlags & ~flag); }
+
         JSType *findType(const StringAtom& typeName);
         TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret);
+        ICodeModule *genFunction(FunctionStmtNode *f);
     
     public:
-        ICodeGenerator(World *world, JSScope *global, JSClass *aClass = NULL, bool atTopLevel = true);
+
+        ICodeGenerator(World *world, JSScope *global, JSClass *aClass = NULL, ICodeGeneratorFlags flags = kIsTopLevel);
         
         ~ICodeGenerator()
         {

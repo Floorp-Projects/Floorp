@@ -162,6 +162,16 @@ namespace JSClasses {
             return mStaticSlots[name];
         }
         
+        bool hasStatic(const String& name, JSType*& type)
+        {
+            JSSlots::const_iterator i = mStaticSlots.find(name);
+            if (i != mStaticSlots.end()) {
+                type = i->second.mType;
+                return true;
+            }
+            return false;
+        }
+
         bool hasStatic(const String& name)
         {
             return (mStaticSlots.find(name) != mStaticSlots.end());
