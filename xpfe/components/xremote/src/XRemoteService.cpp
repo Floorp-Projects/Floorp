@@ -767,6 +767,10 @@ XRemoteService::OpenURL(nsCString &aArgument,
   // If we're trying to open a new tab, we'll fall back to opening
   // a new window if there's no browser window open, so look for it
   // here.
+#ifdef MOZ_THUNDERBIRD
+  newWindow = PR_FALSE;
+  finalWindow = nsnull; // always use the URILoader code below
+#else
   if (aOpenBrowser && (!newWindow || newTab)) {
     nsCOMPtr<nsIDOMWindowInternal> lastUsedWindow;
     FindWindow(NS_LITERAL_STRING("navigator:browser").get(),
@@ -777,6 +781,7 @@ XRemoteService::OpenURL(nsCString &aArgument,
     else
       newWindow = PR_TRUE;
   }
+#endif
 
   // check if we can handle this type of URL
   if (!MayOpenURL(aArgument))
