@@ -40,7 +40,8 @@
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
-extern "C" {
+extern "C" 
+{
 	char * NET_SACopy (char **destination, const char *source);
 	char * NET_SACat (char **destination, const char *source);
 }
@@ -208,24 +209,14 @@ esmtp_value_encode(char *addr)
 // END OF TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-/* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsSmtpProtocol)
-NS_IMPL_RELEASE(nsSmtpProtocol)
-NS_IMPL_QUERY_INTERFACE(nsSmtpProtocol, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
-
-nsSmtpProtocol::nsSmtpProtocol(nsIURL * aURL)
+nsSmtpProtocol::nsSmtpProtocol(nsIURL * aURL) : m_responseText("", eOneByte)
 {
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
   Initialize(aURL);
 }
 
 nsSmtpProtocol::~nsSmtpProtocol()
 {
-	// release all of our event sinks
-	
 	// free our local state
-	PR_FREEIF(m_responseText);
 	PR_FREEIF(m_hostName);
 	PR_FREEIF(m_addressCopy);
 	PR_FREEIF(m_verifyAddress);
@@ -254,26 +245,10 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL)
 		m_hostName = PL_strdup(hostName);
 	else
 		m_hostName = NULL;
-	NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
-    if (NS_SUCCEEDED(rv) && pNetService) 
-	{
-		rv = pNetService->CreateSocketTransport(getter_AddRefs(m_transport), m_port, m_hostName);
-		if (NS_SUCCEEDED(rv) && m_transport)
-		{
-			rv = m_transport->GetOutputStream(getter_AddRefs(m_outputStream));
-			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output stream");
-
-			rv = m_transport->GetOutputStreamConsumer(getter_AddRefs(m_outputConsumer));
-			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output consumer");
-
-			// register self as the consumer for the socket...
-			rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
-			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register NNTP instance as a consumer on the socket");
-		} // if m_transport
-                
-	} // if net service
 	
-
+	// call base class to set up the url 
+	rv = OpenNetworkSocket(aURL, m_port, m_hostName);
+	
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
 
@@ -281,7 +256,6 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL)
 	m_nextStateAfterResponse = SMTP_START_CONNECT;
 	m_responseCode = 0;
 	m_previousResponseCode = 0;
-	m_responseText = nsnull;
 	m_continuationResponse = -1; 
 	m_authMethod = SMTP_AUTH_NONE;
 
@@ -293,8 +267,6 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL)
 	m_totalMessageSize = 0;
 
 	m_originalContentLength = 0;
-	m_urlInProgress = PR_FALSE;
-	m_socketIsOpen = PR_FALSE;
 }
 
 const char * nsSmtpProtocol::GetUserDomainName()
@@ -320,37 +292,14 @@ const char * nsSmtpProtocol::GetUserDomainName()
 // we suppport the nsIStreamListener interface 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-// Whenever data arrives from the connection, core netlib notifices the protocol by calling
-// OnDataAvailable. We then read and process the incoming data from the input stream. 
-NS_IMETHODIMP nsSmtpProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
-{
-	// right now, this really just means turn around and process the url
-	ProcessSmtpState(aURL, aIStream, aLength);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsSmtpProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
-{
-	// extract the appropriate event sinks from the url and initialize them in our protocol data
-	// the URL should be queried for a nsINewsURL. If it doesn't support a news URL interface then
-	// we have an error.
-
-	return NS_OK;
-
-}
-
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsSmtpProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
-	// what can we do? we can close the stream?
-	m_urlInProgress = PR_FALSE;  // don't close the connection...we may be re-using it.
-	m_runningURL->SetUrlState(PR_FALSE, NS_OK);
+	nsMsgProtocol::OnStopBinding(aURL, aStatus, aMsg);
 
-	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
-	// available for another url if there is one....
-
-	return NS_OK;
-
+	// okay, we've been told that the send is done and the connection is going away. So 
+	// we need to release all of our state
+	return CloseSocket();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -406,39 +355,6 @@ PRInt32 nsSmtpProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, 
 	return numBytesRead;
 }
 
-/*
- * Writes the data contained in dataBuffer into the current output stream. It also informs
- * the transport layer that this data is now available for transmission.
- * Returns a positive number for success, 0 for failure (not all the bytes were written to the
- * stream, etc). We need to make another pass through this file to install an error system (mscott)
- */
-
-PRInt32 nsSmtpProtocol::SendData(const char * dataBuffer)
-{
-	PRUint32 writeCount = 0; 
-	PRInt32 status = 0; 
-
-	NS_PRECONDITION(m_outputStream && m_outputConsumer, "no registered consumer for our output");
-	if (dataBuffer && m_outputStream)
-	{
-		nsresult rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
-		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
-		{
-			// notify the consumer that data has arrived
-			// HACK ALERT: this should really be m_runningURL once we have NNTP url support...
-			nsCOMPtr<nsIInputStream> inputStream;
-			inputStream = do_QueryInterface(m_outputStream);
-			if (inputStream)
-				m_outputConsumer->OnDataAvailable(m_runningURL, inputStream, writeCount);
-			status = 1; // mscott: we need some type of MK_OK? MK_SUCCESS? Arrgghhh
-		}
-		else // the write failed for some reason, returning 0 trips an error by the caller
-			status = 0; // mscott: again, I really want to add an error code here!!
-	}
-
-	return status;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Begin protocol state machine functions...
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -461,7 +377,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
     {
         m_nextState = SMTP_ERROR_DONE;
         ClearFlag(SMTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_SMTP_SERVER_ERROR, m_responseText));
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_SMTP_SERVER_ERROR, m_responseText.GetBuffer()));
 		status = MK_SMTP_SERVER_ERROR;
         return(MK_SMTP_SERVER_ERROR);
     }
@@ -489,17 +405,17 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 			m_continuationResponse = m_responseCode;
 
 		if(PL_strlen(line) > 3)
-         	NET_SACopy(&m_responseText, line+4);
+			m_responseText = line+4;
     }
     else
     {    /* have to continue */
 		if (m_continuationResponse == m_responseCode && cont_char == ' ')
 			m_continuationResponse = -1;    /* ended */
 
-        NET_SACat(&m_responseText, "\n");
+		m_responseText += "\n";
         if(PL_strlen(line) > 3)
-            NET_SACat(&m_responseText, line+4);
-     }
+			m_responseText += line+4;
+    }
 
 	if(m_continuationResponse == -1)  /* all done with this response? */
 	{
@@ -513,7 +429,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
-	char buffer[356];
+	nsAutoString buffer ((const char *) "HELO ", eOneByte);
 
     if(m_responseCode != 220)
 	{
@@ -521,11 +437,10 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 		return(MK_COULD_NOT_LOGIN_TO_SMTP_SERVER);
 	}
 
+	buffer += GetUserDomainName();
+	buffer += CRLF;
 
-	PR_snprintf(buffer, sizeof(buffer), "HELO %.256s" CRLF, 
-				GetUserDomainName());
-
-    status = SendData(buffer);
+    status = SendData(m_runningURL, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
@@ -538,7 +453,7 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRUint32 length) 
 {
     PRInt32 status = 0;
-	char buffer[356];
+	nsAutoString buffer((const char *) "EHLO ", eOneByte);
 
     if(m_responseCode != 220)
 	{
@@ -546,10 +461,10 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 		return(MK_COULD_NOT_LOGIN_TO_SMTP_SERVER);
 	}
 
-	PR_snprintf(buffer, sizeof(buffer), "EHLO %.256s" CRLF, 
-				GetUserDomainName());
+	buffer += GetUserDomainName();
+	buffer += CRLF;
 
-    status = SendData(buffer);
+    status = SendData(m_runningURL, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_EHLO_RESPONSE;
@@ -562,7 +477,7 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
-	char buffer[620];
+	nsAutoString buffer (eOneByte);
 
 	// extract the email addresss
 	const char * userAddress = nsnull;
@@ -580,24 +495,22 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 
 	if(m_verifyAddress)
 	{
-		PR_snprintf(buffer, sizeof(buffer), "VRFY %.256s" CRLF, m_verifyAddress);
+		buffer += "VRFY";
+		buffer += m_verifyAddress;
+		buffer += CRLF;
 	}
 	else
 	{
 		/* else send the MAIL FROM: command */
- 	  	 nsIMsgHeaderParser * parser = nsnull;
+		nsCOMPtr<nsIMsgHeaderParser> parser;
          nsComponentManager::CreateInstance(kHeaderParserCID,
                                             nsnull,
                                             nsIMsgHeaderParser::GetIID(),
-                                            (void **)&parser);
+                                            getter_AddRefs(parser));
 
 		 char * s = nsnull;
 		 if (parser)
-		 {
 			 parser->MakeFullAddress(nsnull, nsnull, userAddress, &s);
-			 NS_RELEASE(parser);
-		 }
-
 		 if (!s)
 		 {
 			m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_OUT_OF_MEMORY));
@@ -633,12 +546,14 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 		else 
 #endif
 		{
-			PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, s);
+			buffer = "MAIL FROM:<";
+			buffer += s;
+			buffer += ">" CRLF;
 		}
 		PR_FREEIF (s);
 	  }
 
-    status = SendData(buffer);
+    status = SendData(m_runningURL, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
 
@@ -655,16 +570,16 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 length)
 {
   PRInt32 status = 0;
+  nsAutoString buffer(eOneByte);
 
   if (m_responseCode != 250) 
   {
-	/* EHLO not implemented */
-	char buffer[384];
-
 	HG10349
-	PR_snprintf(buffer, sizeof(buffer), "HELO %.256s" CRLF, GetUserDomainName());
+	buffer = "HELO ";
+	buffer += GetUserDomainName();
+	buffer += CRLF;
 
-    status = SendData(buffer);
+    status = SendData(m_runningURL, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
@@ -676,7 +591,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	char *ptr = NULL;
 	PRBool auth_login_enabled = PR_FALSE;
 
-	ptr = PL_strcasestr(m_responseText, "DSN");
+	ptr = PL_strcasestr(m_responseText.GetBuffer(), "DSN");
 	if (ptr && nsCRT::ToUpper(*(ptr-1)) != 'X')
 	{
 		// temporary hack to disable return receipts until we have a preference to handle it...
@@ -696,9 +611,9 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 	{
 		/* okay user has set to use skey
 		   let's see does the server have the capability */
-		if (PL_strcasestr(m_responseText, " PLAIN") != 0)
+		if (PL_strcasestr(m_responseText.GetBuffer(), " PLAIN") != 0)
 			m_authMethod =  SMTP_AUTH_PLAIN;
-		else if (PL_strcasestr(m_responseText, "AUTH=LOGIN") != 0)
+		else if (PL_strcasestr(m_responseText.GetBuffer(), "AUTH=LOGIN") != 0)
 			m_authMethod = SMTP_AUTH_LOGIN;	/* old style */
 	}
 #ifdef UNREADY_CODE
@@ -834,7 +749,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 	  else
 		  return (MK_COMMUNICATIONS_ERROR);
 
-	  status = SendData(buffer);
+	  status = SendData(m_runningURL, buffer);
 	  m_nextState = SMTP_RESPONSE;
 	  m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
 	  SetFlag(SMTP_PAUSE_FOR_READ);
@@ -883,7 +798,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
 		char buffer[512];
 		PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
 		
-		status = SendData(buffer);
+		status = SendData(m_runningURL, buffer);
 		m_nextState = SMTP_RESPONSE;
 		m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
 		SetFlag(SMTP_PAUSE_FOR_READ);
@@ -916,12 +831,12 @@ PRInt32 nsSmtpProtocol::SendVerifyResponse()
 PRInt32 nsSmtpProtocol::SendMailResponse()
 {
 	PRInt32 status = 0;
-    char buffer[1024];
+	nsAutoString buffer(eOneByte);
 
     if(m_responseCode != 250)
 	{
 
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_FROM_COMMAND, m_responseText));
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_FROM_COMMAND, m_responseText.GetBuffer()));
 		return(MK_ERROR_SENDING_FROM_COMMAND);  
 	}
 
@@ -938,8 +853,11 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 
 		if (encodedAddress) 
 		{
-			PR_snprintf(buffer, sizeof(buffer), "RCPT TO:<%.256s> NOTIFY=SUCCESS,FAILURE ORCPT=rfc822;%.500s" CRLF, 
-				m_addresses, encodedAddress);
+			buffer = "RCPT TO:<";
+			buffer += m_addresses;
+			buffer += "> NOTIFY=SUCCESS,FAILURE ORCPT=rfc822;";
+			buffer += encodedAddress;
+			buffer += CRLF; 
 			PR_FREEIF(encodedAddress);
 		}
 		else 
@@ -950,14 +868,17 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 	}
 	else
 	{
-	    PR_snprintf(buffer, sizeof(buffer), "RCPT TO:<%.256s>" CRLF, m_addresses);
+		buffer = "RCPT TO:<";
+		buffer += m_addresses;
+		buffer += ">";
+		buffer += CRLF;
 	}
 	/* take the address we sent off the list (move the pointer to just
 	   past the terminating null.) */
 	m_addresses += PL_strlen (m_addresses) + 1;
 	m_addressesLeft--;
   
-    status = SendData(buffer);
+    status = SendData(m_runningURL, buffer.GetBuffer());
 
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_RCPT_RESPONSE;
@@ -969,11 +890,11 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 PRInt32 nsSmtpProtocol::SendRecipientResponse()
 {
     PRInt32 status = 0;
-    char buffer[16];
+	nsAutoString buffer(eOneByte);
 
 	if(m_responseCode != 250 && m_responseCode != 251)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_RCPT_COMMAND, m_responseText));
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_RCPT_COMMAND, m_responseText.GetBuffer()));
         return(MK_ERROR_SENDING_RCPT_COMMAND);
 	}
 
@@ -986,9 +907,10 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 	}
 
     /* else send the RCPT TO: command */
-    PL_strcpy(buffer, "DATA" CRLF);
+	buffer = "DATA";
+	buffer += CRLF;
       
-    status = SendData(buffer);   
+    status = SendData(m_runningURL, buffer.GetBuffer());   
 
     m_nextState = SMTP_RESPONSE;  
     m_nextStateAfterResponse = SMTP_SEND_DATA_RESPONSE; 
@@ -1005,7 +927,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
     if(m_responseCode != 354)
 	{
 		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_DATA_COMMAND, 
-			m_responseText ? m_responseText : ""));
+			m_responseText.GetBuffer()));
         return(MK_ERROR_SENDING_DATA_COMMAND);
 	}
 #ifdef UNREADY_CODE
@@ -1172,7 +1094,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 					// to make more room.
 					if (bsize < 100) // i chose 100 arbitrarily.
 					{
-						SendData(buffer);
+						SendData(m_runningURL, buffer);
 						buffer[0] = '\0';
 						b = buffer; // reset buffer
 						bsize = POST_DATA_BUFFER_SIZE;
@@ -1181,7 +1103,8 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 				} while (line /* && bsize > 100 */);
               }
 
-			SendData(buffer); 
+			SendData(m_runningURL, buffer); 
+			delete fileStream;
 		}
 	} // if filePath
 
@@ -1191,8 +1114,8 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 	// to post data...
 
 	// always issue a '.' and CRLF when we are done...
-    PL_strcpy(m_dataBuf, CRLF "." CRLF);
-	SendData(m_dataBuf);
+	nsAutoString cmd ((const char *) CRLF "." CRLF, eOneByte);
+	SendData(m_runningURL, cmd.GetBuffer());
 #ifdef UNREADY_CODE
 		NET_Progress(CE_WINDOW_ID,
 					XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
@@ -1253,7 +1176,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 
     if(m_responseCode != 250)
 	{
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_MESSAGE, m_responseText ? m_responseText : ""));
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_MESSAGE, m_responseText.GetBuffer()));
         return(MK_ERROR_SENDING_MESSAGE);
 	}
 
@@ -1261,12 +1184,13 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 	NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_MAILSENT));
 #endif
 	/* else */
+	SendData(m_runningURL, "quit"CRLF); // send a quit command to close the connection with the server.
 	m_nextState = SMTP_DONE;
 	return(0);
 }
 
 
-PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
+nsresult nsSmtpProtocol::LoadUrl(nsIURL * aURL)
 {
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 
@@ -1299,15 +1223,15 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 			*/
 
 			char * addresses = nsnull;
-			nsIMsgHeaderParser * parser = nsnull;
-            nsComponentManager::CreateInstance(kHeaderParserCID,
+			nsCOMPtr<nsIMsgHeaderParser> parser;
+            rv = nsComponentManager::CreateInstance(kHeaderParserCID,
                                                nsnull,
                                                nsIMsgHeaderParser::GetIID(),
-                                               (void **)&parser);
+                                               getter_AddRefs(parser));
 
 			m_runningURL->GetAllRecipients(&addresses);
 
-			if (parser)
+			if (NS_SUCCEEDED(rv) && parser)
 			{
 				parser->RemoveDuplicateAddresses(nsnull, addresses, nsnull, PR_FALSE, &addrs1);
 
@@ -1333,26 +1257,14 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 
 				m_addressCopy = addrs2;
 				m_addresses = m_addressCopy;
-				NS_RELEASE(parser); // release the RFC-822 parser...
 				PR_FREEIF(addresses); // free our original addresses string...
 			} // if parser
 		} // if post message
 		
-		// okay now kick us off to the next state...
-		// our first state is a process state so drive the state machine...
-		PRBool transportOpen = PR_FALSE;
-		m_transport->IsTransportOpen(&transportOpen);
-		m_urlInProgress = PR_TRUE;
-		m_runningURL->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
-		if (transportOpen == PR_FALSE)
-		{
-			m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
-		}
-		else  // the connection is already open so we should begin processing our new url...
-			status = ProcessSmtpState(m_runningURL, nsnull, 0); 
+		rv = nsMsgProtocol::LoadUrl(aURL);
 	} // if we received a url!
 
-	return status;
+	return rv;
 }
 	
 /*
@@ -1360,7 +1272,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
  *
  * returns zero or more if the transfer needs to be continued.
  */
- PRInt32 nsSmtpProtocol::ProcessSmtpState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
+nsresult nsSmtpProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
     ClearFlag(SMTP_PAUSE_FOR_READ); /* already paused; reset */
@@ -1470,7 +1382,6 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 					status = SendMessageResponse();
 				break;
 			case SMTP_DONE:
-				m_urlInProgress = PR_FALSE;
 				m_runningURL->SetUrlState(PR_FALSE, NS_OK);
 	            m_nextState = SMTP_FREE;
 				break;
@@ -1481,8 +1392,8 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
         
 			case SMTP_FREE:
 				// smtp is a one time use connection so kill it if we get here...
-				CloseConnection(); 
-	            return(-1); /* final end */
+				CloseSocket(); 
+	            return NS_OK; /* final end */
         
 			default: /* should never happen !!! */
 				m_nextState = SMTP_ERROR_DONE;
@@ -1500,15 +1411,8 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
           }
       } /* while(!SMTP_PAUSE_FOR_READ) */
     
-    return(status);
+    return NS_OK;
 }
-
-PRInt32	  nsSmtpProtocol::CloseConnection()
-{
-	return 0;
-}
-
-
 
 #ifdef UNREADY_CODE
 static void

@@ -19,6 +19,7 @@
 #ifndef nsSmtpProtocol_h___
 #define nsSmtpProtocol_h___
 
+#include "nsMsgProtocol.h"
 #include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 #include "nsITransport.h"
@@ -66,66 +67,27 @@ typedef enum _SmtpAuthMethod {
 	SMTP_AUTH_PLAIN = 2
  } SmtpAuthMethod;
 
-class nsSmtpProtocol : public nsIStreamListener
+class nsSmtpProtocol : public nsMsgProtocol
 {
 public:
 	// Creating a protocol instance requires the URL which needs to be run.
 	nsSmtpProtocol(nsIURL * aURL);
-	
 	virtual ~nsSmtpProtocol();
 
-	PRInt32 LoadURL(nsIURL * aURL);
-	PRBool  IsRunningUrl() { return m_urlInProgress;} // returns true if we are currently running a url and false otherwise...
-
-	NS_DECL_ISUPPORTS
+	virtual nsresult LoadUrl(nsIURL * aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	// mscott; I don't think we need to worry about this yet so I'll leave it stubbed out for now
-	NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} ;
-	
-	// Whenever data arrives from the connection, core netlib notifies the protocol by calling
-	// OnDataAvailable. We then read and process the incoming data from the input stream. 
-	NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-
-	NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
-	// Ideally, a protocol should only have to support the stream listener methods covered above. 
-	// However, we don't have this nsIStreamListenerLite interface defined yet. Until then, we are using
-	// nsIStreamListener so we need to add stubs for the heavy weight stuff we don't want to use.
-
-	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
-	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) { return NS_OK;}
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// End of nsIStreamListenerSupport
-	////////////////////////////////////////////////////////////////////////////////////////
-
-	// Flag manipulators
-	PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
-	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
-	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
-
 private:
-	// the following flag is used to determine when a url is currently being run. It is cleared on calls
-	// to ::StopBinding and it is set whenever we call Load on a url
-	PRBool	m_urlInProgress;	
-
 	// Smtp Event Sinks
-
-	// Ouput stream for writing commands to the socket
-	nsCOMPtr<nsITransport>		m_transport; 
-	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
-	nsCOMPtr<nsIStreamListener> m_outputConsumer; // this will be obtained from the transport interface
 
 	// the nsISmtpURL that is currently running
 	nsCOMPtr<nsISmtpUrl>		m_runningURL;
-	PRUint32 m_flags;		// used to store flag information
 	PRUint32 m_LastTime;
 
 	HG60917
@@ -137,7 +99,7 @@ private:
     PRInt32     m_responseCode;    /* code returned from Smtp server */
 	PRInt32 	m_previousResponseCode; 
 	PRInt32		m_continuationResponse;
-    char       *m_responseText;   /* text returned from Smtp server */
+    nsString    m_responseText;   /* text returned from Smtp server */
 	char	   *m_hostName;
 	PRUint32    m_port;
 
@@ -155,26 +117,17 @@ private:
 	char		*m_dataBuf;
     PRUint32	 m_dataBufSize;
 
-	PRBool	  m_socketIsOpen; // mscott: we should look into keeping this state in the nsSocketTransport...
-							  // I'm using it to make sure I open the socket the first time a URL is loaded into the connection
-
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
-	PRInt32	  ProcessSmtpState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
-	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
-
 	// initialization function given a new url and transport layer
 	void Initialize(nsIURL * aURL);
+	virtual nsresult ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line);
-
-	// SendData not only writes the NULL terminated data in dataBuffer to our output stream
-	// but it also informs the consumer that the data has been written to the stream.
-	PRInt32 SendData(const char * dataBuffer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Protocol Methods --> This protocol is state driven so each protocol method is 
