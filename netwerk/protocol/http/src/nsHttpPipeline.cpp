@@ -25,6 +25,7 @@
 #include "nsHttp.h"
 #include "nsHttpPipeline.h"
 #include "nsHttpHandler.h"
+#include "nsIOService.h"
 #include "nsIRequest.h"
 #include "nsISocketTransport.h"
 #include "nsIStringStream.h"
@@ -512,7 +513,9 @@ nsHttpPipeline::FillSendBuf()
         rv = NS_NewPipe(getter_AddRefs(mSendBufIn),
                         getter_AddRefs(mSendBufOut),
                         NS_HTTP_SEGMENT_SIZE,
-                        NS_HTTP_SEGMENT_SIZE);
+                        NS_HTTP_SEGMENT_SIZE,
+                        PR_TRUE, PR_TRUE,
+                        nsIOService::gBufferCache);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -524,7 +527,10 @@ nsHttpPipeline::FillSendBuf()
             rv = trans->ReadSegments(this, avail, &n);
             if (NS_FAILED(rv)) return rv;
             
-            NS_ASSERTION(n > 0, "pipe was full");
+            if (n == 0) {
+                LOG(("send pipe is full"));
+                break;
+            }
         }
         avail = trans->Available();
         if (avail == 0) {
