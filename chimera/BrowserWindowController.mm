@@ -252,16 +252,11 @@ static NSArray* sToolbarDefaults = nil;
       [[self window] setShowsResizeIndicator:NO];
     
     if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR) ) {
-      // remove the status bar at the bottom and adjust the height of the content area. We
-      // have to turn off the autoresizing min flag to correctly pull the tab browser to
-      // the bottom of the window while we're resizing it.
+      // remove the status bar at the bottom and adjust the height of the content area.
       float height = [mStatusBar frame].size.height;
       [mStatusBar removeFromSuperview];
-      int mask = [mTabBrowser autoresizingMask];
-      [mTabBrowser setAutoresizingMask:(mask & !NSViewMinYMargin)];
       [mTabBrowser setFrame:NSMakeRect([mTabBrowser frame].origin.x, [mTabBrowser frame].origin.y - height,
                                [mTabBrowser frame].size.width, [mTabBrowser frame].size.height + height)];
-      [mTabBrowser setAutoresizingMask:mask];
 
       // clear out everything in the status bar we were holding on to. This will cause us to
       // pass nil for these status items into the CHBrowserwWrapper which is what we want. We'll
