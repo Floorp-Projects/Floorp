@@ -238,7 +238,7 @@ if (lsearch(\@::enterable_products, $product) == -1) {
 my $product_id = get_product_id($product);
 
 if (0 == @{$::components{$product}}) {        
-    ThrowUserError("no_components");   
+    ThrowUserError("no_components", {product => $product});   
 } 
 elsif (1 == @{$::components{$product}}) {
     # Only one component; just pick it.
