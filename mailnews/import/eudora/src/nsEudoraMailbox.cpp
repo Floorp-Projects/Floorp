@@ -746,8 +746,8 @@ static PRInt32 eudoraTagLen[] = {
 static const char *TagContentType[] = {
 	"text/html",
 	"text/html",
-	"text/html",
-	"text/html",
+	"text/enriched",
+	"text/enriched",
 	"text/plain",
 	"text/plain",
 };
