@@ -57,14 +57,14 @@
 #define _ALLXPSTR_H_
 
 #include "resdef.h"
-
+/*
 #ifdef XP_MAC
 #define XP_MSG_BASE					1000
 #define SEC_DIALOG_STRING_BASE		3000
-#else
+#else */
 #define XP_MSG_BASE			14000
 #define SEC_DIALOG_STRING_BASE		(XP_MSG_BASE + 2000)
-#endif
+/*#endif*/
 
 /* WARNING: DO NOT TAKE ERROR CODE -666, it is used internally
    by the message lib */
