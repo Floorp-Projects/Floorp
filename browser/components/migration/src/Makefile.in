@@ -73,8 +73,11 @@ CPPSRCS  = nsProfileMigrator.cpp \
            nsSeamonkeyProfileMigrator.cpp \
            nsPhoenixProfileMigrator.cpp \
            nsINIParser.cpp \
-           nsOperaProfileMigrator.cpp \
            $(NULL)
+
+ifneq ($(OS_ARCH),OS2)
+CPPSRCS += nsOperaProfileMigrator.cpp
+endif
 
 ifeq ($(OS_ARCH)_$(GNU_CXX),WINNT_)
 DEFINES += -DPSTOREC_DLL=\"$(subst \,\\,$(WINDIR))\\system32\\pstorec.dll\"
