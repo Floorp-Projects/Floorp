@@ -149,34 +149,15 @@ private:
   char* mProgID;
 
 public:
-  nsProgIDKey(const char* aProgID) : mProgID(mProgIDBuf) {
-    PRInt32 len = PL_strlen(aProgID);
-    if (len >= sizeof(mProgIDBuf)) {
-      mProgID = new char[PL_strlen(aProgID) + 1];
-      NS_ASSERTION(mProgID, "out of memory");
-      if (! mProgID)
-        return;
-    }
+  nsProgIDKey(const char* aProgID);
 
-    PL_strcpy(mProgID, aProgID);
-  }
+  virtual ~nsProgIDKey(void);
 
-  virtual ~nsProgIDKey(void) {
-    if (mProgID != mProgIDBuf)
-      delete[] mProgID;
-  }
+  virtual PRUint32 HashValue(void) const;
 
-  virtual PRUint32 HashValue(void) const {
-    return (PRUint32) PL_HashString((const void*) mProgID);
-  }
+  virtual PRBool Equals(const nsHashKey* aKey) const;
 
-  virtual PRBool Equals(const nsHashKey* aKey) const {
-    return PL_strcmp( ((nsProgIDKey*)aKey)->mProgID, mProgID ) == 0;
-  }
-
-  virtual nsHashKey* Clone() const {
-    return new nsProgIDKey(mProgID);
-  }
+  virtual nsHashKey* Clone() const;
 };
 
 #endif
