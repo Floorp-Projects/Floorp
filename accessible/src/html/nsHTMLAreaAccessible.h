@@ -54,14 +54,8 @@ public:
   NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
-  NS_IMETHOD GetParent(nsIAccessible * *aParent);
-  NS_IMETHOD GetNextSibling(nsIAccessible * *aNextSibling);
-  NS_IMETHOD GetPreviousSibling(nsIAccessible * *aPreviousSibling);
   NS_IMETHOD GetDescription(nsAString& _retval);
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-
-protected:
-  nsIAccessible *GetAreaAccessible(nsIDOMNode *aDOMNode);
 };
 
 #endif  

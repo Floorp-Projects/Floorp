@@ -107,51 +107,6 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetChildCount(PRInt32 *_retval)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsHTMLAreaAccessible::GetParent(nsIAccessible * *aParent) 
-{ 
-  *aParent = mParent;
-  NS_IF_ADDREF(*aParent);
-  return NS_OK;
-}
-
-nsIAccessible *nsHTMLAreaAccessible::GetAreaAccessible(nsIDOMNode *aDOMNode)
-{
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  if (accService) {
-    nsIAccessible* acc = nsnull;
-    accService->GetCachedAccessible(aDOMNode, mWeakShell, &acc);
-    if (!acc) {
-      accService->CreateHTMLAreaAccessible(mWeakShell, aDOMNode, mParent, &acc);
-    }
-    return acc;
-  }
-  return nsnull;
-
-}
-
-NS_IMETHODIMP nsHTMLAreaAccessible::GetNextSibling(nsIAccessible * *aNextSibling) 
-{ 
-  *aNextSibling = nsnull;
-  nsCOMPtr<nsIDOMNode> nextNode;
-  mDOMNode->GetNextSibling(getter_AddRefs(nextNode));
-  if (nextNode)
-    *aNextSibling = GetAreaAccessible(nextNode);
-  return NS_OK;  
-}
-
-/* readonly attribute nsIAccessible accPreviousSibling; */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetPreviousSibling(nsIAccessible * *aAccPrevSibling) 
-{
-  *aAccPrevSibling = nsnull;
-  nsCOMPtr<nsIDOMNode> prevNode;
-  mDOMNode->GetPreviousSibling(getter_AddRefs(prevNode));
-  if (prevNode)
-    *aAccPrevSibling = GetAreaAccessible(prevNode);
-  return NS_OK;  
-}
-
-
 /* void accGetBounds (out long x, out long y, out long width, out long height); */
 NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
 {
