@@ -113,6 +113,8 @@
    <command id="publish_events_command" oncommand="publishCalendarData()"/>
    
    <command id="close_calendar_command" key="key_close" oncommand="closeCalendar()"/>
+   
+   <command id="wizard_command" oncommand="launchWizard()"/>
 </commandset>
 
 <keyset>
@@ -149,6 +151,9 @@
 </script>
 
 <!-- Javascript includes -->
+
+<!-- NEEDED FOR DRAG AND DROP SUPPORT -->
+<script type="application/x-javascript" src="chrome://calendar/content/calendarDragDrop.js"/>
 
 <!-- NEEDED FOR MULTIPLE CALENDAR SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarManager.js"/>
@@ -372,15 +377,15 @@
             <vbox id="bottom-events-box" persist="height">
                <hbox>
                   <box align="center">
-                     <menulist id="event-filter-menulist" persist="selectedItem">
+                     <menulist id="event-filter-menulist" persist="value">
                          <menupopup id="event-filter-menupopup" oncommand="unifinderDoFilterEvents( event );">
-                             <menuitem id="event-filter-all" label="&calendar.events.filter.all.label;" value="all" persist="selected"/>
-                             <menuitem id="event-filter-today" label="&calendar.events.filter.today.label;" value="today" persist="selected"/>
-                             <menuitem id="event-filter-week" label="&calendar.events.filter.week.label;" value="week" persist="selected"/>
-                             <menuitem id="event-filter-2weeks" label="&calendar.events.filter.2weeks.label;" value="2weeks" persist="selected"/>
-                             <menuitem id="event-filter-month" label="&calendar.events.filter.month.label;" value="month" persist="selected"/>
-                             <menuitem id="event-filter-future" label="&calendar.events.filter.future.label;" value="future" persist="selected"/>
-                             <menuitem id="event-filter-current" label="&calendar.events.filter.current.label;" value="current" persist="selected"/>
+                             <menuitem id="event-filter-all" label="&calendar.events.filter.all.label;" value="all"/>
+                             <menuitem id="event-filter-today" label="&calendar.events.filter.today.label;" value="today"/>
+                             <menuitem id="event-filter-week" label="&calendar.events.filter.week.label;" value="week"/>
+                             <menuitem id="event-filter-2weeks" label="&calendar.events.filter.2weeks.label;" value="2weeks"/>
+                             <menuitem id="event-filter-month" label="&calendar.events.filter.month.label;" value="month"/>
+                             <menuitem id="event-filter-future" label="&calendar.events.filter.future.label;" value="future"/>
+                             <menuitem id="event-filter-current" label="&calendar.events.filter.current.label;" value="current"/>
                          </menupopup>
                      </menulist>
                   </box>
