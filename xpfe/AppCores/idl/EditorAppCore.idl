@@ -60,4 +60,15 @@ interface EditorAppCore : BaseAppCore
 	void setContentWindow(in Window win);
 	void setWebShellWindow(in Window win);
 
+  DOMString startSpellChecking();
+  DOMString getFirstMisspelledWord();
+  DOMString getNextMisspelledWord();
+  DOMString getSuggestedWord();
+  boolean checkCurrentWord(in DOMString suggestedWord);
+  void replaceWord(in DOMString misspelledWord, in DOMString replaceWord, in boolean allOccurrences);
+  void ignoreWordAllOccurrences(in DOMString word);
+  void addWordToDictionary(in DOMString word);
+  void removeWordFromDictionary(in DOMString word);
+  DOMString getPersonalDictionaryWord();
+  void closeSpellChecking();
 };

@@ -29,6 +29,9 @@
 #include "nsBaseAppCore.h"
 #include "nsINetSupport.h"
 #include "nsIStreamObserver.h"
+#include "nsVoidArray.h"
+#include "nsTextServicesCID.h"
+#include "nsISpellChecker.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -129,6 +132,18 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD		InsertLink();
     NS_IMETHOD		InsertImage();
 
+    NS_IMETHOD    StartSpellChecking(nsString& aFirstMisspelledWord);
+    NS_IMETHOD    GetFirstMisspelledWord(nsString& aFirstMisspelledWord);
+    NS_IMETHOD    GetNextMisspelledWord(nsString& aNextMisspelledWord);
+    NS_IMETHOD    GetSuggestedWord(nsString& aSuggestedWord);
+    NS_IMETHOD    CheckCurrentWord(const nsString& aSuggestedWord, PRBool* aIsMisspelled);
+    NS_IMETHOD    ReplaceWord(const nsString& aMisspelledWord, const nsString& aReplaceWord, PRBool aAllOccurrences);
+    NS_IMETHOD    IgnoreWordAllOccurrences(const nsString& aWord);
+    NS_IMETHOD    AddWordToDictionary(const nsString& aWord);
+    NS_IMETHOD    RemoveWordFromDictionary(const nsString& aWord);
+    NS_IMETHOD    GetPersonalDictionaryWord(nsString& aSuggestedWord);
+    NS_IMETHOD    CloseSpellChecking();
+
 	  NS_IMETHOD    BeginBatchChanges();
 	  NS_IMETHOD    EndBatchChanges();
 
@@ -146,7 +161,12 @@ class nsEditorAppCore : public nsBaseAppCore,
                                         const char *aContentType,
                                         const char *aCommand );
   protected:
-  
+    nsCOMPtr<nsISpellChecker> mSpellChecker;
+    nsString        mFirstMisspelledWord;
+    nsStringArray   mSuggestedWordList;
+    PRInt32         mSuggestedWordIndex;
+    NS_IMETHOD      DeleteSuggestedWordList();
+
   	typedef enum {
   		ePlainTextEditorType = 1,
   		eHTMLTextEditorType = 2

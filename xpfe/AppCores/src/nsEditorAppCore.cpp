@@ -79,6 +79,9 @@
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsTextServicesCID.h"
+#include "nsITextServicesDocument.h"
+#include "nsISpellChecker.h"
 ///////////////////////////////////////
 
 // Drag & Drop, Clipboard
@@ -118,6 +121,9 @@ static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
 static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 
+static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
+static NS_DEFINE_CID(kCSpellCheckerCID, NS_SPELLCHECKER_CID);
+
 #define APP_DEBUG 0 
 
 /////////////////////////////////////////////////////////////////////////
@@ -138,6 +144,7 @@ nsEditorAppCore::nsEditorAppCore()
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
   mEditor               = nsnull;
+  mSuggestedWordIndex   = 0;
   
   IncInstanceCount();
   NS_INIT_REFCNT();
@@ -1506,6 +1513,202 @@ nsEditorAppCore::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
   return err;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::StartSpellChecking(nsString& aFirstMisspelledWord)
+{
+	nsresult	result = NS_NOINTERFACE;
+ 	// We can spell check with any editor type
+  if (mEditor)
+	{
+    nsCOMPtr<nsITextServicesDocument>tsDoc;
+
+    result = nsComponentManager::CreateInstance(
+                                 kCTextServicesDocumentCID,
+                                 nsnull,
+                                 nsITextServicesDocument::GetIID(),
+                                 (void **)getter_AddRefs(tsDoc));
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!tsDoc)
+      return NS_ERROR_NULL_POINTER;
+
+    // Pass the editor to the text services document
+		nsCOMPtr<nsIEditor>	editor = do_QueryInterface(mEditor);
+    if (!editor)
+      return NS_NOINTERFACE;
+
+    result = tsDoc->InitWithEditor(editor);
+
+    if (NS_FAILED(result))
+      return result;
+
+    result = nsComponentManager::CreateInstance(kCSpellCheckerCID,
+                                                nsnull,
+                                                nsISpellChecker::GetIID(),
+                                                (void **)getter_AddRefs(mSpellChecker));
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!mSpellChecker)
+      return NS_ERROR_NULL_POINTER;
+
+    result = mSpellChecker->SetDocument(tsDoc, PR_FALSE);
+
+    if (NS_FAILED(result))
+      return result;
+
+    DeleteSuggestedWordList();
+    // Return the first misspelled word and initialize the suggested list
+    result = mSpellChecker->NextMisspelledWord(&aFirstMisspelledWord, &mSuggestedWordList);
+    // Save the first word for GetFirstMisspelled word
+    // We wouldn't have to do this if we could pass > 1 parameter during dialog creation    
+    mFirstMisspelledWord = aFirstMisspelledWord;
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::GetFirstMisspelledWord(nsString& aFirstMisspelledWord)
+{
+	nsresult	result = NS_NOINTERFACE;
+ 	// We can spell check with any editor type
+  if (mEditor && mSpellChecker)
+	{
+    mSuggestedWordIndex = 0;
+    aFirstMisspelledWord = mFirstMisspelledWord;
+    result = NS_OK;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::GetNextMisspelledWord(nsString& aNextMisspelledWord)
+{
+	nsresult	result = NS_NOINTERFACE;
+ 	// We can spell check with any editor type
+  if (mEditor && mSpellChecker)
+	{
+    DeleteSuggestedWordList();
+    result = mSpellChecker->NextMisspelledWord(&aNextMisspelledWord, &mSuggestedWordList);
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::GetSuggestedWord(nsString& aSuggestedWord)
+{
+	nsresult	result = NS_NOINTERFACE;
+ 	// We can spell check with any editor type
+  if (mEditor)
+	{
+    if ( mSuggestedWordIndex < mSuggestedWordList.Count())
+    {
+      mSuggestedWordList.StringAt(mSuggestedWordIndex, aSuggestedWord);
+      mSuggestedWordIndex++;
+    } else {
+      // A blank string signals that there are no more strings
+      aSuggestedWord = "";
+    }
+    result = NS_OK;
+	}
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::CheckCurrentWord(const nsString& aSuggestedWord, PRBool* aIsMisspelled)
+{
+	nsresult	result = NS_NOINTERFACE;
+ 	// We can spell check with any editor type
+  if (mEditor && mSpellChecker)
+	{
+    DeleteSuggestedWordList();
+    result = mSpellChecker->CheckWord(&aSuggestedWord, aIsMisspelled, &mSuggestedWordList);
+	}
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::ReplaceWord(const nsString& aMisspelledWord, const nsString& aReplaceWord, PRBool aAllOccurrences)
+{
+	nsresult	result = NS_NOINTERFACE;
+  if (mEditor && mSpellChecker)
+	{
+    result = mSpellChecker->Replace(&aMisspelledWord, &aReplaceWord, aAllOccurrences);
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::IgnoreWordAllOccurrences(const nsString& aWord)
+{
+	nsresult	result = NS_NOINTERFACE;
+  if (mEditor && mSpellChecker)
+	{
+    result = mSpellChecker->IgnoreAll(&aWord);
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::AddWordToDictionary(const nsString& aWord)
+{
+	nsresult	result = NS_NOINTERFACE;
+  if (mEditor && mSpellChecker)
+	{
+    result = mSpellChecker->AddWordToPersonalDictionary(&aWord);
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::RemoveWordFromDictionary(const nsString& aWord)
+{
+	nsresult	result = NS_NOINTERFACE;
+  if (mEditor && mSpellChecker)
+	{
+    result = mSpellChecker->RemoveWordFromPersonalDictionary(&aWord);
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::GetPersonalDictionaryWord(nsString& aSuggestedWord)
+{
+	nsresult	result = NS_NOINTERFACE;
+  if (mEditor && mSpellChecker)
+	{
+    printf("GetPersonalDictionaryWord NOT IMPLEMENTED\n");
+  }
+  return result;
+}
+
+
+NS_IMETHODIMP    
+nsEditorAppCore::CloseSpellChecking()
+{
+	nsresult	result = NS_NOINTERFACE;
+ 	// We can spell check with any editor type
+  if (mEditor)
+	{
+    // Cleanup - kill the spell checker
+    DeleteSuggestedWordList();
+    mSpellChecker = 0;
+    result = NS_OK;
+	}
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::DeleteSuggestedWordList()
+{
+  mSuggestedWordList.Clear();
+  mSuggestedWordIndex = 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
