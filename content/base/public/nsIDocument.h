@@ -61,6 +61,7 @@ class nsIDOMDocumentType;
 class nsIBindingManager;
 class nsIObserver;
 class nsISupportsArray;
+class nsIScriptLoader;
 class nsString;
 
 // IID for the nsIDocument interface
@@ -253,6 +254,11 @@ public:
    * Get the name space manager for this document
    */
   NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager) = 0;
+
+  /**
+   * Get the script loader for this document
+   */ 
+  NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader) = 0;
 
   //----------------------------------------------------------------------
 

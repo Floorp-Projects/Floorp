@@ -50,6 +50,7 @@
 #include "nsILineBreakerFactory.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
+#include "nsScriptLoader.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
@@ -386,6 +387,11 @@ public:
   NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager);
 
   /**
+   * Get the script loader for this document
+   */ 
+  NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader);
+
+  /**
    * Add a new observer of document change notifications. Whenever
    * content is changed, appended, inserted or removed the observers are
    * informed.
@@ -540,6 +546,7 @@ protected:
   PRBool mInDestructor;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
   nsINameSpaceManager* mNameSpaceManager;
+  nsCOMPtr<nsIScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
   nsCOMPtr<nsILineBreaker> mLineBreaker;
   nsCOMPtr<nsIWordBreaker> mWordBreaker;

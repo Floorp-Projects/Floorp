@@ -471,6 +471,9 @@ nsXULDocument::~nsXULDocument()
       mCSSLoader->DropDocumentReference();
     }
 
+    if (mScriptLoader) {
+      mScriptLoader->DropDocumentReference();
+    }
 
     delete mTemplateBuilderTable;
     delete mBoxObjectTable;
@@ -1368,6 +1371,26 @@ nsXULDocument::GetCSSLoader(nsICSSLoader*& aLoader)
   aLoader = mCSSLoader;
   NS_IF_ADDREF(aLoader);
   return result;
+}
+
+NS_IMETHODIMP
+nsXULDocument::GetScriptLoader(nsIScriptLoader** aLoader)
+{
+    NS_ENSURE_ARG_POINTER(aLoader);
+    nsresult result = NS_OK;
+    if (!mScriptLoader) {
+        nsScriptLoader* loader = new nsScriptLoader();
+        if (!loader) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        mScriptLoader = loader;
+        mScriptLoader->Init(this);
+    }
+    
+    *aLoader = mScriptLoader;
+    NS_IF_ADDREF(*aLoader);
+    
+    return result;
 }
 
 NS_IMETHODIMP

@@ -8,3 +8,5 @@ nsISelection.idl
 nsISelectionController.idl
 nsISelectionListener.idl
 nsISelectionPrivate.idl
+nsIScriptLoader.idl
+nsIScriptLoaderObserver.idl

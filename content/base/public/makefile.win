@@ -58,6 +58,8 @@ XPIDLSRCS=					\
 		.\nsISelectionListener.idl	\
 		.\nsISelection.idl		\
 		.\nsISelectionPrivate.idl	\
+		.\nsIScriptLoader.idl		\
+		.\nsIScriptLoaderObserver.idl	\
 		$(NULL)
 
 

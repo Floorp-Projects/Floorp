@@ -30,10 +30,15 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsITextContent.h"
-
+#include "nsIDocument.h"
+#include "nsIScriptLoader.h"
+#include "nsIScriptLoaderObserver.h"
+#include "nsIScriptElement.h"
 
 class nsHTMLScriptElement : public nsGenericHTMLContainerElement,
-                            public nsIDOMHTMLScriptElement
+                            public nsIDOMHTMLScriptElement,
+                            public nsIScriptLoaderObserver,
+                            public nsIScriptElement
 {
 public:
   nsHTMLScriptElement();
@@ -54,7 +59,20 @@ public:
   // nsIDOMHTMLScriptElement
   NS_DECL_NSIDOMHTMLSCRIPTELEMENT
 
+  // nsIScriptLoaderObserver
+  NS_DECL_NSISCRIPTLOADEROBSERVER
+
+  // nsIScriptElement
+  NS_IMETHOD SetLineNumber(PRUint32 aLineNumber);
+  NS_IMETHOD GetLineNumber(PRUint32* aLineNumber);
+
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
+
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+
+protected:
+  PRUint32 mLineNumber;
 };
 
 nsresult
@@ -86,6 +104,7 @@ NS_NewHTMLScriptElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLScriptElement::nsHTMLScriptElement()
 {
+  mLineNumber = 0;
 }
 
 nsHTMLScriptElement::~nsHTMLScriptElement()
@@ -96,21 +115,38 @@ nsHTMLScriptElement::~nsHTMLScriptElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLScriptElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLScriptElement, nsGenericElement) 
 
-
 // XPConnect interface list for nsHTMLScriptElement
 NS_CLASSINFO_MAP_BEGIN(HTMLScriptElement)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLScriptElement)
   NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
 NS_CLASSINFO_MAP_END
 
-
 // QueryInterface implementation for nsHTMLScriptElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLScriptElement,
                                     nsGenericHTMLContainerElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLScriptElement)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLScriptElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
+NS_IMETHODIMP 
+nsHTMLScriptElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                                 PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                                           aCompileEventHandlers);
+
+  if (NS_SUCCEEDED(rv) && mDocument && mParent) {
+    nsCOMPtr<nsIScriptLoader> loader;
+    mDocument->GetScriptLoader(getter_AddRefs(loader));
+    if (loader) {
+      loader->ProcessScriptElement(this, this);
+    }
+  }
+ 
+  return rv;
+}
 
 nsresult
 nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
@@ -246,6 +282,47 @@ NS_IMETHODIMP
 nsHTMLScriptElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
+}
+
+/* void scriptAvailable (in nsresult aResult, in nsIDOMHTMLScriptElement aElement, in nsIURI aURI, in PRInt32 aLineNo, in PRUint32 aScriptLength, [size_is (aScriptLength)] in wstring aScript); */
+NS_IMETHODIMP 
+nsHTMLScriptElement::ScriptAvailable(nsresult aResult, 
+                                     nsIDOMHTMLScriptElement *aElement, 
+                                     PRBool aIsInline,
+                                     PRBool aWasPending,
+                                     nsIURI *aURI, 
+                                     PRInt32 aLineNo,
+                                     const nsAString& aScript)
+{
+  return NS_OK;
+}
+
+/* void scriptEvaluated (in nsresult aResult, in nsIDOMHTMLScriptElement aElement); */
+NS_IMETHODIMP 
+nsHTMLScriptElement::ScriptEvaluated(nsresult aResult, 
+                                     nsIDOMHTMLScriptElement *aElement,
+                                     PRBool aIsInline,
+                                     PRBool aWasPending)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLScriptElement::SetLineNumber(PRUint32 aLineNumber)
+{
+  mLineNumber = aLineNumber;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLScriptElement::GetLineNumber(PRUint32* aLineNumber)
+{
+  NS_ENSURE_ARG_POINTER(aLineNumber);
+
+  *aLineNumber = mLineNumber;
 
   return NS_OK;
 }
