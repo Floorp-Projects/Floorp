@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil -*- -->
 
 <!DOCTYPE window SYSTEM "chrome://sidebar/locale/sidebarOverlay.dtd">
 
@@ -8,7 +8,7 @@
 
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" align="vertical" persist="hidden width">
-    <splitter id="title-box" collapse="after"
+    <splitter id="title-box" collapse="after" persist="state"
       onclick="sidebarOpenClosePanel(this)">
       <html:div class="panel-bar">
         &sidebar.panels.label;
@@ -19,31 +19,27 @@
         onclick="sidebarCustomize();" />
     </splitter>
 
-    <box id="sidebar-panels" align="vertical" flex="100%">
-    <!--
-      datasources="chrome://sidebar/content/sidebar.rdf" 
-      ref="NC:SidebarRoot">
+    <box id="sidebar-panels" align="vertical" flex="100%"
+      datasources="chrome://sidebar/content/local-panels.rdf 
+                   chrome://sidebar/content/remote-panels.rdf"
+      ref="urn:sidebar:current-panel-list">
       <template>
         <rule>
-          <box uri="rdf:*" align="vertical">
-          <splitter class="panel-bar"
-            collapse="after" resizeafter="grow"
-            onclick="sidebarSavePanelState(this)">
+          <splitter class="panel-bar" uri="rdf:*"
+            collapse="after" resizeafter="grow" persist="state">
             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#title"
-              class="panel-bar"/>
+              class="panel-bar plain"/>
             <spring flex="100%"/>
             <titledbutton class="borderless show-hide"
               onclick="sidebarOpenClosePanel(this.parentNode)"/>
           </splitter>
-          <html:iframe class="panel-frame"
+          <html:iframe class="panel-frame" uri="rdf:*" persist="height"
            src="rdf:http://home.netscape.com/NC-rdf#content"/>
-          </box>
         </rule>
       </template>
-      -->
     </box>
 
-    <splitter id="alerts-splitter" class="panel-bar"
+    <splitter id="alerts-splitter" class="panel-bar" persist="state"
       collapse="after" chromeclass="extrachrome"
       onclick="sidebarOpenClosePanel(this)"> 
       <html:div class="panel-bar">
@@ -51,7 +47,8 @@
       </html:div>
     </splitter>
 
-    <box id="alerts-panel" align="vertical" chromeclass="extrachrome">
+    <box id="alerts-panel" align="vertical" chromeclass="extrachrome"
+      persist="height">
       <html:div flex="1">
         <tree id="flash-tree"
           ref="NC:FlashRoot"
@@ -76,7 +73,7 @@
 
   <!-- Some splitter attritutes -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden" 
-    chromeclass="extrachrome" onclick="sidebarSaveState(this)"/>
+    chromeclass="extrachrome" />
 
   <!-- Scripts go last, because they peek at state to tweak menus -->
   <html:script language="JavaScript"

@@ -26,4 +26,4 @@ include $(topsrcdir)/config/rules.mk
 
 install::
 	$(INSTALL) $(srcdir)/bookmarks.html $(DIST)/bin/defaults/profile
-
+	$(INSTALL) $(srcdir)/panels.rdf     $(DIST)/bin/defaults/profile

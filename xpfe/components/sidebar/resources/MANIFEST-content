@@ -9,7 +9,8 @@ flash.xul
 preview.css
 preview.js
 preview.xul
-sidebar-registry.rdf
-sidebar.rdf
 sidebarOverlay.js
 sidebarOverlay.xul
+local-panels.rdf
+remote-panels.rdf
+default-panels.rdf

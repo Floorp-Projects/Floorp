@@ -24,14 +24,13 @@
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="Init();">
+  onload="Init();" 
+  id="main-box"
+  align="vertical">
 
-<html:script src="chrome://sidebar/content/customize.js" />
-
-<box align="vertical" flex="100%" id="main-box">
-
+  <!-- Dialog title -->
+  <html:script src="chrome://sidebar/content/customize.js" />
   <html:div class="title">
     &sidebar.customize.title.label;
   </html:div>
@@ -40,83 +39,111 @@
     <html:hr />
   </html:div>
 
-  <html:div class="subtitle">
-    &sidebar.customize.current.label;
-  </html:div>
+  <!-- The two-pane -->
+  <box align="horizontal">
 
-  <box align="horizontal" class="box-group">
+    <!-- All of the panels that are available -->
+    <box align="vertical" flex="1*">
 
-    <box align="vertical">
-      <spring flex="50%"/>
-      <titledbutton onclick="moveUp();"   id="up"   class="borderless up" />
-      <titledbutton onclick="moveDown();" id="down" class="borderless down" />
-      <spring flex="50%"/>
-    </box>
+      <html:div class="subtitle">
+      &sidebar.customize.additional.label;
+      </html:div>
 
-    <html:form>
-      <html:select id="selectList" size="10" onclick="selectChange();">
-      </html:select>
-    </html:form>
+      <html:div style="width:15em;height:15em" flex="1*">
+        <tree id="other-panels" size="10" onclick="otherPanelSelected()"
+          datasources="chrome://sidebar/content/local-panels.rdf
+                       chrome://sidebar/content/remote-panels.rdf"
+          ref="urn:sidebar:master-panel-list"
+          style="width:100%;height:100%">
+    
+          <template>
+            <treechildren>
+              <treeitem uri="rdf:*"
+                title="rdf:http://home.netscape.com/NC-rdf#title"
+                content="rdf:http://home.netscape.com/NC-rdf#content">
+                <treerow>
+                  <treecell value="rdf:http://home.netscape.com/NC-rdf#title"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </template>
+        </tree>
+      </html:div>
 
-    <box align="vertical" class="button-group" flex="100%">
-      <titledbutton id="customize-button" onclick="CustomizePanel();" 
-         value="&sidebar.customize.customize.label;" />
-      <titledbutton onclick="RemovePanel()"
-         value="&sidebar.customize.remove.label;" />
-    </box>
+      <!-- xxxslamm Need to add descriptive panel text here -->
+      <box align="horizontal" class="button-group">
+        <titledbutton id="add_button" onclick="AddPanel()"
+          value="&sidebar.customize.add.label;"
+          disabled="true"/>
 
+        <titledbutton id="preview_button" onclick="PreviewPanel()"
+          value="&sidebar.customize.preview.label;"
+          disabled="true"/>
+      </box>
+    </box> 
+
+    <!-- The panels that the user currently has chosen -->
+    <box align="vertical" flex="1*">
+      <html:div class="subtitle">
+      &sidebar.customize.current.label;
+      </html:div>
+
+      <box align="horizontal" class="box-group" flex="1*">
+        <html:div style="width:15em;height:15em" flex="1*">
+          <tree id="selected-panels" onclick="selectChange();"
+            datasources="chrome://sidebar/content/local-panels.rdf
+                         chrome://sidebar/content/remote-panels.rdf"
+            style="width:100%;height:100%">
+
+            <template>
+              <treechildren>
+                <treeitem uri="rdf:*"
+                  title="rdf:http://home.netscape.com/NC-rdf#title"
+                  customize="rdf:http://home.netscape.com/NC-rdf#customize"
+                  content="rdf:http://home.netscape.com/NC-rdf#content">
+                  <treerow>
+                    <treecell
+                      value="rdf:http://home.netscape.com/NC-rdf#title" />
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </template>
+
+            <treecol />
+
+            <!-- We explicitly create a 'treechildren' so we can refer
+                 to it from the script -->
+            <treechildren id="selected-panels-root"/> 
+          </tree>
+        </html:div>
+
+        <!-- The 'reorder' buttons -->
+        <box align="vertical">
+          <spring flex="50%"/>
+          <titledbutton onclick="moveUp();" id="up" class="borderless up" />
+          <html:div>
+          &sidebar.customize.reorder.label;
+          </html:div>
+          <titledbutton onclick="moveDown();" id="down"
+            class="borderless down" />
+          <spring flex="50%"/>
+        </box>
+      </box>
+
+      <box align="horizontal" class="button-group" flex="100%">
+        <titledbutton id="customize-button" onclick="CustomizePanel();" 
+          value="&sidebar.customize.customize.label;" />
+        <titledbutton id="remove-button" onclick="RemovePanel()"
+          value="&sidebar.customize.remove.label;" />
+      </box>
+    </box> 
   </box>
 
   <html:div>
     <html:hr />
   </html:div>
 
-  <html:div class="subtitle">
-    &sidebar.customize.additional.label;
-  </html:div>
-
-  <box align="horizontal"  class="box-group">
-
- <!-- datasources="chrome://sidebar/content/sidebar-registry.rdf"-->
-
-      <tree id="other-panels" flex='100%'
-            datasources="resource:/chrome/sidebar/content/default/sidebar-registry.rdf"
-            onclick="selected()"
-            ref="NC:SidebarRoot" >
-    
-        <!-- The template we'll use to build rows in the content model. -->
-        <template>
-          <rule>
-            <treechildren>
-            <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
-              <treerow>
-                <treecell>
-                  <treeindentation />
-                  <titledbutton align="right"
-                     value="rdf:http://home.netscape.com/NC-rdf#title" />
-                </treecell>
-              </treerow>
-            </treeitem>
-            </treechildren>
-          </rule>
-        </template>
-      </tree>
-  
-    <box align="vertical" class="button-group">
-      <titledbutton id="add_button" onclick="AddPanel()"
-         value="&sidebar.customize.add.label;"
-         disabled="true"/>
-      <titledbutton id="preview_button" onclick="PreviewPanel()"
-         value="&sidebar.customize.preview.label;"
-         disabled="true"/>
-    </box>
-
-  </box> 
-
-  <html:div>
-    <html:hr />
-  </html:div>
-
+  <!-- The 'Save' and 'Cancel' buttons -->
   <box align="horizontal">
     <spring flex="48%"/>
     <titledbutton onclick="window.close()"
@@ -127,7 +154,5 @@
        disabled="true"/>
     <spring flex="48%"/>
   </box>
-
-</box>
-
 </window>
+

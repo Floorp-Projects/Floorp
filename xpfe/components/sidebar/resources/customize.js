@@ -1,95 +1,94 @@
-// -*- Mode: Java -*-
+/* -*- Mode: Java; tab-width: 4; insert-tabs-mode: nil; c-basic-offset: 2 -*-
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ */
 
 // the rdf service
-var RDF;
+var RDF = 'component://netscape/rdf/rdf-service'
+RDF = Components.classes[RDF].getService();
+RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+
 var NC = "http://home.netscape.com/NC-rdf#";
 
-var sidebar;
+var sidebar = new Object;
+
+function debug(msg)
+{
+  //dump(msg);
+}
 
 function Init()
 {
-  RDF=Components.classes['component://netscape/rdf/rdf-service'].getService();
-  RDF=RDF.QueryInterface(Components.interfaces.nsIRDFService);
- 
-  sidebar          = new Object;
   sidebar.db       = window.arguments[0];
   sidebar.resource = window.arguments[1];
+  debug("sidebar.db = " + sidebar.db + "\n");
+  debug("sidebar.resource = " + sidebar.resource + "\n");
 
-  var registry;
-  try {
-    // First try to construct a new one and load it
-    // synchronously. nsIRDFService::GetDataSource() loads RDF/XML
-    // asynchronously by default.
-    registry = Components.classes['component://netscape/rdf/datasource?name=xml-datasource'].createInstance();
-    registry = registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  // This will load the datasource, if it isn't already.
+  sidebar.datasource = RDF.GetDataSource(sidebar.db);
 
-    var remote = registry.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-    remote.Init(sidebar.db); // this will throw if it's already been opened and registered.
+  // Add the necessary datasources to the select list
+  var select_list = document.getElementById('selected-panels');
+  select_list.database.AddDataSource(sidebar.datasource);
 
-    // read it in synchronously.
-    remote.Refresh(true);
-  }
-  catch (ex) {
-    // if we get here, then the RDF/XML has been opened and read
-    // once. We just need to grab the datasource.
-    registry = RDF.GetDataSource(sidebar.db);
-  }
+  // Root the customize dialog at the correct place.
+  select_list.setAttribute('ref', sidebar.resource);
 
-  // Create a 'container' wrapper around the sidebar.resources
-  // resource so we can use some utility routines that make access a
-  // bit easier.
-  var sb_datasource = Components.classes['component://netscape/rdf/container'].createInstance();
-  sb_datasource = sb_datasource.QueryInterface(Components.interfaces.nsIRDFContainer);
-  sb_datasource.Init(registry, RDF.GetResource(sidebar.resource));
-  
-  // Now enumerate all of the flash datasources.
-  var enumerator = sb_datasource.GetElements();
-  var count = 0;
-  while (enumerator.HasMoreElements()) {
-    count = ++count;
-    var service = enumerator.GetNext();
-    service = service.QueryInterface(Components.interfaces.nsIRDFResource);
-
-    addOption(registry, service, false);
-  }
   enableButtons();
 }
 
-function addOption(registry, service, selectIt) {
-  
-  var option_title = getAttr(registry, service, 'title');
+function addOption(registry, service, selectIt)
+{
+  dump("Adding "+service.Value+"\n");
+  var option_title     = getAttr(registry, service, 'title');
   var option_customize = getAttr(registry, service, 'customize');
   var option_content   = getAttr(registry, service, 'content');
 
-  // Check to see if the panel already exists  
-  var list = document.getElementById('selectList'); 
-  var list_length = list.childNodes.length;
-	
-  for (var ii=0; ii < list_length; ii++) {
-    //dump(list.childNodes.item(ii).getAttribute('title') + '\n');
+  var tree = document.getElementById('selected-panels'); 
+  var treeroot = document.getElementById('selected-panels-root'); 
 
-    var content   = list.childNodes.item(ii).getAttribute('content');
-
-    if (content == option_content) {
-      if (selectIt) {
-        list.selectedIndex = ii;
-      }
+  // Check to see if the panel already exists...
+  for (var ii = treeroot.firstChild; ii != null; ii = ii.nextSibling) {
+      if (ii.getAttribute('id') == service.Value) {
+      // we already had the panel installed
+      tree.selectItem(ii);
       return;
-    }
+      }
   }
 
-  var optionSelect = createOptionTitle(option_title);
-  var option = document.createElement('html:option');
-  
-  option.setAttribute('title', option_title);
-  option.setAttribute('customize', option_customize);
-  option.setAttribute('content', option_content);
- 
-  option.appendChild(optionSelect);
 
-  list.appendChild(option);
+  var item = document.createElement('treeitem');
+  var row  = document.createElement('treerow');
+  var cell = document.createElement('treecell');
+  
+  item.setAttribute('id', service.Value);
+  item.setAttribute('customize', option_customize);
+  item.setAttribute('content', option_content);
+  cell.setAttribute('value', option_title);
+ 
+  item.appendChild(row);
+  row.appendChild(cell);
+  treeroot.appendChild(item);
+
   if (selectIt) {
-    list.selectedIndex = list_length;
+    dump("Selecting new item\n");
+    tree.selectItem(item)
   }
 }
 
@@ -118,82 +117,93 @@ function selectChange() {
 }
 
 function moveUp() {
-  var list = document.getElementById('selectList'); 
-  var index = list.selectedIndex;
-  if (index > 0) {
-    var optionBefore   = list.childNodes.item(index-1);	
-    var selectedOption = list.childNodes.item(index);
-    list.remove(index);
-    list.insertBefore(selectedOption, optionBefore);
-    list.selectedIndex = index - 1;
-    enableButtons();
-    enableSave();
+  var tree = document.getElementById('selected-panels'); 
+  if (tree.selectedItems.length == 1) {
+    var selected = tree.selectedItems[0];
+    if (selected.previousSibling) {
+      selected.parentNode.insertBefore(selected, selected.previousSibling);
+      tree.selectItem(selected);
+    }
   }
+  enableButtons();
 }
    
 function moveDown() {
-  var list = document.getElementById('selectList');	
-  var index = list.selectedIndex;
-  if (index != -1 &&
-      index != list.options.length - 1) {
-    var selectedOption = list.childNodes.item(index);
-    var optionAfter    = list.childNodes.item(index+1);
-    list.remove(index+1);
-    list.insertBefore(optionAfter, selectedOption);
-    list.selectedIndex = index + 1;
-    enableButtons();
-    enableSave();
+  var tree = document.getElementById('selected-panels');
+  if (tree.selectedItems.length == 1) {
+    var selected = tree.selectedItems[0];
+    if (selected.nextSibling) {
+      if (selected.nextSibling.nextSibling) {
+        selected.parentNode.insertBefore(selected, selected.nextSibling.nextSibling);
+      }
+      else {
+        selected.parentNode.appendChild(selected);
+      }
+      tree.selectItem(selected);
+    }
   }
+  enableButtons();
 }
 
 function enableButtons() {
   var up        = document.getElementById('up');
   var down      = document.getElementById('down');
-  var list      = document.getElementById('selectList');
+  var tree      = document.getElementById('selected-panels');
   var customize = document.getElementById('customize-button');
-  var index = list.selectedIndex;
-  var noneSelected = (index == -1);
-  var isFirst      = (index == 0);
-  var isLast       = (index == list.options.length - 1);
+  var remove    = document.getElementById('remove-button');
+
+  var numSelected = tree.selectedItems.length;
+  var noneSelected, isFirst, isLast, selectedNode
+
+  if (numSelected > 0) {
+    selectedNode = tree.selectedItems[0]
+    isFirst = selectedNode == selectedNode.parentNode.firstChild
+    isLast  = selectedNode == selectedNode.parentNode.lastChild
+  }
 
   // up /\ button
-  if (noneSelected || isFirst) {
+  if (numSelected != 1 || isFirst) {
     up.setAttribute('disabled', 'true');
   } else {
     up.setAttribute('disabled', '');
   }
   // down \/ button
-  if (noneSelected || isLast) {
+  if (numSelected != 1 || isLast) {
     down.setAttribute('disabled', 'true');
   } else {
     down.setAttribute('disabled', '');
   }
   // "Customize..." button
   var customizeURL = null;
-  if (!noneSelected) {
-    var option = list.childNodes.item(index);
-    customizeURL = option.getAttribute('customize');
+  if (selectedNode) {
+    customizeURL = selectedNode.getAttribute('customize');
   }
-  if (customizeURL == 'null') {
+  if (customizeURL == null || customizeURL == '') {
     customize.setAttribute('disabled','true');
   } else {
     customize.setAttribute('disabled','');
+  }
+  // "Remove" button
+  if (numSelected == 0) {
+    remove.setAttribute('disabled','true');
+  } else {
+    remove.setAttribute('disabled','');
   }
 }
 
 function CustomizePanel() 
 {
-  var list  = document.getElementById('selectList');	
-  var index = list.selectedIndex;
+  var tree  = document.getElementById('selected-panels');
+  var index = tree.selectedIndex;
 
   if (index != -1) {
-    var title         = list.childNodes.item(index).getAttribute('title');
-    var customize_URL = list.childNodes.item(index).getAttribute('customize');
+    var title         = tree.childNodes.item(index).getAttribute('title');
+    var customize_URL = tree.childNodes.item(index).getAttribute('customize');
 
     if (!title || !customize_URL) return;
 
     var customize = window.open("chrome://sidebar/content/customize-panel.xul",
-			      "PanelPreview", "chrome");
+                                "_blank", "chrome");
 
     customize.panel_name          = title;
     customize.panel_customize_URL = customize_URL;
@@ -203,20 +213,23 @@ function CustomizePanel()
 
 function RemovePanel()
 {
-  var list        = document.getElementById('selectList');	
-  var index       = list.selectedIndex;
+  var tree = document.getElementById('selected-panels');
 
-  if (index != -1) {
-    // XXX prompt user
-    list.options[index] = null;
-
-    // Clean up the selection
-    if (index == list.length) {
-      list.selectedIndex = index - 1;
-    } else {
-      list.selectedIndex = index;
+  var nextNode = null;
+  var numSelected = tree.selectedItems.length
+  while (tree.selectedItems.length > 0) {
+    var selectedNode = tree.selectedItems[0]
+    nextNode = selectedNode.nextSibling;
+    if (!nextNode) {
+      nextNode = selectedNode.previousSibling;
     }
+    selectedNode.parentNode.removeChild(selectedNode)
+  } 
+  
+  if (nextNode) {
+    tree.selectItem(nextNode)
   }
+  enableButtons();
   enableSave();
 }
 
@@ -226,110 +239,62 @@ var FileURL = "file:////u/slamm/tt/sidebar-browser.rdf";
 // var the "NC" namespace. Used to construct resources
 function Save()
 {
-  // Open the RDF file synchronously. This is tricky, because
-  // GetDataSource() will do it asynchronously. So, what we do is
-  // this. First try to manually construct the RDF/XML datasource
-  // and read it in. This might throw an exception if the datasource
-  // has already been read in once. In which case, we'll just get
-  // the existing datasource from the RDF service.
-  var datasource;
+  // Iterate through the 'selected-panels' tree to collect the panels
+  // that the user has chosen. We need to do this _before_ we remove
+  // the panels from the datasource, because the act of removing them
+  // from the datasource will change the tree!
+  var panels = new Array();
+  var root = document.getElementById('selected-panels-root');
+  for (var node = root.firstChild; node != null; node = node.nextSibling) {
+    panels[panels.length] = node.getAttribute('id');
+  }
 
-  try {
-    datasource = Components.classes["component://netscape/rdf/datasource?name=xml-datasource"].createInstance();
-    datasource = datasource.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
-    //datasource.Init(FileURL);
-    datasource.Init(sidebar.db);
-    datasource.Open(true);
-    //dump("datasource = " + datasource + ", opened for the first time.\n");
-  }
-  catch (ex) {
-      //datasource = RDF.GetDataSource(FileURL);
-    datasource = RDF.GetDataSource(sidebar.db);
-    //dump("datasource = " + datasource + ", using registered datasource.\n");
-  }
+  // Now remove all the current panels from the datasource.
 
   // Create a "container" wrapper around the "NC:BrowserSidebarRoot"
   // object. This makes it easier to manipulate the RDF:Seq correctly.
   var container = Components.classes["component://netscape/rdf/container"].createInstance();
   container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
+  container.Init(sidebar.datasource, RDF.GetResource(sidebar.resource));
 
-  container.Init(datasource, RDF.GetResource(sidebar.resource));
-  //dump("initialized container " + container + " on " + sidebar.resource+"\n");
-
-  // Remove all the current panels
-  //
-  var enumerator = container.GetElements();
-
-  while (enumerator.HasMoreElements()) {
-    var service = enumerator.GetNext();
-    service = service.QueryInterface(Components.interfaces.nsIRDFResource);
-    container.RemoveElement(service, true);
+  for (var ii = container.GetCount(); ii >= 1; --ii) {
+    dump('removing panel ' + ii + '\n');
+    container.RemoveElementAt(ii, true);
   }
 
-  // Add the new panel list
-  //
-  var count = container.GetCount();
-  //dump("container has " + count + " elements\n");
-
-  var list = document.getElementById('selectList'); 
-  var list_length = list.childNodes.length;
-	
-  for (var ii=0; ii < list_length; ii++, count++) {
-    //dump(list.childNodes.item(ii).getAttribute('title') + '\n');
-
-    var title     = list.childNodes.item(ii).getAttribute('title');
-    var content   = list.childNodes.item(ii).getAttribute('content');
-    var customize = list.childNodes.item(ii).getAttribute('customize');
-
-    var element = RDF.GetResource(FileURL + "#" + count);
-    //dump(FileURL + "#" + count + "\n");
-	
-    container.AppendElement(element);
-    //dump("appended " + element + " to the container\n");
-
-    // Now make some sidebar-ish assertions about it...
-    datasource.Assert(element,
-                      RDF.GetResource(NC + "title"),
-                      RDF.GetLiteral(title + ' ' + count),
-                      true);
-    datasource.Assert(element,
-                      RDF.GetResource(NC + "content"),
-                      RDF.GetLiteral(content),
-                      true);
-    datasource.Assert(element,
-                      RDF.GetResource(NC + "customize"),
-                      RDF.GetLiteral(customize),
-                      true);
-
-    //dump("added assertions about " + element + "\n");
+  // Now iterate through the panels, and re-add them to the datasource
+  for (var ii = 0; ii < panels.length; ++ii) {
+    debug('adding ' + panels[ii] + '\n');
+    container.AppendElement(RDF.GetResource(panels[ii]));
   }
 
-  // Now serialize it back to disk
-  datasource.Flush();
-  //dump("wrote " + FileURL + " back to disk.\n");
+  // Write the modified panels out.
+  sidebar.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
 
-  //window.close();
+  window.close();
 }
 
-function selected()
+function otherPanelSelected()
 { 
-  var add_button = document.getElementById('add_button');
-  var preview_button = document.getElementById('preview_button');
-  var select_list = document.getElementsByAttribute("selected", "true");
-  if (select_list.length >= 1) {
-    add_button.setAttribute('disabled','');
-    preview_button.setAttribute('disabled','');
-  } else {
-    add_button.setAttribute('disabled','true');
-    preview_button.setAttribute('disabled','true');
-  }
+    var add_button = document.getElementById('add_button');
+    var preview_button = document.getElementById('preview_button');
+    var other_panels = document.getElementById('other-panels');
+
+    if (other_panels.selectedItems.length > 0) {
+        add_button.setAttribute('disabled','');
+        preview_button.setAttribute('disabled','');
+    }
+    else {
+        add_button.setAttribute('disabled','true');
+        preview_button.setAttribute('disabled','true');
+    }
 }
 
 function AddPanel() 
 {
   var tree = document.getElementById('other-panels');
   var database = tree.database;
-  var select_list = document.getElementsByAttribute("selected", "true");
+  var select_list = tree.selectedItems
   var isFirstAddition = true;
   for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
     var node = select_list[nodeIndex];
@@ -341,6 +306,7 @@ function AddPanel()
     addOption(database, rdfNode, isFirstAddition);
     isFirstAddition = false;
   }
+  enableButtons();
   enableSave();
 }
 
@@ -348,7 +314,7 @@ function PreviewPanel()
 {
   var tree = document.getElementById('other-panels');
   var database = tree.database;
-  var select_list = document.getElementsByAttribute("selected", "true");
+  var select_list = tree.selectedItems
   for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
     var node = select_list[nodeIndex];
     if (!node)    break;
@@ -362,11 +328,10 @@ function PreviewPanel()
     if (!preview_URL || !preview_name) break;
 
     var preview = window.open("chrome://sidebar/content/preview.xul",
-			      "PanelPreview", "chrome");
+                              "_blank", "chrome");
     preview.panel_name = preview_name;
     preview.panel_URL = preview_URL;
   }
-  enableSave();
 }
 
 function enableSave() {
