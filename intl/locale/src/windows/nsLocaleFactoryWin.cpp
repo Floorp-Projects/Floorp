@@ -107,11 +107,11 @@ nsresult nsLocaleWinFactory::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;  
   }
   
+  NS_ADDREF(inst);  // Stabilize
+  
   nsresult res = inst->QueryInterface(aIID, aResult);
   
-  if(NS_FAILED(res)) {
-    delete inst;
-  }
+  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
 
   return res;
 }

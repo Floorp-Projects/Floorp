@@ -19,6 +19,7 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsCOMPtr.h"
 #include "nsCollationUnix.h"
 #include "nsIScriptableDateFormat.h"
 #include "nsDateTimeFormatCID.h"
@@ -33,11 +34,9 @@ NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
 
-
-
 nsLocaleUnixFactory::nsLocaleUnixFactory(const nsCID &aClass)   
 {   
-  mRefCnt = 0;
+  NS_INIT_ISUPPORTS();
   mClassID = aClass;
 }   
 
@@ -45,32 +44,7 @@ nsLocaleUnixFactory::~nsLocaleUnixFactory()
 {   
 }   
 
-nsresult nsLocaleUnixFactory::QueryInterface(const nsIID &aIID,   
-                                      void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  NS_ADDREF_THIS(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsLocaleUnixFactory);
-NS_IMPL_RELEASE(nsLocaleUnixFactory);
+NS_IMPL_ISUPPORTS(nsLocaleUnixFactory, NS_GET_IID(nsIFactory));
 
 nsresult nsLocaleUnixFactory::CreateInstance(nsISupports *aOuter,  
                                          const nsIID &aIID,  
@@ -108,13 +82,10 @@ nsresult nsLocaleUnixFactory::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;  
   }
   
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  
-  if(NS_FAILED(res)) {
-    delete inst;
-  }
-
-  return res;
+  NS_ADDREF(inst);
+  nsresult ret = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+  return ret;
 }
 
 nsresult nsLocaleUnixFactory::LockFactory(PRBool aLock)  
