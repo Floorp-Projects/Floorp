@@ -19,7 +19,7 @@
 #include "msgCore.h"
 
 #include "nsIImapIncomingServer.h"
-#include "nsIImapHostSessionList.h"
+#include "nsIMAPHostSessionList.h"
 #include "nsImapIncomingServer.h"
 #include "nsMsgIncomingServer.h"
 
