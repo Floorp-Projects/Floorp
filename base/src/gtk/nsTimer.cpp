@@ -164,7 +164,6 @@ TimerImpl::Cancel()
   TimerImpl *me = this;
   if (mTimerId)
     gtk_timeout_remove(mTimerId);
-  NS_RELEASE(me);
 }
 
 NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
