@@ -115,8 +115,9 @@ PRUint32 nsRootAccessible::gInstanceCount = 0;
 // construction 
 //-----------------------------------------------------
 nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull,aShell), 
-  nsDocAccessibleMixin(aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1")),
-  mBusy(eBusyStateUninitialized), mListener(nsnull), mScrollPositionChangedTicks(0), mScrollablePresShells(nsnull)
+  nsDocAccessibleMixin(aShell), mListener(nsnull), 
+  mAccService(do_GetService("@mozilla.org/accessibilityService;1")),
+  mBusy(eBusyStateUninitialized), mScrollPositionChangedTicks(0), mScrollablePresShells(nsnull)
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
   if (shell) {

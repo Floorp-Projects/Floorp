@@ -300,12 +300,12 @@ NS_NewExpatDriver(nsIDTD** aResult) {
 
 nsExpatDriver::nsExpatDriver()
   :mExpatParser(0), 
-   mSink(0), 
    mInCData(0),
    mInDoctype(0),
-   mBytesParsed(0),
    mBytePosition(0),
    mInternalState(NS_OK),
+   mBytesParsed(0),
+   mSink(0), 
    mCatalogData(nsnull)
 {
   NS_INIT_REFCNT();

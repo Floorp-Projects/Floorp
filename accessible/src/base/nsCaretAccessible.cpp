@@ -51,7 +51,7 @@
 NS_IMPL_ISUPPORTS_INHERITED2(nsCaretAccessible, nsLeafAccessible, nsIAccessibleCaret, nsISelectionListener)
 
 nsCaretAccessible::nsCaretAccessible(nsIDOMNode* aDocumentNode, nsIWeakReference* aShell, nsIAccessibleEventListener *aListener):
-nsLeafAccessible(aDocumentNode, aShell), mListener(aListener), mVisible(PR_TRUE)
+nsLeafAccessible(aDocumentNode, aShell), mVisible(PR_TRUE), mListener(aListener)
 {
 }
 

@@ -108,20 +108,15 @@ GraphicsState::~GraphicsState()
 
 nsRenderingContextXlib::nsRenderingContextXlib() :
   nsRenderingContextImpl(),
-  mFontMetrics(nsnull),
-  mContext(nsnull),
-  mSurface(nsnull),
-  mOffscreenSurface(nsnull),
+  mP2T(1.0f),
+  mGC(nsnull),
+  mFunction(GXcopy),
   mCurrentColor(NS_RGB(0, 0, 0)), /* X11 intial bg color is always _black_...
                                    * ...but we should query that from 
                                    * Xserver instead of guessing that...
                                    */
-  mCurrentLineStyle(nsLineStyle_kSolid),
   mCurrentFont(nsnull),
-  mP2T(1.0f),
-  mClipRegion(nsnull),
-  mGC(nsnull),
-  mFunction(GXcopy)
+  mCurrentLineStyle(nsLineStyle_kSolid)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::nsRenderingContextXlib()\n"));
   NS_INIT_REFCNT();

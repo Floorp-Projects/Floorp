@@ -61,9 +61,9 @@ nsAbLDAPProcessReplicationData::nsAbLDAPProcessReplicationData()
  : mState(kIdle),
    mProtocol(-1),
    mCount(0),
-   mDirServerInfo(nsnull),
+   mDBOpen(PR_FALSE),
    mInitialized(PR_FALSE),
-   mDBOpen(PR_FALSE)
+   mDirServerInfo(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }

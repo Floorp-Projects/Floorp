@@ -380,15 +380,15 @@ nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
     mPosition(aCopy.mPosition),
     mFloat(aCopy.mFloat),
     mClear(aCopy.mClear),
-    // temp fix for bug 24000
-    mBreakBefore(aCopy.mBreakBefore),
-    mBreakAfter(aCopy.mBreakAfter),
-    // end temp
     mClip(nsnull),
     mOverflow(aCopy.mOverflow),
     mVisibility(aCopy.mVisibility),
     mOpacity(aCopy.mOpacity),
-    mLang(aCopy.mLang)
+    mLang(aCopy.mLang),
+    // temp fix for bug 24000
+    mBreakBefore(aCopy.mBreakBefore),
+    mBreakAfter(aCopy.mBreakAfter)
+    // end temp
 {
   MOZ_COUNT_CTOR(nsCSSDisplay);
   CSS_IF_COPY(mClip, nsCSSRect);
@@ -454,8 +454,8 @@ nsCSSMargin::nsCSSMargin(void)
 
 nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
   : mMargin(nsnull), mPadding(nsnull), 
-    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull),
-    mBorderColors(nsnull),
+    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderColors(nsnull),
+    mBorderStyle(nsnull), mBorderRadius(nsnull),
     mOutlineWidth(aCopy.mOutlineWidth),
     mOutlineColor(aCopy.mOutlineColor),
     mOutlineStyle(aCopy.mOutlineStyle),

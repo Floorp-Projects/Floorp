@@ -737,8 +737,8 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_headersInUse(nsnull),
 	  m_cachedHeaders(nsnull),
 	  m_bCacheHeaders(PR_TRUE),
-    m_cacheSize(kMaxHdrsInCache),
-    m_cachedThreadId(nsMsgKey_None)
+    m_cachedThreadId(nsMsgKey_None),
+    m_cacheSize(kMaxHdrsInCache)
 
 {
 	NS_INIT_REFCNT();

@@ -64,8 +64,8 @@ enum UpdateOp {
 
 nsAbLDAPProcessChangeLogData::nsAbLDAPProcessChangeLogData()
 : mUseChangeLog(PR_FALSE),
-  mEntriesAddedQueryCount(0),
-  mChangeLogEntriesCount(0)
+  mChangeLogEntriesCount(0),
+  mEntriesAddedQueryCount(0)
 {
    mRootDSEEntry.firstChangeNumber = 0;
    mRootDSEEntry.lastChangeNumber = 0;

@@ -479,9 +479,9 @@ inline nsThreadPoolBusyBody::~nsThreadPoolBusyBody() {
 ////////////////////////////////////////////////////////////////////////////////
 
 nsThreadPool::nsThreadPool()
-    : mMinThreads(0), mMaxThreads(0), mBusyThreads(0),
-      mShuttingDown(PR_FALSE), mLock(nsnull), mThreadExit(nsnull),
-      mPendingRequestAdded(nsnull), mPendingRequestsAtZero(nsnull)
+    : mLock(nsnull), mThreadExit(nsnull), mPendingRequestAdded(nsnull),
+      mPendingRequestsAtZero(nsnull), mMinThreads(0), mMaxThreads(0), 
+      mBusyThreads(0), mShuttingDown(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }

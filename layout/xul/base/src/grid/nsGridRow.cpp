@@ -45,8 +45,8 @@
 #include "nsGridRow.h"
 #include "nsIBox.h"
 
-nsGridRow::nsGridRow():mBox(nsnull), 
-                       mIsBogus(PR_FALSE), 
+nsGridRow::nsGridRow():mIsBogus(PR_FALSE),
+                       mBox(nsnull), 
                        mFlex(-1),
                        mPref(-1),
                        mMin(-1),

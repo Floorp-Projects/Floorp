@@ -195,9 +195,9 @@ nsImapMailFolder::nsImapMailFolder() :
     m_folderNeedsSubscribing(PR_FALSE),
     m_folderNeedsAdded(PR_FALSE),
     m_folderNeedsACLListed(PR_TRUE),
+    m_performingBiff(PR_FALSE),
     m_downloadMessageForOfflineUse(PR_FALSE),
-    m_downloadingFolderForOfflineUse(PR_FALSE),
-    m_performingBiff(PR_FALSE)
+    m_downloadingFolderForOfflineUse(PR_FALSE)
 {
       MOZ_COUNT_CTOR(nsImapMailFolder); // double count these for now.
       
@@ -6308,8 +6308,7 @@ nsImapMailCopyState::nsImapMailCopyState() :
     m_isMove(PR_FALSE), m_selectedState(PR_FALSE),
     m_isCrossServerOp(PR_FALSE), m_curIndex(0),
     m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull),
-    m_leftOver(0), m_allowUndo(PR_FALSE),
-    m_dataBufferSize(0)
+    m_dataBufferSize(0), m_leftOver(0), m_allowUndo(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }

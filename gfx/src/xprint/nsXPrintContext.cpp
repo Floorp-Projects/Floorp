@@ -97,12 +97,12 @@ PR_END_EXTERN_C
 nsXPrintContext::nsXPrintContext() :
   mXlibRgbHandle(nsnull),
   mPDisplay(nsnull),
-  mPContext(None),
   mScreen(nsnull),
   mVisual(nsnull),
   mDrawable(None),
   mGC(nsnull),
   mDepth(0),
+  mPContext(None),
   mJobStarted(PR_FALSE),
   mIsGrayscale(PR_FALSE), /* default is color output */
   mIsAPrinter(PR_TRUE),   /* default destination is printer */

@@ -172,21 +172,20 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mSink(0),
     mTokenAllocator(0),
     mTempContext(0),
-    mOpenHeadCount(0),
-    mOpenMapCount(0),
     mParser(0),       
     mTokenizer(0),
     mDTDMode(eDTDMode_quirks),
     mDocType(eHTML3_Quirks), // why not eHTML_Quirks?
     mParserCommand(eViewNormal),
     mSkipTarget(eHTMLTag_unknown),
-    mFlags(NS_DTD_FLAG_NONE),
+    mLineNumber(1),
+    mOpenHeadCount(0),
+    mOpenMapCount(0),
+    mFlags(NS_DTD_FLAG_NONE)
 #ifdef ENABLE_CRC
-    mComputedCRC32(0),
-    mExpectedCRC32(0),
+    ,mComputedCRC32(0),
+    mExpectedCRC32(0)
 #endif
-
-    mLineNumber(1)
 {
   NS_INIT_REFCNT(); 
 

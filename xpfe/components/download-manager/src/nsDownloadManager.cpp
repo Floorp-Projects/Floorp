@@ -87,8 +87,8 @@ nsIRDFService* gRDFService;
 
 NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIDOMEventListener, nsIObserver)
 
-nsDownloadManager::nsDownloadManager() : mCurrDownloads(nsnull),
-                                         mBatches(0)
+nsDownloadManager::nsDownloadManager() : mBatches(0),
+                                         mCurrDownloads(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -900,13 +900,12 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
 
 NS_IMPL_ISUPPORTS2(nsDownload, nsIDownload, nsIWebProgressListener)
 
-nsDownload::nsDownload():mStartTime(0),
+nsDownload::nsDownload():mDownloadState(NOTSTARTED),
                          mPercentComplete(0),
                          mCurrBytes(0),
                          mMaxBytes(0),
-                         mDownloadState(NOTSTARTED),
-                         mLastUpdate(-500),
-                         mMIMEInfo(nsnull)
+                         mStartTime(0),
+                         mLastUpdate(-500)
 {
   NS_INIT_ISUPPORTS();
 }

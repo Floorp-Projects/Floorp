@@ -257,10 +257,10 @@ NS_IMPL_ISUPPORTS2(nsXBLPrototypeBinding, nsIXBLPrototypeBinding, nsISupportsWea
 // Constructors/Destructors
 nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsACString& aID, nsIXBLDocumentInfo* aInfo,
                                              nsIContent* aElement)
-: mInheritStyle(PR_TRUE), 
+: mImplementation(nsnull),
+  mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
   mResources(nsnull),
-  mImplementation(nsnull),
   mAttributeTable(nsnull), 
   mInsertionPointTable(nsnull),
   mInterfaceTable(nsnull)
