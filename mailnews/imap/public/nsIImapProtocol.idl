@@ -90,9 +90,6 @@ interface nsIImapProtocol : nsIStreamListener {
 
 	void GetRunningImapURL(out nsIImapUrl aImapUrl);
 
-	// this is for the temp message display hack
-    // ** jt - let's try it a little more generic way
-	void GetStreamConsumer (out nsISupports aSupport);
     void GetRunningUrl(out nsIURI aUrl);
 
     // Tell thread to die

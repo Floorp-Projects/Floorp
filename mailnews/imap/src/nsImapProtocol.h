@@ -142,7 +142,6 @@ public:
 	NS_IMETHOD GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *flags);
 	NS_IMETHOD GetSupportedUserFlags(PRUint16 *flags);
 
-	NS_IMETHOD GetStreamConsumer (nsISupports **aSupport);
   NS_IMETHOD GetRunningUrl(nsIURI **aUrl);
   
   // Tell thread to die. This can only be called by imap service

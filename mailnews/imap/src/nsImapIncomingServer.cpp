@@ -729,15 +729,25 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
         rv = NS_OK; // don't want to return this error, just don't use the connection
         continue;
     }
-    // if we haven't found a free connection, and this connection
-    // is wrong, but it's not busy.
-    if (!freeConnection && !canRunUrlImmediately && !canRunButBusy && connection)
+    // if this connection is wrong, but it's not busy, check if we should designate
+    // it as the free connection.
+    if (!canRunUrlImmediately && !canRunButBusy && connection)
     {
         rv = connection->IsBusy(&isBusy, &isInboxConnection);
         if (NS_FAILED(rv)) 
           continue;
         if (!isBusy && !isInboxConnection)
+        {
+          if (!freeConnection)
             freeConnection = connection;
+          else  // check which is the better free connection to use.
+          {     // We prefer one not in the selected state.
+            nsXPIDLCString selectedFolderName;
+            connection->GetSelectedMailboxName(getter_Copies(selectedFolderName));
+            if (selectedFolderName.IsEmpty())
+              freeConnection = connection;
+          }
+        }
     }
     // don't leave this loop with connection set if we can't use it!
     if (!canRunButBusy && !canRunUrlImmediately)
@@ -2546,7 +2556,8 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
       if (aMsgWindow)
         aMsgWindow->GetPromptDialog(getter_AddRefs(dialogPrompter));
       rv = m_logonRedirector->Logon(userName, password, redirectorType, dialogPrompter, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
-      if (NS_FAILED(rv)) return OnLogonRedirectionError(nsnull, PR_TRUE);
+      if (NS_FAILED(rv)) 
+        return OnLogonRedirectionError(nsnull, PR_TRUE);
     }
   }
   
@@ -2682,7 +2693,13 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
       NS_IF_RELEASE(aConsumer);
     }    
   }
-  
+  else
+  {
+    m_waitingForConnectionInfo = PR_FALSE;
+    NS_ASSERTION(PR_FALSE, "got redirection response with no queued urls");
+  // Need to clear this even if we don't have any urls in the queue.
+  // Otherwise, we'll never clear it and we'll never request override info.
+  }
   return rv;
 }
 
