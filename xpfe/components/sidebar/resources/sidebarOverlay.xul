@@ -99,8 +99,7 @@
             <menuseparator />
           </menupopup>
         </toolbarbutton>
-        <toolbarbutton class="close-button" oncommand="SidebarShowHide();"
-                       tooltiptext="&sidebar.close.tooltip;"/>
+        <toolbarbutton class="close-button" oncommand="SidebarShowHide();"/>
       </sidebarheader>
   
       <vbox id="sidebar-panels"
