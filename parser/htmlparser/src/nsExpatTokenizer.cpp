@@ -24,10 +24,11 @@
  */
 
 #include "nsExpatTokenizer.h"
-#include "nsParser.h"
+//#include "nsParser.h"
 #include "nsScanner.h"
 #include "nsDTDUtils.h"
 #include "nsParser.h"
+#include "nsIParser.h"
 
 /************************************************************************
   And now for the main class -- nsExpatTokenizer...
@@ -106,11 +107,11 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
     XML_SetElementHandler(mExpatParser, HandleStartElement, HandleEndElement);    
     XML_SetCharacterDataHandler(mExpatParser, HandleCharacterData);
     XML_SetProcessingInstructionHandler(mExpatParser, HandleProcessingInstruction);
-    // XML_SetDefaultHandler(mExpatParser, NULL);
-    // XML_SetUnparsedEntityDeclHandler(mExpatParser, NULL);
+    XML_SetDefaultHandler(mExpatParser, HandleDefault);
+    XML_SetUnparsedEntityDeclHandler(mExpatParser, HandleUnparsedEntityDecl);
     XML_SetNotationDeclHandler(mExpatParser, HandleNotationDecl);
-    // XML_SetExternalEntityRefHandler(mExpatParser, NULL);
-    // XML_SetUnknownEncodingHandler(mExpatParser, NULL, NULL);    
+    XML_SetExternalEntityRefHandler(mExpatParser, HandleExternalEntityRef);
+    XML_SetUnknownEncodingHandler(mExpatParser, HandleUnknownEncoding, NULL);    
   }
 }
 
@@ -153,8 +154,7 @@ nsresult nsExpatTokenizer::ParseXMLBuffer(const char *buffer){
     if (!XML_Parse(mExpatParser, buffer, strlen(buffer), PR_FALSE)) {
       // XXX Add code here to implement error propagation to the
       // content sink.
-      NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::ParseXMLBuffer(): \
-        Error propogation from expat not yet implemented.");
+      NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::ParseXMLBuffer(): Error propogation from expat not yet implemented.");
       result = NS_ERROR_FAILURE;
     }
   }
@@ -163,6 +163,9 @@ nsresult nsExpatTokenizer::ParseXMLBuffer(const char *buffer){
   }
   return result;
 }
+
+static CTokenRecycler* gTokenRecycler=0;
+static nsDeque* gTokenDeque=0;
 
 /**
  *  This method repeatedly called by the tokenizer. 
@@ -182,55 +185,106 @@ nsresult nsExpatTokenizer::ConsumeToken(nsScanner& aScanner) {
 
   // Ask the scanner to send us all the data it has
   // scanned and pass that data to expat.
-  nsString buffer;
-  char *expatBuffer = NULL;
   nsresult result = NS_OK;
-
-  // XXX Rick should add a method to the scanner that gives me the
-  // entire contents of the scanner's buffer without calling
-  // GetChar() repeatedly.
-  buffer = aScanner.GetBuffer();
-  if (buffer) {
-    expatBuffer = buffer.ToNewCString();
-  
+  nsString& theBuffer = aScanner.GetBuffer();
+  if(0<theBuffer.Length()) {
+    char* expatBuffer = theBuffer.ToNewCString();
     if (expatBuffer) {      
+      gTokenRecycler=(CTokenRecycler*)GetTokenRecycler();
+      gTokenDeque=&mTokenDeque;
       result = ParseXMLBuffer(expatBuffer);
       delete [] expatBuffer;
     }
+    theBuffer.Truncate(0);    
   }
-
+  if(NS_OK==result)
+    result=aScanner.Eof();
   return result;
 }
 
 /***************************************/
 /* Expat Callback Functions start here */
 /***************************************/
-
-void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts)
-{
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleStartElement() not yet implemented.");
+ 
+void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts){
+  CToken* theToken=gTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
+  if(theToken) {
+    nsString& theString=theToken->GetStringValueXXX();
+    theString.SetString(name);
+    AddToken(theToken,NS_OK,*gTokenDeque);
+    int theAttrCount=0;
+    while(*atts){
+      theAttrCount++;
+      CAttributeToken* theAttrToken= (CAttributeToken*)gTokenRecycler->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown);
+      if(theAttrToken){
+        nsString& theKey=theAttrToken->GetKey();
+        theKey.SetString(*atts++);
+        nsString& theValue=theAttrToken->GetStringValueXXX();
+        theValue.SetString(*atts++);
+      }
+      CToken* theTok=(CToken*)theAttrToken;
+      AddToken(theTok,NS_OK,*gTokenDeque);
+    }
+    theToken->SetAttributeCount(theAttrCount);
+  }
+  else{
+    //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
+  }
 }
 
-void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name)
-{
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleEndElement() not yet implemented.");
+void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
+  CToken* theToken=gTokenRecycler->CreateTokenOfType(eToken_end,eHTMLTag_unknown);
+  if(theToken) {
+    nsString& theString=theToken->GetStringValueXXX();
+    AddToken(theToken,NS_OK,*gTokenDeque);
+  }
+  else{
+    //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
+  }
 }
 
-void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, int len)
-{
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleCharacterData() not yet implemented.");
+void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, int len) {
+ // NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleCharacterData() not yet implemented.");
+  CToken* theToken=0;
+  switch(s[0]){
+    case kNewLine:
+    case CR:
+      theToken=gTokenRecycler->CreateTokenOfType(eToken_newline,eHTMLTag_unknown); break;
+    case kSpace:
+    case kTab:
+      theToken=gTokenRecycler->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown); break;
+    default:
+      theToken=gTokenRecycler->CreateTokenOfType(eToken_text,eHTMLTag_unknown);
+  }
+  if(theToken) {
+    nsString& theString=theToken->GetStringValueXXX();
+    theString.Append(s,len);
+    AddToken(theToken,NS_OK,*gTokenDeque);
+    return;
+  }
+  //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
 }
 
-void nsExpatTokenizer::HandleProcessingInstruction(void *userData, 
-                                             const XML_Char *target, 
-                                             const XML_Char *data)
-{
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleProcessingInstruction() not yet implemented.");
+void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Char *target, const XML_Char *data){
+  CToken* theToken=gTokenRecycler->CreateTokenOfType(eToken_instruction,eHTMLTag_unknown);
+  if(theToken) {
+    nsString& theString=theToken->GetStringValueXXX();
+    theString.Append("<?");
+    theString.Append(target);
+    if(data) {
+      theString.Append(" ");
+      theString.Append(data);
+    }
+    theString.Append("?>");
+    AddToken(theToken,NS_OK,*gTokenDeque);
+  }
+  else{
+    //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
+  }
 }
 
-void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len)
-{
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleDefault() not yet implemented.");
+void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len) {
+//  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleDefault() not yet implemented.");
 }
 
 void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData, 
@@ -238,8 +292,7 @@ void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData,
                                           const XML_Char *base, 
                                           const XML_Char *systemId, 
                                           const XML_Char *publicId,
-                                          const XML_Char *notationName)
-{
+                                          const XML_Char *notationName) {
   NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleUnparsedEntityDecl() not yet implemented.");
 }
 
@@ -247,23 +300,25 @@ void nsExpatTokenizer::HandleNotationDecl(void *userData,
                                     const XML_Char *notationName,
                                     const XML_Char *base,
                                     const XML_Char *systemId,
-                                    const XML_Char *publicId)
-{
+                                    const XML_Char *publicId){
   NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleNotationDecl() not yet implemented.");
 }
 
-void nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
+int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
                                          const XML_Char *openEntityNames,
                                          const XML_Char *base,
                                          const XML_Char *systemId,
-                                         const XML_Char *publicId)
-{
+                                         const XML_Char *publicId){
   NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleExternalEntityRef() not yet implemented.");
+  int result=0;
+  return result;
 }
 
-void nsExpatTokenizer::HandleUnknownEncoding(void *encodingHandlerData,
+int nsExpatTokenizer::HandleUnknownEncoding(void *encodingHandlerData,
                                        const XML_Char *name,
-                                       XML_Encoding *info)
-{
+                                       XML_Encoding *info) {
   NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleUnknownEncoding() not yet implemented.");
+  int result=0;
+  return result;
 }
+

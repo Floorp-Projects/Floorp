@@ -34,10 +34,9 @@
 #include "nsDTDUtils.h"
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
+#include "nsHTMLTokenizer.h"
 #include "nsXMLTokenizer.h"
-#ifdef EXPAT
-  #include "nsExpatTokenizer.h"
-#endif
+#include "nsExpatTokenizer.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -139,10 +138,9 @@ CWellFormedDTD::CWellFormedDTD() : nsIDTD() {
  */
 CWellFormedDTD::~CWellFormedDTD(){
   mParser=0; //just to prove we destructed...
-#ifdef EXPAT
   if (mTokenizer)
-    delete (nsExpatTokenizer *) mTokenizer;
-#endif
+    delete mTokenizer;
+  mTokenizer=0;
 }
 
 /**
@@ -247,8 +245,8 @@ NS_IMETHODIMP CWellFormedDTD::BuildModel(nsIParser* aParser,nsITokenizer* aToken
   nsresult result=NS_OK;
 
   if(aTokenizer) {
-    nsITokenizer*  oldTokenizer=mTokenizer;
-    mTokenizer=aTokenizer;
+    nsHTMLTokenizer*  oldTokenizer=mTokenizer;
+    mTokenizer=(nsHTMLTokenizer*)aTokenizer;
     nsITokenRecycler* theRecycler=aTokenizer->GetTokenRecycler();
 
     while(NS_OK==result){
@@ -330,11 +328,16 @@ nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
  */
 nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
   if(!mTokenizer) {
-#ifndef EXPAT
-    mTokenizer=new nsXMLTokenizer();
-#else
-    mTokenizer = new nsExpatTokenizer();
-#endif
+    PRBool  theExpatState=PR_FALSE;
+    char* theEnvString = PR_GetEnv("EXPAT");
+    if(theEnvString){
+      if(('1'==theEnvString[0]) || ('Y'==toupper(theEnvString[0]))) {
+        theExpatState=PR_TRUE;  //this indicates that the EXPAT flag was found in the environment.
+      }
+    }
+    if(theExpatState)
+      mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer();
+    else mTokenizer=(nsHTMLTokenizer*)new nsXMLTokenizer();
   }
   return mTokenizer;
 }
