@@ -1054,6 +1054,10 @@ select > input#-moz-display {
   margin: 0px;
 }
 
+select > input:button-content {
+  text-align: left;
+}
+
 select[disabled] > input#-moz-display {
   font-family: inherit;
   font-size: inherit;
