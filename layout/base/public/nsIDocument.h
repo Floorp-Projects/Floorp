@@ -61,6 +61,7 @@ class nsINodeInfoManager;
 class nsIDOMDocument;
 class nsIDOMDocumentType;
 class nsIBindingManager;
+class nsIObserver;
 class nsISupportsArray;
 
 // IID for the nsIDocument interface
@@ -154,6 +155,16 @@ public:
    */
   NS_IMETHOD GetDocumentCharacterSet(nsString& oCharSetID) = 0;
   NS_IMETHOD SetDocumentCharacterSet(const nsString& aCharSetID) = 0;
+
+  /**
+   * Add an observer that gets notified whenever the charset changes.
+   */
+  NS_IMETHOD AddCharSetObserver(nsIObserver* aObserver) = 0;
+
+  /**
+   * Remove a charset observer.
+   */
+  NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver) = 0;
 
   /**
    * Return the Line Breaker for the document
