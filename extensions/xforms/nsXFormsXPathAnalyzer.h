@@ -41,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsXFormsXPathNode.h"
 #include "nsIDOMXPathExpression.h"
-#include "nsIDOMXPathEvaluator.h"
+#include "nsIXFormsXPathEvaluator.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsXFormsMDGSet.h"
 #include "nsIDOMNode.h"
@@ -57,8 +57,8 @@
  */
 class nsXFormsXPathAnalyzer {
 private:
-  nsCOMPtr<nsIDOMXPathEvaluator>  mEvaluator;
-  nsCOMPtr<nsIDOMXPathNSResolver> mResolver;
+  nsCOMPtr<nsIXFormsXPathEvaluator>  mEvaluator;
+  nsCOMPtr<nsIDOMNode>            mResolver;
 
   nsXFormsMDGSet                 *mCurSet;
   nsCOMPtr<nsIDOMXPathExpression> mCurExpression;
@@ -69,8 +69,8 @@ private:
                               PRUint32                 aIndent);
 
 public:
-  nsXFormsXPathAnalyzer(nsIDOMXPathEvaluator  *aEvaluator,
-                        nsIDOMXPathNSResolver *aResolver);
+  nsXFormsXPathAnalyzer(nsIXFormsXPathEvaluator  *aEvaluator,
+                        nsIDOMNode               *aResolver);
   ~nsXFormsXPathAnalyzer();
   
   nsresult Analyze(nsIDOMNode              *aContextNode,

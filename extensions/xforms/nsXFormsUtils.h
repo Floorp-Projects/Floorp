@@ -199,7 +199,7 @@ public:
    * and returned (addrefed) in |aModel|
    *
    * The return value is an XPathResult as returned from
-   * nsIDOMXPathEvaluator::Evaluate().
+   * nsIXFormsXPathEvaluator::Evaluate().
    */
   static NS_HIDDEN_(nsresult)
     EvaluateNodeBinding(nsIDOMElement           *aElement,
@@ -223,8 +223,8 @@ public:
   
   /**
    * Convenience method for doing XPath evaluations.  This gets a
-   * nsIDOMXPathEvaluator from |aContextNode|'s ownerDocument, and calls
-   * nsIDOMXPathEvaluator::Evalute using the given expression, context node,
+   * nsIXFormsXPathEvaluator from |aContextNode|'s ownerDocument, and calls
+   * nsIXFormsXPathEvaluator::Evalute using the given expression, context node,
    * namespace resolver, and result type.
    */
   static NS_HIDDEN_(already_AddRefed<nsIDOMXPathResult>)

@@ -46,7 +46,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMXPathEvaluator.h"
+#include "nsIXFormsXPathEvaluator.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMDocument.h"
@@ -72,6 +72,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIXFormsUtilityService.h"
 
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
@@ -349,45 +350,48 @@ nsXFormsUtils::EvaluateXPath(const nsAString &aExpression,
   aContextNode->GetOwnerDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, nsnull);
 
-  nsCOMPtr<nsIDOMXPathEvaluator> eval = do_QueryInterface(doc);
+  nsCOMPtr<nsIXFormsXPathEvaluator> eval = 
+           do_CreateInstance("@mozilla.org/dom/xforms-xpath-evaluator;1");
   NS_ENSURE_TRUE(eval, nsnull);
-
-  nsCOMPtr<nsIDOMXPathNSResolver> resolver;
-  eval->CreateNSResolver(aResolverNode, getter_AddRefs(resolver));
-  NS_ENSURE_TRUE(resolver, nsnull);
 
   nsCOMPtr<nsIDOMXPathExpression> expression;
   eval->CreateExpression(aExpression,
-                         resolver,
+                         aResolverNode,
                          getter_AddRefs(expression));
   NS_ENSURE_TRUE(expression, nsnull);
    
   ///
   /// @todo Evaluate() should use aContextPosition and aContextSize
   nsCOMPtr<nsISupports> supResult;
-  expression->Evaluate(aContextNode,
-                       aResultType,
-                       nsnull,
-                       getter_AddRefs(supResult));
+  nsresult rv = expression->Evaluate(aContextNode,
+                                     aResultType,
+                                     nsnull,
+                                     getter_AddRefs(supResult));
 
   nsIDOMXPathResult *result = nsnull;
-  if (supResult) {
+  if (NS_SUCCEEDED(rv) && supResult) {
     /// @todo beaufour: This is somewhat "hackish". Hopefully, this will
     /// improve when we integrate properly with Transformiix (XXX)
     /// @see http://bugzilla.mozilla.org/show_bug.cgi?id=265212
     if (aSet) {
       nsXFormsXPathParser parser;
-      nsXFormsXPathAnalyzer analyzer(eval, resolver);
+      nsXFormsXPathAnalyzer analyzer(eval, aResolverNode);
       nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(aExpression));
 
-      nsresult rv = analyzer.Analyze(aContextNode,
-                                     xNode,
-                                     expression,
-                                     &aExpression,
-                                     aSet);
+      rv = analyzer.Analyze(aContextNode,
+                            xNode,
+                            expression,
+                            &aExpression,
+                            aSet);
       NS_ENSURE_SUCCESS(rv, nsnull);
     }
     CallQueryInterface(supResult, &result);  // addrefs
+  }
+  else if(rv == NS_ERROR_XFORMS_CALCUATION_EXCEPTION){
+      nsCOMPtr<nsIDOMElement> resolverElement = do_QueryInterface(aResolverNode);
+      nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(resolverElement);
+      nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+      DispatchEvent(model, eEvent_ComputeException);
   }
 
   return result;

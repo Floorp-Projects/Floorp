@@ -38,13 +38,20 @@
 
 #include "nsIGenericFactory.h"
 #include "nsXFormsElementFactory.h"
+#include "nsXFormsUtilityService.h"
 #include "nsXFormsAtoms.h"
 #include "nsXFormsModelElement.h"
 #include "nsXFormsUtils.h"
 #include "nsICategoryManager.h"
 #include "nsIServiceManager.h"
 
+// bb0d9c8b-3096-4b66-92a0-6c1ddf80e65f
+#define NS_XFORMSUTILITYSERVICE_CID \
+{ 0xbb0d9c8b, 0x3096, 0x4b66, { 0x92, 0xa0, 0x6c, 0x1d, 0xdf, 0x80, 0xe6, 0x5f }}
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsElementFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsUtilityService)
+
 
 static NS_IMETHODIMP
 RegisterXFormsModule(nsIComponentManager *aCompMgr,
@@ -89,7 +96,11 @@ static const nsModuleComponentInfo components[] = {
     nsXFormsElementFactoryConstructor,
     RegisterXFormsModule,
     UnregisterXFormsModule
-  }
+  },
+  { "XForms Utility Service",
+    NS_XFORMSUTILITYSERVICE_CID,
+    NS_XFORMS_UTILITY_CONTRACTID,
+    nsXFormsUtilityServiceConstructor }
 };
 
 PR_STATIC_CALLBACK(nsresult)

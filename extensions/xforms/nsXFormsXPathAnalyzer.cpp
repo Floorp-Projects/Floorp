@@ -46,8 +46,9 @@
 
 MOZ_DECL_CTOR_COUNTER(nsXFormsXPathAnalyzer)
 
-nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(nsIDOMXPathEvaluator  *aEvaluator,
-                                             nsIDOMXPathNSResolver *aResolver)
+nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(
+                                          nsIXFormsXPathEvaluator  *aEvaluator,
+                                          nsIDOMNode               *aResolver)
   : mEvaluator(aEvaluator),
     mResolver(aResolver)
 {

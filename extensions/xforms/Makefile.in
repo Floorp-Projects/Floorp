@@ -65,6 +65,7 @@ REQUIRES	= \
 		xpconnect \
 		js \
 		layout \
+		transformiix \
 		schemavalidation \
 		$(NULL)
 
@@ -129,6 +130,7 @@ CPPSRCS		= \
 		nsXFormsSchemaValidator.cpp \
 		nsXFormsNodeState.cpp \
 		nsXFormsControlStub.cpp \
+		nsXFormsUtilityService.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)

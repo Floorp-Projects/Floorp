@@ -55,7 +55,7 @@
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMXPathResult.h"
-#include "nsIDOMXPathEvaluator.h"
+#include "nsIXFormsXPathEvaluator.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMXPathExpression.h"
 #include "nsIScriptGlobalObject.h"
@@ -856,7 +856,10 @@ nsXFormsModelElement::FinishConstruction()
   nsCOMPtr<nsIDOMElement> firstInstanceRoot;
   firstInstanceDoc->GetDocumentElement(getter_AddRefs(firstInstanceRoot));
 
-  nsCOMPtr<nsIDOMXPathEvaluator> xpath = do_QueryInterface(firstInstanceDoc);
+  nsresult rv;
+  nsCOMPtr<nsIXFormsXPathEvaluator> xpath = 
+           do_CreateInstance("@mozilla.org/dom/xforms-xpath-evaluator;1", &rv);
+  NS_ENSURE_TRUE(xpath, rv);
   
   nsCOMPtr<nsIDOMNodeList> children;
   mElement->GetChildNodes(getter_AddRefs(children));
@@ -866,7 +869,6 @@ nsXFormsModelElement::FinishConstruction()
     children->GetLength(&childCount);
 
   nsAutoString namespaceURI, localName;
-  nsresult rv;
   for (PRUint32 i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDOMNode> child;
     children->Item(i, getter_AddRefs(child));
@@ -929,20 +931,17 @@ nsXFormsModelElement::MaybeNotifyCompletion()
 }
 
 nsresult
-nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
-                                  nsIDOMNode           *aContextNode,
-                                  PRInt32              aContextPosition,
-                                  PRInt32              aContextSize,
-                                  nsIDOMElement        *aBindElement)
+nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
+                                  nsIDOMNode              *aContextNode,
+                                  PRInt32                 aContextPosition,
+                                  PRInt32                 aContextSize,
+                                  nsIDOMElement           *aBindElement)
 {
   // Get the model item properties specified by this \<bind\>.
   nsCOMPtr<nsIDOMXPathExpression> props[eModel__count];
   nsAutoString propStrings[eModel__count];
   nsresult rv;
   nsAutoString attrStr;
-
-  nsCOMPtr<nsIDOMXPathNSResolver> resolver;
-  aEvaluator->CreateNSResolver(aBindElement, getter_AddRefs(resolver));
 
   for (int i = 0; i < eModel__count; ++i) {
     sModelPropsList[i]->ToString(attrStr);
@@ -951,7 +950,7 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
     if (!propStrings[i].IsEmpty() &&
         i != eModel_type &&
         i != eModel_p3ptype) {
-      rv = aEvaluator->CreateExpression(propStrings[i], resolver,
+      rv = aEvaluator->CreateExpression(propStrings[i], aBindElement,
                                         getter_AddRefs(props[i]));
       if (NS_FAILED(rv)) {
         nsXFormsUtils::DispatchEvent(mElement, eEvent_ComputeException);
@@ -970,7 +969,7 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
   }
   ///
   /// @todo use aContextSize and aContextPosition in evaluation (XXX)
-  rv = aEvaluator->Evaluate(expr, aContextNode, resolver,
+  rv = aEvaluator->Evaluate(expr, aContextNode, aBindElement,
                             nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                             nsnull, getter_AddRefs(result));
   if (NS_FAILED(rv)) {
@@ -1001,7 +1000,7 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
 
     // Apply MIPs
     nsXFormsXPathParser parser;
-    nsXFormsXPathAnalyzer analyzer(aEvaluator, resolver);
+    nsXFormsXPathAnalyzer analyzer(aEvaluator, aBindElement);
     PRBool multiMIP = PR_FALSE;
     for (int j = 0; j < eModel__count; ++j) {
       if (propStrings[j].IsEmpty())
