@@ -7690,7 +7690,7 @@ fi
 echo "$ac_t""$ac_cv_func_memcmp_clean" 1>&6
 test $ac_cv_func_memcmp_clean = no && LIBOBJS="$LIBOBJS memcmp.o"
 
-for ac_func in random qsort strerror lchown fchmod snprintf localtime_r statvfs
+for ac_func in random qsort strerror lchown fchmod snprintf localtime_r statvfs usleep
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:7697: checking for $ac_func" >&5
