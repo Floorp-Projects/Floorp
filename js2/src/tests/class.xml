@@ -15,7 +15,35 @@
 </class>
 
 
+<class name="E" super="D">
+<constructor name="E">
+    GET_STATIC      R1, "D", 1
+    BIND_THIS       R2, R0, R1
+    CALL            R3, R2, ()          <!-- call to superclass constructor -->
+    RETURN          R0
+</constructor>
+</class>
+
+<function name="fn1" type="Void">
+    NEW_CLASS       R2, "E"
+    GET_STATIC      R3, "E", 1
+    BIND_THIS       R4, R2, R3
+    CALL            R1, R4, ()
+    LOAD_IMMEDIATE  R2, 1
+    LOAD_IMMEDIATE  R3, 4
+    GET_METHOD      R4, R1, 0           <!-- virtual call to 'bar' in D -->
+    CALL            R5, R4, (R2, R3)
+    GET_SLOT        R2, R1, 0
+    LOAD_NAME       R1, "print"
+    CALL            R1, R1, (R2)
+    RETURN_VOID
+</function>
+
+
 <script>
+    LOAD_NAME       R1, "fn1"
+    CALL            R1, R1, ()
+
     NEW_CLASS       R2, "D"
     GET_STATIC      R3, "D", 1          <!-- 0'th static is __init__ -->
                                         <!-- 1st static is D::D constructor -->
@@ -27,6 +55,5 @@
     CALL            R5, R4, (R2, R3)
     GET_SLOT        R2, R1, 0
     RETURN          R2
-    
 
 </script>

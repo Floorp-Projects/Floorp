@@ -35,7 +35,6 @@
 #include "world.h"
 #include "interpreter.h"
 #include "icodegenerator.h"
-#include "xmlparser.h"
 
 #ifdef DEBUGGER_FOO
 #include "debugger.h"
