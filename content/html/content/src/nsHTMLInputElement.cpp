@@ -885,7 +885,8 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
 
   // Notify the document that the CSS :checked pseudoclass for this element
   // has changed state.
-  mDocument->ContentStatesChanged(this, nsnull, nsCSSAtoms::checkedPseudo);
+  if (mDocument)
+    mDocument->ContentStatesChanged(this, nsnull, nsCSSAtoms::checkedPseudo);
 
   return NS_OK;
 }
