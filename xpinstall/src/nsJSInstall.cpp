@@ -542,6 +542,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   JSObject* jsObj;
   nsInstallFolder* folder;
   PRInt32 flags = 0;
+  nsresult rv;
 
   *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
@@ -586,10 +587,12 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, flags, &nativeRet))
-    {
-    return JS_FALSE;
-    }
+    //jsrefcount saveDepth;
+    //saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
+    rv= nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, flags, &nativeRet);
+    //JS_ResumeRequest(cx, saveDepth);
+    if (NS_FAILED(rv))
+      return JS_FALSE;
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
@@ -624,10 +627,12 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, &nativeRet))
-    {
+    //jsrefcount saveDepth;
+    //saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
+    rv = nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, &nativeRet);
+    //JS_ResumeRequest(cx, saveDepth);
+    if (NS_FAILED(rv))
         return JS_FALSE;
-    }
     
     *rval = INT_TO_JSVAL(nativeRet);
   }
@@ -794,7 +799,11 @@ InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   {
     //  public int Execute ( String jarSourcePath);
     ConvertJSValToStr(b0, cx, argv[0]);
+
+    jsrefcount saveDepth;
+    saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
     nativeThis->Execute(b0, b1, blocking, &nativeRet);
+    JS_ResumeRequest(cx, saveDepth);
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
