@@ -189,7 +189,7 @@
 #define HG98379
 #define HG65293(a) 0
 #define HG42539
-#define HG72761
+#define HG72761 	cur_ptr += sizeof(int32);
 #define HG42490
 #define HG73699
 #define HG72873
