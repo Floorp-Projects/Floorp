@@ -22,12 +22,22 @@
 
 #include "nsXMLContentSerializer.h"
 #include "nsIParserService.h"
+#include "nsIEntityConverter.h"
+
+class nsIContent;
+class nsIAtom;
 
 class nsHTMLContentSerializer : public nsXMLContentSerializer {
  public:
   nsHTMLContentSerializer();
   virtual ~nsHTMLContentSerializer();
 
+  NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn);
+
+  NS_IMETHOD AppendText(nsIDOMText* aText, 
+                        PRInt32 aStartOffset,
+                        PRInt32 aEndOffset,
+                        nsAWritableString& aStr);
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
                                 nsAWritableString& aStr);
   
@@ -36,5 +46,50 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
  protected:
   virtual void ReplaceCharacterEntities(nsAWritableString& aStr,
                                         PRUint32 aOffset);
+  PRBool HasDirtyAttr(nsIContent* aContent);
+  PRBool LineBreakBeforeOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
+  PRBool LineBreakAfterOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
+  PRBool LineBreakBeforeClose(nsIAtom* aName, PRBool aHasDirtyAttr);
+  PRBool LineBreakAfterClose(nsIAtom* aName, PRBool aHasDirtyAttr);
+  void StartIndentation(nsIAtom* aName, 
+                        PRBool aHasDirtyAttr,
+                        nsAWritableString& aStr);
+  void EndIndentation(nsIAtom* aName, 
+                      PRBool aHasDirtyAttr,
+                      nsAWritableString& aStr);
+  nsresult GetEntityConverter(nsIEntityConverter** aConverter);
+  nsresult GetParserService(nsIParserService** aParserService);
+  void SerializeAttributes(nsIContent* aContent,
+                           nsIAtom* aTagName,
+                           nsAWritableString& aStr);
+  void AppendToString(const PRUnichar* aStr,
+                      PRInt32 aLength,
+                      nsAWritableString& aOutputStr);
+  void AppendToString(const nsAReadableString& aStr,
+                      PRInt32 aLength,
+                      nsAWritableString& aOutputStr,
+                      PRBool aTranslateEntities = PR_FALSE);
+  void AppendToStringWrapped(const nsAReadableString& aStr,
+                             PRInt32 aLength,
+                             nsAWritableString& aOutputStr,
+                             PRBool aTranslateEntities);
+  PRBool HasLongLines(const nsString& text);
+
   nsCOMPtr<nsIParserService> mParserService;
+  nsCOMPtr<nsIEntityConverter> mEntityConverter;
+
+  PRInt32   mIndent;
+  PRInt32   mColPos;
+  PRBool    mInBody;
+  PRUint32  mFlags;
+  
+  PRBool    mDoFormat;
+  PRBool    mDoHeader;
+  PRBool    mBodyOnly;
+  PRInt32   mPreLevel;
+  
+  PRInt32   mMaxColumn;
+  
+  nsString  mLineBreak;
+  PRInt32   mLineBreakLen;
 };

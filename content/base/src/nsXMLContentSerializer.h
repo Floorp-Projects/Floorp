@@ -67,9 +67,9 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                           PRInt32 aStartOffset,
                           PRInt32 aEndOffset,
                           nsAWritableString& aStr);
-  nsresult PushNameSpaceDecl(const nsAReadableString& aPrefix,
-                             const nsAReadableString& aURI,
-                             nsIDOMElement* aOwner);
+  virtual nsresult PushNameSpaceDecl(const nsAReadableString& aPrefix,
+                                     const nsAReadableString& aURI,
+                                     nsIDOMElement* aOwner);
   void PopNameSpaceDeclsFor(nsIDOMElement* aOwner);
   PRBool ConfirmPrefix(nsAWritableString& aPrefix,
                        const nsAReadableString& aURI);

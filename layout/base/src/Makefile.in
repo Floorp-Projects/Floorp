@@ -74,6 +74,8 @@ CPPSRCS		= \
 		nsTextNode.cpp \
 		nsXIFConverter.cpp \
 		nsLayoutHistoryState.cpp \
+		nsXMLContentSerializer.cpp \
+		nsHTMLContentSerializer.cpp \
 		$(NULL)
 
 EXPORTS		= \
