@@ -1896,15 +1896,13 @@ nsInlineFrame::GetSkipSides() const
 // nsLineFrame implementation
 
 static void
-ReResolveChildList(nsIPresContext* aPresContext,
-                   nsIStyleContext* aParentStyleContext,
-                   nsFrameList& aFrameList)
+ReParentChildListStyle(nsIPresContext* aPresContext,
+                       nsIStyleContext* aParentStyleContext,
+                       nsFrameList& aFrameList)
 {
   nsIFrame* kid = aFrameList.FirstChild();
   while (nsnull != kid) {
-    kid->ReResolveStyleContext(aPresContext, aParentStyleContext, 
-                               NS_STYLE_HINT_REFLOW,
-                               nsnull, nsnull);
+    aPresContext->ReParentStyleContext(kid, aParentStyleContext);
     kid->GetNextSibling(&kid);
   }
 }
@@ -2002,7 +2000,7 @@ nsFirstLineFrame::AppendFrames2(nsIPresContext* aPresContext,
                                 nsIFrame*       aFrameList)
 {
   nsFrameList frames(aFrameList);
-  ReResolveChildList(aPresContext, mStyleContext, frames);
+  ReParentChildListStyle(aPresContext, mStyleContext, frames);
   // XXX ReparentFrameView
   mFrames.AppendFrames(this, aFrameList);
   return NS_OK;
@@ -2014,7 +2012,7 @@ nsFirstLineFrame::InsertFrames2(nsIPresContext* aPresContext,
                                 nsIFrame*       aFrameList)
 {
   nsFrameList frames(aFrameList);
-  ReResolveChildList(aPresContext, mStyleContext, frames);
+  ReParentChildListStyle(aPresContext, mStyleContext, frames);
   // XXX ReparentFrameView
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
   return NS_OK;
@@ -2056,8 +2054,7 @@ nsFirstLineFrame::PullInlineFrame(nsIPresContext* aPresContext,
   if (frame && !mPrevInFlow) {
     // We are a first-line frame. Fixup the child frames
     // style-context that we just pulled.
-    frame->ReResolveStyleContext(aPresContext, mStyleContext,
-                                 NS_STYLE_HINT_REFLOW, nsnull, nsnull);
+    aPresContext->ReParentStyleContext(frame, mStyleContext);
   }
   return frame;
 }
@@ -2069,8 +2066,8 @@ nsFirstLineFrame::DrainOverflow(nsIPresContext* aPresContext)
   nsFirstLineFrame* prevInFlow = (nsFirstLineFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
     if (prevInFlow->mOverflowFrames.NotEmpty()) {
-      ReResolveChildList(aPresContext, mStyleContext,
-                         prevInFlow->mOverflowFrames);
+      ReParentChildListStyle(aPresContext, mStyleContext,
+                             prevInFlow->mOverflowFrames);
       mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
     }
   }
@@ -2078,7 +2075,7 @@ nsFirstLineFrame::DrainOverflow(nsIPresContext* aPresContext)
   // It's also possible that we have an overflow list for ourselves
   if (mOverflowFrames.NotEmpty()) {
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-    ReResolveChildList(aPresContext, mStyleContext, mOverflowFrames);
+    ReParentChildListStyle(aPresContext, mStyleContext, mOverflowFrames);
     mFrames.AppendFrames(nsnull, mOverflowFrames);
   }
 }
@@ -2149,9 +2146,7 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
       // Fixup style of frame just pulled up
       nsIFrame* firstFrame = mFrames.FirstChild();
       if (firstFrame) {
-        firstFrame->ReResolveStyleContext(&aPresContext, mStyleContext,
-                                          NS_STYLE_HINT_REFLOW, nsnull,
-                                          nsnull);
+        aPresContext.ReParentStyleContext(firstFrame, mStyleContext);
       }
     }
     if (nsnull == mPrevInFlow) {
@@ -2201,7 +2196,7 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
             SetStyleContext(&aPresContext, newSC);
 
             // Re-resolve all children
-            ReResolveChildList(&aPresContext, mStyleContext, mFrames);
+            ReParentChildListStyle(&aPresContext, mStyleContext, mFrames);
 
             NS_RELEASE(newSC);
           }

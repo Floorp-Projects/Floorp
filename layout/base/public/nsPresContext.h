@@ -150,6 +150,14 @@ public:
                                         PRBool aForceUnique,
                                         nsIStyleContext** aResult) = 0;
 
+  /** 
+   * For a given frame tree, get a new style context that is the equivalent
+   * but within a new parent
+   */
+  NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
+                                  nsIStyleContext* aNewParentContext) = 0;
+
+
   /**
    * Get the font metrics for a given font.
    */

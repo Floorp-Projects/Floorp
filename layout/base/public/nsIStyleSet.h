@@ -89,6 +89,13 @@ public:
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique = PR_FALSE) = 0;
 
+  // Get a new style context that lives in a different parent
+  // The new context will be the same as the old if the new parent == the old parent
+  NS_IMETHOD  ReParentStyleContext(nsIPresContext* aPresContext,
+                                   nsIStyleContext* aStyleContext, 
+                                   nsIStyleContext* aNewParentContext,
+                                   nsIStyleContext** aNewStyleContext) = 0;
+
   // Test if style is dependent on content state
   NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
                                      nsIContent*     aContent) = 0;

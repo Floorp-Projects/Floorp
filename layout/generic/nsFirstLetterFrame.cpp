@@ -139,9 +139,7 @@ nsFirstLetterFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                         nsIFrame*       aChildList)
 {
   mFrames.SetFrames(aChildList);
-  aChildList->ReResolveStyleContext(&aPresContext, mStyleContext,
-                                    NS_STYLE_HINT_REFLOW,
-                                    nsnull, nsnull);
+  aPresContext.ReParentStyleContext(aChildList, mStyleContext); // XXX only first frame?
   return NS_OK;
 }
 
@@ -290,11 +288,9 @@ nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
     mFrames.AppendFrames(nsnull, mOverflowFrames);
   }
 
-  // Now repair our first frames style context
+  // Now repair our first frames style context XXX only first frame?
   nsIFrame* kid = mFrames.FirstChild();
   if (kid) {
-    kid->ReResolveStyleContext(aPresContext, mStyleContext,
-                               NS_STYLE_HINT_REFLOW,
-                               nsnull, nsnull);
+    aPresContext->ReParentStyleContext(kid, mStyleContext); 
   }
 }
