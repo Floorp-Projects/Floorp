@@ -1033,8 +1033,9 @@ nsGenericElement::GetNodeValue(nsAString& aNodeValue)
 NS_IMETHODIMP
 nsGenericElement::SetNodeValue(const nsAString& aNodeValue)
 {
-  // The node value can't be modified
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  // The DOM spec says that when nodeValue is defined to be null "setting it
+  // has no effect", so we don't throw an exception.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1281,9 +1282,7 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 NS_IMETHODIMP
 nsGenericElement::GetTagName(nsAString& aTagName)
 {
-  mNodeInfo->GetName(aTagName);
-
-  return NS_OK;
+  return mNodeInfo->GetQualifiedName(aTagName);
 }
 
 nsresult
