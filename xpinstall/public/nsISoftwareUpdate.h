@@ -83,7 +83,6 @@ class nsISoftwareUpdate : public nsISupports
             NS_IMETHOD InstallJarCallBack()                   = 0;
             NS_IMETHOD GetMasterListener(nsIXPIListener **aListener) = 0;
             NS_IMETHOD SetActiveListener(nsIXPIListener *aListener) = 0;
-            NS_IMETHOD StartupTasks( PRBool* outAutoreg ) = 0;
 };
 
 
@@ -93,7 +92,7 @@ class nsISoftwareUpdate : public nsISupports
  * application.  Next time XPCOM sees this file, it will cause
  * an autoreg, then delete this file.
  */
-static void
+void
 NS_SoftwareUpdateRequestAutoReg()
 {
   nsresult rv;
