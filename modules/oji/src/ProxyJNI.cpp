@@ -237,6 +237,15 @@ private:
     jvalue* mArgs;
 };
 
+inline jvalue getErrorValue()
+{
+    jvalue errorValue;
+    errorValue.d = 0;
+    return errorValue;
+}
+
+static const jvalue kErrorValue(getErrorValue());
+
 class ProxyJNIEnv : public JNIEnv {
 private:
     static JNINativeInterface_ theFuncs;
@@ -526,14 +535,13 @@ private:
     
     static jvalue InvokeMethod(JNIEnv *env, jobject obj, JNIMethod* method, jvalue* args)
     {
-        jvalue outValue = { NULL };
+        jvalue outValue;
         ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
         nsISecureEnv* secureEnv = GetSecureEnv(env);
         nsISecurityContext* securityContext = proxyEnv.getContext();
-        nsresult result;
-        result = secureEnv->CallMethod(method->mReturnType, obj, method->mMethodID, args, &outValue, securityContext);
+        nsresult rv = secureEnv->CallMethod(method->mReturnType, obj, method->mMethodID, args, &outValue, securityContext);
         NS_IF_RELEASE(securityContext);
-        return outValue;
+        return NS_SUCCEEDED(rv) ? outValue : kErrorValue;
     }
     
     static jvalue InvokeMethod(JNIEnv *env, jobject obj, JNIMethod* method, va_list args)
@@ -634,14 +642,13 @@ private:
 
     static jvalue InvokeNonVirtualMethod(JNIEnv *env, jobject obj, jclass clazz, JNIMethod* method, jvalue* args)
     {
-        jvalue outValue = { NULL };
+        jvalue outValue;
         ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
         nsISecureEnv* secureEnv = GetSecureEnv(env);
         nsISecurityContext* securityContext = proxyEnv.getContext();
-        nsresult result;
-        result = secureEnv->CallNonvirtualMethod(method->mReturnType, obj, clazz, method->mMethodID, args, &outValue, securityContext);
+        nsresult rv = secureEnv->CallNonvirtualMethod(method->mReturnType, obj, clazz, method->mMethodID, args, &outValue, securityContext);
         NS_IF_RELEASE(securityContext);
-        return outValue;
+        return NS_SUCCEEDED(rv) ? outValue : kErrorValue;
     }
     
     static jvalue InvokeNonVirtualMethod(JNIEnv *env, jobject obj, jclass clazz, JNIMethod* method, va_list args)
@@ -738,14 +745,13 @@ private:
 
     static jvalue GetField(JNIEnv* env, jobject obj, JNIField* field)
     {
-        jvalue outValue = { NULL };
+        jvalue outValue;
         ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
         nsISecureEnv* secureEnv = GetSecureEnv(env);
         nsISecurityContext* securityContext = proxyEnv.getContext();
-        nsresult result;
-        result = secureEnv->GetField(field->mFieldType, obj, field->mFieldID, &outValue, securityContext);
+        nsresult rv = secureEnv->GetField(field->mFieldType, obj, field->mFieldID, &outValue, securityContext);
         NS_IF_RELEASE(securityContext);
-        return outValue;
+        return NS_SUCCEEDED(rv) ? outValue : kErrorValue;
     }
 
 #define IMPLEMENT_GET_FIELD(methodName, returnType, jvalueField)                            \
@@ -821,14 +827,13 @@ private:
     
     static jvalue InvokeStaticMethod(JNIEnv *env, jclass clazz, JNIMethod* method, jvalue* args)
     {
-        jvalue outValue = { NULL };
+        jvalue outValue;
         ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
         nsISecureEnv* secureEnv = GetSecureEnv(env);
         nsISecurityContext* securityContext = proxyEnv.getContext();
-        nsresult result;
-        result = secureEnv->CallStaticMethod(method->mReturnType, clazz, method->mMethodID, args, &outValue, securityContext);
+        nsresult rv = secureEnv->CallStaticMethod(method->mReturnType, clazz, method->mMethodID, args, &outValue, securityContext);
         NS_IF_RELEASE(securityContext);
-        return outValue;
+        return NS_SUCCEEDED(rv) ? outValue : kErrorValue;
     }
     
     static jvalue InvokeStaticMethod(JNIEnv *env, jclass clazz, JNIMethod* method, va_list args)
@@ -925,14 +930,13 @@ private:
 
     static jvalue GetStaticField(JNIEnv* env, jclass clazz, JNIField* field)
     {
-        jvalue outValue = { NULL };
+        jvalue outValue;
         ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
         nsISecureEnv* secureEnv = GetSecureEnv(env);
         nsISecurityContext* securityContext = proxyEnv.getContext();
-        nsresult result;
-        result = secureEnv->GetStaticField(field->mFieldType, clazz, field->mFieldID, &outValue, securityContext);
+        nsresult rv = secureEnv->GetStaticField(field->mFieldType, clazz, field->mFieldID, &outValue, securityContext);
         NS_IF_RELEASE(securityContext);
-        return outValue;
+        return NS_SUCCEEDED(rv) ? outValue : kErrorValue;
     }
 
 #define IMPLEMENT_GET_FIELD(methodName, returnType, jvalueField)                            \
