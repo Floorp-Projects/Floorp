@@ -65,6 +65,8 @@ public:
 	
 	void idle(short modifiers);
 	void drawApplet();
+	void printApplet(GrafPtr printingPort, Point frameOrigin);
+	
 	void activate(Boolean active);
 	void resume(Boolean inFront);
 
