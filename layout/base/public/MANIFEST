@@ -3,6 +3,7 @@
 #
 nslayout.h
 nsHTMLReflowState.h
+nsIAutoCopy.h
 nsICaret.h
 nsIContent.h
 nsIContentIterator.h
