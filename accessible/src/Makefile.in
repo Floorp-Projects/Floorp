@@ -39,7 +39,6 @@ DIRS += other
 endif
 endif
 endif
-endif
 
 DIRS += \
   base \
