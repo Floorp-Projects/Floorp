@@ -43,10 +43,6 @@
 inline nsresult
 nsresultForErrno(int err)
 {
-#ifdef DEBUG_shaver
-    if (err)
-        fprintf(stderr, "errno %d\n", err);
-#endif
     switch(err) {
       case 0:
         return NS_OK;
@@ -101,9 +97,6 @@ protected:
 
     nsresult FillStatCache() {
 	if (stat(mPath, &mCachedStat) == -1) {
-#ifdef DEBUG_shaver
-	    fprintf(stderr, "stat(%s) -> %d\n", (const char *)mPath, errno);
-#endif
 	    return NS_ERROR_FAILURE;
 	}
 	mHaveCachedStat = PR_TRUE;
