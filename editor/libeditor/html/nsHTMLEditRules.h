@@ -74,6 +74,7 @@ protected:
   static nsresult GetTabAsNBSPsAndSpace(nsString *outString);
   
   static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
+  static PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
   static PRBool IsInlineNode(nsIDOMNode *aNode);
   static PRBool IsBlockNode(nsIDOMNode *aNode);
   static nsCOMPtr<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
@@ -84,6 +85,7 @@ protected:
   static PRBool IsEmptyTextNode(nsIDOMNode *aNode);
   
   static PRInt32 GetIndexOf(nsIDOMNode *aParent, nsIDOMNode *aChild);
+  static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset);
   
   static PRBool IsHeader(nsIDOMNode *aNode);
   static PRBool IsParagraph(nsIDOMNode *aNode);
@@ -99,6 +101,7 @@ protected:
   nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
 
   nsresult SplitNodeDeep(nsIDOMNode *aNode, nsIDOMNode *aSplitPointParent, PRInt32 aSplitPointOffset);
+  nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMSelection *aSelection); 
 
   // data
   static nsIAtom *sAAtom;

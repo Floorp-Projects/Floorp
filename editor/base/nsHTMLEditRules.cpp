@@ -405,7 +405,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
 		  {
 		    // join para's, insert break
             *aCancel = PR_TRUE;
-            res = mEditor->JoinNodes(leftParent,rightParent,topParent);
+            res = JoinNodeDeep(leftParent,rightParent,aSelection);
             if (NS_FAILED(res)) return res;
             res = mEditor->InsertBreak();
             return res;
@@ -414,7 +414,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
 		  {
 		    // join blocks
             *aCancel = PR_TRUE;
-            res = mEditor->JoinNodes(leftParent,rightParent,topParent);
+            res = JoinNodeDeep(leftParent,rightParent,aSelection);
             return res;
 		  }
 		}
@@ -469,7 +469,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
 		  {
 		    // join para's, insert break
             *aCancel = PR_TRUE;
-            res = mEditor->JoinNodes(leftParent,rightParent,topParent);
+            res = JoinNodeDeep(leftParent,rightParent,aSelection);
             if (NS_FAILED(res)) return res;
             res = mEditor->InsertBreak();
             return res;
@@ -478,7 +478,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
 		  {
 		    // join blocks
             *aCancel = PR_TRUE;
-            res = mEditor->JoinNodes(leftParent,rightParent,topParent);
+            res = JoinNodeDeep(leftParent,rightParent,aSelection);
             return res;
 		  }
 		}
@@ -531,9 +531,10 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
         res = mEditor->nsEditor::DeleteSelection(aDir);
         if (NS_FAILED(res)) return res;
 	    // then join para's, insert break
-        res = mEditor->JoinNodes(leftParent,rightParent,topParent);
+        res = JoinNodeDeep(leftParent,rightParent,aSelection);
         if (NS_FAILED(res)) return res;
-        res = mEditor->InsertBreak();
+        //res = mEditor->InsertBreak();
+        // uhh, no, we don't want to have the <br> on a deleted selction across para's
         return res;
 	  }
 	  if (IsListItem(leftParent) || IsHeader(leftParent))
@@ -543,7 +544,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
         res = mEditor->nsEditor::DeleteSelection(aDir);
         if (NS_FAILED(res)) return res;
 	    // join blocks
-        res = mEditor->JoinNodes(leftParent,rightParent,topParent);
+        res = JoinNodeDeep(leftParent,rightParent,aSelection);
         return res;
 	  }
 	}
@@ -684,6 +685,29 @@ nsHTMLEditRules::GetTag(nsIDOMNode *aNode)
 
   return atom;
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// NodesSameType: do these nodes have the same tag?
+//                    
+PRBool 
+nsHTMLEditRules::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
+{
+  if (!aNode1 || !aNode2) 
+  {
+    NS_NOTREACHED("null node passed to nsHTMLEditRules::NodesSameType()");
+    return PR_FALSE;
+  }
+  
+  nsCOMPtr<nsIAtom> atom1 = GetTag(aNode1);
+  nsCOMPtr<nsIAtom> atom2 = GetTag(aNode2);
+  
+  if (atom1.get() == atom2.get())
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // IsBlockNode: true if this node is an html block node
@@ -873,6 +897,9 @@ nsHTMLEditRules::IsEmptyTextNode(nsIDOMNode *aNode)
 
 
 
+///////////////////////////////////////////////////////////////////////////
+// GetIndexOf: returns the position index of the node in the parent
+//
 PRInt32 
 nsHTMLEditRules::GetIndexOf(nsIDOMNode *parent, nsIDOMNode *child)
 {
@@ -891,6 +918,29 @@ nsHTMLEditRules::GetIndexOf(nsIDOMNode *parent, nsIDOMNode *child)
     NS_NOTREACHED("could not find child in parent - nsHTMLEditRules::GetIndexOf");
   }
   return index;
+}
+  
+
+///////////////////////////////////////////////////////////////////////////
+// GetChildAt: returns the node at this position index in the parent
+//
+nsCOMPtr<nsIDOMNode> 
+nsHTMLEditRules::GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
+{
+  nsCOMPtr<nsIDOMNode> resultNode;
+  
+  if (!aParent) 
+    return resultNode;
+  
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
+  nsCOMPtr<nsIContent> cChild;
+  NS_PRECONDITION(content, "null content in nsHTMLEditRules::GetChildAt");
+  
+  if (NS_FAILED(content->ChildAt(aOffset, *getter_AddRefs(cChild))))
+    return resultNode;
+  
+  resultNode = do_QueryInterface(cChild);
+  return resultNode;
 }
   
 
@@ -1261,7 +1311,7 @@ nsHTMLEditRules::GetTabAsNBSPsAndSpace(nsString *outString)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// SplitNodeDeep: this plits a node "deeply", splitting children as 
+// SplitNodeDeep: this splits a node "deeply", splitting children as 
 //                appropriate.  The place to split is represented by
 //                a dom point at {splitPointParent, splitPointOffset}.
 //                That dom point must be inside aNode, which is the node to 
@@ -1296,6 +1346,55 @@ nsHTMLEditRules::SplitNodeDeep(nsIDOMNode *aNode,
   }
   
   return NS_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// JoinNodeDeep:  this joins two like nodes "deeply", joining children as 
+//                appropriate.  
+nsresult
+nsHTMLEditRules::JoinNodeDeep(nsIDOMNode *aLeftNode, 
+                              nsIDOMNode *aRightNode,
+                              nsIDOMSelection *aSelection) 
+{
+  if (!aLeftNode || !aRightNode) return NS_ERROR_NULL_POINTER;
+
+  // while the rightmost children and their descendants of the left node 
+  // match the leftmost children and their descendants of the right node
+  // join them up.  Can you say that three times fast?
+   
+  nsCOMPtr<nsIDOMNode> leftNodeToJoin = do_QueryInterface(aLeftNode);
+  nsCOMPtr<nsIDOMNode> rightNodeToJoin = do_QueryInterface(aRightNode);
+  nsCOMPtr<nsIDOMNode> parentNode;
+  PRInt32 offset;
+  nsresult res = NS_OK;
+  
+  rightNodeToJoin->GetParentNode(getter_AddRefs(parentNode));
+  
+  while (leftNodeToJoin && rightNodeToJoin && parentNode &&
+          NodesSameType(leftNodeToJoin, rightNodeToJoin))
+  {
+    res = mEditor->JoinNodes(leftNodeToJoin,rightNodeToJoin,parentNode);
+    if (NS_FAILED(res)) return res;
+    
+    res = GetStartNodeAndOffset(aSelection, &parentNode, &offset);
+    if (NS_FAILED(res)) return res;
+    
+    if (offset == 0)  // no new left node; we're done joining
+      return NS_OK;
+
+    if (IsTextNode(parentNode)) // we've joined all the way down to text nodes, we're done!
+      return NS_OK;
+
+    else
+    {
+      // get new left and right nodes, and begin anew
+      leftNodeToJoin = GetChildAt(parentNode, offset-1);
+      rightNodeToJoin = GetChildAt(parentNode, offset);
+    }
+  }
+  
+  return res;
 }
 
 
