@@ -310,3 +310,10 @@
       list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
     }
   
+  menulist > menupopup > arrowscrollbox > vbox > autorepeatbutton:hover 
+    {
+      background-color: #B2BFBF;
+      border: 1px inset #B2BFBF;
+    }
+
+
