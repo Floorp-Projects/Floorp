@@ -136,6 +136,10 @@ Bugzilla::Error - Error handling utilities for Bugzilla
 
   ThrowUserError("error_tag",
                  { foo => 'bar' });
+ 
+  # supplying "abort" to ensure tables are unlocked
+  ThrowUserError("another_error_tag",
+                 { foo => 'bar' }, 'abort');
 
 =head1 DESCRIPTION
 
@@ -154,10 +158,11 @@ of variables as a second argument. These are used by the
 I<global/user-error.html.tmpl> template to format the error, using the passed
 in variables as required.
 
-An optional third argument may be supplied. If present (and defined), then the
-error handling code will unlock the database tables. In the long term, this
-argument will go away, to be replaced by transactional C<rollback> calls. There
-is no timeframe for doing so, however.
+An optional third argument may be supplied. If present, the error
+handling code will unlock the database tables: it is a Bugzilla standard
+to provide the string "abort" as the argument value. In the long term,
+this argument will go away, to be replaced by transactional C<rollback>
+calls. There is no timeframe for doing so, however.
 
 =item C<ThrowCodeError>
 
