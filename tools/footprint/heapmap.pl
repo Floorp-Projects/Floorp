@@ -49,7 +49,6 @@ while(<>)
 
         # See if the previous heap ended with a free block
         if ($prevFree) {
-            printf "DEBUG: before END heap : $prevFree\n";
             $freeAtEndBytes += $prevFree;
             $freeAtEndCount++;
         }
@@ -63,7 +62,6 @@ while(<>)
 
         # See if the previous heap ended with a free block
         if ($prevFree) {
-            printf "DEBUG: before REGION : $prevFree\n";
             $freeAtEndBytes += $prevFree;
             $freeAtEndCount++;
         }
