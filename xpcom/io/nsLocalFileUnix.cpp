@@ -1065,7 +1065,7 @@ nsLocalFile::GetParent(nsIFile **aParent)
     parentPath.Truncate(offset);
 
     nsCOMPtr<nsILocalFile> localFile;
-    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), mFollowSymlinks, getter_AddRefs(localFile));
+    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), PR_TRUE, getter_AddRefs(localFile));
     
     if(NS_SUCCEEDED(rv) && localFile)
     {
