@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = TestXPTCInvoke
+MODULE = TestXPTC
 
 CPPSRCS = \
 	TestXPTCInvoke.cpp \
