@@ -108,9 +108,10 @@ interface nsMsgDBCommitType
 [scriptable, uuid(9188bc83-f92e-11d2-81ef-0060083a0bcf)]
 
 interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
-  nsIMsgDatabase Open(in nsIFileSpec folderName, in boolean create, in boolean upgrading);
-  nsIMsgDatabase OpenFolderDB(in nsIMsgFolder folder, in boolean create, in boolean upgrading);
-  void Close(in boolean forceCommit);
+  nsIMsgDatabase Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aUpgrading);
+  nsIMsgDatabase OpenFolderDB(in nsIMsgFolder aFolder, in boolean aCreate, in boolean aUpgrading);
+  void forceFolderDBClosed(in nsIMsgFolder aFolder);
+  void Close(in boolean aForceCommit);
 
   void Commit(in nsMsgDBCommit commitType);
   // Force closed is evil, and we should see if we can do without it.

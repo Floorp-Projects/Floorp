@@ -74,6 +74,7 @@
 #include "nsIRDFService.h"
 #include "nsTextFormatter.h"
 #include "nsCPasswordManager.h"
+#include "nsMsgDBCID.h"
 
 #include <time.h>
 
@@ -89,6 +90,7 @@ static PRTime gtimeOfLastPurgeCheck;    //variable to know when to check for pur
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
+static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 nsIAtom* nsMsgDBFolder::mFolderLoadedAtom=nsnull;
 nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgCompletedAtom=nsnull;
@@ -249,6 +251,13 @@ NS_IMETHODIMP nsMsgDBFolder::ForceDBClosed()
     {
         mDatabase->ForceClosed();
         mDatabase = nsnull;
+    }
+    else
+    {
+      nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+      nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
+      if (NS_SUCCEEDED(rv) && mailDBFactory)
+        mailDBFactory->ForceFolderDBClosed(this);
     }
     return NS_OK;
 }
@@ -3153,13 +3162,16 @@ void nsMsgDBFolder::ChangeNumPendingUnread(PRInt32 delta)
     mNumPendingUnreadMessages += delta;
     PRInt32 newUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
     NS_ASSERTION(newUnreadMessages >= 0, "shouldn't have negative unread message count");
-    nsCOMPtr<nsIMsgDatabase> db;
-    nsCOMPtr<nsIDBFolderInfo> folderInfo;
-    nsresult rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
-    if (NS_SUCCEEDED(rv) && folderInfo)
-      folderInfo->SetImapUnreadPendingMessages(mNumPendingUnreadMessages);
+    if (newUnreadMessages >= 0)
+    {
+      nsCOMPtr<nsIMsgDatabase> db;
+      nsCOMPtr<nsIDBFolderInfo> folderInfo;
+      nsresult rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+      if (NS_SUCCEEDED(rv) && folderInfo)
+        folderInfo->SetImapUnreadPendingMessages(mNumPendingUnreadMessages);
 
-    NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, newUnreadMessages);
+      NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, newUnreadMessages);
+    }
   }
 }
 
@@ -3660,7 +3672,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetNumNewMessages(PRBool deep, PRInt32 *aNumNewMess
         {
           PRInt32 num;
           folder->GetNumNewMessages(deep, &num);
-          if (num >= 0) // it's legal for counts to be negative if we don't know
+          if (num > 0) // it's legal for counts to be negative if we don't know
             numNewMessages += num;
         }
       }

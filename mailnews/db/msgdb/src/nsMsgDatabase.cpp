@@ -63,6 +63,7 @@
 #include "prprf.h"
 #include "nsTime.h"
 #include "nsIFileSpec.h"
+#include "nsLocalFolderSummarySpec.h"
 
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
@@ -787,10 +788,10 @@ nsMsgDatabase::~nsMsgDatabase()
   
   if (m_mdbAllThreadsTable)
     m_mdbAllThreadsTable->Release();
+
   if (m_mdbStore)
-  {
     m_mdbStore->Release();
-  }
+
   if (m_mdbEnv)
   {
     m_mdbEnv->Release(); //??? is this right?
@@ -1071,6 +1072,31 @@ nsresult nsMsgDatabase::CloseMDB(PRBool commit)
     Commit(nsMsgDBCommitType::kSessionCommit);
   return(NS_OK);
 }
+
+NS_IMETHODIMP nsMsgDatabase::ForceFolderDBClosed(nsIMsgFolder *aFolder)
+{
+  NS_ENSURE_ARG(aFolder);
+  nsCOMPtr <nsIFileSpec> folderPath;
+  nsFileSpec		folderName;
+
+  nsresult rv = aFolder->GetPath(getter_AddRefs(folderPath));
+  NS_ENSURE_SUCCESS(rv, rv);
+  folderPath->GetFileSpec(&folderName);
+  nsLocalFolderSummarySpec	summarySpec(folderName);
+  
+  
+  nsFileSpec dbPath(summarySpec);
+  
+  nsIMsgDatabase *mailDB = (nsMsgDatabase *) FindInCache(dbPath);
+  if (mailDB)
+  {
+    mailDB->ForceClosed();
+   //FindInCache AddRef's
+    mailDB->Release();
+  }
+  return(NS_OK);
+ }
+
 
 // force the database to close - this'll flush out anybody holding onto
 // a database without having a listener!
