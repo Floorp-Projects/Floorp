@@ -37,6 +37,7 @@
 
 #ifdef XP_PC
 #define NS_PC_DESIRED_CHECKBOX_SIZE 20
+#define NS_PC_ABSOLUTE_CHECKBOX_SIZE 12
 #endif
 
 
@@ -413,14 +414,11 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
   float p2t;
   aPresContext.GetScaledPixelsToTwips(p2t);
  
-    //XXX:??? Offset for rendering, Not sure why we need this??? When rendering the 
-    //checkbox to the screen this is not needed. But it is needed when Printing. Looks
-    // Like it offsets from the middle of the control during Printing, but not when rendered
-    // to the screen?
-  const int printOffsetX = (NS_PC_DESIRED_CHECKBOX_SIZE / 2);
-  const int printOffsetY = (NS_PC_DESIRED_CHECKBOX_SIZE / 2);
-  aRenderingContext.Translate(NSIntPixelsToTwips(printOffsetX, p2t), 
-                              NSIntPixelsToTwips(printOffsetY, p2t));
+    //Offset fixed size checkbox in to the middle of the area reserved for the checkbox
+    const int printOffsetX = (NS_PC_DESIRED_CHECKBOX_SIZE - NS_PC_ABSOLUTE_CHECKBOX_SIZE);
+    const int printOffsetY = (NS_PC_DESIRED_CHECKBOX_SIZE - NS_PC_ABSOLUTE_CHECKBOX_SIZE);
+    aRenderingContext.Translate(NSIntPixelsToTwips(printOffsetX, p2t), 
+                                NSIntPixelsToTwips(printOffsetY, p2t));
 
     // Draw's background + border
   PaintFixedSizeCheckMarkBorder(aRenderingContext, p2t);

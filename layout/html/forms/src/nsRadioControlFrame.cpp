@@ -323,15 +323,6 @@ nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
   float p2t;
   aPresContext.GetScaledPixelsToTwips(p2t);
  
-    //XXX:??? Offset for rendering, Not sure why we need this??? When rendering the 
-    //radiobox to the screen this is not needed. But it is needed when Printing. Looks
-    // Like it offsets from the middle of the control during Printing, but not when rendered
-    // to the screen?
-  const int printOffsetX = (NS_DESIRED_RADIOBOX_SIZE / 2);
-  const int printOffsetY = (NS_DESIRED_RADIOBOX_SIZE / 2);
-  aRenderingContext.Translate(NSIntPixelsToTwips(printOffsetX, p2t), 
-                              NSIntPixelsToTwips(printOffsetY, p2t));
-
   nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 
   const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);

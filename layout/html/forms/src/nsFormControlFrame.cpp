@@ -230,10 +230,22 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
  //XXX:PRINTING Temporary to force GFX rendered widgets to appear on the display. This
  //Will be used to debug GFX rendered widgets for printing. This should be removed when
  //Printing is completely working.
- PRBool renderToScreen = PR_FALSE;
-  if (PR_TRUE == renderToScreen) {
+  PRBool renderToScreen = PR_FALSE;
+
+  nsIDeviceContext* dx = nsnull;
+  dx = aPresContext.GetDeviceContext();
+  PRBool supportsWidgets = PR_FALSE;
+  if (nsnull != dx) { 
+	PRBool native = PR_FALSE;
+    dx->SupportsNativeWidgets(supportsWidgets);
+	 
+    NS_RELEASE(dx);
+  }
+
+  if ((PR_TRUE == renderToScreen) || (PR_FALSE == supportsWidgets)) {
 	return(ReflowWithNoWidget(aPresContext, aDesiredSize, aReflowState, aStatus));
   }
+
 
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
