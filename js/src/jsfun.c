@@ -1333,11 +1333,16 @@ js_IsIdentifier(JSString *str)
     n = str->length;
     s = str->chars;
     c = *s;
-    if (n == 0 || !JS_ISIDENT(c))
+    /*
+    * We don't handle unicode escape sequences here
+    * because they won't be in the input string.
+    * (Right?)
+    */
+    if (n == 0 || !JS_ISIDENT_START(c))
 	return JS_FALSE;
     for (n--; n != 0; n--) {
 	c = *++s;
-	if (!JS_ISIDENT2(c))
+	if (!JS_ISIDENT(c))
 	    return JS_FALSE;
     }
     return JS_TRUE;

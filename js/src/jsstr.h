@@ -122,11 +122,39 @@ typedef enum JSCharType {
 			   (1 << JSCT_DECIMAL_DIGIT_NUMBER))                  \
 			  >> JS_CTYPE(c)) & 1)
 
+/* A unicode letter, suitable for use in an identifier. */
+#define JS_ISUC_LETTER(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                 \
+			   (1 << JSCT_LOWERCASE_LETTER) |                     \
+			   (1 << JSCT_TITLECASE_LETTER) |                     \
+			   (1 << JSCT_MODIFIER_LETTER) |                      \
+			   (1 << JSCT_OTHER_LETTER) |                         \
+			   (1 << JSCT_LETTER_NUMBER))                         \
+			  >> JS_CTYPE(c)) & 1)
+
+/*
+* 'IdentifierPart' from ECMA grammar, is Unicode letter or
+* combining mark or digit or connector punctuation.
+*/
+#define JS_ISID_PART(c) ((((1 << JSCT_UPPERCASE_LETTER) |                     \
+			   (1 << JSCT_LOWERCASE_LETTER) |                     \
+			   (1 << JSCT_TITLECASE_LETTER) |                     \
+			   (1 << JSCT_MODIFIER_LETTER) |                      \
+			   (1 << JSCT_OTHER_LETTER) |                         \
+			   (1 << JSCT_LETTER_NUMBER) |                        \
+			   (1 << JSCT_NON_SPACING_MARK) |                     \
+			   (1 << JSCT_COMBINING_SPACING_MARK) |               \
+			   (1 << JSCT_DECIMAL_DIGIT_NUMBER) |                 \
+			   (1 << JSCT_CONNECTOR_PUNCTUATION))                 \
+			  >> JS_CTYPE(c)) & 1)
+
+/* Unicode control-format characters, ignored in input */
+#define JS_ISFORMAT(c) (((1 << JSCT_FORMAT) >> JS_CTYPE(c)) & 1)
+
 #define JS_ISWORD(c)    (JS_ISALNUM(c) || (c) == '_')
 
 /* XXXbe unify on A/X/Y tbls, avoid ctype.h? */
-#define JS_ISIDENT(c)   ((c) < 128 && (isalpha(c) || (c) == '_' || (c) == '$'))
-#define JS_ISIDENT2(c)  ((c) < 128 && (isalnum(c) || (c) == '_' || (c) == '$'))
+#define JS_ISIDENT_START(c) (JS_ISUC_LETTER(c) || (c) == '_' || (c) == '$')
+#define JS_ISIDENT(c)       (JS_ISID_PART(c) || (c) == '_' || (c) == '$')
 
 #define JS_ISDIGIT(c)   (JS_CTYPE(c) == JSCT_DECIMAL_DIGIT_NUMBER)
 

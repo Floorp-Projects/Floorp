@@ -67,6 +67,20 @@
 #include "jsinterp.h"
 #endif
 
+/*
+* Forward declarations for URI encode/decode and helper routines
+*/
+static JSBool 
+str_decodeURI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+static JSBool
+str_decodeURI_Component(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+static JSBool
+str_encodeURI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+static JSBool
+str_encodeURI_Component(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+static int oneUcs4ToUtf8Char(unsigned char *utf8Buffer, uint32 ucs4Char);
+static uint32 utf8ToOneUcs4Char(const unsigned char *utf8Buffer, int utf8Length);
+
 /* Contributions from the String class to the set of methods defined for the
  * global object.  escape and unescape used to be defined in the Mocha library,
  * but as ECMA decided to spec them, they've been moved to the core engine
@@ -260,6 +274,11 @@ static JSFunctionSpec string_functions[] = {
 #if JS_HAS_UNEVAL
     {"uneval",              str_uneval,                 1,0,0},
 #endif
+    {"decodeURI",           str_decodeURI,              1,0,0},
+    {"encodeURI",           str_encodeURI,              1,0,0},
+    {"decodeURIComponent",  str_decodeURI_Component,    1,0,0},
+    {"encodeURIComponent",  str_encodeURI_Component,    1,0,0},
+
     {0,0,0,0,0}
 };
 
@@ -865,7 +884,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	ok = JS_TRUE;
 	re->lastIndex = 0;
 	for (count = 0; index <= str->length; count++) {
-	    ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, rval);
+	    ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, rval);            
 	    if (!ok || *rval != JSVAL_TRUE)
 		break;
 	    ok = glob(cx, count, data);
@@ -1066,6 +1085,12 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 	void *mark;
 	JSStackFrame *fp;
 	JSBool ok;
+        /*
+         * Save the rightContext from the current regexp, since it
+         * gets stuck at the end of the replacement string and may
+         * be clobbered by a RegExp usage in the lambda function.
+         */
+        JSSubString saveRightContext = cx->regExpStatics.rightContext;
 
 	/*
 	 * In the lambda case, not only do we find the replacement string's
@@ -1143,6 +1168,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
       lambda_out:
 	js_FreeStack(cx, mark);
+        cx->regExpStatics.rightContext = saveRightContext;
 	return ok;
     }
 #endif /* JS_HAS_REPLACE_LAMBDA */
@@ -1264,8 +1290,10 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     rdata.length = 0;
     rdata.index = 0;
     rdata.leftIndex = 0;
-    /* for ECMA 3, the first argument is to be treated as a string 
-       (i.e. converted to one if necessary) UNLESS it's a reg.exp object */
+    /* 
+     * For ECMA 3, the first argument is to be treated as a string 
+     * (i.e. converted to one if necessary) UNLESS it's a reg.exp object.
+     */
     if (!match_or_replace(cx, obj, argc, argv, replace_glob, &rdata.base, rval,
                 (cx->version == JSVERSION_DEFAULT || cx->version > JSVERSION_1_4)))
 	return JS_FALSE;
@@ -2643,7 +2671,7 @@ const uint8 js_Y[] = {
   0,   0,   0,   0,   0,   0,   0,   0,  /*    0 */
   0,   1,   1,   1,   1,   1,   0,   0,  /*    0 */
   0,   0,   0,   0,   0,   0,   0,   0,  /*    0 */
-  0,   0,   0,   0,   1,   1,   1,   1,  /*    0 */
+  0,   0,   0,   0,   0,   0,   0,   0,  /*    0 */
   2,   3,   3,   3,   4,   3,   3,   3,  /*    0 */
   5,   6,   3,   7,   3,   8,   3,   3,  /*    0 */
   9,   9,   9,   9,   9,   9,   9,   9,  /*    0 */
@@ -2660,7 +2688,7 @@ const uint8 js_Y[] = {
   0,   0,   0,   0,   0,   0,   0,   0,  /*    2 */
   0,   0,   0,   0,   0,   0,   0,   0,  /*    2 */
   0,   0,   0,   0,   0,   0,   0,   0,  /*    2 */
- 14,   3,   4,   4,   4,   4,  15,  15,  /*    2 */
+  2,   3,   4,   4,   4,   4,  15,  15,  /*    2 */
  11,  15,  16,   5,   7,   8,  15,  11,  /*    2 */
  15,   7,  17,  17,  11,  16,  15,   3,  /*    2 */
  11,  18,  16,   6,  19,  19,  19,   3,  /*    2 */
@@ -3762,3 +3790,268 @@ js_ToLower(jschar c)
     return (v & 0x00200000) ? c + ((int32)v >> 22) : c;
 }
 #endif /* !__GNUC__ */
+
+char *uriReservedPlusPound = ";/?:@&=+$,#";
+char *uriUnescaped = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.!~*'()";
+
+/* concatenate jschars onto a JSString */
+static JSBool
+add_chars(JSContext *cx, JSString *str, jschar *chars, size_t length)
+{
+    str->chars = JS_realloc(cx, str->chars, (str->length + length + 1) * sizeof(jschar));
+    if (!str->chars)
+        return JS_FALSE;
+    js_strncpy(str->chars + str->length, chars, length);
+    str->length += length;
+    return JS_TRUE;
+}
+
+/* concatenate chars onto a JSString */
+static JSBool
+add_bytes(JSContext *cx, JSString *str, char *bytes, size_t length)
+{
+    size_t i;
+
+    str->chars = JS_realloc(cx, str->chars, (str->length + length + 1) * sizeof(jschar));
+    if (!str->chars)
+        return JS_FALSE;
+    for (i = 0; i < length; i++)
+	str->chars[str->length + i] = (unsigned char)bytes[i];
+    str->chars[str->length + length] = 0;
+    str->length += length;
+    return JS_TRUE;
+}
+
+/* 
+*   ECMA 3, 15.1.3 URI Handling Function Properties
+*
+*   The following are implementations of the algorithms
+*   given in the ECMA specification for the hidden functions
+*   'Encode' and 'Decode'.
+*/
+static JSBool encode(JSContext *cx, JSString *str, JSString *unescapedSet, jsval *rval)
+{
+    size_t j, k = 0, L;
+    jschar C, C2;
+    uint32 V;
+    unsigned char utf8buf[6];
+    char hexBuf[4];
+    JSString *R;
+
+    R = js_NewString(cx, NULL, 0, 0);
+    if (!R)
+        return JS_FALSE;
+
+    while (k < str->length) {
+        C = str->chars[k];
+        if (js_strchr(unescapedSet->chars, C)) {
+            if (!add_chars(cx, R, &C, 1))
+                return JS_FALSE;
+        } else {
+            if ((C >= 0xDC00) && (C <= 0xDFFF)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				 JSMSG_BAD_URI, NULL);
+                return JS_FALSE;
+            }
+            if ((C < 0xD800) || (C > 0xDBFF))
+                V = C;
+            else {
+                k++;
+                if (k == str->length) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				     JSMSG_BAD_URI, NULL);
+                    return JS_FALSE;
+                }
+                C2 = str->chars[k];
+                if ((C2 < 0xDC00) || (C2 > 0xDFFF)) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				     JSMSG_BAD_URI, NULL);
+                    return JS_FALSE;
+                }
+                V = ((C - 0xD800) << 10) + (C2 - 0xDC00) + 0x10000;
+            }
+            L = oneUcs4ToUtf8Char(utf8buf, V);
+            for (j = 0; j < L; j++) {
+                sprintf(hexBuf, "%%%.2X", utf8buf[j]);
+                if (!add_bytes(cx, R, hexBuf, 3))
+                    return JS_FALSE;
+            }
+        }
+        k++;
+    }
+    *rval = STRING_TO_JSVAL(R);
+    return JS_TRUE;
+}
+
+static JSBool decode(JSContext *cx, JSString *str, JSString *reservedSet, jsval *rval)
+{
+    size_t start, k = 0;
+    jschar C, H;
+    uint32 V;
+    uint B;
+    unsigned char octets[6];
+    JSString *R;
+    int16 j, n;
+
+    R = js_NewString(cx, NULL, 0, 0);
+    if (!R)
+        return JS_FALSE;
+
+    while (k < str->length) {
+        C = str->chars[k];
+        if (C == '%') {
+            start = k;
+            if ((k + 2) >= str->length) goto errOut;
+            if (!JS7_ISHEX(str->chars[k + 1]) || !JS7_ISHEX(str->chars[k + 2])) 
+                goto errOut;
+            B = JS7_UNHEX(str->chars[k + 1]) * 16 + JS7_UNHEX(str->chars[k + 2]);
+            k += 2;
+            if (!(B & 0x80))
+                C = B;
+            else {
+                n = 1;
+                while (B & (0x80 >> n)) n++;
+                if ((n == 1) || (n > 6)) goto errOut;
+                octets[0] = (char)B;
+                if ((k + 3 * (n - 1)) >= str->length) goto errOut;
+                for (j = 1; j < n; j++) {
+                    k++;
+                    if (str->chars[k] != '%') goto errOut;
+                    if (!JS7_ISHEX(str->chars[k + 1]) || !JS7_ISHEX(str->chars[k + 2])) 
+                        goto errOut;
+                    B = JS7_UNHEX(str->chars[k + 1]) * 16 + JS7_UNHEX(str->chars[k + 2]);
+                    if ((B & 0xC0) != 0x80) goto errOut;
+                    k += 2;
+                    octets[j] = (char)B;
+                }
+                V = utf8ToOneUcs4Char(octets, n);
+                if (V >= 0x10000) {
+                    V -= 0x10000;
+                    if (V > 0xFFFFF) goto errOut;
+                    C = (jschar)((V & 0x3FF) + 0xDC00);
+                    H = (jschar)((V >> 10) + 0xD800);
+                    if (!add_chars(cx, R, &H, 1)) return JS_FALSE;
+                }
+                else
+                    C = (jschar)V;
+            }
+            if (js_strchr(reservedSet->chars, C)) {
+                if (!add_chars(cx, R, &str->chars[start], (k - start + 1))) return JS_FALSE;
+            }
+            else
+                if (!add_chars(cx, R, &C, 1)) return JS_FALSE;
+        }
+        else
+            if (!add_chars(cx, R, &C, 1)) return JS_FALSE;
+        k++;
+    }
+    *rval = STRING_TO_JSVAL(R);
+    return JS_TRUE;
+errOut:
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+		     JSMSG_BAD_URI, NULL);
+    return JS_FALSE;
+}
+
+static JSBool
+str_decodeURI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str, *reservedURISet;
+    str = js_ValueToString(cx, argv[0]);
+    if (!str)
+	return JS_FALSE;
+    reservedURISet = JS_NewStringCopyZ(cx, uriReservedPlusPound);
+    if (!reservedURISet)
+        return JS_FALSE;
+    return decode(cx, str, reservedURISet, rval);
+}
+
+static JSBool
+str_decodeURI_Component(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    str = js_ValueToString(cx, argv[0]);
+    if (!str)
+	return JS_FALSE;
+    return decode(cx, str, cx->runtime->emptyString, rval);
+}
+
+static JSBool
+str_encodeURI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str, *unescapedURISet;    
+    str = js_ValueToString(cx, argv[0]);
+    if (!str)
+	return JS_FALSE;
+    unescapedURISet = JS_NewStringCopyZ(cx, uriReservedPlusPound);
+    if (!unescapedURISet)
+        return JS_FALSE;
+    if (!add_bytes(cx, unescapedURISet, uriUnescaped, strlen(uriUnescaped)))
+        return JS_FALSE;
+    return encode(cx, str, unescapedURISet, rval);
+}
+
+static JSBool
+str_encodeURI_Component(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str, *unescapedURISet;
+    str = js_ValueToString(cx, argv[0]);
+    if (!str)
+	return JS_FALSE;
+    unescapedURISet = JS_NewStringCopyZ(cx, uriUnescaped);
+    if (!unescapedURISet)
+        return JS_FALSE;
+    return encode(cx, str, unescapedURISet, rval);
+}
+
+
+/* Convert one UCS-4 char and write it into a UTF-8 buffer, which must be
+ * at least 6 bytes long.  Return the number of UTF-8 bytes of data written.
+ */
+static int oneUcs4ToUtf8Char(unsigned char *utf8Buffer, uint32 ucs4Char)
+{
+    int utf8Length = 1;
+
+    JS_ASSERT(ucs4Char <= 0x7FFFFFFF);
+    if (ucs4Char < 0x80)
+        *utf8Buffer = (unsigned char)ucs4Char;
+    else {
+        int i;
+        uint32 a = ucs4Char >> 11;
+        utf8Length = 2;
+        while (a) {
+            a >>= 5;
+            utf8Length++;
+        }
+        i = utf8Length;
+        while (--i) {
+            utf8Buffer[i] = (unsigned char)(ucs4Char & 0x3F | 0x80);
+            ucs4Char >>= 6;
+        }
+        *utf8Buffer = (unsigned char)(0x100 - (1 << (8-utf8Length)) + ucs4Char);
+    }
+    return utf8Length;
+}
+
+
+/* Convert a utf8 character sequence into a UCS-4 character and return that
+ * character.  It is assumed that the caller already checked that the sequence is valid.
+ */
+static uint32 utf8ToOneUcs4Char(const unsigned char *utf8Buffer, int utf8Length)
+{
+    uint32 ucs4Char;
+
+    JS_ASSERT(utf8Length >= 1 && utf8Length <= 6);
+    if (utf8Length == 1) {
+        ucs4Char = *utf8Buffer;
+        JS_ASSERT(!(ucs4Char & 0x80));
+    } else {
+        JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7-utf8Length)))) == (0x100 - (1 << (8-utf8Length))));
+        ucs4Char = *utf8Buffer++ & (1<<(7-utf8Length))-1;
+        while (--utf8Length) {
+            JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
+            ucs4Char = ucs4Char<<6 | *utf8Buffer++ & 0x3F;
+        }
+    }
+    return ucs4Char;
+}
