@@ -413,12 +413,27 @@
 <!ENTITY calendar.wizard.subscribe.label           "Subscribir: Suscribirse a un fichero de calendario en una máquina remota (p. ej. Internet)">
 <!ENTITY calendar.wizard.publish.label             "Publicar: Publicar eventos en una máquina remota (p. ej. Internet) para que otros se suscriban.">
 
-<!-- Calendar Import Duplicates Dialog -->
-<!ENTITY calendar.importdupes.dialog.title "Gestión de duplicados" >
-<!ENTITY calendar.importdupes.caption.label "Qué hacer con los duplicados:">
-<!ENTITY calendar.importdupes.autodiscard.label "Descartar duplicados automáticamente">
-<!ENTITY calendar.importdupes.adddupes.label "Añadir duplicados">
-<!ENTITY calendar.importdupes.prompt.label "Preguntar cada vez">
+<!-- Calendar Import Outlook CSV Dialog -->
+<!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
+                  copied from outlook csv file headers -->
+<!ENTITY calendar.importoutlook.dialog.title "Outlook CSV Import" >
+<!ENTITY calendar.importoutlook.mapconcepts.label "Please map the following calendar concepts to their Outlook CSV equivalents:" >
+<!ENTITY calendar.importoutlook.outlooksubject.label "Subject" >
+<!ENTITY calendar.importoutlook.outlookstartdate.label "Start date" >
+<!ENTITY calendar.importoutlook.outlookstarttime.label "Start time" >
+<!ENTITY calendar.importoutlook.outlookenddate.label "End date" >
+<!ENTITY calendar.importoutlook.outlookendtime.label "End time" >
+<!ENTITY calendar.importoutlook.outlooklocation.label "Location" >
+<!ENTITY calendar.importoutlook.outlookdescription.label "Description" >
+<!ENTITY calendar.importoutlook.outlookallday.label "All-day event" >
+<!ENTITY calendar.importoutlook.outlookprivate.label "Private" >
+<!ENTITY calendar.importoutlook.outlookalarm.label "Alarm on/off" >
+<!ENTITY calendar.importoutlook.outlookalarmdate.label "Alarm date" >
+<!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarm time" >
+<!ENTITY calendar.importoutlook.outlookcategories.label "Categories" >
+<!ENTITY calendar.importoutlook.selectmeaning.label "Select the meaning of the following word: " >
+<!ENTITY calendar.importoutlook.true.label "True" >
+<!ENTITY calendar.importoutlook.false.label "False" >
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Imprimir un calendario">
@@ -427,3 +442,4 @@
 <!ENTITY calendar.print.listselected.label "Lista de eventos seleccionados">
 <!ENTITY calendar.print.onlyitemsstatus.label "Imprimir sólo eventos con este estado:">
 <!ENTITY calendar.print.onlyitemscategory.label "Imprimir sólo los elementos de esta categoría:">
+
