@@ -1460,7 +1460,8 @@ nsSocketTransport::OnFound(nsISupports *aContext,
   nsAutoLock lock(mLock);
   nsresult rv = NS_OK;
 
-  if (aHostEnt->hostEnt.h_addr_list) {
+  if (aHostEnt->hostEnt.h_addr_list
+      && aHostEnt->hostEnt.h_addr_list[0]) {
     memcpy(&mNetAddress.inet.ip, aHostEnt->hostEnt.h_addr_list[0], 
            sizeof(mNetAddress.inet.ip));
 
