@@ -36,7 +36,8 @@ include $(DEPTH)/config/config.mk
 
 LCFLAGS += -D_IMPL_NS_HTML
 
-INCLUDES += -I../../style/src -I../../../base/src
+INCLUDES += -I../../../html/style/src -I../../../html/base/src \
+ -I../../../base/src
 
 include $(DEPTH)/config/rules.mk
 
