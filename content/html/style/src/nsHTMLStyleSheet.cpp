@@ -1306,66 +1306,63 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
                                                   PRInt32         aNewIndexInContainer)
 {
   nsIPresShell* shell = aPresContext->GetShell();
-  nsIContent* parentContainer = aContainer;
-  NS_IF_ADDREF(parentContainer);  // match release below
-  while (nsnull != parentContainer) {
-    nsIFrame* parentFrame = shell->FindFrameWithContent(parentContainer);
-    if (nsnull != parentFrame) {
-      // Get the parent frame's last-in-flow
-      nsIFrame* nextInFlow = parentFrame;
-      while (nsnull != nextInFlow) {
-        parentFrame->GetNextInFlow(nextInFlow);
-        if (nsnull != nextInFlow) {
-          parentFrame = nextInFlow;
-        }
+  nsIFrame* parentFrame = shell->FindFrameWithContent(aContainer);
+
+#ifdef NS_DEBUG
+  if (nsnull == parentFrame) {
+    NS_WARNING("Ignoring content-appended notification with no matching frame...");
+  }
+#endif
+  if (nsnull != parentFrame) {
+    // Get the parent frame's last-in-flow
+    nsIFrame* nextInFlow = parentFrame;
+    while (nsnull != nextInFlow) {
+      parentFrame->GetNextInFlow(nextInFlow);
+      if (nsnull != nextInFlow) {
+        parentFrame = nextInFlow;
       }
-
-      // Create some new frames
-      PRInt32   count;
-      nsIFrame* lastChildFrame = nsnull;
-      nsIFrame* firstAppendedFrame = nsnull;
-
-      aContainer->ChildCount(count);
-
-      for (PRInt32 i = aNewIndexInContainer; i < count; i++) {
-        nsIContent* child;
-        nsIFrame*   frame;
-
-        aContainer->ChildAt(i, child);
-        ConstructFrame(aPresContext, child, parentFrame, frame);
-
-        // Link the frame into the child frame list
-        if (nsnull == lastChildFrame) {
-          firstAppendedFrame = frame;
-        } else {
-          lastChildFrame->SetNextSibling(frame);
-        }
-
-        // XXX We should probably mark the frame as being dirty: that way the
-        // parent frame can easily identify the newly added frames. Either that
-        // or pass along in count in which case they must be contiguus...
-        lastChildFrame = frame;
-        NS_RELEASE(child);
-      }
-
-      // Notify the parent frame with a reflow command, passing it the list of
-      // new frames.
-      nsIReflowCommand* reflowCmd;
-      nsresult          result;
-
-      result = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
-                                       nsIReflowCommand::FrameAppended,
-                                       firstAppendedFrame);
-      if (NS_SUCCEEDED(result)) {
-        shell->AppendReflowCommand(reflowCmd);
-        NS_RELEASE(reflowCmd);
-      }
-      NS_RELEASE(parentContainer);
-      break;
     }
-    nsIContent* oldParent = parentContainer;
-    parentContainer->GetParent(parentContainer);
-    NS_RELEASE(oldParent);
+
+    // Create some new frames
+    PRInt32   count;
+    nsIFrame* lastChildFrame = nsnull;
+    nsIFrame* firstAppendedFrame = nsnull;
+
+    aContainer->ChildCount(count);
+
+    for (PRInt32 i = aNewIndexInContainer; i < count; i++) {
+      nsIContent* child;
+      nsIFrame*   frame;
+
+      aContainer->ChildAt(i, child);
+      ConstructFrame(aPresContext, child, parentFrame, frame);
+
+      // Link the frame into the child frame list
+      if (nsnull == lastChildFrame) {
+        firstAppendedFrame = frame;
+      } else {
+        lastChildFrame->SetNextSibling(frame);
+      }
+
+      // XXX We should probably mark the frame as being dirty: that way the
+      // parent frame can easily identify the newly added frames. Either that
+      // or pass along in count in which case they must be contiguus...
+      lastChildFrame = frame;
+      NS_RELEASE(child);
+    }
+
+    // Notify the parent frame with a reflow command, passing it the list of
+    // new frames.
+    nsIReflowCommand* reflowCmd;
+    nsresult          result;
+
+    result = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
+                                     nsIReflowCommand::FrameAppended,
+                                     firstAppendedFrame);
+    if (NS_SUCCEEDED(result)) {
+      shell->AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
   }
 
   NS_RELEASE(shell);
