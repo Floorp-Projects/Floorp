@@ -56,7 +56,9 @@ pref("general.useragent.vendorSub",
 );
 
 pref("general.smoothScroll", false);
-#ifndef XP_UNIX
+#ifdef XP_UNIX
+pref("general.autoScroll", false);
+#else
 pref("general.autoScroll", true);
 #endif
 
