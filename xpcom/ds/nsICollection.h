@@ -44,7 +44,7 @@ class nsIEnumerator;
 class nsICollection : public nsISupports {
 public:
 
-  static const nsIID& IID(void) { static nsIID iid = NS_ICOLLECTION_IID; return iid; }
+  static const nsIID& GetIID(void) { static nsIID iid = NS_ICOLLECTION_IID; return iid; }
 
   /** Return the count of elements in the collection.
    */
