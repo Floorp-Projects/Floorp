@@ -212,8 +212,10 @@ static void FreeArray(nsDiscriminatedUnion* data)
 #undef CASE__FREE_ARRAY_IFACE
 }    
 
-static nsresult CloneArray(PRUint16 inType, PRUint32 inCount, void* inValue,
-                           PRUint16* outType, PRUint32* outCount, void** outValue)
+static nsresult CloneArray(PRUint16 inType, const nsIID* inIID, 
+                           PRUint32 inCount, void* inValue,
+                           PRUint16* outType, nsIID* outIID, 
+                           PRUint32* outCount, void** outValue)
 {
     NS_ASSERTION(inCount, "bad param");
     NS_ASSERTION(inValue, "bad param");
@@ -277,6 +279,7 @@ static nsresult CloneArray(PRUint16 inType, PRUint32 inCount, void* inValue,
         case nsIDataType::TYPE_CHAR_STR:        
         case nsIDataType::TYPE_WCHAR_STR:        
         case nsIDataType::TYPE_INTERFACE:        
+        case nsIDataType::TYPE_INTERFACE_IS:        
             elementSize = sizeof(void*); 
             break;
 
@@ -284,7 +287,6 @@ static nsresult CloneArray(PRUint16 inType, PRUint32 inCount, void* inValue,
         case nsIDataType::TYPE_ASTRING:        
         case nsIDataType::TYPE_STRING_SIZE_IS:        
         case nsIDataType::TYPE_WSTRING_SIZE_IS:        
-        case nsIDataType::TYPE_INTERFACE_IS:        
         case nsIDataType::TYPE_VOID:        
         case nsIDataType::TYPE_ARRAY:
         case nsIDataType::TYPE_EMPTY:
@@ -321,6 +323,10 @@ static nsresult CloneArray(PRUint16 inType, PRUint32 inCount, void* inValue,
             memcpy(*outValue, inValue, allocSize);
             break;
 
+        case nsIDataType::TYPE_INTERFACE_IS:        
+            if(outIID)
+                *outIID = *inIID;
+            // fall through...
         case nsIDataType::TYPE_INTERFACE:        
         {
             memcpy(*outValue, inValue, allocSize);
@@ -401,7 +407,6 @@ static nsresult CloneArray(PRUint16 inType, PRUint32 inCount, void* inValue,
         case nsIDataType::TYPE_ASTRING:        
         case nsIDataType::TYPE_STRING_SIZE_IS:        
         case nsIDataType::TYPE_WSTRING_SIZE_IS:        
-        case nsIDataType::TYPE_INTERFACE_IS:        
         default:
             NS_ERROR("bad type in array!");
             return NS_ERROR_CANNOT_CONVERT_DATA;
@@ -959,15 +964,16 @@ nsVariant::ConvertToInterface(const nsDiscriminatedUnion& data, nsIID * *iid, vo
 }
 
 /* static */ nsresult 
-nsVariant::ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type, PRUint32 *count, void * *ptr)
+nsVariant::ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type, nsIID* iid, PRUint32 *count, void * *ptr)
 {
     // XXX perhaps we'd like to add support for converting each of the various
     // types into an array containing one element of that type. We can leverage
     // CloneArray to do this if we want to support this.
 
     if(data.mType == nsIDataType::TYPE_ARRAY)
-        return CloneArray(data.mArrayType, data.mArrayCount, data.mArrayValue,
-                          type, count, ptr);
+        return CloneArray(data.mArrayType, &data.mArrayInterfaceID, 
+                          data.mArrayCount, data.mArrayValue,
+                          type, iid, count, ptr);
     return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
@@ -1086,6 +1092,7 @@ nsVariant::SetFromVariant(nsDiscriminatedUnion* data, nsIVariant* aValue)
         case nsIDataType::TYPE_ARRAY:
             CASE__SET_FROM_VARIANT_TYPE_PROLOGUE(TYPE_ARRAY);
             rv = aValue->GetAsArray(&data->mArrayType,
+                                    &data->mArrayInterfaceID,
                                     &data->mArrayCount,
                                     &data->mArrayValue);
             CASE__SET_FROM_VARIANT_TYPE_EPILOGUE(TYPE_ARRAY)
@@ -1215,14 +1222,15 @@ nsVariant::SetFromInterface(nsDiscriminatedUnion* data, const nsIID& iid, nsISup
     DATA_SETTER_EPILOGUE(data, TYPE_INTERFACE_IS);
 }
 /* static */ nsresult 
-nsVariant::SetFromArray(nsDiscriminatedUnion* data, PRUint16 type, PRUint32 count, void * aValue)
+nsVariant::SetFromArray(nsDiscriminatedUnion* data, PRUint16 type, const nsIID* iid, PRUint32 count, void * aValue)
 {
     DATA_SETTER_PROLOGUE(data);
     if(!aValue || !count) 
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv = CloneArray(type, count, aValue,
+    nsresult rv = CloneArray(type, iid, count, aValue,
                              &data->mArrayType,
+                             &data->mArrayInterfaceID,
                              &data->mArrayCount, 
                              &data->mArrayValue);
     if(NS_FAILED(rv))
@@ -1509,10 +1517,10 @@ NS_IMETHODIMP nsVariant::GetAsInterface(nsIID * *iid, void * *iface)
     return nsVariant::ConvertToInterface(mData, iid, iface);
 }
 
-/* [noscript] void getAsArray (out PRUint16 type, out PRUint32 count, out voidPtr ptr); */
-NS_IMETHODIMP nsVariant::GetAsArray(PRUint16 *type, PRUint32 *count, void * *ptr)
+/* [notxpcom] nsresult getAsArray (out PRUint16 type, out nsIID iid, out PRUint32 count, out voidPtr ptr); */
+NS_IMETHODIMP_(nsresult) nsVariant::GetAsArray(PRUint16 *type, nsIID *iid, PRUint32 *count, void * *ptr)
 {
-    return nsVariant::ConvertToArray(mData, type, count, ptr);
+    return nsVariant::ConvertToArray(mData, type, iid, count, ptr);
 }
 
 /* void getAsStringWithSize (out PRUint32 size, [size_is (size), retval] out string str); */
@@ -1681,11 +1689,11 @@ NS_IMETHODIMP nsVariant::SetAsInterface(const nsIID & iid, void * iface)
     return nsVariant::SetFromInterface(&mData, iid, (nsISupports*)iface);
 }
 
-/* [noscript] void setAsArray (in PRUint16 type, in PRUint32 count, in voidPtr ptr); */
-NS_IMETHODIMP nsVariant::SetAsArray(PRUint16 type, PRUint32 count, void * ptr)
+/* [noscript] void setAsArray (in PRUint16 type, in nsIIDPtr iid, in PRUint32 count, in voidPtr ptr); */
+NS_IMETHODIMP nsVariant::SetAsArray(PRUint16 type, const nsIID * iid, PRUint32 count, void * ptr)
 {
     if(!mWritable) return NS_ERROR_OBJECT_IS_IMMUTABLE;
-    return nsVariant::SetFromArray(&mData, type, count, ptr);
+    return nsVariant::SetFromArray(&mData, type, iid, count, ptr);
 }
 
 /* void setAsStringWithSize (in PRUint32 size, [size_is (size)] in string str); */

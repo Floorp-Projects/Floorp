@@ -98,8 +98,8 @@ interface nsIVariant : nsISupports
     [noscript] void getAsInterface(out nsIIDPtr iid, 
                                    [iid_is(iid), retval] out nsQIResult iface);
 
-    [noscript] void getAsArray(out PRUint16 type, out PRUint32 count, 
-                               out voidPtr ptr);
+    [notxpcom] nsresult getAsArray(out PRUint16 type, out nsIID iid,
+                                   out PRUint32 count, out voidPtr ptr);
 
     [noscript] void getAsStringWithSize(out PRUint32 size, 
                                         [size_is(size), retval] out string str);
@@ -145,8 +145,8 @@ interface nsIWritableVariant : nsIVariant
     void setAsInterface(in nsIIDRef iid, 
                         [iid_is(iid)] in nsQIResult iface);
 
-    [noscript] void setAsArray(in PRUint16 type, in PRUint32 count, 
-                               in voidPtr ptr);
+    [noscript] void setAsArray(in PRUint16 type, in nsIIDPtr iid,
+                               in PRUint32 count, in voidPtr ptr);
 
     void setAsStringWithSize(in PRUint32 size, 
                              [size_is(size)] in string str);

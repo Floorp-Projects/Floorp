@@ -55,6 +55,7 @@ struct NS_COM nsDiscriminatedUnion
             nsIID        mInterfaceID;
         };
         struct {
+            nsIID        mArrayInterfaceID;
             void*        mArrayValue;
             PRUint32     mArrayCount;
             PRUint16     mArrayType;
@@ -114,7 +115,7 @@ public:
     static nsresult ConvertToWString(const nsDiscriminatedUnion& data, PRUnichar **_retval);
     static nsresult ConvertToISupports(const nsDiscriminatedUnion& data, nsISupports **_retval);
     static nsresult ConvertToInterface(const nsDiscriminatedUnion& data, nsIID * *iid, void * *iface);
-    static nsresult ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type, PRUint32 *count, void * *ptr);
+    static nsresult ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type, nsIID* iid, PRUint32 *count, void * *ptr);
     static nsresult ConvertToStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *size, char **str);
     static nsresult ConvertToWStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *size, PRUnichar **str);
 
@@ -139,7 +140,7 @@ public:
     static nsresult SetFromWString(nsDiscriminatedUnion* data, const PRUnichar *aValue);
     static nsresult SetFromISupports(nsDiscriminatedUnion* data, nsISupports *aValue);
     static nsresult SetFromInterface(nsDiscriminatedUnion* data, const nsIID& iid, nsISupports *aValue);
-    static nsresult SetFromArray(nsDiscriminatedUnion* data, PRUint16 type, PRUint32 count, void * aValue);
+    static nsresult SetFromArray(nsDiscriminatedUnion* data, PRUint16 type, const nsIID* iid, PRUint32 count, void * aValue);
     static nsresult SetFromStringWithSize(nsDiscriminatedUnion* data, PRUint32 size, const char *aValue);
     static nsresult SetFromWStringWithSize(nsDiscriminatedUnion* data, PRUint32 size, const PRUnichar *aValue);
 
