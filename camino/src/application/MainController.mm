@@ -193,7 +193,7 @@ const int kReuseWindowOnAE = 2;
   [mBookmarksMenu setAutoenablesItems: NO];
 
   // menubar bookmarks
-  int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
+  int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag];
   mMenuBookmarks = [[BookmarksMenu alloc] initWithMenu: mBookmarksMenu
                                              firstItem: firstBookmarkItem
                                            rootContent: [bmManager getRootContent]
@@ -205,8 +205,9 @@ const int kReuseWindowOnAE = 2;
   if (NSAppKitVersionNumber >= kFixedDockMenuAppKitVersion)
   {
     [mDockMenu setAutoenablesItems:NO];
+    int firstBookmarkItem = [mDockMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
     mDockBookmarks = [[BookmarksMenu alloc] initWithMenu: mDockMenu
-                                              firstItem: 0
+                                              firstItem: firstBookmarkItem
                                             rootContent: [bmManager getDockMenuRoot]
                                           watchedFolder: eBookmarksFolderDockMenu];
     [bmManager addBookmarksClient:mDockBookmarks];
