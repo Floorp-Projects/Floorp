@@ -85,7 +85,7 @@ DIRS += \
 		download-manager \
 		history \
 		sidebar \
-		alerts
+		alerts \
 		$(NULL)
 endif
 endif
