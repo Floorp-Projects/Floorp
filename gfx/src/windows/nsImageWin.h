@@ -125,7 +125,6 @@ public:
 
   /** 
    * Progressivly double the bitmap size as we blit.. very fast way to tile
-   * @update - dwc 4/160/02
    * @param aSurface  the surface to blit to
    * @param aDestBufferWidth   Width of buffer
    * @param aDestBufferHeight  Height of buffer
@@ -242,14 +241,14 @@ private:
 
   
   /** ---------------------------------------------------
-   *  A bit blitter to tile images to the background recursively
-   *	@update 3/29/00 dwc
-   *  @param aDS -- Target drawing surface for the rendering context
+   *  build a tile area by doubling the image until it reaches its limits
+   *  @param aTheHDC -- HDC to render to
    *  @param aSrcRect -- Rectangle we are build with the image
    *  @param aHeight -- height of the tile
    *  @param aWidth -- width of the tile
    */
-  void  BuildTile(HDC SrcDestDC,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32 aCopyMode);
+  void  BuildTile(HDC aTheHDC, nsRect &aSrcRect,
+                  PRInt32 aWidth, PRInt32 aHeight, PRInt32 aCopyMode);
 
 
 
