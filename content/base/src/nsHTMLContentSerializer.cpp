@@ -263,6 +263,14 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         (valueStr.EqualsWithConversion(kMozStr, PR_FALSE, sizeof(kMozStr)-1))) {
       continue;
     }
+    
+    // XXX: This special cased textarea code should be
+    //      removed when bug #17003 is fixed.  
+    if ( (aTagName == nsHTMLAtoms::textarea) &&
+         ((attrName.get() == nsHTMLAtoms::value) || 
+         (attrName.get() == nsHTMLAtoms::defaultvalue)) ){
+        continue;
+    }
 
     if (((attrName.get() == nsHTMLAtoms::href) || 
          (attrName.get() == nsHTMLAtoms::src))) {
@@ -345,6 +353,15 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   if (LineBreakAfterOpen(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, aStr);
     mColPos = 0;
+  }
+
+  // XXX: This special cased textarea code should be
+  //      removed when bug #17003 is fixed.  
+  if (name.get() == nsHTMLAtoms::textarea)
+  {
+    nsAutoString valueStr;
+    content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, valueStr);
+    AppendToString(valueStr, aStr);
   }
 
   if ((name.get() == nsHTMLAtoms::script) ||
