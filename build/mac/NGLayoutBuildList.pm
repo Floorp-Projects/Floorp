@@ -419,6 +419,23 @@ sub BuildLayoutProjects()
 	
 	my($toolbar_dir) = "$resource_dir" . "toolbar:";
 	BuildResourceAliases(":mozilla:xpfe:xpviewer:src:resources:toolbar:",				"$toolbar_dir");
+
+	
+	#//
+	#// Make WasteLib alias
+	#//
+	local(*F);
+	my($filepath, $appath, $psi) = (':mozilla:build:mac:idepath.txt');
+	if (open(F, $filepath)) {
+		$appath = <F>;
+		close(F);
+		my($wastelibpath) = "$appath" . "::MacOS Support:WASTE 1.3 Distribution:WASTELib";
+		MakeAlias("$wastelibpath", "$dist_dir");
+	}
+	else {
+		print STDERR "Can't find $filepath\n";
+	}
+
 	
 	#//
 	#// Build Layout projects
@@ -464,7 +481,7 @@ sub BuildLayoutProjects()
 	BuildProject(":mozilla:widget:macbuild:widget.mcp",									"widget$D.shlb");
 	MakeAlias(":mozilla:widget:macbuild:widget$D.shlb",									"$dist_dir");
 	
-	# This isn't quite ready yet...
+	#// This isn't quite ready yet...
 	#BuildProject(":mozilla:rdf:macbuild:rdf.mcp",										"rdf$D.shlb");
 	#MakeAlias(":mozilla:rdf:macbuild:rdf$D.shlb",										"$dist_dir");
 	
