@@ -52,6 +52,12 @@
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 
+#include "nsVoidArray.h"
+
+#ifdef DEBUG_seth
+#define DEBUG_UTF8_CONVERSION 1
+#endif 
+
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
@@ -64,7 +70,6 @@
 
 #include "nsPrefMigration.h"
 #include "nsPrefMigrationFactory.h"
-//#include "nsPMProgressDlg.h"
 
 #define PREF_FILE_HEADER_STRING "# Mozilla User Preferences    " 
 
@@ -182,6 +187,12 @@ typedef struct
 
 } MigrateProfileItem;
 
+typedef struct
+{
+  nsIPref *prefs;
+  nsAutoString charSet;
+} prefConversionClosure;
+
 /* 
  * In 4.x the mac cookie file used expiration times starting from
  * 1900 whereas all the other platforms started from
@@ -267,8 +278,7 @@ nsPrefMigration::getPrefService()
   nsresult rv = NS_OK;
 
   NS_WITH_SERVICE(nsIPref, pIMyService, kPrefServiceCID, &rv);
-  if(NS_FAILED(rv))
-    return rv;
+  if(NS_FAILED(rv)) return rv;
 
   NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
   if(NS_FAILED(rv))
@@ -1841,288 +1851,61 @@ nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsIFileSpec *path
 	return rv;
 }
 
-/* This works.  Saving for reference 
+////////////////////////////////////////////////////////////////////////
+// nsPrefConverter
+////////////////////////////////////////////////////////////////////////
 
-PRInt32    
-nsPrefMigration::ShowProgressDialog(nsString& string)
+/* 
+  these are the prefs we know we need to convert to utf8.
+  we'll also be converting:
+
+ "ldap_2.server.*.description"
+ "intl.font*.fixed_font"
+ "intl.font*.prop_font"
+ */
+
+static const char *prefsToConvert[] = {
+      "browser.cache.directory",
+      "browser.bookmark_file",
+      "browser.history_file",
+      "browser.sarcache.directory",
+      "browser.user_history_file",
+      "custtoolbar.personal_toolbar_folder",
+      "editor.image_editor",
+      "editor.html_editor",
+      "editor.author",
+      "helpers.private_mailcap_file",
+      "helpers.private_mime_types_file",
+      "li.server.ldap.userbase",
+      "mail.default_fcc",
+      "mail.default_templates",
+      "mail.directory",
+      "mail.identity.organization",
+      "mail.identity.username",
+      "mail.imap.root_dir",
+      "mail.signature_file",
+      "news.default_fcc",
+      "news.directory",
+      "premigration.mail.directory",
+      "premigration.news.directory",
+      nsnull
+};
+
+nsPrefConverter::~nsPrefConverter()
 {
-    nsresult res;  
-
-    NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID,  &res);
-    if (NS_FAILED(res)) 
-        return res;
-    
-    return dialog->Alert(string.GetUnicode());
-}
-*/
-
-#if 0
-
-PRInt32
-nsPrefMigration::ShowProgressDialog(const PRUnichar *inWindowTitle, const PRUnichar *inMsg)
-{
-    nsresult rv;
-    nsString text;
-
-    enum {  eMsg =0, eCheckboxMsg =1, eIconURL =2 , eTitleMessage =3, 
-            eEditfield1Msg =4, eEditfield2Msg =5, eEditfield1Value = 6, 
-            eEditfield2Value = 7,	eButton0Text = 8, eButton1Text = 9, 
-            eButton2Text =10, eButton3Text = 11,eDialogTitle = 12 };
-
-    enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, 
-           eNumberEditfields =3, eEditField1Password =4 };
-
-
-    NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
-    if ( NS_SUCCEEDED ( rv ) )
-    {
-      //nsCOMPtr< nsIDOMWindow> window;
-      windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( m_parentWindow ) );
-	    
-      nsCOMPtr< nsIDialogParamBlock> block;
-	    rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
-                                               0,
-                                               NS_GET_IID(nsIDialogParamBlock),
-                                               (void**)&block );
-      
-	    if ( NS_FAILED( rv ) )
-		    return rv;
-	    block->SetInt( eNumberButtons, 1 );
-
-      ShowPMDialogEngine(block, kProgressURL);
-
-      //nsCOMPtr<nsICommonDialogs> dialogService;
-      //rv = nsComponentManager::CreateInstance( kCommonDialogsCID,
-      //                                         0, 
-      //                                         NS_GET_IID(nsICommonDialogs),
-      //                                         (void**)&dialogService );
-
-      //if( NS_SUCCEEDED ( rv ) )
-      //  rv = dialogService->DoDialog( window, block, kProgressURL);
-        //rv = dialogService->Alert( window, NULL, text.GetUnicode());
-    
-    }
-    return rv;
 }
 
-
-nsresult
-nsPrefMigration::ShowPMDialogEngine(nsIDialogParamBlock *ioParamBlock, const char *inChromeURL)
+nsPrefConverter::nsPrefConverter()
 {
-  nsresult rv = NS_OK;
-
-    if ( m_parentWindow && ioParamBlock &&inChromeURL )
-    {
-        // Get JS context from parent window.
-        nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( m_parentWindow, &rv );
-        if ( NS_SUCCEEDED( rv ) && sgo )
-        {
-            nsCOMPtr<nsIScriptContext> context;
-            sgo->GetContext( getter_AddRefs( context ) );
-            if ( context )
-            {
-                JSContext *jsContext = (JSContext*)context->GetNativeContext();
-                if ( jsContext ) {
-                    void *stackPtr;
-                    jsval *argv = JS_PushArguments( jsContext,
-                                                    &stackPtr,
-                                                    "sss%ip",
-                                                    inChromeURL,
-                                                    "_blank",
-                                                    "chrome",
-                                                    (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
-                                                    (nsISupports*)ioParamBlock
-                                                  );
-                    if ( argv ) {
-                        //nsIDOMWindow *newWindow;
-                        rv = m_parentWindow->Open( jsContext, argv, 4, &m_progressWindow );
-                        if ( NS_SUCCEEDED( rv ) )
-                        {
-                            m_progressWindow->Release();
-                        } else
-                        {
-                        }
-                        JS_PopArguments( jsContext, stackPtr );
-                    }
-                    else
-                    {
-                    	
-                        NS_WARNING( "JS_PushArguments failed\n" );
-                        rv = NS_ERROR_FAILURE;
-                    }
-                }
-                else
-                {
-                    NS_WARNING(" GetNativeContext failed\n" );
-                    rv = NS_ERROR_FAILURE;
-                }
-            }
-            else
-            {
-                NS_WARNING( "GetContext failed\n" );
-                rv = NS_ERROR_FAILURE;
-            }
-        }
-        else
-        {
-            NS_WARNING( "QueryInterface (for nsIScriptGlobalObject) failed \n" );
-        }
-    }
-    else
-    {
-        NS_WARNING( " OpenDialogWithArg was passed a null pointer!\n" );
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
- }
-
-#endif /* 0 */
-
-
-// This is to be called per string pref to check whether the input pref needs
-// charset conversion (from platform charset to UTF-8) for the pref migration.
-PRBool
-nsPrefMigration::PrefStringNeedsCharsetConversion(const char* prefName)
-{
-  //TODO: we need a complete list of 4.x prefs which are saved as the platform charset.
-  // also may need an extensibility in addition to the hard coded names.
-  const char *names[] = {
-    "mail.identity.username",
-     ""
-  };
-
-  for (int i = 0; names[i][0]; i++) {
-    if (!nsCRT::strcasecmp(prefName, names[i]))
-      return PR_TRUE;
-  }
-
-  return PR_FALSE;
+  NS_INIT_REFCNT();
 }
 
-// for UTF-8 detection
-#define kLeft1BitMask  0x80
-#define kLeft2BitsMask 0xC0
-#define kLeft3BitsMask 0xE0
-#define kLeft4BitsMask 0xF0
-#define kLeft5BitsMask 0xF8
-#define kLeft6BitsMask 0xFC
-#define kLeft7BitsMask 0xFE
-
-#define k2BytesLeadByte kLeft2BitsMask
-#define k3BytesLeadByte kLeft3BitsMask
-#define k4BytesLeadByte kLeft4BitsMask
-#define k5BytesLeadByte kLeft5BitsMask
-#define k6BytesLeadByte kLeft6BitsMask
-#define kTrialByte      kLeft1BitMask
-
-#define UTF8_1Byte(c) ( 0 == ((c) & kLeft1BitMask))
-#define UTF8_2Bytes(c) ( k2BytesLeadByte == ((c) & kLeft3BitsMask))
-#define UTF8_3Bytes(c) ( k3BytesLeadByte == ((c) & kLeft4BitsMask))
-#define UTF8_4Bytes(c) ( k4BytesLeadByte == ((c) & kLeft5BitsMask))
-#define UTF8_5Bytes(c) ( k5BytesLeadByte == ((c) & kLeft6BitsMask))
-#define UTF8_6Bytes(c) ( k6BytesLeadByte == ((c) & kLeft7BitsMask))
-#define UTF8_ValidTrialByte(c) ( kTrialByte == ((c) & kLeft2BitsMask))
-
-// Check if the given C string is UTF-8 or not.
-PRBool
-nsPrefMigration::IsUTF8String(const unsigned char* utf8)
-{
-  if(NULL == utf8)
-    return PR_TRUE;
-  return IsUTF8Text(utf8, nsCRT::strlen((char *)utf8));}
-
-// Check if the given buffer is UTF-8 or not.
-PRBool
-nsPrefMigration::IsUTF8Text(const unsigned char* utf8, PRInt32 len)
-{
-   PRInt32 i;
-   PRInt32 j;
-   PRInt32 clen;
-   for(i =0; i < len; i += clen)
-   {
-      if(UTF8_1Byte(utf8[i]))
-      {
-        clen = 1;
-      } else if(UTF8_2Bytes(utf8[i])) {
-        clen = 2;
-        /* No enough trail bytes */
-        if( (i + clen) > len) 
-          return PR_FALSE;
-        /* 0000 0000 - 0000 007F : should encode in less bytes */
-        if(0 ==  (utf8[i] & 0x1E )) 
-          return PR_FALSE;
-      } else if(UTF8_3Bytes(utf8[i])) {
-        clen = 3;
-        /* No enough trail bytes */
-        if( (i + clen) > len) 
-          return PR_FALSE;
-        /* a single Surrogate should not show in 3 bytes UTF8, instead, the pair 
-           should be intepreted
-           as one single UCS4 char and encoded UTF8 in 4 bytes */
-        if((0xED == utf8[i] ) && (0xA0 ==  (utf8[i+1] & 0xA0 ) )) 
-          return PR_FALSE;
-        /* 0000 0000 - 0000 07FF : should encode in less bytes */
-        if((0 ==  (utf8[i] & 0x0F )) && (0 ==  (utf8[i+1] & 0x20 ) )) 
-          return PR_FALSE;
-      } else if(UTF8_4Bytes(utf8[i])) {
-        clen = 4;
-        /* No enough trail bytes */
-        if( (i + clen) > len) 
-          return PR_FALSE;
-        /* 0000 0000 - 0000 FFFF : should encode in less bytes */
-        if((0 ==  (utf8[i] & 0x07 )) && (0 ==  (utf8[i+1] & 0x30 )) ) 
-          return PR_FALSE;
-      } else if(UTF8_5Bytes(utf8[i])) {
-        clen = 5;
-        /* No enough trail bytes */
-        if( (i + clen) > len) 
-          return FALSE;
-        /* 0000 0000 - 001F FFFF : should encode in less bytes */
-        if((0 ==  (utf8[i] & 0x03 )) && (0 ==  (utf8[i+1] & 0x38 )) ) 
-          return PR_FALSE;
-      } else if(UTF8_6Bytes(utf8[i])) {
-        clen = 6;
-        /* No enough trail bytes */
-        if( (i + clen) > len) 
-          return PR_FALSE;
-        /* 0000 0000 - 03FF FFFF : should encode in less bytes */
-        if((0 ==  (utf8[i] & 0x01 )) && (0 ==  (utf8[i+1] & 0x3E )) ) 
-          return PR_FALSE;
-      } else {
-        return PR_FALSE;
-      }
-      for(j = 1; j<clen ;j++)
-      {
-        if(! UTF8_ValidTrialByte(utf8[i+j])) /* Trail bytes invalid */
-          return PR_FALSE;
-      }
-   }
-   return PR_TRUE;
-}
-
-// A wrapper function to call the interface to get a platform file charset.
-nsresult 
-nsPrefMigration::GetPlatformCharset(nsAutoString& aCharset)
-{
-  nsresult rv;
-
-  // we may cache it since the platform charset will not change through application life
-  nsCOMPtr <nsIPlatformCharset> platformCharset;
-  rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
-                                         NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
-  if (NS_SUCCEEDED(rv)) {
-   rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
-  }
-  if (NS_FAILED(rv)) {
-   aCharset.SetString("ISO-8859-1");  // use ISO-8859-1 in case of any error
-  }
- 
-  return rv;
-}
+NS_IMPL_ISUPPORTS(nsPrefConverter, NS_GET_IID(nsIPrefConverter))
 
 // Apply a charset conversion from the given charset to UTF-8 for the input C string.
+static
 nsresult 
-nsPrefMigration::ConvertStringToUTF8(nsAutoString& aCharset, const char* inString, char** outString)
+ConvertStringToUTF8(nsAutoString& aCharset, const char* inString, char** outString)
 {
   if (nsnull == outString)
     return NS_ERROR_NULL_POINTER;
@@ -2160,6 +1943,167 @@ nsPrefMigration::ConvertStringToUTF8(nsAutoString& aCharset, const char* inStrin
     }    
   }
 
+  return rv;
+}
+
+nsresult
+ConvertPrefToUTF8(const char *prefname, nsIPref *prefs, nsAutoString &charSet)
+{
+    nsresult rv;
+
+    if (!prefname || !prefs) return NS_ERROR_FAILURE;
+#ifdef DEBUG_UTF8_CONVERSION 
+    printf("converting %s to UTF8\n", prefname);
+#endif /* DEBUG_UTF8_CONVERSION */
+    
+    nsXPIDLCString prefval;
+
+    rv = prefs->CopyCharPref(prefname, getter_Copies(prefval));
+    if (NS_FAILED(rv)) return rv;
+
+    if (!((const char *)prefval) || (PL_strlen((const char *)prefval) == 0)) {
+        // no need to convert ""
+        return NS_OK;
+    }
+
+    nsXPIDLCString outval;
+    rv = ConvertStringToUTF8(charSet, (const char *)prefval, getter_Copies(outval));
+    // only set the pref if the conversion worked, and it convert to something non null
+    if (NS_SUCCEEDED(rv) && (const char *)outval && PL_strlen((const char *)outval)) {
+#ifdef DEBUG_UTF8_CONVERSION
+        printf("converting %s to %s\n",(const char *)prefval, (const char *)outval);
+#endif /* DEBUG_UTF8_CONVERSION */
+        rv = prefs->SetCharPref(prefname, (const char *)outval);
+    }
+
+    return NS_OK;
+}
+
+
+static PRBool charEndsWith(const char *str, const char *endStr)
+{
+    PRUint32 endStrLen = PL_strlen(endStr);
+    PRUint32 strLen = PL_strlen(str);
+    
+    if (strLen < endStrLen) return PR_FALSE;
+
+    PRUint32 pos = strLen - endStrLen;
+    if (PL_strncmp(str + pos, endStr, endStrLen) == 0) {
+        return PR_TRUE;
+    }
+    else {
+        return PR_FALSE;
+    }
+}
+
+static
+void fontPrefEnumerationFunction(const char *name, void *data)
+{
+  nsCStringArray *arr;
+  arr = (nsCStringArray *)data;
+#ifdef DEBUG_UTF8_CONVERSION
+  printf("fontPrefEnumerationFunction: %s\n", name);
+#endif 
+
+  if (charEndsWith(name,".fixed_font") || charEndsWith(name,".prop_font")) {
+    nsCString str(name);
+    arr->AppendCString(str);
+  }
+}
+
+static
+void ldapPrefEnumerationFunction(const char *name, void *data)
+{
+  nsCStringArray *arr;
+  arr = (nsCStringArray *)data;
+#ifdef DEBUG_UTF8_CONVERSION
+  printf("ldapPrefEnumerationFunction: %s\n", name);
+#endif 
+
+  // we only want to convert "ldap_2.servers.*.description"
+  if (charEndsWith(name,".description")) {
+    nsCString str(name);
+    arr->AppendCString(str);
+  }
+}
+
+typedef struct {
+    nsIPref *prefs;
+    nsAutoString charSet;
+} PrefEnumerationClosure;
+
+PRBool
+convertPref(nsCString &aElement, void *aData)
+{
+  PrefEnumerationClosure *closure;
+  closure = (PrefEnumerationClosure *)aData;
+
+  ConvertPrefToUTF8((const char *)aElement, closure->prefs, closure->charSet);
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsPrefConverter::ConvertPrefsToUTF8IfNecessary()
+{
+  nsresult rv;
+
+  nsCStringArray prefsToMigrate;
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if(NS_FAILED(rv)) return rv;
+  if (!prefs) return NS_ERROR_FAILURE;
+
+  PRBool prefs_converted = PR_FALSE;
+  rv = prefs->GetBoolPref("prefs.converted-to-utf8",&prefs_converted);
+  if(NS_FAILED(rv)) return rv;
+
+  if (prefs_converted) {
+#ifdef DEBUG_UTF8_CONVERSION
+    printf("utf8 pref conversion not needed\n");
+#endif
+    return NS_OK;
+  }
+  
+  nsAutoString charSet;
+  rv = GetPlatformCharset(charSet);
+  if (NS_FAILED(rv)) return rv;
+
+  for (PRUint32 i = 0; prefsToConvert[i]; i++) {
+    nsCString prefnameStr = prefsToConvert[i];
+    prefsToMigrate.AppendCString(prefnameStr);
+  }
+
+  prefs->EnumerateChildren("intl.font",fontPrefEnumerationFunction,(void *)(&prefsToMigrate));
+  prefs->EnumerateChildren("ldap_2.servers",ldapPrefEnumerationFunction,(void *)(&prefsToMigrate));
+
+  PrefEnumerationClosure closure;
+
+  closure.prefs = prefs;
+  closure.charSet = charSet;
+
+  prefsToMigrate.EnumerateForwards((nsCStringArrayEnumFunc)convertPref, (void *)(&closure));
+
+  rv = prefs->SetBoolPref("prefs.converted-to-utf8",PR_TRUE);
+  return NS_OK;
+}
+
+// A wrapper function to call the interface to get a platform file charset.
+nsresult 
+nsPrefConverter::GetPlatformCharset(nsAutoString& aCharset)
+{
+  nsresult rv;
+
+  // we may cache it since the platform charset will not change through application life
+  nsCOMPtr <nsIPlatformCharset> platformCharset;
+  rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+                                         NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+  if (NS_SUCCEEDED(rv)) {
+   rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
+  }
+  if (NS_FAILED(rv)) {
+   aCharset.SetString("ISO-8859-1");  // use ISO-8859-1 in case of any error
+  }
+ 
   return rv;
 }
 
