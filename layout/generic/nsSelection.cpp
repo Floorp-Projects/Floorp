@@ -5338,10 +5338,11 @@ nsDOMSelection::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 aOf
     // some special casing for text nodes
     if (IsTextNode(aNode))  
     {
+      // if not at beginning of text node, we are done
+      if (offset >  0) return NS_OK;
+      // else
       res = GetNodeLocation(aNode, &parent, &offset);
       if (NS_FAILED(res)) return res;
-      if (offset >  0) return NS_OK;
-      // if not at beginning of text node, we are done
     }
     else
     {
@@ -5372,12 +5373,13 @@ nsDOMSelection::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 aOf
     // some special casing for text nodes
     if (IsTextNode(aNode))  
     {
-      res = GetNodeLocation(aNode, &parent, &offset);
-      if (NS_FAILED(res)) return res;
+      // if not at end of text node, we are done
       PRUint32 len;
       GetLengthOfDOMNode(aNode, len);
       if (offset < len) return NS_OK;
-      // if not at end of text node, we are done
+      // else
+      res = GetNodeLocation(aNode, &parent, &offset);
+      if (NS_FAILED(res)) return res;
     }
     else
     {
