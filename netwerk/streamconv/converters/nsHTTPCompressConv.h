@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    David Dick <ddick@cpan.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -101,8 +102,9 @@ private:
     nsresult do_OnDataAvailable (nsIRequest *request, nsISupports *aContext, PRUint32 aSourceOffset, char *buffer, PRUint32 aCount);
 
     PRBool      mCheckHeaderDone;
-    PRBool      mGzipStreamEnded;
-    PRBool      mGzipStreamInitialized;
+    PRBool      mStreamEnded;
+    PRBool      mStreamInitialized;
+    PRBool      mDummyStreamInitialised;
 
     z_stream d_stream;
     unsigned mLen, hMode, mSkipCount, mFlags;
