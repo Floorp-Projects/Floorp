@@ -65,6 +65,20 @@ struct _MozContainerClass
 
 GtkType    moz_container_get_type (void);
 GtkWidget *moz_container_new      (void);
+void       moz_container_put      (MozContainer *container,
+				   GtkWidget    *child_widget,
+				   gint          x,
+				   gint          y);
+void       moz_container_move          (MozContainer *container,
+					GtkWidget    *child_widget,
+					gint          x,
+					gint          y,
+					gint          width,
+					gint          height);
+void       moz_container_scroll_update (MozContainer *container,
+					GtkWidget    *child_widget,
+					gint          x,
+					gint          y);
 
 #ifdef __cplusplus
 }

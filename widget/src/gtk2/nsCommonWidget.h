@@ -59,6 +59,7 @@ class nsCommonWidget : public nsBaseWidget {
   void InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
 			    GdkEventScroll *aGdkEvent, PRUint32 aMsg);
   void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aEvent, PRUint32 aMsg);
+  void InitScrollbarEvent(nsScrollbarEvent &aEvent, PRUint32 aMsg);
 
   void DispatchGotFocusEvent(void);
   void DispatchLostFocusEvent(void);
@@ -82,16 +83,20 @@ class nsCommonWidget : public nsBaseWidget {
   virtual void NativeShow  (PRBool  aAction) = 0;
 
   // Some of the nsIWidget methods
-  NS_IMETHOD         Show(PRBool aState);
-  NS_IMETHOD         Resize(PRInt32 aWidth,
-			    PRInt32 aHeight,
-			    PRBool  aRepaint);
-  NS_IMETHOD         Resize(PRInt32 aX,
-			    PRInt32 aY,
-			    PRInt32 aWidth,
-			    PRInt32 aHeight,
-			    PRBool   aRepaint);
-  
+  NS_IMETHOD         Show             (PRBool aState);
+  NS_IMETHOD         Resize           (PRInt32 aWidth,
+				       PRInt32 aHeight,
+				       PRBool  aRepaint);
+  NS_IMETHOD         Resize           (PRInt32 aX,
+				       PRInt32 aY,
+				       PRInt32 aWidth,
+				       PRInt32 aHeight,
+				       PRBool   aRepaint);
+  NS_IMETHOD         GetPreferredSize (PRInt32 &aWidth,
+				       PRInt32 &aHeight);
+  NS_IMETHOD         SetPreferredSize (PRInt32 aWidth,
+				       PRInt32 aHeight);
+
   // called when we are destroyed
   void OnDestroy(void);
 
@@ -102,8 +107,9 @@ class nsCommonWidget : public nsBaseWidget {
   nsCOMPtr<nsIWidget> mParent;
   // Is this a toplevel window?
   PRPackedBool        mIsTopLevel;
-  // Has someone called OnDestroy() yet?
-  PRPackedBool        mOnDestroyCalled;
+  // Has this widget been destroyed yet?
+  PRPackedBool        mIsDestroyed;
+
   // This is a flag that tracks if we need to resize a widget or
   // window before we call |Show| on that widget.
   PRPackedBool        mNeedsResize;
@@ -112,6 +118,10 @@ class nsCommonWidget : public nsBaseWidget {
   // This flag tracks if we're hidden or shown.
   PRPackedBool        mIsShown;
   PRPackedBool        mNeedsShow;
+
+  // Preferred sizes
+  PRUint32            mPreferredWidth;
+  PRUint32            mPreferredHeight;
 };
 
 #endif /* __nsCommonWidget_h__ */
