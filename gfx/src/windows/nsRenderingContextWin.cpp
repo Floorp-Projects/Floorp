@@ -479,6 +479,17 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   if (nsnull != pstate)
     ::SelectClipRgn(aNewDC, pstate->mClipRegion);
 #endif
+  
+  // If this is a palette device, then select and realize the palette
+  nsPaletteInfo palInfo;
+  mContext->GetPaletteInfo(palInfo);
+
+  if (palInfo.isPaletteDevice && palInfo.palette)
+  {
+    // Select the palette in the background
+    ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, PR_FALSE);
+    ::RealizePalette(aNewDC);
+  }
 
   return NS_OK;
 }
@@ -506,6 +517,7 @@ NS_IMETHODIMP nsRenderingContextWin :: LockDrawingSurface(PRInt32 aX, PRInt32 aY
                                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
   PRBool        destructive;
+  nsPaletteInfo palInfo;
 
   PushState();
 
@@ -523,6 +535,13 @@ NS_IMETHODIMP nsRenderingContextWin :: LockDrawingSurface(PRInt32 aX, PRInt32 aY
 
     if (nsnull != mOrigSolidPen)
       mCurrPen = (HPEN)::SelectObject(mDC, mOrigSolidPen);
+
+    mContext->GetPaletteInfo(palInfo);
+    if(palInfo.isPaletteDevice && palInfo.palette){
+      ::SelectPalette(mDC,(HPALETTE)palInfo.palette,PR_FALSE);
+      ::RealizePalette(mDC);
+      ::UpdateColors(mDC);
+    }
   }
 
   mSurface->ReleaseDC();
@@ -2600,6 +2619,19 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
           ::SelectClipRgn(destdc, tregion);
 
         ::DeleteObject(tregion);
+      }
+
+      // If there's a palette make sure it's selected.
+      // XXX This doesn't seem like the best place to be doing this...
+
+      nsPaletteInfo palInfo;
+
+      mContext->GetPaletteInfo(palInfo);
+
+      if (palInfo.isPaletteDevice && palInfo.palette){
+        ::SelectPalette(destdc, (HPALETTE)palInfo.palette, PR_FALSE);
+        ::RealizePalette(destdc);
+        ::UpdateColors(destdc);
       }
 
       if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
