@@ -624,3 +624,19 @@ NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
   mWebShell = aWebShell;
   return NS_OK;
 }
+
+
+char* GetACPString(nsString& aStr)
+{
+   int acplen = aStr.Length() * 2 + 1;
+   char * acp = new char[acplen];
+   if(acp)
+   {
+      int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
+                      aStr.GetUnicode(), aStr.Length(),
+                      acp, acplen, NULL, NULL);
+      if ( outlen > 0)
+         acp[outlen] = '\0';  // null terminate
+   }
+   return acp;
+}

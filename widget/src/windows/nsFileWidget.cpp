@@ -115,9 +115,6 @@ PRBool nsFileWidget::Show()
   
   PRBool result;
 
-    // Save current directory, so we can reset if it changes.
-  char* currentDirectory = new char[MAX_PATH+1];
-  VERIFY(::GetCurrentDirectory(MAX_PATH, currentDirectory) > 0);
 
   if (mMode == eMode_load) {
     result = ::GetOpenFileName(&ofn);
@@ -136,10 +133,6 @@ PRBool nsFileWidget::Show()
   mDisplayDirectory.Append(newCurrentDirectory);
   delete[] newCurrentDirectory;
 
-
-  VERIFY(::SetCurrentDirectory(currentDirectory));
-  delete[] currentDirectory;
-  
    // Clean up filter buffers
   delete[] filterBuffer;
   delete[] title;

@@ -51,7 +51,6 @@ CPPSRCS =              \
 	nsDialog.cpp         \
 	nsLabel.cpp          \
 	nsToolkit.cpp        \
-	nsStringUtil.cpp   \
 	$(NULL)
 
 MODULE=raptor 
@@ -85,7 +84,6 @@ OBJS =                             \
 	.\$(OBJDIR)\nsDialog.obj    \
 	.\$(OBJDIR)\nsLabel.obj    \
 	.\$(OBJDIR)\nsToolkit.obj        \
-	.\$(OBJDIR)\nsStringUtil.obj   \
 	$(NULL)
 
 LINCS=                                  \

@@ -121,4 +121,6 @@ protected:
   bool            mConstructed;
 };
 
+char* GetACPString(nsString&);
+
 #endif // nsMenu_h__
