@@ -472,7 +472,7 @@ input[type=hidden] {
 input[type=image] {
   box-sizing: border-box;
   border: 2px solid blue;
-  vertial-align:baseline;
+  vertical-align:baseline;
 }
 
 input[type=image]:focus {
