@@ -228,38 +228,47 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       }
     }
 
-    if (mMode == modeOpen) {
-      // FILE MUST EXIST!
-      ofn.Flags |= OFN_FILEMUSTEXIST;
-      result = nsToolkit::mGetOpenFileName(&ofn);
-    }
-    else if (mMode == modeOpenMultiple) {
-      ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
-      result = nsToolkit::mGetOpenFileName(&ofn);
-    }
-    else if (mMode == modeSave) {
-      ofn.Flags |= OFN_NOREADONLYRETURN;
-      result = nsToolkit::mGetSaveFileName(&ofn);
-      if (!result) {
-        // Error, find out what kind.
-        if (::GetLastError() == ERROR_INVALID_PARAMETER ||
-            ::CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
-          // probably the default file name is too long or contains illegal characters!
-          // Try again, without a starting file name.
-          ofn.lpstrFile[0] = 0;
-          result = nsToolkit::mGetSaveFileName(&ofn);
+    try {
+      if (mMode == modeOpen) {
+        // FILE MUST EXIST!
+        ofn.Flags |= OFN_FILEMUSTEXIST;
+        result = nsToolkit::mGetOpenFileName(&ofn);
+      }
+      else if (mMode == modeOpenMultiple) {
+        ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
+        result = nsToolkit::mGetOpenFileName(&ofn);
+      }
+      else if (mMode == modeSave) {
+        ofn.Flags |= OFN_NOREADONLYRETURN;
+        result = nsToolkit::mGetSaveFileName(&ofn);
+        if (!result) {
+          // Error, find out what kind.
+          if (::GetLastError() == ERROR_INVALID_PARAMETER ||
+              ::CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
+            // probably the default file name is too long or contains illegal characters!
+            // Try again, without a starting file name.
+            ofn.lpstrFile[0] = 0;
+            result = nsToolkit::mGetSaveFileName(&ofn);
+          }
         }
       }
+      else {
+        NS_ASSERTION(0, "unsupported mode"); 
+      }
     }
-    else {
-      NS_ASSERTION(0, "unsupported mode"); 
+    catch(...) {
+      MessageBox(ofn.hwndOwner,
+                 0,
+                 "The filepicker was unexpectedly closed by Windows.",
+                 MB_ICONERROR);
+      result = PR_FALSE;
     }
   
-    // Remember what filter type the user selected
-    mSelectedType = (PRInt16)ofn.nFilterIndex;
-
-    // Set user-selected location of file or directory
     if (result == PR_TRUE) {
+      // Remember what filter type the user selected
+      mSelectedType = (PRInt16)ofn.nFilterIndex;
+
+      // Set user-selected location of file or directory
       if (mMode == modeOpenMultiple) {
         nsresult rv = NS_NewISupportsArray(getter_AddRefs(mFiles));
         NS_ENSURE_SUCCESS(rv,rv);
