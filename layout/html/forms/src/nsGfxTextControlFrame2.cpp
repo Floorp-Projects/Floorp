@@ -1364,7 +1364,7 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   // nsIFontMetrics. The other need to have it implemeneted (Bug 50998)
   // and then this if def removed. We are too close to RTM to implement it in all 
   // the platforms and ports.
-#ifdef _WIN32
+#if defined(_WIN32) || defined(XP_OS2)
   fontMet->GetAveCharWidth(charWidth);
 #else
   // XP implementation of AveCharWidth
