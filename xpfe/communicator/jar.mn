@@ -27,6 +27,7 @@ comm.jar:
     content/communicator/viewZoomOverlay.js              (resources/content/viewZoomOverlay.js)
     content/communicator/askViewZoom.xul                 (resources/content/askViewZoom.xul)
     content/communicator/askViewZoom.js                  (resources/content/askViewZoom.js)
+    content/communicator/findUtils.js                    (resources/content/findUtils.js)
 
 en-US.jar:
         locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)
