@@ -22,8 +22,9 @@
 #   Ben Goodger <ben@netscape.com> (Original Author)
 
 <?xml-stylesheet href="chrome://global/skin/"?>
-<?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css"?>
 <?xml-stylesheet href="chrome://global/skin/arrow.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css"?>
+<?xml-stylesheet href="chrome://browser/skin/bookmarks/addBookmark.css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/bookmarks/addBookmark.dtd">
 
@@ -51,16 +52,18 @@
       <row align="center">
         <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
         <textbox id="name" oninput="onFieldInput();"/>
-        <button id="expander" class="down" oncommand="expandTree();" persist="class"/>
+        <button id="expander" class="down" oncommand="expandTree();"/>
       </row>
       <row align="center">
         <label id="createinlabel" value="&createin.label;"/>
-        <menulist id="select-menu" oncommand="selectMenulistFolder(event);"
+        <menulist id="select-menu" class="folder-icon"
+                  oncommand="selectMenulistFolder(event);"
                   datasources="rdf:bookmarks" ref="NC:LastModifiedFoldersRoot">
           <template>
             <rule parent="menulist">
               <menupopup>
-                <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                <menuitem uri="rdf:*" class="menuitem-iconic folder-icon"
+                          label="rdf:http://home.netscape.com/NC-rdf#Name"/>
               </menupopup>
             </rule>
           </template>

@@ -37,7 +37,8 @@ browser.jar:
 
 classic.jar:
    skin/classic/browser/bookmarks/bookmarksManager.css        (skin/bookmarksManager.css)
-   skin/classic/browser/bookmarks/Bookmarks-toolbar.png        (skin/Bookmarks-toolbar.png)
+   skin/classic/browser/bookmarks/addBookmark.css             (skin/addBookmark.css)
+   skin/classic/browser/bookmarks/Bookmarks-toolbar.png       (skin/Bookmarks-toolbar.png)
   
 en-US.jar:
 *  locale/en-US/browser/bookmarks/addBookmark.dtd         (locale/addBookmark.dtd)

@@ -1700,7 +1700,7 @@ function dumpDOM (aElement, aIndent)
   for (var i=0; i<aIndent*2; ++i)
     dump("-");
   dump("-> ");
-  dump(aElement.localName+ " ("+aElement.id+")\n");
+  dump(aElement.localName+ " ("+aElement.id+') "'+aElement.getAttribute("class")+'"\n');
   var element = aElement.firstChild;
   while (element) {
     dumpDOM(element,++aIndent);
