@@ -1597,7 +1597,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*           aPresContext,
     nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
     PRBool innerMoved = (innerRect.x != innerOrigin.x) ||
                          (innerRect.y != innerOrigin.y);
-    InvalidateDamage(aPresContext, NO_SIDE, nsSize(aDesiredSize.width,
+    InvalidateDamage(aPresContext, (PRUint8) NO_SIDE, nsSize(aDesiredSize.width,
                      aDesiredSize.height), innerMoved, PR_FALSE,
                      oldOverflowArea);
   }
