@@ -102,6 +102,13 @@ static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
 
+//#define NEWGFX_LIST
+
+#ifdef NEWGFX_LIST
+nsresult
+NS_NewGfxListControlFrame ( nsIFrame** aNewFrame );
+#endif
+
 nsresult
 NS_NewThumbFrame ( nsIFrame** aNewFrame );
 
@@ -2842,7 +2849,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
                                             PRBool                   aIsFixedPositioned,
                                             nsFrameItems&            aFrameItems)
 {
-nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
   nsWidgetRendering mode;
   aPresContext->GetWidgetRenderingMode(&mode);
   const PRInt32 kNoSizeSpecified = -1;
@@ -2939,13 +2946,104 @@ nsresult rv = NS_OK;
           aFrameHasBeenInitialized = PR_TRUE;
         }
       } else {
-          // Construct a frame-based list box
+#ifdef NEWGFX_LIST
+        // Construct a frame-based list box 
+        nsIFrame * listFrame; 
+        rv = NS_NewGfxListControlFrame(&listFrame);
+
+        // initialize the list control 
+        listFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
+
+        // create the area frame we are scrolling 
+        nsIFrame* scrolledFrame = nsnull;
+        NS_NewSelectsAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+
+        nsCOMPtr<nsIListControlFrame> listControlframe(do_QueryInterface(listFrame));
+        if (listControlframe) {
+          listControlframe->SetMainChildFrame(scrolledFrame);
+        }
+
+        // resolve a style for our gfx scrollframe based on the list frames style 
+        /*nsCOMPtr<nsIStyleContext> scrollFrameStyle;
+        aPresContext->ResolvePseudoStyleContextFor(aContent, 
+                                          nsLayoutAtoms::scrolledContentPseudo,// (this will probably work but you might want to set up you own), 
+                                          aStyleContext, PR_FALSE, 
+                                          getter_AddRefs(scrollFrameStyle)); 
+        */
+        // this is what is returned when the scrollframe is created. 
+        // newScrollFrame - Either a gfx scrollframe or a native scrollframe that was created 
+        // scrolledFrameStyleContext - The resolved style context of the scrolledframe you passed in. 
+        // this is not the style of the scrollFrame. 
+
+        nsIFrame* newScrollFrame = nsnull; 
+        nsIStyleContext * scrolledFrameStyleContext = nsnull; 
+
+        // ok take the style context, the Select area frame to scroll,the listFrame, and its parent 
+        // and build the scrollframe. 
+        BuildScrollFrame(aPresContext, aState, aContent, aStyleContext, scrolledFrame, 
+                         listFrame, newScrollFrame, scrolledFrameStyleContext); 
+
+
+        // The area frame is a floater container 
+        PRBool haveFirstLetterStyle, haveFirstLineStyle; 
+        HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext, 
+                              &haveFirstLetterStyle, &haveFirstLineStyle); 
+        nsFrameConstructorSaveState floaterSaveState; 
+        aState.PushFloaterContainingBlock(scrolledFrame, floaterSaveState, 
+                                          haveFirstLetterStyle, 
+                                          haveFirstLineStyle); 
+
+        // Process children 
+        nsFrameItems childItems; 
+
+        ProcessChildren(aPresContext, aState, aContent, scrolledFrame, PR_FALSE, 
+                        childItems, PR_TRUE); 
+
+        // if a select is being created with zero options we need to create 
+        // a special pseudo frame so it can be sized as best it can 
+        nsCOMPtr<nsIDOMHTMLSelectElement> selectElement; 
+        nsresult result = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(), 
+                                                     (void**)getter_AddRefs(selectElement)); 
+        if (NS_SUCCEEDED(result) && selectElement) { 
+          PRUint32 numOptions = 0; 
+          result = selectElement->GetLength(&numOptions); 
+          if (NS_SUCCEEDED(result) && 0 == numOptions) { 
+            nsIStyleContext*  styleContext   = nsnull; 
+            nsIFrame*         generatedFrame = nsnull; 
+            scrolledFrame->GetStyleContext(&styleContext); 
+            if (CreateGeneratedContentFrame(aPresContext, aState, scrolledFrame, aContent, 
+                                            styleContext, nsLayoutAtoms::dummyOptionPseudo, 
+                                            PR_FALSE, &generatedFrame)) { 
+              // Add the generated frame to the child list 
+              childItems.AddChild(generatedFrame); 
+            } 
+          } 
+        } 
+
+        // Set the scrolled frame's initial child lists 
+        scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList); 
+
+        // set the floated list 
+        if (aState.mFloatedItems.childList) { 
+          scrolledFrame->SetInitialChildList(*aPresContext, 
+                                             nsLayoutAtoms::floaterList, 
+                                             aState.mFloatedItems.childList); 
+        } 
+
+        // now we need to set the initial child list of the listFrame and this of course will be the gfx scrollframe 
+        listFrame->SetInitialChildList(*aPresContext, nsnull, newScrollFrame); 
+
+        // our new frame retured is the top frame which is the list frame. 
+        aNewFrame = listFrame; 
+
+        // yes we have already initialized our frame 
+        aFrameHasBeenInitialized = PR_TRUE; 
+#else
         nsIFrame * listFrame;
         rv = NS_NewListControlFrame(&listFrame);
         aNewFrame = listFrame;
         nsIFrame* scrolledFrame = nsnull;
         NS_NewSelectsAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
-
         // ******* this code stolen from Initialze ScrollFrame ********
         // please adjust this code to use BuildScrollFrame.
 
@@ -2963,6 +3061,7 @@ nsresult rv = NS_OK;
         NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
         //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
         aFrameHasBeenInitialized = PR_TRUE;
+#endif
       }
     } else {
       rv = NS_NewNativeSelectControlFrame(&aNewFrame);
