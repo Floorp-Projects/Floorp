@@ -59,6 +59,8 @@ public:
   static nsIAtom* treechildren; // The children of an item in the tree viw
   static nsIAtom* treeindentation; // Specifies that the indentation for the level should occur here.
   static nsIAtom* treeallowevents; // Lets events be handled on the cell contents.
+  static nsIAtom* treecol; // A column in the tree view
+  static nsIAtom* treecolgroup; // A column group in the tree view
 
   static nsIAtom* progressmeter; 
   static nsIAtom* mode; 

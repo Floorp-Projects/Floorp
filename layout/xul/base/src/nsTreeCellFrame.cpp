@@ -59,9 +59,9 @@ static void ForceDrawFrame(nsIFrame * aFrame)
 // Creates a new tree cell frame
 //
 nsresult
-NS_NewTreeCellFrame (nsIFrame*& aNewFrame, PRBool allowEvents)
+NS_NewTreeCellFrame (nsIFrame*& aNewFrame)
 {
-  nsTreeCellFrame* theFrame = new nsTreeCellFrame(allowEvents);
+  nsTreeCellFrame* theFrame = new nsTreeCellFrame();
   if (theFrame == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -72,8 +72,8 @@ NS_NewTreeCellFrame (nsIFrame*& aNewFrame, PRBool allowEvents)
 
 
 // Constructor
-nsTreeCellFrame::nsTreeCellFrame(PRBool allowEvents)
-:nsTableCellFrame() { mAllowEvents = allowEvents; mIsHeader = PR_FALSE; }
+nsTreeCellFrame::nsTreeCellFrame()
+:nsTableCellFrame() { mAllowEvents = PR_FALSE; mIsHeader = PR_FALSE; }
 
 // Destructor
 nsTreeCellFrame::~nsTreeCellFrame()
