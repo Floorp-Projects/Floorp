@@ -17,47 +17,10 @@
  */
 <!--  to hide script contents from old browsers
 
-var				sizeArray = null;
-var				showArray = null;
+var				ispRadio = null;
+var				out = java.lang.System.out;
 
-window.captureEvents( Event.MOUSEUP| Event.MOUSEDOWN| Event.MOUSEDRAG );
-
-function go( msg )
-{
-	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
-
-	if ( parent.parent.globals.document.vars.editMode.value != "yes" )
-	{
-	}
-	return true;
-}
-
-function checkData()
-{
-	return true;
-}
-
-function loadData()
-{
-}
-
-function saveData()
-{
-}
-
-function savePositions()
-{
-	sizeArray = new Array;
-	showArray = new Array;
-	
-	allisp = document.layers[ "allisp" ];
-
-	for ( i = 0; i < allisp.layers.length; i++ )
-	{
-		sizeArray[ i ] = allisp.layers[ i ].document.height
-		showArray[ i ] = true;
-	}
-}
+//window.captureEvents( Event.MOUSEUP| Event.MOUSEDOWN| Event.MOUSEDRAG );
 
 function tabIndex( tab )
 {
@@ -71,35 +34,94 @@ function tabIndex( tab )
 	return -1;
 }
 
-function toggleTab( tab )
+function syncTabs()
 {
 	allisp = document.layers[ "allisp" ];
-
-	if ( tab )
-		index = tabIndex( tab );
-	if ( index != -1 )
+	for ( i = 0; i < allisp.layers.length; i++ )
 	{
-		height = sizeArray[ index ];
-		if ( showArray[ index ] == true  )
+		levelLayer = allisp.layers[ i ];
+		controls = levelLayer.layers[ "control" ];
+		showLayer = controls.layers[ "show" ];
+		hideLayer = controls.layers[ "hide" ];
+		displayLayer = levelLayer.layers[ "levelDisplay" ];
+		
+		if ( hideLayer.visibility == "show" )
 		{
-			showArray[ index ] = false;
-			tab.clip.bottom = tab.clip.top + 54; 
-			for ( i = index + 1; i < allisp.layers.length; i++ )
+			hideLayer.moveAbove( showLayer );
+			showLayer.visibility = "hide";
+			displayLayer.visibility = "show";
+		//	displayLayer.moveAbove( hideLayer );
+			levelLayer.toggleState = true;
+		}
+		else if ( showLayer.visibility == "show" )
+		{
+			showLayer.moveAbove( hideLayer );
+			hideLayer.visibility = "hide";
+			displayLayer.visibility = "hide";
+		//	displayLayer.moveBelow( hideLayer );
+			levelLayer.toggleState = false;
+		}
+	}
+}
+
+function toggleTab( tab )
+{
+	out.println( "toggleTab" );
+	allisp = document.layers[ "allisp" ];
+	
+	for ( i = tabIndex( tab ); i < allisp.layers.length; i++ )
+	{
+		levelLayer = allisp.layers[ i ];
+		displayLayer = levelLayer.layers[ "levelDisplay" ];
+		controls = levelLayer.layers[ "control" ];
+		showLayer = controls.layers[ "show" ];
+		hideLayer = controls.layers[ "hide" ];
+
+		out.println( "pageY: " + levelLayer.pageY );
+		
+		if ( tab == levelLayer )
+		{
+			// toggleState == false is closed 
+			if ( levelLayer.toggleState == false )
 			{
-				layerToMove = allisp.layers[ i ];
-				layerToMove.moveBy( 0, - ( height - 54 ) );
+				out.println( "OPENING" );
+				// open "tab"
+				showLayer.visibility = "hide";
+				hideLayer.visibility = "show";
+				hideLayer.moveAbove( showLayer );
+				levelLayer.toggleState = true;
+				moveBy = levelLayer.clip.height - controls.clip.height;
+				displayLayer.visibility = "show";
 			}
+			else
+			{
+				out.println( "CLOSING" );
+				// close "tab"
+				hideLayer.visibility = "hide";
+				showLayer.visibility = "show";
+				showLayer.moveAbove( hideLayer );
+				levelLayer.toggleState = false;
+				moveBy = -displayLayer.clip.height;
+				displayLayer.visibility = "hide";
+			}		
+				
 		}
 		else
-		{
-			showArray[ index ] = true; 
-			for ( i = index + 1; i < allisp.layers.length; i++ )
-			{
-				layerToMove = allisp.layers[ i ];
-				layerToMove.moveBy( 0, ( height - 54 ) );
-			}
-			tab.clip.bottom = height;
-		}
+			levelLayer.moveBy( 0, moveBy );
+	}
+	levelLayer = allisp.layers[ allisp.layers.length - 1 ];
+	displayLayer = levelLayer.layers[ "levelDisplay" ];
+	controls = levelLayer.layers[ "control" ];
+	
+	if ( levelLayer.toggleState == false )
+	{
+		displayLayer.visibility = "hide";
+		allisp.resizeBy( 0, -displayLayer.clip.height );
+	}
+	else
+	{
+		displayLayer.visibility = "show";
+		allisp.resizeBy( 0, displayLayer.clip.height );
 	}
 }
 
@@ -109,32 +131,30 @@ function toggle( tabName )
 	toggleTab( allisp.layers[ tabName ] );
 }
 
-function checkTab( x, y )
+function radioClick( radioValue )
 {
-	allisp = document.layers[ "allisp" ];
-	
-	for ( var i = 0; i < allisp.layers.length; i++ )
+	if ( radioValue != ispRadio )
 	{
-		checkLayer = allisp.layers[ i ];
-		
-		if (	( x >= i.pageX ) && ( x <= ( i.pageX + 300 ) ) &&
-			( y >= i.pageY ) && ( y <= ( i.pageY + 16 ) ) )
-			return checkLayer;
+		allisp = document.layers[ "allisp" ];
+		for ( i = 0; i < allisp.layers.length; i++ )
+		{
+			levellayer = allisp.layers[ i ];
+			displaylayer = levellayer.layers[ "levelDisplay" ];
+			for ( j = 0; j < displaylayer.layers.length; j++ )
+			{
+				isplayer = displaylayer.layers[ j ];
+				buttonlayer = isplayer.layers[ "moreInfoButton" ];
+				form = buttonlayer.document.forms[ 0 ];
+				radio = form.elements[ 0 ];
+				if ( radio.value == radioValue )
+					radio.check == "1";
+				else
+					form.reset();
+			}
+		}
+		ispRadio = radioValue;
 	}
-	return false;
-}
+}		
 
-function checkClick( e )
-{
-	possibleTab = checkTab( e.pageX, e.pageY );
-	if ( possibleTab )
-		toggleTab( possibleTab );
-}
-
-function donothing()
-{
-}
-
-window.onmousedown = checkClick;
-
+	
 // end hiding contents from old browsers  -->

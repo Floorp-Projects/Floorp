@@ -17,9 +17,12 @@ DEPTH=..\..\..\..\..
 
 JAVA_DESTPATH=$(DEPTH)\dist\classes
 PACKAGE=netscape\asw
+SIGNDIR=$(DEPTH)\cmd\dialup\as_html\signed
 
 !include <$(DEPTH)\config\rules.mak>
 
 export::
-	copy compare.tmpl ..\..\compare.htm
-	copy compare.js ..\..\.
+#	copy compare.tmpl $(DEPTH)\cmd\dialup\as_html\compare.htm
+#	copy level1.tmpl $(SIGNDIR)\level1.htm
+#	copy level2.tmpl $(SIGNDIR)\level2.htm
+	copy compare.js $(DEPTH)\cmd\dialup\as_html\.
