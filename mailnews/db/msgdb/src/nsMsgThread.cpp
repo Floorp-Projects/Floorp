@@ -219,7 +219,7 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 			{
 				curHdr->GetMessageKey(&msgKey);
 				curHdr->SetThreadParent(newHdrKey);
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 				if (newHdrKey != m_threadKey)
 					printf("adding second level child\n");
 #endif
@@ -524,7 +524,7 @@ nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey start
 		}
 	}
 
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 		nsCOMPtr <nsIMsgDBHdr> child;
 		for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++)
 		{
@@ -599,7 +599,7 @@ PRInt32 nsMsgThreadEnumerator::MsgKeyFirstChildIndex(nsMsgKey inMsgKey)
 			}
 		}
 	}
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 	printf("first child index of %ld = %ld\n", inMsgKey, firstChildIndex);
 #endif
 	return firstChildIndex;
@@ -650,7 +650,7 @@ NS_IMETHODIMP nsMsgThreadEnumerator::Next(void)
         mDone = PR_TRUE;
         return rv;
     }
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 	nsMsgKey debugMsgKey;
 	mResultHdr->GetMessageKey(&debugMsgKey);
 	printf("next for %ld = %ld\n", mThreadParentKey, debugMsgKey);
