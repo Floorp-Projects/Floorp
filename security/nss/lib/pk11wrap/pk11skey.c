@@ -88,7 +88,7 @@ pk11_getKeyFromList(PK11SlotInfo *slot) {
 	return symKey;
     }
 
-    symKey = (PK11SymKey *)PORT_ZAlloc(sizeof(PK11SymKey));
+    symKey = (PK11SymKey *)PORT_Alloc(sizeof(PK11SymKey));
     if (symKey == NULL) {
 	return NULL;
     }
@@ -129,6 +129,7 @@ PK11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, PRBool owner,
     }
 
     symKey->type = type;
+    symKey->data.type = siBuffer;
     symKey->data.data = NULL;
     symKey->data.len = 0;
     symKey->owner = owner;
