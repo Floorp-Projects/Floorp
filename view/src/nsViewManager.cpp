@@ -3636,6 +3636,13 @@ nsViewManager::AllowDoubleBuffering(PRBool aDoubleBuffer)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsViewManager::IsPainting(PRBool& aIsPainting)
+{
+  aIsPainting = mPainting;
+  return NS_OK;
+}
+
 nsresult
 nsViewManager::ProcessWidgetChanges(nsIView* aView)
 {
