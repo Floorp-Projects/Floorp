@@ -22,7 +22,7 @@
 <!-- These entities are used on the "Internet Shortcuts" section of the dialog. -->
 <!ENTITY shortcuts.label "Internet Shortcuts">
 <!ENTITY shortcuts.text  "Select the types of Internet Shortcuts you want to view using &brandShortName;.  Windows will use &brandShortName; when you open any shortcuts of the selected types.">
-<!ENTITY http.label      "Hyper-Text Transfer Protocol (http:)">
+<!ENTITY http.label      "Hypertext Transfer Protocol (http:)">
 <!ENTITY http.accesskey  "H">
 <!ENTITY https.label      "Secure HTTP (https:)">
 <!ENTITY https.accesskey  "S">
