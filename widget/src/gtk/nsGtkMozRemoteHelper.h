@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -35,7 +38,9 @@ public:
   virtual ~nsGtkMozRemoteHelper();
 
   // interaction from the outside world
-  static        void SetupVersion         (GdkWindow *aWindow);
+  static        void SetupVersion         (GdkWindow *aWindow,
+                                           const char *aProfile,
+                                           const char *aProgram);
   static    gboolean HandlePropertyChange (GtkWidget *aWidget,
                                            GdkEventProperty *aEvent,
                                            nsIWidget *ansIWidget);
@@ -50,6 +55,8 @@ public:
   static        Atom sMozCommandAtom;
   static        Atom sMozResponseAtom;
   static        Atom sMozUserAtom;
+  static        Atom sMozProfileAtom;
+  static        Atom sMozProgramAtom;
 
 };
 
@@ -66,7 +73,9 @@ class nsGtkXRemoteWidgetHelper : public nsIXRemoteWidgetHelper {
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD EnableXRemoteCommands(nsIWidget *aWidget);
+  NS_IMETHOD EnableXRemoteCommands(nsIWidget *aWidget,
+                                   const char *aProfile,
+                                   const char *aProgram);
 };
 
 #endif /* __nsGtkMozRemoteHelper_h__ */

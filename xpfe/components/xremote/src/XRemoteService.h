@@ -90,6 +90,9 @@ class XRemoteService : public nsIXRemoteService, public nsIObserver {
   nsresult FindWindow(const PRUnichar *aType,
 		      nsIDOMWindowInternal **_retval);
 
+  // Save the profile name
+  void GetProfileName(nsACString &aProfile);
+
   // hidden window for proxy requests
   nsCOMPtr<nsIWidget> mProxyWindow;
   
@@ -104,4 +107,6 @@ class XRemoteService : public nsIXRemoteService, public nsIObserver {
   // have we been started up from the main loop yet?
   PRBool   mRunning;
 
+  // Name of our program
+  nsCString mProgram;
 };

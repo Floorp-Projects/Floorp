@@ -1,3 +1,6 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -31,8 +34,34 @@ interface nsIXRemoteClient : nsISupports
   /**
    * Sends a command to a running instance.  If it returns false then
    * there is no running instance.
+   *
+   * @param aProgram This is the preferred program that we want to use
+   * for this particular command.
+   *
+   * @param aNoProgramFallback This boolean attribute tells the client
+   * code that if the preferred program isn't found that it should
+   * fail not send the command to another server.
+   *
+   * @param aUsername This allows someone to only talk to an instance
+   * of the server that's running under a particular username.  If
+   * this isn't specified here it's pulled from the LOGNAME
+   * environmental variable if it's set.
+
+   * @param aProfile This allows you to specify a particular server
+   * running under a named profile.  If it is not specified the
+   * profile is not checked.
+
+   * @param aCommand This is the command that is passed to the server.
+   * Please see the additional information located at:
+   * http://www.mozilla.org/unix/remote.html
+   *
+   * @param aResponse If there is a response, it will be here.  This
+   * includes error messages.  The string is allocated using stdlib
+   * string functions, so free it with free().
   */
-  boolean sendCommand(in string aCommand);
+  boolean sendCommand(in string aProgram, in string aUsername,
+                      in string aProfile, in string aCommand,
+                      out string aResponse);
 
   /**
    * Shuts down the client

@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -35,18 +38,23 @@
 #define MOZILLA_COMMAND_PROP   "_MOZILLA_COMMAND"
 #define MOZILLA_RESPONSE_PROP  "_MOZILLA_RESPONSE"
 #define MOZILLA_USER_PROP      "_MOZILLA_USER"
+#define MOZILLA_PROFILE_PROP   "_MOZILLA_PROFILE"
+#define MOZILLA_PROGRAM_PROP   "_MOZILLA_PROGRAM"
 
 Atom nsGtkMozRemoteHelper::sMozVersionAtom  = 0;
 Atom nsGtkMozRemoteHelper::sMozLockAtom     = 0;
 Atom nsGtkMozRemoteHelper::sMozCommandAtom  = 0;
 Atom nsGtkMozRemoteHelper::sMozResponseAtom = 0;
 Atom nsGtkMozRemoteHelper::sMozUserAtom     = 0;
+Atom nsGtkMozRemoteHelper::sMozProfileAtom  = 0;
+Atom nsGtkMozRemoteHelper::sMozProgramAtom  = 0;
 
 // XXX get this dynamically
 static const char sRemoteVersion[]   = "5.0";
 
 void
-nsGtkMozRemoteHelper::SetupVersion(GdkWindow *aWindow)
+nsGtkMozRemoteHelper::SetupVersion(GdkWindow *aWindow, const char *aProfile,
+                                   const char *aProgram)
 {
   Window window;
   unsigned char *data = (unsigned char *)sRemoteVersion;
@@ -68,6 +76,20 @@ nsGtkMozRemoteHelper::SetupVersion(GdkWindow *aWindow)
 		    8, PropModeReplace, data, strlen(logname));
   }
 
+  // set our profile name and program name, if available.
+  if (aProfile) {
+    data = (unsigned char *)aProfile;
+
+    XChangeProperty(GDK_DISPLAY(), window, sMozProfileAtom, XA_STRING,
+                    8, PropModeReplace, data, strlen(aProfile));
+  }
+
+  if (aProgram) {
+    data = (unsigned char *)aProgram;
+
+    XChangeProperty(GDK_DISPLAY(), window, sMozProgramAtom, XA_STRING,
+                    8, PropModeReplace, data, strlen(aProgram));
+  }
 }
 
 gboolean
@@ -177,6 +199,10 @@ nsGtkMozRemoteHelper::EnsureAtoms(void)
 				   False);
   if (!sMozUserAtom)
     sMozUserAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_USER_PROP, False);
+  if (!sMozProfileAtom)
+    sMozProfileAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_PROFILE_PROP, False);
+  if (!sMozProgramAtom)
+    sMozProgramAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_PROGRAM_PROP, False);
 
 }
 
@@ -196,7 +222,9 @@ nsGtkXRemoteWidgetHelper::~nsGtkXRemoteWidgetHelper()
 NS_IMPL_ISUPPORTS1(nsGtkXRemoteWidgetHelper, nsIXRemoteWidgetHelper)
 
 NS_IMETHODIMP
-nsGtkXRemoteWidgetHelper::EnableXRemoteCommands(nsIWidget *aWidget)
+nsGtkXRemoteWidgetHelper::EnableXRemoteCommands(nsIWidget *aWidget,
+                                                const char *aProfile,
+                                                const char *aProgram)
 {
   // find the native gdk window
   GdkWindow *window = NS_STATIC_CAST(GdkWindow *,
@@ -216,7 +244,7 @@ nsGtkXRemoteWidgetHelper::EnableXRemoteCommands(nsIWidget *aWidget)
   }
 
   // ok, found the toplevel window - set up the version information
-  nsGtkMozRemoteHelper::SetupVersion(window);
+  nsGtkMozRemoteHelper::SetupVersion(window, aProfile, aProgram);
   
   return NS_OK;
 }
