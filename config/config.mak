@@ -288,9 +288,10 @@ MOZ_NEW_CACHE=1
 CFLAGS=$(CFLAGS) -DMOZ_NEW_CACHE
 #!endif
 
-!ifdef USE_IMG2
+#!ifdef USE_IMG2
+USE_IMG2=1
 CFLAGS=$(CFLAGS) -DUSE_IMG2
-!endif
+#!endif
 
 #//-----------------------------------------------------------------------
 #//
