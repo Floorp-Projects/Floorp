@@ -920,6 +920,9 @@ nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
       *aWindowTitle = PL_strdup(mCert->nickname);
     } else {
       *aWindowTitle = CERT_GetCommonName(&mCert->subject);
+      if (!*aWindowTitle) {
+        *aWindowTitle = PL_strdup(mCert->subjectName);
+      }
     }
   } else {
     NS_ASSERTION(0,"Somehow got nsnull for mCertificate in nsNSSCertificate.");
