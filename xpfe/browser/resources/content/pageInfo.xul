@@ -46,6 +46,7 @@
   screenX="10" screenY="10"
   persist="screenX screenY width height sizemode">
 
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
 
   <keyset>
@@ -312,6 +313,9 @@
             </row> -->
           </rows>
         </grid>
+        <hbox>
+          <button label="&mediaSaveAs;" accesskey="&mediaSaveAsAccesskey;" id="imagesaveasbutton" disabled="true" oncommand="saveMedia();"/>
+        </hbox>
         <vbox class="inset iframe" flex="1" pack="center">
           <hbox id="theimagecontainer" pack="center">
             <image id="thepreviewimage"/>
