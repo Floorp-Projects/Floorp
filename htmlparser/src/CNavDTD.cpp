@@ -1141,7 +1141,7 @@ static eHTMLTags gTagSet2[]={
   eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
   eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      
   eHTMLTag_del,       eHTMLTag_dfn,       eHTMLTag_div,       
-  eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
+  eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_hr,        
   eHTMLTag_embed,
   eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       
   eHTMLTag_input,     eHTMLTag_ins,
@@ -1419,7 +1419,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       case eHTMLTag_table:
         {
           static eHTMLTags okTags[]={ 
-            eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  eHTMLTag_form,
+            eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  
+            eHTMLTag_form,    eHTMLTag_script,
             eHTMLTag_tbody,   eHTMLTag_tfoot,  /* eHTMLTag_tr,*/  
             eHTMLTag_thead,   eHTMLTag_map};
           result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
@@ -1430,7 +1431,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       case eHTMLTag_tfoot:
       case eHTMLTag_thead:
         {
-          static eHTMLTags okTags[]={eHTMLTag_tr,eHTMLTag_map,eHTMLTag_form};
+          static eHTMLTags okTags[]={eHTMLTag_script,eHTMLTag_tr,eHTMLTag_map,eHTMLTag_form};
           result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
@@ -1447,7 +1448,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
       case eHTMLTag_tr:
         {
-          static eHTMLTags okTags[]={eHTMLTag_td,eHTMLTag_th,eHTMLTag_form,eHTMLTag_map};
+          static eHTMLTags okTags[]={eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_form,eHTMLTag_map};
           result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
