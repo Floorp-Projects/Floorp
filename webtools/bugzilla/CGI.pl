@@ -936,7 +936,7 @@ sub GetCommandMenu {
                 "WHERE userid = $userid AND linkinfooter");
         while (MoreSQLData()) {
             my ($name, $query) = (FetchSQLData());
-            $html .= qq{ | <A HREF="buglist.cgi?$query"><NOBR>$name</A>};
+            $html .= qq{ | <A HREF="buglist.cgi?$query"><NOBR>$name</NOBR></A>};
         }
         $html .= " | <NOBR>Edit <a href='userprefs.cgi'>prefs</a></NOBR>";
         if (UserInGroup("tweakparams")) {
