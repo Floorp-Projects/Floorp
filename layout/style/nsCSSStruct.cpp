@@ -374,7 +374,8 @@ nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
     mClip(nsnull),
     mOverflow(aCopy.mOverflow),
     mVisibility(aCopy.mVisibility),
-    mOpacity(aCopy.mOpacity)
+    mOpacity(aCopy.mOpacity),
+    mLang(aCopy.mLang)
 {
   MOZ_COUNT_CTOR(nsCSSDisplay);
   CSS_IF_COPY(mClip, nsCSSRect);

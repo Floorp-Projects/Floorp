@@ -223,6 +223,10 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mOverflow;
   nsCSSValue mVisibility;
   nsCSSValue mOpacity;
+  // mLang member variable is here not because in needs to be stored 
+  // in nsCSSDeclaration objects but because it's needed on the
+  // stack when the struct is used in WalkRuleTree.
+  nsCSSValue mLang;
 };
 
 struct nsCSSMargin : public nsCSSStruct  {
