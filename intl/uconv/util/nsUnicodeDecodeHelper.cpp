@@ -119,7 +119,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTable(const char * aSrc,
     dest++;
   }
 
-  if (srcLen > 0) res = NS_OK_UDEC_MOREOUTPUT;
+  if ((srcLen > 0) && (res == NS_OK)) res = NS_OK_UDEC_MOREOUTPUT;
 
   *aSrcLength = src - aSrc;
   *aDestLength  = dest - aDest;
@@ -176,7 +176,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTables(const char * aSrc,
     dest++;
   }
 
-  if (srcLen > 0) res = NS_OK_UDEC_MOREOUTPUT;
+  if ((srcLen > 0) && (res == NS_OK)) res = NS_OK_UDEC_MOREOUTPUT;
 
   *aSrcLength = src - aSrc;
   *aDestLength  = dest - aDest;
