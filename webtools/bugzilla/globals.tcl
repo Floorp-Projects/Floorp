@@ -437,3 +437,22 @@ proc SqlQuote {str} {
 
     return $str
 }
+
+
+proc Param {value} {
+    global param
+    if {[info exists param($value)]} {
+        return $param($value)
+    }
+    # Um, maybe we haven't sourced in the params at all yet.
+    catch {uplevel \#0 source "params"}
+    if {[info exists param($value)]} {
+        return $param($value)
+    }
+    # Well, that didn't help.  Maybe it's a new param, and the user
+    # hasn't defined anything for it.  Try and load a default value
+    # for it.
+    uplevel #0 source "defparams.tcl"
+    WriteParams
+    return $param($value)
+}

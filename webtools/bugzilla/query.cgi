@@ -33,7 +33,7 @@ if {[info exists FORM(GoAheadAndLogIn)]} {
 
 
 if {![info exists COOKIE(DEFAULTQUERY)]} {
-    set COOKIE(DEFAULTQUERY) "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&product=Mozilla&order=%22Importance%22"
+    set COOKIE(DEFAULTQUERY) [Param defaultquery]
 }
 
 if {![info exists buffer] || $buffer == ""} {
@@ -231,6 +231,9 @@ puts "
 
 
 if {[info exists COOKIE(Bugzilla_login)]} {
+    if {[cequal $COOKIE(Bugzilla_login) [Param maintainer]]} {
+        puts "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>"
+    }
     puts "
 <a href=relogin.cgi>Log in as someone besides <b>$COOKIE(Bugzilla_login)</b></a><br>
 <a href=changepassword.cgi>Change my password.</a><br>"

@@ -104,6 +104,35 @@ You should be run all six scripts named make*.sh.  This creates the
 databases and populates them a teeny bit.
 
 
+4. Setting the parameters
+
+At this point, you ought to be able to go and browse some pages.  But you'd
+like to customize some things.
+
+Create yourself an account.  (Try to enter a new bug, and it will
+prompt you for your login.  Give it your email address, and have it
+mail you your password.)  Go visit the query page; that ought to force
+the creation of the "params" file in your installation dir.  Edit the
+params file, and change the line that says "set param(maintainer)" to
+have your email address as the maintainer.  Go visit the query page
+again; there should now be a link at the bottom that invites you to
+edit the parameters.  (If you have cookies turned off, you'll have to
+go to editparams.cgi manually.)
+
+Tweak the parameters to taste.  Be careful.
+
+
+5. Set up the whining cron job.
+
+It's a good idea to set up a daily cronjob that does
+
+	cd <your-installation-dir> ; ./whineatnews.tcl
+
+This causes email that gets sent to anyone who has a NEW bug that
+hasn't been touched for several days.  For more info, see the
+whinedays and whinemail parameters.
+
+
 
 *******************************************************
 APPENDIXES
