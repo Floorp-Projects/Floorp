@@ -615,99 +615,43 @@ nsOutlinerContentView::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
 NS_IMETHODIMP
 nsOutlinerContentView::Select(PRInt32 aIndex)
 {
-  if (!mHasCheckedSelect)
-    GetSelectElement();
-
-  mIgnoreOptionSelected = PR_TRUE;
-  mSelectElement->SetOptionsSelectedByIndex(aIndex, aIndex, PR_TRUE,
-                                            PR_FALSE, PR_FALSE, nsnull);
-  mIgnoreOptionSelected = PR_FALSE;
-
-  return NS_OK;
+  return SetOptionsSelected(aIndex, aIndex, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsOutlinerContentView::SelectAll()
 {
-  if (!mHasCheckedSelect)
-    GetSelectElement();
-
-  mIgnoreOptionSelected = PR_TRUE;
-  mSelectElement->SetOptionsSelectedByIndex(0, mRows.Count() - 1, PR_TRUE,
-                                            PR_FALSE, PR_FALSE, nsnull);
-  mIgnoreOptionSelected = PR_FALSE;
-
-  return NS_OK;
+  return SetOptionsSelected(0, mRows.Count() - 1, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsOutlinerContentView::Deselect(PRInt32 aIndex)
 {
-  if (!mHasCheckedSelect)
-    GetSelectElement();
-
-  mIgnoreOptionSelected = PR_TRUE;
-  mSelectElement->SetOptionsSelectedByIndex(aIndex, aIndex, PR_FALSE,
-                                            PR_FALSE, PR_FALSE, nsnull);
-  mIgnoreOptionSelected = PR_FALSE;
-
-  return NS_OK;
+  return SetOptionsSelected(aIndex, aIndex, PR_FALSE, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsOutlinerContentView::DeselectAll()
 {
-  if (!mHasCheckedSelect)
-    GetSelectElement();
-
-  mIgnoreOptionSelected = PR_TRUE;
-  mSelectElement->SetOptionsSelectedByIndex(0, mRows.Count() - 1, PR_FALSE,
-                                            PR_FALSE, PR_FALSE, nsnull);
-  mIgnoreOptionSelected = PR_FALSE;
-
-  return NS_OK;
+  return SetOptionsSelected(0, mRows.Count() - 1, PR_FALSE, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsOutlinerContentView::SelectRange(PRInt32 aStart, PRInt32 aEnd)
 {
-  if (!mHasCheckedSelect)
-    GetSelectElement();
-
-  mIgnoreOptionSelected = PR_TRUE;
-  mSelectElement->SetOptionsSelectedByIndex(aStart, aEnd, PR_TRUE,
-                                            PR_FALSE, PR_FALSE, nsnull);
-  mIgnoreOptionSelected = PR_FALSE;
-
-  return NS_OK;
+  return SetOptionsSelected(aStart, aEnd, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsOutlinerContentView::DeselectRange(PRInt32 aStart, PRInt32 aEnd)
 {
-  if (!mHasCheckedSelect)
-    GetSelectElement();
-
-  mIgnoreOptionSelected = PR_TRUE;
-  mSelectElement->SetOptionsSelectedByIndex(aStart, aEnd, PR_FALSE,
-                                            PR_FALSE, PR_FALSE, nsnull);
-  mIgnoreOptionSelected = PR_FALSE;
-
-  return NS_OK;
+  return SetOptionsSelected(aStart, aEnd, PR_FALSE, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsOutlinerContentView::DeselectAllBut(PRInt32 aIndex)
 {
-  if (!mHasCheckedSelect)
-    GetSelectElement();
-
-  mIgnoreOptionSelected = PR_TRUE;
-  mSelectElement->SetOptionsSelectedByIndex(aIndex, aIndex, PR_TRUE,
-                                            PR_TRUE, PR_FALSE, nsnull);
-  mIgnoreOptionSelected = PR_FALSE;
-    
-  return NS_OK;
+  return SetOptionsSelected(aIndex, aIndex, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP
