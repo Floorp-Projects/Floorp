@@ -111,11 +111,10 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
                   PRThreadState state, 
                   PRUint32 stackSize)
 {
-    thread->md.handle = thread->id = (TID) _beginthread(
-                    (void(* _Optlink)(void*))start,
-                    NULL, 
-                    thread->stack->stackSize,
-                    thread);
+    thread->md.handle = thread->id = (TID) _beginthread(start,
+                                                        NULL, 
+                                                        thread->stack->stackSize,
+                                                        thread);
     if(thread->md.handle == -1) {
         return PR_FAILURE;
     }

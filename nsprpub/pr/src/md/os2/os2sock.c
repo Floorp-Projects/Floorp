@@ -100,7 +100,7 @@ _MD_SocketAvailable(PRFileDesc *fd)
 {
     PRInt32 result;
 
-    if (ioctl(fd->secret->md.osfd, FIONREAD, (char *) &result, sizeof(result)) < 0) {
+    if (so_ioctl(fd->secret->md.osfd, FIONREAD, (char *) &result, sizeof(result)) < 0) {
         PR_SetError(PR_BAD_DESCRIPTOR_ERROR, sock_errno());
         return -1;
     }
@@ -139,17 +139,17 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
             do {
                 FD_SET(osfd, &rd_wr);
                 if (fd_type == READ_FD)
-                    rv = _MD_SELECT(osfd + 1, &rd_wr, NULL, NULL, &tv);
+                    rv = bsdselect(osfd + 1, &rd_wr, NULL, NULL, &tv);
                 else
-                    rv = _MD_SELECT(osfd + 1, NULL, &rd_wr, NULL, &tv);
+                    rv = bsdselect(osfd + 1, NULL, &rd_wr, NULL, &tv);
 #else
             lTimeout = _PR_INTERRUPT_CHECK_INTERVAL_SECS * 1000; 
             do {
                 socks[0] = osfd;
                 if (fd_type == READ_FD)
-                    rv = _MD_SELECT(socks, 1, 0, 0, lTimeout);
+                    rv = os2_select(socks, 1, 0, 0, lTimeout);
                 else
-                    rv = _MD_SELECT(socks, 0, 1, 0, lTimeout);
+                    rv = os2_select(socks, 0, 1, 0, lTimeout);
 #endif                    
                 if (rv == -1 && (syserror = sock_errno()) != EINTR) {
                     _PR_MD_MAP_SELECT_ERROR(syserror);
@@ -171,7 +171,7 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
 #endif
             do {
                 /*
-                 * We block in _MD_SELECT for at most
+                 * We block in select for at most
                  * _PR_INTERRUPT_CHECK_INTERVAL_SECS seconds,
                  * so that there is an upper limit on the delay
                  * before the interrupt bit is checked.
@@ -190,9 +190,9 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                 }
                 FD_SET(osfd, &rd_wr);
                 if (fd_type == READ_FD)
-                    rv = _MD_SELECT(osfd + 1, &rd_wr, NULL, NULL, &tv);
+                    rv = bsdselect(osfd + 1, &rd_wr, NULL, NULL, &tv);
                 else
-                    rv = _MD_SELECT(osfd + 1, NULL, &rd_wr, NULL, &tv);
+                    rv = bsdselect(osfd + 1, NULL, &rd_wr, NULL, &tv);
 #else
                 wait_for_remaining = PR_TRUE;
                 lTimeout = PR_IntervalToMilliseconds(remaining);
@@ -202,9 +202,9 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                 }
                 socks[0] = osfd;
                 if (fd_type == READ_FD)
-                    rv = _MD_SELECT(socks, 1, 0, 0, lTimeout);
+                    rv = os2_select(socks, 1, 0, 0, lTimeout);
                 else
-                    rv = _MD_SELECT(socks, 0, 1, 0, lTimeout);
+                    rv = os2_select(socks, 0, 1, 0, lTimeout);
 #endif
                 /*
                  * we don't consider EINTR a real error
@@ -220,12 +220,12 @@ socket_io_wait( PRInt32 osfd, PRInt32 fd_type, PRIntervalTime timeout )
                     break;
                 }
                 /*
-                 * We loop again if _MD_SELECT timed out or got interrupted
+                 * We loop again if select timed out or got interrupted
                  * by a signal, and the timeout deadline has not passed yet.
                  */
                 if (rv == 0 || (rv == -1 && syserror == EINTR)) {
                     /*
-                     * If _MD_SELECT timed out, we know how much time
+                     * If select timed out, we know how much time
                      * we spent in blocking, so we can avoid a
                      * PR_IntervalNow() call.
                      */
@@ -539,7 +539,7 @@ _PR_MD_WRITEV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size,
         }
     }
 
-    while ((rv = writev(osfd, (const struct iovec*)iov, iov_size)) == -1) {
+    while ((rv = so_writev(osfd, (const struct iovec*)iov, iov_size)) == -1) {
         err = sock_errno();
         if ((err == EWOULDBLOCK))    {
             if (fd->secret->nonblocking) {
@@ -583,6 +583,20 @@ _PR_MD_SHUTDOWN(PRFileDesc *fd, PRIntn how)
         _PR_MD_MAP_SHUTDOWN_ERROR(sock_errno());
     return rv;
 }
+
+PRInt32
+_PR_MD_SOCKETPAIR(int af, int type, int flags, PRInt32 *osfd)
+{
+    PRInt32 rv, err;
+
+    rv = socketpair(af, type, flags, osfd);
+    if (rv < 0) {
+        err = _MD_ERRNO();
+        _PR_MD_MAP_SOCKETPAIR_ERROR(err);
+    }
+    return rv;
+}
+
 
 PRStatus
 _PR_MD_GETSOCKNAME(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen)
@@ -652,7 +666,7 @@ _MD_MakeNonblock(PRFileDesc *fd)
         return;
     }
 
-    err = ioctl( osfd, FIONBIO, (char *) &one, sizeof(one));
+    err = so_ioctl( osfd, FIONBIO, (char *) &one, sizeof(one));
     if ( err != 0 )
     {
         err = sock_errno();

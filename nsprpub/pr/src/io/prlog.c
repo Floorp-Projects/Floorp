@@ -493,8 +493,7 @@ PR_IMPLEMENT(void) PR_Abort(void)
 #include <builtin.h>
 static void DebugBreak(void) { _interrupt(3); }
 #elif defined(XP_OS2_EMX)
-/* Force a trap */
-static void DebugBreak(void) { int *pTrap=NULL; *pTrap = 1; }
+static void DebugBreak(void) { asm("int $3"); }
 #else
 static void DebugBreak(void) { }
 #endif

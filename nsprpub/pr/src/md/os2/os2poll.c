@@ -242,7 +242,7 @@ retry:
         tvp = &tv;
     }
 
-    ready = _MD_SELECT(maxfd + 1, &rd, &wt, &ex, tvp);
+    ready = bsdselect(maxfd + 1, &rd, &wt, &ex, tvp);
 #else
     switch (timeout)
     {
@@ -262,7 +262,7 @@ retry:
     for( i = rd+wt, j = npds*2; j < npds*2+ex; i++,j++ )
         socks[i] = socks[j];
     
-    ready = _MD_SELECT(socks, rd, wt, ex, msecs);
+    ready = os2_select(socks, rd, wt, ex, msecs);
 #endif
 
     if (ready == -1 && errno == EINTR)
@@ -378,151 +378,3 @@ retry:
     return ready;
 }
 
-#ifdef XP_OS2_EMX
-HMTX thread_select_mutex = 0;	/* because EMX's select is not thread safe - duh! */
-
-typedef struct _thread_select_st {
-	int		nfds;
-	int		isrdfds;
-	struct _fd_set *readfds;
-	int		iswrfds;
-	struct _fd_set *writefds;
-	int		isexfds;
-	struct _fd_set *exceptfds;
-	int		istimeout;
-	struct timeval	timeout;
-	volatile HEV	event;
-	int		result;
-	int		select_errno;
-	volatile int	done;
-} *pthread_select_t;
-	
-void _thread_select(void * arg)
-{
-	pthread_select_t	self = arg;
-	int			result, chkstdin;
-	struct _fd_set		readfds;
-	struct _fd_set		writefds;
-	struct _fd_set		exceptfds;
-	HEV			event = self->event;
-
-	chkstdin = (self->isrdfds && FD_ISSET(0,self->readfds))?1:0;
-
-	do {
-		struct timeval	timeout = {0L,0L};
-
-
-		if (self->isrdfds) readfds = *self->readfds;
-		if (self->iswrfds) writefds = *self->writefds;
-		if (self->isexfds) exceptfds = *self->exceptfds;
-		
-		if (chkstdin) FD_CLR(0,&readfds);
-
-		if (!thread_select_mutex) 
-			DosCreateMutexSem(NULL,&thread_select_mutex,0,1);
-		else
-			DosRequestMutexSem(thread_select_mutex,SEM_INDEFINITE_WAIT);
-		result = select(
-			self->nfds, 
-			self->isrdfds?&readfds:NULL,
-			self->iswrfds?&writefds:NULL,
-			self->isexfds?&exceptfds:NULL,
-			&timeout);
-		DosReleaseMutexSem(thread_select_mutex);
-
-		if (chkstdin) {
-			int charcount = 0, res;
-			res = ioctl(0,FIONREAD,&charcount);
-			if (res==0 && charcount>0) FD_SET(0,&readfds);
-		}
-				
-		if (result>0) {
-			self->done++;
-			if (self->isrdfds) *self->readfds = readfds;
-			if (self->iswrfds) *self->writefds = writefds;
-			if (self->isexfds) *self->exceptfds = exceptfds;
-		} else
-		if (result) self->done++;
-		else DosSleep(1);
-
-	} while (self->event!=0 && self->done==0);
-
-	if (self->event) {
-		self->select_errno = (result < 0)?errno:0;
-		self->result = result;
-		self->done = 3;
-		DosPostEventSem(event);
-	} else {
-		self->done = 3;
-		free(self);
-	}
-
-}
-
-PRInt32
-_MD_SELECT(int nfds, fd_set *readfds, fd_set *writefds,
-                  fd_set *exceptfds, struct timeval *timeout)
-{
-	pthread_select_t sel;
-	HEV		ev = 0;
-	HTIMER		timer = 0;
-	int		result = 0;
-	APIRET		rc;
-	unsigned long	msecs = SEM_INDEFINITE_WAIT;
-
-	if (timeout) {
-		if (timeout->tv_sec != 0 || timeout->tv_usec != 0) 
-			msecs = (timeout->tv_sec * 1000L) + (timeout->tv_usec / 1000L);
-		else
-			msecs = SEM_IMMEDIATE_RETURN;
-	};
-
-	if (!(sel = (pthread_select_t) malloc(sizeof(struct _thread_select_st)))) {
-		result = -1;
-		errno = ENOMEM;
-	} else {
-		sel->nfds = nfds;
-		sel->isrdfds = readfds?1:0;
-		if (sel->isrdfds) sel->readfds = readfds;
-		sel->iswrfds = writefds?1:0;
-		if (sel->iswrfds) sel->writefds = writefds;
-		sel->isexfds = exceptfds?1:0;
-		if (sel->isexfds) sel->exceptfds = exceptfds;
-		sel->istimeout = timeout?1:0;
-		if (sel->istimeout) sel->timeout = *timeout;
-	
-		rc = DosCreateEventSem(NULL,&ev,0,FALSE);
-
-		sel->event = ev;
-		if (msecs == SEM_IMMEDIATE_RETURN)
-			sel->done = 1;
-		else
-			sel->done = 0;
-
-		if (_beginthread(_thread_select,NULL,65536,(void *)sel) == -1) {
-			result = -1; sel->event = 0;
-			DosCloseEventSem(ev);
-		} else {
-			rc = DosWaitEventSem(ev,msecs);
-			if ((!sel->done) && (msecs != SEM_IMMEDIATE_RETURN)) {	/* Interrupted by other thread or timeout */
-				sel->event = 0;
-				result = 0;
-				errno = ETIMEDOUT;
-				
-			} else {
-				while (sel->done && sel->done != 3) {
-					DosSleep(1);
-				}
-				sel->event = 0;
-				result = sel->result;
-				if (sel->select_errno) errno = sel->select_errno;
-				free(sel);
-			}
-			rc = DosCloseEventSem(ev);
-		}
-	}
-
-	return (result);
-}
-
-#endif

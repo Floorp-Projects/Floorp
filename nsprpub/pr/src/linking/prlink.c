@@ -162,7 +162,7 @@ struct _imcb *IAC$GL_IMAGE_LIST = NULL;
  * On these platforms, symbols have a leading '_'.
  */
 #if defined(SUNOS4) || defined(DARWIN) || defined(NEXTSTEP) \
-    || defined(WIN16) \
+    || defined(WIN16) || defined(XP_OS2) \
     || ((defined(OPENBSD) || defined(NETBSD)) && !defined(__ELF__))
 #define NEED_LEADING_UNDERSCORE
 #endif
@@ -939,8 +939,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         UCHAR pszError[_MAX_PATH];
         ULONG ulRc = NO_ERROR;
 
-        retry:
-              ulRc = DosLoadModule(pszError, _MAX_PATH, (PSZ) name, &h);
+          ulRc = DosLoadModule(pszError, _MAX_PATH, (PSZ) name, &h);
           if (ulRc != NO_ERROR) {
               oserr = ulRc;
               PR_DELETE(lm);
@@ -1432,6 +1431,9 @@ static void*
 pr_FindSymbolInLib(PRLibrary *lm, const char *name)
 {
     void *f = NULL;
+#ifdef XP_OS2
+    int rc;
+#endif
 
     if (lm->staticTable != NULL) {
         const PRStaticLinkTable* tp;
@@ -1451,7 +1453,17 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
     }
     
 #ifdef XP_OS2
-    DosQueryProcAddr(lm->dlh, 0, (PSZ) name, (PFN *) &f);
+    rc = DosQueryProcAddr(lm->dlh, 0, (PSZ) name, (PFN *) &f);
+#if defined(NEED_LEADING_UNDERSCORE)
+    /*
+     * Older plugins (not built using GCC) will have symbols that are not
+     * underscore prefixed.  We check for that here.
+     */
+    if (rc != NO_ERROR) {
+        name++;
+        DosQueryProcAddr(lm->dlh, 0, (PSZ) name, (PFN *) &f);
+    }
+#endif
 #endif  /* XP_OS2 */
 
 #if defined(WIN32) || defined(WIN16)

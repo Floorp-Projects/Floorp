@@ -53,7 +53,7 @@ ASFILES = os2vacpp.asm
 endif
 
 ifeq ($(MOZ_OS2_TOOLS),EMX)
-ASFILES = os2emx.s
+ASFILES = os2emx.s os2vaclegacy.s
 endif
 
 OBJS += $(addprefix md/os2/$(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)))  \
