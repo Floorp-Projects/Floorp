@@ -1421,8 +1421,8 @@ PresShell::PresShell():
 #ifdef IBMBIDI
   mBidiLevel(BIDI_LEVEL_UNDEFINED),
 #endif
-  mScrollingEnabled(PR_TRUE),
-  mEnablePrefStyleSheet(PR_TRUE)
+  mEnablePrefStyleSheet(PR_TRUE),
+  mScrollingEnabled(PR_TRUE)
 {
   NS_INIT_ISUPPORTS();
 #ifdef MOZ_REFLOW_PERF

@@ -609,7 +609,7 @@ nsFocusIterator::Next()
 NS_IMETHODIMP
 nsFocusIterator::Prev()
 {
-  nsIFrame *result;
+  nsIFrame *result = 0;
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
