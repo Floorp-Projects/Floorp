@@ -33,7 +33,10 @@ import java.net.*;
 /**
  * Authenticates to a server using SASL
  */
-public class LDAPSaslBind implements LDAPBind, Serializable {
+public class LDAPSaslBind implements LDAPBind, java.io.Serializable {
+
+    static final long serialVersionUID = -7615315715163655443L;
+
     /**
      * Construct an object which can authenticate to an LDAP server
      * using the specified name and a specified SASL mechanism.
@@ -181,8 +184,7 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
                         continue;
                     }
 
-                    String challenge = response.getCredentials();
-                    byte[] b = challenge.getBytes();
+                    byte[] b = response.getCredentials();
 
                     Object[] args = {b};
                     String[] argNames = {"[B"}; // class name for byte array
@@ -190,7 +192,7 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
                     outVals =
                         (byte[])DynamicInvoker.invokeMethod(
                             _saslClient,
-                            mechanismName, "evaluateChallenge",
+                            className, "evaluateChallenge",
                             args, argNames);
                 }
 
@@ -198,7 +200,7 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
                 Boolean bool =
                     (Boolean)DynamicInvoker.invokeMethod(
                         _saslClient,
-                        mechanismName, "isComplete", null, null);
+                        className, "isComplete", null, null);
                 if (!bool.booleanValue()) {
                     // Authentication session hijacked!
                     throw new LDAPException("The server indicates that " +
@@ -214,14 +216,14 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
                 InputStream is =
                     (InputStream)DynamicInvoker.invokeMethod(
                         _saslClient,
-                        mechanismName, "getInputStream", args, argNames);
+                        className, "getInputStream", args, argNames);
                 ldc.setInputStream(is);
                 args[0] = ldc.getOutputStream();
                 argNames[0] = "java.io.OutputStream";
                 OutputStream os =
                     (OutputStream)DynamicInvoker.invokeMethod(
                         _saslClient,
-                        mechanismName, "getOutputStream", args, argNames);
+                        className, "getOutputStream", args, argNames);
                 ldc.setOutputStream(os);
                 ldc.markConnAsBound();
             } catch (LDAPException e) {
