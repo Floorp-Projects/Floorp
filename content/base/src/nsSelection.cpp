@@ -222,7 +222,7 @@ public:
 
 //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
-  NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame);
+  NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame, PRInt32 *aOffset);
   NS_IMETHOD   SetOriginalAnchorPoint(nsIDOMNode *aNode, PRInt32 aOffset);
   NS_IMETHOD   GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset);
   NS_IMETHOD   LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
@@ -1538,7 +1538,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 
     
   nsIFrame *frame;
-  result = mDomSelections[index]->GetPrimaryFrameForFocusNode(&frame);
+  result = mDomSelections[index]->GetPrimaryFrameForFocusNode(&frame, &offsetused);
 
   if (NS_FAILED(result) || !frame)
     return result?result:NS_ERROR_FAILURE;
@@ -1546,20 +1546,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   result = frame->GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
   nsCOMPtr<nsIDOMNode> parentNode;
-  //we also need to check to see if the result frame's content's parent is equal to the weaknode used of course.
-  //except for special case of text frames where they are their own parent.
-  nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(node);
-  if (NS_SUCCEEDED(result) && textNode && node != weakNodeUsed)//then the offset is meaningless.
-  {
-    offsetused = 0;//0 because when grabbing a child content we grab the IDX'th object or: body has 2 children, 
-                     //index 0 of parent is the first child so if we say the first child is the frame then say offset is 0 we are correct
-  }
-  else
-  {
-    result = node->GetParentNode(getter_AddRefs(parentNode));
-    if ((NS_FAILED(result) || parentNode != weakNodeUsed) && node != weakNodeUsed) //we are not pointing to same node! offset is meaningless
-      offsetused = -1;
-  }  
   nsPeekOffsetStruct pos;
 
   //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking
@@ -4980,20 +4966,23 @@ nsTypedSelection::GetPrimaryFrameForAnchorNode(nsIFrame **aReturnFrame)
 }
 
 NS_IMETHODIMP
-nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
+nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *aOffsetUsed)
 {
   if (!aReturnFrame)
     return NS_ERROR_NULL_POINTER;
   
   PRInt32 frameOffset = 0;
   *aReturnFrame = 0;
+  if (!aOffsetUsed)
+    aOffsetUsed = &frameOffset;
+    
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(FetchFocusNode());
   if (content && mFrameSelection)
   {
     nsIFrameSelection::HINT hint;
     mFrameSelection->GetHint(&hint);
-    return mFrameSelection->GetFrameForNodeOffset(content, FetchFocusOffset(),hint,aReturnFrame, &frameOffset);
+    return mFrameSelection->GetFrameForNodeOffset(content, FetchFocusOffset(),hint,aReturnFrame, aOffsetUsed);
   }
   return NS_ERROR_FAILURE;
 }
@@ -7807,7 +7796,7 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
 
   focusOffset = FetchFocusOffset();
   focusNode = FetchFocusNode();
-  result =GetPrimaryFrameForFocusNode(&focusFrame);
+  result = GetPrimaryFrameForFocusNode(&focusFrame, nsnull);
   if (NS_FAILED(result) || !focusFrame)
     return result?result:NS_ERROR_FAILURE;
 
