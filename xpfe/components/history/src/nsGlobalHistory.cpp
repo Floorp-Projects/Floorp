@@ -35,11 +35,9 @@
 
 */
 
-#include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "nsCRT.h"
 #include "nsFileStream.h"
-#include "nsIModule.h"
 #include "nsIEnumerator.h"
 #include "nsIGenericFactory.h"
 #include "nsIGlobalHistory.h"
@@ -79,9 +77,6 @@
 //
 // CIDs
 
-static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
-static NS_DEFINE_CID(kGlobalHistoryCID,     NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
@@ -1868,208 +1863,19 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
 }
 
 
-
-
-
-
-
-
 //----------------------------------------------------------------------
 //
-// Component Exports
-//
-//   XXX aren't there macors or templates to do this now?
+// Global History Module
 //
 
-// Module implementation for the sample library
-class nsGlobalHistoryModule : public nsIModule
+static nsModuleComponentInfo gHistoryComponents[] =
 {
-public:
-  nsGlobalHistoryModule();
-  virtual ~nsGlobalHistoryModule();
-  
-  NS_DECL_ISUPPORTS
-  
-  NS_DECL_NSIMODULE
-  
-protected:
-  nsresult Initialize();
-  
-  void Shutdown();
-  
-  PRBool mInitialized;
-  nsCOMPtr<nsIGenericFactory> mFactory;
+  { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_PROGID,
+    NS_NewGlobalHistory,
+  },
+  { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_PROGID,
+    NS_NewGlobalHistory,
+  }
 };
 
-NS_IMPL_ISUPPORTS(nsGlobalHistoryModule, NS_GET_IID(nsIModule))
-
-nsGlobalHistoryModule::nsGlobalHistoryModule()
-  : mInitialized(PR_FALSE)
-{
-  NS_INIT_ISUPPORTS();
-}
-
-nsGlobalHistoryModule::~nsGlobalHistoryModule()
-{
-  Shutdown();
-}
-
-
-// Perform our one-time intialization for this module
-nsresult
-nsGlobalHistoryModule::Initialize()
-{
-  if (mInitialized) {
-    return NS_OK;
-  }
-  mInitialized = PR_TRUE;
-  return NS_OK;
-}
-
-// Shutdown this module, releasing all of the module resources
-void
-nsGlobalHistoryModule::Shutdown()
-{
-  // Release the factory object
-  mFactory = nsnull;
-}
-
-// Create a factory object for creating instances of aClass.
-NS_IMETHODIMP
-nsGlobalHistoryModule::GetClassObject(nsIComponentManager *aCompMgr,
-                                      const nsCID& aClass,
-                                      const nsIID& aIID,
-                                      void** r_classObj)
-{
-  nsresult rv;
-
-  // Defensive programming: Initialize *r_classObj in case of error below
-  if (!r_classObj) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *r_classObj = NULL;
-
-  // Do one-time-only initialization if necessary
-  if (!mInitialized) {
-    rv = Initialize();
-    if (NS_FAILED(rv)) {
-      // Initialization failed! yikes!
-      return rv;
-    }
-  }
-
-  // Choose the appropriate factory, based on the desired instance
-  // class type (aClass).
-  nsCOMPtr<nsIGenericFactory> fact;
-  if (aClass.Equals(kGlobalHistoryCID)) {
-    if (!mFactory) {
-      // Create and save away the factory object for creating
-      // new instances of Sample. This way if we are called
-      // again for the factory, we won't need to create a new
-      // one.
-      rv = aCompMgr->CreateInstance(kGenericFactoryCID,
-                                    nsnull,
-                                    NS_GET_IID(nsIGenericFactory),
-                                    getter_AddRefs(mFactory));
-
-      if (NS_FAILED(rv)) return rv;
-
-      rv = mFactory->SetConstructor(NS_NewGlobalHistory);
-      if (NS_FAILED(rv)) return rv;
-    }
-    fact = mFactory;
-  }
-  else {
-    rv = NS_ERROR_FACTORY_NOT_REGISTERED;
-#ifdef DEBUG
-    char* cs = aClass.ToString();
-    printf("+++ nsGlobalHistoryModule: unable to create factory for %s\n", cs);
-    nsCRT::free(cs);
-#endif
-  }
-
-  if (fact) {
-    rv = fact->QueryInterface(aIID, r_classObj);
-  }
-
-  return rv;
-}
-
-//----------------------------------------
-
-NS_IMETHODIMP
-nsGlobalHistoryModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                          nsIFile* aPath,
-                          const char* registryLocation,
-                          const char* componentType)
-{
-  nsresult rv = NS_OK;
-
-#ifdef DEBUG
-  printf("*** Registering history components\n");
-#endif
-  
-  rv = aCompMgr->RegisterComponentSpec(kGlobalHistoryCID, "Global History",
-                                      NS_GLOBALHISTORY_PROGID,
-                                      aPath, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = aCompMgr->RegisterComponentSpec(kGlobalHistoryCID, "Global History",
-                                      NS_GLOBALHISTORY_DATASOURCE_PROGID,
-                                      aPath, PR_TRUE, PR_TRUE);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsGlobalHistoryModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                                      nsIFile* aPath,
-                                      const char* registryLocation)
-{
-#ifdef DEBUG
-  printf("*** Unregistering history components\n");
-#endif
-  
-  aCompMgr->UnregisterComponentSpec(kGlobalHistoryCID, aPath);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalHistoryModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-    if (!okToUnload) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    *okToUnload = PR_FALSE;
-    return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------------------------
-
-static nsGlobalHistoryModule *gModule = NULL;
-
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFile* aPath,
-                                          nsIModule** return_cobj)
-{
-    nsresult rv = NS_OK;
-
-    // Preconditions
-    NS_ENSURE_ARG_POINTER(return_cobj);
-    NS_ENSURE_FALSE(gModule, NS_ERROR_FAILURE);
-
-    // Create an initialize the layout module instance
-    nsGlobalHistoryModule *m = new nsGlobalHistoryModule();
-    if (!m) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-    if (NS_FAILED(rv)) {
-        delete m;
-        m = nsnull;
-    }
-    gModule = m;                  // WARNING: Weak Reference
-    return rv;
-}
+NS_IMPL_NSGETMODULE("nsGlobalHistoryModule", gHistoryComponents)
