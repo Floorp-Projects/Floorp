@@ -47,15 +47,15 @@
     <content>
       <xul:tabbox onselect="this.parentNode.updateCurrentBrowser();">
         <xul:stack collapsed="true" tooltip="_child">
-          <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.label) { this.childNodes[0].value = document.tooltipNode.label; return true; } return false;">
+          <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.getAttribute('label')) { this.childNodes[0].value = document.tooltipNode.getAttribute('label'); return true; } return false;">
             <xul:label style="margin:0px; padding:0px;" value="Dummy"/>
           </xul:tooltip>
-          <xul:tabs flex="1">
-            <xul:tab flex="1" maxwidth="150" class="tabbrowser-tab" label="Blank" crop="center"/>
+          <xul:tabs style="padding-left:1px; padding-top: 1px;" flex="1">
+            <xul:tab flex="1" maxwidth="150" class="tabbrowser-tab" label="(Untitled)" crop="center"/>
           </xul:tabs>
-          <xul:hbox mousethrough="always">
+          <xul:hbox mousethrough="always" align="center">
             <spacer flex="1"/>
-            <xul:button label="Close Tab" onclick="this.parentNode.parentNode.parentNode.parentNode.removeCurrentTab();"/>
+            <xul:image mousethrough="never" class="tabbrowser-closebox" label="Close Tab" onclick="this.parentNode.parentNode.parentNode.parentNode.removeCurrentTab();"/>
           </xul:hbox>
         </xul:stack>
         <xul:tabpanels flex="1" style="margin:0px; padding:0px; border:0px;">
@@ -135,6 +135,7 @@
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 this.mTab.setAttribute("busy", "true"); 
                 this.mTab.label = "Loading...";
+                
                 if (this.mTabBrowser.mCurrentTab == this.mTab)
                   this.mTabBrowser.mIsBusy = true;
               }
@@ -142,7 +143,8 @@
                        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 this.mTab.removeAttribute("busy");
                 if (this.mTab.label == "Loading...")
-                  this.mTab.label = "Done";
+                  this.mTab.label = "(Untitled)";
+                
                 if (this.mTabBrowser.mCurrentTab == this.mTab)
                   this.mTabBrowser.mIsBusy = false;
               }
@@ -205,6 +207,25 @@
         </body>
       </method>
 
+      <method name="updateTitlebar">
+        <body>
+          <![CDATA[
+            var newTitle = "";
+            var docTitle;
+            if (this.docShell.contentViewer)
+              docTitle = this.contentDocument.title;
+            
+            if (docTitle) {
+              newTitle += this.ownerDocument.documentElement.getAttribute("titlepreface");
+              newTitle += docTitle;
+              newTitle += this.ownerDocument.documentElement.getAttribute("titlemenuseparator");
+            }
+            newTitle += this.ownerDocument.documentElement.getAttribute("titlemodifier");
+            window.title = newTitle;
+          ]]>
+        </body>
+      </method>
+
       <method name="updateCurrentBrowser">
         <body>
           <![CDATA[
@@ -225,6 +246,9 @@
                 p.onLocationChange(webProgress, null, loc);
             }
 
+            // Update the window title.
+            this.updateTitlebar();
+            
             // If the new tab is busy, and our current state is not busy, then
             // we need to fire a start to all progress listeners.
             const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
@@ -268,8 +292,13 @@
               if (this.parentNode.childNodes[i] == this)
                 break;
             }
-            var tab = this.parentNode.parentNode.parentNode.mTabContainer.childNodes[i];
+
+            var tabBrowser = this.parentNode.parentNode.parentNode;
+            var tab = tabBrowser.mTabContainer.childNodes[i];
             tab.setAttribute("label", this.contentDocument.title);
+
+            if (tab == tabBrowser.mCurrentTab)
+              this.parentNode.parentNode.parentNode.updateTitlebar();
           ]]> 
         </body>
       </method>
@@ -318,7 +347,6 @@
             this.mTabContainer.appendChild(t);
 
             b.setAttribute("type", "content");
-            b.setAttribute("src", aURI);
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
             
@@ -335,6 +363,8 @@
             b.webProgress.addProgressListener(tabListener);
             this.mTabListeners[position] = tabListener;
             
+            b.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE);
+
             return t;
           ]]>
         </body>
@@ -387,7 +417,7 @@
 
             if (!this.mTabbedMode)
               // Just perform a direct wiring to the single active browser.
-              this.mCurrentBrowser.webProgress.addProgressListener(aListener);
+              this.mCurrentBrowser.addProgressListener(aListener);
           ]]>
         </body>
       </method>
@@ -406,7 +436,7 @@
 
             if (!this.mTabbedMode)
               // Just do a direct removal.
-              this.mCurrentBrowser.webProgress.removeProgressListener(aListener);
+              this.mCurrentBrowser.removeProgressListener(aListener);
          ]]>
         </body>
       </method>
@@ -777,6 +807,24 @@
       <property name="contentDocument"
                 onget="return this.webNavigation.document;"
                 readonly="true"/>
+
+      <method name="addProgressListener">
+        <parameter name="aListener"/>
+        <body>
+          <![CDATA[
+            this.webProgress.addProgressListener(aListener);
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeProgressListener">
+        <parameter name="aListener"/>
+        <body>
+          <![CDATA[
+            this.webProgress.removeProgressListener(aListener);
+         ]]>
+        </body>
+      </method>
 
       <constructor>
         // wire up session history
