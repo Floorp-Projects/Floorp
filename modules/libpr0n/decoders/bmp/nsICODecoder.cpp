@@ -295,7 +295,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     rv = mObserver->OnStartContainer(nsnull, nsnull, mImage);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mCurLine = mDirEntry.mHeight;
+    mCurLine = (mDirEntry.mHeight - 1);
     mRow = new PRUint8[(mDirEntry.mWidth * mBIH.bpp)/8 + 4];
     // +4 because the line is padded to a 4 bit boundary, but I don't want
     // to make exact calculations here, that's unnecessary.
@@ -366,9 +366,9 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
         }
         if (rowSize == mRowBytes) {
 #if defined(XP_MAC) || defined(XP_MACOSX)
-            PRUint8* decoded = mDecodedBuffer+((mCurLine-1)*mDirEntry.mWidth*4);
+            PRUint8* decoded = mDecodedBuffer+(mCurLine*mDirEntry.mWidth*4);
 #else
-            PRUint8* decoded = mDecodedBuffer+((mCurLine-1)*mDirEntry.mWidth*3);
+            PRUint8* decoded = mDecodedBuffer+(mCurLine*mDirEntry.mWidth*3);
 #endif
             PRUint8* p = mRow;
             PRUint8* d = decoded;
@@ -428,7 +428,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
                 return NS_ERROR_FAILURE;
             }
 
-            if (mCurLine == 1)
+            if (mCurLine == 0)
               mDecodingAndMask = PR_TRUE;
               
             mCurLine--; mRowBytes = 0;
@@ -442,7 +442,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     if (mPos == (1 + mImageOffset + BITMAPINFOSIZE + mNumColors*4)) {
       mPos++;
       mRowBytes = 0;
-      mCurLine = mDirEntry.mHeight;
+      mCurLine = (mDirEntry.mHeight - 1);
       delete []mRow;
       mRow = new PRUint8[rowSize];
       mAlphaBuffer = new PRUint8[mDirEntry.mHeight*rowSize];
@@ -461,7 +461,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
             mRowBytes += toCopy;
         }
         if ((rowSize - mRowBytes) == 0) {
-            PRUint8* decoded = mAlphaBuffer+((mCurLine-1)*rowSize);
+            PRUint8* decoded = mAlphaBuffer+(mCurLine*rowSize);
             PRUint8* p = mRow;
             PRUint32 lpos = 0;
             while (lpos < rowSize) {
@@ -473,7 +473,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
               p++;
             }
             
-            if (mCurLine == 1) {
+            if (mCurLine == 0) {
               return NS_OK;
             }
               

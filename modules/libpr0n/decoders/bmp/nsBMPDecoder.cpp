@@ -149,8 +149,7 @@ nsresult nsBMPDecoder::SetData(PRUint8* aData)
     rv = mFrame->GetImageBytesPerRow(&bpr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 offset = (mCurLine - 1) * bpr;
-    rv = mFrame->SetImageData(aData, bpr, offset);
+    rv = mFrame->SetImageData(aData, bpr, mCurLine * bpr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRect r(0, mCurLine, mBIH.width, 1);
@@ -162,7 +161,7 @@ nsresult nsBMPDecoder::SetData(PRUint8* aData)
 
 NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
 {
-    if (!aCount) // aCount=0 means EOF
+    if (!aCount || (mCurLine < 0)) // aCount=0 means EOF, mCurLine < 0 means we're past end of image
         return NS_OK;
 
     nsresult rv;
@@ -237,7 +236,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         NS_ENSURE_SUCCESS(rv, rv);
         rv = mObserver->OnStartContainer(nsnull, nsnull, mImage);
         NS_ENSURE_SUCCESS(rv, rv);
-        mCurLine = mBIH.height;
+        mCurLine = (mBIH.height - 1);
 
         mRow = new PRUint8[(mBIH.width * mBIH.bpp)/8 + 4];
         // +4 because the line is padded to a 4 bit boundary, but I don't want
@@ -406,7 +405,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                     delete[] decoded;
                     NS_ENSURE_SUCCESS(rv, rv);
 
-                    if (mCurLine == 1) { // Finished last line
+                    if (mCurLine == 0) { // Finished last line
                         return mObserver->OnStopFrame(nsnull, nsnull, mFrame);
                     }
                     mCurLine--; mRowBytes = 0;
