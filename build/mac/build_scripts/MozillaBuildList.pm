@@ -191,6 +191,9 @@ sub InstallNonChromeResources()
     #//
     #// Make aliases of resource files
     #//
+    
+    MakeAlias(":mozilla:content:xml:content:src:xhtml11.dtd",                          "$dist_dir"."dtd:");
+    
     if (! $main::options{mathml})
     {
         MakeAlias(":mozilla:layout:html:document:src:ua.css",                          "$resource_dir");
