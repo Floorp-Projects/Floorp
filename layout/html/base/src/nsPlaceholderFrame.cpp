@@ -25,7 +25,7 @@
 #include "nsIView.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
-#include "nsCSSLineLayout.h"
+#include "nsCSSBlockFrame.h"
 
 nsresult
 nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
@@ -141,6 +141,9 @@ nsPlaceholderFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
     // Notify our containing block that there's a new floater
     container->AddFloater(&presContext, aReflowState, mAnchoredItem, this);
   }
+
+  // Let line layout know about the floater
+  aLineLayout.AddFloater(this);
 
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
