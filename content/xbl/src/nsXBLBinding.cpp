@@ -1523,12 +1523,19 @@ nsXBLBinding::AllowScripts()
   return result;
 }
 
+static PRBool PR_CALLBACK
+DeleteVoidArray(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  delete NS_STATIC_CAST(nsVoidArray*, aData);
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent, nsVoidArray** aResult)
 {
   if (!mInsertionPointTable) {
     mInsertionPointTable = new nsObjectHashtable(nsnull, nsnull,
-                                                 nsnull, nsnull, 4);
+                                                 DeleteVoidArray, nsnull, 4);
 
     NS_ENSURE_TRUE(mInsertionPointTable, NS_ERROR_OUT_OF_MEMORY);
   }

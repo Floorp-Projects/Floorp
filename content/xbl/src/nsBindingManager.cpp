@@ -67,7 +67,6 @@
 
 #include "nsIXBLBinding.h"
 #include "nsIXBLDocumentInfo.h"
-#include "nsIXBLBindingAttachedHandler.h"
 #include "nsXBLInsertionPoint.h"
 
 #include "nsIStyleSheet.h"
@@ -356,7 +355,6 @@ public:
                                  nsIDocument** aResult);
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
-  NS_IMETHOD AddHandlerToAttachedQueue(nsIXBLBindingAttachedHandler* aHandler);
   NS_IMETHOD ClearAttachedQueue();
   NS_IMETHOD ProcessAttachedQueue();
 
@@ -931,17 +929,6 @@ nsBindingManager::AddToAttachedQueue(nsIXBLBinding* aBinding)
 }
 
 NS_IMETHODIMP
-nsBindingManager::AddHandlerToAttachedQueue(nsIXBLBindingAttachedHandler* aBinding)
-{
-  if (!mAttachedQueue)
-    NS_NewISupportsArray(getter_AddRefs(mAttachedQueue)); // This call addrefs the array.
-
-  mAttachedQueue->AppendElement(aBinding);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsBindingManager::ClearAttachedQueue()
 {
   if (mAttachedQueue)
@@ -965,11 +952,6 @@ nsBindingManager::ProcessAttachedQueue()
     nsCOMPtr<nsIXBLBinding> binding(do_QueryInterface(supp));
     if (binding)
       binding->ExecuteAttachedHandler();
-    else {
-      nsCOMPtr<nsIXBLBindingAttachedHandler> handler(do_QueryInterface(supp));
-      if (handler)
-        handler->OnBindingAttached();
-    }
   }
 
   ClearAttachedQueue();

@@ -233,11 +233,11 @@ protected:
                                       
   nsWeakPtr mXBLDocInfoWeak; // A pointer back to our doc info.  Weak, since it owns us.
 
-  nsSupportsHashtable* mAttributeTable; // A table for attribute entries.  Used to efficiently
-                                        // handle attribute changes.
+  nsObjectHashtable* mAttributeTable; // A table for attribute entries.  Used to efficiently
+                                      // handle attribute changes.
 
-  nsSupportsHashtable* mInsertionPointTable; // A table of insertion points for placing explicit content
-                                             // underneath anonymous content.
+  nsObjectHashtable* mInsertionPointTable; // A table of insertion points for placing explicit content
+                                           // underneath anonymous content.
 
   nsSupportsHashtable* mInterfaceTable; // A table of cached interfaces that we support.
 
