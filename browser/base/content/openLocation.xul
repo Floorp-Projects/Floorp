@@ -48,6 +48,7 @@
         title="&caption.label;"
         onload="onLoad()"
         buttonlabelaccept="&openBtn.label;"
+        buttoniconaccept="open"
         ondialogaccept="open()"
         style="width: 40em;"
         persist="screenX screenY"

@@ -60,6 +60,8 @@
 #ifdef XP_UNIX
         buttonlabelaccept="&acceptButton.label;"
 #endif
+        buttoniconaccept="add"
+        buttoniconextra2="open"
         title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
         onload="Startup();"
         onunload="setFolderTreeHeight();"
