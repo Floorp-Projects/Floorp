@@ -553,26 +553,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
     }
   }
 
-  if ((retval == nsEventStatus_eIgnore) && (nsnull != mFrame))
-  {
-    nsIPresContext  *cx = mViewManager->GetPresContext();
-    nscoord         xoff, yoff;
-
-    GetScrollOffset(&xoff, &yoff);
-
-    event->point.x += xoff;
-    event->point.y += yoff;
-
-    mFrame->HandleEvent(*cx, event, retval);
-
-    event->point.x -= xoff;
-    event->point.y -= yoff;
-
-    NS_RELEASE(cx);
-  }
-
   //see if any of this view's children can process the event
-  
   if ((aEventFlags & NS_VIEW_FLAG_CHECK_CHILDREN) &&
       (retval == nsEventStatus_eIgnore))
   {
@@ -611,6 +592,25 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
           break;
       }
     }
+  }
+
+  //if the view's children didn't take the event, check the view itself.
+  if ((retval == nsEventStatus_eIgnore) && (nsnull != mFrame))
+  {
+    nsIPresContext  *cx = mViewManager->GetPresContext();
+    nscoord         xoff, yoff;
+
+    GetScrollOffset(&xoff, &yoff);
+
+    event->point.x += xoff;
+    event->point.y += yoff;
+
+    mFrame->HandleEvent(*cx, event, retval);
+
+    event->point.x -= xoff;
+    event->point.y -= yoff;
+
+    NS_RELEASE(cx);
   }
 
   //see if any of this views siblings can process this event
