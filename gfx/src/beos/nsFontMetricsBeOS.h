@@ -30,6 +30,8 @@
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 #include "nsDeviceContextBeOS.h"
+#include "nsIAtom.h"
+#include "nsCOMPtr.h"
 
 #include <Font.h>
 
@@ -43,7 +45,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
+                   nsIDeviceContext* aContext);
   NS_IMETHOD  Destroy();
 
   NS_IMETHOD  GetXHeight(nscoord& aResult);
@@ -58,6 +61,7 @@ public:
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
+  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
 protected:
@@ -66,6 +70,7 @@ protected:
   nsIDeviceContext    *mDeviceContext;
   nsFont              *mFont;
   BFont               mFontHandle;
+  nsCOMPtr<nsIAtom>   mLangGroup;
 
   nscoord             mHeight;
   nscoord             mAscent;

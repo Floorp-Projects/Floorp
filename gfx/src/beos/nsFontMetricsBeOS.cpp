@@ -62,11 +62,13 @@ nsFontMetricsBeOS::~nsFontMetricsBeOS()
 
 NS_IMPL_ISUPPORTS(nsFontMetricsBeOS, kIFontMetricsIID)
 
-NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIDeviceContext* aContext)
+NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
+  nsIDeviceContext* aContext)
 {
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
 
   nsAutoString  firstFace;
+  mLangGroup = aLangGroup;
   if (NS_OK != aContext->FirstExistingFont(aFont, firstFace)) {
     aFont.GetFirstFamily(firstFace);
   }
@@ -242,6 +244,18 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetMaxAdvance(nscoord &aAdvance)
 NS_IMETHODIMP  nsFontMetricsBeOS::GetFont(const nsFont*& aFont)
 {
   aFont = mFont;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsBeOS::GetLangGroup(nsIAtom** aLangGroup)
+{
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
+
   return NS_OK;
 }
 
