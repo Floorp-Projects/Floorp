@@ -66,6 +66,8 @@ public:
 
   NS_IMETHOD GetBounds(nsRect& aResult) = 0;
 
+  NS_IMETHOD GetWindowBounds(nsRect& aResult) = 0;
+
   NS_IMETHOD Show() = 0;
 
   NS_IMETHOD Hide() = 0;

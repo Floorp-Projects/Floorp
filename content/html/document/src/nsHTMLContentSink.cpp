@@ -2101,32 +2101,30 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   PRInt32 i, ac = aNode.GetAttributeCount();
 
   // Look for SRC attribute
-  nsString* src = nsnull;
+  nsAutoString src;
   for (i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("src")) {
-      src = new nsString(aNode.GetValueAt(i));
-      src->Trim("\"", PR_TRUE, PR_TRUE); 
+      src = aNode.GetValueAt(i);
+      src.Trim("\"", PR_TRUE, PR_TRUE); 
     }
   }
 
-  char *script = nsnull;
-  PRInt32 len = 0;
+  nsAutoString script;
 
   // If there is a SRC attribute, (for now) read from the
   // stream synchronously and hold the data in a string.
-  if (nsnull != src) {
+  if (src != "") {
     // Use the SRC attribute value to open a blocking stream
     nsIURL* url = nsnull;
     nsAutoString absURL;
     nsIURL* docURL = mDocument->GetDocumentURL();
-    rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, *src, absURL);
+    rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, src, absURL);
     if (NS_OK != rv) {
       return rv;
     }
     NS_RELEASE(docURL);
     rv = NS_NewURL(&url, nsnull, absURL);
-    delete src;
     if (NS_OK != rv) {
       return rv;
     }
@@ -2138,7 +2136,6 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     }
 
     // Drain the stream by reading from it a chunk at a time
-    nsString data;
     PRInt32 nb;
     nsresult err;
     do {
@@ -2146,15 +2143,11 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       
       err = iin->Read(buf, 0, SCRIPT_BUF_SIZE, &nb);
       if (NS_OK == err) {
-        data.Append((const char *)buf, nb);
+        script.Append((const char *)buf, nb);
       }
     } while (err == NS_OK);
 
-    if (NS_BASE_STREAM_EOF == err) {
-      script = data.ToNewCString();
-      len = data.Length();
-    }
-    else {
+    if (NS_BASE_STREAM_EOF != err) {
       rv = NS_ERROR_FAILURE;
     }
 
@@ -2163,12 +2156,10 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   }
   else {
     // Otherwise, get the text content of the script tag
-    const nsString& content = aNode.GetSkippedContent();
-    script = content.ToNewCString();
-    len = content.Length();
+    script = aNode.GetSkippedContent();
   }
 
-  if (nsnull != script) {
+  if (script != "") {
     nsIScriptContextOwner *owner;
     nsIScriptContext *context;
     owner = mDocument->GetScriptContextOwner();
@@ -2188,14 +2179,13 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       }
       PRUint32 mLineNo = (PRUint32)aNode.GetSourceLineNumber();
 
-      PRBool result = context->EvaluateString(script, len, mURL, mLineNo, &val);
+      PRBool result = context->EvaluateString(script, mURL, mLineNo, &val);
       
       NS_IF_RELEASE(mDocURL);
 
       NS_RELEASE(context);
       NS_RELEASE(owner);
     }
-    delete [] script;
   }
 
   return rv;

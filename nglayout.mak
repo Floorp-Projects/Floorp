@@ -102,8 +102,8 @@ DIST_DIRS =			\
 
 RAPTOR_DIRS =			\
   htmlparser			\
-  dom				\
   gfx				\
+  dom				\
   view				\
   widget			\
   layout			\
