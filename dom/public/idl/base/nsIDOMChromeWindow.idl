@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(876d6f96-2420-4f78-bc17-00b1a2ec12ba)]
+[scriptable, uuid(934f7c7f-76cc-4246-a926-4e2b1b545f67)]
 interface nsIDOMChromeWindow : nsISupports
 {
   const unsigned short STATE_MAXIMIZED = 1;

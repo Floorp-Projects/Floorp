@@ -13,7 +13,7 @@ struct nsRect;
 [ptr] native nsIDeviceContextPtr(nsIDeviceContext);
 [ref] native nsRectRef(nsRect);
 
-[scriptable, uuid(a6cf9056-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(70b8f22d-135c-4c94-8044-1bd3238d0990)]
 interface nsIContentViewer : nsISupports
 {
 

@@ -105,7 +105,7 @@ interface nsMsgDBCommitType
 [ref] native nsMsgKeyArrayRef(nsMsgKeyArray);
 [ptr] native nsMsgKeyArrayPtr(nsMsgKeyArray);
 
-[scriptable, uuid(9188bc83-f92e-11d2-81ef-0060083a0bcf)]
+[scriptable, uuid(f667dcb8-5aae-4e71-8559-2a48d7e508cd)]
 
 interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   nsIMsgDatabase Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aUpgrading);

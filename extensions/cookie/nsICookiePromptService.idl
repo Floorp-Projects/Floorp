@@ -43,7 +43,7 @@
 interface nsIDOMWindow;
 interface nsICookie;
 
-[scriptable, uuid(CE002B28-92B7-4701-8621-CC925866FB87)]
+[scriptable, uuid(72f8bb14-2810-4f38-8d0d-290c5401f54e)]
 interface nsICookiePromptService : nsISupports
 {
   const PRUint32 DENY_COOKIE = 0;

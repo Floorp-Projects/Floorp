@@ -40,7 +40,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(6fd344d0-7e5f-11d2-bd91-00805f8ae3f4)]
+[scriptable, uuid(c914d7a4-63b3-4d40-943f-91a3c7ab0d4d)]
 interface nsIDOMNSHTMLButtonElement : nsISupports
 {
   void                      blur();

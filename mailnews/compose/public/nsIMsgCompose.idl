@@ -125,7 +125,7 @@ interface nsIMsgComposeRecyclingListener : nsISupports {
 };
 
 
-[scriptable, uuid(4E606270-B588-11D2-8289-00805F2A0107)]
+[scriptable, uuid(6ed82ccd-21a3-4ee5-83b0-8d39e0d65a83)]
 interface nsIMsgCompose : nsISupports {
 
 	/* ... */

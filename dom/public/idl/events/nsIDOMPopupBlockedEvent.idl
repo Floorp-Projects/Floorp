@@ -44,7 +44,7 @@ interface nsIURI;
  * posted when a popup window is blocked.
  */
 
-[scriptable, uuid(FADC9149-9267-4b41-B4CB-1F76446D7629)]
+[scriptable, uuid(9e201104-78e9-4cb3-aff5-7f0a9cf446c0)]
 interface nsIDOMPopupBlockedEvent : nsIDOMEvent
 {
   readonly attribute nsIURI requestingWindowURI;

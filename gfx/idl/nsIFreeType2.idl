@@ -93,7 +93,7 @@ native FT_Bool(FT_Bool);
 /*
  * A XPCOM interface to the run-time loaded functions
  */
-[uuid(606eac78-16d4-486a-9f0e-f180aebd449b)]
+[uuid(c6e09354-1bb1-4ec2-aaa3-a26d0aafe36d)]
 interface nsIFreeType2 : nsISupports
 {
 

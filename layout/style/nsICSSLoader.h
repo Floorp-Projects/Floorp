@@ -55,9 +55,9 @@ class nsIUnicharInputStream;
 class nsICSSLoaderObserver;
 class nsISupportsArray;
 
-// IID for the nsIStyleSheetLoader interface {a6cf9101-15b3-11d2-932e-00805f8add32}
+// IID for the nsICSSLoader interface {a6e82061-46c9-4af6-8fd3-97ec5a7ba649}
 #define NS_ICSS_LOADER_IID     \
-{0xa6cf9101, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+{0xa6e82061, 0x46c9, 0x4af6, {0x8f, 0xd3, 0x97, 0xec, 0x5a, 0x7b, 0xa6, 0x49}}
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 

@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(5FB62950-9A0B-41b4-8D11-F6888DFF835E)]
+[scriptable, uuid(3f92b7c0-8679-4dc6-9af9-9da5546db5b0)]
 interface nsIMsgAttachment : nsISupports {
 
   /**

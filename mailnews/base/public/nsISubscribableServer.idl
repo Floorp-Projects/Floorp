@@ -55,7 +55,7 @@ interface nsISubscribeListener : nsISupports {
 	void OnDonePopulating();
 };
 
-[scriptable, uuid(6f9d2e82-1dd2-11b2-bbed-bbea41ca33a7)]
+[scriptable, uuid(ce251379-dbcc-4dfd-9085-363b7b0b0af0)]
 interface nsISubscribableServer : nsISupports {
 	attribute nsISubscribeListener subscribeListener;
 	attribute char delimiter;

@@ -79,7 +79,7 @@ interface nsIVariant;
  *   The 'onload' and 'onerror' attributes moved to nsIJSXMLHttRequest,
  *   but if you're coding in C++ you should avoid using those.
  */
-[scriptable, uuid(b7215e70-4157-11d4-9a42-000064657374)]
+[scriptable, uuid(7b3b3c62-9d53-4abc-bc89-c33ce78f439f)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**

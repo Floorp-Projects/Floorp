@@ -47,7 +47,7 @@ interface nsIDOMWindowInternal;
 interface nsITransactionManager;
 interface nsIMsgMessageService;
 
-[scriptable, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
+[scriptable, uuid(74028422-7d28-4624-8fff-f8ec4288332a)]
 interface nsIMessenger : nsISupports {
 
     const long eUnknown = 0;
