@@ -63,7 +63,7 @@ interface nsIArray : nsISupports
     /**
      * number of elements in the array
      */
-    attribute unsigned long length;
+    readonly attribute unsigned long length;
 
     /**
      * Retrieve a specific element of the array
@@ -113,7 +113,7 @@ interface nsIMutableArray : nsIArray
     /**
      *
      */
-    void insertElementAt(in unsigned long index, in nsISupports element);
+    void insertElementAt(in nsISupports element, in unsigned long index);
     
     /**
      * clear the entire array
