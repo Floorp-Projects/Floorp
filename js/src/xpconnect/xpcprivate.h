@@ -199,6 +199,7 @@ public:
                                                      REFNSIID aIID);
 
     REFNSIID GetIID() const {return mIID;}
+    const char* GetInterfaceName() const;
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     XPCContext*  GetXPCContext() const {return mXPCContext;}
 
@@ -245,7 +246,7 @@ private:
     nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID,
                            nsIInterfaceInfo* aInfo);
 
-    const char* GetMethodName(int MethodIndex) const;
+    const char* GetMemberName(const XPCNativeMemberDescriptor* desc) const;
     JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
 
     uintN GetMaxParamCount(const XPCNativeMemberDescriptor* desc)

@@ -40,20 +40,37 @@ nsInterfaceInfo::nsInterfaceInfo(REFNSIID aIID, const char* aName,
                           mParent->mConstantBaseIndex +
                           mParent->mConstantCount : 0;
 
-    // XXX implement for real
-    mMethodCount = 0;
-    mMethods = NULL;
-
+    ///////////////////////////////////////////////
     // XXX completely bogus hardcoded stuff...
+
+    mMethodCount = 4;
+    mMethods = new nsXPCMethodInfo[4];
+
+    nsXPCParamInfo* params = new nsXPCParamInfo[2];
+    params[0] = nsXPCParamInfo(nsXPCParamInfo::IS_IN, nsXPCType::T_I32);
+    params[1] = nsXPCParamInfo(nsXPCParamInfo::IS_IN, nsXPCType::T_I32);
+    nsXPCParamInfo result = nsXPCParamInfo(nsXPCParamInfo::IS_OUT, nsXPCType::T_U32);
+
+    // XXX these are bogus declarations - don't call!
+    mMethods[0] = nsXPCMethodInfo(0, "QueryInterface", 2, params, result);
+    mMethods[1] = nsXPCMethodInfo(0, "AddRef", 0, NULL, result);
+    mMethods[2] = nsXPCMethodInfo(0, "Release", 0, NULL, result);
+    // this one should be callable (in test/TestXPC.cpp)
+    mMethods[3] = nsXPCMethodInfo(0, "Test", 2, params, result);
+
+    ///////
 
     mConstantCount = 2;
     mConstants = new nsXPCConstant[2];
+
     nsXPCVarient v;
     v.type = nsXPCType::T_I32;
     v.val.i32 = 5;
     mConstants[0] = nsXPCConstant("five", v);
     v.val.i32 = 6;
     mConstants[1] = nsXPCConstant("six", v);
+    ///////////////////////////////////////////////
+
 
     if(mParent)
         NS_ADDREF(mParent);
