@@ -38,6 +38,7 @@ CHROME_L10N = \
 		pageInfo.dtd \
 		NetSupportConfirmCheckYN.dtd \
 		navigator.properties \
+		askViewZoom.dtd \
 		$(NULL)
 #		navigator.dtd \
 
