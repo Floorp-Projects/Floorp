@@ -118,6 +118,7 @@ JSValStorageStatementBinder (JSContext *cx,
         // some special things
         if (js_DateIsValid (cx, obj)) {
             double msecd = js_DateGetMsecSinceEpoch(cx, obj);
+            msecd *= 1000.0;
             PRInt64 msec;
             LL_D2L(msec, msecd);
 
