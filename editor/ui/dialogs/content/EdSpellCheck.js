@@ -75,13 +75,65 @@ function Startup()
   // Initial replace word is the misspelled word;
   dialog.ReplaceWordInput.value = MisspelledWord;
 
-  //Use English for now TODO: Kin needs to finish this work so we can fill in list
-  
-  dump("Language Listed Index = "+dialog.LanguageMenulist.selectedIndex+"\n");
+  if (dialog.LanguageMenulist)
+    InitLanguageMenu("");
 
   DoEnabling();
 
   dialog.SuggestedList.focus();  
+}
+
+function InitLanguageMenu(defaultLangStr)
+{
+  ClearMenulist(dialog.LanguageMenulist);
+
+  var o1 = {};
+  var o2 = {};
+
+  // Get the list of dictionaries from
+  // the spellchecker.
+
+  spellChecker.GetDictionaryList(o1, o2);
+
+  var dictList = o1.value;
+  var count    = o2.value;
+
+  // Load the string bundle that will help us map
+  // RFC 1766 strings to UI strings.
+
+  var bundle = srGetStrBundle("resource:/res/acceptlanguage.properties"); 
+  var menuStr;
+  var defaultIndex = 0;
+
+  for (var i = 0; i < dictList.length; i++)
+  {
+    try {
+      menuStr = bundle.GetStringFromName(dictList[i]+".title");
+
+      if (!menuStr)
+        menuStr = dictList[i];
+
+      if (defaultLangStr && dictList[i] == defaultLangStr)
+        defaultIndex = i;
+    } catch (ex) {
+      // GetStringFromName throws an exception when
+      // a key is not found in the bundle. In that
+      // case, just use the original dictList string.
+
+      menuStr = dictList[i];
+    }
+
+    AppendValueAndDataToMenulist(dialog.LanguageMenulist, menuStr, dictList[i]);
+  }
+
+  // Now make sure the correct item in the menu list
+  // is selected and that the spellchecker is in sync!
+
+  if (dictList.length > 0)
+  {
+    dialog.LanguageMenulist.selectedIndex = defaultIndex;
+    // SelectLanguage();
+  }
 }
 
 function DoEnabling()
@@ -225,8 +277,13 @@ function EditDictionary()
 
 function SelectLanguage()
 {
-  // A bug in combobox prevents this from working
-  dump("SpellCheck: SelectLanguage.\n");
+  var item = dialog.LanguageMenulist.selectedItem;
+
+  try {
+    spellChecker.SetCurrentDictionary(item.data);
+  } catch (ex) {
+    dump(ex);
+  }
 }
 
 function Recheck()

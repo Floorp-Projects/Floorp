@@ -35,6 +35,7 @@
 
   <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <html:script language="JavaScript" src="chrome://editor/content/EdSpellCheck.js"/>
+  <html:script language="Javascript" src="chrome://global/content/strres.js" />
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
   <broadcaster id="args" value=""/>
 

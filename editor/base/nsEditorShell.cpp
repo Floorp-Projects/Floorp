@@ -244,10 +244,12 @@ GetTreeOwner(nsIDocShell* aDocShell, nsIBaseWindow** aBaseWindow)
 /////////////////////////////////////////////////////////////////////////
 
 nsEditorShell::nsEditorShell()
-:  mParserObserver(nsnull)
-,  mStateMaintainer(nsnull)
+:  mMailCompose(0)
+,  mDisplayMode(eDisplayModeNormal)
 ,  mWebShellWindow(nsnull)
 ,  mContentWindow(nsnull)
+,  mParserObserver(nsnull)
+,  mStateMaintainer(nsnull)
 ,  mEditorController(nsnull)
 ,  mDocShell(nsnull)
 ,  mContentAreaDocShell(nsnull)
@@ -256,8 +258,6 @@ nsEditorShell::nsEditorShell()
 ,  mWrapColumn(0)
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
-,  mDisplayMode(eDisplayModeNormal)
-,  mMailCompose(0)
 {
   //TODO:Save last-used display mode in prefs so new window inherits?
   NS_INIT_REFCNT();
@@ -4197,6 +4197,108 @@ nsEditorShell::RemoveWordFromDictionary(const PRUnichar *aWord)
   {
     result = mSpellChecker->RemoveWordFromPersonalDictionary(&word);
   }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aCount)
+{
+  nsresult  result = NS_ERROR_NOT_IMPLEMENTED;
+
+  if (!aDictionaryList || !aCount)
+    return NS_ERROR_NULL_POINTER;
+
+  *aDictionaryList = 0;
+  *aCount          = 0;
+
+  if (mEditor && mSpellChecker)
+  {
+    nsStringArray dictList;
+
+    result = mSpellChecker->GetDictionaryList(&dictList);
+
+    if (NS_FAILED(result))
+      return result;
+
+    PRUnichar **tmpPtr = 0;
+
+    if (dictList.Count() < 1)
+    {
+      // If there are no dictionaries, return an array containing
+      // one element and a count of one.
+
+      tmpPtr = (PRUnichar **)nsAllocator::Alloc(sizeof(PRUnichar *));
+
+      if (!tmpPtr)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      *tmpPtr          = 0;
+      *aDictionaryList = tmpPtr;
+      *aCount          = 0;
+
+      return NS_OK;
+    }
+
+    tmpPtr = (PRUnichar **)nsAllocator::Alloc(sizeof(PRUnichar *) * dictList.Count());
+
+    if (!tmpPtr)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    *aDictionaryList = tmpPtr;
+    *aCount          = dictList.Count();
+
+    nsAutoString dictStr;
+
+    PRUint32 i;
+
+    for (i = 0; i < *aCount; i++)
+    {
+      dictList.StringAt(i, dictStr);
+      tmpPtr[i] = dictStr.ToNewUnicode();
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::GetCurrentDictionary(PRUnichar **aDictionary)
+{
+  nsresult  result = NS_ERROR_NOT_INITIALIZED;
+
+  if (!aDictionary)
+    return NS_ERROR_NULL_POINTER;
+
+  *aDictionary = 0;
+
+  if (mEditor && mSpellChecker)
+  {
+    nsAutoString dictStr;
+    result = mSpellChecker->GetCurrentDictionary(&dictStr);
+
+    if (NS_FAILED(result))
+      return result;
+
+    *aDictionary = dictStr.ToNewUnicode();
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::SetCurrentDictionary(const PRUnichar *aDictionary)
+{
+  nsresult  result = NS_ERROR_NOT_INITIALIZED;
+
+  if (!aDictionary)
+    return NS_ERROR_NULL_POINTER;
+
+  if (mEditor && mSpellChecker)
+  {
+    nsAutoString dictStr(aDictionary);
+    result = mSpellChecker->SetCurrentDictionary(&dictStr);
+  }
+
   return result;
 }
 

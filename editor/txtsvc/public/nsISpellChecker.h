@@ -102,6 +102,32 @@ public:
    * list of words in the user's personal dictionary.
    */
   NS_IMETHOD GetPersonalDictionary(nsStringArray *aWordList) = 0;
+
+  /**
+   * Returns the list of strings representing the dictionaries
+   * the spellchecker supports. It was suggested that the strings
+   * returned be in the RFC 1766 format. This format looks something
+   * like <ISO 639 language code>-<ISO 3166 country code>.
+   * For example: en-US
+   * @param aDictionaryList is an array of nsStrings that represent the
+   * dictionaries supported by the spellchecker.
+   */
+  NS_IMETHOD GetDictionaryList(nsStringArray *aDictionaryList) = 0;
+
+  /**
+   * Returns a string representing the current dictionary.
+   * @param aDictionary will contain the name of the dictionary.
+   * This name is the same string that is in the list returned
+   * by GetDictionaryList().
+   */
+  NS_IMETHOD GetCurrentDictionary(nsString *aDictionary) = 0;
+
+  /**
+   * Tells the spellchecker to use a specific dictionary.
+   * @param aDictionary a string that is in the list returned
+   * by GetDictionaryList().
+   */
+  NS_IMETHOD SetCurrentDictionary(const nsString *aDictionary) = 0;
 };
 
 #endif // nsISpellChecker_h__

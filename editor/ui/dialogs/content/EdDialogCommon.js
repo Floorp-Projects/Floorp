@@ -354,6 +354,35 @@ function AppendStringToMenulist(menulist, string)
   return null;
 }
 
+function AppendValueAndDataToMenulist(menulist, valueStr, dataStr)
+{
+  if (menulist)
+  {
+    var menupopup = menulist.firstChild;
+    // May not have any popup yet -- so create one
+    if (!menupopup)
+    {
+      menupopup = document.createElement("menupopup");
+      if (menupopup)
+        menulist.appendChild(menupopup);
+      else
+      {
+        dump("Failed to create menupoup\n");
+        return null;
+      }
+    }
+    menuItem = document.createElement("menuitem");
+    if (menuItem)
+    {
+      menuItem.setAttribute("value", valueStr);
+      menuItem.setAttribute("data", dataStr);
+      menupopup.appendChild(menuItem);
+      return menuItem;
+    }
+  }
+  return null;
+}
+
 function ClearMenulist(menulist)
 {
   // There is usually not more than 1 menupopup under a menulist,
