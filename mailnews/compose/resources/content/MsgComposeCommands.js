@@ -989,13 +989,16 @@ function AttachFile()
 {
 	dump("AttachFile()\n");
 	currentAttachment = "";
-
-	// Get a local file, converted into URL format
-	try {
-		var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
-    filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
-		currentAttachment = filePicker.chooseFile(Bundle.GetStringFromName("chooseFileToAttach"));
-	}
+	//Get file using nsIFilePicker and convert to URL
+    try {
+			var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+			fp.init(window, Bundle.GetStringFromName("chooseFileToAttach"), nsIFilePicker.modeOpen);
+			fp.appendFilters(nsIFilePicker.filterAll);
+			if (fp.show() == nsIFilePicker.returnOK) {
+			currentAttachment = fp.fileURL.spec;
+			dump("nsIFilePicker - "+currentAttachment+"\n");
+			}
+    } 	
 	catch (ex) {
 		dump("failed to get the local file to attach\n");
 	}
