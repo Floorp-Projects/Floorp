@@ -1303,7 +1303,9 @@ NS_IMETHODIMP GlobalWindowImpl::GetScreenX(PRInt32* aScreenX)
 
   FlushPendingNotifications();
 
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(aScreenX, nsnull),
+  PRInt32 y;
+
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(aScreenX, &y),
                     NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -1318,8 +1320,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetScreenX(PRInt32 aScreenX)
   NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(&aScreenX, nsnull),
                     NS_ERROR_FAILURE);
 
-  PRInt32 y;
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(nsnull, &y),
+  PRInt32 x, y;
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(&x, &y),
                     NS_ERROR_FAILURE);
 
   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetPosition(aScreenX, y),
@@ -1336,7 +1338,9 @@ NS_IMETHODIMP GlobalWindowImpl::GetScreenY(PRInt32* aScreenY)
 
   FlushPendingNotifications();
 
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(nsnull, aScreenY),
+  PRInt32 x;
+
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(&x, aScreenY),
                     NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -1351,8 +1355,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetScreenY(PRInt32 aScreenY)
   NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(nsnull, &aScreenY),
                     NS_ERROR_FAILURE);
 
-  PRInt32 x;
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(&x, nsnull),
+  PRInt32 x, y;
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(&x, &y),
                     NS_ERROR_FAILURE);
 
   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetPosition(x, aScreenY),
@@ -1956,6 +1960,21 @@ NS_IMETHODIMP GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
   result = GetScrollInfo(&view, &p2t, &t2p);
 
   if (view) {
+    // Here we calculate what the max pixel value is that we can
+    // scroll to, we do this by dividing maxint with the pixel to
+    // twips conversion factor, and substracting 4, the 4 comes from
+    // experimenting with this value, anything less makes the view
+    // code not scroll correctly, I have no idea why. -- jst
+    const PRInt32 maxpx = (PRInt32)((float)0x7fffffff / p2t) - 4;
+
+    if (aXScroll > maxpx) {
+      aXScroll = maxpx;
+    }
+
+    if (aYScroll > maxpx) {
+      aYScroll = maxpx;
+    }
+
     result = view->ScrollTo(NSIntPixelsToTwips(aXScroll, p2t),
                             NSIntPixelsToTwips(aYScroll, p2t),
                             NS_VMREFRESH_IMMEDIATE);
@@ -1977,9 +1996,8 @@ NS_IMETHODIMP GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif,
     nscoord xPos, yPos;
     result = view->GetScrollPosition(xPos, yPos);
     if (NS_SUCCEEDED(result)) {
-      result = view->ScrollTo(xPos + NSIntPixelsToTwips(aXScrollDif, p2t),
-                              yPos + NSIntPixelsToTwips(aYScrollDif, p2t),
-                              NS_VMREFRESH_IMMEDIATE);
+      result = ScrollTo(NSTwipsToIntPixels(xPos, t2p) + aXScrollDif,
+                        NSTwipsToIntPixels(yPos, t2p) + aYScrollDif);
     }
   }
 
