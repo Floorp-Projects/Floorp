@@ -1307,7 +1307,8 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
         }
       }
       n -= contentLen;
-      NS_ASSERTION(n >= 0, "whoops");
+      if(n<0)
+        NS_WARNING("mContentLength is < FragmentLength");
     }
   }
 
