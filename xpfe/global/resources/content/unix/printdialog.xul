@@ -104,8 +104,8 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
         </radiogroup>
       </row>
       <row>
-        <label value="&printframeGroup.label;" id="printrangeGroupLabel" flex ="1"/>
-        <radiogroup id="printrangeGroup">
+        <label value="&printframeGroup.label;" id="printframeGroupLabel" flex ="1"/>
+        <radiogroup id="printframeGroup">
           <radio id = "aslaidoutRadio" label = "&aslaidoutRadio.label;" />
           <radio id = "selectedframeRadio" label = "&selectedframeRadio.label;" />
           <radio id = "eachframesepRadio" label = "&eachframesepRadio.label;" />

@@ -19,8 +19,8 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
  * Contributor(s): Masaki Katakai <katakai@japan.sun.com>
+ *                 Asko Tontti <atontti@cc.hut.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -59,24 +59,30 @@ function initDialog()
   dialog.fileLabel       = document.getElementById("fileLabel");
   dialog.cmdLabel        = document.getElementById("cmdLabel");
 
+  dialog.destGroup       = document.getElementById("destGroup");
   dialog.fileRadio       = document.getElementById("fileRadio");
   dialog.printerRadio    = document.getElementById("printerRadio");
 
+  dialog.reverseGroup    = document.getElementById("reverseGroup");
   dialog.firstRadio      = document.getElementById("firstRadio");
   dialog.lastRadio       = document.getElementById("lastRadio");
 
+  dialog.colorGroup      = document.getElementById("colorGroup");
   dialog.colorRadio      = document.getElementById("colorRadio");
   dialog.grayRadio       = document.getElementById("grayRadio");
 
+  dialog.paperGroup      = document.getElementById("paperGroup");
   dialog.a4Radio         = document.getElementById("a4Radio");
   dialog.a3Radio         = document.getElementById("a3Radio");
   dialog.letterRadio     = document.getElementById("letterRadio");
   dialog.legalRadio      = document.getElementById("legalRadio");
   dialog.exectiveRadio   = document.getElementById("exectiveRadio");
   
-  dialog.portraitRadio   = document.getElementById("portraitRadio");
+  dialog.orientationGroup = document.getElementById("orientationGroup");
+  dialog.portraitRadio    = document.getElementById("portraitRadio");
   dialog.landscapeRadio   = document.getElementById("landscapeRadio");
 
+  dialog.printrangeGroup = document.getElementById("printrangeGroup");
   dialog.allpagesRadio   = document.getElementById("allpagesRadio");
   dialog.rangeRadio      = document.getElementById("rangeRadio");
   dialog.selectionRadio  = document.getElementById("selectionRadio");
@@ -85,10 +91,11 @@ function initDialog()
   dialog.topageInput     = document.getElementById("topageInput");
   dialog.topageLabel     = document.getElementById("topageLabel");
 
+  dialog.printframeGroup      = document.getElementById("printframeGroup");
   dialog.aslaidoutRadio       = document.getElementById("aslaidoutRadio");
   dialog.selectedframeRadio   = document.getElementById("selectedframeRadio");
   dialog.eachframesepRadio    = document.getElementById("eachframesepRadio");
-  dialog.printrangeGroupLabel = document.getElementById("printrangeGroupLabel");
+  dialog.printframeGroupLabel = document.getElementById("printframeGroupLabel");
 
   dialog.topInput        = document.getElementById("topInput");
   dialog.bottomInput     = document.getElementById("bottomInput");
@@ -245,50 +252,50 @@ function loadDialog()
   }
 
   if ( print_tofile) {
-    dialog.fileRadio.checked = true;
+    dialog.destGroup.selectedItem = dialog.fileRadio;
     doPrintToFile( true );
   } else {
-    dialog.printerRadio.checked = true;
+    dialog.destGroup.selectedItem = dialog.printerRadio;
     doPrintToFile( false );
   }
 
   if ( print_color) {
-    dialog.colorRadio.checked = true;
+    dialog.colorGroup.selectedItem = dialog.colorRadio;
   } else {
-    dialog.grayRadio.checked = true;
+    dialog.colorGroup.selectedItem = dialog.grayRadio;
   }
 
   if ( print_reversed) {
-    dialog.lastRadio.checked = true;
+    dialog.reverseGroup.selectedItem = dialog.lastRadio;
   } else {
-    dialog.firstRadio.checked = true;
+    dialog.reverseGroup.selectedItem = dialog.firstRadio;
   }
 
   if ( print_paper_size == gPrintOptInterface.kLetterPaperSize ) {
-    dialog.letterRadio.checked = true;
+    dialog.paperGroup.selectedItem = dialog.letterRadio;
   } else if ( print_paper_size == gPrintOptInterface.kLegalPaperSize ) {
-    dialog.legalRadio.checked = true;
+    dialog.paperGroup.selectedItem = dialog.legalRadio;
   } else if ( print_paper_size == gPrintOptInterface.kExecutivePaperSize ) {
-    dialog.exectiveRadio.checked = true;
+    dialog.paperGroup.selectedItem = dialog.exectiveRadio;
   } else if ( print_paper_size == gPrintOptInterface.kA4PaperSize ) {
-    dialog.a4Radio.checked = true;
+    dialog.paperGroup.selectedItem = dialog.a4Radio;
   } else if ( print_paper_size == gPrintOptInterface.kA3PaperSize ) {
-    dialog.a3Radio.checked = true;  
+    dialog.paperGroup.selectedItem = dialog.a3Radio;  
   }
 
   if ( print_orientation == gPrintOptInterface.kPortraitOrientation ) {
-    dialog.portraitRadio.checked = true;
+    dialog.orientationGroup.selectedItem = dialog.portraitRadio;
   } else  if ( print_orientation == gPrintOptInterface.kLandscapeOrientation ) {
-    dialog.landscapeRadio.checked = true;
+    dialog.orientationGroup.selectedItem = dialog.landscapeRadio;
   }
 
-  dialog.allpagesRadio.checked = true;
+  dialog.printrangeGroup.selectedItem = dialog.allpagesRadio;
   if ( print_selection_radio_enabled) {
     dialog.selectionRadio.removeAttribute("disabled");
   } else {
     dialog.selectionRadio.setAttribute("disabled","true" );
   }
-  doPrintRange(dialog.rangeRadio.checked);
+  doPrintRange(dialog.rangeRadio.selected);
   dialog.frompageInput.value = 1;
   dialog.topageInput.value   = 1;
 
@@ -312,26 +319,26 @@ function loadDialog()
 
     dialog.selectedframeRadio.removeAttribute("disabled");
     dialog.eachframesepRadio.removeAttribute("disabled");
-    dialog.printrangeGroupLabel.removeAttribute("disabled");
+    dialog.printframeGroupLabel.removeAttribute("disabled");
 
     // initialize radio group
-    dialog.selectedframeRadio.checked = true;
+    dialog.printframeGroup.selectedItem = dialog.selectedframeRadio;
 
   } else if (print_howToEnableUI == gPrintOptInterface.kFrameEnableAsIsAndEach) {
     dialog.aslaidoutRadio.removeAttribute("disabled");       //enable
 
     dialog.selectedframeRadio.setAttribute("disabled","true" ); // disable
     dialog.eachframesepRadio.removeAttribute("disabled");       // enable
-    dialog.printrangeGroupLabel.removeAttribute("disabled");    // enable
+    dialog.printframeGroupLabel.removeAttribute("disabled");    // enable
 
     // initialize
-    dialog.eachframesepRadio.checked = true;
+    dialog.printframeGroup.selectedItem = dialog.eachframesepRadio;
 
   } else {
     dialog.aslaidoutRadio.setAttribute("disabled","true" );
     dialog.selectedframeRadio.setAttribute("disabled","true" );
     dialog.eachframesepRadio.setAttribute("disabled","true" );
-    dialog.printrangeGroupLabel.setAttribute("disabled","true" );
+    dialog.printframeGroupLabel.setAttribute("disabled","true" );
   }
 
 }
@@ -362,28 +369,28 @@ function onAccept()
   if (printService) {
     var print_howToEnableUI = gPrintOptInterface.kFrameEnableNone;
 
-    printService.printToFile   = dialog.fileRadio.checked;
-    printService.printReversed = dialog.lastRadio.checked;
-    printService.printInColor  = dialog.colorRadio.checked;
+    printService.printToFile   = dialog.fileRadio.selected;
+    printService.printReversed = dialog.lastRadio.selected;
+    printService.printInColor  = dialog.colorRadio.selected;
     print_howToEnableUI        = printService.howToEnableFrameUI;
 
-    if (dialog.letterRadio.checked) {
+    if (dialog.letterRadio.selected) {
       print_paper_size = gPrintOptInterface.kLetterPaperSize;
-    } else if (dialog.legalRadio.checked) {
+    } else if (dialog.legalRadio.selected) {
       print_paper_size = gPrintOptInterface.kLegalPaperSize;
-    } else if (dialog.exectiveRadio.checked) {
+    } else if (dialog.exectiveRadio.selected) {
       print_paper_size = gPrintOptInterface.kExecutivePaperSize;
-    } else if (dialog.a4Radio.checked) {
+    } else if (dialog.a4Radio.selected) {
       print_paper_size = gPrintOptInterface.kA4PaperSize;
-    } else if (dialog.a3Radio.checked) {
+    } else if (dialog.a3Radio.selected) {
       print_paper_size = gPrintOptInterface.kA3PaperSize;
     }
     printService.paperSize = print_paper_size;
     
     var print_orientation;
-    if (dialog.portraitRadio.checked) {
+    if (dialog.portraitRadio.selected) {
       print_orientation = gPrintOptInterface.kPortraitOrientation;
-    } else if (dialog.landscapeRadio.checked) {
+    } else if (dialog.landscapeRadio.selected) {
       print_orientation = gPrintOptInterface.kLandscapeOrientation;
     }
     printService.orientation = print_orientation;
@@ -397,11 +404,11 @@ function onAccept()
     printService.printCommand = dialog.cmdInput.value;
     printService.toFileName   = dialog.fileInput.value;
 
-    if (dialog.allpagesRadio.checked) {
+    if (dialog.allpagesRadio.selected) {
       printService.printRange = gPrintOptInterface.kRangeAllPages;
-    } else if (dialog.rangeRadio.checked) {
+    } else if (dialog.rangeRadio.selected) {
       printService.printRange = gPrintOptInterface.kRangeSpecifiedPageRange;
-    } else if (dialog.selectionRadio.checked) {
+    } else if (dialog.selectionRadio.selected) {
       printService.printRange = gPrintOptInterface.kRangeSelection;
     }
     printService.startPageRange = dialog.frompageInput.value;
@@ -409,11 +416,11 @@ function onAccept()
 
     var frametype = gPrintOptInterface.kNoFrames;
     if (print_howToEnableUI != gPrintOptInterface.kFrameEnableNone) {
-      if (dialog.aslaidoutRadio.checked) {
+      if (dialog.aslaidoutRadio.selected) {
         frametype = gPrintOptInterface.kFramesAsIs;
-      } else if (dialog.selectedframeRadio.checked) {
+      } else if (dialog.selectedframeRadio.selected) {
         frametype = gPrintOptInterface.kSelectedFrame;
-      } else if (dialog.eachframesepRadio.checked) {
+      } else if (dialog.eachframesepRadio.selected) {
         frametype = gPrintOptInterface.kEachFrameSep;
       } else {
         frametype = gPrintOptInterface.kSelectedFrame;
@@ -444,7 +451,7 @@ function onCancel()
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function onChooseFile()
 {
-  if (dialog.fileRadio.checked == false) {
+  if (dialog.fileRadio.selected == false) {
     return;
   }
   try {
