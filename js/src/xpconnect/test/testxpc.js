@@ -207,7 +207,7 @@ if(all_ok)
     print("SendInOutManyTypes - passed");
 
 ////////////////////
-// ReturnCode
+// check exceptions on xpcom error code
 
 try {
     echo.ReturnCode(0);
@@ -222,8 +222,35 @@ try {
     print("ReturnCode(-1) - failed");
 }
 catch(e) {
-    print("ReturnCode(-1) exception text: "+e+" - passed");
+//    print("ReturnCode(-1) exception text: "+e+" - passed");
+    print("ReturnCode(-1) - passed");
 }    
+
+////////////////////
+// check exceptions on too few args
+
+try {
+    echo.ReturnCode();  // supposed to have one arg
+    print("Too few args test - failed");
+}
+catch(e) {
+//    print("Too few args test -- exception text: "+e+" - passed");
+    print("Too few args test - passed");
+}    
+
+////////////////////
+// check exceptions on can't convert
+
+try {
+    echo.SetReciever(null);
+//    print("Can't convert arg to Native ("+out+")- failed");
+    print("Can't convert arg to Native - failed");
+}
+catch(e) {
+//    print("Can't convert arg to Native ("+e+") - passed");
+    print("Can't convert arg to Native - passed");
+}    
+
 
 print(".......................................");
 print("simple speed tests...");

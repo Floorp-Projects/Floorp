@@ -336,27 +336,7 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(JSContext *cx,
     memcpy(&v.val, &mv.val, sizeof(mv.val));
 
     // XXX if iid consts are supported, then coditionally fill it in here
-    return XPCConvert::NativeData2JS(cx, vp, &v.val, v.type, NULL);
-}
-
-void
-nsXPCWrappedNativeClass::ReportError(const XPCNativeMemberDescriptor* desc,
-                                     const char* msg)
-{
-    JSContext* cx = GetJSContext();
-    char* sz = JS_smprintf("'%s' accessing '%s' of '%s'",
-                           msg, GetMemberName(desc), GetInterfaceName());
-    if(sz)
-    {
-        JSString* str = JS_NewStringCopyZ(cx, sz);
-        if(str)
-            JS_SetPendingException(cx, STRING_TO_JSVAL(str));
-        JS_smprintf_free(sz);
-    }
-/*
-    JS_ReportError(GetJSContext(), "'%s' accessing '%s' of '%s'",
-                   msg, GetMemberName(desc), GetInterfaceName());
-*/
+    return XPCConvert::NativeData2JS(cx, vp, &v.val, v.type, NULL, NULL);
 }
 
 JSBool
@@ -381,12 +361,13 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     uint8 vtblIndex;
     nsresult invokeResult;
     nsIAllocator* al = NULL;
+    uintN err;
 
     *vp = JSVAL_NULL;
 
     if(!(al = nsXPConnect::GetAllocator()))
     {
-        ReportError(desc, "can't get xpcom shared memory allocator");
+        ThrowException(XPCJSError::UNEXPECTED, cx, desc);
         goto done;
     }
 
@@ -404,7 +385,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
     if(NS_FAILED(mInfo->GetMethodInfo(vtblIndex, &info)))
     {
-        ReportError(desc, "can't get MethodInfo");
+        ThrowException(XPCJSError::CANT_GET_METHOD_INFO, cx, desc);
         goto done;
     }
 
@@ -414,7 +395,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
     if(argc < requiredArgs)
     {
-        ReportError(desc, "not enough arguments");
+        ThrowException(XPCJSError::NOT_ENOUGH_ARGS, cx, desc);
         goto done;
     }
 
@@ -423,7 +404,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     {
         if(!(dispatchParams = new nsXPCVariant[paramCount]))
         {
-            ReportError(desc, "out of memory");
+            JS_ReportOutOfMemory(cx);
             goto done;
         }
     }
@@ -456,7 +437,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                (!JSVAL_IS_OBJECT(argv[i]) ||
                 !JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &src)))
             {
-                ReportError(desc, "out argument must be object");
+                ThrowBadParamException(XPCJSError::NEED_OUT_OBJECT,
+                                       cx, desc, i);
                 goto done;
             }
             if(!param.IsIn())
@@ -480,8 +462,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
             if(!(conditional_iid = param.GetInterfaceIID()))
             {
-                // XXX this (and others!) should throw rather than report error
-                ReportError(desc, "could not get interface type");
+                ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
+                                       cx, desc, i);
                 goto done;
             }
         }
@@ -494,18 +476,18 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             const nsXPTType& type = param.GetType();
             if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
                !XPCConvert::JSData2Native(cx, &conditional_iid, argv[arg_num],
-                                          type, NULL, NULL))
+                                          type, NULL, NULL, NULL))
             {
-                // XXX this (and others!) should throw rather than report error
-                ReportError(desc, "could not get interface type");
+                ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
+                                       cx, desc, i);
                 goto done;
             }
         }
 
         if(!XPCConvert::JSData2Native(cx, &dp->val, src, type,
-                                      conditional_al, conditional_iid))
+                                      conditional_al, conditional_iid, &err))
         {
-            NS_ASSERTION(0, "bad type");
+            ThrowBadParamException(err, cx, desc, i);
             goto done;
         }
     }
@@ -536,8 +518,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             {
                 if(!(conditional_iid = param.GetInterfaceIID()))
                 {
-                    // XXX this (and others!) should throw rather than report error
-                    ReportError(desc, "could not get interface type");
+                    ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
+                                           cx, desc, i);
                     goto done;
                 }
             }
@@ -549,16 +531,16 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
                    !(conditional_iid = (nsID*)dispatchParams[arg_num].val.p))
                 {
-                    // XXX this (and others!) should throw rather than report error
-                    ReportError(desc, "could not get interface type");
+                    ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
+                                           cx, desc, i);
                     goto done;
                 }
             }
 
             if(!XPCConvert::NativeData2JS(cx, &v, &dp->val, type,
-                                          conditional_iid))
+                                          conditional_iid, &err))
             {
-                retval = NS_ERROR_FAILURE;
+                ThrowBadParamException(err, cx, desc, i);
                 goto done;
             }
 
@@ -570,7 +552,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 NS_ASSERTION(JSVAL_IS_OBJECT(argv[i]), "out var is not object");
                 if(!JS_SetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &v))
                 {
-                    ReportError(desc, "Can't set val on out param object");
+                    ThrowBadParamException(XPCJSError::CANT_SET_OUT_VAL,
+                                           cx, desc, i);
                     goto done;
                 }
             }

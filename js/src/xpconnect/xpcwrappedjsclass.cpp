@@ -338,7 +338,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             }
 
             if(!XPCConvert::NativeData2JS(cx, &val, &pv->val, type,
-                                          conditional_iid))
+                                          conditional_iid, NULL))
             {
                 goto pre_call_clean_up;
             }
@@ -452,7 +452,7 @@ pre_call_clean_up:
                 conditional_al = al;
 
             if(!XPCConvert::JSData2Native(cx, &pv->val, val, type,
-                                          conditional_al, conditional_iid))
+                                        conditional_al, conditional_iid, NULL))
                 break;
         }
     }
