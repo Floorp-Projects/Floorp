@@ -464,6 +464,16 @@ noframes {
   -moz-outline: 1px dotted invert;
 }
 
+*|*:-moz-any-link:focus img {
+  -moz-outline: 1px dotted invert;
+}
+*|*:-moz-any-link:focus object {
+  -moz-outline: 1px dotted invert;
+}
+*|*:-moz-any-link:focus embed {
+  -moz-outline: 1px dotted invert;
+}
+
 /* hidden elements */
 area, base, basefont, head, meta, script, style, title,
 noembed, noscript, param {

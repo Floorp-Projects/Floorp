@@ -1228,17 +1228,12 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
       if (vis->IsVisibleOrCollapsed()) {
         const nsStyleBorder* myBorder = (const nsStyleBorder*)
           mStyleContext->GetStyleData(eStyleStruct_Border);
-        const nsStyleOutline* myOutline = (const nsStyleOutline*)
-          mStyleContext->GetStyleData(eStyleStruct_Outline);
         nsRect rect(0, 0, mRect.width, mRect.height);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *myBorder, 0, 0);
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *myBorder,
                                     mStyleContext, 0);
-        nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                     aDirtyRect, rect, *myBorder,
-                                     *myOutline, mStyleContext, 0);
       }
     }
 
@@ -1268,6 +1263,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
       }
     }
     else {
+      PRBool paintOutline   = PR_FALSE;
       mInitialLoadCompleted = PR_TRUE;
       if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
         // Now render the image into our content area (the area inside the
@@ -1330,6 +1326,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
 
             aRenderingContext.DrawScaledImage(imgCon, &r, &d);
           }
+          paintOutline = PR_TRUE;
         }
       }
 
@@ -1344,6 +1341,20 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
         aRenderingContext.Translate(inner.x, inner.y);
         map->Draw(aPresContext, aRenderingContext);
         aRenderingContext.PopState(clipState);
+        paintOutline = PR_TRUE;
+      }
+
+      // paint the outline in the overlay layer (or if there is an image map) until the 
+      // general problem of painting it outside the border box is solved.
+      if (paintOutline) {
+        const nsStyleBorder* myBorder = (const nsStyleBorder*)
+          mStyleContext->GetStyleData(eStyleStruct_Border);
+        const nsStyleOutline* myOutline = (const nsStyleOutline*)
+          mStyleContext->GetStyleData(eStyleStruct_Outline);
+        nsRect rect(0, 0, mRect.width, mRect.height);
+        nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                     aDirtyRect, rect, *myBorder,
+                                     *myOutline, mStyleContext, 0);
       }
 
 #ifdef DEBUG
