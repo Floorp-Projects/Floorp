@@ -332,24 +332,29 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   // if there is more room than the thumb need stretch the
   // thumb
 
-  nscoord thumbsize = NSToCoordRound(ourmaxpos * mRatio);
+  nscoord flex = 0;
+  thumbBox->GetFlex(aState, flex);
+   
+  if (flex > 0) 
+  {
+    nscoord thumbsize = NSToCoordRound(ourmaxpos * mRatio);
 
-  if (thumbsize > thumbcoord) {
-    nscoord flex = 0;
-    thumbBox->GetFlex(aState, flex);
-
-    // if the thumb is flexible make the thumb bigger.
-    if (flex > 0) {
-       if (isHorizontal)
+    if (thumbsize > thumbcoord) 
+    {
+        // if the thumb is flexible make the thumb bigger.
+      if (isHorizontal)
          thumbSize.width = thumbsize;
        else
           thumbSize.height = thumbsize;
-    }    
+        
+    } else {
+        ourmaxpos -= thumbcoord;
+        mRatio = float(ourmaxpos)/float(maxpos);
+    }
   } else {
-    ourmaxpos -= thumbcoord;
-    mRatio = float(ourmaxpos)/float(maxpos);
+      ourmaxpos -= thumbcoord;
+      mRatio = float(ourmaxpos)/float(maxpos);
   }
-
   nscoord curpos = curpospx*onePixel;
 
   // set the thumbs y coord to be the current pos * the ratio.
