@@ -325,7 +325,12 @@ sub EnsureFileInDir
         }
         unlink $destPath;       # in case we had a symlink on unix
         if ($preproc) {
-            if (system("$^X $preprocessor $defines $file > $destPath") != 0) {
+	    my $preproc_file = $file;
+	    if ($^O eq 'cygwin' && $file =~ /^[a-zA-Z]:/) {
+		# convert to a cygwin path
+		$preproc_file =~ s|^([a-zA-Z]):|/cygdrive/\1|;
+	    }
+            if (system("$^X $preprocessor $defines $preproc_file > $destPath") != 0) {
                 die "Preprocessing of $file failed: ".($? >> 8);
             }
         } else {
