@@ -35,7 +35,7 @@
                (:a-s-c-i-i-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
                                  (($default-action $default-action)
                                   (decimal-value $digit-value))))
-              (($default-action character nil identity)
+              (($default-action char16 nil identity)
                ($digit-value integer digit-value digit-char-36)))
        
        

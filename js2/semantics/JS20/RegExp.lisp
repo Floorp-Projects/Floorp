@@ -38,7 +38,7 @@
                 (($default-action $default-action)))
                (:identity-escape (- :unicode-character (+ (#\_) :unicode-alphanumeric))
                                  (($default-action $default-action))))
-              (($default-action character nil identity)
+              (($default-action char16 nil identity)
                ($digit-value integer digit-value digit-char-36)))
        
        (deftag syntax-error)
@@ -49,10 +49,10 @@
        (%charclass :unicode-alphanumeric)
        (%charclass :line-terminator)
        
-       (define line-terminators (range-set character) (range-set-of character #?000A #?000D #?2028 #?2029))
-       (define re-whitespaces (range-set character) (range-set-of character #?000C #?000A #?000D #?0009 #?000B #\space))
-       (define re-digits (range-set character) (range-set-of-ranges character #\0 #\9))
-       (define re-word-characters (range-set character) (range-set-of-ranges character #\0 #\9 #\A #\Z #\a #\z #\_ nil))
+       (define line-terminators (range-set char16) (range-set-of char16 #?000A #?000D #?2028 #?2029))
+       (define re-whitespaces (range-set char16) (range-set-of char16 #?000C #?000A #?000D #?0009 #?000B #\space))
+       (define re-digits (range-set char16) (range-set-of-ranges char16 #\0 #\9))
+       (define re-word-characters (range-set char16) (range-set-of-ranges char16 #\0 #\9 #\A #\Z #\a #\z #\_ nil))
        (%print-actions)
        
        
@@ -105,7 +105,7 @@
          "of the pattern. The " (:type integer) " parameter contains the number of capturing left parentheses seen so far in the "
          "pattern and is used to assign static, consecutive numbers to capturing parentheses.")
        
-       (define (character-set-matcher (acceptance-set (range-set character)) (invert boolean)) matcher   ;*********ignore case?
+       (define (character-set-matcher (acceptance-set (range-set char16)) (invert boolean)) matcher   ;*********ignore case?
          (function (m (t r-e-input) (x r-e-match) (c continuation)) r-e-result
            (const i integer (& end-index x))
            (const s string (& str t))
@@ -123,8 +123,8 @@
          (:local invert) " is " (:tag true) ", the match succeeds if the character is not a member of the "
          (:local acceptance-set) " set of characters (possibly ignoring case).")
        
-       (define (character-matcher (ch character)) matcher
-         (return (character-set-matcher (range-set-of character ch) false)))
+       (define (character-matcher (ch char16)) matcher
+         (return (character-set-matcher (range-set-of char16 ch) false)))
        (%text :semantics
          (:global character-matcher) " returns a " (:type matcher)
          " that matches a single input string character. The match succeeds if the character is the same as "
@@ -346,7 +346,7 @@
          (production :atom (#\.) atom-dot
            ((gen-matcher (paren-index :unused))
             (function (m1 (t r-e-input) (x r-e-match) (c continuation)) r-e-result
-              (const a (range-set character) (if (& span t) (range-set-of character) line-terminators))
+              (const a (range-set char16) (if (& span t) (range-set-of char16) line-terminators))
               (const m2 matcher (character-set-matcher a true))
               (return (m2 t x c)))
             (return m1))
@@ -362,7 +362,7 @@
            (count-parens 0))
          (production :atom (:character-class) atom-character-class
            ((gen-matcher (paren-index :unused))
-            (const a (range-set character) (acceptance-set :character-class))
+            (const a (range-set char16) (acceptance-set :character-class))
             (return (character-set-matcher a (invert :character-class))))
            (count-parens 0))
          (production :atom (#\( :disjunction #\)) atom-parentheses
@@ -446,11 +446,11 @@
          (return (nth (& captures x) (- n 1))))
        
        
-       (rule :character-escape ((character-value character))
+       (rule :character-escape ((character-value char16))
          (production :character-escape (:control-escape) character-escape-control
            (character-value (character-value :control-escape)))
          (production :character-escape (#\c :control-letter) character-escape-control-letter
-           (character-value (code-to-character (bitwise-and (character-to-code ($default-action :control-letter)) 31))))
+           (character-value (integer-to-char16 (bitwise-and (char16-to-integer ($default-action :control-letter)) 31))))
          (production :character-escape (:hex-escape) character-escape-hex
            (character-value (character-value :hex-escape)))
          (production :character-escape (:identity-escape) character-escape-identity
@@ -459,7 +459,7 @@
        (%charclass :control-letter)
        (%charclass :identity-escape)
        
-       (rule :control-escape ((character-value character))
+       (rule :control-escape ((character-value char16))
          (production :control-escape (#\f) control-escape-form-feed (character-value #?000C))
          (production :control-escape (#\n) control-escape-new-line (character-value #?000A))
          (production :control-escape (#\r) control-escape-return (character-value #?000D))
@@ -492,12 +492,12 @@
        
        (%heading 2 "Hexadecimal Escapes")
        
-       (rule :hex-escape ((character-value character))
+       (rule :hex-escape ((character-value char16))
          (production :hex-escape (#\x :hex-digit :hex-digit) hex-escape-2
-           (character-value (code-to-character (+ (* 16 (hex-value :hex-digit 1))
+           (character-value (integer-to-char16 (+ (* 16 (hex-value :hex-digit 1))
                                                   (hex-value :hex-digit 2)))))
          (production :hex-escape (#\u :hex-digit :hex-digit :hex-digit :hex-digit) hex-escape-4
-           (character-value (code-to-character (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
+           (character-value (integer-to-char16 (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
                                                         (* 256 (hex-value :hex-digit 2)))
                                                      (* 16 (hex-value :hex-digit 3)))
                                                   (hex-value :hex-digit 4))))))
@@ -507,25 +507,25 @@
        
        (%heading 2 "Character Class Escapes")
        
-       (rule :character-class-escape ((acceptance-set (range-set character)))
+       (rule :character-class-escape ((acceptance-set (range-set char16)))
          (production :character-class-escape (#\s) character-class-escape-whitespace
            (acceptance-set re-whitespaces))
          (production :character-class-escape (#\S) character-class-escape-non-whitespace
-           (acceptance-set (set- (range-set-of-ranges character #?0000 #?FFFF) re-whitespaces)))
+           (acceptance-set (set- (range-set-of-ranges char16 #?0000 #?FFFF) re-whitespaces)))
          (production :character-class-escape (#\d) character-class-escape-digit
            (acceptance-set re-digits))
          (production :character-class-escape (#\D) character-class-escape-non-digit
-           (acceptance-set (set- (range-set-of-ranges character #?0000 #?FFFF) re-digits)))
+           (acceptance-set (set- (range-set-of-ranges char16 #?0000 #?FFFF) re-digits)))
          (production :character-class-escape (#\w) character-class-escape-word
            (acceptance-set re-word-characters))
          (production :character-class-escape (#\W) character-class-escape-non-word
-           (acceptance-set (set- (range-set-of-ranges character #?0000 #?FFFF) re-word-characters))))
+           (acceptance-set (set- (range-set-of-ranges char16 #?0000 #?FFFF) re-word-characters))))
        (%print-actions)
        
        
        (%heading 1 "User-Specified Character Classes")
        
-       (rule :character-class ((acceptance-set (range-set character)) (invert boolean))
+       (rule :character-class ((acceptance-set (range-set char16)) (invert boolean))
          (production :character-class (#\[ (:- #\^) :class-ranges #\]) character-class-positive
            (acceptance-set (acceptance-set :class-ranges))
            (invert false))
@@ -533,15 +533,15 @@
            (acceptance-set (acceptance-set :class-ranges))
            (invert true)))
        
-       (rule :class-ranges ((acceptance-set (range-set character)))
+       (rule :class-ranges ((acceptance-set (range-set char16)))
          (production :class-ranges () class-ranges-none
-           (acceptance-set (range-set-of character)))
+           (acceptance-set (range-set-of char16)))
          (production :class-ranges ((:nonempty-class-ranges dash)) class-ranges-some
            (acceptance-set (acceptance-set :nonempty-class-ranges))))
        
        (grammar-argument :delta dash no-dash)
        
-       (rule (:nonempty-class-ranges :delta) ((acceptance-set (range-set character)))
+       (rule (:nonempty-class-ranges :delta) ((acceptance-set (range-set char16)))
          (production (:nonempty-class-ranges :delta) ((:class-atom dash)) nonempty-class-ranges-final
            (acceptance-set (acceptance-set :class-atom)))
          (production (:nonempty-class-ranges :delta) ((:class-atom :delta) (:nonempty-class-ranges no-dash)) nonempty-class-ranges-non-final
@@ -556,38 +556,38 @@
            (acceptance-set (acceptance-set :class-ranges))))
        (%print-actions)
        
-       (define (character-range (low (range-set character)) (high (range-set character))) (range-set character)
+       (define (character-range (low (range-set char16)) (high (range-set char16))) (range-set char16)
          (rwhen (or (/= (length low) 1) (/= (length high) 1))
            (throw syntax-error))
-         (const l character (character-set-min low))
-         (const h character (character-set-min high))
-         (if (<= l h character)
-           (return (range-set-of-ranges character l h))
+         (const l char16 (unique-elt-of low))
+         (const h char16 (unique-elt-of high))
+         (if (<= l h char16)
+           (return (range-set-of-ranges char16 l h))
            (throw syntax-error)))
        
        
        (%heading 2 "Character Class Range Atoms")
        
-       (rule (:class-atom :delta) ((acceptance-set (range-set character)))
+       (rule (:class-atom :delta) ((acceptance-set (range-set char16)))
          (production (:class-atom :delta) ((:class-character :delta)) class-atom-character
-           (acceptance-set (range-set-of character ($default-action :class-character))))
+           (acceptance-set (range-set-of char16 ($default-action :class-character))))
          (production (:class-atom :delta) (#\\ :class-escape) class-atom-escape
            (acceptance-set (acceptance-set :class-escape))))
        
        (%charclass (:class-character dash))
        (%charclass (:class-character no-dash))
        
-       (rule :class-escape ((acceptance-set (range-set character)))
+       (rule :class-escape ((acceptance-set (range-set char16)))
          (production :class-escape (:decimal-escape) class-escape-decimal
            (acceptance-set
             (begin
              (if (= (escape-value :decimal-escape) 0)
-               (return (range-set-of character #?0000))
+               (return (range-set-of char16 #?0000))
                (throw syntax-error)))))
          (production :class-escape (#\b) class-escape-backspace
-           (acceptance-set (range-set-of character #?0008)))
+           (acceptance-set (range-set-of char16 #?0008)))
          (production :class-escape (:character-escape) class-escape-character-escape
-           (acceptance-set (range-set-of character (character-value :character-escape))))
+           (acceptance-set (range-set-of char16 (character-value :character-escape))))
          (production :class-escape (:character-class-escape) class-escape-character-class-escape
            (acceptance-set (acceptance-set :character-class-escape))))
        (%print-actions)
