@@ -128,7 +128,7 @@ class TestConnection : public nsIRunnable,
 {
 public:
   TestConnection(const char* aHostName, PRInt32 aPort,
-                 PRBool aAsyncFlag, PRBool testAsyncRead);
+                 PRBool aAsyncFlag);
   virtual ~TestConnection();
 
   NS_DECL_ISUPPORTS
@@ -290,7 +290,7 @@ TestConnection::OnStopRequest(nsIChannel* channel,
 
 
 TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, 
-                               PRBool aAsyncFlag, PRBool testAsyncRead)
+                               PRBool aAsyncFlag)
 {
   nsresult rv;
 
