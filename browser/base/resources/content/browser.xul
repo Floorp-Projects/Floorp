@@ -164,7 +164,7 @@ Contributor(s): ______________________________________. -->
              disabled="false"/>
 
     <!-- View Menu -->
-    <command id="View:PageSource" oncommand="BrowserViewSource();"/>
+    <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
     <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
   
@@ -644,17 +644,6 @@ Contributor(s): ______________________________________. -->
                 </menu>
                 <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
                 </menupopup>
-            </menu>
-            <menuseparator/>
-            <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
-              <menupopup datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)">
-                <template>
-                <menuitem uri="..."
-                          label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                          accesskey="rdf:http://www.mozilla.org/rdf/chrome#accessKey"
-                          name="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-                </template>
-              </menupopup>
             </menu>
           </menupopup>
         </menu>
