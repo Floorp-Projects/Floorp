@@ -95,7 +95,7 @@ class nsProxyObject : public nsISupports
 
         } AutoProxyConvertTypes;
         
-        void                AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
+        nsresult            AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
                                                    nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType);
 
         nsIEventQueue       *mDestQueue;                 /* destination queue */
