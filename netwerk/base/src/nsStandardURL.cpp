@@ -1417,7 +1417,7 @@ nsStandardURL::SetQuery(const char *query)
 
     // escape query if necessary
     nsCAutoString escaped;
-    NS_EscapeURL(query, queryLen, esc_Password, escaped);
+    NS_EscapeURL(query, queryLen, esc_Query, escaped);
     if (!escaped.IsEmpty()) {
         query = escaped.get();
         queryLen = escaped.Length();
@@ -1469,7 +1469,7 @@ nsStandardURL::SetRef(const char *ref)
 
     // escape ref if necessary
     nsCAutoString escaped;
-    NS_EscapeURL(ref, refLen, esc_Password, escaped);
+    NS_EscapeURL(ref, refLen, esc_Ref, escaped);
     if (!escaped.IsEmpty()) {
         ref = escaped.get();
         refLen = escaped.Length();
