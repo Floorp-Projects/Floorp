@@ -47,7 +47,11 @@ REQUIRES		= raptor js dbm nspr security pref xpcom util img \
 EXPORTS = nsINetService.h               \
           nsINetSupport.h		\
           nsIRelatedLinks.h             \
+          nsIRefreshUrl.h                \
+          nsIConnectionInfo.h                \
+          nsIURLGroup.h                \
           nsINetlibURL.h                \
+          nsIProtocol.h       \
           nsIProtocolURLFactory.h       \
           $(NULL)
 

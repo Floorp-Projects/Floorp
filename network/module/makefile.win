@@ -29,6 +29,7 @@ EXPORTS = nsINetService.h               \
           nsIURLGroup.h                 \
           nsIConnectionInfo.h           \
           nsIRefreshUrl.h               \
+          nsIProtocol.h                 \
           nsIProtocolURLFactory.h       \
           $(NULL)
 
