@@ -28,12 +28,29 @@
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
+#include "nsIProxyObjectManager.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
  
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
+
+////////////// this needs to move to nspr
+static inline PRUint32
+PRTimeToSeconds(PRTime t_usec)
+{
+    PRTime usec_per_sec;
+    PRUint32 t_sec;
+    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
+    LL_DIV(t_usec, t_usec, usec_per_sec);
+    LL_L2I(t_sec, t_usec);
+    return t_sec;
+}
+
+#define NowInSeconds() PRTimeToSeconds(PR_Now())
+////////////// end
+
 
 // There are two transport connections established for an 
 // ftp connection. One is used for the command channel , and
@@ -44,7 +61,8 @@ extern PRLogModuleInfo* gFTPLog;
 // Client initiation is the most common case and is attempted first.
 
 nsFTPChannel::nsFTPChannel()
-    : mLoadFlags(LOAD_NORMAL),
+    : mIsPending(0),
+      mLoadFlags(LOAD_NORMAL),
       mSourceOffset(0),
       mAmount(0),
       mContentLength(-1),
@@ -67,17 +85,18 @@ nsFTPChannel::~nsFTPChannel()
     if (mLock) PR_DestroyLock(mLock);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsFTPChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS8(nsFTPChannel,
                               nsIChannel,
                               nsIFTPChannel,
                               nsIRequest,
                               nsIInterfaceRequestor, 
                               nsIProgressEventSink,
                               nsIStreamListener,
-                              nsIRequestObserver);
+                              nsIRequestObserver,
+                              nsICacheListener);
 
 nsresult
-nsFTPChannel::Init(nsIURI* uri)
+nsFTPChannel::Init(nsIURI* uri, nsICacheSession* session)
 {
     nsresult rv = NS_OK;
 
@@ -94,6 +113,8 @@ nsFTPChannel::Init(nsIURI* uri)
 
     mIOService = do_GetIOService(&rv);
     if (NS_FAILED(rv)) return rv;
+
+    mCacheSession = session;
     
     return NS_OK;
 }
@@ -135,9 +156,8 @@ nsFTPChannel::GetName(PRUnichar* *result)
 
 NS_IMETHODIMP
 nsFTPChannel::IsPending(PRBool *result) {
-    nsAutoLock lock(mLock);
-    NS_NOTREACHED("nsFTPChannel::IsPending");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = mIsPending;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -166,7 +186,7 @@ nsFTPChannel::Cancel(nsresult status) {
     mStatus = status;
 
     if (mFTPState) 
-        return mFTPState->Cancel(status);
+        (void)mFTPState->Cancel(status);
 
     return NS_OK;
 }
@@ -230,6 +250,23 @@ nsFTPChannel::Open(nsIInputStream **result)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult
+nsFTPChannel::GenerateCacheKey(nsACString &cacheKey)
+{
+    cacheKey.SetLength(0);
+    
+    nsXPIDLCString spec;
+    mURL->GetSpec(getter_Copies(spec));
+
+    // Strip any trailing #ref from the URL before using it as the key
+    const char *p = PL_strchr(spec, '#');
+    if (p)
+        cacheKey.Append(spec, p - spec);
+    else
+        cacheKey.Append(spec);
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
@@ -252,20 +289,51 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         rv = mLoadGroup->AddRequest(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
+    PRBool offline;
 
-    ////////////////////////////////
-    //// setup the channel thread
+    if (mCacheSession) {
+        mIOService->GetOffline(&offline);
+
+        // Set the desired cache access mode accordingly...
+        nsCacheAccessMode accessRequested;
+        if (offline) {
+            // Since we are offline, we can only read from the cache.
+            accessRequested = nsICache::ACCESS_READ;
+        }
+        else if (mLoadFlags & LOAD_BYPASS_CACHE)
+            accessRequested = nsICache::ACCESS_WRITE; // replace cache entry
+        else
+            accessRequested = nsICache::ACCESS_READ_WRITE; // normal browsing
+        
+        nsCAutoString cacheKey;
+        GenerateCacheKey(cacheKey);
+
+        return mCacheSession->AsyncOpenCacheEntry(cacheKey, accessRequested, this);
+    }
+    
+    return SetupState();
+}
+
+nsresult 
+nsFTPChannel::SetupState()
+{
     if (!mFTPState) {
         NS_NEWXPCOM(mFTPState, nsFtpState);
         if (!mFTPState) return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(mFTPState);
     }
-    rv = mFTPState->Init(this, mPrompter, mAuthPrompter, mFTPEventSink);
+    nsresult rv = mFTPState->Init(this, 
+                                  mPrompter, 
+                                  mAuthPrompter, 
+                                  mFTPEventSink, 
+                                  mCacheEntry);
     if (NS_FAILED(rv)) return rv;
 
     rv = mFTPState->Connect();
-    
-    return rv;
+    if (NS_FAILED(rv)) return rv;
+
+    mIsPending = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -381,21 +449,59 @@ nsFTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
 {
     mCallbacks = aNotificationCallbacks;
 
-    // FIX these should be proxies!
     if (mCallbacks) {
+
+        // nsIProgressEventSink
+        nsCOMPtr<nsIProgressEventSink> sink;
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), 
-                                       getter_AddRefs(mEventSink));
+                                       getter_AddRefs(sink));
 
-        (void)mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
-                                       getter_AddRefs(mPrompter));
-        NS_ASSERTION ( mPrompter, "Channel doesn't have a prompt!!!" );
+        if (sink)
+            NS_GetProxyForObject(NS_CURRENT_EVENTQ, 
+                                 NS_GET_IID(nsIProgressEventSink), 
+                                 sink, 
+                                 PROXY_ASYNC | PROXY_ALWAYS, 
+                                 getter_AddRefs(mEventSink));
 
-        (void)mCallbacks->GetInterface(NS_GET_IID(nsIFTPEventSink),
-                                       getter_AddRefs(mFTPEventSink));
         
+        // nsIFTPEventSink
+        nsCOMPtr<nsIFTPEventSink> ftpSink;
+        (void)mCallbacks->GetInterface(NS_GET_IID(nsIFTPEventSink),
+                                       getter_AddRefs(ftpSink));
+        
+        if (ftpSink)
+            NS_GetProxyForObject(NS_CURRENT_EVENTQ, 
+                                 NS_GET_IID(nsIFTPEventSink), 
+                                 sink, 
+                                 PROXY_ASYNC | PROXY_ALWAYS, 
+                                 getter_AddRefs(mFTPEventSink));        
+
+        // nsIPrompt
+        nsCOMPtr<nsIPrompt> prompt;
+        (void)mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
+                                       getter_AddRefs(prompt));
+
+        NS_ASSERTION ( prompt, "Channel doesn't have a prompt!!!" );
+
+        if (prompt)
+            NS_GetProxyForObject(NS_CURRENT_EVENTQ, 
+                                 NS_GET_IID(nsIPrompt), 
+                                 prompt, 
+                                 PROXY_SYNC, 
+                                 getter_AddRefs(mPrompter));
+
+        // nsIAuthPrompt
+        nsCOMPtr<nsIAuthPrompt> aPrompt;
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIAuthPrompt),
-                                       getter_AddRefs(mAuthPrompter));
-        NS_ASSERTION ( mAuthPrompter, "Channel doesn't have an auth prompt!!!" );
+                                       getter_AddRefs(aPrompt));
+
+        if (aPrompt)
+            NS_GetProxyForObject(NS_CURRENT_EVENTQ, 
+                                 NS_GET_IID(nsIAuthPrompt), 
+                                 aPrompt, 
+                                 PROXY_SYNC, 
+                                 getter_AddRefs(mAuthPrompter));
+
     }
     return NS_OK;
 }
@@ -467,18 +573,29 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     mStatus = aStatus;
     
     if (mObserver) {
-        rv = mObserver->OnStopRequest(this, mUserContext, aStatus);
-        if (NS_FAILED(rv)) return rv;
+        (void) mObserver->OnStopRequest(this, mUserContext, aStatus);
     }
 
     if (mListener) {
-        rv = mListener->OnStopRequest(this, mUserContext, aStatus);
-        if (NS_FAILED(rv)) return rv;
+        (void) mListener->OnStopRequest(this, mUserContext, aStatus);
     }
     if (mLoadGroup) {
-        rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus);
-        if (NS_FAILED(rv)) return rv;
+        (void) mLoadGroup->RemoveRequest(this, nsnull, aStatus);
     }
+    
+    if (mCacheEntry) {
+        if (NS_SUCCEEDED(aStatus)) {
+            (void) mCacheEntry->SetExpirationTime( NowInSeconds() + 900 ); // valid for 15 minutes.
+            (void) mCacheEntry->MarkValid();
+	}
+        else {
+            (void) mCacheEntry->Doom();
+        }
+        mCacheEntry->Close();
+        mCacheEntry = 0;
+    }
+
+    mIsPending = PR_FALSE;
     return rv;
 }
 
@@ -510,4 +627,27 @@ nsFTPChannel::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
                                nsIInputStream *aInputStream, PRUint32 aSourceOffset,
                                PRUint32 aLength) {
     return mListener->OnDataAvailable(this, mUserContext, aInputStream, aSourceOffset, aLength);
+}
+
+//-----------------------------------------------------------------------------
+// nsFTPChannel::nsICacheListener
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsFTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
+                                     nsCacheAccessMode access,
+                                     nsresult status)
+{
+    nsresult rv;
+
+    if (NS_SUCCEEDED(status)) {
+        mCacheEntry = entry;
+    }
+    
+    rv = SetupState();
+
+    if (NS_FAILED(rv)) {
+        Cancel(rv);
+    }
+    return NS_OK;
 }

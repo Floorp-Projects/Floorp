@@ -46,11 +46,7 @@
 
 #include "nsFtpControlConnection.h"
 
-#ifdef DOUGT_NEW_CACHE
-#include "nsICacheService.h"
-#include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
-#endif
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -98,7 +94,11 @@ public:
     nsFtpState();
     virtual ~nsFtpState();
 
-    nsresult Init(nsIFTPChannel *aChannel, nsIPrompt *aPrompter, nsIAuthPrompt *aAuthPrompter, nsIFTPEventSink *sink);
+    nsresult Init(nsIFTPChannel *aChannel, 
+                  nsIPrompt *aPrompter, 
+                  nsIAuthPrompt *aAuthPrompter, 
+                  nsIFTPEventSink *sink, 
+                  nsICacheEntryDescriptor* cacheEntry);
 
     // use this to provide a stream to be written to the server.
     nsresult SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount);
@@ -143,6 +143,7 @@ private:
     nsresult EstablishControlConnection();
     nsresult SendFTPCommand(nsCString& command);
     nsresult BuildStreamConverter(nsIStreamListener** convertStreamListener);
+    nsresult SetContentType();
 
     ///////////////////////////////////
     // Private members
@@ -207,12 +208,8 @@ private:
     PRPackedBool            mControlReadContinue;
     PRPackedBool            mControlReadBrokenLine;
     nsCAutoString           mControlReadCarryOverBuf;
-#ifdef DOUGT_NEW_CACHE
-    nsCOMPtr<nsICacheSession>         mCacheSession;
+
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
-    PRPackedBool                      mReadingFromCache;
-#endif
-  
 };
 
 
