@@ -742,8 +742,6 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           document is XML.
        */
       if(NS_SUCCEEDED(result) && !(mFlags & NS_IPARSER_FLAG_XML)) {
-        CStartToken* theStartToken = NS_STATIC_CAST(CStartToken*,aToken);
-
         PRBool isCDATA = gHTMLElements[theTag].CanContainType(kCDATA);
         PRBool isPCDATA = eHTMLTag_textarea == theTag ||
                           eHTMLTag_title    == theTag;
