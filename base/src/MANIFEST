@@ -14,7 +14,9 @@ nsITimerCallback.h
 nsIUnicharBuffer.h
 nsRBTree.h
 nsIUnicharInputStream.h
+nsStr.h
 nsString.h
+nsString2.h
 nsVoidArray.h
 nsUnitConversion.h
 nsIBaseStream.h
