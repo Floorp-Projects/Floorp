@@ -147,16 +147,42 @@ NS_IMETHODIMP nsHTMLIFrameAccessible::GetLinks(PRInt32 *aLinks)
 
 /* nsIAccessibleHyperLink getLink (in long index); */
 NS_IMETHODIMP nsHTMLIFrameAccessible::GetLink(PRInt32 aIndex,
-                                              nsIAccessibleHyperLink **_retval)
+                                              nsIAccessibleHyperLink **aLink)
 {
-  return GetLinkFromAccNode(aIndex, this, _retval);
+  return GetLinkFromAccNode(aIndex, this, aLink);
 }
 
 /* long getLinkIndex (in long charIndex); */
 NS_IMETHODIMP nsHTMLIFrameAccessible::GetLinkIndex(PRInt32 aCharIndex,
-                                                   PRInt32 *_retval)
+                                                   PRInt32 *aLinkIndex)
 {
-  return GetLinkIndexFromAccNode(this, aCharIndex, _retval);
+  return GetLinkIndexFromAccNode(this, aCharIndex, aLinkIndex);
+}
+
+/* long getSelectedLinkIndex (); */
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetSelectedLinkIndex(PRInt32 *aSelectedLinkIndex)
+{
+  *aSelectedLinkIndex = -1;
+
+  nsCOMPtr<nsIDOMNode> focusedNode;
+  GetFocusedNode(getter_AddRefs(focusedNode));
+
+  PRInt32 index, links = GetLinksFromAccNode(this);
+  for (index = 0; index < links; index++) {
+    nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
+    GetLink(index, getter_AddRefs(hyperLink));
+    nsCOMPtr<nsIAccessible> acc(do_QueryInterface(hyperLink));
+    if (acc) {
+      nsCOMPtr<nsIDOMNode> linkNode;
+      acc->AccGetDOMNode(getter_AddRefs(linkNode));
+      if (focusedNode == linkNode) {
+        *aSelectedLinkIndex = index;
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 //helper function for nsIAccessibleHyperText

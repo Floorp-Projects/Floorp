@@ -95,6 +95,10 @@ public:
   NS_IMETHOD AccTakeFocus(void); 
   NS_IMETHOD AccGetDOMNode(nsIDOMNode **_retval); 
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+    static nsresult GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
+#endif
+
 protected:
   virtual nsIFrame* GetFrame();
   virtual nsIFrame* GetBoundsFrame();

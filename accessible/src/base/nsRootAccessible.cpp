@@ -36,55 +36,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIAccessible.h"
-#include "nsRootAccessible.h"
-#include "nsCOMPtr.h"
-#include "nsIDocument.h"
-#include "nsIDOMNSDocument.h"
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
-#include "nsIContent.h"
-#include "nsIFrame.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMNSEvent.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMEventListener.h"
-#include "nsReadableUtils.h"
-#include "nsILink.h"
-#include "nsHTMLFormControlAccessible.h"
-#include "nsHTMLLinkAccessible.h"
-#include "nsIURI.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIWebNavigation.h"
-#include "nsIXULDocument.h"
+// NOTE: alphabetically ordered
+#include "nsAccessibilityService.h"
+#include "nsAccessibleEventData.h"
+#include "nsHTMLSelectAccessible.h"
+#include "nsIAccessibleCaret.h"
+#include "nsIAccessibleHyperText.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
-#include "nsINameSpaceManager.h"
-#include "nsIDOMNSHTMLSelectElement.h"
-#include "nsString.h"
-#include "nsXPIDLString.h"
-#include "nsIAccessibilityService.h"
-#include "nsIServiceManager.h"
-#include "nsHTMLSelectAccessible.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
-#include "nsCURILoader.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
-#include "nsIViewManager.h"
-#include "nsIScrollableView.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsXULTreeAccessible.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocument.h"
+#include "nsIFrame.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsINameSpaceManager.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScrollableView.h"
+#include "nsIServiceManager.h"
 #include "nsITreeSelection.h"
-#include "nsAccessibilityService.h"
-#include "nsISelectionPrivate.h"
-#include "nsICaret.h"
-#include "nsIAccessibleCaret.h"
-#include "nsIDOMHTMLInputElement.h"
-#include "nsAccessibleEventData.h"
+#include "nsIURI.h"
+#include "nsIViewManager.h"
+#include "nsIWebNavigation.h"
+#include "nsIXULDocument.h"
+#include "nsLayoutAtoms.h"
+#include "nsReadableUtils.h"
+#include "nsRootAccessible.h"
+#include "nsXULTreeAccessible.h"
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
@@ -473,6 +460,16 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       optionTargetNode = do_QueryInterface(selectItem);
     }
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement(do_QueryInterface(targetNode));
+    if (anchorElement) {
+      nsCOMPtr<nsIDOMNode> blockNode;
+      // For ATK, we don't create any individual object for hyperlink, use its parent who has block frame instead
+      nsAccessible::GetParentBlockNode(targetNode, getter_AddRefs(blockNode));
+      targetNode = blockNode;
+    }
+#endif
+
     nsCOMPtr<nsIAccessible> accessible;
     if (NS_FAILED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible))))
       return NS_OK;
@@ -571,6 +568,14 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) {
       if (treeItemAccessible) // use focused treeitem
         HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
+      else if (anchorElement) {
+        nsCOMPtr<nsIAccessibleHyperText> hyperText(do_QueryInterface(accessible));
+        if (hyperText) {
+          PRInt32 selectedLink;
+          hyperText->GetSelectedLinkIndex(&selectedLink);
+          HandleEvent(nsIAccessibleEventListener::EVENT_ATK_LINK_SELECTED, accessible, &selectedLink);
+        }
+      }
       else if (optionTargetNode && // use focused option
           NS_SUCCEEDED(mAccService->GetAccessibleFor(optionTargetNode, getter_AddRefs(accessible))))
         FireAccessibleFocusEvent(accessible, optionTargetNode);
@@ -899,6 +904,9 @@ NS_IMETHODIMP nsRootAccessible::OnSecurityChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
+//-----------------------------------------------------
+// nsDocAccessibleMixin 
+//-----------------------------------------------------
 nsDocAccessibleMixin::nsDocAccessibleMixin(nsIDocument *aDoc):mDocument(aDoc)
 {
 }

@@ -35,4 +35,5 @@ interface nsIAccessibleHyperText : nsISupports
   nsIAccessibleHyperLink getLink (in long index);
 
   long getLinkIndex (in long charIndex);
+  long getSelectedLinkIndex ();
 };
