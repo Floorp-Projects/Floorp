@@ -128,13 +128,9 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage -- Created new imgRequest [request=%p]\n", this, request));
 
-#ifdef MOZ_NEW_CACHE
     imgCache::Put(aURI, request, getter_AddRefs(entry));
 
     request->Init(newChannel, entry);
-#else
-    request->Init(newChannel, nsnull);
-#endif
 
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
