@@ -324,7 +324,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
     
     if (!aMsgHdr) return NS_ERROR_NULL_POINTER;
 
-    if (!m_newsgroupName) return NS_ERROR_FAILURE;
+    if (!((const char *)m_newsgroupName)) return NS_ERROR_FAILURE;
 
     nsXPIDLCString hostName;
     rv = GetHost(getter_Copies(hostName));
@@ -342,7 +342,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
     }
     newsgroupURI.Append(hostName);
     newsgroupURI.Append("/");
-    newsgroupURI.Append(m_newsgroupName);
+    newsgroupURI.Append((const char *)m_newsgroupName);
     
     rv = nsNewsURI2Path(kNewsMessageRootURI, newsgroupURI.GetBuffer(), pathResult);
     if (NS_FAILED(rv)) {
