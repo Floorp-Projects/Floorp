@@ -29,8 +29,6 @@
 
 #include "../src/nsInterfaceInfo.h"
 
-static void RegAllocator();
-
 // This file expects the nsInterfaceInfoManager to be able to discover
 // .xpt files corresponding to those in xpcom/idl.  Currently this
 // means setting XPTDIR in the environment to some directory
@@ -41,8 +39,6 @@ int main (int argc, char **argv) {
     nsIID *iid1, *iid2, *iid3, *iid4, *iid5, *iid6;
     char *name1, *name2, *name3, *name4, *name5, *name6;
     nsIInterfaceInfo *info1, *info2, *info3, *info4, *info5, *info6;;
-
-    RegAllocator();
 
     nsIInterfaceInfoManager *iim = XPTI_GetInterfaceInfoManager();
 
@@ -126,26 +122,3 @@ int main (int argc, char **argv) {
     return 0;
 }    
 
-
-// XXX remove following code when allocator autoregisters.
-#include "nsRepository.h"
-#include "nsIAllocator.h"
-
-static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-
-#ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
-#else
-#ifdef XP_MAC
-#define XPCOM_DLL  "XPCOM_DLL"
-#else
-#define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
-#endif
-#endif
-
-static void RegAllocator()
-{
-    nsRepository::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, 
-                                    PR_FALSE, PR_FALSE);
-}
