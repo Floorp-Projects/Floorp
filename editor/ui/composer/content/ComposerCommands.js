@@ -899,7 +899,29 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     var parentDir;
     try {
       if (tempLocalFile)
-        parentDir = tempLocalFile.parent;
+      {
+        if (!aSaveAs)         // we are saving an existing local file
+          parentDir = null;   // don't change links or move files
+        else
+        {
+          // if we are saving to the same parent directory, don't set parentDir
+          // grab old location, chop off file
+          // grab new location, chop off file, compare
+          var oldLocation = GetDocumentURI(editorDoc);
+          var oldLocationLastSlash = oldLocation.lastIndexOf("\/");
+          if (oldLocationLastSlash != -1)
+            oldLocation = oldLocation.slice(0, oldLocationLastSlash);
+
+          var curParentString = urlstring;
+          var newLocationLastSlash = curParentString.lastIndexOf("\/");
+          if (newLocationLastSlash != -1)
+            curParentString = curParentString.slice(0, newLocationLastSlash);
+          if (oldLocation == curParentString)
+            parentDir = null;
+          else
+            parentDir = tempLocalFile.parent;
+        }
+      }
       else
       {
         var lastSlash = urlstring.lastIndexOf("\/");
