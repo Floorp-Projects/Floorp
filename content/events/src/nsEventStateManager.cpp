@@ -3401,8 +3401,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
       }
 
       child->GetTag(*getter_AddRefs(tag));
-      nsCOMPtr<nsIDOMHTMLElement> htmlElement(do_QueryInterface(child));
-      if (htmlElement) {
+      if (child->IsContentOfType(nsIContent::eHTML)) {
         if (nsHTMLAtoms::input==tag) {
           nsCOMPtr<nsIDOMHTMLInputElement> nextInput(do_QueryInterface(child));
           if (nextInput) {
@@ -3414,7 +3413,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             if (type.EqualsIgnoreCase("text")
                 || type.EqualsIgnoreCase("password")) {
               // It's a text field or password field
-              disabled = !(sTabFocusModel & eTabFocus_textControlsMask);
+              disabled =
+                disabled || !(sTabFocusModel & eTabFocus_textControlsMask);
             }
             else if (type.EqualsIgnoreCase("hidden")) {
               hidden = PR_TRUE;
@@ -3424,7 +3424,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             }
             else {
               // it's some other type of form element
-              disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+              disabled =
+                disabled || !(sTabFocusModel & eTabFocus_formElementsMask);
             }
           }
         }
