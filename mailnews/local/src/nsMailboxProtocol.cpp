@@ -114,9 +114,6 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURL* aURL, const char *aConte
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
-	// what can we do? we can close the stream?
-	nsMsgProtocol::OnStopBinding(aURL, aStatus, aMsg);
-
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that there is no more incoming data...
@@ -150,6 +147,8 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 	// releasing all of our interfaces. It's important to remember that this on stop binding call
 	// is coming from netlib so they are never going to ping us again with on data available. This means
 	// we'll never be going through the Process loop...
+
+	nsMsgProtocol::OnStopBinding(aURL, aStatus, aMsg);
 	return CloseSocket(); 
 }
 
