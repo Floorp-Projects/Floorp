@@ -220,9 +220,17 @@ typedef struct PRCallOnceType {
 
 typedef PRStatus (PR_CALLBACK *PRCallOnceFN)(void);
 
+typedef PRStatus (PR_CALLBACK *PRCallOnceWithArgFN)(void *arg);
+
 NSPR_API(PRStatus) PR_CallOnce(
     PRCallOnceType *once,
     PRCallOnceFN    func
+);
+
+NSPR_API(PRStatus) PR_CallOnceWithArg(
+    PRCallOnceType      *once,
+    PRCallOnceWithArgFN  func,
+    void                *arg
 );
 
 
