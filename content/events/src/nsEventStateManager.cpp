@@ -1501,6 +1501,10 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
         }
 
+        // The rest is left button-specific.
+        if (aEvent->message != NS_MOUSE_LEFT_BUTTON_DOWN)
+          break;
+
         if (activeContent) {
           // The nearest enclosing element goes into the
           // :active state.  If we fail the QI to DOMElement,
@@ -1511,15 +1515,13 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           if (!elt) {
             nsCOMPtr<nsIContent> par;
             activeContent->GetParent(*getter_AddRefs(par));
-            activeContent = par;
+            if (par)
+              activeContent = par;
           }
-          if (activeContent) {
-            SetContentState(activeContent, NS_EVENT_STATE_ACTIVE);
-            nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement(do_QueryInterface(activeContent));
-            if (bodyElement) {
-              mSpecialTopOfDoc = PR_TRUE;
-            }
-          }
+          SetContentState(activeContent, NS_EVENT_STATE_ACTIVE);
+          nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement(do_QueryInterface(activeContent));
+          if (bodyElement)
+            mSpecialTopOfDoc = PR_TRUE;
         }
       }
       else {
