@@ -62,6 +62,7 @@ CPPSRCS         = nsAppShell.cpp \
 		nsChildWindow.cpp \
 		nsClipboard.cpp \
 		nsDeleteObserver.cpp \
+		nsDragHelperService.cpp \
 		nsDragService.cpp \
 		nsFilePicker.cpp \
 		nsLabel.cpp \
@@ -92,6 +93,7 @@ XPIDLSRCS	+= \
 		nsIMenuCommandDispatcher.idl \
 		nsPIWidgetMac.idl \
 		nsPIEventSinkStandalone.idl \
+		nsIDragHelperService.idl \
 		$(NULL)
 
 GARBAGE		+= $(GFX_LCPPSRCS)
