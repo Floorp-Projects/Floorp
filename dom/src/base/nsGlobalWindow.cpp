@@ -1411,9 +1411,9 @@ GlobalWindowImpl::GetOpener(nsIDOMWindowInternal** aOpener)
   // First, check if we were called from a privileged chrome script
 
   NS_ENSURE_TRUE(sSecMan, NS_ERROR_FAILURE);
-  PRBool inChrome;
-  nsresult rv = sSecMan->SubjectPrincipalIsSystem(&inChrome);
-  if (NS_SUCCEEDED(rv) && inChrome) {
+  PRBool allowClose;
+  nsresult rv = sSecMan->SubjectPrincipalIsSystem(&allowClose);
+  if (NS_SUCCEEDED(rv) && allowClose) {
     *aOpener = mOpener;
     NS_IF_ADDREF(*aOpener);
     return NS_OK;
@@ -3480,10 +3480,15 @@ GlobalWindowImpl::Close()
     nsCOMPtr<nsIScriptSecurityManager> secMan(
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
-      PRBool inChrome = PR_TRUE;
-      rv = secMan->SubjectPrincipalIsSystem(&inChrome);
-      if (NS_SUCCEEDED(rv) && !inChrome) {
-        PRBool allowClose =
+      PRBool allowClose = PR_TRUE;
+      rv = secMan->SubjectPrincipalIsSystem(&allowClose);
+
+      if (!allowClose)
+        rv = sSecMan->IsCapabilityEnabled("UniversalBrowserWrite",
+                                          &allowClose);
+
+      if (NS_SUCCEEDED(rv) && !allowClose) {
+        allowClose =
           nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
                                       PR_TRUE);
         if (!allowClose) {
