@@ -231,7 +231,8 @@ EmbedWindow::ExitModalEventLoop(nsresult aStatus)
 // nsIEmbeddingSiteWindow
 
 NS_IMETHODIMP
-EmbedWindow::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY)
+EmbedWindow::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY,
+			   PRInt32 aCX, PRInt32 aCY)
 {
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
       (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER ||
@@ -249,7 +250,8 @@ EmbedWindow::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY, PRInt32 aCX,
 }
 
 NS_IMETHODIMP
-EmbedWindow::GetDimensions(PRUint32 aFlags, PRInt32 *aX, PRInt32 *aY, PRInt32 *aCX, PRInt32 *aCY)
+EmbedWindow::GetDimensions(PRUint32 aFlags, PRInt32 *aX,
+			   PRInt32 *aY, PRInt32 *aCX, PRInt32 *aCY)
 {
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
       (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER ||
@@ -304,7 +306,10 @@ EmbedWindow::GetVisibility(PRBool *aVisibility)
 NS_IMETHODIMP
 EmbedWindow::SetVisibility(PRBool aVisibility)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+		  moz_embed_signals[VISIBILITY],
+		  aVisibility);
+  return NS_OK;
 }
 
 // nsITooltipListener
