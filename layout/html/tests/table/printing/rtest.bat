@@ -15,7 +15,7 @@ s:\mozilla\dist\win32_d.obj\bin\viewer -Prt 1 -B 1 -o s:\mozilla\layout\html\tes
 goto done
 
 :baseline
-s:\mozilla\dist\win32_d.obj\bin\viewer -Prt 1 -o s:\mozilla\layout\html\tests\table\printing\ -rd s:\mozilla\layout\html\tests\table\printing -f s:\mozilla\layout\html\tests\table\printing\file_list.txt
+s:\mozilla\dist\win32_d.obj\bin\viewer -Prt 1 -o s:\mozilla\layout\html\tests\table\printing\  -f s:\mozilla\layout\html\tests\table\printing\file_list.txt
 goto done
 
 :error
