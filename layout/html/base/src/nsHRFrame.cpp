@@ -172,8 +172,8 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
   // Compute the width
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
-    aDesiredSize.width = aReflowState.computedWidth;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+    aDesiredSize.width = aReflowState.mComputedWidth;
   }
   else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
@@ -189,8 +189,8 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
   // Get the thickness of the rule. Note that this specifies the
   // height of the rule, not the height of the frame.
   nscoord thickness;
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
-    thickness = aReflowState.computedHeight;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+    thickness = aReflowState.mComputedHeight;
   }
   else {
     thickness = NSIntPixelsToTwips(DEFAULT_THICKNESS, p2t);
@@ -220,7 +220,7 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
   // are springy.
   if (nsnull != aDesiredSize.maxElementSize) {
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
       if (eStyleUnit_Percent ==
           aReflowState.mStylePosition->mWidth.GetUnit()) {
         // When the HR is using a percentage width, make sure it
@@ -228,7 +228,7 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
         aDesiredSize.maxElementSize->width = onePixel;
       }
       else {
-        aDesiredSize.maxElementSize->width = aReflowState.computedWidth;
+        aDesiredSize.maxElementSize->width = aReflowState.mComputedWidth;
       }
     }
     else {

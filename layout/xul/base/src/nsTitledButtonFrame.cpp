@@ -723,15 +723,15 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredSize.height = info.prefSize.height;
 
   // if either the width or the height was not computed use our intrinsic size
-  if (aReflowState.computedWidth != NS_INTRINSICSIZE)
-    if (aReflowState.computedWidth > info.minSize.width)
-       aDesiredSize.width = aReflowState.computedWidth;
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
+    if (aReflowState.mComputedWidth > info.minSize.width)
+       aDesiredSize.width = aReflowState.mComputedWidth;
     else 
        aDesiredSize.width = info.minSize.width;
 
-  if (aReflowState.computedHeight != NS_INTRINSICSIZE)
-    if (aReflowState.computedHeight > info.minSize.height)
-       aDesiredSize.height = aReflowState.computedHeight;
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE)
+    if (aReflowState.mComputedHeight > info.minSize.height)
+       aDesiredSize.height = aReflowState.mComputedHeight;
     else 
        aDesiredSize.height = info.minSize.height;
 }

@@ -357,8 +357,8 @@ nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame,
   nsSize availSize(aAvailableWidth, aAvailableHeight);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aFrame,
                                    availSize);
-  kidReflowState.computedWidth = aAvailableWidth;
-  kidReflowState.computedHeight = aAvailableHeight;
+  kidReflowState.mComputedWidth = aAvailableWidth;
+  kidReflowState.mComputedHeight = aAvailableHeight;
       
    // Reflow child
   nsresult rv = ReflowChild(aFrame, aPresContext, aDesiredSize, kidReflowState, aStatus);
@@ -628,7 +628,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
 
 
   //Set the desired size for the button and display frame
-  if (NS_UNCONSTRAINEDSIZE == firstPassState.computedWidth) {
+  if (NS_UNCONSTRAINEDSIZE == firstPassState.mComputedWidth) {
     // A width has not been specified for the select so size the display area to
     // match the width of the longest item in the drop-down list. The dropdown
     // list has already been reflowed and sized to shrink around its contents above.
@@ -672,7 +672,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
       // Compute display width
     buttonFrame->GetRect(buttonRect);
     nscoord displayWidth;
-    displayWidth = firstPassState.computedWidth - buttonRect.width;
+    displayWidth = firstPassState.mComputedWidth - buttonRect.width;
 
      // Set the displayFrame to match the displayWidth computed above
     SetChildFrameSize(displayFrame, displayWidth, size.height);

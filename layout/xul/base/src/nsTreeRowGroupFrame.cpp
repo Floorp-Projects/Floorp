@@ -660,7 +660,7 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState, mScrollbar,
                                      kidAvailSize, aReason);
     
-    kidReflowState.computedHeight = kidAvailSize.height;
+    kidReflowState.mComputedHeight = kidAvailSize.height;
     rv = ReflowChild(mScrollbar, aPresContext, desiredSize, kidReflowState, aStatus);
     if (NS_FAILED(rv))
       return rv;

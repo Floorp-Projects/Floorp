@@ -639,14 +639,14 @@ nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  nsSize& aSize)
 {
-  if (aReflowState.computedWidth != NS_INTRINSICSIZE) {
-    aSize.width = aReflowState.computedWidth;
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) {
+    aSize.width = aReflowState.mComputedWidth;
   }
   else {
     aSize.width = CSS_NOTSET;
   }
-  if (aReflowState.computedHeight != NS_INTRINSICSIZE) {
-    aSize.height = aReflowState.computedHeight;
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
+    aSize.height = aReflowState.mComputedHeight;
   }
   else {
     aSize.height = CSS_NOTSET;

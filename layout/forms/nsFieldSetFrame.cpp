@@ -293,7 +293,7 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
                         nsReflowStatus&          aStatus)
 {
   // availSize could have unconstrained values, don't perform any addition on them
-  nsSize availSize(aReflowState.computedWidth, aReflowState.computedHeight);
+  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   
   // get our border and padding
   const nsMargin &borderPadding = aReflowState.mComputedBorderPadding;
@@ -307,8 +307,8 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
                                         mLegendFrame, nsSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE));
 
     // always give the legend as much size as it needs
-    legendReflowState.computedWidth = NS_INTRINSICSIZE;
-    legendReflowState.computedHeight = NS_INTRINSICSIZE;
+    legendReflowState.mComputedWidth = NS_INTRINSICSIZE;
+    legendReflowState.mComputedHeight = NS_INTRINSICSIZE;
 
     ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState, aStatus);
 
@@ -399,25 +399,25 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   mLegendFrame->SetRect(actualLegendRect);
     
   // Return our size and our result
-  if (aReflowState.computedHeight == NS_INTRINSICSIZE) {
+  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
      aDesiredSize.height = mLegendSpace + 
                            borderPadding.top +
                            aDesiredSize.height +
                            borderPadding.bottom;
   } else {
      nscoord min = borderPadding.top + borderPadding.bottom + mLegendRect.height;
-     aDesiredSize.height = aReflowState.computedHeight + borderPadding.top + borderPadding.bottom;
+     aDesiredSize.height = aReflowState.mComputedHeight + borderPadding.top + borderPadding.bottom;
      if (aDesiredSize.height < min)
          aDesiredSize.height = min;
   }
 
-  if (aReflowState.computedWidth == NS_INTRINSICSIZE) {
+  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
       aDesiredSize.width = borderPadding.left + 
                            aDesiredSize.width +
                            borderPadding.right;
   } else {
      nscoord min = borderPadding.left + borderPadding.right + mLegendRect.width;
-     aDesiredSize.width = aReflowState.computedWidth + borderPadding.left + borderPadding.right;
+     aDesiredSize.width = aReflowState.mComputedWidth + borderPadding.left + borderPadding.right;
      if (aDesiredSize.width < min)
          aDesiredSize.width = min;
   }

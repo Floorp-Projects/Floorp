@@ -441,7 +441,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 {
   mLineLayout = aLineLayout;
 
-  mSpaceManager = aReflowState.spaceManager;
+  mSpaceManager = aReflowState.mSpaceManager;
 
   // Translate into our content area and then save the 
   // coordinate system origin for later.
@@ -458,8 +458,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   // Compute content area width (the content area is inside the border
   // and padding)
   mUnconstrainedWidth = PR_FALSE;
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
-    mContentArea.width = aReflowState.computedWidth;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+    mContentArea.width = aReflowState.mComputedWidth;
   }
   else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
@@ -645,7 +645,7 @@ nsBlockReflowState::RecoverVerticalMargins(nsLineBox* aLine,
     }
 
     // Compute collapsed bottom margin
-    nscoord bottomMargin = reflowState.computedMargin.bottom;
+    nscoord bottomMargin = reflowState.mComputedMargin.bottom;
     bottomMargin =
       nsBlockReflowContext::MaxMargin(bottomMargin,
                                       aLine->mCarriedOutBottomMargin);
@@ -1148,7 +1148,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  nsLineLayout lineLayout(aPresContext, aReflowState.spaceManager,
+  nsLineLayout lineLayout(aPresContext, aReflowState.mSpaceManager,
                           &aReflowState, nsnull != aMetrics.maxElementSize);
   nsBlockReflowState state(aReflowState, &aPresContext, this, aMetrics,
                            &lineLayout);
@@ -1321,7 +1321,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   ListTag(stdout);
   printf(": availSize=%d,%d computed=%d,%d metrics=%d,%d carriedMargin=%d\n",
          aReflowState.availableWidth, aReflowState.availableHeight,
-         aReflowState.computedWidth, aReflowState.computedHeight,
+         aReflowState.mComputedWidth, aReflowState.mComputedHeight,
          aMetrics.width, aMetrics.height,
          aMetrics.mCarriedOutBottomMargin);
 #endif
@@ -1331,7 +1331,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 static PRBool
 HaveAutoWidth(const nsHTMLReflowState& aReflowState)
 {
-  if (NS_UNCONSTRAINEDSIZE == aReflowState.computedWidth) {
+  if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
     return PR_TRUE;
   }
   const nsStylePosition* pos = aReflowState.mStylePosition;
@@ -1401,10 +1401,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     nscoord minWidth = aState.mKidXMost + borderPadding.right;
     if (!HaveAutoWidth(aReflowState)) {
       // Use style defined width
-      aMetrics.width = borderPadding.left + aReflowState.computedWidth +
+      aMetrics.width = borderPadding.left + aReflowState.mComputedWidth +
         borderPadding.right;
       // XXX quote css1 section here
-      if ((0 == aReflowState.computedWidth) && (aMetrics.width < minWidth)) {
+      if ((0 == aReflowState.mComputedWidth) && (aMetrics.width < minWidth)) {
         aMetrics.width = minWidth;
       }
 
@@ -1492,9 +1492,9 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
 
     // Compute final height
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
       // Use style defined height
-      aMetrics.height = borderPadding.top + aReflowState.computedHeight +
+      aMetrics.height = borderPadding.top + aReflowState.mComputedHeight +
         borderPadding.bottom;
 
       // When style defines the height use it for the max-element-size
@@ -5706,7 +5706,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
 
   // Place the bullet now; use its right margin to distance it
   // from the rest of the frames in the line
-  nscoord x = - reflowState.computedMargin.right - aMetrics.width;
+  nscoord x = - reflowState.mComputedMargin.right - aMetrics.width;
 
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location.

@@ -203,8 +203,8 @@ nsSliderFrame::ReflowThumb(nsIPresContext&   aPresContext,
                                        thumbFrame, available);
 
     // always give the thumb as much size as it needs
-    thumbReflowState.computedWidth = computed.width;
-    thumbReflowState.computedHeight = computed.height;
+    thumbReflowState.mComputedWidth = computed.width;
+    thumbReflowState.mComputedHeight = computed.height;
 
     // subtract out the childs margin and border if computed
     const nsStyleSpacing* spacing;
@@ -217,11 +217,11 @@ nsSliderFrame::ReflowThumb(nsIPresContext&   aPresContext,
     spacing->GetBorderPadding(border);
     nsMargin total = margin + border;
 
-    if (thumbReflowState.computedWidth != NS_INTRINSICSIZE)
-       thumbReflowState.computedWidth -= total.left + total.right;
+    if (thumbReflowState.mComputedWidth != NS_INTRINSICSIZE)
+       thumbReflowState.mComputedWidth -= total.left + total.right;
 
-    if (thumbReflowState.computedHeight != NS_INTRINSICSIZE)
-       thumbReflowState.computedHeight -= total.top + total.bottom;
+    if (thumbReflowState.mComputedHeight != NS_INTRINSICSIZE)
+       thumbReflowState.mComputedHeight -= total.top + total.bottom;
 
     ReflowChild(thumbFrame, aPresContext, aDesiredSize, thumbReflowState, aStatus);
     
@@ -260,8 +260,8 @@ nsSliderFrame::Reflow(nsIPresContext&   aPresContext,
 
   nsHTMLReflowMetrics thumbSize(nsnull);
 
-  nsSize availableSize(isHorizontal ? NS_INTRINSICSIZE: aReflowState.computedWidth, isHorizontal ? aReflowState.computedHeight : NS_INTRINSICSIZE);
-  nsSize computedSize(isHorizontal ? NS_INTRINSICSIZE: aReflowState.computedWidth, isHorizontal ? aReflowState.computedHeight : NS_INTRINSICSIZE);
+  nsSize availableSize(isHorizontal ? NS_INTRINSICSIZE: aReflowState.mComputedWidth, isHorizontal ? aReflowState.mComputedHeight : NS_INTRINSICSIZE);
+  nsSize computedSize(isHorizontal ? NS_INTRINSICSIZE: aReflowState.mComputedWidth, isHorizontal ? aReflowState.mComputedHeight : NS_INTRINSICSIZE);
      
   ReflowThumb(aPresContext, thumbSize, aReflowState, aStatus, thumbFrame, availableSize, computedSize);
  
@@ -279,19 +279,19 @@ nsSliderFrame::Reflow(nsIPresContext&   aPresContext,
   aPresContext.GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
-  if (aReflowState.computedHeight == NS_INTRINSICSIZE) 
+  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) 
     aDesiredSize.height = isHorizontal ? thumbSize.height : 200*onePixel;
   else {
-    aDesiredSize.height = aReflowState.computedHeight;
+    aDesiredSize.height = aReflowState.mComputedHeight;
     if (aDesiredSize.height < thumbSize.height)
       aDesiredSize.height = thumbSize.height;
   }
 
   // set the width to the computed or if intrinsic then the width of the thumb.
-  if (aReflowState.computedWidth == NS_INTRINSICSIZE) 
+  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) 
     aDesiredSize.width = isHorizontal ? 200*onePixel : thumbSize.width;
   else {
-    aDesiredSize.width = aReflowState.computedWidth;
+    aDesiredSize.width = aReflowState.mComputedWidth;
     if (aDesiredSize.width < thumbSize.width)
       aDesiredSize.width = thumbSize.width;
   }
