@@ -51,6 +51,7 @@ my %force;
 @{$force{'Owner'}} = ();
 @{$force{'Reporter'}} = ();
 @{$force{'CClist'}} = ();
+@{$force{'Voter'}} = ();
 
 sub Lock {
     if ($::lockcount <= 0) {
@@ -515,8 +516,11 @@ sub NewProcessOneBug {
         @ccList = filterEmailGroup('CClist', \@currentEmailAttributes,
                                    $values{'cc'});
 
+        @voterlist = filterEmailGroup('Voter', \@currentEmailAttributes,
+                                      join(',',@voterlist));
+
         my @emailList = (@assigned_toList, @reporterList, 
-                         @qa_contactList, @ccList);
+                         @qa_contactList, @ccList, @voterlist);
 
         # only need one entry per person
         my @allEmail = ();
@@ -823,6 +827,16 @@ sub filterEmailGroup ($$$) {
 
                 my $matchName = 'email' . $emailGroup . $attribute;
                 
+                # **** Kludge... quick and dirty fix for 2.12
+                #      http://bugzilla.mozilla.org/show_bug.cgi?id=73665
+                # If this pref is new (it's been added since this user
+                # last updated their filtering prefs, $userFlags{$matchName}
+                # will be undefined.  This should be considered a match
+                # so that new prefs will default to 'on'
+                if (!defined($userFlags{$matchName})) {
+                    $detectedOn = 1;
+                }
+
                 while ((my $flagName, my $flagValue) = each %userFlags) {
                     
                     if ($flagName !~ /$emailGroup/) { 

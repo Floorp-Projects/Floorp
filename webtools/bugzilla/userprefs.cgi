@@ -45,7 +45,8 @@ my @emailGroups = (
         'Owner',        'the Bug Owner',
         'Reporter',     'the Reporter',
         'QAcontact',    'the QA contact',
-        'CClist',       'on the CC list'
+        'CClist',       'on the CC list',
+        'Voter',        'a Voter'
         );
 
 my @emailFlags = (
@@ -95,8 +96,16 @@ my $defaultEmailFlagString =
         'emailCClistResolved~'       . 'on~' .
         'emailCClistKeywords~'       . 'on~' .
         'emailCClistCC~'             . 'on~' .
-        'emailCClistOther~'          . 'on' ;
+        'emailCClistOther~'          . 'on~' .
 
+        'emailVoterRemoveme~'        . 'on~' .
+        'emailVoterComments~'        . 'on~' .
+        'emailVoterAttachemnts~'     . 'on~' .
+        'emailVoterStatus~'          . 'on~' .
+        'emailVoterResolved~'        . 'on~' .
+        'emailVoterKeywords~'        . 'on~' .
+        'emailVoterCC~'              . 'on~' .
+        'emailVoterOther~'           . 'on' ;
 
 sub EmitEntry {
     my ($description, $entry) = (@_);
@@ -406,6 +415,11 @@ sub printEmailOption ($$\%) {
 
     # if the db value is 'on', then mark that checkbox
     if ($$refCurrentFlags{"email$optionName"} eq 'on'){
+        $value = 'CHECKED';
+    }
+
+    # **** Kludge ... also mark on if the value in $$refCurrentFlags in undef
+    if (!defined($$refCurrentFlags{"email$optionName"})) {
         $value = 'CHECKED';
     }
 
