@@ -4,43 +4,27 @@
 
 use Getopt::Std;
 use Cwd;
+use File::stat;
+use Time::localtime;
 
-sub RemoveAll
-{
-    my ($target) = @_;
-    my $next = "";
-    my $depth = 0;
-	if (-e $target)
-	{
-		if ( -d $target ) {
-			chdir($target);
-			foreach ( <*> ) {
-				$next = $_;
-				if (-d $next ) {
-					RemoveAll($next);
-					rmdir($next);
-				} else {
-					unlink($next);
-				}
-			}
-			$depth = ( $target =~ tr/\/// ) + 1; 
-			for ($i = 0; $i < $depth; $i++) { chdir(".."); }
-			rmdir($target);  
-		} else {
-			unlink($target);
-		}
-	}
-}
+@cleanupList = ();
+$IS_DIR = 1;
+$IS_FILE = 2;
 
-sub cleanup
+sub Cleanup
 {
-    my (%removeList) = @_;
-    my $target = "";
-    print "+++ removing temp files\n";
-    foreach $target (keys %removeList) {
-		if ($target) {
-			RemoveAll($target);
-		}
+    while (true) {
+        my $isDir = pop(@cleanupList);
+        if ($isDir == undef) {
+            return 0;
+        }
+        my $path = pop(@cleanupList);
+        if ($isDir == $IS_DIR) {
+            rmdir($path) || die "can't remove dir $path: $!";
+        }
+        else {
+            unlink($path) || die "can't remove file $path: $!";
+        }
     }
 }
 
@@ -50,29 +34,34 @@ sub JarIt
     system "zip -u $jarfile $args\n";
     my $cwd = cwd();
     print "+++ jarred $cwd => $jarfile\n";
+    Cleanup();
 }
 
 sub MkDirs
 {
-    my ($path) = @_; 
-
+    my ($path, $containingDir) = @_;
+    #print "MkDirs $path $containingDir\n";
     if ($path =~ /([\w\d.\-]+)[\\\/](.*)/) {
         my $dir = $1;
         $path = $2;
-
         if (!-e $dir) {
+            #print "making dir $containingDir/$dir\n";
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-        } 
+            push(@cleanupList, "$containingDir/$dir");
+            push(@cleanupList, $IS_DIR);
+        }
         chdir $dir;
-        MkDirs($path);
+        MkDirs($path, "$containingDir/$dir");
         chdir "..";
     }
     else {
         my $dir = $path;
-        if ($dir eq "") { return 0; }
+        if ($dir eq "") { return 0; } 
         if (!-e $dir) {
+            #print "making dir $containingDir/$dir\n";
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-            $created = 1;
+            push(@cleanupList, "$containingDir/$dir");
+            push(@cleanupList, $IS_DIR);
         }
     }
 }
@@ -80,6 +69,7 @@ sub MkDirs
 sub CopyFile
 {
     my ($from, $to) = @_;
+    #print "copying $from to $to\n";
     open(OUT, ">$to") || die "error: can't open '$to': $!";
     open(IN, "<$from") || die "error: can't open '$from': $!";
     while (<IN>) {
@@ -87,6 +77,14 @@ sub CopyFile
     }
     close(IN) || die "error: can't close '$from': $!";
     close(OUT) || die "error: can't close '$to': $!";
+
+    # fix the mod date so we don't jar everything (is this faster than just jarring everything?)
+    my $atime = stat($from)->atime || die $!;
+    my $mtime = stat($from)->mtime || die $!;
+    utime($atime, $mtime, $to);
+
+    push(@cleanupList, "$to");
+    push(@cleanupList, $IS_FILE);
 }
 
 sub EnsureFileInDir
@@ -111,24 +109,8 @@ sub EnsureFileInDir
         if (!-e $file) {
             die "error: file '$file' doesn't exist\n";
         }
-        MkDirs($dir);
+        MkDirs($dir, ".");
         CopyFile($file, $destPath);
-
-        if ( $dir )
-        {
-            my $i = 0;
-            my $TLD = "";
-            @dirList = split(/\//,$dir);
-            @srcList = split(/\//,$srcPath);
-			while ( $srcList[$i] eq $dirList[$i] ) {
-				$TLD = "$TLD$dirList[$i]/";
-				$i++;
-			} 
-			$TLD = "$TLD$dirList[$i]";
-            $removeList{$TLD} = 1;
-        } else {
-            $removeList{$destPath} = 1;
-        }
         return 1;
     }
     return 0;
@@ -148,8 +130,6 @@ while (<>) {
         my $jarfile = "$destPath/$1"; 
 
         my $args = "";
-        %removeList = "";
-
         while (<>) {
             if (/^\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
                 my $dest = $1;
@@ -165,13 +145,12 @@ while (<>) {
                 # end with blank line
                 last;
             } else {
-                JarIt($jarfile, $args);
-                cleanup(%removeList);
+        	JarIt($jarfile, $args);
                 goto start;
             }
         }
         JarIt($jarfile, $args);
-        cleanup(%removeList);
+
     } elsif (/^\s*\#.*$/) {
         # skip comments
     } elsif (/^\s*$/) {
