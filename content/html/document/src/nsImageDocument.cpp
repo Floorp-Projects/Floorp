@@ -37,6 +37,14 @@
 #include "nsIChannel.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
+// Needed for Localization
+#include "nsXPIDLString.h"
+#include "nsIStringBundle.h"
+
+#define NSIMAGEDOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/ImageDocument.properties"
+static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+
+// done L10N
 
 // XXX TODO:
 
@@ -371,8 +379,6 @@ nsImageDocument::EndLayout(nsISupports *ctxt,
 //       and it updates the titlebar
 nsresult nsImageDocument::UpdateTitle( void )
 {
-  nsString titleStr;
-
 #ifdef USE_EXTENSION_FOR_TYPE
   // XXX TEMPORARY XXX
   // We want to display the image type, however there is no way to right now
@@ -393,22 +399,40 @@ nsresult nsImageDocument::UpdateTitle( void )
     NS_IF_RELEASE(pURL);
   }
 #endif
-
-  // append the image information...
-  titleStr.AppendWithConversion( " Image" );
-  if (mImageRequest) {
-    PRUint32 width, height;
-    mImageRequest->GetNaturalDimensions(&width, &height);
-    // if we got a valid size (sometimes we do not) then display it
-    if (width != 0 && height != 0){
-      titleStr.AppendWithConversion( " " );
-      titleStr.AppendInt((PRInt32)width);
-      titleStr.AppendWithConversion("x");
-      titleStr.AppendInt((PRInt32)height);
-      titleStr.AppendWithConversion(" pixels");
+ 
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv; 
+  // Create a bundle for the localization
+  NS_WITH_SERVICE(nsIStringBundleService, stringService, kStringBundleServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && stringService) {
+    nsCOMPtr<nsILocale> locale = nsnull;
+    rv = stringService->CreateBundle(NSIMAGEDOCUMENT_PROPERTIES_URI, locale, getter_AddRefs(bundle));
+  }
+  if (NS_SUCCEEDED(rv) && bundle) {
+    nsAutoString key;
+    nsXPIDLString valUni;
+    if (mImageRequest) {
+      PRUint32 width, height;
+      mImageRequest->GetNaturalDimensions(&width, &height);
+      // if we got a valid size (sometimes we do not) then display it
+      if (width != 0 && height != 0){
+        key.AssignWithConversion("ImageTitleWithDimensions");
+        nsAutoString widthStr; widthStr.AppendInt(width);
+        nsAutoString heightStr; heightStr.AppendInt(height);
+        const PRUnichar *formatStrings[2]  = {widthStr.GetUnicode(), heightStr.GetUnicode()};
+        rv = bundle->FormatStringFromName(key.GetUnicode(), formatStrings, 2, getter_Copies(valUni));
+      }
     }
-  } 
-  // set it on the document
-  SetTitle(titleStr);
+    if (nsLiteralString(valUni).IsEmpty()) {
+      key.AssignWithConversion("ImageTitleWithoutDimensions");
+      rv = bundle->GetStringFromName(key.GetUnicode(), getter_Copies(valUni));
+    }
+    if (NS_SUCCEEDED(rv) && valUni) {
+      nsString titleStr;
+      titleStr.Assign(valUni);
+      // set it on the document
+      SetTitle(titleStr);
+    }
+  }
   return NS_OK;
 }
