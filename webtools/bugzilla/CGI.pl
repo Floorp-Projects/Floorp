@@ -28,9 +28,13 @@ use strict;
 # use Carp;                       # for confess
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
+
+# commented out the following snippet of code. this tosses errors into the
+# CGI if you are perl 5.6, and doesn't if you have perl 5.003. 
 # We want to check for the existence of the LDAP modules here.
-eval "use Mozilla::LDAP::Conn";
-my $have_ldap = $@ ? 0 : 1;
+# eval "use Mozilla::LDAP::Conn";
+# my $have_ldap = $@ ? 0 : 1;
+
 
 sub CGI_pl_sillyness {
     my $zz;
@@ -674,17 +678,19 @@ sub confirm_login {
               defined $::FORM{"LDAP_password"}) {
        # If we're using LDAP for login, we've got an entirely different
        # set of things to check.
+
+# see comment at top of file near eval
        # First, if we don't have the LDAP modules available to us, we can't
        # do this.
-       if(!$have_ldap) {
-         print "Content-type: text/html\n\n";
-         PutHeader("LDAP not enabled");
-         print "The necessary modules for LDAP login are not installed on ";
-         print "this machine.  Please send mail to ".Param("maintainer");
-         print " and notify him of this problem.\n";
-         PutFooter();
-         exit;
-       }
+#       if(!$have_ldap) {
+#         print "Content-type: text/html\n\n";
+#         PutHeader("LDAP not enabled");
+#         print "The necessary modules for LDAP login are not installed on ";
+#         print "this machine.  Please send mail to ".Param("maintainer");
+#         print " and notify him of this problem.\n";
+#         PutFooter();
+#         exit;
+#       }
 
        # Next, we need to bind anonymously to the LDAP server.  This is
        # because we need to get the Distinguished Name of the user trying
