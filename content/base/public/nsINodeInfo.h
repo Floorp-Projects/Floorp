@@ -67,6 +67,7 @@ class nsINodeInfoManager;
 class nsINameSpaceManager;
 class nsIDocument;
 class nsIURI;
+class nsIPrincipal;
 
 
 // IID for the nsINodeInfo interface
@@ -287,6 +288,11 @@ public:
    */
   NS_IMETHOD GetDocument(nsIDocument*& aDocument) const = 0;
 
+  /*
+   * Retrieve a pointer to the principal for the document of this node info.
+   */
+  NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal) const = 0;
+
 protected:
   /*
    * nsNodeInfoInner is used for two things:
@@ -368,15 +374,15 @@ public:
   NS_IMETHOD GetDocument(nsIDocument*& aDocument) = 0;
 
   /**
-   * Gets the url of the document associated with this.
+   * Gets the principal of the document associated with this.
    */
-  NS_IMETHOD GetDocumentURL(nsIURI** aURL) = 0;
+  NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal) = 0;
   
   /**
-   * Sets the url of the nodeinfo manager. This should only be called when
-   * this nodeinfo manager isn't connected to an nsIDocument.
+   * Sets the principal of the nodeinfo manager. This should only be called
+   * when this nodeinfo manager isn't connected to an nsIDocument.
    */
-  NS_IMETHOD SetDocumentURL(nsIURI* aURL) = 0;
+  NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;
   
 };
 

@@ -218,6 +218,13 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript] void checkSameOriginURI(in nsIURI aSourceURI,
                                        in nsIURI aTargetURI);
 
+    /**
+     * Returns OK if aSourcePrincipal and aTargetPrincipal
+     * have the same "origin" (scheme, host, and port).
+     */
+    [noscript] void checkSameOriginPrincipal(in nsIPrincipal aSourcePrincipal,
+                                             in nsIPrincipal aTargetPrincipal);
+
 };
 
 %{C++
