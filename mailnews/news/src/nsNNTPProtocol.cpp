@@ -25,6 +25,8 @@
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 
+#include "nsCOMPtr.h"
+
 // mscott: this is a short term hack for the demo...we should be able to remove this webshell
 // dependency at a later date....
 #include "nsIWebShell.h"
@@ -475,7 +477,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   char *messageID = 0;
   char *commandSpecificData = 0;
   PRBool cancel = FALSE;
-  nsINNTPNewsgroupPost *message=NULL;
+  nsCOMPtr <nsINNTPNewsgroupPost> message;
   //char *message_id = 0;
 
   nsresult rv = NS_OK;
@@ -584,7 +586,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
      if and only if this message has a message to post
      Cancel messages are created later with a ?cancel URL
   */
-  rv = m_runningURL->GetMessageToPost(&message);
+  rv = m_runningURL->GetMessageToPost(getter_AddRefs(message));
   if (NS_SUCCEEDED(rv) && message)
 	{
 #ifdef UNREADY_CODE
@@ -1071,12 +1073,10 @@ PRInt32 nsNNTPProtocol::SendData(const char * dataBuffer)
 		{
 			// notify the consumer that data has arrived
 			// HACK ALERT: this should really be m_runningURL once we have NNTP url support...
-			nsIInputStream *inputStream = NULL;
-			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) &inputStream);
-			if (inputStream)
-			{
+			nsCOMPtr <nsIInputStream> inputStream;
+			m_outputStream->QueryInterface(nsIInputStream::GetIID() , getter_AddRefs(inputStream));
+			if (inputStream) {
 				m_outputConsumer->OnDataAvailable(m_runningURL, inputStream, writeCount);
-				NS_RELEASE(inputStream);
 			}
 			NNTP_LOG_WRITE(dataBuffer);  // write the data out to our log file...
 			status = 1; // mscott: we need some type of MK_OK? MK_SUCCESS? Arrgghhh
@@ -2816,7 +2816,7 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	}
 
 #ifdef DEBUG_sspitzer
-    printf("Chunk will be (%ld-%ld)\n", m_firstArticle, m_lastArticle);
+    printf("Chunk will be (%d-%d)\n", m_firstArticle, m_lastArticle);
 #endif
     
 	m_articleNumber = m_firstArticle;
@@ -2848,7 +2848,7 @@ PRInt32 nsNNTPProtocol::XoverSend()
 
     PR_snprintf(outputBuffer, 
 				OUTPUT_BUFFER_SIZE,
-				"XOVER %ld-%ld" CRLF, 
+				"XOVER %d-%d" CRLF, 
 				m_firstArticle, 
 				m_lastArticle);
 
@@ -3095,10 +3095,21 @@ PRInt32 nsNNTPProtocol::PostData()
     /* returns 0 on done and negative on error
      * positive if it needs to continue.
      */
-    nsresult rv;
-
-    nsINNTPNewsgroupPost *message;
-    rv = m_runningURL->GetMessageToPost(&message);
+#ifdef DEBUG_sspitzer
+    printf("nsNNTPProtocol::PostData()\n");
+#endif
+    nsresult rv = NS_OK;
+    
+    const nsFilePath * filePath = nsnull;
+    rv = m_runningURL->GetPostMessageFile(&filePath);
+    if (NS_SUCCEEDED(rv) && filePath) {
+#ifdef DEBUG_sspitzer
+        printf("post this file: %s\n",(const char *)filePath);
+#endif
+    }
+    
+    nsCOMPtr <nsINNTPNewsgroupPost> message;
+    rv = m_runningURL->GetMessageToPost(getter_AddRefs(message));
     if (NS_SUCCEEDED(rv)) {
         char *fullMessage;
         
@@ -3474,24 +3485,24 @@ PRInt32 nsNNTPProtocol::Cancel()
   rv = m_newsHost->QueryExtension("CANCELCHK",&cancelchk);
   if (NS_SUCCEEDED(rv) && cancelchk)
   {
-    nsIMsgHeaderParser *parser;
+    nsCOMPtr<nsIMsgHeaderParser> parser;
     PRBool ok = PR_FALSE;
     NS_DEFINE_CID(kCHeaderParser, NS_MSGHEADERPARSER_CID);
                   
     rv = nsComponentManager::CreateInstance(kCHeaderParser,
                                             nsnull,
                                             nsIMsgHeaderParser::IID(),
-                                            (void **)&parser);
+                                            getter_AddRefs(parser));
     if (NS_SUCCEEDED(rv)) 
 	{
-		char *us, *them;
+		char *us = nsnull;
+        char *them = nsnull;
 		nsresult rv1 = parser->ExtractHeaderAddressMailboxes(nsnull, from, &us);
 		nsresult rv2 = parser->ExtractHeaderAddressMailboxes(nsnull, old_from, &them);
 		ok = (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && !PL_strcasecmp(us, them));
 
 		if (NS_SUCCEEDED(rv1)) PR_Free(us);
 		if (NS_SUCCEEDED(rv2)) PR_Free(them);
-		NS_RELEASE(parser);
     }
 	if (!ok)
 	{
@@ -3885,6 +3896,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
           if (m_typeWanted == NEW_GROUPS &&
               NS_SUCCEEDED(rv) && xactive)
 			{
+                // todo:  use nsCOMPtr
                 nsINNTPNewsgroup* old_newsgroup = m_newsgroup;
                 char *groupName;
                 
