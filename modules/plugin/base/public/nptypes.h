@@ -60,10 +60,12 @@
   #endif
 #elif defined(bsdi)
   /*
-   * BSD/OS ships sys/types.h that define [u]int32_t, but no header
-   * that defines bool for C
+   * BSD/OS ships sys/types.h that define int32_t and u_int32_t, but
+   * no header that defines uint32_t, nor bool (for C)
    */
   #include <sys/types.h>
+
+  typedef u_int32_t uint32_t;
 
   #if !defined(__cplusplus)
     typedef int bool;
