@@ -226,7 +226,8 @@ public:
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
-  static nsresult CreatePluginHost(void);
+  nsresult CreatePluginHost(PRBool aAllowPlugins);
+  nsresult DestroyPluginHost(void);
 
 protected:
   nsIScriptGlobalObject *mScriptGlobal;
@@ -262,7 +263,7 @@ protected:
 
   static nsIPluginHost    *mPluginHost;
   static nsIPluginManager *mPluginManager;
-  static PRBool           mPluginInited;
+  static PRUint32          mPluginInitCnt;
 };
 
 //----------------------------------------------------------------------
@@ -298,29 +299,52 @@ static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 
 nsIPluginHost *nsWebShell::mPluginHost = nsnull;
 nsIPluginManager *nsWebShell::mPluginManager = nsnull;
-PRBool nsWebShell::mPluginInited = PR_FALSE;
+PRUint32 nsWebShell::mPluginInitCnt = 0;
 
-nsresult nsWebShell::CreatePluginHost(void)
+nsresult nsWebShell::CreatePluginHost(PRBool aAllowPlugins)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
 
-  if (nsnull == mPluginManager)
+  if ((PR_TRUE == aAllowPlugins) && (0 == mPluginInitCnt))
   {
-    rv = nsRepository::CreateInstance(kCPluginHostCID, nsnull,
-                                      kIPluginManagerIID,
-                                      (void**)&mPluginManager);
-    if (NS_OK == rv)
+    if (nsnull == mPluginManager)
     {
-      if (NS_OK == mPluginManager->QueryInterface(kIPluginHostIID,
-                                                  (void **)&mPluginHost))
+      rv = nsRepository::CreateInstance(kCPluginHostCID, nsnull,
+                                        kIPluginManagerIID,
+                                        (void**)&mPluginManager);
+      if (NS_OK == rv)
       {
-        mPluginHost->Init();
-        mPluginHost->LoadPlugins();
+        if (NS_OK == mPluginManager->QueryInterface(kIPluginHostIID,
+                                                    (void **)&mPluginHost))
+        {
+          mPluginHost->Init();
+          mPluginHost->LoadPlugins();
+        }
       }
     }
   }
 
+  mPluginInitCnt++;
+
   return rv;
+}
+
+nsresult nsWebShell::DestroyPluginHost(void)
+{
+  mPluginInitCnt--;
+
+  NS_ASSERTION(!(mPluginInitCnt < 0), "underflow in plugin host destruction");
+
+  if (0 == mPluginInitCnt)
+  {
+    if (nsnull != mPluginHost)
+      mPluginHost->Destroy();
+
+    NS_IF_RELEASE(mPluginManager);
+    NS_IF_RELEASE(mPluginHost);
+  }
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -374,6 +398,8 @@ nsWebShell::~nsWebShell()
     nsString* s = (nsString*) mHistory.ElementAt(i);
     delete s;
   }
+
+  DestroyPluginHost();
 }
 
 void
@@ -517,11 +543,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   //not the nsIWebShell interfaces. this is a hack. MMP
   nsRect aBounds(x,y,w,h);
 
-  if ((PR_TRUE == aAllowPlugins) && (PR_FALSE == mPluginInited))
-    CreatePluginHost();
-
-  //never attempt to initialize plugins again...
-  mPluginInited = PR_TRUE;
+  CreatePluginHost(aAllowPlugins);
 
   mScrollPref = aScrolling;
 

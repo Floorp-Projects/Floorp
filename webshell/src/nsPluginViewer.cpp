@@ -35,6 +35,7 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIContentViewerIID, NS_ICONTENT_VIEWER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+static NS_DEFINE_IID(kIPluginInstanceOwnerIID, NS_IPLUGININSTANCEOWNER_IID);
 
 class PluginViewerImpl;
 
@@ -58,6 +59,42 @@ public:
 
   PluginViewerImpl* mViewer;
   nsIStreamListener* mNextStream;
+};
+
+class nsPluginInstanceOwner : public nsIPluginInstanceOwner {
+public:
+  nsPluginInstanceOwner();
+  ~nsPluginInstanceOwner();
+
+  NS_DECL_ISUPPORTS
+
+  //nsIPluginInstanceOwner interface
+
+  NS_IMETHOD SetInstance(nsIPluginInstance *aInstance);
+
+  NS_IMETHOD GetInstance(nsIPluginInstance *&aInstance);
+
+  NS_IMETHOD GetWindow(nsPluginWindow *&aWindow);
+
+  NS_IMETHOD GetMode(nsPluginMode *aMode);
+
+  NS_IMETHOD GetAttributes(PRUint16& n, const char*const*& names,
+                           const char*const*& values);
+
+  NS_IMETHOD GetAttribute(const char* name, const char* *result);
+
+  NS_IMETHOD CreateWidget(void);
+
+  NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData);
+
+  //locals
+
+  NS_IMETHOD Init(nsIWidget *aWindow);
+
+private:
+  nsPluginWindow    mPluginWindow;
+  nsIPluginInstance *mInstance;
+  nsIWidget         *mWindow;       //we do not addref this...
 };
 
 class PluginViewerImpl : public nsIContentViewer
@@ -93,9 +130,8 @@ public:
 
   ~PluginViewerImpl();
 
-  nsresult CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds);
-
-  void DestroyPlugin();
+  nsresult CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
+                        nsIStreamListener*& aResult);
 
   nsresult MakeWindow(nsNativeWidget aParent,
                       nsIDeviceContext* aDeviceContext,
@@ -108,10 +144,9 @@ public:
 
   nsIWidget* mWindow;
   nsIContentViewerContainer* mContainer;
-  nsPluginWindow mPluginWindow;
-  nsIPluginInstance *mInstance;
   nsIURL* mURL;
   nsString mContentType;
+  nsPluginInstanceOwner *mOwner;
 };
 
 //----------------------------------------------------------------------
@@ -165,15 +200,12 @@ PluginViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 PluginViewerImpl::~PluginViewerImpl()
 {
-  NS_IF_RELEASE(mContainer);
-  if (nsnull != mInstance) {
-    DestroyPlugin();
-    NS_RELEASE(mInstance);
-  }
+  NS_IF_RELEASE(mOwner);
   if (nsnull != mWindow) {
     mWindow->Destroy();
     NS_RELEASE(mWindow);
   }
+  NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mURL);
 }
 
@@ -217,6 +249,13 @@ PluginViewerImpl::Init(nsNativeWidget aNativeParent,
                        nsScrollPreference aScrolling)
 {
   nsresult rv = MakeWindow(aNativeParent, aDeviceContext, aBounds);
+  if (NS_OK == rv) {
+    mOwner = new nsPluginInstanceOwner();
+    if (nsnull != mOwner) {
+      NS_ADDREF(mOwner);
+      rv = mOwner->Init(mWindow);
+    }
+  }
   return rv;
 }
 
@@ -239,7 +278,7 @@ PluginViewerImpl::StartLoad(nsIURL* aURL, const char* aContentType,
   if (NS_OK == rv) {
     nsRect r;
     mWindow->GetBounds(r);
-    rv = CreatePlugin(host, nsRect(0, 0, r.width, r.height));
+    rv = CreatePlugin(host, nsRect(0, 0, r.width, r.height), aResult);
     NS_RELEASE(host);
   }
 
@@ -247,41 +286,37 @@ PluginViewerImpl::StartLoad(nsIURL* aURL, const char* aContentType,
 }
 
 nsresult
-PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds)
+PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
+                               nsIStreamListener*& aResult)
 {
   nsresult rv = NS_OK;
 
-  mPluginWindow.window = (nsPluginPort *)
-    mWindow->GetNativeData(NS_NATIVE_WINDOW);
-  mPluginWindow.x = aBounds.x;
-  mPluginWindow.y = aBounds.y;
-  mPluginWindow.width = aBounds.width;
-  mPluginWindow.height = aBounds.height;
-  mPluginWindow.clipRect.top = aBounds.y;
-  mPluginWindow.clipRect.left = aBounds.x;
-  mPluginWindow.clipRect.bottom = aBounds.YMost();
-  mPluginWindow.clipRect.right = aBounds.XMost();
-#ifdef XP_UNIX
-  mPluginWindow.ws_info = nsnull;   //XXX need to figure out what this is. MMP
-#endif
-  //this will change with support for windowless plugins... MMP
-  mPluginWindow.type = nsPluginWindowType_Window;
+  if (nsnull != mOwner) {
+    nsPluginWindow  *win;
 
-  nsAutoString fullurl;
-  mURL->ToString(fullurl);
-  char* ct = mContentType.ToNewCString();
-  rv = aHost->InstantiatePlugin(ct, &mInstance, &mPluginWindow, fullurl);
-  delete ct;
+    mOwner->GetWindow(win);
+
+    win->x = aBounds.x;
+    win->y = aBounds.y;
+    win->width = aBounds.width;
+    win->height = aBounds.height;
+    win->clipRect.top = aBounds.y;
+    win->clipRect.left = aBounds.x;
+    win->clipRect.bottom = aBounds.YMost();
+    win->clipRect.right = aBounds.XMost();
+  #ifdef XP_UNIX
+    win->ws_info = nsnull;   //XXX need to figure out what this is. MMP
+  #endif
+
+    nsAutoString fullurl;
+    mURL->ToString(fullurl);
+
+    char* ct = mContentType.ToNewCString();
+    rv = aHost->InstantiatePlugin(ct, fullurl, aResult, mOwner);
+    delete ct;
+  }
 
   return rv;
-}
-
-void
-PluginViewerImpl::DestroyPlugin()
-{
-  if (nsnull != mInstance) {
-    mInstance->Destroy();
-  }
 }
 
 static nsEventStatus PR_CALLBACK
@@ -323,7 +358,24 @@ PluginViewerImpl::SetBounds(const nsRect& aBounds)
   if (nsnull != mWindow) {
     // Don't have the widget repaint. Layout will generate repaint requests
     // during reflow
+    nsIPluginInstance *inst;
     mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_FALSE);
+    if ((nsnull != mOwner) && (NS_OK == mOwner->GetInstance(inst))) {
+      nsPluginWindow  *win;
+      if (NS_OK == mOwner->GetWindow(win)) {
+        win->x = aBounds.x;
+        win->y = aBounds.y;
+        win->width = aBounds.width;
+        win->height = aBounds.height;
+        win->clipRect.top = aBounds.y;
+        win->clipRect.left = aBounds.x;
+        win->clipRect.bottom = aBounds.YMost();
+        win->clipRect.right = aBounds.XMost();
+
+        inst->SetWindow(win);
+      }
+      NS_RELEASE(inst);
+    }
   }
 }
 
@@ -332,7 +384,22 @@ PluginViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   if (nsnull != mWindow) {
+    nsIPluginInstance *inst;
     mWindow->Move(aX, aY);
+    if ((nsnull != mOwner) && (NS_OK == mOwner->GetInstance(inst))) {
+      nsPluginWindow  *win;
+      if (NS_OK == mOwner->GetWindow(win)) {
+        win->x = aX;
+        win->y = aY;
+        win->clipRect.bottom = (win->clipRect.bottom - win->clipRect.top) + aY;
+        win->clipRect.right = (win->clipRect.right - win->clipRect.left) + aX;
+        win->clipRect.top = aY;
+        win->clipRect.left = aX;
+
+        inst->SetWindow(win);
+      }
+      NS_RELEASE(inst);
+    }
   }
 }
 
@@ -433,4 +500,113 @@ PluginListener::OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
     return NS_ERROR_FAILURE;
   }
   return mNextStream->OnDataAvailable(aURL, aStream, aCount);
+}
+
+//----------------------------------------------------------------------
+
+nsPluginInstanceOwner :: nsPluginInstanceOwner()
+{
+  memset(&mPluginWindow, 0, sizeof(mPluginWindow));
+  mInstance = nsnull;
+  mWindow = nsnull;
+}
+
+nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
+{
+  if (nsnull != mInstance)
+  {
+    mInstance->Stop();
+    mInstance->Destroy();
+    NS_RELEASE(mInstance);
+  }
+}
+
+NS_IMPL_ISUPPORTS(nsPluginInstanceOwner, kIPluginInstanceOwnerIID)
+
+NS_IMETHODIMP nsPluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
+{
+  NS_IF_RELEASE(mInstance);
+  mInstance = aInstance;
+  NS_IF_ADDREF(mInstance);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetInstance(nsIPluginInstance *&aInstance)
+{
+  NS_IF_ADDREF(mInstance);
+  aInstance = mInstance;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetWindow(nsPluginWindow *&aWindow)
+{
+  aWindow = &mPluginWindow;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetMode(nsPluginMode *aMode)
+{
+  *aMode = nsPluginMode_Full;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetAttributes(PRUint16& n, const char*const*& names,
+                                                     const char*const*& values)
+{
+  n = 0;
+  names = nsnull;
+  values = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetAttribute(const char* name, const char* *result)
+{
+  name = nsnull;
+  result = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: CreateWidget(void)
+{
+  PRBool    windowless;
+
+  if (nsnull != mInstance)
+  {
+    mInstance->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
+
+    if (PR_TRUE == windowless)
+    {
+      mPluginWindow.window = nsnull;    //XXX this needs to be a HDC
+      mPluginWindow.type = nsPluginWindowType_Drawable;
+    }
+    else if (nsnull != mWindow)
+    {
+      mPluginWindow.window = (nsPluginPort *)mWindow->GetNativeData(NS_NATIVE_WINDOW);
+      mPluginWindow.type = nsPluginWindowType_Window;
+    }
+    else
+      return NS_ERROR_FAILURE;
+  }
+  else
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTarget, void *aPostData)
+{
+printf("instance owner geturl called\n");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: Init(nsIWidget *aWindow)
+{
+  //do not addref
+  mWindow = aWindow;
+
+  return NS_OK;
 }
