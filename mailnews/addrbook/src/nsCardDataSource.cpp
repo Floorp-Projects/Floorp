@@ -91,6 +91,7 @@ peq(nsIRDFResource* r1, nsIRDFResource* r2)
   }
 }
 
+#if 0
 static PRBool
 peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 {
@@ -131,6 +132,7 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 		return(peq(r1, r2));
 	}
 }
+#endif 
 
 void nsABCardDataSource::createNode(nsString& str, nsIRDFNode **node)
 {
