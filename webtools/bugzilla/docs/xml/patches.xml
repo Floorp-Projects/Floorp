@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
+<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
 
 <appendix id="patches" xreflabel="Useful Patches and Utilities for Bugzilla">
   <title>Useful Patches and Utilities for Bugzilla</title>		
@@ -365,6 +365,16 @@ else
             can cause confusion in CVS and other mozilla.org utilities.
           </para>
         </listitem>
+	<listitem>
+	  <para>
+	    Schema Changes
+	  </para>
+	  <para>
+	    If you make schema changes, you should modify <filename>sanitycheck.cgi</filename>
+	    to support the new schema.  All referential columns should be checked.
+	  </para>
+	</listitem>
+
         <listitem>
           <para>
             Variable Names
