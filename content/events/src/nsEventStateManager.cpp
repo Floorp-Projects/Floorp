@@ -1089,6 +1089,14 @@ nsEventStateManager :: FireContextClick ( )
         allowedToDispatch = PR_FALSE;
       else if ( tag == nsHTMLAtoms::applet || tag == nsHTMLAtoms::object || tag == nsHTMLAtoms::embed )
         allowedToDispatch = PR_FALSE;
+      else if ( tag == nsXULAtoms::toolbarbutton ) {
+        // a <toolbarbutton> that has the container attribute set will already have its
+        // own dropdown. 
+        nsAutoString container;
+        lastContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
+        if ( container.Length() )
+          allowedToDispatch = PR_FALSE;
+      }
     
       if ( allowedToDispatch ) {
         // stop selection tracking, we're in control now
