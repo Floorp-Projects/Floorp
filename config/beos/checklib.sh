@@ -46,7 +46,7 @@ fi
 
 # generate stub
 
-echo "stub(){return(0);}">${libname}.c
+echo "int stub(){return(0);}">${libname}.c
 c++ -nostart ${libname}.c -olib${libname}.so
 rm ${libname}.c
 
