@@ -2029,7 +2029,7 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 	print("Populating duplicates table...\n");
 	
 	$sth = $dbh->prepare("SELECT longdescs.bug_id, thetext FROM longdescs left JOIN bugs using(bug_id) WHERE (thetext " . 
-	        "regexp 'This bug has been marked as a duplicate of') AND (resolution = 'DUPLICATE') ORDER" .
+	        "regexp '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') AND (resolution = 'DUPLICATE') ORDER" .
 			" BY longdescs.bug_when");
 	$sth->execute();
 
@@ -2044,9 +2044,9 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 
 	foreach $key (keys(%dupes))
 	{
-		$dupes{$key} =~ s/.*This bug has been marked as a duplicate of (\d{1,5}).*/$1/sm;
+		$dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
 		$dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
-		#										 BugItsADupeOf   Dupe
+		#					 BugItsADupeOf   Dupe
 	}
 	
 	$::regenerateshadow = 1;
