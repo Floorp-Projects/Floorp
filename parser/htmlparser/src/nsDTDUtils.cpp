@@ -475,7 +475,7 @@ public:
   CAbacus(PRInt32 aDefaultValue=0,eNumFormat aFormat=eDecimal) {
     mUserSeries=0;
     mFormat=aFormat;
-    mCase=false;
+    mCase=PR_FALSE;
     mValue=0;
     mUserBase=0;
   }
