@@ -1423,6 +1423,8 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
     else
     {
         PR_ASSERT(0 == rv);
+        /* clean up after the failed inet_pton() call */
+        memset(&addr->ipv6.ip, 0, sizeof(addr->ipv6.ip));
         rv = inet_pton(AF_INET, string, &addr->inet.ip);
         if (1 == rv)
         {
@@ -1442,6 +1444,8 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
         return PR_SUCCESS;
     }
     PR_ASSERT(0 == rv);
+    /* clean up after the failed StringToV6Addr() call */
+    memset(&addr->ipv6.ip, 0, sizeof(addr->ipv6.ip));
 
     addr->inet.family = AF_INET;
 #ifdef XP_OS2_VACPP
