@@ -46,7 +46,6 @@ public class NodeTransformer {
     public Node transform(Node tree, Node enclosing, TokenStream ts) {
         loops = new Stack();
         loopEnds = new Stack();
-        Context cx = Context.getContext();
         inFunction = tree.getType() == TokenStream.FUNCTION;
         if (!inFunction) {
             addVariables(tree, getVariableTable(tree));
@@ -115,7 +114,8 @@ public class NodeTransformer {
                             Object[] errArgs = { id };
                             String message = Context.getMessage("msg.dup.label",
                                                                 errArgs);
-                            reportMessage(cx, message, node, tree, true);
+                            reportMessage(Context.getContext(), message, node, 
+                                          tree, true);
                             break typeswitch;
                         }
                     }
@@ -346,7 +346,8 @@ public class NodeTransformer {
                         message = Context.getMessage
                             ("msg.undef.label", errArgs);
                     }
-                    reportMessage(cx, message, node, tree, true);
+                    reportMessage(Context.getContext(), message, node, 
+                                  tree, true);
                     node.setType(TokenStream.NOP);
                     break;
                 }
@@ -356,13 +357,13 @@ public class NodeTransformer {
               }
 
               case TokenStream.CALL:
-                if (isSpecialCallName(cx, tree, node))
+                if (isSpecialCallName(tree, node))
                     node.putProp(Node.SPECIALCALL_PROP, Boolean.TRUE);
                 visitCall(node, tree);
                 break;
 
               case TokenStream.NEW:
-                if (isSpecialCallName(cx, tree, node))
+                if (isSpecialCallName(tree, node))
                     node.putProp(Node.SPECIALCALL_PROP, Boolean.TRUE);
                 visitNew(node, tree);
                 break;
@@ -446,7 +447,8 @@ public class NodeTransformer {
                     String name = n == null ? "" : n.getString();
                     if (name.equals("arguments") || 
                         (name.equals("length") && 
-                         cx.getLanguageVersion() == Context.VERSION_1_2))
+                         Context.getContext().getLanguageVersion() == 
+                         Context.VERSION_1_2))
                     {
                         // Use of "arguments" or "length" in 1.2 requires 
                         // an activation object.
@@ -603,7 +605,7 @@ public class NodeTransformer {
      * Return true if the node is a call to a function that requires 
      * access to the enclosing activation object.
      */
-    private boolean isSpecialCallName(Context cx, Node tree, Node node) {
+    private boolean isSpecialCallName(Node tree, Node node) {
         Node left = node.getFirstChild();
         String name = "";
         if (left.getType() == TokenStream.NAME)
