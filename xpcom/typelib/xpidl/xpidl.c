@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 {
     int i, idlfiles;
     IncludePathEntry *inc, *inc_head, **inc_tail;
-    char *basename = NULL;
+    char *file_basename = NULL;
     ModeData *mode = NULL;
 
     /* turn this on for extra checking of our code */
@@ -165,15 +165,8 @@ int main(int argc, char *argv[])
                 xpidl_usage(argc, argv);
                 return 1;
             }
-            basename = argv[i + 1];
+            file_basename = argv[i + 1];
             i++;
-            break;
-          case 'h':             /* legacy stuff, already! */
-            mode = FindMode("header");
-            if (!mode) {
-                xpidl_usage(argc, argv);
-                return 1;
-            }
             break;
           case 'm':
             if (i == argc) {
@@ -211,7 +204,7 @@ int main(int argc, char *argv[])
     }
 
     for (idlfiles = 0; i < argc; i++)
-        idlfiles += xpidl_process_idl(argv[i], inc_head, basename, mode);
+        idlfiles += xpidl_process_idl(argv[i], inc_head, file_basename, mode);
 
     if (!idlfiles)
         return 1;

@@ -124,7 +124,7 @@ struct input_callback_data {
     char *buf;                  /* buffer for data */
     char *point;                /* next char to feed to libIDL */
     int len;                    /* amount of data read into the buffer */
-    int max;                    /* size of the buffer */
+    unsigned int max;           /* size of the buffer */
     struct input_callback_data *next; /* file from which we were included */
     int  f_raw : 2,             /* in a raw block when starting next block */
          f_comment : 2,         /* in a comment when starting next block */
@@ -415,13 +415,14 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 #endif
                 assert(stack->includes);
                 if (!g_hash_table_lookup(stack->includes, filename)) {
-                    char *basename = filename;
+                    char *file_basename = filename;
                     filename = xpidl_strdup(filename);
-                    ptr = strrchr(basename, '.');
+                    ptr = strrchr(file_basename, '.');
                     if (ptr)
                         *ptr = 0;
-                    basename = xpidl_strdup(basename);
-                    g_hash_table_insert(stack->includes, filename, basename);
+                    file_basename = xpidl_strdup(file_basename);
+                    g_hash_table_insert(stack->includes,
+                                        filename, file_basename);
                     new_data = new_input_callback_data(filename,
                                                        stack->include_path);
                     if (!new_data) {
@@ -454,6 +455,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
         }
 
         avail = MIN(data->buf + data->len, end_copy) - data->point;
+        assert(avail >= 0);
 #ifdef DEBUG_shaver_bufmgmt
         fprintf(stderr,
                 "avail[%d] = MIN((data->buf[%x] + data->len[%d])[%x], "
@@ -466,7 +468,8 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 #ifdef DEBUG_shaver_bufmgmt
         fprintf(stderr, "COPYING->%.*s<-COPYING\n", copy, data->point);
 #endif
-        memcpy(cb_data->fill.buffer, data->point, copy);
+        /* Supress signed->unsigned conversion warning from memcpy prototype. */
+        memcpy(cb_data->fill.buffer, data->point, (unsigned int)copy);
         data->point += copy;
         return copy;
 
@@ -488,7 +491,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 
 int
 xpidl_process_idl(char *filename, IncludePathEntry *include_path,
-                  char *basename, ModeData *mode)
+                  char *file_basename, ModeData *mode)
 {
     char *tmp, *outname, *mode_outname;
     IDL_tree top;
@@ -514,18 +517,18 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
 
 #ifdef XP_MAC
 	  // on the Mac, we let CodeWarrior tell us where to put the output file.
-    if (!basename) {
+    if (!file_basename) {
         outname = xpidl_strdup(filename);
         tmp = strrchr(outname, '.');
         if (tmp != NULL) *tmp = '\0';
     } else {
-        outname = xpidl_strdup(basename);
+        outname = xpidl_strdup(file_basename);
     }
 #else
-    if (!basename)
+    if (!file_basename)
         outname = xpidl_strdup(state.basename);
     else
-        outname = xpidl_strdup(basename);
+        outname = xpidl_strdup(file_basename);
 #endif
 
     /* so we don't include it again! */

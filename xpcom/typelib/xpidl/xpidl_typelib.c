@@ -187,9 +187,9 @@ find_interfaces(IDL_tree_func_data *tfd, gpointer user_data)
     }
 
     if (node && IDL_NODE_TYPE(node) == IDLN_IDENT) {
-        IDL_tree_func_data tfd;
-        tfd.tree = node;
-        add_interface_maybe(&tfd, user_data);
+        IDL_tree_func_data new_tfd;
+        new_tfd.tree = node;
+        add_interface_maybe(&new_tfd, user_data);
     }
 
     return TRUE;
