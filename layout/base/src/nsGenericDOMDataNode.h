@@ -197,6 +197,9 @@ struct nsGenericDOMDataNode {
   nsresult RangeAdd(nsIDOMRange& aRange);
   nsresult RangeRemove(nsIDOMRange& aRange);
   nsresult GetRangeList(nsVoidArray*& aResult) const;
+  nsresult SetFocus(nsIPresContext *aPresContext);
+  nsresult RemoveFocus(nsIPresContext *aPresContext);
+
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                   size_t aInstanceSize) const;
 
@@ -424,7 +427,7 @@ struct nsGenericDOMDataNode {
     return _g.SetScriptObject(aScriptObject);                 \
   }
 
-#define NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(_g)                        \
+#define NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(_g)        \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
     return _g.GetDocument(aResult);                                        \
   }                                                                        \
@@ -524,7 +527,13 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
-  }
+  }                                                                        \
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext) {                      \
+    return _g.SetFocus(aPresContext);                                      \
+  }                                                                        \
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) {                   \
+    return _g.RemoveFocus(aPresContext);                                   \
+  }        
 
 /**
  * Implement the nsIDOMText API by forwarding the methods to a

@@ -31,18 +31,15 @@
 #include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIFocusableContent.h"
 #include "nsIEventStateManager.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 
 static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
-static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLAreaElement : public nsIDOMHTMLAreaElement,
                           public nsIJSScriptObject,
-                          public nsIHTMLContent,
-                          public nsIFocusableContent
+                          public nsIHTMLContent
 {
 public:
   nsHTMLAreaElement(nsIAtom* aTag);
@@ -91,14 +88,10 @@ public:
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
+  NS_IMPL_ICONTENT_NO_FOCUS_USING_GENERIC(mInner)
+  
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-  // nsIFocusableContent
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
 protected:
   nsGenericHTMLLeafElement mInner;
@@ -140,11 +133,6 @@ nsHTMLAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLAreaElementIID)) {
     nsIDOMHTMLAreaElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(kIFocusableContentIID)) {
-    *aInstancePtr = (void*)(nsIFocusableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }

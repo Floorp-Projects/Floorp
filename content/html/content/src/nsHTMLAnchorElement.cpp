@@ -33,7 +33,6 @@
 #include "nsIPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIURL.h"
-#include "nsIFocusableContent.h"
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
@@ -50,13 +49,11 @@
 // custom frame
 
 static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
-static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLAnchorElement : public nsIDOMHTMLAnchorElement,
                             public nsIDOMNSHTMLAnchorElement,
                             public nsIJSScriptObject,
-                            public nsIHTMLContent,
-                            public nsIFocusableContent
+                            public nsIHTMLContent
 {
 public:
   nsHTMLAnchorElement(nsIAtom* aTag);
@@ -116,14 +113,10 @@ public:
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+  NS_IMPL_ICONTENT_NO_FOCUS_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-  // nsIFocusableContent
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
 protected:
   nsGenericHTMLContainerElement mInner;
@@ -165,11 +158,6 @@ nsHTMLAnchorElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLAnchorElementIID)) {
     nsIDOMHTMLAnchorElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(kIFocusableContentIID)) {
-    *aInstancePtr = (void*)(nsIFocusableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }

@@ -80,6 +80,8 @@ class nsLeafIterator: public nsFrameIterator
 {
 public:
   nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *start);
+  void SetExtensive(PRBool aExtensive) {mExtensive = aExtensive;}
+  PRBool GetExtensive(){return mExtensive;}
 private :
   
   NS_IMETHOD Next();
@@ -87,6 +89,7 @@ private :
   NS_IMETHOD Prev();
 
   nsIPresContext* mPresContext;
+  PRBool mExtensive;
 };
 
 /************IMPLEMENTATIONS**************/
@@ -107,17 +110,19 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
       return NS_ERROR_OUT_OF_MEMORY;
     *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
+    trav->SetExtensive(PR_FALSE);
+             }
+    break;
+  case EXTENSIVE:{
+    nsLeafIterator *trav = new nsLeafIterator(aPresContext, aStart);
+    if (!trav)
+      return NS_ERROR_OUT_OF_MEMORY;
+    *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
+    NS_ADDREF(trav);
+    trav->SetExtensive(PR_TRUE);
              }
     break;
 #if 0
-  case EXTENSIVE:{
-    nsExtensiveTraversal *trav = new nsExtensiveTraversal(aStart);
-    if (!trav)
-      return NS_ERROR_NOMEMORY;
-    *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
-    NS_ADDREF(trav);
-                 }
-    break;
   case FASTEST:{
     nsFastestTraversal *trav = new nsFastestTraversal(aStart);
     if (!trav)
@@ -210,9 +215,12 @@ nsLeafIterator::Next()
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
-  while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
+  if (!mExtensive)
   {
-    parent = result;
+     while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
+    {
+      parent = result;
+    }
   }
   if (parent != getCurrent())
   {
@@ -235,7 +243,11 @@ nsLeafIterator::Next()
           break;
         }
         else 
+        {
           parent = result;
+          if (mExtensive)
+            break;
+        }
     }
   }
   setCurrent(result);
@@ -277,7 +289,11 @@ nsLeafIterator::Prev()
           break;
       }
       else 
+      {
         parent = result;
+        if (mExtensive)
+          break;
+      }
     }
     else{
       setLast(parent);
@@ -286,35 +302,6 @@ nsLeafIterator::Prev()
     }
   }
 
-
-/*  while(parent){
-    nsIFrame *grandParent;
-    if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent){
-      nsIFrame * grandFchild;
-      if (NS_SUCCEEDED(grandParent->FirstChild(nsnull,&grandFchild)) && grandFchild){
-        nsFrameList list(grandFchild);
-        if (nsnull != (result = list.GetPrevSiblingFor(parent)) ){
-          parent = result;
-          while(NS_SUCCEEDED(parent->FirstChild(nsnull,&result)) && result){
-            parent = result;
-            while(NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
-              parent = result;
-            }
-          }
-          result = parent;
-          break;
-        }
-        else
-          if (NS_FAILED(parent->GetParent(&result)) || !result){
-            result = nsnull;
-            break;
-          }
-          else 
-            parent = result;
-      }
-    }
-  }
-  */
   setCurrent(result);
   if (!result)
     setOffEdge(-1);

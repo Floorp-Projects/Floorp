@@ -43,7 +43,6 @@
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
 #include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
-#include "nsIFocusableContent.h"
 #include "nsIScrollableView.h"
 #include "nsIDOMSelection.h"
 #include "nsIFrameSelection.h"
@@ -54,6 +53,8 @@
 #include "nsIGfxTextControlFrame.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsIEnumerator.h"
+#include "nsFrameTraversal.h"
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
@@ -69,9 +70,6 @@
 #define NON_KEYBINDING 0  
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
-nsIFrame * gCurrentlyFocusedTargetFrame = 0; 
-nsIContent * gCurrentlyFocusedContent = 0; // Weak because it mirrors the strong mCurrentFocus
 
 nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
@@ -376,43 +374,42 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         }
       }
 
-	  if (!focusedWindow) {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-        focusedWindow = do_QueryInterface(globalObject);
+	    if (!focusedWindow) {
+          nsCOMPtr<nsIScriptGlobalObject> globalObject;
+          mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+          focusedWindow = do_QueryInterface(globalObject);
       }
 
-	  // Sill no focused XULDocument, that is bad
-	  if(!xulDoc && focusedWindow)
-	  {
-		nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(focusedWindow);
+	    // Sill no focused XULDocument, that is bad
+	    if(!xulDoc && focusedWindow)
+	    {
+		    nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(focusedWindow);
         if(privateWindow){
-		  nsCOMPtr<nsIDOMWindow> privateRootWindow;
-		  privateWindow->GetPrivateRoot(getter_AddRefs(privateRootWindow));
-          if(privateRootWindow){
-			nsCOMPtr<nsIDOMDocument> privateParentDoc;
-			privateRootWindow->GetDocument(getter_AddRefs(privateParentDoc));
+		      nsCOMPtr<nsIDOMWindow> privateRootWindow;
+		      privateWindow->GetPrivateRoot(getter_AddRefs(privateRootWindow));
+          if(privateRootWindow) {
+			      nsCOMPtr<nsIDOMDocument> privateParentDoc;
+			      privateRootWindow->GetDocument(getter_AddRefs(privateParentDoc));
             xulDoc = do_QueryInterface(privateParentDoc);
-		  }
-		}
-		
-		if (xulDoc) {
+          }
+        }
+		  
+		    if (xulDoc) {
           // See if we have a command dispatcher attached.
           xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
           if (commandDispatcher) {
             // Obtain focus info from the command dispatcher.
             commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
             commandDispatcher->GetFocusedElement(getter_AddRefs(focusedElement));
-		  }
-		}
-	  }
+          }
+        }
+	    }
 
       // Focus the DOM window.
       focusedWindow->Focus();
 
       if (focusedElement) {
-        // Focus the content node.
-        nsCOMPtr<nsIFocusableContent> focusContent = do_QueryInterface(focusedElement);
+        nsCOMPtr<nsIContent> focusContent = do_QueryInterface(focusedElement);
         nsCOMPtr<nsIDOMDocument> domDoc;
         nsCOMPtr<nsIDocument> document;
         focusedWindow->GetDocument(getter_AddRefs(domDoc));
@@ -429,7 +426,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
       }  
     }
-    break;
+  break;
     
  case NS_DEACTIVATE:
     {
@@ -678,74 +675,32 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
 
       if (nsEventStatus_eConsumeNoDefault != *aStatus) {
         nsCOMPtr<nsIContent> newFocus;
-        mCurrentTarget->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(newFocus));
-        nsCOMPtr<nsIFocusableContent> focusable;
-  
-        if (newFocus) {
-          // Look for the nearest enclosing focusable content.
-          nsCOMPtr<nsIContent> current = newFocus;
-          while (current) {
-            focusable = do_QueryInterface(current);
-            if (focusable)
-              break;
-
-            nsCOMPtr<nsIContent> parent;
-            current->GetParent(*getter_AddRefs(parent));
-            current = parent;
-          }
-
-          // if a focusable piece of content is an anonymous node
-          // weed to find the parent and have the parent be the 
-          // new focusable node
-          //
-          // We fist to check here to see if the focused content 
-          // is anonymous content
-          if (focusable) {
-            nsCOMPtr<nsIContent> parent;
-            current->GetParent(*getter_AddRefs(parent));
-            NS_ASSERTION(parent.get(), "parent is null.  this should not happen.");
-            PRInt32 numChilds;
-            parent->ChildCount(numChilds);
-            PRInt32 i;
-            PRBool isChild = PR_FALSE;
-            for (i=0;i<numChilds;i++) {
-              nsCOMPtr<nsIContent> child;
-              parent->ChildAt(i, *getter_AddRefs(child));
-              if (child.get() == current.get()) {
-                isChild = PR_TRUE;
-                break;
-              }
-            }
-            // if it isn't a child of the parent, then it is anonynous content
-            // Now, go up the parent list to find a focusable content node
-            if (!isChild) {
-              current = parent;
-              while (current) {
-                focusable = do_QueryInterface(current);
-                if (focusable)
-                  break;
-
-                nsCOMPtr<nsIContent> tempParent;
-                current->GetParent(*getter_AddRefs(tempParent));
-                current = tempParent;
-              }
-            }
-            // now we ned to get the content node's frame and reset 
-            // the mCurrentTarget target
-            nsCOMPtr<nsIPresShell> shell;
-            if (mPresContext) {
-              nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-              if (NS_SUCCEEDED(rv) && shell){
-                shell->GetPrimaryFrameFor(current, &mCurrentTarget);
-              }
-            }
-            // now adjust the value for the "newFocus"
-            newFocus = current;
-          }
-
-          nsCOMPtr<nsIContent> content = do_QueryInterface(focusable);
-          ChangeFocus(content, mCurrentTarget, PR_TRUE);
+        PRBool suppressBlur = PR_FALSE;
+        if (mCurrentTarget) {
+          mCurrentTarget->GetContentForEvent(mPresContext, aEvent, getter_AddRefs(newFocus));
+          const nsStyleUserInterface* ui;
+          mCurrentTarget->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));;
+          suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
         }
+
+        nsIFrame* currFrame = mCurrentTarget;
+        // Look for the nearest enclosing focusable frame.
+        while (currFrame) {
+          const nsStyleUserInterface* ui;
+          currFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));;
+          if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
+              (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) {
+            currFrame->GetContent(getter_AddRefs(newFocus));
+            break;
+          }
+          currFrame->GetParent(&currFrame);
+        }
+
+        if (newFocus && currFrame)
+          ChangeFocus(newFocus, currFrame, PR_TRUE);
+        else if (!suppressBlur)
+          SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+
         SetContentState(newFocus, NS_EVENT_STATE_ACTIVE);
       }
     }
@@ -1607,34 +1562,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
 PRBool
 nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, nsIFrame* aTargetFrame, PRBool aSetFocus)
 {
-  nsCOMPtr<nsIFocusableContent> focusChange = do_QueryInterface(aFocusContent);
-  
-  if (aTargetFrame) {
- 
-    PRBool suppressBlurAndFocus = PR_FALSE;
-    nsCOMPtr<nsIStyleContext> context;
-    aTargetFrame->GetStyleContext(getter_AddRefs(context));
-  
-    const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
-    if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
-      // we want to surpress the blur and the following focus
-      suppressBlurAndFocus = PR_TRUE;
-    }
-  
-    if(!suppressBlurAndFocus) {
-
-      if (focusChange) {
-        focusChange->SetFocus(mPresContext);
-      }
-      else {
-        SendFocusBlur(mPresContext, nsnull);
-      }
-    }
-  } 
-  else {
-    printf("OH MY GOD!\n");
-  }
-  
+  aFocusContent->SetFocus(mPresContext);
   return PR_FALSE;
 } 
 
@@ -1666,9 +1594,21 @@ nsEventStateManager::ShiftFocus(PRBool forward)
     topOfDoc = PR_TRUE;
   }
 
-  nsIContent* next = GetNextTabbableContent(mCurrentFocus, nsnull, mCurrentFocus, forward);
+  nsIFrame* primaryFrame;
+  nsCOMPtr<nsIPresShell> shell;
+  if (mPresContext) {
+    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && shell){
+      shell->GetPrimaryFrameFor(mCurrentFocus, &primaryFrame);
+    }
+  }
 
-  if (nsnull == next) {
+  nsCOMPtr<nsIContent> rootContent = getter_AddRefs(mDocument->GetRootContent());
+
+  nsCOMPtr<nsIContent> next;
+  GetNextTabbableContent(rootContent, primaryFrame, forward, getter_AddRefs(next));
+
+  if (!next) {
     PRBool focusTaken = PR_FALSE;
 
     SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
@@ -1689,193 +1629,174 @@ nsEventStateManager::ShiftFocus(PRBool forward)
   // Now we need to get the content node's frame and reset 
   // the mCurrentTarget target.  Otherwise the focus
   // code will be slightly out of sync (with regards to
-  // focusing widgets within the current target).
-  nsCOMPtr<nsIPresShell> shell;
-  if (mPresContext) {
-    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell){
-      shell->GetPrimaryFrameFor(next, &mCurrentTarget);
-    }
-  }
+  // focusing widgets within the current target)
+  if (shell)
+    shell->GetPrimaryFrameFor(next, &mCurrentTarget);
+  
   ChangeFocus(next, mCurrentTarget, PR_TRUE);
 
   NS_IF_RELEASE(mCurrentFocus);
   mCurrentFocus = next;
+  NS_IF_ADDREF(mCurrentFocus);
 }
 
 /*
  * At some point this will need to be linked into HTML 4.0 tabindex
  */
-nsIContent*
-nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool forward)
+
+NS_IMETHODIMP
+nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward,
+                                            nsIContent** aResult)
 {
-  PRInt32 count, index;
-  aParent->ChildCount(count);
+  *aResult = nsnull;
 
-  if (nsnull != aChild) {
-    aParent->IndexOf(aChild, index);
-    index += forward ? 1 : -1;
-  }
-  else {
-    index = forward ? 0 : count-1;
-  }
+  nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
+  nsresult result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
+                                         mPresContext, aFrame);
 
-  for (;index < count && index >= 0;index += forward ? 1 : -1) {
-    nsIContent* child;
+  if (NS_FAILED(result))
+    return NS_OK;
 
-    aParent->ChildAt(index, child);
-    nsIContent* content = GetNextTabbableContent(child, nsnull, aTop, forward);
-    if (content != nsnull) {
-      NS_IF_RELEASE(child);
-      return content;
-    }
-    if (nsnull != child) {
+  if (forward)
+    frameTraversal->Next();
+  else frameTraversal->Prev();
+
+  nsISupports* currentItem;
+  frameTraversal->CurrentItem(&currentItem);
+  nsIFrame* currentFrame = (nsIFrame*)currentItem;
+
+  while (currentFrame) {
+    nsCOMPtr<nsIContent> child;
+    currentFrame->GetContent(getter_AddRefs(child));
+
+    const nsStyleDisplay* disp;
+    currentFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
+
+    const nsStyleUserInterface* ui;
+    currentFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));;
+    
+    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(child));
+
+    // if collapsed or hidden, we don't get tabbed into.
+    if ((disp->mVisible != NS_STYLE_VISIBILITY_COLLAPSE) &&
+        (disp->mVisible != NS_STYLE_VISIBILITY_HIDDEN) && 
+        (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
+        (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) && element) {
       nsCOMPtr<nsIAtom> tag;
       PRInt32 tabIndex = -1;
       PRBool disabled = PR_TRUE;
       PRBool hidden = PR_FALSE;
 
       child->GetTag(*getter_AddRefs(tag));
-      if (nsHTMLAtoms::input==tag.get()) {
-        nsIDOMHTMLInputElement *nextInput;
-        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement),
-                                           (void **)&nextInput)) {
-          nextInput->GetDisabled(&disabled);
-          nextInput->GetTabIndex(&tabIndex);
+      nsCOMPtr<nsIDOMHTMLElement> htmlElement(do_QueryInterface(child));
+      if (htmlElement) {
+        if (nsHTMLAtoms::input==tag.get()) {
+          nsCOMPtr<nsIDOMHTMLInputElement> nextInput(do_QueryInterface(child));
+          if (nextInput) {
+            nextInput->GetDisabled(&disabled);
+            nextInput->GetTabIndex(&tabIndex);
 
-          nsAutoString type;
-          nextInput->GetType(type);
-          if (type.EqualsIgnoreCase("hidden")) {
-            hidden = PR_TRUE;
+            nsAutoString type;
+            nextInput->GetType(type);
+            if (type.EqualsIgnoreCase("hidden")) {
+              hidden = PR_TRUE;
+            }
           }
-          NS_RELEASE(nextInput);
         }
-      }
-      else if (nsHTMLAtoms::select==tag.get()) {
-        nsIDOMHTMLSelectElement *nextSelect;
-        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
-                                           (void **)&nextSelect)) {
-          nextSelect->GetDisabled(&disabled);
-          nextSelect->GetTabIndex(&tabIndex);
-          NS_RELEASE(nextSelect);
+        else if (nsHTMLAtoms::select==tag.get()) {
+          nsCOMPtr<nsIDOMHTMLSelectElement> nextSelect(do_QueryInterface(child));
+          if (nextSelect) {
+            nextSelect->GetDisabled(&disabled);
+            nextSelect->GetTabIndex(&tabIndex);
+          }
         }
-      }
-      else if (nsHTMLAtoms::textarea==tag.get()) {
-        nsIDOMHTMLTextAreaElement *nextTextArea;
-        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLTextAreaElement),(void **)&nextTextArea)) {
-          nextTextArea->GetDisabled(&disabled);
-          nextTextArea->GetTabIndex(&tabIndex);
-          NS_RELEASE(nextTextArea);
+        else if (nsHTMLAtoms::textarea==tag.get()) {
+          nsCOMPtr<nsIDOMHTMLTextAreaElement> nextTextArea(do_QueryInterface(child));
+          if (nextTextArea) {
+            nextTextArea->GetDisabled(&disabled);
+            nextTextArea->GetTabIndex(&tabIndex);
+          }
         }
-
-      }
-      else if(nsHTMLAtoms::a==tag.get()) {
-        nsIDOMHTMLAnchorElement *nextAnchor;
-        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLAnchorElement),
-                                           (void **)&nextAnchor)) {
-          nextAnchor->GetTabIndex(&tabIndex);
-          NS_RELEASE(nextAnchor);
+        else if(nsHTMLAtoms::a==tag.get()) {
+          nsCOMPtr<nsIDOMHTMLAnchorElement> nextAnchor(do_QueryInterface(child));
+          if (nextAnchor)
+            nextAnchor->GetTabIndex(&tabIndex);
+          disabled = PR_FALSE;
         }
-        disabled = PR_FALSE;
-      }
-      else if(nsHTMLAtoms::button==tag.get()) {
-        nsIDOMHTMLButtonElement *nextButton;
-        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLButtonElement),
-                                           (void **)&nextButton)) {
-          nextButton->GetTabIndex(&tabIndex);
-          nextButton->GetDisabled(&disabled);
-          NS_RELEASE(nextButton);
+        else if(nsHTMLAtoms::button==tag.get()) {
+          nsCOMPtr<nsIDOMHTMLButtonElement> nextButton(do_QueryInterface(child));
+          if (nextButton) {
+            nextButton->GetTabIndex(&tabIndex);
+            nextButton->GetDisabled(&disabled);
+          }
         }
-      }
-      else if(nsHTMLAtoms::area==tag.get()) {
-        nsIDOMHTMLAreaElement *nextArea;
-        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLAreaElement),
-                                           (void **)&nextArea)) {
-          nextArea->GetTabIndex(&tabIndex);
-          NS_RELEASE(nextArea);
+        else if(nsHTMLAtoms::area==tag.get()) {
+          nsCOMPtr<nsIDOMHTMLAreaElement> nextArea(do_QueryInterface(child));
+          if (nextArea)
+            nextArea->GetTabIndex(&tabIndex);
+          disabled = PR_FALSE;
         }
-        disabled = PR_FALSE;
-      }
-      else if(nsHTMLAtoms::object==tag.get()) {
-        nsIDOMHTMLObjectElement *nextObject;
-        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLObjectElement),
-                                           (void **)&nextObject)) {
-          nextObject->GetTabIndex(&tabIndex);
-          NS_RELEASE(nextObject);
+        else if(nsHTMLAtoms::object==tag.get()) {
+          nsCOMPtr<nsIDOMHTMLObjectElement> nextObject(do_QueryInterface(child));
+          if (nextObject) 
+            nextObject->GetTabIndex(&tabIndex);
+          disabled = PR_FALSE;
         }
-        disabled = PR_FALSE;
       }
       else {
-        // QI to nsIFocusableContent
-        nsCOMPtr<nsIFocusableContent> focusable(do_QueryInterface(child));
-        if (focusable) {
-          nsAutoString value;
-          child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
-          if (!value.EqualsWithConversion("true"))
-            disabled = PR_FALSE;
+        nsAutoString value;
+        child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
+        nsAutoString tabStr;
+        child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabStr);
+        if (tabStr != "") {
+          PRInt32 errorCode;
+          tabIndex = tabStr.ToInteger(&errorCode);
         }
+        if (!value.EqualsWithConversion("true"))
+          disabled = PR_FALSE;
       }
       
-      // Get the primary frame for the widget.  We don't tab into anything
-      // that doesn't have a frame.
-      nsCOMPtr<nsIPresShell> shell;
-      if (mPresContext) {
-        nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-        if (NS_SUCCEEDED(rv) && shell){
-          nsIFrame* potentialFrame;
-          shell->GetPrimaryFrameFor(child, &potentialFrame);
-          if (!potentialFrame)
-            hidden = PR_TRUE;
-        }
-      }
-
       //TabIndex not set (-1) treated at same level as set to 0
       tabIndex = tabIndex < 0 ? 0 : tabIndex;
 
       if (!disabled && !hidden && mCurrentTabIndex == tabIndex) {
-        return child;
+        *aResult = child;
+        NS_IF_ADDREF(*aResult);
+        return NS_OK;
       }
-      NS_RELEASE(child);
     }
+
+    if (forward)
+      frameTraversal->Next();
+    else frameTraversal->Prev();
+
+    frameTraversal->CurrentItem(&currentItem);
+    currentFrame = (nsIFrame*)currentItem;
   }
 
-  if (aParent == aTop) {
-    nsIContent* nextParent;
-    aParent->GetParent(nextParent);
-    if (nsnull != nextParent) {
-      nsIContent* content = GetNextTabbableContent(nextParent, aParent, nextParent, forward);
-      NS_RELEASE(nextParent);
-      return content;
-    }
-    //Reached end of document
-    else {
-      //If already at lowest priority tab (0), end
-      if (((forward) && (0 == mCurrentTabIndex)) ||
-          ((!forward) && (1 == mCurrentTabIndex))) {
-        return nsnull;
-      }
-      //else continue looking for next highest priority tab
-      mCurrentTabIndex = GetNextTabIndex(aParent, forward);
-      nsIContent* content = GetNextTabbableContent(aParent, nsnull, aParent, forward);
-      return content;
-    }
+  // Reached end or beginning of document
+  //If already at lowest priority tab (0), end
+  if (((forward) && (0 == mCurrentTabIndex)) ||
+      ((!forward) && (1 == mCurrentTabIndex))) {
+    return NS_OK;
   }
-
-  return nsnull;
+  //else continue looking for next highest priority tab
+  mCurrentTabIndex = GetNextTabIndex(aRootContent, forward);
+  return GetNextTabbableContent(aRootContent, nsnull, forward, aResult);
 }
 
 PRInt32
 nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
 {
   PRInt32 count, tabIndex, childTabIndex;
-  nsIContent* child;
+  nsCOMPtr<nsIContent> child;
   
   aParent->ChildCount(count);
  
   if (forward) {
     tabIndex = 0;
     for (PRInt32 index = 0; index < count; index++) {
-      aParent->ChildAt(index, child);
+      aParent->ChildAt(index, *getter_AddRefs(child));
       childTabIndex = GetNextTabIndex(child, forward);
       if (childTabIndex > mCurrentTabIndex && childTabIndex != tabIndex) {
         tabIndex = (tabIndex == 0 || childTabIndex < tabIndex) ? childTabIndex : tabIndex; 
@@ -1887,13 +1808,12 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       if (NS_OK == ec && val > mCurrentTabIndex && val != tabIndex) {
         tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex; 
       }
-      NS_RELEASE(child);
     }
   } 
   else { /* !forward */
     tabIndex = 1;
     for (PRInt32 index = 0; index < count; index++) {
-      aParent->ChildAt(index, child);
+      aParent->ChildAt(index, *getter_AddRefs(child));
       childTabIndex = GetNextTabIndex(child, forward);
       if ((mCurrentTabIndex==0 && childTabIndex > tabIndex) ||
           (childTabIndex < mCurrentTabIndex && childTabIndex > tabIndex)) {
@@ -1909,7 +1829,6 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
           tabIndex = val;
         }
       }
-      NS_RELEASE(child);
     }
   }
   return tabIndex;
@@ -1932,26 +1851,6 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
   *aFrame = mCurrentTarget;
   return NS_OK;
 }
-
-// This API crosses ESM instances to give the currently focused frame, no matter what ESM instace
-// you call it from.
-NS_IMETHODIMP
-nsEventStateManager::GetFocusedEventTarget(nsIFrame **aFrame)
-{
-  if (!gCurrentlyFocusedTargetFrame && gCurrentlyFocusedContent && gLastFocusedPresContext) {
-	nsCOMPtr<nsIPresShell> shell;
-    if (gLastFocusedPresContext) {
-      nsresult rv = gLastFocusedPresContext->GetShell(getter_AddRefs(shell));
-      if (NS_SUCCEEDED(rv) && shell){
-        shell->GetPrimaryFrameFor(gCurrentlyFocusedContent, &gCurrentlyFocusedTargetFrame);
-      }
-    }
-  }
-
-  *aFrame = gCurrentlyFocusedTargetFrame;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsEventStateManager::GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent)
@@ -2040,21 +1939,16 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   }
 
   if ((aState & NS_EVENT_STATE_FOCUS)) {
-    if (aContent == mCurrentFocus) {
+    if (aContent && (aContent == mCurrentFocus)) {
       // gLastFocusedDocument appears to always be correct, that is why
       // I'm not setting it here. This is to catch an edge case.
       NS_IF_RELEASE(gLastFocusedContent);
       gLastFocusedContent = mCurrentFocus;
       NS_IF_ADDREF(gLastFocusedContent);
     } else {
-      SendFocusBlur(mPresContext, aContent);
-
-      //transferring ref to notifyContent from mCurrentFocus
       notifyContent[3] = mCurrentFocus;
-      mCurrentFocus = aContent;
       NS_IF_ADDREF(mCurrentFocus);
-
-	    gCurrentlyFocusedContent = mCurrentFocus;
+      SendFocusBlur(mPresContext, aContent);
     }
   }
 
@@ -2144,24 +2038,9 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 NS_IMETHODIMP
 nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent)
 {
-  //PRBool suppressBlurAndFocus = PR_FALSE;
-
-  if(mCurrentTarget) {
-    nsCOMPtr<nsIStyleContext> context;
-    mCurrentTarget->GetStyleContext(getter_AddRefs(context));
-    if(!context) return NS_OK;
-
- 
-    const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
-    if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
-      // we want to suppress the blur and the following focus
-      return NS_OK;
-	  }
-  }
-
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
-    
+  
   if (nsnull != gLastFocusedPresContext) {
     
     if (gLastFocusedContent && gLastFocusedContent != mFirstBlurEvent) {
@@ -2258,10 +2137,6 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     event.eventStructType = NS_EVENT;
     event.message = NS_FOCUS_CONTENT;
 
-    NS_IF_RELEASE(mCurrentFocus);
-    mCurrentFocus = aContent;
-    NS_IF_ADDREF(mCurrentFocus);
-
     if (nsnull != mPresContext) {
       aContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
@@ -2278,9 +2153,11 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     }
   }
 
-  // XXx The following line could be bad in the case where a
-  // parent element is really the one with the focus.
-  nsIFrame * currentFocusFrame = mCurrentTarget;
+  nsIFrame * currentFocusFrame = nsnull;
+  if (mCurrentFocus)
+    presShell->GetPrimaryFrameFor(mCurrentFocus, &currentFocusFrame);
+  if (!currentFocusFrame)
+    currentFocusFrame = mCurrentTarget;
 
   // Find the window that this frame is in and
   // make sure it has focus

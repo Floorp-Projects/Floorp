@@ -42,7 +42,6 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControlFrame.h"
-#include "nsIFocusableContent.h"
 #include "nsIBindableContent.h"
 #include "nsIXBLBinding.h"
 #include "nsIEventStateManager.h"
@@ -53,7 +52,6 @@ static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
@@ -61,7 +59,6 @@ class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
                               public nsIJSScriptObject,
                               public nsIHTMLContent,
                               public nsIFormControl,
-                              public nsIFocusableContent,
                               public nsIBindableContent
 {
 public:
@@ -112,7 +109,7 @@ public:
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
+  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
@@ -121,10 +118,6 @@ public:
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Init() { return NS_OK; }
-
-  // nsIFocusableContent
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
   // nsIBindableContent
   NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
@@ -187,11 +180,6 @@ nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(kIFocusableContentIID)) {
-    *aInstancePtr = (void*)(nsIFocusableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }

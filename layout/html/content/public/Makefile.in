@@ -31,7 +31,6 @@ MODULE		= layout
 EXPORTS		= \
 		nsIFormControl.h \
 		nsIForm.h \
-		nsIFocusableContent.h \
 		nsISelectElement.h \
 		$(NULL)
 

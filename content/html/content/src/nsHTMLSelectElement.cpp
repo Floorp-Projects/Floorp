@@ -39,7 +39,6 @@
 #include "nsIForm.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
-#include "nsIFocusableContent.h"
 #include "nsIEventStateManager.h"
 #include "nsGenericDOMHTMLCollection.h"
 #include "nsIJSScriptObject.h"
@@ -69,7 +68,6 @@ static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kISelectElementIID, NS_ISELECTELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
-static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLSelectElement;
 
@@ -128,7 +126,6 @@ class nsHTMLSelectElement : public nsIDOMHTMLSelectElement,
                             public nsIJSScriptObject,
                             public nsIHTMLContent,
                             public nsIFormControl,
-                            public nsIFocusableContent,
                             public nsISelectElement
 {
 public:
@@ -177,7 +174,7 @@ public:
   NS_IMETHOD NamedItem(const nsString& aName, nsIDOMNode** aReturn);
 
   // nsIContent
-  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
+  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
@@ -186,9 +183,6 @@ public:
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Init();
-
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
   // nsISelectElement
   NS_IMETHOD AddOption(nsIContent* aContent);
@@ -294,11 +288,6 @@ nsHTMLSelectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(kIFocusableContentIID)) {
-    *aInstancePtr = (void*)(nsIFocusableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }

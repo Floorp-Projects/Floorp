@@ -856,6 +856,18 @@ nsGenericDOMDataNode::GetRangeList(nsVoidArray*& aResult) const
 }
 
 nsresult
+nsGenericDOMDataNode::SetFocus(nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::RemoveFocus(nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
+nsresult
 nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                              size_t aInstanceSize) const
 {

@@ -56,8 +56,6 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsFormControlFrame.h"
 
-#include "nsIFocusableContent.h"
-
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
@@ -216,10 +214,7 @@ nsLabelFrame::HandleEvent(nsIPresContext* aPresContext,
       nsIContent * content;
       mControlFrame->GetFormContent(content);
       if (nsnull != content) {
-        nsCOMPtr<nsIFocusableContent> focusable(do_QueryInterface(content));
-        if (focusable) {
-          focusable->SetFocus(aPresContext);
-        }
+        content->SetFocus(aPresContext);
         NS_RELEASE(content);
       }
       mLastMouseState = eMouseDown;

@@ -1133,6 +1133,18 @@ nsGenericElement::GetRangeList(nsVoidArray*& aResult) const
   return NS_OK;
 }
 
+nsresult 
+nsGenericElement::SetFocus(nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
+nsresult 
+nsGenericElement::RemoveFocus(nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
 nsresult
 nsGenericElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                          size_t aInstanceSize) const

@@ -46,7 +46,6 @@
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
-#include "nsIFocusableContent.h"
 #include "nsIBindableContent.h"
 #include "nsIXBLBinding.h"
 #include "nsIEventStateManager.h"
@@ -66,7 +65,6 @@ static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
-static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 class nsHTMLInputElement : public nsIDOMHTMLInputElement,
@@ -74,7 +72,6 @@ class nsHTMLInputElement : public nsIDOMHTMLInputElement,
                            public nsIJSScriptObject,
                            public nsIHTMLContent,
                            public nsIFormControl,
-                           public nsIFocusableContent,
                            public nsIBindableContent
 {
 public:
@@ -122,7 +119,6 @@ public:
                                   nsIDOMNodeList** aReturn) {              
     return mInner.GetElementsByTagName(aTagname, aReturn);                     
   }                                                                        
-
 
   // nsIDOMHTMLElement
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
@@ -178,7 +174,7 @@ public:
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
+  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
@@ -187,10 +183,6 @@ public:
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Init() { return NS_OK; }
-
-  // nsIFocusableContent
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
   // nsIBindableContent
   NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
@@ -274,11 +266,6 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(kIFocusableContentIID)) {
-    *aInstancePtr = (void*)(nsIFocusableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -700,18 +687,17 @@ nsHTMLInputElement::Focus()
 NS_IMETHODIMP
 nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 {
-  nsIEventStateManager* esm;
-  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
-    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-    NS_RELEASE(esm);
-  }
-
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled)) {
     return NS_OK;
   }
-  
+ 
+  nsCOMPtr<nsIEventStateManager> esm;
+  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
+    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+  }
+
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {

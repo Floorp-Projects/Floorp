@@ -213,7 +213,13 @@ public:
   NS_IMETHOD RangeRemove(nsIDOMRange& aRange)
     {  return mInner.RangeRemove(aRange); }                                                                        
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const 
-    {  return mInner.GetRangeList(aResult); }                                                                        
+    {  return mInner.GetRangeList(aResult); }   
+  NS_IMETHOD SetFocus(nsIPresContext* aContext) {
+    return mInner.SetFocus(aContext);
+  }
+  NS_IMETHOD RemoveFocus(nsIPresContext* aContext) {
+    return mInner.RemoveFocus(aContext);
+  }
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     if (!aResult) {
       return NS_ERROR_NULL_POINTER;
