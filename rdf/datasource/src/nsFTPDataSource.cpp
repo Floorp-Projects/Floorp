@@ -788,21 +788,8 @@ FTPDataSource::HasAssertion(nsIRDFResource *source,
 
 	// we only have positive assertions in the FTP data source.
 
-	if ((tv) && isFTPURI(source))
-	{
-		if (property == kRDF_type)
-		{
-			if ((nsIRDFResource *)target == kRDF_type)
-			{
-				*hasAssertion = PR_TRUE;
-			}
-		}
-	}
-	else
-	{
-		rv = mInner->HasAssertion(source, property, target,
-			tv, hasAssertion);
-	}
+	rv = mInner->HasAssertion(source, property, target,
+		tv, hasAssertion);
 	return (rv);
 }
 

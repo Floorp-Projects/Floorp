@@ -922,27 +922,13 @@ RelatedLinksDataSource::HasAssertion(nsIRDFResource *source,
     if (! hasAssertion)
         return NS_ERROR_NULL_POINTER;
 
-	PRBool			retVal = PR_FALSE;
 	nsresult		rv = NS_OK;
 
 	*hasAssertion = PR_FALSE;
 
 	// we only have positive assertions in the Related Links data source.
 
-	if ((tv) && (source == kNC_RelatedLinksRoot))
-	{
-		if (property == kRDF_type)
-		{
-			if ((nsIRDFResource *)target == kRDF_type)
-			{
-				*hasAssertion = PR_TRUE;
-			}
-		}
-	}
-	else
-	{
-		if (mInner)	rv = mInner->HasAssertion(source, property, target, tv, hasAssertion);
-	}
+	if (mInner)	rv = mInner->HasAssertion(source, property, target, tv, hasAssertion);
 	return (rv);
 }
 
