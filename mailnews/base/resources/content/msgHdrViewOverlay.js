@@ -839,6 +839,9 @@ function displayAttachmentsForExpandedView()
       item.setAttribute("label", attachment.displayName);
       item.setAttribute("tooltip", "attachmentListTooltip");
       item.setAttribute("commandSuffix", generateCommandSuffixForAttachment(attachment)); // set the command suffix on the listitem...
+      item.setAttribute("attachmentUrl", attachment.url);
+      item.setAttribute("attachmentContentType", attachment.contentType);
+      item.setAttribute("attachmentUri", attachment.uri);
       setApplicationIconForAttachment(attachment, item);
   	  attachmentList.appendChild(item);
     } // for each attachment
@@ -1024,3 +1027,22 @@ function ClearEditMessageButton()
     editBox.collapsed = true;
 }
 
+var attachmentAreaDNDObserver = {
+  onDragStart: function (aEvent, aAttachmentData, aDragAction)
+  {
+    var target = aEvent.target;
+    if (target.localName == "listitem")
+    {
+      var attachmentUrl = target.getAttribute("attachmentUrl");
+      var attachmentDisplayName = target.getAttribute("label");
+      var attachmentContentType = target.getAttribute("attachmentContentType");
+      var tmpurl = attachmentUrl;
+      tmpurl = tmpurl + "&type=" + attachmentContentType + "&filename=" + attachmentDisplayName;
+      aAttachmentData.data = new TransferData();
+      if (attachmentUrl && attachmentDisplayName)
+      {
+        aAttachmentData.data.addDataForFlavour("text/x-moz-url", tmpurl + "\n" + attachmentDisplayName);
+      }
+    }
+  }
+};

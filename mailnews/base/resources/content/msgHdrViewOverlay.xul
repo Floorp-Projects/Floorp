@@ -29,6 +29,10 @@ Rights Reserved.
 <script src="chrome://messenger/content/msgHdrViewAddresses.js"/>
 <script src="chrome://messenger/content/msgHdrViewOverlay.js"/>
 
+<!-- drag and drop -->
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 </stringbundleset>
@@ -118,7 +122,7 @@ Rights Reserved.
    <vbox id="expandedAttachmentBox" class="header-part1" collapsed="true">
      <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
      <listbox id="attachmentList" flex="2"
-              onclick="attachmentListClick(event);" context="attachmentListContext"/>
+              onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);" ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext"/>
    </vbox>
 
   </hbox>
