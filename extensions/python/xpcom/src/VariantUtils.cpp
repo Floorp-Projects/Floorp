@@ -1044,19 +1044,13 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 	nsXPTCVariant &ns_v = m_var_array[value_index];
 	NS_ABORT_IF_FALSE(ns_v.type == td.type_flags, "Expecting variant all setup for us");
 
-	// NOTE: We NEVER pass Python internal buffers, even when a param is
-	// only marked as "in", for 2 reasons:
-	// * Paranoia - passing the internal "char *" buffer for a Python string
-	//   means that the caller could potentially modify it, even though they
-	//   shouldnt.  This will be hard to track down, and will appear as tho
-	//   Python itself has the bug, rather than the naughty object.
-	// * Simplicity - if the param is marked "in/out", we _must_ make 
-	//   a buffer copy anyway.
-	// The downside is speed - if a large buffer is passed as an "in" param,
-	// it is a shame to make a copy, then pass it, then free it, when it should
-	// be fine to simply pass the buffer.
-	// (The discussion above doesnt apply to ints and stuff - we can't
-	// even really get at the internal "int *" of a PyInt object.
+	// We used to avoid passing internal buffers to PyString etc objects
+	// for 2 reasons: paranoia (so incorrect external components couldn't break
+	// Python) and simplicity (in vs in-out issues, etc)
+	// However, at least one C++ implemented component (nsITimelineService)
+	// uses a "char *", and keys on the address (assuming that the same
+	// *pointer* is passed rather than value.  Therefore, we have a special case
+	// - T_CHAR_STR that is "in" gets the Python string pointer passed.
 	void *&this_buffer_pointer = m_buffer_array[value_index]; // Freed at object destruction with PyMem_Free()
 	NS_ABORT_IF_FALSE(this_buffer_pointer==nsnull, "We appear to already have a buffer");
 	int cb_this_buffer_pointer = 0;
@@ -1216,6 +1210,13 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 				ns_v.val.p = nsnull;
 				break;
 			}
+			// If an "in" char *, and we have a PyString, then pass the
+			// pointer (hoping everyone else plays by the rules too.
+			if (!XPT_PD_IS_OUT(td.param_flags) && PyString_Check(val)) {
+				ns_v.val.p = PyString_AS_STRING(val);
+				break;
+			}
+			   
 			if (!PyString_Check(val) && !PyUnicode_Check(val)) {
 				PyErr_SetString(PyExc_TypeError, "This parameter must be a string or Unicode object");
 				BREAK_FALSE;
@@ -1235,6 +1236,12 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 		  case nsXPTType::T_WCHAR_STR: {
 			if (val==Py_None) {
 				ns_v.val.p = nsnull;
+				break;
+			}
+			// If an "in" char *, and we have a PyString, then pass the
+			// pointer (hoping everyone else plays by the rules too.
+			if (!XPT_PD_IS_OUT(td.param_flags) && PyUnicode_Check(val)) {
+				ns_v.val.p = PyUnicode_AS_UNICODE(val);
 				break;
 			}
 			if (!PyString_Check(val) && !PyUnicode_Check(val)) {
