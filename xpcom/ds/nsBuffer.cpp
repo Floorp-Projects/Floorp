@@ -29,6 +29,7 @@ nsBuffer::nsBuffer()
     : mGrowBySize(0),
       mMaxSize(0),
       mAllocator(nsnull),
+      mObserver(nsnull),
       mBufferSize(0),
       mReadSegment(nsnull),
       mReadCursor(0),
