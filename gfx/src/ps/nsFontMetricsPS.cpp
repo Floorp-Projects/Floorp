@@ -197,7 +197,7 @@ float offset;
   //mAscent = NSToCoordRound((float)((fontsize*mAFMInfo->mPSFontInfo->mAscender)/1000)*dev2app);
 
   offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mDescender)/1000.0f;
-  mDescent = NSToCoordRound(offset);
+  mDescent = -(NSToCoordRound(offset));
   //mDescent = NSToCoordRound((float)((fabs(fontsize*mAFMInfo->mPSFontInfo->mDescender))/1000)*dev2app);
 
   offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mDescender)/1000.0f;
