@@ -421,9 +421,10 @@ sub collect {
 
             my $printops_body = &get_printops_body(@types);
             my $printops_decl =  "virtual Formatter& printOperands(Formatter& f, ";
-            $printops_decl .= ($printops_body ne "" ?
+
+            $printops_decl .= ($dec_list =~ /RegisterList/) ?
                                "const JSValues& registers" :
-                               "const JSValues& /*registers*/");
+                               "const JSValues& /*registers*/";
             $printops_decl .= ") {\n";
 
             $class_decs .= ($init_tab . $tab . 
