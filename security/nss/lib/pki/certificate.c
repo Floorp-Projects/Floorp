@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:16:21 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.3 $ $Date: 2001/09/18 20:54:57 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -104,6 +104,7 @@ NSS_IMPLEMENT NSSCertificate *
 NSSCertificate_CreateFromHandle
 (
   CK_OBJECT_HANDLE object,
+  nssSession *session,
   NSSSlot *slot
 )
 {
@@ -123,7 +124,7 @@ NSSCertificate_CreateFromHandle
     rvCert->handle = object;
     rvCert->slot = slot;
     nssrv = NSSCKObject_GetAttributes(object, cert_template, template_size,
-                                      rvCert->arena, rvCert->slot);
+                                      rvCert->arena, session, rvCert->slot);
     if (nssrv) {
 	/* okay, but if failed because one of the attributes could not be
 	 * found, do it gracefully (i.e., catch the error).
