@@ -1,6 +1,9 @@
 
 Release 0.8
 
+This release moved some files into new directories update with
+	cvs update -d -P
+
 Fix the Unmonitored Builds in admintree.cgi and in status.html page.
 
 Storable.pm has been tested as a Persistence implementation.

@@ -7,40 +7,54 @@ code and documentation.
 
 To install:
 
-1) read and edit the variables found in the files ./src/lib/* particularly: 
+*) The src/default_config directory contains perl libraries which are
+specific to an individual users site configuration.  No two users of
+Tinderbox will have the identical sets of files.
 
-	TinderConfig.pm: general configuration settings
-	TreeData.pm: version control configuration
+The files found in default_config are sample files which are used at
+Mozilla.org.  Other users are expected to customize these libries and
+install the modified libraries in local_config.  Files found in
+local_config will be used before any file found in default_config.
+The distribution of Tinderbox will never place any files in the
+local_config directory as this is assumed to be under local control.
 
-   These modules will take some programming experiance to configure
+A quick overview of the files:
 
-	Error_Parse.pm: the regular expressions for highlighting errors
-	FileStructure.pm: filesystem (storage) and global/per-project settings
-	BTData.pm: bug tracking configuration
+	TinderConfig.pm: general configuration settings 
+		(HTML directories, Log files, implementations of libraries 
+		 to use, etc).
+	VCData.pm: version control (CVS, Bonsai) configuration.
+	Error_Parse.pm: the regular expressions for identifying
+		 errors in build logs.
+	TicketData.pm: bug tracking configuration
+	FileStructure.pm: filesystem (storage) and global/per-project 
+		settings. Most users will not have to change this.
 
-2) Run configure. You may wish to change the default directories in
-configure for some of the makefile variables.  When configure is done
-you will have a Makefile and a config.out.  Please read config.out and
-make any changes which need to be made for your system.
+*) Run ./configure. When configure is done you will have a Makefile
+and a config.out.  Although Tinderbox consists entirely of perl
+scripts we must substitute some values into the source code to make it
+executable.You may wish to change the default directories in configure
+for some of the makefile variables.  Please read config.out and make
+any changes which need to be made for your system.
 
-3) run ./configure to generate a Makefile.  Although Tinderbox
-consists entirely of perl scripts we must substitute some values into
-the source code to make it executable.
+*) run make to create executable versions of the source code in the
+./build directory.
 
-4) run make to create executable versions of the source code.
-
-5) run the test programs as described in /build/test/ReadMe to ensure
+*) run the test programs as described in /build/test/ReadMe to ensure
 that you have configured the program correctly.
 
-6) run make install
+*) run make install, to install Tinderbox on your system.  You may
+wish to run this with a different 'prefix'
 
-7) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
+	make install prefix=/opt/tinderbox
+
+*) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
 	every five minutes.
    set up a cron job to run $prefix/bin/tinder.cgi/rmlogs once a day.
      six am is a good time to run this as the machine load is usually light
       and will avoids any day light savings problems.
 
-8) set up the $prefix/bin/processmail* programs to receive the
+*) set up the $prefix/bin/processmail* programs to receive the
 incoming tinderbox mail.  The process id which receives and process
 the mail must be the the same id which runs the tinderbox cron job to
 prepare the web pages.  Usually this set up is accomplished by having
@@ -85,17 +99,17 @@ the script processmail_bugs.
 
 
 
-9) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
+*) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
 for tinderbox to use.  Log into the CVS repository yourself, once for
 each tree you have defined.  The login command must use the
-hostname/modules exactly as you wrote it in TreeData.  Then copy your
+hostname/modules exactly as you wrote it in VCData.  Then copy your
 ~/.cvspass into the tinderbox server user id's home directory.  This
 must be the REAL home of the Tinderbox daemon, as listed in
 /etc/passwd/ and set in the $HOME environmental variable for
 tinder.cgi.
 
 
-10) setup the build machines to mail their build logs (with tinderbox
+*) setup the build machines to mail their build logs (with tinderbox
 variables on the top) to the web server machine.  New builds must not
 start earlier then 6 minutes after the last build started.  Each build
 machine mails the build log of each build and puts some build data at
@@ -105,13 +119,13 @@ this is.  The mail processing program has a help file (--help) which
 details the format it knows how to accept.
 
 
-11) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
+*) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
 the webserver machine whenever a Bug ticket changes state. It is not
 interesting to see which tickets are being worked on, so restrict
 mailing to changes in ticket state not updates (edit) of a ticket.
 
 
-12) Check that the time on your webserver, your version control
+*) Check that the time on your webserver, your version control
 machine, your bug tracking machine and your build machines are all in
 sync.  Check that mail if build mail bounces on any of the above
 machines that it will be recieved by someone who can act on it.
