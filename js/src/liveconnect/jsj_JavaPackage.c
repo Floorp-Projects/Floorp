@@ -215,10 +215,10 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
          * system packages to be created.
          */
         if (JS_InstanceOf(cx, obj, &JavaPackage_class, NULL)) {
-            JavaPackage_Private *package;
+            JavaPackage_Private *current_package;
 
-            package = JS_GetPrivate(cx, obj);
-            if (package->flags & PKG_SYSTEM) {
+            current_package = JS_GetPrivate(cx, obj);
+            if (current_package->flags & PKG_SYSTEM) {
                 char *msg, *cp;
                 msg = JS_strdup(cx, newPath);
 
@@ -327,7 +327,16 @@ JSClass JavaPackage_class = {
     "JavaPackage", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JavaPackage_setProperty,
     JS_EnumerateStub, JavaPackage_resolve,
-    JavaPackage_convert, JavaPackage_finalize
+    JavaPackage_convert, JavaPackage_finalize,
+
+    /* Optionally non-null members start here. */
+    NULL,                       /* getObjectOps */
+    NULL,                       /* checkAccess */
+    NULL,                       /* call */
+    NULL,                       /* construct */
+    NULL,                       /* xdrObject */
+    NULL,                       /* hasInstance */
+    {0, 0},                     /* spare */
 };
 
 JavaPackageDef
@@ -488,8 +497,8 @@ JavaPackage_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSFunctionSpec JavaPackage_methods[] = {
-    {"toString",   JavaPackage_toString,        0},
-    {0}
+    {"toString",   JavaPackage_toString,        0,      0,      0},
+    {0, 0, 0, 0, 0},
 };
 
 /*
