@@ -183,7 +183,8 @@ sub show_graph {
   # ls 1 = small blue points
   # ls 2 = larger blue points
   #
-  # lt 3 = blue
+  # lt: 0=grey, 1=red, 2=green, 3=blue, 4=cyan, 5=magenta, 6=yellow,
+  #     7=dk.red, 8=dk.green, 9=dk.blue
   my $cmds = qq{
 				reset
                 $graph_size
@@ -194,7 +195,7 @@ sub show_graph {
 				set linestyle 1 lt 3 lw 1 pt 7 ps .5
 				set linestyle 2 lt 3 lw 1 pt 7 ps 1
 				set linestyle 3 lt 3 lw 1
-				set linestyle 4 lt 7 lw 1 pt 7 ps 3
+				set linestyle 4 lt 8 lw 1 pt 7 ps 3
 				set data style points
 				set timefmt "%Y:%m:%d:%H:%M:%S"
 				set xdata time
