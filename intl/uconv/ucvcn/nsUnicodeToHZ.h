@@ -57,12 +57,13 @@ protected:
                             char * aDest, 
                             PRInt32 * aDestLength);
 
-  NS_IMETHOD ConvertNoBuffNoErr( const PRUnichar * aSrc, 
-                                 PRInt32 * aSrcLength, 
-                                 char * aDest, 
-                                 PRInt32 * aDestLength);
-
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
+
+  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+                                char * aDest, PRInt32 * aDestLength)
+  {
+    return NS_OK;
+  };  // just make it not abstract;
 
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
@@ -76,6 +77,7 @@ typedef struct
 
 } DByte;
   void UnicodeToHZ(PRUnichar SrcUnicode, DByte *pGBCode);
+  void UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode);
 
 };
 

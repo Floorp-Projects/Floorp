@@ -29,44 +29,8 @@
 #include "gbku.h"
 
 //----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-static PRInt16 g_ASCIIShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static PRInt16 g_GB2312ShiftTable[] =  {
-  0, u2BytesGRCharset,  
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static PRInt16 *g_GB2312ShiftTableSet [] = {
-  g_ASCIIShiftTable,
-  g_GB2312ShiftTable
-};
-
-static PRUint16 *g_GB2312MappingTableSet [] ={
-  g_AsciiMapping,
-  g_utGB2312Mapping
-};
-
-static uRange g_GB2312Ranges[] = {
-  { 0x00, 0x7E },
-  { 0xA1, 0xFE }
-};
-
-
-//----------------------------------------------------------------------
 // Class nsGB2312ToUnicode [implementation]
 
-nsGBKToUnicode::nsGBKToUnicode() 
-: nsMultiTableDecoderSupport(2, 
-                        (uRange *) &g_GB2312Ranges,
-                        (uShiftTable**) &g_GB2312ShiftTableSet, 
-                        (uMappingTable**) &g_GB2312MappingTableSet)
-{
-}
 
 nsresult nsGBKToUnicode::CreateInstance(nsISupports ** aResult) 
 {
@@ -81,9 +45,8 @@ NS_IMETHODIMP nsGBKToUnicode::GetMaxLength(const char * aSrc,
                                               PRInt32 aSrcLength, 
                                               PRInt32 * aDestLength)
 {
-  // we are a single byte to Unicode converter, so...
   *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
+  return NS_OK;
 }
 
 
@@ -91,7 +54,7 @@ NS_IMETHODIMP nsGBKToUnicode::GetMaxLength(const char * aSrc,
 //Overwriting the ConvertNoBuff() in nsUCvCnSupport.cpp.
 //side effects: all the helper functions called by UCvCnSupport are deprecated
 
-void GBKToUnicode(DByte *pGBCode, PRUnichar * pUnicode)
+void nsGBKToUnicode::GBKToUnicode(DByte *pGBCode, PRUnichar * pUnicode)
 {
 	short int iGBKToUnicodeIndex;
 

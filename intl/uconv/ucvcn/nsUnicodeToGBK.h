@@ -32,14 +32,15 @@
 //----------------------------------------------------------------------
 // Class nsUnicodeToGBK [declaration]
 
-class nsUnicodeToGBK: public nsMultiTableEncoderSupport
+class nsUnicodeToGBK: public nsEncoderSupport
 {
 public:
 
   /**
    * Class constructor.
    */
-  nsUnicodeToGBK();
+  nsUnicodeToGBK(){};
+  virtual ~nsUnicodeToGBK(){};
 
   /**
    * Static class constructor.
@@ -58,6 +59,27 @@ protected:
 
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
+
+  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+                                char * aDest, PRInt32 * aDestLength)
+  {
+    return NS_OK;
+  };  // just make it not abstract;
+
+  NS_IMETHOD FillInfo(PRUint32 *aInfo);
+
+ private:
+
+  typedef struct
+  {
+    char leftbyte;
+    char rightbyte;
+
+  } DByte;
+
+  void UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode);
+
+
 };
 
 #endif /* nsUnicodeToGBK_h___ */

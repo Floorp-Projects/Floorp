@@ -21,47 +21,17 @@
 #include "nsGB2312ToUnicodeV2.h"
 #include "nsUCvCnDll.h"
 
-#include "gbu.h"
+
+#define _GBKU_TABLE_		// to use a shared GBKU table
+#include "gbku.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRInt16 g_ASCIIShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static PRInt16 g_GB2312ShiftTable[] =  {
-  0, u2BytesGRCharset,  
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static PRInt16 *g_GB2312ShiftTableSet [] = {
-  g_ASCIIShiftTable,
-  g_GB2312ShiftTable
-};
-
-static PRUint16 *g_GB2312MappingTableSet [] ={
-  g_AsciiMapping,
-  g_utGB2312Mapping
-};
-
-static uRange g_GB2312Ranges[] = {
-  { 0x00, 0x7E },
-  { 0xA1, 0xFE }
-};
 
 
 //----------------------------------------------------------------------
 // Class nsGB2312ToUnicodeV2 [implementation]
-
-nsGB2312ToUnicodeV2::nsGB2312ToUnicodeV2() 
-: nsMultiTableDecoderSupport(2, 
-                        (uRange *) &g_GB2312Ranges,
-                        (uShiftTable**) &g_GB2312ShiftTableSet, 
-                        (uMappingTable**) &g_GB2312MappingTableSet)
-{
-}
 
 nsresult nsGB2312ToUnicodeV2::CreateInstance(nsISupports ** aResult) 
 {
@@ -76,29 +46,28 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::GetMaxLength(const char * aSrc,
                                               PRInt32 aSrcLength, 
                                               PRInt32 * aDestLength)
 {
-  // we are a single byte to Unicode converter, so...
   *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
+  return NS_OK;
 }
 
 
 
 
 //Overwriting the ConvertNoBuff() in nsUCvCnSupport.cpp.
-//side effects: all the helper functions called by UCvCnSupport are deprecated
 
-void GBToUnicode(DByte *pGBCode, PRUnichar * pUnicode)
+void nsGB2312ToUnicodeV2::GBKToUnicode(DByte *pGBCode, PRUnichar * pUnicode)
 {
-	short int iGBToUnicodeIndex;
+	short int iGBKToUnicodeIndex;
 
     if(pGBCode)	
-	iGBToUnicodeIndex = ( (short int)(pGBCode->leftbyte & 0x7f) - 0x21)*(0x7e - 0x20 )+( (short int)(pGBCode->rightbyte &0x7f ) - 0x21);
+	iGBKToUnicodeIndex = ( (short int)(pGBCode->leftbyte) - 0x81)*0xbf +( (short int)(pGBCode->rightbyte) - 0x40);
 
-	if( (iGBToUnicodeIndex >= 0 ) && ( iGBToUnicodeIndex < MAX_GB_LENGTH) )
-	*pUnicode = GBToUnicodeTable[iGBToUnicodeIndex];
+	if( (iGBKToUnicodeIndex >= 0 ) && ( iGBKToUnicodeIndex < MAX_GBK_LENGTH) )
+	*pUnicode = GBKToUnicodeTable[iGBKToUnicodeIndex];
 
-// e.g. 0xb0a1 --> Index = 0 --> left = 0x00, right = 0x30, value = 0x3000
 }
+
+
 
 
 
@@ -128,7 +97,7 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
 		if ( *aSrc & 0x80 )
 		{
 			// The source is a GBCode
-			GBToUnicode(pSrcDBCode, pDestDBCode);
+			GBKToUnicode(pSrcDBCode, pDestDBCode);
 			aSrc += 2;
 			i++;
 		}
