@@ -68,9 +68,6 @@ protected:
   virtual ~nsMathMLmstyleFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }
-
-  PRUint32 mInheritedDisplayStyle;
-  PRInt32  mInheritedScriptLevel;
 };
 
 #endif /* nsMathMLmstyleFrame_h___ */

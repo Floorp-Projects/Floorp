@@ -78,13 +78,6 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 
   mPresentationData.mstyle = this;
 
-  // cache these values that we would have if we were not special...
-  // In the event of dynamic updates, e.g., if our displastyle and/or
-  // scriptlevel attributes are removed, we will recover our state using
-  // these cached values
-  mInheritedScriptLevel = mPresentationData.scriptLevel;
-  mInheritedDisplayStyle = mPresentationData.flags & NS_MATHML_DISPLAYSTYLE;
-
   // see if the displaystyle attribute is there
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
@@ -141,15 +134,6 @@ nsMathMLmstyleFrame::UpdatePresentationData(nsIPresContext* aPresContext,
   // Since UpdatePresentationData() can be called by a parent frame, the
   // scriptlevel and displaystyle attributes of mstyle must take precedence.
   // Update only if attributes are not there
-
-  // But... cache the values that we would have if we were not special...
-  // In the event of dynamic updates, e.g., if our displastyle and/or
-  // scriptlevel attributes are removed, we will recover our state using
-  // these cached values
-  mInheritedScriptLevel += aScriptLevelIncrement;
-  if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsToUpdate)) {
-    mInheritedDisplayStyle = aFlagsValues & NS_MATHML_DISPLAYSTYLE;
-  }
 
   // see if updating the displaystyle flag is allowed
   if (!NS_MATHML_IS_MSTYLE_WITH_DISPLAYSTYLE(mPresentationData.flags)) {
@@ -223,69 +207,12 @@ nsMathMLmstyleFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   if (nsMathMLAtoms::displaystyle_ == aAttribute ||
       nsMathMLAtoms::scriptlevel_ == aAttribute) {
-    nsPresentationData oldData = mPresentationData;
-    // process our attributes
-    nsAutoString value;
-    if (NS_CONTENT_ATTR_NOT_THERE == mContent->GetAttr(kNameSpaceID_None,
-                     nsMathMLAtoms::scriptlevel_, value)) {
-      // when our scriptlevel attribute is gone, we recover our inherited scriptlevel
-      mPresentationData.flags &= ~NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL;
-      mPresentationData.scriptLevel = mInheritedScriptLevel;
-    }
-    else {
-      PRInt32 errorCode, userValue;
-      userValue = value.ToInteger(&errorCode); 
-      if (!errorCode) {
-        if (value[0] != '+' && value[0] != '-') {
-          // record that it is an explicit value
-          mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL;
-          mPresentationData.scriptLevel = userValue;
-        }
-        else {
-          // incremental value...
-          mPresentationData.flags &= ~NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL;
-          mPresentationData.scriptLevel = mInheritedScriptLevel + userValue;
-        }
-      }
-    }
-    if (NS_CONTENT_ATTR_NOT_THERE == mContent->GetAttr(kNameSpaceID_None,
-                     nsMathMLAtoms::displaystyle_, value)) {
-      // when our displaystyle attribute is gone, we recover our inherited displaystyle
-      mPresentationData.flags &= ~NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
-      if (NS_MATHML_DISPLAYSTYLE & mInheritedDisplayStyle)
-        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      else
-        mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
-    }
-    else {
-      if (value.Equals(NS_LITERAL_STRING("true"))) {
-        mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
-        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-      }
-      else if (value.Equals(NS_LITERAL_STRING("false"))) {
-        mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
-        mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
-      }
-    }
-
-    // propagate to our children if something changed
-    if (oldData.flags != mPresentationData.flags ||
-        oldData.scriptLevel != mPresentationData.scriptLevel) {
-      PRUint32 whichFlags = NS_MATHML_DISPLAYSTYLE;
-      PRUint32 newValues = NS_MATHML_DISPLAYSTYLE & mPresentationData.flags;
-      if (newValues == (oldData.flags & NS_MATHML_DISPLAYSTYLE)) {
-        newValues = 0;
-        whichFlags = 0;
-      }
-      // use the base method here because we really want to reflect any updates
-      nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 
-        mPresentationData.scriptLevel - oldData.scriptLevel, newValues, whichFlags);
-      // now grab the scriptlevel of our parent
-      nsPresentationData parentData;
-      GetPresentationDataFrom(mParent, parentData);
-      // re-resolve style data in our subtree to sync any change of script sizes
-      PropagateScriptStyleFor(aPresContext, this, parentData.scriptLevel);
-    }
+    // These attributes can affect too many things, ask our parent to re-layout
+    // its children so that we can pick up changes in our attributes & transmit
+    // them in our subtree. However, our siblings will be re-laid too. We used
+    // to have a more speedier but more verbose alternative that didn't re-layout
+    // our siblings. See bug 114909 - attachment 67668.
+    return ReLayout(aPresContext, mParent);
   }
 
   return nsMathMLContainerFrame::
