@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Radha Kulkarni <radha@netscape.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsISupportsUtils.h"
 #include "nsIDOMDocument.h"
@@ -363,7 +364,7 @@ nsSHEnumerator::CurrentItem(nsISHEntry **aItem)
   PRUint32 cnt = mSHEntry->mChildren.Count();
   if (mIndex >=0 && mIndex < (PRInt32)cnt){
     nsCOMPtr<nsISupports> indexIsupports =  (nsISHEntry *) mSHEntry->mChildren.ElementAt(mIndex);
-    return indexIsupports->QueryInterface(nsISHEntry::GetIID(),(void **)aItem);
+    return indexIsupports->QueryInterface(NS_GET_IID(nsISHEntry),(void **)aItem);
   }
   return NS_ERROR_FAILURE;
 }
@@ -389,12 +390,12 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsIEnumerator::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEnumerator))) {
     *aInstancePtr = NS_STATIC_CAST(nsIEnumerator*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIBidirectionalEnumerator))) {
     *aInstancePtr = NS_STATIC_CAST(nsIBidirectionalEnumerator*, this);
     NS_ADDREF_THIS();
     return NS_OK;

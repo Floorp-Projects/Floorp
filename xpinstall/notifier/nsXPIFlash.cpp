@@ -19,7 +19,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *     Doug Turner <dougt@netscape.com>
+ *   Doug Turner <dougt@netscape.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -125,7 +126,7 @@ nsXPINotifierImpl::nsXPINotifierImpl()
     
     nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
                                        this, /* the "outer" */
-                                       nsCOMTypeInfo<nsISupports>::GetIID(),
+                                       NS_GET_IID(nsISupports),
                                        getter_AddRefs(mInner));
 }
 
@@ -242,7 +243,7 @@ nsXPINotifierImpl::Init()
     PRBool moreElements;
     
     // Read the distributor registry
-    rv = nsServiceManager::GetService(kRDFServiceCID, nsIRDFService::GetIID(), (nsISupports**) &mRDF);
+    rv = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService), (nsISupports**) &mRDF);
     if (NS_FAILED(rv)) return rv;
     
     if (! kXPI_NotifierSources)
@@ -269,7 +270,7 @@ nsXPINotifierImpl::Init()
 
     rv = nsComponentManager::CreateInstance(kRDFContainerCID,
                                             nsnull,
-                                            nsIRDFContainer::GetIID(),
+                                            NS_GET_IID(nsIRDFContainer),
                                             getter_AddRefs(distributorsContainer));
 
     if (NS_SUCCEEDED(rv))
@@ -449,7 +450,7 @@ nsXPINotifierImpl::OpenRemoteDataSource(const char* aURL, PRBool blocking, nsIRD
     nsCOMPtr<nsIRDFRemoteDataSource> remote;
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,
-                                            nsIRDFRemoteDataSource::GetIID(),
+                                            NS_GET_IID(nsIRDFRemoteDataSource),
                                             getter_AddRefs(remote));
     if (NS_FAILED(rv)) return rv;
 
@@ -538,7 +539,7 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
 
     rv = nsComponentManager::CreateInstance(kRDFContainerCID,
                                             nsnull,
-                                            nsIRDFContainer::GetIID(),
+                                            NS_GET_IID(nsIRDFContainer),
                                             getter_AddRefs(distributorContainer));
     if (NS_SUCCEEDED(rv))
     {
@@ -659,12 +660,12 @@ nsXPINotifierImpl::QueryInterface(REFNSIID aIID, void** aResult)
     {
         *aResult = NS_STATIC_CAST(nsISupports*, this);
     }
-    else if (aIID.Equals(nsIRDFDataSource::GetIID())) 
+    else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) 
     {
         if (mInner)
             return mInner->QueryInterface(aIID, aResult);
     }
-    else if (aIID.Equals(nsIRDFXMLSinkObserver::GetIID())) 
+    else if (aIID.Equals(NS_GET_IID(nsIRDFXMLSinkObserver))) 
     {
         *aResult = NS_STATIC_CAST(nsIRDFXMLSinkObserver*, this);
     }

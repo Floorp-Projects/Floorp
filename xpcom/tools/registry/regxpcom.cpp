@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <iostream.h>
@@ -61,7 +62,7 @@ nsresult Register(const char *path)
   nsCOMPtr<nsILocalFile> spec;
   nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
                                                    nsnull, 
-                                                   nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                                   NS_GET_IID(nsILocalFile), 
                                                    getter_AddRefs(spec));
 
   if (NS_FAILED(rv) || (!spec)) 

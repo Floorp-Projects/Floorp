@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsICaret.h"
 
@@ -299,22 +300,22 @@ nsHTMLEditor::~nsHTMLEditor()
       if (NS_SUCCEEDED(result) && erP) 
       {
         if (mKeyListenerP) {
-          erP->RemoveEventListenerByIID(mKeyListenerP, nsIDOMKeyListener::GetIID());
+          erP->RemoveEventListenerByIID(mKeyListenerP, NS_GET_IID(nsIDOMKeyListener));
         }
         if (mMouseListenerP) {
-          erP->RemoveEventListenerByIID(mMouseListenerP, nsIDOMMouseListener::GetIID());
+          erP->RemoveEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
         }
         if (mTextListenerP) {
-          erP->RemoveEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
+          erP->RemoveEventListenerByIID(mTextListenerP, NS_GET_IID(nsIDOMTextListener));
         }
          if (mCompositionListenerP) {
-          erP->RemoveEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
+          erP->RemoveEventListenerByIID(mCompositionListenerP, NS_GET_IID(nsIDOMCompositionListener));
         }
         if (mFocusListenerP) {
-          erP->RemoveEventListenerByIID(mFocusListenerP, nsIDOMFocusListener::GetIID());
+          erP->RemoveEventListenerByIID(mFocusListenerP, NS_GET_IID(nsIDOMFocusListener));
         }
         if (mDragListenerP) {
-            erP->RemoveEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
+            erP->RemoveEventListenerByIID(mDragListenerP, NS_GET_IID(nsIDOMDragListener));
         }
       }
       else
@@ -339,27 +340,27 @@ NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
  
   *aInstancePtr = nsnull;
   
-  if (aIID.Equals(nsIHTMLEditor::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIHTMLEditor))) {
     *aInstancePtr = NS_STATIC_CAST(nsIHTMLEditor*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIEditorMailSupport::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEditorMailSupport))) {
     *aInstancePtr = NS_STATIC_CAST(nsIEditorMailSupport*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsITableEditor::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsITableEditor))) {
     *aInstancePtr = NS_STATIC_CAST(nsITableEditor*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIEditorStyleSheets::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIEditorStyleSheets))) {
     *aInstancePtr = NS_STATIC_CAST(nsIEditorStyleSheets*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsICSSLoaderObserver::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsICSSLoaderObserver))) {
     *aInstancePtr = NS_STATIC_CAST(nsICSSLoaderObserver*, this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -407,7 +408,7 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   // HACK: This should have happened in a document specific way
   //       in nsEditor::Init(), but we dont' have a way to do that yet
   result = nsComponentManager::CreateInstance(kCNavDTDCID, nsnull,
-                                          nsIDTD::GetIID(), getter_AddRefs(mDTD));
+                                          NS_GET_IID(nsIDTD), getter_AddRefs(mDTD));
   if (!mDTD) result = NS_ERROR_FAILURE;
 
   // Init the rules system
@@ -577,34 +578,34 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
   nsCOMPtr<nsIDOMEventReceiver> erP;
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  result = doc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
+  result = doc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
   if (NS_FAILED(result)) {
     HandleEventListenerError();
     return result;
   }
 
   // register the event listeners with the DOM event reveiver
-  result = erP->AddEventListenerByIID(mKeyListenerP, nsIDOMKeyListener::GetIID());
+  result = erP->AddEventListenerByIID(mKeyListenerP, NS_GET_IID(nsIDOMKeyListener));
   NS_ASSERTION(NS_SUCCEEDED(result), "failed to register key listener");
   if (NS_SUCCEEDED(result))
   {
-    result = erP->AddEventListenerByIID(mMouseListenerP, nsIDOMMouseListener::GetIID());
+    result = erP->AddEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
     NS_ASSERTION(NS_SUCCEEDED(result), "failed to register mouse listener");
     if (NS_SUCCEEDED(result))
     {
-      result = erP->AddEventListenerByIID(mFocusListenerP, nsIDOMFocusListener::GetIID());
+      result = erP->AddEventListenerByIID(mFocusListenerP, NS_GET_IID(nsIDOMFocusListener));
       NS_ASSERTION(NS_SUCCEEDED(result), "failed to register focus listener");
       if (NS_SUCCEEDED(result))
       {
-        result = erP->AddEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
+        result = erP->AddEventListenerByIID(mTextListenerP, NS_GET_IID(nsIDOMTextListener));
         NS_ASSERTION(NS_SUCCEEDED(result), "failed to register text listener");
         if (NS_SUCCEEDED(result))
         {
-          result = erP->AddEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
+          result = erP->AddEventListenerByIID(mCompositionListenerP, NS_GET_IID(nsIDOMCompositionListener));
           NS_ASSERTION(NS_SUCCEEDED(result), "failed to register composition listener");
           if (NS_SUCCEEDED(result))
           {
-            result = erP->AddEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
+            result = erP->AddEventListenerByIID(mDragListenerP, NS_GET_IID(nsIDOMDragListener));
             NS_ASSERTION(NS_SUCCEEDED(result), "failed to register drag listener");
           }
         }
@@ -777,7 +778,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
     // first create an iterator over the table
     nsCOMPtr<nsIContentIterator> iter;
     res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                nsIContentIterator::GetIID(), 
+                                                NS_GET_IID(nsIContentIterator), 
                                                 getter_AddRefs(iter));
     if (NS_FAILED(res)) return res;
     if (!iter) return NS_ERROR_NULL_POINTER;
@@ -1113,7 +1114,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
     // either non-collapsed selection or no cached value: do it the hard way
     nsCOMPtr<nsIContentIterator> iter;
     result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                nsIContentIterator::GetIID(), 
+                                                NS_GET_IID(nsIContentIterator), 
                                                 getter_AddRefs(iter));
     if (NS_FAILED(result)) return result;
     if (!iter) return NS_ERROR_NULL_POINTER;
@@ -2734,7 +2735,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         nsCOMPtr<nsIContentIterator> iter;
         res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                    nsIContentIterator::GetIID(), 
+                                                    NS_GET_IID(nsIContentIterator), 
                                                     getter_AddRefs(iter));
         // XXX: ERROR_HANDLING  XPCOM usage
         if ((NS_SUCCEEDED(res)) && iter)
@@ -3428,7 +3429,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 
   nsCOMPtr<nsIContentIterator> iter;
   res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                           nsIContentIterator::GetIID(), 
+                                           NS_GET_IID(nsIContentIterator), 
                                            getter_AddRefs(iter));
   if (!iter) return NS_ERROR_NULL_POINTER;
   if ((NS_SUCCEEDED(res)))
@@ -3737,7 +3738,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
   // Create generic Transferable for getting the data
   nsCOMPtr<nsITransferable> trans;
   rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                          nsITransferable::GetIID(), 
+                                          NS_GET_IID(nsITransferable), 
                                           (void**) getter_AddRefs(trans));
   if (NS_SUCCEEDED(rv))
   {
@@ -3951,7 +3952,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
   // Create generic Transferable for getting the data
   nsCOMPtr<nsITransferable> trans;
   rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                          nsITransferable::GetIID(), 
+                                          NS_GET_IID(nsITransferable), 
                                           (void**) getter_AddRefs(trans));
   if (NS_SUCCEEDED(rv) && trans)
   {
@@ -4222,7 +4223,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
     nsCRT::free(type);
     rv = nsComponentManager::CreateInstance(progid,
                                             nsnull,
-                                            nsIDocumentEncoder::GetIID(),
+                                            NS_GET_IID(nsIDocumentEncoder),
                                             getter_AddRefs(encoder));
 
     nsCRT::free(progid);
@@ -4305,7 +4306,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   nsCRT::free(type);
   rv = nsComponentManager::CreateInstance(progid,
                                           nsnull,
-                                          nsIDocumentEncoder::GetIID(),
+                                          NS_GET_IID(nsIDocumentEncoder),
                                           getter_AddRefs(encoder));
 
   nsCRT::free(progid);
@@ -4801,7 +4802,7 @@ nsresult nsHTMLEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
 
   nsCOMPtr<nsIContentIterator> iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              nsIContentIterator::GetIID(), 
+                                              NS_GET_IID(nsIContentIterator), 
                                               getter_AddRefs(iter));
   if (NS_FAILED(result)) return result;
   if (!iter) return NS_ERROR_NULL_POINTER;
@@ -4888,7 +4889,7 @@ nsHTMLEditor::GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection,
 
   nsCOMPtr<nsIContentIterator> iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              nsIContentIterator::GetIID(), 
+                                              NS_GET_IID(nsIContentIterator), 
                                               getter_AddRefs(iter));
   if (NS_FAILED(result)) return result;
   if (!iter) return NS_ERROR_NULL_POINTER;
@@ -4937,7 +4938,7 @@ void nsHTMLEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
   nsresult result;
   nsCOMPtr<nsIContentIterator> iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              nsIContentIterator::GetIID(), 
+                                              NS_GET_IID(nsIContentIterator), 
                                               getter_AddRefs(iter));
   if (NS_FAILED(result)) return;
   if (!iter) return;
@@ -5002,7 +5003,7 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode,
   // find the current block parent, or just use aNode if it is a block node
   nsCOMPtr<nsIDOMElement>blockParentElement;
   nsCOMPtr<nsIDOMNode>nodeToReParent; // this is the node we'll operate on, by default it's aNode
-  nsresult res = aNode->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(nodeToReParent));
+  nsresult res = aNode->QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(nodeToReParent));
   PRBool nodeIsInline;
   PRBool nodeIsBlock=PR_FALSE;
   IsNodeInline(aNode, nodeIsInline);
@@ -5010,7 +5011,7 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode,
   {
     nsresult QIResult;
     nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-    QIResult = aNode->QueryInterface(nsIDOMCharacterData::GetIID(), getter_AddRefs(nodeAsText));
+    QIResult = aNode->QueryInterface(NS_GET_IID(nsIDOMCharacterData), getter_AddRefs(nodeAsText));
     if (NS_FAILED(QIResult) || !nodeAsText) {
       nodeIsBlock=PR_TRUE;
     }
@@ -5018,7 +5019,7 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode,
   // if aNode is the block parent, then the node to reparent is one of its children
   if (PR_TRUE==nodeIsBlock) 
   {
-    res = aNode->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(blockParentElement));
+    res = aNode->QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(blockParentElement));
     if (NS_SUCCEEDED(res) && blockParentElement) {
       res = aNode->GetFirstChild(getter_AddRefs(nodeToReParent));
     }
@@ -6450,7 +6451,7 @@ nsHTMLEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
   // create new parent nodes for all the content between the start and end nodes
   nsCOMPtr<nsIContentIterator>iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              nsIContentIterator::GetIID(), getter_AddRefs(iter));
+                                              NS_GET_IID(nsIContentIterator), getter_AddRefs(iter));
   if (NS_FAILED(result)) return result;
   if (!iter) return NS_ERROR_NULL_POINTER;
 
@@ -6994,7 +6995,7 @@ nsHTMLEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     nsCOMPtr<nsIDOMRange> range;
     result = nsComponentManager::CreateInstance(kCRangeCID, 
                                                 nsnull, 
-                                                nsIDOMRange::GetIID(), 
+                                                NS_GET_IID(nsIDOMRange), 
                                                 getter_AddRefs(range));
     if (NS_FAILED(result)) { return result; }
     if (!range) { return NS_ERROR_NULL_POINTER; }
@@ -7017,7 +7018,7 @@ nsHTMLEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     nsVoidArray nodeList;
     nsCOMPtr<nsIContentIterator>iter;
     result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                nsIContentIterator::GetIID(), getter_AddRefs(iter));
+                                                NS_GET_IID(nsIContentIterator), getter_AddRefs(iter));
     if (NS_FAILED(result)) return result;
     if (!iter) return NS_ERROR_NULL_POINTER;
 
@@ -7202,7 +7203,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMSelection *aInSelection)
     nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
     nsCOMPtr<nsIContentIterator> iter;
     result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                nsIContentIterator::GetIID(), 
+                                                NS_GET_IID(nsIContentIterator), 
                                                 getter_AddRefs(iter));
     if (NS_FAILED(result)) return result;
     if (!iter) return NS_ERROR_NULL_POINTER;

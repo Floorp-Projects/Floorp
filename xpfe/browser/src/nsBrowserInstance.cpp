@@ -232,7 +232,7 @@ nsBrowserAppCore::Init()
 
 	  rv = nsComponentManager::CreateInstance(NS_SHISTORY_PROGID,
 											  nsnull,
-											  nsISHistory::GetIID(),
+											  NS_GET_IID(nsISHistory),
 											  (void **) &mNewSHistory);
 	  if (NS_SUCCEEDED(rv)) {
 		  printf("**** Successfully created new Session History ****\n");
@@ -1540,7 +1540,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   nsCOMPtr<nsISHEntry> shEntry;
   rv = nsComponentManager::CreateInstance(NS_SHENTRY_PROGID,
 	                                      nsnull,
-										  nsISHEntry::GetIID(),
+										  NS_GET_IID(nsISHEntry),
 										  (void **) &shEntry);
 
   const PRUnichar * title=nsnull;
@@ -1572,7 +1572,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   nsCOMPtr<nsISHTransaction> shTransaction;
   rv = nsComponentManager::CreateInstance(NS_SHTRANSACTION_PROGID,
 	                                      nsnull,
-										  nsISHTransaction::GetIID(),
+										  NS_GET_IID(nsISHTransaction),
 										  (void **) &shTransaction);
   if (NS_SUCCEEDED(rv))  {
 	  printf("******* Successfully created nsSHEntry ********* \n");

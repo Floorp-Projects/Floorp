@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -298,7 +299,7 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
     nsIEnumerator *components = 0;
     const char *failed = "GetService";
     if ( NS_SUCCEEDED( ( rv = nsServiceManager::GetService( NS_REGISTRY_PROGID,
-                                                          nsIRegistry::GetIID(),
+                                                          NS_GET_IID(nsIRegistry),
                                                           (nsISupports**)&registry ) ) )
          &&
          ( failed = "Open" )
@@ -390,7 +391,7 @@ nsAppShellService::InitializeComponent( const nsCID &aComponentCID ) {
     nsIAppShellComponent *component;
     nsresult rv = nsComponentManager::CreateInstance( aComponentCID,
                                                       0,
-                                                      nsIAppShellComponent::GetIID(),
+                                                      NS_GET_IID(nsIAppShellComponent),
                                                       (void**)&component );
     if ( NS_SUCCEEDED( rv ) ) {
         // Then tell it to initialize (it may RegisterService itself).
@@ -421,7 +422,7 @@ nsAppShellService::ShutdownComponent( const nsCID &aComponentCID ) {
     // Attempt to create instance of the component (must be a service).
     nsIAppShellComponent *component;
     nsresult rv = nsServiceManager::GetService( aComponentCID,
-                                                nsIAppShellComponent::GetIID(),
+                                                NS_GET_IID(nsIAppShellComponent),
                                                 (nsISupports**)&component );
     if ( NS_SUCCEEDED( rv ) ) {
         // Instance accessed, tell it to shutdown.
@@ -931,7 +932,7 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
   NS_ASSERTION(weObserve, "who's been chopping bits off nsAppShellService?");
 
   rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID,
-                           nsIObserverService::GetIID(), &glop);
+                           NS_GET_IID(nsIObserverService), &glop);
   if (NS_SUCCEEDED(rv)) {
     nsIObserverService *os = NS_STATIC_CAST(nsIObserverService*,glop);
     if (aRegister) {
