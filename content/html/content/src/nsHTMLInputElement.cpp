@@ -671,6 +671,11 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
+
+  // We can't be focus'd if we don't have a document
+  if (! mDocument)
+    return NS_OK;
+
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
