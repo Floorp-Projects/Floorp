@@ -51,6 +51,8 @@
 #include "nsImapStringBundle.h"
 #include "nsICopyMsgStreamListener.h"
 
+#include "nsAutoLock.h"
+
 // for the memory cache...
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
@@ -548,7 +550,7 @@ nsImapProtocol::SetupSinkProxy()
 // running, then you should put it in Initialize(). 
 nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 {
-    nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_FAILURE;
   NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
   if (aURL)
   {
@@ -647,12 +649,12 @@ void nsImapProtocol::ReleaseUrlState()
 
 NS_IMETHODIMP nsImapProtocol::Run()
 {
-    nsImapProtocol *me = this;
+  nsImapProtocol *me = this;
   nsresult result = NS_OK;
-    NS_ASSERTION(me, "Yuk, me is null.\n");
+  NS_ASSERTION(me, "Yuk, me is null.\n");
     
-    PR_CEnterMonitor(this);
-    NS_ASSERTION(me->m_imapThreadIsRunning == PR_FALSE, 
+  PR_CEnterMonitor(this);
+  NS_ASSERTION(me->m_imapThreadIsRunning == PR_FALSE, 
                  "Oh. oh. thread is already running. What's wrong here?");
     if (me->m_imapThreadIsRunning)
     {
@@ -746,7 +748,7 @@ nsImapProtocol::NotifyFEEventCompletion()
 {
     PR_EnterMonitor(m_eventCompletionMonitor);
     PR_Notify(m_eventCompletionMonitor);
-  m_gotFEEventCompletion = PR_TRUE;
+    m_gotFEEventCompletion = PR_TRUE;
     PR_ExitMonitor(m_eventCompletionMonitor);
     return NS_OK;
 }
@@ -754,75 +756,78 @@ nsImapProtocol::NotifyFEEventCompletion()
 void
 nsImapProtocol::WaitForFEEventCompletion()
 {
-    PR_EnterMonitor(m_eventCompletionMonitor);
+  PR_EnterMonitor(m_eventCompletionMonitor);
   if (!m_gotFEEventCompletion)
     PR_Wait(m_eventCompletionMonitor, PR_INTERVAL_NO_TIMEOUT);
   m_gotFEEventCompletion = PR_FALSE;
-    PR_ExitMonitor(m_eventCompletionMonitor);
+  PR_ExitMonitor(m_eventCompletionMonitor);
 }
 
 NS_IMETHODIMP
 nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
 {
     // **** jt - This routine should only be called by imap service.
-    PR_CEnterMonitor(this);
+  nsAutoCMonitor(this);
 
-    PRBool closeNeeded = GetServerStateParser().GetIMAPstate() ==
-        nsImapServerResponseParser::kFolderSelected && isSaveToClose;
-    nsCString command;
-    nsresult rv = NS_OK;
+  // if the connection is closed,then don't try to send data
+  // to the connection.
+  PRBool connectionIsLost = TestFlag(IMAP_CONNECTION_IS_OPEN);
 
-    if (closeNeeded && GetDeleteIsMoveToTrash())
-    {
-        IncrementCommandTagNumber();
-        command = GetServerCommandTag();
-        command.Append(" close" CRLF);
-        rv = SendData(command.GetBuffer());
-    }
+  PRBool closeNeeded = GetServerStateParser().GetIMAPstate() ==
+  nsImapServerResponseParser::kFolderSelected && isSaveToClose;
+  nsCString command;
+  nsresult rv = NS_OK;
 
-  IncrementCommandTagNumber();
-  command = GetServerCommandTag();
-  command.Append(" logout" CRLF);
-  rv = SendData(command.GetBuffer());
+  if (closeNeeded && GetDeleteIsMoveToTrash() && !connectionIsLost)
+  {
+    IncrementCommandTagNumber();
+    command = GetServerCommandTag();
+    command.Append(" close" CRLF);
+    rv = SendData(command.GetBuffer());
+  }
 
-    PR_EnterMonitor(m_threadDeathMonitor);
-    m_threadShouldDie = PR_TRUE;
-    PR_ExitMonitor(m_threadDeathMonitor);
+  if (!connectionIsLost)
+  {
+    IncrementCommandTagNumber();
+    command = GetServerCommandTag();
+    command.Append(" logout" CRLF);
+    rv = SendData(command.GetBuffer());
+  }
 
-    PR_EnterMonitor(m_eventCompletionMonitor);
-    PR_NotifyAll(m_eventCompletionMonitor);
-    PR_ExitMonitor(m_eventCompletionMonitor);
+  PR_EnterMonitor(m_threadDeathMonitor);
+  m_threadShouldDie = PR_TRUE;
+  PR_ExitMonitor(m_threadDeathMonitor);
 
-    PR_EnterMonitor(m_urlReadyToRunMonitor);
-    PR_NotifyAll(m_urlReadyToRunMonitor);
-    PR_ExitMonitor(m_urlReadyToRunMonitor);
+  PR_EnterMonitor(m_eventCompletionMonitor);
+  PR_NotifyAll(m_eventCompletionMonitor);
+  PR_ExitMonitor(m_eventCompletionMonitor);
 
-    PR_EnterMonitor(m_dataAvailableMonitor);
-    PR_Notify(m_dataAvailableMonitor);
-    PR_ExitMonitor(m_dataAvailableMonitor);
+  PR_EnterMonitor(m_urlReadyToRunMonitor);
+  PR_NotifyAll(m_urlReadyToRunMonitor);
+  PR_ExitMonitor(m_urlReadyToRunMonitor);
 
-    PR_CExitMonitor(this);
+  PR_EnterMonitor(m_dataAvailableMonitor);
+  PR_Notify(m_dataAvailableMonitor);
+  PR_ExitMonitor(m_dataAvailableMonitor);
 
-    return rv;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsImapProtocol::GetLastActiveTimeStamp(PRTime* aTimeStamp)
 {
-    PR_CEnterMonitor(this);
-    if (aTimeStamp)
-        *aTimeStamp = m_lastActiveTime;
-    PR_CExitMonitor(this);
-    return NS_OK;
+  nsAutoCMonitor(this);
+  if (aTimeStamp)
+      *aTimeStamp = m_lastActiveTime;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted)
 {
-  if (!interrupted)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG (interrupted);
 
-  PR_CEnterMonitor(this);
+  nsAutoCMonitor(this);
 
   if (m_runningUrl)
   {
@@ -839,8 +844,8 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted
       rv = GetRunningImapURL(getter_AddRefs(runningImapURL));
       if (NS_SUCCEEDED(rv) && runningImapURL)
       {
-                nsXPIDLCString runningImapUrlSourceFolder;
-                nsXPIDLCString newImapUrlSourceFolder;
+        nsXPIDLCString runningImapUrlSourceFolder;
+        nsXPIDLCString newImapUrlSourceFolder;
 
         runningImapURL->CreateServerSourceFolderPathString(getter_Copies(runningImapUrlSourceFolder));
         aImapUrl->CreateServerSourceFolderPathString(getter_Copies(newImapUrlSourceFolder));
@@ -854,7 +859,6 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted
   }
   // this should check if the protocol instance is currently running a msg fetch
   // url for the passed folder, and if so, pseudo interrupt it.
-    PR_CExitMonitor(this);
   return NS_OK;
 }
 
@@ -878,7 +882,7 @@ nsImapProtocol::ImapThreadMainLoop()
       ClearFlag(IMAP_FIRST_PASS_IN_THREAD);
     }
 
-        PR_EnterMonitor(m_urlReadyToRunMonitor);
+    PR_EnterMonitor(m_urlReadyToRunMonitor);
 
     PRStatus err;
 
@@ -1272,18 +1276,21 @@ NS_IMETHODIMP nsImapProtocol::GetRunningImapURL(nsIImapUrl **aImapUrl)
 nsresult nsImapProtocol::SendData(const char * dataBuffer)
 {
   PRUint32 writeCount = 0; 
-    nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_ERROR_NULL_POINTER;
 
-    if (!m_channel)
-        return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(m_channel, NS_ERROR_FAILURE);
 
   if (dataBuffer && m_outputStream)
   {
-        m_currentCommand = dataBuffer;
-        Log("SendData", nsnull, dataBuffer);
+    m_currentCommand = dataBuffer;
+    Log("SendData", nsnull, dataBuffer);
     rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
-        if (NS_FAILED(rv))
-            TellThreadToDie(PR_FALSE);
+    if (NS_FAILED(rv))
+    {
+      // the connection died unexpectedly! so clear the open connection flag
+      ClearFlag(IMAP_CONNECTION_IS_OPEN); 
+      TellThreadToDie(PR_FALSE);
+    }
   }
 
   return rv;
