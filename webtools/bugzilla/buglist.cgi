@@ -528,12 +528,6 @@ if ($order) {
                     else {
                         ThrowCodeError("invalid_column_name_form");
                     }
-                } elsif (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @selectnames)) {
-                    # Add order columns to selectnames
-                    # The fragment has already been validated
-                    $fragment =~ s/\s+(asc|desc)$//;
-                    trick_taint($fragment);
-                    push @selectnames, $fragment;
                 }
             }
             # Now that we have checked that all columns in the order are valid,
@@ -559,6 +553,16 @@ if ($order) {
         };
         # DEFAULT
         $order = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
+    }
+    foreach my $fragment (split(/,/, $order)) {
+        $fragment = trim($fragment);
+        if (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @selectnames)) {
+            # Add order columns to selectnames
+            # The fragment has already been validated
+            $fragment =~ s/\s+(asc|desc)$//;
+            $fragment =~ tr/a-zA-Z\.0-9\-_//cd;
+            push @selectnames, $fragment;
+        }
     }
 
     $db_order = $order;  # Copy $order into $db_order for use with SQL query
