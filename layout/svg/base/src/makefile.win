@@ -31,12 +31,14 @@ CPPSRCS=					\
   nsSVGContainerFrame.cpp \
   nsPolygonFrame.cpp \
   nsPolylineFrame.cpp \
+  nsSVGPathFrame.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
   .\$(OBJDIR)\nsSVGContainerFrame.obj    \
   .\$(OBJDIR)\nsPolygonFrame.obj    \
   .\$(OBJDIR)\nsPolylineFrame.obj    \
+  .\$(OBJDIR)\nsSVGPathFrame.obj    \
 	$(NULL)
 
 EXPORTS =					\
