@@ -27,6 +27,7 @@
 
 #include "nsINetService.h"
 #include "nsIMsgMailSession.h"
+#include "nsIIMAPHostSessionList.h"
 #include "nsIMAPGenericParser.h"
 #include "nsString.h"
 #include "prmem.h"
@@ -40,6 +41,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kCImapHostSessionListCID, NS_IIMAPHOSTSESSIONLIST_CID);
 
 nsImapUrl::nsImapUrl()
 {
@@ -1217,67 +1219,94 @@ char *nsImapUrl::AllocateServerPath(const char *canonicalPath, char onlineDelimi
 
 NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) 
 {
-	NS_LOCK_INSTANCE();
-    *allocatedPath = nsnull;
-#if 0 // here's the old code.
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    char *canonicalPath = nsnull;
 	char delimiterToUse = onlineDelimiter;
+    const char* hostName = nsnull;
+    char* userName = nsnull;
+    nsString aString;
+	char *currentPath = (char *) serverPath;
+    char *onlineDir = nsnull;
+
+	NS_LOCK_INSTANCE();
+
+    NS_WITH_SERVICE(nsIImapHostSessionList, hostSessionList,
+                    kCImapHostSessionListCID, &rv);    
+
+    *allocatedPath = nsnull;
+
 	if (onlineDelimiter == kOnlineHierarchySeparatorUnknown ||
 		onlineDelimiter == 0)
 		delimiterToUse = GetOnlineSubDirSeparator();
 
-	XP_ASSERT(serverPath);
-	if (!serverPath)
-		return NULL;
+	NS_ASSERTION (serverPath, "Oops... null serverPath");
 
-	// First we have to check to see if we should strip off an online server subdirectory
+	if (!serverPath)
+		goto done;
+
+    if (NS_FAILED(rv))
+        goto done;
+
+    GetHost(&hostName);
+    m_server->GetUserName(&userName);
+
+    hostSessionList->GetOnlineDirForHost(hostName, userName, aString); 
+    // First we have to check to see if we should strip off an online server
+    // subdirectory 
 	// If this host has an online server directory configured
-	char *currentPath = (char *) serverPath;
-	char *onlineDir = TIMAPHostInfo::GetOnlineDirForHost(GetUrlHost());
+	onlineDir = aString.Length() > 0? aString.ToNewCString(): nsnull;
+
 	if (currentPath && onlineDir)
 	{
 #ifdef DEBUG
 		// This invariant should be maintained by libmsg when reading/writing the prefs.
 		// We are only supporting online directories whose online delimiter is /
 		// Therefore, the online directory must end in a slash.
-		XP_ASSERT(onlineDir[XP_STRLEN(onlineDir) - 1] == '/');
+		NS_ASSERTION (onlineDir[PL_strlen(onlineDir) - 1] == '/', 
+                      "Oops... online dir not end in a slash");
 #endif
 
 		// By definition, the online dir must be at the root.
-		int len = XP_STRLEN(onlineDir);
-		if (!XP_STRNCMP(onlineDir, currentPath, len))
+		int len = PL_strlen(onlineDir);
+		if (!PL_strncmp(onlineDir, currentPath, len))
 		{
 			// This online path begins with the server sub directory
 			currentPath += len;
 
 			// This might occur, but it's most likely something not good.
 			// Basically, it means we're doing something on the online sub directory itself.
-			XP_ASSERT(*currentPath);
+			NS_ASSERTION (*currentPath, "Oops ... null currentPath");
 			// Also make sure that the first character in the mailbox name is not '/'.
-			XP_ASSERT(*currentPath != '/');
+			NS_ASSERTION (*currentPath != '/', 
+                          "Oops ... currentPath starts with a slash");
 		}
 	}
 
 	if (!currentPath)
-		return NULL;
+		goto done;
 
 	// Now, start the conversion to canonical form.
-	char *canonicalPath = ReplaceCharsInCopiedString(currentPath, delimiterToUse , '/');
+	canonicalPath = ReplaceCharsInCopiedString(currentPath, delimiterToUse ,
+                                               '/');
 	
 	// eat any escape characters for escaped dir separators
 	if (canonicalPath)
 	{
-		char *currentEscapeSequence = XP_STRSTR(canonicalPath, "\\/");
+		char *currentEscapeSequence = PL_strstr(canonicalPath, "\\/");
 		while (currentEscapeSequence)
 		{
-			XP_STRCPY(currentEscapeSequence, currentEscapeSequence+1);
-			currentEscapeSequence = XP_STRSTR(currentEscapeSequence+1, "\\/");
+			PL_strcpy(currentEscapeSequence, currentEscapeSequence+1);
+			currentEscapeSequence = PL_strstr(currentEscapeSequence+1, "\\/");
 		}
+        *allocatedPath = canonicalPath;
 	}
 
-	return canonicalPath;
-#endif // 0
+done:
+    PR_FREEIF(userName);
+    PR_FREEIF(onlineDir);
+
     NS_UNLOCK_INSTANCE();
-    return NS_ERROR_NULL_POINTER;
+    return rv;
 }
 
 NS_IMETHODIMP  nsImapUrl::CreateServerSourceFolderPathString(char **result)
