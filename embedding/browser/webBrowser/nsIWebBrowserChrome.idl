@@ -76,8 +76,9 @@ interface nsIWebBrowserChrome : nsISupports
 	const unsigned long titlebarOn          = 0x00000400;
 	const unsigned long extraChromeOn       = 0x00000800;
 
-	const unsigned long windowRaised        = 0x04000000;
-	const unsigned long windowLowered       = 0x08000000;
+	const unsigned long windowRaised        = 0x02000000;
+	const unsigned long windowLowered       = 0x04000000;
+	const unsigned long centerScreen        = 0x08000000;
 	const unsigned long dependent           = 0x10000000;
 	const unsigned long modal               = 0x20000000;
 	const unsigned long openAsDialog        = 0x40000000;
