@@ -59,6 +59,7 @@
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
       <preference id="app.update.autoUpdateEnabled"    name="app.update.autoUpdateEnabled"    type="bool"/>
       <preference id="extensions.update.autoUpdateEnabled" name="extensions.update.autoUpdateEnabled" type="bool"/>
+      <preference id="mailnews.tcptimeout" name="mailnews.tcptimeout" type="int"/>
       <preference id="security.disable_button.openCertManager"
                   name="security.disable_button.openCertManager"
                   type="bool"/>
@@ -120,6 +121,12 @@
           </vbox>
           
           <separator class="thin"/>
+
+          <hbox align="center" pack="start">
+            <label value="&connectionTimeout.label;" accesskey="&connectionTimeout.accesskey;" control="connectionTimeoutBox" />
+            <textbox  id="connectionTimeoutBox" size="3" preference="mailnews.tcptimeout"/>
+            <label value="&connectionSeconds.label;"/>
+          </hbox>
 
           <hbox align="center">
             <description flex="1">&offline.label;</description>

@@ -25,6 +25,9 @@
 <!ENTITY reuseExpRadio1.accesskey      "x">
 <!ENTITY showOfflineSettings.label     "Offline Settings...">
 <!ENTITY showOfflineSettings.accesskey "f">
+<!ENTITY connectionTimeout.label "Connection timeout: ">
+<!ENTITY connectionTimeout.accesskey   "C">
+<!ENTITY connectionSeconds.label "seconds">
 <!ENTITY offline.label                 "Configure Offline Settings">
 
 <!-- Update -->
