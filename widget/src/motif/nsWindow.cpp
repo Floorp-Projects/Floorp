@@ -55,8 +55,7 @@ void nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 // Setup initial tooltip rectangles
 //
 //-------------------------------------------------------------------------
-
-void nsWindow::SetTooltips(PRUint32 aNumberOfTips,const nsRect* aTooltipAreas)
+void nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
 {
 }
 
@@ -66,7 +65,7 @@ void nsWindow::SetTooltips(PRUint32 aNumberOfTips,const nsRect* aTooltipAreas)
 //
 //-------------------------------------------------------------------------
 
-void nsWindow::UpdateTooltips(const nsRect* aNewTips)
+void nsWindow::UpdateTooltips(nsRect* aNewTips[])
 {
 }
 
@@ -91,6 +90,9 @@ nsWindow::nsWindow(nsISupports *aOuter)
   // XXX Til can deal with ColorMaps!
   SetForegroundColor(1);
   SetBackgroundColor(2);
+
+  mToolkit = nsnull ;
+
 }
 
 
@@ -115,7 +117,7 @@ void nsWindow::Create(nsIWidget *aParent,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIToolkit *aToolkit,
-                      void *aInitData)
+                      nsWidgetInitData *aInitData)
 {
 
   Widget mainWindow, frame;
@@ -152,6 +154,22 @@ void nsWindow::Create(nsIWidget *aParent,
   else {
     nsresult  res;
     
+    // XXX Move this! - For some reason Registering in another DLL (shell) isn't working
+        
+#define GFXWIN_DLL "libgfxunix.so"
+
+    static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
+    static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
+    static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
+    static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
+    
+    NSRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    
+    
+    
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
     
@@ -163,20 +181,20 @@ void nsWindow::Create(nsIWidget *aParent,
     if (NS_OK == res)
       mContext->Init();
   }
-
+  
   if (aParent)
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   else
     parentWidget = (Widget) aInitData ;
-
+  
   if (!aParent)
     mainWindow = ::XtVaCreateManagedWidget("mainWindow",
 					   xmMainWindowWidgetClass,
-					   parentWidget,
-					   XmNwidth, aRect.width,
-					   XmNheight, aRect.height,
-					   nsnull);
-
+					   parentWidget, 
+  					   XmNwidth, aRect.width,
+  					   XmNheight, aRect.height,
+  					   nsnull);
+  
   frame = ::XtVaCreateManagedWidget("frame",
 				    xmDrawingAreaWidgetClass,
 				    (aParent) ? parentWidget : mainWindow,
@@ -236,7 +254,7 @@ void nsWindow::Create(nsNativeWindow aParent,
                          EVENT_CALLBACK aHandleEventFunction,
                          nsIDeviceContext *aContext,
                          nsIToolkit *aToolkit,
-                         void *aInitData)
+                         nsWidgetInitData *aInitData)
 {
 }
 
@@ -488,11 +506,6 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
             return (void*)(mWidget);
 	  }
 	break;
-        case NS_NATIVE_DISPLAY:
-	  {
-            return (void*)(XtDisplay(mWidget));
-	  }
-	break;
         case NS_NATIVE_GRAPHIC:
 	  {
 	    XGCValues values;
@@ -670,6 +683,13 @@ void nsWindow::OnPaint(nsPaintEvent &event)
 }
 
 
+void nsWindow::BeginResizingChildren(void)
+{
+}
+
+void nsWindow::EndResizingChildren(void)
+{
+}
 
 
 

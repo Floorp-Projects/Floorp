@@ -21,10 +21,10 @@
 
 #include "Xm/Xm.h"
 
-void nsXtWidget_ExposureMask_EventHandler(Widget w, caddr_t client_data, XEvent * event);
-void nsXtWidget_ButtonPressMask_EventHandler(Widget w, caddr_t client_data, XEvent * event);
-void nsXtWidget_ButtonReleaseMask_EventHandler(Widget w, caddr_t client_data, XEvent * event);
-void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, caddr_t client_data, XEvent * event);
+void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
+void nsXtWidget_ButtonPressMask_EventHandler(Widget w,XtPointer p, XEvent * event, Boolean * b);
+void nsXtWidget_ButtonReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
+void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
 
 #endif  // __nsXtEventHandler.h
 

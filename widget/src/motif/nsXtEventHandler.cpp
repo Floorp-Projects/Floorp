@@ -23,10 +23,10 @@
 
 #include "stdio.h"
 
-void nsXtWidget_ExposureMask_EventHandler(Widget w, caddr_t client_data, XEvent * event)
+void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsPaintEvent pevent ;
-  nsWindow * widgetWindow = (nsWindow *) client_data ;
+  nsWindow * widgetWindow = (nsWindow *) p ;
 
   if (event->xexpose.count != 0)
     return ;
@@ -43,19 +43,19 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, caddr_t client_data, XEvent 
 
 }
 
-void nsXtWidget_ButtonPressMask_EventHandler(Widget w, caddr_t client_data, XEvent * event)
+void nsXtWidget_ButtonPressMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
-  nsWindow * widgetWindow = (nsWindow *) client_data ;
+  nsWindow * widgetWindow = (nsWindow *) p;
 }
 
-void nsXtWidget_ButtonReleaseMask_EventHandler(Widget w, caddr_t client_data, XEvent * event)
+void nsXtWidget_ButtonReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
-  nsWindow * widgetWindow = (nsWindow *) client_data ;
+  nsWindow * widgetWindow = (nsWindow *) p ;
 }
 
-void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, caddr_t client_data, XEvent * event)
+void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
-  nsWindow * widgetWindow = (nsWindow *) client_data ;
+  nsWindow * widgetWindow = (nsWindow *) p ;
 }
 
 
