@@ -1,21 +1,28 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- * the License for the specific language governing rights and limitations
- * under the License.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is Mozilla Communicator client code, 
+ * released March 31, 1998. 
  *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+ * The Initial Developer of the Original Code is Netscape Communications 
+ * Corporation.  Portions created by Netscape are 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ *
+ * Contributors:
+ *     Daniel Veditz <dveditz@netscape.com>
+ *     Douglas Turner <dougt@netscape.com>
  */
+
 
 
 #include "nscore.h"
@@ -71,7 +78,9 @@ nsInstallInfo::nsInstallInfo(const nsString& fromURL, const nsString& arguments,
     mArguments          = new nsString(arguments);
     mFlags              = new nsString(flags);
     mLocalFile          = new nsString();
-
+    
+    mInstalled          = PR_FALSE;
+    
     mMultipleTrigger    = PR_FALSE;
     mFromURLs           = nsnull;
     mLocalFiles         = nsnull;
@@ -88,6 +97,7 @@ nsInstallInfo::nsInstallInfo(nsVector* fromURL, const nsString& arguments, const
     mArguments       = new nsString(arguments);
     mFlags           = new nsString(flags);
 
+    mInstalled       = PR_FALSE;
     mMultipleTrigger = PR_FALSE;
     
     // The following are not to be used with the Multiple Trigger 
@@ -213,7 +223,6 @@ nsInstallInfo::IsMultipleTrigger()
     return mMultipleTrigger;
 }
 
-
 nsInstall::nsInstall()
 {
     mScriptObject           = nsnull;           // this is the jsobject for our context
@@ -225,17 +234,14 @@ nsInstall::nsInstall()
     mUninstallPackage = PR_FALSE;
     mRegisterPackage  = PR_FALSE;
 
-    mJarFileLocation = nsnull;
-    mInstallArguments = nsnull;
+    mJarFileLocation = "";
+    mInstallArguments = "";
 }
 
 nsInstall::~nsInstall()
 {
     if (mVersionInfo != nsnull)
         delete mVersionInfo;
-
-    PR_FREEIF( mJarFileLocation );
-    PR_FREEIF( mInstallArguments );
 }
 
 
@@ -1263,31 +1269,27 @@ nsInstall::CleanUp(void)
 
 
 void       
-nsInstall::GetJarFileLocation(char** aFile)
+nsInstall::GetJarFileLocation(nsString& aFile)
 {
-    *aFile = mJarFileLocation;
+    aFile.SetString( mJarFileLocation );
 }
 
 void       
-nsInstall::SetJarFileLocation(const char* aFile)
+nsInstall::SetJarFileLocation(const nsString& aFile)
 {
-    PR_FREEIF(mJarFileLocation);
-    mJarFileLocation = (char*) malloc( strlen(aFile) + 1 );
-    strncpy(mJarFileLocation, aFile, strlen(aFile) + 1 );
+    mJarFileLocation.SetString(aFile);
 }
 
 void       
-nsInstall::GetInstallArguments(char** args)
+nsInstall::GetInstallArguments(nsString& args)
 {
-    *args = mInstallArguments;
+    args.SetString( mInstallArguments );
 }
 
 void       
-nsInstall::SetInstallArguments(const char* args)
+nsInstall::SetInstallArguments(const nsString& args)
 {
-    PR_FREEIF(mInstallArguments);
-    mInstallArguments = (char*) malloc( strlen(args) + 1 );
-    strncpy(mInstallArguments, args, strlen(args) + 1);
+    mInstallArguments.SetString(args);
 }
 
 
@@ -1296,7 +1298,7 @@ PRInt32
 nsInstall::OpenJARFile(void)
 {    
     
-    PRInt32 result = ZIP_OpenArchive(mJarFileLocation,  &mJarFileData);
+    PRInt32 result = ZIP_OpenArchive(nsAutoCString(mJarFileLocation),  &mJarFileData);
     
     return result;
 }

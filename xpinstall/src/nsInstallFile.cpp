@@ -1,26 +1,32 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
- * NPL.
+ * License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
+ * The Original Code is Mozilla Communicator client code, 
+ * released March 31, 1998. 
+ *
+ * The Initial Developer of the Original Code is Netscape Communications 
+ * Corporation.  Portions created by Netscape are 
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributors:
+ *     Daniel Veditz <dveditz@netscape.com>
+ *     Douglas Turner <dougt@netscape.com>
  */
 
-#include "nsFileSpec.h"
-
-#include "VerReg.h"
 #include "nsInstallFile.h"
-
+#include "nsFileSpec.h"
+#include "VerReg.h"
+#include "ScheduledTasks.h"
 #include "nsInstall.h"
 #include "nsInstallVersion.h"
 
@@ -191,19 +197,25 @@ PRInt32 nsInstallFile::CompleteFileMove()
         }
         else
         {
-            /* Target exists, can't trust XP_FileRename--do platform specific stuff in FE_ReplaceExistingFile() */
-            // FIX: FE_ReplaceExistingFile()
             mFinalFile->Delete(PR_FALSE);
 
-            // Now that we have move the existing file, we can move the mExtracedFile into place.
-            nsFileSpec parentofFinalFile;
+            if (! mFinalFile->Exists())
+            {    
+                // Now that we have move the existing file, we can move the mExtracedFile into place.
+                nsFileSpec parentofFinalFile;
 
-            mFinalFile->GetParent(parentofFinalFile);
-            result = mExtracedFile->Move(parentofFinalFile);
+                mFinalFile->GetParent(parentofFinalFile);
+                result = mExtracedFile->Move(parentofFinalFile);
             
-            char* leafName = mFinalFile->GetLeafName();
-            mExtracedFile->Rename(leafName);
-            delete [] leafName;
+                char* leafName = mFinalFile->GetLeafName();
+                mExtracedFile->Rename(leafName);
+                delete [] leafName;
+            }
+            else
+            {
+                ReplaceFileLater(mExtracedFile->GetCString(), mFinalFile->GetCString() );
+                result = nsInstall::REBOOT_NEEDED;
+            }
         }
     }
 

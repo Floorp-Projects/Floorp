@@ -57,10 +57,12 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case INSTALL_USERPACKAGENAME:
       {
         nsAutoString prop;
-        if (NS_OK == a->GetUserPackageName(prop)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        if (NS_OK == a->GetUserPackageName(prop)) 
+        {
+            *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop, prop.Length()) );
         }
-        else {
+        else 
+        {
           return JS_TRUE;
         }
         break;
@@ -68,27 +70,33 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case INSTALL_REGPACKAGENAME:
       {
         nsAutoString prop;
-        if (NS_OK == a->GetRegPackageName(prop)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        if (NS_OK == a->GetRegPackageName(prop)) 
+        {
+          *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop, prop.Length()) );
         }
-        else {
+        else 
+        {
           return JS_TRUE;
         }
         break;
       }
       case INSTALL_JARFILE:
       {
-        char* prop;
-        a->GetJarFileLocation(&prop);
-        nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        nsAutoString prop;
+        
+        a->GetJarFileLocation(prop);
+        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop, prop.Length()) );
+        
         break;
       }
 
       case INSTALL_ARGUMENTS:
       {
-        char* prop;
-        a->GetInstallArguments(&prop);
-        nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        nsAutoString prop;
+        
+        a->GetInstallArguments(prop); 
+        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop, prop.Length()) );
+        
         break;
       }
         
@@ -132,33 +140,8 @@ SetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 
-//
-// Install finalizer
-//
-PR_STATIC_CALLBACK(void)
-FinalizeInstall(JSContext *cx, JSObject *obj)
+static void PR_CALLBACK FinalizeInstall(JSContext *cx, JSObject *obj)
 {
-  nsJSUtils::nsGenericFinalize(cx, obj);
-}
-
-
-//
-// Install enumerate
-//
-PR_STATIC_CALLBACK(JSBool)
-EnumerateInstall(JSContext *cx, JSObject *obj)
-{
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
-}
-
-
-//
-// Install resolve
-//
-PR_STATIC_CALLBACK(JSBool)
-ResolveInstall(JSContext *cx, JSObject *obj, jsval id)
-{
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 
@@ -920,6 +903,9 @@ InstallUninstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 }
 
 
+
+
+
 /***********************************************************************/
 //
 // class for Install
@@ -931,8 +917,8 @@ JSClass InstallClass = {
   JS_PropertyStub,
   GetInstallProperty,
   SetInstallProperty,
-  EnumerateInstall,
-  ResolveInstall,
+  JS_EnumerateStub,
+  JS_ResolveStub,
   JS_ConvertStub,
   FinalizeInstall
 };
@@ -1034,6 +1020,45 @@ PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, co
 {
   JSContext *jscontext  = (JSContext *)aContext->GetNativeContext();
   JSObject *global      = JS_GetGlobalObject(jscontext);
+  JSObject *installObject = nsnull;
+  nsInstall *nativeInstallObject;
+
+  installObject  = JS_InitClass( jscontext,         // context
+                                 global,            // global object
+                                 nsnull,            // parent proto 
+                                 &InstallClass,     // JSClass
+                                 nsnull,            // JSNative ctor
+                                 0,                 // ctor args
+                                 nsnull,            // proto props
+                                 nsnull,            // proto funcs
+                                 InstallProperties, // ctor props (static)
+                                 InstallMethods);   // ctor funcs (static)
+
+  if (nsnull == installObject) 
+  {
+      return NS_ERROR_FAILURE;
+  }
+
+  if ( PR_FALSE == JS_DefineConstDoubles(jscontext, installObject, install_constants) )
+            return NS_ERROR_FAILURE;
+  
+  
+  nativeInstallObject = new nsInstall();
+
+  nativeInstallObject->SetJarFileLocation(jarfile);
+  nativeInstallObject->SetInstallArguments(args);
+
+  JS_SetPrivate(jscontext, installObject, nativeInstallObject);
+  nativeInstallObject->SetScriptObject(installObject);
+ 
+  return NS_OK;
+}
+
+
+
+
+PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char* jarfile, const char* args)
+{
   JSObject *installObject = nsnull;
   nsInstall *nativeInstallObject;
 

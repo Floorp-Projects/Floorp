@@ -32,16 +32,19 @@ class nsSoftwareUpdate: public nsISoftwareUpdate
                                   const nsString& flags, 
                                   const nsString& args);  
 
+            
+            
+            NS_IMETHOD RunNextInstall();
+            NS_IMETHOD InstallJarCallBack();
 
 
     private:
         nsresult Startup();
         nsresult Shutdown();
         
-        nsresult UpdateInstallJarQueue();
         nsresult DeleteScheduledNodes();
         
-        PRInt32           mInstalling;
+        PRBool            mInstalling;
         nsVector*         mJarInstallQueue;
 
         static nsSoftwareUpdate* mInstance;

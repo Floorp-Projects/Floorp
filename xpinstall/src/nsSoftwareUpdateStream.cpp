@@ -62,7 +62,7 @@ nsSoftwareUpdateListener::nsSoftwareUpdateListener(nsInstallInfo *nextInstall)
     nsIURL  *pURL  = nsnull;
     mResult = NS_NewURL(&pURL, nextInstall->GetFromURL());
 
-    if (mResult != NS_OK)
+    if (NS_FAILED(mResult)) 
         return;
  
     mResult = NS_OpenURL(pURL, this);
@@ -144,7 +144,7 @@ nsSoftwareUpdateListener::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream
     {
         err = pIStream->Read(buffer, BUF_SIZE, &len);
         
-        if (err == NS_OK) 
+        if (err == 0)
         {
             if ( PR_Write(mOutFileDesc, buffer, len) == -1 )
             {
