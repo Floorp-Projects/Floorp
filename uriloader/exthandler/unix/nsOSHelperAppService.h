@@ -59,7 +59,10 @@ protected:
   already_AddRefed<nsMIMEInfoBase> GetFromType(const char *aMimeType);
   already_AddRefed<nsMIMEInfoBase> GetFromExtension(const char *aFileExt);
 
+  virtual void FixFilePermissions(nsILocalFile* aFile);
 private:
+  PRUint32 mPermissions;
+
   // Helper methods which have to access static members
   static nsresult UnescapeCommand(const nsAString& aEscapedCommand,
                                   const nsAString& aMajorType,

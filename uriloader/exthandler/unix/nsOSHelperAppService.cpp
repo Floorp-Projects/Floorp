@@ -21,6 +21,9 @@
  *   Boris Zbarsky <bzbarsky@mit.edu>  (Added mailcap and mime.types support)
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "nsOSHelperAppService.h"
 #ifdef MOZ_WIDGET_GTK2
 #include "nsGNOMERegistry.h"
@@ -70,6 +73,10 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 #ifdef MOZ_WIDGET_GTK2
   nsGNOMERegistry::Startup();
 #endif
+
+  mode_t mask = umask(0777);
+  umask(mask);
+  mPermissions = 0666 & ~mask;
 }
 
 nsOSHelperAppService::~nsOSHelperAppService()
@@ -1605,5 +1612,11 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
     miByExt.swap(retval);
   }
   return retval;
+}
+
+void
+nsOSHelperAppService::FixFilePermissions(nsILocalFile* aFile)
+{
+  aFile->SetPermissions(mPermissions); 
 }
 

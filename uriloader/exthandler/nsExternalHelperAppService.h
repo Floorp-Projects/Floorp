@@ -234,6 +234,13 @@ protected:
   nsresult GetMIMEInfoForExtensionFromExtras(const char * aExtension,
                                              nsIMIMEInfo * aMIMEInfo);
 
+  /**
+   * Fixes the file permissions to be correct. Base class has a no-op
+   * implementation, subclasses can use this to correctly inherit ACLs from the
+   * parent directory, to make the permissions obey the umask, etc.
+   */
+  virtual void FixFilePermissions(nsILocalFile* aFile);
+
 #ifdef PR_LOGGING
   /**
    * NSPR Logging Module. Usage: set NSPR_LOG_MODULES=HelperAppService:level,
@@ -242,9 +249,9 @@ protected:
    */
   static PRLogModuleInfo* mLog;
 
-  // friend, so that it can access the nspr log module
-  friend class nsExternalAppHandler;
 #endif
+  // friend, so that it can access the nspr log module and FixFilePermissions
+  friend class nsExternalAppHandler;
 
   /**
    * Functions related to the tempory file cleanup service provided by
@@ -289,8 +296,7 @@ public:
   nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension,
                 nsISupports * aWindowContext,
                 const nsAString& aFilename,
-                PRBool aIsAttachment,
-                nsExternalHelperAppService *aHelperAppService);
+                PRBool aIsAttachment);
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
@@ -405,7 +411,6 @@ protected:
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
   nsCOMPtr<nsIChannel> mOriginalChannel; /**< in the case of a redirect, this will be the pre-redirect channel. */
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
-  nsExternalHelperAppService *mHelperAppService;
 
   /**
    * The request that's being loaded. Not used after OnStopRequest, so a weak
