@@ -22,7 +22,6 @@
 #ifndef msgCore_h__
 #define msgCore_h__
 
-#define DOING_FILTERS	// leave this under #ifdef control for a bit.
 #include "nscore.h"
 #include "xp_core.h"
 #include "nsCRT.h"
