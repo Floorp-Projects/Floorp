@@ -117,6 +117,7 @@ nsInspectorCSSUtils::AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect)
     return NS_OK;
 }
 
+/* static */
 nsStyleContext*
 nsInspectorCSSUtils::GetStyleContextForFrame(nsIFrame* aFrame)
 {
@@ -135,25 +136,30 @@ nsInspectorCSSUtils::GetStyleContextForFrame(nsIFrame* aFrame)
     return styleContext;
 }    
 
+/* static */
 already_AddRefed<nsStyleContext>
 nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
+                                               nsIAtom* aPseudo,
                                                nsIPresShell* aPresShell)
 {
-    nsIFrame* frame = nsnull;
-    aPresShell->GetPrimaryFrameFor(aContent, &frame);
-    if (frame) {
-        nsStyleContext* result = GetStyleContextForFrame(frame);
-        // this function returns an addrefed style context
-        if (result)
-            result->AddRef();
-        return result;
+    if (!aPseudo) {
+        nsIFrame* frame = nsnull;
+        aPresShell->GetPrimaryFrameFor(aContent, &frame);
+        if (frame) {
+            nsStyleContext* result = GetStyleContextForFrame(frame);
+            // this function returns an addrefed style context
+            if (result)
+                result->AddRef();
+            return result;
+        }
     }
 
-    // No frame has been created, so resolve the style ourselves
+    // No frame has been created or we have a pseudo, so resolve the
+    // style ourselves
     nsRefPtr<nsStyleContext> parentContext;
-    nsCOMPtr<nsIContent> parent = aContent->GetParent();
+    nsIContent* parent = aPseudo ? aContent : aContent->GetParent();
     if (parent)
-        parentContext = GetStyleContextForContent(parent, aPresShell);
+        parentContext = GetStyleContextForContent(parent, nsnull, aPresShell);
 
     nsCOMPtr<nsIPresContext> presContext;
     aPresShell->GetPresContext(getter_AddRefs(presContext));
@@ -162,10 +168,16 @@ nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
 
     nsStyleSet *styleSet = aPresShell->StyleSet();
 
-    if (aContent->IsContentOfType(nsIContent::eELEMENT))
-        return styleSet->ResolveStyleFor(aContent, parentContext);
+    if (!aContent->IsContentOfType(nsIContent::eELEMENT)) {
+        NS_ASSERTION(!aPseudo, "Shouldn't have a pseudo for a non-element!");
+        return styleSet->ResolveStyleForNonElement(parentContext);
+    }
 
-    return styleSet->ResolveStyleForNonElement(parentContext);
+    if (aPseudo) {
+        return styleSet->ResolvePseudoStyleFor(aContent, aPseudo, parentContext);
+    }
+    
+    return styleSet->ResolveStyleFor(aContent, parentContext);
 }
 
 NS_IMETHODIMP
@@ -181,7 +193,7 @@ nsInspectorCSSUtils::GetRuleNodeForContent(nsIContent* aContent,
     NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
 
     nsRefPtr<nsStyleContext> sContext =
-        GetStyleContextForContent(aContent, presShell);
+        GetStyleContextForContent(aContent, nsnull, presShell);
     *aRuleNode = sContext->GetRuleNode();
     return NS_OK;
 }

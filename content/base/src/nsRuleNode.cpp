@@ -3236,20 +3236,25 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     FOR_CSS_SIDES(side) {
       const nsCSSValue &value = ourBorderColor.*(nsCSSRect::sides[side]);
       if (eCSSUnit_Inherit == value.GetUnit()) {
-        inherited = PR_TRUE;
-        parentBorder->GetBorderColor(side, borderColor,
-                                     transparent, foreground);      
-        if (transparent)
-          border->SetBorderTransparent(side);
-        else if (foreground) {
-          // We want to inherit the color from the parent, not use the
-          // color on the element where this chunk of style data will be
-          // used.  We can ensure that the data for the parent are fully
-          // computed (unlike for the element where this will be used, for
-          // which the color could be specified on a more specific rule).
-          border->SetBorderColor(side, parentContext->GetStyleColor()->mColor);
-        } else
-          border->SetBorderColor(side, borderColor);
+        if (parentContext) {
+          inherited = PR_TRUE;
+          parentBorder->GetBorderColor(side, borderColor,
+                                       transparent, foreground);
+          if (transparent)
+            border->SetBorderTransparent(side);
+          else if (foreground) {
+            // We want to inherit the color from the parent, not use the
+            // color on the element where this chunk of style data will be
+            // used.  We can ensure that the data for the parent are fully
+            // computed (unlike for the element where this will be used, for
+            // which the color could be specified on a more specific rule).
+            border->SetBorderColor(side, parentContext->GetStyleColor()->mColor);
+          } else
+            border->SetBorderColor(side, borderColor);
+        } else {
+          // We're the root
+          border->SetBorderToForeground(side);
+        }
       }
       else if (SetColor(value, unused, mPresContext, borderColor, inherited)) {
         border->SetBorderColor(side, borderColor);

@@ -4390,6 +4390,11 @@ nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
 {
   *aIsChild = PR_FALSE;
   *aProviderFrame = nsnull;
+  if (mContent && !mContent->GetParent()) {
+    // we're a frame for the root.  We have no style context parent.
+    return NS_OK;
+  }
+  
   if (!(mState & NS_FRAME_OUT_OF_FLOW)) {
     /*
      * If this frame is the anonymous block created when an inline

@@ -61,6 +61,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"
 #include "imgIRequest.h"
+#include "nsInspectorCSSUtils.h"
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -2909,21 +2910,12 @@ nsComputedDOMStyle::GetStyleData(nsStyleStructID aID,
 
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIPresContext> pctx;
-    presShell->GetPresContext(getter_AddRefs(pctx));
-    if (pctx) {
-      nsStyleContext* sctx;
-      nsStyleSet *styleSet = presShell->StyleSet();
-      if (!mPseudo) {
-        sctx = styleSet->ResolveStyleFor(mContent, nsnull).get();
-      } else {
-        sctx = styleSet->ResolvePseudoStyleFor(mContent, mPseudo,
-                                               nsnull).get();
-      }
-      if (sctx) {
-        aStyleStruct = sctx->GetStyleData(aID);
-      }
-      mStyleContextHolder = dont_AddRef(sctx);  // transfer ref from sctx
+    mStyleContextHolder =
+      nsInspectorCSSUtils::GetStyleContextForContent(mContent,
+                                                     mPseudo,
+                                                     presShell);
+    if (mStyleContextHolder) {
+      aStyleStruct = mStyleContextHolder->GetStyleData(aID);
     }
   }
   NS_ASSERTION(aStyleStruct, "Failed to get a style struct");
