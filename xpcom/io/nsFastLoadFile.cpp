@@ -1052,12 +1052,9 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
         return rv;
     oid ^= MFL_OID_XOR_KEY;
 
-    nsObjectMapEntry* entry = (oid != MFL_DULL_OBJECT_OID)
-                              ? &mFooter.GetSharpObjectEntry(oid)
-                              : nsnull;
     nsCOMPtr<nsISupports> object;
 
-    if (!entry) {
+    if (oid == MFL_DULL_OBJECT_OID) {
         // A very dull object, defined at point of single (strong) reference.
         NS_ASSERTION(aIsStrongRef, "dull object read via weak ref!");
 
@@ -1068,6 +1065,8 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
         NS_ASSERTION((oid & MFL_WEAK_REF_TAG) ==
                      (aIsStrongRef ? 0 : MFL_WEAK_REF_TAG),
                      "strong vs. weak ref deserialization mismatch!");
+
+        nsObjectMapEntry* entry = &mFooter.GetSharpObjectEntry(oid);
 
         // Check whether we've already deserialized the object for this OID.
         object = entry->mReadObject;
