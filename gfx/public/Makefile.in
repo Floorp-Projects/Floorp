@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= gfx
 
 EXPORTS		= \
+		imgScaler.h \
 		nsColor.h \
 		nsColorNames.h \
 		nsColorNameList.h \
@@ -57,10 +58,6 @@ EXPORTS		= \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 EXPORTS		+= nsIPrintingContext.h
-endif
-
-ifneq (,$(filter gtk xlib beos,$(MOZ_WIDGET_TOOLKIT)))
-EXPORTS		+= imgScaler.h
 endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
