@@ -51,6 +51,8 @@ interface nsIStringService : nsISupports
 {
   /**
    * Creates an nsAString from a |PRUnichar| buffer and length.
+   *
+   * Must be destroyed by deleteAString();
    * 
    * @param aString : A unicode string assigned to the new nsAString
    * @param aLength : The length of the string to be assigned to the new 
@@ -62,12 +64,32 @@ interface nsIStringService : nsISupports
   /**
    * Creates an nsAString from a |char| buffer and lenth.
    * 
+   * Must be destroyed by deleteACString();
+   *
    * @param aString : A string assigned to the new nsACString
    * @param aLength : The length of the string to be assigned to the new 
    *                  nsACString
    */
 
   nsACString createACString(in string aString, in long aLength); 
+
+
+
+  /**
+   * Frees memory associated with the |nsAString|.  After calling this method,
+   * the |aString| is no longer valid.
+   *
+   * @param aString : The |nsAString| object.
+   */
+  void deleteAString(in nsAString aString);
+
+  /**
+   * Frees memory associated with the |nsACString|.  After calling this method,
+   * the |aString| is no longer valid.
+   *
+   * @param aString : The |nsACString| object.
+   */
+  void deleteACString(in nsACString aString);
 
   /**
    * Returns a new |PRUnichar| buffer containing the bytes of |aString|.  This new 
