@@ -48,6 +48,7 @@
 #include "nsIWebBrowserFocus.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserPrint.h"
+#include "nsIWindowWatcher.h"
 
 // for painting the background window
 #include "nsIDeviceContext.h"
@@ -140,6 +141,7 @@ protected:
    nsCOMPtr<nsIScrollable>    mDocShellAsScrollable;
    nsCOMPtr<nsITextScroll>    mDocShellAsTextScroll;
    nsCOMPtr<nsIWidget>        mInternalWidget;
+   nsCOMPtr<nsIWindowWatcher> mWWatch;
    nsWebBrowserInitInfo*      mInitInfo;
    PRUint32                   mContentType;
    nativeWindow               mParentNativeWindow;

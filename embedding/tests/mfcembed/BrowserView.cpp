@@ -980,6 +980,7 @@ void CBrowserView::Activate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
     
     switch(nState) {
         case WA_ACTIVE:
+        case WA_CLICKACTIVE:
             focus->Activate();
             break;
         case WA_INACTIVE:
