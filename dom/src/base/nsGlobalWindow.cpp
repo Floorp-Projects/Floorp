@@ -433,7 +433,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
   if (aDocument) {
     if (mNavigator && mDocumentPrincipal) {
-      // Loading a new document.  Compare it's principal against the
+      // Loading a new document.  Compare its principal against the
       // old principal to see whether we are allowed to keep the old
       // navigator object.
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
