@@ -78,8 +78,18 @@ ifeq (,$(filter-out arm% sa110,$(OS_TEST)))
 	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = arm
 else
+ifeq ($(OS_TEST),s390)
+	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
+	CPU_ARCH        = s390
+else
+ifeq ($(OS_TEST),s390x)
+	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
+	CPU_ARCH        = s390x
+else
 	OS_REL_CFLAGS	= -DLINUX1_2 -Di386 -D_XOPEN_SOURCE
 	CPU_ARCH	= x86
+endif
+endif
 endif
 endif
 endif
