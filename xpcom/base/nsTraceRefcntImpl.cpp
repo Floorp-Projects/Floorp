@@ -348,16 +348,18 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
   BloatEntry* entry = NULL;
   if (gBloatView) {
     entry = (BloatEntry*)PL_HashTableLookup(gBloatView, aTypeName);
-    if (entry == NULL) {
+    if (entry == NULL && aInstanceSize > 0) {
+
       entry = new BloatEntry(aTypeName, aInstanceSize);
       PLHashEntry* e = PL_HashTableAdd(gBloatView, aTypeName, entry);
       if (e == NULL) {
         delete entry;
         entry = NULL;
       }
-    }
-    else {
-      NS_ASSERTION(aInstanceSize == 0 || entry->GetClassSize() == aInstanceSize, "bad size recorded");
+    } else {
+      NS_ASSERTION(aInstanceSize == 0 || 
+                   entry->GetClassSize() == aInstanceSize, 
+                   "bad size recorded");
     }
   }
   return entry;
