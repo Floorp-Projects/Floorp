@@ -33,10 +33,10 @@ static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID
 static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
 
 class nsHTMLTableColElement :  public nsIDOMHTMLTableColElement,
+                               public nsIHTMLTableColElement,
                                public nsIScriptObjectOwner,
                                public nsIDOMEventReceiver,
-                               public nsIHTMLContent,
-                               public nsIHTMLTableColElement
+                               public nsIHTMLContent
 {
 public:
   nsHTMLTableColElement(nsIAtom* aTag);

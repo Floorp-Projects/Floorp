@@ -28,12 +28,12 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
-static NS_DEFINE_IID(kIDOMHTMLTableColGroupElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID);
 
-class nsHTMLTableColGroupElement : public nsIDOMHTMLElement, // nsIDOMHTMLColGroupElement
-                       public nsIScriptObjectOwner,
-                       public nsIDOMEventReceiver,
-                       public nsIHTMLContent
+class nsHTMLTableColGroupElement : public nsIDOMHTMLTableColElement,
+                                   public nsIScriptObjectOwner,
+                                   public nsIDOMEventReceiver,
+                                   public nsIHTMLContent
 {
 public:
   nsHTMLTableColGroupElement(nsIAtom* aTag);
@@ -113,14 +113,13 @@ nsresult
 nsHTMLTableColGroupElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  /*
-  if (aIID.Equals(kIDOMHTMLTableColGroupElementIID)) {
-    nsIDOMHTMLTableColGroupElement* tmp = this;
+  // DOM treats COLGROUP like COL
+  if (aIID.Equals(kIDOMHTMLTableColElementIID)) {
+    nsIDOMHTMLTableColElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     mRefCnt++;
     return NS_OK;
   }
-  */
   return NS_NOINTERFACE;
 }
 
