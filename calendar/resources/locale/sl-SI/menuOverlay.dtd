@@ -138,5 +138,5 @@
 
 <!ENTITY helpMenu.accesskey            "P">
 
-<!ENTITY walletPasswordManager.label     "Password Manager">
-<!ENTITY walletPasswordManager.accesskey "p">
+<!ENTITY walletPasswordManager.label     "Upravljalec gesel">
+<!ENTITY walletPasswordManager.accesskey "g">

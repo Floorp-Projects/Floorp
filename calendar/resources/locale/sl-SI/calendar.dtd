@@ -160,7 +160,7 @@
 <!ENTITY event.title.alarm         "Alarm">
 <!ENTITY event.title.new         "Nov dogodek">
 <!ENTITY event.title.edit        "Uredi dogodek">
-<!ENTITY event.title.heading        "Calendar Alarm" >
+<!ENTITY event.title.heading        "Alarm koledarja">
 
 <!ENTITY onthe-text            "Na ">
 <!ENTITY last-text             "Zadnjih ">
@@ -421,8 +421,8 @@
 <!-- Calendar Import Outlook CSV Dialog -->
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
                   copied from outlook csv file headers -->
-<!ENTITY calendar.importoutlook.dialog.title "Outlook CSV Import" >
-<!ENTITY calendar.importoutlook.mapconcepts.label "Please map the following calendar concepts to their Outlook CSV equivalents:" >
+<!ENTITY calendar.importoutlook.dialog.title "Uvoz CSV iz Outlooka">
+<!ENTITY calendar.importoutlook.mapconcepts.label "Prosimo preslikajte sledeče pojme koledarja v njihove ustrezne CSV vrednosti:">
 <!ENTITY calendar.importoutlook.outlooksubject.label "Subject" >
 <!ENTITY calendar.importoutlook.outlookstartdate.label "Start date" >
 <!ENTITY calendar.importoutlook.outlookstarttime.label "Start time" >
@@ -436,9 +436,9 @@
 <!ENTITY calendar.importoutlook.outlookalarmdate.label "Alarm date" >
 <!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarm time" >
 <!ENTITY calendar.importoutlook.outlookcategories.label "Categories" >
-<!ENTITY calendar.importoutlook.selectmeaning.label "Select the meaning of the following word: " >
-<!ENTITY calendar.importoutlook.true.label "True" >
-<!ENTITY calendar.importoutlook.false.label "False" >
+<!ENTITY calendar.importoutlook.selectmeaning.label "Izberite pomen sledeče besede: ">
+<!ENTITY calendar.importoutlook.true.label "resnično">
+<!ENTITY calendar.importoutlook.false.label "neresnično">
 
 <!-- Tiskanje koledarja-->
 <!ENTITY calendar.print.window.title "Natisni koledar">
