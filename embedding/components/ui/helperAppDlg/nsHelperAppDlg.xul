@@ -1,0 +1,114 @@
+<?xml version="1.0"?> 
+
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s):
+    Bill Law    <law@netscape.com>
+
+-->
+
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  %brandDTD;
+  <!ENTITY % nsHelperAppDlgDTD SYSTEM "chrome://global/locale/nsHelperAppDlg.dtd" >
+  %nsHelperAppDlgDTD;
+]>            
+ 
+<window id="nsHelperAppDlg"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&caption.label;"
+        onload="dialog.initDialog()"
+        style="width: 40em;"
+        class="dialog"
+        align="vertical">
+              
+    <keyset id="keyset"/>
+           
+    <vbox>
+        <html id="intro">&intro.label;</html>     
+
+        <html id="prompt">&prompt.label;</html>
+
+        <radiogroup id="option" orient="vertical" oncommand="dialog.option()">
+            <radio id="default"
+                   group="option"
+                   label="&default.label;"
+                   accesskey="&default.accesskey;"/>
+            <vbox class="indent">
+                <hbox>
+                    <textbox id="explanation" readonly="true" flex="1"/>
+                    <button id="default.set"
+                            label="&default.set.label;"
+                            accesskey="&default.set.accesskey;"
+                            oncommand="dialog.setDefault()"/>
+                </hbox>
+                <checkbox id="alwaysAsk"
+                          label="&alwaysAsk.label;"
+                          accesskey="&alwaysAsk.accesskey;"
+                          disabled="true"
+                          checked="true"/>
+            </vbox>
+            <radio id="different"
+                   group="option"
+                   label="&different.label;"
+                   accesskey="&different.accesskey;"/>
+        </radiogroup>
+        <vbox class="indent">
+            <radiogroup id="different-option" orient="vertical" oncommand="dialog.differentOption()">
+                <radio id="saveToDisk"
+                       group="different-option"
+                       label="&saveToDisk.label;"
+                       accesskey="&saveToDisk.accesskey;"/>
+                    <hbox>
+                        <radio id="openUsing"
+                               group="different-option"
+                               label="&openUsing.label;"
+                               accesskey="&openUsing.accesskey;"/>
+                        <textbox id="appName" flex="1" oninput="dialog.updateOKButton()"/>
+                        <button id="chooseApp"
+                                label="&chooseApp.label;"
+                                accesskey="&chooseApp.accesskey;"
+                                oncommand="dialog.chooseApp()"/>
+                    </hbox>
+            </radiogroup>
+        </vbox>
+    </vbox>
+
+    <separator class="groove"/>
+
+    <box id="okCancelButtonsRight"/>
+           
+    <!-- Localizable strings (from .dtd) -->
+    <strings style="display:none;">
+        <string id="brandShortName">         &brandShortName;         </string>
+        <string id="intro.withDesc">         &intro.label;            </string>
+        <string id="intro.noDesc">           &intro.noDesc.label;     </string>
+        <string id="explanation.saveToDisk"> &explanation.saveToDisk; </string>
+        <string id="explanation.openUsing">  &explanation.openUsing;  </string>
+        <string id="explanation.defaultApp"> &explanation.defaultApp; </string>
+        <string id="badApp">                 &badApp;                 </string>
+        <string id="badApp.title">           &badApp.title;           </string>
+    </strings>
+</window>
