@@ -58,7 +58,6 @@ class nsCaret : public nsICaret,
 	
 	  //nsIDOMSelectionListener interface
 	  NS_IMETHOD    NotifySelectionChanged();
-    NS_IMETHOD    TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset);
 	  		               				
 		static void		CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 	
