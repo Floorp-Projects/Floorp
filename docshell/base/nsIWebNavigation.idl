@@ -133,15 +133,4 @@ interface nsIWebNavigation : nsISupports
 	The session history object used to store the session history for the session.
 	*/
 	attribute nsISHistory sessionHistory;
-
-	/*
-	 Get the SHEntry associated with a child docshell
-	 */
-    nsISHEntry GetSHEForChild(in long childOffset);
-
-	/*
-	  Add a Child SHEntry for a frameset page
-	 */
-	 void AddChildSHEntry(in nsISHEntry cloneReference, in nsISHEntry newEntry, in long childOffset);
-
 };

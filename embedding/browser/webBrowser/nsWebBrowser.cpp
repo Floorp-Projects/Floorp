@@ -454,24 +454,6 @@ NS_IMETHODIMP nsWebBrowser::GetSessionHistory(nsISHistory** aSessionHistory)
    return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebBrowser::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry, PRInt32 aChildOffset)
-{
-
-  //XXX Not yet implemented
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
-{
-
-    // XXX Not yet implemented
-    return NS_OK;
-
-}
-
-
 //*****************************************************************************
 // nsWebBrowser::nsIWebProgress
 //*****************************************************************************

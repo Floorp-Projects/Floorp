@@ -25,6 +25,7 @@ MODULE=docshell_base
 XPIDLSRCS=						\
 		.\nsCDocShell.idl			\
 		.\nsIDocShell.idl			\
+    .\nsIDocShellHistory.idl \
 		.\nsIDocShellLoadInfo.idl			\
 		.\nsIDocShellTreeItem.idl			\
 		.\nsIDocShellTreeNode.idl			\
