@@ -1076,7 +1076,7 @@ nsRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP
 nsRegSubtreeEnumerator::IsDone() {
-    nsresult rv = mDone ? NS_OK : NS_COMFALSE;
+    nsresult rv = mDone ? NS_OK : NS_ENUMERATOR_FALSE;
     return rv;
 }
 

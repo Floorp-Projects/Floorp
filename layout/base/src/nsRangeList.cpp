@@ -555,7 +555,7 @@ nsRangeListIterator::IsDone()
   nsresult rv = mDomSelection->mRangeArray->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   if (mIndex >= 0 && mIndex < (PRInt32)cnt ) { 
-    return NS_COMFALSE;
+    return NS_ENUMERATOR_FALSE;
   }
   return NS_OK;
 }
@@ -1855,7 +1855,7 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(result))
   {
     nsCOMPtr<nsIContent> innercontent;
-    while (NS_COMFALSE == aInnerIter->IsDone())
+    while (NS_ENUMERATOR_FALSE == aInnerIter->IsDone())
     {
       result = aInnerIter->CurrentNode(getter_AddRefs(innercontent));
       if (NS_FAILED(result) || !innercontent)
@@ -1918,7 +1918,7 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, 
     }
 //end start content
     result = iter->First();
-    while (NS_SUCCEEDED(result) && NS_COMFALSE == iter->IsDone())
+    while (NS_SUCCEEDED(result) && NS_ENUMERATOR_FALSE == iter->IsDone())
     {
       result = iter->CurrentNode(getter_AddRefs(content));
       if (NS_FAILED(result) || !content)

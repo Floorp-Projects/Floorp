@@ -1749,7 +1749,7 @@ nsresult nsEditor::GetFirstEditableNode(nsIDOMNode *aRoot, nsIDOMNode* *outFirst
 
   iter->MakePre();
   
-  while (iter->IsDone() == NS_COMFALSE)
+  while (iter->IsDone() == NS_ENUMERATOR_FALSE)
   {
     nsCOMPtr<nsIContent> curNode;    
     rv = iter->CurrentNode(getter_AddRefs(curNode));
@@ -1794,7 +1794,7 @@ nsresult nsEditor::GetLastEditableNode(nsIDOMNode *aRoot, nsIDOMNode* *outLastNo
   iter->MakePre();
   iter->Last();
   
-  while (iter->IsDone() == NS_COMFALSE)
+  while (iter->IsDone() == NS_ENUMERATOR_FALSE)
   {
     nsCOMPtr<nsIContent> curNode;    
     rv = iter->CurrentNode(getter_AddRefs(curNode));
@@ -2501,7 +2501,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
     iter->Init(aRange);
     nsCOMPtr<nsIContent> currentContent;
     iter->CurrentNode(getter_AddRefs(currentContent));
-    while (NS_COMFALSE == iter->IsDone())
+    while (NS_ENUMERATOR_FALSE == iter->IsDone())
     {
       nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(currentContent);
       if (currentNode)
@@ -2614,7 +2614,7 @@ nsEditor::IntermediateNodesAreInline(nsIDOMRange *aRange,
       iter->Init(aRange);
       nsCOMPtr<nsIContent> content;
       iter->CurrentNode(getter_AddRefs(content));
-      while (NS_COMFALSE == iter->IsDone())
+      while (NS_ENUMERATOR_FALSE == iter->IsDone())
       {
         if ((content.get() != startContent.get()) &&
             (content.get() != endContent.get()))
@@ -3492,7 +3492,7 @@ nsEditor::NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir)
   if (NS_FAILED(iter->Init(blockContent)))  return nullNode;
   if (NS_FAILED(iter->PositionAt(content)))  return nullNode;
   
-  while (NS_COMFALSE == iter->IsDone())
+  while (NS_ENUMERATOR_FALSE == iter->IsDone())
   {
     if (NS_FAILED(iter->CurrentNode(getter_AddRefs(content)))) return nullNode;
     // ignore nodes that aren't elements or text, or that are the block parent 
