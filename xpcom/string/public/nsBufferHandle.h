@@ -179,6 +179,21 @@ struct nsStringAllocatorTraits<PRUnichar>
 
 // end of string allocator stuff that needs to move
 
+#ifdef DEBUG
+
+// A small utility class for verifying that all reference counting of
+// shared buffer handles (which are not threadsafe) occurs on a single
+// thread.
+class nsSingleThreadVerifier
+  {
+    public:
+      nsSingleThreadVerifier();
+      void verify() const;
+    protected:
+      void* mThread;
+  };
+
+#endif
 
 template <class CharT>
 class nsSharedBufferHandle
@@ -261,16 +276,26 @@ class nsSharedBufferHandle
     protected:
       PRUint32  mFlags;
       size_type mStorageLength;
+#ifdef DEBUG
+      nsSingleThreadVerifier mSingleThreadVerifier;
+#endif
 
       PRUint32
       get_refcount() const
         {
+#ifdef DEBUG
+          mSingleThreadVerifier.verify();
+#endif
           return mFlags & kRefCountMask;
         }
 
       PRUint32
       set_refcount( PRUint32 aNewRefCount )
         {
+#ifdef DEBUG
+          mSingleThreadVerifier.verify();
+#endif
+
           NS_ASSERTION(aNewRefCount <= kRefCountMask, "aNewRefCount <= kRefCountMask");
 
           mFlags = (mFlags & kFlagsMask) | aNewRefCount;

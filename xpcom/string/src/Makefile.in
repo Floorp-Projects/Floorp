@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 CPPSRCS		=				\
 		nsASingleFragmentString.cpp	\
 		nsAString.cpp			\
+		nsBufferHandle.cpp		\
 		nsDependentConcatenation.cpp	\
 		nsDependentSubstring.cpp	\
 		nsFragmentedString.cpp		\
