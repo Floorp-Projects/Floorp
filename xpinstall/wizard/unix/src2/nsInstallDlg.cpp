@@ -29,6 +29,7 @@
 #include "nsXIEngine.h"
 #include <signal.h>
 #include <gtk/gtk.h>
+#include <errno.h>
 
 #define NUM_PS_ENTRIES 4
 
@@ -308,6 +309,10 @@ nsInstallDlg::RunApps()
     extern char **environ; /* globally available to all processes */
     int pid;
 
+    dest = gCtx->opt->mDestination;
+    if (chdir(dest) < 0) 
+        fprintf(stderr,"chdir(%s): %s\n",dest,strerror(errno));
+
     while (currRunApp)
     {
         /* run application with supplied args */
@@ -315,7 +320,6 @@ nsInstallDlg::RunApps()
         {
             /* child */
 
-            dest = gCtx->opt->mDestination;
             if (*(dest + strlen(dest)) == '/') /* trailing slash */
                 sprintf(apppath, "%s%s", dest, currRunApp->GetApp());
             else                               /* no trailing slash */
