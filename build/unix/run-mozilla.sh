@@ -63,6 +63,8 @@ MOZ_DIST_BIN=`dirname $0`
 MOZ_APPRUNNER_NAME="./mozilla-bin"
 MOZ_VIEWER_NAME="./viewer"
 MOZ_PROGRAM=""
+
+exitcode=0
 #
 ##
 ## Functions
@@ -187,6 +189,7 @@ moz_run_program()
 	## Run the program
 	##
 	$prog ${1+"$@"}
+	exitcode=$?
 	if [ "$DEBUG_CORE_FILES" ]
 	then
 		if [ -f core ]
@@ -249,12 +252,15 @@ moz_debug_program()
         case `basename $debugger` in
             gdb) echo "$debugger $prog -x /tmp/mozargs$$"
                 $debugger $prog -x /tmp/mozargs$$
+		exitcode=$?
                 ;;
             ddd) echo "$debugger --debugger \"gdb -x /tmp/mozargs$$\" $prog"
                 $debugger --debugger "gdb -x /tmp/mozargs$$" $prog
+		exitcode=$?
                 ;;
             *) echo "$debugger $prog ${1+"$@"}"
                 $debugger $prog ${1+"$@"}
+		exitcode=$?
                 ;;
         esac
         /bin/rm /tmp/mozargs$$
@@ -371,3 +377,5 @@ then
 else
 	moz_run_program ${1+"$@"}
 fi
+
+exit $exitcode
