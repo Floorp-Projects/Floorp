@@ -860,7 +860,8 @@ void nsWebShellWindow::DoContextMenu(
   nsIWidget   * aParentWindow,
   PRInt32       aX,
   PRInt32       aY,
-  const nsString& aPopupAlignment) 
+  const nsString& aPopupAlignment,
+  const nsString& aAnchorAlignment) 
 {
   if (aMenuNode) {
     nsIContextMenu * pnsContextMenu;
@@ -868,7 +869,7 @@ void nsWebShellWindow::DoContextMenu(
     if (NS_SUCCEEDED(rv) && pnsContextMenu) {
         nsISupports * supports;
         aParentWindow->QueryInterface(kISupportsIID, (void**) &supports);
-        pnsContextMenu->Create(supports, aPopupAlignment);
+        pnsContextMenu->Create(supports, aPopupAlignment, aAnchorAlignment);
         NS_RELEASE(supports);
         pnsContextMenu->SetLocation(aX,aY);
         // Set webshell
@@ -1079,7 +1080,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   if (tagName == "menu") {
       
     // XXX Need to distinguish between popup menus and context menus?
-    DoContextMenu(nsnull, rootElement, mWindow, aXPos, aYPos, aPopupAlignment);
+    DoContextMenu(nsnull, rootElement, mWindow, aXPos, aYPos, aPopupAlignment, anAnchorAlignment);
 
     // Fire the DESTRUCT DOM event to give JS/C++ a chance to destroy the popup contents
     nsEventStatus status = nsEventStatus_eIgnore;
