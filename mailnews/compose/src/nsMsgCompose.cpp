@@ -1393,6 +1393,8 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   
   if (m_identity)
   {
+      nsXPIDLCString::const_iterator start, end;
+
       /* Setup reply-to field */
       nsXPIDLCString replyTo;
       m_identity->GetReplyTo(getter_Copies(replyTo));
@@ -1401,9 +1403,14 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         nsXPIDLCString replyToStr;
         replyToStr.Assign(m_compFields->GetReplyTo());
 
-        if (replyToStr.Length() > 0)
-          replyToStr.Append(',');
-        replyToStr.Append(replyTo);
+        replyToStr.BeginReading(start);
+        replyToStr.EndReading(end);
+
+        if (FindInReadable(replyTo, start, end) == PR_FALSE) {
+          if (replyToStr.Length() > 0)
+            replyToStr.Append(',');
+          replyToStr.Append(replyTo);
+        }
         m_compFields->SetReplyTo(replyToStr.get());
       }
 
@@ -1418,20 +1425,30 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
         if (bccSelf)
         {
+          bccStr.BeginReading(start);
+          bccStr.EndReading(end);
+
           nsXPIDLCString email;
           m_identity->GetEmail(getter_Copies(email));
-          if (bccStr.Length() > 0)
-            bccStr.Append(',');
-          bccStr.Append(email);
+          if (FindInReadable(email, start, end) == PR_FALSE) {
+            if (bccStr.Length() > 0)
+              bccStr.Append(',');
+            bccStr.Append(email);
+          }
         }
 
         if (bccOthers)
         {
+          bccStr.BeginReading(start);
+          bccStr.EndReading(end);
+
           nsXPIDLCString bccList;
           m_identity->GetBccList(getter_Copies(bccList));
-          if (bccStr.Length() > 0)
-            bccStr.Append(',');
-          bccStr.Append(bccList);
+          if (FindInReadable(bccList, start, end) == PR_FALSE) {
+            if (bccStr.Length() > 0)
+              bccStr.Append(',');
+            bccStr.Append(bccList);
+          }
         }
         m_compFields->SetBcc(bccStr.get());
       }
