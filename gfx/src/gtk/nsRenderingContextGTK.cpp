@@ -779,7 +779,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-nscoord diffX,diffY;
+  nscoord diffX,diffY;
 
   g_return_val_if_fail(mTranMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
@@ -808,10 +808,13 @@ nscoord diffX,diffY;
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-nscoord diffX,diffY;
+  nscoord diffX,diffY;
 
   g_return_val_if_fail(mTranMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
+
+  diffX = aX1 - aX0;
+  diffY = aY1 - aY0;
 
   if (0!=diffX) {
     diffX = (diffX>0?1:-1);
