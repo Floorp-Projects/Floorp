@@ -1665,6 +1665,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
       }
       if(!dot || *(dot+1) == '\0') {
         /* did not pass two dot test. FAIL */
+        PR_FREEIF(path_from_header);
         PR_Free(domain_from_header);
         PR_Free(cur_path);
         PR_Free(cur_host);
@@ -1687,6 +1688,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
           PL_strcasecmp(domain_from_header, &cur_host[cur_host_length-domain_length])) {
           // TRACEMSG(("DOMAIN failed host within domain test."
 //        " Domain: %s, Host: %s", domain_from_header, cur_host));
+        PR_FREEIF(path_from_header);
         PR_Free(domain_from_header);
         PR_Free(cur_path);
         PR_Free(cur_host);
@@ -1722,6 +1724,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
         if (dot) {
         // TRACEMSG(("host minus domain failed no-dot test."
 //          " Domain: %s, Host: %s", domain_from_header, cur_host));
+          PR_FREEIF(path_from_header);
           PR_Free(domain_from_header);
           PR_Free(cur_path);
           PR_Free(cur_host);
