@@ -169,6 +169,10 @@ nsCookieHTTPNotify::OnModifyRequest(nsIHttpChannel *aHttpChannel)
     nsCOMPtr<nsIURI> pFirstURL;
     rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
     if (NS_FAILED(rv)) return rv;
+    if (!pFirstURL) {
+      rv = aHttpChannel->GetOriginalURI(getter_AddRefs(pFirstURL));
+      if (NS_FAILED(rv)) return rv;
+    }
 
     // Ensure that the cookie service exists
     rv = SetupCookieService();
