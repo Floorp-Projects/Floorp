@@ -39,6 +39,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsIXBLBinding.h"
+#include "nsAutoPtr.h"
+#include "nsXBLPrototypeBinding.h"
 
 class nsIContent;
 class nsIAtom;
@@ -49,7 +51,6 @@ class nsSupportsHashtable;
 class nsIXBLService;
 class nsFixedSizeAllocator;
 class nsXBLEventHandler;
-class nsXBLPrototypeBinding;
 struct JSContext;
 
 // *********************************************************************/
@@ -165,7 +166,8 @@ protected:
   
 // MEMBER VARIABLES
 protected:
-  nsXBLPrototypeBinding* mPrototypeBinding; // Weak. The docinfo owns the prototype binding.
+
+  nsRefPtr<nsXBLPrototypeBinding> mPrototypeBinding; // Strong. We share ownership with other bindings and the docinfo.
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
   
