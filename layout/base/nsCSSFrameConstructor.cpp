@@ -1776,6 +1776,10 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::treerow         == tag.get())  ||
         (nsXULAtoms::treecell        == tag.get())  ||
         (nsXULAtoms::treeindentation == tag.get())  ||
+        (nsXULAtoms::treecol         == tag.get())  ||
+        (nsXULAtoms::treecolgroup    == tag.get())  ||
+        (nsXULAtoms::treefoot        == tag.get())  ||
+        (nsXULAtoms::treepusher      == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
         (nsXULAtoms::deck            == tag.get())  ||
@@ -2844,6 +2848,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     {
       rv = NS_NewTreeIndentationFrame(&newFrame);
     }
+    else if (aTag == nsXULAtoms::treepusher)
+    {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewTitledButtonFrame(&newFrame);
+    }
     // End of TREE CONSTRUCTION code here (there's more later on in the function)
 
     // TOOLBAR CONSTRUCTION
@@ -3009,35 +3019,17 @@ nsCSSFrameConstructor::CreateAnonymousXULContent(nsIPresContext* aPresContext,
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(grandPappy);
     nsString mode;
     element->GetAttribute("mode", mode);
-    if (tag.get() == nsXULAtoms::tree && mode == "lazy") {
-      // Create an anonymous scrollbar node.
-      nsCOMPtr<nsIDocument> idocument;
-      aContent->GetDocument(*getter_AddRefs(idocument));
-
-      nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
-
-      nsCOMPtr<nsIDOMElement> node;
-      document->CreateElement("scrollbar",getter_AddRefs(node));
-
-      nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-      content->SetParent(aContent);
-      
-      nsCOMPtr<nsIAtom> vertical = dont_AddRef(NS_NewAtom("align"));
-      nsCOMPtr<nsIAtom> style = dont_AddRef(NS_NewAtom("style"));
-
-      content->SetAttribute(kNameSpaceID_None, vertical, "vertical", PR_FALSE);
-      
-      ConstructFrame(aPresContext, aState, content, aParentFrame, PR_FALSE, aChildItems);
-
-      ((nsTreeRowGroupFrame*)aParentFrame)->SetScrollbarFrame(aChildItems.lastChild);
+    if (tag.get() == nsXULAtoms::tree) {
+      // We will want to have a scrollbar.
       ((nsTreeRowGroupFrame*)aParentFrame)->SetFrameConstructor(this);
+      ((nsTreeRowGroupFrame*)aParentFrame)->SetShouldHaveScrollbar();
     }
   }
 
     // if we are creating a scrollbar
     if (aTag == nsXULAtoms::scrollbar) {
 
-      // if we have not children create anonymous ones
+      // if we have no children create anonymous ones
       PRInt32   count;
       aContent->ChildCount(count);
 
@@ -6000,7 +5992,8 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
                                                nsIFrame*       aPrevFrame,
                                                nsIContent*     aChild,
                                                nsIFrame**      aNewFrame,
-                                               PRBool          aIsAppend)
+                                               PRBool          aIsAppend,
+                                               PRBool          aIsScrollbar)
 {
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -6020,7 +6013,9 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
 
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
       // Notify the parent frame
-      if (aIsAppend)
+      if (aIsScrollbar)
+        ((nsTreeRowGroupFrame*)aParentFrame)->SetScrollbarFrame(newFrame);
+      else if (aIsAppend)
         rv = ((nsTreeRowGroupFrame*)aParentFrame)->TreeAppendFrames(newFrame);
       else
         rv = ((nsTreeRowGroupFrame*)aParentFrame)->TreeInsertFrames(aPrevFrame, newFrame);

@@ -37,6 +37,8 @@
 #include "nsSliderFrame.h"
 #include "nsIDOMElement.h"
 #include "nsISupportsArray.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 
 //
 // NS_NewTreeFrame
@@ -64,7 +66,7 @@ NS_NewTreeRowGroupFrame (nsIFrame** aNewFrame)
 nsTreeRowGroupFrame::nsTreeRowGroupFrame()
 :nsTableRowGroupFrame(), mScrollbar(nsnull), mFrameConstructor(nsnull),
  mTopFrame(nsnull), mBottomFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE), 
- mContentChain(nsnull), mLinkupFrame(nsnull)
+ mContentChain(nsnull), mLinkupFrame(nsnull), mShouldHaveScrollbar(PR_FALSE)
 { }
 
 // Destructor
@@ -120,7 +122,7 @@ void nsTreeRowGroupFrame::DestroyRows(nsIPresContext& aPresContext, PRInt32& row
         ((nsTreeRowGroupFrame*)childFrame)->DestroyRows(aPresContext, rowsToLose);
         return;
       }
-      else rowsToLose = 0;
+      else rowsToLose -= rowGroupCount;
     }
     else if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {
@@ -153,7 +155,7 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsIPresContext& aPresContext, PRInt
         ((nsTreeRowGroupFrame*)childFrame)->ReverseDestroyRows(aPresContext, rowsToLose);
         return;
       }
-      else rowsToLose = 0;
+      else rowsToLose -= rowGroupCount;
     }
     else if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {
@@ -356,13 +358,57 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
   // Bail. There's nothing else we can do.
 }
 
+void
+nsTreeRowGroupFrame::GetVisibleRowCount(PRInt32& aCount, nsIContent* aParent)
+{
+  PRInt32 childCount;
+  aParent->ChildCount(childCount);
+
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> childContent;
+    aParent->ChildAt(i, *getter_AddRefs(childContent));
+    nsCOMPtr<nsIAtom> tag;
+    childContent->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::treerow) {
+      aCount++;
+    }
+    else if (tag.get() == nsXULAtoms::treeitem) {
+      // Descend into this row group and try to find the next row.
+      GetVisibleRowCount(aCount, childContent);
+
+      // If it's open, descend into its treechildren.
+      nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
+      nsString isOpen;
+      childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
+      if (isOpen == "true") {
+        // Find the <treechildren> node.
+        PRInt32 childContentCount;
+        nsCOMPtr<nsIContent> grandChild;
+        childContent->ChildCount(childContentCount);
+
+        PRInt32 j;
+        for (j = childContentCount-1; j >= 0; j--) {
+          
+          childContent->ChildAt(j, *getter_AddRefs(grandChild));
+          nsCOMPtr<nsIAtom> grandChildTag;
+          grandChild->GetTag(*getter_AddRefs(grandChildTag));
+          if (grandChildTag.get() == nsXULAtoms::treechildren)
+            break;
+        }
+        if (j >= 0 && grandChild)
+          GetVisibleRowCount(aCount, grandChild);
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
   if (aOldIndex == aNewIndex)
     return NS_OK;
 
-  printf("The position changed!\n");
+  //printf("The position changed! The new index is: %d\n", aNewIndex);
  
   if (mContentChain) {
     NS_ERROR("This is bad!");
@@ -380,6 +426,8 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
   // Figure out how many rows we need to lose (if we moved down) or gain (if we moved up).
   PRInt32 delta = aNewIndex > aOldIndex ? aNewIndex - aOldIndex : aOldIndex - aNewIndex;
   
+  //printf("The delta is: %d\n", delta);
+
   // Get our presentation context.
   if (delta < rowCount) {
     PRInt32 loseRows = delta;
@@ -409,7 +457,8 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
     mFrames.DeleteFrames(aPresContext);
     nsCOMPtr<nsIContent> topRowContent;
     FindRowContentAtIndex(aNewIndex, mContent, getter_AddRefs(topRowContent));
-    ConstructContentChain(topRowContent);
+    if (topRowContent)
+      ConstructContentChain(topRowContent);
   }
 
   // Invalidate the cell map and column cache.
@@ -427,28 +476,42 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
 NS_IMETHODIMP
 nsTreeRowGroupFrame::PagedUpDown()
 {
-  printf("Hey! You paged up and down!\n");
+  // Set the scrollbar's pageincrement
+  if (mScrollbar) {
+    PRInt32 rowGroupCount;
+    GetRowCount(rowGroupCount);
+  
+    nsCOMPtr<nsIContent> scrollbarContent;
+    mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+
+    rowGroupCount--;
+    char ch[100];
+    sprintf(ch,"%d", rowGroupCount);
+    
+    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, nsString(ch), PR_FALSE);
+  }
+
   return NS_OK;
 }
 
 void
 nsTreeRowGroupFrame::SetScrollbarFrame(nsIFrame* aFrame)
 {
-  mIsLazy = PR_TRUE;
   mScrollbar = aFrame;
   
-  nsCOMPtr<nsIAtom> sliderAtom = dont_AddRef(NS_NewAtom("slider"));
-  nsCOMPtr<nsIAtom> incrementAtom = dont_AddRef(NS_NewAtom("increment"));
-  nsCOMPtr<nsIAtom> pageIncrementAtom = dont_AddRef(NS_NewAtom("pageincrement"));
-  
+  // Place it in its own list.
+  mScrollbarList.AppendFrames(this, nsFrameList(mScrollbar));
+
   nsCOMPtr<nsIContent> scrollbarContent;
   aFrame->GetContent(getter_AddRefs(scrollbarContent));
   
-  scrollbarContent->SetAttribute(kNameSpaceID_None, incrementAtom, "1", PR_FALSE);
-  scrollbarContent->SetAttribute(kNameSpaceID_None, pageIncrementAtom, "1", PR_FALSE);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, "0", PR_FALSE);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::increment, "1", PR_FALSE);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, "1", PR_FALSE);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, "5000", PR_FALSE);
 
   nsIFrame* result;
-  nsScrollbarButtonFrame::GetChildWithTag(sliderAtom, aFrame, result);
+  nsScrollbarButtonFrame::GetChildWithTag(nsXULAtoms::slider, aFrame, result);
   ((nsSliderFrame*)result)->SetScrollbarListener(this);
 }
 
@@ -555,7 +618,28 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
 {
   nsresult rv = NS_OK;
   // Reflow a scrollbar if we have one.
-  if (mScrollbar && (aReflowState.availSize.height != NS_UNCONSTRAINEDSIZE)) {
+  if (mShouldHaveScrollbar && (aReflowState.availSize.height != NS_UNCONSTRAINEDSIZE)) {
+    // Ensure the scrollbar has been created.
+    if (!mScrollbar)
+      CreateScrollbar(aPresContext);
+
+    PRInt32 rowCount = 0;
+    GetVisibleRowCount(rowCount, mContent); // XXX This sucks! Needs to be cheap!
+
+    // Set the maxpos of the scrollbar.
+    nsCOMPtr<nsIContent> scrollbarContent;
+    mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+
+    rowCount--;
+    if (rowCount < 0)
+      rowCount = 0;
+
+    char ch[100];
+    sprintf(ch,"%d", rowCount);
+    
+    // Make sure our position is accurate.
+    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, nsString(ch), PR_FALSE);
+
     // We must be constrained, or a scrollbar makes no sense.
     nsSize    kidMaxElementSize;
     nsSize*   pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ? &kidMaxElementSize : nsnull;
@@ -593,6 +677,30 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP 
+nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
+                                           nsHTMLReflowMetrics& aDesiredSize,
+                                           RowGroupReflowState& aReflowState,
+                                           nsReflowStatus&      aStatus,
+                                           nsReflowReason       aReason)
+{
+  nsresult rv = NS_OK;
+  if (mScrollbar) {
+    nsCOMPtr<nsIContent> scrollbarContent;
+    mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+    nsString value;
+    nsIAtom* hiddenAtom = NS_NewAtom("hidden");
+    scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value);
+    if (value == "0" && !mIsFull) {
+      // Nuke the scrollbar.
+      mScrollbarList.DeleteFrames(aPresContext);
+      mScrollbar = nsnull;
+    }
+  }
+  return rv;
+}
+
+
 void nsTreeRowGroupFrame::LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult)
 {
   if (aStartFrame == nsnull)
@@ -600,15 +708,6 @@ void nsTreeRowGroupFrame::LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult)
     *aResult = mFrames.FirstChild();
   }
   else aStartFrame->GetNextSibling(aResult);
-
-  if (mScrollbar && (*aResult == mScrollbar)) {
-    // Get this out of our flow.
-    mScrollbar->GetNextSibling(aResult);
-    mFrames.RemoveFrame(mScrollbar);
-
-    // Put it into a special list of our own.
-    mScrollbarList.AppendFrame(this, mScrollbar);
-  }
 }
    
 nsIFrame*
@@ -659,30 +758,35 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
   mBottomFrame = mTopFrame;
 
   nsCOMPtr<nsIContent> startContent;
-  if (mTopFrame) {
-    if (!mContentChain)
-      return mTopFrame;
-   
-    // We have a content chain. If the top frame is the same as our content
-    // chain, we can go ahead and destroy our content chain and return the
-    // top frame.
-    nsCOMPtr<nsIContent> topContent;
-    mTopFrame->GetContent(getter_AddRefs(topContent));
+  if (mContentChain) {
     nsCOMPtr<nsISupports> supports;
     mContentChain->GetElementAt(0, getter_AddRefs(supports));
     nsCOMPtr<nsIContent> chainContent = do_QueryInterface(supports);
-    if (chainContent.get() == topContent.get()) {
-      // The two content nodes are the same.  Our content chain has
-      // been synched up, and we can now remove our element and
-      // pass the content chain inwards.
-      InitSubContentChain((nsTreeRowGroupFrame*)mTopFrame);
-    }
-    else mLinkupFrame = mTopFrame; // We have some frames that we'll eventually catch up with.
-                                   // Cache the pointer to the first of these frames, so
-                                   // we'll know it when we hit it.
-
     startContent = chainContent;
+
+    if (mTopFrame) {
+    
+      // We have a content chain. If the top frame is the same as our content
+      // chain, we can go ahead and destroy our content chain and return the
+      // top frame.
+      nsCOMPtr<nsIContent> topContent;
+      mTopFrame->GetContent(getter_AddRefs(topContent));
+      if (chainContent.get() == topContent.get()) {
+        // The two content nodes are the same.  Our content chain has
+        // been synched up, and we can now remove our element and
+        // pass the content chain inwards.
+        InitSubContentChain((nsTreeRowGroupFrame*)mTopFrame);
+      }
+      else mLinkupFrame = mTopFrame; // We have some frames that we'll eventually catch up with.
+                                     // Cache the pointer to the first of these frames, so
+                                     // we'll know it when we hit it.
+    }
   }
+  else if (mTopFrame) {
+    return mTopFrame;
+  }
+
+  
 
   // We don't have a top frame instantiated. Let's
   // try to make one.
@@ -704,8 +808,8 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
     PRBool isAppend = (mLinkupFrame == nsnull);
 
     mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nsnull, startContent,
-                                               &mTopFrame, isAppend);
-    printf("Created a frame\n");
+                                               &mTopFrame, isAppend, PR_FALSE);
+    //printf("Created a frame\n");
     mBottomFrame = mTopFrame;
     const nsStyleDisplay *rowDisplay;
     mTopFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
@@ -773,8 +877,8 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
           isAppend = PR_FALSE;
         }
         mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, prevFrame, nextContent,
-                                                   aResult, isAppend);
-        printf("Created a frame\n");
+                                                   aResult, isAppend, PR_FALSE);
+        //printf("Created a frame\n");
         const nsStyleDisplay *rowDisplay;
         (*aResult)->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
         if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay) {
@@ -805,12 +909,25 @@ nsTreeRowGroupFrame::TreeAppendFrames(nsIFrame* aFrameList)
   return NS_OK;
 }
 
-PRBool nsTreeRowGroupFrame::ContinueReflow(nscoord y, nscoord height) 
+PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext& aPresContext, nscoord y, nscoord height) 
 { 
   //printf("Y is: %d\n", y);
   //printf("Height is: %d\n", height); 
   if (height <= 0 && IsLazy()) {
     mIsFull = PR_TRUE;
+    nsIFrame* lastChild = GetLastFrame();
+    if (lastChild != mBottomFrame) {
+      // We have some hangers on (probably caused by shrinking the size of the window).
+      // Nuke them.
+      nsIFrame* currFrame;
+      mBottomFrame->GetNextSibling(&currFrame);
+      while (currFrame) {
+        nsIFrame* nextFrame;
+        currFrame->GetNextSibling(&nextFrame);
+        mFrames.DeleteFrame(aPresContext, currFrame);
+        currFrame = nextFrame;
+      }
+    }
     return PR_FALSE;
   }
   else
@@ -862,3 +979,33 @@ void nsTreeRowGroupFrame::InitSubContentChain(nsTreeRowGroupFrame* aRowGroupFram
   }
 }
 
+void nsTreeRowGroupFrame::SetShouldHaveScrollbar()
+{
+  mShouldHaveScrollbar = PR_TRUE;
+  mIsLazy = PR_TRUE;
+}
+
+void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext& aPresContext)
+{
+  if (mShouldHaveScrollbar && !mScrollbar) {
+    // Create an anonymous scrollbar node.
+    nsCOMPtr<nsIDocument> idocument;
+    mContent->GetDocument(*getter_AddRefs(idocument));
+
+    nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
+
+    nsCOMPtr<nsIDOMElement> node;
+    document->CreateElement("scrollbar",getter_AddRefs(node));
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+    content->SetParent(mContent);
+    
+    nsCOMPtr<nsIAtom> align = dont_AddRef(NS_NewAtom("align"));
+    content->SetAttribute(kNameSpaceID_None, align, "vertical", PR_FALSE);
+    
+    nsIFrame* aResult;
+    mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nsnull, content,
+                                               &aResult, PR_FALSE, PR_TRUE);
+
+  }
+}

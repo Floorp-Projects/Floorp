@@ -395,7 +395,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
   nsSize*   pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ? &kidMaxElementSize : nsnull;
   nsresult  rv = NS_OK;
 
-  if (!ContinueReflow(aReflowState.y, aReflowState.availSize.height))
+  if (!ContinueReflow(aPresContext, aReflowState.y, aReflowState.availSize.height))
       return rv;
 
   nsIFrame*  kidFrame;
@@ -494,13 +494,15 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     if (PR_FALSE==aDoSiblings)
       break;
 
-    if (!ContinueReflow(aReflowState.y, aReflowState.availSize.height))
+    if (!ContinueReflow(aPresContext, aReflowState.y, aReflowState.availSize.height))
       break;
 
     // Get the next child
     GetNextFrameForReflow(aPresContext, kidFrame, &kidFrame);
   }
 
+  // Call our post-row reflow hook
+  ReflowAfterRowLayout(aPresContext, aDesiredSize, aReflowState, aStatus, aReason);
   return rv;
 }
 

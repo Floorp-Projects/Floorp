@@ -67,6 +67,8 @@ public:
   static nsIAtom* treeallowevents; // Lets events be handled on the cell contents.
   static nsIAtom* treecol; // A column in the tree view
   static nsIAtom* treecolgroup; // A column group in the tree view
+  static nsIAtom* treefoot; // The footer of the tree view
+  static nsIAtom* treepusher; // A column pusher (left or right) for the tree view
 
   static nsIAtom* progressmeter; 
   static nsIAtom* titledbutton;

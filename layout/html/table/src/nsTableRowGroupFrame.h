@@ -174,7 +174,7 @@ public:
   
   virtual PRBool RowGroupReceivesExcessSpace() { return PR_TRUE; }
 
-  virtual PRBool ContinueReflow(nscoord y, nscoord height) { return PR_TRUE; }
+  virtual PRBool ContinueReflow(nsIPresContext& aPresContext, nscoord y, nscoord height) { return PR_TRUE; }
 
 protected:
 
@@ -290,6 +290,12 @@ protected:
                          nsReflowStatus&          aStatus);
 
   NS_IMETHOD     ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
+                                      nsHTMLReflowMetrics& aDesiredSize,
+                                      RowGroupReflowState& aReflowState,
+                                      nsReflowStatus&      aStatus,
+                                      nsReflowReason       aReason) { return NS_OK; };
+
+  NS_IMETHOD     ReflowAfterRowLayout(nsIPresContext&      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
                                       RowGroupReflowState& aReflowState,
                                       nsReflowStatus&      aStatus,

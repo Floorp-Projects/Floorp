@@ -49,6 +49,8 @@ nsIAtom* nsXULAtoms::treeindentation;
 nsIAtom* nsXULAtoms::treeallowevents;
 nsIAtom* nsXULAtoms::treecol;
 nsIAtom* nsXULAtoms::treecolgroup;
+nsIAtom* nsXULAtoms::treefoot;
+nsIAtom* nsXULAtoms::treepusher;
 
 nsIAtom* nsXULAtoms::progressmeter;
 nsIAtom* nsXULAtoms::titledbutton;
@@ -115,6 +117,8 @@ void nsXULAtoms::AddrefAtoms() {
     treeallowevents = NS_NewAtom("treeallowevents");
     treecol = NS_NewAtom("treecol");
 	treecolgroup = NS_NewAtom("treecolgroup");
+  treefoot = NS_NewAtom("treefoot");
+  treepusher = NS_NewAtom("treepusher");
 
 	progressmeter = NS_NewAtom("progressmeter");
 	titledbutton = NS_NewAtom("titledbutton");
@@ -171,6 +175,8 @@ void nsXULAtoms::ReleaseAtoms() {
     NS_RELEASE(treeallowevents);
 	NS_RELEASE(treecol);
 	NS_RELEASE(treecolgroup);
+  NS_RELEASE(treefoot);
+  NS_RELEASE(treepusher);
 
     NS_RELEASE(progressmeter);
 	NS_RELEASE(mode);

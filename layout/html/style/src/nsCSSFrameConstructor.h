@@ -117,7 +117,8 @@ public:
                                         nsIFrame*       aPrevFrame,
                                         nsIContent*     aChild,
                                         nsIFrame**      aResult,
-                                        PRBool          aIsAppend);
+                                        PRBool          aIsAppend,
+                                        PRBool          aIsScrollbar);
 
 protected:
 
