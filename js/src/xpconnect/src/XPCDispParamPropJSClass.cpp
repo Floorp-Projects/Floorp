@@ -42,6 +42,13 @@
 
 #include "xpcprivate.h"
 
+/**
+ * Helper function to retrieve the parameterized property instance
+ * from the JS object's private slot
+ * @param cx a JS context
+ * @param obj the JS object to retrieve the instance from
+ * @return the parameterized property class
+ */
 inline
 XPCDispParamPropJSClass* GetParamProp(JSContext* cx, JSObject* obj)
 {
@@ -116,6 +123,13 @@ XPC_PP_Finalize(JSContext *cx, JSObject *obj)
     delete GetParamProp(cx, obj);
 }
 
+/**
+ * Is called to mark during GC
+ * @param cx the JS context
+ * @param obj the object being marked
+ * @param arg we just pass this on
+ * @return 0
+ */
 JS_STATIC_DLL_CALLBACK(uint32)
 XPC_PP_Mark(JSContext *cx, JSObject *obj, void *arg)
 {
@@ -129,6 +143,10 @@ XPC_PP_Mark(JSContext *cx, JSObject *obj, void *arg)
     return 0;
 }
 
+/**
+ * Our JSClass used by XPCDispParamPropClass
+ * @see XPCDispParamPropClass
+ */
 static JSClass ParamPropClass = {
     "XPCDispParamPropJSCass",   // Name 
     JSCLASS_HAS_PRIVATE,        // flags  
@@ -183,6 +201,7 @@ XPCDispParamPropJSClass::XPCDispParamPropJSClass(XPCWrappedNative* wrapper,
     mDispID(dispID),
     mDispParams(dispParams)
 {
+    NS_ADDREF(mWrapper);
     nsresult result = dispObj->QueryInterface(NSID_IDISPATCH, 
                                               NS_REINTERPRET_CAST(void**,
                                               &mDispObj));
@@ -192,5 +211,7 @@ XPCDispParamPropJSClass::XPCDispParamPropJSClass(XPCWrappedNative* wrapper,
 
 XPCDispParamPropJSClass::~XPCDispParamPropJSClass()
 {
-    mDispObj->Release();
+    // release our members
+    NS_RELEASE(mWrapper);
+    NS_RELEASE(mDispObj);
 }

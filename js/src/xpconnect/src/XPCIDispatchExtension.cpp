@@ -47,43 +47,43 @@ CommonConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     // Make sure we were called with one string parameter
     if(argc != 1 || (argc == 1 && !JSVAL_IS_STRING(argv[0])))
     {
+        XPCThrower::Throw(NS_ERROR_XPC_COM_INVALID_CLASS_ID, cx);
         return JS_FALSE;
     }
 
-    JSString * str = JS_ValueToString(cx, argv[0]);
-    if(!str)
-    {
-        // TODO: error reporting
-        return JS_FALSE;
-    }
-
-    const char * bytes = JS_GetStringBytes(str);
+    const char * bytes = xpc_JSString2Char(cx, argv[0]);
     if(!bytes)
     {
-        // TODO: error reporting
+        XPCThrower::Throw(NS_ERROR_XPC_COM_INVALID_CLASS_ID, cx);
         return JS_FALSE;
     }
 
     // Instantiate the desired COM object
     IDispatch* pDispatch = nsnull;;
-    nsresult rv = XPCDispObject::COMCreateInstance(bytes, testScriptability, &pDispatch);
-    if (NS_FAILED(rv))
-    {
-        // TODO: error reporting
-        return JS_FALSE;
-    }
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = nsXPConnect::GetXPConnect()->WrapNative(cx, obj, 
-                                  NS_REINTERPRET_CAST(nsISupports*, pDispatch),
-                                  NSID_IDISPATCH, getter_AddRefs(holder));
+    HRESULT rv = XPCDispObject::COMCreateInstance(bytes, testScriptability, &pDispatch);
     if(FAILED(rv))
     {
-        // TODO: error reporting
+        XPCThrower::ThrowCOMError(cx, rv, NS_ERROR_XPC_COM_CREATE_FAILED);
         return JS_FALSE;
     }
-    JSObject * jsobj;
-    if(NS_FAILED(holder->GetJSObject(&jsobj)))
+    // Get a wrapper for our object
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    nsresult nsrv = nsXPConnect::GetXPConnect()->WrapNative(cx, obj, 
+                                  NS_REINTERPRET_CAST(nsISupports*, pDispatch),
+                                  NSID_IDISPATCH, getter_AddRefs(holder));
+    if(NS_FAILED(nsrv))
+    {
+        XPCThrower::Throw(nsrv, cx);
         return JS_FALSE;
+    }
+    // get and return the JS object wrapper
+    JSObject * jsobj;
+    nsrv = holder->GetJSObject(&jsobj);
+    if(NS_FAILED(nsrv))
+    {
+        XPCThrower::Throw(nsrv, cx);
+        return JS_FALSE;
+    }
     *rval = OBJECT_TO_JSVAL(jsobj);
     return JS_TRUE;
 }
@@ -109,7 +109,7 @@ JSBool XPCIDispatchExtension::Initialize(JSContext * aJSContext,
     JSBool result = JS_DefineFunction(aJSContext, aGlobalJSObj, "ActiveXObject", 
                                       ActiveXConstructor, 1, 0) != nsnull;
 #ifdef XPC_COMOBJECT
-    if (result)
+    if(result)
        result = JS_DefineFunction(aJSContext, aGlobalJSObj, "COMObject", 
                                   COMObjectConstructor, 1, 0) != nsnull;
 #endif
@@ -121,18 +121,20 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx,
                                              XPCWrappedNative* wrapperToReflectInterfaceNames,
                                              uintN propFlags, JSBool* resolved)
 {
-    XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(ccx, "IDispatch");
+    // Look up the native interface for IDispatch and then find a tearoff
+    XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(ccx,
+                                                                 "IDispatch");
     if(iface == nsnull)
         return JS_FALSE;
     XPCWrappedNativeTearOff* to = 
         wrapperToReflectInterfaceNames->FindTearOff(ccx, iface, JS_TRUE);
     if(to == nsnull)
         return JS_FALSE;
-
+    // get the JS Object for the tea
     JSObject* jso = to->GetJSObject();
     if(jso == nsnull)
         return JS_FALSE;
-
+    // Look up the member in the interface
     if(!JSVAL_IS_STRING(idval))
         return JS_FALSE;
     const XPCDispInterface::Member * member = to->GetIDispatchInfo()->FindMember(idval);
@@ -146,6 +148,7 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx,
         if(!member)
             return JS_FALSE;
     }
+    // Get the function object
     jsval funval;
     if(!member->GetValue(ccx, iface, &funval))
         return JS_FALSE;
@@ -153,8 +156,10 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx,
     if(!funobj)
         return JS_FALSE;
     jsid id;
+    // If this is a function or a parameterized property
     if(member->IsFunction() || member->IsParameterizedProperty())
     {
+        // define the function on the object
         AutoResolveName arn(ccx, idval);
         if(resolved)
             *resolved = JS_TRUE;
@@ -162,6 +167,7 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx,
                OBJ_DEFINE_PROPERTY(ccx, obj, id, OBJECT_TO_JSVAL(funobj),
                                    nsnull, nsnull, propFlags, nsnull);
     }
+    // Define the property on the object
     NS_ASSERTION(member->IsProperty(), "way broken!");
     propFlags |= JSPROP_GETTER | JSPROP_SHARED;
     if(member->IsSetter())
@@ -185,29 +191,30 @@ JSBool XPCIDispatchExtension::Enumerate(XPCCallContext& ccx, JSObject* obj,
 {
     XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(
         ccx,&NSID_IDISPATCH);
-    if(iface)
+    if(!iface)
+        return JS_FALSE;
+
+    XPCWrappedNativeTearOff* tearoff = wrapper->FindTearOff(ccx, iface);
+    if(!tearoff)
+        return JS_FALSE;
+
+    XPCDispInterface* pInfo = tearoff->GetIDispatchInfo();
+    PRUint32 members = pInfo->GetMemberCount();
+    // Iterate over the members and force the properties to be resolved
+    for(PRUint32 index = 0; index < members; ++index)
     {
-        XPCWrappedNativeTearOff* tearoff = wrapper->FindTearOff(ccx, iface);
-        if(tearoff)
-        {
-            XPCDispInterface* pInfo = tearoff->GetIDispatchInfo();
-            PRUint32 members = pInfo->GetMemberCount();
-            for(PRUint32 index = 0; index < members; ++index)
-            {
-                const XPCDispInterface::Member & member = pInfo->GetMember(index);
-                jsval name = member.GetName();
-                if(!xpc_ForcePropertyResolve(ccx, obj, name))
-                    return JS_FALSE;
-            }
-            return JS_TRUE;
-        }
+        const XPCDispInterface::Member & member = pInfo->GetMember(index);
+        jsval name = member.GetName();
+        if(!xpc_ForcePropertyResolve(ccx, obj, name))
+            return JS_FALSE;
     }
-    return JS_FALSE;
+    return JS_TRUE;
 }
 
 nsresult XPCIDispatchExtension::IDispatchQIWrappedJS(nsXPCWrappedJS * self, 
                                                      void ** aInstancePtr)
 {
+    // Lookup the root and create a tearoff based on that
     nsXPCWrappedJS* root = self->GetRootWrapper();
 
     if(!root->IsValid())

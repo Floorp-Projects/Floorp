@@ -36,13 +36,25 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * \file XPCDispTypeInfo.cpp implementation XPCDispTypeInfo
+ * \file XPCDispTypeInfo.cpp
+ * Is the implementation for XPCDispTypeInfo and supporting classes
+ */
+
+/**
+ * \file XPCDispTypeInfo.cpp 
+ * \brief implementation of XPCDispTypeInfo
  * This file contains the implementations for XPCDispTypeInfo class and
  * associated helper classes and functions
  */
 
 #include "xpcprivate.h"
 
+/**
+ * Helper function that initializes the element description
+ * @param vt The type of variant
+ * @param paramFlags flats for the type of parameter, in, out, etc.
+ * @param elemDesc The element being initialized
+ */
 inline
 void FillOutElemDesc(VARTYPE vt, PRUint16 paramFlags, ELEMDESC & elemDesc)
 {
@@ -54,18 +66,23 @@ void FillOutElemDesc(VARTYPE vt, PRUint16 paramFlags, ELEMDESC & elemDesc)
     elemDesc.tdesc.hreftype = 0;
 }
 
+XPCDispTypeInfo::~XPCDispTypeInfo()
+{
+    delete mIDArray;
+}
+
 void XPCDispJSPropertyInfo::GetReturnType(XPCCallContext& ccx, ELEMDESC & elemDesc)
 {
     VARTYPE vt;
-    if(IsSetterMode())     // we're working on a property
+    if(IsSetter())      // if this is a setter
     {
         vt = VT_EMPTY;
     }
-    else if(IsProperty())
+    else if(IsProperty())   // If this is a property
     {
         vt = XPCDispConvert::JSTypeToCOMType(ccx, mProperty);
     }
-    else // Function
+    else                    // if this is a function
     {
         vt = VT_VARIANT;
     }
@@ -79,85 +96,91 @@ ELEMDESC* XPCDispJSPropertyInfo::GetParamInfo()
     if(paramCount != 0)
     {
         elemDesc = new ELEMDESC[paramCount];
-        for(PRUint32 index = 0; index < paramCount; ++index)
+        if (elemDesc)
         {
-            FillOutElemDesc(VT_VARIANT, PARAMFLAG_FIN, elemDesc[index]);
+            for(PRUint32 index = 0; index < paramCount; ++index)
+            {
+                FillOutElemDesc(VT_VARIANT, PARAMFLAG_FIN, elemDesc[index]);
+            }
         }
     }
     else
         elemDesc = 0;
+    // Caller becomes owner
     return elemDesc;
 }
 
 XPCDispJSPropertyInfo::XPCDispJSPropertyInfo(JSContext* cx, PRUint32 memid, 
-                                     JSObject* obj, jsval val) : 
+                                             JSObject* obj, jsval val) : 
     mPropertyType(INVALID), mMemID(memid)
 {
-    JSString* str = JS_ValueToString(cx, val);
-    if(str)
+    const char* chars = xpc_JSString2Char(cx, val);
+    if(!chars)
+        return;
+
+    mName = chars;
+    JSBool found;
+    uintN attr;
+    // Get the property's attributes, and make sure it's found and enumerable 
+    if(!JS_GetPropertyAttributes(cx, obj, chars, &attr, &found) || 
+        !found || (attr & JSPROP_ENUMERATE) == 0)
+        return;
+
+    // Retrieve the property 
+    if(!chars || !JS_GetProperty(cx, obj, chars, &mProperty) ||
+        JSVAL_IS_NULL(mProperty))
+        return;
+
+    // If this is a function
+    if(JSVAL_IS_OBJECT(mProperty) && 
+        JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(mProperty)))
     {
-        const char* chars = JS_GetStringBytes(str);
-        if(chars)
+        mPropertyType = FUNCTION;
+        JSObject * funcObj = JSVAL_TO_OBJECT(mProperty);
+        JSIdArray * funcObjArray = JS_Enumerate(cx, funcObj);
+        if(funcObjArray)
         {
-            mName = chars;
-            JSBool found;
-            uintN attr;
-            // Get the property, and if it's found and enumerable 
-            if(JS_GetPropertyAttributes(cx, obj, chars, &attr, &found) && 
-                found && (attr & JSPROP_ENUMERATE) != 0)
-            {
-                if(chars && JS_GetProperty(cx, obj, chars, &mProperty) && 
-                    !JSVAL_IS_VOID(mProperty))
-                {
-                    if(JSVAL_IS_OBJECT(mProperty) && 
-                        JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(mProperty)))
-                    {
-                        mPropertyType = FUNCTION;
-                        JSObject * funcObj = JSVAL_TO_OBJECT(mProperty);
-                        JSIdArray * funcObjArray = JS_Enumerate(cx, funcObj);
-                        if(funcObjArray)
-                        {
-                            mParamCount = funcObjArray->length;
-                        }
-                    }
-                    else
-                    {
-                        mParamCount = 0;
-                        if((attr & JSPROP_READONLY) != 0)
-                        {
-                            mPropertyType = READONLY_PROPERTY;
-                        }
-                        else
-                        {
-                            mPropertyType = PROPERTY;
-                        }
-                    }
-                }
-            }
+            mParamCount = funcObjArray->length;
+        }
+    }
+    else // It's a property
+    {
+        mParamCount = 0;
+        if((attr & JSPROP_READONLY) != 0)
+        {
+            mPropertyType = READONLY_PROPERTY;
+        }
+        else
+        {
+            mPropertyType = PROPERTY;
         }
     }
 }
 
-void XPCDispTypeInfo::FuncDescArray::BuildFuncDesc(XPCCallContext& ccx, JSObject* obj, 
+PRBool XPCDispTypeInfo::FuncDescArray::BuildFuncDesc(XPCCallContext& ccx, JSObject* obj, 
                                      XPCDispJSPropertyInfo & propInfo)
 {
     FUNCDESC* funcDesc = new FUNCDESC;
+    if(!funcDesc)
+        return PR_FALSE;
     mArray.AppendElement(funcDesc);
     // zero is reserved
     funcDesc->memid = propInfo.GetMemID();
-    funcDesc->lprgscode = 0;
+    funcDesc->lprgscode = 0; // Not used (for 16 bit systems)
     funcDesc->funckind = FUNC_DISPATCH;
     funcDesc->invkind = propInfo.GetInvokeKind();
     funcDesc->callconv = CC_STDCALL;
     funcDesc->cParams = propInfo.GetParamCount();
     funcDesc->lprgelemdescParam = propInfo.GetParamInfo();
-    funcDesc->cParamsOpt = 0;
+    // We might want to make all parameters optional since JS can handle that
+    funcDesc->cParamsOpt = 0; // Optional parameters
     // This could be a problem, supposed to be used for functions of
     // type FUNC_VIRTUAL which we aren't, so zero should be ok
-    funcDesc->oVft = 0;
-    funcDesc->cScodes = 0;
-    funcDesc->wFuncFlags = 0;
+    funcDesc->oVft = 0;         // Specifies offset in VTBL for FUNC_VIRTUAL
+    funcDesc->cScodes = 0;      // Counts the permitted return values.
+    funcDesc->wFuncFlags = 0;   // Indicates the FUNCFLAGS of a function.
     propInfo.GetReturnType(ccx, funcDesc->elemdescFunc);
+    return PR_TRUE;
 }
 
 XPCDispTypeInfo::FuncDescArray::FuncDescArray(XPCCallContext& ccx, JSObject* obj, const XPCDispIDArray& array, XPCDispNameArray & names)
@@ -166,15 +189,19 @@ XPCDispTypeInfo::FuncDescArray::FuncDescArray(XPCCallContext& ccx, JSObject* obj
     names.SetSize(size);
     PRUint32 memid = 0;
     JSContext* cx = ccx;
+    // Initialize each function description in the array
     for(PRUint32 index = 0; index < size; ++index)
     {
         XPCDispJSPropertyInfo propInfo(cx, ++memid, obj, array.Item(cx, index));
         names.SetName(index + 1, propInfo.GetName());
-        BuildFuncDesc(ccx, obj, propInfo);
+        if(!BuildFuncDesc(ccx, obj, propInfo))
+            return;
+        // non-readonly Properties get two function descriptions
         if(propInfo.IsProperty() && !propInfo.IsReadOnly())
         {
-            propInfo.SetSetterMode();
-            BuildFuncDesc(ccx, obj, propInfo);
+            propInfo.SetSetter();
+            if(!BuildFuncDesc(ccx, obj, propInfo))
+                return;
         }
     }
 }
@@ -184,36 +211,37 @@ XPCDispTypeInfo::FuncDescArray::~FuncDescArray()
     PRUint32 size = mArray.Count();
     for(PRUint32 index = 0; index < size; ++index)
     {
-        delete NS_REINTERPRET_CAST(FUNCDESC*,mArray.ElementAt(index));
+        FUNCDESC* funcDesc = NS_REINTERPRET_CAST(FUNCDESC*,mArray.ElementAt(index));
+        delete [] funcDesc->lprgelemdescParam;
+        delete funcDesc;
     }
 }
 
 XPCDispTypeInfo::XPCDispTypeInfo(XPCCallContext& ccx, JSObject* obj, 
                                XPCDispIDArray* array) :
-    mRefCnt(0), mJSObject(obj), mIDArray(ccx, array), 
+    mRefCnt(0), mJSObject(obj), mIDArray(array), 
     mFuncDescArray(ccx, obj, *array, mNameArray)
-{
-}
-
-XPCDispTypeInfo::~XPCDispTypeInfo()
 {
 }
 
 XPCDispTypeInfo * XPCDispTypeInfo::New(XPCCallContext& ccx, JSObject* obj)
 {
     nsresult retval = NS_ERROR_FAILURE;
-    // Saved state must be restored, all exits through 'out'...
+    // Saved state must be restored
     JSExceptionState* saved_exception = xpc_DoPreScriptEvaluated(ccx);
     JSErrorReporter older = JS_SetErrorReporter(ccx, nsnull);
     XPCDispTypeInfo * pTypeInfo = 0;
     JSIdArray * jsArray = JS_Enumerate(ccx, obj);
-    if(jsArray)
+    if(!jsArray)
+        return nsnull;
+    XPCDispIDArray* array = new XPCDispIDArray(ccx, jsArray);
+    if(!array)
+        return nsnull;
+    pTypeInfo = new XPCDispTypeInfo(ccx, obj, array);
+    if(!pTypeInfo)
     {
-        XPCDispIDArray* array = new XPCDispIDArray(ccx, jsArray);
-        if(array)
-        {
-            pTypeInfo = new XPCDispTypeInfo(ccx, obj, array);
-        }
+        delete array;
+        return nsnull;
     }
     JS_SetErrorReporter(ccx, older);
     xpc_DoPostScriptEvaluated(ccx, saved_exception);
@@ -285,8 +313,11 @@ STDMETHODIMP XPCDispTypeInfo::GetIDsOfNames(
         /* [size_is][out] */ MEMBERID __RPC_FAR *pMemId)
 {
     _bstr_t name;
+    // lookup each name
     for(UINT index = 0; index < cNames; ++index)
     {
+        // This can probably be streamlined, I wasn't sure if
+        // we could go safely from LPOLESTR to nsDependentString
         name = rgszNames[index];
         nsDependentCString buffer(NS_STATIC_CAST(const char *,name));
         pMemId[index] = mNameArray.Find(buffer);
@@ -295,7 +326,6 @@ STDMETHODIMP XPCDispTypeInfo::GetIDsOfNames(
     return S_OK;
 }
 
-// TODO: Factor out with nsXPCWrappedJS::Invoke
 STDMETHODIMP XPCDispTypeInfo::Invoke(
         /* [in] */ PVOID pvInstance,
         /* [in] */ MEMBERID memid,
@@ -326,20 +356,20 @@ STDMETHODIMP XPCDispTypeInfo::GetDocumentation(
 {
     PRUint32 index = memid;
     if(index < mIDArray->Length())
+        return E_FAIL;
+
+    XPCCallContext ccx(NATIVE_CALLER);
+    PRUnichar * chars = xpc_JSString2PRUnichar(ccx, mIDArray->Item(ccx, index));
+    if(!chars)
     {
-        XPCCallContext ccx(NATIVE_CALLER);
-        JSString* str = JS_ValueToString(ccx, mIDArray->Item(ccx, index));
-        if(str)
-        {
-            jschar* chars = JS_GetStringChars(str);
-            CComBSTR name(chars);
-            *pBstrName = name.Detach();
-            pBstrDocString = 0;
-            pdwHelpContext = 0;
-            pBstrHelpFile = 0;
-        }
+        return E_FAIL;
     }
-    return E_NOTIMPL;
+    CComBSTR name(chars);
+    *pBstrName = name.Detach();
+    pBstrDocString = 0;
+    pdwHelpContext = 0;
+    pBstrHelpFile = 0;
+    return S_OK;
 }
     
 STDMETHODIMP XPCDispTypeInfo::GetDllEntry(
@@ -414,6 +444,7 @@ void STDMETHODCALLTYPE XPCDispTypeInfo::ReleaseVarDesc(
 XPCDispIDArray::XPCDispIDArray(XPCCallContext& ccx, JSIdArray* array) : 
     mMarked(JS_FALSE), mIDArray(array->length)
 {
+    // copy the JS ID Array to our internal array
     for(jsint index = 0; index < array->length; ++index)
     {
         mIDArray.ReplaceElementAt(NS_REINTERPRET_CAST(void*,
@@ -424,27 +455,29 @@ XPCDispIDArray::XPCDispIDArray(XPCCallContext& ccx, JSIdArray* array) :
 
 void XPCDispIDArray::Mark()
 {
-    if(!IsMarked())
+    // If already marked nothing to do
+    if(IsMarked())
+        return;
+    mMarked = JS_TRUE;
+    XPCCallContext ccx(NATIVE_CALLER);
+    // Bail if our call context is bad
+    if(!ccx.IsValid())
+        return;
+
+    PRInt32 count = Length();
+    jsval val;
+    JSContext* cx = ccx;
+    // Iterate each of the ID's and mark them
+    for(PRInt32 index = 0; index < count; ++index)
     {
-        mMarked = JS_TRUE;
-        XPCCallContext ccx(NATIVE_CALLER);
-        if(ccx.IsValid())
+        if(JS_IdToValue(cx,
+                        NS_REINTERPRET_CAST(jsid,
+                                            mIDArray.ElementAt(index)),
+                        &val) &&
+            JSVAL_IS_GCTHING(val))
         {
-            PRInt32 count = Length();
-            jsval val;
-            JSContext* cx = ccx;
-            for(PRInt32 index = 0; index < count; ++index)
-            {
-                if(JS_IdToValue(cx,
-                                NS_REINTERPRET_CAST(jsid,
-                                                    mIDArray.ElementAt(index)),
-                                &val) &&
-                    JSVAL_IS_GCTHING(val))
-                {
-                    JS_MarkGCThing(cx, NS_REINTERPRET_CAST(void*,val),
-                                   nsnull, nsnull);
-                }
-            }
+            JS_MarkGCThing(cx, NS_REINTERPRET_CAST(void*,val),
+                           nsnull, nsnull);
         }
     }
 }

@@ -35,11 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * \file XPCDispConvert.cpp
+ * Contains the implementation of the XPCDispConvert class
+ */
+
 #include "xpcprivate.h"
 
-/**
- * Returns the COM type for a given JS value
- */
 VARTYPE XPCDispConvert::JSTypeToCOMType(XPCCallContext& ccx, jsval val)
 {
     if(JSVAL_IS_STRING(val))
@@ -87,6 +89,7 @@ JSBool XPCDispConvert::JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj,
         err = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
         return PR_FALSE;
     }
+    // Create the safe array and populate it
     SAFEARRAY * array = SafeArrayCreateVector(VT_VARIANT, 0, len);
     for(long index = 0; index < len; ++index)
     {
@@ -147,6 +150,14 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
         dest.vt = VT_R8;
         dest.dblVal = *JSVAL_TO_DOUBLE(src);
     }
+    else if(JSVAL_IS_VOID(src))
+    {
+        dest.vt = VT_EMPTY;
+    }
+    else if(JSVAL_IS_NULL(src))
+    {
+        dest.vt = VT_EMPTY;
+    }
     else if(JSVAL_IS_OBJECT(src))
     {
         JSObject * obj = JSVAL_TO_OBJECT(src);
@@ -175,14 +186,6 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
     {
         dest.vt = VT_BOOL;
         dest.boolVal = JSVAL_TO_BOOLEAN(src);
-    }
-    else if(JSVAL_IS_VOID(src))
-    {
-        dest.vt = VT_EMPTY;
-    }
-    else if(JSVAL_IS_NULL(src))
-    {
-        dest.vt = VT_NULL;
     }
     else  // Unknown type
     {
@@ -242,28 +245,50 @@ JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx,
     return JS_TRUE;
 }
 
+/**
+ * Converts an integer number to a jsval
+ * @param cx a JS context
+ * @param value the integer to be converted
+ * @return the converted jsval
+ */
 inline
 jsval NumberToJSVal(JSContext* cx, int value)
 {
     jsval val;
-    if (INT_FITS_IN_JSVAL(value))
+    if(INT_FITS_IN_JSVAL(value))
         val = INT_TO_JSVAL(value);
     else
     {
-        if (!JS_NewDoubleValue(cx, NS_STATIC_CAST(jsdouble,value), &val))
+        if(!JS_NewDoubleValue(cx, NS_STATIC_CAST(jsdouble,value), &val))
             val = JSVAL_ZERO;
     }
     return val;
 }
 
+/**
+ * Converts an floating point number to a jsval
+ * @param cx a JS context
+ * @param value the floating point number to be converted
+ * @return the converted jsval
+ */
 inline
 jsval NumberToJSVal(JSContext* cx, double value)
 {
     jsval val;
-    if (JS_NewDoubleValue(cx, NS_STATIC_CAST(jsdouble, value), &val))
+    if(JS_NewDoubleValue(cx, NS_STATIC_CAST(jsdouble, value), &val))
         return val;
     else
         return JSVAL_ZERO;
+}
+
+inline
+jsval StringToJSVal(JSContext* cx, const PRUnichar * str)
+{
+    JSString * s = JS_NewUCStringCopyZ(cx, str);
+    if (s)
+        return STRING_TO_JSVAL(s);
+    else
+        return JSVAL_NULL;
 }
 
 JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const _variant_t & src,
@@ -278,17 +303,10 @@ JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const _variant_t & src,
     {
         case VT_BSTR:
         {
-            JSString * str;
             if(src.vt & VT_BYREF)
-                str = JS_NewUCStringCopyZ(ccx, *src.pbstrVal);
+                dest = StringToJSVal(ccx, *src.pbstrVal);
             else
-                str = JS_NewUCStringCopyZ(ccx, src.bstrVal);
-            if(!str)
-            {
-                err = NS_ERROR_OUT_OF_MEMORY;
-                return JS_FALSE;
-            }
-            dest = STRING_TO_JSVAL(str);
+                dest = StringToJSVal(ccx, src.bstrVal);
         }
         break;
         case VT_I4:
@@ -323,9 +341,20 @@ JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const _variant_t & src,
         break;
         case VT_DISPATCH:
         {
-            XPCDispObject::COMCreateFromIDispatch(src.pdispVal, ccx,
-                                                  JS_GetGlobalObject(ccx),
-                                                  &dest);
+            XPCDispObject::WrapIDispatch(src.pdispVal, ccx,
+                                         JS_GetGlobalObject(ccx), &dest);
+        }
+        break;
+        case VT_DATE:
+        {
+            _variant_t var(src);
+            _bstr_t bstr(var);
+            dest = StringToJSVal(ccx, NS_STATIC_CAST(const PRUnichar*, bstr));
+        }
+        break;
+        case VT_EMPTY:
+        {
+            dest = JSVAL_NULL;
         }
         break;
         /**
@@ -333,7 +362,6 @@ JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const _variant_t & src,
          */
         case VT_ERROR:
         case VT_CY:
-        case VT_DATE:
         case VT_UNKNOWN:
         case VT_I1:
         case VT_UI2:

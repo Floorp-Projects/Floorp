@@ -47,7 +47,8 @@ PRBool nsXPConnect::IsIDispatchEnabled()
     return XPCIDispatchExtension::IsEnabled();
 }
 
-// XPCDispInterface inlines
+//=============================================================================
+// XPCDispInterface::Member:ParamInfo inlines
 
 inline
 XPCDispInterface::Member::ParamInfo::ParamInfo(
@@ -101,6 +102,9 @@ VARTYPE XPCDispInterface::Member::ParamInfo::GetType() const
 {
     return mParamInfo->tdesc.vt == VT_PTR ? mParamInfo->tdesc.lptdesc->vt : mParamInfo->tdesc.vt;
 }
+
+//=============================================================================
+// XPCDispInterface::Member inlines
 
 inline
 XPCDispInterface::Member::Member() : 
@@ -231,6 +235,9 @@ PRUint16 XPCDispInterface::Member::GetParamType(PRUint32 index) const
     return mFuncDesc->lprgelemdescParam[index].paramdesc.wParamFlags; 
 }
 
+//=============================================================================
+// XPCDispInterface inlines
+
 inline
 JSObject* XPCDispInterface::GetJSObject() const
 {
@@ -285,17 +292,15 @@ XPCDispInterface::~XPCDispInterface()
     // Cleanup our members, the first gets cleaned up by the destructor
     // We have to cleanup the rest manually. These members are allocated
     // as part of the XPCIDispInterface object at the end
-    for (PRUint32 index = 1; index < GetMemberCount(); ++index)
+    for(PRUint32 index = 1; index < GetMemberCount(); ++index)
     {
         mMembers[index].~Member();
     }
 }
 
 inline
-XPCDispInterface::XPCDispInterface(JSContext* cx, 
-                                             ITypeInfo * pTypeInfo, 
-                                             PRUint32 members) : 
-    mJSObject(nsnull) 
+XPCDispInterface::XPCDispInterface(JSContext* cx, ITypeInfo * pTypeInfo,
+                                   PRUint32 members) : mJSObject(nsnull)
 {
     InspectIDispatch(cx, pTypeInfo, members);
 }
@@ -303,9 +308,14 @@ XPCDispInterface::XPCDispInterface(JSContext* cx,
 inline
 void * XPCDispInterface::operator new (size_t, PRUint32 members) 
 {
+    // Must allow for the member in XPCDispInterface
+    if(!members)
+        members = 1;
+    // Calculate the size needed for the base XPCDispInterface and its members
     return PR_Malloc(sizeof(XPCDispInterface) + sizeof(Member) * (members - 1));
 }
 
+//=============================================================================
 // XPCDispNameArray inlines
 
 inline
@@ -334,30 +344,33 @@ PRUint32 XPCDispNameArray::GetSize() const
 }
 
 inline
-void XPCDispNameArray::SetName(PRUint32 index, nsACString const & name) 
+void XPCDispNameArray::SetName(DISPID dispid, nsACString const & name) 
 {
-    mNames[index - 1] = name;
+    NS_ASSERTION(dispid <= mCount, "Array bounds error in XPCDispNameArray::SetName");
+    mNames[dispid - 1] = name;
 }
 
 inline
-nsCString XPCDispNameArray::Get(PRUint32 index) const 
+nsCString XPCDispNameArray::GetName(DISPID dispid) const 
 {
-    if(index > 0)
-        return mNames[index - 1];
+    NS_ASSERTION(dispid <= mCount, "Array bounds error in XPCDispNameArray::Get");
+    if(dispid > 0)
+        return mNames[dispid - 1];
     return nsCString();
 }
 
 inline
-PRUint32 XPCDispNameArray::Find(const nsACString &target) const
+DISPID XPCDispNameArray::Find(const nsACString &target) const
 {
     for(PRUint32 index = 0; index < mCount; ++index) 
     {
         if(mNames[index] == target) 
-            return index + 1; 
+            return NS_STATIC_CAST(DISPID, index + 1);
     }
     return 0; 
 }
 
+//=============================================================================
 // XPCDispIDArray inlines
 
 inline
@@ -395,7 +408,8 @@ void XPCDispIDArray::MarkBeforeJSFinalize(JSContext*)
 {
 }
 
-// XPCDispTypeInfo
+//=============================================================================
+// XPCDispTypeInfo inlines
 
 inline
 FUNCDESC* XPCDispTypeInfo::FuncDescArray::Get(PRUint32 index) 
@@ -417,8 +431,74 @@ PRUint32 XPCDispTypeInfo::FuncDescArray::Length() const
 inline
 nsCString XPCDispTypeInfo::GetNameForDispID(DISPID dispID)
 {
-    return mNameArray.Get(dispID);
+    return mNameArray.GetName(dispID);
 }
+
+//=============================================================================
+// XPCDispJSPropertyInfo inlines
+
+inline
+PRBool XPCDispJSPropertyInfo::Valid() const 
+{
+    return mPropertyType != INVALID;
+}
+
+inline
+PRUint32 XPCDispJSPropertyInfo::GetParamCount() const
+{
+    return IsSetter() ? 1 : mParamCount;
+}
+
+inline
+PRUint32 XPCDispJSPropertyInfo::GetMemID() const
+{
+    return mMemID;
+}
+
+inline
+INVOKEKIND XPCDispJSPropertyInfo::GetInvokeKind() const
+{
+    return IsSetter() ? INVOKE_PROPERTYPUT : 
+        (IsProperty() ? INVOKE_PROPERTYGET : INVOKE_FUNC); 
+}
+
+inline
+PRBool XPCDispJSPropertyInfo::IsProperty() const
+{
+    return PropertyType() == PROPERTY || PropertyType() == READONLY_PROPERTY;
+}
+
+inline
+PRBool XPCDispJSPropertyInfo::IsReadOnly() const
+{
+    return PropertyType()== READONLY_PROPERTY;
+}
+
+inline
+PRBool XPCDispJSPropertyInfo::IsSetter() const
+{
+    return (mPropertyType & SETTER_MODE) != 0;
+}
+inline
+void XPCDispJSPropertyInfo::SetSetter()
+{
+    mPropertyType |= SETTER_MODE;
+}
+
+inline
+nsACString const & XPCDispJSPropertyInfo::GetName() const
+{
+    return mName; 
+}
+
+inline
+XPCDispJSPropertyInfo::property_type XPCDispJSPropertyInfo::PropertyType() const
+{
+    return NS_STATIC_CAST(property_type,mPropertyType & ~SETTER_MODE);
+}
+
+//=============================================================================
+// GUID/nsIID/nsCID conversion functions
 
 inline
 const nsIID & XPCDispGUID2nsIID(const struct _GUID & guid)
@@ -448,6 +528,9 @@ const GUID & XPCDispCID2GUID(const nsCID & iid)
     return NS_REINTERPRET_CAST(const struct _GUID &, iid);
 }
 
+//=============================================================================
+// XPCDispParams inlines
+
 inline
 void XPCDispParams::SetNamedPropID()
 {
@@ -475,6 +558,8 @@ void * XPCDispParams::GetOutputBuffer(PRUint32 index)
     return mVarBuffer + VARIANT_UNION_SIZE * index;
 }
 
+//=============================================================================
+// XPCDispParamPropJSClass inlines
 inline
 JSBool XPCDispParamPropJSClass::Invoke(XPCCallContext& ccx, 
                                        XPCDispObject::CallMode mode,
@@ -482,5 +567,44 @@ JSBool XPCDispParamPropJSClass::Invoke(XPCCallContext& ccx,
 {
     return XPCDispObject::Dispatch(ccx, mDispObj, mDispID, mode, mDispParams,
                                    retval);
+}
+
+//=============================================================================
+// Other helper functions
+
+/**
+ * Converts a jsval that is a string to a char const *
+ * @param cx a JS context
+ * @param val The JS value to be converted
+ * @return a C string (Does not need to be freed)
+ */
+inline
+const char * xpc_JSString2Char(JSContext * cx, jsval val)
+{
+    JSString* str = JS_ValueToString(cx, val);
+    if(!str)
+        return nsnull;
+
+    return JS_GetStringBytes(str);
+
+}
+
+/**
+ * Converts a jsval that is a string to a PRUnichar *
+ * @param cx a JS context
+ * @param val the JS value to vbe converted
+ * @param length optional pointer to a variable to hold the length
+ * @return a PRUnichar buffer (Does not need to be freed)
+ */
+inline
+PRUnichar* xpc_JSString2PRUnichar(XPCCallContext& ccx, jsval val,
+                                  size_t* length = nsnull)
+{
+    JSString* str = JS_ValueToString(ccx, val);
+    if(!str)
+        return nsnull;
+    if(length)
+        *length = JS_GetStringLength(str);
+    return NS_REINTERPRET_CAST(PRUnichar*,JS_GetStringChars(str));
 }
 

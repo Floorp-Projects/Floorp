@@ -200,22 +200,19 @@ void XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, P
     }
 }
 
-inline
-PRUnichar* JSString2PRUnichar(XPCCallContext& ccx, jsval val, size_t* length)
-{
-    JSString* str = JS_ValueToString(ccx, val);
-    if(!str)
-        return nsnull;
-    *length = JS_GetStringLength(str);
-    PRUnichar * string = NS_REINTERPRET_CAST(PRUnichar*,JS_GetStringChars(str));
-    return string;
-}
-
+/**
+ * Compares a PRUnichar and a JS string ignoring case
+ * @param ccx an XPConnect call context
+ * @param lhr the PRUnichar string to be compared
+ * @param lhsLength the length of the PRUnichar string
+ * @param rhs the JS value that is the other string to compare
+ * @return true if the strings are equal
+ */
 inline
 PRBool CaseInsensitiveCompare(XPCCallContext& ccx, const PRUnichar* lhs, size_t lhsLength, jsval rhs)
 {
     size_t rhsLength;
-    PRUnichar* rhsString = JSString2PRUnichar(ccx, rhs, &rhsLength);
+    PRUnichar* rhsString = xpc_JSString2PRUnichar(ccx, rhs, &rhsLength);
     return rhsString && 
         lhsLength == rhsLength &&
         _wcsnicmp(lhs, rhsString, lhsLength * sizeof(PRUnichar)) == 0;
@@ -224,10 +221,10 @@ PRBool CaseInsensitiveCompare(XPCCallContext& ccx, const PRUnichar* lhs, size_t 
 const XPCDispInterface::Member* XPCDispInterface::FindMemberCI(XPCCallContext& ccx, jsval name) const
 {
     size_t nameLength;
-    PRUnichar* sName = JSString2PRUnichar(ccx, name, &nameLength);
+    PRUnichar* sName = xpc_JSString2PRUnichar(ccx, name, &nameLength);
     if(!sName)
         return nsnull;
-    // Iterate backwards to save time
+    // Iterate backwards over the members array (more efficient)
     const Member* member = mMembers + mMemberCount;
     while(member > mMembers)
     {

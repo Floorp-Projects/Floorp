@@ -35,6 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * \file nsDispatchSupport.cpp
+ * Contains the implementation for the nsDispatchSupport class
+ * this is an XPCOM service
+ */
+
 #include "XPCPrivate.h"
 
 nsDispatchSupport* nsDispatchSupport::mInstance = nsnull;
@@ -52,7 +58,12 @@ nsDispatchSupport::~nsDispatchSupport()
   /* destructor code */
 }
 
-/* void COMVariant2JSVal (in COMVARIANTPtr comvar, out JSVal val); */
+/**
+ * Converts a COM variant to a jsval
+ * @param comvar the variant to convert
+ * @param val pointer to the jsval to receive the value
+ * @return nsresult
+ */
 NS_IMETHODIMP nsDispatchSupport::COMVariant2JSVal(VARIANT * comvar, jsval *val)
 {
     XPCCallContext ccx(NATIVE_CALLER);
@@ -61,7 +72,12 @@ NS_IMETHODIMP nsDispatchSupport::COMVariant2JSVal(VARIANT * comvar, jsval *val)
     return retval;
 }
 
-/* void COMArray2JSArray (in COMVARIANTPtr comvar, out JSObjectPtr obj); */
+/**
+ * Converts a jsval to a COM variant
+ * @param val the jsval to be converted
+ * @param comvar pointer to the variant to receive the value
+ * @return nsresult
+ */
 NS_IMETHODIMP nsDispatchSupport::JSVal2COMVariant(jsval val, VARIANT * comvar)
 {
     XPCCallContext ccx(NATIVE_CALLER);
@@ -70,7 +86,19 @@ NS_IMETHODIMP nsDispatchSupport::JSVal2COMVariant(jsval val, VARIANT * comvar)
     return retval;
 }
 
-NS_IMETHODIMP nsDispatchSupport::CreateInstance(const char * className, PRBool testScriptability, IDispatch ** result)
+/**
+ * Creates an instance of an COM object, returning it as an IDispatch interface.
+ * This also allows testing of scriptability.
+ * @param className prog ID or class ID of COM component, class ID must be in
+ * the form of {00000000-0000-0000-000000000000}
+ * @param testScriptability if true this will only succeed if the object is in
+ * the property category or supports the IObjectSafety interface
+ * @param result pointer to an IDispatch to receive the pointer to the instance
+ * @return nsresult
+ */
+NS_IMETHODIMP nsDispatchSupport::CreateInstance(const char * className,
+                                                PRBool testScriptability,
+                                                IDispatch ** result)
 {
     return XPCDispObject::COMCreateInstance(className, testScriptability, result);
 }

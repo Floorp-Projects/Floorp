@@ -35,30 +35,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * \file XPCDispObject.cpp
+ * Contains the XPCDispObject class implementation,
+ * XPC_IDispatch_GetterSetter, and XPC_IDispatch_CallMethod
+ */
 #include "xpcprivate.h"
 
+/**
+ * This is COM's IDispatch IID, but in XPCOM's nsID type
+ */
 nsID NSID_IDISPATCH = { 0x00020400, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
+
+/**
+ * Need this for ATL stuff
+ * We should look into the possiblity of removing this. It would be nice to
+ * break the ties to ATL all together at some point
+ */
 CComModule _Module;
 
 PRBool
-XPCDispObject::COMCreateFromIDispatch(IDispatch *pDispatch, JSContext *cx, JSObject *obj, jsval *rval)
+XPCDispObject::WrapIDispatch(IDispatch *pDispatch, JSContext *cx, JSObject *obj, jsval *rval)
 {
     if(!pDispatch)
     {
-        // TODO: error reporting
         return PR_FALSE;
     }
 
-    // TODO: Do we return an existing COM object if we recognize we've already wrapped this IDispatch?
-
-    // Instantiate the desired COM object
+    // Wrap the desired COM object
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsresult rv = nsXPConnect::GetXPConnect()->WrapNative(cx, obj, 
                                   NS_REINTERPRET_CAST(nsISupports*, pDispatch),
                                   NSID_IDISPATCH, getter_AddRefs(holder));
     if(FAILED(rv) || !holder)
     {
-        // TODO: error reporting
         return PR_FALSE;
     }
     JSObject * jsobj;
@@ -68,50 +78,51 @@ XPCDispObject::COMCreateFromIDispatch(IDispatch *pDispatch, JSContext *cx, JSObj
     return PR_TRUE;
 }
 
-static boolean HasSafeScriptingCategory(const GUID & classID)
+/**
+ * Helper function to determine whether an object has the safe scripting
+ * category
+ * @param the class ID of the COM object to be created
+ * @return true if it has the category
+ */
+static PRBool HasSafeScriptingCategory(const GUID & classID)
 {
+    // TODO: probably should look into caching this if this becomes
+    // a performance issue
     CComPtr<ICatInformation> catInfo;
     HRESULT hr = catInfo.CoCreateInstance(CLSID_StdComponentCategoriesMgr);
-    if (catInfo == NULL)
-    {
-        // Must fail if we can't open the category manager
-        return false;
-    }
+    // Must fail if we can't open the category manager
+    if(catInfo == NULL)
+        return PR_FALSE;
      
     // See what categories the class implements
     CComPtr<IEnumCATID> enumCATID;
-    if (FAILED(catInfo->EnumImplCategoriesOfClass(classID, &enumCATID)))
-    {
-        // Can't enumerate classes in category so fail
-        return false;
-    }
+    if(FAILED(catInfo->EnumImplCategoriesOfClass(classID, &enumCATID)))
+        return PR_FALSE;  // Can't enumerate classes in category so fail
  
     // Search for matching categories
-    BOOL bFound = FALSE;
     CATID catidNext = GUID_NULL;
-    while (enumCATID->Next(1, &catidNext, NULL) == S_OK)
+    while(enumCATID->Next(1, &catidNext, NULL) == S_OK)
     {
-        if (::IsEqualCATID(CATID_SafeForScripting, catidNext))
+        if(::IsEqualCATID(CATID_SafeForScripting, catidNext))
         {
-            bFound = TRUE;
+            return PR_TRUE;
         }
     }
-    if (!bFound)
-    {
-        return false;
-    }
- 
-     return true;
+    return PR_FALSE;
 }
 
+/**
+ * Returns true if the desired scriptable flags are set
+ * @return true if the desired scriptable flags are set
+ */
 inline
-boolean ScriptOK(DWORD value)
+PRBool ScriptOK(DWORD value)
 {
     return value & (INTERFACESAFE_FOR_UNTRUSTED_CALLER | 
         INTERFACESAFE_FOR_UNTRUSTED_DATA);
 }
 
-nsresult XPCDispObject::COMCreateInstance(const char * className, PRBool testScriptability, IDispatch ** result)
+HRESULT XPCDispObject::COMCreateInstance(const char * className, PRBool testScriptability, IDispatch ** result)
 {
     _bstr_t bstrName(className);
     CLSID classID;
@@ -128,35 +139,32 @@ nsresult XPCDispObject::COMCreateInstance(const char * className, PRBool testScr
     if(FAILED(hr))
         return hr;
     PRBool scriptableOK = PR_TRUE;
-    if (testScriptability)
-    {
-        const DWORD scriptOk = INTERFACESAFE_FOR_UNTRUSTED_CALLER |
-                                     INTERFACESAFE_FOR_UNTRUSTED_DATA;
+    if(testScriptability)
         scriptableOK = HasSafeScriptingCategory(classID);
-    }
     
     // Didn't have the safe for scripting category so lets look at IObjectSafety
     CComPtr<IDispatch> disp;
     HRESULT hResult = disp.CoCreateInstance(classID);
-    if (FAILED(hResult))
+    if(FAILED(hResult))
         return hResult;
 
     // If we're testing scriptability and it didn't have a scripting category
     // we'll check via the IObjectSafety interface
-    if (testScriptability && !scriptableOK)
+    if(testScriptability && !scriptableOK)
     {
         CComQIPtr<IObjectSafety> objSafety(disp);
         // Didn't have IObjectSafety so we'll bail
-        if (objSafety == 0)
+        if(objSafety == 0)
             return E_FAIL;
         DWORD supported;
         DWORD state;
         hr = objSafety->GetInterfaceSafetyOptions(IID_IDispatch, &supported, &state);
-        if (FAILED(hr))
+        if(FAILED(hr))
             return hr;
-        if (!ScriptOK(supported) || !ScriptOK(state))
+        if(!ScriptOK(supported) || !ScriptOK(state))
             return E_FAIL;
     }
+    // Copy and addref
     disp.CopyTo(result);
     return S_OK;
 }
@@ -176,7 +184,7 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
     jsval val;
     uintN err;
     uintN argc = params.GetParamCount();
-
+    // Figure out what we're doing (getter/setter/method)
     WORD dispFlags;
     if(mode == CALL_SETTER)
     {
@@ -190,6 +198,7 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
     {
         dispFlags = DISPATCH_METHOD;
     }
+    // call IDispatch's invoke
     HRESULT invokeResult= disp->Invoke(
         dispID,    // IDispatch ID
         IID_NULL,               // Reserved must be IID_NULL
@@ -236,6 +245,7 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
             *retval = val;
         }
     }
+    // Set the result and throw the error if one occured
     ccx.GetXPCContext()->SetLastResult(invokeResult);
 
     if(NS_FAILED(invokeResult))
@@ -245,7 +255,6 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
     }
     return JS_TRUE;
 }
-
 
 JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
 {
@@ -257,7 +266,8 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
         NS_ASSERTION(rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO, 
                      "hmm? CanCallNow failed in XPCDispObject::Invoke. "
                      "We are finding out about this late!");
-        return Throw(rv, ccx);
+        XPCThrower::Throw(rv, ccx);
+        return JS_FALSE;
     }
 
     // TODO: Remove type cast and change GetIDispatchMember to use the correct type
@@ -296,7 +306,7 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
             return JS_FALSE;
     }
     jsval name = member->GetName();
-#if I_UNDERSTAND_SECURITY
+
     nsIXPCSecurityManager* sm = xpcc->GetAppropriateSecurityManager(secFlag);
     if(sm && NS_FAILED(sm->CanAccess(secAction, &ccx, ccx,
                                      ccx.GetFlattenedJSObject(),
@@ -307,15 +317,16 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
         // the security manager vetoed. It should have set an exception.
         return JS_FALSE;
     }
-#endif
+
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     nsISupports * pObj = ccx.GetTearOff()->GetNative();
     PRUint32 args = member->GetParamCount();
     uintN err;
-    // TODO: I'm not sure why we need to do this I would have expected COM
-    // to report one parameter
+    // Make sure setter has one argument
     if(mode == CALL_SETTER)
         args = 1;
+    // Allow for optional parameters. We'll let COM handle the error if there
+    // are not enough parameters
     if(argc < args)
         args = argc;
     XPCDispParams params(args);
@@ -327,8 +338,9 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
         if(!XPCDispConvert::JSToCOM(ccx, argv[0],params.GetParamRef(0), err))
             return ThrowBadParam(err, 0, ccx);
     }
-    else if(mode != CALL_GETTER)
+    else if(mode != CALL_GETTER)    // This is a function
     {
+        // Convert the arguments to the function
         for(PRUint32 index = 0; index < args; ++index)
         {
             const XPCDispInterface::Member::ParamInfo & paramInfo = member->GetParamInfo(index);
@@ -391,21 +403,10 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
     return JS_FALSE;
 }
 
-/**
- * throws an error
- */
-
-JSBool XPCDispObject::Throw(uintN errNum, JSContext* cx)
-{
-    XPCThrower::Throw(errNum, cx);
-    return JS_FALSE;
-}
-
 static
 JSBool GetMember(XPCCallContext& ccx, JSObject* funobj, XPCNativeInterface*& iface, XPCDispInterface::Member*& member)
 {
     // We expect funobj to be a clone, we need the real funobj.
-
     JSFunction* fun = (JSFunction*) JS_GetPrivate(ccx, funobj);
     if(!fun)
         return JS_FALSE;
@@ -426,14 +427,19 @@ JSBool GetMember(XPCCallContext& ccx, JSObject* funobj, XPCNativeInterface*& ifa
     return JS_TRUE;
 }
 
-// Handy macro used in many callback stub below.
-
+// Handy macro used in callbacks below.
 #define THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper)                         \
     PR_BEGIN_MACRO                                                           \
     if(!wrapper)                                                             \
-        return XPCDispObject::Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);     \
+    {                                                                        \
+        XPCThrower::Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);              \
+        return JS_FALSE;                                                     \
+    }                                                                        \
     if(!wrapper->IsValid())                                                  \
-        return XPCDispObject::Throw(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN, cx);      \
+    {                                                                        \
+        XPCThrower::Throw(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN, cx);               \
+        return JS_FALSE;                                                     \
+    }                                                                        \
     PR_END_MACRO
 
 /**
