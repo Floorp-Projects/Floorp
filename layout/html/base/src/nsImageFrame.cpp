@@ -16,9 +16,8 @@
  * Reserved.
  */
 #include "nsHTMLParts.h"
-#include "nsHTMLImage.h"
+#include "nsImageFrame.h"
 #include "nsString.h"
-#include "nsLeafFrame.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIFrameImageLoader.h"
@@ -39,7 +38,6 @@
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
 #include "prprf.h"
-#include "nsISizeOfHandler.h"
 #include "nsIFontMetrics.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -49,12 +47,11 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIStyleSet.h"
 
-#ifndef _WIN32
-#define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
+#ifdef DEBUG
+#undef NOISY_IMAGE_LOADING
+#else
+#undef NOISY_IMAGE_LOADING
 #endif
-
-// XXX until I fix aspect scaling...
-#undef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
@@ -66,321 +63,6 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET PRUint8(-1)
-
-//----------------------------------------------------------------------
-
-nsHTMLImageLoader::nsHTMLImageLoader()
-  : mHaveImageSize(PR_FALSE),
-    mImageSize(0, 0)
-{
-  mImageLoader = nsnull;
-  mLoadImageFailed = PR_FALSE;
-#ifndef _WIN32
-  mLoadBrokenImageFailed = PR_FALSE;
-#endif
-  mURLSpec = nsnull;
-  mBaseURL = nsnull;
-}
-
-nsHTMLImageLoader::~nsHTMLImageLoader()
-{
-  NS_IF_RELEASE(mImageLoader);
-  if (nsnull != mURLSpec) {
-    delete mURLSpec;
-  }
-  NS_IF_RELEASE(mBaseURL);
-}
-
-void
-nsHTMLImageLoader::StopLoadImage(nsIPresContext& aPresContext,
-                                 nsIFrame* aTargetFrame)
-{
-  aPresContext.StopLoadImage(aTargetFrame);
-  NS_RELEASE(mImageLoader);
-}
-
-nsIImage*
-nsHTMLImageLoader::GetImage()
-{
-  nsIImage* image = nsnull;
-  if (nsnull != mImageLoader) {
-    mImageLoader->GetImage(image);
-  }
-  return image;
-}
-
-nsresult
-nsHTMLImageLoader::SetURLSpec(const nsString& aURLSpec)
-{
-  if (nsnull != mURLSpec) {
-    delete mURLSpec;
-  }
-  mURLSpec = new nsString(aURLSpec);
-  if (nsnull == mURLSpec) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
-nsresult
-nsHTMLImageLoader::SetBaseURL(nsIURL* aBaseURL)
-{
-  NS_IF_RELEASE(mBaseURL);
-  mBaseURL = aBaseURL;
-  NS_IF_ADDREF(mBaseURL);
-  return NS_OK;
-}
-
-void
-nsHTMLImageLoader::GetBaseURL(nsIURL*& aResult) const {
-  aResult = mBaseURL;
-  NS_IF_ADDREF(aResult);
-}
-
-nsresult
-nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
-                                  nsIFrame* aForFrame,
-                                  nsFrameImageLoaderCB aCallBack,
-                                  PRBool aNeedSizeUpdate,
-                                  PRIntn& aLoadStatus)
-{
-  aLoadStatus = NS_IMAGE_LOAD_STATUS_NONE;
-
-  // Get absolute url the first time through
-  nsresult rv;
-  nsAutoString src;
-#ifdef _WIN32
-  if (mLoadImageFailed) {
-    // We've already notified the pres shell that we're unable to render
-    // the image so just return
-    return NS_OK;
-  } else if (nsnull == mURLSpec) {
-    // No URI was specified for the src. Indicate we're unable to load the
-    // image and notify the pres shell
-    mLoadImageFailed = PR_TRUE;
-    nsIPresShell* presShell;
-    aPresContext->GetShell(&presShell);
-    presShell->CantRenderReplacedElement(aPresContext, aForFrame);
-    NS_RELEASE(presShell);
-    return NS_OK;
-#else
-  if (mLoadImageFailed || (nsnull == mURLSpec)) {
-    src.Append(BROKEN_IMAGE_URL);
-#endif
-  } else if (nsnull == mImageLoader) {
-    // Create an absolute URL
-    if (mBaseURL) {
-      nsString empty;
-      nsresult rv = NS_MakeAbsoluteURL(mBaseURL, empty, *mURLSpec, src);
-
-      if (NS_OK != rv) {
-        return rv;
-      }
-    } else {
-      // Just use the URL spec
-      src = *mURLSpec;
-    }
-  }
-
-  if (nsnull == mImageLoader) {
-    // Start image loading. Note that we don't specify a background color
-    // so transparent images are always rendered using a transparency mask
-#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
-    printf("loading ");
-    fputs(*mURLSpec, stdout);
-    printf(" at %d,%d size\n", mImageSize.width, mImageSize.height);
-#else
-    nsSize zero(0, 0);
-#endif
-    rv = aPresContext->StartLoadImage(src, nsnull, aForFrame,
-#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
-                                      mImageSize,
-#else
-                                      mHaveImageSize ? mImageSize : zero,
-#endif
-                                      aCallBack, aNeedSizeUpdate,
-                                      PR_TRUE, &mImageLoader);
-    if ((NS_OK != rv) || (nsnull == mImageLoader)) {
-      return rv;
-    }
-  }
-
-  // Examine current image load status
-  mImageLoader->GetImageLoadStatus(aLoadStatus);
-  if (0 != (aLoadStatus & NS_IMAGE_LOAD_STATUS_ERROR)) {
-    NS_RELEASE(mImageLoader);
-#ifdef _WIN32
-    // Display broken icon along with alt-text
-    mLoadImageFailed = PR_TRUE;
-#else
-    if (mLoadImageFailed) {
-      // We are doomed. Loading the broken image has just failed.
-      mLoadBrokenImageFailed = PR_TRUE;
-    }
-    else {
-      // Try again, this time using the broke-image url
-      mLoadImageFailed = PR_TRUE;
-      return StartLoadImage(aPresContext, aForFrame, nsnull,
-                            aNeedSizeUpdate, aLoadStatus);
-    }
-#endif
-  }
-  return NS_OK;
-}
-
-void
-nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
-                                  const nsHTMLReflowState& aReflowState,
-                                  nsIFrame* aTargetFrame,
-                                  nsFrameImageLoaderCB aCallBack,
-                                  nsHTMLReflowMetrics& aDesiredSize)
-{
-  // If we have the image size then we are finished
-  if (mHaveImageSize) {
-    aDesiredSize.width = mImageSize.width;
-    aDesiredSize.height = mImageSize.height;
-    return;
-  }
-
-  // Determine whether the image has fixed content width and height
-  PRBool  fixedContentWidth = aReflowState.HaveFixedContentWidth();
-  PRBool  fixedContentHeight = aReflowState.HaveFixedContentHeight();
-  if (NS_INTRINSICSIZE == aReflowState.computedWidth) {
-    fixedContentWidth = PR_FALSE;
-  }
-  if (NS_INTRINSICSIZE == aReflowState.computedHeight) {
-    fixedContentHeight = PR_FALSE;
-  }
-
-  // Choose reflow size
-  if (fixedContentWidth || fixedContentHeight) {
-    if (fixedContentWidth && fixedContentHeight) {
-      // The image is fully constrained. Use the constraints directly.
-      aDesiredSize.width = aReflowState.computedWidth;
-      aDesiredSize.height = aReflowState.computedHeight;
-
-      // Load image using the constrained widths so that it is scaled
-      // properly.
-      mHaveImageSize = PR_TRUE;
-      mImageSize.SizeTo(aDesiredSize.width, aDesiredSize.height);
-      PRIntn loadStatus;
-      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                     !(fixedContentWidth && fixedContentHeight),
-                     loadStatus);
-    }
-    else {
-      // Get current image loading status (this may kick off an
-      // initial load with no specified size).
-      PRIntn loadStatus;
-      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                     !(fixedContentWidth && fixedContentHeight),
-                     loadStatus);
-
-      // The image is partially constrained. Preserve aspect ratio of
-      // image with unbound dimension.
-      if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
-          (nsnull == mImageLoader)) {
-        // Provide a dummy size for now; later on when the image size
-        // shows up we will reflow to the new size.
-        aDesiredSize.width = 1;
-        aDesiredSize.height = 1;
-      }
-      else {
-        // Now we know the correct size (compute it).
-        float p2t;
-        aPresContext->GetScaledPixelsToTwips(&p2t);
-        nsSize imageSize;
-        mImageLoader->GetSize(imageSize);
-        float imageWidth = imageSize.width * p2t;
-        float imageHeight = imageSize.height * p2t;
-        if (0.0f != imageHeight) {
-          if (fixedContentWidth) {
-            // We have a width, and an auto height. Compute height
-            // from width.
-            aDesiredSize.width = aReflowState.computedWidth;
-            aDesiredSize.height = (nscoord)
-              NSToIntRound(aReflowState.computedWidth * imageHeight / imageWidth);
-          }
-          else {
-            // We have a height and an auto width. Compute width from
-            // height.
-            aDesiredSize.height = aReflowState.computedHeight;
-            aDesiredSize.width = (nscoord)
-              NSToIntRound(aReflowState.computedHeight * imageWidth / imageHeight);
-          }
-        }
-        else {
-          // Screwy image
-          aDesiredSize.width = 1;
-          aDesiredSize.height = 1;
-        }
-
-#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
-        if (!mHaveImageSize) {
-          // Now we have an image size, but last time we didn't
-          mImageSize.SizeTo(aDesiredSize.width, aDesiredSize.height);
-          mHaveImageSize = PR_TRUE;
-
-          // Load image again so that it is scaled properly.
-
-          // XXX: optimization: don't do the second load if the sizes
-          // happen to match
-          StopLoadImage(*aPresContext, aTargetFrame);
-          StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                         !(fixedContentWidth && fixedContentHeight),
-                         loadStatus);
-        }
-#endif
-      }
-    }
-  }
-  else {
-    // Get current image loading status (this may kick off an
-    // initial load with no specified size).
-    PRIntn loadStatus;
-    StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                   !(fixedContentWidth && fixedContentHeight),
-                   loadStatus);
-
-    if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
-        (nsnull == mImageLoader)) {
-      // Provide a dummy size for now; later on when the image size
-      // shows up we will reflow to the new size.
-      aDesiredSize.width = 1;
-      aDesiredSize.height = 1;
-    } else {
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
-      nsSize imageSize;
-      mImageLoader->GetSize(imageSize);
-      aDesiredSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
-      aDesiredSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
-
-      // Save size away for next time
-      mImageSize.SizeTo(aDesiredSize.width, aDesiredSize.height);
-      mHaveImageSize = PR_TRUE;
-    }
-  }
-}
-
-PRBool
-nsHTMLImageLoader::GetLoadImageFailed() const
-{
-  PRBool  result = PR_FALSE;
-
-  if (nsnull != mImageLoader) {
-    PRIntn  loadStatus;
-
-    // Ask the image loader whether the load failed
-    mImageLoader->GetImageLoadStatus(loadStatus);
-    result = 0 != (loadStatus & NS_IMAGE_LOAD_STATUS_ERROR);
-  }
-
-  result |= PRBool(mLoadImageFailed);
-  return result;
-}
-
-//----------------------------------------------------------------------
 
 nsresult
 NS_NewImageFrame(nsIFrame*& aResult)
@@ -403,7 +85,7 @@ nsImageFrame::DeleteFrame(nsIPresContext& aPresContext)
   NS_IF_RELEASE(mImageMap);
 
   // Release image loader first so that it's refcnt can go to zero
-  mImageLoader.DestroyLoader();
+  mImageLoader.StopAllLoadImages(&aPresContext);
 
   return nsLeafFrame::DeleteFrame(aPresContext);
 }
@@ -415,71 +97,85 @@ nsImageFrame::Init(nsIPresContext&  aPresContext,
                    nsIStyleContext* aContext,
                    nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent,
+                                   aContext, aPrevInFlow);
+
+  // See if we have a SRC attribute
+  PRBool sourcePresent = PR_FALSE;
+  nsAutoString src;
+  nsresult ca;
+  ca = mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
+  if ((NS_CONTENT_ATTR_HAS_VALUE == ca) && (src.Length() > 0)) {
+    sourcePresent = PR_TRUE;
+  }
+  else {
+    // XXX ick: this should only work for OBJECT tags
+    ca = mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src);
+    if ((NS_CONTENT_ATTR_HAS_VALUE == ca) && (src.Length() > 0)) {
+      sourcePresent = PR_TRUE;
+    }
+  }
 
   // Set the image loader's source URL and base URL
-  //~~~
-  PRBool bSourcePresent = PR_FALSE;
-
-  nsAutoString src;
-  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) &&
-      (src.Length() > 0)) {
-    bSourcePresent = PR_TRUE;
-  }
-  else if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) &&
-      (src.Length() > 0)) {
-    bSourcePresent = PR_TRUE;
-  }
-
-  if (bSourcePresent) {
-    mImageLoader.SetURLSpec(src);
+  if (sourcePresent) {
     nsIURL* baseURL = nsnull;
     nsIHTMLContent* htmlContent;
-    if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+    rv = mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+    if (NS_SUCCEEDED(rv)) {
       htmlContent->GetBaseURL(baseURL);
       NS_RELEASE(htmlContent);
     }
     else {
       nsIDocument* doc;
-      if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
+      rv = mContent->GetDocument(doc);
+      if (NS_SUCCEEDED(rv)) {
         doc->GetBaseURL(baseURL);
         NS_RELEASE(doc);
       }
     }
-    mImageLoader.SetBaseURL(baseURL);
+    mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
     NS_IF_RELEASE(baseURL);
   }
 
   return rv;
 }
 
-static nsresult
-UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
-                 PRIntn aStatus)
+nsresult
+nsImageFrame::UpdateImageFrame(nsIPresContext* aPresContext,
+                               nsHTMLImageLoader* aLoader,
+                               nsIFrame* aFrame,
+                               void* aClosure,
+                               PRUint32 aStatus)
 {
-  if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
-    // XXX Turned off for the time being until the frame construction code for
-    // images that can't be rendered handles floated and absolutely positioned
-    // images...
-#if 0
-    // We failed to load the image. Notify the pres shell
-    nsIPresShell* presShell = aPresContext.GetShell();
-    presShell->CantRenderReplacedElement(&aPresContext, aFrame);
-    NS_RELEASE(presShell);
+  nsImageFrame* frame = (nsImageFrame*) aFrame;
+  return frame->UpdateImage(aPresContext, aStatus);
+}
+
+nsresult
+nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
+{
+#ifdef NOISY_IMAGE_LOADING
+  ListTag(stdout);
+  printf(": UpdateImage: status=%x\n", aStatus);
 #endif
+  if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
+    // We failed to load the image. Notify the pres shell
+    nsIPresShell* presShell;
+    aPresContext->GetShell(&presShell);
+    if (presShell) {
+      presShell->CantRenderReplacedElement(aPresContext, this);
+      NS_RELEASE(presShell);
+    }
   }
   else if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     // Now that the size is available, trigger a content-changed reflow
-    nsIContent* content = nsnull;
-    aFrame->GetContent(&content);
-    if (nsnull != content) {
+    if (nsnull != mContent) {
       nsIDocument* document = nsnull;
-      content->GetDocument(document);
+      mContent->GetDocument(document);
       if (nsnull != document) {
-        document->ContentChanged(content, nsnull);
+        document->ContentChanged(mContent, nsnull);
         NS_RELEASE(document);
       }
-      NS_RELEASE(content);
     }
   }
   return NS_OK;
@@ -490,16 +186,7 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
-  if (mSizeFrozen) {
-    aDesiredSize.width = mRect.width;
-    aDesiredSize.height = mRect.height;
-  }
-  else {
-    // Ask the image loader for the desired size
-    mImageLoader.GetDesiredSize(aPresContext, aReflowState,
-                                this, UpdateImageFrame,
-                                aDesiredSize);
-  }
+  mImageLoader.GetDesiredSize(aPresContext, &aReflowState, aDesiredSize);
 }
 
 void
@@ -704,7 +391,6 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   aRenderingContext.PushState();
   aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect, clipState);
 
-#ifdef _WIN32
   // Display the icon
   nsIDeviceContext* dc;
   aRenderingContext.GetDeviceContext(dc);
@@ -723,7 +409,6 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   }
 
   NS_RELEASE(dc);
-#endif
 
   // If there's still room, display the alt-text
   if (!inner.IsEmpty()) {
@@ -766,11 +451,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
       }
     }
     else {
-      if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
-#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
-          && mImageLoader.HaveImageSize()
-#endif
-        ) {
+      if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
         // Now render the image into our content area (the area inside the
         // borders and padding)
         nsRect inner;
@@ -1052,55 +733,37 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
     return rv;
   }
   if (nsHTMLAtoms::src == aAttribute) {
-    nsAutoString oldSRC;
+    nsAutoString oldSRC, newSRC;
     mImageLoader.GetURLSpec(oldSRC);
-    nsAutoString newSRC;
-
     aChild->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, newSRC);
     if (!oldSRC.Equals(newSRC)) {
-      mSizeFrozen = PR_TRUE;
-      
-#ifdef NS_DEBUG
-      char oldcbuf[100], newcbuf[100];
-      oldSRC.ToCString(oldcbuf, sizeof(oldcbuf));
-      newSRC.ToCString(newcbuf, sizeof(newcbuf));
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("nsImageFrame::AttributeChanged: new image source; old='%s' new='%s'",
-          oldcbuf, newcbuf));
+#ifdef NOISY_IMAGE_LOADING
+      ListTag(stdout);
+      printf(": new image source; old='");
+      fputs(oldSRC, stdout);
+      printf("' new='");
+      fputs(newSRC, stdout);
+      printf("'\n");
 #endif
-
-      // Get rid of old image loader and start a new image load going
-      mImageLoader.DestroyLoader();
-
-      // Fire up a new image load request
-      PRIntn loadStatus;
-#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
-      mImageLoader.StopLoadImage(*aPresContext, this);
-#endif
-      mImageLoader.SetURLSpec(newSRC);
-      mImageLoader.StartLoadImage(aPresContext, this, nsnull,
-                                  PR_FALSE, loadStatus);
-
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                     ("nsImageFrame::AttributeChanged: loadImage status=%x",
-                      loadStatus));
-
-      // If the image is already ready then we need to trigger a
-      // redraw because the image loader won't.
-      if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
-        // XXX Stuff this into a method on nsIPresShell/Context
-        nsRect bounds;
-        nsPoint offset;
-        nsIView* view;
-        GetOffsetFromView(offset, &view);
-        nsIViewManager* vm;
-        view->GetViewManager(vm);
-        bounds.x = offset.x;
-        bounds.y = offset.y;
-        bounds.width = mRect.width;
-        bounds.height = mRect.height;
-        vm->UpdateView(view, bounds, 0);
-        NS_RELEASE(vm);
+      if (mImageLoader.IsImageSizeKnown()) {
+        mImageLoader.UpdateURLSpec(aPresContext, newSRC);
+        PRUint32 loadStatus = mImageLoader.GetLoadStatus();
+        if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
+          // Trigger a paint now because image-loader won't if the
+          // image is already loaded and ready to go.
+          Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+        }
+      }
+      else {
+        // Force a reflow when the image size isn't already known
+        if (nsnull != mContent) {
+          nsIDocument* document = nsnull;
+          mContent->GetDocument(document);
+          if (nsnull != document) {
+            document->ContentChanged(mContent, nsnull);
+            NS_RELEASE(document);
+          }
+        }
       }
     }
   }
