@@ -791,14 +791,14 @@ function ValidateCellData()
 
   if (dialog.CellHeightCheckbox.checked)
   {
-    ValidateNumber("CellHeightInput", dialog.TableHeightUnits, 
+    ValidateNumber("CellHeightInput", dialog.CellHeightUnits, 
                     1, maxPixels, globalCellElement, "height");
     if (error) return false;
   }
 
   if (dialog.CellWidthCheckbox.checked)
   {
-    ValidateNumber("CellWidthInput", dialog.TableWidthUnits, 
+    ValidateNumber("CellWidthInput", dialog.CellWidthUnits, 
                    1, maxPixels, globalCellElement, "width");
     if (error) return false;
   }
@@ -968,10 +968,9 @@ function ApplyTableAttributes()
       
       // Insert it into the table - caption is always inserted as first child
       editorShell.InsertElement(TableCaptionElement, TableElement, 0);
-      selection.collapse(TableCaptionElement, 0);
 
       // Put selecton back where it was
-      //ChangeSelection(RESET_SELECTION);
+      ChangeSelection(RESET_SELECTION);
     }
   }
 
