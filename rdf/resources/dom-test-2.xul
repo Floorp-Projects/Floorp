@@ -1,0 +1,56 @@
+<!--
+
+This test exercises some of the DOMAttr stuff.
+
+-->
+
+<?xml version="1.0"?>
+<?xml-stylesheet href="dom-test-1.css" type="text/css"?>
+
+<xul:window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script>
+function DumpAttributes()
+{
+  var bookmarksRoot = document.getElementById("NC:BookmarksRoot");
+  dump("bookmarksRoot = " + bookmarksRoot + "\n");
+  if (bookmarksRoot == null)
+    return;
+
+  var attrs = bookmarksRoot.attributes;
+  dump("attrs = " + attrs + "\n");
+  if (attrs == null)
+    return;
+
+  for (var i = 0; i < attrs.length; ++i) {
+    var attr = attrs[i];
+    dump("attrs[" + i + "] = " + attr + "\n");
+    if (attr != null) {
+      dump("attr.name  = " + attr.name +  "\n");
+      dump("attr.value = " + attr.value + "\n");
+    }
+  }
+}
+  
+</html:script>
+
+<html:button onclick="DumpAttributes();">DumpAttributes</html:button>
+
+<tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treehead>
+    <treeitem>
+      <treecell>Name</treecell>
+      <treecell>URL</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody id="NC:BookmarksRoot">
+  </treebody>
+</tree>
+
+</window>
