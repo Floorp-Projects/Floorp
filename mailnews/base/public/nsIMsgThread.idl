@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -30,6 +30,7 @@ interface nsIMsgDBHdr;
 interface nsIMsgThread : nsISupports {
   attribute nsMsgKey threadKey;
   attribute unsigned long flags;
+  attribute string subject;
   readonly attribute unsigned long numChildren;
   readonly attribute unsigned long numUnreadChildren;
 
@@ -39,7 +40,7 @@ interface nsIMsgThread : nsISupports {
   nsIMsgDBHdr GetChildHdrAt(in long index);
 
   void RemoveChildAt(in long index);
-  void RemoveChild(in nsMsgKey msgKey);
+  void RemoveChildHdr(in nsIMsgDBHdr child);
 
   void MarkChildRead(in boolean bRead);
 
