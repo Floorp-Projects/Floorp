@@ -347,7 +347,9 @@ MKCPYFLAGS= -i
 #// Common Libraries
 #//
 #//------------------------------------------------------------------------
-LIBNSPR=$(DIST)\lib\nspr3.lib $(DIST)\lib\plds3.lib $(DIST)\lib\plc3.lib
+NSPR_VERSION=3
+LIBNSPR=$(DIST)\lib\nspr$(NSPR_VERSION).lib $(DIST)\lib\plds$(NSPR_VERSION).lib $(DIST)\lib\plc$(NSPR_VERSION).lib
+LIBPLC=$(DIST)\lib\plc$(NSPR_VERSION).lib
 
 NSPRDIR = nsprpub
 CFLAGS = $(CFLAGS) -DNSPR20

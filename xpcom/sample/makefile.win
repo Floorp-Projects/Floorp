@@ -36,7 +36,7 @@ CPP_OBJS=\
 
 LLIBS=\
         $(DIST)\lib\xpcom.lib \
-        $(DIST)\lib\plc3.lib \
+        $(LIBPLC) \
         $(NULL)
 
 LINCS=\
