@@ -50,10 +50,10 @@
  * Idea Distribution Ratio = 0.74851/(1-0.74851) =2.98
  * Random Distribution Ration = 512/(5401-512)=0.105
  * 
- * Typical Distribution Ratio about 50% of Ideal one, 
+ * Typical Distribution Ratio about 25% of Ideal one, still much higher than RDR
  *****************************************************************************/
 
-#define BIG5_TYPICAL_DISTRIBUTION_RATIO (float)1.5
+#define BIG5_TYPICAL_DISTRIBUTION_RATIO (float)0.75
 
 
 //Char to FreqOrder table , 
