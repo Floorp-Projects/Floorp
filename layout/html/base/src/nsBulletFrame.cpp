@@ -199,12 +199,11 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
         nsCOMPtr<imgIContainer> imageCon;
         mImageRequest->GetImage(getter_AddRefs(imageCon));
         if (imageCon) {
-          nsRect innerArea(mPadding.left, mPadding.top,
+          nsRect innerArea(0, 0,
                            mRect.width - (mPadding.left + mPadding.right),
                            mRect.height - (mPadding.top + mPadding.bottom));
-          nsPoint p(innerArea.x, innerArea.y);
-          innerArea.x = innerArea.y = 0;
-          aRenderingContext.DrawImage(imageCon, &innerArea, &p);
+          nsRect dest(mPadding.left, mPadding.top, innerArea.width, innerArea.height);
+          aRenderingContext.DrawImage(imageCon, innerArea, dest);
           return NS_OK;
         }
       }

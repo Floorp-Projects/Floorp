@@ -804,11 +804,16 @@ public:
    */
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) = 0;
 
-  /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
-  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint) = 0;
-
-  /* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
-  NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect) = 0;
+  /**
+   *  Draw an image, scaling it to fit a specified rectangle.
+   *  @param aImage     The image to draw
+   *  @param aSrcRect   The portion (in twips) of the image to draw.
+   *                    [x,y] denotes the top left corner of the region.
+   *  @param aDestRect  The region (in twips) of the page that the image should
+   *                    occupy. [x,y] denotes the top left corner.
+   *                    [height,width] denotes the desired image size.
+   */
+  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect) = 0;
 
   /*
    * Tiles an image over an area

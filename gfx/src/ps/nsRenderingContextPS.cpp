@@ -1228,27 +1228,16 @@ nsRenderingContextPS :: DrawString(const nsString& aString,nscoord aX, nscoord a
   return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
-/* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
 NS_IMETHODIMP
-nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
+nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
 {
-  nsRect dr(aDestPoint->x, aDestPoint->y, aSrcRect->width, aSrcRect->height);
-  return DrawScaledImage(aImage, aSrcRect, &dr);
-}
-
-/* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
-NS_IMETHODIMP
-nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
-{
-  nsRect sr, ir, dr;
-
   // Transform the destination rectangle.
-  dr = *aDestRect;
+  nsRect dr = aDestRect;
   mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
   // Transform the source rectangle. We don't use the matrix for this;
   // just convert the twips back into points.
-  sr = *aSrcRect;
+  nsRect sr = aSrcRect;
   sr.x /= TWIPS_PER_POINT_INT;
   sr.y /= TWIPS_PER_POINT_INT;
   sr.width /= TWIPS_PER_POINT_INT;
@@ -1261,6 +1250,7 @@ nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrc
   nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
   if (!img) return NS_ERROR_FAILURE;
 
+  nsRect ir;
   iframe->GetRect(ir);
   mPSObj->draw_image(img, sr, ir, dr);
   return NS_OK;
