@@ -215,12 +215,14 @@ function createAccount(hash) {
     try {
         var am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
 
+        var username = hash["server.username"];
+        var hostname = hash["server.hostName"];
 
     // workaround for lame-ass combo box bug
     var serverType = hash["server.type"];
     if (!serverType  || serverType == "")
         serverType = "pop3";
-    var server = am.createIncomingServer(serverType);
+    var server = am.createIncomingServer(username, hostname, serverType);
     
     var identity = am.createIdentity();
 
@@ -249,6 +251,7 @@ function createAccount(hash) {
 
     // check if there already is a "none" account. (aka "Local Folders")
     // if not, create it.
+    dump("Looking for local mail..\n");
 	var localMailServer = null;
 	try {
 		// look for anything that is of type "none".
@@ -256,10 +259,12 @@ function createAccount(hash) {
 		localMailServer = am.findServer("","","none");
 	}
 	catch (ex) {
+        dump("exception in findserver: " + ex + "\n");
 		localMailServer = null;
 	}
 
 	if (!localMailServer) {
+        dump("Creating local mail\n");
 		// creates a copy of the identity you pass in
 		am.createLocalMailAccount(identity, false);
         }

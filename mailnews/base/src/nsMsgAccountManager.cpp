@@ -89,6 +89,8 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 #endif /* HAVE_MOVEMAIL */
 
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
+#define PREF_MAIL_SERVER_PREFIX "mail.server."
+
 /* TODO:  do we want to clear these after migration? */
 #define PREF_NEWS_DIRECTORY "news.directory"
 #define PREF_MAIL_DIRECTORY "mail.directory"
@@ -605,12 +607,14 @@ nsMsgAccountManager::createKeyedIdentity(const char* key,
 }
 
 nsresult
-nsMsgAccountManager::CreateIncomingServer(const char* type,
+nsMsgAccountManager::CreateIncomingServer(const char* username,
+                                          const char* hostname,
+                                          const char* type,
                                           nsIMsgIncomingServer **_retval)
 {
   if (!_retval) return NS_ERROR_NULL_POINTER;
   const char *key = getUniqueKey("server", &m_incomingServers);
-  return createKeyedServer(key, type, _retval);
+  return createKeyedServer(key, username, hostname, type, _retval);
 }
 
 nsresult
@@ -632,22 +636,43 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   }
 
   // server doesn't exist, so create it
+  // this is really horrible because we are doing our own prefname munging
+  // instead of leaving it up to the incoming server.
+  // this should be fixed somehow so that we can create the incoming server
+  // and then read from the incoming server's attributes
   
   // in order to create the right kind of server, we have to look
-  // at the pref for this server to get the type
-  const char *serverTypePref =
-    PR_smprintf("mail.server.%s.type", key);
-
-  // serverType is the short server type, like "pop3","imap","nntp","none", etc
-  nsXPIDLCString serverType;
-  rv = m_prefs->CopyCharPref(serverTypePref, getter_Copies(serverType));
+  // at the pref for this server to get the username, hostname, and type
+  nsCAutoString serverPrefPrefix(PREF_MAIL_SERVER_PREFIX);
+  serverPrefPrefix += key;
   
-  PR_smprintf_free(NS_CONST_CAST(char*, serverTypePref));
+  nsCAutoString serverPref;
+
+  //
+  // .type
+  serverPref = serverPrefPrefix;
+  serverPref += ".type";
+  nsXPIDLCString serverType;
+  rv = m_prefs->CopyCharPref(serverPref, getter_Copies(serverType));
+  
+  //
+  // .userName
+  serverPref = serverPrefPrefix;
+  serverPref += ".userName";
+  nsXPIDLCString username;
+  rv = m_prefs->CopyCharPref(serverPref, getter_Copies(username));
+
+  // .hostname
+  serverPref = serverPrefPrefix;
+  serverPref += ".hostname";
+  nsXPIDLCString hostname;
+  rv = m_prefs->CopyCharPref(serverPref, getter_Copies(hostname));
+  
     // the server type doesn't exist. That's bad.
   if (NS_FAILED(rv))
     return NS_ERROR_NOT_INITIALIZED;
 
-  rv = createKeyedServer(key, serverType, _retval);
+  rv = createKeyedServer(key, username, hostname, serverType, _retval);
   if (NS_FAILED(rv)) return rv;
 
   return rv;
@@ -658,6 +683,8 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
  */
 nsresult
 nsMsgAccountManager::createKeyedServer(const char* key,
+                                       const char* username,
+                                       const char* hostname,
                                        const char* type,
                                        nsIMsgIncomingServer ** aServer)
 {
@@ -678,6 +705,8 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   
   server->SetKey(key);
   server->SetType(type);
+  server->SetUsername(username);
+  server->SetHostName(hostname);
 
   nsStringKey hashKey(key);
 
@@ -753,7 +782,7 @@ nsMsgAccountManager::removeKeyedAccount(const char *key)
 
   // reconstruct the new account list, re-adding all accounts except
   // the one with 'key'
-  nsCString newAccountList;
+  nsCAutoString newAccountList;
   char *rest = NS_CONST_CAST(char *,(const char*)accountList);
 
   char *token = nsCRT::strtok(rest, ",", &rest);
@@ -1782,20 +1811,15 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity, PRBool mig
 
   // create the server
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = CreateIncomingServer("none", getter_AddRefs(server));
+  rv = CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
+                            LOCAL_MAIL_FAKE_HOST_NAME,
+                            "none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
-
-  // "none" is the type we use for migrate 4.x "Local Mail"
-  server->SetType("none");
-  server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
 
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
   nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
   server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
-
-  // the server needs a username
-  server->SetUsername(LOCAL_MAIL_FAKE_USER_NAME);
 
 
   // create the identity
@@ -1906,12 +1930,12 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
 
   // create the server
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = CreateIncomingServer("none", getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
   // "none" is the type we use for migrating 4.x "Local Mail"
-  server->SetType("none");
-  server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
+                            LOCAL_MAIL_FAKE_HOST_NAME,
+                            "none", getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
 
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
@@ -1926,9 +1950,6 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   rv = SetMailCcAndFccValues(copied_identity);
   if (NS_FAILED(rv)) return rv;
     
-  // the server needs a username
-  server->SetUsername(LOCAL_MAIL_FAKE_USER_NAME);
-
   // hook them together
   account->SetIncomingServer(server);
   account->AddIdentity(copied_identity);
@@ -2006,13 +2027,16 @@ nsMsgAccountManager::MigrateMovemailAccount(nsIMsgIdentity *identity)
   rv = CreateAccount(getter_AddRefs(account));
   if (NS_FAILED(rv)) return rv;
 
-  // for right now, none.  eventually, we'll have "movemail"
-  rv = CreateIncomingServer("none", getter_AddRefs(server));
+  // get the pop username
+  // movemail used the pop username in 4.x
+  nsXPIDLCString username;
+  rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(username));
   if (NS_FAILED(rv)) return rv;
 
-  // "none" is the type we use for migrating 4.x "Local Mail"
-  server->SetType("none");
-  server->SetHostName(MOVEMAIL_FAKE_HOST_NAME);  
+  // for right now, none.  eventually, we'll have "movemail"
+  rv = CreateIncomingServer(username, MOVEMAIL_FAKE_HOST_NAME,
+                            "none", getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
 
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
@@ -2097,9 +2121,44 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   rv = CreateAccount(getter_AddRefs(account));
   if (NS_FAILED(rv)) return rv;
 
-  rv = CreateIncomingServer("pop3", getter_AddRefs(server));
+
+  // get the pop username
+  nsXPIDLCString username;
+  rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(username));
   if (NS_FAILED(rv)) return rv;
 
+  // get the hostname and port
+  nsXPIDLCString hostAndPort;
+  rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER,
+                             getter_Copies(hostAndPort));
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32 port = -1;
+  nsCAutoString hostname(hostAndPort);
+  PRInt32 colonPos = hostname.FindChar(':');
+  if (colonPos != -1) {
+        hostname.Truncate(colonPos);
+        
+        // migrate the port from hostAndPort
+        nsCAutoString portStr(hostAndPort + colonPos);
+        PRInt32 err;
+        port = portStr.ToInteger(&err);
+        NS_ASSERTION(err == 0, "failed to get the port\n");
+        if (err != 0) port=-1;
+  }
+
+  //
+  // create the server
+  //
+  rv = CreateIncomingServer(username, hostname, "pop3",
+                            getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+
+  // if we got the port above, set it here
+  if (port != -1) {
+    server->SetPort(port);
+  }
+  
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
   rv = CreateIdentity(getter_AddRefs(copied_identity));
@@ -2122,30 +2181,12 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   nsFileSpec dir;
   PRBool dirExists;
 
-  server->SetType("pop3");
-  char *hostAndPort=nsnull;
-  rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, &hostAndPort);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCString hostname(hostAndPort);
-  PRInt32 colonPos = hostname.FindChar(':');
-  if (colonPos != -1) {
-        nsCString portStr(hostAndPort + colonPos);
-        hostname.Truncate(colonPos);
-        PRInt32 err;
-        PRInt32 port = portStr.ToInteger(&err);
-        NS_ASSERTION(err == 0, "failed to get the port\n");
-        if (NS_SUCCEEDED(rv)) {
-                server->SetPort(port);
-        }
-  }
 #ifdef DEBUG_ACCOUNTMANAGER
   PRInt32 portValue;
   rv = server->GetPort(&portValue);
   printf("HOSTNAME = %s\n", (const char *)hostname);
   printf("PORT = %d\n", portValue);
 #endif /* DEBUG_ACCOUNTMANAGER */
-  server->SetHostName((const char *)hostname);
 
   rv = MigrateOldMailPrefs(server);
   if (NS_FAILED(rv)) return rv;
@@ -2177,7 +2218,6 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
 
   // we want .../Mail/<hostname>, not .../Mail
   rv = mailDir->AppendRelativeUnixPath(hostAndPort);
-  PR_FREEIF(hostAndPort);
   if (NS_FAILED(rv)) return rv;
   
   // set the local path for this "pop3" server
@@ -2227,7 +2267,6 @@ nsMsgAccountManager::MigrateOldMailPrefs(nsIMsgIncomingServer * server)
 {
   nsresult rv;
     
-  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_POP_NAME,server,SetUsername)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_REMEMBER_PASSWORD,server,SetRememberPassword)
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_POP_PASSWORD,server,SetPassword)
@@ -2312,37 +2351,51 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 
   if (!hostAndPort) return NS_ERROR_NULL_POINTER;
  
-  
   // create the account
   nsCOMPtr<nsIMsgAccount> account;
   rv = CreateAccount(getter_AddRefs(account));
   if (NS_FAILED(rv)) return rv;
 
-  // create the server
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = CreateIncomingServer("imap", getter_AddRefs(server));
+  // get the old username
+  nsXPIDLCString username;
+  char *imapUsernamePref =
+    PR_smprintf("mail.imap.server.%s.userName", hostAndPort);
+  rv = m_prefs->CopyCharPref(imapUsernamePref, getter_Copies(username));
+  PR_FREEIF(imapUsernamePref);
   if (NS_FAILED(rv)) return rv;
-  server->SetType("imap");
 
-  nsCString hostname(hostAndPort);
+  // get the old host (and possibly port)
+  PRInt32 port = -1;
+  nsCAutoString hostname(hostAndPort);
   PRInt32 colonPos = hostname.FindChar(':');
   if (colonPos != -1) {
-	nsCString portStr(hostAndPort + colonPos);
+	nsCAutoString portStr(hostAndPort + colonPos);
 	hostname.Truncate(colonPos);
 	PRInt32 err;
-	PRInt32 port = portStr.ToInteger(&err);
+    port = portStr.ToInteger(&err);
 	NS_ASSERTION(err == 0, "failed to get the port\n");
-	if (NS_SUCCEEDED(rv)) {
-		server->SetPort(port);
+    if (err != 0)
+      port = -1;
 	}
-  }
+
+  //
+  // create the server
+  //
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = CreateIncomingServer(username, hostname, "imap",
+                            getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+
+  // now start migrating 4.x prefs
+  if (port != -1)
+    server->SetPort(port);
+
 #ifdef DEBUG_ACCOUNTMANAGER
   PRInt32 portValue;
   rv = server->GetPort(&portValue);
   printf("HOSTNAME = %s\n", (const char *)hostname);
   printf("PORT = %d\n", portValue);
 #endif /* DEBUG_ACCOUNTMANAGER */
-  server->SetHostName((const char *)hostname);
 
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
@@ -2418,7 +2471,6 @@ nsMsgAccountManager::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
   if (NS_FAILED(rv)) return rv;
 
   // upgrade the msg incoming server prefs
-  MIGRATE_STR_PREF("mail.imap.server.%s.userName",hostAndPort,server,SetUsername)
   MIGRATE_BOOL_PREF("mail.imap.server.%s.remember_password",hostAndPort,server,SetRememberPassword)
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   MIGRATE_STR_PREF("mail.imap.server.%s.password",hostAndPort,server,SetPassword)
@@ -2642,32 +2694,35 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
     rv = CreateAccount(getter_AddRefs(account));
 	if (NS_FAILED(rv)) return rv;
 
-    // create the server
-	nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = CreateIncomingServer("nntp", getter_AddRefs(server));
-	if (NS_FAILED(rv)) return rv;
-	// now upgrade all the prefs
-	server->SetType("nntp");
-
-	nsCString hostname(hostAndPort);
+    PRInt32 port=-1;
+	nsCAutoString hostname(hostAndPort);
 	PRInt32 colonPos = hostname.FindChar(':');
 	if (colonPos != -1) {
-		nsCString portStr(hostAndPort + colonPos);
+		nsCAutoString portStr(hostAndPort + colonPos);
 		hostname.Truncate(colonPos);
 		PRInt32 err;
-		PRInt32 port = portStr.ToInteger(&err);
+		port = portStr.ToInteger(&err);
 		NS_ASSERTION(err == 0, "failed to get the port\n");
-		if (NS_SUCCEEDED(rv)) {
-			server->SetPort(port);
+        if (err != 0)
+          port=-1;
 		}
-	}
+    
+    // create the server
+	nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = CreateIncomingServer(nsnull, hostname, "nntp",
+                              getter_AddRefs(server));
+	if (NS_FAILED(rv)) return rv;
+    
+	// now upgrade all the prefs
+    if (port != -1)
+      server->SetPort(port);
+
 #ifdef DEBUG_ACCOUNTMANAGER
 	PRInt32 portValue;
 	rv = server->GetPort(&portValue);
 	printf("HOSTNAME = %s\n", (const char *)hostname);
 	printf("PORT = %d\n", portValue);
 #endif /* DEBUG_ACCOUNTMANAGER */
-    server->SetHostName((const char *)hostname);
 
     // we only need to do this once
     if (!m_alreadySetNntpDefaultLocalPath) {
@@ -2762,7 +2817,6 @@ nsMsgAccountManager::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
     
 #ifdef SUPPORT_SNEWS
 #error THIS_CODE_ISNT_DONE_YET
-  MIGRATE_STR_PREF("???nntp.server.%s.userName",hostAndPort,server,SetUsername)
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   MIGRATE_STR_PREF("???nntp.server.%s.password",hostAndPort,server,SetPassword)
 #else

@@ -106,6 +106,8 @@ private:
   nsresult createKeyedAccount(const char* key,
                               nsIMsgAccount **_retval);
   nsresult createKeyedServer(const char*key,
+                             const char* username,
+                             const char* password,
                              const char* type,
                              nsIMsgIncomingServer **_retval);
 

@@ -47,7 +47,9 @@ interface nsIMsgAccountManager : nsISupports {
    * creates a new server and assigns it a new, unique "key"
    * the given type will be used to construct a ProgID
    */
-  nsIMsgIncomingServer createIncomingServer(in string type);
+  nsIMsgIncomingServer createIncomingServer(in string username,
+                                            in string hostname,
+                                            in string type);
   
   /*
    * get the identity with the given key
