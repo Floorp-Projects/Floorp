@@ -595,8 +595,15 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // window) is a reasonable comprimise in the short term. It is not intended
   // to fix all cases.
   //
-  // Luckily, NONE of this is required on OSX, which uses CarbonEvents ;)
-  Rect sbRect = { 100, 0, 200, 1 };
+  // Even after all this, we still have to make one more tweak for Kensington
+  // mice. With their new driver, the scrollbar has to be two pixels wide due
+  // to a bug in the appearance manager that doesn't put the correct widgetry
+  // on 1px wide scrollbars in every case. Rather than have it sticking out 2px
+  // into the window, we straddle the window border so only 1px is actually
+  // in the content area. Luckily, this is good enough for Logitech ;)
+  //
+  // NONE of this is required on OSX, which uses CarbonEvents ;)
+  Rect sbRect = { 100, -1, 150, 1 };
   mPhantomScrollbarData = new PhantomScrollbarData;
   mPhantomScrollbar = ::NewControl ( mWindowPtr, &sbRect, nil, true, 50, 0, 100, 
                                             kControlScrollBarLiveProc, (long)mPhantomScrollbarData );
