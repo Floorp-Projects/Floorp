@@ -57,7 +57,13 @@ include"$page_header";
 
 	<div id="mainContent">
 	<h2><?php print(ucwords($application)); ?> Extensions</h2>
-	<p class="first">Extensions are small add-ons that add new functionality to <?php print(ucwords($application)); ?>. They can add anything from a toolbar button to a completely new feature. They allow the browser to be customized to fit the personal needs of each user if they need additional features<?php if ($application !=="mozilla") { ?>, while keeping <?php print(ucwords($application)); ?> small to download <?php } ?>.</p>
+
+	<p class="first">Extensions are small add-ons that add new functionality to
+<?php print(ucwords($application)); ?>. They can add anything from a toolbar
+button to a completely new feature. They allow the application to be customized
+to fit the personal needs of each user if they need additional features<?php if
+($application !=="mozilla") { ?>, while keeping <?php
+print(ucwords($application)); ?> small to download <?php } ?>.</p>
 
     <?php
     //Get Current Version for Detected Application
