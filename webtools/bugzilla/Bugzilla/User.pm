@@ -39,7 +39,7 @@ use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::Auth;
 
-use Exporter qw(import);
+use base qw(Exporter);
 @Bugzilla::User::EXPORT_OK = qw(insert_new_user);
 
 ################################################################################
