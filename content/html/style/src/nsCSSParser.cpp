@@ -2588,6 +2588,15 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
     case eCSSProperty_clip_left:
     case eCSSProperty_clip_right:
     case eCSSProperty_clip_top:
+    case eCSSProperty_play_during_flags:
+    case eCSSProperty_quotes_close:
+    case eCSSProperty_quotes_open:
+    case eCSSProperty_size_height:
+    case eCSSProperty_size_width:
+    case eCSSProperty_text_shadow_color:
+    case eCSSProperty_text_shadow_radius:
+    case eCSSProperty_text_shadow_x:
+    case eCSSProperty_text_shadow_y:
       // The user can't use these
       return PR_FALSE;
     default:
@@ -2700,6 +2709,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
                                                nsCSSProperty aPropID)
 {
   switch (aPropID) {
+  case eCSSProperty_UNKNOWN:
   case eCSSProperty_background:
   case eCSSProperty_background_position:
   case eCSSProperty_border:
@@ -2723,12 +2733,38 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_outline:
   case eCSSProperty_padding:
   case eCSSProperty_pause:
+  case eCSSProperty_play_during:
   case eCSSProperty_quotes:
   case eCSSProperty_size:
   case eCSSProperty_text_shadow:
+  case eCSSProperty_COUNT:
     NS_ERROR("not a single value property");
     return PR_FALSE;
 
+  case eCSSProperty_border_x_spacing:
+  case eCSSProperty_border_y_spacing:
+  case eCSSProperty_clip_bottom:
+  case eCSSProperty_clip_left:
+  case eCSSProperty_clip_right:
+  case eCSSProperty_clip_top:
+  case eCSSProperty_play_during_flags:
+  case eCSSProperty_quotes_close:
+  case eCSSProperty_quotes_open:
+  case eCSSProperty_size_height:
+  case eCSSProperty_size_width:
+  case eCSSProperty_text_shadow_color:
+  case eCSSProperty_text_shadow_radius:
+  case eCSSProperty_text_shadow_x:
+  case eCSSProperty_text_shadow_y:
+    NS_ERROR("not currently parsed here");
+    return PR_FALSE;
+
+  case eCSSProperty_auto_select:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
+                        nsCSSProps::kAutoSelectKTable);
+  case eCSSProperty_auto_tab:
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK | VARIANT_NONE,
+                        nsCSSProps::kAutoTabKTable);
   case eCSSProperty_azimuth:
     return ParseAzimuth(aErrorCode, aValue);
   case eCSSProperty_background_attachment:
@@ -2774,6 +2810,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_left:
   case eCSSProperty_right:
 	  return ParseVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
+  case eCSSProperty_box_sizing:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kBoxSizingKTable);
   case eCSSProperty_height:
   case eCSSProperty_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
@@ -2803,6 +2842,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_float:
     return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
                         nsCSSProps::kFloatKTable);
+  case eCSSProperty_float_edge:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kFloatEdgeKTable);
   case eCSSProperty_font_family:
     return ParseFamily(aErrorCode, aValue);
   case eCSSProperty_font_size:
@@ -2826,6 +2868,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_letter_spacing:
   case eCSSProperty_word_spacing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
+  case eCSSProperty_key_equivalent:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
+                        nsCSSProps::kKeyEquivalentKTable);
   case eCSSProperty_line_height:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPN | VARIANT_NORMAL, nsnull);
   case eCSSProperty_list_style_image:
@@ -2849,6 +2894,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_min_height:
   case eCSSProperty_min_width:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
+  case eCSSProperty_modify_content:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kModifyContentKTable);
   case eCSSProperty_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HPN, nsnull);
   case eCSSProperty_orphans:
@@ -2889,8 +2937,14 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_position:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK, nsCSSProps::kPositionKTable);
+  case eCSSProperty_resizer:
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK | VARIANT_NONE,
+                        nsCSSProps::kResizerKTable);
   case eCSSProperty_richness:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
+  case eCSSProperty_selection_style:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
+                        nsCSSProps::kSelectionStyleKTable);
   case eCSSProperty_speak:
     return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_NONE,
                         nsCSSProps::kSpeakKTable);
@@ -2924,6 +2978,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_unicode_bidi:
     return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
                         nsCSSProps::kUnicodeBidiKTable);
+  case eCSSProperty_user_input:
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK | VARIANT_NONE,
+                        nsCSSProps::kUserInputKTable);
   case eCSSProperty_vertical_align:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKLP,
                         nsCSSProps::kVerticalAlignKTable);
@@ -2940,9 +2997,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
                         nsCSSProps::kWhitespaceKTable);
   case eCSSProperty_z_index:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHI, nsnull);
-  default:
-    break;
   }
+  // explicitly do NOT have a default case to let the compiler
+  // help find missing properties
   return PR_FALSE;
 }
 

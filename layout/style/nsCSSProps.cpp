@@ -294,6 +294,7 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword_table_column,       NS_STYLE_DISPLAY_TABLE_COLUMN,
   eCSSKeyword_table_cell,         NS_STYLE_DISPLAY_TABLE_CELL,
   eCSSKeyword_table_caption,      NS_STYLE_DISPLAY_TABLE_CAPTION,
+  eCSSKeyword_menu,               NS_STYLE_DISPLAY_MENU,
   -1,-1
 };
 
@@ -645,6 +646,9 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
 };
 
   switch (aProp)  {
+
+  case eCSSProperty__moz_border_radius:
+    break;
   
   case eCSSProperty_auto_select:
     return SearchKeywordTable(aValue, kAutoSelectKTable);

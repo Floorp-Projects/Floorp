@@ -63,6 +63,7 @@ static NS_DEFINE_IID(kCSSListSID, NS_CSS_LIST_SID);
 static NS_DEFINE_IID(kCSSDisplaySID, NS_CSS_DISPLAY_SID);
 static NS_DEFINE_IID(kCSSTableSID, NS_CSS_TABLE_SID);
 static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
+static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
 
 // -- nsCSSSelector -------------------------------
 
@@ -1921,6 +1922,14 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         else if (eCSSUnit_Inherit == ourMargin->mOutlineStyle.GetUnit()) {
           spacing->SetOutlineStyle(parentSpacing->GetOutlineStyle());
         }
+
+        // float-edge: enum, inherit
+        if (eCSSUnit_Enumerated == ourMargin->mFloatEdge.GetUnit()) {
+          spacing->mFloatEdge = ourMargin->mFloatEdge.GetIntValue();
+        }
+        else if (eCSSUnit_Inherit == ourMargin->mFloatEdge.GetUnit()) {
+          spacing->mFloatEdge = parentSpacing->mFloatEdge;
+        }
       }
     }
 
@@ -1973,6 +1982,14 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           if (eCSSUnit_None == ourPosition->mMaxHeight.GetUnit()) {
             position->mMaxHeight.Reset();
           }
+        }
+
+        // box-sizing: enum, inherit
+        if (eCSSUnit_Enumerated == ourPosition->mBoxSizing.GetUnit()) {
+          position->mBoxSizing = ourPosition->mBoxSizing.GetIntValue();
+        }
+        else if (eCSSUnit_Inherit == ourPosition->mBoxSizing.GetUnit()) {
+          position->mBoxSizing = parentPosition->mBoxSizing;
         }
 
         // z-index
@@ -2286,6 +2303,106 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
             }
           }
         }
+      }
+    }
+
+    nsCSSUserInterface*  ourUI;
+    if (NS_OK == aDeclaration->GetData(kCSSUserInterfaceSID, (nsCSSStruct**)&ourUI)) {
+      if (nsnull != ourUI) {
+        // Get our user interface style and our parent's user interface style
+        nsStyleUserInterface* ui = (nsStyleUserInterface*) aContext->GetMutableStyleData(eStyleStruct_UserInterface);
+        const nsStyleUserInterface* parentUI = ui;
+        if (nsnull != parentContext) {
+          parentUI = (const nsStyleUserInterface*)parentContext->GetStyleData(eStyleStruct_UserInterface);
+        }
+
+        // user-input: auto, none, enum, inherit
+        if (eCSSUnit_Enumerated == ourUI->mUserInput.GetUnit()) {
+          ui->mUserInput = ourUI->mUserInput.GetIntValue();
+        }
+        else if (eCSSUnit_Auto == ourUI->mUserInput.GetUnit()) {
+          ui->mUserInput = NS_STYLE_USER_INPUT_AUTO;
+        }
+        else if (eCSSUnit_None == ourUI->mUserInput.GetUnit()) {
+          ui->mUserInput = NS_STYLE_USER_INPUT_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourUI->mUserInput.GetUnit()) {
+          ui->mUserInput = parentUI->mUserInput;
+        }
+
+        // modify-content: enum, inherit
+        if (eCSSUnit_Enumerated == ourUI->mModifyContent.GetUnit()) {
+          ui->mModifyContent = ourUI->mModifyContent.GetIntValue();
+        }
+        else if (eCSSUnit_Inherit == ourUI->mModifyContent.GetUnit()) {
+          ui->mModifyContent = parentUI->mModifyContent;
+        }
+
+        // selection-style: none, enum, inherit
+        if (eCSSUnit_Enumerated == ourUI->mSelectionStyle.GetUnit()) {
+          ui->mSelectionStyle = ourUI->mSelectionStyle.GetIntValue();
+        }
+        else if (eCSSUnit_None == ourUI->mSelectionStyle.GetUnit()) {
+          ui->mSelectionStyle = NS_STYLE_SELECTION_STYLE_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourUI->mSelectionStyle.GetUnit()) {
+          ui->mSelectionStyle = parentUI->mSelectionStyle;
+        }
+
+        // auto-select: none, enum, inherit
+        if (eCSSUnit_Enumerated == ourUI->mAutoSelect.GetUnit()) {
+          ui->mAutoSelect = ourUI->mAutoSelect.GetIntValue();
+        }
+        else if (eCSSUnit_None == ourUI->mAutoSelect.GetUnit()) {
+          ui->mAutoSelect = NS_STYLE_AUTO_SELECT_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourUI->mAutoSelect.GetUnit()) {
+          ui->mAutoSelect = parentUI->mAutoSelect;
+        }
+
+        // key-equivalent: none, enum XXX, inherit
+        nsCSSValueList*  keyEquiv = ourUI->mKeyEquivalent;
+        if (keyEquiv) {
+          // XXX need to deal with multiple values
+          if (eCSSUnit_Enumerated == keyEquiv->mValue.GetUnit()) {
+            ui->mKeyEquivalent = PRUnichar(0);  // XXX To be implemented
+          }
+          else if (eCSSUnit_None == keyEquiv->mValue.GetUnit()) {
+            ui->mKeyEquivalent = PRUnichar(0);
+          }
+          else if (eCSSUnit_Inherit == keyEquiv->mValue.GetUnit()) {
+            ui->mKeyEquivalent = parentUI->mKeyEquivalent;
+          }
+        }
+
+        // auto-tab: auto, none, enum, inherit
+        if (eCSSUnit_Enumerated == ourUI->mAutoTab.GetUnit()) {
+          ui->mAutoTab = ourUI->mAutoTab.GetIntValue();
+        }
+        else if (eCSSUnit_Auto == ourUI->mAutoTab.GetUnit()) {
+          ui->mAutoTab = NS_STYLE_AUTO_TAB_AUTO;
+        }
+        else if (eCSSUnit_None == ourUI->mAutoTab.GetUnit()) {
+          ui->mAutoTab = NS_STYLE_AUTO_TAB_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourUI->mAutoTab.GetUnit()) {
+          ui->mAutoTab = parentUI->mAutoTab;
+        }
+
+        // resizer: auto, none, enum, inherit
+        if (eCSSUnit_Enumerated == ourUI->mResizer.GetUnit()) {
+          ui->mResizer = ourUI->mResizer.GetIntValue();
+        }
+        else if (eCSSUnit_Auto == ourUI->mResizer.GetUnit()) {
+          ui->mResizer = NS_STYLE_RESIZER_AUTO;
+        }
+        else if (eCSSUnit_None == ourUI->mResizer.GetUnit()) {
+          ui->mResizer = NS_STYLE_RESIZER_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourUI->mResizer.GetUnit()) {
+          ui->mResizer = parentUI->mResizer;
+        }
+
       }
     }
 
