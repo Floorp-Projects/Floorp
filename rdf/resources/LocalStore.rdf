@@ -45,8 +45,8 @@
 
   <!-- Top-level folders and items -->
   <nc:child RDF:resource="http://www.netscape.com" nc:subject="Netscape Home Page!"/>
-  <nc:child RDF:resource="NC:MailRoot"/>
-  <nc:child RDF:resource="NC:BookmarksRoot"/>
+  <nc:child RDF:resource="NC:MailRoot" nc:subject="Mail"/>
+  <nc:child RDF:resource="NC:BookmarksRoot" nc:subject="Bookmarks"/>
 </RDF:Description>
 
 </RDF:RDF>
