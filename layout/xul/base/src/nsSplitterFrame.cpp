@@ -93,17 +93,17 @@ public:
   virtual ~nsSplitterFrameInner();
 
   // mouse listener
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return MouseMove(aMouseEvent); }
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return MouseMove(aMouseEvent); }
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
   // mouse motion listener
-  virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
-  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
   void MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   void MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent);

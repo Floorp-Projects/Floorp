@@ -24,6 +24,7 @@
 #define nsSOAPUtils_h__
 
 #include "nsIDOMElement.h"
+#include "nsString.h"
 #include "jsapi.h"
 
 class nsSOAPUtils {

@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsString.h"
 
 class nsMsgComposeProgress : public nsIMsgComposeProgress
 {

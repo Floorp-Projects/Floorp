@@ -46,7 +46,7 @@
 { 0xcc75499a, 0x1dd1, 0x11b2, {0x8a, 0x82, 0xca, 0x41, 0x0a, 0xc9, 0x07, 0xb8}}
 
 
-class nsSecureBrowserUIImpl : public nsSecureBrowserUI,
+class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
                               public nsIWebProgressListener,
                               public nsIFormSubmitObserver,
                               public nsIObserver,
@@ -60,7 +60,7 @@ public:
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
-  NS_DECL_NSSECUREBROWSERUI
+  NS_DECL_NSISECUREBROWSERUI
   
   // nsIObserver
   NS_DECL_NSIOBSERVER

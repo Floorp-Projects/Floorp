@@ -94,6 +94,20 @@ NS_IMETHODIMP nsGenericFactory::GetContractID(char **aContractID)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsGenericFactory::GetClassDescription(char * *aClassDescription)
+{
+    if (mInfo->mDescription) {
+        *aClassDescription = (char *)
+            nsMemory::Alloc(strlen(mInfo->mDescription) + 1);
+        if (!*aClassDescription)
+            return NS_ERROR_OUT_OF_MEMORY;
+        strcpy(*aClassDescription, mInfo->mDescription);
+    } else {
+        *aClassDescription = nsnull;
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID **aClassID)
 {
     *aClassID = (nsCID *)nsMemory::Clone(&mInfo->mCID, sizeof(nsCID));
@@ -104,7 +118,7 @@ NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID **aClassID)
 
 NS_IMETHODIMP nsGenericFactory::GetImplementationLanguage(PRUint32 *langp)
 {
-    *langp = nsIClassInfo::LANGUAGE_CPP;
+    *langp = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
 }
 

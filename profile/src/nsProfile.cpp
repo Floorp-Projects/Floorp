@@ -63,6 +63,7 @@
 #include "nsIChromeRegistry.h" // chromeReg
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
+#include "nsISupportsPrimitives.h"
 #include "nsHashtable.h"
 
 // Interfaces Needed
@@ -1927,34 +1928,21 @@ nsProfile::ShowProfileWizard(void)
         if ( NS_SUCCEEDED( rv ) ) 
             ioParamBlock->SetInt(0,4); // standard wizard buttons
 
- 
-        void* stackPtr;
-        jsval *argv = JS_PushArguments( jsContext,
-                                    &stackPtr,
-                                    "sss%ip",
-                                    PROFILE_WIZARD_URL,
-                                    "_blank",
-                                    "chrome,modal",
-                                    (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
-                                    (nsISupports*)ioParamBlock);
+        nsCOMPtr<nsISupportsInterfacePointer> ifptr =
+            do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        if (argv)
-        {
-            nsCOMPtr<nsIDOMWindowInternal> newWindow;
-            rv = PMDOMWindow->OpenDialog(jsContext,
-                                         argv,
-                                         4,
-                                         getter_AddRefs(newWindow));
-            if (NS_SUCCEEDED(rv))
-            {
-                JS_PopArguments( jsContext, stackPtr);
-            }
-            else
-                return NS_ERROR_FAILURE;
+        ifptr->SetData(ioParamBlock);
+        ifptr->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+
+        nsCOMPtr<nsIDOMWindow> newWindow;
+        rv = PMDOMWindow->OpenDialog(NS_ConvertUTF8toUCS2(PROFILE_WIZARD_URL),
+                                     NS_LITERAL_STRING("_blank"),
+                                     NS_LITERAL_STRING("chrome,modal"),
+                                     ifptr, getter_AddRefs(newWindow));
+        if (NS_FAILED(rv)) {
+            return rv;
         }
-        else
-            return NS_ERROR_FAILURE;     
-
     }
     else
     {

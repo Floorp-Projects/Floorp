@@ -23,7 +23,6 @@
 #include "nsISupports.idl"
 #include "nsIEnumerator.idl"
 #include "nsIRDFDataSource.idl"
-#include "domstubs.idl"
 
 %{C++
 #define NS_WINDOWMEDIATOR_CID \
@@ -32,6 +31,7 @@
 
 interface nsIXULWindow;
 interface nsIWidget;
+interface nsIDOMWindowInternal;
 
 
 [scriptable, uuid(0659cb81-faad-11d2-8e19-b206620a657c)]

@@ -27,14 +27,15 @@
 #include "prmem.h"
 #include "nsPSMComponent.h"
 #include "nsDOMCID.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMClassInfo.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsIXPConnect.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsIThreadManager.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
-#include "nsJSUtils.h"
 #include "nsJSPrincipals.h"
 #include "nsIPrincipal.h"
 #include "nsAppShellCIDs.h"
@@ -135,10 +136,71 @@ private:
 
 const char * nsCrypto::kPSMComponentContractID = PSM_COMPONENT_CONTRACTID;
 
-NS_IMPL_ISUPPORTS2(nsCrypto, nsIDOMCrypto,nsIScriptObjectOwner)
-NS_IMPL_ISUPPORTS2(nsCRMFObject, nsIDOMCRMFObject,nsIScriptObjectOwner)
-NS_IMPL_ISUPPORTS2(nsCryptoRunnable, nsIRunnable,nsISupports);
-NS_IMPL_ISUPPORTS2(nsPkcs11, nsIDOMPkcs11, nsIScriptObjectOwner);
+
+// XPConnect interface list for nsCrypto
+NS_CLASSINFO_MAP_BEGIN(Crypto)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMCrypto)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsCrypto
+NS_INTERFACE_MAP_BEGIN(nsCrypto)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCrypto)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(Crypto)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsCrypto)
+NS_IMPL_RELEASE(nsCrypto)
+
+
+// XPConnect interface list for nsCRMFObject
+NS_CLASSINFO_MAP_BEGIN(CRMFObject)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMCRMFObject)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsCRMFObject
+NS_INTERFACE_MAP_BEGIN(nsCRMFObject)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCRMFObject)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(CRMFObject)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsCRMFObject)
+NS_IMPL_RELEASE(nsCRMFObject)
+
+
+// XPConnect interface list for nsPkcs11
+NS_CLASSINFO_MAP_BEGIN(Pkcs11)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMPkcs11)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsPkcs11
+NS_INTERFACE_MAP_BEGIN(nsPkcs11)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMPkcs11)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(Pkcs11)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsPkcs11)
+NS_IMPL_RELEASE(nsPkcs11)
+
+
+// QueryInterface implementation for nsCryptoRunnable
+NS_INTERFACE_MAP_BEGIN(nsCryptoRunnable)
+  NS_INTERFACE_MAP_ENTRY(nsIRunnable)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsCryptoRunnable)
+NS_IMPL_RELEASE(nsCryptoRunnable)
+
 
 nsIEventQueue* getUIEventQueue();
 
@@ -147,7 +209,6 @@ nsCrypto::nsCrypto()
   NS_INIT_REFCNT();
   mPSM = nsnull;
   mVersionStringSet = PR_FALSE;
-  mScriptObject = nsnull;
 }
 
 nsCrypto::~nsCrypto()
@@ -160,7 +221,7 @@ getPSMComponent(nsIPSMComponent ** retPSM)
 {
   nsresult rv;
   nsISupports *psm;
-  
+
   rv = nsPSMComponent::CreatePSMComponent(nsnull, NS_GET_IID(nsIPSMComponent), (void**)&psm);
   if (rv == NS_OK) 
     *retPSM = (nsIPSMComponent *)psm;
@@ -172,60 +233,6 @@ nsresult
 nsCrypto::init()
 {
   return getPSMComponent(&mPSM);
-}
-
-nsIDOMScriptObjectFactory* nsCrypto::gScriptObjectFactory=nsnull;
-
-static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
-static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
-nsresult 
-nsCrypto::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
-{
-  nsresult result = NS_OK;
-
-  if (nsnull == gScriptObjectFactory) {
-    result = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                          kIDOMScriptObjectFactoryIID,
-                                          (nsISupports **)&gScriptObjectFactory);
-    if (result != NS_OK) {
-      return result;
-    }
-  }
-
-  *aResult = gScriptObjectFactory;
-  NS_ADDREF(gScriptObjectFactory);
-  return result;
-}
-
-NS_IMETHODIMP
-nsCrypto::GetScriptObject(nsIScriptContext *aContext, 
-                          void** aScriptObject)
-{
-  nsresult rv = NS_OK;
-
-  if (mScriptObject == nsnull) {
-    nsIDOMScriptObjectFactory *factory=nsnull;
-    
-    rv = GetScriptObjectFactory(&factory);
-    if (rv == NS_OK) {
-      nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-      rv = factory->NewScriptCrypto(aContext, 
-                                    (nsISupports *)(nsIDOMCrypto *)this, 
-                                    (nsISupports *)global, 
-                                    (void**)&mScriptObject);
-      NS_IF_RELEASE(factory);
-    }
-  }
-  *aScriptObject = mScriptObject;
-  return rv;
-}
-
-NS_IMETHODIMP
-nsCrypto::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
 }
 
 /*
@@ -894,9 +901,34 @@ nsCrypto::GetScriptPrincipal(JSContext *cx)
 }
 
 NS_IMETHODIMP
-nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc, 
-                              nsIDOMCRMFObject** aReturn)
+nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
 {
+  nsresult nrv;
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &nrv));
+  NS_ENSURE_SUCCESS(nrv, nrv);
+
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+
+  nrv = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  NS_ENSURE_SUCCESS(nrv, nrv);
+
+  if (!ncc)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  PRBool force_get = PR_FALSE;
+
+  PRUint32 argc;
+
+  ncc->GetArgc(&argc);
+
+  jsval *argv = nsnull;
+
+  ncc->GetArgvPtr(&argv);
+
+  JSContext *cx;
+
+  ncc->GetJSContext(&cx);
+
   JSString           *jsString;
   JSObject           *crmfObject=NULL;
   CMUint32            localKeyGenContext, errorCode;
@@ -908,7 +940,6 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
   CMTItem             dnValue, regTokenValue,windowCx;
   CMTItem             authenticatorValue, eaCertValue;
   CMTStatus           rv;
-  nsresult            nrv;
   PCMT_CONTROL        control;
   CMTItem window_context = {0, 0, 0};
   nsCRMFObject       *newObject;
@@ -917,6 +948,9 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
   const char         *fileName;
   PRUint32            lineNo;
   nsIPrincipal       *principals;
+  JSObject* script_obj = nsnull;
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+
 
   /*
    * Get all of the parameters.
@@ -1006,6 +1040,14 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
 #endif
   principals = GetScriptPrincipal(cx);
 
+  nrv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx),
+                        NS_STATIC_CAST(nsIDOMCrypto *, this),
+                        NS_GET_IID(nsIDOMCrypto), getter_AddRefs(holder));
+  NS_ENSURE_SUCCESS(nrv, nrv);
+
+  nrv = holder->GetJSObject(&script_obj);
+  NS_ENSURE_SUCCESS(nrv, nrv);
+
   keyGenHandler->result        = CMTFailure;
   keyGenHandler->numRequests   = numRequests;
   keyGenHandler->keyGenContext = localKeyGenContext;
@@ -1019,13 +1061,12 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
   keyGenHandler->control       = control;
   keyGenHandler->cryptoObject  = this;
   keyGenHandler->cx            = cx;
-  keyGenHandler->scope         = JS_GetParent(cx, (JSObject*)mScriptObject);
+  keyGenHandler->scope         = JS_GetParent(cx, script_obj);
   keyGenHandler->jsCallback    = PL_strdup(jsCallback);
   keyGenHandler->principals    = principals;
   keyGenHandler->fileName      = fileName;
   keyGenHandler->lineNo        = lineNo;
 
-  
   rv = CMT_RegisterEventHandler(control, SSM_TASK_COMPLETED_EVENT, 
                                 localKeyGenContext,
                                 (void_fun)cryptojs_KeyGenContextEventHandler,
@@ -1125,8 +1166,7 @@ nsCrypto::Random(PRInt32 aNumBytes, nsAWritableString& aReturn)
 }
 
 NS_IMETHODIMP
-nsCrypto::SignText(JSContext *cx, jsval *argv, PRUint32 argc,
-                   nsAWritableString& aReturn)
+nsCrypto::SignText(nsAWritableString& aReturn)
 {
   return NS_ERROR_FAILURE;
 }
@@ -1184,40 +1224,10 @@ nsCrypto::DisableRightClick()
 nsCRMFObject::nsCRMFObject()
 {
   NS_INIT_ISUPPORTS();
-  mScriptObject = nsnull;
 }
 
 nsCRMFObject::~nsCRMFObject()
 {
-}
-
-NS_IMETHODIMP
-nsCRMFObject::GetScriptObject(nsIScriptContext *aContext, 
-                              void** aScriptObject)
-{
-  nsresult rv = NS_OK;
-  
-  if (mScriptObject == nsnull) {
-    nsIDOMScriptObjectFactory *factory=nsnull;
-    
-    rv = nsCrypto::GetScriptObjectFactory(&factory);
-    if (rv == NS_OK) {
-      nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-      rv = factory->NewScriptCRMFObject(aContext, 
-                                (nsISupports *)(nsIDOMCRMFObject *)this, 
-                                (nsISupports *)global, (void**)&mScriptObject);
-      NS_IF_RELEASE(factory);
-    }
-  }
-  *aScriptObject = mScriptObject;
-  return rv;
-}
-
-NS_IMETHODIMP
-nsCRMFObject::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
 }
 
 nsresult
@@ -1361,7 +1371,6 @@ nsPkcs11::nsPkcs11()
 {
   NS_INIT_REFCNT();
   mPSM = nsnull;
-  mScriptObject = nsnull;
 }
 
 nsPkcs11::~nsPkcs11()
@@ -1374,36 +1383,6 @@ nsPkcs11::init()
 {
   return getPSMComponent(&mPSM);
 }
-
-NS_IMETHODIMP
-nsPkcs11::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPkcs11::GetScriptObject(nsIScriptContext *aContext, 
-                          void** aScriptObject)
-{
-  nsresult rv = NS_OK;
-  
-  if (mScriptObject == nsnull) {
-    nsIDOMScriptObjectFactory *factory=nsnull;
-    
-    rv = nsCrypto::GetScriptObjectFactory(&factory);
-    if (rv == NS_OK) {
-      nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-      rv = factory->NewScriptPkcs11(aContext, 
-                                (nsISupports *)(nsIDOMPkcs11 *)this, 
-                                (nsISupports *)global, (void**)&mScriptObject);
-      NS_IF_RELEASE(factory);
-    }
-  }
-  *aScriptObject = mScriptObject;
-  return rv;
-}
-
 
 PRBool
 confirm_user(char *message)

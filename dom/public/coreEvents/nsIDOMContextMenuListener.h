@@ -45,7 +45,7 @@ public:
   * @param aContextMenuEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult ContextMenu(nsIDOMEvent* aContextMenuEvent) = 0;
+  NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent) = 0;
 
 };
 

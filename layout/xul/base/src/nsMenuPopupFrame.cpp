@@ -43,7 +43,6 @@
 #include "nsIDOMScreen.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPresShell.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsRect.h"

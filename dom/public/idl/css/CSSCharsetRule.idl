@@ -1,7 +1,0 @@
-interface CSSCharsetRule : CSSRule {
- /* IID: { 0x19fe78cc, 0x65ff, 0x4b1d, \
-  { 0xa5, 0xd7, 0x9e, 0xa8, 0x96, 0x92, 0xce, 0xc6 } } */
-
-  attribute DOMString        encoding;
-                                        // raises(DOMException) on setting
-};

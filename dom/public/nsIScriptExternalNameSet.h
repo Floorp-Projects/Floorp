@@ -23,8 +23,6 @@
 #ifndef nsIScriptExternalNameSet_h__
 #define nsIScriptExternalNameSet_h__
 
-#include "nscore.h"
-#include "nsString.h"
 #include "nsISupports.h"
 
 #define NS_ISCRIPTEXTERNALNAMESET_IID \
@@ -34,32 +32,22 @@
 class nsIScriptContext;
 
 /**
- * This interface represents a set of names or symbols
- * that should be added to the "global" namespace of a
- * script context. A name set is registered with the
- * name set registry (see <code>nsIScriptNameSetRegistry</code>)
- * at application initialization time. The 
- * <code>AddNameSet</code> method is invoked for each
- * new script context so that a name set can add its
- * global symbols to the name space manager
- * (see <code>nsIScriptNameSpaceManager</code>) of the
- * script context.
+ * This interface represents a set of names or symbols that should be
+ * added to the "global" namespace of a script context. A name set is
+ * registered with the name set registry (see
+ * <code>nsIScriptNameSetRegistry</code>) at component registration
+ * time using the category manager.
  */
-class nsIScriptExternalNameSet : public nsISupports {
+
+class nsIScriptExternalNameSet : public nsISupports
+{
 public:
-
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTEXTERNALNAMESET_IID);
-  /**
-   * Called to tell the name set to do any class initialization
-   * it needs to
-   */
-  NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext) = 0;
 
   /**
-   * Called to tell the name set to add its names to the
-   * namespace manager of the context.
+   * Called to tell the name set to do any initialization it needs to
    */
-  NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext) = 0;
+  NS_IMETHOD InitializeNameSet(nsIScriptContext* aScriptContext) = 0;
 };
 
 #endif /* nsIScriptExternalNameSet_h__ */

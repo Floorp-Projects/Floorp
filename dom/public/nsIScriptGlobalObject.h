@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 #include "nsIScriptContext.h"
 #include "nsGUIEvent.h"
+#include "jsapi.h"
 
 class nsIScriptContext;
 class nsIDOMDocument;
@@ -71,14 +72,19 @@ public:
    */
   NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner) = 0;
 
-
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus)=0;
-};
 
-extern "C" NS_DOM nsresult NS_NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
+  NS_IMETHOD_(JSObject *) GetGlobalJSObject() = 0;
+
+  /**
+   * Called when the global JSObject is finalized
+   */
+
+  NS_IMETHOD OnFinalize(JSObject *aJSObject) = 0;
+};
 
 #endif

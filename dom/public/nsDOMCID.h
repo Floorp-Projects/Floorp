@@ -32,11 +32,6 @@
   0x9eb760f0, 0x4380, 0x11d2,                       \
  {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59} }
 
-#define NS_DOM_NATIVE_OBJECT_REGISTRY_CID            \
- { /* 651074a0-4cd4-11d2-b328-00805f8a3859 */        \
-  0x651074a0, 0x4cd4, 0x11d2,                        \
- {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59 } }
-
 #define NS_SCRIPT_NAMESET_REGISTRY_CID               \
  { /* 45f27d10-987b-11d2-bd40-00105aa45e89 */        \
   0x45f27d10, 0x987b, 0x11d2,                        \

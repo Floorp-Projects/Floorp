@@ -20,10 +20,11 @@
  * Contributor(s): 
  */
 
-#include "domstubs.idl"
 #include "nsIChannel.idl"
 
+interface nsIDOMWindowInternal;
 interface nsIRequest;
+
 
 /*----------------------- nsIUnknownContentTypeHandler -------------------------
 | This file describes the interface for Mozilla's "unknown content-type        |

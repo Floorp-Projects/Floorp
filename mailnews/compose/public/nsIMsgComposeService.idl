@@ -22,16 +22,13 @@
 
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 #include "nsIMsgCompose.idl"
 #include "nsIMsgComposeParams.idl"
 #include "nsIMsgIdentity.idl"
 
 interface nsIURI;
+interface nsIDOMWindowInternal;
 
-%{ C++
-#include "nsIDOMWindowInternal.h"
-%}
 
 [scriptable, uuid(B004F4AE-1AC2-11d3-A715-0060B0EB39B5)]
 interface nsIMsgComposeService : nsISupports {

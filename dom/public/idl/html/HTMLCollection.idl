@@ -1,8 +1,0 @@
-interface HTMLCollection {
- /* IID: { 0xa6cf9083, 0x15b3, 0x11d2, \
-  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
-
-   readonly attribute  unsigned long        length;
-   Node                      item(in unsigned long index);
-   Node                      namedItem(in DOMString name);
- };

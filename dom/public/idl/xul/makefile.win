@@ -22,38 +22,14 @@
 DEPTH=..\..\..\..
 
 
-MODULE=rdf
+MODULE=dom
+XPIDL_MODULE=dom_xul
 
-IDLSRCS =  \
-        XULDocument.idl         \
-        XULElement.idl          \
-        XULCommandDispatcher.idl   \
-        XULTreeElement.idl     \
-       $(NULL)
+XPIDLSRCS =					\
+	.\nsIDOMXULCommandDispatcher.idl	\
+	.\nsIDOMXULDocument.idl			\
+	.\nsIDOMXULElement.idl			\
+	.\nsIDOMXULTreeElement.idl		\
+	$(NULL)
 
-XPCOM_DESTDIR=$(DEPTH)\dom\public\xul
-JSSTUB_DESTDIR=$(DEPTH)\dom\src\xul
-
-GENXDIR=genx
-GENJSDIR=genjs
-
-!include <$(DEPTH)\config\rules.mak>
-
-$(GENXDIR):
-	-mkdir $(GENXDIR)
-
-$(GENJSDIR):
-	-mkdir $(GENJSDIR)
-
-IDLC=$(DIST)\bin\idlc.exe
-GENIID=$(DIST)\bin\geniid.pl
-
-export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
-	@echo +++ make: generating xpcom headers
-	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
-	@echo +++ make: generating JavaScript stubs
-	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
-
-install::
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM*.h $(XPCOM_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS*.cpp $(JSSTUB_DESTDIR)
+include <$(DEPTH)\config\rules.mak>

@@ -21,35 +21,13 @@
 
 DEPTH=..\..\..\..
 
+MODULE=dom
+XPIDL_MODULE=dom_range
 
-MODULE=raptor 
+XPIDLSRCS =					\
+	.\nsIDOMDocumentRange.idl		\
+	.\nsIDOMNSRange.idl			\
+	.\nsIDOMRange.idl			\
+	$(NULL)
 
-IDLSRCS =  \
-	Range.idl \
-
-XPCOM_DESTDIR=$(DEPTH)\dom\public\range
-JSSTUB_DESTDIR=$(DEPTH)\dom\src\range
-
-GENXDIR=genx
-GENJSDIR=genjs
-
-!include <$(DEPTH)\config\rules.mak>
-
-$(GENXDIR):
-	-mkdir $(GENXDIR)
-
-$(GENJSDIR):
-	-mkdir $(GENJSDIR)
-
-IDLC=$(DIST)\bin\idlc.exe
-GENIID=$(DIST)\bin\geniid.pl
-
-export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
-	@echo +++ make: generating xpcom headers
-	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
-	@echo +++ make: generating JavaScript stubs
-	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
-
-install::
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM*.h $(XPCOM_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS*.cpp $(JSSTUB_DESTDIR)
+include <$(DEPTH)\config\rules.mak>

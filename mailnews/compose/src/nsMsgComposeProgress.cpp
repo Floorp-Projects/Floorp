@@ -28,6 +28,9 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsISupportsArray.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIComponentManager.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgComposeProgress, nsIMsgComposeProgress)
 
@@ -46,7 +49,10 @@ nsMsgComposeProgress::~nsMsgComposeProgress()
 }
 
 /* void OpenProgress (in nsIDOMWindowInternal parent, in wstring subject, in boolean itsASaveOperation); */
-NS_IMETHODIMP nsMsgComposeProgress::OpenProgress(nsIDOMWindowInternal *parent, const PRUnichar *subject, PRBool itsASaveOperation)
+NS_IMETHODIMP
+nsMsgComposeProgress::OpenProgress(nsIDOMWindowInternal *parent,
+                                   const PRUnichar *subject,
+                                   PRBool itsASaveOperation)
 {
   nsresult rv = NS_ERROR_FAILURE;
   
@@ -55,41 +61,41 @@ NS_IMETHODIMP nsMsgComposeProgress::OpenProgress(nsIDOMWindowInternal *parent, c
 
   if (parent)
   {
-    // Get JS context from parent window.
-    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(parent, &rv);
-    if (NS_SUCCEEDED(rv) && sgo)
-    {
-      nsCOMPtr<nsIScriptContext> context;
-      sgo->GetContext(getter_AddRefs(context));
-      if (context)
-      {
-        // Get native context.
-        JSContext *jsContext = (JSContext*)context->GetNativeContext();
-        if (jsContext)
-        {
-          // Set up window.arguments[0]...
-          void *stackPtr;
-          jsval *argv = JS_PushArguments( jsContext,
-                                          &stackPtr,
-                                          "sssWb%ip",
-                                          "chrome://messenger/content/messengercompose/sendProgress.xul",
-                                          "_blank",
-                                          "chrome,titlebar,dependent",
-                                          subject,
-                                          itsASaveOperation,
-                                          (const nsIID*)(&NS_GET_IID(nsIMsgComposeProgress)),
-                                          (nsISupports*)this
-                                          );
-          if (argv)
-          {
-            // Open the dialog.
-            rv = parent->OpenDialog(jsContext, argv, 6, getter_AddRefs(m_dialog));
-            // Pop arguments.
-            JS_PopArguments(jsContext, stackPtr);
-          }
-        }
-      }
-    }
+     // Open the dialog.
+    nsCOMPtr<nsISupportsArray> array;
+    rv = NS_NewISupportsArray(getter_AddRefs(array));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupportsWString> strptr =
+      do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    strptr->SetData(subject);
+
+    array->AppendElement(strptr);
+
+    nsCOMPtr<nsISupportsPRBool> boolptr =
+      do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    boolptr->SetData(itsASaveOperation);
+
+    array->AppendElement(boolptr);
+
+    nsCOMPtr<nsISupportsInterfacePointer> ifptr =
+      do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ifptr->SetData(this);
+    ifptr->SetDataIID(&NS_GET_IID(nsIMsgComposeProgress));
+
+    array->AppendElement(ifptr);
+
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = parent->OpenDialog(NS_LITERAL_STRING("chrome://messenger/content/messengercompose/sendProgress.xul"),
+                            NS_LITERAL_STRING("_blank"),
+                            NS_LITERAL_STRING("chrome,titlebar,dependent"),
+                            array, getter_AddRefs(newWindow));
   }
   return rv;
 }

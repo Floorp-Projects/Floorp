@@ -26,86 +26,78 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout
+MODULE		= dom
+XPIDL_MODULE	= dom_html
 
-IDLSRCS		= \
-		HTMLIFrameElement.idl \
-		HTMLAnchorElement.idl \
-		HTMLAppletElement.idl \
-		HTMLAreaElement.idl \
-		HTMLBRElement.idl \
-		HTMLBaseElement.idl \
-		HTMLBaseFontElement.idl \
-		HTMLBodyElement.idl \
-		HTMLButtonElement.idl \
-		HTMLCollection.idl \
-		HTMLDListElement.idl \
-		HTMLDirectoryElement.idl \
-		HTMLDivElement.idl \
-		HTMLDocument.idl \
-		HTMLElement.idl \
-		HTMLEmbedElement.idl \
-		HTMLFieldsetElement.idl \
-		HTMLFontElement.idl \
-		HTMLFormElement.idl \
-		HTMLFormControlList.idl \
-		HTMLFrameElement.idl \
-		HTMLFrameSetElement.idl \
-		HTMLHRElement.idl \
-		HTMLHeadElement.idl \
-		HTMLHeadingElement.idl \
-		HTMLHtmlElement.idl \
-		HTMLImageElement.idl \
-		HTMLInputElement.idl \
-		HTMLIsIndexElement.idl \
-		HTMLLIElement.idl \
-		HTMLLabelElement.idl \
-		HTMLLayerElement.idl \
-		HTMLLegendElement.idl \
-		HTMLLinkElement.idl \
-		HTMLMapElement.idl \
-		HTMLMenuElement.idl \
-		HTMLMetaElement.idl \
-		HTMLModElement.idl \
-		HTMLOListElement.idl \
-		HTMLObjectElement.idl \
-		HTMLOptGroupElement.idl \
-		HTMLOptionCollection.idl \
-		HTMLOptionElement.idl \
-		HTMLParagraphElement.idl \
-		HTMLParamElement.idl \
-		HTMLPreElement.idl \
-		HTMLQuoteElement.idl \
-		HTMLScriptElement.idl \
-		HTMLSelectElement.idl \
-		HTMLStyleElement.idl \
-		HTMLTableCaptionElement.idl \
-		HTMLTableCellElement.idl \
-		HTMLTableColElement.idl \
-		HTMLTableElement.idl \
-		HTMLTableRowElement.idl \
-		HTMLTableSectionElement.idl \
-		HTMLTextAreaElement.idl \
-		HTMLTitleElement.idl \
-		HTMLUListElement.idl \
-		$(NULL)
-
-IDLSRCS		:= $(addprefix $(srcdir)/, $(IDLSRCS))
+XPIDLSRCS =					\
+	nsIDOMHTMLAnchorElement.idl		\
+	nsIDOMHTMLAppletElement.idl		\
+	nsIDOMHTMLAreaElement.idl		\
+	nsIDOMHTMLBRElement.idl			\
+	nsIDOMHTMLBaseElement.idl		\
+	nsIDOMHTMLBaseFontElement.idl		\
+	nsIDOMHTMLBodyElement.idl		\
+	nsIDOMHTMLButtonElement.idl		\
+	nsIDOMHTMLCollection.idl		\
+	nsIDOMHTMLDListElement.idl		\
+	nsIDOMHTMLDirectoryElement.idl		\
+	nsIDOMHTMLDivElement.idl		\
+	nsIDOMHTMLDocument.idl			\
+	nsIDOMHTMLElement.idl			\
+	nsIDOMHTMLEmbedElement.idl		\
+	nsIDOMHTMLFieldSetElement.idl		\
+	nsIDOMHTMLFontElement.idl		\
+	nsIDOMHTMLFormElement.idl		\
+	nsIDOMHTMLFrameElement.idl		\
+	nsIDOMHTMLFrameSetElement.idl		\
+	nsIDOMHTMLHRElement.idl			\
+	nsIDOMHTMLHeadElement.idl		\
+	nsIDOMHTMLHeadingElement.idl		\
+	nsIDOMHTMLHtmlElement.idl		\
+	nsIDOMHTMLIFrameElement.idl		\
+	nsIDOMHTMLImageElement.idl		\
+	nsIDOMHTMLInputElement.idl		\
+	nsIDOMHTMLIsIndexElement.idl		\
+	nsIDOMHTMLLIElement.idl			\
+	nsIDOMHTMLLabelElement.idl		\
+	nsIDOMHTMLLegendElement.idl		\
+	nsIDOMHTMLLinkElement.idl		\
+	nsIDOMHTMLMapElement.idl		\
+	nsIDOMHTMLMenuElement.idl		\
+	nsIDOMHTMLMetaElement.idl		\
+	nsIDOMHTMLModElement.idl		\
+	nsIDOMHTMLOListElement.idl		\
+	nsIDOMHTMLObjectElement.idl		\
+	nsIDOMHTMLOptGroupElement.idl		\
+	nsIDOMHTMLOptionElement.idl		\
+	nsIDOMHTMLParagraphElement.idl		\
+	nsIDOMHTMLParamElement.idl		\
+	nsIDOMHTMLPreElement.idl		\
+	nsIDOMHTMLQuoteElement.idl		\
+	nsIDOMHTMLScriptElement.idl		\
+	nsIDOMHTMLSelectElement.idl		\
+	nsIDOMHTMLStyleElement.idl		\
+	nsIDOMHTMLTableCaptionElem.idl		\
+	nsIDOMHTMLTableCellElement.idl		\
+	nsIDOMHTMLTableColElement.idl		\
+	nsIDOMHTMLTableElement.idl		\
+	nsIDOMHTMLTableRowElement.idl		\
+	nsIDOMHTMLTableSectionElem.idl		\
+	nsIDOMHTMLTextAreaElement.idl		\
+	nsIDOMHTMLTitleElement.idl		\
+	nsIDOMHTMLUListElement.idl		\
+	nsIDOMNSHTMLAnchorElement.idl		\
+	nsIDOMNSHTMLAreaElement.idl		\
+	nsIDOMNSHTMLButtonElement.idl		\
+	nsIDOMNSHTMLDocument.idl		\
+	nsIDOMNSHTMLElement.idl			\
+	nsIDOMNSHTMLFormControlList.idl		\
+	nsIDOMNSHTMLFormElement.idl		\
+	nsIDOMNSHTMLImageElement.idl		\
+	nsIDOMNSHTMLInputElement.idl		\
+	nsIDOMNSHTMLOptionCollectn.idl	\
+	nsIDOMNSHTMLSelectElement.idl		\
+	nsIDOMNSHTMLTextAreaElement.idl		\
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= genx genjs
-
-genx genjs:
-	-mkdir $@
-
-export:: genx genjs $(IDLSRCS)
-	@echo +++ make: generating xpcom headers
-	$(DIST)/bin/idlc -d genx -x $(IDLSRCS)
-	@echo +++ make: generating JavaScript stubs
-	$(DIST)/bin/idlc -d genjs -j $(IDLSRCS)
-
-install::
-	$(NSINSTALL) -m 644 genx/nsIDOM*.h $(topsrcdir)/dom/public/html
-	$(NSINSTALL) -m 644 genjs/nsJS*.cpp $(topsrcdir)/dom/src/html
-

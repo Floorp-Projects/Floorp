@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,8 +18,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
+ *   Mark Hammond <MarkH@ActiveState.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -34,36 +35,50 @@
  */
 
 #include "nsISupports.idl"
-
-[scriptable, uuid(4ea09430-30f4-11d3-9885-006008962422)]
-interface nsIJSStackFrameLocation : nsISupports
-{
-    readonly attribute boolean                 isJSFrame;
-    readonly attribute string                  filename;
-    readonly attribute string                  functionName;
-    readonly attribute PRInt32                 lineNumber;
-    readonly attribute nsIJSStackFrameLocation caller;
-
-    string toString();
-};
-
+#include "nsIException.idl"
 
 [scriptable, uuid(b2a34010-3983-11d3-9888-006008962422)]
-interface nsIXPCException : nsISupports
+interface nsIXPCException : nsIException
 {
-    readonly attribute string                  message;
-    readonly attribute nsresult                result;
-    readonly attribute string                  name;
-    readonly attribute nsIJSStackFrameLocation location;
-    readonly attribute nsISupports             data;
+    // inherits methods from nsIException
 
-    void initialize(in string                  aMessage,
-                    in nsresult                aResult,
-                    in string                  aName,
-                    in nsIJSStackFrameLocation aLocation,
-                    in nsISupports             aData);
+    void initialize(in string           aMessage,
+                    in nsresult         aResult,
+                    in string           aName,
+                    in nsIStackFrame    aLocation,
+                    in nsISupports      aData,
+                    in nsIException     aInner);
+};
 
-    string toString();
+// XXX this is a hack that will be fixed later with integration to
+// the nsIErrorService and a scheme to let the DOM make its own
+// exceptions on demand.
+
+[scriptable, uuid(84279040-40ce-11d5-90bb-0010a4e73d9a)]
+interface nsIXPCDOMException : nsIXPCException
+{
+  const unsigned short      INDEX_SIZE_ERR                 = 1;
+  const unsigned short      DOMSTRING_SIZE_ERR             = 2;
+  const unsigned short      HIERARCHY_REQUEST_ERR          = 3;
+  const unsigned short      WRONG_DOCUMENT_ERR             = 4;
+  const unsigned short      INVALID_CHARACTER_ERR          = 5;
+  const unsigned short      NO_DATA_ALLOWED_ERR            = 6;
+  const unsigned short      NO_MODIFICATION_ALLOWED_ERR    = 7;
+  const unsigned short      NOT_FOUND_ERR                  = 8;
+  const unsigned short      NOT_SUPPORTED_ERR              = 9;
+  const unsigned short      INUSE_ATTRIBUTE_ERR            = 10;
+  // Introduced in DOM Level 2:
+  const unsigned short      INVALID_STATE_ERR              = 11;
+  // Introduced in DOM Level 2:
+  const unsigned short      SYNTAX_ERR                     = 12;
+  // Introduced in DOM Level 2:
+  const unsigned short      INVALID_MODIFICATION_ERR       = 13;
+  // Introduced in DOM Level 2:
+  const unsigned short      NAMESPACE_ERR                  = 14;
+  // Introduced in DOM Level 2:
+  const unsigned short      INVALID_ACCESS_ERR             = 15;
+
+  readonly attribute unsigned long   code;
 };
 
 /* this goes into the C++ header verbatim. */

@@ -195,57 +195,44 @@ nsSOAPParameter::Initialize(JSContext *cx, JSObject *obj,
   return NS_OK;
 }
 
-XPC_IMPLEMENT_IGNORE_CREATE(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_GETFLAGS(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_DEFAULTVALUE(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_ENUMERATE(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_CHECKACCESS(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_CALL(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_HASINSTANCE(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_FINALIZE(nsSOAPParameter)
+// The nsIXPCScriptable map declaration that will generate stubs for us...
+#define XPC_MAP_CLASSNAME           nsSOAPParameter
+#define XPC_MAP_QUOTED_CLASSNAME   "SOAPParameter"
+#define                             XPC_MAP_WANT_SETPROPERTY
+#define                             XPC_MAP_WANT_GETPROPERTY
+#define XPC_MAP_FLAGS       nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY   | \
+                            nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY   | \
+                            nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY
+#include "xpc_map_end.h" /* This will #undef the above */
+
 
 NS_IMETHODIMP 
-nsSOAPParameter::GetProperty(JSContext *cx, JSObject *obj,
-                             jsid id, jsval *vp,
-                             nsIXPConnectWrappedNative* wrapper,
-                             nsIXPCScriptable* arbitrary,
-                             JSBool* retval)
+nsSOAPParameter::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                             JSObject *obj, jsval id, jsval *vp,
+                             PRBool *_retval)
 {
-  *retval = JS_TRUE;
-  jsval val;
-  if (JS_IdToValue(cx, id, &val)) {
-    if (JSVAL_IS_STRING(val)) {
-      JSString* str = JSVAL_TO_STRING(val);
-      char* name = JS_GetStringBytes(str);
-      if (nsCRT::strcmp(name, "value") == 0) {
-        return GetValue(cx, vp);
-      }
+  if (JSVAL_IS_STRING(id)) {
+    JSString* str = JSVAL_TO_STRING(id);
+    const PRUnichar* name = NS_REINTERPRET_CAST(const PRUnichar *,
+                                                JS_GetStringChars(str));
+    if (NS_LITERAL_STRING("value").Equals(name)) {
+      return GetValue(cx, vp);
     }
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsSOAPParameter::SetProperty(JSContext *cx, JSObject *obj, jsid id, 
-                             jsval *vp, nsIXPConnectWrappedNative* wrapper,
-                             nsIXPCScriptable* arbitrary,
-                             JSBool* retval)
+nsSOAPParameter::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                             JSObject *obj, jsval id, jsval *vp,
+                             PRBool *_retval)
 {
-  *retval = JS_TRUE;
-  jsval val;
-  if (JS_IdToValue(cx, id, &val)) {
-    if (JSVAL_IS_STRING(val)) {
-      JSString* str = JSVAL_TO_STRING(val);
-      char* name = JS_GetStringBytes(str);
-      if (nsCRT::strcmp(name, "value") == 0) {
-        return SetValue(cx, *vp);
-      }
+  if (JSVAL_IS_STRING(id)) {
+    JSString* str = JSVAL_TO_STRING(id);
+    const PRUnichar* name = NS_REINTERPRET_CAST(const PRUnichar *,
+                                                JS_GetStringChars(str));
+    if (NS_LITERAL_STRING("value").Equals(name)) {
+      return SetValue(cx, *vp);
     }
   }
   return NS_OK;

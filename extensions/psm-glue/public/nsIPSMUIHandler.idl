@@ -22,7 +22,8 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
+
+interface nsIDOMWindow;
 
 [scriptable, uuid(d92be9b0-601b-11d3-8c4a-000064657374)]
 interface nsIPSMUIHandler : nsISupports

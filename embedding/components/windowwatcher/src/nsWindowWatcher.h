@@ -90,7 +90,7 @@ private:
                                            nsIDOMWindow *aParent,
                                            const char *aFeatures,
                                            PRUint32 aChromeFlags);
-  static void       AttachArguments(nsIDOMWindow *aWindow,
+  static nsresult   AttachArguments(nsIDOMWindow *aWindow,
                                     PRUint32 argc, jsval *argv);
   static nsresult   ConvertSupportsTojsvals(nsIDOMWindow *aWindow,
                                             nsISupports *aArgs,

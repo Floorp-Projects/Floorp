@@ -32,6 +32,9 @@
 [ptr] native nsXPTParamInfoPtr(nsXPTParamInfo);
       native nsXPTType(nsXPTType);
 
+// We bend the rules to do a [shared] nsIID (but this is never scriptable)  
+[ptr] native nsIIDPtrShared(nsIID);
+
 %{C++
 class nsXPTMethodInfo;
 class nsXPTConstant;
@@ -104,5 +107,12 @@ interface nsIInterfaceInfo : nsISupports
                                             [const] in nsXPTParamInfoPtr param);
 
     PRBool isIID(in nsIIDPtr IID);
+
+    void   getNameShared([shared,retval] out string name);
+    void   getIIDShared([shared,retval] out nsIIDPtrShared iid);
+
+    PRBool isFunction();
+
+    PRBool hasAncestor(in nsIIDPtr iid);
 };
 

@@ -21,18 +21,14 @@
  */
 
 #include "nsISupports.idl"
-#include "xulstubs.idl"
 #include "nsIRDFCompositeDataSource.idl"
 #include "nsIAddrDatabase.idl"
 #include "nsISupportsArray.idl"
 
 
-%{C++
-#include "nsIDOMNodeList.h"
-#include "nsIDOMXULElement.h"
-%}
-
 interface nsIDOMWindowInternal;
+interface nsIDOMXULElement;
+interface nsIDOMNodeList;
 interface nsIFileSpec;
 
 [scriptable, uuid(D60B84F1-2A8C-11d3-9E07-00A0C92B5F0D)]

@@ -21,7 +21,6 @@
 */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 #include "nsIMsgCompFields.idl"
 #include "nsIMsgComposeParams.idl"
 #include "nsIEditorShell.idl"
@@ -31,9 +30,11 @@
 
 
 %{ C++
-#include "nsIDOMWindowInternal.h"
 #include "nsIEditorShell.h"
 %}
+
+interface nsIDOMWindowInternal;
+interface nsIDOMNode;
 
 
 typedef long MSG_ComposeSaveType;

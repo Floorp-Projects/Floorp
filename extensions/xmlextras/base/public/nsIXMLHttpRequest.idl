@@ -29,28 +29,6 @@ interface nsIHTTPChannel;
 [scriptable, uuid(b7215e70-4157-11d4-9a42-000064657374)]
 interface nsIXMLHttpRequest : nsISupports {
   /**
-   * Native (non-script) mechanism for adding an event listener for
-   * either a load or error event.
-   *
-   * @param type The event the listener is added for - either 
-   *             "load" or "error".
-   * @param listener The listener to be added.
-   */
-  [noscript] void addEventListener(in string type, 
-                                   in nsIDOMEventListener listener);
-
-  /**
-   * Native (non-script) mechanism for removing an event listener for
-   * either a load or error event.
-   *
-   * @param type The event the listener is removed for - either 
-   *             "load" or "error".
-   * @param listener The listener instance to be removed.
-   */
-  [noscript] void removeEventListener(in string type,
-                                      in nsIDOMEventListener listener);
-
-  /**
    * Meant to be a script-only mechanism for setting a load event listener.
    * The attribute is expected to be JavaScript function object. When
    * the load event occurs, the function is invoked. 

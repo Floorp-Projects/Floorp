@@ -31,9 +31,7 @@
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-NS_IMPL_ISUPPORTS2(nsNodeSet,
-                   nsIDOMNodeList,
-                   nsIScriptObjectOwner)
+NS_IMPL_ISUPPORTS1(nsNodeSet, nsIDOMNodeList)
 
 nsNodeSet::nsNodeSet(NodeSet* aNodeSet) {
     NS_INIT_ISUPPORTS();
@@ -61,42 +59,5 @@ NS_IMETHODIMP
 nsNodeSet::GetLength(PRUint32* aLength)
 {
     mNodes.Count(aLength);
-    return NS_OK;
-}
-
-/* 
- * nsIScriptObjectOwner
- */
-
-NS_IMETHODIMP
-nsNodeSet::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-    nsresult rv = NS_OK;
-    nsIScriptGlobalObject* global = aContext->GetGlobalObject();
-
-    if (nsnull == mScriptObject) {
-        nsIDOMScriptObjectFactory *factory;
-    
-        if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                                           NS_GET_IID(nsIDOMScriptObjectFactory),
-                                                           (nsISupports **)&factory))) {
-            rv = factory->NewScriptNodeList(aContext, 
-                                            (nsISupports*)(nsIDOMNodeList*)this, 
-                                            global, 
-                                            (void**)&mScriptObject);
-
-            nsServiceManager::ReleaseService(kDOMScriptObjectFactoryCID, factory);
-        }
-    }
-    *aScriptObject = mScriptObject;
-
-    NS_RELEASE(global);
-    return rv;
-}
-
-NS_IMETHODIMP
-nsNodeSet::SetScriptObject(void* aScriptObject)
-{
-    mScriptObject = aScriptObject;
     return NS_OK;
 }

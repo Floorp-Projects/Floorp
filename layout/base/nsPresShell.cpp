@@ -1481,14 +1481,17 @@ PresShell::~PresShell()
     mViewManager = nsnull;
   }
 
+  // This shell must be removed from the document before the frame
+  // hierarchy is torn down to avoid finding deleted frames through
+  // this presshell while the frames are being torn down
+  if (mDocument) {
+    mDocument->DeleteShell(this);
+  }
+
   // Destroy the frame manager. This will destroy the frame hierarchy
   if (mFrameManager) {
     mFrameManager->Destroy();
     NS_RELEASE(mFrameManager);
-  }
-
-  if (mDocument) {
-    mDocument->DeleteShell(this);
   }
 
   // We hold a reference to the pres context, and it holds a weak link back

@@ -34,7 +34,10 @@
 
 #include "nsIWidget.h"
 #include "nsIPresContext.h"
-#include "nsPIDOMWindow.h"	
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIBaseWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIViewManager.h"
 #include "nsXULAtoms.h"
@@ -83,11 +86,9 @@ NS_IMETHODIMP  nsResizerFrame::Init(nsIPresContext*  aPresContext,
 
 NS_IMETHODIMP
 nsResizerFrame::HandleEvent(nsIPresContext* aPresContext, 
-                                      nsGUIEvent* aEvent,
-                                      nsEventStatus* aEventStatus)
+                            nsGUIEvent* aEvent,
+                            nsEventStatus* aEventStatus)
 {
-
-
   PRBool doDefault = PR_TRUE;
 
   switch (aEvent->message) {
@@ -143,8 +144,22 @@ nsResizerFrame::HandleEvent(nsIPresContext* aPresContext,
 			   presShell->GetDocument(getter_AddRefs(document));
 			   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
 			   document->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-			   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
+         NS_ENSURE_TRUE(scriptGlobalObject, NS_ERROR_FAILURE);
 
+         nsCOMPtr<nsIDocShell> docShell;
+         scriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
+
+         nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+         NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+         nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+         docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+
+         nsCOMPtr<nsIBaseWindow> window(do_QueryInterface(treeOwner));
+
+         if (!window) {
+           return NS_OK;
+         }
 
 				 nsPoint nsMoveBy(0,0),nsSizeBy(0,0);
 				 nsPoint nsMouseMove(aEvent->refPoint - mLastPoint);

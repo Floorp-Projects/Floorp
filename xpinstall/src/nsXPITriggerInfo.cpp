@@ -80,7 +80,7 @@ PRBool nsXPITriggerItem::IsRelativeURL()
 MOZ_DECL_CTOR_COUNTER(nsXPITriggerInfo)
 
 nsXPITriggerInfo::nsXPITriggerInfo() 
-  : mCx(0), mGlobal(JSVAL_NULL), mCbval(JSVAL_NULL)
+  : mCx(0), mCbval(JSVAL_NULL)
 {
     MOZ_COUNT_CTOR(nsXPITriggerInfo);
 }
@@ -97,9 +97,6 @@ nsXPITriggerInfo::~nsXPITriggerInfo()
     }
     mItems.Clear();
 
-    if ( mCx && !JSVAL_IS_NULL(mGlobal) )
-        JS_RemoveRoot( mCx, &mGlobal );
-
     if ( mCx && !JSVAL_IS_NULL(mCbval) )
         JS_RemoveRoot( mCx, &mCbval );
 
@@ -110,12 +107,26 @@ void nsXPITriggerInfo::SaveCallback( JSContext *aCx, jsval aVal )
 {
     NS_ASSERTION( mCx == 0, "callback set twice, memory leak" );
     mCx = aCx;
-    mGlobal = OBJECT_TO_JSVAL(JS_GetGlobalObject( mCx ));
+    JSObject *obj = JS_GetGlobalObject( mCx );
+
+    JSClass* clazz;
+
+#ifdef JS_THREADSAFE
+    clazz = ::JS_GetClass(aCx, obj);
+#else
+    clazz = ::JS_GetClass(obj);
+#endif
+
+    if (clazz &&
+        (clazz->flags & JSCLASS_HAS_PRIVATE) &&
+        (clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
+      mGlobalWrapper =
+        do_QueryInterface((nsISupports*)::JS_GetPrivate(aCx, obj));
+    }
+
     mCbval = aVal;
     mThread = PR_GetCurrentThread();
 
-    if ( !JSVAL_IS_NULL(mGlobal) )
-        JS_AddRoot( mCx, &mGlobal );
     if ( !JSVAL_IS_NULL(mCbval) )
         JS_AddRoot( mCx, &mCbval );
 }
@@ -155,7 +166,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
     nsCOMPtr<nsIEventQueue> eq;
     nsresult rv;
 
-    if ( mCx && mGlobal && mCbval )
+    if ( mCx && mGlobalWrapper && mCbval )
     {
         NS_WITH_SERVICE(nsIEventQueueService, EQService, kEventQueueServiceCID, &rv);
         if ( NS_SUCCEEDED( rv ) )
@@ -174,7 +185,13 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
                     event->URL      = URL;
                     event->status   = status;
                     event->cx       = mCx;
-                    event->global   = mGlobal;
+
+                    JSObject *obj = nsnull;
+
+                    mGlobalWrapper->GetJSObject(&obj);
+
+                    event->global   = OBJECT_TO_JSVAL(obj);
+
                     event->cbval    = mCbval;
 
                     eq->PostEvent(&event->e);

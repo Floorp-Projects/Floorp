@@ -45,35 +45,35 @@ public:
   * @param aEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult Submit(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Submit(nsIDOMEvent* aEvent) = 0;
 
   /**
    * Processes a form reset event
    * @param aEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult Reset(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Reset(nsIDOMEvent* aEvent) = 0;
 
   /**
    * Processes a form change event
    * @param aEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult Change(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Change(nsIDOMEvent* aEvent) = 0;
 
   /**
    * Processes a form select event
    * @param aEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult Select(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Select(nsIDOMEvent* aEvent) = 0;
   
   /**
    * Processes a form input event
    * @param aEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult Input(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Input(nsIDOMEvent* aEvent) = 0;
 
 };
 

@@ -42,7 +42,7 @@ public:
   NS_DECL_NSISOAPTRANSPORT
 
   // nsIDOMEventListener
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
 protected:
   PRUint32 mStatus;

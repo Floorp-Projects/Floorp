@@ -94,7 +94,7 @@ class xpcoverloaded : public nsIXPCTestOverloaded, public nsIXPCScriptable
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCTESTOVERLOADED
-    XPC_DECLARE_IXPCSCRIPTABLE
+    NS_DECL_NSIXPCSCRIPTABLE
 
     xpcoverloaded();
     virtual ~xpcoverloaded();
@@ -129,31 +129,20 @@ xpcoverloaded::Foo2(PRInt32 p1, PRInt32 p2)
     return NS_OK;
 }
 
-// These macros give default implementations for these methods.
+// The nsIXPCScriptable map declaration that will generate stubs for us...
+#define XPC_MAP_CLASSNAME           xpcoverloaded
+#define XPC_MAP_QUOTED_CLASSNAME   "xpcoverloaded"
+#define                             XPC_MAP_WANT_CREATE
+#define XPC_MAP_FLAGS               0
+#include "xpc_map_end.h" /* This will #undef the above */
 
-//XPC_IMPLEMENT_FORWARD_CREATE(xpcoverloaded)
-XPC_IMPLEMENT_IGNORE_GETFLAGS(xpcoverloaded);
-XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_GETPROPERTY(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_SETPROPERTY(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_SETATTRIBUTES(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_DELETEPROPERTY(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_ENUMERATE(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_CHECKACCESS(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_CALL(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_CONSTRUCT(xpcoverloaded)
-XPC_IMPLEMENT_FORWARD_HASINSTANCE(xpcoverloaded);
-XPC_IMPLEMENT_FORWARD_FINALIZE(xpcoverloaded)
+// We implement this method ourselves
 
-// we implement this method ourselves
 
-NS_IMETHODIMP
-xpcoverloaded::Create(JSContext *cx, JSObject *obj,
-                                nsIXPConnectWrappedNative* wrapper,
-                                nsIXPCScriptable* arbitrary)
+/* void create (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
+NS_IMETHODIMP 
+xpcoverloaded::Create(nsIXPConnectWrappedNative *wrapper, 
+                      JSContext * cx, JSObject * obj)
 {
 /*
 * Here are two implementations...

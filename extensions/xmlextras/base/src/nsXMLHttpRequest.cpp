@@ -45,7 +45,6 @@
 #include "nsICodebasePrincipal.h"
 #include "nsWeakPtr.h"
 #include "nsICharsetAlias.h"
-#include "nsDOMPropEnums.h"
 #ifdef IMPLEMENT_SYNC_LOAD
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -55,10 +54,11 @@
 #include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestor.h"
 #endif
+#include "nsIDOMClassInfo.h"
 
 static const char* kLoadAsData = "loadAsData";
-static const char* kLoadStr = "load";
-static const char* kErrorStr = "error";
+#define LOADSTR NS_LITERAL_STRING("load")
+#define ERRORSTR NS_LITERAL_STRING("error")
 
 // CIDs
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
@@ -72,13 +72,13 @@ GetSafeContext()
 {
   // Get the "safe" JSContext: our JSContext of last resort
   nsresult rv;
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
-                  &rv);
+  nsCOMPtr<nsIThreadJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv))
     return nsnull;
-  nsCOMPtr<nsIThreadJSContextStack> tcs(do_QueryInterface(stack));
+
   JSContext* cx;
-  if (NS_FAILED(tcs->GetSafeJSContext(&cx))) {
+  if (NS_FAILED(stack->GetSafeJSContext(&cx))) {
     return nsnull;
   }
   return cx;
@@ -124,7 +124,7 @@ nsXMLHttpRequestScriptListener::~nsXMLHttpRequestScriptListener()
 
 NS_IMPL_ISUPPORTS2(nsXMLHttpRequestScriptListener, nsIDOMEventListener, nsIPrivateJSEventListener)
 
-nsresult 
+NS_IMETHODIMP
 nsXMLHttpRequestScriptListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   JSContext* cx;
@@ -174,13 +174,13 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMEventListener
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
   // nsIDOMLoadListener
-  virtual nsresult Load(nsIDOMEvent* aEvent);
-  virtual nsresult Unload(nsIDOMEvent* aEvent);
-  virtual nsresult Abort(nsIDOMEvent* aEvent);
-  virtual nsresult Error(nsIDOMEvent* aEvent);
+  NS_IMETHOD Load(nsIDOMEvent* aEvent);
+  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
+  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
+  NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
 protected:
   nsWeakPtr  mParent;
@@ -198,7 +198,7 @@ nsLoadListenerProxy::~nsLoadListenerProxy()
 
 NS_IMPL_ISUPPORTS1(nsLoadListenerProxy, nsIDOMLoadListener)
 
-nsresult
+NS_IMETHODIMP
 nsLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
@@ -210,7 +210,7 @@ nsLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-nsresult 
+NS_IMETHODIMP
 nsLoadListenerProxy::Load(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
@@ -222,7 +222,7 @@ nsLoadListenerProxy::Load(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-nsresult 
+NS_IMETHODIMP
 nsLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
@@ -234,7 +234,7 @@ nsLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-nsresult 
+NS_IMETHODIMP
 nsLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
@@ -246,7 +246,7 @@ nsLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-nsresult 
+NS_IMETHODIMP
 nsLoadListenerProxy::Error(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
@@ -282,38 +282,51 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
 #endif
 }
 
+
+// XPConnect interface list for nsXMLHttpRequest
+NS_CLASSINFO_MAP_BEGIN(XMLHttpRequest)
+  NS_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequest)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsXMLHttpRequest
+NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLHttpRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XMLHttpRequest)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(nsXMLHttpRequest)
 NS_IMPL_RELEASE(nsXMLHttpRequest)
 
-NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLHttpRequest)
-   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequest)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
-   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
-   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
-  
-/* noscript void addEventListener (in string type, in nsIDOMEventListener listener); */
-NS_IMETHODIMP 
-nsXMLHttpRequest::AddEventListener(const char *type, 
-                                   nsIDOMEventListener *listener)
+
+/* void addEventListener (in string type, in nsIDOMEventListener listener); */
+NS_IMETHODIMP
+nsXMLHttpRequest::AddEventListener(const nsAReadableString& type,
+                                   nsIDOMEventListener *listener,
+                                   PRBool useCapture)
 {
-  NS_ENSURE_ARG(type);
   NS_ENSURE_ARG(listener);
   nsresult rv;
 
   // I know, I know - strcmp's. But it's only for a couple of 
   // cases...and they are short strings. :-)
-  if (nsCRT::strcmp(type, kLoadStr) == 0) {
+  if (type.Equals(LOADSTR)) {
     if (!mLoadEventListeners) {
       rv = NS_NewISupportsArray(getter_AddRefs(mLoadEventListeners));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     mLoadEventListeners->AppendElement(listener);
   }
-  else if (nsCRT::strcmp(type, kErrorStr) == 0) {
+  else if (type.Equals(ERRORSTR)) {
     if (!mErrorEventListeners) {
       rv = NS_NewISupportsArray(getter_AddRefs(mErrorEventListeners));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -327,20 +340,20 @@ nsXMLHttpRequest::AddEventListener(const char *type,
   return NS_OK;
 }
 
-/* noscript void removeEventListener (in string type, in nsIDOMEventListener listener); */
+/* void removeEventListener (in string type, in nsIDOMEventListener listener); */
 NS_IMETHODIMP 
-nsXMLHttpRequest::RemoveEventListener(const char *type, 
-                                      nsIDOMEventListener *listener)
+nsXMLHttpRequest::RemoveEventListener(const nsAReadableString & type,
+                                      nsIDOMEventListener *listener,
+                                      PRBool useCapture)
 {
-  NS_ENSURE_ARG(type);
   NS_ENSURE_ARG(listener);
 
-  if (nsCRT::strcmp(type, kLoadStr) == 0) {
+  if (type.Equals(LOADSTR)) {
     if (mLoadEventListeners) {
       mLoadEventListeners->RemoveElement(listener);
     }
   }
-  else if (nsCRT::strcmp(type, kErrorStr) == 0) {
+  else if (type.Equals(ERRORSTR)) {
     if (mErrorEventListeners) {
       mErrorEventListeners->RemoveElement(listener);
     }
@@ -348,6 +361,15 @@ nsXMLHttpRequest::RemoveEventListener(const char *type,
   else {
     return NS_ERROR_INVALID_ARG;
   }
+
+  return NS_OK;
+}
+
+/* void dispatchEvent (in nsIDOMEvent evt); */
+NS_IMETHODIMP
+nsXMLHttpRequest::DispatchEvent(nsIDOMEvent *evt)
+{
+  // Ignored
 
   return NS_OK;
 }
@@ -408,7 +430,7 @@ CheckForScriptListener(nsISupports* aElement, void *aData)
   nsCOMPtr<nsIPrivateJSEventListener> jsel(do_QueryInterface(aElement));
   if (jsel) {
     nsIDOMEventListener** retval = (nsIDOMEventListener**)aData;
-    
+
     aElement->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void**)retval);
     return PR_FALSE;
   }
@@ -432,7 +454,7 @@ nsXMLHttpRequest::StuffReturnValue(nsIDOMEventListener* aListener)
   if(NS_SUCCEEDED(rv)) {
     rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
   }
-      
+
   // If we're being called through JS, stuff the return value
   if (NS_SUCCEEDED(rv) && cc) {
     jsval* val;
@@ -489,7 +511,7 @@ nsXMLHttpRequest::SetOnload(nsISupports * aOnLoad)
     // we can only have one
     if (mLoadEventListeners) {
       GetScriptEventListener(mLoadEventListeners, getter_AddRefs(oldListener));
-      RemoveEventListener(kLoadStr, oldListener);
+      RemoveEventListener(LOADSTR, oldListener, PR_TRUE);
     }
   }
   else {
@@ -501,7 +523,7 @@ nsXMLHttpRequest::SetOnload(nsISupports * aOnLoad)
     }
   }
 
-  return AddEventListener(kLoadStr, listener);
+  return AddEventListener(LOADSTR, listener, PR_TRUE);
 }
 
 /* attribute nsIDOMEventListener onerror; */
@@ -542,7 +564,7 @@ nsXMLHttpRequest::SetOnerror(nsISupports * aOnerror)
     if (mErrorEventListeners) {
       GetScriptEventListener(mErrorEventListeners, 
                              getter_AddRefs(oldListener));
-      RemoveEventListener(kErrorStr, oldListener);
+      RemoveEventListener(ERRORSTR, oldListener, PR_TRUE);
     }
   }
   else {
@@ -554,7 +576,7 @@ nsXMLHttpRequest::SetOnerror(nsISupports * aOnerror)
     }
   }
 
-  return AddEventListener(kErrorStr, listener);
+  return AddEventListener(ERRORSTR, listener, PR_TRUE);
 }
 
 /* readonly attribute nsIHTTPChannel channel; */
@@ -918,25 +940,26 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
     jsval* argv;
     rv = cc->GetArgvPtr(&argv);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    
+
     JSContext* cx;
     rv = cc->GetJSContext(&cx);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+ /*
      rv = secMan->CheckScriptAccessToURL(cx, url, NS_DOM_PROP_XMLHTTPREQUEST_OPEN, PR_FALSE);
      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
- 
-     nsCOMPtr<nsIPrincipal> principal;
-     rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
-      if (NS_SUCCEEDED(rv)) {
-       nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-       if (codebase) {
-         codebase->GetURI(getter_AddRefs(mBaseURI));
-        }
+ */
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+      if (codebase) {
+        codebase->GetURI(getter_AddRefs(mBaseURI));
       }
+    }
 
     if (argc > 2) {
       JSBool asyncBool;
@@ -950,10 +973,10 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
         if (userStr) {
           user = JS_GetStringBytes(userStr);
         }
-        
+
         if (argc > 4) {
           JSString* passwordStr;
-          
+
           passwordStr = JS_ValueToString(cx, argv[4]);
           if (passwordStr) {
             password = JS_GetStringBytes(passwordStr);

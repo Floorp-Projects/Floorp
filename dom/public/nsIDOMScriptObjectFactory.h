@@ -24,6 +24,7 @@
 #define nsIDOMScriptObjectFactory_h__
 
 #include "nsISupports.h"
+#include "nsIDOMClassInfo.h"
 #include "nsString.h"
 
 #define NS_IDOM_SCRIPT_OBJECT_FACTORY_IID   \
@@ -31,110 +32,27 @@
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
 
 class nsIScriptContext;
+class nsIScriptGlobalObject;
+class nsIDOMEventListener;
 
 class nsIDOMScriptObjectFactory : public nsISupports {
 public:  
   static const nsIID& GetIID() { static nsIID iid = NS_IDOM_SCRIPT_OBJECT_FACTORY_IID; return iid; }
 
-  NS_IMETHOD    NewScriptAttr(nsIScriptContext *aContext, 
-                              nsISupports *aAttribute, 
-                              nsISupports *aParent, 
-                              void** aReturn)=0;
 
-  NS_IMETHOD    NewScriptComment(nsIScriptContext *aContext, 
-                                 nsISupports *aComment,
-                                 nsISupports *aParent, 
-                                 void** aReturn)=0;
+  NS_IMETHOD NewScriptContext(nsIScriptGlobalObject *aGlobal,
+                              nsIScriptContext **aContext) = 0;
 
-  NS_IMETHOD    NewScriptDocument(const nsString &aDocType,
-                                  nsIScriptContext *aContext, 
-                                  nsISupports *aDocFrag, 
-                                  nsISupports *aParent, 
-                                  void** aReturn)=0;
+  NS_IMETHOD NewJSEventListener(nsIScriptContext *aContext,
+                                nsISupports* aObject,
+                                nsIDOMEventListener ** aInstancePtrResult) = 0;
 
-  NS_IMETHOD    NewScriptDocumentFragment(nsIScriptContext *aContext, 
-                                          nsISupports *aDocFrag, 
-                                          nsISupports *aParent, 
-                                          void** aReturn)=0;
+  NS_IMETHOD NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal) = 0;
 
-  NS_IMETHOD    NewScriptDocumentType(nsIScriptContext *aContext, 
-                                      nsISupports *aDocType, 
-                                      nsISupports *aParent, 
-                                      void** aReturn)=0;
-  
-  NS_IMETHOD    NewScriptDOMImplementation(nsIScriptContext *aContext, 
-                                           nsISupports *aDOM, 
-                                           nsISupports *aParent, 
-                                           void** aReturn)=0;
-
-  NS_IMETHOD    NewScriptCharacterData(PRUint16 aNodeType,
-                                       nsIScriptContext *aContext, 
-                                       nsISupports *aData, 
-                                       nsISupports *aParent, 
-                                       void** aReturn)=0;
-  
-  NS_IMETHOD    NewScriptElement(const nsString &aTagName, 
-                                 nsIScriptContext *aContext, 
-                                 nsISupports *aElement, 
-                                 nsISupports *aParent, 
-                                 void **aReturn)=0;
-
-  NS_IMETHOD    NewScriptXMLElement(const nsString &aTagName, 
-                                    nsIScriptContext *aContext, 
-                                    nsISupports *aElement, 
-                                    nsISupports *aParent, 
-                                    void **aReturn)=0;
-
-  NS_IMETHOD    NewScriptXULElement(const nsString &aTagName,
-                                    nsIScriptContext *aContext,
-                                    nsISupports *aElement,
-                                    nsISupports *aParent,
-                                    void **aReturn)=0;
-
-  NS_IMETHOD    NewScriptHTMLCollection(nsIScriptContext *aContext, 
-                                        nsISupports *aCollection, 
-                                        nsISupports *aParent, 
-                                        void** aReturn)=0;
-  
-  NS_IMETHOD    NewScriptNamedNodeMap(nsIScriptContext *aContext, 
-                                      nsISupports *aNodeMap, 
-                                      nsISupports *aParent, 
-                                      void** aReturn)=0;
-
-  NS_IMETHOD    NewScriptNodeList(nsIScriptContext *aContext, 
-                                  nsISupports *aNodeList, 
-                                  nsISupports *aParent, 
-                                  void** aReturn)=0;
-
-  NS_IMETHOD    NewScriptProcessingInstruction(nsIScriptContext *aContext, 
-                                               nsISupports *aPI, 
-                                               nsISupports *aParent, 
-                                               void** aReturn)=0;
-
-  NS_IMETHOD    NewScriptEntity(nsIScriptContext *aContext, 
-                                nsISupports *aPI, 
-                                nsISupports *aParent, 
-                                void** aReturn)=0;
-
-  NS_IMETHOD    NewScriptNotation(nsIScriptContext *aContext, 
-                                  nsISupports *aPI, 
-                                  nsISupports *aParent, 
-                                  void** aReturn)=0;
-
-  NS_IMETHOD    NewScriptCrypto(nsIScriptContext *aContext, 
-                                nsISupports *aPI, 
-                                nsISupports *aParent, 
-                                void** aReturn)=0;
-
-  NS_IMETHOD    NewScriptCRMFObject(nsIScriptContext *aContext, 
-                                    nsISupports *aPI, 
-                                    nsISupports *aParent, 
-                                    void** aReturn)=0;
-
-  NS_IMETHOD    NewScriptPkcs11(nsIScriptContext *aContext, 
-                                nsISupports *aPI, 
-                                nsISupports *aParent, 
-                                void** aReturn)=0;
+  NS_IMETHOD_(nsISupports *)
+    GetClassInfoInstance(nsDOMClassInfoID aID,
+                         GetDOMClassIIDsFnc aGetIIDsFptr,
+                         const char *aName) = 0;
 };
 
 #endif /* nsIDOMScriptObjectFactory_h__ */

@@ -111,29 +111,29 @@ public:
   /** nsIDOMKeyListener interfaces 
     * @see nsIDOMKeyListener
     */
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
   /* END interfaces from nsIDOMKeyListener*/
 
   /** nsIDOMMouseListener interfaces 
     * @see nsIDOMMouseListener
     */
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
   /* END interfaces from nsIDOMMouseListener*/
 
   //nsIDOMEventMotionListener
   /** nsIDOMEventMotionListener interfaces 
     * @see nsIDOMEventMotionListener
     */
-  virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
-  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent);
   /* END interfaces from nsIDOMMouseListener*/
   
   friend nsresult NS_NewListEventListener(nsIListEventListener ** aInstancePtrResult);
@@ -271,22 +271,22 @@ public:
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   //nsIDOMEventListener
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent)    { return NS_OK; }
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent)     { return NS_OK; }
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent)      { return NS_OK; }
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent)        { return NS_OK; }
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent)    { return NS_OK; }
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent)     { return NS_OK; }
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent)      { return NS_OK; }
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)        { return NS_OK; }
 
   //nsIDOMEventMotionListener
-  virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
-  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent);
 
   //nsIDOMKeyListener
-  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent)    { return NS_OK; }
-  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent)    { return NS_OK; }
+  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 
     // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);

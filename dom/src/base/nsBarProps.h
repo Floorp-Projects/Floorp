@@ -37,15 +37,12 @@
 class nsIWebBrowserChrome;
 
 // Script "BarProp" object
-class BarPropImpl : public nsIScriptObjectOwner, public nsIDOMBarProp {
+class BarPropImpl : public nsIDOMBarProp {
 public:
    BarPropImpl();
    virtual ~BarPropImpl();
 
    NS_DECL_ISUPPORTS
-
-   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
    NS_IMETHOD SetWebBrowserChrome(nsIWebBrowserChrome* aBrowserChrome);
 
@@ -55,7 +52,6 @@ public:
 protected:
    // Weak Reference
    nsIWebBrowserChrome* mBrowserChrome;
-   void *mScriptObject;
 };
 
 // Script "menubar" object
@@ -64,7 +60,7 @@ public:
    MenubarPropImpl();
    virtual ~MenubarPropImpl();
 
-   NS_DECL_IDOMBARPROP
+   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "toolbar" object
@@ -73,7 +69,7 @@ public:
    ToolbarPropImpl();
    virtual ~ToolbarPropImpl();
 
-   NS_DECL_IDOMBARPROP
+   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "locationbar" object
@@ -82,7 +78,7 @@ public:
    LocationbarPropImpl();
    virtual ~LocationbarPropImpl();
 
-   NS_DECL_IDOMBARPROP
+   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "personalbar" object
@@ -91,7 +87,7 @@ public:
    PersonalbarPropImpl();
    virtual ~PersonalbarPropImpl();
 
-   NS_DECL_IDOMBARPROP
+   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "statusbar" object
@@ -100,7 +96,7 @@ public:
    StatusbarPropImpl();
    virtual ~StatusbarPropImpl();
 
-   NS_DECL_IDOMBARPROP
+   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "scrollbars" object
@@ -109,7 +105,7 @@ public:
    ScrollbarsPropImpl();
    virtual ~ScrollbarsPropImpl();
 
-   NS_DECL_IDOMBARPROP
+   NS_DECL_NSIDOMBARPROP
 };
 
 #endif /* nsBarProps_h___ */

@@ -35,6 +35,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMXULElement.h"
+#include "nsIDOMNodeList.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFService.h"

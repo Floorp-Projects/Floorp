@@ -398,7 +398,7 @@ nsWebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
                                    nsresult aStatus,
                                    const PRUnichar* aMessage)
 {
-    if (mBrowserWindow->mStatus) {
+    if (mBrowserWindow && mBrowserWindow->mStatus) {
         PRUint32 size;
         mBrowserWindow->mStatus->SetText(nsAutoString(aMessage), size);
     }

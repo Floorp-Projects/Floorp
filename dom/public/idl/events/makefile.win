@@ -21,38 +21,19 @@
 
 DEPTH=..\..\..\..
 
+MODULE=dom
+XPIDL_MODULE=dom_events
 
-MODULE=raptor 
+XPIDLSRCS =					\
+	.\nsIDOMDocumentEvent.idl		\
+	.\nsIDOMEvent.idl			\
+	.\nsIDOMEventTarget.idl			\
+	.\nsIDOMKeyEvent.idl			\
+	.\nsIDOMMouseEvent.idl			\
+	.\nsIDOMMutationEvent.idl		\
+	.\nsIDOMNSUIEvent.idl			\
+	.\nsIDOMUIEvent.idl			\
+	.\nsIDOMEventListener.idl		\
+	$(NULL)
 
-IDLSRCS =  \
-	Event.idl \
-	UIEvent.idl \
-	MouseKeyEvent.idl \
-  MutationEvent.idl \
-
-XPCOM_DESTDIR=$(DEPTH)\dom\public\coreEvents
-JSSTUB_DESTDIR=$(DEPTH)\dom\src\events
-
-GENXDIR=genx
-GENJSDIR=genjs
-
-!include <$(DEPTH)\config\rules.mak>
-
-$(GENXDIR):
-	-mkdir $(GENXDIR)
-
-$(GENJSDIR):
-	-mkdir $(GENJSDIR)
-
-IDLC=$(DIST)\bin\idlc.exe
-GENIID=$(DIST)\bin\geniid.pl
-
-export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
-	@echo +++ make: generating xpcom headers
-	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
-	@echo +++ make: generating JavaScript stubs
-	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
-
-install::
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM*.h $(XPCOM_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS*.cpp $(JSSTUB_DESTDIR)
+include <$(DEPTH)\config\rules.mak>

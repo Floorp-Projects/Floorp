@@ -31,8 +31,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsSupportsArray.h"
 
-class nsNodeSet : public nsIDOMNodeList,
-                  public nsIScriptObjectOwner
+class nsNodeSet : public nsIDOMNodeList
 {
 public:
     /**
@@ -49,11 +48,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIDocumentTransformer interface
-    NS_DECL_IDOMNODELIST
-
-    // nsIScriptObjectOwner interface
-    NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-    NS_IMETHOD SetScriptObject(void* aScriptObject);
+    NS_DECL_NSIDOMNODELIST
 
 private:
     void* mScriptObject;

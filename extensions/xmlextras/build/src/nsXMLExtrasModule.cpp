@@ -27,11 +27,7 @@
 #include "nsIAppStartupNotifier.h"
 #include "nsICategoryManager.h"
 #include "nsIObserver.h"
-#include "nsIScriptExternalNameSet.h"
-#include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "nsIScriptContext.h"
-#include "nsIRegistry.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsDOMCID.h"
@@ -43,8 +39,10 @@
 #include "nsDefaultSOAPEncoder.h"
 #include "nsHTTPSOAPTransport.h"
 #endif
+#include "nsString.h"
+#include "prprf.h"
+#include "nsIScriptNameSpaceManager.h"
 
-static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -61,17 +59,14 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
 #endif
 
-class nsXMLExtrasNameset : public nsIScriptExternalNameSet {
+class nsXMLExtrasNameset : public nsISupports
+{
 public:
   nsXMLExtrasNameset();
   virtual ~nsXMLExtrasNameset();
 
   // nsISupports
   NS_DECL_ISUPPORTS
-
-  // nsIScriptExternalNameSet
-  NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
-  NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
 };
 
 nsXMLExtrasNameset::nsXMLExtrasNameset()
@@ -83,64 +78,12 @@ nsXMLExtrasNameset::~nsXMLExtrasNameset()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsXMLExtrasNameset, nsIScriptExternalNameSet)
+NS_INTERFACE_MAP_BEGIN(nsXMLExtrasNameset)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-nsXMLExtrasNameset::InitializeClasses(nsIScriptContext* aScriptContext)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLExtrasNameset::AddNameSet(nsIScriptContext* aScriptContext)
-{
-  static NS_DEFINE_CID(kXMLSerializer_CID, NS_XMLSERIALIZER_CID);
-  static NS_DEFINE_CID(kXMLHttpRequest_CID, NS_XMLHTTPREQUEST_CID);
-  static NS_DEFINE_CID(kDOMParser_CID, NS_DOMPARSER_CID);
-#ifdef MOZ_SOAP
-  static NS_DEFINE_CID(kSOAPCall_CID, NS_SOAPCALL_CID);
-  static NS_DEFINE_CID(kSOAPParameter_CID, NS_SOAPPARAMETER_CID);
-#endif
-  nsresult result;
-  nsCOMPtr<nsIScriptNameSpaceManager> manager;
-  
-  result = aScriptContext->GetNameSpaceManager(getter_AddRefs(manager));
-  if (NS_SUCCEEDED(result)) {
-    result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("XMLSerializer"), 
-                                         NS_GET_IID(nsIDOMSerializer),
-                                         kXMLSerializer_CID, 
-                                         PR_TRUE);
-    NS_ENSURE_SUCCESS(result, result);
-
-    result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("XMLHttpRequest"), 
-                                         NS_GET_IID(nsIXMLHttpRequest),
-                                         kXMLHttpRequest_CID, 
-                                         PR_TRUE);
-    NS_ENSURE_SUCCESS(result, result);
-
-    result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("DOMParser"), 
-                                         NS_GET_IID(nsIDOMParser),
-                                         kDOMParser_CID, 
-                                         PR_TRUE);
-    NS_ENSURE_SUCCESS(result, result);
-
-#ifdef MOZ_SOAP
-    result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("SOAPCall"), 
-                                         NS_GET_IID(nsISOAPCall),
-                                         kSOAPCall_CID, 
-                                         PR_TRUE);
-    NS_ENSURE_SUCCESS(result, result);
-
-    result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("SOAPParameter"), 
-                                         NS_GET_IID(nsISOAPParameter),
-                                         kSOAPParameter_CID, 
-                                         PR_TRUE);
-    NS_ENSURE_SUCCESS(result, result);
-#endif
-  }
-
-  return result;
-}
+NS_IMPL_ADDREF(nsXMLExtrasNameset)
+NS_IMPL_RELEASE(nsXMLExtrasNameset)
 
 #define NS_XML_EXTRAS_CID                          \
  { /* 33e569b0-40f8-11d4-9a41-000064657374 */      \
@@ -149,7 +92,7 @@ nsXMLExtrasNameset::AddNameSet(nsIScriptContext* aScriptContext)
 
 #define NS_XML_EXTRAS_CONTRACTID "@mozilla.org/xmlextras;1"
 
-class nsXMLExtras : public nsIObserver {
+class nsXMLExtras : public nsISupports {
 public:
   nsXMLExtras();
   virtual ~nsXMLExtras();
@@ -158,9 +101,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-
-  // nsIObserver
-  NS_DECL_NSIOBSERVER
 };
 
 nsXMLExtras::nsXMLExtras()
@@ -172,25 +112,13 @@ nsXMLExtras::~nsXMLExtras()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsXMLExtras, nsIObserver)
+NS_IMPL_ADDREF(nsXMLExtras)
+NS_IMPL_RELEASE(nsXMLExtras)
 
-NS_IMETHODIMP
-nsXMLExtras::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *aData) 
-{
-  nsresult rv;
-  nsCOMPtr<nsIScriptNameSetRegistry> 
-    namesetService(do_GetService(kCScriptNameSetRegistryCID, &rv));
-  
-  if (NS_SUCCEEDED(rv)) {
-    nsXMLExtrasNameset* nameset = new nsXMLExtrasNameset();
-    if (!nameset)
-      return NS_ERROR_OUT_OF_MEMORY;
-    // the NameSet service will AddRef this one
-    rv = namesetService->AddExternalNameSet(nameset);
-  }
-  
-  return rv;
-}
+NS_INTERFACE_MAP_BEGIN(nsXMLExtras)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLExtras)
 
@@ -201,15 +129,47 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
                   const char *componentType,
                   const nsModuleComponentInfo *info)
 {
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> 
-    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY, "XML Extras Module",
-                        "service," NS_XML_EXTRAS_CONTRACTID,
-                        PR_TRUE, PR_TRUE,
-                        nsnull);
-  }
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString previous;
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "XMLSerializer",
+                                NS_XMLSERIALIZER_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "XMLHttpRequest",
+                                NS_XMLHTTPREQUEST_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "DOMParser",
+                                NS_DOMPARSER_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef MOZ_SOAP
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "SOAPCall",
+                                NS_SOAPCALL_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "SOAPParameter",
+                                NS_SOAPPARAMETER_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
   return rv;
 }
 
@@ -219,16 +179,24 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
 // class name.
 //
 static nsModuleComponentInfo components[] = {
-  { "XMLExtras component", NS_XML_EXTRAS_CID, NS_XML_EXTRAS_CONTRACTID, nsXMLExtrasConstructor, RegisterXMLExtras },
-  { "XML Serializer", NS_XMLSERIALIZER_CID, NS_XMLSERIALIZER_CONTRACTID, nsDOMSerializerConstructor },
-  { "XMLHttpRequest", NS_XMLHTTPREQUEST_CID, NS_XMLHTTPREQUEST_CONTRACTID, nsXMLHttpRequestConstructor },
-  { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_CONTRACTID, nsDOMParserConstructor },
+  { "XMLExtras component", NS_XML_EXTRAS_CID, NS_XML_EXTRAS_CONTRACTID,
+    nsXMLExtrasConstructor, RegisterXMLExtras },
+  { "XML Serializer", NS_XMLSERIALIZER_CID, NS_XMLSERIALIZER_CONTRACTID,
+    nsDOMSerializerConstructor },
+  { "XMLHttpRequest", NS_XMLHTTPREQUEST_CID, NS_XMLHTTPREQUEST_CONTRACTID,
+    nsXMLHttpRequestConstructor },
+  { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_CONTRACTID,
+    nsDOMParserConstructor },
 #ifdef MOZ_SOAP
-  { "SOAP Call", NS_SOAPCALL_CID, NS_SOAPCALL_CONTRACTID, nsSOAPCallConstructor },
-  { "SOAP Parameter", NS_SOAPPARAMETER_CID, NS_SOAPPARAMETER_CONTRACTID, nsSOAPParameterConstructor },
-  { "Default SOAP Encoder", NS_DEFAULTSOAPENCODER_CID, NS_DEFAULTSOAPENCODER_CONTRACTID, nsDefaultSOAPEncoderConstructor },
-  { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID, NS_HTTPSOAPTRANSPORT_CONTRACTID, nsHTTPSOAPTransportConstructor },
-#endif  
+  { "SOAP Call", NS_SOAPCALL_CID, NS_SOAPCALL_CONTRACTID,
+    nsSOAPCallConstructor },
+  { "SOAP Parameter", NS_SOAPPARAMETER_CID, NS_SOAPPARAMETER_CONTRACTID,
+    nsSOAPParameterConstructor },
+  { "Default SOAP Encoder", NS_DEFAULTSOAPENCODER_CID,
+    NS_DEFAULTSOAPENCODER_CONTRACTID, nsDefaultSOAPEncoderConstructor },
+  { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID,
+    NS_HTTPSOAPTRANSPORT_CONTRACTID, nsHTTPSOAPTransportConstructor },
+#endif
 };
 
 NS_IMPL_NSGETMODULE(nsXMLExtrasModule, components)

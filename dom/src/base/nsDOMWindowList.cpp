@@ -41,7 +41,6 @@
 nsDOMWindowList::nsDOMWindowList(nsIDocShell *aDocShell)
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
   SetDocShell(aDocShell);
 }
 
@@ -54,8 +53,7 @@ NS_IMPL_RELEASE(nsDOMWindowList)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowList)
    NS_INTERFACE_MAP_ENTRY(nsIDOMWindowCollection)
-   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowCollection)
+   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -157,27 +155,5 @@ nsDOMWindowList::NamedItem(const nsAReadableString& aName, nsIDOMWindow** aRetur
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDOMWindowList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptWindowCollection(aContext, (nsISupports *)(nsIDOMWindowCollection *)this, global, (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  NS_RELEASE(global);
-  return res;
-}
-
-NS_IMETHODIMP 
-nsDOMWindowList::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
   return NS_OK;
 }

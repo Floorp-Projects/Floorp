@@ -36,22 +36,23 @@ class nsJSEventListener : public nsIDOMEventListener,
                           public nsIJSEventListener
 {
 public:
-  nsJSEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner* aOwner);
+  nsJSEventListener(nsIScriptContext *aContext, nsISupports* aObject);
   virtual ~nsJSEventListener();
 
   NS_DECL_ISUPPORTS
 
   //nsIDOMEventListener interface
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
   //nsIJSEventListener interface
-  NS_IMETHOD GetEventTarget(nsIScriptContext** aContext, nsIScriptObjectOwner** aOwner);
-  
+  NS_IMETHOD GetEventTarget(nsIScriptContext** aContext,
+                            nsISupports** aTarget);
+
   NS_IMETHOD SetEventName(nsIAtom* aName);
 
 protected:
   nsIScriptContext* mContext;
-  nsIScriptObjectOwner* mOwner;
+  nsISupports* mObject;
   nsCOMPtr<nsIAtom> mEventName;
   
   enum nsReturnResult {

@@ -28,11 +28,12 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsWWJSUtils.h"
+#include "nsIXPConnect.h"
 
 NS_EXPORT nsresult 
 nsWWJSUtils::nsGetStaticScriptGlobal(JSContext* aContext,
-                                   JSObject* aObj,
-                                   nsIScriptGlobalObject** aNativeGlobal)
+                                     JSObject* aObj,
+                                     nsIScriptGlobalObject** aNativeGlobal)
 {
   nsISupports* supports;
   JSClass* clazz;
@@ -57,14 +58,19 @@ nsWWJSUtils::nsGetStaticScriptGlobal(JSContext* aContext,
       !(supports = (nsISupports*) JS_GetPrivate(aContext, glob))) {
     return NS_ERROR_FAILURE;
   }
+ 
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(supports));
+  NS_ENSURE_TRUE(wrapper, NS_ERROR_UNEXPECTED);
 
-  return supports->QueryInterface(NS_GET_IID(nsIScriptGlobalObject),
-                                  (void**) aNativeGlobal);
+  nsCOMPtr<nsISupports> native;
+  wrapper->GetNative(getter_AddRefs(native));
+
+  return CallQueryInterface(native, aNativeGlobal);
 }
 
 NS_EXPORT nsresult 
 nsWWJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
-                                     nsIScriptContext** aScriptContext)
+                                       nsIScriptContext** aScriptContext)
 {
   // XXX We rely on the rule that if any JSContext in our JSRuntime has a 
   // private set then that private *must* be a pointer to an nsISupports.
@@ -77,8 +83,8 @@ nsWWJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
 
 NS_EXPORT nsresult 
 nsWWJSUtils::nsGetStaticScriptContext(JSContext* aContext,
-                                    JSObject* aObj,
-                                    nsIScriptContext** aScriptContext)
+                                      JSObject* aObj,
+                                      nsIScriptContext** aScriptContext)
 {
   nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
   nsGetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));

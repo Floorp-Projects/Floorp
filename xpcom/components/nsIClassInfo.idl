@@ -34,23 +34,11 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIProgrammingLanguage.idl"
 
 [scriptable, uuid(986c11d0-f340-11d4-9075-0010a4e73d9a)]
 interface nsIClassInfo : nsISupports
 {
-    /**
-     * Identifiers for languages 
-     */
-    const PRUint32 LANGUAGE_UNKNOWN     = 0;
-    const PRUint32 LANGUAGE_CPP         = 1;
-    const PRUint32 LANGUAGE_JAVASCRIPT  = 2;
-    const PRUint32 LANGUAGE_PYTHON      = 3;
-    const PRUint32 LANGUAGE_PERL        = 4;
-    const PRUint32 LANGUAGE_JAVA        = 5;
-    const PRUint32 LANGUAGE_ZX81_BASIC  = 6;  // it could happen :)
-    const PRUint32 LANGUAGE_JAVASCRIPT2 = 7;
-    // This list can grow indefinitely. Just don't ever change an existing item.
-    
     /**
      * Get an ordered list of the interface ids that instances of the class 
      * promise to implement. Note that nsISupports is an implicit member 
@@ -65,9 +53,12 @@ interface nsIClassInfo : nsISupports
     /**
      * Get a language mapping specific helper object that may assist in using
      * objects of this class in a specific lanaguage. For instance, if asked
-     * for the helper for LANGUAGE_JAVASCRIPT this might return an object that
-     * can be QI'd into the nsIXPCScriptable interface to assist xpconnect in
-     * supplying JavaScript specific behavior to callers of the instance object.
+     * for the helper for nsIProgrammingLanguage::JAVASCRIPT this might return 
+     * an object that can be QI'd into the nsIXPCScriptable interface to assist 
+     * XPConnect in supplying JavaScript specific behavior to callers of the 
+     * instance object.
+     *
+     * see: nsIProgrammingLanguage.idl
      *
      * Should return null if no helper available for given language.
      */
@@ -80,19 +71,38 @@ interface nsIClassInfo : nsISupports
     readonly attribute string   contractID;
 
     /**
+     * A human readable string naming the class, or null.
+     */
+    readonly attribute string   classDescription;
+
+    /**
      * A class ID through which an instance of this class can be created
      * (or accessed as a service, if |flags & SINGLETON|), or null.
      */
     readonly attribute nsCIDPtr classID;
+
+    /**
+     * Return language type from list in nsIProgrammingLanguage
+     */
 
     readonly attribute PRUint32 implementationLanguage;
 
     /**
      * Bitflags for 'flags' attribute.
      */
-    const PRUint32 THREADSAFE   = 1 << 0;
-    const PRUint32 SINGLETON    = 1 << 1;
+    const PRUint32 SINGLETON            = 1 << 0;
+    const PRUint32 THREADSAFE           = 1 << 1;
+    const PRUint32 MAIN_THREAD_ONLY     = 1 << 2;
+    const PRUint32 DOM_OBJECT           = 1 << 3;
+    const PRUint32 PLUGIN_OBJECT        = 1 << 4;
+    
     // XXX what else might we want to add?
+
+    // The high order bit is RESERVED for consumers of these flags. 
+    // No implementor of this interface should ever return flags 
+    // with this bit set.
+    const PRUint32 RESERVED             = 1 << 31;
+
 
     readonly attribute PRUint32 flags;
 };

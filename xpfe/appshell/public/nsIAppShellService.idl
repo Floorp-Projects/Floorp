@@ -21,7 +21,6 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
 %{C++
 #include "nscore.h"
@@ -33,6 +32,7 @@ interface nsIXULWindow;
 interface nsIURI;
 interface nsICmdLineService;
 interface nsINativeAppSupport;
+interface nsIDOMWindowInternal;
 
 [ptr] native JSContext(JSContext);
 

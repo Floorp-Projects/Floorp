@@ -21,93 +21,79 @@
 
 DEPTH=..\..\..\..
 
+MODULE=dom
+XPIDL_MODULE=dom_html
 
-MODULE=raptor 
+XPIDLSRCS =					\
+	.\nsIDOMHTMLAnchorElement.idl		\
+	.\nsIDOMHTMLAppletElement.idl		\
+	.\nsIDOMHTMLAreaElement.idl		\
+	.\nsIDOMHTMLBRElement.idl		\
+	.\nsIDOMHTMLBaseElement.idl		\
+	.\nsIDOMHTMLBaseFontElement.idl		\
+	.\nsIDOMHTMLBodyElement.idl		\
+	.\nsIDOMHTMLButtonElement.idl		\
+	.\nsIDOMHTMLCollection.idl		\
+	.\nsIDOMHTMLDListElement.idl		\
+	.\nsIDOMHTMLDirectoryElement.idl	\
+	.\nsIDOMHTMLDivElement.idl		\
+	.\nsIDOMHTMLDocument.idl		\
+	.\nsIDOMHTMLElement.idl			\
+	.\nsIDOMHTMLEmbedElement.idl		\
+	.\nsIDOMHTMLFieldSetElement.idl		\
+	.\nsIDOMHTMLFontElement.idl		\
+	.\nsIDOMHTMLFormElement.idl		\
+	.\nsIDOMHTMLFrameElement.idl		\
+	.\nsIDOMHTMLFrameSetElement.idl		\
+	.\nsIDOMHTMLHRElement.idl		\
+	.\nsIDOMHTMLHeadElement.idl		\
+	.\nsIDOMHTMLHeadingElement.idl		\
+	.\nsIDOMHTMLHtmlElement.idl		\
+	.\nsIDOMHTMLIFrameElement.idl		\
+	.\nsIDOMHTMLImageElement.idl		\
+	.\nsIDOMHTMLInputElement.idl		\
+	.\nsIDOMHTMLIsIndexElement.idl		\
+	.\nsIDOMHTMLLIElement.idl		\
+	.\nsIDOMHTMLLabelElement.idl		\
+	.\nsIDOMHTMLLegendElement.idl		\
+	.\nsIDOMHTMLLinkElement.idl		\
+	.\nsIDOMHTMLMapElement.idl		\
+	.\nsIDOMHTMLMenuElement.idl		\
+	.\nsIDOMHTMLMetaElement.idl		\
+	.\nsIDOMHTMLModElement.idl		\
+	.\nsIDOMHTMLOListElement.idl		\
+	.\nsIDOMHTMLObjectElement.idl		\
+	.\nsIDOMHTMLOptGroupElement.idl		\
+	.\nsIDOMHTMLOptionElement.idl		\
+	.\nsIDOMHTMLParagraphElement.idl	\
+	.\nsIDOMHTMLParamElement.idl		\
+	.\nsIDOMHTMLPreElement.idl		\
+	.\nsIDOMHTMLQuoteElement.idl		\
+	.\nsIDOMHTMLScriptElement.idl		\
+	.\nsIDOMHTMLSelectElement.idl		\
+	.\nsIDOMHTMLStyleElement.idl		\
+	.\nsIDOMHTMLTableCaptionElem.idl	\
+	.\nsIDOMHTMLTableCellElement.idl	\
+	.\nsIDOMHTMLTableColElement.idl		\
+	.\nsIDOMHTMLTableElement.idl		\
+	.\nsIDOMHTMLTableRowElement.idl		\
+	.\nsIDOMHTMLTableSectionElem.idl	\
+	.\nsIDOMHTMLTextAreaElement.idl		\
+	.\nsIDOMHTMLTitleElement.idl		\
+	.\nsIDOMHTMLUListElement.idl		\
+	.\nsIDOMNSHTMLAnchorElement.idl		\
+	.\nsIDOMNSHTMLAreaElement.idl		\
+	.\nsIDOMNSHTMLButtonElement.idl		\
+	.\nsIDOMNSHTMLDocument.idl		\
+	.\nsIDOMNSHTMLElement.idl		\
+	.\nsIDOMNSHTMLFormControlList.idl	\
+	.\nsIDOMNSHTMLFormElement.idl		\
+	.\nsIDOMNSHTMLImageElement.idl		\
+	.\nsIDOMNSHTMLInputElement.idl		\
+	.\nsIDOMNSHTMLOptionCollectn.idl	\
+	.\nsIDOMNSHTMLSelectElement.idl		\
+	.\nsIDOMNSHTMLTextAreaElement.idl	\
+	$(NULL)
 
-IDLSRCS =  \
-	HTMLIFrameElement.idl \
-	HTMLAnchorElement.idl \
-	HTMLAppletElement.idl \
-	HTMLAreaElement.idl \
-	HTMLBRElement.idl \
-	HTMLBaseElement.idl \
-	HTMLBaseFontElement.idl \
-	HTMLBodyElement.idl \
-	HTMLButtonElement.idl \
-	HTMLCollection.idl \
-	HTMLDListElement.idl \
-	HTMLDirectoryElement.idl \
-	HTMLDivElement.idl \
-	HTMLDocument.idl \
-	HTMLElement.idl \
-	HTMLEmbedElement.idl \
-	HTMLFieldsetElement.idl \
-	HTMLFontElement.idl \
-	HTMLFormElement.idl \
-	HTMLFormControlList.idl \
-	HTMLFrameElement.idl \
-	HTMLFrameSetElement.idl \
-	HTMLHRElement.idl \
-	HTMLHeadElement.idl \
-	HTMLHeadingElement.idl \
-	HTMLHtmlElement.idl \
-	HTMLImageElement.idl \
-	HTMLInputElement.idl \
-	HTMLIsIndexElement.idl \
-	HTMLLIElement.idl \
-	HTMLLabelElement.idl \
-	HTMLLayerElement.idl \
-	HTMLLegendElement.idl \
-	HTMLLinkElement.idl \
-	HTMLMapElement.idl \
-	HTMLMenuElement.idl \
-	HTMLMetaElement.idl \
-	HTMLModElement.idl \
-	HTMLOListElement.idl \
-	HTMLObjectElement.idl \
-	HTMLOptGroupElement.idl \
-	HTMLOptionCollection.idl \
-	HTMLOptionElement.idl \
-	HTMLParagraphElement.idl \
-	HTMLParamElement.idl \
-	HTMLPreElement.idl \
-	HTMLQuoteElement.idl \
-	HTMLScriptElement.idl \
-	HTMLSelectElement.idl \
-	HTMLStyleElement.idl \
-	HTMLTableCaptionElement.idl \
-	HTMLTableCellElement.idl \
-	HTMLTableColElement.idl \
-	HTMLTableElement.idl \
-	HTMLTableRowElement.idl \
-	HTMLTableSectionElement.idl \
-	HTMLTextAreaElement.idl \
-	HTMLTitleElement.idl \
-	HTMLUListElement.idl
+include <$(DEPTH)\config\rules.mak>
 
-XPCOM_DESTDIR=$(DEPTH)\dom\public\html
-JSSTUB_DESTDIR=$(DEPTH)\dom\src\html
-
-GENXDIR=genx
-GENJSDIR=genjs
-
-!include <$(DEPTH)\config\rules.mak>
-
-$(GENXDIR):
-	-mkdir $(GENXDIR)
-
-$(GENJSDIR):
-	-mkdir $(GENJSDIR)
-
-IDLC=$(DIST)\bin\idlc.exe
-GENIID=$(DIST)\bin\geniid.pl
-
-export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
-	@echo +++ make: generating xpcom headers
-	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
-	@echo +++ make: generating JavaScript stubs
-	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
-
-install::
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM*.h $(XPCOM_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS*.cpp $(JSSTUB_DESTDIR)

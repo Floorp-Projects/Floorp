@@ -37,7 +37,7 @@
 #include "nsIDOMHTMLCollection.h" 
 #include "nsIDOMHTMLSelectElement.h" 
 #include "nsIDOMHTMLOptionElement.h" 
-#include "nsIDOMNSHTMLOptionCollection.h" 
+#include "nsIDOMNSHTMLOptionCollectn.h" 
 #include "nsIPresShell.h"
 #include "nsIPresState.h"
 #include "nsISupportsArray.h"

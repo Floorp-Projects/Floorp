@@ -27,6 +27,7 @@
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"

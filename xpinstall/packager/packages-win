@@ -58,7 +58,6 @@ bin\gkgfxwin.dll
 bin\gkwidget.dll
 bin\img3250.dll
 bin\jpeg3250.dll
-bin\jsdom.dll
 bin\jsj3250.dll
 bin\mozilla.exe
 bin\mozctl.dll
@@ -90,7 +89,18 @@ bin\components\cookie.dll
 bin\components\cookie.xpt
 bin\components\docshell.dll
 bin\components\docshell_base.xpt
+bin\components\jsdom.dll
 bin\components\dom.xpt
+bin\components\dom_base.xpt
+bin\components\dom_core.xpt
+bin\components\dom_css.xpt
+bin\components\dom_events.xpt
+bin\components\dom_html.xpt
+bin\components\dom_range.xpt
+bin\components\dom_stylesheets.xpt
+bin\components\dom_views.xpt
+bin\components\dom_xbl.xpt
+bin\components\dom_xul.xpt
 bin\components\editor.xpt
 bin\components\editor.dll
 bin\components\evntloop.dll

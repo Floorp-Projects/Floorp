@@ -40,21 +40,21 @@ public:
   * @param aEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult Paint(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Paint(nsIDOMEvent* aEvent) = 0;
 
   /**
   * Processes a resize event
   * @param aEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult Resize(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Resize(nsIDOMEvent* aEvent) = 0;
 
   /**
   * Processes a scroll event
   * @param aEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult Scroll(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Scroll(nsIDOMEvent* aEvent) = 0;
 };
 
 #endif /* nsIDOMPaintListener_h__ */

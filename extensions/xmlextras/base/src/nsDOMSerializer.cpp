@@ -23,6 +23,7 @@
 #include "nsDOMSerializer.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMClassInfo.h"
 #include "nsIOutputStream.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -43,7 +44,24 @@ nsDOMSerializer::~nsDOMSerializer()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsDOMSerializer, nsIDOMSerializer, nsISecurityCheckedComponent)
+
+// XPConnect interface list for nsDOMSerializer
+NS_CLASSINFO_MAP_BEGIN(DOMSerializer)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMSerializer)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsDOMSerializer
+NS_INTERFACE_MAP_BEGIN(nsDOMSerializer)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSerializer)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(DOMSerializer)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsDOMSerializer)
+NS_IMPL_RELEASE(nsDOMSerializer)
+
 
 static nsresult SetUpEncoder(nsIDOMNode *aRoot, const char* aCharset, nsIDocumentEncoder **aEncoder)
 {
@@ -140,50 +158,3 @@ nsDOMSerializer::SerializeToStream(nsIDOMNode *root,
 
   return encoder->EncodeToStream(stream);
 }
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsDOMSerializer::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIDOMSerializer))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsDOMSerializer::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIDOMSerializer))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsDOMSerializer::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIDOMSerializer))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsDOMSerializer::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIDOMSerializer))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-

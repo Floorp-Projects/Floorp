@@ -23,38 +23,31 @@ DEPTH=..\..
 
 include <$(DEPTH)\config\config.mak>
 
-DIRS=base coreDom coreEvents range events html css
-
-!ifdef MOZ_XUL
-DIRS=$(DIRS) xul
-!endif
-
-XPIDLSRCS = .\domstubs.idl \
-				.\nsIScriptContextOwner.idl \
-				.\nsIScriptGlobalObjectOwner.idl \
-				.\nsIEntropyCollector.idl \
-				$(NULL)
-
-
-DEFINES=-D_IMPL_NS_DOM 
-EXPORTS=nsIScriptContext.h 		\
-	nsIJSScriptObject.h 		\
-	nsIJSNativeInitializer.h	\
-	nsIScriptObjectOwner.h	\
-        nsIScriptGlobalObject.h 	\
-	nsIScriptEventListener.h 	\
-	nsIDOMScriptObjectFactory.h 	\
-	nsIDOMNativeObjectRegistry.h 	\
-	nsDOMCID.h 			\
-	nsDOMPropEnums.h 		\
-	nsDOMPropNames.h 		\
-	nsIScriptNameSetRegistry.h 	\
-	nsIScriptExternalNameSet.h	\
-	nsIScriptNameSpaceManager.h \
-	nsDOMError.h \
-	nsIJSEventListener.h
-
+DIRS=idl coreEvents base
 MODULE=dom 
+
+XPIDLSRCS = \
+	.\nsIScriptContextOwner.idl \
+	.\nsIScriptGlobalObjectOwner.idl \
+	.\nsIEntropyCollector.idl \
+	$(NULL)
+
+
+EXPORTS=nsIScriptContext.h		\
+	nsIJSScriptObject.h		\
+	nsIJSNativeInitializer.h	\
+	nsIScriptObjectOwner.h		\
+	nsIScriptObjectPrincipal.h	\
+	nsIScriptGlobalObject.h		\
+	nsIScriptEventListener.h	\
+	nsIDOMScriptObjectFactory.h	\
+	nsDOMCID.h			\
+	nsIScriptExternalNameSet.h	\
+	nsIScriptNameSpaceManager.h	\
+	nsDOMError.h			\
+	nsIJSEventListener.h		\
+	nsIDOMClassInfo.h		\
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

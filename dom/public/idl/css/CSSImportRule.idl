@@ -1,8 +1,0 @@
-interface CSSImportRule : CSSRule {	
- /* IID: { 0xa6cf90cf, 0x15b3, 0x11d2, \
-    {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} } */
-
-  readonly attribute DOMString        href;
-  readonly attribute MediaList        media;
-  readonly attribute CSSStyleSheet    styleSheet;
-};

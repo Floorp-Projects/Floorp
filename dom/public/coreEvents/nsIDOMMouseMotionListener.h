@@ -45,14 +45,14 @@ public:
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent) = 0;
+  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
    * Processes a drag move event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) = 0;
+  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) = 0;
 
 };
 

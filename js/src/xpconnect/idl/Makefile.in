@@ -48,6 +48,7 @@ XPIDLSRCS	= \
 		nsIJSRuntimeService.idl \
 		nsIXPConnect.idl \
 		nsIXPCSecurityManager.idl \
+		nsIXPCScriptable.idl \
 		nsIScriptError.idl \
 		mozIJSSubScriptLoader.idl \
 		$(NULL)

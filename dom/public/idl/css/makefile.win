@@ -22,49 +22,30 @@
 DEPTH=..\..\..\..
 
 
-MODULE=raptor 
+MODULE=dom
+XPIDL_MODULE=dom_css
 
-IDLSRCS =  \
-	CSS2Properties.idl \
-	CSSFontFaceRule.idl \
-	CSSImportRule.idl \
-	CSSMediaRule.idl \
-	CSSPageRule.idl \
-	CSSRule.idl \
-	CSSRuleList.idl \
-	CSSStyleDeclaration.idl \
-	CSSStyleRule.idl \
-	CSSStyleSheet.idl \
-	CSSUnknownRule.idl \
-	CSSValue.idl \
-	CSSPrimitiveValue.idl \
-	Rect.idl \
-	Counter.idl \
-	RGBColor.idl
+XPIDLSRCS =					\
+	.\nsIDOMCSS2Properties.idl		\
+	.\nsIDOMCSSCharsetRule.idl		\
+	.\nsIDOMCSSFontFaceRule.idl		\
+	.\nsIDOMCSSImportRule.idl		\
+	.\nsIDOMCSSMediaRule.idl		\
+	.\nsIDOMCSSPageRule.idl			\
+	.\nsIDOMCSSPrimitiveValue.idl		\
+	.\nsIDOMCSSRule.idl			\
+	.\nsIDOMCSSRuleList.idl			\
+	.\nsIDOMCSSStyleDeclaration.idl		\
+	.\nsIDOMCSSStyleRule.idl		\
+	.\nsIDOMCSSStyleSheet.idl		\
+	.\nsIDOMCSSUnknownRule.idl		\
+	.\nsIDOMCSSValue.idl			\
+	.\nsIDOMCounter.idl			\
+	.\nsIDOMDocumentCSS.idl			\
+	.\nsIDOMElementCSSInlineStyle.idl	\
+	.\nsIDOMRGBColor.idl			\
+	.\nsIDOMRect.idl			\
+	.\nsIDOMViewCSS.idl			\
+	$(NULL)
 
-XPCOM_DESTDIR=$(DEPTH)\dom\public\css
-JSSTUB_DESTDIR=$(DEPTH)\dom\src\css
-
-GENXDIR=genx
-GENJSDIR=genjs
-
-!include <$(DEPTH)\config\rules.mak>
-
-$(GENXDIR):
-	-mkdir $(GENXDIR)
-
-$(GENJSDIR):
-	-mkdir $(GENJSDIR)
-
-IDLC=$(DIST)\bin\idlc.exe
-GENIID=$(DIST)\bin\geniid.pl
-
-export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
-	@echo +++ make: generating xpcom headers
-	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
-	@echo +++ make: generating JavaScript stubs
-	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
-
-install::
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM*.h $(XPCOM_DESTDIR)
-	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS*.cpp $(JSSTUB_DESTDIR)
+include <$(DEPTH)\config\rules.mak>

@@ -45,14 +45,14 @@ public:
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult Load(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Load(nsIDOMEvent* aEvent) = 0;
 
   /**
    * Processes a page unload event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult Unload(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Unload(nsIDOMEvent* aEvent) = 0;
 
   /**
    * Processes a load abort event
@@ -60,14 +60,14 @@ public:
    * @returns whether the event was consumed or ignored. @see nsresult
    *
    */
-  virtual nsresult Abort(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Abort(nsIDOMEvent* aEvent) = 0;
 
   /**
    * Processes an load error event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult Error(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Error(nsIDOMEvent* aEvent) = 0;
 
 };
 

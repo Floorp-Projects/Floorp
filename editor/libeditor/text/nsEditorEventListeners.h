@@ -61,10 +61,10 @@ public:
 /*BEGIN interfaces in to the keylister base interface. must be supplied to handle pure virtual interfaces
   see the nsIDOMKeyListener interface implementation for details
   */
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 /*END interfaces from nsIDOMKeyListener*/
 
 protected:
@@ -96,8 +96,8 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of textevent handler interface*/
-    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-    virtual nsresult HandleText(nsIDOMEvent* aTextEvent);
+    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+    NS_IMETHOD HandleText(nsIDOMEvent* aTextEvent);
 /*END implementations of textevent handler interface*/
 
 protected:
@@ -128,11 +128,11 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of textevent handler interface*/
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult HandleStartComposition(nsIDOMEvent* aCompositionEvent);
-  virtual nsresult HandleEndComposition(nsIDOMEvent* aCompositionEvent);
-  virtual nsresult HandleQueryComposition(nsIDOMEvent* aCompositionEvent);
-  virtual nsresult HandleQueryReconversion(nsIDOMEvent* aReconvertionEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aReconvertionEvent);
 /*END implementations of textevent handler interface*/
 
 protected:
@@ -161,13 +161,13 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of mouseevent handler interface*/
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
 /*END implementations of mouseevent handler interface*/
 
 protected:
@@ -197,12 +197,12 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of dragevent handler interface*/
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
-  virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
-  virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
-  virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
-  virtual nsresult DragGesture(nsIDOMEvent* aDragEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD DragEnter(nsIDOMEvent* aDragEvent);
+  NS_IMETHOD DragOver(nsIDOMEvent* aDragEvent);
+  NS_IMETHOD DragExit(nsIDOMEvent* aDragEvent);
+  NS_IMETHOD DragDrop(nsIDOMEvent* aDragEvent);
+  NS_IMETHOD DragGesture(nsIDOMEvent* aDragEvent);
 /*END implementations of dragevent handler interface*/
 
 protected:
@@ -231,9 +231,9 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of focus event handler interface*/
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult Focus(nsIDOMEvent* aEvent);
-  virtual nsresult Blur(nsIDOMEvent* aEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD Focus(nsIDOMEvent* aEvent);
+  NS_IMETHOD Blur(nsIDOMEvent* aEvent);
 /*END implementations of focus event handler interface*/
 
 protected:

@@ -29,17 +29,16 @@
 #include "nsIServiceManager.h"
 #include "nsIPluginHost.h"
 #include "nsIDocShell.h"
-
 #include "nsIWebNavigation.h"
+#include "nsDOMClassInfo.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-PluginArrayImpl::PluginArrayImpl(nsIDOMNavigator* navigator, nsIDocShell *aDocShell)
+PluginArrayImpl::PluginArrayImpl(nsIDOMNavigator* navigator,
+                                 nsIDocShell *aDocShell)
 {
   nsresult rv;
   NS_INIT_ISUPPORTS();
-  mScriptObject = nsnull;
   mNavigator = navigator; // don't ADDREF here, needed for parent of script object.
   mPluginHost = do_GetService(kPluginManagerCID, &rv);
   mPluginCount = 0;
@@ -57,54 +56,26 @@ PluginArrayImpl::~PluginArrayImpl()
   }
 }
 
+
+// XPConnect interface list for PluginArrayImpl
+NS_CLASSINFO_MAP_BEGIN(PluginArray)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMPluginArray)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMJSPluginArray)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for PluginArrayImpl
+NS_INTERFACE_MAP_BEGIN(PluginArrayImpl)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPluginArray)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMPluginArray)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMJSPluginArray)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PluginArray)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(PluginArrayImpl)
 NS_IMPL_RELEASE(PluginArrayImpl)
 
-NS_IMETHODIMP
-PluginArrayImpl::QueryInterface(const nsIID& aIID, void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMPluginArray))) {
-    *aInstancePtrResult = (void*) ((nsIDOMPluginArray*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
-PluginArrayImpl::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PluginArrayImpl::GetScriptObject(nsIScriptContext *aContext,
-                                 void** aScriptObject)
-{
-  NS_PRECONDITION(nsnull != aScriptObject, "null arg");
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptPluginArray(aContext, (nsISupports*)(nsIDOMPluginArray*)this, mNavigator, &mScriptObject);
-  }
-
-  *aScriptObject = mScriptObject;
-  return res;
-}
 
 NS_IMETHODIMP
 PluginArrayImpl::GetLength(PRUint32* aLength)
@@ -196,8 +167,7 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
 {
   nsresult res = NS_OK;
 
-  if (mPluginArray != nsnull) 
-  {
+  if (mPluginArray != nsnull) {
     for (PRUint32 i = 0; i < mPluginCount; i++) 
       NS_IF_RELEASE(mPluginArray[i]);
 
@@ -207,21 +177,20 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
   mPluginCount = 0;
   mPluginArray = nsnull;
 
-  if (!mPluginHost)
+  if (!mPluginHost) {
     mPluginHost = do_GetService(kPluginManagerCID, &res);
-  
-  if(NS_FAILED(res))
-  {
+  }
+
+  if(NS_FAILED(res)) {
     return res;
   }
 
   nsCOMPtr<nsIPluginManager> pm(do_QueryInterface(mPluginHost));
-  
+
   if(pm)
     pm->ReloadPlugins(aReloadDocuments);
 
-  if (aReloadDocuments && mDocShell)
-  {
+  if (aReloadDocuments && mDocShell) {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
 
     if (webNav)
@@ -229,6 +198,44 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
   }
 
   return res;
+}
+
+NS_IMETHODIMP
+PluginArrayImpl::Refresh()
+{
+  nsresult rv;
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+
+  rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!ncc)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  PRBool reload_doc = PR_FALSE;
+
+  PRUint32 argc;
+
+  ncc->GetArgc(&argc);
+
+  if (argc > 0) {
+    jsval *argv = nsnull;
+
+    ncc->GetArgvPtr(&argv);
+    NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
+
+    JSContext *cx = nsnull;
+
+    rv = ncc->GetJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JS_ValueToBoolean(cx, argv[0], &reload_doc);
+  }
+
+  return Refresh(reload_doc);
 }
 
 nsresult
@@ -259,7 +266,6 @@ PluginArrayImpl::GetPlugins()
 PluginElementImpl::PluginElementImpl(nsIDOMPlugin* plugin)
 {
   NS_INIT_ISUPPORTS();
-  mScriptObject = nsnull;
   mPlugin = plugin;  // don't AddRef, see PluginArrayImpl::Item.
   mMimeTypeCount = 0;
   mMimeTypeArray = nsnull;
@@ -276,57 +282,24 @@ PluginElementImpl::~PluginElementImpl()
   }
 }
 
+
+// XPConnect interface list for PluginElementImpl
+NS_CLASSINFO_MAP_BEGIN(Plugin)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMPlugin)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for PluginElementImpl
+NS_INTERFACE_MAP_BEGIN(PluginElementImpl)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMPlugin)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Plugin)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(PluginElementImpl)
 NS_IMPL_RELEASE(PluginElementImpl)
 
-NS_IMETHODIMP
-PluginElementImpl::QueryInterface(const nsIID& aIID, void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMPlugin))) {
-    *aInstancePtrResult = (void*) ((nsIDOMPlugin*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
-PluginElementImpl::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PluginElementImpl::GetScriptObject(nsIScriptContext *aContext,
-                                   void** aScriptObject)
-{
-  NS_PRECONDITION(nsnull != aScriptObject, "null arg");
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-    res = NS_NewScriptPlugin(aContext, (nsISupports*)(nsIDOMPlugin*)this,
-                             global, &mScriptObject);
-    NS_IF_RELEASE(global);
-  }
-
-  *aScriptObject = mScriptObject;
-  return res;
-}
 
 NS_IMETHODIMP
 PluginElementImpl::GetDescription(nsAWritableString& aDescription)

@@ -88,12 +88,12 @@ public:
   NS_DECL_ISUPPORTS
 
     // nsIDOMDragListener
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
-  virtual nsresult DragEnter(nsIDOMEvent* aDragEvent) { return NS_OK; }
-  virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
-  virtual nsresult DragExit(nsIDOMEvent* aDragEvent) { return NS_OK; }
-  virtual nsresult DragDrop(nsIDOMEvent* aDragEvent) { return NS_OK; }
-  virtual nsresult DragGesture(nsIDOMEvent* aDragEvent) { return NS_OK; }
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD DragEnter(nsIDOMEvent* aDragEvent) { return NS_OK; }
+  NS_IMETHOD DragOver(nsIDOMEvent* aDragEvent);
+  NS_IMETHOD DragExit(nsIDOMEvent* aDragEvent) { return NS_OK; }
+  NS_IMETHOD DragDrop(nsIDOMEvent* aDragEvent) { return NS_OK; }
+  NS_IMETHOD DragGesture(nsIDOMEvent* aDragEvent) { return NS_OK; }
 
 protected:
 

@@ -38,7 +38,6 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMWindowInternal.h"
-#include "jsapi.h"	// for JS_PushArguments and JS_PopArguments
 
 #include "nsXPIDLString.h"
 #include "nsIMsgAccountManager.h"
@@ -72,11 +71,10 @@
 #include "nsIPref.h"
 #include "nsINewsDownloadDialogArgs.h"
 
-#include "nsIScriptGlobalObjectOwner.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIMsgWindow.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
-#include "nsIScriptContext.h"
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 
@@ -144,7 +142,8 @@ void	nsNNTPNewsgroupList::OnAnnouncerGoingAway (ChangeAnnouncer *instigator)
 #endif
 
 static nsresult 
-openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsINewsDownloadDialogArgs *param) 
+openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL,
+           nsINewsDownloadDialogArgs *param) 
 {
     nsresult rv;
 
@@ -152,44 +151,25 @@ openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsINewsDownloadDialo
 
 	nsCOMPtr<nsIDocShell> docShell;
 	rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
-    if (NS_FAILED(rv)) return rv;
-	NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+    if (NS_FAILED(rv))
+        return rv;
 
-   	nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(docShell));
-	NS_ENSURE_TRUE(globalObjectOwner, NS_ERROR_FAILURE);
-
-	nsCOMPtr<nsIScriptGlobalObject> globalObject;
-	globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
-	NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
-
-	nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryInterface(globalObject));
+   	nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_GetInterface(docShell));
 	NS_ENSURE_TRUE(parentWindow, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIScriptContext> context;
-    globalObject->GetContext( getter_AddRefs( context ) );
-    if (!context) return NS_ERROR_FAILURE;
-    JSContext *jsContext = (JSContext*)context->GetNativeContext();
-    
-    void *stackPtr;
-    jsval *argv = JS_PushArguments( jsContext,
-                                    &stackPtr,
-                                    "sss%ip",
-                                    chromeURL,
-                                    "_blank",
-                                    "chrome,modal,titlebar",
-                                    (const nsIID*)(&NS_GET_IID(nsINewsDownloadDialogArgs)), 
-                                    (nsISupports*)param);
+    nsCOMPtr<nsISupportsInterfacePointer> ifptr =
+        do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!argv) {
-        return NS_ERROR_FAILURE;
-    }
+    ifptr->SetData(param);
+    ifptr->SetDataIID(&NS_GET_IID(nsINewsDownloadDialogArgs));
 
-    nsCOMPtr<nsIDOMWindowInternal> dialogWindow;
-    rv = parentWindow->OpenDialog(jsContext,
-                                  argv,
-                                  4,
-                                  getter_AddRefs(dialogWindow));
-    JS_PopArguments( jsContext, stackPtr );
+    nsCOMPtr<nsIDOMWindow> dialogWindow;
+    rv = parentWindow->OpenDialog(NS_ConvertASCIItoUCS2(chromeURL),
+                                  NS_LITERAL_STRING("_blank"),
+                                  NS_LITERAL_STRING("chrome,modal,titlebar"),
+                                  ifptr, getter_AddRefs(dialogWindow));
+
     return rv;
 }       
 

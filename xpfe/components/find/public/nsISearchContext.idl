@@ -21,7 +21,9 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
+
+interface nsIDOMWindowInternal;
+
 
 /*----------------------------- nsISearchContext -------------------------------
 | This file defines the internal, non-public interface between the default     |

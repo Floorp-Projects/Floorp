@@ -2319,6 +2319,10 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      */
     CHECK_FOR_FUNNY_INDEX(id);
 
+    /* XXX - TEMPORARY HACK */
+    if (!js_LookupProperty(cx, obj, id, &tmp, (JSProperty **)&sprop))
+        return JS_FALSE;
+
     rt = cx->runtime;
     JS_LOCK_OBJ(cx, obj);
     clasp = LOCKED_OBJ_GET_CLASS(obj);

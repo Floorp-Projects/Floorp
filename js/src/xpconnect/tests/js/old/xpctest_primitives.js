@@ -12,6 +12,7 @@
 
 // prefix used by all these contractids
 contractid_prefix = "@mozilla.org/";
+contractid_suffix = ";1";
 
 // an iid to use to test nsISupportsID
 var iface_test = Components.interfaces.nsISupports;
@@ -81,11 +82,11 @@ function test(contractid, iid, d, string_val, val_compare_fn, str_compare_fn)
 {
     var test1_result;    
     var test2_result;    
-    var full_contractid = contractid_prefix+contractid;
-//    println("checking... "+contractid+" "+iid+ " with "+d);
+    var full_contractid = contractid_prefix+contractid+contractid_suffix;
+//    println("checking... "+full_contractid+" "+iid+ " with "+d);
     var clazz = Components.classes[full_contractid];
     if(!clazz) {
-        println(contractid+ " is not a valid contractid");
+        println(full_contractid+ " is not a valid contractid");
         return false;
     }
     var v = clazz.createInstance(Components.interfaces[iid])

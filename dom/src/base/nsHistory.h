@@ -23,7 +23,7 @@
 #define nsHistory_h___
 
 #include "nsIScriptObjectOwner.h"
-#include "nsIDOMHistory.h"
+#include "nsIDOMNSHistory.h"
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
@@ -32,32 +32,28 @@
 class nsIDocShell;
 
 // Script "History" object
-class HistoryImpl : public nsIScriptObjectOwner, public nsIDOMHistory {
+class HistoryImpl : public nsIDOMNSHistory
+{
 public:
   HistoryImpl(nsIDocShell* aDocShell);
   virtual ~HistoryImpl();
 
+  // nsISupports
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
+  // nsIDOMHistory
+  NS_DECL_NSIDOMHISTORY
 
-  NS_IMETHOD_(void)       SetDocShell(nsIDocShell *aDocShell);
+  // nsIDOMNSHistory
+  NS_DECL_NSIDOMNSHISTORY
 
-  NS_IMETHOD    GetLength(PRInt32* aLength);
-  NS_IMETHOD    GetCurrent(nsAWritableString& aCurrent);
-  NS_IMETHOD    GetPrevious(nsAWritableString& aPrevious);
-  NS_IMETHOD    GetNext(nsAWritableString& aNext);
-  NS_IMETHOD    Back();
-  NS_IMETHOD    Forward();
-  NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn);
-
-  NS_IMETHOD    GetSessionHistoryFromDocShell(nsIDocShell * aDocShell, nsISHistory ** aReturn);
+  void SetDocShell(nsIDocShell *aDocShell);
 
 protected:
+  nsresult GetSessionHistoryFromDocShell(nsIDocShell * aDocShell,
+                                         nsISHistory ** aReturn);
+
   nsIDocShell* mDocShell;
-  void *mScriptObject;
 };
 
 #endif /* nsHistory_h___ */

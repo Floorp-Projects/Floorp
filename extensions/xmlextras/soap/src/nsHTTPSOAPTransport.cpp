@@ -45,7 +45,8 @@ nsHTTPSOAPTransport::CanDoSync(PRBool *_retval)
   return NS_OK;
 }
 
-/* nsIDOMDocument syncCall (in string url, in string action, in nsIDOMDocument messageDocument); */
+/* nsIDOMDocument syncCall (in string url, in string action, in
+   nsIDOMDocument messageDocument); */
 NS_IMETHODIMP 
 nsHTTPSOAPTransport::SyncCall(const char *url, 
 			      const char *action, 
@@ -80,12 +81,13 @@ nsHTTPSOAPTransport::SyncCall(const char *url,
   return NS_OK;
 }
 
-/* void asyncCall (in string url, in string action, in nsIDOMDocument messageDocument, in nsISOAPTransportListener listener); */
+/* void asyncCall (in string url, in string action, in nsIDOMDocument
+   messageDocument, in nsISOAPTransportListener listener); */
 NS_IMETHODIMP 
 nsHTTPSOAPTransport::AsyncCall(const char *url, 
-			       const char *action, 
-			       nsIDOMDocument *messageDocument, 
-			       nsISOAPTransportListener *listener)
+                               const char *action, 
+                               nsIDOMDocument *messageDocument, 
+                               nsISOAPTransportListener *listener)
 {
   NS_ENSURE_ARG(url);
   NS_ENSURE_ARG(messageDocument);
@@ -124,7 +126,7 @@ nsHTTPSOAPTransport::GetStatus(PRUint32 *aStatus)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTTPSOAPTransport::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMDocument> document;

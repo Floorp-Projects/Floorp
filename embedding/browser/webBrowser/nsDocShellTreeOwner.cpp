@@ -1423,7 +1423,7 @@ ChromeContextMenuListener :: RemoveChromeListeners ( )
 // find the type of object we're dealing with and notify the front
 // end chrome.
 //
-nsresult 
+NS_IMETHODIMP
 ChromeContextMenuListener :: ContextMenu ( nsIDOMEvent* aMouseEvent )
 {     
   nsCOMPtr<nsIDOMEventTarget> targetNode;

@@ -25,6 +25,7 @@
 
 // Basic dependencies.
 #include "nsIServiceManager.h"
+#include "nsISupportsPrimitives.h"
 
 // For notifying observer.
 #include "nsIObserver.h"
@@ -80,50 +81,22 @@ nsStreamXferOp::~nsStreamXferOp() {
 NS_IMETHODIMP
 nsStreamXferOp::OpenDialog( nsIDOMWindowInternal *parent ) {
     nsresult rv = NS_OK;
-    // Get JS context from parent window.
-    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( parent, &rv );
-    if ( NS_SUCCEEDED( rv ) && sgo ) {
-        nsCOMPtr<nsIScriptContext> context;
-        sgo->GetContext( getter_AddRefs( context ) );
-        if ( context ) {
-            JSContext *jsContext = (JSContext*)context->GetNativeContext();
-            if ( jsContext ) {
-                void *stackPtr;
-                jsval *argv = JS_PushArguments( jsContext,
-                                                &stackPtr,
-                                                "sss%ip",
-                                                "chrome://global/content/downloadProgress.xul",
-                                                "_blank",
-                                                "chrome,titlebar,minimizable",
-                                                (const nsIID*)(&NS_GET_IID(nsIStreamTransferOperation)),
-                                                (nsISupports*)(nsIStreamTransferOperation*)this );
-                if ( argv ) {
-                    nsCOMPtr<nsIDOMWindowInternal> newWindow;
-                    rv = parent->OpenDialog( jsContext, argv, 4, getter_AddRefs( newWindow ) );
-                    if ( NS_FAILED( rv ) ) {
-                        DEBUG_PRINTF( PR_STDOUT, "%s %d: nsIDOMWindowInternal::OpenDialog failed, rv=0x%08X\n",
-                                      (char*)__FILE__, (int)__LINE__, (int)rv );
-                    }
-                    JS_PopArguments( jsContext, stackPtr );
-                } else {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d: JS_PushArguments failed\n",
-                                  (char*)__FILE__, (int)__LINE__ );
-                    rv = NS_ERROR_FAILURE;
-                }
-            } else {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d: GetNativeContext failed\n",
-                              (char*)__FILE__, (int)__LINE__ );
-                rv = NS_ERROR_FAILURE;
-            }
-        } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContext failed\n",
-                          (char*)__FILE__, (int)__LINE__ );
-            rv = NS_ERROR_FAILURE;
-        }
-    } else {
-        DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
-                      (char*)__FILE__, (int)__LINE__, (int)rv );
-    }
+
+    nsCOMPtr<nsISupportsInterfacePointer> ifptr =
+        do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ifptr->SetData(NS_STATIC_CAST(nsIStreamTransferOperation *, this));
+    ifptr->SetDataIID(&NS_GET_IID(nsIStreamTransferOperation));
+
+    // Open the dialog.
+    nsCOMPtr<nsIDOMWindow> newWindow;
+
+    rv = parent->OpenDialog(NS_LITERAL_STRING("chrome://global/content/downloadProgress.xul"),
+                            NS_LITERAL_STRING("_blank"),
+                            NS_LITERAL_STRING("chrome,titlebar,minimizable"),
+                            ifptr, getter_AddRefs(newWindow));
+
     return rv;
 }
 

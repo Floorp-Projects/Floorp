@@ -36,6 +36,7 @@
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMClassInfo.h"
 #include "nsIView.h"
 #include "nsIDOMXULElement.h"
 
@@ -47,11 +48,29 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 // Static member variable initialization
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS3(nsBoxObject, nsIBoxObject, nsPIBoxObject, nsISecurityCheckedComponent)
+
+// XPConnect interface list for nsBoxObject
+NS_CLASSINFO_MAP_BEGIN(BoxObject)
+  NS_CLASSINFO_MAP_ENTRY(nsIBoxObject)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsBoxObject
+NS_INTERFACE_MAP_BEGIN(nsBoxObject)
+  NS_INTERFACE_MAP_ENTRY(nsIBoxObject)
+  NS_INTERFACE_MAP_ENTRY(nsPIBoxObject)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(BoxObject)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsBoxObject)
+NS_IMPL_RELEASE(nsBoxObject)
+
 
 // Constructors/Destructors
 nsBoxObject::nsBoxObject(void)
-:mContent(nsnull), mPresShell(nsnull)
+  :mContent(nsnull), mPresShell(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -461,37 +480,6 @@ nsBoxObject::RemoveProperty(const PRUnichar* aPropertyName)
   return mPresState->RemoveStateProperty(propertyName);
 }
 
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP nsBoxObject::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP nsBoxObject::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP nsBoxObject::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP nsBoxObject::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult

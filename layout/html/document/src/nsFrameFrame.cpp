@@ -971,10 +971,10 @@ static PRBool CheckForBrowser(nsIContent* aContent, nsIBaseWindow* aShell)
         boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("xulwindow").get(), getter_AddRefs(supp));
         nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(supp));
         boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("secureBrowserUI").get(), getter_AddRefs(supp));
-        nsCOMPtr<nsSecureBrowserUI> secureBrowserUI(do_QueryInterface(supp));
+        nsCOMPtr<nsISecureBrowserUI> secureBrowserUI(do_QueryInterface(supp));
         if (domWindow && secureBrowserUI) {
-          nsCOMPtr<nsIDOMWindowInternal> contentWindow;
-          domWindow->Get_content(getter_AddRefs(contentWindow));
+          nsCOMPtr<nsIDOMWindow> contentWindow;
+          domWindow->GetContent(getter_AddRefs(contentWindow));
           nsCOMPtr<nsIDOMDocument> doc;
           domWindow->GetDocument(getter_AddRefs(doc));
           if (contentWindow && doc) {

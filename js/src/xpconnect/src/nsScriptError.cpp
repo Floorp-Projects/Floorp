@@ -17,7 +17,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
+ *
  */
 
 /*
@@ -29,7 +32,7 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError);
 
-nsScriptError::nsScriptError() 
+nsScriptError::nsScriptError()
     :  mMessage(nsnull),
        mSourceName(nsnull),
        mLineNumber(0),
@@ -38,7 +41,7 @@ nsScriptError::nsScriptError()
        mFlags(0),
        mCategory(nsnull)
 {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 }
 
 nsScriptError::~nsScriptError() {};
@@ -103,7 +106,7 @@ nsScriptError::Init(const PRUnichar *message,
     mColumnNumber = columnNumber;
     mFlags = flags;
     mCategory.Assign(category);
-  
+
     return NS_OK;
 }
 

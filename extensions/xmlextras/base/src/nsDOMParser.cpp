@@ -39,6 +39,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsICodebasePrincipal.h"
+#include "nsIDOMClassInfo.h"
 
 static const char* kLoadAsData = "loadAsData";
 
@@ -260,7 +261,23 @@ nsDOMParser::~nsDOMParser()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsDOMParser, nsIDOMParser, nsISecurityCheckedComponent)
+
+// XPConnect interface list for nsDOMParser
+NS_CLASSINFO_MAP_BEGIN(DOMParser)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMParser)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsDOMParser
+NS_INTERFACE_MAP_BEGIN(nsDOMParser)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMParser)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(DOMParser)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsDOMParser)
+NS_IMPL_RELEASE(nsDOMParser)
 
 static nsresult
 ConvertWStringToStream(const PRUnichar* aStr,
@@ -482,51 +499,5 @@ NS_IMETHODIMP
 nsDOMParser::SetBaseURI(nsIURI *aBaseURI)
 {
   mBaseURI = aBaseURI;
-  return NS_OK;
-}
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsDOMParser::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIDOMParser))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsDOMParser::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIDOMParser))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsDOMParser::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIDOMParser))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsDOMParser::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIDOMParser))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
   return NS_OK;
 }

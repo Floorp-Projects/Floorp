@@ -23,72 +23,16 @@
 #ifndef nsIScriptNameSpaceManager_h__
 #define nsIScriptNameSpaceManager_h__
 
-#include "nscore.h"
-#include "nsString.h"
-#include "nsISupports.h"
+#define JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY \
+  "JavaScript global constructor"
 
-#define NS_ISCRIPTNAMESPACEMANAGER_IID   \
-  {0xa6cf90db, 0x15b3, 0x11d2,           \
-  {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+#define JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY \
+  "JavaScript global property"
 
-/**
- * A per script context construct. The namespace manager maintains
- * a mapping between a global symbol or name and a class ID to
- * obtain a factory to use to instantiate a native object.
- */
-class nsIScriptNameSpaceManager : public nsISupports {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTNAMESPACEMANAGER_IID);
+#define JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY \
+  "JavaScript global static nameset"
 
-  /**
-   * Used to register a single global symbol or name. The class ID
-   * is used to obtain a factory which is used to instantiate
-   * the the corresponding native object. The name can represent
-   * either an object or a constructor.
-   * XXX How do we indicate clashes in registered names?
-   * 
-   * @param aName the name to reflect in the global namespace
-   * @param aIID IID used to create a script wrapper 
-   * @param aCID the class ID used to obtain a factory
-   * @param aIsConstructor set to PR_TRUE if the name represents
-   *        a constructor. PR_FALSE if it is a global object.
-   * @result NS_OK if successful
-   */
-  NS_IMETHOD RegisterGlobalName(const nsAReadableString& aName, 
-                                const nsIID& aIID,
-                                const nsIID& aCID,
-                                PRBool aIsConstructor) = 0;
-
-  /**
-   * Used to remove a global symbol or name from the manager.
-   * 
-   * @param aName the name to remove
-   * @result NS_OK if successful
-   */
-  NS_IMETHOD UnregisterGlobalName(const nsAReadableString& aName) = 0;
-
-  /**
-   * Used to look up the manager using a name as a key. The
-   * return value is a class ID that can be used to obtain
-   * a factory.
-   * 
-   * @param aName the name to use as a key for the lookup
-   * @param aIsConstructor out parameter to indicate whether
-   *                       the name refers to an instance or a constructor
-   * @param aIID out parameter that returns the ID of the
-   *             interface to use to create a script wrapper 
-   *             for the newly created instance.
-   * @param aCID out parameter that returns the class ID
-   *        that corresponds to the name
-   * @result NS_OK if the lookup succeeded. NS_ERROR_INVALID_ARG
-   *         if the lookup failed.
-   */
-  NS_IMETHOD LookupName(const nsAReadableString& aName, 
-                        PRBool& aIsConstructor,
-                        nsIID& aIID,
-                        nsIID& aCID) = 0;
-};
-
-extern "C" NS_DOM nsresult NS_NewScriptNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr);
+#define JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY \
+  "JavaScript global dynamic nameset"
 
 #endif /* nsIScriptNameSpaceManager_h__ */

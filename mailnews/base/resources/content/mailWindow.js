@@ -122,7 +122,7 @@ function CreateMailWindowGlobals()
       // we may not have a secure UI if psm isn't installed!
       if (secureUI)
       {
-        secureUI = secureUI.QueryInterface(Components.interfaces.nsSecureBrowserUI);
+        secureUI = secureUI.QueryInterface(Components.interfaces.nsISecureBrowserUI);
         secureUI.init(_content, securityIcon);
       }
     }

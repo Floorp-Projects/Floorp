@@ -29,6 +29,7 @@
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsICategoryManager.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 
@@ -59,9 +60,6 @@
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 #include "nsINameSpaceManager.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
 
@@ -77,22 +75,11 @@ extern "C" void RunChromeInstallOnThread(void *data);
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
 ////////////////////////////////////////////////////////////////////////////////
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
 static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
-static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
-
-static NS_DEFINE_IID(kISoftwareUpdate_IID, NS_ISOFTWAREUPDATE_IID);
-
-static NS_DEFINE_IID(kIInstallTrigger_IID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
 static NS_DEFINE_CID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 
-static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 static NS_DEFINE_CID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
@@ -193,9 +180,8 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
 //  nsISupports implementation
 //------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsSoftwareUpdate,
-                              nsISoftwareUpdate,
-                              nsIAppShellComponent,
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSoftwareUpdate,
+			      nsISoftwareUpdate,
                               nsPIXPIStubHook);
 
 NS_IMETHODIMP
@@ -208,12 +194,6 @@ nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService 
 
     // prevent use of nsPIXPIStubHook by browser
     mStubLockout = PR_TRUE;
-
-    /***************************************/
-    /* Add us to the Javascript Name Space */
-    /***************************************/
-
-    RegisterNameset();
 
     /***************************************/
     /* Register us with NetLib             */
@@ -520,24 +500,6 @@ nsSoftwareUpdate::RunNextInstall()
 }
 
 
-nsresult
-nsSoftwareUpdate::RegisterNameset()
-{
-    nsresult rv;
-    nsCOMPtr<nsIScriptNameSetRegistry> namesetService = 
-        do_GetService( kCScriptNameSetRegistryCID, &rv );
-
-    if (NS_SUCCEEDED(rv))
-    {
-        nsSoftwareUpdateNameSet* nameset = new nsSoftwareUpdateNameSet();
-        // the NameSet service will AddRef this one
-        namesetService->AddExternalNameSet( nameset );
-    }
-
-    return rv;
-}
-
-
 NS_IMETHODIMP
 nsSoftwareUpdate::StubInitialize(nsIFile *aDir, const char* logName)
 {
@@ -588,11 +550,12 @@ nsSoftwareUpdateNameSet::~nsSoftwareUpdateNameSet()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsSoftwareUpdateNameSet, kIScriptExternalNameSetIID);
+NS_IMPL_ISUPPORTS(nsSoftwareUpdateNameSet,
+		  NS_GET_IID(nsIScriptExternalNameSet));
 
 
 NS_IMETHODIMP
-nsSoftwareUpdateNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
+nsSoftwareUpdateNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
 {
     nsresult result = NS_OK;
 
@@ -605,46 +568,25 @@ nsSoftwareUpdateNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
 }
 
 
-NS_IMETHODIMP
-nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
-{
-    nsresult result = NS_OK;
-    nsIScriptNameSpaceManager* manager;
-
-    result = aScriptContext->GetNameSpaceManager(&manager);
-    if (NS_SUCCEEDED(result)) 
-    {
-        result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("InstallVersion"), 
-					     kIScriptObjectOwnerIID,
-                                             kInstallVersion_CID, 
-                                             PR_TRUE);
-        
-        if (NS_FAILED(result))  return result;
-        
-        result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("InstallTrigger"), 
-					     kIScriptObjectOwnerIID,
-                                             kInstallTrigger_CID, 
-                                             PR_FALSE);
-
-    }
-    
-    if (manager != nsnull)
-        NS_RELEASE(manager);
-
-    return result;
-}
-            
 //----------------------------------------------------------------------
 
 // Functions used to create new instances of a given object by the
 // generic factory.
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSoftwareUpdate,nsSoftwareUpdate::GetInstance);
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSoftwareUpdate,
+					 nsSoftwareUpdate::GetInstance);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallTrigger);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallVersion);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSoftwareUpdateNameSet);
+
 //----------------------------------------------------------------------
 
+#define NS_SOFTWAREUPDATENAMESET_CID \
+  { 0xcde48010, 0x9494, 0x4a73, \
+  { 0x96, 0x9a, 0x26, 0x33, 0x50, 0x0, 0x70, 0xde }}
 
+#define NS_SOFTWAREUPDATENAMESET_CONTRACTID \
+  "@mozilla.org/xpinstall/softwareupdatenameset;1"
 
 static NS_METHOD 
 RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
@@ -653,31 +595,26 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
                         const char *componentType,
                         const nsModuleComponentInfo *info)
 {
-    // get the registry
-    nsIRegistry* registry;
-    nsresult rv = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID,
-                                               NS_GET_IID(nsIRegistry),
-                                               (nsISupports**)&registry);
-    if ( NS_SUCCEEDED( rv ) ) 
-    {
-        registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-        char buffer[256];
-        char *cid = nsSoftwareUpdate::GetCID().ToString();
-        PR_snprintf( buffer,
-                     sizeof buffer,
-                     "%s/%s",
-                     NS_IAPPSHELLCOMPONENT_KEY,
-                     cid ? cid : "unknown" );
-        nsCRT::free(cid);
+  nsresult rv = NS_OK;
 
-        nsRegistryKey key;
-        rv = registry->AddSubtree( nsIRegistry::Common,
-                                   buffer,
-                                   &key );
-        nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);
-    }
-    return rv;
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  nsXPIDLCString previous;
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "InstallVersion",
+				NS_INSTALLVERSIONCOMPONENT_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
+                                "InstallTrigger",
+				NS_INSTALLTRIGGERCOMPONENT_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 
@@ -707,6 +644,12 @@ static nsModuleComponentInfo components[] =
       NS_SoftwareUpdateInstallTrigger_CID,
       NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-xpinstall",
       nsInstallTriggerConstructor 
+    },
+
+    { "Software update nameset",
+      NS_SOFTWAREUPDATENAMESET_CID,
+      NS_SOFTWAREUPDATENAMESET_CONTRACTID,
+      nsSoftwareUpdateNameSetConstructor 
     },
 
 #if NOTIFICATION_ENABLED 

@@ -26,43 +26,30 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout
+MODULE		= dom
+XPIDL_MODULE	= dom_css
 
-IDLSRCS		= \
-		CSS2Properties.idl \
-		CSSFontFaceRule.idl \
-		CSSImportRule.idl \
-		CSSMediaRule.idl \
-		CSSPageRule.idl \
-		CSSRule.idl \
-		CSSRuleList.idl \
-		CSSStyleDeclaration.idl \
-		CSSStyleRule.idl \
-		CSSStyleSheet.idl \
-		CSSUnknownRule.idl \
-		CSSValue.idl \
-		Rect.idl \
-		Counter.idl \
-		RGBColor.idl \
-		CSSPrimitiveValue.idl \
-		$(NULL)
-
-IDLSRCS		:= $(addprefix $(srcdir)/, $(IDLSRCS))
+XPIDLSRCS =					\
+	nsIDOMCSS2Properties.idl		\
+	nsIDOMCSSCharsetRule.idl		\
+	nsIDOMCSSFontFaceRule.idl		\
+	nsIDOMCSSImportRule.idl			\
+	nsIDOMCSSMediaRule.idl			\
+	nsIDOMCSSPageRule.idl			\
+	nsIDOMCSSPrimitiveValue.idl		\
+	nsIDOMCSSRule.idl			\
+	nsIDOMCSSRuleList.idl			\
+	nsIDOMCSSStyleDeclaration.idl		\
+	nsIDOMCSSStyleRule.idl			\
+	nsIDOMCSSStyleSheet.idl			\
+	nsIDOMCSSUnknownRule.idl		\
+	nsIDOMCSSValue.idl			\
+	nsIDOMCounter.idl			\
+	nsIDOMDocumentCSS.idl			\
+	nsIDOMElementCSSInlineStyle.idl		\
+	nsIDOMRGBColor.idl			\
+	nsIDOMRect.idl				\
+	nsIDOMViewCSS.idl			\
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= genx genjs
-
-genx genjs:
-	-mkdir $@
-
-export:: genx genjs $(IDLSRCS)
-	@echo +++ make: generating xpcom headers
-	$(DIST)/bin/idlc -d genx -x $(IDLSRCS)
-	@echo +++ make: generating JavaScript stubs
-	$(DIST)/bin/idlc -d genjs -j $(IDLSRCS)
-
-install::
-	$(NSINSTALL) -m 644 genx/nsIDOM*.h $(topsrcdir)/dom/public/css
-	$(NSINSTALL) -m 644 genjs/nsJS*.cpp $(topsrcdir)/dom/src/css
-

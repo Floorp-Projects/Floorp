@@ -1,9 +1,0 @@
-// Introduced in DOM Level 2:
-interface Counter {
- /* IID: { 0x31adb439, 0x0055, 0x402d, \
-  { 0x9b, 0x1d, 0xd5, 0xca, 0x94, 0xf3, 0xf5, 0x5b } } */
-
-  readonly attribute DOMString        identifier;
-  readonly attribute DOMString        listStyle;
-  readonly attribute DOMString        separator;
-};

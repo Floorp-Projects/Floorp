@@ -18,8 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -93,7 +93,7 @@ interface nsIXPCComponents_Exception : nsISupports
 };
 
 /**
-* interface of Components.Constructor 
+* interface of Components.Constructor
 * (interesting stuff only reflected into JavaScript)
 */
 [scriptable, uuid(88655640-e028-11d3-8f5d-0010a4e73d9a)]
@@ -102,7 +102,7 @@ interface nsIXPCComponents_Constructor : nsISupports
 };
 
 /**
-* interface of object returned by Components.Constructor 
+* interface of object returned by Components.Constructor
 * (additional interesting stuff only reflected into JavaScript)
 */
 [scriptable, uuid(c814ca20-e0dc-11d3-8f5f-0010a4e73d9a)]
@@ -122,7 +122,7 @@ interface nsIXPCComponents : nsISupports
     readonly attribute nsIXPCComponents_Interfaces  interfaces;
     readonly attribute nsIXPCComponents_Classes     classes;
     readonly attribute nsIXPCComponents_ClassesByID classesByID;
-    readonly attribute nsIJSStackFrameLocation      stack;
+    readonly attribute nsIStackFrame                stack;
     readonly attribute nsIXPCComponents_Results     results;
     readonly attribute nsIComponentManager          manager;
 
@@ -131,6 +131,7 @@ interface nsIXPCComponents : nsISupports
     readonly attribute nsIXPCComponents_Constructor Constructor;
 
     boolean isSuccessCode(in nsresult result);
+
     /* 'lastResult' is accessable via JavaScript only */
     /* 'returnCode' is accessable via JavaScript only */
 };

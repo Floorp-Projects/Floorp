@@ -23,8 +23,10 @@
 
 #include "nsMsgProgress.h"
 
-#include "nsIScriptGlobalObject.h"
 #include "nsIBaseWindow.h"
+#include "nsISupportsArray.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIComponentManager.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgProgress, nsIMsgProgress)
 
@@ -43,7 +45,9 @@ nsMsgProgress::~nsMsgProgress()
 }
 
 /* void openProgressDialog (in nsIDOMWindowInternal parent, in string dialogURL, in nsISupports parameters); */
-NS_IMETHODIMP nsMsgProgress::OpenProgressDialog(nsIDOMWindowInternal *parent, const char *dialogURL, nsISupports *parameters)
+NS_IMETHODIMP nsMsgProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
+                                                const char *dialogURL,
+                                                nsISupports *parameters)
 {
   nsresult rv = NS_ERROR_FAILURE;
   
@@ -55,42 +59,32 @@ NS_IMETHODIMP nsMsgProgress::OpenProgressDialog(nsIDOMWindowInternal *parent, co
 
   if (parent)
   {
-    // Get JS context from parent window.
-    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(parent, &rv);
-    if (NS_SUCCEEDED(rv) && sgo)
-    {
-      nsCOMPtr<nsIScriptContext> context;
-      sgo->GetContext(getter_AddRefs(context));
-      if (context)
-      {
-        // Get native context.
-        JSContext *jsContext = (JSContext*)context->GetNativeContext();
-        if (jsContext)
-        {
-          // Set up window.arguments[0]...
-          void *stackPtr;
-          jsval *argv = JS_PushArguments( jsContext,
-                                          &stackPtr,
-                                          "sss%ip%ip",
-                                          dialogURL,
-                                          "_blank",
-                                          "chrome,titlebar,dependent",
-                                          (const nsIID*)(&NS_GET_IID(nsIMsgProgress)),
-                                          (nsISupports*)this,
-                                          (const nsIID*)(&NS_GET_IID(nsISupports)),
-                                          (nsISupports*)parameters
-                                          );
-          if (argv)
-          {
-            // Open the dialog.
-            rv = parent->OpenDialog(jsContext, argv, 5, getter_AddRefs(m_dialog));
-            // Pop arguments.
-            JS_PopArguments(jsContext, stackPtr);
-          }
-        }
-      }
-    }
+    // Set up window.arguments[0]...
+    nsCOMPtr<nsISupportsArray> array;
+    rv = NS_NewISupportsArray(getter_AddRefs(array));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupportsInterfacePointer> ifptr =
+      do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ifptr->SetData(this);
+    ifptr->SetDataIID(&NS_GET_IID(nsIMsgProgress));
+
+    array->AppendElement(ifptr);
+
+    array->AppendElement(parameters);
+
+    nsAutoString tmp;
+    tmp.AssignWithConversion(dialogURL);
+
+    // Open the dialog.
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = parent->OpenDialog(tmp, NS_LITERAL_STRING("_blank"),
+                            NS_LITERAL_STRING("chrome,titlebar,dependent"),
+                            array, getter_AddRefs(newWindow));
   }
+
   return rv;
 }
 

@@ -42,6 +42,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsISupportsPrimitives.h"
 
 #include "nsISound.h"
 #include "nsWidgetsCID.h"   // ugh! contractID, please
@@ -498,62 +499,28 @@ nsFindComponent::CreateContext( nsIDOMWindowInternal *aWindow, nsIEditorShell* a
     return NS_OK;
 }
 
-static nsresult OpenDialogWithArg( nsIDOMWindowInternal     *parent,
-                                   nsISearchContext *arg, 
-                                   const char       *url ) {
-    nsresult rv = NS_OK;
+static nsresult
+OpenDialogWithArg(nsIDOMWindowInternal *parent, nsISearchContext *arg,
+                  const char *url)
+{
+  nsresult rv = NS_OK;
 
-    if ( parent && arg && url ) {
-        // Get JS context from parent window.
-        nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( parent, &rv );
-        if ( NS_SUCCEEDED( rv ) && sgo ) {
-            nsCOMPtr<nsIScriptContext> context;
-            sgo->GetContext( getter_AddRefs( context ) );
-            if ( context ) {
-                JSContext *jsContext = (JSContext*)context->GetNativeContext();
-                if ( jsContext ) {
-                    void *stackPtr;
-                    jsval *argv = JS_PushArguments( jsContext,
-                                                    &stackPtr,
-                                                    "sss%ip",
-                                                    url,
-                                                    "_blank",
-                                                    "chrome,resizable=no,dependent=yes",
-                                                    (const nsIID*)(&NS_GET_IID(nsISearchContext)),
-                                                    (nsISupports*)arg );
-                    if ( argv ) {
-                        nsIDOMWindowInternal *newWindow;
-                        rv = parent->OpenDialog( jsContext, argv, 4, &newWindow );
-                        if ( NS_SUCCEEDED( rv ) ) {
-                            newWindow->Release();
-                        } else {
-                        }
-                        JS_PopArguments( jsContext, stackPtr );
-                    } else {
-                        DEBUG_PRINTF( PR_STDOUT, "%s %d: JS_PushArguments failed\n",
-                                      (char*)__FILE__, (int)__LINE__ );
-                        rv = NS_ERROR_FAILURE;
-                    }
-                } else {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d: GetNativeContext failed\n",
-                                  (char*)__FILE__, (int)__LINE__ );
-                    rv = NS_ERROR_FAILURE;
-                }
-            } else {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContext failed\n",
-                              (char*)__FILE__, (int)__LINE__ );
-                rv = NS_ERROR_FAILURE;
-            }
-        } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
-                          (char*)__FILE__, (int)__LINE__, (int)rv );
-        }
-    } else {
-        DEBUG_PRINTF( PR_STDOUT, "%s %d: OpenDialogWithArg was passed a null pointer!\n",
-                      __FILE__, (int)__LINE__ );
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
+  if (parent && arg && url) {
+    nsCOMPtr<nsISupportsInterfacePointer> ifptr =
+      do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ifptr->SetData(arg);
+    ifptr->SetDataIID(&NS_GET_IID(nsISearchContext));
+
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = parent->OpenDialog(NS_ConvertASCIItoUCS2(url),
+                            NS_LITERAL_STRING("_blank"),
+                            NS_LITERAL_STRING("chrome,resizable=no,dependent=yes"),
+                            ifptr, getter_AddRefs(newWindow));
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP

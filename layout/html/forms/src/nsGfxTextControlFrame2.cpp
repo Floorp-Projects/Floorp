@@ -161,10 +161,10 @@ public:
 /*BEGIN interfaces in to the keylister base interface. must be supplied to handle pure virtual interfaces
   see the nsIDOMKeyListener interface implementation for details
   */
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 /*END interfaces from nsIDOMKeyListener*/
 /*BEGIN nsISelectionListener Interface*/
   NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel, PRInt16 aReason);
@@ -178,8 +178,8 @@ public:
     * used to propogate focus, blur, and change notifications
     * @see nsIDOMFocusListener
     */
-  virtual nsresult Focus(nsIDOMEvent* aEvent); //must use virtual nsresult. the header does for somereason
-  virtual nsresult Blur (nsIDOMEvent* aEvent);
+  NS_IMETHOD Focus(nsIDOMEvent* aEvent);
+  NS_IMETHOD Blur (nsIDOMEvent* aEvent);
   /* END interfaces from nsIDOMFocusListener*/
 
 

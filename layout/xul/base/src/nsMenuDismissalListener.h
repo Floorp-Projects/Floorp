@@ -48,14 +48,14 @@ public:
    */
   virtual ~nsMenuDismissalListener();
    
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSIROLLUPLISTENER

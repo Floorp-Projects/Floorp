@@ -23,7 +23,9 @@
  */
 
 #include "nsIBoxObject.idl"
-#include "domstubs.idl"
+
+interface nsIDOMElement;
+
 
 [scriptable, uuid(F5099746-5049-4e81-A03E-945D5110FEE2)]
 interface nsIMenuBoxObject : nsISupports

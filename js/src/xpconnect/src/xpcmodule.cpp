@@ -18,8 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   John Bandhauer <jband@netscape.com>
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -37,23 +37,24 @@
 
 #include "xpcprivate.h"
 
-// Module implementation for the xpconnect library
+/* Module implementation for the xpconnect library. */
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCException)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect, nsXPConnect::GetXPConnect)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect, nsXPConnect::GetSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSContextStack, nsXPCThreadJSContextStackImpl::GetSingleton)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSRuntimeService, nsJSRuntimeServiceImpl::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 
-// XXX contractids need to be standardized!
+NS_DECL_CLASSINFO(nsXPCException)
+
 static nsModuleComponentInfo components[] = {
-  {nsnull, NS_JS_ID_CID,                      "@mozilla.org/js/xpc/ID;1",                   nsJSIDConstructor             },
-  {nsnull, NS_XPCONNECT_CID,                  "@mozilla.org/js/xpc/XPConnect;1",           nsIXPConnectConstructor       },
-  {nsnull, NS_XPC_THREAD_JSCONTEXT_STACK_CID, "@mozilla.org/js/xpc/ContextStack;1", nsIJSContextStackConstructor  },
-  {nsnull, NS_XPCEXCEPTION_CID,               "@mozilla.org/js/xpc/Exception;1",         nsXPCExceptionConstructor     },
-  {nsnull, NS_JS_RUNTIME_SERVICE_CID,         "@mozilla.org/js/xpc/RuntimeService;1",     nsIJSRuntimeServiceConstructor},
-  {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_CONTRACTID, nsScriptErrorConstructor}
+  {nsnull, NS_JS_ID_CID,                         XPC_ID_CONTRACTID,            nsJSIDConstructor             },
+  {nsnull, NS_XPCONNECT_CID,                     XPC_XPCONNECT_CONTRACTID,     nsIXPConnectConstructor       },
+  {nsnull, NS_XPC_THREAD_JSCONTEXT_STACK_CID,    XPC_CONTEXT_STACK_CONTRACTID, nsIJSContextStackConstructor  },
+  {nsnull, NS_XPCEXCEPTION_CID,                  XPC_EXCEPTION_CONTRACTID,     nsXPCExceptionConstructor, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsXPCException), nsnull, &NS_CLASSINFO_NAME(nsXPCException)},
+  {nsnull, NS_JS_RUNTIME_SERVICE_CID,            XPC_RUNTIME_CONTRACTID,       nsIJSRuntimeServiceConstructor},
+  {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_CONTRACTID,    nsScriptErrorConstructor      }
 };
 
 PR_STATIC_CALLBACK(void)
@@ -63,6 +64,7 @@ xpcModuleDtor(nsIModule* self)
     nsXPConnect::ReleaseXPConnectSingleton();
     nsXPCThreadJSContextStackImpl::FreeSingleton();
     nsJSRuntimeServiceImpl::FreeSingleton();
+    xpc_DestroyJSxIDClassObjects();
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(xpconnect, components, xpcModuleDtor)

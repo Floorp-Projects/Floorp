@@ -404,7 +404,7 @@ foo = bar = iface = clazz = null;
 print(".......................................");
 print("simple speed tests...");
 
-var iterations = 5000;
+var iterations = 10000;
 
 var receiver2 = new Object();
 receiver2.SetReceiver = function() {};

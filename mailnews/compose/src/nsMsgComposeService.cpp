@@ -35,6 +35,7 @@
 #include "nsIMsgComposeParams.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
 #include "nsEscape.h"
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE

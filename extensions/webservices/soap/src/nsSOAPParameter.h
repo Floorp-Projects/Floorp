@@ -49,7 +49,7 @@ public:
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
   // nsIXPCScriptable
-  XPC_DECLARE_IXPCSCRIPTABLE
+  NS_DECL_NSIXPCSCRIPTABLE
 
   NS_IMETHODIMP GetValue(JSContext* aContext,
                          jsval* aValue);

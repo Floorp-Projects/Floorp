@@ -41,6 +41,10 @@ design requirement that clients explicitly maintain |activeWindow|,
 and that windows remove themselves from the service when they are closed.
 */
 
+%{C++
+#include "jsapi.h"
+%}
+
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;

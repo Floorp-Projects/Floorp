@@ -1,22 +1,25 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Mozilla Public
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
+ * the License at http://www.mozilla.org/NPL/
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
- * The Original Code is the Mozilla browser.
- * 
+ *
+ * The Original Code is mozilla.org code.
+ *
  * The Initial Developer of the Original Code is Netscape
- * Communications, Inc.  Portions created by Netscape are
- * Copyright (C) 1999, Mozilla.  All Rights Reserved.
- * 
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
  * Contributor(s):
+ *   Vidur Apparao <vidur@netscape.com> (original author)
+ *   Johnny Stenback <jst@netscape.com>
  */
 
 #include "domstubs.idl"
@@ -47,4 +50,14 @@ interface nsIDOMNavigator : nsISupports
   // pref /*, ... */); work?
 
   // jsval      preference(/* ... */);
+};
+
+
+[scriptable, uuid(4b4f8316-1dd2-11b2-b265-9a857376d159)]
+interface nsIDOMJSNavigator : nsISupports
+{
+  // Nothing about this method (except it's name :-) is describeable
+  // in XPIDL, argument handling and the return value needs to be
+  // dealt with in the implementation of this method.
+  void                      preference();
 };

@@ -146,7 +146,7 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
 }
 
 NS_IMPL_ISUPPORTS5(nsSecureBrowserUIImpl, 
-                   nsSecureBrowserUI, 
+                   nsISecureBrowserUI, 
                    nsIWebProgressListener, 
                    nsIFormSubmitObserver,
                    nsIObserver,
@@ -154,10 +154,10 @@ NS_IMPL_ISUPPORTS5(nsSecureBrowserUIImpl,
 
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window, nsIDOMElement *button)
+nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
 {
     mSecurityButton = button;
-    mWindow         = window;
+    mWindow         = do_QueryInterface(window);
 
     nsresult rv = nsServiceManager::GetService( kPrefCID, 
                                                 NS_GET_IID(nsIPref), 
@@ -588,7 +588,9 @@ nsSecureBrowserUIImpl::IsURLfromPSM(nsIURI* aURL, PRBool* value)
 	return NS_OK;
 }
 
-void nsSecureBrowserUIImpl::GetBundleString(const nsString& name, nsString &outString)
+void
+nsSecureBrowserUIImpl::GetBundleString(const nsString& name,
+                                       nsString &outString)
 {
     if (mStringBundle && name.Length() > 0) {
         PRUnichar *ptrv = nsnull;

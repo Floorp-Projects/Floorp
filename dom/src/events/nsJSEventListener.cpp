@@ -25,17 +25,15 @@
 #include "nsIServiceManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIScriptObjectOwner.h"
+#include "nsIScriptContext.h"
+#include "nsIXPConnect.h"
 
-static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-static NS_DEFINE_IID(kIJSEventListenerIID, NS_IJSEVENTLISTENER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 /*
  * nsJSEventListener implementation
  */
 nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext, 
-                                     nsIScriptObjectOwner *aOwner) 
+                                     nsISupports *aObject) 
 {
   NS_INIT_REFCNT();
 
@@ -44,7 +42,7 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
   // freed (and the references dropped) before either the context
   // or the owner goes away.
   mContext = aContext;
-  mOwner = aOwner;
+  mObject = aObject;
   mReturnResult = nsReturnResult_eNotSet;
 }
 
@@ -52,28 +50,11 @@ nsJSEventListener::~nsJSEventListener()
 {
 }
 
-nsresult nsJSEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMEventListenerIID)) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIJSEventListenerIID)) {
-    *aInstancePtr = (void*)(nsIJSEventListener*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMEventListener*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsJSEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsIJSEventListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsJSEventListener)
 
@@ -91,15 +72,11 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   jsval funval;
   jsval argv[1];
-  JSObject *eventObj;
-  char* eventChars;
   nsAutoString eventString;
   // XXX This doesn't seem like the correct context on which to execute
   // the event handler. Might need to get one from the JS thread context
   // stack.
   JSContext* cx = (JSContext*)mContext->GetNativeContext();
-  JSObject* obj;
-  nsresult result = NS_OK;
 
   if (!mEventName) {
     if (NS_OK != aEvent->GetType(eventString)) {
@@ -120,60 +97,68 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     mEventName->ToString(eventString);
   }
 
-  eventChars = eventString.ToNewCString();
-  
-  result = mOwner->GetScriptObject(mContext, (void**)&obj);
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  nsresult rv;
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
 
-  if (!JS_LookupProperty(cx, obj, eventChars, &funval)) {
-    nsCRT::free(eventChars);
+  // root
+  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+
+  rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx),
+                       mObject, NS_GET_IID(nsISupports),
+                       getter_AddRefs(wrapper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject* obj = nsnull;
+  rv = wrapper->GetJSObject(&obj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!JS_LookupUCProperty(cx, obj,
+                           NS_REINTERPRET_CAST(const jschar *,
+                                               eventString.GetUnicode()),
+                           eventString.Length(), &funval)) {
     return NS_ERROR_FAILURE;
   }
-
-  nsCRT::free(eventChars);
 
   if (JS_TypeOfValue(cx, funval) != JSTYPE_FUNCTION) {
     return NS_OK;
   }
 
-  result = NS_NewScriptKeyEvent(mContext, aEvent, nsnull, (void**)&eventObj);
-  if (NS_FAILED(result)) {
-    return NS_ERROR_FAILURE;
-  }
+  rv = xpc->WrapNative(cx, obj, aEvent, NS_GET_IID(nsIDOMEvent),
+                       getter_AddRefs(wrapper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject *eventObj = nsnull;
+  rv = wrapper->GetJSObject(&eventObj);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   argv[0] = OBJECT_TO_JSVAL(eventObj);
   PRBool jsBoolResult;
-  PRBool returnResult = mReturnResult == nsReturnResult_eReverseReturnResult ? PR_TRUE : PR_FALSE;
-  result = mContext->CallEventHandler(obj, 
-                                      (void*) JSVAL_TO_OBJECT(funval), 
-                                      1, 
-                                      argv, 
-                                      &jsBoolResult, 
-                                      returnResult);
-  if (NS_FAILED(result)) {
-    return result;
+  PRBool returnResult = (mReturnResult == nsReturnResult_eReverseReturnResult);
+
+  rv = mContext->CallEventHandler(obj, JSVAL_TO_OBJECT(funval), 1, argv,
+                                  &jsBoolResult, returnResult);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
+
   if (!jsBoolResult) 
     aEvent->PreventDefault();
 
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP 
 nsJSEventListener::GetEventTarget(nsIScriptContext**aContext, 
-                                  nsIScriptObjectOwner** aOwner)
+                                  nsISupports** aTarget)
 {
-  NS_ASSERTION(aContext && aOwner, "null argument");
-  if (aContext) {
-    *aContext = mContext;
-    NS_ADDREF(mContext);
-  }
-  if (aOwner) { 
-    *aOwner = mOwner;
-    NS_ADDREF(mOwner);
-  }
+  NS_ENSURE_ARG_POINTER(aContext);
+  NS_ENSURE_ARG_POINTER(aTarget);
+
+  *aContext = mContext;
+  NS_ADDREF(*aContext);
+
+  *aTarget = mObject;
+  NS_ADDREF(*aTarget);
 
   return NS_OK;
 }
@@ -182,13 +167,18 @@ nsJSEventListener::GetEventTarget(nsIScriptContext**aContext,
  * Factory functions
  */
 
-extern "C" NS_DOM nsresult NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, nsIScriptObjectOwner *aOwner)
+nsresult
+NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult,
+                      nsIScriptContext *aContext, nsISupports *aObject)
 {
-  nsJSEventListener* it = new nsJSEventListener(aContext, aOwner);
-  if (NULL == it) {
+  nsJSEventListener* it = new nsJSEventListener(aContext, aObject);
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);   
+  *aInstancePtrResult = it;
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 

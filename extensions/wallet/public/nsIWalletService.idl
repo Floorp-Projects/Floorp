@@ -22,7 +22,6 @@
 
 #include "nsISupports.idl"
 #include "nsIAuthPrompt.idl"
-#include "domstubs.idl"
 #include "nsIEnumerator.idl"
 
 %{ C++
@@ -38,6 +37,8 @@
 %}
 
 interface nsIPresShell;
+interface nsIDOMNode;
+interface nsIDOMWindowInternal;
 interface nsIPrompt;
 
 native nsAutoString(nsAutoString);

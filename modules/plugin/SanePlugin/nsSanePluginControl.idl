@@ -18,7 +18,6 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
 [scriptable, uuid(10982800-365e-11d3-a2bf-0004ac779ef3)]
 /**

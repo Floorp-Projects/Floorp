@@ -47,35 +47,35 @@ public:
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult DragEnter(nsIDOMEvent* aMouseEvent) = 0;
+  NS_IMETHOD DragEnter(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
   * Processes a drag over event
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult DragOver(nsIDOMEvent* aMouseEvent) = 0;
+  NS_IMETHOD DragOver(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
   * Processes a drag Exit event
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult DragExit(nsIDOMEvent* aMouseEvent) = 0;
+  NS_IMETHOD DragExit(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
    * Processes a drag drop event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult DragDrop(nsIDOMEvent* aMouseEvent) = 0;
+  NS_IMETHOD DragDrop(nsIDOMEvent* aMouseEvent) = 0;
   
   /**
    * Processes a drag gesture event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult DragGesture(nsIDOMEvent* aMouseEvent) = 0;
+  NS_IMETHOD DragGesture(nsIDOMEvent* aMouseEvent) = 0;
 
 };
 

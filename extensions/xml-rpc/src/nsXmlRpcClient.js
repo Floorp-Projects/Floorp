@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.16 $
+ *  Version: $Revision: 1.17 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.16 2001/04/10 05:59:28 darin%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.17 2001/05/08 17:28:07 jst%netscape.com Exp $
  */
 
 /*

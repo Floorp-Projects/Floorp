@@ -33,33 +33,48 @@
  *                               use in OS2
  */
 
-#ifndef nsScriptNameSetRegistry_h__
-#define nsScriptNameSetRegistry_h__
+#ifndef nsScriptNameSpaceManager_h__
+#define nsScriptNameSpaceManager_h__
 
 #include "nsIScriptNameSpaceManager.h"
-#include "plhash.h"
+#include "nsHashtable.h"
 
-class nsScriptNameSpaceManager : public nsIScriptNameSpaceManager {
- public:
+typedef struct {
+  enum nametype {
+    eTypeInterface,
+    eTypeProperty,
+    eTypeConstructor,
+    eTypeStaticNameSet,
+    eTypeDynamicNameSet
+  } mType;
+
+  nsCID mCID;
+} nsGlobalNameStruct;
+
+
+class nsIScriptContext;
+class nsICategoryManager;
+
+
+class nsScriptNameSpaceManager
+{
+public:
   nsScriptNameSpaceManager();
   virtual ~nsScriptNameSpaceManager();
 
-  NS_DECL_ISUPPORTS
+  nsresult Init();
+  nsresult InitForContext(nsIScriptContext *aContext);
 
-  NS_IMETHOD RegisterGlobalName(const nsAReadableString& aName, 
-                                const nsIID& aIID,
-                                const nsIID& aCID,
-                                PRBool aIsConstructor);
-  NS_IMETHOD UnregisterGlobalName(const nsAReadableString& aName);
-  NS_IMETHOD LookupName(const nsAReadableString& aName, 
-                        PRBool& aIsConstructor,
-                        nsIID& aIID,
-                        nsIID& aCID);
-  
- protected:
-  static PRIntn PR_CALLBACK RemoveNames(PLHashEntry *he, PRIntn i, void *arg);
+  nsresult LookupName(const nsAReadableString& aName,
+                      const nsGlobalNameStruct **aNameStruct);
 
-  PLHashTable* mGlobalNames;
+protected:
+  nsresult FillHash(nsICategoryManager *aCategoryManager,
+                    const char *aCategory,
+                    nsGlobalNameStruct::nametype aType);
+  nsresult FillHashWithDOMInterfaces();
+
+  nsHashtable mGlobalNames;
 };
 
-#endif /* nsScriptNameSetRegistry_h__ */
+#endif /* nsScriptNameSpaceManager_h__ */

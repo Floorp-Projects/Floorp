@@ -33,8 +33,6 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= appshell
 REQUIRES	= xpcom string widget docshell webshell layout dom necko uriloader js locale webbrwsr rdf pref xpconnect timer chardet intl chrome profile prefmigr xul gfx2 windowwatcher browser mozcomps
 
-EXTRA_DSO_LIBS	= jsdom
-
 CPPSRCS		= \
 		nsChromeTreeOwner.cpp \
 		nsContentTreeOwner.cpp \
@@ -42,9 +40,6 @@ CPPSRCS		= \
 		nsAppShellService.cpp \
 		nsWebShellWindow.cpp \
 		nsCommandLineService.cpp \
-		nsXPConnectFactory.cpp \
-		nsJSXPConnectFactory.cpp \
-		nsAppShellNameSet.cpp \
 		nsFileLocations.cpp \
 		nsWindowMediator.cpp \
 		nsAbout.cpp \

@@ -1275,8 +1275,11 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 #define NS_CLASSINFO_NAME(_class) _class##_classInfoGlobal
 #define NS_CI_INTERFACE_GETTER_NAME(_class) _class##_GetInterfacesHelper
 
-#define NS_DECL_CLASSINFO(_class)                                              \
+#define NS_DECL_CI_INTERFACE_GETTER(_class)                                    \
   extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *, nsIID ***);           \
+
+#define NS_DECL_CLASSINFO(_class)                                              \
+  NS_DECL_CI_INTERFACE_GETTER(_class)                                          \
   nsIClassInfo *NS_CLASSINFO_NAME(_class);
 
 #define NS_IMPL_QUERY_CLASSINFO(_class)                                        \

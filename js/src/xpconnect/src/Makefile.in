@@ -46,8 +46,9 @@ SHORT_LIBNAME	= xpconect
 REQUIRES	= xpcom string js dom widget layout caps
 
 CPPSRCS		= \
+		nsScriptError.cpp \
 		nsXPConnect.cpp \
-		xpcarbitrary.cpp \
+		xpccallcontext.cpp \
 		xpccomponents.cpp \
 		xpccontext.cpp \
 		xpcconvert.cpp \
@@ -58,8 +59,7 @@ CPPSRCS		= \
 		xpclog.cpp \
 		xpcmaps.cpp \
 		xpcmodule.cpp \
-		xpcnativecallcontext.cpp \
-		xpcruntimesvc.cpp \
+		xpcruntimesvc.cpp  \
 		xpcstack.cpp \
 		xpcstring.cpp \
 		xpcthreadcontext.cpp \
@@ -67,10 +67,10 @@ CPPSRCS		= \
 		xpcwrappedjs.cpp \
 		xpcwrappedjsclass.cpp \
 		xpcwrappednative.cpp \
-		xpcwrappednativeclass.cpp \
+		xpcwrappednativeinfo.cpp \
 		xpcwrappednativejsops.cpp \
+		xpcwrappednativeproto.cpp \
 		xpcwrappednativescope.cpp \
-		nsScriptError.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

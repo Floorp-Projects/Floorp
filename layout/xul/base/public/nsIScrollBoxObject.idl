@@ -23,7 +23,9 @@
  */
 
 #include "nsIBoxObject.idl"
-#include "domstubs.idl"
+
+interface nsIDOMElement;
+
 
 [scriptable, uuid(56E2ADA8-4631-11d4-BA11-001083023C1E)]
 interface nsIScrollBoxObject : nsISupports

@@ -133,7 +133,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   rv = content->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&mTextContent);
 
   if (NS_SUCCEEDED(rv)) {
-    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("text"), PR_FALSE);
+    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
     if (nsFormFrame::GetDisabled(this)) {
       nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
       if (textControl) {
@@ -150,7 +150,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   mBrowse = do_QueryInterface(content,&rv);
 
   if (NS_SUCCEEDED(rv)) {
-    mBrowse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
+    mBrowse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
     //browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
 
     aChildList.AppendElement(mBrowse);
@@ -160,7 +160,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     reciever->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
   }
 
-  nsString value;
+  nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
     mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_FALSE);
   }

@@ -45,7 +45,7 @@
 #define NS_SECURE_BROWSER_UI_CID \
 { 0x10fe7ea0, 0xa10a, 0x11d3, {0x8c, 0x7c, 0x00, 0x60, 0x97, 0x92, 0x27, 0x8c}}
 
-class nsSecureBrowserUIImpl : public nsSecureBrowserUI, 
+class nsSecureBrowserUIImpl : public nsISecureBrowserUI, 
                               public nsIWebProgressListener, 
                               public nsIFormSubmitObserver,
                               public nsIObserver,
@@ -60,7 +60,7 @@ public:
 
   	NS_DECL_ISUPPORTS    
     NS_DECL_NSIWEBPROGRESSLISTENER
-    NS_DECL_NSSECUREBROWSERUI
+    NS_DECL_NSISECUREBROWSERUI
 
 
     // nsIObserver

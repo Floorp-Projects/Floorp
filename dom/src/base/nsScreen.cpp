@@ -31,59 +31,45 @@
 #include "nsCOMPtr.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoader.h"
+#include "nsDOMClassInfo.h"
 
 
 //
 //  Screen class implementation 
 //
-ScreenImpl::ScreenImpl( nsIDocShell* aDocShell): mDocShell(aDocShell)
+ScreenImpl::ScreenImpl(nsIDocShell* aDocShell) : mDocShell(aDocShell)
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
 }
 
 ScreenImpl::~ScreenImpl()
 {
 }
 
+
+// XPConnect interface list for ScreenImpl
+NS_CLASSINFO_MAP_BEGIN(Screen)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMScreen)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for ScreenImpl
+NS_INTERFACE_MAP_BEGIN(ScreenImpl)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMScreen)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Screen)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(ScreenImpl)
 NS_IMPL_RELEASE(ScreenImpl)
 
-NS_INTERFACE_MAP_BEGIN(ScreenImpl)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptObjectOwner)
-   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMScreen)
-NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP ScreenImpl::SetDocShell(nsIDocShell* aDocShell)
 {
    mDocShell = aDocShell; // Weak Reference
    return NS_OK;
 }
-
-NS_IMETHODIMP
-ScreenImpl::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ScreenImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  NS_PRECONDITION(nsnull != aScriptObject, "null arg");
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-    res = NS_NewScriptScreen(aContext, NS_STATIC_CAST(nsIDOMScreen *, this),
-                             global, &mScriptObject);
-    NS_IF_RELEASE(global);
-  }
-  
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
 
 NS_IMETHODIMP
 ScreenImpl::GetTop(PRInt32* aTop)

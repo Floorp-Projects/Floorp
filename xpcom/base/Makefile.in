@@ -46,6 +46,7 @@ CPPSRCS		= \
 		nsWeakReference.cpp \
 		nsConsoleService.cpp \
 		nsConsoleMessage.cpp \
+		nsExceptionService.cpp \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
@@ -96,6 +97,9 @@ XPIDLSRCS	= \
 		nsIConsoleService.idl \
 		nsIConsoleMessage.idl \
 		nsIConsoleListener.idl \
+		nsIException.idl \
+		nsIExceptionService.idl \
+		nsIProgrammingLanguage.idl \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR

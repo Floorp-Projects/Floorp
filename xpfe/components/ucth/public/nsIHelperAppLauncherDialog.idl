@@ -21,7 +21,6 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
 interface nsIHelperAppLauncher;
 interface nsILocalFile;

@@ -470,8 +470,8 @@ nsBrowserInstance::ReinitializeContentVariables()
 {
   nsresult rv;
 
-  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
-  mDOMWindow->Get_content(getter_AddRefs(contentWindow));
+  nsCOMPtr<nsIDOMWindow> contentWindow;
+  mDOMWindow->GetContent(getter_AddRefs(contentWindow));
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
 
@@ -531,15 +531,19 @@ nsresult nsBrowserInstance::GetContentAreaDocShell(nsIDocShell** outDocShell)
 
 nsresult nsBrowserInstance::GetContentWindow(nsIDOMWindowInternal** outDOMWindow)
 {
-  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
-  mDOMWindow->Get_content(getter_AddRefs(contentWindow));
-  NS_IF_ADDREF(*outDOMWindow = contentWindow);
+  nsCOMPtr<nsIDOMWindow> contentWindow;
+  mDOMWindow->GetContent(getter_AddRefs(contentWindow));
+
+  if (contentWindow) {
+    return CallQueryInterface(contentWindow, outDOMWindow);
+  }
+
   return NS_OK;
 }
 
 nsresult nsBrowserInstance::GetFocussedContentWindow(nsIDOMWindowInternal** outFocussedWindow)
 {
-  nsCOMPtr<nsIDOMWindowInternal> focussedWindow;
+  nsCOMPtr<nsIDOMWindow> focussedWindow;
   
   // get the window that has focus (e.g. framesets)
   if (mDocShell)
@@ -565,11 +569,9 @@ nsresult nsBrowserInstance::GetFocussedContentWindow(nsIDOMWindowInternal** outF
   }
   
   if (!focussedWindow)
-    GetContentWindow(getter_AddRefs(focussedWindow));   // default to content window
+    return GetContentWindow(outFocussedWindow);   // default to content window
 
-  *outFocussedWindow = focussedWindow;
-  NS_IF_ADDREF(*outFocussedWindow);
-  return NS_OK;
+  return CallQueryInterface(focussedWindow, outFocussedWindow);
 }
 
 

@@ -36,6 +36,7 @@
 #include "jsapi.h"
 #include "prthread.h"
 #include "plevent.h"
+#include "nsIXPConnect.h"
 
 
 
@@ -96,7 +97,7 @@ class nsXPITriggerInfo
   private:
     nsVoidArray mItems;
     JSContext   *mCx;
-    jsval       mGlobal;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobalWrapper;
     jsval       mCbval;
     PRThread*   mThread;
 

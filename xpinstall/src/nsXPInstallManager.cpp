@@ -61,6 +61,7 @@
 #include "nsIAppShellComponentImpl.h"
 #include "nsIPromptService.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsISupportsPrimitives.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
@@ -258,49 +259,35 @@ PRBool nsXPInstallManager::ConfirmInstall(nsIScriptGlobalObject* aGlobalObject, 
     nsresult rv = NS_OK;
     PRBool result = PR_FALSE;
 
-    if (aGlobalObject)
+    nsCOMPtr<nsIDOMWindowInternal> parentWindow =
+        do_QueryInterface(aGlobalObject);
+
+    if (parentWindow)
     {
-        nsCOMPtr<nsIScriptContext> scriptContext;  
-        aGlobalObject->GetContext(getter_AddRefs(scriptContext));
-        if (scriptContext)
+        nsCOMPtr<nsIDOMWindow> newWindow;
+        nsCOMPtr<nsISupportsArray> array;
+
+        nsCOMPtr<nsISupportsInterfacePointer> ifptr =
+            do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        ifptr->SetData(ioParamBlock);
+        ifptr->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+
+        rv = parentWindow->OpenDialog(NS_LITERAL_STRING("chrome://communicator/content/xpinstall/institems.xul"),
+                                      NS_LITERAL_STRING("_blank"),
+                                      NS_LITERAL_STRING("chrome,modal,titlebar,resizable"),
+                                      ifptr, getter_AddRefs( newWindow));
+
+        if (NS_SUCCEEDED(rv))
         {
-            JSContext* jsContext = (JSContext*) scriptContext->GetNativeContext();
-            nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryInterface(aGlobalObject));
-            if (parentWindow)
-            {
-
-                void* stackPtr;
-                jsval *argv = JS_PushArguments( jsContext,
-                                            &stackPtr,
-                                            "sss%ip",
-                                            "chrome://communicator/content/xpinstall/institems.xul",
-                                            "_blank",
-                                            "chrome,modal,titlebar,resizable",
-                                            (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
-                                            (nsISupports*)ioParamBlock);
-
-                if (argv)
-                {
-                    nsCOMPtr<nsIDOMWindowInternal> newWindow;
-                    rv = parentWindow->OpenDialog( jsContext,
-                                                   argv,
-                                                   4,
-                                                   getter_AddRefs( newWindow));
-                 
-                    if (NS_SUCCEEDED(rv))
-                    {
-                        JS_PopArguments( jsContext, stackPtr);
-
-                        //Now get which button was pressed from the ParamBlock
-                        PRInt32 buttonPressed = 0;
-                        ioParamBlock->GetInt( 0, &buttonPressed );
-                        result = buttonPressed ? PR_FALSE : PR_TRUE;
-                    }
-                }
-            }
+            //Now get which button was pressed from the ParamBlock
+            PRInt32 buttonPressed = 0;
+            ioParamBlock->GetInt( 0, &buttonPressed );
+            result = buttonPressed ? PR_FALSE : PR_TRUE;
         }
     }
-    
+
     return result;
 }
 

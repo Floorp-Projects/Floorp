@@ -26,77 +26,44 @@ LIBRARY_NAME=jsdombase_s
 
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS =			 \
-	nsBarProps.cpp           \
-	nsDOMException.cpp 	 \
-	nsJSBarProp.cpp          \
-	nsJSDOMException.cpp	\
-	nsJSEnvironment.cpp	 \
-	nsJSWindow.cpp           \
-	nsJSNavigator.cpp        \
-	nsJSLocation.cpp	 \
-	nsJSWindowCollection.cpp \
-  nsFocusController.cpp \
-	nsGlobalWindow.cpp       \
-	nsLocation.cpp		 \
-	nsDOMWindowList.cpp	 \
-	nsJSUtils.cpp		 \
-	nsScreen.cpp		 \
-	nsJSScreen.cpp		 \
-	nsHistory.cpp		 \
-	nsJSHistory.cpp		 \
-	nsJSPlugin.cpp		 \
-	nsJSPluginArray.cpp  \
-	nsJSMimeTypeArray.cpp \
-	nsJSMimeType.cpp \
-	nsMimeTypeArray.cpp \
-	nsPluginArray.cpp \
-	nsJSCrypto.cpp		\
-	nsJSCMRFObject.cpp	\
-	nsJSPkcs11.cpp		\
-  nsWindowRoot.cpp \
+LINCS= -I..\build
+
+CPPSRCS =			\
+	nsBarProps.cpp          \
+	nsDOMException.cpp 	\
+	nsJSEnvironment.cpp	\
+	nsFocusController.cpp	\
+	nsGlobalWindow.cpp      \
+	nsLocation.cpp		\
+	nsDOMWindowList.cpp	\
+	nsJSUtils.cpp		\
+	nsScreen.cpp		\
+	nsHistory.cpp		\
+	nsMimeTypeArray.cpp	\
+	nsPluginArray.cpp	\
+	nsWindowRoot.cpp	\
+	nsDOMClassInfo.cpp	\
 	$(NULL)
 
-EXPORTS=nsJSUtils.h
-
-MODULE=raptor 
+MODULE=dom
 
 
 CPP_OBJS= \
 	.\$(OBJDIR)\nsBarProps.obj		\
 	.\$(OBJDIR)\nsDOMException.obj		\
-	.\$(OBJDIR)\nsJSBarProp.obj		\
-	.\$(OBJDIR)\nsJSDOMException.obj	\
 	.\$(OBJDIR)\nsJSEnvironment.obj		\
-	.\$(OBJDIR)\nsJSWindow.obj		\
-  .\$(OBJDIR)\nsFocusController.obj \
+	.\$(OBJDIR)\nsFocusController.obj	\
 	.\$(OBJDIR)\nsGlobalWindow.obj		\
-	.\$(OBJDIR)\nsJSNavigator.obj		\
 	.\$(OBJDIR)\nsLocation.obj		\
-	.\$(OBJDIR)\nsJSLocation.obj		\
 	.\$(OBJDIR)\nsDOMWindowList.obj		\
-	.\$(OBJDIR)\nsJSWindowCollection.obj	\
 	.\$(OBJDIR)\nsJSUtils.obj		\
 	.\$(OBJDIR)\nsScreen.obj		\
-	.\$(OBJDIR)\nsJSScreen.obj		\
 	.\$(OBJDIR)\nsHistory.obj		\
-	.\$(OBJDIR)\nsJSHistory.obj		\
-	.\$(OBJDIR)\nsJSPlugin.obj		 \
-	.\$(OBJDIR)\nsJSPluginArray.obj  \
-	.\$(OBJDIR)\nsJSMimeTypeArray.obj \
-	.\$(OBJDIR)\nsJSMimeType.obj \
-	.\$(OBJDIR)\nsMimeTypeArray.obj \
-	.\$(OBJDIR)\nsPluginArray.obj \
-	.\$(OBJDIR)\nsJSCrypto.obj		\
-	.\$(OBJDIR)\nsJSCRMFObject.obj		\
-	.\$(OBJDIR)\nsJSPkcs11.obj		\
-  .\$(OBJDIR)\nsWindowRoot.obj \
+	.\$(OBJDIR)\nsMimeTypeArray.obj		\
+	.\$(OBJDIR)\nsPluginArray.obj		\
+	.\$(OBJDIR)\nsWindowRoot.obj		\
+	.\$(OBJDIR)\nsDOMClassInfo.obj		\
 	$(NULL)
-
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
- -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib -I$(PUBLIC)\plugin -I$(PUBLIC)\oji \
- -I$(PUBLIC)\java -I$(PUBLIC)\xpconnect -I$(PUBLIC)\pref -I$(PUBLIC)\caps -I$(PUBLIC)\ojiimpl
-
 
 LCFLAGS = \
         $(LCFLAGS) \

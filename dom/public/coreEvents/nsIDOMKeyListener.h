@@ -45,14 +45,14 @@ public:
      * @param aKeyEvent @see nsIDOMEvent.h 
      * @returns whether the event was consumed or ignored. @see nsresult
      */
-    virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent) = 0;
+    NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent) = 0;
 
     /**
      * Processes a key release event
      * @param aKeyEvent @see nsIDOMEvent.h 
      * @returns whether the event was consumed or ignored. @see nsresult
      */
-    virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent) = 0;
+    NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent) = 0;
 
     /**
      * Processes a key typed event
@@ -60,7 +60,7 @@ public:
      * @returns whether the event was consumed or ignored. @see nsresult
      *
      */
-    virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent) = 0;
+    NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent) = 0;
 
 };
 #endif // nsIDOMKeyListener_h__
