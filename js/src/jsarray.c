@@ -333,6 +333,12 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
     JSString *str;
     JSHashEntry *he;
     JSObject *obj2;
+    int stackDummy;
+
+    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        return JS_FALSE;
+    }
 
     ok = js_GetLengthProperty(cx, obj, &length);
     if (!ok)

@@ -499,7 +499,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
       case JSTYPE_NUMBER:
         ok = js_ValueToNumber(cx, v, &d);
         if (ok) {
-            dp = js_NewDouble(cx, d);
+            dp = js_NewDouble(cx, d, 0);
             ok = (dp != NULL);
             if (ok)
                 *vp = DOUBLE_TO_JSVAL(dp);
@@ -1527,7 +1527,7 @@ JS_PUBLIC_API(jsdouble *)
 JS_NewDouble(JSContext *cx, jsdouble d)
 {
     CHECK_REQUEST(cx);
-    return js_NewDouble(cx, d);
+    return js_NewDouble(cx, d, 0);
 }
 
 JS_PUBLIC_API(JSBool)

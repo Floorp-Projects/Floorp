@@ -298,24 +298,36 @@ void
 js_DumpGCStats(JSRuntime *rt, FILE *fp)
 {
     fprintf(fp, "\nGC allocation statistics:\n");
-    fprintf(fp, "     bytes currently allocated: %lu\n", rt->gcBytes);
-    fprintf(fp, "                alloc attempts: %lu\n", rt->gcStats.alloc);
-    fprintf(fp, "            GC freelist length: %lu\n", rt->gcStats.freelen);
-    fprintf(fp, "  recycles through GC freelist: %lu\n", rt->gcStats.recycle);
-    fprintf(fp, "alloc retries after running GC: %lu\n", rt->gcStats.retry);
-    fprintf(fp, "           allocation failures: %lu\n", rt->gcStats.fail);
-    fprintf(fp, "              valid lock calls: %lu\n", rt->gcStats.lock);
-    fprintf(fp, "            valid unlock calls: %lu\n", rt->gcStats.unlock);
-    fprintf(fp, "   locks that hit stuck counts: %lu\n", rt->gcStats.stuck);
-    fprintf(fp, " unlocks that saw stuck counts: %lu\n", rt->gcStats.unstuck);
-    fprintf(fp, "          mark recursion depth: %lu\n", rt->gcStats.depth);
-    fprintf(fp, "  maximum mark recursion depth: %lu\n", rt->gcStats.maxdepth);
-    fprintf(fp, "      maximum GC nesting level: %lu\n", rt->gcStats.maxlevel);
-    fprintf(fp, "   potentially useful GC calls: %lu\n", rt->gcStats.poke);
-    fprintf(fp, "              useless GC calls: %lu\n", rt->gcStats.nopoke);
-    fprintf(fp, "     thing arenas freed so far: %lu\n", rt->gcStats.afree);
-    fprintf(fp, "  extra stack segments scanned: %lu\n", rt->gcStats.stackseg);
-    fprintf(fp, "   stack segment slots scanned: %lu\n", rt->gcStats.segslots);
+
+#define U(x)    ((unsigned long)(x))
+    fprintf(fp, "  bytes currently allocated: %lu\n", U(rt->gcBytes));
+    fprintf(fp, "             alloc attempts: %lu\n", U(rt->gcStats.alloc));
+    fprintf(fp, "         GC freelist length: %lu\n", U(rt->gcStats.freelen));
+    fprintf(fp, "   recycles via GC freelist: %lu\n", U(rt->gcStats.recycle));
+    fprintf(fp, "allocation retries after GC: %lu\n", U(rt->gcStats.retry));
+    fprintf(fp, "        allocation failures: %lu\n", U(rt->gcStats.fail));
+    fprintf(fp, "         things born locked: %lu\n", U(rt->gcStats.lockborn));
+    fprintf(fp, "           valid lock calls: %lu\n", U(rt->gcStats.lock));
+    fprintf(fp, "         valid unlock calls: %lu\n", U(rt->gcStats.unlock));
+    fprintf(fp, "locks that hit stuck counts: %lu\n", U(rt->gcStats.stuck));
+    fprintf(fp, "    unlocks on stuck counts: %lu\n", U(rt->gcStats.unstuck));
+    fprintf(fp, "       mark recursion depth: %lu\n", U(rt->gcStats.depth));
+    fprintf(fp, "     maximum mark recursion: %lu\n", U(rt->gcStats.maxdepth));
+    fprintf(fp, "     mark C recursion depth: %lu\n", U(rt->gcStats.cdepth));
+    fprintf(fp, "   maximum mark C recursion: %lu\n", U(rt->gcStats.maxcdepth));
+    fprintf(fp, "     mark C stack overflows: %lu\n", U(rt->gcStats.dswmark));
+    fprintf(fp, "   mark DSW recursion depth: %lu\n", U(rt->gcStats.dswdepth));
+    fprintf(fp, " maximum mark DSW recursion: %lu\n", U(rt->gcStats.maxdswdepth));
+    fprintf(fp, "  mark DSW up-tree movement: %lu\n", U(rt->gcStats.dswup));
+    fprintf(fp, "DSW up-tree obj->slot steps: %lu\n", U(rt->gcStats.dswupstep));
+    fprintf(fp, "   maximum GC nesting level: %lu\n", U(rt->gcStats.maxlevel));
+    fprintf(fp, "potentially useful GC calls: %lu\n", U(rt->gcStats.poke));
+    fprintf(fp, "           useless GC calls: %lu\n", U(rt->gcStats.nopoke));
+    fprintf(fp, "  thing arenas freed so far: %lu\n", U(rt->gcStats.afree));
+    fprintf(fp, "     stack segments scanned: %lu\n", U(rt->gcStats.stackseg));
+    fprintf(fp, "stack segment slots scanned: %lu\n", U(rt->gcStats.segslots));
+#undef U
+
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(fp);
 #endif
@@ -455,6 +467,17 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
     return JS_TRUE;
 }
 
+#ifdef DEBUG_brendan
+#define NGCHIST 64
+
+static struct GCHist {
+    JSBool      lastDitch;
+    JSGCThing   *freeList;
+} gchist[NGCHIST];
+
+unsigned gchpos;
+#endif
+
 void *
 js_AllocGCThing(JSContext *cx, uintN flags)
 {
@@ -532,6 +555,13 @@ retry:
             if (!tried_gc) {
                 rt->gcPoke = JS_TRUE;
                 js_GC(cx, GC_KEEP_ATOMS | GC_ALREADY_LOCKED);
+                if (JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) &&
+                    cx->branchCallback &&
+                    !cx->branchCallback(cx, NULL)) {
+                    METER(rt->gcStats.retryhalt++);
+                    JS_UNLOCK_GC(rt);
+                    return NULL;
+                }
                 tried_gc = JS_TRUE;
                 METER(rt->gcStats.retry++);
                 goto retry;
@@ -572,6 +602,13 @@ retry:
      */
     thing->next = NULL;
     thing->flagp = NULL;
+#ifdef DEBUG_brendan
+    gchist[gchpos].lastDitch = tried_gc;
+    gchist[gchpos].freeList = rt->gcFreeList;
+    if (++gchpos == NGCHIST)
+        gchpos = 0;
+#endif
+    METER(if (flags & GCF_LOCK) rt->gcStats.lockborn++);
     JS_UNLOCK_GC(rt);
     return thing;
 
@@ -704,7 +741,6 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
 #ifdef GC_MARK_DEBUG
 
 #include <stdio.h>
-#include <stdlib.h>
 #include "jsprf.h"
 
 JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
@@ -841,22 +877,33 @@ js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg)
     }
 }
 
-void
-js_MarkGCThing(JSContext *cx, void *thing, void *arg)
-{
-    uint8 flags, *flagp;
-    JSRuntime *rt;
-    JSObject *obj;
-    uint32 nslots;
-    jsval v, *vp, *end;
-    JSString *str;
+/*
+ * These macros help avoid passing the GC_MARK_DEBUG-only |arg| parameter
+ * during recursive calls when GC_MARK_DEBUG is not defined.
+ */
 #ifdef GC_MARK_DEBUG
-    JSScope *scope;
-    JSScopeProperty *sprop;
+# define UNMARKED_GC_THING_FLAGS(thing, arg)                                  \
+    UnmarkedGCThingFlags(thing, arg)
+# define NEXT_UNMARKED_GC_THING(vp, end, thingp, flagpp, arg)                 \
+    NextUnmarkedGCThing(vp, end, thingp, flagpp, arg)
+# define MARK_GC_THING(cx, thing, flagp, arg)                                 \
+    MarkGCThing(cx, thing, flagp, arg)
+#else
+# define UNMARKED_GC_THING_FLAGS(thing, arg)                                  \
+    UnmarkedGCThingFlags(thing)
+# define NEXT_UNMARKED_GC_THING(vp, end, thingp, flagpp, arg)                 \
+    NextUnmarkedGCThing(vp, end, thingp, flagpp)
+# define MARK_GC_THING(cx, thing, flagp, arg)                                 \
+    MarkGCThing(cx, thing, flagp)
 #endif
 
+static uint8 *
+UNMARKED_GC_THING_FLAGS(void *thing, void *arg)
+{
+    uint8 flags, *flagp;
+
     if (!thing)
-        return;
+        return NULL;
 
     flagp = js_GetGCThingFlags(thing);
     flags = *flagp;
@@ -867,20 +914,94 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
 #endif
 
     if (flags & GCF_MARK)
-        return;
+        return NULL;
 
-    *flagp |= GCF_MARK;
+    return flagp;
+}
+
+static jsval *
+NEXT_UNMARKED_GC_THING(jsval *vp, jsval *end, void **thingp, uint8 **flagpp,
+                       void *arg)
+{
+    jsval v;
+    void *thing;
+    uint8 *flagp;
+
+    while (vp < end) {
+        v = *vp;
+        if (JSVAL_IS_GCTHING(v)) {
+            thing = JSVAL_TO_GCTHING(v);
+            flagp = UNMARKED_GC_THING_FLAGS(thing, arg);
+            if (flagp) {
+                *thingp = thing;
+                *flagpp = flagp;
+                return vp;
+            }
+        }
+        vp++;
+    }
+    return NULL;
+}
+
+static void
+DeutschSchorrWaite(JSContext *cx, void *thing, uint8 *flagp);
+
+static JSBool
+MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
+{
+    JSRuntime *rt;
+    JSObject *obj;
+    jsval v, *vp, *end;
+    JSString *str;
+    void *next_thing;
+    uint8 *next_flagp;
+#ifdef JS_GCMETER
+    uint32 tailCallNesting;
+#endif
+#ifdef GC_MARK_DEBUG
+    JSScope *scope;
+    JSScopeProperty *sprop;
+    char name[32];
+#endif
+    int stackDummy;
+
     rt = cx->runtime;
+    METER(tailCallNesting = 0);
+    METER(if (++rt->gcStats.cdepth > rt->gcStats.maxcdepth)
+              rt->gcStats.maxcdepth = rt->gcStats.cdepth);
+
+#ifndef GC_MARK_DEBUG
+  start:
+#endif
+    JS_ASSERT(flagp);
     METER(if (++rt->gcStats.depth > rt->gcStats.maxdepth)
               rt->gcStats.maxdepth = rt->gcStats.depth);
+    if (*flagp & GCF_MARK) {
+        /*
+         * This should happen only if recursive MARK_GC_THING marks flags
+         * already stored in the caller's *next_flagp.
+         */
+        goto out;
+    }
+
+    *flagp |= GCF_MARK;
 
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap)
-        gc_dump_thing(thing, flags, arg, js_DumpGCHeap);
+        gc_dump_thing(thing, *flagp, arg, js_DumpGCHeap);
 #endif
 
-    switch (flags & GCF_TYPEMASK) {
+    switch (*flagp & GCF_TYPEMASK) {
       case GCX_OBJECT:
+        /*
+         * Switch to Deutsch-Schorr-Waite if we exhaust our stack quota.
+         */
+        if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+            METER(rt->gcStats.dswmark++);
+            DeutschSchorrWaite(cx, thing, flagp);
+            goto out;
+        }
+
         obj = (JSObject *) thing;
         vp = obj->slots;
         if (!vp) {
@@ -888,64 +1009,104 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
             JS_ASSERT(!obj->map);
             goto out;
         }
-        nslots = (obj->map->ops->mark)
-                 ? obj->map->ops->mark(cx, obj, arg)
-                 : JS_MIN(obj->map->freeslot, obj->map->nslots);
+        end = vp + ((obj->map->ops->mark) ?
+#ifdef GC_MARK_DEBUG
+                    obj->map->ops->mark(cx, obj, arg)
+#else
+                    obj->map->ops->mark(cx, obj, NULL)
+#endif
+                    : JS_MIN(obj->map->freeslot, obj->map->nslots));
+
+        vp = NEXT_UNMARKED_GC_THING(vp, end, &thing, &flagp, arg);
+        if (!vp)
+            goto out;
+        v = *vp;
+
+        /*
+         * Here, thing is the first value in obj->slots referring to an
+         * unmarked GC-thing.
+         */
 #ifdef GC_MARK_DEBUG
         scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
 #endif
-        for (end = vp + nslots; vp < end; vp++) {
-            v = *vp;
-            if (JSVAL_IS_GCTHING(v)) {
+        for (;;) {
+            /* Check loop invariants. */
+            JS_ASSERT(v == *vp && JSVAL_IS_GCTHING(v));
+            JS_ASSERT(thing == JSVAL_TO_GCTHING(v));
+            JS_ASSERT(flagp == js_GetGCThingFlags(thing));
+
 #ifdef GC_MARK_DEBUG
-                char name[32];
+            if (scope) {
+                uint32 slot;
+                jsval nval;
 
-                if (scope) {
-                    uint32 slot;
-                    jsval nval;
-
-                    slot = vp - obj->slots;
-                    for (sprop = SCOPE_LAST_PROP(scope); ;
-                         sprop = sprop->parent) {
-                        if (!sprop) {
-                            switch (slot) {
-                              case JSSLOT_PROTO:
-                                strcpy(name, "__proto__");
-                                break;
-                              case JSSLOT_PARENT:
-                                strcpy(name, "__parent__");
-                                break;
-                              case JSSLOT_PRIVATE:
-                                strcpy(name, "__private__");
-                                break;
-                              default:
-                                JS_snprintf(name, sizeof name,
-                                            "**UNKNOWN SLOT %ld**",
-                                            (long)slot);
-                                break;
-                            }
+                slot = vp - obj->slots;
+                for (sprop = SCOPE_LAST_PROP(scope); ; sprop = sprop->parent) {
+                    if (!sprop) {
+                        switch (slot) {
+                          case JSSLOT_PROTO:
+                            strcpy(name, "__proto__");
+                            break;
+                          case JSSLOT_PARENT:
+                            strcpy(name, "__parent__");
+                            break;
+                          case JSSLOT_PRIVATE:
+                            strcpy(name, "__private__");
+                            break;
+                          default:
+                            JS_snprintf(name, sizeof name,
+                                        "**UNKNOWN SLOT %ld**",
+                                        (long)slot);
                             break;
                         }
-                        if (sprop->slot == slot) {
-                            nval = ID_TO_VALUE(sprop->id);
-                            if (JSVAL_IS_INT(nval)) {
-                                JS_snprintf(name, sizeof name, "%ld",
-                                            (long)JSVAL_TO_INT(nval));
-                            } else if (JSVAL_IS_STRING(nval)) {
-                                JS_snprintf(name, sizeof name, "%s",
-                                  JS_GetStringBytes(JSVAL_TO_STRING(nval)));
-                            } else {
-                                strcpy(name, "**FINALIZED ATOM KEY**");
-                            }
-                            break;
-                        }
+                        break;
                     }
-                } else {
-                    strcpy(name, "**UNKNOWN OBJECT MAP ENTRY**");
+                    if (sprop->slot == slot) {
+                        nval = ID_TO_VALUE(sprop->id);
+                        if (JSVAL_IS_INT(nval)) {
+                            JS_snprintf(name, sizeof name, "%ld",
+                                        (long)JSVAL_TO_INT(nval));
+                        } else if (JSVAL_IS_STRING(nval)) {
+                            JS_snprintf(name, sizeof name, "%s",
+                              JS_GetStringBytes(JSVAL_TO_STRING(nval)));
+                        } else {
+                            strcpy(name, "**FINALIZED ATOM KEY**");
+                        }
+                        break;
+                    }
                 }
-#endif
-                GC_MARK(cx, JSVAL_TO_GCTHING(v), name, arg);
+            } else {
+                strcpy(name, "**UNKNOWN OBJECT MAP ENTRY**");
             }
+#endif
+
+            do {
+                vp = NEXT_UNMARKED_GC_THING(vp+1, end, &next_thing, &next_flagp,
+                                            arg);
+                if (!vp) {
+                    /*
+                     * Here thing came from the last unmarked GC-thing slot.
+                     * We can eliminate tail recursion unless GC_MARK_DEBUG
+                     * is defined.
+                     */
+#ifdef GC_MARK_DEBUG
+                    GC_MARK(cx, thing, name, arg);
+                    goto out;
+#else
+                    METER(++tailCallNesting);
+                    goto start;
+#endif
+                }
+            } while (next_thing == thing);
+            v = *vp;
+
+#ifdef GC_MARK_DEBUG
+            GC_MARK(cx, thing, name, arg);
+#else
+            MARK_GC_THING(cx, thing, flagp, arg);
+#endif
+            thing = next_thing;
+            flagp = next_flagp;
         }
         break;
 
@@ -958,13 +1119,187 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
 
       case GCX_MUTABLE_STRING:
         str = (JSString *)thing;
-        if (JSSTRING_IS_DEPENDENT(str))
-            GC_MARK(cx, JSSTRDEP_BASE(str), "base", arg);
+        if (JSSTRING_IS_DEPENDENT(str)) {
+            thing = JSSTRDEP_BASE(str);
+            flagp = UNMARKED_GC_THING_FLAGS(thing, arg);
+            if (flagp) {
+#ifdef GC_MARK_DEBUG
+                GC_MARK(cx, thing, "base", arg);
+                goto out;
+#else
+                METER(++tailCallNesting);
+                goto start;
+#endif
+            }
+        }
         break;
     }
 
 out:
-    METER(rt->gcStats.depth--);
+    METER(rt->gcStats.depth -= 1 + tailCallNesting);
+    METER(rt->gcStats.cdepth--);
+    return JS_TRUE;
+}
+
+/*
+ * An invalid object reference that's distinct from JSVAL_TRUE and JSVAL_FALSE
+ * when tagged as a boolean.  Used to indicate empty DSW mark stack.
+ *
+ * Reversed pointers that link the DSW mark stack through obj->slots entries
+ * are also tagged as booleans so we can find each pointer and unreverse it.
+ * Because no object pointer is <= 16, these values can be distinguished from
+ * JSVAL_EMPTY, JSVAL_TRUE, and JSVAL_FALSE.
+ */
+#define JSVAL_EMPTY (2 << JSVAL_TAGBITS)
+
+/*
+ * To optimize native objects to avoid O(n^2) explosion in pathological cases,
+ * we use a dswIndex member of JSScope to tell where in obj->slots to find the
+ * reversed pointer.  Scrounging space in JSScope by packing existing members
+ * tighter yielded 16 bits of index, which we use directly if obj->slots has
+ * 64K or fewer slots.  Otherwise we make scope->dswIndex a fixed-point 16-bit
+ * fraction of the number of slots.
+ */
+static JS_INLINE uint16
+EncodeDSWIndex(jsval *vp, jsval *slots)
+{
+    uint32 nslots, limit, index;
+    jsdouble d;
+
+    nslots = slots[-1];
+    limit = JS_BIT(16);
+    index = PTRDIFF(vp, slots, jsval);
+    JS_ASSERT(index < nslots);
+    if (nslots > limit) {
+        d = ((jsdouble)index / nslots) * limit;
+        JS_ASSERT(0 <= d && d < limit);
+        return (uint16) d;
+    }
+    return (uint16) index;
+}
+
+static JS_INLINE uint32
+DecodeDSWIndex(uint16 dswIndex, jsval *slots)
+{
+    uint32 nslots, limit;
+    jsdouble d;
+
+    nslots = slots[-1];
+    limit = JS_BIT(16);
+    JS_ASSERT(dswIndex < nslots);
+    if (nslots > limit) {
+        d = ((jsdouble)dswIndex * nslots) / limit;
+        JS_ASSERT(0 <= d && d < nslots);
+        return (uint32) d;
+    }
+    return dswIndex;
+}
+
+static void
+DeutschSchorrWaite(JSContext *cx, void *thing, uint8 *flagp)
+{
+    jsval top, parent, v, *vp, *end;
+    JSObject *obj;
+    JSScope *scope;
+#ifdef JS_GCMETER
+    JSRuntime *rt = cx->runtime;
+#endif
+
+    top = JSVAL_EMPTY;
+
+down:
+    METER(if (++rt->gcStats.dswdepth > rt->gcStats.maxdswdepth)
+              rt->gcStats.maxdswdepth = rt->gcStats.dswdepth);
+    obj = (JSObject *) thing;
+    parent = OBJECT_TO_JSVAL(obj);
+
+    /* Precompute for quick testing to set and get scope->dswIndex. */
+    scope = (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->object == obj)
+            ? OBJ_SCOPE(obj)
+            : NULL;
+
+    vp = obj->slots;
+    end = vp + ((obj->map->ops->mark)
+                ? obj->map->ops->mark(cx, obj, NULL)
+                : JS_MIN(obj->map->freeslot, obj->map->nslots));
+
+    *flagp |= GCF_MARK;
+
+    for (;;) {
+        while ((vp = NEXT_UNMARKED_GC_THING(vp, end, &thing, &flagp, NULL))
+               != NULL) {
+            v = *vp;
+            JS_ASSERT(JSVAL_TO_GCTHING(v) == thing);
+
+            if (JSVAL_IS_OBJECT(v)) {
+                *vp = JSVAL_SETTAG(top, JSVAL_BOOLEAN);
+                top = parent;
+                if (scope)
+                    scope->dswIndex = EncodeDSWIndex(vp, obj->slots);
+                goto down;
+            }
+
+            /* Handle string and double GC-things. */
+            MARK_GC_THING(cx, thing, flagp, NULL);
+        }
+
+        /* If we are back at the root (or we never left it), we're done. */
+        METER(rt->gcStats.dswdepth--);
+        if (scope)
+            scope->dswIndex = 0;
+        if (top == JSVAL_EMPTY)
+            return;
+
+        /* Time to go back up the spanning tree. */
+        METER(rt->gcStats.dswup++);
+        obj = JSVAL_TO_OBJECT(top);
+        vp = obj->slots;
+        end = vp + vp[-1];
+
+        /*
+         * If obj is native and owns its own scope, we can minimize the cost
+         * of searching for the reversed pointer.
+         */
+        scope = (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->object == obj)
+                ? OBJ_SCOPE(obj)
+                : NULL;
+        if (scope)
+            vp += DecodeDSWIndex(scope->dswIndex, vp);
+        
+        /*
+         * Alas, we must search for the reversed pointer.  If we used the
+         * scope->dswIndex hint, we'll step over a few slots for objects with
+         * a few times 64K slots, etc.  For more typical (that is, far fewer
+         * than 64K slots) native objects that own their own scopes, this loop
+         * won't iterate at all.  The order of complexity for host objects and
+         * unmutated native objects is O(n^2), but n (4 or 5 in most cases) is
+         * low enough that we don't care.
+         *
+         * We cannot use a reversed pointer into obj->slots, because there
+         * is no way to find an object from an address within its slots.
+         */
+        v = *vp;
+        while (v <= JSVAL_TRUE || !JSVAL_IS_BOOLEAN(v)) {
+            METER(rt->gcStats.dswupstep++);
+            JS_ASSERT(vp + 1 < end);
+            v = *++vp;
+        }
+
+        *vp++ = parent;
+        parent = top;
+        top = JSVAL_CLRTAG(v);
+    }
+}
+
+void
+js_MarkGCThing(JSContext *cx, void *thing, void *arg)
+{
+    uint8 *flagp;
+
+    flagp = UNMARKED_GC_THING_FLAGS(thing, arg);
+    if (!flagp)
+        return;
+    MARK_GC_THING(cx, thing, flagp, arg);
 }
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
@@ -1416,6 +1751,7 @@ restart:
 #ifdef DEBUG_brendan
   { extern void DumpSrcNoteSizeHist();
     DumpSrcNoteSizeHist();
+    printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
   }
 #endif
 

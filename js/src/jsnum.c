@@ -537,27 +537,23 @@ js_InitRuntimeNumberState(JSContext *cx)
     u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
     u.s.lo = 0xffffffff;
     number_constants[NC_NaN].dval = NaN = u.d;
-    rt->jsNaN = js_NewDouble(cx, NaN);
-    if (!rt->jsNaN || !js_LockGCThing(cx, rt->jsNaN))
+    rt->jsNaN = js_NewDouble(cx, NaN, GCF_LOCK);
+    if (!rt->jsNaN)
         return JS_FALSE;
 
     u.s.hi = JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
     number_constants[NC_POSITIVE_INFINITY].dval = u.d;
-    rt->jsPositiveInfinity = js_NewDouble(cx, u.d);
-    if (!rt->jsPositiveInfinity ||
-        !js_LockGCThing(cx, rt->jsPositiveInfinity)) {
+    rt->jsPositiveInfinity = js_NewDouble(cx, u.d, GCF_LOCK);
+    if (!rt->jsPositiveInfinity)
         return JS_FALSE;
-    }
 
     u.s.hi = JSDOUBLE_HI32_SIGNBIT | JSDOUBLE_HI32_EXPMASK;
     u.s.lo = 0x00000000;
     number_constants[NC_NEGATIVE_INFINITY].dval = u.d;
-    rt->jsNegativeInfinity = js_NewDouble(cx, u.d);
-    if (!rt->jsNegativeInfinity ||
-        !js_LockGCThing(cx, rt->jsNegativeInfinity)) {
+    rt->jsNegativeInfinity = js_NewDouble(cx, u.d, GCF_LOCK);
+    if (!rt->jsNegativeInfinity)
         return JS_FALSE;
-    }
 
     u.s.hi = 0;
     u.s.lo = 1;
@@ -630,11 +626,11 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 }
 
 jsdouble *
-js_NewDouble(JSContext *cx, jsdouble d)
+js_NewDouble(JSContext *cx, jsdouble d, uintN gcflag)
 {
     jsdouble *dp;
 
-    dp = (jsdouble *) js_AllocGCThing(cx, GCX_DOUBLE);
+    dp = (jsdouble *) js_AllocGCThing(cx, gcflag | GCX_DOUBLE);
     if (!dp)
         return NULL;
     *dp = d;
@@ -652,7 +648,7 @@ js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval)
 {
     jsdouble *dp;
 
-    dp = js_NewDouble(cx, d);
+    dp = js_NewDouble(cx, d, 0);
     if (!dp)
         return JS_FALSE;
     *rval = DOUBLE_TO_JSVAL(dp);

@@ -170,7 +170,7 @@ extern const char js_parseInt_str[];
 
 /* GC-allocate a new JS number. */
 extern jsdouble *
-js_NewDouble(JSContext *cx, jsdouble d);
+js_NewDouble(JSContext *cx, jsdouble d, uintN gcflag);
 
 extern void
 js_FinalizeDouble(JSContext *cx, jsdouble *dp);

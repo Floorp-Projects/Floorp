@@ -451,6 +451,12 @@ JS_StringToVersion(const char *string);
                                                    not backward compatible with
                                                    the comment-hiding hack used
                                                    in HTML script tags. */
+#define JSOPTION_NATIVE_BRANCH_CALLBACK \
+                                JS_BIT(7)       /* the branch callback set by
+                                                   JS_SetBranchCallback may be
+                                                   called with a null script
+                                                   parameter, by native code
+                                                   that loops intensively */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);

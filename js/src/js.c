@@ -417,10 +417,15 @@ static JSBool
 my_BranchCallback(JSContext *cx, JSScript *script)
 {
     if (++gBranchCount == gBranchLimit) {
-        if (script->filename)
-            fprintf(gErrFile, "%s:", script->filename);
-        fprintf(gErrFile, "%u: script branches too much (%u callbacks)\n",
-                script->lineno, gBranchLimit);
+        if (script) {
+            if (script->filename)
+                fprintf(gErrFile, "%s:", script->filename);
+            fprintf(gErrFile, "%u: script branch callback (%u callbacks)\n",
+                    script->lineno, gBranchLimit);
+        } else {
+            fprintf(gErrFile, "native branch callback (%u callbacks)\n",
+                    gBranchLimit);
+        }
         gBranchCount = 0;
         return JS_FALSE;
     }
@@ -535,6 +540,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'b':
             gBranchLimit = atoi(argv[++i]);
             JS_SetBranchCallback(cx, my_BranchCallback);
+            JS_ToggleOptions(cx, JSOPTION_NATIVE_BRANCH_CALLBACK);
             break;
 
         case 'c':
@@ -1119,8 +1125,8 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 while (line1 < line2) {
                     if (!fgets(linebuf, LINE_BUF_LEN, file)) {
                         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                                       JSSMSG_UNEXPECTED_EOF,
-                                       script->filename);
+                                             JSSMSG_UNEXPECTED_EOF,
+                                             script->filename);
                         goto bail;
                     }
                     line1++;
