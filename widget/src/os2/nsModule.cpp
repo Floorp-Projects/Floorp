@@ -185,10 +185,10 @@ HPOINTER nsWidgetModuleData::GetPointer( nsCursor aCursor)
       case eCursor_cell:                idPtr = ID_PTR_CELL       ; break;
       case eCursor_grab:                idPtr = ID_PTR_GRAB       ; break;
       case eCursor_grabbing:            idPtr = ID_PTR_GRABBING   ; break;
+      case eCursor_spinning:            idPtr = ID_PTR_ARROWWAIT  ; break;
 
       case eCursor_crosshair:
       case eCursor_help:
-      case eCursor_spinning:
       case eCursor_context_menu:
       case eCursor_count_up:
       case eCursor_count_down:
