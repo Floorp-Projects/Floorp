@@ -33,15 +33,19 @@ class nsIDOMDocument;
 class nsIDOMSelection;
 class nsIDOMElement;
 class nsIDOMNode;
+
 %}
 
 interface nsIFileSpec;
+interface nsIEditor;
 
 [scriptable, uuid(9afff72b-ca9a-11d2-96c9-0060b0fb9956)]
 interface nsIEditorShell : nsISupports
 {
   readonly attribute nsIDOMDocument    editorDocument;
   readonly attribute nsIDOMSelection   editorSelection;
+  
+  [noscript] readonly attribute nsIEditor         editor;
   
 %{C++
 

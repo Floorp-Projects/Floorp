@@ -2550,7 +2550,7 @@ nsEditorShell::SetParagraphFormat(const PRUnichar * paragraphFormat)
 }
 
 
-NS_METHOD
+NS_IMETHODIMP
 nsEditorShell::GetEditorDocument(nsIDOMDocument** aEditorDocument)
 {
   if (mEditor)
@@ -2563,6 +2563,18 @@ nsEditorShell::GetEditorDocument(nsIDOMDocument** aEditorDocument)
   }
   return NS_NOINTERFACE;
 }
+
+ 
+NS_IMETHODIMP
+nsEditorShell::GetEditor(nsIEditor** aEditor)
+{
+  if (mEditor)
+    return mEditor->QueryInterface(NS_GET_IID(nsIEditor), (void **)aEditor);		// the QI does the addref
+
+  *aEditor = nsnull;
+  return NS_ERROR_NOT_INITIALIZED;
+}
+
 
 NS_IMETHODIMP
 nsEditorShell::GetEditorSelection(nsIDOMSelection** aEditorSelection)
