@@ -638,9 +638,12 @@ nsHTMLImageElement::GetCallerSourceURL(nsIURI** sourceURL)
   if (NS_FAILED(result))
     return NS_ERROR_FAILURE;
 
-  JSContext *cx;
+  JSContext *cx = nsnull;
 
-  if (NS_FAILED(stack->Peek(&cx)))
+  // it's possible that there is not a JSContext on the stack.
+  // specifically this can happen when the DOM is being manipulated
+  // from native (non-JS) code.
+  if (NS_FAILED(stack->Peek(&cx)) || !cx)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIScriptGlobalObject> global;
@@ -1054,7 +1057,7 @@ nsHTMLImageElement::SetSrc(const nsAReadableString& aSrc)
   nsCOMPtr<nsIURI> baseURL;
   nsresult result = NS_OK;
 
-  GetCallerSourceURL(getter_AddRefs(baseURL));
+  (void) GetCallerSourceURL(getter_AddRefs(baseURL));
 
   if (mDocument && !baseURL) {
     result = mDocument->GetBaseURL(*getter_AddRefs(baseURL));
