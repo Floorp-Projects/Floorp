@@ -294,6 +294,7 @@ modern.jar:
   skin/modern/messenger/threadPaneExtras.css                       (messenger/threadPaneExtras.css)
   skin/modern/messenger/mailWindow2.css                            (messenger/mailWindow2.css)
   skin/modern/messenger/messageBody.css                            (messenger/messageBody.css)
+  skin/classic/messenger/virtualFolderListDialog.css               (messenger/virtualFolderListDialog.css)
   skin/modern/messenger/messageHeader.css                          (messenger/messageHeader.css)
   skin/modern/messenger/messageKeywords.css                        (messenger/messageKeywords.css)
   skin/modern/messenger/messageWindow.css                          (messenger/messageWindow.css)
