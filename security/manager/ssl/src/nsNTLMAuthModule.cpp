@@ -46,6 +46,11 @@
 #include "pk11func.h"
 #include "md4.h"
 
+#ifdef DEBUG
+// enable this directive to turn on extra debug output
+#define NTLM_DEBUG
+#endif
+
 static void des_makekey(const PRUint8 *raw, PRUint8 *key);
 static void des_encrypt(const PRUint8 *key, const PRUint8 *src, PRUint8 *hash);
 static void md5sum(const PRUint8 *input, PRUint32 inputLen, PRUint8 *result);
@@ -89,11 +94,12 @@ static void md5sum(const PRUint8 *input, PRUint32 inputLen, PRUint8 *result);
 #define NTLM_Negotiate56                    0x80000000
 
 // we send these flags with our type 1 message
-#define NTLM_TYPE1_FLAGS    \
-  (NTLM_NegotiateUnicode |  \
-   NTLM_NegotiateOEM |      \
-   NTLM_RequestTarget |     \
-   NTLM_NegotiateNTLMKey |  \
+#define NTLM_TYPE1_FLAGS      \
+  (NTLM_NegotiateUnicode |    \
+   NTLM_NegotiateOEM |        \
+   NTLM_RequestTarget |       \
+   NTLM_NegotiateNTLMKey |    \
+   NTLM_NegotiateAlwaysSign | \
    NTLM_NegotiateNTLM2Key)
 
 static const char NTLM_SIGNATURE[] = "NTLMSSP";
@@ -113,7 +119,7 @@ static const char NTLM_TYPE3_MARKER[] = { 0x03, 0x00, 0x00, 0x00 };
 
 //-----------------------------------------------------------------------------
 
-#ifdef DEBUG
+#ifdef NTLM_DEBUG
 
 static void PrintFlags(PRUint32 flags)
 {
@@ -194,7 +200,19 @@ PrintBuf(const char *tag, const PRUint8 *buf, PRUint32 bufLen)
   }
 }
 
-#endif // DEBUG
+#include "plbase64.h"
+#include "prmem.h"
+static void PrintToken(const char *name, const void *token, PRUint32 tokenLen)
+{
+  char *b64data = PL_Base64Encode((const char *) token, tokenLen, NULL);
+  if (b64data)
+  {
+    printf("%s: %s\n", name, b64data);
+    PR_Free(b64data);
+  }
+}
+
+#endif // NTLM_DEBUG
 
 //-----------------------------------------------------------------------------
 
@@ -480,7 +498,7 @@ ParseType2Msg(const void *inBuf, PRUint32 inLen, Type2Msg *msg)
   memcpy(msg->challenge, cursor, sizeof(msg->challenge));
   cursor += sizeof(msg->challenge);
 
-#ifdef DEBUG
+#ifdef NTLM_DEBUG
   printf("NTLM type 2 message:\n");
   PrintBuf("target", (const PRUint8 *) msg->target, msg->targetLen);
   PrintBuf("flags", (const PRUint8 *) &msg->flags, 4);
@@ -722,10 +740,22 @@ nsNTLMAuthModule::GetNextToken(const void *inToken,
 
   // if inToken is non-null, then assume it contains a type 2 message...
   if (inToken)
+  {
+#ifdef NTLM_DEBUG
+    PrintToken("in-token", inToken, inTokenLen);
+#endif
     rv = GenerateType3Msg(mDomain, mUsername, mPassword, inToken,
                           inTokenLen, outToken, outTokenLen);
+  }
   else
+  {
     rv = GenerateType1Msg(outToken, outTokenLen);
+  }
+
+#ifdef NTLM_DEBUG
+  if (NS_SUCCEEDED(rv))
+    PrintToken("out-token", *outToken, *outTokenLen);
+#endif
 
   return rv;
 }
