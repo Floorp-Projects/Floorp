@@ -111,6 +111,7 @@
     <command id="cmd_tmode_trace" oncommand="setThrowMode(TMODE_TRACE);"/>
     <command id="cmd_tmode_break" oncommand="setThrowMode(TMODE_BREAK);"/>
     <command id="cmd_stop" oncommand="console.doCommandToggleStop();"/>
+    <command id="cmd_reload" oncommand="console.doCommandReload();"/>
   </commandset>
 
   <commandset id="venkmanDebuggerCommands">
@@ -124,6 +125,8 @@
   <keyset id="venkmanKeys">
     <key id="key_reload_ui" observes="cmd_reload_ui" 
       modifiers="control alt" key="R"/>
+    <key id="key_reload" observes="cmd_reload" 
+      modifiers="control" key="R"/>
     <key id="key_focus" observes="cmd_focus" keycode="VK_TAB"/>
     <key id="key_stop" observes="cmd_stop" keycode="VK_F4"/>
     <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
@@ -146,21 +149,17 @@
     <menubar id="main-menubar" persist="collapsed">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
-         <!--
-          <menuitem id="menu_ReloadUI" key="key_reload_ui"
-            observes="cmd_reload_ui"
-            label="&ReloadUI.label;" accesskey="&ReloadUI.aKey;"/>
-          <menuseparator/>
-         -->
           <menuitem id="menu_close"/>
         </menupopup>
       </menu>
-    <!--
+
       <menu id="menu_View">
         <menupopup id="menu_ViewPopup">
-        </menupopup>        
+          <menuitem id="menu_Reload" key="key_reload" observes="cmd_reload"
+            label="&Reload.label;" accesskey="&Reload.aKey;"/>
+        </menupopup>
       </menu>
-    -->
+
       <menu id="menu_Debug" label="&Debug.label;" accesskey="&Debug.aKey;">
         <menupopup id="menu_DebugPopup">
           <menuitem id="menu_Stop" key="key_stop"
@@ -227,6 +226,9 @@
       <hbox flex="1" id="top-hbox" persist="height">
 
         <vbox flex="1" id="top-left-pane" persist="width">
+
+          <!-- project view -->
+
           <outliner flex="1" id="project-outliner" persist="height"
             onselect="console.onProjectSelect(event);">
 
@@ -246,6 +248,8 @@
           </outliner>
 
           <splitter collapse="before"><grippy/></splitter>
+
+          <!-- script view -->
 
           <outliner flex="1" id="script-list-outliner" persist="height"
             onselect="console.onScriptSelect(event);"
@@ -268,6 +272,8 @@
 
         <splitter collapse="before"><grippy/></splitter>
 
+        <!-- script view -->
+
         <outliner id="source-outliner" flex="50" persist="width"
           onclick="console.onSourceClick(event);">
           <outlinercol id="breakpoint-col" width="20px"
@@ -288,6 +294,9 @@
       <splitter collapse="after" persist="top"><grippy/></splitter>
 
       <hbox id="bottom-hbox" persist="height">
+
+        <!-- stack view -->
+
         <outliner flex="2" id="stack-outliner" persist="width"
           onselect="console.onStackSelect(event);">
 
@@ -314,6 +323,8 @@
         </outliner>
 
         <splitter collapse="after" persist="left"><grippy/></splitter>
+
+        <!-- console view -->
 
         <vbox id="console-box" flex="50" persist="width">
           <iframe id="output-iframe" flex="1" tooltip="tooltip-popup"
