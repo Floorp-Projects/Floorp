@@ -132,6 +132,10 @@ public:
 //----------------------------------------------------------------------
 
 class MemoryElementSet {
+public:
+    class ConstIterator;
+    friend class ConstIterator;
+
 protected:
     class List {
     public:
@@ -223,8 +227,6 @@ public:
         List* mCurrent;
     };
 
-    friend class ConstIterator;
-
     ConstIterator First() const { return ConstIterator(mElements); }
     ConstIterator Last() const { return ConstIterator(nsnull); }
 
@@ -274,6 +276,10 @@ public:
 //----------------------------------------------------------------------
 
 class BindingSet {
+public:
+    class ConstIterator;
+    friend class ConstIterator;
+
 protected:
     class List {
     public:
@@ -364,8 +370,6 @@ public:
         List* mCurrent;
     };
 
-    friend class ConstIterator;
-
     ConstIterator First() const { return ConstIterator(mBindings); }
     ConstIterator Last() const { return ConstIterator(nsnull); }
 
@@ -445,6 +449,12 @@ public:
         MOZ_COUNT_DTOR(InstantiationSet);
         Clear(); }
 
+    class ConstIterator;
+    friend class ConstIterator;
+
+    class Iterator;
+    friend class Iterator;
+
 protected:
     class List {
     public:
@@ -507,8 +517,6 @@ public:
             return mCurrent != aConstIterator.mCurrent; }
     };
 
-    friend class ConstIterator;
-
     ConstIterator First() const { return ConstIterator(mHead.mNext); }
     ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(List*, &mHead)); }
 
@@ -548,8 +556,6 @@ public:
 
         friend class InstantiationSet;
     };
-
-    friend class Iterator;
 
     Iterator First() { return Iterator(mHead.mNext); }
     Iterator Last() { return Iterator(&mHead); }

@@ -346,6 +346,12 @@ Rule::GetContent(nsIContent** aResult) const
 class MatchSet
 {
 public:
+    class ConstIterator;
+    friend class ConstIterator;
+
+    class Iterator;
+    friend class Iterator;
+
     /**
      * A single <rule, instantiation> tuple.
      */
@@ -458,8 +464,6 @@ public:
             return mCurrent != aConstIterator.mCurrent; }
     };
 
-    friend class ConstIterator;
-
     ConstIterator First() const { return ConstIterator(mHead.mNext); }
     ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(MatchList*, &mHead)); }
 
@@ -499,8 +503,6 @@ public:
 
         friend class MatchSet;
     };
-
-    friend class Iterator;
 
     Iterator First() { return Iterator(mHead.mNext); }
     Iterator Last() { return Iterator(&mHead); }
@@ -739,6 +741,10 @@ Key::CompareKeys(const void* aLeft, const void* aRight)
 //----------------------------------------------------------------------
 
 class KeySet {
+public:
+    class ConstIterator;
+    friend class ConstIterator;
+
 protected:
     class Entry {
     public:
@@ -797,8 +803,6 @@ public:
         PRBool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
     };
-
-    friend class ConstIterator;
 
     ConstIterator First() const { return ConstIterator(mHead.mNext); }
     ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(Entry*, &mHead)); }
