@@ -360,6 +360,19 @@ sub bz_add_column {
 sub bz_alter_column {
     my ($self, $table, $name, $new_def) = @_;
 
+    # You can't change a column to be NOT NULL if you have no DEFAULT,
+    # if there are any NULL values in that column.
+    if ($new_def->{NOTNULL} && !exists $new_def->{DEFAULT}) {
+        # Check for NULLs
+        my $any_nulls = $self->selectrow_array(
+            "SELECT 1 FROM $table WHERE $name IS NULL");
+        if ($any_nulls) {
+            die "You cannot alter the ${table}.${name} column to be NOT NULL"
+                . " without\nspecifying a default, because there are NULL"
+                . " values currently in it.";
+        }
+    }
+
     my $current_def = $self->bz_column_info($table, $name);
 
     if (!$self->_bz_schema->columns_equal($current_def, $new_def)) {
@@ -434,6 +447,23 @@ sub bz_change_field_type ($$$) {
     }
 }
 
+sub bz_drop_column {
+    my ($self, $table, $column) = @_;
+
+    my $current_def = $self->bz_column_info($table, $column);
+
+    if ($current_def) {
+        my @statements = $self->_bz_real_schema->get_drop_column_ddl(
+            $table, $column);
+        print "Deleting unused column $column from table $table ...\n";
+        foreach my $sql (@statements) {
+            $self->do($sql);
+        }
+        $self->_bz_real_schema->delete_column($table, $column);
+        $self->_bz_store_real_schema;
+    }
+}
+
 # XXX - Need to make this cross-db compatible
 # XXX - This shouldn't print stuff to stdout
 sub bz_drop_field ($$) {
@@ -491,6 +521,28 @@ sub bz_drop_table_indexes ($) {
       }
       $seen{$$ref[2]} = 1;
 
+    }
+}
+
+sub bz_rename_column {
+    my ($self, $table, $old_name, $new_name) = @_;
+
+    my $old_col_exists  = $self->bz_column_info($table, $old_name);
+
+    if ($old_col_exists) {
+        my $already_renamed = $self->bz_column_info($table, $new_name);
+        die "Name conflict: Cannot rename ${table}.${old_name} to"
+            . " ${table}.${new_name},\nbecause ${table}.${new_name}"
+            . " already exists." if $already_renamed;
+        my @statements = $self->_bz_real_schema->get_rename_column_ddl(
+            $table, $old_name, $new_name);
+        print "Changing column $old_name in table $table to"
+              . " be named $new_name...\n";
+        foreach my $sql (@statements) {
+            $self->do($sql);
+        }
+        $self->_bz_real_schema->rename_column($table, $old_name, $new_name);
+        $self->_bz_store_real_schema;
     }
 }
 
@@ -814,6 +866,9 @@ Bugzilla::DB - Database access routines, using L<DBI>
   $dbh->bz_add_column($table, $name, \%definition);
   $dbh->bz_add_index($table, $name, $definition);
   $dbh->bz_drop_index($table, $name);
+  $dbh->bz_alter_column($table, $name, \%new_def);
+  $dbh->bz_drop_column($table, $column);
+  $dbh->bz_rename_column($table, $old_name, $new_name);
 
   # Schema Modification (DEPRECATED)
   $dbh->bz_add_field($table, $column, $definition);
@@ -1151,6 +1206,40 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
               doesn't exist, we do nothing.
  Params:      $table - The table that the index is on.
               $name  - The name of the index that you want to drop.
+ Returns:     nothing
+
+=item C<bz_alter_column($table, $name, \%new_def)>
+
+ Description: Changes the data type of a column in a table. Prints out
+              the changes being made to stdout. If the new type is the
+              same as the old type, the function returns without changing
+              anything.
+ Params:      $table   = the table where the column is
+              $name    = the name of the column you want to change
+              $new_def = An abstract column definition for the new 
+                         data type of the columm
+ Returns:     nothing
+
+=item C<bz_drop_column($table, $column)>
+
+ Description: Removes a column from a database table. If the column
+              doesn't exist, we return without doing anything. If we do
+              anything, we print a short message to stdout about the change.
+ Params:      $table  = The table where the column is
+              $column = The name of the column you want to drop
+ Returns:     none
+
+=item C<bz_rename_column($table, $old_name, $new_name)>
+
+ Description: Renames a column in a database table. If the C<$old_name>
+              column doesn't exist, we return without doing anything.
+              If C<$old_name> and C<$new_name> both already exist in the
+              table specified, we fail.
+ Params:      $table    = The table containing the column 
+                          that you want to rename
+              $old_name = The current name of the column that 
+                          you want to rename
+              $new_name = The new name of the column
  Returns:     nothing
 
 =back

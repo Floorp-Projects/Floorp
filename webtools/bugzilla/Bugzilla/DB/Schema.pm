@@ -1189,32 +1189,29 @@ sub get_type_ddl {
 
 } #eosub--get_type_ddl
 #--------------------------------------------------------------------------
-sub get_column_ddl {
+sub get_column {
+=item C<get_column($table, $column)>
 
-=item C<get_column_ddl>
-
- Description: Public method to generate a DDL segment of a "create table"
-              SQL statement for a given table and field.
+ Description: Public method to get the abstract definition of a column.
  Parameters:  $table - the table name
               $column - a column in the table
- Returns:     a hash containing information about the column including its
+ Returns:     a hashref containing information about the column, including its
               type (C<TYPE>), whether or not it can be null (C<NOTNULL>),
-              its default value if it has one (C<DEFAULT), whether it is
-              a etc. The hash will be empty if either the specified
-              table or column does not exist in the database schema.
+              its default value if it has one (C<DEFAULT), etc.
+              Returns undef if the table or column does not exist.
 
 =cut
 
     my($self, $table, $column) = @_;
 
-    my $thash = $self->{schema}{$table};
-    return() unless ($thash);
-
-    my %fields = @{ $thash->{FIELDS} };
-    return() unless ($fields{$column});
-    return %{ $fields{$column} };
-
-} #eosub--get_column_ddl
+    # Prevent a possible dereferencing of an undef hash, if the
+    # table doesn't exist.
+    if (exists $self->{schema}->{$table}) {
+        my %fields = (@{ $self->{schema}{$table}{FIELDS} });
+        return $fields{$column};
+    }
+    return undef;
+} #eosub--get_column
 #--------------------------------------------------------------------------
 sub get_table_list {
 
@@ -1363,7 +1360,7 @@ sub _get_create_index_ddl {
 
 sub get_add_column_ddl {
 
-=item C<get_alter_ddl($table, $column, \%definition)>
+=item C<get_add_column_ddl($table, $column, \%definition)>
 
  Description: Generate SQL to add a column to a table.
  Params:      $table - The table containing the column.
@@ -1417,7 +1414,7 @@ sub get_add_index_ddl {
 
 sub get_alter_column_ddl {
 
-=item C<get_alter_ddl($table, $column, \%definition)>
+=item C<get_alter_column_ddl($table, $column, \%definition)>
 
  Description: Generate SQL to alter a column in a table.
               The column that you are altering must exist,
@@ -1482,8 +1479,13 @@ sub get_alter_column_ddl {
     # OR if we changed the type and we are NOT NULL
     if ( (!$old_def->{NOTNULL} && $new_def->{NOTNULL}) ||
          ($typechange && $new_def->{NOTNULL}) ) {
+        if (exists $new_def->{DEFAULT}) {
+            # Handle any fields that were NULL before, if we have a default.
+            push(@statements, "UPDATE $table SET $column = $default"
+                            . "  WHERE $column IS NULL");
+        }
         push(@statements, "ALTER TABLE $table ALTER COLUMN $column"
-                          . " SET NOT NULL");
+                        . " SET NOT NULL");
     }
     # If we went from NOT NULL to NULL
     elsif ($old_def->{NOTNULL} && !$new_def->{NOTNULL}) {
@@ -1520,6 +1522,40 @@ sub get_drop_index_ddl {
     # Although ANSI SQL-92 doesn't specify a method of dropping an index,
     # many DBs support this syntax.
     return ("DROP INDEX $name");
+}
+
+sub get_drop_column_ddl {
+
+=item C<get_drop_column_ddl($table, $column)>
+
+ Description: Generate SQL to drop a column from a table.
+ Params:      $table - The table containing the column.
+              $column - The name of the column being dropped.
+ Returns:     An array of SQL statements.
+
+=cut
+
+    my ($self, $table, $column) = @_;
+    return ("ALTER TABLE $table DROP COLUMN $column");
+}
+
+sub get_rename_column_ddl {
+
+=item C<get_rename_column_ddl($table, $old_name, $new_name)>
+
+ Description: Generate SQL to change the name of a column in a table.
+              NOTE: ANSI SQL contains no simple way to rename a column,
+                    so this function is ABSTRACT and must be implemented
+                    by subclasses.
+ Params:      $table - The table containing the column to be renamed.
+              $old_name - The name of the column being renamed.
+              $new_name - The name the column is changing to.
+ Returns:     An array of SQL statements.
+
+=cut
+
+    die "ANSI SQL has no way to rename a column, and your database driver\n"
+        . " has not implemented a method.";
 }
 
 sub get_column_abstract {
@@ -1572,6 +1608,51 @@ sub get_index_abstract {
     return undef;
 }
 
+sub delete_column {
+
+=item C<delete_column($table, $column)>
+
+ Description: Deletes a column from this Schema object.
+ Params:      $table - Name of the table that the column is in.
+                       The table must exist, or we will fail.
+              $column  - Name of the column to delete.
+ Returns:     nothing
+
+=cut
+
+    my ($self, $table, $column) = @_;
+
+    my $abstract_fields = $self->{abstract_schema}{$table}{FIELDS};
+    my $name_position = lsearch($abstract_fields, $column);
+    die "Attempted to delete nonexistent column ${table}.${column}" 
+        if $name_position == -1;
+    # Delete the key/value pair from the array.
+    splice(@$abstract_fields, $name_position, 2);
+
+    $self->{schema} = dclone($self->{abstract_schema});
+    $self->_adjust_schema();
+}
+
+sub rename_column {
+
+=item C<rename_column($table, $old_name, $new_name>
+
+ Description: Renames a column on a table in the Schema object.
+              The column that you are renaming must exist.
+ Params:      $table - The table the column is on.
+              $old_name - The current name of the column.
+              $new_name - The new name of hte column.
+ Returns:     nothing
+
+=cut
+
+    my ($self, $table, $old_name, $new_name) = @_;
+    my $def = $self->get_column_abstract($table, $old_name);
+    die "Renaming a column that doesn't exist" if !$def;
+    $self->delete_column($table, $old_name);
+    $self->set_column($table, $new_name, $def);
+}
+
 sub set_column {
 
 =item C<set_column($table, $column, \%new_def)>
@@ -1592,7 +1673,7 @@ sub set_column {
 
     my ($self, $table, $column, $new_def) = @_;
 
-    my $fields = \@{ $self->{abstract_schema}{$table}{FIELDS} };
+    my $fields = $self->{abstract_schema}{$table}{FIELDS};
     $self->_set_object($table, $column, $new_def, $fields);
 }
 
@@ -1616,7 +1697,7 @@ sub set_index {
 
     my ($self, $table, $name, $definition) = @_;
 
-    my $indexes = \@{ $self->{abstract_schema}{$table}{INDEXES} };
+    my $indexes = $self->{abstract_schema}{$table}{INDEXES};
     $self->_set_object($table, $name, $definition, $indexes);
 }
 
