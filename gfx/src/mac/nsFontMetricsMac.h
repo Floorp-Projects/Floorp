@@ -59,19 +59,7 @@ public:
 
   static void SetFont(const nsFont& aFont, nsIDeviceContext* aContext);
 
-/*protected:
-  void RealizeFont();
-  static const char* MapFamilyToFont(const nsString& aLogicalFontName);
-
 protected:
-  void QueryFont();
-  char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
-
-  nsFont            *mFont;
-  nsIDeviceContext  *mContext;
-  XFontStruct       *mFontInfo;
-  Font              mFontHandle;
-  nscoord           mCharWidths[256];*/
   nscoord           mHeight;
   nscoord           mAscent;
   nscoord           mDescent;
