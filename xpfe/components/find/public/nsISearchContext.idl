@@ -38,7 +38,8 @@ class nsIWebShell;
 | default implementation of the find component.                                |
 |                                                                              |
 | This interface is very simple: it provides 5 attributes that control the     |
-| Find and FindNext methods of nsFindComponent.                                |
+| Find and FindNext methods of nsFindComponent.  In addition, it provides      |
+| two additional attributes used for implementation purposes.                  |
 ------------------------------------------------------------------------------*/
 [scriptable, uuid(31ABA0F0-2D93-11d3-8069-00600811A9C3)]
 interface nsISearchContext : nsISupports {
@@ -49,6 +50,4 @@ interface nsISearchContext : nsISupports {
     attribute boolean wrapSearch;
     readonly attribute nsIDOMWindow targetWindow;
     attribute nsIDOMWindow findDialog;
-    void ConvertToWeakReference();
-    void ConvertToOwningReference();
 };

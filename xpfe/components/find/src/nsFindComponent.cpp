@@ -62,11 +62,11 @@ nsFindComponent::Context::Context()
 
 nsFindComponent::Context::~Context()
 {
+    #ifdef DEBUG_law
+    printf( "\nnsFindComponent::Context destructor called\n\n" );
+    #endif
     // Close the dialog (if there is one).
     if ( mFindDialog ) {
-        // Bump refcnt so cleanup of the bogus owning reference in JS doesn't
-        // cause re-entry.
-        this->AddRef();
         mFindDialog->Close();
         mFindDialog = 0;
     }
@@ -668,16 +668,16 @@ nsFindComponent::Context::SetWrapSearch(PRBool aBool)
 NS_IMETHODIMP
 nsFindComponent::Context::GetTargetWindow( nsIDOMWindow * *aWindow)
 {
-	NS_ENSURE_ARG_POINTER(aWindow);
-	NS_IF_ADDREF(*aWindow = mTargetWindow);
+  NS_ENSURE_ARG_POINTER(aWindow);
+  NS_IF_ADDREF(*aWindow = mTargetWindow);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFindComponent::Context::GetFindDialog( nsIDOMWindow  * *aDialog)
 {
-	NS_ENSURE_ARG_POINTER(aDialog);
-	NS_IF_ADDREF(*aDialog = mFindDialog);
+  NS_ENSURE_ARG_POINTER(aDialog);
+  NS_IF_ADDREF(*aDialog = mFindDialog);
   return NS_OK;
 }
 
@@ -687,21 +687,6 @@ nsFindComponent::Context::SetFindDialog( nsIDOMWindow *aDialog )
   mFindDialog = aDialog;
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsFindComponent::Context::ConvertToWeakReference()
-{
-    NS_ASSERTION( mRefCnt >= 1, "Can't convert last reference to a weak one!" );
-    this->Release();
-    return NS_OK;
-};
-
-NS_IMETHODIMP
-nsFindComponent::Context::ConvertToOwningReference()
-{
-    this->AddRef();
-    return NS_OK;
-};
 
 #ifdef XP_MAC
 #pragma mark -

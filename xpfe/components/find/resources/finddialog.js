@@ -95,9 +95,6 @@
             // Tell search context about this dialog.
             data.findDialog = window;
 
-            // Turn "data" into weak reference.
-            data.ConvertToWeakReference();
-
             // Fill dialog.
             loadDialog();
 
@@ -106,10 +103,6 @@
         }
 
         function onUnload() {
-            // Turn "data" back to owning reference (since xpconnect
-            // will do Release() regardless).
-            data.ConvertToOwningReference();
-
             // Disconnect context from this dialog.
             data.findDialog = null;
         }
