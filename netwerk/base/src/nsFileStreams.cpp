@@ -133,9 +133,20 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
     if (mFile == nsnull)
         return NS_ERROR_NOT_INITIALIZED;
 
+    *contentLength = 0;
+    *contentType = nsnull;
+
     // don't actually open the file here -- we'll do it on demand in the
     // GetInputStream/GetOutputStream methods
     nsresult rv = NS_OK;
+    
+    PRBool exist;
+    rv = mFile->Exists(&exist);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (!exist)
+        return NS_ERROR_FILE_NOT_FOUND;
 
     // We'll try to use the file's length, if it has one. If not,
     // assume the file to be special, and set the content length
