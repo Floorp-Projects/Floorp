@@ -155,7 +155,7 @@ function FindTopLevelMessage(startMessage)
 	var currentTop = startMessage;
 	var parent = startMessage.parentNode.parentNode;
 
-	while(parent.nodeName == 'treeitem')
+	while(parent.localName == 'treeitem')
 	{
 		currentTop = parent;
 		parent = parent.parentNode.parentNode;

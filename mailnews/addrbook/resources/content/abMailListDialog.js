@@ -280,7 +280,7 @@ function awInputChanged(inputElement)
 function awInputElementName()
 {
     if (inputElementType == "")
-        inputElementType = document.getElementById("address#1").nodeName;
+        inputElementType = document.getElementById("address#1").localName;
     return inputElementType;
 }
 

@@ -666,7 +666,7 @@ function FolderPaneOnClick(event)
 			//dump("twisty open\n");
 
 			var item = event.target.parentNode.parentNode.parentNode;
-			if (item.nodeName == "treeitem") {
+			if (item.localName == "treeitem") {
 				var isServer = (treeitem.getAttribute('IsServer') == "true");
 				if (isServer) {
 	    			var uri = treeitem.getAttribute("id");
@@ -694,7 +694,7 @@ function FolderPaneOnClick(event)
 	else if(event.detail == 2)
 	{
 		var item = event.target.parentNode.parentNode;
-		if (item.nodeName == "treeitem")
+		if (item.localName == "treeitem")
 			FolderPaneDoubleClick(item);
 	}
 }

@@ -28,14 +28,14 @@ var selectElementIndexTable = null;
 function awInputElementName()
 {
     if (inputElementType == "")
-        inputElementType = document.getElementById("msgRecipient#1").nodeName;
+        inputElementType = document.getElementById("msgRecipient#1").localName;
     return inputElementType;
 }
 
 function awSelectElementName()
 {
     if (selectElementType == "")
-        selectElementType = document.getElementById("msgRecipientType#1").nodeName;
+        selectElementType = document.getElementById("msgRecipientType#1").localName;
     return selectElementType;
 }
 

@@ -267,7 +267,7 @@ var DefaultController =
 				var focusedElement = top.document.commandDispatcher.focusedElement;
 				if(focusedElement)
 				{
-					var name = focusedElement.nodeName;
+					var name = focusedElement.localName;
 					return ((name != "INPUT") && (name != "TEXTAREA"));
 				}
 				else
@@ -561,8 +561,8 @@ function MsgDeleteFolder()
                 dump(parenturi);
             else
                 dump("No parenturi");
-            dump("folder = " + folder.nodeName + "\n"); 
-            dump("parent = " + parent.nodeName + "\n"); 
+            dump("folder = " + folder.localName + "\n"); 
+            dump("parent = " + parent.localName + "\n"); 
             messenger.DeleteFolders(tree.database,
                                     parent.resource, folder.resource);
         }

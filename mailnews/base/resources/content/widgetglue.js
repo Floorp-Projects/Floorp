@@ -189,7 +189,7 @@ function MsgCompactFolder()
                 {
                     folderuri = folder.getAttribute('id');
                     dump(folderuri + "\n");
-                    dump("folder = " + folder.nodeName + "\n"); 
+                    dump("folder = " + folder.localName + "\n"); 
                     messenger.CompactFolder(tree.database, folder.resource);
                 }
             }

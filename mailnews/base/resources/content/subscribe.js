@@ -374,7 +374,7 @@ function selectNodeByName( aMatchString )
         node.getAttribute("open") != "true" )
       node.setAttribute("open","true");
     node = getTreechildren(node);
-    dump("*** node = " + node.nodeName + "\n");
+    dump("*** node = " + node.localName + "\n");
   }
   
   for( var i = 0; i < node.childNodes.length; i++ )
@@ -395,7 +395,7 @@ function getTreechildren( aTreeNode )
     {
       for( var i = 0; i < aTreeNode.childNodes.length; i++ )
       {
-        if( aTreeNode.childNodes[i].nodeName.toLowerCase() == "treechildren" )
+        if( aTreeNode.childNodes[i].localName.toLowerCase() == "treechildren" )
           return aTreeNode.childNodes[i];
       }
       return aTreeNode;
