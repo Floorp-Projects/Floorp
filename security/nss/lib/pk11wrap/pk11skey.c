@@ -1216,6 +1216,7 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
     PRBool weird = PR_FALSE;   /* hack for fortezza */
     CK_BBOOL ckfalse = CK_FALSE;
     CK_BBOOL cktrue = CK_TRUE;
+    CK_ULONG ck_key_size;       /* only used for variable-length keys */
 
     if ((keySize == -1) && (type == CKM_SKIPJACK_CBC64)) {
 	weird = PR_TRUE;
@@ -1227,9 +1228,9 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
 	? CKA_ENCRYPT : CKA_DECRYPT, &cktrue, sizeof(CK_BBOOL)); attrs++;
     
     if (keySize != 0) {
-        CK_ULONG key_size = keySize; /* Convert to PK11 type */
+        ck_key_size = keySize; /* Convert to PK11 type */
 
-        PK11_SETATTRS(attrs, CKA_VALUE_LEN, &key_size, sizeof(key_size)); 
+        PK11_SETATTRS(attrs, CKA_VALUE_LEN, &ck_key_size, sizeof(ck_key_size)); 
 							attrs++;
     }
 
