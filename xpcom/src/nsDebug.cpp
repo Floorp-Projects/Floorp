@@ -174,4 +174,5 @@ NS_COM void nsDebug::Warning(const char* aMessage,
   InitLog();
   PR_LOG(gDebugLog, PR_LOG_ERROR,
          ("Warning: \"%s\" at file %s, line %d", aMessage, aFile, aLine));
+  PR_LogFlush();
 }
