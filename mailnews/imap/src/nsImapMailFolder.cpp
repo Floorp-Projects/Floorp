@@ -373,15 +373,11 @@ nsresult nsImapMailFolder::GetDatabase()
 		nsresult rv = GetPathName(path);
 		if (NS_FAILED(rv)) return rv;
 
-		nsIMsgDatabase * mailDBFactory = nsnull;
+		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
-		rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+		rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDBFactory));
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
-		{
 			folderOpen = mailDBFactory->Open(path, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
-	
-			NS_RELEASE(mailDBFactory);
-		}
 
 		if(mDatabase)
 		{
@@ -446,15 +442,14 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 
         if(NS_SUCCEEDED(rv))
         {
-            nsIEnumerator *msgHdrEnumerator = nsnull;
+            nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
             nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-            rv = mDatabase->EnumerateMessages(&msgHdrEnumerator);
+            rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
             if(NS_SUCCEEDED(rv))
                 rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
                                                        this,
                                                        &messageEnumerator);
             *result = messageEnumerator;
-            NS_IF_RELEASE(msgHdrEnumerator);
         }
         else
             return rv;
@@ -470,7 +465,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 	nsresult rv = NS_OK;
     
 	nsFileSpec path;
-    nsIMsgFolder *child = nsnull;
+    nsCOMPtr<nsIMsgFolder> child;
 	//Get a directory based on our current path.
 	rv = CreateDirectoryForFolder(path);
 	if(NS_FAILED(rv))
@@ -489,13 +484,13 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 	path += folderNameStr;
    
 	// Create an empty database for this mail folder, set its name from the user  
-	nsIMsgDatabase * mailDBFactory = nsnull;
+	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
-	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-        nsIMsgDatabase *unusedDB = NULL;
-		rv = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &unusedDB, PR_TRUE);
+        nsCOMPtr<nsIMsgDatabase> unusedDB;
+		rv = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB), PR_TRUE);
 
         if (NS_SUCCEEDED(rv) && unusedDB)
         {
@@ -509,26 +504,19 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 			}
 
 			//Now let's create the actual new folder
-			rv = AddSubfolder(folderNameStr, &child);
+			rv = AddSubfolder(folderNameStr, getter_AddRefs(child));
             unusedDB->SetSummaryValid(PR_TRUE);
 			unusedDB->Commit(kLargeCommit);
             unusedDB->Close(PR_TRUE);
         }
-
-		NS_IF_RELEASE(mailDBFactory);
 	}
-	if(rv == NS_OK && child)
+	if(NS_SUCCEEDED(rv) && child)
 	{
-		nsISupports *folderSupports;
-
-		rv = child->QueryInterface(kISupportsIID, (void**)&folderSupports);
+		nsCOMPtr<nsISupports> folderSupports = do_QueryInterface(child, &rv);
 		if(NS_SUCCEEDED(rv))
-		{
 			NotifyItemAdded(folderSupports);
-			NS_IF_RELEASE(folderSupports);
-		}
 	}
-	NS_IF_RELEASE(child);
+
 	return rv;
 }
     
@@ -584,13 +572,12 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
 			{
 				nsString folderName;
 
-				nsIDBFolderInfo *dbFolderInfo = nsnull;
-				mDatabase->GetDBFolderInfo(&dbFolderInfo);
+				nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
+				mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
 				if (dbFolderInfo)
 				{
 					dbFolderInfo->GetMailboxName(folderName);
 					m_haveReadNameFromDB = PR_TRUE;
-					NS_RELEASE(dbFolderInfo);
 					*name = folderName.ToNewCString();
 					return NS_OK;
 				}
@@ -689,12 +676,11 @@ NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
     
     if (NS_SUCCEEDED(rv) && session) 
     {
-      nsIMsgIncomingServer *server = nsnull;
-      rv = session->GetCurrentServer(&server);
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = session->GetCurrentServer(getter_AddRefs(server));
 
       if (NS_SUCCEEDED(rv) && server)
           rv = server->GetUserName(userName);
-      NS_IF_RELEASE (server);
     }
 #else  // **** for the future
     nsCOMPtr<nsIFolder> aFolder(do_QueryInterface((nsIMsgFolder*) this, &rv));
@@ -802,8 +788,8 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
 {
     nsresult rv = NS_ERROR_FAILURE;
     // *** jt - assuming delete is move to the trash folder for now
-    nsIEnumerator* aEnumerator = nsnull;
-    nsIRDFResource* res = nsnull;
+    nsCOMPtr<nsIEnumerator> aEnumerator;
+    nsCOMPtr<nsIRDFResource> res;
     nsString2 uri("", eOneByte);
     char* hostName = nsnull;
 
@@ -818,22 +804,22 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if(NS_FAILED(rv)) return rv;
 
-    rv = rdf->GetResource(uri.GetBuffer(), &res);
+    rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIFolder>hostFolder(do_QueryInterface(res, &rv));
     if(NS_FAILED(rv)) return rv;
 
-    rv = hostFolder->GetSubFolders(&aEnumerator);
+    rv = hostFolder->GetSubFolders(getter_AddRefs(aEnumerator));
     if(NS_FAILED(rv)) return rv;
 
-    nsISupports *aItem = nsnull;
+    nsCOMPtr<nsISupports> aItem;
     nsCOMPtr<nsIMsgFolder> trashFolder;
 
     rv = aEnumerator->First();
     while(NS_SUCCEEDED(rv))
     {
-        rv = aEnumerator->CurrentItem(&aItem);
+        rv = aEnumerator->CurrentItem(getter_AddRefs(aItem));
         if (NS_FAILED(rv)) break;
         nsCOMPtr<nsIMsgFolder> aMsgFolder(do_QueryInterface(aItem, &rv));
         if (NS_SUCCEEDED(rv))
@@ -898,10 +884,10 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 {
 	nsresult rv;
     PRBool found = PR_FALSE;
-    nsIMsgFolder* hostFolder = nsnull;
-    nsIMsgFolder* aFolder = nsnull;
-    nsISupports* aItem;
-    nsIEnumerator *aEnumerator = nsnull;
+    nsCOMPtr<nsIMsgFolder> hostFolder;
+    nsCOMPtr<nsIMsgFolder> aFolder;
+    nsCOMPtr<nsISupports> aItem;
+    nsCOMPtr<nsIEnumerator> aEnumerator;
 
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
  
@@ -929,57 +915,46 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
     }
 #endif 
     
-    char* uriStr = uri.ToNewCString();
-    if (uriStr == nsnull) 
-        return NS_ERROR_OUT_OF_MEMORY;
-    nsIRDFResource* res;
-    rv = rdf->GetResource(uriStr, &res);
-    delete[] uriStr;
+	nsCOMPtr<nsIRDFResource> res;
+    rv = rdf->GetResource((const char *) nsAutoCString(uri), getter_AddRefs(res));
     if (NS_FAILED(rv))
         return rv;
     // OK, this is purely temporary - we either need getParent, or
     // AddSubFolder should be an nsIMsgFolder interface...
-    rv = res->QueryInterface(nsIMsgFolder::GetIID(), (void**)&hostFolder);
-    if (NS_FAILED(rv)) return rv;
+	hostFolder = do_QueryInterface(res, &rv);
+    if (NS_FAILED(rv)) 
+		return rv;
             
     nsCOMPtr<nsIFolder> a_nsIFolder(do_QueryInterface(hostFolder, &rv));
     
     if (NS_FAILED(rv))
-    {
-        NS_RELEASE(hostFolder);
-        return rv;
-    }
+		return rv;
 
-    rv = a_nsIFolder->GetSubFolders(&aEnumerator);
+    rv = a_nsIFolder->GetSubFolders(getter_AddRefs(aEnumerator));
 
     if (NS_FAILED(rv)) 
-    {
-        NS_RELEASE(hostFolder);
-        NS_IF_RELEASE(aEnumerator);
         return rv;
-    }
     
     rv = aEnumerator->First();
-    while (rv == NS_OK)
+    while (NS_SUCCEEDED(rv))
     {
-        rv = aEnumerator->CurrentItem(&aItem);
-        if (rv != NS_OK) break;
-        aFolder = nsnull;
-        rv = aItem->QueryInterface(nsIMsgFolder::GetIID(), (void**) &aFolder);
-        aItem->Release();
+        rv = aEnumerator->CurrentItem(getter_AddRefs(aItem));
+        if (NS_FAILED(rv)) break;
+		aFolder = do_QueryInterface(aItem, &rv);
         if (rv == NS_OK && aFolder)
         {
             char* aName = nsnull;
             aFolder->GetName(&aName);
-            NS_RELEASE (aFolder);
             PRBool isInbox = 
                 PL_strcasecmp("inbox", aSpec->allocatedPathName) == 0;
             if (PL_strcmp(aName, aSpec->allocatedPathName) == 0 || 
                 (isInbox && PL_strcasecmp(aName, aSpec->allocatedPathName) == 0))
             {
+				delete [] aName;
                 found = PR_TRUE;
                 break;
             }
+			delete [] aName;
         }
         rv = aEnumerator->Next();
     }
@@ -988,8 +963,6 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
         hostFolder->CreateSubfolder(aSpec->allocatedPathName);
     }
     
-    NS_RELEASE(hostFolder);
-    NS_RELEASE(aEnumerator);
 	return NS_OK;
 }
 
