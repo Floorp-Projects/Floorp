@@ -767,6 +767,8 @@ nsHTTPHandler::Init()
                 HTTPPrefsCallback, (void*)this);
     mPrefs->RegisterCallback(INTL_ACCEPT_LANGUAGES, 
                 HTTPPrefsCallback, (void*)this);
+    mPrefs->RegisterCallback(UA_PREF_PREFIX "locale", 
+                HTTPPrefsCallback, (void*)this);
     PrefsChanged();
 
     rv = InitUserAgentComponents();
@@ -830,6 +832,8 @@ nsHTTPHandler::~nsHTTPHandler()
         mPrefs->UnregisterCallback(NETWORK_PREFS, 
                 HTTPPrefsCallback, (void*)this);
         mPrefs->UnregisterCallback(INTL_ACCEPT_LANGUAGES, 
+                HTTPPrefsCallback, (void*)this);
+        mPrefs->UnregisterCallback(UA_PREF_PREFIX "locale", 
                 HTTPPrefsCallback, (void*)this);
     }
 
@@ -1434,6 +1438,9 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     mPrefs->GetIntPref("network.http.keep-alive.max-connections-per-server",
                 &mMaxAllowedKeepAlivesPerServer);
 
+#if defined(DEBUG_tao)
+        printf("\n--> nsHTTPHandler::PrefsChanged:pref=%s\n", pref?pref:"null");
+#endif
     if ( (bChangedAll)|| !PL_strcmp(pref, INTL_ACCEPT_LANGUAGES) ) // intl.accept_languages
     {
         nsXPIDLString acceptLanguages;
@@ -1441,6 +1448,27 @@ nsHTTPHandler::PrefsChanged(const char* pref)
                 getter_Copies(acceptLanguages));
         if (NS_SUCCEEDED(rv))
             SetAcceptLanguages(NS_ConvertUCS2toUTF8(acceptLanguages));
+#if defined(DEBUG_tao)
+        printf("\n--> nsHTTPHandler::PrefsChanged: intl.accept_languages=%s\n",
+               (const char *)NS_ConvertUCS2toUTF8(acceptLanguages));
+#endif
+    }
+
+    if ( (bChangedAll)|| !PL_strcmp(pref, UA_PREF_PREFIX "locale") ) {// general.useragent.locale
+        // 55156: re-Gather locale.
+        nsXPIDLString uval;
+        nsresult rv = NS_OK;
+        rv = mPrefs->GetLocalizedUnicharPref(UA_PREF_PREFIX "locale", 
+                                             getter_Copies(uval));
+        if (NS_SUCCEEDED(rv)) {
+            mAppLanguage = (const char*) NS_ConvertUCS2toUTF8(uval);
+            //
+#if defined(DEBUG_tao)
+            printf("\n--> nsHTTPHandler::PrefsChanged:general.useragent.locale=%s\n",
+                   (const char*) NS_ConvertUCS2toUTF8(uval));
+#endif
+            BuildUserAgent();
+        }
     }
 
     nsXPIDLCString acceptEncodings;
