@@ -261,7 +261,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // by the content edge
     nscoord containingBlockWidth = cbrs->computedWidth;
     nscoord containingBlockHeight = cbrs->computedHeight;
-    NS_ASSERTION(0 != containingBlockWidth, "containing block width of 0");
+    //NS_ASSERTION(0 != containingBlockWidth, "containing block width of 0");
     nsStyleUnit widthUnit = pos->mWidth.GetUnit();
     nsStyleUnit heightUnit = pos->mHeight.GetUnit();
 
