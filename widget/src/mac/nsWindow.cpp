@@ -816,6 +816,8 @@ PRBool nsWindow::ReportSizeEvent()
 
 	// nsSizeEvent
 	sizeEvent.windowSize	= &mBounds;
+	sizeEvent.mWinWidth		= mBounds.width;
+	sizeEvent.mWinHeight	= mBounds.height;
   
 	// dispatch event
 	return(DispatchWindowEvent(sizeEvent));
