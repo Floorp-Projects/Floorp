@@ -70,10 +70,7 @@
   NSString* url = [NSString stringWith_nsAString: href];
 
   // Now load the URL in the window.
-  [[[self window] windowController] loadURL: url referrer:nil];
-
-  // Focus and activate our content area.
-  [[[[[self window] windowController] getBrowserWrapper] getBrowserView] setActive: YES];
+  [[[self window] windowController] loadURL: url referrer:nil activate:YES];
 }
 
 -(IBAction)openBookmarkInNewTab:(id)aSender

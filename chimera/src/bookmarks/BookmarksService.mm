@@ -809,10 +809,7 @@ BookmarksService::OpenMenuBookmark(BrowserWindowController* aController, id aMen
   NSString* url = [NSString stringWith_nsAString: href];
 
   // Now load the URL in the window.
-  [aController loadURL:url referrer:nil];
-
-  // Focus and activate our content area.
-  [[[aController getBrowserWrapper] getBrowserView] setActive: YES];
+  [aController loadURL:url referrer:nil activate:YES];
 }
 
 static void GetImportTitle(nsIDOMElement* aSrc, nsString& aTitle)
@@ -1036,8 +1033,8 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
         else
           tabViewItem = [aTabView tabViewItemAtIndex: currentIndex];
 
-        [[[tabViewItem view] getBrowserView] loadURI: url referrer:nil
-                                               flags: NSLoadFlagsNone];
+        [[tabViewItem view] loadURI: url referrer:nil
+                              flags: NSLoadFlagsNone activate:(currentIndex == 0)];
       }
     }
     
@@ -1046,9 +1043,8 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
     currentIndex++;
   }
 
-  // Select and activate the first tab.
+  // Select the first tab.
   [aTabView selectTabViewItemAtIndex: 0];
-  [[[[aTabView tabViewItemAtIndex: 0] view] getBrowserView] setActive: YES];
 }
 
 NSString* 

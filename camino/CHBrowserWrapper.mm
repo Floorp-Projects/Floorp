@@ -63,6 +63,10 @@
 
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
+@interface CHBrowserWrapper(Private)
+  -(void) setPendingActive:(BOOL)active;
+@end
+
 @implementation CHBrowserWrapper
 
 -(void)windowClosed
@@ -225,6 +229,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   return mIsBusy;
 }
 
+- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate
+{
+  mActivateOnLoad = activate;
+  [mBrowserView loadURI:urlSpec referrer:referrer flags:flags];
+}
+
 - (void)onLoadingStarted 
 {
   if (defaultStatus) {
@@ -250,6 +260,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (void)onLoadingCompleted:(BOOL)succeeded
 {
+  if (mActivateOnLoad) {
+    [mBrowserView setActive:YES];
+    mActivateOnLoad = NO;
+  }
+  
   [progress setIndeterminate:YES];
   [progress stopAnimation:self];
   [progress removeFromSuperview];
@@ -541,7 +556,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [controller disableAutosave]; // The Web page opened this window, so we don't ever use its settings.
   [controller disableLoadPage]; // don't load about:blank initially since this is a script-opened window
   [controller enterModalSession];
-  [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
+  [[controller getBrowserWrapper] setPendingActive: YES];
   return [[controller getBrowserWrapper] getBrowserView];
 }
 
@@ -550,5 +565,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   return mBrowserView;
 }
 
+- (void)setPendingActive:(BOOL)active
+{
+  mActivateOnLoad = active;
+}
 
 @end

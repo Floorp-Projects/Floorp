@@ -154,9 +154,7 @@
     valueLiteral->GetValue(getter_Copies(literalValue));
 
     NSString* url = [NSString stringWith_nsAString: literalValue];
-    [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI: url referrer: nil flags: NSLoadFlagsNone];
-    // Focus and activate our content area.
-    [[[mBrowserWindowController getBrowserWrapper] getBrowserView] setActive: YES];
+    [[mBrowserWindowController getBrowserWrapper] loadURI: url referrer: nil flags: NSLoadFlagsNone activate:YES];
 }
 
 @end

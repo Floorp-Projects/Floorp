@@ -69,6 +69,7 @@
                            // If we never become the primary view, we don't bother creating the listeners.
   BOOL mIsBookmarksImport; // This view was created for the purpose of importing bookmarks.  Upon
                            // completion, we need to do the import and then destroy ourselves.
+  BOOL mActivateOnLoad;    // If set, activate the browser view when loading starts.
 }
 
 - (IBAction)load:(id)sender;
@@ -80,6 +81,7 @@
 
 -(NSString*)getCurrentURLSpec;
 
+- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate;
 -(void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
     progress: (id)aProgress windowController: (BrowserWindowController*)aWindowController;
 -(void)disconnectView;

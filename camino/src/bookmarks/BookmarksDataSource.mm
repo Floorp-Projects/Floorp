@@ -419,9 +419,7 @@
     content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
     if (!href.IsEmpty()) {
       NSString* url = [NSString stringWith_nsAString: href];
-      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI: url referrer:nil flags: NSLoadFlagsNone];
-      // Focus and activate our content area.
-      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] setActive: YES];
+      [[mBrowserWindowController getBrowserWrapper] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:YES];
     }
   }
 }

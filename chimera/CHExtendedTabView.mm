@@ -137,9 +137,9 @@
 - (void)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
 {
   if (overTabViewItem) {
-    [[[overTabViewItem view] getBrowserView] loadURI: url referrer:nil flags: NSLoadFlagsNone];
+    [[overTabViewItem view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO];
   } else if (overContentArea) {
-    [[[[self selectedTabViewItem] view] getBrowserView] loadURI: url referrer:nil flags: NSLoadFlagsNone];
+    [[[self selectedTabViewItem] view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO];
   } else
     [self addTabForURL:url referrer:nil];
 }
@@ -234,9 +234,8 @@
   [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
   [tabViewItem setView: newView];
   [self addTabViewItem: tabViewItem];
-  
-  [[[tabViewItem view] getBrowserView] loadURI: aURL referrer:aReferrer
-                                          flags: NSLoadFlagsNone];
+
+  [[tabViewItem view] loadURI: aURL referrer:aReferrer flags: NSLoadFlagsNone activate:NO];
 }
 
 @end
