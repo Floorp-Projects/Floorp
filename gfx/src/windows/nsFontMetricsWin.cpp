@@ -2235,7 +2235,27 @@ nsFontMetricsWin::InitMetricsFor(HDC aDC, nsFontWin* aFont)
   ::GetTextMetrics(aDC, &metrics);
   aFont->mMaxAscent = NSToCoordRound(metrics.tmAscent * dev2app);
   aFont->mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
-  aFont->mOverhangCorrection = (IsWin95OrWin98() ? metrics.tmOverhang : 0);
+  aFont->mOverhangCorrection = 0;
+  if (IsWin95OrWin98()) {
+    aFont->mOverhangCorrection = metrics.tmOverhang;
+    if (metrics.tmOverhang < 3 && metrics.tmItalic &&
+        !(metrics.tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE | TMPF_DEVICE))) {
+      // bug 216670 - for several italicized bitmap fonts, we have to compute
+      // a overhang value, since the built-in value is zero if the weight of
+      // the font is normal or it is one if the weight of the font is bold.
+      SIZE size;
+      ::GetTextExtentPoint32(aDC, " ", 1, &size);
+      if (!(metrics.tmPitchAndFamily & TMPF_FIXED_PITCH)) {
+        // optimization for monospace fonts: no need to make another GDI call.
+        // We can use tmAveCharWidth since it does not include the overhang.
+        aFont->mOverhangCorrection = size.cx - metrics.tmAveCharWidth;
+      } else {
+        SIZE size2;
+        ::GetTextExtentPoint32(aDC, "  ", 2, &size2);
+        aFont->mOverhangCorrection = size.cx * 2 - size2.cx;
+      }
+    }
+  }
   aFont->mMaxCharWidthMetric = metrics.tmMaxCharWidth;
   aFont->mMaxHeightMetric = metrics.tmHeight;
   aFont->mPitchAndFamily = metrics.tmPitchAndFamily;
