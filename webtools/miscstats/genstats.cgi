@@ -22,7 +22,7 @@
 #
 
 #
-# $Id: genstats.cgi,v 1.13 2001/04/23 06:02:59 myk%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.14 2001/10/02 22:56:49 terry%mozilla.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -214,7 +214,7 @@ for ( ; $curYear <= $lastYear ; $curYear++ ) {
 		if (! $::db->selectdb($::STATINFO[$_][1]) ) {
 			die "MySQL returned \"$Mysql::db_errstr\" while " .
 				"attempting to selectdb(\"$::STATINFO[$_][1]" .
-				"\")";
+				"\") for the report \"$::STATINFO[$_][0]\"";
 		}
 
 		if (! $F::debugHtml ) { 
