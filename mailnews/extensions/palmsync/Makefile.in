@@ -28,5 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= build public src
 
+ifdef PALM_CDK_DIR
+DIRS		+= conduit
+else
+libs::
+	@echo " "
+	@echo "PLEASE SET 'PALM_CDK_DIR' ENV VARIABLE to THE DIR WHERE YOU HAVE PALM CDK INSTALLED IF YOU WANT TO BUILD THE CONDUIT"
+	@echo " "
+endif
+
 include $(topsrcdir)/config/rules.mk
 

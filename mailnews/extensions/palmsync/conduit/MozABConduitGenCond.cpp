@@ -10,6 +10,10 @@
 #define TRACE0(sz)
 #define TRACE(sz)
 
+#include <CPalmRec.cpp>
+#include <CPString.cpp>
+#include <CPCatgry.cpp>
+
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
