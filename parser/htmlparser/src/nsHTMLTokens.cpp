@@ -1294,9 +1294,9 @@ nsresult CCommentToken::ConsumeStrictComment(nsScanner& aScanner)
       if (balancedComment && IsCommentEnd(current, end, gt)) {
         // done
         current.advance(-2);
-        if (beginData != current) { // protects from <!---->
-          aScanner.BindSubstring(mComment, beginData, current);
-        }
+        // Note: it's ok if beginData == current, (we'll copy an empty string)
+        // and we need to bind mComment anyway.
+        aScanner.BindSubstring(mComment, beginData, current);
         aScanner.BindSubstring(mCommentDecl, lt, ++gt);
         aScanner.SetPosition(gt);
         return NS_OK;
@@ -1329,7 +1329,7 @@ nsresult CCommentToken::ConsumeStrictComment(nsScanner& aScanner)
     // wait for more content, and try again.
     // XXX For performance reasons we should cache where we were, and
     //     continue from there for next call
-    return kEOF; // not really an nsresult, but...
+    return kEOF;
   }
 
   // There was no terminating string, parse this comment as text.
@@ -1397,9 +1397,7 @@ nsresult CCommentToken::ConsumeQuirksComment(nsScanner& aScanner)
     
         if (goodComment) {
           // done
-          if (beginLastMinus != current) { // protects from <!---->
-            aScanner.BindSubstring(mComment, beginData, ++current);
-          }
+          aScanner.BindSubstring(mComment, beginData, ++current);
           aScanner.BindSubstring(mCommentDecl, lt, ++gt);
           aScanner.SetPosition(gt);
           return NS_OK;
@@ -1426,9 +1424,7 @@ nsresult CCommentToken::ConsumeQuirksComment(nsScanner& aScanner)
       // If so, rewind just pass that, and use everything up to that point as your comment.
       // If not, the document has no end comment and should be treated as one big comment.
       gt = bestAltCommentEnd;
-      if (beginData != gt) { // protects from <!-->
-        aScanner.BindSubstring(mComment, beginData, gt);
-      }
+      aScanner.BindSubstring(mComment, beginData, gt);
       if (gt != end) {
         ++gt;
       }
@@ -1463,6 +1459,11 @@ nsresult CCommentToken::ConsumeQuirksComment(nsScanner& aScanner)
 
     if (current != gt) {
       aScanner.BindSubstring(mComment, beginData, ++current);
+    }
+    else {
+      // Bind mComment to an empty string (note that if current == gt,
+      // then current == beginData). We reach this for <!>
+      aScanner.BindSubstring(mComment, beginData, current);
     }
     aScanner.BindSubstring(mCommentDecl, lt, ++gt);
     aScanner.SetPosition(gt);
