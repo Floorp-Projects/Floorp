@@ -2286,7 +2286,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     httpChannel->SetAuthTriedWithPrehost(PR_TRUE);
 
     // Let it know that we are trying to access a realm
-    if (authRealm)
+    if (authRealm.GetBuffer())
         httpChannel->SetAuthRealm(authRealm);
 
     if (mResponseDataListener)
