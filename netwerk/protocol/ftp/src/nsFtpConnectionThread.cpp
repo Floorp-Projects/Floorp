@@ -1015,11 +1015,12 @@ nsFtpState::R_syst() {
         }
         else
         {
-            NS_ASSERTION(0, "Guessing FTP server type.");
-            // No clue.  We will just hope it is UNIX type server.
-            // An assertion here indicates that we should be testing 
-            // for another substring
-            mServerType = FTP_UNIX_TYPE;
+            NS_ASSERTION(0, "Server type list format unrecognized.");
+            // Guessing causes crashes.  
+#if DEBUG
+            printf("Server listing unrecognized: %s \n", mResponseMsg.get());
+#endif
+            return FTP_ERROR;
         }
 
         return FTP_S_TYPE;
