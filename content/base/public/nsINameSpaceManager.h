@@ -40,7 +40,6 @@
 #define nsINameSpaceManager_h___
 
 #include "nsISupports.h"
-#include "nslayout.h"
 #include "nsAWritableString.h"
 
 class nsIAtom;

@@ -2453,7 +2453,7 @@ CSSStyleRuleImpl::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   return NS_OK;
 }
 
-NS_HTML nsresult
+NS_EXPORT nsresult
   NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult, const nsCSSSelector& aSelector)
 {
   if (aInstancePtrResult == nsnull) {
