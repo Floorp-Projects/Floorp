@@ -41,6 +41,7 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsIViewManager.h"
+#include "nsIView.h"
 
 class nsIView;
 class nsIScrollPositionListener;
@@ -241,6 +242,7 @@ public:
 
   /**
    * Returns the clip view
+   * XXX Obsolete; with nsScrollingView gone, this always returns 'this'
    */
   NS_IMETHOD GetClipView(const nsIView** aClipView) const = 0;
 

@@ -109,8 +109,14 @@ interface nsIDOMWindowInternal : nsIDOMWindow
            attribute long                        screenX;
            attribute long                        screenY;
 
+  /* The offset in pixels by which the window is scrolled */
   readonly attribute long                        pageXOffset;
   readonly attribute long                        pageYOffset;
+
+  /* The maximum offset that the window can be scrolled to
+     (i.e., the document width/height minus the scrollport width/height) */
+  readonly attribute long                        scrollMaxX;
+  readonly attribute long                        scrollMaxY;
 
   /* [replaceable] length */
   readonly attribute unsigned long               length;
