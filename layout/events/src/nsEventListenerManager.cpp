@@ -476,7 +476,7 @@ nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aConte
     if (nsnull != mCharName) {
       JS_CompileUCFunctionForPrincipals(mJSContext, mScriptObject, jsprin, mCharName,
                1, mEventArgv, (jschar*)aFunc.GetUnicode(), aFunc.Length(), nsnull, 0);
-      delete[] mCharName;
+      nsCRT::free(mCharName);
       JSPRINCIPALS_DROP(mJSContext, jsprin);
       return SetJSEventListener(aContext, mScriptObject, aIID);
     }
