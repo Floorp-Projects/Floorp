@@ -1489,6 +1489,12 @@ findNewestSubjectForEmail(CERTCertDBHandle *handle, int subjectNum,
 	CERT_DestroyCertificate(cert);
     }
 
+    /*
+     * XXX Should we make sure that subjectEntry1->emailAddr is not
+     * a null pointer or an empty string before going into the next
+     * two for loops, which pass it to PORT_Strcmp?
+     */
+
     /*  Loop over the remaining subjects.  */
     for (i=subjectNum+1; i<subjects.numEntries; i++) {
 	subjectEntry2 = (certDBEntrySubject*)&subjects.entries[i];
