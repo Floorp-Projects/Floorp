@@ -33,6 +33,7 @@ CPPSRCS		= \
 		nsJSXULElement.cpp \
 		nsJSXULCommandDispatcher.cpp \
 		nsJSXULTreeElement.cpp \
+		nsJSXULEditorElement.cpp \
 		nsRDFDOMNodeList.cpp \
 		nsRDFElement.cpp \
 		nsRDFGenericBuilder.cpp \
@@ -47,6 +48,7 @@ CPPSRCS		= \
 		nsXULControllers.cpp \
 		nsXULKeyListener.cpp \
 		nsXULTreeElement.cpp \
+		nsXULEditorElement.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
