@@ -715,23 +715,30 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   // if one of the width and height is constrained,
   // do smarter preferred size checking in case the scrolled frame is a block.
-  nsSize computedSize(aState.GetReflowState()->mComputedWidth,
-                      aState.GetReflowState()->mComputedHeight);
   nsSize oldConstrainedSize;
   aState.GetScrolledBlockSizeConstraint(oldConstrainedSize);
-  if ((computedSize.width != NS_INTRINSICSIZE)
-      != (computedSize.height != NS_INTRINSICSIZE)) {
-    // adjust constraints in case we have scrollbars
-    if (computedSize.width != NS_INTRINSICSIZE) {
-      computedSize.width = PR_MAX(0, computedSize.width - vSize.width);
+  const nsHTMLReflowState* HTMLState = aState.GetReflowState();
+  nsSize computedSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  if (HTMLState != nsnull) {
+    computedSize.width = HTMLState->mComputedWidth;
+    computedSize.height = HTMLState->mComputedHeight;
+    if ((computedSize.width == NS_INTRINSICSIZE)
+          != (computedSize.height == NS_INTRINSICSIZE)) {
+      // adjust constraints in case we have scrollbars
+      if (computedSize.width != NS_INTRINSICSIZE) {
+        computedSize.width = PR_MAX(0, computedSize.width - vSize.width);
+      }
+      if (computedSize.height != NS_INTRINSICSIZE) {
+        computedSize.height = PR_MAX(0, computedSize.height - hSize.height);
+      }
+      aState.SetScrolledBlockSizeConstraint(computedSize);
+    } else {
+      aState.SetScrolledBlockSizeConstraint(nsSize(-1,-1));
     }
-    if (computedSize.height != NS_INTRINSICSIZE) {
-      computedSize.height = PR_MAX(0, computedSize.height - hSize.height);
-    }
-    aState.SetScrolledBlockSizeConstraint(computedSize);
   } else {
     aState.SetScrolledBlockSizeConstraint(nsSize(-1,-1));
   }
+
   nsresult rv = mInner->mScrollAreaBox->GetPrefSize(aState, aSize);
   aState.SetScrolledBlockSizeConstraint(oldConstrainedSize);
 
