@@ -102,6 +102,8 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
+  virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
+
 #ifdef FONT_SWITCHING
 
   nsFontXlib*  FindFont(PRUnichar aChar);
@@ -152,6 +154,7 @@ protected:
   nscoord             mStrikeoutOffset;
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
+  nscoord             mSpaceWidth;
 
 #ifdef FONT_SWITCHING
 

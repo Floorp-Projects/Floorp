@@ -958,6 +958,12 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(char aC, nscoord& aWidth)
 {
   printf("nsRenderingContextXlib::GetWidth()\n");
+  // Check for the very common case of trying to get the width of a single
+  // space.
+  if ((aC == ' ') && (nsnull != mFontMetrics)) {
+    nsFontMetricsXlib* fontMetricsXlib = (nsFontMetricsXlib*)mFontMetrics;
+    return fontMetricsXlib->GetSpaceWidth(aWidth);
+  }
   return GetWidth(&aC, 1, aWidth);
 }
 

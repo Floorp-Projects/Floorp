@@ -62,6 +62,7 @@ nsFontMetricsXlib::nsFontMetricsXlib()
   mStrikeoutOffset = 0;
   mUnderlineSize = 0;
   mUnderlineOffset = 0;
+  mSpaceWidth = 0;
 }
 
 nsFontMetricsXlib::~nsFontMetricsXlib()
@@ -419,6 +420,8 @@ void nsFontMetricsXlib::RealizeFont()
   // 56% of ascent, best guess for non-true type
   mXHeight = NSToCoordRound((float) mFontHandle->ascent* f * 0.56f);
 
+  int rawWidth = XTextWidth(mFontHandle, " ", 1);
+  mSpaceWidth = NSToCoordRound(rawWidth * f);
   unsigned long pr = 0;
 
   if (::XGetFontProperty(mFontHandle, XA_X_HEIGHT, &pr))
@@ -2182,6 +2185,13 @@ nsFontMetricsXlib::DrawString(nsDrawingSurfaceXlib* aSurface, nsFontXlib* aFont,
                 aSurface->GetDrawable(),
                 aSurface->GetGC(),
                 aX, aY, buf, (len / 2));
+}
+
+nsresult
+nsFontMetricsXlib::GetSpaceWidth(nscoord &aSpaceWidth)
+{
+  aSpaceWidth = mSpaceWidth;
+  return NS_OK;
 }
 
 #endif /* FONT_SWITCHING */
