@@ -117,6 +117,9 @@ public:
   void DoCopy();
   nsIPresShell* GetPresShell();
 
+  void DoSelectAll();
+  void ForceRefresh();
+
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);
   void DumpFrames(FILE *out = stdout);
@@ -125,7 +128,6 @@ public:
   void DumpStyleSheets(FILE *out = stdout);
   void DumpStyleContexts(FILE *out = stdout);
   void ToggleFrameBorders();
-  void ForceRefresh();
   void ShowContentSize();
   void ShowFrameSize();
   void ShowStyleSize();
@@ -135,7 +137,6 @@ public:
   void DoSiteWalker();
   void DoJSConsole();
   void DoEditorMode();
-  void DoSelectAll();
   nsEventStatus DispatchDebugMenu(PRInt32 aID);
 #endif
 
