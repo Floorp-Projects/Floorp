@@ -88,8 +88,9 @@ Element ReqTable[] = {
 	{"http://www.intel.com/",    1, 1, 1, 0, 0, 0, 0},
 	{"http://www.aol.com/",      0, 1, 0, 0, 0, 1, 1},
 	{"https://www.yahoo.com/",   1, 1, 1, 1, 0, 1, 1},
-	{"data:text/plain;charset=iso-8859-7,%be%fg%be",
+	{" data:text/plain;charset=iso-8859-7,%be%fg%be",
 								1, 1, 1, 1, 0, 1, 1},
+//	{"mailto:name@netscape.com", 1, 1, 1, 1, 0, 1, 1},
 	{"file://C|/Program Files/", 1, 1, 1, 1, 0, 1, 1},
 	{"ftp://ftp.netscape.com/",  1, 1, 1, 1, 0, 1, 1},
 	{"ftp://ftp.mozilla.org/",   0, 0, 0, 0, 1, 0, 0},
@@ -98,9 +99,9 @@ Element ReqTable[] = {
 void CNsIRequest::OnStartTests(UINT nMenuID)
 {
 	if (nMenuID == ID_INTERFACES_NSIREQUEST_RUNALLTESTS)
-		RunAllTests(9);
+		RunAllTests(10);
 	else
-		RunIndividualTests(nMenuID, 9);
+		RunIndividualTests(nMenuID, 10);
 }
  
 void CNsIRequest::RunIndividualTests(UINT nMenuID, int reqTotal)

@@ -135,6 +135,7 @@
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
 
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

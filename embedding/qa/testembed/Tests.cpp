@@ -94,6 +94,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_ADDFROMNSIWEBBROWSER, OnTestsAddUriContentListenerByWebBrowser)
 	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_ADDFROMNSIURILOADER, OnTestsAddUriContentListenerByUriLoader)
 	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_OPENURI, OnTestsAddUriContentListenerByOpenUri)
+	ON_COMMAND(ID_TESTS_NSNEWCHANNEL, OnTestsNSNewChannel)
 
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
@@ -550,6 +551,25 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 	RvTestResult(rv, "nsIUriLoader->OpenURI() test", 2);
 }
 
+void CTests::OnTestsNSNewChannel()
+{
+	CUrlDialog myDialog;
+	nsCOMPtr<nsIChannel> theChannel;
+	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
+	nsCOMPtr<nsIURI> theURI;
+	if (myDialog.DoModal() == IDOK)
+	{
+		nsCAutoString theStr;
+
+		theStr = myDialog.m_urlfield;
+
+		rv = NS_NewURI(getter_AddRefs(theURI), theStr);
+		RvTestResult(rv, "NS_NewURI() test", 2);
+		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
+		RvTestResult(rv, "NS_NewChannel() test", 2);
+	}
+}
+
 // *********************************************************
 // *********************************************************
 //					TOOLS to help us
@@ -620,34 +640,14 @@ void CTests::OnToolsRemoveAllGH()
 void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
-/*
-    nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl))));
-    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIURIContentListener));
 
-	RvTestResult(rv, "AddWebBrowserListener(). nsIURIContentListener test", 2);
-*/
-	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
-	RvTestResult(rv, "nsIURILoader() object test", 1);
-
-	nsCOMPtr<nsIURIContentListener> cntListener(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
-	if (!cntListener)
-		QAOutput("Didn't get urIContentListener object.", 2);
-	else {
-		/*
-		rv = myLoader->RegisterContentListener(cntListener);
-		RvTestResult(rv, "RegisterContentListener() test", 2);
-		*/
 		nsCOMPtr<nsIChannel> theChannel;
 		nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
 		nsCOMPtr<nsIURI> theURI;
-		NS_NewURI(getter_AddRefs(theURI), "http://www.yahoo.com");
-		NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
-		nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
-		myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
-
-	}
-
+		rv = NS_NewURI(getter_AddRefs(theURI), "http://www.yahoo.com");
+		RvTestResult(rv, "NS_NewURI(). Test .", 2);
+		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
+		RvTestResult(rv, "NS_NewChannel(). Test .", 2);
 }
 
 // ***********************************************************************
