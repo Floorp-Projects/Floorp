@@ -37,6 +37,7 @@
 #include "nsISupports.idl"
 
 interface nsISupportsArray;
+interface nsIProfileStartup;
 
 [scriptable, uuid(6c64bc4a-881f-4fd8-8f19-3b4125dcee50)]
 interface nsIBrowserProfileMigrator : nsISupports 
@@ -59,18 +60,17 @@ interface nsIBrowserProfileMigrator : nsISupports
    * @param aReplace replace or append current data where applicable. 
    * @param aProfile profile to migrate from, if there is more than one.
    */
-  void migrate(in unsigned short aItems, in boolean aReplace, in wstring aProfile);
+  void migrate(in unsigned short aItems, in nsIProfileStartup aStartup, in wstring aProfile);
 
   /**
    * A bit field containing profile items that this migrator
    * offers for import. 
    * @param   aProfile the profile that we are looking for available data
    *          to import
-   * @param   aReplace whether or not the profile is being run replace-current
-   *          data mode (automigration, before profile has started)
+   * @param   aStarting "true" if the profile is not currently being used.
    * @returns bit field containing profile items (see above)
    */
-  unsigned short getMigrateData(in wstring aProfile, in boolean aReplace);
+  unsigned short getMigrateData(in wstring aProfile, in boolean aDoingStartup);
 
   /** 
    * Whether or not there is any data that can be imported from this 

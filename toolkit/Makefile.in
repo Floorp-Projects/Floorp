@@ -43,7 +43,15 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= content locale obsolete xre components mozapps
+DIRS	= \
+		content \
+		locale \
+		obsolete \
+		profile \
+		xre \
+		components \
+		mozapps \
+		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 # Use Pinstripe on MacOS X

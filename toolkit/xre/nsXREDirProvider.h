@@ -40,24 +40,55 @@
 #define _nsXREDirProvider_h__
 
 #include "nsIDirectoryService.h"
-#include "nsString.h"
+#include "nsIProfileMigrator.h"
+#include "nsILocalFile.h"
 
-class nsILocalFile;
-
-class nsXREDirProvider : public nsIDirectoryServiceProvider
+class nsXREDirProvider : public nsIDirectoryServiceProvider2,
+                         public nsIProfileStartup
 {
 public:
-  nsXREDirProvider(const nsACString& aProductName);
-  virtual ~nsXREDirProvider();
+  // we use a custom isupports implementation (no refcount)
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_DECL_ISUPPORTS
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+  NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
+  NS_DECL_NSIPROFILESTARTUP
 
-private:
-  nsresult GetProductDirectory(nsILocalFile** aFile);
-  nsresult EnsureDirectoryExists(nsILocalFile* aDirectory);
+  nsXREDirProvider();
+  nsresult Initialize();
+  ~nsXREDirProvider();
 
-  nsCString mProductDir;
+  // We only set the profile dir, we don't ensure that it exists;
+  // that is the responsibility of the toolkit profile service.
+  // We also don't fire profile-changed notifications... that is
+  // the responsibility of the apprunner.
+  nsresult SetProfileDir(nsIFile* aProfileDir);
+
+  // Causes any attempts to retrieve an enumeration of directories for the
+  // "ComsDL" property to return a list of directories specified in the 
+  // "components.ini" manifest in the profile/application directories.
+  // This results in component registration at those locations during 
+  // XPCOM startup. 
+  void RegisterExtraComponents();
+
+  void DoShutdown();
+
+  nsresult GetProfileDefaultsDir(nsIFile* *aResult);
+  static nsresult GetUserAppDataDirectory(nsILocalFile* *aFile);
+
+  /* make sure you clone it, if you need to do stuff to it */
+  nsIFile* GetAppDir() { return mAppDir; }
+
+protected:
+  static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
+  void EnsureProfileFileExists(nsIFile* aFile);
+
+  nsCOMPtr<nsILocalFile> mAppDir;
+  nsCOMPtr<nsIFile>      mProfileDir;
+  PRBool                 mProfileNotified;
+  PRBool                 mRegisterExtraComponents;
 };
 
 #endif

@@ -74,14 +74,13 @@
 #else
                      tooltiptext="&optionsUnix.tooltip;" 
 #endif
-                     tooltiptext="&options.tooltip;" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('options');"/>
+                     onclick="gExtensionsViewController.doCommand('cmd_options');"/>
           <xul:image class="extension-button" anonid="about-button" 
                      tooltiptext="&about.tooltip;" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('about');"/>
+                     onclick="gExtensionsViewController.doCommand('cmd_about');"/>
           <xul:image class="extension-button" anonid="homepage-button" 
                      tooltiptext="&homepage.tooltip;" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('homepage');"/>
+                     onclick="gExtensionsViewController.doCommand('cmd_homepage');"/>
         </xul:vbox>
       </xul:hbox>
     </content>  

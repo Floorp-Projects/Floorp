@@ -5,7 +5,7 @@ const kObserverServiceProgID = "@mozilla.org/observer-service;1";
 const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
 
 var gExtensionManager = null;
-var gExtensionssView  = null;
+var gExtensionsView   = null;
 var gWindowState      = "";
 var gURIPrefix        = ""; // extension or theme prefix
 var gDSRoot           = ""; // extension or theme root
@@ -17,6 +17,7 @@ var gObserverIndex    = -1;
 const PREF_APP_ID                           = "app.id";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
 const PREF_EXTENSIONS_GETMOREEXTENSIONSURL  = "extensions.getMoreExtensionsURL";
+const PREF_EM_LAST_SELECTED_SKIN            = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN       = "general.skins.selectedSkin";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,8 +37,7 @@ function openURL(aURL)
 
   var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
                               .getService(Components.interfaces.nsIExternalProtocolService);
-  if (protocolSvc.isExposedProtocol(uri.scheme))
-    protocolSvc.loadUrl(uri);
+  protocolSvc.loadUrl(uri);
 # If we're a browser, open a new browser window instead.    
 #else
   openDialog("chrome://browser/content/browser.xul", "_blank", "chrome,all,dialog=no", aURL, null, null);
@@ -93,10 +93,9 @@ function Startup()
                        .getService(Components.interfaces.nsIPrefBranch);
   if (!isExtensions) {
     gExtensionsView.addEventListener("richview-select", onThemeSelect, false);
-    try {
-      gCurrentTheme = pref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
-    }
-    catch (e) { gCurrentTheme = "classic/1.0"; } 
+    var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                       .getService(Components.interfaces.nsIXULChromeRegistry);
+    gCurrentTheme = cr.getSelectedSkin("global");
     
     var useThemeButton = document.getElementById("useThemeButton");
     useThemeButton.hidden = false;
@@ -247,7 +246,6 @@ XPInstallDownloadManager.prototype = {
   {
     const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
     var element = document.getElementById(aURL);
-    dump("*** aURL = " + aURL + "\n");
     if (!element) return;
     switch (aState) {
     case nsIXPIProgressDialog.DOWNLOAD_START:
@@ -261,6 +259,7 @@ XPInstallDownloadManager.prototype = {
       element.setAttribute("state", "installing");
       break;
     case nsIXPIProgressDialog.INSTALL_DONE:
+      dump("*** state change = " + aURL + ", state = " + aState + ", value = " + aValue + "\n");
       element.setAttribute("state", "done");
       var msg;
       if (aValue != 0) {
@@ -570,6 +569,10 @@ var gExtensionsViewController = {
     case "cmd_movedn":
       var children = gExtensionsView.children;
       return (children[children.length-1] != selectedItem);
+#ifdef MOZ_THUNDERBIRD
+    case "cmd_install":
+      return true;   
+#endif
     }
     return false;
   },
@@ -601,17 +604,24 @@ var gExtensionsViewController = {
     cmd_useTheme: function ()
     {
       var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                        .getService(Components.interfaces.nsIXULChromeRegistry);
+                         .getService(Components.interfaces.nsIXULChromeRegistry);
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
+                           .getService(Components.interfaces.nsIPrefBranch);
       gCurrentTheme = gExtensionsView.selected.getAttribute("internalName");
       var inUse = cr.isSkinSelected(gCurrentTheme , true);
       if (inUse == Components.interfaces.nsIChromeRegistry.FULL)
         return;
         
       pref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, gCurrentTheme);
+      
+      // Set this pref so the user can reset the theme in safe mode
+      pref.setCharPref(PREF_EM_LAST_SELECTED_SKIN, gCurrentTheme);
       cr.selectSkin(gCurrentTheme, true);
       cr.refreshSkins();
+
+
+      // disable the useThemeButton
+      gExtensionsViewController.onCommandUpdate();
     },
       
     cmd_options: function ()
@@ -640,65 +650,22 @@ var gExtensionsViewController = {
     
     cmd_movetop: function ()
     {
-      var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-      var extensions = rdfs.GetResource("urn:mozilla:extension:root");
-      var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
-      container.Init(gExtensionManager.datasource, extensions);
-      
       var movingID = gExtensionsView.selected.id;
-      var extension = rdfs.GetResource(movingID);
-      var index = container.IndexOf(extension);
-      if (index > 1) {
-        container.RemoveElement(extension, false);
-        container.InsertElementAt(extension, 1, true);
-      }
-      
-      flushDataSource();
-      
+      gExtensionManager.moveTop(stripPrefix(movingID));
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
     cmd_moveup: function ()
     {
-      var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-      var extensions = rdfs.GetResource("urn:mozilla:extension:root");
-      var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
-      container.Init(gExtensionManager.datasource, extensions);
-      
       var movingID = gExtensionsView.selected.id;
-      var extension = rdfs.GetResource(movingID);
-      var index = container.IndexOf(extension);
-      if (index > 1) {
-        container.RemoveElement(extension, false);
-        container.InsertElementAt(extension, index - 1, true);
-      }
-      
-      flushDataSource();
-      
+      gExtensionManager.moveUp(stripPrefix(movingID));
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
     cmd_movedn: function ()
     {
-      var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-      var extensions = rdfs.GetResource("urn:mozilla:extension:root");
-      var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
-      container.Init(gExtensionManager.datasource, extensions);
-      
       var movingID = gExtensionsView.selected.id;
-      var extension = rdfs.GetResource(movingID);
-      var index = container.IndexOf(extension);
-      var count = container.GetCount();
-      if (index < count) {
-        container.RemoveElement(extension, true);
-        container.InsertElementAt(extension, index + 1, true);
-      }
-      
-      flushDataSource();
-      
+      gExtensionManager.moveDown(stripPrefix(movingID));
       gExtensionsView.selected = document.getElementById(movingID);
     },
     
@@ -757,9 +724,74 @@ var gExtensionsViewController = {
     {
       gExtensionManager.enableExtension(stripPrefix(gExtensionsView.selected.id));
     },
+#ifdef MOZ_THUNDERBIRD
+    cmd_install: function()
+    {
+      if (gWindowState == "extensions") 
+        installExtension();
+      else
+        installSkin();
+    },
+#endif
   }
 };
 
+#ifdef MOZ_THUNDERBIRD
+///////////////////////////////////////////////////////////////
+// functions to support installing of themes in thunderbird
+///////////////////////////////////////////////////////////////
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
+const nsIIOService = Components.interfaces.nsIIOService;
+const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
+const nsIURL = Components.interfaces.nsIURL;
+
+function installSkin()
+{
+  // 1) Prompt the user for the location of the theme to install. 
+  var extensionsStrings = document.getElementById("extensionsStrings");
+
+  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  fp.init(window, extensionsStrings.getString("installThemePickerTitle"), nsIFilePicker.modeOpen);
+
+
+  fp.appendFilter(extensionsStrings.getString("themesFilter"), "*.jar");
+  fp.appendFilters(nsIFilePicker.filterAll);
+
+  var ret = fp.show();
+  if (ret == nsIFilePicker.returnOK) 
+  {
+    var ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(nsIIOService);
+    var fileProtocolHandler =
+    ioService.getProtocolHandler("file").QueryInterface(nsIFileProtocolHandler);
+    var url = fileProtocolHandler.newFileURI(fp.file).QueryInterface(nsIURL);
+    InstallTrigger.installChrome(InstallTrigger.SKIN, url.spec, decodeURIComponent(url.fileBaseName));
+  }
+}
+
+function installExtension()
+{
+  var extensionsStrings = document.getElementById("extensionsStrings");
+
+  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  fp.init(window, extensionsStrings.getString("installExtensionPickerTitle"), nsIFilePicker.modeOpen);
+  
+  fp.appendFilter(extensionsStrings.getString("extensionFilter"), "*.xpi");
+  
+  fp.appendFilters(nsIFilePicker.filterAll);
+
+  var ret = fp.show();
+  if (ret == nsIFilePicker.returnOK) 
+  {
+    var ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(nsIIOService);
+    var fileProtocolHandler =
+    ioService.getProtocolHandler("file").QueryInterface(nsIFileProtocolHandler);
+    var url = fileProtocolHandler.newFileURI(fp.file).QueryInterface(nsIURL);
+    var xpi = {};
+    xpi[decodeURIComponent(url.fileBaseName)] = url.spec;
+    InstallTrigger.install(xpi);
+  }
+}
+#endif
 
 # -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1

@@ -48,8 +48,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIPrefService.h"
-#include "nsIProfile.h"
-#include "nsIProfileInternal.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
@@ -57,17 +55,26 @@
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
+#include "prenv.h"
+#include "nsEscape.h"
+#include "NSReg.h"
+#include "nsDirectoryServiceDefs.h"
+
+#ifndef MAXPATHLEN
+#ifdef _MAX_PATH
+#define MAXPATHLEN _MAX_PATH
+#elif defined(CCHMAXPATH)
+#define MAXPATHLEN CCHMAXPATH
+#else
+#define MAXPATHLEN 1024
+#endif
+#endif
 
 #define PREF_FILE_HEADER_STRING "# Mozilla User Preferences    " 
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-#define PREF_FILE_NAME_IN_4x      NS_LITERAL_STRING("preferences.js")
-#define COOKIES_FILE_NAME_IN_4x   NS_LITERAL_STRING("cookies")
-#define BOOKMARKS_FILE_NAME_IN_4x NS_LITERAL_STRING("bookmarks.html")
-#define PSM_CERT7_DB              NS_LITERAL_STRING("cert7.db")
-#define PSM_KEY3_DB               NS_LITERAL_STRING("key3.db")
-#define PSM_SECMODULE_DB          NS_LITERAL_STRING("secmodule.db")
-#elif defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
+#define OLDREG_NAME               "Netscape Registry"
+#define OLDREG_DIR                NS_MAC_PREFS_DIR
 #define PREF_FILE_NAME_IN_4x      NS_LITERAL_STRING("Netscape Preferences")
 #define COOKIES_FILE_NAME_IN_4x   NS_LITERAL_STRING("MagicCookie")
 #define BOOKMARKS_FILE_NAME_IN_4x NS_LITERAL_STRING("Bookmarks.html")
@@ -75,13 +82,33 @@
 #define PSM_CERT7_DB              NS_LITERAL_STRING("Certificates7")
 #define PSM_KEY3_DB               NS_LITERAL_STRING("Key Database3")
 #define PSM_SECMODULE_DB          NS_LITERAL_STRING("Security Modules")
-#else /* XP_WIN || XP_OS2 */
+
+#elif defined(XP_WIN) || defined(XP_OS2)
+#define OLDREG_NAME               "nsreg.dat"
+#ifdef XP_WIN
+#define OLDREG_DIR                NS_WIN_WINDOWS_DIR
+#else
+#define OLDREG_DIR                NS_OS2_DIR
+#endif
 #define PREF_FILE_NAME_IN_4x      NS_LITERAL_STRING("prefs.js")
 #define COOKIES_FILE_NAME_IN_4x   NS_LITERAL_STRING("cookies.txt")
 #define BOOKMARKS_FILE_NAME_IN_4x NS_LITERAL_STRING("bookmark.htm")
 #define PSM_CERT7_DB              NS_LITERAL_STRING("cert7.db")
 #define PSM_KEY3_DB               NS_LITERAL_STRING("key3.db")
 #define PSM_SECMODULE_DB          NS_LITERAL_STRING("secmod.db")
+
+#elif defined(XP_UNIX)
+#define PREF_FILE_NAME_IN_4x      NS_LITERAL_STRING("preferences.js")
+#define COOKIES_FILE_NAME_IN_4x   NS_LITERAL_STRING("cookies")
+#define BOOKMARKS_FILE_NAME_IN_4x NS_LITERAL_STRING("bookmarks.html")
+#define PSM_CERT7_DB              NS_LITERAL_STRING("cert7.db")
+#define PSM_KEY3_DB               NS_LITERAL_STRING("key3.db")
+#define PSM_SECMODULE_DB          NS_LITERAL_STRING("secmodule.db")
+#define HOME_ENVIRONMENT_VARIABLE         "HOME"
+#define PROFILE_HOME_ENVIRONMENT_VARIABLE "PROFILE_HOME"
+#define DEFAULT_UNIX_PROFILE_NAME         "default"
+#else
+#error No netscape4.x profile-migrator on this platform.
 #endif /* XP_UNIX */
 
 #define COOKIES_FILE_NAME_IN_5x   NS_LITERAL_STRING("cookies.txt")
@@ -106,14 +133,22 @@ nsDogbertProfileMigrator::~nsDogbertProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsDogbertProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsDogbertProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup,
+                                  const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
+  PRBool aReplace = aStartup ? PR_TRUE : PR_FALSE;
 
-  if (!mTargetProfile) 
-    GetTargetProfile(aProfile, aReplace);
-  if (!mSourceProfile)
+  if (!mTargetProfile) { 
+    GetProfilePath(aStartup, mTargetProfile);
+    if (!mTargetProfile) return NS_ERROR_FAILURE;
+  }
+
+  if (!mSourceProfile) {
     GetSourceProfile(aProfile);
+    if (!mSourceProfile)
+      return NS_ERROR_FAILURE;
+  }
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
 
@@ -126,15 +161,63 @@ nsDogbertProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnic
   return rv;
 }
 
+// on win/mac/os2, NS4x uses a registry to determine profile locations
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
 void
 nsDogbertProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
 {
-  // XXXben I would actually prefer we do this by reading the 4.x registry, rather than
-  // relying on the 5.x registry knowing about 4.x profiles, in case we remove profile
-  // manager support from Firefox. 
-  nsCOMPtr<nsIProfileInternal> pmi(do_GetService("@mozilla.org/profile/manager;1"));
-  pmi->GetOriginalProfileDir(aProfile, getter_AddRefs(mSourceProfile));
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> regFile;
+  rv = NS_GetSpecialDirectory(OLDREG_DIR, getter_AddRefs(regFile));
+  if (NS_FAILED(rv)) return;
+
+  regFile->AppendNative(NS_LITERAL_CSTRING(OLDREG_NAME));
+  
+  nsCAutoString path;
+  rv = regFile->GetNativePath(path);
+  if (NS_FAILED(rv)) return;
+
+  if (NR_StartupRegistry())
+    return;
+
+  HREG reg = nsnull;
+  RKEY profile = nsnull;
+
+  if (NR_RegOpen(path.get(), &reg))
+    goto cleanup;
+
+  {
+    // on macos, registry entries are UTF8 encoded
+    NS_ConvertUTF16toUTF8 profileName(aProfile);
+
+    if (NR_RegGetKey(reg, ROOTKEY_USERS, profileName.get(), &profile))
+      goto cleanup;
+  }
+
+  char profilePath[MAXPATHLEN];
+  if (NR_RegGetEntryString(reg, profile, "ProfileLocation", profilePath, MAXPATHLEN))
+    goto cleanup;
+
+  mSourceProfile = do_CreateInstance("@mozilla.org/file/local;1");
+  if (!mSourceProfile) goto cleanup;
+
+  {
+    // the string is UTF8 encoded, which forces us to do some strange string-do
+    rv = mSourceProfile->InitWithPath(NS_ConvertUTF8toUTF16(profilePath));
+  }
+
+  if (NS_FAILED(rv))
+    mSourceProfile = nsnull;
+
+cleanup:
+  if (reg)
+    NR_RegClose(reg);
+  NR_ShutdownRegistry();
 }
+#else
+
+#endif
 
 NS_IMETHODIMP
 nsDogbertProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
@@ -144,11 +227,10 @@ nsDogbertProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
   *aResult = 0;
   if (!mSourceProfile) {
     GetSourceProfile(aProfile);
-    if (!mSourceProfile) 
+    if (!mSourceProfile)
       return NS_ERROR_FILE_NOT_FOUND;
   }
 
-  PRBool exists;
   MigrationData data[] = { { ToNewUnicode(PREF_FILE_NAME_IN_4x),
                              nsIBrowserProfileMigrator::SETTINGS,
                              PR_TRUE },
@@ -200,34 +282,104 @@ nsDogbertProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
   return NS_OK;
 }
 
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MACOSX)
 NS_IMETHODIMP
 nsDogbertProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 {
   if (!mProfiles) {
-    nsresult rv = NS_NewISupportsArray(getter_AddRefs(mProfiles));
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv;
 
-    // XXXben - this is a little risky.. let's make this actually go and use the 
-    // 4.x registry instead... 
-    // Our profile manager stores information about the set of Dogbert Profiles we have.
-    nsCOMPtr<nsIProfileInternal> pmi(do_CreateInstance("@mozilla.org/profile/manager;1"));
-    PRUnichar** profileNames = nsnull;
-    PRUint32 profileCount = 0;
-    // Lordy, this API sucketh.
-    rv = pmi->GetProfileListX(nsIProfileInternal::LIST_FOR_IMPORT, &profileCount, &profileNames);
-    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewISupportsArray(getter_AddRefs(mProfiles));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    for (PRUint32 i = 0; i < profileCount; ++i) {
-      nsCOMPtr<nsISupportsString> string(do_CreateInstance("@mozilla.org/supports-string;1"));
-      string->SetData(nsDependentString(profileNames[i]));
-      mProfiles->AppendElement(string);
+    nsCOMPtr<nsIFile> regFile;
+    rv = NS_GetSpecialDirectory(OLDREG_DIR, getter_AddRefs(regFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    regFile->AppendNative(NS_LITERAL_CSTRING(OLDREG_NAME));
+  
+    nsCAutoString path;
+    rv = regFile->GetNativePath(path);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (NR_StartupRegistry())
+      return NS_ERROR_FAILURE;
+
+    HREG reg = nsnull;
+    REGENUM enumstate = 0;
+
+    if (NR_RegOpen(path.get(), &reg)) {
+      NR_ShutdownRegistry();
+      return NS_ERROR_FAILURE;
     }
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(profileCount, profileNames);
+
+    char profileName[MAXREGNAMELEN];
+    while (!NR_RegEnumSubkeys(reg, ROOTKEY_USERS, &enumstate,
+                              profileName, MAXREGNAMELEN, REGENUM_CHILDREN)) {
+      nsCOMPtr<nsISupportsString> nameString
+        (do_CreateInstance("@mozilla.org/supports-string;1"));
+      if (nameString) {
+        nameString->SetData(NS_ConvertUTF8toUTF16(profileName));
+        mProfiles->AppendElement(nameString);
+      }
+    }
   }
   
   NS_IF_ADDREF(*aResult = mProfiles);
   return NS_OK;
 }
+#else // XP_UNIX
+
+NS_IMETHODIMP
+nsDogbertProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
+{
+  nsresult rv;
+  const char* profileDir  = PR_GetEnv(PROFILE_HOME_ENVIRONMENT_VARIABLE);
+
+  if (!profileDir) {
+    profileDir = PR_GetEnv(HOME_ENVIRONMENT_VARIABLE);
+  }
+  if (!profileDir) return NS_ERROR_FAILURE;
+
+  nsCAutoString profilePath(profileDir);
+  profilePath += "/.netscape";
+
+  nsCOMPtr<nsILocalFile> profileFile;
+  rv = NS_NewNativeLocalFile(profilePath, PR_TRUE, getter_AddRefs(profileFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> prefFile;
+  rv = profileFile->Clone(getter_AddRefs(prefFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  prefFile->AppendNative(NS_LITERAL_CSTRING("preferences.js"));
+
+  PRBool exists;
+  rv = prefFile->Exists(&exists);
+  if (NS_FAILED(rv) || !exists) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mSourceProfile = profileFile;
+
+  rv = NS_NewISupportsArray(getter_AddRefs(mProfiles));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISupportsString> nameString
+    (do_CreateInstance("@mozilla.org/supports-string;1"));
+  if (!nameString) return NS_ERROR_FAILURE;
+
+  nameString->SetData(NS_LITERAL_STRING("Netscape 4.x"));
+  mProfiles->AppendElement(nameString);
+  NS_ADDREF(*aResult = mProfiles);
+  return NS_OK;
+}
+
+void
+nsDogbertProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
+{
+  // if GetSourceProfiles didn't do its magic, we're screwed
+}
+#endif // GetSourceProfiles
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsDogbertProfileMigrator
@@ -396,7 +548,7 @@ nsDogbertProfileMigrator::FixDogbertCookies()
   if (!fileOutputStream) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
-  nsCAutoString buffer, outBuffer;
+  nsAutoString buffer, outBuffer;
   PRBool moreData = PR_FALSE;
   PRUint32 written = 0;
   do {
@@ -409,7 +561,8 @@ nsDogbertProfileMigrator::FixDogbertCookies()
     // skip line if it is a comment or null line
     if (buffer.IsEmpty() || buffer.CharAt(0) == '#' ||
         buffer.CharAt(0) == nsCRT::CR || buffer.CharAt(0) == nsCRT::LF) {
-      fileOutputStream->Write(buffer.get(), buffer.Length(), &written);
+      fileOutputStream->Write((const char*)buffer.get(), buffer.Length(), &written);
+      // XXX this is wrong! you need buffer.Length() * sizeof(PRUnichar)
       continue;
     }
 
@@ -425,7 +578,7 @@ nsDogbertProfileMigrator::FixDogbertCookies()
       continue;
 
     // separate the expires field from the rest of the cookie line
-    nsCAutoString prefix, expiresString, suffix;
+    nsAutoString prefix, expiresString, suffix;
     buffer.Mid(prefix, hostIndex, expiresIndex-hostIndex-1);
     buffer.Mid(expiresString, expiresIndex, nameIndex-expiresIndex-1);
     buffer.Mid(suffix, nameIndex, buffer.Length()-nameIndex);
@@ -444,12 +597,14 @@ nsDogbertProfileMigrator::FixDogbertCookies()
 
     // generate the output buffer and write it to file
     outBuffer = prefix;
-    outBuffer.Append('\t');
-    outBuffer.Append(dateString);
-    outBuffer.Append('\t');
+    outBuffer.Append(PRUnichar('\t'));
+    outBuffer.AppendWithConversion(dateString);
+    outBuffer.Append(PRUnichar('\t'));
     outBuffer.Append(suffix);
 
-    fileOutputStream->Write(outBuffer.get(), outBuffer.Length(), &written);
+    nsCAutoString convertedBuffer;
+    convertedBuffer.Assign(NS_ConvertUCS2toUTF8(outBuffer));
+    fileOutputStream->Write(convertedBuffer.get(), convertedBuffer.Length(), &written);
   }
   while (1);
   
@@ -514,7 +669,6 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
 
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
   nsCAutoString sourceBuffer;
-  nsCAutoString targetBuffer;
   PRBool moreData = PR_FALSE;
   PRUint32 bytesWritten = 0;
   do {
@@ -534,9 +688,8 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
                             folderPrefixOffset + folderPrefix.Length());
     }
 
-    targetBuffer.Assign(sourceBuffer);
-    targetBuffer.Append("\r\n");
-    outputStream->Write(targetBuffer.get(), targetBuffer.Length(), &bytesWritten);
+    sourceBuffer.Append("\r\n");
+    outputStream->Write(sourceBuffer.get(), sourceBuffer.Length(), &bytesWritten);
   }
   while (1);
 

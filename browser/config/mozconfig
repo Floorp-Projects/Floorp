@@ -11,4 +11,5 @@ ac_add_options --disable-mailnews
 ac_add_options --enable-extensions=cookie,xml-rpc,xmlextras,pref,transformiix,universalchardet,typeaheadfind,webservices,inspector,gnomevfs,negotiateauth
 ac_add_options --enable-crypto
 ac_add_options --disable-composer
+ac_add_options --enable-single-profile
 ac_add_options --disable-profilesharing

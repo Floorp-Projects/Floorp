@@ -43,8 +43,7 @@
 #include "nsILocalFileMac.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
-#include "nsIProfile.h"
-#include "nsIProfileInternal.h"
+#include "nsIProfileMigrator.h"
 #include "nsIProtocolHandler.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFDataSource.h"
@@ -77,9 +76,17 @@ nsSafariProfileMigrator::~nsSafariProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsSafariProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsSafariProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
+
+  PRBool aReplace = PR_FALSE;
+
+  if (aStartup) {
+    aReplace = PR_TRUE;
+    rv = aStartup->DoStartup();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
   

@@ -56,7 +56,9 @@
   }
 
 #include "nsIPrefBranch.h"
+#include "nsIFile.h"
 #include "nsString.h"
+class nsIProfileStartup;
 
 // Proxy utilities shared by the Opera and IE migrators
 void ParseOverrideServers(const char* aServers, nsIPrefBranch* aBranch);
@@ -73,8 +75,13 @@ class nsILocalFile;
 void GetMigrateDataFromArray(MigrationData* aDataArray, 
                              PRInt32 aDataArrayLength,
                              PRBool aReplace,
-                             nsILocalFile* aSourceProfile, 
+                             nsIFile* aSourceProfile, 
                              PRUint16* aResult);
+
+
+// get the base directory of the *target* profile
+// this is already cloned, modify it to your heart's content
+void GetProfilePath(nsIProfileStartup* aStartup, nsCOMPtr<nsIFile>& aProfileDir);
 
 #endif
 

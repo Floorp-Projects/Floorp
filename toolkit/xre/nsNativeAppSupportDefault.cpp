@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is The Browser Profile Migrator.
+ * The Original Code is the Mozilla XUL toolkit.
  *
- * The Initial Developer of the Original Code is Ben Goodger.
+ * The Initial Developer of the Original Code is
+ * Benjamin Smedberg <bsmedberg@covad.net>
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Goodger <ben@bengoodger.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,22 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsNativeAppSupportBase.h"
 
-[scriptable, uuid(5d9c7f6a-4af4-4a3d-be48-da1e70600b9c)]
-interface nsIProfileMigrator : nsISupports 
+nsresult
+NS_CreateNativeAppSupport( nsINativeAppSupport **aResult )
 {
-  /**
-   * Copy user profile information to the current active profile.
-   */
-  void migrate();
-};  
+  nsNativeAppSupportBase* native = new nsNativeAppSupportBase();
+  if (!native) return NS_ERROR_OUT_OF_MEMORY;
 
-%{C++
-      
-#define NS_PROFILEMIGRATOR_CONTRACTID "@mozilla.org/profile/migrator;1"
+  *aResult = native;
+  NS_ADDREF( *aResult );
 
-#define NS_PROFILEMIGRATOR_CID \
-{ 0xc0f8241e, 0x3340, 0x431e, { 0xbe, 0xba, 0x7b, 0x82, 0xf8, 0x7d, 0xd1, 0x41 } }
-
-%}
+  return NS_OK;
+}

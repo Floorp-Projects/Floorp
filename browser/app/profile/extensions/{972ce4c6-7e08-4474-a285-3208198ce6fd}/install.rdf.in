@@ -9,7 +9,13 @@
     
     <!-- Target Application this theme can install into, 
         with minimum and maximum supported versions. --> 
-    <em:targetApplication>{ec8030f7-c20a-464f-9b0e-13a3a9e97384},0.8+,0.9</em:targetApplication>
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>0.8</em:minVersion>
+        <em:maxVersion>0.9</em:maxVersion>
+      </Description>
+    </em:targetApplication>
     
     <!-- Front End MetaData -->
     <em:name>Firefox (default)</em:name>
@@ -19,7 +25,7 @@
 
     <!-- Front End Integration Hooks (used by Theme Manager)-->
     <!-- XXXben - preprocess this file to use different info for mac version -->
-    <em:creator>Arvid Axelsson</em:creator>
+    <em:creator>Gerich and Horlander</em:creator>
     <em:contributor>Mozilla Contributors</em:contributor>
 
     <em:internalName>classic/1.0</em:internalName>

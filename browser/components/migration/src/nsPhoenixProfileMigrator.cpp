@@ -85,30 +85,32 @@ nsPhoenixProfileMigrator::~nsPhoenixProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsPhoenixProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsPhoenixProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
   // At this time the only reason for this migrator is to get data across from the
   // Phoenix profile directory on initial run, so we don't need to support after-the-fact
   // importing. 
-  NS_ASSERTION(aReplace, "Can't migrate from Phoenix/Firebird/Firefox profiles once Firefox is running!");
-  if (!aReplace)
+  NS_ASSERTION(aStartup, "Can't migrate from Phoenix/Firebird/Firefox profiles once Firefox is running!");
+  if (!aStartup)
     return NS_ERROR_FAILURE;
 
-  if (!mTargetProfile) 
-    GetTargetProfile(aProfile, aReplace);
+  if (!mTargetProfile) {
+    GetProfilePath(aStartup, mTargetProfile);
+    if (!mTargetProfile) return NS_ERROR_FAILURE;
+  }
   if (!mSourceProfile)
     GetSourceProfile(aProfile);
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
 
-  COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS);
-  COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES);
-  COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY);
-  COPY_DATA(CopyPasswords,    aReplace, nsIBrowserProfileMigrator::PASSWORDS);
-  COPY_DATA(CopyOtherData,    aReplace, nsIBrowserProfileMigrator::OTHERDATA);
-  COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS);
+  COPY_DATA(CopyPreferences,  PR_TRUE, nsIBrowserProfileMigrator::SETTINGS);
+  COPY_DATA(CopyCookies,      PR_TRUE, nsIBrowserProfileMigrator::COOKIES);
+  COPY_DATA(CopyHistory,      PR_TRUE, nsIBrowserProfileMigrator::HISTORY);
+  COPY_DATA(CopyPasswords,    PR_TRUE, nsIBrowserProfileMigrator::PASSWORDS);
+  COPY_DATA(CopyOtherData,    PR_TRUE, nsIBrowserProfileMigrator::OTHERDATA);
+  COPY_DATA(CopyBookmarks,    PR_TRUE, nsIBrowserProfileMigrator::BOOKMARKS);
 
   if (aItems & nsIBrowserProfileMigrator::SETTINGS || 
       aItems & nsIBrowserProfileMigrator::COOKIES || 
@@ -284,6 +286,11 @@ nsPhoenixProfileMigrator::FillProfileDataFromPhoenixRegistry()
   
   phoenixRegistry->Append(NS_LITERAL_STRING(".phoenix"));
   phoenixRegistry->Append(NS_LITERAL_STRING("appreg"));
+#elif defined(XP_OS2)
+  fileLocator->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(phoenixRegistry));
+  
+  phoenixRegistry->Append(NS_LITERAL_STRING("Phoenix"));
+  phoenixRegistry->Append(NS_LITERAL_STRING("registry.dat"));
 #endif
 
 

@@ -39,30 +39,31 @@
 #define profilemigrator___h___
 
 #include "nsIBrowserProfileMigrator.h"
-#include "nsIObserver.h"
 #include "nsIProfileMigrator.h"
-#include "nsISupportsPrimitives.h"
+#include "nsCOMPtr.h"
 
-class nsProfileMigrator : public nsIProfileMigrator,
-                          public nsIObserver
+#define NS_FIREFOX_PROFILEMIGRATOR_CID \
+{ 0x4ca3c946, 0x5408, 0x49f0, { 0x9e, 0xca, 0x3a, 0x97, 0xd5, 0xc6, 0x77, 0x50 } }
+
+class nsProfileMigrator : public nsIProfileMigrator
 {
 public:
-  NS_DECL_NSIOBSERVER
   NS_DECL_NSIPROFILEMIGRATOR
   NS_DECL_ISUPPORTS
 
   nsProfileMigrator() { };
-  virtual ~nsProfileMigrator() { };
 
 protected:
-  nsresult OpenMigrationWizard();
-  nsresult GetDefaultBrowserMigratorKey(nsIBrowserProfileMigrator** aMigrator, 
-                                        nsISupportsString** aKey,
-                                        PRBool* aNeedsActiveProfile);
+  ~nsProfileMigrator() { };
 
-private:
-  nsCOMPtr<nsIBrowserProfileMigrator> mMigrator;
-  nsCOMPtr<nsISupportsString> mSourceKey;
+  nsresult GetDefaultBrowserMigratorKey(nsACString& key,
+                                        nsCOMPtr<nsIBrowserProfileMigrator>& bpm);
+
+  /**
+   * Import profiles from ~/.firefox/ or ~/.phoenix/
+   * @return PR_TRUE if any profiles imported.
+   */
+  PRBool ImportRegistryProfiles(const nsACString& aAppName);
 };
 
 #endif

@@ -82,6 +82,8 @@
 #include <io.h>
 #include <fcntl.h>
 
+#define kMailtoUrlScheme "mailto:"
+
 #ifdef MOZ_THUNDERBIRD
 #define MAPI_STARTUP_ARG       "/MAPIStartUp"
 #endif
@@ -125,60 +127,6 @@ activateWindow( nsIDOMWindowInternal *win ) {
 #undef MOZ_DEBUG_DDE
 #define MOZ_DEBUG_DDE 1
 #endif
-
-class nsSplashScreenWin : public nsISplashScreen {
-public:
-    nsSplashScreenWin();
-    ~nsSplashScreenWin();
-
-    NS_IMETHOD Show();
-    NS_IMETHOD Hide();
-
-    // nsISupports methods
-    NS_IMETHOD_(nsrefcnt) AddRef() {
-        mRefCnt++;
-        return mRefCnt;
-    }
-    NS_IMETHOD_(nsrefcnt) Release() {
-        --mRefCnt;
-        if ( !mRefCnt ) {
-            delete this;
-            return 0;
-        }
-        return mRefCnt;
-    }
-    NS_IMETHOD QueryInterface( const nsIID &iid, void**p ) {
-        nsresult rv = NS_OK;
-        if ( p ) {
-            *p = 0;
-            if ( iid.Equals( NS_GET_IID( nsISplashScreen ) ) ) {
-                nsISplashScreen *result = this;
-                *p = result;
-                NS_ADDREF( result );
-            } else if ( iid.Equals( NS_GET_IID( nsISupports ) ) ) {
-                nsISupports *result = NS_STATIC_CAST( nsISupports*, this );
-                *p = result;
-                NS_ADDREF( result );
-            } else {
-                rv = NS_NOINTERFACE;
-            }
-        } else {
-            rv = NS_ERROR_NULL_POINTER;
-        }
-        return rv;
-    }
-
-    void SetDialog( HWND dlg );
-    void LoadBitmap();
-    static nsSplashScreenWin* GetPointer( HWND dlg );
-
-    static BOOL CALLBACK DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
-    static DWORD WINAPI ThreadProc( LPVOID );
-
-    HWND mDlg;
-    HBITMAP mBitmap;
-    nsrefcnt mRefCnt;
-}; // class nsSplashScreenWin
 
 // Simple Win32 mutex wrapper.
 struct Mutex {
@@ -320,7 +268,7 @@ public:
     NS_IMETHOD Start( PRBool *aResult );
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
-    NS_IMETHOD EnsureProfile(nsICmdLineService* args);
+    NS_IMETHOD SetShouldShowUI(PRBool aValue);
 
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
@@ -371,174 +319,11 @@ private:
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static char *mAppName;
-    static PRBool mInitialWindowActive;
-    static PRBool mForceProfileStartup;
+    static PRBool mCanHandleRequests;
     static PRBool mSupportingDDEExec;
     static char mMutexName[];
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
-
-nsSplashScreenWin::nsSplashScreenWin()
-    : mDlg( 0 ), mBitmap( 0 ), mRefCnt( 0 ) {
-}
-
-nsSplashScreenWin::~nsSplashScreenWin() {
-#if MOZ_DEBUG_DDE
-    printf( "splash screen dtor called\n" );
-#endif
-    // Make sure dialog is gone.
-    Hide();
-}
-
-NS_IMETHODIMP
-nsSplashScreenWin::Show() {
-    // Spawn new thread to display real splash screen.
-    DWORD threadID = 0;
-    HANDLE handle = CreateThread( 0, 0, (LPTHREAD_START_ROUTINE)ThreadProc, this, 0, &threadID );
-    CloseHandle(handle);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSplashScreenWin::Hide() {
-    if ( mDlg ) {
-        // Fix for bugs:
-        //  http://bugzilla.mozilla.org/show_bug.cgi?id=26581
-        //  http://bugzilla.mozilla.org/show_bug.cgi?id=65974
-        //  http://bugzilla.mozilla.org/show_bug.cgi?id=29172
-        //  http://bugzilla.mozilla.org/show_bug.cgi?id=45805
-        // As the splash-screen is in a separate thread, Windows considers
-        // this the "foreground" thread.  When our main windows on the main
-        // thread are activated, they are treated like windows from a different
-        // application, so Windows 2000 and 98 both leave the window in the background.
-        // Therefore, we post a message to the splash-screen thread that includes
-        // the hwnd of the window we want moved to the foreground.  This thread
-        // can then successfully bring the top-level window to the foreground.
-        nsCOMPtr<nsIDOMWindowInternal> topLevel;
-        GetMostRecentWindow(nsnull, getter_AddRefs( topLevel ) );
-        HWND hWndTopLevel = topLevel ? hwndForDOMWindow(topLevel) : 0;
-        // Dismiss the dialog.
-        ::PostMessage(mDlg, WM_CLOSE, (WPARAM)mBitmap, (LPARAM)hWndTopLevel);
-        mBitmap = 0;
-        mDlg = 0;
-    }
-    return NS_OK;
-}
-
-void
-nsSplashScreenWin::LoadBitmap() {
-    // Check for '<program-name>.bmp" in same directory as executable.
-    char fileName[ _MAX_PATH ];
-    int fileNameLen = ::GetModuleFileName( NULL, fileName, sizeof fileName );
-    if ( fileNameLen >= 3 ) {
-        fileName[ fileNameLen - 3 ] = 0;
-        strcat( fileName, "bmp" );
-        // Try to load bitmap from that file.
-        HBITMAP bitmap = (HBITMAP)::LoadImage( NULL,
-                                               fileName,
-                                               IMAGE_BITMAP,
-                                               0,
-                                               0,
-                                               LR_LOADFROMFILE );
-        if ( bitmap ) {
-            HWND bitmapControl = GetDlgItem( mDlg, IDB_SPLASH );
-            if ( bitmapControl ) {
-                HBITMAP old = (HBITMAP)SendMessage( bitmapControl,
-                                                    STM_SETIMAGE,
-                                                    IMAGE_BITMAP,
-                                                    (LPARAM)bitmap );
-                // Remember bitmap so we can delete it later.
-                mBitmap = bitmap;
-                // Delete old bitmap.
-                if ( old ) {
-                    BOOL ok = DeleteObject( old );
-                }
-            } else {
-                // Delete bitmap since it isn't going to be used.
-                DeleteObject( bitmap );
-            }
-        }
-    }
-}
-
-BOOL CALLBACK
-nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
-    if ( msg == WM_INITDIALOG ) {
-        // Store dialog handle.
-        nsSplashScreenWin *splashScreen = (nsSplashScreenWin*)lp;
-        if ( lp ) {
-            splashScreen->SetDialog( dlg );
-
-            // Try to load customized bitmap.
-            splashScreen->LoadBitmap();
-        }
-
-        /* Size and center the splash screen correctly. The flags in the
-         * dialog template do not do the right thing if the user's
-         * machine is using large fonts.
-         */
-        HWND bitmapControl = GetDlgItem( dlg, IDB_SPLASH );
-        if ( bitmapControl ) {
-            HBITMAP hbitmap = (HBITMAP)SendMessage( bitmapControl,
-                                                    STM_GETIMAGE,
-                                                    IMAGE_BITMAP,
-                                                    0 );
-            if ( hbitmap ) {
-                BITMAP bitmap;
-                if ( GetObject( hbitmap, sizeof bitmap, &bitmap ) ) {
-                    SetWindowPos( dlg,
-                                  NULL,
-                                  GetSystemMetrics(SM_CXSCREEN)/2 - bitmap.bmWidth/2,
-                                  GetSystemMetrics(SM_CYSCREEN)/2 - bitmap.bmHeight/2,
-                                  bitmap.bmWidth,
-                                  bitmap.bmHeight,
-                                  SWP_NOZORDER );
-                    ShowWindow( dlg, SW_SHOW );
-                }
-            }
-        }
-        return 1;
-    } else if (msg == WM_CLOSE) {
-        // Before killing ourself, set the top-level current.
-        // See comments in nsSplashScreenWin::Hide() above.
-        HWND topLevel = (HWND)lp;
-        if (topLevel)
-            ::SetForegroundWindow(topLevel);
-        // Destroy the dialog
-        ::EndDialog(dlg, 0);
-        // Release custom bitmap (if there is one).
-        HBITMAP bitmap = (HBITMAP)wp;
-        if ( bitmap ) {
-            ::DeleteObject( bitmap );
-        }
-    }
-    return 0;
-}
-
-void nsSplashScreenWin::SetDialog( HWND dlg ) {
-    // Save dialog handle.
-    mDlg = dlg;
-    // Store this pointer in the dialog.
-    SetWindowLong( mDlg, DWL_USER, (LONG)(void*)this );
-}
-
-nsSplashScreenWin *nsSplashScreenWin::GetPointer( HWND dlg ) {
-    // Get result from dialog user data.
-    LONG data = GetWindowLong( dlg, DWL_USER );
-    return (nsSplashScreenWin*)(void*)data;
-}
-
-DWORD WINAPI nsSplashScreenWin::ThreadProc( LPVOID splashScreen ) {
-    DialogBoxParam( GetModuleHandle( 0 ),
-                    MAKEINTRESOURCE( IDD_SPLASH ),
-                    HWND_DESKTOP,
-                    (DLGPROC)DialogProc,
-                    (LPARAM)splashScreen );
-    return 0;
-}
-
-PRBool gAbortServer = PR_FALSE;
 
 void
 nsNativeAppSupportWin::CheckConsole() {
@@ -602,45 +387,14 @@ nsNativeAppSupportWin::CheckConsole() {
 // Create and return an instance of class nsNativeAppSupportWin.
 nsresult
 NS_CreateNativeAppSupport( nsINativeAppSupport **aResult ) {
-    if ( aResult ) {
-        nsNativeAppSupportWin *pNative = new nsNativeAppSupportWin;
-        if ( pNative ) {
-            *aResult = pNative;
-            NS_ADDREF( *aResult );
-            // Check for dynamic console creation request.
-            pNative->CheckConsole();
-        } else {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-    } else {
-        return NS_ERROR_NULL_POINTER;
-    }
+    nsNativeAppSupportWin *pNative = new nsNativeAppSupportWin;
+    if (!pNative) return NS_ERROR_OUT_OF_MEMORY;
 
-    return NS_OK;
-}
+    // Check for dynamic console creation request.
+    pNative->CheckConsole();
 
-// Create instance of Windows splash screen object.
-nsresult
-NS_CreateSplashScreen( nsISplashScreen **aResult ) {
-    if ( aResult ) {
-        *aResult = 0;
-        for ( int i = 1; i < __argc; i++ ) {
-            if ( strcmp( "-quiet", __argv[i] ) == 0
-                 ||
-                 strcmp( "/quiet", __argv[i] ) == 0 ) {
-                // No splash screen, please.
-                return NS_OK;
-            }
-        }
-        *aResult = new nsSplashScreenWin;
-        if ( *aResult ) {
-            NS_ADDREF( *aResult );
-        } else {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-    } else {
-        return NS_ERROR_NULL_POINTER;
-    }
+    *aResult = pNative;
+    NS_ADDREF( *aResult );
 
     return NS_OK;
 }
@@ -666,8 +420,7 @@ int   nsNativeAppSupportWin::mConversations = 0;
 HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
-PRBool nsNativeAppSupportWin::mInitialWindowActive = PR_FALSE;
-PRBool nsNativeAppSupportWin::mForceProfileStartup = PR_FALSE;
+PRBool nsNativeAppSupportWin::mCanHandleRequests   = PR_FALSE;
 PRBool nsNativeAppSupportWin::mSupportingDDEExec   = PR_FALSE;
 
 char nsNativeAppSupportWin::mMutexName[ 128 ] = { 0 };
@@ -767,6 +520,9 @@ struct MessageWindow {
     // Window proc.
     static long CALLBACK WindowProc( HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp ) {
         if ( msg == WM_COPYDATA ) {
+            if (!nsNativeAppSupportWin::mCanHandleRequests)
+                return 0;
+
             // This is an incoming request.
             COPYDATASTRUCT *cds = (COPYDATASTRUCT*)lp;
 #if MOZ_DEBUG_DDE
@@ -779,6 +535,8 @@ struct MessageWindow {
             GetMostRecentWindow( 0, getter_AddRefs( win ) );
             return win ? (long)hwndForDOMWindow( win ) : 0;
   } else if ( msg == WM_QUERYENDSESSION ) {
+    if (!nsNativeAppSupportWin::mCanHandleRequests)
+        return 0;
     // Invoke "-killAll" cmd line handler.  That will close all open windows,
     // and display dialog asking whether to save/don't save/cancel.  If the
     // user says cancel, then we pass that indicator along to the system
@@ -861,14 +619,12 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
         rv = msgWindow.SendRequest( cmd );
     } else {
         // We will be server.
-        if (!gAbortServer) {
-            rv = msgWindow.Create();
-            if ( NS_SUCCEEDED( rv ) ) {
-                // Start up DDE server.
-                this->StartDDE();
-                // Tell caller to spin message loop.
-                *aResult = PR_TRUE;
-            }
+        rv = msgWindow.Create();
+        if ( NS_SUCCEEDED( rv ) ) {
+            // Start up DDE server.
+            this->StartDDE();
+            // Tell caller to spin message loop.
+            *aResult = PR_TRUE;
         }
     }
 
@@ -1066,9 +822,12 @@ nsNativeAppSupportWin::Quit() {
     return NS_OK;
 }
 
-PRBool NS_CanRun()
+NS_IMETHODIMP
+nsNativeAppSupportWin::SetShouldShowUI(PRBool aValue)
 {
-      return PR_TRUE;
+    NS_ASSERTION(aValue, "True is the only allowed value!");
+    mCanHandleRequests = aValue;
+    return NS_OK;
 }
 
 #if MOZ_DEBUG_DDE
@@ -1152,6 +911,10 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                                               HDDEDATA hdata,   // handle to a global memory object
                                               ULONG dwData1,    // transaction-specific data
                                               ULONG dwData2 ) { // transaction-specific data
+
+    if (!mCanHandleRequests)
+        return 0;
+
 
 #if MOZ_DEBUG_DDE
     printf( "DDE: uType  =%s\n",      uTypeDesc( uType ).get() );
@@ -1503,26 +1266,12 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( LPBYTE value, DWORD len ) {
 void
 nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 
-    // if initial hidden window is still being displayed, we need to ignore requests
-    // because such requests might not function properly.  See bug 147223 for details
-
-    if (mInitialWindowActive) {
-      return;
-    }
-
     // Parse command line.
 
     nsCOMPtr<nsICmdLineService> args;
     nsresult rv;
 
     rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
-    if (NS_FAILED(rv)) return;
-
-    nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
-    if (NS_FAILED(rv)) return;
-
-    nsCOMPtr<nsINativeAppSupport> nativeApp;
-    rv = appShell->GetNativeAppSupport(getter_AddRefs( nativeApp ));
     if (NS_FAILED(rv)) return;
 
     // first see if there is a url
@@ -1533,8 +1282,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching browser on url [%s]...\n", (const char*)arg );
 #endif
-      if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
-        (void)OpenBrowserWindow( arg, newWindow );
+      (void)OpenBrowserWindow( arg, newWindow );
       return;
     }
 
@@ -1546,21 +1294,8 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching chrome url [%s]...\n", (const char*)arg );
 #endif
-      if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
-        (void)OpenWindow( arg, "" );
+      (void)OpenWindow( arg, "" );
       return;
-    }
-
-    // try for the "-profilemanager" argument, in which case we want the
-    // profile manager to appear, but only if there are no windows open
-
-    rv = args->GetCmdLineValue( "-profilemanager", getter_Copies(arg));
-    if ( NS_SUCCEEDED(rv) && (const char*)arg ) { // -profilemanager on command line
-      nsCOMPtr<nsIDOMWindowInternal> window;
-      GetMostRecentWindow(0, getter_AddRefs(window));
-      if (!window) { // there are no open windows
-        mForceProfileStartup = PR_TRUE;
-      }
     }
 
 #ifdef MOZ_THUNDERBIRD
@@ -1568,16 +1303,11 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // windows and just return.
     rv = args->GetCmdLineValue(MAPI_STARTUP_ARG, getter_Copies(arg));
     if (NS_SUCCEEDED(rv) && (const char*)arg) {
-      nativeApp->EnsureProfile(args);
       return;
     }
 #endif
 
     // Try standard startup's command-line handling logic from nsAppRunner.cpp...
-
-    // Need profile before opening windows.
-    rv = nativeApp->EnsureProfile(args);
-    if (NS_FAILED(rv)) return;
 
     // This will tell us whether the command line processing opened a window.
     PRBool windowOpened = PR_FALSE;
@@ -1653,6 +1383,8 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     int argc;
     char *p;
     nsCAutoString arg;
+    nsDependentCString mailtoUrlScheme (kMailtoUrlScheme);
+
     // We loop if we've not finished the second pass through.
     while ( 1 ) {
         // Initialize if required.
@@ -1690,7 +1422,9 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
         } else {
             // We are processing the contents of an argument.
             // Check for whitespace or end.
-            if ( *p == 0 || ( !quoted && isspace( *p ) ) ) {
+            // if the argument we are parsing is a mailto url then all of the remaining command line data
+            // needs to be part of the mailto url even if it has spaces. See Bug #231032
+            if ( *p == 0 || ( !quoted && isspace( *p ) && !StringBeginsWith(arg, mailtoUrlScheme, nsCaseInsensitiveCStringComparator()) ) ) {
                 // Process pending backslashes (interpret them
                 // literally since they're not followed by a ").
                 while( bSlashCount ) {
@@ -1796,88 +1530,6 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     delete [] argv;
 
     return rv;
-}
-
-// Check to see if we have a profile. We will not have a profile
-// at this point if we were launched invisibly in -turbo mode, and
-// the profile mgr needed to show UI (to pick from multiple profiles).
-// At this point, we can show UI, so call DoProfileStartUp().
-nsresult
-nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
-{
-  static PRBool firstTime = PR_TRUE;
-  if ( firstTime ) {
-    firstTime = PR_FALSE;
-    // Check pref for whether to set ddeexec subkey entries.
-    nsCOMPtr<nsIPref> prefService( do_GetService( NS_PREF_CONTRACTID ) );
-    PRBool supportDDEExec = PR_FALSE;
-    if ( prefService ) {
-        prefService->GetBoolPref( "advanced.system.supportDDEExec", &supportDDEExec );
-    }
-    if ( supportDDEExec && isDefaultBrowser() ) {
-#if MOZ_DEBUG_DDE
-printf( "Setting ddexec subkey entries\n" );
-#endif
-      // Set ddeexec default value.
-      const char ddeexec[] = "\"%1\",,-1,0,,,,";
-      ::RegSetValue( HKEY_CLASSES_ROOT,
-                     "http\\shell\\open\\ddeexec",
-                     REG_SZ,
-                     ddeexec,
-                     sizeof ddeexec );
-
-      // Set application/topic (while we're running), reset at exit.
-      ::RegSetValue( HKEY_CLASSES_ROOT,
-                     "http\\shell\\open\\ddeexec\\application",
-                     REG_SZ,
-                     mAppName,
-                     ::strlen( mAppName ) );
-
-      const char topic[] = "WWW_OpenURL";
-      ::RegSetValue( HKEY_CLASSES_ROOT,
-                     "http\\shell\\open\\ddeexec\\topic",
-                     REG_SZ,
-                     topic,
-                     sizeof topic );
-
-      // Remember we need to undo this.
-      mSupportingDDEExec = PR_TRUE;
-    }
-  }
-
-  nsresult rv;
-
-  nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  // If we have a profile, everything is fine -
-  // unless mForceProfileStartup is TRUE. This flag is set when the
-  // last window is closed in -turbo mode. When TRUE, it forces the
-  // profile UI to come up at the beginning of the next -turbo session
-  // even if we currently have a profile.
-  PRBool haveProfile;
-  rv = profileMgr->IsCurrentProfileAvailable(&haveProfile);
-  if (!mForceProfileStartup && NS_SUCCEEDED(rv) && haveProfile)
-      return NS_OK;
-
-  // If the profile selection is happening, fail.
-  PRBool doingProfileStartup;
-  rv = profileMgr->GetIsStartingUp(&doingProfileStartup);
-  if (NS_FAILED(rv) || doingProfileStartup) return NS_ERROR_FAILURE;
-
-  // See if profile manager is being suppressed via -silent flag.
-  PRBool canInteract = PR_TRUE;
-  nsXPIDLCString arg;
-  if (NS_SUCCEEDED(args->GetCmdLineValue("-silent", getter_Copies(arg))) && (const char*)arg) {
-    canInteract = PR_FALSE;
-  }
-  rv = appShell->DoProfileStartup(args, canInteract);
-
-  mForceProfileStartup = PR_FALSE;
-
-  return rv;
 }
 
 nsresult

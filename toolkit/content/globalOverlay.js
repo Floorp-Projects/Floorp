@@ -64,8 +64,7 @@ function goQuitApplication()
        return false;          
      domWindow.close();
   };
-  if (!nativeAppSupport || !nativeAppSupport.isServerMode)
-    appShell.quit(Components.interfaces.nsIAppShellService.eAttemptQuit);
+  appShell.quit(Components.interfaces.nsIAppShellService.eAttemptQuit);
   return true;
 }
 

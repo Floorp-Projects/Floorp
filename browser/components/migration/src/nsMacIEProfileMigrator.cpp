@@ -38,8 +38,7 @@
 #include "nsBrowserProfileMigratorUtils.h"
 #include "nsMacIEProfileMigrator.h"
 #include "nsIObserverService.h"
-#include "nsIProfile.h"
-#include "nsIProfileInternal.h"
+#include "nsIProfileMigrator.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
@@ -62,7 +61,7 @@ nsMacIEProfileMigrator::~nsMacIEProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsMacIEProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsMacIEProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 

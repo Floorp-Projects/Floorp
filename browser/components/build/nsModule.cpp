@@ -125,7 +125,7 @@ static const nsModuleComponentInfo components[] =
     nsBookmarksServiceConstructor },
 
   { "Profile Migrator",
-    NS_PROFILEMIGRATOR_CID,
+    NS_FIREFOX_PROFILEMIGRATOR_CID,
     NS_PROFILEMIGRATOR_CONTRACTID,
     nsProfileMigratorConstructor },
 

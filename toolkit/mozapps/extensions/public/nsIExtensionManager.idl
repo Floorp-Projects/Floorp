@@ -53,6 +53,17 @@ interface nsIExtensionDownloadProgressListener : nsISupports
 [scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
 interface nsIExtensionManager : nsISupports
 {
+  // Apprunner hooks
+  boolean start(in boolean aIsDirty);
+
+  /** 
+   * Returns true if mismatches were found and the app needs to restart. 
+   */
+  boolean checkForMismatches();
+
+  void handleCommandLineArgs();
+
+  // Installing Extensions
   const unsigned long FLAG_INSTALL_PROFILE = 0x01;
   const unsigned long FLAG_INSTALL_GLOBAL  = 0x02;
 
@@ -61,29 +72,32 @@ interface nsIExtensionManager : nsISupports
   void enableExtension(in string aExtensionID);
   void disableExtension(in string aExtensionID);
 
+  // Installing Themes
+  void installTheme(in nsIFile aJARFile, in unsigned long aFlags);
+  void uninstallTheme(in string aThemeID);
+
+  // Downloads
   void addDownloads([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                     in unsigned long aItemCount);
   void removeDownload(in wstring aURL, in unsigned short aType);
   long addDownloadObserver(in nsIExtensionDownloadProgressListener aObserver);
   void removeDownloadObserverAt(in long aIndex);
 
-  void installTheme(in nsIFile aJARFile, in unsigned long aFlags);
-  void uninstallTheme(in string aThemeID);
-
-  /** 
-   * Returns true if mismatches were found and the app needs to restart. 
-   */
-  boolean checkForMismatches();
-
   readonly attribute boolean inSafeMode;
 
+  // Updates
   void update([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                in unsigned long aItemCount);
 
+  // Management
   void getItemList(in string aItemID, 
                    in unsigned short aType, 
                    out unsigned long aItemCount,
                    [retval, array, size_is(aItemCount)] out nsIUpdateItem aItems);
+
+  void moveUp(in string aItemID);
+  void moveDown(in string aItemID);
+  void moveTop(in string aItemID);
 
   readonly attribute nsIRDFDataSource datasource;
 };
