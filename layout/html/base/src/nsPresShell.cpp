@@ -334,7 +334,6 @@ protected:
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsIPresContext> mPresContext;
   nsCOMPtr<nsIStyleSet> mStyleSet;
-  nsIFrame* mRootFrame;
   nsIViewManager* mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsILayoutHistoryState* mHistoryState; // [WEAK] session history owns this
   PRUint32 mUpdateCount;
@@ -371,13 +370,16 @@ private:
 
 #ifdef NS_DEBUG
 static void
-VerifyStyleTree(nsIFrameManager* aFrameManager, nsIFrame* aFrame)
+VerifyStyleTree(nsIFrameManager* aFrameManager)
 {
-  if (aFrameManager && aFrame && nsIFrame::GetVerifyStyleTreeEnable()) {
-    aFrameManager->DebugVerifyStyleTree(aFrame);
+  if (aFrameManager && nsIFrame::GetVerifyStyleTreeEnable()) {
+    nsIFrame* rootFrame;
+
+    aFrameManager->GetRootFrame(&rootFrame);
+    aFrameManager->DebugVerifyStyleTree(rootFrame);
   }
 }
-#define VERIFY_STYLE_TREE VerifyStyleTree(mFrameManager, mRootFrame)
+#define VERIFY_STYLE_TREE VerifyStyleTree(mFrameManager)
 #else
 #define VERIFY_STYLE_TREE
 #endif
@@ -538,13 +540,8 @@ PresShell::~PresShell()
     mViewManager = nsnull;
   }
 
-  // Destroy the frame manager before destroying the frame hierarchy. That way
-  // we won't waste time removing content->frame mappings for frames being
-  // destroyed
+  // Destroy the frame manager. This will destroy the frame hierarchy
   NS_IF_RELEASE(mFrameManager);
-  if (mRootFrame) {
-    mRootFrame->Destroy(*mPresContext);
-  }
 
   if (mDocument) {
     mDocument->DeleteShell(this);
@@ -610,7 +607,10 @@ PresShell::Init(nsIDocument* aDocument,
   if (NS_FAILED(result)) {
     return result;
   }
-  mFrameManager->Init(this, mStyleSet);
+  result = mFrameManager->Init(this, mStyleSet);
+  if (NS_FAILED(result)) {
+    return result;
+  }
 
   nsCOMPtr<nsIDOMSelection> domSelection;
   mSelection->GetSelection(SELECTION_NORMAL, getter_AddRefs(domSelection));
@@ -893,13 +893,19 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     root = mDocument->GetRootContent();
   }
 
+  // Get the root frame from the frame manager
+  nsIFrame* rootFrame;
+  mFrameManager->GetRootFrame(&rootFrame);
+  
   if (nsnull != root) {
     RAPTOR_STOPWATCH_DEBUGTRACE(("Reset and start: Frame Creation: PresShell::InitialReflow(), this=%p\n", this));
     NS_RESET_AND_START_STOPWATCH(mFrameCreationWatch)
-    if (nsnull == mRootFrame) {
+
+    if (!rootFrame) {
       // Have style sheet processor construct a frame for the
       // precursors to the root content object's frame
-      mStyleSet->ConstructRootFrame(mPresContext, root, mRootFrame);
+      mStyleSet->ConstructRootFrame(mPresContext, root, rootFrame);
+      mFrameManager->SetRootFrame(rootFrame);
     }
 
     // Have the style sheet processor construct frame for the root
@@ -911,7 +917,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     NS_STOP_STOPWATCH(mFrameCreationWatch)
   }
 
-  if (nsnull != mRootFrame) {
+  if (rootFrame) {
     RAPTOR_STOPWATCH_DEBUGTRACE(("Reset and start: Reflow: PresShell::InitialReflow(), this=%p\n", this));
     NS_RESET_AND_START_STOPWATCH(mReflowWatch)
     // Kick off a top-down reflow
@@ -919,7 +925,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
                  ("enter nsPresShell::InitialReflow: %d,%d", aWidth, aHeight));
 #ifdef NS_DEBUG
     if (nsIFrame::GetVerifyTreeEnable()) {
-      mRootFrame->VerifyTree();
+      rootFrame->VerifyTree();
     }
 #endif
 #ifdef DEBUG_kipp
@@ -933,19 +939,19 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     nsIHTMLReflow*        htmlReflow;
     nsIRenderingContext*  rcx = nsnull;
 
-    CreateRenderingContext(mRootFrame, &rcx);
+    CreateRenderingContext(rootFrame, &rcx);
 
-    nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
+    nsHTMLReflowState reflowState(*mPresContext, rootFrame,
                                   eReflowReason_Initial, rcx, maxSize);
 
-    if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    if (NS_OK == rootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
-      mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+      rootFrame->SizeTo(desiredSize.width, desiredSize.height);
       mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
       
 #ifdef NS_DEBUG
       if (nsIFrame::GetVerifyTreeEnable()) {
-        mRootFrame->VerifyTree();
+        rootFrame->VerifyTree();
       }
 #endif
       VERIFY_STYLE_TREE;
@@ -991,13 +997,15 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
   // If we don't have a root frame yet, that means we haven't had our initial
   // reflow...
-  if (nsnull != mRootFrame) {
+  nsIFrame* rootFrame;
+  mFrameManager->GetRootFrame(&rootFrame);
+  if (rootFrame) {
     // Kick off a top-down reflow
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                  ("enter nsPresShell::ResizeReflow: %d,%d", aWidth, aHeight));
 #ifdef NS_DEBUG
     if (nsIFrame::GetVerifyTreeEnable()) {
-      mRootFrame->VerifyTree();
+      rootFrame->VerifyTree();
     }
 #endif
 #ifdef DEBUG_kipp
@@ -1011,17 +1019,17 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsIHTMLReflow*        htmlReflow;
     nsIRenderingContext*  rcx = nsnull;
 
-    CreateRenderingContext(mRootFrame, &rcx);
+    CreateRenderingContext(rootFrame, &rcx);
 
-    nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
+    nsHTMLReflowState reflowState(*mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
 
-    if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    if (NS_OK == rootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
-      mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+      rootFrame->SizeTo(desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
       if (nsIFrame::GetVerifyTreeEnable()) {
-        mRootFrame->VerifyTree();
+        rootFrame->VerifyTree();
       }
 #endif
       VERIFY_STYLE_TREE;
@@ -1134,13 +1142,15 @@ PresShell::StyleChangeReflow()
 {
   EnterReflowLock();
 
-  if (nsnull != mRootFrame) {
+  nsIFrame* rootFrame;
+  mFrameManager->GetRootFrame(&rootFrame);
+  if (rootFrame) {
     // Kick off a top-down reflow
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                  ("enter nsPresShell::StyleChangeReflow"));
 #ifdef NS_DEBUG
     if (nsIFrame::GetVerifyTreeEnable()) {
-      mRootFrame->VerifyTree();
+      rootFrame->VerifyTree();
     }
 #endif
     nsRect                bounds;
@@ -1151,18 +1161,18 @@ PresShell::StyleChangeReflow()
     nsIHTMLReflow*        htmlReflow;
     nsIRenderingContext*  rcx = nsnull;
 
-    CreateRenderingContext(mRootFrame, &rcx);
+    CreateRenderingContext(rootFrame, &rcx);
 
     // XXX We should be using eReflowReason_StyleChange
-    nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
+    nsHTMLReflowState reflowState(*mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
 
-    if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    if (NS_OK == rootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
-      mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+      rootFrame->SizeTo(desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
       if (nsIFrame::GetVerifyTreeEnable()) {
-        mRootFrame->VerifyTree();
+        rootFrame->VerifyTree();
       }
 #endif
       VERIFY_STYLE_TREE;
@@ -1179,12 +1189,7 @@ PresShell::StyleChangeReflow()
 NS_IMETHODIMP
 PresShell::GetRootFrame(nsIFrame** aResult) const
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = mRootFrame;
-  return NS_OK;
+  return mFrameManager->GetRootFrame(aResult);
 }
 
 NS_IMETHODIMP
@@ -1195,12 +1200,14 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
     return NS_ERROR_NULL_POINTER;
   }
 
+  nsIFrame*             rootFrame;
   nsIFrame*             child;
   nsIPageSequenceFrame* pageSequence;
 
   // The page sequence frame should be either the immediate child or
   // its child
-  mRootFrame->FirstChild(nsnull, &child);
+  mFrameManager->GetRootFrame(&rootFrame);
+  rootFrame->FirstChild(nsnull, &child);
   if (nsnull != child) {
     if (NS_SUCCEEDED(child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence))) {
       *aResult = pageSequence;
@@ -1350,7 +1357,10 @@ PresShell::ProcessReflowCommands()
   if (0 != mReflowCommands.Count()) {
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsIRenderingContext*  rcx;
-    CreateRenderingContext(mRootFrame, &rcx);
+    nsIFrame*             rootFrame;
+
+    mFrameManager->GetRootFrame(&rootFrame);
+    CreateRenderingContext(rootFrame, &rcx);
 
 #ifdef DEBUG
     if (GetVerifyReflowEnable()) {
@@ -1376,7 +1386,7 @@ PresShell::ProcessReflowCommands()
 
       // Dispatch the reflow command
       nsSize          maxSize;
-      mRootFrame->GetSize(maxSize);
+      rootFrame->GetSize(maxSize);
       rc->Dispatch(*mPresContext, desiredSize, maxSize, *rcx);
       NS_RELEASE(rc);
       VERIFY_STYLE_TREE;
@@ -1385,7 +1395,7 @@ PresShell::ProcessReflowCommands()
 
 #ifdef DEBUG
     if (nsIFrame::GetVerifyTreeEnable()) {
-      mRootFrame->VerifyTree();
+      rootFrame->VerifyTree();
     }
     if (GetVerifyReflowEnable()) {
       // First synchronously render what we have so far so that we can
@@ -1751,8 +1761,6 @@ PresShell::ContentChanged(nsIDocument *aDocument,
                           nsIContent*  aContent,
                           nsISupports* aSubContent)
 {
-  NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentChanged(mPresContext, aContent, aSubContent);
   VERIFY_STYLE_TREE;
@@ -1766,8 +1774,6 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
                                 nsIContent* aContent1,
                                 nsIContent* aContent2)
 {
-  NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1, aContent2);
   VERIFY_STYLE_TREE;
@@ -1784,8 +1790,6 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
                             nsIAtom*     aAttribute,
                             PRInt32      aHint)
 {
-  NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-
   EnterReflowLock();
   nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aHint);
   VERIFY_STYLE_TREE;
