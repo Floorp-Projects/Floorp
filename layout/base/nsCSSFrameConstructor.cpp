@@ -2153,17 +2153,17 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
     case NS_FORM_INPUT_RESET:
     case NS_FORM_INPUT_BUTTON:
       if (gUseXBLForms)
-        return NS_OK;
+        return NS_OK; // upddate IsSpecialHTMLContent if this becomes functional
       return NS_NewGfxButtonControlFrame(mPresShell, aFrame);
 
     case NS_FORM_INPUT_CHECKBOX:
       if (gUseXBLForms)
-        return NS_OK;
+        return NS_OK; // see comment above
       return ConstructCheckboxControlFrame(aFrame, aContent, aStyleContext);
 
     case NS_FORM_INPUT_RADIO:
       if (gUseXBLForms)
-        return NS_OK;
+        return NS_OK; // see comment above
       return ConstructRadioControlFrame(aFrame, aContent, aStyleContext);
 
     case NS_FORM_INPUT_FILE:
@@ -2177,7 +2177,8 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
     }
 
     case NS_FORM_INPUT_HIDDEN:
-      return NS_OK;
+      return NS_OK; // this does not create a frame so it needs special handling
+                    // in IsSpecialHTMLContent
 
     case NS_FORM_INPUT_IMAGE:
       return NS_NewImageControlFrame(mPresShell, aFrame);
@@ -2959,6 +2960,13 @@ IsSpecialHTMLContent(nsIContent* aContent)
   }
 
   nsIAtom* tag = aContent->Tag();
+  
+  if (tag == nsHTMLAtoms::input) {
+    nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
+    if (control && NS_FORM_INPUT_HIDDEN == control->GetType())
+      return PR_FALSE; // input hidden does not create a special frame
+  }
+
   return
     tag == nsHTMLAtoms::img ||
     tag == nsHTMLAtoms::br ||
