@@ -2,4 +2,5 @@ en-win.jar:
     locale/en-US/global-platform/contents.rdf 		(contents-platform.rdf)
     locale/en-US/global-platform/platformGlobalOverlay.dtd
     locale/en-US/global-platform/platformDialogOverlay.dtd
+    locale/en-US/global-platform/platformKeys.properties
     locale/en-US/global-platform/wizard.properties

@@ -2,8 +2,5 @@ en-mac.jar:
     locale/en-US/global-platform/contents.rdf		(contents-platform.rdf)
     locale/en-US/global-platform/platformGlobalOverlay.dtd
     locale/en-US/global-platform/platformDialogOverlay.dtd
-#this should not go into global-platform as its an override of the XP version used for
-#windows/os2/unix. See platformKeys.properties in the parent directory
-en-US.jar:
-+   locale/en-US/global/platformKeys.properties
+    locale/en-US/global-platform/platformKeys.properties
     locale/en-US/global-platform/wizard.properties
