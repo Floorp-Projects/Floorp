@@ -212,3 +212,11 @@ nsImapMoveCopyMsgTxn::GetDstKeyArray(nsMsgKeyArray& dstKeyArray)
     return NS_OK;
 }
 
+nsresult
+nsImapMoveCopyMsgTxn::AddDstKey(nsMsgKey aKey)
+{
+    m_dstKeyArray.Add(aKey);
+    return NS_OK;
+}
+
+

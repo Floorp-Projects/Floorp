@@ -50,17 +50,22 @@ struct nsImapMailCopyState
     nsImapMailCopyState();
     virtual ~nsImapMailCopyState();
 
-    nsCOMPtr<nsISupports> m_srcSupport;
-    nsCOMPtr<nsISupportsArray> m_messages;
-    nsCOMPtr<nsMsgTxn> m_undoMsgTxn;
-    nsCOMPtr<nsIMessage> m_message;
-    nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
+    nsCOMPtr<nsISupports> m_srcSupport; // source file spec or folder
+    nsCOMPtr<nsISupportsArray> m_messages; // array of source messages
+    nsCOMPtr<nsMsgTxn> m_undoMsgTxn; // undo object with this copy operation
+    nsCOMPtr<nsIMessage> m_message; // current message to be copied
+    nsCOMPtr<nsIMsgCopyServiceListener> m_listener; // listener of this copy
+                                                    // operation 
+    nsCOMPtr<nsIFileSpec> m_tmpFileSpec; // temp file spec for copy operation
 
-    nsIMsgMessageService* m_msgService;
-    PRBool m_isMoveOrDraft;
-    PRUint32 m_curIndex;
-    PRUint32 m_totalCount;
-    char *m_dataBuffer;
+    nsIMsgMessageService* m_msgService; // source folder message service; can
+                                        // be Nntp, Mailbox, or Imap
+    PRBool m_isMove;             // is a move
+    PRBool m_selectedState;      // needs to be in selected state; append msg
+    PRUint32 m_curIndex; // message index to the message array which we are
+                         // copying 
+    PRUint32 m_totalCount;// total count of messages we have to do
+    char *m_dataBuffer; // temporary buffer for this copy operation
 };
 
 class nsImapMailFolder : public nsMsgDBFolder, 
@@ -280,7 +285,10 @@ public:
                                msg_line_info* aInfo);
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
-	NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol, nsIImapIncomingServer *aInfo);
+	NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
+                                 nsIImapIncomingServer *aInfo);
+    NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
+                                     void* copyState);
 
 #ifdef DOING_FILTERS
 	// nsIMsgFilterHitNotification method(s)
@@ -324,9 +332,12 @@ protected:
                            PRBool isMove,
                            nsITransactionManager* txnMgr,
                            nsIMsgCopyServiceListener* listener);
+    nsresult CopyStreamMessage(nsIMessage* message, nsIMsgFolder* dstFolder,
+                               PRBool isMove);
     nsresult InitCopyState(nsISupports* srcSupport, 
                            nsISupportsArray* messages,
-                           PRBool isMoveOrDraft,
+                           PRBool isMove,
+                           PRBool selectedState,
                            nsIMsgCopyServiceListener* listener);
     void ClearCopyState(nsresult exitCode);
     nsresult SetTransactionManager(nsITransactionManager* txnMgr);
@@ -357,6 +368,7 @@ protected:
     nsCOMPtr<nsITransactionManager> m_transactionManager;
     nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
     nsImapMailCopyState* m_copyState;
+    PRMonitor *m_appendMsgMonitor;
 };
 
 #endif

@@ -247,6 +247,9 @@ public:
 
     NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
                              nsIImapIncomingServer *aInfo);
+    NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocl,
+                                     void* copyState);
+
     nsIImapMiscellaneousSink* m_realImapMiscellaneousSink;
 };
 
@@ -815,5 +818,13 @@ struct LoadNextQueuedUrlProxyEvent : public nsImapMiscellaneousSinkProxyEvent
     nsCOMPtr <nsIImapIncomingServer> m_imapIncomingServer;
 };
 
+struct CopyNextStreamMessageProxyEvent : public nsImapMiscellaneousSinkProxyEvent
+{
+    CopyNextStreamMessageProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
+                                    void* copyState);
+    virtual ~CopyNextStreamMessageProxyEvent();
+    NS_IMETHOD HandleEvent();
+    void* m_copyState;
+};
 
 #endif

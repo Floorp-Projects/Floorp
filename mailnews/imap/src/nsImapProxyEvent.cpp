@@ -1126,7 +1126,10 @@ nsImapExtensionSinkProxy::SetCopyResponseUid(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1153,7 +1156,10 @@ nsImapExtensionSinkProxy::SetAppendMsgUid(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1796,6 +1802,33 @@ nsImapMiscellaneousSinkProxy::LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->LoadNextQueuedUrl(aProtocol, aInfo);
+    }
+    return res;
+}
+
+NS_IMETHODIMP
+nsImapMiscellaneousSinkProxy::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
+                                                    void* copyState)
+{
+    nsresult res = NS_OK;
+    NS_PRECONDITION (copyState, "Oops... null copyState");
+    if(!copyState)
+        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        CopyNextStreamMessageProxyEvent *ev =
+            new CopyNextStreamMessageProxyEvent(this, copyState);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+            ev->PostEvent(m_eventQueue);
+    }
+    else
+    {
+        res = m_realImapMiscellaneousSink->CopyNextStreamMessage(aProtocol,
+                                                                 copyState);
     }
     return res;
 }
@@ -3589,3 +3622,28 @@ LoadNextQueuedUrlProxyEvent::HandleEvent()
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
+
+CopyNextStreamMessageProxyEvent::CopyNextStreamMessageProxyEvent(
+    nsImapMiscellaneousSinkProxy* aProxy, void* copyState) :
+    nsImapMiscellaneousSinkProxyEvent(aProxy)
+{
+    NS_ASSERTION (copyState, "Oops... a null copy state");
+	// potential ownership/lifetime problem here, but incoming server
+	// shouldn't be deleted while urls are running.
+    m_copyState = copyState;
+}
+
+CopyNextStreamMessageProxyEvent::~CopyNextStreamMessageProxyEvent()
+{
+}
+
+NS_IMETHODIMP
+CopyNextStreamMessageProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapMiscellaneousSink->CopyNextStreamMessage(
+        m_proxy->m_protocol, m_copyState);
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+

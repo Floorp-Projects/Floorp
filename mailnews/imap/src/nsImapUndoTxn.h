@@ -60,6 +60,7 @@ public:
                                 const char *msgIdString);
     nsresult GetSrcKeyArray(nsMsgKeyArray& srcKeyArray);
     nsresult GetDstKeyArray(nsMsgKeyArray& dstKeyArray);
+    nsresult AddDstKey(nsMsgKey aKey);
 
 private:
 

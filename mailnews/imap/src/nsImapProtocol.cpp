@@ -888,6 +888,10 @@ void nsImapProtocol::ProcessCurrentURL()
         mailnewsurl->SetUrlState(PR_FALSE, NS_OK);  // we are done with this url.
     m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
 	PseudoInterrupt(FALSE);	// clear this, because we must be done interrupting?
+    void *copyState = nsnull;
+    rv = m_runningUrl->GetCopyState(&copyState);
+    if (NS_SUCCEEDED(rv) && m_imapMiscellaneousSink && copyState)
+        m_imapMiscellaneousSink->CopyNextStreamMessage(this, copyState);
 
 	// release this by hand so that we can load the next queued url without thinking
 	// this connection is busy running a url.
@@ -3276,6 +3280,7 @@ void nsImapProtocol::SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
             m_runningUrl->GetCopyState(&copyState);
         m_imapExtensionSink->SetCopyResponseUid(this,aKeyArray, msgIdString,
                                                 copyState);
+        WaitForFEEventCompletion();
     }
 }
 
@@ -4211,12 +4216,15 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                     nsMsgKey newKey =
                         GetServerStateParser().CurrentResponseUID();
                     if (m_imapExtensionSink)
+                    {
                         m_imapExtensionSink->SetAppendMsgUid(this, newKey,
                                                              copyState);
+                        WaitForFEEventCompletion();
+                    }
                     nsString2 oldMsgId("", eOneByte);
                     rv =
                         m_runningUrl->CreateListOfMessageIdsString(&oldMsgId);
-                    if (NS_SUCCEEDED(rv))
+                    if (NS_SUCCEEDED(rv) && oldMsgId.Length() > 0)
                     {
                         PRBool idsAreUids = PR_TRUE;
                         m_runningUrl->MessageIdsAreUids(&idsAreUids);
@@ -4245,8 +4253,11 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
 							newkey = searchResult->GetNextMessageNumber();
 							delete searchResult;
                             if (newkey != nsMsgKey_None)
+                            {
                                 m_imapExtensionSink->SetAppendMsgUid
                                     (this, newkey, copyState);
+                                WaitForFEEventCompletion();
+                            }
                         }
                     }
                 }
