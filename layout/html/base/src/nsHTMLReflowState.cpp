@@ -828,6 +828,13 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(const nsHTMLReflowState* aCon
       aContainingBlockHeight += aContainingBlockRS->mComputedPadding.top +
                                 aContainingBlockRS->mComputedPadding.bottom;
     }
+  } else {
+    // If this is an unconstrained reflow, then reset the containing block
+    // width to NS_UNCONSTRAINEDSIZE. This way percentage based values have
+    // no effect
+    if (NS_UNCONSTRAINEDSIZE == availableWidth) {
+      aContainingBlockWidth = NS_UNCONSTRAINEDSIZE;
+    }
   }
 }
 
