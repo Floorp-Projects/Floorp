@@ -39,10 +39,9 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-
 #include "nsNetUtil.h"
 #include "nsIBufferInputStream.h"
-
+#include "nsIPref.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -67,6 +66,7 @@ static NS_DEFINE_CID(kRelatedLinksHandlerCID,     NS_RELATEDLINKSHANDLER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,        NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,          NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_IID(kPrefCID,                    NS_PREF_CID);
 
 static const char kURINC_RelatedLinksRoot[] = "NC:RelatedLinks";
 
@@ -538,6 +538,7 @@ private:
 	char			*mURI;
 	char			*mRelatedLinksURL;
 	PRBool			mPerformQuery;
+	nsAutoString		mRLServerURL;
 
    // pseudo-constants
 	static PRInt32		gRefCnt;
@@ -683,6 +684,24 @@ RelatedLinksHandlerImpl::Init()
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
 		gRDFService->GetResource(NC_NAMESPACE_URI "RelatedLinksTopic", &kNC_RelatedLinksTopic);
 		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
+
+		NS_WITH_SERVICE(nsIPref, prefServ, kPrefCID, &rv);
+		if (NS_SUCCEEDED(rv) && (prefServ))
+		{
+			char	*prefVal = nsnull;
+			if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("browser.related.provider",
+				&prefVal)) && (prefVal))
+			{
+				mRLServerURL = prefVal;
+				nsCRT::free(prefVal);
+				prefVal = nsnull;
+			}
+			else
+			{
+				// no preference, so fallback to a well-known URL
+				mRLServerURL = "http://www-rl.netscape.com/wtgn?";
+			}
+		}
 	}
 
 	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
@@ -809,16 +828,11 @@ RelatedLinksHandlerImpl::SetURL(const char* aURL)
 	rv = purgeable->Sweep();
 	if (NS_FAILED(rv)) return rv;
 
-	// XXX This should be a parameter
-	nsCAutoString	relatedLinksQueryURL("http://www-rl.netscape.com/wtgn?");
+	nsAutoString	relatedLinksQueryURL(mRLServerURL);
 	relatedLinksQueryURL += mRelatedLinksURL;
 
-	const char *queryURL = relatedLinksQueryURL.GetBuffer();
-	if (! queryURL)
-		return NS_ERROR_OUT_OF_MEMORY;
-
 	nsCOMPtr<nsIURI> url;
-	rv = NS_NewURI(getter_AddRefs(url), queryURL);
+	rv = NS_NewURI(getter_AddRefs(url), relatedLinksQueryURL);
 
 	if (NS_FAILED(rv)) return rv;
 
