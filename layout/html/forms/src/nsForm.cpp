@@ -253,6 +253,7 @@ nsForm::~nsForm()
     nsIFormControl* child = GetFormControlAt(i);
     if (child) {
       child->SetFormManager(nsnull, PR_FALSE);
+      NS_RELEASE(child);
     }
   }
   mChildren.Clear();
@@ -310,6 +311,11 @@ nsrefcnt nsForm::Release()
   --mRefCnt;
   int numChildren = GetFormControlCount();
   PRBool externalRefsToChildren = PR_FALSE;  // are there refs to any children besides my ref
+  // XXX This check for external refs to child form elements can't work, because
+  // many other objects (e.g., frame, style context, parent content object) hold a
+  // reference to the child AND depending on order of destruction those references
+  // may or may not have been released yet...
+#if 0
   for (int i = 0; i < numChildren; i++) {
     nsIFormControl* child = GetFormControlAt(i);
     if (child && (child->GetRefCount() > 1)) {
@@ -317,6 +323,7 @@ nsrefcnt nsForm::Release()
       break;
     }
   }
+#endif
   if (!externalRefsToChildren && ((int)mRefCnt == numChildren)) {
     mRefCnt = 0;
     delete this; 
