@@ -18,8 +18,7 @@ use File::Copy;
 
 # homegrown
 use Moz;
-#use MozJar;
-#use MakeJarsMac;
+use MozJar;
 use MacCVS;
 use MANIFESTO;
 
@@ -205,20 +204,91 @@ sub _copy($$)
 }
 
 #//--------------------------------------------------------------------------------------------------
-#// yeah
+#// _InstallManifestRDF
 #//--------------------------------------------------------------------------------------------------
 
-sub _InstallManifestRDF($$$$$)
+sub _InstallManifestRDF($$$$)
 {
-    my($src, $dist_dir, $chrome_subdir, $manifest_subdir, $type) = @_;
+    my($src, $manifest_subdir, $type, $building_jars) = @_;
     
-    _MakeAlias($src, "${dist_dir}${chrome_subdir}${manifest_subdir}");
+    my($dist_dir) = _getDistDirectory();
+    my $chrome_subdir = "Chrome:";
+    my $chrome_dir = "$dist_dir" . $chrome_subdir;
+
+    my($manifest_path) = $chrome_dir.$manifest_subdir;
     
-    open(CHROMEFILE, ">>${dist_dir}${chrome_subdir}installed-chrome.txt");
+    print "Installing manifest.rdf file in ".$manifest_path."\n";
+    
+    MakeAlias($src, "$manifest_path");
+    
+    open(CHROMEFILE, ">>${chrome_dir}installed-chrome.txt");
+
     $manifest_subdir =~ tr(:)(/);
-    print(CHROMEFILE "${type},install,url,resource:/Chrome/${manifest_subdir}\n");
+
+    if ($building_jars)
+    {
+        # remove trailing / from subdir
+        $manifest_subdir =~ s/\/$//;    
+        print(CHROMEFILE "${type},install,url,jar:resource:/Chrome/${manifest_subdir}.jar!/\n");     
+    }
+    else
+    {
+        print(CHROMEFILE "${type},install,url,resource:/Chrome/${manifest_subdir}\n");
+    }
+
     close(CHROMEFILE);
 }
+
+
+#//--------------------------------------------------------------------------------------------------
+#// InstallManifestRDFFiles Install manifest.rdf files and build installed_chrome.txt
+#//--------------------------------------------------------------------------------------------------
+
+sub InstallManifestRDFFiles()
+{
+    unless( $main::build{resources} ) { return; }
+
+    my($dist_dir) = _getDistDirectory();
+
+    my $chrome_subdir = "Chrome:";
+    my $chrome_dir = "$dist_dir" . $chrome_subdir;
+
+    my($building_jars) = $main::options{jars};
+
+    # nuke installed-chrome.txt
+    unlink ${chrome_dir}."installed-chrome.txt";
+
+    # install manifest RDF files
+    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", "packages:chatzilla:", "content", $building_jars);
+    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", "packages:chatzilla:", "locale", $building_jars);
+    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", "packages:chatzilla:", "skin", $building_jars);
+    
+    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", "packages:cview:", "content", $building_jars);
+    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", "packages:cview:", "locale", $building_jars);
+    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", "packages:cview:", "skin", $building_jars);
+    
+    if ($main::options{transformiix})
+    {
+        my($transformiix_manifest) = ":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf";
+        _InstallManifestRDF($transformiix_manifest, "packages:transformiix:", "content", $building_jars);
+        _InstallManifestRDF($transformiix_manifest, "packages:transformiix:", "locale", $building_jars);
+        _InstallManifestRDF($transformiix_manifest, "packages:transformiix:", "skin", $building_jars);
+    }
+
+    _InstallManifestRDF(":mozilla:themes:classic:manifest.rdf", "skins:classic:", "skin", $building_jars);
+    _InstallManifestRDF(":mozilla:themes:blue:manifest.rdf", "skins:blue:", "skin", $building_jars);
+    _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf", "skins:modern:", "skin", $building_jars);
+
+    _InstallManifestRDF(":mozilla:xpfe:communicator:resources:content:manifest.rdf", "packages:core:", "content", $building_jars);
+    _InstallManifestRDF(":mozilla:xpfe:global:resources:content:manifest.rdf", "packages:widget-toolkit:", "content", $building_jars);
+    _InstallManifestRDF(":mozilla:mailnews:base:resources:content:manifest.rdf", "packages:messenger:", "content", $building_jars);
+
+    _InstallManifestRDF(":mozilla:xpfe:communicator:resources:locale:en-US:manifest.rdf", "locales:en-US:", "locale", $building_jars);
+    
+    _InstallManifestRDF(":mozilla:l10n:langpacks:en-DE:chrome:en-DE:manifest.rdf", "locales:en-DE:", "locale", $building_jars);
+
+}
+
 
 #//--------------------------------------------------------------------------------------------------
 #// Configure Build System
@@ -669,10 +739,10 @@ sub DefScanForManifestFiles($$$$)
 }
 
 #//--------------------------------------------------------------------------------------------------
-#// Install defaults files
+#// InstallLangPackFiles
 #//--------------------------------------------------------------------------------------------------
 
-sub InstallDefaultsFiles($)
+sub InstallLangPackFiles($)
 {
        my($theme_name) = @_;
        
@@ -691,14 +761,73 @@ sub InstallDefaultsFiles($)
 }
 
 #//--------------------------------------------------------------------------------------------------
-#// Make resource aliases
+#// InstallDefaultsFiles
 #//--------------------------------------------------------------------------------------------------
 
-sub MakeResourceAliases()
+sub InstallDefaultsFiles()
 {
     unless( $main::build{resources} ) { return; }
     _assertRightDirectory();
 
+    # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+    my($D) = $main::DEBUG ? "Debug" : "";
+    my($dist_dir) = _getDistDirectory();
+
+    print("--- Starting Defaults copying ----\n");
+
+    # default folder
+    my($defaults_dir) = "$dist_dir" . "Defaults:";
+    mkdir($defaults_dir, 0);
+
+    {
+    my($default_wallet_dir) = "$defaults_dir"."wallet:";
+    mkdir($default_wallet_dir, 0);
+    _InstallResources(":mozilla:extensions:wallet:src:MANIFEST",                        "$default_wallet_dir");
+    }
+
+    # Default _profile_ directory stuff
+    {
+    my($default_profile_dir) = "$defaults_dir"."Profile:";
+    mkdir($default_profile_dir, 0);
+
+    _copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir"."bookmarks.html");
+    _copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir"."panels.rdf");
+    _copy(":mozilla:profile:defaults:localstore.rdf","$default_profile_dir"."localstore.rdf");
+    _copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir"."search.rdf");
+    _copy(":mozilla:profile:defaults:mimeTypes.rdf","$default_profile_dir"."mimeTypes.rdf");
+
+    # make a dup in en-US
+    my($default_profile_dir_en_US) = "$default_profile_dir"."en-US:";
+    mkdir($default_profile_dir_en_US, 0);
+
+    _copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir_en_US"."bookmarks.html");
+    _copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir_en_US"."panels.rdf");
+    _copy(":mozilla:profile:defaults:localstore.rdf","$default_profile_dir_en_US"."localstore.rdf");
+    _copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir_en_US"."search.rdf");
+    _copy(":mozilla:profile:defaults:mimeTypes.rdf","$default_profile_dir_en_US"."mimeTypes.rdf");
+    }
+    
+    # Default _pref_ directory stuff
+    {
+    my($default_pref_dir) = "$defaults_dir"."Pref:";
+    mkdir($default_pref_dir, 0);
+    _InstallResources(":mozilla:xpinstall:public:MANIFEST_PREFS",                       "$default_pref_dir", 0);
+    _InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",                    "$default_pref_dir", 0);
+    _InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",                     "$default_pref_dir", 0);
+    _InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",                      "$default_pref_dir", 0);
+    }
+
+    print("--- Defaults copying complete ----\n");
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// InstallNonChromeResources
+#//--------------------------------------------------------------------------------------------------
+
+sub InstallNonChromeResources()
+{
+    unless( $main::build{resources} ) { return; }
+    _assertRightDirectory();
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
@@ -709,18 +838,8 @@ sub MakeResourceAliases()
     #//
     #// Most resources should all go into the chrome dir eventually
     #//
-    my $chrome_subdir = "Chrome:";
-    my $chrome_dir = "$dist_dir" . $chrome_subdir;
-    my($components_dir) = "$dist_dir" . "Components:";
     my($resource_dir) = "$dist_dir" . "res:";
     my($samples_dir) = "$resource_dir" . "samples:";
-
-    # default folder
-    my($defaults_dir) = "$dist_dir" . "Defaults:";
-    mkdir($defaults_dir, 0);
-
-    my($default_wallet_dir) = "$defaults_dir"."wallet:";
-    mkdir($default_wallet_dir, 0);
 
     #//
     #// Make aliases of resource files
@@ -737,6 +856,7 @@ sub MakeResourceAliases()
         @ARGV = ("$resource_dir"."ua.css");
         do ":mozilla:layout:mathml:content:src:mathml-css.pl";
     }
+    
     _MakeAlias(":mozilla:layout:html:document:src:html.css",                            "$resource_dir");
     _MakeAlias(":mozilla:layout:html:document:src:quirk.css",                           "$resource_dir");
     _MakeAlias(":mozilla:layout:html:document:src:arrow.gif",                           "$resource_dir"); 
@@ -751,7 +871,6 @@ sub MakeResourceAliases()
 
     _InstallResources(":mozilla:gfx:src:MANIFEST",                                      "$resource_dir"."gfx:");
 
-    _InstallResources(":mozilla:extensions:wallet:src:MANIFEST",                        "$default_wallet_dir");
     my($entitytab_dir) = "$resource_dir" . "entityTables";
     _InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",                      "$entitytab_dir");
 
@@ -774,7 +893,60 @@ sub MakeResourceAliases()
     my($domds_dir) = "$samples_dir" . "rdf:";
     _InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",                    "$domds_dir");
 
-    # Top level chrome directories
+    # QA Menu
+    _InstallResources(":mozilla:intl:strres:tests:MANIFEST",            "$resource_dir");
+
+    print("--- End Resource copying ----\n");
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// InstallComponentFiles
+#//--------------------------------------------------------------------------------------------------
+
+sub InstallComponentFiles()
+{
+    unless( $main::build{resources} ) { return; }
+    _assertRightDirectory();
+
+    # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+    my($D) = $main::DEBUG ? "Debug" : "";
+    my($dist_dir) = _getDistDirectory();
+
+    print("--- Starting Text Components copying ----\n");
+
+    my($components_dir) = "$dist_dir" . "Components:";
+
+    # console
+    _InstallResources(":mozilla:xpfe:components:console:MANIFEST",                          "$components_dir", 0);
+
+    # sidebar
+    _InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",                      "$components_dir");
+
+    print("--- Done Text Components copying ----\n");
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// InstallChromeFiles
+#//--------------------------------------------------------------------------------------------------
+
+sub InstallChromeFiles()
+{
+    unless( $main::build{resources} ) { return; }
+    _assertRightDirectory();
+
+    # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+    my($D) = $main::DEBUG ? "Debug" : "";
+    my($dist_dir) = _getDistDirectory();
+
+    print("--- Starting Chrome copying ----\n");
+
+    #//
+    #// Most resources should all go into the chrome dir eventually
+    #//
+    my $chrome_subdir = "Chrome:";
+    my $chrome_dir = "$dist_dir" . $chrome_subdir;
 
     my($packages_chrome_dir) = "$chrome_dir" . "packages:";
     my($locales_chrome_dir) = "$chrome_dir" . "locales:";
@@ -815,32 +987,6 @@ sub MakeResourceAliases()
             
     _MakeAlias(":mozilla:xpcom:base:xpcom.properties",      "$globalLocale");   
 
-    # install manifest RDF files
-    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "content");
-    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "locale");
-    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "skin");
-    
-    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "content");
-    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "locale");
-    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "skin");
-    
-    if ($main::options{transformiix})
-    {
-        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "content");
-        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "locale");
-        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "skin");
-    }
-
- 		_InstallManifestRDF(":mozilla:themes:classic:manifest.rdf",$dist_dir, $chrome_subdir, "skins:classic:", "skin");
-    _InstallManifestRDF(":mozilla:themes:blue:manifest.rdf",$dist_dir, $chrome_subdir, "skins:blue:", "skin");
-    _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf",$dist_dir, $chrome_subdir, "skins:modern:", "skin");
-
-    _InstallManifestRDF(":mozilla:xpfe:communicator:resources:locale:en-US:manifest.rdf",    $dist_dir, $chrome_subdir, "locales:en-US:", "locale");
-    
-    _InstallManifestRDF(":mozilla:xpfe:communicator:resources:content:manifest.rdf", $dist_dir, $chrome_subdir, "packages:core:", "content");
-    _InstallManifestRDF(":mozilla:xpfe:global:resources:content:manifest.rdf", $dist_dir, $chrome_subdir, "packages:widget-toolkit:", "content");
-    _InstallManifestRDF(":mozilla:mailnews:base:resources:content:manifest.rdf", $dist_dir, $chrome_subdir, "packages:messenger:", "content");
-        
     _MakeAlias(":mozilla:intl:uconv:src:charsetTitles.properties","$globalLocale");
 
     _InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",               "$navigatorContent");
@@ -863,7 +1009,6 @@ sub MakeResourceAliases()
     # console
     _InstallResources(":mozilla:xpfe:components:console:resources:content:MANIFEST",        "$globalContent", 0);
     _InstallResources(":mozilla:xpfe:components:console:resources:locale:en-US:MANIFEST",   "$globalLocale", 0);
-    _InstallResources(":mozilla:xpfe:components:console:MANIFEST",                          "$components_dir", 0);
 
     # autocomplete
     _InstallResources(":mozilla:xpfe:components:autocomplete:resources:content:MANIFEST",   "$globalContent", 0);
@@ -908,37 +1053,6 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:profile:pref-migrator:resources:locale:en-US:MANIFEST", "$profileLocale", 0);
     }
     
-    # Default _profile_ directory stuff
-    {
-    my($default_profile_dir) = "$defaults_dir"."Profile:";
-    mkdir($default_profile_dir, 0);
-
-    _copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir"."bookmarks.html");
-    _copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir"."panels.rdf");
-    _copy(":mozilla:profile:defaults:localstore.rdf","$default_profile_dir"."localstore.rdf");
-    _copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir"."search.rdf");
-    _copy(":mozilla:profile:defaults:mimeTypes.rdf","$default_profile_dir"."mimeTypes.rdf");
-
-    # make a dup in en-US
-    my($default_profile_dir_en_US) = "$default_profile_dir"."en-US:";
-    mkdir($default_profile_dir_en_US, 0);
-
-    _copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir_en_US"."bookmarks.html");
-    _copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir_en_US"."panels.rdf");
-    _copy(":mozilla:profile:defaults:localstore.rdf","$default_profile_dir_en_US"."localstore.rdf");
-    _copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir_en_US"."search.rdf");
-    _copy(":mozilla:profile:defaults:mimeTypes.rdf","$default_profile_dir_en_US"."mimeTypes.rdf");
-    }
-    
-    # Default _pref_ directory stuff
-    {
-    my($default_pref_dir) = "$defaults_dir"."Pref:";
-    mkdir($default_pref_dir, 0);
-    _InstallResources(":mozilla:xpinstall:public:MANIFEST_PREFS",                       "$default_pref_dir", 0);
-    _InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",                    "$default_pref_dir", 0);
-    _InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",                     "$default_pref_dir", 0);
-    _InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",                      "$default_pref_dir", 0);
-    }
     
     #NECKO
     {
@@ -973,7 +1087,6 @@ sub MakeResourceAliases()
     # mailnews
     {
     # Messenger is a top level component
-    my($mailnews_dir) = "$resource_dir" . "messenger";
     my($messenger_chrome_dir) = "$chrome_dir" . "messenger:";
 
     my($messenger_packages_chrome_dir) = "$packages_chrome_dir" . "messenger:";
@@ -1090,7 +1203,6 @@ sub MakeResourceAliases()
 
     _InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",        "$sidebarContent");
     _InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:en-US:MANIFEST",   "$sidebarLocale");
-    _InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",                      "$components_dir");
     }
     
     # timebomb (aka tmbmb)
@@ -1137,25 +1249,97 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:caps:src:MANIFEST_PROPERTIES",  "$securityLocale", 0);
     }
 
-    # QA Menu
-    _InstallResources(":mozilla:intl:strres:tests:MANIFEST",            "$resource_dir");
-
     # Install skin files
    	InstallSkinFiles("classic"); # fix me
     InstallSkinFiles("blue"); # fix me
     InstallSkinFiles("modern"); # fix me
 
-    # Set the default skin to be classic
-    SetDefaultSkin("classic/1.0"); 
-
     # install locale provider
     InstallProviderFiles("locales", "en-DE");
     # install defaults
-    InstallDefaultsFiles("en-DE");
-    # mozilla:l10n
-    _InstallManifestRDF(":mozilla:l10n:langpacks:en-DE:chrome:en-DE:manifest.rdf",$dist_dir, $chrome_subdir, "locales:en-DE:", "locale");
+    InstallLangPackFiles("en-DE");
 
-    print("--- Resource copying complete ----\n");
+    print("--- Chrome copying complete ----\n");
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// MakeNonChromeAliases
+#//--------------------------------------------------------------------------------------------------
+sub MakeNonChromeAliases()
+{
+    unless( $main::build{resources} ) { return; }
+    _assertRightDirectory();
+
+    InstallNonChromeResources();
+    InstallDefaultsFiles();
+    InstallComponentFiles();
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// MakeResourceAliases
+#//--------------------------------------------------------------------------------------------------
+
+sub MakeResourceAliases()
+{
+    unless( $main::build{resources} ) { return; }
+    _assertRightDirectory();
+
+    InstallChromeFiles();
+    MakeNonChromeAliases();
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// ProcessJarManifests
+#//--------------------------------------------------------------------------------------------------
+
+sub ProcessJarManifests()
+{
+    my($dist_dir) = _getDistDirectory();
+    my($chrome_dir) = "$dist_dir"."Chrome";
+
+    # a hash of jars passed as context to the following calls
+    my(%jars);
+    
+    MozJar::CreateJarFromManifest(":mozilla:caps:src:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:docshell:base:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:editor:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:embedding:browser:chrome:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:embedding:browser:chrome:locale:en-US:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:extensions:wallet:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:intl:uconv:src:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:layout:html:forms:src:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:mailnews:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:rdf:tests:domds:resources:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:security:base:res:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:blue:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:search:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:sidebar:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:global:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:navigator:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:modern:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpcom:base:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpfe:browser:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpfe:browser:resources:content:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpfe:communicator:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpfe:communicator:resources:content:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpfe:components:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpfe:components:prefwindow:resources:content:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpfe:global:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpfe:global:resources:content:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:xpinstall:res:jar.mn", $chrome_dir, \%jars);
+
+    # bad jar.mn files
+#    MozJar::CreateJarFromManifest(":mozilla:extensions:xmlterm:jar.mn", $chrome_dir, \%jars);
+
+    WriteOutJarFiles($chrome_dir, \%jars);
 }
 
 
@@ -1163,22 +1347,16 @@ sub MakeResourceAliases()
 #// BuildJarFiles
 #//--------------------------------------------------------------------------------------------------
 
-
 sub BuildJarFiles()
 {
-    unless( $main::build{jars} ) { return; }
+    unless( $main::build{resources} && $main::options{jars} ) { return; }
     _assertRightDirectory();
-
-    # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
-    my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = _getDistDirectory();
 
     print("--- Starting JAR building ----\n");
 
-    my($chrome_dir) = "$dist_dir"."Chrome";
+    ProcessJarManifests();
 
-    MozJar::ProcessJarManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir);
-#    CreateJarFile("$chrome_dir:communicator", "$chrome_dir:communicator.jar");
+    print("--- JAR building done ----\n");
 }
 
 
@@ -2652,7 +2830,20 @@ sub BuildProjects()
     # before building projects.
     # activate CodeWarrior
     ActivateApplication('McPL');
-    MakeResourceAliases();
+    
+    if ($main::options{jar_manifests})
+    {
+      MakeNonChromeAliases();   # Defaults, JS components etc.
+      
+      BuildJarFiles();    
+    }
+    else
+    {
+      MakeResourceAliases();
+      # this builds installed_chrome.txt
+      InstallManifestRDFFiles();
+    }
 
-#    BuildJarFiles();
+    # Set the default skin to be classic
+    SetDefaultSkin("classic/1.0"); 
 }
