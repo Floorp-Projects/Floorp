@@ -57,6 +57,7 @@ my %reports =
 
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.
+ConnectToDatabase(1);
 quietly_check_login();
 
 print "Content-type: text/html\n";
@@ -74,7 +75,6 @@ else
 	print("<html><head><title>Bug Reports</title></head><body bgcolor=\"#FFFFFF\">");
         }
 
-ConnectToDatabase(1);
 GetVersionTable();
 
 # If the usebuggroups parameter is set, we don't want to list all products.
