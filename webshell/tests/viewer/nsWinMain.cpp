@@ -23,6 +23,7 @@
 #include "JSConsole.h"
 #include "plevent.h"
 #include "nsIServiceManager.h"
+#include "nsIThread.h"
 
 JSConsole *gConsole;
 HINSTANCE gInstance, gPrevInstance;
@@ -129,6 +130,7 @@ int main(int argc, char **argv)
   nsresult rv;
   rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
+  NS_VERIFY(NS_SUCCEEDED(nsIThread::SetMainThread()), "couldn't set main thread");
   nsViewerApp* app = new nsNativeViewerApp();
   NS_ADDREF(app);
   app->Initialize(argc, argv);
