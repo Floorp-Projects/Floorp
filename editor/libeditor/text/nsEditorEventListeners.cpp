@@ -345,6 +345,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       // XXX: hard-coded cut
       case nsIDOMUIEvent::VK_X:
+      case (PRUint32)('x'):
         if (PR_TRUE==ctrlKey)
         {
           if (mEditor)
