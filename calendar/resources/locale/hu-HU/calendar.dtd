@@ -320,8 +320,8 @@
 <!-- customizable toolbars -->
 <!ENTITY calendar.context.customize.label             "Testreszabás">
 <!ENTITY calendar.context.customize.accesskey         "T">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
-<!ENTITY calendar.menu.customize.accesskey            "C">
+<!ENTITY calendar.menu.customize.label                "Eszköztárak testreszabása">
+<!ENTITY calendar.menu.customize.accesskey            "E">
 <!ENTITY calendar.maintoolbar.name                    "Fő eszköztár">
 <!ENTITY calendar.maintoolbar.accesskey               "F">
 
