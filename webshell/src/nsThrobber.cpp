@@ -286,6 +286,7 @@ nsThrobber::~nsThrobber()
 {
   NS_IF_RELEASE(mInnerWidget);
   RemoveThrobber(this);
+  DestroyThrobberImages();
 }
 
 nsrefcnt
@@ -459,6 +460,8 @@ nsThrobber::LoadThrobberImages()
                                                    mWidth - 2,
                                                    mHeight - 2, 0),
                                                    cnt);
+    // Note: the throbber observer was created with a ref count of 0
+    // which is why we don't have to release a reference to it
   }
 
   return rv;
@@ -487,6 +490,7 @@ nsThrobber::DestroyThrobberImages()
       }
     }
     delete mImages;
+    NS_RELEASE(mImageGroup);
   }
 }
 
