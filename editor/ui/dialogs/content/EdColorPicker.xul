@@ -53,6 +53,9 @@
   </hbox>
   <colorpicker id="ColorPicker" palettename="standard" 
     persist="palettename"
+    onclick="SetDefaultToOk();"
+    ondblclick="if (onOK()) window.close();"
+    onkeypress="SelectColorByKeypress(event);"
     onselect="SelectColor();"/>
 <!-- Web palette is not implemented???
   <hbox valign="middle" autostretch="never">
@@ -66,7 +69,7 @@
     <stack valign="middle" autostretch="never">
       <button id="LastPickedButton" class="dialog" label="&lastPickedColor.label;" 
         style="margin-left:0px; margin-right: 0px;"
-        onclick="SelectLastPickedColor();"/>
+        oncommand="SelectLastPickedColor();"/>
       <hbox style="margin-left: 5px"  mousethrough="always">
         <vbox autostretch="never">
           <spring flex="1"/>
@@ -92,5 +95,5 @@
   </vbox>
   <separator class="groove"/>
   <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtons"/> 
+  <hbox id="okCancelButtonsRight"/> 
 </window>
