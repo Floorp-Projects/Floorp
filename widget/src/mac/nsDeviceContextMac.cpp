@@ -29,6 +29,10 @@
 #include "il_util.h"
 #include <FixMath.h>
 
+
+const PRUint32		nsDeviceContextMac::kPixelsPerInch = 72;
+
+
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 //------------------------------------------------------------------------
@@ -69,7 +73,7 @@ double				pix_inch;
 	thepix = (**thegd).gdPMap;					// dereferenced handle: don't move memory below!
 	mDepth = (**thepix).pixelSize;
 	pix_inch = Fix2X((**thepix).hRes);
-	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
+	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(kPixelsPerInch);
 	mPixelsToTwips = 1.0f/mTwipsToPixels;
 	
   return DeviceContextImpl::Init(aNativeWidget);
@@ -341,7 +345,7 @@ THPrint	thePrintRecord;			// handle to print record
 	((nsDeviceContextMac*)aContext)->Init(curPort);
 
 	((nsDeviceContextMac*)aContext)->mPageRect = (**thePrintRecord).prInfo.rPage;	
-	((nsDeviceContextMac*)aContext)->mTwipsToPixels = pix_Inch/(float)NSIntPointsToTwips(72);
+	((nsDeviceContextMac*)aContext)->mTwipsToPixels = pix_Inch/(float)NSIntPointsToTwips(kPixelsPerInch);
 	((nsDeviceContextMac*)aContext)->mPixelsToTwips = 1.0f/mTwipsToPixels;
   ((nsDeviceContextMac*)aContext)->mAppUnitsToDevUnits = mTwipsToPixels;
   ((nsDeviceContextMac*)aContext)->mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;

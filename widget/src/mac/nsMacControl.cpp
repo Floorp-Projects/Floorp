@@ -284,8 +284,6 @@ NS_METHOD nsMacControl::CreateOrReplaceMacControl(short inControlType)
 //
 //
 //-------------------------------------------------------------------------
-#define kMinControlFontSize		9
-
 void nsMacControl::SetupMacControlFont()
 {
 	NS_PRECONDITION(mFontMetrics != nsnull, "No font metrics in SetupMacControlFont");
@@ -294,9 +292,11 @@ void nsMacControl::SetupMacControlFont()
 	TextStyle		theStyle;
 	nsFontMetricsMac::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
 	
+#if DONT_USE_FONTS_SMALLER_THAN_9
 	// impose a min size of 9pt on the control font
-	if (theStyle.tsSize < kMinControlFontSize)
-		theStyle.tsSize = kMinControlFontSize;
+	if (theStyle.tsSize < 9)
+		theStyle.tsSize = 9;
+#endif
 	
 	ControlFontStyleRec fontStyleRec;
 	fontStyleRec.flags = (kControlUseFontMask | kControlUseFaceMask | kControlUseSizeMask);
