@@ -97,16 +97,15 @@ NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 
 NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
-#if 0
-  NS_ALLOC_STR_BUF(val, aItem, 256);
+  NS_ALLOC_STR_BUF(text, aItem, 256);
+//  str = XmStringCreateLocalized(val);
 
-  XmString str;
+  gtk_clist_insert(GTK_CLIST(mWidget), (int)aPosition+1, NULL);
+  gtk_clist_set_text(GTK_CLIST(mWidget), (int)aPosition+1, 0, text);
+  gtk_clist_set_row_data(GTK_CLIST(mWidget), (int)aPosition+1, aItem);
+  
+  NS_FREE_STR_BUF(text);
 
-  str = XmStringCreateLocalized(val);
-
-  XmListAddItem(mWidget, str, (int)aPosition+1);
-  NS_FREE_STR_BUF(val);
-#endif
   return NS_OK;
 }
 
@@ -117,20 +116,13 @@ NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
-#if 0
-  NS_ALLOC_STR_BUF(val, aItem, 256);
+  int index = gtk_clist_find_row_from_data(GTK_CLIST(mWidget), aItem)-1;
 
-  XmString str = XmStringCreate(val, XmFONTLIST_DEFAULT_TAG);
-
-  int index = XmListItemPos(mWidget, str)-1;
   if (index < aStartPos) {
     index = -1;
   }
-  NS_FREE_STR_BUF(val);
-  XmStringFree(str);
 
   return index;
-#endif
 }
 
 //-------------------------------------------------------------------------
@@ -140,12 +132,7 @@ PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::GetItemCount()
 {
-#if 0
-  int count = 0;
-  XtVaGetValues(mWidget, XmNitemCount, &count, nsnull);
-
-  return (PRInt32)count;
-#endif
+  return GTK_CLIST(mWidget)->rows;
 }
 
 //-------------------------------------------------------------------------
@@ -155,15 +142,17 @@ PRInt32  nsListBox::GetItemCount()
 //-------------------------------------------------------------------------
 PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 {
-#if 0
+  gtk_clist_remove(GTK_CLIST(mWidget), aPosition+1);
+/*
   int count = 0;
   XtVaGetValues(mWidget, XmNitemCount, &count, nsnull);
   if (aPosition >= 0 && aPosition < count) {
     XmListDeletePos(mWidget, aPosition+1);
     return PR_TRUE;
   }
-#endif
   return PR_FALSE;
+*/
+  return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -173,8 +162,17 @@ PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
-#if 0
   PRBool result = PR_FALSE;
+  char *text = NULL;
+
+  gtk_clist_get_text(GTK_CLIST(mWidget),aPosition,0,&text);
+  if (text) {
+    anItem.SetLength(0);
+    anItem.Append(text);
+  }
+  return PR_TRUE;
+
+#if 0
   XmStringTable list;
 
   int count = 0;
@@ -246,13 +244,14 @@ PRInt32 nsListBox::GetSelectedIndex()
 //-------------------------------------------------------------------------
 NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 {
-#if 0
+  gtk_clist_select_row(GTK_CLIST(mWidget), aPosition+1, 0);
+/*
   int count = 0;
   XtVaGetValues(mWidget,  XmNitemCount, &count, nsnull);
   if (aPosition >= 0 && aPosition < count) {
     XmListSelectPos(mWidget, aPosition+1, FALSE);
   }
-#endif
+*/
   return NS_OK;
 }
 
@@ -263,11 +262,7 @@ NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32 nsListBox::GetSelectedCount()
 {
-#if 0
-  int count = 0;
-  XtVaGetValues(mWidget,  XmNselectedItemCount, &count, nsnull);
-  return (PRInt32)count;
-#endif
+  return (PRInt32)g_list_length(GTK_CLIST(mWidget)->selection);
 }
 
 //-------------------------------------------------------------------------
@@ -338,31 +333,29 @@ NS_METHOD nsListBox::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-#if 0
   aParent->AddChild(this);
-  Widget parentWidget = nsnull;
+  GtkWidget *parentWidget = nsnull;
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = (GtkWidget*) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = (GtkWidget*) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 
-  unsigned char selectionPolicy;
+  GtkSelectionMode selectionPolicy;
+
+  mWidget = gtk_clist_new(1);
   
-  Boolean autoSelection;
   if (mMultiSelect) {
     //selectionPolicy = XmEXTENDED_SELECT;
-    selectionPolicy = XmMULTIPLE_SELECT;
-    autoSelection   = TRUE;
+    gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_MULTIPLE);
   } else {
-    selectionPolicy = XmBROWSE_SELECT;
-    autoSelection   = FALSE;
+    gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_BROWSE);
   }
-
+/*
   mWidget = ::XtVaCreateManagedWidget("",
                                     xmListWidgetClass,
                                     parentWidget,
@@ -387,13 +380,12 @@ NS_METHOD nsListBox::Create(nsIWidget *aParent,
                                     XmNscrolledWindowMarginWidth, 0,
                                     XmNscrolledWindowMarginHeight, 0,
                                     nsnull);
-
+*/
   // save the event callback function
   mEventCallback = aHandleEventFunction;
-#endif
+
   //InitCallbacks();
   return NS_OK;
-
 }
 
 //-------------------------------------------------------------------------
