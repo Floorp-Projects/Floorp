@@ -426,7 +426,7 @@ noframes {
 }
 
 *|*:-moz-any-link:focus {
-  -moz-outline: 1px dotted WindowText;
+  -moz-outline: 1px dotted invert;
 }
 
 /* hidden elements */
