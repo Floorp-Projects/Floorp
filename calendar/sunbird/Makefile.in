@@ -286,7 +286,6 @@ endif
 	cp $(topsrcdir)/dist/bin/components/docshell*.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/downloadmanager.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/extensions.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/libnegotiateauth.so ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/migration.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsBackgroundUpdateService.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsDownloadProgressListener.js ./MozillaSunbird/components
@@ -305,4 +304,5 @@ sunbirdunix::
 	cp $(topsrcdir)/dist/bin/run-mozilla.sh ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/res/unixcharset.properties ./MozillaSunbird/res
 	cp $(topsrcdir)/dist/bin/res/sample.unixpsfonts.properties ./MozillaSunbird/res
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)negotiateauth$(DLL_SUFFIX) ./MozillaSunbird/components
 
