@@ -2,56 +2,103 @@
 
 use CGI;
 use Tinderbox3::Header;
-use Tinderbox3::Actions;
 use Tinderbox3::DB;
+use Tinderbox3::InitialValues;
+use Tinderbox3::Login;
 use strict;
 
 #
 # Init
 #
 my $p = new CGI;
-
 my $dbh = get_dbh();
-my $tree = update_tree($p, $dbh);
-my $tree_str = "Edit $tree" || "Add Tree";
-header($p, $tree_str);
-process_actions($p, $dbh);
+my ($login, $cookie) = check_session($p, $dbh);
+
+# For delete_machine
+Tinderbox3::DB::update_machine_action($p, $dbh, $login);
+# For delete_patch, stop_using_patch
+Tinderbox3::DB::update_patch_action($p, $dbh, $login);
+# For delete_bonsai
+Tinderbox3::DB::update_bonsai_action($p, $dbh, $login);
+# For edit_tree
+my $tree = Tinderbox3::DB::update_tree_action($p, $dbh, $login);
 
 #
 # Get the tree info to fill in the fields 
 #
 my $tree_info;
+my %initial_machine_config;
 if (!$tree) {
-  # XXX Pull these out into defaults elsewhere
-  $tree_info = [ '',
-                 'refcount_leaks=Lk,refcount_bloat=Bl,trace_malloc_leaks=Lk,trace_malloc_maxheap=MH,trace_malloc_allocs=A,pageload=Tp,codesize=Z,xulwinopen=Txul,startup=Ts,binary_url=Binary,warnings=Warn',
-                 'refcount_leaks=Graph,refcount_bloat=Graph,trace_malloc_leaks=Graph,trace_malloc_maxheap=Graph,trace_malloc_allocs=Graph,pageload=Graph,codesize=Graph,xulwinopen=Graph,startup=Graph,binary_url=URL,warnings=Warn',
+  $tree_info = [ $Tinderbox3::InitialValues::field_short_names,
+                 $Tinderbox3::InitialValues::field_processors,
+                 $Tinderbox3::InitialValues::statuses,
+                 $Tinderbox3::InitialValues::min_row_size,
+                 $Tinderbox3::InitialValues::max_row_size,
+                 $Tinderbox3::InitialValues::default_tinderbox_view,
+                 $Tinderbox3::InitialValues::new_machines_visible,
+                 '',
                  ];
+  %initial_machine_config = %Tinderbox3::InitialValues::initial_machine_config;
 } else {
-  $tree_info = $dbh->selectrow_arrayref("SELECT password, field_short_names, field_processors FROM tbox_tree WHERE tree_name = ?", undef, $tree);
+  $tree_info = $dbh->selectrow_arrayref("SELECT field_short_names, field_processors, statuses, min_row_size, max_row_size, default_tinderbox_view, new_machines_visible, editors FROM tbox_tree WHERE tree_name = ?", undef, $tree);
+  if (!defined($tree_info)) {
+    die "Could not get tree!";
+  }
+
+  my $sth = $dbh->prepare("SELECT name, value FROM tbox_initial_machine_config WHERE tree_name = ?");
+  $sth->execute($tree);
+  while (my $row = $sth->fetchrow_arrayref) {
+    $initial_machine_config{$row->[0]} = $row->[1];
+  }
 }
 
 #
 # Edit / Add tree form
 #
-print "<h2>$tree_str</h2>\n";
-
-print "<p><strong><a href='admin.pl'>List Trees</a>";
-if ($tree) {
-  print " | <a href='sheriff.pl?tree=$tree'>Edit Sheriff / Tree Status Info</a>\n";
-}
-print "</strong></p>\n";
+header($p, $login, $cookie, ($tree ? "Edit $tree" : "Add Tree"), $tree);
 
 print <<EOM;
 <form name=editform method=get action='admintree.pl'>
 <input type=hidden name=action value='edit_tree'>
-<input type=hidden name=tree value='$tree'>
+@{[$p->hidden(-name=>'tree', -default=>$tree, -override=>1)]}
 <table>
-<tr><th>Tree Name (this is the name used to identify the tree):</th><td><input type=text name=_tree_name value='$tree'></td></tr>
-<tr><th>Password:</th><td><input type=text name=_password value='$tree_info->[0]'></td></tr>
-<tr><th>Status Short Names (bloat=Bl,pageload=Tp)</th><td><input type=text name=_field_short_names size=80 value='$tree_info->[1]'></td></tr>
-<tr><th>Status Handlers (bloat=Graph,binary_url=URL)</th><td><input type=text name=_field_processors size=80 value='$tree_info->[2]'></td></tr>
+<tr><th>Tree Name (this is the name used to identify the tree):</th><td>@{[$p->textfield(-name=>'tree_name', -default=>$tree)]}</td></tr>
+<tr><th>Status Short Names (bloat=Bl,pageload=Tp...)</th><td>@{[$p->textfield(-name=>'field_short_names', -default=>$tree_info->[0], -size=>80)]}</td></tr>
+<tr><th>Status Handlers (bloat=Graph,binary_url=URL...)</th><td>@{[$p->textfield(-name=>'field_processors', -default=>$tree_info->[1], -size=>80)]}</td></tr>
+<tr><th>Tree Statuses (open,closed...)</th><td>@{[$p->textfield(-name=>'statuses', -default=>$tree_info->[2], -size=>80)]}</td></tr>
+<tr><th>Min Row Size (minutes)</th><td>@{[$p->textfield(-name=>'min_row_size', -default=>$tree_info->[3])]}</td></tr>
+<tr><th>Max Row Size (minutes)</th><td>@{[$p->textfield(-name=>'max_row_size', -default=>$tree_info->[4])]}</td></tr>
+<tr><th>Tinderbox Page Size (minutes)</th><td>@{[$p->textfield(-name=>'default_tinderbox_view', -default=>$tree_info->[5])]}</td></tr>
+<tr><th>New Machines Visible By Default?</th><td><input type=checkbox name=new_machines_visible@{[$tree_info->[6] ? ' checked' : '']}></td></tr>
+<tr><th>Editor Privileges (list of emails)</th><td>@{[$p->textfield(-name=>'editors', -default=>$tree_info->[9])]}</td></tr>
 </table>
+<p><strong>Initial .mozconfig:</strong><br>
+<input type=hidden name=initial_machine_config0 value=mozconfig>
+@{[$p->textarea(-name=>'initial_machine_config0_val', -default=>$initial_machine_config{mozconfig}, -rows=>5, -columns => 100)]}</p>
+EOM
+
+print "<p><strong>Initial Machine Config:</strong><br>";
+print "(Empty a line to delete it)<br>";
+print "<table><tr><th>Var</th><th>Value</th></tr>\n";
+my $config_num = 1;
+while (my ($var, $value) = each %initial_machine_config) {
+  if ($var ne "mozconfig") {
+    print "<tr><td>", $p->textfield(-name=>"initial_machine_config$config_num", -default=>$var, -override=>1), "</td>";
+    print "<td>", $p->textfield(-name=>"initial_machine_config${config_num}_val", -default=>$value, -override=>1), "</td></tr>\n";
+    $config_num++;
+  }
+}
+foreach my $i ($config_num..($config_num+2)) {
+    print "<tr><td>", $p->textfield(-name=>"initial_machine_config$i", -override=>1), "</td>";
+    print "<td>", $p->textfield(-name=>"initial_machine_config${i}_val", -override=>1), "</td></tr>\n";
+}
+print "</table></p>\n";
+
+if (!$login) {
+  print login_fields();
+}
+
+print <<EOM;
 <input type=submit>
 </form>
 EOM
@@ -62,10 +109,20 @@ EOM
 if ($tree) {
   # Patch list
   print "<table class=editlist><tr><th>Patches</th></tr>\n";
-  my $sth = $dbh->prepare('SELECT patch_id, patch_name FROM tbox_patch WHERE tree_name = ?');
+  my $sth = $dbh->prepare('SELECT patch_id, patch_name, in_use FROM tbox_patch WHERE tree_name = ?');
   $sth->execute($tree);
   while (my $patch_info = $sth->fetchrow_arrayref) {
-    print "<tr><td><a href='adminpatch.pl?patch_id=$patch_info->[0]'>$patch_info->[1]</a> (<a href='admintree.pl?tree=$tree&action=delete_patch&_patch_id=$patch_info->[0]'>Del</a> | <a href='admintree.pl?tree=$tree&action=delete_patch&_patch_id=$patch_info->[0]'>Obsolete</a>)</td>\n";
+    my ($patch_class, $action, $action_name);
+    if ($patch_info->[2]) {
+      $patch_class = "";
+      $action = "stop_using_patch";
+      $action_name = "Obsolete";
+    } else {
+      $patch_class = " class=obsolete";
+      $action = "start_using_patch";
+      $action_name = "Resurrect";
+    }
+    print "<tr><td><a href='adminpatch.pl?patch_id=$patch_info->[0]'$patch_class>$patch_info->[1]</a> (<a href='admintree.pl?tree=$tree&action=delete_patch&patch_id=$patch_info->[0]'>Del</a> | <a href='admintree.pl?tree=$tree&action=$action&patch_id=$patch_info->[0]'>$action_name</a>)</td>\n";
   }
   print "<tr><td><a href='uploadpatch.pl?tree=$tree'>Upload Patch</a></td></tr>\n";
   print "</table>\n";
@@ -75,68 +132,24 @@ if ($tree) {
   $sth = $dbh->prepare('SELECT machine_id, machine_name FROM tbox_machine WHERE tree_name = ?');
   $sth->execute($tree);
   while (my $machine_info = $sth->fetchrow_arrayref) {
-    print "<tr><td><a href='adminmachine.pl?machine_id=$machine_info->[0]'>$machine_info->[1]</a></td>\n";
+    print "<tr><td><a href='adminmachine.pl?tree=$tree&machine_id=$machine_info->[0]'>$machine_info->[1]</a></td>\n";
   }
   # XXX Add this feature in if you decide not to automatically allow machines
   # into the federation
-  # print "<tr><td><a href='adminmachine.pl?tree=$tree'>Upload Machine</a></td></tr>\n";
+  # print "<tr><td><a href='adminmachine.pl?tree=$tree'>New Machine</a></td></tr>\n";
+  print "</table>\n";
+
+  # Machine list
+  print "<table class=editlist><tr><th>Bonsai Monitors</th></tr>\n";
+  $sth = $dbh->prepare('SELECT bonsai_id, display_name FROM tbox_bonsai WHERE tree_name = ?');
+  $sth->execute($tree);
+  while (my $bonsai_info = $sth->fetchrow_arrayref) {
+    print "<tr><td><a href='adminbonsai.pl?tree=$tree&bonsai_id=$bonsai_info->[0]'>$bonsai_info->[1]</a> (<a href='admintree.pl?tree=$tree&action=delete_bonsai&bonsai_id=$bonsai_info->[0]'>Del</a>)</td>\n";
+  }
+  print "<tr><td><a href='adminbonsai.pl?tree=$tree'>New Bonsai</a></td></tr>\n";
   print "</table>\n";
 }
 
 
 footer($p);
 $dbh->disconnect;
-
-
-#
-# Update / Insert the tree and perform other DB operations
-#
-sub update_tree {
-  my ($p, $dbh) = @_;
-
-  my $tree = $p->param('tree') || "";
-
-  my $action = $p->param('action') || "";
-  if ($action eq 'edit_tree') {
-    my $newtree = $p->param('_tree_name') || "";
-    my $password = $p->param('_password') || "";
-    my $field_short_names = $p->param('_field_short_names') || "";
-    my $field_processors = $p->param('_field_processors') || "";
-
-    if (!$newtree) { die "Must specify a non-blank tree!"; }
-
-    # Update or insert the tree
-    if ($tree) {
-      my $rows = $dbh->do("UPDATE tbox_tree SET tree_name = ?, password = ?, field_short_names = ?, field_processors = ? WHERE tree_name = ?", undef, $newtree, $password, $field_short_names, $field_processors, $tree);
-      if (!$rows) {
-        die "No tree named $tree!";
-      }
-    } else {
-      my $rows = $dbh->do("INSERT INTO tbox_tree (tree_name, password, field_short_names, field_processors) VALUES (?, ?, ?, ?)", undef, $newtree, $password, $field_short_names, $field_processors);
-      if (!$rows) {
-        die "Passing strange.  Insert failed.";
-      }
-      $tree = $newtree;
-    }
-    $dbh->commit;
-  } elsif ($action eq 'delete_patch') {
-    my $patch_id = $p->param('_patch_id') || "";
-    if (!$patch_id) { die "Need patch id!" }
-    my $rows = $dbh->do("DELETE FROM tbox_patch WHERE tree_name = ? AND patch_id = ?", undef, $tree, $patch_id);
-    if (!$rows) {
-      die "Delete failed.  No such tree / patch.";
-    }
-    $dbh->commit;
-  } elsif ($action eq 'obsolete_patch') {
-    my $patch_id = $p->param('_patch_id') || "";
-    if (!$patch_id) { die "Need patch id!" }
-    my $rows = $dbh->do("UPDATE tbox_patch SET obsolete = 'Y' WHERE tree_name = ? AND patch_id = ?", undef, $tree, $patch_id);
-    if (!$rows) {
-      die "Update failed.  No such tree / patch.";
-    }
-    $dbh->commit;
-  }
-
-  return $tree;
-}
-
