@@ -842,13 +842,16 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     nsSize imageSize;
     nsIImage* image = nsnull;
     nsIFrameImageLoader* loader = nsnull;
-    nsresult rv = aPresContext.LoadImage(aColor.mBackgroundImage,
+    PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
+                           (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+    nsresult rv = aPresContext.LoadImage(aColor.mBackgroundImage, transparentBG ?
+                                         nsnull : &aColor.mBackgroundColor,
                                          aForFrame, PR_FALSE, loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
         (loader->GetImage(image), (nsnull == image))) {
       NS_IF_RELEASE(loader);
       // Redraw will happen later
-      if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
+      if (!transparentBG) {
         aRenderingContext.SetColor(aColor.mBackgroundColor);
         aRenderingContext.FillRect(0, 0, aBounds.width, aBounds.height);
       }

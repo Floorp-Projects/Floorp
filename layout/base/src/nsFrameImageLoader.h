@@ -21,6 +21,7 @@
 #include "nsIFrameImageLoader.h"
 #include "nsSize.h"
 #include "nsString.h"
+#include "nscolor.h"
 
 /**
  * An image loader for frame's.
@@ -44,6 +45,7 @@ public:
   NS_IMETHOD Init(nsIPresContext* aPresContext,
                   nsIImageGroup* aGroup,
                   const nsString& aURL,
+                  const nscolor* aBackgroundColor,
                   nsIFrame* aTargetFrame,
                   PRBool aNeedSizeUpdate);
   NS_IMETHOD StopImageLoad();

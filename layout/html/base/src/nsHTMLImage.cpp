@@ -209,8 +209,9 @@ nsHTMLImageLoader::LoadImage(nsIPresContext* aPresContext,
   }
 
   if (nsnull == mImageLoader) {
-    // Start image loading
-    rv = aPresContext->LoadImage(src, aForFrame, aNeedSizeUpdate,
+    // Start image loading. Note that we don't specify a background color
+    // so transparent images are always rendered using a transparency mask
+    rv = aPresContext->LoadImage(src, nsnull, aForFrame, aNeedSizeUpdate,
                                  mImageLoader);
     if (NS_OK != rv) {
       return rv;

@@ -259,6 +259,7 @@ nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
 
 NS_METHOD
 nsPresContext::LoadImage(const nsString& aURL,
+                         const nscolor* aBackgroundColor,
                          nsIFrame* aTargetFrame,
                          PRBool aNeedSizeUpdate,
                          nsIFrameImageLoader*& aLoaderResult)
@@ -315,7 +316,8 @@ nsPresContext::LoadImage(const nsString& aURL,
   // Return new loader
   NS_ADDREF(loader);
 
-  rv = loader->Init(this, mImageGroup, aURL, aTargetFrame, aNeedSizeUpdate);
+  rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aTargetFrame,
+                    aNeedSizeUpdate);
   if (NS_OK != rv) {
     return rv;
   }

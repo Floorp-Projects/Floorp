@@ -20,6 +20,7 @@
 
 #include "nslayout.h"
 #include "nsIImageObserver.h"
+#include "nscolor.h"
 class nsIFrame;
 class nsIImage;
 class nsIImageGroup;
@@ -43,6 +44,7 @@ public:
   NS_IMETHOD Init(nsIPresContext* aPresContext,
                   nsIImageGroup* aGroup,
                   const nsString& aURL,
+                  const nscolor* aBackgroundColor,
                   nsIFrame* aTargetFrame,
                   PRBool aNeedSizeUpdate) = 0;
 
