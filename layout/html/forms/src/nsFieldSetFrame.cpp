@@ -317,7 +317,7 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
     } 
     if ((NS_UNCONSTRAINEDSIZE != availSize.height) && (availSize.height < aDesiredSize.height)) {
       availSize.height = 0;
-    } else {
+    } else if (NS_UNCONSTRAINEDSIZE != availSize.height) {
       availSize.height -= aDesiredSize.height;
     }
     SetMaxElementSize(maxElementSize, aDesiredSize.maxElementSize);
