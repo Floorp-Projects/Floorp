@@ -949,48 +949,67 @@ void nsContainerFrame::AdjustOffsetOfEmptyNextInFlows()
 /////////////////////////////////////////////////////////////////////////////
 // Debugging
 
-NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
+NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
-  // Indent
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+  // if a filter is present, only output this frame if the filter says we should
+  nsIAtom* tag;
+  nsAutoString tagString;
+  mContent->GetTag(tag);
+  if (tag != nsnull) 
+    tag->ToString(tagString);
+  PRBool outputMe = (PRBool)((nsnull==aFilter) || ((PR_TRUE==aFilter->OutputTag(&tagString)) && (!IsPseudoFrame())));
+  if (PR_TRUE==outputMe)
+  {
+    // Indent
+    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
 
-  // Output the tag
-  ListTag(out);
-  nsIView* view;
-  GetView(view);
-  if (nsnull != view) {
-    fprintf(out, " [view=%p]", view);
-  }
+    // Output the tag
+    ListTag(out);
+    nsIView* view;
+    GetView(view);
+    if (nsnull != view) {
+      fprintf(out, " [view=%p]", view);
+    }
 
-  // Output the first/last content offset
-  fprintf(out, "[%d,%d,%c] ", mFirstContentOffset, mLastContentOffset,
-          (mLastContentIsComplete ? 'T' : 'F'));
-  if (nsnull != mPrevInFlow) {
-    fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
-  }
-  if (nsnull != mNextInFlow) {
-    fprintf(out, "next-in-flow=%p ", mNextInFlow);
-  }
+    // Output the first/last content offset
+    fprintf(out, "[%d,%d,%c] ", mFirstContentOffset, mLastContentOffset,
+            (mLastContentIsComplete ? 'T' : 'F'));
+    if (nsnull != mPrevInFlow) {
+      fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
+    }
+    if (nsnull != mNextInFlow) {
+      fprintf(out, "next-in-flow=%p ", mNextInFlow);
+    }
 
-  // Output the rect
-  out << mRect;
+    // Output the rect
+    out << mRect;
+  }
 
   // Output the children
   if (mChildCount > 0) {
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]", mState);
+      }
+      fputs("<\n", out);
     }
-    fputs("<\n", out);
     for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
-      child->List(out, aIndent + 1);
+      child->List(out, aIndent + 1, aFilter);
     }
-    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
-    fputs(">\n", out);
+    if (PR_TRUE==outputMe)
+    {
+      for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+      fputs(">\n", out);
+    }
   } else {
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]", mState);
+      }
+      fputs("<>\n", out);
     }
-    fputs("<>\n", out);
   }
 
   return NS_OK;

@@ -36,6 +36,9 @@ class nsIStyleContext;
 class nsIView;
 class nsIWidget;
 class nsIReflowCommand;
+class nsIListFilter;
+class nsAutoString;
+class nsString;
 
 struct nsPoint;
 struct nsRect;
@@ -620,9 +623,10 @@ public:
   NS_IMETHOD IsTransparent(PRBool& aTransparent) const = 0;
 
   // Debugging
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const= 0;
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const= 0;
   NS_IMETHOD  ListTag(FILE* out = stdout) const = 0;
   NS_IMETHOD  VerifyTree() const = 0;
+  static NS_LAYOUT nsIListFilter * GetFilter(nsString *aFilterName);
 
   /**
    * See if tree verification is enabled. To enable tree verification add
@@ -734,5 +738,12 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
   minSize.width = 0;
   minSize.height = 0;
 }
+
+/* ----- nsIListFilter definition ----- */
+class nsIListFilter
+{
+  public:
+    virtual PRBool OutputTag(nsAutoString *aTag) const = 0;
+};
 
 #endif /* nsIFrame_h___ */

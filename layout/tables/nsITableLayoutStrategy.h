@@ -53,6 +53,26 @@ public:
     */
   virtual nscoord GetTableMaxWidth() const = 0;
 
+  /** return the computed minimum possible size of the table. 
+    * this is the sum of the minimum sizes of the content taking into account table
+    * attributes, but NOT factoring in the available size the table is laying out into.
+    * the actual table width in a given situation will depend on the available size
+    * provided by the parent (especially for percent-width tables.)
+    */
+  virtual nscoord GetTableMinWidth() const = 0;
+
+  /** return the portion of the table width that is specified as "fixed" aka
+    * the amount of table width that does not vary with available width or other
+    * inputs to the table balancing algorithm.
+    */
+  virtual nscoord GetTableFixedWidth() const = 0;
+
+  /** return the value of the COLS attribute, used for balancing column widths */
+  virtual nscoord GetCOLSAttribute() const = 0;
+
+  /** return the total number of columns in the table */
+  virtual nscoord GetNumCols() const = 0;
+
 };
 
 #endif

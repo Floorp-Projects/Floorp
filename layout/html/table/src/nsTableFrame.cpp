@@ -3463,3 +3463,70 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
   return result; 
 }
 
+/* ----- debugging methods ----- */
+NS_METHOD nsTableFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+{
+  // if a filter is present, only output this frame if the filter says we should
+  // since this could be any "tag" with the right display type, we'll
+  // just pretend it's a table
+  if (nsnull==aFilter)
+    return nsContainerFrame::List(out, aIndent, aFilter);
+
+  nsAutoString tagString("table");
+  PRBool outputMe = aFilter->OutputTag(&tagString);
+  if (PR_TRUE==outputMe)
+  {
+    // Indent
+    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+
+    // Output the tag and rect
+    nsIAtom* tag;
+    mContent->GetTag(tag);
+    if (tag != nsnull) {
+      nsAutoString buf;
+      tag->ToString(buf);
+      fputs(buf, out);
+      NS_RELEASE(tag);
+    }
+    PRInt32 contentIndex;
+
+    GetContentIndex(contentIndex);
+    fprintf(out, "(%d)", contentIndex);
+    out << mRect;
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
+    fputs("\n", out);
+    if (nsnull!=mTableLayoutStrategy)
+    {
+      for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+      fprintf(out, "min=%d, max=%d, fixed=%d, cols=%d, numCols=%d\n",
+              mTableLayoutStrategy->GetTableMinWidth(),
+              mTableLayoutStrategy->GetTableMaxWidth(),
+              mTableLayoutStrategy->GetTableFixedWidth(),
+              mTableLayoutStrategy->GetCOLSAttribute(),
+              mTableLayoutStrategy->GetNumCols()
+             );
+    }
+  }
+  // Output the children
+  if (mChildCount > 0) {
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]\n", mState);
+      }
+    }
+    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+      child->List(out, aIndent + 1, aFilter);
+    }
+  } else {
+    if (PR_TRUE==outputMe)
+    {
+      if (0 != mState) {
+        fprintf(out, " [state=%08x]\n", mState);
+      }
+    }
+  }
+  return NS_OK;
+}
