@@ -273,26 +273,26 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIRequest *request, nsISupports *ct
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
-	// if we are set up as a channel, we should notify our channel listener that we are starting...
-	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
-	// happens to be using
-	if (!mSuppressListenerNotifications && m_channelListener)
-		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus);
+  // if we are set up as a channel, we should notify our channel listener that we are starting...
+  // so pass in ourself as the channel and not the underlying socket or file channel the protocol
+  // happens to be using
+  if (!mSuppressListenerNotifications && m_channelListener)
+    rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus);
 	
   nsCOMPtr <nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(ctxt, &rv);
-	if (NS_SUCCEEDED(rv) && msgUrl)
-	{
-		rv = msgUrl->SetUrlState(PR_FALSE, aStatus);
-		if (m_loadGroup)
-			m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, aStatus);
+  if (NS_SUCCEEDED(rv) && msgUrl)
+  {
+    rv = msgUrl->SetUrlState(PR_FALSE, aStatus);
+    if (m_loadGroup)
+      m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, aStatus);
     
-	  // !NS_BINDING_ABORTED because we don't want to see an alert if the user 
-	  // cancelled the operation.  also, we'll get here because we call Cancel()
-	  // to force removal of the nsSocketTransport.  see CloseSocket()
-	  // bugs #30775 and #30648 relate to this
-	  if (NS_FAILED(aStatus) && (aStatus != NS_BINDING_ABORTED)) 
+    // !NS_BINDING_ABORTED because we don't want to see an alert if the user 
+    // cancelled the operation.  also, we'll get here because we call Cancel()
+    // to force removal of the nsSocketTransport.  see CloseSocket()
+    // bugs #30775 and #30648 relate to this
+    if (NS_FAILED(aStatus) && (aStatus != NS_BINDING_ABORTED)) 
     {
       nsCOMPtr<nsIPrompt> msgPrompt;
       GetPromptDialogFromUrl(msgUrl , getter_AddRefs(msgPrompt));
@@ -314,25 +314,23 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
              errorID = UNKNOWN_ERROR;
              break;
       }
-      PRUnichar *errorMsg = GetStringByID(errorID);
-      if (errorMsg == nsnull) {
-         nsAutoString resultString(NS_LITERAL_STRING("[StringID "));
-         resultString.AppendInt(errorID, 10);
-         resultString.Append(NS_LITERAL_STRING("?]"));
-         errorMsg = resultString.ToNewUnicode();
-      } else if (errorID == UNKNOWN_ERROR) {
-         nsAutoString errorString(errorMsg);
-         errorString.Append(NS_LITERAL_STRING(" "));
-         errorString.AppendInt(aStatus, 16);
-         nsMemory::Free(errorMsg);
-         errorMsg = errorString.ToNewUnicode();
-      } 
-      rv = msgPrompt->Alert(nsnull, errorMsg);
-      nsMemory::Free(errorMsg);
+      
+      NS_ASSERTION(errorID != UNKNOWN_ERROR, "unknown error, but don't alert user.");
+      if (errorID != UNKNOWN_ERROR) {
+        PRUnichar *errorMsg = GetStringByID(errorID);
+        if (errorMsg == nsnull) {
+          nsAutoString resultString(NS_LITERAL_STRING("[StringID "));
+          resultString.AppendInt(errorID, 10);
+          resultString.Append(NS_LITERAL_STRING("?]"));
+          errorMsg = resultString.ToNewUnicode();
+        }
+        rv = msgPrompt->Alert(nsnull, errorMsg);
+        nsMemory::Free(errorMsg);
+      }
     } // if we got an error code
   } // if we have a mailnews url.
 
-	return rv;
+  return rv;
 }
 
 nsresult nsMsgProtocol::GetPromptDialogFromUrl(nsIMsgMailNewsUrl * aMsgUrl, nsIPrompt ** aPromptDialog)
