@@ -103,55 +103,55 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
 
     switch(type)
     {
-    case nsIDataType::TYPE_INT8:        
+    case nsIDataType::VTYPE_INT8:        
         MEMBER_COPY_CAST(Int8, PRUint8)
         break;
-    case nsIDataType::TYPE_INT16:        
+    case nsIDataType::VTYPE_INT16:        
         MEMBER_COPY(Int16)
         break;
-    case nsIDataType::TYPE_INT32:        
+    case nsIDataType::VTYPE_INT32:        
         MEMBER_COPY(Int32)
         break;
-    case nsIDataType::TYPE_INT64:        
+    case nsIDataType::VTYPE_INT64:        
         MEMBER_COPY(Int64)
         break;
-    case nsIDataType::TYPE_UINT8:        
+    case nsIDataType::VTYPE_UINT8:        
         MEMBER_COPY(Uint8)
         break;
-    case nsIDataType::TYPE_UINT16:        
+    case nsIDataType::VTYPE_UINT16:        
         MEMBER_COPY(Uint16)
         break;
-    case nsIDataType::TYPE_UINT32:        
+    case nsIDataType::VTYPE_UINT32:        
         MEMBER_COPY(Uint32)
         break;
-    case nsIDataType::TYPE_UINT64:        
+    case nsIDataType::VTYPE_UINT64:        
         MEMBER_COPY(Uint64)
         break;
-    case nsIDataType::TYPE_FLOAT:        
+    case nsIDataType::VTYPE_FLOAT:        
         MEMBER_COPY(Float)
         break;
-    case nsIDataType::TYPE_DOUBLE:        
+    case nsIDataType::VTYPE_DOUBLE:        
         MEMBER_COPY(Double)
         break;
-    case nsIDataType::TYPE_BOOL:        
+    case nsIDataType::VTYPE_BOOL:        
         MEMBER_COPY(Bool)
         break;
-    case nsIDataType::TYPE_CHAR:        
+    case nsIDataType::VTYPE_CHAR:        
         MEMBER_COPY(Char)
         break;
-    case nsIDataType::TYPE_WCHAR:        
+    case nsIDataType::VTYPE_WCHAR:        
         MEMBER_COPY(WChar)
         break;
-    case nsIDataType::TYPE_VOID:        
-        if(inVarType != nsIDataType::TYPE_VOID)
+    case nsIDataType::VTYPE_VOID:        
+        if(inVarType != nsIDataType::VTYPE_VOID)
             return NS_ERROR_CANNOT_CONVERT_DATA;
         rv = outVar->SetAsVoid();
         NS_ENSURE_SUCCESS(rv,rv);
         break;
-    case nsIDataType::TYPE_ID:        
+    case nsIDataType::VTYPE_ID:        
         MEMBER_COPY(ID)
         break;
-    case nsIDataType::TYPE_ASTRING:        
+    case nsIDataType::VTYPE_ASTRING:        
     {
         nsAutoString str;
         rv = inVar->GetAsAString(str);
@@ -160,7 +160,7 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         NS_ENSURE_SUCCESS(rv,rv);
         break;
     }
-    case nsIDataType::TYPE_CHAR_STR:        
+    case nsIDataType::VTYPE_CHAR_STR:        
     {
         char* str;
         rv = inVar->GetAsString(&str);
@@ -170,7 +170,7 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         NS_ENSURE_SUCCESS(rv,rv);
         break;
     }
-    case nsIDataType::TYPE_STRING_SIZE_IS:        
+    case nsIDataType::VTYPE_STRING_SIZE_IS:        
     {
         char* str;
         PRUint32 size;
@@ -181,7 +181,7 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         NS_ENSURE_SUCCESS(rv,rv);
         break;
     }
-    case nsIDataType::TYPE_WCHAR_STR:        
+    case nsIDataType::VTYPE_WCHAR_STR:        
     {
         PRUnichar* str;
         rv = inVar->GetAsWString(&str);
@@ -191,7 +191,7 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         NS_ENSURE_SUCCESS(rv,rv);
         break;
     }
-    case nsIDataType::TYPE_WSTRING_SIZE_IS:        
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS:        
     {
         PRUnichar* str;
         PRUint32 size;
@@ -202,7 +202,7 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         NS_ENSURE_SUCCESS(rv,rv);
         break;
     }
-    case nsIDataType::TYPE_INTERFACE:        
+    case nsIDataType::VTYPE_INTERFACE:        
     {
         nsISupports* ptr;
         rv = inVar->GetAsISupports(&ptr);
@@ -212,7 +212,7 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         NS_ENSURE_SUCCESS(rv,rv);
         break;
     }
-    case nsIDataType::TYPE_INTERFACE_IS:        
+    case nsIDataType::VTYPE_INTERFACE_IS:        
     {
         nsISupports* ptr;
         nsIID* iid;
@@ -225,10 +225,10 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         break;
     }
         break;
-    case nsIDataType::TYPE_ARRAY:   
+    case nsIDataType::VTYPE_ARRAY:   
         return NS_ERROR_NOT_IMPLEMENTED;
-    case nsIDataType::TYPE_EMPTY:
-        if(inVarType != nsIDataType::TYPE_EMPTY)
+    case nsIDataType::VTYPE_EMPTY:
+        if(inVarType != nsIDataType::VTYPE_EMPTY)
             return NS_ERROR_CANNOT_CONVERT_DATA;
         rv = outVar->SetAsEmpty();
         NS_ENSURE_SUCCESS(rv,rv);
