@@ -407,7 +407,7 @@ nsAbAddressCollecter::collectEmailAddressSizeLimitPrefChanged(const char *newpre
 	nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) data;
 	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
 	if(NS_FAILED(pPref->GetIntPref(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, &max))){
-		adCol->maxCABsize = 200;
+		adCol->maxCABsize = 0;
 	} else 
 		adCol->maxCABsize = max;
 
