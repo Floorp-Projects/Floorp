@@ -49,10 +49,6 @@ public:
 
   nscoord GetHeight() const { return mBounds.height; }
 
-#ifdef NS_DEBUG
-  PRBool CheckIsBlock() const;
-#endif
-
   PRBool IsEmptyLine() const {
     return 0 != (mState & LINE_ISA_EMPTY_LINE);
   }
@@ -74,7 +70,8 @@ public:
 
   static nsLineBox* LastLine(nsLineBox* aLine);
 
-  static nsLineBox* FindLineContaining(nsLineBox* aLine, nsIFrame* aFrame);
+  static nsLineBox* FindLineContaining(nsLineBox* aLine, nsIFrame* aFrame,
+                                       PRInt32* aFrameIndexInLine);
 
   void List(FILE* out, PRInt32 aIndent) const;
 
@@ -162,13 +159,16 @@ public:
 
   char* StateToString(char* aBuf, PRInt32 aBufSize) const;
 
-  PRBool Contains(nsIFrame* aFrame) const;
+  PRInt32 IndexOf(nsIFrame* aFrame) const;
+
+  PRBool Contains(nsIFrame* aFrame) const {
+    return IndexOf(aFrame) >= 0;
+  }
 
 #ifdef NS_DEBUG
-  void Verify();
+  PRBool CheckIsBlock() const;
 #endif
 
-//XXX protected:
   nsIFrame* mFirstChild;
   PRUint16 mChildCount;
   PRUint16 mState;
@@ -178,8 +178,6 @@ public:
   nscoord mCarriedOutBottomMargin;/* XXX switch to 16 bits */
   nsVoidArray* mFloaters;
   nsLineBox* mNext;
-
-protected:
 };
 
 #endif /* nsLineBox_h___ */

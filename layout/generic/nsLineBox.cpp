@@ -130,95 +130,19 @@ nsLineBox::IsLastChild(nsIFrame* aFrame) const
   return aFrame == lastFrame;
 }
 
-PRBool
-nsLineBox::Contains(nsIFrame* aFrame) const
+PRInt32
+nsLineBox::IndexOf(nsIFrame* aFrame) const
 {
-  PRInt32 n = ChildCount();
+  PRInt32 i, n = ChildCount();
   nsIFrame* frame = mFirstChild;
-  while (--n >= 0) {
+  for (i = 0; i < n; i++) {
     if (frame == aFrame) {
-      return PR_TRUE;
+      return i;
     }
     frame->GetNextSibling(&frame);
   }
-  return PR_FALSE;
+  return -1;
 }
-
-#if 0
-static PRInt32
-LengthOf(nsIFrame* aFrame)
-{
-  PRInt32 result = 0;
-  while (nsnull != aFrame) {
-    result++;
-    aFrame->GetNextSibling(aFrame);
-  }
-  return result;
-}
-
-void
-nsLineBox::Verify()
-{
-  nsIFrame* lastFrame = LastChild();
-  if (nsnull != lastFrame) {
-    nsIFrame* nextInFlow;
-    lastFrame->GetNextInFlow(nextInFlow);
-    if (nsnull != mNext) {
-      nsIFrame* nextSibling;
-      lastFrame->GetNextSibling(nextSibling);
-      NS_ASSERTION(mNext->mFirstChild == nextSibling, "bad line list");
-    }
-  }
-  PRInt32 len = LengthOf(mFirstChild);
-  NS_ASSERTION(len >= ChildCount(), "bad mChildCount");
-}
-
-static void
-VerifyLines(nsLineBox* aLine)
-{
-  while (nsnull != aLine) {
-    aLine->Verify();
-    aLine = aLine->mNext;
-  }
-}
-
-static void
-VerifyChildCount(nsLineBox* aLines, PRBool aEmptyOK = PR_FALSE)
-{
-  if (nsnull != aLines) {
-    PRInt32 childCount = LengthOf(aLines->mFirstChild);
-    PRInt32 sum = 0;
-    nsLineBox* line = aLines;
-    while (nsnull != line) {
-      if (!aEmptyOK) {
-        NS_ASSERTION(0 != line->ChildCount(), "empty line left in line list");
-      }
-      sum += line->ChildCount();
-      line = line->mNext;
-    }
-    if (sum != childCount) {
-      printf("Bad sibling list/line mChildCount's\n");
-      nsLineBox* line = aLines;
-      while (nsnull != line) {
-        line->List(stdout, 1);
-        if (nsnull != line->mNext) {
-          nsIFrame* lastFrame = line->LastChild();
-          if (nsnull != lastFrame) {
-            nsIFrame* nextSibling;
-            lastFrame->GetNextSibling(nextSibling);
-            if (line->mNext->mFirstChild != nextSibling) {
-              printf("  [list broken: nextSibling=%p mNext->mFirstChild=%p]\n",
-                     nextSibling, line->mNext->mFirstChild);
-            }
-          }
-        }
-        line = line->mNext;
-      }
-      NS_ASSERTION(sum == childCount, "bad sibling list/line mChildCount's");
-    }
-  }
-}
-#endif
 
 void
 nsLineBox::DeleteLineList(nsIPresContext& aPresContext, nsLineBox* aLine)
@@ -254,14 +178,19 @@ nsLineBox::LastLine(nsLineBox* aLine)
 }
 
 nsLineBox*
-nsLineBox::FindLineContaining(nsLineBox* aLine, nsIFrame* aFrame)
+nsLineBox::FindLineContaining(nsLineBox* aLine, nsIFrame* aFrame,
+                              PRInt32* aFrameIndexInLine)
 {
+  NS_PRECONDITION(aFrameIndexInLine && aLine && aFrame, "null ptr");
   while (nsnull != aLine) {
-    if (aLine->Contains(aFrame)) {
+    PRInt32 ix = aLine->IndexOf(aFrame);
+    if (ix >= 0) {
+      *aFrameIndexInLine = ix;
       return aLine;
     }
     aLine = aLine->mNext;
   }
+  *aFrameIndexInLine = -1;
   return nsnull;
 }
 
