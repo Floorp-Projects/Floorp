@@ -47,7 +47,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
                                        NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
     if ( primitive ) {
-      primitive->SetData ( (char*)aDataBuff );
+      primitive->SetDataWithLength ( aDataLen, NS_STATIC_CAST(char*, aDataBuff) );
       nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
       *aPrimitive = genericPrimitive;
       NS_ADDREF(*aPrimitive);
@@ -58,7 +58,8 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
                                                       NS_GET_IID(nsISupportsWString), getter_AddRefs(primitive));
     if (NS_SUCCEEDED(rv) && primitive ) {
-      primitive->SetData ( (unsigned short*)aDataBuff );
+      // recall that SetDataWithLength() takes length as characters, not bytes
+      primitive->SetDataWithLength ( aDataLen / 2, NS_STATIC_CAST(PRUnichar*, aDataBuff) );
       nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
       *aPrimitive = genericPrimitive;
       NS_ADDREF(*aPrimitive);
@@ -72,7 +73,8 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
 // CreateDataFromPrimitive
 //
 // Given a nsISupports* primitive and the flavor it represents, creates a new data
-// buffer with the data in it. 
+// buffer with the data in it. This data will be null terminated, but the length
+// parameter does not reflect that.
 //
 void
 nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, 

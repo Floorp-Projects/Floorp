@@ -32,9 +32,15 @@ class nsPrimitiveHelpers
 {
 public:
 
+    // Given some data and the flavor it corresponds to, creates the appropriate
+    // nsISupports* wrapper for passing across IDL boundaries. The length parameter
+    // should not include the null if the data is null terminated.
   static void CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, 
                                          PRUint32 aDataLen, nsISupports** aPrimitive ) ;
 
+    // Given a nsISupports* primitive and the flavor it represents, creates a new data
+    // buffer with the data in it. This data will be null terminated, but the length
+    // parameter does not reflect that.
   static void CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, 
                                          void** aDataBuff, PRUint32 aDataLen ) ;
 
