@@ -50,6 +50,9 @@
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
 
+#include "nsIWindowWatcher.h"
+#include "nsIPrompt.h"
+
 #include "nsMathMLOperators.h"
 #include "nsMathMLChar.h"
 
@@ -116,7 +119,7 @@ static nsCOMPtr<nsIPersistentProperties> gPUAProperties;
 
 // helper to check if a font is installed
 static PRBool
-CheckFontExistence(nsIPresContext* aPresContext, nsString& aFontName)
+CheckFontExistence(nsIPresContext* aPresContext, const nsString& aFontName)
 {
   PRBool aliased;
   nsAutoString localName;
@@ -126,6 +129,28 @@ CheckFontExistence(nsIPresContext* aPresContext, nsString& aFontName)
   PRBool rv = (aliased || (NS_OK == deviceContext->CheckFontExistence(localName)));
   // (see bug 35824 for comments about the aliased localName)
   return rv;
+}
+
+// alert the user if some of the needed MathML fonts are not installed.
+void
+AlertMissingFonts(nsString& aMissingFonts)
+{
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIPrompt> prompter;
+  if (wwatch) {
+    wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+    if (prompter) {
+      nsAutoString message;
+      message.AssignWithConversion(
+"This page contains MathML. Mozilla has detected that some "
+"of the fonts needed for quality rendering of MathML are missing "
+"from your system. Without these fonts, Mozilla cannot render "
+"the page properly. To get a rendering of professional quality "
+"you should install the following fonts: ");
+      message.Append(aMissingFonts);
+      prompter->Alert(0, message.get());
+    }
+  }
 }
 
 // helper to trim off comments from data in a MathFont Property File
@@ -997,16 +1022,39 @@ SetPreferredTableList(PRUnichar aChar, nsString& aExtension, nsString& aFamilyLi
   }
 }
 
+struct MathFontEnumContext {
+  nsIPresContext* mPresContext;
+  nsString*       mMissingFamilyList;
+};
+
 static PRBool PR_CALLBACK
 MathFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
+  // check if the font is missing
+  MathFontEnumContext* context = (MathFontEnumContext*)aData;
+  nsIPresContext* presContext = context->mPresContext;
+  nsString* missingFamilyList = context->mMissingFamilyList;
+  if (!CheckFontExistence(presContext, aFamily)) {
+//#ifndef _WIN32
+   // XXX In principle, the mathfont-family list in the mathfont.properties file
+   // is customizable depending on the platform. For now, this is here since there
+   // is no need to alter Linux users about TrueType fonts specific to Windows.
+   if (aFamily.EqualsIgnoreCase("MT Extra"))
+     return PR_TRUE; // continue to try other fonts
+//#endif
+    if (!missingFamilyList->IsEmpty()) {
+      missingFamilyList->Append(NS_LITERAL_STRING(", "));
+    }
+    missingFamilyList->Append(aFamily);
+  }
+
   if (!gGlyphTableList->AddGlyphTable(aFamily))
     return PR_FALSE; // stop in low-memory situations
   return PR_TRUE; // don't stop
 }
 
 static nsresult
-InitGlobals()
+InitGlobals(nsIPresContext* aPresContext)
 {
   NS_ASSERTION(!gInitialized, "Error -- already initialized");
   gInitialized = PR_TRUE;
@@ -1085,9 +1133,16 @@ InitGlobals()
   }
 
   // Parse the font list and append an entry for each family to gGlyphTableList
-  font.EnumerateFamilies(MathFontEnumCallback, gGlyphTableList);
+  nsAutoString missingFamilyList;
+  MathFontEnumContext context = {aPresContext, &missingFamilyList};
+  font.EnumerateFamilies(MathFontEnumCallback, &context);
   // Append a null separator
   gGlyphTableList->AppendTable(nsnull);
+
+  // alert the user if some of the expected fonts are missing
+  if (!missingFamilyList.IsEmpty()) {
+    AlertMissingFonts(missingFamilyList);
+  }
 
   // Let the particular characters have their preferred extension tables
   nsCOMPtr<nsISimpleEnumerator> iterator;
@@ -1154,7 +1209,7 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
 {
   NS_ASSERTION(!mParent, "invalid call - not allowed for child chars");
   if (!gInitialized) {
-    InitGlobals();
+    InitGlobals(aPresContext);
   }
   mData = aData;
   // some assumptions until proven otherwise
