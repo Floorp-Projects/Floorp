@@ -394,10 +394,10 @@ nsInputStreamPump::OnStateTransfer()
             avail = mStreamLength - mStreamOffset;
 
         if (avail) {
-            // XXX need to make max ODA size configurable
-            if (avail > 16384)
-                avail = 16384;
-
+            // we used to limit avail to 16K - we were afraid some ODA handlers
+            // might assume they wouldn't get more than 16K at once
+            // we're removing that limit since it speeds up local file access.
+            // Now there's an implicit 64K limit of 4 16K segments
             // NOTE: ok, so the story is as follows.  OnDataAvailable impls
             //       are by contract supposed to consume exactly |avail| bytes.
             //       however, many do not... mailnews... stream converters...
