@@ -1249,14 +1249,8 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     }
 
     // ensure it is not even partially offscreen.
-    if ( (screenViewLocX + mRect.width) > screenRightTwips ) {
-      if (tag == nsXULAtoms::tooltip) {
-        //the tooltip is off the screen to the right - shift it to the left as much as needed
+    if ( (screenViewLocX + mRect.width) > screenRightTwips )
         xpos -= (screenViewLocX + mRect.width) - screenRightTwips;
-      }
-      else        
-        xpos -= mRect.width;      
-    }
     if ( (screenViewLocY + mRect.height) > screenBottomTwips )
       ypos -= (mRect.height + margin.top + margin.bottom);
       
