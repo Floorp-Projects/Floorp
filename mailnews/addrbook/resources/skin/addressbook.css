@@ -1,5 +1,11 @@
 /* Address Book specific style */
 
+iframe {
+	min-width: 10px;
+	min-height: 10px;
+	width: 100px;
+	height: 100px;
+}
 
 /* CardEdit styles - used in the Card Edit Dialog */
 
