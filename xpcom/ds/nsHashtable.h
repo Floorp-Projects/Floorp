@@ -20,6 +20,7 @@
 #define nsHashtable_h__
 
 #include "plhash.h"
+#include "prlock.h"
 #include "nsCom.h"
 
 class NS_COM nsHashKey {
@@ -40,9 +41,10 @@ class NS_COM nsHashtable {
 private:
   // members  
   PLHashTable *hashtable;
+  PRLock *mLock;
 
 public:
-  nsHashtable(PRUint32 aSize = 256);
+  nsHashtable(PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE);
   ~nsHashtable();
 
   PRInt32 Count(void) { return hashtable->nentries; }
