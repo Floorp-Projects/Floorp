@@ -936,6 +936,8 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
             PR_DestroyLock(pt_book.ml); pt_book.ml = NULL;
         }
         _pt_thread_death(me);
+        PR_DestroyLock(_pr_sleeplock);
+        _pr_sleeplock = NULL;
         _PR_CleanupLayerCache();
         _PR_CleanupEnv();
         _pr_initialized = PR_FALSE;
