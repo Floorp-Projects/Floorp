@@ -214,7 +214,7 @@ NS_AddFastLoadChecksums(PRUint32 sum1, PRUint32 sum2, PRUint32 sum2ByteCount)
         FOLD_ONES_COMPLEMENT_CARRY(A);
 
     PRUint32 B = B2;
-    for (PRUint32 n = (sum2ByteCount+1) / 2; n != 0; n--)
+    for (PRUint32 n = (sum2ByteCount + 1) / 2; n != 0; n--)
         ONES_COMPLEMENT_ACCUMULATE(B, B1);
     while (B >> 16)
         FOLD_ONES_COMPLEMENT_CARRY(B);
@@ -2023,8 +2023,8 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
         NS_IF_ADDREF(obj);
         writeEntry->mObject = NS_REINTERPRET_CAST(nsISupports*, key);
         writeEntry->mOID = oid;
-        writeEntry->mInfo = NS_STATIC_CAST(nsFastLoadSharpObjectInfo,
-                                           *readEntry);
+        writeEntry->mInfo = *NS_STATIC_CAST(nsFastLoadSharpObjectInfo*,
+                                            readEntry);
     }
 
     rv = aReader->Seek(nsISeekableStream::NS_SEEK_SET, saveReadOffset);
