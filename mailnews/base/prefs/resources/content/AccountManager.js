@@ -606,11 +606,10 @@ function getFormElementValue(formElement) {
   else if (type == "textbox" &&
            formElement.getAttribute("datatype") == "nsILocalFile") {
     if (formElement.value) {
-      var localfile = Components.classes["component://mozilla/file/local"].createInstance(Components.interfaces.nsILocalFile);
+      var localfile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 
       localfile.unicodePath = formElement.value;
       return localfile;
-
     }
     else {
       return null;
