@@ -104,27 +104,24 @@ nsTableCellFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-void nsTableCellFrame::SetPass1MaxElementSize(const nsSize& aMaxElementSize)
+void nsTableCellFrame::SetPass1MaxElementSize(nscoord       aMaxWidth,
+                                              const nsSize& aMaxElementSize)
 { 
   mPass1MaxElementSize.height = aMaxElementSize.height;
   nscoord maxElemWidth = aMaxElementSize.width;
-  // the max elem width needs to be set to the max of aMaxElementSize.width and 
-  // the width attribute if both nowrap and width are present on the cell.
-  const nsStylePosition* stylePosition;
-  GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)stylePosition));
-  if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord) {
-    nscoord styleWidth = stylePosition->mWidth.GetCoordValue();
-    if (styleWidth > 0) {
-      nsIDOMHTMLTableCellElement* cellContent = nsnull;
-      nsresult rv = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLTableCellElement), (void **)&cellContent);  
-      if (cellContent && NS_SUCCEEDED(rv)) {
-        PRBool nowrap = PR_FALSE;
-        cellContent->GetNoWrap(&nowrap);
-        if (nowrap) {
-          maxElemWidth = PR_MAX(maxElemWidth, styleWidth);
-        }
-        NS_RELEASE(cellContent);
-      }
+  // the max elem width needs to take into account a cell that is NOWRAP
+  const nsStyleText* styleText;
+  GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);
+  if (NS_STYLE_WHITESPACE_NOWRAP == styleText->mWhiteSpace) {
+    const nsStylePosition* stylePosition;
+    GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)stylePosition));
+    if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord) {
+      nscoord styleWidth = stylePosition->mWidth.GetCoordValue();
+      // Nav and IE only honor the nowrap up to the style width, if present
+      maxElemWidth = PR_MAX(maxElemWidth, styleWidth);
+    }
+    else {
+      maxElemWidth = PR_MAX(maxElemWidth, aMaxWidth);
     }
   }
   mPass1MaxElementSize.width = maxElemWidth;

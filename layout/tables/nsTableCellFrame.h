@@ -222,7 +222,8 @@ public:
   /** set the MaxElement size returned by this frame during its last reflow.
     * should never be called with a null MaxElementSize
     */
-  virtual void SetPass1MaxElementSize(const nsSize & aMaxElementSize);
+  virtual void SetPass1MaxElementSize(nscoord       aMaxWidth,
+                                      const nsSize& aMaxElementSize);
 
   PRBool GetContentEmpty();
   void SetContentEmpty(PRBool aContentEmpty);
