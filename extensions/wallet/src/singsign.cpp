@@ -557,7 +557,7 @@ si_CheckGetUsernamePassword
   }
 
   PRBool confirmed = PR_FALSE;  
-  res = dialog->PromptUsernameAndPassword(dialogTitle,
+  res = dialog->PromptUsernameAndPassword(prompt_string,
                                           szMessage,
                                           username, password,
                                           check_string,
