@@ -30,12 +30,10 @@
 #include "nsIGenericFactory.h"
 #include "nsAccessProxy.h"
 #include "nsIServiceManager.h"
-#include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
 #include "prprf.h"
 #include "nsCRT.h"
-
-#define NS_ACESSPROXY_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/accessproxy;1"
+#include "nsICategoryManager.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -54,22 +52,12 @@ static NS_METHOD nsAccessProxyRegistrationProc(nsIComponentManager *aCompMgr,
   // This function performs the extra step of installing us as
   // an application component. This makes sure that we're
   // initialized on application startup.
-  // get the registry
-  nsIRegistry* registry;
-  nsresult rv = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID,
-    NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
-  if (NS_SUCCEEDED(rv)) {
-    registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-    char buffer[256];
-    char *cid = nsAccessProxy::GetCID().ToString();
-    PR_snprintf(buffer, sizeof buffer, "%s/%s", NS_IAPPSHELLCOMPONENT_KEY,
-      cid ? cid : "unknown" );
-    nsCRT::free(cid);
 
-    nsRegistryKey key;
-    rv = registry->AddSubtree(nsIRegistry::Common, buffer, &key);
-    nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);
-  }
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> categoryManager(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv)) 
+    rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY, "Access Proxy", 
+      "service," NS_ACCESSPROXY_CONTRACTID, PR_TRUE, PR_TRUE, nsnull);
   return rv;
 }
 

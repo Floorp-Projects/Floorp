@@ -30,8 +30,8 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
+#include "nsIObserverService.h"
 #include "nsIGenericFactory.h"
-#include "nsIAppShellComponent.h"
 #include "nsIWebProgress.h"
 #include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
@@ -50,7 +50,6 @@
 #include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
-#include "nsIFrameSelection.h"
 #include "nsICaret.h"
 
 // Header for this class
@@ -62,7 +61,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 
-NS_IMPL_ISUPPORTS4(nsAccessProxy, nsIAppShellComponent, nsISupportsWeakReference, nsIWebProgressListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS4(nsAccessProxy, nsIObserver, nsISupportsWeakReference, nsIWebProgressListener, nsIDOMEventListener)
 
 nsAccessProxy* nsAccessProxy::mInstance = nsnull;
 
@@ -164,25 +163,33 @@ NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
 
 
 // This method gets called on application startup
-NS_IMETHODIMP nsAccessProxy::Initialize(nsIAppShellService *anAppShell,
-  nsICmdLineService  *aCmdLineService)
+NS_IMETHODIMP nsAccessProxy::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *aData) 
 {
-  nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
-  nsresult rv = NS_ERROR_FAILURE;
-  if (progress) {
-    rv = progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
-    if (NS_SUCCEEDED(rv))
-      AddRef();
+  static PRBool accessProxyInstalled;
+
+  nsresult rv = NS_OK;
+  nsDependentString aTopicString(aTopic);
+
+  if (accessProxyInstalled && aTopicString.Equals(NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID)))
+    return Release();
+
+  if (!accessProxyInstalled && aTopicString.Equals(NS_LITERAL_STRING(APPSTARTUP_CATEGORY))) {
+    accessProxyInstalled = PR_TRUE; // Set to TRUE even for failure cases - we don't want to try more than once
+    nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
+    rv = NS_ERROR_FAILURE;
+    if (progress) {
+      rv = progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
+      if (NS_SUCCEEDED(rv))
+        AddRef();
+    }
+     // install xpcom shutdown observer
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+      if (NS_SUCCEEDED(rv)) 
+        rv = observerService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    }
   }
-
   return rv;
-}
-
-// This method gets called on application shutdown
-NS_IMETHODIMP nsAccessProxy::Shutdown()
-{
-  Release();
-  return NS_OK;
 }
 
 
@@ -283,5 +290,4 @@ NS_IMETHODIMP nsAccessProxy::OnSecurityChange(nsIWebProgress *aWebProgress,
   #endif
   return NS_OK;
 }
-
 
