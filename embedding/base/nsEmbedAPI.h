@@ -25,7 +25,10 @@
 #ifndef NSEMBEDAPI_H
 #define NSEMBEDAPI_H
 
+#include "nsILocalFile.h"
+
 extern nsresult NS_InitEmbedding(const char *aPath);
+extern nsresult NS_InitEmbedding(nsILocalFile *aPath);
 extern nsresult NS_TermEmbedding();
 
 #endif
