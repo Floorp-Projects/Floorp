@@ -976,7 +976,6 @@ nsTableFrame::InsertRows(nsIPresContext&  aPresContext,
                                PR_TRUE);
     }
     if (aRowIndex < origNumRows) {
-      PRInt32 numNewRows = aRowFrames.Count();
       AdjustRowIndices(aRowIndex, numNewRows);
     }
     // assign the correct row indices to the new rows. If they were adjusted above

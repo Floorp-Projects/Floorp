@@ -594,9 +594,6 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext*          aPresC
 {
   nsresult rv;
  
-  // Remember the old col count
-  const PRInt32 oldColCount = GetColCount();
-
   // Pass along the reflow command
   nsHTMLReflowMetrics desiredSize(nsnull);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aNextFrame,
@@ -613,7 +610,6 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext*          aPresC
     // compare the new col count to the old col count.  
     // If they are the same, we just need to rebalance column widths
     // If they differ, we need to fix up other column groups and the column cache
-    const PRInt32 newColCount = GetColCount(); 
     tableFrame->InvalidateColumnWidths();
   }
   return rv;
