@@ -26,13 +26,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
+MODULE		= necko2
 LIBRARY_NAME	= necko2
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= necko_secondary_protocols
 REQUIRES	= xpcom \
 		  string \
+		  necko \
 		  nkcache \
 		  $(NULL)
 

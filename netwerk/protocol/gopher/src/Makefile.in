@@ -25,9 +25,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
+MODULE		= necko2
 LIBRARY_NAME	= nkgopher_s
 REQUIRES	= xpcom \
+		  necko \
 		  string \
 		  mimetype \
 		  $(NULL)

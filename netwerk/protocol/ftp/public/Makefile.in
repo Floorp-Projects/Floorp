@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
+MODULE		= necko2
 XPIDL_MODULE	= necko_ftp
 
 XPIDLSRCS	= \
