@@ -31,6 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 #include "nsIProtocolHandler.h"
+#include "nsIProgressEventSink.h"
 
 class nsIEventSinkGetter;
 class nsIProgressEventSink;
