@@ -380,19 +380,38 @@ sub print_configure_form {
   open(OPTIONS, "m4 webify-configure.m4 $configure_in|")
     or die "Error parsing configure.in\n";
 
-  foreach (<OPTIONS>) {
-    chomp;
-    ($type, $prename, $name, $comment) = split /$field_separator/;
-    ($dummy,$dummy2,$help) = split /\s+/, $comment, 3;
+    undef @options;
 
-    if ($type eq 'header') {
-      &header_option($comment);
-    } elsif ($type eq 'unhandled') {
-      push @unhandled_options, $comment;
-    } else {
-      eval "&${type}_option(\"--$prename-$name\",\"$help\");";
+    while ($line = <OPTIONS>) {
+        chomp $line;
+        
+        if ($line !~ m/^bool/ &&
+            $line !~ m/^string/ &&
+            $line !~ m/^header/ &&
+            $line !~ m/^unhandled/) {
+            # Must be continuation comment
+            $line =~ s/^\s+/ /;
+            $oldline .= $line;
+        } else {
+            push @options, $oldline;
+            $oldline = $line;
+        }
     }
-  }
+    push @options, $oldline;
+
+    foreach $line (@options) {
+        ($type, $prename, $name, $comment) = split /$field_separator/, $line;
+        ($dummy,$dummy2,$help) = split /\s+/, $comment, 3;
+
+        if ($type eq 'header') {
+            &header_option($comment);
+        } elsif ($type eq 'unhandled') {
+            push @unhandled_options, $comment;
+        } else {
+            eval "&${type}_option(\"--$prename-$name\",\"$help\");";
+        }
+    }
+
   header_option("Options not handled by Configurator"
                ." (Add them to the .mozconfig script by hand)");
   foreach $comment (@unhandled_options) {
