@@ -75,9 +75,6 @@
 extern char ** __argv;
 extern int    __argc;
 
-// Adding to support DDE
-#define ID_MESSAGEWINDOW        0xDEAF
-
 /* trying to keep this like Window's COPYDATASTRUCT, but a compiler error is
  * forcing me to add chBuff so that we can append the data to the end of the
  * structure
@@ -957,12 +954,41 @@ struct MessageWindow {
     // ctor/dtor are simplistic
     MessageWindow() {
         // Try to find window.
-        // XXX need to improve this to use check the class
-        mHandle = WinWindowFromID( HWND_OBJECT, ID_MESSAGEWINDOW ); 
+        HATOMTBL  hatomtbl;
+        HENUM     henum;
+        HWND      hwndNext;
+        char      classname[CCHMAXPATH];
+
+        mHandle = NULLHANDLE;
+
+        hatomtbl = WinQuerySystemAtomTable();
+        mMsgWindowAtom = WinFindAtom(hatomtbl, className());
+        if (mMsgWindowAtom == 0)
+        {
+          // If there is not atom in the system table for this class name, then
+          // we can assume that the app is not currently running.
+          mMsgWindowAtom = WinAddAtom(hatomtbl, className());
+        } else {
+          // Found an existing atom for this class name.  Cycle through existing
+          // windows and see if one with our window id and class name already 
+          // exists
+          henum = WinBeginEnumWindows(HWND_OBJECT);
+          while ((hwndNext = WinGetNextWindow(henum)) != NULLHANDLE)
+          {
+            if (WinQueryWindowUShort(hwndNext, QWS_ID) == (USHORT)mMsgWindowAtom)
+            {
+              WinQueryClassName(hwndNext, CCHMAXPATH, classname);
+              if (strcmp(classname, className()) == 0)
+              {
+                mHandle = hwndNext;
+                break;
+              }
+            }
+          }
+        }
     }
 
-    // Act like an HWND.
-    operator HWND() {
+    HWND getHWND() {
         return mHandle;
     }
 
@@ -1002,7 +1028,7 @@ struct MessageWindow {
                                    0,0,       // cx,cy
                                    HWND_DESKTOP,// owner
                                    HWND_BOTTOM,  // hwndbehind
-                                   ID_MESSAGEWINDOW, // id
+                                   (USHORT)mMsgWindowAtom, // id
                                    NULL,        // pCtlData
                                    NULL );      // pres params
 
@@ -1018,6 +1044,9 @@ struct MessageWindow {
         nsresult retval = NS_OK;
 
         if ( mHandle ) {
+           HATOMTBL hatomtbl = WinQuerySystemAtomTable();
+           WinDeleteAtom(hatomtbl, mMsgWindowAtom);
+           
             // DestroyWindow can only destroy windows created from
             //  the same thread.
             BOOL desRes = WinDestroyWindow( mHandle );
@@ -1101,7 +1130,8 @@ struct MessageWindow {
 }
 
 private:
-    HWND mHandle;
+    HWND     mHandle;
+    USHORT   mMsgWindowAtom;
 }; // struct MessageWindow
 
 static char nameBuffer[128] = { 0 };
@@ -1174,7 +1204,7 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
 
     // Search for existing message window.
     MessageWindow msgWindow;
-    if ( (HWND)msgWindow ) {
+    if ( msgWindow.getHWND() ) {
         // We are a client process.  Pass request to message window.
         char *cmd = GetCommandLine();
         rv = msgWindow.SendRequest( cmd );
@@ -2355,7 +2385,7 @@ nsNativeAppSupportOS2::StartServerMode() {
     mInitialWindowActive = PR_TRUE;
 
     // Hide this window by re-parenting it (to ensure it doesn't appear).
-    ReParent( newWindow, (HWND)MessageWindow() );
+    ReParent( newWindow, MessageWindow().getHWND() );
 
     return NS_OK;
 }
