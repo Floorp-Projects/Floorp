@@ -587,7 +587,7 @@ nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
          msgToMatch->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
          err = aTerm->MatchJunkStatus(junkScoreStr, &result);
          break; 
-      }          
+      }
       default:
           // XXX todo
           // for the temporary return receipts filters, we use a custom header for Content-Type
@@ -625,13 +625,14 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
                                             PRBool Filtering,
 											PRBool *pResult) 
 {
-  nsMsgSearchBoolExpression * expressionTree = new nsMsgSearchBoolExpression(); 
+  nsMsgSearchBoolExpression * expressionTree = nsnull; 
   PRUint32 initialPos = 0; 
   nsresult err = ConstructExpressionTree(msgToMatch, termList, initialPos, defaultCharset, scope, db, headers, headerSize, 
                           Filtering, &expressionTree, pResult);
 
   // evaluate the expression tree and return the result
-  *pResult = expressionTree->OfflineEvaluate();
+	if (NS_SUCCEEDED(err) && expressionTree)
+		*pResult = expressionTree->OfflineEvaluate();
   delete expressionTree;
 
   return err;
