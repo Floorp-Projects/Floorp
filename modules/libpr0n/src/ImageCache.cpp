@@ -156,4 +156,5 @@ PRBool ImageCache::Remove(nsIURI *aKey)
 
   return PR_TRUE;
 }
+
 #endif /* MOZ_NEW_CACHE */

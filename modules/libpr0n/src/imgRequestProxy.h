@@ -31,12 +31,6 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 
-#ifdef MOZ_NEW_CACHE
-#include "nsICacheEntryDescriptor.h"
-#else
-class nsICacheEntryDescriptor;
-#endif
-
 #define NS_IMGREQUESTPROXY_CID \
 { /* 20557898-1dd2-11b2-8f65-9c462ee2bc95 */         \
      0x20557898,                                     \
@@ -61,7 +55,7 @@ public:
   virtual ~imgRequestProxy();
 
   /* additional members */
-  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx, nsICacheEntryDescriptor *aCacheEntry);
+  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx);
 
 private:
   nsCOMPtr<imgIDecoderObserver> mObserver;
@@ -71,12 +65,6 @@ private:
   nsCOMPtr<imgIRequest> mOwner;
 
   nsCOMPtr<nsIChannel> mDummyChannel;
-
-#ifdef MOZ_NEW_CACHE
-  nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to give the cache an 
-                                                  * acurate count of people holding on to an entry
-                                                  */
-#endif
 
   PRBool mCanceled;
 };

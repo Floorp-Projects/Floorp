@@ -21,8 +21,6 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-//#define LOADER_THREADSAFE 1
-
 #include "imgILoader.h"
 
 #ifdef LOADER_THREADSAFE
@@ -47,7 +45,4 @@ public:
   virtual ~imgLoader();
 
 private:
-#ifdef LOADER_THREADSAFE
-  PRLock *mLock;
-#endif
 };

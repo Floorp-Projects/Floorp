@@ -42,36 +42,22 @@
 
 #include "nsCOMPtr.h"
 
-#ifdef LOADER_THREADSAFE
-#include "nsAutoLock.h"
-#endif
-
 #include "ImageLogging.h"
 
 static NS_DEFINE_CID(kImageRequestCID, NS_IMGREQUEST_CID);
 static NS_DEFINE_CID(kImageRequestProxyCID, NS_IMGREQUESTPROXY_CID);
 
-#ifdef LOADER_THREADSAFE
-NS_IMPL_THREADSAFE_ISUPPORTS1(imgLoader, imgILoader)
-#else
 NS_IMPL_ISUPPORTS1(imgLoader, imgILoader)
-#endif
 
 imgLoader::imgLoader()
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
-#ifdef LOADER_THREADSAFE
-  mLock = PR_NewLock();
-#endif
 }
 
 imgLoader::~imgLoader()
 {
   /* destructor code */
-#ifdef LOADER_THREADSAFE
-  PR_DestroyLock(mLock);
-#endif
 }
 
 /* imgIRequest loadImage (in nsIURI uri, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports cx); */
@@ -124,9 +110,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 #endif
 
   if (!request) {
-#ifdef LOADER_THREADSAFE
-    nsAutoLock lock(mLock); // lock when we are adding things to the cache
-#endif
+    /* no request from the cache.  do a new load */
     LOG_SCOPE(gImgLog, "imgLoader::LoadImage |cache miss|");
 
     nsCOMPtr<nsIIOService> ioserv(do_GetService("@mozilla.org/network/io-service;1"));
@@ -149,7 +133,11 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage -- Created new imgRequest [request=%p]\n", this, request));
 
-    request->Init(newChannel);
+#ifdef MOZ_NEW_CACHE
+    request->Init(newChannel, entry);
+#else
+    request->Init(newChannel, nsnull);
+#endif
 
 #ifdef MOZ_NEW_CACHE
     ImageCache::Put(aURI, request, getter_AddRefs(entry));
@@ -161,6 +149,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
     newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, request), nsnull);
 
   } else {
+    /* request found in cache.  use it */
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage |cache hit| [request=%p]\n",
             this, request));
@@ -171,11 +160,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
   nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
   // init adds itself to imgRequest's list of observers
-#ifdef MOZ_NEW_CACHE
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aLoadGroup, aObserver, cx, entry);
-#else
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aLoadGroup, aObserver, cx, nsnull);
-#endif
+  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aLoadGroup, aObserver, cx);
+
   NS_RELEASE(request);
 
   *_retval = proxyRequest;
@@ -208,16 +194,18 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     *listener = nsnull; // give them back a null nsIStreamListener
   } else {
-#ifdef LOADER_THREADSAFE
-    nsAutoLock lock(mLock); // lock when we are adding things to the cache
-#endif
-
     nsCOMPtr<imgIRequest> req(do_CreateInstance(kImageRequestCID));
 
     request = NS_REINTERPRET_CAST(imgRequest*, req.get());
     NS_ADDREF(request);
 
-    request->Init(channel);
+
+
+#ifdef MOZ_NEW_CACHE
+    request->Init(channel, entry);
+#else
+    request->Init(channel, nsnull);
+#endif
 
 #ifdef MOZ_NEW_CACHE
     ImageCache::Put(uri, request, getter_AddRefs(entry));
@@ -230,11 +218,8 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
 
   // init adds itself to imgRequest's list of observers
-#ifdef MOZ_NEW_CACHE
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, nsnull, aObserver, cx, entry);
-#else
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, nsnull, aObserver, cx, nsnull);
-#endif
+  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, nsnull, aObserver, cx);
+
   NS_RELEASE(request);
 
   *_retval = proxyRequest;
