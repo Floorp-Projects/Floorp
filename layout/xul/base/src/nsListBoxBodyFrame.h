@@ -51,6 +51,10 @@
 
 class nsCSSFrameConstructor;
 class nsListScrollSmoother;
+nsresult NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, 
+                                nsIFrame** aNewFrame, 
+                                PRBool aIsRoot = PR_FALSE,
+                                nsIBoxLayout* aLayoutManager = nsnull);
 
 class nsListBoxBodyFrame : public nsBoxFrame,
                            public nsIListBoxObject,
@@ -66,8 +70,8 @@ public:
 
   friend nsresult NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, 
                                          nsIFrame** aNewFrame, 
-                                         PRBool aIsRoot = PR_FALSE,
-                                         nsIBoxLayout* aLayoutManager = nsnull);
+                                         PRBool aIsRoot,
+                                         nsIBoxLayout* aLayoutManager);
   
   // nsIFrame
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,

@@ -40,6 +40,11 @@
 #include "nsBoxFrame.h"
 #include "nsGridRowLeafFrame.h"
 
+nsresult NS_NewListItemFrame(nsIPresShell* aPresShell, 
+                             nsIFrame** aNewFrame, 
+                             PRBool aIsRoot = PR_FALSE,
+                             nsIBoxLayout* aLayoutManager = nsnull);
+
 class nsListItemFrame : public nsGridRowLeafFrame
 {
 public:
@@ -47,8 +52,8 @@ public:
 
   friend nsresult NS_NewListItemFrame(nsIPresShell* aPresShell, 
                                       nsIFrame** aNewFrame, 
-                                      PRBool aIsRoot = PR_FALSE,
-                                      nsIBoxLayout* aLayoutManager = nsnull);
+                                      PRBool aIsRoot,
+                                      nsIBoxLayout* aLayoutManager);
 
   // nsIBox
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
