@@ -89,10 +89,10 @@ SDK_XPIDLSRCS   = \
 		nsIWebBrowserFocus.idl	    \
 		nsIWebBrowserPrint.idl      \
 		nsIWebBrowserSetup.idl	    \
+		nsIWebBrowserStream.idl	    \
                 $(NULL)
 
 XPIDLSRCS	= \
-		nsIWebBrowserStream.idl			\
 		nsCWebBrowser.idl			\
 		nsICommandHandler.idl			\
 		nsIEmbeddingSiteWindow2.idl \
