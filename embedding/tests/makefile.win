@@ -20,6 +20,10 @@
 
 DEPTH=..\..
 
-DIRS=winEmbed mfcembed
+DIRS=winEmbed
+
+!if !defined(NO_MFC)
+DIRS=$(DIRS) mfcembed
+!endif
 
 include <$(DEPTH)\config\rules.mak>
