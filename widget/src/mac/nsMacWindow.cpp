@@ -167,6 +167,12 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 		
 		case kDragTrackingLeaveWindow:
 		{
+            // stop any drag tracking in this window
+            nsCOMPtr<nsIDragSession> session;
+            sDragService->GetCurrentSession ( getter_AddRefs(session) );
+            if ( session )
+              session->StopTracking();
+
 			// tell the drag service that we're done with it.
 			if ( sDragService ) {
 				sDragService->EndDragSession();
@@ -177,10 +183,9 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 				// was in our window.
 				nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(sDragService) );
 				if ( macSession )
-					macSession->SetDragReference ( 0 );
-					
-			}
-			
+					macSession->SetDragReference ( 0 );					
+			}			
+    
 			// let gecko know that the mouse has left the window so it
 			// can stop tracking and sending enter/exit events to frames.
 			Point mouseLocGlobal;
@@ -217,7 +222,7 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 
 	OSErr result = noErr;
 	printf("DragReceiveHandler called. We got a drop!!!!, DragRef is %ld\n", theDragRef);
-
+    
 	// pass the drop event along to Gecko
 	Point mouseLocGlobal;
 	::GetDragMouse ( theDragRef, &mouseLocGlobal, nsnull );
@@ -227,26 +232,24 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 	
 	// once the event has gone to gecko, check the "canDrop" state in the 
 	// drag session to see what we should return to the OS (drag accepted or not).
-	nsIDragService* dragService;
-	nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                       			NS_GET_IID(nsIDragService),
-      	                            			(nsISupports **)&dragService);
-	if ( NS_SUCCEEDED(rv) && dragService ) {
+	nsCOMPtr<nsIDragService> dragService ( do_GetService(kCDragServiceCID) );
+	if ( dragService ) {
 		nsCOMPtr<nsIDragSession> dragSession;
 		dragService->GetCurrentSession ( getter_AddRefs(dragSession) );
 		if ( dragSession ) {
+            // stop any drag tracking in this window
+            dragSession->StopTracking();
+
 			// fail if the target has set that it can't accept the drag
 			PRBool canDrop = PR_FALSE;
 			if ( NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) )
 				if ( canDrop == PR_FALSE )
 					result = dragNotAcceptedErr;	
 		}
-		
+          
 		// we don't need the drag session anymore, the user has released the
 		// mouse and the event has already gone to gecko.
 		dragService->EndDragSession();
-		
-		nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
 	}
 	
 	return result;

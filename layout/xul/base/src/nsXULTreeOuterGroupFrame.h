@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *  Mike Pinkerton (pinkerton@netscape.com)
  */
 
 #ifndef NSXULTREEOUTERGROUPFRAME
@@ -32,8 +33,15 @@
 #include "nsXULTreeGroupFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsIPresContext.h"
+#include "nsITimerCallback.h"
+#include "nsITimer.h"
+#include "nsIDragTracker.h"
+
 
 class nsCSSFrameConstructor;
+class nsDragOverListener;
+class nsDragAutoScrollTimer;
+
 
 #define TREE_LINE_HEIGHT 225
 
@@ -61,25 +69,101 @@ public:
   }
 };
 
-class nsXULTreeOuterGroupFrame : public nsXULTreeGroupFrame, public nsIScrollbarMediator
+
+/*-----------------------------------------------------------------*/
+
+
+//
+// nsDragAutoScrollTimer
+//
+// A timer class for handling auto-scrolling during drags
+//
+class nsDragAutoScrollTimer : public nsITimerCallback
+{
+public:
+
+  NS_DECL_ISUPPORTS
+
+  nsDragAutoScrollTimer ( nsXULTreeOuterGroupFrame* inTree )
+      : mPoint(0,0), mDelay(30), mTree(inTree)
+  {
+    NS_INIT_ISUPPORTS();
+  }
+
+  virtual ~nsDragAutoScrollTimer()
+  {
+    if (mTimer)
+      mTimer->Cancel();
+  }
+
+  nsresult Start(const nsPoint& aPoint)
+  {
+    mPoint = aPoint;
+
+    if ( !mTimer ) {
+      nsresult result;
+      mTimer = do_CreateInstance("component://netscape/timer", &result);
+      if (NS_FAILED(result))
+        return result;
+    }
+
+    return mTimer->Init(this, mDelay);
+  }
+
+  nsresult Stop()
+  {
+    nsresult result = NS_OK;
+
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nsnull;
+    }
+
+    return result;
+  }
+
+  nsresult SetDelay(PRUint32 aDelay)
+  {
+    mDelay = aDelay;
+    return NS_OK;
+  }
+
+  NS_IMETHOD_(void) Notify(nsITimer *timer) ;
+  
+private:
+  nsXULTreeOuterGroupFrame *mTree;
+  nsCOMPtr<nsITimer> mTimer;
+  nsPoint         mPoint;
+  PRUint32        mDelay;
+  
+}; // nsDragAutoScrollTimer
+
+
+
+/*-----------------------------------------------------------------*/
+
+
+class nsXULTreeOuterGroupFrame : public nsXULTreeGroupFrame, public nsIScrollbarMediator,
+                                    public nsIDragTracker
 {
 public:
   NS_DECL_ISUPPORTS
-
+  NS_DECL_NSIDRAGTRACKER
+  
+  friend class nsDragAutoScrollTimer;
+  friend class nsDragOverListener;
   friend nsresult NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
                                           PRBool aIsRoot = PR_FALSE,
                                           nsIBoxLayout* aLayoutManager = nsnull,
                                           PRBool aDefaultHorizontal = PR_TRUE);
-
+  
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
 
 protected:
   nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
   virtual ~nsXULTreeOuterGroupFrame();
-
-  void ComputeTotalRowCount(PRInt32& aRowCount, nsIContent* aParent);
 
 public:
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
@@ -152,15 +236,33 @@ public:
   NS_IMETHOD InternalPositionChanged(PRBool aUp, PRInt32 aDelta);
 
   PRBool IsTreeSorted ( ) const { return mTreeIsSorted; }
-  
+
 protected: // Data Members
+
+  void ComputeTotalRowCount(PRInt32& aRowCount, nsIContent* aParent);
+
+    // Drag Auto-scrolling. Call HandleAutoScrollTracking() to setup everything and
+    // do the scrolling magic. It can be called multiple times, though the 
+    // setup will only be done once.
+  nsresult HandleAutoScrollTracking ( const nsPoint & aPoint );
+  nsresult StartAutoScrollTimer(const nsPoint& aPoint, PRUint32 aDelay);
+  nsresult StopAutoScrollTimer();
+  nsresult DoAutoScroll(const nsPoint& aPoint);
+  void UnregisterTracking ( ) ;
+
   nsXULTreeRowGroupInfo* mRowGroupInfo;
   PRInt32 mRowHeight;
   nscoord mOnePixel;
   PRInt32 mCurrentIndex; // Row-based
   PRInt32 mTwipIndex; // Not really accurate. Used to handle thumb dragging
   PRPackedBool mTreeIsSorted;
+  PRPackedBool mCurrentlyTrackingAutoScroll;    // used to track if we've done setup already
 
+    // our auto-scroll event listener registered with the content model. See the discussion
+    // in Init() for why this is a weak ref.
+  nsDragOverListener* mDragOverListener;
+  nsDragAutoScrollTimer* mAutoScrollTimer;      // actually a strong ref
+  
 }; // class nsXULTreeOuterGroupFrame
 
 
