@@ -89,6 +89,9 @@
       // VC++5.0 has an internal compiler error (sometimes) without this
     #undef HAVE_CPP_USING
   #endif
+
+	#define NSCAP_FEATURE_INLINE_STARTASSIGNMENT
+		// under VC++, we win by inlining StartAssignment
 #endif
 
 
@@ -412,7 +415,14 @@ class nsCOMPtr : private nsCOMPtr_base
       T**
       StartAssignment()
         {
+#ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
           return NSCAP_REINTERPRET_CAST(T**, begin_assignment());
+#else
+					if ( mRawPtr )
+					  NSCAP_RELEASE(mRawPtr);
+					mRawPtr = 0;
+					return NSCAP_REINTERPRET_CAST(T**, &mRawPtr);
+#endif
         }
   };
 
