@@ -105,7 +105,7 @@
     <command id="cmd_printPreview" value="&printPreviewCmd.label;"  oncommand="goDoCommand('cmd_printPreview')"/>
     <command id="cmd_print"                                         oncommand="goDoCommand('cmd_print')"/>
 
-    <command id="cmd_quit"         value="&exitCmd.label;"          oncommand="goQuitApplication()"/>
+    <command id="cmd_quit"         value="&exitCmd.label;"          oncommand="goDoCommand('cmd_quit')"/>
 
     <!-- view menu -->
    	<command id="cmd_viewCompToolbar"     oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');"         checked="true"/>
