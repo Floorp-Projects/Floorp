@@ -48,6 +48,8 @@ MKSHLIB = $(LD) -shared $(XMKSHLIBOPTS)
 #      $(CC) -c -MD $*.d $(CFLAGS) $<
 
 CPU_ARCH = $(shell uname -m)
+# don't filter in x86-64 architecture
+ifneq (x86_64,$(CPU_ARCH))
 ifeq (86,$(findstring 86,$(CPU_ARCH)))
 CPU_ARCH = x86
 OS_CFLAGS+= -DX86_LINUX
@@ -62,8 +64,9 @@ ifeq (2.91.66, $(firstword $(GCC_LIST)))
 CFLAGS+= -DGCC_OPT_BUG
 endif
 endif
-
 endif
+endif
+
 GFX_ARCH = x
 
 OS_LIBS = -lm -lc
@@ -81,3 +84,15 @@ endif
 
 # Use the editline library to provide line-editing support.
 JS_EDITLINE = 1
+
+ifeq ($(CPU_ARCH),x86_64)
+# Use VA_COPY() standard macro on x86-64
+# FIXME: better use it everywhere
+OS_CFLAGS += -DHAVE_VA_COPY
+endif
+
+ifeq ($(CPU_ARCH),x86_64)
+# We need PIC code for shared libraries
+# FIXME: better patch rules.mk & fdlibm/Makefile*
+OS_CFLAGS += -DPIC -fPIC
+endif
