@@ -76,15 +76,15 @@ PRInt32 SpaceManager::GetBandAvailableSpace(const nsRect* aBand,
                                             const nsSize& aMaxSize,
                                             nsBandData&   aAvailableSpace) const
 {
-  PRInt32 numRects = LengthOfBand(aBand, aIndex);
-  nscoord localY = aY - mY;
-  nscoord height = PR_MIN(aBand->YMost() - aY, aMaxSize.height);
-  nsRect* rect = aAvailableSpace.rects;
-  nscoord rightEdge = mX + aMaxSize.width;
+  PRInt32          numRects = LengthOfBand(aBand, aIndex);
+  nscoord          localY = aY - mY;
+  nscoord          height = PR_MIN(aBand->YMost() - aY, aMaxSize.height);
+  nsBandTrapezoid* trapezoid = aAvailableSpace.trapezoids;
+  nscoord          rightEdge = mX + aMaxSize.width;
 
   // Initialize the band data
   aAvailableSpace.count = 0;
-  rect->x = mX;
+  trapezoid->xTopLeft = mX;
 
   // Skip any rectangles that are to the left of the local coordinate space
   while (numRects > 0) {
@@ -99,32 +99,49 @@ PRInt32 SpaceManager::GetBandAvailableSpace(const nsRect* aBand,
 
   // Process all the remaining rectangles that are within the clip width
   while ((numRects > 0) && (aBand->x < rightEdge)) {
-    if (aBand->x > rect->x) {
+    if (aBand->x > trapezoid->xTopLeft) {
       // We found some available space
-      rect->width = aBand->x - rect->x;
-      rect->x -= mX;  // convert from world to local coordinates
-      rect->y = localY;
-      rect->height = height;
+      trapezoid->xTopRight = trapezoid->xBottomRight = aBand->x;
+
+      // Convert from world to local coordinates
+      trapezoid->xTopLeft -= mX;
+      trapezoid->xTopRight -= mX;
+      trapezoid->xBottomLeft = trapezoid->xTopLeft;
+      trapezoid->xBottomRight = trapezoid->xTopRight;
+
+      trapezoid->yTop = localY;
+      trapezoid->yBottom = localY + height;
+      trapezoid->state = nsBandTrapezoid::smAvailable;
+      trapezoid->frame = nsnull;
   
       // Move to the next output rect
-      rect++;
+      trapezoid++;
       aAvailableSpace.count++;
     }
 
-    rect->x = aBand->XMost();
+    trapezoid->xTopLeft = aBand->XMost();
 
     // Move to the next rect in the band
     numRects--;
     aBand++;
   }
 
-  // No more rects left in the band. If we haven't yet reached the right edge
+  // No more rects left in the band. If we haven't yet reached the right edge,
   // then all the remaining space is available
-  if (rect->x < rightEdge) {
-    rect->width = rightEdge - rect->x;
-    rect->x -= mX;  // convert from world to local coordinates
-    rect->y = localY;
-    rect->height = height;
+  if (trapezoid->xTopLeft < rightEdge) {
+    trapezoid->xTopRight = rightEdge;
+
+    // Convert from world to local coordinates
+    trapezoid->xTopLeft -= mX;
+    trapezoid->xTopRight -= mX;
+    trapezoid->xBottomLeft = trapezoid->xTopLeft;
+    trapezoid->xBottomRight = trapezoid->xTopRight;
+
+    trapezoid->yTop = localY;
+    trapezoid->yBottom = localY + height;
+    trapezoid->state = nsBandTrapezoid::smAvailable;
+    trapezoid->frame = nsnull;
+
     aAvailableSpace.count++;
   }
 
@@ -142,10 +159,15 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
   // band then all the space is available
   if ((0 == mRectArray.mCount) || (y >= mRectArray.YMost())) {
     aAvailableSpace.count = 1;
-    aAvailableSpace.rects[0].x = 0;
-    aAvailableSpace.rects[0].y = aYOffset;
-    aAvailableSpace.rects[0].width = aMaxSize.width;
-    aAvailableSpace.rects[0].height = aMaxSize.height;
+
+    nsBandTrapezoid& trapezoid = aAvailableSpace.trapezoids[0];
+
+    trapezoid.xTopLeft = trapezoid.xBottomLeft = 0;
+    trapezoid.yTop = aYOffset;
+    trapezoid.xTopRight = trapezoid.xBottomRight = aMaxSize.width;
+    trapezoid.yBottom = aYOffset + aMaxSize.height;
+    trapezoid.state = nsBandTrapezoid::smAvailable;
+    trapezoid.frame = nsnull;
   } else {
     // Find the first band that contains the y-offset or is below the y-offset
     nsRect* band = mRectArray.mRects;
@@ -153,11 +175,14 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
     for (PRInt32 i = 0; i < mRectArray.mCount; ) {
       if (band->y > y) {
         // The band is below the y-offset
-        aAvailableSpace.count = 1;
-        aAvailableSpace.rects[0].x = 0;
-        aAvailableSpace.rects[0].y = aYOffset;
-        aAvailableSpace.rects[0].width = aMaxSize.width;
-        aAvailableSpace.rects[0].height = PR_MIN(band->y - y, aMaxSize.height);
+        nsBandTrapezoid& trapezoid = aAvailableSpace.trapezoids[0];
+    
+        trapezoid.xTopLeft = trapezoid.xBottomLeft = 0;
+        trapezoid.yTop = aYOffset;
+        trapezoid.xTopRight = trapezoid.xBottomRight = aMaxSize.width;
+        trapezoid.yBottom = aYOffset + PR_MIN(band->y - y, aMaxSize.height);
+        trapezoid.state = nsBandTrapezoid::smAvailable;
+        trapezoid.frame = nsnull;
         break;
       } else if (y < band->YMost()) {
         // The band contains the y-offset

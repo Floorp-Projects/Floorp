@@ -450,25 +450,30 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   // XXX In order to do this efficiently we should move all this code to
   // nsBlockFrame since it already has band data, and it's probably the only
   // one who calls this routine anyway
-  nsBandData  bandData;
-  nsRect      rects[7];
-  nsRect*     availRect = rects;
-  nsSize      availSize = aMaxSize;
+  nsBandData        bandData;
+  nsBandTrapezoid   trapezoids[7];
+  nsBandTrapezoid*  availSpace = trapezoids;
+  nsSize            availSize = aMaxSize;
 
-  bandData.rects = rects;
+  bandData.trapezoids = trapezoids;
   bandData.size = 7;
   aSpaceManager->GetBandData(0, aMaxSize, bandData);
 
-  // If there's more than one rect than figure out which one determines the
+  // If there's more than one trapezoid then figure out which one determines the
   // available reflow area
   if (bandData.count == 2) {
+    nsRect  r0, r1;
+
+    trapezoids[0].GetRect(r0);
+    trapezoids[1].GetRect(r1);
+
     // Either a left or right floater. Use whichever space is larger
-    if (rects[1].width > rects[0].width) {
-      availRect = &rects[1];
+    if (r1.width > r0.width) {
+      availSpace = &trapezoids[1];
     }
   } else if (bandData.count == 3) {
     // Assume there are floaters on the left and right, and use the middle rect
-    availRect = &rects[1];
+    availSpace = &trapezoids[1];
   }
 
   // Does the child frame want to do continuation-based runaround?
@@ -477,13 +482,17 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   aKidFrame->IsSplittable(isSplittable);
   if (isSplittable == frSplittableNonRectangular) {
     // Reduce the max height to the band height.
-    availSize.height = availRect->height;
+    availSize.height = availSpace->yBottom - availSpace->yTop;
   }
 
+  // Get the bounding rect of the available trapezoid
+  nsRect  rect;
+
+  availSpace->GetRect(rect);
   if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
-    if ((availRect->x > 0) || (availRect->XMost() < aMaxSize.width)) {
+    if ((rect.x > 0) || (rect.XMost() < aMaxSize.width)) {
       // There are left/right floaters.
-      availSize.width = availRect->width;
+      availSize.width = rect.width;
     }
   
     // Reduce the available width by the kid's left/right margin
@@ -493,7 +502,7 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   // Does the child frame support interface nsIRunaround?
   if (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround)) {
     // Yes, the child frame wants to interact directly with the space manager.
-    nscoord tx = availRect->x + aKidMol->margin.left;
+    nscoord tx = rect.x + aKidMol->margin.left;
 
     // Translate the local coordinate space to the current left edge plus any
     // left margin the child wants
@@ -501,7 +510,7 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
 
     reflowRunaround->ResizeReflow(aPresContext, aSpaceManager, availSize,
                                   aDesiredRect, aMaxElementSize, status);
-    aDesiredRect.x += availRect->x;
+    aDesiredRect.x += rect.x;
 
     // Translate back
     aSpaceManager->Translate(-tx, 0);
@@ -514,7 +523,7 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
                             aMaxElementSize, status);
 
     // Return the desired rect
-    aDesiredRect.x = availRect->x;
+    aDesiredRect.x = rect.x;
     aDesiredRect.y = 0;
     aDesiredRect.width = desiredSize.width;
     aDesiredRect.height = desiredSize.height;

@@ -50,9 +50,9 @@ static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 
 struct BlockBandData : public nsBandData {
-  nsRect  data[5];
+  nsBandTrapezoid data[5];
 
-  BlockBandData() {size = 5; rects = data;}
+  BlockBandData() {size = 5; trapezoids = data;}
 };
 
 // XXX Bugs
@@ -352,13 +352,13 @@ void nsBlockFrame::PlaceBelowCurrentLineFloaters(nsIPresContext* aCX,
     NS_RELEASE(styleContext);
   
     floater->GetRect(region);
-    region.y = mCurrentState->currentBand->rects[0].y;
+    region.y = mCurrentState->currentBand->trapezoids[0].yTop;
 
     if (NS_STYLE_FLOAT_LEFT == mol->floats) {
-      region.x = mCurrentState->currentBand->rects[0].x;
+      region.x = mCurrentState->currentBand->trapezoids[0].xTopLeft;
     } else {
       NS_ASSERTION(NS_STYLE_FLOAT_RIGHT == mol->floats, "bad float type");
-      region.x = mCurrentState->currentBand->rects[0].XMost() - region.width;
+      region.x = mCurrentState->currentBand->trapezoids[0].xTopRight - region.width;
     }
 
     // XXX Don't forget the floater's margins...
@@ -655,9 +655,9 @@ void nsBlockFrame::GetAvailSize(nsSize& aResult,
     aResult.width = NS_UNCONSTRAINEDSIZE;
   } else if (aIsInline) {
     if (NS_STYLE_DIRECTION_LTR == aState.mol->direction) {
-      aResult.width = aState.currentBand->rects[0].XMost() - aState.x;
+      aResult.width = aState.currentBand->trapezoids[0].xTopRight - aState.x;
     } else {
-      aResult.width = aState.x - aState.currentBand->rects[0].x;
+      aResult.width = aState.x - aState.currentBand->trapezoids[0].xTopLeft;
     }
   } else {
     // It's a block. Don't adjust for the left/right margin here. That happens
@@ -750,17 +750,21 @@ void nsBlockFrame::GetAvailableSpaceBand(nsBlockReflowState& aState, nscoord aY)
     // If there are three rects then let's assume that there are floaters on the
     // left and right and that only the middle rect is available
     if (aState.currentBand->count == 3) {
-      aState.currentBand->rects[0] = aState.currentBand->rects[1];
+      aState.currentBand->trapezoids[0] = aState.currentBand->trapezoids[1];
     } else {
+      nsRect  r0, r1;
+
       // There are two rects. That means either a left or right floater. Just use
       // whichever space is larger.
-      if (aState.currentBand->rects[1].width > aState.currentBand->rects[0].width) {
-        aState.currentBand->rects[0] = aState.currentBand->rects[1];
+      aState.currentBand->trapezoids[0].GetRect(r0);
+      aState.currentBand->trapezoids[1].GetRect(r1);
+      if (r1.width > r0.width) {
+        aState.currentBand->trapezoids[0] = aState.currentBand->trapezoids[1];
       }
     }
   }
   aState.spaceManager->Translate(-aState.borderPadding.left, 0);
-  aState.x = aState.currentBand->rects[0].x;
+  aState.x = aState.currentBand->trapezoids[0].xTopLeft;
 }
 
 void nsBlockFrame::ClearFloaters(nsBlockReflowState& aState, PRUint32 aClear)
@@ -777,24 +781,31 @@ getBand:
   aState.spaceManager->GetBandData(y, aState.availSize, *aState.currentBand);
 
   if (aState.currentBand->count == 1) {
-    if (aState.currentBand->rects[0].width != aState.availSize.width) {
+    nsRect  rect;
+
+    aState.currentBand->trapezoids[0].GetRect(rect);
+    if (rect.width != aState.availSize.width) {
       // Some of the space is taken up by floaters
-      if (aState.currentBand->rects[0].x > 0) {
+      if (rect.x > 0) {
         isLeftFloater = PR_TRUE;
       }
 
-      if (aState.currentBand->rects[0].XMost() < aState.availSize.width) {
+      if (rect.XMost() < aState.availSize.width) {
         isRightFloater = PR_TRUE;
       }
     }
   } else if (aState.currentBand->count == 2) {
-    if (aState.currentBand->rects[0].width > aState.currentBand->rects[1].width) {
+    nsRect  r0, r1;
+
+    aState.currentBand->trapezoids[0].GetRect(r0);
+    aState.currentBand->trapezoids[1].GetRect(r1);
+    if (r0.width > r1.width) {
       isRightFloater = PR_TRUE;
     } else {
       isLeftFloater = PR_TRUE;
 
       // There may also be a right floater
-      if (aState.currentBand->rects[1].XMost() < aState.availSize.width) {
+      if (r1.XMost() < aState.availSize.width) {
         isRightFloater = PR_TRUE;
       }
     }
@@ -806,13 +817,13 @@ getBand:
 
   if (isLeftFloater) {
     if ((aClear == NS_STYLE_CLEAR_LEFT) || (aClear == NS_STYLE_CLEAR_BOTH)) {
-      aState.y += aState.currentBand->rects[0].height;
+      aState.y += aState.currentBand->trapezoids[0].GetHeight();
       goto getBand;
     }
   }
   if (isRightFloater) {
     if ((aClear == NS_STYLE_CLEAR_RIGHT) || (aClear == NS_STYLE_CLEAR_BOTH)) {
-      aState.y += aState.currentBand->rects[0].height;
+      aState.y += aState.currentBand->trapezoids[0].GetHeight();
       goto getBand;
     }
   }
@@ -1954,13 +1965,13 @@ void nsBlockFrame::PlaceFloater(nsIPresContext* aCX,
     nsRect  region;
 
     aFloater->GetRect(region);
-    region.y = mCurrentState->currentBand->rects[0].y;
+    region.y = mCurrentState->currentBand->trapezoids[0].yTop;
 
     if (NS_STYLE_FLOAT_LEFT == mol->floats) {
-      region.x = mCurrentState->currentBand->rects[0].x;
+      region.x = mCurrentState->currentBand->trapezoids[0].xTopLeft;
     } else {
       NS_ASSERTION(NS_STYLE_FLOAT_RIGHT == mol->floats, "bad float type");
-      region.x = mCurrentState->currentBand->rects[0].XMost() - region.width;
+      region.x = mCurrentState->currentBand->trapezoids[0].xTopRight - region.width;
     }
 
     // XXX Don't forget the floater's margins...
