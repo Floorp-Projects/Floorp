@@ -33,7 +33,7 @@ class nsIRDFDataBase;
 nsresult NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result);
 
 // in nsMemoryDataSource.cpp
-nsresult NS_NewRDFMemoryDataSource(nsIRDFDataSource** result);
+nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
 
 // in nsSimpleDataBase.cpp
 nsresult NS_NewRDFSimpleDataBase(nsIRDFDataBase** result);

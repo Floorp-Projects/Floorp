@@ -30,7 +30,7 @@ class nsIRDFDataSource;
 class nsIRDFDataBase;
 
 // in nsMemoryDataSource.cpp
-nsresult NS_NewRDFMemoryDataSource(nsIRDFDataSource** result);
+nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
 
 // in nsSimpleDataBase.cpp
 nsresult NS_NewRDFSimpleDataBase(nsIRDFDataBase** result);
