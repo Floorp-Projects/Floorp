@@ -150,16 +150,6 @@ protected:
   /** creates a bogus text node if the document has no editable content */
   nsresult CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection);
 
-  /** set aCount to the number of characters in the document. */
-  nsresult GetLengthOfDocumentInCharacters(PRInt32 &aCount);
-
-  /** returns the absolute position of the end points of aSelection
-    * in the document as a text stream.
-    */
-  nsresult GetTextSelectionOffsets(nsIDOMSelection *aSelection,
-                                   PRInt32 &aStartOffset, 
-                                   PRInt32 &aEndOffset);
-  
   // data
   nsTextEditor *mEditor;  // note that we do not refcount the editor
   nsString      mPasswordText;  // a buffer we use to store the real value of password editors
