@@ -12,7 +12,7 @@
         <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.html#browsing_the_web"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail"     nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.xhtml#using_mozilla_mail_and_newsgroups" /> </rdf:li>
         <rdf:li> <rdf:Description ID="comp"	nc:name="Creating Web Pages"  nc:link="chrome://help/locale/composer_help.html#comp_top"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.html#cust_main"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.xhtml#customizing_mozilla"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="chrome://help/locale/privacy_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.xhtml#privacy_on_the_internet"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-help-certs" nc:name="Using Certificates" nc:link="chrome://help/locale/using_certs_help.html"/> </rdf:li>
@@ -649,13 +649,13 @@
 <rdf:Description about="#cust">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-doc" nc:name="Sidebar"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed" nc:name="Tabbed Browsing"  nc:link="chrome://help/locale/customize_help.html#cust_tabbed"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="chrome://help/locale/customize_help.html#cust_font"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-toolbar" nc:name="Toolbars"  nc:link="chrome://help/locale/customize_help.html#cust_toolbar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk" nc:name="Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Mozilla Starts Up"  nc:link="chrome://help/locale/customize_help.html#cust_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-settings" nc:name="Navigator Settings"  nc:link="chrome://help/locale/cs_nav_prefs_appearance.html#nav_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-doc" nc:name="Sidebar"  nc:link="chrome://help/locale/customize_help.xhtml#sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed" nc:name="Tabbed Browsing"  nc:link="chrome://help/locale/customize_help.xhtml#tabbed_browsing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="chrome://help/locale/customize_help.xhtml#changing_font_colors_and_themes"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-toolbar" nc:name="Toolbars"  nc:link="chrome://help/locale/customize_help.xhtml#toolbars"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk" nc:name="Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Mozilla Starts Up"  nc:link="chrome://help/locale/customize_help.xhtml#specifying_how_mozilla_starts_up"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-settings" nc:name="Navigator Settings"  nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#navigator_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -663,13 +663,13 @@
  <rdf:Description about="#cust-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is Sidebar?"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_define"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using Sidebar"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_using"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_adding"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_indiv"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_reorg"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_removing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-openclose" nc:name="Opening, Closing, and Resizing"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_openclose"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is Sidebar?"  nc:link="chrome://help/locale/customize_help.xhtml#what_is_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using Sidebar"  nc:link="chrome://help/locale/customize_help.xhtml#using_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#adding_sidebar_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#cust__individual_sidebar_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#reorganizing_sidebar_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#removing_sidebar_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-openclose" nc:name="Opening, Closing, and Resizing"  nc:link="chrome://help/locale/customize_help.xhtml#opening_closing_and_resizing_sidebar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -677,11 +677,11 @@
 <rdf:Description about="#cust-tabbed">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-tabbed-whatis" nc:name="What is Tabbed Browsing?"  nc:link="chrome://help/locale/customize_help.html#tabbed_whatis"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedsetting" nc:name="Setting up Tabbed Browsing"  nc:link="chrome://help/locale/customize_help.html#tabbed_setting"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedopening" nc:name="Opening Tabs"  nc:link="chrome://help/locale/customize_help.html#tabbed_opening"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedbookmarking" nc:name="Bookmarking Tabs"  nc:link="chrome://help/locale/customize_help.html#tabbed_bookmarking"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedclosing" nc:name="Closing Tabs"  nc:link="chrome://help/locale/customize_help.html#tabbed_closing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-whatis" nc:name="What is Tabbed Browsing?"  nc:link="chrome://help/locale/customize_help.xhtml#what_is_tabbed_browsing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedsetting" nc:name="Setting up Tabbed Browsing"  nc:link="chrome://help/locale/customize_help.xhtml#setting_up_tabbed_browsing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedopening" nc:name="Opening Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#opening_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedbookmarking" nc:name="Bookmarking Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#bookmarking_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedclosing" nc:name="Closing Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#closing_tabs"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -689,9 +689,9 @@
 <rdf:Description about="#cust-font">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-fonts" nc:name="Changing the Default Font"  nc:link="chrome://help/locale/customize_help.html#cust_fonts"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-colors" nc:name="Changing the Default Colors"  nc:link="chrome://help/locale/customize_help.html#cust_colors"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-themes" nc:name="Changing the Theme"  nc:link="chrome://help/locale/customize_help.html#cust_themes"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-fonts" nc:name="Changing the Default Font"  nc:link="chrome://help/locale/customize_help.xhtml#changing_the_default_fonts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-colors" nc:name="Changing the Default Colors"  nc:link="chrome://help/locale/customize_help.xhtml#changing_the_default_colors"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-themes" nc:name="Changing the Theme"  nc:link="chrome://help/locale/customize_help.xhtml#changing_the_theme"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -699,11 +699,11 @@
 <rdf:Description about="#cust-toolbar">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-main" nc:name="Navigation Toolbar"  nc:link="chrome://help/locale/customize_help.html#cust_navbar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-personal" nc:name="Personal Toolbar"  nc:link="chrome://help/locale/customize_help.html#cust_personal"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-status" nc:name="Status Bar"  nc:link="chrome://help/locale/customize_help.html#cust_statusbar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-taskbar" nc:name="Component Bar"  nc:link="chrome://help/locale/customize_help.html#cust_taskbar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-hide" nc:name="Hiding a Toolbar"  nc:link="chrome://help/locale/customize_help.html#cust_hide"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-main" nc:name="Navigation Toolbar"  nc:link="chrome://help/locale/customize_help.xhtml#navigation_toolbar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-personal" nc:name="Personal Toolbar"  nc:link="chrome://help/locale/customize_help.xhtml#personal_toolbar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-status" nc:name="Status Bar"  nc:link="chrome://help/locale/customize_help.xhtml#status_bar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-taskbar" nc:name="Component Bar"  nc:link="chrome://help/locale/customize_help.xhtml#component_bar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-hide" nc:name="Hiding a Toolbar"  nc:link="chrome://help/locale/customize_help.xhtml#hiding_a_toolbar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -711,13 +711,13 @@
 <rdf:Description about="#cust-bkmk">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-bkmk-intro" nc:name="What Are Bookmarks?"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_intro"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-use" nc:name="Using Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_use"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-create" nc:name="Creating New Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_create"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-organize" nc:name="Organizing Your Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_organize"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-change" nc:name="Changing Individual Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_change"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-search" nc:name="Searching Your Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_search"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-multiple" nc:name="Exporting or Importing a Bookmark List"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_multiple"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-intro" nc:name="What Are Bookmarks?"  nc:link="chrome://help/locale/customize_help.xhtml#what_are_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-use" nc:name="Using Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#using_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-create" nc:name="Creating New Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#creating_new_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-organize" nc:name="Organizing Your Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#organizing_your_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-change" nc:name="Changing Individual Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#changing_individual_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-search" nc:name="Searching Your Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#searching_your_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-multiple" nc:name="Exporting or Importing a Bookmark List"  nc:link="chrome://help/locale/customize_help.xhtml#exporting_or_importing_a_bookmark_list"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -725,9 +725,9 @@
 <rdf:Description about="#cust-page">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-startpage" nc:name="Specifying a Starting Page"  nc:link="chrome://help/locale/customize_help.html#cust_startpage"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-home" nc:name="Changing Your Home Page"  nc:link="chrome://help/locale/customize_help.html#cust_home"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-start" nc:name="Specifying Which Components Open at Launch"  nc:link="chrome://help/locale/customize_help.html#cust_start"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-startpage" nc:name="Specifying a Starting Page"  nc:link="chrome://help/locale/customize_help.xhtml#specifying_a_starting_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-home" nc:name="Changing Your Home Page"  nc:link="chrome://help/locale/customize_help.xhtml#changing_your_home_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-start" nc:name="Specifying Which Components Open at Launch"  nc:link="chrome://help/locale/customize_help.xhtml#specifying_which_components_open_at_launch"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -735,9 +735,9 @@
 <rdf:Description about="#nav-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="appearance_pref" nc:name="Appearance" nc:link="chrome://help/locale/cs_nav_prefs_appearance.html#appearance_pref"/> </rdf:li>
+        <rdf:li><rdf:Description ID="appearance_pref" nc:name="Appearance" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#appearance_preferences"/> </rdf:li>
         <rdf:li><rdf:Description ID="navigator_pref_navigator" nc:name="Navigator" nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#nav_settings"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_advanced" nc:name="Advanced" nc:link="chrome://help/locale/cs_nav_prefs_advanced.html"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_advanced" nc:name="Advanced" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml"/> </rdf:li>
 
       </rdf:Seq>
     </nc:subheadings>
@@ -746,10 +746,10 @@
 <rdf:Description about="#appearance_pref">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="appearance_pref_fonts" nc:name="Fonts" nc:link="chrome://help/locale/cs_nav_prefs_appearance.html#fonts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="appearance_pref_colors" nc:name="Colors" nc:link="chrome://help/locale/cs_nav_prefs_appearance.html#colors"/> </rdf:li>
-        <rdf:li><rdf:Description ID="appearance_pref_themes" nc:name="Themes" nc:link="chrome://help/locale/cs_nav_prefs_appearance.html#themes"/> </rdf:li>
-        <rdf:li><rdf:Description ID="appearance_pref_content_packs" nc:name="Languages/Content" nc:link="chrome://help/locale/cs_nav_prefs_appearance.html#content"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="appearance_pref_fonts" nc:name="Fonts" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#fonts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="appearance_pref_colors" nc:name="Colors" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#colors"/> </rdf:li>
+        <rdf:li><rdf:Description ID="appearance_pref_themes" nc:name="Themes" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#themes"/> </rdf:li>
+        <rdf:li><rdf:Description ID="appearance_pref_content_packs" nc:name="Languages/Content" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#languages_content"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -779,14 +779,14 @@
 <rdf:Description about="#advanced_pref_advanced">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="advanced_pref_scripts" nc:name="Scripts &amp; Plug-ins" nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Scripts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_keyboard_nav" nc:name="Keyboard Navigation" nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#keyboard_navigation"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_cache" nc:name="Cache" nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Cache"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_proxies" nc:name="Proxies" nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Proxies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_http_networking" nc:name="HTTP Networking" nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#HTTP_Networking"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_installation" nc:name="Software Installation" nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Software_Installation"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_mouse_wheel" nc:name="Mouse Wheel" nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Mouse_Wheel"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_system" nc:name="System" nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#system"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_scripts" nc:name="Scripts &amp; Plug-ins" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#scripts_and_plug-ins"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_keyboard_nav" nc:name="Keyboard Navigation" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#keyboard_navigation"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_cache" nc:name="Cache" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#cache"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_proxies" nc:name="Proxies" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#proxies"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_http_networking" nc:name="HTTP Networking" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#http_networking"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_installation" nc:name="Software Installation" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#software_installation"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_mouse_wheel" nc:name="Mouse Wheel" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#mouse_wheel"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_system" nc:name="System" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#system"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -861,7 +861,7 @@
         <rdf:li><rdf:Description ID="using-priv-help-password-auto" nc:name="Entering Names and Passwords Automatically" nc:link="chrome://help/locale/using_priv_help.html#passwords_auto"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-priv-help-password-onoff" nc:name="Turning On and Off" nc:link="chrome://help/locale/using_priv_help.html#passwords_onoff"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-priv-help-password-view" nc:name="Managing Stored Passwords" nc:link="chrome://help/locale/using_priv_help.html#passwords_view"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-settings" nc:name="Password Settings" nc:link="chrome://help/locale/passwords_help.html#password_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-settings" nc:name="Password Settings" nc:link="chrome://help/locale/passwords_help.xhtml#password_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -869,9 +869,9 @@
 <rdf:Description about="#using-priv-help-password-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="passwords_prefs" nc:name="Password Preferences" nc:link="chrome://help/locale/passwords_help.html#passwords_first"/> </rdf:li>
-        <rdf:li><rdf:Description ID="password_mgr" nc:name="Password Manager" nc:link="chrome://help/locale/passwords_help.html#password_mgr"/> </rdf:li>
-        <rdf:li><rdf:Description ID="passwords_master" nc:name="Master Password Preferences" nc:link="chrome://help/locale/passwords_help.html#Master_Password_Timeout"/> </rdf:li>
+        <rdf:li><rdf:Description ID="passwords_prefs" nc:name="Password Preferences" nc:link="chrome://help/locale/passwords_help.xhtml#passwords"/> </rdf:li>
+        <rdf:li><rdf:Description ID="password_mgr" nc:name="Password Manager" nc:link="chrome://help/locale/passwords_help.xhtml#password_manager"/> </rdf:li>
+        <rdf:li><rdf:Description ID="passwords_master" nc:name="Master Password Preferences" nc:link="chrome://help/locale/passwords_help.xhtml#master_passwords"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -879,9 +879,9 @@
 <rdf:Description about="#passwords_master">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="change_pwd_1" nc:name="Change Master Password" nc:link="chrome://help/locale/passwords_help.html#change_mp_prefs"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-timeout" nc:name="Master Password Timeout" nc:link="chrome://help/locale/passwords_help.html#Master_Password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-reset" nc:name="Reset Master Password" nc:link="chrome://help/locale/passwords_help.html#reset_mp_prefs"/> </rdf:li>
+        <rdf:li><rdf:Description ID="change_pwd_1" nc:name="Change Master Password" nc:link="chrome://help/locale/passwords_help.xhtml#change_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-timeout" nc:name="Master Password Timeout" nc:link="chrome://help/locale/passwords_help.xhtml#master_password_timeout"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-reset" nc:name="Reset Master Password" nc:link="chrome://help/locale/passwords_help.xhtml#reset_master_password"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -889,8 +889,8 @@
 <rdf:Description about="#using-priv-help-password-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="change_pwd" nc:name="Change Master Password" nc:link="chrome://help/locale/passwords_help.html#Change_Master_Password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="reset_pwd" nc:name="Reset Master Password" nc:link="chrome://help/locale/passwords_help.html#Reset_Master_Password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="change_pwd" nc:name="Change Master Password" nc:link="chrome://help/locale/passwords_help.xhtml#change_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="reset_pwd" nc:name="Reset Master Password" nc:link="chrome://help/locale/passwords_help.xhtml#reset_master_password"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

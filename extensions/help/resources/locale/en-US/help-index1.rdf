@@ -121,32 +121,32 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:changing_bookmarks"
          nc:name="changing bookmarks"
-	 nc:link="customize_help.html#bookmarks:changing_bookmarksIDX"/>
+	 nc:link="customize_help.xhtml#changing_individual_bookmarks"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="bookmarks:creating_bookmarks"
          nc:name="creating bookmarks"
-	 nc:link="customize_help.html#bookmarks:creating_bookmarksIDX"/>
+	 nc:link="customize_help.xhtml#bookmarks:creating_new_bookmarks"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="bookmarks:exporting_bookmarks"
          nc:name="exporting bookmarks"
-	 nc:link="customize_help.html#bookmarks:exporting_bookmarksIDX"/>
+	 nc:link="customize_help.xhtml#exporting_or_importing_a_bookmark"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="bookmarks:organizing_bookmarks"
          nc:name="organizing bookmarks"
-	 nc:link="customize_help.html#bookmarks:organizing_bookmarksIDX"/>
+	 nc:link="customize_help.xhtml#organizing_your_bookmarks"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="bookmarks:searching_bookmarks"
          nc:name="searching bookmarks"
-	 nc:link="customize_help.html#bookmarks:searching_bookmarksIDX"/>
+	 nc:link="customize_help.xhtml#searching_your_bookmarks"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="bookmarks:using_bookmarks"
          nc:name="using bookmarks"
-	 nc:link="customize_help.html#bookmarks:using_bookmarksIDX"/>
+	 nc:link="customize_help.xhtml#using_bookmarks"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="bookmarks:visiting"
@@ -156,7 +156,7 @@
      <rdf:li>
        <rdf:Description ID="bookmarks:what_are_bookmarks"
          nc:name="what are bookmarks"
-	 nc:link="customize_help.html#bookmarks:what_are_bookmarksIDX"/>
+	 nc:link="customize_help.xhtml#what_are_bookmarks"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -166,7 +166,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="browser:changing_your_home_page"
          nc:name="changing your home page"
-	 nc:link="customize_help.html#browser:changing_your_home_pageIDX"/>
+	 nc:link="customize_help.xhtml#changing_your_home_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="browser:default"
@@ -176,7 +176,7 @@
      <rdf:li>
        <rdf:Description ID="browser:start_up_components"
          nc:name="start up components"
-	 nc:link="customize_help.html#browser:start_up_componentsIDX"/>
+	 nc:link="customize_help.xhtml#specifying_which_components_open_at_launch"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -219,7 +219,7 @@
      <rdf:li>
        <rdf:Description ID="Customizing Fonts"
          nc:name="Customizing Fonts"
-	 nc:link="customize_help.html#cust_font"/>
+	 nc:link="customize_help.xhtml#changing_fonts_colors_and_themes"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -234,7 +234,7 @@
      <rdf:li>
        <rdf:Description ID="cache:preferences"
          nc:name="cache preferences"
-	 nc:link="cs_nav_prefs_advanced.html#cache:preferencesIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#cache"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -244,7 +244,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="colors:customizing_web_page"
          nc:name="customizing web page"
-	 nc:link="customize_help.html#colors:customizing_web_pageIDX"/>
+	 nc:link="customize_help.xhtml#changing_the_default_colors"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -618,12 +618,12 @@
      <rdf:li>
        <rdf:Description ID="Find_Links_As_You_Type"
          nc:name="Find Links As You Type"
-	 nc:link="cs_nav_prefs_advanced.html#Find_Links_As_You_TypeIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#keyboard_navigation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Find_Text_As_You_Type"
          nc:name="Find Text As You Type"
-	 nc:link="cs_nav_prefs_advanced.html#Find_Text_As_You_TypeIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#keyboard_navigation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="FIPS_mode"
@@ -731,7 +731,7 @@
      </rdf:li><rdf:li>
        <rdf:Description ID="HTTP_Networking"
          nc:name="HTTP Networking"
-	 nc:link="cs_nav_prefs_advanced.html#HTTP_Networking:preferencesIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#http_networking"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -890,7 +890,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="JavaScript:preferences"
          nc:name="JavaScript Preferences"
-	 nc:link="cs_nav_prefs_advanced.html#JavaScript:preferencesIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#scripts_and_plug-ins"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -900,7 +900,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_preferences"
          nc:name="keyboard preferences"
-	 nc:link="cs_nav_prefs_advanced.html#keyboard_navigation"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#keyboard_navigation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="keyboard_shortcuts"
@@ -985,7 +985,7 @@
      <rdf:li>
        <rdf:Description ID="languages:Appearance_preferences"
          nc:name="Appearance preferences"
-	 nc:link="cs_nav_prefs_appearance.html#languages:Appearance_preferencesIDX"/>
+	 nc:link="cs_nav_prefs_appearance.xhtml#languages_content"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1025,7 +1025,7 @@
      <rdf:li>
        <rdf:Description ID="master_password"
          nc:name="Master Password"
-	 nc:link="passwords_help.html#master_password:aboutIDX"/>
+	 nc:link="passwords_help.xhtml#change_master_password"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="mouse_wheel"
@@ -1250,7 +1250,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="master_password:changing"
          nc:name="Changing master password"
-	 nc:link="passwords_help.html#master_password:changingIDX"/>
+	 nc:link="passwords_help.xhtml#change_master_password"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="master_password:forgetting"
@@ -1260,12 +1260,12 @@
      <rdf:li>
        <rdf:Description ID="master_password:preferences"
          nc:name="Master Password Preferences"
-	 nc:link="passwords_help.html#master_password:preferencesIDX"/>
+	 nc:link="passwords_help.xhtml#master_passwords"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="master_password:timeout"
          nc:name="Master Password Timeout"
-	 nc:link="passwords_help.html#master_password:timeout_forIDX"/>
+	 nc:link="passwords_help.xhtml#master_password_timeout"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1295,7 +1295,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Navigator:changing_your_home_page"
          nc:name="changing your home page"
-	 nc:link="customize_help.html#Navigator:changing_your_home_pageIDX"/>
+	 nc:link="customize_help.xhtml#changing_your_home_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:controlling_popups"
@@ -1350,7 +1350,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator:start_page"
          nc:name="start page"
-	 nc:link="customize_help.html#Navigator:start_pageIDX"/>
+	 nc:link="customize_help.xhtml#specifying_a_starting_page"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1424,7 +1424,7 @@
      <rdf:li>
        <rdf:Description ID="passwords"
          nc:name="Passwords"
-	 nc:link="passwords_help.html#passwords:preferencesIDX"/>
+	 nc:link="passwords_help.xhtml#passwords"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="popup_windows"
@@ -1458,7 +1458,7 @@
      <rdf:li>
        <rdf:Description ID="proxies"
          nc:name="proxies"
-	 nc:link="cs_nav_prefs_advanced.html#proxies:preferencesIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#proxies"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="publishing_pages"
@@ -1484,7 +1484,7 @@
      <rdf:li>
        <rdf:Description ID="password_manager:preferences"
          nc:name="Password Preferences"
-	 nc:link="passwords_help.html#Password_Manager:preferencesIDX"/>
+	 nc:link="passwords_help.xhtml#password_manager"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1494,7 +1494,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="passwords:preferences"
          nc:name="Password Preferences"
-	 nc:link="passwords_help.html#passwords:preferencesIDX"/>
+	 nc:link="passwords_help.xhtml#passwords"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="passwords:remembering_automatically"
@@ -1504,7 +1504,7 @@
      <rdf:li>
        <rdf:Description ID="passwords:timeout_for_master_password"
          nc:name="Timeout for Master Password"
-	 nc:link="passwords_help.html#passwords:timeout_for_master_passwordIDX"/>
+	 nc:link="passwords_help.xhtml#master_passwords"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1534,17 +1534,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="preferences:advanced"
          nc:name="advanced preferences"
-	 nc:link="cs_nav_prefs_advanced.html#preferences:advancedIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#advanced_preferences"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:appearance"
          nc:name="appearance preferences"
-	 nc:link="cs_nav_prefs_appearance.html#preferences:appearanceIDX"/>
+	 nc:link="cs_nav_prefs_appearance.xhtml#appearance"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:cache"
          nc:name="cache preferences"
-	 nc:link="cs_nav_prefs_advanced.html#preferences:cacheIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#cache"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:certificates"
@@ -1554,12 +1554,12 @@
      <rdf:li>
        <rdf:Description ID="preferences:colors"
          nc:name="colors preferences"
-	 nc:link="cs_nav_prefs_appearance.html#preferences:colorsIDX"/>
+	 nc:link="cs_nav_prefs_appearance.xhtml#preferences:colors"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:content_packs"
          nc:name="content packs preferences"
-	 nc:link="cs_nav_prefs_appearance.html#preferences:content_packsIDX"/>
+	 nc:link="cs_nav_prefs_appearance.xhtml#languages_content"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:cookies"
@@ -1579,7 +1579,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:fonts"
          nc:name="fonts preferences"
-	 nc:link="cs_nav_prefs_appearance.html#preferences:fontsIDX"/>
+	 nc:link="cs_nav_prefs_appearance.xhtml#fonts"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:forms"
@@ -1609,12 +1609,12 @@
      <rdf:li>
        <rdf:Description ID="preferences:JavaScript"
          nc:name="JavaScript preferences"
-	 nc:link="cs_nav_prefs_advanced.html#preferences:JavaScriptIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#scripts_and_plug-ins"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:keyboard"
          nc:name="keyboard preferences"
-	 nc:link="cs_nav_prefs_advanced.html#preferences:keyboardIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#keyboard_navigation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:languages"
@@ -1629,7 +1629,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:passwords"
          nc:name="passwords preferences"
-	 nc:link="passwords_help.html#preferences:passwordsIDX"/>
+	 nc:link="passwords_help.xhtml#passwords"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:popup_windows"
@@ -1644,7 +1644,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:proxies"
          nc:name="proxies preferences"
-	 nc:link="cs_nav_prefs_advanced.html#preferences:proxiesIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#proxies"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:security"
@@ -1669,7 +1669,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:themes"
          nc:name="themes preferences"
-	 nc:link="cs_nav_prefs_appearance.html#preferences:themesIDX"/>
+	 nc:link="cs_nav_prefs_appearance.xhtml#themes"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:validation"
@@ -1759,7 +1759,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="proxies:preferences"
          nc:name="proxy preferences"
-	 nc:link="cs_nav_prefs_advanced.html#proxies:preferencesIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#proxies"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="proxies:setting"
@@ -1799,7 +1799,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="resetting_master_password"
          nc:name="resetting master password"
-	 nc:link="passwords_help.html#resetting_master_passwordIDX"/>
+	 nc:link="passwords_help.xhtml#reset_master_password"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="return_receipts"
@@ -1865,7 +1865,7 @@
      <rdf:li>
        <rdf:Description ID="Sidebar"
          nc:name="Sidebar"
-	 nc:link="customize_help.html#cust_sidebar_define"/>
+	 nc:link="customize_help.xhtml#what_is_sidebar"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="signing_email_messages"
@@ -1889,7 +1889,7 @@
      <rdf:li>
        <rdf:Description ID="software_installation"
          nc:name="software installation"
-	 nc:link="cs_nav_prefs_advanced.html#software_installation:preferencesIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#software_installation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="SSL"
@@ -1899,7 +1899,7 @@
      <rdf:li>
        <rdf:Description ID="System"
          nc:name="System Preferences"
-	 nc:link="cs_nav_prefs_advanced.html#System:preferencesIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#system"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2015,27 +2015,27 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar:adding_tabs"
          nc:name="adding sidebar tabs"
-	 nc:link="customize_help.html#Sidebar:adding_tabsIDX"/>
+	 nc:link="customize_help.xhtml#adding_sidebar_tabs"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Sidebar:customizing_tabs"
          nc:name="customizing sidebar tabs"
-	 nc:link="customize_help.html#Sidebar:customizing_tabsIDX"/>
+	 nc:link="customize_help.xhtml#customizing_individual_sidebar_tabs"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Sidebar:description"
          nc:name="what is Sidebar?"
-	 nc:link="customize_help.html#Sidebar:descriptionIDX"/>
+	 nc:link="customize_help.xhtml#what_is_sidebar"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Sidebar:removing_tabs"
          nc:name="removing sidebar tabs"
-	 nc:link="customize_help.html#Sidebar:removing_tabsIDX"/>
+	 nc:link="customize_help.xhtml#removing_sidebar_tabs"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Sidebar:reorganizing_tabs"
          nc:name="reorganizing sidebar tabs"
-	 nc:link="customize_help.html#Sidebar:reorganizing_tabsIDX"/>
+	 nc:link="customize_help.xhtml#reorganizing_sidebar_tabs"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Sidebar:search_categories"
@@ -2050,7 +2050,7 @@
      <rdf:li>
        <rdf:Description ID="Sidebar:using"
          nc:name="using Sidebar"
-	 nc:link="customize_help.html#Sidebar:usingIDX"/>
+	 nc:link="customize_help.xhtml#using_sidebar"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2090,17 +2090,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Tab_Key_Navigation"
          nc:name="Tab Key Navigation"
-	 nc:link="cs_nav_prefs_advanced.html#Tab_Key_NavigationIDX"/>
+	 nc:link="cs_nav_prefs_advanced.xhtml#keyboard_navigation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Tabbed_Browsing"
          nc:name="Tabbed Browsing"
-	 nc:link="customize_help.html#Tabbed_BrowsingIDX"/>
+	 nc:link="customize_help.xhtml#tabbed_browsing"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="themes"
          nc:name="themes"
-	 nc:link="customize_help.html#themes:changingIDX"/>
+	 nc:link="customize_help.xhtml#changing_the_theme"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="toolbar"
@@ -2114,12 +2114,12 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Tabbed_Browsing:bookmarking_tabs"
          nc:name="bookmarking tabs"
-	 nc:link="customize_help.html#Tabbed_Browsing:bookmarking_tabsIDX"/>
+	 nc:link="customize_help.xhtml#bookmarking_tabs"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Tabbed_Browsing:closing_tabs"
          nc:name="closing tabs"
-	 nc:link="customize_help.html#Tabbed_Browsing:closing_tabsIDX"/>
+	 nc:link="customize_help.xhtml#closing_tabs"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Tabbed_Browsing:introduction"
@@ -2129,17 +2129,17 @@
      <rdf:li>
        <rdf:Description ID="Tabbed_Browsing:opening_tabs"
          nc:name="opening tabs"
-	 nc:link="customize_help.html#Tabbed_Browsing:opening_tabsIDX"/>
+	 nc:link="customize_help.xhtml#opening_tabs"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Tabbed_Browsing:setting_up"
          nc:name="setting up tabbed browsing"
-	 nc:link="customize_help.html#Tabbed_Browsing:setting_upIDX"/>
+	 nc:link="customize_help.xhtml#setting_up_tabbed_browsing"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Tabbed_Browsing:what_is"
          nc:name="what is tabbed browsing"
-	 nc:link="customize_help.html#Tabbed_Browsing:what_isIDX"/>
+	 nc:link="customize_help.xhtml#what_is_tabbed_browsing"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2149,17 +2149,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="toolbar:hiding_a_toolbar"
          nc:name="hiding a toolbar"
-	 nc:link="customize_help.html#toolbar:hiding_a_toolbarIDX"/>
+	 nc:link="customize_help.xhtml#hiding_a_toolbar"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="toolbar:navigation_toolbar"
          nc:name="navigation toolbar"
-	 nc:link="customize_help.html#toolbar:navigation_toolbarIDX"/>
+	 nc:link="customize_help.xhtml#navigation_toolbar"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="toolbar:personal_toolbar"
          nc:name="personal toolbar"
-	 nc:link="customize_help.html#toolbar:personal_toolbarIDX"/>
+	 nc:link="customize_help.xhtml#personal_toolbar"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2243,7 +2243,7 @@
      <rdf:li>
        <rdf:Description ID="web_pages:customizing_fonts"
          nc:name="customizing fonts"
-	 nc:link="chrome://help/locale/customize_help.html#cust_font"/>
+	 nc:link="chrome://help/locale/customize_help.xhtml#changing_fonts_colors_and_themes"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="web_pages:finding_related"

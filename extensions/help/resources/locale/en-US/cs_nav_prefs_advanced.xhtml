@@ -1,375 +1,421 @@
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  %brandDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Mozilla Advanced Preferences Help</title>
-
-<link rel="stylesheet" href="chrome://help/locale/content_style.css" type="text/css">
-<!-- <link rel="stylesheet" href="../style.css" type="text/css"> -->
-
+<title>&brandShortName; Advanced Preferences Help</title>
+<link rel="stylesheet" href="chrome://help/locale/helpFileLayout.css"
+  type="text/css"></link>
 </head>
-
 <body>
-<a name="preferences:advancedIDX"></a>
-<a NAME="top"></a>
-<h1>Advanced Preferences</h1>
-<p>This section describes how to use the Advanced preferences panel. If you are 
-not already viewing the panel, follow these steps:</p>
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-  2. Click the Advanced category.</p>
-<table summary="list of tables" CELLSPACING=2 CELLPADDING=4 WIDTH="324" BGCOLOR="#CCCCCC" >
-<tr>
-<td class="inthissection">
-<p>In this section:
-      <p><a href="#Advanced">Advanced</a>
-      
-<p><a href="#Scripts">Scripts &amp; Plug-ins</a> 
-<p><a href="#keyboard_navigation">Keyboard Navigation</a> 
-<p><a href="#Cache">Cache</a> 
-      
-<p><a href="#Proxies">Proxies</a> 
-<p><a href="#HTTP_Networking">HTTP Networking </a>
-<p><a href="#Software_Installation">Software Installation </a> 
-      <p><a href="#Mouse_Wheel">Mouse Wheel </a> 
-      <p><a href="#system">System</a> 
-    </td>
-</tr>
-</table>
 
-<p>&nbsp;</p>
-<a NAME="Advanced"></a>
-<a name="JavaSDX"></a>  
-<a name="JavaSDX"></a>  
-<a name="Quick_Launch:preferenceIDX"></a> 
-<a name="QuickLaunchSDX"></a> 
-<a name="disable_QuickLaunchSDX"></a> 
-<a name="enable_QuickLaunchSDX"></a> 
-<a name="memorySDX"></a> 
+<h1 id="advanced_preferences">Advanced Preferences</h1>
 
-<h2>Advanced Preferences - Advanced</h2>
-<p>This section describes how to use the main Advanced preferences panel. If you're 
-  not already viewing it, follow these steps:
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-  2. Click the Advanced category.</p>
-<p> The main Advanced preferences panel allows you to customize Java, FTP passwords, 
-  and Quick Launch:</p>
-<ul>
-<li><b>Enable Java:</b> Select this to allow Mozilla to interpret pages containing 
-Java. Java is used on some Web page to incorporate interactive and multimedia 
-content.
-<li><b>Send this email address as anonymous FTP password</b>: Type an email address 
-that you want to use as your password when logging into an FTP site anonymously. 
-<li><b>Keep Mozilla in memory to improve startup performance</b>: Select this 
-if you want to shorten the time it takes to start Mozilla. See &quot;<a href="nav_help.html#nav_quicklaunch">Using 
-Quick Launch</a>&quot; for more information about using Quick Launch.<br>
-<p><b>Note</b>: Quick Launch appears only on Windows-based platforms.</p>
-</ul>
-<p>&nbsp;</p>
-<hr>
-<a name="Scripts"></a>
-<a name="preferences:JavaScriptIDX"></a> 
-<a name="JavaScript:preferencesIDX"></a> 
-<a name="disable_JavaScriptSDX"></a> 
-<a name="JavaScriptSDX"></a> 
-<h2>Advanced Preferences - Scripts &amp; Plug-ins</h2>
-<p>This section describes how to use the Scripts &amp; Plug-ins preferences panel. 
-  If you're not already viewing it, follow these steps: 
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-  2. Under the Advanced category, click Scripts &amp; Plug-ins. (If no subcategories 
-  are visible, double-click Advanced to expand the list.)</p>
-<p><br></p>
-<p>The Scripts &amp; Plug-ins preferences panel allows you to control how JavaScript 
-and plug-ins are used:</p>
-<ul>
-<li><b>Enable JavaScript for</b>: Select these checkboxes to turn JavaScript 
-on: 
-<ul>
-<li><b>Navigator</b>: Toggles JavaScript for web pages opened in Navigator.</li>
-<li><b>Mail &amp; Newsgroups</b>: Toggles JavaScript for web pages opened in 
-Mail &amp; Newsgroups.</li>
-</ul>
-</li>
-<li><b>Allow scripts to:</b> Select these checkboxes to control how JavaScript 
-can be used: 
-<ul>
-<li><b>Move or resize existing windows</b>: Allows open windows to be resized 
-or moved.</li>
-<li><b>Raise or lower windows</b>: Allows windows to be placed under or on top 
-of other windows.</li>
-<li><b>Hide the status bar</b>: Allows the status bar to be hidden.</li>
-<li><b>Change status bar text</b>: Allows status bar text to be changed, such 
-as in scrolling text in the status bar.</li>
-<li><b>Change images</b>: Allows images to be changed or animated, such as in 
-image rollovers (images that change when the mouse cursor is placed over them).</li>
-<li><b>Create or change cookies</b>: Allows cookies to be changed or created 
-using JavaScript.</li>
-<li><b>Read cookies</b>: Allows cookies to be read using JavaScript.</li>
-</ul>
-</li>
-<li><b>Enable Plug-ins for</b>: Check this checkbox to control how plug-ins are 
-used:</li>
-<ul>
-<li><b>Mail &amp; Newsgroups</b>: Allows plug-ins to be used in Mail &amp; Newsgroups.</li>
-</ul>
-</ul>
-<p>For more information about plug-ins, see <a href="nav_help.html#nav_helperapps">Managing 
-Different File Types</a>.</p>
-<p>&nbsp;</p>
+<p>This section describes how to use the Advanced preferences panel. If you are
+  not already viewing the panel, follow these steps:</p>
 
-<hr>
-<a name="keyboard_navigation"></a>
-<a name="preferences:keyboardIDX"></a> 
-<a name="keyboard:preferencesIDX"></a> 
-<a name="Find_As_You_TypeSDX"></a> 
-<a name="Find_Links_As_You_TypeSDX"></a> 
-<a name="Find_Text_As_You_TypeSDX"></a> 
-<a name="Tab_Key_NavigationSDX"></a>
-<a name="Find_Links_As_You_TypeIDX"></a> 
-<a name="Find_Text_As_You_TypeIDX"></a> 
-<a name="Tab_Key_NavigationIDX"></a>
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Click the Advanced category.</li>
+</ol>
 
-<h2>Advanced Preferences - Keyboard Navigation</h2>
-<p>This section describes how to use the Keyboard Navigation preferences panel. 
-  If you're not already viewing it, follow these steps: 
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-  2. Under the Advanced category, click Keyboard Navigation. (If no subcategories 
-  are visible, double-click Advanced to expand the list.)</p>
-<p><br></p>
-<p>The Keyboard Navigation preferences panel allows you to control how you use the keyboard to navigate and search for text in web pages:</p>
+<div class="contentsBox">In this section:
+<ul>
+  <li><a href="#advanced">Advanced</a></li>
+  <li><a href="#scripts_and_plug-ins">Scripts &amp; Plug-ins</a></li>
+  <li><a href="#keyboard_navigation">Keyboard Navigation</a></li>
+  <li><a href="#cache">Cache</a></li>
+  <li><a href="#proxies">Proxies</a></li>
+  <li><a href="#http_networking">HTTP Networking</a></li>
+  <li><a href="#software_installation">Software Installation</a></li>
+  <li><a href="#mouse_wheel">Mouse Wheel</a></li>
+  <li><a href="#system">System</a></li>
+</ul>
+</div>
+
+<h2 id="advanced">Advanced Preferences - Advanced</h2>
+
+<p>This section describes how to use the main Advanced preferences panel. If
+you&apos;re not already viewing it, follow these steps:</p>
+
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+  Preferences.</li>
+  <li>Click the Advanced category.</li>
+</ol>
+
+<p>The main Advanced preferences panel allows you to customize Java, FTP
+  passwords, and Quick Launch:</p>
 
 <ul>
-<li><strong>Links</strong>: If checked, pressing Tab or Shift+Tab moves between links.</li>
-<li><strong>Buttons, radio buttons, check boxes, and lists</strong>: If checked, pressing Tab or Shift+Tab moves between buttons, radio buttons, check boxes, and lists.</li>
-<li><strong>Find automatically when typing within a web page</strong>: If checked, typing text in a web page automatically activates Find As You Type and locates the text you typed (if it exists in the page). Choose whether you want typing to find any text in the page or links only. If unchecked, you must choose Find Links As You Type or Find Text As You Type from the Edit menu before typing the text you want to find.</li>
-<li><strong>Play a sound when typed text isn't found</strong>: If checked, Find As You Type plays a sound when the typed text isn't found in the web page.</li>
-<li><strong>Clear the current search after a few seconds of inactivity</strong>: If checked, cancels the search after a few seconds of keyboard inactivity.</li>
+  <li><strong>Enable Java:</strong> Select this to allow &brandShortName; to
+    interpret pages containing Java. Java is used on some Web page to
+    incorporate interactive and multimedia content.</li>
+  <li><strong>Send this email address as anonymous FTP password</strong>: Type
+    an email address that you want to use as your password when logging into an
+    FTP site anonymously.</li>
+  <li><strong>Keep &brandShortName; in memory to improve startup
+    performance</strong>: Select this if you want to shorten the time it takes
+    to start &brandShortName;. See
+    &quot;<a href="nav_help.html#nav_quicklaunch">Using Quick Launch</a>&quot;
+    for more information about using Quick Launch.
+
+    <p><strong>Note</strong>: Quick Launch appears only on Windows-based
+      platforms.</p>
+
+  </li>
 </ul>
 
-<p>&nbsp;</p>
+<h2 id="scripts_and_plug-ins">Advanced Preferences - Scripts &amp;
+  Plug-ins</h2>
 
-<hr>
-<a name="Cache"></a>
-<a name="preferences:cacheIDX"></a> 
-<a name="cache:preferencesIDX"></a> 
-<a name="clear_cacheSDX"></a> 
-<a name="cacheSDX"></a> 
-<h2>Advanced Preferences - Cache</h2>
-<p>This section describes how to use the Cache preferences panel. If you're not 
-  already viewing it, follow these steps:
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-  2. Under the Advanced category, click Cache. (If no subcategories are visible, 
-  double-click Advanced to expand the list.)</p>
-<p><br></p>
-<p>The Cache preferences panel allows you to adjust the Mozilla memory and disk 
-  cache:</p>
-<ul>
-<li><b>Cache</b>: Type in the amount of disk cache you want to allocate 
-for Mozilla. Disk cache is saved to your hard disk (drive) and can be used again 
-even if you have turned your computer off.</li>
-<li><b>Clear Cache</b>: Click this to clear the disk cache.</li>
-<li><b>Cache Folder</b>: Shows the current location of the disk cache folder 
-<ul>
-<li><b>Choose Folder</b>: Click this to choose a folder location for the disk 
-cache. </li>
-</ul>
-</li>
-<li><b>Compare the page in the cache to the page on the network:</b> 
-<ul>
-<li><b>Every time I view the page</b>: Select this if you want Mozilla to compare 
-a web page to the cache every time you view it.</li>
-<li><b>When the page is out of date</b>: Select this if you want Mozilla to 
-compare a web page to the cache when the page is determined by the server to 
-have expired.</li>
-<li><b>Once per session</b>: Select this if you want Mozilla to compare a web 
-page to the cache once for each time you start Mozilla.</li>
-<li><b>Never</b>: Select this if you do not want Mozilla to compare cached information 
-to the network.</li>
-</ul>
-</li>
-<li><b>Prefetch web pages when idle, so that links in web pages designed
-    for prefetching can load faster</b>:
-    Select this to decrease the time it takes to load web pages when you
-    click a link in a web page that uses prefetching.</li>
-</ul>
-<p>&nbsp;</p>
+<p>This section describes how to use the Scripts &amp; Plug-ins preferences
+  panel. If you&apos;re not already viewing it, follow these steps:</p>
 
-<hr>
-<a name="Proxies"></a>
-<a name="SOCKSSDX"></a> 
-<a name="preferences:proxiesIDX"></a> 
-<a name="proxies:preferencesIDX"></a> 
-<h2>Advanced Preferences - Proxies</h2>
-<p> 
-<p>This section describes how to use the Proxies preferences panel. If you're 
-  not already viewing it, follow these steps: </p>
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-  2. Under the Advanced category, click Proxies. (If no subcategories are visible, 
-  double-click Advanced to expand the list.)</p>
-<p><br></p>
-<p>The Proxies preferences panel allows you to set up Mozilla to use a proxy:</p>
-<p><b>Before you start: </b>Ask your network administrator if you have a proxy 
-  configuration file or for the names and port numbers of the proxy.</p>
-<ul>
-<li><b>Direct connection to the Internet</b>: Choose this if you don't want to 
-use a proxy.</li>
-<li><b>Manual proxy configuration</b>: Choose this if you don't have a proxy location 
-(URL). 
-<ul>
-<li><b>HTTP Proxy</b>, <b>SSL Proxy</b>, <b>FTP Proxy, Gopher Proxy</b>:<b> </b>Type 
-the name or numeric IP address of the proxy server. Type the port in the Ports 
-field.</li>
-<li><b>SOCKS Host</b>: Type the name or numeric IP address of the proxy server. 
-Type the port in the Ports field. 
-<ul>
-<li><b>SOCKS v4, SOCKS v5</b>: When entering a SOCK Host, select &quot;SOCKS v4&quot; 
-or &quot;SOCKS v5,&quot; depending on what version of SOCKS is used for the proxy. 
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<ul>
-<li><b>No Proxy for</b>: Type the domains and/or IP address that you do not want to use a proxy 
-for. Separate each entry with a comma. (Example: .yourcompany.com, .yourcompany.co.nz, 192.168.1.0/24)</li>
-</ul>
-<li><b>Automatic proxy configuration URL</b>: Choose this if you have a proxy 
-configuration file or URL, then type the configuration URL.</li>
-</ul>
-<p>&nbsp;</p>
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Advanced category, click Scripts &amp; Plug-ins. (If no
+    subcategories are visible, double-click Advanced to expand the list.)</li>
+</ol>
 
-<hr>
-<a name="HTTP_Networking"></a>
-<a name="keep-aliveSDX"></a> <a name="pipeliningSDX"></a> <a name="keep-aliveSDX"></a> 
-<a name="HTTP_Networking:preferencesIDX"></a> <a name="preferences:HTTP_NetworkingIDX"></a> 
-<h2>Advanced Preferences - HTTP Networking</h2>
-<p>This section describes how to use the HTTP Networking preferences panel. If 
-you're not already viewing it, follow these steps: 
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-2. Under the Advanced category, click HTTP Networking. (If no subcategories are 
-visible, double-click Advanced to expand the list.)</p>
-<p><br></p>
-<p>The HTTP Networking preferences panel is used to configure HTTP-based networking:</p>
-<ul>
-<li><b>Direct Connection Options, Proxy Connection Options: </b>Choose the HTTP 
-version and options for direct and proxy connections. 
-<ul>
-<li><b>Use HTTP 1.0</b>: Choose this to use the original version of HTTP, standardized 
-in 1996.</li>
-<li><b>Use HTTP 1.1</b>: Choose this to use the new version of HTTP, which offers 
-performance enhancements, including more efficient use of HTTP connections, better 
-support for client-side caching, multiple HTTP requests (pipelining), and more 
-refined control over cache expiration and replacement policies.</li>
-<li><b>Enable Keep-Alive</b>: Select this to keep a connection open to make additional 
-HTTP requests, increasing speed.</li>
-<li><b>Enable Pipelining</b>:<b> </b>Select this to enable pipelining, which 
-allows for more than one HTTP request to be sent to the server at once, reducing 
-delays loading web pages.<br>
-<b>Note</b>: Pipelining is only available with HTTP 1.1.</li>
-</ul>
-</li>
-</ul>
-<p>&nbsp;</p>
+<p>The Scripts &amp; Plug-ins preferences panel allows you to control how
+  JavaScript and plug-ins are used:</p>
 
-<hr><a name="Software_Installation"></a>
-<a name="software_installation:preferencesIDX"></a> <a name="preferences:software_installationIDX"></a> 
-<h2>Advanced Preferences - Software Installation</h2>
-<p>This section describes how to use the Software Installation preferences panel. 
-  If you're not already viewing it, follow these steps: 
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-  2. Under the Advanced category, click Software Installation. (If no subcategories 
-  are visible, double-click Advanced to expand the list.)</p>
-<p><br></p>
-<p>The Software Installation preferences panel is used to enable software installation 
-and update notification:</p>
 <ul>
-  <li><b>Enable software installation</b>: Select this if you want Mozilla to 
-    prompt you when new software needs to be installed and used with Mozilla.</li>
-  <li><b>Check for updates</b>: Select this to be notified when new versions of 
-    Mozilla are available. Your personal information is not shared with Mozilla 
-    when verifying your version of Mozilla. 
+  <li><strong>Enable JavaScript for</strong>: Select these checkboxes to turn
+    JavaScript on:
     <ul>
-      <li><b>weekly</b>: Choose this if you want Mozilla to check once a week 
-        to see if a new version of Mozilla is available.</li>
-      <li><b>monthly</b>: Choose this if you want Mozilla to check once a month 
-        to see if a new version of Mozilla is available.</li>
+      <li><strong>Navigator</strong>: Toggles JavaScript for web pages opened
+        in Navigator.</li>
+      <li><strong>Mail &amp; Newsgroups</strong>: Toggles JavaScript for web
+        pages opened in Mail &amp; Newsgroups.</li>
+    </ul>
+  </li>
+  <li><strong>Allow scripts to:</strong> Select these checkboxes to control
+    how JavaScript can be used:
+    <ul>
+      <li><strong>Move or resize existing windows</strong>: Allows open windows
+        to be resized or moved.</li>
+      <li><strong>Raise or lower windows</strong>: Allows windows to be placed
+        under or on top of other windows.</li>
+      <li><strong>Hide the status bar</strong>: Allows the status bar to be
+        hidden.</li>
+      <li><strong>Change status bar text</strong>: Allows status bar text to be
+        changed, such as in scrolling text in the status bar.</li>
+      <li><strong>Change images</strong>: Allows images to be changed or
+        animated, such as in image rollovers (images that change when the mouse
+        cursor is placed over them).</li>
+      <li><strong>Create or change cookies</strong>: Allows cookies to be
+        changed or created using JavaScript.</li>
+      <li><strong>Read cookies</strong>: Allows cookies to be read using
+        JavaScript.</li>
+    </ul>
+  </li>
+  <li><strong>Enable Plug-ins for</strong>: Check this checkbox to control how
+    plug-ins are used:
+    <ul>
+      <li><strong>Mail &amp; Newsgroups</strong>: Allows plug-ins to be used in
+        Mail &amp; Newsgroups.</li>
     </ul>
   </li>
 </ul>
-<p>&nbsp;</p>
 
-<hr><a name="Mouse_Wheel"></a>
-<a name="mouse_wheel:preferencesIDX"></a> <a name="preferences:mouse_wheelIDX"></a> 
-<h2>Advanced Preferences - Mouse Wheel</h2>
+<p>For more information about plug-ins, see
+  <a href="nav_help.html#nav_helperapps">Managing Different File Types</a>.</p>
 
-<p>This section describes how to use the Mouse Wheel preferences panel. If you're 
-  not already viewing it, follow these steps: </p>
-<p> 1. Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.<br>
-  2. Under the Advanced category, click Mouse Wheel. (If no subcategories are 
-  visible, double-click Advanced to expand the list.)</p>
-<p><br></p>
-<p>The Mouse Wheel preferences panel allows you to control how the mouse wheel 
-  on your mouse (in between your mouse buttons) is used in Mozilla:</p>
+<h2 id="keyboard_navigation">Advanced Preferences - Keyboard Navigation</h2>
+
+<p>This section describes how to use the Keyboard Navigation preferences
+  panel. If you&apos;re not already viewing it, follow these steps:</p>
+
+<ol>
+  <li>1. Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Advanced category, click Keyboard Navigation. (If no
+    subcategories are visible, double-click Advanced to expand the list.)</li>
+</ol>
+
+<p>The Keyboard Navigation preferences panel allows you to control how you use
+  the keyboard to navigate and search for text in web pages:</p>
+
 <ul>
-  
-<li><b>Modifier Key</b>: Use the the drop-down list to choose a key that you 
-    want to use along with the mouse wheel to perform one of the following functions:
-<ul>
-      
-<li><b>Scroll the document by</b>: Choose this to scroll the document by 
-        the number of lines typed in the field. 
-        
-<ul>
-          
-<li><b>Use system default</b>: Choose this to override the number of 
-            lines entered and instead the system default setting.</li>
-</ul>
-</li>
-<li><b>Scroll a page up or a page down</b>: Choose this to scroll up or down 
-one page at a time. This setting allows faster, but less accurate scrolling through 
-a page with your mouse wheel.</li>
-<li><b>Move back and forward in the browsing history</b>: Choose this to 
-        use the mouse wheel to navigate back or forward to previous pages you've 
-        visited.</li>
-<li><b>Make the text larger or smaller</b>: Choose this to use the mouse 
-        wheel to increase or decrease the size of text on a web page. This setting 
-        can help you better read a page, or make text fit on the screen.</li>
-</ul>
-<p><b>Note</b>: Each modifier key can be assigned to a different function.</p>
-</li>
+  <li><strong>Links</strong>: If checked, pressing Tab or Shift+Tab moves
+    between links.</li>
+  <li><strong>Buttons, radio buttons, check boxes, and lists</strong>: If
+    checked, pressing Tab or Shift+Tab moves between buttons, radio buttons,
+    check boxes, and lists.</li>
+  <li><strong>Find automatically when typing within a web page</strong>: If
+    checked, typing text in a web page automatically activates Find As You Type
+    and locates the text you typed (if it exists in the page). Choose whether
+    you want typing to find any text in the page or links only. If unchecked,
+    you must choose Find Links As You Type or Find Text As You Type from the
+    Edit menu before typing the text you want to find.</li>
+  <li><strong>Play a sound when typed text isn&apos;t found</strong>: If
+    checked, Find As You Type plays a sound when the typed text isn&apos;t
+    found in the web page.</li>
+  <li><strong>Clear the current search after a few seconds of
+    inactivity</strong>: If checked, cancels the search after a few seconds of
+    keyboard inactivity.</li>
 </ul>
 
+<h2 id="cache">Advanced Preferences - Cache</h2>
 
-<p>&nbsp;</p>
+<p>This section describes how to use the Cache preferences panel. If
+  you&apos;re not already viewing it, follow these steps:</p>
 
-<hr><a name="system"></a>
-<a name="System:preferencesIDX"></a> <a name="preferences:SystemIDX"></a> 
-<h2>Advanced Preferences - System</h2>
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Advanced category, click Cache. (If no subcategories are
+    visible, double-click Advanced to expand the list.)</li>
+</ol>
 
-<p>This section describes how to use the System preferences panel. If you're not 
-  already viewing it, follow these steps: </p>
-<p> 1. Open the Edit menu and choose Preferences.<br>
-  2. Under the Advanced category, click System. (If no subcategories are visible, 
-  double-click Advanced to expand the list.)</p>
-<p><b>Note</b>: The System preferences panel appears only on Windows-based platforms.</p>
-<p><br></p>
-<p>The System preferences panel allows you to specify what files and protocols 
-  are opened using Mozilla:</p>
+<p>The Cache preferences panel allows you to adjust the &brandShortName; memory
+  and disk cache:</p>
+
 <ul>
-  
-<li><b>Windows should use Mozilla to open these file types</b>: Select the file 
-types that you want to open by default using Mozilla.</li>
-<li><b>Windows should use Mozilla to handle these protocols</b>: Select the protocols 
-that you want to open by default using Mozilla.</li>
-<li><b>Alert me if other applications change these settings: </b>Select this 
-    if you want Mozilla to alert you when other applications have changed your 
-    default Mozilla file and protocol settings. </li>
+  <li><strong>Cache</strong>: Type in the amount of disk cache you want to
+    allocate for &brandShortName;. Disk cache is saved to your hard disk
+    (drive) and can be used again even if you have turned your computer
+    off.</li>
+  <li><strong>Clear Cache</strong>: Click this to clear the disk cache.</li>
+  <li><strong>Cache Folder</strong>: Shows the current location of the disk
+    cache folder 
+    <ul>
+      <li><strong>Choose Folder</strong>: Click this to choose a folder
+        location for the disk cache.</li>
+    </ul>
+  </li>
+  <li><strong>Compare the page in the cache to the page on the
+    network:</strong>
+    <ul>
+      <li><strong>Every time I view the page</strong>: Select this if you want
+        &brandShortName; to compare a web page to the cache every time you view
+        it.</li>
+      <li><strong>When the page is out of date</strong>: Select this if you
+        want &brandShortName; to compare a web page to the cache when the page
+	is determined by the server to have expired.</li>
+      <li><strong>Once per session</strong>: Select this if you want
+        &brandShortName; to compare a web page to the cache once for each time
+        you start &brandShortName;.</li>
+      <li><strong>Never</strong>: Select this if you do not want
+        &brandShortName; to compare cached information to the network.</li>
+    </ul>
+  </li>
+  <li><strong>Prefetch web pages when idle, so that links in web pages
+    designed for prefetching can load faster</strong>: Select this to decrease
+    the time it takes to load web pages when you click a link in a web page
+    that uses prefetching.</li>
 </ul>
-<p><b>Tip</b>: To make Mozilla the default browser easily, see <a href="cs_nav_prefs_navigator.html#Navigator">Navigator 
-Preferences - Navigator</a>. Also select &quot;Alert me if other application 
-change these settings&quot; to know when other programs become the default programs 
-instead of Mozilla.</p>
-<hr>
-<p><i> 19 June 2002</i></p>
-<hr>
-<p>Copyright &copy; 1998-2003 The Mozilla Foundation.</p>
+
+<h2 id="proxies">Advanced Preferences - Proxies</h2>
+
+<p>This section describes how to use the Proxies preferences panel. If
+  you&apos;re not already viewing it, follow these steps:</p>
+
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Advanced category, click Proxies. (If no subcategories are
+    visible, double-click Advanced to expand the list.)</li>
+</ol>
+
+<p>The Proxies preferences panel allows you to set up &brandShortName; to use a
+  proxy:</p>
+
+<p><strong>Before you start:</strong> Ask your network administrator if you
+  have a proxy configuration file or for the names and port numbers of the
+  proxy.</p>
+
+<ul>
+  <li><strong>Direct connection to the Internet</strong>: Choose this if you
+    don&apos;t want to use a proxy.</li>
+  <li><strong>Manual proxy configuration</strong>: Choose this if you
+    don&apos;t have a proxy location (URL).
+    <ul>
+      <li><strong>HTTP Proxy</strong>, <strong>SSL Proxy</strong>, <strong>FTP
+        Proxy, Gopher Proxy</strong>: Type the name or numeric IP address of
+	the proxy server. Type the port in the Ports field.</li>
+      <li><strong>SOCKS Host</strong>: Type the name or numeric IP address of
+        the proxy server. Type the port in the Ports field. 
+        <ul>
+          <li><strong>SOCKS v4, SOCKS v5</strong>: When entering a SOCK Host,
+            select &quot;SOCKS v4&quot; or &quot;SOCKS v5,&quot; depending on
+	    what version of SOCKS is used for the proxy.</li>
+        </ul>
+      </li>
+      <li><strong>No Proxy for</strong>: Type the domains and/or IP address
+        that you do not want to use a proxy for. Separate each entry with a
+	comma. (Example: .yourcompany.com, .yourcompany.co.nz,
+	192.168.1.0/24)</li>
+    </ul>
+  </li>
+  <li><strong>Automatic proxy configuration URL</strong>: Choose this if you
+    have a proxy configuration file or URL, then type the configuration
+    URL.</li>
+</ul>
+
+<h2 id="http_networking">Advanced Preferences - HTTP Networking</h2>
+
+<p>This section describes how to use the HTTP Networking preferences panel. If
+  you&apos;re not already viewing it, follow these steps:</p>
+
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Advanced category, click HTTP Networking. (If no subcategories
+    are visible, double-click Advanced to expand the list.)</li>
+</ol>
+
+<p>The HTTP Networking preferences panel is used to configure HTTP-based
+  networking:</p>
+
+<ul>
+  <li><strong>Direct Connection Options, Proxy Connection Options:</strong>
+    Choose the HTTP version and options for direct and proxy connections.
+    <ul>
+      <li><strong>Use HTTP 1.0</strong>: Choose this to use the original
+        version of HTTP, standardized in 1996.</li>
+      <li><strong>Use HTTP 1.1</strong>: Choose this to use the new version of
+        HTTP, which offers performance enhancements, including more efficient
+	use of HTTP connections, better support for client-side caching,
+	multiple HTTP requests (pipelining), and more refined control over
+	cache expiration and replacement policies.</li>
+      <li><strong>Enable Keep-Alive</strong>: Select this to keep a connection
+        open to make additional HTTP requests, increasing speed.</li>
+      <li><strong>Enable Pipelining</strong>: <strong></strong>Select this to
+        enable pipelining, which allows for more than one HTTP request to be
+	sent to the server at once, reducing delays loading web
+	pages.<br></br>
+        <strong>Note</strong>: Pipelining is only available with HTTP 1.1.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="software_installation">Advanced Preferences - Software
+  Installation</h2>
+
+<p>This section describes how to use the Software Installation preferences
+  panel. If you&apos;re not already viewing it, follow these steps:</p>
+
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Advanced category, click Software Installation. (If no
+    subcategories are visible, double-click Advanced to expand the list.)</li>
+</ol>
+
+<p>The Software Installation preferences panel is used to enable software
+  installation and update notification:</p>
+
+<ul>
+  <li><strong>Enable software installation</strong>: Select this if you want
+    &brandShortName; to prompt you when new software needs to be installed and
+    used with &brandShortName;.</li>
+  <li><strong>Check for updates</strong>: Select this to be notified when new
+    versions of &brandShortName; are available. Your personal information is
+    not shared with &brandShortName; when verifying your version of
+    &brandShortName;.
+    <ul>
+      <li><strong>weekly</strong>: Choose this if you want &brandShortName; to
+        check once a week to see if a new version of &brandShortName; is
+        available.</li>
+      <li><strong>monthly</strong>: Choose this if you want &brandShortName; to
+        check once a month to see if a new version of &brandShortName; is
+        available.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="mouse_wheel">Advanced Preferences - Mouse Wheel</h2>
+
+<p>This section describes how to use the Mouse Wheel preferences panel. If
+  you&apos;re not already viewing it, follow these steps:</p>
+
+<ol>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Advanced category, click Mouse Wheel. (If no subcategories
+    are visible, double-click Advanced to expand the list.)</li>
+</ol>
+<p>The Mouse Wheel preferences panel allows you to control how the mouse wheel
+  on your mouse (in between your mouse buttons) is used in
+  &brandShortName;:</p>
+
+<ul>
+  <li><strong>Modifier Key</strong>: Use the the drop-down list to choose a key
+    that you want to use along with the mouse wheel to perform one of the
+    following functions:
+    <ul>
+      <li><strong>Scroll the document by</strong>: Choose this to scroll the
+        document by the number of lines typed in the field.
+        <ul>
+          <li><strong>Use system default</strong>: Choose this to override the
+            number of lines entered and instead the system default
+	    setting.</li>
+        </ul>
+      </li>
+      <li><strong>Scroll a page up or a page down</strong>: Choose this to
+        scroll up or down one page at a time. This setting allows faster, but
+	less accurate scrolling through a page with your mouse wheel.</li>
+      <li><strong>Move back and forward in the browsing history</strong>:
+        Choose this to use the mouse wheel to navigate back or forward to
+	previous pages you&apos;ve visited.</li>
+      <li><strong>Make the text larger or smaller</strong>: Choose this to use
+        the mouse wheel to increase or decrease the size of text on a web page.
+        This setting can help you better read a page, or make text fit on the
+        screen.</li>
+    </ul>
+
+    <p><strong>Note</strong>: Each modifier key can be assigned to a different
+      function.</p>
+  </li>
+</ul>
+
+<h2 id="system">Advanced Preferences - System</h2>
+
+<p>This section describes how to use the System preferences panel. If
+  you&apos;re not already viewing it, follow these steps:</p>
+
+<ol>
+  <li>Open the Edit menu and choose Preferences.</li>
+  <li>Under the Advanced category, click System. (If no subcategories are
+    visible, double-click Advanced to expand the list.)</li>
+</ol>
+
+<p><strong>Note</strong>: The System preferences panel appears only on
+  Windows-based platforms.</p>
+
+<p>The System preferences panel allows you to specify what files and protocols
+  are opened using &brandShortName;:</p>
+
+<ul>
+  <li><strong>Windows should use &brandShortName; to open these file
+    types</strong>: Select the file types that you want to open by default
+    using &brandShortName;.</li>
+  <li><strong>Windows should use &brandShortName; to handle these
+    protocols</strong>: Select the protocols that you want to open by default
+    using &brandShortName;.</li>
+  <li><strong>Alert me if other applications change these settings:</strong>
+    Select this if you want &brandShortName; to alert you when other
+    applications have changed your default &brandShortName; file and protocol
+    settings.</li>
+</ul>
+
+<p><strong>Tip</strong>: To make &brandShortName; the default browser easily,
+  see <a href="cs_nav_prefs_navigator.html#Navigator">Navigator Preferences -
+  Navigator</a>. Also select &quot;Alert me if other application change these
+  settings&quot; to know when other programs become the default programs
+  instead of &brandShortName;.</p>
+
+<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
 
 </body>
 </html>
