@@ -4684,9 +4684,24 @@ ResolveValue(JSContext *cx, JSXML *list, JSXML **result)
     return JS_TRUE;
 }
 
+/*
+ * HasProperty must be able to return a found JSProperty and the object in
+ * which it was found, if id is of the form function::name.  For other ids,
+ * if they index or name an XML child, we return FOUND_XML_PROPERTY in *propp
+ * and null in *objp.
+ *
+ * DROP_PROPERTY helps HasProperty callers drop function properties without
+ * trying to drop the magic FOUND_XML_PROPERTY cookie.
+ */
+#define FOUND_XML_PROPERTY              ((JSProperty *) 1)
+#define DROP_PROPERTY(cx,pobj,prop)     (((prop) != FOUND_XML_PROPERTY)       \
+                                         ? OBJ_DROP_PROPERTY(cx, pobj, prop)  \
+                                         : (void) 0)
+
 /* ECMA-357 9.1.1.6 XML [[HasProperty]] and 9.2.1.5 XMLList [[HasProperty]]. */
 static JSBool
-HasProperty(JSContext *cx, JSObject *obj, jsval id, JSBool *foundp)
+HasProperty(JSContext *cx, JSObject *obj, jsval id, JSObject **objp,
+            JSProperty **propp)
 {
     JSXML *xml, *kid;
     uint32 i, n;
@@ -4696,11 +4711,15 @@ HasProperty(JSContext *cx, JSObject *obj, jsval id, JSBool *foundp)
     JSXMLArray *array;
     JSXMLNameMatcher matcher;
 
+    *objp = NULL;
+    *propp = NULL;
+
     xml = (JSXML *) JS_GetPrivate(cx, obj);
     if (xml->xml_class == JSXML_CLASS_LIST) {
         n = JSXML_LENGTH(xml);
         if (js_IdIsIndex(id, &i)) {
-            *foundp = i < n;
+            if (i < n)
+                *propp = FOUND_XML_PROPERTY;
             return JS_TRUE;
         }
 
@@ -4708,31 +4727,27 @@ HasProperty(JSContext *cx, JSObject *obj, jsval id, JSBool *foundp)
             kid = XMLARRAY_MEMBER(&xml->xml_kids, i, JSXML);
             if (kid->xml_class == JSXML_CLASS_ELEMENT) {
                 kidobj = js_GetXMLObject(cx, kid);
-                if (!kidobj || !HasProperty(cx, kidobj, id, foundp))
+                if (!kidobj || !HasProperty(cx, kidobj, id, objp, propp))
                     return JS_FALSE;
-                if (*foundp)
+                if (*propp)
                     return JS_TRUE;
             }
         }
-    } else if (xml->xml_class == JSXML_CLASS_ELEMENT) {
-        if (js_IdIsIndex(id, &i)) {
-            *foundp = (i == 0);
+    } else {
+        if (xml->xml_class == JSXML_CLASS_ELEMENT && js_IdIsIndex(id, &i)) {
+            if (i == 0)
+                *propp = FOUND_XML_PROPERTY;
             return JS_TRUE;
         }
 
         qn = ToXMLName(cx, id, &funid);
         if (!qn)
             return JS_FALSE;
-        if (funid) {
-            JSObject *pobj;
-            JSProperty *prop;
+        if (funid)
+            return js_LookupProperty(cx, obj, funid, objp, propp);
 
-            if (!js_LookupProperty(cx, obj, funid, &pobj, &prop))
-                return JS_FALSE;
-            *foundp = prop != NULL;
-            OBJ_DROP_PROPERTY(cx, pobj, prop);
+        if (xml->xml_class != JSXML_CLASS_ELEMENT)
             return JS_TRUE;
-        }
 
         if (OBJ_GET_CLASS(cx, qn->object) == &js_AttributeNameClass) {
             array = &xml->xml_attrs;
@@ -4743,13 +4758,13 @@ HasProperty(JSContext *cx, JSObject *obj, jsval id, JSBool *foundp)
         }
         for (i = 0, n = array->length; i < n; i++) {
             kid = XMLARRAY_MEMBER(array, i, JSXML);
-            *foundp = matcher(qn, kid);
-            if (*foundp)
+            if (matcher(qn, kid)) {
+                *propp = FOUND_XML_PROPERTY;
                 return JS_TRUE;
+            }
         }
     }
 
-    *foundp = JS_FALSE;
     return JS_TRUE;
 }
 
@@ -4812,20 +4827,19 @@ static JSBool
 xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                    JSProperty **propp)
 {
-    JSBool found;
     JSScopeProperty *sprop;
 
-    if (!HasProperty(cx, obj, ID_TO_VALUE(id), &found))
+    if (!HasProperty(cx, obj, ID_TO_VALUE(id), objp, propp))
         return JS_FALSE;
-    if (!found) {
-        *objp = obj;
-        *propp = NULL;
-    } else {
+
+    if (*propp == FOUND_XML_PROPERTY) {
         sprop = js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty,
                                      SPROP_INVALID_SLOT, JSPROP_ENUMERATE,
                                      0, 0);
         if (!sprop)
             return JS_FALSE;
+
+        JS_LOCK_OBJ(cx, obj);
         *objp = obj;
         *propp = (JSProperty *) sprop;
     }
@@ -4872,11 +4886,18 @@ static JSBool
 FoundProperty(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
               JSBool *foundp)
 {
+    JSObject *pobj;
+
     if (prop) {
         *foundp = JS_TRUE;
-        return JS_TRUE;
+    } else {
+        if (!HasProperty(cx, obj, ID_TO_VALUE(id), &pobj, &prop))
+            return JS_FALSE;
+        if (prop)
+            DROP_PROPERTY(cx, pobj, prop);
+        *foundp = (prop != NULL);
     }
-    return HasProperty(cx, obj, ID_TO_VALUE(id), foundp);
+    return JS_TRUE;
 }
 
 static JSBool
@@ -5708,15 +5729,17 @@ xml_hasOwnProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
 {
     jsval name;
-    JSBool found;
+    JSObject *pobj;
+    JSProperty *prop;
 
     name = argv[0];
-    if (!HasProperty(cx, obj, name, &found))
+    if (!HasProperty(cx, obj, name, &pobj, &prop))
         return JS_FALSE;
-    if (!found) {
+    if (!prop) {
         return js_HasOwnPropertyHelper(cx, obj, js_LookupProperty, argc, argv,
                                        rval);
     }
+    DROP_PROPERTY(cx, pobj, prop);
     *rval = JSVAL_TRUE;
     return JS_TRUE;
 }
@@ -7554,6 +7577,11 @@ js_FindXMLProperty(JSContext *cx, jsval name, JSObject **objp, jsval *namep)
         if (prop) {
             OBJ_DROP_PROPERTY(cx, pobj, prop);
 
+            /*
+             * Call OBJ_THIS_OBJECT to skip any With object that wraps an XML
+             * object to carry scope chain linkage in js_FilterXMLList.
+             */
+            pobj = OBJ_THIS_OBJECT(cx, obj);
             if (OBJECT_IS_XML(cx, pobj)) {
                 *objp = pobj;
                 *namep = ID_TO_VALUE(id);
