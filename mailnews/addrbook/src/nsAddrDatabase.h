@@ -49,6 +49,7 @@
 #include "nsCOMPtr.h"
 
 #define  CARD_ATTRIB_PALMID "PalmRecId"
+#define  CARD_ATTRIB_DISPLAY "DisplayName"
 
 typedef enum 
 {

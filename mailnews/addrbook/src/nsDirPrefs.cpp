@@ -283,6 +283,7 @@ static PRInt32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *
 static PRBool DIR_GetBoolPref(const char *prefRoot, const char *prefLeaf, char *scratch, PRBool defaultValue);
 static char * dir_ConvertDescriptionToPrefName(DIR_Server * server);
 void DIR_SetFileName(char** filename, const char* leafName);
+static void DIR_SetIntPref (const char *prefRoot, const char *prefLeaf, char *scratch, PRInt32 value, PRInt32 defaultValue);
 
 static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *pref, void *inst_data);
 
@@ -869,156 +870,160 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
  *
  * Returns PR_TRUE if the server list was re-sorted.
  */
-PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position)
-{
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-    if (NS_FAILED(rv) || !pPref) 
-		return PR_FALSE;
-
-	PRInt32    i, count, num;
-	PRBool     resort = PR_FALSE;
-	DIR_Server *s=nsnull;
-
-	switch (position) {
-	case DIR_POS_APPEND:
-		/* Do nothing if the request is to append a server that is already
+ PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position)
+ {
+   nsresult rv = NS_OK;
+   nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+   if (NS_FAILED(rv) || !pPref) 
+     return PR_FALSE;
+   
+   PRInt32    i, count, num;
+   PRBool     resort = PR_FALSE;
+   DIR_Server *s=nsnull;
+   
+   switch (position) {
+   case DIR_POS_APPEND:
+   /* Do nothing if the request is to append a server that is already
 		 * in the list.
-		 */
-		count = wholeList->Count();
-		for (i= 0; i < count; i++)
-		{
-			if  ((s = (DIR_Server *)wholeList->ElementAt(i)) != nsnull)
-				if (s == server)
-					return PR_FALSE;
-		}
-		/* In general, if there are any servers already in the list, set the
-		 * position to the position of the last server plus one.  If there
-		 * are none, set it to position 1.
-		 */
-		if (count > 0)
-		{
-			/* Exception to the rule: if the last server is a locked server,
-			 * find the position of last unlocked server.  If there are no
-			 * unlocked servers, set the position to 1; otherwise, set it to
-			 * the position of the last unlocked server plus one.  In either
-			 * case the list must be resorted (to find the correct position).
-			 */
-			s = (DIR_Server *)wholeList->ElementAt(count - 1);
-			if (DIR_TestFlag(s, DIR_POSITION_LOCKED))
-			{
-				DIR_Server *sLast = nsnull;
-
-				for (i= 0; i < count; i++)
-				{
-					if  ((s = (DIR_Server *)wholeList->ElementAt(i)) != nsnull)
-						if (!DIR_TestFlag(s, DIR_POSITION_LOCKED))
-							sLast = s;
-				}
-
-				if (sLast)
-					server->position = sLast->position + 1;
-				else
-					server->position = 1;
-
-				resort = PR_TRUE;
-			}
-			else
-				server->position = s->position + 1;
-		}
-		else
-			server->position = 1;
-
-		wholeList->AppendElement(server);
-
-		if (wholeList == dir_ServerList)
-			DIR_SendNotification(server, DIR_NOTIFY_ADD, idNone);
-		break;
-
-	case DIR_POS_DELETE:
-		/* Undeletable servers cannot be deleted.
-		 */
-		if (DIR_TestFlag(server, DIR_UNDELETABLE))
-			return PR_FALSE;
-
-		/* Remove the prefs corresponding to the given server.  If the prefName
-		 * value is nsnull, the server has never been saved and there are no
-		 * prefs to remove.
-		 */
-		if (server->prefName)
-		{
-			DIR_ClearPrefBranch(server->prefName);
-		}
-
-		/* If the server is in the server list, remove it.
-		 */
-		num = wholeList->IndexOf(server);
-		if (num >= 0)
-		{
-			/* The list does not need to be re-sorted if the server is the
-			 * last one in the list.
-			 */
-			count = wholeList->Count();
-			if (num == count - 1)
-			{
-				wholeList->RemoveElementAt(num);
-			}
-			else
-			{
-				resort = PR_TRUE;
-				wholeList->RemoveElement(server);
-			}
-
-			if (wholeList == dir_ServerList)
-				DIR_SendNotification(server, DIR_NOTIFY_DELETE, idNone);
-		}
-		break;
-
-	default:
-		/* See if the server is already in the list.
-		 */
-		count = wholeList->Count();
-		for (i= 0; i < count; i++)
-		{
-			if  ((s = (DIR_Server *)wholeList->ElementAt(i)) != nsnull)
-				if (s == server)
-					break;
-		}
-
-		/* If the server is not in the list, add it to the beginning and re-sort.
-		 */
-		if (s == nsnull)
-		{
-			server->position = position;
-			wholeList->AppendElement(server);
-			resort = PR_TRUE;
-
-			if (wholeList == dir_ServerList)
-				DIR_SendNotification(server, DIR_NOTIFY_ADD, idNone);
-		}
-
-		/* Servers with locked position values cannot be moved.
-		 */
-		else if (DIR_TestFlag(server, DIR_POSITION_LOCKED))
-			return PR_FALSE;
-		
-		/* Don't re-sort if the server is already in the requested position.
-		 */
-		else if (server->position != position)
-		{
-			server->position = position;
-			wholeList->RemoveElement(server);
-			wholeList->AppendElement(server);
-			resort = PR_TRUE;
-		}
-		break;
-	}
-
-	/* Make sure our position changes get saved back to prefs
-	 */
-	DIR_SaveServerPreferences(wholeList);
-
-	return resort;
+     */
+     count = wholeList->Count();
+     for (i= 0; i < count; i++)
+     {
+       if  ((s = (DIR_Server *)wholeList->ElementAt(i)) != nsnull)
+         if (s == server)
+           return PR_FALSE;
+     }
+     /* In general, if there are any servers already in the list, set the
+     * position to the position of the last server plus one.  If there
+     * are none, set it to position 1.
+     */
+     if (count > 0)
+     {
+     /* Exception to the rule: if the last server is a locked server,
+     * find the position of last unlocked server.  If there are no
+     * unlocked servers, set the position to 1; otherwise, set it to
+     * the position of the last unlocked server plus one.  In either
+     * case the list must be resorted (to find the correct position).
+       */
+       s = (DIR_Server *)wholeList->ElementAt(count - 1);
+       if (DIR_TestFlag(s, DIR_POSITION_LOCKED))
+       {
+         DIR_Server *sLast = nsnull;
+         
+         for (i= 0; i < count; i++)
+         {
+           if  ((s = (DIR_Server *)wholeList->ElementAt(i)) != nsnull)
+             if (!DIR_TestFlag(s, DIR_POSITION_LOCKED))
+               sLast = s;
+         }
+         
+         if (sLast)
+           server->position = sLast->position + 1;
+         else
+           server->position = 1;
+         
+         resort = PR_TRUE;
+       }
+       else
+         server->position = s->position + 1;
+     }
+     else
+       server->position = 1;
+     
+     wholeList->AppendElement(server);
+     
+     if (wholeList == dir_ServerList)
+       DIR_SendNotification(server, DIR_NOTIFY_ADD, idNone);
+     break;
+     
+   case DIR_POS_DELETE:
+   /* Undeletable servers cannot be deleted.
+     */
+     if (DIR_TestFlag(server, DIR_UNDELETABLE))
+       return PR_FALSE;
+     
+       /* Remove the prefs corresponding to the given server.  If the prefName
+       * value is nsnull, the server has never been saved and there are no
+       * prefs to remove.
+     */
+     if (server->prefName)
+     {
+       char tempstring[256];
+       
+       DIR_ClearPrefBranch(server->prefName);
+       // mark the server as deleted by setting its position to 0
+       DIR_SetIntPref (server->prefName, "position", tempstring, 0, -1);
+     }
+     
+     /* If the server is in the server list, remove it.
+     */
+     num = wholeList->IndexOf(server);
+     if (num >= 0)
+     {
+     /* The list does not need to be re-sorted if the server is the
+     * last one in the list.
+       */
+       count = wholeList->Count();
+       if (num == count - 1)
+       {
+         wholeList->RemoveElementAt(num);
+       }
+       else
+       {
+         resort = PR_TRUE;
+         wholeList->RemoveElement(server);
+       }
+       
+       if (wholeList == dir_ServerList)
+         DIR_SendNotification(server, DIR_NOTIFY_DELETE, idNone);
+     }
+     break;
+     
+   default:
+   /* See if the server is already in the list.
+     */
+     count = wholeList->Count();
+     for (i= 0; i < count; i++)
+     {
+       if  ((s = (DIR_Server *)wholeList->ElementAt(i)) != nsnull)
+         if (s == server)
+           break;
+     }
+     
+     /* If the server is not in the list, add it to the beginning and re-sort.
+     */
+     if (s == nsnull)
+     {
+       server->position = position;
+       wholeList->AppendElement(server);
+       resort = PR_TRUE;
+       
+       if (wholeList == dir_ServerList)
+         DIR_SendNotification(server, DIR_NOTIFY_ADD, idNone);
+     }
+     
+     /* Servers with locked position values cannot be moved.
+     */
+     else if (DIR_TestFlag(server, DIR_POSITION_LOCKED))
+       return PR_FALSE;
+     
+       /* Don't re-sort if the server is already in the requested position.
+     */
+     else if (server->position != position)
+     {
+       server->position = position;
+       wholeList->RemoveElement(server);
+       wholeList->AppendElement(server);
+       resort = PR_TRUE;
+     }
+     break;
+        }
+        
+        /* Make sure our position changes get saved back to prefs
+        */
+        DIR_SaveServerPreferences(wholeList);
+        
+        return resort;
 }
 
 

@@ -73,9 +73,9 @@ typedef enum
 {
 	LDAPDirectory,
 	HTMLDirectory,
-    PABDirectory,
-    MAPIDirectory,
-    FixedQueryLDAPDirectory = 777
+  PABDirectory,
+  MAPIDirectory,
+  FixedQueryLDAPDirectory = 777
 } DirectoryType;
 
 typedef enum
