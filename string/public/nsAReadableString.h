@@ -27,7 +27,13 @@
   // WORK IN PROGRESS
 
 #include "nscore.h"
+  // for |PRUnichar|
+
+#include <string>
+  // for |char_traits|
+
 #include <iterator>
+  // for |bidirectional_iterator_tag|
 
 
 /*
@@ -47,6 +53,27 @@
   'C') is a string of |char|s.
 */
 
+
+#define NS_DEF_1_STRING_COMPARISON_OPERATOR(comp, T1, T2) \
+  template <class CharT>                        \
+  inline                                        \
+  PRBool                                        \
+  operator comp( T1 lhs, T2 rhs )               \
+    {                                           \
+      return PRBool(Compare(lhs, rhs) comp 0);  \
+    }
+
+#define NS_DEF_STRING_COMPARISON_OPERATORS(T1, T2) \
+  NS_DEF_1_STRING_COMPARISON_OPERATOR(!=, T1, T2) \
+  NS_DEF_1_STRING_COMPARISON_OPERATOR(< , T1, T2) \
+  NS_DEF_1_STRING_COMPARISON_OPERATOR(<=, T1, T2) \
+  NS_DEF_1_STRING_COMPARISON_OPERATOR(==, T1, T2) \
+  NS_DEF_1_STRING_COMPARISON_OPERATOR(>=, T1, T2) \
+  NS_DEF_1_STRING_COMPARISON_OPERATOR(> , T1, T2)
+
+#define NS_DEF_STRING_COMPARISONS(T) \
+  NS_DEF_STRING_COMPARISON_OPERATORS(const T<CharT>&, const CharT*) \
+  NS_DEF_STRING_COMPARISON_OPERATORS(const CharT*, const T<CharT>&)
 
 template <class CharT> class basic_nsAWritableString;
   // ...because we sometimes use them as `out' params
@@ -78,6 +105,8 @@ class basic_nsAReadableString
 
     public:
       enum FragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
+
+        // Damn!  Had to make |GetFragment| public because the compilers suck.  Should be protected.
       virtual const CharT* GetFragment( ConstFragment&, FragmentRequest, PRUint32 = 0 ) const = 0;
 
       friend class ConstIterator;
@@ -155,6 +184,9 @@ class basic_nsAReadableString
                 --mPosition;
                 return result;
               }
+
+
+              // Damn again!  Problems with templates made me implement comparisons as members.
 
             PRBool
             operator==( const ConstIterator& rhs )
@@ -247,7 +279,26 @@ class basic_nsAReadableString
       // IsSpace
       // IsAlpha
       // IsDigit
+
+
+
+        /*
+          Normally you wouldn't declare these as members...
+
+          ...explanation to come...
+        */
+
+      PRBool operator!=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)!=0; }
+      PRBool operator< ( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)< 0; }
+      PRBool operator<=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)<=0; }
+      PRBool operator==( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)==0; }
+      PRBool operator>=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)>=0; }
+      PRBool operator> ( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)> 0; }
   };
+
+NS_DEF_STRING_COMPARISONS(basic_nsAReadableString)
+
+
 
 NS_SPECIALIZE_TEMPLATE
 inline
@@ -278,6 +329,183 @@ basic_nsAReadableString<char>::GetBuffer() const
     GetFragment(fragment, kFirstFragment);
     return fragment.mStart;
   }
+
+
+
+template <class CharT>
+class basic_nsLiteralString
+      : public basic_nsAReadableString<CharT>
+  {
+    typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
+    typedef typename basic_nsAWritableString<CharT>::ConstFragment    ConstFragment;
+
+    protected:
+      virtual const CharT* GetFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
+
+    public:
+    
+        // Note: _not_ explicit
+      basic_nsLiteralString( const CharT* aLiteral )
+          : mStart(aLiteral),
+            mEnd(mStart + char_traits<CharT>::length(mStart))
+        {
+          // nothing else to do here
+        }
+
+      basic_nsLiteralString( const CharT* aLiteral, PRUint32 aLength )
+          : mStart(aLiteral)
+            mEnd(mStart + aLength)
+        {
+          // nothing else to do here
+        }
+
+      virtual PRUint32 Length() const;
+
+    private:
+      const CharT* mStart;
+      const CharT* mEnd;
+  };
+
+NS_DEF_STRING_COMPARISONS(basic_nsLiteralString)
+
+template <class CharT>
+class nsConcatString
+      : public basic_nsAReadableString<CharT>
+    /*
+      ...not unlike RickG's original |nsSubsumeString| in _intent_.
+    */
+  {
+    typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
+    typedef typename basic_nsAWritableString<CharT>::ConstFragment    ConstFragment;
+
+    protected:
+      virtual const CharT* GetFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
+
+      static const int kLeftString = 0;
+      static const int kRightString = 1;
+
+    public:
+      nsConcatString( const basic_nsAReadableString<CharT>& aLeftString, const basic_nsAReadableString<CharT>& aRightString )
+        {
+          mStrings[kLeftString] = &aLeftString;
+          mStrings[kRightString] = &aRightString;
+        }
+
+      virtual PRUint32 Length() const;
+
+    private:
+      const basic_nsAReadableString<CharT>* mStrings[2];
+      ConstFragment mFragment;
+  };
+
+NS_DEF_STRING_COMPARISONS(nsConcatString)
+
+template <class CharT>
+PRUint32
+nsConcatString<CharT>::Length() const
+  {
+    return mStrings[kLeftString]->Length() + mStrings[kRightString]->Length();
+  }
+
+template <class CharT>
+const CharT*
+nsConcatString<CharT>::GetFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
+  {
+    const int kLeftString   = 0;
+    const int kRightString  = 1;
+
+    int whichString;
+
+    switch ( aRequest )
+      {
+        case kPrevFragment:
+        case kNextFragment:
+          whichString = reinterpret_cast<PRInt32>(aFragment.mFragmentIdentifier);
+          break;
+
+        case kFirstFragment:
+          aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString = kLeftString);
+          break;
+
+        case kLastFragment:
+          aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString = kRightString);
+          break;
+
+        case kFragmentAt:
+          PRUint32 leftLength = mStrings[kLeftString]->Length();
+          if ( aPosition < leftLength )
+            whichString = kLeftString;
+          else
+            {
+              whichString = kRightString;
+              aPosition -= leftLength;
+            }
+          aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString);
+          break;
+            
+      }
+
+    const CharT* result;
+    bool done;
+    do
+      {
+        done = true;
+        result = mStrings[whichString]->GetFragment(mFragment, aRequest, aPosition);
+
+        if ( !result )
+          {
+            done = false;
+            if ( aRequest == kNextFragment && whichString == kLeftString )
+              {
+                aRequest = kFirstFragment;
+                aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString = kRightString);
+              }
+            else if ( aRequest == kPrevFragment && whichString == kRightString )
+              {
+                aRequest = kLastFragment;
+                aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString = kLeftString);
+              }
+            else
+              done = true;
+          }
+      }
+    while ( !done );
+
+    aFragment.mStart = mFragment.mStart;
+    aFragment.mEnd   = mFragment.mEnd;
+    return result;
+  }
+
+
+
+
+template <class CharT>
+const CharT*
+basic_nsLiteralString<CharT>::GetFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const
+  {
+    switch ( aRequest )
+      {
+        case kFirstFragment:
+        case kLastFragment:
+        case kFragmentAt:
+          aFragment.mStart = mStart;
+          aFragment.mEnd = mEnd;
+          return mStart + aOffset;
+        
+        case kPrevFragment:
+        case kNextFragment:
+        default:
+          return 0;
+      }
+  }
+
+template <class CharT>
+PRUint32
+basic_nsLiteralString<CharT>::Length() const
+  {
+    return PRUint32(mEnd - mStart);
+  }
+
 
 
 template <class CharT>
@@ -365,6 +593,12 @@ template <class CharT>
 int
 Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
+      /*
+        If this turns out to be too slow (after measurement), there are two important modifications
+          1) chunky iterators
+          2) use char_traits<T>::compare
+      */
+
     PRUint32 lLength = lhs.Length();
     PRUint32 rLength = rhs.Length();
     int result = 0;
@@ -395,6 +629,20 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
   }
 
 template <class CharT>
+int
+Compare( const basic_nsAReadableString<CharT>& lhs, const CharT* rhs )
+  {
+    return Compare(lhs, basic_nsLiteralString<CharT>(rhs));
+  }
+
+template <class CharT>
+int
+Compare( const CharT* lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    return Compare(basic_nsLiteralString<CharT>(lhs), rhs);
+  }
+
+template <class CharT>
 inline
 int
 basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& rhs ) const
@@ -402,59 +650,6 @@ basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& r
     return ::Compare(*this, rhs);
   }
 
-template <class CharT>
-PRBool
-operator!=( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    return lhs.Compare(rhs) != 0;
-  }
-// readable != CharT*
-// CharT* != readable
-
-template <class CharT>
-PRBool
-operator<( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    return lhs.Compare(rhs) < 0;
-  }
-// readable < CharT*
-// CharT* < readable
-
-template <class CharT>
-PRBool
-operator<=( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    return lhs.Compare(rhs) <= 0;
-  }
-// readable <= CharT*
-// CharT* <= readable
-
-template <class CharT>
-PRBool
-operator==( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    return lhs.Compare(rhs) == 0;
-  }
-// readable == CharT*
-// CharT* == readable
-
-template <class CharT>
-PRBool
-operator>=( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    return lhs.Compare(rhs) >= 0;
-  }
-// readable >= CharT*
-// CharT* >= readable
-
-template <class CharT>
-PRBool
-operator>( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    return lhs.Compare(rhs) > 0;
-  }
-// readable > CharT*
-// CharT* > readable
 
 
   /*
@@ -478,36 +673,31 @@ operator>( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStr
   */
 
 template <class CharT>
-class nsConcatString
-      : public basic_nsAReadableString<CharT>
-    /*
-      ...not unlike RickG's original |nsSubsumeString| in _intent_.
-    */
-  {
-    public:
-
-    // ...
-  };
-
-template <class CharT>
 nsConcatString<CharT>
-operator+( const basic_nsAReadableString<CharT>&, const basic_nsAReadableString<CharT>& )
+operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
-    // ...
+    return nsConcatString<CharT>(lhs, rhs);
   }
 
 template <class CharT>
 nsConcatString<CharT>
-operator+( const basic_nsAReadableString<CharT>&, const CharT* )
+operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsLiteralString<CharT>& rhs )
   {
-    // ...
+    return nsConcatString<CharT>(lhs, rhs);
   }
 
 template <class CharT>
 nsConcatString<CharT>
-operator+( const CharT*, const basic_nsAReadableString<CharT>& )
+operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
-    // ...
+    return nsConcatString<CharT>(lhs, rhs);
+  }
+
+template <class CharT>
+nsConcatString<CharT>
+operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<CharT>& rhs )
+  {
+    return nsConcatString<CharT>(lhs, rhs);
   }
 
 template <class CharT, class TraitsT>
@@ -520,5 +710,8 @@ operator<<( basic_ostream<CharT, TraitsT>& os, const basic_nsAReadableString<Cha
 
 typedef basic_nsAReadableString<PRUnichar>  nsAReadableString;
 typedef basic_nsAReadableString<char>       nsAReadableCString;
+
+typedef basic_nsLiteralString<PRUnichar>    nsLiteralString;
+typedef basic_nsLiteralString<char>         nsLiteralCString;
 
 #endif // !defined(_nsAReadableString_h__)

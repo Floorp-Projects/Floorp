@@ -56,6 +56,10 @@ class basic_nsSharedString
       mutable nsrefcnt mRefCount;
   };
 
+NS_DEF_STRING_COMPARISONS(basic_nsStdStringWrapper)
+
+
+
 template <class CharT>
 class nsSharedStringPtr
   {
