@@ -31,7 +31,7 @@
 #include <Menus.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsDynamicMDEFLog, 0)
+NS_IMPL_LOG(nsDynamicMDEFLog)
 #define PRINTF NS_LOG_PRINTF(nsDynamicMDEFLog)
 #define FLUSH  NS_LOG_FLUSH(nsDynamicMDEFLog)
 
