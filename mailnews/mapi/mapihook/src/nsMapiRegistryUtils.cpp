@@ -241,93 +241,37 @@ nsresult nsMapiRegistryUtils::recursiveDeleteKey(HKEY hKeyParent, const char* lp
     return rv;
 }
 
-nsresult nsMapiRegistryUtils::RegCopyKey(HKEY SrcKey, HKEY TrgKey, const char* TrgSubKeyName)
+/* static */
+void nsMapiRegistryUtils::RegCopyKey(HKEY aSrcKey, HKEY aDestKey, const char* aSubKeyName)
 {
-	  HKEY	SrcSubKey;
-	  HKEY	TrgSubKey;
-	  int	ValEnumIndx=0;
-	  int	KeyEnumIndx=0;
+  HKEY srcSubKey, destSubKey;
+  char valueName[MAX_PATH + 1], keyName[MAX_PATH + 1];
+  BYTE valueData[MAX_PATH + 1];
+  DWORD nameSize, dataSize, keySize, valueType;
+  LONG Err;
 
-	  char	ValName[MAX_PATH+1];
-	  char	KeyName[MAX_PATH+1];
+  // open source key
+  if (::RegOpenKeyEx(aSrcKey, aSubKeyName, NULL, KEY_ALL_ACCESS, &srcSubKey) != ERROR_SUCCESS)
+    return;
 
-	  DWORD	VarType;
-    DWORD dwSize = MAX_PATH + 1;
-    DWORD dwBufferSize = dwSize;
-	  unsigned char szBuffer[MAX_PATH+1];
+  // create target key
+  if (::RegCreateKeyEx(aDestKey, aSubKeyName, NULL, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &destSubKey, NULL) == ERROR_SUCCESS) {
+    for (DWORD valueIndex = 0;
+         nameSize = MAX_PATH + 1,
+         dataSize = MAX_PATH + 1,
+         ::RegEnumValue(srcSubKey, valueIndex, valueName, &nameSize, NULL, &valueType, valueData, &dataSize) == ERROR_SUCCESS;
+         valueIndex++)
+      ::RegSetValueEx(destSubKey, valueName, NULL, valueType, valueData, dataSize);
 
-	  LONG	Err;
-	  DWORD	KeyDisposition;
-	  FILETIME LastWriteTime; 
+    for (DWORD keyIndex = 0;
+         keySize = MAX_PATH + 1,
+         ::RegEnumKeyEx(srcSubKey, keyIndex, keyName, &keySize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS;
+         keyIndex++)
+      RegCopyKey(srcSubKey, destSubKey, keyName);
 
-	  // create target key
-    if (::RegCreateKeyEx(TrgKey,TrgSubKeyName,NULL,NULL,REG_OPTION_NON_VOLATILE,KEY_ALL_ACCESS,NULL,&TrgSubKey,&KeyDisposition) == ERROR_SUCCESS)
-    {
-	      do {
-		        do {
-			          // read value from source key
-			          Err = ERROR_NOT_ENOUGH_MEMORY;
-			          do {						 
-				            dwSize=MAX_PATH+1;
-                    Err = ::RegEnumValue(SrcKey,ValEnumIndx,ValName,&dwSize,NULL,&VarType,szBuffer,&dwBufferSize);
-                } while (Err == ERROR_NOT_ENOUGH_MEMORY);
-
-			          // done copying this key
-			          if (Err == ERROR_NO_MORE_ITEMS)
-				            break;
-
-			          // unknown error return
-			          if (Err != ERROR_SUCCESS)
-				            goto quit_err;
-
-			          // write value to target key
-                if (::RegSetValueEx(TrgSubKey,ValName,NULL,VarType,szBuffer,dwBufferSize) != ERROR_SUCCESS)
-				            goto quit_get_err;
-
-			          // read next value
-			          ValEnumIndx++;
-            } while (true);
-		        
-            // if copying under the same key avoid endless recursions
-		        do {
-			          // enum sub keys
-			          dwSize =MAX_PATH+1; // reset dwSize
-                Err = ::RegEnumKeyEx(SrcKey,KeyEnumIndx++,KeyName,&dwSize,NULL,NULL,NULL,&LastWriteTime);
-            } while ((SrcKey == TrgKey) && !strnicmp(KeyName,TrgSubKeyName,strlen(KeyName)) && (Err == ERROR_SUCCESS));
-
-		        // done copying this key		
-		       if (Err == ERROR_NO_MORE_ITEMS)
-			         break;
-
-		       // unknown error return
-		       if (Err != ERROR_SUCCESS)
-			         goto quit_get_err;
-
-		       // open the source subkey
-           if (::RegOpenKeyEx(SrcKey,KeyName,NULL,KEY_ALL_ACCESS,&SrcSubKey) != ERROR_SUCCESS)
-			         goto quit_get_err;
-
-		        // recurs with the subkey
-		        if ((Err = RegCopyKey(SrcSubKey, TrgSubKey, KeyName)) != ERROR_SUCCESS)
-			          break;
-
-            if (::RegCloseKey(SrcSubKey) != ERROR_SUCCESS)
-			          goto quit_get_err;
-        } while (true);
-    }
-
-// normal quit
-quit_err:
-    ::RegCloseKey(TrgSubKey);
-	if (Err == ERROR_NO_MORE_ITEMS)
-		return NS_OK;	
-	else
-		return NS_ERROR_FAILURE;
-
-// abnormal quit
-quit_get_err:
-  ::RegCloseKey(TrgSubKey);
-	return NS_ERROR_FAILURE;
+    ::RegCloseKey(destSubKey);
+  }
+  ::RegCloseKey(srcSubKey);
 }
 
 PRBool nsMapiRegistryUtils::IsDefaultMailClient()
@@ -659,14 +603,10 @@ nsresult nsMapiRegistryUtils::RestoreBackedUpMapiDll()
 // we will copy the keys into Software\Clases
 nsresult nsMapiRegistryUtils::setProtocolHandler(const char * aDefaultAppRegKey, const char * protocolName)
 {
-    nsCAutoString srcKeyName;
-    srcKeyName = aDefaultAppRegKey;
-    srcKeyName.Append(protocolName);
-
     HKEY srcKey;
     HKEY trgKey;
 
-    ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, srcKeyName.get(), 0, KEY_READ, &srcKey);
+    ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, aDefaultAppRegKey, 0, KEY_READ, &srcKey);
     ::RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\Classes", 0, KEY_READ, &trgKey);
 
     RegCopyKey(srcKey, trgKey, protocolName);

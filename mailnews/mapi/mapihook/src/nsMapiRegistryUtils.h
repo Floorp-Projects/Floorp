@@ -71,7 +71,7 @@ private :
 
     PRBool mRestrictedRegAccess; // cannot write to HKLM in the registry
 
-    nsresult RegCopyKey(HKEY SrcKey, HKEY TrgKey, const char* TrgSubKeyName); // copies a key and all sub keys to TrgKey.
+    static void RegCopyKey(HKEY aSrcKey, HKEY aDestKey, const char* aSubKeyName); // recursively copies the given sub key from the src key to the dest key
     nsresult recursiveDeleteKey(HKEY hKeyParent, const char* lpszKeyChild);
 
 public :
