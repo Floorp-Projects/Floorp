@@ -76,6 +76,7 @@ CHROME_CONTENT = \
       .\msgSynchronize.xul \
       .\msgSynchronize.js \
       .\msgSelectOffline.xul \
+	  .\mail-offline.js \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -73,6 +73,7 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://messenger/content/mailContextMenus.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/messengerdnd.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>

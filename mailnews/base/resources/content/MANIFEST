@@ -63,3 +63,4 @@ mailWidgets.xml
 msgSynchronize.xul
 msgSynchronize.js
 msgSelectOffline.xul
+mail-offline.js
