@@ -76,10 +76,14 @@ static inline void DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state)
     // If this is a DOM JSContext, then notify nsIScriptContext of script
     // completion so that it can reset its infinite loop detection mechanism.
     //
-    // Note: We rely on the rule that if any JSContext in our JSRuntime has a
-    // private set then that private *must* be a pointer to an nsISupports.
+    // Note: We rely on the rule that if any JSContext in our JSRuntime has
+    // private data that points to an nsISupports subclass, it has also set
+    // the JSOPTION_PRIVATE_IS_NSISUPPORTS option.
 
-    nsISupports *supports = (nsISupports*) JS_GetContextPrivate(cx);
+    nsISupports *supports =
+        (JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+        ? NS_STATIC_CAST(nsIScriptContext*, JS_GetContextPrivate(cx))
+        : nsnull;
     if(supports)
     {
         nsCOMPtr<nsIScriptContext> scx = do_QueryInterface(supports);
