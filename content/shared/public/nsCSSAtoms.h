@@ -29,37 +29,20 @@
 class nsCSSAtoms {
 public:
 
-  static void AddrefAtoms();
+  static void AddRefAtoms();
   static void ReleaseAtoms();
 
-  // Alphabetical list of css atoms
-  static nsIAtom* activePseudo;
-  static nsIAtom* afterPseudo;
-  
-  static nsIAtom* beforePseudo;
 
-  static nsIAtom* disabledPseudo;
-  static nsIAtom* dragOverPseudo;
-  static nsIAtom* dragPseudo;
+  /* Declare all atoms
 
-  static nsIAtom* enabledPseudo;
+     The atom names and values are stored in nsCSSAtomList.h and
+     are brought to you by the magic of C preprocessing
 
-  static nsIAtom* firstChildPseudo;
-  static nsIAtom* focusPseudo;
-
-  static nsIAtom* hoverPseudo;
-
-  static nsIAtom* langPseudo;
-  static nsIAtom* linkPseudo;
-
-  static nsIAtom* outOfDatePseudo;  // Netscape extension
-
-  static nsIAtom* selectedPseudo;
-  static nsIAtom* selectionPseudo;
-
-  static nsIAtom* universalSelector;
-
-  static nsIAtom* visitedPseudo;
+     Add new atoms to nsCSSAtomList and all support logic will be auto-generated
+   */
+#define CSS_ATOM(_name, _value) static nsIAtom* _name;
+#include "nsCSSAtomList.h"
+#undef CSS_ATOM
 };
 
 #endif /* nsCSSAtoms_h___ */
