@@ -56,7 +56,7 @@ DownloadProgressListener.prototype =
     this.elapsed = now - (aDownload.startTime / 1000);
     var rate; // aCurTotalProgress/sec
     if (this.elapsed)
-      rate = (aCurTotalProgress * 1000) / this.elapsed;
+      rate = (aCurTotalProgress * 1024) / this.elapsed;
     else
       rate = 0;
 
@@ -174,8 +174,8 @@ DownloadProgressListener.prototype =
   // x, >= 1MB  y >= 1MB        x of y MB
   _formatKBytes: function (aKBytes, aTotalKBytes)
   {
-    var progressHasMB = parseInt(aKBytes/1000) > 0;
-    var totalHasMB = parseInt(aTotalKBytes/1000) > 0;
+    var progressHasMB = parseInt(aKBytes/1024) > 0;
+    var totalHasMB = parseInt(aTotalKBytes/1024) > 0;
     
     var format = "";
     if (!progressHasMB && !totalHasMB) {
@@ -184,17 +184,17 @@ DownloadProgressListener.prototype =
     }
     else if (progressHasMB && totalHasMB) {
       format = this._statusFormatMBMB;
-      format = this._replaceInsert(format, 1, (aKBytes / 1000).toFixed(1));
-      format = this._replaceInsert(format, 2, (aTotalKBytes / 1000).toFixed(1));
+      format = this._replaceInsert(format, 1, (aKBytes / 1024).toFixed(1));
+      format = this._replaceInsert(format, 2, (aTotalKBytes / 1024).toFixed(1));
     }
     else if (totalHasMB && !progressHasMB) {
       format = this._statusFormatKBMB;
       format = this._replaceInsert(format, 1, aKBytes);
-      format = this._replaceInsert(format, 2, (aTotalKBytes / 1000).toFixed(1));
+      format = this._replaceInsert(format, 2, (aTotalKBytes / 1024).toFixed(1));
     }
     else if (progressHasMB && !totalHasMB) {
       format = this._statusFormatUnknownMB;
-      format = this._replaceInsert(format, 1, (aKBytes / 1000).toFixed(1));
+      format = this._replaceInsert(format, 1, (aKBytes / 1024).toFixed(1));
     }
     else {
       // This is an undefined state!
