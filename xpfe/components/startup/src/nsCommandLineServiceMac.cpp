@@ -205,7 +205,7 @@ private:
 	static pascal OSErr	AppleEventHandler(
 								const AppleEvent*	inAppleEvent,
 								AppleEvent*			outAEReply,
-								SInt32				inRefCon);
+								UInt32				inRefCon);
 
 protected:
 	KioskEnum			mKioskMode;
@@ -469,7 +469,7 @@ nsAppleEventHandler::~nsAppleEventHandler()
 pascal OSErr nsAppleEventHandler::AppleEventHandler(
 		const AppleEvent*	inAppleEvent,
 		AppleEvent*			outAEReply,
-		SInt32				inRefCon)
+		UInt32				inRefCon)
 // This is the function that gets installed as the AE callback.
 //----------------------------------------------------------------------------------------
 {
@@ -2168,13 +2168,21 @@ OSErr EudoraSuite::SendSetData(Str31 theFieldName, Ptr thePtr, SInt32 thePtrSize
 			AEDisposeDesc(&theFieldSpec);
 				
 			theText.descriptorType = typeChar;
+#if TARGET_CARBON
+			DebugStr("\pAppleEvent support needs fixing under Carbon");
+#else
 			theText.dataHandle = theData;
+#endif
 			if (!err)
 				err = AEPutParamDesc(&theEvent,keyAEData,&theText);
 			if (!err)
 				err = EudoraSuite::SendEvent(&theEvent);
 
+#if TARGET_CARBON
+			DebugStr("\pAppleEvent support needs fixing under Carbon");
+#else
 			DisposeHandle(theText.dataHandle);
+#endif
 			AEDisposeDesc(&theText);
 			AEDisposeDesc(&theMsg);
 			AEDisposeDesc(&theName);
@@ -2360,7 +2368,11 @@ OSErr EudoraSuite::Set_Eudora_Priority(SInt32 thePriority)
   h = NewHandle (sizeof(thePriority));
   BlockMove ((Ptr)&thePriority,*h,sizeof(thePriority));
   theData.descriptorType = typeInteger;
+#if TARGET_CARBON
+  DebugStr("\pAppleEvent support needs fixing under Carbon");
+#else
   theData.dataHandle = h;
+#endif
   if (!theErr)
     theErr=AEPutParamDesc(&theEvent,keyAEData,&theData);
   if (!theErr)
@@ -2417,12 +2429,19 @@ void MoreExtractFromAEDesc::TheCString(const AEDesc &inDesc, char * & outPtr)
 	Handle	dataH;
 	AEDesc	coerceDesc = {typeNull, nil};
 	if (inDesc.descriptorType == typeChar) {
-		dataH = inDesc.dataHandle;		// Descriptor is the type we want
-	
+#if TARGET_CARBON
+		DebugStr("\pAppleEvent support needs fixing under Carbon");
+#else
+		dataH = inDesc.dataHandle;		// Descriptor is the type we want#
+#endif
 	} else {							// Try to coerce to the desired type
 		if (AECoerceDesc(&inDesc, typeChar, &coerceDesc) == noErr) {
 										// Coercion succeeded
+#if TARGET_CARBON
+			DebugStr("\pAppleEvent support needs fixing under Carbon");
+#else
 			dataH = coerceDesc.dataHandle;
+#endif
 
 		} else {						// Coercion failed
 			ThrowOSErr_(errAETypeError);
