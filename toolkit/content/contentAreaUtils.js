@@ -63,22 +63,24 @@ function openNewWindowWith(href, linkNode, securityCheck)
 
 function markLinkVisited(href, linkNode)
 {
-   var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
-                               .getService(Components.interfaces.nsIGlobalHistory);
-   if (!globalHistory.isVisited(href)) {
-     globalHistory.addPage(href);
-     var oldHref = linkNode.getAttribute("href");
-     if (typeof oldHref == "string") {
-       // Use setAttribute instead of direct assignment.
-       // (bug 217195, bug 187195)
-       linkNode.setAttribute("href", "");
-       linkNode.setAttribute("href", oldHref);
-     }
-     else {
-       // Converting to string implicitly would be a 
-       // minor security hole (similar to bug 202994).
-     }
-   }
+  var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
+                                .getService(Components.interfaces.nsIGlobalHistory2);
+
+  var uri = makeURL(href);
+  if (!globalHistory.isVisited(uri)) {
+    globalHistory.addPage(uri, false, false);
+    var oldHref = linkNode.getAttribute("href");
+    if (typeof oldHref == "string") {
+      // Use setAttribute instead of direct assignment.
+      // (bug 217195, bug 187195)
+      linkNode.setAttribute("href", "");
+      linkNode.setAttribute("href", oldHref);
+    }
+    else {
+      // Converting to string implicitly would be a 
+      // minor security hole (similar to bug 202994).
+    }
+  }
 }
 
 function urlSecurityCheck(url, doc) 
