@@ -490,7 +490,7 @@ MimeMultipart_close_child(MimeObject *object)
   MimeHeaders_free(mult->hdrs);
   mult->hdrs = 0;
 
-  PR_ASSERT(cont->nchildren > 0);
+  NS_ASSERTION(cont->nchildren > 0, "badly formed mime message");
   if (cont->nchildren > 0)
 	{
 	  MimeObject *kid = cont->children[cont->nchildren-1];
