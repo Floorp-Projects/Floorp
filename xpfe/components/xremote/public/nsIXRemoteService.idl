@@ -24,6 +24,7 @@
  * browser instance so that it will respond to X remote requests. */
 
 interface nsIDOMWindowInternal;
+interface nsIWidget;
 
 [scriptable, uuid(510c0946-1dd2-11b2-b210-f5031abff3f0)]
 interface nsIXRemoteService : nsISupports {
@@ -37,7 +38,8 @@ interface nsIXRemoteService : nsISupports {
   [noscript] void shutdown     ();
 
   // parse the command given and generate a response
-  [noscript] void parseCommand (in string aCommand, out string aResponse);
+  [noscript] void parseCommand (in nsIWidget aWidget,
+				in string aCommand, out string aResponse);
 
   // add a new browser instance to listen for remote requests on
   void addBrowserInstance      (in nsIDOMWindowInternal aBrowser);
