@@ -78,6 +78,9 @@ class nsEditorAppCore : public nsBaseAppCore,
 	  															nsString& aAnyHas,
 	  															nsString& aAllHas);
 
+		NS_IMETHOD    GetParagraphFormat(nsString& aParagraphFormat);
+    NS_IMETHOD    SetParagraphFormat(const nsString& aParagraphFormat);
+
 		NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);
 		NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);
 		NS_IMETHOD    GetContentsAsText(nsIOutputStream* aContentsAsText);
