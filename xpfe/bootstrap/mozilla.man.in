@@ -69,7 +69,7 @@ Start with 4.x migration window.
 Set width of startup window to \fIvalue\fR.
 .TP
 .B \-v, \-version
-Print \fB@libdir@/@MOZ_APP_NAME@/@MOZ_APP_NAME@-bin\fR version.
+Print \fB@MOZ_APP_NAME@-bin\fR version.
 .TP
 \fB\-CreateProfile\fR \fIprofile\fR
 Create \fIprofile\fR.
@@ -120,7 +120,7 @@ Start with mail compose.
 .SH FILES
 \fI@bindir@/@MOZ_APP_NAME@\fR - shell script wrapping \fB@MOZ_APP_NAME@\fR
 .br
-\fI@libdir@/@MOZ_APP_NAME@/@MOZ_APP_NAME@-bin\fR - \fB@MOZ_APP_NAME@\fR executable
+\fI@mozappdir@/@MOZ_APP_NAME@-bin\fR - \fB@MOZ_APP_NAME@\fR executable
 
 .SH VERSION
 @MOZ_APP_VERSION@
