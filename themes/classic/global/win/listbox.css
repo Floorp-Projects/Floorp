@@ -72,13 +72,8 @@ listbox:focus > listitem[current="true"][selected="true"] {
 }
 
 listitem[selected="true"] {
-#ifdef MOZ_WIDGET_GTK2
-  background-color: -moz-gtk2-active;
-  color: -moz-gtk2-activetext
-#else
   background-color: -moz-Dialog;
   color: -moz-DialogText;
-#endif
 }
 
 listbox:focus > listitem[selected="true"] {

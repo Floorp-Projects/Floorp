@@ -120,10 +120,8 @@ public:
     eColor__moz_mac_menushadow,				//colour used to do shadows on menu items
     eColor__moz_mac_menutextselect,			//colour used to display text while mouse is over a menu item
 
-    //colour needed by GTK2 skin
-    eColor__moz_gtk2_active,                            //colour used for cell text background, selected not focus
-    eColor__moz_gtk2_activetext,                        //colour used for cell text, selected not focus
-    eColor__moz_gtk2_hovertext,                         //colour used for text, hover
+    //colour needed by GTK2 Classic skin
+    eColor__moz_gtk2_hovertext,
     
   	//all of the accent colours
   	eColor__moz_mac_accentlightesthighlight,

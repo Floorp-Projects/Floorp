@@ -77,11 +77,7 @@ treechildren::-moz-tree-row {
 }
 
 treechildren::-moz-tree-row(selected) {
-#ifdef MOZ_WIDGET_GTK2
-  background-color: -moz-gtk2-active;
-#else
   background-color: -moz-Dialog;
-#endif
 }
 
 treechildren::-moz-tree-row(selected, focus) {
@@ -113,11 +109,7 @@ treechildren::-moz-tree-cell-text {
 }
 
 treechildren::-moz-tree-cell-text(selected) {
-#ifdef MOZ_WIDGET_GTK2
-  color: -moz-gtk2-activetext;
-#else
   color: -moz-DialogText;
-#endif
 }
 
 tree[selstyle="primary"] > treechildren::-moz-tree-cell-text(primary) {
@@ -126,13 +118,8 @@ tree[selstyle="primary"] > treechildren::-moz-tree-cell-text(primary) {
 }
 
 tree[selstyle="primary"] > treechildren::-moz-tree-cell-text(primary, selected) {
-#ifdef MOZ_WIDGET_GTK2
-  background-color: -moz-gtk2-active;
-  color: -moz-gtk2-activetext;
-#else
   background-color: -moz-Dialog;
   color: -moz-DialogText;
-#endif
 }
 
 treechildren::-moz-tree-cell-text(selected, focus) {
@@ -348,19 +335,11 @@ treechildren[alternatingbackground="true"]::-moz-tree-row(odd) {
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected) {
-#ifdef MOZ_WIDGET_GTK2
-  background-color: -moz-gtk2-active;
-#else
   background-color: -moz-Dialog;
-#endif
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected) {
-#ifdef MOZ_WIDGET_GTK2
-  color: -moz-gtk2-activetext;
-#else
   color: -moz-DialogText;
-#endif
 }
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected, focus) {
