@@ -90,26 +90,6 @@ public:
    */
   NS_IMETHOD SetPenMode(nsPenMode aPenMode) { return NS_ERROR_FAILURE;};
 
-
-  /** ---------------------------------------------------
-   *  See documentation in nsIRenderingContext.h
-   *	@update 03/29/00 dwc
-   */
-  NS_IMETHOD DrawPath(nsPathPoint aPointArray[],PRInt32 aNumPts);
-
-    /** ---------------------------------------------------
-   *  See documentation in nsIRenderingContext.h
-   *	@update 03/29/00 dwc
-   */
-  NS_IMETHOD FillPath(nsPathPoint aPointArray[],PRInt32 aNumPts);
-
-  /**
-   * Fill a poly in the current foreground color
-   * @param aPoints points to use for the drawing, last must equal first
-   * @param aNumPonts number of points in the polygon
-   */
-  NS_IMETHOD RasterPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-
   /** ---------------------------------------------------
    *  See documentation in nsIRenderingContext.h
    *	@update 05/01/00 dwc
@@ -140,9 +120,6 @@ public:
 
 protected:
   virtual ~nsRenderingContextImpl();
-
-  void cdelete(int i);
-  void cinsert(int i,int y,const nsPoint aPointArray[],PRInt32 aNumPts);
 
   /**
    * Determine if a rect's width and height will fit within a specified width and height
@@ -210,74 +187,5 @@ private:
 
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
-
-/** ---------------------------------------------------
- *  Class QBezierCurve, a quadratic bezier curve
- *	@update 4/27/2000 dwc
- */
-class QBezierCurve
-{
-
-public:
-	nsFloatPoint	mAnc1;
-	nsFloatPoint	mCon;
-	nsFloatPoint  mAnc2;
-
-  QBezierCurve() {mAnc1.x=0;mAnc1.y=0;mCon=mAnc2=mAnc1;}
-  void SetControls(nsFloatPoint &aAnc1,nsFloatPoint &aCon,nsFloatPoint &aAnc2) { mAnc1 = aAnc1; mCon = aCon; mAnc2 = aAnc2;}
-  void SetPoints(nscoord a1x,nscoord a1y,nscoord acx,nscoord acy,nscoord a2x,nscoord a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
-  void SetPoints(float a1x,float a1y,float acx,float acy,float a2x,float a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
-  void DebugPrint();
-/** ---------------------------------------------------
- *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
- *  else it is so small that it can be approximated by 2 lineto calls
- *  @param aRenderingContext -- The RenderingContext to use to draw with
- *	@update 3/26/99 dwc
- */
-  void SubDivide(nsIRenderingContext *aRenderingContext);
-
-/** ---------------------------------------------------
- *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
- *  else it is so small that it can be approximated by 2 lineto calls
- *  @param nsPoint* -- The points array to rasterize into
- *  @param aNumPts* -- Current number of points in this array
- *	@update 3/26/99 dwc
- */
-  void SubDivide(nsPoint aThePoints[],PRInt16 *aNumPts);
-
-/** ---------------------------------------------------
- *  Divide a Quadratic Bezier curve at the mid-point
- *	@update 3/26/99 dwc
- *  @param aCurve1 -- Curve 1 as a result of the division
- *  @param aCurve2 -- Curve 2 as a result of the division
- */
-  void MidPointDivide(QBezierCurve *A,QBezierCurve *B);
-};
-
-  enum eSegType {eUNDEF,eLINE,eQCURVE,eCCURVE};
-
-
-/** ---------------------------------------------------
- *  A class to iterate through a nsPathPoint array and return segments
- *	@update 04/27/00 dwc
- */
-class nsPathIter {
-
-public:
-  enum eSegType {eUNDEF,eLINE,eQCURVE,eCCURVE};
-
-private:
-  PRUint32    mCurPoint;
-  PRUint32    mNumPoints;
-  nsPathPoint *mThePath;
-
-public:
-  nsPathIter();
-  nsPathIter(nsPathPoint* aThePath,PRUint32 aNumPts);
-
-  PRBool  NextSeg(QBezierCurve& TheSegment,eSegType& aCurveType);
-
-};
-
 
 #endif /* nsRenderingContextImpl */

@@ -57,7 +57,6 @@ class nsIAtom;
 
 struct nsFont;
 struct nsPoint;
-struct nsPathPoint;
 struct nsRect;
 struct nsTextDimensions;
 #ifdef MOZ_MATHML
@@ -96,7 +95,7 @@ typedef enum
 
 // IID for the nsIRenderingContext interface
 #define NS_IRENDERING_CONTEXT_IID \
- { 0xa6cf9068, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+ { 0x79be0166, 0x4491, 0x48e8,{0xb9, 0xe2, 0xce, 0xfb, 0xa1, 0xb1, 0x71, 0x99}}
 
 //----------------------------------------------------------------------
 
@@ -438,13 +437,6 @@ public:
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
 
   /**
-   * Rasterize a polygon with the current fill color.
-   * @param aPoints points to use for the drawing, last must equal first
-   * @param aNumPonts number of points in the polygon
-   */
-  NS_IMETHOD RasterPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)=0;
-
-  /**
    * Fill a poly in the current foreground color, without transformation taking place
    * @param aPoints points to use for the drawing, last must equal first
    * @param aNumPonts number of points in the polygon
@@ -696,28 +688,6 @@ public:
   NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
                         PRInt32 aFontID = -1,
                         const nscoord* aSpacing = nsnull) = 0;
-  /**
-   * Draw a path.. given a point array.  The Path currently supported is a Quadratic
-   * Bezier curve
-   * @param aPointArray an array of points on the path
-   * @param aNumPoints number of points in the array
-   * @param aY0 starting y
-   * @param aX1 ending x
-   * @param aY1 ending y
-   * @param aWidth tile width
-   * @param aHeight tile height
-   */
-  NS_IMETHOD DrawPath(nsPathPoint aPointArray[],PRInt32 aNumPts) = 0;
-
-
-  /**
-   * fill a path.. given a point array.  The Path currently supported is a Quadratic
-   * Bezier curve
-   * @param aPointArray an array of points on the path
-   * @param aNumPts number of points in the array
-   */
-  NS_IMETHOD FillPath(nsPathPoint aPointArray[],PRInt32 aNumPts) = 0;
-
 
   /**
    * Copy offscreen pixelmap to this RenderingContext.
