@@ -1477,7 +1477,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
 {
   NS_ENSURE_ARG_POINTER(aScrollX);
   nsresult result = NS_OK;
-  nsIScrollableView *view;      // no addref/release for views
+  nsIScrollableView *view = nsnull;      // no addref/release for views
   float p2t, t2p;
 
   *aScrollX = 0;
@@ -1496,7 +1496,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
 {
   NS_ENSURE_ARG_POINTER(aScrollY);
   nsresult result = NS_OK;
-  nsIScrollableView *view;      // no addref/release for views
+  nsIScrollableView *view = nsnull;      // no addref/release for views
   float p2t, t2p;
 
   *aScrollY = 0;
@@ -1948,7 +1948,7 @@ NS_IMETHODIMP GlobalWindowImpl::Scroll(PRInt32 aXScroll, PRInt32 aYScroll)
 NS_IMETHODIMP GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
 {
   nsresult result;
-  nsIScrollableView *view;      // no addref/release for views
+  nsIScrollableView *view = nsnull;      // no addref/release for views
   float p2t, t2p;
 
   result = GetScrollInfo(&view, &p2t, &t2p);
@@ -1966,7 +1966,7 @@ NS_IMETHODIMP GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif,
                                          PRInt32 aYScrollDif)
 {
   nsresult result;
-  nsIScrollableView *view;      // no addref/release for views
+  nsIScrollableView *view = nsnull;      // no addref/release for views
   float p2t, t2p;
 
   result = GetScrollInfo(&view, &p2t, &t2p);
@@ -3685,6 +3685,8 @@ nsresult
 GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
                                 float *aP2T, float *aT2P)
 {
+  *aScrollableView = nsnull;
+
   // Flush pending notifications so that the presentation is up to
   // date.
   FlushPendingNotifications();
