@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.167 $ ';
+$::UtilsVersion = '$Revision: 1.168 $ ';
 
 package TinderUtils;
 
@@ -311,7 +311,9 @@ sub SetupEnv {
 
     $ENV{LIBPATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:"
         . "$ENV{LIBPATH}";
+    # BeOS requires that components/ be in the library search path per bug 51655
     $ENV{LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:"
+	. "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin/components:"
         . "$ENV{LIBRARY_PATH}";
     $ENV{ADDON_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:"
         . "$ENV{ADDON_PATH}";
@@ -852,6 +854,7 @@ sub find_pref_file {
     # default to *nix
     my $pref_file = "prefs.js";
     my $profile_dir = "$build_dir/.mozilla";
+    $profile_dir ="/boot/home/config/settings/Mozilla/$Settings::MozProfileName" if ($Settings::OS eq "BeOS");
 
     # win32: works on win98 and win2k (file bugs on jrgm@netscape.com if it 
     # doesn't work on Me, XP, NT4 ...)
@@ -919,12 +922,15 @@ sub run_all_tests {
     # Before running tests, run regxpcom so that we don't crash when
     # people change contractids on us (since we don't autoreg opt builds)
     #
-    unlink("$binary_dir/component.reg");
+    unlink("$binary_dir/component.reg") or warn "$binary_dir/component.reg not removed\n";
     if($Settings::RegxpcomTest) {
         AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0,
                   $Settings::RegxpcomTestTimeout);
     }
 
+    my $mozappdir="$build_dir/.mozilla";
+    $mozappdir="/boot/home/config/settings/Mozilla" if ($Settings::OS eq "BeOS");
+    my $profiledir="$mozappdir/$Settings::MozProfileName";
 
     # no special profiledir on win32
     if ($Settings::OS !~ /^WIN/) {
@@ -935,8 +941,8 @@ sub run_all_tests {
         # Also assuming only one profile here.
         #
         my $cp_result = 0;
-        unless ((-d "$build_dir/.mozilla/$Settings::MozProfileName")||
-                ((-d "$build_dir/.mozilla/Profiles/$Settings::MozProfileName") and 
+        unless ((-d "$profiledir")||
+                ((-d "$mozappdir/Profiles/$Settings::MozProfileName") and 
                  ($Settings::OS eq 'Darwin'))) {
             print_log "No profile found, creating profile.\n";
             $cp_result = create_profile($build_dir, $binary_dir, $binary);
@@ -945,11 +951,13 @@ sub run_all_tests {
 
             # Recreate profile if we have $Settings::CleanProfile set.
             if ($Settings::CleanProfile) {
+		my $deletedir = $mozappdir;
+		$deletedir = $profiledir if ($Settings::OS eq "BeOS");
                 print_log "Creating clean profile ...\n";
-                print_log "Deleting $build_dir/.mozilla ...\n";
-                File::Path::rmtree("$build_dir/.mozilla", 0, 0);
-                if (-e "$build_dir/.mozilla") {
-                    print_log "Error: rmtree('$build_dir/.mozilla', 0, 0) failed.\n";
+                print_log "Deleting $deletedir ...\n";
+                File::Path::rmtree([$deletedir], 0, 0);
+                if (-e "$deletedir") {
+                    print_log "Error: rmtree([$deletedir], 0, 0) failed.\n";
                 }
                 $cp_result = create_profile($build_dir, $binary_dir, $binary);
             }
@@ -1569,7 +1577,7 @@ sub fork_and_log {
     my $pid = fork; # Fork off a child process.
 
     unless ($pid) { # child
-        $ENV{HOME} = $home;
+        $ENV{HOME} = $home if ($Settings::OS ne "BeOS");
         chdir $dir or die "chdir($dir): $!\n";
         open STDOUT, ">$logfile";
         open STDERR, ">&STDOUT";
