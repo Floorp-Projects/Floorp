@@ -79,7 +79,7 @@ nsMsgFactory::nsMsgFactory(const nsCID &aClass,
 
   // store a copy of the 
   serviceMgrSupports->QueryInterface(nsIServiceManager::IID(),
-                                     (void **)mServiceManager);
+                                     (void **)&mServiceManager);
 }   
 
 nsMsgFactory::~nsMsgFactory()   
