@@ -327,6 +327,8 @@ void nsParser::SetCommand(const char* aCommand){
 void nsParser::SetDocumentCharset(nsString& aCharset, nsCharsetSource aCharsetSource){
   mCharset = aCharset;
   mCharsetSource = aCharsetSource; 
+  if(mParserContext && mParserContext->mScanner)
+     mParserContext->mScanner->SetDocumentCharset(aCharset, aCharsetSource);
 }
 
 /**
@@ -1344,7 +1346,6 @@ nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
               printf("xmlencoding detect- %s\n", guess.ToNewCString());
   #endif
               this->SetDocumentCharset(guess, guessSource);
-			        mParserContext->mScanner->SetDocumentCharset(guess, guessSource);
            }
         }
         theTotalRead+=theNumRead;
