@@ -61,7 +61,7 @@ protected:
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
 
   nsresult FinishWithLength(char **_retval, PRInt32* aLength);
-  nsresult ConvertFromUnicodeWithLength(const PRUnichar *aSrc,
+  nsresult ConvertFromUnicodeWithLength(const nsAString& aSrc,
                                         PRInt32* aOutLen,
                                         char **_retval);
 

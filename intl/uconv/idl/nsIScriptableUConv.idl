@@ -37,6 +37,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIInputStream;
+
 %{C++
 // {0A698C44-3BFF-11d4-9649-00C0CA135B4E}
 #define NS_ISCRIPTABLEUNICODECONVERTER_CID { 0x0A698C44, 0x3BFF, 0x11d4, { 0x96, 0x49, 0x00, 0xC0, 0xCA, 0x13, 0x5B, 0x4E } }
@@ -49,7 +51,7 @@
  * @created         8/Jun/2000
  * @author          Makoto Kato [m_kato@ga2.so-net.ne.jp]
  */
-[scriptable, uuid(6a4bd9ef-abbc-47bb-a634-8c944205515a)]
+[scriptable, uuid(b5a06c58-1e32-4386-85ba-f54c4e8a9b48)]
 interface nsIScriptableUnicodeConverter : nsISupports
 {
   /**
@@ -57,7 +59,7 @@ interface nsIScriptableUnicodeConverter : nsISupports
    * Returns the converted string. After converting, Finish should be called
    * and its return value appended to this return value.
    */
-  string ConvertFromUnicode(in wstring aSrc);
+  string ConvertFromUnicode(in AString aSrc);
 
   /**
    * Returns the terminator string.
@@ -69,26 +71,34 @@ interface nsIScriptableUnicodeConverter : nsISupports
   /**
    * Converts the data from one Charset to Unicode.
    */
-  wstring ConvertToUnicode(in string aSrc);
+  AString ConvertToUnicode(in string aSrc);
 
   /**
    * Converts an array of bytes to a unicode string.
    */
-  wstring convertFromByteArray([const,array,size_is(aCount)] in octet aData,
+  AString convertFromByteArray([const,array,size_is(aCount)] in octet aData,
                                in unsigned long aCount);
 
   /**
    * Convert a unicode string to an array of bytes. Finish does not need to be
    * called.
    */
-  void convertToByteArray(in wstring aString,
+  void convertToByteArray(in AString aString,
                           out unsigned long aLen,
                           [array, size_is(aLen),retval] out octet aData);
 
   /**
+   * Converts a unicode string to an input stream. The bytes in the stream are
+   * encoded according to the charset attribute.
+   * The returned stream will be nonblocking.
+   */
+  nsIInputStream convertToInputStream(in AString aString);
+
+  /**
    * Current character set.
    *
-   * @throw NS_ERROR_UCONV_NOCONV The requested charset is not supported.
+   * @throw NS_ERROR_UCONV_NOCONV
+   *        The requested charset is not supported.
    */
   attribute string charset;
 };

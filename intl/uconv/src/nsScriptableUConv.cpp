@@ -44,6 +44,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIScriptableUConv.h"
 #include "nsScriptableUConv.h"
+#include "nsIStringStream.h"
 #include "nsCRT.h"
 
 #include "nsIPlatformCharset.h"
@@ -64,7 +65,7 @@ nsScriptableUnicodeConverter::~nsScriptableUnicodeConverter()
 }
 
 nsresult
-nsScriptableUnicodeConverter::ConvertFromUnicodeWithLength(const PRUnichar *aSrc,
+nsScriptableUnicodeConverter::ConvertFromUnicodeWithLength(const nsAString& aSrc,
                                                            PRInt32* aOutLen,
                                                            char **_retval)
 {
@@ -72,14 +73,15 @@ nsScriptableUnicodeConverter::ConvertFromUnicodeWithLength(const PRUnichar *aSrc
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
-  PRInt32 inLength = nsCRT::strlen(aSrc);
-  rv = mEncoder->GetMaxLength(aSrc, inLength, aOutLen);
+  PRInt32 inLength = aSrc.Length();
+  const nsAFlatString& flatSrc = PromiseFlatString(aSrc);
+  rv = mEncoder->GetMaxLength(flatSrc.get(), inLength, aOutLen);
   if (NS_SUCCEEDED(rv)) {
     *_retval = (char*) nsMemory::Alloc(*aOutLen+1);
     if (!*_retval)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = mEncoder->Convert(aSrc, &inLength, *_retval, aOutLen);
+    rv = mEncoder->Convert(flatSrc.get(), &inLength, *_retval, aOutLen);
     if (NS_SUCCEEDED(rv))
     {
       (*_retval)[*aOutLen] = '\0';
@@ -91,9 +93,9 @@ nsScriptableUnicodeConverter::ConvertFromUnicodeWithLength(const PRUnichar *aSrc
   return NS_ERROR_FAILURE;
 }
 
-/* string ConvertFromUnicode ([const] in wstring src); */
+/* string ConvertFromUnicode ([const] in AString src); */
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::ConvertFromUnicode(const PRUnichar *aSrc, char **_retval)
+nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc, char **_retval)
 {
   PRInt32 len;
   return ConvertFromUnicodeWithLength(aSrc, &len, _retval);
@@ -130,22 +132,22 @@ nsScriptableUnicodeConverter::Finish(char **_retval)
   return FinishWithLength(_retval, &len);
 }
 
-/* wstring ConvertToUnicode ([const] in string src); */
+/* AString ConvertToUnicode ([const] in string src); */
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::ConvertToUnicode(const char *aSrc, PRUnichar **_retval)
+nsScriptableUnicodeConverter::ConvertToUnicode(const char *aSrc, nsAString& _retval)
 {
   return ConvertFromByteArray(NS_REINTERPRET_CAST(const PRUint8*, aSrc),
                               strlen(aSrc),
                               _retval);
 }
 
-/* wstring convertFromByteArray([const,array,size_is(aCount)] in octet aData,
+/* AString convertFromByteArray([const,array,size_is(aCount)] in octet aData,
                                 in unsigned long aCount);
  */
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::ConvertFromByteArray(const PRUint8* aData,
                                                    PRUint32 aCount,
-                                                   PRUnichar** _retval)
+                                                   nsAString& _retval)
 {
   if (!mDecoder)
     return NS_ERROR_FAILURE;
@@ -157,30 +159,30 @@ nsScriptableUnicodeConverter::ConvertFromByteArray(const PRUint8* aData,
                               inLength, &outLength);
   if (NS_SUCCEEDED(rv))
   {
-    *_retval = (PRUnichar*) nsMemory::Alloc((outLength+1)*sizeof(PRUnichar));
-    if (!*_retval)
+    PRUnichar* buf = (PRUnichar*) nsMemory::Alloc((outLength+1)*sizeof(PRUnichar));
+    if (!buf)
       return NS_ERROR_OUT_OF_MEMORY;
 
     rv = mDecoder->Convert(NS_REINTERPRET_CAST(const char*, aData),
-                           &inLength, *_retval, &outLength);
+                           &inLength, buf, &outLength);
     if (NS_SUCCEEDED(rv))
     {
-      (*_retval)[outLength] = 0;
-      return NS_OK;
+      buf[outLength] = 0;
+      _retval.Assign(buf, outLength);
     }
-    nsMemory::Free(*_retval);
+    nsMemory::Free(buf);
+    return rv;
   }
-  *_retval = nsnull;
   return NS_ERROR_FAILURE;
 
 }
 
-/* void convertToByteArray(in wstring aString,
+/* void convertToByteArray(in AString aString,
                           out unsigned long aLen,
                           [array, size_is(aLen),retval] out octet aData);
  */
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::ConvertToByteArray(const PRUnichar* aString,
+nsScriptableUnicodeConverter::ConvertToByteArray(const nsAString& aString,
                                                  PRUint32* aLen,
                                                  PRUint8** _aData)
 {
@@ -206,7 +208,34 @@ nsScriptableUnicodeConverter::ConvertToByteArray(const PRUnichar* aString,
   return NS_OK;
 }
 
-/* attribute wstring charset; */
+/* nsIInputStream convertToInputStream(in AString aString); */
+NS_IMETHODIMP
+nsScriptableUnicodeConverter::ConvertToInputStream(const nsAString& aString,
+                                                   nsIInputStream** _retval)
+{
+  nsresult rv;
+  nsCOMPtr<nsIStringInputStream> inputStream =
+    do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRUint8* data;
+  PRUint32 dataLen;
+  rv = ConvertToByteArray(aString, &dataLen, &data);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = inputStream->AdoptData(NS_REINTERPRET_CAST(char*, data), dataLen);
+  if (NS_FAILED(rv)) {
+    nsMemory::Free(data);
+    return rv;
+  }
+
+  NS_ADDREF(*_retval = inputStream);
+  return rv;
+}
+
+/* attribute string charset; */
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::GetCharset(char * *aCharset)
 {
