@@ -28,23 +28,22 @@ include $(topsrcdir)/config/rules.mk
 
 embed_chrome: embed-jar.mn
 ifneq (jar,$(MOZ_CHROME_FILE_FORMAT))
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/bin/chrome < $(MOZILLA_DIR)/embedding/config/embed-jar.mn
+	$(PERL) $(MOZILLA_DIR)/embedding/config/gen_mn.pl -manifest $(MOZILLA_DIR)/embedding/config/embed-jar.mn -mozpath $(MOZILLA_DIR) -chrome $(DIST)/bin/chrome > $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/bin/chrome < $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
+	-$(RM) -f $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
 else
-	$(RM) -rf $(DIST)/Embed/tmpchrome
+	-$(RM) -rf $(DIST)/Embed/tmpchrome
 	for f in $(DIST)/bin/chrome/*.jar; do \
 		b=`basename $$f | sed -e 's|.jar$$||'` ; \
 		echo "$$b" ; \
 		$(NSINSTALL) -D $(DIST)/Embed/tmpchrome/$$b ;\
 		unzip -o -d $(DIST)/Embed/tmpchrome/$$b $$f ; \
 	done
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/Embed/tmpchrome < $(MOZILLA_DIR)/embedding/config/embed-jar.mn
+	$(PERL) $(MOZILLA_DIR)/embedding/config/gen_mn.pl -manifest $(MOZILLA_DIR)/embedding/config/embed-jar.mn -mozpath $(MOZILLA_DIR) -chrome $(DIST)/Embed/tmpchrome > $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/Embed/tmpchrome < $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
+	-$(RM) -f $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
+	# -$(RM) -rf $(DIST)/Embed/tmpchrome
 endif
-
-#
-# Run this by hand and check changes in, if necessary.
-# 
-create-jar:
-	$(PERL) $(MOZILLA_DIR)/embedding/config/gen_mn.pl -mozpath $(MOZILLA_DIR) -chrome $(DIST)/Embed/tmpchrome > $(MOZILLA_DIR)/embedding/config/embed-jar.mn
 
 install:: embed_chrome
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/basebrowser-unix -o unix -v

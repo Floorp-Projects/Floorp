@@ -26,8 +26,11 @@ include <$(DEPTH)\config\config.mak>
 
 embed_chrome: embed-jar.mn
 !if "$(_CHROME_FILE_FORMAT)" != "jar"
-        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -s $(DIST)\bin\chrome -d $(DIST)\bin\chrome < embed-jar.mn
+        $(PERL) gen_mn.pl -manifest embed-jar.mn -mozpath $(DEPTH) -chrome $(DIST)/bin/chrome > embed.mn
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -s $(DIST)\bin\chrome -d $(DIST)\bin\chrome < embed.mn
+        -$(RM) -f embed.mn
 !else
+	-$(RM) -rf $(DIST)\Embed\tmpchrome
 	nsinstall -D $(DIST)\Embed\tmpchrome\US
 	unzip -d $(DIST)\Embed\tmpchrome\US $(DIST)\bin\chrome\US.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\chatzilla
@@ -48,8 +51,10 @@ embed_chrome: embed-jar.mn
 	unzip -d $(DIST)\Embed\tmpchrome\modern $(DIST)\bin\chrome\modern.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\toolkit
 	unzip -d $(DIST)\Embed\tmpchrome\toolkit $(DIST)\bin\chrome\toolkit.jar
-        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -s $(DIST)\Embed\tmpchrome -d $(DIST)\bin\chrome < embed-jar.mn
-	$(RM) -rf $(DIST)\Embed\tmpchrome
+        $(PERL) gen_mn.pl -manifest embed-jar.mn -mozpath $(DEPTH) -chrome $(DIST)/Embed/tmpchrome > embed.mn
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -s $(DIST)\Embed\tmpchrome -d $(DIST)\bin\chrome < embed.mn
+        -$(RM) -f embed.mn
+	-$(RM) -rf $(DIST)\Embed\tmpchrome
 !endif
 
 install:: embed_chrome
