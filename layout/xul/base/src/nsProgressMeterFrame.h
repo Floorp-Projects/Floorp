@@ -45,7 +45,7 @@
 #include "nsCOMPtr.h"
 
 class nsIPresContext;
-
+class nsIStyleContext;
 
 class nsProgressMeterFrame : public nsLeafFrame
 {
