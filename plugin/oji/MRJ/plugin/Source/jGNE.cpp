@@ -27,41 +27,106 @@
 #include "jGNE.h"
 
 #include <MixedMode.h>
+#include <Memory.h>
 #include <LowMem.h>
+#include <TextUtils.h>
+
+/**
+ * A 68K jump vector.
+ */
+#pragma options align=mac68k
+
+struct Jump {
+	unsigned short		jmp;
+	UniversalProcPtr	addr;
+};
+ 
+#pragma options align=reset
 
 static void GNEFilter(EventRecord *event, Boolean* result);
 
-static RoutineDescriptor theGNEFilterUPP = BUILD_ROUTINE_DESCRIPTOR(uppGetNextEventFilterProcInfo, GNEFilter);
-static GetNextEventFilterUPP theGetNextEventFilterUPP = NULL;
+static RoutineDescriptor theGNEFilterDescriptor = BUILD_ROUTINE_DESCRIPTOR(uppGetNextEventFilterProcInfo, GNEFilter);
+static Jump* theGNEFilterJump;
+static GetNextEventFilterUPP theOldGNEFilterUPP = NULL;
 static EventFilterProcPtr  theEventFilter = NULL;
+
+static Str63 theAppName;
 
 OSStatus InstallEventFilter(EventFilterProcPtr filter)
 {
-	theEventFilter = filter;
+	if (theEventFilter == NULL) {
+		theEventFilter = filter;
 
-	// get previous event filter routine.
-	theGetNextEventFilterUPP = LMGetGNEFilter();
-	LMSetGNEFilter(&theGNEFilterUPP);
-	
-	return noErr;
+		// record the current application's name.
+		StringPtr currentAppName = LMGetCurApName();
+		::BlockMoveData(currentAppName, theAppName, 1 + currentAppName[0]);
+
+		// allocate a jump vector in the System heap, so it will be retained after termination.
+		if (theGNEFilterJump == NULL) {
+			theGNEFilterJump = (Jump*) NewPtrSys(sizeof(Jump));
+			if (theGNEFilterJump == NULL)
+				return MemError();
+			
+			theGNEFilterJump->jmp = 0x4EF9;
+			theGNEFilterJump->addr = &theGNEFilterDescriptor;
+			
+			// get previous event filter routine.
+			theOldGNEFilterUPP = LMGetGNEFilter();
+			LMSetGNEFilter(GetNextEventFilterUPP(theGNEFilterJump));
+		} else {
+			// our previously allocated Jump is still installed, use it.
+			theOldGNEFilterUPP = theGNEFilterJump->addr;
+			theGNEFilterJump->addr = &theGNEFilterDescriptor;
+		}
+		
+		return noErr;
+	}
+	return paramErr;
 }
 
 OSStatus RemoveEventFilter()
 {
-	// should really check to see if somebody else has installed a filter proc as well.
-	LMSetGNEFilter(theGetNextEventFilterUPP);
-	theGetNextEventFilterUPP = NULL;
-	theEventFilter = NULL;
-	return noErr;
+	if (theEventFilter != NULL) {
+		// It's only truly safe to remove our filter, if nobody else installed one after us.
+		if (LMGetGNEFilter() == GetNextEventFilterUPP(theGNEFilterJump)) {
+			// can safely restore the old filter.
+			LMSetGNEFilter(theOldGNEFilterUPP);
+			DisposePtr(Ptr(theGNEFilterJump));
+			theGNEFilterJump = NULL;
+		} else {
+			// modify the jump instruction to point to the previous filter.
+			theGNEFilterJump->addr = theOldGNEFilterUPP;
+		}
+		theOldGNEFilterUPP = NULL;
+		theEventFilter = NULL;
+		return noErr;
+	}
+	return paramErr;
 }
 
 static void GNEFilter(EventRecord *event, Boolean* result)
 {
 	// call next filter in chain first.
-	if (theGetNextEventFilterUPP)
-		CallGetNextEventFilterProc(theGetNextEventFilterUPP, event, result);
+	if (theOldGNEFilterUPP != NULL)
+		CallGetNextEventFilterProc(theOldGNEFilterUPP, event, result);
 
 	// now, let the filter proc have a crack at the event.
-	if (*result)
-		*result = !theEventFilter(event);
+	if (*result) {
+		// only call the filter if called in the current application's context.
+		/* if (::EqualString(theAppName, LMGetCurApName(), true, true)) */
+		{
+			// prevent recursive calls to the filter.
+			static Boolean inFilter = false;
+			if (! inFilter) {
+				inFilter = true;
+				Boolean filteredEvent = theEventFilter(event);
+				if (filteredEvent) {
+					// consume the event by making it a nullEvent.
+					event->what = nullEvent;
+					*result = false;
+				}
+				inFilter = false;
+			}
+		}
+	}
 }
