@@ -326,11 +326,11 @@
           if (!aParent)
             return -1;
           var index = this.treeBuilder.getIndexOfResource(aParent)
-          if (index == -1)
+          if (index == -1 && !aParent.EqualsNode(RDF.GetResource("NC:BookmarksRoot")))
             return -1;
-          if (!this.treeBoxObject.view.isContainerOpen(index))
+          if (index != -1 && !this.treeBoxObject.view.isContainerOpen(index))
             return -1;
-          while (++index < this.treeBuilder.rowCount) {
+          while (++index < this.treeBoxObject.view.rowCount) {
             if (this.treeBuilder.getResourceAtIndex(index) == aItem &&
                 this.getParentResource(index) == aParent)
               return index;
@@ -448,6 +448,9 @@
           case "cmd_bm_newbookmark":
           case "cmd_bm_newfolder":
           case "cmd_bm_newseparator":
+          // [Category 2 bis] - Temporary hack 
+          case "cmd_undo":
+          case "cmd_redo":
             // All items inserted will be selected. The implementation of this model
             // is left to |preUpdateTreeSelection|, called when an insert transaction is
             // executed, and |updateTreeSelection| called here. 
@@ -480,7 +483,8 @@
         <body><![CDATA[
           aTxn = aTxn.wrappedJSObject;
           var type = aTxn.type;
-          if (type != "insert" || type != "remove")
+          // Skip transactions that aggregates nested "insert" or "remove" transactions.
+          if (type != "insert" && type != "remove")
             return;
           for (var i=0; i<aTxn.item.length; ++i) {
             this._itemToBeToggled  .push(aTxn.item  [i]);
@@ -699,15 +703,12 @@
           else
             BookmarksUtils.moveSelection  ("drag", selection, target);
           observer.endUpdateBatch(this.db);
-          this.mOuter.saveSelection();
           this.mOuter.treeBoxObject.selection.currentIndex=-1;
           this.mOuter.treeBuilder.rebuild();
           // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
           // if the first visible row is not 0
           this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
-          // A drop is an insertion operation like a paste, we want to trigger the same type
-          // of selection restoration model. 
-          this.mOuter.restoreSelection("cmd_bm_paste");
+          this.mOuter.updateTreeSelection();
           // use of a timer to speedup
           var This = this.mOuter;
           setTimeout( function (){This.treeBoxObject.selection.selectEventsSuppressed = false}, 100)
