@@ -322,7 +322,7 @@ nsMsgAccountManager::CreateAccountWithKey(nsIMsgIncomingServer *server,
 }
 #endif
 
-NS_IMETHODIMP
+nsresult
 nsMsgAccountManager::AddAccount(nsIMsgAccount *account)
 {
     nsresult rv;
