@@ -557,6 +557,8 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 // A type-safe interface for calling |QueryInterface()|.  A similar implementation
 //	exists in "nsCOMPtr.h" for use with |nsCOMPtr|s.
 
+extern "C++" {
+
 class nsISupports;
 
 template <class T>
@@ -569,6 +571,8 @@ CallQueryInterface( nsISupports* aSource, T** aDestination )
 
 		return aSource->QueryInterface(T::GetIID(), aDestination);
 	}
+
+} // extern "C++"
 
 ////////////////////////////////////////////////////////////////////////////////
 
