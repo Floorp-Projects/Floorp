@@ -119,6 +119,7 @@
 #include "nsWeakPtr.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h" // XXX should go away
+#include "nsXULElement.h"
 #include "plhash.h"
 #include "plstr.h"
 #include "prlog.h"
@@ -4233,7 +4234,7 @@ XULDocumentImpl::CreateElement(PRInt32 aNameSpaceID,
             return NS_ERROR_UNEXPECTED;
     }
     else {
-        rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result));
+        rv = nsXULElement::Create(aNameSpaceID, aTag, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
 
