@@ -338,24 +338,31 @@ void CnsIChannelTests::OnStartTests(UINT nMenuID)
 			GetNotificationsTest(theChannel, 2);
 			break ;
 		case ID_INTERFACES_NSICHANNEL_GETSECURITYINFO  :
+			AsyncOpenTest(theChannel, 1);
 			GetSecurityInfoTest(theChannel, 2);
 			break ;
 		case ID_INTERFACES_NSICHANNEL_SETCONTENTTYPE :
+			AsyncOpenTest(theChannel, 1);
 			SetContentTypeTest(theChannel, 2);
 			break ;
 		case ID_INTERFACES_NSICHANNEL_GETCONTENTTYPE :
+			AsyncOpenTest(theChannel, 1);
 			GetContentTypeTest(theChannel, 2);
 			break ;
 		case ID_INTERFACES_NSICHANNEL_SETCONTENTCHARSET  :
+			AsyncOpenTest(theChannel, 1);
 			SetContentCharsetTest(theChannel, 2);
 			break ;
 		case ID_INTERFACES_NSICHANNEL_GETCONTENTCHARSET :
+			AsyncOpenTest(theChannel, 1);
 			GetContentCharsetTest(theChannel, 2);
 			break ;
 		case ID_INTERFACES_NSICHANNEL_SETCONTENTLENGTH :
+			AsyncOpenTest(theChannel, 1);
 			SetContentLengthTest(theChannel, 2);
 			break ;
 		case ID_INTERFACES_NSICHANNEL_GETCONTENTLENGTH :
+			AsyncOpenTest(theChannel, 1);
 			GetContentLengthTest(theChannel, 2);
 			break ;
 		case ID_INTERFACES_NSICHANNEL_OPEN  :
@@ -384,6 +391,7 @@ void CnsIChannelTests::RunAllTests()
 	GetOwnerTest(theChannel, 1);
 	SetNotificationsTest(theChannel, 1);
 	GetNotificationsTest(theChannel, 1);
+	AsyncOpenTest(theChannel, 1);
 	GetSecurityInfoTest(theChannel, 1);
 	SetContentTypeTest(theChannel, 1);
 	GetContentTypeTest(theChannel, 1);
@@ -392,5 +400,4 @@ void CnsIChannelTests::RunAllTests()
 	SetContentLengthTest(theChannel, 1);
 	GetContentLengthTest(theChannel, 1);
 	OpenTest(theChannel, 1);
-	AsyncOpenTest(theChannel, 1);
 }
