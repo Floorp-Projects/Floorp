@@ -24,7 +24,7 @@ var gUpdateDialog = {
       os.addObserver(this, this._messages[i], false);
     
     if (this._updateType == "extensions")
-      this._extensionManager.updateExtension(this._extensionID);
+      this._extensionManager.updateExtension(this._extensionID, window);
     else if (gUpdateType == "themes")
       this._extensionManager.updateTheme(this._extensionID);
   },

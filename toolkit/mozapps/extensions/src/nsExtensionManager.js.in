@@ -99,120 +99,31 @@ nsExtensionManager.prototype = {
     this._ds.disableExtension(aExtensionID);
   },
   
-  updateExtension: function (aExtensionID)
+  updateExtension: function (aExtensionID, aDOMWindow)
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     var appID = pref.getCharPref(PREF_EM_APP_ID);
     var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
-    
-    var extensionVersion = this._ds.getExtensionProperty(aExtensionID, "version");
 
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
+    var ds = this._ds;
+    var extensionVersion = ds.getExtensionProperty(aExtensionID, "version");
+
     var itemCount = 0;
-
-    var proxy = null;
-    function getExtensionUpdateURL(aExtensionGUID, aInstalledVersion, 
-                                   aTargetApp, aTargetAppVersion)
+    
+    var trigger = aDOMWindow.InstallTrigger;
+    
+    function doneUpdatingExtension(aExtensionID, aXPIURL)
     {
-      proxy.getNewestExtension(aExtensionGUID, aInstalledVersion, aTargetApp, aTargetAppVersion);
+      var name = ds.getExtensionProperty(aExtensionID, "name");
+      var obj = {};
+      obj[name] = aXPIURL;
+      if (trigger.updateEnabled())
+        trigger.install(obj);
     }
     
-    if (!proxy) {    
-      var listener = {
-        onLoad: function (aProxy)
-        { 
-          proxy = aProxy;
-          proxy.setListener(this);
-          getExtensionUpdateURL(aExtensionID, extensionVersion, appID, appVersion);
-        },
-        
-        onError: function (aError)
-        {
-          dump("*** onError ERROR = " + aError + "\n");
-        },
-        
-        getNewestExtensionCallback: function (aResult)
-        {
-          this._newestID = aResult;
-          dump("*** getNewestExtensionCallback result = " + aResult + "\n");
-          
-          if (this._newestID != -1)
-            proxy.getProperty(this._newestID, "xpiurl");
-        },
-
-        getPropertyCallback: function (aResult)
-        {
-          dump("*** UPDATE URL = " + aResult + "\n");
-        }
-      };
-
-      var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
-                                 .getService(Components.interfaces.nsIWebServiceProxyFactory);
-      wspFactory.createProxyAsync("http://localhost:8080/axis/services/VersionCheck?wsdl", 
-                                  "VersionCheck", "", true, listener);
-    }
-    else
-      getExtensionUpdateURL(aExtensionID, extensionVersion, appID, appVersion);
-          
-    return;
-
-    function RDFSinkObserver()
-    {
-    }
-    RDFSinkObserver.prototype = { 
-      onBeginLoad: function (aSink) 
-      { 
-        os.notifyObservers(aSink, "update-item-network-start", "");
-      },
-      onInterrupt: function (aSink) { },
-      onResume: function (aSink) { },
-      onError: function (aSink, aStatus, aErrorMsg) 
-      {
-        dump("*** error; status = " + aStatus + ", msg = " + aErrorMsg + "\n");
-        if (aStatus == Components.results.NS_ERROR_FILE_NOT_FOUND)
-          dump("*** FILE NOT FOUND BOZO\n");
-        aSink.removeXMLSinkObserver(this);
-        os.notifyObservers(aSink, "update-item-error", aErrorMsg);
-        this._checkLastItem();
-      },
-      onEndLoad: function (aSink) 
-      {
-        dump("*** done!\n");
-        os.notifyObservers(aSink, "update-item-network-end", "");
-        aSink.removeXMLSinkObserver(this);
-        os.notifyObservers(aSink, "update-item-processing-start", "");
-        dump("*** processing...\n");
-        os.notifyObservers(aSink, "update-item-processing-end", "");
-        this._checkLastItem();
-      },
-      
-      _checkLastItem: function ()
-      {
-        if (--itemCount == 0)
-          os.notifyObservers(null, "update-end", "");
-      }
-    };
-  
-    os.notifyObservers(null, "update-start", "");
-
-    var urls = this._ds.getUpdateURLs(aExtensionID);
-    var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                         .getService(Components.interfaces.nsIRDFService);
-    itemCount = urls.length;
-    for (var i = 0; i < urls.length; ++i) {      
-      var observer = new RDFSinkObserver();
-
-      var ds = rdfs.GetDataSource(urls[i]);
-      dump("*** starting " + ds.URI + "\n");
-      var sink = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
-      var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-      if (rds.loaded)
-        observer.onEndLoad(sink);
-      else
-        sink.addXMLSinkObserver(observer);
-    }
+    var updater = new nsExtensionUpdater(aExtensionID, extensionVersion, appID, appVersion);
+    updater.checkForUpdates(doneUpdatingExtension);
   },  
   
   // Themes
@@ -263,6 +174,65 @@ nsExtensionManager.prototype = {
     return this;
   }
 };
+
+function nsExtensionUpdater(aExtensionID, aExtensionVersion, 
+                            aTargetAppID, aTargetAppVersion) 
+{
+  this._extensionID = aExtensionID;
+  this._extensionVersion = aExtensionVersion;
+  this._appID = aTargetAppID;
+  this._appVersion = aTargetAppVersion;
+}
+
+nsExtensionUpdater.prototype = {
+  /////////////////////////////////////////////////////////////////////////////
+  // 
+  checkForUpdates: function (aDoneUpdatingFunc) 
+  {
+    this._doneUpdatingFunc = aDoneUpdatingFunc;
+    
+    var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
+                              .getService(Components.interfaces.nsIWebServiceProxyFactory);
+    wspFactory.createProxyAsync("http://localhost:8080/axis/services/VersionCheck?wsdl", 
+                                "VersionCheck", "", true, this);
+  },
+
+  _proxy: null,
+  
+  _getExtensionUpdateURL: function (aExtensionGUID, aInstalledVersion,
+                                    aTargetApp, aTargetAppVersion)
+  {
+    this._proxy.getNewestExtension(aExtensionGUID, aInstalledVersion, aTargetApp, aTargetAppVersion);
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIWSDLLoadListener  
+  onLoad: function (aProxy)
+  { 
+    this._proxy = aProxy;
+    this._proxy.setListener(this);
+    this._getExtensionUpdateURL(this._extensionID, this._extensionVersion, this._appID, this._appVersion);
+  },
+  
+  onError: function (aError)
+  {
+    dump("*** onError ERROR = " + aError + "\n");
+  },
+  
+  getNewestExtensionCallback: function (aResult)
+  {
+    this._newestID = aResult;
+    
+    if (this._newestID != -1)
+      this._proxy.getProperty(this._newestID, "xpiurl");
+  },
+
+  getPropertyCallback: function (aResult)
+  {
+    this._doneUpdatingFunc(this._extensionID, aResult);
+  }
+};
+
 
 const PREF_EM_DEFAULTUPDATEURL = "update.url.extensions";
 const PREF_EM_APP_ID = "app.id";
