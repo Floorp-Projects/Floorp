@@ -38,59 +38,36 @@
 #ifndef ipcTransportUnix_h__
 #define ipcTransportUnix_h__
 
-#include "nsIStreamListener.h"
-#include "nsIStreamProvider.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIAsyncOutputStream.h"
+#include "nsISocketTransport.h"
+#include "prio.h"
 
 #include "ipcMessageQ.h"
 
 class ipcTransport;
 
-//----------------------------------------------------------------------------
-// ipcSendQueue
-//----------------------------------------------------------------------------
-
-class ipcSendQueue : public nsIStreamProvider
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMPROVIDER
-
-    ipcSendQueue(ipcTransport *transport)
-        : mTransport(transport)
-        { }
-    virtual ~ipcSendQueue() { }
-
-    void EnqueueMsg(ipcMessage *msg) { mQueue.Append(msg); }
-
-    PRBool IsEmpty() { return mQueue.IsEmpty(); }
-
-private:
-    ipcTransport *mTransport;
-    ipcMessageQ   mQueue;
-};
-
 //-----------------------------------------------------------------------------
 // ipcReceiver
 //-----------------------------------------------------------------------------
 
-class ipcReceiver : public nsIStreamListener
+class ipcReceiver : public nsIInputStreamNotify
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIINPUTSTREAMNOTIFY
 
     ipcReceiver(ipcTransport *transport)
         : mTransport(transport)
         { }
     virtual ~ipcReceiver() { }
 
-    nsresult ReadSegment(const char *, PRUint32 count, PRUint32 *countRead);
-
 private:
-    ipcTransport         *mTransport;
-    ipcMessage            mMsg;  // message in progress
+    static NS_METHOD ReadSegment(nsIInputStream *, void *, const char *,
+                                 PRUint32, PRUint32, PRUint32 *);
+
+    ipcTransport *mTransport;
+    ipcMessage    mMsg;  // message in progress
 };
 
 #endif // !ipcTransportUnix_h__

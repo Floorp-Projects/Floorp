@@ -39,7 +39,6 @@
 #define ipcTransport_h__
 
 #include "nsIObserver.h"
-#include "nsITransport.h"
 #include "nsITimer.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -48,7 +47,6 @@
 #include "ipcMessageQ.h"
 
 #ifdef XP_UNIX
-#include "prio.h"
 #include "ipcTransportUnix.h"
 #endif
 
@@ -81,10 +79,8 @@ public:
         , mSpawnedDaemon(PR_FALSE)
         , mConnectionAttemptCount(0)
 #ifdef XP_UNIX
-        , mSendQ(this)
         , mReceiver(this)
         , mFD(nsnull)
-        , mWriteSuspended(PR_FALSE)
 #endif
         { NS_INIT_ISUPPORTS(); }
 
@@ -125,14 +121,12 @@ private:
     PRUint8                mConnectionAttemptCount;
 
 #ifdef XP_UNIX
-    ipcSendQueue           mSendQ;
-    ipcReceiver            mReceiver;
-    nsCOMPtr<nsITransport> mTransport;
-    nsCOMPtr<nsIRequest>   mReadRequest;
-    nsCOMPtr<nsIRequest>   mWriteRequest;
-    nsCString              mSocketPath;
-    PRFileDesc            *mFD;
-    PRPackedBool           mWriteSuspended;
+    ipcReceiver                  mReceiver;
+    nsCOMPtr<nsISocketTransport> mTransport;
+    nsCOMPtr<nsIInputStream>     mInputStream;
+    nsCOMPtr<nsIOutputStream>    mOutputStream;
+    nsCString                    mSocketPath;
+    PRFileDesc                  *mFD;
 
     //
     // unix specific helpers
@@ -143,11 +137,9 @@ private:
 
 public:
     //
-    // internal helper methods for ipcSendQueue and ipcReceiver
+    // internal helper methods
     //
-    void SetWriteSuspended(PRBool val) { mWriteSuspended = val; }
-    void OnStartRequest(nsIRequest *req);
-    void OnStopRequest(nsIRequest *req, nsresult status);
+    void OnConnectionLost(nsresult reason);
     PRFileDesc *FD() { return mFD; }
 #endif
 };
