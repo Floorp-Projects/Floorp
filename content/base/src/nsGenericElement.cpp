@@ -1225,8 +1225,10 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
       if (NS_FAILED(rv)) return;
 
       char *absUrl = nsnull;
-      const char *uriStr = aURLSpec.GetBuffer();
+      const char *uriStr = aURLSpec.ToNewCString();
+
       rv = service->MakeAbsolute(uriStr, baseUri, &absUrl);
+      nsCRT::free(uriStr);
       NS_RELEASE(baseUri);
       if (NS_FAILED(rv)) return;
       absURLSpec = absUrl;
