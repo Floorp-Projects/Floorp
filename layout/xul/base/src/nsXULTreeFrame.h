@@ -51,6 +51,8 @@ public:
   NS_IMETHOD GetNumberOfVisibleRows(PRInt32 *aResult);
   NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32 *aResult);
   NS_IMETHOD GetRowCount(PRInt32* aResult);
+  NS_IMETHOD BeginBatch();
+  NS_IMETHOD EndBatch();
 
 protected:
   nsXULTreeFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);

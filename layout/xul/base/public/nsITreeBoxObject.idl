@@ -38,6 +38,9 @@ interface nsITreeBoxObject : nsISupports
   long getNumberOfVisibleRows();
   long getIndexOfFirstVisibleRow();
   long getRowCount();
+
+  void beginBatch();
+  void endBatch();
 };
 
 %{C++

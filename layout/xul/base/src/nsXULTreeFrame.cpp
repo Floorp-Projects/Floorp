@@ -245,7 +245,6 @@ nsXULTreeFrame::GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aEle
   if (!treeOuterGroup)
     return NS_OK; // No tree body. Just bail.
 
-  *aResult = 0;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   nsCOMPtr<nsIContent> root;
   treeOuterGroup->GetContent(getter_AddRefs(root));
@@ -288,6 +287,32 @@ nsXULTreeFrame::GetRowCount(PRInt32 *aResult)
   if (!XULTreeOuterGroup) return NS_OK;
   
   return XULTreeOuterGroup->GetRowCount(aResult);
+}
+
+NS_IMETHODIMP
+nsXULTreeFrame::BeginBatch()
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
+  GetTreeBody(&treeOuterGroup);
+
+  if (!treeOuterGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  return treeOuterGroup->BeginBatch();
+}
+
+NS_IMETHODIMP
+nsXULTreeFrame::EndBatch()
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
+  GetTreeBody(&treeOuterGroup);
+
+  if (!treeOuterGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  return treeOuterGroup->EndBatch();
 }
 
 void

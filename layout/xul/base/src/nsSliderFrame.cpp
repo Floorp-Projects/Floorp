@@ -201,10 +201,6 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
           scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
           if (mediator) {
             mediator->PositionChanged(GetCurrentPosition(scrollbar), current);
-            char ch[100];
-            sprintf(ch,"%d", current);
-            scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
-            return NS_OK;
           }
         }
        

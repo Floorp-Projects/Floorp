@@ -133,7 +133,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetItemAtIndex(PRInt32 index, nsIDOMElement **_re
 /* long getIndexOfItem (in nsIDOMElement item); */
 NS_IMETHODIMP nsTreeBoxObject::GetIndexOfItem(nsIDOMElement* aElement, PRInt32 *aResult)
 {
-  *aResult = -1;
+  *aResult = 0;
 
   nsIFrame* frame = GetFrame();
   if (!frame)
@@ -175,6 +175,26 @@ NS_IMETHODIMP nsTreeBoxObject::GetRowCount(PRInt32 *aResult)
   
   nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
   return treeFrame->GetRowCount(aResult);
+}
+
+NS_IMETHODIMP nsTreeBoxObject::BeginBatch()
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+  
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
+  return treeFrame->BeginBatch();
+}
+
+NS_IMETHODIMP nsTreeBoxObject::EndBatch()
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+  
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
+  return treeFrame->EndBatch();
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

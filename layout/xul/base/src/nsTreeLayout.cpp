@@ -260,7 +260,7 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     box->GetNextBox(&box);
   }
 
-  if (group && (group == outer) && availableHeight > 0) {
+  if (group && (group == outer)) {
     // We have enough available height left to add some more rows
     // Since we can't do this during layout, we post a callback
     // that will be processed after the reflow completes.
@@ -354,6 +354,8 @@ nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
   if (isOuterGroup) {
     nsXULTreeOuterGroupFrame* outer = (nsXULTreeOuterGroupFrame*) frame;
+    if (outer->IsBatching())
+      return NS_OK;
 
     // Always ensure an accurate scrollview position
     // This is an edge case that was caused by the row height

@@ -3127,9 +3127,7 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
       (!gAsyncReflowDuringDocLoad && !mBatchReflows && !mDocumentLoading)) {
     // If we're in the middle of a drag, process it right away (needed for mac,
     // might as well do it on all platforms just to keep the code paths the same).
-    if ( IsDragInProgress() )
-      FlushPendingNotifications();
-    else
+    if ( !IsDragInProgress() )
       PostReflowEvent();
   }
 
