@@ -129,8 +129,8 @@
     (define (to-number (o object)) float64
       (case o
         (:select undefined (return nan))
-        (:select (union null false) (return +zero))
-        (:select true (return 1.0))
+        (:select (union null (tag false)) (return +zero))
+        (:select (tag true) (return 1.0))
         (:narrow float64 (return o))
         (:select string (todo))
         (:select (union namespace class) (throw type-error))
@@ -140,8 +140,8 @@
       (case o
         (:select undefined (return "undefined"))
         (:select null (return "null"))
-        (:select false (return "false"))
-        (:select true (return "true"))
+        (:select (tag false) (return "false"))
+        (:select (tag true) (return "true"))
         (:select float64 (todo))
         (:narrow string (return o))
         (:select namespace (todo))
@@ -161,13 +161,10 @@
     (define (to-u-int32 (x float64)) integer
       (rwhen (:narrow-false (in (tag +infinity -infinity nan) x))
         (return 0))
-      (return (mod (truncate-float64 x) (expt 2 32))))
+      (return (mod (truncate-finite-float64 x) (expt 2 32))))
     
     (define (to-int32 (x float64)) integer
       (return (u-int32-to-int32 (to-u-int32 x))))
-    
-    (define (float64-equal (x float64) (y float64)) boolean
-      (return (float64-compare x y false true false false)))
     
     
     (%subsection :semantics "References")
@@ -311,14 +308,14 @@
       (const bp object (to-primitive b null))
       (if (:narrow-true (and (in string ap) (in string bp)))
         (return (< ap bp string))
-        (return (float64-compare (to-number ap) (to-number bp) true false false false))))
+        (return (= (float64-compare (to-number ap) (to-number bp)) less order))))
     
     (define (less-or-equal-objects (a object) (b object)) object
       (const ap object (to-primitive a null))
       (const bp object (to-primitive b null))
       (if (:narrow-true (and (in string ap) (in string bp)))
         (return (<= ap bp string))
-        (return (float64-compare (to-number ap) (to-number bp) true true false false))))
+        (return (in (tag less equal) (float64-compare (to-number ap) (to-number bp))))))
     
     (define (equal-objects (a object) (b object)) object
       (case a
@@ -332,12 +329,12 @@
           (const bp object (to-primitive b null))
           (case bp
             (:select (union undefined null namespace class structure) (return false))
-            (:select (union boolean string float64) (return (float64-equal a (to-number bp))))))
+            (:select (union boolean string float64) (return (= (float64-compare a (to-number bp)) equal order)))))
         (:narrow string
           (const bp object (to-primitive b null))
           (case bp
             (:select (union undefined null namespace class structure) (return false))
-            (:select (union boolean float64) (return (float64-equal (to-number a) (to-number bp))))
+            (:select (union boolean float64) (return (= (float64-compare (to-number a) (to-number bp)) equal order)))
             (:narrow string (return (= a bp string)))))
         (:select (union namespace class structure)
           (case b
@@ -351,7 +348,7 @@
     
     (define (strict-equal-objects (a object) (b object)) object
       (if (:narrow-true (and (in float64 a) (in float64 b)))
-        (return (float64-equal a b))
+        (return (= (float64-compare a b) equal order))
         (return (= a b object))))
     
     
@@ -838,6 +835,11 @@
         ((verify s)
          ((verify :relational-expression) s)
          ((verify :shift-expression-or-super) s))
+        ((eval (e :unused)) (todo)))
+      (production (:relational-expression :beta) ((:relational-expression :beta) instanceof :shift-expression) relational-expression-instanceof
+        ((verify s)
+         ((verify :relational-expression) s)
+         ((verify :shift-expression) s))
         ((eval (e :unused)) (todo))))
     (%print-actions)
     
