@@ -108,6 +108,8 @@ nsMIMEService::InitFromHack() {
     if (NS_FAILED(rv)) return rv;
     rv = AddMapping("text/html", "html", "Hyper Text Markup Language");
     if (NS_FAILED(rv)) return rv;
+    rv = AddMapping("text/html", "shtml", "Hyper Text Markup Language");
+    if (NS_FAILED(rv)) return rv;
     rv = AddMapping("text/rdf", "rdf", "Resource Description Framework");
     if (NS_FAILED(rv)) return rv;
     rv = AddMapping("text/xul", "xul", "XML-Based User Interface Language");
