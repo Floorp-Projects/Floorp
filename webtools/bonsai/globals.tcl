@@ -445,8 +445,7 @@ proc WriteCheckins {} {
     foreach i [lsort [array names person]] {
         puts $fid [EmailFromUsername $i]
     }
-    puts $fid "bonsai-hookinterest@glacier"
-    puts $fid "mcom.dev.client.build.busted"
+    puts $fid "mozilla-builds@mozilla.org"
     close $fid
     frename $filename [DataDir]/hooklist
     
