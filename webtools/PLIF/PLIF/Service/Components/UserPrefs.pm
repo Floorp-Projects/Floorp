@@ -226,7 +226,7 @@ sub cmdUserPrefsSet {
     # string identifying the notification.
     my @notifications = ();
     foreach my $userID (@userIDs) {
-        my $targetUser = $userFactory->getUserByID($userID);
+        my $targetUser = $userFactory->getUserByID($app, $userID);
         if (defined($targetUser)) {
             push(@notifications, $self->applyUserPrefsChanges($app, $user, $targetUser, $userID, $userID == $user->userID, @rights));
         } else {
@@ -269,12 +269,12 @@ sub applyUserPrefsChanges {
     # first, get a lists of all the relevant arguments
     my $arguments = $app->input->getArgumentsBranch("userPrefs.$targetUserID");
 
-    if (defined($arguments->{'password'})) {
+    if (defined($arguments->{'password'}) and $arguments->{'password'}->[0] ne '') {
         if ($editingUserIsTargetUser) {
-            if (defined($arguments->{'password.old'}) and ($targetUser->checkPassword($arguments->{'password.old'}))) {
+            if (defined($arguments->{'password.old'}) and ($targetUser->checkPassword($arguments->{'password.old'}->[0]))) {
                 if (defined($arguments->{'password.confirmation'}) and
-                    $arguments->{'password.confirmation'} eq $arguments->{'password'}) {
-                    $targetUser->password($app->getService('service.passwords')->encryptPassword(arguments('password')));
+                    $arguments->{'password.confirmation'}->[0] eq $arguments->{'password'}->[0]) {
+                    $targetUser->password($app->getService('service.passwords')->encryptPassword($arguments->{'password'}->[0]));
                 } else {
                     # new passwords don't match
                     push(@notifications, [$targetUserID, 'password', 'password.mismatch.new']);
@@ -284,7 +284,7 @@ sub applyUserPrefsChanges {
                 push(@notifications, [$targetUserID, 'password', 'password.mismatch.old']);
             }
         } elsif ($rightPasswords) {
-            $targetUser->password($app->getService('service.passwords')->encryptPassword(arguments('password')));
+            $targetUser->password($app->getService('service.passwords')->encryptPassword($arguments->{'password'}->[0]));
         } else {
             my $userID = $user->userID;
             $self->warn(2, "user $userID tried to change user $targetUserID's password: denied");
@@ -300,6 +300,7 @@ sub applyUserPrefsChanges {
         my $fieldName = $fieldRow->[3];
         my $newValue = $arguments->{"fields.$fieldCategory.$fieldName"};
         if (defined($newValue)) {
+            $newValue = $newValue->[0];
             my $field = $targetUser->getFieldByID($fieldID);
             my $oldValue = $field->data;
             if (not defined($oldValue)) {
@@ -315,7 +316,7 @@ sub applyUserPrefsChanges {
 
     if (defined($arguments->{'adminMessage'})) {
         if ($rightAdminMessage) {
-            $targetUser->adminMessage($arguments->{'adminMessage'});
+            $targetUser->adminMessage($arguments->{'adminMessage'}->[0]);
         } else {
             my $userID = $user->userID;
             $self->warn(2, "user $userID tried to change user $targetUserID's admin message: denied");
@@ -323,9 +324,9 @@ sub applyUserPrefsChanges {
         }
     }
 
-    if (defined($arguments->('mode'))) {
+    if (defined($arguments->{'mode'})) {
         if ($rightAdminMessage) {
-            $targetUser->mode($arguments->{'mode'});
+            $targetUser->mode($arguments->{'mode'}->[0]);
         } else {
             my $userID = $user->userID;
             $self->warn(2, "user $userID tried to change user $targetUserID's user mode: denied");
@@ -338,6 +339,7 @@ sub applyUserPrefsChanges {
         my $groupID = $group->[0];
         my $newValue = $arguments->{"groups.$groupID"};
         if (defined($newValue)) {
+            $newValue = $newValue->[0];
             if ($newValue =~ /^\d+$/o) {
                 my $userLevel = $user->levelInGroup($groupID);
                 if ($userLevel == 2) { # if editing user is a group op # XXX BARE CONSTANT ALERT
