@@ -917,7 +917,6 @@ loser:
     return SECFailure;
 }
 
-
 void *
 CERT_GetGeneralNameByType (CERTGeneralName *genNames,
 			   CERTGeneralNameType type, PRBool derFormat)
@@ -925,38 +924,35 @@ CERT_GetGeneralNameByType (CERTGeneralName *genNames,
     CERTGeneralName *current;
     
     if (!genNames)
-	return (NULL);
+	return NULL;
     current = genNames;
 
     do {
 	if (current->type == type) {
 	    switch (type) {
-	      case certDNSName:
-	      case certEDIPartyName:
-	      case certIPAddress:
-	      case certRegisterID:
-	      case certRFC822Name:
-	      case certX400Address:
-	      case certURI: {
-		    return &(current->name.other);
-	      }
-	      case certOtherName: {
-		  return &(current->name.OthName);
-		  break;
-	      }
-	      case certDirectoryName: {
-		  if (derFormat) {
-		      return &(current->derDirectoryName);
-		  } else{
-		      return &(current->name.directoryName);
-		  }
-		  break;
-	      }
+	    case certDNSName:
+	    case certEDIPartyName:
+	    case certIPAddress:
+	    case certRegisterID:
+	    case certRFC822Name:
+	    case certX400Address:
+	    case certURI: 
+		return (void *)&current->name.other;           /* SECItem * */
+
+	    case certOtherName: 
+		return (void *)&current->name.OthName;         /* OthName * */
+
+	    case certDirectoryName: 
+		return derFormat 
+		       ? (void *)&current->derDirectoryName    /* SECItem * */
+		       : (void *)&current->name.directoryName; /* CERTName * */
 	    }
+	    PORT_Assert(0); 
+	    return NULL;
 	}
 	current = cert_get_next_general_name(current);
     } while (current != genNames);
-    return (NULL);
+    return NULL;
 }
 
 int
