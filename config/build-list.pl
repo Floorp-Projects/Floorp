@@ -66,6 +66,7 @@ mozLock($lockfile) unless $nofilelocks;
 undef @inbuf;
 if ( -e "$file" ) {
     open(IN, "$file") || die ("$file: $!\n");
+    binmode(IN);
     while ($tmp = <IN>) {
 	chomp($tmp);
 	push @inbuf, $tmp;
@@ -84,6 +85,7 @@ $count = $#outbuf + 1;
 # Append new entry to file
 if ($count) {
     open(OUT, ">>$file") || die ("$file: $!\n");
+    binmode(OUT);
     foreach $entry (@outbuf) {
 	print OUT "$entry\n";
     }
