@@ -1452,7 +1452,6 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
     return NS_OK;
 }
 
-/* Create a spec then hand off to spec version */
 nsresult
 nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
                                           const char *aClassName,
@@ -1461,11 +1460,9 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
                                           PRBool aReplace,
                                           PRBool aPersist)
 {
-    char *registryName = nsCRT::strdup(aPersistentDescriptor);
-    if (!registryName)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return RegisterComponentCommon(aClass, aClassName, aProgID, registryName,
-                                   aReplace, aPersist, nativeComponentType);
+    return RegisterComponentCommon(aClass, aClassName, aProgID,
+                                   aPersistentDescriptor, aReplace, aPersist,
+                                   nativeComponentType);
 }
 
 nsresult
