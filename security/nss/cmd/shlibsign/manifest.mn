@@ -44,8 +44,6 @@ CSRCS = \
 
 CHECKFILES = softokn3.chk
 
-MD_LIB_RELEASE_FILES = $(CHECKLOC)
-
 # headers for the MODULE (defined above) are implicitly required.
 REQUIRES = dbm seccmd
 
