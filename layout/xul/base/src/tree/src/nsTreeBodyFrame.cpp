@@ -2383,8 +2383,6 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
       style = borderStyle->GetBorderStyle(NS_SIDE_LEFT);
       aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
 
-      nsRect imageSize(0,0,0,0);
-
       nscoord lineX = currX;
       nscoord lineY = (aRowIndex - mTopRowIndex) * mRowHeight;
 
@@ -2396,26 +2394,7 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
       PRInt32 currentParent = aRowIndex;
       for (PRInt32 i = level; i > 0; i--) {
         if (i <= maxLevel) {
-          // Get size of parent image to line up.
-          PrefillPropertyArray(currentParent, aColumn);
-          mView->GetCellProperties(currentParent, aColumn->GetID().get(), mScratchArray);
-
-          nsCOMPtr<nsIStyleContext> imageContext;
-          GetPseudoStyleContext(nsXULAtoms::moztreeimage, getter_AddRefs(imageContext));
-
-          imageSize = GetImageSize(currentParent, aColumn->GetID().get(), PR_FALSE, imageContext);
-
-          const nsStyleMargin* imageMarginData = (const nsStyleMargin*)imageContext->GetStyleData(eStyleStruct_Margin);
-          nsMargin imageMargin;
-          imageMarginData->GetMargin(imageMargin);
-          imageSize.Inflate(imageMargin);
-
-          // Use default indentation if no parent image
-          if (!imageSize.width)
-            imageSize.width = mIndentation;
-
-          // Line up line with the parent image.
-          lineX = currX + twistySize.width + imageSize.width / 2;
+          lineX = currX + twistySize.width + mIndentation / 2;
 
           nscoord srcX = lineX - (level - i + 1) * mIndentation;
           if (srcX <= cellRect.x + cellRect.width) {
@@ -2440,7 +2419,7 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
       if (level == maxLevel) {
         nscoord srcX = lineX - mIndentation + 16;
         if (srcX <= cellRect.x + cellRect.width) {
-          nscoord destX = lineX - imageSize.width / 2;
+          nscoord destX = lineX - mIndentation / 2;
           if (destX > cellRect.x + cellRect.width)
             destX = cellRect.x + cellRect.width;
           aRenderingContext.DrawLine(srcX, lineY + mRowHeight / 2, destX, lineY + mRowHeight / 2);
@@ -2449,9 +2428,6 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
 
       PRBool clipState;
       aRenderingContext.PopState(clipState);
-
-      PrefillPropertyArray(aRowIndex, aColumn);
-      mView->GetCellProperties(aRowIndex, aColumn->GetID().get(), mScratchArray);
     }
 
     // Always leave space for the twisty.
@@ -2608,13 +2584,6 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
           // Center the image. XXX Obey vertical-align style prop?
           if (imageSize.height < twistyRect.height) {
             p.y += (twistyRect.height - imageSize.height)/2;
-            float t2p;
-            mPresContext->GetTwipsToPixels(&t2p);
-            if (NSTwipsToIntPixels(twistyRect.height - imageSize.height, t2p)%2 != 0) {
-              float p2t;
-              mPresContext->GetPixelsToTwips(&p2t);
-              p.y -= NSIntPixelsToTwips(1, p2t);
-            }
           }
           
           // Paint the image.
@@ -2695,15 +2664,11 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
 
       if (imageSize.height < imageRect.height) {
         p.y += (imageRect.height - imageSize.height)/2;
-        if (NSTwipsToIntPixels(imageRect.height - imageSize.height, t2p)%2 != 0)
-          p.y -= NSIntPixelsToTwips(1, p2t); // One pixel in twips
       }
 
       // For cyclers, we also want to center the image in the column.
       if (aColumn->IsCycler() && imageSize.width < imageRect.width) {
         p.x += (imageRect.width - imageSize.width)/2;
-        if (NSTwipsToIntPixels(imageRect.width - imageSize.width, t2p)%2 != 0)
-          p.x -= NSIntPixelsToTwips(1, p2t); // One pixel in twips
       }
 
       // Paint the image.

@@ -232,8 +232,7 @@ treechildren:-moz-tree-column(insertafter) {
 /* ::::: twisty :::::  */
 
 treechildren:-moz-tree-twisty {
-  padding-right: 4px;
-  padding-top: 1px;
+  padding-right: 3px;
   width: 9px; /* The image's width is 9 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
 }
@@ -244,7 +243,7 @@ treechildren:-moz-tree-twisty(open) {
 }
 
 treechildren:-moz-tree-indentation {
-  width: 18px;
+  width: 16px;
 }
 
 /* ::::: gridline style ::::: */
