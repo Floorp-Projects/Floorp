@@ -30,14 +30,6 @@
   } 
 
 
-/** 
- * set a min width on messenger buttons for even spacing
-**/
-.button-toolbar-2 
-  {
-       min-width: 7em !important;  /** set as important in order to show up in msg comp **/
-  }     
-
 
 
 
@@ -427,6 +419,14 @@ searchterm
 {
   background-color:#FFFFFF;
 }
+
+
+/** hide black border on splitter in mailnews - makes splitter 'T' intersection look bad **/
+splitter
+  {
+    border-right:none !important;
+  }
+    
 
 /** 
  *Focus rings on 3 pane view
