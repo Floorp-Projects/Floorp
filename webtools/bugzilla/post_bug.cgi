@@ -205,7 +205,7 @@ my %ccids;
 my @cc;
 
 # Create the ccid hash for inserting into the db
-# and the list for passing to processmail
+# and the list for passing to Bugzilla::BugMail::Send
 # use a hash rather than a list to avoid adding users twice
 if (defined $::FORM{'cc'}) {
     foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {

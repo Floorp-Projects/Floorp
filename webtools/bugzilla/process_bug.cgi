@@ -1398,7 +1398,7 @@ foreach my $id (@idlist) {
         @ccRemoved = @removed;
     }
 
-    # We need to run processmail for dependson/blocked bugs if the dependencies
+    # We need to send mail for dependson/blocked bugs if the dependencies
     # change or the status or resolution change. This var keeps track of that.
     my $check_dep_bugs = 0;
 
@@ -1586,7 +1586,7 @@ foreach my $id (@idlist) {
         $newhash{$col} = $newvalues[$i];
         $i++;
     }
-    # for passing to processmail to ensure that when someone is removed
+    # for passing to Bugzilla::BugMail to ensure that when someone is removed
     # from one of these fields, they get notified of that fact (if desired)
     #
     my $origOwner = "";
@@ -1612,8 +1612,8 @@ foreach my $id (@idlist) {
                 $col = 'component';
             }
 
-            # save off the old value for passing to processmail so the old
-            # owner can be notified
+            # save off the old value for passing to Bugzilla::BugMail so
+            # the old owner can be notified
             #
             if ($col eq 'assigned_to') {
                 $old = ($old) ? DBID_to_name($old) : "";

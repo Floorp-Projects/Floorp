@@ -62,6 +62,7 @@ use lib ($::path);
 use XML::Parser;
 use Data::Dumper;
 $Data::Dumper::Useqq = 1;
+use Bugzilla::BugMail;
 
 require "CGI.pl";
 require "globals.pl";
@@ -648,7 +649,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     $log .= "\n\n\n";
   }
 
-  system("./processmail", $id, $exporter);
+  Bugzilla::BugMail::Send($id, { 'changer' => $exporter });
 }
 
 my $subject = "$bugqty bug(s) successfully moved from $urlbase to " 

@@ -30,6 +30,7 @@ require "CGI.pl";
 use vars qw($template $userid %COOKIE);
 
 use Bug;
+use Bugzilla::BugMail;
 
 $::lockcount = 0;
 
@@ -132,7 +133,7 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
         "($id,  $exporterid, now(), " . SqlQuote($comment) . ")");
 
     print "<P>Bug $id moved to " . Param("move-to-url") . ".<BR>\n";
-    system("./processmail", $id, $exporter);
+    Bugzilla::BugMail::Send($id, { 'changer' => $exporter });
   }
 }
 print "<P>\n";
