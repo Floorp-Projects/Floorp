@@ -138,6 +138,10 @@ nsContainerFrame::Destroy(nsIPresContext* aPresContext)
 
   // Delete the primary child list
   mFrames.DestroyFrames(aPresContext);
+  
+  // Destroy overflow frames now
+  nsFrameList overflowFrames(GetOverflowFrames(aPresContext, PR_TRUE));
+  overflowFrames.DestroyFrames(aPresContext);
 
   // Destroy the frame and remove the flow pointers
   return nsSplittableFrame::Destroy(aPresContext);
@@ -164,6 +168,23 @@ nsContainerFrame::FirstChild(nsIPresContext* aPresContext,
     *aFirstChild = nsnull;
     return NS_ERROR_INVALID_ARG;
   }
+}
+
+NS_IMETHODIMP
+nsContainerFrame::GetAdditionalChildListName(PRInt32   aIndex,
+                                             nsIAtom** aListName) const
+{
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (aIndex == 0) {
+    *aListName = nsLayoutAtoms::overflowList;
+    NS_ADDREF(*aListName);
+  } else {
+    *aListName = nsnull;
+  }
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////

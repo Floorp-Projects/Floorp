@@ -328,6 +328,12 @@ nsBlockFrame::Destroy(nsIPresContext* aPresContext)
 
   nsLineBox::DeleteLineList(aPresContext, mLines);
 
+  // destroy overflow lines now
+  nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_TRUE);
+  if (overflowLines) {
+    nsLineBox::DeleteLineList(aPresContext, *overflowLines);
+  }
+
   return nsBlockFrameSuper::Destroy(aPresContext);
 }
 
