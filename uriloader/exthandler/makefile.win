@@ -30,6 +30,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  helperAppDlg \
 		  plugin \
+		  unicharutil \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
