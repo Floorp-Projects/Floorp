@@ -1237,6 +1237,10 @@ Bool lo_ValidEditableElement(MWContext *context, LO_Element* eptr)
             ( (!EDT_IS_EDITOR(context) ) ||
                 (eptr->lo_any.edit_element != 0 &&
                  eptr->lo_any.edit_offset >= 0));
+#if 0
+        /* This may fix arrow key problem, but it prevents
+           us from clicking on the empty text element in a table cell,
+           so we must fix it a different way. */
         /* cmanske. Not sure why these are created, 
            but after backspacing from the beginning of line 2 of wrapped text,
            then type a space to cause wrapping again, a 0-len lo_text element
@@ -1247,6 +1251,7 @@ Bool lo_ValidEditableElement(MWContext *context, LO_Element* eptr)
            but its before the last visible char. */
         if( bEditable && eptr->type == LO_TEXT && eptr->lo_text.text_len == 0 )
             bEditable = FALSE;
+#endif
     }    
     return bEditable;
 }
