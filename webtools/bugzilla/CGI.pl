@@ -943,6 +943,9 @@ sub GetCommandMenu {
         if (UserInGroup("editcomponents")) {
             $html .= ", <a href=editproducts.cgi>components</a>";
         }
+        if (UserInGroup("creategroups")) {
+            $html .= ", <a href=editgroups.cgi>groups</a>";
+        }
         if (UserInGroup("editkeywords")) {
             $html .= ", <a href=editkeywords.cgi>keywords</a>";
         }
