@@ -35,14 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCocoaBrowserService.h"
+#import "nsCocoaBrowserService.h"
+#import "DownloadFactories.h"
+#import "CHBrowserView.h"
 
 #include "nsIWindowWatcher.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIProfile.h"
 #include "nsIPrefService.h"
-#include "CHBrowserView.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsIPrompt.h"
@@ -74,13 +75,14 @@ nsCocoaBrowserService::~nsCocoaBrowserService()
 {
 }
 
-NS_IMPL_ISUPPORTS9(nsCocoaBrowserService,
+NS_IMPL_ISUPPORTS7(nsCocoaBrowserService,
                    nsIWindowCreator,
                    nsIPromptService,
                    nsIFactory, 
                    nsIBadCertListener, nsISecurityWarningDialogs, nsINSSDialogs,
-                   nsIHelperAppLauncherDialog, nsIDownload, nsIWebProgressListener)
+                   nsIHelperAppLauncherDialog)
 
+/* static */
 nsresult
 nsCocoaBrowserService::InitEmbedding()
 {
@@ -103,7 +105,7 @@ nsCocoaBrowserService::InitEmbedding()
   #define NS_PROMPTSERVICE_CID \
      {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
   static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
-	nsresult rv = cr->RegisterFactory(kPromptServiceCID, "Prompt Service", "@mozilla.org/embedcomp/prompt-service;1",
+  nsresult rv = cr->RegisterFactory(kPromptServiceCID, "Prompt Service", "@mozilla.org/embedcomp/prompt-service;1",
                                     sSingleton);
   if (NS_FAILED(rv))
     return rv;
@@ -127,14 +129,18 @@ nsCocoaBrowserService::InitEmbedding()
   rv = cr->RegisterFactory(kHelperDlgCID, NS_IHELPERAPPLAUNCHERDLG_CLASSNAME, NS_IHELPERAPPLAUNCHERDLG_CONTRACTID,
                             sSingleton);
   
-  // replace the downloader with our own which does rely on the xpfe downlaod manager
+  // replace the downloader with our own which does not rely on the xpfe downlaod manager
+  nsCOMPtr<nsIFactory> downloadFactory;
+  rv = NewDownloadListenerFactory(getter_AddRefs(downloadFactory));
+  if (NS_FAILED(rv)) return rv;
+  
   static NS_DEFINE_CID(kDownloadCID, NS_DOWNLOAD_CID);
-  rv = cr->RegisterFactory(kDownloadCID, "Download", NS_DOWNLOAD_CONTRACTID,
-                            sSingleton);
+  rv = cr->RegisterFactory(kDownloadCID, "Download", NS_DOWNLOAD_CONTRACTID, downloadFactory);
 
   return rv;
 }
 
+/* static */
 void
 nsCocoaBrowserService::BrowserClosed()
 {
@@ -149,6 +155,7 @@ nsCocoaBrowserService::BrowserClosed()
     }
 }
 
+/* static */
 void
 nsCocoaBrowserService::TermEmbedding()
 {
@@ -195,7 +202,14 @@ nsCocoaBrowserService::CreateInstance(nsISupports *aOuter,
                                       const nsIID & aIID, 
                                       void **aResult)
 {
+
   NS_ENSURE_ARG_POINTER(aResult);
+
+  /*
+  if (aIID.Equals(NS_GET_IID(nsIHelperAppLauncherDialog)))
+  {
+  }
+  */
 
   return sSingleton->QueryInterface(aIID, aResult);
 }
@@ -828,14 +842,12 @@ nsCocoaBrowserService::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ct
 NS_IMETHODIMP
 nsCocoaBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext)
 {
-NSLog(@"Show");
   return inLauncher->SaveToDisk(nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsCocoaBrowserService::PromptForSaveToFile(nsISupports *aWindowContext, const PRUnichar *aDefaultFile, const PRUnichar *aSuggestedFileExtension, nsILocalFile **_retval)
 {
-NSLog(@"PromptForSaveToFile");
   NSString* filename = [NSString stringWithCharacters:aDefaultFile length:nsCRT::strlen(aDefaultFile)];
   NSSavePanel *thePanel = [NSSavePanel savePanel];
   
@@ -844,7 +856,7 @@ NSLog(@"PromptForSaveToFile");
   // use nil for the path given to runModalForDirectory
   int runResult = [thePanel runModalForDirectory: nil file:filename];
   if (runResult == NSOKButton) {
-NSLog([thePanel filename]);
+    // NSLog(@"Saving to %@", [thePanel filename]);
     NSString *theName = [thePanel filename];
     return NS_NewNativeLocalFile(nsDependentCString([theName fileSystemRepresentation]), PR_FALSE, _retval);
   }
@@ -856,140 +868,6 @@ NSLog([thePanel filename]);
 NS_IMETHODIMP
 nsCocoaBrowserService::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::Init(nsIURI* aSource,
-                            nsILocalFile* aTarget,
-                            const PRUnichar* aDisplayName,
-                            const PRUnichar* aOpeningWith,
-                            PRInt64 aStartTime,
-                            nsIWebBrowserPersist* aPersist)
-{
-  NSLog(@"nsIDownload::Init");
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsCocoaBrowserService::GetDisplayName(PRUnichar** aDisplayName)
-{
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::SetDisplayName(const PRUnichar* aDisplayName)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::GetOpeningWith(PRUnichar** aOpeningWith)
-{
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::GetSource(nsIURI** aSource)
-{
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::GetTarget(nsILocalFile** aTarget)
-{
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::GetStartTime(PRInt64* aStartTime)
-{
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::GetPercentComplete(PRInt32* aPercentComplete)
-{
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-  
-NS_IMETHODIMP
-nsCocoaBrowserService::GetListener(nsIWebProgressListener** aListener)
-{
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::SetListener(nsIWebProgressListener* aListener)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::GetObserver(nsIObserver** aObserver)
-{
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::SetObserver(nsIObserver* aObserver)
-{
-  return NS_OK;
-}
-  
-NS_IMETHODIMP
-nsCocoaBrowserService::GetPersist(nsIWebBrowserPersist** aPersist)
-{
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::OnStateChange(nsIWebProgress* aWebProgress,
-                            nsIRequest* aRequest, PRUint32 aStateFlags,
-                            PRUint32 aStatus)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::OnStatusChange(nsIWebProgress *aWebProgress,
-                              nsIRequest *aRequest, nsresult aStatus,
-                              const PRUnichar *aMessage)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::OnLocationChange(nsIWebProgress *aWebProgress,
-                                nsIRequest *aRequest, nsIURI *aLocation)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::OnProgressChange(nsIWebProgress *aWebProgress,
-                                nsIRequest *aRequest,
-                                PRInt32 aCurSelfProgress,
-                                PRInt32 aMaxSelfProgress,
-                                PRInt32 aCurTotalProgress,
-                                PRInt32 aMaxTotalProgress)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserService::OnSecurityChange(nsIWebProgress *aWebProgress,
-                                nsIRequest *aRequest, PRUint32 aState)
-{
+  NSLog(@"nsCocoaBrowserService::ShowProgressDialog");
   return NS_OK;
 }

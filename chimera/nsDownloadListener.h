@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Simon Fraser <sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,48 +36,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <AppKit/AppKit.h>
+ 
+ 
+#import <Foundation/Foundation.h>
+#import <Appkit/Appkit.h>
 
 #import "DownloadProgressDisplay.h"
 
-#include "nscore.h"
-
-class nsIWebBrowserPersist;
-class nsISupports;
-class nsIInputStream;
-class nsDownloadListener;
-
-
-@interface ChimeraDownloadControllerFactory : DownloadControllerFactory
-@end
+#include "nsString.h"
+#include "nsIDownload.h"
+#include "nsIWebProgressListener.h"
+#include "nsIWebBrowserPersist.h"
+#include "nsIURI.h"
+#include "nsILocalFile.h"
 
 
-@interface ProgressDlgController : NSWindowController <DownloadProgressDisplay>
+// maybe this should replace nsHeaderSniffer too?
+
+class nsDownloadListener :  public nsDownloader,
+                            public nsIDownload,
+                            public nsIWebProgressListener
 {
-    IBOutlet NSTextField *mElapsedTimeLabel;
-    IBOutlet NSTextField *mFromField;
-    IBOutlet NSTextField *mStatusLabel;
-    IBOutlet NSTextField *mTimeLeftLabel;
-    IBOutlet NSTextField *mToField;
-    IBOutlet NSProgressIndicator *mProgressBar;
+public:
+            nsDownloadListener(DownloadControllerFactory* inDownloadControllerFactory);
+    virtual ~nsDownloadListener();
 
-    NSToolbarItem *pauseResumeToggleToolbarItem;
-    NSToolbarItem *leaveOpenToggleToolbarItem;
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIDOWNLOAD
+    NS_DECL_NSIWEBPROGRESSLISTENER
+  
+public:
+    //void BeginDownload();
+    void InitDialog();
+    
+    virtual void PauseDownload();
+    virtual void ResumeDownload();
+    virtual void CancelDownload();
+    virtual void DownloadDone();
+    
+private:
 
-    BOOL      mDownloadIsPaused;
-    BOOL      mSaveFileDialogShouldStayOpen;
-    BOOL      mDownloadIsComplete;
-    long      mCurrentProgress; // if progress bar is indeterminate, can still calc stats.
-        
-    nsDownloader        *mDownloader;   // we hold a ref to this
-    NSTimer             *mDownloadTimer;
-}
+    nsCOMPtr<nsIWebBrowserPersist>  mWebPersist;        // Our web persist object.
+    nsCOMPtr<nsIURI>                mURI;               // The URI of our source file. Null if we're saving a complete document.
+    nsCOMPtr<nsILocalFile>          mDestination;       // Our destination URL.
+    PRInt64                         mStartTime;         // When the download started
+    PRPackedBool                    mBypassCache;       // Whether we should bypass the cache or not.
+    PRPackedBool                    mNetworkTransfer;     // true if the first OnStateChange has the NETWORK bit set
+    PRPackedBool                    mGotFirstStateChange; // true after we've seen the first OnStateChange
+    PRPackedBool                    mUserCanceled;        // true if the user canceled the download
+};
 
--(void) setupDownloadTimer;
--(void) killDownloadTimer;
--(void) setDownloadProgress:(NSTimer *)aTimer;
--(NSString *) formatTime:(int)aSeconds;
--(NSString *) formatFuzzyTime:(int)aSeconds;
--(NSString *) formatBytes:(float)aBytes;
-
-@end

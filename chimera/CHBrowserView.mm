@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "CHBrowserView.h"
-#import "ProgressDlgController.h"
 #import "FindDlgController.h"
 #import "nsCocoaBrowserService.h"
 #import "mozView.h"
@@ -65,18 +64,12 @@
 
 // Saving of links/images/docs
 #include "nsIWebBrowserFocus.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMLocation.h"
-#include "nsIURL.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIProperties.h"
 #include "nsIRequest.h"
-#include "nsIChannel.h"
-#include "nsIHttpChannel.h"
-#include "nsIPref.h"
-#include "nsIMIMEService.h"
-#include "nsIMIMEInfo.h"
+#include "nsIPrefService.h"
 #include "nsISHistory.h"
 #include "nsIHistoryEntry.h"
 #include "nsISHEntry.h"
@@ -84,6 +77,7 @@
 #include "nsIContextMenuListener.h"
 #include "nsITooltipListener.h"
 #include "nsIEmbeddingSiteWindow2.h"
+#include "SaveHeaderSniffer.h"
 
 typedef unsigned int DragReference;
 #include "nsIDragHelperService.h"
@@ -677,265 +671,7 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
   [mContainer retain];
 }
 
-// Implementation of a header sniffer class that is used when saving Web pages and images.
-class nsHeaderSniffer :  public nsIWebProgressListener
-{
-public:
-    nsHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile, nsIURI* aURL,
-                    nsIDOMDocument* aDocument, nsIInputStream* aPostData,
-                    const nsCString& aSuggestedFilename, PRBool aBypassCache,
-                    NSView* aFilterView, NSPopUpButton* aFilterList)
-    {
-        NS_INIT_REFCNT();
-        mPersist = aPersist;
-        mTmpFile = aFile;
-        mURL = aURL;
-        mDocument = aDocument;
-        mPostData = aPostData;
-        mDefaultFilename = aSuggestedFilename;
-        mBypassCache = aBypassCache;
-        mFilterView = aFilterView;
-        mFilterList = aFilterList;
-    }
-                  
-    virtual ~nsHeaderSniffer() 
-    {
-    };
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBPROGRESSLISTENER
-  
-protected:
-    void PerformSave();
-    
-private:
-    nsIWebBrowserPersist* mPersist; // Weak. It owns us as a listener.
-    nsCOMPtr<nsIFile> mTmpFile;
-    nsCOMPtr<nsIURI> mURL;
-    nsCOMPtr<nsIDOMDocument> mDocument;
-    nsCOMPtr<nsIInputStream> mPostData;
-    nsCString mDefaultFilename;
-    PRBool mBypassCache;
-    nsCString mContentType;
-    nsCString mContentDisposition;
-    NSView* mFilterView;
-    NSPopUpButton* mFilterList;
-};
-
-NS_IMPL_ISUPPORTS1(nsHeaderSniffer, nsIWebProgressListener)
-
-// Implementation of nsIWebProgressListener
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
-NS_IMETHODIMP 
-nsHeaderSniffer::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, 
-                                PRUint32 aStatus)
-{
-    if (aStateFlags & nsIWebProgressListener::STATE_START) {
-        nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-        channel->GetContentType(mContentType);
-       
-        // Get the content-disposition if we're an HTTP channel.
-        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-        if (httpChannel)
-            httpChannel->GetResponseHeader(nsCAutoString("content-disposition"), mContentDisposition);
-        
-        mPersist->CancelSave();
-        PRBool exists;
-        mTmpFile->Exists(&exists);
-        if (exists)
-            mTmpFile->Remove(PR_FALSE);
-        PerformSave();
-    }
-    return NS_OK;
-}
-
-void nsHeaderSniffer::PerformSave()
-{
-    // Are we an HTML document? If so, we will want to append an accessory view to
-    // the save dialog to provide the user with the option of doing a complete
-    // save vs. a single file save.
-    PRBool isHTML = (mDocument && mContentType.Equals("text/html") ||
-                     mContentType.Equals("text/xml") ||
-                     mContentType.Equals("application/xhtml+xml"));
-    
-    // Next find out the directory that we should start in.
-    nsCOMPtr<nsIPrefService> prefs(do_GetService("@mozilla.org/preferences-service;1"));
-    if (!prefs)
-        return;
-    nsCOMPtr<nsIPrefBranch> dirBranch;
-    prefs->GetBranch("browser.download.", getter_AddRefs(dirBranch));
-    PRInt32 filterIndex = 0;
-    if (dirBranch) {
-        nsresult rv = dirBranch->GetIntPref("save_converter_index", &filterIndex);
-        if (NS_FAILED(rv))
-            filterIndex = 0;
-    }
-    if (mFilterList)
-        [mFilterList selectItemAtIndex: filterIndex];
-        
-    // We need to figure out what file name to use.
-    nsCAutoString defaultFileName;
-    if (!mContentDisposition.IsEmpty()) {
-        // (1) Use the HTTP header suggestion.
-        PRInt32 index = mContentDisposition.Find("filename=");
-        if (index >= 0) {
-            // Take the substring following the prefix.
-            index += 9;
-            nsCAutoString filename;
-            mContentDisposition.Right(filename, mContentDisposition.Length() - index);
-            defaultFileName = filename;
-        }
-    }
-    
-    if (defaultFileName.IsEmpty()) {
-        nsCOMPtr<nsIURL> url(do_QueryInterface(mURL));
-        if (url)
-            url->GetFileName(defaultFileName); // (2) For file URLs, use the file name.
-    }
-    
-    if (defaultFileName.IsEmpty() && mDocument && isHTML) {
-        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
-        nsAutoString title;
-        if (htmlDoc)
-            htmlDoc->GetTitle(title); // (3) Use the title of the document.
-        defaultFileName.AssignWithConversion(title);
-    }
-    
-    if (defaultFileName.IsEmpty()) {
-        // (4) Use the caller provided name.
-        defaultFileName = mDefaultFilename;
-    }
-
-    if (defaultFileName.IsEmpty() && mURL)
-        // (5) Use the host.
-        mURL->GetHost(defaultFileName);
-    
-    // One last case to handle about:blank and other fruity untitled pages.
-    if (defaultFileName.IsEmpty())
-        defaultFileName = "untitled";
-        
-    // Validate the file name to ensure legality.
-    for (PRUint32 i = 0; i < defaultFileName.Length(); i++)
-        if (defaultFileName[i] == ':' || defaultFileName[i] == '/')
-            defaultFileName.SetCharAt(i, ' ');
-            
-    // Make sure the appropriate extension is appended to the suggested file name.
-    nsCOMPtr<nsIURI> fileURI(do_CreateInstance("@mozilla.org/network/standard-url;1"));
-    nsCOMPtr<nsIURL> fileURL(do_QueryInterface(fileURI));
-    if (!fileURL)
-        return;
-    fileURL->SetFilePath(defaultFileName);
-    
-    nsCAutoString fileExtension;
-    fileURL->GetFileExtension(fileExtension);
-    
-    PRBool setExtension = PR_FALSE;
-    if (mContentType.Equals("text/html")) {
-        if (fileExtension.IsEmpty() || (!fileExtension.Equals("htm") && !fileExtension.Equals("html"))) {
-            defaultFileName += ".html";
-            setExtension = PR_TRUE;
-        }
-    }
-    
-    if (!setExtension && fileExtension.IsEmpty()) {
-        nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1"));
-        if (!mimeService)
-            return;
-        nsCOMPtr<nsIMIMEInfo> mimeInfo;
-        mimeService->GetFromMIMEType(mContentType.get(), getter_AddRefs(mimeInfo));
-        if (!mimeInfo)
-          return;
-
-        PRUint32 extCount = 0;
-        char** extList = nsnull;
-        mimeInfo->GetFileExtensions(&extCount, &extList);        
-        if (extCount > 0 && extList) {
-            defaultFileName += ".";
-            defaultFileName += extList[0];
-        }
-    }
-    
-    // Now it's time to pose the save dialog.
-    NSSavePanel* savePanel = [NSSavePanel savePanel];
-    NSString* file = nil;
-    if (!defaultFileName.IsEmpty())
-        file = [[NSString alloc] initWithCString: defaultFileName.get()];
-        
-    if (isHTML)
-        [savePanel setAccessoryView: mFilterView];
-        
-    if ([savePanel runModalForDirectory: nil file: file] == NSFileHandlingPanelCancelButton)
-        return;
-       
-    // Release the file string.
-    [file release];
-    
-    // Update the filter index.
-    if (isHTML && mFilterList) {
-        filterIndex = [mFilterList indexOfSelectedItem];
-        dirBranch->SetIntPref("save_converter_index", filterIndex);
-    }
-    
-    // Convert the content type to text/plain if it was selected in the filter.
-    if (isHTML && filterIndex == 2)
-        mContentType = "text/plain";
-    
-    nsCOMPtr<nsISupports> sourceData;
-    if (isHTML && filterIndex != 1)
-        sourceData = do_QueryInterface(mDocument);
-    else
-        sourceData = do_QueryInterface(mURL);
-        
-    nsCOMPtr<nsIWebBrowserPersist> webPersist(do_CreateInstance(persistContractID));
-    ProgressDlgController* progressDialog = [[ProgressDlgController alloc] initWithWindowNibName: @"ProgressDialog"];
-    [progressDialog setWebPersist: webPersist 
-                    source: sourceData.get()
-                    destination: [savePanel filename]
-                    contentType: mContentType.get()
-                    postData: mPostData
-                    bypassCache: mBypassCache];
-                    
-    [progressDialog showWindow: progressDialog];
-}
-
-/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
-NS_IMETHODIMP 
-nsHeaderSniffer::OnProgressChange(nsIWebProgress *aWebProgress, 
-           nsIRequest *aRequest, 
-           PRInt32 aCurSelfProgress, 
-           PRInt32 aMaxSelfProgress, 
-           PRInt32 aCurTotalProgress, 
-           PRInt32 aMaxTotalProgress)
-{
-  return NS_OK;
-}
-
-/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
-NS_IMETHODIMP 
-nsHeaderSniffer::OnLocationChange(nsIWebProgress *aWebProgress, 
-           nsIRequest *aRequest, 
-           nsIURI *location)
-{
-  return NS_OK;
-}
-
-/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
-NS_IMETHODIMP 
-nsHeaderSniffer::OnStatusChange(nsIWebProgress *aWebProgress, 
-               nsIRequest *aRequest, 
-               nsresult aStatus, 
-               const PRUnichar *aMessage)
-{
-  return NS_OK;
-}
-
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
-NS_IMETHODIMP 
-nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
-{
-  return NS_OK;
-}
-
+#pragma mark -
 
 @implementation CHBrowserView
 
@@ -1244,13 +980,17 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
           shEntry->GetPostData(getter_AddRefs(postData));
     }
 
+    // when saving, we first fire off a save with a nsHeaderSniffer as a progress
+    // listener. This allows us to look for the content-disposition header, which
+    // can supply a filename, and maybe has something to do with CGI-generated
+    // content (?)
     nsCAutoString fileName(aFilename);
     nsHeaderSniffer* sniffer = new nsHeaderSniffer(webPersist, tmpFile, aURI, 
                                                    aDocument, postData, fileName, aBypassCache,
                                                    aFilterView, aFilterList);
     if (!sniffer)
         return;
-    webPersist->SetProgressListener(sniffer);
+    webPersist->SetProgressListener(sniffer);  // owned
     webPersist->SaveURI(aURI, nsnull, tmpFile);
 }
 
