@@ -122,7 +122,7 @@ nsNetFactory::CreateInstance(nsISupports *aOuter,
         nsUrl* url = new nsUrl(aOuter);
         if (url == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
-        inst = NS_STATIC_CAST(nsIUrl*, url);
+        inst = NS_STATIC_CAST(nsITypicalUrl*, url);
     }
     else {
         return NS_ERROR_NO_INTERFACE;
