@@ -48,4 +48,3 @@ function abNameOKButton()
 	return true;
 }
 
-c
