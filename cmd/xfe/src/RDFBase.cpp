@@ -201,8 +201,14 @@ XFE_RDFBase::debugEvent(HT_Resource n, HT_Event whatHappened)
     if (strcmp(viewName, nodeName) == 0)
         nodeName = "<same>";
 
+
+#ifdef DEBUG_slamm
 #define EVENTDEBUG(x) printf("%-21s %s, %s\n",(x),\
                              viewName,nodeName);
+#else
+#define EVENTDEBUG(x)
+#endif
+
 
   switch (whatHappened) {
   case HT_EVENT_NODE_ADDED:
