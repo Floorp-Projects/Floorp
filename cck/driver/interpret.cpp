@@ -192,7 +192,7 @@ CString CInterpret::BrowseDir(WIDGET *curWidget)
 				((CEdit*)tmpWidget->control)->SetWindowText(szPath);
 
 		}
-	 }
+	}
 	returnDir = szPath;
 	free( bi.pszDisplayName );
 	return returnDir;
@@ -213,7 +213,8 @@ BOOL CInterpret::Progress()
 	pProgressDlg->m_ProgressBar.SetRange(0,4);
 	pProgressDlg->m_ProgressBar.SetStep(1);
 				
-	if (curWidget->action.dll == "IBEngine.dll") {
+	if (curWidget->action.dll == "IBEngine.dll") 
+	{
 		VERIFY(hModule = ::LoadLibrary("IBEngine.dll"));
 
 		VERIFY(
@@ -388,14 +389,14 @@ BOOL CInterpret::OpenBrowser(const char *url)
 				*pos = '\0';    /* remove the parameter */
 			}
 			else
-			*pos = '\0';        /* remove the parameter */
+				*pos = '\0';    /* remove the parameter */
 
-		lstrcat(pos," ");
-		lstrcat(pos,"\"");
-		lstrcat(pos,url);
-		lstrcat(pos,"\"");
-		ExecuteCommand(key,SW_SHOW,50); 
-		retflag = TRUE;
+			lstrcat(pos," ");
+			lstrcat(pos,"\"");
+			lstrcat(pos,url);
+			lstrcat(pos,"\"");
+			ExecuteCommand(key,SW_SHOW,50); 
+			retflag = TRUE;
 		}
 	}
 
@@ -431,14 +432,14 @@ BOOL CInterpret::OpenViewer(const char *url)
 				*pos = '\0';    /* remove the parameter */
 			}
 			else
-			*pos = '\0';        /* remove the parameter */
+				*pos = '\0';    /* remove the parameter */
 
-		lstrcat(pos," ");
-		lstrcat(pos,"\"");
-		lstrcat(pos,url);
-		lstrcat(pos,"\"");
-		ExecuteCommand(key,SW_SHOW,50); 
-		retflag = TRUE;
+			lstrcat(pos," ");
+			lstrcat(pos,"\"");
+			lstrcat(pos,url);
+			lstrcat(pos,"\"");
+			ExecuteCommand(key,SW_SHOW,50); 
+			retflag = TRUE;
 		}
 	}
 
@@ -588,6 +589,7 @@ BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms, WIDGET *curWidget)
 
 	return TRUE;
 }
+
 CString CInterpret::GetTrimFile(CString filePath)
 {
 	int fileLength=0;
@@ -610,277 +612,262 @@ BOOL CInterpret::interpret(char *cmds, WIDGET *curWidget)
 
 BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 {
-		// Make modifiable copy of string's buffer
-		char buf[MAX_SIZE];
-		strcpy(buf, (char *)(LPCTSTR) cmds);
+	// Make modifiable copy of string's buffer
+	char buf[MAX_SIZE];
+	strcpy(buf, (char *)(LPCTSTR) cmds);
 
-		// Format of commandList is:  <command1>;<command2>;...
-		// Format of command is:   <command>(<parm1>,<parm2>,...)
-		int numCmds = 0;
-		char *cmdList[100];
-		char *pcmdL = strtok(buf, ";");
-		while (pcmdL)
+	// Format of commandList is:  <command1>;<command2>;...
+	// Format of command is:   <command>(<parm1>,<parm2>,...)
+	int numCmds = 0;
+	char *cmdList[100];
+	char *pcmdL = strtok(buf, ";");
+	while (pcmdL)
+	{
+		cmdList[numCmds] = strdup(pcmdL);
+		pcmdL = strtok(NULL, ";");
+		numCmds++;
+		if (numCmds >= 100)
 		{
-			cmdList[numCmds] = strdup(pcmdL);
-			pcmdL = strtok(NULL, ";");
-			numCmds++;
-			if (numCmds >= 100)
-			{
-				//fprintf(out, "Skipping command interpretation, too many commands.\n");
-				return FALSE;
-			}
+			//fprintf(out, "Skipping command interpretation, too many commands.\n");
+			return FALSE;
 		}
+	}
 
-		int i;
-		for (i=0; i<numCmds; i++)
+	int i;
+	for (i=0; i<numCmds; i++)
+	{
+		char *pcmd = strtok(cmdList[i], "(");
+		char *parms = strtok(NULL, ")");
+
+		if (pcmd)
 		{
-			char *pcmd = strtok(cmdList[i], "(");
-			char *parms = strtok(NULL, ")");
-
-			if (pcmd)
+			// Only do this AFTER we're done with previous set
+			char *dll   = strtok(pcmd, ".");
+			char *proc = strtok(NULL, "(");  // guaranteed no "(" will match
+			if (proc)
 			{
-				// Only do this AFTER we're done with previous set
-				char *dll   = strtok(pcmd, ".");
-				char *proc = strtok(NULL, "(");  // guaranteed no "(" will match
-				if (proc)
-				{
-					if (!proc)
-						return FALSE;
+				if (!proc)
+					return FALSE;
 
-					if (!CallDLL(dll, proc, parms, curWidget))
-						return FALSE;
-				}
-				else if (strcmp(pcmd, "command") == 0)
+				if (!CallDLL(dll, proc, parms, curWidget))
+					return FALSE;
+			}
+			else if (strcmp(pcmd, "command") == 0)
+			{
+				CString p = replaceVars(parms, NULL);
+				ExecuteCommand((char *) (LPCSTR) p, SW_SHOWDEFAULT,INFINITE);
+			}
+			else if (strcmp(pcmd, "IterateListBox") == 0)
+			{
+				if (!IterateListBox(parms))
+					return FALSE;
+			}
+			else if(strcmp(pcmd, "IsMailfieldempty") ==0)
+			{
+				CString ispDomainName = GetGlobal("DomainName");
+				CString ispPrettyName = GetGlobal("PrettyName");
+				CString ispLongName = GetGlobal("LongName");
+				CString ispInServer = GetGlobal("IncomingServer");
+				CString ispOutServer = GetGlobal("OutgoingServer");
+				CString ispPortNumber = GetGlobal("PortNumber");
+				if ((ispDomainName.IsEmpty()) || 
+					(ispPrettyName.IsEmpty()) || 
+					(ispLongName.IsEmpty()) || 
+					(ispInServer.IsEmpty())	|| 
+					(ispOutServer.IsEmpty()) || 
+					(ispPortNumber.IsEmpty()))
 				{
-					CString p = replaceVars(parms, NULL);
-					ExecuteCommand((char *) (LPCSTR) p, SW_SHOWDEFAULT,INFINITE);
-				}
-				else if (strcmp(pcmd, "IterateListBox") == 0)
-				{
-					if (!IterateListBox(parms))
-						return FALSE;
-				}
-				else if(strcmp(pcmd, "IsMailfieldempty") ==0)
-				{
-					CString ispDomainName = GetGlobal("DomainName");
-					CString ispPrettyName = GetGlobal("PrettyName");
-					CString ispLongName = GetGlobal("LongName");
-					CString ispInServer = GetGlobal("IncomingServer");
-					CString ispOutServer = GetGlobal("OutgoingServer");
-					CString ispPortNumber = GetGlobal("PortNumber");
-					if ((ispDomainName.IsEmpty()) || 
-						(ispPrettyName.IsEmpty()) || 
-						(ispLongName.IsEmpty()) || 
-						(ispInServer.IsEmpty())	|| 
-						(ispOutServer.IsEmpty()) || 
-						(ispPortNumber.IsEmpty()))
+					if (!((ispDomainName.IsEmpty()) && 
+						(ispPrettyName.IsEmpty()) && 
+						(ispLongName.IsEmpty()) && 
+						(ispInServer.IsEmpty())	&& 
+						(ispOutServer.IsEmpty()) && 
+						(ispPortNumber.IsEmpty())))
 					{
-						if (!((ispDomainName.IsEmpty()) && 
-							(ispPrettyName.IsEmpty()) && 
-							(ispLongName.IsEmpty()) && 
-							(ispInServer.IsEmpty())	&& 
-							(ispOutServer.IsEmpty()) && 
-							(ispPortNumber.IsEmpty())))
-						{
-							AfxMessageBox("All fields must be filled to create a customized mail account", MB_OK);
-							return FALSE;
-						}
-					}
-				}
-				else if(strcmp(pcmd, "IsNewsfieldempty") ==0)
-				{
-					CString newsDomainName = GetGlobal("nDomainName");
-					CString newsPrettyName = GetGlobal("nPrettyName");
-					CString newsLongName = GetGlobal("nLongName");
-					CString newsServer = GetGlobal("nServer");
-					CString newsPortNumber = GetGlobal("nPortNumber");
-					if ((newsDomainName.IsEmpty()) || 
-						(newsPrettyName.IsEmpty()) || 
-						(newsLongName.IsEmpty()) || 
-						(newsServer.IsEmpty()) || 
-						(newsPortNumber.IsEmpty()))
-					{
-						if (!((newsDomainName.IsEmpty()) && 
-							(newsPrettyName.IsEmpty()) && 
-							(newsLongName.IsEmpty()) && 
-							(newsServer.IsEmpty())	&& 
-							(newsPortNumber.IsEmpty())))
-						{
-							AfxMessageBox("All fields must be filled to create a customized news account", MB_OK);
-							return FALSE;
-						}
-					}
-				}
-				else if (strcmp(pcmd, "IsAutourlempty") == 0)
-				{
-					CString proxyConfigoption = GetGlobal("radioGroup2");
-					if (proxyConfigoption == "3")
-					{
-						WIDGET *wid;
-						wid = findWidget("autoproxyurl");
-						CString autourl = CWizardUI::GetScreenValue(wid);
-						if (autourl == "")
-						{
-							AfxMessageBox("Please enter a URL for automatic proxy configuration", MB_OK);
-							return FALSE;
-						}
-					}
-				}
-				else if (strcmp(pcmd, "IsSamedomain") == 0)
-				{
-					CString ispDomainName = GetGlobal("DomainName");
-					CString newsDomainName;
-					newsDomainName = CWizardUI::GetScreenValue(curWidget);
-					if (newsDomainName == ispDomainName)
-					{
-						AfxMessageBox("The domain name for News must be different from the domain name used for Mail", MB_OK);
+						AfxMessageBox("All fields must be filled to create a customized mail account", MB_OK);
 						return FALSE;
 					}
 				}
-				else if(strcmp(pcmd, "IsNumeric") ==0)
+			}
+			else if(strcmp(pcmd, "IsNewsfieldempty") ==0)
+			{
+				CString newsDomainName = GetGlobal("nDomainName");
+				CString newsPrettyName = GetGlobal("nPrettyName");
+				CString newsLongName = GetGlobal("nLongName");
+				CString newsServer = GetGlobal("nServer");
+				CString newsPortNumber = GetGlobal("nPortNumber");
+				if ((newsDomainName.IsEmpty()) || 
+					(newsPrettyName.IsEmpty()) || 
+					(newsLongName.IsEmpty()) || 
+					(newsServer.IsEmpty()) || 
+					(newsPortNumber.IsEmpty()))
+				{
+					if (!((newsDomainName.IsEmpty()) && 
+						(newsPrettyName.IsEmpty()) && 
+						(newsLongName.IsEmpty()) && 
+						(newsServer.IsEmpty())	&& 
+						(newsPortNumber.IsEmpty())))
+					{
+						AfxMessageBox("All fields must be filled to create a customized news account", MB_OK);
+						return FALSE;
+					}
+				}
+			}
+			else if (strcmp(pcmd, "IsAutourlempty") == 0)
+			{
+				CString proxyConfigoption = GetGlobal("radioGroup2");
+				if (proxyConfigoption == "3")
 				{
 					WIDGET *wid;
-					wid = curWidget;
-					if (wid)
+					wid = findWidget("autoproxyurl");
+					CString autourl = CWizardUI::GetScreenValue(wid);
+					if (autourl == "")
 					{
-						CString retval = CWizardUI::GetScreenValue(curWidget);
-						curWidget->value = retval;
-						int len = retval.GetLength();
-						char* intval = (char*)(LPCTSTR)(retval);
-						intval[len] = '\0';
-						int pCount =0;
-						while (intval[0] != '\0')
-						{
-							if (!isdigit(intval[0]))
-								pCount++;
+						AfxMessageBox("Please enter a URL for automatic proxy configuration", MB_OK);
+						return FALSE;
+					}
+				}
+			}
+			else if (strcmp(pcmd, "IsSamedomain") == 0)
+			{
+				CString ispDomainName = GetGlobal("DomainName");
+				CString newsDomainName;
+				newsDomainName = CWizardUI::GetScreenValue(curWidget);
+				if (newsDomainName == ispDomainName)
+				{
+					AfxMessageBox("The domain name for News must be different from the domain name used for Mail", MB_OK);
+					return FALSE;
+				}
+			}
+			else if(strcmp(pcmd, "IsNumeric") ==0)
+			{
+				WIDGET *wid;
+				wid = curWidget;
+				if (wid)
+				{
+					CString retval = CWizardUI::GetScreenValue(curWidget);
+					curWidget->value = retval;
+					int len = retval.GetLength();
+					char* intval = (char*)(LPCTSTR)(retval);
+					intval[len] = '\0';
+					int pCount =0;
+					while (intval[0] != '\0')
+					{
+						if (!isdigit(intval[0]))
+							pCount++;
 
-							intval++;
+						intval++;
 							
-						}
-						if (pCount > 0)
-						{
-							numericMessage = replaceVars(parms,NULL);
-							AfxMessageBox(numericMessage,MB_OK);
-							Validate = FALSE;
-						}
-						else
-							Validate = TRUE;
 					}
-					
-				}
- 				else if(strcmp(pcmd, "IsPortnumEmpty") ==0)
-				{
-					WIDGET *wid;
-					wid = curWidget;
-					if (wid)
+					if (pCount > 0)
 					{
-						CString retval = CWizardUI::GetScreenValue(curWidget);
-						if (retval == "")
-						{
-							SetGlobal(curWidget->value,"0");
-							((CEdit*)wid->control)->SetWindowText("0");
-						}
+						numericMessage = replaceVars(parms,NULL);
+						AfxMessageBox(numericMessage,MB_OK);
+						Validate = FALSE;
 					}
-				}
-				else if (strcmp(pcmd, "VerifySet") == 0)
-				{
-					// VerifySet checks to see if the first parameter has any value
-
-					int i=0;
-					char *token[3];
-					token[i] = strtok(parms, ",");
-					while ((token[i] != NULL) && (i<2))
-					{
-						i++;
-						token[i]=strtok(NULL, ",");
-					}
-					
-					CString value = replaceVars(parms, NULL);
-
-					if (!value || value.IsEmpty())
-					{
-						CWnd myWnd;
-						myWnd.MessageBox(token[1], "Error", MB_OK|MB_SYSTEMMODAL);
-						return FALSE;
-					}
-
-					// Check if the user agent string contains spaces
-					if (token[2])
-					{
-						if (value.Find(' ') != -1)
-						{
-							CWnd myWnd;
-							myWnd.MessageBox(token[2], "Error", MB_OK|MB_SYSTEMMODAL);
-							return FALSE;
-						}
-					}
-
-				}
-				else if (strcmp(pcmd, "CopyFile") == 0)
-				{
-					// VerifySet checks to see if the first parameter has any value
-					//   If (p1) then continue else show error dialog and return FALSE
-
-					char *p2 = strchr(parms, ',');
-
-					if (p2)
-						*p2++ = '\0';
 					else
-						p2 = "You must specify a second file to copy";
-					CString fchild =replaceVars(parms,NULL);
-					CString tchild = replaceVars(p2,NULL);
-					if (!CopyFile((LPCTSTR) fchild, (LPCTSTR) tchild, FALSE))
+						Validate = TRUE;
+				}
+					
+			}
+			else if(strcmp(pcmd, "IsPortnumEmpty") ==0)
+			{
+				WIDGET *wid;
+				wid = curWidget;
+				if (wid)
+				{
+					CString retval = CWizardUI::GetScreenValue(curWidget);
+					if (retval == "")
 					{
-						DWORD copyerror = GetLastError();
-						AfxMessageBox("Error - File couldnt be copied", MB_OK|MB_SYSTEMMODAL);
+						SetGlobal(curWidget->value,"0");
+						((CEdit*)wid->control)->SetWindowText("0");
+					}
+				}
+			}
+			else if (strcmp(pcmd, "VerifySet") == 0)
+			{
+				// VerifySet checks to see if the first parameter has any value
+
+				int i=0;
+				char *token[3];
+				token[i] = strtok(parms, ",");
+				while ((token[i] != NULL) && (i<2))
+				{
+					i++;
+					token[i]=strtok(NULL, ",");
+				}
+					
+				CString value = replaceVars(parms, NULL);
+
+				if (!value || value.IsEmpty())
+				{
+					CWnd myWnd;
+					myWnd.MessageBox(token[1], "Error", MB_OK|MB_SYSTEMMODAL);
+					return FALSE;
+				}
+
+				// Check if the user agent string contains spaces
+				if (token[2])
+				{
+					if (value.Find(' ') != -1)
+					{
+						CWnd myWnd;
+						myWnd.MessageBox(token[2], "Error", MB_OK|MB_SYSTEMMODAL);
 						return FALSE;
 					}
 				}
 
-				else if (strcmp(pcmd, "Reload") == 0)
-				{
-					// Enforce the rule that Reload() cannot be followed by any 
-					// further commands to interpret
-					if (i < numCmds-1)
-					{
-						CWnd myWnd;
-						myWnd.MessageBox(
-							"No commands allowed after a Reload().  File = " + CachePath, 
-							"Information", MB_OK);
-						exit(-30);
-					}
-					
-					
-					// Write out the current cache
-					if (!IsSameCache)
-						theApp.CreateNewCache();
+			}
+			else if (strcmp(pcmd, "CopyFile") == 0)
+			{
+				// VerifySet checks to see if the first parameter has any value
+				//   If (p1) then continue else show error dialog and return FALSE
 
-					// Reload sets the CachePath and reloads the cache from the new file
-					CString newDir = replaceVars(parms, NULL);
-					CachePath = newDir + "\\" + CacheFile;
-					theApp.FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
-					IsSameCache = FALSE;
-				}
-				// Switch pre-set target platform and create working installer
-				else if (strcmp(pcmd, "ChangePlatform") ==0)	
+				char *p2 = strchr(parms, ',');
+
+				if (p2)
+					*p2++ = '\0';
+				else
+					p2 = "You must specify a second file to copy";
+				CString fchild =replaceVars(parms,NULL);
+				CString tchild = replaceVars(p2,NULL);
+				if (!CopyFile((LPCTSTR) fchild, (LPCTSTR) tchild, FALSE))
 				{
-					WIDGET *w = findWidget(parms);
-					if (w)
-						if (wNotifyCode == CBN_SELCHANGE)
-						{
-							CString rootPath	= GetGlobal("Root");
-							CString configName	= GetGlobal("CustomizationList");
-							CString outputPath	= rootPath + "Configs\\" + configName + "\\Output";
-							char deletePath[MAX_SIZE];
-							strcpy(deletePath, outputPath);
-							CallDLL("IBEngine", "EraseDirectory", deletePath, w);
-						}
+					DWORD copyerror = GetLastError();
+					AfxMessageBox("Error - File couldnt be copied", MB_OK|MB_SYSTEMMODAL);
+					return FALSE;
 				}
-				// change pre-set CD autorun option
-				else if (strcmp(pcmd, "ChangeCDScreen") ==0)	
+			}
+
+			else if (strcmp(pcmd, "Reload") == 0)
+			{
+				// Enforce the rule that Reload() cannot be followed by any 
+				// further commands to interpret
+				if (i < numCmds-1)
 				{
-					WIDGET *w = findWidget(parms);
-					if (w)
+					CWnd myWnd;
+					myWnd.MessageBox(
+						"No commands allowed after a Reload().  File = " + CachePath, 
+						"Information", MB_OK);
+					exit(-30);
+				}
+					
+				// Write out the current cache
+				if (!IsSameCache)
+					theApp.CreateNewCache();
+
+				// Reload sets the CachePath and reloads the cache from the new file
+				CString newDir = replaceVars(parms, NULL);
+				CachePath = newDir + "\\" + CacheFile;
+				theApp.FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
+				IsSameCache = FALSE;
+			}
+			// Switch pre-set target platform and create working installer
+			else if (strcmp(pcmd, "ChangePlatform") ==0)	
+			{
+				WIDGET *w = findWidget(parms);
+				if (w)
+					if (wNotifyCode == CBN_SELCHANGE)
 					{
 						CString rootPath	= GetGlobal("Root");
 						CString configName	= GetGlobal("CustomizationList");
@@ -889,340 +876,349 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						strcpy(deletePath, outputPath);
 						CallDLL("IBEngine", "EraseDirectory", deletePath, w);
 					}
-				}
-				else if (strcmp(pcmd, "WriteCache") ==0)
+			}
+			// change pre-set CD autorun option
+			else if (strcmp(pcmd, "ChangeCDScreen") ==0)	
+			{
+				WIDGET *w = findWidget(parms);
+				if (w)
 				{
-					WIDGET *w = findWidget(parms);
-					if (w)
-						if (wNotifyCode == CBN_SELCHANGE)
-						{
-							IsSameCache = FALSE;
-						}
-				}
-				else if (strcmp(pcmd, "VerifyVal") == 0)
-				{
-					char *p2 = strchr(parms, ',');
-
-					if (p2)
-						*p2++ = '\0';
-					else
-					{
-						AfxMessageBox("Please Enter Verification Value for" + CString(parms),MB_OK);
-						exit(12);
-					}
-
-					CString Getval = replaceVars(parms, NULL);
-					
-					if (strcmp(Getval,p2) ==0)
-						return FALSE;
-				}
-				else if (strcmp(pcmd, "Depend") == 0)
-				{
-					int numParam = 0;
-					char *dParamList[5];
-					char *dParam = strtok(parms, ",");
-					while (dParam)
-					{
-						dParamList[numParam] = strdup(dParam);
-						dParam = strtok(NULL, ",");
-						numParam++;
-					}
-					CString var1 = replaceVars(dParamList[0],NULL);
-					CString value1 = replaceVars(dParamList[1],NULL);
-					CString var2 = replaceVars(dParamList[2],NULL);
-					CString value2;
-					if (strcmp(dParamList[3],"NULL") !=0)
-						value2 = replaceVars(dParamList[3],NULL);
-					else 
-						value2.Empty();
-					CString message = replaceVars(dParamList[4],NULL);
-					if (!message)
-					{
-						AfxMessageBox("Error - provide a message to show when depend is false", MB_OK);
-						return FALSE;
-					}
-
-					
-					if (var1.Compare(value1) == 0)
-					{
-						if (value2.IsEmpty())
-						{
-							if (var2.IsEmpty())
-							{
-								AfxMessageBox(message, MB_OK);
-								return FALSE;
-							}
-						}				
-						else
-						{
-							if (var2.Compare(value2) != 0)
-							{
-								AfxMessageBox(message, MB_OK);
-								return FALSE;
-							}
-						}
-					}
-				}
-				else if (strcmp(pcmd, "VerifyDir") == 0)
-				{
-					CFileFind tmpDir;
-					BOOL dirFound = tmpDir.FindFile(CString(nciPath)+"*.*");
-					if (!dirFound)
-					{
-						strcpy(tmpPath,asePath);
-						strcat(tmpPath,"NCIFiles");
-						_mkdir (tmpPath);
-					}
-				}
-				else if (strcmp(pcmd, "Msg") ==0)
-				{
-					CString message = replaceVars(parms,NULL);
-					int rv = AfxMessageBox(message,MB_OK);
-				}
-				else if (strcmp(pcmd, "Message") ==0)
-				{
-					int rv = AfxMessageBox(parms,MB_YESNO);
-					if (rv == IDNO)
-						return FALSE;
-				}
-				else if (strcmp(pcmd, "ImportFiles") == 0)
-				{
-					char *p2 = strchr(parms, ',');
-
-					if (p2)
-						*p2++ = '\0';
-					else
-					{
-						AfxMessageBox("You havent entered an extension - all files will be copied",MB_OK);
-					}
-
-					CString todir = replaceVars(parms, NULL);
-					CString ext = p2;
-					CString returnDir = BrowseDir(curWidget);
-					CopyDir(returnDir,todir,ext,FALSE);
-				}
-				else if (strcmp(pcmd, "DisplayImage") == 0)
-				{
-					// This is to dsiplay an image in a separate dialog
-					CImgDlg imgDlg(parms);
-					int retVal = imgDlg.DoModal();
-				}
-				else if (strcmp(pcmd, "OpenURL") == 0)
-				{
-					// This is to dsiplay an image in a separate dialog
-					CString Location = replaceVars(parms,NULL);
-					OpenBrowser((CHAR*)(LPCTSTR)Location);
-				}
-				
-				else if (strcmp(pcmd, "OpenViewer") == 0)
-				{
-					// This is to dsiplay an image in a separate dialog
-					CString Location = replaceVars(parms,NULL);
-					OpenViewer((CHAR*)(LPCTSTR)Location);
-				}
-				
-
-				else if (strcmp(pcmd, "ViewFile") == 0)
-				{
-					// This is to dsiplay an image in a separate dialog
-					CString view = replaceVars("%Root%ImageEye.exe ",NULL);
-					CString gif_file = replaceVars(parms,NULL);
-					view += gif_file;
-					ExecuteCommand((char *) (LPCSTR) view, SW_SHOWDEFAULT,INFINITE);
-				}
-				else if (strcmp(pcmd, "ShowSum") == 0)
-				{
-					CSumDlg sumdlg;
-					int retVal = sumdlg.DoModal();
-				}
-				else if (strcmp(pcmd, "ShowSummary") == 0)
-				{
-					interpret("Reload(%Root%Configs\\%CustomizationList%)",curWidget);
-					interpret("ShowSum()",curWidget);
-					interpret("Reload(%Root%)",curWidget);
-
-				}
-#if 0
-				else if (strcmp(pcmd, "NewNCIDialog") == 0)
-				{
-					CString entryName;
-					CNewDialog newDlg;
-					newDlg.DoModal();
-					entryName = newDlg.GetData();
-					SetGlobal(parms, entryName);
-				}
-#endif
-				else if (strcmp(pcmd, "inform") == 0)
-				{
-					char *p2 = strchr(parms, ',');
-
-					if (p2)
-						*p2++ = '\0';
-					else
-						p2 = "Specify Directory here";
-						
-					CString entryName;
-					CWnd myWnd;
-					entryName = GetGlobal(parms);
-					CString p2path = replaceVars(p2,NULL);
-					if (entryName != "") {
-						myWnd.MessageBox( entryName + " is saved in " + p2path, "Information", MB_OK);
-					}
-					// Delete the global var now...
-				}	
-				else if (strcmp(pcmd, "GenerateFileList") == 0 || 
-						 strcmp(pcmd, "GenerateDirList") == 0)
-				{
-					char *p2 = strchr(parms, ',');
-
-					if (p2)
-						*p2++ = '\0';
-					CString value = replaceVars(parms, NULL);
-
-					WIDGET *w;
-					if (strcmp(parms, "self") == 0)
-						w = curWidget;
-					else
-						w = findWidget(parms);
-
-					if (w)
-					{
-						CString p2path = replaceVars(p2,NULL);
-						GenerateList(pcmd, w, p2path);
-					}
-				}
-				else if (strcmp(pcmd, "SelectItem") ==0)
-				{
-					WIDGET* tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
-					if (!tmpWidget)
-						return FALSE;
-					CString comboValue = replaceVars(parms,NULL);				
-					if (!(comboValue.IsEmpty()))
-						((CComboBox*)tmpWidget->control)->SelectString(0, comboValue);
-
-				}
-
-				else if (strcmp(pcmd, "BrowseFile") == 0)
-				{
-					if (curWidget)
-						BrowseFile(curWidget);
-				}
-			
-				else if (strcmp(pcmd, "BrowseDir") == 0)
-				{
-					if (curWidget)
-						BrowseDir(curWidget);
-				}
-#if 0			
-				else if (strcmp(pcmd, "NewConfigDialog") == 0)
-				{
-					if (curWidget)
-						NewConfig(curWidget, CString(parms),"");
-				}
-
-				else if (strcmp(pcmd, "CopyConfig") == 0)
-				{
-					if (curWidget)
-						NewConfig(curWidget, CString(parms),"Create Copy");
-				}
-#endif
-				else if (strcmp(pcmd, "CopyDir") == 0)
-				{
-					char *p2 = strchr(parms, ',');
-					if (p2)
-					{
-						*p2++ = '\0';
-						CString from = replaceVars(parms, NULL);
-						CString to = replaceVars(p2, NULL);
-						CopyDir(from, to, NULL, TRUE);
-					}
-				}
-				else if (strcmp(pcmd, "SetGlobal") == 0)
-				{
-					char *p2 = strchr(parms, ',');
-					if (p2)
-					{
-						*p2++ = '\0';
-						CString name = replaceVars(parms, NULL);
-						CString value = replaceVars(p2, NULL);
-						value.TrimRight();
-						SetGlobal(name, value);
-					}
-				}
-				else if (strcmp(pcmd, "ShowDescription") == 0)
-				{
-					if (curWidget)
-					{
-						int i = ((CCheckListBox*)curWidget->control)->GetCurSel();
-						WIDGET *t = findWidget((char *)(LPCSTR) curWidget->target);
-						CString msg(i);
-						((CEdit*)t->control)->SetWindowText(msg);
-					}
-				}
-				else if (strcmp(pcmd, "toggleEnabled") == 0)
-				{
-					// convert first parm into boolean...
-					char *p2 = strchr(parms, ',');
-					if (p2)
-					{
-						*p2++ = '\0';
-						CString value = replaceVars(parms, NULL);
-						int newval = (value == "1");
-						parms = p2;
-						p2 = strchr(parms, ',');
-						while (parms)
-						{
-							if (p2)
-								*p2++ = '\0';
-							WIDGET *w = findWidget(parms);
-							if (w)
-								w->control->EnableWindow(newval);
-							parms = p2;
-							if (parms)
-								p2 = strchr(parms, ',');
-						}
-					}
-				}
-				else if (strcmp(pcmd, "toggleEnabled2") == 0)
-				{
-					// convert first parm into boolean...
-                    char *p2 = strchr(parms, ',');
-					if (p2)
-					{
-						*p2++ = '\0';
-						CString value = replaceVars(parms, NULL);
-						BOOL newval = (!value.IsEmpty());
-						char *parms1 = p2;
-						p2 = strchr(parms1, ',');
-						while (parms1)
-						{
-							if (p2)
-								*p2++ = '\0';
-							WIDGET *w = findWidget(parms);
-							if (w)
-								w->control->EnableWindow(newval);
-							parms1 = p2;
-							if (parms1)
-								p2 = strchr(parms1, ',');
-						}
-					}
-				}
-				else if (strcmp(pcmd, "ShowSection") == 0)
-				{
-					// ShowSection is a way to use a listbox to choose a subset of widgets to display.
-					// To use, create a listbox widget, and fill it will sectionnames.
-					// Set its onCommand=ShowSection.
-					// Then give the widgets you want in each section a "ShowInSection=sectionname". 
-					// When "sectionname" is selected in the listbox, all widgets with matching ShowInSection
-					// are shown, and all widgets with some other sectiion are hidden. Widgets without
-					// the ShowInSection attribute are left alone.
-					
-					ShowSection(curWidget);					
+					CString rootPath	= GetGlobal("Root");
+					CString configName	= GetGlobal("CustomizationList");
+					CString outputPath	= rootPath + "Configs\\" + configName + "\\Output";
+					char deletePath[MAX_SIZE];
+					strcpy(deletePath, outputPath);
+					CallDLL("IBEngine", "EraseDirectory", deletePath, w);
 				}
 			}
-			// This is an extra free...
-			//free(pcmd);
+			else if (strcmp(pcmd, "WriteCache") ==0)
+			{
+				WIDGET *w = findWidget(parms);
+				if (w)
+					if (wNotifyCode == CBN_SELCHANGE)
+					{
+						IsSameCache = FALSE;
+					}
+			}
+			else if (strcmp(pcmd, "VerifyVal") == 0)
+			{
+				char *p2 = strchr(parms, ',');
+
+				if (p2)
+					*p2++ = '\0';
+				else
+				{
+					AfxMessageBox("Please Enter Verification Value for" + CString(parms),MB_OK);
+					exit(12);
+				}
+
+				CString Getval = replaceVars(parms, NULL);
+					
+				if (strcmp(Getval,p2) ==0)
+					return FALSE;
+			}
+			else if (strcmp(pcmd, "Depend") == 0)
+			{
+				int numParam = 0;
+				char *dParamList[5];
+				char *dParam = strtok(parms, ",");
+				while (dParam)
+				{
+					dParamList[numParam] = strdup(dParam);
+					dParam = strtok(NULL, ",");
+					numParam++;
+				}
+				CString var1 = replaceVars(dParamList[0],NULL);
+				CString value1 = replaceVars(dParamList[1],NULL);
+				CString var2 = replaceVars(dParamList[2],NULL);
+				CString value2;
+				if (strcmp(dParamList[3],"NULL") !=0)
+					value2 = replaceVars(dParamList[3],NULL);
+				else 
+					value2.Empty();
+				CString message = replaceVars(dParamList[4],NULL);
+				if (!message)
+				{
+					AfxMessageBox("Error - provide a message to show when depend is false", MB_OK);
+					return FALSE;
+				}
+
+				if (var1.Compare(value1) == 0)
+				{
+					if (value2.IsEmpty())
+					{
+						if (var2.IsEmpty())
+						{
+							AfxMessageBox(message, MB_OK);
+							return FALSE;
+						}
+					}				
+					else
+					{
+						if (var2.Compare(value2) != 0)
+						{
+							AfxMessageBox(message, MB_OK);
+							return FALSE;
+						}
+					}
+				}
+			}
+			else if (strcmp(pcmd, "VerifyDir") == 0)
+			{
+				CFileFind tmpDir;
+				BOOL dirFound = tmpDir.FindFile(CString(nciPath)+"*.*");
+				if (!dirFound)
+				{
+					strcpy(tmpPath,asePath);
+					strcat(tmpPath,"NCIFiles");
+					_mkdir (tmpPath);
+				}
+			}
+			else if (strcmp(pcmd, "Msg") ==0)
+			{
+				CString message = replaceVars(parms,NULL);
+				int rv = AfxMessageBox(message,MB_OK);
+			}
+			else if (strcmp(pcmd, "Message") ==0)
+			{
+				int rv = AfxMessageBox(parms,MB_YESNO);
+				if (rv == IDNO)
+					return FALSE;
+			}
+			else if (strcmp(pcmd, "ImportFiles") == 0)
+			{
+				char *p2 = strchr(parms, ',');
+
+				if (p2)
+					*p2++ = '\0';
+				else
+				{
+					AfxMessageBox("You havent entered an extension - all files will be copied",MB_OK);
+				}
+
+				CString todir = replaceVars(parms, NULL);
+				CString ext = p2;
+				CString returnDir = BrowseDir(curWidget);
+				CopyDir(returnDir,todir,ext,FALSE);
+			}
+			else if (strcmp(pcmd, "DisplayImage") == 0)
+			{
+				// This is to dsiplay an image in a separate dialog
+				CImgDlg imgDlg(parms);
+				int retVal = imgDlg.DoModal();
+			}
+			else if (strcmp(pcmd, "OpenURL") == 0)
+			{
+				// This is to dsiplay an image in a separate dialog
+				CString Location = replaceVars(parms,NULL);
+				OpenBrowser((CHAR*)(LPCTSTR)Location);
+			}
+			else if (strcmp(pcmd, "OpenViewer") == 0)
+			{
+				// This is to dsiplay an image in a separate dialog
+				CString Location = replaceVars(parms,NULL);
+				OpenViewer((CHAR*)(LPCTSTR)Location);
+			}
+			else if (strcmp(pcmd, "ViewFile") == 0)
+			{
+				// This is to dsiplay an image in a separate dialog
+				CString view = replaceVars("%Root%ImageEye.exe ",NULL);
+				CString gif_file = replaceVars(parms,NULL);
+				view += gif_file;
+				ExecuteCommand((char *) (LPCSTR) view, SW_SHOWDEFAULT,INFINITE);
+			}
+			else if (strcmp(pcmd, "ShowSum") == 0)
+			{
+				CSumDlg sumdlg;
+				int retVal = sumdlg.DoModal();
+			}
+			else if (strcmp(pcmd, "ShowSummary") == 0)
+			{
+				interpret("Reload(%Root%Configs\\%CustomizationList%)",curWidget);
+				interpret("ShowSum()",curWidget);
+				interpret("Reload(%Root%)",curWidget);
+			}
+#if 0
+			else if (strcmp(pcmd, "NewNCIDialog") == 0)
+			{
+				CString entryName;
+				CNewDialog newDlg;
+				newDlg.DoModal();
+				entryName = newDlg.GetData();
+				SetGlobal(parms, entryName);
+			}
+#endif
+			else if (strcmp(pcmd, "inform") == 0)
+			{
+				char *p2 = strchr(parms, ',');
+
+				if (p2)
+					*p2++ = '\0';
+				else
+					p2 = "Specify Directory here";
+						
+				CString entryName;
+				CWnd myWnd;
+				entryName = GetGlobal(parms);
+				CString p2path = replaceVars(p2,NULL);
+				if (entryName != "") 
+				{
+					myWnd.MessageBox( entryName + " is saved in " + p2path, "Information", MB_OK);
+				}
+				// Delete the global var now...
+			}	
+			else if (strcmp(pcmd, "GenerateFileList") == 0 || 
+					 strcmp(pcmd, "GenerateDirList") == 0)
+			{
+				char *p2 = strchr(parms, ',');
+
+				if (p2)
+					*p2++ = '\0';
+				CString value = replaceVars(parms, NULL);
+
+				WIDGET *w;
+				if (strcmp(parms, "self") == 0)
+					w = curWidget;
+				else
+					w = findWidget(parms);
+
+				if (w)
+				{
+					CString p2path = replaceVars(p2,NULL);
+					GenerateList(pcmd, w, p2path);
+				}
+			}
+			else if (strcmp(pcmd, "SelectItem") ==0)
+			{
+				WIDGET* tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
+				if (!tmpWidget)
+					return FALSE;
+				CString comboValue = replaceVars(parms,NULL);				
+				if (!(comboValue.IsEmpty()))
+					((CComboBox*)tmpWidget->control)->SelectString(0, comboValue);
+			}
+
+			else if (strcmp(pcmd, "BrowseFile") == 0)
+			{
+				if (curWidget)
+					BrowseFile(curWidget);
+			}
+			
+			else if (strcmp(pcmd, "BrowseDir") == 0)
+			{
+				if (curWidget)
+					BrowseDir(curWidget);
+			}
+#if 0			
+			else if (strcmp(pcmd, "NewConfigDialog") == 0)
+			{
+				if (curWidget)
+					NewConfig(curWidget, CString(parms),"");
+			}
+
+			else if (strcmp(pcmd, "CopyConfig") == 0)
+			{
+				if (curWidget)
+					NewConfig(curWidget, CString(parms),"Create Copy");
+			}
+#endif
+			else if (strcmp(pcmd, "CopyDir") == 0)
+			{
+				char *p2 = strchr(parms, ',');
+				if (p2)
+				{
+					*p2++ = '\0';
+					CString from = replaceVars(parms, NULL);
+					CString to = replaceVars(p2, NULL);
+					CopyDir(from, to, NULL, TRUE);
+				}
+			}
+			else if (strcmp(pcmd, "SetGlobal") == 0)
+			{
+				char *p2 = strchr(parms, ',');
+				if (p2)
+				{
+					*p2++ = '\0';
+					CString name = replaceVars(parms, NULL);
+					CString value = replaceVars(p2, NULL);
+					value.TrimRight();
+					SetGlobal(name, value);
+				}
+			}
+			else if (strcmp(pcmd, "ShowDescription") == 0)
+			{
+				if (curWidget)
+				{
+					int i = ((CCheckListBox*)curWidget->control)->GetCurSel();
+					WIDGET *t = findWidget((char *)(LPCSTR) curWidget->target);
+					CString msg(i);
+					((CEdit*)t->control)->SetWindowText(msg);
+				}
+			}
+			else if (strcmp(pcmd, "toggleEnabled") == 0)
+			{
+				// convert first parm into boolean...
+				char *p2 = strchr(parms, ',');
+				if (p2)
+				{
+					*p2++ = '\0';
+					CString value = replaceVars(parms, NULL);
+					int newval = (value == "1");
+					parms = p2;
+					p2 = strchr(parms, ',');
+					while (parms)
+					{
+						if (p2)
+							*p2++ = '\0';
+						WIDGET *w = findWidget(parms);
+						if (w)
+							w->control->EnableWindow(newval);
+						parms = p2;
+						if (parms)
+							p2 = strchr(parms, ',');
+					}
+				}
+			}
+			else if (strcmp(pcmd, "toggleEnabled2") == 0)
+			{
+				// convert first parm into boolean...
+                char *p2 = strchr(parms, ',');
+				if (p2)
+				{
+					*p2++ = '\0';
+					CString value = replaceVars(parms, NULL);
+					BOOL newval = (!value.IsEmpty());
+					char *parms1 = p2;
+					p2 = strchr(parms1, ',');
+					while (parms1)
+					{
+						if (p2)
+							*p2++ = '\0';
+						WIDGET *w = findWidget(parms);
+						if (w)
+							w->control->EnableWindow(newval);
+						parms1 = p2;
+						if (parms1)
+							p2 = strchr(parms1, ',');
+					}
+				}
+			}
+			else if (strcmp(pcmd, "ShowSection") == 0)
+			{
+				// ShowSection is a way to use a listbox to choose a subset of widgets to display.
+				// To use, create a listbox widget, and fill it will sectionnames.
+				// Set its onCommand=ShowSection.
+				// Then give the widgets you want in each section a "ShowInSection=sectionname". 
+				// When "sectionname" is selected in the listbox, all widgets with matching ShowInSection
+				// are shown, and all widgets with some other sectiion are hidden. Widgets without
+				// the ShowInSection attribute are left alone.
+					
+				ShowSection(curWidget);					
+			}
 		}
+		// This is an extra free...
+		//free(pcmd);
+	}
 
 	return TRUE;
 }
