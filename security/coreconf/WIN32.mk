@@ -181,11 +181,23 @@ ifndef RELEASE_TREE
 endif
 
 #
-# override the definitions of LIB_PREFIX and DLL_PREFIX in prefix.mk
+# override the definitions of IMPORT_LIB_PREFIX, LIB_PREFIX and DLL_PREFIX in prefix.mk
 #
 
+ifndef IMPORT_LIB_PREFIX
+    ifdef NS_USE_GCC
+	IMPORT_LIB_PREFIX = lib
+    else
+	IMPORT_LIB_PREFIX = $(NULL)
+    endif
+endif
+
 ifndef LIB_PREFIX
-    LIB_PREFIX =  $(NULL)
+    ifdef NS_USE_GCC
+	LIB_PREFIX = lib
+    else
+	LIB_PREFIX = $(NULL)
+    endif
 endif
 
 ifndef DLL_PREFIX
