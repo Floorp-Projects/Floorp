@@ -3582,6 +3582,11 @@ HTMLContentSink::ProcessMAPTag(const nsIParserNode& aNode,
     aContent->SetHTMLAttribute(nsHTMLAtoms::name, name, PR_FALSE);
   }
 
+  // This is for nav4 compatibility. (Bug 18478)
+  // The base tag should only appear in the head,
+  // but nav4 allows the base tag in the body as well.
+  AddBaseTagInfo(aContent);
+
   // Don't need to add the map to the document here anymore.
   // The map adds itself
   mCurrentMap = aContent;  
