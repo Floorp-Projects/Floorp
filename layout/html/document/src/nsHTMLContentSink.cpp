@@ -259,8 +259,8 @@ public:
 
   // Script processing related routines
   nsresult ResumeParsing();
-  nsresult PreEvaluateScript();
-  nsresult PostEvaluateScript();
+  PRBool   PreEvaluateScript();
+  void     PostEvaluateScript(PRBool aBodyPresent);
   nsresult EvaluateScript(nsString& aScript,
                           PRInt32 aLineNo);
 
@@ -2737,7 +2737,7 @@ HTMLContentSink::ResumeParsing()
   return NS_OK;
 }
 
-nsresult
+PRBool
 HTMLContentSink::PreEvaluateScript()
 {
   // Cause frame creation and reflow of all body children that 
@@ -2762,11 +2762,13 @@ HTMLContentSink::PreEvaluateScript()
     mDirty = PR_FALSE;
   }
 
-  return mCurrentContext->FlushTags();
+  mCurrentContext->FlushTags();
+  
+  return (nsnull != mBody);
 }
 
-nsresult
-HTMLContentSink::PostEvaluateScript()
+void
+HTMLContentSink::PostEvaluateScript(PRBool aBodyPresent)
 {
   // If the script added new content directly to the body, we update
   // our body child count so that frames aren't created twice.
@@ -2774,13 +2776,15 @@ HTMLContentSink::PostEvaluateScript()
     mBody->ChildCount(mBodyChildCount);
     // If the script is not a body child, we shouldn't include
     // the element that we eagerly appended (the ancestor of the
-    // script), since it is not yet complete.
-    if (!mCurrentContext->IsCurrentContainer(eHTMLTag_body)) {
+    // script), since it is not yet complete. Of course, this
+    // should only happen if the body element was present *before*
+    // script evaluation (a body could have been created by
+    // the script).
+    if (!mCurrentContext->IsCurrentContainer(eHTMLTag_body) &&
+        aBodyPresent) {
       mBodyChildCount--;
     }
   }
-
-  return NS_OK;
 }
 
 nsresult
@@ -2832,12 +2836,12 @@ nsDoneLoadingScript(nsIUnicharStreamLoader* aLoader,
 
   if (NS_OK == aStatus) {
 
-    sink->PreEvaluateScript();
+    PRBool bodyPresent = sink->PreEvaluateScript();
 
     // XXX We have no way of indicating failure. Silently fail?
     sink->EvaluateScript(aData, 0);
 
-    sink->PostEvaluateScript();
+    sink->PostEvaluateScript(bodyPresent);
   }
 
   sink->ResumeParsing();
@@ -2915,7 +2919,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       }
     }
     else {
-      PreEvaluateScript();
+      PRBool bodyPresent = PreEvaluateScript();
 
       // Otherwise, get the text content of the script tag
       script = aNode.GetSkippedContent();
@@ -2924,7 +2928,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
       EvaluateScript(script, lineNo);
       
-      PostEvaluateScript();
+      PostEvaluateScript(bodyPresent);
 
       // If the parse was disabled as a result of this evaluate script
       // (for example, if the script document.wrote a SCRIPT SRC= tag,
