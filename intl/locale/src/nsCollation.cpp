@@ -132,14 +132,23 @@ nsresult nsCollation::CreateSortKey(nsICollation *inst, const nsCollationStrengt
 
   res = inst->GetSortKeyLen(strength, stringIn, &aLength);
   if (NS_SUCCEEDED(res)) {
-    aKey = new PRUint8[aLength];
+    PRUint32 bufferLength = (aLength + 1) / 2 * 2;  // should be even
+    aKey = new PRUint8[bufferLength];
     if (nsnull != aKey) {
+      aKey[bufferLength-1] = 0;                     // pre-set zero to the padding
       res = inst->CreateRawSortKey(strength, stringIn, aKey, &aLength);
       if (NS_SUCCEEDED(res)) {
-        // set as char* makes every byte to be casted to PRUnichar
-        // which doubles the key size, use CreateRawSortKey instead 
-        // to avoid this to happen
-        key.SetString((char *) aKey, aLength / sizeof(char));
+        PRUnichar *aKeyInUnichar = (PRUnichar *) aKey;
+        PRUint32 aLengthUnichar = bufferLength / 2;
+
+        // to avoid nsString to assert, chop off the last null word (padding)
+        // however, collation key may contain zero's anywhere in the key
+        // so we may still get assertion as long as nsString is used to hold collation key
+        // use CreateRawSortKey instead (recommended) to avoid this to happen
+        if (aKeyInUnichar[aLengthUnichar-1] == 0)
+          aLengthUnichar--;
+
+        key.SetString(aKeyInUnichar, aLengthUnichar);
       }
       delete [] aKey;
     }
