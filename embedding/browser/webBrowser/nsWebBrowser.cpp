@@ -320,7 +320,7 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference *aListener
     } else {
         nsCOMPtr<nsISupports> supports(do_QueryReferent(aListener));
         if (!supports) return NS_ERROR_INVALID_ARG;
-        rv = UnBindListener(aListener, aIID);
+        rv = UnBindListener(supports, aIID);
     }
     
     return rv;
