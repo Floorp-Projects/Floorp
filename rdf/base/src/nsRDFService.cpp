@@ -625,7 +625,7 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
             progID[len] = '\0';
 
             nsCID cid;
-            rv = nsComponentManager::ProgIDToCLSID(progID, &cid);
+            rv = nsComponentManager::ProgIDToClassID(progID, &cid);
 
             if (progID != buf)
                 nsCRT::free(progID);

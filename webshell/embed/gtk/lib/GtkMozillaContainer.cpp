@@ -347,7 +347,7 @@ GtkMozillaContainer::CreateContentViewer(const char *aCommand,
     PR_snprintf(id, sizeof(id),
                 NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
                 aCommand, aContentType);
-    nsresult rv = nsComponentManager::ProgIDToCLSID(id, &cid);
+    nsresult rv = nsComponentManager::ProgIDToClassID(id, &cid);
     if (NS_FAILED(rv)) {
         return rv;
     }

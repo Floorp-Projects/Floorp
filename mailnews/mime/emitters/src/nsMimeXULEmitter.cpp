@@ -227,7 +227,7 @@ nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
     return nsnull;
   
   nsCID         cid;
-  rv = comMgr->ProgIDToCLSID(aProgID, &cid);
+  rv = comMgr->ProgIDToClassID(aProgID, &cid);
   if (NS_FAILED(rv))
     return nsnull;
 

@@ -88,7 +88,7 @@ nsTransformMediator::Init(const nsString& aMimeType)
   if (NS_SUCCEEDED(rv)) {
     nsCID cid;
     char* progIDStr = (char*)progID.ToNewCString();
-    rv = nsComponentManager::ProgIDToCLSID((const char*)progIDStr, &cid);
+    rv = nsComponentManager::ProgIDToClassID((const char*)progIDStr, &cid);
     if (NS_SUCCEEDED(rv)) {
       // Try to find a component that implements the nsIDocumentTransformer interface
       rv = nsComponentManager::CreateInstance(cid, nsnull,

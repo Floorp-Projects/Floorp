@@ -1763,7 +1763,7 @@ nsresult nsWebShell::CreateViewer(nsIChannel* aChannel,
                 aCommand ? aCommand : "view",/* XXX bug! shouldn't b needed!*/
                 aContentType);
     
-    rv = nsComponentManager::ProgIDToCLSID(id, &cid);
+    rv = nsComponentManager::ProgIDToClassID(id, &cid);
     if (NS_SUCCEEDED(rv)) {
       // Create an instance of the document-loader-factory object
       nsIDocumentLoaderFactory* factory;

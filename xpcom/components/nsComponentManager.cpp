@@ -1114,13 +1114,13 @@ nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
 }
 
 /**
- * ProgIDToCLSID()
+ * ProgIDToClassID()
  *
  * Mapping function from a ProgID to a classID. Directly talks to the registry.
  *
  */
 nsresult
-nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass) 
+nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass) 
 {
     NS_PRECONDITION(aProgID != NULL, "null ptr");
     if (! aProgID)
@@ -1178,7 +1178,7 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
         if (NS_SUCCEEDED(res))
             buf = aClass->ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("nsComponentManager: ProgIDToCLSID(%s)->%s", aProgID,
+               ("nsComponentManager: ProgIDToClassID(%s)->%s", aProgID,
                 NS_SUCCEEDED(res) ? buf : "[FAILED]"));
         if (NS_SUCCEEDED(res))
             delete [] buf;
@@ -1271,7 +1271,7 @@ nsComponentManagerImpl::CreateInstanceByProgID(const char *aProgID,
                                                void **aResult)
 {
     nsCID clsid;
-    nsresult rv = ProgIDToCLSID(aProgID, &clsid);
+    nsresult rv = ProgIDToClassID(aProgID, &clsid);
     if (NS_FAILED(rv)) return rv; 
     return CreateInstance(clsid, aDelegate, aIID, aResult);
 }

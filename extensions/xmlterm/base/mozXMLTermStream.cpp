@@ -283,7 +283,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
   progID += "/";
   progID += contentType;
 
-  result = nsComponentManager::ProgIDToCLSID(progID.GetBuffer(),
+  result = nsComponentManager::ProgIDToClassID(progID.GetBuffer(),
                                              &classID);
   if (NS_FAILED(result))
     return result;

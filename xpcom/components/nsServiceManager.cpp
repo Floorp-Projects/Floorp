@@ -411,7 +411,7 @@ nsServiceManagerImpl::RegisterService(const char* aProgID, nsISupports* aService
 {
     nsCID aClass;
     nsresult rv;
-    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    rv = nsComponentManager::ProgIDToClassID(aProgID, &aClass);
     if (NS_FAILED(rv)) return rv;
     return RegisterService(aClass, aService);
 }
@@ -421,7 +421,7 @@ nsServiceManagerImpl::UnregisterService(const char* aProgID)
 {
     nsCID aClass;
     nsresult rv;
-    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    rv = nsComponentManager::ProgIDToClassID(aProgID, &aClass);
     if (NS_FAILED(rv)) return rv;
     return UnregisterService(aClass);
 }
@@ -433,7 +433,7 @@ nsServiceManagerImpl::GetService(const char* aProgID, const nsIID& aIID,
 {
     nsCID aClass;
     nsresult rv;
-    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    rv = nsComponentManager::ProgIDToClassID(aProgID, &aClass);
     if (NS_FAILED(rv)) return rv;
     return GetService(aClass, aIID, result, shutdownListener);
 }
@@ -444,7 +444,7 @@ nsServiceManagerImpl::ReleaseService(const char* aProgID, nsISupports* service,
 {
     nsCID aClass;
     nsresult rv;
-    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    rv = nsComponentManager::ProgIDToClassID(aProgID, &aClass);
     if (NS_FAILED(rv)) return rv;
     return ReleaseService(aClass, service, shutdownListener);
 }
