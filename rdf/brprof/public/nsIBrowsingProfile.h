@@ -78,8 +78,6 @@ public:
 
     NS_IMETHOD GetCookieString(char buf[kBrowsingProfileCookieSize]) = 0;
 
-    NS_IMETHOD SetCookieString(char buf[kBrowsingProfileCookieSize]) = 0;
-
     NS_IMETHOD GetDescription(char* *htmlResult) = 0;
 
     NS_IMETHOD CountPageVisit(const char* url) = 0;

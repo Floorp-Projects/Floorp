@@ -69,7 +69,6 @@ public:
     NS_IMETHOD GetVector(nsBrowsingProfileVector& result);
     NS_IMETHOD SetVector(nsBrowsingProfileVector& value);
     NS_IMETHOD GetCookieString(char buf[kBrowsingProfileCookieSize]);
-    NS_IMETHOD SetCookieString(char buf[kBrowsingProfileCookieSize]);
     NS_IMETHOD GetDescription(char* *htmlResult);
     NS_IMETHOD CountPageVisit(const char* url);
 
@@ -225,14 +224,14 @@ nsBrowsingProfile::SetVector(nsBrowsingProfileVector& value)
 NS_IMETHODIMP
 nsBrowsingProfile::GetCookieString(char buf[kBrowsingProfileCookieSize])
 {
-    // XXX translate mVector to hex
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowsingProfile::SetCookieString(char buf[kBrowsingProfileCookieSize])
-{
-    // XXX translate hex to mVector
+    // translate mVector to hex
+	char hexMap[] = "0123456789ABCDEF";
+    PRUint8* vector = (PRUint8*)&mVector;
+    for (PRUint32 i = 0; i < sizeof(mVector); i++) {
+        char c = vector[i];
+        *buf++ = hexMap[c >> 4];
+        *buf++ = hexMap[c & 0x0F];
+    }
     return NS_OK;
 }
 
