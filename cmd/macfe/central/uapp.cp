@@ -934,7 +934,6 @@ CFrontApp::CFrontApp()
 	// whether conference launches on startup or not (but that occurence of
 	// FindApplication isn't called many times/sec either).
 	mConferenceApplicationExists = (CFileMgr::FindApplication(kConferenceAppSig, spec) == noErr);
-	mNetcasterContext = NULL;
 }
 
 //-----------------------------------
@@ -2963,7 +2962,7 @@ void CFrontApp::DoWindowsMenu(CommandT inCommand)
 
 // DoGetURL loads the given url into the frontmost window, or new one if there is no frontmost
 // Provides a bottleneck for UI generated requests to load a URL
-void CFrontApp::DoGetURL( const cstring & url, const char* inTarget )
+void CFrontApp::DoGetURL( const cstring & url, const char* inReferrer, const char* inTarget )
 {
 	// Check for kiosk mode and bail if it's set so that the user can't manually
 	// go to a different URL.  Note that this does NOT prevent dispatching to a different
@@ -2977,9 +2976,13 @@ void CFrontApp::DoGetURL( const cstring & url, const char* inTarget )
 		// URDFUtilities::LaunchNode(). Both are quick. (pinkerton)
 		if ( !URDFUtilities::LaunchURL(url) ) {
 			URL_Struct* theURL = NET_CreateURLStruct(url, NET_DONT_RELOAD);
-			theURL->window_target = const_cast<char*>(inTarget);
-			if (theURL)
+			if (theURL) {
+				if ( inTarget )
+					theURL->window_target = strdup(inTarget);
+				if ( inReferrer )
+					theURL->referer = strdup(inReferrer);		
 				CURLDispatcher::DispatchURL(theURL, NULL);
+			}
 		}
 	}
 }
@@ -4289,6 +4292,8 @@ void CFrontApp::LaunchExternalApp(OSType inAppSig, ResIDT inAppNameStringResourc
 	}
 }
 
+#if MOZ_3270_APPLET
+
 // Tries to find local file 3270/HE3270EN.HTM
 Boolean CFrontApp::Find3270Applet(FSSpec& tn3270File)
 {
@@ -4328,6 +4333,7 @@ void CFrontApp::Launch3270Applet()
 		ErrorManager::PlainAlert(ERROR_LAUNCH_IBM3270);
 	}
 }
+#endif /* MOZ_3270_APPLET */
 
 FSSpec CFrontApp::CreateAccountSetupSpec()
 {
@@ -4396,6 +4402,7 @@ Boolean CFrontApp::LaunchAccountSetup()
 	return FALSE; 
 }
 
+#if 0
 static void launchNetcasterCallback(void* closure);
 
 static void launchNetcasterCallback(void* /*closure*/)
@@ -4431,6 +4438,7 @@ void CFrontApp::SetNetcasterContext(MWContext *context)
 {
 	mNetcasterContext = context;	
 }
+#endif
 
 // 97-08-23 pchen -- This method should be called when we're "low on memory."
 // For now, we just call LJ_ShutdownJava().
@@ -4444,6 +4452,7 @@ void CFrontApp::MemoryIsLow()
 		LJ_ShutdownJava();
 #endif /* defined (JAVA) */
 }
+
 
 #pragma mark -
 

@@ -102,8 +102,8 @@ public:
 	virtual void		EventKeyDown( const EventRecord& inMacEvent );
 	
 	// so plug-ins can get key ups (which are ignored by default)
-	virtual void		ProcessNextEvent();
 	virtual void		EventKeyUp(const EventRecord &inMacEvent);
+	virtual void		ProcessNextEvent();
 
 	Boolean				HasProperlyStartedUp() const { return fProperStartup; }
 	
@@ -156,7 +156,7 @@ public:
 	static void			DoHelpMenuItem( short itemNum );
 
 	// ее Command handling
-	static void 		DoGetURL (const cstring& url, const char* inTarget = NULL);
+	static void 		DoGetURL (const cstring& url, const char* inReferrer=NULL, const char* inTarget = NULL);
 							// loads the given url into the frontmost window, or new one if there
 							// is no frontmost
 	static void			DoOpenDirectoryURL( CommandT menuCommand );
@@ -211,10 +211,12 @@ public:
 
 	static CMailNewsWindow*	GetMailNewsWindow();
 
+#if 0
 	// EA - Netcaster support
 	void				LaunchNetcaster(void);
 	MWContext*			GetNetcasterContext(void);	
 	void				SetNetcasterContext(MWContext *);
+#endif
 	
 	// 97-05-12 pkc -- dpi support for MWContext
 	static double		sHRes;
@@ -255,8 +257,11 @@ protected:
 							int currItem, LWindow * win, short iconID=0); // Utility function to add an item into windows menu
 
 	void				LaunchExternalApp(OSType inAppSig, ResIDT inAppNameStringResourceID);
+
+#ifdef IBM_HOST_ON_DEMAND
 	Boolean				Find3270Applet(FSSpec& tn3270File);
 	void				Launch3270Applet();
+#endif
 
 	Boolean				LaunchAccountSetup();
 	
@@ -291,8 +296,6 @@ public:
 
 protected:
 	FSSpec				CreateAccountSetupSpec();
-	
-	MWContext*			mNetcasterContext;	// EA - Track the Netcaster window
 	RgnHandle				mMouseRgnH;
 };
 
