@@ -1,4 +1,4 @@
-/* ***** BEGIN LICENSE BLOCK ***** 
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Netscape Public License
@@ -40,12 +40,12 @@
 #include "nsUserInfo.h"
 #include "nsCommandLineService.h"
 #include "nsXPFEComponentsCID.h"
-#include "nsToolkitCompsCID.h"
 
 #if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 #ifdef XP_WIN
 #include "nsAlertsService.h"
 #endif
+#include "nsToolkitCompsCID.h"
 #include "nsDocShellCID.h"
 #include "nsAutoCompleteController.h"
 #include "nsAutoCompleteMdbResult.h"
@@ -179,11 +179,11 @@ static const nsModuleComponentInfo components[] =
     NS_SINGLE_SIGNON_PROMPT_CID,
     "@mozilla.org/wallet/single-sign-on-prompt;1",
     nsSingleSignonPromptConstructor },
-#endif
   
   { "TypeAheadFind Component", NS_TYPEAHEADFIND_CID,
     NS_TYPEAHEADFIND_CONTRACTID, nsTypeAheadFindConstructor
   },
+#endif
 };
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsToolkitCompsModule, components, nsToolkitCompModuleDtor)
