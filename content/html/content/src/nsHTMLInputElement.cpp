@@ -564,7 +564,7 @@ nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent,
 
   // Obtain the value property from the presentation state.
   if (presState) {
-    nsAutoString value; value.Assign(aValue ? NS_LITERAL_STRING("1") : NS_LITERAL_STRING("0"));
+    nsAutoString value; value.AssignWithConversion( aValue ? "1" : "0" );
     presState->SetStateProperty(NS_LITERAL_STRING("checked"), value);
   }
 }
@@ -587,7 +587,7 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_SUCCEEDED(GetPrimaryFrame(this, formControlFrame))) {
     // the value is being toggled
-    nsAutoString val; val.Assign(aValue ? NS_LITERAL_STRING("1") : NS_LITERAL_STRING("0"));
+    nsAutoString val; val.AssignWithConversion(aValue ? "1" : "0");
 
     formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, val);
   }
