@@ -75,8 +75,6 @@ ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 
 NSLOCALE_MAKE_CTOR(CreateLocaleService, nsILocaleService, NS_NewLocaleService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationFactory)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationWin)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatWin)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableDateTimeFormat)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLanguageAtomService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageService)
