@@ -1,0 +1,252 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsTXTToHTMLConv.h"
+#include "nsNetUtil.h"
+#include "nsIStringStream.h"
+
+#define TOKEN_DELIMITERS "\t\r\n "
+
+// nsISupports methods
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsTXTToHTMLConv,
+                              nsIStreamConverter,
+                              nsIStreamObserver,
+                              nsIStreamListener);
+
+
+// nsIStreamConverter methods
+NS_IMETHODIMP
+nsTXTToHTMLConv::Convert(nsIInputStream *aFromStream,
+                         const PRUnichar *aFromType, const PRUnichar *aToType,
+                         nsISupports *aCtxt, nsIInputStream * *_retval) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
+                                  const PRUnichar *aToType,
+                                  nsIStreamListener *aListener,
+                                  nsISupports *aCtxt) {
+    NS_ASSERTION(aListener, "null pointer");
+    mListener = aListener;
+    return NS_OK;
+}
+
+
+// nsIStreamObserver methods
+NS_IMETHODIMP
+nsTXTToHTMLConv::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
+    mBuffer = "<html>\n";
+    return mListener->OnStartRequest(aChannel, aContext);
+}
+NS_IMETHODIMP
+nsTXTToHTMLConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
+                               nsresult aStatus, const PRUnichar *aMsg) {
+    nsresult rv = NS_OK;
+    if (mToken) {
+        // we still have an outstanding token
+        PRInt32 back = mBuffer.FindCharInSet(TOKEN_DELIMITERS);
+        if (back == -1) back = mBuffer.Length();
+        (void)CatHTML(0, mBuffer.Length());
+    }
+    mBuffer += "\n</html>";    
+    
+    nsCOMPtr<nsIInputStream> inputData;
+    nsCOMPtr<nsISupports>    inputDataSup;
+
+    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), mBuffer);
+    if (NS_FAILED(rv)) return rv;
+
+    inputData = do_QueryInterface(inputDataSup);
+
+    rv = mListener->OnDataAvailable(aChannel, aContext,
+                                    inputData, 0, mBuffer.Length());
+    if (NS_FAILED(rv)) return rv;
+
+    return mListener->OnStopRequest(aChannel, aContext, aStatus, aMsg);
+}
+
+// nsIStreamListener method
+NS_IMETHODIMP
+nsTXTToHTMLConv::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
+                                 nsIInputStream *aInStream,
+                                 PRUint32 aOffset, PRUint32 aCount) {
+    nsresult rv = NS_OK;
+    nsString pushBuffer;
+    PRUint32 amtRead = 0;
+    char *buffer = (char*)nsAllocator::Alloc(aCount+1);
+    if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
+    
+    do {
+        PRUint32 read = 0;
+        rv = aInStream->Read(buffer, aCount-amtRead, &read);
+        if (NS_FAILED(rv)) return rv;
+
+        buffer[read] = '\0';
+        mBuffer += buffer;
+        amtRead += read;
+
+        PRInt32 front = -1, back = -1, tokenLoc = -1, cursor = 0; 
+
+        while ( (tokenLoc = FindToken(cursor, &mToken)) > -1) {
+            front = mBuffer.RFindCharInSet(TOKEN_DELIMITERS, tokenLoc);
+            front++;
+    
+            back = mBuffer.FindCharInSet(TOKEN_DELIMITERS, tokenLoc);
+            if (back == -1) {
+                // didn't find an ending, buffer up.
+                mBuffer.Left(pushBuffer, front);
+                cursor = front;
+                break;
+            } else {
+                // found the end of the token.
+                cursor = CatHTML(front, back);
+            }
+        }
+
+        PRInt32 end = mBuffer.RFind(TOKEN_DELIMITERS, 
+                                    PR_FALSE, mBuffer.Length());
+        mBuffer.Left(pushBuffer, PR_MAX(cursor, end));
+        mBuffer.Cut(0, PR_MAX(cursor, end));
+        cursor = 0;
+
+        if (!pushBuffer.IsEmpty()) {
+            nsCOMPtr<nsIInputStream> inputData;
+            nsCOMPtr<nsISupports>    inputDataSup;
+            rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), pushBuffer);
+            if (NS_FAILED(rv)) {
+                nsAllocator::Free(buffer);
+                return rv;
+            }
+
+            inputData = do_QueryInterface(inputDataSup);
+
+            rv = mListener->OnDataAvailable(aChannel, aContext,
+                                            inputData, 0, pushBuffer.Length());
+            if (NS_FAILED(rv)) {
+                nsAllocator::Free(buffer);
+                return rv;
+            }
+        }
+    } while (amtRead < aCount);
+
+    nsAllocator::Free(buffer);
+    return rv; 
+} 
+// nsTXTToHTMLConv methods
+nsTXTToHTMLConv::nsTXTToHTMLConv() {
+    NS_INIT_REFCNT();
+    mToken = nsnull;
+}
+
+PRBool CleanupTokens(void *aElement, void *aData) {
+    if (aElement) delete (convToken*)aElement;
+    return PR_TRUE;
+}
+
+nsTXTToHTMLConv::~nsTXTToHTMLConv() {
+    mTokens.EnumerateForwards((nsVoidArrayEnumFunc)CleanupTokens, nsnull);
+}
+
+nsresult
+nsTXTToHTMLConv::Init() {
+    nsresult rv = NS_OK;
+
+    // build up the list of tokens to handle
+    convToken *token = new convToken;
+    if (!token) return NS_ERROR_OUT_OF_MEMORY;
+    token->prepend = PR_TRUE;
+    token->token = "http://"; // XXX need to iterate through all protos
+    mTokens.AppendElement(token);
+
+    token = new convToken;
+    if (!token) return NS_ERROR_OUT_OF_MEMORY;
+    token->prepend = PR_TRUE;
+    token->token = '@';
+    token->modText = "mailto:";
+    mTokens.AppendElement(token);
+  
+    return rv;
+}
+
+PRInt32
+nsTXTToHTMLConv::FindToken(PRInt32 cursor, convToken* *_retval) {
+    PRInt32 loc = -1, firstToken = mBuffer.Length();
+    PRInt8 token = -1;
+    for (PRInt8 i=0; i < mTokens.Count(); i++) {
+        loc = mBuffer.Find(((convToken*)mTokens[i])->token, PR_FALSE, cursor);
+        if (loc != -1)
+            if (loc < firstToken) {
+                firstToken = loc;
+                token = i;
+            }
+    }
+    if (token != -1) {
+        *_retval = (convToken*)mTokens[token];   
+        return firstToken;
+    } else {
+        return -1;
+    }
+}
+
+PRInt32
+nsTXTToHTMLConv::CatHTML(PRInt32 front, PRInt32 back) {
+    PRInt32 cursor = 0;
+    if (!mToken->prepend) {
+        // replace the entire token (from delimiter to delimiter)
+        mBuffer.Cut(front, back);
+        mBuffer.Insert(mToken->modText, front);
+    } else {
+        nsString linkText;
+        // href is implied
+        PRInt32 modLen = mToken->modText.Length();
+        mBuffer.Mid(linkText, front, back-front);
+        mBuffer.Insert("<a href=\"", front);
+        cursor += front+9;
+        if (modLen)
+            mBuffer.Insert(mToken->modText, cursor);
+        cursor += modLen-front+back;
+        mBuffer.Insert("\">", cursor);
+        cursor += 2;
+        mBuffer.Insert(linkText, cursor);
+        cursor += linkText.Length();
+        mBuffer.Insert("</a>", cursor);
+        cursor += 4;
+    }
+    mToken = nsnull; // indicates completeness
+    return cursor;
+}
+
+nsresult
+NS_NewNSTXTToHTMLConv(nsTXTToHTMLConv** aTXTToHTMLConv)
+{
+    NS_PRECONDITION(aTXTToHTMLConv != nsnull, "null ptr");
+    if (!aTXTToHTMLConv)
+        return NS_ERROR_NULL_POINTER;
+
+    *aTXTToHTMLConv = new nsTXTToHTMLConv();
+    if (!*aTXTToHTMLConv)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aTXTToHTMLConv);
+    return (*aTXTToHTMLConv)->Init();
+}
