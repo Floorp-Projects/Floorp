@@ -22,6 +22,7 @@
 #include "nsIStringBundle.h"
 #include "nsIEventQueueService.h"
 #include "nsILocale.h"
+#include <iostream.h>
 
 #ifndef NECKO
 #include "nsINetService.h"
