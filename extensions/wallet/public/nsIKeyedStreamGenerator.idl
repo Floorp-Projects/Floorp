@@ -32,6 +32,8 @@ interface nsIKeyedStreamGenerator: nsISupports {
   
   /* consumer will be a nsIPasswordSink for now, but not limited to that.
    * Use NULL consumer to reset the KeyedStreamGenerator's state.
+   * Also it is understood that the KeyedStreamGenerator will hold
+   * only a weakreference to the consumer to avoid any circular depedencies.
    */
   void setup(in unsigned long salt, in nsISupports consumer);
     
