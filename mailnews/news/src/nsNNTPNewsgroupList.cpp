@@ -130,7 +130,7 @@ nsNNTPNewsgroupList::CleanUp() {
 	PR_Free(m_groupName);
     
 	if (m_newsDB) {
-		m_newsDB->Commit(kSessionCommit);
+		m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
 		m_newsDB->Close(PR_TRUE);
 	}
 
@@ -163,7 +163,7 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
         if (NS_SUCCEEDED(rv) && newsDBFactory) {
 				nsCOMPtr <nsIFileSpec> dbFileSpec;
 				NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
-                newsDBOpen = newsDBFactory->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) db, PR_FALSE);
+                newsDBOpen = newsDBFactory->Open(dbFileSpec, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) db);
 #ifdef DEBUG_NEWS
                 if (NS_SUCCEEDED(newsDBOpen)) {
                     printf ("newsDBFactory->Open() succeeded\n");
@@ -825,7 +825,7 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 #ifdef DEBUG_NEWS
         printf("committing summary file changes\n");
 #endif
-		m_newsDB->Commit(kSessionCommit);
+		m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
 		m_newsDB->Close(PR_TRUE);
 		m_newsDB = nsnull;
 	}

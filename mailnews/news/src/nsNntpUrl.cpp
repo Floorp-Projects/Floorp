@@ -542,7 +542,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
     
 	nsCOMPtr <nsIFileSpec> dbFileSpec;
 	NS_NewFileSpecWithSpec(pathResult, getter_AddRefs(dbFileSpec));
-    rv = newsDBFactory->Open(dbFileSpec, PR_TRUE, getter_AddRefs(newsDB), PR_FALSE);
+    rv = newsDBFactory->Open(dbFileSpec, PR_TRUE, PR_FALSE, getter_AddRefs(newsDB));
     
     if (NS_FAILED(rv) || (!newsDB)) {
         return rv;

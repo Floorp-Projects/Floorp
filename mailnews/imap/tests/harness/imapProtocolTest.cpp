@@ -250,7 +250,7 @@ nsIMAP4TestDriver::~nsIMAP4TestDriver()
 	NS_IF_RELEASE(m_eventQueue);
 	NS_IF_RELEASE(m_url);
 	if (m_mailDB)
-		m_mailDB->Commit(kLargeCommit);
+		m_mailDB->Commit(nsMsgDBCommitType::kLargeCommit);
 	NS_IF_RELEASE(m_mailDB);
     NS_IF_RELEASE (m_inbox);
 }

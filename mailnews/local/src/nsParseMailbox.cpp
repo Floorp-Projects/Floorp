@@ -85,7 +85,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIURI* aURL, const char *aCont
 			{
 				nsCOMPtr <nsIFileSpec> dbFileSpec;
 				NS_NewFileSpecWithSpec(dbName, getter_AddRefs(dbFileSpec));
-				rv = mailDB->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB), PR_TRUE);
+				rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
 			}
 			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 			printf("url file = %s\n", fileName);
@@ -255,7 +255,7 @@ void nsMsgMailboxParser::UpdateDBFolderInfo(nsIMsgDatabase *mailDB, const char *
 {
 	// ### wrong - use method on db.
 	mailDB->SetSummaryValid(PR_TRUE);
-	mailDB->Commit(kLargeCommit);
+	mailDB->Commit(nsMsgDBCommitType::kLargeCommit);
 //	m_mailDB->Close();
 }
 
@@ -1368,7 +1368,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 	{
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(folder, getter_AddRefs(dbFileSpec));
-		rv = mailDB->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB), PR_FALSE);
+		rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
 	}
 //	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
     if (NS_FAILED(rv)) 
@@ -1815,7 +1815,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	{
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(destFolderSpec, getter_AddRefs(dbFileSpec));
-		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(destMailDB), PR_TRUE);
+		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(destMailDB));
 	}
 	NS_ASSERTION(destMailDB, "failed to open mail db parsing folder");
 	// don't force upgrade in place - open the db here before we start writing to the 

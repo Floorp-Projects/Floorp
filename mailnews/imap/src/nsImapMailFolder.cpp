@@ -402,7 +402,7 @@ nsresult nsImapMailFolder::GetDatabase()
 
 		rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDBFactory));
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
-			folderOpen = mailDBFactory->Open(pathSpec, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+			folderOpen = mailDBFactory->Open(pathSpec, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
 
 		if(mDatabase)
 		{
@@ -531,7 +531,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
         nsCOMPtr<nsIMsgDatabase> unusedDB;
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
-		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB), PR_TRUE);
+		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
 
         if (NS_SUCCEEDED(rv) && unusedDB)
         {
@@ -547,7 +547,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 			//Now let's create the actual new folder
 			rv = AddSubfolder(folderNameStr, getter_AddRefs(child));
             unusedDB->SetSummaryValid(PR_TRUE);
-			unusedDB->Commit(kLargeCommit);
+			unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
             unusedDB->Close(PR_TRUE);
         }
 	}
@@ -865,7 +865,7 @@ nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
 		rv = GetPath(getter_AddRefs(pathSpec));
 		if (NS_FAILED(rv)) return rv;
 
-		openErr = mailDBFactory->Open(pathSpec, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+		openErr = mailDBFactory->Open(pathSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &mailDB);
 	}
 
     *db = mailDB;
@@ -1017,10 +1017,10 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                 rv = undoMsgTxn->SetUndoString(&undoString);
                 rv = undoMsgTxn->SetRedoString(&redoString);
             }
-            if (mDatabase)
-            {
-                mDatabase->DeleteMessages(&srcKeyArray, nsnull);
-            }
+//            if (mDatabase)
+//            {
+//                mDatabase->DeleteMessages(&srcKeyArray, nsnull);
+//            }
         }
     }
     return rv;
@@ -1164,8 +1164,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     {
         // if we pass in PR_TRUE for upgrading, the db code will ignore the
         // summary out of date problem for now.
-        rv = mailDBFactory->Open(pathSpec, PR_TRUE, (nsIMsgDatabase **)
-                                 getter_AddRefs(mDatabase), PR_TRUE);
+        rv = mailDBFactory->Open(pathSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **)
+                                 getter_AddRefs(mDatabase));
         if (NS_FAILED(rv))
             return rv;
         if (!mDatabase) 
@@ -1204,7 +1204,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			
 			// Create a new summary file, update the folder message counts, and
 			// Close the summary file db.
-			rv = mailDBFactory->Open(pathSpec, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+			rv = mailDBFactory->Open(pathSpec, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
 
 			// ********** Important *************
 			// David, help me here I don't know this is right or wrong
@@ -2497,7 +2497,7 @@ NS_IMETHODIMP
 nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
 	if (mDatabase)
-		mDatabase->Commit(kLargeCommit);
+		mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
 #ifdef DOING_FILTERS
 	if (m_moveCoalescer)
 	{

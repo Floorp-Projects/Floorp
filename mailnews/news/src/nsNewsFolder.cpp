@@ -510,7 +510,7 @@ nsresult nsMsgNewsFolder::GetDatabase()
 		rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 		if (NS_SUCCEEDED(rv) && newsDBFactory)
 		{
-			folderOpen = newsDBFactory->Open(pathSpec, PR_TRUE, getter_AddRefs(mDatabase), PR_FALSE);
+			folderOpen = newsDBFactory->Open(pathSpec, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
 #ifdef DEBUG_NEWS
       if (NS_SUCCEEDED(folderOpen)) {
         printf ("newsDBFactory->Open() succeeded\n");
@@ -728,7 +728,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
     nsIMsgDatabase *unusedDB = nsnull;
-		rv = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &unusedDB, PR_TRUE);
+		rv = newsDBFactory->Open(path, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) &unusedDB);
     
     if (NS_SUCCEEDED(rv) && unusedDB) {
       //need to set the folder name
@@ -958,7 +958,7 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(*mPath, getter_AddRefs(dbFileSpec));
-		openErr = newsDBFactory->Open(dbFileSpec, PR_FALSE, (nsIMsgDatabase **) &newsDB, PR_FALSE);
+		openErr = newsDBFactory->Open(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &newsDB);
 	}
   else {
     return rv;
