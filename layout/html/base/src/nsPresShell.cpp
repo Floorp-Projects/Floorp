@@ -1398,28 +1398,39 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
       scrollingView->GetScrolledView(scrolledView);
       aFrame->GetOffsetFromView(offset, &view);
       if (aVFlags & NS_PRESSHELL_SCROLL_ANYWHERE)
-      { // if we just care that the frame is in the view port, check to see if it is already visible
-        // first, get the frame's absolute position relative to the scrolling view
+      { // if we just care that the frame is somewhere in the view port, 
+        // check to see if it is already visible
         nsRect frameRect (offset, nsSize(1,1));   // XXX: this is biased toward showing the top of the frame
-        nsIView *parentView;
+        nsRect viewBounds;            // the bounds of the view containing the frame
+        view->GetBounds(viewBounds);
+        // walk up the view hierarchy looking for the scrolling view
+        nsIView *parentView;          
         view->GetParent(parentView);
         nsRect bounds;
+        nscoord visHeight=0;
         while (parentView)
         {
-          parentView->GetBounds(bounds);
-          frameRect.y += bounds.y;
           nsIScrollableView *parentScrollableView=nsnull;
           nsresult result = parentView->QueryInterface(kIScrollableViewIID, (void**)&parentScrollableView);
           if (NS_SUCCEEDED(result))
           {
             if (parentScrollableView==scrollingView)
+            { // found the scrolling view, get it's height
+              parentView->GetBounds(bounds);
+              visHeight = bounds.height;
               break;
+            }
           }
           parentView->GetParent(parentView);
         }
-        PRBool alreadyVisible = frameRect.Intersects(bounds);
-        if (PR_FALSE==alreadyVisible) {
-          scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
+        if (0!=visHeight)
+        { // there was a scrolling view, calc the visible rect
+          nsRect visArea(viewBounds.x, -(viewBounds.y), viewBounds.width, visHeight);
+          // is the frame within the visible rect?
+          PRBool alreadyVisible = visArea.Intersects(frameRect);
+          if (PR_FALSE==alreadyVisible) { // if not, scroll it into view
+            scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
+          }
         }
       }
       else
