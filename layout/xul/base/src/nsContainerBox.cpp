@@ -60,7 +60,6 @@
 #include "nsIPresShell.h"
 #include "nsFrameNavigator.h"
 #include "nsCSSRendering.h"
-#include "nsISelfScrollingFrame.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 

@@ -34,7 +34,6 @@
 #include "nsIView.h"
 #include "nsIPresShell.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsISelfScrollingFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
@@ -821,14 +820,6 @@ nsBox::CollapseChild(nsBoxLayoutState& aState, nsIFrame* aFrame, PRBool aHide)
          }
       }
 
-      // Trees have to collapse their scrollbars manually, since you can't
-      // get to the scrollbar via the normal frame list.
-      nsISelfScrollingFrame* treeFrame;
-      if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsISelfScrollingFrame), (void**)&treeFrame)) && treeFrame) {
-        // Tell the tree frame to collapse its scrollbar.
-        treeFrame->CollapseScrollbar(presContext, aHide);
-      }
-      
       // collapse the child
       nsIFrame* child = nsnull;
       aFrame->FirstChild(presContext, nsnull,&child);
