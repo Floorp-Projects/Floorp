@@ -22,7 +22,6 @@
  */
 
 #include "nsISupports.idl"
-#include "gfxtypes.idl"
 
 interface imgIDecoderObserver;
 interface imgIRequest;
@@ -40,7 +39,7 @@ interface nsISimpleEnumerator;
  * imgILoader interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
- * @version 0.2
+ * @version 0.3
  * @see imagelib2
  */
 [scriptable, uuid(4c8cf1e0-1dd2-11b2-aff9-c51cdbfcb6da)]
@@ -70,4 +69,19 @@ interface imgILoader : nsISupports
    * @param cx some random data
    */
   imgIRequest loadImageWithChannel(in nsIChannel aChannel, in imgIDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener aListener);
+
+  /**
+   * Checks if a decoder for the an image with the given mime type is available
+   * @param mimeType The type to find a decoder for
+   * @return true if a decoder is available, false otherwise
+   */
+  boolean supportImageWithMimeType(in string mimeType);
+
+  /**
+   * Checks if a decoder for the given contents is available.
+   * @param contents The first few bytes of the image
+   * @param length The length of contents
+   * @return The Content Type of the Image or null if no decoder was found.
+   */
+  string supportImageWithContents(in string contents, in unsigned long length);
 };

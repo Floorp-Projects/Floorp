@@ -62,7 +62,7 @@
 #include "nsIXULContentSink.h"
 #include "nsIDocStreamLoaderFactory.h"
 
-#include "nsString.h"
+#include "imgILoader.h"
 
 // URL for the "user agent" style sheet
 #define UA_CSS_URL "resource:/res/ua.css"
@@ -262,11 +262,9 @@ nsContentDLF::CreateInstance(const char* aCommand,
   }
 
   // Try image types
-  nsCOMPtr<nsIComponentRegistrar> reg;
-  NS_GetComponentRegistrar(getter_AddRefs(reg));
+  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
   PRBool isReg = PR_FALSE;
-  nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + nsDependentCString(aContentType));
-  reg->IsContractIDRegistered(decoderId.get(),  &isReg);
+  loader->SupportImageWithMimeType(aContentType, &isReg);
   if (isReg) {
     return CreateDocument(aCommand, 
                           aChannel, aLoadGroup,

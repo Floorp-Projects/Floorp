@@ -43,6 +43,8 @@
 
 #include "ImageLogging.h"
 
+#include "nsIComponentRegistrar.h"
+
 #ifdef DEBUG_pavlov
 #include "nsIEnumerator.h"
 #include "nsISupportsPrimitives.h"
@@ -519,6 +521,100 @@ imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGro
 
   NS_RELEASE(proxyRequest);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  nsCOMPtr<nsIComponentRegistrar> reg;
+  nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(reg));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + nsDependentCString(aMimeType));
+  return reg->IsContractIDRegistered(decoderId.get(),  _retval);
+}
+
+NS_IMETHODIMP imgLoader::SupportImageWithContents(const char* aContents, PRUint32 aLength, char** aContentType)
+{
+  *aContentType = nsnull;
+  /* Is it a GIF? */
+  if (aLength >= 4 && !nsCRT::strncmp(aContents, "GIF8", 4))  {
+    *aContentType = nsCRT::strndup("image/gif", 9);
+    return NS_OK;
+  }
+
+  /* or a PNG? */
+  if (aLength >= 4 && ((unsigned char)aContents[0]==0x89 &&
+                   (unsigned char)aContents[1]==0x50 &&
+                   (unsigned char)aContents[2]==0x4E &&
+                   (unsigned char)aContents[3]==0x47))
+  { 
+    *aContentType = nsCRT::strndup("image/png", 9);
+    return NS_OK;
+  }
+
+  /* maybe a JPEG (JFIF)? */
+  /* JFIF files start with SOI APP0 but older files can start with SOI DQT
+   * so we test for SOI followed by any marker, i.e. FF D8 FF
+   * this will also work for SPIFF JPEG files if they appear in the future.
+   *
+   * (JFIF is 0XFF 0XD8 0XFF 0XE0 <skip 2> 0X4A 0X46 0X49 0X46 0X00)
+   */
+  if (aLength >= 3 &&
+     ((unsigned char)aContents[0])==0xFF &&
+     ((unsigned char)aContents[1])==0xD8 &&
+     ((unsigned char)aContents[2])==0xFF)
+  {
+    *aContentType = nsCRT::strndup("image/jpeg", 10);
+    return NS_OK;
+  }
+
+  /* or how about ART? */
+  /* ART begins with JG (4A 47). Major version offset 2.
+   * Minor version offset 3. Offset 4 must be NULL.
+   */
+  if (aLength >= 5 &&
+   ((unsigned char) aContents[0])==0x4a &&
+   ((unsigned char) aContents[1])==0x47 &&
+   ((unsigned char) aContents[4])==0x00 )
+  {
+    *aContentType = nsCRT::strndup("image/x-jg", 10);
+    return NS_OK;
+  }
+
+  if (aLength >= 2 && !nsCRT::strncmp(aContents, "BM", 2)) {
+    *aContentType = nsCRT::strndup("image/bmp", 9);
+    return NS_OK;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (aLength >= 4 && !memcmp(aContents, "\000\000\001\000", 4)) {
+    *aContentType = nsCRT::strndup("image/x-icon", 12);
+    return NS_OK;
+  }
+
+  if (aLength >= 4 && ((unsigned char)aContents[0]==0x8A &&
+                   (unsigned char)aContents[1]==0x4D &&
+                   (unsigned char)aContents[2]==0x4E &&
+                   (unsigned char)aContents[3]==0x47))
+  { 
+    *aContentType = nsCRT::strndup("video/x-mng", 11);
+    return NS_OK;
+  }
+
+  if (aLength >= 4 && ((unsigned char)aContents[0]==0x8B &&
+                   (unsigned char)aContents[1]==0x4A &&
+                   (unsigned char)aContents[2]==0x4E &&
+                   (unsigned char)aContents[3]==0x47))
+  { 
+    *aContentType = nsCRT::strndup("image/x-jng", 11);
+    return NS_OK;
+  }
+
+  /* none of the above?  I give up */
+  /* don't raise an exception, simply return null */
   return NS_OK;
 }
 
