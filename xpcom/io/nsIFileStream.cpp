@@ -115,6 +115,10 @@ class FileImpl
 								                mFailed = PR_TRUE;
 								                return NS_FILE_RESULT(PR_GetError());
 								            }
+                                            else if (bytesRead == 0) {
+                                                mEOF = PR_TRUE;
+                                                return NS_BASE_STREAM_EOF;
+                                            }
 								            *aReadCount = bytesRead;
 								            return NS_OK;
 								        }
