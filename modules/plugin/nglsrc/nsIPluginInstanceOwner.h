@@ -59,27 +59,6 @@ public:
   GetMode(nsPluginMode *aMode) = 0;
 
   /**
-   * Get a ptr to the paired list of attribute names and values,
-   * returns the length of the array.
-   *
-   * Each name or value is a null-terminated string.
-   */
-  NS_IMETHOD
-  GetAttributes(PRUint16& n, const char*const*& names, const char*const*& values) = 0;
-
-  /**
-   * Gets the value for the named attribute.
-   *
-   * @param name - the name of the attribute to find
-   * @param result - the resulting attribute
-   * @result - NS_OK if this operation was successful, NS_ERROR_FAILURE if
-   * this operation failed. result is set to NULL if the attribute is not found
-   * else to the found value.
-   */
-  NS_IMETHOD
-  GetAttribute(const char* name, const char* *result) = 0;
-
-  /**
    * Create a place for the plugin to live in the owner's
    * environment. this may or may not create a window
    * depending on the windowless state of the plugin instance.
@@ -96,6 +75,13 @@ public:
    */
   NS_IMETHOD
   GetURL(const char *aURL, const char *aTarget, void *aPostData) = 0;
+
+  /**
+   * Show a status message in the host environment.
+   * 
+   */
+  NS_IMETHOD
+  ShowStatus(const char *aStatusMsg) = 0;
 };
 
 #endif
