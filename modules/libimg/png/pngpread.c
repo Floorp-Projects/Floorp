@@ -796,6 +796,19 @@ png_push_process_row(png_structp png_ptr)
                   png_read_push_finish_row(png_ptr);
                }
             }
+	    if (png_ptr->pass == 4 && png_ptr->height <= 4)
+	    {
+	        for (i = 0; i < 2 && png_ptr->pass == 4; i++)
+                {
+                   png_push_have_row(png_ptr, NULL);
+                   png_read_push_finish_row(png_ptr);
+                }
+            }
+            if (png_ptr->pass == 6 && png_ptr->height <= 4)
+            {
+                png_push_have_row(png_ptr, NULL);
+                png_read_push_finish_row(png_ptr);
+            }
             break;
          }
          case 1:
