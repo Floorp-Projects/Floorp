@@ -642,7 +642,11 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
             // tree property. So this won't be a new row in the
             // table. See if we can use it to set a cell value on the
             // current element.
-            return SetWidgetAttribute(element, aPredicate, aObject);
+            nsCOMPtr<nsIRDFNode> target;
+            rv = mDB->GetTarget(aSubject, aPredicate, PR_TRUE, getter_AddRefs(target));
+            if (NS_FAILED(rv)) return rv;
+
+            return SetWidgetAttribute(element, aPredicate, target);
         }
     }
     return NS_OK;
@@ -720,7 +724,16 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
             // tree property. So this won't be a new row in the
             // table. See if we can use it to set a cell value on the
             // current element.
-            return UnsetWidgetAttribute(element, aPredicate, aObject);
+            nsCOMPtr<nsIRDFNode> target;
+            rv = mDB->GetTarget(aSubject, aPredicate, PR_TRUE, getter_AddRefs(target));
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_RDF_NO_VALUE) {
+                return UnsetWidgetAttribute(element, aPredicate, aObject);
+            }
+            else {
+                return SetWidgetAttribute(element, aPredicate, target);
+            }
         }
     }
     return NS_OK;
