@@ -222,6 +222,12 @@ extern JRI_PUBLIC_API(void)
 native_netscape_npasw_SetupPlugin_SECURE_0005fQuitNavigator(JRIEnv* env,
 											 struct netscape_npasw_SetupPlugin* self)
 {
+	// Bug#112622 - don't broadcast this, java catches it and dies.
+	// Instead, find the hidden window and tell _it_ what to do.
+
+	// The strings in this call are hard-coded because the constants needed
+	// do not exist and multiple places are doing similar things.  The 
+	// values themselves come from winfe's Netscape.cpp.
 	HWND hWnd = FindWindowEx(NULL, NULL, "aHiddenFrameClass", "Netscape's Hidden Frame");
 	PostMessage(/*HWND_BROADCAST*/ hWnd, WM_COMMAND, ID_APP_SUPER_EXIT, 0L);
 }
