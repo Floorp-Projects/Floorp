@@ -73,7 +73,6 @@
 #include "nsContentErrors.h"
 #include "nsUnitConversion.h"
 #include "nsPrintfCString.h"
-#include "nsIStringBundle.h"
 
 #include "prprf.h"
 #include "math.h"
@@ -402,20 +401,20 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 #ifdef CSS_REPORT_PARSE_ERRORS
 
 #define REPORT_UNEXPECTED(msg_) \
-  ReportUnexpected(mScanner, #msg_)
+  mScanner->ReportUnexpected(#msg_)
 
 #define REPORT_UNEXPECTED_P(msg_, params_) \
-  ReportUnexpectedParams(mScanner, #msg_, params_, NS_ARRAY_LENGTH(params_))
+  mScanner->ReportUnexpectedParams(#msg_, params_, NS_ARRAY_LENGTH(params_))
 
 #define REPORT_UNEXPECTED_EOF(lf_) \
-  ReportUnexpectedEOF(mScanner, #lf_)
+  mScanner->ReportUnexpectedEOF(#lf_)
 
 #define REPORT_UNEXPECTED_TOKEN(msg_) \
-  ReportUnexpectedToken(mScanner, mToken, #msg_)
+  mScanner->ReportUnexpectedToken(mToken, #msg_)
 
 #define REPORT_UNEXPECTED_TOKEN_P(msg_, params_) \
-  ReportUnexpectedTokenParams(mScanner,  mToken, #msg_, \
-                              params_, NS_ARRAY_LENGTH(params_))
+  mScanner->ReportUnexpectedTokenParams(mToken, #msg_, \
+                                        params_, NS_ARRAY_LENGTH(params_))
 
 
 #define OUTPUT_ERROR() \
@@ -423,110 +422,6 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 
 #define CLEAR_ERROR() \
   mScanner->ClearError()
-
-static nsIStringBundle *gStringBundle;
-
-static PRBool InitStringBundle()
-{
-  if (gStringBundle)
-    return PR_TRUE;
-
-  nsCOMPtr<nsIStringBundleService> sbs =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-  if (!sbs)
-    return PR_FALSE;
-
-  nsresult rv = 
-    sbs->CreateBundle("chrome://global/locale/css.properties", &gStringBundle);
-  if (NS_FAILED(rv)) {
-    gStringBundle = nsnull;
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-
-#define ENSURE_STRINGBUNDLE \
-  PR_BEGIN_MACRO if (!InitStringBundle()) return; PR_END_MACRO
-
-// aMessage must take no parameters
-static void ReportUnexpected(nsCSSScanner *sc, const char* aMessage)
-{
-  ENSURE_STRINGBUNDLE;
-
-  nsXPIDLString str;
-  gStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
-                                   getter_Copies(str));
-  sc->AddToError(str);
-}
-  
-static void ReportUnexpectedParams(nsCSSScanner *sc, const char* aMessage,
-                                   const PRUnichar **aParams,
-                                   PRUint32 aParamsLength)
-{
-  NS_PRECONDITION(aParamsLength > 0, "use the non-params version");
-  ENSURE_STRINGBUNDLE;
-
-  nsXPIDLString str;
-  gStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
-                                      aParams, aParamsLength,
-                                      getter_Copies(str));
-  sc->AddToError(str);
-}
-
-// aMessage must take no parameters
-static void ReportUnexpectedEOF(nsCSSScanner *sc, const char* aLookingFor)
-{
-  ENSURE_STRINGBUNDLE;
-
-  nsXPIDLString innerStr;
-  gStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aLookingFor).get(),
-                                   getter_Copies(innerStr));
-
-  const PRUnichar *params[] = {
-    innerStr.get()
-  };
-  nsXPIDLString str;
-  gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF").get(),
-                                      params, NS_ARRAY_LENGTH(params),
-                                      getter_Copies(str));
-  sc->AddToError(str);
-}
-
-// aMessage must take 1 parameter (for the string representation of the
-// unexpected token)
-static void ReportUnexpectedToken(nsCSSScanner *sc, nsCSSToken& tok,
-                                  const char *aMessage)
-{
-  ENSURE_STRINGBUNDLE;
-  
-  nsAutoString tokenString;
-  tok.AppendToString(tokenString);
-
-  const PRUnichar *params[] = {
-    tokenString.get()
-  };
-
-  ReportUnexpectedParams(sc, aMessage, params, NS_ARRAY_LENGTH(params));
-}
-
-// aParams's first entry must be null, and we'll fill in the token
-static void ReportUnexpectedTokenParams(nsCSSScanner *sc, nsCSSToken& tok,
-                                        const char* aMessage,
-                                        const PRUnichar **aParams,
-                                        PRUint32 aParamsLength)
-{
-  NS_PRECONDITION(aParamsLength > 1, "use the non-params version");
-  NS_PRECONDITION(aParams[0] == nsnull, "first param should be empty");
-
-  ENSURE_STRINGBUNDLE;
-  
-  nsAutoString tokenString;
-  tok.AppendToString(tokenString);
-  aParams[0] = tokenString.get();
-
-  ReportUnexpectedParams(sc, aMessage, aParams, aParamsLength);
-}
 
 #else
 
@@ -539,14 +434,6 @@ static void ReportUnexpectedTokenParams(nsCSSScanner *sc, nsCSSToken& tok,
 #define CLEAR_ERROR()
 
 #endif
-
-NS_HIDDEN_(void) NS_ShutdownCSSParser()
-{
-#ifdef CSS_REPORT_PARSE_ERRORS
-  NS_IF_RELEASE(gStringBundle);
-#endif
-}
-
 
 CSSParserImpl::CSSParserImpl()
   : mToken(),

@@ -223,8 +223,6 @@ void NS_FreeSVGRendererCairoGlobals();
 #endif
 #endif
 
-extern NS_HIDDEN_(void) NS_ShutdownCSSParser();
-
 //-----------------------------------------------------------------------------
 
 // Per bug 209804, it is necessary to observe the "xpcom-shutdown" event and
@@ -415,7 +413,6 @@ Shutdown()
   nsSpaceManager::Shutdown();
   nsImageFrame::ReleaseGlobals();
 
-  NS_ShutdownCSSParser();
   nsCSSScanner::ReleaseGlobals();
 
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
