@@ -15,6 +15,7 @@ comm.jar:
         content/navigator/tooltip.js                   (resources/content/tooltip.js)
         content/navigator/metadata.xul                 (resources/content/metadata.xul)
         content/navigator/metadata.js                  (resources/content/metadata.js)
+	content/navigator/personalToolbar.js           (resources/content/personalToolbar.js)
 
 en-US.jar:
         locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
