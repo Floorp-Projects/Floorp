@@ -380,20 +380,6 @@ do_QueryInterface( already_AddRefed<T>&, nsresult* )
 
 
 
-  /**
-   * |null_nsCOMPtr| is deprecated.  Please use the value |0| instead.
-   *  |#define|s are bad, because they aren't scoped.  But I can't replace
-   *  this definition with an inline, because only a compile-time |0| gets
-   *  magically converted to arbitrary pointer types.  This doesn't automatically
-   *  happen for just any |const int| with the value |0|.
-   *
-   * Ergo: we really want to eliminate all uses of |null_nsCOMPtr()| in favor of
-   *  |0|.
-   */
-#define null_nsCOMPtr() (0)
-
-
-
 class nsCOMPtr_base
     /*
       ...factors implementation for all template versions of |nsCOMPtr|.
