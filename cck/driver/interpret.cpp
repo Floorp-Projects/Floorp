@@ -788,6 +788,44 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					}
 				}
 			}
+			else if (strcmp(pcmd, "IsFieldEmpty") == 0)
+			{
+				/*
+				Check if input field/fields is empty and display error message
+
+				If the first parameter is empty, then other listed parameters 
+				need not contain values. If the first parameter has a value 
+				then all other parameters listed should also contain values, 
+				otherwise an error alert is displayed.
+				Format of command is: 
+				   <command>(<param1>,<param2>,<param3>,...<message>)
+				where last parameter is the error message 
+				*/
+				int paramcnt=0;
+				char *paramList[5];
+				CString valueList[5];
+				paramList[paramcnt] = strtok(parms, ",");
+				valueList[paramcnt] = replaceVars(paramList[paramcnt],NULL);
+				while ((paramList[paramcnt] != NULL) && (paramcnt<4))
+				{
+					paramcnt++;
+					paramList[paramcnt] = strtok(NULL, ",");
+					if (paramList[paramcnt])
+						valueList[paramcnt] = replaceVars(paramList[paramcnt],NULL);
+				}
+				paramcnt--;
+				if (!valueList[0].IsEmpty())
+				{
+					for (int count=1; count<=paramcnt; count++)
+					{
+						if (valueList[count] == "")
+						{
+							AfxMessageBox(valueList[paramcnt], MB_OK);
+							return FALSE;
+						}
+					}
+				}
+			}
 			else if (strcmp(pcmd, "VerifySet") == 0)
 			{
 				// VerifySet checks to see if the first parameter has any value
