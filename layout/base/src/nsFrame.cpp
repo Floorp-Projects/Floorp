@@ -26,6 +26,8 @@
 #include "nsCRT.h"
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
+#include "nsReflowCommand.h"
+#include "nsIPresShell.h"
 
 #define DO_SELECTION 0
 
@@ -721,6 +723,11 @@ NS_METHOD nsFrame::ContentChanged(nsIPresShell*   aShell,
                                   nsIContent*     aChild,
                                   nsISupports*    aSubContent)
 {
+  // Generate a reflow command with our geometric parent as the target,
+  // and us as the child frame
+  nsReflowCommand* cmd = new nsReflowCommand(aPresContext, mGeometricParent,
+                                             nsReflowCommand::ContentChanged, this);
+  aShell->AppendReflowCommand(cmd);
   return NS_OK;
 }
 
