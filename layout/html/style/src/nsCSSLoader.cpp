@@ -41,6 +41,7 @@
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
+#include "nsCOMPtr.h"
 
 #include <iostream.h>
 
@@ -1068,14 +1069,12 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
     nsIURI* urlClone = CloneURL(aKey.mURL); // don't give the key to netlib, it munges it
     if (urlClone) {
 #endif
-      nsILoadGroup* loadGroup = mDocument->GetDocumentLoadGroup();
-      result = NS_NewUnicharStreamLoader(&loader, urlClone,
+      result = NS_NewUnicharStreamLoader(&loader, urlClone, 
 #ifdef NECKO
-                                         loadGroup,
+                                         nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
 #endif
                                          DoneLoadingStyle, aData);
       NS_RELEASE(urlClone);
-      NS_IF_RELEASE(loadGroup);
       if (NS_SUCCEEDED(result)) {
         mLoadingSheets.Put(&aKey, aData);
         // grab any pending alternates that have this URL
@@ -1284,13 +1283,7 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
     if (urlClone) {
 #endif
 #ifdef NECKO
-#if 0
-      nsILoadGroup* loadGroup = nsnull;
-      if (mDocument) {
-        loadGroup = mDocument->GetDocumentLoadGroup();
-      }
-#endif
-      result = NS_OpenURI(&in, urlClone/*, loadGroup*/);
+      result = NS_OpenURI(&in, urlClone);
 #else
       result = NS_OpenURL(urlClone, &in);
 #endif

@@ -158,7 +158,7 @@ main(int argc, char* argv[])
 
   rv = sts->CreateTransport(hostName, port, &transport);
   if (NS_SUCCEEDED(rv)) {
-    transport->AsyncRead(0, -1, nsnull, new InputTestConsumer, nsnull);
+    transport->AsyncRead(0, -1, nsnull, new InputTestConsumer);
 
     NS_RELEASE(transport);
   }

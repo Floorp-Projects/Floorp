@@ -23,7 +23,6 @@ interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIStreamObserver;
 interface nsIStreamListener;
-interface nsILoadGroup;
 
 typedef unsigned long nsLoadFlags;
 
@@ -70,8 +69,7 @@ interface nsIChannel : nsIRequest
     void AsyncRead(in unsigned long startPosition,
                    in long readCount,
                    in nsISupports ctxt,
-                   in nsIStreamListener listener,
-                   in nsILoadGroup group);
+                   in nsIStreamListener listener);
 
     /**
      * Writes asynchronously to the URL's specified destination. Notifications
@@ -86,8 +84,7 @@ interface nsIChannel : nsIRequest
                     in unsigned long startPosition,
                     in long writeCount,
                     in nsISupports ctxt,
-                    in nsIStreamObserver observer,
-                    in nsILoadGroup group);
+                    in nsIStreamObserver observer);
 
     /**
      * Load attribute flags. These may be or'd together.
@@ -118,11 +115,6 @@ interface nsIChannel : nsIRequest
      * most likely wants to verify with the actual data. 
      */
     readonly attribute string ContentType;
-
-    /**
-     * Returns the load group in which the channel is a currently a member.
-     */
-    readonly attribute nsILoadGroup LoadGroup;
 
 };
 

@@ -30,6 +30,7 @@ interface nsIInputStream;
 interface nsIBufferOutputStream;
 interface nsIFileChannel;
 interface nsILoadGroup;
+interface nsILoadGroupObserver;
 
 [scriptable, uuid(01f0a170-1881-11d3-9337-00104ba0fd40)]
 interface nsIIOService : nsISupports

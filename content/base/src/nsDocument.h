@@ -113,6 +113,7 @@ public:
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
 #ifdef NECKO
                                nsIChannel* aChannel,
+                               nsILoadGroup* aLoadGroup,
 #else
                                nsIURI *aUrl, 
 #endif
@@ -417,7 +418,7 @@ protected:
                           const nsIContent* aTest1, 
                           const nsIContent* aTest2) const;
 #ifdef NECKO
-  virtual nsresult Reset(nsIChannel* aChannel);
+  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 #else
   virtual nsresult Reset(nsIURI* aURL);
 #endif

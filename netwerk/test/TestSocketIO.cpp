@@ -174,7 +174,7 @@ TestWriteObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
   printf("\n+++ TestWriteObserver::OnStopRequest (status = %x) +++\n", aStatus);
 
   if (NS_SUCCEEDED(aStatus)) {
-    mTransport->AsyncRead(0, -1, nsnull, new InputTestConsumer, nsnull);
+    mTransport->AsyncRead(0, -1, nsnull, new InputTestConsumer);
   } else {
     gKeepRunning = 0;
   }
@@ -259,7 +259,7 @@ main(int argc, char* argv[])
     TestWriteObserver* observer = new TestWriteObserver(transport);
 
     gElapsedTime = PR_Now();
-    transport->AsyncWrite(stream, 0, bytesWritten, nsnull, observer, nsnull);
+    transport->AsyncWrite(stream, 0, bytesWritten, nsnull, observer);
 
     NS_RELEASE(transport);
   }

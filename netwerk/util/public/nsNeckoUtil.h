@@ -44,8 +44,7 @@ extern nsresult
 NS_OpenURI(nsIInputStream* *result, nsIURI* uri);
 
 extern nsresult
-NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, 
-           nsIURI* uri, nsILoadGroup* group);
+NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri);
 
 extern nsresult
 NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result);
@@ -56,5 +55,9 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result);
 extern nsresult
 NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
                 nsILoadGroup* parent, nsILoadGroup* *result);
+
+extern nsresult
+NS_NewPostDataStream(PRBool isFile, const char *data,
+                     nsIInputStream **result);
 
 #endif // nsNeckoUtil_h__

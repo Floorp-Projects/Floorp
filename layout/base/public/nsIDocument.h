@@ -89,6 +89,7 @@ public:
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
 #ifdef NECKO
                                nsIChannel* aChannel,
+                               nsILoadGroup* aLoadGroup,
 #else
                                nsIURI *aUrl, 
 #endif

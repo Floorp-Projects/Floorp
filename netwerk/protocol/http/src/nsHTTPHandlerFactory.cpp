@@ -28,7 +28,7 @@
 
 #include "nsCOMPtr.h"
 #include "nscore.h"
-#include "nsIHTTPHandler.h"
+#include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPCID.h"
 #include "nsHTTPHandlerFactory.h"
 #include "nsIComponentManager.h"
@@ -96,7 +96,7 @@ nsHTTPHandlerFactory::CreateInstance(nsISupports *aOuter,
 
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kHTTPHandlerCID)) {
-        if (NS_FAILED(rv = CreateOrGetHTTPHandler((nsIHTTPHandler**) &inst)))
+        if (NS_FAILED(rv = NS_CreateOrGetHTTPHandler((nsIHTTPProtocolHandler**) &inst)))
             return rv;
     }
     else {

@@ -295,7 +295,7 @@ TestConnection::Run(void)
       //
       // Initiate an async read...
       //
-      rv = mTransport->AsyncRead(0, -1, mTransport, this, nsnull);
+      rv = mTransport->AsyncRead(0, -1, mTransport, this);
 
       if (NS_FAILED(rv)) {
         printf("Error: AsyncRead failed...");
@@ -359,7 +359,7 @@ nsresult TestConnection::WriteBuffer(void)
       // Write the buffer to the server...
       if (NS_SUCCEEDED(rv)) {
         rv = mTransport->AsyncWrite(mStream, 0, bytesWritten, mTransport,
-                                    /* mOutputObserver */ nsnull, nsnull);
+                                    /* mOutputObserver */ nsnull);
       } 
       // Wait for the write to complete...
       if (NS_FAILED(rv)) {

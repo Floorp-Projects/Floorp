@@ -425,6 +425,7 @@ public:
     NS_IMETHOD StartDocumentLoad(const char* aCommand,
 #ifdef NECKO
                                  nsIChannel* aChannel,
+                                 nsILoadGroup* aLoadGroup,
 #else
                                  nsIURI *aUrl, 
 #endif
@@ -730,7 +731,7 @@ protected:
 		                        nsIContentViewerContainer* aContainer,
 		                        const char* aCommand,
 #ifdef NECKO
-                            nsIChannel* aChannel
+                            nsIChannel* aChannel, nsILoadGroup* aLoadGroup
 #else
                             nsIURI* aOptionalURL = 0
 #endif
@@ -1092,7 +1093,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
                                 nsIContentViewerContainer* aContainer,
                                 const char* aCommand,
 #ifdef NECKO
-                                nsIChannel* aChannel
+                                nsIChannel* aChannel, nsILoadGroup* aLoadGroup
 #else
                                 nsIURI* aOptionalURL
 #endif
@@ -1132,7 +1133,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 
     mDocumentURL = syntheticURL;
 #ifdef NECKO
-    (void)aChannel->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
+    mDocumentLoadGroup = aLoadGroup;
 #else
     syntheticURL->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
 #endif
@@ -1271,6 +1272,7 @@ NS_IMETHODIMP
 XULDocumentImpl::StartDocumentLoad(const char* aCommand,
 #ifdef NECKO
                                    nsIChannel* aChannel,
+                                   nsILoadGroup* aLoadGroup,
 #else
                                    nsIURI *aURL,
 #endif
@@ -1288,7 +1290,7 @@ XULDocumentImpl::StartDocumentLoad(const char* aCommand,
 		do
 			{
 #ifdef NECKO
-        status = PrepareToLoad(&parser, aContainer, aCommand, aChannel);
+        status = PrepareToLoad(&parser, aContainer, aCommand, aChannel, aLoadGroup);
 #else
         status = PrepareToLoad(&parser, aContainer, aCommand, aURL);
 #endif
@@ -1321,7 +1323,11 @@ XULDocumentImpl::LoadFromStream( nsIInputStream& xulStream,
 	{
 		nsresult status;
 		nsCOMPtr<nsIParser> parser;
+#ifdef NECKO
+		if ( NS_SUCCEEDED(status = PrepareToLoad(&parser, aContainer, aCommand, nsnull, nsnull)) )
+#else
 		if ( NS_SUCCEEDED(status = PrepareToLoad(&parser, aContainer, aCommand, nsnull)) )
+#endif
 			parser->Parse(xulStream);
 
 		return status;

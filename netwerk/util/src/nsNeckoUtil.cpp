@@ -21,6 +21,8 @@
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsIAllocator.h"
+#include "nsCOMPtr.h"
+#include "nsIHTTPProtocolHandler.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -83,8 +85,7 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
 }
 
 nsresult
-NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, 
-           nsIURI* uri, nsILoadGroup* group)
+NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri)
 {
     nsresult rv;
     nsIChannel* channel;
@@ -92,7 +93,7 @@ NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context,
     rv = NS_OpenURI(&channel, uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->AsyncRead(0, -1, context, aConsumer, group);
+    rv = channel->AsyncRead(0, -1, context, aConsumer);
     NS_RELEASE(channel);
     return rv;
 }
@@ -132,6 +133,24 @@ NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
     if (NS_FAILED(rv)) return rv;
     
     return serv->NewLoadGroup(outer, observer, parent, result);
+}
+
+nsresult
+NS_NewPostDataStream(PRBool isFile, const char *data,
+                     nsIInputStream **result)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = serv->GetProtocolHandler("http", getter_AddRefs(handler));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIHTTPProtocolHandler> http = do_QueryInterface(handler, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    return http->NewPostDataStream(isFile, data, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

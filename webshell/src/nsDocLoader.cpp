@@ -40,6 +40,7 @@
 #else
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
+//#include "nsILoadGroupObserver.h"
 #include "nsNeckoUtil.h"
 #include "nsIURL.h"
 
@@ -304,9 +305,11 @@ public:
 #endif
 
 #ifdef NECKO
-    void LoadURLComplete(nsIChannel* channel, nsISupports* aLoader, PRInt32 aStatus);
+    nsresult LoadURLComplete(nsIChannel* channel, nsISupports* ctxt,
+                             nsISupports* aLoader, PRInt32 aStatus,
+                             const PRUnichar* aMsg);
 #else
-    void LoadURLComplete(nsIURI* aURL, nsISupports* aLoader, PRInt32 aStatus);
+    nsresult LoadURLComplete(nsIURI* aURL, nsISupports* aLoader, PRInt32 aStatus);
 #endif
     void SetParent(nsDocLoaderImpl* aParent);
 #ifdef NECKO
@@ -570,7 +573,7 @@ nsDocLoaderImpl::CreateContentViewer(const char *aCommand,
     // Now create an instance of the content viewer
     rv = factory->CreateInstance(aCommand, 
 #ifdef NECKO
-                                 channel,
+                                 channel, mLoadGroup,
 #else
                                  aURL,
 #endif
@@ -1264,13 +1267,13 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsIDocumentLoader* aLoadInitiator,
 
 
 #ifdef NECKO
-void nsDocLoaderImpl::LoadURLComplete(nsIChannel* channel, nsISupports* aBindInfo, PRInt32 aStatus)
+nsresult nsDocLoaderImpl::LoadURLComplete(nsIChannel* channel, nsISupports* ctxt,
+                                          nsISupports* aBindInfo, PRInt32 aStatus,
+                                          const PRUnichar* aMsg)
 #else
-void nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
+nsresult nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
 #endif
 {
-    PRBool isForegroundURL = PR_FALSE;
-
     /*
      * If the entry is not found in the list, then it must have been cancelled
      * via Stop(...). So ignore just it... 
@@ -1290,7 +1293,9 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, PRIn
         }
     }
 #endif /* DEBUG */
-#else
+#else // !NECKO
+    PRBool isForegroundURL = PR_FALSE;
+
     PRBool removed = m_LoadingDocsList->RemoveElement(aBindInfo);
     if (removed) {
         nsILoadAttribs* loadAttributes;
@@ -1322,7 +1327,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, PRIn
                 this, buffer, mForegroundURLs, mTotalURLs));
 #endif /* DEBUG */
     }
-#endif
+#endif // !NECKO
 
     /*
      * Fire the OnEndURLLoad notification to any observers...
@@ -1333,6 +1338,9 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, PRIn
     FireOnEndURLLoad((nsIDocumentLoader *) this, aURL, aStatus);
 #endif
 
+#ifdef NECKO
+    return GetLoadGroup()->RemoveChannel(channel, ctxt, aStatus, aMsg);
+#else
     /*
      * Fire the OnEndDocumentLoad notification to any observers...
      */
@@ -1340,26 +1348,19 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURI* aURL, nsISupports* aBindInfo, PRIn
     IsBusy(busy);
     if (isForegroundURL && !busy) {
 #if defined(DEBUG)
-#ifdef NECKO
-        nsCOMPtr<nsIURI> uri;
-        channel->GetURI(getter_AddRefs(uri));
-        char* buffer;
-#else
         const char* buffer;
         nsIURI* uri = mDocumentUrl;
-#endif
 
         uri->GetSpec(&buffer);
         PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                ("DocLoader:%p: OnEndDocumentLoad(...) called for %s.\n",
                 this, buffer));
-#ifdef NECKO
-        nsCRT::free(buffer);
-#endif
 #endif /* DEBUG */
 
         FireOnEndDocumentLoad((nsIDocumentLoader *) this, aStatus);
     }
+    return NS_OK;
+#endif
 }
 
 void nsDocLoaderImpl::SetParent(nsDocLoaderImpl* aParent)
@@ -1656,7 +1657,9 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener)
 
   m_DocLoader->SetDocumentChannel(channel);
 
-  rv = channel->AsyncRead(0, -1, nsnull, this, loadGroup);
+  rv = loadGroup->AddChannel(channel, nsnull);
+  if (NS_FAILED(rv)) return rv;
+  rv = channel->AsyncRead(0, -1, nsnull, this);
   if (NS_FAILED(rv)) return rv;
 #endif // NECKO
 
@@ -2109,9 +2112,10 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
      * The stream is complete...  Tell the DocumentLoader to release us...
      */
 #ifdef NECKO
-    m_DocLoader->LoadURLComplete(channel, (nsIStreamListener *)this, aStatus);
+    rv = m_DocLoader->LoadURLComplete(channel, ctxt, (nsIStreamListener *)this,
+                                      aStatus, aMsg);
 #else
-    m_DocLoader->LoadURLComplete(aURL, (nsIStreamListener *)this, aStatus);
+    rv = m_DocLoader->LoadURLComplete(aURL, (nsIStreamListener *)this, aStatus);
 #endif
     NS_IF_RELEASE(m_NextStream);
 

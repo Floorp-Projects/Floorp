@@ -46,6 +46,7 @@ class FileImpl
                                             , mFailed(PR_FALSE)
                                             , mEOF(PR_FALSE)
                                             , mLength(-1)
+											, mNSPRMode(0)
                                         {
                                             NS_INIT_REFCNT();
                                         }
@@ -56,6 +57,8 @@ class FileImpl
                                             : mFileDesc(nsnull)
                                             , mFailed(PR_FALSE)
                                             , mEOF(PR_FALSE)
+                                            , mLength(-1)
+											, mNSPRMode(-1)
                                         {
                                             NS_INIT_REFCNT();
                                             Open(inFile, nsprMode, accessMode);
@@ -90,7 +93,7 @@ class FileImpl
                                             if (!aLength)
                                                 return NS_ERROR_NULL_POINTER;
                                             if (mLength < 0)
-                                                return NS_FILE_RESULT(NS_ERROR_UNEXPECTED);
+                                                return NS_ERROR_UNEXPECTED;
                                             *aLength = mLength;
                                             return NS_OK;
                                         }
