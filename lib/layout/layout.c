@@ -5758,7 +5758,9 @@ lo_process_deferred_image_info(void *closure)
         {
             lo_TopState* top_state = lo_FetchTopState(XP_DOCID(c->context));
             PR_ASSERT(top_state);
-            if (top_state) {
+
+			/* Do not perform reflow for Aurora custom icons (MWContextIcon) */
+            if (top_state && (c->context->type != MWContextIcon)) {
                 int32 docWidth  = LO_GetLayerScrollWidth(top_state->body_layer);
                 int32 docHeight = LO_GetLayerScrollHeight(top_state->body_layer);
                 int32 docX, docY;

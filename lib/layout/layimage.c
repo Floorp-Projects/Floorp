@@ -2111,7 +2111,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	 * when the front end can give us the width and height.
 	 */
 	if (((image->width == 0)||(image->height == 0))
-        && EDT_IS_EDITOR(context))
+        && (EDT_IS_EDITOR(context)))
 	{
         /* If a lowres image has been specified, we'll actually be
            blocking on that, not the real (hires) url */
