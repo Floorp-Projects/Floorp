@@ -19,7 +19,10 @@
 #include "nsIThread.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
+#include "nsIStreamListener.h"
+#include "nsIOutputStream.h"
 
+#include "nsString2.h"
 #include "plevent.h"
 
 
@@ -70,16 +73,20 @@ typedef enum _FTP_ACTION {
 	GET,
 	POST,
 	MKDIR,
-	DELETE,
+	DEL
 } FTP_ACTION;
 
 class nsFtpConnectionThread : public nsIRunnable {
 public:
+    NS_DECL_ISUPPORTS
+
 	nsFtpConnectionThread(PLEventQueue* aEventQ);
 	~nsFtpConnectionThread();
 	
 	// nsIRunnable method
 	NS_IMETHOD Run();
+
+    nsresult Init(nsIThread* aThread, nsIStreamListener* aListener);
 
 	// user level setup
 
@@ -88,6 +95,8 @@ private:
     void SetSystInternals(void);
 
 	PLEventQueue*		mEventQueue;            // used to communicate outside this thread
+    nsIThread*          mThread;                // the worker thread
+
 	FTP_STATE			mState;                 // the current state
     FTP_STATE           mNextState;             // the next state
     nsIInputStream*     mInStream;
@@ -96,8 +105,17 @@ private:
 	nsString2			mResponseMsg;			// the last command response text
     nsString2           mUsername;
     nsString2           mPassword;
+
+// these members should be hung off of a specific transport connection
     PRInt32             mServerType;
-    PRBool              mList;
+    PRBool              mPasv;
+	PRBool				mList;					// use LIST instead of NLST
+// end "these ...."
 
+    PRBool              mConnected;
+	PRBool			    mUseDefaultPath;		// use PWD to figure out path
+    nsIUrl*             mUrl;
 
-}
+    nsIStreamListener*  mListener;              // the listener we want to call
+                                                // during our event firing.
+};

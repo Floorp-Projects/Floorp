@@ -22,14 +22,12 @@
 #include "nscore.h"
 #include "nsIUrl.h"
 #include "nsIFtpEventSink.h"
-#include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
 #include "nsIByteBufferInputStream.h"
 
 #include "prprf.h" // PR_sscanf
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 // There are actually two transport connections established for an 
 // ftp connection. One is used for the command channel , and
@@ -40,9 +38,7 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 // Client initiation is the most command case and is attempted first.
 
 nsFtpProtocolConnection::nsFtpProtocolConnection()
-    : mUrl(nsnull), mEventSink(nsnull), mPasv(TRUE),
-    mServerType(FTP_GENERIC_TYPE), mConnected(FALSE),
-    mResponseCode(0), mList(FALSE), mUseDefaultPath(TRUE) {
+    : mUrl(nsnull), mEventSink(nsnull), mConnected(PR_FALSE) {
 
     mEventQueue = PL_CreateEventQueue("FTP Event Queue", PR_CurrentThread());
 }
@@ -50,8 +46,7 @@ nsFtpProtocolConnection::nsFtpProtocolConnection()
 nsFtpProtocolConnection::~nsFtpProtocolConnection() {
     NS_IF_RELEASE(mUrl);
     NS_IF_RELEASE(mEventSink);
-    NS_IF_RELEASE(mCPipe);
-    NS_IF_RELEASE(mDPipe);
+    NS_IF_RELEASE(mListener);
 }
 
 NS_IMPL_ADDREF(nsFtpProtocolConnection);
@@ -67,12 +62,12 @@ nsFtpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIStreamListener::GetIID()) ||
+    /*if (aIID.Equals(nsIStreamListener::GetIID()) ||
         aIID.Equals(nsIStreamObserver::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
-    }
+    }*/
     return NS_NOINTERFACE; 
 }
 
@@ -118,9 +113,7 @@ nsFtpProtocolConnection::Resume(void) {
 // establishes the connection and initiates the file transfer.
 NS_IMETHODIMP
 nsFtpProtocolConnection::Open(void) {
-    nsresult rv;
-
-    mState = FTP_CONNECT;
+/*    nsresult rv;
 
     NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
     if(NS_FAILED(rv)) return rv;
@@ -141,9 +134,9 @@ nsFtpProtocolConnection::Open(void) {
     // XXX don't know when the transport does that so, we're going to
     // XXX consider ourselves conencted.
 	mConnected = TRUE;
-	mState = FTP_S_USER;
-
+*/
     return NS_OK;
+
 }
 
 NS_IMETHODIMP
@@ -177,21 +170,12 @@ NS_IMETHODIMP
 nsFtpProtocolConnection::Put(void) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-NS_IMETHODIMP
-nsFtpProtocolConnection::UsePASV(PRBool aComm) {
-    if (mConnected)
-        return NS_ERROR_NOT_IMPLEMENTED;
-    mPasv = aComm;
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver methods:
 
 NS_IMETHODIMP
 nsFtpProtocolConnection::OnStartBinding(nsISupports* context) {
-    // up call OnStartBinding
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -199,347 +183,26 @@ NS_IMETHODIMP
 nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
                                         nsresult aStatus,
                                         nsIString* aMsg) {
-    nsresult rv;
-    char *buffer = nsnull;                          // the buffer to be sent to the server
-    nsIByteBufferInputStream* stream = nsnull;      // stream to be filled, with buffer, then written to the server
-    PRUint32 bytesWritten = 0;
-
-	rv = NS_NewByteBufferInputStream(&stream);
-    if (NS_FAILED(rv)) return rv;
-
-    // each hunk of data that comes in is evaluated, appropriate action 
-    // is taken and the state is incremented.
-
-	// XXX some of the "buffer"s allocated below in the individual states can be removed
-	// XXX and replaced with static char or #defines.
-    switch(mState) {
-        case FTP_CONNECT:
-
-        case FTP_S_USER:
-            buffer = "USER anonymous";
-            stream->Fill(buffer, strlen(buffer), &bytesWritten);
-
-            // send off the command
-            mState = FTP_R_USER;
-            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
-            break;
-
-        case FTP_R_USER:
-            mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
-            break;
-
-        case FTP_S_PASS:
-            if (!mPassword) {
-                // XXX we need to prompt the user to enter a password.
-
-                // sendEventToUIThreadToPostADialog(&mPassword);
-            }
-            buffer = "PASS guest\r\n";
-            // PR_smprintf(buffer, "PASS %.256s\r\n", mPassword);
-            stream->Fill(buffer, strlen(buffer), &bytesWritten);
-            
-            // send off the command
-            mState = FTP_R_PASV;
-            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
-            break;
-
-        case FTP_R_PASS:
-            mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
-            break;
-
-		case FTP_S_SYST:
-			buffer = "SYST\r\n";
-			stream->Fill(buffer, strlen(buffer), &bytesWritten);
-
-			// send off the command
-			mState = FTP_R_SYST;
-			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
-			break;
-
-		case FTP_R_SYST:
-			mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
-			break;
-
-		case FTP_S_ACCT:
-			buffer = "ACCT noaccount\r\n";
-			stream->Fill(buffer, strlen(buffer), &bytesWritten);
-
-			// send off the command
-			mState = FTP_R_ACCT;			
-			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
-			break;
-
-		case FTP_R_ACCT:
-			mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
-			break;
-
-		case FTP_S_MACB:
-			buffer = "MACB ENABLE\r\n";
-			stream->Fill(buffer, strlen(buffer), &bytesWritten);
-
-			mState = FTP_R_MACB;
-			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
-			break;
-
-		case FTP_R_MACB:
-			mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
-			break;
-
-		case FTP_S_PWD:
-			buffer = "PWD\r\n";
-			stream->Fill(buffer, strlen(buffer), &bytesWritten);
-
-			// send off the command
-			mState = FTP_R_PWD;
-			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
-			break;
-
-		case FTP_R_PWD:
-			mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
-			break;
-
-        case FTP_COMPLETE:
-        default:
-            ;
-    }    
-
-
-    // up call OnStopBinding
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamListener methods:
 
-// this is the command channel's OnDataAvailable(). It's job is to processes AsyncReads.
-// It absorbs the data from the stream, parses it, and passes the data onto the appropriate
-// routine/logic for handling.
 NS_IMETHODIMP
 nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
                                          nsIInputStream *aIStream, 
                                          PRUint32 aSourceOffset,
-                                         PRUint32 aLength) {
-    nsresult rv;
-
-    // we've got some data. suck it out of the inputSteam.
-    char *buffer = new char[aLength+1];
-    // XXX maybe use an nsString2
-    PRUint32 read = 0;
-    rv = aIStream->Read(buffer, aLength, &read);
-    if (NS_FAILED(rv)) return rv;
-
-	// get the response code out.
-    PR_sscanf(buffer, "%d", &mResponseCode);
-
-	// get the rest of the line
-	mResponseMsg = buffer+4;
-
-    // these are states in which data is coming back to us. read states.
-    // This switch is a state incrementor using the server response to
-    // determine what the next state shall be.
-    switch(mState) {
-        case FTP_R_USER:
-            if (mResponseCode == 3) {
-                // send off the password
-                mState = FTP_S_PASV;
-            } else if (mResponseCode == 2) {
-                // no password required, we're already logged in
-				mState = FTP_S_SYST;
-            }
-            break;
-
-        case FTP_R_PASS:
-            if (mResponseCode == 3) {
-                // send account info
-                mState = FTP_S_ACCT;
-            } else if (mResponseCode == 2) {
-                // logged in
-                mState = FTP_S_SYST;
-            }
-			break;
-
-		case FTP_R_SYST:
-			if (mResponseCode == 2) {
-				if (mUseDefaultPath)
-					mState = FTP_S_PWD;
-				else
-					; // ftp figure out what to do.
-
-				SetSystInternals(); // must be called first to setup member vars.
-
-				// setup next state based on server type.
-				if (mServerType == FTP_PETER_LEWIS_TYPE || mServerType == FTP_WEBSTAR_TYPE) {
-					mState = FTP_S_MACB;
-				} else if (mServerType == FTP_TCPC_TYPE || mServerType == FTP_GENERIC_TYPE) {
-					mState = FTP_S_PWD;
-				} 
-			} else {
-				mState = FTP_S_PWD;		
-			}
-			break;
-
-		case FTP_R_ACCT:
-			if (mResponseCode == 2) {
-				mState = FTP_S_SYST;
-			} else {
-				// failure. couldn't login
-				// XXX use a more descriptive error code.
-				return NS_ERROR_NOT_IMPLEMENTED;
-			}
-			break;
-
-		case FTP_R_MACB:
-			if (mResponseCode == 2) {
-				// set the mac binary
-				if (mServerType == FTP_UNIX_TYPE) {
-					// This state is carry over from the old ftp implementation
-					// I'm not sure what's really going on here.
-					// original comment /* we were unsure here */
-					mServerType = FTP_NCSA_TYPE;	
-				}
-			}
-
-			break;
-
-		case FTP_R_PWD:
-			{
-			// fun response interpretation begins :)
-			PRInt32 start = mResponseMsg.Find('"', FALSE, 5);
-			nsString2 lNewMsg;
-			if (start > -1) {
-				mResponseMsg.Left(lNewMsg, start);
-			} else {
-				lNewMsg = mResponseMsg;				
-			}
-
-			// default next state
-			// mState = figure out what to do
-
-			// reset server types if necessary
-			if (mServerType == FTP_TCPC_TYPE) {
-				if (lNewMsg.CharAt(1) == '/') {
-					mServerType = FTP_NCSA_TYPE;
-				}
-			}
-			else if(mServerType == FTP_GENERIC_TYPE) {
-				if (lNewMsg.CharAt(1) == '/') {
-					// path names ending with '/' imply unix
-					mServerType = FTP_UNIX_TYPE;
-					mList = TRUE;
-				} else if (lNewMsg.Last() == ']') {
-					// path names ending with ']' imply vms
-					mServerType = FTP_VMS_TYPE;
-					mList = TRUE;
-				}
-			}
-
-			if (mUseDefaultPath && mServerType != FTP_VMS_TYPE) {
-				// we want to use the default path specified by the PWD command.
-				PRInt32 start = lNewMsg.Find('"', FALSE, 1);
-				nsString2 path, ptr;
-				lNewMsg.Right(path, start);
-
-				if (path.First() != '/') {
-					start = path.Find('/');
-					if (start > -1) {
-						path.Right(ptr, start);
-					} else {
-						// if we couldn't find a slash, check for back slashes and switch them out.
-						PRInt32 start = path.Find('\\');
-						if (start > -1) {
-							path.ReplaceChar('\\', '/');
-						}
-					}
-				} else {
-					ptr = path;
-				}
-
-				// construct the new url
-				if (ptr.Length()) {
-					nsString2 newPath;
-
-					newPath = ptr;
-
-
-					const char *initialPath = nsnull;
-					rv = mUrl->GetPath(&initialPath);
-					if (NS_FAILED(rv)) return rv;
-					
-					if (initialPath && *initialPath) {
-						if (newPath.Last() == '/')
-							newPath.Cut(newPath.Length()-1, 1);
-						newPath.Append(initialPath);
-					}
-
-					char *p = newPath.ToNewCString();
-					mUrl->SetPath(p);
-					delete [] p;
-				}
-			}
-
-			// change state for these servers.
-			if (mServerType == FTP_GENERIC_TYPE
-				|| mServerType == FTP_NCSA_TYPE
-				|| mServerType == FTP_TCPC_TYPE
-				|| mServerType == FTP_WEBSTAR_TYPE
-				|| mServerType == FTP_PETER_LEWIS_TYPE)
-				mState = FTP_S_MACB;
-
-			break;
-			}
-
-        case FTP_R_PORT:
-        case FTP_COMPLETE:
-        default:
-            ;
-    }
-
-    delete [] buffer;
-	// XXX this may not be necessary. presumably OnStopBinding will be called
-	// XXX right after this call, so we probably don't need to explicitly call 
-	// XXX it here.
-	// call back into the sending state machine.
-    OnStopBinding(nsnull, rv, nsnull);
+                                         PRUint32 aLength)
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+*/
+NS_IMETHODIMP
+nsFtpProtocolConnection::SetStreamListener(nsIStreamListener *aListener) {
+    mListener = aListener;
+    NS_ADDREF(mListener);
     return NS_OK;
 }
 
-// Here's where we do all the string whacking/parsing magic to determine
-// what type of server it is we're dealing with.
-void
-nsFtpProtocolConnection::SetSystInternals(void) {
-    if (mResponseMsg.Equals("UNIX Type: L8 MAC-OS MachTen", 28)) {
-		mServerType = FTP_MACHTEN_TYPE;
-		mList = TRUE;
-	}
-	else if (mResponseMsg.Find("UNIX") > -1) {
-		mServerType = FTP_UNIX_TYPE;
-		mList = TRUE;
-	}
-	else if (mResponseMsg.Find("Windows_NT") > -1) {
-		mServerType = FTP_NT_TYPE;
-		mList = TRUE;
-	}
-	else if (mResponseMsg.Equals("VMS", 3)) {
-		mServerType = FTP_VMS_TYPE;
-		mList = TRUE;
-	}
-	else if (mResponseMsg.Equals("VMS/CMS", 6) || mResponseMsg.Equals("VM ", 3)) {
-		mServerType = FTP_CMS_TYPE;
-	}
-	else if (mResponseMsg.Equals("DCTS", 4)) {
-		mServerType = FTP_DCTS_TYPE;
-	}
-	else if (mResponseMsg.Find("MAC-OS TCP/Connect II") > -1) {
-		mServerType = FTP_TCPC_TYPE;
-		mList = TRUE;
-	}
-	else if (mResponseMsg.Equals("MACOS Peter's Server", 20)) {
-		mServerType = FTP_PETER_LEWIS_TYPE;
-		mList = TRUE;
-	}
-	else if (mResponseMsg.Equals("MACOS WebSTAR FTP", 17)) {
-		mServerType = FTP_WEBSTAR_TYPE;
-		mList = TRUE;
-	}
-}
+
 ////////////////////////////////////////////////////////////////////////////////

@@ -30,46 +30,8 @@
 class nsIConnectionGroup;
 class nsIFtpEventSink;
 
-
-// ftp server types
-#define FTP_GENERIC_TYPE     0
-#define FTP_UNIX_TYPE        1
-#define FTP_DCTS_TYPE        2
-#define FTP_NCSA_TYPE        3
-#define FTP_PETER_LEWIS_TYPE 4
-#define FTP_MACHTEN_TYPE     5
-#define FTP_CMS_TYPE         6
-#define FTP_TCPC_TYPE        7
-#define FTP_VMS_TYPE         8
-#define FTP_NT_TYPE          9
-#define FTP_WEBSTAR_TYPE     10
-
-// ftp states
-typedef enum _FTP_STATE {
-    FTP_CONNECT,
-    FTP_S_USER,		// send username
-    FTP_R_USER,
-    FTP_S_PASS,		// send password
-    FTP_R_PASS,
-//	FTP_S_REST,		// send restart
-//	FTP_R_REST,
-	FTP_S_SYST,		// send system (interrogates server)
-	FTP_R_SYST,
-    FTP_S_ACCT,		// send account
-    FTP_R_ACCT,
-	FTP_S_MACB,
-	FTP_R_MACB,
-	FTP_S_PWD ,		// send parent working directory (pwd)
-	FTP_R_PWD ,
-    FTP_S_PASV,		// send passive
-    FTP_R_PASV,
-    FTP_S_PORT,		// send port
-    FTP_R_PORT,
-    FTP_COMPLETE
-} FTP_STATE;
-
-class nsFtpProtocolConnection : public nsIFtpProtocolConnection,
-                                public nsIStreamListener {
+class nsFtpProtocolConnection : public nsIFtpProtocolConnection
+                                /*,public nsIStreamListener*/ {
 public:
     NS_DECL_ISUPPORTS
 
@@ -87,8 +49,7 @@ public:
     // nsIFtpProtocolConnection methods:
     NS_IMETHOD Get(void);
     NS_IMETHOD Put(void);
-    NS_IMETHOD UsePASV(PRBool aComm);
-
+/*
     // nsIStreamObserver methods:
     NS_IMETHOD OnStartBinding(nsISupports* context);
     NS_IMETHOD OnStopBinding(nsISupports* context,
@@ -100,36 +61,22 @@ public:
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
-
+*/
     // nsFtpProtocolConnection methods:
+    NS_IMETHOD SetStreamListener(nsIStreamListener* aListener);
+
     nsFtpProtocolConnection();
     virtual ~nsFtpProtocolConnection();
 
     nsresult Init(nsIUrl* aUrl, nsISupports* aEventSink, PLEventQueue* aEventQueue);
-
-private:
-	void SetSystInternals(void);
 
 protected:
     nsIUrl*                 mUrl;
     nsIFtpEventSink*        mEventSink;
     PLEventQueue*           mEventQueue;
 
-// these members should be hung off of a specific transport connection
-    PRInt32                 mServerType;
-    PRBool                  mPasv;
-	PRBool					mList;					// use LIST instead of NLST
-// end "these ...."
-
     PRBool                  mConnected;
-	PRBool					mUseDefaultPath;		// use PWD to figure out path
-    FTP_STATE               mState;
-    nsITransport*           mCPipe;                 // the command channel
-    nsITransport*           mDPipe;                 // the data channel
-    PRInt32                 mResponseCode;          // the last command response code.
-	nsString2				mResponseMsg;			// the last command response text
-    nsString2               mUsername;
-    nsString2               mPassword;
+    nsIStreamListener*      mListener;
 };
 
 #endif /* nsFtpProtocolConnection_h___ */
