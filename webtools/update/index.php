@@ -61,7 +61,7 @@ include"$page_header";
 
 <div id="mBody">
   <div class="frontcolumn">
-    <h2><a href="extensions/?application=<?php echo"$application"; ?>">Get Extensions</a></h2>
+    <h2><a href="extensions/?<?php echo"".uriparams().""; ?>">Get Extensions</a></h2>
     <a href="products/thunderbird"><img src="images/product-front-thunderbird.png" alt="Thunderbird" class="promo" width="60" height="60"></a>
     <p>Extensions are small add-ons that add new functionality. They can add anything from a toolbar button to a completely new feature.</p>
 
@@ -74,10 +74,10 @@ WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `minAppVer_int`<='$curr
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numextensions = mysql_num_rows($sql_result);
 ?>
-     <a href="/extensions/?application=<?php echo"$application"; ?>">Browse extensions</a><BR>(<?php echo"$numextensions"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)<BR> 
+     <a href="/extensions/?<?php echo"".uriparams().""; ?>">Browse extensions</a><BR>(<?php echo"$numextensions"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)<BR> 
   </div>
   <div class="frontcolumn">
-    <h2><a href="themes/?application=<?php echo"$application"; ?>">Get Themes</a></h2>
+    <h2><a href="themes/?<?php echo"".uriparams().""; ?>">Get Themes</a></h2>
     <a href="products/mozilla1.x"><img src="images/product-front-mozilla.png" alt="Mozilla" class="promo" width="60" height="60"></a>
     <p>Themes are skins for Firefox, they allow you to change the look and feel of the browser and personalize it to your tastes.</p>
 <?php
@@ -88,7 +88,7 @@ WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int`<='$curr
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numthemes = mysql_num_rows($sql_result);
 ?>
-     <a href="/themes/?application=<?php echo"$application"; ?>">Browse themes</a><BR>(<?php echo"$numthemes"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)
+     <a href="/themes/?<?php echo"".uriparams().""; ?>">Browse themes</a><BR>(<?php echo"$numthemes"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)
   </div>
   <div class="frontcolumnlast">
     <h2><a href="http://www.MozillaStore.com">Get Plugins</a></h2>
@@ -189,7 +189,7 @@ WHERE `Type` = 'E' AND `AppName` = '$application' AND `pick`='YES' ORDER BY `rID
     $bodylength = strlen($body);
 if ($bodylength>"250") {
  $body = substr($body,0,250);
- $body .= " <a href=\"/extensions/moreinfo.php?id=$id&page=staffreview\">[More...]</a>";
+ $body .= " <a href=\"/extensions/moreinfo.php?".uriparams()."&id=$id&page=staffreview\">[More...]</a>";
  
  }
 
@@ -228,7 +228,7 @@ WHERE `Type` = 'T' AND `AppName` = '$application' AND `pick`='YES' ORDER BY `rID
     $bodylength = strlen($body);
 if ($bodylength>"250") {
  $body = substr($body,0,250);
- $body .= " <a href=\"/moreinfo.php?id=$id&page=staffreview\">[More...]</a>";
+ $body .= " <a href=\"/moreinfo.php?".uriparams()."&id=$id&page=staffreview\">[More...]</a>";
  
  }
 

@@ -76,26 +76,13 @@
  </div>
  </form>
 </div>
-Firefox: <a href="/extensions/?application=firefox">Extensions</a> <a href="/themes/?application=firefox">Themes</a> <a href="/searchplugins/">Search Plugins</a> | 
-Thunderbird: <a href="/extensions/?application=thunderbird">Extensions</a> <a href="/themes/?application=thunderbird">Themes</a> | 
-Mozilla Suite: <a href="/extensions/?application=mozilla">Extensions</a> <a href="/themes/?application=mozilla">Themes</a>
+<?php
+$uriparams_skip="application";
+?>
+Firefox: <a href="/extensions/?<?php echo"".uriparams()."&"; ?>application=firefox">Extensions</a> <a href="/themes/?<?php echo"".uriparams()."&"; ?>application=firefox">Themes</a> <a href="/searchplugins/">Search Plugins</a> | 
+Thunderbird: <a href="/extensions/?<?php echo"".uriparams()."&"; ?>application=thunderbird">Extensions</a> <a href="/themes/?<?php echo"".uriparams()."&"; ?>application=thunderbird">Themes</a> | 
+Mozilla Suite: <a href="/extensions/?<?php echo"".uriparams()."&"; ?>application=mozilla">Extensions</a> <a href="/themes/?<?php echo"".uriparams()."&"; ?>application=mozilla">Themes</a>
+<?php
+unset($uriparams_skip);
+?>
 <!-- closes #header-->
-<?php return; ?>
-
-
-
-
-<DIV class="header">
-<?php
-if ($pos !== false) {
-?>
-<?php if ($_SESSION["logoncheck"] =="YES" && $headerline !="none") { ?>
-<DIV class="adminheading">
-Welcome<?php echo" $_SESSION[name]"; ?>!
-<a href="usermanager.php?function=edituser&amp;userid=<?php echo"$_SESSION[uid]"; ?>">Your Profile</a> | <A HREF="main.php">Home</A> |<A HREF="logout.php">Logout</A>
-<?php } ?>
-</DIV>
-<div id="mainContent">
-<?php
-}
-?>

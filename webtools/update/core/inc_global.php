@@ -145,13 +145,13 @@ function checkFormKey()
 // -----------------------------
 
 function uriparams() {
-    global $app_version, $application, $items_per_page, $category, $OS;
+    global $app_version, $application, $items_per_page, $category, $OS, $uriparams_skip;
     $uriparams = "";
 
-    if ($application) { $uriparams .="application=$application"; }
+    if ($application and $uriparams_skip !="application") { $uriparams .="application=$application"; }
     if ($app_version) { $uriparams .="&version=$app_version"; }
     if ($OS) { $uriparams .="&os=$OS"; }
-    if ($category) { $uriparams .="&category=$category"; }
+    if ($category and $uriparams_skip !="category") { $uriparams .="&category=$category"; }
     if ($items_per_page) { $uriparams .="&numpg=$items_per_page"; }
 
     return $uriparams;
