@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#define NS_IMPL_IDS
 #include "nsBrowserWindow.h"
 #include "nsIStreamListener.h"
 #include "nsIAppShell.h"
@@ -367,6 +368,9 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
+
+  *aInstancePtrResult = NULL;
+
   if (aIID.Equals(kIBrowserWindowIID)) {
     *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
     AddRef();
@@ -379,6 +383,11 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIWebShellContainerIID)) {
     *aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kINetSupportIID)) {
+    *aInstancePtrResult = (void*) ((nsINetSupport*)this);
     AddRef();
     return NS_OK;
   }
@@ -750,6 +759,69 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
     mStatus->SetText(url);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsBrowserWindow::Alert(const nsString &aText)
+{
+  nsAutoString str(aText);
+  printf("Browser Window Alert: %s\n", str);
+}
+
+NS_IMETHODIMP_(PRBool)
+nsBrowserWindow::Confirm(const nsString &aText)
+{
+  nsAutoString str(aText);
+  printf("Browser Window Confirm: %s (returning false)\n", str);
+
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsBrowserWindow::Prompt(const nsString &aText,
+                        const nsString &aDefault,
+                        nsString &aResult)
+{
+  nsAutoString str(aText);
+  char buf[256];
+  printf("Browser Window: %s\n", str);
+  printf("Prompt: ");
+  scanf("%s", buf);
+  aResult = buf;
+  
+  return (aResult.Length() > 0);
+}
+
+NS_IMETHODIMP_(PRBool) 
+nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
+                                       nsString &aUser,
+                                       nsString &aPassword)
+{
+  nsAutoString str(aText);
+  char buf[256];
+  printf("Browser Window: %s\n", str);
+  printf("User: ");
+  scanf("%s", buf);
+  aUser = buf;
+  printf("Password: ");
+  scanf("%s", buf);
+  aPassword = buf;
+  
+  return (aUser.Length() > 0);
+}
+
+NS_IMETHODIMP_(PRBool) 
+nsBrowserWindow::PromptPassword(const nsString &aText,
+                                nsString &aPassword)
+{
+  nsAutoString str(aText);
+  char buf[256];
+  printf("Browser Window: %s\n", str);
+  printf("Password: ");
+  scanf("%s", buf);
+  aPassword = buf;
+ 
+  return PR_TRUE;
 }
 
 //----------------------------------------
