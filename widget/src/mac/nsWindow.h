@@ -144,9 +144,7 @@ protected:
 	PRBool				ReportMoveEvent();
 	PRBool				ReportSizeEvent();
 
-
   NS_IMETHOD			CalcOffset(PRInt32 &aX,PRInt32 &aY);
-  NS_IMETHOD			CalcTotalOffset(PRInt32 &aX,PRInt32 &aY);
 
 
 protected:
