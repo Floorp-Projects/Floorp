@@ -2491,8 +2491,15 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 
 	nsAutoString	 text(searchStr), encodingStr, queryEncodingStr;
 
-	GetData(dataUni, "search", 0, "queryEncoding", encodingStr);	// decimal string values
-	MapEncoding(encodingStr, queryEncodingStr);
+	// first look for "search/queryCharset"... if that isn't specified,
+	// then fall back to looking for "search/queryEncoding" (a decimal)
+	GetData(dataUni, "search", 0, "queryCharset", queryEncodingStr);
+	if (queryEncodingStr.Length() < 1)
+	{
+		GetData(dataUni, "search", 0, "queryEncoding", encodingStr);		// decimal string values
+		MapEncoding(encodingStr, queryEncodingStr);
+	}
+
 	if (queryEncodingStr.Length() > 0)
 	{
 		// convert from escaped-UTF_8, to unicode, and then to
@@ -3496,7 +3503,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		if (NS_FAILED(rv = GetData(dataUni, "search", 0, "method", methodStr)))	return(rv);
 	}
 
-	nsAutoString	encodingStr, queryEncodingStr, resultEncodingStr;
+	nsAutoString	encodingStr, resultEncodingStr;
 
 	// first look for "interpret/charset"... if that isn't specified,
 	// then fall back to looking for "interpret/resultEncoding" (a decimal)
@@ -3519,8 +3526,15 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		}
 	}
 
-	GetData(dataUni, "search", 0, "queryEncoding", encodingStr);		// decimal string values
-	MapEncoding(encodingStr, queryEncodingStr);
+	// first look for "search/queryCharset"... if that isn't specified,
+	// then fall back to looking for "search/queryEncoding" (a decimal)
+	nsAutoString    queryEncodingStr;
+	GetData(dataUni, "search", 0, "queryCharset", queryEncodingStr);
+	if (queryEncodingStr.Length() < 1)
+	{
+		GetData(dataUni, "search", 0, "queryEncoding", encodingStr);		// decimal string values
+		MapEncoding(encodingStr, queryEncodingStr);
+	}
 	if (queryEncodingStr.Length() > 0)
 	{
 		// convert from escaped-UTF_8, to unicode, and then to
@@ -3539,7 +3553,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 					char		*charsetData = nsnull;
 					nsCAutoString	queryencodingstrC;
 					queryencodingstrC.AssignWithConversion(queryEncodingStr);
-					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC, uni, &charsetData)) && (charsetData))
+					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC, uni, &charsetData))
+					        && (charsetData))
 					{
 						textTemp.AssignWithConversion(charsetData);
 						Recycle(charsetData);
