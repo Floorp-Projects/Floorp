@@ -45,7 +45,6 @@
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
-#include "nsIClipboard.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
@@ -60,7 +59,6 @@ static NS_DEFINE_CID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kContentIteratorCID,      NS_CONTENTITERATOR_CID);
-static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 
 

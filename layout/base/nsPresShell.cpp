@@ -1734,7 +1734,8 @@ PresShell::DoCopy()
   GetDocument(getter_AddRefs(doc));
   if (doc) {
     nsString buffer;
-    
+    nsresult rv;
+
     nsIDOMSelection* sel = nsnull;
     GetSelection(SELECTION_NORMAL, &sel);
       
@@ -1743,10 +1744,8 @@ PresShell::DoCopy()
     NS_IF_RELEASE(sel);
 
     // Get the Clipboard
-    nsIClipboard* clipboard = nsnull;
-    nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                               nsIClipboard::GetIID(),
-                                               (nsISupports **)&clipboard);
+    NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
     if ( clipboard ) {
       // Create a transferable for putting data on the Clipboard
@@ -1787,7 +1786,6 @@ PresShell::DoCopy()
           clipboard->SetData(trans, nsnull);
         }
       }
-      nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
     }
   }
   return NS_OK;
