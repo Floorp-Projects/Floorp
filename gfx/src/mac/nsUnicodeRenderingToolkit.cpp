@@ -37,9 +37,11 @@
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 //#define DISABLE_TEC_FALLBACK
+//#define DISABLE_PRECOMPOSEHANGUL_FALLBACK
 //#define DISABLE_ATSUI_FALLBACK
 //#define DISABLE_TRANSLITERATE_FALLBACK
 //#define DISABLE_UPLUS_FALLBACK
+
 
 #define QUESTION_FALLBACKSIZE 9
 #define UPLUS_FALLBACKSIZE 9
@@ -370,6 +372,95 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackDrawChar(
   return PR_FALSE;
 }
 //------------------------------------------------------------------------
+#define CAN_DO_PRECOMPOSE_HANGUL(u, f) ((0xAC00<=(u)) && ((u)<=0xD7FF) && ((f) != BAD_FONT_NUM))
+#define SBase 0xAC00
+#define LCount 19
+#define VCount 21
+#define TCount 28
+#define NCount (VCount * TCount)
+static void UnicodePrecomposedHangulTo4EUCKR(PRUnichar in, char *out)
+{
+        static PRUint8 lMap[LCount] = {
+          0xa1, 0xa2, 0xa4, 0xa7, 0xa8, 0xa9, 0xb1, 0xb2, 0xb3, 0xb5,
+          0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
+        };
+
+        static PRUint8 tMap[TCount] = {
+          0xd4, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa9, 0xaa, 
+          0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb4, 0xb5, 
+          0xb6, 0xb7, 0xb8, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
+        };
+        PRUint16 SIndex, LIndex, VIndex, TIndex;
+        /* the following line are copy from Unicode 2.0 page 3-13 */
+        /* item 1 of Hangul Syllabel Decomposition */
+        SIndex =  in - SBase;
+
+        /* the following lines are copy from Unicode 2.0 page 3-14 */
+        /* item 2 of Hangul Syllabel Decomposition w/ modification */
+        LIndex = SIndex / NCount;
+        VIndex = (SIndex % NCount) / TCount;
+        TIndex = SIndex % TCount;
+		// somehow Apple's Korean font show glaph on A4D4 :( so we use '[' + L + V + T + ']' intead of 
+		// Filler + L + V + T to display
+		// output '['
+		*out++ = '['; 
+		// output L
+		*out++ = 0xA4;
+		*out++ = lMap[LIndex] ;
+		// output V
+		*out++ = 0xA4;
+		*out++  = (VIndex + 0xbf);
+		// output T
+		*out++ = 0xA4;
+		*out++ = tMap[TIndex] ;
+		// output ']'
+		*out++ = ']'; 
+}
+    
+//------------------------------------------------------------------------
+PRBool nsUnicodeRenderingToolkit :: PrecomposeHangulFallbackGetWidth(
+	const PRUnichar *aCharPt, 
+	short& oWidth,
+	short koreanFont,
+	short origFont)
+{
+  if(CAN_DO_PRECOMPOSE_HANGUL(*aCharPt, koreanFont)) {
+	  char euckr[8];
+	  if(koreanFont != origFont)
+	  	::TextFont(koreanFont);		  
+	  UnicodePrecomposedHangulTo4EUCKR(*aCharPt, euckr);
+	  GetScriptTextWidth(euckr, 8, oWidth); 
+	  if(koreanFont != origFont)
+	  	::TextFont(origFont);		  
+	  return PR_TRUE;
+  } else {
+	  return PR_FALSE;
+  }
+}
+//------------------------------------------------------------------------
+
+PRBool nsUnicodeRenderingToolkit :: PrecomposeHangulFallbackDrawChar(
+	const PRUnichar *aCharPt, 
+	PRInt32 x, 
+	PRInt32 y, 
+	short& oWidth,
+	short koreanFont,
+	short origFont)
+{
+  if(CAN_DO_PRECOMPOSE_HANGUL(*aCharPt, koreanFont)) {
+	  char euckr[8];
+	  if(koreanFont != origFont)
+	  	::TextFont(koreanFont);		  
+	  UnicodePrecomposedHangulTo4EUCKR(*aCharPt, euckr);
+	  DrawScriptText(euckr, 8, x, y, oWidth); 
+	  if(koreanFont != origFont)
+	  	::TextFont(origFont);		  
+	  return PR_TRUE;
+  } else {
+	  return PR_FALSE;
+  }
+}
+//------------------------------------------------------------------------
 
 PRBool nsUnicodeRenderingToolkit :: UPlusFallbackGetWidth(
 	const PRUnichar *aCharPt, 
@@ -521,6 +612,10 @@ nsresult nsUnicodeRenderingToolkit :: GetTextSegmentWidth(
 									  		mGS->mColor );
 		  }
 #endif
+#ifndef DISABLE_PRECOMPOSEHANGUL_FALLBACK
+		  if(! fallbackDone)
+		  	fallbackDone = PrecomposeHangulFallbackGetWidth(aString, thisWidth,scriptFallbackFonts[smKorean], fontNum);
+#endif
 #ifndef DISABLE_TRANSLITERATE_FALLBACK  
 		  // Fallback to Transliteration
 		  if(! fallbackDone)
@@ -647,6 +742,10 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 									  		((NS_FONT_STYLE_ITALIC ==  font->style) || (NS_FONT_STYLE_OBLIQUE ==  font->style)),
 									  		mGS->mColor );
 		  }
+#endif
+#ifndef DISABLE_PRECOMPOSEHANGUL_FALLBACK
+		  if(! fallbackDone)
+		  	fallbackDone = PrecomposeHangulFallbackDrawChar(aString, x, y, thisWidth,scriptFallbackFonts[smKorean], fontNum);
 #endif
 #ifndef DISABLE_TRANSLITERATE_FALLBACK  
 		  // Fallback to Transliteration
