@@ -40,89 +40,6 @@ sub bug_form_pl_sillyness {
     $zz = @::legal_severity;
 }
 
-my %knownattachments;
-
-# This routine quoteUrls contains inspirations from the HTML::FromText CPAN
-# module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
-# all that is really recognizable from the original is bits of the regular
-# expressions.
-
-sub quoteUrls {
-    my $text = shift;		# Take a copy; don't modify in-place.
-    return $text unless $text;
-
-    my $base = Param('urlbase');
-
-    my $protocol = join '|',
-    qw(afs cid ftp gopher http https mid news nntp prospero telnet wais);
-
-    my %options = ( metachars => 1, @_ );
-
-    my $count = 0;
-
-    # Now, quote any "#" characters so they won't confuse stuff later
-    $text =~ s/#/%#/g;
-
-    # Next, find anything that looks like a URL or an email address and
-    # pull them out the the text, replacing them with a "##<digits>##
-    # marker, and writing them into an array.  All this confusion is
-    # necessary so that we don't match on something we've already replaced,
-    # which can happen if you do multiple s///g operations.
-
-    my @things;
-    while ($text =~ s%((mailto:)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b|
-                    (\b((?:$protocol):[^ \t\n<>"]+[\w/])))%"##$count##"%exo) {
-        my $item = $&;
-
-        $item = value_quote($item);
-
-        if ($item !~ m/^$protocol:/o && $item !~ /^mailto:/) {
-            # We must have grabbed this one because it looks like an email
-            # address.
-            $item = qq{<A HREF="mailto:$item">$item</A>};
-        } else {
-            $item = qq{<A HREF="$item">$item</A>};
-        }
-
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $2;
-        $item = value_quote($item); # Not really necessary, since we know
-                                # there's no special chars in it.
-        $item = qq{<A HREF="show_bug.cgi?id=$num">$item</A>};
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
-        my $item = $&;
-        my $num = $1;
-        $item =~ s@\d+@<A HREF="show_bug.cgi?id=$num">$num</A>@;
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
-        my $item = $&;
-        my $num = $1;
-        if (exists $knownattachments{$num}) {
-            $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
-        }
-        $things[$count++] = $item;
-    }
-
-    $text = value_quote($text);
-    $text =~ s/\&#010;/\n/g;
-
-    # Stuff everything back from the array.
-    for (my $i=0 ; $i<$count ; $i++) {
-        $text =~ s/##$i##/$things[$i]/e;
-    }
-
-    # And undo the quoting of "#" characters.
-    $text =~ s/%#/#/g;
-
-    return $text;
-}
-
 my $loginok = quietly_check_login();
 
 my $id = $::FORM{'id'};
@@ -208,7 +125,7 @@ print qq{<FORM NAME="changeform" METHOD="POST" ACTION="process_bug.cgi">\n};
 #      print qq{<INPUT TYPE="HIDDEN" NAME="orig-$i" VALUE="$q">\n};
 #  }
 
-$bug{'long_desc'} = GetLongDescription($id);
+$bug{'long_desc'} = GetLongDescriptionAsHTML($id);
 my $longdesclength = length($bug{'long_desc'});
 
 GetVersionTable();
@@ -370,7 +287,6 @@ while (MoreSQLData()) {
     my $link = "showattachment.cgi?attach_id=$attachid";
     $desc = value_quote($desc);
     print qq{<td><a href="$link">$date</a></td><td colspan=4>$desc</td></tr><tr><td></td>};
-    $knownattachments{$attachid} = 1;
 }
 print "<td colspan=6><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
 
@@ -550,11 +466,9 @@ print "
 <table><tr><td align=left><B>Description:</B></td>
 <td align=right width=100%>Opened: $bug{'creation_ts'}</td></tr></table>
 <HR>
-<PRE>
 ";
-print quoteUrls($bug{'long_desc'}, email=>1, urls=>1);
+print $bug{'long_desc'};
 print "
-</PRE>
 <HR>\n";
 
 # To add back option of editing the long description, insert after the above

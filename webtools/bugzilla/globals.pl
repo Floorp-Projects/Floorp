@@ -562,7 +562,88 @@ sub DBNameToIdAndCheck {
     exit(0);
 }
 
-sub GetLongDescription {
+# This routine quoteUrls contains inspirations from the HTML::FromText CPAN
+# module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
+# all that is really recognizable from the original is bits of the regular
+# expressions.
+
+sub quoteUrls {
+    my ($knownattachments, $text) = (@_);
+    return $text unless $text;
+
+    my $base = Param('urlbase');
+
+    my $protocol = join '|',
+    qw(afs cid ftp gopher http https mid news nntp prospero telnet wais);
+
+    my %options = ( metachars => 1, @_ );
+
+    my $count = 0;
+
+    # Now, quote any "#" characters so they won't confuse stuff later
+    $text =~ s/#/%#/g;
+
+    # Next, find anything that looks like a URL or an email address and
+    # pull them out the the text, replacing them with a "##<digits>##
+    # marker, and writing them into an array.  All this confusion is
+    # necessary so that we don't match on something we've already replaced,
+    # which can happen if you do multiple s///g operations.
+
+    my @things;
+    while ($text =~ s%((mailto:)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b|
+                    (\b((?:$protocol):[^ \t\n<>"]+[\w/])))%"##$count##"%exo) {
+        my $item = $&;
+
+        $item = value_quote($item);
+
+        if ($item !~ m/^$protocol:/o && $item !~ /^mailto:/) {
+            # We must have grabbed this one because it looks like an email
+            # address.
+            $item = qq{<A HREF="mailto:$item">$item</A>};
+        } else {
+            $item = qq{<A HREF="$item">$item</A>};
+        }
+
+        $things[$count++] = $item;
+    }
+    while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
+        my $item = $&;
+        my $num = $2;
+        $item = value_quote($item); # Not really necessary, since we know
+                                    # there's no special chars in it.
+        $item = qq{<A HREF="show_bug.cgi?id=$num">$item</A>};
+        $things[$count++] = $item;
+    }
+    while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
+        my $item = $&;
+        my $num = $1;
+        $item =~ s@\d+@<A HREF="show_bug.cgi?id=$num">$num</A>@;
+        $things[$count++] = $item;
+    }
+    while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
+        my $item = $&;
+        my $num = $1;
+        if ($knownattachments->{$num}) {
+            $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+        }
+        $things[$count++] = $item;
+    }
+
+    $text = value_quote($text);
+    $text =~ s/\&#010;/\n/g;
+
+    # Stuff everything back from the array.
+    for (my $i=0 ; $i<$count ; $i++) {
+        $text =~ s/##$i##/$things[$i]/e;
+    }
+
+    # And undo the quoting of "#" characters.
+    $text =~ s/%#/#/g;
+
+    return $text;
+}
+
+sub GetLongDescriptionAsText {
     my ($id, $start, $end) = (@_);
     my $result = "";
     my $count = 0;
@@ -597,6 +678,49 @@ sub GetLongDescription {
     return $result;
 }
 
+
+sub GetLongDescriptionAsHTML {
+    my ($id, $start, $end) = (@_);
+    my $result = "";
+    my $count = 0;
+    my %knownattachments;
+    SendSQL("SELECT attach_id FROM attachments WHERE bug_id = $id");
+    while (MoreSQLData()) {
+        $knownattachments{FetchOneColumn()} = 1;
+    }
+
+    my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
+                   "       longdescs.thetext " .
+                   "FROM longdescs, profiles " .
+                   "WHERE profiles.userid = longdescs.who " .
+                   "      AND longdescs.bug_id = $id ");
+
+    if ($start && $start =~ /[1-9]/) {
+        # If the start is all zeros, then don't do this (because we want to
+        # not emit a leading "Addition Comments" line in that case.)
+        $query .= "AND longdescs.bug_when > '$start'";
+        $count = 1;
+    }
+    if ($end) {
+        $query .= "AND longdescs.bug_when <= '$end'";
+    }
+
+    $query .= "ORDER BY longdescs.bug_when";
+    SendSQL($query);
+    while (MoreSQLData()) {
+        my ($who, $when, $text) = (FetchSQLData());
+        if ($count) {
+            $result .= "<BR><BR><I>------- Additional Comments From " .
+                qq{<A HREF="$who">$who</A> } .
+                    time2str("%Y-%m-%d %H:%M", str2time($when)) .
+                        " -------</I><BR>\n";
+        }
+        $result .= "<PRE>" . quoteUrls(\%knownattachments, $text) . "</PRE>\n";
+        $count++;
+    }
+
+    return $result;
+}
 
 sub ShowCcList {
     my ($num) = (@_);

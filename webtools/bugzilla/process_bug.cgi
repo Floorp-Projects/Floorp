@@ -609,14 +609,14 @@ The changes made were:
 <p>
 ";
         DumpBugActivity($id, $delta_ts);
-        my $longdesc = GetLongDescription($id);
+        my $longdesc = GetLongDescriptionAsHTML($id);
         my $longchanged = 0;
 
         if (length($longdesc) > $::FORM{'longdesclength'}) {
             $longchanged = 1;
-            print "<P>Added text to the long description:<blockquote><pre>";
-            print html_quote(substr($longdesc, $::FORM{'longdesclength'}));
-            print "</pre></blockquote>\n";
+            print "<P>Added text to the long description:<blockquote>";
+            print substr($longdesc, $::FORM{'longdesclength'});
+            print "</blockquote>\n";
         }
         SendSQL("unlock tables");
         print "You have the following choices: <ul>\n";

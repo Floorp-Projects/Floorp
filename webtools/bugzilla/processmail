@@ -199,7 +199,7 @@ sub GetBugText {
         $status_whiteboard = "StatusWhiteboard: $::bug{'status_whiteboard'}\n";
     }
 
-    $::bug{'long_desc'} = GetLongDescription($id);
+    $::bug{'long_desc'} = GetLongDescriptionAsText($id);
 
     my @cclist;
     @cclist = split(/,/, ShowCcList($id));
@@ -455,7 +455,7 @@ sub NewProcessOneBug {
     }
 
 
-    my $newcomments = GetLongDescription($id, $start, $end);
+    my $newcomments = GetLongDescriptionAsText($id, $start, $end);
 
     my $count = 0;
     for my $person ($values{'assigned_to'}, $values{'reporter'},

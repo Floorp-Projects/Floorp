@@ -116,7 +116,7 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
                 html_quote($status_whiteboard) . "\n";
         }
         print "<TR><TD><B>Description:</B>\n</TABLE>\n";
-        print "<PRE>" . html_quote(GetLongDescription($bug)) . "</PRE>\n";
+        print GetLongDescriptionAsHTML($bug);
         print "<HR>\n";
     }
 }
