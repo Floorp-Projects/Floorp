@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -38,6 +38,7 @@
 #include "prthread.h"
 #include "xp_list.h"
 #include "xp_mem.h"
+#include "prefapi.h"
 
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -200,6 +201,104 @@ wallet_DumpStopwatch() {
   fprintf(stdout, "stopwatch = %ld\n", stopwatch/100);  
 }
 #endif /* DEBUG */
+
+/********************************************************/
+/* The following data and procedures are for preference */
+/********************************************************/
+
+static const char *pref_captureForms =
+    "wallet.captureForms";
+PRIVATE Bool wallet_captureForms = FALSE;
+
+PRIVATE void
+wallet_SetFormsCapturingPref(Bool x)
+{
+    /* do nothing if new value of pref is same as current value */
+    if (x == wallet_captureForms) {
+        return;
+    }
+
+    /* change the pref */
+    wallet_captureForms = x;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+wallet_FormsCapturingPrefChanged(const char * newpref, void * data)
+{
+    Bool x;
+    PREF_GetBoolPref(pref_captureForms, &x);
+    wallet_SetFormsCapturingPref(x);
+    return PREF_NOERROR;
+}
+
+void
+wallet_RegisterCapturePrefCallbacks(void)
+{
+    Bool x = TRUE; /* initialize to default value in case PREF_GetBoolPref fails */
+    static Bool first_time = TRUE;
+
+    if(first_time)
+    {
+        first_time = FALSE;
+        PREF_GetBoolPref(pref_captureForms, &x);
+        wallet_SetFormsCapturingPref(x);
+        PREF_RegisterCallback(pref_captureForms, wallet_FormsCapturingPrefChanged, NULL);
+    }
+}
+
+PRIVATE Bool
+wallet_GetFormsCapturingPref(void)
+{
+    wallet_RegisterCapturePrefCallbacks();
+    return wallet_captureForms;
+}
+
+static const char *pref_useDialogs =
+    "wallet.useDialogs";
+PRIVATE Bool wallet_useDialogs = FALSE;
+
+PRIVATE void
+wallet_SetUsingDialogsPref(Bool x)
+{
+    /* do nothing if new value of pref is same as current value */
+    if (x == wallet_useDialogs) {
+        return;
+    }
+
+    /* change the pref */
+    wallet_useDialogs = x;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+wallet_UsingDialogsPrefChanged(const char * newpref, void * data)
+{
+    Bool x;
+    PREF_GetBoolPref(pref_useDialogs, &x);
+    wallet_SetUsingDialogsPref(x);
+    return PREF_NOERROR;
+}
+
+void
+wallet_RegisterUsingDialogsPrefCallbacks(void)
+{
+    Bool x = FALSE; /* initialize to default value in case PREF_GetBoolPref fails */
+    static Bool first_time = TRUE;
+
+    if(first_time)
+    {
+        first_time = FALSE;
+        PREF_GetBoolPref(pref_useDialogs, &x);
+        wallet_SetUsingDialogsPref(x);
+        PREF_RegisterCallback(pref_useDialogs, wallet_UsingDialogsPrefChanged, NULL);
+    }
+}
+
+PRIVATE Bool
+wallet_GetUsingDialogsPref(void)
+{
+    wallet_RegisterUsingDialogsPrefCallbacks();
+    return wallet_useDialogs;
+}
 
 /**********************************************************************************/
 /* The following routines are for locking the data base.  They are not being used */
@@ -410,14 +509,11 @@ wallet_ReadFromSublist(nsAutoString& value, XP_List*& resume)
  * strip carriage returns and line feeds from end of line
  */
 PRInt32
-wallet_GetLine(FILE * fp, nsAutoString*& line) {
+wallet_GetLine(FILE * fp, nsAutoString*& line, PRBool obscure) {
   char linebuf[2000];
   char* cp = fgets(linebuf, sizeof(linebuf), fp);
   if (nsnull == cp) {
     return -1;
-  }
-  if (linebuf[0] == '#') {
-    return wallet_GetLine(fp, line);
   }
 
   // strip crlf's from the line
@@ -433,15 +529,60 @@ wallet_GetLine(FILE * fp, nsAutoString*& line) {
     }  
   }
 
+  // simple XOR obfuscation
+  if (obscure) {
+    char* p = linebuf;
+    while (*p) {
+      *(p++) ^= 0xff;
+    }
+  }
+
   line = new nsAutoString(linebuf);   
   return 0;
+}
+
+/*
+ * Write a line to a file
+ * return -1 if an error occurs
+ */
+PRInt32
+wallet_PutLine(FILE * aFile, const nsString& aLine, PRBool obscure)
+{
+  char linebuf[2000];
+  char* cp = linebuf;
+
+  // allocate a buffer from the heap if the line is too long.
+  if (aLine.Length() >= sizeof(linebuf)) {
+    cp = new char[aLine.Length() + 1];
+    if (! cp) {
+      return -1;
+    }
+  }
+
+  aLine.ToCString(linebuf, aLine.Length() + 1);
+
+  // simple XOR obfuscation
+  if (obscure) {
+    char* p = cp;
+    while (*p) {
+      *(p++) ^= 0xff;
+    }
+  }
+
+  PRInt32 cb = fprintf(aFile, "%s\n", linebuf);
+
+  if (cp != linebuf) {
+    delete[] cp;
+  }
+
+  return cb;
 }
 
 /*
  * write contents of designated list into designated file
  */
 void
-wallet_WriteToFile(char* filename, XP_List* list) {
+wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
   XP_List * list_ptr;
   wallet_MapElement * ptr;
 
@@ -459,23 +600,17 @@ wallet_WriteToFile(char* filename, XP_List* list) {
   /* traverse the list */
   list_ptr = list;
   while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
-    char * temp;
-    temp = ptr->item1->ToNewCString();
-    fprintf(fp, "%s\n", temp);
-    delete temp;
+    wallet_PutLine(fp, *ptr->item1, obscure);
     if (*ptr->item2 != "") {
-      temp = ptr->item2->ToNewCString();
-      fprintf(fp, "%s\n", temp);
+      wallet_PutLine(fp, *ptr->item2, obscure);
     } else {
       XP_List * list_ptr1;
       wallet_Sublist * ptr1;
       list_ptr1 = ptr->itemList;
       while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
-        temp = ptr->item1->ToNewCString();
-        fprintf(fp, "%s\n", temp);
+        wallet_PutLine(fp, *ptr->item1, obscure);
       }
     }
-    delete temp;
     fprintf(fp, "\n");
  }
 
@@ -487,7 +622,8 @@ wallet_WriteToFile(char* filename, XP_List* list) {
  * Read contents of designated file into designated list
  */
 void
-wallet_ReadFromFile(char* filename, XP_List*& list, PlacementType placement = DUP_AFTER) {
+wallet_ReadFromFile
+    (char* filename, XP_List*& list, PRBool obscure, PlacementType placement = DUP_AFTER) {
   FILE* fp = fopen(filename, "r");
 
   if (nsnull==fp) {
@@ -495,14 +631,14 @@ wallet_ReadFromFile(char* filename, XP_List*& list, PlacementType placement = DU
   }
   for (;;) {
     nsAutoString * aItem1;
-    if (wallet_GetLine(fp, aItem1) == -1) {
+    if (wallet_GetLine(fp, aItem1, obscure) == -1) {
       /* end of file reached */
       fclose(fp);
       return;
     }
 
     nsAutoString * aItem2;
-    if (wallet_GetLine(fp, aItem2) == -1) {
+    if (wallet_GetLine(fp, aItem2, obscure) == -1) {
       /* unexpected end of file reached */
       delete aItem1;
       fclose(fp);
@@ -510,7 +646,7 @@ wallet_ReadFromFile(char* filename, XP_List*& list, PlacementType placement = DU
     }
 
     nsAutoString * aItem3;
-    if (wallet_GetLine(fp, aItem3) == -1) {
+    if (wallet_GetLine(fp, aItem3, obscure) == -1) {
       /* end of file reached */
       XP_List* dummy = NULL;
       wallet_WriteToList(*aItem1, *aItem2, dummy, list, placement);
@@ -538,7 +674,7 @@ wallet_ReadFromFile(char* filename, XP_List*& list, PlacementType placement = DU
       nsAutoString * dummy2 = new nsAutoString("");
       for (;;) {
         /* get next item for sublist */
-        if (wallet_GetLine(fp, aItem3) == -1) {
+        if (wallet_GetLine(fp, aItem3, obscure) == -1) {
           /* end of file reached */
           wallet_WriteToList(*aItem1, *dummy2, itemList, list, placement);
           fclose(fp);
@@ -583,7 +719,7 @@ wallet_ReadFromURLFieldToSchemaFile
   for (;;) {
 
     nsAutoString * aItem;
-    if (wallet_GetLine(fp, aItem) == -1) {
+    if (wallet_GetLine(fp, aItem, FALSE) == -1) {
       /* end of file reached */
       fclose(fp);
       return;
@@ -595,7 +731,7 @@ wallet_ReadFromURLFieldToSchemaFile
 
     for (;;) {
       nsAutoString * aItem1;
-      if (wallet_GetLine(fp, aItem1) == -1) {
+      if (wallet_GetLine(fp, aItem1, FALSE) == -1) {
         /* end of file reached */
         fclose(fp);
         return;
@@ -607,7 +743,7 @@ wallet_ReadFromURLFieldToSchemaFile
       }
 
       nsAutoString * aItem2;
-      if (wallet_GetLine(fp, aItem2) == -1) {
+      if (wallet_GetLine(fp, aItem2, FALSE) == -1) {
         /* unexpected end of file reached */
         delete aItem1;
         fclose(fp);
@@ -618,7 +754,7 @@ wallet_ReadFromURLFieldToSchemaFile
       wallet_WriteToList(*aItem1, *aItem2, dummy, itemList, placement);
 
       nsAutoString * aItem3;
-      if (wallet_GetLine(fp, aItem3) == -1) {
+      if (wallet_GetLine(fp, aItem3, FALSE) == -1) {
         /* end of file reached */
         fclose(fp);
         return;
@@ -736,15 +872,15 @@ PRInt32 FieldToValue(
       return 0;
     } else {
       /* value not found, see if concatenation rule exists */
-      XP_List * itemList;
+      XP_List * itemList2;
 
       XP_List * SchemaConcat_list = wallet_SchemaConcat_list;
       nsAutoString dummy2;
-      if (wallet_ReadFromList(schema, dummy2, itemList, SchemaConcat_list) != -1) {
+      if (wallet_ReadFromList(schema, dummy2, itemList2, SchemaConcat_list) != -1) {
         /* concatenation rules exist, generate value as a concatenation */
         XP_List * list_ptr1;
         wallet_Sublist * ptr1;
-        list_ptr1 = itemList;
+        list_ptr1 = itemList2;
         value = nsAutoString("");
         nsAutoString value2;
         while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
@@ -905,9 +1041,9 @@ wallet_Initialize() {
     wallet_FetchFieldSchemaFromNetCenter();
     wallet_FetchURLFieldSchemaFromNetCenter();
     wallet_FetchSchemaConcatFromNetCenter();
-    wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list);
-    wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list);
-    wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list);
+    wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list, FALSE);
+    wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
+    wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, FALSE);
     wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
 
 #if DEBUG
@@ -1394,7 +1530,7 @@ wallet_PostEdit() {
     for (int i=0; ((*cookie != '\0') && (*cookie != ';')); i++) {
       separator = strchr(cookie, BREAK);
       *separator = '\0';
-      fprintf(fp, "%s\n", cookie);
+      wallet_PutLine(fp, cookie,TRUE);
       cookie = separator+1;
       *separator = BREAK;
     }
@@ -1402,7 +1538,7 @@ wallet_PostEdit() {
     /* close the file and read it back into the SchemaToValue list */
     fclose(fp);
     wallet_Clear(&wallet_SchemaToValue_list);
-    wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list);
+    wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
     delete cookies;
   }
 }
@@ -1605,6 +1741,9 @@ wallet_ClearStopwatch();
 
 /* this routine is temporary -- will be replaced with real dialog box when available */
 PRBool FE_Confirm(char * szMessage) {
+  if (!wallet_GetUsingDialogsPref()) {
+    return JS_TRUE;
+  }
   fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
   char c;
   for (;;) {
@@ -1621,7 +1760,7 @@ PRBool FE_Confirm(char * szMessage) {
 PUBLIC void
 WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
   *result =
-    (strcmp(URLName, WALLET_EDITOR_URL)) &&
+    (strcmp(URLName, WALLET_EDITOR_URL)) && wallet_GetFormsCapturingPref() &&
     (count>=3) && FE_Confirm("Do you want to put the values on this form into your wallet?");
 }
 
@@ -1663,7 +1802,7 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
       nsAutoString * aSchema = new nsAutoString(schema);
       dummy = 0;
       wallet_WriteToList(*aSchema, *aValue, dummy, wallet_SchemaToValue_list);
-      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list);
+      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
     }
   } else {
 
@@ -1678,7 +1817,7 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
       nsAutoString * aValue = new nsAutoString(value);
       dummy = 0;
       wallet_WriteToList(*aField, *aValue, dummy, wallet_SchemaToValue_list);
-      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list);
+      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
     }
   }
 }
