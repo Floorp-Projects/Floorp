@@ -704,6 +704,9 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
 
+  if (!OnOpenContainer(aNode, nameSpaceID, tagAtom))
+    return NS_OK;
+  
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
   mNodeInfoManager->GetNodeInfo(tagAtom, nameSpacePrefix, nameSpaceID,

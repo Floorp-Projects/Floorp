@@ -726,7 +726,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
                                  nsIStreamListener **aDocListener,
-                                 PRBool aReset)
+                                 PRBool aReset,
+                                 nsIContentSink* aSink)
 {
     nsresult rv;
 

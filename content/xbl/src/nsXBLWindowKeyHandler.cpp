@@ -53,6 +53,7 @@
 #include "nsIXBLDocumentInfo.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"
+#include "nsXBLAtoms.h"
 
 PRUint32 nsXBLWindowKeyHandler::gRefCnt = 0;
 nsIAtom* nsXBLWindowKeyHandler::kKeyDownAtom = nsnull;
@@ -85,6 +86,32 @@ nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
 
 NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler, nsIDOMKeyListener)
 
+static void
+BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult)
+{
+  nsCOMPtr<nsIXBLPrototypeHandler> firstHandler;
+  nsCOMPtr<nsIXBLPrototypeHandler> currHandler;
+  
+  PRInt32 handlerCount;
+  aContent->ChildCount(handlerCount);
+  for (PRInt32 j = 0; j < handlerCount; j++) {
+    nsCOMPtr<nsIContent> handler;
+    aContent->ChildAt(j, *getter_AddRefs(handler));
+    
+    nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
+    NS_NewXULKeyHandler(handler, getter_AddRefs(newHandler));
+    
+    if (newHandler) {
+      if (currHandler)
+        currHandler->SetNextHandler(newHandler);
+      else firstHandler = newHandler;
+      currHandler = newHandler;
+    }
+  }
+
+  *aResult = firstHandler;
+  NS_IF_ADDREF(*aResult);
+}
 
 //
 // EnsureHandlers
@@ -95,18 +122,17 @@ NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler, nsIDOMKeyListener)
 nsresult
 nsXBLWindowKeyHandler::EnsureHandlers()
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  
   if (mElement) {
+    // We are actually a XUL <keyset>.
     if (mHandler)
       return NS_OK;
     nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
-    rv = nsXBLService::BuildHandlerChain(content, getter_AddRefs(mHandler));
+    BuildHandlerChain(content, getter_AddRefs(mHandler));
   }
-  else
+  else // We are an XBL file of handlers.
     nsXBLWindowHandler::EnsureHandlers();
   
-  return rv;
+  return NS_OK;
 }
 
 

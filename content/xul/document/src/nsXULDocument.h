@@ -149,7 +149,8 @@ public:
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
                                  nsIStreamListener **aDocListener,
-                                 PRBool aReset);
+                                 PRBool aReset = PR_TRUE,
+                                 nsIContentSink* aSink = nsnull);
 
     NS_IMETHOD StopDocumentLoad();
 

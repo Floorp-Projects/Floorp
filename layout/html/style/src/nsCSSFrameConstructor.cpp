@@ -13095,6 +13095,9 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
   // situation: an inline frame that will now contain block
   // frames. This is a no-no and the frame construction logic knows
   // how to fix this.
+  if (!aBlockContent)
+    return PR_FALSE;
+
   const nsStyleDisplay* parentDisplay;
   aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&) parentDisplay);
   if (NS_STYLE_DISPLAY_INLINE == parentDisplay->mDisplay) {

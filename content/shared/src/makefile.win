@@ -57,6 +57,7 @@ CPPSRCS = \
   nsStyleStruct.cpp \
   nsTextFragment.cpp \
   nsXULAtoms.cpp \
+  nsXBLAtoms.cpp \
   nsStyleCoord.cpp \
   $(NULL)
 
@@ -74,6 +75,7 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsStyleStruct.obj \
   .\$(OBJDIR)\nsTextFragment.obj \
   .\$(OBJDIR)\nsXULAtoms.obj \
+  .\$(OBJDIR)\nsXBLAtoms.obj \
   .\$(OBJDIR)\nsStyleCoord.obj \
   $(NULL)
 

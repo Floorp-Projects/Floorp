@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
@@ -36,53 +36,40 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsXBLAtoms_h___
+#define nsXBLAtoms_h___
 
-#ifndef nsXBLEventHandler_h__
-#define nsXBLEventHandler_h__
+#include "prtypes.h"
+#include "nsIAtom.h"
 
-#include "nsIDOMEventReceiver.h"
+class nsINameSpaceManager;
 
-class nsIXBLBinding;
-class nsIDOMEvent;
-class nsIContent;
-class nsIDOMUIEvent;
-class nsIDOMKeyEvent;
-class nsIDOMMouseEvent;
-class nsIAtom;
-class nsIController;
-class nsIXBLPrototypeHandler;
-
-// XXX This should be broken up into subclasses for each listener IID type, so we
-// can cut down on the bloat of the handlers.
-class nsXBLEventHandler : public nsISupports
-{
+/**
+ * This class wraps up the creation and destruction of the standard
+ * set of XBL atoms used during normal XBL handling. This object
+ * is created when the first XBL content object is created, and
+ * destroyed when the last such content object is destroyed.
+ */
+class nsXBLAtoms {
 public:
-  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
-  virtual ~nsXBLEventHandler();
-  
-  NS_DECL_ISUPPORTS
 
-public:
-  void SetNextHandler(nsXBLEventHandler* aHandler) {
-    mNextHandler = aHandler;
-  }
+  static void AddRefAtoms();
+  static void ReleaseAtoms();
 
-  void RemoveEventHandlers();
+  // XBL namespace ID, good for the life of the nsXBLAtoms object
+  static PRInt32  nameSpaceID;
 
-  void MarkForDeath() {
-    if (mNextHandler) mNextHandler->MarkForDeath(); mProtoHandler = nsnull; mEventReceiver = nsnull;
-  }
+  /* Declare all atoms
 
-  static nsresult GetTextData(nsIContent *aParent, nsAWritableString& aResult);
+     The atom names and values are stored in nsCSSAtomList.h and
+     are brought to you by the magic of C preprocessing
 
-protected:
-  nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
-  nsCOMPtr<nsIXBLPrototypeHandler> mProtoHandler;
+     Add new atoms to nsCSSAtomList and all support logic will be auto-generated
+   */
+#define XBL_ATOM(_name, _value) static nsIAtom* _name;
+#include "nsXBLAtomList.h"
+#undef XBL_ATOM
 
-  nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
 };
 
-extern nsresult
-NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsXBLEventHandler** aResult);
-#endif
+#endif /* nsXBLAtoms_h___ */

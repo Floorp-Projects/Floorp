@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
@@ -37,52 +37,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXBLEventHandler_h__
-#define nsXBLEventHandler_h__
+#include "nsString.h"
+#include "nsXBLAtoms.h"
+#include "nsContentCID.h"
 
-#include "nsIDOMEventReceiver.h"
+// define storage for all atoms
+#define XBL_ATOM(_name, _value) nsIAtom* nsXBLAtoms::_name;
+#include "nsXBLAtomList.h"
+#undef XBL_ATOM
 
-class nsIXBLBinding;
-class nsIDOMEvent;
-class nsIContent;
-class nsIDOMUIEvent;
-class nsIDOMKeyEvent;
-class nsIDOMMouseEvent;
-class nsIAtom;
-class nsIController;
-class nsIXBLPrototypeHandler;
 
-// XXX This should be broken up into subclasses for each listener IID type, so we
-// can cut down on the bloat of the handlers.
-class nsXBLEventHandler : public nsISupports
-{
-public:
-  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
-  virtual ~nsXBLEventHandler();
-  
-  NS_DECL_ISUPPORTS
+static nsrefcnt gRefCnt = 0;
 
-public:
-  void SetNextHandler(nsXBLEventHandler* aHandler) {
-    mNextHandler = aHandler;
+void nsXBLAtoms::AddRefAtoms() {
+
+  if (gRefCnt == 0) {
+    // now register the atoms
+#define XBL_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
+#include "nsXBLAtomList.h"
+#undef XBL_ATOM
   }
+  ++gRefCnt;
+}
 
-  void RemoveEventHandlers();
+void nsXBLAtoms::ReleaseAtoms() {
 
-  void MarkForDeath() {
-    if (mNextHandler) mNextHandler->MarkForDeath(); mProtoHandler = nsnull; mEventReceiver = nsnull;
+  NS_PRECONDITION(gRefCnt != 0, "bad release of XBL atoms");
+  if (--gRefCnt == 0) {
+#define XBL_ATOM(_name, _value) NS_RELEASE(_name);
+#include "nsXBLAtomList.h"
+#undef XBL_ATOM
   }
-
-  static nsresult GetTextData(nsIContent *aParent, nsAWritableString& aResult);
-
-protected:
-  nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
-  nsCOMPtr<nsIXBLPrototypeHandler> mProtoHandler;
-
-  nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
-};
-
-extern nsresult
-NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsXBLEventHandler** aResult);
-#endif
+}

@@ -98,7 +98,8 @@ public:
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
                                nsIStreamListener **aDocListener,
-                               PRBool aReset = PR_TRUE);
+                               PRBool aReset = PR_TRUE,
+                               nsIContentSink* aSink = nsnull);
 
   nsresult CreateSyntheticDocument();
 
@@ -249,7 +250,8 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
                                    nsILoadGroup* aLoadGroup,
                                    nsISupports* aContainer,
                                    nsIStreamListener **aDocListener,
-                                   PRBool aReset)
+                                   PRBool aReset,
+                                   nsIContentSink* aSink)
 {
   NS_ASSERTION(aDocListener, "null aDocListener");
   NS_ENSURE_ARG_POINTER(aContainer);
@@ -262,7 +264,7 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
   }
 
   rv = nsDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
-                                     aContainer, aDocListener, aReset);
+                                     aContainer, aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) {
     return rv;
   }

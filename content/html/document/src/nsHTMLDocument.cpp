@@ -401,7 +401,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsILoadGroup* aLoadGroup,
                                   nsISupports* aContainer,
                                   nsIStreamListener **aDocListener,
-                                  PRBool aReset)
+                                  PRBool aReset,
+                                  nsIContentSink* aSink)
 {
   PRBool needsParser=PR_TRUE;
   if (aCommand)
@@ -821,9 +822,15 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     mParser->SetCommand(aCommand);
     // create the content sink
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aURL, webShell,aChannel);
-    if (NS_FAILED(rv)) { return rv; }
-    NS_ASSERTION(sink, "null sink with successful result from factory method");
+
+    if (aSink)
+      sink = do_QueryInterface(aSink);
+    else {
+      rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aURL, webShell,aChannel);
+      if (NS_FAILED(rv)) { return rv; }
+      NS_ASSERTION(sink, "null sink with successful result from factory method");
+    }
+
     mParser->SetContentSink(sink); 
     // parser the content of the URL
     mParser->Parse(aURL, nsnull, PR_FALSE, (void *)this);

@@ -42,6 +42,7 @@
 
 #include "nsIXBLPrototypeHandler.h"
 #include "nsIAtom.h"
+#include "nsString.h"
 
 class nsIXBLBinding;
 class nsIDOMEvent;
@@ -49,12 +50,28 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
-class nsString;
+
+#define NS_HANDLER_TYPE_XBL_JS      0
+#define NS_HANDLER_TYPE_XBL_COMMAND 1
+#define NS_HANDLER_TYPE_XUL         2
+
+#define NS_PHASE_BUBBLING           0
+#define NS_PHASE_TARGET             1
+#define NS_PHASE_CAPTURING          2
 
 class nsXBLPrototypeHandler : public nsIXBLPrototypeHandler
 {
 public:
-  nsXBLPrototypeHandler(nsIContent* aHandlerElement);
+  // This constructor is used by XBL handlers (both the JS and command shorthand variety)
+  nsXBLPrototypeHandler(nsAReadableString* aEvent, nsAReadableString* aPhase,
+                        nsAReadableString* aAction, nsAReadableString* aCommand,
+                        nsAReadableString* aKeyCode, nsAReadableString* aCharCode,
+                        nsAReadableString* aModifiers, nsAReadableString* aButton,
+                        nsAReadableString* aClickCount); 
+
+  // This constructor is used only by XUL key handlers (e.g., <key>)
+  nsXBLPrototypeHandler(nsIContent* aKeyElement);
+
   virtual ~nsXBLPrototypeHandler();
   
   NS_DECL_ISUPPORTS
@@ -63,6 +80,10 @@ public:
   NS_IMETHOD KeyEventMatched(nsIAtom* aEventType, nsIDOMKeyEvent* aEvent, PRBool* aResult);
 
   NS_IMETHOD GetHandlerElement(nsIContent** aResult);
+
+  NS_IMETHOD SetHandlerText(const nsAReadableString& aText);
+
+  NS_IMETHOD GetPhase(PRUint8* aResult) { *aResult = mPhase; return NS_OK; };
 
   NS_IMETHOD GetNextHandler(nsIXBLPrototypeHandler** aResult);
   NS_IMETHOD SetNextHandler(nsIXBLPrototypeHandler* aHandler);
@@ -80,25 +101,17 @@ public:
 
   static PRUint32 gRefCnt;
   
-  static nsIAtom* kBindingAttachedAtom;
-  static nsIAtom* kBindingDetachedAtom;
-  static nsIAtom* kKeyAtom;
-  static nsIAtom* kKeyCodeAtom;
-  static nsIAtom* kCharCodeAtom;
-  static nsIAtom* kActionAtom;
-  static nsIAtom* kCommandAtom;
-  static nsIAtom* kOnCommandAtom;
-  static nsIAtom* kFocusCommandAtom;
-  static nsIAtom* kClickCountAtom;
-  static nsIAtom* kButtonAtom;
-  static nsIAtom* kModifiersAtom;
-  static nsIAtom* kTypeAtom;
-
 protected:
   NS_IMETHOD GetController(nsIDOMEventReceiver* aReceiver, nsIController** aResult);
   
-  inline PRInt32 GetMatchingKeyCode(const nsString& aKeyName);
-  void ConstructMask();
+  inline PRInt32 GetMatchingKeyCode(const nsAReadableString& aKeyName);
+  void ConstructPrototype(nsIContent* aKeyElement, 
+                          nsAReadableString* aEvent=nsnull, nsAReadableString* aPhase=nsnull,
+                          nsAReadableString* aAction=nsnull, nsAReadableString* aCommand=nsnull,
+                          nsAReadableString* aKeyCode=nsnull, nsAReadableString* aCharCode=nsnull,
+                          nsAReadableString* aModifiers=nsnull, nsAReadableString* aButton=nsnull,
+                          nsAReadableString* aClickCount=nsnull);
+
   void GetEventType(nsAWritableString& type);
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
 
@@ -117,23 +130,42 @@ protected:
   static const PRInt32 cMeta;
 
 protected:
-  nsIContent* mHandlerElement; // This ref is weak.
-
-  PRInt32 mKeyMask;          // Which modifier keys this event handler expects to have down
+  union {
+    nsIContent* mHandlerElement;  // For XUL <key> element handlers.
+    PRUnichar* mHandlerText;      // For XBL handlers (we don't build an element for the <handler>,
+                                  // and instead we cache the JS text or command name that we should
+                                  // use.
+  };
+  
+  // The following four values make up 32 bits.
+  PRUint8 mPhase;            // The phase (capturing, bubbling)
+  PRUint8 mKeyMask;          // Which modifier keys this event handler expects to have down
                              // in order to be matched.
+  PRUint8 mType;             // The type of the handler.  The handler is either a XUL key
+                             // handler, an XBL "command" event, or a normal XBL event with
+                             // accompanying JavaScript.
+  PRUint8 mMisc;             // Miscellaneous extra information.  For key events,
+                             // stores whether or not we're a key code or char code.
+                             // For mouse events, stores the clickCount.
 
+  // The primary filter information for mouse/key events.
   PRInt32 mDetail;           // For key events, contains a charcode or keycode. For
                              // mouse events, stores the button info.
   
-  PRInt32 mDetail2;          // Miscellaneous extra information.  For key events,
-                             // stores whether or not we're a key code or char code.
-                             // For mouse events, stores the clickCount.
+  
 
   nsCOMPtr<nsIXBLPrototypeHandler> mNextHandler; // Prototype handlers are chained. We own the next handler in the chain.
   nsCOMPtr<nsIAtom> mEventName; // The type of the event, e.g., "keypress"
 };
 
 extern nsresult
-NS_NewXBLPrototypeHandler(nsIContent* aHandlerElement, nsIXBLPrototypeHandler** aResult);
+NS_NewXBLPrototypeHandler(nsAReadableString* aEvent, nsAReadableString* aPhase,
+                          nsAReadableString* aAction, nsAReadableString* aCommand,
+                          nsAReadableString* aKeyCode, nsAReadableString* aCharCode,
+                          nsAReadableString* aModifiers, nsAReadableString* aButton,
+                          nsAReadableString* aClickCount, nsIXBLPrototypeHandler** aResult);
+
+extern nsresult
+NS_NewXULKeyHandler(nsIContent* aHandlerElement, nsIXBLPrototypeHandler** aResult);
 
 #endif

@@ -370,12 +370,13 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
                                  nsIStreamListener **aDocListener,
-                                 PRBool aReset)
+                                 PRBool aReset,
+                                 nsIContentSink* aSink)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer, 
-                                              aDocListener, aReset);
+                                              aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
@@ -424,7 +425,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                           (void **)&mParser);
   if (NS_FAILED(rv))  return rv;
 
-  nsIXMLContentSink* sink;
+  nsCOMPtr<nsIXMLContentSink> sink;
     
   nsCOMPtr<nsIDocShell> docShell;
   if(aContainer)
@@ -586,11 +587,18 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     } //got content view
 
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-    rv = NS_NewXMLContentSink(&sink, this, aUrl, webShell);
+    if (aSink)
+      sink = do_QueryInterface(aSink);
+    else
+      rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, webShell);
   }
-  else 
-    rv = NS_NewXMLContentSink(&sink, this, aUrl, nsnull);
- 
+  else {
+    if (aSink)
+      sink = do_QueryInterface(aSink);
+    else
+      rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, nsnull);
+  }
+
   if (NS_OK == rv) {      
     // Set the parser as the stream listener for the document loader...
     rv = mParser->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)aDocListener);
@@ -602,7 +610,6 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
       mParser->SetContentSink(sink);
       mParser->Parse(aUrl, nsnull, PR_FALSE, (void *)this);
     }
-    NS_RELEASE(sink); 
   }
 
   return rv;

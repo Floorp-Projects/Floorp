@@ -24,30 +24,34 @@ DEPTH=..\..\..
 LIBRARY_NAME=contentxbl_s 
 MODULE=content
 REQUIRES	= xpcom \
-		  string \
-		  js \
-		  dom \
-		  widget \
-		  caps \
-		  htmlparser \
-		  necko \
-		  xpconnect \
-		  pref \
-		  docshell \
-		  chrome \
-		  lwbrk \
-		  gfx2 \
-		  imglib2 \
-		  layout \
-		  gfx \
-		  content_xul \
-		  $(NULL)
+      string \
+      js \
+      dom \
+      widget \
+      view \
+      caps \
+      htmlparser \
+      necko \
+      xpconnect \
+      pref \
+      docshell \
+      chrome \
+      lwbrk \
+      gfx2 \
+      imglib2 \
+      layout \
+      gfx \
+      content_xul \
+      unicharutil \
+      $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
   nsXBLBinding.cpp \
   nsXBLPrototypeBinding.cpp \
+  nsXBLDocumentInfo.cpp \
+  nsXBLContentSink.cpp \
   nsXBLService.cpp \
   nsXBLEventHandler.cpp \
   nsXBLWindowHandler.cpp \
@@ -73,6 +77,8 @@ CPPSRCS=					\
 CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLBinding.obj \
   .\$(OBJDIR)\nsXBLPrototypeBinding.obj \
+  .\$(OBJDIR)\nsXBLDocumentInfo.obj \
+  .\$(OBJDIR)\nsXBLContentSink.obj \
   .\$(OBJDIR)\nsXBLEventHandler.obj \
   .\$(OBJDIR)\nsXBLWindowHandler.obj \
   .\$(OBJDIR)\nsXBLWindowKeyHandler.obj \
@@ -99,8 +105,9 @@ EXPORTS =					\
 	$(NULL)
 
 LINCS=-I..\..\html\style\src -I..\..\html\base\src \
-   -I..\..\html\document\src \
+  -I..\..\html\document\src \
   -I..\..\xml\document\src \
+  -I..\..\xsl\document\src \
   -I..\..\base\src \
   $(NULL)
 

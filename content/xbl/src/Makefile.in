@@ -29,29 +29,33 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 LIBRARY_NAME	= gkconxbl_s
 REQUIRES	= xpcom \
-		  string \
-		  js \
-		  dom \
-		  gfx \
-		  layout \
-		  widget \
-		  caps \
-		  htmlparser \
-		  necko \
-		  xpconnect \
-		  pref \
-		  docshell \
-		  chrome \
-		  lwbrk \
-		  xul \
-		  xuldoc \
-		  gfx2 \
-		  imglib2 \
-		  $(NULL)
+      string \
+      js \
+      dom \
+      gfx \
+      layout \
+      widget \
+      view \
+      caps \
+      htmlparser \
+      necko \
+      xpconnect \
+      pref \
+      docshell \
+      chrome \
+      lwbrk \
+      xul \
+      xuldoc \
+      gfx2 \
+      imglib2 \
+      unicharutil \
+      $(NULL)
 
 CPPSRCS		= \
     nsXBLBinding.cpp \
     nsXBLPrototypeBinding.cpp \
+    nsXBLDocumentInfo.cpp \
+    nsXBLContentSink.cpp \
     nsXBLPrototypeProperty.cpp \
     nsXBLEventHandler.cpp \
     nsXBLWindowHandler.cpp \
@@ -68,10 +72,10 @@ CPPSRCS		= \
     nsXBLXULHandler.cpp \
     nsXBLFormHandler.cpp \
     nsXBLScrollHandler.cpp \
-	nsXBLContextMenuHandler.cpp \
-		nsXBLService.cpp \
-		nsBindingManager.cpp \
-		nsXBLInsertionPoint.cpp \
+    nsXBLContextMenuHandler.cpp \
+    nsXBLService.cpp \
+    nsBindingManager.cpp \
+    nsXBLInsertionPoint.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -89,5 +93,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../html/base/src \
     -I$(srcdir)/../../html/document/src \
     -I$(srcdir)/../../xml/document/src \
+    -I$(srcdir)/../../xsl/document/src \
 		$(NULL)
 

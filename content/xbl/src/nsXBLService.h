@@ -118,7 +118,6 @@ public:
   // This method walks a binding document and removes any text nodes
   // that contain only whitespace.
   static nsresult StripWhitespaceNodes(nsIContent* aContent);
-  static nsresult BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult);
   static nsresult BuildPropertyChain(nsIXBLPrototypeBinding * aPrototypeBinding, nsIContent * aContent, nsIXBLPrototypeProperty ** aResult);
 
 // MEMBER VARIABLES
@@ -127,8 +126,7 @@ public:
   static nsIXULPrototypeCache* gXULCache;
     
   static nsINameSpaceManager* gNameSpaceManager; // Used to register the XBL namespace
-  static PRInt32  kNameSpaceID_XBL;          // Convenient cached XBL namespace.
-
+  
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
 
   static PRBool gDisableChromeCache;
@@ -140,8 +138,6 @@ public:
   static PRUint32 gClassLRUListQuota;        // Quota on class LRU list.
 
   // XBL Atoms
-  static nsIAtom* kDisplayAtom;
-  static nsIAtom* kExtendsAtom;
   static nsIAtom* kEventAtom;
   static nsIAtom* kScrollbarAtom;
   static nsIAtom* kInputAtom;

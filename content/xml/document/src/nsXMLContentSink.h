@@ -184,6 +184,8 @@ protected:
 
   void ScrollToRef();
 
+  virtual PRBool OnOpenContainer(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTagName) { return PR_TRUE; };
+
   static nsINameSpaceManager* gNameSpaceManager;
   static PRUint32 gRefCnt;
 

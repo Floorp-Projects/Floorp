@@ -55,6 +55,7 @@ class nsIElementFactory;
 #define kNameSpaceID_XLink    4
 #define kNameSpaceID_HTML2    5 // This is not a real namespace
 #define kNameSpaceID_XSLT     6
+#define kNameSpaceID_XBL      7
 #define kNameSpaceID_XHTML    kNameSpaceID_HTML
 
 // 'html' is by definition bound to the namespace name "urn:w3-org-ns:HTML" XXX ???
