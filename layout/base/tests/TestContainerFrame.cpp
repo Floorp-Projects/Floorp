@@ -266,11 +266,6 @@ TestChildEnumeration()
     printf("ChildEnumeration: wrong first child\n");
     return PR_FALSE;
   }
-  f->LastChild(child);
-  if (child != c3) {
-    printf("ChildEnumeration: wrong last child\n");
-    return PR_FALSE;
-  }
 
   // Test IndexOf()
   PRInt32 index;

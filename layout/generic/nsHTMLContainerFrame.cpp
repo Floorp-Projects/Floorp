@@ -206,8 +206,9 @@ nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
     // If the last frame for the flow is the frame we are deleting
     // then the flow will become complete.
     if (!flow->mLastContentIsComplete) {
-      nsIFrame* lastFrame;
-      flow->LastChild(lastFrame);
+      nsIFrame* firstChild;
+      flow->FirstChild(firstChild);
+      nsIFrame* lastFrame = LastFrame(firstChild);
       if (lastFrame == deadFrame) {
         flow->mLastContentIsComplete = PR_TRUE;
       }

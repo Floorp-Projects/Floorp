@@ -136,13 +136,7 @@ public:
   // Child frame enumeration.
   // ChildAt() retruns null if the index is not in the range 0 .. ChildCount() - 1.
   // IndexOf() returns -1 if the frame is not in the child list.
-  NS_IMETHOD  ChildCount(PRInt32& aChildCount) const;
-  NS_IMETHOD  ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const;
-  NS_IMETHOD  IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const;
   NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
-  NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const;
-  NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
-  NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const;
 
   // Access functions for starting and end content offsets. These reflect the
   // range of content mapped by the frame.
@@ -184,6 +178,23 @@ public:
                                        PRInt32 aFirstContentOffset,
                                        PRInt32 aLastContentOffset,
                                        PRBool aLastContentIsComplete);
+
+  /**
+   * Return the number of children in the sibling list, starting at aChild.
+   * Returns zero if aChild is nsnull.
+   */
+  static PRInt32 LengthOf(nsIFrame* aChild);
+
+  /**
+   * Return the last frame in the sibling list.
+   * Returns nsnullif aChild is nsnull.
+   */
+  static nsIFrame* LastFrame(nsIFrame* aChild);
+
+  /**
+   * Returns the frame at the specified index relative to aFrame
+   */
+  static nsIFrame* FrameAt(nsIFrame* aFrame, PRInt32 aIndex);
 
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,
@@ -286,12 +297,6 @@ protected:
   PRBool ChildIsPseudoFrame(const nsIFrame* aChild) const;
 
   virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
-
-  /**
-   * Return the number of children in the sibling list, starting at aChild.
-   * Returns zero if aChild is nsnull.
-   */
-  static PRInt32 LengthOf(nsIFrame* aChild);
 
 #ifdef NS_DEBUG
   /**

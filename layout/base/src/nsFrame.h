@@ -126,13 +126,7 @@ public:
   NS_IMETHOD  SetRect(const nsRect& aRect);
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
-  NS_IMETHOD  ChildCount(PRInt32& aChildCount) const;
-  NS_IMETHOD  ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const;
-  NS_IMETHOD  IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const;
   NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
-  NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const;
-  NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
-  NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const;
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect);

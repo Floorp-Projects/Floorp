@@ -121,7 +121,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
   
         NS_ASSERTION(!prevPage->mLastContentIsComplete, "bad continuing page");
         nsIFrame* prevLastChild;
-        prevPage->LastChild(prevLastChild);
+        prevPage->LastFrame(prevLastChild);
   
         // Create a continuing child of the previous page's last child
         nsIStyleContext* kidSC;

@@ -82,8 +82,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
 nsresult
 nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
-  nsIFrame* lastChild;
-  LastChild(lastChild);
+  nsIFrame* lastChild = LastFrame(mFirstChild);
 
   // Append the new frames to the child list
   if (nsnull == lastChild) {
@@ -193,7 +192,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
     // set numCols to the number of columns effected by the COLS attribute
     PRInt32 numCols=0;
     if (NS_STYLE_TABLE_COLS_ALL == tableStyle->mCols)
-      ChildCount(numCols);
+      numCols = LengthOf(mFirstChild);
     else 
       numCols = tableStyle->mCols;
 
@@ -201,7 +200,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
     PRInt32 colIndex=0;
     nsIFrame *colFrame=nsnull;
     nsIStyleContextPtr colStyleContext;
-    ChildAt(aColIndex, colFrame);
+    colFrame = FrameAt(mFirstChild, aColIndex);
     if (nsnull!=colFrame)
     {
       nsStylePosition * colPosition=nsnull;
@@ -212,11 +211,11 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
       colStyleContext->RecalcAutomaticData(aPresContext);
 
       // if there are more columns, there width is set to "minimum"
-      PRInt32 numChildFrames;
-      ChildCount(numChildFrames);
+      // XXX FIX USE OF LengthOf() and ChildAt()...
+      PRInt32 numChildFrames = LengthOf(mFirstChild);
       for (; aColIndex<numChildFrames-1; colIndex++)
       {
-        ChildAt(colIndex, colFrame);
+        colFrame = FrameAt(mFirstChild, colIndex);
         if (nsnull==colFrame)
           break;
         nsStylePosition * colPosition=nsnull;
@@ -240,12 +239,10 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
 int nsTableColGroupFrame::GetColumnCount ()
 {
   mColCount=0;
-  int count;
-  ChildCount (count);
+  int count = LengthOf(mFirstChild);
   if (0 < count)
   {
-    nsIFrame * child = nsnull;
-    ChildAt(0, child);
+    nsIFrame * child = mFirstChild;
     NS_ASSERTION(nsnull!=child, "bad child");
     while (nsnull!=child)
     {
@@ -322,7 +319,7 @@ NS_METHOD nsTableColGroupFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {

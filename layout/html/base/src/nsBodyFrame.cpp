@@ -553,9 +553,8 @@ nsBodyFrame::ComputeDesiredSize(const nsRect&    aDesiredRect,
 // Add the frame to the end of the child list
 void nsBodyFrame::AddFrame(nsIFrame* aFrame)
 {
-  nsIFrame* lastChild;
+  nsIFrame* lastChild = LastFrame(mFirstChild);
 
-  LastChild(lastChild);
   lastChild->SetNextSibling(aFrame);
   aFrame->SetNextSibling(nsnull);
   mChildCount++;
@@ -1014,9 +1013,8 @@ NS_METHOD nsBodyFrame::VerifyTree() const
   // Check our child count
   PRInt32 len = LengthOf(mFirstChild);
   NS_ASSERTION(len == mChildCount, "bad child count");
-  nsIFrame* lastChild;
+  nsIFrame* lastChild = LastFrame(mFirstChild);
    
-  LastChild(lastChild);
   if (len != 0) {
     NS_ASSERTION(nsnull != lastChild, "bad last child");
   }

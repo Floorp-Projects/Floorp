@@ -126,13 +126,10 @@ NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext&      aPresContext,
                                        const nsReflowState& aReflowState, 
                                        nsReflowStatus&      aStatus)
 {
-  PRInt32 numChildren;
-  ChildCount(numChildren); 
-  
   nsInputFile* content = (nsInputFile*)mContent;
   nsIFrame* childFrame;
 
-  if (0 == numChildren) {
+  if (nsnull == mFirstChild) {
     // XXX This code should move to Init(), someday when the frame construction
     // changes are all done and Init() is always getting called...
     nsInputText* textField = content->GetTextField();

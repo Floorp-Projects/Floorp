@@ -359,13 +359,7 @@ public:
   /**
    * Child frame enumeration
    */
-  NS_IMETHOD  ChildCount(PRInt32& aChildCount) const = 0;
-  NS_IMETHOD  ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const = 0;
-  NS_IMETHOD  IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const = 0;
   NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const = 0;
-  NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const = 0;
-  NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const = 0;
-  NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const = 0;
 
   /**
    * Painting

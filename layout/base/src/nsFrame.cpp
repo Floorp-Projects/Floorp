@@ -494,52 +494,11 @@ NS_METHOD nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 
 // Child frame enumeration
 
-NS_METHOD nsFrame::ChildCount(PRInt32& aChildCount) const
-{
-  aChildCount = 0;
-  return NS_OK;
-}
-
-NS_METHOD nsFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
-{
-  NS_ERROR("not a container");
-  aFrame = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
-{
-  NS_ERROR("not a container");
-  aIndex = -1;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_METHOD nsFrame::FirstChild(nsIFrame*& aFirstChild) const
 {
   aFirstChild = nsnull;
   return NS_OK;
 }
-
-NS_METHOD nsFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
-{
-  NS_ERROR("not a container");
-  aNextChild = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
-{
-  NS_ERROR("not a container");
-  aPrevChild = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsFrame::LastChild(nsIFrame*& aLastChild) const
-{
-  aLastChild = nsnull;
-  return NS_OK;
-}
-
 
 PRBool nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
 {

@@ -140,92 +140,9 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-NS_METHOD nsContainerFrame::ChildCount(PRInt32& aChildCount) const
-{
-  aChildCount = mChildCount;
-  return NS_OK;
-}
-
-NS_METHOD nsContainerFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
-{
-  // Check that the index is in range
-  if ((aIndex < 0) || (aIndex >= mChildCount)) {
-    aFrame = nsnull;
-    return NS_OK;
-  }
-
-  aFrame = mFirstChild;
-  while ((aIndex-- > 0) && (aFrame != nsnull)) {
-    aFrame->GetNextSibling(aFrame);
-  }
-  return NS_OK;
-}
-
-NS_METHOD nsContainerFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
-{
-  aIndex = -1;  // initialize out parameter
-
-  for (nsIFrame* f = mFirstChild; f != nsnull; f->GetNextSibling(f)) {
-    aIndex++;
-
-    if (f == aChild)
-      break;
-  }
-
-  return NS_OK;
-}
-
 NS_METHOD nsContainerFrame::FirstChild(nsIFrame*& aFirstChild) const
 {
   aFirstChild = mFirstChild;
-  return NS_OK;
-}
-
-NS_METHOD nsContainerFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
-{
-  NS_PRECONDITION(aChild != nsnull, "null pointer");
-  aChild->GetNextSibling(aNextChild);
-  return NS_OK;
-}
-
-NS_METHOD nsContainerFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
-{
-  NS_PRECONDITION(aChild != nsnull, "null pointer");
-
-  if (mFirstChild == aChild) {
-    aPrevChild = nsnull;
-  } else {
-    aPrevChild = mFirstChild;
-
-    while ((aPrevChild != nsnull)) {
-      nsIFrame* nextChild;
-         
-      aPrevChild->GetNextSibling(nextChild);
-      if (nextChild == aChild) {
-        break;
-      }
-
-      aPrevChild = nextChild;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_METHOD nsContainerFrame::LastChild(nsIFrame*& aLastChild) const
-{
-  aLastChild = mFirstChild;
-
-  if (nsnull != aLastChild) {
-    nsIFrame* nextChild;
-
-    aLastChild->GetNextSibling(nextChild);
-    while (nextChild != nsnull) {
-      aLastChild = nextChild;
-      aLastChild->GetNextSibling(nextChild);
-    }
-  }
-
   return NS_OK;
 }
 
@@ -545,8 +462,8 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
   PRInt32   childCount;
   nsIFrame* firstChild;
 
-  nextInFlow->ChildCount(childCount);
   nextInFlow->FirstChild(firstChild);
+  childCount = LengthOf(firstChild);
 
   if ((0 != childCount) || (nsnull != firstChild)) {
     nsIFrame* top = nextInFlow;
@@ -633,8 +550,7 @@ nsContainerFrame::PropagateContentOffsets(nsIFrame* aChild,
   if (mFirstChild == aChild) {
     mFirstContentOffset = aFirstContentOffset;
   }
-  nsIFrame* lastChild;
-  LastChild(lastChild);
+  nsIFrame* lastChild = LastFrame(mFirstChild);
   if (lastChild == aChild) {
     mLastContentOffset = aLastContentOffset;
     mLastContentIsComplete = aLastContentIsComplete;
@@ -831,9 +747,7 @@ void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
     // We have no children so aChild becomes the first child
     mFirstChild = aChild;
   } else {
-    nsIFrame* lastChild;
-
-    LastChild(lastChild);
+    nsIFrame* lastChild = LastFrame(mFirstChild);
     lastChild->SetNextSibling(aChild);
   }
 
@@ -987,7 +901,7 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
       }
       fputs("<\n", out);
     }
-    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
     if (PR_TRUE==outputMe)
@@ -1032,9 +946,7 @@ NS_METHOD nsContainerFrame::VerifyTree() const
   PRInt32 len = LengthOf(mFirstChild);
   VERIFY_ASSERT(len == mChildCount, "bad child count");
 
-  nsIFrame* lastChild;
-
-  LastChild(lastChild);
+  nsIFrame* lastChild = LastFrame(mFirstChild);
   if (len != 0) {
     VERIFY_ASSERT(nsnull != lastChild, "bad last child");
   }
@@ -1123,6 +1035,26 @@ PRInt32 nsContainerFrame::LengthOf(nsIFrame* aFrame)
   return result;
 }
 
+nsIFrame* nsContainerFrame::LastFrame(nsIFrame* aFrame)
+{
+  nsIFrame* lastChild = nsnull;
+
+  while (nsnull != aFrame) {
+    lastChild = aFrame;
+    aFrame->GetNextSibling(aFrame);
+  }
+
+  return lastChild;
+}
+
+nsIFrame* nsContainerFrame::FrameAt(nsIFrame* aFrame, PRInt32 aIndex)
+{
+  while ((aIndex-- > 0) && (aFrame != nsnull)) {
+    aFrame->GetNextSibling(aFrame);
+  }
+  return aFrame;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 
 #ifdef NS_DEBUG
@@ -1164,9 +1096,7 @@ PRBool nsContainerFrame::IsLastChild(const nsIFrame* aChild) const
   }
 
   // Check that aChild is in our sibling list
-  nsIFrame* lastChild;
-
-  LastChild(lastChild);
+  nsIFrame* lastChild = LastFrame(mFirstChild);
   if (lastChild != aChild) {
     return PR_FALSE;
   }
@@ -1212,9 +1142,7 @@ void nsContainerFrame::CheckContentOffsets()
   }
 
   // Verify that our last content offset is correct
-  nsIFrame* lastChild;
-   
-  LastChild(lastChild);
+  nsIFrame* lastChild = LastFrame(mFirstChild);
   if (ChildIsPseudoFrame(lastChild)) {
     nsContainerFrame* pseudoFrame = (nsContainerFrame*)lastChild;
 
@@ -1328,9 +1256,7 @@ nsContainerFrame::SafeToCheckLastContentOffset(nsContainerFrame* aContainer)
     return PR_FALSE;
   }
 
-  nsIFrame* lastChild;
-   
-  aContainer->LastChild(lastChild);
+  nsIFrame* lastChild = LastFrame(aContainer->mFirstChild);
   if (aContainer->ChildIsPseudoFrame(lastChild)) {
     // If the containers last child is a pseudo-frame then the
     // containers last content offset is determined by the child. Ask
@@ -1355,9 +1281,7 @@ void nsContainerFrame::VerifyLastIsComplete() const
     return;
   }
 
-  nsIFrame* lastKid;
-
-  LastChild(lastKid);
+  nsIFrame* lastKid = LastFrame(mFirstChild);
   if (ChildIsPseudoFrame(lastKid)) {
     // When my last child is a pseudo-frame it means that our
     // mLastContentIsComplete is a copy of it's.

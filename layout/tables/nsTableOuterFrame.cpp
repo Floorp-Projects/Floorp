@@ -222,7 +222,7 @@ nsresult nsTableOuterFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPr
 
   } else {
     // Get the last frame
-    LastChild(lastKidFrame);
+    lastKidFrame = LastFrame(mFirstChild);
   }
 
   // Update our running y-offset to reflect the bottommost child
@@ -769,8 +769,8 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, n
   PRInt32   childCount;
   nsIFrame* firstChild;
 
-  nextInFlow->ChildCount(childCount);
   nextInFlow->FirstChild(firstChild);
+  childCount = LengthOf(firstChild);
 
   NS_ASSERTION(childCount == 0, "deleting !empty next-in-flow");
 
@@ -927,7 +927,7 @@ NS_METHOD nsTableOuterFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFi
         fprintf(out, " [state=%08x]\n", mState);
       }
     }
-    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
+    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
   } else {
