@@ -53,27 +53,30 @@ NS_IMETHODIMP nsMyObserver::Notify(
     const char* aCharset, nsDetectionConfident aConf)
 {
     nsresult rv = NS_OK;
+
+    if(mWeakRefParser) {
+      nsAutoString existingCharset;
+      PRInt32 existingSource;
+      mWeakRefParser->GetDocumentCharset(existingCharset, existingSource);  
+      if (existingSource >= kCharsetFromAutoDetection) 
+        return NS_OK;
+    }
+     
     if(!mCharset.EqualsWithConversion(aCharset)) {
       if(mNotifyByReload) {
         rv = mWebShellSvc->SetRendering( PR_FALSE);
         rv = mWebShellSvc->StopDocumentLoad();
         rv = mWebShellSvc->ReloadDocument(aCharset, kCharsetFromAutoDetection);
       } else {
-        nsAutoString existingCharset;
-        PRInt32 existingSource;
         nsAutoString newcharset; newcharset.AssignWithConversion(aCharset);
-        if(mWeakRefParser) {
-          mWeakRefParser->GetDocumentCharset(existingCharset, existingSource);  
-          if (existingSource < kCharsetFromAutoDetection) {
-            mWeakRefParser->SetDocumentCharset(newcharset, kCharsetFromAutoDetection);
-            nsCOMPtr<nsIContentSink> contentSink = mWeakRefParser->GetContentSink();
-            if (contentSink)
-              contentSink->SetDocumentCharset(newcharset);
-
-            if(mWeakRefDocument) 
-              mWeakRefDocument->SetDocumentCharacterSet(newcharset);
-          }
+        if (mWeakRefParser) {
+          mWeakRefParser->SetDocumentCharset(newcharset, kCharsetFromAutoDetection);
+          nsCOMPtr<nsIContentSink> contentSink = mWeakRefParser->GetContentSink();
+          if (contentSink)
+            contentSink->SetDocumentCharset(newcharset);
         }
+        if(mWeakRefDocument) 
+          mWeakRefDocument->SetDocumentCharacterSet(newcharset);
       }
     }
     return NS_OK;
