@@ -668,21 +668,12 @@ function EditorSharedStartup()
 function EditorResetFontAndColorAttributes()
 {
   try {  
+    var editor = GetCurrentEditor();
+    editor.rebuildDocumentFromSource("");
+    // Because the selection is now collapsed, the following line
+    // clears the typing state to discontinue all inline styles
+    editor.removeAllInlineProperties();
     document.getElementById("cmd_fontFace").setAttribute("state", "");
-    EditorRemoveTextProperty("font", "color");
-    EditorRemoveTextProperty("font", "bgcolor");
-    EditorRemoveTextProperty("font", "size");
-    EditorRemoveTextProperty("small", "");
-    EditorRemoveTextProperty("big", "");
-    var bodyelement = GetBodyElement();
-    if (bodyelement)
-    {
-      var editor = GetCurrentEditor();
-      // remove all the existing attributes on the body element
-      // by creating a dummy body element and cloning the attributes
-      // see bug #249882 for more details
-      editor.cloneAttributes(bodyelement, editor.document.createElement("body"));
-    }
     gColorObj.LastTextColor = "";
     gColorObj.LastBackgroundColor = "";
     gColorObj.LastHighlightColor = "";
