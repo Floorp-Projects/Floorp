@@ -1804,7 +1804,7 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       nsAutoString absURL;
 #ifdef NECKO    // XXX we need to get passed in the nsILoadGroup here!
 //      nsILoadGroup* group = mDocument->GetDocumentLoadGroup();
-      rv = NS_NewURI(&url, absURL/*, group*/);
+      rv = NS_NewURI(&url, src, mDocumentBaseURL);
 #else
       nsIURI* docURL = mDocument->GetDocumentURL();
       nsILoadGroup* group = nsnull;
