@@ -24,11 +24,13 @@
 #ifndef nsFilePicker_h__
 #define nsFilePicker_h__
 
+#include "nsISimpleEnumerator.h"
+#include "nsISupportsArray.h"
+
 #include "nsICharsetConverterManager.h"
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsdefs.h"
-#include "nsIFileChannel.h"
 
 /**
  * Native Windows FileSelector wrapper
@@ -53,6 +55,7 @@ public:
   NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
+  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *_retval); 
   NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter) ;
 
@@ -80,7 +83,7 @@ protected:
   nsIUnicodeDecoder*     mUnicodeDecoder;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16                mSelectedType;
-
+  nsCOMPtr <nsISupportsArray> mFiles;
   static char            mLastUsedDirectory[];
 
   char    pszFDFileExists[256];
