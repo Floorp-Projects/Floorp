@@ -41,8 +41,13 @@ public:
 
   NS_IMETHOD AddBodyPart(nsIMIMEBodyPart& aBodyPart);
 
+  NS_IMETHOD GetBodyType(nsMIMEBodyType& aBodyType) ;
+
 protected:
   ~nsMIMEMessage();
+
+private:
+  nsMIMEBodyType mBodyType;
 
 };
 
