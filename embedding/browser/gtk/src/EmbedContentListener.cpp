@@ -36,8 +36,9 @@ EmbedContentListener::~EmbedContentListener()
 {
 }
 
-NS_IMPL_ISUPPORTS1(EmbedContentListener,
-		   nsIURIContentListener)
+NS_IMPL_ISUPPORTS2(EmbedContentListener,
+                   nsIURIContentListener,
+                   nsISupportsWeakReference)
 
 nsresult
 EmbedContentListener::Init(EmbedPrivate *aOwner)

@@ -23,10 +23,12 @@
 #define __EmbedContentListener_h
 
 #include <nsIURIContentListener.h>
+#include <nsWeakReference.h>
 
 class EmbedPrivate;
 
-class EmbedContentListener : public nsIURIContentListener
+class EmbedContentListener : public nsIURIContentListener,
+                             public nsSupportsWeakReference
 {
  public:
 
