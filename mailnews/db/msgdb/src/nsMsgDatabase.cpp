@@ -1900,10 +1900,19 @@ NS_IMETHODIMP nsMsgDatabase::SetStringProperty(nsMsgKey aKey, const char *aPrope
   if (NS_FAILED(rv) || !msgHdr) 
     return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
 
+  nsXPIDLCString oldValue;
+  rv = msgHdr->GetStringProperty(aProperty, getter_Copies(oldValue));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // if no change to this string property, bail out
+  if (!strcmp(aValue, oldValue.get()))
+    return NS_OK;
+
   rv = msgHdr->SetStringProperty(aProperty, aValue);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  if (strcmp(aProperty, "junkscore") == 0)
+  // if this is the junk score property notify
+  if (!strcmp(aProperty, "junkscore"))
     NotifyJunkScoreChanged(nsnull);
 
   PRUint32 flags;
