@@ -35,9 +35,9 @@
  * ----- END LICENSE BLOCK ----- */
 
 /*
-	CSecureEnv.h
-	
-	Rewritten for use with MRJ plugin by Patrick C. Beard.
+    CSecureEnv.h
+    
+    Rewritten for use with MRJ plugin by Patrick C. Beard.
  */
 
 #ifndef CSecureJNI2_h___
@@ -61,7 +61,7 @@ class CSecureEnv : public nsISecureEnv, public nsIRunnable, private SupportsMixi
 public:
     DECL_SUPPORTS_MIXIN
 
-	static NS_METHOD Create(MRJPlugin* plugin, JNIEnv* proxyEnv, const nsIID& aIID, void* *aInstancePtr);
+    static NS_METHOD Create(MRJPlugin* plugin, JNIEnv* proxyEnv, const nsIID& aIID, void* *aInstancePtr);
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsISecureJNI2:
@@ -302,7 +302,7 @@ public:
                               /*[out]*/ jsize* result);
 
     NS_IMETHOD NewObjectArray(/*[in]*/  jsize len,
-    					/*[in]*/  jclass clazz,
+                        /*[in]*/  jclass clazz,
                         /*[in]*/  jobject init,
                         /*[out]*/ jobjectArray* result);
 
@@ -365,49 +365,55 @@ public:
     CSecureEnv(MRJPlugin* plugin, JNIEnv* proxyEnv, JNIEnv* javaEnv = NULL);
     virtual ~CSecureEnv(void);
 
-	/**
-	 * Called by the native run method, to connect the
-	 * thread and the secure env.
-	 */
-	void initialize(JNIEnv* javaEnv, jboolean* isRunning, JavaMessageQueue* javaQueue, JavaMessageQueue* nativeQueue);
-	
-	jboolean isInitialized() { return mJavaQueue != NULL; }
+    /**
+     * Called by the native run method, to connect the
+     * thread and the secure env.
+     */
+    void initialize(JNIEnv* javaEnv, jboolean* isRunning, JavaMessageQueue* javaQueue, JavaMessageQueue* nativeQueue);
+    
+    jboolean isInitialized() { return mJavaQueue != NULL; }
 
-	void setProxyEnv(JNIEnv* proxyEnv) { mProxyEnv = proxyEnv; }
-	JNIEnv* getProxyEnv() { return mProxyEnv; }
-	
-	void setJavaEnv(JNIEnv* javaEnv) { mJavaEnv = javaEnv; }
-	JNIEnv* getJavaEnv() { return mJavaEnv; }
-	
-	MRJSession* getSession() { return mSession; }
-	nsIThreadManager* getThreadManager() { return mThreadManager; }
-	
-	void getMessageQueues(JavaMessageQueue*& javaQueue, JavaMessageQueue*& nativeQueue)
-	{
-		javaQueue = mJavaQueue;
-		nativeQueue = mNativeQueue;
-	}
-	
-	void sendMessageToJava(JavaMessage* msg);
-	void sendMessageFromJava(JNIEnv* javaEnv, JavaMessage* msg, Boolean busyWaiting = false);
-	void messageLoop(JNIEnv* env, JavaMessage* msgToSend, JavaMessageQueue* sendQueue, JavaMessageQueue* receiveQueue, Boolean busyWaiting = false);
-	
+    void setProxyEnv(JNIEnv* proxyEnv) { mProxyEnv = proxyEnv; }
+    JNIEnv* getProxyEnv() { return mProxyEnv; }
+    
+    void setJavaEnv(JNIEnv* javaEnv) { mJavaEnv = javaEnv; }
+    JNIEnv* getJavaEnv() { return mJavaEnv; }
+    
+    MRJSession* getSession() { return mSession; }
+    nsIThreadManager* getThreadManager() { return mThreadManager; }
+    
+    void getMessageQueues(JavaMessageQueue*& javaQueue, JavaMessageQueue*& nativeQueue)
+    {
+        javaQueue = mJavaQueue;
+        nativeQueue = mNativeQueue;
+    }
+    
+    void sendMessageToJava(JavaMessage* msg);
+    void sendMessageFromJava(JNIEnv* javaEnv, JavaMessage* msg, Boolean busyWaiting = false);
+    void messageLoop(JNIEnv* env, JavaMessage* msgToSend, JavaMessageQueue* sendQueue, JavaMessageQueue* receiveQueue, Boolean busyWaiting = false);
+
+    void savePendingException(JNIEnv* env);
+    jthrowable getPendingException(JNIEnv* env);
+    void clearPendingException(JNIEnv* env);
+    
 protected:
 
-	MRJPlugin*				mPlugin;
-    JNIEnv*					mProxyEnv;
-    MRJSession*				mSession;
-    nsIThreadManager*		mThreadManager;
+    MRJPlugin*              mPlugin;
+    JNIEnv*                 mProxyEnv;
+    MRJSession*             mSession;
+    nsIThreadManager*       mThreadManager;
     
-    JNIEnv*     			mJavaEnv;
-    jboolean*				mIsRunning;
-    JavaMessageQueue*		mJavaQueue;
-    JavaMessageQueue*		mNativeQueue;
+    JNIEnv*                 mJavaEnv;
+    jboolean*               mIsRunning;
+    JavaMessageQueue*       mJavaQueue;
+    JavaMessageQueue*       mNativeQueue;
+
+    jthrowable              mPendingException;
 
 private:
-	// support for SupportsMixin.
-	static const InterfaceInfo sInterfaces[];
-	static const UInt32 kInterfaceCount;
+    // support for SupportsMixin.
+    static const InterfaceInfo sInterfaces[];
+    static const UInt32 kInterfaceCount;
 };
 
 /**

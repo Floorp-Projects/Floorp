@@ -152,6 +152,7 @@ static void netscape_oji_JNIThread_run(JNIEnv* env, jobject self)
 			JavaMessage* msg = requests.getMessage();
 			if (msg != NULL) {
 				msg->execute(env);
+				secureEnv->savePendingException(env);
 				replies.putMessage(msg);
 				replies.notify();
 			} else {
@@ -354,7 +355,7 @@ CSecureEnv::CSecureEnv(MRJPlugin* plugin, JNIEnv* proxyEnv, JNIEnv* javaEnv)
 	:	SupportsMixin(this, sInterfaces, kInterfaceCount),
 		mPlugin(plugin), mProxyEnv(proxyEnv), mJavaEnv(javaEnv),
 		mSession(plugin->getSession()), mThreadManager(plugin->getThreadManager()),
-		mIsRunning(NULL), mJavaQueue(NULL), mNativeQueue(NULL)
+		mIsRunning(NULL), mJavaQueue(NULL), mNativeQueue(NULL), mPendingException(NULL)
 {
 	// need to create the JNIThread for communicating with Java.
 	if (mJavaEnv != NULL)
@@ -1451,16 +1452,18 @@ NS_IMETHODIMP CSecureEnv::ThrowNew(/*[in]*/  jclass clazz,
 
 
 class ExceptionOccurredMessage : public JavaMessage {
+    CSecureEnv* secureEnv;
     jthrowable* result;
 public:
-	ExceptionOccurredMessage(jthrowable* result)
+	ExceptionOccurredMessage(CSecureEnv* secureEnv, jthrowable* result)
 	{
+	    this->secureEnv = secureEnv;
 		this->result = result;
 	}
 
 	virtual void execute(JNIEnv* env)
 	{
-        *result = env->ExceptionOccurred();
+        *result = secureEnv->getPendingException(env);
 	}
 };
 
@@ -1469,8 +1472,8 @@ NS_IMETHODIMP CSecureEnv::ExceptionOccurred(/*[out]*/ jthrowable* result)
 	if (mJavaEnv == NULL || result == NULL)
 		return NS_ERROR_NULL_POINTER;
     
-#if PROXY_JNI_CALLS    
-	ExceptionOccurredMessage msg(result);
+#if PROXY_JNI_CALLS
+	ExceptionOccurredMessage msg(this, result);
 	sendMessageToJava(&msg);
 #else
     *result = mJavaEnv->ExceptionOccurred();
@@ -1497,14 +1500,20 @@ NS_IMETHODIMP CSecureEnv::ExceptionDescribe(void)
     return NS_OK;
 }
 
+class ExceptionClearMessage : public JavaMessage {
+    CSecureEnv* secureEnv;
+public:
+    ExceptionClearMessage(CSecureEnv* secureEnv)
+    {
+        this->secureEnv = secureEnv;
+    }
+	virtual void execute(JNIEnv* env) { secureEnv->clearPendingException(env); }
+};
 
 NS_IMETHODIMP CSecureEnv::ExceptionClear(void)
 {
-#if PROXY_JNI_CALLS    
-    class ExceptionClearMessage : public JavaMessage {
-    public:
-    	virtual void execute(JNIEnv* env) { env->ExceptionClear(); }
-    } msg;
+#if PROXY_JNI_CALLS
+    ExceptionClearMessage msg(this); 
 	sendMessageToJava(&msg);
 #else
     mJavaEnv->ExceptionClear();
@@ -2918,6 +2927,36 @@ void CSecureEnv::messageLoop(JNIEnv* env, JavaMessage* msg, JavaMessageQueue* se
 		}
 		replyMsg = receiveQueue->getMessage();
 	}
+}
+
+void CSecureEnv::savePendingException(JNIEnv* env)
+{
+    // first off, always restore the env to a known state.
+    jthrowable pendingException = env->ExceptionOccurred();
+    env->ExceptionClear();
+    
+    if (mPendingException)
+        env->DeleteGlobalRef(mPendingException);
+
+    if (pendingException) {
+        mPendingException = (jthrowable) env->NewGlobalRef(pendingException);
+        env->DeleteLocalRef(pendingException);
+    }
+}
+
+jthrowable CSecureEnv::getPendingException(JNIEnv* env)
+{
+    if (mPendingException)
+        return (jthrowable) env->NewLocalRef(mPendingException);
+    return NULL;
+}
+
+void CSecureEnv::clearPendingException(JNIEnv* env)
+{
+    if (mPendingException) {
+        env->DeleteGlobalRef(mPendingException);
+        mPendingException = NULL;
+    }
 }
 
 CSecureEnv* GetSecureJNI(JNIEnv* env, jobject thread)
