@@ -505,10 +505,11 @@ nsSVGElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
     if (!slots->mChildNodes) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_ADDREF(slots->mChildNodes);
   }
 
-  return CallQueryInterface(slots->mChildNodes, aChildNodes);
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
