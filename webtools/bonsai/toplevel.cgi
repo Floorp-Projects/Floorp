@@ -226,18 +226,14 @@ $uname</td>
     puts "</table>"
     puts "[llength $checkinlist] checkins."
 
-    if {[cequal $treeid default]} {
-        set mailaddr "bonsai-hook@warp"
-    } else {
-	set mailaddr [join $peoplelist ","]
+    set mailaddr [join $peoplelist ","]
+    append mailaddr "?subject=Build%20Problem"
+    if {[info exists treeinfo($treeid,cchookmail)]} {
+        append mailaddr "&cc=$treeinfo($treeid,cchookmail)"
     }
     puts "<p>"
     puts "<a href=showcheckins.cgi[BatchIdPart ?]>Show all checkins.</a><br>"
-    if {[cequal $treeid default]} { 
-        puts "<a href=\"mailto:[set mailaddr]@warp?subject=Build problem\">"
-    } else {
-        puts "<a href=\"mailto:[set mailaddr]?subject=Build problem\">"
-    }
+    puts "<a href=\"mailto:[set mailaddr]\">"
     puts "Send mail to \"the hook\".</a><br>"
 } else {
     puts "Nobody seems to have made any changes since the tree opened."
