@@ -94,8 +94,6 @@
 
 #define NECKO 1
 
-#define DETECT_WEBSHELL_LEAKS 1
-
 //#define MOZ_PERF_METRICS 1		// Uncomment to get metrics in layout, parser and webshell.
 															// You also need to define __TIMESIZE_DOUBLE__ in <timesize.mac.h>
 

@@ -30,20 +30,6 @@
 typedef unsigned long HMTX;
 #endif
 
-#ifdef DEBUG
-#undef NOISY_LINKS
-#undef NOISY_WEBSHELL_LEAKS
-#else
-#undef NOISY_LINKS
-#undef NOISY_WEBSHELL_LEAKS
-#endif
-
-#define NOISY_WEBSHELL_LEAKS
-#ifdef NOISY_WEBSHELL_LEAKS
-#undef DETECT_WEBSHELL_LEAKS
-#define DETECT_WEBSHELL_LEAKS
-#endif
-
 #include "nsDocShell.h"
 #include "nsIWebShell.h"
 #include "nsWebShell.h"
@@ -196,12 +182,12 @@ static NS_DEFINE_IID(kILinkHandlerIID,        NS_ILINKHANDLER_IID);
 // Note: operator new zeros our memory
 nsWebShell::nsWebShell() : nsDocShell()
 {
-#ifdef DETECT_WEBSHELL_LEAKS
+#ifdef DEBUG
   // We're counting the number of |nsWebShells| to help find leaks
   ++gNumberOfWebShells;
 #endif
-#ifdef NOISY_WEBSHELL_LEAKS
-  printf("WEBSHELL+ = %ld\n", gNumberOfWebShells);
+#ifdef DEBUG
+    printf("WEBSHELL+ = %ld\n", gNumberOfWebShells);
 #endif
 
   NS_INIT_REFCNT();
@@ -248,11 +234,11 @@ nsWebShell::~nsWebShell()
 
   InitFrameData();
 
-#ifdef DETECT_WEBSHELL_LEAKS
+#ifdef DEBUG
   // We're counting the number of |nsWebShells| to help find leaks
   --gNumberOfWebShells;
 #endif
-#ifdef NOISY_WEBSHELL_LEAKS
+#ifdef DEBUG
   printf("WEBSHELL- = %ld\n", gNumberOfWebShells);
 #endif
 }
@@ -1455,6 +1441,6 @@ NS_IMETHODIMP nsWebShell::GetPositionAndSize(PRInt32* x, PRInt32* y,
    return NS_OK; 
 }
 
-#ifdef DETECT_WEBSHELL_LEAKS
+#ifdef DEBUG
 unsigned long nsWebShell::gNumberOfWebShells = 0;
 #endif
