@@ -45,7 +45,7 @@ PRBool 	uScan(      uShiftTable *shift,
                     PRUint32* inscanlen);
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif /* __UNIPRIV__ */
