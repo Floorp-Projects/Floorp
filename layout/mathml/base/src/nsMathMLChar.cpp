@@ -825,8 +825,8 @@ nsGlyphTableList::Finalize()
   }
   // delete the other variables
   delete gBaseFonts;
-  delete gParts;
-  delete gVariants;
+  delete [] gParts;
+  delete [] gVariants;
   gParts = gVariants = nsnull;
   gInitialized = PR_FALSE;
   // our oneself will be destroyed when our |Release| is called by the observer
@@ -1169,8 +1169,8 @@ InitGlobals(nsPresContext* aPresContext)
   if (NS_FAILED(rv)) {
     delete gGlyphTableList;
     delete nsGlyphTableList::gBaseFonts;
-    delete nsGlyphTableList::gParts;
-    delete nsGlyphTableList::gVariants;
+    delete [] nsGlyphTableList::gParts;
+    delete [] nsGlyphTableList::gVariants;
     gGlyphTableList = nsnull;
     nsGlyphTableList::gBaseFonts = nsnull;
     nsGlyphTableList::gParts = nsnull;
