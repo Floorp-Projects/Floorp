@@ -123,7 +123,7 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports * /* aOuter */, const nsI
 	// do they want a local datasource ?
 	if (mClassID.Equals(kMailboxUrlCID)) 
 	{
-		nsMailboxUrl * url = new nsMailboxUrl(nsnull, nsnull);
+		nsMailboxUrl * url = new nsMailboxUrl();
 		if (url)
 			rv = url->QueryInterface(aIID, aResult);
 		else
