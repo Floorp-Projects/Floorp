@@ -40,7 +40,6 @@
 #import "BrowserWindowController.h"
 
 #import "CHBrowserWrapper.h"
-#import "CHIconTabViewItem.h"
 #import "CHPreferenceManager.h"
 #import "BookmarksDataSource.h"
 #import "CHHistoryDataSource.h"
@@ -968,7 +967,7 @@ static NSArray* sToolbarDefaults = nil;
 
 -(void)newTab:(BOOL)allowHomepage
 {
-    CHIconTabViewItem* newTab = [[[CHIconTabViewItem alloc] initWithIdentifier: nil] autorelease];
+    BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
     CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
 
     PRInt32 newTabPage = 0;
@@ -980,7 +979,7 @@ static NSArray* sToolbarDefaults = nil;
     [newTab setLabel: ((newTabPage == 1) ? NSLocalizedString(@"TabLoading", @"") : NSLocalizedString(@"UntitledPageTitle", @""))];
     [newTab setView: newView];
     [mTabBrowser addTabViewItem: newTab];
-
+    
     // Focus the URL bar if we're opening a blank tab and the URL bar is visible.
     NSToolbar* toolbar = [[self window] toolbar];
     BOOL focusURLBar = ([toolbar isVisible] &&
@@ -1087,7 +1086,7 @@ static NSArray* sToolbarDefaults = nil;
 
 -(void)openNewTabWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
 {
-    CHIconTabViewItem* newTab = [[[CHIconTabViewItem alloc] initWithIdentifier: nil] autorelease];
+    BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
 
     // hyatt originally made new tabs open on the far right and tabs opened from a content
     // link open to the right of the current tab. The idea was to keep the new tab
@@ -1476,6 +1475,10 @@ static NSArray* sToolbarDefaults = nil;
     return mSidebarDrawer;
 }
 
+- (CHPageProxyIcon *)proxyIconView
+{
+  return mProxyIcon;
+}
 
 - (id)windowWillReturnFieldEditor:(NSWindow *)aWindow toObject:(id)anObject
 {

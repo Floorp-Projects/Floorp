@@ -278,5 +278,8 @@ class nsIDOMNode;
 // Accessor to get the sidebar drawer
 - (NSDrawer *)sidebarDrawer;
 
+// Accessor to get the proxy icon view
+- (CHPageProxyIcon *)proxyIconView;
+
 @end
 
