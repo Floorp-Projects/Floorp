@@ -26,6 +26,8 @@
   # versions: array; versions for the new product.
   # components: array; components for the new product.
   # milestones: array; milestones for the new product.
+  # defaults: hash; keys are names of fields, values are defaults for
+  #   those fields
   # verify_bug_group: boolean; whether or not to ask the user
   #   if they want to add the bug to its new product's group
   # use_target_milestone: boolean; whether or not to use 
@@ -57,16 +59,16 @@
     <tr>
       <td>
         <b>Version:</b><br>
-        [% PROCESS "global/select-menu.html.tmpl" name="version" options=versions %]
+        [% PROCESS "global/select-menu.html.tmpl" name="version" options=versions default=defaults.version %]
       </td>
       <td>
         <b>Component:</b><br>
-        [% PROCESS "global/select-menu.html.tmpl" name="component" options=components %]
+        [% PROCESS "global/select-menu.html.tmpl" name="component" options=components default=defaults.component %]
       </td>
       [% IF use_target_milestone %]
         <td>
           <b>Target Milestone:</b><br>
-        [% PROCESS "global/select-menu.html.tmpl" name="target_milestone" options=milestones %]
+        [% PROCESS "global/select-menu.html.tmpl" name="target_milestone" options=milestones default=defaults.target_milestone %]
         </td>
       [% END %]
     </tr>

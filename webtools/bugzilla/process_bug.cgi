@@ -191,16 +191,35 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
         
         if (!$vok || !$cok || !$mok) {
             $vars->{'verify_fields'} = 1;
+            my %defaults;
+            # We set the defaults to these fields to the old value,
+            # if its a valid option, otherwise we use the default where
+            # thats appropriate
             $vars->{'versions'} = $::versions{$prod};
+            if (lsearch($::versions{$prod}, $::FORM{'version'}) != -1) {
+                $defaults{'version'} = $::FORM{'version'};
+            }
             $vars->{'components'} = $::components{$prod};
-        
+            if (lsearch($::components{$prod}, $::FORM{'component'}) != -1) {
+                $defaults{'component'} = $::FORM{'component'};
+            }
+
             if (Param("usetargetmilestone")) {
                 $vars->{'use_target_milestone'} = 1;
                 $vars->{'milestones'} = $::target_milestone{$prod};
+                if (lsearch($::target_milestone{$prod},
+                            $::FORM{'target_milestone'}) != -1) {
+                    $defaults{'target_milestone'} = $::FORM{'target_milestone'};
+                } else {
+                    SendSQL("SELECT defaultmilestone FROM products WHERE " .
+                            "product = " . SqlQuote($prod));
+                    $defaults{'target_milestone'} = FetchOneColumn();
+                }
             }
             else {
                 $vars->{'use_target_milestone'} = 0;
             }
+            $vars->{'defaults'} = \%defaults;
         }
         else {
             $vars->{"verify_fields"} = 0;
