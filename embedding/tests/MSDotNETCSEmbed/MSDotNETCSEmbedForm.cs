@@ -58,8 +58,9 @@ namespace MSDotNETCSEmbed
 		/// Required designer variable.
 		/// </summary>
 		private System.ComponentModel.Container components = null;
-		private Mozilla.Embedding.Gecko myGecko = null;
-		private String myURL = null;
+		private Mozilla.Embedding.Gecko gecko1;
+		private System.Windows.Forms.Button goButton;
+		private System.Windows.Forms.TextBox urlBar;
 
 		public MSDotNETCSEmbedForm()
 		{
@@ -71,7 +72,6 @@ namespace MSDotNETCSEmbed
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
-			myGecko = new Gecko(this);
 		}
 
 		/// <summary>
@@ -96,16 +96,49 @@ namespace MSDotNETCSEmbed
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.gecko1 = new Mozilla.Embedding.Gecko();
+			this.goButton = new System.Windows.Forms.Button();
+			this.urlBar = new System.Windows.Forms.TextBox();
+			this.SuspendLayout();
+			// 
+			// gecko1
+			// 
+			this.gecko1.Location = new System.Drawing.Point(0, 40);
+			this.gecko1.Name = "gecko1";
+			this.gecko1.Size = new System.Drawing.Size(664, 392);
+			this.gecko1.TabIndex = 0;
+			// 
+			// goButton
+			// 
+			this.goButton.Location = new System.Drawing.Point(600, 8);
+			this.goButton.Name = "goButton";
+			this.goButton.Size = new System.Drawing.Size(56, 24);
+			this.goButton.TabIndex = 1;
+			this.goButton.Text = "Go";
+			this.goButton.Click += new System.EventHandler(this.goButton_Click);
+			// 
+			// urlBar
+			// 
+			this.urlBar.Location = new System.Drawing.Point(8, 10);
+			this.urlBar.Name = "urlBar";
+			this.urlBar.Size = new System.Drawing.Size(576, 20);
+			this.urlBar.TabIndex = 2;
+			this.urlBar.Text = "";
+			this.urlBar.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.urlBar_KeyPress);
 			// 
 			// MSDotNETCSEmbedForm
 			// 
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-			this.ClientSize = new System.Drawing.Size(744, 374);
-			this.Name = "MSDotNETCSEmbed";
+			this.ClientSize = new System.Drawing.Size(664, 429);
+			this.Controls.AddRange(new System.Windows.Forms.Control[] {
+																		  this.urlBar,
+																		  this.goButton,
+																		  this.gecko1});
+			this.Name = "MSDotNETCSEmbedForm";
 			this.Text = "MSDotNETCSEmbed [UNSUPPORTED]";
 			this.Resize += new System.EventHandler(this.MSDotNETCSEmbedForm_Resize);
-			this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MSDotNETCSEmbedForm_KeyPress);
 			this.Load += new System.EventHandler(this.MSDotNETCSEmbedForm_Load);
+			this.ResumeLayout(false);
 
 		}
 		#endregion
@@ -124,31 +157,31 @@ namespace MSDotNETCSEmbed
 
 		private void MSDotNETCSEmbedForm_Load(object sender, System.EventArgs e)
 		{
-			myURL = "www.mozilla.org";
-			myGecko.OpenURL(myURL);
-			this.Text = "MSDotNETCSEmbed [UNSUPPORTED] - " + myURL;
-			myURL = "";
+			urlBar.Text = "http://www.mozilla.org";
+			gecko1.OpenURL(urlBar.Text);
+			this.Text = "MSDotNETCSEmbed [UNSUPPORTED] - " + urlBar.Text;
 		}
 
 		private void MSDotNETCSEmbedForm_Resize(object sender, System.EventArgs e)
 		{
-			myGecko.Resize();		
+			gecko1.Size =
+				new Size(ClientSize.Width,
+						 ClientSize.Height - gecko1.Location.Y);
 		}
 
-		private void MSDotNETCSEmbedForm_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+		private void urlBar_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
 		{
 			switch (e.KeyChar)
 			{
 				case '\r':
-					myGecko.OpenURL(myURL);
-					myURL = "";
-					break;
-
-				default:
-					myURL += e.KeyChar;
-					this.Text = "MSDotNETCSEmbed [UNSUPPORTED] - " + myURL;
+					gecko1.OpenURL(urlBar.Text);
 					break;
 			}
+		}
+
+		private void goButton_Click(object sender, System.EventArgs e)
+		{
+			gecko1.OpenURL(urlBar.Text);
 		}
 	}
 }
