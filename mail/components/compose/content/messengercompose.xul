@@ -154,13 +154,13 @@
 
 <keyset id="tasksKeys">
   <!-- File Menu -->
-  #ifdef XP_MACOSX
-    <key id="key_newMessage" key="&newMessage.key;" oncommand="goOpenNewMessage();" modifiers="accel,shift"/>
-    <key id="key_newMessage2" key="&newMessageCmd2.key;" oncommand="goOpenNewMessage();" modifiers="accel,shift"/>
-  #else
-    <key id="key_newMessage" key="&newMessage.key;" oncommand="goOpenNewMessage();" modifiers="accel"/>
-    <key id="key_newMessage2" key="&newMessageCmd2.key;" oncommand="goOpenNewMessage();" modifiers="accel"/>
-  #endif
+#ifdef XP_MACOSX
+  <key id="key_newMessage" key="&newMessage.key;" oncommand="goOpenNewMessage();" modifiers="accel,shift"/>
+  <key id="key_newMessage2" key="&newMessageCmd2.key;" oncommand="goOpenNewMessage();" modifiers="accel,shift"/>
+#else
+  <key id="key_newMessage" key="&newMessage.key;" oncommand="goOpenNewMessage();" modifiers="accel"/>
+  <key id="key_newMessage2" key="&newMessageCmd2.key;" oncommand="goOpenNewMessage();" modifiers="accel"/>
+#endif
   <key id="key_close" key="&closeCmd.key;" modifiers="accel"/>
   <key id="key_save" key="&saveCmd.key;" command="cmd_saveDefault" modifiers="accel"/>
   <key id="key_send" keycode="&sendCmd.keycode;" observes="cmd_sendWithCheck" modifiers="accel"/>
