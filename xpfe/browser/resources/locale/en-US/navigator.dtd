@@ -61,6 +61,7 @@
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY translateMenu.label "Translate">
+<!ENTITY translate.commandKey "t">
 <!ENTITY webContentMenu.label "Languages and Web Content">
 <!ENTITY downloadMore.label "Download More">
 <!ENTITY dcharMenu.label "Character Set  ISO">
@@ -330,6 +331,7 @@
 <!ENTITY openFrameCmd.label           "Open Frame in New Window">
 <!ENTITY openFrameCmd.accesskey       "o">
 <!ENTITY reloadCmd.accesskey          "r">
+<!ENTITY reloadCmd.commandKey         "r">
 <!ENTITY reloadFrameCmd.label         "Reload Frame">
 <!ENTITY reloadFrameCmd.accesskey     "r">
 <!ENTITY viewPageSourceCmd.label      "View Page Source">

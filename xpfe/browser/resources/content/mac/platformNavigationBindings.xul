@@ -7,7 +7,9 @@
     <!-- proper arrow key navigation, 4.xP -->
     <key id="goBackKb" xulkey="true" keycode="VK_LEFT" observes="Browser:Back"/>
     <key id="goForwardKb" xulkey="true" keycode="VK_RIGHT" observes="Browser:Forward"/>
-
+    <key id="stopMac" xulkey="true" key="." onkeypres="BrowserStop();"/>
   </keyset>  
 
 </overlay>
+
+

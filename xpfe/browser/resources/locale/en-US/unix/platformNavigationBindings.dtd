@@ -1,4 +1,4 @@
-<!ENTITY goBackCmd.commandkey "[">
-<!ENTITY goForwardCmd.commandkey "]">
+<!ENTITY goBackCmd.commandKey "[">
+<!ENTITY goForwardCmd.commandKey "]">
 
 

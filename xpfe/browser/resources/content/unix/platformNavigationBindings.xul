@@ -12,8 +12,10 @@
 
     <!-- Some people apparently use this combination too on Unix...
          we live and learn.  -->
-    <key id="goBackKbWacko" xulkey="true" key="&goForwardCmd.commandKey;" observes="Browser:Back"/>
-    <key id="goForwardKbWacko" xulkey="true" key="&goBackCmd.commandKey;" observes="Browser:Forward"/>
+    <key id="goBackKbWacko" xulkey="true" key="&goBackCmd.commandKey;" observes="Browser:Back"/>
+    <key id="goForwardKbWacko" xulkey="true" key="&goForwardCmd.commandKey;" observes="Browser:Forward"/>
   </keyset>  
 
 </overlay>
+
+
