@@ -318,7 +318,7 @@ int nsAccount::IterateDirectoryChildren(nsFileSpec& startChild)
     {
 	printf ("Inside the iteration \n");
 
-        char* itemName = ((nsFileSpec&)i).GetLeafName();
+        char* itemName = (i.Spec()).GetLeafName();
 		PL_strcpy(gNCIInfo[NCICount], itemName);
         mConsole << '\t' << itemName << nsEndl;
 		mConsole << '\t' << "This is the arraynumber "<<NCICount<<"and value" <<gNCIInfo[NCICount] << nsEndl;
