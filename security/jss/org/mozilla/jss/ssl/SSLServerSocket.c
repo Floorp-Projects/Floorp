@@ -73,6 +73,7 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketListen
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT jbyteArray JNICALL
@@ -255,4 +256,5 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_setNeedClientAuth(
     }
 
 finish:
+    return;
 }

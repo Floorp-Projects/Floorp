@@ -35,6 +35,7 @@
 #include <jni.h>
 #include <ssl.h>
 #include <sslerr.h>
+#include <stdio.h>
 
 #include <jssutil.h>
 #include <jss_exceptions.h>
@@ -42,6 +43,10 @@
 #include <pk11util.h>
 #include "_jni/org_mozilla_jss_ssl_SSLSocket.h"
 #include "jssl.h"
+
+#ifdef WIN32
+#include <winsock.h>
+#endif
 
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SSLSocket_setSSLOption(JNIEnv *env, jobject self,
@@ -101,6 +106,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_forceHandshake(JNIEnv *env, jobject self)
     }
 
 finish:
+    return;
 }
 
 /*
@@ -108,7 +114,7 @@ finish:
  *      The linger time, in hundredths of a second.
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SSLSocket_setSoLInger(JNIEnv *env, jobject self,
+Java_org_mozilla_jss_ssl_SSLSocket_setSoLinger(JNIEnv *env, jobject self,
     jboolean on, jint linger)
 {
     PRSocketOptionData sockOptions;
@@ -134,6 +140,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_setSoLInger(JNIEnv *env, jobject self,
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT jboolean JNICALL
@@ -182,6 +189,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_setTcpNoDelay(JNIEnv *env, jobject self,
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT jint JNICALL
@@ -230,6 +238,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_setSendBufferSize(JNIEnv *env, jobject self,
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT jboolean JNICALL
@@ -302,6 +311,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_setReceiveBufferSize(
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT void JNICALL
@@ -327,6 +337,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_setKeepAlive(JNIEnv *env, jobject self,
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT jint JNICALL
@@ -644,6 +655,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreference(
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT jint JNICALL 
@@ -710,7 +722,7 @@ finish:
 }
 
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_ssl_SSLSocketImpl_socketAvailable(
+Java_org_mozilla_jss_ssl_SSLSocket_socketAvailable(
     JNIEnv *env, jobject self)
 {
     jint available;
@@ -807,6 +819,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_shutdownNative(
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT void JNICALL
@@ -824,6 +837,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_invalidateSession(JNIEnv *env, jobject self)
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT void JNICALL
@@ -842,10 +856,11 @@ Java_org_mozilla_jss_ssl_SSLSocket_redoHandshake(
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SSLSocket_resetHandshake(
+Java_org_mozilla_jss_ssl_SSLSocket_resetHandshakeNative(
     JNIEnv *env, jobject self, jboolean asClient)
 {
     JSSL_SocketData *sock;
@@ -860,6 +875,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_resetHandshake(
     }
 
 finish:
+    return;
 }
 
 JNIEXPORT void JNICALL
@@ -934,4 +950,5 @@ Java_org_mozilla_jss_ssl_SSLSocket_setCipherPolicyNative(
     }
 
 finish:
+    return;
 }

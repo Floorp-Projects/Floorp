@@ -38,8 +38,6 @@
 
 include manifest.mn
 
-LIBRARY_NAME = jss21
-
 #######################################################################
 # (2) Include "global" configuration information. (OPTIONAL)          #
 #######################################################################

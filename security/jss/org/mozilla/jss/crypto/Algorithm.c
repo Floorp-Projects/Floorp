@@ -104,7 +104,7 @@ JSS_AlgInfo JSS_AlgTable[NUM_ALGS] = {
  *          CK_MECHANISM_TYPE corresponding to this algorithm, or
  *          CKM_INVALID_MECHANISM if none exists.
  */
-PR_IMPLEMENT( CK_MECHANISM_TYPE )
+CK_MECHANISM_TYPE
 JSS_getPK11MechFromAlg(JNIEnv *env, jobject alg)
 {
     JSS_AlgInfo info;
@@ -131,7 +131,7 @@ JSS_getPK11MechFromAlg(JNIEnv *env, jobject alg)
  *      SECOidTag corresponding to this algorithm, or SEC_OID_UNKNOWN
  *      if none was found.
  */
-PR_IMPLEMENT( SECOidTag )
+SECOidTag
 JSS_getOidTagFromAlg(JNIEnv *env, jobject alg)
 {
     JSS_AlgInfo info;

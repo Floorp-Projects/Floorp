@@ -240,7 +240,7 @@ finish:
  * ptr: Address of a CERTCertificate* that will receive the pointer.
  * Returns: PR_SUCCESS for success, PR_FAILURE if an exception was thrown.
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_PK11_getCertPtr(JNIEnv *env, jobject certObject, CERTCertificate **ptr)
 {
 	PR_ASSERT(env!=NULL && certObject!=NULL && ptr!=NULL);
@@ -259,7 +259,7 @@ JSS_PK11_getCertPtr(JNIEnv *env, jobject certObject, CERTCertificate **ptr)
  * returns: a new PK11Cert wrapping the CERTCertificate, or NULL if an
  * 		exception was thrown.
  */
-PR_IMPLEMENT( jobject )
+jobject
 JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **cert)
 {
 	jclass certClass;

@@ -50,7 +50,7 @@ PR_BEGIN_EXTERN_C
  * representation of an integer as a big-endian Java byte array. Prepends
  * a zero byte to force it to be positive.
  */
-PR_IMPLEMENT( jbyteArray )
+jbyteArray
 JSS_OctetStringToByteArray(JNIEnv *env, SECItem *item);
 
 /***********************************************************************
@@ -71,7 +71,7 @@ JSS_OctetStringToByteArray(JNIEnv *env, SECItem *item);
  *      PR_SUCCESS if the operation was successful, PR_FAILURE if an exception
  *      was thrown.
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_ByteArrayToOctetString(JNIEnv *env, jbyteArray byteArray, SECItem *item);
 
 PR_END_EXTERN_C

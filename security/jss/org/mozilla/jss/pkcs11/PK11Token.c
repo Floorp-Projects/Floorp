@@ -87,7 +87,7 @@ static SECStatus GenerateKeyPair(JNIEnv *env, unsigned int ktype,
  *
  * Returns a new PK11Token object, or NULL if an exception was thrown.
  */
-PR_IMPLEMENT( jobject )
+jobject
 JSS_PK11_wrapPK11Token(JNIEnv *env, PK11SlotInfo **slot)
 {
     jclass tokenClass;
@@ -836,19 +836,19 @@ finish:
 
 /************************************************************************
  *
- * P K 1 1 T o k e n . r e l e a s e N a t i v e R e s o u r c e s
+ * T o k e n P r o x y . r e l e a s e N a t i v e R e s o u r c e s
  *
  * Free the PK11SlotInfo structure that underlies my token.
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_jss_pkcs11_PK11Token_releaseNativeResources
+Java_org_mozilla_jss_pkcs11_TokenProxy_releaseNativeResources
   (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot;
 
     PR_ASSERT(env!=NULL && this!=NULL);
 
-    if(JSS_PK11_getTokenSlotPtr(env, this, &slot) != PR_SUCCESS) {
+    if(JSS_getPtrFromProxy(env, this, (void**)&slot) != PR_SUCCESS) {
         PR_ASSERT( PR_FALSE );
         goto finish;
     }
@@ -874,7 +874,7 @@ finish:
  * returns: PR_SUCCESS if the operation was successful, PR_FAILURE if an
  *      exception was thrown. 
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_PK11_getTokenSlotPtr(JNIEnv *env, jobject tokenObject, PK11SlotInfo **ptr)
 {
     PR_ASSERT(env != NULL && tokenObject != NULL && ptr != NULL);

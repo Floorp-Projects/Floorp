@@ -30,63 +30,63 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 # 
-#######################################################################
-# Adjust specific variables for specific platforms                    #
-#######################################################################
 
-# We don't need static, import, or purify libraries
-LIBRARY=
-IMPORT_LIBRARY=
+LIBRARY =
 
-# Get rid of embedded "32" in library names on Windows
 ifeq ($(OS_ARCH),WINNT)
-SHARED_LIBRARY := $(subst 32,,$(SHARED_LIBRARY))
-SHARED_LIBRARY_G := $(subst 32,,$(SHARED_LIBRARY_G))
-endif
 
-#######################################################################
-# Adjust specific variables for all platforms                         #
-#######################################################################
+SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+
+DLLFLAGS += -DEF:jss.def
+#RES = $(OBJDIR)/jss.res
+#RESNAME = jss.rc
+
+SHARED_LIBRARY_LIBS=yes
+
+SHARED_LIBRARY_DIRS = \
+    ../org/mozilla/jss/crypto \
+    ../org/mozilla/jss/manage \
+    ../org/mozilla/jss/pkcs11 \
+    ../org/mozilla/jss/ssl \
+    ../org/mozilla/jss/util \
+    ../org/mozilla/jss/hclhacks \
+    $(NULL)
+
+EXTRA_LIBS += \
+    $(LIBNSS) \
+    $(LIBSSL) \
+    $(LIBCRYPTOHI) \
+    $(LIBCERTHI) \
+    $(LIBNSSB) \
+    $(LIBPK11WRAP) \
+    $(LIBJAR) \
+    $(LIBPKCS12) \
+    $(LIBPKCS7) \
+    $(LIBSECTOOL) \
+    $(LIBSMIME) \
+    $(LIBSOFTOKEN) \
+    $(LIBCERTDB) \
+    $(LIBFREEBL) \
+    $(LIBSECUTIL) \
+    $(DIST)/lib/dbm.lib \
+    $(NULL)
+
+EXTRA_SHARED_LIBS += \
+    $(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
+    $(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
+    $(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
+    $(JAVA_LIBS) \
+    $(DLLSYSTEM) \
+    $(NULL)
+
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 LDOPTS += -PDB:NONE
 endif
 
-# Only used for "sanitizing" the release
-STATIC_LIB_EXTENSION=
-DYNAMIC_LIB_EXTENSION=
-
 # Include "funky" link path to pick up ALL native libraries for OSF/1.
 ifeq ($(OS_ARCH), OSF1)
 	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR).no
-endif
-
-LD_LIBS += -Wl,--whole-archive
-
-#######################################################################
-# Set the LD_LIBS value to encompass all static JSS, security, and    #
-# dbm libraries                                                       #
-#######################################################################
-
-LD_LIBS += $(LIBJSSMANAGE) $(LIBJSSPKCS11) $(LIBJSSCRYPTO) $(LIBJSSUTIL) $(LIBJSSHCLHACKS) $(LIBJSSSSL) -Wl,--no-whole-archive $(LIBNSS) $(LIBSSL) $(LIBCRYPTOHI) $(LIBCERTHI) $(LIBNSSB) $(LIBPK11WRAP) $(LIBJAR) $(LIBPKCS12) $(LIBPKCS7) $(LIBSECTOOL) $(LIBSMIME) $(LIBSOFTOKEN) $(LIBCERTDB) $(LIBFREEBL) $(LIBSECUTIL) $(LIBDBM)
-
-#######################################################################
-# Append additional LD_LIBS value to encompass all dynamic NSPR 2.0,  #
-# java, and system libraries                                          #
-#######################################################################
-ifneq ($(STANDALONE_LIBJSS),1)
-# NSPR is not included in libjss
-ifeq ($(OS_ARCH), WINNT)
-	LD_LIBS += $(DLLPLDS) $(DLLPLC) $(DLLPR) $(JAVA_LIBS) $(DLLSYSTEM)
-else
-	LD_LIBS += -L$(SOURCE_LIB_DIR) -lplds4 -lplc4 -lnspr4 $(JAVA_LIBS) $(DLLSYSTEM)
-endif
-
-else
-# NSPR is included in libjss
-ifeq ($(OS_ARCH), WINNT)
-	LD_LIBS += $(LIBPLDS) $(LIBPLC) $(LIBPR) $(JAVA_LIBS) $(DLLSYSTEM)
-else
-	LD_LIBS += -L$(SOURCE_LIB_DIR) $(LIBPLDS) $(LIBPLC) $(LIBPR) $(JAVA_LIBS) $(DLLSYSTEM)
-endif
 endif

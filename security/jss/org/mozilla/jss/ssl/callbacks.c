@@ -123,7 +123,7 @@ done:
  *    -1        SECFailure - No suitable certificate found.
  *    -2         SECWouldBlock (we're waiting while we ask the user).
  */
-PR_IMPLEMENT( int )
+int
 JSSL_CallCertSelectionCallback(    void * arg,
             PRFileDesc *        fd,
             CERTDistNames *     caNames,
@@ -291,7 +291,7 @@ loser:
 }
 
 
-PR_IMPLEMENT(void)
+void
 JSSL_HandshakeCallback(PRFileDesc *fd, void *arg)
 {
     JSSL_SocketData *sock = (JSSL_SocketData*) arg;
@@ -319,13 +319,14 @@ JSSL_HandshakeCallback(PRFileDesc *fd, void *arg)
     (*env)->CallVoidMethod(env, sock->socketObject, notifierID);
 
 finish:
+    return;
 }
 
 /*
  * Callback from SSL for checking certificate the peer (other end of
  * the socket) presents.
  */
-PR_IMPLEMENT(int)
+int
 JSSL_DefaultCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
              PRBool isServer)
 {
@@ -432,7 +433,7 @@ addToVerifyLog(JNIEnv *env, CERTVerifyLog *log, CERTCertificate *cert,
  * obj - a jobject -> instance of a class implementing 
  *       the SSLCertificateApprovalCallback interface
  */
-PR_IMPLEMENT(SECStatus)
+SECStatus
 JSSL_JavaCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
              PRBool isServer)
 {
@@ -607,7 +608,7 @@ finish:
     return retval;
 }
 
-PR_IMPLEMENT( int )
+int
 JSSL_GetClientAuthData( void * arg,
                         PRFileDesc *        fd,
                         CERTDistNames *     caNames,
@@ -647,7 +648,7 @@ JSSL_GetClientAuthData( void * arg,
  * Callback from SSL for checking a (possibly) expired
  * certificate the peer presents.
  */
-PR_IMPLEMENT( int )
+int
 JSSL_ConfirmExpiredPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
              PRBool isServer)
 {

@@ -55,7 +55,7 @@ PR_BEGIN_EXTERN_C
  * privk: will be eaten by the wrapper and set to NULL.
  * Returns: a new PK11PrivKey, or NULL if an exception occurred.
  */
-PR_EXTERN( jobject )
+jobject
 JSS_PK11_wrapPrivKey(JNIEnv *env, SECKEYPrivateKey **privk);
 
 /***********************************************************************
@@ -64,7 +64,7 @@ JSS_PK11_wrapPrivKey(JNIEnv *env, SECKEYPrivateKey **privk);
  * privk: will be eaten by the wrapper and set to NULL.
  * Returns: a new PK11PubKey, or NULL if an exception occurred.
  */
-PR_EXTERN( jobject )
+jobject
 JSS_PK11_wrapPubKey(JNIEnv *env, SECKEYPublicKey **pubk);
 
 
@@ -76,7 +76,7 @@ JSS_PK11_wrapPubKey(JNIEnv *env, SECKEYPublicKey **pubk);
  * ptr: Address of a SECKEYPrivateKey* that will receive the pointer.
  * Returns: PR_SUCCESS for success, PR_FAILURE if an exception was thrown.
  */
-PR_EXTERN( PRStatus )
+PRStatus
 JSS_PK11_getPrivKeyPtr(JNIEnv *env, jobject privkObject,
     SECKEYPrivateKey** ptr);
 
@@ -98,7 +98,7 @@ JSS_PK11_getPubKeyPtr(JNIEnv *env, jobject pubkObject,
  * Given a Java PK11SymKey, extracts the C PK11SymKey and stores it at
  * the given address.
  */
-PR_EXTERN( PRStatus )
+PRStatus
 JSS_PK11_getSymKeyPtr(JNIEnv *env, jobject symKeyObject, PK11SymKey **ptr);
 
 /***********************************************************************
@@ -107,7 +107,7 @@ JSS_PK11_getSymKeyPtr(JNIEnv *env, jobject symKeyObject, PK11SymKey **ptr);
  * symKey: will be stored in a Java wrapper.
  * Returns: a new PK11SymKey, or NULL if an exception occurred.
  */
-PR_EXTERN( jobject )
+jobject
 JSS_PK11_wrapSymKey(JNIEnv *env, PK11SymKey **symKey);
 
 /***********************************************************************
@@ -121,7 +121,7 @@ JSS_PK11_wrapSymKey(JNIEnv *env, PK11SymKey **symKey);
  * RETURNS
  *  The key type, or nullKey if an exception occurred.
  */
-PR_EXTERN( KeyType )
+KeyType
 JSS_PK11_getKeyType(JNIEnv *env, jobject keyTypeObj);
 
 
@@ -143,7 +143,7 @@ JSS_PK11_getKeyType(JNIEnv *env, jobject keyTypeObj);
  * ptr: Address of a CERTCertificate* that will receive the pointer.
  * Returns: PR_SUCCESS for success, PR_FAILURE if an exception was thrown.
  */
-PR_EXTERN( PRStatus )
+PRStatus
 JSS_PK11_getCertPtr(JNIEnv *env, jobject certObject, CERTCertificate **ptr);
 
 
@@ -159,7 +159,7 @@ JSS_PK11_getCertPtr(JNIEnv *env, jobject certObject, CERTCertificate **ptr);
  *      will be set to NULL whether the functions fails or succeeds.
  * Returns: a new Java PK11Cert object, or NULL if an exception was thrown.
  */
-PR_EXTERN( jobject )
+jobject
 JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **ppCert);
 
 
@@ -183,7 +183,7 @@ JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **ppCert);
  *      PR_SUCCESS if the operation was successful, PR_FAILURE if an
  *      exception was thrown.
  */
-PR_EXTERN( PRStatus )
+PRStatus
 JSS_PK11_getStoreSlotPtr(JNIEnv *env, jobject store, PK11SlotInfo **slot);
 
 
@@ -200,7 +200,7 @@ JSS_PK11_getStoreSlotPtr(JNIEnv *env, jobject store, PK11SlotInfo **slot);
 **
 ** Returns a new CryptoToken object, or NULL if an exception was thrown.
 **/
-PR_EXTERN( jobject )
+jobject
 JSS_PK11_makeCryptoTokenFromPK11(JNIEnv *env, jobject pk11token);
 
 /***********************************************************************
@@ -214,7 +214,7 @@ JSS_PK11_makeCryptoTokenFromPK11(JNIEnv *env, jobject pk11token);
  *
  * Returns a new PK11Token object, or NULL if an exception was thrown.
  */
-PR_EXTERN( jobject )
+jobject
 JSS_PK11_wrapPK11Token(JNIEnv *env, PK11SlotInfo **slot);
 
 /************************************************************************
@@ -229,7 +229,7 @@ JSS_PK11_wrapPK11Token(JNIEnv *env, PK11SlotInfo **slot);
  * returns: PR_SUCCESS if the operation was successful, PR_FAILURE if an
  *      exception was thrown.
  */
-PR_EXTERN( PRStatus )
+PRStatus
 JSS_PK11_getTokenSlotPtr(JNIEnv *env, jobject tokenObject, PK11SlotInfo **ptr);
 
 
@@ -251,7 +251,7 @@ JSS_PK11_getTokenSlotPtr(JNIEnv *env, jobject tokenObject, PK11SlotInfo **ptr);
  *      A new Java PK11Module object, or NULL if an exception was thrown.
  *      In any case, the ptr parameter is eaten.
  */
-PR_IMPLEMENT( jobject )
+jobject
 JSS_PK11_wrapPK11Module(JNIEnv *env, SECMODModule **module);
 
 
@@ -271,7 +271,7 @@ JSS_PK11_wrapPK11Module(JNIEnv *env, SECMODModule **module);
  *      PR_FAILURE if an exception was thrown, or PR_SUCCESS if the
  *      peration succeeded.
  */
-PR_EXTERN( PRStatus )
+PRStatus
 JSS_PK11_getModulePtr(JNIEnv *env, jobject module, SECMODModule **ptr);
 
 
@@ -296,7 +296,7 @@ typedef struct SigContextProxyStr SigContextProxy;
  *      be stored.
  * Returns: PR_SUCCESS, unless an exception was thrown.
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_PK11_getSigContext(JNIEnv *env, jobject proxy, void**pContext,
         SigContextType* pType);
 
@@ -312,7 +312,7 @@ JSS_PK11_getSigContext(JNIEnv *env, jobject proxy, void**pContext,
  * Returns: a new ContextProxy object wrapping the given context,
  *  or NULL if an exception was thrown.
  */
-PR_EXTERN( jobject )
+jobject
 JSS_PK11_wrapSigContextProxy(JNIEnv *env, void **ctxt, SigContextType type);
 
 /***********************************************************************
@@ -331,7 +331,7 @@ JSS_PK11_wrapSigContextProxy(JNIEnv *env, void **ctxt, SigContextType type);
  * RETURNS
  *      PR_SUCCESS for success, or PR_FAILURE if an exception was thrown.
  */
-PR_EXTERN( PRStatus )
+PRStatus
 JSS_PK11_getCipherContext(JNIEnv *env, jobject proxy, PK11Context **pContext);
 
 
@@ -349,7 +349,7 @@ JSS_PK11_getCipherContext(JNIEnv *env, jobject proxy, PK11Context **pContext);
  * RETURNS
  *      A new CipherContextProxy, or NULL if an exception was thrown.
  */
-PR_EXTERN( jobject )
+jobject
 JSS_PK11_wrapCipherContextProxy(JNIEnv *env, PK11Context **context);
 
 
@@ -375,7 +375,7 @@ JSS_PK11_wrapCipherContextProxy(JNIEnv *env, PK11Context **context);
  *      A session that can be used for cryptographic operations.  If *owner
  *      is false, the session is not owned by the called but rather is shared.
  */
-PR_EXTERN( CK_SESSION_HANDLE )
+CK_SESSION_HANDLE
 JSS_PK11_getNewSession(PK11SlotInfo *slot, PRBool *owner);
 
 /***********************************************************************
@@ -395,7 +395,7 @@ JSS_PK11_getNewSession(PK11SlotInfo *slot, PRBool *owner);
  *      created especially for the caller, PR_FALSE if it is the common
  *      shared session.
  */
-PR_EXTERN( void )
+void
 JSS_PK11_closeSession(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
         PRBool owner);
 
@@ -405,7 +405,7 @@ JSS_PK11_closeSession(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
  *
  * Returns a simple error string for a given PKCS #11 error.
  */
-PR_EXTERN( char* )
+char*
 JSS_PK11_getErrorString(CK_RV crv);
 
 

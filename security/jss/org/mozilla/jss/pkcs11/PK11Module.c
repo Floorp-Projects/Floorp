@@ -170,7 +170,7 @@ finish:
  *      A new Java PK11Module object, or NULL if an exception was thrown.
  *      In any case, the ptr parameter is eaten.
  */
-PR_IMPLEMENT( jobject )
+jobject
 JSS_PK11_wrapPK11Module(JNIEnv *env, SECMODModule **module)
 {
     jclass moduleClass;
@@ -231,7 +231,7 @@ finish:
  *      PR_FAILURE if an exception was thrown, or PR_SUCCESS if the
  *      peration succeeded.
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_PK11_getModulePtr(JNIEnv *env, jobject module, SECMODModule **ptr)
 {
     PR_ASSERT(env!=NULL && module!=NULL && ptr!=NULL);

@@ -271,7 +271,7 @@ finish:
  * RETURNS
  *      PR_SUCCESS for success, or PR_FAILURE if an exception was thrown.
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_PK11_getCipherContext(JNIEnv *env, jobject proxy, PK11Context **pContext)
 {
 
@@ -294,7 +294,7 @@ JSS_PK11_getCipherContext(JNIEnv *env, jobject proxy, PK11Context **pContext)
  * RETURNS
  *      A new CipherContextProxy, or NULL if an exception was thrown.
  */
-PR_IMPLEMENT( jobject )
+jobject
 JSS_PK11_wrapCipherContextProxy(JNIEnv *env, PK11Context **context) {
 
     jbyteArray pointer=NULL;

@@ -81,7 +81,7 @@ struct CERTCertDBHandleStr {
 **
 ** Returns 0 on success, -1 on failure.
 */
-PR_EXTERN(PRInt32)
+PRInt32
 PR_GetThreadAffinityMask(PRThread *thread, PRUint32 *mask);
 
 static jobject
@@ -394,7 +394,7 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative
  * Initialize the security library and open all the databases.
  *
  */
-PR_IMPLEMENT( void )
+void
 JSS_completeInitialize(JNIEnv *env,
         jstring modDBName,
         jstring keyDBName,
@@ -655,7 +655,7 @@ Java_org_mozilla_jss_CryptoManager_setNativePasswordCallback
  * login to tokens implicitly if necessary.
  *
  */
-PR_IMPLEMENT( void )
+void
 JSS_setPasswordCallback(JNIEnv *env, jobject callback)
 {
     PR_ASSERT(env!=NULL && callback!=NULL);

@@ -52,7 +52,7 @@
  * privk: will be stored in a Java wrapper.
  * Returns: a new PK11PrivKey, or NULL if an exception occurred.
  */
-PR_IMPLEMENT( jobject )
+jobject
 JSS_PK11_wrapPrivKey(JNIEnv *env, SECKEYPrivateKey **privk)
 {
 	jclass keyClass;
@@ -255,7 +255,7 @@ finish:
  * ptr: Address of a SECKEYPrivateKey* that will receive the pointer.
  * Returns: PR_SUCCESS for success, PR_FAILURE if an exception was thrown.
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_PK11_getPrivKeyPtr(JNIEnv *env, jobject privkObject,
     SECKEYPrivateKey** ptr)
 {
@@ -425,7 +425,7 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_getStrength
  * RETURNS
  *  The key type, or nullKey if an exception occurred.
  */
-PR_IMPLEMENT( KeyType )
+KeyType
 JSS_PK11_getKeyType(JNIEnv *env, jobject keyTypeObj)
 {
     jclass keyTypeClass;

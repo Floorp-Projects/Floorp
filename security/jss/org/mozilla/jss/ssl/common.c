@@ -43,6 +43,10 @@
 #include "_jni/org_mozilla_jss_ssl_SSLSocket.h"
 #include "jssl.h"
 
+#ifdef WIN32
+#include <winsock.h>
+#endif
+
 /*
  * This is done for regular sockets that we connect() and server sockets,
  * but not for sockets that come from accept.
@@ -296,6 +300,7 @@ JSSL_socketClose(JNIEnv *env, jobject self)
     JSSL_DestroySocketData(env, sock);
 
 finish:
+    return;
 }
 
 void
@@ -330,4 +335,5 @@ JSSL_setNeedClientAuthNoExpiryCheck(JNIEnv *env, jobject self, jboolean b)
     }
 
 finish:
+    return;
 }

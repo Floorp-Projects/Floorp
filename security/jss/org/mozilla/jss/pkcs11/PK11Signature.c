@@ -540,7 +540,7 @@ struct SigContextProxyStr {
  *      of the context either SGN_CONTEXT or VFY_CONTEXT.
  * Returns: PR_SUCCESS, unless an exception was thrown.
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_PK11_getSigContext(JNIEnv *env, jobject proxy, void**pContext,
         SigContextType *pType)
 {
@@ -580,7 +580,7 @@ JSS_PK11_getSigContext(JNIEnv *env, jobject proxy, void**pContext,
  * Returns: a new SigContextProxy object wrapping the given SGNContext, or
  *  NULL if an exception was thrown.
  */
-PR_IMPLEMENT( jobject )
+jobject
 JSS_PK11_wrapSigContextProxy(JNIEnv *env, void **ctxt, SigContextType type)
 {
     jclass proxyClass;

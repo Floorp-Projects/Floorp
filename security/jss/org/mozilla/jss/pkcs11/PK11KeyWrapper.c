@@ -752,7 +752,7 @@ finish:
  *
  * Returns a simple error string for a given PKCS #11 error.
  */
-PR_IMPLEMENT( char* )
+char*
 JSS_PK11_getErrorString(CK_RV crv)
 {
     switch(crv) {

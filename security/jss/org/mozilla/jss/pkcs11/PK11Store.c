@@ -370,7 +370,7 @@ finish:
  *      PR_SUCCESS if the operation was successful, PR_FAILURE if an
  *      exception was thrown.
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_PK11_getStoreSlotPtr(JNIEnv *env, jobject store, PK11SlotInfo **slot)
 {
     PR_ASSERT(env!=NULL && store!=NULL && slot!=NULL);

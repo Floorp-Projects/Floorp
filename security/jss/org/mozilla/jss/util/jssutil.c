@@ -61,7 +61,7 @@
 **          "Bogus argument, you ninny");
 **      return -1;
 */
-PR_IMPLEMENT( void )
+void
 JSS_throwMsg(JNIEnv *env, char *throwableClassName, char *message) {
 
     jclass throwableClass;
@@ -100,7 +100,7 @@ JSS_throwMsg(JNIEnv *env, char *throwableClassName, char *message) {
 **      JSS_throw(env, ILLEGAL_ARGUMENT_EXCEPTION);
 **      return -1;
 */
-PR_IMPLEMENT( void )
+void
 JSS_throw(JNIEnv *env, char *throwableClassName)
 {
     jclass throwableClass;
@@ -169,7 +169,7 @@ JSS_throw(JNIEnv *env, char *throwableClassName)
 **      return;  // exception was thrown!
 **  }
 */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_getPtrFromProxy(JNIEnv *env, jobject nativeProxy, void **ptr)
 {
     jclass nativeProxyClass;
@@ -251,7 +251,7 @@ JSS_getPtrFromProxy(JNIEnv *env, jobject nativeProxy, void **ptr)
 **      return;  // exception was thrown!
 **  }
 */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_getPtrFromProxyOwner(JNIEnv *env, jobject proxyOwner, char* proxyFieldName,
 	char *proxyFieldSig, void **ptr)
 {
@@ -291,7 +291,7 @@ JSS_getPtrFromProxyOwner(JNIEnv *env, jobject proxyOwner, char* proxyFieldName,
 ** Returns a byte array containing the pointer, or NULL if an exception
 ** was thrown.
 */
-PR_IMPLEMENT( jbyteArray ) 
+jbyteArray
 JSS_ptrToByteArray(JNIEnv *env, void *ptr)
 {
     jbyteArray byteArray;
@@ -323,7 +323,7 @@ JSS_ptrToByteArray(JNIEnv *env, void *ptr)
  * occurred.
  *
  */
-PR_IMPLEMENT( jbyteArray )
+jbyteArray
 JSS_OctetStringToByteArray(JNIEnv *env, SECItem *item)
 {
     jbyteArray array;
@@ -378,7 +378,7 @@ JSS_OctetStringToByteArray(JNIEnv *env, SECItem *item)
  *      PR_SUCCESS if the operation was successful, PR_FAILURE if an exception
  *      was thrown.
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_ByteArrayToOctetString(JNIEnv *env, jbyteArray byteArray, SECItem *item)
 {
     jbyte *bytes=NULL;
@@ -425,7 +425,7 @@ finish:
  *
  * Given a string, set it to all zeroes. Be a chum and don't pass in NULL.
  */
-PR_IMPLEMENT( void )
+void
 JSS_wipeCharArray(char* array)
 {
 	PR_ASSERT(array != NULL);
@@ -663,7 +663,7 @@ static int debugLevel = JSS_TRACE_ERROR;
  *      mesg
  *          The trace message.  Must not be NULL.
  */
-PR_IMPLEMENT( void )
+void
 JSS_trace(JNIEnv *env, jint level, char *mesg)
 {
     PR_ASSERT(env!=NULL && mesg!=NULL);
@@ -683,7 +683,7 @@ JSS_trace(JNIEnv *env, jint level, char *mesg)
  * PR_ASSERT that it is due to an OutOfMemory condition. It takes a JNIEnv*,
  * which better not be NULL.
  */
-PR_IMPLEMENT( void )
+void
 JSS_assertOutOfMem(JNIEnv *env)
 {
     jclass memErrClass;
@@ -730,7 +730,7 @@ Java_org_mozilla_jss_util_Debug_setNativeLevel
  *      A Java byte array. NULL will be returned if an exception was
  *      thrown.
  */
-PR_IMPLEMENT( jbyteArray )
+jbyteArray
 JSS_SECItemToByteArray(JNIEnv *env, SECItem *item)
 {
     jbyteArray array=NULL;
@@ -771,7 +771,7 @@ finish:
  * RETURNS
  *      A newly allocated SECItem, or NULL iff an exception was thrown.
  */
-PR_IMPLEMENT( SECItem* )
+SECItem*
 JSS_ByteArrayToSECItem(JNIEnv *env, jbyteArray byteArray)
 {
     SECItem *item = NULL;

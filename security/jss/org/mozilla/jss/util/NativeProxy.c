@@ -56,7 +56,7 @@
  *      return;  // exception was thrown!
  *  }
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_getPtrFromProxy(JNIEnv *env, jobject nativeProxy, void **ptr)
 {
     jclass nativeProxyClass;
@@ -106,7 +106,7 @@ JSS_getPtrFromProxy(JNIEnv *env, jobject nativeProxy, void **ptr)
  * Returns a byte array containing the pointer, or NULL if an exception
  * was thrown.
  */
-PR_IMPLEMENT( jbyteArray ) 
+jbyteArray
 JSS_ptrToByteArray(JNIEnv *env, void *ptr)
 {
     jbyteArray byteArray;

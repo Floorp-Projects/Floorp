@@ -44,7 +44,7 @@
  * Initialize the security library and open all the databases.
  *
  */
-PR_EXTERN( void )
+void
 JSS_completeInitialize(JNIEnv *env,
         jstring modDBName,
         jstring keyDBName,
@@ -71,7 +71,7 @@ JSS_completeInitialize(JNIEnv *env,
  * login to tokens implicitly if necessary.
  *
  */
-PR_EXTERN( void )
+void
 JSS_setPasswordCallback(JNIEnv *env, jobject callback);
 
 #endif

@@ -58,7 +58,7 @@ PR_BEGIN_EXTERN_C
  *      return;  // exception was thrown!
  *  }
  */
-PR_EXTERN( PRStatus )
+PRStatus
 JSS_getPtrFromProxy(JNIEnv *env, jobject nativeProxy, void **ptr);
 
 /*
@@ -68,7 +68,7 @@ JSS_getPtrFromProxy(JNIEnv *env, jobject nativeProxy, void **ptr);
  * Returns a byte array containing the pointer, or NULL if an exception
  * was thrown.
  */
-PR_EXTERN( jbyteArray )
+jbyteArray
 JSS_ptrToByteArray(JNIEnv *env, void *ptr);
 
 PR_END_EXTERN_C

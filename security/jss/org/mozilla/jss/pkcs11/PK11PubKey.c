@@ -84,7 +84,7 @@ finish:
 /***********************************************************************
 ** JSS_PK11_wrapPubKey
 */
-PR_IMPLEMENT( jobject )
+jobject
 JSS_PK11_wrapPubKey(JNIEnv *env, SECKEYPublicKey **pKey)
 {
 	jobject pubKey=NULL;

@@ -52,7 +52,7 @@
  * symKey: will be stored in a Java wrapper.
  * Returns: a new PK11SymKey, or NULL if an exception occurred.
  */
-PR_IMPLEMENT( jobject )
+jobject
 JSS_PK11_wrapSymKey(JNIEnv *env, PK11SymKey **symKey)
 {
     jclass keyClass;
@@ -289,7 +289,7 @@ finish:
  * J S S _ P K 1 1 _ g e t S y m K e y P t r
  *
  */
-PR_IMPLEMENT( PRStatus )
+PRStatus
 JSS_PK11_getSymKeyPtr(JNIEnv *env, jobject symKeyObject, PK11SymKey **ptr)
 {
     PR_ASSERT(env!=NULL && symKeyObject!=NULL);
