@@ -194,6 +194,6 @@ nsMovemailIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
 NS_IMETHODIMP 
 nsMovemailIncomingServer::GetAccountManagerChrome(nsAString& aResult)
 {
-    aResult = ToNewUnicodeString("am-serverwithnoidentities.xul");
+    aResult = ToNewUnicode(NS_LITERAL_STRING("am-serverwithnoidentities.xul"));
     return NS_OK;
 }
