@@ -591,8 +591,6 @@ chrome::
 
 install:: chrome
 
-!ifndef MOZ_OLD_JAR_PACKAGING
-
 !ifdef MOZ_DISABLE_JAR_PACKAGING
 _JAR_FLAT_FILES_ONLY=-f
 _JAR_REGCHROME_JAR=1
@@ -601,14 +599,16 @@ _JAR_FLAT_FILES_ONLY=
 _JAR_REGCHROME_JAR=0
 !endif
 
+REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chrome.txt $(_JAR_REGCHROME_JAR)
+
+!ifndef MOZ_OLD_JAR_PACKAGING
+
 !if exist($(JAR_MANIFEST))
 
 chrome::
         $(PERL) $(DEPTH)\config\make-jars.pl $(_JAR_FLAT_FILES_ONLY) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 
 !endif
-
-REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chrome.txt $(_JAR_REGCHROME_JAR)
 
 regchrome:
 
