@@ -779,7 +779,7 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
       result=-result;
       break;
     }
-    else if(('+'==theChar) || (' '==theChar)) { //stop in a good state if you see this...
+    else if(('+'==theChar) || (' '==theChar) || ('#'==theChar)) { //stop in a good state if you see this...
       break;
     }
     else if((('x'==theChar) || ('X'==theChar)) && (16==aRadix)) {  
