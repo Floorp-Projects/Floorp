@@ -24,6 +24,7 @@
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoader.h"
+#include "nsICSSLoaderObserver.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
@@ -78,12 +79,16 @@
 #include "nsParserCIID.h"
 #include "nsISelectElement.h"
 
+#include "nsIPref.h"
+
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
 
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 #include "nsTimer.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 #include "nsDOMError.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
@@ -103,6 +108,7 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //----------------------------------------------------------------------
 
@@ -136,7 +142,9 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 class SinkContext;
 
 class HTMLContentSink : public nsIHTMLContentSink,
-                        public nsIUnicharStreamLoaderObserver
+                        public nsIUnicharStreamLoaderObserver,
+                        public nsITimerCallback,
+                        public nsICSSLoaderObserver
 {
 public:
   HTMLContentSink();
@@ -185,6 +193,13 @@ public:
 
   NS_IMETHOD DoFragment(PRBool aFlag);
 
+  // nsITimerCallback
+  virtual void Notify(nsITimer *timer);
+  
+  // nsICSSLoaderObserver
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
+
+  PRBool IsTimeToNotify();
   PRBool IsInScript();
   void ReduceEntities(nsString& aString);
   void GetAttributeValueAt(const nsIParserNode& aNode,
@@ -212,6 +227,12 @@ public:
   nsIURI* mDocumentBaseURL;
   nsIWebShell* mWebShell;
   nsIParser* mParser;
+
+  PRBool mNotifyOnTimer;           // Do we notify based on time?
+  PRInt32 mBackoffCount;           // back off timer notification after count
+  PRInt32 mNotificationInterval;   // Notification interval in microseconds
+  PRTime mLastNotificationTime;    // Time of last notification
+  nsCOMPtr<nsITimer> mNotificationTimer;    // Timer used for notification
 
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
@@ -1104,6 +1125,11 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
     parent->ChildCount(childCount);
     mStack[mStackPos-1].mNumFlushed = childCount;
   }
+  else if (!aDidNotify && mSink->IsTimeToNotify()) {
+    SINK_TRACE(SINK_TRACE_REFLOW,
+               ("SinkContext::DidAddContent: Notification as a result of the interval expiring; backoff count: %d", mSink->mBackoffCount));
+    FlushTags();
+  }
 }
 
 nsresult
@@ -1899,6 +1925,10 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mCurrentMap);
   NS_IF_RELEASE(mRefContent);
 
+  if (mNotificationTimer) {
+    mNotificationTimer->Cancel();
+  }
+
   PRInt32 numContexts = mContextStack.Count();
   
   if(mCurrentContext==mHeadContext) {
@@ -1934,10 +1964,12 @@ HTMLContentSink::~HTMLContentSink()
   }
 }
 
-NS_IMPL_ISUPPORTS3(HTMLContentSink, 
+NS_IMPL_ISUPPORTS5(HTMLContentSink, 
                    nsIHTMLContentSink,
                    nsIContentSink,
-                   nsIUnicharStreamLoaderObserver)
+                   nsIUnicharStreamLoaderObserver,
+                   nsITimerCallback,
+                   nsICSSLoaderObserver)
 
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
@@ -1967,6 +1999,24 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mWebShell = aContainer;
   NS_ADDREF(aContainer);
 
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+
+  if (NS_FAILED(rv)) {
+    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
+    MOZ_TIMER_STOP(mWatch);
+    return rv;
+  }
+
+  mNotifyOnTimer = PR_FALSE;
+  prefs->GetBoolPref("content.notify.ontimer", &mNotifyOnTimer);
+
+  mBackoffCount = 3;
+  prefs->GetIntPref("content.notify.backoffcount", &mBackoffCount);
+
+  mNotificationInterval = 1000000;
+  prefs->GetIntPref("content.notify.interval", &mNotificationInterval);
+
   nsIHTMLContentContainer* htmlContainer = nsnull;
   if (NS_SUCCEEDED(aDoc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer))) {
     htmlContainer->GetCSSLoader(mCSSLoader);
@@ -1978,7 +2028,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, mPreferredStyle);
 
   // Make root part
-  nsresult rv = NS_NewHTMLHtmlElement(&mRoot, nsHTMLAtoms::html);
+  rv = NS_NewHTMLHtmlElement(&mRoot, nsHTMLAtoms::html);
   if (NS_OK != rv) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
     MOZ_TIMER_STOP(mWatch);
@@ -2038,6 +2088,14 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   MOZ_TIMER_PRINT(mWatch);
 #endif
 
+  // Cancel a timer if we had one out there
+  if (mNotificationTimer) {
+    SINK_TRACE(SINK_TRACE_REFLOW,
+               ("HTMLContentSink::DidBuildModel: canceling notification timeout"));
+    mNotificationTimer->Cancel();
+    mNotificationTimer = 0;
+  }
+
   if (nsnull == mTitle) {
     mHTMLDocument->SetTitle("");
   }
@@ -2071,15 +2129,101 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   return NS_OK;
 }
 
+void 
+HTMLContentSink::Notify(nsITimer *timer)
+{
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::Notify()\n"));
+  MOZ_TIMER_START(mWatch);
+#ifdef MOZ_DEBUG
+  PRTime now = PR_Now();
+  PRInt64 diff, interval;
+  PRInt32 delay;
+
+  LL_I2L(interval, mNotificationInterval);
+  LL_SUB(diff, now, mLastNotificationTime);
+
+  LL_SUB(diff, diff, interval);
+  LL_L2I(delay, diff);
+  delay /= PR_USEC_PER_MSEC;
+
+  mBackoffCount--;
+  SINK_TRACE(SINK_TRACE_REFLOW,
+             ("HTMLContentSink::Notify: reflow on a timer: %d milliseconds late, backoff count: %d", delay, mBackoffCount));
+#endif
+  if (mCurrentContext) {
+    mCurrentContext->FlushTags();
+  }
+  mNotificationTimer = 0;
+  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Notify()\n"));
+  MOZ_TIMER_STOP(mWatch);
+}
+
 NS_IMETHODIMP
 HTMLContentSink::WillInterrupt()
 {
+  nsresult result = NS_OK;
+
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::WillInterrupt: this=%p", this));
 #ifdef SINK_NO_INCREMENTAL
   return NS_OK;
 #else
-  return mCurrentContext->FlushTags();
+  if (mNotifyOnTimer && mLayoutStarted) {
+    if (mBackoffCount) {
+      PRTime now = PR_Now();
+      PRInt64 interval, diff;
+      PRInt32 delay;
+      
+      LL_I2L(interval, mNotificationInterval);
+      LL_SUB(diff, now, mLastNotificationTime);
+      
+      // If it's already time for us to have a notification
+      if (LL_CMP(diff, >=, interval)) {
+        mBackoffCount--;
+        SINK_TRACE(SINK_TRACE_REFLOW,
+                 ("HTMLContentSink::WillInterrupt: flushing tags since we've run out time; backoff count: %d", mBackoffCount));
+        result = mCurrentContext->FlushTags();
+      }
+      else {
+        // If the time since the last notification is less than
+        // the expected interval but positive, set a timer up for the remaining
+        // interval.
+        if (LL_CMP(diff, >, LL_ZERO)) {
+          LL_SUB(diff, interval, diff);
+          LL_L2I(delay, diff);
+        }
+        // Else set up a timer for the expected interval
+        else {
+          delay = mNotificationInterval;
+        }
+        
+        // Convert to milliseconds
+        delay /= PR_USEC_PER_MSEC;
+        
+        // Cancel a timer if we had one out there
+        if (mNotificationTimer) {
+          SINK_TRACE(SINK_TRACE_REFLOW,
+                     ("HTMLContentSink::WillInterrupt: canceling notification timeout"));
+          mNotificationTimer->Cancel();
+        }
+        
+        result = NS_NewTimer(getter_AddRefs(mNotificationTimer));
+        if (NS_SUCCEEDED(result)) {
+          SINK_TRACE(SINK_TRACE_REFLOW,
+                     ("HTMLContentSink::WillInterrupt: setting up timer with delay %d", delay));
+          
+          result = mNotificationTimer->Init(this, delay);
+        }
+      }
+    }
+  }
+  else {
+    SINK_TRACE(SINK_TRACE_REFLOW,
+               ("HTMLContentSink::WillInterrupt: flushing tags unconditionally"));
+    result = mCurrentContext->FlushTags();
+  }
+
+  return result;
 #endif
 }
 
@@ -2088,6 +2232,14 @@ HTMLContentSink::WillResume()
 {
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::WillResume: this=%p", this));
+  // Cancel a timer if we had one out there
+  if (mNotificationTimer) {
+    SINK_TRACE(SINK_TRACE_REFLOW,
+               ("HTMLContentSink::WillResume: canceling notification timeout"));
+    mNotificationTimer->Cancel();
+    mNotificationTimer = 0;
+  }
+
   return NS_OK;
 }
 
@@ -2687,6 +2839,8 @@ HTMLContentSink::StartLayout()
   }
   mLayoutStarted = PR_TRUE;
 
+  mLastNotificationTime = PR_Now();
+
   // If it's a frameset document then disable scrolling. If it is not a <frame> 
   // document, then let the style dictate. We need to do this before the initial reflow...
   if (mWebShell) {
@@ -3162,6 +3316,22 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
   aType.StripWhitespace();
 }
 
+NS_IMETHODIMP
+HTMLContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet, 
+                                  PRBool aDidNotify)
+{
+  // If there was a notification done for this style sheet, we know
+  // that frames have been created for all content seen so far
+  // (processing of a new style sheet causes recreation of the frame
+  // model).  As a result, all contexts should update their notion of
+  // how much frame creation has happened.
+  if (aDidNotify) {
+    UpdateAllContexts();
+  }
+
+  return NS_OK;
+}
+
 nsresult
 HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
                                   const nsString& aHref, const nsString& aRel,
@@ -3213,7 +3383,8 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
       result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_HTML,
                                          mStyleSheetCount++, 
                                          ((blockParser) ? mParser : nsnull),
-                                         doneLoading);
+                                         doneLoading, 
+                                         this);
       NS_RELEASE(url);
       if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
         result = NS_ERROR_HTMLPARSER_BLOCK;
@@ -3499,6 +3670,7 @@ HTMLContentSink::NotifyAppend(nsIContent* aContainer, PRInt32 aStartIndex)
   MOZ_TIMER_SAVE(mWatch)      
   MOZ_TIMER_STOP(mWatch);
   mDocument->ContentAppended(aContainer, aStartIndex);
+  mLastNotificationTime = PR_Now();
   MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyAppend()\n"));
   MOZ_TIMER_RESTORE(mWatch);
 }
@@ -3512,8 +3684,31 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
   MOZ_TIMER_SAVE(mWatch)      
   MOZ_TIMER_STOP(mWatch);
   mDocument->ContentInserted(aContent, aChildContent, aIndexInContainer);
+  mLastNotificationTime = PR_Now();
   MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyInsert()\n"));
   MOZ_TIMER_RESTORE(mWatch);
+}
+
+PRBool
+HTMLContentSink::IsTimeToNotify()
+{
+  if (!mNotifyOnTimer || !mLayoutStarted || !mBackoffCount) {
+    return PR_FALSE;
+  }
+
+  PRTime now = PR_Now();
+  PRInt64 interval, diff;
+  
+  LL_I2L(interval, mNotificationInterval);
+  LL_SUB(diff, now, mLastNotificationTime);
+
+  if (LL_CMP(diff, >=, interval)) {
+    mBackoffCount--;
+    return PR_TRUE;
+  }
+  else {
+    return PR_FALSE;
+  }
 }
 
 void
@@ -3532,7 +3727,7 @@ nsresult
 HTMLContentSink::ResumeParsing()
 {
   nsresult result=NS_OK;
-  if (nsnull != mParser) {
+  if (mParser) {
     result=mParser->EnableParser(PR_TRUE);
   }
   
@@ -3907,17 +4102,8 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       rv = mCSSLoader->LoadInlineStyle(element, uin, title, media, kNameSpaceID_HTML,
                                        mStyleSheetCount++, 
                                        ((blockParser) ? mParser : nsnull),
-                                       doneLoading);
+                                       doneLoading, this);
       NS_RELEASE(uin);
-
-      // If we're done loading the inline style, we know that frames
-      // have been created for all content seen so far (processing
-      // of a new style sheet causes recreation of the frame model).
-      // As a result, all contexts should update their notion of
-      // how much frame creation has happened.
-      if (doneLoading) {
-        UpdateAllContexts();
-      }
     } 
     else {
       // src with immediate style data doesn't add up
@@ -3934,7 +4120,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       rv = mCSSLoader->LoadStyleLink(element, url, title, media, kNameSpaceID_HTML,
                                      mStyleSheetCount++, 
                                      ((blockParser) ? mParser : nsnull), 
-                                     doneLoading);
+                                     doneLoading, this);
       NS_RELEASE(url);
     }
     if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
