@@ -151,6 +151,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
+				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin MOZILLA_INTERNAL_API=1";
 				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
 				INFOPLIST_FILE = "Info-HistoryPrefPane.plist";
 				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
@@ -449,6 +450,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
+				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin MOZILLA_INTERNAL_API=1";
 				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
 				INFOPLIST_FILE = "Info-DownloadsPrefPane.plist";
 				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
@@ -647,6 +649,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
+				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin MOZILLA_INTERNAL_API=1";
 				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
 				INFOPLIST_FILE = "Info-TabsPrefPane.plist";
 				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
@@ -1669,13 +1672,13 @@
 			projectDirPath = "";
 			targets = (
 				3F44ABD005BDFB9E00CB4B08,
+				3F44AE0905BDFBA000CB4B08,
+				3F44AFC805BDFBA100CB4B08,
 				3F44AD8A05BDFB9F00CB4B08,
 				3F44ADA005BDFB9F00CB4B08,
 				3F44ADC305BDFBA000CB4B08,
 				3F44ADDB05BDFBA000CB4B08,
 				3F44ADF205BDFBA000CB4B08,
-				3F44AE0905BDFBA000CB4B08,
-				3F44AFC805BDFBA100CB4B08,
 				03E2D8520771F73F00BD2443,
 				03C5AB0F07722DFC00EAF77D,
 				035A4974079DC83D0084B05F,
@@ -2383,12 +2386,12 @@
 				WRAPPER_EXTENSION = app;
 			};
 			dependencies = (
+				3F44AFE005BDFBA100CB4B08,
 				3F44AFD605BDFBA100CB4B08,
 				3F44AFD805BDFBA100CB4B08,
 				3F44AFDA05BDFBA100CB4B08,
 				3F44AFDC05BDFBA100CB4B08,
 				3F44AFDE05BDFBA100CB4B08,
-				3F44AFE005BDFBA100CB4B08,
 				03E2D9900771FB9300BD2443,
 				03C5AB1307722EFC00EAF77D,
 				0380F471079DCCD90065A7AB,
@@ -6253,12 +6256,12 @@
 				WRAPPER_EXTENSION = app;
 			};
 			dependencies = (
+				3F44AFEC05BDFBA100CB4B08,
 				3F44AFE205BDFBA100CB4B08,
 				3F44AFE405BDFBA100CB4B08,
 				3F44AFE605BDFBA100CB4B08,
 				3F44AFE805BDFBA100CB4B08,
 				3F44AFEA05BDFBA100CB4B08,
-				3F44AFEC05BDFBA100CB4B08,
 				03C5AB1507722F1100EAF77D,
 				03C5AB1707722F1100EAF77D,
 				0380F473079DCCEC0065A7AB,
