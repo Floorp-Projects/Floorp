@@ -1303,7 +1303,8 @@ wallet_RequestToPrefill(XP_List * list) {
   return;
 }
 
-#define WALLET_EDITOR_URL "http://peoplestage/morse/wallet/walleted.html"
+#define WALLET_EDITOR_URL "http://people.netscape.com/morse/wallet/walleted.html"
+//#define WALLET_EDITOR_URL "http://peoplestage/morse/wallet/walleted.html"
 //#define WALLET_EDITOR_URL "resource:/res/samples/walleted.html"
 // bad!!! should pass the above URL as parameter to wallet_PostEdit
 #define BREAK '\001'
