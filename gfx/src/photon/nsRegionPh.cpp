@@ -304,10 +304,10 @@ void nsRegionPh :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRI
    {
      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::GetBoundingBox t=<%p> t->next=<%p>\n", t, t->next));
 
-     *aX = min(*aX, tulx);
-     *aY = min(*aY, tuly);
-     bX = max(bX, tlrx);
-	 bY = max(bY, tlry);	 
+     *aX = PR_MIN(*aX, tulx);
+     *aY = PR_MIN(*aY, tuly);
+     bX = PR_MAX(bX, tlrx);
+	 bY = PR_MAX(bY, tlry);	 
      t = t->next;   
    }
 

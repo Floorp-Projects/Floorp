@@ -865,7 +865,8 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUi
   if (surf)
   {
     NS_ADDREF(surf);
-    surf->Init(mSurface->GetGC(), aBounds->width, aBounds->height, aSurfFlags);
+    PhGC_t *gc = mSurface->GetGC();
+    surf->Init(gc, aBounds->width, aBounds->height, aSurfFlags);
   }
   else
   {

@@ -907,7 +907,7 @@ NS_METHOD nsWindow::ShowMenuBar( PRBool aShow)
     PhDim_t    win_dim;
     PtWidget_t *menubar;
 
-    mMenuBar->GetNativeData( menubar );
+    mMenuBar->GetNativeData( (void *) menubar );
 
     if( mMenuBarVis )
     {

@@ -1,6 +1,7 @@
 /* PtRawDrawContainer.c - widget source file */
 
 #include "PtRawDrawContainer.h"
+#include <stdio.h>
 
 /* prototype declarations */
 PtWidgetClass_t *CreateRawDrawContainerClass( void );

@@ -160,11 +160,14 @@ NS_METHOD nsScrollbar::SetPosition (PRUint32 aPos)
   {
     PtArg_t  arg;
 
+#ifdef PHOTON1_ONLY
     PtSetArg( &arg, Pt_ARG_SCROLL_POSITION, aPos, 0 );
     if( PtSetResources( mWidget, 1, &arg ) == 0 )
     {
       res = NS_OK;
     }
+#endif
+
   }
 
   return res;
@@ -184,13 +187,14 @@ NS_METHOD nsScrollbar::GetPosition (PRUint32 & aPos)
   {
     PtArg_t  arg;
     int     *pos;
-
+#ifdef PHOTON1_ONLY
     PtSetArg( &arg, Pt_ARG_SCROLL_POSITION, &pos, 0 );
     if( PtGetResources( mWidget, 1, &arg ) == 0 )
     {
       aPos = *pos;
       res = NS_OK;
     }
+#endif
   }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::GetPosition position=<%d>\n", aPos));
@@ -325,7 +329,9 @@ NS_METHOD nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSize,
 
     PtSetArg( &arg[0], Pt_ARG_MAXIMUM , aMaxRange, 0 );
     PtSetArg( &arg[1], Pt_ARG_SLIDER_SIZE , aThumbSize, 0 );
+#ifdef PHOTON1_ONLY
     PtSetArg( &arg[2], Pt_ARG_SCROLL_POSITION , aPosition, 0 );
+#endif
     PtSetArg( &arg[3], Pt_ARG_INCREMENT, aLineIncrement, 0 );
 
     if( PtSetResources( mWidget, 4, arg ) == 0 )
