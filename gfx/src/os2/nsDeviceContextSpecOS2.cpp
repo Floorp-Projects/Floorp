@@ -164,10 +164,7 @@ nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* a
   pDJP++;
 
   //Get Orientation from Job Properties
-  if (!strcmp(driver, "LASERJET"))
-    pDJP->lType = DJP_ALL;
-  else
-    pDJP->lType = DJP_CURRENT;
+  pDJP->lType = DJP_CURRENT;
   pDJP->cb = sizeof(DJP_ITEM);
   pDJP->ulNumReturned = 1;
   pDJP->ulProperty = DJP_SJ_ORIENTATION;
@@ -265,7 +262,7 @@ NS_IMPL_RELEASE(nsDeviceContextSpecOS2)
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -299,8 +296,13 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
     }
     if (printer != nsnull) 
       strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());  
-  
-    mPrData.toPrinter = !tofile;
+
+    if (aIsPrintPreview) 
+      mPrData.destination = printPreview; 
+    else if (tofile)  
+      mPrData.destination = printToFile;
+    else  
+      mPrData.destination = printToPrinter;
     mPrData.copies = copies;
 
     rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
@@ -330,9 +332,9 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
 }
 
 
-NS_IMETHODIMP nsDeviceContextSpecOS2 :: GetToPrinter( PRBool &aToPrinter )     
+NS_IMETHODIMP nsDeviceContextSpecOS2 :: GetDestination( int &aDestination )     
 {
-  aToPrinter = mPrData.toPrinter;
+  aDestination = mPrData.destination;
   return NS_OK;
 }
 
@@ -504,7 +506,8 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 
   int defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
   for (int i = 0; i < mGlobalNumPrinters; i++) {
-    char *printer = nsDeviceContextSpecOS2::PrnDlg.GetPrinter(i);
+    nsXPIDLCString printer;
+    nsDeviceContextSpecOS2::PrnDlg.GetPrinter(i, getter_Copies(printer));
     if ( defaultPrinter == i ) 
        mGlobalPrinterList->InsertStringAt(NS_ConvertASCIItoUCS2(printer), 0);
     else 
@@ -518,11 +521,10 @@ void GlobalPrinters::GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName)
   aDefaultPrinterName = nsnull;
 
   int defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
-  char *printer = nsDeviceContextSpecOS2::PrnDlg.GetPrinter(defaultPrinter);
+  nsXPIDLCString printer;
+  nsDeviceContextSpecOS2::PrnDlg.GetPrinter(defaultPrinter, getter_Copies(printer));
 
-  nsAutoString defaultName;
-  defaultName.AppendWithConversion(printer);
-  aDefaultPrinterName = ToNewUnicode(defaultName);
+  aDefaultPrinterName = ToNewUnicode(NS_ConvertASCIItoUCS2(printer));
 }
 
 void GlobalPrinters::FreeGlobalPrinters()
@@ -685,16 +687,16 @@ int PRINTDLG::GetDefaultPrinter ()
    return mDefaultQueue;
 }
 
-char* PRINTDLG::GetPrinter (int numPrinter)
+PRINTDLG::GetPrinter (int numPrinter, char** printerName)
 {
    if (numPrinter > mQueueCount)
       return NULL;
-
+ 
    nsCAutoString pName(mPQBuf [numPrinter]->QueueName());
-
+ 
    pName.ReplaceChar('\r', ' ');
    pName.StripChars("\n");
-   return ToNewCString(pName);
+   *printerName = ToNewCString(pName);
 }
 
 PRTQUEUE* PRINTDLG::SetPrinterQueue (int numPrinter)
@@ -803,7 +805,7 @@ BOOL PRINTDLG::ShowProperties (int index)
 /*  Job management                                                          */
 /****************************************************************************/
 
-HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int toPrinter, char *file )
+HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int destination, char *file )
 {
    HDC hdc = 0;
    PSZ pszLogAddress;
@@ -819,10 +821,13 @@ HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int toPrinte
    itoa (copies, numCopies, 10);
    strcat (pszQueueProcParams, numCopies);
 
-   if ( toPrinter ) {
+   if ( destination ) {
       pszLogAddress = pInfo->PQI3 ().pszName;
       pszDataType = "PM_Q_STD";
-      dcType = OD_QUEUED;
+      if ( destination == 2 )
+         dcType = OD_METAFILE;
+      else
+         dcType = OD_QUEUED;
    } else {
       if (file && strlen(file) != 0) 
          pszLogAddress = (PSZ) file;
