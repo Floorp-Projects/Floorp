@@ -133,18 +133,6 @@ nsHttpHandler::~nsHttpHandler()
 
     nsHttp::DestroyAtomTable();
 
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    GetPrefBranch(getter_AddRefs(prefBranch));
-    if (prefBranch) {
-        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
-        if (pbi) {
-            pbi->RemoveObserver(HTTP_PREF_PREFIX, this);
-            pbi->RemoveObserver(UA_PREF_PREFIX, this);
-            pbi->RemoveObserver(INTL_ACCEPT_LANGUAGES, this); 
-            pbi->RemoveObserver(INTL_ACCEPT_CHARSET, this);
-        }
-    }
-
     LOG(("dropping active connections...\n"));
     DropConnections(mActiveConnections);
 
@@ -261,6 +249,7 @@ nsHttpHandler::Init()
     if (observerSvc) {
         observerSvc->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
         observerSvc->AddObserver(this, NS_LITERAL_STRING("session-logout").get());
+        observerSvc->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
     }
     return NS_OK;
 }
@@ -1808,8 +1797,13 @@ nsHttpHandler::Observe(nsISupports *subject,
                        const PRUnichar *topic,
                        const PRUnichar *data)
 {
-    if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("profile-before-change").get()) ||
-        !nsCRT::strcmp(topic, NS_LITERAL_STRING("session-logout").get())) {
+    if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("nsPref:changed").get())) {
+        nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
+        if (prefBranch)
+            PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
+    }
+    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("profile-before-change").get()) ||
+             !nsCRT::strcmp(topic, NS_LITERAL_STRING("session-logout").get())) {
         // clear cache of all authentication credentials.
         if (mAuthCache)
             mAuthCache->ClearAll();
@@ -1818,10 +1812,18 @@ nsHttpHandler::Observe(nsISupports *subject,
         // depend on this value.
         mSessionStartTime = NowInSeconds();
     }
-    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("nsPref:changed").get())) {
-        nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
-        if (prefBranch)
-            PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
+    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get())) {
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        GetPrefBranch(getter_AddRefs(prefBranch));
+        if (prefBranch) {
+            nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
+            if (pbi) {
+                pbi->RemoveObserver(HTTP_PREF_PREFIX, this);
+                pbi->RemoveObserver(UA_PREF_PREFIX, this);
+                pbi->RemoveObserver(INTL_ACCEPT_LANGUAGES, this); 
+                pbi->RemoveObserver(INTL_ACCEPT_CHARSET, this);
+            }
+        }
     }
     return NS_OK;
 }
