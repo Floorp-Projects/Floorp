@@ -1331,7 +1331,9 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\navigate.cpp   
 	$(DEPTH)\cmd\winfe\ncapiurl.cpp 
 	$(DEPTH)\cmd\winfe\nethelp.cpp  
+!ifdef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\nglglue.cpp  
+!endif
 	$(DEPTH)\cmd\winfe\mozilla.cpp   
 	$(DEPTH)\cmd\winfe\nsapp.cpp   
 	$(DEPTH)\cmd\winfe\netsdoc.cpp
