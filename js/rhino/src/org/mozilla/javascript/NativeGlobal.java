@@ -535,6 +535,12 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                     sb.append(C);
                 }
             } else {
+                if (sb == null) {
+                    sb = new StringBuffer(length + 3);
+                    sb.append(str);
+                    sb.setLength(k);
+                    utf8buf = new byte[6];
+                }
                 if (0xDC00 <= C && C <= 0xDFFF) {
                     throw cx.reportRuntimeError0("msg.bad.uri");
                 }
@@ -551,12 +557,6 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                         throw cx.reportRuntimeError0("msg.bad.uri");
                     }
                     V = ((C - 0xD800) << 10) + (C2 - 0xDC00) + 0x10000;
-                }
-                if (utf8buf == null) {
-                    utf8buf = new byte[6];
-                    sb = new StringBuffer(length + 3);
-                    sb.append(str);
-                    sb.setLength(k);
                 }
                 int L = oneUcs4ToUtf8Char(utf8buf, V);
                 for (int j = 0; j < L; j++) {
