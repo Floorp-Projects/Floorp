@@ -317,7 +317,7 @@ public class Codegen extends Interpreter
         Scriptable directConstruct(<directCallArgs>) {
             Scriptable newInstance = createObject(cx, scope);
             Object val = <body-name>(cx, scope, newInstance, <directCallArgs>);
-            if (val instanceof Scriptable && val != Undefined.instance) {
+            if (val instanceof Scriptable) {
                 return (Scriptable) val;
             }
             return newInstance;
@@ -359,9 +359,6 @@ public class Codegen extends Interpreter
         cfw.add(ByteCode.DUP); // make a copy of direct call result
         cfw.add(ByteCode.INSTANCEOF, "org/mozilla/javascript/Scriptable");
         cfw.add(ByteCode.IFEQ, exitLabel);
-        cfw.add(ByteCode.DUP); // make a copy of direct call result
-        pushUndefined(cfw);
-        cfw.add(ByteCode.IF_ACMPEQ, exitLabel);
         // cast direct call result
         cfw.add(ByteCode.CHECKCAST, "org/mozilla/javascript/Scriptable");
         cfw.add(ByteCode.ARETURN);
@@ -371,7 +368,6 @@ public class Codegen extends Interpreter
         cfw.add(ByteCode.ARETURN);
 
         cfw.stopMethod((short)(firstLocal + 1));
-
     }
 
     private void generateCallMethod(ClassFileWriter cfw)
@@ -1051,7 +1047,7 @@ public class Codegen extends Interpreter
     static void pushUndefined(ClassFileWriter cfw)
     {
         cfw.add(ByteCode.GETSTATIC, "org/mozilla/javascript/Undefined",
-                "instance", "Lorg/mozilla/javascript/Scriptable;");
+                "instance", "Ljava/lang/Object;");
     }
 
     int getIndex(ScriptOrFnNode n)

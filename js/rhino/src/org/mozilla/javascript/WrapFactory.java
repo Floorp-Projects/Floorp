@@ -76,16 +76,16 @@ public class WrapFactory
     public Object wrap(Context cx, Scriptable scope,
                        Object obj, Class staticType)
     {
-        if (obj == null)
+        if (obj == null || obj == Undefined.instance
+            || obj instanceof Scriptable)
+        {
             return obj;
+        }
         if (staticType != null && staticType.isPrimitive()) {
             if (staticType == Void.TYPE)
                 return Undefined.instance;
             if (staticType == Character.TYPE)
                 return new Integer((int) ((Character) obj).charValue());
-            return obj;
-        }
-        if (obj instanceof Scriptable) {
             return obj;
         }
         if (!isJavaPrimitiveWrap()) {

@@ -234,15 +234,16 @@ public class ScriptRuntime {
      *
      * See ECMA 9.2.
      */
-    public static boolean toBoolean(Object val) {
-        if (val == null)
+    public static boolean toBoolean(Object val)
+    {
+        if (val == null || val == Undefined.instance)
             return false;
         if (val instanceof Boolean)
             return ((Boolean) val).booleanValue();
         if (val instanceof Scriptable) {
             if (Context.getContext().isVersionECMA1()) {
                 // pure ECMA
-                return val != Undefined.instance;
+                return true;
             }
             // ECMA extension
             val = ((Scriptable) val).getDefaultValue(BooleanClass);
@@ -658,19 +659,26 @@ public class ScriptRuntime {
      */
     public static String toString(Object val) {
         for (;;) {
-            if (val == null)
+            if (val == null) {
                 return "null";
-            if (val instanceof Scriptable) {
-                val = ((Scriptable) val).getDefaultValue(StringClass);
-                if (val != Undefined.instance && val instanceof Scriptable) {
-                    throw errorWithClassName("msg.primitive.expected", val);
-                }
-                continue;
+            }
+            if (val == Undefined.instance) {
+                return "undefined";
+            }
+            if (val instanceof String) {
+                return (String)val;
             }
             if (val instanceof Number) {
                 // XXX should we just teach NativeNumber.stringValue()
                 // about Numbers?
-                return numberToString(((Number) val).doubleValue(), 10);
+                return numberToString(((Number)val).doubleValue(), 10);
+            }
+            if (val instanceof Scriptable) {
+                val = ((Scriptable) val).getDefaultValue(StringClass);
+                if (val instanceof Scriptable) {
+                    throw errorWithClassName("msg.primitive.expected", val);
+                }
+                continue;
             }
             return val.toString();
         }
@@ -722,6 +730,9 @@ public class ScriptRuntime {
         if (value == null) {
             return "null";
         }
+        if (value == Undefined.instance) {
+            return "undefined";
+        }
         if (value instanceof String) {
             String escaped = escapeString((String)value);
             StringBuffer sb = new StringBuffer(escaped.length() + 2);
@@ -739,9 +750,6 @@ public class ScriptRuntime {
         }
         if (value instanceof Boolean) {
             return toString(value);
-        }
-        if (value == Undefined.instance) {
-            return "undefined";
         }
         if (value instanceof Scriptable) {
             Scriptable obj = (Scriptable)value;
@@ -821,7 +829,7 @@ public class ScriptRuntime {
 
     public static Scriptable toObject(Scriptable scope, Object val)
     {
-        if (val instanceof Scriptable && val != Undefined.instance) {
+        if (val instanceof Scriptable) {
             return (Scriptable)val;
         }
         return toObject(Context.getContext(), scope, val);
@@ -830,11 +838,8 @@ public class ScriptRuntime {
     public static Scriptable toObjectOrNull(Context cx, Object obj)
     {
         if (obj instanceof Scriptable) {
-            Scriptable sobj = (Scriptable)obj;
-            if (sobj != Undefined.instance) {
-                return sobj;
-            }
-        } else if (obj != null) {
+            return (Scriptable)obj;
+        } else if (obj != null && obj != Undefined.instance) {
             return toObject(cx, getTopCallScope(cx), obj);
         }
         return null;
@@ -846,7 +851,7 @@ public class ScriptRuntime {
     public static Scriptable toObject(Scriptable scope, Object val,
                                       Class staticClass)
     {
-        if (val instanceof Scriptable && val != Undefined.instance) {
+        if (val instanceof Scriptable) {
             return (Scriptable)val;
         }
         return toObject(Context.getContext(), scope, val);
@@ -860,15 +865,14 @@ public class ScriptRuntime {
     public static Scriptable toObject(Context cx, Scriptable scope, Object val)
     {
         if (val instanceof Scriptable) {
-            if (val == Undefined.instance) {
-                throw typeError0("msg.undef.to.object");
-            }
             return (Scriptable) val;
         }
         if (val == null) {
             throw typeError0("msg.null.to.object");
         }
-
+        if (val == Undefined.instance) {
+            throw typeError0("msg.undef.to.object");
+        }
         String className = val instanceof String ? "String" :
                            val instanceof Number ? "Number" :
                            val instanceof Boolean ? "Boolean" :
@@ -2220,10 +2224,10 @@ public class ScriptRuntime {
      */
     public static String typeof(Object value)
     {
-        if (value == Undefined.instance)
-            return "undefined";
         if (value == null)
             return "object";
+        if (value == Undefined.instance)
+            return "undefined";
         if (value instanceof Scriptable)
         {
             if (value instanceof XMLObject)
@@ -2478,7 +2482,6 @@ public class ScriptRuntime {
             return eqNumber(b ? 1.0 : 0.0, y);
         } else if (x instanceof Scriptable) {
             if (y instanceof Scriptable) {
-                // Generic test also works for y == Undefined.instance
                 if (x == y) {
                     return true;
                 }
@@ -2512,6 +2515,7 @@ public class ScriptRuntime {
             } else if (y instanceof String) {
                 return eqString((String)y, x);
             }
+            // covers the case when y == Undefined.instance as well
             return false;
         } else {
             warnAboutNonJSObject(x);
@@ -2522,7 +2526,7 @@ public class ScriptRuntime {
     static boolean eqNumber(double x, Object y)
     {
         for (;;) {
-            if (y == null) {
+            if (y == null || y == Undefined.instance) {
                 return false;
             } else if (y instanceof Number) {
                 return x == ((Number)y).doubleValue();
@@ -2531,7 +2535,6 @@ public class ScriptRuntime {
             } else if (y instanceof Boolean) {
                 return x == (((Boolean)y).booleanValue() ? 1.0 : +0.0);
             } else if (y instanceof Scriptable) {
-                if (y == Undefined.instance) { return false; }
                 if (y instanceof ScriptableObject) {
                     Object xval = wrapNumber(x);
                     Object test = ((ScriptableObject)y).equivalentValues(xval);
@@ -2550,7 +2553,7 @@ public class ScriptRuntime {
     private static boolean eqString(String x, Object y)
     {
         for (;;) {
-            if (y == null) {
+            if (y == null || y == Undefined.instance) {
                 return false;
             } else if (y instanceof String) {
                 return x.equals(y);
@@ -2559,7 +2562,6 @@ public class ScriptRuntime {
             } else if (y instanceof Boolean) {
                 return toNumber(x) == (((Boolean)y).booleanValue() ? 1.0 : 0.0);
             } else if (y instanceof Scriptable) {
-                if (y == Undefined.instance) { return false; }
                 if (y instanceof ScriptableObject) {
                     Object test = ((ScriptableObject)y).equivalentValues(x);
                     if (test != Scriptable.NOT_FOUND) {
@@ -2584,7 +2586,7 @@ public class ScriptRuntime {
             double d = ((Number)x).doubleValue();
             return d == d;
         }
-        if (x == null) {
+        if (x == null || x == Undefined.instance) {
             return false;
         } else if (x instanceof Number) {
             if (y instanceof Number) {
@@ -2599,7 +2601,6 @@ public class ScriptRuntime {
                 return x.equals(y);
             }
         } else if (x instanceof Scriptable) {
-            // x == Undefined.instance goes here as well
             if (x instanceof Wrapper && y instanceof Wrapper) {
                 return ((Wrapper)x).unwrap() == ((Wrapper)y).unwrap();
             }

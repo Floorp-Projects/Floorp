@@ -1608,7 +1608,7 @@ class XMLList extends XMLObjectImpl implements Function
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
     {
-        return Undefined.instance;
+        throw ScriptRuntime.typeError1("msg.not.ctor", "XMLList");
     }
 }
 

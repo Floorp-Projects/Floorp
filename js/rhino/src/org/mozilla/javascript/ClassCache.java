@@ -151,7 +151,7 @@ public class ClassCache
     }
 
     /**
-     * @deprecated 
+     * @deprecated
      * The method always returns false.
      * @see #setInvokerOptimizationEnabled(boolean enabled)
      */
@@ -161,7 +161,7 @@ public class ClassCache
     }
 
     /**
-     * @deprecated 
+     * @deprecated
      * The method does nothing.
      * Invoker optimization is no longer used by Rhino.
      * On modern JDK like 1.4 or 1.5 the disadvatages of the optimization

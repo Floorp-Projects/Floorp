@@ -85,8 +85,7 @@ public class BaseFunction extends IdScriptableObject implements Function
     public boolean hasInstance(Scriptable instance)
     {
         Object protoProp = ScriptableObject.getProperty(this, "prototype");
-        if (protoProp instanceof Scriptable && protoProp != Undefined.instance)
-        {
+        if (protoProp instanceof Scriptable) {
             return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
         }
         throw ScriptRuntime.typeError1("msg.instanceof.bad.prototype",
@@ -282,7 +281,7 @@ public class BaseFunction extends IdScriptableObject implements Function
     protected Scriptable getClassPrototype()
     {
         Object protoVal = getPrototypeProperty();
-        if (protoVal instanceof Scriptable && protoVal != Undefined.instance) {
+        if (protoVal instanceof Scriptable) {
             return (Scriptable) protoVal;
         }
         return getClassPrototype(this, "Object");
@@ -302,12 +301,12 @@ public class BaseFunction extends IdScriptableObject implements Function
         Scriptable result = createObject(cx, scope);
         if (result != null) {
             Object val = call(cx, scope, result, args);
-            if (val instanceof Scriptable && val != Undefined.instance) {
+            if (val instanceof Scriptable) {
                 result = (Scriptable)val;
             }
         } else {
             Object val = call(cx, scope, null, args);
-            if (!(val instanceof Scriptable && val != Undefined.instance)) {
+            if (!(val instanceof Scriptable)) {
                 // It is program error not to return Scriptable from
                 // the call method if createObject returns null.
                 throw new IllegalStateException(

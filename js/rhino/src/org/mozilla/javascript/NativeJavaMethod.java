@@ -218,10 +218,9 @@ public class NativeJavaMethod extends BaseFunction
                                " class = " + actualType);
         }
 
-        if (wrapped == Undefined.instance)
-            return wrapped;
-        if (wrapped == null && staticType == Void.TYPE)
-            return Undefined.instance;
+        if (wrapped == null && staticType == Void.TYPE) {
+            wrapped = Undefined.instance;
+        }
         return wrapped;
     }
 

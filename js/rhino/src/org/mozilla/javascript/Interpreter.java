@@ -2170,7 +2170,7 @@ public class Interpreter
         // it holds ContinuationJump
 
         final Object DBL_MRK = UniqueTag.DOUBLE_MARK;
-        final Scriptable undefined = Undefined.instance;
+        final Object undefined = Undefined.instance;
 
         final boolean instructionCounting = (cx.instructionThreshold != 0);
         // arbitrary number to add to instructionCount when calling
@@ -3749,9 +3749,7 @@ switch (op) {
             // If construct returns scriptable,
             // then it replaces on stack top saved original instance
             // of the object.
-            if (callResult instanceof Scriptable
-                && callResult != Undefined.instance)
-            {
+            if (callResult instanceof Scriptable) {
                 frame.stack[frame.savedStackTop] = callResult;
             }
         } else {

@@ -40,93 +40,16 @@ import java.io.Serializable;
 /**
  * This class implements the Undefined value in JavaScript.
  */
-public class Undefined implements Scriptable, Serializable
+public class Undefined implements Serializable
 {
-    static final public Scriptable instance = new Undefined();
+    public static final Object instance = new Undefined();
 
-    public String getClassName() {
-        return "undefined";
+    private Undefined()
+    {
     }
 
-    public boolean has(String id, Scriptable start) {
-        return false;
-    }
-
-    public boolean has(int index, Scriptable start) {
-        return false;
-    }
-
-    public Object get(String id, Scriptable start) {
-        throw reportError();
-    }
-
-    public Object get(int index, Scriptable start) {
-        throw reportError();
-    }
-
-    public void put(String id,Scriptable start, Object value) {
-        throw reportError();
-    }
-
-    public void put(int index, Scriptable start, Object value) {
-        throw reportError();
-    }
-
-    public void delete(String id) {
-        throw reportError();
-    }
-
-    public void delete(int index) {
-        throw reportError();
-    }
-
-    public short getAttributes(String id, Scriptable start) {
-        throw reportError();
-    }
-
-    public short getAttributes(int index, Scriptable start) {
-        throw reportError();
-    }
-
-    public Scriptable getPrototype() {
-        throw reportError();
-    }
-
-    public void setPrototype(Scriptable prototype) {
-        throw reportError();
-    }
-
-    public Scriptable getParentScope() {
-        throw reportError();
-    }
-
-    public void setParentScope(Scriptable parent) {
-        throw reportError();
-    }
-
-    public Object[] getIds() {
-        throw reportError();
-    }
-
-    public Object getDefaultValue(Class cl) {
-        if (cl == ScriptRuntime.StringClass)
-            return "undefined";
-        if (cl == ScriptRuntime.NumberClass)
-            return ScriptRuntime.NaNobj;
-        if (cl == ScriptRuntime.BooleanClass)
-            return Boolean.FALSE;
-        return this;
-    }
-
-    public boolean hasInstance(Scriptable value) {
-        throw reportError();
-    }
-
-    private RuntimeException reportError() {
-        return Context.reportRuntimeError0("msg.undefined");
-    }
-
-    public Object readResolve() {
-        return Undefined.instance;
+    public Object readResolve()
+    {
+        return instance;
     }
 }

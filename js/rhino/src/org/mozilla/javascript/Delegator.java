@@ -250,7 +250,7 @@ public class Delegator implements Function {
             Delegator n = newInstance();
             Scriptable delegee;
             if (args.length == 0) {
-                delegee = Undefined.instance;
+                delegee = new NativeObject();
             } else {
                 delegee = ScriptRuntime.toObject(cx, scope, args[0]);
             }

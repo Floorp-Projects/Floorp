@@ -579,8 +579,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 if (!(v instanceof Scriptable)) {
                     return v;
                 }
-                if (v == Undefined.instance
-                    || typeHint == ScriptRuntime.ScriptableClass
+                if (typeHint == ScriptRuntime.ScriptableClass
                     || typeHint == ScriptRuntime.FunctionClass)
                 {
                     return v;
