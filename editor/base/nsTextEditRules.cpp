@@ -28,7 +28,7 @@
 NS_IMPL_ADDREF(nsTextEditRules)
 NS_IMPL_RELEASE(nsTextEditRules)
 
-PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
+static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
 {
   nsCOMPtr<nsIDOMElement>element;
   element = do_QueryInterface(aNode);
