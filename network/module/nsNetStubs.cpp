@@ -777,23 +777,6 @@ XP_HandleHTMLDialog(URL_Struct *url)
 
 /*
  *---------------------------------------------------------------------------
- * From ns/modules/softupdt/src/softupdt.c
- *---------------------------------------------------------------------------
- */
-
-/* New stream callback */
-/* creates the stream, and a opens up a temporary file */
-NET_StreamClass * SU_NewStream (int format_out, void * registration,
-                                URL_Struct * request, MWContext *context)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-char **fe_encoding_extensions = NULL;
-
-/*
- *---------------------------------------------------------------------------
  * From ns/lib/libmisc/glhist.c
  *---------------------------------------------------------------------------
  */

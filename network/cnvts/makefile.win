@@ -116,7 +116,6 @@ LINCS= \
     -I$(PUBLIC)\lay	\
     -I$(PUBLIC)\style	\
     -I$(PUBLIC)\zlib	\
-    -I$(PUBLIC)\softupdt	\
     -I$(PUBLIC)\network \
     -I$(PUBLIC)\mimetype \
     -I$(PUBLIC)\plugin \

@@ -52,10 +52,6 @@
 #include "intl_csi.h"
 
 
-#ifdef MOZ_SMARTUPDATE
-#include "softupdt.h"	/* software update converters */
-#endif
-
 #include "m_cvstrm.h"
 #include "cvmime.h"
 
@@ -574,11 +570,6 @@ net_RegisterDefaultDecoders (void)
 									NULL, NET_CacheConverter);
 #endif /* CRAWLER */
 
-#ifdef MOZ_SMARTUPDATE
-  NET_RegisterContentTypeConverter("*", FO_SOFTWARE_UPDATE, NULL, SU_NewStream);
-  NET_RegisterContentTypeConverter(APPLICATION_JAVAARCHIVE, FO_PRESENT, NULL, SU_NewStream);
-  NET_cdataCommit(APPLICATION_JAVAARCHIVE, ".jar");
-#endif
 
 #ifndef MCC_PROXY
   NET_RegisterContentTypeConverter(APPLICATION_NS_PROXY_AUTOCONFIG,

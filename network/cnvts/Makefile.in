@@ -77,7 +77,7 @@ endif
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 REQUIRES	= network img lay layer util parse pref js \
-	security marimurl style softupdt mimetype ldap
+	security marimurl style mimetype ldap
 
 ifndef MOZ_NATIVE_ZLIB
 REQUIRES	+= zlib
