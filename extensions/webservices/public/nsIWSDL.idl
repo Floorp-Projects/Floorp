@@ -23,6 +23,10 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#include "nsAWritableString.h"
+%} 
+
 interface nsIWSDLService;
 interface nsIWSDLPort;
 interface nsIWSDLOperation;

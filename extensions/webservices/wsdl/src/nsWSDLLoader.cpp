@@ -35,20 +35,26 @@ nsWSDLLoader::~nsWSDLLoader()
 
 NS_IMPL_ISUPPORTS1(nsWSDLLoader, nsIWSDLLoader)
 
-/* nsIWSDLService loadService (in nsIURI wsdlURI); */
+/* nsIWSDLService load (in nsIURI wsdlURI); */
 NS_IMETHODIMP 
-nsWSDLLoader::LoadService(nsIURI *wsdlURI, 
-			  nsIWSDLService **_retval)
+nsWSDLLoader::Load(nsIURI *wsdlURI, nsIWSDLService **_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsISupports createServiceProxy (in nsIWSDLService service, in wstring nameSpace); */
+/* void loadAsync (in nsIURI wsdlURI, in nsIWSDLLoaderListener listener); */
+NS_IMETHODIMP 
+nsWSDLLoader::LoadAsync(nsIURI *wsdlURI, nsIWSDLLoaderListener *listener)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsISupports createServiceProxy (in nsIWSDLService service, in AString nameSpace); */
 NS_IMETHODIMP 
 nsWSDLLoader::CreateServiceProxy(nsIWSDLService *service, 
-                                 const PRUnichar *nameSpace, 
+                                 const nsAReadableString& nameSpace, 
                                  nsISupports **_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 

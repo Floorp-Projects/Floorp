@@ -52,7 +52,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLSERVICE
 
-  NS_IMETHOD SetName(const nsAReadable& aName);
+  NS_IMETHOD SetName(const nsAReadableString& aName);
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
   NS_IMETHOD AddPort(nsIWSDLPort* aPort);
 
@@ -70,11 +70,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLPORT
 
-  NS_IMETHOD SetName(const nsAReadable& aName);
+  NS_IMETHOD SetName(const nsAReadableString& aName);
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetBindingInfo(const nsAReadable& aBindingName,
+  NS_IMETHOD SetBindingInfo(const nsAReadableString& aBindingName,
                             PRUint16 aStyle,
-                            const nsAReadable& aTransport);
+                            const nsAReadableString& aTransport);
   NS_IMETHOD AddOperation(nsIWSDLOperation* aOperation);
 
 protected:
@@ -94,10 +94,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLOPERATION
 
-  NS_IMETHOD SetName(const nsAReadable& aName);
+  NS_IMETHOD SetName(const nsAReadableString& aName);
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
   NS_IMETHOD SetBindingInfo(PRUint16 aStyle,
-                            const nsAReadable& aSoapAction);
+                            const nsAReadableString& aSoapAction);
   NS_IMETHOD SetInputMessage(nsIWSDLMessage* aInputMessage);
   NS_IMETHOD SetOutputMessage(nsIWSDLMessage* aOutputMessage);
   NS_IMETHOD SetFaultMessage(nsIWSDLMessage* aFaultMessage);
@@ -120,11 +120,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLMESSAGE
 
-  NS_IMETHOD SetName(const nsAReadable& aName);
+  NS_IMETHOD SetName(const nsAReadableString& aName);
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
   NS_IMETHOD SetBindingInfo(PRUint16 aLocation, PRUint16 aUse,
-                            const nsAReadable& aEncodingStyle,
-                            const nsAReadable& aNamespace);
+                            const nsAReadableString& aEncodingStyle,
+                            const nsAReadableString& aNamespace);
   NS_IMETHOD AddPart(nsIWSDLPart* aPart);
 
 protected:
@@ -145,9 +145,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLPART
 
-  NS_IMETHOD SetName(const nsAReadable& aName);
-  NS_IMETHOD SetTypeInfo(const nsAReadable& aType,
-                         const nsAReadable& aElementName,
+  NS_IMETHOD SetName(const nsAReadableString& aName);
+  NS_IMETHOD SetTypeInfo(const nsAReadableString& aType,
+                         const nsAReadableString& aElementName,
                          nsIDOMElement* aSchema,
                          nsIDOMElement* aSchemaRoot);
 

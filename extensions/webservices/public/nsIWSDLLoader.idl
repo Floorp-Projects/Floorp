@@ -23,6 +23,10 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#include "nsAWritableString.h"
+%} 
+
 interface nsIWSDLService;
 interface nsIURI;
 interface nsIWSDLLoaderListener;
@@ -32,12 +36,12 @@ interface nsIWSDLLoader : nsISupports {
   nsIWSDLService load(in nsIURI wsdlURI);
   void loadAsync(in nsIURI wsdlURI, in nsIWSDLLoaderListener listener);
   nsISupports createServiceProxy(in nsIWSDLService service, 
-                                 in wstring nameSpace);
+                                 in AString nameSpace);
 };
 
 [scriptable, uuid(0458dac6-65de-11d5-9b42-00104bdf5339)]
 interface nsIWSDLLoaderListener : nsISupports {
   void onError(in PRInt32 status,
-	       in wstring statusMessage);
+               in AString statusMessage);
   void onComplete(in nsIWSDLService service);
 };
