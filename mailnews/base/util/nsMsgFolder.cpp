@@ -1283,6 +1283,8 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRInt32 *numUnread)
   PRUint32 total = mNumUnreadMessages + mNumPendingUnreadMessages;
   if (deep)
   {
+    if (total < 0) // deep search never returns negative counts
+      total = 0;
     PRUint32 count;
     rv = mSubFolders->Count(&count);
     if (NS_SUCCEEDED(rv)) {
@@ -1294,8 +1296,7 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRInt32 *numUnread)
         {
           PRInt32 num;
           folder->GetNumUnread(deep, &num);
-          if (num >= 0) // it's legal for counts to be negative if we don't know
-            total += num;
+          total += num;
         }
       }
     }
@@ -1314,6 +1315,8 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
   PRInt32 total = mNumTotalMessages + mNumPendingTotalMessages;
   if (deep)
   {
+    if (total < 0) // deep search never returns negative counts
+      total = 0;
     PRUint32 count;
     rv = mSubFolders->Count(&count);
     if (NS_SUCCEEDED(rv)) {
@@ -1325,8 +1328,7 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
         {
           PRInt32 num;
           folder->GetTotalMessages (deep, &num);
-          if (num >= 0) // it's legal for counts to be negative if we don't know
-            total += num;
+          total += num;
         }
       }
     }
