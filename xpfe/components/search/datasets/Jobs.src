@@ -1,5 +1,5 @@
 # Sherlock Plugin for Netscape Open Directory
-# Copyright (c) 1999 Netscape Communications Corp.
+# Copyright (c) 2000 Netscape Communications Corp.
 # Author - Myron Rosmarin
 # 
 
@@ -7,7 +7,7 @@
      name        = "Jobs"
      description = "Jobs"
      method      = "GET"
-     action      = "http://info.netscape.com/fwd/sidb1/http://jobsearch.netscape.monster.com/jobsearch.asp"
+     action      = "http://jobsearch.netscape.monster.com/jobsearch.asp"
 >
 
 <INPUT NAME="fn" VALUE="">

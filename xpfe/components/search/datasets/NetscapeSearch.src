@@ -2,10 +2,10 @@
 # Copyright (C)2000 Netscape Communications Corp.
 
 <SEARCH
-	name=".Netscape"
+	name="Netscape"
 	description = "Netscape Search"
 	method="GET"
-	action="http://info.netscape.com/fwd/sidb1dnet/http://search.netscape.com/cgi-bin/search"
+	action="http://search.netscape.com/cgi-bin/search"
 >
 
 <INPUT NAME="search" user>

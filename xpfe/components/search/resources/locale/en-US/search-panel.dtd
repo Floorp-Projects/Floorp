@@ -29,3 +29,4 @@
 <!ENTITY engine.column.label      "Search Engines">
 <!ENTITY checkbox.column.label    "Use">
 <!ENTITY stop.button.label        "Stop">
+<!ENTITY savesearch.button.label  "Bookmark Search Query">

@@ -5,7 +5,7 @@
 	name="AOL.COM"
 	description="AOL.COM Search"
 	method="GET"
-	action="http://info.netscape.com/fwd/sidb1aol/http://search.aol.com/dirsearch.adp"
+	action="http://search.aol.com/dirsearch.adp"
 	routeType = internet
 >
 

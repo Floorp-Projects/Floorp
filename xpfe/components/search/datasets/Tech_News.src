@@ -1,5 +1,5 @@
 # Sherlock Plugin for Netscape Open Directory
-# Copyright (c) 1999 Netscape Communications Corp.
+# Copyright (c) 2000 Netscape Communications Corp.
 # Author - Myron Rosmarin
 # 
 
@@ -7,7 +7,7 @@
      name        = "Tech News"
      description = "Tech News"
      method      = "GET"
-     action      = "http://info.netscape.com/fwd/sidb1/http://technews.netscape.com/news/search/results/1,10199,0-1002,00.html"
+     action      = "http://technews.netscape.com/news/search/results/1,10199,0-1002,00.html"
 >
 
 <INPUT NAME="qt" user> 

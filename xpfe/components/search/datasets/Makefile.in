@@ -44,8 +44,6 @@ FILES		= \
 		ICQ.src				\
 		NetscapeSearch.gif		\
 		NetscapeSearch.src		\
-		NetscapeSearchMain.gif		\
-		NetscapeSearchMain.src		\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
