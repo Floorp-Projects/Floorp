@@ -755,7 +755,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     if (nsnull==rowGroup)
     { // need to create a TBODY
       nsIHTMLContent *newRowGroup=nsnull;
-      rv = NS_NewHTMLTableSectionElement(&newRowGroup, nsHTMLAtoms::tr);
+      rv = NS_NewHTMLTableSectionElement(&newRowGroup, nsHTMLAtoms::tbody);
       if (NS_SUCCEEDED(rv) && (nsnull!=newRowGroup))
       {
         rv = mInner.AppendChildTo(newRowGroup, PR_FALSE);
