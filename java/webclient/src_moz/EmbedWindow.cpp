@@ -29,6 +29,8 @@
 #include <nsCWebBrowser.h>
 #include <nsIComponentManager.h>
 #include <nsIDocShellTreeItem.h>
+#include "nsIContentViewer.h"
+#include "nsIContentViewerEdit.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMWindow.h"
 #include "nsISelection.h"
@@ -268,6 +270,33 @@ EmbedWindow::GetSelection(JNIEnv *env, jobject mSelection)
                          (jint)startOffset, (jint)endOffset);
     
     return NS_OK;
+}
+
+nsresult
+EmbedWindow::CopySelection()
+{
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebBrowser);
+    nsCOMPtr<nsIContentViewer> contentViewer = nsnull;
+    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit = nsnull;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (!docShell) {
+        return NS_ERROR_FAILURE;
+    }
+    
+    rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+    if (!contentViewer || NS_FAILED(rv)) {
+        return rv;
+    }
+    
+    contentViewerEdit = do_QueryInterface(contentViewer, &rv);
+
+    if (!contentViewerEdit || NS_FAILED(rv)) {
+        return rv;
+    }
+    
+    rv = contentViewerEdit->CopySelection();
+    return rv;
 }
 
 nsresult 

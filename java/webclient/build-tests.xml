@@ -65,6 +65,7 @@
 
     <!-- Source directory for tests -->
     <property name="src.test.dir" value="${basedir}/test/automated/src/classes"/>
+    <property name="src.manual.test.dir" value="${basedir}/test/manual/src/classes"/>
 
     <!-- Output directory for tests -->
     <property name="out.test.dir" value="${build.home}/test"/>
@@ -86,7 +87,7 @@
 <!-- 
         Compile unit tests
 -->
-    <target name="compile.test">
+    <target name="compile.test" depends="copy-test-data-files">
 
         <echo message="${build.home}"/>
 
@@ -100,6 +101,7 @@
               <classpath refid="test.classpath"/>
 
 	      <src path="${src.test.dir}"/>
+	      <src path="${src.manual.test.dir}"/>
 	      <patternset>
 		    <exclude name="**/*Win32*.java" if="build.unix.classes"/>
 	      </patternset>
@@ -120,6 +122,13 @@
         <copy todir="${build.test}">
             <fileset dir="${basedir}/test/automated/src/test"/>
         </copy>
+
+        <copy todir="${out.test.dir}/classes">
+           <fileset dir="${src.manual.test.dir}">
+            <include name="**/*.gif" />
+            <include name="**/*.png" />
+           </fileset>
+        </copy>
    </target>
 
 
@@ -130,7 +139,7 @@
 
     </target>
 
-    <target name="run.test" depends="compile.test,copy-test-data-files">
+    <target name="run.test" depends="compile.test">
 
         <junit printsummary="yes" haltonfailure="yes" haltonerror="yes" fork="yes">
             <jvmarg value="-Djava.library.path=${myenv.MOZILLA_FIVE_HOME}${PATH_SEP}${myenv.MOZILLA_FIVE_HOME}/components"/>
@@ -159,6 +168,23 @@
         </junit>
 
     </target>
+
+    <target name="run.test.browser" depends="compile.test">
+
+        <java classname="org.mozilla.webclient.test.TestBrowser" fork="true">
+            <jvmarg value="-Djava.library.path=${myenv.MOZILLA_FIVE_HOME}${PATH_SEP}${myenv.MOZILLA_FIVE_HOME}/components"/>
+            <jvmarg value="-DNSPR_LOG_MODULES=${myenv.NSPR_LOG_MODULES}"/>
+            <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>
+            <jvmarg value="-DBROWSER_BIN_DIR=${myenv.MOZILLA_FIVE_HOME}"/>
+            <sysproperty key="native.waitForDebugger" 
+                         value="${native.waitForDebugger}"/>
+            <jvmarg line="${debug.jvm.args}"/>
+
+            <classpath refid="test.classpath"/>
+        </java>
+
+    </target>
+
 
 
 </project>

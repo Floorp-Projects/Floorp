@@ -45,11 +45,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
     NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-
-    if (nativeBrowserControl->initComplete) {
-        wsCopySelectionEvent * actionEvent = new wsCopySelectionEvent(nativeBrowserControl);
-        PLEvent         * event       = (PLEvent*) *actionEvent;
-        ::util_PostEvent(nativeBrowserControl, event);
+    
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed nativeGetSelection");
+        return;
+    }
+    
+    nsresult rv = nativeBrowserControl->mWindow->CopySelection();
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get Selection from browser");
+        return;
     }
 
 }

@@ -94,9 +94,12 @@ public void copyCurrentSelectionToSystemClipboard()
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
 
-    synchronized(getBrowserControl()) {
-        nativeCopyCurrentSelectionToSystemClipboard(getNativeBrowserControl());
-    }
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeCopyCurrentSelectionToSystemClipboard(CurrentPageImpl.this.getNativeBrowserControl());
+		return null;
+	    }
+	});
 }
 
 public Selection getSelection() {
@@ -336,7 +339,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.4 2004/04/28 14:39:54 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.5 2004/06/25 13:59:53 edburns%acm.org Exp $");
 
 }
 

@@ -67,6 +67,7 @@ public:
 
     nsresult SelectAll       ();
     nsresult GetSelection    (JNIEnv *env, jobject selection);
+    nsresult CopySelection    ();
 
     nsresult LoadStream      (nsIInputStream *aStream, nsIURI * aURI,
                               const nsACString &aContentType,
