@@ -109,16 +109,19 @@ sub getDefaultString {
        debugDumpVarsVariables.\${key} = 'empty array';
      END;
    ELSE;
-     IF (!variable.defined);
+     IF (!variable.ref and !variable.defined);
        debugDumpVarsVariables.\${key} = 'undefined';
-     ELSIF (variable.search('^[0-9]+(?:\\\\.[0+9]+)?\$'));
-       debugDumpVarsVariables.\${key} = variable;
      ELSE;
-       debugDumpVarsVariables.\${key} =
-         '\\'' _
-         variable.replace('\\\\\\\\', '\\\\\\\\')
-                 .replace('\\'',   '\\\\\\'') _
-         '\\'';
+       variable = "\$variable";
+       IF (variable.search('^[0-9]+(?:\\\\.[0+9]+)?\$'));
+         debugDumpVarsVariables.\${key} = variable;
+       ELSE;
+         debugDumpVarsVariables.\${key} =
+           '\\'' _
+           variable.replace('\\\\\\\\', '\\\\\\\\')
+                   .replace('\\'',   '\\\\\\'') _
+           '\\'';
+       END;
      END;
    END;
    IF key.length > debugDumpVarsMaxLength;
