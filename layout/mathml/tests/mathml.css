@@ -301,7 +301,7 @@ mstyle[fontstyle="normal"] mi {
 :-moz-math-font-style-stretchy {
   font-family: CMSY10, CMEX10, MT Extra, Symbol /*,Math1, Math3, Math4, Math5*/;
   font-style: normal;
-  background-color: #3C6;
+/*  background-color: #3C6; */
 }
 
 :-moz-math-font-style-anonymous {
