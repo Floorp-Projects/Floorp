@@ -96,6 +96,8 @@ interface nsILoadGroup : nsIRequest
      */
     readonly attribute nsISimpleEnumerator subGroups;
 
+	attribute nsIStreamObserver groupObserver;
+
     attribute nsILoadGroupListenerFactory groupListenerFactory;
 };
 

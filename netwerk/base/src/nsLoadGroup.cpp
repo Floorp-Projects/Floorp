@@ -113,9 +113,8 @@ nsresult nsLoadGroup::SubGroupIsEmpty(nsresult aStatus)
             PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
                    ("LOADGROUP: %x Firing OnStopRequest(...).\n", 
                    this));
-            nsCOMPtr<nsIStreamObserver> observer = do_QueryReferent(mObserver);
-            if (observer) {
-                rv = observer->OnStopRequest(mDefaultLoadChannel, nsnull, 
+            if (mObserver) {
+                rv = mObserver->OnStopRequest(mDefaultLoadChannel, nsnull, 
                                              aStatus, nsnull);
             }
 
@@ -316,13 +315,11 @@ nsLoadGroup::Cancel()
     (void) PropagateDown(CancelFun);
 
     if (isActive) {
-        nsCOMPtr<nsIStreamObserver> observer = do_QueryReferent(mObserver);
-
         PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
                ("LOADGROUP: %x Firing OnStopRequest(...).\n", 
                    this));
-        if (observer) {
-            rv = observer->OnStopRequest(mDefaultLoadChannel, nsnull, 
+        if (mObserver) {
+            rv = mObserver->OnStopRequest(mDefaultLoadChannel, nsnull, 
                                          NS_BINDING_ABORTED, nsnull);
         }
     }
@@ -391,34 +388,16 @@ nsLoadGroup::Resume()
 // nsILoadGroup methods:
 
 NS_IMETHODIMP
-nsLoadGroup::Init(nsIStreamObserver *observer, nsILoadGroup *parent)
+nsLoadGroup::Init(nsIStreamObserver *aObserver, nsILoadGroup *aParent)
 {
     nsresult rv;
 
-    if (observer) {
-/*
-        nsCOMPtr<nsIEventQueue> eventQueue;
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-        if (NS_FAILED(rv)) return rv;
-        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
-                                                getter_AddRefs(eventQueue));
-        if (NS_FAILED(rv)) return rv;
+    rv = SetGroupObserver(aObserver);
 
-        nsCOMPtr<nsIStreamObserver> asyncObserver;
-        rv = NS_NewAsyncStreamObserver(getter_AddRefs(asyncObserver),
-                                       eventQueue, observer);
-        if (NS_FAILED(rv)) return rv;
-
-        mObserver = asyncObserver;
-*/
-        mObserver = getter_AddRefs(NS_GetWeakReference(observer));
+    if (NS_SUCCEEDED(rv) && aParent) {
+        rv = aParent->AddSubGroup(this);
     }
-
-    if (parent) {
-        rv = parent->AddSubGroup(this);
-        if (NS_FAILED(rv)) return rv;
-    }
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -511,9 +490,8 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
                     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
                            ("LOADGROUP: %x Firing OnStartRequest(...).\n", 
                            this));
-                    nsCOMPtr<nsIStreamObserver> observer = do_QueryReferent(mObserver);
-                    if (observer) {
-                        rv = observer->OnStartRequest(channel, ctxt);
+                    if (mObserver) {
+                        rv = mObserver->OnStartRequest(channel, ctxt);
                     }
                 }
                 // return with rv, below
@@ -592,9 +570,8 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
                     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
                            ("LOADGROUP: %x Firing OnStopRequest(...).\n", 
                             this));
-                    nsCOMPtr<nsIStreamObserver> observer = do_QueryReferent(mObserver);
-                    if (observer) {
-                        rv = observer->OnStopRequest(channel, ctxt, status, errorMsg);
+                    if (mObserver) {
+                        rv = mObserver->OnStopRequest(channel, ctxt, status, errorMsg);
                     }
                     // return with rv, below
                 }
@@ -684,6 +661,41 @@ NS_IMETHODIMP
 nsLoadGroup::SetGroupListenerFactory(nsILoadGroupListenerFactory *aFactory)
 {
     mGroupListenerFactory = getter_AddRefs(NS_GetWeakReference(aFactory));
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsLoadGroup::SetGroupObserver(nsIStreamObserver* aObserver)
+{
+    nsresult rv = NS_OK;
+
+    // Release the old observer (if any...)
+    mObserver = null_nsCOMPtr();
+
+    if (aObserver) {
+        nsCOMPtr<nsIEventQueue> eventQueue;
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
+                                                getter_AddRefs(eventQueue));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = NS_NewAsyncStreamObserver(getter_AddRefs(mObserver),
+                                       eventQueue, aObserver);
+    }
+
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsLoadGroup::GetGroupObserver(nsIStreamObserver* *aResult)
+{
+    *aResult = mObserver;
+    NS_IF_ADDREF(*aResult);
+
     return NS_OK;
 }
 
