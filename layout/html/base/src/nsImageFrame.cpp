@@ -111,7 +111,8 @@ NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsImageFrame::nsImageFrame() :
   mIntrinsicSize(0, 0),
-  mGotInitialReflow(PR_FALSE)
+  mGotInitialReflow(PR_FALSE),
+  mFailureReplace(PR_TRUE)
 {
   // Size is constrained if we have a width and height. 
   // - Set in reflow in case the attributes are changed
@@ -380,8 +381,8 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
 
   // if src failed and there is no lowsrc
   // or both failed to load, then notify the PresShell
-  if (imageFailedToLoad) {    
-    if (presShell) {
+  if (imageFailedToLoad && presShell) {
+    if (mFailureReplace) {
       nsAutoString usemap;
       mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
       // We failed to load the image. Notify the pres shell if we aren't an image map
@@ -389,6 +390,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
         presShell->CantRenderReplacedElement(aPresContext, this);      
       }
     }
+    mFailureReplace = PR_TRUE;
   }
 
   // After these DOM events are fired its possible that this frame may be deleted.  As a result
@@ -1241,6 +1243,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
 
     if (!(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
       if (mImageRequest) {
+        mFailureReplace = PR_FALSE; // don't cause a CantRenderReplacedElement call
         mImageRequest->Cancel(NS_ERROR_FAILURE);
         mImageRequest = nsnull;
       }
