@@ -625,7 +625,7 @@ const int kDefaultFontSansSerifTag = 1;
   for (unsigned int i = 0; i < [regionMappingTable count]; i++)
   {
     NSMutableDictionary* regionDict = [regionMappingTable objectAtIndex:i];
-    NSString* regionCode = [regionDict objectForKey:@"code"];
+    // NSString* regionCode = [regionDict objectForKey:@"code"];
     
     // for each region, we reset the dictionaries to be empty.
     [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"serif"];
@@ -647,7 +647,6 @@ const int kDefaultFontSansSerifTag = 1;
   // Update the UI of the Appearance pane
   // order is important here -- syncing the font panel depends on the font previews being correct.
   [self updateFontPreviews];
-  [self syncFontPanel];
 }
 
 - (void)advancedFontsSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void  *)contextInfo

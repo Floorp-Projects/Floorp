@@ -321,7 +321,7 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
     NSArray *rows = [[mCookiesTable selectedRowEnumerator] allObjects];
     NSEnumerator *e = [rows reverseObjectEnumerator];
     NSNumber *index;
-    while (index = [e nextObject])
+    while ((index = [e nextObject]))
     {
       int row = [index intValue];
       nsCAutoString host, name, path;
@@ -436,7 +436,7 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
     NSArray *rows = [[mPermissionsTable selectedRowEnumerator] allObjects];
     NSEnumerator *e = [rows reverseObjectEnumerator];
     NSNumber *index;
-    while (index = [e nextObject])  {
+    while ((index = [e nextObject]))  {
       int row = [index intValue];
       nsCAutoString host;
       mCachedPermissions->ObjectAt(row)->GetHost(host);
@@ -665,7 +665,7 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
       nsCOMArray<nsIPermission> selectedItems;
       NSEnumerator *e = [mPermissionsTable selectedRowEnumerator];
       NSNumber *index;
-      while (index = [e nextObject]) {
+      while ((index = [e nextObject])) {
         int row = [index intValue];
         selectedItems.AppendObject(mCachedPermissions->ObjectAt(row));
       }
@@ -689,7 +689,7 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
       nsCOMArray<nsICookie> selectedItems;
       NSEnumerator *e = [mCookiesTable selectedRowEnumerator];
       NSNumber *index;
-      while (index = [e nextObject]) {
+      while ((index = [e nextObject])) {
         int row = [index intValue];
         selectedItems.AppendObject(mCachedCookies->ObjectAt(row));
       }
