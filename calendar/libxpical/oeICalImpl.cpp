@@ -475,7 +475,7 @@ END:VCALENDAR\n\
 
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
-	    printf( "oeICalImpl::Test() : WARNING icalfileset_commit() unsuccessful %d\n" );
+	    printf( "oeICalImpl::Test() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
     }
 #ifdef ICAL_DEBUG
@@ -651,7 +651,7 @@ END:VCALENDAR\n\
 
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
-	    printf( "oeICalImpl::Test() : WARNING icalfileset_commit() unsuccessful %d\n" );
+	    printf( "oeICalImpl::Test() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
     }
     icalfileset_free(stream);
@@ -820,7 +820,7 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
 
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
-	    printf( "oeICalImpl::AddEvent() : WARNING icalfileset_commit() unsuccessful %d\n" );
+	    printf( "oeICalImpl::AddEvent() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
     }
     icalfileset_free( stream );
@@ -918,7 +918,7 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
     
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
-	    printf( "oeICalImpl::ModifyEvent() : WARNING icalfileset_commit() unsuccessful %d\n" );
+	    printf( "oeICalImpl::ModifyEvent() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
     }
     icalfileset_free(stream);
@@ -1026,7 +1026,7 @@ oeICalImpl::DeleteEvent( const char *id )
     icalfileset_mark( stream ); //Make sure stream is marked as dirty
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
-	    printf( "oeICalImpl::ModifyEvent() : WARNING icalfileset_commit() unsuccessful %d\n" );
+	    printf( "oeICalImpl::ModifyEvent() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
     }
     icalfileset_free(stream);
