@@ -134,7 +134,7 @@ SMModel EUCJPSMModel = {
    6,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCJP_st },
   EUCJPCharLenTable,
-  "EUCJP",
+  "EUC-JP",
 };
 
 static PRUint32 EUCKR_cls [ 256 / 8 ] = {
@@ -186,7 +186,7 @@ SMModel EUCKRSMModel = {
   4,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCKR_st },
   EUCKRCharLenTable,
-  "EUCKR",
+  "EUC-KR",
 };
 
 static PRUint32 EUCTW_cls [ 256 / 8 ] = {

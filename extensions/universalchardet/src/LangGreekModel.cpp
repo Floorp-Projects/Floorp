@@ -202,5 +202,5 @@ SequenceModel Win1253Model =
   win1253_CharToOrderMap,
   GreekLangModel,
   PR_FALSE,
-  "Windows-1253"
+  "windows-1253"
 };
