@@ -33,9 +33,32 @@ nsCalendarUser::nsCalendarUser(nsISupports* outer)
   mUser = nsnull;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsCalendarUser, kICalendarUserIID)
-//  if (nsnull != mWidgetSupports)
-//    return mWidgetSupports->QueryInterface(aIID, aInstancePtr);
+nsresult nsCalendarUser::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{                                                                        
+
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+  static NS_DEFINE_IID(kClassIID, kICalendarUserIID);                         
+
+  if (aIID.Equals(kClassIID)) {                                          
+    *aInstancePtr = (void*) this;                                        
+    AddRef();                                                            
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*) (this);                        
+    AddRef();                                                            
+    return NS_OK;                                                        
+  }                                                                      
+
+  if (nsnull != mUserSupports)
+    return mUserSupports->QueryInterface(aIID, aInstancePtr);
+
+  return (NS_NOINTERFACE);
+
+}
+
 
 NS_IMPL_ADDREF(nsCalendarUser)
 NS_IMPL_RELEASE(nsCalendarUser)
