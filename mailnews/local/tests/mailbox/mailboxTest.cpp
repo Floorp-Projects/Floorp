@@ -221,7 +221,7 @@ nsresult nsMailboxTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode
 	{
 		// query it for a mailnews interface for now....
 		nsIMsgMailNewsUrl * mailUrl = nsnull;
-		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::IID(), (void **) mailUrl);
+		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void **) mailUrl);
 		if (NS_SUCCEEDED(rv))
 		{
 			mailUrl->UnRegisterListener(this);
@@ -232,7 +232,7 @@ nsresult nsMailboxTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode
 	return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsMailboxTestDriver, nsIUrlListener::IID())
+NS_IMPL_ISUPPORTS(nsMailboxTestDriver, nsIUrlListener::GetIID())
 
 nsMailboxTestDriver::nsMailboxTestDriver(PLEventQueue *queue, nsIStreamListener * aMailboxParser)
 {
@@ -386,13 +386,13 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 	nsFilePath filePath(m_userData);
 	// now ask the mailbox service to parse this mailbox...
 	nsIMailboxService * mailboxService = nsnull;
-	rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::IID(), (nsISupports **) &mailboxService);
+	rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::GetIID(), (nsISupports **) &mailboxService);
 	if (NS_SUCCEEDED(rv) && mailboxService)
 	{
 		nsIURL * url = nsnull;
 		mailboxService->ParseMailbox(filePath, m_mailboxParser, this /* register self as url listener */, &url);
 		if (url)
-			url->QueryInterface(nsIMailboxUrl::IID(), (void **) &m_url);
+			url->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &m_url);
 		NS_IF_RELEASE(url);
 
 		nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);

@@ -184,7 +184,7 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::IID());
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
 
 nsresult
 nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)

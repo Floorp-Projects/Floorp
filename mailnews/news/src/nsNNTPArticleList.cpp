@@ -66,7 +66,7 @@ protected:
 	nsMsgKey				m_highwater;
 };
 
-NS_IMPL_ISUPPORTS(nsNNTPArticleList, IID())
+NS_IMPL_ISUPPORTS(nsNNTPArticleList, GetIID())
 
 nsNNTPArticleList::nsNNTPArticleList(nsINNTPHost* newsHost,
                                      nsINNTPNewsgroup* newsgroup)
@@ -174,7 +174,7 @@ NS_NewArticleList(nsINNTPArticleList **articleList,
 {
     nsNNTPArticleList* aArticleList =
         new nsNNTPArticleList(newsHost, newsgroup);
-    return aArticleList->QueryInterface(nsINNTPArticleList::IID(),
+    return aArticleList->QueryInterface(nsINNTPArticleList::GetIID(),
                                         (void **)articleList);
 }
 

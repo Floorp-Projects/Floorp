@@ -47,7 +47,7 @@ class nsIUrlListener;
 class nsIMailboxService : public nsISupports
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IMAILBOXSERVICE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IMAILBOXSERVICE_IID; return iid; }
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// All of these functions build mailbox urls and run them. If you want a handle 

@@ -202,7 +202,7 @@ esmtp_value_encode(char *addr)
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsSmtpProtocol)
 NS_IMPL_RELEASE(nsSmtpProtocol)
-NS_IMPL_QUERY_INTERFACE(nsSmtpProtocol, nsIStreamListener::IID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsSmtpProtocol, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
 
 nsSmtpProtocol::nsSmtpProtocol(nsIURL * aURL, nsITransport * transportLayer)
 {
@@ -245,7 +245,7 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(nsISmtpUrl::IID(), (void **)&m_runningURL);
+		nsresult rv = aURL->QueryInterface(nsISmtpUrl::GetIID(), (void **)&m_runningURL);
 		if (NS_SUCCEEDED(rv) && m_runningURL)
 		{
 			// okay, now fill in our event sinks...Note that each getter ref counts before
@@ -425,7 +425,7 @@ PRInt32 nsSmtpProtocol::SendData(const char * dataBuffer)
 			// notify the consumer that data has arrived
 			// HACK ALERT: this should really be m_runningURL once we have NNTP url support...
 			nsIInputStream *inputStream = NULL;
-			m_outputStream->QueryInterface(nsIInputStream::IID() , (void **) &inputStream);
+			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) &inputStream);
 			if (inputStream)
 			{
 				m_outputConsumer->OnDataAvailable(m_runningURL, inputStream, writeCount);
@@ -1255,7 +1255,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 
 	if (aURL)
 	{
-		rv = aURL->QueryInterface(nsISmtpUrl::IID(), (void **) &smtpUrl);
+		rv = aURL->QueryInterface(nsISmtpUrl::GetIID(), (void **) &smtpUrl);
 		if (NS_SUCCEEDED(rv) && smtpUrl)
 		{
 			m_runningURL = smtpUrl;

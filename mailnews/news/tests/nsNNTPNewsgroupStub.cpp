@@ -105,7 +105,7 @@ nsNNTPNewsgroupStub::~nsNNTPNewsgroupStub()
 	PR_FREEIF(m_prettyName);
 }
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupStub, nsINNTPNewsgroup::IID());
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupStub, nsINNTPNewsgroup::GetIID());
 
 nsresult nsNNTPNewsgroupStub::GetName(char ** aName)
 {
@@ -326,7 +326,7 @@ nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info,
 	if (group)
 	{
 		group->SetSubscribed(subscribed);
-		rv = group->QueryInterface(nsINNTPNewsgroup::IID(), (void **) info);
+		rv = group->QueryInterface(nsINNTPNewsgroup::GetIID(), (void **) info);
 	}
 
 	return rv;

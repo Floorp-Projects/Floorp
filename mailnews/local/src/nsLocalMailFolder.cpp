@@ -30,7 +30,7 @@
 #include "nsMailDatabase.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -75,7 +75,7 @@ nsURI2Path(char* uriStr, nsFileSpec& pathResult, PRBool asParentFolder)
   if (NS_FAILED(rv))
     return rv; 
 #else
-  char rootPath[] = "c:\\program files\\netscape\\users\\putterman\\mail";
+  char rootPath[] = "c:\\program files\\netscape\\users\\mscott\\mail";
 #endif
   path.Append(rootPath);
   uri.Cut(0, nsCRT::strlen(kRootPrefix));
@@ -173,7 +173,7 @@ nsMsgLocalMailFolder::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
 
   *result = nsnull;
-  if (iid.Equals(nsIMsgLocalMailFolder::IID()) ||
+  if (iid.Equals(nsIMsgLocalMailFolder::GetIID()) ||
       iid.Equals(kISupportsIID))
   {
     *result = NS_STATIC_CAST(nsIMsgLocalMailFolder*, this);
@@ -243,7 +243,7 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
     nsMsgLocalMailFolder* folder = nsnull;
 
 	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsIRDFService::IID(),
+                                             nsIRDFService::GetIID(),
                                              (nsISupports**) &rdfService);
 	if(NS_SUCCEEDED(rv))
 	{

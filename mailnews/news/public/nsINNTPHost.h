@@ -29,7 +29,7 @@
 
 class nsINNTPHost : public nsISupports {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_INNTPHOST_IID;
     return iid;
   }

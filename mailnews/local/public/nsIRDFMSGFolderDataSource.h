@@ -29,7 +29,7 @@
 
 class nsIRDFMSGFolderDataSource : public nsIRDFDataSource {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFMSGFOLDERDATASOURCE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFMSGFOLDERDATASOURCE_IID; return iid; }
 };
 
 extern NS_EXPORT nsresult NS_NewRDFMSGFolderDataSource(nsIRDFDataSource** result);

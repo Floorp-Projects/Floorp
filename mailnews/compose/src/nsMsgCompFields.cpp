@@ -37,7 +37,7 @@ nsresult NS_NewMsgCompFields(nsIMsgCompFields** aInstancePtrResult)
 	{
 		nsMsgCompFields* pCompFields = new nsMsgCompFields();
 		if (pCompFields)
-			return pCompFields->QueryInterface(nsIMsgCompFields::IID(), (void**) aInstancePtrResult);
+			return pCompFields->QueryInterface(nsIMsgCompFields::GetIID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -46,7 +46,7 @@ nsresult NS_NewMsgCompFields(nsIMsgCompFields** aInstancePtrResult)
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompFields, nsIMsgCompFields::IID());
+NS_IMPL_ISUPPORTS(nsMsgCompFields, nsIMsgCompFields::GetIID());
 
 nsMsgCompFields::nsMsgCompFields()
 {

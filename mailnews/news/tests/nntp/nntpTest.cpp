@@ -659,7 +659,7 @@ int main()
 	// Create the Event Queue for this thread...
     nsIEventQueueService *pEventQService = nsnull;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::IID(),
+                                          nsIEventQueueService::GetIID(),
                                           (nsISupports **)&pEventQService);
 	if (NS_SUCCEEDED(result)) {
       // XXX: What if this fails?

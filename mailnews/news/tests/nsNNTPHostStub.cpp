@@ -244,7 +244,7 @@ protected:
 	
 };
 
-NS_IMPL_ISUPPORTS(nsNNTPHostStub, nsINNTPHost::IID());
+NS_IMPL_ISUPPORTS(nsNNTPHostStub, nsINNTPHost::GetIID());
 
 nsNNTPHostStub::nsNNTPHostStub(char * name, PRInt32 port)
 {
@@ -477,7 +477,7 @@ nsresult nsNNTPHostStub::GetFirstGroupNeedingCounts(char ** aFirstGroup)
 	if (groupToBe)
 	{
 		nsINNTPNewsgroup * group = nsnull;
-		groupToBe->QueryInterface(nsINNTPNewsgroup::IID(), (void **) &group);
+		groupToBe->QueryInterface(nsINNTPNewsgroup::GetIID(), (void **) &group);
 		if (group)
 		{
 			group->GetName(aFirstGroup);
@@ -615,7 +615,7 @@ nsresult nsNNTPHostStub::FindGroup(char * name, nsINNTPNewsgroup ** retVal)
 		if (elem)
 		{	
 			nsINNTPNewsgroup * group = nsnull;
-			elem->QueryInterface(nsINNTPNewsgroup::IID(), (void **) &group);
+			elem->QueryInterface(nsINNTPNewsgroup::GetIID(), (void **) &group);
 			if (group)
 			{
 				char * groupName = nsnull;
@@ -706,7 +706,7 @@ nsresult NS_NewNNTPHost(nsINNTPHost ** aInstancePtr, char * name, PRUint32 port)
 	{
 		nsNNTPHostStub * host = new nsNNTPHostStub(name, port);
 		if (host)
-			rv =host->QueryInterface(nsINNTPHost::IID(), (void **) aInstancePtr);		
+			rv =host->QueryInterface(nsINNTPHost::GetIID(), (void **) aInstancePtr);		
 	}
 
 	return rv;

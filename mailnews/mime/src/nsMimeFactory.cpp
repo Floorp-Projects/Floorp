@@ -95,11 +95,11 @@ nsresult nsMimeFactory::QueryInterface(const nsIID &aIID, void **aResult)
   *aResult = NULL;   
 
   // we support three interfaces....nsISupports, nsFactory and nsINetPlugin.....
-  if (aIID.Equals(::nsISupports::IID()))    
+  if (aIID.Equals(::nsISupports::GetIID()))    
     *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(nsIFactory::IID()))   
+  else if (aIID.Equals(nsIFactory::GetIID()))   
     *aResult = (void *)(nsIFactory*)this;
-  else if (aIID.Equals(nsINetPlugin::IID()))   
+  else if (aIID.Equals(nsINetPlugin::GetIID()))   
     *aResult = (void *)(nsINetPlugin*)this; 
 
   if (*aResult == NULL)
@@ -195,7 +195,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	*aFactory = new nsMimeFactory(aClass);
 
 	if (aFactory)
-		return (*aFactory)->QueryInterface(nsIFactory::IID(), (void**)aFactory); // they want a Factory Interface so give it to them
+		return (*aFactory)->QueryInterface(nsIFactory::GetIID(), (void**)aFactory); // they want a Factory Interface so give it to them
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
 }

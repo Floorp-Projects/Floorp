@@ -56,7 +56,7 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMailboxProtocol)
 NS_IMPL_RELEASE(nsMailboxProtocol)
-NS_IMPL_QUERY_INTERFACE(nsMailboxProtocol, nsIStreamListener::IID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMailboxProtocol, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
 
 nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL)
 {
@@ -91,14 +91,14 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(nsIMailboxUrl::IID(), (void **)&m_runningUrl);
+		nsresult rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **)&m_runningUrl);
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
 			// extract the file name and create a file transport...
 			const char * fileName = nsnull;
 			nsINetService * pNetService = nsnull;
 
-			rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::IID(), (nsISupports **)&pNetService);
+			rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
 			if (NS_SUCCEEDED(rv) && pNetService)
 			{
 				m_runningUrl->GetFile(&fileName);
@@ -257,7 +257,7 @@ PRInt32 nsMailboxProtocol::SendData(const char * dataBuffer)
 			// notify the consumer that data has arrived
 			// HACK ALERT: this should really be m_runningUrl once we have NNTP url support...
 			nsIInputStream *inputStream = NULL;
-			m_outputStream->QueryInterface(nsIInputStream::IID() , (void **) &inputStream);
+			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) &inputStream);
 			if (inputStream)
 			{
 				m_outputConsumer->OnDataAvailable(m_runningUrl, inputStream, writeCount);
@@ -302,7 +302,7 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL)
 		rv = aURL->GetProtocol(&protocol);
 		NS_ASSERTION(protocol && PL_strcmp(protocol, "mailbox") == 0, "this is not a mailbox url!");
 
-		rv = aURL->QueryInterface(nsIMailboxUrl::IID(), (void **) &mailboxUrl);
+		rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &mailboxUrl);
 		if (NS_SUCCEEDED(rv) && mailboxUrl)
 		{
 			NS_IF_RELEASE(m_runningUrl);

@@ -36,7 +36,7 @@ nsresult NS_NewMimeObjectClassAccess(nsIMimeObjectClassAccess ** aInstancePtrRes
 	{
 		nsMimeObjectClassAccess *obj = new nsMimeObjectClassAccess();
 		if (obj)
-			return obj->QueryInterface(nsIMimeObjectClassAccess::IID(), (void**) aInstancePtrResult);
+			return obj->QueryInterface(nsIMimeObjectClassAccess::GetIID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -50,7 +50,7 @@ nsresult NS_NewMimeObjectClassAccess(nsIMimeObjectClassAccess ** aInstancePtrRes
  */
 NS_IMPL_ADDREF(nsMimeObjectClassAccess)
 NS_IMPL_RELEASE(nsMimeObjectClassAccess)
-NS_IMPL_QUERY_INTERFACE(nsMimeObjectClassAccess, nsIMimeObjectClassAccess::IID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMimeObjectClassAccess, nsIMimeObjectClassAccess::GetIID()); /* we need to pass in the interface ID of this interface */
 
 /*
  * nsMimeObjectClassAccess definitions....

@@ -27,7 +27,7 @@
 static NS_DEFINE_CID(kIMBBCID, NS_IMBB_IID);
 
 
-	nsresult rv = nsRepository::CreateInstance(kMDBCID, nsnull, nsIMDB::IID(), (void **)&gMDBInterface);
+	nsresult rv = nsRepository::CreateInstance(kMDBCID, nsnull, nsIMDB::GetIID(), (void **)&gMDBInterface);
 
 	if (nsnull != devSpec){
 	  if (NS_OK == ((nsDeviceContextSpecMac *)devSpec)->Init(aQuiet)){

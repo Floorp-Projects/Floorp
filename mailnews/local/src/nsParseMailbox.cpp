@@ -30,7 +30,7 @@
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMsgMailboxParser)
 NS_IMPL_RELEASE(nsMsgMailboxParser)
-NS_IMPL_QUERY_INTERFACE(nsMsgMailboxParser, nsIStreamListener::IID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMsgMailboxParser, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
 
 NS_BEGIN_EXTERN_C
 
@@ -41,7 +41,7 @@ nsresult NS_NewMsgParser(nsIStreamListener ** aInstancePtr)
 	{
 		nsMsgMailboxParser * parser = new nsMsgMailboxParser();
 		if (parser)
-			rv =parser->QueryInterface(nsIStreamListener::IID(), (void **) aInstancePtr);		
+			rv =parser->QueryInterface(nsIStreamListener::GetIID(), (void **) aInstancePtr);		
 	}
 
 	return rv;
@@ -67,7 +67,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 	nsIMailboxUrl *runningUrl;
 	printf("\n+++ nsMsgMailboxParserStub::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
 
-	nsresult rv = aURL->QueryInterface(nsIMailboxUrl::IID(), (void **)&runningUrl);
+	nsresult rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **)&runningUrl);
 	if (NS_SUCCEEDED(rv) && runningUrl)
 	{
 		// okay, now fill in our event sinks...Note that each getter ref counts before

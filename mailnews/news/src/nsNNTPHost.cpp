@@ -483,7 +483,7 @@ extern "C" {
 	extern int MK_MSG_CANT_MOVE_FOLDER;
 }
 
-NS_IMPL_ISUPPORTS(nsNNTPHost, IID())
+NS_IMPL_ISUPPORTS(nsNNTPHost, GetIID())
 
 
 #ifdef HAVE_MASTER
@@ -778,7 +778,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 	// for now, you can't subscribe to category by itself.
     nsINNTPCategory *category;
     
-	if (NS_SUCCEEDED(info->QueryInterface(nsINNTPCategory::IID(),
+	if (NS_SUCCEEDED(info->QueryInterface(nsINNTPCategory::GetIID(),
                                           (void **)&category))) {
         
         nsIMsgFolder *folder = getFolderFor(info);
@@ -867,7 +867,7 @@ nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
 		nsINNTPNewsgroup *newsgroup = (nsINNTPNewsgroup *) (*m_groups)[i];
         
         nsINNTPCategoryContainer *catContainer;
-        rv = newsgroup->QueryInterface(nsINNTPCategoryContainer::IID(),
+        rv = newsgroup->QueryInterface(nsINNTPCategoryContainer::GetIID(),
                                        (void **)&catContainer);
 		if (NS_SUCCEEDED(rv)) {
               
@@ -1677,7 +1677,7 @@ nsNNTPHost::AddGroup(char *groupName,
         nsresult rv = FindGroup(containerName, &newsInfo);
         
 		if (NS_SUCCEEDED(rv)) {
-            rv = newsInfo->QueryInterface(nsINNTPCategoryContainer::IID(),
+            rv = newsInfo->QueryInterface(nsINNTPCategoryContainer::GetIID(),
                                           (void **)&categoryContainer);
             
             // if we're not subscribed to container, do that instead.
@@ -1781,7 +1781,7 @@ nsNNTPHost::AddGroup(char *groupName,
         // return an nsresult
         nsINNTPCategoryContainer *catContainer;
         nsresult rv =
-            newsInfo->QueryInterface(nsINNTPCategoryContainer::IID(),
+            newsInfo->QueryInterface(nsINNTPCategoryContainer::GetIID(),
                                      (void **)&catContainer);
 		if (NS_FAILED(rv))
 		{
@@ -1842,7 +1842,7 @@ nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
 
         nsIMsgFolder *newsFolder = getFolderFor(newsInfo);
 
-        rv = newsInfo->QueryInterface(nsIMsgFolder::IID(),
+        rv = newsInfo->QueryInterface(nsIMsgFolder::GetIID(),
                                       (void **)&newsFolder);
         if (newsFolder) {
             nsIMsgFolder *catContFolder = getFolderFor(newCatCont);
@@ -2441,7 +2441,7 @@ nsNNTPHost::SetIsCategoryContainer(char* groupname, PRBool value, nsMsgGroupReco
 			{
                 // change category container into a newsgroup
                 nsINNTPCategoryContainer *catCont;
-                rv = newsgroup->QueryInterface(nsINNTPCategoryContainer::IID(),
+                rv = newsgroup->QueryInterface(nsINNTPCategoryContainer::GetIID(),
                                                (void **)&catCont);
 
 				if (NS_SUCCEEDED(rv))
@@ -3020,7 +3020,7 @@ int nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *gr
                 (void)infoList->CurrentItem(&hostInfoSupports);
                 
 				nsIMsgFolder *groupInHostInfo=NULL;
-                rv = hostInfoSupports->QueryInterface(::nsISupports::IID(),
+                rv = hostInfoSupports->QueryInterface(::nsISupports::GetIID(),
                                                       (void **)&groupInHostInfo);
 #endif
 #ifdef HAVE_PANE
@@ -3046,7 +3046,7 @@ int nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *gr
 			{
 				m_groups->InsertElementAt(groupToMove, idxInData); // the index has to be the same, right?
                 nsISupports* groupSupports;
-                groupToMove->QueryInterface(::nsISupports::IID(),
+                groupToMove->QueryInterface(::nsISupports::GetIID(),
                                             (void **)&groupSupports);
 //XXX				infoList->InsertElementAt(groupSupports, idxInHostInfo);
                 NS_RELEASE(groupSupports);
@@ -3229,7 +3229,7 @@ nsIMsgFolder * \
 nsNNTPHost::getFolderFor(_type * _class) {\
    nsIMsgFolder* folder;\
    nsresult rv = \
-      _class->QueryInterface(nsIMsgFolder::IID(), (void **)&folder);\
+      _class->QueryInterface(nsIMsgFolder::GetIID(), (void **)&folder);\
    if (NS_SUCCEEDED(rv)) return folder;\
    else return nsnull;\
 }\
@@ -3244,7 +3244,7 @@ NS_NewNNTPHost(nsINNTPHost *aNNTPHost)
     nsresult rv;
     nsNNTPHost *aHost = new nsNNTPHost("news", 119);
     if (aHost)
-        return aHost->QueryInterface(nsINNTPHost::IID(),
+        return aHost->QueryInterface(nsINNTPHost::GetIID(),
                                      (void **)aNNTPHost);
     return NS_ERROR_NOT_INITIALIZED;
 

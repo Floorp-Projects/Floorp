@@ -36,7 +36,7 @@ NS_NewMimePluginInstance(MimePluginInstance **aInstancePtrResult)
     if (inst == NULL)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    res = inst->QueryInterface(nsINetPluginInstance::IID(), (void **)aInstancePtrResult);
+    res = inst->QueryInterface(nsINetPluginInstance::GetIID(), (void **)aInstancePtrResult);
     if (res != NS_OK)
     {
       *aInstancePtrResult = NULL;

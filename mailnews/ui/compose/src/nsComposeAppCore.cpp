@@ -43,7 +43,7 @@
 #include "nsIMsgSend.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDocumentIID, nsIDocument::IID());
+static NS_DEFINE_IID(kIDocumentIID, nsIDocument::GetIID());
 static NS_DEFINE_IID(kIMsgComposeIID, NS_IMSGCOMPOSE_IID); 
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID); 
 
@@ -60,7 +60,7 @@ NS_BEGIN_EXTERN_C
 NS_END_EXTERN_C
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -170,12 +170,12 @@ nsComposeAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
       AddRef();
       return NS_OK;
   }
-  if ( aIID.Equals(nsIDOMBaseAppCore::IID())) {
+  if ( aIID.Equals(nsIDOMBaseAppCore::GetIID())) {
       *aInstancePtr = (void*) ((nsIDOMBaseAppCore*)this);
       AddRef();
       return NS_OK;
   }
-  else if ( aIID.Equals(nsIDOMComposeAppCore::IID()) ) {
+  else if ( aIID.Equals(nsIDOMComposeAppCore::GetIID()) ) {
       *aInstancePtr = (void*) (nsIDOMComposeAppCore*)this;
       AddRef();
       return NS_OK;
@@ -267,7 +267,7 @@ nsComposeAppCore::NewMessage(const nsString& aUrl)
 	nsString controllerCID;
 
 	rv = nsServiceManager::GetService(kAppShellServiceCID,
-									  nsIAppShellService::IID(),
+									  nsIAppShellService::GetIID(),
 									  (nsISupports**)&appShell);
 	nsIURL* url;
 	nsIWidget* newWindow;
@@ -383,7 +383,7 @@ NS_NewComposeAppCore(nsIDOMComposeAppCore **aResult)
 
   nsComposeAppCore *appcore = new nsComposeAppCore();
   if (appcore) {
-    return appcore->QueryInterface(nsIDOMComposeAppCore::IID(),
+    return appcore->QueryInterface(nsIDOMComposeAppCore::GetIID(),
                                    (void **)aResult);
 
   }

@@ -341,7 +341,7 @@ nsMsgSendMimeDeliveryState::~nsMsgSendMimeDeliveryState()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgSendMimeDeliveryState, nsIMsgSend::IID());
+NS_IMPL_ISUPPORTS(nsMsgSendMimeDeliveryState, nsIMsgSend::GetIID());
 
 nsresult nsMsgSendMimeDeliveryState::SendMessage(const nsIMsgCompFields *fields, const char *smtp)
 {
@@ -1620,7 +1620,7 @@ static char * mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_
 		nsIMsgRFC822Parser * pRfc822;
 		nsresult rv = nsRepository::CreateInstance(kMsgRFC822ParserCID, 
                                                NULL, 
-                                               nsIMsgRFC822Parser::IID(), 
+                                               nsIMsgRFC822Parser::GetIID(), 
                                                (void **) &pRfc822);
 		if (NS_SUCCEEDED(rv)) {
 			char *n;
@@ -3155,7 +3155,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 
 	nsINetService * pNetService;
 	nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, "netlib.dll", PR_FALSE, PR_FALSE); /*JFD - Should go away when netlib will register itself! */
-	nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::IID(), (nsISupports **)&pNetService);
+	nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
 	if (NS_SUCCEEDED(rv) && pNetService)
 	{
 		nsString aNSStr;
@@ -4883,7 +4883,7 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 	nsISmtpService * smtpService = nsnull;
 	nsFilePath filePath (m_msg_file_name ? m_msg_file_name : "");
 
-	nsresult rv = nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::IID(), (nsISupports **)&smtpService);
+	nsresult rv = nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::GetIID(), (nsISupports **)&smtpService);
 	if (NS_SUCCEEDED(rv) && smtpService)
 	{	
 		if (pSmtpServer)

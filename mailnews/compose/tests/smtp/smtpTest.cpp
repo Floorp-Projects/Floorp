@@ -183,7 +183,7 @@ nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
 	{
 		// query it for a mailnews interface for now....
 		nsIMsgMailNewsUrl * mailUrl = nsnull;
-		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::IID(), (void **) &mailUrl);
+		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void **) &mailUrl);
 		if (NS_SUCCEEDED(rv))
 		{
 			mailUrl->UnRegisterListener(this);
@@ -211,7 +211,7 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 	InitializeTestDriver(); // prompts user for initialization information...
 
 	m_smtpService = nsnull;
-	nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::IID(), (nsISupports **)&m_smtpService);
+	nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::GetIID(), (nsISupports **)&m_smtpService);
 }
 
 
@@ -221,7 +221,7 @@ nsSmtpTestDriver::~nsSmtpTestDriver()
 	nsServiceManager::ReleaseService(kSmtpServiceCID, m_smtpService);
 }
 
-NS_IMPL_ISUPPORTS(nsSmtpTestDriver, nsIUrlListener::IID())
+NS_IMPL_ISUPPORTS(nsSmtpTestDriver, nsIUrlListener::GetIID())
 
 nsresult nsSmtpTestDriver::RunDriver()
 {
@@ -407,7 +407,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	nsIURL * url = nsnull;
 	m_smtpService->SendMailMessage(filePath, m_host, userName, recipients, this, &url);
 	if (url)
-		url->QueryInterface(nsISmtpUrl::IID(), (void **) &m_smtpUrl);
+		url->QueryInterface(nsISmtpUrl::GetIID(), (void **) &m_smtpUrl);
 	NS_IF_RELEASE(url);
 
 
@@ -433,7 +433,7 @@ int main()
 	// Create the Event Queue for this thread...
     nsIEventQueueService *pEventQService = nsnull;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::IID(),
+                                          nsIEventQueueService::GetIID(),
                                           (nsISupports **)&pEventQService);
 	if (NS_SUCCEEDED(result)) {
       // XXX: What if this fails?

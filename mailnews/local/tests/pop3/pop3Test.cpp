@@ -210,7 +210,7 @@ nsresult NS_NewPop3URL(nsIPop3URL ** aResult, const nsString urlSpec)
 	 if (pop3URL)
 	 {
 		pop3URL->ParseURL(urlSpec);  // load the spec we were given...
-		rv = pop3URL->QueryInterface(nsIPop3URL::IID(), (void **) aResult);
+		rv = pop3URL->QueryInterface(nsIPop3URL::GetIID(), (void **) aResult);
 	 }
 
 	 return rv;
@@ -626,7 +626,7 @@ int main()
 	// Create the Event Queue for this thread...
     nsIEventQueueService *pEventQService = nsnull;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::IID(),
+                                          nsIEventQueueService::GetIID(),
                                           (nsISupports **)&pEventQService);
 	if (NS_SUCCEEDED(result)) {
       // XXX: What if this fails?

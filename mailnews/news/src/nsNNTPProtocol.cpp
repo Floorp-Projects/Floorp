@@ -318,7 +318,7 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(nsINntpUrl::IID(), (void **)&m_runningURL);
+		nsresult rv = aURL->QueryInterface(nsINntpUrl::GetIID(), (void **)&m_runningURL);
 		if (NS_SUCCEEDED(rv) && m_runningURL)
 		{
 			// okay, now fill in our event sinks...Note that each getter ref counts before
@@ -404,7 +404,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 
   if (aURL)
   {
-	  rv = aURL->QueryInterface(nsINntpUrl::IID(), (void **) &nntpUrl);
+	  rv = aURL->QueryInterface(nsINntpUrl::GetIID(), (void **) &nntpUrl);
 	  if (NS_SUCCEEDED(rv) && nntpUrl)
 	  {
 		  // replace our old url with the new one...
@@ -899,7 +899,7 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsNNTPProtocol)
 NS_IMPL_RELEASE(nsNNTPProtocol)
-NS_IMPL_QUERY_INTERFACE(nsNNTPProtocol, nsIStreamListener::IID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsNNTPProtocol, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
@@ -1123,7 +1123,7 @@ PRInt32 nsNNTPProtocol::SendData(const char * dataBuffer)
 			// notify the consumer that data has arrived
 			// HACK ALERT: this should really be m_runningURL once we have NNTP url support...
 			nsIInputStream *inputStream = NULL;
-			m_outputStream->QueryInterface(nsIInputStream::IID() , (void **) &inputStream);
+			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) &inputStream);
 			if (inputStream)
 			{
 				m_outputConsumer->OnDataAvailable(m_runningURL, inputStream, writeCount);
@@ -4612,7 +4612,7 @@ nsresult NS_NewNntpUrl(nsINntpUrl ** aResult, const nsString urlSpec)
 	 if (nntpUrl)
 	 {
 		nntpUrl->ParseURL(urlSpec);  // load the spec we were given...
-		rv = nntpUrl->QueryInterface(nsINntpUrl::IID(), (void **) aResult);
+		rv = nntpUrl->QueryInterface(nsINntpUrl::GetIID(), (void **) aResult);
 	 }
 
 	 return rv;

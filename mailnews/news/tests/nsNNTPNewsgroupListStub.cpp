@@ -84,7 +84,7 @@ class nsNNTPNewsgroupListStub : public nsINNTPNewsgroupList {
 };
 
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupListStub, nsINNTPNewsgroupList::IID());
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupListStub, nsINNTPNewsgroupList::GetIID());
 
 nsNNTPNewsgroupListStub::nsNNTPNewsgroupListStub(nsINNTPHost* host,
                                          nsINNTPNewsgroup *newsgroup)
@@ -358,6 +358,6 @@ extern "C" nsresult NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResul
 {
 	nsNNTPNewsgroupListStub * stub = nsnull;
 	stub = new nsNNTPNewsgroupListStub(newsHost, newsgroup);
-	nsresult rv = stub->QueryInterface(nsINNTPNewsgroupList::IID(), (void **) aInstancePtrResult);
+	nsresult rv = stub->QueryInterface(nsINNTPNewsgroupList::GetIID(), (void **) aInstancePtrResult);
 	return rv;
 }

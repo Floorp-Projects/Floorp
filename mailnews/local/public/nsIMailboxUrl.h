@@ -48,7 +48,7 @@ typedef enum {
 class nsIMailboxUrl : public nsIMsgMailNewsUrl
 {
 public:
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IMAILBOXURL_IID;
     return iid;
   }

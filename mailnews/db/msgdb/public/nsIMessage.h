@@ -32,7 +32,7 @@
 
 class nsIMessage : public nsISupports {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IMESSAGE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IMESSAGE_IID; return iid; }
 
     NS_IMETHOD GetProperty(const char *propertyName, nsString &resultProperty) = 0;
     NS_IMETHOD SetProperty(const char *propertyName, nsString &propertyStr) = 0;

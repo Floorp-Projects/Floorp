@@ -33,7 +33,7 @@
 #include "nsCRT.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
@@ -64,7 +64,7 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 	m_runningUrl = PR_FALSE;
 
 	m_urlListeners = nsnull;
-	nsServiceManager::GetService(kUrlListenerManagerCID, nsIUrlListenerManager::IID(),
+	nsServiceManager::GetService(kUrlListenerManagerCID, nsIUrlListenerManager::GetIID(),
 								 (nsISupports **)&m_urlListeners);
 
     m_container = aContainer;
@@ -103,25 +103,25 @@ nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
  
-    if (aIID.Equals(nsIMailboxUrl::IID()) || aIID.Equals(kISupportsIID)) 
+    if (aIID.Equals(nsIMailboxUrl::GetIID()) || aIID.Equals(kISupportsIID)) 
 	{
         *aInstancePtr = (void*) ((nsIMailboxUrl*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIURL::IID())) 
+    if (aIID.Equals(nsIURL::GetIID())) 
 	{
         *aInstancePtr = (void*) ((nsIURL*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsINetlibURL::IID())) 
+    if (aIID.Equals(nsINetlibURL::GetIID())) 
 	{
         *aInstancePtr = (void*) ((nsINetlibURL*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-	if (aIID.Equals(nsIMsgMailNewsUrl::IID()))
+	if (aIID.Equals(nsIMsgMailNewsUrl::GetIID()))
 	{
 		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl *) this);
 		NS_ADDREF_THIS();
@@ -603,7 +603,7 @@ PRBool nsMailboxUrl::Equals(const nsIURL* aURL) const
     NS_LOCK_INSTANCE();
 	// are they both mailbox urls?? if yes...for now just compare the pointers until 
 	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURL*)aURL)->QueryInterface(nsIMailboxUrl::IID(), (void**)&other) == NS_OK) {
+    if (((nsIURL*)aURL)->QueryInterface(nsIMailboxUrl::GetIID(), (void**)&other) == NS_OK) {
         bIsEqual = other == this; // compare the pointers...
     }
     else

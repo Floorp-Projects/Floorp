@@ -29,7 +29,7 @@
 
 class nsINNTPCategoryContainer : public nsISupports {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_INNTPCATEGORYCONTAINER_IID;
     return iid;
   }

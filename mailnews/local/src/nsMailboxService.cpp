@@ -36,7 +36,7 @@ nsMailboxService::nsMailboxService()
 nsMailboxService::~nsMailboxService()
 {}
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsMailboxService, nsIMailboxService::IID());
+NS_IMPL_THREADSAFE_ISUPPORTS(nsMailboxService, nsIMailboxService::GetIID());
 
 nsresult nsMailboxService::ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURL ** aURL)
@@ -49,7 +49,7 @@ nsresult nsMailboxService::ParseMailbox(const nsFilePath& aMailboxPath, nsIStrea
 	mailboxUrl = new nsMailboxUrl(nsnull, nsnull);
 	if (mailboxUrl)
 	{
-		rv = mailboxUrl->QueryInterface(nsIMailboxUrl::IID(), (void **) &url);
+		rv = mailboxUrl->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &url);
 		if (NS_SUCCEEDED(rv) && url)
 		{
 			// okay now generate the url string

@@ -44,7 +44,7 @@ nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer);
 NS_END_EXTERN_C
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -120,12 +120,12 @@ nsMsgAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
       AddRef();
       return NS_OK;
   }
-  if ( aIID.Equals(nsIDOMBaseAppCore::IID())) {
+  if ( aIID.Equals(nsIDOMBaseAppCore::GetIID())) {
       *aInstancePtr = (void*) ((nsIDOMBaseAppCore*)this);
       AddRef();
       return NS_OK;
   }
-  else if ( aIID.Equals(nsIDOMMsgAppCore::IID()) ) {
+  else if ( aIID.Equals(nsIDOMMsgAppCore::GetIID()) ) {
       *aInstancePtr = (void*) (nsIDOMMsgAppCore*)this;
       AddRef();
       return NS_OK;
@@ -201,7 +201,7 @@ nsMsgAppCore::Open3PaneWindow()
 
 	urlstr = "resource:/res/samples/messenger.html";
 	rv = nsServiceManager::GetService(kAppShellServiceCID,
-									  nsIAppShellService::IID(),
+									  nsIAppShellService::GetIID(),
 									  (nsISupports**)&appShell);
 	nsIURL* url;
 	nsIWidget* newWindow;
@@ -243,7 +243,7 @@ NS_NewMsgAppCore(nsIDOMMsgAppCore **aResult)
 
   nsMsgAppCore *appcore = new nsMsgAppCore();
   if (appcore) {
-    return appcore->QueryInterface(nsIDOMMsgAppCore::IID(),
+    return appcore->QueryInterface(nsIDOMMsgAppCore::GetIID(),
                                    (void **)aResult);
 
   }

@@ -40,7 +40,7 @@
 #  endif /* XP_WIN */
 #endif /* XP_MAC */
 
-NS_IMPL_ISUPPORTS(nsPop3Sink, nsIPop3Sink::IID());
+NS_IMPL_ISUPPORTS(nsPop3Sink, nsIPop3Sink::GetIID());
 
 nsPop3Sink::nsPop3Sink()
 {

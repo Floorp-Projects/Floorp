@@ -139,7 +139,7 @@ const char* nsNNTPNewsgroupPost::m_headerName[HEADER_LAST+1]=
     "Message-ID: ",
 };
     
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, nsINNTPNewsgroupPost::IID());
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, nsINNTPNewsgroupPost::GetIID());
 
 nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
 {
@@ -303,7 +303,7 @@ nsresult NS_NewNewsgroupPost(nsINNTPNewsgroupPost **aPost)
 {
     if (!aPost) return NS_ERROR_NULL_POINTER;
     nsNNTPNewsgroupPost *post = new nsNNTPNewsgroupPost();
-    return post->QueryInterface(nsINNTPNewsgroupPost::IID(),
+    return post->QueryInterface(nsINNTPNewsgroupPost::GetIID(),
                                 (void **)aPost);
 }
 

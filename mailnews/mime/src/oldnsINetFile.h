@@ -82,7 +82,7 @@ typedef enum {
 
 class nsINetFile: public nsISupports {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_INETFILE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_INETFILE_IID; return iid; }
 
     /*
      * File methods

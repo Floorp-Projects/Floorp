@@ -27,7 +27,7 @@
 
 class nsINNTPNewsgroupPost : public nsISupports {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_INNTPNEWSGROUPPOST_IID;
     return iid;
   }

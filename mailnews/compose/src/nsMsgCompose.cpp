@@ -134,7 +134,7 @@ nsresult NS_NewMsgCompose(nsIMsgCompose** aInstancePtrResult)
 	{
 		nsMsgCompose* pCompose = new nsMsgCompose();
 		if (pCompose)
-			return pCompose->QueryInterface(nsIMsgCompose::IID(), (void**) aInstancePtrResult);
+			return pCompose->QueryInterface(nsIMsgCompose::GetIID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -396,7 +396,7 @@ nsMsgCompose::~nsMsgCompose()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompose, nsIMsgCompose::IID());
+NS_IMPL_ISUPPORTS(nsMsgCompose, nsIMsgCompose::GetIID());
 
 #if 0 //JFD
 nsMsgCompose::MSG_CompositionPaneCreate(MWContext* context,

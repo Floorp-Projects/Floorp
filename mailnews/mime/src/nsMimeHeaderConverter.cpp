@@ -37,7 +37,7 @@ nsresult NS_NewMimeHeaderConverter(nsIMimeHeaderConverter ** aInstancePtrResult)
 	{
 		nsMimeHeaderConverter *obj = new nsMimeHeaderConverter();
 		if (obj)
-			return obj->QueryInterface(nsIMimeHeaderConverter::IID(), (void**) aInstancePtrResult);
+			return obj->QueryInterface(nsIMimeHeaderConverter::GetIID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -51,7 +51,7 @@ nsresult NS_NewMimeHeaderConverter(nsIMimeHeaderConverter ** aInstancePtrResult)
  */
 NS_IMPL_ADDREF(nsMimeHeaderConverter)
 NS_IMPL_RELEASE(nsMimeHeaderConverter)
-NS_IMPL_QUERY_INTERFACE(nsMimeHeaderConverter, nsIMimeHeaderConverter::IID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMimeHeaderConverter, nsIMimeHeaderConverter::GetIID()); /* we need to pass in the interface ID of this interface */
 
 /*
  * nsMimeHeaderConverter definitions....

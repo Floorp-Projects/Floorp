@@ -29,7 +29,7 @@
 
 class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IDOMMSGAPPCORE_IID;
     return iid;
   }

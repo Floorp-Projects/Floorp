@@ -35,7 +35,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
 	res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
                                            NULL, 
-                                           nsIMsgCompFields::IID(), 
+                                           nsIMsgCompFields::GetIID(), 
                                            (void **) &pMsgCompFields); 
 
 	if (res == NS_OK && pMsgCompFields) { 
@@ -73,7 +73,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 		nsIMsgCompFields * pCopyFields;
 		res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
 												NULL, 
-												nsIMsgCompFields::IID(), 
+												nsIMsgCompFields::GetIID(), 
 												(void **) &pCopyFields); 
 
 		if (res == NS_OK && pCopyFields) { 
@@ -98,7 +98,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
     res = nsRepository::CreateInstance(kMsgComposeCID, 
                                                NULL, 
-                                               nsIMsgCompose::IID(), 
+                                               nsIMsgCompose::GetIID(), 
                                                (void **) &pMsgCompose); 
 
    if (res == NS_OK && pMsgCompose) {

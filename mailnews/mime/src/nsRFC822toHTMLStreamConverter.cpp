@@ -33,7 +33,7 @@ nsresult NS_NewRFC822HTMLConverter(nsIStreamConverter** aInstancePtrResult)
 	{
 		nsRFC822toHTMLStreamConverter *converter = new nsRFC822toHTMLStreamConverter();
 		if (converter)
-			return converter->QueryInterface(nsIStreamConverter::IID(), (void**) aInstancePtrResult);
+			return converter->QueryInterface(nsIStreamConverter::GetIID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -48,7 +48,7 @@ nsresult NS_NewRFC822HTMLConverter(nsIStreamConverter** aInstancePtrResult)
  */
 NS_IMPL_ADDREF(nsRFC822toHTMLStreamConverter)
 NS_IMPL_RELEASE(nsRFC822toHTMLStreamConverter)
-NS_IMPL_QUERY_INTERFACE(nsRFC822toHTMLStreamConverter, nsIStreamConverter::IID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsRFC822toHTMLStreamConverter, nsIStreamConverter::GetIID()); /* we need to pass in the interface ID of this interface */
 
 /*
  * nsRFC822toHTMLStreamConverter definitions....

@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
                                 "mime.dll", PR_FALSE, PR_FALSE);
   
   nsresult res = nsRepository::CreateInstance(kRFC822toHTMLStreamConverterCID, 
-                    NULL, nsIStreamConverter::IID(), (void **) &sample); 
+                    NULL, nsIStreamConverter::GetIID(), (void **) &sample); 
   if (res == NS_OK && sample) 
   { 
     void *stream;
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
   printf("Time for try the nsMimeObjectClassAccess class...\n");
   res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
-                    NULL, nsIMimeObjectClassAccess::IID(), 
+                    NULL, nsIMimeObjectClassAccess::GetIID(), 
                     (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 

@@ -42,7 +42,7 @@ class nsNNTPCategoryContainerStub : public nsISupports {
 
 };
 
-NS_IMPL_ISUPPORTS(nsNNTPCategoryContainerStub, nsINNTPCategoryContainer::IID());
+NS_IMPL_ISUPPORTS(nsNNTPCategoryContainerStub, nsINNTPCategoryContainer::GetIID());
 
 nsNNTPCategoryContainerStub::nsNNTPCategoryContainerStub()
 {
@@ -92,7 +92,7 @@ nsresult NS_NewCategoryContainerFromNewsgroup(nsINNTPCategoryContainer ** aInsta
 	{
 		stub = new nsNNTPCategoryContainerStub();
 		stub->SetRootCategory(group);
-		rv = stub->QueryInterface(nsINNTPCategoryContainer::IID(), (void **) aInstancePtr);
+		rv = stub->QueryInterface(nsINNTPCategoryContainer::GetIID(), (void **) aInstancePtr);
 	}
 
 	return rv;

@@ -20,7 +20,7 @@
 
 class nsIDOMComposeAppCore : public nsIDOMBaseAppCore {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IDOMCOMPOSEAPPCORE_IID;
     return iid;
   }

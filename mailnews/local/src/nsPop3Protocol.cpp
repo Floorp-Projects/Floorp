@@ -385,7 +385,7 @@ void KillPopData(char* data)
 
 NS_IMPL_ADDREF(nsPop3Protocol)
 NS_IMPL_RELEASE(nsPop3Protocol)
-NS_IMPL_QUERY_INTERFACE(nsPop3Protocol, nsIStreamListener::IID())
+NS_IMPL_QUERY_INTERFACE(nsPop3Protocol, nsIStreamListener::GetIID())
 
 NS_IMETHODIMP nsPop3Protocol::OnDataAvailable(nsIURL* aURL, 
                                            nsIInputStream* aInputStream,
@@ -509,7 +509,7 @@ nsPop3Protocol::Load(nsIURL* aURL)
 
     if (aURL)
     {
-        rv = aURL->QueryInterface(nsIPop3URL::IID(), (void **) &pop3URL);
+        rv = aURL->QueryInterface(nsIPop3URL::GetIID(), (void **) &pop3URL);
         if (NS_SUCCEEDED(rv) && pop3URL)
         {
             // replace our old url with the new one...
@@ -817,7 +817,7 @@ nsPop3Protocol::SendCommand(const char * command)
     if (NS_SUCCEEDED(rv) && write_count == PL_strlen(command))
     {
         nsIInputStream *inputStream = NULL;
-        m_outputStream->QueryInterface(nsIInputStream::IID(), (void **)
+        m_outputStream->QueryInterface(nsIInputStream::GetIID(), (void **)
                                        &inputStream);
         if (inputStream)
         {

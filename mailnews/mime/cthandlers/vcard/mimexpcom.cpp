@@ -31,7 +31,7 @@ COM_GetmimeInlineTextClass(void)
   void                    *ptr = NULL;
 
   int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::IID(), 
+                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 
@@ -49,7 +49,7 @@ COM_GetmimeLeafClass(void)
   void                    *ptr = NULL;
 
   int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::IID(), 
+                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 
@@ -67,7 +67,7 @@ COM_GetmimeObjectClass(void)
   void                    *ptr = NULL;
 
   int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::IID(), 
+                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 
@@ -85,7 +85,7 @@ COM_GetmimeContainerClass(void)
   void                    *ptr = NULL;
 
   int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::IID(), 
+                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 
@@ -103,7 +103,7 @@ COM_GetmimeMultipartClass(void)
   void                    *ptr = NULL;
 
   int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::IID(), 
+                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 
@@ -121,7 +121,7 @@ COM_GetmimeMultipartSignedClass(void)
   void                    *ptr = NULL;
 
   int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::IID(), 
+                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 
@@ -140,7 +140,7 @@ COM_MimeObject_write(void *mimeObject, char *data, PRInt32 length,
   int                     rc = -1;
 
   int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
-                                      NULL, nsIMimeObjectClassAccess::IID(), 
+                                      NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
   { 

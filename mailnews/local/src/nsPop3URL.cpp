@@ -34,7 +34,7 @@
 #include "nsCRT.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -92,18 +92,18 @@ nsresult nsPop3URL::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
  
-    if (aIID.Equals(nsIPop3URL::IID()) ||
+    if (aIID.Equals(nsIPop3URL::GetIID()) ||
         aIID.Equals(kISupportsIID)) {
         *aInstancePtr = (void*) ((nsIPop3URL*)this);
         AddRef();
         return NS_OK;
     }
-    if (aIID.Equals(nsIURL::IID())) {
+    if (aIID.Equals(nsIURL::GetIID())) {
         *aInstancePtr = (void*) ((nsIURL*)this);
         AddRef();
         return NS_OK;
     }
-    if (aIID.Equals(nsINetlibURL::IID())) {
+    if (aIID.Equals(nsINetlibURL::GetIID())) {
         *aInstancePtr = (void*) ((nsINetlibURL*)this);
         AddRef();
         return NS_OK;
@@ -564,7 +564,7 @@ PRBool nsPop3URL::Equals(const nsIURL* aURL) const
     NS_LOCK_INSTANCE();
 	// are they both Pop3 urls?? if yes...for now just compare the pointers until 
 	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURL*)aURL)->QueryInterface(nsIPop3URL::IID(), (void**)&other) == NS_OK) {
+    if (((nsIURL*)aURL)->QueryInterface(nsIPop3URL::GetIID(), (void**)&other) == NS_OK) {
         bIsEqual = other == this; // compare the pointers...
     }
     else

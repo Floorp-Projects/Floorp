@@ -44,7 +44,7 @@ static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,		NS_RDFINMEMORYDATASOURCE_CID);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRDFCursorIID, NS_IRDFCURSOR_IID);
@@ -142,7 +142,7 @@ nsMSGFolderDataSource::nsMSGFolderDataSource()
 	mObservers = nsnull;
 
 	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsIRDFService::IID(),
+                                             nsIRDFService::GetIID(),
                                              (nsISupports**) &gRDFService);
 
 	PR_ASSERT(NS_SUCCEEDED(rv));
@@ -186,8 +186,8 @@ nsMSGFolderDataSource::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
 
   *result = nsnull;
-  if (iid.Equals(nsIRDFMSGFolderDataSource::IID()) ||
-	  iid.Equals(nsIRDFDataSource::IID()) ||
+  if (iid.Equals(nsIRDFMSGFolderDataSource::GetIID()) ||
+	  iid.Equals(nsIRDFDataSource::GetIID()) ||
       iid.Equals(kISupportsIID))
   {
     *result = NS_STATIC_CAST(nsIRDFMSGFolderDataSource*, this);
@@ -222,7 +222,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
   nsresult rv;
 	nsIMsgFolder *rootFolder;
 #if 0
-	if(NS_SUCCEEDED(kNC_MSGFolderRoot->QueryInterface(nsIMsgFolder::IID(), (void**)&rootFolder)))
+	if(NS_SUCCEEDED(kNC_MSGFolderRoot->QueryInterface(nsIMsgFolder::GetIID(), (void**)&rootFolder)))
 	{		
 		if(rootFolder)
 		{
@@ -271,7 +271,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
 
 	nsIMsgFolder* folder;
 	nsIMessage* message;
-	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::IID(), (void**) &folder)))
+	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**) &folder)))
 	{
     nsresult rv;
 
@@ -283,7 +283,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
 			{
 				nsISupports *firstFolder;
 				subFolders->CurrentItem(&firstFolder);
-				firstFolder->QueryInterface(nsIRDFResource::IID(), (void**)target);
+				firstFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)target);
 				NS_RELEASE(firstFolder);
 			}
 			NS_RELEASE(subFolders);
@@ -316,7 +316,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
 
 		return rv;
   }
-	else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::IID(), (void**) &message)))
+	else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**) &message)))
 	{
     nsresult rv;
 
@@ -369,7 +369,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
 
 	nsIMsgFolder* folder;
 	nsIMessage* message;
-	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
+	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
 	{
 
 		if (peq(kNC_Child, property))
@@ -413,7 +413,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
 		}
 		NS_IF_RELEASE(folder);
 	}
-  else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::IID(), (void**)&message))) {
+  else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
     if(peq(kNC_Name, property) || peq(kNC_Subject, property) || peq(kNC_Date, property))
 		{
 			nsRDFSingletonAssertionCursor* cursor =
@@ -490,7 +490,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
     return NS_ERROR_OUT_OF_MEMORY;
 	nsIMsgFolder* folder;
 	nsIMessage* message;
-	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
+	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
 	{
 		nsIEnumerator* subFolders;
 		folder->GetSubFolders(&subFolders);
@@ -507,7 +507,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
 		arcs->AppendElement(kNC_Name);
 		NS_IF_RELEASE(folder);
 	}
-  else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::IID(), (void**)&message)))
+  else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
 	{
 		arcs->AppendElement(kNC_Subject);
 		arcs->AppendElement(kNC_Sender);
