@@ -98,11 +98,11 @@ public:
     virtual ~nsProxyEventObject();
 
 private:
-    nsProxyEventObject::nsProxyEventObject();   // not implemented
-    nsProxyEventObject::nsProxyEventObject(PLEventQueue *destQueue,
-                                           nsISupports* aObj,
-                                           nsProxyEventClass* aClass,
-                                           nsProxyEventObject* root);
+    nsProxyEventObject();   // not implemented
+    nsProxyEventObject(PLEventQueue *destQueue,
+                       nsISupports* aObj,
+    				   nsProxyEventClass* aClass,
+                       nsProxyEventObject* root);
 
 
     nsProxyObject*  mProxyObject;

@@ -74,7 +74,7 @@ nsProxyEventObject::GetNewOrUsedProxy(PLEventQueue *destQueue,
     else
     {
         // build the root proxy
-        if (aObj = rootObject)
+        if (aObj == rootObject)
         {
             // the root will do double duty as the interface wrapper
             proxy = root = new nsProxyEventObject(destQueue, aObj, clazz, nsnull);
