@@ -62,12 +62,12 @@ private:
   
   /* Private Fields */
   
-  nsWinReg* reg;         // initiating WinReg object
+  nsWinReg* reg;        // initiating WinReg object
   PRInt32   rootkey;
   PRInt32   command;
   nsString* subkey;     // Name of section
-  nsString* name;         // Name of key
-  void* value;       // data to write
+  nsString* name;       // Name of key
+  void*     value;      // data to write
   
   /* Private Methods */
 

@@ -18,27 +18,34 @@
 
 
 #include "nsWinProfileItem.h"
-#include "xp.h"
-#include "xp_str.h"
-
-PR_BEGIN_EXTERN_C
+#include "nspr.h"
+#include <windows.h>
 
 /* Public Methods */
 
 nsWinProfileItem::nsWinProfileItem(nsWinProfile* profileObj, 
-								   char* sectionName, char* keyName,
-								   char* val) : nsInstallObject(profileObj->softUpdate())
+                                   nsString sectionName,
+                                   nsString keyName,
+                                   nsString val) : nsInstallObject(profileObj->installObject())
 {
-	profile = profileObj;
-	section = XP_STRDUP(sectionName);
-	key = XP_STRDUP(keyName);
-	value = XP_STRDUP(val);
+  profile = profileObj;
+  section = new nsString(sectionName);
+  key     = new nsString(keyName);
+  value   = new nsString(val);
 }
 
-char* nsWinProfileItem::Complete()
+nsWinProfileItem::~nsWinProfileItem()
 {
-	profile->finalWriteString(section, key, value);
-	return NULL;
+  delete profile;
+  delete section;
+  delete key;
+  delete value;
+}
+
+PRInt32 nsWinProfileItem::Complete()
+{
+	profile->finalWriteString(*section, *key, *value);
+	return NS_OK;
 }
   
 float nsWinProfileItem::GetInstallOrder()
@@ -48,34 +55,33 @@ float nsWinProfileItem::GetInstallOrder()
 
 char* nsWinProfileItem::toString()
 {
-	PRInt32 len;
-	char* result;
-	char* filename = profile->getFilename();
+  char*     resultCString;
+  nsString* result;
+  nsString* filename = new nsString(*profile->getFilename());
 
-	len = XP_STRLEN("Write ") + XP_STRLEN(filename) +
-		  XP_STRLEN(": [") + XP_STRLEN(section) + XP_STRLEN("] ") +
-		  XP_STRLEN(key) + XP_STRLEN("=") + XP_STRLEN(value);
+  result = new nsString("Write ");
+  result->Append(*filename);
+  result->Append(": [");
+  result->Append(*section);
+  result->Append("] ");
+  result->Append(*key);
+  result->Append("=");
+  result->Append(*value);
 
-	result = (char*)XP_ALLOC((len+1)*sizeof(char));
-	XP_STRCAT(result, "Write ");
-	XP_STRCAT(result, filename);
-	XP_STRCAT(result, ": [");
-	XP_STRCAT(result, section);
-	XP_STRCAT(result, "] ");
-	XP_STRCAT(result, key);
-	XP_STRCAT(result, "=");
-	XP_STRCAT(result, value);
+  resultCString = result->ToNewCString();
+  delete result;
+  delete filename;
 
-	return result;
+  return resultCString;
 }
 
 void nsWinProfileItem::Abort()
 {
 }
 
-char* nsWinProfileItem::Prepare()
+PRInt32 nsWinProfileItem::Prepare()
 {
-	return NULL;
+	return nsnull;
 }
 
 
@@ -99,5 +105,3 @@ nsWinProfileItem::RegisterPackageNode()
     return TRUE;
 }
 
-
-PR_END_EXTERN_C

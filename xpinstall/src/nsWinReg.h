@@ -19,14 +19,8 @@
 #ifndef __NS_WINREG_H__
 #define __NS_WINREG_H__
 
-//#include "prtypes.h"
-#include "nsSoftUpdateEnums.h" 
+#include "nsWinRegEnums.h" 
 #include "nsWinRegValue.h"
-
-//#include "nsPrincipal.h"
-//#include "nsPrivilegeManager.h"
-//#include "nsTarget.h"
-//#include "nsUserTarget.h"
 
 #include "nscore.h"
 #include "nsISupports.h"
