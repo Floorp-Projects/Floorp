@@ -166,7 +166,7 @@ function onCancel()
         closeWizard = false;
     }
 
-    if(top.okCallback) {
+    if(top.okCallback && closeWizard) {
       var state = false;
       top.okCallback(state);
     }
