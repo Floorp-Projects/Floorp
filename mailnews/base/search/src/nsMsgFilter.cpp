@@ -359,7 +359,6 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgRuleAction *aFilterAction, nsIMsgDBH
     PRTime date;
     char dateStr[40];	/* 30 probably not enough */
     nsMsgRuleActionType actionType;
-    nsXPIDLCString actionFolderUri;
     
     nsXPIDLCString author;
     nsXPIDLCString subject;
@@ -395,6 +394,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgRuleAction *aFilterAction, nsIMsgDBH
     buffer +=  " ";
         
     if (actionType == nsMsgFilterAction::MoveToFolder) {
+      nsXPIDLCString actionFolderUri;
       aFilterAction->GetTargetFolderUri(getter_Copies(actionFolderUri));
       buffer += actionFolderUri.get();
     } 
@@ -403,7 +403,6 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgRuleAction *aFilterAction, nsIMsgDBH
     if (actionType == nsMsgFilterAction::MoveToFolder) {
       nsXPIDLCString msgId;
       aMsgHdr->GetMessageId(getter_Copies(msgId));
-      buffer += (const char *) actionFolderUri;
       buffer += " id = ";
       buffer += (const char*)msgId;
       buffer += "\n";
@@ -424,7 +423,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgRuleAction *aFilterAction, nsIMsgDBH
 
     PRUint32 escapedBufferLen = strlen(escapedBuffer);
     rv = logStream->Write(escapedBuffer, escapedBufferLen, &writeCount);
-    PR_FREEIF(escapedBuffer);
+    PR_Free(escapedBuffer);
     NS_ENSURE_SUCCESS(rv,rv);
     NS_ASSERTION(writeCount == escapedBufferLen, "failed to write out log hit");
  
