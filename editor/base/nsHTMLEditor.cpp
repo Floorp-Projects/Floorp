@@ -852,6 +852,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   ForceCompositionEnd();
 
   nsAutoEditBatch batchIt(this);
+  nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
   
   if (gNoisy) 
   { 
@@ -3789,6 +3790,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
 {
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> newNode;
+  nsAutoRules(this, kOpInsertElement, nsIEditor::eNext);
   nsAutoString tag("blockquote");
   nsresult res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
   if (NS_FAILED(res)) return res;
