@@ -73,7 +73,7 @@ public:
     nsresult Init(nsIRequest *request);
 
     nsresult SetStreamListener(nsIStreamListener *listener);
-    nsresult SetCacheEntry(nsICacheEntryDescriptor *entry);
+    nsresult SetCacheEntry(nsICacheEntryDescriptor *entry, PRBool writing);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
@@ -163,13 +163,16 @@ DataRequestForwarder::Init(nsIRequest *request)
 
 
 nsresult 
-DataRequestForwarder::SetCacheEntry(nsICacheEntryDescriptor *cacheEntry)
+DataRequestForwarder::SetCacheEntry(nsICacheEntryDescriptor *cacheEntry, PRBool writing)
 {
     // if there is a cache entry descriptor, send data to it.
     if (!cacheEntry) 
         return NS_ERROR_FAILURE;
     
     mCacheEntry = cacheEntry;
+    if (!writing)
+        return NS_OK;
+
     nsCOMPtr<nsITransport> cacheTransport;
     nsresult rv = cacheEntry->GetTransport(getter_AddRefs(cacheTransport));
     if (NS_FAILED(rv)) return rv;
@@ -186,6 +189,7 @@ DataRequestForwarder::SetCacheEntry(nsICacheEntryDescriptor *cacheEntry)
     if (NS_FAILED(rv)) return rv;
 
     mListener = do_QueryInterface(tee, &rv);
+
     return NS_OK;
 }
 
@@ -1212,7 +1216,7 @@ nsFtpState::S_list() {
     // to the channel.  Lets hijack and send the notifications
     // to the stream converter.
     mDRequestForwarder->SetStreamListener(converter);
-    mDRequestForwarder->SetCacheEntry(mCacheEntry);
+    mDRequestForwarder->SetCacheEntry(mCacheEntry, PR_TRUE);
 
     nsCAutoString listString("LIST" CRLF);
 
@@ -1680,7 +1684,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
             if (NS_FAILED(rv)) return rv;
                 
             mDRequestForwarder->SetStreamListener(converter);
-            mDRequestForwarder->SetCacheEntry(mCacheEntry);
+            mDRequestForwarder->SetCacheEntry(mCacheEntry, PR_FALSE);
 
             // Get a transport to the cached data...
             nsCOMPtr<nsITransport> transport;
