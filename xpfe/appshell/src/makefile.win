@@ -33,13 +33,14 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsContentTreeOwner.obj      \
  .\$(OBJDIR)\nsXULWindow.obj      \
  .\$(OBJDIR)\nsAppShellService.obj      \
+ .\$(OBJDIR)\nsAppShellWindowEnumerator.obj \
  .\$(OBJDIR)\nsWebShellWindow.obj       \
  .\$(OBJDIR)\nsAppShellFactory.obj      \
  .\$(OBJDIR)\nsCommandLineService.obj   \
-     .\$(OBJDIR)\nsWindowMediator.obj        \
-	.\$(OBJDIR)\nsAbout.obj \
-	.\$(OBJDIR)\nsUserInfoWin.obj \
-	.\$(OBJDIR)\nsTimingService.obj \
+ .\$(OBJDIR)\nsWindowMediator.obj        \
+ .\$(OBJDIR)\nsAbout.obj \
+ .\$(OBJDIR)\nsUserInfoWin.obj \
+ .\$(OBJDIR)\nsTimingService.obj \
  $(NULL)
 
 LINCS= \

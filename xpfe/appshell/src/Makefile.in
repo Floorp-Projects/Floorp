@@ -39,6 +39,7 @@ CPPSRCS		= \
 		nsContentTreeOwner.cpp \
 		nsXULWindow.cpp \
 		nsAppShellService.cpp \
+		nsAppShellWindowEnumerator.cpp \
 		nsWebShellWindow.cpp \
 		nsCommandLineService.cpp \
 		nsWindowMediator.cpp \
