@@ -615,6 +615,11 @@ void nsCSSSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   }
 }
 
+nsresult nsCSSSelector::ToString( nsAWritableString& aString ) const
+{
+  return NS_OK;
+}
+
 // -- CSSImportantRule -------------------------------
 
 static nscoord CalcLength(const nsCSSValue& aValue, const nsFont& aFont, 
@@ -1056,7 +1061,6 @@ protected:
 
 protected:
   nsCSSSelector           mSelector;
-  nsString                mSelectorText;
   nsICSSDeclaration*      mDeclaration;
   PRInt32                 mWeight;
   CSSImportantRule*       mImportantRule;
@@ -1070,7 +1074,7 @@ PRUint32 gStyleRuleCount=0;
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
   : nsCSSRule(),
-    mSelector(aSelector), mSelectorText(), mDeclaration(nsnull), 
+    mSelector(aSelector), mDeclaration(nsnull), 
     mWeight(0), mImportantRule(nsnull),
     mDOMDeclaration(nsnull),
     mScriptObject(nsnull)
@@ -1084,7 +1088,6 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
 CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
   : nsCSSRule(aCopy),
     mSelector(aCopy.mSelector),
-    mSelectorText(aCopy.mSelectorText),
     mDeclaration(nsnull),
     mWeight(aCopy.mWeight),
     mImportantRule(nsnull),
@@ -1291,12 +1294,12 @@ void CSSStyleRuleImpl::DeleteSelector(nsCSSSelector* aSelector)
 
 void CSSStyleRuleImpl::SetSourceSelectorText(const nsString& aSelectorText)
 {
-  mSelectorText = aSelectorText;
+    /* no need for set, since get recreates the string */
 }
 
 void CSSStyleRuleImpl::GetSourceSelectorText(nsString& aSelectorText) const
 {
-  aSelectorText = mSelectorText;
+  mSelector.ToString( aSelectorText );
 }
 
 
@@ -3273,7 +3276,7 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
 * SizeOf method:
 *
 *  Self (reported as CSSStyleRuleImpl's size): 
-*    1) sizeof(*this) + size of the mSelectorText 
+*    1) sizeof(*this) 
 *       + sizeof the DOMDeclaration if it exists and is unique
 *
 *  Contained / Aggregated data (not reported as CSSStyleRuleImpl's size):
@@ -3304,11 +3307,6 @@ void CSSStyleRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   // remove the sizeof the mSelector's class since we count it seperately below
   aSize -= sizeof(mSelector);
 
-  // add in the length of the selectorText
-  mSelectorText.SizeOf(aSizeOfHandler, &localSize);
-  aSize += localSize;
-  aSize -= sizeof(mSelectorText); // counted in sizeof(*this) and nsString.SizeOf()
-
   // and add the size of the DOMDeclaration
   // XXX - investigate the size and quantity of these
   if(mDOMDeclaration && uniqueItems->AddItem(mDOMDeclaration)){
@@ -3338,8 +3336,13 @@ CSSStyleRuleImpl::GetType(PRUint16* aType)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetCssText(nsAWritableString& aCssText)
 {
-  aCssText.Assign(mSelectorText);
-  // XXX TBI append declaration too
+  mSelector.ToString( aCssText );
+  if (mDeclaration)
+  {
+    nsAutoString   tempString;
+    mDeclaration->ToString( tempString );
+    aCssText.Append( tempString );
+  }
   return NS_OK;
 }
 
@@ -3369,7 +3372,7 @@ CSSStyleRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetSelectorText(nsAWritableString& aSelectorText)
 {
-  aSelectorText.Assign(mSelectorText);
+  mSelector.ToString( aSelectorText );
   return NS_OK;
 }
 
@@ -3379,7 +3382,6 @@ CSSStyleRuleImpl::SetSelectorText(const nsAReadableString& aSelectorText)
   // XXX TBI - get a parser and re-parse the selectors, 
   // XXX then need to re-compute the cascade
   // XXX and dirty sheet
-  mSelectorText = aSelectorText;
   return NS_OK;
 }
 
