@@ -60,9 +60,14 @@ STATIC_EXTRA_LIBS	+= \
 		$(JPEG_LIBS) \
 		$(ZLIB_LIBS) \
 		$(MOZ_GDK_PIXBUF_LIBS) \
-		$(MOZ_XIE_LIBS) \
 		$(MOZ_XPRINT_LDFLAGS) \
 		$(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),xlib)
+STATIC_EXTRA_LIBS	+= \
+		$(MOZ_XIE_LIBS) \
+		$(NULL)
+endif
 
 ifdef MOZ_PSM
 STATIC_EXTRA_LIBS	+= \
