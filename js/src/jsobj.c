@@ -412,7 +412,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     if (map->depth == 0) {
 	he = MarkSharpObjects(cx, obj, &ida);
 	if (!he)
-	    return NULL;
+	    goto bad;
 	JS_ASSERT((((jsatomid) he->value) & SHARP_BIT) == 0);
 	if (!idap) {
 	    JS_DestroyIdArray(cx, ida);
@@ -427,13 +427,15 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
 	 * It's possible that the value of a property has changed from the
 	 * first time the object's properties are traversed (when the property
 	 * ids are entered into the hash table) to the second (when they are
-	 * converted to strings), i.e. the getProperty() call is not
+	 * converted to strings), i.e., the OBJ_GET_PROPERTY() call is not
 	 * idempotent.
 	 */
 	if (!he) {
-	    he = JS_HashTableRawAdd(table, hep, hash, obj, (void *)0);
-	    if (!he)
+	    he = JS_HashTableRawAdd(table, hep, hash, obj, NULL);
+	    if (!he) {
 		JS_ReportOutOfMemory(cx);
+		goto bad;
+	    }
 	    *sp = NULL;
             sharpid = 0;
 	    goto out;
@@ -450,11 +452,12 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
 	if (!*sp) {
 	    if (ida)
 		JS_DestroyIdArray(cx, ida);
-	    return NULL;
+	    goto bad;
 	}
     }
 
 out:
+    JS_ASSERT(he);
     if ((sharpid & SHARP_BIT) == 0) {
 	if (idap && !ida) {
 	    ida = JS_Enumerate(cx, obj);
@@ -463,7 +466,7 @@ out:
 		    JS_free(cx, *sp);
 		    *sp = NULL;
 		}
-		return NULL;
+		goto bad;
 	    }
 	}
 	map->depth++;
@@ -472,6 +475,15 @@ out:
     if (idap)
 	*idap = ida;
     return he;
+
+bad:
+    /* Clean up the sharpObjectMap table on outermost error. */
+    if (map->depth == 0) {
+	map->sharpgen = 0;
+	JS_HashTableDestroy(map->table);
+	map->table = NULL;
+    }
+    return NULL;
 }
 
 void
@@ -747,7 +759,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	chars[nchars++] = ')';
     chars[nchars] = 0;
 
-error:
+  error:
     js_LeaveSharpObject(cx, &ida);
 
     if (!ok) {
