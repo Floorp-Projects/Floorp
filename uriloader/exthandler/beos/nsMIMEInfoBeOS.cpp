@@ -39,14 +39,6 @@
 #include "nsMIMEInfoBeOS.h"
 #include "nsILocalFile.h"
 
-nsMIMEInfoBeOS::nsMIMEInfoBeOS() : nsMIMEInfoImpl()
-{
-}
-
-nsMIMEInfoBeOS::nsMIMEInfoBeOS(const char* aType) : nsMIMEInfoImpl(aType)
-{
-}
-
 nsMIMEInfoBeOS::~nsMIMEInfoBeOS()
 {
 }

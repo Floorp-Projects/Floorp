@@ -42,8 +42,7 @@
 class nsMIMEInfoOS2 : public nsMIMEInfoImpl
 {
   public:
-    nsMIMEInfoOS2();
-    nsMIMEInfoOS2(const char* aType);
+    nsMIMEInfoOS2(const char* aType = "") : nsMIMEInfoImpl(aType) {}
     virtual ~nsMIMEInfoOS2();
 
     NS_IMETHOD LaunchWithFile(nsIFile* aFile);
