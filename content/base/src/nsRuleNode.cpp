@@ -1660,9 +1660,10 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aConte
       mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, &defaultFont);
       nsStyleFont* fontData = new (mPresContext) nsStyleFont(*defaultFont);
       fontData->mSize = ZoomFont(mPresContext, fontData->mFont.size);
-      if (!IsChrome(mPresContext)) {
-        nscoord minimumFontSize = 0;
-        mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize, minimumFontSize);
+
+      nscoord minimumFontSize = 0;
+      mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize, minimumFontSize);
+      if (minimumFontSize > 0 && !IsChrome(mPresContext)) {
         fontData->mFont.size = PR_MAX(fontData->mSize, minimumFontSize);
       }
       else {
