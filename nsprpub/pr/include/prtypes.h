@@ -338,6 +338,20 @@ typedef PRUint8 PRPackedBool;
 */
 typedef enum { PR_FAILURE = -1, PR_SUCCESS = 0 } PRStatus;
 
+/*
+** WARNING: The undocumented data types PRWord and PRUword are
+** only used in the garbage collection and arena code.  Do not
+** use PRWord and PRUword in new code.
+**
+** A PRWord is an integer that is the same size as a void*.
+** It implements the notion of a "word" in the Java Virtual
+** Machine.  (See Sec. 3.4 "Words", The Java Virtual Machine
+** Specification, Addison-Wesley, September 1996.
+** http://java.sun.com/docs/books/vmspec/index.html.)
+*/
+typedef long PRWord;
+typedef unsigned long PRUword;
+
 #if defined(NO_NSPR_10_SUPPORT)
 #else
 /********* ???????????????? FIX ME       ??????????????????????????? *****/
@@ -374,20 +388,14 @@ typedef enum { PR_FAILURE = -1, PR_SUCCESS = 0 } PRStatus;
 #define NSPR_END_EXTERN_C
 #endif
 
-/*
-** A PRWord is an integer that is the same size as a void*
-*/
-typedef long PRWord;
-typedef unsigned long PRUword;
-
-/********* ????????????? End Fix me ?????????????????????????????? *****/
-#endif /* NO_NSPR_10_SUPPORT */
-
 #ifdef XP_MAC
 #include "protypes.h"
 #else
 #include "obsolete/protypes.h"
 #endif
+
+/********* ????????????? End Fix me ?????????????????????????????? *****/
+#endif /* NO_NSPR_10_SUPPORT */
 
 PR_END_EXTERN_C
 
