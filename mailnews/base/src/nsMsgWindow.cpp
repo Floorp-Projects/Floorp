@@ -170,14 +170,12 @@ NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedb
   GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
 
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(messageWindowDocShell));
-  nsCOMPtr<nsIWebProgressListener> webProgressListener(do_QueryInterface(mStatusFeedback));
-
-	mStatusFeedback = aStatusFeedback;
+  mStatusFeedback = aStatusFeedback;
 
   // register our status feedback object
   if (webProgress && mStatusFeedback && messageWindowDocShell)
   {
-    webProgressListener = do_QueryInterface(mStatusFeedback);
+    nsCOMPtr<nsIWebProgressListener> webProgressListener = do_QueryInterface(mStatusFeedback);
     webProgress->AddProgressListener(webProgressListener);
   }
 
