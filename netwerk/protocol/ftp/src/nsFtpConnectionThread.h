@@ -222,7 +222,6 @@ private:
     PRUint32               mBufferMaxSize;
     PRLock                 *mLock;
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
-    PRPackedBool           mFireCallbacks; // Fire the listener callback.
     PRPackedBool           mIPv6Checked;
     nsCOMPtr<nsIPrompt>    mPrompter;
     nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
