@@ -3197,7 +3197,7 @@ nsGenericHTMLLeafElement::CopyInnerTo(nsIContent* aSrcContent,
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   nsDOMSlots* slots = GetDOMSlots();
@@ -3289,7 +3289,7 @@ nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
   return slots->mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aChildNodes);
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::HasChildNodes(PRBool* aReturn)
 {
   if (0 != mChildren.Count()) {
@@ -3301,12 +3301,14 @@ nsGenericHTMLContainerElement::HasChildNodes(PRBool* aReturn)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
 {
   nsIContent *child = (nsIContent *)mChildren.ElementAt(0);
-  if (nsnull != child) {
-    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aNode);
+  if (child) {
+    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                         (void**)aNode);
+
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
@@ -3314,12 +3316,14 @@ nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
 {
   nsIContent *child = (nsIContent *)mChildren.ElementAt(mChildren.Count()-1);
-  if (nsnull != child) {
-    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aNode);
+  if (child) {
+    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                         (void**)aNode);
+
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
@@ -3327,28 +3331,28 @@ nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::Compact()
 {
   mChildren.Compact();
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::CanContainChildren(PRBool& aResult) const
 {
   aResult = PR_TRUE;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::ChildCount(PRInt32& aCount) const
 {
   aCount = mChildren.Count();
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::ChildAt(PRInt32 aIndex,
                                        nsIContent*& aResult) const
 {
@@ -3360,7 +3364,7 @@ nsGenericHTMLContainerElement::ChildAt(PRInt32 aIndex,
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::IndexOf(nsIContent* aPossibleChild,
                                        PRInt32& aIndex) const
 {
@@ -3369,7 +3373,7 @@ nsGenericHTMLContainerElement::IndexOf(nsIContent* aPossibleChild,
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
                                              PRInt32 aIndex,
                                              PRBool aNotify)
@@ -3412,7 +3416,7 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
                                               PRInt32 aIndex,
                                               PRBool aNotify)
@@ -3444,7 +3448,7 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid && this != aKid, "null ptr");
@@ -3485,7 +3489,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 {
   nsIDocument* doc = mDocument;
@@ -3607,7 +3611,7 @@ nsGenericHTMLContainerFormElement::Init()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);
@@ -3620,7 +3624,7 @@ nsGenericHTMLContainerFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::GetScriptObject(nsIScriptContext* aContext,
                                                    void** aScriptObject)
 {
@@ -3654,7 +3658,7 @@ nsGenericHTMLContainerFormElement::GetScriptObject(nsIScriptContext* aContext,
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::SetParent(nsIContent* aParent)
 {
   nsresult rv = NS_OK;
@@ -3704,7 +3708,7 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::SetAttribute(PRInt32 aNameSpaceID,
                                                 nsIAtom* aName,
                                                 const nsAReadableString& aValue,
@@ -3803,7 +3807,7 @@ nsGenericHTMLLeafFormElement::Init()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);
@@ -3816,7 +3820,7 @@ nsGenericHTMLLeafFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::SetParent(nsIContent* aParent)
 {
   nsresult rv = NS_OK;
@@ -3866,7 +3870,7 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::GetScriptObject(nsIScriptContext* aContext,
                                               void** aScriptObject)
 {
@@ -3900,7 +3904,7 @@ nsGenericHTMLLeafFormElement::GetScriptObject(nsIScriptContext* aContext,
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::SetAttribute(PRInt32 aNameSpaceID,
                                            nsIAtom* aName,
                                            const nsAReadableString& aValue,
@@ -3922,4 +3926,3 @@ nsGenericHTMLLeafFormElement::SetAttribute(PRInt32 aNameSpaceID,
                                             aNotify);
 }
 
-//----------------------------------------------------------------------
