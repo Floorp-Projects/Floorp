@@ -31,6 +31,7 @@
 #include "nsIDOMMouseListener.h"
 
 class nsString;
+class nsIScrollbarListener;
 
 nsresult NS_NewSliderFrame(nsIFrame** aResult) ;
 
@@ -156,6 +157,7 @@ public:
   static PRInt32 GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 defaultValue);
   static PRInt32 IsHorizontal(nsIContent* content);
 
+  void SetScrollbarListener(nsIScrollbarListener* aListener);
 
 protected:
 
@@ -183,6 +185,10 @@ private:
 
   nscoord mDragStartPx;
   nscoord mThumbStart;
+
+  PRInt32 mCurPos;
+
+  nsIScrollbarListener* mScrollbarListener;
 
 }; // class nsSliderFrame
 
