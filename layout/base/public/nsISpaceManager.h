@@ -48,7 +48,7 @@ struct nsBandTrapezoid {
   nscoord   xTopRight, xBottomRight;  // right edge x-coordinates
   State     state;                    // state of the space
   union {
-    nsIFrame*          frame;  // frame occupying the space
+    nsIFrame*          frame;  // single frame occupying the space
     const nsVoidArray* frames; // list of frames occupying the space
   };
 
@@ -142,13 +142,18 @@ public:
   virtual PRBool AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace) = 0;
 
   /**
-   * Reshape the rectangular region associated with aFrame. The new space is
-   * relative to the local coordinate system.
+   * Resize the rectangular region associated with aFrame by the specified deltas.
+   * The height change always applies to the bottom edge or the existing rect.
+   * You specify whether the width change applies to the left or right edge
    *
    * Returns PR_TRUE if successful and PR_FALSE otherwise, e.g. there is no region
    * tagged with aFrame
    */
-  virtual PRBool ReshapeRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace) = 0;
+  enum AffectedEdge {LeftEdge, RightEdge};
+  virtual PRBool ResizeRectRegion(nsIFrame*    aFrame,
+                                  nscoord      aDeltaWidth,
+                                  nscoord      aDeltaHeight,
+                                  AffectedEdge aEdge = RightEdge) = 0;
 
   /**
    * Offset the region associated with aFrame by the specified amount.

@@ -42,15 +42,27 @@ public:
                               nsBandData&   aBandData) const;
 
   virtual PRBool AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace);
-  virtual PRBool ReshapeRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace);
+  virtual PRBool ResizeRectRegion(nsIFrame*    aFrame,
+                                  nscoord      aDeltaWidth,
+                                  nscoord      aDeltaHeight,
+                                  AffectedEdge aEdge);
   virtual PRBool OffsetRegion(nsIFrame* aFrame, nscoord dx, nscoord dy);
   virtual PRBool RemoveRegion(nsIFrame* aFrame);
 
   virtual void   ClearRegions();
 
 protected:
-  struct nsBandRect : nsRect {
-    nsIFrame* frame;
+  struct BandRect : nsRect {
+    PRIntn  numFrames;  // number of frames occupying this rect
+
+    union {
+      nsIFrame*    frame;   // single frame occupying the space
+      nsVoidArray* frames;  // list of frames occupying the space
+    };
+
+    PRBool  IsOccupiedBy(nsIFrame*);
+    void    AddFrame(nsIFrame*);
+    void    RemoveFrame(nsIFrame*);
   };
 
   class RectArray {
@@ -61,6 +73,7 @@ protected:
     // Functions to add rects
     void Append(const nsRect& aRect, nsIFrame* aFrame);
     void InsertAt(const nsRect& aRect, PRInt32 aIndex, nsIFrame* aFrame);
+    void InsertAt(const nsRect& aRect, PRInt32 aIndex, const nsVoidArray* aFramesList);
     void RemoveAt(PRInt32 aIndex);
 
     // Clear the list of rectangles
@@ -71,7 +84,7 @@ protected:
 
   public:
     // Access to the underlying storage
-    nsBandRect* mRects;  // y-x banded array of rectangles of unavailable space
+    BandRect*   mRects;  // y-x banded array of rectangles of unavailable space
     PRInt32     mCount;  // current number of rects
     PRInt32     mMax;    // capacity of rect array
   };
@@ -79,20 +92,20 @@ protected:
   nsIFrame* const mFrame;      // frame associated with the space manager
   nscoord         mX, mY;      // translation from local to global coordinate space
   RectArray       mRectArray;  // y-x banded array of rectangles of unavailable space
-  RectArray       mEmptyRects; // list of empty height rects
+  RectArray       mEmptyRects; // list of empty rects
 
 protected:
-  PRBool  GetNextBand(nsBandRect*& aRect, PRInt32& aIndex) const;
-  PRInt32 LengthOfBand(const nsBandRect* aBand, PRInt32 aIndex) const;
-  PRBool  CoalesceBand(nsBandRect* aBand, PRInt32 aIndex);
-  void    DivideBand(nsBandRect* aBand, PRInt32 aIndex, nscoord aB1Height);
-  void    AddRectToBand(nsBandRect* aBand, PRInt32 aIndex,
+  PRBool  GetNextBand(BandRect*& aRect, PRInt32& aIndex) const;
+  PRInt32 LengthOfBand(const BandRect* aBand, PRInt32 aIndex) const;
+  PRBool  CoalesceBand(BandRect* aBand, PRInt32 aIndex);
+  void    DivideBand(BandRect* aBand, PRInt32 aIndex, nscoord aB1Height);
+  void    AddRectToBand(BandRect* aBand, PRInt32 aIndex,
                         const nsRect& aRect, nsIFrame* aFrame);
-  PRInt32 GetBandAvailableSpace(const nsBandRect* aBand,
-                                PRInt32           aIndex,
-                                nscoord           aY,
-                                const nsSize&     aMaxSize,
-                                nsBandData&       aAvailableSpace) const;
+  PRInt32 GetBandAvailableSpace(const BandRect* aBand,
+                                PRInt32         aIndex,
+                                nscoord         aY,
+                                const nsSize&   aMaxSize,
+                                nsBandData&     aAvailableSpace) const;
 
 private:
 	SpaceManager(const SpaceManager&);    // no implementation

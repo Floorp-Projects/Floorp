@@ -20,6 +20,7 @@
 #include "nsRect.h"
 #include "nsSize.h"
 #include <stdlib.h>
+#include "nsVoidArray.h"
 
 static NS_DEFINE_IID(kISpaceManagerIID, NS_ISPACEMANAGER_IID);
 
@@ -71,11 +72,11 @@ nscoord SpaceManager::YMost() const
  * @param aMaxSize the size to use to constrain the band data
  * @param aAvailableBand
  */
-PRInt32 SpaceManager::GetBandAvailableSpace(const nsBandRect* aBand,
-                                            PRInt32           aIndex,
-                                            nscoord           aY,
-                                            const nsSize&     aMaxSize,
-                                            nsBandData&       aBandData) const
+PRInt32 SpaceManager::GetBandAvailableSpace(const BandRect* aBand,
+                                            PRInt32         aIndex,
+                                            nscoord         aY,
+                                            const nsSize&   aMaxSize,
+                                            nsBandData&     aBandData) const
 {
   PRInt32          numRects = LengthOfBand(aBand, aIndex);
   nscoord          localY = aY - mY;
@@ -121,8 +122,14 @@ PRInt32 SpaceManager::GetBandAvailableSpace(const nsBandRect* aBand,
     }
 
     // The rect represents unavailable space, so add another trapezoid
-    trapezoid->state = nsBandTrapezoid::smOccupied;
-    trapezoid->frame = aBand->frame;
+    if (1 == aBand->numFrames) {
+      trapezoid->state = nsBandTrapezoid::smOccupied;
+      trapezoid->frame = aBand->frame;
+    } else {
+      NS_ASSERTION(aBand->numFrames > 1, "unexpected frame count");
+      trapezoid->state = nsBandTrapezoid::smOccupiedMultiple;
+      trapezoid->frames = aBand->frames;
+    }
 
     nscoord x = aBand->x;
     // The first band can straddle the clip rect
@@ -179,7 +186,7 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
     aBandData.trapezoids[0].frame = nsnull;
   } else {
     // Find the first band that contains the y-offset or is below the y-offset
-    nsBandRect* band = mRectArray.mRects;
+    BandRect* band = mRectArray.mRects;
 
     aBandData.count = 0;
     for (PRInt32 i = 0; i < mRectArray.mCount; ) {
@@ -217,7 +224,7 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
  *          next band. If there is no next band then aRect is undefined
  *          and aIndex is set to the number of rects in the rect array
  */
-PRBool SpaceManager::GetNextBand(nsBandRect*& aRect, PRInt32& aIndex) const
+PRBool SpaceManager::GetNextBand(BandRect*& aRect, PRInt32& aIndex) const
 {
   nscoord topOfBand = aRect->y;
 
@@ -241,7 +248,7 @@ PRBool SpaceManager::GetNextBand(nsBandRect*& aRect, PRInt32& aIndex) const
  * @param aBand the first rect in the band
  * @param aIndex aBand's index in the rect array
  */
-PRInt32 SpaceManager::LengthOfBand(const nsBandRect* aBand, PRInt32 aIndex) const
+PRInt32 SpaceManager::LengthOfBand(const BandRect* aBand, PRInt32 aIndex) const
 {
   nscoord topOfBand = aBand->y;
   PRInt32 result = 1;
@@ -268,13 +275,13 @@ PRInt32 SpaceManager::LengthOfBand(const nsBandRect* aBand, PRInt32 aIndex) cons
  * @param aRect the first rect in the band
  * @param aIndex aBand's index in the rect array
  */
-PRBool SpaceManager::CoalesceBand(nsBandRect* aBand, PRInt32 aIndex)
+PRBool SpaceManager::CoalesceBand(BandRect* aBand, PRInt32 aIndex)
 {
   PRBool  result = PR_FALSE;
 
   while ((aIndex + 1) < mRectArray.mCount) {
     // Is there another rect in this band?
-    nsBandRect* nextRect = aBand + 1;
+    BandRect* nextRect = aBand + 1;
 
     if (nextRect->y == aBand->y) {
       // The rects must not be overlapping
@@ -313,7 +320,7 @@ PRBool SpaceManager::CoalesceBand(nsBandRect* aBand, PRInt32 aIndex)
  * @param aIndex aBand's index in the rect array
  * @param aB1Height the height of the new band to create
  */
-void SpaceManager::DivideBand(nsBandRect* aBand, PRInt32 aIndex, nscoord aB1Height)
+void SpaceManager::DivideBand(BandRect* aBand, PRInt32 aIndex, nscoord aB1Height)
 {
   NS_PRECONDITION(aB1Height < aBand->height, "bad height");
 
@@ -327,7 +334,11 @@ void SpaceManager::DivideBand(nsBandRect* aBand, PRInt32 aIndex, nscoord aB1Heig
     // Insert a new bottom band
     nsRect  r(aBand->x, aBand->y + aB1Height, aBand->width, aB2Height);
 
-    mRectArray.InsertAt(r, insertAt, aBand->frame);
+    if (aBand->numFrames > 1) {
+      mRectArray.InsertAt(r, insertAt, aBand->frames);
+    } else {
+      mRectArray.InsertAt(r, insertAt, aBand->frame);
+    }
     aBand = mRectArray.mRects + aIndex;  // memory may have changed...
 
     // Adjust the height of the top band
@@ -347,7 +358,7 @@ void SpaceManager::DivideBand(nsBandRect* aBand, PRInt32 aIndex, nscoord aB1Heig
  * @param aRect the rect to add to the band. It's in world coordinates
  * @returns PR_TRUE if successful and PR_FALSE if this is the last band
  */
-void SpaceManager::AddRectToBand(nsBandRect*   aBand,
+void SpaceManager::AddRectToBand(BandRect*     aBand,
                                  PRInt32       aIndex,
                                  const nsRect& aRect,
                                  nsIFrame*     aFrame)
@@ -426,8 +437,13 @@ void SpaceManager::AddRectToBand(nsBandRect*   aBand,
       // Insert the new right half of the existing rect, and make it the current
       // rect
       aIndex++;
-      mRectArray.InsertAt(r1, aIndex, aBand->frame);
+      if (aBand->numFrames > 1) {
+        mRectArray.InsertAt(r1, aIndex, aBand->frames);
+      } else {
+        mRectArray.InsertAt(r1, aIndex, aBand->frame);
+      }
       aBand = mRectArray.mRects + aIndex;  // memory may have changed...
+      aBand->AddFrame(aFrame);
     }
 
     // At this point the left edge of the new rect is the same as the left edge
@@ -441,15 +457,15 @@ void SpaceManager::AddRectToBand(nsBandRect*   aBand,
       // the new rect
       nsRect  r1(rect.XMost(), aBand->y, aBand->XMost() - rect.XMost(), aBand->height);
 
-      // Modify the left half of the existing rect
+      // Modify the left half of the existing rect, and indicate the rect is
+      // shared
       aBand->width = r1.x - aBand->x;
+      aBand->AddFrame(aFrame);
 
       // Insert the new right half of the existing rect
       mRectArray.InsertAt(r1, aIndex, aBand->frame);
       aBand = mRectArray.mRects + aIndex;  // memory may have changed...
     }
-
-    // XXX Mark the existing rect as being shared by the two frames...
 
     if (rect.width == aBand->width) {
       // We're all done
@@ -502,6 +518,13 @@ PRBool SpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableS
   nsRect  rect(aUnavailableSpace.x + mX, aUnavailableSpace.y + mY,
                aUnavailableSpace.width, aUnavailableSpace.height);
 
+  // Check if the rect is empty
+  if (aUnavailableSpace.IsEmpty()) {
+    // The rect doesn't consume any space so don't add the rect to the band data
+    mEmptyRects.Append(rect, aFrame);
+    return PR_TRUE;
+  }
+
   // If there are no existing bands or this rect is below the bottommost band,
   // then add a new band
   if ((0 == mRectArray.mCount) || (rect.y >= mRectArray.YMost())) {
@@ -511,7 +534,7 @@ PRBool SpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableS
   }
 
   // Examine each band looking for a band that intersects this rect
-  nsBandRect* band = mRectArray.mRects;
+  BandRect* band = mRectArray.mRects;
 
   for (PRInt32 i = 0; i < mRectArray.mCount; ) {
     // Compare the top edge of this rect with the top edge of the band
@@ -597,9 +620,12 @@ PRBool SpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableS
   return PR_TRUE;
 }
 
-PRBool SpaceManager::ReshapeRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
+PRBool SpaceManager::ResizeRectRegion(nsIFrame*    aFrame,
+                                      nscoord      aDeltaWidth,
+                                      nscoord      aDeltaHeight,
+                                      AffectedEdge aEdge)
 {
-  NS_NOTYETIMPLEMENTED("offseting a region");
+  NS_NOTYETIMPLEMENTED("resizing a region");
   return PR_FALSE;
 }
 
@@ -613,22 +639,82 @@ PRBool SpaceManager::RemoveRegion(nsIFrame* aFrame)
 {
   PRBool  result = PR_FALSE;
 
-  // Walk the list of rects and remove those tagged with aFrame.
-  // XXX We need to properly handle overlapped rects
-  for (PRInt32 i = 0; i < mRectArray.mCount; i++) {
-    if (mRectArray.mRects[i].frame == aFrame) {
-      mRectArray.RemoveAt(i);
+  // Walk the list of rects and remove those rects tagged with aFrame.
+  for (PRInt32 i = 0; i < mRectArray.mCount;) {
+    BandRect* r = &mRectArray.mRects[i];
+
+    if (r->IsOccupiedBy(aFrame)) {
+      if (r->numFrames > 1) {
+        r->RemoveFrame(aFrame);
+        i++;
+      } else {
+        mRectArray.RemoveAt(i);
+      }
       result = PR_TRUE;
     }
   }
 
-  // XXX We should try and coalesce adjacent bands...
+  // XXX We should try and coalesce adjoining rects within a band, and
+  // adjacent bands as well...
   return result;
 }
 
 void SpaceManager::ClearRegions()
 {
   mRectArray.Clear();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// BandRect
+
+PRBool SpaceManager::BandRect::IsOccupiedBy(nsIFrame* aFrame)
+{
+  PRBool  result;
+
+  if (1 == numFrames) {
+    result = (frame == aFrame);
+  } else {
+    PRInt32 count = frames->Count();
+
+    result = PR_FALSE;
+    for (PRInt32 i = 0; i < count; i++) {
+      nsIFrame* f = (nsIFrame*)frames->ElementAt(i);
+
+      if (f == aFrame) {
+        result = PR_TRUE;
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+void SpaceManager::BandRect::AddFrame(nsIFrame* aFrame)
+{
+  if (1 == numFrames) {
+    nsIFrame* f = frame;
+    frames = new nsVoidArray;
+    frames->AppendElement(f);
+  }
+
+  numFrames++;
+  frames->AppendElement(aFrame);
+  NS_POSTCONDITION(frames->Count() == numFrames, "bad frame count");
+}
+
+void SpaceManager::BandRect::RemoveFrame(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(numFrames > 1, "only one frame");
+  frames->RemoveElement(aFrame);
+  numFrames--;
+
+  if (1 == numFrames) {
+    nsIFrame* f = (nsIFrame*)frames->ElementAt(0);
+
+    delete frames;
+    frame = f;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -642,6 +728,16 @@ SpaceManager::RectArray::RectArray()
 
 SpaceManager::RectArray::~RectArray()
 {
+  // Delete any void arrays used for the list of frames occupying a rect
+  BandRect* r = mRects;
+  for (PRInt32 n = mCount; n > 0; n--) {
+    if (r->numFrames > 1) {
+      delete r->frames;
+    }
+    r++;
+  }
+
+  // Free the space for the rect array
   if (nsnull != mRects) {
     free(mRects);
   }
@@ -657,7 +753,7 @@ void SpaceManager::RectArray::Append(const nsRect& aRect, nsIFrame* aFrame)
   // Ensure there's enough capacity
   if (mCount >= mMax) {
     mMax += 8;
-    mRects = (nsBandRect*)realloc(mRects, mMax * sizeof(nsBandRect));
+    mRects = (BandRect*)realloc(mRects, mMax * sizeof(BandRect));
   }
 
   mRects[mCount].x = aRect.x;
@@ -665,6 +761,7 @@ void SpaceManager::RectArray::Append(const nsRect& aRect, nsIFrame* aFrame)
   mRects[mCount].width = aRect.width;
   mRects[mCount].height = aRect.height;
   mRects[mCount].frame = aFrame;
+  mRects[mCount].numFrames = 1;
   mCount++;
 }
 
@@ -677,29 +774,58 @@ void SpaceManager::RectArray::InsertAt(const nsRect& aRect,
   // Ensure there's enough capacity
   if (mCount >= mMax) {
     mMax += 8;
-    mRects = (nsBandRect*)realloc(mRects, mMax * sizeof(nsBandRect));
+    mRects = (BandRect*)realloc(mRects, mMax * sizeof(BandRect));
   }
 
-  memmove(&mRects[aIndex + 1], &mRects[aIndex], (mCount - aIndex) * sizeof(nsBandRect));
+  memmove(&mRects[aIndex + 1], &mRects[aIndex], (mCount - aIndex) * sizeof(BandRect));
   mRects[aIndex].x = aRect.x;
   mRects[aIndex].y = aRect.y;
   mRects[aIndex].width = aRect.width;
   mRects[aIndex].height = aRect.height;
   mRects[aIndex].frame = aFrame;
+  mRects[aIndex].numFrames = 1;
   mCount++;
+}
+
+void SpaceManager::RectArray::InsertAt(const nsRect&      aRect,
+                                       PRInt32            aIndex,
+                                       const nsVoidArray* aFramesList)
+{
+  NS_PRECONDITION(aIndex <= mCount, "bad index");  // no holes in the array
+
+  InsertAt(aRect, aIndex, (nsIFrame*)nsnull);
+  mRects[aIndex].numFrames = aFramesList->Count();
+  mRects[aIndex].frames->operator=(*aFramesList);
 }
 
 void SpaceManager::RectArray::RemoveAt(PRInt32 aIndex)
 {
   NS_PRECONDITION(aIndex < mCount, "bad index");
 
+  BandRect* r = &mRects[aIndex];
+  if (r->numFrames > 1) {
+    // Delete the void array of frames occupying the rect
+    delete r->frames;
+  }
+
+  // Reduce the count and compact the array
   mCount--;
   if (aIndex < mCount) {
-    memmove(&mRects[aIndex], &mRects[aIndex + 1], (mCount - aIndex) * sizeof(nsBandRect));
+    memmove(&mRects[aIndex], &mRects[aIndex + 1], (mCount - aIndex) * sizeof(BandRect));
   }
 }
 
 void SpaceManager::RectArray::Clear()
 {
-  mCount = 0;
+  // Delete any void arrays used for the list of frames occupying a rect
+  BandRect* r = mRects;
+  while (mCount > 0) {
+    if (r->numFrames > 1) {
+      delete r->frames;
+    }
+    mCount--;
+    r++;
+  }
+
+  NS_POSTCONDITION(0 == mCount, "bad count");
 }
