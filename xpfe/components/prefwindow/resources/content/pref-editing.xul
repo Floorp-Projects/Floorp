@@ -1,0 +1,159 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-2000 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-composer.dtd" >
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
+        align="vertical" title="&title.label;"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-editing' ); else parent.queuedTag = 'pref-editing';">
+
+<!--
+  <html:script language="JavaScript" src="chrome://pref/content/pref-editing.js"/>
+-->
+
+	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+    <titledbutton class="right-header-text" value="&rHeader2;"/>
+	</box>
+
+<!-- Take out Auto-Save; not supported at this time
+		<html:fieldset>
+		<html:div>
+			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save" />
+			<html:label for="pref:0:int:editor.auto_save" accesskey="a" tabindex="0">
+				&AutoSaveCheck.label;
+			</html:label>		
+			<html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />
+			<html:label for="pref:5:int:editor.auto_save_delay">
+	  		&minText;	
+			</html:label>		
+		</html:div>
+	</html:fieldset>
+  -->
+
+<!-- External Editors are not supported at this time
+		<html:fieldset>
+					<html:legend align="left"> 
+			<html:div>&exterLegend.label;</html:div> 
+					</html:legend> 
+		<html:input name="htmlSourceEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_html_editor" />
+	 	<html:div>
+			&htmlSource;
+		</html:div>
+		<html:div>
+			<html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_editor" />
+			<titledbutton class="dialog push" name=""  value="&chooseButton.label;" />
+		</html:div>
+		<html:input name="htmlImageEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_image_editor" />
+	<html:div>
+			&img;
+		</html:div>
+		<html:div>
+			<html:input name="chooseButton.label" type="text" id="pref:string:editor.image_editor" />
+			<titledbutton class="dialog push" name=""  value="&chooseButton.label;" />
+		</html:div> 
+
+	</html:fieldset>
+  -->
+  <html:label>
+		<html:input name="maintainTable" type="checkbox" id="pref:0:int:editor.maintain_table_structure" />
+    &maintainTableStructure.label;
+  </html:label>
+
+  <html:fieldset>
+	  <html:legend align="left">Key Mappings</html:legend>
+	  <html:div class="hspace-both">
+	    &returnkey.label;
+	  </html:div>
+		<html:div class="hspace-both">
+			<html:input name="returnkey" type="radio" id="returnkey0"
+                  pref="true" preftype="int" prefindex="0" prefstring="editor.returnkey_mapping"/>
+			<html:label for="returnkey0" accesskey="" tabindex="0">
+				&returnkeyradio0.label;
+			</html:label>
+		</html:div>
+		<html:div class="hspace-both">
+			<html:input name="returnkey" type="radio" id="returnkey1"
+                  pref="true" preftype="int" prefindex="1" prefstring="editor.returnkey_mapping"/>
+			<html:label for="returnkey1" accesskey="" tabindex="0">
+				&returnkeyradio1.label;
+			</html:label>
+		</html:div>
+		<html:div class="hspace-both">
+			<html:input name="returnkey" type="radio" id="returnkey2"
+                  pref="true" preftype="int" prefindex="2" prefstring="editor.returnkey_mapping"/>
+			<html:label for="returnkey2" accesskey="" tabindex="0">			
+				&returnkeyradio2.label;
+			</html:label>
+		</html:div>
+		<html:div class="hspace-both">
+			<html:input name="returnkey" type="radio" id="returnkey3"
+                  pref="true" preftype="int" prefindex="3" prefstring="editor.returnkey_mapping"/>
+			<html:label for="returnkey3" accesskey="" tabindex="0">			
+				&returnkeyradio3.label;
+			</html:label>
+		</html:div>
+
+    <spring style="height: 10px;"/>
+
+	  <html:div class="hspace-both">
+	    &enterkey.label;
+	  </html:div>
+		<html:div class="hspace-both">
+			<html:input name="enterkey" type="radio" id="enterkey0"
+                  pref="true" preftype="int" prefindex="0" prefstring="editor.enterkey_mapping"/>
+			<html:label for="enterkey0" accesskey="" tabindex="0">
+				&returnkeyradio0.label;
+			</html:label>
+		</html:div>
+		<html:div class="hspace-both">
+			<html:input name="enterkey" type="radio" id="enterkey1"
+                  pref="true" preftype="int" prefindex="1" prefstring="editor.enterkey_mapping"/>
+			<html:label for="enterkey1" accesskey="" tabindex="0">
+				&returnkeyradio1.label;
+			</html:label>
+		</html:div>
+		<html:div class="hspace-both">
+			<html:input name="enterkey" type="radio" id="enterkey2"
+                  pref="true" preftype="int" prefindex="2" prefstring="editor.enterkey_mapping"/>
+			<html:label for="enterkey2" accesskey="" tabindex="0">			
+				&returnkeyradio2.label;
+			</html:label>
+		</html:div>
+		<html:div class="hspace-both">
+			<html:input name="enterkey" type="radio" id="enterkey3"
+                  pref="true" preftype="int" prefindex="3" prefstring="editor.enterkey_mapping"/>
+			<html:label for="enterkey3" accesskey="" tabindex="0">			
+				&returnkeyradio3.label;
+			</html:label>
+		</html:div>
+		</html:fieldset>  
+	
+
+</window>
+
