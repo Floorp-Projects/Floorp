@@ -666,7 +666,7 @@ nsContentAreaDragDrop::NormalizeSelection(nsIDOMNode* inBaseNode, nsISelection* 
     return;
   PRUint32 listLen = 0;
   childNodes->GetLength(&listLen);
-  PRInt32 index = 0;
+  PRUint32 index = 0;
   for ( ; index < listLen; ++index ) {
     nsCOMPtr<nsIDOMNode> indexedNode;
     childNodes->Item(index, getter_AddRefs(indexedNode));
@@ -837,6 +837,9 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
         
         // also grab the image data
         GetImageFromDOMNode(draggedNode, outImage);
+        // select siblings up to and including the selected link. this
+        // shouldn't be fatal, and we should still do the drag if this fails
+        NormalizeSelection(draggedNode, selection);
       } // img
       else {
         nsCOMPtr<nsIDOMHTMLLinkElement> link(do_QueryInterface(draggedNode));
