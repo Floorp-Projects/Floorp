@@ -36,6 +36,8 @@ public:
   static void ReleaseAtoms();
 
   static nsIAtom* mozAnonymousBlock;
+  static nsIAtom* mozFirstLineFixup;
+  static nsIAtom* mozLineFrame;
   static nsIAtom* mozListBulletPseudo;
 
   // Special attribute atoms
@@ -182,6 +184,7 @@ public:
   static nsIAtom* legend;
   static nsIAtom* legendContentPseudo;
   static nsIAtom* length;
+  static nsIAtom* lineFrame;
   static nsIAtom* longdesc;
   static nsIAtom* lowsrc;
 
