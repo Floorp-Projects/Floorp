@@ -161,14 +161,14 @@ public:
     enum Halignment {
         hAlign_Left,
         hAlign_Right,
-        hAlign_Center,
+        hAlign_Center
     };
 
     enum Valignment {
         vAlign_Top,
         vAlign_Middle,
         vAlign_BaseLine,
-        vAlign_Bottom,
+        vAlign_Bottom
     };
 protected:
     nsBoxFrame();
