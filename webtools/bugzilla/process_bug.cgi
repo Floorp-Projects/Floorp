@@ -1112,14 +1112,14 @@ sub FindWrapPoint {
 }
 
 sub LogDependencyActivity {
-    my ($i, $oldstr, $target, $me, $timestamp) = (@_);
+    my ($i, $oldstr, $target, $me) = (@_);
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
         # Figure out what's really different...
         my ($removed, $added) = diff_strings($oldstr, $newstr);
         LogActivityEntry($i,$target,$removed,$added,$whoid,$timestamp);
         # update timestamp on target bug so midairs will be triggered
-        SendSQL("UPDATE bugs SET delta_ts=$timestamp WHERE bug_id=$i");
+        SendSQL("UPDATE bugs SET delta_ts=NOW() WHERE bug_id=$i");
         $bug_changed = 1;
         return 1;
     }
@@ -1403,7 +1403,7 @@ foreach my $id (@idlist) {
             while (MoreSQLData()) {
                 push(@list, FetchOneColumn());
             }
-            SendSQL("UPDATE bugs SET delta_ts = $timestamp, keywords = " .
+            SendSQL("UPDATE bugs SET keywords = " .
                     SqlQuote(join(', ', @list)) .
                     " WHERE bug_id = $id");
         }
@@ -1558,9 +1558,9 @@ foreach my $id (@idlist) {
                     SendSQL("insert into dependencies ($me, $target) values ($id, $i)");
                 }
                 foreach my $k (@keys) {
-                    LogDependencyActivity($k, $snapshot{$k}, $me, $target, $timestamp);
+                    LogDependencyActivity($k, $snapshot{$k}, $me, $target);
                 }
-                LogDependencyActivity($id, $oldsnap, $target, $me, $timestamp);
+                LogDependencyActivity($id, $oldsnap, $target, $me);
                 $check_dep_bugs = 1;
             }
 
@@ -1804,10 +1804,7 @@ foreach my $id (@idlist) {
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
         # Bug 171639 - Duplicate notifications do not need to be private. 
-        AppendComment($duplicate, Bugzilla->user->login,
-                      "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***",
-                      0, $timestamp);
-
+        AppendComment($duplicate, Bugzilla->user->login, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***", 0);
         CheckFormFieldDefined(\%::FORM,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         

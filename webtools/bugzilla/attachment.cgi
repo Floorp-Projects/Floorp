@@ -940,7 +940,7 @@ sub insert
       @newvalues = map(SqlQuote($_), @newvalues);
                
       # Update the bug record. Note that this doesn't involve login_name.
-      SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp, " . 
+      SendSQL("UPDATE bugs SET " . 
               join(", ", map("$fields[$_] = $newvalues[$_]", (0..2))) . 
               " WHERE bug_id = $::FORM{'bugid'}");
       

@@ -1176,12 +1176,12 @@ if ($action eq 'updategroupcontrols') {
             my ($removed, $timestamp) = FetchSQLData();
             LogActivityEntry($bugid, "bug_group", $removed, "",
                              $::userid, $timestamp);
-            my $diffed = "";
             if ($mailiscurrent != 0) {
-                $diffed = ", lastdiffed = " . SqlQuote($timestamp);
+                SendSQL("UPDATE bugs SET lastdiffed = " . SqlQuote($timestamp)
+                     . " WHERE bug_id = $bugid");
             }
-            SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) .
-                    $diffed . " WHERE bug_id = $bugid");
+            SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp)
+                 . " WHERE bug_id = $bugid");
             PopGlobalSQLState();
             $count++;
         }
@@ -1210,12 +1210,12 @@ if ($action eq 'updategroupcontrols') {
             my ($added, $timestamp) = FetchSQLData();
             LogActivityEntry($bugid, "bug_group", "", $added,
                              $::userid, $timestamp);
-            my $diffed = "";
             if ($mailiscurrent != 0) {
-                $diffed = ", lastdiffed = " . SqlQuote($timestamp);
+                SendSQL("UPDATE bugs SET lastdiffed = " . SqlQuote($timestamp)
+                     . " WHERE bug_id = $bugid");
             }
-            SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) .
-                    $diffed . " WHERE bug_id = $bugid");
+            SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp)
+                 . " WHERE bug_id = $bugid");
             PopGlobalSQLState();
             $count++;
         }

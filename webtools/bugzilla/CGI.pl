@@ -246,28 +246,27 @@ sub CheckIfVotedConfirmed {
     my ($id, $who) = (@_);
     PushGlobalSQLState();
     SendSQL("SELECT bugs.votes, bugs.bug_status, products.votestoconfirm, " .
-            "       bugs.everconfirmed, NOW() " .
+            "       bugs.everconfirmed " .
             "FROM bugs, products " .
             "WHERE bugs.bug_id = $id AND products.id = bugs.product_id");
-    my ($votes, $status, $votestoconfirm, $everconfirmed, $now) = (FetchSQLData());
+    my ($votes, $status, $votestoconfirm, $everconfirmed) = (FetchSQLData());
     my $ret = 0;
     if ($votes >= $votestoconfirm && $status eq $::unconfirmedstate) {
-        SendSQL("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1, " .
-                "delta_ts = $now WHERE bug_id = $id");
+        SendSQL("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1 " .
+                "WHERE bug_id = $id");
         my $fieldid = GetFieldID("bug_status");
         SendSQL("INSERT INTO bugs_activity " .
                 "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                "($id,$who,$now,$fieldid,'$::unconfirmedstate','NEW')");
+                "($id,$who,now(),$fieldid,'$::unconfirmedstate','NEW')");
         if (!$everconfirmed) {
             $fieldid = GetFieldID("everconfirmed");
             SendSQL("INSERT INTO bugs_activity " .
                     "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                    "($id,$who,$now,$fieldid,'0','1')");
+                    "($id,$who,now(),$fieldid,'0','1')");
         }
         
         AppendComment($id, DBID_to_name($who),
-                      "*** This bug has been confirmed by popular vote. ***",
-                      0, $now);
+                      "*** This bug has been confirmed by popular vote. ***", 0);
                       
         $vars->{'type'} = "votes";
         $vars->{'id'} = $id;

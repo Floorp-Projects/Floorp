@@ -321,14 +321,9 @@ if (UserInGroup("editbugs") && defined($::FORM{'dependson'})) {
     }
 }
 
-# get current time
-SendSQL("SELECT NOW()");
-my $timestamp = FetchOneColumn();
-
-
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
-  "(" . join(",", @used_fields) . ", reporter, creation_ts, delta_ts, " .
+  "(" . join(",", @used_fields) . ", reporter, creation_ts, " .
   "estimated_time, remaining_time, deadline) " .
   "VALUES (";
 
@@ -342,7 +337,7 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$sql .= "$::userid, $timestamp, $timestamp, ";
+$sql .= "$::userid, now(), ";
 
 # Time Tracking
 if (UserInGroup(Param("timetrackinggroup")) &&
@@ -419,6 +414,9 @@ while (MoreSQLData()) {
 # Add the bug report to the DB.
 SendSQL($sql);
 
+SendSQL("select now()");
+my $timestamp = FetchOneColumn();
+
 # Get the bug ID back.
 SendSQL("select LAST_INSERT_ID()");
 my $id = FetchOneColumn();
@@ -458,8 +456,8 @@ if (UserInGroup("editbugs")) {
         while (MoreSQLData()) {
             push (@list, FetchOneColumn());
         }
-        SendSQL("UPDATE bugs SET delta_ts = $timestamp," .
-                " keywords = " . SqlQuote(join(', ', @list)) .
+        SendSQL("UPDATE bugs SET keywords = " .
+                SqlQuote(join(', ', @list)) .
                 " WHERE bug_id = $id");
     }
     if (defined $::FORM{'dependson'}) {

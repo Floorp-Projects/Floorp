@@ -418,7 +418,8 @@ if ($action eq 'update') {
             exit;
         }
         SendSQL("UPDATE bugs
-                 SET version=" . SqlQuote($version) . "
+                 SET version=" . SqlQuote($version) . ",
+                 delta_ts = delta_ts
                  WHERE version=" . SqlQuote($versionold) . "
                    AND product_id = $product_id");
         SendSQL("UPDATE versions

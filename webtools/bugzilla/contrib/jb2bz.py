@@ -208,7 +208,6 @@ def process_jitterbug(filename):
                     "bug_severity='normal',"  \
                     "bug_status=%s," \
                     "creation_ts=%s,"  \
-                    "delta_ts=%s,"  \
                     "short_desc=%s," \
                     "product=%s," \
                     "rep_platform='All'," \
@@ -219,7 +218,6 @@ def process_jitterbug(filename):
                     "resolution=%s",
                     [ current['number'],
                       bug_status,
-                      time.strftime("%Y-%m-%d %H:%M:%S", current['date-reported'][:9]),
                       time.strftime("%Y-%m-%d %H:%M:%S", current['date-reported'][:9]),
                       current['short-description'],
                       product,
