@@ -7,13 +7,21 @@ in short:
 
 This is a working version only; the next release will be 0.9.0 (first Beta!)
 
+There are a few incompatible changes with previous versions. The userdata
+variable has been changed from mng_uint32 to mng_ptr to accomodate 64-bit
+systems. For the same reason memory allocation size parameters have been
+changed to a mng_size_t type which is a typedef of size_t.
+
+Thanks to Aleks Jakulin for helping to iron out some 64-bit platform issues!
+
 - implemented the update-region parameters of the refresh callback
 - added support for most common delta-image options
 - added an animation-speed modifier
 - added an image-level parameter for the processtext callback
 - updated mngplg to 0.3.0 (supports JNG & full color-correction!)
 - fixed a lot of small things
-- added support for PPLT chunk                         
+- added support for PPLT chunk
+- fixed to support 64-bit platforms
 
 -------------------
 
@@ -51,7 +59,7 @@ core:
 - added administration of imagelevel parameter            
 - added support for PPLT chunk                         
 - added trace-codes & -strings for PPLT chunk processing
-- fixed problem with incorrect gamma-correction           
+- fixed problem with incorrect gamma-correction
 - fixed inclusion of IJG read/write code                  
 - fixed problem with 16-bit GA format
 - fixed problem with cheap transparency for 4-bit gray    
@@ -60,6 +68,11 @@ core:
 - changed userdata variable to mng_ptr
 - added typedef for mng_size_t
 - changed size parameter for memory allocation to mng_size_t
+- fixed compiler-warning for non-initialized iB variable
+- changed definition for 32-bit ints (64-bit platforms)   
+- changed definition for mng_handle (64-bit platforms)
+- swapped refresh parameters                              
+- fixed initialization routine for new mng_handle type    
 
 samples:
 
@@ -70,6 +83,7 @@ doc:
 
 makefiles:
 - changed makefile.linux to reflect versionnr for shared-lib
+- changed makefile.linux to depend on mng_conf.h & mng_types.h
 
 -----------------------------------------------------------
 

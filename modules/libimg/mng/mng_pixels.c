@@ -54,6 +54,8 @@
 /* *             0.5.3 - 06/25/2000 - G.Juyn                                * */
 /* *             - fixed problem with cheap transparency for 4-bit gray     * */
 /* *             - fixed display_xxxx routines for interlaced images        * */
+/* *             0.5.3 - 06/28/2000 - G.Juyn                                * */
+/* *             - fixed compiler-warning for non-initialized iB variable   * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -2084,6 +2086,7 @@ mng_retcode store_g1 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
   {
@@ -2130,6 +2133,7 @@ mng_retcode store_g2 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -2183,6 +2187,7 @@ mng_retcode store_g4 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -2361,6 +2366,7 @@ mng_retcode store_idx1 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
   {
@@ -2407,6 +2413,7 @@ mng_retcode store_idx2 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -2453,6 +2460,7 @@ mng_retcode store_idx4 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -2783,6 +2791,7 @@ mng_retcode store_jpeg_g8_a1 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize) + 1;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
   {
@@ -2829,6 +2838,7 @@ mng_retcode store_jpeg_g8_a2 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize) + 1;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -2882,6 +2892,7 @@ mng_retcode store_jpeg_g8_a4 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize) + 1;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -2994,6 +3005,7 @@ mng_retcode store_jpeg_rgb8_a1 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize) + 3;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
   {
@@ -3040,6 +3052,7 @@ mng_retcode store_jpeg_rgb8_a2 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize) + 3;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -3093,6 +3106,7 @@ mng_retcode store_jpeg_rgb8_a4 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize) + 3;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -3205,6 +3219,7 @@ mng_retcode store_jpeg_g12_a1 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize) + 2;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
   {
@@ -3251,6 +3266,7 @@ mng_retcode store_jpeg_g12_a2 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize) + 2;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -3304,6 +3320,7 @@ mng_retcode store_jpeg_g12_a4 (mng_datap pData)
   pOutrow  = pBuf->pImgdata + (pData->iRow * pBuf->iRowsize   ) +
                               (pData->iCol * pBuf->iSamplesize) + 2;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   for (iX = 0; iX < pData->iRowsamples; iX++)
@@ -3432,6 +3449,7 @@ mng_retcode delta_g1 (mng_datap pData)
                               (pData->iCol         * pBuf->iSamplesize) +
                               (pData->iDeltaBlockx * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
                                        /* pixel replace ? */
   if (pData->iDeltatype == MNG_DELTATYPE_BLOCKPIXELREPLACE)
   {
@@ -3501,6 +3519,7 @@ mng_retcode delta_g2 (mng_datap pData)
                               (pData->iCol         * pBuf->iSamplesize) +
                               (pData->iDeltaBlockx * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
                                        /* pixel replace ? */
   if (pData->iDeltatype == MNG_DELTATYPE_BLOCKPIXELREPLACE)
@@ -3584,6 +3603,7 @@ mng_retcode delta_g4 (mng_datap pData)
                               (pData->iCol         * pBuf->iSamplesize) +
                               (pData->iDeltaBlockx * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
                                        /* pixel replace ? */
   if (pData->iDeltatype == MNG_DELTATYPE_BLOCKPIXELREPLACE)
@@ -3865,6 +3885,7 @@ mng_retcode delta_idx1 (mng_datap pData)
                               (pData->iCol         * pBuf->iSamplesize) +
                               (pData->iDeltaBlockx * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
                                        /* pixel replace ? */
   if (pData->iDeltatype == MNG_DELTATYPE_BLOCKPIXELREPLACE)
   {
@@ -3934,6 +3955,7 @@ mng_retcode delta_idx2 (mng_datap pData)
                               (pData->iCol         * pBuf->iSamplesize) +
                               (pData->iDeltaBlockx * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
                                        /* pixel replace ? */
   if (pData->iDeltatype == MNG_DELTATYPE_BLOCKPIXELREPLACE)
@@ -4004,6 +4026,7 @@ mng_retcode delta_idx4 (mng_datap pData)
                               (pData->iCol         * pBuf->iSamplesize) +
                               (pData->iDeltaBlockx * pBuf->iSamplesize);
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
                                        /* pixel replace ? */
   if (pData->iDeltatype == MNG_DELTATYPE_BLOCKPIXELREPLACE)
@@ -4335,6 +4358,7 @@ mng_retcode process_g1 (mng_datap pData)
   pWorkrow = pData->pWorkrow + 1;      /* temporary work pointers */
   pRGBArow = pData->pRGBArow;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
 
   if (pBuf->bHasTRNS)                  /* tRNS encountered ? */
   {
@@ -4437,6 +4461,7 @@ mng_retcode process_g2 (mng_datap pData)
   pWorkrow = pData->pWorkrow + 1;      /* temporary work pointers */
   pRGBArow = pData->pRGBArow;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   if (pBuf->bHasTRNS)                  /* tRNS encountered ? */
@@ -4531,6 +4556,7 @@ mng_retcode process_g4 (mng_datap pData)
   pWorkrow = pData->pWorkrow + 1;      /* temporary work pointers */
   pRGBArow = pData->pRGBArow;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   if (pBuf->bHasTRNS)                  /* tRNS encountered ? */
@@ -4919,6 +4945,7 @@ mng_retcode process_idx1 (mng_datap pData)
   pWorkrow = pData->pWorkrow + 1;      /* temporary work pointers */
   pRGBArow = pData->pRGBArow;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   if (pBuf->bHasTRNS)                  /* tRNS encountered ? */
@@ -5018,6 +5045,7 @@ mng_retcode process_idx2 (mng_datap pData)
   pWorkrow = pData->pWorkrow + 1;      /* temporary work pointers */
   pRGBArow = pData->pRGBArow;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   if (pBuf->bHasTRNS)                  /* tRNS encountered ? */
@@ -5117,6 +5145,7 @@ mng_retcode process_idx4 (mng_datap pData)
   pWorkrow = pData->pWorkrow + 1;      /* temporary work pointers */
   pRGBArow = pData->pRGBArow;
   iM       = 0;                        /* start at pixel 0 */
+  iB       = 0;
   iS       = 0;
 
   if (pBuf->bHasTRNS)                  /* tRNS encountered ? */

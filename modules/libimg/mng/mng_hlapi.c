@@ -60,6 +60,8 @@
 /* *             - added initialization of Imagelevel                       * */
 /* *             0.5.3 - 06/26/2000 - G.Juyn                                * */
 /* *             - changed userdata variable to mng_ptr                     * */
+/* *             0.5.3 - 06/29/2000 - G.Juyn                                * */
+/* *             - fixed initialization routine for new mng_handle type     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -286,13 +288,13 @@ mng_handle MNG_DECL mng_initialize (mng_ptr       pUserdata,
 #endif
 
 #ifdef MNG_INTERNAL_MEMMNGMT           /* allocate the main datastruc */
-  pData = calloc (1, sizeof (mng_data));
+  pData = (mng_datap)calloc (1, sizeof (mng_data));
 #else
   pData = (mng_datap)fMemalloc (sizeof (mng_data));
 #endif
 
   if (!pData)
-    return 0;                          /* error: out of memory?? */
+    return MNG_NULL;                   /* error: out of memory?? */
                                        /* validate the structure */
   pData->iMagic                = MNG_MAGIC;
                                        /* save userdata field */
@@ -301,7 +303,11 @@ mng_handle MNG_DECL mng_initialize (mng_ptr       pUserdata,
   pData->fTraceproc            = fTraceproc;
 
 #ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (pData, MNG_FN_INITIALIZE, MNG_LC_INITIALIZE)
+  if (mng_trace (pData, MNG_FN_INITIALIZE, MNG_LC_INITIALIZE))
+  {
+    MNG_FREEX (pData, pData, sizeof (mng_data))
+    return MNG_NULL;
+  }
 #endif
                                        /* default canvas styles are 8-bit RGB */
   pData->iCanvasstyle          = MNG_CANVAS_RGB8;
@@ -369,10 +375,10 @@ mng_handle MNG_DECL mng_initialize (mng_ptr       pUserdata,
   if (iRetcode)                        /* on error drop out */
   {
     MNG_FREEX (pData, pData, sizeof (mng_data))
-    return 0;
+    return MNG_NULL;
   }
 
-  pData->pObjzero = pImage;  
+  pData->pObjzero = pImage;
 #endif
 
 #if defined(MNG_SUPPORT_DISPLAY) && defined(MNG_INCLUDE_LCMS)
@@ -404,7 +410,11 @@ mng_handle MNG_DECL mng_initialize (mng_ptr       pUserdata,
   mng_reset ((mng_handle)pData);
 
 #ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (pData, MNG_FN_INITIALIZE, MNG_LC_END)
+  if (mng_trace (pData, MNG_FN_INITIALIZE, MNG_LC_END))
+  {
+    MNG_FREEX (pData, pData, sizeof (mng_data))
+    return MNG_NULL;
+  }
 #endif
 
   return (mng_handle)pData;            /* if we get here, we're in business */

@@ -51,6 +51,12 @@
 /* *             - added typedef for mng_size_t                             * */
 /* *             - changed size parameter for memory callbacks to           * */
 /* *               mng_size_t                                               * */
+/* *             0.5.3 - 06/28/2000 - G.Juyn                                * */
+/* *             - changed definition of 32-bit ints (64-bit platforms)     * */
+/* *             - changed definition of mng_handle (64-bit platforms)      * */
+/* *             0.5.3 - 06/29/2000 - G.Juyn                                * */
+/* *             - changed definition of mng_handle (again)                 * */
+/* *             - swapped refresh parameters                               * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -103,6 +109,8 @@
 #ifdef MNG_INTERNAL_MEMMNGMT
 #include <stdlib.h>                    /* "calloc" & "free" */
 #endif
+
+#include <limits.h>                    /* get proper integer widths */
 
 #ifdef WIN32
 /* B003 */
@@ -162,9 +170,20 @@
 
 /* ************************************************************************** */
 
-typedef signed   long  mng_int32;                /* basic integers */
+#if USHRT_MAX == 0xffffffff                      /* get the proper 32-bit width !!! */
+typedef unsigned short mng_uint32;               
+typedef signed   short mng_int32;
+#elif UINT_MAX == 0xffffffff
+typedef unsigned int   mng_uint32;
+typedef signed   int   mng_int32;
+#elif ULONG_MAX == 0xffffffff
 typedef unsigned long  mng_uint32;
-typedef signed   short mng_int16;
+typedef signed   long  mng_int32;
+#else
+#error Sorry, I can't find any 32-bit integers on this platform.
+#endif
+
+typedef signed   short mng_int16;                /* other basic integers */
 typedef unsigned short mng_uint16;
 typedef signed   char  mng_int8;
 typedef unsigned char  mng_uint8;
@@ -189,7 +208,9 @@ typedef mng_uint8 *    mng_uint8p;               /* pointer to unsigned bytes */
 
 typedef mng_int8       mng_bool;                 /* booleans */
 
-typedef mng_int32      mng_handle;               /* generic handle */
+struct mng_data_struct;
+typedef struct mng_data_struct * mng_handle;     /* generic handle */
+
 typedef mng_int32      mng_retcode;              /* generic return code */
 typedef mng_int32      mng_chunkid;              /* 4-byte chunkname identifier */
 typedef mng_ptr        mng_chunkp;               /* pointer to a chunk-structure */
@@ -335,10 +356,10 @@ typedef mng_ptr    MNG_DECL (*mng_getbkgdline)   (mng_handle  hHandle,
 typedef mng_ptr    MNG_DECL (*mng_getalphaline)  (mng_handle  hHandle,
                                                   mng_uint32  iLinenr);
 typedef mng_bool   MNG_DECL (*mng_refresh)       (mng_handle  hHandle,
-                                                  mng_uint32  iTop,
                                                   mng_uint32  iLeft,
-                                                  mng_uint32  iBottom,
-                                                  mng_uint32  iRight);
+                                                  mng_uint32  iTop,
+                                                  mng_uint32  iRight,
+                                                  mng_uint32  iBottom);
 
                                        /* timer management callbacks */
 typedef mng_uint32 MNG_DECL (*mng_gettickcount)  (mng_handle  hHandle);
