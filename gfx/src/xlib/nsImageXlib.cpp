@@ -1364,124 +1364,6 @@ void nsImageXlib::TilePixmap(Pixmap src, Pixmap dest, PRInt32 aSXOffset,
 
 NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
                                     nsDrawingSurface aSurface,
-                                    nsRect &aSrcRect,
-                                    nsRect &aTileRect)
-{
-  if (mPendingUpdate)
-    UpdateCachedImage();
-
-  if ((mAlphaDepth == 1) && mIsSpacer)
-    return NS_OK;
-  
-  nsIDrawingSurfaceXlib *drawing = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, aSurface);
-  PRBool partial = PR_FALSE;
-  
-  PRInt32
-    validX = 0,
-    validY = 0,
-    validWidth  = mWidth,
-    validHeight = mHeight;
-  
-  // limit the image rectangle to the size of the image data which
-  // has been validated.
-  if (mDecodedY2 < mHeight) {
-    validHeight = mDecodedY2 - mDecodedY1;
-    partial = PR_TRUE;
-  }
-  if (mDecodedX2 < mWidth) {
-    validWidth = mDecodedX2 - mDecodedX1;
-    partial = PR_TRUE;
-  }
-  if (mDecodedY1 > 0) {   
-    validHeight -= mDecodedY1;
-    validY = mDecodedY1;
-    partial = PR_TRUE;
-  }
-  if (mDecodedX1 > 0) {
-    validWidth -= mDecodedX1;
-    validX = mDecodedX1; 
-    partial = PR_TRUE;
-  }
-  
-  XlibRgbHandle *drawingXHandle; 
-  drawing->GetXlibRgbHandle(drawingXHandle);
-
-  if (partial || 
-      (xxlib_rgb_get_depth(drawingXHandle) == 8) ||
-      ((mAlphaDepth == 8) && mAlphaValid)) {
-    PRInt32 aY0 = aTileRect.y,
-    aX0 = aTileRect.x,
-    aY1 = aTileRect.y + aTileRect.height,
-    aX1 = aTileRect.x + aTileRect.width;
-
-    for (PRInt32 y = aY0; y < aY1; y+=aSrcRect.height)
-      for (PRInt32 x = aX0; x < aX1; x+=aSrcRect.width)
-        Draw(aContext,aSurface,x,y,
-             PR_MIN(aSrcRect.width, aX1-x),
-             PR_MIN(aSrcRect.height, aY1-y));
-   
-    return NS_OK;
-  }
-
-  /* draw the tile offscreen */
-  CreateOffscreenPixmap(mWidth, mHeight);
-
-  if (mAlphaDepth == 1) {
-    Pixmap tileImg;
-    Pixmap tileMask;
-
-    CreateAlphaBitmap(validWidth, validHeight);
-
-    nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
-
-    tileImg = XCreatePixmap(mDisplay, mImagePixmap,
-                            aTileRect.width, aTileRect.height,
-                            mDepth);
-
-    TilePixmap(mImagePixmap, tileImg, 0, 0, tmpRect, tmpRect, PR_FALSE);
-
-    // tile alpha mask
-    tileMask = XCreatePixmap(mDisplay, mAlphaPixmap,
-                             aTileRect.width, aTileRect.height, mAlphaDepth);
-
-    TilePixmap(mAlphaPixmap, tileMask, 0, 0, tmpRect, tmpRect, PR_FALSE);
-
-    GC fgc;
-    XGCValues values;
-    unsigned long valuesMask;
-   
-    memset(&values, 0, sizeof(XGCValues));
-    values.clip_mask = tileMask;
-    values.clip_x_origin = aTileRect.x;
-    values.clip_y_origin = aTileRect.y;
-    valuesMask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
-    Drawable drawable; drawing->GetDrawable(drawable);
-    fgc = XCreateGC(mDisplay, drawable, valuesMask, &values);
-
-    // and copy it back
-    XCopyArea(mDisplay, tileImg, drawable,
-              fgc, 0,0,
-              aTileRect.width, aTileRect.height,
-              aTileRect.x, aTileRect.y);
-
-    XFreePixmap(mDisplay, tileImg);
-    XFreePixmap(mDisplay, tileMask);
-    XFreeGC(mDisplay, fgc);
-
-  } else {
-    // In the non-alpha case, xlib can tile for us
-
-    nsRect clipRect;
-    PRBool isValid;
-    aContext.GetClipRect(clipRect, isValid);
-    Drawable drawable; drawing->GetDrawable(drawable);
-    TilePixmap(mImagePixmap, drawable, aTileRect.x, aTileRect.y, aTileRect, clipRect, PR_TRUE);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
-                                    nsDrawingSurface aSurface,
                                     PRInt32 aSXOffset, PRInt32 aSYOffset,
                                     const nsRect &aTileRect)
 {
@@ -1492,8 +1374,6 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
 
   if (aTileRect.width <= 0 || aTileRect.height <= 0) {
-    NS_ASSERTION(aTileRect.width > 0 && aTileRect.height > 0,
-                 "You can't draw an image with a 0 width or height!");
     return NS_OK;
   }
   
@@ -1527,7 +1407,11 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     validX = mDecodedX1;
     partial = PR_TRUE;
   }
-
+  
+  if (validWidth == 0 || validHeight == 0) {
+    return NS_OK;
+  }
+   
   if (partial || ((mAlphaDepth == 8) && mAlphaValid)) {
     PRInt32 aY0 = aTileRect.y - aSYOffset,
             aX0 = aTileRect.x - aSXOffset,
