@@ -179,6 +179,23 @@ PRBool nsFileSpec::IsDirectory() const
 } // nsFileSpec::IsDirectory
 
 //----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsHidden() const
+//----------------------------------------------------------------------------------------
+{
+    PRBool hidden = PR_TRUE;
+    char *leafname = GetLeafName();
+    if (nsnull != leafname)
+    {
+        if ((!strcmp(leafname, ".")) || (!strcmp(leafname, "..")))
+        {
+            hidden = PR_FALSE;
+        }
+        nsCRT::free(leafname);
+    }
+    return hidden;
+} // nsFileSpec::IsHidden
+
+//----------------------------------------------------------------------------------------
 void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 //----------------------------------------------------------------------------------------
 {

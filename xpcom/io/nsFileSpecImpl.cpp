@@ -301,6 +301,15 @@ NS_IMETHODIMP nsFileSpecImpl::exists(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::isHidden(PRBool *_retval)
+//----------------------------------------------------------------------------------------
+{
+	TEST_OUT_PTR(_retval)
+	*_retval = mFileSpec.IsHidden();
+	return mFileSpec.Error();
+}
+
+//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecImpl::GetFileSize(PRUint32 *aFileSize)
 //----------------------------------------------------------------------------------------
 {

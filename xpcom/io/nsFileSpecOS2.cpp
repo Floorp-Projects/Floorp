@@ -194,6 +194,11 @@ PRBool nsFileSpec::IsDirectory() const
    return (0 == stat( mPath, &st)) && (S_IFDIR == (st.st_mode & S_IFDIR));
 }
 
+PRBool nsFileSpec::IsHidden() const
+{
+   return PR_FALSE;  // FIX!  
+}
+
 void nsFileSpec::GetModDate( TimeStamp& outStamp) const
 {
    struct stat st;

@@ -387,10 +387,10 @@ NS_IMETHODIMP FileImpl::Flush()
 #endif
     if (!mFileDesc) 
         return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
-    PRBool itFailed = PR_Sync(mFileDesc) != PR_SUCCESS;
+    
 #ifdef XP_MAC
     // On unix, it seems to fail always.
-    if (itFailed)
+    if (PR_Sync(mFileDesc) != PR_SUCCESS)
         mFailed = PR_TRUE;
 #endif
     return NS_OK;

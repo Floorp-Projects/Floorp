@@ -88,6 +88,9 @@ class NS_COM nsFileSpecImpl
 
 	/* boolean exists (); */
 	NS_IMETHOD exists(PRBool *_retval);
+    
+    /* boolean isHidden (); */
+	NS_IMETHOD isHidden(PRBool *_retval);
 
 	/* readonly attribute unsigned long FileSize; */
 	NS_IMETHOD GetFileSize(PRUint32 *aFileSize);
