@@ -184,7 +184,7 @@ void nsFileSpec::operator += (const char* inRelativePath)
     if (!inRelativePath || mPath.IsEmpty())
         return;
     
-    char endChar = mPath[strlen(mPath) - 1];
+    char endChar = mPath[(int)(strlen(mPath) - 1)];
     if (endChar == '/')
         mPath += "x";
     else
