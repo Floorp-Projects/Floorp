@@ -829,10 +829,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       //
       // First try keyword fixup
       //
-      if (aStatus == NS_ERROR_UNKNOWN_HOST ||
-          aStatus == NS_ERROR_CONNECTION_REFUSED ||
-          aStatus == NS_ERROR_NET_TIMEOUT ||
-          aStatus == NS_ERROR_NET_RESET)
+      if (aStatus == NS_ERROR_UNKNOWN_HOST)  
       {
         PRBool keywordsEnabled = PR_FALSE;
 
