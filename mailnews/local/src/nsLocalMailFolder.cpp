@@ -281,6 +281,13 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     nsresult rv = GetPath(path);
     if (NS_FAILED(rv)) return rv;
 	
+#if 0
+	//Make sure our path isn't the empty path.
+	nsFileSpec emptyPath("");
+	if(path == emptyPath)
+		return NS_ERROR_FAILURE;
+#endif 
+
     if (!path.IsDirectory())
       AddDirectorySeparator(path);
   
@@ -330,6 +337,12 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 		nsresult rv = GetPath(path);
 		if (NS_FAILED(rv)) return rv;
 
+#if 0
+		//Make sure our path isn't the empty path.
+		nsFileSpec emptyPath("");
+		if(path == emptyPath)
+			return NS_ERROR_FAILURE;
+#endif
 		nsresult folderOpen = NS_OK;
 		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
@@ -1166,6 +1179,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
 
 		rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+
+		if(NS_SUCCEEDED(rv))
+			rv = GetDatabase();
 
 		if(NS_SUCCEEDED(rv))
 			rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->dstKey, msgDBHdr, getter_AddRefs(newHdr));
