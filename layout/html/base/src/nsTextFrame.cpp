@@ -780,7 +780,8 @@ public:
                                 const nsTextDimensions& aBaseDimensions,
                                 PRUnichar* aWordBuf,
                                 PRUint32   aWordBufLen,
-                                PRUint32   aWordBufSize);
+                                PRUint32   aWordBufSize,
+                                PRBool     aIsBreakable);
 
   nsTextDimensions ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
                                    nsILineBreaker* aLineBreaker,
@@ -792,7 +793,8 @@ public:
                                    PRBool* aStop,
                                    const PRUnichar* aWordBuf,
                                    PRUint32 &aWordBufLen,
-                                   PRUint32 aWordBufSize);
+                                   PRUint32 aWordBufSize,
+                                   PRBool aIsBreakable);
 
   void ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const;
 
@@ -5027,7 +5029,8 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
                                                     lastWordDimensions,
                                                     pWordBuf,
                                                     lastWordLen,
-                                                    wordBufLen);
+                                                    wordBufLen,
+                                                    aTextData.mIsBreakable);
           if (!aTextData.mIsBreakable || (aTextData.mX - lastWordDimensions.width + wordDimensions.width <= maxWidth)) {
             // The fully joined word has fit. Account for the joined
             // word's affect on the max-element-size here (since the
@@ -5534,11 +5537,14 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
                                    const nsTextDimensions& aBaseDimensions,
                                    PRUnichar* aWordBuf,
                                    PRUint32 aWordLen,
-                                   PRUint32 aWordBufSize)
+                                   PRUint32 aWordBufSize,
+                                   PRBool aIsBreakable)
 {
-  // Before we get going, convert any spaces in the current word back
-  // to nbsp's. This keeps the breaking logic happy.
-  RevertSpacesToNBSP(aWordBuf, (PRInt32) aWordLen);
+  if (aIsBreakable) {
+    // Before we get going, convert any spaces in the current word back
+    // to nbsp's. This keeps the breaking logic happy.
+    RevertSpacesToNBSP(aWordBuf, (PRInt32) aWordLen);
+  }
 
   nsTextDimensions addedDimensions;
   PRUnichar *newWordBuf = aWordBuf;
@@ -5563,7 +5569,8 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
                                                    &stop,
                                                    newWordBuf,
                                                    aWordLen,
-                                                   newWordBufSize);
+                                                   newWordBufSize,
+                                                   aIsBreakable);
         if (moreDimensions.width < 0) {
           PRUint32 moreSize = -moreDimensions.width;
           //Oh, wordBuf is too small, we have to grow it
@@ -5588,7 +5595,8 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
                                                  &stop,
                                                  newWordBuf,
                                                  aWordLen,
-                                                 newWordBufSize);
+                                                 newWordBufSize,
+                                                 aIsBreakable);
             NS_ASSERTION((moreDimensions.width >= 0), "ComputeWordFragmentWidth is returning negative");
           } else {
             stop = PR_TRUE;
@@ -5642,7 +5650,8 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
                                       PRBool* aStop,
                                       const PRUnichar* aWordBuf,
                                       PRUint32& aRunningWordLen,
-                                      PRUint32 aWordBufSize)
+                                      PRUint32 aWordBufSize,
+                                      PRBool aIsBreakable)
 {
   nsTextTransformer tx(aLineBreaker, nsnull, aPresContext);
   tx.Init(aTextFrame, aContent, 0);
@@ -5675,36 +5684,38 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
   }
   *aStop = contentLen < tx.GetContentLength();
 
-  // Convert any spaces in the current word back to nbsp's. This keeps
-  // the breaking logic happy.
-  RevertSpacesToNBSP(bp, wordLen);
+  if (aIsBreakable) {
+    // Convert any spaces in the current word back to nbsp's. This keeps
+    // the breaking logic happy.
+    RevertSpacesToNBSP(bp, wordLen);
 
-  if(wordLen > 0)
-  {
-    memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, sizeof(PRUnichar)*wordLen);
-
-    PRUint32 breakP=0;
-    PRBool needMore=PR_TRUE;
-    nsresult lres = aLineBreaker->Next(aWordBuf, aRunningWordLen+wordLen,
-                                       0, &breakP, &needMore);
-    if(NS_SUCCEEDED(lres)) 
+    if(wordLen > 0)
     {
-       // when we look at two pieces text together, we might decide to break
-       // eariler than if we only look at the 2nd pieces of text
-       if(!needMore && (breakP < (aRunningWordLen + wordLen)))
-       {
-           wordLen = breakP - aRunningWordLen; 
-           if(wordLen < 0)
-               wordLen = 0;
-           *aStop = PR_TRUE;
-       } 
+      memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, sizeof(PRUnichar)*wordLen);
+      
+      PRUint32 breakP=0;
+      PRBool needMore=PR_TRUE;
+      nsresult lres = aLineBreaker->Next(aWordBuf, aRunningWordLen+wordLen,
+                                         0, &breakP, &needMore);
+      if(NS_SUCCEEDED(lres)) 
+        {
+          // when we look at two pieces text together, we might decide to break
+            // eariler than if we only look at the 2nd pieces of text
+          if(!needMore && (breakP < (aRunningWordLen + wordLen)))
+            {
+              wordLen = breakP - aRunningWordLen; 
+              if(wordLen < 0)
+                  wordLen = 0;
+              *aStop = PR_TRUE;
+            } 
+        }
+      
+      // if we don't stop, we need to extend the buf so the next one can
+      // see this part otherwise, it does not matter since we will stop
+      // anyway
+      if(! *aStop) 
+        aRunningWordLen += wordLen;
     }
-
-    // if we don't stop, we need to extend the buf so the next one can
-    // see this part otherwise, it does not matter since we will stop
-    // anyway
-    if(! *aStop) 
-      aRunningWordLen += wordLen;
   }
   if((*aStop) && (wordLen == 0))
     return dimensions; // 0;
