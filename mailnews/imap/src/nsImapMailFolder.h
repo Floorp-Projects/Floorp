@@ -82,6 +82,7 @@ public:
     PRUint32 m_totalCount;// total count of messages we have to do
     PRBool m_streamCopy;
     char *m_dataBuffer; // temporary buffer for this copy operation
+    PRUint32 m_leftOver;
 };
 
 class nsImapMailFolder : public nsMsgDBFolder, 

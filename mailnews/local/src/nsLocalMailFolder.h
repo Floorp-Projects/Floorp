@@ -61,7 +61,8 @@ struct nsLocalMailCopyState
   PRUint32 m_totalMsgCount;
   PRBool m_isMove;
   PRBool m_dummyEnvelopeNeeded;
-  char m_dataBuffer[FOUR_K];
+  char m_dataBuffer[FOUR_K+1];
+  PRUint32 m_leftOver;
 };
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,
@@ -93,6 +94,7 @@ public:
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 
 	NS_IMETHOD CreateSubfolder(const char *folderName);
+  NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder** newFolder);
 
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const char *newName);

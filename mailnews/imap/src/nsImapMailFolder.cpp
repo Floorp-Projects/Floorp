@@ -704,9 +704,44 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
 NS_IMETHODIMP nsImapMailFolder::Rename (const char *newName)
 {
     nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIFileSpec> oldPathSpec;
+    rv = GetPath(getter_AddRefs(oldPathSpec));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIFolder> parent;
+    rv = GetParent(getter_AddRefs(parent));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent);
+    Shutdown(PR_TRUE);
+    PRUint32 cnt = 0;
+    nsFileSpec dirSpec;
+
+    if (mSubFolders)
+        mSubFolders->Count(&cnt);
+    if (cnt > 0)
+        rv = CreateDirectoryForFolder(dirSpec);
+
+    if (parentFolder)
+    {
+        SetParent(nsnull);
+        parentFolder->PropagateDelete(this, PR_FALSE);
+    }
+    nsFileSpec fileSpec;
+    oldPathSpec->GetFileSpec(&fileSpec);
+    nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
+    nsCAutoString newNameStr = newName;
+    newNameStr += ".msf";
+    oldSummarySpec.Rename(newNameStr.GetBuffer());
+    if (NS_SUCCEEDED(rv) && cnt> 0)
+    {
+        newNameStr = newName;
+        newNameStr += ".sbd";
+        dirSpec.Rename(newNameStr.GetBuffer());
+    }
+
     NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv))
-        rv = imapService->RenameLeaf(m_eventQueue, this, newName, this, nsnull);
+        rv = imapService->RenameLeaf(m_eventQueue, this, newName, this,
+                                     nsnull);
     return rv;
 }
 
@@ -1622,22 +1657,34 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
     if (!m_copyState || !m_copyState->m_dataBuffer ||
         !m_copyState->m_tmpFileSpec) return rv;
 
-    PRUint32 readCount, maxReadCount = FOUR_K;
+    PRUint32 readCount, maxReadCount = FOUR_K - m_copyState->m_leftOver;
     PRInt32 writeCount;
     char *start, *end;
+    PRUint32 linebreak_len = 0;
 
     while (aLength > 0)
     {
         if (aLength < (PRInt32) maxReadCount)
             maxReadCount = aLength;
-        rv = aIStream->Read(m_copyState->m_dataBuffer, maxReadCount,
+        rv = aIStream->Read(m_copyState->m_dataBuffer+m_copyState->m_leftOver,
+                            maxReadCount,
                             &readCount);
         if (NS_FAILED(rv)) return rv;
 
-        m_copyState->m_dataBuffer[readCount] = '\0';
+        m_copyState->m_dataBuffer[readCount+m_copyState->m_leftOver] = '\0';
 
         start = m_copyState->m_dataBuffer;
-        end = PL_strstr(start, MSG_LINEBREAK);
+        end = PL_strstr(start, "\r");
+        if (!end)
+            end = PL_strstr(start, "\n");
+        else if (*(end+1) == LF && linebreak_len == 0)
+            linebreak_len = 2;
+
+        if (linebreak_len == 0) // not initialize yet
+            linebreak_len = 1;
+
+        if (!end)
+            m_copyState->m_leftOver = PL_strlen(start);
 
         while (start && end)
         {
@@ -1650,10 +1697,23 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
                                                        &writeCount);
                 rv = m_copyState->m_tmpFileSpec->Write(CRLF, 2, &writeCount);
             }
-            start = end+MSG_LINEBREAK_LEN;
-            if (start >= m_copyState->m_dataBuffer+readCount)
+            start = end+linebreak_len;
+            if (start >=
+                m_copyState->m_dataBuffer+readCount+m_copyState->m_leftOver)
+            {
+                m_copyState->m_leftOver = 0;
                 break;
-            end = PL_strstr(start, MSG_LINEBREAK);
+            }
+            end = PL_strstr(start, "\r");
+            if (!end)
+                end = PL_strstr(start, "\n");
+            if (start && !end)
+            {
+                m_copyState->m_leftOver = PL_strlen(start);
+                nsCRT::memcpy(m_copyState->m_dataBuffer, start,
+                              m_copyState->m_leftOver+1); // including null
+                maxReadCount = FOUR_K - m_copyState->m_leftOver;
+            }
         }
         if (NS_FAILED(rv)) return rv;
         aLength -= readCount;
@@ -3270,7 +3330,8 @@ nsImapMailFolder::CopyStreamMessage(nsIMessage* message,
 
 nsImapMailCopyState::nsImapMailCopyState() : m_msgService(nsnull),
     m_isMove(PR_FALSE), m_selectedState(PR_FALSE), m_curIndex(0),
-    m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull)
+    m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull),
+    m_leftOver(0)
 {
     NS_INIT_REFCNT();
 }

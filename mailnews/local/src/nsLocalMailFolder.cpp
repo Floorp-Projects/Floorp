@@ -77,7 +77,7 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 nsLocalMailCopyState::nsLocalMailCopyState() :
   m_fileStream(nsnull), m_curDstKey(0xffffffff), m_curCopyIndex(0),
   m_messageService(nsnull), m_totalMsgCount(0), m_isMove(PR_FALSE),
-  m_dummyEnvelopeNeeded(PR_FALSE)
+  m_dummyEnvelopeNeeded(PR_FALSE), m_leftOver(0)
 {
 }
 
@@ -233,13 +233,14 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 			continue;
 		}
 
-		AddSubfolder(currentFolderNameStr, getter_AddRefs(child));
+		AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
 		PL_strfree(folderName);
     }
 	return rv;
 }
 
-nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
+NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
+                                                 nsIMsgFolder **child)
 {
 	if(!child)
 		return NS_ERROR_NULL_POINTER;
@@ -253,7 +254,7 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 	uri.Append(mURI);
 	uri.Append('/');
 
-	uri.Append(name);
+	uri.Append(*name);
 
 	nsCOMPtr<nsIRDFResource> res;
 	rv = rdf->GetResource(uri, getter_AddRefs(res));
@@ -272,22 +273,22 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 	//Only set these is these are top level children.
 	if(NS_SUCCEEDED(rv) && isServer)
 	{
-		if(name.Compare("Inbox", PR_TRUE) == 0)
+		if(name->Compare("Inbox", PR_TRUE) == 0)
 		{
 			folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
 			mBiffState = nsMsgBiffState_Unknown;
 		}
-		else if(name.Compare("Trash", PR_TRUE) == 0)
+		else if(name->Compare("Trash", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
-		else if(name.Compare("Unsent Messages", PR_TRUE) == 0 
-			|| name.Compare("Outbox", PR_TRUE) == 0)
+		else if(name->Compare("Unsent Messages", PR_TRUE) == 0 
+			|| name->Compare("Outbox", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_QUEUE);
 		//These should probably be read in from a preference.  Hacking in here for the moment.
-		else if(name.Compare("Sent", PR_TRUE) == 0)
+		else if(name->Compare("Sent", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-		else if(name.Compare("Drafts", PR_TRUE) == 0)
+		else if(name->Compare("Drafts", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-		else if(name.Compare("Templates", PR_TRUE) == 0)
+		else if(name->Compare("Templates", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 	}
 	//at this point we must be ok and we don't want to return failure in case GetIsServer failed.
@@ -659,7 +660,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 			}
 
 			//Now let's create the actual new folder
-			rv = AddSubfolder(folderName, getter_AddRefs(child));
+			rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
             unusedDB->SetSummaryValid(PR_TRUE);
             unusedDB->Close(PR_TRUE);
         }
@@ -725,73 +726,60 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const char *newName)
 {
-#ifdef HAVE_PORT
-  // change the leaf name (stored separately)
-  nsresult status = MSG_FolderInfo::Rename (newUserLeafName);
-  if (status == 0) {
-    char *baseDir = nsCRT::strdup(m_pathName);
-    if (baseDir) {
-      char *base_slash = nsCRT::strrchr (baseDir, '/'); 
-      if (base_slash)
-        *base_slash = '\0';
+    nsCOMPtr<nsIFileSpec> oldPathSpec;
+    nsCOMPtr<nsIFolder> parent;
+    nsresult rv = GetPath(getter_AddRefs(oldPathSpec));
+    if (NS_FAILED(rv)) return rv;
+    rv = GetParent(getter_AddRefs(parent));
+    if (NS_FAILED(rv)) return rv;
+    Shutdown(PR_TRUE);
+    nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent);
+    nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parent);
+    
+    nsFileSpec fileSpec;
+    oldPathSpec->GetFileSpec(&fileSpec);
+    nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
+    nsFileSpec dirSpec;
+
+    PRUint32 cnt = 0;
+    if (mSubFolders)
+      mSubFolders->Count(&cnt);
+
+    if (cnt > 0)
+      rv = CreateDirectoryForFolder(dirSpec);
+
+    if (parentFolder)
+    {
+        SetParent(nsnull);
+        parentFolder->PropagateDelete(this, PR_FALSE);
     }
 
-    char *leafNameForDisk = CreatePlatformLeafNameForDisk(newUserLeafName,m_master, baseDir);
-    if (!leafNameForDisk)
-      status = MK_OUT_OF_MEMORY;
-
-    if (0 == status) {
-      // calculate the new path name
-      char *newPath = (char*) PR_Malloc(nsCRT::strlen(m_pathName) + nsCRT::strlen(leafNameForDisk) + 1);
-      nsCRT::strcpy (newPath, m_pathName);
-      char *slash = nsCRT::strrchr (newPath, '/'); 
-      if (slash)
-        nsCRT::strcpy (slash + 1, leafNameForDisk);
-
-      // rename the mail summary file, if there is one
-      nsMsgDatabase *db = NULL;
-      status = CloseDatabase (m_pathName, &db);
-          
-      XP_StatStruct fileStat;
-      if (!XP_Stat(m_pathName, &fileStat, xpMailFolderSummary))
-        status = XP_FileRename(m_pathName, xpMailFolderSummary, newPath, xpMailFolderSummary);
-      if (0 == status) {
-        if (db) {
-          if (ReopenDatabase (db, newPath) == 0) {  
-            //need to set mailbox name
-          }
-        }
-        else {
-          MailDB *mailDb = NULL;
-          MailDB::Open(newPath, PR_TRUE, &mailDb, PR_TRUE);
-          if (mailDb) {
-            //need to set mailbox name
-            mailDb->Close();
-          }
-        }
-      }
-
-      // rename the mail folder file, if its local
-      if ((status == 0) && (GetType() == FOLDER_MAIL))
-        status = XP_FileRename (m_pathName, xpMailFolder, newPath, xpMailFolder);
-
-      if (status == 0) {
-        // rename the subdirectory if there is one
-        if (m_subFolders->GetSize() > 0)
-          status = XP_FileRename (m_pathName, xpMailSubdirectory, newPath, xpMailSubdirectory);
-
-        // tell all our children about the new pathname
-        if (status == 0) {
-          int startingAt = nsCRT::strlen (newPath) - nsCRT::strlen (leafNameForDisk) + 1; // add one for trailing '/'
-          status = PropagateRename (leafNameForDisk, startingAt);
-        }
-      }
+    nsCAutoString newNameStr = newName;
+    oldPathSpec->Rename(newNameStr.GetBuffer());
+    newNameStr += ".msf";
+    oldSummarySpec.Rename(newNameStr.GetBuffer());
+    if (NS_SUCCEEDED(rv) && cnt > 0)
+    {
+      newNameStr = newName;
+      newNameStr += ".sbd";
+      dirSpec.Rename(newNameStr.GetBuffer());
     }
-    FREEIF(baseDir);
-  }
-  return status;
-#endif
-  return NS_OK;
+    
+    if (parentSupport)
+    {
+        nsCOMPtr<nsIMsgFolder> newFolder;
+        nsAutoString newFolderName = newName;
+        parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
+        nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
+        NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
+        Release(); // really remove ourself from the system; since we need to
+                   // regenerate the folder uri from the parent folder.
+        /***** jefft -
+        * Needs to find a way to reselect the new renamed folder and the
+        * message being selected.
+        */
+    }
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
@@ -1601,46 +1589,62 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
   
 	if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
 
-	PRUint32 readCount, maxReadCount = FOUR_K -1;
+	PRUint32 readCount, maxReadCount = FOUR_K - mCopyState->m_leftOver;
 	mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
+  char *start, *end;
+  PRUint32 linebreak_len = 0;
 
   while (aLength > 0)
   {
     if (aLength < (PRInt32) maxReadCount)
       maxReadCount = aLength;
     
-    rv = aIStream->Read(mCopyState->m_dataBuffer, maxReadCount, &readCount);
-    mCopyState->m_dataBuffer[readCount] ='\0';
+    rv = aIStream->Read(mCopyState->m_dataBuffer + mCopyState->m_leftOver,
+                        maxReadCount, &readCount);
+    mCopyState->m_dataBuffer[readCount+mCopyState->m_leftOver] ='\0';
+    start = mCopyState->m_dataBuffer;
+
+    end = PL_strstr(start, "\r");
+    if (!end)
+      	end = PL_strstr(start, "\n");
+    else if (*(end+1) == LF && linebreak_len == 0)
+        linebreak_len = 2;
+
+    if (linebreak_len == 0) // not set yet
+        linebreak_len = 1;
+
+    if (!end)
+      mCopyState->m_leftOver = PL_strlen(start);
+    
+    while (start && end)
     {
-      char* start = mCopyState->m_dataBuffer;
-      char* end = nsnull;
-	  PRUint32 linebreak_len = 1;      
-      end = PL_strstr(mCopyState->m_dataBuffer, "\r");
-      if (!end)
-      	end = PL_strstr(mCopyState->m_dataBuffer, "\n");
-      else if (*(end+1) == LF)
-      	linebreak_len++;
-      
-      while (start && end)
-      {
-		mCopyState->m_fileStream->write(start, end-start); 
-		if (mCopyState->m_parseMsgState)
-        	mCopyState->m_parseMsgState->ParseAFolderLine(start,
-                                                      end-start +
-                                                      linebreak_len);
-        *(mCopyState->m_fileStream) << MSG_LINEBREAK;                                              
+        mCopyState->m_fileStream->write(start, end-start); 
+        if (mCopyState->m_parseMsgState)
+            mCopyState->m_parseMsgState->ParseAFolderLine(start,
+                                                          end-start +
+                                                          linebreak_len);
+        *(mCopyState->m_fileStream) << MSG_LINEBREAK;
         start = end+linebreak_len;
-        if (start >= &mCopyState->m_dataBuffer[readCount])
-          break;
+        if (start >=
+            &mCopyState->m_dataBuffer[readCount+mCopyState->m_leftOver])
+        {
+            mCopyState->m_leftOver = 0;
+            break;
+        }
         end = PL_strstr(start, "\r");
         if (!end)
-        	end = PL_strstr(start, "\n");
-      }
+            end = PL_strstr(start, "\n");
+        if (start && !end)
+        {
+            mCopyState->m_leftOver = PL_strlen(start);
+            nsCRT::memcpy (mCopyState->m_dataBuffer, start,
+                           mCopyState->m_leftOver+1);
+            maxReadCount = FOUR_K - mCopyState->m_leftOver;
+        }
     }
-
     aLength -= readCount;
   }
-
+  
 	return rv;
 }
 
