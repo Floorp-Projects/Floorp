@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.31 $ 
-# $Date: 2002/12/10 19:23:37 $ 
+# $Revision: 1.32 $ 
+# $Date: 2003/05/10 20:03:16 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -390,8 +390,8 @@ sub HTML_status_page {
   $out .= "<br>\n";
   $out .= HTMLPopUp::Link("name"=>"Legend",)."\n";
   $out .= "<!-- Table Legend -->\n";
-  $out .= "<FONT SIZE=\"+3\"><B><NOBR>Table Legend</NOBR></B></FONT>";
-  $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
+  $out .= "<FONT SIZE=\"+3\"><B><NOBR>Table Legend</NOBR></B></FONT>\n";
+  $out .= "<table width=\"100%\" border=1 cellpadding=0 cellspacing=0>\n";
   $out .= "	@legend\n\n";
   $out .= "</table>\n\n";
   my (@structures) = HTMLPopUp::define_structures();
