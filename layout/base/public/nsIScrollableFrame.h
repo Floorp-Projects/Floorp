@@ -96,13 +96,6 @@ public:
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState) = 0;
 
   /**
-   * Query whether scroll bars should be displayed all the time, never or
-   * only when necessary.
-   * @return current scrollbar selection
-   */
-  NS_IMETHOD  GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const = 0;
-
-  /**
    * Get the position of the scrolled view.
    */
   NS_IMETHOD  GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const=0;
