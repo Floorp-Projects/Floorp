@@ -72,8 +72,6 @@ public:
 
   virtual PRBool CanPaintBackground() { return PR_FALSE; }
 
-  virtual PRBool CanPaintBackground() { return PR_FALSE; }
-
 protected:
   PRBool GetNoShade();
 
