@@ -33,6 +33,8 @@
 #include "nsIAllocator.h"
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
+#include "nsIScriptSecurityManager.h"
+
 const char mozJSComponentLoaderProgID[] = "moz.jsloader.1";
 const char jsComponentTypeName[] = "text/javascript";
 /* XXX export properly from libxpcom, for now this will let Mac build */
@@ -636,6 +638,21 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         NS_FAILED(ReallyInit()))
         return nsnull;
     
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secman, NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if(NS_FAILED(rv) || !secman)
+        return nsnull;
+
+    nsCOMPtr<nsIPrincipal> iPrincipals;
+    rv = secman->GetSystemPrincipal(getter_AddRefs(iPrincipals));
+    if(NS_FAILED(rv) || !iPrincipals)
+        return nsnull;
+
+    JSPrincipals* jsPrincipals;
+    rv = iPrincipals->GetJSPrincipals(&jsPrincipals);
+    if(NS_FAILED(rv) || !jsPrincipals)
+        return nsnull;
+
     obj = JS_NewObject(mContext, &gGlobalClass, mSuperGlobal, NULL);
     if (!obj)
         return nsnull;
@@ -647,7 +664,6 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         needRelease = PR_TRUE;
     }
 
-    nsresult rv;
     NS_WITH_SERVICE(nsIJSContextStack, cxstack, kJSContextStackProgID, &rv);
     if (NS_FAILED(rv) ||
         NS_FAILED(cxstack->Push(mContext)))
@@ -669,7 +685,10 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     if (NS_FAILED(rv))
         return nsnull;
 
-    JSScript *script = JS_CompileFileHandle(mContext, obj, (const char *)displayPath, fileHandle);
+    JSScript *script = 
+        JS_CompileFileHandleForPrincipals(mContext, obj,
+                                          (const char *)displayPath, 
+                                          fileHandle, jsPrincipals);
     
     /* JS will close the filehandle after compilation is complete. */
 
