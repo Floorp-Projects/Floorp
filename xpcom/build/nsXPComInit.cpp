@@ -148,10 +148,20 @@ nsIServiceManager* nsServiceManager::mGlobalServiceManager = NULL;
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 static nsFileSpec registryDirName;
 
+#ifdef GC_LEAK_DETECTOR
+extern "C" void NSInitGarbageCollector(void);
+extern "C" void NSShutdownGarbageCollector(void);
+#endif
+
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                              nsFileSpec *registryFile, nsFileSpec *componentDir)
 {
     nsresult rv = NS_OK;
+
+#ifdef GC_LEAK_DETECTOR
+	// 0. Initialize the GC.
+	NSInitGarbageCollector();
+#endif
 
     // 1. Create the Global Service Manager
     nsIServiceManager* servMgr = NULL;
@@ -457,6 +467,12 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     extern void _FreeAutoLockStatics();
     _FreeAutoLockStatics();
 #endif
+
+#ifdef GC_LEAK_DETECTOR
+	// Shutdown the GC.
+	NSShutdownGarbageCollector();
+#endif
+
     return NS_OK;
 }
 
