@@ -47,6 +47,11 @@
   visibility: visible;
 }
 
+#signedHdrIcon[signed="unknown"] {
+  list-style-image: url("chrome://messenger/skin/smime/icons/hdrSignUnknown.gif");
+  visibility: visible;
+}
+
 #signedHdrIcon[signed="notok"] {
   list-style-image: url("chrome://messenger/skin/smime/icons/hdrSignNotOk.gif");
   visibility: visible;

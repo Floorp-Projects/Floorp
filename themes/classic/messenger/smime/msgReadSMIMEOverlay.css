@@ -48,6 +48,11 @@
   visibility: visible;
 }
 
+#status-bar[signed="unknown"] #signed-status {
+  list-style-image: url("chrome://messenger/skin/smime/icons/sbSignUnknown.gif");
+  visibility: visible;
+}
+
 #status-bar[signed="notok"] #signed-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbSignNotOk.gif");
   visibility: visible;

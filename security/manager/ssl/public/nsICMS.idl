@@ -110,6 +110,7 @@ interface nsICMSMessageErrors : nsISupports
   const long VERIFY_UNSUPPORTED_ALGO = 1036;
   const long VERIFY_MALFORMED_SIGNATURE = 1037;
   const long VERIFY_HEADER_MISMATCH = 1038;
+  const long VERIFY_NOT_YET_ATTEMPTED = 1039;
 
   const long ENCRYPT_NO_BULK_ALG = 1056;
 };
@@ -192,6 +193,9 @@ interface nsICMSEncoder : nsISupports
 #define NS_ERROR_CMS_VERIFY_HEADER_MISMATCH \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
                             nsICMSMessageErrors::VERIFY_HEADER_MISMATCH)
+#define NS_ERROR_CMS_VERIFY_NOT_YET_ATTEMPTED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
+                            nsICMSMessageErrors::VERIFY_NOT_YET_ATTEMPTED)
 #define NS_ERROR_CMS_ENCRYPT_NO_BULK_ALG \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, \
                             nsICMSMessageErrors::ENCRYPT_NO_BULK_ALG)

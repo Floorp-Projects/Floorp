@@ -53,6 +53,11 @@ var smimeHeaderSink =
       gSignedUINode.setAttribute("signed", "ok");
       gStatusBar.setAttribute("signed", "ok");
     }
+    else if(nsICMSMessageErrors.VERIFY_NOT_YET_ATTEMPTED == aSignatureStatus)
+    {
+      gSignedUINode.setAttribute("signed", "unknown");
+      gStatusBar.setAttribute("signed", "unknown");
+    }
     else
     {
       gSignedUINode.setAttribute("signed", "notok");

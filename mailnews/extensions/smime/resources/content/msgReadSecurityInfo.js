@@ -127,6 +127,7 @@ function onLoad()
         // SIExpired SIRevoked SINotYetValid SIUnknownCA SIExpiredCA SIRevokedCA SINotYetValidCA
         break;
 
+      case nsICMSMessageErrors.VERIFY_NOT_YET_ATTEMPTED:
       case nsICMSMessageErrors.GENERAL_ERROR:
       case nsICMSMessageErrors.VERIFY_NO_CONTENT_INFO:
       case nsICMSMessageErrors.VERIFY_BAD_DIGEST:

@@ -448,6 +448,15 @@ MimeMultCMS_generate (void *crypto_closure)
     }
   }
 
+  unverified_p = data->self->options->missing_parts; 
+
+  if (unverified_p)
+  {
+    // We were not given all parts of the message.
+    // We are therefore unable to verify correctness of the signature.
+    signature_status = nsICMSMessageErrors::VERIFY_NOT_YET_ATTEMPTED;
+  }
+  else
   if (data->content_info)
 	{
 	  rv = data->content_info->VerifyDetachedSignature(data->item_data, data->item_len);
@@ -514,8 +523,6 @@ MimeMultCMS_generate (void *crypto_closure)
       data->smimeHeaderSink->SignedStatus(aNestLevel, signature_status, signerCert);
     }
   }
-
-  unverified_p = data->self->options->missing_parts; 
 
   if (data->self && data->self->parent) {
     mime_set_crypto_stamp(data->self->parent, signed_p, encrypted_p);
