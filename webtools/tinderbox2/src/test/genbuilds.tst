@@ -6,8 +6,8 @@
 # URL.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:18:33 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/24 14:49:00 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
@@ -43,6 +43,7 @@
 # Load the tinderbox specific libraries
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use Utils;
 use HTMLPopUp;
 
@@ -81,7 +82,7 @@ foreach $i (0 .. 45) {
       if ( $random_status > 2 ) {
 	$status = 'success'; 
       } else {
-	$status = ( 'success', 'test_failed', 'busted', ) [$random_status];
+	$status = ( 'success', 'test_failed', 'build_failed', ) [$random_status];
       }
       $runtime = (rand 25) + 10;
       # convert minutes to seconds, and remove fractions.
@@ -99,7 +100,7 @@ foreach $i (0 .. 45) {
       
 $out = <<EOF;
 
-\$record = {
+\$r = {
               'tree' => '$tree',
               'buildname' => '$build',
               'buildfamily' => 'unix',
