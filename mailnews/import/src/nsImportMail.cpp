@@ -77,7 +77,8 @@ static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
-
+static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
+static NS_DEFINE_IID(kISupportsWStringIID, NS_ISUPPORTSWSTRING_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -124,6 +125,7 @@ private:
 	void	GetDefaultLocation( void);
 	void	GetDefaultDestination( void);
 	void	GetUniquePrettyName( nsIMsgAccountManager *pMgr, nsString& name);
+	void	GetMailboxName( PRUint32 index, nsISupportsWString *pStr);
 
 public:
 	static void	SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError);
@@ -162,6 +164,7 @@ public:
 	nsIImportMail *			mailImport;
 	nsISupportsWString *	successLog;
 	nsISupportsWString *	errorLog;
+	PRUint32				currentMailbox;
 
 	ImportThreadData();
 	~ImportThreadData();
@@ -208,6 +211,7 @@ nsImportGenericMail::nsImportGenericMail()
 	m_deleteDestFolder = PR_FALSE;
 	m_createdAccount = PR_FALSE;
 	m_pName = nsnull;
+
 }
 
 
@@ -236,6 +240,8 @@ NS_IMPL_ISUPPORTS(nsImportGenericMail, nsIImportGeneric::GetIID());
 
 NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_retval)
 {
+	nsresult rv = NS_OK;
+
     NS_PRECONDITION(_retval != nsnull, "null ptr");
 	if (!_retval)
 		return NS_ERROR_NULL_POINTER;
@@ -266,8 +272,22 @@ NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_re
 		*_retval = m_pDestFolder;
 		NS_IF_ADDREF( m_pDestFolder);
 	}
+	
+	if (!nsCRT::strcasecmp( dataId, "currentMailbox")) {
+		// create an nsISupportsWString, get the current mailbox
+		// name being imported and put it in the string
+		nsCOMPtr<nsISupportsWString>	data;
+		rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, kISupportsWStringIID, getter_AddRefs( data));
+		if (NS_FAILED( rv))
+			return( rv);
+		if (m_pThreadData) {
+			GetMailboxName( m_pThreadData->currentMailbox, data);
+		}
+		*_retval = data;
+		NS_ADDREF( *_retval);
+	}
 
-	return( NS_OK);
+	return( rv);
 }
 
 NS_IMETHODIMP nsImportGenericMail::SetData( const char *dataId, nsISupports *item)
@@ -465,6 +485,25 @@ NS_IMETHODIMP nsImportGenericMail::WantsProgress(PRBool *_retval)
 	return( NS_OK);
 }
 
+void nsImportGenericMail::GetMailboxName( PRUint32 index, nsISupportsWString *pStr)
+{
+	if (m_pMailboxes) {
+		nsISupports *pSupports = m_pMailboxes->ElementAt( index);
+		if (pSupports) {
+			nsCOMPtr<nsISupports> iFace( dont_AddRef( pSupports));
+			nsCOMPtr<nsIImportMailboxDescriptor> box( do_QueryInterface( pSupports));
+			if (box) {
+				PRUnichar *pName = nsnull;
+				box->GetDisplayName( &pName);
+				if (pName) {
+					pStr->SetData( pName);
+					nsCRT::free( pName);
+				}
+			}
+		}
+	}		
+}
+
 
 NS_IMETHODIMP nsImportGenericMail::BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool *_retval)
 {
@@ -584,11 +623,22 @@ NS_IMETHODIMP nsImportGenericMail::GetProgress(PRInt32 *_retval)
 			sz = 0;
 	}
 	
-	if (m_totalSize)
-		*_retval = ((m_pThreadData->currentTotal + sz) * 100) / m_totalSize;
+
+	// *_retval = (PRInt32) (((PRUint32)(m_pThreadData->currentTotal + sz) * (PRUint32)100) / m_totalSize);
+
+	if (m_totalSize) {
+		PRFloat64	perc;
+		perc = (PRFloat64) m_pThreadData->currentTotal;
+		perc += sz;
+		perc *= 100;
+		perc /= m_totalSize;
+		*_retval = (PRInt32) perc;
+		if (*_retval > 100)
+			*_retval = 100;
+	}
 	else
 		*_retval = 0;
-		
+	
 	return( NS_OK);
 }
 
@@ -765,6 +815,8 @@ ImportMailThread( void *stuff)
 			nsCOMPtr<nsISupports> iFace( dont_AddRef( pSupports));
 			nsCOMPtr<nsIImportMailboxDescriptor> box( do_QueryInterface( pSupports));
 			if (box) {
+				pData->currentMailbox = i;
+
 				import = PR_FALSE;
 				size = 0;
 				rv = box->GetImport( &import);
@@ -873,6 +925,7 @@ ImportMailThread( void *stuff)
 
 					pData->currentSize = 0;
 					pData->currentTotal += size;
+
 					if (fatalError) {
 						IMPORT_LOG1( "*** ImportMailbox returned fatalError, mailbox #%d\n", (int) i);
 						pData->fatalError = PR_TRUE;
