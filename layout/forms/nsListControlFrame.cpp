@@ -411,7 +411,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
   // Convert to nscoord's by rounding
   nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
-  nscoord scrollbarHeight = NSToCoordRound(sbHeight);
+  //nscoord scrollbarHeight = NSToCoordRound(sbHeight);
 
     // Subtract out the scrollbar width
   scrolledAreaWidth -= scrollbarWidth;
@@ -1797,7 +1797,7 @@ nsListControlFrame::ToggleSelected(PRInt32 aIndex)
 PRBool nsListControlFrame::CheckIfAllFramesHere()
 {
   // Get the number of optgroups and options
-  PRInt32 numContentItems = 0;
+  //PRInt32 numContentItems = 0;
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
   if (node) {
     // XXX Need to find a fail proff way to determine that
