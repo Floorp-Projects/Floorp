@@ -22,6 +22,6 @@
 DEPTH=..
 include <$(DEPTH)/config/config.mak>
 
-DIRS = wallet cookie irc
+DIRS = wallet cookie irc psm-glue
 
 include <$(DEPTH)\config\rules.mak>
