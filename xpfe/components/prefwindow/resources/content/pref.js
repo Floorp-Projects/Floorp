@@ -307,6 +307,19 @@ function PREF_onpageload( tag )
     dump("wallet.enabled pref is missing from all.js");
   }
 
+  // enable image blocker if "imageblocker.enabled" pref is true
+  try {
+    if (this.pref.GetBoolPref("imageblocker.enabled")) {
+      var element;
+      if (tag == "pref-cookies") {
+        element = window.frames[this.contentFrame].document.getElementById("imagesArea");
+        element.setAttribute("style","display: inline;" );
+      }
+    }
+  } catch(e) {
+//  dump("imageblocker.enabled pref is missing from all.js");
+  }
+
   if( !this.wsm.PageData[tag] ) {
     // there is no entry in the data hash for this page, so we need to initialise
     // the form values from existing prefs. The best way to do this is to pack

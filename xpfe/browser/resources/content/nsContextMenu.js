@@ -311,6 +311,31 @@ nsContextMenu.prototype = {
     copyImage : function () {
         this.copyToClipboard( this.imageURL );
     },
+    // Determine if "Block Image" is to appear in the menu.
+    checkForImageBlocker: function () {
+      pref = Components.classes['component://netscape/preferences'];
+      pref = pref.getService();
+      pref = pref.QueryInterface(Components.interfaces.nsIPref);
+      try {
+        if (pref.GetBoolPref("imageblocker.enabled")) {
+          var element = document.getElementById("context-blockimage");
+          element.setAttribute("style","display: inline;" );
+        }
+      } catch(e) {
+      }
+    },
+    // Block image from loading in the future.
+    blockImage : function () {
+        cookieviewer = Components.classes["component://netscape/cookieviewer/cookieviewer-world"].createInstance();
+        cookieviewer = cookieviewer.QueryInterface(Components.interfaces.nsICookieViewer);
+        cookieviewer.BlockImage(this.imageURL);
+
+// here's how we would have liked to do this but there is no idl for cookies
+//      wallet = Components.classes['component://netscape/wallet'];
+//      wallet = wallet.getService();
+//      wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
+//      wallet.WALLET_ChangePassword();
+    },
     // Utilities
     // Show/hide one item (specified via name or the item element itself).
     showItem : function ( itemOrId, show ) {
