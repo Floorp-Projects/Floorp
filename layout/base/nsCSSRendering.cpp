@@ -39,6 +39,7 @@
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
+#include "nsIScrollableFrame.h"
 
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
@@ -2038,24 +2039,6 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
   aResult.y = y;
 }
 
-// Returns the clip view associated with the scroll frame's scrolling
-// view
-static const nsIView*
-GetClipView(nsIPresContext* aPresContext, nsIFrame* aScrollFrame)
-{
-  nsIView*           view;
-  nsIScrollableView* scrollingView;
-  const nsIView*     clipView;
-
-  // Get the scrolling view
-  aScrollFrame->GetView(aPresContext, &view);
-  view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
-
-  // Get the clip view
-  scrollingView->GetClipView(&clipView);
-  return clipView;
-}
-
 // Returns the nearest scroll frame ancestor
 static nsIFrame*
 GetNearestScrollFrame(nsIFrame* aFrame)
@@ -2213,29 +2196,31 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
     // If it's a fixed background attachment, then get the nearest scrolling
     // ancestor
-    const nsIView* viewportView = nsnull;
-    nsRect         viewportArea(0, 0, 0, 0);
+    nsIView* viewportView = nsnull;
+    nsRect   viewportArea(0, 0, 0, 0);
+    nscoord  scroll_x, scroll_y;
 
     if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
       nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
       
-      // Get the viewport size
+      // get the nsIScrollableFrame interface from the scrollframe
       if (scrollFrame) {
-        viewportView = GetClipView(aPresContext, scrollFrame);
+        nsCOMPtr<nsIScrollableFrame> scrollableFrame ( do_QueryInterface(scrollFrame) );
+        if ( scrollableFrame ) {
+          nsIFrame* scrolledFrame = nsnull;
 
-      } else {
-        // The viewport isn't scrollable, so use the root frame's view
-        nsIPresShell*  presShell;
-        nsIFrame*      rootFrame;
-
-        aPresContext->GetShell(&presShell);
-        presShell->GetRootFrame(&rootFrame);
-        NS_RELEASE(presShell);
-        rootFrame->GetView(aPresContext, (nsIView**)&viewportView);
+          scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
+          if (scrolledFrame) {
+            nsRect rect;
+            scrolledFrame->GetRect(rect);
+            viewportArea.width = rect.width;
+            viewportArea.height = rect.width;
+            scrolledFrame->GetView(aPresContext, &viewportView);
+          }
+          // get the current scroll position for determining the anchor point of the image
+          scrollableFrame->GetScrollPosition(aPresContext, scroll_x, scroll_y);
+        }
       }
-
-      NS_ASSERTION(viewportView, "no viewport view");
-      viewportView->GetDimensions(&viewportArea.width, &viewportArea.height);
     }
 
     // Compute the anchor point. If it's a fixed background attachment, then
@@ -2263,11 +2248,11 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       NS_ASSERTION(view, "expected a view");
       while (view && (view != viewportView)) {
         nscoord x, y;
-
+  
         view->GetPosition(&x, &y);
         anchor.x -= x;
         anchor.y -= y;
-
+        
         // Get the parent view
         view->GetParent(view);
       }
