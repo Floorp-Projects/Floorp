@@ -39,8 +39,12 @@ static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
 class MyDocument : public nsDocument {
 public:
   MyDocument();
-
-  virtual void LoadURL(nsIURL* aURL);
+  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+                               nsIWebWidget* aWebWidget,
+                               nsIStreamListener **aDocListener)
+  {
+    return NS_OK;
+  }
 
 protected:
   virtual ~MyDocument();
@@ -54,9 +58,6 @@ MyDocument::~MyDocument()
 {
 }
 
-void MyDocument::LoadURL(nsIURL* aURL)
-{
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
