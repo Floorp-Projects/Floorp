@@ -381,10 +381,10 @@ void nsMessenger::InitializeFolderRoot()
     rv = mailSession->GetCurrentServer(getter_AddRefs(server));
     
     nsCOMPtr<nsIFileSpec> folderRoot;
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && server)
         rv = server->GetLocalPath(getter_AddRefs(folderRoot));
     
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && folderRoot) {
         // everyone should have a inbox so let's
         // tack that folder name on to the root path...
         rv = folderRoot->GetFileSpec(&m_folderPath);
