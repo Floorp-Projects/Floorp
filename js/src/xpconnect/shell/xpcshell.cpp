@@ -359,6 +359,108 @@ static JSClass global_class = {
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
 };
 
+static JSBool
+env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    JSString *idstr, *valstr;
+    const char *name, *value;
+    int rv;
+
+    idstr = JS_ValueToString(cx, id);
+    valstr = JS_ValueToString(cx, *vp);
+    if (!idstr || !valstr)
+        return JS_FALSE;
+    name = JS_GetStringBytes(idstr);
+    value = JS_GetStringBytes(valstr);
+#ifdef XP_WIN
+    {
+        char *waste = JS_smprintf("%s=%s", name, value);
+        if (!waste) {
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
+        rv = putenv(waste);
+        free(waste);
+    }
+#else
+    rv = setenv(name, value, 1);
+#endif
+    if (rv < 0) {
+        JS_ReportError(cx, "can't set envariable %s to %s", name, value);
+        return JS_FALSE;
+    }
+    *vp = STRING_TO_JSVAL(valstr);
+    return JS_TRUE;
+}
+
+static JSBool
+env_enumerate(JSContext *cx, JSObject *obj)
+{
+    static JSBool reflected;
+    char **evp, *name, *value;
+    JSString *valstr;
+    JSBool ok;
+
+    if (reflected)
+        return JS_TRUE;
+
+    for (evp = (char **)JS_GetPrivate(cx, obj); (name = *evp) != NULL; evp++) {
+        value = strchr(name, '=');
+        if (!value)
+            continue;
+        *value++ = '\0';
+        valstr = JS_NewStringCopyZ(cx, value);
+        if (!valstr) {
+            ok = JS_FALSE;
+        } else {
+            ok = JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
+                                   NULL, NULL, JSPROP_ENUMERATE);
+        }
+        value[-1] = '=';
+        if (!ok)
+            return JS_FALSE;
+    }
+
+    reflected = JS_TRUE;
+    return JS_TRUE;
+}
+
+static JSBool
+env_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+            JSObject **objp)
+{
+    JSString *idstr, *valstr;
+    const char *name, *value;
+
+    if (flags & JSRESOLVE_ASSIGNING)
+        return JS_TRUE;
+
+    idstr = JS_ValueToString(cx, id);
+    if (!idstr)
+        return JS_FALSE;
+    name = JS_GetStringBytes(idstr);
+    value = getenv(name);
+    if (value) {
+        valstr = JS_NewStringCopyZ(cx, value);
+        if (!valstr)
+            return JS_FALSE;
+        if (!JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
+                               NULL, NULL, JSPROP_ENUMERATE)) {
+            return JS_FALSE;
+        }
+        *objp = obj;
+    }
+    return JS_TRUE;
+}
+
+static JSClass env_class = {
+    "environment", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  env_setProperty,
+    env_enumerate, (JSResolveOp) env_resolve,
+    JS_ConvertStub,   JS_FinalizeStub
+};
+
 /***************************************************************************/
 
 typedef enum JSShellErrNum {
@@ -399,15 +501,15 @@ extern void     add_history(char *line);
 #endif
 
 static JSBool
-GetLine(JSContext *cx, char *bufp, FILE *fh, const char *prompt) {
+GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
 #ifdef EDITLINE
     /*
-     * Use readline only if fh is stdin, because there's no way to specify
+     * Use readline only if file is stdin, because there's no way to specify
      * another handle.  Are other filehandles interactive?
      */
-    if (fh == stdin) {
-        char *linep;
-        if ((linep = readline(prompt)) == NULL)
+    if (file == stdin) {
+        char *linep = readline(prompt);
+        if (!linep)
             return JS_FALSE;
         if (*linep)
             add_history(linep);
@@ -422,7 +524,7 @@ GetLine(JSContext *cx, char *bufp, FILE *fh, const char *prompt) {
         char line[256];
         fprintf(gOutFile, prompt);
         fflush(gOutFile);
-        if (fgets(line, 256, fh) == NULL)
+        if (!fgets(line, sizeof line, file))
             return JS_FALSE;
         strcpy(bufp, line);
     }
@@ -430,32 +532,16 @@ GetLine(JSContext *cx, char *bufp, FILE *fh, const char *prompt) {
 }
 
 static void
-Process(JSContext *cx, JSObject *obj, char *filename, FILE *filehandle)
+ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
 {
-    JSBool ok, hitEOF;
     JSScript *script;
     jsval result;
+    int lineno, startline;
+    JSBool ok, hitEOF;
+    char *bufp, buffer[4096];
     JSString *str;
-    char buffer[4098];
-    char *bufp;
-    int lineno;
-    int startline;
-    FILE *fh;
 
-    if (filename != NULL && strcmp(filename, "-") != 0) {
-        fh = fopen(filename, "r");
-        if (!fh) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                            JSSMSG_CANT_OPEN,
-                            filename, strerror(errno));
-            gExitCode = EXITCODE_FILE_NOT_FOUND;
-            return;
-        }
-    } else {
-        fh = filehandle;
-    }
-
-    if (!isatty(fileno(fh))) {
+    if (!isatty(fileno(file))) {
         /*
          * It's not interactive - just execute it.
          *
@@ -464,16 +550,16 @@ Process(JSContext *cx, JSObject *obj, char *filename, FILE *filehandle)
          * as a legal js program (using sharp variables) might start with '#'.
          * But that would require multi-character lookahead.
          */
-        int ch = fgetc(fh);
+        int ch = fgetc(file);
         if (ch == '#') {
-            while((ch = fgetc(fh)) != EOF) {
+            while((ch = fgetc(file)) != EOF) {
                 if(ch == '\n' || ch == '\r')
                     break;
             }
         }
-        ungetc(ch, fh);
+        ungetc(ch, file);
         DoBeginRequest(cx);
-        script = JS_CompileFileHandle(cx, obj, filename, fh);
+        script = JS_CompileFileHandle(cx, obj, filename, file);
         if (script) {
             (void)JS_ExecuteScript(cx, obj, script, &result);
             JS_DestroyScript(cx, script);
@@ -497,7 +583,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, FILE *filehandle)
          */
         startline = lineno;
         do {
-            if (!GetLine(cx, bufp, fh, startline == lineno ? "js> " : "")) {
+            if (!GetLine(cx, bufp, file, startline == lineno ? "js> " : "")) {
                 hitEOF = JS_TRUE;
                 break;
             }
@@ -548,6 +634,27 @@ Process(JSContext *cx, JSObject *obj, char *filename, FILE *filehandle)
     return;
 }
 
+static void
+Process(JSContext *cx, JSObject *obj, const char *filename)
+{
+    FILE *file;
+
+    if (!filename || strcmp(filename, "-") == 0) {
+        file = stdin;
+    } else {
+        file = fopen(filename, "r");
+        if (!file) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                 JSSMSG_CANT_OPEN,
+                                 filename, strerror(errno));
+            gExitCode = EXITCODE_FILE_NOT_FOUND;
+            return;
+        }
+    }
+
+    ProcessFile(cx, obj, filename, file);
+}
+
 static int
 usage(void)
 {
@@ -559,99 +666,102 @@ usage(void)
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 {
-    int i;
-    char *filename = NULL;
-    FILE *filehandle = NULL;
-    jsint length;
-    jsval *vector;
-    jsval *p;
+    const char rcfilename[] = "xpcshell.js";
+    FILE *rcfile;
+    int i, j, length;
     JSObject *argsObj;
+    char *filename = NULL;
     JSBool isInteractive = JS_TRUE;
 
-    filehandle = fopen("xpcshell.js", "r");
-    if (filehandle != NULL) {
-        printf("[loading 'xpcshell.js'...]\n");
-        Process(cx, obj, NULL, filehandle);
-        // evidently JS closes this for us.
-        // fclose(filehandle);
+    rcfile = fopen(rcfilename, "r");
+    if (rcfile) {
+        printf("[loading '%s'...]\n", rcfilename);
+        ProcessFile(cx, obj, rcfilename, rcfile);
     }
 
-    for (i=0; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            switch (argv[i][1]) {
-            case 'v':
-                if (i+1 == argc) {
-                    return usage();
-                }
-                JS_SetVersion(cx, JSVersion(atoi(argv[i+1])));
-                i++;
-                break;
-            case 'W':
-                reportWarnings = JS_FALSE;
-                break;
-            case 'w':
-                reportWarnings = JS_TRUE;
-                break;
-            case 's':
-                JS_ToggleOptions(cx, JSOPTION_STRICT);
-                break;
-            case 'f':
-                if (i+1 == argc) {
-                    return usage();
-                }
-                filename = argv[i+1];
-                /* "-f -" means read from stdin */
-                if (filename[0] == '-' && filename[1] == '\0')
-                    filename = NULL;
-                Process(cx, obj, filename, NULL);
-                filename = NULL;
-                /* XXX: js -f foo.js should interpret foo.js and then
-                 * drop into interactive mode, but that breaks test
-                 * harness. Just execute foo.js for now.
-                 */
-                isInteractive = JS_FALSE;
-                i++;
-                break;
-            default:
-                return usage();
-            }
-        } else {
-            filename = argv[i++];
-            isInteractive = JS_FALSE;
+    /*
+     * Scan past all optional arguments so we can create the arguments object
+     * before processing any -f options, which must interleave properly with
+     * -v and -w options.  This requires two passes, and without getopt, we'll
+     * have to keep the option logic here and in the second for loop in sync.
+     */
+    for (i = 0; i < argc; i++) {
+        if (argv[i][0] != '-' || argv[i][1] == '\0') {
+            ++i;
+            break;
+        }
+        switch (argv[i][1]) {
+          case 'v':
+          case 'f':
+            ++i;
             break;
         }
     }
 
+    /*
+     * Create arguments early and define it to root it, so it's safe from any
+     * GC calls nested below, and so it is available to -f <file> arguments.
+     */
+    argsObj = JS_NewArrayObject(cx, 0, NULL);
+    if (!argsObj)
+        return 1;
+    if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),
+                           NULL, NULL, 0)) {
+        return 1;
+    }
+
     length = argc - i;
-    if (length == 0) {
-        vector = NULL;
-    } else {
-        vector = (jsval*) JS_malloc(cx, length * sizeof(jsval));
-        if (vector == NULL)
+    for (j = 0; j < length; j++) {
+        JSString *str = JS_NewStringCopyZ(cx, argv[i++]);
+        if (!str)
             return 1;
-    }
-    p = vector;
-
-    while (i < argc) {
-        JSString *str = JS_NewStringCopyZ(cx, argv[i]);
-        if (str == NULL)
+        if (!JS_DefineElement(cx, argsObj, j, STRING_TO_JSVAL(str),
+                              NULL, NULL, JSPROP_ENUMERATE)) {
             return 1;
-        *p++ = STRING_TO_JSVAL(str);
-        i++;
+        }
     }
-    argsObj = JS_NewArrayObject(cx, length, vector);
-    if (vector) {
-        JS_free(cx, vector);
-    }
-    if (argsObj == NULL)
-        return 1;
 
-    if (!JS_DefineProperty(cx, obj, "arguments",
-                           OBJECT_TO_JSVAL(argsObj), NULL, NULL, 0))
-        return 1;
+    for (i = 0; i < argc; i++) {
+        if (argv[i][0] != '-' || argv[i][1] == '\0') {
+            filename = argv[i++];
+            isInteractive = JS_FALSE;
+            break;
+        }
+        switch (argv[i][1]) {
+        case 'v':
+            if (++i == argc) {
+                return usage();
+            }
+            JS_SetVersion(cx, JSVersion(atoi(argv[i])));
+            break;
+        case 'W':
+            reportWarnings = JS_FALSE;
+            break;
+        case 'w':
+            reportWarnings = JS_TRUE;
+            break;
+        case 's':
+            JS_ToggleOptions(cx, JSOPTION_STRICT);
+            break;
+        case 'f':
+            if (++i == argc) {
+                return usage();
+            }
+            Process(cx, obj, argv[i]);
+            /*
+             * XXX: js -f foo.js should interpret foo.js and then
+             * drop into interactive mode, but that breaks test
+             * harness. Just execute foo.js for now.
+             */
+            isInteractive = JS_FALSE;
+            break;
+        default:
+            return usage();
+        }
+    }
 
     if (filename || isInteractive)
-        Process(cx, obj, filename, filename ? NULL : stdin);
+        Process(cx, obj, filename);
     return gExitCode;
 }
 
@@ -740,7 +850,6 @@ public:
     NS_DECL_NSIXPCSCRIPTABLE
 
     TestGlobal(){}
-
 };
 
 NS_IMPL_ISUPPORTS2(TestGlobal, nsIXPCTestNoisy, nsIXPCScriptable)
@@ -810,11 +919,11 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 #endif
 
 int
-main(int argc, char **argv)
+main(int argc, char **argv, char **envp)
 {
     JSRuntime *rt;
-    JSContext *jscontext;
-    JSObject *glob;
+    JSContext *cx;
+    JSObject *glob, *envobj;
     int result;
     nsresult rv;
 
@@ -850,13 +959,13 @@ main(int argc, char **argv)
             return 1;
         }
 
-        jscontext = JS_NewContext(rt, 8192);
-        if (!jscontext) {
+        cx = JS_NewContext(rt, 8192);
+        if (!cx) {
             printf("JS_NewContext failed!\n");
             return 1;
         }
 
-        JS_SetErrorReporter(jscontext, my_ErrorReporter);
+        JS_SetErrorReporter(cx, my_ErrorReporter);
 
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
         if (!xpc) {
@@ -871,7 +980,7 @@ main(int argc, char **argv)
         // anything, we set the flags to '0' so it ought never get called anyway.
         nsCOMPtr<nsIXPCSecurityManager> secman =
             NS_STATIC_CAST(nsIXPCSecurityManager*, new FullTrustSecMan());
-        xpc->SetSecurityManagerForJSContext(jscontext, secman, 0);
+        xpc->SetSecurityManagerForJSContext(cx, secman, 0);
 
         //    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
         //    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
@@ -888,25 +997,29 @@ main(int argc, char **argv)
             return 1;
         }
 
-        if(NS_FAILED(cxstack->Push(jscontext))) {
+        if(NS_FAILED(cxstack->Push(cx))) {
             printf("failed to push the current JSContext on the nsThreadJSContextStack!\n");
             return 1;
         }
 
-        glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
+        glob = JS_NewObject(cx, &global_class, NULL, NULL);
         if (!glob)
             return 1;
-        if (!JS_InitStandardClasses(jscontext, glob))
+        if (!JS_InitStandardClasses(cx, glob))
             return 1;
-        if (!JS_DefineFunctions(jscontext, glob, glob_functions))
+        if (!JS_DefineFunctions(cx, glob, glob_functions))
             return 1;
-        if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
+        if (NS_FAILED(xpc->InitClasses(cx, glob)))
+            return 1;
+
+        envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
+        if (!envobj || !JS_SetPrivate(cx, envobj, envp))
             return 1;
 
         argc--;
         argv++;
 
-        result = ProcessArgs(jscontext, glob, argv, argc);
+        result = ProcessArgs(cx, glob, argv, argc);
 
 
 #ifdef TEST_InitClassesWithNewWrappedGlobal
@@ -928,18 +1041,18 @@ main(int argc, char **argv)
 #ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
         // test of late call and release (see below)
         nsCOMPtr<nsIJSContextStack> bogus;
-        xpc->WrapJS(jscontext, glob, NS_GET_IID(nsIJSContextStack),
+        xpc->WrapJS(cx, glob, NS_GET_IID(nsIJSContextStack),
                     (void**) getter_AddRefs(bogus));
 #endif
 
-        JS_ClearScope(jscontext, glob);
-        JS_GC(jscontext);
+        JS_ClearScope(cx, glob);
+        JS_GC(cx);
         JSContext *oldcx;
         cxstack->Pop(&oldcx);
-        NS_ASSERTION(oldcx == jscontext, "JS thread context push/pop mismatch");
+        NS_ASSERTION(oldcx == cx, "JS thread context push/pop mismatch");
         cxstack = nsnull;
-        JS_GC(jscontext);
-        JS_DestroyContext(jscontext);
+        JS_GC(cx);
+        JS_DestroyContext(cx);
         xpc->SyncJSContexts();
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM

@@ -257,8 +257,8 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
      * another handle.  Are other filehandles interactive?
      */
     if (file == stdin) {
-        char *linep;
-        if ((linep = readline(prompt)) == NULL)
+        char *linep = readline(prompt);
+        if (!linep)
             return JS_FALSE;
         if (linep[0] != '\0')
             add_history(linep);
@@ -277,7 +277,7 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
         /* Print a CR after the prompt because MPW grabs the entire line when entering an interactive command */
         fputc('\n', gOutFile);
 #endif
-        if (fgets(line, sizeof line, file) == NULL)
+        if (!fgets(line, sizeof line, file))
             return JS_FALSE;
         strcpy(bufp, line);
     }
@@ -297,7 +297,9 @@ Process(JSContext *cx, JSObject *obj, char *filename)
     int startline;
     FILE *file;
 
-    if (filename != NULL && strcmp(filename, "-") != 0) {
+    if (!filename || strcmp(filename, "-") == 0) {
+        file = stdin;
+    } else {
         file = fopen(filename, "r");
         if (!file) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
@@ -305,8 +307,6 @@ Process(JSContext *cx, JSObject *obj, char *filename)
             gExitCode = EXITCODE_FILE_NOT_FOUND;
             return;
         }
-    } else {
-        file = stdin;
     }
 
     if (!isatty(fileno(file))) {
@@ -410,99 +410,106 @@ my_BranchCallback(JSContext *cx, JSScript *script)
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 {
-    int i, j;
-    char *filename = NULL;
-    jsint length;
-    jsval *vector;
+    int i, j, length;
     JSObject *argsObj;
+    char *filename = NULL;
     JSBool isInteractive = JS_TRUE;
 
-    for (i=0; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            switch (argv[i][1]) {
-            case 'v':
-                if (i+1 == argc) {
-                    return usage();
-                }
-                JS_SetVersion(cx, (JSVersion) atoi(argv[i+1]));
-                i++;
-                break;
-
-            case 'w':
-                reportWarnings = JS_TRUE;
-                break;
-
-            case 'W':
-                reportWarnings = JS_FALSE;
-                break;
-
-            case 's':
-                JS_ToggleOptions(cx, JSOPTION_STRICT);
-                break;
-
-            case 'b':
-                gBranchLimit = atoi(argv[++i]);
-                JS_SetBranchCallback(cx, my_BranchCallback);
-                break;
-
-            case 'c':
-                /* set stack chunk size */
-                gStackChunkSize = atoi(argv[++i]);
-                break;
-
-            case 'f':
-                if (i+1 == argc) {
-                    return usage();
-                }
-                filename = argv[i+1];
-                /* "-f -" means read from stdin */
-                if (filename[0] == '-' && filename[1] == '\0')
-                    filename = NULL;
-                Process(cx, obj, filename);
-                filename = NULL;
-                /* XXX: js -f foo.js should interpret foo.js and then
-                 * drop into interactive mode, but that breaks test
-                 * harness. Just execute foo.js for now.
-                 */
-                isInteractive = JS_FALSE;
-                i++;
-                break;
-
-            default:
-                return usage();
-            }
-        } else {
-            filename = argv[i++];
-            isInteractive = JS_FALSE;
+    /*
+     * Scan past all optional arguments so we can create the arguments object
+     * before processing any -f options, which must interleave properly with
+     * -v and -w options.  This requires two passes, and without getopt, we'll
+     * have to keep the option logic here and in the second for loop in sync.
+     */
+    for (i = 0; i < argc; i++) {
+        if (argv[i][0] != '-' || argv[i][1] == '\0') {
+            ++i;
+            break;
+        }
+        switch (argv[i][1]) {
+          case 'v':
+          case 'f':
+            ++i;
             break;
         }
     }
 
-    length = argc - i;
-    if (length == 0) {
-        vector = NULL;
-    } else {
-        vector = (jsval *) JS_malloc(cx, length * sizeof(jsval));
-        if (vector == NULL)
-            return 1;
-
-        for (j = 0; j < length; j++) {
-            JSString *str = JS_NewStringCopyZ(cx, argv[i++]);
-            if (str == NULL)
-                return 1;
-            vector[j] = STRING_TO_JSVAL(str);
-        }
-    }
-
-    argsObj = JS_NewArrayObject(cx, length, vector);
-    if (vector)
-        JS_free(cx, vector);
-    if (argsObj == NULL)
+    /*
+     * Create arguments early and define it to root it, so it's safe from any
+     * GC calls nested below, and so it is available to -f <file> arguments.
+     */
+    argsObj = JS_NewArrayObject(cx, 0, NULL);
+    if (!argsObj)
         return 1;
-
     if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),
                            NULL, NULL, 0)) {
         return 1;
+    }
+
+    length = argc - i;
+    for (j = 0; j < length; j++) {
+        JSString *str = JS_NewStringCopyZ(cx, argv[i++]);
+        if (!str)
+            return 1;
+        if (!JS_DefineElement(cx, argsObj, j, STRING_TO_JSVAL(str),
+                              NULL, NULL, JSPROP_ENUMERATE)) {
+            return 1;
+        }
+    }
+
+    for (i = 0; i < argc; i++) {
+        if (argv[i][0] != '-' || argv[i][1] == '\0') {
+            filename = argv[i++];
+            isInteractive = JS_FALSE;
+            break;
+        }
+
+        switch (argv[i][1]) {
+        case 'v':
+            if (++i == argc) {
+                return usage();
+            }
+            JS_SetVersion(cx, (JSVersion) atoi(argv[i]));
+            break;
+
+        case 'w':
+            reportWarnings = JS_TRUE;
+            break;
+
+        case 'W':
+            reportWarnings = JS_FALSE;
+            break;
+
+        case 's':
+            JS_ToggleOptions(cx, JSOPTION_STRICT);
+            break;
+
+        case 'b':
+            gBranchLimit = atoi(argv[++i]);
+            JS_SetBranchCallback(cx, my_BranchCallback);
+            break;
+
+        case 'c':
+            /* set stack chunk size */
+            gStackChunkSize = atoi(argv[++i]);
+            break;
+
+        case 'f':
+            if (++i == argc) {
+                return usage();
+            }
+            Process(cx, obj, argv[i]);
+            /*
+             * XXX: js -f foo.js should interpret foo.js and then
+             * drop into interactive mode, but that breaks test
+             * harness. Just execute foo.js for now.
+             */
+            isInteractive = JS_FALSE;
+            break;
+
+        default:
+            return usage();
+        }
     }
 
     if (filename || isInteractive)
@@ -984,7 +991,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 SHOW_FLAG(GETTER);
                 SHOW_FLAG(BOUND_METHOD);
                 SHOW_FLAG(HEAVYWEIGHT);
-                
+
 #undef SHOW_FLAG
                 putchar('\n');
             }
@@ -1990,13 +1997,115 @@ static JSClass global_class = {
     JS_ConvertStub,   JS_FinalizeStub
 };
 
+static JSBool
+env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    JSString *idstr, *valstr;
+    const char *name, *value;
+    int rv;
+
+    idstr = JS_ValueToString(cx, id);
+    valstr = JS_ValueToString(cx, *vp);
+    if (!idstr || !valstr)
+        return JS_FALSE;
+    name = JS_GetStringBytes(idstr);
+    value = JS_GetStringBytes(valstr);
+#ifdef XP_WIN
+    {
+        char *waste = JS_smprintf("%s=%s", name, value);
+        if (!waste) {
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
+        rv = putenv(waste);
+        free(waste);
+    }
+#else
+    rv = setenv(name, value, 1);
+#endif
+    if (rv < 0) {
+        JS_ReportError(cx, "can't set envariable %s to %s", name, value);
+        return JS_FALSE;
+    }
+    *vp = STRING_TO_JSVAL(valstr);
+    return JS_TRUE;
+}
+
+static JSBool
+env_enumerate(JSContext *cx, JSObject *obj)
+{
+    static JSBool reflected;
+    char **evp, *name, *value;
+    JSString *valstr;
+    JSBool ok;
+
+    if (reflected)
+        return JS_TRUE;
+
+    for (evp = (char **)JS_GetPrivate(cx, obj); (name = *evp) != NULL; evp++) {
+        value = strchr(name, '=');
+        if (!value)
+            continue;
+        *value++ = '\0';
+        valstr = JS_NewStringCopyZ(cx, value);
+        if (!valstr) {
+            ok = JS_FALSE;
+        } else {
+            ok = JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
+                                   NULL, NULL, JSPROP_ENUMERATE);
+        }
+        value[-1] = '=';
+        if (!ok)
+            return JS_FALSE;
+    }
+
+    reflected = JS_TRUE;
+    return JS_TRUE;
+}
+
+static JSBool
+env_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+            JSObject **objp)
+{
+    JSString *idstr, *valstr;
+    const char *name, *value;
+
+    if (flags & JSRESOLVE_ASSIGNING)
+        return JS_TRUE;
+
+    idstr = JS_ValueToString(cx, id);
+    if (!idstr)
+        return JS_FALSE;
+    name = JS_GetStringBytes(idstr);
+    value = getenv(name);
+    if (value) {
+        valstr = JS_NewStringCopyZ(cx, value);
+        if (!valstr)
+            return JS_FALSE;
+        if (!JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
+                               NULL, NULL, JSPROP_ENUMERATE)) {
+            return JS_FALSE;
+        }
+        *objp = obj;
+    }
+    return JS_TRUE;
+}
+
+static JSClass env_class = {
+    "environment", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  env_setProperty,
+    env_enumerate, (JSResolveOp) env_resolve,
+    JS_ConvertStub,   JS_FinalizeStub
+};
+
 int
-main(int argc, char **argv)
+main(int argc, char **argv, char **envp)
 {
     JSVersion version;
     JSRuntime *rt;
     JSContext *cx;
-    JSObject *glob, *it;
+    JSObject *glob, *it, *envobj;
     int result;
 #ifdef LIVECONNECT
     JavaVM *java_vm = NULL;
@@ -2017,41 +2126,41 @@ main(int argc, char **argv)
 
 #ifdef XP_MAC
 #ifndef XP_MAC_MPW
-        initConsole("\pJavaScript Shell", "Welcome to js shell.", &argc, &argv);
+    initConsole("\pJavaScript Shell", "Welcome to js shell.", &argc, &argv);
 #endif
 #endif
 
 #ifdef MAC_TEST_HACK
 /*
-        Open a file "testArgs.txt" and read each line into argc/argv.
-        Re-direct all output to "results.txt"
+    Open a file "testArgs.txt" and read each line into argc/argv.
+    Re-direct all output to "results.txt"
 */
-        {
-                char argText[256];
-                FILE *f = fopen("testargs.txt", "r");
-                if (f != NULL) {
-                        int maxArgs = 32; /* arbitrary max !!! */
-                        int argText_strlen;
-                        argc = 1;
-                        argv = malloc(sizeof(char *) * maxArgs);
-                        argv[0] = NULL;
-                        while (fgets(argText, 255, f) != NULL) {
-                                 /* argText includes '\n' */
-                                argText_strlen = strlen(argText);
-                                argv[argc] = malloc(argText_strlen);
-                                strncpy(argv[argc], argText,
-                                                    argText_strlen - 1);
-                                argv[argc][argText_strlen - 1] = '\0';
-                                argc++;
-                                if (argc >= maxArgs) break;
-                        }
-                        fclose(f);
-                }
-                gTestResultFile = fopen("results.txt", "w");
+    {
+        char argText[256];
+        FILE *f = fopen("testargs.txt", "r");
+        if (f) {
+            int maxArgs = 32; /* arbitrary max !!! */
+            int argText_strlen;
+            argc = 1;
+            argv = malloc(sizeof(char *) * maxArgs);
+            argv[0] = NULL;
+            while (fgets(argText, 255, f)) {
+                 /* argText includes '\n' */
+                argText_strlen = strlen(argText);
+                argv[argc] = malloc(argText_strlen);
+                strncpy(argv[argc], argText, argText_strlen - 1);
+                argv[argc][argText_strlen - 1] = '\0';
+                argc++;
+                if (argc >= maxArgs)
+                    break;
+            }
+            fclose(f);
         }
+        gTestResultFile = fopen("results.txt", "w");
+    }
 
-        gErrFile = gTestResultFile;
-        gOutFile = gTestResultFile;
+    gErrFile = gTestResultFile;
+    gOutFile = gTestResultFile;
 #endif
 
     version = JSVERSION_DEFAULT;
@@ -2130,9 +2239,13 @@ main(int argc, char **argv)
 #endif /* JSDEBUGGER */
 
 #ifdef LIVECONNECT
-        if (!JSJ_SimpleInit(cx, glob, java_vm, getenv("CLASSPATH")))
-            return 1;
+    if (!JSJ_SimpleInit(cx, glob, java_vm, getenv("CLASSPATH")))
+        return 1;
 #endif
+
+    envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
+    if (!envobj || !JS_SetPrivate(cx, envobj, envp))
+        return 1;
 
     result = ProcessArgs(cx, glob, argv, argc);
 
