@@ -202,7 +202,7 @@ nsPSMShimVerifyUnixSocket(CMTSocket sock)
 #endif
 }
 
-size_t
+CMInt32
 nsPSMShimSend(CMTSocket sock, void *buffer, size_t length)
 {
     CMSocket *cmSock = (CMSocket *)sock;
@@ -212,7 +212,7 @@ nsPSMShimSend(CMTSocket sock, void *buffer, size_t length)
    return PR_Send(cmSock->fd, buffer, length, 0, gTimeout);
 }
 
-size_t
+CMInt32
 nsPSMShimReceive(CMTSocket sock, void *buffer, size_t bufSize)
 {
     CMSocket *cmSock = (CMSocket *)sock;

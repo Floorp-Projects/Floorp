@@ -47,13 +47,13 @@ nsPSMShimConnect(CMTSocket sock, short port, char *path);
 PR_EXTERN(CMTStatus)
 nsPSMShimVerifyUnixSocket(CMTSocket sock);
 
-PR_EXTERN(size_t)
+PR_EXTERN(CMInt32)
 nsPSMShimSend(CMTSocket sock, void *buffer, size_t length);
 
 PR_EXTERN(CMTSocket)
 nsPSMShimSelect(CMTSocket *socks, int numsocks, int poll);
 
-PR_EXTERN(size_t)
+PR_EXTERN(CMInt32)
 nsPSMShimReceive(CMTSocket sock, void *buffer, size_t bufSize);
 
 PR_EXTERN(CMTStatus)
