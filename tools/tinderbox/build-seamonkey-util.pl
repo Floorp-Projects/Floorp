@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.260 $ ';
+$::UtilsVersion = '$Revision: 1.261 $ ';
 
 package TinderUtils;
 
@@ -1627,6 +1627,11 @@ sub run_all_tests {
           $test_result = "testfailed";
         }
       }
+
+      # Call get_profile_dir again, so it can find the extension-salted
+      # profile directory under the profile root.
+
+      $profile_dir = get_profile_dir($build_dir);
 
       #
       # Find the prefs file, remember we have that random string now
