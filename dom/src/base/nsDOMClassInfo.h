@@ -832,6 +832,32 @@ public:
 };
 
 
+// CSSRuleList helper
+
+class nsCSSRuleListSH : public nsArraySH
+{
+protected:
+  nsCSSRuleListSH(nsDOMClassInfoID aID) : nsArraySH(aID)
+  {
+  }
+
+  virtual ~nsCSSRuleListSH()
+  {
+  }
+
+  // Override nsArraySH::GetItemAt() since our list isn't a
+  // nsIDOMNodeList
+  virtual nsresult GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                             nsISupports **aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  {
+    return new nsCSSRuleListSH(aID);
+  }
+};
+
+
 // XMLHttpRequest helper
 
 class nsXMLHttpRequestSH : public nsDOMGenericSH

@@ -106,6 +106,8 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSSRule.h"
+#include "nsIDOMCSSRuleList.h"
 
 // XBL related includes.
 #include "nsIXBLService.h"
@@ -409,8 +411,8 @@ nsDOMClassInfoData sClassInfoData[] = {
   // CSS classes
   NS_DEFINE_CLASSINFO_DATA(CSSStyleRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSRuleList, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSRuleList, nsCSSRuleListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MediaList, nsMediaListSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(StyleSheetList, nsDOMGenericSH,
@@ -3164,6 +3166,24 @@ nsCSSStyleDeclSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
   nsCOMPtr<nsIDOMCSSStyleDeclaration> style_decl(do_QueryInterface(aNative));
 
   return style_decl->Item(PRUint32(aNative), aResult);
+}
+
+
+// CSSRuleList scriptable helper
+
+nsresult
+nsCSSRuleListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                           nsISupports **aResult)
+{
+  nsCOMPtr<nsIDOMCSSRuleList> list(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
+
+  nsIDOMCSSRule *rule = nsnull; // Weak, transfer the ownership over to aResult
+  nsresult rv = list->Item(aIndex, &rule);
+
+  *aResult = rule;
+
+  return rv;
 }
 
 
