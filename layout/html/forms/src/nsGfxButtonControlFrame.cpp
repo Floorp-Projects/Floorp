@@ -200,6 +200,25 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   GetStyleData(eStyleStruct_Text,  (const nsStyleStruct *&)textStyle);
   if (!textStyle->WhiteSpaceIsSignificant()) {
     value.CompressWhitespace();
+  } else if (value.Length() > 2 && value[0] == ' ' &&
+             value[value.Length() - 1] == ' '){
+    // This is a bit of a hack.  The reason this is here is as follows: we now
+    // have default padding on our buttons to make them non-ugly.
+    // Unfortunately, IE-windows does not have such padding, so people will
+    // stick values like " ok " (with the spaces) in the buttons in an attempt
+    // to make them look decent.  Unfortunately, if they do this the button
+    // looks way too big in Mozilla.  Worse yet, if they do this _and_ set a
+    // fixed width for the button we run into trouble because our focus-rect
+    // border/padding and outer border take up 10px of the horizontal button
+    // space or so; the result is that the text is misaligned, even with the
+    // recentering we do in nsHTMLButtonFrame::Reflow.  So to solve this, even
+    // if the whitespace is significant, single leading and trailing _spaces_
+    // (and not other whitespace) are removed.  The proper solution, of
+    // course, is to not have the focus rect painting taking up 6px of
+    // horizontal space. We should do that instead (via XBL form controls or
+    // changing the renderer) and remove this.
+    value.Cut(0, 1);
+    value.Truncate(value.Length() - 1);
   }
 
   // Add a child text content node for the label

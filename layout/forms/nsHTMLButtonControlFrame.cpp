@@ -405,34 +405,6 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
-// XXX a hack until the reflow state does this correctly
-// XXX when it gets fixed, leave in the printf statements or add an assertion
-static
-void ButtonHack(nsHTMLReflowState& aReflowState, const char* aMessage)
-{
-  // XXXbz is this still relevant?
-  if (aReflowState.mComputedWidth == 0) {
-    aReflowState.mComputedWidth = aReflowState.availableWidth;
-  }
-  if ((aReflowState.mComputedWidth != NS_INTRINSICSIZE) &&
-      (aReflowState.mComputedWidth > aReflowState.availableWidth) &&
-      (aReflowState.availableWidth > 0)) {
-//    printf("BUG - %s has a computed width = %d, available width = %d \n", 
-//    aMessage, aReflowState.mComputedWidth, aReflowState.availableWidth);
-    aReflowState.mComputedWidth = aReflowState.availableWidth;
-  }
-  if (aReflowState.mComputedHeight == 0) {
-    aReflowState.mComputedHeight = aReflowState.availableHeight;
-  }
-  if ((aReflowState.mComputedHeight != NS_INTRINSICSIZE) &&
-      (aReflowState.mComputedHeight > aReflowState.availableHeight) &&
-      (aReflowState.availableHeight > 0)) {
-//    printf("BUG - %s has a computed height = %d, available height = %d \n", 
-//    aMessage, aReflowState.mComputedHeight, aReflowState.availableHeight);
-    aReflowState.mComputedHeight = aReflowState.availableHeight;
-  }
-}
-
 NS_IMETHODIMP 
 nsHTMLButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
                                                                 const nsHTMLReflowState& aSuggestedReflowState)
@@ -462,8 +434,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     return skiprv;
   }
 #endif
-  // XXX remove the following when the reflow state is fixed
-  ButtonHack((nsHTMLReflowState&)aReflowState, "html4 button");
 
   // commenting this out for now. We need a view to do mouse grabbing but
   // it doesn't really seem to work correctly. When you press the only event
@@ -545,9 +515,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, availSize, reason);
   //reflowState.computedWidth = availSize;
 
-  // XXX remove the following when the reflow state is fixed
-  //ButtonHack(reflowState, "html4 button's area");
-
   ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState,
               focusPadding.left + aReflowState.mComputedBorderPadding.left,
               focusPadding.top + aReflowState.mComputedBorderPadding.top,
@@ -572,24 +539,32 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     yoff = (minInternalHeight - aDesiredSize.height) / 2;
   }
 
+  // Place the child.  If we have a non-intrinsic width, we want to
+  // reduce the left padding as needed to try and fit the text in the
+  // button
+  nscoord xoffset = focusPadding.left + aReflowState.mComputedBorderPadding.left;
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) {
+    // First, how much did we "overflow"?  This is the width of our
+    // kid plus our special focus stuff (which did not get accounted
+    // for in calculating aReflowState.mComputedWidth minus the width
+    // we're forced to be.
+    nscoord extrawidth =
+      aDesiredSize.width + focusPadding.left + focusPadding.right
+      - aReflowState.mComputedWidth;
+    if (extrawidth > 0) {
+      // Split it evenly between right and left
+      extrawidth /= 2;
+      // But do not shoot out the left side of the button, please
+      extrawidth = PR_MIN(extrawidth, aReflowState.mComputedPadding.left);
+      xoffset -= extrawidth;
+    }
+  }
+  
   // Place the child
   FinishReflowChild(firstKid, aPresContext, &reflowState, aDesiredSize,
-                    focusPadding.left + aReflowState.mComputedBorderPadding.left,
+                    xoffset,
                     yoff + focusPadding.top + aReflowState.mComputedBorderPadding.top, 0);
 
-#if 0 // old way
-  // if computed use the computed values.
-  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE && (aDesiredSize.width < aReflowState.mComputedWidth)) 
-    aDesiredSize.width = aReflowState.mComputedWidth;
-  else 
-    aDesiredSize.width  += focusPadding.left + focusPadding.right;
-
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE && (aDesiredSize.height < aReflowState.mComputedHeight)) 
-    aDesiredSize.height = aReflowState.mComputedHeight;
-  else
-    aDesiredSize.height += focusPadding.top + focusPadding.bottom;
-
-#else // temporary for Bug #17474
   // if computed use the computed values.
   if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) 
     aDesiredSize.width = aReflowState.mComputedWidth;
@@ -600,7 +575,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.height = aReflowState.mComputedHeight;
   else
     aDesiredSize.height += focusPadding.top + focusPadding.bottom;
-#endif
 
   AddComputedBorderPaddingToDesiredSize(aDesiredSize, aReflowState);
 
