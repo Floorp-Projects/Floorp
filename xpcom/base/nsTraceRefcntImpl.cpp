@@ -1583,7 +1583,7 @@ nsTraceRefcnt::SetActivityIsLegal(PRBool aLegal)
 #endif
 }
 
-#ifdef DEBUG_dbaron
+#ifdef DEBUG_dbaron_off
   // I hope to turn this on for everybody once we hit it a little less.
 #define ASSERT_ACTIVITY_IS_LEGAL                                                \
   NS_WARN_IF_FALSE(gActivityIsLegal,                                         \
