@@ -175,7 +175,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                           nsIInputStream* input,
                                           PRUint32 length)
 {
-  if (!mInst)
+  if (!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
 
   const NPPluginFuncs *callbacks = nsnull;
@@ -216,18 +216,11 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     {
       PRLibrary* lib = nsnull;
       PRBool started = PR_FALSE;
-      if(mInst) 
-      {
-        lib = mInst->fLibrary;
-        started = mInst->IsStarted();
-      }
+      lib = mInst->fLibrary;
 
-      if (started)
-      {
-        NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
+      NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
                                                                    npp,
                                                                    &mNPStream), lib);
-      }
 
       // if WriteReady returned 0, the plugin is not ready to handle 
       // the data, return FAILURE for now
@@ -278,7 +271,7 @@ NS_IMETHODIMP
 ns4xPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo, 
                                           const char* fileName)
 {
-  if(!mInst)
+  if(!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
 
   NPP npp;
@@ -296,20 +289,12 @@ ns4xPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
     return NS_OK;
 
   PRLibrary* lib = nsnull;
-  PRBool started = PR_FALSE;
-  if(mInst) 
-  {
-    lib = mInst->fLibrary;
-    started = mInst->IsStarted();
-  }
+  lib = mInst->fLibrary;
 
-  if (started)
-  {
-    NS_TRY_SAFE_CALL_VOID(CallNPP_StreamAsFileProc(callbacks->asfile,
+  NS_TRY_SAFE_CALL_VOID(CallNPP_StreamAsFileProc(callbacks->asfile,
                                                    npp,
                                                    &mNPStream,
                                                    fileName), lib);
-  }
  
   return NS_OK;
 }
@@ -318,7 +303,7 @@ NS_IMETHODIMP
 ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, 
                                         nsresult status)
 {
-  if(!mInst)
+  if(!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
 
   NPP npp;
@@ -339,20 +324,12 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
   {
     // XXX need to convert status to NPReason
     PRLibrary* lib = nsnull;
-    PRBool started = PR_FALSE;
-    if(mInst) 
-    {
-      lib = mInst->fLibrary;
-      started = mInst->IsStarted();
-    }
+    lib = mInst->fLibrary;
 
-    if (started)
-    {
-      NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
+    NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
                                                                npp,
                                                                &mNPStream,
                                                                NPRES_DONE), lib);
-    }
     if(error != NPERR_NO_ERROR)
       return NS_ERROR_FAILURE;
   }
