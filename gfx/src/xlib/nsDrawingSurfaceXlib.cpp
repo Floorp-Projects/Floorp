@@ -48,29 +48,31 @@
 static PRLogModuleInfo *DrawingSurfaceXlibLM = PR_NewLogModule("DrawingSurfaceXlib");
 #endif /* PR_LOGGING */ 
 
-nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl()
+nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl() :
+  nsIDrawingSurfaceXlib(),
+  mDrawable(None),
+  mImage(nsnull),
+  mXlibRgbHandle(nsnull),
+  mDisplay(nsnull),
+  mScreen(nsnull),
+  mVisual(nsnull),
+  mDepth(0),
+  mGC(nsnull),
+  // set up lock info
+  mLocked(PR_FALSE),
+  mLockX(0),
+  mLockY(0),
+  mLockWidth(0),
+  mLockHeight(0),
+  mLockFlags(0),
+  // dimensions...
+  mWidth(0),
+  mHeight(0),
+  mIsOffscreen(PR_FALSE)
 {
   NS_INIT_REFCNT();
   PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl()\n"));
-  mDrawable = 0;
-  mImage = nsnull;
-  mXlibRgbHandle = nsnull;
-  mDisplay = nsnull;
-  mScreen = nsnull;
-  mVisual = nsnull;
-  mDepth = 0;
-  mGC = nsnull;
-  // set up lock info
-  mLocked = PR_FALSE;
-  mLockX = 0;
-  mLockY = 0;
-  mLockWidth = 0;
-  mLockHeight = 0;
-  mLockFlags = 0;
-  // dimensions...
-  mWidth = 0;
-  mHeight = 0;
-  mIsOffscreen = PR_FALSE;
+
 }
 
 nsDrawingSurfaceXlibImpl::~nsDrawingSurfaceXlibImpl()

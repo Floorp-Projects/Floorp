@@ -84,6 +84,8 @@ public:
   NS_IMETHOD GetDrawable(Drawable &aDrawable) { aDrawable = mDrawable; return NS_OK; }
   NS_IMETHOD GetXlibRgbHandle(XlibRgbHandle *&aHandle) { aHandle = mXlibRgbHandle; return NS_OK; }
   NS_IMETHOD GetGC(xGC *&aXGC) { mGC->AddRef(); aXGC = mGC; return NS_OK; }
+
+  virtual Drawable GetDrawable() { return mDrawable; }
   
   void                    SetGC(xGC *aGC) { mGC = aGC; mGC->AddRef(); }
 

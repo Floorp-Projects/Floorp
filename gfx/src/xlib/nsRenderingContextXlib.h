@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 1; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,34 +42,29 @@
 #ifndef nsRenderingContextXlib_h___
 #define nsRenderingContextXlib_h___
 
+#include "nsIImage.h"
+#include "nsIDeviceContext.h"
+#include "nsIWidget.h"
 #include "nsRenderingContextImpl.h"
 #include "nsUnitConversion.h"
 #include "nsFont.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetricsXlib.h"
 #include "nsPoint.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsTransform2D.h"
-#include "nsIViewManager.h"
-#include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsDeviceContextX.h"
-#include "nsImageXlib.h"
 #include "nsVoidArray.h"
+#include "nsGfxCIID.h"
 #include "nsDrawingSurfaceXlib.h"
 #include "nsRegionXlib.h"
-#include "nsCOMPtr.h"
-#include "nsGCCache.h"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 
-class GraphicsState;
 class nsFontXlib;
 
 /* Note |nsRenderingContextXp| may override some of these methods here */
 class nsRenderingContextXlib : public nsRenderingContextImpl
 {
- public:
+public:
   nsRenderingContextXlib();
   virtual ~nsRenderingContextXlib();
   static nsresult Shutdown(); // release statics
@@ -92,17 +87,16 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
 
   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
   NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
-  
   NS_IMETHOD GetHints(PRUint32& aResult);
 
   NS_IMETHOD PushState(void);
-  NS_IMETHOD PopState(PRBool &aClipState);
+  NS_IMETHOD PopState(PRBool &aClipEmpty);
 
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
 
-  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aCilpState);
-  NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipState);
-  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipState);
+  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
+  NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipValid);
+  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty);
   NS_IMETHOD CopyClipRegion(nsIRegion &aRegion);
   NS_IMETHOD GetClipRegion(nsIRegion **aRegion);
 
@@ -125,17 +119,11 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
   NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
 
   NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
+  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
   NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
 
   NS_IMETHOD DrawRect(const nsRect& aRect);
   NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-
-#if 0
-  // in nsRenderingContextImpl
-  NS_IMETHOD DrawPath(nsPathPoint aPointArray[], PRInt32 aNumPts);
-  NS_IMETHOD FillPath(nsPathPoint aPointArray[], PRInt32 aNumPts);
-#endif
 
   NS_IMETHOD FillRect(const nsRect& aRect);
   NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -145,11 +133,6 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
 
   NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-#if 0
-  //  in nsRenderingContextImpl
-  NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-  NS_IMETHOD RasterPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-#endif
 
   NS_IMETHOD DrawEllipse(const nsRect& aRect);
   NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -165,15 +148,15 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
   NS_IMETHOD FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                      float aStartAngle, float aEndAngle);
 
-  NS_IMETHOD GetWidth(char aC, nscoord& aWidth);
-  NS_IMETHOD GetWidth(PRUnichar aC, nscoord& aWidth,
+  NS_IMETHOD GetWidth(char aC, nscoord &aWidth);
+  NS_IMETHOD GetWidth(PRUnichar aC, nscoord &aWidth,
                       PRInt32 *aFontID);
-  NS_IMETHOD GetWidth(const nsString& aString, nscoord& aWidth,
+  NS_IMETHOD GetWidth(const nsString& aString, nscoord &aWidth,
                       PRInt32 *aFontID);
-  NS_IMETHOD GetWidth(const char* aString, nscoord& aWidth);
-  NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
-  NS_IMETHOD GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                      nscoord& aWidth, PRInt32 *aFontID);
+  NS_IMETHOD GetWidth(const char *aString, nscoord &aWidth);
+  NS_IMETHOD GetWidth(const char *aString, PRUint32 aLength, nscoord &aWidth);
+  NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
+                      PRInt32 *aFontID);
 
   NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
@@ -196,13 +179,15 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
                        nscoord aWidth, nscoord aHeight); 
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
-
-  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer);
-  NS_IMETHOD ReleaseBackbuffer(void);
-
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
+
+  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint);
+  NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
+
+  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer);
+  NS_IMETHOD ReleaseBackbuffer(void);
 
 #ifdef MOZ_MATHML
   /**
@@ -211,7 +196,7 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
   NS_IMETHOD GetBoundingMetrics(const char*        aString,
                                 PRUint32           aLength,
                                 nsBoundingMetrics& aBoundingMetrics);
- 
+  
   /**
    * Returns metrics (in app units) of a Unicode character string
    */
@@ -219,42 +204,42 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
                                 PRUint32           aLength,
                                 nsBoundingMetrics& aBoundingMetrics,
                                 PRInt32*           aFontID = nsnull);
+
 #endif /* MOZ_MATHML */
 
-  // this is a common init function for both of the init functions.
-  nsresult CommonInit(void);
 
   xGC *GetGC() { mGC->AddRef(); return mGC; }
   void UpdateGC();
-  void UpdateGC(Drawable drawable);
   
-  /* use UpdateGC() to update GC-cache !! */
-  void SetCurrentFont(nsFontXlib *cf){ mCurrentFont = cf; };
+  /* Use UpdateGC() to update GC-cache !! */
+  void SetCurrentFont(nsFontXlib *cf) { mCurrentFont = cf; };
   nsFontXlib *GetCurrentFont() { return mCurrentFont; };
-  
-protected: 
-  nsCOMPtr<nsIDeviceContext> mContext;
-  nsCOMPtr<nsIDrawingSurfaceXlib> mOffscreenSurface; /* not supported for printers */
-  nsCOMPtr<nsIDrawingSurfaceXlib> mRenderingSurface;
-  nsIFontMetrics          *mFontMetrics;
-  nsCOMPtr<nsIRegion>      mClipRegion;
-  float                    mP2T;
-  nscolor                  mCurrentColor;
-  XlibRgbHandle           *mXlibRgbHandle; 
-  Display *                mDisplay;
-  Screen *                 mScreen;
-  Visual *                 mVisual;
-  int                      mDepth;
 
-  // graphics state stuff
+protected:
+  /* This is a common init function for all of the |Init()| functions.*/
+  nsresult CommonInit(void);
+
+  nsCOMPtr<nsIDeviceContext>      mContext;
+  nsCOMPtr<nsIDrawingSurfaceXlib> mOffscreenSurface; /* not supported for printers */
+  nsCOMPtr<nsIDrawingSurfaceXlib> mSurface;
+  nsCOMPtr<nsIFontMetrics>        mFontMetrics;
+  nsCOMPtr<nsIRegion>             mClipRegion;
+  float                           mP2T;
+
+ // graphic state stack (GraphicsState)
   nsAutoVoidArray          mStateCache;
-  nsFontXlib              *mCurrentFont;
-  nsLineStyle              mCurrentLineStyle;
+
   xGC                     *mGC;
   int                      mFunction;
   int                      mLineStyle;
   char                    *mDashList;
   int                      mDashes;
+  nscolor                  mCurrentColor;
+  XlibRgbHandle           *mXlibRgbHandle; 
+  Display                 *mDisplay;
+
+  nsFontXlib              *mCurrentFont;
+  nsLineStyle              mCurrentLineStyle;
 
   // ConditionRect is used to fix coordinate overflow problems for
   // rectangles after they are transformed to screen coordinates
@@ -262,15 +247,15 @@ protected:
     if ( y < -32766 ) {
       y = -32766;
     }
-    
+
     if ( y + h > 32766 ) {
       h  = 32766 - y;
     }
-    
+
     if ( x < -32766 ) {
       x = -32766;
     }
-    
+
     if ( x + w > 32766 ) {
       w  = 32766 - x;
     }
@@ -280,5 +265,3 @@ protected:
 };
 
 #endif /* !nsRenderingContextXlib_h___ */
-
-
