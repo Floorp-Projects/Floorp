@@ -33,6 +33,17 @@
 
 # makefile for xmlterm root directory
 
+# XMLterm currently works only on Linux and Solaris platforms.
+# This makefile is configured to do nothing on other platforms.
+
+# It should be possible to make XMLterm work on other Unix
+# platforms, but you need to do the following:
+# 1. Ensure that the pseudo-TTY implementation (ptystream.c)
+#    works on the platform
+# 2. Ensure that a WCHAR implementation is available
+# 3. Modify this Makefile.in and config/xmlterm_config.mk
+#    to recognize the new platform
+
 ifdef STAND_ALONE
 DEPTH      = .
 topsrcdir  = .
@@ -55,10 +66,16 @@ ifdef STAND_ALONE
 
 DIRS = base tests linetest
 
-else  # not STAND_ALONE
+else    # not STAND_ALONE
 
+# XMLterm currently works on Linux and SunOS only
+ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
 DIRS = base ui scripts doc tests
+else    # XMLterm not yet been ported to this platform; do nothing
+DIRS = 
+endif
 
+# Library name
 LIBRARY_NAME = 
 
 # Exported header files
