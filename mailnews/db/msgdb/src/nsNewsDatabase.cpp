@@ -366,6 +366,9 @@ PRBool nsNewsDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
     }
     else {
       nsMsgKey messageKey;
+
+      // give the base class a chance to update m_flags.
+      nsMsgDatabase::SetHdrReadFlag(msgHdr, bRead);
       rv = msgHdr->GetMessageKey(&messageKey);
       if (NS_FAILED(rv)) return PR_FALSE;
 
