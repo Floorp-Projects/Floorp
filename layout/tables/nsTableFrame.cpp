@@ -1058,19 +1058,18 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible) {
-    const nsStyleColor* myColor =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleSpacing* mySpacing =
+    const nsStyleSpacing* spacing =
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    NS_ASSERTION(nsnull != myColor, "null style color");
-    NS_ASSERTION(nsnull != mySpacing, "null style spacing");
-    if (nsnull!=mySpacing)
-    {
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, mRect, *myColor);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, mRect, *mySpacing, 0);
-    }
+
+    // Use our parent's color style structure, because we're a pseudo frame
+    // and that the style system marks us as having a transparent background
+    const nsStyleColor* color;
+    mGeometricParent->GetStyleData(eStyleStruct_Color, (nsStyleStruct*&)color);
+
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, mRect, *color);
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                aDirtyRect, mRect, *spacing, 0);
   }
 
   // for debug...
