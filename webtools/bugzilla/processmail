@@ -19,9 +19,6 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-
-# To recreate the shadow database,  run "processmail regenerate" .
-
 use diagnostics;
 use strict;
 
@@ -32,6 +29,8 @@ $| = 1;
 umask(0);
 
 $::lockcount = 0;
+my $regenerate = 0;
+my $nametoexclude = "";
 
 sub Lock {
     if ($::lockcount <= 0) {
@@ -182,7 +181,7 @@ sub fixaddresses {
     my @result;
     my %seen;
     foreach my $i (@$list) {
-        if ($i ne "" && !defined $::nomail{$i} && !defined $seen{$i}) {
+        if ($i ne $nametoexclude && $i ne "" && !defined $::nomail{$i} && !defined $seen{$i}) {
             push @result, $i;
             $seen{$i} = 1;
         }
@@ -200,40 +199,8 @@ sub Log {
     Unlock();
 }
     
-
-ConnectToDatabase();
-
-
-Lock();
-
-# foreach i [split [read_file -nonewline "okmail"] "\n"] {
-#     set okmail($i) 1
-# }
-
-
-
-if (open(FID, "<data/nomail")) {
-    while (<FID>) {
-        $::nomail{trim($_)} = 1;
-    }
-    close FID;
-}
-
-
-my $regenerate = 0;
-
-if ($ARGV[0] eq "regenerate") {
-    $regenerate = 1;
-    shift @ARGV;
-    SendSQL("select bug_id from bugs order by bug_id");
-    my @row;
-    while (@row = FetchSQLData()) {
-        push @ARGV, $row[0];
-    }
-    print "$#ARGV bugs to be regenerated.\n";
-}
-
-foreach my $i (@ARGV) {
+sub ProcessOneBug {
+    my $i = $_[0];
     my $old = "shadow/$i";
     my $new = "shadow/$i.tmp.$$";
     my $diffs = "shadow/$i.diffs.$$";
@@ -257,7 +224,7 @@ foreach my $i (@ARGV) {
         my $tolist = fixaddresses([$::bug{'assigned_to'}, $::bug{'reporter'},
                                    $::bug{'qa_contact'}]);
         my $cclist = fixaddresses($::bug{'cclist'});
-        my $logstr = "Bug $i changed";
+        my $logstr = "Bug $i $verb";
         if ($tolist ne "" || $cclist ne "") {
             my %substs;
 
@@ -275,11 +242,12 @@ foreach my $i (@ARGV) {
             my $msg = PerformSubsts(Param("changedmail"), \%substs);
 
             if (!$regenerate) {
-                open(SENDMAIL, "|/usr/lib/sendmail -t") ||
+                open(SENDMAIL, "|/usr/sbin/sendmail -t") ||
                     die "Can't open sendmail";
                 print SENDMAIL $msg;
                 close SENDMAIL;
-                $logstr = "$logstr; mail sent to $tolist $cclist";
+                $logstr = "$logstr; mail sent to $tolist, $cclist";
+		print "<B>Email sent to:</B> $tolist $cclist <B>Excluding:</B> $nametoexclude\n";
             }
         }
         unlink($diffs);
@@ -291,5 +259,44 @@ foreach my $i (@ARGV) {
         print "$i ";
     }
 }
+
+# Code starts here
+
+ConnectToDatabase();
+Lock();
+
+if (open(FID, "<data/nomail")) {
+    while (<FID>) {
+        $::nomail{trim($_)} = 1;
+    }
+    close FID;
+}
+
+if (($#ARGV < 0) || ($#ARGV > 1)) {
+    print "Usage error: processmail {bugid} {nametoexclude}\nOr: processmail regenerate\n";
+    exit;
+}
+
+# To recreate the shadow database,  run "processmail regenerate" .
+if ($ARGV[0] eq "regenerate") {
+    $regenerate = 1;
+    shift @ARGV;
+    SendSQL("select bug_id from bugs order by bug_id");
+    my @regenerate_list;
+    while (my @row = FetchSQLData()) {
+        push @regenerate_list, $row[0];
+    }
+    foreach my $i (@regenerate_list) {
+        ProcessOneBug($i);
+    }
+    print("\n");
+    exit;
+}
+
+if ($#ARGV == 1) {
+    $nametoexclude = $ARGV[1];
+}
+
+ProcessOneBug($ARGV[0]);
 
 exit;

@@ -67,7 +67,8 @@ foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
                   "email1", "emailtype1", "emailreporter1",
                   "emailassigned_to1", "emailcc1", "emailqa_contact1",
                   "email2", "emailtype2", "emailreporter2",
-                  "emailassigned_to2", "emailcc2", "emailqa_contact2") {
+                  "emailassigned_to2", "emailcc2", "emailqa_contact2",
+                  "changedin") {
     $default{$name} = "";
     $type{$name} = 0;
 }

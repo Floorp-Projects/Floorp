@@ -97,16 +97,11 @@ What kind of file is this?
     my $attachid = FetchOneColumn();
     AppendComment($id, $::COOKIE{"Bugzilla_login"},
                   "Created an attachment (id=$attachid)\n$desc\n");
-    print "Your attachment has been created.";
-    system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
 
-
+    print "<TABLE BORDER=1><TD><H2>Attachment to bug $id created</H2>\n";
+    system("./processmail $id $::COOKIE{'Bugzilla_login'}");
+    print "<TD><A HREF=\"show_bug.cgi?id=$id\">Go Back to BUG# $id</A></TABLE>\n";
 }
 
+navigation_header();
 
-
-print qq{
-<P>
-<a href="show_bug.cgi?id=$id">Go back to bug $id</a><br>
-<a href="query.cgi">Go back to the query page</a><br>
-};
