@@ -304,7 +304,7 @@ nsDOMSOFactory::RegisterDOMClassInfo(const char *aName,
 
 //////////////////////////////////////////////////////////////////////
 
-static nsresult
+static NS_METHOD
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
                                     REFNSIID aIID, void **aResult)
 {
@@ -319,7 +319,7 @@ CreateWindowCommandTableConstructor(nsISupports *aOuter,
   return commandTable->QueryInterface(aIID, aResult);
 }
 
-static nsresult
+static NS_METHOD
 CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
                                       REFNSIID aIID, void **aResult)
 {
