@@ -26,6 +26,7 @@ PUBLIC = $(DEPTH)\netwerk\dist\include
 !endif
 
 EXPORTS =             \
+        nsIUnicharStreamLoader.h \
         nsNeckoUtil.h \
         $(NULL)
 
