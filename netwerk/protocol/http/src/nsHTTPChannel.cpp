@@ -1404,7 +1404,7 @@ nsHTTPChannel::Open(PRBool bIgnoreCache)
                             authStr);
             }
 
-            if (mProxy && *mProxy && mProxyTransparent)
+            if (mProxy && *mProxy && !mProxyTransparent)
             {
                 nsXPIDLCString proxyAuthStr;
                 if (NS_SUCCEEDED(pAuthEngine->GetProxyAuthString(mProxy, 
