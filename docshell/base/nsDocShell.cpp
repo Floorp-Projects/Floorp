@@ -4575,7 +4575,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             OnNewURI(aURI, nsnull, mLoadType);
 
             /* save current position of scroller(s) (bug 59774) */
-            mOSHE->SetScrollPosition(cx, cy);
+            if (mOSHE)
+                mOSHE->SetScrollPosition(cx, cy);
             
             /* If this is a history load, OnNewURI() will not create
              * a mLSHE. In that case, we want to assign mOSHE to aSHEntry 
@@ -4583,18 +4584,18 @@ nsDocShell::InternalLoad(nsIURI * aURI,
              * be assigned to mOSHE.
              */
             if (aSHEntry && !mLSHE)
-              mOSHE = aSHEntry;            
+                mOSHE = aSHEntry;            
             else if (mLSHE)
-              mOSHE = mLSHE;
+                mOSHE = mLSHE;
 
             /* restore previous position of scroller(s), if we're moving
              * back in history (bug 59774)
              */
-            if (aLoadType == LOAD_HISTORY)
+            if (aLoadType == LOAD_HISTORY && mOSHE)
             {
-              nscoord bx, by;
-              mOSHE->GetScrollPosition(&bx, &by);
-              SetCurScrollPosEx(bx, by);
+                nscoord bx, by;
+                mOSHE->GetScrollPosition(&bx, &by);
+                SetCurScrollPosEx(bx, by);
             }
 
             /* Clear out mLSHE so that further anchor visits get
