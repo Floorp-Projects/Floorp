@@ -61,6 +61,8 @@ public class NativeNumber extends ScriptableObject {
             ctor.defineProperty(names[i], new Double(values[i]), attr);
         }
     }
+	
+	private static final int MAX_PRECISION = 100;
 
     /**
      * Zero-parameter constructor: just used to create Number.prototype
@@ -106,6 +108,51 @@ public class NativeNumber extends ScriptableObject {
         return doubleValue;
     }
 
+    public String jsFunction_toFixed(Object arg) {
+    /* We allow a larger range of precision than 
+		ECMA requires; this is permitted by ECMA. */
+		return num_to(arg, DToA.DTOSTR_FIXED, DToA.DTOSTR_FIXED,
+												-20, MAX_PRECISION, 0);
+    }
+
+    public String jsFunction_toExponential(Object arg) {
+    /* We allow a larger range of precision than
+		ECMA requires; this is permitted by ECMA. */
+		return num_to(arg, DToA.DTOSTR_STANDARD_EXPONENTIAL,
+							DToA.DTOSTR_EXPONENTIAL, 0, MAX_PRECISION, 1);
+    }
+
+    public String jsFunction_toPrecision(Object arg) {
+    /* We allow a larger range of precision than
+		ECMA requires; this is permitted by ECMA. */
+		return num_to(arg, DToA.DTOSTR_STANDARD, 
+							DToA.DTOSTR_PRECISION, 1, MAX_PRECISION, 0);
+	}
+
+	private String num_to(Object arg, int zeroArgMode,
+       int oneArgMode, int precisionMin, int precisionMax, int precisionOffset)
+	{
+	    int precision;
+
+		if (arg == Undefined.instance) {
+			precision = 0;
+			oneArgMode = zeroArgMode;							
+	    } else {
+			precision = ScriptRuntime.toInt32(arg);
+	        if (precision < precisionMin || precision > precisionMax) {
+				Object args[] = new Object[1];
+				args[0] = Integer.toString(precision);
+			    throw NativeGlobal.constructError(
+			               Context.getCurrentContext(), "RangeError",
+			               ScriptRuntime.getMessage("msg.bad.precision", args),
+			               this);
+			}
+		}
+		StringBuffer result = new StringBuffer();	
+	    DToA.JS_dtostr(result, oneArgMode, precision + precisionOffset, doubleValue);
+		return result.toString();
+	}	
+	
     private static final double defaultValue = +0.0;
     private double doubleValue;
 }
