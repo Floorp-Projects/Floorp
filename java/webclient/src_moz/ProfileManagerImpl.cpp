@@ -370,10 +370,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
         (PRUnichar *) ::util_GetStringChars(env, oldNameJstr),
         *newName = (nsnull == newNameJstr) ? nsnull :
         (PRUnichar *) ::util_GetStringChars(env, newNameJstr);
-    
+
     rv = profile->RenameProfile(oldName, newName);
     if (NS_FAILED(rv)) {
-        ::util_ThrowExceptionToJava(env, "Can't create new profile.");
+        ::util_ThrowExceptionToJava(env, "Can't rename new profile.");
     }
     
     ::util_ReleaseStringChars(env, oldNameJstr, oldName);
@@ -402,7 +402,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     
     rv = profile->DeleteProfile(profileName, canDeleteFiles);
     if (NS_FAILED(rv)) {
-        ::util_ThrowExceptionToJava(env, "Can't create new profile.");
+        ::util_ThrowExceptionToJava(env, "Can't delete profile.");
     }
     
     ::util_ReleaseStringChars(env, profileNameJstr, profileName);

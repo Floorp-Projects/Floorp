@@ -1,5 +1,5 @@
 /*
- * $Id: ProfileManagerTest.java,v 1.1 2003/09/28 06:29:18 edburns%acm.org Exp $
+ * $Id: ProfileManagerTest.java,v 1.2 2004/02/26 04:21:24 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -116,6 +116,10 @@ public class ProfileManagerTest extends WebclientTestCase {
 	    }
 	}
 	assertTrue(!hasExpectedProfile);
+
+	// switch back to the base profile
+	profiles = profileManager.getProfileList();
+	profileManager.setCurrentProfile(profiles[0]);
 
 	// test that we can delete the new profile
 	profileManager.deleteProfile(newName, true);
