@@ -402,9 +402,6 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
         m_initialized = PR_TRUE;      // XXX do this on failure too?
     }
     rv = mSubFolders->Enumerate(result);
-    if (isServer)
-        // *** Set identity pref default folder flags
-        SetPrefFlag();
     return rv;
 }
 
@@ -1598,7 +1595,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     nsresult rv;
     // "this" is the folder we're deleting from
     PRBool deleteNoTrash = TrashOrDescendentOfTrash(this);;
-    PRBool moveToTrash = PR_FALSE;
+    PRBool confirmed = PR_FALSE;
 
     NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv))
@@ -1641,7 +1638,6 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
             PRUnichar *confirmationStr = IMAPGetStringByID((!deleteNoTrash)
               ? IMAP_MOVE_FOLDER_TO_TRASH : IMAP_DELETE_NO_TRASH);
 
-            PRBool confirmed = PR_FALSE;
             if (dialog && confirmationStr) {
                 dialog->Confirm(nsnull, confirmationStr, &confirmed);
             }
@@ -1668,12 +1664,13 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
                   }
               }
             }
+            else
             if (confirmationStr)
                 nsCRT::free(confirmationStr);
         }
     }
     
-    if (deleteNoTrash || moveToTrash)
+    if (confirmed)
         return nsMsgFolder::DeleteSubFolders(folders, nsnull);
     else
         return rv;

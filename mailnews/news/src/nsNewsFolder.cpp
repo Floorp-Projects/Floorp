@@ -308,8 +308,6 @@ NS_IMETHODIMP
 nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
 {
 	nsresult rv;
-  PRBool isServer = PR_FALSE;
-  rv = GetIsServer(&isServer);
 
   if (!mInitialized) {
 	nsCOMPtr<nsIFileSpec> pathSpec;
@@ -329,8 +327,6 @@ nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
     mInitialized = PR_TRUE;      // XXX do this on failure too?
   }
   rv = mSubFolders->Enumerate(result);
-  if (isServer) // *** setting identity pref default folder flags
-    SetPrefFlag();
   return rv;
 }
 

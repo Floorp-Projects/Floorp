@@ -133,6 +133,7 @@ interface nsIMsgAccountManager : nsISupports {
    */
   void LoadAccounts();
 
+  void SetSpecialFoldersForIdentities();
   /* unload accounts frees all the account manager data structures */
   void UnloadAccounts();
 

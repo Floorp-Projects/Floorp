@@ -209,6 +209,7 @@ function OnLoadMessenger()
 	InitializeDataSources();
 	InitPanes();
 
+	accountManager.SetSpecialFoldersForIdentities();
 
   AddToSession();
   //need to add to session before trying to load start folder otherwise listeners aren't

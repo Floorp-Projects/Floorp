@@ -55,6 +55,9 @@
 #include "nsIEventQueueService.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsMsgFolderFlags.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
 
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -80,6 +83,7 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
@@ -1173,6 +1177,70 @@ nsMsgAccountManager::getAccountList(nsISupports *element, void *aData)
   }
 
   return PR_TRUE;
+}
+
+// this routine goes through all the identities and makes sure
+// that the special folders for each identity have the
+// correct special folder flags set, e.g, the Sent folder has
+// the sent flag set.
+NS_IMETHODIMP
+nsMsgAccountManager::SetSpecialFoldersForIdentities()
+{
+  nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  
+	if(NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISupportsArray> identities;
+  GetAllIdentities(getter_AddRefs(identities));
+
+  PRUint32 idCount=0;
+  identities->Count(&idCount);
+
+  PRUint32 id;
+  nsXPIDLCString identityKey;
+
+  
+  for (id=0; id<idCount; id++) 
+  {
+
+    // convert supports->Identity
+    nsCOMPtr<nsISupports> thisSupports;
+    rv = identities->GetElementAt(id, getter_AddRefs(thisSupports));
+    if (NS_FAILED(rv)) continue;
+    
+    nsCOMPtr<nsIMsgIdentity>
+      thisIdentity = do_QueryInterface(thisSupports, &rv);
+
+    if (NS_SUCCEEDED(rv) && thisIdentity)
+    {
+      nsXPIDLCString folderUri;
+      nsCOMPtr<nsIRDFResource> res;
+      nsCOMPtr<nsIMsgFolder> folder;
+      thisIdentity->GetFccFolder(getter_Copies(folderUri));
+      if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
+      {
+        folder = do_QueryInterface(res, &rv);
+        if (NS_SUCCEEDED(rv))
+          rv = folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
+      }
+      thisIdentity->GetDraftFolder(getter_Copies(folderUri));
+      if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
+      {
+        folder = do_QueryInterface(res, &rv);
+        if (NS_SUCCEEDED(rv))
+          rv = folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+      }
+      thisIdentity->GetStationeryFolder(getter_Copies(folderUri));
+      if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
+      {
+        folder = do_QueryInterface(res, &rv);
+        if (NS_SUCCEEDED(rv))
+          rv = folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
+      }
+    }
+  }
+  return NS_OK;
 }
 
 nsresult
