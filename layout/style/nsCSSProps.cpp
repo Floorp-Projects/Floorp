@@ -179,6 +179,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_menulist,               NS_THEME_DROPDOWN,
   eCSSKeyword_menulistbutton,         NS_THEME_DROPDOWN_BUTTON,
   eCSSKeyword_menulisttext,           NS_THEME_DROPDOWN_TEXT,
+  eCSSKeyword_menulisttextfield,      NS_THEME_DROPDOWN_TEXTFIELD,
   eCSSKeyword_slider,                 NS_THEME_SLIDER,
   eCSSKeyword_sliderthumb,            NS_THEME_SLIDER_THUMB,
   eCSSKeyword_sliderthumbstart,       NS_THEME_SLIDER_THUMB_START,
