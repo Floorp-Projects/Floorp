@@ -1124,6 +1124,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
     else {
       // We need to create a struct for this class.
       c = new JSClass;
+      memset(c, 0, sizeof(JSClass));
       c->name = nsXPIDLCString::Copy(aClassName);
       c->flags = JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS;
       c->addProperty = c->delProperty = c->setProperty = c->getProperty = JS_PropertyStub;
@@ -1131,12 +1132,6 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
       c->resolve = JS_ResolveStub;
       c->convert = JS_ConvertStub;
       c->finalize = XBLFinalize;
-      c->getObjectOps = 0;
-      c->checkAccess = 0;
-      c->call = 0;
-      c->construct = 0;
-      c->xdrObject = 0;
-      c->hasInstance = 0;
 
       // Add c to our table.
       (nsXBLService::gClassTable)->Put(&key, (void*)c);
