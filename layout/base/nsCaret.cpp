@@ -22,7 +22,7 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
-#include "nsISelection.h"
+#include "nsIFrameSelection.h"
 #include "nsIFrame.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
@@ -80,14 +80,10 @@ NS_METHOD nsCaret::Init(nsIPresShell *inPresShell, nsCaretProperties *inCaretPro
 	// get the selection from the pres shell, and set ourselves up as a selection
 	// listener
 	
-  nsCOMPtr<nsISelection> selection;
-  if (NS_SUCCEEDED(mPresShell->GetSelection(getter_AddRefs(selection))))
+  nsCOMPtr<nsIDOMSelection> domSelection;
+  if (NS_SUCCEEDED(mPresShell->GetSelection(getter_AddRefs(domSelection))))
   {
-		nsCOMPtr<nsIDOMSelection> domSelection(selection);
-		if (domSelection)
-		{
-			domSelection->AddSelectionListener(this);
-		}
+		domSelection->AddSelectionListener(this);
 	}
 	
 	// set up the blink timer
@@ -219,13 +215,11 @@ void nsCaret::DrawCaret()
 	
   if (PR_TRUE || !mDrawn)
   {
-	  nsCOMPtr<nsISelection> selection;
-	  nsresult err = mPresShell->GetSelection(getter_AddRefs(selection));
-	  if (!NS_SUCCEEDED(err) || (nsnull == selection))
+	  nsCOMPtr<nsIDOMSelection> domSelection;
+	  nsresult err = mPresShell->GetSelection(getter_AddRefs(domSelection));
+	  if (!NS_SUCCEEDED(err) || (nsnull == domSelection))
 	  	return;
 	  	
-	  nsCOMPtr<nsIDOMSelection> domSelection(selection);
-	  
 	  PRBool isCollapsed;
 	  
 	  if (domSelection && NS_SUCCEEDED(domSelection->IsCollapsed(&isCollapsed)) && isCollapsed)
