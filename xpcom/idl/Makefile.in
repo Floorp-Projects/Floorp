@@ -21,26 +21,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# IDLSRCS = \
-# 	nsISupports.idl	\
-# 	nsISupportsArray.idl \
-# 	nsIShutdownListener.idl \
-# 	nsIServiceManager.idl \
-# 	nsIFactory.idl \
-# 	nsIBaseStream.idl	\
-# 	nsIInputStream.idl	\
-# 	nsICollection.idl \
-# 	nsIEnumerator.idl \
-# 	nsID.idl	\
-# 	nsrootidl.idl	\
-# 	nsISimpleEnumerator.idl	\
-# 	$(NULL)
-
-# for testing purposes
-#EXPORTS = $(XIDLSRCS:.idl=.h)
-
-# to build in the static methods
-#CPPSRCS = $(XIDLSRCS:.idl=.cpp)
-#LIBRARY_NAME = xpcomidl
+MODULE = xpcom
+XPIDLSRCS = \
+	nsrootidl.idl	\
+	nsISupports.idl	\
+	nsIEnumerator.idl \
+	nsIFactory.idl \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
