@@ -1114,9 +1114,14 @@ fun_mark(JSContext *cx, JSObject *obj, void *arg)
     return 0;
 }
 
+/*
+ * Reserve two slots in all function objects for XPConnect.  Note that this
+ * does not bloat every instance, only those on which reserved slots are set,
+ * and those on which ad-hoc properties are defined.
+ */
 JSClass js_FunctionClass = {
     js_Function_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(2),
     JS_PropertyStub,  JS_PropertyStub,
     fun_getProperty,  JS_PropertyStub,
     JS_EnumerateStub, (JSResolveOp)fun_resolve,

@@ -2678,6 +2678,42 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     return OBJ_CHECK_ACCESS(cx, obj, id, mode, vp, attrsp);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
+{
+    JSClass *clasp;
+    uint32 slot;
+
+    CHECK_REQUEST(cx);
+    clasp = OBJ_GET_CLASS(cx, obj);
+    if (index >= JSCLASS_RESERVED_SLOTS(clasp)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_RESERVED_SLOT_RANGE);
+        return JS_FALSE;
+    }
+    slot = JSSLOT_START(clasp) + index;
+    *vp = OBJ_GET_REQUIRED_SLOT(cx, obj, slot);
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
+{
+    JSClass *clasp;
+    uint32 slot;
+
+    CHECK_REQUEST(cx);
+    clasp = OBJ_GET_CLASS(cx, obj);
+    if (index >= JSCLASS_RESERVED_SLOTS(clasp)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_RESERVED_SLOT_RANGE);
+        return JS_FALSE;
+    }
+    slot = JSSLOT_START(clasp) + index;
+    OBJ_SET_REQUIRED_SLOT(cx, obj, slot, v);
+    return JS_TRUE;
+}
+
 JS_PUBLIC_API(JSFunction *)
 JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
                JSObject *parent, const char *name)
@@ -2910,14 +2946,14 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
 
 JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename,
-                     FILE *fh)
+                     FILE *file)
 {
-    return JS_CompileFileHandleForPrincipals(cx, obj, filename, fh, NULL);
+    return JS_CompileFileHandleForPrincipals(cx, obj, filename, file, NULL);
 }
 
 JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
-                                  const char *filename, FILE *fh,
+                                  const char *filename, FILE *file,
                                   JSPrincipals *principals)
 {
     void *mark;
@@ -2925,7 +2961,7 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     mark = JS_ARENA_MARK(&cx->tempPool);
-    ts = js_NewFileTokenStream(cx, NULL, fh);
+    ts = js_NewFileTokenStream(cx, NULL, file);
     if (!ts)
         return NULL;
     ts->filename = filename;

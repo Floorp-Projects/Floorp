@@ -140,7 +140,7 @@ MSG_DEF(JSMSG_SEEK_BEYOND_START,       64, 0, JSEXN_NONE, "illegal seek beyond s
 MSG_DEF(JSMSG_SEEK_BEYOND_END,         65, 0, JSEXN_NONE, "illegal seek beyond end")
 MSG_DEF(JSMSG_END_SEEK,                66, 0, JSEXN_NONE, "illegal end-based seek")
 MSG_DEF(JSMSG_WHITHER_WHENCE,          67, 1, JSEXN_NONE, "unknown seek whence: {0}")
-MSG_DEF(JSMSG_BAD_JVAL_TYPE,           68, 1, JSEXN_NONE, "unknown jsval type {0} for XDR")
+MSG_DEF(JSMSG_BAD_SCRIPT_MAGIC,        68, 0, JSEXN_NONE, "bad script XDR magic number")
 MSG_DEF(JSMSG_PAREN_BEFORE_FORMAL,     69, 0, JSEXN_SYNTAXERR, "missing ( before formal parameters")
 MSG_DEF(JSMSG_MISSING_FORMAL,          70, 0, JSEXN_SYNTAXERR, "missing formal parameter")
 MSG_DEF(JSMSG_PAREN_AFTER_FORMAL,      71, 0, JSEXN_SYNTAXERR, "missing ) after formal parameters")
@@ -238,3 +238,4 @@ MSG_DEF(JSMSG_UNDEFINED_PROP,         162, 1, JSEXN_TYPEERR, "reference to undef
 MSG_DEF(JSMSG_USELESS_EXPR,           163, 0, JSEXN_TYPEERR, "useless expression")
 MSG_DEF(JSMSG_REDECLARED_PARAM,       164, 1, JSEXN_TYPEERR, "redeclaration of formal parameter {0}")
 MSG_DEF(JSMSG_NEWREGEXP_FLAGGED,      165, 0, JSEXN_TYPEERR, "can't supply flags when constructing one RegExp from another")
+MSG_DEF(JSMSG_RESERVED_SLOT_RANGE,    166, 0, JSEXN_RANGEERR, "reserved slot index out of range")
