@@ -28,6 +28,9 @@
 #include "nsIPref.h"
 #include "nsINetService.h"
 #include "nsRepository.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
 #include "nsWebCrawler.h"
 #include "prprf.h"
 #include "plstr.h"
@@ -70,10 +73,12 @@ extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
 extern nsresult NS_NewXPBaseWindowFactory(nsIFactory** aFactory);
 extern "C" void NS_SetupRegistry();
 
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -179,6 +184,16 @@ nsViewerApp::Initialize(int argc, char** argv)
     return rv;
   }
 
+  // Create the Event Queue for the UI thread...
+  rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&mEventQService);
+  if (NS_OK == rv) {
+    // XXX: What if this fails?
+    rv = mEventQService->CreateThreadEventQueue();
+  }
+
+
   // Create widget application shell
   rv = nsRepository::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
                                     (void**)&mAppShell);
@@ -268,6 +283,11 @@ nsViewerApp::Exit()
   Destroy();
   mAppShell->Exit();
   NS_RELEASE(mAppShell);
+
+  if (nsnull != mEventQService) {
+    nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
+    mEventQService = nsnull;
+  }
   return NS_OK;
 }
 

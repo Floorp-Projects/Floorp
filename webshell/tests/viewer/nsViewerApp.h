@@ -25,6 +25,7 @@
 #include "nsVoidArray.h"
 #include "nsWebCrawler.h"
 
+class nsIEventQueueService;
 class nsIPref;
 class nsBrowserWindow;
 class nsIBrowserWindow;
@@ -76,6 +77,7 @@ protected:
 
   nsIAppShell* mAppShell;
   nsIPref* mPrefs;
+  nsIEventQueueService* mEventQService;
   nsString mStartURL;
   PRBool mDoPurify;
   PRBool mLoadTestFromFile;
