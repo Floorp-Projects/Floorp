@@ -584,26 +584,40 @@ public class Context {
         }
     }
 
-    static EvaluatorException reportRuntimeError0(String messageId) {
-        return reportRuntimeError(getMessage0(messageId));
+    static EvaluatorException reportRuntimeError0(String messageId)
+    {
+        String msg = getMessage0(messageId);
+        return reportRuntimeError(msg);
     }
 
-    static EvaluatorException reportRuntimeError1
-        (String messageId, Object arg1)
+    static EvaluatorException reportRuntimeError1(String messageId,
+                                                  Object arg1)
     {
-        return reportRuntimeError(getMessage1(messageId, arg1));
+        String msg = getMessage1(messageId, arg1);
+        return reportRuntimeError(msg);
     }
 
-    static EvaluatorException reportRuntimeError2
-        (String messageId, Object arg1, Object arg2)
+    static EvaluatorException reportRuntimeError2(String messageId,
+                                                  Object arg1, Object arg2)
     {
-        return reportRuntimeError(getMessage2(messageId, arg1, arg2));
+        String msg = getMessage2(messageId, arg1, arg2);
+        return reportRuntimeError(msg);
     }
 
-    static EvaluatorException reportRuntimeError3
-        (String messageId, Object arg1, Object arg2, Object arg3)
+    static EvaluatorException reportRuntimeError3(String messageId,
+                                                  Object arg1, Object arg2,
+                                                  Object arg3)
     {
-        return reportRuntimeError(getMessage3(messageId, arg1, arg2, arg3));
+        String msg = getMessage3(messageId, arg1, arg2, arg3);
+        return reportRuntimeError(msg);
+    }
+
+    static EvaluatorException reportRuntimeError4(String messageId,
+                                                  Object arg1, Object arg2,
+                                                  Object arg3, Object arg4)
+    {
+        String msg = getMessage4(messageId, arg1, arg2, arg3, arg4);
+        return reportRuntimeError(msg);
     }
 
     /**
@@ -1755,25 +1769,37 @@ public class Context {
 
     /********** end of API **********/
 
-    static String getMessage0(String messageId) {
+    static String getMessage0(String messageId)
+    {
         return getMessage(messageId, null);
     }
 
-    static String getMessage1(String messageId, Object arg1) {
+    static String getMessage1(String messageId, Object arg1)
+    {
         Object[] arguments = {arg1};
         return getMessage(messageId, arguments);
     }
 
-    static String getMessage2(String messageId, Object arg1, Object arg2) {
+    static String getMessage2(String messageId, Object arg1, Object arg2)
+    {
         Object[] arguments = {arg1, arg2};
         return getMessage(messageId, arguments);
     }
 
-    static String getMessage3
-        (String messageId, Object arg1, Object arg2, Object arg3) {
+    static String getMessage3(String messageId, Object arg1, Object arg2,
+                              Object arg3)
+    {
         Object[] arguments = {arg1, arg2, arg3};
         return getMessage(messageId, arguments);
     }
+
+    static String getMessage4(String messageId, Object arg1, Object arg2,
+                              Object arg3, Object arg4)
+    {
+        Object[] arguments = {arg1, arg2, arg3, arg4};
+        return getMessage(messageId, arguments);
+    }
+
     /**
      * Internal method that reports an error for missing calls to
      * enter().
