@@ -36,7 +36,11 @@ treecell[selectedcell] {
  color: white;
 } 
 
-treeitem[Status="new"] {
+treeitem[Status=""] {
+	font-weight: bold;
+}
+
+treeitem[Status="New"] {
 	font-weight: bold;
 }
 
