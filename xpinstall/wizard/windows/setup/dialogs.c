@@ -729,27 +729,47 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           /* retrieve and save the state of the selected radio button */
           if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST0)      == BST_CHECKED)
           {
+            if(dwSetupType != ST_RADIO0)
+            {
+              ResetComponentAttributes(szFileIniConfig);
+              SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
+            }
+
             dwSetupType     = ST_RADIO0;
             dwTempSetupType = dwSetupType;
-            SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
           }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST1) == BST_CHECKED)
           {
+            if(dwSetupType != ST_RADIO1)
+            {
+              ResetComponentAttributes(szFileIniConfig);
+              SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
+            }
+
             dwSetupType     = ST_RADIO1;
             dwTempSetupType = dwSetupType;
-            SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
           }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST2) == BST_CHECKED)
           {
+            if(dwSetupType != ST_RADIO2)
+            {
+              ResetComponentAttributes(szFileIniConfig);
+              SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
+            }
+
             dwSetupType     = ST_RADIO2;
             dwTempSetupType = dwSetupType;
-            SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
           }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST3) == BST_CHECKED)
           {
+            if(dwSetupType != ST_RADIO3)
+            {
+              ResetComponentAttributes(szFileIniConfig);
+              SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
+            }
+
             dwSetupType     = ST_RADIO3;
             dwTempSetupType = dwSetupType;
-            SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
           }
 
           /* set the next dialog to be shown depending on the 

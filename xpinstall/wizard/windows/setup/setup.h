@@ -256,6 +256,7 @@ typedef struct setupStruct
 {
   DWORD     dwMode;
   DWORD     dwCustomType;
+  DWORD     dwNumberOfComponents;
   LPSTR     szPath;
   LPSTR     szProductName;
   LPSTR     szProgramFolderName;
