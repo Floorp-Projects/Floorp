@@ -668,11 +668,10 @@ int main()
 
     cxstack = nsnull;   // release service held by nsCOMPtr
     xpc     = nsnull;   // release service held by nsCOMPtr
+    rtsvc   = nsnull;   // release service held by nsCOMPtr
 
     rv = NS_ShutdownXPCOM( NULL );
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-    
-    rtsvc   = nsnull;   // release service held by nsCOMPtr
 
     return 0;
 }

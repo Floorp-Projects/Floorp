@@ -274,14 +274,14 @@ nsXPConnect::nsXPConnect()
 
 nsXPConnect::~nsXPConnect()
 {
-    if(mRuntime)
-        delete mRuntime;
-    if(mThrower)
-        delete mThrower;
     NS_IF_RELEASE(mArbitraryScriptable);
     NS_IF_RELEASE(mInterfaceInfoManager);
     NS_IF_RELEASE(mContextStack);
     NS_IF_RELEASE(mDefaultSecurityManager);
+    if(mThrower)
+        delete mThrower;
+    if(mRuntime)
+        delete mRuntime;
     gSelf = nsnull;
 }
 
@@ -445,12 +445,11 @@ JSBool
 nsXPConnect::CreateRuntime()
 {
     NS_ASSERTION(!mRuntime,"CreateRuntime called but mRuntime already init'd");
-    JSRuntime* rt;
     nsresult rv;
     NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
-    if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)))
+    if(NS_SUCCEEDED(rv) && rtsvc)
     {
-        mRuntime = XPCJSRuntime::newXPCJSRuntime(this, rt);
+        mRuntime = XPCJSRuntime::newXPCJSRuntime(this, rtsvc);
     }
     return nsnull != mRuntime;
 }        

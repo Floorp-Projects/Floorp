@@ -173,7 +173,7 @@ class XPCJSRuntime
 {
 public:
     static XPCJSRuntime* newXPCJSRuntime(nsXPConnect* aXPConnect,
-                                         JSRuntime*  aJSRuntime);
+                                         nsIJSRuntimeService* aJSRuntimeService);
 
     JSRuntime*      GetJSRuntime() const {return mJSRuntime;}
     nsXPConnect*    GetXPConnect() const {return mXPConnect;}
@@ -224,7 +224,7 @@ public:
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect,
-                 JSRuntime*  aJSRuntime);
+                 nsIJSRuntimeService* aJSRuntimeService);
 
     JSContext2XPCContextMap*  GetContextMap() const {return mContextMap;}
     JSBool GenerateStringIDs(JSContext* cx);
@@ -235,6 +235,7 @@ private:
 
     nsXPConnect* mXPConnect;
     JSRuntime*  mJSRuntime;
+    nsIJSRuntimeService* mJSRuntimeService; // hold this to hold the JSRuntime
     JSContext2XPCContextMap* mContextMap;
     JSObject2WrappedJSMap* mWrappedJSMap;
     IID2WrappedJSClassMap* mWrappedJSClassMap;
