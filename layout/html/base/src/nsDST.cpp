@@ -439,7 +439,6 @@ nsDST::Insert(void* aKey, void* aValue, void** aOldValue)
   
   // See if there's an existing node with a matching key
   LeafNode**  node = (LeafNode**)&mRoot;
-  void*       previousValue = 0;
   TwoNode*    branchReduction = 0;
   nsresult    result = NS_OK;
   
