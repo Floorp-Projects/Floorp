@@ -418,13 +418,13 @@ These also need to call goDoCommand(), not editor JS functions. - - smfr
 						onkeyup="SetComposeWindowTitle(event.which);"
 						onkeypress="if (event.which == 9) {
 						                if (event.shiftKey == false) {
-						                    contentWindow.focus();
+						                    window._content.focus();
 						                    event.preventDefault();
 						                }
 						            }
 						            else
 						                if (event.which == 13)
-						                    contentWindow.focus();"
+						                    window._content.focus();"
 						onchange="contentChanged=true;"
 						/>
 				</box>
