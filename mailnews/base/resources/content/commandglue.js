@@ -192,18 +192,15 @@ function SortThreadPane(column, sortKey)
 
 }
 
+var prefwindow = null;
+
 function MsgPreferences()
 {
-  var prefsCore = XPAppCoresManager.Find("PrefsCore");
-  if (!prefsCore) {
-    prefsCore = new PrefsCore();
-    if (prefsCore) {
-      prefsCore.Init("PrefsCore");
+    if (!prefwindow) {
+        prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
     }
-  }
-  if (prefsCore) {
-    prefsCore.ShowWindow(window);
-  }
+
+    prefwindow.showWindow("navigator.js", window, "chrome://pref/content/pref-mailnews.html");
 }
 
 
