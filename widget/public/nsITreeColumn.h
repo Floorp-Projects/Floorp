@@ -33,7 +33,7 @@ public:
 	// Inspectors
 	NS_IMETHOD GetPixelWidth(int& width) = 0;
 	NS_IMETHOD GetDesiredPercentage(double& percentage) = 0;
-	NS_IMETHOD IsSortColumn(PRBool& answer) = 0;
+	NS_IMETHOD GetSortState(int& answer) = 0;
 	NS_IMETHOD GetColumnName(nsString& name) = 0;
 
 	// Setters
