@@ -508,6 +508,7 @@ protected:
   PRBool mNeedsStyleInit;
   PRBool mDummyInitialized; //DUMMY
   nsIPresContext *mFramePresContext; // not ref counted
+  nsString* mCachedState;
 };
 
 #endif
