@@ -87,26 +87,31 @@ public class LDAPGetEntries extends LDAPBasePropertySupport implements Serializa
         setScope( theScope );
     }
 
-    private String convertToStrings( String[] aResult ) {
-        String sResult = "";
-        if ( null != aResult ) {
-            for ( int i = 0; i < aResult.length; i++ ) {
-                sResult += aResult[i] + "\n";
-            }
-        }
-        return sResult;
-    }
-
     private void notifyResult( String error ) {
         firePropertyChange( "error", _errorMsg, error );
         _errorMsg = error;
     }
 
     private void notifyResult( String[] newResult ) {
-        String sNewResult = convertToStrings( newResult );
-        firePropertyChange( "result", result, newResult );
+        String sNewResult = convertToString( newResult );
+        firePropertyChange( "result", _result, newResult );
         _sResult = sNewResult;
-        result = newResult;
+        _result = newResult;
+    }
+
+    /**
+     * Returns the name of the attribute to retrieve
+     * @return attribute name to retrieve
+     */
+    public String getAttribute() {
+        return _attribute;
+    }
+
+    /**
+     * Sets the attribute to retrieve
+     */
+    public void setAttribute( String attr ) {
+        _attribute = attr;
     }
 
     public void setResultString( String sNewValue ) {
@@ -244,7 +249,7 @@ public class LDAPGetEntries extends LDAPBasePropertySupport implements Serializa
             try {
                 printDebug("Searching " + getBase() +
                            " for " + getFilter() + ", scope = " + getScope());
-                String[] attrs = null;
+                String[] attrs = { _attribute };
                 LDAPSearchResults results = m_ldc.search( getBase(),
                                                           getScope(),
                                                           getFilter(),
@@ -256,48 +261,56 @@ public class LDAPGetEntries extends LDAPBasePropertySupport implements Serializa
                 LDAPEntry entry = null;
                 while ( results.hasMoreElements() ) {
                     try {
-                        entry = (LDAPEntry)results.next();
-                    } catch (LDAPReferralException e) {
-                        if (getDebug()) {
-                            notifyResult("Referral URLs: ");
-                            LDAPUrl refUrls[] = e.getURLs();
-                            for (int i = 0; i < refUrls.length; i++)
-                                notifyResult(refUrls[i].getUrl());
-                        }
-                        continue;
+                        entry = results.next();
                     } catch (LDAPException e) {
                         if (getDebug())
                             notifyResult(e.toString());
                         continue;
                     }
-                    String dn = entry.getDN();
-                    v.addElement( dn );
-                    printDebug( "... " + dn );
+                    // Add the DN to the list
+                    String value = "";
+                    if ( _attribute.equals("dn") ) {
+                        value = entry.getDN();
+                    } else {
+                        LDAPAttribute attr = entry.getAttribute( _attribute );
+                        if ( attr != null ) {
+                            Enumeration vals = attr.getStringValues();
+                            if ( (vals != null) && (vals.hasMoreElements()) ) {
+                                value = (String)vals.nextElement();
+                            }
+                        }
+                    }
+                    v.addElement( value );
+                    printDebug( "... " + value );
                 }
                 // Pull out the DNs and create a string array
                 if ( v.size() > 0 ) {
                     res = new String[v.size()];
-                    for( int i = 0; i < v.size(); i++ )
-                        res[i] = (String)v.elementAt( i );
+                    v.copyInto( res );
+                    v.removeAllElements();
                     setErrorCode( OK );
                 } else {
                     printDebug( "No entries found for " + getFilter() );
                     setErrorCode( PROPERTY_NOT_FOUND );
                 }
             } catch (Exception e) {
-                printDebug( "Failed to search for " + getFilter() + ": " +
-                            e.toString() );
+                if (getDebug()) {
+                    printDebug( "Failed to search for " + getFilter() + ": " +
+                                e.toString() );
+                }
                 setErrorCode( PROPERTY_NOT_FOUND );
             }
         } catch (Exception e) {
         }
 
+        // Disconnect
         try {
             if ( (m_ldc != null) && m_ldc.isConnected() )
                 m_ldc.disconnect();
         } catch ( Exception e ) {
         }
 
+        // Notify any clients with a PropertyChangeEvent
         notifyResult( res );
         return res;
     }
@@ -307,7 +320,16 @@ public class LDAPGetEntries extends LDAPBasePropertySupport implements Serializa
    * @param args list of arguments
    */
     public static void main(String args[]) {
-        if (args.length != 5) {
+        String[] scope = { "base", "one", "sub" };
+        int scopeIndex = -1;
+        for( int i = 0; (i < scope.length) && (args.length == 5); i++ ) {
+            if ( args[3].equalsIgnoreCase(scope[i]) ) {
+                scopeIndex = i;
+                break;
+            }
+        }
+            
+        if ( scopeIndex < 0 ) {
             System.out.println( "Usage: LDAPGetEntries host port base" +
                                 " scope filter" );
             System.exit(1);
@@ -316,7 +338,7 @@ public class LDAPGetEntries extends LDAPBasePropertySupport implements Serializa
         app.setHost( args[0] );
         app.setPort( java.lang.Integer.parseInt( args[1] ) );
         app.setBase( args[2] );
-        app.setScope( Integer.parseInt(args[3]) );
+        app.setScope( scopeIndex );
         app.setFilter( args[4] );
         String[] response = app.getEntries();
         if ( response != null ) {
@@ -329,13 +351,8 @@ public class LDAPGetEntries extends LDAPBasePropertySupport implements Serializa
     /*
      * Variables
      */
-    public static final int OK = 0;
-    public static final int INVALID_PARAMETER = 1;
-    public static final int CONNECT_ERROR = 2;
-    public static final int AUTHENTICATION_ERROR = 3;
-    public static final int PROPERTY_NOT_FOUND = 4;
-    public static final int AMBIGUOUS_RESULTS = 5;
-    transient private String[] result;
+    private String _attribute = "dn";
+    private String[] _result;
     private String _sResult = null;
     private String _errorMsg = null;
 }

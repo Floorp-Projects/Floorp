@@ -1,19 +1,8 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+/* ======================================================================
+ * Copyright (c) 1997 Netscape Communications Corporation
+ * This file contains proprietary information of Netscape Communications.
+ * Copying or reproduction without prior written approval is prohibited.
+ * ======================================================================
  */
 
 import java.io.*;
@@ -116,6 +105,7 @@ public class LDAPDelete extends LDAPTool { /* LDAPDelete */
 
 		System.err.println("  -M            manage references (treat them "+
 						   "as regular entries)");
+		System.err.println("  -y proxy-DN   DN to use for access control");
 	}
 
 	/**
@@ -179,10 +169,18 @@ public class LDAPDelete extends LDAPTool { /* LDAPDelete */
 		int msgid = 0;
 		LDAPSearchConstraints cons =
 		  (LDAPSearchConstraints)m_client.getSearchConstraints().clone();
+
+		Vector controlVector = new Vector();
+		if (m_proxyControl != null)
+			controlVector.addElement(m_proxyControl);
 		if (m_ordinary) {
-			LDAPControl control = new LDAPControl(
-				LDAPControl.MANAGEDSAIT, true, null);
-			cons.setServerControls(control);
+			controlVector.addElement( new LDAPControl(
+				LDAPControl.MANAGEDSAIT, true, null) );
+		}
+		if (controlVector.size() > 0) {
+			LDAPControl[] controls = new LDAPControl[controlVector.size()];
+			controlVector.copyInto(controls);
+			cons.setServerControls(controls);
 		}
 		cons.setReferrals( m_referrals );
 		if ( m_referrals ) {

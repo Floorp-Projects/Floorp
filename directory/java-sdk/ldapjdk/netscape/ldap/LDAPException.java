@@ -151,11 +151,11 @@ public class LDAPException extends java.lang.Exception {
      * (3) The search operation could not be completed within
      * the maximum time limit.  You can specify the maximum time
      * limit by calling the <CODE>LDAPConnection.setOption</CODE>
-     * method or the <CODE>LDAPSearchConstraints.setTimeLimit</CODE>
+     * method or the <CODE>LDAPSearchConstraints.setServerTimeLimit</CODE>
      * method.<P>
      *
      * @see netscape.ldap.LDAPConnection@setOption
-     * @see netscape.ldap.LDAPSearchConstraints@setTimeLimit
+     * @see netscape.ldap.LDAPSearchConstraints@setServerTimeLimit
      */
     public final static int TIME_LIMIT_EXCEEDED          = 3;
 

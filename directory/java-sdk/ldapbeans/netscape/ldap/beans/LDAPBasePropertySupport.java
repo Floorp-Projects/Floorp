@@ -221,7 +221,7 @@ public class LDAPBasePropertySupport implements Serializable {
      * @param listener a client to be notified of changes
      */
     public void addPropertyChangeListener( PropertyChangeListener listener ) {
-        System.out.println( "Adding listener " + listener );
+        printDebug( "Adding listener " + listener );
         m_propSupport.addPropertyChangeListener( listener );
     }
 
@@ -304,6 +304,9 @@ public class LDAPBasePropertySupport implements Serializable {
                                 args[0] = new String( "UniversalConnect" );
                                 m[i].invoke( null, args );
                                 printDebug( "UniversalConnect enabled" );
+                                args[0] = new String( "UniversalPropertyRead" );
+                                m[i].invoke( null, args );
+                                printDebug( "UniversalPropertyRead enabled" );
                             } catch ( Exception e ) {
                                 printDebug( "Exception on invoking " +
                                             "enablePrivilege: " +
@@ -320,11 +323,54 @@ public class LDAPBasePropertySupport implements Serializable {
         }
 
         conn.connect( host, port );
+        setDefaultReferralCredentials( conn );
+    }
+
+    protected void setDefaultReferralCredentials(
+        LDAPConnection conn ) {
+        final LDAPConnection m_conn = conn;
+        LDAPRebind rebind = new LDAPRebind() {
+            public LDAPRebindAuth getRebindAuthentication(
+                String host,
+                int port ) {
+                    return new LDAPRebindAuth( 
+                        m_conn.getAuthenticationDN(),
+                        m_conn.getAuthenticationPassword() );
+                }
+        };
+        LDAPSearchConstraints cons = conn.getSearchConstraints();
+        cons.setReferrals( true );
+        cons.setRebindProc( rebind );
+    }
+
+    /**
+     * Utility method to convert an array of Strings to a single String
+     * with line feeds between elements.
+     * @param aResult The array of Strings to convert
+     * @return A String with the elements separated by line feeds
+     */
+    public String convertToString( String[] aResult ) {
+        String sResult = "";
+        if ( null != aResult ) {
+            for ( int i = 0; i < aResult.length; i++ ) {
+                sResult += aResult[i] + "\n";
+            }
+        }
+        return sResult;
     }
 
     /*
      * Variables
      */
+    /* Error codes from search operations, etc */
+    public static final int OK = 0;
+    public static final int INVALID_PARAMETER = 1;
+    public static final int CONNECT_ERROR = 2;
+    public static final int AUTHENTICATION_ERROR = 3;
+    public static final int PROPERTY_NOT_FOUND = 4;
+    public static final int AMBIGUOUS_RESULTS = 5;
+    public static final int NO_SUCH_OBJECT = 6;
+
     private boolean _debug = false;
     private int _errCode = 0;
     private String _host = new String("localhost");
@@ -339,3 +385,4 @@ public class LDAPBasePropertySupport implements Serializable {
     transient private PropertyChangeSupport m_propSupport =
               new PropertyChangeSupport( this );
 }
+

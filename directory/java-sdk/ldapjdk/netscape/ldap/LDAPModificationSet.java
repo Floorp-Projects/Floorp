@@ -114,4 +114,22 @@ public class LDAPModificationSet {
             }
         }
     }
+
+    /**
+     * Retrieves the string representation of the
+     * modification set.
+     *
+     * @return String representation of the modification set.
+     */
+    public String toString() {
+        String s = "LDAPModificationSet: {";
+        for( int i = 0; i < modifications.size(); i++ ) {
+            s += (LDAPModification)modifications.elementAt(i);
+            if ( i < modifications.size()-1 ) {
+                s += ", ";
+            }
+        }
+        s += "}";
+        return s;
+    }
 }

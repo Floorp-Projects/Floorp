@@ -30,6 +30,7 @@ package netscape.ldap;
 public class LDAPSearchConstraints implements Cloneable {
 
     private int timeLimit;
+    private int serverTimeLimit;
     private int deref;
     private int maxRes;
     private boolean referrals;
@@ -46,6 +47,7 @@ public class LDAPSearchConstraints implements Cloneable {
      */
     public LDAPSearchConstraints() {
         timeLimit = 0;
+        serverTimeLimit = 0;
         deref = 0;
         maxRes = 1000;
         referrals = false;
@@ -103,13 +105,74 @@ public class LDAPSearchConstraints implements Cloneable {
     }
 
     /**
+     * Constructs a new <CODE>LDAPSearchConstraints</CODE> object and allows you
+     * to specify the search constraints in that object.
+     * <P>
+     * @param msLimit Maximum time in milliseconds to wait for results (0
+     * by default, which means that there is no maximum time limit)
+     * @param timeLimit Maximum time in seconds for the server to spend
+     * processing a search request (0 by default for no limit)
+     * @param dereference Either <CODE>LDAPv2.DEREF_NEVER</CODE>,
+     * <CODE>LDAPv2.DEREF_FINDING</CODE>,
+     * <CODE>LDAPv2.DEREF_SEARCHING</CODE>, or
+     * <CODE>LDAPv2.DEREF_ALWAYS</CODE> (see LDAPConnection.setOption).
+     * <CODE>LDAPv2.DEREF_NEVER</CODE> is the default.
+     * @param maxResults Maximum number of search results to return
+     * (1000 by default)
+     * @param doReferrals Specify <CODE>true</CODE> to follow referrals
+     * automatically, or <CODE>False</CODE> to throw an
+     * <CODE>LDAPReferralException</CODE> error if the server sends back
+     * a referral (<CODE>False</CODE> by default)
+     * @param batchSize Specify the number of results to return at a time
+     * (1 by default)
+     * @param rebind_proc Specifies the object of the class that
+     * implements the <CODE>LDAPRebind</CODE> interface (you need to
+     * define this class).  The object will be using when the client
+     * follows referrals automatically.  The object provides the client
+     * with a method for getting the distinguished name and password
+     * used to authenticate to another LDAP server during a referral.
+     * (This field is <CODE>null</CODE> by default.)
+     * @param hop_limit Maximum number of referrals to follow in a
+     * sequence when attempting to resolve a request.
+     * @see netscape.ldap.LDAPConnection#setOption(int, java.lang.Object)
+     * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl, netscape.ldap.LDAPSearchConstraints)
+     * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
+     */
+    public LDAPSearchConstraints( int msLimit, int timeLimit,
+                                  int dereference,
+                                  int maxResults, boolean doReferrals,
+                                  int batchSize,
+                                  LDAPRebind rebind_proc,
+                                  int hop_limit) {
+        timeLimit = msLimit;
+        serverTimeLimit = timeLimit;
+        deref = dereference;
+        maxRes = maxResults;
+        referrals = doReferrals;
+        batch = batchSize;
+        m_rebind_proc = rebind_proc;
+        m_hop_limit = hop_limit;
+        m_clientControls = null;
+        m_serverControls = null;
+    }
+
+    /**
      * Returns the maximum number of milliseconds to wait for any operation
      * under these search constraints. If 0, there is no maximum time limit
      * on waiting for the operation results.
      * @return Maximum number of milliseconds to wait for operation results.
      */
     public int getTimeLimit() {
-        return timeLimit*1000;
+        return timeLimit;
+    }
+
+    /**
+     * Returns the maximum number of seconds to wait for the server to
+     * spend on a search operation.If 0, there is no time limit.
+     * @return Maximum number of seconds for the server to spend.
+     */
+    public int getServerTimeLimit() {
+        return serverTimeLimit;
     }
 
     /**
@@ -207,12 +270,22 @@ public class LDAPSearchConstraints implements Cloneable {
      * Sets the maximum number of milliseconds to wait for any operation
      * under these search constraints. If 0, there is no maximum time limit
      * on waiting for the operation results.
-     * @param msLimit Maximum number of milliseconds to wait for operation results.
+     * @param msLimit Maximum number of milliseconds to wait for operation
+     * results.
      * (0 by default, which means that there is no maximum time limit.)
      */
     public void setTimeLimit( int msLimit ) {
-        if (msLimit != 0)
-            timeLimit = Math.max( 1, (msLimit + 500) / 1000 );
+        timeLimit = msLimit;
+    }
+
+    /**
+     * Sets the maximum number of seconds for the server to spend
+     * returning search results. If 0, there is no time limit.
+     * @param limit Maximum number of seconds for the server to spend.
+     * (0 by default, which means that there is no maximum time limit.)
+     */
+    public void setServerTimeLimit( int limit ) {
+        serverTimeLimit = limit;
     }
 
     /**
@@ -355,6 +428,7 @@ public class LDAPSearchConstraints implements Cloneable {
         LDAPSearchConstraints o = new LDAPSearchConstraints();
 
         o.timeLimit = this.timeLimit;
+        o.serverTimeLimit = this.serverTimeLimit;
         o.deref = this.deref;
         o.maxRes = this.maxRes;
         o.referrals = this.referrals;

@@ -12,12 +12,13 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 package netscape.ldap;
 
 import java.util.*;
+import java.text.*;
 import netscape.ldap.client.*;
 
 /**
@@ -38,6 +39,8 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
 
     String m_attrs[];
     boolean m_ascending[];
+    Locale m_locale = null;
+    Collator m_collator = null;
 
     /**
      * Constructs a comparator that compares the string values of
@@ -134,7 +137,9 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
      * <P>
      *
      * @param attribute Array of the attribute names to use for comparisons.
-     * @param ascendingFlags Array of boolean values specifying ascending or descending order to use for each attribute name. If <CODE>true</CODE>, sort the attributes in ascending order.
+     * @param ascendingFlags Array of boolean values specifying ascending
+     * or descending order to use for each attribute name. If
+     * <CODE>true</CODE>, sort the attributes in ascending order.
      */
     public LDAPCompareAttrNames (String[] attributes,
                                  boolean[] ascendingFlags) {
@@ -144,6 +149,31 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
             m_ascending = new boolean[attributes.length];
             for( int i = 0; i < attributes.length; i++ )
                 m_ascending[i] = true;
+        }
+    }
+
+    /**
+     * Get the locale used for collation, if any. If it is null,
+     * an ordinary string comparison will be used for sorting.
+     *
+     * @return The locale used for collation, or null.
+     */
+    public Locale getLocale() {
+        return m_locale;
+    }
+
+    /**
+     * Set the locale used for collation, if any. If it is null,
+     * an ordinary string comparison will be used for sorting.
+     *
+     * @param locale The locale used for collation, or null.
+     */
+    public void setLocale( Locale locale ) {
+        m_locale = locale;
+        if ( m_locale == null ) {
+            m_collator = null;
+        } else {
+            m_collator = Collator.getInstance( m_locale );
         }
     }
 
@@ -231,10 +261,17 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
             else
                 return attrGreater (greater, less, attrPos+1);
 
-        if( ascending )
-            return (greaterValue.compareTo (lessValue) > 0);
-        else
-            return (greaterValue.compareTo (lessValue) < 0);
+        if ( m_collator != null ) {
+            if ( ascending )
+                return ( m_collator.compare( greaterValue, lessValue ) > 0 );
+            else
+                return ( m_collator.compare( greaterValue, lessValue ) < 0 );
+        } else {
+            if ( ascending )
+                return (greaterValue.compareTo (lessValue) > 0);
+            else
+                return (greaterValue.compareTo (lessValue) < 0);
+        }
     }
 
 }

@@ -18,6 +18,7 @@
 package netscape.ldap.beans;
 
 import netscape.ldap.*;
+import netscape.ldap.util.*;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.io.Serializable;
@@ -28,6 +29,11 @@ import java.awt.event.*;
  * authentication name and password, and DN of a group and another DN
  * which might be a member of the group, and returns true or
  * false, depending on whether the second DN is a member of the first.
+ * <BR>
+ * Also handles the case of dynamic groups by derefencing the URL
+ * and searching for membership based on the url search.
+ * <BR>
+ * It doesn't handle nested groups.
  * <BR><BR>
  * A false result means the member could not be identified as
  * belonging to the group. The exact reason is
@@ -43,7 +49,8 @@ import java.awt.event.*;
  *     NO_SUCH_OBJECT
  *</PRE>
  */
-public class LDAPIsMember extends LDAPBasePropertySupport implements Serializable {
+public class LDAPIsMember extends LDAPBasePropertySupport
+                          implements Serializable {
 
     /**
      * Constructor with no parameters
@@ -147,14 +154,16 @@ public class LDAPIsMember extends LDAPBasePropertySupport implements Serializabl
         int numDataEntries = 0;
         // Search
         try {
-            String[] attrs = new String[3];
+            String[] attrs = new String[4];
             attrs[0] = "member";
             attrs[1] = "uniqueMember";
             attrs[2] = "memberOfGroup";
-            LDAPSearchResults results = m_ldc.search( group,
-                                                     LDAPConnection.SCOPE_BASE,
-                                                     "objectclass=*",
-                                                     attrs, false);
+            attrs[3] = "memberurl";
+            LDAPSearchResults results =
+                m_ldc.search( group,
+                              LDAPConnection.SCOPE_BASE,
+                              "objectclass=*",
+                              attrs, false);
 
             // Should be only one result, at most
             LDAPEntry entry = null;
@@ -194,22 +203,37 @@ public class LDAPIsMember extends LDAPBasePropertySupport implements Serializabl
                     LDAPAttribute attr =
                         (LDAPAttribute)attrsenum.nextElement();
                     printDebug( attr.getName() + " = " );
-                    // Get the values as strings
+                    boolean urlHandler =
+                        attr.getName().equalsIgnoreCase("memberurl");
+                    /* Get the values as strings.
+                       The following code also handles dynamic
+                       groups by calling URLMatch to see if an entry
+                       DN is found via a URL search.
+                       This is transparent to the caller of the bean.
+                    */
                     Enumeration valuesenum = attr.getStringValues();
                     if (valuesenum != null) {
                         while (valuesenum.hasMoreElements()) {
                             String val = (String)valuesenum.nextElement();
+                            if (urlHandler) {
+                                if ( URLMatch(m_ldc, val, normMember) ) {
+                                    isMember = true;
+                                    setErrorCode( OK );
+                                    break;
+                                }
+                            } 
                             printDebug( "\t\t" + val );
                             String normFound = normalizeDN( val );
-                            if ( normMember.equalsIgnoreCase( normFound ) ) {
+                            if ( normMember.equals( normFound ) ) {
                                 isMember = true;
-                                setErrorCode( OK );
-                                break;
+                              setErrorCode( OK );
+                              break;
                             }
                         }
                     } else {
                         setErrorCode(PROPERTY_NOT_FOUND);
-                        printDebug("Failed to do string conversion for "+ attr.getName());
+                        printDebug("Failed to do string conversion for "+
+                                   attr.getName());
                     }
                 }
                 if ( !isMember )
@@ -307,15 +331,68 @@ public class LDAPIsMember extends LDAPBasePropertySupport implements Serializabl
     }
 
     private String normalizeDN( String dn ) {
-        StringTokenizer st = new StringTokenizer( dn, "," );
-        String norm = "";
-        if( st.hasMoreTokens() ) {
-            norm = st.nextToken();
-            while( st.hasMoreTokens() )
-                norm = norm + "," + st.nextToken().trim();
-        }
-        return norm;
+        return new DN( dn ).toRFCString().toUpperCase();
     }
+
+    /**
+     * Return true if normMember is result of url search.
+     * Urls from dynamic groups do not typically contain
+     * the host and port so we need to fix them before
+     * constructing an LDAP URL.  
+     * current ldap:///.... make ldap://host:port/...
+     **/
+     private boolean URLMatch(LDAPConnection ld, String URL,
+                              String normMemberDN) {
+        String cURL = URL;
+        boolean isMember = false;
+        int loc = URL.indexOf(":///");
+        if ( loc > 0) {
+            cURL = URL.substring(0,loc) + "://" + ld.getHost() + 
+                ":" + ld.getPort() + URL.substring(loc+3);
+        }
+        printDebug("URLMatch: url = " + cURL +
+                   ", member DN = " + normMemberDN);
+        LDAPUrl ldapurl;
+        try {
+            ldapurl = new LDAPUrl(cURL);
+            printDebug("URL ->"+ldapurl.getUrl());
+        } catch (java.net.MalformedURLException murl) {
+            printDebug("bad URL");
+            return isMember;
+        }
+        
+        try {
+            LDAPSearchResults results = ld.search(ldapurl);
+            String entry = "";
+            while ( results.hasMoreElements() && !isMember ) {
+                try {
+                    entry = ((LDAPEntry)results.next()).getDN();
+                    String normEntry = normalizeDN( entry );
+                    if (normEntry.equals(normMemberDN)) {
+                        isMember = true;
+                        break;
+                    }
+                } catch (LDAPReferralException e) {
+                    if (getDebug()) {
+                        notifyResult("Referral URLs: ");
+                        LDAPUrl refUrls[] = e.getURLs();
+                        for (int i = 0; i < refUrls.length; i++)
+                            notifyResult(refUrls[i].getUrl());
+                    }
+                    continue;
+                } catch (LDAPException e) {
+                    if (getDebug())
+                        notifyResult(e.toString());
+                    continue;
+                }
+            }
+        } catch (LDAPException lde) {
+            printDebug("Failed search for url " + ldapurl.getUrl());
+            setErrorCode(NO_SUCH_OBJECT);
+        }
+        
+        return isMember;
+     }
 
   /**
    * The main body if we run it as application instead of applet.

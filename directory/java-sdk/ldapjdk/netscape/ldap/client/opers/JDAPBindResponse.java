@@ -57,7 +57,12 @@ public class JDAPBindResponse extends JDAPResult implements JDAPProtocolOp {
             return;
         BERElement e = s.elementAt(3);
         if (e.getType() == BERElement.TAG) {
-            BEROctetString str = (BEROctetString)((BERTag)e).getValue();
+			BERElement el = ((BERTag)e).getValue();
+			if (el instanceof BERSequence)
+			{
+				el = ((BERSequence)el).elementAt(0);
+			}
+            BEROctetString str = (BEROctetString)el;
             try{
                 m_credentials = new String(str.getValue(),"UTF8");
             } catch(Throwable x)

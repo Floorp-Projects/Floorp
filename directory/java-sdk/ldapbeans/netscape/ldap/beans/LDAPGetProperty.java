@@ -74,37 +74,26 @@ public class LDAPGetProperty extends LDAPBasePropertySupport implements
      * @return attribute name to retrieve
      */
     public String getAttribute() {
-        return attribute;
+        return _attribute;
     }
 
     /**
      * Sets the attribute to retrieve
      */
     public void setAttribute( String attr ) {
-        attribute = attr;
-    }
-
-    private String convertToStrings( String[] aResult ) {
-        String sResult = "";
-        if ( null != aResult ) {
-            for ( int i = 0; i < aResult.length; i++ ) {
-                sResult += aResult[i] + "\n";
-            }
-        }
-        return sResult;
+        _attribute = attr;
     }
 
     private void notifyResult( String[] newResult ) {
-        String sNewResult = convertToStrings( newResult );
-        firePropertyChange( "result", result, newResult );
-     //   firePropertyChange( "resultString", _sResult, sNewResult );
+        String sNewResult = convertToString( newResult );
+        firePropertyChange( "result", _result, newResult );
         _sResult = sNewResult;
-        result = newResult;
+        _result = newResult;
     }
 
     private void notifyResult( Vector newResult ) {
-        firePropertyChange( "result", resultV, newResult );
-        resultV = (Vector)newResult.clone();
+        firePropertyChange( "result", _resultV, newResult );
+        _resultV = (Vector)newResult.clone();
     }
 
     private void notifyResult( String error ) {
@@ -154,7 +143,7 @@ public class LDAPGetProperty extends LDAPBasePropertySupport implements
      * @return Array of values for the property
      */
     public String[] getProperty() {
-        if ( (attribute.length() < 1) || (getFilter().length() < 1) ) {
+        if ( (_attribute.length() < 1) || (getFilter().length() < 1) ) {
             printDebug( "Invalid attribute name or filter" );
             setErrorCode( INVALID_PARAMETER );
             notifyResult( (String[])null );
@@ -210,7 +199,7 @@ public class LDAPGetProperty extends LDAPBasePropertySupport implements
         // Search
         try {
             String[] attrs = new String[1];
-            attrs[0] = attribute;
+            attrs[0] = _attribute;
             LDAPSearchResults results = m_ldc.search(getBase(),
                                                      getScope(),
                                                      getFilter(),
@@ -230,14 +219,6 @@ public class LDAPGetProperty extends LDAPBasePropertySupport implements
                         setErrorCode( AMBIGUOUS_RESULTS );
                         break;
                     }
-                } catch (LDAPReferralException e) {
-                    if (getDebug()) {
-                        notifyResult("Referral URLs: ");
-                        LDAPUrl refUrls[] = e.getURLs();
-                        for (int i = 0; i < refUrls.length; i++)
-                            notifyResult(refUrls[i].getUrl());
-                    }
-                    continue;
                 } catch (LDAPException e) {
                     if (getDebug())
                         notifyResult(e.toString());
@@ -248,7 +229,7 @@ public class LDAPGetProperty extends LDAPBasePropertySupport implements
                 printDebug( "... " + entry.getDN() );
                 // Good - exactly one entry found; get the attribute
                 // Treat DN as a special case
-                if ( attribute.equalsIgnoreCase( "dn" ) ) {
+                if ( _attribute.equalsIgnoreCase( "dn" ) ) {
                     res = new String[1];
                     res[0] = entry.getDN();
                     setErrorCode( OK );
@@ -270,8 +251,7 @@ public class LDAPGetProperty extends LDAPBasePropertySupport implements
                                 printDebug( "\t\t" + val );
                             }
                             res = new String[v.size()];
-                            for( int i = 0; i < v.size(); i++ )
-                                res[i] = (String)v.elementAt( i );
+                            v.copyInto( res );
                             setErrorCode( OK );
                         } else {
                             Enumeration byteEnum = attr.getByteValues();
@@ -287,14 +267,16 @@ public class LDAPGetProperty extends LDAPBasePropertySupport implements
                         }
                     } else {
                         printDebug( "No properties found for " +
-                                    attribute );
+                                    _attribute );
                         setErrorCode( PROPERTY_NOT_FOUND );
                     }
                 }
             }
         } catch (Exception e) {
-            printDebug( "Failed to search for " + getFilter() + ": "
-                                    + e.toString() );
+            if (getDebug()) {
+                printDebug( "Failed to search for " + getFilter() + ": "
+                            + e.toString() );
+            }
             setErrorCode( PROPERTY_NOT_FOUND );
         }
 
@@ -303,6 +285,7 @@ public class LDAPGetProperty extends LDAPBasePropertySupport implements
             setErrorCode( PROPERTY_NOT_FOUND );
         }
 
+        // Disconnect
         try {
             if ( (m_ldc != null) && m_ldc.isConnected() )
                 m_ldc.disconnect();
@@ -340,16 +323,10 @@ public class LDAPGetProperty extends LDAPBasePropertySupport implements
     /*
      * Variables
      */
-    public static final int OK = 0;
-    public static final int INVALID_PARAMETER = 1;
-    public static final int CONNECT_ERROR = 2;
-    public static final int AUTHENTICATION_ERROR = 3;
-    public static final int PROPERTY_NOT_FOUND = 4;
-    public static final int AMBIGUOUS_RESULTS = 5;
     private String[] _dns = null;
-    private String attribute = new String("cn");
-    transient private String[] result;
-    private Vector resultV = null;
+    private String _attribute = new String("cn");
+    transient private String[] _result;
+    private Vector _resultV = null;
     private String _sResult = null;
     private String _errorMsg = null;
 }

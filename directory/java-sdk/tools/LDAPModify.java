@@ -1,19 +1,8 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+/* ======================================================================
+ * Copyright (c) 1997 Netscape Communications Corporation
+ * This file contains proprietary information of Netscape Communications.
+ * Copying or reproduction without prior written approval is prohibited.
+ * ======================================================================
  */
 /*
  * @(#) LDAPModify.java
@@ -150,6 +139,7 @@ public class LDAPModify extends LDAPTool { /* LDAPModify */
 						   "default");
 		System.err.println("  -e rejectfile save rejected entries in " +
 						   "\'rejfile\'");
+		System.err.println("  -y proxy-DN   DN to use for access control");
 	}
 
 	/**
@@ -197,19 +187,26 @@ public class LDAPModify extends LDAPTool { /* LDAPModify */
 	} /* extract parameters */
 
 	/**
-	 * This class-method is used to call the JDAP Modify Operation with the
+	 * Call the LDAPConnection modify operation with the
 	 * specified options, and/or parameters.
 	 */
     private static void doModify() throws IOException { /* doModify */
-		DataOutputStream reject = null;
+		PrintWriter reject = null;
 		LDAPSearchConstraints cons = null;
 		if (!m_justShow) {
 			cons =
 			  (LDAPSearchConstraints)m_client.getSearchConstraints().clone();
+			Vector controlVector = new Vector();
+			if (m_proxyControl != null)
+				controlVector.addElement(m_proxyControl);
 			if (m_ordinary) {
-				LDAPControl control = new LDAPControl(
-				  LDAPControl.MANAGEDSAIT, true, null);
-				cons.setServerControls(control);
+				controlVector.addElement( new LDAPControl(
+					LDAPControl.MANAGEDSAIT, true, null) );
+			}
+			if (controlVector.size() > 0) {
+				LDAPControl[] controls = new LDAPControl[controlVector.size()];
+				controlVector.copyInto(controls);
+				cons.setServerControls(controls);
 			}
         	cons.setReferrals( m_referrals );
 			if ( m_referrals ) {
@@ -360,33 +357,27 @@ public class LDAPModify extends LDAPTool { /* LDAPModify */
 			if ( skip && (m_rejectsFile != null) ) {
 				try {
 					if ( reject == null ) {
-						reject = new DataOutputStream(
+						reject = new PrintWriter(
 							new FileOutputStream( m_rejectsFile ) );
 					}
 				} catch ( Exception e ) {
 				}
 				if ( reject != null ) {
-					try {
-						reject.writeUTF( "dn: "+rec.getDN()+ " # Error: " + errCode + '\n' );
-						if ( mods != null ) {
-							for( int m = 0; m < mods.length; m++ ) {
-								reject.writeUTF( mods[m].toString() +
-												   '\n' );
-							}
-						} else if ( newEntry != null ) {
-							reject.writeUTF( "Add " + newEntry.toString()
-											   + '\n' );
-						} else if ( doDelete ) {
-							reject.writeUTF( "Delete " + rec.getDN()
-											   + '\n' );
-						} else if (doModDN) {
-							reject.writeUTF( "ModDN "+ 
-							  ((LDIFModDNContent)content).toString()+'\n');
+					reject.println( "dn: "+rec.getDN()+ " # Error: " +
+									errCode );
+					if ( mods != null ) {
+						for( int m = 0; m < mods.length; m++ ) {
+							reject.println( mods[m].toString() );
 						}
-					} catch ( IOException ex ) {
-						System.err.println( ex.toString() );
-						System.exit( 1 );
+					} else if ( newEntry != null ) {
+						reject.println( "Add " + newEntry.toString() );
+					} else if ( doDelete ) {
+						reject.println( "Delete " + rec.getDN() );
+					} else if (doModDN) {
+						reject.println( "ModDN "+ 
+									((LDIFModDNContent)content).toString() );
 					}
+					reject.flush();
 				}
 			}
 		}

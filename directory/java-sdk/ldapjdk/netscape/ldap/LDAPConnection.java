@@ -209,11 +209,11 @@ public class LDAPConnection implements LDAPv3, Cloneable {
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(3.1f);
+    private final static Float SdkVersion = new Float(3.2f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(3.0f);
-    private final static Float MinorVersion = new Float(0.1f);
+    private final static Float MinorVersion = new Float(0.2f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
@@ -2031,7 +2031,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
         int deref = cons.getDereference();
 
         JDAPSearchRequest request = new JDAPSearchRequest (base,
-            scope, deref, cons.getMaxResults(), cons.getTimeLimit(),
+            scope, deref, cons.getMaxResults(), cons.getServerTimeLimit(),
             attrsOnly, filter, attrs);
 
         synchronized(myListener) {
@@ -2986,7 +2986,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
             case LDAPv2.SIZELIMIT:
               return new Integer (cons.getMaxResults());
             case LDAPv2.TIMELIMIT:
-              return new Integer (cons.getTimeLimit());
+              return new Integer (cons.getServerTimeLimit());
             case LDAPv2.REFERRALS:
               return new Boolean (cons.getReferrals());
             case LDAPv2.REFERRALS_REBIND_PROC:
@@ -3175,7 +3175,7 @@ public class LDAPConnection implements LDAPv3, Cloneable {
           cons.setMaxResults(((Integer)value).intValue());
           return;
         case LDAPv2.TIMELIMIT:
-          cons.setTimeLimit(((Integer)value).intValue());
+          cons.setServerTimeLimit(((Integer)value).intValue());
           return;
         case LDAPv2.REFERRALS:
           cons.setReferrals(((Boolean)value).booleanValue());

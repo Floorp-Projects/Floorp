@@ -1,23 +1,13 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+/* ======================================================================
+ * Copyright (c) 1997 Netscape Communications Corporation
+ * This file contains proprietary information of Netscape Communications.
+ * Copying or reproduction without prior written approval is prohibited.
+ * ======================================================================
  */
 
 import netscape.ldap.*;
 import netscape.ldap.util.*;
+import netscape.ldap.controls.*;
 
 /**
  * LDAPTool
@@ -35,7 +25,7 @@ class LDAPTool {
 	 */
     protected static GetOpt extractParameters(String privateOpts, String args[]) { 
 
-		GetOpt options = new GetOpt("vnRMD:h:O:p:w:d:V:" + privateOpts, args);
+		GetOpt options = new GetOpt("vnRMD:h:O:p:w:d:V:y:" + privateOpts, args);
 
 		if (options.hasOption('n'))
 			m_justShow = true;
@@ -94,6 +84,11 @@ class LDAPTool {
 		if (options.hasOption('w'))
 			m_passwd = options.getOptionParam('w');
 
+        /* -y proxy DN */
+        if (options.hasOption('y'))
+            m_proxyControl = new LDAPProxiedAuthControl(
+                options.getOptionParam('y'), true );
+
 		/* -M treat ref attribute as ordinary entry */
 		if (options.hasOption('M'))
 			m_ordinary = true;
@@ -127,4 +122,5 @@ class LDAPTool {
   protected static boolean m_justShow = false;
   protected static boolean m_verbose = false;
   protected static boolean m_ordinary = false;
+  protected static LDAPControl m_proxyControl = null;
 }

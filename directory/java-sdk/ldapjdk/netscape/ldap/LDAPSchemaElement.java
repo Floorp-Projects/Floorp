@@ -174,6 +174,27 @@ public abstract class LDAPSchemaElement {
     }
 
     /**
+     * Replace a single value of the object class, attribute type,
+     * or matching rule definition in the schema. Typically, most servers
+     * will require you to authenticate before allowing you to
+     * edit the schema.
+     * @param ld The <CODE>LDAPConnection</CODE> object representing
+     * a connection to an LDAP server.
+     * @param newValue The new value
+     * @exception LDAPException The specified definition cannot be
+     * modified.
+     */
+    public void modify( LDAPConnection ld, LDAPSchemaElement newValue )
+                        throws LDAPException {
+        LDAPModificationSet mods = new LDAPModificationSet();
+        mods.add( LDAPModification.DELETE,
+                  new LDAPAttribute( attrName, getValue() ) );
+        mods.add( LDAPModification.ADD,
+                  new LDAPAttribute( attrName, newValue.getValue() ) );
+        ld.modify( "cn=schema", mods );
+    }
+
+    /**
      * Removes the current object class, attribute type, or matching rule
      * definition from the schema. Typically, most servers
      * will require you to authenticate before allowing you to
