@@ -1227,10 +1227,10 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
       // commom case: we won't bother with the stretching if there is
       // no glyph table for us...
       if (!mGlyphTable) {
-        mOperator = -1;
-        mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
         // never try to stretch this operator again
         nsMathMLOperators::DisableStretchyOperatorAt(mOperator);
+        mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
+        mOperator = -1;
       }
     }
   }
