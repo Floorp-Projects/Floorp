@@ -77,7 +77,7 @@ public:
  * @param _class The name of the class implementing the method
  */
 #define NS_IMPL_ADDREF(_class)                               \
-nsrefcnt _class::AddRef(void)                                \
+NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                \
 {                                                            \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  \
   return ++mRefCnt;                                          \
@@ -88,7 +88,7 @@ nsrefcnt _class::AddRef(void)                                \
  * @param _class The name of the class implementing the method
  */
 #define NS_IMPL_RELEASE(_class)                        \
-nsrefcnt _class::Release(void)                         \
+NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                         \
 {                                                      \
   NS_PRECONDITION(0 != mRefCnt, "dup release");        \
   if (--mRefCnt == 0) {                                \
@@ -116,7 +116,7 @@ nsrefcnt _class::Release(void)                         \
  */
 
 #define NS_IMPL_QUERY_INTERFACE(_class,_classiiddef)                     \
-nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
+NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 {                                                                        \
   if (NULL == aInstancePtr) {                                            \
     return NS_ERROR_NULL_POINTER;                                        \
@@ -182,19 +182,19 @@ public:                                                                     \
  */
 
 #define NS_IMPL_ADDREF_INHERITED(Class, Super)                                \
-nsrefcnt Class::AddRef(void)                                                  \
+NS_IMETHODIMP_(nsrefcnt) Class::AddRef(void)                                                  \
 {                                                                             \
   return Super::AddRef();                                                     \
 }                                                                             \
 
 #define NS_IMPL_RELEASE_INHERITED(Class, Super)                               \
-nsrefcnt Class::Release(void)                                                 \
+NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                                 \
 {                                                                             \
   return Super::Release();                                                    \
 }                                                                             \
 
 #define NS_IMPL_QUERY_INTERFACE_INHERITED(Class, Super, AdditionalInterface)  \
-nsresult Class::QueryInterface(REFNSIID aIID, void** aInstancePtr)            \
+NS_IMETHODIMP Class::QueryInterface(REFNSIID aIID, void** aInstancePtr)            \
 {                                                                             \
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;                            \
   if (aIID.Equals(AdditionalInterface::GetIID())) {                           \
@@ -243,7 +243,7 @@ nsresult Class::QueryInterface(REFNSIID aIID, void** aInstancePtr)            \
  */
 #if defined(XP_PC)
 #define NS_IMPL_THREADSAFE_ADDREF(_class)                                   \
-nsrefcnt _class::AddRef(void)                                               \
+NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                               \
 {                                                                           \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                 \
   return InterlockedIncrement((LONG*)&mRefCnt);                             \
@@ -268,7 +268,7 @@ nsrefcnt _class::AddRef(void)                                               \
  */
 #if defined(XP_PC)
 #define NS_IMPL_THREADSAFE_RELEASE(_class)             \
-nsrefcnt _class::Release(void)                         \
+NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                         \
 {                                                      \
   NS_PRECONDITION(0 != mRefCnt, "dup release");        \
   if (0 == InterlockedDecrement((LONG*)&mRefCnt)) {    \
@@ -322,7 +322,7 @@ nsrefcnt _class::Release(void)                         \
  }
 
 #define NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)          \
-nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
+NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 {                                                                        \
   if (NULL == aInstancePtr) {                                            \
     return NS_ERROR_NULL_POINTER;                                        \
