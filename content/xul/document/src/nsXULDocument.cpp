@@ -1147,7 +1147,7 @@ nsXULDocument::GetCSSLoader(nsICSSLoader*& aLoader)
 NS_IMETHODIMP
 nsXULDocument::GetScriptGlobalObject(nsIScriptGlobalObject** aScriptGlobalObject)
 {
-   *aScriptGlobalObject = mScriptGlobalObject;
+   *aScriptGlobalObject = mScriptGlobalObject.get();
    NS_IF_ADDREF(*aScriptGlobalObject);
    return NS_OK;
 }
@@ -1757,7 +1757,7 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   //Capturing stage
-  if (NS_EVENT_FLAG_BUBBLE != aFlags && nsnull != mScriptGlobalObject) {
+  if (NS_EVENT_FLAG_BUBBLE != aFlags && mScriptGlobalObject) {
     mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
   }
 
@@ -1768,7 +1768,7 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   //Bubbling stage
-  if (NS_EVENT_FLAG_CAPTURE != aFlags && nsnull != mScriptGlobalObject) {
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && mScriptGlobalObject) {
     mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
   }
 
