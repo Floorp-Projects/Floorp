@@ -117,11 +117,15 @@ separator[orient="vertical"].groove-thin {
 /* ::::: text formatting rules ::::: */
 
 /* ..... label (with margins) ..... */
-
 text.label {
   margin: 1px 5px 2px 5px;
 }
     
+/* reduced margin for some UI */
+.small-margin {
+  margin: 1px 2px 1px 2px;
+}
+
 text[disabled="true"] {
   color: #9FA6AE;
 }    

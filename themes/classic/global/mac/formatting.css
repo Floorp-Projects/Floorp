@@ -101,7 +101,12 @@
 /* label (with margins) */
   text.label 
     {
-      margin              : 1px 5px 2px 5px;
+      margin              : 0px 5px 0px 5px;
+    }
+    
+  .small-margin
+    {
+      margin              : 1px 2px 1px 2px;
     }
     
   text[disabled="true"] 

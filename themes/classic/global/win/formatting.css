@@ -113,6 +113,12 @@
     {
       margin              : 1px 5px 2px 6px;
     }
+
+/** Reduced Margin for some UI **/
+  .small-margin
+    {
+      margin              : 1px 2px 1px 2px;
+    }
     
   text[disabled="true"] 
     {

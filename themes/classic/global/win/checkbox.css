@@ -69,6 +69,11 @@
     {
       list-style-image    : inherit;
     }    
+
+  .checkbox-text
+    {
+      margin              : 0px !important;
+    }
     
   .checkbox-text[disabled="true"]
     {
@@ -84,4 +89,5 @@
   .checkbox-internal-box
     {
       -moz-user-focus     : none;
+      padding             : 0px;
     }

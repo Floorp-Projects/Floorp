@@ -68,6 +68,11 @@
     {
       list-style-image    : inherit;
     }    
+
+  .radio-text
+    {
+      margin              : 0px !important;
+    }
     
   .radio-text[disabled="true"]
     {
