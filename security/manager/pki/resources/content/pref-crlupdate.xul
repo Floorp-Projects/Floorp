@@ -27,7 +27,6 @@
 
 <dialog id="crlUpdatePref" 
   title="&validation.crl.autoupdate.title;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
   onload="onLoad();"
   buttons="accept,cancel,help"

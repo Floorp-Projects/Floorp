@@ -41,25 +41,25 @@ A simple static tree view with things that can expand and collapse. Nothing fanc
 			<treechildren>
 				<treeitem>
 					<treerow>
-						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Tinderbox</treecell>
+						<treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/PageRead.gif"/>Tinderbox</treecell>
 						<treecell><html:div>http://tinderbox.mozilla.org</html:div></treecell>  
 					</treerow>
 				</treeitem>
 				<treeitem>
 					<treerow>
-						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bonsai</treecell>
+						<treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/PageRead.gif"/>Bonsai</treecell>
 						<treecell><html:div>http://bonsai.mozilla.org</html:div></treecell>  
 					</treerow>
 				</treeitem>
 				<treeitem>
 					<treerow>
-						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Mozilla.org</treecell>
+						<treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/PageRead.gif"/>Mozilla.org</treecell>
 						<treecell><html:div>http://www.mozilla.org</html:div></treecell>  
 					</treerow>
 				</treeitem>
 				<treeitem>
 					<treerow>
-						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bugzilla</treecell>
+						<treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/PageRead.gif"/>Bugzilla</treecell>
 						<treecell><html:div>http://bugzilla.mozilla.org</html:div></treecell>  
 					</treerow>
 				</treeitem>
@@ -75,25 +75,25 @@ A simple static tree view with things that can expand and collapse. Nothing fanc
 			<treechildren>
 				<treeitem>
 					<treerow>
-						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Tinderbox</treecell>
+						<treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/PageRead.gif"/>Tinderbox</treecell>
 						<treecell><html:div>http://tinderbox.mozilla.org</html:div></treecell>  
 					</treerow>
 				</treeitem>
 				<treeitem>
 					<treerow>
-						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bonsai</treecell>
+						<treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/PageRead.gif"/>Bonsai</treecell>
 						<treecell><html:div>http://bonsai.mozilla.org</html:div></treecell>  
 					</treerow>
 				</treeitem>
 				<treeitem>
 					<treerow>
-						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Mozilla.org</treecell>
+						<treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/PageRead.gif"/>Mozilla.org</treecell>
 						<treecell><html:div>http://www.mozilla.org</html:div></treecell>  
 					</treerow>
 				</treeitem>
 				<treeitem>
 					<treerow>
-						<treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/PageRead.gif"/>Bugzilla</treecell>
+						<treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/PageRead.gif"/>Bugzilla</treecell>
 						<treecell><html:div>http://bugzilla.mozilla.org</html:div></treecell>  
 					</treerow>
 				</treeitem>

@@ -4,7 +4,6 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/securityOverlay.dtd">
 
 <overlay id="NavSecurityOverlay"
-         xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://communicator/content/securityUI.js" />

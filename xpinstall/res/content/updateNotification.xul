@@ -3,7 +3,6 @@
 <!DOCTYPE window SYSTEM "chrome://global/locale/updateNotification.dtd" >
 
 <overlay id="updateNotificationMenuID"
-xmlns:html="http://www.w3.org/1999/xhtml"
 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript">

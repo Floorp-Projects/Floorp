@@ -33,10 +33,10 @@
   
   <script type="application/x-javascript" src="chrome://xmlterm/content/XMLTermChrome.js"/>
 
-  <html:iframe id="content-frame2" type="content" html:name="content2"
-               html:src="about:blank" flex="100%"/>
+  <html:iframe id="content-frame2" type="content" name="content2"
+               src="about:blank" flex="100%"/>
 
-  <html:iframe id="content-frame" type="content" html:name="content"
-               html:src="chrome://xmlterm/content/xmlterm.html" flex="100%"/>
+  <html:iframe id="content-frame" type="content" name="content"
+               src="chrome://xmlterm/content/xmlterm.html" flex="100%"/>
 
 </window>
