@@ -72,6 +72,9 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
             break;
         }
     }
+    // nuts, I know there's a cooler way of doing this, but it's late
+    // now and it'll probably come to me in the morning.
+    if (result & 0x3) result += 4 - (result & 0x3);     // ensure q-word alignment
     return result;
 }
 
@@ -87,6 +90,12 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
     nsXPTCVariant *l_s = s;
     uint32 l_paramCount = paramCount;
 
+    typedef struct {
+        uint32 hi;
+        uint32 lo;
+    } DU;               // have to move 64 bit entities as 32 bit halves since
+                        // stack slots are not guaranteed 16 byte aligned
+
     for(uint32 i = 0; i < l_paramCount; i++, l_d++, l_s++)
     {
         if(l_s->IsPtrData())
@@ -96,19 +105,21 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
         }
         switch(l_s->type)
         {
-        case nsXPTType::T_I8     : *((int8*)   l_d) = l_s->val.i8;          break;
-        case nsXPTType::T_I16    : *((int16*)  l_d) = l_s->val.i16;         break;
+        case nsXPTType::T_I8     : *((int32*)   l_d) = l_s->val.i8;          break;
+        case nsXPTType::T_I16    : *((int32*)  l_d) = l_s->val.i16;         break;
         case nsXPTType::T_I32    : *((int32*)  l_d) = l_s->val.i32;         break;
-        case nsXPTType::T_I64    : *((int64*)  l_d) = l_s->val.i64; l_d++;  break;
-        case nsXPTType::T_U8     : *((uint8*)  l_d) = l_s->val.u8;          break;
-        case nsXPTType::T_U16    : *((uint16*) l_d) = l_s->val.u16;         break;
+        case nsXPTType::T_I64    : 
+        case nsXPTType::T_U64    : 
+        case nsXPTType::T_DOUBLE : *((uint32*) l_d++) = ((DU *)l_s)->hi;
+                                   *((uint32*) l_d) = ((DU *)l_s)->lo;
+                                   break;
+        case nsXPTType::T_U8     : *((uint32*)  l_d) = l_s->val.u8;          break;
+        case nsXPTType::T_U16    : *((uint32*) l_d) = l_s->val.u16;         break;
         case nsXPTType::T_U32    : *((uint32*) l_d) = l_s->val.u32;         break;
-        case nsXPTType::T_U64    : *((uint64*) l_d) = l_s->val.u64; l_d++;  break;
         case nsXPTType::T_FLOAT  : *((float*)  l_d) = l_s->val.f;           break;
-        case nsXPTType::T_DOUBLE : *((double*) l_d) = l_s->val.d;   l_d++;  break;
         case nsXPTType::T_BOOL   : *((PRBool*) l_d) = l_s->val.b;           break;
-        case nsXPTType::T_CHAR   : *((char*)   l_d) = l_s->val.c;           break;
-        case nsXPTType::T_WCHAR  : *((wchar_t*)l_d) = l_s->val.wc;          break;
+        case nsXPTType::T_CHAR   : *((uint32*)   l_d) = l_s->val.c;           break;
+        case nsXPTType::T_WCHAR  : *((int32*)l_d) = l_s->val.wc;          break;
         default:
             // all the others are plain pointer types
             *((void**)l_d) = l_s->val.p;
