@@ -468,7 +468,7 @@ CalendarEventDataSource.prototype.getAllFutureEvents = function()
    var Today = new Date();
 
    //do this to allow all day events to show up all day long
-   var Start = new Date( Today.getFullYear(), Today.getDay(), Today.getMonth(), 0, 0, 0 );
+   var Start = new Date( Today.getFullYear(), Today.getMonth(), Today.getDate(), 0, 0, 0 );
    
    var Infinity = new Date( Today.getFullYear()+100, 31, 11 );
 
