@@ -42,6 +42,8 @@ FILES = \
 	dom-test-4.css			\
 	dom-test-4.xul			\
 	dom-test-5.xul			\
+	dom-test-6.xul			\
+	dom-test-7.xul			\
 	flash-registry.rdf		\
 	flash.css			\
 	flash.js			\
