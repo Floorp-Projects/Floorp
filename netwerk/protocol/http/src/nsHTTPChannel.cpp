@@ -1137,11 +1137,14 @@ nsHTTPChannel::CheckCache()
         }
     }
 
-    if (doIfModifiedSince) {
-        // Add If-Modified-Since header
-        nsXPIDLCString lastModified;
-        mCachedResponse->GetHeader(nsHTTPAtoms::Last_Modified, 
-                                   getter_Copies(lastModified));
+    // If there is no if-modified header, we will refetch This will cause refetch of cgi's
+    // on link click and url typein
+    nsXPIDLCString lastModified;
+    mCachedResponse->GetHeader(nsHTTPAtoms::Last_Modified,
+                               getter_Copies(lastModified));
+
+    if (doIfModifiedSince)
+    {
         if (lastModified)
             SetRequestHeader(nsHTTPAtoms::If_Modified_Since, lastModified);
 
@@ -1152,7 +1155,12 @@ nsHTTPChannel::CheckCache()
             SetRequestHeader(nsHTTPAtoms::If_None_Match, etag);
     }
 
-    mCachedContentIsValid = !doIfModifiedSince;
+    if (!lastModified)
+        // This is most probably a cgi. Refetch unconditionally.
+        mCachedContentIsValid = PR_FALSE;
+    else
+        mCachedContentIsValid = !doIfModifiedSince;
+
 
     return NS_OK;
 }
@@ -1821,48 +1829,51 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
 
     if (mCacheEntry)
     {
-        // The no-store directive within the 'Cache-Control:' header indicates
-        // that we should not store the response in the cache
-        nsXPIDLCString header;
-        PRBool dontCache = PR_FALSE;
-
-        GetResponseHeader(nsHTTPAtoms::Cache_Control, getter_Copies(header));
-        if (header)
+        if (NS_FAILED(aStatus))
         {
-            PRInt32 offset;
-            // XXX readable string
-            nsCAutoString cacheControlHeader(NS_STATIC_CAST(const char*, header));
-            offset = cacheControlHeader.Find("no-store", PR_TRUE);
-            if (offset != kNotFound)
-                dontCache = PR_TRUE;
+            // The url failed. This could be a DNS failure or server error
+            // We have covered the server errors elsewhere. On DNS error, do CacheAbort().
+            CacheAbort(aStatus);
         }
-
-        // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
-        // a request header), caching is inhibited when this header is present so
-        // as to match existing Navigator behavior.
-        if (!dontCache)
+        else
         {
-            GetResponseHeader(nsHTTPAtoms::Pragma, getter_Copies(header));
+            // The no-store directive within the 'Cache-Control:' header indicates
+            // that we should not store the response in the cache
+            nsXPIDLCString header;
+            PRBool dontCache = PR_FALSE;
+
+            GetResponseHeader(nsHTTPAtoms::Cache_Control, getter_Copies(header));
             if (header)
             {
                 PRInt32 offset;
                 // XXX readable string
-                nsCAutoString pragmaHeader(NS_STATIC_CAST(const char*, header));
-                offset = pragmaHeader.Find("no-cache", PR_TRUE);
+                nsCAutoString cacheControlHeader(NS_STATIC_CAST(const char*, header));
+                offset = cacheControlHeader.Find("no-store", PR_TRUE);
                 if (offset != kNotFound)
                     dontCache = PR_TRUE;
             }
-        }
+
+            // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
+            // a request header), caching is inhibited when this header is present so
+            // as to match existing Navigator behavior.
+            if (!dontCache)
+            {
+                GetResponseHeader(nsHTTPAtoms::Pragma, getter_Copies(header));
+                if (header)
+                {
+                    PRInt32 offset;
+                    // XXX readable string
+                    nsCAutoString pragmaHeader(NS_STATIC_CAST(const char*, header));
+                    offset = pragmaHeader.Find("no-cache", PR_TRUE);
+                    if (offset != kNotFound)
+                        dontCache = PR_TRUE;
+                }
+            }
     
-        if (dontCache)
-        {
-            mCacheEntry->SetStoredContentLength(0);
+            if (dontCache)
+                mCacheEntry->SetStoredContentLength(0);
         }
     }
-
-    // Release the cache entry as soon as we are done. This helps as it can
-    // flush any cache records and do maintenance.
-    mCacheEntry = nsnull;
 
     //
     // Call the consumer OnStopRequest(...) to end the request...
@@ -1878,6 +1889,12 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
                 this, rv));
         }
     }
+
+    // Release the cache entry as soon as we are done. This helps as it can
+    // flush any cache records and do maintenance. But do this only after
+    // stopRequest has been fired as the stopListeners could want to use
+    // the cache entry like the plugin listener.
+    mCacheEntry = nsnull;
 
     //
     // After the consumer has been notified, remove the channel from its 
