@@ -454,7 +454,7 @@ nsJSUtils::nsGenericEnumerate(JSContext* aContext,
   return JS_TRUE;
 }
 
-static JSBool
+static JSBool PR_CALLBACK
 StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
