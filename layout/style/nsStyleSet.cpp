@@ -534,7 +534,9 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
       // XXX Stop-gap fix to prevent ua.css rules from being applied
       // to XML elements
       nsIHTMLContent *htmlContent;
-      nsresult rv = aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+      nsresult rv = NS_ERROR_FAILURE;
+      if (aContent)
+        rv = aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
       PRInt32 ruleCount = 0;
       if (NS_SUCCEEDED(rv)) {
          ruleCount += RulesMatching(mBackstopSheets, aPresContext, medium, aContent, aParentContext, rules);
