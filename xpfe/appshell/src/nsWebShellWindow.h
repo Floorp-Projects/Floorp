@@ -30,7 +30,9 @@
 #include "nsVoidArray.h"
 #include "nsIMenu.h"
 #include "nsIUrlDispatcher.h"
+#ifndef NECKO
 #include "nsINetSupport.h"
+#endif
 // can't use forward class decl's because of template bugs on Solaris 
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -59,8 +61,11 @@ class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver,
-						 public nsIUrlDispatcher,
-						  public nsINetSupport
+						 public nsIUrlDispatcher
+					#ifdef NECKO
+					#else
+						, public nsINetSupport
+					#endif
 {
 public:
   nsWebShellWindow();
@@ -250,6 +255,8 @@ public:
 
   NS_DECL_IURLDISPATCHER
   // nsINetSupport
+ #if NECKO
+ #else
   NS_IMETHOD_(void) Alert(const nsString &aText);  
   NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
   NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
@@ -259,7 +266,8 @@ public:
                                             nsString &aUser,
                                             nsString &aPassword);
   NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
-                                     nsString &aPassword); 
+                                     nsString &aPassword);
+ #endif
 protected:
   void ExecuteJavaScriptString(nsString& aJavaScript);
 
