@@ -19,19 +19,19 @@
 #ifndef nsMacControl_h__
 #define nsMacControl_h__
 
-#include "nsWindow.h"
+#include "nsChildWindow.h"
 #include <Controls.h>
 
-class nsMacControl : public nsWindow
+class nsMacControl : public nsChildWindow
 {
 private:
-	typedef nsWindow Inherited;
+	typedef nsChildWindow Inherited;
 
 public:
-                           nsMacControl();
-	virtual                 ~nsMacControl();
+						nsMacControl();
+	virtual				~nsMacControl();
 
-  NS_IMETHOD 			Create(nsIWidget *aParent,
+	NS_IMETHOD 			Create(nsIWidget *aParent,
 				              const nsRect &aRect,
 				              EVENT_CALLBACK aHandleEventFunction,
 				              nsIDeviceContext *aContext = nsnull,
@@ -40,15 +40,15 @@ public:
 				              nsWidgetInitData *aInitData = nsnull);
 
 	virtual void		SetControlType(short type)	{mControlType = type;}
-	short						GetControlType()						{return mControlType;}
+	short				GetControlType()			{return mControlType;}
 
 	// event handling
-  virtual PRBool	OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool	DispatchMouseEvent(nsMouseEvent &aEvent);
+	virtual PRBool		OnPaint(nsPaintEvent & aEvent);
+	virtual PRBool		DispatchMouseEvent(nsMouseEvent &aEvent);
     
 	// nsIWidget interface
 	NS_IMETHOD			Enable(PRBool bState);
-	NS_IMETHOD    	Show(PRBool aState);
+	NS_IMETHOD			Show(PRBool aState);
 	NS_IMETHODIMP		SetFont(const nsFont &aFont);
 
 	// Mac string utilities
@@ -58,27 +58,27 @@ public:
 
 protected:
 	
-	NS_METHOD				CreateOrReplaceMacControl(short inControlType);
+	NS_METHOD			CreateOrReplaceMacControl(short inControlType);
 	virtual void		GetRectForMacControl(nsRect &outRect);
-	void						SetupMacControlFont();
-	void						ControlChanged(PRInt32 aNewValue);
-	void						NSStringSetControlTitle(ControlHandle theControl, nsString title);
-	void						SetupMacControlFontForScript(short theScript);
+	void				SetupMacControlFont();
+	void				ControlChanged(PRInt32 aNewValue);
+	void				NSStringSetControlTitle(ControlHandle theControl, nsString title);
+	void				SetupMacControlFontForScript(short theScript);
 	
-	nsString				mLabel;
-	PRBool					mWidgetArmed;
-	PRBool					mMouseInButton;
+	nsString			mLabel;
+	PRBool				mWidgetArmed;
+	PRBool				mMouseInButton;
 
-	PRInt32					mValue;
-	PRInt32					mMin;
-	PRInt32					mMax;
+	PRInt32				mValue;
+	PRInt32				mMin;
+	PRInt32				mMax;
 	ControlHandle		mControl;
-	short						mControlType;
+	short				mControlType;
 
-	nsString				mLastLabel;
-	nsRect					mLastBounds;
-	PRInt32					mLastValue;
-	PRInt16					mLastHilite;
+	nsString			mLastLabel;
+	nsRect				mLastBounds;
+	PRInt32				mLastValue;
+	PRInt16				mLastHilite;
 };
 
 #endif // nsMacControl_h__

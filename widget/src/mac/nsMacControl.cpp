@@ -38,7 +38,7 @@
 //
 //
 //-------------------------------------------------------------------------
-nsMacControl::nsMacControl() : nsWindow()
+nsMacControl::nsMacControl()
 {
 	mValue			= 0;
 	mMin			= 0;
