@@ -123,8 +123,6 @@ components/profile.xpt
 ; rdf
 components/librdf.so
 components/rdf.xpt
-components/librdfdomds.so
-components/rdfdomds.xpt
 
 ; session history
 components/libshistory.so
@@ -153,7 +151,7 @@ res/langGroups.properties
 res/charsetData.properties
 res/charsetalias.properties
 res/acceptlanguage.properties
-res/wincharset.properties
+res/unixcharset.properties
 res/strres.properties 
 
 

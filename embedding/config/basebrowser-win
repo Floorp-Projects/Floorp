@@ -120,8 +120,6 @@ components\profile.xpt
 ; rdf
 components\rdf.dll
 components\rdf.xpt
-components\rdfdomds.dll
-components\rdfdomds.xpt
 
 ; session history
 components\shistory.dll
