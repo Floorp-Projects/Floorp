@@ -54,16 +54,15 @@
 /////////////////////////////////////////////////////////////////////////////
 // CNsIWebNav window
 
-class CNsIWebNav : public CWnd
+class CNsIWebNav 
 {
 // Construction
 public:
-	CNsIWebNav(CTests *mTests);
+	CNsIWebNav(nsIWebNavigation *mWebNav);
 
 // Attributes
 public:
-	CTests *qaTests ;
-
+	nsCOMPtr<nsIWebNavigation> qaWebNav;
 // Operations
 public:
 
@@ -79,11 +78,10 @@ public:
 	void GetDocumentTest(void);
 	void GetCurrentURITest(void);
 	void GetSHTest(void);
+	void LoadUriandReload();
+	void OnStartTests(UINT nMenuID);
+	void RunAllTests();
 
-// Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CNsIWebNav)
-	//}}AFX_VIRTUAL
 
 // Implementation
 public:
@@ -91,10 +89,6 @@ public:
 
 	// Generated message map functions
 protected:
-	//{{AFX_MSG(CNsIWebNav)
-	afx_msg void OnInterfacesNsiwebnav();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
 };
 typedef struct
 {

@@ -50,17 +50,17 @@
 #include "ProfileMgr.h"
 #include "ProfilesDlg.h"
 #include "QaUtils.h"
-#include "tests.h"
+#include "nsihistory.h"
 #include <stdio.h>
 
 
 /////////////////////////////////////////////////////////////////////////////
 // CNsIHistory
 
-CNsIHistory::CNsIHistory(CTests *mTests)
+CNsIHistory::CNsIHistory(nsIWebNavigation *mWebNav)
 {
-	qaTests = mTests;
-	//qaWebNav = mWebNav ;
+	//qaTests = mTests;
+	qaWebNav = mWebNav ;
 }
 
 
@@ -68,12 +68,6 @@ CNsIHistory::~CNsIHistory()
 {
 }
 
-
-BEGIN_MESSAGE_MAP(CNsIHistory, CWnd)
-	//{{AFX_MSG_MAP(CNsIHistory)
-	ON_COMMAND(ID_INTERFACES_NSISHISTORY, OnInterfacesNsishistory)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -86,7 +80,90 @@ END_MESSAGE_MAP()
 // ***********************************************************************
 // nsISHistory & nsIHistoryEntry ifaces:
 
-void CNsIHistory::OnInterfacesNsishistory() 
+void CNsIHistory::OnStartTests(UINT nMenuID)
+{
+
+	// Calls  all or indivdual test cases on the basis of the 
+	// option selected from menu.
+   PRInt32 numEntries = 5;
+   PRInt32 theIndex;
+   PRInt32 theMaxLength = 1;
+
+   CString shString;
+
+   nsCOMPtr<nsISHistory> theSessionHistory;
+   nsCOMPtr<nsIHistoryEntry> theHistoryEntry;
+   nsCOMPtr<nsISimpleEnumerator> theSimpleEnum;
+
+
+   //nsCOMPtr<nsIURI> theUri;
+   // do_QueryInterface
+   // NS_HISTORYENTRY_CONTRACTID
+   // NS_SHISTORYLISTENER_CONTRACTID
+
+	// get Session History through web nav iface
+   if (qaWebNav)
+		qaWebNav->GetSessionHistory( getter_AddRefs(theSessionHistory));
+
+   if (!theSessionHistory)
+   {
+	   QAOutput("theSessionHistory object wasn't created. No session history tests performed.", 2);
+	   return;
+   }
+   else
+	   QAOutput("theSessionHistory object was created.", 2);
+
+	theSessionHistory->GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
+	if (!theHistoryEntry)
+		QAOutput("We didn't get the History Entry object.", 1);
+	else 
+		QAOutput("We have the History Entry object!", 1);	
+
+
+
+	switch(nMenuID)
+	{
+		case ID_INTERFACES_NSISHISTORY_RUNALLTESTS :
+			RunAllTests();
+			break ;
+		case ID_INTERFACES_NSISHISTORY_GETCOUNT :
+			GetCountTest(theSessionHistory, &numEntries);
+			break ;
+		case ID_INTERFACES_NSISHISTORY_GETINDEX :
+			GetIndexTest(theSessionHistory, &theIndex);
+			break ;
+		case ID_INTERFACES_NSISHISTORY_GETMAXLENGTH :
+			GetMaxLengthTest(theSessionHistory, &theMaxLength);
+			break ;
+		case ID_INTERFACES_NSISHISTORY_SETMAXLENGTH :
+			SetMaxLengthTest(theSessionHistory, theMaxLength);
+			break ;
+		case ID_INTERFACES_NSISHISTORY_GETENTRYATINDEX :
+			//GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
+			break ;
+		case ID_INTERFACES_NSISHISTORY_PURGEHISTORY :
+			PurgeHistoryTest(theSessionHistory, numEntries);
+			break ;
+		case ID_INTERFACES_NSISHISTORY_GETSHISTORYENUMERATOR :
+			//GetSHistoryEnumerator(getter_AddRefs(theSimpleEnum));
+			break ;
+		case ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_RUNALLTESTS :
+			RunAllHistoryEnrtyTests();
+			break ;
+		case ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETURI :
+			GetURIHistTest(theHistoryEntry);
+			break ;
+		case ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETTITLE :
+			GetTitleHistTest(theHistoryEntry);
+			break ;
+		case ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETISSUBFRAME :
+			GetIsSubFrameTest(theHistoryEntry);
+			break ;
+	}
+
+}
+
+void CNsIHistory::RunAllTests() 
 {
    //nsresult rv;  
 
@@ -105,8 +182,8 @@ void CNsIHistory::OnInterfacesNsishistory()
    // NS_SHISTORYLISTENER_CONTRACTID
 
 	// get Session History through web nav iface
-   if (qaTests->qaWebNav)
-		qaTests->qaWebNav->GetSessionHistory( getter_AddRefs(theSessionHistory));
+   if (qaWebNav)
+		qaWebNav->GetSessionHistory( getter_AddRefs(theSessionHistory));
 
    if (!theSessionHistory)
    {
@@ -250,13 +327,13 @@ void CNsIHistory::GetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 *theM
 
 void CNsIHistory::GetURIHistTest(nsIHistoryEntry* theHistoryEntry)
 {
-	rv = theHistoryEntry->GetURI(getter_AddRefs(qaTests->theUri));
-	if (!qaTests->theUri)
+	rv = theHistoryEntry->GetURI(getter_AddRefs(theUri));
+	if (!theUri)
 		QAOutput("theUri for GetURI() invalid. Test failed.", 1);
 	else
 	{
 		RvTestResult(rv, "GetURI() (URI attribute) test", 1);
-		rv = qaTests->theUri->GetSpec(&uriSpec);
+		rv = theUri->GetSpec(&uriSpec);
 		if (NS_FAILED(rv))
 			QAOutput("We didn't get the uriSpec.", 1);
 		else
@@ -317,8 +394,8 @@ void CNsIHistory::SimpleEnumTest(nsISimpleEnumerator *theSimpleEnum)
 	 nextHistoryEntry = do_QueryInterface(nextObj);
 	 if (!nextHistoryEntry)
 		continue;
-	 rv = nextHistoryEntry->GetURI(getter_AddRefs(qaTests->theUri));
-	 rv = qaTests->theUri->GetSpec(&uriSpec);
+	 rv = nextHistoryEntry->GetURI(getter_AddRefs(theUri));
+	 rv = theUri->GetSpec(&uriSpec);
 	 if (!uriSpec)
 		QAOutput("uriSpec for GetSpec() invalid. Test failed.", 1);
 	 else
@@ -331,4 +408,74 @@ void CNsIHistory::PurgeHistoryTest(nsISHistory* theSessionHistory, PRInt32 numEn
    rv = theSessionHistory->PurgeHistory(numEntries);
    RvTestResult(rv, "PurgeHistory() test", 2);
    FormatAndPrintOutput("Number of removed entries = ", numEntries, 2);		 
+}
+
+void CNsIHistory::RunAllHistoryEnrtyTests() 
+{
+   PRInt32 numEntries = 5;
+   PRInt32 theIndex;
+   PRInt32 theMaxLength = 1;
+
+   CString shString;
+
+   nsCOMPtr<nsISHistory> theSessionHistory;
+   nsCOMPtr<nsIHistoryEntry> theHistoryEntry;
+
+   //nsCOMPtr<nsIURI> theUri;
+   // do_QueryInterface
+   // NS_HISTORYENTRY_CONTRACTID
+   // NS_SHISTORYLISTENER_CONTRACTID
+
+	// get Session History through web nav iface
+   if (qaWebNav)
+		qaWebNav->GetSessionHistory( getter_AddRefs(theSessionHistory));
+
+   if (!theSessionHistory)
+   {
+	   QAOutput("theSessionHistory object wasn't created. No session history tests performed.", 2);
+	   return;
+   }
+   else
+	   QAOutput("theSessionHistory object was created.", 2);
+
+	theSessionHistory->GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
+	if (!theHistoryEntry)
+		QAOutput("We didn't get the History Entry object.", 1);
+	else 
+	{
+		QAOutput("We have the History Entry object!", 1);	
+
+			    // getEntryAtIndex() tests
+		if (theMaxLength < numEntries)
+		{
+			QAOutput("Setting number of entries to maximum length!", 1);
+			numEntries = theMaxLength;
+		}
+
+		for (theIndex = 0; theIndex < numEntries; theIndex++)
+		{ 
+			FormatAndPrintOutput("the index = ", theIndex, 2); 
+
+			//GetEntryAtIndexTest(theSessionHistory,theHistoryEntry, theIndex);
+
+			theSessionHistory->GetEntryAtIndex(theIndex, PR_FALSE, getter_AddRefs(theHistoryEntry));
+			if (!theHistoryEntry)
+			{
+				QAOutput("We didn't get the History Entry object. No more tests performed.", 1);
+				return;
+			}
+			// nsiHistoryEntry.idl tests	
+
+			// test URI attribute in nsIHistoryEntry.idl
+			GetURIHistTest(theHistoryEntry);
+
+			// test title attribute in nsIHistoryEntry.idl
+			GetTitleHistTest(theHistoryEntry);
+
+			// test isSubFrame attribute in nsIHistoryEntry.idl
+			GetIsSubFrameTest(theHistoryEntry);
+
+		}	// end for loop
+	}		// end outer else
+
 }

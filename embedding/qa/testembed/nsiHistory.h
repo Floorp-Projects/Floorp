@@ -47,28 +47,22 @@
 /////////////////////////////////////////////////////////////////////////////
 // CNsIHistory window
 
-class CNsIHistory : public CWnd
+class CNsIHistory
 {
 // Construction
 public:
-	CNsIHistory(CTests *mTests);
+	CNsIHistory(nsIWebNavigation *mWebNav);
 
 // Attributes
 public:
 	// Mozilla interfaces
 	//
-	//nsCOMPtr<nsIWebNavigation> qaWebNav;
-	//nsCOMPtr<nsIURI> theUri;
+	nsCOMPtr<nsIWebNavigation> qaWebNav;
+	nsCOMPtr<nsIURI> theUri;
 	char *uriSpec;
-	CTests *qaTests ;
+	//CTests *qaTests ;
 
-// Operations
 public:
-
-// Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CNsIHistory)
-	//}}AFX_VIRTUAL
 
 // Implementation
 public:
@@ -88,14 +82,12 @@ public:
 	void GetSHEnumTest(nsISHistory*, nsISimpleEnumerator *);
 	void SimpleEnumTest(nsISimpleEnumerator *);
 	void PurgeHistoryTest(nsISHistory *, PRInt32);
-
-
+	void RunAllTests();
+	void OnStartTests(UINT nMenuID);
+	void RunAllHistoryEnrtyTests();
 	// Generated message map functions
 protected:
-	//{{AFX_MSG(CNsIHistory)
-	afx_msg void OnInterfacesNsishistory();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+
 };
 
 

@@ -52,6 +52,8 @@
 #include "ProfileMgr.h"
 #include "ProfilesDlg.h"
 #include "Tests.h"
+#include "nsihistory.h"
+#include "nsiwebnav.h"
 #include "nsirequest.h"
 #include "nsidirserv.h"
 #include "domwindow.h"
@@ -94,12 +96,15 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
     ON_COMMAND(ID_CLIPBOARDCMD_CANCOPYSELECTION, canCopySelectionTest)
     ON_COMMAND(ID_CLIPBOARDCMD_CANCUTSELECTION, canCutSelectionTest)
     ON_COMMAND(ID_CLIPBOARDCMD_CANPASTE, canPasteTest)
-	ON_COMMAND(ID_INTERFACES_NSIREQUEST, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_CANCEL, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_RUNALLTESTS, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_INIT, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_RUNALLTESTS, OnInterfacesNsiselection)
 	ON_COMMAND(ID_VERIFYBUGS_90195, OnVerifybugs90195)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RUNALLTESTS, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETCOUNT, OnInterfacesNsishistory)
+	ON_COMMAND(ID_TESTS_REMOVEHISTORYLISTENER, OnTestsRemovehistorylistener)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETCANGOBACK, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_REGISTERPROVIDER, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_RUNALLTESTS, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_UNREGISTERPROVIDER, OnInterfacesNsidirectoryservice)
@@ -145,6 +150,39 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RENAMEPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SETCURRENTPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SHUTDOWNCURRENTPROFILE, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETENTRYATINDEX, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETINDEX, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETMAXLENGTH, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETSHISTORYENUMERATOR, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_PURGEHISTORY, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_RUNALLTESTS, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_SETMAXLENGTH, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETISSUBFRAME, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETTITLE, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETURI, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_RUNALLTESTS, OnInterfacesNsishistory)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETCANGOFORWARD, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETCURRENTURI, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETDOCUMENT, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETSESSIONHISTORY, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GOBACK, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GOFORWARD, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GOTOINDEX, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_LOADURI, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_RELOAD, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_RUNALLTESTS, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_SETSESSIONHISTORY, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_STOP, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETLOADFLAGS, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETLOADGROUP, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETNAME, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETSTATUS, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_ISPENDING, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_RESUME, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SETLOADFLAGS, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SETLOADGROUP, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SUSPEND, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_RUNALLTESTS, OnInterfacesNsirequest)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -159,12 +197,6 @@ CTests::CTests(nsIWebBrowser* mWebBrowser,
 	qaWebNav = mWebNav;
 
 	qaBrowserImpl = mpBrowserImpl;
-
-	// Create Individual Interface Objects
-//	nsirequest = new CNsIRequest(mWebBrowser, mpBrowserImpl);
-	nsihistory = new CNsIHistory(this);
-	nsiwebnav  = new  CNsIWebNav(this);
-
 }	
 
 CTests::~CTests()
@@ -373,6 +405,15 @@ void CTests::OnTestsAddHistoryListener()
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl))));
 	rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
 	RvTestResult(rv, "AddWebBrowserListener(). Add History Lstnr test", 2);
+}
+
+void CTests::OnTestsRemovehistorylistener() 
+{
+  // addSHistoryListener test
+	nsWeakPtr weakling(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl))));
+	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
+	RvTestResult(rv, "RemoveWebBrowserListener(). Remove History Lstnr test", 2);
 }
 
 // *********************************************************
@@ -763,18 +804,13 @@ BOOL CTests::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHa
    // menu handlers
 	nCommandID = nID ;
 
-   if ((nsihistory != NULL) && nsihistory->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
-      return TRUE;
-   if ((nsiwebnav != NULL) && nsiwebnav->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
-      return TRUE;
-
 	return CWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
 
 void CTests::OnInterfacesNsirequest() 
 {
 	CNsIRequest oNsIRequest(qaWebBrowser,/*qaBaseWindow,qaWebNav,*/ qaBrowserImpl);
-	oNsIRequest.OnInterfacesNsirequest();
+	oNsIRequest.OnStartTests(nCommandID);
 }
 
 void CTests::OnInterfacesNsidirectoryservice() 
@@ -814,3 +850,17 @@ void CTests::OnInterfacesNsiprofile()
 	CProfile oProfile(qaWebBrowser);
 	oProfile.OnStartTests(nCommandID);	
 }
+
+void CTests::OnInterfacesNsishistory() 
+{
+	CNsIHistory oHistory(qaWebNav);
+	oHistory.OnStartTests(nCommandID);	
+}
+
+
+void CTests::OnInterfacesNsiwebnav() 
+{
+	CNsIWebNav oWebNav(qaWebNav);
+	oWebNav.OnStartTests(nCommandID);	
+}		
+
