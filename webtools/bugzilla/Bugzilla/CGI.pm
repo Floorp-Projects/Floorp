@@ -29,6 +29,9 @@ use base qw(CGI);
 
 use Bugzilla::Util;
 
+# We need to disable output buffering - see bug 179174
+$| = 1;
+
 # CGI.pm uses AUTOLOAD, but explicitly defines a DESTROY sub.
 # We need to do so, too, otherwise perl dies when the object is destroyed
 # and we don't have a DESTROY method (because CGI.pm's AUTOLOAD will |die|
