@@ -44,6 +44,9 @@ CPPSRCS =				\
 	nsLayoutDebugger.cpp		\
 	nsCaret.cpp			\
 	nsLayoutHistoryState.cpp	\
+!ifdef IBMBIDI
+	nsBidiPresUtils.cpp		\
+!endif        
 	$(NULL)
 
 MODULE=raptor 
@@ -65,6 +68,9 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsLayoutDebugger.obj	\
 	.\$(OBJDIR)\nsCaret.obj			\
 	.\$(OBJDIR)\nsLayoutHistoryState.obj	\
+!ifdef IBMBIDI
+	.\$(OBJDIR)\nsBidiPresUtils.obj		\
+!endif        
 	$(NULL)
 
 LINCS=-I..\..\html\base\src -I..\..\html\style\src \
