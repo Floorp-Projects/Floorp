@@ -90,10 +90,9 @@ static int handle_connection( PRFileDesc *, PRFileDesc *, int );
 static const char envVarName[] = { SSL_ENV_VAR_NAME };
 static const char inheritableSockName[] = { "SELFSERV_LISTEN_SOCKET" };
 
-static PRFloat64 secondsPerTick;
 static PRBool logStats = PR_FALSE;
 static int logPeriod = 30;
-
+static PRUint32 loggerOps = 0;
 
 const int ssl2CipherSuites[] = {
     SSL_EN_RC4_128_WITH_MD5,			/* A */
@@ -377,7 +376,6 @@ static PZCondVar * jobQNotEmptyCv;
 static PZCondVar * freeListNotEmptyCv;
 static PZCondVar * threadCountChangeCv;
 static int  threadCount;
-static int  qCount;
 static PRCList  jobQ;
 static PRCList  freeJobs;
 static JOB *jobTable;
@@ -545,6 +543,36 @@ terminateWorkerThreads(void)
     DESTROY_LOCK(qLock);
     PR_Free(jobTable);
     PR_Free(threads);
+}
+
+static void 
+logger(void *arg)
+{
+    PRFloat64 seconds;
+    PRFloat64 opsPerSec;
+    PRIntervalTime period;
+    PRIntervalTime previousTime;
+    PRIntervalTime latestTime;
+    PRUint32 previousOps;
+    PRUint32 ops;
+    PRIntervalTime logPeriodTicks = PR_SecondsToInterval(logPeriod);
+    PRFloat64 secondsPerTick = 1.0 / (PRFloat64)PR_TicksPerSecond();
+
+    previousOps = loggerOps;
+    previousTime = PR_IntervalNow();
+ 
+    for (;;) {
+    	PR_Sleep(logPeriodTicks);
+        latestTime = PR_IntervalNow();
+        ops = loggerOps;
+        period = latestTime - previousTime;
+        seconds = (PRFloat64) period*secondsPerTick;
+        opsPerSec = (ops - previousOps) / seconds;
+        printf("%.2f ops/second, %d threads\n", opsPerSec, threadCount);
+        fflush(stdout);
+        previousOps = ops;
+        previousTime = latestTime;
+    }
 }
 
 
@@ -1009,14 +1037,6 @@ do_accepts(
     PRNetAddr   addr;
     PRErrorCode  perr;
 
-    PRIntervalTime previous = PR_IntervalNow();
-    PRIntervalTime latest = previous;
-    PRIntervalTime period = 0;
-    PRInt32 ops = 0;
-    PRFloat64 seconds;
-    PRFloat64 opsPerSec;
-
-
     VLOG(("selfserv: do_accepts: starting"));
     PR_SetThreadPriority( PR_GetCurrentThread(), PR_PRIORITY_HIGH);
 
@@ -1045,22 +1065,9 @@ do_accepts(
         VLOG(("selfserv: do_accept: Got connection\n"));
 
         if (logStats) {
-            ops++;
-            latest = PR_IntervalNow();
-            period = latest - previous;
-            if (period < 1) {
-                period = 1; /* tick */
-            }
-            seconds = (PRFloat64) period*secondsPerTick;
-            if (seconds >= logPeriod) {
-                opsPerSec = ops / seconds;
-                fprintf(stderr, "%.2f op%s/second\n", opsPerSec,
-    	    	(opsPerSec>1)?"s":"");
-                seconds = 0;
-                previous = latest;
-                ops = 0;
-            }
+            loggerOps++;
         }
+
 	PZ_Lock(qLock);
 	while (PR_CLIST_IS_EMPTY(&freeJobs) && !stopping) {
             PZ_WaitCondVar(freeListNotEmptyCv, PR_INTERVAL_NO_TIMEOUT);
@@ -1392,14 +1399,13 @@ main(int argc, char **argv)
     PRBool               useLocalThreads = PR_FALSE;
     PLOptState		*optstate;
     PLOptStatus          status;
+    PRThread             *loggerThread;
 
 
     tmp = strrchr(argv[0], '/');
     tmp = tmp ? tmp + 1 : argv[0];
     progName = strrchr(tmp, '\\');
     progName = progName ? progName + 1 : tmp;
-
-    secondsPerTick = 1.0 / (PRFloat64)PR_SecondsToInterval(1);
 
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
@@ -1629,7 +1635,18 @@ main(int argc, char **argv)
     /* allocate the array of thread slots, and launch the worker threads. */
     rv = launch_threads(&jobLoop, 0, 0, requestCert, useLocalThreads);
 
-    if ( rv == SECSuccess) {
+    if (rv == SECSuccess && logStats) {
+	loggerThread = PR_CreateThread(PR_USER_THREAD, 
+			logger, NULL, PR_PRIORITY_NORMAL, 
+                        useLocalThreads ? PR_LOCAL_THREAD:PR_GLOBAL_THREAD,
+                        PR_UNJOINABLE_THREAD, 0);
+	if (loggerThread == NULL) {
+	    fprintf(stderr, "selfserv: Failed to launch logger thread!\n");
+	    rv = SECFailure;
+	} 
+    }
+
+    if (rv == SECSuccess) {
 	server_main(listen_sock, requestCert, privKey, cert);
     }
 
