@@ -70,11 +70,11 @@ struct RowGroupReflowState {
     : mPresContext(aPresContext),
       reflowState(aReflowState)
   {
-    availSize.width = reflowState.maxSize.width;
-    availSize.height = reflowState.maxSize.height;
+    availSize.width = reflowState.availableWidth;
+    availSize.height = reflowState.availableHeight;
     y=0;  // border/padding???
-    unconstrainedWidth = PRBool(reflowState.maxSize.width == NS_UNCONSTRAINEDSIZE);
-    unconstrainedHeight = PRBool(reflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
+    unconstrainedWidth = PRBool(reflowState.availableWidth == NS_UNCONSTRAINEDSIZE);
+    unconstrainedHeight = PRBool(reflowState.availableHeight == NS_UNCONSTRAINEDSIZE);
     firstRow = PR_TRUE;
     firstRowHeight=0;
     tableFrame = aTableFrame;
@@ -866,12 +866,12 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
 
     kidFrame->GetRect(bounds);
     // XXX This check isn't correct if there's a footer...
-    if (bounds.YMost() > aReflowState.maxSize.height) {
+    if (bounds.YMost() > aReflowState.availableHeight) {
       // If this is the first row frame then we need to split it
       if (nsnull == prevKidFrame) {
         // Reflow the row in the available space and have it split
-        nsSize  kidAvailSize(aReflowState.maxSize.width,
-                             aReflowState.maxSize.height - bounds.y);
+        nsSize  kidAvailSize(aReflowState.availableWidth,
+                             aReflowState.availableHeight - bounds.y);
         nsHTMLReflowState   kidReflowState(aPresContext, kidFrame, aReflowState,
                                            kidAvailSize, eReflowReason_Resize);
         nsHTMLReflowMetrics desiredSize(nsnull);
@@ -932,7 +932,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
   nsresult rv=NS_OK;
   if (gsDebug==PR_TRUE)
     printf("nsTableRowGroupFrame::Reflow - aMaxSize = %d, %d\n",
-            aReflowState.maxSize.width, aReflowState.maxSize.height);
+            aReflowState.availableWidth, aReflowState.availableHeight);
 
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -975,7 +975,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
 #endif
   
     // Return our desired rect
-    aDesiredSize.width = aReflowState.maxSize.width;
+    aDesiredSize.width = aReflowState.availableWidth;
     aDesiredSize.height = state.y;
 
     // shrink wrap rows to height of tallest cell in that row
@@ -984,7 +984,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     }
 
     // See if all the frames fit
-    if (aDesiredSize.height > aReflowState.maxSize.height) {
+    if (aDesiredSize.height > aReflowState.availableHeight) {
       // Nope, find a place to split the row group
       SplitRowGroup(aPresContext, aDesiredSize, aReflowState, aStatus);
     }
@@ -1289,7 +1289,8 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
 
   // Pass along the reflow command
   // XXX Correctly compute the available space...
-  nsHTMLReflowState   kidReflowState(aPresContext, aNextFrame, aReflowState.reflowState, aReflowState.reflowState.maxSize);
+  nsSize  availSpace(aReflowState.reflowState.availableWidth, aReflowState.reflowState.availableHeight);
+  nsHTMLReflowState   kidReflowState(aPresContext, aNextFrame, aReflowState.reflowState, availSpace);
   nsHTMLReflowMetrics desiredSize(nsnull);
 
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
@@ -1304,7 +1305,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
                             oldKidRect.height);
 
   // Return of desired size
-  aDesiredSize.width = aReflowState.reflowState.maxSize.width;
+  aDesiredSize.width = aReflowState.reflowState.availableWidth;
   aDesiredSize.height = aReflowState.y;
 
   return rv;

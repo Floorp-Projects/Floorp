@@ -68,8 +68,8 @@ struct RowReflowState {
                  nsTableFrame*            aTableFrame)
     : reflowState(aReflowState)
   {
-    availSize.width = reflowState.maxSize.width;
-    availSize.height = reflowState.maxSize.height;
+    availSize.width = reflowState.availableWidth;
+    availSize.height = reflowState.availableHeight;
     maxCellHeight = 0;
     maxCellVertSpace = 0;
     tableFrame = aTableFrame;
@@ -572,7 +572,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       // cell frame has a next-in-flow
       nsIFrame* kidNextInFlow;
       kidFrame->GetNextInFlow(kidNextInFlow);
-      if ((aReflowState.reflowState.maxSize.height != NS_UNCONSTRAINEDSIZE) ||
+      if ((aReflowState.reflowState.availableHeight != NS_UNCONSTRAINEDSIZE) ||
           (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth()) ||
           (nsnull != kidNextInFlow))
       {
@@ -584,7 +584,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
         nsSize  kidAvailSize(availWidth, NS_UNCONSTRAINEDSIZE);
 #else
         // Reflow the cell to fit the available height
-        nsSize  kidAvailSize(availWidth, aReflowState.reflowState.maxSize.height);
+        nsSize  kidAvailSize(availWidth, aReflowState.reflowState.availableHeight);
 #endif
 
         // Reflow the child
@@ -699,18 +699,18 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
 
   if (gsDebug)
     printf("Row: RR -- row %p width = %d from maxSize %d\n", 
-           this, aDesiredSize.width, aReflowState.reflowState.maxSize.width);
+           this, aDesiredSize.width, aReflowState.reflowState.availableWidth);
   
-  if (aDesiredSize.width > aReflowState.reflowState.maxSize.width) 
+  if (aDesiredSize.width > aReflowState.reflowState.availableWidth) 
   {
     if (gsDebug)
     {
       printf ("Row %p error case, desired width = %d, maxSize=%d\n",
-              this, aDesiredSize.width, aReflowState.reflowState.maxSize.width);
+              this, aDesiredSize.width, aReflowState.reflowState.availableWidth);
       fflush (stdout);
     }
   }
-  NS_ASSERTION(aDesiredSize.width <= aReflowState.reflowState.maxSize.width, "row calculated to be too wide.");
+  NS_ASSERTION(aDesiredSize.width <= aReflowState.reflowState.availableWidth, "row calculated to be too wide.");
   return rv;
 }
 
@@ -1279,7 +1279,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     // column width isn't dependent on the max cell width...
     kidReflowState.reason = eReflowReason_Resize;
     kidReflowState.reflowCommand = nsnull;
-    kidReflowState.maxSize.width = NS_UNCONSTRAINEDSIZE;
+    kidReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
     rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
     if (gsDebug) 
         printf ("TR %p for cell %p Incremental Reflow: desired=%d, MES=%d\n", 
@@ -1296,7 +1296,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
   
     // Now reflow the cell again this time constraining the width
     // XXX Ignore for now the possibility that the column width has changed...
-    kidReflowState.maxSize.width = availWidth;
+    kidReflowState.availableWidth = availWidth;
     rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
   
     // Place the child after taking into account it's margin and attributes
@@ -1348,7 +1348,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
       printf("incr -- row %p width = %d MES=%d from maxSize %d\n", 
              this, aDesiredSize.width, 
              aDesiredSize.maxElementSize ? aDesiredSize.maxElementSize->width : -1,
-             aReflowState.reflowState.maxSize.width);
+             aReflowState.reflowState.availableWidth);
   }
   else
   { // pass reflow to unknown frame child
@@ -1370,7 +1370,7 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
   nsresult rv=NS_OK;
   if (gsDebug==PR_TRUE)
     printf("nsTableRowFrame::Reflow - aMaxSize = %d, %d\n",
-            aReflowState.maxSize.width, aReflowState.maxSize.height);
+            aReflowState.availableWidth, aReflowState.availableHeight);
 
   // Initialize 'out' parameters (aStatus set below, undefined if rv returns an error)
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -1395,9 +1395,10 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
     if (PR_FALSE==tableFrame->RequiresPass1Layout())
     { // this resize reflow is necessary to place the cells correctly in the case of rowspans and colspans.  
       // It is very efficient.  It does not actually need to pass a reflow down to the cells.
+      nsSize  availSpace(aReflowState.availableWidth, aReflowState.availableHeight);
       nsHTMLReflowState  resizeReflowState(aPresContext, (nsIFrame *)this,
                                            (const nsHTMLReflowState&)(*(aReflowState.parentReflowState)),
-                                           (const nsSize&)(aReflowState.maxSize),
+                                           availSpace,
                                            eReflowReason_Resize);
       RowReflowState rowResizeReflowState(resizeReflowState, tableFrame);
       rv = ResizeReflow(aPresContext, aDesiredSize, rowResizeReflowState, aStatus);

@@ -483,7 +483,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext&          aPresC
   nsHTMLReflowMetrics desiredSize(nsnull);
   nsHTMLReflowState kidReflowState(aPresContext, aNextFrame,
                                    aReflowState,
-                                   aReflowState.maxSize);
+                                   nsSize(aReflowState.availableWidth, aReflowState.availableHeight));
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
   if (NS_FAILED(rv))
     return rv;

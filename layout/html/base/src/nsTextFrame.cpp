@@ -1658,7 +1658,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   //  NS_PRECONDITION(nsnull != aReflowState.lineLayout, "no line layout");
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter TextFrame::Reflow: aMaxSize=%d,%d",
-      aReflowState.maxSize.width, aReflowState.maxSize.height));
+      aReflowState.availableWidth, aReflowState.availableHeight));
 
   // XXX If there's no line layout, we shouldn't even have created this
   // frame. This may happen if, for example, this is text inside a table
@@ -1706,7 +1706,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   nscoord x = 0;
-  nscoord maxWidth = aReflowState.maxSize.width;
+  nscoord maxWidth = aReflowState.availableWidth;
   nscoord maxWordWidth = 0;
   nscoord prevMaxWordWidth = 0;
   PRBool endsInWhitespace = PR_FALSE;

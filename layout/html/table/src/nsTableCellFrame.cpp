@@ -344,12 +344,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
     printf("%p nsTableCellFrame::Reflow: maxSize=%d,%d\n",
-           this, aReflowState.maxSize.width, aReflowState.maxSize.height);
+           this, aReflowState.availableWidth, aReflowState.availableHeight);
 
-  nsSize availSize(aReflowState.maxSize);
+  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
   nsSize maxElementSize;
   nsSize *pMaxElementSize = aDesiredSize.maxElementSize;
-  if (NS_UNCONSTRAINEDSIZE==aReflowState.maxSize.width)
+  if (NS_UNCONSTRAINEDSIZE==aReflowState.availableWidth)
     pMaxElementSize = &maxElementSize;
   nscoord x = 0;
   // SEC: what about ascent and decent???
@@ -417,7 +417,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
            availSize.width, availSize.height);
   nsHTMLReflowMetrics kidSize(pMaxElementSize);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
-  SetPriorAvailWidth(aReflowState.maxSize.width);
+  SetPriorAvailWidth(aReflowState.availableWidth);
   nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
                                    availSize);
 
@@ -456,7 +456,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
       if (gsDebug) printf ("setting initial child width from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(4, p2t));
     }
     else  // empty content has to be forced to the assigned width for resize or incremental reflow
-      kidSize.width = kidReflowState.maxSize.width;
+      kidSize.width = kidReflowState.availableWidth;
   }
   if (0==kidSize.height)
   {

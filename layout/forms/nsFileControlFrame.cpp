@@ -218,7 +218,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     NS_RELEASE(browse);
   }
 
-  nsSize maxSize = aReflowState.maxSize;
+  nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
   nsHTMLReflowMetrics desiredSize = aDesiredSize;
   aDesiredSize.width = CONTROL_SPACING; 
   aDesiredSize.height = 0;

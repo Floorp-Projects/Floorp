@@ -246,8 +246,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   // If this is the root frame then set the computed width and
   // height equal to the available space
   if (nsnull == parentReflowState) {
-    computedWidth = maxSize.width;
-    computedHeight = maxSize.height;
+    computedWidth = availableWidth;
+    computedHeight = availableHeight;
 
   } else {
     // Get the containing block reflow state
@@ -269,8 +269,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // containing block (e.g., for scrolled elements because we subtract for
     // the scrollbar width).
     // XXX Don't do this if the max width is 0, which is the case for floaters...
-    if ((maxSize.width < containingBlockWidth) && (maxSize.width > 0)) {
-      containingBlockWidth = maxSize.width;
+    if ((availableWidth < containingBlockWidth) && (availableWidth > 0)) {
+      containingBlockWidth = availableWidth;
     }
 
     // Check for a percentage based height
@@ -337,7 +337,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 
         // Internal table elements don't have margins, but they have border
         // and padding
-        computedWidth = maxSize.width - borderPadding.left - borderPadding.right;
+        computedWidth = availableWidth - borderPadding.left - borderPadding.right;
       } else {
         ComputeHorizontalValue(containingBlockWidth, widthUnit, pos->mWidth,
                                computedWidth);

@@ -171,7 +171,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     // We must pass in that the available height is unconstrained, because
     // constrained is only for when we're paginated...
     nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
-                                     nsSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE));
+                                     nsSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE));
     if (isChildInitialReflow) {
       kidReflowState.reason = eReflowReason_Initial;
       kidReflowState.reflowCommand = nsnull;
@@ -180,7 +180,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     // For a height that's 'auto', make the frame as big as the available space
     // minus and top and bottom margins
     if (NS_AUTOHEIGHT == kidReflowState.computedHeight) {
-      kidReflowState.computedHeight = aReflowState.maxSize.height -
+      kidReflowState.computedHeight = aReflowState.availableHeight -
         kidReflowState.computedTopMargin - kidReflowState.computedTopMargin;
 
       // Computed height is for the content area so reduce it by the amount of
@@ -206,14 +206,14 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
     // If this is a resize reflow then do a repaint
     if (eReflowReason_Resize == aReflowState.reason) {
-      nsRect  damageRect(0, 0, aReflowState.maxSize.width, aReflowState.maxSize.height);
+      nsRect  damageRect(0, 0, aReflowState.availableWidth, aReflowState.availableHeight);
       Invalidate(damageRect, PR_FALSE);
     }
   }
 
   // Return the max size as our desired size
-  aDesiredSize.width = aReflowState.maxSize.width;
-  aDesiredSize.height = aReflowState.maxSize.height;
+  aDesiredSize.width = aReflowState.availableWidth;
+  aDesiredSize.height = aReflowState.availableHeight;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 

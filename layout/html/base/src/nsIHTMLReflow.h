@@ -171,7 +171,7 @@ struct nsHTMLReflowState : nsReflowState {
   nsHTMLReflowState(nsIPresContext&      aPresContext,
                     nsIFrame*            aFrame,
                     nsReflowReason       aReason, 
-                    const nsSize&        aMaxSize,
+                    const nsSize&        aAvailableSpace,
                     nsIRenderingContext* aContext,
                     nsISpaceManager*     aSpaceManager = nsnull);
 
@@ -180,7 +180,7 @@ struct nsHTMLReflowState : nsReflowState {
   nsHTMLReflowState(nsIPresContext&      aPresContext,
                     nsIFrame*            aFrame,
                     nsIReflowCommand&    aReflowCommand,
-                    const nsSize&        aMaxSize,
+                    const nsSize&        aAvailableSpace,
                     nsIRenderingContext* aContext,
                     nsISpaceManager*     aSpaceManager = nsnull);
 
@@ -191,7 +191,7 @@ struct nsHTMLReflowState : nsReflowState {
   nsHTMLReflowState(nsIPresContext&          aPresContext,
                     nsIFrame*                aFrame,
                     const nsHTMLReflowState& aParentReflowState,
-                    const nsSize&            aMaxSize);
+                    const nsSize&            aAvailableSpace);
 
   // Construct a reflow state for the given inline frame, parent
   // reflow state, and max size. Uses the reflow reason, space
@@ -200,7 +200,7 @@ struct nsHTMLReflowState : nsReflowState {
   nsHTMLReflowState(nsIPresContext&          aPresContext,
                     nsIFrame*                aFrame,
                     const nsHTMLReflowState& aParentReflowState,
-                    const nsSize&            aMaxSize,
+                    const nsSize&            aAvailableSpace,
                     nsLineLayout*            aLineLayout);
 
   // Constructs a reflow state that overrides the reflow reason of the parent
@@ -210,7 +210,7 @@ struct nsHTMLReflowState : nsReflowState {
   nsHTMLReflowState(nsIPresContext&          aPresContext,
                     nsIFrame*                aFrame,
                     const nsHTMLReflowState& aParentReflowState,
-                    const nsSize&            aMaxSize,
+                    const nsSize&            aAvailableSpace,
                     nsReflowReason           aReflowReason);
 
   /**
@@ -420,10 +420,10 @@ inline
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
                                      nsIFrame*            aFrame,
                                      nsReflowReason       aReason, 
-                                     const nsSize&        aMaxSize,
+                                     const nsSize&        aAvailableSpace,
                                      nsIRenderingContext* aContext,
                                      nsISpaceManager*     aSpaceManager)
-  : nsReflowState(aFrame, aReason, aMaxSize, aContext)
+  : nsReflowState(aFrame, aReason, aAvailableSpace, aContext)
 {
   spaceManager = aSpaceManager;
   lineLayout = nsnull;
@@ -436,10 +436,10 @@ inline
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
                                      nsIFrame*            aFrame,
                                      nsIReflowCommand&    aReflowCommand,
-                                     const nsSize&        aMaxSize,
+                                     const nsSize&        aAvailableSpace,
                                      nsIRenderingContext* aContext,
                                      nsISpaceManager*     aSpaceManager)
-  : nsReflowState(aFrame, aReflowCommand, aMaxSize, aContext)
+  : nsReflowState(aFrame, aReflowCommand, aAvailableSpace, aContext)
 {
   spaceManager = aSpaceManager;
   lineLayout = nsnull;
@@ -454,8 +454,8 @@ inline
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
                                      nsIFrame*                aFrame,
                                      const nsHTMLReflowState& aParentState,
-                                     const nsSize&            aMaxSize)
-  : nsReflowState(aFrame, aParentState, aMaxSize)
+                                     const nsSize&            aAvailableSpace)
+  : nsReflowState(aFrame, aParentState, aAvailableSpace)
 {
   spaceManager = aParentState.spaceManager;
   lineLayout = aParentState.lineLayout;
@@ -469,9 +469,9 @@ inline
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
                                      nsIFrame*                aFrame,
                                      const nsHTMLReflowState& aParentState,
-                                     const nsSize&            aMaxSize,
+                                     const nsSize&            aAvailableSpace,
                                      nsLineLayout*            aLineLayout)
-  : nsReflowState(aFrame, aParentState, aMaxSize)
+  : nsReflowState(aFrame, aParentState, aAvailableSpace)
 {
   spaceManager = aParentState.spaceManager;
   lineLayout = aLineLayout;
@@ -486,9 +486,9 @@ inline
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
                                      nsIFrame*                aFrame,
                                      const nsHTMLReflowState& aParentState,
-                                     const nsSize&            aMaxSize,
+                                     const nsSize&            aAvailableSpace,
                                      nsReflowReason           aReflowReason)
-  : nsReflowState(aFrame, aParentState, aMaxSize, aReflowReason)
+  : nsReflowState(aFrame, aParentState, aAvailableSpace, aReflowReason)
 {
   spaceManager = aParentState.spaceManager;
   lineLayout = nsnull;

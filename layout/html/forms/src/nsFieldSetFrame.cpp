@@ -242,7 +242,7 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus& aStatus)
 {
-  nsSize availSize(aReflowState.maxSize);
+  nsSize availSize(aReflowState.availableWidth, aReflowState.availableWidth);
   float p2t;
   aPresContext.GetScaledPixelsToTwips(p2t);
   const PRInt32 minTopBorder = NSIntPixelsToTwips(MIN_TOP_BORDER, p2t);
