@@ -377,12 +377,12 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
     // put the mime mapping data for this item in a special flavor. Unlike the other data,
     // we have to put the data in now (rather than defer it) or the mappings will go out 
     // of scope by the time they are asked for. Remember that the |mappingLen|
-    // includes the null.
+    // includes the null, and we need to maintain that for when we parse it.
     short mappingLen;
     char* mapping = theMapper.ExportMapping(&mappingLen);
     if ( mapping && mappingLen ) {
       ::AddDragItemFlavor ( mDragRef, itemIndex, nsMimeMapperMac::MappingFlavor(), 
-                               mapping, mappingLen - 1, flags );
+                               mapping, mappingLen, flags );
 	  nsCRT::free ( mapping );
 	}
     

@@ -173,9 +173,9 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
 #if TARGET_CARBON
     ScrapRef scrap;
     ::GetCurrentScrap(&scrap);
-    ::PutScrapFlavor(scrap, nsMimeMapperMac::MappingFlavor(), 0L/*???*/, mappingLen - 1, mapping);
+    ::PutScrapFlavor(scrap, nsMimeMapperMac::MappingFlavor(), 0L/*???*/, mappingLen, mapping);
 #else
-    long numBytes = ::PutScrap ( mappingLen - 1, nsMimeMapperMac::MappingFlavor(), mapping );
+    long numBytes = ::PutScrap ( mappingLen, nsMimeMapperMac::MappingFlavor(), mapping );
     if ( numBytes != noErr )
       errCode = NS_ERROR_FAILURE;
 #endif
