@@ -481,6 +481,12 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libjbn.a \
 		  $(NULL)
 
+ifdef MOZ_SMARTUPDATE
+BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a \
+ 		   $(DIST)/lib/libprgrss.a \
+		   $(NULL)
+endif
+
 ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libjsl.a
 endif
@@ -506,7 +512,6 @@ ifdef NSJVM
 ifdef EDITOR
 BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
 endif
-BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a
 else # !NSJVM
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libstubsj.a \
