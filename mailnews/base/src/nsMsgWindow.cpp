@@ -205,7 +205,7 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, const char *aComm
 {
   // we handle message/rfc822 content in our message window (which is mRootWebShell)
 
-  if (aContentType && PL_strcasecmp(aContentType, "message/rfc822") == 0)
+  if (aContentType /* nsCRT::strcasecmp(aContentType, "message/rfc822") == 0 */ )
   {
     // forward the DoContent call to our webshell
     nsCOMPtr<nsIURIContentListener> ctnListener = do_QueryInterface(mMessageWindowWebShell);
