@@ -100,16 +100,16 @@ struct nsLineLayout {
    */
   nsresult ReflowLine();
 
+  nsresult IncrementalReflowFromChild(nsReflowCommand& aReflowCommand,
+                                      nsIFrame*        aChildFrame);
+                                      
+
   // The presentation context
   nsIPresContext* mPresContext;
 
   // The block behind the line
   nsBlockFrame* mBlock;
   nsISpaceManager* mSpaceManager;
-#if 0
-  // XXX I don't think we need this anymore...
-  PRBool mBlockIsPseudo;
-#endif
   nsIContent* mBlockContent;
   PRInt32 mKidIndex;
 
@@ -180,7 +180,7 @@ protected:
 
   nsresult WordBreakReflow();
 
-  nsresult ReflowChild();
+  nsresult ReflowChild(nsReflowCommand* aReflowCommand);
 
   nsresult ReflowMapped();
 

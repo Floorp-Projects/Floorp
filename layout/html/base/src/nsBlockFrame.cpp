@@ -142,6 +142,45 @@ nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
   return rv;
 }
 
+// Recover the block reflow state to what it should be if aLine is about
+// to be reflowed. aLine should not be nsnull
+nsresult nsBlockReflowState::RecoverState(nsLineData* aLine)
+{
+  NS_PRECONDITION(nsnull != aLine, "null parameter");
+  nsLineData* prevLine = aLine->mPrevLine;
+
+  if (nsnull != prevLine) {
+    // Compute the running y-offset, and the available height
+    mY = prevLine->mBounds.YMost();
+    if (!mUnconstrainedHeight) {
+      mAvailSize.height -= mY;
+    }
+  
+    // Compute the kid x-most
+    for (nsLineData* l = prevLine; nsnull != l; l = l->mPrevLine) {
+      nscoord xmost = l->mBounds.XMost();
+      if (xmost > mKidXMost) {
+        mKidXMost = xmost;
+      }
+    }
+  
+    // If the previous line is a block, then factor in its bottom margin
+    if (prevLine->mIsBlock) {
+      nsStyleSpacing* spacing;
+      nsIFrame*       kid = prevLine->mFirstChild;
+  
+      kid->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)spacing);
+      if (spacing->mMargin.bottom < 0) {
+        mPrevMaxNegBottomMargin = -spacing->mMargin.bottom;
+      } else {
+        mPrevMaxPosBottomMargin = spacing->mMargin.bottom;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 nsresult
@@ -780,6 +819,52 @@ done:
   return rv;
 }
 
+// XXX This is a short-term hack. It assumes that the caller has already recovered
+// the state, and that some space has been retrieved from the space manager...
+nsresult
+nsBlockFrame::ReflowMappedFrom(nsBlockReflowState& aState, nsLineData* aLine)
+{
+  nsresult rv = NS_OK;
+
+  nsLineLayout lineLayout(aState);
+  aState.mCurrentLine = &lineLayout;
+  while (nsnull != aLine) {
+    // Initialize the line layout for this line
+    rv = lineLayout.Initialize(aState, aLine);
+    if (NS_OK != rv) {
+      goto done;
+    }
+    lineLayout.mPrevKidFrame = aState.mPrevKidFrame;
+
+    // Reflow the line
+    nsresult lineReflowStatus = lineLayout.ReflowLine();
+    if (lineReflowStatus < 0) {
+      // Some kind of hard error
+      rv = lineReflowStatus;
+      goto done;
+    }
+    mChildCount += lineLayout.mNewFrames;
+
+    // Now place it. It's possible it won't fit.
+    rv = PlaceLine(aState, lineLayout, aLine);
+    if (NS_LINE_LAYOUT_COMPLETE != rv) {
+      goto done;
+    }
+
+    mLastContentOffset = aLine->mLastContentOffset;
+    mLastContentIsComplete = PRBool(aLine->mLastContentIsComplete);
+    aLine = aLine->mNextLine;
+    aState.mPrevKidFrame = lineLayout.mPrevKidFrame;
+  }
+
+done:
+  aState.mCurrentLine = nsnull;
+#ifdef NS_DEBUG
+  VerifyLines(PR_TRUE);
+#endif
+  return rv;
+}
+
 nsresult
 nsBlockFrame::ReflowUnmapped(nsBlockReflowState& aState)
 {
@@ -1194,6 +1279,51 @@ nsBlockFrame::ResizeReflow(nsIPresContext*         aPresContext,
   return rv;
 }
 
+nsLineData* nsBlockFrame::FindLine(nsIFrame* aFrame)
+{
+  // Find the line that contains the aFrame
+  nsLineData* line = mLines;
+  while (nsnull != line) {
+    nsIFrame* child = line->mFirstChild;
+    for (PRInt32 count = line->mChildCount; count > 0; count--) {
+      if (child == aFrame) {
+        return line;
+      }
+
+      child->GetNextSibling(child);
+    }
+
+    // Move to the next line
+    line = line->mNextLine;
+  }
+
+  return nsnull;
+}
+
+nsLineData* nsBlockFrame::LastLine()
+{
+  nsLineData* lastLine = mLines;
+
+  // Get the last line
+  if (nsnull != lastLine) {
+    while (nsnull != lastLine->mNextLine) {
+      lastLine = lastLine->mNextLine;
+    }
+  }
+
+  return lastLine;
+}
+
+nsresult nsBlockFrame::IncrementalReflowAfter(nsBlockReflowState& aState,
+                                              nsLineData*         aLine,
+                                              nsresult            aReflowStatus,
+                                              const nsRect&       aOldBounds)
+{
+  // Now just reflow all the lines that follow...
+  // XXX Obviously this needs to be more efficient
+  return ReflowMappedFrom(aState, aLine->mNextLine);
+}
+
 NS_METHOD
 nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
                                 nsISpaceManager*        aSpaceManager,
@@ -1219,39 +1349,11 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
   // Is the reflow command target at us?
   if (this == aReflowCommand.GetTarget()) {
     if (aReflowCommand.GetType() == nsReflowCommand::FrameAppended) {
-      nsLineData* lastLine = mLines;
-
-      // Get the last line
-      if (nsnull != lastLine) {
-        while (nsnull != lastLine->mNextLine) {
-          lastLine = lastLine->mNextLine;
-        }
-      }
+      nsLineData* lastLine = LastLine();
 
       // Restore the state
-      if ((nsnull != lastLine) && (nsnull != lastLine->mPrevLine)) {
-        nsLineData* prevLine = lastLine->mPrevLine;
-
-        state.mY = prevLine->mBounds.YMost();
-        if (!state.mUnconstrainedHeight) {
-          state.mAvailSize.height -= state.mY;
-        }
-
-        // XXX This isn't really right...
-        state.mKidXMost = mRect.width - state.mBorderPadding.right;
-
-        // If the previous line is a block, then factor in its bottom margin
-        if (prevLine->mIsBlock) {
-          nsStyleSpacing* spacing;
-          nsIFrame*       kid = prevLine->mFirstChild;
-
-          kid->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)spacing);
-          if (spacing->mMargin.bottom < 0) {
-            state.mPrevMaxNegBottomMargin = -spacing->mMargin.bottom;
-          } else {
-            state.mPrevMaxPosBottomMargin = spacing->mMargin.bottom;
-          }
-        }
+      if (nsnull != lastLine) {
+        state.RecoverState(lastLine);
       }
 
       // Reflow unmapped children
@@ -1267,37 +1369,64 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
         rv = ReflowUnmapped(state);
       }
 
-      // Set return status
-      aStatus = frComplete;
-      if (NS_LINE_LAYOUT_NOT_COMPLETE == rv) {
-        rv = NS_OK;
-        aStatus = frNotComplete;
-      }
+    } else if (aReflowCommand.GetType() == nsReflowCommand::ContentChanged) {
+      // Restore our state as if the child that changed is the next frame to reflow
+      nsLineData* line = FindLine(aReflowCommand.GetChildFrame());
+      state.RecoverState(line);
+
+      // Get some available space to start reflowing with
+      GetAvailableSpace(state, state.mY);
+  
+      // Reflow the affected line, and all the lines that follow...
+      // XXX Obviously this needs to be more efficient
+      rv = ReflowMappedFrom(state, line);
 
     } else {
       NS_NOTYETIMPLEMENTED("unexpected reflow command");
     }
  } else {
-#if 0
     // The command is passing through us. Get the next frame in the reflow chain
     nsIFrame* nextFrame = aReflowCommand.GetNext();
 
     // Restore our state as if nextFrame is the next frame to reflow
-    RecoverState(aPresContext, state, nextFrame);
+    nsLineData* line = FindLine(nextFrame);
+    state.RecoverState(line);
 
-    // Get the current bounds. We'll need this to adjust the frames that follow
-    nsRect  oldBounds;
-    nextFrame->GetRect(oldBounds);
+    // Get some available space to start reflowing with
+    GetAvailableSpace(state, state.mY);
 
-    // Pass along the reflow command
-    nsRect  desiredRect;
-    aStatus = aReflowCommand.Next(aSpaceManager, desiredRect, aMaxSize, nextFrame);
-#endif
-    NS_NOTYETIMPLEMENTED("unexpected reflow command");
+    // Reflow the affected line
+    nsLineLayout  lineLayout(state);
+
+    state.mCurrentLine = &lineLayout;
+    lineLayout.Initialize(state, line);
+
+    // Have the line handle the incremental reflow
+    nsRect  oldBounds = line->mBounds;
+    rv = lineLayout.IncrementalReflowFromChild(aReflowCommand, nextFrame);
+
+    // Now place the line. It's possible it won't fit
+    rv = PlaceLine(state, lineLayout, line);
+    // XXX The way NS_LINE_LAYOUT_COMPLETE is being used is very confusing...
+    if (NS_LINE_LAYOUT_COMPLETE == rv) {
+      mLastContentOffset = line->mLastContentOffset;
+      mLastContentIsComplete = PRBool(line->mLastContentIsComplete);
+      state.mPrevKidFrame = lineLayout.mPrevKidFrame;
+
+      // Now figure out what to do with the frames that follow
+      rv = IncrementalReflowAfter(state, line, rv, oldBounds);
+    }
   }
 
   // Return our desired rect
   ComputeDesiredRect(state, aMaxSize, aDesiredRect);
+
+  // Set return status
+  aStatus = frComplete;
+  if (NS_LINE_LAYOUT_NOT_COMPLETE == rv) {
+    rv = NS_OK;
+    aStatus = frNotComplete;
+  }
 
   // Now that reflow has finished, remove the cached pointer
   shell->RemoveCachedData(this);

@@ -33,7 +33,7 @@ class nsBlockFrame;
 struct nsBandData;
 
 struct nsBlockBandData : public nsBandData {
-  // Trapezoid's used during band processing
+  // Trapezoids used during band processing
   nsBandTrapezoid data[12];
 
   // Bounding rect of available space between any left and right floaters
@@ -62,6 +62,8 @@ struct nsBlockReflowState {
                       const nsSize& aMaxSize,
                       nsSize* aMaxElementSize,
                       nsBlockFrame* aBlock);
+
+  nsresult RecoverState(nsLineData* aLine);
 
   nsIPresContext* mPresContext;
 
@@ -249,6 +251,14 @@ protected:
                           const nsSize&       aMaxSize,
                           nsRect&             aDesiredRect);
 
+  nsLineData* LastLine();
+  nsLineData* FindLine(nsIFrame* aFrame);
+
+  nsresult IncrementalReflowAfter(nsBlockReflowState& aState,
+                                  nsLineData*         aLine,
+                                  nsresult            aReflowStatus,
+                                  const nsRect&       aOldBounds);
+
   void DestroyLines();
 
   void DrainOverflowList();
@@ -278,6 +288,7 @@ protected:
                      nsLineData*         aLine);
 
   nsresult ReflowMapped(nsBlockReflowState& aState);
+  nsresult ReflowMappedFrom(nsBlockReflowState& aState, nsLineData* aLine);
 
   nsresult ReflowUnmapped(nsBlockReflowState& aState);
 
