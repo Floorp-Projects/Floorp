@@ -20,10 +20,50 @@
  *
  * Contributors:
  *   Ben Goodger <ben@netscape.com>
+ *   Chris Nelson <chrisn@statecollege.com>
  *
  */
 
-#contentarea
-  {
-    padding                : 7px 5px 7px 5px;
-  }  
+@import url(chrome://global/skin/global.css);
+
+window.dialog {
+  padding: none;
+}
+
+.dimmed-highcontrast {
+  color: #99cccc ! important;
+} 
+
+#profiles > treechildren > treeitem > treerow > treecell > .tree-cell-icon {
+  list-style-image: url("chrome://communicator/skin/profile/profileicon-large.gif");
+}
+
+#profiles > treechildren > treeitem > treerow > treecell[rowMigrate="no"] > .tree-cell-icon {
+  list-style-image: url("chrome://communicator/skin/profile/migrate.gif");
+}
+
+/* profile selection dialog */
+html#intro {
+  width: 17em;
+}
+
+box#managebuttons > button {
+  min-width: 8em;
+}
+
+/* display area */
+box#contentarea {
+  border-top: 2px groove #CCCCCC;
+  border-bottom: 2px groove #CCCCCC;
+  padding: 7px;
+}
+
+/* top border on status area */
+box#wizardButtons {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+box.selection {
+  margin-top: 4px;
+}
