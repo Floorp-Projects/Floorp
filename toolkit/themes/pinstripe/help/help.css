@@ -114,15 +114,14 @@ toolbar[mode="icons"] > toolbarbutton > toolbarbutton > .toolbarbutton-text {
 #help-throbber {
   -moz-appearance: none;
   -moz-user-focus: ignore;
-  -moz-box-pack: center;
-  margin: 0 1px 0 1px !important;
+  margin: 0 !important;
   border: none !important;
-  padding: 0 !important;
+  padding: 0px !important;
   min-width: 0;
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
+  list-style-image: url("chrome://help/skin/throbber.png");
 }
 
 #help-throbber[busy="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
+  list-style-image: url("chrome://help/skin/throbber-busy.gif");
 }
