@@ -53,6 +53,10 @@ protected:
              nsIRDFNode* property,
              nsIRDFNode* value);
 
+    /**
+     * Ensure that the specified <tt>tag</tt> exists as a child of the
+     * <tt>parent</tt> element.
+     */
     nsresult
     EnsureChildElement(nsIContent* parent,
                        const nsString& tag,
@@ -88,50 +92,6 @@ RDFTreeDocumentImpl::~RDFTreeDocumentImpl(void)
 {
 }
 
-#if 0
-NS_IMETHODIMP
-RDFTreeDocumentImpl::SetRootResource(nsIRDFNode* resource)
-{
-    nsresult rv;
-
-    if (NS_FAILED(rv = nsRDFDocument::SetRootResource(resource)))
-        return rv;
-
-    // XXX This is a hack to get the column data set up right. It
-    // generates the column structure off the root that the HT widgets
-    // look for, namely,
-    //
-    // <root>
-    //   <columns>
-    //     <colFooId>Column Foo's Title</colFooId>
-    //     <colBarId>Column Bar's Title</colBarId>
-    //     ...
-    //   </columns>
-    // </root>
-    //
-    // This is really ad hoc, and I don't like it one bit. I wish that
-    // we could do this stylistically. This is going to get worse and
-    // worse as we need to support more HT features, like column
-    // desired widths, titles, etc. But I guess I'd better just shut
-    // up and code.
-
-    // XXX this should be a generic XML container element, not an nsRDFElement.
-    nsIRDFContent* columns = nsnull;
-
-    if (NS_FAILED(rv = NS_NewRDFElement(&columns)))
-        goto done;
-
-    if (NS_FAILED(rv = columns->Init(this, kColumnsTag, nsnull /* XXX */, PR_FALSE)))
-        goto done;
-
-    if (NS_FAILED(rv = mRootContent->AppendChildTo(columns, PR_FALSE)))
-        goto done;
-
-done:
-    NS_IF_RELEASE(columns);
-    return rv;
-}
-#endif
 
 nsresult
 RDFTreeDocumentImpl::EnsureChildElement(nsIContent* parent,
@@ -336,26 +296,33 @@ RDFTreeDocumentImpl::AddPropertyChild(nsIRDFContent* parent,
     // its value; e.g.,
     //
     // <parent>
-    //   <td>value</td>
+    //   <columns>
+    //     <folder>value</folder>
+    //   </columns>
     //   ...
     // </parent>
     nsresult rv;
-    nsIRDFContent* child = nsnull;
-
+    nsIContent* columnsElement = nsnull;
+    nsIRDFContent* child       = nsnull;
     nsAutoString s;
+
+    if (NS_FAILED(rv = EnsureChildElement(parent, kColumnsTag, columnsElement)))
+        goto done;
 
     if (NS_FAILED(rv = property->GetStringValue(s)))
         goto done;
 
+    // XXX this should be a generic XML element, *not* an nsRDFElement.
     if (NS_FAILED(rv = NewChild(s, property, child, PR_FALSE)))
         goto done;
 
     if (NS_FAILED(rv = AttachTextNode(child, value)))
         goto done;
 
-    rv = parent->AppendChildTo(child, PR_TRUE);
+    rv = columnsElement->AppendChildTo(child, PR_TRUE);
 
 done:
+    NS_IF_RELEASE(columnsElement);
     NS_IF_RELEASE(child);
     return rv;
 }
