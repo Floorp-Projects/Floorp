@@ -26,6 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_PSM
+BUILD_SMIME=1
+endif
+
 ifdef BUILD_SMIME
 DEFINES		+= -DENABLE_SMIME
 endif
