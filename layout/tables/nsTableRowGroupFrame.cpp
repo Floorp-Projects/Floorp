@@ -359,8 +359,11 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
         // No the child isn't complete, and it doesn't have a next in flow so
         // create a continuing frame. This hooks the child into the flow.
         nsIFrame* continuingFrame;
-         
-        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+        nsIStyleContext* kidSC;
+        kidFrame->GetStyleContext(aPresContext, kidSC);
+        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
+                                        continuingFrame);
+        NS_RELEASE(kidSC);
 
         // Insert the frame. We'll reflow it next pass through the loop
         nsIFrame* nextSib;
@@ -587,8 +590,11 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
         // continuing frame. The creation appends it to the flow and
         // prepares it for reflow.
         nsIFrame* continuingFrame;
-         
-        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+        nsIStyleContext* kidSC;
+        kidFrame->GetStyleContext(aPresContext, kidSC);
+        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
+                                        continuingFrame);
+        NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to our sibling list and then push
@@ -739,11 +745,12 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel = nsnull;
       kidDel = kid->GetDelegate(aPresContext);
-      kidFrame = kidDel->CreateFrame(aPresContext, kid, this);
+      nsresult rv = kidDel->CreateFrame(aPresContext, kid, this, kidSC,
+                                        kidFrame);
       NS_RELEASE(kidDel);
-      kidFrame->SetStyleContext(aPresContext,kidSC);
     } else {
-      kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
+      kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidSC,
+                                           kidFrame);
     }
 
     // Try to reflow the child into the available space. It might not
@@ -922,12 +929,17 @@ nsTableRowGroupFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                                      nsIFrame*       aParent,
-                                                      nsIFrame*&      aContinuingFrame)
+NS_METHOD
+nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                            nsIFrame*        aParent,
+                                            nsIStyleContext* aStyleContext,
+                                            nsIFrame*&       aContinuingFrame)
 {
   nsTableRowGroupFrame* cf = new nsTableRowGroupFrame(mContent, aParent);
-  PrepareContinuingFrame(aPresContext, aParent, cf);
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
   if (PR_TRUE==gsDebug1) printf("nsTableRowGroupFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   aContinuingFrame = cf;
   return NS_OK;

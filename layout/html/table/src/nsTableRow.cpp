@@ -239,12 +239,21 @@ PRBool nsTableRow::RemoveChildAt (int aIndex)
   return result;
 }
 
-// nsTableRowFrame checks args
-nsIFrame* nsTableRow::CreateFrame(nsIPresContext* aPresContext,
-                                  nsIFrame* aParentFrame)
+nsresult
+nsTableRow::CreateFrame(nsIPresContext* aPresContext,
+                        nsIFrame* aParentFrame,
+                        nsIStyleContext* aStyleContext,
+                        nsIFrame*& aResult)
 {
-  nsIFrame* rv;
-  nsresult status = nsTableRowFrame::NewFrame(&rv, this, aParentFrame);
+  NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
+
+  nsIFrame* frame;
+  nsresult rv = nsTableRowFrame::NewFrame(&frame, this, aParentFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
   return rv;
 }
 

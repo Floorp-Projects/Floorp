@@ -243,35 +243,45 @@ static void AdjustIndexInParents(nsIFrame*         aContainerFrame,
   }
 }
 
-nsIFrame* nsHTMLContainerFrame::CreateFrameFor(nsIPresContext* aPresContext,
-                                               nsIContent*     aContent)
+nsresult
+nsHTMLContainerFrame::CreateFrameFor(nsIPresContext*  aPresContext,
+                                     nsIContent*      aContent,
+                                     nsIStyleContext* aStyleContext,
+                                     nsIFrame*&       aResult)
 {
-  // Get the style content for the frame
-  nsIStyleContextPtr  styleContext = aPresContext->ResolveStyleContextFor(aContent, this);
-  nsStylePosition*    position = (nsStylePosition*)styleContext->GetData(kStylePositionSID);
-  nsStyleDisplay*     display = (nsStyleDisplay*)styleContext->GetData(kStyleDisplaySID);
-  nsIFrame*           result;
+  // Get the style data for the frame
+  nsStylePosition*    position = (nsStylePosition*)
+    aStyleContext->GetData(kStylePositionSID);
+  nsStyleDisplay*     display = (nsStyleDisplay*)
+    aStyleContext->GetData(kStyleDisplaySID);
+  nsIFrame*           frame = nsnull;
 
   // See whether it wants any special handling
+  nsresult rv;
   if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-    AbsoluteFrame::NewFrame(&result, aContent, this);
+    rv = AbsoluteFrame::NewFrame(&frame, aContent, this);
+    if (NS_OK == rv) {
+      frame->SetStyleContext(aPresContext, aStyleContext);
+    }
   } else if (display->mFloats != NS_STYLE_FLOAT_NONE) {
-    PlaceholderFrame::NewFrame(&result, aContent, this);
+    rv = PlaceholderFrame::NewFrame(&frame, aContent, this);
+    if (NS_OK == rv) {
+      frame->SetStyleContext(aPresContext, aStyleContext);
+    }
   } else if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-    nsFrame::NewFrame(&result, aContent, this);
+    rv = nsFrame::NewFrame(&frame, aContent, this);
+    if (NS_OK == rv) {
+      frame->SetStyleContext(aPresContext, aStyleContext);
+    }
   } else {
-    nsIContentDelegate* delegate;
-
     // Ask the content delegate to create the frame
-    // XXX The delegate will also resolve the style context...
-    delegate = aContent->GetDelegate(aPresContext);
-    result = delegate->CreateFrame(aPresContext, aContent, this);
+    nsIContentDelegate* delegate = aContent->GetDelegate(aPresContext);
+    rv = delegate->CreateFrame(aPresContext, aContent, this,
+                               aStyleContext, frame);
     NS_RELEASE(delegate);
   }
-
-  // Set the frame's style context
-  result->SetStyleContext(aPresContext, styleContext);
-  return result;
+  aResult = frame;
+  return rv;
 }
 
 NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
@@ -324,13 +334,18 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
   // next-in-flow(s). It could be a pseudo-frame, but then it better also be
   // a nsHTMLContainerFrame...
   nsHTMLContainerFrame* parent = this;
-
   if (nsnull != prevSibling) {
     prevSibling->GetGeometricParent((nsIFrame*&)parent);
   }
 
   // Create the new frame
-  nsIFrame* newFrame = parent->CreateFrameFor(aPresContext, aChild);
+  nsIStyleContext* kidSC;
+  kidSC = aPresContext->ResolveStyleContextFor(aChild, parent);
+  nsIFrame* newFrame;
+  nsresult rv = parent->CreateFrameFor(aPresContext, aChild, kidSC, newFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
 
   // Insert the frame
   if (nsnull == prevSibling) {

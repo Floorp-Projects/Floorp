@@ -55,9 +55,10 @@ public:
                              nsIContent*     aChild,
                              PRInt32         aIndexInParent);
 
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame*       aParent,
-                                   nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
 
   virtual void AddAnchoredItem(nsIFrame*         aAnchoredItem,
                                AnchoringPosition aPosition,

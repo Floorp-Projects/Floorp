@@ -128,9 +128,10 @@ public:
 
   // Flow member functions
   NS_IMETHOD  IsSplittable(SplittableType& aIsSplittable) const;
-  NS_IMETHOD  CreateContinuingFrame(nsIPresContext* aPresContext,
-                                    nsIFrame*       aParent,
-                                    nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD  CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                    nsIFrame*        aParent,
+                                    nsIStyleContext* aStyleContext,
+                                    nsIFrame*&       aContinuingFrame);
 
   NS_IMETHOD  GetPrevInFlow(nsIFrame*& aPrevInFlow) const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);

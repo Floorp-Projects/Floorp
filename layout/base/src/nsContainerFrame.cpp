@@ -59,9 +59,11 @@ nsContainerFrame::~nsContainerFrame()
   }
 }
 
-void nsContainerFrame::PrepareContinuingFrame(nsIPresContext* aPresContext,
-                                              nsIFrame* aParent,
-                                              nsContainerFrame* aContFrame)
+void
+nsContainerFrame::PrepareContinuingFrame(nsIPresContext*   aPresContext,
+                                         nsIFrame*         aParent,
+                                         nsIStyleContext*  aStyleContext,
+                                         nsContainerFrame* aContFrame)
 {
   // Append the continuing frame to the flow
   aContFrame->AppendToFlow(this);
@@ -74,25 +76,24 @@ void nsContainerFrame::PrepareContinuingFrame(nsIPresContext* aPresContext,
   aContFrame->mLastContentOffset = nextOffset;
   aContFrame->mLastContentIsComplete = PR_TRUE;
 
-  // Resolve style for the continuing frame and set its style context.
-  // XXX presumptive
-  nsIStyleContext* styleContext =
-    aPresContext->ResolveStyleContextFor(mContent, aParent);
-  aContFrame->SetStyleContext(aPresContext, styleContext);
-  NS_RELEASE(styleContext);
+  aContFrame->SetStyleContext(aPresContext, aStyleContext);
 }
 
-NS_METHOD nsContainerFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                                  nsIFrame*       aParent,
-                                                  nsIFrame*&      aContinuingFrame)
+NS_METHOD
+nsContainerFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                        nsIFrame*        aParent,
+                                        nsIStyleContext* aStyleContext,
+                                        nsIFrame*&       aContinuingFrame)
 {
   nsIContentDelegate* contentDelegate = mContent->GetDelegate(aPresContext);
-
-  aContinuingFrame = contentDelegate->CreateFrame(aPresContext, mContent, aParent);
+  nsresult rv = contentDelegate->CreateFrame(aPresContext, mContent, aParent,
+                                             aStyleContext, aContinuingFrame);
   NS_RELEASE(contentDelegate);
-
-  PrepareContinuingFrame(aPresContext, aParent, (nsContainerFrame*)aContinuingFrame);
-  return NS_OK;
+  if (NS_OK == rv) {
+    PrepareContinuingFrame(aPresContext, aParent, aStyleContext,
+                           (nsContainerFrame*)aContinuingFrame);
+  }
+  return rv;
 }
 
 

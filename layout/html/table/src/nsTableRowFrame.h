@@ -91,9 +91,10 @@ public:
                                ReflowStatus&    aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame*       aParent,
-                                   nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
   
   /** set mTallestCell to 0 in anticipation of recalculating it */
   void ResetMaxChildHeight();

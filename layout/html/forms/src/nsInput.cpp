@@ -162,15 +162,6 @@ nsrefcnt nsInput::Release()
   return mRefCnt;
 }
   
-
-nsIFrame*
-nsInput::CreateFrame(nsIPresContext *aPresContext,
-                               nsIFrame *aParentFrame)
-{
-  NS_ASSERTION(0, "frames must be created by subclasses of Input");
-  return nsnull;
-}
-
 PRBool 
 nsInput::IsHidden()
 {

@@ -267,16 +267,14 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
         // Create a frame
         nsIContentDelegate* cd = child->GetDelegate(aPresContext);
         if (nsnull != cd) {
-          mFirstChild = cd->CreateFrame(aPresContext, child, this);
-          if (nsnull != mFirstChild) {
+          nsIStyleContext* kidStyleContext =
+            aPresContext->ResolveStyleContextFor(child, this);
+          nsresult rv = cd->CreateFrame(aPresContext, child, this,
+                                        kidStyleContext, mFirstChild);
+          NS_RELEASE(kidStyleContext);
+          if (NS_OK == rv) {
             mChildCount = 1;
             mLastContentOffset = mFirstContentOffset;
-
-            // Resolve style and set the style context
-            nsIStyleContext* kidStyleContext =
-              aPresContext->ResolveStyleContextFor(child, this);
-            mFirstChild->SetStyleContext(aPresContext,kidStyleContext);
-            NS_RELEASE(kidStyleContext);
           }
           NS_RELEASE(cd);
         }
@@ -340,9 +338,12 @@ NS_METHOD RootContentFrame::ResizeReflow(nsIPresContext*  aPresContext,
         } else if (nsnull == kidNextInFlow) {
           // The page isn't complete and it doesn't have a next-in-flow so
           // create a continuing page
+          nsIStyleContext* kidSC;
+          kidFrame->GetStyleContext(aPresContext, kidSC);
           nsIFrame*  continuingPage;
-           
-          kidFrame->CreateContinuingFrame(aPresContext, this, continuingPage);
+          nsresult rv = kidFrame->CreateContinuingFrame(aPresContext, this,
+                                                        kidSC, continuingPage);
+          NS_RELEASE(kidSC);
 
           // Add it to our child list
 #ifdef NS_DEBUG
@@ -448,8 +449,11 @@ public:
 
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
 
 protected:
   virtual ~RootPart();
@@ -480,11 +484,19 @@ nsrefcnt RootPart::Release(void)
   return mRefCnt;
 }
 
-nsIFrame* RootPart::CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame)
+nsresult
+RootPart::CreateFrame(nsIPresContext* aPresContext,
+                      nsIFrame* aParentFrame,
+                      nsIStyleContext* aStyleContext,
+                      nsIFrame*& aResult)
 {
-  nsIFrame* rv = new RootFrame(this);
-  return rv;
+  RootFrame* frame = new RootFrame(this);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 nsresult

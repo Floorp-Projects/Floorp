@@ -77,8 +77,10 @@ public:
   NS_IMETHOD_(nsrefcnt) Release();
   
   /** @see nsIHTMLContent::CreateFrame */
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
+                               nsIFrame*        aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*&       aResult);
 
   /** returns nsITableContent::kTableColGroupType */
   virtual int GetType();

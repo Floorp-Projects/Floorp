@@ -647,12 +647,17 @@ NS_METHOD nsListItemFrame::IncrementalReflow(nsIPresContext* aCX,
 }
 #endif
 
-NS_METHOD nsListItemFrame::CreateContinuingFrame(nsIPresContext* aCX,
-                                                 nsIFrame* aParent,
-                                                 nsIFrame*& aContinuingFrame)
+NS_METHOD
+nsListItemFrame::CreateContinuingFrame(nsIPresContext*  aCX,
+                                       nsIFrame*        aParent,
+                                       nsIStyleContext* aStyleContext,
+                                       nsIFrame*&       aContinuingFrame)
 {
   nsListItemFrame* cf = new nsListItemFrame(mContent, aParent);
-  PrepareContinuingFrame(aCX, aParent, cf);
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  PrepareContinuingFrame(aCX, aParent, aStyleContext, cf);
   aContinuingFrame = cf;
   return NS_OK;
 }

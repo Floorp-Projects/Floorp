@@ -69,12 +69,13 @@ NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
   if (nsnull == mAnchoredItem) {
     // Create the anchored item
     nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
-
-    mAnchoredItem = delegate->CreateFrame(aPresContext, mContent, mGeometricParent);
+    nsresult rv = delegate->CreateFrame(aPresContext, mContent,
+                                        mGeometricParent, mStyleContext,
+                                        mAnchoredItem);
     NS_RELEASE(delegate);
-
-    // Set the style context for the frame
-    mAnchoredItem->SetStyleContext(aPresContext,mStyleContext);
+    if (NS_OK != rv) {
+      return rv;
+    }
 
     // Resize reflow the anchored item into the available space
     // XXX Check for complete?

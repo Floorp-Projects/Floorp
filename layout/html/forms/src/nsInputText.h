@@ -38,8 +38,10 @@ public:
   typedef nsInput nsInputTextSuper;
   nsInputText (nsIAtom* aTag, nsIFormManager* aManager, nsInputTextType aType);
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
+                               nsIFrame*        aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*&       aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 

@@ -95,9 +95,10 @@ public:
                                ReflowStatus& aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame*       aParent,
-                                   nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
 
   /** resize myself and my children according to the arcane rules of cell height magic. 
     * By default, the height of a cell is the max (height of cells in its row)

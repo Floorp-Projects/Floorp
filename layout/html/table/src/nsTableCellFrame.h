@@ -54,9 +54,10 @@ public:
   /**
    * @see nsContainerFrame
    */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame*       aParent,
-                                   nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
 
   void          VerticallyAlignChild(nsIPresContext* aPresContext);
 

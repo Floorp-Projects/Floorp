@@ -30,8 +30,10 @@ public:
   typedef nsInput nsInputFileSuper;
   nsInputFile (nsIAtom* aTag, nsIFormManager* aManager);
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
+                               nsIFrame*        aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*&       aResult);
 
 protected:
   virtual ~nsInputFile();

@@ -143,13 +143,21 @@ void nsTableCell::SetColIndex (int aColIndex)
   mColIndex = aColIndex;
 }
 
-nsIFrame* nsTableCell::CreateFrame(nsIPresContext* aPresContext,
-                                   nsIFrame* aParentFrame)
+nsresult
+nsTableCell::CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult)
 {
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
-  nsIFrame* rv;
-  nsresult status = nsTableCellFrame::NewFrame(&rv, this, aParentFrame);
-  NS_ASSERTION(nsnull!=rv, "bad arg");
+
+  nsIFrame* frame;
+  nsresult rv = nsTableCellFrame::NewFrame(&frame, this, aParentFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
   return rv;
 }
 

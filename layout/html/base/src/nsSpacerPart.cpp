@@ -50,8 +50,10 @@ class SpacerPart : public nsHTMLTagContent {
 public:
   SpacerPart(nsIAtom* aTag);
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
@@ -200,10 +202,19 @@ SpacerPart::~SpacerPart()
 {
 }
 
-nsIFrame* SpacerPart::CreateFrame(nsIPresContext* aPresContext, nsIFrame* aParentFrame)
+nsresult
+SpacerPart::CreateFrame(nsIPresContext*  aPresContext,
+                        nsIFrame*        aParentFrame,
+                        nsIStyleContext* aStyleContext,
+                        nsIFrame*&       aResult)
 {
-  nsIFrame* rv = new SpacerFrame(this, aParentFrame);
-  return rv;
+  nsIFrame* frame = new SpacerFrame(this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 void SpacerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)

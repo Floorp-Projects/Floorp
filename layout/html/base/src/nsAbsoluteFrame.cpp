@@ -245,11 +245,12 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
       // also create a view
       nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
   
-      mFrame= delegate->CreateFrame(aPresContext, mContent, this);
+      nsresult rv = delegate->CreateFrame(aPresContext, mContent, this,
+                                          mStyleContext, mFrame);
       NS_RELEASE(delegate);
-  
-      // Set the style context for the frame
-      mFrame->SetStyleContext(aPresContext,mStyleContext);
+      if (NS_OK != rv) {
+        return rv;
+      }
     }
 
     // Get the containing block, and its associated view

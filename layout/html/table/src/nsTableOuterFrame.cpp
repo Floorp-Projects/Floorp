@@ -529,8 +529,11 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
         // The child doesn't have a next-in-flow so create a continuing
         // frame. This hooks the child into the flow
         nsIFrame* continuingFrame;
-         
-        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+        nsIStyleContext* kidSC;
+        kidFrame->GetStyleContext(aPresContext, kidSC);
+        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
+                                        continuingFrame);
+        NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to the sibling list
@@ -764,8 +767,10 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
         // continuing frame. The creation appends it to the flow and
         // prepares it for reflow.
         nsIFrame* continuingFrame;
-         
-        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+        nsIStyleContext* kidSC;
+        kidFrame->GetStyleContext(aPresContext, kidSC);
+        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
+                                        continuingFrame);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to our sibling list and then push
@@ -1202,12 +1207,17 @@ nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsTableOuterFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                                   nsIFrame*       aParent,
-                                                   nsIFrame*&      aContinuingFrame)
+NS_METHOD
+nsTableOuterFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                         nsIFrame*        aParent,
+                                         nsIStyleContext* aStyleContext,
+                                         nsIFrame*&       aContinuingFrame)
 {
   nsTableOuterFrame* cf = new nsTableOuterFrame(mContent, aParent);
-  PrepareContinuingFrame(aPresContext, aParent, cf);
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
   cf->SetFirstPassValid(PR_TRUE);
   if (PR_TRUE==gsDebug)
     printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
@@ -1215,9 +1225,11 @@ NS_METHOD nsTableOuterFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-void nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext*    aPresContext,
-                                               nsIFrame*          aParent,
-                                               nsTableOuterFrame* aContFrame)
+void
+nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext*    aPresContext,
+                                          nsIFrame*          aParent,
+                                          nsIStyleContext*   aStyleContext,
+                                          nsTableOuterFrame* aContFrame)
 {
   // Append the continuing frame to the flow
   aContFrame->AppendToFlow(this);
@@ -1238,12 +1250,7 @@ void nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext*    aPresContext,
   aContFrame->SetFirstContentOffset(nextOffset);
   aContFrame->SetLastContentOffset(nextOffset);
   aContFrame->SetLastContentIsComplete(PR_TRUE);
-
-  // Resolve style for the continuing frame and set its style context.
-  // XXX presumptive
-  nsIStyleContextPtr styleContext =
-    aPresContext->ResolveStyleContextFor(mContent, aParent);
-  aContFrame->SetStyleContext(aPresContext,styleContext);
+  aContFrame->SetStyleContext(aPresContext, aStyleContext);
 }
 
 NS_METHOD nsTableOuterFrame::VerifyTree() const
@@ -1373,8 +1380,10 @@ void nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext)
     if (nsnull==mInnerTableFrame)
     {
       nsIFrame* continuingFrame;
-
-      prevInnerTable->CreateContinuingFrame(aPresContext, this, continuingFrame);
+      nsIStyleContext* kidSC;
+      prevInnerTable->GetStyleContext(aPresContext, kidSC);
+      prevInnerTable->CreateContinuingFrame(aPresContext, this, kidSC,
+                                            continuingFrame);
       mInnerTableFrame = (nsTableFrame*)continuingFrame;
       mChildCount++;
     }

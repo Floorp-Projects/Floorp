@@ -47,8 +47,11 @@ public:
   virtual nsrefcnt AddRef(void);
   virtual nsrefcnt Release(void);
 #endif
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
@@ -417,11 +420,19 @@ nsContentAttr HRulePart::AttributeToString(nsIAtom* aAttribute,
 
 //----------------------------------------------------------------------
 
-nsIFrame* HRulePart::CreateFrame(nsIPresContext* aPresContext,
-                                 nsIFrame* aParentFrame)
+nsresult
+HRulePart::CreateFrame(nsIPresContext*  aPresContext,
+                       nsIFrame*        aParentFrame,
+                       nsIStyleContext* aStyleContext,
+                       nsIFrame*&       aResult)
 {
-  nsIFrame* rv = new HRuleFrame(this, aParentFrame);
-  return rv;
+  nsIFrame* frame = new HRuleFrame(this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 nsresult

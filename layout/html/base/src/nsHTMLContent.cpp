@@ -44,9 +44,11 @@ class ContentDelegate : public nsIContentDelegate {
 public:
   ContentDelegate();
   NS_DECL_ISUPPORTS
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIContent* aContent,
-                                nsIFrame* aParentFrame);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIContent* aContent,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
 protected:
   ~ContentDelegate();
 };
@@ -62,27 +64,34 @@ ContentDelegate::~ContentDelegate()
 {
 }
 
-nsIFrame* ContentDelegate::CreateFrame(nsIPresContext* aPresContext,
-                                       nsIContent* aContent,
-                                       nsIFrame* aParentFrame)
+NS_METHOD
+ContentDelegate::CreateFrame(nsIPresContext* aPresContext,
+                             nsIContent* aContent,
+                             nsIFrame* aParentFrame,
+                             nsIStyleContext* aStyleContext,
+                             nsIFrame*& aResult)
 {
   NS_PRECONDITION(nsnull != aContent, "null ptr");
 
   // Make sure the content is html content
   nsIHTMLContent* hc;
-  nsIFrame* rv;
-  nsresult status = aContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
-  if (NS_OK != status) {
+  nsIFrame* frame = nsnull;
+  nsresult rv = aContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
+  if (NS_OK != rv) {
     // This means that *somehow* somebody which is not an html
     // content object got ahold of this delegate and tried to
     // create a frame with it. Give them back an nsFrame.
-    status = nsFrame::NewFrame(&rv, aContent, aParentFrame);
-    return rv;
+    rv = nsFrame::NewFrame(&frame, aContent, aParentFrame);
+    if (NS_OK == rv) {
+      frame->SetStyleContext(aPresContext, aStyleContext);
+    }
   }
-
-  // Ask the content object to create the frame
-  rv = hc->CreateFrame(aPresContext, aParentFrame);
-  NS_RELEASE(hc);
+  else {
+    // Ask the content object to create the frame
+    rv = hc->CreateFrame(aPresContext, aParentFrame, aStyleContext, frame);
+    NS_RELEASE(hc);
+  }
+  aResult = frame;
   return rv;
 }
 

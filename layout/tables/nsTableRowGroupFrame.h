@@ -85,9 +85,10 @@ public:
                                ReflowStatus&    aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame*       aParent,
-                                   nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
 
   /** returns the type of the mapped row group content in aType.
     * caller MUST call release on the returned object if it is not null.

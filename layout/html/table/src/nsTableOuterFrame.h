@@ -97,9 +97,10 @@ public:
                                ReflowStatus&    aStatus);
 
   /** @see nsContainerFrame */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame*       aParent,
-                                   nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
   /** destructor */
   virtual ~nsTableOuterFrame();
 
@@ -206,9 +207,10 @@ protected:
   /** overridden here to handle special caption-table relationship
     * @see nsContainerFrame::PrepareContinuingFrame
     */
-  virtual void PrepareContinuingFrame(nsIPresContext*    aPresContext,
-                                      nsIFrame*          aParent,
-                                      nsTableOuterFrame* aContFrame);
+  void PrepareContinuingFrame(nsIPresContext*    aPresContext,
+                              nsIFrame*          aParent,
+                              nsIStyleContext* aStyleContext,
+                              nsTableOuterFrame* aContFrame);
 
   /**
    * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow

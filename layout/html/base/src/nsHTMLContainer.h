@@ -38,8 +38,10 @@ public:
 
   virtual void Compact();
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
   virtual void MapAttributesInto(nsIStyleContext* aContext,

@@ -90,7 +90,11 @@ void nsTableCaptionFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
     NS_ASSERTION(prevFrame->ChildIsPseudoFrame(prevPseudoFrame), "bad previous pseudo-frame");
 
     // Create a continuing column
-    prevPseudoFrame->CreateContinuingFrame(aPresContext, this, mFirstChild);
+    nsIStyleContext* kidSC;
+    prevPseudoFrame->GetStyleContext(aPresContext, kidSC);
+    prevPseudoFrame->CreateContinuingFrame(aPresContext, this, kidSC,
+                                           mFirstChild);
+    NS_RELEASE(kidSC);
     mChildCount = 1;
   }
 }
@@ -324,13 +328,18 @@ NS_METHOD nsTableCaptionFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsTableCaptionFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                                     nsIFrame*       aParent,
-                                                     nsIFrame*&      aContinuingFrame)
+NS_METHOD
+nsTableCaptionFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                           nsIFrame*        aParent,
+                                           nsIStyleContext* aStyleContext,
+                                           nsIFrame*&       aContinuingFrame)
 {
   if (PR_TRUE==gsDebug) printf("nsTableCaptionFrame::CreateContinuingFrame called\n");
   nsTableCaptionFrame* cf = new nsTableCaptionFrame(mContent, aParent);
-  PrepareContinuingFrame(aPresContext, aParent, cf);
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
   aContinuingFrame = cf;
   return NS_OK;
 }

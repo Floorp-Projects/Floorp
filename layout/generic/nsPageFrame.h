@@ -37,9 +37,10 @@ public:
                                 nsReflowCommand& aReflowCommand,
                                 ReflowStatus&    aStatus);
 
-  NS_IMETHOD  CreateContinuingFrame(nsIPresContext* aPresContext,
-                                    nsIFrame*       aParent,
-                                    nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aCX,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
 
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
