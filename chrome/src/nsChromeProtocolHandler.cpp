@@ -556,11 +556,16 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         //aURI->GetSpec(getter_Copies(oldSpec));
         //printf("*************************** %s\n", (const char*)oldSpec);
 
-        nsCOMPtr<nsIChromeRegistry> reg (do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
-        NS_ENSURE_TRUE(reg, NS_ERROR_FAILURE);
+        if (!nsChromeRegistry::gChromeRegistry) {
+            // We don't actually want this ref, we just want the service to
+            // initialize if it hasn't already.
+            nsCOMPtr<nsIChromeRegistry> reg (do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
+        }
+
+        NS_ENSURE_TRUE(nsChromeRegistry::gChromeRegistry, NS_ERROR_FAILURE);
 
         nsCOMPtr<nsIURI> resolvedURI;
-        rv = reg->ConvertChromeURL(aURI, getter_AddRefs(resolvedURI));
+        rv = nsChromeRegistry::gChromeRegistry->ConvertChromeURL(aURI, getter_AddRefs(resolvedURI));
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
             nsCAutoString spec;

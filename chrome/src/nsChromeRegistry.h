@@ -83,10 +83,13 @@ public:
   NS_DECL_NSIOBSERVER
 
   // nsChromeRegistry methods:
-  nsChromeRegistry() { }
+  nsChromeRegistry() : mInitialized(PR_FALSE) { }
   ~nsChromeRegistry();
 
   nsresult Init();
+
+  static nsChromeRegistry* gChromeRegistry;
+
   static nsresult Canonify(nsIURL* aChromeURL);
 
 protected:
@@ -217,6 +220,8 @@ public:
   };
 
 private:
+  PRBool mInitialized;
+
   // Hash of package names ("global") to PackageEntry objects
   PLDHashTable mPackagesHash;
 
