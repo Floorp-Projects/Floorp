@@ -1374,3 +1374,9 @@ void INTL_SetCCCCvtflag_SendHankakuKana(CCCDataObject obj, XP_Bool flag)
 	}
 }
 #endif  /* MOZ_MAIL_NEWS */
+
+
+INTLCharSetID INTL_GetCharSetID(INTL_CharSetID_Selector selector) 
+{ 
+ return FE_GetCharSetID(selector); 
+} 
