@@ -129,7 +129,7 @@ class nsCategoryManager
   {
     public:
       nsCategoryManager();
-      ~nsCategoryManager();
+      virtual ~nsCategoryManager();
 
       NS_DECL_ISUPPORTS
       NS_DECL_NSICATEGORYMANAGER
