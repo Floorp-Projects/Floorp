@@ -136,6 +136,7 @@ static nsGenericHTMLElement::EnumTable kListItemTypeTable[] = {
   { "a", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
   { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
   { "i", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
+  { "1", NS_STYLE_LIST_STYLE_DECIMAL },
   { 0 }
 };
 
