@@ -20,6 +20,8 @@
 #
 # Contributor(s):
 #  Brian Ryner <bryner@netscape.com>
+#  Jonathan Wilson <jonwil@tpgi.com.au>
+#  Dan Mosedale <dmose@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,7 +65,7 @@ REQUIRES = \
 
 CPPSRCS = nsBrowserApp.cpp
 
-EXTRA_LIBS = \
+LIBS = \
 	$(EXTRA_DSO_LDOPTS) \
 	$(EXTRA_DSO_LIBS) \
 	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
@@ -74,7 +76,7 @@ EXTRA_LIBS = \
 	$(NULL)
 
 ifdef MOZ_JPROF
-EXTRA_LIBS += -ljprof
+LIBS += -ljprof
 endif
 
 ifndef MOZ_WINCONSOLE
@@ -109,9 +111,13 @@ EXTRA_LIBS	+= $(STATIC_EXTRA_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)
 RCINCLUDE = splash.rc
+ifndef GNU_CC
 RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
+else
+RCFLAGS += -DMOZ_PHOENIX --include-dir $(srcdir)
+endif
 ifdef BUILD_STATIC_LIBS
 RCFLAGS += -DMOZ_STATIC_BUILD
 endif

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Bill Law       law@netscape.com
+ *   Jonathan Wilson <jonwil@tpgi.com.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -53,7 +54,9 @@ IDD_SPLASH DIALOGEX
 	FONT 8, "MS Sans Serif"
 	BEGIN
 		CONTROL
+#ifndef __MINGW32__
             IDB_SPLASH,
+#endif
 			IDB_SPLASH,
 			"Static",
 			SS_BITMAP,
