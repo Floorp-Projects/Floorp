@@ -30,6 +30,7 @@ DEFINES += -D_IMPL_NS_HTML
 
 INCLUDES += \
 	-I$(srcdir)/../../../base/src		\
+	-I$(srcdir)/../../../html/table/src \
 	-I$(DIST)/public/raptor			\
 	$(NULL)
 
@@ -37,6 +38,7 @@ INCLUDES += \
 CPPSRCS =				\
 	nsToolbarFrame.cpp			\
 	nsToolboxFrame.cpp			\
+	nsTreeFrame.cpp \
 	$(NULL)
 
 EXPORTS = \
