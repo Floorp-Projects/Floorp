@@ -107,6 +107,9 @@ var BookmarksMenu = {
     case "BookmarksMenu":
       parent = "NC:BookmarksRoot";
       break;
+    case "bookmarks-button":
+      parent = "NC:BookmarksRoot";
+      break;
     case "bookmarks-chevron":
       parent = "NC:PersonalToolbarFolder";
       break;
