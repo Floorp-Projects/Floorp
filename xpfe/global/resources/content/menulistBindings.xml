@@ -34,11 +34,11 @@
         <body>
           <![CDATA[
             this.setAttribute('sizetopopup', 'true');
-            if (!this.value) {
-              var arr = this.getElementsByAttribute('selected', 'true');
+            if (!this.value && this.childNodes.length) {
+              var arr = this.firstChild.getElementsByAttribute('selected', 'true');
 
               if (!arr.length && this.data)
-                arr = this.getElementsByAttribute('data', this.data);
+                arr = this.firstChild.getElementsByAttribute('data', this.data);
 
               if (arr.length)
                 this.selectedItem = arr[0];
@@ -51,11 +51,16 @@
       <property name="data" onget="return this.getAttribute('data');">
         <setter>
           <![CDATA[
-            var arr = this.getElementsByAttribute('data', val);
-            if (arr.length)
+            var arr;
+
+            if (this.childNodes.length)
+              arr = this.firstChild.getElementsByAttribute('data', val);
+
+            if (arr && arr.length)
               this.selectedItem = arr[0];
             else
               this.setAttribute('data', val);
+
             return val;
           ]]>
         </setter>
