@@ -332,6 +332,21 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
           decl->RemoveProperty(prop, val);
         }
       }
+  
+      nsCOMPtr<nsINodeInfo> nodeInfo;
+      mContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+      if (nodeInfo) {
+        nsCOMPtr<nsIDocument> doc;
+        nodeInfo->GetDocument(*getter_AddRefs(doc));
+        if (doc) {
+          nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
+          if (htmlDoc) {
+            nsDTDMode mode;
+            htmlDoc->GetDTDMode(mode);
+            cssParser->SetQuirkMode(eDTDMode_strict != mode);
+          }
+        }
+      }
 
       result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
                                                     aParseOnlyOneDecl, &hint);
