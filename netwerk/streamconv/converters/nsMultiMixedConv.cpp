@@ -127,13 +127,13 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             bufLen = read + mTokenLen + 1;
             char *tmp = (char*)nsMemory::Alloc(bufLen);
             if (!tmp) {
-                nsMemory::Free(cursor);
+                nsMemory::Free(buffer);
                 return NS_ERROR_OUT_OF_MEMORY;
             }
             nsCRT::memcpy(tmp, token, mTokenLen);
             nsCRT::memcpy(tmp+mTokenLen, "\n", 1);
             nsCRT::memcpy(tmp+mTokenLen+1, cursor, read);
-            nsMemory::Free(cursor);
+            nsMemory::Free(buffer);
             buffer = tmp;
         }
     }
