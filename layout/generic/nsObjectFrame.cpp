@@ -181,6 +181,12 @@ private:
   nsIPluginHost     *mPluginHost;
 };
 
+  // Mac specific code to fix up port position and clip during paint
+#ifdef XP_MAC
+  static void DoMacFixUp(nsPluginWindow *pluginWindow, nsIWidget* aWidget);
+
+  static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY, nsRect& aClipRect); 
+#endif	// XP_MAC
 
 nsObjectFrame::~nsObjectFrame()
 {
@@ -435,6 +441,12 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
     } else {
       NS_ASSERTION(0, "could not get widget");
     }
+#endif
+
+    // Turn off double buffering on the Mac. This depends on bug 49743 and partially
+    // fixes 32327, 19931 amd 51787
+#ifdef XP_MAC
+    viewMan->AllowDoubleBuffering(PR_FALSE);
 #endif
 
     viewMan->InsertChild(parView, view, 0);
@@ -1174,12 +1186,7 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
         // beard: to preserve backward compatibility with Communicator 4.X, the
         // clipRect must be in port coordinates.
 #ifdef XP_MAC
-        nsPluginPort* port = window->window;
-        nsPluginRect& clipRect = window->clipRect;
-        clipRect.top = -port->porty;
-        clipRect.left = -port->portx;
-        clipRect.bottom = clipRect.top + window->height;
-        clipRect.right = clipRect.left + window->width;
+        DoMacFixUp(window,mWidget);
 #else
         // this is only well-defined on the Mac OS anyway, or perhaps for windowless plugins.
         window->clipRect.top = 0;
@@ -2364,17 +2371,20 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 {
 #ifdef XP_MAC
-	if (mInstance != NULL) {
-		nsPluginPort* pluginPort = GetPluginPort();
+  if (mInstance != NULL) {
+    nsPluginPort* pluginPort = GetPluginPort();
 
-		EventRecord updateEvent;
-		::OSEventAvail(0, &updateEvent);
-		updateEvent.what = updateEvt;
-		updateEvent.message = UInt32(pluginPort->port);
-		
-		nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
-		PRBool eventHandled = PR_FALSE;
-		mInstance->HandleEvent(&pluginEvent, &eventHandled);
+    EventRecord updateEvent;
+    ::OSEventAvail(0, &updateEvent);
+    updateEvent.what = updateEvt;
+    updateEvent.message = UInt32(pluginPort->port);
+
+    nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+    PRBool eventHandled = PR_FALSE;
+
+    DoMacFixUp(&mPluginWindow,mWidget);
+    
+    mInstance->HandleEvent(&pluginEvent, &eventHandled);
 	}
 #endif
 
@@ -2503,6 +2513,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           mPluginWindow.type = nsPluginWindowType_Window;
 
 #if defined(XP_MAC)
+          DoMacFixUp(&mPluginWindow,mWidget);
+
           // start a periodic timer to provide null events to the plugin instance.
           mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
           if (rv == NS_OK)
@@ -2524,3 +2536,77 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
   mPluginHost = aHost;
   NS_IF_ADDREF(mPluginHost);
 }
+
+
+  // Mac specific code to fix up the port location and clipping region
+#ifdef XP_MAC
+static void DoMacFixUp(nsPluginWindow *pluginWindow, nsIWidget* aWidget)
+{
+  if (aWidget == nsnull || pluginWindow == nsnull)
+    return;
+
+  nsPluginRect& clipRect = pluginWindow->clipRect;
+  nscoord x,y; 
+  nsRect rect(0,0,0,0);
+
+  // find aWidget's absolute position (x,y) and the clipping region (rect)
+  GetWidgetPosAndClip(aWidget,x,y,rect);
+
+  // set the port location
+  pluginWindow->x = x;
+  pluginWindow->y = y;
+
+  // fix up the clipping region
+  clipRect.top = y;
+  clipRect.left = x;
+  clipRect.bottom = clipRect.top + rect.height;
+  clipRect.right = clipRect.right + rect.width;
+}
+
+  // calculate the absolute position and clip for a widget 
+  // and use other windows in calculating the clip
+static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY,
+                                nsRect& aClipRect) 
+{
+  aWidget->GetBounds(aClipRect); 
+  aAbsX = aClipRect.x; 
+  aAbsY = aClipRect.y; 
+  
+  nscoord ancestorX = -aClipRect.x, ancestorY = -aClipRect.y; 
+  // Calculate clipping relative to the widget passed in 
+  aClipRect.x = 0; 
+  aClipRect.y = 0; 
+
+   // Gather up the absolute position of the widget 
+   // + clip window 
+  nsCOMPtr<nsIWidget> widget = getter_AddRefs(aWidget->GetParent());
+  while (widget != nsnull) { 
+    nsRect wrect; 
+    widget->GetClientBounds(wrect); 
+    nscoord wx, wy; 
+    wx = wrect.x; 
+    wy = wrect.y; 
+    wrect.x = ancestorX; 
+    wrect.y = ancestorY; 
+    aClipRect.IntersectRect(aClipRect, wrect); 
+    aAbsX += wx; 
+    aAbsY += wy; 
+    widget = getter_AddRefs(widget->GetParent());
+    if (widget == nsnull) { 
+      // Don't include the top-level windows offset 
+      // printf("Top level window offset %d %d\n", wx, wy); 
+      aAbsX -= wx; 
+      aAbsY -= wy; 
+    } 
+    ancestorX -=wx; 
+    ancestorY -=wy; 
+  } 
+
+  aClipRect.x = aAbsX; 
+  aClipRect.y = aAbsY; 
+
+  //printf("--------------\n"); 
+  //printf("Widget clip X %d Y %d rect %d %d %d %d\n", aAbsX, aAbsY,  aClipRect.x,  aClipRect.y, aClipRect.width,  aClipRect.height ); 
+  //printf("--------------\n"); 
+} 
+#endif	// XP_MAC
