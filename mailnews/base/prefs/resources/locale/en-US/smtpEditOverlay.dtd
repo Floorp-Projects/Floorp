@@ -1,5 +1,5 @@
 <!ENTITY serverName.label "Server Name:">
-<!ENTITY alwaysUseUsername.label "Always use name and password">
+<!ENTITY alwaysUseUsername.label "Use name and password">
 <!ENTITY userName.label "User Name:">
 <!ENTITY savePassword.label "Save my password">
 <!ENTITY isSecure.label "Use secure connection (SSL)">

@@ -100,7 +100,7 @@ Rights Reserved.
 <!ENTITY filtersCmd.accesskey "i">  
 <!ENTITY folderPropsCmd.label "Properties...">  
 <!ENTITY folderPropsCmd.accesskey "o">  
-<!ENTITY accountManagerCmd.label "Mail/News Account Settings">
+<!ENTITY accountManagerCmd.label "Mail/News Account Settings...">
 <!ENTITY accountManagerCmd.accesskey "m">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
 <!ENTITY redoDeleteMsgCmd.label "Redo Delete Message">
