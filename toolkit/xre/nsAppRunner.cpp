@@ -379,104 +379,6 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
   return ARG_NONE;
 }
 
-
-static const nsXREAppData* LoadAppData(const char* appDataFile)
-{
-  static char vendor[256], name[256], version[32], buildID[32], copyright[512];
-  static nsXREAppData data = { vendor, name, version, buildID, {0,0,0,{0,0,0,0,0,0,0,0}}, copyright, 0 };
-  
-  nsCOMPtr<nsILocalFile> lf;
-  NS_GetFileFromPath(appDataFile, getter_AddRefs(lf));
-  if (!lf)
-    return nsnull;
-
-  nsINIParser parser; 
-  if (NS_FAILED(parser.Init(lf)))
-    return nsnull;
-
-  // Ensure that this file specifies a compatible XRE version.
-  char xreVersion[32];
-  nsresult rv = parser.GetString("XRE", "Version", xreVersion, sizeof(xreVersion));
-  if (NS_FAILED(rv) || xreVersion[0] != '0' || xreVersion[1] != '.') {
-    fprintf(stderr, "Error: XRE version requirement not met.\n");
-    return nsnull;
-  }
-
-  // Read the app ID, if specified
-  char id[38] = "";
-  rv = parser.GetString("App", "ID", id, sizeof(id));
-  if (NS_SUCCEEDED(rv)) {
-    if(!data.id.Parse(id)) {
-      memset(&data.id, 0, sizeof(data.id));
-    }
-  }
-
-  PRUint32 i;
-
-  // Read string-valued fields
-  const struct {
-    const char* key;
-    char* buf;
-    size_t bufLen;
-    PRBool required;
-  } string_fields[] = {
-    { "Vendor",    vendor,    sizeof(vendor),    PR_FALSE },
-    { "Name",      name,      sizeof(name),      PR_TRUE  },
-    { "Version",   version,   sizeof(version),   PR_FALSE },
-    { "BuildID",   buildID,   sizeof(buildID),   PR_TRUE  },
-    { "Copyright", copyright, sizeof(copyright), PR_FALSE }
-  };
-  for (i = 0; i < NS_ARRAY_LENGTH(string_fields); ++i) {
-    rv = parser.GetString("App", string_fields[i].key, string_fields[i].buf,
-                          string_fields[i].bufLen);
-    if (NS_FAILED(rv)) {
-      if (string_fields[i].required) {
-        fprintf(stderr, "Error: %x: No \"%s\" field.\n", rv,
-                string_fields[i].key);
-        return nsnull;
-      } else {
-        string_fields[i].buf[0] = '\0';
-      }
-    }
-  }
-
-  // Read boolean-valued fields
-  const struct {
-    const char* key;
-    PRUint32 flag;
-  } boolean_fields[] = {
-    { "UseStartupPrefs",        NS_XRE_USE_STARTUP_PREFS        },
-    { "EnableProfileMigrator",  NS_XRE_ENABLE_PROFILE_MIGRATOR  },
-    { "EnableExtensionManager", NS_XRE_ENABLE_EXTENSION_MANAGER }
-  };
-  char buf[6]; // large enough to hold "false"
-  data.flags = 0;
-  for (i = 0; i < NS_ARRAY_LENGTH(boolean_fields); ++i) {
-    rv = parser.GetString("XRE", boolean_fields[i].key, buf, sizeof(buf));
-    // accept a truncated result since we are only interested in the
-    // first character.  this is designed to allow the possibility of
-    // expanding these boolean attributes to express additional options.
-    if ((NS_SUCCEEDED(rv) || rv == NS_ERROR_LOSS_OF_SIGNIFICANT_DATA) &&
-        (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T')) {
-      data.flags |= boolean_fields[i].flag;
-    }
-  } 
-
-#ifdef DEBUG
-  printf("---------------------------------------------------------\n");
-  printf("     Vendor %s\n", data.appVendor);
-  printf("       Name %s\n", data.appName);
-  printf("    Version %s\n", data.appVersion);
-  printf("    BuildID %s\n", data.appBuildID);
-  printf("  Copyright %s\n", data.copyright);
-  printf("      Flags %08x\n", data.flags);
-  printf("---------------------------------------------------------\n");
-#endif
-
-  return &data;
-}
-
-
 static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
                            const nsAFlatString& aAppArgs,
                            PRInt32 aWidth, PRInt32 aHeight);
@@ -1859,15 +1761,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   gArgc = argc;
   gArgv = argv;
 
-  // allow -app argument to override default app data
-  const char *appDataFile = nsnull;
-  if (CheckArg("app", &appDataFile))
-    aAppData = LoadAppData(appDataFile);
-
-  if (!aAppData) {
-    fprintf(stderr, "Error: Invalid or missing application data!\n");
-    return 1;
-  }
+  NS_ASSERTION(aAppData, "must specify XUL app data");
   gAppData = aAppData;
 
   gRestartArgc = argc;
@@ -1924,7 +1818,8 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   {
     nsCOMPtr<nsIFile> xulAppDir;
 
-    if (appDataFile) {
+    const char *appDataFile;
+    if (CheckArg("app", &appDataFile) == ARG_FOUND) {
       nsCOMPtr<nsILocalFile> lf;
       NS_GetFileFromPath(appDataFile, getter_AddRefs(lf));
       lf->GetParent(getter_AddRefs(xulAppDir));

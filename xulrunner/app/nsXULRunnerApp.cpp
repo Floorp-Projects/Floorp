@@ -34,14 +34,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXULAppAPI.h"
-#include "plstr.h"
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef XP_WIN
 #include <windows.h>
 #endif
 
+#include "nsXULAppAPI.h"
+#include "nsAppRunner.h"
+#include "nsINIParser.h"
+#include "nsILocalFile.h"
+#include "nsCOMPtr.h"
+#include "nsMemory.h"
+#include "nsBuildID.h"
+#include "plstr.h"
+#include "prprf.h"
+
+/**
+ * Return true if |arg| matches the given argument name.
+ */
 static PRBool IsArg(const char* arg, const char* s)
 {
   if (*arg == '-')
@@ -59,6 +70,147 @@ static PRBool IsArg(const char* arg, const char* s)
   return PR_FALSE;
 }
 
+/**
+ * Version checking.
+ */
+
+static PRUint32 geckoVersion = 0;
+
+static PRUint32 ParseVersion(const char *versionStr)
+{
+  PRUint16 major, minor;
+  if (PR_sscanf(versionStr, "%hu.%hu", &major, &minor) != 2) {
+    NS_WARNING("invalid version string");
+    return 0;
+  }
+
+  return PRUint32(major) << 16 | PRUint32(minor);
+}
+
+static PRBool CheckMinVersion(const char *versionStr)
+{
+  PRUint32 v = ParseVersion(versionStr);
+  return geckoVersion >= v;
+}
+
+static PRBool CheckMaxVersion(const char *versionStr)
+{
+  PRUint32 v = ParseVersion(versionStr);
+  return geckoVersion <= v;
+}
+
+/**
+ * Parse application data.
+ */
+static const nsXREAppData* LoadAppData(const char* appDataFile)
+{
+  static char vendor[256], name[256], version[32], buildID[32], copyright[512];
+  static nsXREAppData data = {
+      vendor, name, version, buildID, {0,0,0,{0,0,0,0,0,0,0,0}}, copyright, 0 };
+  
+  nsCOMPtr<nsILocalFile> lf;
+  NS_GetFileFromPath(appDataFile, getter_AddRefs(lf));
+  if (!lf)
+    return nsnull;
+
+  nsINIParser parser; 
+  if (NS_FAILED(parser.Init(lf)))
+    return nsnull;
+
+  nsresult rv;
+
+  // Gecko version checking
+  //
+  // TODO: If these version checks fail, then look for a compatible XULRunner
+  //       version on the system, and launch it instead.
+
+  char gkVersion[32];
+  rv = parser.GetString("Gecko", "MinVersion", gkVersion, sizeof(gkVersion));
+  if (NS_FAILED(rv) || !CheckMinVersion(gkVersion)) {
+    fprintf(stderr, "Error: Gecko MinVersion requirement not met.\n");
+    return nsnull;
+  }
+
+  rv = parser.GetString("Gecko", "MaxVersion", gkVersion, sizeof(gkVersion));
+  if (NS_SUCCEEDED(rv) && !CheckMaxVersion(gkVersion)) {
+    fprintf(stderr, "Error: Gecko MaxVersion requirement not met.\n");
+    return nsnull;
+  }
+
+  // Read the app ID, if specified
+  char id[38] = "";
+  rv = parser.GetString("App", "ID", id, sizeof(id));
+  if (NS_SUCCEEDED(rv)) {
+    if(!data.id.Parse(id)) {
+      memset(&data.id, 0, sizeof(data.id));
+    }
+  }
+
+  PRUint32 i;
+
+  // Read string-valued fields
+  const struct {
+    const char* key;
+    char* buf;
+    size_t bufLen;
+    PRBool required;
+  } string_fields[] = {
+    { "Vendor",    vendor,    sizeof(vendor),    PR_FALSE },
+    { "Name",      name,      sizeof(name),      PR_TRUE  },
+    { "Version",   version,   sizeof(version),   PR_FALSE },
+    { "BuildID",   buildID,   sizeof(buildID),   PR_TRUE  },
+    { "Copyright", copyright, sizeof(copyright), PR_FALSE }
+  };
+  for (i = 0; i < NS_ARRAY_LENGTH(string_fields); ++i) {
+    rv = parser.GetString("App", string_fields[i].key, string_fields[i].buf,
+                          string_fields[i].bufLen);
+    if (NS_FAILED(rv)) {
+      if (string_fields[i].required) {
+        fprintf(stderr, "Error: %x: No \"%s\" field.\n", rv,
+                string_fields[i].key);
+        return nsnull;
+      } else {
+        string_fields[i].buf[0] = '\0';
+      }
+    }
+  }
+
+  // Read boolean-valued fields
+  const struct {
+    const char* key;
+    PRUint32 flag;
+  } boolean_fields[] = {
+    { "UseStartupPrefs",        NS_XRE_USE_STARTUP_PREFS        },
+    { "EnableProfileMigrator",  NS_XRE_ENABLE_PROFILE_MIGRATOR  },
+    { "EnableExtensionManager", NS_XRE_ENABLE_EXTENSION_MANAGER }
+  };
+  char buf[6]; // large enough to hold "false"
+  data.flags = 0;
+  for (i = 0; i < NS_ARRAY_LENGTH(boolean_fields); ++i) {
+    rv = parser.GetString("XRE", boolean_fields[i].key, buf, sizeof(buf));
+    // accept a truncated result since we are only interested in the
+    // first character.  this is designed to allow the possibility of
+    // expanding these boolean attributes to express additional options.
+    if ((NS_SUCCEEDED(rv) || rv == NS_ERROR_LOSS_OF_SIGNIFICANT_DATA) &&
+        (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T')) {
+      data.flags |= boolean_fields[i].flag;
+    }
+  } 
+
+#ifdef DEBUG
+  printf("---------------------------------------------------------\n");
+  printf("     Vendor %s\n", data.appVendor);
+  printf("       Name %s\n", data.appName);
+  printf("    Version %s\n", data.appVersion);
+  printf("    BuildID %s\n", data.appBuildID);
+  printf("  Copyright %s\n", data.copyright);
+  printf("      Flags %08x\n", data.flags);
+  printf("---------------------------------------------------------\n");
+#endif
+
+  return &data;
+}
+
 int main(int argc, char* argv[])
 {
   if (argc == 1 || IsArg(argv[1], "h")
@@ -66,10 +218,12 @@ int main(int argc, char* argv[])
                 || IsArg(argv[1], "?"))
   {
     printf("Usage: " XULRUNNER_PROGNAME " [OPTIONS] [APP-FILE [APP-OPTIONS...]]\n");
-    if (argc > 1) {
-      // display additional information
+    if (argc > 1)
+    {
+      // display additional information (XXX make localizable)
       printf("\n"
              "OPTIONS\n"
+             "      --app        specify APP-FILE (optional)\n"
              "  -h, --help       show this message\n"
              "  -v, --version    show version\n"
              "\n"
@@ -82,15 +236,43 @@ int main(int argc, char* argv[])
     return 0;
   }
 
-  if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version"))) {
-    printf("Mozilla XULRunner %s %s (Gecko:%s)\n", APP_VERSION, BUILD_ID, MOZILLA_VERSION);
+  if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version")))
+  {
+    printf("Mozilla XULRunner %s %s\n", MOZILLA_VERSION, BUILD_ID);
     return 0;
   }
 
-  // fixup argv to start with -app.
-  char **argv2 = NULL;
-  if (argv[1][0] != '-')
+  geckoVersion = ParseVersion(GRE_BUILD_ID);
+
+  PRBool hasAppOption;
+  const char *appDataFile;
+  if (IsArg(argv[1], "app"))
   {
+    if (argc == 2)
+    {
+      fprintf(stderr, "Error: APP-FILE must be specified!\n");
+      return 1;
+    }
+    hasAppOption = PR_TRUE;
+    appDataFile = argv[2];
+  }
+  else
+  {
+    hasAppOption = PR_FALSE;
+    appDataFile = argv[1];
+  }
+
+  const nsXREAppData *appData = LoadAppData(appDataFile);
+  if (!appData)
+  {
+    fprintf(stderr, "Error: Invalid or missing application data!\n");
+    return 1;
+  }
+
+  char **argv2 = NULL;
+  if (!hasAppOption)
+  {
+    // fixup argv to start with -app.
     argv2 = (char **) malloc(sizeof(char*) * (argc + 2));
     argv2[0] = argv[0];
     argv2[1] = "-app";
@@ -101,7 +283,7 @@ int main(int argc, char* argv[])
     argc++;
   }
 
-  int rv = xre_main(argc, argv, NULL);
+  int rv = xre_main(argc, argv, appData);
 
   if (argv2)
     free(argv2);
