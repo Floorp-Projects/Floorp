@@ -250,7 +250,7 @@ protected:
   nsresult GetImapDeleteModel(nsIMsgFolder *folder);
   nsresult UpdateDisplayMessage(nsMsgKey aMsgKey);
 
-
+  PRBool AdjustReadFlag(nsIMsgDBHdr *msgHdr, PRUint32 *msgFlags);
   void FreeAll(nsVoidArray *ptrs);
   void ClearHdrCache();
   nsMsgKeyArray m_keys;

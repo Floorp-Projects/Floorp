@@ -288,11 +288,7 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
         // handle thread flags vs. message flags, if we do decide
         // to make them different.
         msgHdr->OrFlags(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newMsgFlags);
-        PRBool	isRead = PR_FALSE;
-        
-        // make sure DB agrees with newsrc, if we're news.
-        m_db->IsRead(msgKey, &isRead);
-        m_db->MarkHdrRead(msgHdr, isRead, nsnull);
+        AdjustReadFlag(msgHdr, &msgFlags);
         // try adding in MSG_VIEW_FLAG_ISTHREAD flag for unreadonly view.
         pFlags[numListed] = msgFlags | MSG_VIEW_FLAG_ISTHREAD | threadFlags;
         if (numChildren > 1)

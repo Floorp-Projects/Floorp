@@ -3184,10 +3184,7 @@ nsresult nsMsgDBView::ListIdsInThreadOrder(nsIMsgThread *threadHdr, nsMsgKey par
       PRUint32 msgFlags, newFlags;
       msgHdr->GetMessageKey(&msgKey);
       msgHdr->GetFlags(&msgFlags);
-      PRBool isRead = PR_FALSE;
-      m_db->IsRead(msgKey, &isRead);
-      // just make sure flag is right in db.
-      m_db->MarkHdrRead(msgHdr, isRead, nsnull);
+      AdjustReadFlag(msgHdr, &msgFlags);
       m_keys.InsertAt(*viewIndex, msgKey);
       // ### TODO - how about hasChildren flag?
       m_flags.InsertAt(*viewIndex, msgFlags & ~MSG_VIEW_FLAGS);
@@ -3242,10 +3239,7 @@ nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex st
       PRUint32 msgFlags, newFlags;
       msgHdr->GetMessageKey(&msgKey);
       msgHdr->GetFlags(&msgFlags);
-      PRBool isRead = PR_FALSE;
-      m_db->IsRead(msgKey, &isRead);
-      // just make sure flag is right in db.
-      m_db->MarkHdrRead(msgHdr, isRead, nsnull);
+      AdjustReadFlag(msgHdr, &msgFlags);
       m_keys.InsertAt(viewIndex, msgKey);
       // ### TODO - how about hasChildren flag?
       m_flags.InsertAt(viewIndex, msgFlags & ~MSG_VIEW_FLAGS);
@@ -3325,10 +3319,7 @@ nsresult	nsMsgDBView::ListUnreadIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIn
       PRUint32 msgFlags;
       msgHdr->GetMessageKey(&msgKey);
       msgHdr->GetFlags(&msgFlags);
-			PRBool isRead = PR_FALSE;
-			m_db->IsRead(msgKey, &isRead);
-			// just make sure flag is right in db.
-			m_db->MarkHdrRead(msgHdr, isRead, nsnull);
+      PRBool isRead = AdjustReadFlag(msgHdr, &msgFlags);
       // determining the level is going to be tricky, since we're not storing the
       // level in the db anymore. It will mean looking up the view for each of the
       // ancestors of the current msg until we find one in the view. I guess we could
@@ -3591,6 +3582,24 @@ nsresult nsMsgDBView::MarkThreadRead(nsIMsgThread *threadHdr, nsMsgViewIndex thr
     }
 
     return NS_OK;
+}
+
+PRBool nsMsgDBView::AdjustReadFlag(nsIMsgDBHdr *msgHdr, PRUint32 *msgFlags)
+{
+  PRBool isRead = PR_FALSE;
+  nsMsgKey msgKey;
+  msgHdr->GetMessageKey(&msgKey);
+  m_db->IsRead(msgKey, &isRead);
+    // just make sure flag is right in db.
+#ifdef DEBUG_bienvenu
+  NS_ASSERTION(isRead == (*msgFlags & MSG_FLAG_READ != 0), "msgFlags out of sync");
+#endif
+  if (isRead)
+    *msgFlags |= MSG_FLAG_READ;
+  else
+    *msgFlags &= ~MSG_FLAG_READ;
+  m_db->MarkHdrRead(msgHdr, isRead, nsnull);
+  return isRead;
 }
 
 // Starting from startIndex, performs the passed in navigation, including
