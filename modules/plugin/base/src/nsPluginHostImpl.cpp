@@ -151,6 +151,7 @@
 #include "imgILoader.h"
 #include "nsDefaultPlugin.h"
 #include "nsWeakReference.h"
+#include "nsIDOMElement.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
@@ -3476,21 +3477,21 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     rv = aOwner->GetInstance(instance);
   else 
   {
-    // We have the mime type either supplied in source or from the header.
-    // Let's try to render the default plugin.  See bug 41197
-    
-    // We were unable to find a plug-in yet we 
-    // really do have mime type. Return the error
-    // so that the nsObjectFrame can render any 
-    // alternate content.
+   /*
+    * If we are here, it's time to either show the default plugin
+    * or return failure so layout will replace us.
+    *
+    * Currently, the default plugin is shown for all EMBED and APPLET
+    * tags and also any OBJECT tag that has a CODEBASE attribute.
+    */
 
-    // but try to load the default plugin first. We need to do this
-    // for <embed> tag leaving <object> to play with its alt content.
-    // but before we return an error let's see if this is an <embed>
-    // tag and try to launch the default plugin
+    PRBool bHasCodebase = PR_FALSE;
+    nsCOMPtr<nsIDOMElement> domelement;
+    pti2->GetDOMElement(getter_AddRefs(domelement));
+    if (domelement)
+      domelement->HasAttribute(NS_LITERAL_STRING("codebase"), &bHasCodebase);
 
-    // but to comply with the spec don't do it for <object> tag
-    if(tagType == nsPluginTagType_Object)
+    if(tagType == nsPluginTagType_Object && !bHasCodebase)
       return rv;
 
     nsresult result;
