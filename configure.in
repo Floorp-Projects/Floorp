@@ -135,6 +135,38 @@ then
 fi
 MOZ_BUILD_ROOT=`pwd`
 
+dnl Special win32 checks
+dnl ==============================================================
+case "$target" in
+*-cygwin*)
+    # Check to see if we are really running in a msvc environemnt
+    _WIN32_MSVC=
+    if test "$CC" = "cl" || test "$CXX" = "cl"; then
+        _WIN32_MSVC=1
+    elif test -z "$CC"; then
+        echo 'main() { return 0; }' > dummy.c
+        cl -o dummy dummy.c >/dev/null 2>&1
+        if test $? = 0; then
+            _WIN32_MSVC=1
+        fi
+        rm -f dummy dummy.o dummy.obj dummy.exe dummy.c
+    fi
+    if test `echo $MOZ_BUILD_ROOT | grep -c ^/cygdrive/` != 0; then
+        MOZ_BUILD_ROOT=`echo $MOZ_BUILD_ROOT | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
+    fi
+    ;;
+*-msvc*|*-mksnt*)
+    _WIN32_MSVC=1
+    ;;
+esac
+
+if test -n "$_WIN32_MSVC"; then
+    SKIP_PATH_CHECKS=1
+    SKIP_COMPILER_CHECKS=1
+    SKIP_LIBRARY_CHECKS=1
+fi
+
+if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
@@ -295,12 +327,14 @@ if test "`echo | $LD -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_LD=1
 fi
 rm -f a.out
+fi # SKIP_COMPILER_CHECKS
 
 AC_SUBST(GNU_AS)
 AC_SUBST(GNU_LD)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
+if test -z "$SKIP_PATH_CHECKS"; then
 dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
@@ -380,6 +414,8 @@ fi
 
 XCFLAGS="$X_CFLAGS"
 
+fi # SKIP_PATH_CHECKS
+
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
@@ -437,6 +473,130 @@ else
     OS_TEST=`uname -m`
 fi
 _COMPILER_PREFIX=
+
+#######################################################################
+# Master "Core Components" macros for getting the OS target           #
+#######################################################################
+
+#
+# Note: OS_TARGET should be specified on the command line for gmake.
+# When OS_TARGET=WIN95 is specified, then a Windows 95 target is built.
+# The difference between the Win95 target and the WinNT target is that
+# the WinNT target uses Windows NT specific features not available
+# in Windows 95. The Win95 target will run on Windows NT, but (supposedly)
+# at lesser performance (the Win95 target uses threads; the WinNT target
+# uses fibers).
+#
+# When OS_TARGET=WIN16 is specified, then a Windows 3.11 (16bit) target
+# is built. See: win16_3.11.mk for lots more about the Win16 target.
+#
+# If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
+# cross-compilation.
+#
+
+#
+# The following hack allows one to build on a WIN95 machine (as if
+# s/he were cross-compiling on a WINNT host for a WIN95 target).
+# It also accomodates for MKS's uname.exe.  If you never intend
+# to do development on a WIN95 machine, you don't need this hack.
+#
+if test "$OS_ARCH" = "WIN95"; then
+    OS_ARCH=WINNT
+    OS_TARGET=WIN95
+elif test "$OS_ARCH" = 'Windows_95'; then
+    OS_ARCH=Windows_NT
+    OS_TARGET=WIN95
+elif test "$OS_ARCH" = 'Windows_98'; then
+    OS_ARCH=Windows_NT
+    OS_TARGET=WIN95
+elif test "$OS_ARCH" = "CYGWIN_95-4.0"; then
+    OS_ARCH='CYGWIN_NT-4.0'
+    OS_TARGET=WIN95
+elif test "$OS_ARCH" = "CYGWIN_98-4.10"; then
+    OS_ARCH='CYGWIN_NT-4.0'
+    OS_TARGET=WIN95
+elif test "$OS_ARCH" = "OS_2"; then
+    OS_ARCH=OS2
+    OS_TARGET=OS2
+fi
+
+#
+# On WIN32, we also define the variable CPU_ARCH.
+#
+
+if test "$OS_ARCH" = "WINNT"; then
+    CPU_ARCH=`uname -p`
+    if test "$CPU_ARCH" = "I386"; then
+        CPU_ARCH=x86
+    fi
+elif test "$OS_ARCH" = "Windows_NT"; then
+#
+# If uname -s returns "Windows_NT", we assume that we are using
+# the uname.exe in MKS toolkit.
+#
+# The -r option of MKS uname only returns the major version number.
+# So we need to use its -v option to get the minor version number.
+# Moreover, it doesn't have the -p option, so we need to use uname -m.
+#
+    OS_ARCH=WINNT
+    OS_MINOR_RELEASE=`uname -v`
+    if test "$OS_MINOR_RELEASE" = "00"; then
+        OS_MINOR_RELEASE=0
+    fi
+    OS_RELEASE="${OS_RELEASE}.${OS_MINOR_RELEASE}"
+    CPU_ARCH=`uname -m`
+    #
+    # MKS's uname -m returns "586" on a Pentium machine.
+    #
+    if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
+        CPU_ARCH=x86
+    fi
+elif echo "$OS_ARCH" | grep -c CYGWIN_NT >/dev/null; then
+#
+# If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
+# the uname.exe in the Cygwin tools.
+#
+    OS_RELEASE=`echo $OS_ARCH | sed 's|^CYGWIN_NT-||'`
+    OS_ARCH=WINNT
+    CPU_ARCH=`uname -m`
+    #
+    # Cygwin's uname -m returns "i686" on a Pentium Pro machine.
+    #
+    if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
+        CPU_ARCH=x86
+    fi
+elif test "$OS_ARCH" = "CYGWIN32_NT"; then
+#
+# Prior to the Beta 20 release, Cygwin was called GNU-Win32.
+# If uname -s returns "CYGWIN32/NT", we assume that we are using
+# the uname.exe in the GNU-Win32 tools.
+#
+    OS_ARCH=WINNT
+    CPU_ARCH=`uname -m`
+    #
+    # GNU-Win32's uname -m returns "i686" on a Pentium Pro machine.
+    #
+    if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
+        CPU_ARCH=x86
+    fi
+fi
+
+if test -n "$MOZILLA_CLIENT" && test "$OS_ARCH" = "WINNT"; then
+    OS_TARGET=WIN95
+    if test -n "$MOZ_DEBUG"; then
+        USE_DEBUG_RTL=1
+    fi
+fi
+if test -z "$OS_TARGET"; then
+    OS_TARGET=$OS_ARCH
+fi
+if test "$OS_TARGET" = "WIN95"; then
+    OS_RELEASE="4.0"
+fi
+if test "$OS_TARGET" = "WIN16"; then
+    OS_RELEASE=
+fi
+OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
 dnl ========================================================
 dnl GNU specific defaults
@@ -726,41 +886,82 @@ case "$target" in
     esac
     ;;
 
-*-mingw*)
-    AC_DEFINE(_WINDOWS)
-    AC_DEFINE(WIN32_LEAN_AND_MEAN)
-    AC_DEFINE(NONAMELESSUNION)
-    CFLAGS="$(CFLAGS) -fvtable-thunks"
-    CXXFLAGS="$(CXXFLAGS) -fvtable-thunks"
-    TARGET_MD_ARCH=win32
-    if test -z "$GNU_CC"; then
-	OBJ_SUFFIX=obj
-	LIB_SUFFIX=lib
-	DLL_SUFFIX=.dll
+*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
+    if test -n "$GNU_CC"; then
+        AC_DEFINE(WIN32_LEAN_AND_MEAN)
+        AC_DEFINE(NONAMELESSUNION)
+        CFLAGS="$(CFLAGS) -fvtable-thunks"
+        CXXFLAGS="$(CXXFLAGS) -fvtable-thunks"
+        MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $(LIBRARY_NAME).dll --output-lib $@'
+        MKCSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $(LIBRARY_NAME).dll --output-lib $@'
+        MKSHLIB_FORCE_ALL=
+        MKSHLIB_UNFORCE_ALL=
+    else
+        CC=cl
+        CXX=cl
+        HOST_CC=cl
+        LD=link
+        AR='lib -NOLOGO -OUT:"$@"'
+        AR_FLAGS=
+        RANLIB='echo not_ranlib'
+        STRIP='echo not_strip'
+        RC=rc.exe
+        PERL=perl
+        XARGS=xargs
+        ZIP=zip
+        UNZIP=unzip
+        GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
+    	OBJ_SUFFIX=obj
+    	LIB_SUFFIX=lib
+    	DLL_SUFFIX=.dll
+        MKSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE)'
+        MKSHLIB_FORCE_ALL=
+        MKSHLIB_UNFORCE_ALL=
+        DSO_LDOPTS=
+        DSO_CFLAGS=
+        DSO_PIC_CFLAGS=
+        CFLAGS="$CFLAGS -W3 -nologo -Gy"
+        CXXFLAGS="$CXXFLAGS -W3 -nologo -Gy"
+        MOZ_DEBUG_FLAGS='-Zi'
+    	MOZ_OPTIMIZE_FLAGS='-O1'
+        MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.lib'
+        MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'
+        MOZ_PNG_LIBS='$(DIST)/lib/mozpng.lib'
+        MOZ_MNG_LIBS='$(DIST)/lib/mozmng.lib'
+        MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
+        XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+        MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
+        MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
     fi
-    MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $(LIBRARY_NAME).dll --output-lib $@'
-    MKCSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $(LIBRARY_NAME).dll --output-lib $@'
-    MKSHLIB_FORCE_ALL=
-    MKSHLIB_UNFORCE_ALL=
-    DSO_LDOPTS=
-    DSO_CFLAGS=
-    DSO_PIC_CFLAGS=
+    AC_DEFINE(_WINDOWS)
+    AC_DEFINE(WIN32)
+    AC_DEFINE(XP_PC)
+    AC_DEFINE(XP_WIN)
+    AC_DEFINE(XP_WIN32)
+    AC_DEFINE(HW_THREADS)
+    AC_DEFINE_UNQUOTED(WINVER,0x400)
+    AC_DEFINE(STDC_HEADERS)
+    TARGET_MD_ARCH=win32
     OS_TARGET=WINNT
+    MOZ_WIDGET_TOOLKIT='windows'
+    BIN_SUFFIX='.exe'
+
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
-    
+    no_x=yes
+
     case "$target" in
     i?86-*)
-	AC_DEFINE(_X86_)
+    	AC_DEFINE(_X86_)
 	;;
     alpha-*)
-	AC_DEFINE(_ALPHA_)
+    	AC_DEFINE(_ALPHA_)
 	;;
     mips-*)
-	AC_DEFINE(_MIPS_)
+    	AC_DEFINE(_MIPS_)
 	;;
     *)
-	AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
+    	AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
 	;;
     esac
     ;;
@@ -1051,6 +1252,11 @@ case "$target" in
 *-openvms*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
+*-msvc*|*-mksnt*|*-mingw*|*-cygwin*)
+    if test -z "$GNU_CC"; then
+        NO_LD_ARCHIVE_FLAGS=
+    fi
+    ;;
 esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
@@ -1078,7 +1284,7 @@ case "$target" in
         ;;
 esac
 
-
+if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
 AC_C_CONST
@@ -2099,6 +2305,7 @@ if test "$ac_cv_i18n_lc_messages" = yes; then
    AC_DEFINE(HAVE_I18N_LC_MESSAGES)
 fi 	
 
+fi # SKIP_COMPILER_CHECKS
 
 dnl Mozilla specific options
 dnl ========================================================
@@ -2120,22 +2327,29 @@ dnl ========================================================
 MOZ_ARG_WITHOUT_BOOL(system-nspr,
 [  --without-system-nspr   Do not use system installed NSPR],
     _NO_NSPR=1 )
+
+if test "$_WIN32_MSVC"; then
+    _NO_NSPR=1
+fi
 	
 if test -z "$_NO_NSPR"; then
     AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
 fi
 
 if test -z "$MOZ_NATIVE_NSPR"; then
-    AC_MSG_WARN(Building local copy of NSPR)
     NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --cflags`'
     # explicitly set libs for Visual Age C++ for OS/2
     if test "$VACPP" = "yes"; then
         NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
+    elif test "$_WIN32_MSVC"; then
+            NSPR_LIBS='$(DIST)/lib/libnspr'$NSPR_VERSION'.lib $(DIST)/lib/libplc'$NSPR_VERSION'.lib $(DIST)/lib/libplds'$NSPR_VERSION'.lib '
+            NSPR_CFLAGS='-I$(DIST)/include/nspr'
     else
         NSPR_LIBS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --libs`'
     fi
 fi
 
+if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl system JPEG support
 dnl ========================================================
 dnl XXX - remove this next milestone
@@ -2325,6 +2539,7 @@ if test "${MNG_DIR}" -a -d "${MNG_DIR}" -a "$SYSTEM_MNG" = 1; then
     MNG_LIBS="-L${MNG_DIR}/lib ${MNG_LIBS}"
 fi
 
+fi # SKIP_LIBRARY_CHECKS
 
 dnl ========================================================
 dnl = 
@@ -3287,8 +3502,10 @@ MOZ_ARG_WITH_STRING(insure-exclude-dirs,
 dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
+if test -z "$SKIP_LIBRARY_CHECKS"; then
 AC_CHECK_LIB(iberty, cplus_demangle, [HAVE_DEMANGLE=1],
              HAVE_DEMANGLE=, "-liberty")
+fi
 
 MOZ_DEMANGLE_SYMBOLS=
 
@@ -3389,6 +3606,7 @@ MOZ_ARG_ENABLE_BOOL(verbose-config-defs,
                           Do not output the contents of config-defs.h],
     VERBOSE_CONFIG_DEFS=)
 
+if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl =
 dnl = Compiler Options
@@ -3465,7 +3683,6 @@ if test "$_PEDANTIC"; then
     esac
 fi
 
-
 dnl ========================================================
 dnl Autoconf test for gcc 2.7.2.x (and maybe others?) so that we don't
 dnl provide non-const forms of the operator== for comparing nsCOMPtrs to
@@ -3506,6 +3723,7 @@ CXXFLAGS="$_SAVE_CXXFLAGS"
 
 if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
     AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
+fi
 fi
 
 dnl pass -Wno-long-long to the compiler
@@ -3577,7 +3795,11 @@ MOZ_ARG_HEADER(Build dependencies)
 dnl ========================================================
 dnl = Do not auto generate dependency info
 dnl ========================================================
+if test "$_WIN32_MSVC"; then
+MOZ_AUTO_DEPS=
+else
 MOZ_AUTO_DEPS=1
+fi
 MOZ_ARG_DISABLE_BOOL(auto-deps,
 [  --disable-auto-deps     Do not automatically generate dependency info],
     MOZ_AUTO_DEPS=)
@@ -3733,6 +3955,10 @@ dnl Check for GLib and libIDL.
 dnl ========================================================
 SKIP_IDL_CHECK="no"
 
+if test "$_WIN32_MSVC"; then
+    SKIP_IDL_CHECK="yes"
+fi
+
 dnl = Allow users to disable libIDL checking for standalone modules
 MOZ_ARG_WITHOUT_BOOL(libIDL,
 [  --without-libIDL        Skip check for libIDL (standalone modules only)],
@@ -3781,8 +4007,10 @@ if test -n "$CROSS_COMPILE"; then
     fi
 fi
 
+if test -z "$SKIP_PATH_CHECKS"; then
 if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
     AM_PATH_GLIB(${GLIB_VERSION})
+fi
 fi
 
 AC_SUBST(LIBIDL_CFLAGS)
@@ -4201,12 +4429,14 @@ fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
     AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
-    if test ! "$VACPP"; then
+    if test ! "$VACPP" && test -z "$_WIN32_MSVC"; then
         NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --libs`
         $PERL -pi.bak -e "s {^NSPR_LIBS\s*=.*} {NSPR_LIBS = $NSPR_LIBS }" config/autoconf.mk
     fi
-    NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --cflags`
-    $PERL -pi.bak -e "s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $NSPR_CFLAGS }" config/autoconf.mk
+    if test -z "$_WIN32_MSVC"; then
+        NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --cflags`
+        $PERL -pi.bak -e "s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $NSPR_CFLAGS }" config/autoconf.mk
+    fi
     rm -f config/autoconf.mk.bak
 fi
 

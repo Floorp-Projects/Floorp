@@ -112,6 +112,14 @@ EXTRA_DSO_LIBS		:= $(addprefix lib,$(STATIC_LIBS)) $(SHARED_LIBS)
 endif
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
+_EXTRA_DSO_RELATIVE_PATHS=1
+else
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+_EXTRA_DSO_RELATIVE_PATHS=1
+endif
+endif
+
+ifdef _EXTRA_DSO_RELATIVE_PATHS
 EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/,$(EXTRA_DSO_LIBS)))
 EXTRA_DSO_LIBS		:= $(filter-out %/bin %/lib,$(EXTRA_DSO_LIBS))
 EXTRA_DSO_LDOPTS    := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_DSO_LDOPTS))
@@ -127,13 +135,21 @@ ifdef SHORT_LIBNAME
 LIBRARY_NAME		:= $(SHORT_LIBNAME)
 endif
 endif
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+LIBRARY			:= $(LIBRARY_NAME).$(LIB_SUFFIX)
+else
 LIBRARY			:= lib$(LIBRARY_NAME).$(LIB_SUFFIX)
+endif # WINNT && !GNU_CC
 endif
 endif
 
 ifndef HOST_LIBRARY
 ifdef HOST_LIBRARY_NAME
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 HOST_LIBRARY		:= lib$(HOST_LIBRARY_NAME).$(LIB_SUFFIX)
+else
+HOST_LIBRARY		:= lib$(HOST_LIBRARY_NAME).$(LIB_SUFFIX)
+endif # WINNT && !GNU_CC
 endif
 endif
 
@@ -183,6 +199,12 @@ SHARED_LIBRARY		:= $(NULL)
 DEF_FILE		:= $(NULL)
 IMPORT_LIBRARY		:= $(NULL)
 endif
+endif
+
+ifdef LIBRARY_NAME
+PDBFILE=$(LIBRARY_NAME).pdb
+else
+PDBFILE='$*.pdb'
 endif
 
 ifndef TARGETS
@@ -466,6 +488,16 @@ else
 IFLAGS1 = -m 644
 IFLAGS2 = -m 755
 endif
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OUTOPTION = -Fo# eol
+else
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+OUTOPTION = -Fo# eol
+else
+OUTOPTION = -o # eol
+endif # WINNT && !GNU_CC
+endif # VACPP
 
 ################################################################################
 
@@ -828,7 +860,7 @@ $(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
 	rm -f $@
 	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
-endif
+endif # OS/2
 
 $(HOST_LIBRARY): $(HOST_OBJS) Makefile
 	rm -f $@
@@ -909,27 +941,19 @@ endif # MOZ_AUTO_DEPS
 %: %.c Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
-ifeq ($(MOZ_OS2_TOOLS), VACPP)
-	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
-else
-	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
-endif
+	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $<
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.c Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(ELOG) $(CC) -Fo$@ -c $(COMPILE_CFLAGS) $<
-else
-	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $<
-endif
+	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $<
 
 $(OBJ_PREFIX)%.ho: %.c Makefile.in
 	$(REPORT_BUILD)
-	$(ELOG) $(HOST_CC) -o $@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $<
+	$(ELOG) $(HOST_CC)$(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $<
 
 moc_%.cpp: %.h Makefile.in
-	$(MOC) $< -o $@ 
+	$(MOC) $< $(OUTOPTION)$@ 
 
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
@@ -953,7 +977,7 @@ endif
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.cc Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
-	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
+	$(ELOG) $(CCC) $(OUTOPTIONS)$@ -c $(COMPILE_CXXFLAGS) $<
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.cpp Makefile.in
 	$(REPORT_BUILD)
@@ -963,11 +987,7 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
 	rm -f t_$*.cc
 else
-ifeq ($(MOZ_OS2_TOOLS), VACPP)
-	$(ELOG) $(CCC) -Fo$@ -c $(COMPILE_CXXFLAGS) $<
-else
-	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
-endif
+	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $<
 endif #STRICT_CPLUSPLUS_SUFFIX
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile.in

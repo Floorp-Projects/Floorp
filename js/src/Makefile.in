@@ -132,7 +132,11 @@ EXPORTS		= \
 		jsstddef.h \
 		$(NULL)
 
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+FDLIBM_LIBRARY	= fdlibm/fdm.$(LIB_SUFFIX)
+else
 FDLIBM_LIBRARY	= fdlibm/libfdm.$(LIB_SUFFIX)
+endif
 JSMATH_PRELINK	= jsmathtemp.o
 JS_SAFE_ARENA	= 1
 
@@ -142,7 +146,7 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
 
-ifeq ($(OS_ARCH),OS2)
+ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 SHARED_LIBRARY_LIBS += $(FDLIBM_LIBRARY)
 endif
 
@@ -181,7 +185,9 @@ INCLUDES	+= -I$(srcdir)
 
 GARBAGE		+= $(JSMATH_PRELINK) jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
 
+ifneq ($(OS_ARCH),WINNT)
 TARGETS		+= jscpucfg$(BIN_SUFFIX)
+endif
 
 ifdef JS_SAFE_ARENA
 DEFINES		+= -DJS_USE_SAFE_ARENA
@@ -208,7 +214,7 @@ endif
 LDFLAGS		+= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
 
 # BeOS and HP-UX do not require the extra linking of "-lm"
-ifeq (,$(filter BeOS HP-UX,$(OS_ARCH)))
+ifeq (,$(filter BeOS HP-UX WINNT,$(OS_ARCH)))
 LDFLAGS		+= -lm
 endif
 
@@ -295,10 +301,15 @@ $(FDLIBM_LIBRARY):
 
 jsopcode.h jsopcode.c: jsopcode.tbl
 
+ifeq ($(OS_ARCH),WINNT)
+jsautocfg.h:
+	touch $@
+else
 jsautocfg.h: jscpucfg$(BIN_SUFFIX)
 	@rm -f $@ jsautocfg.tmp
 	./jscpucfg > jsautocfg.tmp
 	mv jsautocfg.tmp $@
+endif
 
 # jscpucfg is a strange target
 # Needs to be built with the host compiler but needs to include
