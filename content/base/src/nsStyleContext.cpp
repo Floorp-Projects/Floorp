@@ -534,6 +534,19 @@ nsStyleContext::Mark()
 }
 
 #ifdef DEBUG
+
+class URICString : public nsCAutoString {
+public:
+  URICString(nsIURI* aURI) {
+    aURI->GetSpec(*this);
+  }
+
+  URICString& operator=(const URICString& aOther) {
+    Assign(aOther);
+    return *this;
+  }
+};
+
 void nsStyleContext::List(FILE* out, PRInt32 aIndent)
 {
   // Indent
@@ -614,7 +627,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (long)bg->mBackgroundColor,
     (long)bg->mBackgroundXPosition.mCoord, // potentially lossy on some platforms
     (long)bg->mBackgroundYPosition.mCoord, // potentially lossy on some platforms
-    NS_ConvertUCS2toUTF8(bg->mBackgroundImage).get());
+    URICString(bg->mBackgroundImage).get());
  
   // SPACING (ie. margin, padding, border, outline)
   IndentBy(out,aIndent);
@@ -648,7 +661,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   fprintf(out, "<list data=\"%d %d %s\" />\n",
     (int)list->mListStyleType,
     (int)list->mListStyleType,
-    NS_ConvertUCS2toUTF8(list->mListStyleImage).get());
+    URICString(list->mListStyleImage).get());
 
   // POSITION
   IndentBy(out,aIndent);
@@ -715,7 +728,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (long)disp->mClip.y,
     (long)disp->mClip.width,
     (long)disp->mClip.height,
-    NS_ConvertUCS2toUTF8(disp->mBinding).get()
+    URICString(disp->mBinding).get()
     );
   
   // VISIBILITY
@@ -781,7 +794,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (int)ui->mUserModify,
     (int)ui->mUserFocus, 
     (int)ui->mCursor,
-    NS_ConvertUCS2toUTF8(ui->mCursorImage).get());
+    URICString(ui->mCursorImage).get());
 
   // UIReset
   IndentBy(out,aIndent);
