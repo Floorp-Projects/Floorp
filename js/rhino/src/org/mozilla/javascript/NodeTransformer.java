@@ -340,19 +340,6 @@ public class NodeTransformer {
                 node.setType(inFunction ? TokenStream.POP : TokenStream.POPV);
                 break;
 
-              case TokenStream.REGEXP:
-              {
-                Node left = node.getFirstChild();
-                Node right = node.getLastChild();
-                String string = left.getString();
-                String flags = (left != right) ? right.getString() : null;
-                int index = tree.addRegexp(string, flags);
-                Node n = new Node(TokenStream.REGEXP);
-                iter.replaceCurrent(n);
-                n.putIntProp(Node.REGEXP_PROP, index);
-                break;
-              }
-
               case TokenStream.VAR:
               {
                 Node result = new Node(TokenStream.BLOCK);

@@ -1399,7 +1399,8 @@ class Parser {
             ts.regExpFlags = null;
             String re = ts.getString();
             sourceAddString(ts.REGEXP, '/' + re + '/' + flags);
-            return nf.createRegExp(re, flags);
+            int index = currentScriptOrFn.addRegexp(re, flags);
+            return nf.createRegExp(index);
         }
 
         case TokenStream.PRIMARY:

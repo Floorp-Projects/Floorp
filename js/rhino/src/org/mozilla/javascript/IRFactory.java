@@ -665,13 +665,10 @@ public class IRFactory {
     /**
      * Regular expressions
      */
-    public Object createRegExp(String string, String flags) {
-        return flags.length() == 0
-               ? new Node(TokenStream.REGEXP,
-                          Node.newString(string))
-               : new Node(TokenStream.REGEXP,
-                          Node.newString(string),
-                          Node.newString(flags));
+    public Object createRegExp(int regexpIndex) {
+        Node n = new Node(TokenStream.REGEXP);
+        n.putIntProp(Node.REGEXP_PROP, regexpIndex);
+        return n;
     }
 
     /**
