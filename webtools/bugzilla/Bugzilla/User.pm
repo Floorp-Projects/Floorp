@@ -90,7 +90,7 @@ sub match {
 
     return \@users if $str =~ /^\s*$/;
 
-    # The search order is wildcards, then exact match, then INSTR search.
+    # The search order is wildcards, then exact match, then substring search.
     # Wildcard matching is skipped if there is no '*', and exact matches will
     # not (?) have a '*' in them.  If any search comes up with something, the
     # ones following it will not execute.
@@ -134,19 +134,19 @@ sub match {
         &::PopGlobalSQLState();
     }
 
-    # then try instr
+    # then try substring search
 
     if ((scalar(@users) == 0)
         && (&::Param('usermatchmode') eq 'search')
         && (length($str) >= 3))
     {
 
-        my $sqlstr = &::SqlQuote($str);
+        my $sqlstr = &::SqlQuote(uc($str));
 
         my $query  = "SELECT  userid, realname, login_name " .
                      "FROM  profiles " .
-                     "WHERE  (INSTR(login_name, $sqlstr) " .
-                     "OR INSTR(realname, $sqlstr)) ";
+                     "WHERE  (INSTR(UPPER(login_name), $sqlstr) " .
+                     "OR INSTR(UPPER(realname), $sqlstr)) ";
         $query    .= "AND disabledtext = '' " if $exclude_disabled;
         $query    .= "ORDER BY length(login_name) ";
         $query    .= "LIMIT $limit " if $limit;
