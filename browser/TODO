@@ -1,0 +1,27 @@
+Missing Features
+----------------
+
+ sidebar
+ the toolbar isn't configurable
+ page links bar (UI far <html:link> and extended XLink support)
+ alternate stylesheets UI
+ dlmgr prefs panel
+ hooks for other apps
+
+
+Open Issues
+-----------
+
+ the open location menu item should go (?)
+ the online and security indicators need to go to the left where they won't be accidentally clicked (?)
+ about mozilla needs to be a dialog
+ the file menu still says "Navigator"
+
+
+See Also
+--------
+
+ bugs with [MB] it the status whiteboard:
+ - 115903 Each app should run in a separate process
+ - 135533 Support preprocessing of XUL files 
+ - 130999 Clicks cause elements to go out of :hover
