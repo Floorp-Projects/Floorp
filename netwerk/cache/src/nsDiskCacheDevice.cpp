@@ -112,6 +112,11 @@ nsresult
 nsDiskCacheDevice::Init()
 {
     nsresult rv = InstallPrefListeners(this);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = mInactiveEntries.Init();
+    if (NS_FAILED(rv)) return rv;
+    
     return  NS_OK;
 }
 
