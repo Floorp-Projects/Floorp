@@ -41,8 +41,13 @@ sub Told {
             foreach my $module (@modules) {
                 my $commands = $module->Help($event);
                 if ($commands->{''}) {
+                    my @commands = grep { /./os } keys %$commands;
                     $topicList{lc($module->{'_name'})} = [] unless defined($topicList{lc($module->{'_name'})});
                     push(@{$topicList{lc($module->{'_name'})}}, $commands->{''});
+                    if (@commands) {
+                        local $" = ', ';
+                        push(@{$topicList{lc($module->{'_name'})}}, "The $module->{'_name'} module has the following help topics: @commands");
+                    }
                 }
                 foreach (keys %$commands) {
                     $topicList{lc($_)} = [] unless defined($topicList{lc($_)});
