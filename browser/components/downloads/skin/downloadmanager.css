@@ -48,3 +48,7 @@ listcell {
   border-bottom: 1px solid ThreeDLightShadow;
   -moz-appearance: toolbox;
 }
+
+#close-button {
+  list-style-image: url("chrome://navigator/skin/icons/close.gif");
+}

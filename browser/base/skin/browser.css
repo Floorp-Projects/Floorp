@@ -779,3 +779,19 @@ toolbar[iconsize="small"] #navigator-throbber {
 toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://browser/skin/throbber-small.gif");
 }
+
+.tabs-closebutton {
+  margin: 0px 4px;
+  padding: 1px 2px 2px 2px;
+  border: none;
+  list-style-image: url("chrome://browser/skin/close.png");
+  -moz-image-region: rect(0px 20px 20px 0px);
+}
+
+.tabs-closebutton:hover {
+  -moz-image-region: rect(0px 50px 20px 30px);
+}
+
+.tabs-closebutton:hover:active {
+  -moz-image-region: rect(0px 110px 20px 90px);
+}
