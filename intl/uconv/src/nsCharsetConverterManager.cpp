@@ -22,16 +22,10 @@
 
 #define NS_IMPL_IDS
 
-#include "pratom.h"
 #include "nsString.h"
-#include "nsIComponentManager.h"
 #include "nsIRegistry.h"
-#include "nsIEnumerator.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterInfo.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsUConvDll.h"
 
 // just for CIDs
@@ -42,52 +36,62 @@
 #include "nsIUnicodeDecodeUtil.h"
 #include "nsUnicodeDecodeUtil.h"
 
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
+static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
 
-struct ConverterInfo
+//----------------------------------------------------------------------------
+// Class nsObject [declaration]
+
+class nsObject
 {
-  nsString      * mCharset;
-  const nsCID   * mCID;
-  PRBool          mFreeCID;
-
-  ConverterInfo()
-  :  mCharset(nsnull), mCID(nsnull), mFreeCID(PR_FALSE) {}
-
-  ~ConverterInfo()
-  {
-    if (mCharset != NULL) delete mCharset;
-    if (mFreeCID) delete (nsCID*)mCID;
-  }
+public: 
+  virtual ~nsObject();
 };
 
-//----------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// Class nsObjectArray [declaration]
+
+class nsObjectArray
+{
+private:
+
+  nsObject **   mArray;
+  PRInt32       mCapacity;
+  PRInt32       mUsage;
+
+  void Init(PRInt32 aCapacity);
+
+public: 
+  nsObjectArray();
+  nsObjectArray(PRInt32 aCapacity);
+  ~nsObjectArray();
+
+  nsObject ** GetArray();
+  PRInt32 GetUsage();
+  nsresult InsureCapacity(PRInt32 aCapacity);
+  nsresult AddObject(nsObject * aObject);
+};
+
+//----------------------------------------------------------------------------
+// Class nsConverterInfo [declaration]
+
+class nsConverterInfo : public nsObject
+{
+public: 
+  nsString *    mName;
+  nsCID         mCID;
+  PRInt32       mFlags;
+
+  nsConverterInfo();
+  ~nsConverterInfo();
+};
+
+//----------------------------------------------------------------------------
 // Class nsCharsetConverterManager [declaration]
 
 /**
  * The actual implementation of the nsICharsetConverterManager interface.
  *
- * Requirements for a Manager:
- * - singleton
- * - special lifetime (survive even if it's not used, die only under memory 
- * pressure conditions or app termination)
- * 
- * Ways of implementing it & fulfill those requirements:
- * + simple xpcom object (current implementation model)
- * - xpcom service (best, but no support available yet)
- * - global class with static methods (ie part of the platform)
- *
- * Interesting observation: the NS_IMPL_IDS macros suck! In a given file, one
- * can only declare OR define IDs, not both. Considering the unique-per-dll 
- * implementation, the headers inclusion and IDs declaration vs. definition 
- * becomes quite tricky.
- *
- * XXX make this component thread safe
- * 
- * XXX Use the more general xpcom extensibility model when it will be ready.
- * That means: Component Categories + Monikers. Better performance!
- * 
- * @created         17/Nov/1998
+ * @created         15/Nov/1999
  * @author  Catalin Rotaru [CATA]
  */
 class nsCharsetConverterManager : public nsICharsetConverterManager
@@ -96,196 +100,219 @@ class nsCharsetConverterManager : public nsICharsetConverterManager
 
 private:
 
-  /**
-   * Pointer to the unique instance of this class.
-   */
-  static nsICharsetConverterManager * mInstance;
+  nsObjectArray mDecoderArray;
+  nsObjectArray mEncoderArray;
 
   /**
-   * The Mapping data structures.
+   * Takes charset information from Registry and puts it into those arrays.
    */
-  ConverterInfo     mEncArray[100];
-  PRInt32           mEncSize;
-  ConverterInfo     mDecArray[100];
-  PRInt32           mDecSize;
-
-  PRBool            mMappingDone;
+  void FillInfoArrays();
+  void FillConverterProperties(nsObjectArray * aArray);
 
   /**
-   * Class constructor.
+   * Returns NULL if charset could not be found.
    */
-  nsCharsetConverterManager();
+  nsConverterInfo * GetConverterInfo(nsObjectArray * aArray, 
+      nsString * aName);
 
-  /**
-   * Creates some sort of mapping (Charset, Charset) -> Converter.
-   */
-  nsresult CreateMapping();
+  nsresult GetConverterList(nsObjectArray * aArray, nsString *** aResult, 
+      PRInt32 * aCount);
 
-  /**
-   * Gathers the necessary informations about each Converter.
-   */
-  nsresult GatherConvertersInfo();
-
-  /**
-   * Attempts to return a ICharsetConverterInfo reference for the given charset
-   * in the array. If errors, the converter will be eliminated from the array.
-   */
-  nsICharsetConverterInfo * GetICharsetConverterInfo(ConverterInfo * ci, 
-      PRInt32 aIndex, PRInt32 * aSize);
-
+  static nsresult RegisterConverterPresenceData(char * aRegistryPath, 
+      PRBool aPresence);
 
 public:
 
-  /**
-   * Class destructor.
-   */
+  nsCharsetConverterManager();
   virtual ~nsCharsetConverterManager();
+  static nsresult RegisterConverterManagerData();
 
-  /**
-   * Unique factory method for this class (the constructor is private).
-   *
-   * @return    a singleton object, instance of this class
-   */
-  static nsICharsetConverterManager * GetInstance();
-
-  //--------------------------------------------------------------------
+  //--------------------------------------------------------------------------
   // Interface nsICharsetConverterManager [declaration]
 
   NS_IMETHOD GetUnicodeEncoder(const nsString * aDest, 
       nsIUnicodeEncoder ** aResult);
   NS_IMETHOD GetUnicodeDecoder(const nsString * aSrc, 
       nsIUnicodeDecoder ** aResult);
-  NS_IMETHOD GetEncodableCharsets(nsString *** aResult, PRInt32 * aCount);
-  NS_IMETHOD GetDecodableCharsets(nsString *** aResult, PRInt32 * aCount);
-  NS_IMETHOD GetCharsetName(const nsString * aCharset, nsString ** aResult);
-  NS_IMETHOD GetCharsetNames(const nsString * aCharset, nsString *** aResult, 
-      PRInt32 * aCount);
+  NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount);
+  NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount);
+  NS_IMETHOD GetDecoderFlags(nsString * aName, PRInt32 * aFlags);
+  NS_IMETHOD GetEncoderFlags(nsString * aName, PRInt32 * aFlags);
 };
 
-//----------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// Global functions and data [implementation]
+
+NS_IMETHODIMP NS_NewCharsetConverterManager(nsISupports* aOuter, 
+                                            const nsIID& aIID,
+                                            void** aResult)
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsCharsetConverterManager * inst = new nsCharsetConverterManager();
+  if (!inst) {
+    *aResult = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) {
+    *aResult = nsnull;
+    delete inst;
+  }
+  return res;
+}
+
+//----------------------------------------------------------------------------
+// Class nsObject [implementation]
+
+// XXX clarify why I can't have this method as a pure virtual one?!
+nsObject::~nsObject()
+{
+}
+
+//----------------------------------------------------------------------------
+// Class nsObjectsArray [implementation]
+
+nsObjectArray::nsObjectArray(PRInt32 aCapacity)
+{
+  Init(aCapacity);
+}
+
+nsObjectArray::nsObjectArray()
+{
+  Init(64);
+}
+
+nsObjectArray::~nsObjectArray()
+{
+  for (PRInt32 i = 0; i < mUsage; i++) delete mArray[i];
+  if (mArray != NULL) delete [] mArray;
+}
+
+nsObject ** nsObjectArray::GetArray()
+{
+  return mArray;
+}
+
+PRInt32 nsObjectArray::GetUsage()
+{
+  return mUsage;
+}
+
+void nsObjectArray::Init(PRInt32 aCapacity)
+{
+  mCapacity = aCapacity;
+  mUsage = 0;
+  mArray = NULL;
+}
+
+nsresult nsObjectArray::InsureCapacity(PRInt32 aCapacity)
+{
+  PRInt32 i;
+
+  if (mArray == NULL) {
+    mArray = new nsObject * [mCapacity];
+    if (mArray == NULL) return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (aCapacity > mCapacity) {
+    while (aCapacity > mCapacity) mCapacity *= 2;
+    nsObject ** newArray = new nsObject * [mCapacity];
+    if (newArray == NULL) return NS_ERROR_OUT_OF_MEMORY;
+    for (i = 0; i < mUsage; i++) newArray[i] = mArray[i];
+    delete [] mArray;
+    mArray = newArray;
+  }
+
+  return NS_OK;
+}
+
+nsresult nsObjectArray::AddObject(nsObject * aObject)
+{
+  nsresult res;
+
+  res = InsureCapacity(mUsage + 1);
+  if (NS_FAILED(res)) return res;
+
+  (mArray)[mUsage++] = aObject;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------------
+// Class nsConverterInfo [implementation]
+
+nsConverterInfo::nsConverterInfo()
+{
+  mName = NULL;
+}
+
+nsConverterInfo::~nsConverterInfo()
+{
+  if (mName != NULL) delete mName;
+}
+
+//----------------------------------------------------------------------------
 // Class nsCharsetConverterManager [implementation]
 
-NS_IMPL_ISUPPORTS(nsCharsetConverterManager, nsCOMTypeInfo<nsICharsetConverterManager>::GetIID());
-
-nsICharsetConverterManager * nsCharsetConverterManager::mInstance = NULL;
+NS_IMPL_ISUPPORTS(nsCharsetConverterManager, nsICharsetConverterManager::GetIID());
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
 {
-  mEncSize      = 0;
-  mDecSize      = 0;
-
-  mMappingDone  = PR_FALSE;
-
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
 
-  CreateMapping();
+  FillInfoArrays();
+  FillConverterProperties(&mDecoderArray);
+  FillConverterProperties(&mEncoderArray);
 }
 
 nsCharsetConverterManager::~nsCharsetConverterManager() 
 {
-  mInstance = NULL;
   PR_AtomicDecrement(&g_InstanceCount);
 }
 
-nsICharsetConverterManager * nsCharsetConverterManager::GetInstance()
+nsresult nsCharsetConverterManager::RegisterConverterManagerData()
 {
-  if (mInstance == NULL) mInstance = new nsCharsetConverterManager();
-  return mInstance;
+  // XXX take these konstants out of here
+  // XXX change "xuconv" to "uconv" when the new enc&dec trees are in place
+  RegisterConverterPresenceData("software/netscape/intl/xuconv/not-for-browser", PR_FALSE);
+
+  return NS_OK;
 }
 
-nsresult nsCharsetConverterManager::CreateMapping()
+nsresult nsCharsetConverterManager::RegisterConverterPresenceData(
+                                    char * aRegistryPath, 
+                                    PRBool aPresence)
 {
-  mMappingDone = PR_TRUE;
-
-  nsresult res = NS_OK;
+  nsresult res;
   nsIRegistry * registry = NULL;
-  nsIEnumerator * components = NULL;
-  nsRegistryKey uconvKey, key;
-
-  // XXX hack; make these dynamic
-  mEncSize = mDecSize = 0;
+  nsRegistryKey key;
 
   // get the registry
   res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
-                                     nsIRegistry::GetIID(), 
-                                     (nsISupports**)&registry);
+    nsIRegistry::GetIID(), (nsISupports**)&registry);
   if (NS_FAILED(res)) goto done;
 
   // open the registry
   res = registry->OpenWellKnownRegistry(
-      nsIRegistry::ApplicationComponentRegistry);
+    nsIRegistry::ApplicationComponentRegistry);
   if (NS_FAILED(res)) goto done;
 
-  // get subtree
-  res = registry -> GetSubtree(nsIRegistry::Common, 
-                               "software/netscape/intl/uconv", 
-                               &uconvKey);
+  res = registry -> AddSubtree(nsIRegistry::Common, aRegistryPath, &key);
   if (NS_FAILED(res)) goto done;
 
-  // enumerate subtrees
-  res = registry -> EnumerateSubtrees(uconvKey, &components);
+  // XXX instead of these hardcoded values, I should read from a property file
+  res = registry -> SetInt(key, "x-fake-1999", 1);
   if (NS_FAILED(res)) goto done;
-  res = components -> First();
+  res = registry -> SetInt(key, "x-fake-2000", 1);
   if (NS_FAILED(res)) goto done;
-
-  // XXX take these KONSTANTS out of here
-  // XXX check return values, free stuff
-  // XXX bit hacky, clean me up
-  while (NS_OK != components -> IsDone()) {
-    nsISupports * base;
-    res = components -> CurrentItem(&base);
-    if (NS_SUCCEEDED(res)) {
-      nsIRegistryNode * node;
-      nsIID nodeIID = NS_IREGISTRYNODE_IID;
-      res = base->QueryInterface (nodeIID, (void**)&node);
-      if (NS_FAILED(res)) continue;
-
-      char *name;
-      res = node->GetName(&name);
-      if (NS_FAILED(res)) continue;
-
-      nsCID * cid = new nsCID();
-      char * src;
-      char * dest;
-      if (!cid->Parse(name)) continue;
-
-      res = node->GetKey(&key);
-      if (NS_FAILED(res)) continue;
-
-      res = registry->GetString(key, "source", &src);
-      if (NS_FAILED(res)) continue;
-      res = registry->GetString(key, "destination", &dest);
-      if (NS_FAILED(res)) {
-          nsCRT::free(src);
-          continue;
-      }
-
-      nsAutoString str;
-
-      if (!strcmp(src, "Unicode")) {
-        str.Assign(dest);
-        GetCharsetName(&str,&mEncArray[mEncSize].mCharset);
-        mEncArray[mEncSize].mCID = cid;
-        mEncArray[mEncSize].mFreeCID = PR_TRUE;
-        mEncSize++;
-      } else if (!strcmp(dest, "Unicode")) {
-        str.Assign(src);
-        GetCharsetName(&str,&mDecArray[mDecSize].mCharset);
-        mDecArray[mDecSize].mCID = cid;
-        mDecArray[mDecSize].mFreeCID = PR_TRUE;
-        mDecSize++;
-      }
-
-      nsCRT::free(src);
-      nsCRT::free(dest);
-      nsCRT::free(name);
-      NS_RELEASE(node);
-      NS_RELEASE(base);
-    }
-
-    res = components->Next();
-  }
+  res = registry -> SetInt(key, "X-EUC-TW", 1);
+  if (NS_FAILED(res)) goto done;
 
 done:
   if (registry != NULL) {
@@ -293,91 +320,163 @@ done:
     nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
   }
 
-  NS_IF_RELEASE(components);
-
   return res;
 }
 
-
-nsresult nsCharsetConverterManager::GatherConvertersInfo()
+// XXX rethink the registry structure(tree) for these converters
+// The idea is to have two trees:
+// .../uconv/decoder/(CID/name)
+// .../uconv/encoder/(CID/name)
+// XXX take the registry strings out and make them macros
+void nsCharsetConverterManager::FillInfoArrays() 
 {
-  nsICharsetConverterInfo * info;
-  nsString * str;
-  PRInt32 i;
+  nsresult res = NS_OK;
+  nsIEnumerator * components = NULL;
+  nsIRegistry * registry = NULL;
+  nsRegistryKey uconvKey, key;
 
-  for (i=0;i<mEncSize;) {
-    info = GetICharsetConverterInfo(mEncArray, i, &mEncSize);
-    if (info == NULL) continue;
+  // get the registry
+  res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
+    nsIRegistry::GetIID(), (nsISupports**)&registry);
+  if (NS_FAILED(res)) goto done;
 
-    char *charset;
-    info->GetCharsetDest(&charset);
-    str = new nsString(charset);
-    GetCharsetName(str,&mEncArray[i].mCharset);
-    delete str;
-	i++;
-    NS_RELEASE(info);
+  // open the registry
+  res = registry->OpenWellKnownRegistry(
+    nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(res)) goto done;
+
+  // get subtree
+  res = registry->GetSubtree(nsIRegistry::Common,  
+    "software/netscape/intl/uconv", &uconvKey);
+  if (NS_FAILED(res)) goto done;
+
+  // enumerate subtrees
+  res = registry->EnumerateSubtrees(uconvKey, &components);
+  if (NS_FAILED(res)) goto done;
+  res = components->First();
+  if (NS_FAILED(res)) goto done;
+
+  while (NS_OK != components->IsDone()) {
+    nsISupports * base = NULL;
+    nsIRegistryNode * node = NULL;
+    char * name = NULL;
+    char * src = NULL;
+    char * dest = NULL;
+    nsConverterInfo * ci = NULL;
+
+    res = components->CurrentItem(&base);
+    if (NS_FAILED(res)) goto done1;
+
+    res = base->QueryInterface(kRegistryNodeIID, (void**)&node);
+    if (NS_FAILED(res)) goto done1;
+
+    res = node->GetName(&name);
+    if (NS_FAILED(res)) goto done1;
+
+    ci = new nsConverterInfo();
+    if (ci == NULL) goto done1;
+    if (!(ci->mCID.Parse(name))) goto done1;
+
+    res = node->GetKey(&key);
+    if (NS_FAILED(res)) goto done1;
+
+    res = registry->GetString(key, "source", &src);
+    if (NS_FAILED(res)) goto done1;
+
+    res = registry->GetString(key, "destination", &dest);
+    if (NS_FAILED(res)) goto done1;
+
+    if (!strcmp(src, "Unicode")) {
+      ci->mName = new nsString(dest);
+      mEncoderArray.AddObject(ci);
+    } else if (!strcmp(dest, "Unicode")) {
+      ci->mName = new nsString(src);
+      mDecoderArray.AddObject(ci);
+    } else goto done1;
+
+    ci = NULL;
+
+done1:
+    NS_IF_RELEASE(base);
+    NS_IF_RELEASE(node);
+
+    if (name != NULL) nsCRT::free(name);
+    if (src != NULL) nsCRT::free(src);
+    if (dest != NULL) nsCRT::free(dest);
+    if (ci != NULL) delete ci;
+
+    res = components->Next();
+    if (NS_FAILED(res)) break; // this is NOT supposed to fail!
   }
 
-  for (i=0;i<mDecSize;) {
-    info = GetICharsetConverterInfo(mDecArray, i, &mDecSize);
-    if (info == NULL) continue;
-
-    char *charset;
-    info->GetCharsetSrc(&charset);
-    str = new nsString(charset);
-    GetCharsetName(str,&mDecArray[i].mCharset);
-    delete str;
-	i++;
-    NS_RELEASE(info);
+  // finish and clean up
+done:
+  if (registry != NULL) {
+    registry->Close();
+    nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
   }
 
-  return NS_OK;
+  NS_IF_RELEASE(components);
 }
 
-nsICharsetConverterInfo * 
-nsCharsetConverterManager::GetICharsetConverterInfo(ConverterInfo * aArray,
-                                                    PRInt32 aIndex,
-                                                    PRInt32 * aSize)
+void nsCharsetConverterManager::FillConverterProperties(
+                                nsObjectArray * aArray)
 {
-  nsresult res;
-  nsIFactory * factory;
-  nsICharsetConverterInfo * info;
+  PRInt32 size = aArray->GetUsage();
+  nsConverterInfo ** array = (nsConverterInfo **)aArray->GetArray();
+  if ((size == 0) || (array == NULL)) return;
 
-  res=nsComponentManager::FindFactory(*(aArray[aIndex].mCID), &factory);
-  if (NS_FAILED(res)) {
-    #if 1
-      printf(" get charset info FindFactory failed %d %x", aIndex, res);
-    #endif
-    goto reduceArray;
+  for (PRInt32 i = 0; i < size; i++) {
+    int val = 0;
+    SET_FOR_BROWSER(val);
+    SET_FOR_MAILNEWSEDITOR(val);
+    array[i]->mFlags = val;
   }
 
-  res=factory->QueryInterface(kICharsetConverterInfoIID, (void ** )&info);
-  NS_RELEASE(factory);
-  if (NS_FAILED(res)) {
-    #if 1
-      printf(" get charset info QI failed %d %x", aIndex, res);
-    #endif
-    goto reduceArray;
-  }
+  // XXX get these properties from registry, not from your stomach
+}
 
-  return info;
+// XXX optimise this method - use some hash tables for God's sake!
+// That could also mean taking the name out of the data structure. Maybe.
+nsConverterInfo * nsCharsetConverterManager::GetConverterInfo(
+                                             nsObjectArray * aArray, 
+                                             nsString * aName) 
+{
+  PRInt32 size = aArray->GetUsage();
+  nsConverterInfo ** array = (nsConverterInfo **)aArray->GetArray();
+  if ((size == 0) || (array == NULL)) return NULL;
 
-reduceArray:
-
-  PRInt32 i;
-
-  (*aSize)--;
-  for (i=aIndex; i<*aSize;) aArray[i] = aArray[++i];
-  if (i>=0) {
-    aArray[i].mCharset = NULL;
-    aArray[i].mCID = NULL;
-  }
+  for (PRInt32 i = 0; i < size; i++) if (aName->Equals(*(array[i]->mName))) 
+    return array[i];
 
   return NULL;
 }
 
+nsresult nsCharsetConverterManager::GetConverterList(
+                                    nsObjectArray * aArray,
+                                    nsString *** aResult,
+                                    PRInt32 * aCount)
+{
+  *aResult = NULL;
+  *aCount = 0;
 
-//----------------------------------------------------------------------
+  PRInt32 size = aArray->GetUsage();
+  nsConverterInfo ** array = (nsConverterInfo **)aArray->GetArray();
+  if ((size == 0) || (array == NULL)) return NS_OK;
+
+  *aResult = new nsString * [size];
+  if (*aResult == NULL) return NS_ERROR_OUT_OF_MEMORY;
+
+  *aCount = size;
+  for (PRInt32 i=0;i<size;i++) (*aResult)[i] = array[i]->mName;
+
+  return NS_OK;
+
+  // XXX also create new Strings here, as opposed to just providing pointers 
+  // to the existing ones
+}
+
+//----------------------------------------------------------------------------
 // Interface nsICharsetConverterManager [implementation]
 
 NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
@@ -422,84 +521,38 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
   return res;
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetEncodableCharsets(
-                                         nsString *** aResult, 
-                                         PRInt32 * aCount)
+NS_IMETHODIMP nsCharsetConverterManager::GetDecoderList(nsString *** aResult, 
+                                                        PRInt32 * aCount)
 {
-  nsresult res;
-  if (!mMappingDone) {
-    res = CreateMapping();
-    if NS_FAILED(res) return res;
-  }
+  return GetConverterList(&mDecoderArray, aResult, aCount);
+}
 
-  *aResult = NULL;
-  *aCount = 0;
-  if (mEncSize != 0) {
-    *aResult = new nsString * [mEncSize];
-    *aCount = mEncSize;
-    for (PRInt32 i=0;i<mEncSize;i++) (*aResult)[i]=mEncArray[i].mCharset;
-  }
+NS_IMETHODIMP nsCharsetConverterManager::GetEncoderList(nsString *** aResult, 
+                                                        PRInt32 * aCount)
+{
+  return GetConverterList(&mEncoderArray, aResult, aCount);
+}
 
+NS_IMETHODIMP nsCharsetConverterManager::GetDecoderFlags(nsString * aName, 
+                                                         PRInt32 * aFlags)
+{
+  *aFlags = 0;
+
+  nsConverterInfo * info = GetConverterInfo(&mDecoderArray, aName);
+  if (info == NULL) return NS_ERROR_UCONV_NOCONV;
+
+  *aFlags = info->mFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetDecodableCharsets(
-                                         nsString *** aResult, 
-                                         PRInt32 * aCount)
+NS_IMETHODIMP nsCharsetConverterManager::GetEncoderFlags(nsString * aName, 
+                                                         PRInt32 * aFlags)
 {
-  nsresult res;
-  if (!mMappingDone) {
-    res = CreateMapping();
-    if NS_FAILED(res) return res;
-  }
+  *aFlags = 0;
 
-  *aResult = NULL;
-  *aCount = 0;
-  if (mDecSize != 0) {
-    *aResult = new nsString * [mDecSize];
-    *aCount = mDecSize;
-    for (PRInt32 i=0;i<mDecSize;i++) (*aResult)[i]=mDecArray[i].mCharset;
-  }
+  nsConverterInfo * info = GetConverterInfo(&mEncoderArray, aName);
+  if (info == NULL) return NS_ERROR_UCONV_NOCONV;
 
+  *aFlags = info->mFlags;
   return NS_OK;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetName(
-                                         const nsString * aCharset,
-                                         nsString ** aResult)
-{
-  // XXX add aliases capability here
-
-  *aResult = new nsString(*aCharset);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetNames(
-                                         const nsString * aCharset, 
-                                         nsString *** aResult, 
-                                         PRInt32 * aCount)
-{
-  // XXX write me
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-NS_IMETHODIMP
-NS_NewCharsetConverterManager(nsISupports* aOuter, const nsIID& aIID,
-                              void** aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsICharsetConverterManager* inst = nsCharsetConverterManager::GetInstance();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return inst->QueryInterface(aIID, aResult);
 }

@@ -116,9 +116,9 @@ nsresult testCharsetConverterManager()
   nsString ** cs;
   PRInt32 ct;
 
-  res = ccMan->GetDecodableCharsets(&cs, &ct);
+  res = ccMan->GetDecoderList(&cs, &ct);
   if (NS_FAILED(res)) {
-    printf("ERROR at GetDecodableCharsets() code=0x%x.\n", res);
+    printf("ERROR at GetDecoderList() code=0x%x.\n", res);
   } else {
     printf("UDecoders (%d): ", ct);
     for (int i=0;i<ct;i++) {
@@ -130,9 +130,9 @@ nsresult testCharsetConverterManager()
   }
   delete [] cs;
 
-  res = ccMan->GetEncodableCharsets(&cs, &ct);
+  res = ccMan->GetEncoderList(&cs, &ct);
   if (NS_FAILED(res)) {
-    printf("ERROR at GetEncodableCharsets() code=0x%x.\n", res);
+    printf("ERROR at GetEncoderList() code=0x%x.\n", res);
   } else {
     printf("UEncoders (%d): ", ct);
     for (int i=0;i<ct;i++) {
