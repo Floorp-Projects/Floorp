@@ -39,9 +39,9 @@
 
   <html:div style="width:100px; height:100px" flex="1">
   <tree id="Tree"
-        style="width: 100%; height: 100%"
-        datasources="rdf:internetsearch"
-        ondblclick="return OnDblClick(event.target.parentNode.parentNode, 'Tree');">
+    style="width: 100%; height: 100%"
+    datasources="rdf:internetsearch"
+    ondblclick="return OnDblClick(event.target.parentNode.parentNode, 'Tree')">
 
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -62,7 +62,8 @@
                   loading="rdf:http://home.netscape.com/NC-rdf#loading"
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+              <treecell indent="true" align="left"
+                value="rdf:http://home.netscape.com/NC-rdf#Name" />
             </treerow>
           </treeitem>
         </treechildren>
