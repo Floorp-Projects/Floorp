@@ -16,7 +16,8 @@
  * Reserved.
  */
 
-
+#include "msgCore.h"
+#include "prprf.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -28,21 +29,21 @@
 #include "plstr.h"
 #include "plevent.h"
 
-#include "nsIStreamListener.h"
-#include "nsIInputStream.h"
-#include "nsITransport.h"
 #include "nsIURL.h"
-#include "nsINetService.h"
+#include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
-#include "nsIPref.h"
-#include "nsIMsgIdentity.h"
-#include "nsIMsgMailSession.h"
-#include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
+
+#include "nsIUrlListener.h"
 
 #include "nsIImapUrl.h"
 #include "nsIImapProtocol.h"
+#include "nsIMsgIdentity.h"
+#include "nsIMsgMailSession.h"
+
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
+#include "nsFileSpec.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -56,19 +57,22 @@
 #endif
 #endif
 
-#define DEFAULT_HOST		"nsmail-2.mcom.com"
-#define DEFAULT_PORT		143		/* we get this value from SmtpCore.h */
-#define DEFAULT_URL_TYPE	"imap://"	/* do NOT change this value until netlib re-write is done...*/
+/////////////////////////////////////////////////////////////////////////////////
+// Define keys for all of the interfaces we are going to require for this test
+/////////////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
-static NS_DEFINE_CID(kIImapUrlCID, NS_IMAPURL_CID);
+static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 
-static NS_DEFINE_IID(kIImapProtocolIID, NS_IIMAPPROTOCOL_IID);
-static NS_DEFINE_CID(kIImapProtocolCID, NS_IMAPPROTOCOL_CID);
+/////////////////////////////////////////////////////////////////////////////////
+// Define default values to be used to drive the test
+/////////////////////////////////////////////////////////////////////////////////
 
+#define DEFAULT_HOST		"nsmail-2.mcom.com"
+#define DEFAULT_PORT		IMAP_PORT
+#define DEFAULT_URL_TYPE	"imap://"	/* do NOT change this value until netlib re-write is done...*/
 
 class nsIMAP4TestDriver  : public nsIUrlListener
 {
@@ -79,7 +83,7 @@ public:
 	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
 	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
 
-	nsIMAP4TestDriver(PLEventQueue *queue, nsINetService * pService);
+	nsIMAP4TestDriver(PLEventQueue *queue);
 	virtual ~nsIMAP4TestDriver();
 
 	// run driver initializes the instance, lists the commands, runs the command and when
@@ -89,12 +93,11 @@ public:
 	nsresult RunDriver(); 
 
 	// User drive commands
-	void InitializeTestDriver(); // will end up prompting the user for things like host, port, etc.
 	nsresult ListCommands();   // will list all available commands to the user...i.e. "get groups, get article, etc."
 	nsresult ReadAndDispatchCommand(); // reads a command number in from the user and calls the appropriate command generator
-	nsresult PromptForUserDataAndBuildUrl(const char * userPrompt);
-
 	nsresult PromptForUserData(const char * userPrompt);
+
+	// command handlers
 	nsresult OnCommand();   // send a command to the imap server
 	nsresult OnRunIMAPCommand();
 	nsresult OnGet();
@@ -110,9 +113,6 @@ protected:
 	// host and port info...
 	PRUint32	m_port;
 	char		m_host[200];		
-    char*       m_username;
-    char*       m_password;
-    char*       m_mailDirectory;
 
 	nsIImapUrl * m_url; 
 	nsIImapProtocol * m_IMAP4Protocol; // running protocol instance
@@ -126,7 +126,7 @@ protected:
 
 };
 
-nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue, nsINetService * pNetService)
+nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
 {
 	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
@@ -137,10 +137,6 @@ nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue, nsINetService * pNetSe
 	m_runningURL = PR_FALSE;
     m_eventQueue = queue;
 
-    m_username = PL_strdup("qatest03");
-    m_password = PL_strdup("Ne!sc-pe");
-	
-	InitializeTestDriver(); // prompts user for initialization information...
 	m_IMAP4Protocol = nsnull; // we can't create it until we have a url...
 }
 
@@ -152,10 +148,10 @@ nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 
 	// this is called when we don't have a url nor a protocol instance yet...
 	// use service manager to get an imap 4 url...
-	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull, nsIImapUrl::GetIID()/* kIImapUrlCID */, (void **) &m_url);
+	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull, nsIImapUrl::GetIID(), (void **) &m_url);
 	// now create a protocol instance...
 	if (NS_SUCCEEDED(rv))
-		rv = nsComponentManager::CreateInstance(kIImapProtocolIID, nsnull, nsIImapProtocol::GetIID() /* kIImapProtocolCID */, (void **) &m_IMAP4Protocol);
+		rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull, nsIImapProtocol::GetIID(), (void **) &m_IMAP4Protocol);
 
 	if (NS_SUCCEEDED(rv))
 		m_protocolInitialized = PR_TRUE;
@@ -165,10 +161,7 @@ nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 nsIMAP4TestDriver::~nsIMAP4TestDriver()
 {
 	NS_IF_RELEASE(m_url);
-    PR_FREEIF(m_username);
-    PR_FREEIF(m_password);
-    PR_FREEIF(m_mailDirectory);
-	delete m_IMAP4Protocol;
+	NS_IF_RELEASE(m_IMAP4Protocol);
 }
 
 nsresult nsIMAP4TestDriver::RunDriver()
@@ -199,79 +192,6 @@ nsresult nsIMAP4TestDriver::RunDriver()
 	} // until the user has stopped running the url (which is really the test session.....
 
 	return status;
-
-	return status;
-}
-
-void nsIMAP4TestDriver::InitializeTestDriver()
-{
-	nsresult rv;
-
-	char portString[20];  // used to read in the port string
-	char hostString[200];
-	portString[0] = '\0';
-	hostString[0] = '\0';
-	m_host[0] = '\0';
-	m_port = DEFAULT_PORT;
-
-	char * displayString = nsnull;
-	
-	PL_strcpy(m_userData, DEFAULT_HOST);
-
-	displayString = PR_smprintf("Enter a host name to test with [%s]: ", m_userData);
-	rv = PromptForUserData(displayString);
-	PR_FREEIF(displayString);
-
-	PL_strncpy(m_host, m_userData, sizeof(m_host));
-
-	PL_strcpy(m_userData, "143");
-	displayString = PR_smprintf("Enter port number if any for the imap url [%d] (use 0 to skip port field): ", IMAP_PORT);
-	rv = PromptForUserData(displayString);
-	PR_FREEIF(displayString);
-	
-	PRUint32 port = atol(m_userData);
-
-    // we'll actually build the url (spec + user data) once the user has specified a command they want to try...
-	if (port > 0) // did the user specify a port? 
-		 PR_snprintf(m_urlSpec, sizeof(m_urlSpec), "imap://%s:%d/", m_host, port);
-	else
-		PR_snprintf(m_urlSpec, sizeof(m_urlSpec), "imap://%s/", m_host);
-
-}
-
-// prints the userPrompt and then reads in the user data. Assumes urlData has already been allocated.
-// it also reconstructs the url string in m_urlString but does NOT reload it....
-nsresult nsIMAP4TestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
-{
-	char tempBuffer[500];
-	tempBuffer[0] = '\0'; 
-
-	if (userPrompt && *userPrompt)
-		printf(userPrompt);
-	else
-		printf("Enter data for command: ");
-	 
-	scanf("%[^\n]", tempBuffer);
-	if (*tempBuffer)
-	{
-		if (tempBuffer[0])  // kill off any CR or LFs...
-		{
-			PRUint32 length = PL_strlen(tempBuffer);
-			if (length > 0 && tempBuffer[length-1] == '\r')
-				tempBuffer[length-1] = '\0';
-
-			// okay, user gave us a valid line so copy it into the user data field..o.t. leave user
-			// data field untouched. This allows us to use default values for things...
-			m_userData[0] = '\0';
-			PL_strcpy(m_userData, tempBuffer);
-		}
-		
-	}
-	
-	char buffer[2];
-	scanf("%c", buffer);  // eat up the CR that is still in the input stream...
-
-	return NS_OK;
 }
 
 nsresult nsIMAP4TestDriver::ReadAndDispatchCommand()
@@ -300,8 +220,10 @@ nsresult nsIMAP4TestDriver::ReadAndDispatchCommand()
 		break;
 	case 2:
 		status = OnIdentityCheck();
+		break;
 	case 3:
 		status = OnTestUrlParsing();
+		break;
 	default:
 		status = OnExit();
 		break;
@@ -530,7 +452,7 @@ nsresult nsIMAP4TestDriver::OnTestUrlParsing()
 
 	nsIImapUrl * imapUrl = nsnull;
 	
-	nsComponentManager::CreateInstance(kIImapUrlCID, nsnull /* progID */, nsIImapUrl::GetIID(), (void **) &imapUrl);
+	nsComponentManager::CreateInstance(kImapUrlCID, nsnull /* progID */, nsIImapUrl::GetIID(), (void **) &imapUrl);
 	if (imapUrl)
 	{
 		char * urlSpec = nsnull;
@@ -582,6 +504,7 @@ int main()
 	if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateThreadEventQueue();
+
 	if (NS_FAILED(result)) return result;
 
     pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
@@ -591,13 +514,10 @@ int main()
         return 1;
     }
 
-	nsINetService * imap4Service = nsnull;
-#ifdef WE_HAVE_IMAP_SERVICE
-	nsServiceManager::GetService(kIMAP4ServiceCID, nsIIMAP4Service::GetIID(),
-                                 (nsISupports **)&imap4Service); 
-#endif
+	nsServiceManager::ReleaseService(kEventQueueServiceCID, pEventQService);
+
 	// okay, everything is set up, now we just need to create a test driver and run it...
-	nsIMAP4TestDriver * driver = new nsIMAP4TestDriver(queue, imap4Service);
+	nsIMAP4TestDriver * driver = new nsIMAP4TestDriver(queue);
 	if (driver)
 	{
 		NS_ADDREF(driver);
@@ -607,7 +527,6 @@ int main()
 	}
 
 	// shut down:
-	NS_IF_RELEASE(imap4Service);
     return 0;
 
 }
