@@ -1,3 +1,11 @@
+DON'T COMPILE ME!!!
+RICHIE
+RICHIE
+RICHIE      OLD FE INTERFACES TO APPLEDOUBLE ENCODE/DECODE
+RICHIE
+RICHIE
+RICHIE
+
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -35,7 +43,7 @@
 
 extern int MK_MSG_SAVE_ATTACH_AS;
 
-#ifdef XP_MAC
+#ifdef RICHIE_XP_MAC
 #pragma warn_unusedarg off
 
 extern int MK_UNABLE_TO_OPEN_TMP_FILE;
@@ -57,7 +65,7 @@ typedef struct	_AppledoubleEncodeObject
 	char*	buff;							/*	the working buff.					*/
 	PRInt32	s_buff;							/*	the working buff size.				*/
 
-	XP_File	fp;								/*  file to hold the encoding			*/
+	RICHIE_XP_File	fp;								/*  file to hold the encoding			*/
 	char	*fname;							/*	and the file name.					*/
 	
 } AppleDoubleEncodeObject;
@@ -88,7 +96,7 @@ net_AppleDouble_Encode_Write (
 			/*
 			 * we get the encode data, so call the next stream to write it to the disk.
 			 */
-			if (XP_FileWrite(obj->buff, count, obj->fp) != count)
+			if (RICHIE_XP_FileWrite(obj->buff, count, obj->fp) != count)
 				return errFileWrite;
 		}
 		
@@ -117,7 +125,7 @@ PRIVATE void net_AppleDouble_Encode_Complete (void *stream)
  	
  	if (obj->fp)
  	{
-    	XP_FileClose(obj->fp);						/* done with the target file	*/
+    	RICHIE_XP_FileClose(obj->fp);						/* done with the target file	*/
 
         PR_FREEIF(obj->fname);							/* and the file name too		*/
     }
@@ -134,9 +142,9 @@ PRIVATE void net_AppleDouble_Encode_Abort (void *stream, int status)
 
  	if (obj->fp)
  	{   
- 		XP_FileClose(obj->fp);
+ 		RICHIE_XP_FileClose(obj->fp);
 
-        XP_FileRemove (obj->fname, xpURL);			/* remove the partial file.		*/
+        RICHIE_XP_FileRemove (obj->fname, xpURL);			/* remove the partial file.		*/
         
         PR_FREEIF(obj->fname);
 	}
@@ -202,7 +210,7 @@ fe_MakeAppleDoubleEncodeStream (int  format_out,
     stream->data_object    = obj;
     stream->window_id      = window_id;
 
-	obj->fp  = XP_FileOpen(dst_filename, xpFileToPost, XP_FILE_WRITE_BIN);
+	obj->fp  = RICHIE_XP_FileOpen(dst_filename, xpFileToPost, RICHIE_XP_FILE_WRITE_BIN);
 	if (obj->fp == NULL)
 	{
 		PR_FREEIF (working_buff);
@@ -356,7 +364,7 @@ net_AppleDouble_Decode_Abort (
 **		In other OS,  the stream will decode apple double object, 
 **					  then encode it in binhex format, and save to the file.
 */
-#ifndef XP_MAC
+#ifndef RICHIE_XP_MAC
 static void
 simple_copy(MWContext* context, char* saveName, void* closure)
 {
@@ -371,7 +379,7 @@ fe_MakeAppleDoubleDecodeStream_1 (int  format_out,
                          URL_Struct *URL_s,
                          MWContext  *window_id)
 {
-#ifdef XP_MAC
+#ifdef RICHIE_XP_MAC
 	return fe_MakeAppleDoubleDecodeStream(format_out, 
 						data_obj, 
 						URL_s, 
@@ -412,7 +420,7 @@ fe_MakeAppleDoubleDecodeStream_1 (int  format_out,
 
 /***** RICHIE - CONVERT THIS
 	if (FE_PromptForFileName(window_id, 
-				XP_GetString(MK_MSG_SAVE_ATTACH_AS),
+				RICHIE_XP_GetString(MK_MSG_SAVE_ATTACH_AS),
 				0,
 				FALSE,
 				FALSE,
@@ -521,10 +529,10 @@ fe_MakeAppleDoubleDecodeStream (int  format_out,
 
 	if (dst_filename) 
 	{
-		XP_STRNCPY_SAFE(obj->ap_decode_obj.fname, dst_filename, 
+		RICHIE_XP_STRNCPY_SAFE(obj->ap_decode_obj.fname, dst_filename, 
 						sizeof(obj->ap_decode_obj.fname));
 	}
-	#ifdef XP_MAC		
+	#ifdef RICHIE_XP_MAC		
 	obj->ap_decode_obj.mSpec = (FSSpec*)( URL_s->fe_data );
 	#endif
     TRACEMSG(("Returning stream from NET_AppleDoubleDecode\n"));
@@ -550,7 +558,7 @@ fe_MakeAppleSingleDecodeStream_1 (int  format_out,
                          URL_Struct *URL_s,
                          MWContext  *window_id)
 {
-#ifdef XP_MAC
+#ifdef RICHIE_XP_MAC
 	return fe_MakeAppleSingleDecodeStream(format_out, 
 						data_obj, 
 						URL_s, 
@@ -588,8 +596,8 @@ fe_MakeAppleSingleDecodeStream_1 (int  format_out,
 
 	defaultPath = URL_s->content_name;
 
-#ifdef XP_WIN16
-	if (XP_FileNameContainsBadChars(defaultPath))
+#ifdef RICHIE_XP_WIN16
+	if (RICHIE_XP_FileNameContainsBadChars(defaultPath))
 		defaultPath = 0;
 #endif
 	
@@ -599,7 +607,7 @@ fe_MakeAppleSingleDecodeStream_1 (int  format_out,
 
 /***** RICHIE - CONVERT THIS
 	if (FE_PromptForFileName(window_id, 
-				XP_GetString(MK_MSG_SAVE_ATTACH_AS),
+				RICHIE_XP_GetString(MK_MSG_SAVE_ATTACH_AS),
 				defaultPath,
 				FALSE,
 				FALSE,
@@ -642,11 +650,11 @@ fe_MakeAppleSingleDecodeStream (int  format_out,
     
     TRACEMSG(("Setting up apple single decode stream. Have URL: %s\n", URL_s->address));
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = RICHIE_XP_NEW(NET_StreamClass);
     if(stream == NULL) 
         return(NULL);
 
-    obj = XP_NEW(AppleDoubleDecodeObject);
+    obj = RICHIE_XP_NEW(AppleDoubleDecodeObject);
     if (obj == NULL)
     {
     	PR_FREEIF(stream);
@@ -702,19 +710,19 @@ fe_MakeAppleSingleDecodeStream (int  format_out,
 							TRUE,
 							FALSE, 
 							window_id);
-#ifndef XP_MAC
+#ifndef RICHIE_XP_MAC
 		obj->ap_decode_obj.is_binary = TRUE;
 #endif
 	}
 
 	if (dst_filename) 
 	{
-		XP_STRNCPY_SAFE(obj->ap_decode_obj.fname, dst_filename, 
+		RICHIE_XP_STRNCPY_SAFE(obj->ap_decode_obj.fname, dst_filename, 
 						sizeof(obj->ap_decode_obj.fname));
 	}
 	/* If we are of a broken content-type, impose its encoding. */
 	if (URL_s->content_type 
-		&& !XP_STRNCASECMP(URL_s->content_type, "x-uuencode-apple-single", 23))
+		&& !RICHIE_XP_STRNCASECMP(URL_s->content_type, "x-uuencode-apple-single", 23))
 		obj->ap_decode_obj.encoding = kEncodeUU;
 	else
 		obj->ap_decode_obj.encoding = kEncodeNone;

@@ -576,15 +576,14 @@ PRIVATE int ap_decode_state_machine(
 					**	The reason behind this dirt work is resource fork is the last
 					**	piece in the binhex, while it is the first piece in apple double. 
 					*/
-					XP_FileSeek(p_ap_decode_obj->tmpfd, 0L, SEEK_SET);
+					p_ap_decode_obj->tmpFileStream->seek(PR_SEEK_SET, 0);
 					
 					while (p_ap_decode_obj->data_size > 0)
 					{
 						char buff[1024];
 					
 						size = PR_MIN(1024, p_ap_decode_obj->data_size);
-						XP_FileRead(buff, size, p_ap_decode_obj->tmpfd);
-					
+						p_ap_decode_obj->tmpFileStream->read(buff, size);					
 						status = (*p_ap_decode_obj->binhex_stream->put_block)
 									(p_ap_decode_obj->binhex_stream->data_object, 
 									buff, 
@@ -650,19 +649,18 @@ int ap_decode_end(
 				(p_ap_decode_obj->binhex_stream->data_object);		
 		}
 
-		if (p_ap_decode_obj->tmpfd)
-			XP_FileClose(p_ap_decode_obj->tmpfd);
+		if (p_ap_decode_obj->tmpFileStream)
+			p_ap_decode_obj->tmpFileStream->close();
 		
-		if (p_ap_decode_obj->tmpfname)
+		if (p_ap_decode_obj->tmpFileSpec)
 		{
-			XP_FileRemove(p_ap_decode_obj->tmpfname, xpTemporary);		
-														/* remove tmp file if we used it	*/	
-			PR_FREEIF(p_ap_decode_obj->tmpfname);			/* and release the file name too.	*/
+			p_ap_decode_obj->tmpFileSpec->Delete(PR_FALSE); /* remove tmp file if we used it	*/	
+			delete p_ap_decode_obj->tmpFileSpec;
 		}
 	}
-	else if (p_ap_decode_obj->fd)
+	else if (p_ap_decode_obj->fileStream)
 	{
-		XP_FileClose(p_ap_decode_obj->fd);
+    p_ap_decode_obj->fileStream->close();
 	}
 #ifdef XP_MAC
 	if( !is_aborting )

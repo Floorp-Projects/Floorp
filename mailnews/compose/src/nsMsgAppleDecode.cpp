@@ -785,19 +785,21 @@ int ap_decode_file_infor(appledouble_decode_object *p_ap_decode_obj)
 	{
 		if (p_ap_decode_obj->rksize != 0)
 		{
-			/* we need a temp file to hold all the resource data, because the */
-			p_ap_decode_obj->tmpfname 
-				= WH_TempName(xpTemporary, "apmail");
-			
-			p_ap_decode_obj->tmpfd 
-				= XP_FileOpen(p_ap_decode_obj->tmpfname, 
-								xpTemporary, 
-								XP_FILE_TRUNCATE_BIN);
-								
-			if (p_ap_decode_obj->tmpfd == NULL)
-				return errFileOpen;
+			/* we need a temp file to hold all the resource data, because the */			
+			p_ap_decode_obj->tmpFileSpec = nsMsgCreateTempFileSpec("apmail");
+      if (!p_ap_decode_obj->tmpFileSpec)
+        return errFileOpen;
+
+      p_ap_decode_obj->tmpFileStream = new nsIOFileStream(*(p_ap_decode_obj->tmpFileSpec));
+      if ( (!p_ap_decode_obj->tmpFileStream) ||
+           (p_ap_decode_obj->tmpFileStream->is_open()) )
+      {
+        delete p_ap_decode_obj->tmpFileSpec;
+        return errFileOpen;
+      }
 		}
 	}
+
 	return NOERR;
 }
 
@@ -867,13 +869,12 @@ int ap_decode_process_header(
 			**	Write to the temp file first, because the resource fork appears after
 			**	 the data fork in the binhex encoding.
 			*/
-			if (XP_FileWrite(wr_buff, 
-							in_count, 
-							p_ap_decode_obj->tmpfd)  != in_count)
-			{
+      if (p_ap_decode_obj->tmpFileStream->write(wr_buff, in_count) != in_count)
+      {
 				status = errFileWrite;						
 				break;
 			}
+
 			p_ap_decode_obj->data_size += in_count;
 		}
 		else
@@ -881,9 +882,7 @@ int ap_decode_process_header(
 #ifdef XP_MAC
 			long howMuch = in_count;
 			
-			if (FSWrite(p_ap_decode_obj->fileId, 
-							&howMuch,
-							wr_buff) != NOERR)
+			if (FSWrite(p_ap_decode_obj->fileId, &howMuch, wr_buff) != NOERR)
 			{
 				status = errFileWrite;
 				break;
@@ -905,8 +904,8 @@ int ap_decode_process_header(
 			**  with tempfile yet, just seek back to the start point, 
 			**		-- ready for a readback later 
 			*/
-			if (p_ap_decode_obj->tmpfd)
-				XP_FileSeek(p_ap_decode_obj->tmpfd, 0L, 1);
+			if (p_ap_decode_obj->tmpFileStream)
+				p_ap_decode_obj->tmpFileStream->seek(PR_SEEK_SET, 0);
 		}
 		
 #ifdef XP_MAC
@@ -949,20 +948,23 @@ int ap_decode_process_data(
 			PL_strcpy((char*)fspec.name+1, p_ap_decode_obj->fname);
 			
 			filename = my_PathnameFromFSSpec(&fspec);
+
+      nsFileSpec    tFileSpec(filename+7);
 			if (p_ap_decode_obj->is_binary)
-				p_ap_decode_obj->fd = 
-						XP_FileOpen(filename+7, xpURL, XP_FILE_TRUNCATE_BIN);
+				p_ap_decode_obj->fileStream = new nsIOFileStream(tFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
 			else
-				p_ap_decode_obj->fd = 
-						XP_FileOpen(filename+7, xpURL, XP_FILE_TRUNCATE);
+				p_ap_decode_obj->fileStream = new nsIOFileStream(tFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
+						// RICHIE XP_FileOpen(filename+7, xpURL, XP_FILE_TRUNCATE);
+
 			PR_FREEIF(filename);				
 #else			
+      nsFileSpec    tFileSpec(p_ap_decode_obj->fname);
 			if (p_ap_decode_obj->is_binary)
-				p_ap_decode_obj->fd = 
-						XP_FileOpen(p_ap_decode_obj->fname, xpURL, XP_FILE_TRUNCATE_BIN);
+				p_ap_decode_obj->fileStream = new nsIOFileStream(tFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
+						// RICHIE XP_FileOpen(p_ap_decode_obj->fname, xpURL, XP_FILE_TRUNCATE_BIN);
 			else
-				p_ap_decode_obj->fd = 
-						XP_FileOpen(p_ap_decode_obj->fname, xpURL, XP_FILE_TRUNCATE);
+				p_ap_decode_obj->fileStream = new nsIOFileStream(tFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE)); 
+						// RICHIE XP_FileOpen(p_ap_decode_obj->fname, xpURL, XP_FILE_TRUNCATE);
 #endif
 		}
 		else
@@ -994,9 +996,7 @@ int ap_decode_process_data(
 						wr_buff, 
 						in_count);
 		else
-			status = XP_FileWrite(wr_buff, 
-						in_count, 
-						p_ap_decode_obj->fd) == in_count ? NOERR : errFileWrite;
+			status = p_ap_decode_obj->fileStream(wr_buff, in_count) == in_count ? NOERR : errFileWrite;
 								
 		if (retval == errEOP ||						/* for apple double, we meet the boundary	*/
 			( p_ap_decode_obj->is_apple_single && 
@@ -1019,10 +1019,10 @@ int ap_decode_process_data(
 			if (status != NOERR)
 				return status;
 		}
-		else if (p_ap_decode_obj->fd)
+		else if (p_ap_decode_obj->fileStream)
 		{
-			XP_FileClose(p_ap_decode_obj->fd);
-			p_ap_decode_obj->fd = 0;		
+			p_ap_decode_obj->fileStream->close();
+			delete p_ap_decode_obj->fileStream;
 		}
 
 		status = errDone;

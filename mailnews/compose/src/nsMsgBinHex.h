@@ -25,6 +25,9 @@
 #ifndef	binhex_h
 #define	binhex_h
 
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
+
 #ifdef XP_MAC
 #if PRAGMA_ALIGN_SUPPORTED
 #pragma options align=mac68k
@@ -122,8 +125,8 @@ typedef struct _binhex_decode_object
 	int32	parID ;
 	int16	fileId;			/* the refnum of the output file 		*/
 #else
-	char	*name;			/* file name for the output file in non-mac OS */
-	XP_File	fileId;			/* the file if for the outpur file. non-mac OS */
+	nsFileSpec      *name;			/* file spec for the output file in non-mac OS */
+	nsIOFileStream  *fileId;			/* the file if for the outpur file. non-mac OS */
 #endif
 
 	MWContext* context; 	/* context for call back function.		*/

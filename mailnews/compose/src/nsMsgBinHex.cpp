@@ -613,12 +613,11 @@ PRIVATE void binhex_process(
 								/* only output data fork in the non-mac system.			*/
 				if (p_bh_decode_obj->state == BINHEX_STATE_DFORK)
 				{
-					status = XP_FileWrite(p_bh_decode_obj->outbuff,
-								p_bh_decode_obj->pos_outbuff,
-								p_bh_decode_obj->fileId)
-									== p_bh_decode_obj->pos_outbuff ? NOERR : errFileWrite;
+					status = p_bh_decode_obj->fileId->write(p_bh_decode_obj->outbuff, 
+                                                  p_bh_decode_obj->pos_outbuff)
+									    == p_bh_decode_obj->pos_outbuff ? NOERR : errFileWrite;
 								
-					XP_FileClose(p_bh_decode_obj->fileId);
+					p_bh_decode_obj->fileId->close();
 				}
 				else
 				{
@@ -646,10 +645,9 @@ PRIVATE void binhex_process(
 #else
 				if (p_bh_decode_obj->state == BINHEX_STATE_DFORK)
 				{
-					status = XP_FileWrite(p_bh_decode_obj->outbuff,
-								p_bh_decode_obj->pos_outbuff,
-								p_bh_decode_obj->fileId) 
-									== p_bh_decode_obj->pos_outbuff ? NOERR : errFileWrite; 
+					status = p_bh_decode_obj->fileId->write(p_bh_decode_obj->outbuff,
+								                                  p_bh_decode_obj->pos_outbuff) 
+									    == p_bh_decode_obj->pos_outbuff ? NOERR : errFileWrite; 
 				}
 				else
 				{
@@ -681,7 +679,7 @@ PRIVATE void binhex_process(
 								p_bh_decode_obj->parID,
 								(unsigned char*)p_bh_decode_obj->name);
 #else
-						XP_FileRemove(p_bh_decode_obj->name, xpURL);
+						p_bh_decode_obj->name->Delete(PR_FALSE);
 #endif
 					}
 					p_bh_decode_obj->state = errDecoding;
@@ -769,16 +767,20 @@ PRIVATE void binhex_process(
 						break;
 					}
 
-					FREEIF(p_bh_decode_obj->name);
-					p_bh_decode_obj->name = XP_STRDUP(filename);
-					p_bh_decode_obj->fileId 
-						= XP_FileOpen(filename, 
-									xpURL, 
-									XP_FILE_TRUNCATE_BIN);
-					if (p_bh_decode_obj->fileId == NULL)
-						status = errFileOpen;
-					else
-						status = NOERR;
+					if (p_bh_decode_obj->name)
+            delete p_bh_decode_obj->fileId;
+
+					p_bh_decode_obj->name = new nsFileSpec(filename);
+          if (!p_bh_decode_obj->name)
+            status = errFileOpen;
+          else
+          {
+					  p_bh_decode_obj->fileId = new nsIOFileStream(*(p_bh_decode_obj->name), (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
+					  if (p_bh_decode_obj->fileId == NULL)
+						  status = errFileOpen;
+					  else
+						  status = NOERR;
+          }
 
 					XP_FREE(filename);
 					
@@ -997,9 +999,9 @@ int binhex_decode_next (
 				p_bh_decode_obj->parID, 
 				(unsigned char*)p_bh_decode_obj->name);
 #else
-		XP_FileClose(p_bh_decode_obj->fileId);
-		p_bh_decode_obj->fileId = 0;
-		XP_FileRemove(p_bh_decode_obj->name, xpURL);
+		p_bh_decode_obj->fileId->close();
+		delete p_bh_decode_obj->fileId;
+		p_bh_decode_obj->name->delete(PR_FALSE);
 #endif
 	}
 	
@@ -1030,11 +1032,10 @@ int binhex_decode_end (
 
 	if (p_bh_decode_obj->fileId)
 	{
-		XP_FileClose(p_bh_decode_obj->fileId);
-		p_bh_decode_obj->fileId = NULL;
+		p_bh_decode_obj->fileId->close();
 		
 		if (is_aborting)
-			XP_FileRemove(p_bh_decode_obj->name, xpURL);		
+			p_bh_decode_obj->name->Delete(PR_FALSE);
 	}
 	FREEIF(p_bh_decode_obj->name);
 #endif
