@@ -19,7 +19,7 @@ if(verifyDiskSpace(communicatorFolder, srDest) == true)
                      "bin",              // dir name in jar to extract 
                      communicatorFolder, // Where to put this file (Returned from GetFolder) 
                      "",                 // subdir name to create relative to communicatorFolder
-                     false);             // Force Flag 
+                     true);              // Force Flag 
   logComment("addDirectory() returned: " + err);
 
   // check return value
