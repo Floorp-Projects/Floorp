@@ -107,3 +107,25 @@ Content-Type: text/html
 CRLF
 INCLUDE foo.html
 END
+
+#
+# Redirect testing
+#
+START /redirect
+HTTP/1.1 301 Moved to a new location
+Server: HTTP Test Server/1.1
+Location: http://home.netscape.com/
+Content-Type: text/html
+CRLF
+END
+
+#
+#
+#
+START /post
+INCLUDE generic.res
+Content-Type: text/html
+CRLF
+INCLUDE post.html
+END
+
