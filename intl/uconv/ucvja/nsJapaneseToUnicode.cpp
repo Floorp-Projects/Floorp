@@ -100,7 +100,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
        switch(mState)
        {
           case 0:
-          if(*src & 0x80)
+          if(*src & 0x80 && *src != (unsigned char)0xa0)
           {
             mData = fbIdx[*src & 0x7F];
             if(mData < 0xE000 )
@@ -135,6 +135,11 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
             PRUint8 off = sbIdx[*src];
             if(0xFF == off) {
                *dest++ = 0xFFFD;
+               // if the first byte is valid for SJIS but the second 
+               // is not while being a valid US-ASCII(i.e. < 0x40), save it
+               // instead of eating it up !
+               if ( ! (*src & 0xc0)  )
+                 *dest++ = (PRUnichar) *src;
             } else {
                *dest++ = gJis0208map[mData+off];
             }
@@ -149,6 +154,9 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
             PRUint8 off = sbIdx[*src];
             if(0xFF == off) {
                *dest++ = 0xFFFD;
+               // see the comment above for mstate=1
+               if ( ! (*src & 0xc0)  )
+                 *dest++ = (PRUnichar) *src;
             } else {
                *dest++ = mData + off;
             }
@@ -272,7 +280,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
        switch(mState)
        {
           case 0:
-          if(*src & 0x80)
+          if(*src & 0x80  && *src != (unsigned char)0xa0)
           {
             mData = fbIdx[*src & 0x7F];
             if(mData != 0xFFFD )
@@ -304,7 +312,12 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
           {
             PRUint8 off = sbIdx[*src];
             if(0xFF == off) {
-               *dest++ = 0xFFFD;
+              *dest++ = 0xFFFD;
+               // if the first byte is valid for EUC-JP but the second 
+               // is not while being a valid US-ASCII(i.e. < 0xc0), save it
+               // instead of eating it up !
+               if ( ! (*src & 0xc0)  )
+                 *dest++ = (PRUnichar) *src;;
             } else {
                *dest++ = gJis0208map[mData+off];
             }
@@ -319,7 +332,11 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
             if((0xA1 <= *src) && (*src <= 0xDF)) {
               *dest++ = (0xFF61-0x00A1) + *src;
             } else {
-              *dest++ = 0xFFFD;
+              *dest++ = 0xFFFD;             
+              // if 0x8e is not followed by a valid JIS X 0201 byte
+              // but by a valid US-ASCII, save it instead of eating it up.
+              if ( (PRUint8)*src < (PRUint8)0x7f )
+                 *dest++ = (PRUnichar) *src;;
             }
             if(dest >= destEnd)
               goto error1;

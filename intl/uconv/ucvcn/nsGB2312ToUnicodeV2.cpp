@@ -83,7 +83,8 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
          break;
       }
 		
-      if ( *aSrc & 0x80 )
+      // we need to handle 0xa0 specially even though it is not a legal GB2312 code point
+      if ( (PRUint8)0xA0 < (PRUint8)*aSrc && (PRUint8)*aSrc < (PRUint8)0xFF)
         {
           if(i+1 >= iSrcLength)
           {
@@ -91,22 +92,39 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
             break;
           }
           
-		  // The source is a GBCode
+
      
           left = pSrcDBCode->leftbyte; 
           right = pSrcDBCode->rightbyte;
-
-          iGBKToUnicodeIndex = (left - 0x0081)*0x00BF + (right - 0x0040);  
-          *pDestDBCode = GBKToUnicodeTable[iGBKToUnicodeIndex];
+          // To make sure, the second byte has to be checked as well
+          // The valid 2nd byte range: [0xA1,0xFE]
+          if ( (PRUint8)0xA0 < right && right < (PRUint8)0xFF ) 
+            {
+              // Valid GB 2312 code point
+              iGBKToUnicodeIndex = (left - 0x0081)*0x00BF + (right - 0x0040);  
+              *pDestDBCode = GBKToUnicodeTable[iGBKToUnicodeIndex];
+              aSrc += 2;
+              i++;
+            }
+          else 
+            {
+              // Invalid GB 2312 code point 
           
-          aSrc += 2;
-          i++;
+              *pDestDBCode = (PRUnichar)0xfffd;
+              aSrc++;
+              
+            }
 		}
       else
 		{
-          // The source is an ASCII
-          *pDestDBCode = (PRUnichar) ( ((char )(*aSrc)) & 0x00ff);
-          aSrc++;
+           if ((PRUint8)*aSrc <= (PRUint8) 0x9f && (PRUint8)*aSrc >= (PRUint8) 0x80)
+             *pDestDBCode = (PRUnichar)0xfffd;
+           else
+             // The source is an ASCII
+             *pDestDBCode = (PRUnichar) ( ((char )(*aSrc)) & 0x00ff);
+
+           aSrc++;
+          
 		}
 
       iDestlen++;

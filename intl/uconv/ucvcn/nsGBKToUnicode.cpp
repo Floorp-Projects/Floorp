@@ -70,23 +70,43 @@ NS_IMETHODIMP nsGBKToUnicode::ConvertNoBuff(const char* aSrc,
          break;
 		}
       
-      if ( *aSrc & 0x80 )
+      // The valid range for the 1st byte is [0x81,0xFE] 
+      if ( (PRUint8) 0x80 < (PRUint8)*aSrc && (PRUint8)*aSrc < (PRUint8)0xff )
 		{
           if(i+1 >= iSrcLength) 
           {
             rv = NS_OK_UDEC_MOREINPUT;
             break;
           }
-		  // The source is a GBCode
+
 
           left = pSrcDBCode->leftbyte;  
           right = pSrcDBCode->rightbyte;
+          // To make sure, the second byte has to be checked as well.
+          // In GBK, the second byte range is [0x40,0x7E] and [0x80,0XFE]
+          if ( right >= (PRUint8)0x40 && (right & 0x7f) != (PRUint8)0x7F) 
+            {
+              // Valid GBK code
+              iGBKToUnicodeIndex = (left - 0x0081)*0x00BF + (right - 0x0040);  
+              *pDestDBCode = GBKToUnicodeTable[iGBKToUnicodeIndex];
+              aSrc += 2;
+              i++;
+            }
+          else if ( left == (PRUint8)0xA0 )
+            {
+              // stand-alone (not followed by a valid second byte) 0xA0 !
+              // treat it as valid a la Netscape 4.x
+              *pDestDBCode = (PRUnichar) ( ((char )(*aSrc)) & 0x00ff);
+              aSrc++;
+            }
           
-          iGBKToUnicodeIndex = (left - 0x0081)*0x00BF + (right - 0x0040);  
-          *pDestDBCode = GBKToUnicodeTable[iGBKToUnicodeIndex];
+          else 
+            {
+              // Invalid GBK code point (second byte should be 0x40 or higher)
+              *pDestDBCode = (PRUnichar)0xfffd;
+              aSrc++;
+            }
           
-          aSrc += 2;
-          i++;
 		}
       else
 		{
