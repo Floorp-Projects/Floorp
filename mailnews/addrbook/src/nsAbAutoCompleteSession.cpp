@@ -32,10 +32,12 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgIdentity.h"
+#include "nsIPref.h"
 
 /* The definition is nsAddressBook.cpp */
 extern const char *kDirectoryDataSourceRoot;
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAutoCompleteResultsCID, NS_AUTOCOMPLETERESULTS_CID);
@@ -436,8 +438,16 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     
     if (!listener)
         return NS_ERROR_NULL_POINTER;
-        
-    if (uSearchString[0] == 0)
+    
+    PRBool enableAutocomplete = PR_TRUE;
+
+    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    if (NS_FAILED(rv) || !pPref) 
+		  return NS_ERROR_FAILURE;
+
+    pPref->GetBoolPref("mail.enable_autocomplete", &enableAutocomplete);
+
+    if (uSearchString[0] == 0 || enableAutocomplete == PR_FALSE)
     {
         listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
         return NS_OK;

@@ -456,7 +456,7 @@ function DoCommandClose()
 
 function DoCommandPreferences()
 {
-  goPreferences('messengercompose.xul', 'chrome://messenger/content/messengercompose/pref-messages.xul')
+  goPreferences('messengercompose.xul', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul')
 }
 
 function ToggleWindowLock()
@@ -686,6 +686,10 @@ function ComposeStartup()
  			
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
 			msgCompose.editor = window.editorShell;
+			
+			//We need to unregister some of the editor commands to avoid conflict
+			if (gComposerCommandManager)
+			  gComposerCommandManager.unregisterCommand("cmd_preferences", nsPreferencesCommand);
 
 			msgCompose.RegisterStateListener(stateListener);
 

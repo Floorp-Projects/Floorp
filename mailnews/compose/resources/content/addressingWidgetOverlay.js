@@ -124,10 +124,10 @@ function CompFields2Recipients(msgCompFields, msgType)
 		awSetInputAndPopup(msgCompFields.GetNewsgroups(), "addr_newsgroups", newTreeChildrenNode, templateNode);
 		awSetInputAndPopup(msgCompFields.GetFollowupTo(), "addr_followup", newTreeChildrenNode, templateNode);
 		
-        if (top.MAX_RECIPIENTS == 0)
+    if (top.MAX_RECIPIENTS == 0)
 		{
-		    top.MAX_RECIPIENTS = 1;
-			awDisableAutoComplete(top.MAX_RECIPIENTS);
+		  top.MAX_RECIPIENTS = 1;
+			awSetAutoComplete(top.MAX_RECIPIENTS);
 		}
 		else
 		{
@@ -159,7 +159,7 @@ function awSetInputAndPopupValue(inputElem, inputValue, popupElem, popupValue, r
   	popupElem.setAttribute("id", "msgRecipientType#" + rowNumber);
 	}
   
-  _awDisableAutoComplete(popupElem, inputElem);
+  _awSetAutoComplete(popupElem, inputElem);
 }
 
 function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
@@ -347,7 +347,7 @@ function awAppendNewRow(setFocus)
             select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(lastRecipientType)];
     	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
     	    if (input)
-                _awDisableAutoComplete(select[0], input[0]);
+            _awSetAutoComplete(select[0], input[0]);
     	}
 
 		// focus on new input widget
@@ -599,20 +599,17 @@ function DropRecipient(recipient)
     awAppendNewRow(true); 
 }
 
-function _awDisableAutoComplete(selectElem, inputElem)
+function _awSetAutoComplete(selectElem, inputElem)
 {
-	if (prefs.GetBoolPref("mail.enable_autocomplete"))
-		if (selectElem.data != 'addr_newsgroups' && selectElem.data != 'addr_followup')
-		{
-			inputElem.disableAutocomplete = false;
-			return;
-		}
-	inputElem.disableAutocomplete = true;
+	if (selectElem.data != 'addr_newsgroups' && selectElem.data != 'addr_followup')
+		inputElem.disableAutocomplete = false;
+	else
+    inputElem.disableAutocomplete = true;
 }
 
-function awDisableAutoComplete(rowNumber)
+function awSetAutoComplete(rowNumber)
 {
     inputElem = awGetInputElement(rowNumber);
     selectElem = awGetPopupElement(rowNumber);
-    _awDisableAutoComplete(selectElem, inputElem)
+    _awSetAutoComplete(selectElem, inputElem)
 }
