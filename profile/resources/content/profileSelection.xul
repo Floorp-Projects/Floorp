@@ -32,8 +32,7 @@
 	class="dialog"
 	title="&windowtitle.label;"
   align="vertical"
-  onload="StartUp();"
-	width="450" height="226"> 
+  onload="StartUp();"> 
       
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
   <html:script language="javascript" src="chrome://profile/content/profileSelection.js"/>
