@@ -44,23 +44,27 @@
 #include "IWebBrowserImpl.h"
 
 // Commands sent via WM_COMMAND
-#define ID_PRINT        1
-#define ID_PAGESETUP    2
-#define ID_VIEWSOURCE    3
-#define ID_SAVEAS        4
-#define ID_PROPERTIES    5
-#define ID_CUT            6
-#define ID_COPY            7
-#define ID_PASTE        8
-#define ID_SELECTALL    9
+enum {
+    ID_PRINT = 1,
+    ID_PAGESETUP,
+    ID_VIEWSOURCE,
+    ID_SAVEAS,
+    ID_PROPERTIES,
+    ID_CUT,
+    ID_COPY,
+    ID_PASTE,
+    ID_SELECTALL
+};
 
 // Command group and IDs exposed through IOleCommandTarget
 extern GUID CGID_IWebBrowser_Moz;
 extern GUID CGID_MSHTML_Moz;
 
-#define HTMLID_FIND 1
-#define HTMLID_VIEWSOURCE 2
-#define HTMLID_OPTIONS 3
+enum {
+    HTMLID_FIND = 1,
+    HTMLID_VIEWSOURCE,
+    HTMLID_OPTIONS
+};
 
 // A list of objects
 typedef CComPtr<IUnknown> CComUnkPtr;
