@@ -1517,7 +1517,14 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
     NS_WITH_SERVICE(nsIGlobalHistory, history, "component://netscape/browser/global-history", &rv);
     if (NS_FAILED(rv)) break;
 
-    rv = history->AddPage(nsCAutoString(mURL), nsnull /* referrer */, PR_Now());
+    nsXPIDLCString spec;
+    rv = aUri->GetSpec(getter_Copies(spec));
+    if (NS_FAILED(rv)) break;
+
+    if (! spec)
+      break;
+
+    rv = history->AddPage(spec, nsnull /* referrer */, PR_Now());
     if (NS_FAILED(rv)) break;
   } while (0);
 
