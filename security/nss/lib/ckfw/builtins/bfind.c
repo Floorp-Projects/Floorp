@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: bfind.c,v $ $Revision: 1.2 $ $Date: 2002/02/13 02:26:47 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: bfind.c,v $ $Revision: 1.3 $ $Date: 2002/10/30 17:18:14 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -108,6 +108,33 @@ builtins_mdFindObjects_Next
   return nss_builtins_CreateMDObject(arena, io, pError);
 }
 
+static int
+builtins_derUnwrapInt(char *src, int size, char **dest) {
+    unsigned char *start = src;
+    int len = 0;
+
+    if (*src ++ != 2) {
+	return 0;
+    }
+    len = *src++;
+    if (len & 0x80) {
+	int count = len & 0x7f;
+	len =0;
+
+	if (count+2 > size) {
+	    return 0;
+	}
+	while (count-- > 0) {
+	    len = (len << 8) | *src++;
+	}
+    }
+    if (len + (src-start) != size) {
+	return 0;
+    }
+    *dest = src;
+    return len;
+}
+
 static CK_BBOOL
 builtins_attrmatch
 (
@@ -118,6 +145,17 @@ builtins_attrmatch
   PRBool prb;
 
   if( a->ulValueLen != b->size ) {
+    /* match a decoded serial number */
+    if ((a->type == CKA_SERIAL_NUMBER) && (a->ulValueLen < b->size)) {
+	int len;
+	unsigned char *data;
+
+	len = builtins_derUnwrapInt(b->data,b->size,&data);
+	if ((len == a->ulValueLen) && 
+		nsslibc_memequal(a->pValue, data, len, (PRStatus *)NULL)) {
+	    return CK_TRUE;
+	}
+    }
     return CK_FALSE;
   }
 
