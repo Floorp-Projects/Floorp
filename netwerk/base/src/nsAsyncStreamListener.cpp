@@ -128,10 +128,6 @@ nsStreamListenerEvent::Fire(nsIEventQueue* aEventQueue)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsAsyncStreamObserver::~nsAsyncStreamObserver()
-{
-}
-
 NS_IMPL_THREADSAFE_ADDREF(nsAsyncStreamObserver)
 NS_IMPL_THREADSAFE_RELEASE(nsAsyncStreamObserver)
 NS_IMPL_QUERY_INTERFACE2(nsAsyncStreamObserver,
