@@ -30,6 +30,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h" 
+#include "nsIContent.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIWebShell.h"
@@ -47,6 +48,7 @@
 #include "nsIDOMText.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsIDOMDocumentType.h"
 #include "nsExpatDTD.h"
 #include "nsINameSpaceManager.h"
 #include "nsICSSLoader.h"
@@ -131,10 +133,29 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   nsIDOMDocumentType* aDoctype,
                   nsIURI* aBaseURI)
 {
-  // XXX Ignoring the namespace, qualified name, and doctype parameters for now
+  nsresult rv;
+
   nsXMLDocument* doc = new nsXMLDocument(aBaseURI);
   if (doc == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = doc->Reset(nsnull, nsnull);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  if (aDoctype) {
+    nsCOMPtr<nsIDOMNode> tmpNode;
+    doc->AppendChild(aDoctype, getter_AddRefs(tmpNode));
+  }
+  
+  if (aQualifiedName.Length() > 0) {
+    nsCOMPtr<nsIDOMElement> root;
+    rv = doc->CreateElementNS(aNamespaceURI, aQualifiedName, getter_AddRefs(root));
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(root);
+      doc->SetRootContent(content);
+    }
+  }
+
   return doc->QueryInterface(kIDOMDocumentIID, (void**) aInstancePtrResult);
 }
 
@@ -216,11 +237,11 @@ nsresult
 nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
-  nsCOMPtr<nsIURI> aURL;
-  result = aChannel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(result)) return result;
-  if (NS_FAILED(result)) {
-    return result;
+  nsCOMPtr<nsIURI> url;
+  if (aChannel) {
+    result = aChannel->GetURI(getter_AddRefs(url));
+    if (NS_FAILED(result)) return result;
   }
 
   if (nsnull != mAttrStyleSheet) {
@@ -232,13 +253,15 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     NS_RELEASE(mInlineStyleSheet);
   }
 
-  result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
-  if (NS_OK == result) {
-    AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
-    
-    result = NS_NewHTMLCSSStyleSheet(&mInlineStyleSheet, aURL, this);
+  if (url) {
+    result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, url, this);
     if (NS_OK == result) {
-      AddStyleSheet(mInlineStyleSheet); // tell the world about our new style sheet
+      AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+      
+      result = NS_NewHTMLCSSStyleSheet(&mInlineStyleSheet, url, this);
+      if (NS_OK == result) {
+        AddStyleSheet(mInlineStyleSheet); // tell the world about our new style sheet
+      }
     }
   }
 
@@ -254,7 +277,7 @@ nsXMLDocument::GetContentType(nsString& aContentType) const
 }
 
 NS_IMETHODIMP
-nsXMLDocument::Load(const nsString& aUrl, const nsString& aMimeType)
+nsXMLDocument::Load(const nsString& aUrl)
 {
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsIURI> uri;
@@ -284,11 +307,11 @@ nsXMLDocument::Load(const nsString& aUrl, const nsString& aMimeType)
 
 NS_IMETHODIMP 
 nsXMLDocument::StartDocumentLoad(const char* aCommand,
-                               nsIChannel* aChannel,
-                               nsILoadGroup* aLoadGroup,
-                               nsISupports* aContainer,
-                               nsIStreamListener **aDocListener,
-                               PRBool aReset)
+                                 nsIChannel* aChannel,
+                                 nsILoadGroup* aLoadGroup,
+                                 nsISupports* aContainer,
+                                 nsIStreamListener **aDocListener,
+                                 PRBool aReset)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
@@ -653,10 +676,7 @@ nsXMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 NS_IMETHODIMP    
 nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 {
-  // XXX TBI
-  *aDocumentType = nsnull;
-  return NS_OK;
-//  return nsDocument::GetDoctype(aDocumentType); 
+  return nsDocument::GetDoctype(aDocumentType); 
 }
  
 NS_IMETHODIMP    

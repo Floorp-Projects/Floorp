@@ -1194,11 +1194,15 @@ nsHTMLDocument::ContentInserted(nsIContent* aContainer,
                                 PRInt32 aIndexInContainer)
 {
   if (nsnull != mNamedItems) {
-    nsIAtom *name;
+    PRBool inform = PR_FALSE;
+    if (aContainer) {
+      nsIAtom *name;
+      aContainer->GetTag(name);
+      inform = (name == nsHTMLAtoms::form);
+      NS_IF_RELEASE(name);
+    }
 
-    aContainer->GetTag(name);
-    RegisterNamedItems(aChild, name == nsHTMLAtoms::form);
-    NS_IF_RELEASE(name);
+    RegisterNamedItems(aChild, inform);
   }
 
   return nsDocument::ContentInserted(aContainer, aChild, aIndexInContainer);

@@ -145,6 +145,7 @@ public:
    */
   virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
 
+  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 protected:
   // Find/Search Method/Data member
   PRBool SearchBlock(BlockText    & aBlockText, 
@@ -208,7 +209,6 @@ protected:
 
   NS_IMETHOD GetDomainURI(nsIURI **uri);
 
-  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
   nsresult WriteCommon(const nsString& aText,
                        PRBool aNewlineTerminate);
   nsresult ScriptWriteCommon(JSContext *cx, 

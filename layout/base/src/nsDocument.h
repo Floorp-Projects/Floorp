@@ -396,7 +396,7 @@ public:
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);
   NS_IMETHOD    GetWidth(PRInt32* aWidth);
   NS_IMETHOD    GetHeight(PRInt32* aHeight);
-  NS_IMETHOD    Load (const nsString& aUrl, const nsString& aMimeType);
+  NS_IMETHOD    Load (const nsString& aUrl);
                      
   // nsIDOMNode interface
   NS_DECL_IDOMNODE
@@ -464,11 +464,12 @@ public:
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
+  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+
 protected:
   nsIContent* FindContent(const nsIContent* aStartNode,
                           const nsIContent* aTest1, 
                           const nsIContent* aTest2) const;
-  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
   nsresult GetPixelDimensions(nsIPresShell* aShell,
                               PRInt32* aWidth,

@@ -10892,9 +10892,11 @@ nsCSSFrameConstructor::GetFirstLetterStyle(nsIPresContext* aPresContext,
                                            nsIStyleContext* aStyleContext)
 {
   nsIStyleContext* fls = nsnull;
-  aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                             nsHTMLAtoms::firstLetterPseudo,
-                                             aStyleContext, PR_FALSE, &fls);
+  if (aContent) {
+    aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                               nsHTMLAtoms::firstLetterPseudo,
+                                               aStyleContext, PR_FALSE, &fls);
+  }
   return fls;
 }
 
@@ -10904,9 +10906,11 @@ nsCSSFrameConstructor::GetFirstLineStyle(nsIPresContext* aPresContext,
                                          nsIStyleContext* aStyleContext)
 {
   nsIStyleContext* fls = nsnull;
-  aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                             nsHTMLAtoms::firstLinePseudo,
-                                             aStyleContext, PR_FALSE, &fls);
+  if (aContent) {
+    aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                               nsHTMLAtoms::firstLinePseudo,
+                                               aStyleContext, PR_FALSE, &fls);
+  }
   return fls;
 }
 
@@ -10918,10 +10922,12 @@ nsCSSFrameConstructor::HaveFirstLetterStyle(nsIPresContext* aPresContext,
                                             nsIStyleContext* aStyleContext)
 {
   nsCOMPtr<nsIStyleContext> fls;
-  aPresContext->ProbePseudoStyleContextFor(aContent,
-                                           nsHTMLAtoms::firstLetterPseudo,
-                                           aStyleContext, PR_FALSE,
-                                           getter_AddRefs(fls));
+  if (aContent) {
+    aPresContext->ProbePseudoStyleContextFor(aContent,
+                                             nsHTMLAtoms::firstLetterPseudo,
+                                             aStyleContext, PR_FALSE,
+                                             getter_AddRefs(fls));
+  }
   PRBool result = PR_FALSE;
   if (fls) {
     result = PR_TRUE;
@@ -10935,10 +10941,12 @@ nsCSSFrameConstructor::HaveFirstLineStyle(nsIPresContext* aPresContext,
                                           nsIStyleContext* aStyleContext)
 {
   nsCOMPtr<nsIStyleContext> fls;
-  aPresContext->ProbePseudoStyleContextFor(aContent,
-                                           nsHTMLAtoms::firstLinePseudo,
-                                           aStyleContext, PR_FALSE,
-                                           getter_AddRefs(fls));
+  if (aContent) {
+    aPresContext->ProbePseudoStyleContextFor(aContent,
+                                             nsHTMLAtoms::firstLinePseudo,
+                                             aStyleContext, PR_FALSE,
+                                             getter_AddRefs(fls));
+  }
   PRBool result = PR_FALSE;
   if (fls) {
     result = PR_TRUE;
