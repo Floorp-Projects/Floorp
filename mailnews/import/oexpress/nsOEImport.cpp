@@ -550,7 +550,7 @@ NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_r
         return NS_ERROR_NULL_POINTER;
     
     *_retval = PR_TRUE;
-    nsString str; str.AppendWithConversion("Outlook Express address book (windows address book)");
+    nsString str; str.Append(nsOEStringBundle::GetStringByID(OEIMPORT_AUTOFIND));
     *description = str.ToNewUnicode();
     
     return( NS_OK);
@@ -578,7 +578,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISupp
 	
 	nsIImportABDescriptor *		pID;
 	nsISupports *				pInterface;
-	nsString					str; str.AppendWithConversion("Outlook Express Address Book");
+	nsString					str; str.Append(nsOEStringBundle::GetStringByID( OEIMPORT_DEFAULT_NAME));
 	
 	if (m_pWab->Loaded()) {
 		// create a new nsIImportABDescriptor and add it to the array

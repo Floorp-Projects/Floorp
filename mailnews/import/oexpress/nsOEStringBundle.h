@@ -48,7 +48,8 @@ private:
 #define OEIMPORT_MAILBOX_BADPARAM							2003
 #define OEIMPORT_MAILBOX_BADSOURCEFILE						2004
 #define OEIMPORT_MAILBOX_CONVERTERROR						2005
-
+#define OEIMPORT_DEFAULT_NAME						2006
+#define OEIMPORT_AUTOFIND               2007
 
 
 #endif /* _nsOEStringBundle_H__ */
