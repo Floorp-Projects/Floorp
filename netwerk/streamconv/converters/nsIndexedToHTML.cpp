@@ -211,12 +211,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // Anything but a gopher url needs to end in a /,
     // otherwise we end up linking to file:///foo/dirfile
 
-    char* spec = nsCRT::strdup(titleUri.get());
-
     buffer.Append(NS_LITERAL_STRING("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>"));
 
     nsXPIDLString title;
-    nsString uniSpec; 
     nsXPIDLCString encoding;
     rv = mParser->GetEncoding(getter_Copies(encoding));
     if (NS_FAILED(rv)) return rv;
@@ -226,14 +223,17 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         if (NS_FAILED(rv)) return rv;
     }
 
-    PRUnichar   *unEscapeSpec = nsnull;
-    rv = mTextToSubURI->UnEscapeAndConvert(encoding, spec, &unEscapeSpec);
+    nsXPIDLString unEscapeSpec;
+    rv = mTextToSubURI->UnEscapeAndConvert(encoding, titleUri.get(),
+                                           getter_Copies(unEscapeSpec));
     if (NS_FAILED(rv)) return rv;
     
-    uniSpec.Adopt(unEscapeSpec);
+    nsXPIDLString htmlEscSpec;
+    htmlEscSpec.Adopt(nsEscapeHTML2(unEscapeSpec.get(),
+                                    unEscapeSpec.Length()));
 
     const PRUnichar* formatTitle[] = {
-        uniSpec.get()
+        htmlEscSpec.get()
     };
 
     rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("DirTitle").get(),
@@ -243,7 +243,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     if (NS_FAILED(rv)) return rv;
     buffer.Append(title);
 
-    buffer.Append(NS_LITERAL_STRING("</title><base href=\""));
+    buffer.Append(NS_LITERAL_STRING("</title><base href=\""));    
     buffer.Append(NS_ConvertASCIItoUCS2(baseUri));
     buffer.Append(NS_LITERAL_STRING("\"/>\n"));
 
@@ -258,7 +258,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     buffer.Append(NS_LITERAL_STRING("</head>\n<body>\n<h1>"));
     
     const PRUnichar* formatHeading[] = {
-        uniSpec.get()
+        htmlEscSpec.get()
     };
 
     rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("DirTitle").get(),
