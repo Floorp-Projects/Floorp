@@ -36,10 +36,7 @@
 
 #include "nsplugindefs.h"
 #include "nsISupports.h"
-
-#ifdef NEW_PLUGIN_STREAM_API
 #include "nsIPluginStreamListener.h"
-#endif
 
 #define NS_IPLUGININSTANCE_IID                       \
 { /* ebe00f40-0199-11d2-815b-006008119d7a */         \
@@ -140,7 +137,6 @@ public:
     NS_IMETHOD
     SetWindow(nsPluginWindow* window) = 0;
 
-#ifdef NEW_PLUGIN_STREAM_API
     /**
      * Called to tell the plugin that the initial src/data stream is
 	 * ready.  Expects the plugin to return a nsIPluginStreamListener.
@@ -152,21 +148,6 @@ public:
      */
     NS_IMETHOD
     NewStream(nsIPluginStreamListener** listener) = 0;
-#else
-    /**
-     * Called when a new plugin stream must be constructed in order for the plugin
-     * instance to receive a stream of data from the browser. 
-     *
-     * (Corresponds to NPP_NewStream.)
-     *
-     * @param peer - the plugin stream peer, representing information about the
-     * incoming stream, and stream-specific callbacks into the browser
-     * @param result - the resulting plugin stream
-     * @result - NS_OK if this operation was successful
-     */
-    NS_IMETHOD
-    NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result) = 0;
-#endif
 
     /**
      * Called to instruct the plugin instance to print itself to a printer.
@@ -178,24 +159,6 @@ public:
      */
     NS_IMETHOD
     Print(nsPluginPrint* platformPrint) = 0;
-
-#ifndef NEW_PLUGIN_STREAM_API
-    /**
-     * Called to notify the plugin instance that a URL request has been
-     * completed. (See nsIPluginManager::GetURL and nsIPluginManager::PostURL).
-     *
-     * (Corresponds to NPP_URLNotify.)
-     *
-     * @param url - the requested URL
-     * @param target - the target window name
-     * @param reason - the reason for completion
-     * @param notifyData - the notify data supplied to GetURL or PostURL
-     * @result - NS_OK if this operation was successful
-     */
-    NS_IMETHOD
-    URLNotify(const char* url, const char* target,
-              nsPluginReason reason, void* notifyData) = 0;
-#endif
 
     /**
      * Returns the value of a variable associated with the plugin instance.

@@ -50,7 +50,7 @@ public:
   GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin) = 0;
 
   NS_IMETHOD
-  InstantiateEmbededPlugin(const char *aMimeType, nsString& aURLSpec, nsIPluginInstanceOwner *aOwner) = 0;
+  InstantiateEmbededPlugin(const char *aMimeType, nsIURL* aURL, nsIPluginInstanceOwner *aOwner) = 0;
 
   NS_IMETHOD
   InstantiateFullPagePlugin(const char *aMimeType, nsString& aURLSpec, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner) = 0;

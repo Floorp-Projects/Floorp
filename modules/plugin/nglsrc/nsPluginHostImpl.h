@@ -79,10 +79,8 @@ public:
   NS_IMETHOD
   UserAgent(const char* *resultingAgentString);
 
-#ifdef NEW_PLUGIN_STREAM_API
-
-    NS_IMETHOD
-    GetURL(nsISupports* pluginInst, 
+  NS_IMETHOD
+  GetURL(nsISupports* pluginInst, 
            const char* url, 
            const char* target = NULL,
            nsIPluginStreamListener* streamListener = NULL,
@@ -90,8 +88,8 @@ public:
            const char* referrer = NULL,
            PRBool forceJSEnabled = PR_FALSE);
 
-    NS_IMETHOD
-    PostURL(nsISupports* pluginInst,
+  NS_IMETHOD
+  PostURL(nsISupports* pluginInst,
             const char* url,
             PRUint32 postDataLen, 
             const char* postData,
@@ -103,21 +101,6 @@ public:
             PRBool forceJSEnabled = PR_FALSE,
             PRUint32 postHeadersLength = 0, 
             const char* postHeaders = NULL);
-#else
-
-  NS_IMETHOD
-  GetURL(nsISupports* inst, const char* url, const char* target,
-         void* notifyData = NULL, const char* altHost = NULL,
-         const char* referrer = NULL, PRBool forceJSEnabled = PR_FALSE);
-
-  NS_IMETHOD
-  PostURL(nsISupports* inst, const char* url, const char* target,
-          PRUint32 postDataLen, const char* postData,
-          PRBool isFile = PR_FALSE, void* notifyData = NULL,
-          const char* altHost = NULL, const char* referrer = NULL,
-          PRBool forceJSEnabled = PR_FALSE,
-          PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
-#endif
 
   //nsIPluginHost interface - used to communicate to the nsPluginInstanceOwner
 
@@ -134,7 +117,7 @@ public:
   GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin);
 
   NS_IMETHOD
-  InstantiateEmbededPlugin(const char *aMimeType, nsString& aURLSpec, nsIPluginInstanceOwner *aOwner);
+  InstantiateEmbededPlugin(const char *aMimeType, nsIURL* aURL, nsIPluginInstanceOwner *aOwner);
 
   NS_IMETHOD
   InstantiateFullPagePlugin(const char *aMimeType, nsString& aURLSpec, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner);
@@ -195,20 +178,15 @@ public:
 
   /* Called by GetURL and PostURL */
 
-#ifdef NEW_PLUGIN_STREAM_API
   NS_IMETHOD
   NewPluginURLStream(const nsString& aURL, nsIPluginInstance *aInstance, nsIPluginStreamListener *aListener);
-#else
-  NS_IMETHOD
-  NewPluginURLStream(const nsString& aURL, nsIPluginInstance *aInstance, void *aNotifyData);
-#endif
 
 private:
 
   /* Called by InstantiatePlugin */
 
   nsresult
-  NewEmbededPluginStream(const nsString& aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
+  NewEmbededPluginStream(nsIURL* aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
   nsresult
   NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance);
 
