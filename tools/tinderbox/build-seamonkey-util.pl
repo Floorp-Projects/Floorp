@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.164 $ ';
+$::UtilsVersion = '$Revision: 1.165 $ ';
 
 package TinderUtils;
 
@@ -935,7 +935,9 @@ sub run_all_tests {
         # Also assuming only one profile here.
         #
         my $cp_result = 0;
-        unless (-d "$build_dir/.mozilla/$Settings::MozProfileName") {
+        unless ((-d "$build_dir/.mozilla/$Settings::MozProfileName")||
+                ((-d "$build_dir/.mozilla/Profiles/$Settings::MozProfileName") and 
+                 ($Settings::OS eq 'Darwin'))) {
             print_log "No profile found, creating profile.\n";
             $cp_result = create_profile($build_dir, $binary_dir, $binary);
         } else {
