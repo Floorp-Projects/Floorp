@@ -107,10 +107,15 @@ namespace MetaData {
             {
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
                 l->labelID = bCon->getLabel();
-                std::pair<LabelSet::iterator, bool> result = stmtLbl->insert(LabelSet::value_type(&l->name, l->labelID));
-                if (!result.second)
+                std::pair<LabelSet::iterator, bool> breakResult = jt->breakTargets->insert(LabelSet::value_type(&l->name, l->labelID));
+                if (!breakResult.second)
                     reportError(Exception::syntaxError, "Duplicate statement label", p->pos);
+                std::pair<LabelSet::iterator, bool> stmtLblResult = stmtLbl->insert(LabelSet::value_type(&l->name, l->labelID));
+               
                 ValidateStmt(cxt, env, l->stmt, stmtLbl, jt);
+
+                jt->breakTargets->erase(breakResult.first);
+                stmtLbl->erase(stmtLblResult.first);
             }
             break;
         case StmtNode::If:
