@@ -24,7 +24,7 @@ NS_IMPL_ISUPPORTS1(nsSmtpServer, nsISmtpServer)
 
 nsSmtpServer::nsSmtpServer()
 {
-    
+    NS_INIT_REFCNT();
 }
 
 nsSmtpServer::~nsSmtpServer()
