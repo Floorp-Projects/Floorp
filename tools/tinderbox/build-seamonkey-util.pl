@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.54 $ ';
+$::UtilsVersion = '$Revision: 1.55 $ ';
 
 package TinderUtils;
 
@@ -301,11 +301,6 @@ sub SetupEnv {
     $ENV{DISPLAY} = $Settings::DisplayServer;
     $ENV{MOZCONFIG} = "$Settings::BaseDir/$Settings::MozConfigFileName" 
       if $Settings::MozConfigFileName ne '' and -e $Settings::MozConfigFileName;
-
-	# Security
-	if($Settings::BuildNSS) {
-	  $ENV{MOZ_NSS_AUTOCONF} = "1";
-	}
 }
 
 sub SetupPath {

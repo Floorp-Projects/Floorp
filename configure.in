@@ -4396,7 +4396,6 @@ AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(BIN_SUFFIX)
 AC_SUBST(ASM_SUFFIX)
 AC_SUBST(USE_N32)
-AC_SUBST(MOZ_NSS_AUTOCONF)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
@@ -4583,12 +4582,4 @@ if test "$MOZ_LDAP_XPCOM"; then
 
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
   AC_OUTPUT_SUBDIRS(directory/c-sdk/ldap)
-fi
-
-if test "$MOZ_PSM" && test -n "$MOZ_NSS_AUTOCONF"; then
-    if test ! -d security; then
-        rm -rf security; mkdir security
-    fi
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla --disable-cmd"
-    AC_OUTPUT_SUBDIRS(security/nss)
 fi
