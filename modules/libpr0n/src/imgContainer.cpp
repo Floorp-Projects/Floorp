@@ -170,9 +170,17 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
         FillWithColor(mCompositingFrame, 0);
       }
 
-      ZeroMask(mCompositingFrame);
+      PRInt32 x;
+      PRInt32 y;
+      PRInt32 width;
+      PRInt32 height;
+      firstFrame->GetX(&x);
+      firstFrame->GetY(&y);
+      firstFrame->GetWidth(&width);
+      firstFrame->GetHeight(&height);
 
-      firstFrame->DrawTo(mCompositingFrame, 0, 0, mSize.width, mSize.height);
+      firstFrame->DrawTo(mCompositingFrame, x, y, width, height);
+      ZeroMask(mCompositingFrame);
       BuildCompositeMask(mCompositingFrame, firstFrame);   
     }
   }
