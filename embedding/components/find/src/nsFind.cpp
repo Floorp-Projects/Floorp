@@ -569,9 +569,6 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   // Current offset into the fragment
   PRInt32 findex = 0;
 
-  // Place in the fragment to re-start the match:
-  PRInt32 restart = 0;
-
   // Direction to move pindex and ptr*
   int incr = (mFindBackward ? -1 : 1);
 
@@ -882,24 +879,34 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     if (matchAnchorNode)    // we're ending a partial match
     {
       findex = matchAnchorOffset;
+      mIterOffset = matchAnchorOffset;
           // +incr will be added to findex when we continue
-      nsCOMPtr<nsIContent> content (do_QueryInterface(matchAnchorNode));
-      nsresult rv = NS_ERROR_UNEXPECTED;
-      NS_ASSERTION(content, "Text content isn't nsIContent!");
-      if (content)
-        rv = mIterator->PositionAt(content);
-      // Should check return value -- but what would we do if it failed??
-      // We're in big trouble if that happens.
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Text content wasn't nsIContent!");
+
+      // Are we going back to a previous node?
+      if (matchAnchorNode != mIterNode)
+      {
+        nsCOMPtr<nsIContent> content (do_QueryInterface(matchAnchorNode));
+        nsresult rv = NS_ERROR_UNEXPECTED;
+        if (content)
+          rv = mIterator->PositionAt(content);
+        frag = 0;
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Text content wasn't nsIContent!");
+#ifdef DEBUG_FIND
+        printf("Repositioned anchor node\n");
+#endif
+      }
+#ifdef DEBUG_FIND
+      printf("Ending a partial match; findex -> %d, mIterOffset -> %d\n",
+             findex, mIterOffset);
+#endif
     }
-    restart = findex + incr;
     matchAnchorNode = nsnull;
     matchAnchorOffset = 0;
     inWhitespace = PR_FALSE;
     pindex = (mFindBackward ? patLen : 0);
 #ifdef DEBUG_FIND
-    printf("Setting restart back to %d, findex back to %d, pindex to %d\n",
-           restart, findex, pindex);
+    printf("Setting findex back to %d, pindex to %d\n", findex, pindex);
+           
 #endif
   } // end while loop
 
