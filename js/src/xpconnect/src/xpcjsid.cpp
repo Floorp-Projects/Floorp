@@ -949,7 +949,7 @@ nsJSCID::NewID(const char* str)
         else
         {
             nsCID cid;
-            if(NS_SUCCEEDED(nsComponentManager::ProgIDToCLSID(str, &cid)))
+            if(NS_SUCCEEDED(nsComponentManager::ProgIDToClassID(str, &cid)))
             {
                 success = idObj->mDetails.InitWithName(cid, str);
             }

@@ -78,7 +78,7 @@ public:
                                  void **aResult);
 
   // Finds a class ID for a specific Program ID
-  static nsresult ProgIDToCLSID(const char *aProgID,
+  static nsresult ProgIDToClassID(const char *aProgID,
                                 nsCID *aClass);
   
   // Finds a Program ID for a specific class ID

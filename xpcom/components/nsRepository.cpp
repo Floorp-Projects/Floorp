@@ -49,13 +49,13 @@ nsComponentManager::GetClassObject(const nsCID &aClass, const nsIID &aIID,
 }
 
 nsresult
-nsComponentManager::ProgIDToCLSID(const char *aProgID,
+nsComponentManager::ProgIDToClassID(const char *aProgID,
                                   nsCID *aClass)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->ProgIDToCLSID(aProgID, aClass);
+    return cm->ProgIDToClassID(aProgID, aClass);
 }
   
 nsresult

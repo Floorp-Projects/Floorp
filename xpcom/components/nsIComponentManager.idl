@@ -30,7 +30,7 @@ interface nsIComponentManager : nsISupports
     nsIFactory findFactory(in nsCIDRef aClass);
     [noscript] voidStar   getClassObject(in nsCIDRef aClass, in nsIIDRef aIID);
 
-    [noscript] void      progIDToCLSID(in string aProgID, out nsCID aClass);
+    [noscript] void      progIDToClassID(in string aProgID, out nsCID aClass);
     string     CLSIDToProgID(in nsCIDRef aClass, out string aClassName);
 
     [noscript] voidStar   createInstance(in nsCIDRef aClass,
