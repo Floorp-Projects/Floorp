@@ -18,6 +18,7 @@ NR_RegAddKeyRaw
 NR_RegPack
 NR_RegClose
 NR_RegOpen
+NR_RegFlush
 NR_RegSetUsername
 NR_RegGetUsername
 VR_SetRegDirectory
