@@ -168,7 +168,8 @@ function DateFormater( )
   this.alphaMonths = null;
   this.probeSucceeded = false;
   
-  var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)\s*$/; //digits & nonDigits
+  // Allow formats such as 2002Y03M04D as well as 2002-03-04
+  var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)\D?\s*$/; //digits&nonDigits
   var probeDate = new Date(2002,3-1,4); // month is 0-based
   var probeString = this.getShortFormatedDate(probeDate);
 
