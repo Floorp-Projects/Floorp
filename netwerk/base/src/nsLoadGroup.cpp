@@ -343,6 +343,9 @@ nsLoadGroup::Cancel()
             rv = mObserver->OnStopRequest(mDefaultLoadChannel, nsnull, 
                                          NS_BINDING_ABORTED, nsnull);
         }
+        if (mParent) {
+            mParent->SubGroupIsEmpty(NS_BINDING_ABORTED);
+        }
     }
     return rv;
 }
@@ -585,8 +588,6 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
                         this, channel, uriStr, status));
                 nsCRT::free(uriStr);
 #endif
-                mIsActive = PR_FALSE;
-
                 if (mObserver) {
                     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
                            ("LOADGROUP: %x Firing OnStopRequest(...).\n", 
@@ -596,6 +597,8 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
                     }
                     // return with rv, below
                 }
+                mIsActive = PR_FALSE;
+
                 if (mParent) {
                     mParent->SubGroupIsEmpty(status);
                 }
