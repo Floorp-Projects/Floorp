@@ -62,13 +62,17 @@ nsOutlinerStyleCache::GetStyleContext(nsIPresContext* aPresContext, nsIContent* 
     }
 
     // Look up our style context at this step of the computation.
-    nsCOMPtr<nsIStyleContext> nextContext = getter_AddRefs(NS_STATIC_CAST(nsIStyleContext*, mCache->Get(currState)));
+    nsCOMPtr<nsIStyleContext> nextContext;
+    if (mCache)
+      nextContext = getter_AddRefs(NS_STATIC_CAST(nsIStyleContext*, mCache->Get(currState)));
     if (!nextContext) {
       // We missed. Resolve this pseudo-style.
       aPresContext->ResolvePseudoStyleContextFor(aContent, pseudo,
                                                  currContext, PR_FALSE,
                                                  getter_AddRefs(nextContext));
       // Put it in our table.
+      if (!mCache)
+        mCache = new nsSupportsHashtable;
       mCache->Put(currState, nextContext);
     }
 

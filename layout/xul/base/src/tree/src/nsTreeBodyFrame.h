@@ -29,13 +29,36 @@
 
 class nsSupportsHashtable;
 
+class nsDFAState : public nsHashKey
+{
+public:
+  PRUint32 mStateID;
+
+  nsDFAState(PRUint32 aID) :mStateID(aID) {};
+
+  PRUint32 GetStateID() { return mStateID; };
+
+  PRUint32 HashCode(void) const {
+    return mStateID;
+  }
+
+  PRBool Equals(const nsHashKey *aKey) const {
+    nsDFAState* key = (nsDFAState*)aKey;
+    return key->mStateID == mStateID;
+  }
+
+  nsHashKey *Clone(void) const {
+    return new nsDFAState(mStateID);
+  }
+};
+
 class nsTransitionKey : public nsHashKey
 {
 public:
-  PRInt32 mState;
+  PRUint32 mState;
   nsCOMPtr<nsIAtom> mInputSymbol;
 
-  nsTransitionKey(PRInt32 aState, nsIAtom* aSymbol) :mState(aState), mInputSymbol(aSymbol) {};
+  nsTransitionKey(PRUint32 aState, nsIAtom* aSymbol) :mState(aState), mInputSymbol(aSymbol) {};
 
   PRUint32 HashCode(void) const {
     // Make a 32-bit integer that combines the low-order 16 bits of the state and the input symbol.
@@ -57,8 +80,12 @@ public:
 class nsOutlinerStyleCache
 {
 public:
-  nsOutlinerStyleCache() :mTransitionTable(nsnull), mCache(nsnull) {};
+  nsOutlinerStyleCache() :mTransitionTable(nsnull), mCache(nsnull), mNextState(0) {};
   virtual ~nsOutlinerStyleCache() { delete mTransitionTable; delete mCache; };
+
+  nsresult GetStyleContext(nsIPresContext* aPresContext, nsIContent* aContent, 
+                           nsIStyleContext* aContext, nsISupportsArray* aInputWord,
+                           nsIStyleContext** aResult);
 
 protected:
   // A transition table for a deterministic finite automaton.  The DFA
@@ -78,7 +105,9 @@ protected:
   // a final state in the DFA, Sf, to the resultant style context.  
   nsSupportsHashtable* mCache;
 
-
+  // An integer counter that is used when we need to make new states in the
+  // DFA.
+  PRUint32 mNextState;
 };
 
 class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject
