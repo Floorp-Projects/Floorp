@@ -6,6 +6,15 @@
  
   <binding name="inputFields" extends="resource:/chrome/htmlBindings.xml#inputFieldsBase">
     <handlers>
+      <handler type="keypress" id="key_up" keycode="VK_UP"
+        command="cmd_charPrevious"/>
+      <handler type="keypress" id="key_down" keycode="VK_DOWN" 
+        command="cmd_charNext"/>
+    </handlers>
+  </binding>
+
+  <binding name="textAreas" extends="resource:/chrome/htmlBindings.xml#textAreasBase">
+    <handlers>
     </handlers>
   </binding>
 
