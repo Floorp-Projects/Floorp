@@ -122,7 +122,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
 		if (!bufp)
 			return (-1);
 		n = p[0];
-		if (!key_size)
+		if (!key_size) {
 			if (FREESPACE(p)) {
 				move_bytes = MIN(FREESPACE(p), val_size);
 				off = OFFSET(p) - move_bytes;
@@ -135,6 +135,7 @@ __big_insert(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
 				OFFSET(p) = off;
 			} else
 				p[n - 2] = FULL_KEY;
+		}
 		p = (uint16 *)bufp->page;
 		cp = bufp->page;
 		bufp->flags |= BUF_MOD;
