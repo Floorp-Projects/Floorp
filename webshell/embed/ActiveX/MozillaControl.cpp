@@ -44,13 +44,20 @@ END_OBJECT_MAP()
 extern "C"
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 {
+	NG_TRACE_METHOD(DllMain);
+
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{
+		NG_TRACE(_T("Mozilla ActiveX - DLL_PROCESS_ATTACH\n"));
 		_Module.Init(ObjectMap, hInstance);
 		DisableThreadLibraryCalls(hInstance);
 	}
 	else if (dwReason == DLL_PROCESS_DETACH)
+	{
+		NG_TRACE(_T("Mozilla ActiveX - DLL_PROCESS_DETACH\n"));
 		_Module.Term();
+	}
+
 	return TRUE;    // ok
 }
 
