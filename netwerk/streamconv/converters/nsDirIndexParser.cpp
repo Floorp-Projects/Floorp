@@ -51,6 +51,7 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsCRT.h"
+#include "nsIPref.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsDirIndexParser,
                               nsIRequestObserver,
@@ -63,15 +64,26 @@ nsDirIndexParser::nsDirIndexParser() {
 
 nsresult
 nsDirIndexParser::Init() {
+  nsresult rv = NS_OK;
+
   mLineStart = 0;
   mHasDescription = PR_FALSE;
   mFormat = nsnull;
 
-  // set initial/default encoding to ISO-8859-1 (not UTF-8)
-  mEncoding.Assign("ISO-8859-1");
+  NS_NAMED_LITERAL_CSTRING(kFallbackEncoding, "ISO-8859-1");
 
-  nsresult rv = NS_OK;
-  
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (prefs)  {
+    nsXPIDLString defCharset;
+    rv = prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
+    if (NS_SUCCEEDED(rv) && !defCharset.IsEmpty())
+      mEncoding.Assign(NS_ConvertUCS2toUTF8(defCharset).get());
+    else
+      mEncoding.Assign(kFallbackEncoding);
+  }
+  else
+    mEncoding.Assign(kFallbackEncoding);
+ 
   if (gRefCntParser++ == 0) {
     rv = nsServiceManager::GetService(NS_ITEXTTOSUBURI_CONTRACTID,
                                       NS_GET_IID(nsITextToSubURI),

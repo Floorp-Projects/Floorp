@@ -47,6 +47,8 @@
 #include "nsIDirIndexListener.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIStringBundle.h"
+#include "nsIStringStream.h"
+#include "nsITextToSubURI.h"
 
 #define NS_NSINDEXEDTOHTMLCONVERTER_CID \
 { 0xcf0f71fd, 0xfafd, 0x4e2b, {0x9f, 0xdc, 0x13, 0x4d, 0x97, 0x2e, 0x16, 0xe2} }
@@ -73,6 +75,7 @@ public:
 protected:
     
     void FormatSizeString(PRUint32 inSize, nsString& outSizeString);
+    nsresult FormatInputStream(nsIRequest* aRequest, nsISupports *aContext, const nsAString &aBuffer); 
 
 protected:
     nsCOMPtr<nsIDirIndexParser>     mParser;
@@ -80,6 +83,9 @@ protected:
 
     nsCOMPtr<nsIDateTimeFormat> mDateTime;
     nsCOMPtr<nsIStringBundle> mBundle;
+
+    nsCOMPtr<nsITextToSubURI> mTextToSubURI;
+
 private:
     // Current number of rows
     PRInt32 mRowCount;
