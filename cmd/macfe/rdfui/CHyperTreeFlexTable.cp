@@ -1138,21 +1138,9 @@ CHyperTreeFlexTable :: DragSelection(
 		selection.InsertItemsAt ( 1, LArray::index_Last, &suite );
 	}
 	
-	
-	// create the drag task
-	Rect cellBoundsOfClick;
-	GetLocalCellRect(inCell, cellBoundsOfClick);
-	CIconTextDragTask theTask(inMouseDown.macEvent, selection, cellBoundsOfClick);
-	
-	// setup our special data transfer proc called upon drag completion
-	OSErr theErr = ::SetDragSendProc ( theTask.GetDragReference(), mSendDataUPP, (LDropArea*) this );
-	ThrowIfOSErr_(theErr);
-	
-	theTask.DoDrag();
-	
-	// There is a problem with the HT backend that if you tell it to say, delete
-	// both a node and its parent, things get really screwed up when it tries to
-	// double-delete the child. Iterate over each item, and for each node, if 
+	// There is a problem with the HT backend that if you tell it to do something with
+	// both the parent and a child of that parent (say the container is open and the user
+	// grabs both of them), it will die. Iterate over each item, and for each node, if 
 	// we find any children in the list, remove them. LArrayIterator should be
 	// smart enough to handle deletions while iterating....
 	LArrayIterator it(selection);
@@ -1170,6 +1158,17 @@ CHyperTreeFlexTable :: DragSelection(
 				counter++;
 		}
 	}
+	
+	// create the drag task
+	Rect cellBoundsOfClick;
+	GetLocalCellRect(inCell, cellBoundsOfClick);
+	CIconTextDragTask theTask(inMouseDown.macEvent, selection, cellBoundsOfClick);
+	
+	// setup our special data transfer proc called upon drag completion
+	OSErr theErr = ::SetDragSendProc ( theTask.GetDragReference(), mSendDataUPP, (LDropArea*) this );
+	ThrowIfOSErr_(theErr);
+	
+	theTask.DoDrag();
 	
 	// remove the items if they went into the trash
 	if ( theTask.DropLocationIsFinderTrash() )
