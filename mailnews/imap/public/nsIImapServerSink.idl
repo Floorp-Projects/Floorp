@@ -24,5 +24,8 @@
 interface nsIImapServerSink : nsISupports {
 	void PossibleImapMailbox(in string folderPath);
 	void DiscoveryDone();
+
+	void FEAlert(in wstring aString);
+	void FEAlertFromServer(in string aString);
 };
 
