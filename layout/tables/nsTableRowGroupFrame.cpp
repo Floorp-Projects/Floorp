@@ -901,8 +901,8 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
           // Add it to the child list
           nsIFrame* nextRow;
           GetNextFrame(rowFrame, &nextRow);
-          GetNextFrame(contRowFrame, &nextRow);
-          GetNextFrame(rowFrame, &contRowFrame);
+          contRowFrame->SetNextSibling(nextRow);
+          rowFrame->SetNextSibling(contRowFrame);
           
           // Push the continuing row frame and the frames that follow
           PushChildren(&aPresContext, contRowFrame, rowFrame);
