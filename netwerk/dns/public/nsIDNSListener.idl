@@ -51,7 +51,7 @@ interface nsIDNSListener : nsISupports
                             in nsHostEntStar entry);
 
     /**
-     * Notify the listener that we the lookup has completed.
+     * Notify the listener that the lookup has completed.
      */
     void OnStopLookup(in nsISupports ctxt, in string hostname, in nsresult status);
 };
