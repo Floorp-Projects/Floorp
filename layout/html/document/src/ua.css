@@ -979,7 +979,7 @@ select[size="1"] {
 /* combobox button */
 select input[type=button] {
   white-space:nowrap;
-  border: outset 1px rgb(204, 204, 204);
+  border: outset 2px rgb(204, 204, 204);
   background-image:url("arrow.gif");
   background-repeat:no-repeat;
   background-position:center;
