@@ -33,7 +33,6 @@ XPIDLSRCS =						 \
 			.\nsIAddressBook.idl		\
 			.\nsIAddrBookSession.idl		\
 			.\nsIAbAutoCompleteSession.idl		\
-			.\nsIAbAutoCompleteListener.idl		\
 			.\nsIAbAddressCollecter.idl		\
 			.\nsIAbUpgrader.idl \
 			.\nsIAddbookUrl.idl \

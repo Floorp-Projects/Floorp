@@ -21,6 +21,23 @@
 
 top.MAX_RECIPIENTS = 0;
 
+var inputElementType = "";
+var selectElementType = "";
+
+function awInputElementName()
+{
+    if (inputElementType == "")
+        inputElementType = document.getElementById("msgRecipient#1").nodeName;
+    return inputElementType;
+}
+
+function awSelectElementName()
+{
+    if (selectElementType == "")
+        selectElementType = document.getElementById("msgRecipientType#1").nodeName;
+    return selectElementType;
+}
+
 function Recipients2CompFields(msgCompFields)
 {
 	if (msgCompFields)
@@ -76,8 +93,8 @@ function CompFields2Recipients(msgCompFields, msgType)
 	{
 	    var treeChildren = document.getElementById('addressWidgetBody');
 	    var newTreeChildrenNode = treeChildren.cloneNode(false);
-//	    var templateNode = treeChildren.firstChild();  // doesn't work!
-	    var templateNode = awGetTreeItem(1);	    
+	    var templateNode = treeChildren.firstChild;  // doesn't work!
+//	    var templateNode = awGetTreeItem(1);	    
 		
 		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetReplyTo(), false), "addr_reply", newTreeChildrenNode, templateNode);
 		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetTo(), false), "addr_to", newTreeChildrenNode, templateNode);
@@ -95,8 +112,8 @@ function CompFields2Recipients(msgCompFields, msgType)
 		    var msgComposeType = Components.interfaces.nsIMsgCompType;
 		    if (msgType == msgComposeType.New)
 		        _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
-//	        var parent = treeChildren.parentNode();     // doesn't work!
-	        var parent = document.getElementById('addressingWidgetTree')
+	        var parent = treeChildren.parentNode;     // doesn't work!
+//	        var parent = document.getElementById('addressingWidgetTree')
 	        parent.replaceChild(newTreeChildrenNode, treeChildren);
             setTimeout("awFinishCopyNodes();", 0);
         }
@@ -114,13 +131,13 @@ function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
     var newNode = templateNode.cloneNode(true);
     parentNode.appendChild(newNode); // we need to insert the new node before we set the value of the select element!
 
-    var input = newNode.getElementsByTagName('INPUT');
+    var input = newNode.getElementsByTagName(awInputElementName());
     if ( input && input.length == 1 )
     {
 	    input[0].setAttribute("value", inputValue);
 	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
 	}
-    var select = newNode.getElementsByTagName('SELECT');
+    var select = newNode.getElementsByTagName(awSelectElementName());
     if ( select && select.length == 1 )
     {
 //Doesn't work!	    select[0].setAttribute("value", popupValue);
@@ -190,7 +207,7 @@ function awReturnHit(inputElement)
 function awInputChanged(inputElement)
 {
 	dump("awInputChanged\n");
-	AutoCompleteAddress(inputElement);
+//	AutoCompleteAddress(inputElement);
 
 	//Do we need to add a new row?
 	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
@@ -211,13 +228,13 @@ function awAppendNewRow(setFocus)
 		newNode = awCopyNode(treeitem1, body, 0);
 		top.MAX_RECIPIENTS++;
 
-        var input = newNode.getElementsByTagName('INPUT');
+        var input = newNode.getElementsByTagName(awInputElementName());
         if ( input && input.length == 1 )
         {
     	    input[0].setAttribute("value", "");
     	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
     	}
-        var select = newNode.getElementsByTagName('SELECT');
+        var select = newNode.getElementsByTagName(awSelectElementName());
         if ( select && select.length == 1 )
         {
 //doesn't work!    	    select[0].setAttribute("value", lastRecipientType);

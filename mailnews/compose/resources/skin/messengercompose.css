@@ -1,6 +1,9 @@
 @import url(chrome://global/skin/global.css);
 @import url(chrome://messenger/skin/messenger.css);
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for HTML elements */
+
 spring.spacer {
 	width: 5px;
 	height: 5px;
@@ -45,13 +48,22 @@ tree[class="addressingWidget"] treeitem > treerow  > treecell > image {
 	user-focus: ignore;
 }
 
-input[class="addressingWidget"] {
-	width: 90%;
-	border: none;
-	margin: 0px;
-	padding: 0px;
+autocomplete[class="addressingWidget"] {
+      border              : 2px solid #FFFFFF;
+      font                : inherit;
+      color               : #000000;
+      padding             : 0px;
+      margin              : 1px 3px 2px 4px;
+      background-color    : #FFFFFF;
+      -moz-border-radius  : 3px 2px 2px 3px;
+      cursor              : text;
 }
 
+autocomplete[class="addressingWidget"][focused="true"]
+{
+    border              : 2px solid #6699cc;
+    margin              : 0px 2px 1px 3px;
+}
 
 #button_send {
 	list-style-image:url("chrome://messenger/skin/messengercompose/send.gif");

@@ -128,11 +128,8 @@ function Initialize()
     onkeypress="if (event.which == 13) dump('Done, value=' + this.value + '\n');"
 />
 
-<<<<<<< autocomplete_test.xul
-</window>=======
 <!--autocomplete
     searchSessionClass="netscape%2Fmessenger%2Fautocomplete%26type%3Daddrbook"
     timeout="300"
 /-->
 </window>
->>>>>>> 1.2

@@ -38,7 +38,6 @@ XPIDLSRCS	= \
 		nsIAddressBook.idl \
 		nsIAbBase.idl \
 		nsIAddrBookSession.idl \
-		nsIAbAutoCompleteListener.idl \
 		nsIAbAutoCompleteSession.idl \
 		nsIAbAddressCollecter.idl \
 		nsIAbUpgrader.idl \
