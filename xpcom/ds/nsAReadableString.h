@@ -1273,7 +1273,6 @@ nsPromiseSubstring<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFrag
 
 #ifdef NEED_CPP_DERIVED_TEMPLATE_OPERATORS
 
-#define NS_DEF_TEMPLATE_OPERATOR_PLUS
   #define NS_DEF_TEMPLATE_DERIVED_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T) \
   template <class CharT>                                                 \
   inline                                                                 \
