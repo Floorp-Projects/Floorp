@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.3 1998/07/29 02:41:11 leif Exp $
+# $Id: Conn.pm,v 1.4 1998/07/29 08:23:53 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -29,9 +29,9 @@
 
 package Mozilla::LDAP::Conn;
 
-require Mozilla::LDAP::Utils(:all);
-require Mozilla::LDAP::API(:all);
-require Mozilla::LDAP::Entry;
+use Mozilla::LDAP::Utils qw(:all);
+use Mozilla::LDAP::API qw(/.+/);
+use Mozilla::LDAP::Entry;
 
 
 #############################################################################
@@ -60,7 +60,7 @@ sub new
 
   bless $self, $class;
 
-  return 0 if (! $self->init());
+  return unless $self->init();
   return $self;
 }
 
@@ -110,8 +110,7 @@ sub init
     }
 
   $self->{ld} = $ld;
-  $ret = ldap_bind_s($ld, $self->{binddn}, $self->{bindpasswd},
-		     $self->{authmethod});
+  $ret = ldap_simple_bind_s($ld, $self->{binddn}, $self->{bindpasswd});
 
   if ($ret)
     {
@@ -141,8 +140,9 @@ sub isURL
 sub getError 
 {
   my ($self) = @_;
+  my ($matched, $err);
 
-  return ldap_get_lderrno($self->{ld});
+  return ldap_get_lderrno($self->{ld}, \$matched, "");
 }
 
 
@@ -154,7 +154,7 @@ sub getErrorString
   my ($self) = @_;
   my ($ret);
 
-  $ret = ldap_err2string(ldap_get_lderrno $self->{ld});
+  ldap_get_lderrno($self->{ld}, \$matched, \$ret);
 
   return $ret;
 }
@@ -257,11 +257,11 @@ sub nextEntry
     }
   else
     {
-      return unless $self->{ldentry};
+      return "" unless $self->{ldentry};
       $ldentry = ldap_next_entry($self->{ld}, $self->{ldentry}); 
       $self->{ldentry} = $ldentry;
     }
-  return unless $ldentry;
+  return "" unless $ldentry;
 
   $dn = ldap_get_dn($self->{ld}, $self->{ldentry});
   $obj->{dn} = $dn;
@@ -269,15 +269,15 @@ sub nextEntry
   $attr = ldap_first_attribute($self->{ld}, $self->{ldentry}, $ber);
   return (bless \%entry, Mozilla::LDAP::Entry) unless $attr;
 
-  $vals = ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
-  $obj->{$attr} = $vals;
+  @vals = ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
+  $obj->{$attr} = [@vals];
   push(@ocorder, $attr);
 
   while ($attr = ldap_next_attribute($self->{ld},
 				     $self->{ldentry}, $ber))
     {
-      $vals = ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
-      $obj->{$attr} = $vals;
+      @vals = ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
+      $obj->{$attr} = [@vals];
       push(@ocorder, $attr);
     }
   $obj->{_oc_order_} = \@ocorder;
