@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,35 +13,30 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH=../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = xmltok_s
+MODULE		= expat
+LIBRARY_NAME	= xmltok_s
 
-ifdef MOZ_STRIP_NOT_EXPORTED
-DEFINES += -DXMLTOKAPI="__attribute__ ((dllexport))"
-endif
-
-CSRCS = \
-	xmltok.c \
-	xmlrole.c \
-    $(NULL)
-
-EXPORTS = \
-    $(NULL)
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-MKSHLIB :=
+CSRCS		= \
+		xmltok.c \
+		xmlrole.c \
+		$(NULL)
 
 # We want only the static lib, not the shared lib
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_STRIP_NOT_EXPORTED
+DEFINES		+= -DXMLTOKAPI="__attribute__ ((dllexport))"
+endif
 
