@@ -28,7 +28,6 @@
 #include "nsIAppShellComponentImpl.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIWindowMediator.h"
 #include "nsICommonDialogs.h"
 #include "nsIScriptGlobalObject.h"
@@ -227,7 +226,6 @@ static NS_DEFINE_IID(kPrefMigrationCID,  NS_PREFMIGRATION_CID);
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);

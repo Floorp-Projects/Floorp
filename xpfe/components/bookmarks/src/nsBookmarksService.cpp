@@ -60,8 +60,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsISound.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
 #include "nsIWebShell.h"
@@ -142,7 +142,6 @@ static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kIOServiceCID,		  NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID,        NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kAppShellServiceCID,         NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 static NS_DEFINE_IID(kSoundCID,                   NS_SOUND_CID);
@@ -2355,7 +2354,11 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 				if (interfaces)
 					interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
 				if (!prompter)
-					prompter = do_GetService(kNetSupportDialogCID);
+				{
+					nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+					if (wwatch)
+						wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+				}
 
 				if (prompter)
 				{
