@@ -35,7 +35,7 @@ class XFE_RDFView : public XFE_View
 {
 public:
   XFE_RDFView(XFE_Component *toplevel, Widget parent,
-              XFE_View *parent_view, MWContext *context, HT_View htview);
+              XFE_View *parent_view, MWContext *context, XP_Bool isStandalone);
 
   ~XFE_RDFView();
 

@@ -27,7 +27,10 @@
 
 #include "View.h"
 #include "htrdf.h"
-#include "RDFView.h"
+//#include "RDFView.h"
+
+class XFE_HTMLView;
+class XFE_RDFView;
 
 class XFE_NavCenterView : public XFE_View
 {
@@ -45,12 +48,12 @@ public:
   static void selector_destroy_cb(Widget,XtPointer,XtPointer);
 
 private:
-  HT_Pane m_pane;
-  HT_View m_htview;
-
-  XFE_RDFView *m_rdfview;
-
-  Widget m_selector;
+  HT_Pane        m_pane;
+  HT_View        m_htview;
+  XFE_HTMLView * m_htmlview;
+  XFE_RDFView  * m_rdfview;
+  Widget         m_selector;
+  XP_Bool        m_isStandalone; // as oppposed to embedded in a browser
 };
 
 static void notify_cb(HT_Notification ns, HT_Resource n, 

@@ -23,6 +23,8 @@
 
 
 #include "NavCenterView.h"
+#include "HTMLView.h"
+#include "RDFView.h"
 #include "IconGroup.h"
 
 #include <Xfe/XfeAll.h>
@@ -45,10 +47,15 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 {
   D(printf("XFE_NavCenterView Constructor\n"););
 
+  // This may need to become a constructor argument,
+  // but this is good enough for now.
+  m_isStandalone = (parent_view == NULL);
+
   Widget nav_form = XtVaCreateManagedWidget("nav_form",
                                             xmFormWidgetClass,
                                             parent,
                                             NULL);
+  setBaseWidget(nav_form);
 
   m_selector = XtVaCreateManagedWidget("selector",
                    xfeToolScrollWidgetClass,
@@ -74,7 +81,11 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                           xmFormWidgetClass,
                           nav_form,
                           XmNtopAttachment,    XmATTACH_FORM,
+#ifdef HTML_PANE
+                          XmNbottomAttachment, XmATTACH_NONE,
+#else
                           XmNbottomAttachment, XmATTACH_FORM,
+#endif
                           XmNleftAttachment,   XmATTACH_WIDGET,
                           XmNleftWidget,       m_selector,
                           XmNrightAttachment,  XmATTACH_FORM,
@@ -85,11 +96,24 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                           XmNshadowThickness,  2,
                           XmNshadowType,       XmSHADOW_IN,
                           NULL);
+#ifdef HTML_PANE
+  m_htmlview = new XFE_HTMLView(this, nav_form, NULL, context);
+  Widget html_base = m_htmlview->getBaseWidget();
+
+  XtVaSetValues(html_base,
+                XmNtopAttachment,    XmATTACH_WIDGET,
+                XmNtopWidget,        rdf_parent,
+                XmNbottomAttachment, XmATTACH_FORM,
+                XmNleftAttachment,   XmATTACH_WIDGET,
+                XmNleftWidget,       m_selector,
+                XmNrightAttachment,  XmATTACH_FORM,
+                NULL);
+#endif
 
   m_htview = NULL;
   m_pane = NULL;
-  m_rdfview = new XFE_RDFView(this, rdf_parent, 
-                              NULL, context, m_htview);
+  m_rdfview = new XFE_RDFView(this, rdf_parent, this,
+                              context, m_isStandalone);
 
   HT_Notification ns = new HT_NotificationStruct;
   ns->notifyProc = notify_cb;
@@ -101,12 +125,18 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   // add our subviews to the list of subviews for command dispatching and
   // deletion.
   addView(m_rdfview);
+#ifdef HTML_PANE
+  addView(m_htmlview);
+#endif 
 
   XtManageChild(m_selector);
   m_rdfview->show();
-  XtManageChild(nav_form);
+#ifdef HTML_PANE
+  m_htmlview->show();
+  m_htmlview->getURL(NET_CreateURLStruct("http://dunk/",NET_DONT_RELOAD));
+#endif
 
-  setBaseWidget(nav_form);
+  XtManageChild(nav_form);
 }
 
 

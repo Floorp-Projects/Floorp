@@ -147,9 +147,13 @@ static XFE_CommandList* my_commands = 0;
 
 XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
                          XFE_View *parent_view, MWContext *context,
-                         HT_View htview)
+                         XP_Bool isStandalone)
   : XFE_View(toplevel, parent_view, context)
 {
+  m_rdfview = NULL;
+
+  
+
   if (!my_commands)
       registerCommand(my_commands, new RdfPopupCommand);
 
@@ -163,9 +167,9 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
 							  XmNselectionPolicy,		XmSELECT_MULTIPLE_ROW,
                               XmNheadingRows,           1,
                               XmNvisibleRows,           14,
-                              /*XmNshowHideButton,        True,*/
+                              XmNhideUnhideButtons,     True,
+                              XmNvisibleColumns,        (isStandalone ? 0 : 1),
                               //XmNdebugLevel, 1,
-
                               /* Form resources */
                               XmNtopAttachment,    XmATTACH_FORM,
                               XmNbottomAttachment, XmATTACH_FORM,
@@ -195,7 +199,6 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
 
   //fe_AddTipStringCallback(outline, XFE_Outliner::tip_cb, this);
 
-  setRDFView(htview);
 }
 
 XFE_RDFView::~XFE_RDFView()
@@ -272,7 +275,7 @@ XFE_RDFView::activate_row(int row)
       // Dispatch in new window
       char *s = HT_GetNodeURL (node);
       URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
-      url->window_target = XP_STRDUP("_rdf_target");
+      //url->window_target = XP_STRDUP("_rdf_target");
       fe_reuseBrowser (m_contextData, url);
   }
 }
@@ -343,6 +346,7 @@ XFE_RDFView::notify(HT_Notification ns, HT_Resource n,
   case HT_EVENT_NODE_ADDED:
     D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_ADDED",
              HT_GetNodeName(n)););
+    add_row(n);
     break;
   case HT_EVENT_NODE_DELETED_DATA:
     D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_DELETED_DATA",
