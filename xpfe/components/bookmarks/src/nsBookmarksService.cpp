@@ -5186,41 +5186,47 @@ nsBookmarksService::LoadBookmarks()
         bookmarksPrefs->GetBoolPref("import_system_favorites", &useDynamicSystemBookmarks);
 #endif
 
+    nsCAutoString bookmarksURICString;
+
 #if defined(XP_WIN) || defined(XP_BEOS)
-    nsCOMPtr<nsIRDFResource> systemFavoritesFolder;
     nsCOMPtr<nsIFile> systemBookmarksFolder;
 
 #if defined(XP_WIN)
     rv = NS_GetSpecialDirectory(NS_WIN_FAVORITES_DIR, getter_AddRefs(systemBookmarksFolder));
-    NS_ENSURE_SUCCESS(rv, rv);
 #elif defined(XP_BEOS)
     rv = NS_GetSpecialDirectory(NS_BEOS_SETTINGS_DIR, getter_AddRefs(systemBookmarksFolder));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = systemBookmarksFolder->AppendNative(NS_LITERAL_CSTRING("NetPositive"));
-    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (NS_SUCCEEDED(rv))
+        rv = systemBookmarksFolder->AppendNative(NS_LITERAL_CSTRING("NetPositive"));
    
-    rv = systemBookmarksFolder->AppendNative(NS_LITERAL_CSTRING("Bookmarks"));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_SUCCEEDED(rv))
+        rv = systemBookmarksFolder->AppendNative(NS_LITERAL_CSTRING("Bookmarks"));
 #endif
 
-    nsCOMPtr<nsIURI> bookmarksURI;
-    rv = NS_NewFileURI(getter_AddRefs(bookmarksURI), systemBookmarksFolder);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIURI> bookmarksURI;
+        rv = NS_NewFileURI(getter_AddRefs(bookmarksURI), systemBookmarksFolder);
 
-    nsCAutoString bookmarksURICString;
-    rv = bookmarksURI->GetSpec(bookmarksURICString);
-    NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_SUCCEEDED(rv))
+            rv = bookmarksURI->GetSpec(bookmarksURICString);
+    }
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+    bookmarksURICString.AssignLiteral(kURINC_IEFavoritesRoot);
 #endif
+
+    nsCOMPtr<nsIRDFResource> systemFolderResource;
+    if (!bookmarksURICString.IsEmpty())
+        gRDF->GetResource(bookmarksURICString,
+                          getter_AddRefs(systemFolderResource));
+
+    // scope the stream to get the open/close automatically.
     {
         BookmarkParser parser;
         parser.Init(mBookmarksFile, mInner);
-        if (useDynamicSystemBookmarks)
+        if (useDynamicSystemBookmarks && !bookmarksURICString.IsEmpty())
         {
-#if defined(XP_MAC) || defined(XP_MACOSX)
-            parser.SetIEFavoritesRoot(nsCString(kURINC_IEFavoritesRoot));
-#elif defined(XP_WIN) || defined(XP_BEOS)
             parser.SetIEFavoritesRoot(bookmarksURICString);
-#endif
             parser.ParserFoundIEFavoritesRoot(&foundIERoot);
         }
 
@@ -5260,13 +5266,13 @@ nsBookmarksService::LoadBookmarks()
     // not to perform this operation. 
 #if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
     PRBool addedStaticRoot = PR_FALSE;
-    if (bookmarksPrefs) 
+    if (bookmarksPrefs)
         bookmarksPrefs->GetBoolPref("added_static_root", 
                                     &addedStaticRoot);
 
     // Add the root that System bookmarks are imported into as real bookmarks. This is 
     // only done once. 
-    if (!addedStaticRoot)
+    if (!addedStaticRoot && systemFolderResource)
     {
         nsCOMPtr<nsIRDFContainer> rootContainer(do_CreateInstance(kRDFContainerCID, &rv));
         if (NS_FAILED(rv)) return rv;
@@ -5300,15 +5306,6 @@ nsBookmarksService::LoadBookmarks()
 
             rv = container->Init(this, kNC_BookmarksRoot);
             if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIRDFResource> systemFolderResource;
-#if defined(XP_WIN)
-            rv = gRDF->GetResource(bookmarksURICString,
-                                   getter_AddRefs(systemFolderResource));
-#elif defined(XP_MAC) || defined(XP_MACOSX)
-            rv = gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_IEFavoritesRoot),
-                                   getter_AddRefs(systemFolderResource));
-#endif
       
             rv = container->RemoveElement(systemFolderResource, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
@@ -5340,10 +5337,7 @@ nsBookmarksService::LoadBookmarks()
             if (NS_FAILED(rv)) return rv;
         }
 #elif defined(XP_WIN) || defined(XP_BEOS)
-        nsCOMPtr<nsIRDFResource> systemFolderResource;
-        rv = gRDF->GetResource(bookmarksURICString,
-                               getter_AddRefs(systemFolderResource));
-        if (NS_SUCCEEDED(rv))
+        if (systemFolderResource)
         {
             nsAutoString systemBookmarksFolderTitle;
 #ifdef XP_BEOS
