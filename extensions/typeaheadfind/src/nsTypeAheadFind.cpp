@@ -1211,6 +1211,13 @@ nsTypeAheadFind::HandleQueryReconversion(nsIDOMEvent* aCompositionEvent)
 }
 
 
+NS_IMETHODIMP
+nsTypeAheadFind::HandleQueryCaretRect(nsIDOMEvent* aCompositionEvent)
+{
+  return NS_OK;
+}
+
+
 nsresult
 nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
                            PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly,

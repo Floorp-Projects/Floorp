@@ -2167,6 +2167,34 @@ nsEditor::GetReconversionString(nsReconversionEventReply* aReply)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsEditor::GetQueryCaretRect(nsQueryCaretRectEventReply* aReply)
+{
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!mPresShellWeak)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsICaret> caretP;
+  rv = ps->GetCaret(getter_AddRefs(caretP));
+
+  if (NS_FAILED(rv) || !caretP)
+    return rv;
+
+  PRBool cursorIsCollapsed;
+  rv = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
+                                   &aReply->mCaretRect, &cursorIsCollapsed, nsnull);
+
+  return rv;
+}
+
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark  public nsEditor methods 

@@ -64,6 +64,7 @@ public:
   // nsIPrivateCompositionEvent interface
   NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
   NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply);
+  NS_IMETHOD GetQueryCaretRectReply(nsQueryCaretRectEventReply** aReply);
   
   // Forward to nsDOMEvent
   NS_FORWARD_TO_NSDOMEVENT

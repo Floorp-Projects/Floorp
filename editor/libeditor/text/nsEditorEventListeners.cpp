@@ -843,6 +843,24 @@ nsTextEditorCompositionListener::HandleQueryReconversion(nsIDOMEvent* aReconvers
   return mEditor->GetReconversionString(eventReply);
 }
 
+nsresult
+nsTextEditorCompositionListener::HandleQueryCaretRect(nsIDOMEvent* aQueryCaretRectEvent)
+{
+#ifdef DEBUG_IME
+  printf("nsTextEditorCompositionListener::HandleQueryCaretRect\n");
+#endif
+  nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aQueryCaretRectEvent);
+  if (!pCompositionEvent)
+    return NS_ERROR_FAILURE;
+
+  nsQueryCaretRectEventReply* eventReply;
+  nsresult rv = pCompositionEvent->GetQueryCaretRectReply(&eventReply);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mEditor->GetQueryCaretRect(eventReply);
+}
+
 /*
  * Factory functions
  */

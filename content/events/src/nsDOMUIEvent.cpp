@@ -468,6 +468,18 @@ nsDOMUIEvent::GetReconversionReply(nsReconversionEventReply** aReply)
   return NS_ERROR_FAILURE;
 }
 
+NS_METHOD
+nsDOMUIEvent::GetQueryCaretRectReply(nsQueryCaretRectEventReply** aReply)
+{
+  if (mEvent->eventStructType == NS_QUERYCARETRECT_EVENT)
+  {
+    *aReply = &(NS_STATIC_CAST(nsQueryCaretRectEvent*, mEvent)->theReply);
+    return NS_OK;
+  }
+  aReply = nsnull;
+  return NS_ERROR_FAILURE;
+}
+
 nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           nsPresContext* aPresContext,
                           nsGUIEvent *aEvent) 

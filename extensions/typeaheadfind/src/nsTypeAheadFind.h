@@ -115,6 +115,7 @@ public:
   NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent);
   NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent);
   NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleQueryCaretRect(nsIDOMEvent* aCompositionEvent);
 
   // ----- nsIScrollPositionListener --------------------
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, 

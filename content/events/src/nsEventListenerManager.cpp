@@ -206,7 +206,9 @@ static const EventDispatchData sCompositionEvents[] = {
   { NS_COMPOSITION_QUERY,  HANDLER(&nsIDOMCompositionListener::HandleQueryComposition),
     NS_EVENT_BITS_COMPOSITION_QUERY },
   { NS_RECONVERSION_QUERY, HANDLER(&nsIDOMCompositionListener::HandleQueryReconversion),
-    NS_EVENT_BITS_COMPOSITION_RECONVERSION }
+    NS_EVENT_BITS_COMPOSITION_RECONVERSION },
+  { NS_QUERYCARETRECT,  HANDLER(&nsIDOMCompositionListener::HandleQueryCaretRect),
+    NS_EVENT_BITS_COMPOSITION_QUERYCARETRECT }
 };
 
 static const EventDispatchData sTextEvents[] = {
@@ -1642,6 +1644,7 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
       case NS_GUI_EVENT:
       case NS_COMPOSITION_EVENT:
       case NS_RECONVERSION_EVENT:
+      case NS_QUERYCARETRECT_EVENT:
         return NS_NewDOMUIEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsGUIEvent*,aEvent));
       case NS_KEY_EVENT:
         return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsKeyEvent*,aEvent));

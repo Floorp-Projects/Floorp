@@ -91,6 +91,7 @@ class nsIURI;
 #define NS_POPUPBLOCKED_EVENT             25
 #define NS_BEFORE_PAGE_UNLOAD_EVENT       26
 #define NS_UI_EVENT                       27
+#define NS_QUERYCARETRECT_EVENT           28
 
 #define NS_EVENT_FLAG_NONE                0x0000
 #define NS_EVENT_FLAG_INIT                0x0001
@@ -316,6 +317,10 @@ class nsIURI;
 #define NS_UI_ACTIVATE             (NS_UI_EVENT_START)
 #define NS_UI_FOCUSIN              (NS_UI_EVENT_START + 1)
 #define NS_UI_FOCUSOUT             (NS_UI_EVENT_START + 2)
+
+// query caret rect events
+#define NS_QUERYCARETRECT_START    2600
+#define NS_QUERYCARETRECT          (NS_QUERYCARETRECT_START)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -728,6 +733,26 @@ struct nsReconversionEvent : public nsInputEvent
   nsReconversionEventReply  theReply;
 };
 
+struct nsQueryCaretRectEventReply {
+  nsQueryCaretRectEventReply()
+  {
+  }
+
+  nsRect mCaretRect;
+};
+
+struct nsQueryCaretRectEvent : public nsInputEvent
+{
+  nsQueryCaretRectEvent(PRUint32 msg = 0,
+                           nsIWidget *w = nsnull,
+                           PRUint8 structType = NS_QUERYCARETRECT_EVENT)
+    : nsInputEvent(msg, w, structType)
+  {
+  }
+
+  nsQueryCaretRectEventReply theReply;
+};
+
 /**
  * MenuItem event
  * 
@@ -887,6 +912,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_COMPOSITION_START) ||  \
         ((evnt)->message == NS_COMPOSITION_END) || \
         ((evnt)->message == NS_RECONVERSION_QUERY) || \
+        ((evnt)->message == NS_QUERYCARETRECT) || \
         ((evnt)->message == NS_COMPOSITION_QUERY))
 
 #define NS_IS_FOCUS_EVENT(evnt) \

@@ -60,5 +60,6 @@ public:
   NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent) = 0;
   NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent) = 0;
   NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aCompositionEvent) = 0;
+  NS_IMETHOD HandleQueryCaretRect(nsIDOMEvent* aCompositionEvent) = 0;
 };
 #endif // nsIDOMCompositionListener_h__

@@ -42,65 +42,75 @@
 class nsIPrivateTextRangeList;
 struct nsTextEventReply;
 struct nsReconversionEventReply;
+struct nsQueryCaretRectEventReply;
 %}
 
 [ptr] native nsIPrivateTextRangeListPtr(nsIPrivateTextRangeList);
 [ptr] native nsTextEventReplyPtr(nsTextEventReply);
 [ptr] native nsReconversionEventReplyPtr(nsReconversionEventReply);
+[ptr] native nsQueryCaretRectEventReplyPtr(nsQueryCaretRectEventReply);
 
 
-[scriptable, uuid(fe489b4d-d2f6-4215-ab33-6afd66388416)]
+[scriptable, uuid(205b3e49-aa58-499e-880b-aacab9dede01)]
 
 interface nsIEditorIMESupport : nsISupports
 {
 
 
   /**
-   * BeginComposition(nsTextEventReply* aReply) Handles the start of inline input composition.
+   * beginComposition(nsTextEventReply* aReply) Handles the start of inline input composition.
    */
 
-  [noscript] void BeginComposition(in nsTextEventReplyPtr aReply);
+  [noscript] void beginComposition(in nsTextEventReplyPtr aReply);
 
   /**
-   * SetCompositionString() Sets the inline input composition string.
-   * BeginComposition must be called prior to this.
+   * setCompositionString() Sets the inline input composition string.
+   * beginComposition must be called prior to this.
    */
 
-  [noscript] void  SetCompositionString(in DOMString aCompositionString, in nsIPrivateTextRangeListPtr aTextRange, in nsTextEventReplyPtr aReply);
+  [noscript] void setCompositionString(in DOMString aCompositionString, in nsIPrivateTextRangeListPtr aTextRange, in nsTextEventReplyPtr aReply);
 
   /**
-   * EndComposition() Handles the end of inline input composition.
+   * endComposition() Handles the end of inline input composition.
    */
 
-  void  EndComposition();
+  void  endComposition();
 
   /**
-   * QueryComposition()  Get the composition position
+   * queryComposition()  Get the composition position
    */
-  [noscript] void  QueryComposition(in nsTextEventReplyPtr aReply);
+
+  [noscript] void queryComposition(in nsTextEventReplyPtr aReply);
 
   /**
-   * ForceCompositionEnd() force the composition end
+   * forceCompositionEnd() force the composition end
    */
 
-  void  ForceCompositionEnd();
+  void forceCompositionEnd();
 
   /**
-   * GetReconvertionString()  Get the reconvertion string
+   * getReconversionString()  Get the reconvertion string
    */
-  [noscript] void  GetReconversionString(in nsReconversionEventReplyPtr aReply);
-  
+
+  [noscript] void getReconversionString(in nsReconversionEventReplyPtr aReply);
+
   /**
    * Notify for IME when the editor got focus.
    */
 
-  [noscript] void NotifyIMEOnFocus();
-  
+  void notifyIMEOnFocus();
+
   /**
    * Notify for IME when the editor lost focus.
    */
 
-  [noscript] void NotifyIMEOnBlur();
+  void notifyIMEOnBlur();
+
+  /**
+   * getQueryCaretRect()  Get the query caret rect
+   */
+
+  [noscript] void getQueryCaretRect(in nsQueryCaretRectEventReplyPtr aReply);
 
 };
 

@@ -70,6 +70,7 @@
 #include "nsColor.h"
 #include "nsTransform2D.h"
 #include "nsIEventQueue.h"
+#include "nsNativeCharsetUtils.h"
 #include <windows.h>
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
@@ -245,6 +246,7 @@ long       nsWindow::sIMECursorPosition        = 0;
 PRUnichar* nsWindow::sIMEReconvertUnicode      = NULL;
 
 RECT*      nsWindow::sIMECompCharPos           = nsnull;
+PRInt32    nsWindow::sIMECaretHeight           = 0;
 
 BOOL nsWindow::sIsRegistered       = FALSE;
 BOOL nsWindow::sIsPopupClassRegistered = FALSE;
@@ -489,7 +491,16 @@ typedef struct tagRECONVERTSTRING {
     DWORD dwTargetStrOffset;
 } RECONVERTSTRING, FAR * LPRECONVERTSTRING;
 
+typedef struct tagIMECHARPOSITION {
+    DWORD dwSize;
+    DWORD dwCharPos;
+    POINT pt;
+    UINT  cLineHeight;
+    RECT  rcDocument;
+} IMECHARPOSITION, *PIMECHARPOSITION;
+
 #define IMR_RECONVERTSTRING             0x0004
+#define IMR_QUERYCHARPOSITION           0x0006
 #define WM_IME_REQUEST                  0x0288
 #endif
 
@@ -5786,7 +5797,6 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 
   nsTextEvent event(NS_TEXT_TEXT, this);
   nsPoint point(0, 0);
-  CANDIDATEFORM candForm;
 
   InitEvent(event, &point);
 
@@ -5814,6 +5824,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   //
   if (event.theReply.mCursorPosition.width || event.theReply.mCursorPosition.height)
   {
+    CANDIDATEFORM candForm;
     candForm.dwIndex = 0;
     candForm.dwStyle = CFS_EXCLUDE;
     candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x;
@@ -5829,6 +5840,13 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
     }
 
     NS_IMM_SETCANDIDATEWINDOW(hIMEContext, &candForm);
+
+    COMPOSITIONFORM compForm;
+    compForm.dwStyle = CFS_POINT;
+    compForm.ptCurrentPos.x = event.theReply.mCursorPosition.x;
+    compForm.ptCurrentPos.y = event.theReply.mCursorPosition.y;
+    NS_IMM_SETCOMPOSITIONWINDOW(hIMEContext, &compForm);
+
     // somehow the "Intellegent ABC IME" in Simplified Chinese
     // window listen to the caret position to decide where to put the
     // candidate window
@@ -5855,6 +5873,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
       sIMECompCharPos[sIMECursorPosition].top = event.theReply.mCursorPosition.y;
       sIMECompCharPos[sIMECursorPosition].bottom = event.theReply.mCursorPosition.YMost();
     }
+    sIMECaretHeight = event.theReply.mCursorPosition.height;
   } else {
     // for some reason we don't know yet, theReply may contain invalid result
     // need more debugging in nsCaret to find out the reason
@@ -5899,6 +5918,12 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 
     NS_IMM_SETCANDIDATEWINDOW(hIMEContext, &candForm);
 
+    COMPOSITIONFORM compForm;
+    compForm.dwStyle = CFS_POINT;
+    compForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
+    compForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET;
+    NS_IMM_SETCOMPOSITIONWINDOW(hIMEContext, &compForm);
+
     sIMECompCharPos = (RECT*)PR_MALLOC(IME_MAX_CHAR_POS*sizeof(RECT));
     if (sIMECompCharPos) {
       memset(sIMECompCharPos, -1, sizeof(RECT)*IME_MAX_CHAR_POS);
@@ -5906,6 +5931,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
       sIMECompCharPos[0].top = event.theReply.mCursorPosition.y;
       sIMECompCharPos[0].bottom = event.theReply.mCursorPosition.YMost();
     }
+    sIMECaretHeight = event.theReply.mCursorPosition.height;
   } else {
     // for some reason we don't know yet, theReply may contain invalid result
     // need more debugging in nsCaret to find out the reason
@@ -5939,6 +5965,7 @@ nsWindow::HandleEndComposition(void)
   NS_RELEASE(event.widget);
   PR_FREEIF(sIMECompCharPos);
   sIMECompCharPos = nsnull;
+  sIMECaretHeight = 0;
   sIMEIsComposing = PR_FALSE;
 }
 
@@ -6454,6 +6481,9 @@ BOOL nsWindow::OnIMERequest(WPARAM aIMR, LPARAM aData, LRESULT *oResult, PRBool 
     case IMR_RECONVERTSTRING:
       result = OnIMEReconvert(aData, oResult, aUseUnicode);
       break;
+    case IMR_QUERYCHARPOSITION:
+      result = OnIMEQueryCharPosition(aData, oResult, aUseUnicode);
+      break;
   }
 
   return result;
@@ -6550,6 +6580,83 @@ PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnico
   }
 
   return result;
+}
+
+//==========================================================================
+PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode)
+{
+#ifdef DEBUG_IME
+  printf("OnIMEQueryCharPosition\n");
+#endif
+  IMECHARPOSITION* pCharPosition = (IMECHARPOSITION*)aData;
+  if (!pCharPosition ||
+      pCharPosition->dwSize < sizeof(IMECHARPOSITION) ||
+      ::GetFocus() != mWnd) {
+    *oResult = FALSE;
+    return PR_FALSE;
+  }
+
+  if (!sIMEIsComposing) {  // Including |!sIMECompUnicode| and |!sIMECompUnicode->IsEmpty|.
+    if (pCharPosition->dwCharPos != 0) {
+      *oResult = FALSE;
+      return PR_FALSE;
+    }
+    nsPoint point(0, 0);
+    nsQueryCaretRectEvent event(NS_QUERYCARETRECT, this);
+    InitEvent(event, &point);
+    DispatchWindowEvent(&event);
+    NS_RELEASE(event.widget);
+
+    nsRect screenRect, widgetRect(event.theReply.mCaretRect);
+    WidgetToScreen(widgetRect, screenRect);
+    pCharPosition->pt.x = screenRect.x;
+    pCharPosition->pt.y = screenRect.y;
+
+    pCharPosition->cLineHeight = event.theReply.mCaretRect.height;
+
+    ::GetWindowRect(mWnd, &pCharPosition->rcDocument);
+
+    *oResult = TRUE;
+    return PR_TRUE;
+  }
+
+  long charPosition;
+  if (aUseUnicode || pCharPosition->dwCharPos == 0) {
+    if (pCharPosition->dwCharPos > sIMECompUnicode->Length()) {
+      *oResult = FALSE;
+      return PR_FALSE;
+    }
+    charPosition = pCharPosition->dwCharPos;
+  } else {
+    nsCAutoString strIMECompAnsi;
+    NS_CopyUnicodeToNative(*sIMECompUnicode, strIMECompAnsi);
+    if (pCharPosition->dwCharPos > strIMECompAnsi.Length()) {
+      *oResult = FALSE;
+      return PR_FALSE;
+    }
+    charPosition = ::MultiByteToWideChar(gCurrentKeyboardCP, MB_PRECOMPOSED,
+                    strIMECompAnsi.get(), pCharPosition->dwCharPos, NULL, 0);
+  }
+  // We only support insertion at the cursor position or at the leftmost position.
+  // Because sIMECompCharPos may be broken by user converting the string.
+  // But leftmost position and cursor position is always correctly.
+  if ((charPosition != 0 && charPosition != sIMECursorPosition) ||
+      charPosition > IME_MAX_CHAR_POS) {
+    *oResult = FALSE;
+    return PR_FALSE;
+  }
+  POINT pt;
+  pt.x = sIMECompCharPos[charPosition].left;
+  pt.y = sIMECompCharPos[charPosition].top;
+  ::ClientToScreen(mWnd, &pt);
+  pCharPosition->pt = pt;
+
+  pCharPosition->cLineHeight = sIMECaretHeight;
+
+  ::GetWindowRect(mWnd, &pCharPosition->rcDocument);
+
+  *oResult = TRUE;
+  return PR_TRUE;
 }
 
 //==========================================================================
