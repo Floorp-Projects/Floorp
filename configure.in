@@ -1002,6 +1002,7 @@ case "$target" in
                 if test `echo ${PATH} | grep -c "$_GLIB_PREFIX_DIR/bin:"` = 0; then
                     AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
                 fi
+                _GLIB_PREFIX_DIR=`cygpath -w $_GLIB_PREFIX_DIR | sed -e 's|\\\\|/|g'`
                 GLIB_CFLAGS="-I${_GLIB_PREFIX_DIR}/include"
                 GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
             else
@@ -1017,6 +1018,7 @@ case "$target" in
                 if test `echo ${PATH} | grep -c "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
                     AC_MSG_ERROR([LIBIDL_PREFIX must be in your \$PATH.])
                 fi
+                _LIBIDL_PREFIX_DIR=`cygpath -w $_LIBIDL_PREFIX_DIR | sed -e 's|\\\\|/|g'`
                 LIBIDL_CFLAGS="-I${_LIBIDL_PREFIX_DIR}/include"
                 LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib ${_LIBIDL_PREFIX_DIR}/lib/glib-1.2.lib"
             else
