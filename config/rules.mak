@@ -884,7 +884,7 @@ chrome::
 
 chrome::
         @echo.
-        @echo ****************** IF YOU ADD OR REMOVE CHROME FILES, PLEASE UPDATE $(PWD)/$(JAR_MANIFEST) (or tell warren@netscape.com) **********************
+        @echo ****************** IF YOU ADD OR REMOVE CHROME FILES, PLEASE UPDATE $(MAKEDIR)\$(JAR_MANIFEST) (or tell warren@netscape.com) **********************
         @echo.
 
 !endif # !JAR_PACKAGING
