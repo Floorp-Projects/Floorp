@@ -601,25 +601,6 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
     }
     aAbsoluteTwipsRect.x += viewOffset.x;
     aAbsoluteTwipsRect.y += viewOffset.y;
-
-     // Addin the containing view's offset form it's containing widget
-    /*nsIWidget* widget = nsnull;
-    nscoord widgetx = 0;
-    nscoord widgety = 0;
-    rv = containingView->GetOffsetFromWidget(&widgetx, &widgety, widget);
-    if (NS_SUCCEEDED(rv) && (nsnull != widget)) {
-      aAbsoluteTwipsRect.x += widgetx;
-      aAbsoluteTwipsRect.y += widgety;
-  
-       // Add in the absolute offset of the widget.
-      nsRect absBounds;
- //XXX: Remove this     widget->GetAbsoluteBounds(absBounds);
-
-      // Convert widget coordinates to twips   
-      aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
-      aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
-      NS_RELEASE(widget);
-    }*/
   }
 
    // convert to pixel coordinates
@@ -789,7 +770,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
  
   nsRect absoluteTwips;
   nsRect absolutePixels;
-  GetAbsoluteFramePosition(aPresContext, displayFrame,  absoluteTwips, absolutePixels);
+  GetAbsoluteFramePosition(aPresContext, this,  absoluteTwips, absolutePixels);
   PositionDropdown(aPresContext, aDesiredSize.height, absoluteTwips, absolutePixels);
 
   return rv;
@@ -885,21 +866,14 @@ nsComboboxControlFrame::GetFrameName(nsString& aResult) const
 nsresult
 nsComboboxControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  /*if (nsFormFrame::GetDisabled(this)) {
-    return NS_OK;
-  }
-  nsRect absoluteTwips;
-  nsRect absolutePixels;
-  nsIFrame * displayFrame = GetDisplayFrame(*mPresContext);
-  nsRect displayRect;
-   // Get the current sizes of the combo box child frames
-  displayFrame->GetRect(displayRect);
-  GetAbsoluteFramePosition(*mPresContext, displayFrame,  absoluteTwips, absolutePixels);
-  PositionDropdown(*mPresContext, displayRect.height, absoluteTwips, absolutePixels);
-
-  ToggleList(mPresContext);
-  //mIgnoreMouseUp = PR_TRUE;
-*/
+  /*PRBool isDroppedDown;
+  IsDroppedDown(&isDroppedDown);
+  if (isDroppedDown) {
+    ShowDropDown(!isDroppedDown);
+    if (isDroppedDown) {
+      mListControlFrame->CaptureMouseEvents(PR_FALSE);
+    }
+  }*/
   return NS_OK;
 }
 
@@ -914,14 +888,6 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
   }
 
   if (!mDroppedDown && aDoDropDown) {
-    //nsRect absoluteTwips;
-    //nsRect absolutePixels;
-    //nsIFrame * displayFrame = GetDisplayFrame(*mPresContext);
-    //nsRect displayRect;
-     // Get the current sizes of the combo box child frames
-    //displayFrame->GetRect(displayRect);
-    //GetAbsoluteFramePosition(*mPresContext, displayFrame,  absoluteTwips, absolutePixels);
-    //PositionDropdown(*mPresContext, displayRect.height, absoluteTwips, absolutePixels);
     if (mListControlFrame) {
       mListControlFrame->SyncViewWithFrame();
     }
@@ -1018,9 +984,20 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   nsRect absolutePixels;
   nsIFrame* displayFrame = GetDisplayFrame(*mPresContext);
   nsRect rect;
-  displayFrame->GetRect(rect);
-  GetAbsoluteFramePosition(*mPresContext, displayFrame,  absoluteTwips, absolutePixels);
+  this->GetRect(rect);
+  GetAbsoluteFramePosition(*mPresContext, this,  absoluteTwips, absolutePixels);
   PositionDropdown(*mPresContext, rect.height, absoluteTwips, absolutePixels);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsComboboxControlFrame::GetAbsoluteRect(nsRect* aRect)
+{
+  nsRect absoluteTwips;
+  nsRect rect;
+  this->GetRect(rect);
+  GetAbsoluteFramePosition(*mPresContext, this,  absoluteTwips, *aRect);
+
   return NS_OK;
 }
 
@@ -1244,7 +1221,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   //displayReciever->AddEventListenerByIID((nsIDOMFocusListener *)this, nsCOMTypeInfo<nsIDOMFocusListener>::GetIID());
 
   // get the reciever interface from the select's content
-  nsCOMPtr<nsIDOMEventReceiver> selectReciever(do_QueryInterface(mContent));
+  //nsCOMPtr<nsIDOMEventReceiver> selectReciever(do_QueryInterface(mContent));
 
   // we shouldn't have to unregister this listener because when
   // our frame goes away all these content node go away as well

@@ -2040,7 +2040,16 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         stateManager->GetEventTarget(&frame);
         nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
         if (listFrame) {
-          return NS_OK;
+          nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aMouseEvent));
+          PRInt32 scrX;
+          PRInt32 scrY;
+          uiEvent->GetScreenX(&scrX);
+          uiEvent->GetScreenY(&scrY);
+          nsRect rect;
+          mComboboxFrame->GetAbsoluteRect(&rect);
+          if (!rect.Contains(scrX, scrY)) {
+            return NS_OK;
+          }
         }
         NS_RELEASE(stateManager);
       }

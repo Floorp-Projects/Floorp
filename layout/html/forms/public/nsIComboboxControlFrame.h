@@ -88,6 +88,11 @@ public:
    */
   NS_IMETHOD AbsolutelyPositionDropDown() = 0;
 
+  /**
+   *
+   */
+  NS_IMETHOD GetAbsoluteRect(nsRect* aRect) = 0;
+
 
 };
 
