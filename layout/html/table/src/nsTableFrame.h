@@ -364,6 +364,7 @@ public:
                        const nsHTMLReflowState& aReflowState,
                        nscoord                  aAvailHeight,
                        nsReflowReason           aReason,
+                       nsIFrame*&               aLastChildReflowed,
                        PRBool&                  aDoCollapse,
                        PRBool&                  aDidBalance,
                        nsReflowStatus&          aStatus);
@@ -603,6 +604,7 @@ protected:
                            PRBool               aDoColGroups,
                            PRBool               aDirtyOnly,
                            nsReflowStatus&      aStatus,
+                           nsIFrame*&           aLastChildReflowed,
                            PRBool*              aReflowedAtLeastOne = nsnull);
 // begin incremental reflow methods
   

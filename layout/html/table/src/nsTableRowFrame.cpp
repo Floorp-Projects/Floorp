@@ -1553,7 +1553,8 @@ nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
 void 
 nsTableRowFrame::RemoveCellFrame(nsTableCellFrame* aFrame)
 {
-  mFrames.RemoveFrame(aFrame);
+  if (!mFrames.RemoveFrame(aFrame))
+    NS_ASSERTION(PR_FALSE, "frame not in list");
 }
 
 NS_IMETHODIMP

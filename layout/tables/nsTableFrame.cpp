@@ -1938,7 +1938,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
             nsTableReflowState reflowState(*aPresContext, aReflowState, *this, reason,
                                            NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE); 
             // reflow the children
-            ReflowChildren(aPresContext, reflowState, !HaveReflowedColGroups(), PR_FALSE, aStatus);
+            nsIFrame *lastReflowed;
+            ReflowChildren(aPresContext, reflowState, !HaveReflowedColGroups(), PR_FALSE, aStatus, lastReflowed);
           }
           mTableLayoutStrategy->Initialize(aPresContext, aReflowState);
         }
@@ -1964,7 +1965,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
         // NS_ASSERTION(HadInitialReflow(), "intial reflow not called");
         nextReason = eReflowReason_Initial;
       }
-      NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth, "this doesn't do anything");
+      //NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth, "this doesn't do anything");
       SetNeedStrategyBalance(PR_TRUE); 
       break; 
     default:
@@ -2003,13 +2004,22 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
                           (NeedSpecialReflow() | NeedToInitiateSpecialReflow()) 
       ? NS_UNCONSTRAINEDSIZE : aReflowState.availableHeight;
 
-    ReflowTable(aPresContext, aDesiredSize, aReflowState, availHeight, nextReason, doCollapse, balanced, aStatus);
+    nsIFrame* lastChildReflowed;
+    ReflowTable(aPresContext, aDesiredSize, aReflowState, availHeight, nextReason, 
+                lastChildReflowed, doCollapse, balanced, aStatus);
 
     if (!aReflowState.mFlags.mSpecialHeightReflow && NeedToInitiateSpecialReflow() && !NeedSpecialReflow()) {
       aDesiredSize.height = CalcDesiredHeight(aPresContext, aReflowState); // distributes extra vertical space to rows
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_TRUE;
       ReflowTable(aPresContext, aDesiredSize, aReflowState, aReflowState.availableHeight, 
-                  nextReason, doCollapse, balanced, aStatus);
+                  nextReason, lastChildReflowed, doCollapse, balanced, aStatus);
+      if (lastChildReflowed && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+        // if there is an incomplete child, then set the desired height to include it but not the next one
+        nsRect childRect;
+        lastChildReflowed->GetRect(childRect);
+        nsMargin borderPadding = GetChildAreaOffset(*aPresContext, &aReflowState);
+        aDesiredSize.height = borderPadding.top + GetCellSpacingY() + childRect.height;
+      }
       haveDesiredHeight = PR_TRUE;
     }
   }
@@ -2094,6 +2104,7 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
                           const nsHTMLReflowState& aReflowState,
                           nscoord                  aAvailHeight,
                           nsReflowReason           aReason,
+                          nsIFrame*&               aLastChildReflowed,
                           PRBool&                  aDoCollapse,
                           PRBool&                  aDidBalance,
                           nsReflowStatus&          aStatus)
@@ -2101,6 +2112,7 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
   nsresult rv = NS_OK;
   aDoCollapse = PR_FALSE;
   aDidBalance = PR_FALSE;
+  aLastChildReflowed = nsnull;
 
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
@@ -2123,7 +2135,7 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
   aDesiredSize.width = GetDesiredWidth();
   nsTableReflowState reflowState(*aPresContext, aReflowState, *this, aReason, 
                                  aDesiredSize.width, aAvailHeight);
-  ReflowChildren(aPresContext, reflowState, haveReflowedColGroups, PR_FALSE, aStatus);
+  ReflowChildren(aPresContext, reflowState, haveReflowedColGroups, PR_FALSE, aStatus, aLastChildReflowed);
 
   // If we're here that means we had to reflow all the rows, e.g., the column widths 
   // changed. We need to make sure that any damaged areas are repainted
@@ -2733,8 +2745,9 @@ nsTableFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
       // reflow the dirty children
       nsTableReflowState reflowState(*aPresContext, aReflowState.reflowState, *this, eReflowReason_Initial,
                                      aReflowState.availSize.width, aReflowState.availSize.height); 
+      nsIFrame* lastReflowed;
       PRBool reflowedAtLeastOne; 
-      ReflowChildren(aPresContext, reflowState, PR_FALSE, PR_TRUE, aStatus, &reflowedAtLeastOne);
+      ReflowChildren(aPresContext, reflowState, PR_FALSE, PR_TRUE, aStatus, lastReflowed, &reflowedAtLeastOne);
       if (!reflowedAtLeastOne)
         // XXX For now assume the worse
         SetNeedStrategyInit(PR_TRUE);
@@ -3185,14 +3198,16 @@ IsRepeatable(nsTableRowGroupFrame& aHeaderOrFooter,
 // Reflow the children based on the avail size and reason in aReflowState
 // update aReflowMetrics a aStatus
 NS_METHOD 
-nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
-                             nsTableReflowState&  aReflowState,
-                             PRBool               aDoColGroups,
-                             PRBool               aDirtyOnly,
-                             nsReflowStatus&      aStatus,
-                             PRBool*              aReflowedAtLeastOne)
+nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
+                             nsTableReflowState& aReflowState,
+                             PRBool              aDoColGroups,
+                             PRBool              aDirtyOnly,
+                             nsReflowStatus&     aStatus,
+                             nsIFrame*&          aLastChildReflowed,
+                             PRBool*             aReflowedAtLeastOne)
 {
   aStatus = NS_FRAME_COMPLETE;
+  aLastChildReflowed = nsnull;
 
   nsIFrame* prevKidFrame = nsnull;
   nsresult  rv = NS_OK;
@@ -3269,6 +3284,7 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
         rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
                          aReflowState.x, aReflowState.y, 0, aStatus);
         haveReflowedRowGroup = PR_TRUE;
+        aLastChildReflowed   = kidFrame;
 
         // Place the child
         PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize);
