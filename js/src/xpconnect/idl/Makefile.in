@@ -43,20 +43,11 @@ MODULE		= xpconnect
 XPIDLSRCS	= \
 		xpccomponents.idl \
 		xpcjsid.idl \
-		xpctest.idl \
-		xpctest2.idl \
 		xpcexception.idl \
 		nsIJSContextStack.idl \
 		nsIJSRuntimeService.idl \
+		nsIXPConnect.idl \
 		nsIXPCSecurityManager.idl \
-		xpctest_attributes.idl \
-		xpctest_in.idl \
-		xpctest_const.idl \
-		xpctest_out.idl \
-		xpctest_inout.idl \
-		xpctest_calljs.idl \
-		xpctest_multiple.idl \
-		xpctest_const.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

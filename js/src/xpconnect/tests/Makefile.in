@@ -41,7 +41,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= TestXPC
 SIMPLE_PROGRAMS = TestXPC
 
-DIRS		= components
+DIRS		= idl components
 
 CPPSRCS		= TestXPC.cpp
 
@@ -53,20 +53,7 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-TEST_FILES	= \
-		$(srcdir)/testxpc.js \
-		$(srcdir)/xpctest_array.js \
-		$(srcdir)/xpctest_echo.js \
-		$(srcdir)/xpctest_ids.js \
-		$(srcdir)/xpctest_overloaded.js \
-		$(srcdir)/xpctest_enum_create.js \
-		$(srcdir)/xpctest_primitives.js \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DJS_THREADSAFE
-
-export::
-	$(INSTALL) $(TEST_FILES) $(DIST)/bin
 

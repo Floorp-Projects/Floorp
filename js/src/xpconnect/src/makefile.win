@@ -53,19 +53,21 @@ OBJS=					\
 	.\$(OBJDIR)\xpcconvert.obj	\
 	.\$(OBJDIR)\xpcexception.obj	\
 	.\$(OBJDIR)\xpcjsid.obj	\
+	.\$(OBJDIR)\xpcjsruntime.obj	\
 	.\$(OBJDIR)\xpclog.obj	\
 	.\$(OBJDIR)\xpcmaps.obj	\
 	.\$(OBJDIR)\xpcmodule.obj	\
 	.\$(OBJDIR)\xpcnativecallcontext.obj	\
+	.\$(OBJDIR)\xpcruntimesvc.obj  \
 	.\$(OBJDIR)\xpcstack.obj	\
 	.\$(OBJDIR)\xpcthreadcontext.obj	\
 	.\$(OBJDIR)\xpcthrower.obj	\
-	.\$(OBJDIR)\xpcruntimesvc.obj  \
 	.\$(OBJDIR)\xpcwrappedjs.obj	\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\
 	.\$(OBJDIR)\xpcwrappednativeclass.obj	\
 	.\$(OBJDIR)\xpcwrappednativejsops.obj	\
+	.\$(OBJDIR)\xpcwrappednativescope.obj	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpconnect -I$(PUBLIC)\xpcom -I$(PUBLIC)\js \

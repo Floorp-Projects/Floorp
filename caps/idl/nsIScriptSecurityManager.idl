@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -23,7 +23,11 @@
 #include "nsISupports.idl"
 #include "nsIPrincipal.idl"
 
-interface nsIScriptContext;
+%{C++
+#include "jspubtd.h"
+%}
+[ptr] native JSContextPtr(JSContext);
+
 interface nsIURI;
 
 [uuid(58df5780-8006-11d2-bd91-00805f8ae3f4)]
@@ -33,13 +37,13 @@ interface nsIScriptSecurityManager : nsISupports
      * Checks whether the currently executing script can access the given 
      * property.
      *
-     * @param cx The current active script context
+     * @param cx The current active JavaScript context
      * @param obj The object that is being accessed
      * @param prop The ordinal of the property being accessed (see nsDOMPropEnums.h)
      * @param isWrite True if write access is being attempted
      * @return True if access is granted
      */
-	boolean CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, 
+	boolean CheckScriptAccess(in JSContextPtr cx, in voidStar obj, 
 	                          in long prop, in boolean isWrite);
 
 	/**
@@ -48,7 +52,7 @@ interface nsIScriptSecurityManager : nsISupports
 	 * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
 	 * should be denied.
 	 */
-    void CheckLoadURIFromScript(in nsIScriptContext cx, in nsIURI uri);
+    void CheckLoadURIFromScript(in JSContextPtr cx, in nsIURI uri);
 
 	/**
 	 * Check that content from "from" can load "uri".

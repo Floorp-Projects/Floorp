@@ -170,14 +170,18 @@ public:
                   size_t aInstanceSize) const;
   
   // Implementation for nsIJSScriptObject
-  PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  PRBool    EnumerateProperty(JSContext *aContext);
-  PRBool    Resolve(JSContext *aContext, jsval aID);
-  PRBool    Convert(JSContext *aContext, jsval aID);
-  void      Finalize(JSContext *aContext);
+  PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  void      Finalize(JSContext *aContext, JSObject *aObj);
 
   // Implementation for nsISupports
   NS_IMETHOD QueryInterface(REFNSIID aIID,

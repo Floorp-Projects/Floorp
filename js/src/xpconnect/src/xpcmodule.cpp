@@ -205,7 +205,7 @@ nsXPConnectModule::Shutdown()
     // Release our singletons
     nsXPCThreadJSContextStackImpl::FreeSingleton();
     nsJSRuntimeServiceImpl::FreeSingleton();
-    nsXPConnect::FreeXPConnect();
+    nsXPConnect::ReleaseXPConnectSingleton();
 }
 
 // Create a factory object for creating instances of aClass.

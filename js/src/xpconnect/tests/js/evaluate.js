@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -68,75 +68,36 @@ function SetupTest() {
 	}
 }
 
+
 function AddTestData() {
-	TestEvaluate( "3",   3,         false);
-	TestEvaluate( "undefined", undefined, false );
 
-	TestEvaluate( 
-		"throw -1",
-		undefined,
-		true,
-		null );
+var data = [
+ ["3",              3,         false],
+ ["undefined",      undefined, false],
+ ["throw -1",       undefined, true, null,true],
+ ["throw 'str'",    undefined, true, "NS_ERROR_XPC_JS_THREW_STRING"],
+ ["throw {}",       undefined, true, "NS_ERROR_XPC_JS_THREW_JS_OBJECT"],
+ ["throw 1",        undefined, true, "NS_ERROR_XPC_JS_THREW_NUMBER"],
+ ["throw Components.results['NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT']",  
+                    undefined, true, "NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT"],
+ ["throw {message:'error message'};", 
+                    undefined, true, "NS_ERROR_XPC_JS_THREW_JS_OBJECT"],
+ ["throw null",     undefined, true, "NS_ERROR_XPC_JS_THREW_NULL"],
+ ["throw new JSException('msg', 'NS_ERROR_XPC_CANT_SET_OUT_VAL', true)",
+                    undefined, true, "NS_ERROR_XPC_CANT_SET_OUT_VAL"],
+ ["throw caller",   undefined, true, "NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT"],
+ ["boo",            undefined, true, "NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS"],
+ ["...ignore this sentinel entry..."]
+];
 
-	TestEvaluate( 
-		"throw \'An error occurred.\'",
-		undefined,
-		true,
-		"NS_ERROR_XPC_JS_THREW_STRING" );
+    for(var i = 0; i < data.length-1; i++)
+        TestEvaluate(data[i][0],
+                     data[i][1],
+                     data[i][2],
+                     data[i][3],
+                     null,
+                     data[i][4]);
 
-	TestEvaluate(
-		"throw {}",
-		undefined,
-		true,
-		"NS_ERROR_XPC_JS_THREW_JS_OBJECT" );
-	
-	TestEvaluate(
-		"throw 0",
-		undefined,
-		true,
-		"NS_ERROR_FAILURE" );
-	
-	TestEvaluate(
-		"throw 1",
-		undefined,
-		true,
-		"NS_ERROR_FAILURE" );
-
-	TestEvaluate(
-		"throw Components.results['NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT']",
-		undefined,
-		true,
-		"NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS" );
-	
-	TestEvaluate( 
-		"throw {message:\"error message\"}",
-		undefined, 
-		true,
-		"NS_ERROR_XPC_JS_THREW_JS_OBJECT" );
-
-	TestEvaluate(
-		"throw null",
-		undefined, 
-		true,
-		"NS_ERROR_XPC_JS_THREW_NULL" );
-
-	TestEvaluate(
-		"throw new JSException( \"error message\", \"NS_ERROR_XPC_CANT_SET_OUT_VAL\", true)",
-		undefined,
-		true,
-		"NS_ERROR_XPC_CANT_SET_OUT_VAL");
-
-	TestEvaluate(
-		"throw caller",
-		undefined,
-		true,
-		"NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT" );
-
-	TestEvaluate( 
-		"boo", 
-		undefined, 
-		true, 
-		"NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS");
 
 	/* 
 	 * second argument is the out object. should throw an exception since the
@@ -153,7 +114,8 @@ if (0) {
 }		
 }
 
-function TestEvaluate (evalArg, eResult, eGotException, eExceptionName, jso ) {
+function TestEvaluate (evalArg, eResult, eGotException, eExceptionName, jso,
+                       errorHasNoName) {
 	if ( !jso )
 		var jso = new JSO();
 
@@ -179,11 +141,17 @@ function TestEvaluate (evalArg, eResult, eGotException, eExceptionName, jso ) {
 			"caller.Evaluate(" +evalArg+ "); jso.exception.name",
 			eExceptionName,
 			jso.exception.name );
-
-		AddTestCase(
-			"caller.Evaluate(" +evalArg+ "); jso.exception.result",
-			Components.results[eExceptionName],
-			jso.exception.result );
+        if (errorHasNoName) {
+		    AddTestCase(
+			    "caller.Evaluate(" +evalArg+ "); jso.exception.result",
+			    jso.exception.result,
+			    jso.exception.result );
+        } else {
+		    AddTestCase(
+			    "caller.Evaluate(" +evalArg+ "); jso.exception.result",
+			    Components.results[eExceptionName],
+			    jso.exception.result );
+		}
 
 		if ( jso.gotException ) {
 			ERRORS_WE_GOT[ jso.exception.name ] = true;

@@ -2,8 +2,10 @@
 # This is a list of local files which get copied to the mozilla:dist directory
 #
 
-xpccomponents.idl
-xpcjsid.idl
-xpctest.idl
+nsIJSContextStack.idl
+nsIJSRuntimeService.idl
+nsIXPConnect.idl
 nsIXPCSecurityManager.idl
-
+xpccomponents.idl
+xpcexception.idl
+xpcjsid.idl

@@ -341,6 +341,7 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
     JSContext* jscontext = NS_REINTERPRET_CAST(JSContext*, context->GetNativeContext());
+    JSObject* global = JS_GetGlobalObject(jscontext);
 
     // Using XPConnect, wrap the HTTP index object...
     static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
@@ -349,6 +350,7 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 
     nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
     rv = xpc->WrapNative(jscontext,                       
+                         global,
                          httpindex,
                          nsCOMTypeInfo<nsIHTTPIndex>::GetIID(),
                          getter_AddRefs(wrapper));
@@ -365,7 +367,6 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 
     // ...and stuff it into the global context
     PRBool ok;
-    JSObject* global = JS_GetGlobalObject(jscontext);
     ok = JS_SetProperty(jscontext, global, "HTTPIndex", &jslistener);
 
     NS_ASSERTION(ok, "unable to set Listener property");

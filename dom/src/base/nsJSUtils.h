@@ -35,6 +35,8 @@
 #include "nsString.h"
 
 class nsIDOMEventListener;
+class nsIScriptContext;
+class nsIScriptGlobalObject;
 
 class nsJSUtils {
 public:
@@ -43,31 +45,37 @@ public:
                                                PRUint32 *aLineno);
 
   static NS_EXPORT JSBool nsReportError(JSContext* aContext, 
+                                        JSObject* aObj,
                                         nsresult aResult,
                                         const char* aMessage=nsnull);
 
   static NS_EXPORT PRBool nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
                                                 JSContext* aContext,
+                                                JSObject* aObj,
                                                 jsval aId,
                                                 jsval* aReturn);
 
   static NS_EXPORT PRBool nsLookupGlobalName(nsISupports* aSupports,
                                    JSContext* aContext,
+                                   JSObject* aObj,
                                    jsval aId,
                                    jsval* aReturn);
 
   static NS_EXPORT PRBool nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
                                                 JSContext* aContext,
+                                                JSObject* aObj,
                                                 jsval aId,
                                                 jsval* aReturn);
 
   static NS_EXPORT void nsConvertObjectToJSVal(nsISupports* aSupports,
                                      JSContext* aContext,
+                                     JSObject* aObj,
                                      jsval* aReturn);
 
   static NS_EXPORT void nsConvertXPCObjectToJSVal(nsISupports* aSupports,
                                                   const nsIID& aIID,
                                                   JSContext* aContext,
+                                                  JSObject* aScope,
                                                   jsval* aReturn);
 
   static NS_EXPORT void nsConvertStringToJSVal(const nsString& aProp,
@@ -100,7 +108,7 @@ public:
 
   static NS_EXPORT void nsGenericFinalize(JSContext* aContext,
                                 JSObject* aObj);
-		     
+
   static NS_EXPORT JSBool nsGenericEnumerate(JSContext* aContext,
                                    JSObject* aObj);
 
@@ -114,6 +122,20 @@ public:
 
   static NS_EXPORT nsISupports* nsGetNativeThis(JSContext* aContext,
                                           JSObject* aObj);
+
+  static NS_EXPORT nsresult nsGetStaticScriptGlobal(JSContext* aContext,
+                                    JSObject* aObj,
+                                    nsIScriptGlobalObject** aNativeGlobal);
+
+  static NS_EXPORT nsresult nsGetStaticScriptContext(JSContext* aContext,
+                                    JSObject* aObj,
+                                    nsIScriptContext** aScriptContext);
+
+  static NS_EXPORT nsresult nsGetDynamicScriptGlobal(JSContext *aContext,
+                                    nsIScriptGlobalObject** aNativeGlobal);
+
+  static NS_EXPORT nsresult nsGetDynamicScriptContext(JSContext *aContext,
+                                    nsIScriptContext** aScriptContext);
 
 protected:
   static PRBool NameAndFormatForNSResult(nsresult rv,

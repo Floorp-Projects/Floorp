@@ -48,6 +48,7 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIPref.h"
 #include "nsCOMPtr.h"
+#include "nsJSUtils.h"
 
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
 #define FORCE_PR_LOG 1
@@ -70,33 +71,38 @@ NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
 {
-  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptGlobalObject> globalObject(context->GetGlobalObject());
+  nsCOMPtr<nsIScriptContext> context;
 
-  if (globalObject) {
-    nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
-    if(NS_FAILED(globalObject->GetGlobalObjectOwner(getter_AddRefs(owner))) ||
-       !owner) {
-      NS_WARN_IF_FALSE(PR_FALSE, "Failed to get a global Object Owner");
-      return;
-    }
-    
-    const char* error;
-    if (message) {
-      error = message;
-    }
-    else {
-      error = "<unknown>";
-    }
+  // XXX this means we are not going to get error reports on non DOM contexts
+  nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(context));
+  if (context) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObject(context->GetGlobalObject());
 
-    if(report) {
-        owner->ReportScriptError(error,
-                                 report->filename,
-                                 report->lineno,
-                                 report->linebuf);
-    }
-    else {
-        owner->ReportScriptError(error, nsnull, 0, nsnull);
+    if (globalObject) {
+      nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
+      if(NS_FAILED(globalObject->GetGlobalObjectOwner(getter_AddRefs(owner))) ||
+         !owner) {
+        NS_WARN_IF_FALSE(PR_FALSE, "Failed to get a global Object Owner");
+        return;
+      }
+      
+      const char* error;
+      if (message) {
+        error = message;
+      }
+      else {
+        error = "<unknown>";
+      }
+  
+      if(report) {
+          owner->ReportScriptError(error,
+                                   report->filename,
+                                   report->lineno,
+                                   report->linebuf);
+      }
+      else {
+          owner->ReportScriptError(error, nsnull, 0, nsnull);
+      }
     }
   }
 
@@ -119,6 +125,7 @@ NS_ScriptErrorReporter(JSContext *cx,
   }
 #endif
 
+  // XXX do we really want to be doing this?
   JS_ClearPendingException(cx);
 }
 
@@ -131,7 +138,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 
     // Check for the JS strict option, which enables extra error checks
     nsresult rv;
-    PRBool strict, werror;
+    PRBool strict;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
       uint32 options = 0;
@@ -143,6 +150,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
       }
 #endif
 #ifdef JSOPTION_WERROR
+      PRBool werror;
       if (NS_SUCCEEDED(prefs->GetBoolPref("javascript.options.werror",
                                           &werror)) &&
           werror) {
@@ -174,15 +182,15 @@ nsJSContext::~nsJSContext()
   if (!mContext)
     return;
 
-  // Tell xpconnect that we're about to destroy the JSContext so it can cleanup
-  nsresult rv;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-  if (NS_SUCCEEDED(rv))
-    xpc->AbandonJSContext(mContext);
-
   /* Remove global object reference to window object, so it can be collected. */
   JS_SetGlobalObject(mContext, nsnull);
   JS_DestroyContext(mContext);
+
+  // Let xpconnect resync its JSContext tracker (this is optional)
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  if (NS_SUCCEEDED(rv))
+    xpc->SyncJSContexts();
 }
 
 NS_IMPL_ISUPPORTS(nsJSContext, NS_GET_IID(nsIScriptContext));
@@ -636,6 +644,7 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
       JS_SetGlobalObject(mContext, global);
       rv = InitClasses(); // this will complete the global object initialization
     }
+		// XXX there ought to be an else here!
 
     if (NS_SUCCEEDED(rv)) {
       ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
@@ -698,17 +707,13 @@ nsJSContext::InitClasses()
     rv = NS_OK;
   }
 
-  // Hook up XPConnect
-  {
+  // Initialize XPConnect classes
+  if (NS_SUCCEEDED(rv)) {
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
     if (NS_SUCCEEDED(rv)) {
-      rv = xpc->AddNewComponentsObject(mContext, JS_GetGlobalObject(mContext));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add Components object");
+      rv = xpc->InitClasses(mContext, JS_GetGlobalObject(mContext));
     }
-    else {
-      // silently fail for now
-      rv = NS_OK;
-    }
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to init xpconnect classes");
   }
   mIsInitialized = PR_TRUE;
   return rv;
@@ -908,31 +913,17 @@ extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal
     return NS_ERROR_OUT_OF_MEMORY;
   *aContext = scriptContext;
 
-  // Hook up XPConnect
+  // Hook up Security Manager to XPConnect
   nsresult rv;
   NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(aGlobal, &rv);
+    JSContext *cx = (JSContext*) scriptContext->GetNativeContext();
+    nsCOMPtr<nsIScriptSecurityManager> mgr;
+    rv = scriptContext->GetSecurityManager(getter_AddRefs(mgr));
     if (NS_SUCCEEDED(rv)) {
-      JSObject* global;
-      rv = owner->GetScriptObject(scriptContext, (void**) &global);
-      if (NS_SUCCEEDED(rv)) {
-        // Tell XPConnect about this context
-        JSContext *cx = (JSContext*) scriptContext->GetNativeContext();
-        rv = xpc->InitJSContext(cx, global, JS_FALSE);
-        //NS_ASSERTION(NS_SUCCEEDED(rv), "xpconnect unable to init jscontext");
-
-        // If that succeeded, get a security manager and install it
-        if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIScriptSecurityManager> mgr;
-          rv = scriptContext->GetSecurityManager(getter_AddRefs(mgr));
-          if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIXPCSecurityManager> xpcSecurityManager = do_QueryInterface(mgr, &rv);
-            if (NS_SUCCEEDED(rv))
-              xpc->SetSecurityManagerForJSContext(cx, xpcSecurityManager, XPC_HOOK_VALUE);
-          }
-        }
-      }
+      nsCOMPtr<nsIXPCSecurityManager> xpcSecurityManager = do_QueryInterface(mgr, &rv);
+      if (NS_SUCCEEDED(rv))
+        xpc->SetSecurityManagerForJSContext(cx, xpcSecurityManager, XPC_HOOK_VALUE);
     }
   }
 
@@ -940,7 +931,7 @@ extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal
   scriptContext->InitContext(aGlobal);
   aGlobal->SetContext(scriptContext);
 
-  // XXX suppress XPConnect failures for now?
+  // XXX suppress XPConnect Security Manager setup failures for now?
   return NS_OK;
 }
 

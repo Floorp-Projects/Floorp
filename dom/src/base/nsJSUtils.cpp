@@ -110,6 +110,7 @@ nsJSUtils::nsGetCallingLocation(JSContext* aContext,
 
 NS_EXPORT JSBool
 nsJSUtils::nsReportError(JSContext* aContext, 
+                         JSObject* aObj,
                          nsresult aResult,
                          const char* aMessage)
 {
@@ -142,13 +143,15 @@ nsJSUtils::nsReportError(JSContext* aContext,
     
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(exc);
-    
     if (owner) {
-      JSObject* obj;
-      nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      rv = owner->GetScriptObject(scriptCX, (void**)&obj);
-      if (NS_SUCCEEDED(rv)) {
-        JS_SetPendingException(aContext, OBJECT_TO_JSVAL(obj));
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsGetStaticScriptContext(aContext, aObj, getter_AddRefs(scriptCX));
+      if (scriptCX) {
+        JSObject* obj;
+        rv = owner->GetScriptObject(scriptCX, (void**)&obj);
+        if (NS_SUCCEEDED(rv)) {
+          JS_SetPendingException(aContext, OBJECT_TO_JSVAL(obj));
+        }
       }
     }
   }
@@ -159,6 +162,7 @@ nsJSUtils::nsReportError(JSContext* aContext,
 NS_EXPORT PRBool 
 nsJSUtils::nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
                                            JSContext* aContext,
+                                           JSObject* aObj,
                                            jsval aId,
                                            jsval* aReturn)
 {
@@ -167,7 +171,7 @@ nsJSUtils::nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
   if (NS_OK == aSupports->QueryInterface(kIJSScriptObjectIID, 
                                          (void**)&object)) {
     PRBool rval;
-    rval =  object->GetProperty(aContext, aId, aReturn);
+    rval =  object->GetProperty(aContext, aObj, aId, aReturn);
     NS_RELEASE(object);
     return rval;
   }
@@ -178,6 +182,7 @@ nsJSUtils::nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
 NS_EXPORT PRBool 
 nsJSUtils::nsLookupGlobalName(nsISupports* aSupports,
                               JSContext* aContext,
+                              JSObject* aObj,
                               jsval aId,
                               jsval* aReturn)
 {
@@ -187,39 +192,44 @@ nsJSUtils::nsLookupGlobalName(nsISupports* aSupports,
     JSString* jsstring = JSVAL_TO_STRING(aId);
     nsAutoString name(JS_GetStringChars(jsstring));
     nsIScriptNameSpaceManager* manager;
-    nsIScriptContext* scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
     nsIID classID;
     nsISupports* native;
 
-    result =  scriptContext->GetNameSpaceManager(&manager);
-    if (NS_OK == result) {
-      result = manager->LookupName(name, PR_FALSE, classID);
-      NS_RELEASE(manager);
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    nsGetStaticScriptContext(aContext, aObj, getter_AddRefs(scriptContext));
+    if (scriptContext) {
+      result =  scriptContext->GetNameSpaceManager(&manager);
       if (NS_OK == result) {
-        result = nsComponentManager::CreateInstance(classID,
-                                              nsnull,
-                                              kISupportsIID,
-                                              (void **)&native);
+        result = manager->LookupName(name, PR_FALSE, classID);
+        NS_RELEASE(manager);
         if (NS_OK == result) {
-          nsConvertObjectToJSVal(native, aContext, aReturn);
-          return PR_TRUE;
+          result = nsComponentManager::CreateInstance(classID,
+                                                nsnull,
+                                                kISupportsIID,
+                                                (void **)&native);
+          if (NS_OK == result) {
+            nsConvertObjectToJSVal(native, aContext, aObj, aReturn);
+            return PR_TRUE;
+          }
+          else {
+            return PR_FALSE;
+          }
         }
-        else {
-          return PR_FALSE;
-        }
+      } 
+      else {
+         return PR_FALSE;
       }
-    }
-    else {
-      return PR_FALSE;
     }
   }
   
-  return nsCallJSScriptObjectGetProperty(aSupports, aContext, aId, aReturn);
+  return nsCallJSScriptObjectGetProperty(aSupports, aContext, aObj, aId, 
+                                         aReturn);
 }
 
 NS_EXPORT PRBool 
 nsJSUtils::nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
                                            JSContext* aContext,
+                                           JSObject* aObj,
                                            jsval aId,
                                            jsval* aReturn)
 {
@@ -228,7 +238,7 @@ nsJSUtils::nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
   if (NS_OK == aSupports->QueryInterface(kIJSScriptObjectIID, 
                                          (void**)&object)) {
     PRBool rval;
-    rval =  object->SetProperty(aContext, aId, aReturn);
+    rval =  object->SetProperty(aContext, aObj, aId, aReturn);
     NS_RELEASE(object);
     return rval;
   }
@@ -239,24 +249,26 @@ nsJSUtils::nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
 NS_EXPORT void 
 nsJSUtils::nsConvertObjectToJSVal(nsISupports* aSupports,
                                   JSContext* aContext,
+                                  JSObject* aObj,
                                   jsval* aReturn)
 {
   // get the js object\n"
+  *aReturn = JSVAL_NULL;
   if (aSupports != nsnull) {
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == aSupports->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      JSObject *object = nsnull;
-      nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-        // set the return value
-        *aReturn = OBJECT_TO_JSVAL(object);
+    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(aSupports);
+    if (owner) {
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsGetStaticScriptContext(aContext, aObj, getter_AddRefs(scriptCX));
+      if (scriptCX) {
+        JSObject *object = nsnull;
+        if (NS_OK == owner->GetScriptObject(scriptCX, (void**)&object)) {
+          // set the return value
+          *aReturn = OBJECT_TO_JSVAL(object);
+        }
       }
-      NS_RELEASE(owner);
     }
+    // XXX the caller really ought to be doing this!
     NS_RELEASE(aSupports);
-  }
-  else {
-    *aReturn = JSVAL_NULL;
   }
 }
 
@@ -264,6 +276,7 @@ NS_EXPORT void
 nsJSUtils::nsConvertXPCObjectToJSVal(nsISupports* aSupports,
                                      const nsIID& aIID,
                                      JSContext* aContext,
+                                     JSObject* aScope,
                                      jsval* aReturn)
 {
   *aReturn = JSVAL_NULL; // a sane value, just in case something blows up
@@ -288,7 +301,7 @@ nsJSUtils::nsConvertXPCObjectToJSVal(nsISupports* aSupports,
       NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
       if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-        rv = xpc->WrapNative(aContext, aSupports, aIID, getter_AddRefs(wrapper));
+        rv = xpc->WrapNative(aContext, aScope, aSupports, aIID, getter_AddRefs(wrapper));
         if (NS_SUCCEEDED(rv)) {
           JSObject* obj;
           rv = wrapper->GetJSObject(&obj);
@@ -447,10 +460,8 @@ nsJSUtils::nsConvertJSValToFunc(nsIDOMEventListener** aListener,
       if (NS_OK == NS_NewScriptEventListener(aListener, scriptContext, (void*)aObj, (void*)JSVAL_TO_OBJECT(aValue))) {
         return JS_TRUE;
       }
-      else {
-        JS_ReportError(aContext, "Out of memory");
-        return JS_FALSE;
-      }
+      JS_ReportError(aContext, "Out of memory");
+      return JS_FALSE;
     }
     else {
       JS_ReportError(aContext, "Parameter isn't a callable object");
@@ -496,7 +507,7 @@ nsJSUtils::nsGenericEnumerate(JSContext* aContext,
     // get the js object
     nsIJSScriptObject *object;
     if (NS_OK == nativeThis->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(aContext);
+      object->EnumerateProperty(aContext, aObj);
       NS_RELEASE(object);
     }
   }
@@ -514,26 +525,30 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
   if (JSVAL_IS_STRING(aId)) {
     JSString* jsstring = JSVAL_TO_STRING(aId);
     nsAutoString name(JS_GetStringChars(jsstring));
-    nsIScriptNameSpaceManager* manager;
-    nsIScriptContext* scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
     nsIID classID;
     nsISupports* native;
+
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    nsGetStaticScriptContext(aContext, aObj, getter_AddRefs(scriptContext));
+    if (!scriptContext) {
+      return JS_TRUE;
+    }
 
     if (NS_COMFALSE == scriptContext->IsContextInitialized()) {
       return JS_TRUE;
     }
 
-    result =  scriptContext->GetNameSpaceManager(&manager);
-    if (NS_OK == result) {
+    nsCOMPtr<nsIScriptNameSpaceManager> manager;
+    result = scriptContext->GetNameSpaceManager(getter_AddRefs(manager));
+    if (manager) {
       result = manager->LookupName(name, PR_FALSE, classID);
-      NS_RELEASE(manager);
       if (NS_OK == result) {
         result = nsComponentManager::CreateInstance(classID,
                                               nsnull,
                                               kISupportsIID,
                                               (void **)&native);
         if (NS_OK == result) {
-          nsConvertObjectToJSVal(native, aContext, &val);
+          nsConvertObjectToJSVal(native, aContext, aObj, &val);
           if (JS_DefineProperty(aContext, aObj, JS_GetStringBytes(jsstring),
                                 val, nsnull, nsnull, 
                                 JSPROP_ENUMERATE | JSPROP_READONLY)) {
@@ -571,7 +586,7 @@ nsJSUtils::nsGenericResolve(JSContext* aContext,
     // get the js object
     nsIJSScriptObject *object;
     if (NS_OK == nativeThis->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(aContext, aId);
+      object->Resolve(aContext, aObj, aId);
       NS_RELEASE(object);
     }
   }
@@ -595,5 +610,79 @@ nsJSUtils::nsGetNativeThis(JSContext* aContext, JSObject* aObj)
 		aObj = JS_GetPrototype(aContext, aObj);
 	}
 	return nsnull;
+}
+
+NS_EXPORT nsresult 
+nsJSUtils::nsGetStaticScriptGlobal(JSContext* aContext,
+                                   JSObject* aObj,
+                                   nsIScriptGlobalObject** aNativeGlobal)
+{
+  nsISupports* supports;
+  JSClass* clazz;
+  JSObject* parent;
+  JSObject* glob = aObj; // starting point for search
+
+  if (!glob)
+    return NS_ERROR_FAILURE;
+
+  while (nsnull != (parent = JS_GetParent(aContext, glob)))
+    glob = parent;
+
+#ifdef JS_THREADSAFE
+  clazz = JS_GetClass(aContext, glob);
+#else
+  clazz = JS_GetClass(glob);
+#endif
+
+  if (!clazz ||
+      !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
+      !(clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) ||
+      !(supports = (nsISupports*) JS_GetPrivate(aContext, glob))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return supports->QueryInterface(NS_GET_IID(nsIScriptGlobalObject),
+                                  (void**) aNativeGlobal);
+}
+
+NS_EXPORT nsresult 
+nsJSUtils::nsGetStaticScriptContext(JSContext* aContext,
+                                    JSObject* aObj,
+                                    nsIScriptContext** aScriptContext)
+{
+  nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
+  nsGetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));
+  if (!nativeGlobal)    
+    return NS_ERROR_FAILURE;
+  nsIScriptContext* scriptContext = nsnull;
+  nativeGlobal->GetContext(&scriptContext);
+  *aScriptContext = scriptContext;
+  return scriptContext ? NS_OK : NS_ERROR_FAILURE;
+}  
+
+NS_EXPORT nsresult 
+nsJSUtils::nsGetDynamicScriptGlobal(JSContext* aContext,
+                                   nsIScriptGlobalObject** aNativeGlobal)
+{
+  nsIScriptGlobalObject* nativeGlobal = nsnull;
+  nsCOMPtr<nsIScriptContext> scriptCX;
+  nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+  if (scriptCX) {
+    *aNativeGlobal = nativeGlobal = scriptCX->GetGlobalObject();
+  }
+  return nativeGlobal ? NS_OK : NS_ERROR_FAILURE;
+}  
+
+NS_EXPORT nsresult 
+nsJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
+                                     nsIScriptContext** aScriptContext)
+{
+  // XXX We rely on the rule that if any JSContext in our JSRuntime has a 
+  // private set then that private *must* be a pointer to an nsISupports.
+  nsISupports *supports = (nsIScriptContext*) JS_GetContextPrivate(aContext);
+  if (!supports)
+      return nsnull;
+  return supports->QueryInterface(NS_GET_IID(nsIScriptContext),
+                                  (void**)aScriptContext);
 }
 

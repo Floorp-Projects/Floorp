@@ -36,8 +36,6 @@
 
 #include "xpcprivate.h"
 
-const char XPC_QUERY_INTERFACE_STR[] = "QueryInterface";
-
 NS_IMPL_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
 // the value of this variable is never used - we use its address as a sentinel
@@ -45,47 +43,48 @@ static uint32 zero_methods_descriptor;
 
 // static
 nsXPCWrappedJSClass*
-nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
+nsXPCWrappedJSClass::GetNewOrUsedClass(XPCJSRuntime* rt,
                                        REFNSIID aIID)
 {
-    IID2WrappedJSClassMap* map;
+    NS_PRECONDITION(rt, "bad param");
+
     nsXPCWrappedJSClass* clazz = nsnull;
 
-    NS_PRECONDITION(xpcc, "bad param");
+    {   // scoped lock
+        nsAutoLock lock(rt->GetMapLock());  
+        IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
+        clazz = map->Find(aIID);
+    }
 
-    map = xpcc->GetWrappedJSClassMap();
-    NS_ASSERTION(map,"bad map");
 
-    clazz = map->Find(aIID);
     if(clazz)
     {
         NS_ADDREF(clazz);
     }
     else
     {
-        nsIInterfaceInfoManager* iimgr;
-        if(nsnull != (iimgr = nsXPConnect::GetInterfaceInfoManager()))
+        nsCOMPtr<nsIInterfaceInfoManager> iimgr =
+            dont_AddRef(nsXPConnect::GetInterfaceInfoManager());
+        if(iimgr)
         {
-            nsIInterfaceInfo* info;
-            if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
+            nsCOMPtr<nsIInterfaceInfo> info;
+            if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, getter_AddRefs(info))))
             {
                 if(nsXPConnect::IsISupportsDescendant(info))
                 {
-                    clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
+                    clazz = new nsXPCWrappedJSClass(rt, aIID, info);
                     if(!clazz->mDescriptors)
                         NS_RELEASE(clazz);  // sets clazz to nsnull
                 }
-                NS_RELEASE(info);
             }
-            NS_RELEASE(iimgr);
         }
     }
     return clazz;
 }
 
-nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
+nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCJSRuntime* rt, REFNSIID aIID,
                                          nsIInterfaceInfo* aInfo)
-    : mXPCContext(xpcc),
+    : mRuntime(rt),
       mInfo(aInfo),
       mName(nsnull),
       mIID(aIID),
@@ -95,7 +94,10 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-    mXPCContext->GetWrappedJSClassMap()->Add(this);
+    {   // scoped lock
+        nsAutoLock lock(rt->GetMapLock());  
+        rt->GetWrappedJSClassMap()->Add(this);
+    }
 
     uint16 methodCount;
     if(NS_SUCCEEDED(mInfo->GetMethodCount(&methodCount)))
@@ -135,21 +137,23 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
 {
     if(mDescriptors && mDescriptors != &zero_methods_descriptor)
         delete [] mDescriptors;
-    if(mXPCContext)
-        mXPCContext->GetWrappedJSClassMap()->Remove(this);
+    if(mRuntime)
+    {   // scoped lock
+        nsAutoLock lock(mRuntime->GetMapLock());  
+        mRuntime->GetWrappedJSClassMap()->Remove(this);
+    }
     if(mName)
         nsAllocator::Free(mName);
-    NS_RELEASE(mInfo);
+    NS_IF_RELEASE(mInfo);
 }
 
 JSObject*
 nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID)
 {
-// XXX disable code to make us run the current JSContext until DOM
-// JS_GetContextPrivate usage is fixed
-//    AutoPushCompatibleJSContext autoContext(GetJSContext());
-//    JSContext* cx = autoContext.GetJSContext();
-    JSContext* cx = GetJSContext();
+    AutoPushCompatibleJSContext autoContext(mRuntime->GetJSRuntime());
+    JSContext* cx = autoContext.GetJSContext();
+    if(!cx)
+        return nsnull;
 
     JSObject* id;
     jsval retval;
@@ -158,18 +162,15 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     jsid funid;
     jsval fun;
 
-    if(!cx || !mXPCContext)
-        return nsnull;
-
     // check upfront for the existence of the function property
-    funid = mXPCContext->GetStringID(XPCContext::IDX_QUERY_INTERFACE_STRING);
+    funid = mRuntime->GetStringID(XPCJSRuntime::IDX_QUERY_INTERFACE);
     if(!OBJ_GET_PROPERTY(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
         return nsnull;
 
     jsval e;
     JSBool hadExpection = JS_GetPendingException(cx, &e);
     JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
-    id = xpc_NewIDObject(cx, aIID);
+    id = xpc_NewIDObject(cx, jsobj, aIID);
     if(id)
     {
         jsval args[1] = {OBJECT_TO_JSVAL(id)};
@@ -255,13 +256,12 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     // else...
 
     // check if asking for an interface that we inherit from
-    nsIInterfaceInfo* current = GetInterfaceInfo();
-    NS_ADDREF(current);
-    nsIInterfaceInfo* parent;
 
-    while(NS_SUCCEEDED(current->GetParent(&parent)) && parent)
+    nsCOMPtr<nsIInterfaceInfo> current = GetInterfaceInfo();
+    nsCOMPtr<nsIInterfaceInfo> parent;
+
+    while(NS_SUCCEEDED(current->GetParent(getter_AddRefs(parent))) && parent)
     {
-        NS_RELEASE(current);
         current = parent;
 
         nsIID* iid;
@@ -271,27 +271,33 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
             nsAllocator::Free(iid);
             if(found)
             {
-                NS_RELEASE(current);
                 *aInstancePtr = (void*) self;
                 NS_ADDREF(self);
                 return NS_OK;
             }
         }
     }
-    NS_RELEASE(current);
 
     // else...
     // check if the JSObject claims to implement this interface
     JSObject* jsobj = CallQueryInterfaceOnJSObject(self->GetJSObject(), aIID);
     if(jsobj)
     {
-        nsXPCWrappedJS* wrapper =
-            nsXPCWrappedJS::GetNewOrUsedWrapper(GetXPCContext(),
-                                                jsobj, aIID);
-        if(wrapper)
+        AutoPushCompatibleJSContext autoContext(mRuntime->GetJSRuntime());
+        JSContext* cx = autoContext.GetJSContext();
+        if(cx)
         {
-            *aInstancePtr = (void*) wrapper;
-            return NS_OK;
+            XPCContext* xpcc = nsXPConnect::GetContext(cx);
+            if(xpcc)
+            {
+                nsXPCWrappedJS* wrapper =
+                    nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, jsobj, aIID);
+                if(wrapper)
+                {
+                    *aInstancePtr = (void*) wrapper;
+                    return NS_OK;
+                }
+            }
         }
     }
 
@@ -354,7 +360,6 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
 
     return JS_TRUE;
 }        
-
 
 JSBool 
 nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
@@ -461,12 +466,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     nsresult pending_result = NS_OK;
     JSErrorReporter older;
     JSBool success;
-// XXX disable code to make us run the current JSContext until DOM
-// JS_GetContextPrivate usage is fixed
-//    AutoPushCompatibleJSContext autoContext(GetJSContext());
-//    JSContext* cx = autoContext.GetJSContext();
-    JSContext* cx = GetJSContext();
-
     JSBool readyToDoTheCall = JS_FALSE;
     nsID* conditional_iid = nsnull;
     JSBool iidIsOwned = JS_FALSE;
@@ -478,6 +477,16 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     void* mark;
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
     JSBool foundDependentParam;
+    AutoPushCompatibleJSContext autoContext(mRuntime->GetJSRuntime());
+    JSContext* cx = autoContext.GetJSContext();
+    XPCContext* xpcc;
+    
+    if(cx && xpc)
+        xpcc = nsXPConnect::GetContext(cx, xpc);
+    else
+        xpcc = nsnull;
+
+    SET_CALLER_NATIVE(xpcc);
 
 #ifdef DEBUG_stats_jband
     static int count = 0;
@@ -494,11 +503,11 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     if(cx)
         older = JS_SetErrorReporter(cx, xpcWrappedJSErrorReporter);
 
-    if(!xpc || !mXPCContext || !cx || !IsReflectable(methodIndex))
+    if(!xpc || !cx || !xpcc || !IsReflectable(methodIndex))
         goto pre_call_clean_up;
 
-    mXPCContext->SetPendingResult(pending_result);
-    mXPCContext->SetException(nsnull);
+    xpcc->SetPendingResult(pending_result);
+    xpcc->SetException(nsnull);
     xpc->SetPendingException(nsnull);
 
     // We use js_AllocStack, js_Invoke, and js_FreeStack so that the gcthings
@@ -580,7 +589,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
                 if(!XPCConvert::NativeArray2JS(cx, &val, (const void**)&pv->val, 
                                                datum_type, conditional_iid, 
-                                               array_count, nsnull))
+                                               array_count, obj, nsnull))
                     goto pre_call_clean_up;
             }
             else if(isSizedString)
@@ -594,7 +603,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             else
             {
                 if(!XPCConvert::NativeData2JS(cx, &val, &pv->val, type,
-                                              conditional_iid, nsnull))
+                                              conditional_iid, obj, nsnull))
                     goto pre_call_clean_up;
             }
             if(conditional_iid)
@@ -615,7 +624,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             if(param.IsIn())
             {
                 if(!OBJ_SET_PROPERTY(cx, out_obj, 
-                        mXPCContext->GetStringID(XPCContext::IDX_VAL_STRING), 
+                        mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE), 
                         &val))
                 {
                     goto pre_call_clean_up;
@@ -721,13 +730,13 @@ pre_call_clean_up:
     }
 
     /* this one would be set by our error reporter */
-    xpc_exception = mXPCContext->GetException();
+    xpc_exception = xpcc->GetException();
     if(xpc_exception)
-        mXPCContext->SetException(nsnull);
+        xpcc->SetException(nsnull);
 
     // get this right away in case we do something below to cause JS code
     // to run on this JSContext
-    pending_result = mXPCContext->GetPendingResult();
+    pending_result = xpcc->GetPendingResult();
 
     /* JS might throw an expection whether the reporter was called or not */
     if(JS_GetPendingException(cx, &js_exception))
@@ -812,7 +821,7 @@ pre_call_clean_up:
         if(param.IsRetval())
             val = result;
         else if(!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(stackbase[i+2]), 
-                    mXPCContext->GetStringID(XPCContext::IDX_VAL_STRING), 
+                    mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE), 
                     &val))
             HANDLE_OUT_CONVERSION_FAILURE;
 
@@ -872,7 +881,7 @@ pre_call_clean_up:
             if(param.IsRetval())
                 val = result;
             else if(!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(stackbase[i+2]), 
-                        mXPCContext->GetStringID(XPCContext::IDX_VAL_STRING), 
+                        mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE), 
                         &val))
                 HANDLE_OUT_CONVERSION_FAILURE;
     
@@ -1015,9 +1024,9 @@ static JSClass WrappedJSOutArg_class = {
 
 // static
 JSBool
-nsXPCWrappedJSClass::InitForContext(XPCContext* xpcc)
+nsXPCWrappedJSClass::InitClasses(XPCContext* xpcc, JSObject* aGlobalJSObj)
 {
-    if (!JS_InitClass(xpcc->GetJSContext(), xpcc->GetGlobalObject(),
+    if (!JS_InitClass(xpcc->GetJSContext(), aGlobalJSObj,
         0, &WrappedJSOutArg_class, 0, 0,
         0, 0,
         0, 0))
@@ -1039,14 +1048,9 @@ nsXPCWrappedJSClass::NewOutObject(JSContext* cx)
     return JS_NewObject(cx, &WrappedJSOutArg_class, nsnull, nsnull);
 }
 
-void
-nsXPCWrappedJSClass::XPCContextBeingDestroyed()
-{
-    mXPCContext = nsnull;
-}
 
 NS_IMETHODIMP
-nsXPCWrappedJSClass::DebugDump(int depth)
+nsXPCWrappedJSClass::DebugDump(PRInt16 depth)
 {
 #ifdef DEBUG
     depth-- ;
@@ -1075,8 +1079,7 @@ nsXPCWrappedJSClass::DebugDump(int depth)
             XPC_LOG_ALWAYS(("ConstantCount = %d", i));
             XPC_LOG_OUTDENT();
         }
-        XPC_LOG_ALWAYS(("mXPCContext @ %x", mXPCContext));
-        XPC_LOG_ALWAYS(("JSContext @ %x", GetJSContext()));
+        XPC_LOG_ALWAYS(("mRuntime @ %x", mRuntime));
         XPC_LOG_ALWAYS(("mDescriptors @ %x count = %d", mDescriptors, methodCount));
         if(depth && mDescriptors && methodCount)
         {

@@ -224,7 +224,11 @@ XPCJSThrower::ThrowExceptionObject(JSContext* cx, nsIXPCException* e)
         nsXPConnect* xpc = nsXPConnect::GetXPConnect();
         if(!xpc)
             return JS_FALSE;
-        rv = xpc->WrapNative(cx, e, NS_GET_IID(nsIXPCException), &wrapper);
+
+        // XXX funky
+        JSObject* obj = JS_GetGlobalObject(cx);
+
+        rv = xpc->WrapNative(cx, obj, e, NS_GET_IID(nsIXPCException), &wrapper);
         NS_RELEASE(xpc);
         if(NS_SUCCEEDED(rv))
         {

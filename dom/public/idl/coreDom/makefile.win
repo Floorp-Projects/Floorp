@@ -42,8 +42,8 @@ IDLSRCS =  \
 	Notation.idl \
 	ProcessingInstruction.idl \
 	Text.idl \
-        StyleSheet.idl \
-        StyleSheetCollection.idl
+	StyleSheet.idl \
+	StyleSheetCollection.idl
 
 
 XPCOM_DESTDIR=$(DEPTH)\dom\public\coreDom

@@ -32,7 +32,7 @@
 class ofstream;
 #endif
 
-//#define USE_COMPTR
+#define USE_COMPTR 1
 
 class IdlObject;
 class IdlSpecification;

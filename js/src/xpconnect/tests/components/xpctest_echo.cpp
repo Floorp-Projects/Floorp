@@ -341,7 +341,7 @@ xpctestEcho::PrintArgTypes(void)
         return NS_ERROR_FAILURE;
 
     jsval* argv;
-    if(NS_FAILED(cc->GetArgv(&argv)))
+    if(NS_FAILED(cc->GetArgvPtr(&argv)))
         return NS_ERROR_FAILURE;
 
     printf("argv types = [");
@@ -395,7 +395,7 @@ xpctestEcho::ThrowArg(void)
 
     jsval* argv;
     JSContext* cx;
-    if(NS_FAILED(cc->GetArgv(&argv)) ||
+    if(NS_FAILED(cc->GetArgvPtr(&argv)) ||
        NS_FAILED(cc->GetJSContext(&cx)))
         return NS_ERROR_FAILURE;
 
@@ -430,6 +430,13 @@ xpctestEcho::Notify(nsITimer *timer)
     if(mReceiver)
         mReceiver->CallReceiverSometimeLater();
     NS_RELEASE(timer);
+}        
+
+/* readonly attribute short throwInGetter; */
+NS_IMETHODIMP
+xpctestEcho::GetThrowInGetter(PRInt16 *aThrowInGetter)
+{
+    return NS_ERROR_FAILURE;
 }        
 
 /***************************************************/

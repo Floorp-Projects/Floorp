@@ -49,6 +49,7 @@ CPPSRCS		= \
 		xpcconvert.cpp \
 		xpcexception.cpp \
 		xpcjsid.cpp \
+		xpcjsruntime.cpp \
 		xpclog.cpp \
 		xpcmaps.cpp \
 		xpcmodule.cpp \
@@ -62,6 +63,7 @@ CPPSRCS		= \
 		xpcwrappednative.cpp \
 		xpcwrappednativeclass.cpp \
 		xpcwrappednativejsops.cpp \
+		xpcwrappednativescope.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

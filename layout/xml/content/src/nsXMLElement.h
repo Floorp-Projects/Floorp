@@ -200,29 +200,29 @@ public:
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIJSScriptObject
-  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp) {
-    return mInner.AddProperty(aContext, aID, aVp);
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
+    return mInner.AddProperty(aContext, aObj, aID, aVp);
   }
-  virtual PRBool   DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp) {
-    return mInner.DeleteProperty(aContext, aID, aVp);
+  virtual PRBool   DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
+    return mInner.DeleteProperty(aContext, aObj, aID, aVp);
   }
-  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp) {
-    return mInner.GetProperty(aContext, aID, aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
+    return mInner.GetProperty(aContext, aObj, aID, aVp);
   }
-  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp) {
-    return mInner.SetProperty(aContext, aID, aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
+    return mInner.SetProperty(aContext, aObj, aID, aVp);
   }
-  virtual PRBool    EnumerateProperty(JSContext *aContext) {
-    return mInner.EnumerateProperty(aContext);
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj) {
+    return mInner.EnumerateProperty(aContext, aObj);
   }
-  virtual PRBool    Resolve(JSContext *aContext, jsval aID) {
-    return mInner.Resolve(aContext, aID);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID) {
+    return mInner.Resolve(aContext, aObj, aID);
   }
-  virtual PRBool    Convert(JSContext *aContext, jsval aID) {
-    return mInner.Convert(aContext, aID);
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID) {
+    return mInner.Convert(aContext, aObj, aID);
   }
-  virtual void      Finalize(JSContext *aContext) {
-    mInner.Finalize(aContext);
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj) {
+    mInner.Finalize(aContext, aObj);
   }
 
 protected:

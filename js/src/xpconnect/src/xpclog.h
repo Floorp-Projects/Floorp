@@ -69,11 +69,11 @@
 
 JS_BEGIN_EXTERN_C
 
-XPC_PUBLIC_API(void)   XPC_Log_print(const char *fmt, ...);
-XPC_PUBLIC_API(PRBool) XPC_Log_Check(int i);
-XPC_PUBLIC_API(void)   XPC_Log_Indent();
-XPC_PUBLIC_API(void)   XPC_Log_Outdent();
-XPC_PUBLIC_API(void)   XPC_Log_Clear_Indent();
+void   XPC_Log_print(const char *fmt, ...);
+PRBool XPC_Log_Check(int i);
+void   XPC_Log_Indent();
+void   XPC_Log_Outdent();
+void   XPC_Log_Clear_Indent();
 
 JS_END_EXTERN_C
 

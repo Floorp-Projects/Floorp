@@ -55,8 +55,7 @@ class xpcTestObjectReadOnly : public nsIXPCTestObjectReadOnly {
 	char	*stringID;
 };
 
-static NS_DEFINE_IID(kxpcTestObjectReadOnlyIID, NS_IXPCTESTOBJECTREADONLY_IID);
-NS_IMPL_ISUPPORTS(xpcTestObjectReadOnly, kxpcTestObjectReadOnlyIID);
+NS_IMPL_ISUPPORTS1(xpcTestObjectReadOnly, nsIXPCTestObjectReadOnly);
 
 xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
     NS_INIT_REFCNT();
@@ -155,8 +154,7 @@ class xpcTestObjectReadWrite : public nsIXPCTestObjectReadWrite {
 	 const char *stringProperty;
 };
 
-static NS_DEFINE_IID(kxpcTestObjectReadWriteIID, NS_IXPCTESTOBJECTREADWRITE_IID);
-NS_IMPL_ISUPPORTS(xpcTestObjectReadWrite, kxpcTestObjectReadWriteIID);
+NS_IMPL_ISUPPORTS1(xpcTestObjectReadWrite, nsIXPCTestObjectReadWrite);
 
 xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
     NS_INIT_REFCNT();
@@ -265,7 +263,6 @@ private:
 	char *name;
 };
   
-static NS_DEFINE_IID(kxpcTestAttributesIID, NS_IXPCTESTATTRIBUTES_IID);
 NS_IMPL_ISUPPORTS2(xpcTestAttributes, nsIXPCTestObjectReadWrite, nsIXPCTestObjectReadOnly);
 
 NS_IMETHODIMP xpcTestAttributes ::GetName(char * *aString) {

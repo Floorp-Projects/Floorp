@@ -32,96 +32,104 @@
  * file under either the NPL or the GPL.
  */
 
-/* Tests for XPConnect - hacked together while development continues. */
+/* API tests for XPConnect - use xpcshell for JS tests. */
 
 #include <stdio.h>
 
 #include "nsIXPConnect.h"
-#include "nsIXPCScriptable.h"
-#include "nsIInterfaceInfo.h"
-#include "nsIInterfaceInfoManager.h"
-#include "nsIXPCScriptable.h"
-#include "nsIXPCSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-#include "nsIEnumerator.h"
-#include "nsISupportsPrimitives.h"
+#include "nsIJSContextStack.h"
+#include "nsIJSRuntimeService.h"
+#include "nsIAllocator.h"
+#include "nsIXPCSecurityManager.h"
+
 #include "jsapi.h"
-#include "xpclog.h"
-#include "nscore.h"
+#include "jsgc.h"   // for js_ForceGC
 
 #include "xpctest.h"
 
-#include "nsIAllocator.h"
-#include "nsIGenericFactory.h"
-#include "nsSpecialSystemDirectory.h"	// For exe dir
-
-#include "nsIJSContextStack.h"
-#include "nsIJSRuntimeService.h"
-
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
-static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+/***************************************************************************/
+// initialization stuff for the xpcom runtime
 
 static void SetupRegistry()
 {
     nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
 }
 
-
 /***************************************************************************/
-class MyScriptable : public nsIXPCScriptable
+// host support for jsengine
+
+FILE *gOutFile = NULL;
+FILE *gErrFile = NULL;
+
+static JSBool
+Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    NS_DECL_ISUPPORTS
-    XPC_DECLARE_IXPCSCRIPTABLE
-    MyScriptable();
+    uintN i, n;
+    JSString *str;
+
+    for (i = n = 0; i < argc; i++) {
+        str = JS_ValueToString(cx, argv[i]);
+        if (!str)
+            return JS_FALSE;
+        fprintf(gOutFile, "%s%s", i ? " " : "", JS_GetStringBytes(str));
+    }
+    n++;
+    if (n)
+        fputc('\n', gOutFile);
+    return JS_TRUE;
+}
+
+static JSBool
+Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    uintN i;
+    JSString *str;
+    const char *filename;
+    JSScript *script;
+    JSBool ok;
+    jsval result;
+
+    for (i = 0; i < argc; i++) {
+        str = JS_ValueToString(cx, argv[i]);
+        if (!str)
+            return JS_FALSE;
+        argv[i] = STRING_TO_JSVAL(str);
+        filename = JS_GetStringBytes(str);
+        script = JS_CompileFile(cx, obj, filename);
+        if (!script)
+            ok = JS_FALSE;
+        else {
+            ok = JS_ExecuteScript(cx, obj, script, &result);
+            JS_DestroyScript(cx, script);
+        }
+        if (!ok)
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+static JSFunctionSpec glob_functions[] = {
+    {"print",           Print,          0},
+    {"load",            Load,           1},
+    {0}
 };
 
-MyScriptable::MyScriptable()
+static JSClass global_class = {
+    "global", 0,
+    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+};
+
+static void
+my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-}
-
-static NS_DEFINE_IID(kMyScriptableIID, NS_IXPCSCRIPTABLE_IID);
-NS_IMPL_ISUPPORTS(MyScriptable, kMyScriptableIID);
-
-// XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(MyScriptable)
-XPC_IMPLEMENT_FORWARD_CREATE(MyScriptable)
-XPC_IMPLEMENT_IGNORE_GETFLAGS(MyScriptable)
-XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(MyScriptable)
-XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(MyScriptable)
-XPC_IMPLEMENT_FORWARD_GETPROPERTY(MyScriptable)
-XPC_IMPLEMENT_FORWARD_SETPROPERTY(MyScriptable)
-XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(MyScriptable)
-XPC_IMPLEMENT_FORWARD_SETATTRIBUTES(MyScriptable)
-XPC_IMPLEMENT_FORWARD_DELETEPROPERTY(MyScriptable)
-// XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(MyScriptable)
-XPC_IMPLEMENT_FORWARD_ENUMERATE(MyScriptable)
-XPC_IMPLEMENT_FORWARD_CHECKACCESS(MyScriptable)
-XPC_IMPLEMENT_FORWARD_CALL(MyScriptable)
-XPC_IMPLEMENT_FORWARD_CONSTRUCT(MyScriptable)
-XPC_IMPLEMENT_FORWARD_HASINSTANCE(MyScriptable)
-XPC_IMPLEMENT_FORWARD_FINALIZE(MyScriptable)
-
-NS_IMETHODIMP
-MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,
-                            JSType type, jsval *vp,
-                            nsIXPConnectWrappedNative* wrapper,
-                            nsIXPCScriptable* arbitrary,
-                            JSBool* retval)
-{
-    if(type == JSTYPE_STRING || type == JSTYPE_VOID)
-    {
-        *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, "obj with MyScriptable"));
-        *retval = JS_TRUE;
-        return NS_OK;
-    }
-    return arbitrary->DefaultValue(cx, obj, type, vp, wrapper, NULL, retval);
+    printf(message);
 }
 
 /***************************************************************************/
+// Foo class for used with some of the tests
 
 class nsTestXPCFoo : public nsITestXPCFoo2
 {
@@ -133,44 +141,21 @@ class nsTestXPCFoo : public nsITestXPCFoo2
     char* mFoo;
 };
 
-NS_IMETHODIMP nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aInstancePtr = NULL;
-
-  if (aIID.Equals(nsITestXPCFoo::GetIID()) ||
-      aIID.Equals(nsITestXPCFoo2::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-    *aInstancePtr = (void*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsIXPCScriptable::GetIID())) {
-    *aInstancePtr = (void*) new MyScriptable();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
 NS_IMETHODIMP nsTestXPCFoo::Test(int p1, int p2, int* retval)
 {
-    printf("nsTestXPCFoo::Test called with p1 = %d and p2 = %d\n", p1, p2);
+//    printf("nsTestXPCFoo::Test called with p1 = %d and p2 = %d\n", p1, p2);
     *retval = p1+p2;
     return NS_OK;
 }
 NS_IMETHODIMP nsTestXPCFoo::Test2()
 {
-    printf("nsTestXPCFoo::Test2 called ");
+//    printf("nsTestXPCFoo::Test2 called ");
     return NS_OK;
 }
 
 NS_IMETHODIMP nsTestXPCFoo::GetFoo(char * *aFoo)
 {
-    printf("nsTestXPCFoo::Get called ");
+//    printf("nsTestXPCFoo::Get called ");
     if(!aFoo)
         return NS_ERROR_NULL_POINTER;
     if(mFoo)
@@ -182,7 +167,7 @@ NS_IMETHODIMP nsTestXPCFoo::GetFoo(char * *aFoo)
 
 NS_IMETHODIMP nsTestXPCFoo::SetFoo(const char * aFoo)
 {
-    printf("nsTestXPCFoo::Set called ");
+//    printf("nsTestXPCFoo::Set called ");
     if(mFoo)
     {
         nsAllocator::Free(mFoo);
@@ -193,8 +178,7 @@ NS_IMETHODIMP nsTestXPCFoo::SetFoo(const char * aFoo)
     return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsTestXPCFoo)
-NS_IMPL_RELEASE(nsTestXPCFoo)
+NS_IMPL_ISUPPORTS2(nsTestXPCFoo, nsITestXPCFoo, nsITestXPCFoo2)
 
 nsTestXPCFoo::nsTestXPCFoo()
     : mFoo(NULL)
@@ -209,303 +193,8 @@ nsTestXPCFoo::~nsTestXPCFoo()
         nsAllocator::Free(mFoo);
 }
 
-
 /***************************************************************************/
-
-class MyEcho : public nsIEcho
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIECHO
-
-    MyEcho();
-private:
-    nsIEcho* mReceiver;
-    nsIAllocator* mAllocator;
-};
-
-static NS_DEFINE_IID(kMyEchoIID, NS_IECHO_IID);
-NS_IMPL_ISUPPORTS(MyEcho, kMyEchoIID);
-
-MyEcho::MyEcho()
-    : mReceiver(NULL)
-{
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-    nsServiceManager::GetService(kAllocatorCID,
-                                 kIAllocatorIID,
-                                 (nsISupports **)&mAllocator);
-}
-
-NS_IMETHODIMP MyEcho::SetReceiver(nsIEcho* aReceiver)
-{
-    if(mReceiver)
-        NS_RELEASE(mReceiver);
-    mReceiver = aReceiver;
-    if(mReceiver)
-        NS_ADDREF(mReceiver);
-    return NS_OK;
-}
-
-NS_IMETHODIMP MyEcho::SendOneString(const char* str)
-{
-    if(mReceiver)
-        return mReceiver->SendOneString(str);
-    return NS_OK;
-}
-
-NS_IMETHODIMP MyEcho::In2OutOneInt(int input, int* output)
-{
-    *output = input;
-    return NS_OK;
-}
-
-NS_IMETHODIMP MyEcho::In2OutAddTwoInts(int input1,
-                                       int input2,
-                                       int* output1,
-                                       int* output2,
-                                       int* result)
-{
-    *output1 = input1;
-    *output2 = input2;
-    *result = input1+input2;
-    return NS_OK;
-}
-
-NS_IMETHODIMP MyEcho::In2OutOneString(const char* input, char** output)
-{
-    char* p;
-    int len;
-    if(input && output && mAllocator &&
-       (NULL != (p = (char*)mAllocator->Alloc(len=strlen(input)+1))))
-    {
-        memcpy(p, input, len);
-        *output = p;
-        return NS_OK;
-    }
-    if(output)
-        *output = NULL;
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP MyEcho::SimpleCallNoEcho()
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-MyEcho::SendManyTypes(PRUint8              p1,
-                      PRInt16             p2,
-                      PRInt32             p3,
-                      PRInt64             p4,
-                      PRUint8              p5,
-                      PRUint16            p6,
-                      PRUint32            p7,
-                      PRUint64            p8,
-                      float             p9,
-                      double            p10,
-                      PRBool            p11,
-                      char              p12,
-                      PRUnichar            p13,
-                      const nsID*       p14,
-                      const char*       p15,
-                      const PRUnichar*  p16)
-{
-    if(mReceiver)
-        return mReceiver->SendManyTypes(p1, p2, p3, p4, p5, p6, p7, p8, p9,
-                                        p10, p11, p12, p13, p14, p15, p16);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-MyEcho::SendInOutManyTypes(PRUint8*    p1,
-                           PRInt16*   p2,
-                           PRInt32*   p3,
-                           PRInt64*   p4,
-                           PRUint8*    p5,
-                           PRUint16*  p6,
-                           PRUint32*  p7,
-                           PRUint64*  p8,
-                           float*   p9,
-                           double*  p10,
-                           PRBool*  p11,
-                           char*    p12,
-                           PRUnichar*  p13,
-                           nsID**   p14,
-                           char**   p15,
-                           PRUnichar** p16)
-{
-    if(mReceiver)
-        return mReceiver->SendInOutManyTypes(p1, p2, p3, p4, p5, p6, p7, p8, p9,
-                                             p10, p11, p12, p13, p14, p15, p16);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-MyEcho::MethodWithNative(int p1, void* p2)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-MyEcho::ReturnCode(int code)
-{
-    return (nsresult) code;
-}
-
-NS_IMETHODIMP
-MyEcho::FailInJSTest(int fail)
-{
-    if(mReceiver)
-        return mReceiver->FailInJSTest(fail);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-MyEcho::SharedString(const char **str)
-{
-    *str = "a static string";
-/*
-    // to do non-shared we clone the string:
-    char buf[] = "a static string";
-    int len;
-    *str = (char*)mAllocator->Alloc(len=strlen(buf)+1);
-    memcpy(*str, buf, len);
-*/
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-MyEcho::ReturnCode_NS_OK()
-{return NS_OK;}
-
-NS_IMETHODIMP
-MyEcho::ReturnCode_NS_ERROR_NULL_POINTER()
-{return NS_ERROR_NULL_POINTER;}
-
-NS_IMETHODIMP
-MyEcho::ReturnCode_NS_ERROR_UNEXPECTED()
-{return NS_ERROR_UNEXPECTED;}
-
-NS_IMETHODIMP
-MyEcho::ReturnCode_NS_ERROR_OUT_OF_MEMORY()
-{return NS_ERROR_OUT_OF_MEMORY;}
-
-NS_IMETHODIMP
-MyEcho::ReturnInterface(nsISupports *obj, nsISupports **_retval)
-{
-    if(!_retval)
-        return NS_ERROR_NULL_POINTER;
-    if(obj)
-        NS_ADDREF(obj);
-    *_retval = obj;
-    return NS_OK;
-}
-
-/* nsIJSStackFrameLocation GetStack (); */
-NS_IMETHODIMP
-MyEcho::GetStack(nsIJSStackFrameLocation **_retval)
-{
-    nsIJSStackFrameLocation* stack = nsnull;
-    if(!_retval)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-    if(NS_SUCCEEDED(rv))
-    {
-        nsIJSStackFrameLocation* jsstack;
-        if(NS_SUCCEEDED(xpc->GetCurrentJSStack(&jsstack)) && jsstack)
-        {
-            xpc->CreateStackFrameLocation(JS_FALSE,
-                                          __FILE__,
-                                          "MyEcho::GetStack",
-                                          __LINE__,
-                                          jsstack,
-                                          &stack);
-            NS_RELEASE(jsstack);
-        }
-    }
-
-    if(stack)
-    {
-        *_retval = stack;
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-}
-
-/* void SetReceiverReturnOldReceiver (inout nsIEcho aReceiver); */
-NS_IMETHODIMP
-MyEcho::SetReceiverReturnOldReceiver(nsIEcho **aReceiver)
-{
-    if(!aReceiver)
-        return NS_ERROR_NULL_POINTER;
-
-    nsIEcho* oldReceiver = mReceiver;
-    mReceiver = *aReceiver;
-    if(mReceiver)
-        NS_ADDREF(mReceiver);
-
-    /* don't release the reference, that is the caller's problem */
-    *aReceiver = oldReceiver;
-    return NS_OK;
-}
-
-/* void MethodWithForwardDeclaredParam (in nsITestXPCSomeUselessThing sut); */
-NS_IMETHODIMP
-MyEcho::MethodWithForwardDeclaredParam(nsITestXPCSomeUselessThing *sut)
-{
-    return NS_OK;
-}
-
-/* void PseudoQueryInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-NS_IMETHODIMP
-MyEcho::PseudoQueryInterface(const nsIID & uuid, void * *result)
-{
-    if(!result)
-        return NS_ERROR_NULL_POINTER;
-    if(mReceiver)
-        return mReceiver->PseudoQueryInterface(uuid, result);
-    return NS_OK;
-}        
-
-/* void DebugDumpJSStack (); */
-NS_IMETHODIMP
-MyEcho::DebugDumpJSStack()
-{
-    nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-    if(NS_SUCCEEDED(rv))
-    {
-        rv = xpc->DebugDumpJSStack();
-    }
-    return rv;
-}        
-
-/* void printArgTypes (); */
-NS_IMETHODIMP
-MyEcho::PrintArgTypes(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void throwArg (); */
-NS_IMETHODIMP
-MyEcho::ThrowArg(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void callReceiverSometimeLater (); */
-NS_IMETHODIMP
-MyEcho::CallReceiverSometimeLater(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/***************************************************************************/
-// security manager test class
+// test for nsIXPCSecurityManager
 
 class MySecMan : public nsIXPCSecurityManager
 {
@@ -643,339 +332,19 @@ MySecMan::CanSetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports
     }
 }
 
-/***************************************************************************/
-
-FILE *gOutFile = NULL;
-FILE *gErrFile = NULL;
-
-static JSBool
-Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    uintN i, n;
-    JSString *str;
-
-    for (i = n = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
-        if (!str)
-            return JS_FALSE;
-        fprintf(gOutFile, "%s%s", i ? " " : "", JS_GetStringBytes(str));
-    }
-    n++;
-    if (n)
-        fputc('\n', gOutFile);
-    return JS_TRUE;
-}
-
-static JSBool
-Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    uintN i;
-    JSString *str;
-    const char *filename;
-    JSScript *script;
-    JSBool ok;
-    jsval result;
-
-    for (i = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
-        if (!str)
-            return JS_FALSE;
-        argv[i] = STRING_TO_JSVAL(str);
-        filename = JS_GetStringBytes(str);
-        script = JS_CompileFile(cx, obj, filename);
-        if (!script)
-            ok = JS_FALSE;
-        else {
-            ok = JS_ExecuteScript(cx, obj, script, &result);
-            JS_DestroyScript(cx, script);
-        }
-        if (!ok)
-            return JS_FALSE;
-    }
-    return JS_TRUE;
-}
-
-static JSFunctionSpec glob_functions[] = {
-    {"print",           Print,          0},
-    {"load",            Load,           1},
-    {0}
-};
-
-static JSClass global_class = {
-    "global", 0,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
-};
+/**********************************************/
 
 static void
-my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 {
-    printf(message);
-}
-
-static nsIXPConnect* GetXPConnect()
-{
-    nsIXPConnect* result;
-
-    if(NS_SUCCEEDED(nsServiceManager::GetService(
-                        nsIXPConnect::GetCID(), nsIXPConnect::GetIID(),
-                        (nsISupports**) &result, NULL)))
-        return result;
-    return NULL;
-}
-
-extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
-
-int main()
-{
-    JSRuntime *rt;
-    JSContext *jscontext;
-    JSObject *glob;
-    nsresult rv;
-
-    gErrFile = stderr;
-    gOutFile = stdout;
-
-    SetupRegistry();
-
-    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
-    // get the JSRuntime from the runtime svc, if possible
-    if (NS_FAILED(rv) ||
-        NS_FAILED(rtsvc->GetRuntime(&rt))) {
-        rtsvc = NULL;
-        rt = JS_NewRuntime(8L * 1024L * 1024L);
-    }
-    if (!rt)
-        return 1;
-    jscontext = JS_NewContext(rt, 8192);
-    if (!jscontext)
-        return 1;
-
-    JS_SetErrorReporter(jscontext, my_ErrorReporter);
-
-    nsIXPConnect* xpc = GetXPConnect();
-    if(!xpc)
-    {
-        printf("XPC_GetXPConnect() returned NULL!\n");
-        return 1;
-    }
-
-    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
-    if(NS_FAILED(rv))
-    {
-        printf("failed to get the nsThreadJSContextStack service!\n");
-        return 1;
-    }
-    if(NS_FAILED(cxstack->Push(jscontext)))
-    {
-        printf("failed to get push the current jscontext on the nsThreadJSContextStack service!\n");
-        return 1;
-    }
-
-#if 0
-
-    // old code where global object was plain object
-    glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
-    if (!glob)
-        return 1;
-
-    if (!JS_InitStandardClasses(jscontext, glob))
-        return 1;
-    if (!JS_DefineFunctions(jscontext, glob, glob_functions))
-        return 1;
-
-    xpc->InitJSContext(jscontext, glob, JS_TRUE);
-
-#if 0
-    nsIXPCComponents* comp = XPC_GetXPConnectComponentsObject();
-    if(!comp)
-    {
-        printf("failed to create Components native object");
-        return 1;
-    }
-    nsIXPConnectWrappedNative* comp_wrapper;
-    if(NS_FAILED(xpc->WrapNative(jscontext, comp,
-                              nsIXPCComponents::GetIID(), &comp_wrapper)))
-    {
-        printf("failed to build wrapper for Components native object");
-        return 1;
-    }
-    JSObject* comp_jsobj;
-    comp_wrapper->GetJSObject(&comp_jsobj);
-    jsval comp_jsval = OBJECT_TO_JSVAL(comp_jsobj);
-    JS_SetProperty(jscontext, glob, "Components", &comp_jsval);
-    NS_RELEASE(comp_wrapper);
-    NS_RELEASE(comp);
-#endif
-
-    char* txt[] = {
-      "load('simpletest.js');",
-      0,
-    };
-
-    jsval rval;
-    for(char** p = txt; *p; p++)
-        JS_EvaluateScript(jscontext, glob, *p, strlen(*p), "builtin", 1, &rval);
-
-//    XPC_DUMP(xpc, 20);
-
-#else
-
-    nsTestXPCFoo* foo = new nsTestXPCFoo();
-
-//    nsXPCVarient v[2];
-//    v[0].type = nsXPCType::T_I32; v[0].val.i32 = 1;
-//    v[1].type = nsXPCType::T_I32; v[1].val.i32 = 2;
-
-//    XPC_TestInvoke(foo, 3, 2, v);
-//    XPC_TestInvoke(foo, 4, 0, NULL);
-
-    nsIXPConnectWrappedNative* wrapper;
-    nsIXPConnectWrappedNative* wrapper2;
-    nsIXPConnectWrappedNative* wrapper3;
-
-
-    nsIXPConnectWrappedNative* fool_wrapper = NULL;
-
-/*
-    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo::GetIID(), &wrapper)))
-*/
-    // new code where global object is a wrapped xpcom object
-    if(NS_SUCCEEDED(xpc->InitJSContextWithNewWrappedGlobal(
-                jscontext, foo, nsITestXPCFoo::GetIID(), JS_TRUE, &wrapper)))
-    {
-        wrapper->GetJSObject(&glob);
-        JS_DefineFunctions(jscontext, glob, glob_functions);
-
-#if 0
-        nsIXPCComponents* comp = XPC_GetXPConnectComponentsObject();
-        if(!comp)
-        {
-            printf("failed to create Components native object");
-            return 1;
-        }
-        nsIXPConnectWrappedNative* comp_wrapper;
-        if(NS_FAILED(xpc->WrapNative(jscontext, comp,
-                                  nsIXPCComponents::GetIID(), &comp_wrapper)))
-        {
-            printf("failed to build wrapper for Components native object");
-            return 1;
-        }
-        JSObject* comp_jsobj;
-        comp_wrapper->GetJSObject(&comp_jsobj);
-        jsval comp_jsval = OBJECT_TO_JSVAL(comp_jsobj);
-        JS_SetProperty(jscontext, glob, "Components", &comp_jsval);
-        NS_RELEASE(comp_wrapper);
-        NS_RELEASE(comp);
-#endif
-
-        nsTestXPCFoo* fool = new nsTestXPCFoo();
-        xpc->WrapNative(jscontext, fool, nsITestXPCFoo2::GetIID(), &fool_wrapper);
-
-        if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo2::GetIID(), &wrapper2)))
-        {
-            JSObject* js_obj;
-            nsISupports* com_obj;
-            jsval rval;
-
-            wrapper2->GetJSObject(&js_obj);
-            wrapper2->GetNative(&com_obj);
-
-            jsval v;
-            v = OBJECT_TO_JSVAL(js_obj);
-            JS_SetProperty(jscontext, glob, "foo", &v);
-
-            // add the reflected native echo object (sans error checking :)
-            nsIXPConnectWrappedNative* echo_wrapper;
-            JSObject* echo_jsobj;
-            jsval echo_jsval;
-            MyEcho* myEcho = new MyEcho();
-            xpc->WrapNative(jscontext, myEcho, nsIEcho::GetIID(), &echo_wrapper);
-            echo_wrapper->GetJSObject(&echo_jsobj);
-            echo_jsval = OBJECT_TO_JSVAL(echo_jsobj);
-            JS_SetProperty(jscontext, glob, "echo", &echo_jsval);
-
-            char* txt[] = {
-              "load('testxpc.js');",
-              0,
-            };
-
-            for(char** p = txt; *p; p++)
-                JS_EvaluateScript(jscontext, glob, *p, strlen(*p), "builtin", 1, &rval);
-
-            if(JS_GetProperty(jscontext, glob, "bar", &v) && JSVAL_IS_OBJECT(v))
-            {
-//                JSObject* bar = JSVAL_TO_OBJECT(v);
-                nsISupports* wrapper4;
-                if(NS_SUCCEEDED(xpc->WrapJS(jscontext,
-                                       JSVAL_TO_OBJECT(v),
-                                       nsITestXPCFoo::GetIID(), &wrapper4)))
-                {
-                    nsITestXPCFoo* ptr = (nsITestXPCFoo*)wrapper4;
-                    int result;
-                    JSObject* test_js_obj;
-                    ptr->Test(11, 13, &result);
-                    printf("call to ptr->Test result: %s\n",
-                           result == 24 ? "passed" : "FAILED");
-
-                    nsIXPConnectWrappedJSMethods* methods;
-
-                    wrapper4->QueryInterface(nsIXPConnectWrappedJSMethods::GetIID(),
-                                            (void**) &methods);
-                    methods->GetJSObject(&test_js_obj);
-
-                    printf("call to methods->GetJSObject() : %s\n",
-                            test_js_obj == JSVAL_TO_OBJECT(v) ?
-                            "passed" : "FAILED" );
-
-                    char some_string[] = "some string here";
-                    char* answer = NULL;
-//                    ptr->GetFoo(&answer);
-//                    printf("Foo : %s\n", answer);
-                    ptr->SetFoo(some_string);
-                    ptr->GetFoo(&answer);
-                    printf("set/get property : %s\n",
-                           0 == strcmp(some_string, answer) ?
-                                "passed" : "FALIED");
-
-                    if(answer)
-                        nsAllocator::Free(answer);
-
-                    // dump to log test...
-//                    XPC_DUMP(xpc, 50);
-
-                    NS_RELEASE(methods);
-                    NS_RELEASE(wrapper4);
-
-                }
-            }
-            NS_RELEASE(com_obj);
-            NS_RELEASE(wrapper2);
-            NS_RELEASE(echo_wrapper);
-            NS_RELEASE(myEcho);
-        }
-//        NS_RELEASE(wrapper);
-    }
-
-    // XXX things are still rooted to the global object in the test scripts...
-
-    // dump to log test...
-//    XPC_LOG_ALWAYS((""));
-//    XPC_LOG_ALWAYS(("after running release object..."));
-//    XPC_LOG_ALWAYS((""));
-//    XPC_DUMP(xpc, 3);
-
-
-    {
-    // SecurityManager tests...
-
     char* t;
     jsval rval;
     JSBool success = JS_TRUE;
     MySecMan* sm = new MySecMan();
-    nsTestXPCFoo* foo3 = new nsTestXPCFoo();
+    nsTestXPCFoo* foo = new nsTestXPCFoo();
+    nsIXPConnectWrappedNative* wrapper;
 
-    if(!sm || ! foo3)
+    if(!sm || ! foo)
     {
         success = JS_FALSE;
         printf("failed to create object!\n");
@@ -991,6 +360,44 @@ int main()
         success = JS_FALSE;
         printf("SetSecurityManagerForJSContext failed!\n");
         goto sm_test_done;
+    }
+
+    printf("  build wrapper with veto: TEST NOT RUN\n");
+/*
+    // This test is broken because xpconnect now detects that this is a
+    // call from native code and lets it succeed without calling the security manager
+
+    sm->SetMode(MySecMan::VETO_ALL);
+    printf("  build wrapper with veto: ");
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, glob, foo, nsITestXPCFoo2::GetIID(), &wrapper)))
+    {
+        success = JS_FALSE;
+        printf("failed\n");
+        NS_RELEASE(wrapper);
+    }
+    else
+    {
+        printf("passed\n");
+    }
+*/
+    sm->SetMode(MySecMan::OK_ALL);
+    printf("  build wrapper no veto: ");
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, glob, foo, nsITestXPCFoo2::GetIID(), &wrapper)))
+    {
+        printf("passed\n");
+        JSObject* obj;
+        if(NS_SUCCEEDED(wrapper->GetJSObject(&obj)))
+        {
+            rval = OBJECT_TO_JSVAL(obj);
+            JS_SetProperty(jscontext, glob, "foo", &rval);
+        }
+            
+        NS_RELEASE(wrapper);
+    }
+    else
+    {
+        success = JS_FALSE;
+        printf("failed\n");
     }
 
     sm->SetMode(MySecMan::OK_ALL);
@@ -1047,347 +454,234 @@ int main()
     t = "try{foo.Foo = 0; failed = true; print(' : failed');}catch(e){print(' : passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
-    sm->SetMode(MySecMan::OK_ALL);
-    printf("  build wrapper no veto: ");
-    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo2::GetIID(), &wrapper3)))
-    {
-        printf("passed\n");
-        NS_RELEASE(wrapper3);
-    }
-    else
-    {
-        success = JS_FALSE;
-        printf("failed\n");
-    }
-
-    sm->SetMode(MySecMan::VETO_ALL);
-    printf("  build wrapper with veto: ");
-    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo3, nsITestXPCFoo2::GetIID(), &wrapper3)))
-    {
-        success = JS_FALSE;
-        printf("failed\n");
-        NS_RELEASE(wrapper3);
-    }
-    else
-    {
-        printf("passed\n");
-    }
-
 sm_test_done:
     success = success && JS_GetProperty(jscontext, glob, "failed", &rval) && JSVAL_TRUE != rval;
     printf("SecurityManager tests : %s\n", success ? "passed" : "failed");
-    NS_RELEASE(foo3);
-    }
+    NS_IF_RELEASE(foo);
+    xpc->SetSecurityManagerForJSContext(jscontext, nsnull, 0);
+}
 
 
+/***************************************************************************/
+// arg formatter test...
+
+static void
+TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
+{
+    jsval* argv;
+    void* mark;
+
+    nsTestXPCFoo* foo = new nsTestXPCFoo();
+    const char* a_in = "some string";
+    const char* b_in = "another meaningless chunck of text";
+    char* a_out;
+    char* b_out;
+
+    printf("ArgumentFormatter test: ");
+
+    argv = JS_PushArguments(jscontext, &mark, "s %ip s",
+                            a_in, &nsITestXPCFoo2::GetIID(), foo, b_in);
+
+    if(argv)
     {
-        // arg formatter test...
-
-        jsval* argv;
-        void* mark;
-
-        const char* a_in = "some string";
-        const char* b_in = "another meaningless chunck of text";
-        char* a_out;
-        char* b_out;
-
-        printf("ArgumentFormatter test: ");
-
-        argv = JS_PushArguments(jscontext, &mark, "s %ip s",
-                                a_in, &nsITestXPCFoo2::GetIID(), foo, b_in);
-
-        if(argv)
+        nsISupports* fooc;
+        nsTestXPCFoo* foog;
+        if(JS_ConvertArguments(jscontext, 3, argv, "s %ip s",
+                               &a_out, &fooc, &b_out))
         {
-            nsISupports* fooc;
-            nsTestXPCFoo* foog;
-            if(JS_ConvertArguments(jscontext, 3, argv, "s %ip s",
-                                   &a_out, &fooc, &b_out))
+            if(fooc)
             {
-                if(fooc)
+                if(NS_SUCCEEDED(fooc->QueryInterface(nsTestXPCFoo::GetIID(),
+                                (void**)&foog)))
                 {
-                    if(NS_SUCCEEDED(fooc->QueryInterface(nsTestXPCFoo::GetIID(),
-                                    (void**)&foog)))
+                    if(foog == foo)
                     {
-                        if(foog == foo)
-                        {
-                            if(!strcmp(a_in, a_out) && !strcmp(b_in, b_out))
-                                printf("passed\n");
-                            else
-                                printf(" conversion OK, but surrounding was mangled -- failed!\n");
-                        }
+                        if(!strcmp(a_in, a_out) && !strcmp(b_in, b_out))
+                            printf("passed\n");
                         else
-                            printf(" JS to native returned wrong value -- failed!\n");
-                        NS_RELEASE(foog);
+                            printf(" conversion OK, but surrounding was mangled -- failed!\n");
                     }
                     else
-                    {
-                        printf(" could not QI value JS to native returned -- failed!\n");
-                    }
-                    NS_RELEASE(fooc);
+                        printf(" JS to native returned wrong value -- failed!\n");
+                    NS_RELEASE(foog);
                 }
                 else
                 {
-                    printf(" JS to native returned NULL -- failed!\n");
+                    printf(" could not QI value JS to native returned -- failed!\n");
                 }
+                NS_RELEASE(fooc);
             }
             else
             {
-                printf(" could not convert from JS to native -- failed!\n");
+                printf(" JS to native returned NULL -- failed!\n");
             }
-            JS_PopArguments(jscontext, mark);
         }
         else
         {
-            printf(" could not convert from native to JS -- failed!\n");
+            printf(" could not convert from JS to native -- failed!\n");
         }
+        JS_PopArguments(jscontext, mark);
     }
-
-
+    else
     {
-        // ThreadJSContextStack test
+        printf(" could not convert from native to JS -- failed!\n");
+    }
+    NS_IF_RELEASE(foo);
+}
 
-        printf("ThreadJSContextStack tests...\n");
+/***************************************************************************/
+// ThreadJSContextStack test
 
-        NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+static void
+TestThreadJSContextStack(JSContext* jscontext)
+{
 
-        if(NS_SUCCEEDED(rv))
-        {
-            PRInt32 count;
-            PRInt32 base_count;
+    printf("ThreadJSContextStack tests...\n");
 
-            if(NS_SUCCEEDED(stack->GetCount(&base_count)))
-                printf("\tstack->GetCount() : passed\n");
-            else
-                printf("\tstack->GetCount() failed!\n");
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
 
-            if(NS_FAILED(stack->Push(jscontext)))
-                printf("\tstack->Push() failed!\n");
-            else
-                printf("\tstack->Push() passed\n");
+    if(NS_SUCCEEDED(rv))
+    {
+        PRInt32 count;
+        PRInt32 base_count;
 
-            if(NS_SUCCEEDED(stack->GetCount(&count)))
-                printf("\tstack->GetCount() : %s\n",
-                        count == base_count+1 ? "passed" : "failed!");
-            else
-                printf("\tstack->GetCount() failed!\n");
-
-            JSContext* testCX;
-            if(NS_FAILED(stack->Peek(&testCX)))
-                printf("\tstack->Peek() failed!\n");
-
-            if(jscontext == testCX)
-                printf("\tstack->Push/Peek : passed\n");
-            else
-                printf("\tstack->Push/Peek : failed\n");
-
-            if(NS_FAILED(stack->Pop(&testCX)))
-                printf("\tstack->Pop() failed!\n");
-
-            if(jscontext == testCX)
-                printf("\tstack->Push/Pop : passed\n");
-            else
-                printf("\tstack->Push/Pop : failed\n");
-
-            if(NS_SUCCEEDED(stack->GetCount(&count)))
-                printf("\tstack->GetCount() : %s\n",
-                        count == base_count ? "passed" : "failed!");
-            else
-                printf("\tstack->GetCount() failed!\n");
-        }
+        if(NS_SUCCEEDED(stack->GetCount(&base_count)))
+            printf("\tstack->GetCount() : passed\n");
         else
-            printf("\tfailed to get nsThreadJSContextStack service!\n");
+            printf("\tstack->GetCount() failed!\n");
 
+        if(NS_FAILED(stack->Push(jscontext)))
+            printf("\tstack->Push() failed!\n");
+        else
+            printf("\tstack->Push() passed\n");
+
+        if(NS_SUCCEEDED(stack->GetCount(&count)))
+            printf("\tstack->GetCount() : %s\n",
+                    count == base_count+1 ? "passed" : "failed!");
+        else
+            printf("\tstack->GetCount() failed!\n");
+
+        JSContext* testCX;
+        if(NS_FAILED(stack->Peek(&testCX)))
+            printf("\tstack->Peek() failed!\n");
+
+        if(jscontext == testCX)
+            printf("\tstack->Push/Peek : passed\n");
+        else
+            printf("\tstack->Push/Peek : failed\n");
+
+        if(NS_FAILED(stack->Pop(&testCX)))
+            printf("\tstack->Pop() failed!\n");
+
+        if(jscontext == testCX)
+            printf("\tstack->Push/Pop : passed\n");
+        else
+            printf("\tstack->Push/Pop : failed\n");
+
+        if(NS_SUCCEEDED(stack->GetCount(&count)))
+            printf("\tstack->GetCount() : %s\n",
+                    count == base_count ? "passed" : "failed!");
+        else
+            printf("\tstack->GetCount() failed!\n");
     }
+    else
+        printf("\tfailed to get nsThreadJSContextStack service!\n");
+}
 
+/***************************************************************************/
+/***************************************************************************/
+// our main...
 
-    // cleanup
+#define DIE(_msg) \
+    PR_BEGIN_MACRO  \
+        printf(_msg); \
+        printf("\n"); \
+        return 1; \
+    PR_END_MACRO
 
-    NS_RELEASE(foo);
+int main()
+{
+    JSRuntime *rt;
+    JSContext *jscontext;
+    JSObject *glob;
+    nsresult rv;
 
-    if(glob)
+    gErrFile = stderr;
+    gOutFile = stdout;
+
+    SetupRegistry();
+
+    // get the JSRuntime from the runtime svc, if possible
+    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+    if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)))
     {
-        JS_DeleteProperty(jscontext, glob, "foo");
-        JS_DeleteProperty(jscontext, glob, "echo");
-        JS_DeleteProperty(jscontext, glob, "bar");
-        JS_DeleteProperty(jscontext, glob, "foo2");
-        JS_DeleteProperty(jscontext, glob, "baz");
-        JS_DeleteProperty(jscontext, glob, "baz2");
-        JS_DeleteProperty(jscontext, glob, "receiver");
-        JS_SetGlobalObject(jscontext, JS_NewObject(jscontext, &global_class, NULL, NULL));
+        rtsvc = NULL;
+        rt = JS_NewRuntime(8L * 1024L * 1024L);
     }
-    NS_RELEASE(wrapper);
+    if(!rt) 
+        DIE("failed to get a JSRuntime");
 
-    NS_RELEASE(fool_wrapper);
+    jscontext = JS_NewContext(rt, 8192);
+    if(!jscontext) 
+        DIE("failed to create a JSContext");
 
-//    js_DumpGCHeap = stdout;
+    JS_SetErrorReporter(jscontext, my_ErrorReporter);
 
-//    JS_GC(jscontext);
-//    printf("-----------------------\n");
-//    JS_GC(jscontext);
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(!xpc) 
+        DIE("failed to get xpconnect service\n");
 
-    // dump to log test...
-//    XPC_LOG_ALWAYS((""));
-//    XPC_LOG_ALWAYS(("after running JS_GC..."));
-//    XPC_LOG_ALWAYS((""));
-//    XPC_DUMP(xpc, 3);
+    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
+    if(NS_FAILED(rv)) 
+        DIE("failed to get the nsThreadJSContextStack service!\n");
 
-#endif
+    if(NS_FAILED(cxstack->Push(jscontext)))
+        DIE("failed to get push the current jscontext on the nsThreadJSContextStack service!\n");
 
-//    xpc->DebugDump(3);
-//    printf("-----------------------\n");
-    JSContext *cx;
-    if (NS_SUCCEEDED(cxstack->Pop(&cx))) {
-        NS_ASSERTION(cx == jscontext, "JS context stack push/pop mismatch");
-    }
-    
-    xpc->AbandonJSContext(jscontext);
+    // XXX I'd like to replace this with code that uses a wrapped xpcom object
+    // as the global object. The old TextXPC did this. The support for this 
+    // is not working now in the new xpconnect code.
+
+    glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
+    if (!glob)
+        DIE("failed to create global object");
+    if (!JS_InitStandardClasses(jscontext, glob))
+        DIE("failed to init standard classes");
+    if (!JS_DefineFunctions(jscontext, glob, glob_functions))
+        DIE("failed to define global functions");
+    if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
+        DIE("failed to init xpconnect classes");
+
+    /**********************************************/
+    // run the tests...
+
+    TestSecurityManager(jscontext, glob, xpc);
+    TestArgFormatter(jscontext, glob, xpc);
+    TestThreadJSContextStack(jscontext);
+
+
+
+    /**********************************************/
+    JS_ClearScope(jscontext, glob);
+    js_ForceGC(jscontext);
+    js_ForceGC(jscontext);
     JS_DestroyContext(jscontext);
-    NS_RELEASE(xpc);
+    xpc->SyncJSContexts();
+    xpc->DebugDump(4);
 
+    cxstack = nsnull;   // release service held by nsCOMPtr
+    xpc     = nsnull;   // release service held by nsCOMPtr
+    
     if (!rtsvc) {
         /* no runtime service, so we have to handle shutdown */
         JS_DestroyRuntime(rt);
         JS_ShutDown();
     }
+    rtsvc   = nsnull;   // release service held by nsCOMPtr
 
-#if 0
-// a fun test...
-    {
-        NS_WITH_SERVICE(nsIComponentManager, cm, kComponentManagerCID, &rv);
-        if(NS_SUCCEEDED(rv))
-        {
-            int count = 0;
-            nsIEnumerator* cids;
-            rv = cm->EnumerateCLSIDs(&cids);
-            if(NS_SUCCEEDED(rv))
-            {
-                nsISupports* raw_holder;
-
-                for(rv = cids->First();
-                    NS_SUCCEEDED(rv) && !cids->IsDone();
-                    rv = cids->Next())
-                {
-                    rv = cids->CurrentItem(&raw_holder);
-                    if(NS_FAILED(rv))
-                        continue;
-                    nsISupportsID* holder;
-                    rv = raw_holder->QueryInterface(NS_GET_IID(nsISupportsID),
-                                                    (void**) &holder);
-                    NS_RELEASE(raw_holder);
-                    if(NS_SUCCEEDED(rv))
-                    {
-                        nsID* cid;
-                        rv = holder->GetData(&cid);
-                        if(NS_SUCCEEDED(rv))
-                        {
-                            char* str = cid->ToString();
-                            if(str)
-                            {
-                                char* progid;
-                                char* classname;
-                                rv = cm->CLSIDToProgID(cid, &classname, &progid);
-                                if(NS_SUCCEEDED(rv))
-                                {
-                                    printf("%s - %s - %s\n", str, progid, classname);
-                                    delete [] progid;
-                                    delete [] classname;
-                                }
-                                else
-                                    printf("%s\n", str);
-                                count++;
-                                delete [] str;                            
-                            }
-                            nsAllocator::Free(cid);
-                        }
-                        NS_RELEASE(holder);
-                    }
-                }
-                NS_RELEASE(cids);
-            }
-            printf("%d CIDs found\n", count);
-            count = 0;
-
-
-            nsIEnumerator* progids;
-            rv = cm->EnumerateProgIDs(&progids);
-            if(NS_SUCCEEDED(rv))
-            {
-                nsISupports* raw_holder;
-
-                for(rv = progids->First();
-                    NS_SUCCEEDED(rv) && !progids->IsDone();
-                    rv = progids->Next())
-                {
-                    rv = progids->CurrentItem(&raw_holder);
-                    if(NS_FAILED(rv))
-                        continue;
-                    nsISupportsString* holder;
-                    rv = raw_holder->QueryInterface(NS_GET_IID(nsISupportsString),
-                                                    (void**) &holder);
-                    NS_RELEASE(raw_holder);
-                    if(NS_SUCCEEDED(rv))
-                    {
-                        char* progid;
-                        rv = holder->GetData(&progid);
-                        if(NS_SUCCEEDED(rv))
-                        {
-                            printf("%s\n", progid);
-                            count++;
-                            nsAllocator::Free(progid);
-                        }
-                        NS_RELEASE(holder);
-                    }
-                }
-                NS_RELEASE(progids);
-            }
-            printf("%d Progids found\n", count);
-        }
-    }
-#endif
-
+    rv = NS_ShutdownXPCOM( NULL );
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }
 
-/***************************************************************************/
-
-#include "jsatom.h"
-#ifdef DEBUG
-int
-DumpAtom(JSHashEntry *he, int i, void *arg)
-{
-    FILE *fp = (FILE *)arg;
-    JSAtom *atom = (JSAtom *)he;
-
-    fprintf(fp, "%3d %08x %5lu ",
-            i, (uintN)he->keyHash, (unsigned long)atom->number);
-    if (ATOM_IS_STRING(atom))
-        fprintf(fp, "\"%s\"\n", ATOM_BYTES(atom));
-    else if (ATOM_IS_INT(atom))
-        fprintf(fp, "%ld\n", (long)ATOM_TO_INT(atom));
-    else
-        fprintf(fp, "%.16g\n", *ATOM_TO_DOUBLE(atom));
-    return HT_ENUMERATE_NEXT;
-}
-
-int
-DumpSymbol(JSHashEntry *he, int i, void *arg)
-{
-    FILE *fp = (FILE *)arg;
-    JSSymbol *sym = (JSSymbol *)he;
-
-    fprintf(fp, "%3d %08x", i, (uintN)he->keyHash);
-    if (JSVAL_IS_INT(sym_id(sym)))
-        fprintf(fp, " [%ld]\n", (long)JSVAL_TO_INT(sym_id(sym)));
-    else
-        fprintf(fp, " \"%s\"\n", ATOM_BYTES(sym_atom(sym)));
-    return HT_ENUMERATE_NEXT;
-}
-
-/* These are callable from gdb. */
-JS_BEGIN_EXTERN_C
-void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
-void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
-//void Dobj(nsISupports* p, int depth) {if(p)XPC_DUMP(p,depth);}
-//void Dxpc(int depth) {Dobj(GetXPConnect(), depth);}
-JS_END_EXTERN_C
-#endif

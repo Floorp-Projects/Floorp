@@ -44,7 +44,7 @@
 #include "nsIComponentManager.h"
 #include "jsapi.h"
 #include "jsprf.h"
-#include "xpclog.h"
+//#include "xpclog.h"
 #include "nscore.h"
 #include "nsIAllocator.h"
 #include "nsIGenericFactory.h"
@@ -283,11 +283,15 @@ DumpXPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     nsIXPConnect* xpc = GetXPConnect();
     if(xpc)
     {
-        xpc->DebugDump(depth);
+        xpc->DebugDump((int16)depth);
         NS_RELEASE(xpc);
     }
     return JS_TRUE;
 }
+
+#ifdef GC_MARK_DEBUG
+extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
+#endif
 
 static JSBool
 GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -688,21 +692,25 @@ main(int argc, char **argv)
         return 1;
     if (!JS_DefineFunctions(jscontext, glob, glob_functions))
         return 1;
-
-    xpc->InitJSContext(jscontext, glob, JS_TRUE);
+    if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
+        return 1;
 
     argc--;
     argv++;
 
     result = ProcessArgs(jscontext, glob, argv, argc);
 
-    xpc->AbandonJSContext(jscontext);
-    JSContext *cx;
-    cxstack->Pop(&cx);
-    NS_ASSERTION(cx == jscontext, "JS thread context push/pop mismatch");
-    NS_RELEASE(xpc);
+    JS_ClearScope(jscontext, glob);
+    js_ForceGC(jscontext);
+    JSContext *oldcx;
+    cxstack->Pop(&oldcx);
+    NS_ASSERTION(oldcx == jscontext, "JS thread context push/pop mismatch");
     js_ForceGC(jscontext);
     JS_DestroyContext(jscontext);
+    xpc->SyncJSContexts();
+    xpc->DebugDump(4);
+    NS_RELEASE(xpc);
+
     if (!rtsvc) {
         /* no runtime service, so we have to handle shutdown */
         JS_DestroyRuntime(rt);

@@ -36,15 +36,6 @@
 
 #include "xpcprivate.h"
 
-const char* XPCContext::mStrings[] = {
-    "constructor",          // IDX_CONSTRUCTOR
-    "toString",             // IDX_TO_STRING
-    "lastResult",           // IDX_LAST_RESULT
-    "returnCode",           // IDX_RETURN_CODE
-    XPC_VAL_STR,            // IDX_VAL_STRING
-    XPC_QUERY_INTERFACE_STR // IDX_QUERY_INTERFACE_STRING
-};
-
 /***************************************************************************/
 
 AutoPushCallingLangType::AutoPushCallingLangType(JSContext* cx, 
@@ -75,232 +66,62 @@ AutoPushCallingLangType::~AutoPushCallingLangType()
     }
 }
 
-/***************************************************************************/
-
 // static
 XPCContext*
-XPCContext::newXPCContext(JSContext* aJSContext,
-                        JSObject* aGlobalObj,
-                        int WrappedJSMapSize,
-                        int WrappedNativeMapSize,
-                        int WrappedJSClassMapSize,
-                        int WrappedNativeClassMapSize)
+XPCContext::newXPCContext(XPCJSRuntime* aRuntime,
+                          JSContext* aJSContext)
 {
-    XPCContext* xpcc;
-
+    NS_PRECONDITION(aRuntime,"bad param");
     NS_PRECONDITION(aJSContext,"bad param");
-    NS_PRECONDITION(WrappedJSMapSize,"bad param");
-    NS_PRECONDITION(WrappedNativeMapSize,"bad param");
-    NS_PRECONDITION(WrappedJSClassMapSize,"bad param");
-    NS_PRECONDITION(WrappedNativeClassMapSize,"bad param");
 
-    xpcc = new XPCContext(aJSContext,
-                        aGlobalObj,
-                        WrappedJSMapSize,
-                        WrappedNativeMapSize,
-                        WrappedJSClassMapSize,
-                        WrappedNativeClassMapSize);
-
-    if(xpcc                             &&
-       xpcc->GetXPConnect()             &&
-       xpcc->GetWrappedJSMap()          &&
-       xpcc->GetWrappedNativeMap()      &&
-       xpcc->GetWrappedJSClassMap()     &&
-       xpcc->GetWrappedNativeClassMap() &&
-       xpcc->mStrIDs[0])
-    {
-        return xpcc;
-    }
-    delete xpcc;
-    return nsnull;
+    return  new XPCContext(aRuntime, aJSContext);
 }
 
-XPCContext::XPCContext(JSContext* aJSContext,
-                     JSObject* aGlobalObj,
-                     int WrappedJSMapSize,
-                     int WrappedNativeMapSize,
-                     int WrappedJSClassMapSize,
-                     int WrappedNativeClassMapSize)
+XPCContext::XPCContext(XPCJSRuntime* aRuntime,
+                       JSContext* aJSContext)
+    :   mRuntime(aRuntime),
+        mJSContext(aJSContext),
+        mLastResult(NS_OK),
+        mPendingResult(NS_OK),
+        mSecurityManager(nsnull),
+        mSecurityManagerFlags(0),
+        mException(nsnull),
+        mCallingLangType(LANG_UNKNOWN)
 {
-    mXPConnect = nsXPConnect::GetXPConnect();
-    mJSContext = aJSContext;
-    mGlobalObj = aGlobalObj;
-    mWrappedJSMap = JSObject2WrappedJSMap::newMap(WrappedJSMapSize);
-    mWrappedNativeMap = Native2WrappedNativeMap::newMap(WrappedNativeMapSize);
-    mWrappedJSClassMap = IID2WrappedJSClassMap::newMap(WrappedJSClassMapSize);
-    mWrappedNativeClassMap = IID2WrappedNativeClassMap::newMap(WrappedNativeClassMapSize);
-    for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
-    {
-        JS_ValueToId(aJSContext,
-                     STRING_TO_JSVAL(JS_InternString(aJSContext, mStrings[i])),
-                     &mStrIDs[i]);
-        if(!mStrIDs[i])
-        {
-            mStrIDs[0] = 0;
-            break;
-        }
-    }
-    mLastResult = NS_OK;
-    mSecurityManager = nsnull;
-    mSecurityManagerFlags = 0;
-    mException = nsnull;
-    mCallingLangType = LANG_UNKNOWN;
-}
-
-JS_STATIC_DLL_CALLBACK(intN)
-WrappedJSDestroyCB(JSHashEntry *he, intN i, void *arg)
-{
-    ((nsXPCWrappedJS*)he->value)->XPCContextBeingDestroyed();
-    return HT_ENUMERATE_NEXT;
-}
-
-JS_STATIC_DLL_CALLBACK(intN)
-WrappedNativeDestroyCB(JSHashEntry *he, intN i, void *arg)
-{
-    ((nsXPCWrappedNative*)he->value)->XPCContextBeingDestroyed();
-    return HT_ENUMERATE_NEXT;
-}
-
-JS_STATIC_DLL_CALLBACK(intN)
-WrappedNativeClassDestroyCB(JSHashEntry *he, intN i, void *arg)
-{
-    ((nsXPCWrappedNativeClass*)he->value)->XPCContextBeingDestroyed();
-    return HT_ENUMERATE_NEXT;
-}
-
-JS_STATIC_DLL_CALLBACK(intN)
-WrappedJSClassDestroyCB(JSHashEntry *he, intN i, void *arg)
-{
-    ((nsXPCWrappedJSClass*)he->value)->XPCContextBeingDestroyed();
-    return HT_ENUMERATE_NEXT;
+    MOZ_COUNT_CTOR(XPCContext);
+    JS_AddArgumentFormatter(mJSContext, 
+                            XPC_ARG_FORMATTER_FORMAT_STR,
+                            XPC_JSArgumentFormatter);
 }
 
 XPCContext::~XPCContext()
 {
-    // important to notify the objects before the classes
-    if(mWrappedJSMap)
-    {
-        mWrappedJSMap->Enumerate(WrappedJSDestroyCB, nsnull);
-        delete mWrappedJSMap;
-    }
-    if(mWrappedNativeMap)
-    {
-        mWrappedNativeMap->Enumerate(WrappedNativeDestroyCB, nsnull);
-        delete mWrappedNativeMap;
-    }
-    if(mWrappedNativeClassMap)
-    {
-        mWrappedNativeClassMap->Enumerate(WrappedNativeClassDestroyCB, nsnull);
-        delete mWrappedNativeClassMap;
-    }
-    if(mWrappedJSClassMap)
-    {
-        mWrappedJSClassMap->Enumerate(WrappedJSClassDestroyCB, nsnull);
-        delete mWrappedJSClassMap;
-    }
-    JS_RemoveArgumentFormatter(mJSContext, XPC_ARG_FORMATTER_FORMAT_STR);
-
+    MOZ_COUNT_DTOR(XPCContext);
     NS_IF_RELEASE(mException);
-    NS_IF_RELEASE(mXPConnect);
+    NS_IF_RELEASE(mSecurityManager);
+    // we do not call JS_RemoveArgumentFormatter because we now only
+    // delete XPCContext *after* the underlying JSContext is dead
 }
-
-JSBool
-XPCContext::Init(JSObject* aGlobalObj /*= nsnull*/)
-{
-    if(aGlobalObj)
-        mGlobalObj = aGlobalObj;
-    return nsXPCWrappedJSClass::InitForContext(this) &&
-           nsXPCWrappedNativeClass::InitForContext(this) &&
-           JS_AddArgumentFormatter(mJSContext, XPC_ARG_FORMATTER_FORMAT_STR,
-                                   XPC_JSArgumentFormatter);
-}
-
-#ifdef DEBUG
-JS_STATIC_DLL_CALLBACK(intN)
-WrappedNativeClassMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
-{
-    ((nsXPCWrappedNativeClass*)he->value)->DebugDump(*(int*)arg);
-    return HT_ENUMERATE_NEXT;
-}
-JS_STATIC_DLL_CALLBACK(intN)
-WrappedJSClassMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
-{
-    ((nsXPCWrappedJSClass*)he->value)->DebugDump(*(int*)arg);
-    return HT_ENUMERATE_NEXT;
-}
-JS_STATIC_DLL_CALLBACK(intN)
-WrappedNativeMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
-{
-    ((nsXPCWrappedNative*)he->value)->DebugDump(*(int*)arg);
-    return HT_ENUMERATE_NEXT;
-}
-JS_STATIC_DLL_CALLBACK(intN)
-WrappedJSMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
-{
-    ((nsXPCWrappedJS*)he->value)->DebugDump(*(int*)arg);
-    return HT_ENUMERATE_NEXT;
-}
-#endif
-
 
 void
-XPCContext::DebugDump(int depth)
+XPCContext::DebugDump(PRInt16 depth)
 {
 #ifdef DEBUG
     depth--;
     XPC_LOG_ALWAYS(("XPCContext @ %x", this));
         XPC_LOG_INDENT();
+        XPC_LOG_ALWAYS(("mRuntime @ %x", mRuntime));
         XPC_LOG_ALWAYS(("mJSContext @ %x", mJSContext));
-        XPC_LOG_ALWAYS(("mGlobalObj @ %x", mGlobalObj));
-        XPC_LOG_ALWAYS(("mWrappedNativeClassMap @ %x with %d classes", \
-            mWrappedNativeClassMap, \
-            mWrappedNativeClassMap ? mWrappedNativeClassMap->Count() : 0));
-        XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %x with %d classes", \
-            mWrappedJSClassMap, \
-            mWrappedJSClassMap ? mWrappedJSClassMap->Count() : 0));
-        XPC_LOG_ALWAYS(("mWrappedNativeMap @ %x with %d wrappers", \
-            mWrappedNativeMap, \
-            mWrappedNativeMap ? mWrappedNativeMap->Count() : 0));
-        XPC_LOG_ALWAYS(("mWrappedJSMap @ %x with %d wrappers", \
-            mWrappedJSMap, \
-            mWrappedJSMap ? mWrappedJSMap->Count() : 0));
+        XPC_LOG_ALWAYS(("mLastResult of %x", mLastResult));
+        XPC_LOG_ALWAYS(("mPendingResult of %x", mPendingResult));
+        XPC_LOG_ALWAYS(("mSecurityManager @ %x", mSecurityManager));
+        XPC_LOG_ALWAYS(("mSecurityManagerFlags of %x", mSecurityManagerFlags));
 
-        if(depth && mWrappedNativeClassMap && mWrappedNativeClassMap->Count())
+        XPC_LOG_ALWAYS(("mException @ %x", mException));
+        if(depth && mException)
         {
-            XPC_LOG_ALWAYS(("The %d WrappedNativeClasses...",\
-                            mWrappedNativeClassMap->Count()));
-            XPC_LOG_INDENT();
-            mWrappedNativeClassMap->Enumerate(WrappedNativeClassMapDumpEnumerator, &depth);
-            XPC_LOG_OUTDENT();
+            // XXX show the exception here...                
         }
-
-        if(depth && mWrappedJSClassMap && mWrappedJSClassMap->Count())
-        {
-            XPC_LOG_ALWAYS(("The %d WrappedJSClasses...",\
-                            mWrappedJSClassMap->Count()));
-            XPC_LOG_INDENT();
-            mWrappedJSClassMap->Enumerate(WrappedJSClassMapDumpEnumerator, &depth);
-            XPC_LOG_OUTDENT();
-        }
-
-        if(depth && mWrappedNativeMap && mWrappedNativeMap->Count())
-        {
-            XPC_LOG_ALWAYS(("The %d WrappedNatives...",\
-                            mWrappedNativeMap->Count()));
-            XPC_LOG_INDENT();
-            mWrappedNativeMap->Enumerate(WrappedNativeMapDumpEnumerator, &depth);
-            XPC_LOG_OUTDENT();
-        }
-
-        if(depth && mWrappedJSMap && mWrappedJSMap->Count())
-        {
-            XPC_LOG_ALWAYS(("The %d WrappedJSs...",\
-                            mWrappedJSMap->Count()));
-            XPC_LOG_INDENT();
-            mWrappedJSMap->Enumerate(WrappedJSMapDumpEnumerator, &depth);
-            XPC_LOG_OUTDENT();
-        }
-
         XPC_LOG_OUTDENT();
 #endif
 }

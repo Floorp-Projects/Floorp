@@ -119,6 +119,7 @@ nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *obse
                     if ( NS_SUCCEEDED( rv ) ) {
                         nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
                         rv = xpc->WrapNative( jsContext,
+                                              JS_GetGlobalObject(jsContext),
                                               observer,
                                               nsIObserver::GetIID(),
                                               getter_AddRefs( wrapper ) );

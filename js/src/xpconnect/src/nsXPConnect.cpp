@@ -36,15 +36,7 @@
 
 #include "xpcprivate.h"
 
-#define CONTEXT_MAP_SIZE        16
-#define JS_MAP_SIZE             256
-#define NATIVE_MAP_SIZE         256
-#define JS_CLASS_MAP_SIZE       256
-#define NATIVE_CLASS_MAP_SIZE   256
-
 NS_IMPL_ISUPPORTS1(nsXPConnect, nsIXPConnect)
-
-const char XPC_COMPONENTS_STR[] = "Components";
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
 
@@ -77,13 +69,7 @@ xpcPerThreadData::~xpcPerThreadData()
 {
     NS_IF_RELEASE(mException);
     if(mCX)
-    {
-        nsresult rv;
-        NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-        if(NS_SUCCEEDED(rv))
-            xpc->AbandonJSContext(mCX);
         JS_DestroyContext(mCX);
-    }
 }
 
 nsIXPCException*
@@ -127,7 +113,7 @@ xpcPerThreadData::GetJSContext()
                     glob = JS_NewObject(mCX, &global_class, NULL, NULL);
                     if(!glob || 
                        !JS_InitStandardClasses(mCX, glob) ||
-                       NS_FAILED(xpc->InitJSContext(mCX, glob, JS_TRUE)))
+                       NS_FAILED(xpc->InitClasses(mCX, glob)))
                     {
                         JS_DestroyContext(mCX);
                         mCX = nsnull;
@@ -186,10 +172,10 @@ GetPerThreadData()
 
 /***************************************************************************/
 
-AutoPushCompatibleJSContext::AutoPushCompatibleJSContext(JSContext *cx, nsXPConnect* xpc /*= nsnull*/)
+AutoPushCompatibleJSContext::AutoPushCompatibleJSContext(JSRuntime* rt, nsXPConnect* xpc /*= nsnull*/)
     : mCX(nsnull)
 {
-    NS_ASSERTION(cx, "pushing null cx");
+    NS_ASSERTION(rt, "bad JSRuntime");
     mContextStack = nsXPConnect::GetContextStack(xpc);
     if(mContextStack)
     {
@@ -198,8 +184,7 @@ AutoPushCompatibleJSContext::AutoPushCompatibleJSContext(JSContext *cx, nsXPConn
         if(NS_SUCCEEDED(mContextStack->Peek(&current)))
         {
             // Is the current runtime compatible?
-            if(current == cx || 
-               (current && JS_GetRuntime(current) == JS_GetRuntime(cx)))
+            if(current && JS_GetRuntime(current) == rt)
             {
                 mCX = current;                            
             }
@@ -214,8 +199,7 @@ AutoPushCompatibleJSContext::AutoPushCompatibleJSContext(JSContext *cx, nsXPConn
                 if(data)
                 {
                     JSContext* ourCX = data->GetJSContext();
-                    if(ourCX && 
-                       JS_GetRuntime(ourCX) == JS_GetRuntime(cx) && 
+                    if(ourCX && JS_GetRuntime(ourCX) == rt && 
                        NS_SUCCEEDED(mContextStack->Push(ourCX)))
                     {
                         mCX = ourCX;
@@ -248,6 +232,51 @@ AutoPushCompatibleJSContext::~AutoPushCompatibleJSContext()
 }
 
 /***************************************************************************/
+// has to go somewhere...
+
+nsXPCArbitraryScriptable::nsXPCArbitraryScriptable()
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+}
+
+/***************************************************************************/
+/***************************************************************************/
+
+nsXPConnect::nsXPConnect()
+    :   mRuntime(nsnull),
+        mArbitraryScriptable(nsnull),
+        mInterfaceInfoManager(nsnull),
+        mThrower(nsnull),
+        mContextStack(nsnull)
+{
+    NS_INIT_REFCNT();
+
+    // ignore result - if the runtime service is not ready to rumble
+    // then we'll set this up later as needed.
+    CreateRuntime();
+
+    mArbitraryScriptable = new nsXPCArbitraryScriptable();
+
+    mInterfaceInfoManager = XPTI_GetInterfaceInfoManager();
+    mThrower = new XPCJSThrower(JS_TRUE);
+
+    nsServiceManager::GetService("nsThreadJSContextStack",
+                                 NS_GET_IID(nsIJSContextStack),
+                                 (nsISupports **)&mContextStack);
+}
+
+nsXPConnect::~nsXPConnect()
+{
+    if(mRuntime)
+        delete mRuntime;
+    if(mThrower)
+        delete mThrower;
+    NS_IF_RELEASE(mArbitraryScriptable);
+    NS_IF_RELEASE(mInterfaceInfoManager);
+    NS_IF_RELEASE(mContextStack);
+    gSelf = nsnull;
+}
 
 // static
 nsXPConnect*
@@ -256,40 +285,39 @@ nsXPConnect::GetXPConnect()
     if(!gSelf)
     {
         gSelf = new nsXPConnect();
-        if (!gSelf) {
-            return nsnull;
-        }
-        if (!gSelf->mContextMap ||
+        if (!gSelf ||
             !gSelf->mArbitraryScriptable ||
             !gSelf->mInterfaceInfoManager ||
             !gSelf->mThrower ||
             !gSelf->mContextStack)
         {
             // ctor failed to create an acceptable instance
-            delete gSelf;
-            gSelf = nsnull;
+            if(gSelf)
+            {
+                delete gSelf;
+                gSelf = nsnull;
+            }
+            return nsnull;
         }
         else
         {
-            // Keep the singleton alive
+            // Initial extra ref to keep the singleton alive
+            // balanced by explicit call to ReleaseXPConnectSingleton()
             NS_ADDREF(gSelf);
         }
     }
-    if(gSelf)
-    {
-        NS_ADDREF(gSelf);
-    }
+    NS_ADDREF(gSelf);
     return gSelf;
 }
 
 void
-nsXPConnect::FreeXPConnect()
+nsXPConnect::ReleaseXPConnectSingleton()
 {
     nsXPConnect* xpc = gSelf;
     if (xpc) {
         nsrefcnt cnt;
         NS_RELEASE2(xpc, cnt);
-#if defined(DEBUG_kipp) || defined(DEBUG_jband)
+#if defined(DEBUG_jband)
         if (0 != cnt) {
             printf("*** dangling reference to nsXPConnect: refcnt=%d\n", cnt);
         }
@@ -330,25 +358,6 @@ nsXPConnect::GetContextStack(nsXPConnect* xpc /*= nsnull*/)
 }
 
 // static
-XPCContext*
-nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= nsnull*/)
-{
-    NS_PRECONDITION(cx,"bad param");
-
-    XPCContext* xpcc;
-    nsXPConnect* xpcl = xpc;
-
-    if(!xpcl && !(xpcl = GetXPConnect()))
-        return nsnull;
-    xpcc = xpcl->mContextMap->Find(cx);
-    if(!xpcc)
-        xpcc = xpcl->NewContext(cx, JS_GetGlobalObject(cx));
-    if(!xpc)
-        NS_RELEASE(xpcl);
-    return xpcc;
-}
-
-// static
 XPCJSThrower*
 nsXPConnect::GetJSThrower(nsXPConnect* xpc /*= nsnull */)
 {
@@ -364,19 +373,54 @@ nsXPConnect::GetJSThrower(nsXPConnect* xpc /*= nsnull */)
 }
 
 // static
+XPCJSRuntime*
+nsXPConnect::GetRuntime(nsXPConnect* xpc /*= nsnull*/)
+{
+    XPCJSRuntime* rt;
+    nsXPConnect* xpcl = xpc;
+
+    if(!xpcl && !(xpcl = GetXPConnect()))
+        return nsnull;
+    rt = xpcl->EnsureRuntime() ? xpcl->mRuntime : nsnull;
+    if(!xpc)
+        NS_RELEASE(xpcl);
+    return rt;
+}
+
+// static
+XPCContext*
+nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= nsnull*/)
+{
+    NS_PRECONDITION(cx,"bad param");
+
+    XPCContext* xpcc;
+    nsXPConnect* xpcl = xpc;
+
+    if(!xpcl && !(xpcl = GetXPConnect()))
+        return nsnull;
+
+    if(xpcl->EnsureRuntime() && 
+       xpcl->mRuntime->GetJSRuntime() == JS_GetRuntime(cx))
+        xpcc = xpcl->mRuntime->GetXPCContext(cx);
+    else
+        xpcc = nsnull;
+    if(!xpc)
+        NS_RELEASE(xpcl);
+    return xpcc;
+}
+
+// static
 JSBool
 nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 {
     if(!info)
         return JS_FALSE;
 
-    nsIInterfaceInfo* oldest = info;
-    nsIInterfaceInfo* parent;
+    nsCOMPtr<nsIInterfaceInfo> oldest = info;
+    nsCOMPtr<nsIInterfaceInfo> parent;
 
-    NS_ADDREF(oldest);
-    while(NS_SUCCEEDED(oldest->GetParent(&parent)))
+    while(NS_SUCCEEDED(oldest->GetParent(getter_AddRefs(parent))))
     {
-        NS_RELEASE(oldest);
         oldest = parent;
     }
 
@@ -387,314 +431,165 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
         retval = iid->Equals(NS_GET_IID(nsISupports));
         nsAllocator::Free(iid);
     }
-    NS_RELEASE(oldest);
     return retval;
 }
 
-nsXPConnect::nsXPConnect()
-    :   mContextMap(nsnull),
-        mArbitraryScriptable(nsnull),
-        mInterfaceInfoManager(nsnull),
-        mThrower(nsnull),
-        mContextStack(nsnull)
+JSBool 
+nsXPConnect::CreateRuntime()
 {
-    NS_INIT_REFCNT();
-
-    nsXPCWrappedNativeClass::OneTimeInit();
-    mContextMap = JSContext2XPCContextMap::newMap(CONTEXT_MAP_SIZE);
-    mArbitraryScriptable = new nsXPCArbitraryScriptable();
-
-    // XXX later this will be a service
-    mInterfaceInfoManager = XPTI_GetInterfaceInfoManager();
-    mThrower = new XPCJSThrower(JS_TRUE);
-
-    nsServiceManager::GetService("nsThreadJSContextStack",
-                                 NS_GET_IID(nsIJSContextStack),
-                                 (nsISupports **)&mContextStack);
-}
-
-nsXPConnect::~nsXPConnect()
-{
-    if(mContextMap)
-        delete mContextMap;
-    if(mArbitraryScriptable)
-        NS_RELEASE(mArbitraryScriptable);
-    // XXX later this will be a service
-    if(mInterfaceInfoManager)
-        NS_RELEASE(mInterfaceInfoManager);
-    if(mThrower)
-        delete mThrower;
-    if(mContextStack)
-        nsServiceManager::ReleaseService("nsThreadJSContextStack", mContextStack);
-    gSelf = nsnull;
-}
-
-NS_IMETHODIMP
-nsXPConnect::InitJSContext(JSContext* aJSContext,
-                            JSObject* aGlobalJSObj,
-                            JSBool AddComponentsObject)
-{
-    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
-    if(!aJSContext)
-    {
-        XPC_LOG_ERROR(("nsXPConnect::InitJSContext failed with null pointer"));
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    if(!aGlobalJSObj)
-        aGlobalJSObj = JS_GetGlobalObject(aJSContext);
-    if(aGlobalJSObj &&
-       !mContextMap->Find(aJSContext))
-    {
-        XPCContext* xpcc;
-        if(nsnull != (xpcc = NewContext(aJSContext, aGlobalJSObj)))
-        {
-            SET_CALLER_NATIVE(xpcc);
-            if(!AddComponentsObject ||
-               NS_SUCCEEDED(AddNewComponentsObject(aJSContext, aGlobalJSObj)))
-            {
-                return NS_OK;
-            }
-        }
-    }
-    XPC_LOG_ERROR(("nsXPConnect::InitJSContext failed"));
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
-                          nsISupports* aCOMObj,
-                          REFNSIID aIID,
-                          JSBool AddComponentsObject,
-                          nsIXPConnectWrappedNative** aWrapper)
-{
-    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
-    nsXPCWrappedNative* wrapper = nsnull;
-    XPCContext* xpcc = nsnull;
-    if(!mContextMap->Find(aJSContext) &&
-       nsnull != (xpcc = NewContext(aJSContext, nsnull, JS_FALSE)))
-    {
-        SET_CALLER_NATIVE(xpcc);
-        wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, 
-                                                          aIID, nsnull);
-        if(wrapper)
-        {
-            if(JS_InitStandardClasses(aJSContext, wrapper->GetJSObject()) &&
-               xpcc->Init(wrapper->GetJSObject()) &&
-               (!AddComponentsObject ||
-                NS_SUCCEEDED(AddNewComponentsObject(aJSContext, nsnull))))
-            {
-                *aWrapper = wrapper;
-                return NS_OK;
-            }
-        }
-    }
-    if(wrapper)
-        NS_RELEASE(wrapper);
-    if(xpcc)
-    {
-        mContextMap->Remove(xpcc);
-        delete xpcc;
-    }
-    XPC_LOG_ERROR(("nsXPConnect::InitJSContextWithNewWrappedGlobal failed"));
-    *aWrapper = nsnull;
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsXPConnect::AddNewComponentsObject(JSContext* aJSContext,
-                                    JSObject* aGlobalJSObj)
-{
-    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
-    SET_CALLER_NATIVE(aJSContext);
-    JSBool success;
+    NS_ASSERTION(!mRuntime,"CreateRuntime called but mRuntime already init'd");
+    JSRuntime* rt;
     nsresult rv;
-
-    if(!aJSContext)
+    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+    if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)))
     {
-        XPC_LOG_ERROR(("nsXPConnect::AddNewComponentsObject failed with null pointer"));
-        return NS_ERROR_NULL_POINTER;
+        mRuntime = XPCJSRuntime::newXPCJSRuntime(this, rt);
     }
+    return nsnull != mRuntime;
+}        
 
-    if(!aGlobalJSObj && !(aGlobalJSObj = JS_GetGlobalObject(aJSContext)))
+/***************************************************************************/
+/***************************************************************************/
+// nsIXPConnect interface methods...
+
+
+/* void initClasses (in JSContextPtr aJSContext, in JSObjectPtr aGlobalJSObj); */
+NS_IMETHODIMP
+nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
+{
+    NS_ENSURE_ARG_POINTER(aJSContext);
+    NS_ENSURE_ARG_POINTER(aGlobalJSObj);
+
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
+
+    // This also ensures that we have a valid runtime
+    XPCContext* xpcc = GetContext(aJSContext, this);
+    if(!xpcc)
+        return NS_ERROR_FAILURE;
+
+    SET_CALLER_NATIVE(xpcc);
+
+    if(!xpc_InitWrappedNativeJSOps())
+        return NS_ERROR_FAILURE;
+
+    if(!nsXPCWrappedJSClass::InitClasses(xpcc, aGlobalJSObj))
+        return NS_ERROR_FAILURE;
+
+    if(!nsXPCComponents::AttachNewComponentsObject(xpcc, aGlobalJSObj))
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}        
+
+/* nsIXPConnectWrappedNative initClassesWithNewWrappedGlobal (in JSContextPtr aJSContext, in nsISupports aCOMObj, in nsIIDRef aIID); */
+NS_IMETHODIMP
+nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext, nsISupports *aCOMObj, const nsIID & aIID, nsIXPConnectWrappedNative **_retval)
+{
+    // XXX need to implement InitClassesWithNewWrappedGlobal
+    return NS_ERROR_NOT_IMPLEMENTED;
+}        
+
+/* nsIXPConnectWrappedNative wrapNative (in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsISupports aCOMObj, in nsIIDRef aIID); */
+NS_IMETHODIMP
+nsXPConnect::WrapNative(JSContext * aJSContext, JSObject * aJSObj, nsISupports *aCOMObj, const nsIID & aIID, nsIXPConnectWrappedNative **_retval)
+{
+    NS_ENSURE_ARG_POINTER(aJSContext);
+    NS_ENSURE_ARG_POINTER(aJSObj);
+    NS_ENSURE_ARG_POINTER(aCOMObj);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
+    *_retval = nsnull;
+
+    // This also ensures that we have a valid runtime
+    XPCContext* xpcc = GetContext(aJSContext, this);
+    if(!xpcc)
+        return NS_ERROR_FAILURE;
+
+    SET_CALLER_NATIVE(xpcc);
+
+    nsXPCWrappedNativeScope* scope =
+        nsXPCWrappedNativeScope::FindInJSObjectScope(xpcc, aJSObj);
+    if(!scope)
+        return NS_ERROR_FAILURE;
+
+    nsresult rv;
+    nsXPCWrappedNative* wrapper =
+        nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, scope, aJSObj,
+                                                aCOMObj, aIID, &rv);
+    if(!wrapper)
     {
-        XPC_LOG_ERROR(("nsXPConnect::AddNewComponentsObject failed - no global object"));
+        if(NS_FAILED(rv))
+            return rv;
         return NS_ERROR_FAILURE;
     }
 
-    nsIXPCComponents* comp;
-    if(NS_FAILED(rv = CreateComponentsObject(&comp)))
-        return rv;
+    *_retval = wrapper;
+    return NS_OK;
+}        
 
-    nsIXPConnectWrappedNative* comp_wrapper;
-    if(NS_FAILED(WrapNative(aJSContext, comp,
-                            nsIXPCComponents::GetIID(), &comp_wrapper)))
-    {
-        XPC_LOG_ERROR(("nsXPConnect::AddNewComponentsObject failed - could not build wrapper"));
-        NS_RELEASE(comp);
+/* nsISupports wrapJS (in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsIIDRef aIID); */
+NS_IMETHODIMP
+nsXPConnect::WrapJS(JSContext * aJSContext, JSObject * aJSObj, const nsIID & aIID, nsISupports **_retval)
+{
+    NS_ENSURE_ARG_POINTER(aJSContext);
+    NS_ENSURE_ARG_POINTER(aJSObj);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
+    *_retval = nsnull;
+
+    // This also ensures that we have a valid runtime
+    XPCContext* xpcc = GetContext(aJSContext, this);
+    if(!xpcc)
         return NS_ERROR_FAILURE;
-    }
-    JSObject* comp_jsobj;
-    comp_wrapper->GetJSObject(&comp_jsobj);
-    jsval comp_jsval = OBJECT_TO_JSVAL(comp_jsobj);
-    success = JS_SetProperty(aJSContext, aGlobalJSObj,
-                             "Components", &comp_jsval);
-    NS_RELEASE(comp_wrapper);
-    NS_RELEASE(comp);
-    return success ? NS_OK : NS_ERROR_FAILURE;
-}
 
+    SET_CALLER_NATIVE(xpcc);
+
+    nsXPCWrappedJS* wrapper =
+        nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, aJSObj, aIID);
+    if(!wrapper)
+        return NS_ERROR_FAILURE;
+
+    *_retval = wrapper;
+    return NS_OK;
+}        
+
+/* nsIXPConnectWrappedNative getWrappedNativeOfJSObject (in JSContextPtr aJSContext, in JSObjectPtr aJSObj); */
 NS_IMETHODIMP
-nsXPConnect::CreateComponentsObject(nsIXPCComponents** aComponentsObj)
+nsXPConnect::GetWrappedNativeOfJSObject(JSContext * aJSContext, JSObject * aJSObj, nsIXPConnectWrappedNative **_retval)
 {
-    if(!aComponentsObj)
-        return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aJSContext);
+    NS_ENSURE_ARG_POINTER(aJSObj);
+    NS_ENSURE_ARG_POINTER(_retval);
 
-    nsIXPCComponents* obj;
-    if(nsnull != (obj = *aComponentsObj = new nsXPCComponents()))
-    {
-        NS_ADDREF(obj);
-        return NS_OK;
-    }
-    XPC_LOG_ERROR(("nsXPConnect::CreateComponentsObject failed"));
-    return NS_ERROR_OUT_OF_MEMORY;
-}
-
-XPCContext*
-nsXPConnect::NewContext(JSContext* cx, JSObject* global,
-                        JSBool doInit /*= JS_TRUE*/)
-{
-    XPCContext* xpcc;
-    NS_PRECONDITION(cx,"bad param");
-    NS_PRECONDITION(!mContextMap->Find(cx),"bad param");
-
-    xpcc = XPCContext::newXPCContext(cx, global,
-                                  JS_MAP_SIZE,
-                                  NATIVE_MAP_SIZE,
-                                  JS_CLASS_MAP_SIZE,
-                                  NATIVE_CLASS_MAP_SIZE);
-    if(doInit && xpcc && !xpcc->Init())
-    {
-        XPC_LOG_ERROR(("nsXPConnect::NewContext failed"));
-        delete xpcc;
-        xpcc = nsnull;
-    }
-    if(xpcc)
-        mContextMap->Add(xpcc);
-    return xpcc;
-}
-
-NS_IMETHODIMP
-nsXPConnect::WrapNative(JSContext* aJSContext,
-                         nsISupports* aCOMObj,
-                         REFNSIID aIID,
-                         nsIXPConnectWrappedNative** aWrapper)
-{
-    NS_PRECONDITION(aJSContext,"bad param");
-    NS_PRECONDITION(aCOMObj,"bad param");
-    NS_PRECONDITION(aWrapper,"bad param");
-
-    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
-    XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
-    if(xpcc)
-    {
-        SET_CALLER_NATIVE(xpcc);
-        nsXPCWrappedNative* wrapper =
-            nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, 
-                                                    aIID, nsnull);
-        if(wrapper)
-        {
-            *aWrapper = wrapper;
-            return NS_OK;
-        }
-    }
-    XPC_LOG_ERROR(("nsXPConnect::WrapNative failed"));
-    *aWrapper = nsnull;
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsXPConnect::WrapJS(JSContext* aJSContext,
-                     JSObject* aJSObj,
-                     REFNSIID aIID,
-                     nsISupports** aWrapper)
-{
-    NS_PRECONDITION(aJSContext,"bad param");
-    NS_PRECONDITION(aJSObj,"bad param");
-    NS_PRECONDITION(aWrapper,"bad param");
-
-    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
-    XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
-    if(xpcc)
-    {
-        SET_CALLER_NATIVE(xpcc);
-        nsXPCWrappedJS* wrapper =
-            nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, aJSObj, aIID);
-        if(wrapper)
-        {
-            *aWrapper = wrapper;
-            return NS_OK;
-        }
-    }
-    XPC_LOG_ERROR(("nsXPConnect::WrapJS failed"));
-    *aWrapper = nsnull;
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsXPConnect::GetWrappedNativeOfJSObject(JSContext* aJSContext,
-                                        JSObject* aJSObj,
-                                        nsIXPConnectWrappedNative** aWrapper)
-{
-    NS_PRECONDITION(aJSContext,"bad param");
-    NS_PRECONDITION(aJSObj,"bad param");
-    NS_PRECONDITION(aWrapper,"bad param");
     SET_CALLER_NATIVE(aJSContext);
 
-    if(!(*aWrapper = nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(aJSContext,aJSObj)))
-        return NS_ERROR_UNEXPECTED;
-    NS_ADDREF(*aWrapper);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::AbandonJSContext(JSContext* aJSContext)
-{
-    NS_PRECONDITION(aJSContext,"bad param");
-    NS_PRECONDITION(mContextMap,"bad state");
-
-    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
-    XPCContext* xpcc = mContextMap->Find(aJSContext);
-    if(!xpcc)
+    nsIXPConnectWrappedNative* wrapper = 
+        nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(aJSContext, aJSObj);
+    if(wrapper)
     {
-        SET_CALLER_NATIVE(xpcc);
-        NS_ASSERTION(0,"called AbandonJSContext for context that's not init'd");
+        NS_ADDREF(wrapper);
+        *_retval = wrapper;        
         return NS_OK;
     }
+    // else...
+    *_retval = nsnull;
+    return NS_ERROR_FAILURE;
+}        
 
-    mContextMap->Remove(xpcc);
-    // XPCContext notifies 'users' of its destruction.
-    delete xpcc;
-    return NS_OK;
-}
-
+/* void setSecurityManagerForJSContext (in JSContextPtr aJSContext, in nsIXPCSecurityManager aManager, in PRUint16 flags); */
 NS_IMETHODIMP
-nsXPConnect::SetSecurityManagerForJSContext(JSContext* aJSContext,
-                                    nsIXPCSecurityManager* aManager,
-                                    PRUint16 flags)
+nsXPConnect::SetSecurityManagerForJSContext(JSContext * aJSContext, nsIXPCSecurityManager *aManager, PRUint16 flags)
 {
-    if(!aJSContext)
-    {
-        NS_ASSERTION(0,"called SetSecurityManagerForJSContext with null pointer");
-        return NS_ERROR_NULL_POINTER;
-    }
+    NS_ENSURE_ARG_POINTER(aJSContext);
 
-    XPCContext* xpcc = mContextMap->Find(aJSContext);
+    // This also ensures that we have a valid runtime
+    XPCContext* xpcc = GetContext(aJSContext, this);
     if(!xpcc)
-    {
-        NS_ASSERTION(0,"called SetSecurityManagerForJSContext for context that's not init'd");
-        return NS_ERROR_INVALID_ARG;
-    }
+        return NS_ERROR_FAILURE;
+
+    SET_CALLER_NATIVE(xpcc);
 
     NS_IF_ADDREF(aManager);
     nsIXPCSecurityManager* oldManager = xpcc->GetSecurityManager();
@@ -703,160 +598,121 @@ nsXPConnect::SetSecurityManagerForJSContext(JSContext* aJSContext,
     xpcc->SetSecurityManager(aManager);
     xpcc->SetSecurityManagerFlags(flags);
     return NS_OK;
-}
+}        
 
+/* void getSecurityManagerForJSContext (in JSContextPtr aJSContext, out nsIXPCSecurityManager aManager, out PRUint16 flags); */
 NS_IMETHODIMP
-nsXPConnect::GetSecurityManagerForJSContext(JSContext* aJSContext,
-                                    nsIXPCSecurityManager** aManager,
-                                    PRUint16* flags)
+nsXPConnect::GetSecurityManagerForJSContext(JSContext * aJSContext, nsIXPCSecurityManager **aManager, PRUint16 *flags)
 {
-    if(!aJSContext || !aManager || !flags)
-    {
-        NS_ASSERTION(0,"called GetSecurityManagerForJSContext with null pointer");
-        return NS_ERROR_NULL_POINTER;
-    }
+    NS_ENSURE_ARG_POINTER(aJSContext);
+    NS_ENSURE_ARG_POINTER(aManager);
+    NS_ENSURE_ARG_POINTER(flags);
 
-    XPCContext* xpcc = mContextMap->Find(aJSContext);
+    // This also ensures that we have a valid runtime
+    XPCContext* xpcc = GetContext(aJSContext, this);
     if(!xpcc)
-    {
-        NS_ASSERTION(0,"called GetSecurityManagerForJSContext for context that's not init'd");
-        return NS_ERROR_INVALID_ARG;
-    }
+        return NS_ERROR_FAILURE;
 
-    if(nsnull != (*aManager = xpcc->GetSecurityManager()))
-        NS_ADDREF(*aManager);
+    SET_CALLER_NATIVE(xpcc);
+
+    nsIXPCSecurityManager* manager = xpcc->GetSecurityManager();
+    NS_IF_ADDREF(manager);
+    *aManager = manager;
     *flags = xpcc->GetSecurityManagerFlags();
     return NS_OK;
-}
+}        
 
+/* nsIJSStackFrameLocation createStackFrameLocation (in PRBool isJSFrame, in string aFilename, in string aFunctionName, in PRInt32 aLineNumber, in nsIJSStackFrameLocation aCaller); */
 NS_IMETHODIMP
-nsXPConnect::GetCurrentJSStack(nsIJSStackFrameLocation** aStack)
+nsXPConnect::CreateStackFrameLocation(PRBool isJSFrame, const char *aFilename, const char *aFunctionName, PRInt32 aLineNumber, nsIJSStackFrameLocation *aCaller, nsIJSStackFrameLocation **_retval)
 {
-    NS_ENSURE_ARG_POINTER(aStack);    
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    nsIJSStackFrameLocation* location = 
+            XPCJSStack::CreateStackFrameLocation(isJSFrame,
+                                                 aFilename,
+                                                 aFunctionName,
+                                                 aLineNumber,
+                                                 aCaller);
+    *_retval = location;    
+    return location ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}        
+
+/* readonly attribute nsIJSStackFrameLocation CurrentJSStack; */
+NS_IMETHODIMP
+nsXPConnect::GetCurrentJSStack(nsIJSStackFrameLocation * *aCurrentJSStack)
+{
+    NS_ENSURE_ARG_POINTER(aCurrentJSStack);    
 
     JSContext* cx;
-    if(NS_FAILED(mContextStack->Peek(&cx)) || !cx)
-    {
-        // no current context available
-        *aStack = nsnull;
-        return NS_OK;
-    }
-
-    *aStack = XPCJSStack::CreateStack(cx);
+    // is there a current context available?
+    if(mContextStack && NS_SUCCEEDED(mContextStack->Peek(&cx)) && cx)
+        *aCurrentJSStack = XPCJSStack::CreateStack(cx);
+    else
+        *aCurrentJSStack = nsnull;
     return NS_OK;
-}
+}        
 
+/* readonly attribute nsIXPCNativeCallContext CurrentNativeCallContext; */
 NS_IMETHODIMP
-nsXPConnect::CreateStackFrameLocation(JSBool isJSFrame,
-                                      const char* aFilename,
-                                      const char* aFunctionName,
-                                      PRInt32 aLineNumber,
-                                      nsIJSStackFrameLocation* aCaller,
-                                      nsIJSStackFrameLocation** aStack)
+nsXPConnect::GetCurrentNativeCallContext(nsIXPCNativeCallContext * *aCurrentNativeCallContext)
 {
-    if(!aStack)
-    {
-        NS_ASSERTION(0,"called CreateStackFrameLocation with null pointer");
-        return NS_ERROR_NULL_POINTER;
-    }
-    *aStack = XPCJSStack::CreateStackFrameLocation(isJSFrame,
-                                                   aFilename,
-                                                   aFunctionName,
-                                                   aLineNumber,
-                                                   aCaller);
-    return *aStack ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-nsXPConnect::GetPendingException(nsIXPCException** aException)
-{
-    if(!aException)
-        return NS_ERROR_NULL_POINTER;
-
-    xpcPerThreadData* data = GetPerThreadData();
-    if(!data)
-    {
-        *aException = nsnull;
-        return NS_ERROR_FAILURE;
-    }
-
-    *aException = data->GetException();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::SetPendingException(nsIXPCException* aException)
-{
-    xpcPerThreadData* data = GetPerThreadData();
-    if(!data)
-        return NS_ERROR_FAILURE;
-
-    data->SetException(aException);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::GetCurrentNativeCallContext(nsIXPCNativeCallContext** aCC)
-{
-    NS_ENSURE_ARG_POINTER(aCC);    
+    NS_ENSURE_ARG_POINTER(aCurrentNativeCallContext);    
 
     JSContext* cx;
     XPCContext* xpcc;
-    if(NS_FAILED(mContextStack->Peek(&cx)) || !cx ||
-       !(xpcc = mContextMap->Find(cx)))
+
+    if(mContextStack && NS_SUCCEEDED(mContextStack->Peek(&cx)) && cx &&
+        nsnull != (xpcc = GetContext(cx, this)))
     {
-        // no current context available
-        *aCC = nsnull;
+        *aCurrentNativeCallContext = xpcc->GetNativeCallContext();
+        return NS_OK;
+    }        
+    //else...
+    *aCurrentNativeCallContext = nsnull;
+    return NS_ERROR_FAILURE;
+}        
+
+/* attribute nsIXPCException PendingException; */
+NS_IMETHODIMP
+nsXPConnect::GetPendingException(nsIXPCException * *aPendingException)
+{
+    NS_ENSURE_ARG_POINTER(aPendingException);    
+
+    xpcPerThreadData* data = GetPerThreadData();
+    if(!data)
+    {
+        *aPendingException = nsnull;
         return NS_ERROR_FAILURE;
     }
 
-    // these things are not refcounted
-    *aCC = xpcc->GetNativeCallContext();
+    *aPendingException = data->GetException();
     return NS_OK;
-}
-
-/***************************************************************************/
-// has to go somewhere...
-nsXPCArbitraryScriptable::nsXPCArbitraryScriptable()
-{
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-}
-
-#ifdef DEBUG
-JS_STATIC_DLL_CALLBACK(intN)
-ContextMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
-{
-    ((XPCContext*)he->value)->DebugDump(*(int*)arg);
-    return HT_ENUMERATE_NEXT;
-}
-#endif
+}        
 
 NS_IMETHODIMP
-nsXPConnect::DebugDump(int depth)
+nsXPConnect::SetPendingException(nsIXPCException * aPendingException)
 {
-#ifdef DEBUG
-    depth-- ;
-    XPC_LOG_ALWAYS(("nsXPConnect @ %x with mRefCnt = %d", this, mRefCnt));
-    XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("mArbitraryScriptable @ %x", mArbitraryScriptable));
-        XPC_LOG_ALWAYS(("mInterfaceInfoManager @ %x", mInterfaceInfoManager));
-        XPC_LOG_ALWAYS(("mContextMap @ %x with %d context(s)", \
-                         mContextMap, mContextMap ? mContextMap->Count() : 0));
-        // iterate contexts...
-        if(depth && mContextMap && mContextMap->Count())
-        {
-            XPC_LOG_INDENT();
-            mContextMap->Enumerate(ContextMapDumpEnumerator, &depth);
-            XPC_LOG_OUTDENT();
-        }
-    XPC_LOG_OUTDENT();
-#endif
-    return NS_OK;
-}
+    xpcPerThreadData* data = GetPerThreadData();
+    if(!data)
+        return NS_ERROR_FAILURE;
 
+    data->SetException(aPendingException);
+    return NS_OK;
+}        
+
+/* void syncJSContexts (); */
 NS_IMETHODIMP
-nsXPConnect::DebugDumpObject(nsISupports* p, int depth)
+nsXPConnect::SyncJSContexts(void)
+{
+    if(mRuntime)
+        mRuntime->SyncXPCContextList();
+    return NS_OK;
+}        
+
+/* void debugDumpObject (in nsISupports aCOMObj, in short depth); */
+NS_IMETHODIMP
+nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
 {
 #ifdef DEBUG
     if(!depth)
@@ -873,7 +729,8 @@ nsXPConnect::DebugDumpObject(nsISupports* p, int depth)
     nsIXPConnectWrappedNative* wn;
     nsIXPConnectWrappedJSMethods* wjsm;
 
-    if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnect::GetIID(),(void**)&xpc)))
+    if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnect::GetIID(),
+                        (void**)&xpc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnect..."));
         xpc->DebugDump(depth);
@@ -908,13 +765,14 @@ nsXPConnect::DebugDumpObject(nsISupports* p, int depth)
         NS_RELEASE(wjsm);
     }
     else
-        XPC_LOG_ALWAYS(("*** Cound not dump the nsISupports @ %x", p));
+        XPC_LOG_ALWAYS(("*** Could not dump the nsISupports @ %x", p));
 #endif
     return NS_OK;
-}
+}        
 
+/* void debugDumpJSStack (); */
 NS_IMETHODIMP
-nsXPConnect::DebugDumpJSStack()
+nsXPConnect::DebugDumpJSStack(void)
 {
 #ifdef DEBUG
 
@@ -948,4 +806,28 @@ nsXPConnect::DebugDumpJSStack()
     NS_RELEASE(stack);
 #endif
     return NS_OK;
-}
+}        
+
+
+/* void debugDump (in short depth); */
+NS_IMETHODIMP
+nsXPConnect::DebugDump(PRInt16 depth)
+{
+#ifdef DEBUG
+    depth-- ;
+    XPC_LOG_ALWAYS(("nsXPConnect @ %x with mRefCnt = %d", this, mRefCnt));
+    XPC_LOG_INDENT();
+        XPC_LOG_ALWAYS(("mArbitraryScriptable @ %x", mArbitraryScriptable));
+        XPC_LOG_ALWAYS(("mInterfaceInfoManager @ %x", mInterfaceInfoManager));
+        XPC_LOG_ALWAYS(("mContextStack @ %x", mContextStack));
+        XPC_LOG_ALWAYS(("mThrower @ %x", mThrower));
+        if(mRuntime)
+            mRuntime->DebugDump(depth);
+        else
+            XPC_LOG_ALWAYS(("mRuntime is null"));
+        nsXPCWrappedNativeScope::DebugDumpAllScopes(depth);
+    XPC_LOG_OUTDENT();
+#endif
+    return NS_OK;
+}        
+

@@ -187,7 +187,7 @@ JAM_DOUBLE(JSContext *cx, double v, jsdouble *dbl)
 JSBool
 XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                           const nsXPTType& type, const nsID* iid,
-                          nsresult* pErr)
+                          JSObject* jsscope, nsresult* pErr)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
@@ -255,7 +255,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 if(!iid)
                     break;
                 JSObject* obj;
-                if(!(obj = xpc_NewIDObject(cx, *iid)))
+                if(!(obj = xpc_NewIDObject(cx, jsscope, *iid)))
                     return JS_FALSE;
                 *d = OBJECT_TO_JSVAL(obj);
                 break;
@@ -354,11 +354,15 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 {
                     // we need to build a wrapper
                     nsXPCWrappedNative* wrapper = nsnull;
+                    nsXPCWrappedNativeScope* scope;
                     XPCContext* xpcc;
                     if(!iid ||
                        !(xpcc = nsXPConnect::GetContext(cx)) ||
+                       !(scope = 
+                         nsXPCWrappedNativeScope::FindInJSObjectScope(xpcc, jsscope)) ||
                        !(wrapper =
                             nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
+                                                        scope, jsscope,
                                                         iface, *iid, pErr)))
                     {
                         return JS_FALSE;
@@ -969,7 +973,8 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
         iid  = va_arg(ap, const nsIID*);
         iface = va_arg(ap, nsISupports *);
 
-        if(!XPCConvert::NativeData2JS(cx, &vp[0], &iface, type, iid, nsnull))
+        if(!XPCConvert::NativeData2JS(cx, &vp[0], &iface, type, iid, 
+                                      JS_GetGlobalObject(cx), nsnull))
             return JS_FALSE;
     }
     *vpp = vp + 1;
@@ -990,7 +995,7 @@ JSBool
 XPCConvert::NativeArray2JS(JSContext* cx,
                            jsval* d, const void** s,
                            const nsXPTType& type, const nsID* iid,
-                           JSUint32 count,
+                           JSUint32 count, JSObject* scope,
                            nsresult* pErr)
 {
     NS_PRECONDITION(s, "bad param");
@@ -1018,7 +1023,8 @@ XPCConvert::NativeArray2JS(JSContext* cx,
     PR_BEGIN_MACRO                                                           \
         for(i = 0; i < count; i++)                                           \
         {                                                                    \
-            if(!NativeData2JS(cx, &current, ((_t*)*s)+i, type, iid, pErr) || \
+            if(!NativeData2JS(cx, &current, ((_t*)*s)+i, type, iid,          \
+                              scope, pErr) ||                                \
                !JS_SetElement(cx, array, i, &current))                       \
                 goto failure;                                                \
         }                                                                    \

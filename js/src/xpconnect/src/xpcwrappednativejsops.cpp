@@ -114,12 +114,12 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
 
-        XPCContext* xpcc;
+        XPCJSRuntime* rt;
         const XPCNativeMemberDescriptor* desc;
 
-        if(nsnull != (xpcc = clazz->GetXPCContext()) &&
+        if(nsnull != (rt = clazz->GetRuntime()) &&
            nsnull != (desc = clazz->LookupMemberByID(
-                           xpcc->GetStringID(XPCContext::IDX_TO_STRING))) &&
+                           rt->GetStringID(XPCJSRuntime::IDX_TO_STRING))) &&
            desc->IsMethod())
         {
             if(!clazz->CallWrappedMethod(cx, wrapper, desc,
@@ -182,7 +182,7 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
     const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
     if(!desc || !desc->IsMethod())
     {
-        HANDLE_POSSIBLE_NAME_CASE_ERROR(clazz,id);
+        HANDLE_POSSIBLE_NAME_CASE_ERROR(cx, clazz, id);
         return JS_FALSE;
     }
 
@@ -201,8 +201,8 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(!wrapper)
     {
-        XPCContext* xpcc = nsXPConnect::GetContext(cx);
-        if(xpcc && id == xpcc->GetStringID(XPCContext::IDX_CONSTRUCTOR))
+        XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+        if(rt && id == rt->GetStringID(XPCJSRuntime::IDX_CONSTRUCTOR))
         {
             // silently fail when looking for constructor property
             *vp = JSVAL_VOID;
@@ -225,13 +225,7 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
         else if(desc->IsMethod())
         {
-            // allow for lazy creation of 'prototypical' function invoke object
-            JSObject* invokeFunObj = clazz->GetInvokeFunObj(desc);
-            if(!invokeFunObj)
-                return JS_FALSE;
-            // Create a function object with this wrapper as its parent, so that
-            // JSFUN_BOUND_METHOD binds it as the default 'this' for the function.
-            JSObject *funobj = JS_CloneFunctionObject(cx, invokeFunObj, obj);
+            JSObject* funobj = clazz->NewFunObj(cx, obj, desc);
             if (!funobj)
                 return JS_FALSE;
             *vp = OBJECT_TO_JSVAL(funobj);
@@ -254,7 +248,7 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
         else
         {
-            HANDLE_POSSIBLE_NAME_CASE_ERROR(clazz,id);
+            HANDLE_POSSIBLE_NAME_CASE_ERROR(cx, clazz, id);
         }
 
         // XXX silently fail when property not found or call fails?
@@ -299,7 +293,7 @@ WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
         else
         {
-            HANDLE_POSSIBLE_NAME_CASE_ERROR(clazz,id);
+            HANDLE_POSSIBLE_NAME_CASE_ERROR(cx, clazz, id);
         }
         // fail silently
         return JS_TRUE;
@@ -339,7 +333,7 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
         }
         else
         {
-            HANDLE_POSSIBLE_NAME_CASE_ERROR(clazz,id);
+            HANDLE_POSSIBLE_NAME_CASE_ERROR(cx, clazz, id);
         }
     }
 
@@ -643,7 +637,7 @@ JS_STATIC_DLL_CALLBACK(void)
 WrappedNative_Finalize(JSContext *cx, JSObject *obj)
 {
     AUTO_PUSH_JSCONTEXT(cx);
-    // we don't want to be setting this in finalization.
+    // XXX we don't want to be setting this in finalization. RIGHT????
     // SET_CALLER_JAVASCRIPT(cx);
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
     if(!wrapper)
@@ -721,7 +715,8 @@ WrappedNative_getWithCallObjectOps(JSContext *cx, JSClass *clazz)
 
 
 JSClass WrappedNative_class = {
-    "XPCWrappedNative", JSCLASS_HAS_PRIVATE,
+    "XPCWrappedNative", 
+    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
     WrappedNative_Convert,
@@ -736,7 +731,8 @@ JSClass WrappedNative_class = {
 };
 
 JSClass WrappedNativeWithCall_class = {
-    "XPCWrappedNativeWithCall", JSCLASS_HAS_PRIVATE,
+    "XPCWrappedNativeWithCall", 
+    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
     WrappedNative_Convert,
@@ -750,16 +746,17 @@ JSClass WrappedNativeWithCall_class = {
     WrappedNative_ClassHasInstance      /* hasInstance  */
 };
 
-
-JSBool xpc_WrappedNativeJSOpsOneTimeInit()
+JSBool xpc_InitWrappedNativeJSOps()
 {
-    WrappedNative_ops.newObjectMap     = js_ObjectOps.newObjectMap;
-    WrappedNative_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
-    WrappedNative_ops.dropProperty     = js_ObjectOps.dropProperty;
+    if(!WrappedNative_ops.newObjectMap)
+    {
+        WrappedNative_ops.newObjectMap     = js_ObjectOps.newObjectMap;
+        WrappedNative_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
+        WrappedNative_ops.dropProperty     = js_ObjectOps.dropProperty;
 
-    WrappedNativeWithCall_ops.newObjectMap     = js_ObjectOps.newObjectMap;
-    WrappedNativeWithCall_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
-    WrappedNativeWithCall_ops.dropProperty     = js_ObjectOps.dropProperty;
-
+        WrappedNativeWithCall_ops.newObjectMap     = js_ObjectOps.newObjectMap;
+        WrappedNativeWithCall_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
+        WrappedNativeWithCall_ops.dropProperty     = js_ObjectOps.dropProperty;
+    }
     return JS_TRUE;
 }

@@ -56,8 +56,7 @@ xpcstringtest::~xpcstringtest()
 {
 }
 
-static NS_DEFINE_IID(kxpcstringtestIID, NS_IXPCTESTSTRING_IID);
-NS_IMPL_ISUPPORTS(xpcstringtest, kxpcstringtestIID);
+NS_IMPL_ISUPPORTS1(xpcstringtest, nsIXPCTestString);
 
 /* string GetStringA (); */
 NS_IMETHODIMP

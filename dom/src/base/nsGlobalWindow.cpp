@@ -1384,14 +1384,14 @@ NS_IMETHODIMP
 GlobalWindowImpl::Close(JSContext* cx, jsval* argv, PRUint32 argc)
 {
   nsresult result = NS_OK;
-  nsIScriptContext* callingContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
-  nsIScriptContext* winContext;
+  nsCOMPtr<nsIScriptContext> callingContext;
+  nsCOMPtr<nsIScriptContext> winContext;
   nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(mWebShell));
 
-  if (globalObject) {
-    
+  nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(callingContext));
+  if (globalObject && callingContext) {
     if (NS_SUCCEEDED(result)) {
-      result = globalObject->GetContext(&winContext);
+      result = globalObject->GetContext(getter_AddRefs(winContext));
       if (NS_SUCCEEDED(result)) {
         if (winContext == callingContext) {
           result = callingContext->SetTerminationFunction(CloseWindow, (nsISupports*)(nsIScriptGlobalObject*)this);
@@ -1399,11 +1399,9 @@ GlobalWindowImpl::Close(JSContext* cx, jsval* argv, PRUint32 argc)
         else {
           result = Close();
         }
-        NS_RELEASE(winContext);
       }
     }
   }
-
   return result;
 }
 
@@ -2306,12 +2304,15 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
           AttachArguments(*aReturn, argv+3, argc-3);
 
         // Get security manager, check to see if URI is allowed.
-        nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
         nsCOMPtr<nsIURI> newUrl;
         nsCOMPtr<nsIScriptSecurityManager> secMan;
-        if (NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
+        nsCOMPtr<nsIScriptContext> scriptCX;
+        nsJSUtils::nsGetStaticScriptContext(cx, (JSObject*) mScriptObject, 
+                                            getter_AddRefs(scriptCX));
+        if (!scriptCX ||
+            NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
             NS_FAILED(NS_NewURI(getter_AddRefs(newUrl), mAbsURL)) ||
-            NS_FAILED(secMan->CheckLoadURIFromScript(scriptCX, newUrl))) 
+            NS_FAILED(secMan->CheckLoadURIFromScript(cx, newUrl))) 
         {
           NS_RELEASE(newOuterShell);
           NS_RELEASE(webShellContainer);
@@ -2722,8 +2723,10 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   if (aPropName == "onmousedown" || aPropName == "onmouseup" || aPropName ==  "onclick" ||
      aPropName == "onmouseover" || aPropName == "onmouseout") {
     if (NS_OK == GetListenerManager(&mManager)) {
-      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseListenerIID)) {
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+      if (!scriptCX ||
+          NS_OK != mManager->RegisterScriptEventListener(scriptCX, this, atom, kIDOMMouseListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2731,8 +2734,10 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   }
   else if (aPropName == "onkeydown" || aPropName == "onkeyup" || aPropName == "onkeypress") {
     if (NS_OK == GetListenerManager(&mManager)) {
-      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMKeyListenerIID)) {
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+      if (!scriptCX ||
+          NS_OK != mManager->RegisterScriptEventListener(scriptCX, this, atom, kIDOMKeyListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2740,8 +2745,10 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   }
   else if (aPropName == "onmousemove") {
     if (NS_OK == GetListenerManager(&mManager)) {
-      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+      if (!scriptCX ||
+          NS_OK != mManager->RegisterScriptEventListener(scriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2749,8 +2756,10 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   }
   else if (aPropName == "onfocus" || aPropName == "onblur") {
     if (NS_OK == GetListenerManager(&mManager)) {
-      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFocusListenerIID)) {
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+      if (!scriptCX ||
+          NS_OK != mManager->RegisterScriptEventListener(scriptCX, this, atom, kIDOMFocusListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2759,8 +2768,10 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   else if (aPropName == "onsubmit" || aPropName == "onreset" || aPropName == "onchange" ||
            aPropName == "onselect") {
     if (NS_OK == GetListenerManager(&mManager)) {
-      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFormListenerIID)) {
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+      if (!scriptCX ||
+          NS_OK != mManager->RegisterScriptEventListener(scriptCX, this, atom, kIDOMFormListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2769,8 +2780,10 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   else if (aPropName == "onload" || aPropName == "onunload" || aPropName == "onclose" ||
            aPropName == "onabort" || aPropName == "onerror") {
     if (NS_OK == GetListenerManager(&mManager)) {
-      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+      if (!scriptCX ||
+          NS_OK != mManager->RegisterScriptEventListener(scriptCX, this, atom, kIDOMLoadListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2778,9 +2791,10 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   }
   else if (aPropName == "onpaint") {
     if (NS_OK == GetListenerManager(&mManager)) {
-      nsIScriptContext *mScriptCX = (nsIScriptContext *)
-        JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this,
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+      if (!scriptCX ||
+          NS_OK != mManager->RegisterScriptEventListener(scriptCX, this,
                                                          atom, kIDOMPaintListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
@@ -2793,7 +2807,7 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
 }
 
 PRBool
-GlobalWindowImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+GlobalWindowImpl::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsString mPropName;
@@ -2808,13 +2822,13 @@ GlobalWindowImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
 }
 
 PRBool    
-GlobalWindowImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+GlobalWindowImpl::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
 
 PRBool    
-GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+GlobalWindowImpl::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   if (JSVAL_IS_STRING(aID)) {
     char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
@@ -2826,8 +2840,10 @@ GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           nsIScriptObjectOwner *owner = nsnull;
           if (NS_OK == location->QueryInterface(NS_GET_IID(nsIScriptObjectOwner), (void**)&owner)) {
             JSObject *object = nsnull;
-            nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-            if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+            nsCOMPtr<nsIScriptContext> scriptCX;
+            nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+            if (scriptCX &&
+                NS_OK == owner->GetScriptObject(scriptCX, (void**)&object)) {
               // set the return value
               *aVp = OBJECT_TO_JSVAL(object);
             }
@@ -2870,7 +2886,7 @@ GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 }
 
 PRBool
-GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+GlobalWindowImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   PRBool result = PR_TRUE;
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
@@ -2893,7 +2909,7 @@ GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
         JSString* str = JS_NewStringCopyZ(aContext, "href");
         
         if (scriptObj && str) {
-          result = scriptObj->SetProperty(aContext, STRING_TO_JSVAL(str), aVp);
+          result = scriptObj->SetProperty(aContext, aObj, STRING_TO_JSVAL(str), aVp);
         }
       }
       else {
@@ -2928,13 +2944,13 @@ GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 }
 
 PRBool    
-GlobalWindowImpl::EnumerateProperty(JSContext *aContext)
+GlobalWindowImpl::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
   return PR_TRUE;
 }
 
 PRBool    
-GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
+GlobalWindowImpl::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   if (JSVAL_IS_STRING(aID)) {
     if (PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
@@ -2980,13 +2996,13 @@ GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
 }
 
 PRBool    
-GlobalWindowImpl::Convert(JSContext *aContext, jsval aID)
+GlobalWindowImpl::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   return PR_TRUE;
 }
 
 void      
-GlobalWindowImpl::Finalize(JSContext *aContext)
+GlobalWindowImpl::Finalize(JSContext *aContext, JSObject *aObj)
 {
 }
 
@@ -3438,19 +3454,19 @@ NavigatorImpl::Preference(JSContext* cx,
 
   *aReturn = JSVAL_NULL;
 
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  JSObject* self;
-  result = scriptCX->GetSecurityManager(getter_AddRefs(secMan));
+  JSObject* self = (JSObject*)mScriptObject;
+  if (!self) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRBool ok;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &result);
   if (NS_FAILED(result)) {
     return result;
   }
-  result = GetScriptObject(scriptCX, (void**)&self);
-  if (NS_FAILED(result)) {
-    return result;
-  }  
-  PRBool ok;
-  secMan->CheckScriptAccess(scriptCX, self, NS_DOM_PROP_NAVIGATOR_PREFERENCE, 
+
+  secMan->CheckScriptAccess(cx, self, NS_DOM_PROP_NAVIGATOR_PREFERENCE, 
                             (argc == 1 ? PR_FALSE : PR_TRUE), &ok);
   if (!ok) {
     //Need to throw error here

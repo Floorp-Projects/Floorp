@@ -41,6 +41,7 @@
 #include "nsIFrame.h"
 #include "nsISizeOfHandler.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsLayoutUtils.h"
 
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -112,14 +113,18 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIJSScriptObject
-  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext);
-  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
-  virtual PRBool    Convert(JSContext *aContext, jsval aID);
-  virtual void      Finalize(JSContext *aContext);
+  PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+                        jsval aID, jsval *aVp);
+  PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  void      Finalize(JSContext *aContext, JSObject *aObj);
 
   // nsIForm
   NS_IMETHOD AddElement(nsIFormControl* aElement);
@@ -520,37 +525,37 @@ nsHTMLFormElement::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
 }
 
 PRBool    
-nsHTMLFormElement::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsHTMLFormElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-  return mInner.AddProperty(aContext, aID, aVp);
+  return mInner.AddProperty(aContext, aObj, aID, aVp);
 }
 
 PRBool    
-nsHTMLFormElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsHTMLFormElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-  return mInner.DeleteProperty(aContext, aID, aVp);
+  return mInner.DeleteProperty(aContext, aObj, aID, aVp);
 }
 
 PRBool    
-nsHTMLFormElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsHTMLFormElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-  return mInner.GetProperty(aContext, aID, aVp);
+  return mInner.GetProperty(aContext, aObj, aID, aVp);
 }
 
 PRBool    
-nsHTMLFormElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsHTMLFormElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-  return mInner.SetProperty(aContext, aID, aVp);
+  return mInner.SetProperty(aContext, aObj, aID, aVp);
 }
 
 PRBool    
-nsHTMLFormElement::EnumerateProperty(JSContext *aContext)
+nsHTMLFormElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
-  return mInner.EnumerateProperty(aContext);
+  return mInner.EnumerateProperty(aContext, aObj);
 }
 
 PRBool    
-nsHTMLFormElement::Resolve(JSContext *aContext, jsval aID)
+nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
   nsCOMPtr<nsIDOMElement> element;
   char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
@@ -564,25 +569,13 @@ nsHTMLFormElement::Resolve(JSContext *aContext, jsval aID)
     
     if (owner) {
       nsCOMPtr<nsIScriptContext> scriptContext;
-      
-      if (nsnull != mInner.mDocument) {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        mInner.mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-        if (globalObject) {
-          result = globalObject->GetContext(getter_AddRefs(scriptContext));
-        }
-      }
-      else {
-        scriptContext = dont_AddRef((nsIScriptContext*)JS_GetContextPrivate(aContext));
-      }
-
-      JSObject* obj;
+      nsLayoutUtils::GetStaticScriptContext(aContext, aObj,
+                                            getter_AddRefs(scriptContext));
       if (scriptContext) {
+        JSObject* obj;
         result = owner->GetScriptObject(scriptContext, (void**)&obj);
         if (NS_SUCCEEDED(result) && (nsnull != obj)) {
-          JSObject* myObj;
-          result = mInner.GetScriptObject(scriptContext, (void**)&myObj);
-          ret = ::JS_DefineProperty(aContext, myObj,
+          ret = ::JS_DefineProperty(aContext, aObj,
                                     str, OBJECT_TO_JSVAL(obj),
                                     nsnull, nsnull, 0);
         }
@@ -590,7 +583,7 @@ nsHTMLFormElement::Resolve(JSContext *aContext, jsval aID)
     }
   }
   else {
-    ret = mInner.Resolve(aContext, aID);
+    ret = mInner.Resolve(aContext, aObj, aID);
   }
 
   if (NS_FAILED(result)) {
@@ -601,15 +594,15 @@ nsHTMLFormElement::Resolve(JSContext *aContext, jsval aID)
 }
 
 PRBool    
-nsHTMLFormElement::Convert(JSContext *aContext, jsval aID)
+nsHTMLFormElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
-  return mInner.Convert(aContext, aID);
+  return mInner.Convert(aContext, aObj, aID);
 }
 
 void      
-nsHTMLFormElement::Finalize(JSContext *aContext)
+nsHTMLFormElement::Finalize(JSContext *aContext, JSObject *aObj)
 {
-  mInner.Finalize(aContext);
+  mInner.Finalize(aContext, aObj);
 }
 
 NS_IMETHODIMP 

@@ -132,7 +132,6 @@ mozJSComponentLoader::~mozJSComponentLoader()
 
         JS_RemoveRoot(mContext, &mSuperGlobal);
         mCompMgrWrapper = nsnull; // release wrapper so GC can release CM
-        mXPC->AbandonJSContext(mContext);
 
         JS_DestroyContext(mContext);
         mContext = nsnull;
@@ -236,12 +235,13 @@ mozJSComponentLoader::ReallyInit()
         !JS_DefineFunctions(mContext, mSuperGlobal, gGlobalFun))
         return NS_ERROR_FAILURE;
 
-    rv = mXPC->InitJSContext(mContext, mSuperGlobal, PR_TRUE);
+    rv = mXPC->InitClasses(mContext, mSuperGlobal);
     if (NS_FAILED(rv))
         return rv;
     
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedCM;
-    rv = mXPC->WrapNative(mContext, mCompMgr, NS_GET_IID(nsIComponentManager),
+    rv = mXPC->WrapNative(mContext, mSuperGlobal, mCompMgr, 
+                          NS_GET_IID(nsIComponentManager),
                           getter_AddRefs(wrappedCM));
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver

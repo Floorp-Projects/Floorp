@@ -686,7 +686,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
     if(xpc)
     {
-        rv = xpc->WrapNative(cx, inst, iid, &instWrapper);
+        rv = xpc->WrapNative(cx, obj, inst, iid, &instWrapper);
         NS_RELEASE(xpc);
     }
 
@@ -856,7 +856,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     }
 
     nsCOMPtr<nsIXPConnectWrappedNative> srvcWrapper;
-    rv = xpc->WrapNative(cx, srvc, iid, getter_AddRefs(srvcWrapper));
+    rv = xpc->WrapNative(cx, obj, srvc, iid, getter_AddRefs(srvcWrapper));
     if(NS_FAILED(rv))
     {
         ThrowException(NS_ERROR_XPC_CANT_CREATE_WN, cx);
@@ -1014,7 +1014,7 @@ nsJSCID::Construct(JSContext *cx, JSObject *obj,
 // additional utilities...
 
 JSObject *
-xpc_NewIDObject(JSContext *cx, const nsID& aID)
+xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID)
 {
     JSObject *obj = nsnull;
 
@@ -1029,7 +1029,7 @@ xpc_NewIDObject(JSContext *cx, const nsID& aID)
             if(xpc)
             {
                 nsIXPConnectWrappedNative* nsid_wrapper;
-                if(NS_SUCCEEDED(xpc->WrapNative(cx,
+                if(NS_SUCCEEDED(xpc->WrapNative(cx, jsobj,
                                         NS_STATIC_CAST(nsISupports*,iid),
                                         NS_GET_IID(nsIJSID),
                                         &nsid_wrapper)))

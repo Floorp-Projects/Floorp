@@ -101,7 +101,7 @@ nsXPCTestModule::~nsXPCTestModule()
     Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsXPCTestModule, NS_GET_IID(nsIModule))
+NS_IMPL_ISUPPORTS1(nsXPCTestModule, nsIModule);
 
 // Perform our one-time intialization for this module
 nsresult

@@ -317,7 +317,7 @@ public:
     {return arbitrary->Construct(cx, obj, argc, argv, rval, wrapper,        \
                                  NULL, retval);}
 
-#define XPC_IMPLEMENT_FORWARD_HASINSTANCE(_class)                           \
+#define XPC_IMPLEMENT_FORWARD_HASINSTANCE(_class) \
     NS_IMETHODIMP _class::HasInstance(JSContext *cx, JSObject *obj,         \
                            jsval v, JSBool *bp,                             \
                            nsIXPConnectWrappedNative* wrapper,              \
@@ -453,7 +453,7 @@ public:
                          JSBool* retval)                                    \
     {*rval = JSVAL_NULL; *retval = JS_TRUE; return NS_OK;}
 
-#define XPC_IMPLEMENT_IGNORE_HASINSTANCE(_class)                            \
+#define XPC_IMPLEMENT_IGNORE_HASINSTANCE(_class) \
     NS_IMETHODIMP _class::HasInstance(JSContext *cx, JSObject *obj,         \
                            jsval v, JSBool *bp,                             \
                            nsIXPConnectWrappedNative* wrapper,              \
@@ -467,6 +467,141 @@ public:
                         nsIXPCScriptable* arbitrary)                        \
     /* XPConnect does the finalization on the wrapper itself anyway */      \
     {return NS_OK;}
+
+/***************************************************************************/
+
+#define XPC_IMPLEMENT_FAIL_CREATE(_class, _code) \
+    NS_IMETHODIMP _class::Create(JSContext *cx, JSObject *obj,              \
+                      nsIXPConnectWrappedNative* wrapper,                   \
+                      nsIXPCScriptable* arbitrary)                          \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_GETFLAGS(_class, _code) \
+    NS_IMETHODIMP _class::GetFlags(JSContext *cx, JSObject *obj,            \
+                      nsIXPConnectWrappedNative* wrapper,                   \
+                      JSUint32* flagsp,                                     \
+                      nsIXPCScriptable* arbitrary)                          \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_LOOKUPPROPERTY(_class, _code) \
+    NS_IMETHODIMP _class::LookupProperty(JSContext *cx, JSObject *obj,      \
+                              jsid id,                                      \
+                              JSObject **objp, JSProperty **propp,          \
+                              nsIXPConnectWrappedNative* wrapper,           \
+                              nsIXPCScriptable* arbitrary,                  \
+                              JSBool* retval)                               \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_DEFINEPROPERTY(_class, _code) \
+    NS_IMETHODIMP _class::DefineProperty(JSContext *cx, JSObject *obj,      \
+                              jsid id, jsval value,                         \
+                              JSPropertyOp getter, JSPropertyOp setter,     \
+                              uintN attrs, JSProperty **propp,              \
+                              nsIXPConnectWrappedNative* wrapper,           \
+                              nsIXPCScriptable* arbitrary,                  \
+                              JSBool* retval)                               \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_GETPROPERTY(_class, _code) \
+    NS_IMETHODIMP _class::GetProperty(JSContext *cx, JSObject *obj,         \
+                           jsid id, jsval *vp,                              \
+                           nsIXPConnectWrappedNative* wrapper,              \
+                           nsIXPCScriptable* arbitrary,                     \
+                           JSBool* retval)                                  \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_SETPROPERTY(_class, _code) \
+    NS_IMETHODIMP _class::SetProperty(JSContext *cx, JSObject *obj,         \
+                           jsid id, jsval *vp,                              \
+                           nsIXPConnectWrappedNative* wrapper,              \
+                           nsIXPCScriptable* arbitrary,                     \
+                           JSBool* retval)                                  \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_GETATTRIBUTES(_class, _code) \
+    NS_IMETHODIMP _class::GetAttributes(JSContext *cx, JSObject *obj,       \
+                             jsid id,                                       \
+                             JSProperty *prop, uintN *attrsp,               \
+                             nsIXPConnectWrappedNative* wrapper,            \
+                             nsIXPCScriptable* arbitrary,                   \
+                             JSBool* retval)                                \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_SETATTRIBUTES(_class, _code) \
+    NS_IMETHODIMP _class::SetAttributes(JSContext *cx, JSObject *obj,       \
+                             jsid id,                                       \
+                             JSProperty *prop, uintN *attrsp,               \
+                             nsIXPConnectWrappedNative* wrapper,            \
+                             nsIXPCScriptable* arbitrary,                   \
+                             JSBool* retval)                                \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_DELETEPROPERTY(_class, _code) \
+    NS_IMETHODIMP _class::DeleteProperty(JSContext *cx, JSObject *obj,      \
+                              jsid id, jsval *vp,                           \
+                              nsIXPConnectWrappedNative* wrapper,           \
+                              nsIXPCScriptable* arbitrary,                  \
+                              JSBool* retval)                               \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_DEFAULTVALUE(_class, _code) \
+    NS_IMETHODIMP _class::DefaultValue(JSContext *cx, JSObject *obj,        \
+                            JSType type, jsval *vp,                         \
+                            nsIXPConnectWrappedNative* wrapper,             \
+                            nsIXPCScriptable* arbitrary,                    \
+                            JSBool* retval)                                 \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_ENUMERATE(_class, _code) \
+    NS_IMETHODIMP _class::Enumerate(JSContext *cx, JSObject *obj,           \
+                         JSIterateOp enum_op,                               \
+                         jsval *statep, jsid *idp,                          \
+                         nsIXPConnectWrappedNative* wrapper,                \
+                         nsIXPCScriptable* arbitrary,                       \
+                         JSBool* retval)                                    \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_CHECKACCESS(_class, _code) \
+    NS_IMETHODIMP _class::CheckAccess(JSContext *cx, JSObject *obj,         \
+                           jsid id,                                         \
+                           JSAccessMode mode, jsval *vp, uintN *attrsp,     \
+                           nsIXPConnectWrappedNative* wrapper,              \
+                           nsIXPCScriptable* arbitrary,                     \
+                           JSBool* retval)                                  \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_CALL(_class, _code) \
+    NS_IMETHODIMP _class::Call(JSContext *cx, JSObject *obj,                \
+                    uintN argc, jsval *argv,                                \
+                    jsval *rval,                                            \
+                    nsIXPConnectWrappedNative* wrapper,                     \
+                    nsIXPCScriptable* arbitrary,                            \
+                    JSBool* retval)                                         \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_CONSTRUCT(_class, _code) \
+    NS_IMETHODIMP _class::Construct(JSContext *cx, JSObject *obj,           \
+                         uintN argc, jsval *argv,                           \
+                         jsval *rval,                                       \
+                         nsIXPConnectWrappedNative* wrapper,                \
+                         nsIXPCScriptable* arbitrary,                       \
+                         JSBool* retval)                                    \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_HASINSTANCE(_class, _code) \
+    NS_IMETHODIMP _class::HasInstance(JSContext *cx, JSObject *obj,         \
+                           jsval v, JSBool *bp,                             \
+                           nsIXPConnectWrappedNative* wrapper,              \
+                           nsIXPCScriptable* arbitrary,                     \
+                           JSBool* retval)                                  \
+    {return _code;}
+
+#define XPC_IMPLEMENT_FAIL_FINALIZE(_class, _code) \
+    NS_IMETHODIMP _class::Finalize(JSContext *cx, JSObject *obj,            \
+                        nsIXPConnectWrappedNative* wrapper,                 \
+                        nsIXPCScriptable* arbitrary)                        \
+    /* XPConnect does the finalization on the wrapper itself anyway */      \
+    {return _code;}
 
 /***************************************************************************/
 
@@ -506,6 +641,24 @@ public:
     XPC_IMPLEMENT_IGNORE_HASINSTANCE(_class)            \
     XPC_IMPLEMENT_IGNORE_FINALIZE(_class)
 
+#define XPC_IMPLEMENT_FAIL_IXPCSCRIPTABLE(_class,_code) \
+    XPC_IMPLEMENT_FAIL_CREATE(_class,_code)             \
+    XPC_IMPLEMENT_FAIL_GETFLAGS(_class,_code)           \
+    XPC_IMPLEMENT_FAIL_LOOKUPPROPERTY(_class,_code)     \
+    XPC_IMPLEMENT_FAIL_DEFINEPROPERTY(_class,_code)     \
+    XPC_IMPLEMENT_FAIL_GETPROPERTY(_class,_code)        \
+    XPC_IMPLEMENT_FAIL_SETPROPERTY(_class,_code)        \
+    XPC_IMPLEMENT_FAIL_GETATTRIBUTES(_class,_code)      \
+    XPC_IMPLEMENT_FAIL_SETATTRIBUTES(_class,_code)      \
+    XPC_IMPLEMENT_FAIL_DELETEPROPERTY(_class,_code)     \
+    XPC_IMPLEMENT_FAIL_DEFAULTVALUE(_class,_code)       \
+    XPC_IMPLEMENT_FAIL_ENUMERATE(_class,_code)          \
+    XPC_IMPLEMENT_FAIL_CHECKACCESS(_class,_code)        \
+    XPC_IMPLEMENT_FAIL_CALL(_class,_code)               \
+    XPC_IMPLEMENT_FAIL_CONSTRUCT(_class,_code)          \
+    XPC_IMPLEMENT_FAIL_HASINSTANCE(_class,_code)        \
+    XPC_IMPLEMENT_FAIL_FINALIZE(_class,_code)
+
 
 // macro test...
 
@@ -514,38 +667,6 @@ public:
 //    XPC_DECLARE_IXPCSCRIPTABLE
 //};
 //XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(foo)
-
-/***************************************************************************/
-/*
-* A macro to make it easier to implement a simple Queryinterface that
-* also deals with returning the scriptable interface object.
-*/
-
-#define NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(_class, _classiiddef, _scriptable) \
-nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
-{                                                                        \
-  if (NULL == aInstancePtr) {                                            \
-    return NS_ERROR_NULL_POINTER;                                        \
-  }                                                                      \
-  static NS_DEFINE_IID(kClassIID, _classiiddef);                         \
-  if (aIID.Equals(kClassIID)) {                                          \
-    *aInstancePtr = (void*) (_class*)this;                               \
-    NS_ADDREF_THIS();                                                    \
-    return NS_OK;                                                        \
-  }                                                                      \
-  if (aIID.Equals(nsIXPCScriptable::GetIID())) {                         \
-    *aInstancePtr = NS_STATIC_CAST(nsIXPCScriptable*, _scriptable);      \
-    NS_ADDREF((nsISupports*)*aInstancePtr);                              \
-    return NS_OK;                                                        \
-  }                                                                      \
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {                            \
-    *aInstancePtr = (void*) (_class*)this;                               \
-    NS_ADDREF_THIS();                                                    \
-    return NS_OK;                                                        \
-  }                                                                      \
-  *aInstancePtr = NULL;                                                  \
-  return NS_NOINTERFACE;                                                 \
-}
 
 /***************************************************************************/
 
