@@ -3699,15 +3699,27 @@ function middleMousePaste(event)
     return false;
 
   // On ctrl-middleclick, open in new tab.
+  var openNewTab;
 #ifdef XP_MACOSX
-  if (event.metaKey)
+  openNewTab = event.metaKey;
 #else
-  if (event.ctrlKey)
+  openNewTab = event.ctrlKey;
 #endif
-    openNewTabWith(url, null, event, true);
 
-  // If ctrl wasn't down, then just load the url in the current win/tab.
-  loadURI(url);
+  if (!openNewTab) {
+    // If ctrl wasn't down, then just load the url in the current win/tab.
+    loadURI(url);
+  } else {
+    const nsIURIFixup = Components.interfaces.nsIURIFixup;
+    if (!gURIFixup)
+      gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                            .getService(nsIURIFixup);
+
+    url = gURIFixup.createFixupURI(url, nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI).spec;
+
+    openNewTabWith(url, null, event, true);
+  }
+
   event.preventBubble();
   return true;
 }
