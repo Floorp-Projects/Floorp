@@ -1230,12 +1230,29 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
 
 NS_IMETHODIMP GlobalWindowImpl::Blur()
 {
-   nsresult result = NS_OK;
-   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-   if(webShell)
-      result = webShell->RemoveFocus();
+   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+   if(docShellAsItem)
+      {
+      nsCOMPtr<nsIDocShellTreeItem> parent;
+      // Parent regardless of chrome or content boundary
+      docShellAsItem->GetParent(getter_AddRefs(parent));
+      
+      nsCOMPtr<nsIBaseWindow> newFocusWin;
 
-   return result;
+      if(parent)
+         newFocusWin = do_QueryInterface(parent);
+      else
+         {
+         nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+         docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+         newFocusWin = do_QueryInterface(treeOwner);
+         }
+         
+      if(newFocusWin)
+         newFocusWin->SetFocus();
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Back()
