@@ -418,6 +418,7 @@ LINK_LIBS= \
     $(DIST)\lib\netcache.lib \
     $(DIST)\lib\netcnvts.lib \
     $(DIST)\lib\mimetype.lib \
+    $(DIST)\lib\netutil.lib \
     $(DIST)\lib\network.lib \
     $(DIST)\lib\cnetinit.lib \
 !ifdef MOZ_LDAP
