@@ -28,6 +28,35 @@
   </binding>
 
   <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
+    <implementation implements="nsIDOMXULLabelElement">
+      <property name="accessKey">
+        <getter>
+          <![CDATA[
+            var accessKey = this.getAttribute('accesskey');
+            return accessKey ? accessKey[0] : null;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this.setAttribute('accesskey', val);
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <property name="control" onget="return getAttribute('control');">
+        <setter>
+          <![CDATA[
+            // After this gets set, the label will use the binding #label-control
+            this.setAttribute('control', val);
+            return val;
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="label-control" extends="chrome://global/content/bindings/text.xml#text-label">
     <content>
       <html:span anonid="accessKeyParens"><children/></html:span>
     </content>
@@ -68,7 +97,7 @@
 
             var accessKey = this.accessKey;
             var labelText = this.textContent;
-            if (!accessKey || !labelText) {
+            if (!accessKey || !labelText || !control) {
               return;
             }
             var accessKeyIndex = labelText.indexOf(accessKey);
@@ -151,9 +180,7 @@
       </property>
 
     </implementation>
-  </binding>
 
-  <binding id="label-control" extends="chrome://global/content/bindings/text.xml#text-label">
     <handlers>
       <handler event="click" action="if (this.disabled) return;
                                      var controlElementID = this.getAttribute('control');

@@ -357,7 +357,7 @@
       </xul:hbox>
     </content>
 
-    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULSelectControlItemElement, nsIDOMXULLabeledControlElement, nsIAccessibleProvider">
       <constructor>
         <![CDATA[
           // Just clear out the parent's cached list of radio children
