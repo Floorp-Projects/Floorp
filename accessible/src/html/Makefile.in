@@ -16,22 +16,56 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): John Gaunt (jgaunt@netscape.com)
+# Contributor(s):  John Gaunt (jgaunt@netscape.com)
 #
 
-DEPTH = ../..
+DEPTH = ../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-  base \
-  html \
-  xul \
-  $(null)
+MODULE = accessibility
+LIBRARY_NAME = accessibility_html_s
+REQUIRES = \
+  content \
+  content_xul \
+  docshell \
+  dom \
+  gfx \
+  gfx2 \
+  htmlparser \
+  imglib2 \
+  intl \
+  layout \
+  locale \
+  necko \
+  string \
+  timer \
+  uriloader \
+  view \
+  webshell \
+  widget \
+  xpcom \
+  $(NULL)
 
+CPPSRCS = \
+  nsHTMLAreaAccessible.cpp \
+  nsHTMLFormControlAccessible.cpp \
+  nsHTMLIFrameRootAccessible.cpp \
+  nsHTMLImageAccessible.cpp \
+  nsHTMLLinkAccessible.cpp \
+  nsHTMLSelectAccessible.cpp \
+  nsHTMLTableAccessible.cpp \
+  nsHTMLTextAccessible.cpp \
+  $(NULL)
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../base \
+  $(NULL)
