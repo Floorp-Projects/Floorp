@@ -2965,7 +2965,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   UINT virtualKeyCode = mIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
 
 #ifdef DEBUG
-  //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, virtualKeyCode, aScanCode);
+  //printf("In OnKeyDown virt: %d  scan: %d\n", virtualKeyCode, aScanCode);
 #endif
 
   BOOL result = DispatchKeyEvent(NS_KEY_DOWN, 0, virtualKeyCode, aKeyData);
@@ -2985,7 +2985,13 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   BOOL gotMsg = ::PeekMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
   // Enter and backspace are always handled here to avoid for example the
   // confusion between ctrl-enter and ctrl-J.
-  if (virtualKeyCode == NS_VK_RETURN || virtualKeyCode == NS_VK_BACK)
+  // Ctrl+[Add, Subtract, Equals] are always handled here to make text zoom shortcuts work
+  // on different keyboard layouts (Equals is needed because many layouts return it when
+  // pressing Ctrl++ and that's why it's also accepted as a shortcut for increasing zoom).
+  if (virtualKeyCode == NS_VK_RETURN || virtualKeyCode == NS_VK_BACK || 
+    (mIsControlDown && !mIsAltDown && !mIsShiftDown && 
+     (virtualKeyCode == NS_VK_ADD || virtualKeyCode == NS_VK_SUBTRACT || 
+     virtualKeyCode == NS_VK_EQUALS)))
   {
     // Remove a possible WM_CHAR or WM_SYSCHAR from the message queue
     if (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
@@ -3012,8 +3018,18 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
     case NS_VK_DIVIDE    :
     case NS_VK_SLASH     : asciiKey = '/';  break;
     case NS_VK_MULTIPLY  : asciiKey = '*';  break;
+    case NS_VK_NUMPAD0   : asciiKey = '0';  break;
+    case NS_VK_NUMPAD1   : asciiKey = '1';  break;
+    case NS_VK_NUMPAD2   : asciiKey = '2';  break;
+    case NS_VK_NUMPAD3   : asciiKey = '3';  break;
+    case NS_VK_NUMPAD4   : asciiKey = '4';  break;
+    case NS_VK_NUMPAD5   : asciiKey = '5';  break;
+    case NS_VK_NUMPAD6   : asciiKey = '6';  break;
+    case NS_VK_NUMPAD7   : asciiKey = '7';  break;
+    case NS_VK_NUMPAD8   : asciiKey = '8';  break;
+    case NS_VK_NUMPAD9   : asciiKey = '9';  break;
     default:
-      // NS_VK_0 - NS_VK9 and NS_VK_A - NS_VK_Z match their ascii values
+      // NS_VK_0 - NS_VK_9 and NS_VK_A - NS_VK_Z match their ascii values
       if ((NS_VK_0 <= virtualKeyCode && virtualKeyCode <= NS_VK_9) ||
           (NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z)) {
         asciiKey = virtualKeyCode;
