@@ -383,7 +383,6 @@ ssmpkcs12context_createpkcs12file(SSMPKCS12Context *cxt,
     return rv;
 }
 
-#ifdef IS_LITTLE_ENDIAN
 void ssm_switch_endian(unsigned char *buf, unsigned int len)
 {
     unsigned int i;
@@ -395,7 +394,6 @@ void ssm_switch_endian(unsigned char *buf, unsigned int len)
         buf[i+1] = tmp;
     }
 }
-#endif
 
 /* This function converts ASCII strings to UCS2 strings in Network Byte Order.
 ** The "swapBytes" argument is ignored.  
