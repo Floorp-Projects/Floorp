@@ -45,6 +45,9 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
+  NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
+                                        nsIAtom** aListName) const;
+
 protected:
   nsFrameList mPopupFrames;
 }; // class nsMenuFrame
