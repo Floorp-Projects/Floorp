@@ -272,7 +272,7 @@ nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgD
   pathSpec->GetFileSpec(&m_fileSpec);
   m_fileSpec.SetLeafName("nstmp");
   m_window = aMsgWindow;
-
+  m_keyArray.RemoveAll();
   InitDB(db);
 
   m_size = m_keyArray.GetSize();
