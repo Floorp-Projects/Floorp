@@ -78,15 +78,17 @@
   </groupbox>
   <groupbox align="start">
     <caption label="&languages.customize.Charset.grouplabel;"/>
-    <label value="&languages.customize.DefaultCharset.label;" accesskey="&languages.customize.DefaultCharset.accesskey;" control="DefaultCharsetList"/>
-    <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-        prefstring="intl.charset.default" preftype="localizedstring"
-        wsm_attributes="value">
-        <template>
-          <menupopup>
-            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-          </menupopup>
-        </template>
-    </menulist>       
+    <hbox align="center">
+      <label value="&languages.customize.DefaultCharset.label;" accesskey="&languages.customize.DefaultCharset.accesskey;" control="DefaultCharsetList"/>
+      <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
+          prefstring="intl.charset.default" preftype="localizedstring"
+          wsm_attributes="value">
+          <template>
+            <menupopup>
+              <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+            </menupopup>
+          </template>
+      </menulist> 
+    </hbox>
   </groupbox>
 </page>
