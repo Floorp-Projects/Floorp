@@ -14,10 +14,8 @@
         }, 
         {
             ACTIONS = {
-                checkboxClicked = id; 
                 checkboxStartPageClicked = id; 
                 checkboxUseSystemHomePageClicked = id; 
-                chooseDownloadFolder = id; 
                 clearDiskCache = id; 
                 clearGlobalHistory = id; 
                 historyDaysModified = id; 
@@ -28,8 +26,6 @@
                 checkboxNewTabBlank = NSButton; 
                 checkboxNewWindowBlank = NSButton; 
                 checkboxUseSystemHomePage = NSButton; 
-                mDownloadFolder = NSPopUpButton; 
-                mEnableHelperApps = NSButton; 
                 textFieldHistoryDays = NSTextField; 
                 textFieldHomePage = NSTextField; 
             }; 

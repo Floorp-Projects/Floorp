@@ -51,7 +51,6 @@
 
 - (IBAction)checkboxClicked:(id)sender
 {
-  NSLog(@"called mofo");
   if (!mPrefService)
     return;
 
