@@ -183,6 +183,7 @@ public:
 	nsresult OnListArticle();
 	nsresult OnSearch();
 	nsresult OnReadNewsRC();
+    nsresult OnPostMessage();
 	nsresult OnExit(); 
 protected:
     PLEventQueue *m_eventQueue;
@@ -201,6 +202,7 @@ protected:
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
 
 	void InitializeProtocol(const char * urlSpec);
+    nsresult SetupUrl(char *group);
 	PRBool m_protocolInitialized; 
 };
 
@@ -252,9 +254,9 @@ nsresult nsNntpTestDriver::RunDriver()
 			status = ReadAndDispatchCommand();	
 		}  // if running url
 #ifdef XP_UNIX
-        printf("ProcessPendingEvents..");
+
         PL_ProcessPendingEvents(m_eventQueue);
-        printf("done.\n");
+
 #endif
 #ifdef XP_PC	
 		MSG msg;
@@ -286,17 +288,15 @@ void nsNntpTestDriver::InitializeTestDriver()
 
 	// prompt user for port...
 	printf("Enter port to use [%d]: ", m_port);
-	scanf("%[^\n]", portString);
+    fgets(portString, sizeof(portString), stdin);
 	if (portString && *portString)
 	{
 		m_port = atoi(portString);
 	}
-	scanf("%c", portString);  // eat the extra CR
 
 	// now prompt for the host name....
 	printf("Enter host name to use [%s]: ", m_host);
-	scanf("%[^\n]", hostString);
-	scanf("%c", portString);  // eat the extra CR
+    fgets(hostString, sizeof(hostString), stdin);
 	if(hostString && *hostString)
 	{
 		PL_strcpy(m_host, hostString);
@@ -313,12 +313,12 @@ nsresult nsNntpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
 	char tempBuffer[500];
 	tempBuffer[0] = '\0'; 
 
-	if (userPrompt && *userPrompt)
+	if (userPrompt)
 		printf(userPrompt);
 	else
 		printf("Enter data for command: ");
-	 
-	scanf("%[^\n]", tempBuffer);
+
+    fgets(tempBuffer, sizeof(tempBuffer), stdin);
 	if (*tempBuffer)
 	{
 		if (tempBuffer[0])  // kill off any CR or LFs...
@@ -334,9 +334,6 @@ nsresult nsNntpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
 		}
 		
 	}
-	
-	char buffer[2];
-	scanf("%c", buffer);  // eat up the CR that is still in the input stream...
 
 	return NS_OK;
 }
@@ -349,12 +346,11 @@ nsresult nsNntpTestDriver::ReadAndDispatchCommand()
 	commandString[0] = '\0';
 
 	printf("Enter command number: ");
-	scanf("%[^\n]", commandString);
+    fgets(commandString, sizeof(commandString), stdin);
 	if (commandString && *commandString)
 	{
 		command = atoi(commandString);
 	}
-	scanf("%c", commandString);  // eat the extra CR
 
 	// now switch on command to the appropriate 
 	switch (command)
@@ -380,6 +376,9 @@ nsresult nsNntpTestDriver::ReadAndDispatchCommand()
 	case 6:
 		status = OnReadNewsRC();
 		break;
+    case 7:
+        status = OnPostMessage();
+        break;
 	default:
 		status = OnExit();
 		break;
@@ -398,6 +397,7 @@ nsresult nsNntpTestDriver::ListCommands()
 	printf("4) Get an article. \n");
 	printf("5) Perform Search. \n");
 	printf("6) Read NewsRC file. \n");
+    printf("7) Post a message. \n");
 	printf("9) Exit the test application. \n");
 	return NS_OK;
 }
@@ -445,34 +445,11 @@ nsresult nsNntpTestDriver::OnListIDs()
 	PL_strcat(m_urlString, m_userData);
 	PL_strcat(m_urlString, "?list-ids");
 	
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
-	else
-		rv = m_url->SetSpec(m_urlString); // reset spec
 	
 	// load the correct newsgroup interface as an event sink...
-	if (NS_SUCCEEDED(rv))
-	{
-		 // before we re-load, assume it is a group command and configure our nntpurl correctly...
-		 nsINNTPHost * host = nsnull;
-		 nsINNTPNewsgroup * group = nsnull;
-		 nsINNTPNewsgroupList * list = nsnull;
-		 rv = m_url->GetNntpHost(&host);
-		 if (host)
-		 {
-			rv = host->FindGroup(m_userData, &group);
-			if (group)
-				group->GetNewsgroupList(&list);
-
-			rv = m_url->SetNewsgroup(group);
-			rv = m_url->SetNewsgroupList(list);
-			NS_IF_RELEASE(group);
-			NS_IF_RELEASE(list);
-			NS_IF_RELEASE(host);
-		 }
-
-		rv = m_nntpProtocol->LoadURL(m_url);
-	} // if user provided the data...
+    if (NS_SUCCEEDED(rv))
+        SetupUrl(m_userData);
+    
 
 	return rv;
 }
@@ -492,36 +469,9 @@ nsresult nsNntpTestDriver::OnListArticle()
 	PL_strcat(m_urlString, "/");
 	PL_strcat(m_urlString, m_userData);
 
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
-	else
-		m_url->SetSpec(m_urlString); // reset spec
-
 	if (NS_SUCCEEDED(rv))
-	{
-		 // before we re-load, assume it is a group command and configure our nntpurl correctly...
-		 nsINNTPHost * host = nsnull;
-		 nsINNTPNewsgroup * group = nsnull;
-		 nsINNTPNewsgroupList * list = nsnull;
-		 
-		 rv = PromptForUserDataAndBuildUrl("Group article is in: ");
-		 rv = m_url->GetNntpHost(&host);
-		 if (host)
-		 {
-			rv = host->FindGroup(m_userData, &group);
-			if (group)
-				group->GetNewsgroupList(&list);
-
-			rv = m_url->SetNewsgroup(group);
-			rv = m_url->SetNewsgroupList(list);
-			NS_IF_RELEASE(group);
-			NS_IF_RELEASE(list);
-			NS_IF_RELEASE(host);
-		 }
-
-		rv = m_nntpProtocol->LoadURL(m_url);
-	} // if user provided the data...
-
+        SetupUrl(m_userData);
+    
 	return rv;
 }
 
@@ -545,40 +495,57 @@ nsresult nsNntpTestDriver::OnSearch()
 		PL_strcat(m_urlString, escapedBuffer);
 	}
 
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
-	else
-		m_url->SetSpec(m_urlString); // reset spec
-
 	
 	if (NS_SUCCEEDED(rv))
-	{
-		 // before we re-load, assume it is a group command and configure our nntpurl correctly...
-		 nsINNTPHost * host = nsnull;
-		 nsINNTPNewsgroup * group = nsnull;
-		 nsINNTPNewsgroupList * list = nsnull;
-		 rv = m_url->GetNntpHost(&host);
-		 if (host)
-		 {
-			rv = host->FindGroup(m_userData, &group);
-			if (group)
-				group->GetNewsgroupList(&list);
-
-			rv = m_url->SetNewsgroup(group);
-			rv = m_url->SetNewsgroupList(list);
-			NS_IF_RELEASE(group);
-			NS_IF_RELEASE(list);
-			NS_IF_RELEASE(host);
-		 }
-
-		rv = m_nntpProtocol->LoadURL(m_url);
-	} // if user provided the data...
-
+        SetupUrl(m_userData);
+    
 	return rv;
 	
 
 }
 
+nsresult
+nsNntpTestDriver::OnPostMessage()
+{
+    nsresult rv = NS_OK;
+    char *subject;
+    char *message;
+    
+    rv = PromptForUserDataAndBuildUrl("Newsgroup: ");
+    m_urlString[0] = '\0';
+    PL_strcpy(m_urlString, m_urlSpec);
+    PL_strcat(m_urlString, "/");
+    PL_strcat(m_urlString, m_userData);
+
+    // now we need to attach a message
+
+    SetupUrl(m_userData);
+    
+    rv = PromptForUserDataAndBuildUrl("Subject: ");
+    subject = PL_strdup(m_userData);
+    printf("Enter your message below. End with a blank line.\n");
+    rv = PromptForUserDataAndBuildUrl("");
+    int messagelen = 0;
+    message = NULL;
+    printf("[%2X][%2X][%2X][%2X]\n",
+           m_userData[0], m_userData[1], m_userData[2], m_userData[3]);
+    while (m_userData[0]) {
+        int linelen = PL_strlen(m_userData);
+        char *newMessage = (char *)PR_Malloc(linelen+messagelen+2);
+        
+        PL_strcpy(newMessage, message);
+        PL_strcat(newMessage, m_userData);
+        PL_strcat(newMessage, "\n");
+        PR_FREEIF(message);
+        message = newMessage;
+        rv = PromptForUserDataAndBuildUrl("");
+    }
+
+    printf("Ready to post the message:\n");
+    printf("Subject: %s\n", subject);
+    printf("Message:\n", message);
+
+}
 nsresult nsNntpTestDriver::OnGetGroup()
 {
 	nsresult rv = NS_OK;
@@ -641,6 +608,37 @@ nsresult nsNntpTestDriver::OnReadNewsRC()
 	rv = m_nntpProtocol->LoadURL(m_url);
 	return rv;
 }
+
+nsresult nsNntpTestDriver::SetupUrl(char *groupname)
+{
+    int rv;
+    
+	if (m_protocolInitialized == PR_FALSE)
+		InitializeProtocol(m_urlString);
+	else
+		rv = m_url->SetSpec(m_urlString); // reset spec
+    
+    // before we re-load, assume it is a group command and configure our nntpurl correctly...
+    nsINNTPHost * host = nsnull;
+    nsINNTPNewsgroup * group = nsnull;
+    nsINNTPNewsgroupList * list = nsnull;
+    rv = m_url->GetNntpHost(&host);
+    if (host)
+        {
+			rv = host->FindGroup(groupname, &group);
+			if (group)
+				group->GetNewsgroupList(&list);
+            
+			rv = m_url->SetNewsgroup(group);
+			rv = m_url->SetNewsgroupList(list);
+			NS_IF_RELEASE(group);
+			NS_IF_RELEASE(list);
+			NS_IF_RELEASE(host);
+        }
+    
+    rv = m_nntpProtocol->LoadURL(m_url);
+} // if user provided the data...
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // End on command handlers for news
