@@ -18,20 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *
- *
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date         Modified by     Description of modification
- * 03/23/2000   IBM Corp.       Fixed bug with OS2_SystemDirectory.
- * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
- *                               use in OS2
+ *   IBM Corp.
  */
 
 #include "nsResProtocolHandler.h"
@@ -418,7 +405,7 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, char **result)
     rv = substitutions->GetElementAt(0, getter_AddRefs(substURI));
     if (NS_FAILED(rv)) return rv;
 
-    return substURI->Resolve(path[0] == '/' ? path+1 : path, result);
+    return substURI->Resolve(path[0] == '/' ? path.get()+1 : path.get(), result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
