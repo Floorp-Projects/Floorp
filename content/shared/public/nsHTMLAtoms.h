@@ -114,6 +114,7 @@ public:
   static nsIAtom* dropDownHidden;
   static nsIAtom* dropDownBtnOut;
   static nsIAtom* dropDownBtnPressed;
+  static nsIAtom* dropDownList;
 
   static nsIAtom* embed;
   static nsIAtom* encoding;
