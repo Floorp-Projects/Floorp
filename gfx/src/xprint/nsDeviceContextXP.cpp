@@ -38,14 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
-/* PostScript/Xprint print modules do not support more than one object
- * instance because they use global vars which cannot be shared between
- * multiple instances...
- * bug 119491 ("Cleanup global vars in PostScript and Xprint modules) will fix
- * that...
- */
-#define WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS 1 
- 
 #include "nsDeviceContextXP.h"
 #include "nsRenderingContextXp.h"
 #include "nsFontMetricsXlib.h"
@@ -58,10 +50,6 @@
 static PRLogModuleInfo *nsDeviceContextXpLM = PR_NewLogModule("nsDeviceContextXp");
 #endif /* PR_LOGGING */
 
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-static int instance_counter = 0;
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
-
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  */
@@ -71,11 +59,6 @@ nsDeviceContextXp :: nsDeviceContextXp()
   mPrintContext        = nsnull;
   mSpec                = nsnull; 
   mParentDeviceContext = nsnull;
-  
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-  instance_counter++;
-  NS_ASSERTION(instance_counter < 2, "Cannot have more than one print device context.");
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
 }
 
 /** ---------------------------------------------------
@@ -85,11 +68,6 @@ nsDeviceContextXp :: nsDeviceContextXp()
 nsDeviceContextXp :: ~nsDeviceContextXp() 
 { 
   DestroyXPContext();
-
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-  instance_counter--;
-  NS_ASSERTION(instance_counter >= 0, "We cannot have less than zero instances.");
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
 }
 
 
@@ -97,14 +75,8 @@ NS_IMETHODIMP
 nsDeviceContextXp::SetSpec(nsIDeviceContextSpec* aSpec)
 {
   nsresult  rv = NS_ERROR_FAILURE;
-  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::SetSpec()\n"));
 
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-  NS_ASSERTION(instance_counter < 2, "Cannot have more than one print device context.");
-  if (instance_counter > 1) {
-    return NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW;
-  }
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
+  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::SetSpec()\n"));
 
   nsCOMPtr<nsIDeviceContextSpecXp> xpSpec;
 
@@ -141,13 +113,6 @@ nsDeviceContextXp::InitDeviceContextXP(nsIDeviceContext *aCreatingDeviceContext,
   float origscale, newscale;
   float t2d, a2d;
   int   print_resolution;
-
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-  NS_ASSERTION(instance_counter < 2, "Cannot have more than one print device context.");
-  if (instance_counter > 1) {
-    return NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW;
-  }
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
 
   mPrintContext->GetPrintResolution(print_resolution);
 
