@@ -65,7 +65,7 @@ class nsIStringBundle;
 class nsSystemPrincipal;
 struct ClassPolicy;
 
-#if defined(DEBUG_mstoltz) || defined(DEBUG_caillon) || defined(DEBUG_chb)
+#if defined(DEBUG_mstoltz) || defined(DEBUG_caillon)
 #define DEBUG_CAPS_HACKER
 #endif
 
