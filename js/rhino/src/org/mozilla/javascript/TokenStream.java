@@ -232,7 +232,13 @@ public class TokenStream {
         JSR         = 142,
         NEWLOCAL    = 143,
         USELOCAL    = 144,
-        SCRIPT      = 145;   // top-level node for entire script
+        SCRIPT      = 145,   // top-level node for entire script
+        
+        /**
+         * For the interpreted mode indicating a line number change in icodes.
+         */
+        LINE        = 146,
+        SOURCEFILE  = 147;
     // end enum
 
 
@@ -389,7 +395,9 @@ public class TokenStream {
                 "jsr",
                 "newlocal",
                 "uselocal",
-                "script"
+                "script",
+                "line",
+                "sourcefile",
             };
             names = a;
         }
