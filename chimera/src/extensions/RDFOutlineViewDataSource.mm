@@ -406,7 +406,7 @@
     isExpandable = YES;
 
   nsCOMPtr<nsIRDFResource> childProperty;
-  mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
+  mRDFService->GetResource(nsDependentCString("http://home.netscape.com/NC-rdf#child"), getter_AddRefs(childProperty));
 
   nsCOMPtr<nsISimpleEnumerator> childNodes;
   mDataSource->GetTargets(itemResource, childProperty, PR_TRUE, getter_AddRefs(childNodes));
@@ -439,7 +439,7 @@
 - (NSString*)getPropertyString:(NSString*)inPropertyURI forItem:(RDFOutlineViewItem*)inItem
 {
   nsCOMPtr<nsIRDFResource> propertyResource;
-  mRDFService->GetResource([inPropertyURI UTF8String], getter_AddRefs(propertyResource));
+  mRDFService->GetResource(nsDependentCString([inPropertyURI UTF8String]), getter_AddRefs(propertyResource));
           
   nsCOMPtr<nsIRDFResource> resource = dont_AddRef([inItem resource]);
           
