@@ -1755,7 +1755,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       /* Add yourself to the Session History */
    if (shist) {
       PRInt32  ret=0;
-      ret = shist->add(this);
+      ret = shist->add(this, aType);
    }
   }
    
@@ -1788,7 +1788,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   /* The session History may have changed the URL. So pass on the
    * right one for loading 
    */
-  PRUnichar * urlString=nsnull;
+  const PRUnichar * urlString=nsnull;
   GetURL(&urlString);
   nsAutoString  newURL(urlString);
   printf("Loading  url %s in WEbshell %x\n", mURL.ToNewCString(), this);
