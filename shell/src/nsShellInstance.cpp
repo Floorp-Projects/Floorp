@@ -34,6 +34,7 @@
 
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
+#include "nsParserCIID.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -150,9 +151,11 @@ nsresult nsShellInstance::RegisterFactories()
 #ifdef NS_WIN32
   #define GFXWIN_DLL "raptorgfxwin.dll"
   #define WIDGET_DLL "raptorwidget.dll"
+  #define PARSER_DLL "raptorhtmlpars.dll"
 #else
   #define GFXWIN_DLL "libgfxunix.so"
   #define WIDGET_DLL "libwidgetunix.so"
+  #define PARSER_DLL "libraptorhtmlpars.so"
 #endif
 
 
@@ -184,6 +187,8 @@ nsresult nsShellInstance::RegisterFactories()
   static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
   static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
   static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  static NS_DEFINE_IID(kCParserNodeCID, NS_PARSER_NODE_IID);
 
   NSRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -198,6 +203,8 @@ nsresult nsShellInstance::RegisterFactories()
   NSRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCParserNodeCID, PARSER_DLL, PR_FALSE, PR_FALSE);
   
 
   return NS_OK;
