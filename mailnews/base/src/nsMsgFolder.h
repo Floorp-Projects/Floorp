@@ -35,23 +35,12 @@
 
  class nsMsgFolder: public nsIMsgFolder
  {
-private:
-	char *	mURI;
 public: 
-	nsMsgFolder(const char* uri);
+	nsMsgFolder();
 	virtual ~nsMsgFolder();
 
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
-
-	//nsIRDFNode
-  NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
-
-	//nsIRDFResource
-	NS_IMETHOD GetValue(const char* *uri) const;
-  NS_IMETHOD EqualsResource(const nsIRDFResource* resource, PRBool* result) const;
-  NS_IMETHOD EqualsString(const char* uri, PRBool* result) const;
-
 
   NS_IMETHOD GetType(FolderType *type);
 
@@ -108,6 +97,9 @@ public:
 	NS_IMETHOD GetName(char **name);
 	NS_IMETHOD SetName(const char *name);
   NS_IMETHOD GetPrettiestName(char **name);
+
+  NS_IMETHOD BuildFolderURL(char ** url);
+
   NS_IMETHOD GetNameFromPathName(const char *pathName, char ** name);
 	NS_IMETHOD HasSubFolders(PRBool *hasSubFolders);
   NS_IMETHOD GetNumSubFolders(PRInt32 *numSubFolders);
@@ -226,9 +218,7 @@ public:
 	NS_IMETHOD GetKnowsSearchNntpExtension(PRBool *knowsExtension);
 	NS_IMETHOD GetAllowsPosting(PRBool *allowsPosting);
 
-#ifdef HAVE_FLAGS
 	NS_IMETHOD DisplayRecipients(PRBool *displayRecipients);
-#endif
 
 #ifdef HAVE_SEMAPHORE
   MsgERR AcquireSemaphore (void *semHolder);
@@ -305,5 +295,79 @@ public:
 #endif
 
  };
+
+class nsMsgMailFolder : public nsMsgFolder, public nsIMsgMailFolder
+{
+public:
+	nsMsgMailFolder();
+	~nsMsgMailFolder();
+
+	NS_DECL_ISUPPORTS
+
+	NS_IMETHOD GetType(FolderType *type);
+
+#ifdef HAVE_DB	
+	virtual MsgERR BeginCopyingMessages (MSG_FolderInfo *dstFolder, 
+																				MessageDB *sourceDB,
+																				IDArray *srcArray, 
+																				MSG_UrlQueue *urlQueue,
+																				int32 srcCount,
+																				MessageCopyInfo *copyInfo);
+
+
+	virtual int FinishCopyingMessages (MWContext *context,
+																			MSG_FolderInfo * srcFolder, 
+																			MSG_FolderInfo *dstFolder, 
+																			MessageDB *sourceDB,
+																			IDArray **ppSrcArray, 
+																			int32 srcCount,
+																			msg_move_state *state);
+#endif
+
+	NS_IMETHOD CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRInt32 *outPos);
+
+	NS_IMETHOD RemoveSubFolder (const nsIMsgFolder *which);
+	NS_IMETHOD Delete ();
+	NS_IMETHOD Rename (const char *newName);
+	NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRInt32 *outPos);
+
+		// this override pulls the value from the db
+	NS_IMETHOD GetName(char** name);   // Name of this folder (as presented to user).
+	NS_IMETHOD GetPrettyName(char ** prettyName);	// Override of the base, for top-level mail folder
+
+  NS_IMETHOD BuildFolderURL(char **url);
+
+	NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, const nsIMsgFolder *otherFolder, char** name);
+
+	NS_IMETHOD UpdateSummaryTotals() ;
+
+	NS_IMETHOD GetExpungedBytesCount(PRInt32 *count);
+	NS_IMETHOD GetDeletable (PRBool *deletable); 
+	NS_IMETHOD GetCanCreateChildren (PRBool *canCreateChildren) ;
+	NS_IMETHOD GetCanBeRenamed (PRBool *canBeRenamed);
+	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
+
+
+	NS_IMETHOD GetRelativePathName (char **pathName);
+
+
+	NS_IMETHOD GetSizeOnDisk(PRInt32 size);
+
+	NS_IMETHOD GetUserName(char** userName);
+	NS_IMETHOD GetHostName(char** hostName);
+	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
+	NS_IMETHOD RememberPassword(const char *password);
+	NS_IMETHOD GetRememberedPassword(char ** password);
+
+	//nsIMsgMailFolder
+  NS_IMETHOD GetPathName(char * *aPathName);
+  NS_IMETHOD SetPathName(char * aPathName);
+
+protected:
+	char*			mPathName;
+	PRInt32		mExpungedBytes;
+	PRBool		mHaveReadNameFromDB;
+	PRBool		mGettingMail;
+};
 
 #endif
