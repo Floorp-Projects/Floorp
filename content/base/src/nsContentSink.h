@@ -82,16 +82,16 @@ protected:
                              nsIContent* aContent = nsnull);
   nsresult ProcessLinkHeader(nsIContent* aElement,
                              const nsAString& aLinkData);
-  nsresult ProcessLink(nsIContent* aElement, const nsAString& aHref,
-                       const nsAString& aRel, const nsAString& aTitle,
-                       const nsAString& aType, const nsAString& aMedia);
+  nsresult ProcessLink(nsIContent* aElement, const nsSubstring& aHref,
+                       const nsSubstring& aRel, const nsSubstring& aTitle,
+                       const nsSubstring& aType, const nsSubstring& aMedia);
 
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
-                                    const nsAString& aHref,
+                                    const nsSubstring& aHref,
                                     PRBool aAlternate,
-                                    const nsAString& aTitle,
-                                    const nsAString& aType,
-                                    const nsAString& aMedia);
+                                    const nsSubstring& aTitle,
+                                    const nsSubstring& aType,
+                                    const nsSubstring& aMedia);
 
   nsresult ProcessMETATag(nsIContent* aContent);
 

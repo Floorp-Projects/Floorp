@@ -44,14 +44,14 @@ class nsICSSRule;
 class nsIDOMNode;
 class nsXMLNameSpaceMap;
 class nsCSSRuleProcessor;
-class nsIMediaList;
+class nsMediaList;
 class nsICSSGroupRule;
 class nsICSSImportRule;
 
 // IID for the nsICSSStyleSheet interface
-// 37f9b0f0-5d00-4abc-9246-35473031ffd7
+// 446df065-af5e-46b8-b32f-289bf5906876
 #define NS_ICSS_STYLE_SHEET_IID     \
-{0x37f9b0f0, 0x5d00, 0x4abc, {0x92, 0x46, 0x35, 0x47, 0x30, 0x31, 0xff, 0xd7}}
+{0x446df065, 0xaf5e, 0x46b8, {0xb3, 0x2f, 0x28, 0x9b, 0xf5, 0x90, 0x68, 0x76}}
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
@@ -84,8 +84,7 @@ public:
    */
   NS_IMETHOD  SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI) = 0;
   NS_IMETHOD  SetTitle(const nsAString& aTitle) = 0;
-  NS_IMETHOD  AppendMedium(nsIAtom* aMedium) = 0;
-  NS_IMETHOD  ClearMedia(void) = 0;
+  NS_IMETHOD  SetMedia(nsMediaList* aMedia) = 0;
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
 
   NS_IMETHOD  SetOwnerRule(nsICSSImportRule* aOwnerRule) = 0;

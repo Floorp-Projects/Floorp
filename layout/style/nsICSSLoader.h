@@ -38,7 +38,7 @@
 #define nsICSSLoader_h___
 
 #include "nsISupports.h"
-#include "nsAString.h"
+#include "nsSubstring.h"
 #include "nsCompatibility.h"
 #include "nsICSSImportRule.h"
 
@@ -52,11 +52,12 @@ class nsIParser;
 class nsIDocument;
 class nsIUnicharInputStream;
 class nsICSSLoaderObserver;
-class nsISupportsArray;
+class nsMediaList;
 
-// IID for the nsICSSLoader interface {a6e82061-46c9-4af6-8fd3-97ec5a7ba649}
+// IID for the nsICSSLoader interface
+// 6c50f676-c764-4f2f-b62b-99d1076b44e9
 #define NS_ICSS_LOADER_IID     \
-{0xa6e82061, 0x46c9, 0x4af6, {0x8f, 0xd3, 0x97, 0xec, 0x5a, 0x7b, 0xa6, 0x49}}
+{0x6c50f676, 0xc764, 0x4f2f, {0xb6, 0x2b, 0x99, 0xd1, 0x07, 0x6b, 0x44, 0xe9}}
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
@@ -87,8 +88,8 @@ public:
   NS_IMETHOD LoadInlineStyle(nsIContent* aElement,
                              nsIUnicharInputStream* aStream, 
                              PRUint32 aLineNumber,
-                             const nsAString& aTitle, 
-                             const nsAString& aMedia, 
+                             const nsSubstring& aTitle, 
+                             const nsSubstring& aMedia, 
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted,
                              nsICSSLoaderObserver* aObserver) = 0;
@@ -100,8 +101,8 @@ public:
   //   will be marked complete when complete
   NS_IMETHOD LoadStyleLink(nsIContent* aElement,
                            nsIURI* aURL, 
-                           const nsAString& aTitle, 
-                           const nsAString& aMedia, 
+                           const nsSubstring& aTitle, 
+                           const nsSubstring& aMedia, 
                            nsIParser* aParserToUnblock,
                            PRBool& aCompleted,
                            nsICSSLoaderObserver* aObserver) = 0;
@@ -109,7 +110,7 @@ public:
   // Load a child style sheet (@import)
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
-                            nsISupportsArray* aMedia,
+                            nsMediaList* aMedia,
                             nsICSSImportRule* aRule) = 0;
 
   // Load a user agent or user sheet.  The sheet is loaded

@@ -622,9 +622,9 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
 
 nsresult
 nsContentSink::ProcessLink(nsIContent* aElement,
-                           const nsAString& aHref, const nsAString& aRel,
-                           const nsAString& aTitle, const nsAString& aType,
-                           const nsAString& aMedia)
+                           const nsSubstring& aHref, const nsSubstring& aRel,
+                           const nsSubstring& aTitle, const nsSubstring& aType,
+                           const nsSubstring& aMedia)
 {
   // XXX seems overkill to generate this string array
   nsStringArray linkTypes;
@@ -648,11 +648,11 @@ nsContentSink::ProcessLink(nsIContent* aElement,
 
 nsresult
 nsContentSink::ProcessStyleLink(nsIContent* aElement,
-                                const nsAString& aHref,
+                                const nsSubstring& aHref,
                                 PRBool aAlternate,
-                                const nsAString& aTitle,
-                                const nsAString& aType,
-                                const nsAString& aMedia)
+                                const nsSubstring& aTitle,
+                                const nsSubstring& aType,
+                                const nsSubstring& aMedia)
 {
   if (aAlternate && aTitle.IsEmpty()) {
     // alternates must have title return without error, for now

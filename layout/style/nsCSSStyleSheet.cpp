@@ -807,102 +807,38 @@ CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
   return result;
 }
 
-class DOMMediaListImpl : public nsIDOMMediaList,
-                         public nsIMediaList
-{
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_NSIDOMMEDIALIST
-
-  NS_FORWARD_NSISUPPORTSARRAY(mArray->)
-  NS_FORWARD_NSICOLLECTION(mArray->);
-  NS_FORWARD_NSISERIALIZABLE(mArray->); // XXXbe temporary
-
-  NS_IMETHOD_(PRBool) operator==(const nsISupportsArray& other) {
-    return PR_FALSE;
-  }
-
-  NS_IMETHOD_(nsISupports*)  operator[](PRUint32 aIndex) {
-    return mArray->ElementAt(aIndex);
-  }
-
-  // nsIMediaList methods
-  NS_DECL_NSIMEDIALIST
-  
-  DOMMediaListImpl(nsISupportsArray *aArray, nsCSSStyleSheet *aStyleSheet);
-  virtual ~DOMMediaListImpl();
-
-private:
-  nsresult Delete(const nsAString & aOldMedium);
-  nsresult Append(const nsAString & aOldMedium);
-
-  nsCOMPtr<nsISupportsArray> mArray;
-  // not refcounted; sheet will let us know when it goes away
-  // mStyleSheet is the sheet that needs to be dirtied when this medialist
-  // changes
-  nsCSSStyleSheet*         mStyleSheet;
-};
-
-// QueryInterface implementation for DOMMediaListImpl
-NS_INTERFACE_MAP_BEGIN(DOMMediaListImpl)
+NS_INTERFACE_MAP_BEGIN(nsMediaList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
-  NS_INTERFACE_MAP_ENTRY(nsIMediaList)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsArray)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMediaList)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(MediaList)
-  NS_INTERFACE_MAP_ENTRY(nsISerializable)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(nsMediaList)
+NS_IMPL_RELEASE(nsMediaList)
 
-NS_IMPL_ADDREF(DOMMediaListImpl)
-NS_IMPL_RELEASE(DOMMediaListImpl)
 
-
-DOMMediaListImpl::DOMMediaListImpl(nsISupportsArray *aArray,
-                                   nsCSSStyleSheet *aStyleSheet)
-  : mArray(aArray), mStyleSheet(aStyleSheet)
+nsMediaList::nsMediaList()
+  : mStyleSheet(nsnull)
 {
-
-  NS_ABORT_IF_FALSE(mArray, "This can't be used without an array!!");
 }
 
-DOMMediaListImpl::~DOMMediaListImpl()
+nsMediaList::~nsMediaList()
 {
 }
 
 nsresult
-NS_NewMediaList(nsISupportsArray* aArray,
-                nsICSSStyleSheet* aSheet,
-                nsIMediaList** aInstancePtrResult)
-{
-  NS_ASSERTION(aInstancePtrResult, "Null out param.");
-  DOMMediaListImpl* medialist = new DOMMediaListImpl(aArray, NS_STATIC_CAST(nsCSSStyleSheet*, aSheet));
-  *aInstancePtrResult = medialist;
-  NS_ENSURE_TRUE(medialist, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aInstancePtrResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMMediaListImpl::GetText(nsAString& aMediaText)
+nsMediaList::GetText(nsAString& aMediaText)
 {
   aMediaText.Truncate();
 
-  PRUint32 cnt;
-  nsresult rv = Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-
-  PRInt32 count = cnt, index = 0;
-
-  while (index < count) {
-    nsCOMPtr<nsIAtom> medium;
-    QueryElementAt(index++, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
+  for (PRInt32 i = 0, i_end = mArray.Count(); i < i_end; ++i) {
+    nsIAtom* medium = mArray[i];
     NS_ENSURE_TRUE(medium, NS_ERROR_FAILURE);
 
     nsAutoString buffer;
     medium->ToString(buffer);
     aMediaText.Append(buffer);
-    if (index < count) {
+    if (i + 1 < i_end) {
       aMediaText.AppendLiteral(", ");
     }
   }
@@ -912,36 +848,24 @@ DOMMediaListImpl::GetText(nsAString& aMediaText)
 
 // XXXbz this is so ill-defined in the spec, it's not clear quite what
 // it should be doing....
-NS_IMETHODIMP
-DOMMediaListImpl::SetText(const nsAString& aMediaText)
+nsresult
+nsMediaList::SetText(const nsAString& aMediaText)
 {
-  nsresult rv = Clear();
+  nsCOMPtr<nsICSSParser> parser;
+  nsresult rv = NS_NewCSSParser(getter_AddRefs(parser));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString buf(aMediaText);
-  PRInt32 n = buf.FindChar(',');
+  PRBool htmlMode = PR_FALSE;
+  nsCOMPtr<nsIDOMStyleSheet> domSheet =
+    do_QueryInterface(NS_STATIC_CAST(nsICSSStyleSheet*, mStyleSheet));
+  if (domSheet) {
+    nsCOMPtr<nsIDOMNode> node;
+    domSheet->GetOwnerNode(getter_AddRefs(node));
+    htmlMode = !!node;
+  }
 
-  do {
-    if (n < 0)
-      n = buf.Length();
-
-    nsAutoString tmp;
-
-    buf.Left(tmp, n);
-
-    tmp.CompressWhitespace();
-
-    if (!tmp.IsEmpty()) {
-      rv = Append(tmp);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    buf.Cut(0, n + 1);
-
-    n = buf.FindChar(',');
-  } while (!buf.IsEmpty());
-
-  return rv;
+  return parser->ParseMediaList(nsString(aMediaText), nsnull, 0,
+                                this, htmlMode);
 }
 
 /*
@@ -949,32 +873,38 @@ DOMMediaListImpl::SetText(const nsAString& aMediaText)
  * "all" medium or contain no media at all, which is the same as
  * containing "all"
  */
-NS_IMETHODIMP
-DOMMediaListImpl::MatchesMedium(nsIAtom* aMedium, PRBool* aMatch)
+PRBool
+nsMediaList::Matches(nsPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aMatch);
-  *aMatch = PR_FALSE;
-  *aMatch = (-1 != IndexOf(aMedium)) ||
-            (-1 != IndexOf(nsLayoutAtoms::all));
-  if (*aMatch)
-    return NS_OK;
-  PRUint32 count;
-  nsresult rv = Count(&count);
-  if(NS_FAILED(rv))
-    return rv;  
-  *aMatch = (count == 0);
+  if (-1 != mArray.IndexOf(aPresContext->Medium()) ||
+      -1 != mArray.IndexOf(nsLayoutAtoms::all))
+    return PR_TRUE;
+  return mArray.Count() == 0;
+}
+
+nsresult
+nsMediaList::SetStyleSheet(nsICSSStyleSheet *aSheet)
+{
+  NS_ASSERTION(aSheet == mStyleSheet || !aSheet || !mStyleSheet,
+               "multiple style sheets competing for one media list");
+  mStyleSheet = NS_STATIC_CAST(nsCSSStyleSheet*, aSheet);
+  return NS_OK;
+}
+
+nsresult
+nsMediaList::Clone(nsMediaList** aResult)
+{
+  nsRefPtr<nsMediaList> result = new nsMediaList();
+  if (!result)
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (!result->mArray.AppendObjects(mArray))
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aResult = result);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::DropReference()
-{
-  mStyleSheet = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMMediaListImpl::GetMediaText(nsAString& aMediaText)
+nsMediaList::GetMediaText(nsAString& aMediaText)
 {
   return GetText(aMediaText);
 }
@@ -1003,7 +933,7 @@ DOMMediaListImpl::GetMediaText(nsAString& aMediaText)
 
 
 NS_IMETHODIMP
-DOMMediaListImpl::SetMediaText(const nsAString& aMediaText)
+nsMediaList::SetMediaText(const nsAString& aMediaText)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDocument> doc;
@@ -1020,41 +950,29 @@ DOMMediaListImpl::SetMediaText(const nsAString& aMediaText)
 }
                                
 NS_IMETHODIMP
-DOMMediaListImpl::GetLength(PRUint32* aLength)
+nsMediaList::GetLength(PRUint32* aLength)
 {
   NS_ENSURE_ARG_POINTER(aLength);
 
-  PRUint32 cnt;
-
-  nsresult rv = Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-
-  *aLength = cnt;
-
+  *aLength = mArray.Count();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::Item(PRUint32 aIndex, nsAString& aReturn)
+nsMediaList::Item(PRUint32 aIndex, nsAString& aReturn)
 {
-  nsCOMPtr<nsISupports> tmp(dont_AddRef(ElementAt(aIndex)));
-
-  if (tmp) {
-    nsCOMPtr<nsIAtom> medium(do_QueryInterface(tmp));
-    NS_ENSURE_TRUE(medium, NS_ERROR_FAILURE);
-
-    nsAutoString buffer;
-    medium->ToString(buffer);
-    aReturn.Assign(buffer);
+  PRInt32 index = aIndex;
+  if (0 <= index && index < Count()) {
+    MediumAt(aIndex)->ToString(aReturn);
   } else {
-    aReturn.Truncate();
+    SetDOMStringToNull(aReturn);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::DeleteMedium(const nsAString& aOldMedium)
+nsMediaList::DeleteMedium(const nsAString& aOldMedium)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDocument> doc;
@@ -1071,7 +989,7 @@ DOMMediaListImpl::DeleteMedium(const nsAString& aOldMedium)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::AppendMedium(const nsAString& aNewMedium)
+nsMediaList::AppendMedium(const nsAString& aNewMedium)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDocument> doc;
@@ -1088,7 +1006,7 @@ DOMMediaListImpl::AppendMedium(const nsAString& aNewMedium)
 }
 
 nsresult
-DOMMediaListImpl::Delete(const nsAString& aOldMedium)
+nsMediaList::Delete(const nsAString& aOldMedium)
 {
   if (aOldMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -1096,19 +1014,19 @@ DOMMediaListImpl::Delete(const nsAString& aOldMedium)
   nsCOMPtr<nsIAtom> old = do_GetAtom(aOldMedium);
   NS_ENSURE_TRUE(old, NS_ERROR_OUT_OF_MEMORY);
 
-  PRInt32 indx = IndexOf(old);
+  PRInt32 indx = mArray.IndexOf(old);
 
   if (indx < 0) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  RemoveElementAt(indx);
+  mArray.RemoveObjectAt(indx);
 
   return NS_OK;
 }
 
 nsresult
-DOMMediaListImpl::Append(const nsAString& aNewMedium)
+nsMediaList::Append(const nsAString& aNewMedium)
 {
   if (aNewMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -1116,13 +1034,13 @@ DOMMediaListImpl::Append(const nsAString& aNewMedium)
   nsCOMPtr<nsIAtom> media = do_GetAtom(aNewMedium);
   NS_ENSURE_TRUE(media, NS_ERROR_OUT_OF_MEMORY);
 
-  PRInt32 indx = IndexOf(media);
+  PRInt32 indx = mArray.IndexOf(media);
 
   if (indx >= 0) {
-    RemoveElementAt(indx);
+    mArray.RemoveObjectAt(indx);
   }
 
-  AppendElement(media);
+  mArray.AppendObject(media);
 
   return NS_OK;
 }
@@ -1410,10 +1328,7 @@ nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
   }
 
   if (aCopy.mMedia) {
-    nsCOMPtr<nsISupportsArray> tmp;
-    (NS_STATIC_CAST(nsISupportsArray *, aCopy.mMedia))->Clone(getter_AddRefs(tmp));
-    mMedia = new DOMMediaListImpl(tmp, this);
-    NS_IF_ADDREF(mMedia);
+    aCopy.mMedia->Clone(getter_AddRefs(mMedia));
   }
 
   if (aCopy.mFirstChild) {
@@ -1459,8 +1374,8 @@ nsCSSStyleSheet::~nsCSSStyleSheet()
     NS_RELEASE(mImportsCollection);
   }
   if (mMedia) {
-    mMedia->DropReference();
-    NS_RELEASE(mMedia);
+    mMedia->SetStyleSheet(nsnull);
+    mMedia = nsnull;
   }
   mInner->RemoveSheet(this);
   // XXX The document reference is not reference counted and should
@@ -1559,75 +1474,20 @@ nsCSSStyleSheet::GetType(nsString& aType) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCSSStyleSheet::GetMediumCount(PRInt32& aCount) const
-{
-  if (mMedia) {
-    PRUint32 cnt;
-    nsresult rv = mMedia->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    aCount = cnt;
-  }
-  else
-    aCount = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSSStyleSheet::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
-{
-  nsIAtom* medium = nsnull;
-  if (nsnull != mMedia) {
-    medium = (nsIAtom*)mMedia->ElementAt(aIndex);
-  }
-  if (nsnull != medium) {
-    aMedium = medium;
-    return NS_OK;
-  }
-  aMedium = nsnull;
-  return NS_ERROR_INVALID_ARG;
-}
-
 NS_IMETHODIMP_(PRBool)
-nsCSSStyleSheet::UseForMedium(nsIAtom* aMedium) const
+nsCSSStyleSheet::UseForMedium(nsPresContext* aPresContext) const
 {
   if (mMedia) {
-    PRBool matches = PR_FALSE;
-    mMedia->MatchesMedium(aMedium, &matches);
-    return matches;
+    return mMedia->Matches(aPresContext);
   }
   return PR_TRUE;
 }
 
 
-
 NS_IMETHODIMP
-nsCSSStyleSheet::AppendMedium(nsIAtom* aMedium)
+nsCSSStyleSheet::SetMedia(nsMediaList* aMedia)
 {
-  nsresult result = NS_OK;
-  if (!mMedia) {
-    nsCOMPtr<nsISupportsArray> tmp;
-    result = NS_NewISupportsArray(getter_AddRefs(tmp));
-    NS_ENSURE_SUCCESS(result, result);
-
-    mMedia = new DOMMediaListImpl(tmp, this);
-    NS_ENSURE_TRUE(mMedia, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(mMedia);
-  }
-
-  if (mMedia) {
-    mMedia->AppendElement(aMedium);
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-nsCSSStyleSheet::ClearMedia()
-{
-  if (mMedia) {
-    mMedia->Clear();
-  }
+  mMedia = aMedia;
   return NS_OK;
 }
 
@@ -2099,18 +1959,9 @@ void nsCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
 
   if (mMedia) {
     fputs(" media: ", out);
-    index = 0;
-    PRUint32 count;
-    mMedia->Count(&count);
     nsAutoString  buffer;
-    while (index < PRInt32(count)) {
-      nsCOMPtr<nsIAtom> medium = dont_AddRef((nsIAtom*)mMedia->ElementAt(index++));
-      medium->ToString(buffer);
-      fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
-      if (index < PRInt32(count)) {
-        fputs(", ", out);
-      }
-    }
+    mMedia->GetText(buffer);
+    fputs(NS_ConvertUTF16toUTF8(buffer).get(), out);
   }
   fputs("\n", out);
 
@@ -2271,16 +2122,13 @@ nsCSSStyleSheet::GetMedia(nsIDOMMediaList** aMedia)
   *aMedia = nsnull;
 
   if (!mMedia) {
-    nsCOMPtr<nsISupportsArray> tmp;
-    NS_NewISupportsArray(getter_AddRefs(tmp));
-    NS_ENSURE_TRUE(tmp, NS_ERROR_NULL_POINTER);
-
-    mMedia = new DOMMediaListImpl(tmp, this);
-    NS_IF_ADDREF(mMedia);
+    mMedia = new nsMediaList();
+    NS_ENSURE_TRUE(mMedia, NS_ERROR_OUT_OF_MEMORY);
+    mMedia->SetStyleSheet(this);
   }
 
   *aMedia = mMedia;
-  NS_IF_ADDREF(*aMedia);
+  NS_ADDREF(*aMedia);
 
   return NS_OK;
 }
@@ -3926,7 +3774,7 @@ CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
   PRBool bSheetApplicable = PR_TRUE;
   sheet->GetApplicable(bSheetApplicable);
 
-  if (bSheetApplicable && sheet->UseForMedium(data->mPresContext->Medium())) {
+  if (bSheetApplicable && sheet->UseForMedium(data->mPresContext)) {
     nsCSSStyleSheet* child = sheet->mFirstChild;
     while (child) {
       CascadeSheetRulesInto(child, data);

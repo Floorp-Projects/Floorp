@@ -62,6 +62,7 @@ class CSSLoaderImpl;
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
+class nsMediaList;
 
 /**
  * OVERALL ARCHITECTURE
@@ -101,7 +102,7 @@ public:
   virtual ~SheetLoadData(void);
   // Data for loading a sheet linked from a document
   SheetLoadData(CSSLoaderImpl* aLoader,
-                const nsAString& aTitle,
+                const nsSubstring& aTitle,
                 nsIParser* aParserToUnblock,
                 nsIURI* aURI,
                 nsICSSStyleSheet* aSheet,
@@ -232,23 +233,23 @@ public:
   NS_IMETHOD LoadInlineStyle(nsIContent* aElement,
                              nsIUnicharInputStream* aStream, 
                              PRUint32 aLineNumber,
-                             const nsAString& aTitle, 
-                             const nsAString& aMedia, 
+                             const nsSubstring& aTitle, 
+                             const nsSubstring& aMedia, 
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted,
                              nsICSSLoaderObserver* aObserver);
 
   NS_IMETHOD LoadStyleLink(nsIContent* aElement,
                            nsIURI* aURL, 
-                           const nsAString& aTitle, 
-                           const nsAString& aMedia, 
+                           const nsSubstring& aTitle, 
+                           const nsSubstring& aMedia, 
                            nsIParser* aParserToUnblock,
                            PRBool& aCompleted,
                            nsICSSLoaderObserver* aObserver);
 
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
-                            nsISupportsArray* aMedia,
+                            nsMediaList* aMedia,
                             nsICSSImportRule* aRule);
 
   NS_IMETHOD LoadAgentSheet(nsIURI* aURL, nsICSSStyleSheet** aSheet);
@@ -288,12 +289,12 @@ private:
                        StyleSheetState& aSheetState,
                        nsICSSStyleSheet** aSheet);
 
-  // Pass in either a media string or the array of media from the
+  // Pass in either a media string or the nsMediaList from the
   // CSSParser.  Don't pass both.
   nsresult PrepareSheet(nsICSSStyleSheet* aSheet,
-                        const nsAString& aTitle,
-                        const nsAString& aMedia,
-                        nsISupportsArray* aMediaArr);
+                        const nsSubstring& aTitle,
+                        const nsSubstring& aMediaString,
+                        nsMediaList* aMediaList);
 
   nsresult InsertSheetInDoc(nsICSSStyleSheet* aSheet,
                             nsIContent* aLinkingContent,

@@ -49,10 +49,11 @@ class nsCSSDeclaration;
 class nsICSSLoader;
 class nsICSSRule;
 class nsISupportsArray;
+class nsMediaList;
 
 #define NS_ICSS_PARSER_IID    \
-{ 0xcc9c0610, 0x968c, 0x11d1, \
-  {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+{ 0x94d1d921, 0xd6f6, 0x435f, \
+  {0xa5, 0xe8, 0x85, 0x3f, 0x6e, 0x34, 0x57, 0xf6} }
 
 // Rule processing function
 typedef void (*PR_CALLBACK RuleAppendFunc) (nsICSSRule* aRule, void* aData);
@@ -113,6 +114,19 @@ public:
                            nsIURI* aBaseURL,
                            nsCSSDeclaration* aDeclaration,
                            PRBool* aChanged) = 0;
+
+  /**
+   * Parse aBuffer into a media list |aMediaList|, which must be
+   * non-null, replacing its current contents.  If aHTMLMode is true,
+   * parse according to HTML rules, with commas as the most important
+   * delimiter.  Otherwise, parse according to CSS rules, with
+   * parentheses and strings more important than commas.
+   */
+  NS_IMETHOD ParseMediaList(const nsSubstring& aBuffer,
+                            nsIURI* aURL, // for error reporting
+                            PRUint32 aLineNumber, // for error reporting
+                            nsMediaList* aMediaList,
+                            PRBool aHTMLMode) = 0;
 };
 
 nsresult

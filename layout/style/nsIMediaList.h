@@ -35,33 +35,49 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsIMediaList_h___
-#define nsIMediaList_h___
+#ifndef nsIMediaList_h_
+#define nsIMediaList_h_
 
-#include "nsISupportsArray.h"
+#include "nsIDOMMediaList.h"
+#include "nsAString.h"
+#include "nsCOMArray.h"
+#include "nsIAtom.h"
+class nsPresContext;
+class nsICSSStyleSheet;
+class nsCSSStyleSheet;
 
-// IID for the nsIMediaList interface {c8c2bbce-1dd1-11b2-a108-f7290a0e6da2}
-#define NS_IMEDIA_LIST_IID \
-{0xc8c2bbce, 0x1dd1, 0x11b2, {0xa1, 0x08, 0xf7, 0x29, 0x0a, 0x0e, 0x6d, 0xa2}}
-
-class nsIMediaList : public nsISupportsArray {
+class nsMediaList : public nsIDOMMediaList {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMEDIA_LIST_IID)
+  nsMediaList();
 
-  NS_IMETHOD GetText(nsAString& aMediaText) = 0;
-  NS_IMETHOD SetText(const nsAString& aMediaText) = 0;
-  NS_IMETHOD MatchesMedium(nsIAtom* aMedium, PRBool* aMatch) = 0;
-  NS_IMETHOD DropReference(void) = 0;
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIDOMMEDIALIST
+
+  nsresult GetText(nsAString& aMediaText);
+  nsresult SetText(const nsAString& aMediaText);
+  PRBool Matches(nsPresContext* aPresContext);
+  nsresult SetStyleSheet(nsICSSStyleSheet* aSheet);
+  nsresult AppendAtom(nsIAtom* aMediumAtom) {
+    return mArray.AppendObject(aMediumAtom) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsresult Clone(nsMediaList** aResult);
+
+  PRInt32 Count() { return mArray.Count(); }
+  nsIAtom* MediumAt(PRInt32 aIndex) { return mArray[aIndex]; }
+  void Clear() { mArray.Clear(); }
+
+private:
+  ~nsMediaList();
+
+  nsresult Delete(const nsAString & aOldMedium);
+  nsresult Append(const nsAString & aOldMedium);
+
+  nsCOMArray<nsIAtom> mArray;
+  // not refcounted; sheet will let us know when it goes away
+  // mStyleSheet is the sheet that needs to be dirtied when this medialist
+  // changes
+  nsCSSStyleSheet*         mStyleSheet;
 };
-
-/* Use this macro when declaring classes that implement this interface. */
-#define NS_DECL_NSIMEDIALIST \
-  NS_IMETHOD GetText(nsAString& aMediaText); \
-  NS_IMETHOD SetText(const nsAString& aMediaText); \
-  NS_IMETHOD MatchesMedium(nsIAtom* aMedium, PRBool* aMatch); \
-  NS_IMETHOD DropReference(void);
-
-nsresult
-NS_NewMediaList(nsISupportsArray* aArray, nsICSSStyleSheet* aSheet,
-                nsIMediaList** aInstancePtrResult);
-#endif /* nsICSSLoader_h___ */
+#endif /* !defined(nsIMediaList_h_) */

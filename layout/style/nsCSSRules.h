@@ -50,7 +50,7 @@
 #include "nsString.h"
 
 class CSSGroupRuleRuleListImpl;
-class nsIMediaList;
+class nsMediaList;
 
 #define DECL_STYLE_RULE_INHERIT  \
 NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const; \
@@ -134,10 +134,10 @@ public:
   NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext);
 
   // @media rule methods
-  nsresult SetMedia(nsISupportsArray* aMedia);
+  nsresult SetMedia(nsMediaList* aMedia);
   
 protected:
-  nsCOMPtr<nsIMediaList> mMedia;
+  nsCOMPtr<nsMediaList> mMedia;
 };
 
 class nsCSSDocumentRule : public nsCSSGroupRule,

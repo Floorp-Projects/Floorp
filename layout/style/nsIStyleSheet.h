@@ -51,9 +51,9 @@ class nsIDocument;
 class nsIStyleRuleProcessor;
 
 // IID for the nsIStyleSheet interface
-// 6fbfb2cb-a1c0-4576-9354-a4af4e0029ad
+// 93eea32f-681b-4405-b908-3933cf1d5091
 #define NS_ISTYLE_SHEET_IID     \
-{0x6fbfb2cb, 0xa1c0, 0x4576, {0x93, 0x54, 0xa4, 0xaf, 0x4e, 0x00, 0x29, 0xad}}
+{0x93eea32f, 0x681b, 0x4405, {0xb9, 0x08, 0x39, 0x33, 0xcf, 0x1d, 0x50, 0x91}}
 
 /**
  * A style sheet is a thing associated with a document that has style
@@ -72,9 +72,7 @@ public:
   NS_IMETHOD GetBaseURI(nsIURI** aBaseURI) const = 0;
   NS_IMETHOD GetTitle(nsString& aTitle) const = 0;
   NS_IMETHOD GetType(nsString& aType) const = 0;
-  NS_IMETHOD GetMediumCount(PRInt32& aCount) const = 0;
-  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const = 0;
-  NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const = 0;
+  NS_IMETHOD_(PRBool) UseForMedium(nsPresContext* aPresContext) const = 0;
   NS_IMETHOD_(PRBool) HasRules() const = 0;
 
   /**

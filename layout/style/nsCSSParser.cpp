@@ -74,6 +74,7 @@
 #include "nsContentErrors.h"
 #include "nsUnitConversion.h"
 #include "nsPrintfCString.h"
+#include "nsIMediaList.h"
 
 #include "prprf.h"
 #include "math.h"
@@ -133,12 +134,26 @@ public:
                            nsCSSDeclaration* aDeclaration,
                            PRBool* aChanged);
 
+  NS_IMETHOD ParseMediaList(const nsSubstring& aBuffer,
+                            nsIURI* aURL, // for error reporting
+                            PRUint32 aLineNumber, // for error reporting
+                            nsMediaList* aMediaList,
+                            PRBool aHTMLMode);
+
   void AppendRule(nsICSSRule* aRule);
 
 protected:
   nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
                        PRUint32 aLineNumber, nsIURI* aBaseURI);
+  // the caller must hold on to aBuffer until parsing is done
+  nsresult InitScanner(const nsAString& aBuffer, nsIURI* aSheetURI,
+                       PRUint32 aLineNumber, nsIURI* aBaseURI);
   nsresult ReleaseScanner(void);
+
+  nsresult DoParseMediaList(const nsSubstring& aBuffer,
+                            nsIURI* aURL, // for error reporting
+                            PRUint32 aLineNumber, // for error reporting
+                            nsMediaList* aMediaList);
 
   PRBool GetToken(nsresult& aErrorCode, PRBool aSkipWS);
   PRBool GetURLToken(nsresult& aErrorCode, PRBool aSkipWS);
@@ -160,10 +175,11 @@ protected:
   PRBool ParseCharsetRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool GatherURL(nsresult& aErrorCode, nsString& aURL);
-  PRBool GatherMedia(nsresult& aErrorCode, nsISupportsArray* aMediaAtoms);
+  PRBool GatherMedia(nsresult& aErrorCode, nsMediaList* aMedia,
+                     PRUnichar aStopSymbol);
   PRBool ProcessImport(nsresult& aErrorCode,
                        const nsString& aURLSpec,
-                       nsISupportsArray* aMedia,
+                       nsMediaList* aMedia,
                        RuleAppendFunc aAppendFunc,
                        void* aProcessData);
   PRBool ParseGroupRule(nsresult& aErrorCode, nsICSSGroupRule* aRule, RuleAppendFunc aAppendFunc, void* aProcessData);
@@ -374,6 +390,10 @@ protected:
   PRPackedBool  mSVGMode;
 #endif
 
+  // True for parsing media lists for HTML attributes, where we have to
+  // ignore CSS comments.
+  PRPackedBool mHTMLMediaMode;
+
   // True if tagnames and attributes are case-sensitive
   PRPackedBool  mCaseSensitive;
 
@@ -471,6 +491,7 @@ CSSParserImpl::CSSParserImpl()
 #ifdef MOZ_SVG
     mSVGMode(PR_FALSE),
 #endif
+    mHTMLMediaMode(PR_FALSE),
     mCaseSensitive(PR_FALSE),
     mParsingCompoundProperty(PR_FALSE)
 #ifdef DEBUG
@@ -550,6 +571,22 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
   mHavePushBack = PR_FALSE;
 
   return NS_OK;
+}
+
+nsresult
+CSSParserImpl::InitScanner(const nsAString& aBuffer, nsIURI* aSheetURI,
+                           PRUint32 aLineNumber, nsIURI* aBaseURI)
+{
+  // Having it not own the string is OK since the caller will hold on to
+  // the stream until we're done parsing.
+  nsCOMPtr<nsIUnicharInputStream> input;
+  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
+                                               &aBuffer, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return InitScanner(input, aSheetURI, aLineNumber, aBaseURI);
 }
 
 nsresult
@@ -660,16 +697,8 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
 {
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
-  nsCOMPtr<nsIUnicharInputStream> input;
-  // Style attribute parsing can't make the stream outlive this
-  // function call, so having it not own the string is OK.
-  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
-                                               &aAttributeValue, PR_FALSE);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = InitScanner(input, aDocURL, 0, aBaseURL); // XXX line number
+  nsresult rv =
+    InitScanner(aAttributeValue, aDocURL, 0, aBaseURL); // XXX line number
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -723,16 +752,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
 //  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   *aChanged = PR_FALSE;
 
-  nsCOMPtr<nsIUnicharInputStream> input;
-  // Parsing a single declaration block can't make the stream outlive this
-  // function call, so having it not own the string is OK.
-  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
-                                               &aBuffer, PR_FALSE);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = InitScanner(input, aSheetURL, 0, aBaseURL);
+  nsresult rv = InitScanner(aBuffer, aSheetURL, 0, aBaseURL);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -779,16 +799,7 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   NS_ENSURE_ARG_POINTER(aResult);
 
-  nsCOMPtr<nsIUnicharInputStream> input;
-  // Parsing a single rule can't make the stream outlive this
-  // function call, so having it not own the string is OK.
-  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
-                                               &aRule, PR_FALSE);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = InitScanner(input, aSheetURL, 0, aBaseURL);
+  nsresult rv = InitScanner(aRule, aSheetURL, 0, aBaseURL);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -835,16 +846,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
   *aChanged = PR_FALSE;
 
-  nsCOMPtr<nsIUnicharInputStream> input;
-  // Parsing a single property value can't make the stream outlive this
-  // function call, so having it not own the string is OK.
-  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
-                                               &aPropValue, PR_FALSE);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = InitScanner(input, aSheetURL, 0, aBaseURL);
+  nsresult rv = InitScanner(aPropValue, aSheetURL, 0, aBaseURL);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -889,6 +891,79 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   ReleaseScanner();
   return result;
 }
+
+NS_IMETHODIMP
+CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
+                              nsIURI* aURL, // for error reporting
+                              PRUint32 aLineNumber, // for error reporting
+                              nsMediaList* aMediaList,
+                              PRBool aHTMLMode)
+{
+  aMediaList->Clear();
+  nsresult rv;
+
+  if (aHTMLMode) {
+    mHTMLMediaMode = PR_TRUE;
+
+    // XXXldb We need to make the scanner not skip CSS comments!  (Or
+    // should we?)
+
+    // Follow the parsing rules in 
+    // http://www.w3.org/TR/1999/REC-html401-19991224/types.html#type-media-descriptors
+
+    for (PRUint32 sub = 0, sub_end; sub < aBuffer.Length(); sub = sub_end + 1) {
+      sub_end = aBuffer.FindChar(PRUnichar(','), sub);
+      if (sub_end == -1)
+        sub_end = aBuffer.Length();
+
+      PRUint32 parse_start, parse_end;
+      for (parse_start = sub;
+           parse_start < sub_end && nsCRT::IsAsciiSpace(aBuffer[parse_start]);
+           ++parse_start)
+        ;
+
+      for (parse_end = parse_start;
+           parse_end < sub_end &&
+           (nsCRT::IsAsciiAlpha(aBuffer[parse_end]) ||
+            nsCRT::IsAsciiDigit(aBuffer[parse_end]) ||
+            aBuffer[parse_end] == PRUnichar('-'));
+           ++parse_end)
+        ;
+
+      DoParseMediaList(Substring(aBuffer, parse_start, parse_end - parse_start),
+                       aURL, aLineNumber, aMediaList);
+    }
+
+    mHTMLMediaMode = PR_FALSE;
+  } else {
+    rv = DoParseMediaList(aBuffer, aURL, aLineNumber, aMediaList);
+  }
+
+  return rv;
+}
+
+// All parameters but the first are the same as for |ParseMediaList|,
+// but for HTML we get the buffer in chunks according to the HTML spec's
+// parsing rules instead of in one piece.
+nsresult
+CSSParserImpl::DoParseMediaList(const nsSubstring& aBuffer,
+                                nsIURI* aURL, // for error reporting
+                                PRUint32 aLineNumber, // for error reporting
+                                nsMediaList* aMediaList)
+{
+  // fake base URL since media lists don't have URLs in them
+  nsresult rv = InitScanner(aBuffer, aURL, aLineNumber, aURL);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!GatherMedia(rv, aMediaList, PRUnichar(0)) && !mHTMLMediaMode) {
+    OUTPUT_ERROR();
+  }
+  CLEAR_ERROR();
+  ReleaseScanner();
+}
+
 //----------------------------------------------------------------------
 
 PRBool CSSParserImpl::GetToken(nsresult& aErrorCode, PRBool aSkipWS)
@@ -1110,79 +1185,67 @@ PRBool CSSParserImpl::GatherURL(nsresult& aErrorCode, nsString& aURL)
 }
 
 PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode,
-                                  nsISupportsArray* aMediaAtoms)
+                                  nsMediaList* aMedia,
+                                  PRUnichar aStopSymbol)
 {
-  PRBool expectIdent = PR_TRUE;
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
       REPORT_UNEXPECTED_EOF(PEGatherMediaEOF);
       break;
     }
-    if (eCSSToken_Symbol == mToken.mType) {
-      PRUnichar symbol = mToken.mSymbol;
-      if ((';' == symbol) || ('{' == symbol)) {
-        UngetToken();
+    if (eCSSToken_Ident != mToken.mType) {
+      REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotIdent);
+      UngetToken();
+      break;
+    }
+    ToLowerCase(mToken.mIdent);  // case insensitive from CSS - must be lower cased
+    nsCOMPtr<nsIAtom> medium = do_GetAtom(mToken.mIdent);
+    aMedia->AppendAtom(medium);
+
+    if (!GetToken(aErrorCode, PR_TRUE)) {
+      if (aStopSymbol == PRUnichar(0))
         return PR_TRUE;
-      } else if (',' != symbol) {
-        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotComma);
-        UngetToken();
-        break;
-      } else if (expectIdent) {
-        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotIdent);
-        UngetToken();
-        break;
-      }
-      else {
-        expectIdent = PR_TRUE;
-      }
+      REPORT_UNEXPECTED_EOF(PEGatherMediaEOF);
+      break;
     }
-    else if (eCSSToken_Ident == mToken.mType) {
-      if (expectIdent) {
-        ToLowerCase(mToken.mIdent);  // case insensitive from CSS - must be lower cased
-        nsCOMPtr<nsIAtom> medium = do_GetAtom(mToken.mIdent);
-        aMediaAtoms->AppendElement(medium);
-        expectIdent = PR_FALSE;
-      }
-      else {
-        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotComma);
-        UngetToken();
-        break;
-      }
-    }
-    else {
-      if (expectIdent)
-        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotIdent);
-      else
-        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotComma);
+
+    if (eCSSToken_Symbol == mToken.mType &&
+        mToken.mSymbol == aStopSymbol) {
+      UngetToken();
+      return PR_TRUE;
+    } else if (eCSSToken_Symbol != mToken.mType ||
+               mToken.mSymbol != ',') {
+      REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotComma);
       UngetToken();
       break;
     }
   }
-  aMediaAtoms->Clear();
   return PR_FALSE;
 }
 
-// Parse a CSS2 import rule: "@import STRING | URL [medium [, mdeium]]"
+// Parse a CSS2 import rule: "@import STRING | URL [medium [, medium]]"
 PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aData)
 {
-  nsAutoString url;
-  nsCOMPtr<nsISupportsArray> media;
-  aErrorCode = NS_NewISupportsArray(getter_AddRefs(media));
+  nsCOMPtr<nsMediaList> media = new nsMediaList();
   if (!media) {
-    // Out of memory
+    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
     return PR_FALSE;
   }
 
+  nsAutoString url;
   if (!GatherURL(aErrorCode, url)) {
     REPORT_UNEXPECTED_TOKEN(PEImportNotURI);
     return PR_FALSE;
   }
   
-  if (!GatherMedia(aErrorCode, media) ||
-      !ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(PEImportUnexpected);
-    // don't advance section, simply ignore invalid @import
-    return PR_FALSE;
+  if (!ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
+    if (!GatherMedia(aErrorCode, media, ';') ||
+        !ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
+      REPORT_UNEXPECTED_TOKEN(PEImportUnexpected);
+      // don't advance section, simply ignore invalid @import
+      return PR_FALSE;
+    }
+    NS_ASSERTION(media->Count() != 0, "media list must be nonempty");
   }
 
   ProcessImport(aErrorCode, url, media, aAppendFunc, aData);
@@ -1192,7 +1255,7 @@ PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppe
 
 PRBool CSSParserImpl::ProcessImport(nsresult& aErrorCode,
                                     const nsString& aURLSpec,
-                                    nsISupportsArray* aMedia,
+                                    nsMediaList* aMedia,
                                     RuleAppendFunc aAppendFunc,
                                     void* aData)
 {
@@ -1271,22 +1334,21 @@ PRBool CSSParserImpl::ParseMediaRule(nsresult& aErrorCode,
                                      RuleAppendFunc aAppendFunc,
                                      void* aData)
 {
-  nsCOMPtr<nsISupportsArray> media;
-  aErrorCode = NS_NewISupportsArray(getter_AddRefs(media));
-  if (media) {
-    if (GatherMedia(aErrorCode, media)) {
-      // XXXbz this could use better error reporting throughout the method
-      PRUint32 count;
-      media->Count(&count);
-      if (count > 0) {
-        nsRefPtr<nsCSSMediaRule> rule(new nsCSSMediaRule());
-        // Append first, so when we do SetMedia() the rule
-        // knows what its stylesheet is.
-        if (rule && ParseGroupRule(aErrorCode, rule, aAppendFunc, aData)) {
-          rule->SetMedia(media);
-          return PR_TRUE;
-        }
-      }
+  nsCOMPtr<nsMediaList> media = new nsMediaList();
+  if (!media) {
+    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+    return PR_FALSE;
+  }
+
+  if (GatherMedia(aErrorCode, media, '{')) {
+    NS_ASSERTION(media->Count() != 0, "media list must be nonempty");
+    // XXXbz this could use better error reporting throughout the method
+    nsRefPtr<nsCSSMediaRule> rule(new nsCSSMediaRule());
+    // Append first, so when we do SetMedia() the rule
+    // knows what its stylesheet is.
+    if (rule && ParseGroupRule(aErrorCode, rule, aAppendFunc, aData)) {
+      rule->SetMedia(media);
+      return PR_TRUE;
     }
   }
 

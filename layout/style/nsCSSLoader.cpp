@@ -59,7 +59,6 @@
 #include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsCOMArray.h"
-#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
@@ -76,7 +75,7 @@
 #include "nsIXULPrototypeCache.h"
 #endif
 
-#include "nsIDOMMediaList.h"
+#include "nsIMediaList.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSImportRule.h"
@@ -133,7 +132,7 @@ static const char* const gStateStrings[] = {
 NS_IMPL_ISUPPORTS1(SheetLoadData, nsIUnicharStreamLoaderObserver)
 
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
-                             const nsAString& aTitle,
+                             const nsSubstring& aTitle,
                              nsIParser* aParserToUnblock,
                              nsIURI* aURI,
                              nsICSSStyleSheet* aSheet,
@@ -811,85 +810,6 @@ static PRBool IsChromeURI(nsIURI* aURI)
 }
 #endif
 
-typedef nsresult (*nsStringEnumFunc)(const nsAString& aSubString, void *aData);
-
-static nsresult EnumerateMediaString(const nsAString& aStringList, nsStringEnumFunc aFunc, void* aData)
-{
-  nsresult status = NS_OK;
-
-  nsAutoString  stringList(aStringList); // copy to work buffer
-  nsAutoString  subStr;
-
-  stringList.Append(kNullCh);  // put an extra null at the end
-
-  PRUnichar* start = stringList.BeginWriting();
-  PRUnichar* end   = start;
-
-  while (NS_SUCCEEDED(status) && (kNullCh != *start)) {
-    PRBool  quoted = PR_FALSE;
-
-    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
-      start++;
-    }
-
-    if ((kApostrophe == *start) || (kQuote == *start)) { // quoted string
-      PRUnichar quote = *start++;
-      quoted = PR_TRUE;
-      end = start;
-      while (kNullCh != *end) {
-        if (quote == *end) {  // found closing quote
-          *end++ = kNullCh;     // end string here
-          while ((kNullCh != *end) && (kComma != *end)) { // keep going until comma
-            end++;
-          }
-          break;
-        }
-        end++;
-      }
-    }
-    else {  // non-quoted string or ended
-      end = start;
-
-      while ((kNullCh != *end) && (kComma != *end)) { // look for comma
-        end++;
-      }
-      *end = kNullCh; // end string here
-    }
-
-    // truncate at first non letter, digit or hyphen
-    PRUnichar* test = start;
-    while (test <= end) {
-      if ((PR_FALSE == nsCRT::IsAsciiAlpha(*test)) && 
-          (PR_FALSE == nsCRT::IsAsciiDigit(*test)) && (kMinus != *test)) {
-        *test = kNullCh;
-        break;
-      }
-      test++;
-    }
-    subStr = start;
-
-    if (PR_FALSE == quoted) {
-      subStr.CompressWhitespace(PR_FALSE, PR_TRUE);
-    }
-
-    if (!subStr.IsEmpty()) {
-      status = (*aFunc)(subStr, aData);
-    }
-
-    start = ++end;
-  }
-
-  return status;
-}
-
-static nsresult MediumEnumFunc(const nsAString& aSubString, void* aData)
-{
-  nsCOMPtr<nsIAtom> medium = do_GetAtom(aSubString);
-  NS_ENSURE_TRUE(medium, NS_ERROR_OUT_OF_MEMORY);
-  ((nsICSSStyleSheet*)aData)->AppendMedium(medium);
-  return NS_OK;
-}
-
 PRBool
 CSSLoaderImpl::IsAlternate(const nsAString& aTitle)
 {
@@ -1064,27 +984,32 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
  */
 nsresult
 CSSLoaderImpl::PrepareSheet(nsICSSStyleSheet* aSheet,
-                            const nsAString& aTitle,
-                            const nsAString& aMedia,
-                            nsISupportsArray* aMediaArr)
+                            const nsSubstring& aTitle,
+                            const nsSubstring& aMediaString,
+                            nsMediaList* aMediaList)
 {
   NS_PRECONDITION(aSheet, "Must have a sheet!");
-  NS_PRECONDITION(aMedia.IsEmpty() || !aMediaArr,
-                  "Can't have media array _and_ media string!");
 
-  nsresult rv = NS_OK;
-  aSheet->ClearMedia();
-  if (!aMedia.IsEmpty()) {
-    rv = EnumerateMediaString(aMedia, MediumEnumFunc, aSheet);
-  } else if (aMediaArr) {
-    PRUint32 count;
-    aMediaArr->Count(&count);
-    for (PRUint32 i = 0; i < count; ++i) {
-      nsCOMPtr<nsIAtom> medium = do_QueryElementAt(aMediaArr, i);
-      NS_ASSERTION(medium, "Null medium in media array!");
-      aSheet->AppendMedium(medium);
-    }
+  nsresult rv;
+  nsCOMPtr<nsMediaList> mediaList(aMediaList);
+
+  if (!aMediaString.IsEmpty()) {
+    NS_ASSERTION(!aMediaList,
+                 "must not provide both aMediaString and aMediaList");
+    mediaList = new nsMediaList();
+    NS_ENSURE_TRUE(mediaList, NS_ERROR_OUT_OF_MEMORY);
+    nsCOMPtr<nsICSSParser> mediumParser;
+    nsresult rv = GetParserFor(nsnull, getter_AddRefs(mediumParser));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // We have aMediaString only when linked from link elements, style
+    // elements, or PIs, so pass PR_TRUE.
+    rv = mediumParser->ParseMediaList(aMediaString, nsnull, 0, mediaList,
+                                      PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    RecycleParser(mediumParser);
   }
+
+  rv = aSheet->SetMedia(mediaList);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aSheet->SetTitle(aTitle);
@@ -1576,8 +1501,8 @@ NS_IMETHODIMP
 CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
                                nsIUnicharInputStream* aStream, 
                                PRUint32 aLineNumber,
-                               const nsAString& aTitle, 
-                               const nsAString& aMedia, 
+                               const nsSubstring& aTitle, 
+                               const nsSubstring& aMedia, 
                                nsIParser* aParserToUnblock,
                                PRBool& aCompleted,
                                nsICSSLoaderObserver* aObserver)
@@ -1630,8 +1555,8 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
 NS_IMETHODIMP
 CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
                              nsIURI* aURL, 
-                             const nsAString& aTitle, 
-                             const nsAString& aMedia, 
+                             const nsSubstring& aTitle, 
+                             const nsSubstring& aMedia, 
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted,
                              nsICSSLoaderObserver* aObserver)
@@ -1718,7 +1643,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
 NS_IMETHODIMP
 CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                               nsIURI* aURL, 
-                              nsISupportsArray* aMedia,
+                              nsMediaList* aMedia,
                               nsICSSImportRule* aParentRule)
 {
   LOG(("CSSLoaderImpl::LoadChildSheet"));
@@ -1805,7 +1730,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                    state, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const nsAString& empty = EmptyString();
+  const nsSubstring& empty = EmptyString();
   rv = PrepareSheet(sheet, empty, empty, aMedia);
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -1877,7 +1802,7 @@ CSSLoaderImpl::InternalLoadAgentSheet(nsIURI* aURL,
                             getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const nsAString& empty = EmptyString();
+  const nsSubstring& empty = EmptyString();
   rv = PrepareSheet(sheet, empty, empty, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
   
