@@ -279,33 +279,37 @@ NS_IMETHODIMP nsMetaCharsetObserver::NotifyWebShell(
   PRUint32 aDocumentID, const char* charset, nsCharsetSource source)
 {
    nsresult res = NS_OK;
+   nsresult rv = NS_OK;
    // shoudl docLoader a memeber to increase performance ???
    nsIDocumentLoader * docLoader = nsnull;
    nsIContentViewerContainer * cvc  = nsnull;
    nsIWebShellServices* wss = nsnull;
 
-   if(NS_FAILED(res =nsServiceManager::GetService(kDocLoaderServiceCID,
+   if(NS_FAILED(rv =nsServiceManager::GetService(kDocLoaderServiceCID,
                                                    kIDocumentLoaderIID,
                                                    (nsISupports**)&docLoader)))
      goto done;
    
-   if(NS_FAILED(res =docLoader->GetContentViewerContainer(aDocumentID, &cvc)))
+   if(NS_FAILED(rv =docLoader->GetContentViewerContainer(aDocumentID, &cvc)))
      goto done;
 
-   if(NS_FAILED( res = cvc->QueryInterface(kIWebShellServicesIID, (void**)&wss)))
+   if(NS_FAILED( rv = cvc->QueryInterface(kIWebShellServicesIID, (void**)&wss)))
      goto done;
 
 #ifndef DONT_INFORM_WEBSHELL
    // ask the webshellservice to load the URL
-   if(NS_FAILED( res = wss->SetRendering(PR_TRUE) ))
+   if(NS_FAILED( rv = wss->SetRendering(PR_FALSE) ))
      goto done;
 
-   if(NS_FAILED(res = wss->StopDocumentLoad()))
-     goto done;
+   // XXX nisheeth, uncomment the following two line to see the reent problem
 
-   if(NS_FAILED(res = wss->ReloadDocument(charset, source)))
+   // if(NS_FAILED(rv = wss->StopDocumentLoad()))
+   //   goto done;
+
+   if(NS_FAILED(rv = wss->ReloadDocument(charset, source)))
      goto done;
  
+   res = NS_ERROR_ABORT;
 #endif
 done:
    if(docLoader) {
