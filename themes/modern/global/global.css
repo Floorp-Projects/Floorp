@@ -110,6 +110,11 @@
       list-style-image    : url("chrome://global/skin/question-icon.gif");
     }
 
+  statusbarpanel
+    {
+      padding             : 0px 1px 0px 1px;
+    }
+
 /**
  * status-bar
  */

@@ -42,9 +42,11 @@ EXPORT_RESOURCE = \
 		$(srcdir)/navbar-endbox.gif \
 		$(srcdir)/tb-menubutton-dm.gif \
 		$(srcdir)/tb-menubutton-dm-disabled.gif \
+		$(srcdir)/online.gif \
+		$(srcdir)/offline.gif \
 		$(NULL)
 
-DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet 
+DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet pageholder 
 
 include $(topsrcdir)/config/rules.mk
 
