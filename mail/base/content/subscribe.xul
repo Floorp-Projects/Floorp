@@ -34,6 +34,7 @@
         ondialogcancel="return subscribeCancel();">   
      
 <stringbundle id="bundle_subscribe" src="chrome://messenger/locale/subscribe.properties"/>
+<stringbundle id="bundle_subscribe" src="chrome://messenger/locale/messenger.properties"/>
 
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
@@ -173,7 +174,7 @@
                   oncommand="SetSubscribeState(false)"/>
           <button id="refresh" label="&refreshButton.label;" accesskey="&refreshButton.accesskey;" 
                   oncommand="Refresh()"/>
-          <button id="stop" label="&stopButton.label;" accesskey="&stopButton.accesskey;" 
+          <button id="cmd_stop" label="&stopButton.label;" accesskey="&stopButton.accesskey;" 
                   oncommand="Stop()"/>
           <spacer flex="1"/>
         </vbox>
