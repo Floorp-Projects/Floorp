@@ -78,18 +78,20 @@ nsRDFParserUtils::EntityToUnicode(const char* buf)
 void
 nsRDFParserUtils::StripAndConvert(nsString& aResult)
 {
-    // Strip quotes if present
-    PRUnichar first = aResult.First();
-    if ((first == '"') || (first == '\'')) {
-        if (aResult.Last() == first) {
-            aResult.Cut(0, 1);
-            PRInt32 pos = aResult.Length() - 1;
-            if (pos >= 0) {
-                aResult.Cut(pos, 1);
-            }
-        } else {
-            // Mismatched quotes - leave them in
-        }
+    if ( !aResult.IsEmpty() ) {
+      // Strip quotes if present
+      PRUnichar first = aResult.First();
+      if ((first == '"') || (first == '\'')) {
+          if (aResult.Last() == first) {
+              aResult.Cut(0, 1);
+              PRInt32 pos = aResult.Length() - 1;
+              if (pos >= 0) {
+                  aResult.Cut(pos, 1);
+              }
+          } else {
+              // Mismatched quotes - leave them in
+          }
+      }
     }
 
     // Reduce any entities
