@@ -279,8 +279,11 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
 	
 		// 2. get the plugin instance corresponding to this element.
 		nsIPresShell* shell = mInner.mDocument->GetShellAt(0);
+		if (nsnull == shell)
+			return NS_ERROR_FAILURE;
 		nsIFrame* frame = nsnull;
 		shell->GetPrimaryFrameFor(mInner.mContent, &frame);
+		NS_RELEASE(shell);
 
 		// 3. get the Java object corresponding to this applet, and reflect it into
 		// JavaScript using the LiveConnect manager.
