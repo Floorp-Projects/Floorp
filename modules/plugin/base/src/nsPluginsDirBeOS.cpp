@@ -50,7 +50,7 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "nsReadableUtils.h"
-
+#include "nsString.h"
 
 #include <File.h>
 #include <AppFileInfo.h>
@@ -141,8 +141,12 @@ nsPluginFile::~nsPluginFile()
  */
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
-        const char* path = this->GetCString();
-        pLibrary = outLibrary = PR_LoadLibrary(path);
+        nsCAutoString path;
+        nsresult rv = mPlugin->GetNativePath(path);
+        if (NS_OK != rv) {
+            return rv;
+        }
+        pLibrary = outLibrary = PR_LoadLibrary(path.get());
 
 #ifdef NS_DEBUG
         printf("LoadPlugin() %s returned %lx\n",path,(unsigned long)pLibrary);
@@ -159,7 +163,12 @@ typedef char* (*BeOS_Plugin_GetMIMEDescription)();
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
-	const char *path = this->GetCString();
+    nsCAutoString fpath;
+    nsresult rv = mPlugin->GetNativePath(fpath);
+    if (NS_OK != rv) {
+        return rv;
+    }
+    const char *path = fpath.get();
     int i;
 
 #ifdef NS_PLUGIN_BEOS_DEBUG
