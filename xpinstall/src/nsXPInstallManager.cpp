@@ -65,6 +65,8 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
+#include "CertReader.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -134,7 +136,6 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
 {
     nsresult rv = NS_OK;
 
-    PRBool OKtoInstall = PR_FALSE; // initialize to secure state
     mTriggers = aTriggers;
     mChromeType = aChromeType;
     mNeedsShutdown = PR_TRUE;
@@ -146,13 +147,35 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
         return rv;
     }
 
+    mParentWindow = do_QueryInterface(aGlobalObject);
+    mOutstandingCertLoads = mTriggers->Size();
+
+    nsXPITriggerItem *item = mTriggers->Get(--mOutstandingCertLoads);
+
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(item->mURL.get()).get());
+    nsIStreamListener* listener = new CertReader(uri, nsnull, this);
+    NS_ADDREF(listener);
+    rv = NS_OpenURI(listener, nsnull, uri);
+    NS_RELEASE(listener);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE_THIS();
+    }
+    return rv;
+}
+
+
+nsresult 
+nsXPInstallManager::InitManagerInternal()
+{
+    nsresult rv;
+    PRBool OKtoInstall = PR_FALSE; // initialize to secure state
+
     //-----------------------------------------------------
     // *** Do not return early after this point ***
     //
     // We have to clean up the triggers in case of error
     //-----------------------------------------------------
-
-    nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryInterface(aGlobalObject));
 
     // --- use embedding dialogs if any registered
     nsCOMPtr<nsIXPIDialogService> dlgSvc(do_CreateInstance(NS_XPIDIALOGSERVICE_CONTRACTID));
@@ -164,7 +187,7 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
 
     // --- prepare dialog params
     PRUint32 numTriggers = mTriggers->Size();
-    PRUint32 numStrings = 2 * numTriggers;
+    PRUint32 numStrings = 3 * numTriggers;
     const PRUnichar** packageList =
         (const PRUnichar**)malloc( sizeof(PRUnichar*) * numStrings );
 
@@ -176,6 +199,7 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
             nsXPITriggerItem *item = mTriggers->Get(i);
             packageList[j++] = item->mName.get();
             packageList[j++] = item->mURL.get();
+            packageList[j++] = item->mCertName.get();
         }
 
         //-----------------------------------------------------
@@ -186,11 +210,11 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
         {
             // skins get a simpler/friendlier dialog
             // XXX currently not embeddable
-            OKtoInstall = ConfirmChromeInstall( parentWindow, packageList );
+            OKtoInstall = ConfirmChromeInstall( mParentWindow, packageList );
         }
         else
         {
-            rv = dlgSvc->ConfirmInstall( parentWindow,
+            rv = dlgSvc->ConfirmInstall( mParentWindow,
                                          packageList,
                                          numStrings,
                                          &OKtoInstall );
@@ -585,6 +609,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                 rv = mInstallSvc->InstallJar( mItem->mFile,
                                               mItem->mURL.get(),
                                               mItem->mArguments.get(),
+                                              mItem->mPrincipal,
                                               mItem->mFlags,
                                               this );
             }
@@ -1011,6 +1036,59 @@ NS_IMETHODIMP
 nsXPInstallManager::OnLogComment(const PRUnichar* comment)
 {
     // Don't need to do anything
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsXPInstallManager::OnCertAvailable(nsIURI *aURI, 
+                                    nsISupports* context, 
+                                    nsresult aStatus, 
+                                    nsIPrincipal *aPrincipal)
+{
+    if (NS_FAILED(aStatus)) {
+        // if there was a failure for whatever reason, we will treat 
+        // the install as unsigned.  An error here could me that the 
+        // location of the install is unreachable or that the install
+        // is currupt.  In either case, we want to ensure that the 
+        // nsIPrincipal is nsnull (although it already should be 
+        // -- we are just being paranoid here.
+        NS_ASSERTION(aPrincipal == nsnull, "There has been an error, but we have a principal!");
+        aPrincipal = nsnull;
+    }
+
+    // get the current one and assign the cert name
+    nsXPITriggerItem *item = mTriggers->Get(mOutstandingCertLoads);
+    item->SetPrincipal(aPrincipal);
+
+    if (mOutstandingCertLoads == 0) {
+        InitManagerInternal();
+        return NS_OK;
+    }
+
+    // get the next one to load.  If there is any failure, we just go on to the 
+    // next trigger.  When all triggers items are handled, we call into InitManagerInternal
+
+    item = mTriggers->Get(--mOutstandingCertLoads);
+
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(item->mURL.get()).get());
+
+    if (!uri || mChromeType != NOT_CHROME)
+        return OnCertAvailable(uri, context, NS_ERROR_FAILURE, nsnull);
+
+    nsIStreamListener* listener = new CertReader(uri, nsnull, this);
+    if (!listener)
+        return OnCertAvailable(uri, context, NS_ERROR_FAILURE, nsnull);
+
+    NS_ADDREF(listener);
+    nsresult rv = NS_OpenURI(listener, nsnull, uri);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "OpenURI failed");
+    NS_RELEASE(listener);
+
+    if (NS_FAILED(rv))
+        return OnCertAvailable(uri, context, NS_ERROR_FAILURE, nsnull);
+
     return NS_OK;
 }
 

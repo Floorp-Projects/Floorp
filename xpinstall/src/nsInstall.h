@@ -58,6 +58,7 @@
 #include "nsIEnumerator.h"
 #include "nsIZipReader.h"
 #include "nsIChromeRegistry.h"
+#include "nsIPrincipal.h"
 
 #define XPINSTALL_BUNDLE_URL "chrome://communicator/locale/xpinstall/xpinstall.properties"
 
@@ -78,6 +79,7 @@ class nsInstallInfo
                    nsIFile*         aFile,
                    const PRUnichar* aURL,
                    const PRUnichar* aArgs,
+                   nsIPrincipal*    mPrincipal,
                    PRUint32         aFlags,
                    nsIXPIListener*  aListener,
                    nsIXULChromeRegistry*   aChromeReg);
@@ -91,6 +93,8 @@ class nsInstallInfo
     PRUint32            GetType()               { return mType; }
     nsIXPIListener*     GetListener()           { return mListener.get(); }
     nsIXULChromeRegistry*  GetChromeRegistry()  { return mChromeRegistry.get(); }
+
+    nsCOMPtr<nsIPrincipal>      mPrincipal;
 
   private:
 
@@ -179,6 +183,8 @@ class nsInstall
             KEY_ACCESS_DENIED           = -241,
             KEY_DOES_NOT_EXIST          = -242,
             VALUE_DOES_NOT_EXIST        = -243,
+
+            INVALID_SIGNATURE           = -260,
 
             OUT_OF_MEMORY               = -299,
 

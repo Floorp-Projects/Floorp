@@ -44,6 +44,7 @@ MODULE_NAME	= nsSoftwareUpdate
 REQUIRES	= xpcom \
 		  string \
 		  jar \
+		  caps \
 		  chrome \
 		  necko \
 		  intl \
@@ -66,6 +67,7 @@ REQUIRES	= xpcom \
 EXPORTS		= nsXPITriggerInfo.h
 
 CPPSRCS		= \
+		CertReader.cpp \
 		nsInstall.cpp \
 		nsInstallTrigger.cpp \
 		nsInstallVersion.cpp \

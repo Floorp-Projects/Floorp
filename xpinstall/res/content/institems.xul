@@ -54,6 +54,7 @@ Contributor(s):
             <grid id="confirmGrid" flex="1">
                 <columns>
                     <column id="xpiColumn"/>
+                    <column id="certColumn"/>
                     <column id="urlColumn" flex="1"/>
                 </columns>
                 <rows id="xpirows">

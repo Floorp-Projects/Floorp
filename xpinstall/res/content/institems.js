@@ -21,7 +21,7 @@
 // dialog param block
 var gParam;
 
-function addTreeItem(num, aName, aUrl)
+function addTreeItem(num, aName, aUrl, aCertName)
 {
   // first column is the package name
   var item = document.createElement("description");
@@ -29,7 +29,14 @@ function addTreeItem(num, aName, aUrl)
   item.setAttribute("tooltiptext", aUrl);
   item.setAttribute("class", "confirmName");
 
-  // second column is the host serving the file
+  // second column is for the cert name
+  var certName = document.createElement("description");
+  if (aCertName == "")
+    certName.setAttribute("value", "Unsigned"); // i18n!
+  else
+    certName.setAttribute("value", aCertName);
+
+  // third column is the host serving the file
   var urltext = aUrl.replace(/^([^:]*:\/*[^\/]+).*/, "$1");
   var url = document.createElement('description');
   url.setAttribute("value", aUrl);
@@ -40,6 +47,7 @@ function addTreeItem(num, aName, aUrl)
   // create row and add it to the grid
   var row  = document.createElement("row");
   row.appendChild(item);
+  row.appendChild(certName);
   row.appendChild(url);
 
   document.getElementById("xpirows").appendChild(row);
@@ -49,7 +57,7 @@ function addTreeItem(num, aName, aUrl)
 function onLoad()
 {
   var row = 0;
-  var moduleName, URL, numberOfDialogTreeElements;
+  var moduleName, URL, certName, numberOfDialogTreeElements;
 
   doSetOKCancel(onOk, onCancel);
 
@@ -63,7 +71,9 @@ function onLoad()
   {
     moduleName = gParam.GetString(i);
     URL = gParam.GetString(++i);
-    addTreeItem(row++, moduleName, URL);
+    certName = gParam.GetString(++i);
+
+    addTreeItem(row++, moduleName, URL, certName);
   }
 
   var okText = document.getElementById("xpinstallBundle").getString("OK");

@@ -270,6 +270,7 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
         rv = gXPI->InstallJar( iFile,
                                URLstr.get(),
                                args.get(),
+                               nsnull,
                                (aFlags | XPI_NO_NEW_THREAD),
                                gListener );
 

@@ -299,6 +299,7 @@ NS_IMETHODIMP
 nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
                                const PRUnichar* aURL,
                                const PRUnichar* aArguments,
+                               nsIPrincipal* aPrincipal,
                                PRUint32 flags,
                                nsIXPIListener* aListener)
 {
@@ -316,7 +317,7 @@ nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
         chromeRegistry = tmpReg;
 
     // we want to call this with or without a chrome registry
-    nsInstallInfo *info = new nsInstallInfo( 0, aLocalFile, aURL, aArguments,
+    nsInstallInfo *info = new nsInstallInfo( 0, aLocalFile, aURL, aArguments, aPrincipal,
                                              flags, aListener, chromeRegistry );
 
     if (!info)
@@ -351,6 +352,7 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
                                              aFile,
                                              URL,
                                              aName,
+                                             nsnull,
                                              (PRUint32)aSelect,
                                              aListener,
                                              chromeRegistry);

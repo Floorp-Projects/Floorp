@@ -1788,6 +1788,7 @@ static JSConstDoubleSpec install_constants[] =
 
     { nsInstall::SUCCESS,                    "SUCCESS"                      },
     { nsInstall::REBOOT_NEEDED,              "REBOOT_NEEDED"                },
+    { nsInstall::INVALID_SIGNATURE,          "INVALID_SIGNATURE"            },
 
     // these are bitwise values supported by addFile
     { DO_NOT_UNINSTALL,                      "DO_NOT_UNINSTALL"             },
