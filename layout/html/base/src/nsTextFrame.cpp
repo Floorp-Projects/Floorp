@@ -1948,7 +1948,8 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                            PRUint32(end - start), textWidth);
   
           }
-          nscoord offset, size, baseline;
+          nscoord offset, size;
+          nscoord baseline = mAscent;
           switch (aDetails->mType)
           {
           case nsISelectionController::SELECTION_NORMAL:
