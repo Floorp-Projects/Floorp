@@ -1229,6 +1229,15 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
 
     NS_ASSERTION((mTotalURLs >= mForegroundURLs), "Foreground URL count is wrong.");
 
+#ifdef DEBUG
+  const char* buffer;
+
+  aURL->GetSpec(&buffer);
+    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+           ("DocLoader - LoadURLComplete(...) called for %s.\nForeground URLs: %d\nTotal URLs: %d\n", 
+            buffer, mForegroundURLs, mTotalURLs));
+#endif /* DEBUG */
+
     /* 
      * If this was the last URL for the entire document (including any sub 
      * documents) then fire an OnConnectionsComplete(...) notification.
@@ -1258,16 +1267,17 @@ void nsDocLoaderImpl::AreAllConnectionsComplete(void)
 
       PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
              ("DocLoader [%p] - OnConnectionsComplete(...) called.\n", this));
-      /* Notify all observers that all connections have been loaded... */
-      for (index = 0; index < count; index++) {
-        nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-        observer->OnConnectionsComplete();
-      }
       /*
        * Clear the flag indicating that the document loader is still loading a 
        * document...
        */
       mIsLoadingDocument = PR_FALSE;
+
+      /* Notify all observers that all connections have been loaded... */
+      for (index = 0; index < count; index++) {
+        nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+        observer->OnConnectionsComplete();
+      }
     }
   }
   /*
