@@ -189,6 +189,7 @@ function onMessageViewClick(e)
     if (client.commandManager.isCommandSatisfied(cx, command))
     {
         dispatch(command, cx);
+        dispatch("focus-input");
         e.preventDefault();
         return true;
     }
