@@ -2192,7 +2192,8 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	  pref->GetBoolPref("mailnews.reply_on_top", &eReplyOnTop);
   }
 	if (nReplyWithExtraLines && eReplyOnTop == 1) {
-	  for (; nReplyWithExtraLines > 0; nReplyWithExtraLines--) {
+//	  for (; nReplyWithExtraLines > 0; nReplyWithExtraLines--) {
+	  if (nReplyWithExtraLines) {
 		status = MimeHeaders_write(opt, "<BR>", 4);
 		if (status < 0) return status;
 	  }

@@ -63,7 +63,11 @@
 #include "plstr.h"
 #include "prlink.h"
 #include "mimecth.h"
+
+#include "nsIServiceManager.h"
 #include "nsIPref.h"
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 #include "mimemoz2.h"
 
 /* ==========================================================================
@@ -629,11 +633,11 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 
   if (!got_lookup_pref)
   {
-    nsIPref *pref = GetPrefServiceManager(opts);   // Pref service manager
-
-    if (pref)
-  	  pref->GetBoolPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
-	  got_lookup_pref = PR_TRUE;
+     nsIPref *pref = GetPrefServiceManager(opts);   // Pref service manager
+ 
+     if (pref)
+         pref->GetBoolPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
+         got_lookup_pref = PR_TRUE;
   }
 
 

@@ -435,7 +435,7 @@ mime_insert_html_complete(nsMIMESession *stream)
         msd->prefs->GetBoolPref("mailnews.reply_with_extra_lines", &nReplyWithExtraLines);
       }
       if (0 == eReplyOnTop && nReplyWithExtraLines) {
-        for (; nReplyWithExtraLines > 0; nReplyWithExtraLines--)
+//        for (; nReplyWithExtraLines > 0; nReplyWithExtraLines--)
 		;
 #ifdef RICHIE
           EDT_PasteQuote(msd->context, "<BR>");

@@ -188,8 +188,8 @@ struct MimeObject {
 
 #define MimeObject_grow_obuffer(obj, desired_size) \
   (((desired_size) >= (obj)->obuffer_size) ? \
-   mime_GrowBuffer ((desired_size), sizeof(char), 1024, \
-				   &(obj)->obuffer, &(obj)->obuffer_size) \
+   mime_GrowBuffer ((PRUint32)(desired_size), (PRUint32)sizeof(char), 1024, \
+				   &(obj)->obuffer, (PRInt32*)&(obj)->obuffer_size) \
    : 0)
 
 
