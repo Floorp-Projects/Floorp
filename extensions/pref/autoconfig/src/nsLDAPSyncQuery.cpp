@@ -235,7 +235,7 @@ nsLDAPSyncQuery::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         
             mResults += NS_LITERAL_STRING("\n") +
                         NS_ConvertASCIItoUCS2(mAttrs[i]) +
-                        NS_LITERAL_STRING("= ") + 
+                        NS_LITERAL_STRING("=") +
                         nsDependentString(vals[j]);
             
         }
