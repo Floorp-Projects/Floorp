@@ -38,7 +38,6 @@ CPPSRCS		= \
 		nsGlobalWindow.cpp \
 		nsLocation.cpp \
 		nsDOMWindowList.cpp \
-		nsJSSecurityManager.cpp \
 		nsJSUtils.cpp \
 		nsScreen.cpp \
 		nsJSScreen.cpp \

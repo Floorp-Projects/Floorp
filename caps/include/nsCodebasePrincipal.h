@@ -30,25 +30,23 @@
 
 class nsCodebasePrincipal : public nsICodebasePrincipal {
 public:
+    
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_CODEBASEPRINCIPAL_CID)
+        
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIPRINCIPAL
+    NS_DECL_NSICODEBASEPRINCIPAL
+    
+    nsCodebasePrincipal();
+    
+    NS_IMETHOD
+    Init(nsIURI *uri);
 
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_CODEBASEPRINCIPAL_CID)
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINCIPAL
-  NS_DECL_NSICODEBASEPRINCIPAL
-
-  nsCodebasePrincipal();
-
-  NS_IMETHOD
-  Init(PRInt16 type, nsIURI * uri);
-
-  virtual ~nsCodebasePrincipal(void);
-
+    virtual ~nsCodebasePrincipal(void);
+    
 protected:
-  nsIURI * itsURL;
-  PRInt16 itsType;
-  nsJSPrincipals itsJSPrincipals;
-
+    nsIURI *itsURI;
+    nsJSPrincipals itsJSPrincipals;
 };
 
 #endif // _NS_CODEBASE_PRINCIPAL_H_

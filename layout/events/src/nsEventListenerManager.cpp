@@ -433,8 +433,8 @@ nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aConte
   JSObject *mScriptObject;
   nsIScriptGlobalObject *global;
   nsIScriptGlobalObjectData *globalData;
-  nsIPrincipal * prin = nsnull;
-  JSPrincipals * jsprin = nsnull;
+  nsIPrincipal *prin = nsnull;
+  JSPrincipals *jsprin = nsnull;
   global = aContext->GetGlobalObject();
   if (global && NS_SUCCEEDED(global->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData))) {
     if (NS_FAILED(globalData->GetPrincipal(& prin))) {
@@ -442,12 +442,12 @@ nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aConte
       NS_RELEASE(globalData);
       return NS_ERROR_FAILURE;
     }
-     prin->ToJSPrincipal(& jsprin);
+    prin->GetJSPrincipals(&jsprin);
     NS_RELEASE(globalData);
   }
   NS_IF_RELEASE(global);
+  JSContext *mJSContext = (JSContext*)aContext->GetNativeContext();
   if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)&mScriptObject)) {
-    JSContext* mJSContext = (JSContext*)aContext->GetNativeContext();
     nsString mName, mLowerName;
     char* mCharName;
     aName->ToString(mName);
@@ -457,9 +457,12 @@ nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aConte
       JS_CompileUCFunctionForPrincipals(mJSContext, mScriptObject, jsprin, mCharName,
                1, mEventArgv, (jschar*)aFunc.GetUnicode(), aFunc.Length(), nsnull, 0);
       delete[] mCharName;
+      JSPRINCIPALS_DROP(mJSContext, jsprin);
       return SetJSEventListener(aContext, mScriptObject, aIID);
     }
   }
+  if (jsprin)
+    JSPRINCIPALS_DROP(mJSContext, jsprin);
   return NS_ERROR_FAILURE;
 }
 

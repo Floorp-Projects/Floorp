@@ -25,7 +25,7 @@ struct nsJSPrincipals : JSPrincipals {
 
 public:
   nsJSPrincipals();
-  nsresult Init(nsIPrincipal * prin);
+  nsresult Init(char *prin);
   ~nsJSPrincipals(void);
 
   nsIPrincipal *nsIPrincipalPtr;

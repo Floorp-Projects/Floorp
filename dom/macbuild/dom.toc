@@ -4,7 +4,6 @@ mozilla/dom/src/base/nsGlobalWindow.cpp
 mozilla/dom/src/base/nsJSEnvironment.cpp
 mozilla/dom/src/base/nsJSLocation.cpp
 mozilla/dom/src/base/nsJSNavigator.cpp
-mozilla/dom/src/base/nsJSSecurityManager.cpp
 mozilla/dom/src/base/nsJSUtils.cpp
 mozilla/dom/src/base/nsJSWindow.cpp
 mozilla/dom/src/base/nsJSWindowCollection.cpp

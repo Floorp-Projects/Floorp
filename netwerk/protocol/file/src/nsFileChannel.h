@@ -123,6 +123,7 @@ protected:
     PRMonitor*                  mMonitor;
     PRUint32                    mLoadAttributes;
     nsILoadGroup*               mLoadGroup;
+    nsIPrincipal*               mPrincipal;
 
     nsCOMPtr<nsIStreamListener> mRealListener;
 

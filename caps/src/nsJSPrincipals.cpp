@@ -21,25 +21,27 @@
 #include "nsXPIDLString.h"
 
 PR_STATIC_CALLBACK(void *) 
-nsGetPrincipalArray(JSContext * cx, struct JSPrincipals * prin) {
+nsGetPrincipalArray(JSContext *cx, struct JSPrincipals *prin) 
+{
     return nsnull;
 }
 
 PR_STATIC_CALLBACK(JSBool) 
-nsGlobalPrivilegesEnabled(JSContext * cx , struct JSPrincipals *jsprin) {
+nsGlobalPrivilegesEnabled(JSContext *cx , struct JSPrincipals *jsprin) 
+{
     return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(void)
-nsDestroyJSPrincipals(JSContext * cx, struct JSPrincipals * jsprin) {
-    nsJSPrincipals * nsjsprin = (nsJSPrincipals *)jsprin;
-    nsIPrincipal *p = nsjsprin->nsIPrincipalPtr;
-    NS_IF_RELEASE(p);
+nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin) {
+    nsJSPrincipals *nsjsprin = (nsJSPrincipals *)jsprin;
+    NS_IF_RELEASE(nsjsprin->nsIPrincipalPtr);
     // The nsIPrincipal that we release owns the JSPrincipal struct,
     // so we don't need to worry about "codebase"
 }
 
-nsJSPrincipals::nsJSPrincipals() {
+nsJSPrincipals::nsJSPrincipals() 
+{
     codebase = nsnull;
     getPrincipalArray = nsGetPrincipalArray;
     globalPrivilegesEnabled = nsGlobalPrivilegesEnabled;
@@ -49,20 +51,14 @@ nsJSPrincipals::nsJSPrincipals() {
 }
 
 nsresult
-nsJSPrincipals::Init(nsIPrincipal * prin) {
-    nsXPIDLCString cb;
-    nsICodebasePrincipal * cbprin;
-    prin->QueryInterface(NS_GET_IID(nsICodebasePrincipal),(void * *)& cbprin);
-    cbprin->GetURLString(getter_Copies(cb));
-    nsIPrincipalPtr = prin;
-    codebase = PL_strdup(cb);
-    if (!codebase) 
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(nsIPrincipalPtr);
+nsJSPrincipals::Init(char *aCodebase) 
+{
+    codebase = aCodebase;
     return NS_OK;
 }
 
-nsJSPrincipals::~nsJSPrincipals() {
+nsJSPrincipals::~nsJSPrincipals() 
+{
     if (codebase)
         PL_strfree(codebase); 
     if (nsIPrincipalPtr)

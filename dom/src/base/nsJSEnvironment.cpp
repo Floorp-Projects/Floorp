@@ -30,7 +30,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLOptionElement.h"
-#include "nsJSSecurityManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -39,6 +38,7 @@
 #include "nsIXPConnect.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsIJSContextStack.h"
+#include "nsCOMPtr.h"
 
 #if defined(OJI)
 #include "nsIJVMManager.h"
@@ -100,6 +100,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 	mNameSpaceManager = nsnull;
 	mIsInitialized = PR_FALSE;
 	mNumEvaluations = 0;
+        mSecurityManager = nsnull;
 }
 
 nsJSContext::~nsJSContext()
@@ -128,31 +129,26 @@ nsJSContext::EvaluateString(const nsString& aScript,
                             nsString& aRetValue,
                             PRBool* aIsUndefined)
 {
-	jsval val;
-	nsIScriptGlobalObject *global = GetGlobalObject();
-	nsIScriptGlobalObjectData *globalData;
-	nsIPrincipal * prin = nsnull;
-  nsresult rv = NS_OK;
-	if (global && NS_SUCCEEDED(global->QueryInterface(NS_GET_IID(nsIScriptGlobalObjectData), (void**)&globalData))) {
-		if (NS_FAILED(globalData->GetPrincipal(& prin))) {
-			NS_RELEASE(global);
-			NS_RELEASE(globalData);
-			return NS_ERROR_FAILURE;
-		}
-		NS_RELEASE(globalData);
-	}
-	NS_IF_RELEASE(global);
+  nsCOMPtr<nsIScriptGlobalObjectData> globalData;
+  nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIScriptGlobalObject> global = GetGlobalObject();
+  if (!global || NS_FAILED(global->QueryInterface(NS_GET_IID(nsIScriptGlobalObjectData), 
+                                                  (void**) getter_AddRefs(globalData)))) 
+  {
+    return NS_ERROR_FAILURE;
+  }
+  if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal)))) 
+    return NS_ERROR_FAILURE;
 	
+  nsresult rv;
   NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = stack->Push(mContext);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  JSPrincipals * jsprin;
-  prin->ToJSPrincipal(& jsprin);
+  if (NS_FAILED(rv)) 
+    return NS_ERROR_FAILURE;
+  if (NS_FAILED(stack->Push(mContext))) 
+    return NS_ERROR_FAILURE;
+  JSPrincipals *jsprin;
+  principal->GetJSPrincipals(&jsprin);
+  jsval val;
   PRBool ret = ::JS_EvaluateUCScriptForPrincipals(mContext, 
                                                   JS_GetGlobalObject(mContext),
                                                   jsprin,
@@ -161,6 +157,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
                                                   aURL, 
                                                   aLineNo,
                                                   &val);
+  JSPRINCIPALS_DROP(mContext, jsprin);
   if (ret) {
     *aIsUndefined = JSVAL_IS_VOID(val);
     JSString* jsstring = JS_ValueToString(mContext, val);   
@@ -172,8 +169,10 @@ nsJSContext::EvaluateString(const nsString& aScript,
 	
   ScriptEvaluated();
   
-  rv = stack->Pop(nsnull);
-	return rv;
+  if (NS_FAILED(stack->Pop(nsnull))) 
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(nsIScriptGlobalObject*)
@@ -378,16 +377,20 @@ nsJSContext::GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsJSContext::GetSecurityManager(nsIScriptSecurityManager * * aInstancePtr)
+nsJSContext::GetSecurityManager(nsIScriptSecurityManager **aInstancePtr)
 {
-  nsresult ret;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secManager,NS_SCRIPTSECURITYMANAGER_PROGID,& ret);
-  if (NS_OK == ret) 
-  {
-    *aInstancePtr = secManager;
-    NS_ADDREF(* aInstancePtr);
-  }
-  return ret;
+    if (!mSecurityManager) {
+        nsresult ret;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                        NS_SCRIPTSECURITYMANAGER_PROGID, &ret);
+        if (NS_FAILED(ret)) 
+            return NS_ERROR_FAILURE;
+        mSecurityManager = securityManager;
+        NS_ADDREF(mSecurityManager);
+    }
+    *aInstancePtr = mSecurityManager;
+    NS_ADDREF(*aInstancePtr);
+    return NS_OK;
 }
 
 nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;

@@ -891,6 +891,7 @@ nsDocument::Reset(nsIURI *aURL)
 
 #ifdef NECKO
   (void)aChannel->GetURI(&mDocumentURL);
+  aChannel->GetPrincipal(&mPrincipal);
 //  (void)aChannel->GetLoadGroup(&mDocumentLoadGroup);
   mDocumentLoadGroup = aLoadGroup;
   NS_ADDREF(mDocumentLoadGroup);
@@ -937,6 +938,12 @@ nsIURI* nsDocument::GetDocumentURL() const
 {
   NS_IF_ADDREF(mDocumentURL);
   return mDocumentURL;
+}
+
+nsIPrincipal* nsDocument::GetDocumentPrincipal() const
+{
+  NS_IF_ADDREF(mPrincipal);
+  return mPrincipal;
 }
 
 NS_IMETHODIMP 

@@ -33,7 +33,6 @@ CPPSRCS =			 \
 	nsGlobalWindow.cpp       \
 	nsLocation.cpp		 \
 	nsDOMWindowList.cpp	 \
-	nsJSSecurityManager.cpp  \
 	nsJSUtils.cpp		 \
 	nsScreen.cpp		 \
 	nsJSScreen.cpp		 \
@@ -64,7 +63,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSLocation.obj		\
 	.\$(OBJDIR)\nsDOMWindowList.obj		\
 	.\$(OBJDIR)\nsJSWindowCollection.obj	\
-	.\$(OBJDIR)\nsJSSecurityManager.obj	\
 	.\$(OBJDIR)\nsJSUtils.obj		\
 	.\$(OBJDIR)\nsScreen.obj		\
 	.\$(OBJDIR)\nsJSScreen.obj		\

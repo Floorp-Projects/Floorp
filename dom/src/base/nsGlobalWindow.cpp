@@ -83,6 +83,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsMimeTypeArray.h"
 #include "nsPluginArray.h"
 
+#include "nsIPrincipalManager.h"
+
 #include "jsapi.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -1694,11 +1696,12 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
                                  timeout->lineno, nsAutoString(""), &isundefined);
 #endif
         JSPrincipals * jsprin;
-        timeout->principal->ToJSPrincipal(& jsprin);
+        timeout->principal->GetJSPrincipals(&jsprin);
         JS_EvaluateUCScriptForPrincipals(cx, (JSObject *)mScriptObject,
                                          jsprin, JS_GetStringChars(timeout->expr),
                                          JS_GetStringLength(timeout->expr), timeout->filename,
                                          timeout->lineno, &result);
+        JSPRINCIPALS_DROP(cx, jsprin);
       } 
       else {
         PRInt64 lateness64;
@@ -1816,7 +1819,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   PRInt64 now, delta;
   nsIPrincipal * principal;
 
-  if (NS_FAILED(GetPrincipal(& principal))) {
+  if (NS_FAILED(GetPrincipal(&principal))) {
     return NS_ERROR_FAILURE;
   }
   if (argc < 2) {
@@ -2916,91 +2919,45 @@ GlobalWindowImpl::ReleaseEvent(const nsString& aType)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetPrincipal(nsIPrincipal * * prin) 
+GlobalWindowImpl::GetPrincipal(nsIPrincipal **result) 
 {
   if (!mPrincipal) {
-    if (mContext) {
-      nsIScriptSecurityManager * secMan = nsnull;
-      mContext->GetSecurityManager(&secMan);
-      if (secMan) {
-        nsIURI * origin;
-        if (NS_SUCCEEDED(this->GetOrigin(& origin))) secMan->NewJSPrincipals(origin, nsnull, & mPrincipal);
-        NS_RELEASE(secMan);
-      }
+    nsCOMPtr<nsIDocument> doc;
+    if (!mDocument || NS_FAILED(mDocument->QueryInterface(kIDocumentIID, 
+                                                          (void **) getter_AddRefs(doc))))
+    {
+      return NS_ERROR_FAILURE;
     }
-    if (!mPrincipal) return NS_ERROR_FAILURE;
-    if (mContext) NS_ADDREF(mPrincipal);
+
+    mPrincipal = doc->GetDocumentPrincipal();
+    if (!mPrincipal) {
+      nsCOMPtr<nsIURI> uri = doc->GetDocumentURL();
+      if (!uri) 
+        return NS_ERROR_FAILURE;
+
+      nsresult rv;
+      NS_WITH_SERVICE(nsIPrincipalManager, prinMan, 
+                      NS_PRINCIPALMANAGER_PROGID, &rv);
+      if (NS_FAILED(rv)) 
+        return NS_ERROR_FAILURE;
+
+      if (NS_FAILED(prinMan->CreateCodebasePrincipal(nsnull, uri, &mPrincipal)))
+        return NS_ERROR_FAILURE;
+    }
+    NS_ADDREF(mPrincipal);
   }
-  * prin = mPrincipal;
+  *result = mPrincipal;
+  NS_ADDREF(*result);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::SetPrincipal(nsIPrincipal * aPrin)
+GlobalWindowImpl::SetPrincipal(nsIPrincipal *aPrin)
 {
   NS_IF_RELEASE(mPrincipal);
   mPrincipal = aPrin;
-  if (mPrincipal) NS_ADDREF(mPrincipal);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::GetOrigin(nsIURI * * aOrigin)
-{
-  nsIDocument* doc;
-  if (mDocument && NS_OK == mDocument->QueryInterface(kIDocumentIID, (void * *)&doc)) {
-    nsIURI* docURL = doc->GetDocumentURL();
-    if (docURL) * aOrigin = docURL;
-    // else return error code
-    NS_RELEASE(doc);
-  }
-#if 0
-  //Old code from 4.0 to show what funcitonality needs replicating
-  History_entry *he;
-  const char *address;
-  JSContext *aCx;
-  MochaDecoder *decoder;
-
-  he = SHIST_GetCurrent(&context->hist);
-  if (he) {
-    address = he->wysiwyg_url;
-    if (!address)
-      address = he->address;
-    switch (NET_URL_Type(address)) {
-      case MOCHA_TYPE_URL:
-        /* This type cannot name the true origin (server) of JS code. */
-        break;
-      case VIEW_SOURCE_TYPE_URL:
-        NS_ASSERTION(0, "Invalid url type");
-      default:
-        return address;
-    }
-  }
-
-  if (context->grid_parent) {
-    address = FindCreatorURL(context->grid_parent);
-    if (address)
-      return address;
-  }
-
-  aCx = context->mocha_context;
-  if (aCx) {
-    decoder = JS_GetPrivate(aCx, JS_GetGlobalObject(aCx));
-    if (decoder && decoder->opener) {
-      /* self.opener property is valid, check its MWContext. */
-      MochaDecoder *opener = JS_GetPrivate(aCx, decoder->opener);
-      if (!opener->visited) {
-        opener->visited = PR_TRUE;
-        address = opener->window_context
-                ? FindCreatorURL(opener->window_context)
-                : nsnull;
-        opener->visited = PR_FALSE;
-        if (address)
-          return address;
-      }
-    }
-  }
-#endif
+  if (mPrincipal) 
+    NS_ADDREF(mPrincipal);
   return NS_OK;
 }
 

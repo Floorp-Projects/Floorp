@@ -42,6 +42,7 @@
 #include "nsEscape.h"
 #include "nsIMIMEService.h"
 #include "prlog.h"
+#include "nsIPrincipal.h"
 
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
@@ -78,7 +79,8 @@ nsFileChannel::nsFileChannel()
       mBufferInputStream(nsnull), mBufferOutputStream(nsnull),
       mStatus(NS_OK), mHandler(nsnull), mSourceOffset(0),
       mLoadAttributes(LOAD_NORMAL),
-	  mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull), mRealListener(nsnull)
+      mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull), mRealListener(nsnull),
+      mPrincipal(nsnull)
 {
     NS_INIT_REFCNT();
 #if defined(PR_LOGGING)
@@ -180,6 +182,7 @@ nsFileChannel::~nsFileChannel()
     if (mMonitor) 
         PR_DestroyMonitor(mMonitor);
     NS_IF_RELEASE(mLoadGroup);
+    NS_IF_RELEASE(mPrincipal);
 }
 
 NS_IMETHODIMP
@@ -559,6 +562,22 @@ nsFileChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFileChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+{
+    *aPrincipal = mPrincipal;
+    NS_IF_ADDREF(*aPrincipal);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+{
+    NS_IF_RELEASE(mPrincipal);
+    mPrincipal = aPrincipal;
+    NS_IF_ADDREF(mPrincipal);
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRunnable methods:

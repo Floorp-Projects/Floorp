@@ -104,7 +104,7 @@ nsPrincipalManager::CreateCodebasePrincipal(const char * codebaseURL, nsIURI * u
   nsCodebasePrincipal * codebasePrin;
   compMan->CreateInstance(NS_CODEBASEPRINCIPAL_PROGID, nsnull, NS_GET_IID(nsICodebasePrincipal),(void * *)& codebasePrin);
   if (codebasePrin == nsnull) return NS_ERROR_OUT_OF_MEMORY;
-  rv = codebasePrin->Init(nsIPrincipal::PrincipalType_CodebaseExact, url);
+  rv = codebasePrin->Init(url);
   if (!NS_SUCCEEDED(rv)) {
     NS_RELEASE(codebasePrin);
     return rv;
@@ -116,9 +116,11 @@ nsPrincipalManager::CreateCodebasePrincipal(const char * codebaseURL, nsIURI * u
 NS_IMETHODIMP
 nsPrincipalManager::CreateCertificatePrincipal(const unsigned char * * certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts, nsIPrincipal * * prin)
 {
-	* prin = new nsCertificatePrincipal(nsIPrincipal::PrincipalType_Certificate,certChain, certChainLengths, noOfCerts);
+#if 0
+	* prin = new nsCertificatePrincipal(certChainLengths, noOfCerts);
 	if (!prin) return NS_ERROR_OUT_OF_MEMORY;
 	(* prin)->AddRef();
+#endif
 	return NS_OK;
 }
 
@@ -126,6 +128,7 @@ nsPrincipalManager::CreateCertificatePrincipal(const unsigned char * * certChain
 NS_IMETHODIMP
 nsPrincipalManager::CanExtendTrust(nsIPrincipalArray * from, nsIPrincipalArray * to, PRBool * result)
 {
+#if 0
 	if ((from == NULL) || (to == NULL)) {
 		* result = PR_FALSE;
 		return NS_OK;
@@ -163,6 +166,10 @@ nsPrincipalManager::CanExtendTrust(nsIPrincipalArray * from, nsIPrincipalArray *
 	}
 	* result = (codebaseCount == 1) ? PR_TRUE : PR_FALSE;
 	return NS_OK;
+#else
+	*result = PR_FALSE;
+	return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
@@ -371,10 +378,12 @@ nsPrincipalManager::Init()
   if(NS_FAILED(rv)) return rv;
   rv = compMgr->CreateInstance(NS_PRINCIPALARRAY_PROGID, nsnull,NS_GET_IID(nsIPrincipalArray), (void * *)& theUnknownPrincipalArray);
   if(NS_FAILED(rv)) return rv;
+/*
   theUnsignedPrincipal = new nsCertificatePrincipal(nsIPrincipal::PrincipalType_Certificate, UNSIGNED_PRINCIPAL_KEY);
   theUnsignedPrincipalArray->AddPrincipalArrayElement(theUnsignedPrincipal);
   theUnknownPrincipal = new nsCertificatePrincipal(nsIPrincipal::PrincipalType_Certificate, UNKNOWN_PRINCIPAL_KEY);
   theUnknownPrincipalArray->AddPrincipalArrayElement(theUnknownPrincipal);
+*/
   return NS_OK;
 }
 

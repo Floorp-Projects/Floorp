@@ -35,9 +35,8 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECTDATA_IID)
 
-  NS_IMETHOD       GetPrincipal(nsIPrincipal * * aPrincipal) = 0;
-  NS_IMETHOD       SetPrincipal(nsIPrincipal * aPrincipal) = 0;
-  NS_IMETHOD       GetOrigin(nsIURI * * aOrigin) = 0;
+  NS_IMETHOD       GetPrincipal(nsIPrincipal **aPrincipal) = 0;
+  NS_IMETHOD       SetPrincipal(nsIPrincipal *aPrincipal) = 0;
 };
 
 #endif //nsIScriptGlobalObjectData_h__
