@@ -95,23 +95,12 @@ public:
                         const PRUnichar* aURL,
                         nsresult aStatus);
 
-  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
-
-  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
-                         PRBool aVisible,
-                         nsIWebShell *&aNewWebShell);
-
   NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult);
   NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
   NS_IMETHOD GetLockedState(PRBool& aResult) { aResult = mLockedUntilChromeLoad; return NS_OK; }
 
   NS_IMETHOD ShouldLoadDefaultPage(PRBool *aYes)
                { *aYes = mLoadDefaultPage; return NS_OK; }
-
-  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
-                                  nsIWebShell*& aResult);
-
-  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
   // nsIWebShellWindow methods...
   NS_IMETHOD Show(PRBool aShow);
@@ -229,7 +218,7 @@ public:
   NS_IMETHOD SetDefaultStatus(const PRUnichar* aStatus);
   NS_IMETHOD GetDefaultStatus(const PRUnichar** aResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD ShowMenuBar(PRBool aShow);
+  NS_IMETHOD ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE;};
 
   // nsINetSupport
 
@@ -270,7 +259,6 @@ protected:
   nsCOMPtr<nsIWeakReference> mParentWindow;
   nsIXULWindowCallbacks*  mCallbacks;
   PRBool                  mLockedUntilChromeLoad;
-  PRUint32                mChromeMask;
   PRBool                  mLoadDefaultPage;
 
   nsVoidArray mMenuDelegates;
