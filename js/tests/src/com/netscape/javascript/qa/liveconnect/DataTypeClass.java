@@ -16,12 +16,99 @@ package com.netscape.javascript.qa.liveconnect;
  */
 
 public class DataTypeClass {
+    /**
+     * Constructor stuff
+     *
+     */
 
+    public DataTypeClass() {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_NONE;
+    }
+
+    // instance setters
+
+    public DataTypeClass(boolean b) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_BOOLEAN;
+    }
+    public DataTypeClass(Boolean b) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_BOOLEAN_OBJECT;
+    }
+    public DataTypeClass(byte b) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_BYTE;
+    }
+    public DataTypeClass(Byte b) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_BYTE_OBJECT;
+    }
+    public DataTypeClass(Integer i) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_INTEGER_OBJECT;
+    }
+    public DataTypeClass(int i) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_INT;
+    }
+    public DataTypeClass(Double d ) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_DOUBLE_OBJECT;
+    }
+    public DataTypeClass(double d) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_DOUBLE;
+    }
+    public DataTypeClass(Float f) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_FLOAT_OBJECT;
+    }
+    public DataTypeClass(float f) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_FLOAT;
+    }
+    public DataTypeClass(Long l) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_LONG_OBJECT;
+    }
+    public DataTypeClass(long l) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_LONG;
+    }
+    public DataTypeClass(Short s) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_SHORT_OBJECT;
+    }
+    public DataTypeClass(short s) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_SHORT;
+    }
+    public DataTypeClass(String s) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_STRING;
+    }
+    public DataTypeClass(Object o ) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_OBJECT;
+    }
+    public DataTypeClass(char c) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_CHAR;
+    }
+    public DataTypeClass(Character c) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_CHAR_OBJECT;
+    }
+    public DataTypeClass( byte b[] ) {
+        PUB_INT_CONSTRUCTOR_ARG = CONSTRUCTOR_ARG_BYTE_ARRAY;
+    }
+    public int PUB_INT_CONSTRUCTOR_ARG;
+    public int CONSTRUCTOR_ARG_NONE = 0;
+    public int CONSTRUCTOR_ARG_BOOLEAN = 1;
+    public int CONSTRUCTOR_ARG_BOOLEAN_OBJECT=2;
+    public int CONSTRUCTOR_ARG_BYTE=3;
+    public int CONSTRUCTOR_ARG_BYTE_OBJECT=4;
+    public int CONSTRUCTOR_ARG_INT=5;
+    public int CONSTRUCTOR_ARG_INTEGER_OBJECT=6;
+    public int CONSTRUCTOR_ARG_DOUBLE=7;
+    public int CONSTRUCTOR_ARG_DOUBLE_OBJECT=8;
+    public int CONSTRUCTOR_ARG_FLOAT=9;
+    public int CONSTRUCTOR_ARG_FLOAT_OBJECT=10;
+    public int CONSTRUCTOR_ARG_LONG=11;
+    public int CONSTRUCTOR_ARG_LONG_OBJECT=12;
+    public int CONSTRUCTOR_ARG_SHORT=13;
+    public int CONSTRUCTOR_ARG_SHORT_OBJECT=14;
+    public int CONSTRUCTOR_ARG_STRING=15;
+    public int CONSTRUCTOR_ARG_OBJECT=16;
+    public int CONSTRUCTOR_ARG_CHAR=17;
+    public int CONSTRUCTOR_ARG_CHAR_OBJECT=18;
+    public int CONSTRUCTOR_ARG_BYTE_ARRAY=19;
     /**
      *  Override toNumber
      *
      */
-
     public static double PUB_DOUBLE_REPRESENTATION = 0.2134;
 
     public double doubleValue() {
@@ -123,7 +210,7 @@ public class DataTypeClass {
     }
 
     public static Character staticGetCharacter() {
-        return new Character(PUB_STATIC_CHAR);
+        return PUB_STATIC_CHAR_OBJECT;
     }
 
     // instance getters
