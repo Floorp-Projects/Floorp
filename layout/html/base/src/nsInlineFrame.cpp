@@ -85,6 +85,52 @@ nsPositionedInlineFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
+nsPositionedInlineFrame::AppendFrames(nsIPresContext& aPresContext,
+                                      nsIPresShell&   aPresShell,
+                                      nsIAtom*        aListName,
+                                      nsIFrame*       aFrameList)
+{
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    // XXX Temporary code until area frame is updated...
+    return nsFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+  }
+
+  return nsInlineFrame::AppendFrames(aPresContext, aPresShell, aListName,
+                                     aFrameList);
+}
+  
+NS_IMETHODIMP
+nsPositionedInlineFrame::InsertFrames(nsIPresContext& aPresContext,
+                                      nsIPresShell&   aPresShell,
+                                      nsIAtom*        aListName,
+                                      nsIFrame*       aPrevFrame,
+                                      nsIFrame*       aFrameList)
+{
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    // XXX Temporary code until area frame is updated...
+    return nsFrame::InsertFrames(aPresContext, aPresShell, aListName,
+                                 aPrevFrame, aFrameList);
+  }
+
+  return nsInlineFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame,
+                                     aFrameList);
+}
+  
+NS_IMETHODIMP
+nsPositionedInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
+                                     nsIPresShell&   aPresShell,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aOldFrame)
+{
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    // XXX Temporary code until area frame is updated...
+    return nsFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  }
+
+  return nsInlineFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+}
+
+NS_IMETHODIMP
 nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32   aIndex,
                                                     nsIAtom** aListName) const
 {
