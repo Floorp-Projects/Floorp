@@ -26,7 +26,7 @@
 #ifndef nsAFlatString_h___
 #define nsAFlatString_h___
 
-#ifndef nsASingleFragmenttring_h___
+#ifndef nsASingleFragmentString_h___
 #include "nsASingleFragmentString.h"
 #endif
 
