@@ -494,71 +494,87 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
  * smart about loops (do {...; return e2;} while(0) at the end of a function
  * that contains an early return e1 will get a strict-option-only warning).
  */
-static JSBool
+#define ENDS_IN_OTHER   0
+#define ENDS_IN_RETURN  1
+#define ENDS_IN_BREAK   2
+
+static int
 HasFinalReturn(JSParseNode *pn)
 {
-    JSBool ok, hasDefault;
+    uintN rv, rv2, hasDefault;
     JSParseNode *pn2, *pn3;
 
     switch (pn->pn_type) {
       case TOK_LC:
         if (!pn->pn_head)
-            return JS_FALSE;
+            return ENDS_IN_OTHER;
         return HasFinalReturn(PN_LAST(pn));
 
       case TOK_IF:
-        ok = HasFinalReturn(pn->pn_kid2);
-        ok &= pn->pn_kid3 && HasFinalReturn(pn->pn_kid3);
-        return ok;
+        rv = HasFinalReturn(pn->pn_kid2);
+        if (pn->pn_kid3)
+            rv &= HasFinalReturn(pn->pn_kid3);
+        return rv;
 
 #if JS_HAS_SWITCH_STATEMENT
       case TOK_SWITCH:
-        ok = JS_TRUE;
-        hasDefault = JS_FALSE;
-        for (pn2 = pn->pn_kid2->pn_head; ok && pn2; pn2 = pn2->pn_next) {
+        rv = ENDS_IN_RETURN;
+        hasDefault = ENDS_IN_OTHER;
+        for (pn2 = pn->pn_kid2->pn_head; rv && pn2; pn2 = pn2->pn_next) {
             if (pn2->pn_type == TOK_DEFAULT)
-                hasDefault = JS_TRUE;
+                hasDefault = ENDS_IN_RETURN;
             pn3 = pn2->pn_right;
             JS_ASSERT(pn3->pn_type == TOK_LC);
-            if (pn3->pn_head)
-                ok &= HasFinalReturn(PN_LAST(pn3));
+            if (pn3->pn_head) {
+                rv2 = HasFinalReturn(PN_LAST(pn3));
+                if (rv2 == ENDS_IN_OTHER && pn2->pn_next)
+                    /* Falling through to next case or default. */;
+                else
+                    rv &= rv2;
+            }
         }
         /* If a final switch has no default case, we judge it harshly. */
-        ok &= hasDefault;
-        return ok;
+        rv &= hasDefault;
+        return rv;
 #endif /* JS_HAS_SWITCH_STATEMENT */
+
+      case TOK_BREAK:
+        return ENDS_IN_BREAK;
 
       case TOK_WITH:
         return HasFinalReturn(pn->pn_right);
 
       case TOK_RETURN:
-        return JS_TRUE;
+        return ENDS_IN_RETURN;
 
 #if JS_HAS_EXCEPTIONS
       case TOK_THROW:
-        return JS_TRUE;
+        return ENDS_IN_RETURN;
 
       case TOK_TRY:
         /* If we have a finally block that returns, we are done. */
-        if (pn->pn_kid3 && HasFinalReturn(pn->pn_kid3))
-            return JS_TRUE;
+        if (pn->pn_kid3) {
+            rv = HasFinalReturn(pn->pn_kid3);
+            if (rv == ENDS_IN_RETURN)
+                return rv;
+        }
 
         /* Else check the try block and any and all catch statements. */
-        ok = HasFinalReturn(pn->pn_kid1);
+        rv = HasFinalReturn(pn->pn_kid1);
         if (pn->pn_kid2)
-            ok &= HasFinalReturn(pn->pn_kid2);
-        return ok;
+            rv &= HasFinalReturn(pn->pn_kid2);
+        return rv;
 
       case TOK_CATCH:
         /* Check this block's code and iterate over further catch blocks. */
-        ok = HasFinalReturn(pn->pn_kid3);
+        rv = HasFinalReturn(pn->pn_kid3);
         for (pn2 = pn->pn_kid2; pn2; pn2 = pn2->pn_kid2)
-            ok &= HasFinalReturn(pn2->pn_kid3);
-        return ok;
+            rv &= HasFinalReturn(pn2->pn_kid3);
+        return rv;
 #endif
 
       default:
-        return JS_FALSE;
+        return ENDS_IN_OTHER;
     }
 }
 
@@ -587,7 +603,7 @@ ReportNoReturnValue(JSContext *cx, JSTokenStream *ts)
 static JSBool
 CheckFinalReturn(JSContext *cx, JSTokenStream *ts, JSParseNode *pn)
 {
-    return HasFinalReturn(pn) || ReportNoReturnValue(cx, ts);
+    return HasFinalReturn(pn) == ENDS_IN_RETURN || ReportNoReturnValue(cx, ts);
 }
 
 static JSParseNode *
@@ -1421,7 +1437,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         js_PushStatement(tc, &stmtInfo, STMT_FOR_LOOP, -1);
 
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
+        ts->flags |= TSF_REGEXP;
         tt = js_PeekToken(cx, ts);
+        ts->flags &= ~TSF_REGEXP;
         if (tt == TOK_SEMI) {
             /* No initializer -- set first kid of left sub-node to null. */
             pn1 = NULL;
@@ -1494,7 +1512,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         } else {
             /* Parse the loop condition or null into pn2. */
             MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
-            if (js_PeekToken(cx, ts) == TOK_SEMI) {
+            ts->flags |= TSF_REGEXP;
+            tt = js_PeekToken(cx, ts);
+            ts->flags &= ~TSF_REGEXP;
+            if (tt == TOK_SEMI) {
                 pn2 = NULL;
             } else {
                 pn2 = Expr(cx, ts, tc);
@@ -1504,7 +1525,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
             /* Parse the update expression or null into pn3. */
             MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_COND);
-            if (js_PeekToken(cx, ts) == TOK_RP) {
+            ts->flags |= TSF_REGEXP;
+            tt = js_PeekToken(cx, ts);
+            ts->flags &= ~TSF_REGEXP;
+            if (tt == TOK_RP) {
                 pn3 = NULL;
             } else {
                 pn3 = Expr(cx, ts, tc);
