@@ -1061,8 +1061,11 @@ protected:
   };
   
   nsresult PromoteRange(nsIDOMRange *inRange);
+  nsresult PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode, 
+                                PRInt32 *ioStartOffset, 
+                                PRInt32 *ioEndOffset);
   nsresult GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
-                                  nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
+                            nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset, nsIDOMNode *aCommon);
   nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset);
   PRBool IsMozBR(nsIDOMNode* aNode);
   nsresult GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *outOffset);
@@ -1341,9 +1344,11 @@ nsHTMLCopyEncoder::PromoteRange(nsIDOMRange *inRange)
 {
   if (!inRange) return NS_ERROR_NULL_POINTER;
   nsresult rv;
-  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  nsCOMPtr<nsIDOMNode> startNode, endNode, common;
   PRInt32 startOffset, endOffset;
   
+  rv = inRange->GetCommonAncestorContainer(getter_AddRefs(common));
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = inRange->GetStartContainer(getter_AddRefs(startNode));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = inRange->GetStartOffset(&startOffset);
@@ -1358,19 +1363,75 @@ nsHTMLCopyEncoder::PromoteRange(nsIDOMRange *inRange)
   PRInt32 opStartOffset, opEndOffset;
   nsCOMPtr<nsIDOMRange> opRange;
   
-  rv = GetPromotedPoint( kStart, startNode, startOffset, address_of(opStartNode), &opStartOffset);
+  // examine range endpoints.  
+  rv = GetPromotedPoint( kStart, startNode, startOffset, address_of(opStartNode), &opStartOffset, common);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = GetPromotedPoint( kEnd, endNode, endOffset, address_of(opEndNode), &opEndOffset);
+  rv = GetPromotedPoint( kEnd, endNode, endOffset, address_of(opEndNode), &opEndOffset, common);
   NS_ENSURE_SUCCESS(rv, rv);
+  
+  // if both range endpoints are at the common ancestor, check for possible inclusion of ancestors
+  if ( (opStartNode == common) && (opEndNode == common) )
+  {
+    rv = PromoteAncestorChain(address_of(opStartNode), &opStartOffset, &opEndOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
+  // set the range to the new values
   rv = inRange->SetStart(opStartNode, opStartOffset);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = inRange->SetEnd(opEndNode, opEndOffset);
   return rv;
 } 
 
+
+// PromoteAncestorChain will promote a range represented by [{*ioNode,*ioStartOffset} , {*ioNode,*ioEndOffset}]
+// The promotion is different from that found in getPromotedPoint: it will only promote one endpoint if it can
+// promote the other.  Thus, instead of having a startnode/endNode, there is just the one ioNode.
+nsresult
+nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode, 
+                                        PRInt32 *ioStartOffset, 
+                                        PRInt32 *ioEndOffset) 
+{
+  if (!ioNode || !ioStartOffset || !ioEndOffset) return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_OK;
+  PRBool done = PR_FALSE;
+
+  nsCOMPtr<nsIDOMNode> frontNode, endNode, parent;
+  PRInt32 frontOffset, endOffset;
+  
+  // loop for as long as we can promote both endpoints
+  while (!done)
+  {
+    rv = (*ioNode)->GetParentNode(getter_AddRefs(parent));
+    if ((NS_FAILED(rv)) || !parent)
+      done = PR_TRUE;
+    else
+    {
+      // passing parent as last param to GetPromotedPoint() allows it to promote only one level
+      // up the heirarchy.
+      rv = GetPromotedPoint( kStart, *ioNode, *ioStartOffset, address_of(frontNode), &frontOffset, parent);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // then we make the same attempt with the endpoint
+      rv = GetPromotedPoint( kEnd, *ioNode, *ioEndOffset, address_of(endNode), &endOffset, parent);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // if both endpoints were promoted one level, keep looping - otherwise we are done.
+      if ( (frontNode != parent) || (endNode != parent) )
+        done = PR_TRUE;
+      else
+      {
+        *ioNode = frontNode;  
+        *ioStartOffset = frontOffset;
+        *ioEndOffset = endOffset;
+      }
+    }
+  }
+  return rv;
+}
+
 nsresult
 nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
-                                  nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset)
+                                  nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset, nsIDOMNode *common)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMNode> node = aNode;
@@ -1378,10 +1439,13 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
   PRInt32 offset = aOffset;
   PRBool  bResetPromotion = PR_FALSE;
   
-  // defualt values
+  // default values
   *outNode = node;
   *outOffset = offset;
 
+  if (common == node) 
+    return NS_OK;
+    
   if (aWhere == kStart)
   {
     // some special casing for text nodes
@@ -1413,12 +1477,12 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
 
     // finding the real start for this point.  look up the tree for as long as we are the 
     // first node in the container, and as long as we haven't hit the body node.
-    if (!IsRoot(node))
+    if (!IsRoot(node) && (parent != common))
     {
       rv = GetNodeLocation(node, address_of(parent), &offset);
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == -1) return NS_OK; // we hit generated content; STOP
-      while ((IsFirstNode(node)) && (!IsRoot(parent)))
+      while ((IsFirstNode(node)) && (!IsRoot(parent)) && (parent != common))
       {
         if (bResetPromotion)
         {
@@ -1498,12 +1562,12 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
     
     // finding the real end for this point.  look up the tree for as long as we are the 
     // last node in the container, and as long as we haven't hit the body node.
-    if (!IsRoot(node))
+    if (!IsRoot(node) && (parent != common))
     {
       rv = GetNodeLocation(node, address_of(parent), &offset);
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == -1) return NS_OK; // we hit generated content; STOP
-      while ((IsLastNode(node)) && (!IsRoot(parent)))
+      while ((IsLastNode(node)) && (!IsRoot(parent)) && (parent != common))
       {
         if (bResetPromotion)
         {
