@@ -19,6 +19,8 @@ DEPTH=../..
 
 DEFINES =-D_IMPL_NS_BASE
 
+DIRS = unix
+
 LIBRARY_NAME = raptorbase
 
 CPPSRCS =                       \
