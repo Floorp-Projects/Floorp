@@ -80,7 +80,7 @@ MaiTopLevel::MaiTopLevel(nsIAccessible *aAcc):MaiWidget(aAcc)
     ++sMaiTopCount;
 #endif
     MAI_LOG_DEBUG(("MaiTopLevel+++>%d, mycount=%d, acc=0x%x\n",
-                   sMaiTopCount, mRefCnt, aAcc));
+                   sMaiTopCount, mRefCnt.get(), aAcc));
 
     nsCOMPtr<nsIAccessibleEventReceiver>
         receiver(do_QueryInterface(mAccessible));
@@ -98,7 +98,7 @@ MaiTopLevel::~MaiTopLevel()
 #endif
 
     MAI_LOG_DEBUG(("MaiTopLevel--->%d, mycount=%d, acc=0x%x\n",
-                   sMaiTopCount, mRefCnt, GetNSAccessible()));
+                   sMaiTopCount, mRefCnt.get(), GetNSAccessible()));
 
     if (receiver)
         receiver->RemoveAccessibleEventListener();
