@@ -1449,7 +1449,7 @@ nsFrame::XMLQuote(nsString& aString)
 {
   PRInt32 i, len = aString.Length();
   for (i = 0; i < len; i++) {
-    PRUnichar ch = aString[i];
+    PRUnichar ch = aString.CharAt(i);
     if (ch == '<') {
       nsAutoString tmp("&lt;");
       aString.Cut(i, 1);

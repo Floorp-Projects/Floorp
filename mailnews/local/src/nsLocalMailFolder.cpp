@@ -122,7 +122,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::QueryInterface(REFNSIID aIID, void** aInstan
 static PRBool
 nsShouldIgnoreFile(nsString& name)
 {
-  if (name[0] == '.' || name[0] == '#' || name[name.Length() - 1] == '~')
+  PRUnichar firstChar=name.CharAt(0);
+  if (firstChar == '.' || firstChar == '#' || name.CharAt(name.Length() - 1) == '~')
     return PR_TRUE;
 
   if (name.EqualsIgnoreCase("rules.dat"))

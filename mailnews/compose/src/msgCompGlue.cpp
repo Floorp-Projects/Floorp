@@ -271,7 +271,7 @@ PRBool INTL_7bit_data_part(const char *charset, const char *inString, const PRUi
     PR_Free(aCString);
     if (NS_SUCCEEDED(res)) {
       for (PRInt32 i = 0; i < outString.Length(); i++) {
-        if (outString[i] > 127) {
+        if (outString.CharAt(i) > 127) {
           return PR_FALSE;
         }
       }

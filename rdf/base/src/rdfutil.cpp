@@ -303,11 +303,11 @@ rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource)
     uri.Cut(0, aContextURI.Length());
 
     // Anonymous resources look like the regexp "\$[0-9]+"
-    if (uri[0] != '#' || uri[1] != '$')
+    if (uri.CharAt(0) != '#' || uri.CharAt(1) != '$')
         return PR_FALSE;
 
     for (PRInt32 i = uri.Length() - 1; i >= 1; --i) {
-        if (uri[i] < '0' || uri[i] > '9')
+        if (uri.CharAt(i) < '0' || uri.CharAt(i) > '9')
             return PR_FALSE;
     }
 

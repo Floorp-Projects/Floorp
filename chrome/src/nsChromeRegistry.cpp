@@ -276,7 +276,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
 	  PRInt32 length = chromeBase.Length();
 		if (length > 0)
 		{
-			PRUnichar c = chromeBase[length-1];
+			PRUnichar c = chromeBase.CharAt(length-1);
 			if (c != '/')
 				chromeBase += "/"; // Ensure that a slash is present.
 		}
@@ -289,7 +289,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
 			  PRInt32 length = restOfURL.Length();
 				if (length > 0)
 				{
-					PRUnichar c = restOfURL[length-1];
+					PRUnichar c = restOfURL.CharAt(length-1);
 					if (c != '/')
 						restOfURL += "/"; // Ensure that a slash is present.
 				}
