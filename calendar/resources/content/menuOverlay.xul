@@ -98,6 +98,9 @@
   <menubar id="main-menubar" class="chromeclass-menubar">
    <menu id="menu_File">
       <menupopup id="menu_FilePopup">
+         <menuitem id="calendar-import-menu" label="Import ..." oncommand="openImportFileDialog()"/>
+         <menuitem id="calendar-export-menu" label="Export ..." oncommand="openExportFileDialog()"/>
+         <menuseparator/>
          <menuitem id="calendar-about-menu-item" label="About Calendar" oncommand="alertCalendarVersion()"/>
       </menupopup>
    </menu>

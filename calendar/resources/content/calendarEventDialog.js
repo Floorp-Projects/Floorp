@@ -430,7 +430,6 @@ function onTimePick( timepopup )
 
    if ( newEndDate.getDate() != timepopup.value.getDate() ) //if this moves us to tomorrow...
    {
-      
       //put us back at today, with a time of 11:55 PM.
       newEndDate = new Date( timepopup.value.getFullYear(),
                              timepopup.value.getMonth(),
@@ -439,13 +438,10 @@ function onTimePick( timepopup )
                              55,
                              0);
    }
-   
    formattedEndTime = formatTime( newEndDate );
    if( timepopup.timeField.id != "end-time-text" )
    {
-      setFieldValue( "end-time-text", formattedEndTime, "value" );
-
-      setFieldValue( "end-time-text", newEndDate, "editDate" );
+      setTimeFieldValue( "end-time-text", newEndDate );
    }
    
    
@@ -472,7 +468,6 @@ function onTimePick( timepopup )
    // remember the new date in a property, "editDate".  we created on the time textbox
    
    timepopup.timeField.editDate = timepopup.value;
-
 }
 
 
