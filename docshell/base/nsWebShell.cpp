@@ -78,6 +78,8 @@
 #include "nsIRegistry.h"
 static NS_DEFINE_CID(kRegistryCID,               NS_REGISTRY_CID);
 
+#include "nsILocaleService.h"
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
 #ifdef XP_PC
 #include <windows.h>
@@ -1243,6 +1245,27 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
       if (NS_FAILED(rv)) goto done;
   }
   // END STREAM CONVERTER REGISTRATION
+
+  // Set the language portion of the user agent. :)
+  nsILocaleService *localeServ;
+  rv = nsServiceManager::GetService(kLocaleServiceCID, NS_GET_IID(nsILocaleService),
+      (nsISupports**)&localeServ);
+  if (NS_FAILED(rv)) goto done;
+
+  PRUnichar *UALang;
+  rv = localeServ->GetLocaleComponentForUserAgent(&UALang);
+  NS_RELEASE(localeServ);
+  if (NS_FAILED(rv)) goto done;
+
+  nsIIOService *ioServ;
+  rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService), (nsISupports**)&ioServ);
+  if (NS_FAILED(rv)) goto done;
+
+  rv = ioServ->SetLanguage(UALang);
+  nsAllocator::Free(UALang);
+  NS_RELEASE(ioServ);
+  if (NS_FAILED(rv)) goto done;
+
 
 done:
   return rv;
