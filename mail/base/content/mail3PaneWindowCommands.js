@@ -364,8 +364,7 @@ var DefaultController =
       case "cmd_collapseAllThreads":
         if (!gDBView || !gDBView.supportsThreading) 
           return false;
-        return (gDBView.sortType == nsMsgViewSortType.byThread);
-        break;
+        return (gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay);
       case "cmd_nextFlaggedMsg":
       case "cmd_previousFlaggedMsg":
         return IsViewNavigationItemEnabled();
