@@ -230,9 +230,10 @@ function ComposeStartup()
 			}
 			else
 			{
-			    //Remove HTML toolbar and format menu as we are editing in plain text mode
+			    //Remove HTML toolbar, format and insert menus as we are editing in plain text mode
 			    document.getElementById("FormatToolbar").setAttribute("hidden", true);
 			    document.getElementById("formatMenu").setAttribute("hidden", true);
+			    document.getElementById("insertMenu").setAttribute("hidden", true);
 
 				window.editorShell.SetEditorType("textmail");
 				dump("editor initialized in PLAIN TEXT mode\n");
