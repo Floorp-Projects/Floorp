@@ -271,7 +271,7 @@ nsHTMLTableSectionElement::DeleteRow(PRInt32 aValue)
   }
 
   nsCOMPtr<nsIDOMNode> row;
-  rv = rows->Item(aValue, getter_AddRefs(row));
+  rv = rows->Item(refIndex, getter_AddRefs(row));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!row) {
