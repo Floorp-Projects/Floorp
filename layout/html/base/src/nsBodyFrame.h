@@ -39,14 +39,10 @@ struct nsStylePosition;
  *
  * @see nsLayoutAtoms::absoluteList
  */
-class nsBodyFrame : public nsBlockFrame,
-                    public nsIAbsoluteItems
+class nsBodyFrame : public nsBlockFrame
 {
 public:
   friend nsresult NS_NewBodyFrame(nsIFrame*& aResult, PRUint32 aFlags);
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
@@ -76,10 +72,6 @@ public:
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
-
-  // nsIAbsoluteItems
-  NS_IMETHOD  AddAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
-  NS_IMETHOD  RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
 
 protected:
   static nsIAtom* gAbsoluteAtom;
