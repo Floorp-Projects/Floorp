@@ -361,6 +361,46 @@ extern void * _pr_getipnodebyaddr_fp;
 extern void * _pr_freehostent_fp;
 #endif
 
+#if defined(_PR_INET6) && defined(_PR_HAVE_GETHOSTBYNAME2)
+/*
+** Append the V4 addresses to the end of the list
+*/
+static PRStatus AppendV4AddrsToHostent(
+    struct hostent *from,
+    char **buf,
+    PRIntn *bufsize,
+    PRHostEnt *to)
+{
+    PRIntn na, na_old;
+    char **ap;
+    char **new_addr_list;
+			
+    /* Count the addresses, then grow storage for the pointers */
+    for (na_old = 0, ap = to->h_addr_list; *ap != 0; na_old++, ap++)
+        {;} /* nothing to execute */
+    for (na = na_old + 1, ap = from->h_addr_list; *ap != 0; na++, ap++)
+        {;} /* nothing to execute */
+    new_addr_list = (char**)Alloc(
+        na * sizeof(char*), buf, bufsize, sizeof(char**));
+    if (!new_addr_list) return PR_FAILURE;
+
+    /* Copy the V6 addresses, one at a time */
+    for (na = 0, ap = to->h_addr_list; *ap != 0; na++, ap++) {
+        new_addr_list[na] = to->h_addr_list[na];
+    }
+    to->h_addr_list = new_addr_list;
+
+    /* Copy the V4 addresses, one at a time */
+    for (ap = from->h_addr_list; *ap != 0; na++, ap++) {
+        to->h_addr_list[na] = Alloc(to->h_length, buf, bufsize, 0);
+        if (!to->h_addr_list[na]) return PR_FAILURE;
+        MakeIPv4MappedAddr(*ap, to->h_addr_list[na]);
+    }
+    to->h_addr_list[na] = 0;
+    return PR_SUCCESS;
+}
+#endif
+
 PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
     const char *name, PRUint16 af, PRIntn flags,
     char *buf, PRIntn bufsize, PRHostEnt *hp)
@@ -374,7 +414,6 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 #endif
 #if defined(_PR_HAVE_GETHOSTBYNAME2)
     PRBool did_af_inet = PR_FALSE;
-    char **new_addr_list;
 #endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
@@ -469,34 +508,12 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 			(*((_pr_freehostent_t)_pr_freehostent_fp))(h);
 #endif
 #if defined(_PR_INET6) && defined(_PR_HAVE_GETHOSTBYNAME2)
-		if ((flags & PR_AI_V4MAPPED) && (flags & (PR_AI_ALL|PR_AI_ADDRCONFIG))
+		if ((PR_SUCCESS == rv) && (flags & PR_AI_V4MAPPED)
+				&& (flags & (PR_AI_ALL|PR_AI_ADDRCONFIG))
 				&& !did_af_inet && (h = gethostbyname2(name, AF_INET)) != 0) {
-			/* Append the V4 addresses to the end of the list */
-			PRIntn na, na_old;
-			char **ap;
-			
-			/* Count the addresses, then grow storage for the pointers */
-			for (na_old = 0, ap = hp->h_addr_list; *ap != 0; na_old++, ap++)
-					{;} /* nothing to execute */
-			for (na = na_old + 1, ap = h->h_addr_list; *ap != 0; na++, ap++)
-					{;} /* nothing to execute */
-			new_addr_list = (char**)Alloc(
-				na * sizeof(char*), &buf, &bufsize, sizeof(char**));
-			if (!new_addr_list) return PR_FAILURE;
-
-			/* Copy the V6 addresses, one at a time */
-			for (na = 0, ap = hp->h_addr_list; *ap != 0; na++, ap++) {
-				new_addr_list[na] = hp->h_addr_list[na];
-			}
-			hp->h_addr_list = new_addr_list;
-
-			/* Copy the V4 addresses, one at a time */
-			for (ap = h->h_addr_list; *ap != 0; na++, ap++) {
-				hp->h_addr_list[na] = Alloc(hp->h_length, &buf, &bufsize, 0);
-				if (!hp->h_addr_list[na]) return PR_FAILURE;
-				MakeIPv4MappedAddr(*ap, hp->h_addr_list[na]);
-			}
-			hp->h_addr_list[na] = 0;
+			rv = AppendV4AddrsToHostent(h, &buf, &bufsize, hp);
+			if (PR_SUCCESS != rv)
+				PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
 		}
 #endif
 	}
