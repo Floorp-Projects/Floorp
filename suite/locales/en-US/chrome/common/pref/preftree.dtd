@@ -7,7 +7,7 @@
 <!ENTITY languages.label "Languages">
 <!ENTITY applications.label "Applications">
 <!ENTITY smartBrowse.label "Smart Browsing">
-<!ENTITY mail.label "Mail &amp; Newsgroups">
+<!ENTITY mail.label "Mail and Newsgroups">
 <!ENTITY address.label "Addressing">
 <!ENTITY mess.label "Messages">
 <!ENTITY windowSet.label "Window Settings">
