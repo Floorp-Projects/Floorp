@@ -523,10 +523,8 @@ int main(int argc, char* argv[])
       nsIPrefWindow::GetIID(),
       (void **)&prefWindow);
 	if (NS_SUCCEEDED(rv))
-	{
-	  prefWindow->Init(nsString("Apprunner::main()").GetUnicode());
-	  prefWindow->ShowWindow(nsnull);
-	}
+	  prefWindow->showWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
+	NS_IF_RELEASE(prefWindow);
 	goto done;
   }
 
