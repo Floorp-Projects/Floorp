@@ -7,7 +7,7 @@
 <!ENTITY  neverRadio "Never">
 <!ENTITY  afterAutoloadFirstRadio "After first use">
 <!ENTITY  afterAutoloadAlwaysRadio "Always">
-<!ENTITY  doNotDecp.label "Do not request Whats Related information for the following domains  (a comma-seperated list)">
+<!ENTITY  doNotDecp.label "Do not request What's Related information for the following domains  (a comma-seprated list)">
 <!ENTITY  internetKeywordsHeader.label "Internet Keywords">
 <!ENTITY  enableKeyCheck.label "Enable Internet Keywords">
 

@@ -9,6 +9,6 @@
 <!ENTITY editButton.label "Edit...">
 <!ENTITY removeButton.label "Remove">
 <!ENTITY file "File type details">
-<!ENTITY exten "Extention:">
-<!ENTITY mimeType "Mime Type:">
+<!ENTITY exten "Extension:">
+<!ENTITY mimeType "MIME Type:">
 <!ENTITY handle "Handled By:">

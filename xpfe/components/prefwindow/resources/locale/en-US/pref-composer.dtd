@@ -2,7 +2,7 @@
 
 <!ENTITY  title.label "Composer">
 <!ENTITY  lHeader "Composer">
-<!ENTITY  rHeader "Set general preferences for authoring Web pages">
+<!ENTITY  rHeader "Set general preferences for authoring Web of pages">
 <!ENTITY  authorName "Author Name">
 <!ENTITY  AutoSaveCheck.label "Automatically save page every">
 <!ENTITY  minText "minutes">

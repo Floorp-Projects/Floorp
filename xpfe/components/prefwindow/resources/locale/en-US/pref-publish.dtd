@@ -2,8 +2,8 @@
 
 <!ENTITY  window.title "Publish">
 <!ENTITY  composerHeader.label "Publish">
-<!ENTITY  maintainCheckbox.label "Maintain links.">
-<!ENTITY  keepCheck.label "Keep images with page.">
+<!ENTITY  maintainCheckbox.label "Maintain links">
+<!ENTITY  keepCheck.label "Keep images with page">
 
 <!ENTITY  adjustDesc.label "Adjust links to work from the page's location. (Links to local pages will work when
 			      local versions exist.)           ">
