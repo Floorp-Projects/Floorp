@@ -32,6 +32,8 @@ use Win32::Process;
 
 ###################################################################
 
+#sometimes we need to specify additional parameters for mozilla
+$ADDITIONAL_PARAMETERS="-P mozProfile";
 
 # time in seconds after which the mozilla has to be killed.
 # by default the mozilla will be up for so much time regardless of
@@ -83,9 +85,10 @@ sub title() {
     print "   Automated Execution of DOM API TestSuite\n";
     print "################################################\n";
     print "\n";
-    print "NOTE: You need to copy files test.html and test.xml into \n";
-    print "      some document directory of HTTP server. TEST_URL environment \n";
-    print "      variable should contain the URL of this directory.\n";
+    print "NOTE: You need to copy files redirect.html, test.html and test.xml\n";
+    print "      into some document directory of HTTP server\n";
+    print "      TEST_URL environment variable should contain the URL of \n";
+    print "      this directory.\n";
     print "\n";
     print "\n";
 
@@ -355,7 +358,7 @@ if ( -f "$LOGHTML" ) {
 if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
 	$DOCFILE = "$DOCROOT/TestLoaderHTML.html";
 } else {
-	$DOCFILE = "$DOCROOT/test.html";
+	$DOCFILE = "$DOCROOT/redirect.html";
 }
 $runcnt = 1;
 $filename = "$curdir/BWTestClass.lst.ORIG";
@@ -364,7 +367,7 @@ if ($runtype == 1) {
     if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
       $DOCFILE = "$DOCROOT/TestLoaderHTML.html";
     } else {
-      $DOCFILE = "$DOCROOT/test.html";
+      $DOCFILE = "$DOCROOT/redirect.html";
     }
     $filename = "$curdir/BWTestClass.lst.html.ORIG";
     $runcnt = 1;
@@ -374,7 +377,7 @@ if ($runtype == 2) {
     if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
       $DOCFILE = "$DOCROOT/TestLoaderXML.html";
     } else {
-      $DOCFILE = "$DOCROOT/test.xml";
+      $DOCFILE = "$DOCROOT/redirect.html";
     }
     $filename = "$curdir/BWTestClass.lst.xml.ORIG";
     $runcnt = 1;
@@ -384,7 +387,7 @@ if ($runtype == 3) {
     if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
       $DOCFILE = "$DOCROOT/TestLoaderHTML.html";
     } else {
-      $DOCFILE = "$DOCROOT/test.xml";
+      $DOCFILE = "$DOCROOT/redirect.html";
     }
     $filename = "$curdir/BWTestClass.lst.html.ORIG";
     $runcnt = 2;
@@ -438,7 +441,7 @@ while (true) {
 	open( STDERR, ">&STDOUT" );
         Win32::Process::Create($ProcessObj,
 			       "$mozhome/$mozilla_bin",
-			       "$mozhome/$mozilla_bin $DOCFILE",
+			       "$mozhome/$mozilla_bin $ADDITIONAL_PARAMETERS $DOCFILE",
 			       1,
 			       NORMAL_PRIORITY_CLASS,
 			       "$TESTROOT" ) || die "cann't start $moilla_bin";
@@ -486,7 +489,7 @@ while (true) {
     ( ++$currcnt < $runcnt ) || last;
     
     if ( $runtype == 3 ) {
-	$DOCFILE="$DOCROOT/test.xml";
+	$DOCFILE="$DOCROOT/redirect.html";
 	$filename="$curdir/BWTestClass.lst.xml.ORIG";
 	constructHTML;
 	appendEntries;

@@ -46,7 +46,7 @@ JAVAFILES= Execution.java \
 	   BWJavaTemplate.java
 
 DOMFILE=  DocumentImpl.java \
-	  DOMAccessorImpl.java
+	  DOMAccessor.java
 
 clean:
 	for i in ${JAVAFILES} ; do \

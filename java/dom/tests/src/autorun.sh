@@ -64,8 +64,9 @@ title()
    echo "   Automated Execution of DOM API TestSuite"
    echo "################################################"
    echo
-   echo "NOTE: You need to copy files test.html and test.xml to "
-   echo "      DOCUMENT_ROOT dir. of your Web-Server on this machine."
+   echo "NOTE: You need to copy files redirect.html, test.html and"
+   echo "      test.xml to DOCUMENT_ROOT dir. of your"
+   echo "      Web-Server on this machine."
    echo
    echo
 }
@@ -464,7 +465,7 @@ fi
 appreg=${USE_APPLET_FOR_REGISTRATION}
 if [ -z "$appreg" ]
 then
-	DOCFILE="$DOCROOT/test.html";
+	DOCFILE="$DOCROOT/redirect.html";
 else
 	DOCFILE="$DOCROOT/TestLoaderHTML.html";
 fi
@@ -476,7 +477,7 @@ if [ "$runtype" = "1" ]
 then
   if [ -z "$appreg" ]
   then
-	DOCFILE="$DOCROOT/test.html";
+	DOCFILE="$DOCROOT/redirect.html";
   else
 	DOCFILE="$DOCROOT/TestLoaderHTML.html";
   fi
@@ -486,10 +487,10 @@ fi
 
 if [ "$runtype" = "2" ]
 then
-  DOCFILE="$DOCROOT/test.xml"
+  DOCFILE="$DOCROOT/redirect.html"
   if [ -z "$appreg" ]
   then
-	DOCFILE="$DOCROOT/test.xml";
+	DOCFILE="$DOCROOT/redirect.html";
   else
 	DOCFILE="$DOCROOT/TestLoaderXML.html";
   fi
@@ -501,7 +502,7 @@ if [ "$runtype" = "3" ]
 then
   if [ -z "$appreg" ]
   then
-	DOCFILE="$DOCROOT/test.html";
+	DOCFILE="$DOCROOT/redirect.html";
   else
 	DOCFILE="$DOCROOT/TestLoaderHTML.html";
   fi
@@ -635,7 +636,7 @@ do
 
  if [ "$runtype" = "3" ]
  then
-     DOCFILE="$DOCROOT/test.xml"
+     DOCFILE="$DOCROOT/redirect.html"
      filename="$curdir/BWTestClass.lst.xml.ORIG"
      constructHTML
      appendEntries

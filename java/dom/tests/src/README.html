@@ -59,7 +59,7 @@
 <td><b><font color="#FF6666"><font size=+1>USE_APPLET_FOR_REGISTRATION</font></font></b></td>
 
 <td><b>Set this variable if you wish to use applet for running tests (now
-available under Win32 only). Otherwise hacked DOMAccessorImpl class is
+available under Win32 only). Otherwise hacked DOMAccessor class is
 used.</b></td>
 </tr>
 </table></center>
@@ -81,7 +81,7 @@ used.</b></td>
 <tr NOSAVE>
 <td NOSAVE><b><font color="#FF6666"><font size=+1>BW_LOGDIR</font></font></b></td>
 
-<td><b>Absolute D.irectory&nbsp; Path where log files need to be created.</b></td>
+<td><b>Absolute Directory&nbsp; Path where log files need to be created.</b></td>
 </tr>
 
 <tr>
@@ -94,14 +94,14 @@ or multi-thread mode[M].&nbsp; Takes values S/M .</b></td>
 <tr>
 <td><b><font color="#FF6666"><font size=+1>BW_HTMLTEST</font></font></b></td>
 
-<td><b>URL where test.html file are located. Used if you run tests through
+<td><b>URL where redirect.html, test.html files are located. Used if you run tests through
 TestLoader applet.</b></td>
 </tr>
 
 <tr>
 <td><b><font color="#FF6666"><font size=+1>BW_XMTEST</font></font></b></td>
 
-<td><b>URL where test.xml file are located. Used if you</b>
+<td><b>URL where redirect.html, test.xml files are located. Used if you</b>
 <br><b>run tests through TestLoader applet</b></td>
 </tr>
 </table></center>
@@ -110,7 +110,7 @@ TestLoader applet.</b></td>
 
 <ul>
 <li>
-<b><font size=+1>Copy <font color="#FF6666">test.html</font> and <font color="#FF6666">test.xml</font>
+<b><font size=+1>Copy <font color="#FF6666">redirect.html, test.html</font> and <font color="#FF6666">test.xml</font>
 files to your web-servers DOCUMENT_ROOT ( By default it is assumed that
 they can be&nbsp; accessed as <font color="#3366FF">http://[server name]/text.html</font>&nbsp;
 or <font color="#3366FF">http://[servername]/~[username]/text.html</font>).</font></b></li>
@@ -138,9 +138,9 @@ Log files are also found in 'log' directory.</font></b></li>
 <b><font size=+1><u><font color="#3366FF">NOTE:</font></u>All Test Cases
 are recorded in file BWTestClass.lst.ORIG</font></b>
 <p><font size=+1><u><font color="#3366FF">ASSUMPTION</font></u><b>: I assume
-that u have copied the files test.xml and test.html to your DOCUMENT_ROOT
+that u have copied the files test.xml and redirect.html, test.html to your DOCUMENT_ROOT
 of your WebServer.</b></font>
-<br><b><font size=+1>The URL it tries to load is http://[servername]/test.html.</font></b>
+<br><b><font size=+1>The URL it tries to load is http://[servername]/redirect.html.</font></b>
 <br><b><font size=+1>If it is set in users public_html then open file autorun.sh
 and change DOCROOT accordingly.</font></b>
 <p>
@@ -180,8 +180,8 @@ make changes to variables</li>
 (where mozilla.bat is)</li>
 
 <li>
-<font color="#FF6666">TEST_URL</font> - URL where test.html and test.xml
-are located (complte URL looks like that: $TEST_URL/test.html). Is used
+<font color="#FF6666">TEST_URL</font> - URL where redirect.html and test.html
+are located (complte URL looks like that: $TEST_URL/redirect.html). Is used
 if you run tests through hacked DOMAccessor only.</li>
 </ul>
 
@@ -206,7 +206,7 @@ files need to be created)</li>
 [S] or multi-thread [M] mode. Takes values S/M.)</li>
 
 <li>
-<font color="#FF6666">BW_HTMLTEST</font> (URL where test.html file are
+<font color="#FF6666">BW_HTMLTEST</font> (URL where redirect.html file are
 located. Used if you run tests through TestLoader applet)</li>
 
 <li>
@@ -240,9 +240,8 @@ For quick testing say</li>
 <li>
 or say</li>
 
-<br><b>mozilla.exe file:/test.html</b>
-<br>(mozilla.exe file:/test.xml)
-<br>if you use hacked DOMAcceessorImpl.</ul>
+<br><b>mozilla.exe file:/redirect.html</b>
+<br>if you use hacked DOMAcceessor.</ul>
 
 <li>
 The results are recorded in HTML file BWTest.html and in log file BWTest.log
@@ -313,7 +312,7 @@ or multi-thread mode[M].&nbsp; Takes values S/M .</b></td>
 
 <ul>
 <li>
-<b><font size=+1>Copy files <font color="#CC6600">test.html</font>and <font color="#CC6600">test.xml</font>
+<b><font size=+1>Copy files <font color="#CC6600">redirect.html, test.html</font>and <font color="#CC6600">test.xml</font>
 into some document directory of HTTP server. TEST_URL environment variable
 should contain the URL of this directory.</font></b></li>
 

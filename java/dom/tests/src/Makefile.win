@@ -41,7 +41,7 @@ JAVAFILES= Execution.java \
 	   BWJavaTemplate.java
 
 
-DOMFILE=DOMAccessorImpl.java \
+DOMFILE=DOMAccessor.java \
 	DocumentImpl.java 
 
 all: testloader accessor

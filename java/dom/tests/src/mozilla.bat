@@ -1,6 +1,7 @@
 rem @ECHO off
 set BLACKWOOD_HOME=%MOZILLA_HOME%
 set MOZILLA_FIVE_HOME=%MOZILLA_HOME%\dist\WIN32_D.OBJ\bin
+set JAVADOM_HOME=%MOZILLA_HOME%\java\dom
 rem Mozilla binary file name
 set MOZILLA_BIN=mozilla.exe
 set JAVA_HOME=%JAVAHOME%
@@ -28,7 +29,7 @@ set TEST_URL=file:
 set PATH=%JAVA_HOME%\bin;%PATH%
 set PATH=%MOZILLA_FIVE_HOME%;%PATH%
 
-set CLASSPATH=%TEST_PATH%\..\classes;%MOZILLA_HOME%\dist\classes;%CLASSPATH%
+set CLASSPATH=%TEST_PATH%\..\classes;%JAVADOM_HOME%\classes;%MOZILLA_FIVE_HOME%\classes;%CLASSPATH%
 
 
 rem creating new console window with these variables being set

@@ -27,7 +27,7 @@ import java.io.*;
 import java.net.URL;
 import java.applet.Applet;
 import org.w3c.dom.Document;
-import org.mozilla.dom.DOMAccessorImpl;
+import org.mozilla.dom.DOMAccessor;
 import org.mozilla.dom.DocumentLoadListener;
 import org.mozilla.dom.test.*;
 
@@ -136,6 +136,8 @@ public class TestLoader extends Applet implements DocumentLoadListener
          String name = (String)(em.nextElement());
          String val = propTable.getProperty(name);
          if (val == null) continue;
+	 if (val.indexOf("BW_HTMLTEST") != -1) continue;
+	 if (val.indexOf("BW_XMLTEST") != -1) continue;
 
          int idx =  val.indexOf(CHECK_SEP);
          if (idx !=  -1) {
@@ -688,7 +690,7 @@ System.out.println("Inside LoadTest");
   public void init() 
   {
     System.err.println("################## Regestring DocumentLoadListener !");
-    DOMAccessorImpl.getInstance().addDocumentLoadListener((DocumentLoadListener)this);
+    DOMAccessor.addDocumentLoadListener((DocumentLoadListener)this);
 
     String testURL = propTable.getProperty("BW_HTMLTEST");
     if (testURL == null) {
