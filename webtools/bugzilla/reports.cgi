@@ -452,12 +452,19 @@ FIN
 	push @data, \@assigned;
 	push @data, \@reopened;
 
+    my $MAXTICKS = 20;      # Try not to show any more x ticks than this.
+    my $skip = 1;
+    if (@dates > $MAXTICKS) {
+        $skip = int((@dates + $MAXTICKS - 1) / $MAXTICKS);
+    }
+
 	my %settings =
 		(
 		"title" => "Bug Charts for $::FORM{'product'}",
 		"x_label" => "Dates",
 		"y_label" => "Bug Count",
 		"legend_labels" => \@labels,
+        "skip_x_ticks" => $skip,
 		);
 	
 	$img->set (%settings);
