@@ -562,8 +562,7 @@ nsMemCacheChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
 NS_IMETHODIMP
 nsMemCacheChannel::SetContentLength(PRInt32 aContentLength)
 {
-    NS_NOTREACHED("nsMemCacheChannel::SetContentLength");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -601,9 +600,12 @@ nsMemCacheChannel::SetContentType(const char *aContentType)
 NS_IMETHODIMP
 nsMemCacheChannel::GetContentLength(PRInt32 *aContentLength)
 {
-    // Not required to be implemented, since it is implemented by cache manager
-    NS_NOTREACHED("nsMemCacheChannel::GetContentLength");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  PRUint32 cl = 0;
+  mRecord->GetStoredContentLength(&cl);
+
+  *aContentLength = (PRInt32) cl;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
