@@ -338,24 +338,15 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       
           if(gLastFocusedPresContext) {
             nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+
             nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
             gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
             nsCOMPtr<nsIDOMWindow> rootWindow;
             nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
             if(ourWindow) {
-              ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
-              if(rootWindow) {
-                nsCOMPtr<nsIDOMDocument> rootDocument;
-                rootWindow->GetDocument(getter_AddRefs(rootDocument));
-
-                nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
-                if(xulDoc) {
-                  xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-                  if (commandDispatcher) {
-                    commandDispatcher->SetSuppressFocus(PR_TRUE);
-                  }
-                }
-              }
+              ourWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(commandDispatcher));
+              if (commandDispatcher)
+                commandDispatcher->SetSuppressFocus(PR_TRUE);
             }
             
             gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
@@ -588,7 +579,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       if (commandDispatcher) {
         commandDispatcher->SetActive(PR_FALSE);
-        commandDispatcher->SetSuppressFocus(PR_FALSE);
+        //commandDispatcher->SetSuppressFocus(PR_FALSE);
       }
     } 
     
@@ -2284,6 +2275,31 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
           event.eventStructType = NS_EVENT;
           event.message = NS_BLUR_CONTENT;
 
+		  if (!mDocument) {  
+            if (presShell) {
+              presShell->GetDocument(&mDocument);
+			}
+		  }
+
+		  // Make sure we're not switching command dispatchers, if so, surpress the blurred one
+		  if(gLastFocusedDocument && mDocument) {
+		    nsCOMPtr<nsIDOMXULCommandDispatcher> newCommandDispatcher;
+            nsCOMPtr<nsIDOMXULCommandDispatcher> oldCommandDispatcher;
+		    nsCOMPtr<nsPIDOMWindow> oldPIDOMWindow;
+		    nsCOMPtr<nsPIDOMWindow> newPIDOMWindow;
+		    nsCOMPtr<nsIScriptGlobalObject> oldGlobal;
+		    nsCOMPtr<nsIScriptGlobalObject> newGlobal;
+		    gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(oldGlobal));
+		    mDocument->GetScriptGlobalObject(getter_AddRefs(newGlobal));
+            nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
+		    nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
+
+		    newWindow->GetRootCommandDispatcher(mDocument, getter_AddRefs(newCommandDispatcher));
+		    oldWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(oldCommandDispatcher));
+            if(oldCommandDispatcher && oldCommandDispatcher != newCommandDispatcher)
+			  oldCommandDispatcher->SetSuppressFocus(PR_TRUE);
+		  }
+
           nsCOMPtr<nsIEventStateManager> esm;
           oldPresContext->GetEventStateManager(getter_AddRefs(esm));
           esm->SetFocusedContent(gLastFocusedContent);
@@ -2317,6 +2333,25 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       nsEvent event;
       event.eventStructType = NS_EVENT;
       event.message = NS_BLUR_CONTENT;
+
+	  	  // Make sure we're not switching command dispatchers, if so, surpress the blurred one
+		  if(mDocument) {
+		    nsCOMPtr<nsIDOMXULCommandDispatcher> newCommandDispatcher;
+            nsCOMPtr<nsIDOMXULCommandDispatcher> oldCommandDispatcher;
+		    nsCOMPtr<nsPIDOMWindow> oldPIDOMWindow;
+		    nsCOMPtr<nsPIDOMWindow> newPIDOMWindow;
+		    nsCOMPtr<nsIScriptGlobalObject> oldGlobal;
+		    nsCOMPtr<nsIScriptGlobalObject> newGlobal;
+		    gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(oldGlobal));
+		    mDocument->GetScriptGlobalObject(getter_AddRefs(newGlobal));
+            nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
+		    nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
+
+		    newWindow->GetRootCommandDispatcher(mDocument, getter_AddRefs(newCommandDispatcher));
+		    oldWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(oldCommandDispatcher));
+            if(oldCommandDispatcher && oldCommandDispatcher != newCommandDispatcher)
+			  oldCommandDispatcher->SetSuppressFocus(PR_TRUE);
+		  }
 
       nsCOMPtr<nsIEventStateManager> esm;
       gLastFocusedPresContext->GetEventStateManager(getter_AddRefs(esm));
