@@ -241,7 +241,7 @@ nsPop3Sink::EndMailDelivery()
   nsresult rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
 
-  m_folder->CallFilterPlugins();
+  m_folder->CallFilterPlugins(nsnull); // ??? do we need msgWindow?
 
   // note that size on disk has possibly changed.
   nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(m_folder);

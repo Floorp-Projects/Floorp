@@ -470,7 +470,7 @@ function analyze(aMsgHdr, aNextFunction)
 
     var messageURI = aMsgHdr.folder.generateMessageURI(aMsgHdr.messageKey)
         + "?fetchCompleteMessage=true";
-    gJunkmailComponent.classifyMessage(messageURI, listener);
+    gJunkmailComponent.classifyMessage(messageURI, msgWindow, listener);
 }
 
 function analyzeMessages()

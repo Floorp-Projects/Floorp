@@ -659,7 +659,7 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
   }
   // if we have new messages, try the filter plugins.
   if (NS_SUCCEEDED(rv) && (mFlags & MSG_FOLDER_FLAG_GOT_NEW))
-    (void) CallFilterPlugins();
+    (void) CallFilterPlugins(aWindow);
   return rv;
 }
 
@@ -2868,8 +2868,7 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
   if(!msgHdr)
     return NS_ERROR_FAILURE;
 
-  if (msgHdr)
-    mCopyState->m_message = do_QueryInterface(msgHdr, &rv);
+  mCopyState->m_message = do_QueryInterface(msgHdr, &rv);
 
   nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryInterface(mCopyState->m_srcSupport));
   if(!srcFolder)
@@ -3373,10 +3372,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Shutdown(PRBool shutdownChildren)
 }
 
 nsresult
-nsMsgLocalMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin)
+nsMsgLocalMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin)
 {
   ++mNumFilterClassifyRequests;
-  return aJunkMailPlugin->ClassifyMessage(aURI, this);   
+  return aJunkMailPlugin->ClassifyMessage(aURI, aMsgWindow, this);   
 }
 
 

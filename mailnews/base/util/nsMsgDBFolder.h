@@ -122,7 +122,7 @@ public:
   NS_IMETHOD SetDBTransferInfo(nsIDBFolderInfo *aTransferInfo);
   NS_IMETHOD GetStringProperty(const char *propertyName, char **propertyValue);
   NS_IMETHOD SetStringProperty(const char *propertyName, const char *propertyValue);
-  NS_IMETHOD CallFilterPlugins();
+  NS_IMETHOD CallFilterPlugins(nsIMsgWindow *aMsgWindow);
 
 
 protected:
@@ -150,7 +150,7 @@ protected:
   nsresult GetPromptPurgeThreshold(PRBool *aPrompt);
   nsresult GetPurgeThreshold(PRInt32 *aThreshold);
 
-  virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin);
+  virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
 
 protected:
   nsCOMPtr<nsIMsgDatabase> mDatabase;

@@ -218,7 +218,7 @@ protected:
                          PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow, PRBool isMoveFolder, PRBool allowUndo);
   nsresult OnCopyCompleted(nsISupports *srcSupport, PRBool moveCopySucceeded);
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
-  nsresult SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin);
+  nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
 protected:
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;

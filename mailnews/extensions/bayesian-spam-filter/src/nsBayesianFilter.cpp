@@ -45,6 +45,7 @@
 #include "nsIProfileInternal.h"
 #include "nsIStreamConverterService.h"
 #include "nsIMsgMailSession.h"
+#include "nsIMsgMailNewsUrl.h"
 #include "nsMsgBaseCID.h"
 #include "prnetdb.h"
 
@@ -469,7 +470,7 @@ private:
     nsCOMPtr<nsIJunkMailClassificationListener> mListener;
 };
 
-nsresult nsBayesianFilter::tokenizeMessage(const char* messageURI, TokenAnalyzer* analyzer)
+nsresult nsBayesianFilter::tokenizeMessage(const char* messageURI, nsIMsgWindow *aMsgWindow, TokenAnalyzer* analyzer)
 {
     nsresult rv;
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
@@ -489,6 +490,14 @@ nsresult nsBayesianFilter::tokenizeMessage(const char* messageURI, TokenAnalyzer
     rv = ioService->NewChannel(aUrl, NULL, NULL, getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(rv, rv);
     
+    nsCOMPtr <nsIURI> channelURI;
+    channel->GetURI(getter_AddRefs(channelURI));
+    if (channelURI)
+    {
+      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(channelURI);
+      if (mailnewsUrl)
+        mailnewsUrl->SetMsgWindow(aMsgWindow);
+    }
     nsCOMPtr<nsIStreamListener> tokenListener = new TokenStreamListener(messageURI, analyzer);
     if (!tokenListener) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -616,19 +625,19 @@ NS_IMETHODIMP nsBayesianFilter::EndBatch(void)
 }
 
 /* void classifyMessage (in string aMsgURL, in nsIJunkMailClassificationListener aListener); */
-NS_IMETHODIMP nsBayesianFilter::ClassifyMessage(const char *aMessageURL, nsIJunkMailClassificationListener *aListener)
+NS_IMETHODIMP nsBayesianFilter::ClassifyMessage(const char *aMessageURL, nsIMsgWindow *aMsgWindow, nsIJunkMailClassificationListener *aListener)
 {
     TokenAnalyzer* analyzer = new MessageClassifier(this, aListener);
     if (!analyzer) return NS_ERROR_OUT_OF_MEMORY;
-    return tokenizeMessage(aMessageURL, analyzer);
+    return tokenizeMessage(aMessageURL, aMsgWindow, analyzer);
 }
 
 /* void classifyMessages (in unsigned long aCount, [array, size_is (aCount)] in string aMsgURLs, in nsIJunkMailClassificationListener aListener); */
-NS_IMETHODIMP nsBayesianFilter::ClassifyMessages(PRUint32 aCount, const char **aMsgURLs, nsIJunkMailClassificationListener *aListener)
+NS_IMETHODIMP nsBayesianFilter::ClassifyMessages(PRUint32 aCount, const char **aMsgURLs, nsIMsgWindow *aMsgWindow, nsIJunkMailClassificationListener *aListener)
 {
     nsresult rv = NS_OK;
     for (PRUint32 i = 0; i < aCount; ++i) {
-        rv = ClassifyMessage(aMsgURLs[i], aListener);
+        rv = ClassifyMessage(aMsgURLs[i], aMsgWindow, aListener);
         if (NS_FAILED(rv))
             break;
     }
@@ -895,9 +904,10 @@ void nsBayesianFilter::readTrainingData()
 NS_IMETHODIMP nsBayesianFilter::SetMessageClassification(const char *aMsgURL,
                                                          nsMsgJunkStatus aOldClassification,
                                                          nsMsgJunkStatus aNewClassification,
+                                                         nsIMsgWindow *aMsgWindow,
                                                          nsIJunkMailClassificationListener *aListener)
 {
     MessageObserver* analyzer = new MessageObserver(this, aOldClassification, aNewClassification, aListener);
     if (!analyzer) return NS_ERROR_OUT_OF_MEMORY;
-    return tokenizeMessage(aMsgURL, analyzer);
+    return tokenizeMessage(aMsgURL, aMsgWindow, analyzer);
 }

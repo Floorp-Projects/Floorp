@@ -2531,7 +2531,7 @@ nsresult nsMsgDBView::SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin,
     // adjust its database appropriately
     //
     rv = aJunkPlugin->SetMessageClassification(
-        uri, oldUserClassification, aNewClassification, this);
+        uri, oldUserClassification, aNewClassification, mMsgWindow, this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // set the junk score on the message itself

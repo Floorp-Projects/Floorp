@@ -4880,6 +4880,7 @@ nsImapMailFolder::AddSearchResult(nsIImapProtocol* aProtocol,
 NS_IMETHODIMP
 nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
+  nsCOMPtr <nsIMsgWindow> msgWindow; // we might need this for the filter plugins.
   if (mDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   SetSizeOnDisk(mFolderSize); 
@@ -4920,9 +4921,18 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
     }
     else
       aProtocol->NotifyBodysToDownload(nsnull, 0/*keysToFetch.GetSize() */);
+
+    nsCOMPtr <nsIURI> runningUri;
+    aProtocol->GetRunningUrl(getter_AddRefs(runningUri));
+    if (runningUri)
+    {
+      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(runningUri);
+      if (mailnewsUrl)
+        mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+    }
   }
 
-  CallFilterPlugins();
+  CallFilterPlugins(msgWindow);
 
   if (m_filterList)
     (void)m_filterList->FlushLogIfNecessary();
@@ -7093,10 +7103,10 @@ nsresult nsImapMailFolder::GetMoveCoalescer()
 }
 
 nsresult
-nsImapMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin)
+nsImapMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin)
 {
   ++m_numFilterClassifyRequests;
-  return aJunkMailPlugin->ClassifyMessage(aURI, this);   
+  return aJunkMailPlugin->ClassifyMessage(aURI, aMsgWindow, this);   
 }
 
 

@@ -50,7 +50,7 @@
 class Token;
 class TokenEnumeration;
 class TokenAnalyzer;
-
+class nsIMsgWindow;
 /**
  * Helper class to enumerate Token objects in a PLDHashTable
  * safely and without copying (see bugzilla #174859). The
@@ -116,9 +116,10 @@ public:
     nsBayesianFilter();
     virtual ~nsBayesianFilter();
     
-    nsresult tokenizeMessage(const char* messageURI, TokenAnalyzer* analyzer);
+    nsresult tokenizeMessage(const char* messageURI, nsIMsgWindow *aMsgWindow, TokenAnalyzer* analyzer);
     void classifyMessage(Tokenizer& tokens, const char* messageURI, nsIJunkMailClassificationListener* listener);
-    void observeMessage(Tokenizer& tokens, const char* messageURI, nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification, nsIJunkMailClassificationListener* listener);
+    void observeMessage(Tokenizer& tokens, const char* messageURI, nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification, 
+                        nsIJunkMailClassificationListener* listener);
 
     void writeTrainingData();
     void readTrainingData();

@@ -1673,16 +1673,16 @@ nsMsgDBFolder::SetStringProperty(const char *propertyName, const char *propertyV
 
 // sub-classes need to override
 nsresult
-nsMsgDBFolder::SpamFilterClassifyMessage(const char *aURI, nsIJunkMailPlugin *aJunkMailPlugin)
+nsMsgDBFolder::SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin)
 {
-  return aJunkMailPlugin->ClassifyMessage(aURI, nsnull);   
+  return aJunkMailPlugin->ClassifyMessage(aURI, aMsgWindow, nsnull);   
 }
 
 /**
  * Call the filter plugins (XXX currently just one)
  */
 NS_IMETHODIMP
-nsMsgDBFolder::CallFilterPlugins()
+nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
 {
 
     nsCOMPtr<nsIMsgIncomingServer> server;
@@ -1810,7 +1810,7 @@ nsMsgDBFolder::CallFilterPlugins()
         // filterMsg
         //
         nsCOMPtr <nsIJunkMailPlugin> junkMailPlugin = do_QueryInterface(filterPlugin);
-        rv = SpamFilterClassifyMessage(uri, junkMailPlugin); 
+        rv = SpamFilterClassifyMessage(uri, aMsgWindow, junkMailPlugin); 
         if (NS_FAILED(rv)) 
         {
             NS_WARNING("nsMsgDBFolder::CallFilterPlugins(): filter plugin"
