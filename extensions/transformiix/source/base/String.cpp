@@ -101,6 +101,10 @@
 //
 // TK  02/14/2000  Added a constructon  which accepts a UNICODE_CHAR* array, and
 //                 its associated length.
+//
+// TK  03/10/2000  Fixed a bug found by Bobbi Guarino where 
+//                 String::indexOf(const String& string...) was not RETURNing
+//                 a value.
 
 #include <stdlib.h>
 #include <string.h>
