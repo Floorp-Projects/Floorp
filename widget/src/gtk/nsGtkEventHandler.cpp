@@ -253,6 +253,12 @@ int nsPlatformToDOMKeyCode(GdkEventKey *aGEK)
 #if defined(SUNOS4) || defined(SOLARIS)
   if (keysym == GDK_F11)
     return NS_VK_ESCAPE;
+  //When F11 key is pressed in Sun keyboard, keysym is SunF36 not F11
+  if (keysym == 268828432)  //SunF36's value is 0x1005ff10(268828432)
+    return NS_VK_F11;       //Change it into F11
+  //When F12 key is pressed in Sun keyboard, keysym is SunF37 not F12
+  if (keysym == 268828433)  //SunF37's value is 0x1005ff11(268828433)
+    return NS_VK_F12;       //Change it into F12
 #endif
   if (keysym >= GDK_F1 && keysym <= GDK_F24)
     return keysym - GDK_F1 + NS_VK_F1;
