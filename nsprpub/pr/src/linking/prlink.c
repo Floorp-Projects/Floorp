@@ -43,6 +43,9 @@
 #ifndef RTLD_LAZY
 #define RTLD_LAZY RTLD_NOW
 #endif
+#ifndef RTLD_GLOBAL
+#define RTLD_GLOBAL 0
+#endif
 #ifndef RTLD_LOCAL
 #define RTLD_LOCAL 0
 #endif
