@@ -58,50 +58,42 @@
 
   <!-- Setting rows="7" on tree isn't working, equalsize vbox sets tree height. -->
   <vbox equalsize="always">
-    <tree id="SelectTree" onselect="onTreeSelect(event);" onkeyup="onTreeKeyUp(event);">
+    <tree id="SelectTree" onselect="treeBoxObject.view.selectionChanged();" onkeyup="onTreeKeyUp(event);">
       <treecols id="SelectCols">
         <treecol id="SelectTextCol" flex="3" label="&TextHeader.label;" primary="true"/>
+        <splitter class="tree-splitter"/>
         <treecol id="SelectValCol" flex="2" label="&ValueHeader.label;"/>
-        <treecol id="SelectSelCol" flex="1" label="&SelectedHeader.label;"/>
+        <treecol id="SelectSelCol" label="&SelectedHeader.label;" cycler="true"/>
       </treecols>
 
-      <treechildren id="SelectTreeChildren" onclick="onTreeClicked(event);">
-        <treeitem id="SelectItem" container="true" empty="true" open="true" index="0">
-          <treerow>
-            <treecell id="SelectCell"/>
-            <treecell/>
-            <treecell/>
-          </treerow>
-          <treechildren id="SelectChildren"/>
-        </treeitem>
-      </treechildren>
+      <treechildren id="SelectTreeChildren"/>
     </tree>
 
     <hbox flex="1">
-      <deck orient="vertical" flex="1" id="SelectDeck" index="0">
+      <deck flex="1" id="SelectDeck" index="0">
         <groupbox flex="1"><caption label="&Select.label;"/>
           <grid flex="1"><columns><column flex="1"/><column/></columns>
             <rows>
               <row align="center">
-                <label value="&SelectName.label;"/>
-                <textbox id="SelectName" flex="1" oninput="onNameInput();" onchange="onNameChange();"/>
+                <label control="SelectName" value="&SelectName.label;" accesskey="&SelectName.accesskey;"/>
+                <textbox id="SelectName" flex="1" oninput="onNameInput();"/>
               </row>
               <row align="center">
-                <label value="&SelectSize.label;"/>
+                <label control="SelectSize" value="&SelectSize.label;" accesskey="&SelectSize.accesskey;"/>
                 <hbox>
                   <textbox id="SelectSize" class="narrow" oninput="forceInteger(this.id);"/>
                 </hbox>
               </row>
               <row>
                 <spacer/>
-                <checkbox id="SelectMultiple" flex="1" label="&SelectMultiple.label;" oncommand="onSelectMultipleClick();"/>
+                <checkbox id="SelectMultiple" flex="1" label="&SelectMultiple.label;" accesskey="&SelectMultiple.accesskey;" oncommand="onSelectMultipleClick();"/>
               </row>
               <row>
                 <spacer/>
-                <checkbox id="SelectDisabled" flex="1" label="&SelectDisabled.label;"/>
+                <checkbox id="SelectDisabled" flex="1" label="&SelectDisabled.label;" accesskey="&SelectDisabled.accesskey;"/>
               </row>
               <row align="center">
-                <label value="&SelectTabIndex.label;"/>
+                <label control="SelectTabIndex" value="&SelectTabIndex.label;" accesskey="&SelectTabIndex.accesskey;"/>
                 <hbox>
                   <textbox id="SelectTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
                 </hbox>
@@ -114,12 +106,12 @@
           <grid flex="1"><columns><column flex="1"/><column/></columns>
             <rows>
               <row align="center">
-                <label value="&OptGroupLabel.label;"/>
-                <textbox id="OptGroupLabel" oninput="onLabelInput();" onchange="onLabelChange();"/>
+                <label control="OptGroupLabel" value="&OptGroupLabel.label;" accesskey="&OptGroupLabel.accesskey;"/>
+                <textbox id="OptGroupLabel" oninput="onLabelInput();"/>
               </row>
               <row>
                 <spacer/>
-                <checkbox id="OptGroupDisabled" label="&OptGroupDisabled.label;"/>
+                <checkbox id="OptGroupDisabled" label="&OptGroupDisabled.label;" accesskey="&OptGroupDisabled.accesskey;"/>
               </row>
             </rows>
           </grid>
@@ -129,20 +121,20 @@
           <grid flex="1"><columns><column flex="1"/><column/></columns>
             <rows>
               <row align="center">
-                <label value="&OptionText.label;"/>
-                <textbox id="OptionText" oninput="onTextInput();" onchange="onTextChange();"/>
+                <label control="OptionText" value="&OptionText.label;" accesskey="&OptionText.accesskey;"/>
+                <textbox id="OptionText" oninput="onTextInput();"/>
               </row>
               <row align="center">
-                <checkbox id="OptionHasValue" label="&OptionValue.label;" oncommand="onHasValueClick();"/>
-                <textbox id="OptionValue" oninput="onValueInput();" onchange="onValueChange();"/>
+                <checkbox id="OptionHasValue" label="&OptionValue.label;" accesskey="&OptionValue.accesskey;" oncommand="onHasValueClick();"/>
+                <textbox id="OptionValue" oninput="onValueInput();"/>
               </row>
               <row>
                 <spacer/>
-                <checkbox id="OptionSelected" label="&OptionSelected.label;" oncommand="currentObject.onSpace();"/>
+                <checkbox id="OptionSelected" label="&OptionSelected.label;" accesskey="&OptionSelected.accesskey;" oncommand="currentItem.cycleCell();"/>
               </row>
               <row>
                 <spacer/>
-                <checkbox id="OptionDisabled" label="&OptionDisabled.label;"/>
+                <checkbox id="OptionDisabled" label="&OptionDisabled.label;" accesskey="&OptionDisabled.accesskey;"/>
               </row>
             </rows>
           </grid>
@@ -150,14 +142,14 @@
       </deck>
 
       <vbox>
-        <button label="&AddOption.label;" oncommand="AddOption();"/>
-        <button label="&AddOptGroup.label;" oncommand="AddOptGroup();"/>
-        <button label="&RemoveElement.label;" oncommand="RemoveElement();"
-                id="RemoveButton" disabled="true"/>
-        <button label="&MoveElementUp.label;" oncommand="currentObject.moveUp();"
-                id="PreviousButton" disabled="true" type="row"/>
-        <button label="&MoveElementDown.label;" oncommand="currentObject.moveDown();"
-                id="NextButton" disabled="true" type="row"/>
+        <button label="&AddOption.label;" accesskey="&AddOption.accesskey;" oncommand="AddOption();"/>
+        <button label="&AddOptGroup.label;" accesskey="&AddOptGroup.accesskey;" oncommand="AddOptGroup();"/>
+        <button id="RemoveButton" label="&RemoveElement.label;" accesskey="&RemoveElement.accesskey;"
+                oncommand="RemoveElement();" disabled="true"/>
+        <button id="PreviousButton" label="&MoveElementUp.label;" accesskey="&MoveElementUp.accesskey;"
+                oncommand="currentItem.moveUp();" disabled="true" type="row"/>
+        <button id="NextButton" label="&MoveElementDown.label;" accesskey="&MoveElementDown.accesskey;"
+                oncommand="currentItem.moveDown();" disabled="true" type="row"/>
         <spacer flex="1"/>
         <button id="AdvancedEditButton"/>
       </vbox>

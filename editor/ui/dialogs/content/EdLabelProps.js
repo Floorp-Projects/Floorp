@@ -43,6 +43,7 @@ function Startup()
   var editor = GetCurrentEditor();
   if (!editor)
   {
+    dump("Failed to get active editor!\n");
     window.close();
     return;
   }
@@ -59,8 +60,11 @@ function Startup()
 
   InitDialog();
 
-  editor.selectElement(labelElement);
-  gDialog.labelText.value = GetSelectionAsText();
+  try {
+    editor.selectElement(labelElement);
+    gDialog.labelText.value = GetSelectionAsText();
+  } catch (e) {}
+
   if (/</.test(labelElement.innerHTML))
   {
     gDialog.editText.checked = false;
@@ -115,11 +119,14 @@ function onAccept()
   ValidateData();
 
   var editor = GetCurrentEditor();
+
   editor.beginTransaction();
 
   try {
     if (gDialog.editText.checked)
     {
+      editor.setShouldTxnSetSelection(false);
+
       while (labelElement.firstChild)
         editor.deleteNode(labelElement.firstChild);
       if (gDialog.labelText.value) {
@@ -127,6 +134,8 @@ function onAccept()
         editor.insertNode(textNode, labelElement, 0);
         editor.selectElement(labelElement);
       }
+
+      editor.setShouldTxnSetSelection(true);
     }
 
     editor.cloneAttributes(labelElement, globalElement);
