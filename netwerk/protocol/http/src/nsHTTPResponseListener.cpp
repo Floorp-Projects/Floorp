@@ -786,70 +786,17 @@ nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
 
   if ((301 == aStatusCode) || (302 == aStatusCode)) {
     if (location) {
-      nsCOMPtr<nsIURI> baseURL, newURL;
+      nsCOMPtr<nsIChannel> channel;
 
-      //
-      // Create a new URI using the Location header and the current URL 
-      // as a base ...
-      //
-#if 0
-      // Expanded inline to avoid linking with neckoutils....  (temporary)
-      rv = NS_NewURI(getter_AddRefs(newURL), location, baseURL);
-#else
-      NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-      if (NS_FAILED(rv)) return rv;
-    
-      mConnection->GetURI(getter_AddRefs(baseURL));
-      rv = serv->NewURI(location, baseURL, getter_AddRefs(newURL));
-#endif
-            
+      rv = mConnection->Redirect(location, getter_AddRefs(channel));
       if (NS_SUCCEEDED(rv)) {
-
-#if defined(PR_LOGGING)
-        char *newURLSpec = nsnull;
-        newURL->GetSpec(&newURLSpec);
-        PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-               ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
-                this, newURLSpec));
-        CRTFREEIF(newURLSpec);
-#endif /* PR_LOGGING */
-#if 0
-      // Expanded inline to avoid linking with neckoutils....  (temporary)
-        rv = NS_OpenURI(mConsumer, mResponseContext, newURL);
-#else
-        nsCOMPtr<nsIChannel> channel;
-        nsCOMPtr<nsILoadGroup> group;
-
-        (void) mConnection->GetLoadGroup(getter_AddRefs(group));
-        rv = serv->NewChannelFromURI("load", newURL, group, nsnull, 
-                                     getter_AddRefs(channel));
-        if (NS_SUCCEEDED(rv)) {
-            PRUint32 loadAttributes;
-
-            // Copy the load attributes into the new channel...
-            mConnection->GetLoadAttributes(&loadAttributes);
-            channel->SetLoadAttributes(loadAttributes);
-            rv = channel->AsyncRead(0, -1, mResponseContext, mConsumer);
-        }
-#endif
-        if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIHTTPEventSink> sink;
-          //
-          // Fire the OnRedirect(...) notification.
-          //
-          mConnection->GetEventSink(getter_AddRefs(sink));
-          if (sink) {
-            sink->OnRedirect(mConnection, newURL);
-          }
-
-          //
-          // Disconnect the consumer from this response listener...  This allows
-          // the entity that follows to be discarded without notifying the 
-          // consumer...
-          //
-          NS_RELEASE(mConsumer);
-          mResponseContext = nsnull;
-        }
+        //
+        // Disconnect the consumer from this response listener...  This allows
+        // the entity that follows to be discarded without notifying the 
+        // consumer...
+        //
+        NS_RELEASE(mConsumer);
+        mResponseContext = nsnull;
       }
       nsCRT::free(location);
     }

@@ -23,6 +23,7 @@
 #include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPResponse.h"
+#include "nsIEventSinkGetter.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
@@ -47,14 +48,16 @@ static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
-                             nsIHTTPEventSink* i_HTTPEventSink,
+                             const char *i_Verb,
+                             nsIEventSinkGetter* i_EventSinkGetter,
                              nsHTTPHandler* i_Handler): 
     mURI(dont_QueryInterface(i_URL)),
     mConnected(PR_FALSE),
     mState(HS_IDLE),
     mRefCnt(0),
     mHandler(dont_QueryInterface(i_Handler)),
-    mEventSink(dont_QueryInterface(i_HTTPEventSink)),
+    mEventSinkGetter(dont_QueryInterface(i_EventSinkGetter)),
+    mVerb(eOneByte),
     mResponse(nsnull),
     mResponseDataListener(nsnull),
     mLoadAttributes(LOAD_NORMAL),
@@ -67,6 +70,17 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Creating nsHTTPChannel [this=%x].\n", this));
 
+    mVerb = i_Verb;
+
+    // Verify that the event sink is http
+    if (i_EventSinkGetter) {
+        nsIHTTPEventSink *sink = nsnull;
+
+        (void) i_EventSinkGetter->GetEventSink(i_Verb, nsCOMTypeInfo<nsIHTTPEventSink>::GetIID(),
+                                             (nsISupports**)&sink);
+        mEventSink = sink;
+        NS_IF_RELEASE(sink);
+    }
 
 }
 
@@ -573,6 +587,61 @@ nsHTTPChannel::Open(void)
 
     return rv;
 }
+
+
+nsresult nsHTTPChannel::Redirect(const char *aNewLocation, 
+                                 nsIChannel **aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIURI> newURI;
+  nsCOMPtr<nsIChannel> channel;
+
+  *aResult = nsnull;
+
+  //
+  // Create a new URI using the Location header and the current URL 
+  // as a base ...
+  //
+  NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+    
+  rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(newURI));
+  if (NS_FAILED(rv)) return rv;
+
+#if defined(PR_LOGGING)
+  char *newURLSpec;
+
+  newURLSpec = nsnull;
+  newURI->GetSpec(&newURLSpec);
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
+          this, newURLSpec));
+#endif /* PR_LOGGING */
+
+  rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, mEventSinkGetter, 
+                               getter_AddRefs(channel));
+  if (NS_FAILED(rv)) return rv;
+
+  // Copy the load attributes into the new channel...
+  channel->SetLoadAttributes(mLoadAttributes);
+
+  // Start the redirect...
+  rv = channel->AsyncRead(0, -1, mResponseContext, mResponseDataListener);
+
+  //
+  // Fire the OnRedirect(...) notification.
+  //
+  if (mEventSink) {
+    mEventSink->OnRedirect(this, newURI);
+  }
+
+
+  *aResult = channel;
+  NS_ADDREF(*aResult);
+
+  return rv;
+}
+
 
 nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport, 
                                           nsresult aStatus)
