@@ -224,11 +224,9 @@ nsresult nsGfxFactoryOS2::CreateInstance(nsISupports *aOuter,
     }
   }
   else if (mClassID.Equals(kCFontEnumerator)) {
-    /* OS2TODO
     nsFontEnumeratorOS2* fe;
     NS_NEWXPCOM(fe, nsFontEnumeratorOS2);
     inst = (nsISupports *)fe;
-    */
   }
 	else if (mClassID.Equals(kCScreenManager)) {
 		NS_NEWXPCOM(inst, nsScreenManagerOS2);
