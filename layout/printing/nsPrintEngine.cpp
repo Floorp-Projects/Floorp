@@ -552,6 +552,18 @@ nsresult nsPrintEngine::GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, PRInt32& 
 //-- Section: nsIWebBrowserPrint
 //---------------------------------------------------------------------------------
 
+// Foward decl for Debug Helper Functions
+#ifdef EXTENDED_DEBUG_PRINTING
+int RemoveFilesInDir(const char * aDir);
+void GetDocTitleAndURL(nsPrintObject* aPO, char *& aDocStr, char *& aURLStr);
+void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD);
+void DumpPrintObjectsList(nsVoidArray * aDocList);
+void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+void DumpViews(nsIDocShell* aDocShell, FILE* out);
+void DumpLayoutData(char* aTitleStr, char* aURLStr, nsIPresContext* aPresContext, nsIDeviceContext * aDC, 
+                    nsIFrame * aRootFrame, nsIWebShell * aWebShell, FILE* aFD);
+#endif
+
 //---------------------------------------------------------------------------------
 NS_IMETHODIMP
 nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
@@ -2210,25 +2222,18 @@ nsPrintEngine::GetDisplayTitleAndURL(nsPrintObject*      aPO,
 //---------------------------------------------------------------------
 nsresult nsPrintEngine::DocumentReadyForPrinting()
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIWebShell> webContainer;
+  if (mPrt->mPrintFrameType == nsIPrintSettings::kEachFrameSep) {
+    CheckForChildFrameSets(mPrt->mPrintObject);
+  }
 
-  webContainer = do_QueryInterface(mContainer);
-  if(webContainer) {
-
-    if (mPrt->mPrintFrameType == nsIPrintSettings::kEachFrameSep) {
-      CheckForChildFrameSets(mPrt->mPrintObject);
-    }
-
-    //
-    // Send the document to the printer...
-    //
-    rv = SetupToPrintContent(webContainer, mPrt->mPrintDC, mPrt->mCurrentFocusWin);
-    if (NS_FAILED(rv)) {
-      // The print job was canceled or there was a problem
-      // So remove all other documents from the print list
-      DonePrintingPages(nsnull, rv);
-    }
+  //
+  // Send the document to the printer...
+  //
+  nsresult rv = SetupToPrintContent(mPrt->mPrintDC, mPrt->mCurrentFocusWin);
+  if (NS_FAILED(rv)) {
+    // The print job was canceled or there was a problem
+    // So remove all other documents from the print list
+    DonePrintingPages(nsnull, rv);
   }
   return rv;
 }
@@ -2367,12 +2372,10 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
 
 //-------------------------------------------------------
 nsresult
-nsPrintEngine::SetupToPrintContent(nsIWebShell*          aParent,
-                                        nsIDeviceContext*     aDContext,
-                                        nsIDOMWindowInternal* aCurrentFocusedDOMWin)
+nsPrintEngine::SetupToPrintContent(nsIDeviceContext*     aDContext,
+                                   nsIDOMWindowInternal* aCurrentFocusedDOMWin)
 {
 
-  NS_ENSURE_ARG_POINTER(aParent);
   NS_ENSURE_ARG_POINTER(aDContext);
   // NOTE: aCurrentFocusedDOMWin may be null (which is OK)
 
@@ -2399,27 +2402,33 @@ nsPrintEngine::SetupToPrintContent(nsIWebShell*          aParent,
     doSetPixelScale = PR_TRUE;
   }
 
+  // If we are doing "shrink to fit" then request that the first
+  // reflow is constrained
+  if (mPrt->mShrinkToFit && !ppIsShrinkToFit) {
+    mPrt->mPrintOptions->SetDoUncontrainedReflow(PR_TRUE);
+  }
+
   // Here we reflow all the PrintObjects
   nsresult rv = ReflowDocList(mPrt->mPrintObject, doSetPixelScale, mPrt->mShrinkToFit);
   CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_REFLOWDOCLIST, rv, NS_ERROR_FAILURE);
   if (NS_FAILED(rv)) {
+    mPrt->mPrintOptions->SetDoUncontrainedReflow(PR_FALSE);
     return NS_ERROR_FAILURE;
   }
 
   // Here is where we do the extra reflow for shrinking the content
   // But skip this step if we are in PrintPreview
   if (mPrt->mShrinkToFit && !ppIsShrinkToFit) {
+    // Turn off the request for unconstrained reflow
+    mPrt->mPrintOptions->SetDoUncontrainedReflow(PR_FALSE);
+
+    // Now look for the PO that has the smallest percent for shrink to fit
     if (mPrt->mPrintDocList->Count() > 1 && mPrt->mPrintObject->mFrameType == eFrameSet) {
-      nsPrintObject* xMostPO = FindXMostPO();
-      NS_ASSERTION(xMostPO, "There must always be an XMost PO!");
-      if (xMostPO) {
-        // The margin is included in the PO's mRect so we need to subtract it
-        nsMargin margin(0,0,0,0);
-        mPrt->mPrintSettings->GetMarginInTwips(margin);
-        nsRect rect = xMostPO->mRect;
-        rect.x -= margin.left;
+      nsPrintObject* smallestPO = FindSmallestSTF();
+      NS_ASSERTION(smallestPO, "There must always be an XMost PO!");
+      if (smallestPO) {
         // Calc the shrinkage based on the entire content area
-        mPrt->mShrinkRatio = float(rect.XMost()) / float(rect.x + xMostPO->mXMost);
+        mPrt->mShrinkRatio = smallestPO->mShrinkRatio;
       }
     } else {
       // Single document so use the Shrink as calculated for the PO
@@ -2460,16 +2469,11 @@ nsPrintEngine::SetupToPrintContent(nsIWebShell*          aParent,
     {
       float calcRatio;
       if (mPrt->mPrintDocList->Count() > 1 && mPrt->mPrintObject->mFrameType == eFrameSet) {
-        nsPrintObject* xMostPO = FindXMostPO();
-        NS_ASSERTION(xMostPO, "There must always be an XMost PO!");
-        if (xMostPO) {
-          // The margin is included in the PO's mRect so we need to subtract it
-          nsMargin margin(0,0,0,0);
-          mPrt->mPrintSettings->GetMarginInTwips(margin);
-          nsRect rect = xMostPO->mRect;
-          rect.x -= margin.left;
+        nsPrintObject* smallestPO = FindSmallestSTF();
+        NS_ASSERTION(smallestPO, "There must always be an XMost PO!");
+        if (smallestPO) {
           // Calc the shrinkage based on the entire content area
-          calcRatio = float(rect.XMost()) / float(rect.x + xMostPO->mXMost);
+          calcRatio = smallestPO->mShrinkRatio;
         }
       } else {
         // Single document so use the Shrink as calculated for the PO
@@ -2634,17 +2638,6 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   // If it is hidden don't bother reflow it or any of it's children
   if (aPO->mIsHidden) return NS_OK;
 
-  // Now locate the nsIDocument for the WebShell
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aPO->mWebShell));
-  NS_ASSERTION(docShell, "The DocShell can't be NULL!");
-
-  nsCOMPtr<nsIPresShell>  wsPresShell;
-  docShell->GetPresShell(getter_AddRefs(wsPresShell));
-  NS_ASSERTION(wsPresShell, "The PresShell can't be NULL!");
-
-  nsCOMPtr<nsIDocument> document;
-  wsPresShell->GetDocument(getter_AddRefs(document));
-
   // create the PresContext
   PRBool containerIsSet = PR_FALSE;
   nsresult rv;
@@ -2676,7 +2669,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   // init it with the DC
   (aPO->mPresContext)->Init(mPrt->mPrintDocDC);
 
-  mDocViewerPrint->CreateStyleSet(document, getter_AddRefs(aPO->mStyleSet));
+  mDocViewerPrint->CreateStyleSet(aPO->mDocument, getter_AddRefs(aPO->mStyleSet));
 
   aPO->mViewManager = do_CreateInstance(kViewManagerCID, &rv);
   if (NS_FAILED(rv)) {
@@ -2688,8 +2681,8 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
     return rv;
   }
 
-  rv = document->CreateShell(aPO->mPresContext, aPO->mViewManager,
-                             aPO->mStyleSet, getter_AddRefs(aPO->mPresShell));
+  rv = aPO->mDocument->CreateShell(aPO->mPresContext, aPO->mViewManager,
+                                   aPO->mStyleSet, getter_AddRefs(aPO->mPresShell));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2783,7 +2776,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
   // Setup hierarchical relationship in view manager
   aPO->mViewManager->SetRootView(aPO->mRootView);
-  aPO->mPresShell->Init(document, aPO->mPresContext,
+  aPO->mPresShell->Init(aPO->mDocument, aPO->mPresContext,
                         aPO->mViewManager, aPO->mStyleSet, mode);
 
   if (!containerIsSet) {
@@ -2854,7 +2847,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
     // Transfer Selection Ranges to the new Print PresShell
     nsCOMPtr<nsISelection> selection;
     nsCOMPtr<nsISelection> selectionPS;
-    nsresult rvv = mDocViewerPrint->GetDocumentSelection(getter_AddRefs(selection), wsPresShell);
+    nsresult rvv = mDocViewerPrint->GetDocumentSelection(getter_AddRefs(selection), aPO->mDisplayPresShell);
     if (NS_SUCCEEDED(rvv) && selection) {
       rvv = mDocViewerPrint->GetDocumentSelection(getter_AddRefs(selectionPS), aPO->mPresShell);
       if (NS_SUCCEEDED(rvv) && selectionPS) {
@@ -2875,69 +2868,12 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
       // this is the frame where the right-hand side of the frame extends
       // the furthest
       if (mPrt->mShrinkToFit) {
-        // First find the seq frame
-        nsIFrame* rootFrame;
-        aPO->mPresShell->GetRootFrame(&rootFrame);
-        NS_ASSERTION(rootFrame, "There has to be a root frame!");
-        if (rootFrame) {
-          nsIFrame* seqFrame;
-          rootFrame->FirstChild(aPO->mPresContext, nsnull, &seqFrame);
-          while (seqFrame) {
-            nsCOMPtr<nsIAtom> frameType;
-            seqFrame->GetFrameType(getter_AddRefs(frameType));
-            if (nsLayoutAtoms::sequenceFrame == frameType.get()) {
-              break;
-            }
-            seqFrame->FirstChild(aPO->mPresContext, nsnull, &seqFrame);
-          }
-          NS_ASSERTION(seqFrame, "There has to be a Sequence frame!");
-          if (seqFrame) {
-            // Get the first page of all the pages
-            nsIFrame* pageFrame;
-            seqFrame->FirstChild(aPO->mPresContext, nsnull, &pageFrame);
-            NS_ASSERTION(pageFrame, "There has to be a Page Frame!");
-            // loop thru all the Page Frames
-            nscoord overallMaxWidth  = 0;
-            nscoord overMaxRectWidth = 0;
-            while (pageFrame) {
-              nsIFrame* child;
-              // Now get it's first child (for HTML docs it is an area frame)
-              // then gets it size which would be the size it is suppose to be to fit
-              pageFrame->FirstChild(aPO->mPresContext, nsnull, &child);
-              NS_ASSERTION(child, "There has to be a child frame!");
-
-              nsRect rect;
-              child->GetRect(rect);
-              // Create a RenderingContext and set the PresContext
-              // appropriately if we are printing selection
-              nsCOMPtr<nsIRenderingContext> rc;
-              if (nsIPrintSettings::kRangeSelection == printRangeType) {
-                aPO->mPresContext->SetIsRenderingOnlySelection(PR_TRUE);
-                mPrt->mPrintDocDC->CreateRenderingContext(*getter_AddRefs(rc));
-              }
-              // Find the Size of the XMost frame
-              // then calc the ratio for shrinkage
-              nscoord maxWidth = 0;
-              FindXMostFrameSize(aPO->mPresContext, rc, child, 0, 0, maxWidth);
-              if (maxWidth > overallMaxWidth) {
-                overallMaxWidth  = maxWidth;
-                overMaxRectWidth = rect.width;
-              }
-              pageFrame->GetNextSibling(&pageFrame);
-            }  // while
-            // Now calc the ratio from the widest frames from all the pages
-            float ratio = 1.0f;
-            NS_ASSERTION(overallMaxWidth, "Overall Max Width must be bigger than zero");
-            if (overallMaxWidth > 0) {
-              ratio = float(overMaxRectWidth) / float(overallMaxWidth);
-              aPO->mXMost = overallMaxWidth;
-              aPO->mShrinkRatio = PR_MIN(ratio, 1.0f);
+        nsIPageSequenceFrame* pageSequence;
+        aPO->mPresShell->GetPageSequenceFrame(&pageSequence);
+        pageSequence->GetSTFPercent(aPO->mShrinkRatio);
 #ifdef EXTENDED_DEBUG_PRINTING
-              printf("PO %p ****** RW: %d MW: %d  xMost %d  width: %d  %10.4f\n", aPO, overMaxRectWidth, overallMaxWidth, aPO->mXMost, overMaxRectWidth, ratio*100.0);
+        printf("PO %p ****** STF Ratio %10.4f\n", aPO, aPO->mShrinkRatio*100.0f);
 #endif
-            }
-          }
-        }
       }
     }
 
@@ -3218,7 +3154,6 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
   nsIPresContext* poPresContext = aPO->mPresContext;
   nsIView*        poRootView    = aPO->mRootView;
 
-  nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
   NS_ASSERTION(webShell, "The WebShell can't be NULL!");
 
   if (mPrt->mPrintProgressParams) {
@@ -3378,7 +3313,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
         char * docStr;
         char * urlStr;
         GetDocTitleAndURL(aPO, docStr, urlStr);
-        DumpLayoutData(docStr, urlStr, poPresContext, mPrt->mPrintDocDC, rootFrame, webShell);
+        DumpLayoutData(docStr, urlStr, poPresContext, mPrt->mPrintDocDC, rootFrame, webShell, nsnull);
         if (docStr) nsMemory::Free(docStr);
         if (urlStr) nsMemory::Free(urlStr);
       }
@@ -4484,124 +4419,29 @@ nsPrintEngine::EnablePOsForPrinting()
 }
 
 //-------------------------------------------------------
-// Find the Frame in a Frame List that is XMost
-void
-nsPrintEngine::FindXMostFrameInList(nsIPresContext* aPresContext,
-                                         nsIRenderingContext* aRC,
-                                         nsIAtom*        aList,
-                                         nsIFrame*       aFrame,
-                                         nscoord         aX,
-                                         nscoord         aY,
-                                         PRInt32&        aMaxWidth)
-{
-  nsIFrame * child;
-  aFrame->FirstChild(aPresContext, aList, &child);
-  while (child) {
-    PRBool isVisible = PR_TRUE;
-    // If the aRC is nsnull, then we skip the more expensive check and
-    // just check visibility
-    if (aRC) {
-      child->IsVisibleForPainting(aPresContext, *aRC, PR_TRUE, &isVisible);
-    } else {
-      nsCOMPtr<nsIStyleContext> sc;
-      child->GetStyleContext(getter_AddRefs(sc));
-      if (sc) {
-        const nsStyleVisibility* vis = (const nsStyleVisibility*)sc->GetStyleData(eStyleStruct_Visibility);
-        isVisible = vis->IsVisible();
-      }
-    }
-
-    if (isVisible) {
-      nsRect rect;
-      child->GetRect(rect);
-      rect.x += aX;
-      rect.y += aY;
-      nscoord xMost = rect.XMost();
-      // make sure we have a reasonable value
-      NS_ASSERTION(xMost < NS_UNCONSTRAINEDSIZE, "Some frame's size is bad.");
-      if (xMost >= NS_UNCONSTRAINEDSIZE) {
-        xMost = 0;
-      }
-
-#ifdef DEBUG_PRINTING_X // keep this here but leave it turned off
-      nsAutoString tmp;
-      nsIFrameDebug*  frameDebug;
-      if (NS_SUCCEEDED(CallQueryInterface(child, &frameDebug))) {
-        frameDebug->GetFrameName(tmp);
-      }
-      printf("%p - %d,%d,%d,%d %s (%d > %d)\n", child, rect.x, rect.y, rect.width, rect.height, NS_LossyConvertUCS2toASCII(tmp).get(), xMost, aMaxWidth);
-#endif
-
-      if (xMost > aMaxWidth) {
-        aMaxWidth = xMost;
-#ifdef DEBUG_PRINTING_X // keep this here but leave it turned off
-        printf("%p - %d %s ", child, aMaxWidth, NS_LossyConvertUCS2toASCII(tmp).get());
-        if (aList == nsLayoutAtoms::overflowList) printf(" nsLayoutAtoms::overflowList\n");
-        if (aList == nsLayoutAtoms::floaterList) printf(" nsLayoutAtoms::floaterList\n");
-        if (aList == nsLayoutAtoms::fixedList) printf(" nsLayoutAtoms::fixedList\n");
-        if (aList == nsLayoutAtoms::absoluteList) printf(" nsLayoutAtoms::absoluteList\n");
-        if (aList == nsnull) printf(" nsnull\n");
-#endif
-      }
-      FindXMostFrameSize(aPresContext, aRC, child, rect.x, rect.y, aMaxWidth);
-    }
-    child->GetNextSibling(&child);
-  }
-}
-
-//-------------------------------------------------------
-// Find the Frame that is XMost
-void
-nsPrintEngine::FindXMostFrameSize(nsIPresContext* aPresContext,
-                                       nsIRenderingContext* aRC,
-                                       nsIFrame*      aFrame,
-                                       nscoord        aX,
-                                       nscoord        aY,
-                                       PRInt32&       aMaxWidth)
-{
-  NS_ASSERTION(aPresContext, "Pointer is null!");
-  NS_ASSERTION(aFrame, "Pointer is null!");
-
-  // loop thru named child lists
-  nsIAtom* childListName = nsnull;
-  PRInt32  childListIndex = 0;
-  do {
-    FindXMostFrameInList(aPresContext, aRC, childListName, aFrame, aX, aY, aMaxWidth);
-    NS_IF_RELEASE(childListName);
-    aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
-  } while (childListName);
-
-}
-
-
-//-------------------------------------------------------
 // Return the nsPrintObject with that is XMost (The widest frameset frame) AND
 // contains the XMost (widest) layout frame
 nsPrintObject*
-nsPrintEngine::FindXMostPO()
+nsPrintEngine::FindSmallestSTF()
 {
-  nscoord xMostForPO   = 0;
-  nscoord xMost        = 0;
-  nsPrintObject* xMostPO = nsnull;
+  float smallestRatio = 1.0f;
+  nsPrintObject* smallestPO = nsnull;
 
   for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
     nsPrintObject* po = (nsPrintObject*)mPrt->mPrintDocList->ElementAt(i);
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     if (po->mFrameType != eFrameSet && po->mFrameType != eIFrame) {
-      if (po->mRect.XMost() >= xMostForPO) {
-        if (po->mRect.XMost() > xMostForPO || (po->mRect.XMost() == xMostForPO && po->mXMost > xMost)) {
-          xMostForPO = po->mRect.XMost();
-          xMost      = po->mXMost;
-          xMostPO    = po;
-        }
+      if (po->mShrinkRatio < smallestRatio) {
+        smallestRatio = po->mShrinkRatio;
+        smallestPO    = po;
       }
     }
   }
 
 #ifdef EXTENDED_DEBUG_PRINTING
-  if (xMostPO) printf("*PO: %p  Type: %d  XM: %d  XM2: %d  %10.3f\n", xMostPO, xMostPO->mFrameType, xMostPO->mRect.XMost(), xMostPO->mXMost, xMostPO->mShrinkRatio);
+  if (smallestPO) printf("*PO: %p  Type: %d  %10.3f\n", smallestPO, smallestPO->mFrameType, smallestPO->mShrinkRatio);
 #endif
-  return xMostPO;
+  return smallestPO;
 }
 
 //-------------------------------------------------------
@@ -4981,7 +4821,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
 
   if (nsnull != aDocShell) {
     fprintf(out, "docshell=%p \n", aDocShell);
-    nsIPresShell* shell = GetPresShellFor(aDocShell);
+    nsIPresShell* shell = nsPrintEngine::GetPresShellFor(aDocShell);
     if (nsnull != shell) {
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
@@ -5107,7 +4947,7 @@ static void DumpPrintObjectsList(nsVoidArray * aDocList)
 }
 
 //-------------------------------------------------------------
-static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel= 0, FILE* aFD = nsnull)
+static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD)
 {
   if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
 
@@ -5162,7 +5002,7 @@ static void GetDocTitleAndURL(nsPrintObject* aPO, char *& aDocStr, char *& aURLS
 //-------------------------------------------------------------
 static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
                                        nsIDeviceContext * aDC,
-                                       int aLevel= 0, FILE * aFD = nsnull)
+                                       int aLevel, FILE * aFD)
 {
   if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
 

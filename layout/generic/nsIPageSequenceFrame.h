@@ -154,6 +154,9 @@ public:
 
   // Gets the dead space (the gray area) around the Print Preview Page
   NS_IMETHOD GetDeadSpaceValue(nscoord* aValue) = 0;
+
+  // For Shrink To Fit
+  NS_IMETHOD GetSTFPercent(float& aSTFPercent) = 0;
   
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

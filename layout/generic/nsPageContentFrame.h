@@ -39,6 +39,7 @@
 
 #include "nsContainerFrame.h"
 class nsPageFrame;
+class nsSharedPageData;
 
 // Page frame class used by the simple page sequence frame
 class nsPageContentFrame : public nsContainerFrame {
@@ -63,6 +64,8 @@ public:
 
   virtual void  SetClipRect(nsRect* aClipRect) { mClipRect = *aClipRect; }
 
+  virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
+
   /**
    * Get the "type" of the frame
    *
@@ -78,6 +81,7 @@ public:
 protected:
   nsPageContentFrame();
   nsRect mClipRect;
+  nsSharedPageData* mPD;
 };
 
 #endif /* nsPageContentFrame_h___ */

@@ -88,7 +88,7 @@ public:
   virtual void  SuppressHeadersAndFooters(PRBool aDoSup) { mSupressHF = aDoSup; }
   virtual void  SetClipRect(nsRect* aClipRect);
 
-  virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
+  virtual void SetSharedPageData(nsSharedPageData* aPD);
 
 // XXX Part of Temporary fix for Bug 127263
   static  void   SetCreateWidget(PRBool aDoCreateWidget)  { mDoCreateWidget = aDoCreateWidget; }

@@ -131,18 +131,10 @@ public:
   nsresult GetSelectionDocument(nsIDeviceContextSpec * aDevSpec,
                                 nsIDocument ** aNewDoc);
 
-  nsresult SetupToPrintContent(nsIWebShell*          aParent,
-                               nsIDeviceContext*     aDContext,
+  nsresult SetupToPrintContent(nsIDeviceContext*     aDContext,
                                nsIDOMWindowInternal* aCurrentFocusedDOMWin);
   nsresult EnablePOsForPrinting();
-  nsPrintObject* FindXMostPO();
-  void FindXMostFrameSize(nsIPresContext* aPresContext,
-                          nsIRenderingContext* aRC, nsIFrame* aFrame,
-                          nscoord aX, nscoord aY, PRInt32& aMaxWidth);
-  void FindXMostFrameInList(nsIPresContext* aPresContext,
-                            nsIRenderingContext* aRC, nsIAtom* aList,
-                            nsIFrame* aFrame, nscoord aX, nscoord aY,
-                            PRInt32& aMaxWidth);
+  nsPrintObject* FindSmallestSTF();
 
   PRBool   PrintDocContent(nsPrintObject* aPO, nsresult& aStatus);
   nsresult DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting,
@@ -237,7 +229,7 @@ public:
   void GetWebShellTitleAndURL(nsIWebShell* aWebShell, nsIDocument* aDoc,
                               PRUnichar** aTitle, PRUnichar** aURLStr);
 
-  void GetDisplayTitleAndURL(nsPrintObject*      aPO, 
+  static void GetDisplayTitleAndURL(nsPrintObject*      aPO, 
                                     nsIPrintSettings* aPrintSettings, 
                                     const PRUnichar*  aBrandName,
                                     PRUnichar**       aTitle, 
@@ -267,6 +259,8 @@ public:
                                nsCOMPtr<nsIViewManager>& aVM, 
                                nsCOMPtr<nsIWidget>& aW);
 
+  static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
+
   // These calls also update the DocViewer
   void   SetIsPrinting(PRBool aIsPrinting)         { mIsDoingPrinting = aIsPrinting; }
   PRBool GetIsPrinting()                           { return mIsDoingPrinting; }
@@ -289,7 +283,6 @@ protected:
 #endif
 
 protected:
-  static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
   void FirePrintCompletionEvent();
   nsresult ShowDocListInternal(nsPrintObject* aPO, PRBool aShow);
   nsresult GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
@@ -324,7 +317,7 @@ protected:
   nsIDeviceContext*       mDeviceContext;  // not ref counted
   nsIPresContext*         mPresContext;    // not ref counted
   nsCOMPtr<nsIWidget>     mWindow;      
-
+  
   nsPrintData*            mPrt;
   nsPagePrintTimer*       mPagePrintTimer;
   nsIPageSequenceFrame*   mPageSeqFrame;
@@ -339,7 +332,6 @@ protected:
 
   PRBool                      mIsCachingPresentation;
   CachedPresentationObj*      mCachedPresObj;
-
   FILE* mDebugFile;
 
 private:

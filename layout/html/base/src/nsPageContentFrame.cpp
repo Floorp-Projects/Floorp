@@ -47,6 +47,7 @@
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintPreviewContext.h"
+#include "nsSimplePageSequence.h"
 
 #include "nsIView.h"
 
@@ -90,8 +91,31 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
       nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
 
-      // Get the child's desired size
+      // Check to see if we need to do an unconstrained reflow
+      // If so, then cache the size the page was SUPPOSE to be reflowed to
+      // so we can use it later to determine a percentage.
+      PRBool doUnconstrained = PR_FALSE;
+      if (mPD && mPD->mPrintOptions) {
+        mPD->mPrintOptions->GetDoUncontrainedReflow(&doUnconstrained);
+        if (doUnconstrained) {
+          mPD->mPageContextSize = aReflowState.availableWidth;
+          maxSize.width = NS_UNCONSTRAINEDSIZE;
+          kidReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
+          kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
+        }
+      }
+
+      // Reflow the page content area to get the child's desired size
       ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
+
+      // This is where we cache the true uncontrained size of the document
+      // each page may end up with a different constrained size, 
+      // so we must only keep the largest size of all the pages
+      if (doUnconstrained) {
+        if (mPD->mPageContextSizeUC == 0 || mPD->mPageContextSizeUC < aDesiredSize.width) {
+          mPD->mPageContextSizeUC = aDesiredSize.width;
+        }
+      }
 
       // Place and size the child
       FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, 0, 0, 0);

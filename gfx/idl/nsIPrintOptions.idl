@@ -95,6 +95,10 @@ interface nsIPrintOptions : nsISupports
   /* Purposely made this an "in" arg */
   [noscript] void GetDefaultFont(in nsNativeFontRef aFont);
 
+  /* caches bool value so we know how to reflow
+     This will get picked by the nsSequencePageFrame */
+  [noscript] attribute boolean doUncontrainedReflow;
+
   /**
    * Native data constants
    */

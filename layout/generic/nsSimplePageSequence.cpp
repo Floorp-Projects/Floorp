@@ -1131,3 +1131,18 @@ nsSimplePageSequenceFrame::SetPageSizes(const nsRect& aRect, const nsMargin& aMa
   mPageData->mReflowMargin = aMarginRect;
 }
 
+//------------------------------------------------------------------------------
+// For Shrink To Fit
+//
+// Return the percentage that the page needs to shrink to 
+//
+NS_IMETHODIMP
+nsSimplePageSequenceFrame::GetSTFPercent(float& aSTFPercent)
+{
+  NS_ENSURE_TRUE(mPageData, NS_ERROR_UNEXPECTED);
+  aSTFPercent = 1.0f;
+  if (mPageData && (mPageData->mPageContextSizeUC > mPageData->mPageContextSize)) {
+    aSTFPercent = float(mPageData->mPageContextSize) / float(mPageData->mPageContextSizeUC);
+  }
+  return NS_OK;
+}
