@@ -1,3 +1,14 @@
+      /* for localization */
+      var Bundle = srGetStrBundle("chrome://wallet/locale/WalletEditor.properties");
+      var manageData = Bundle.GetStringFromName("manageData");
+      var schemasHeading = Bundle.GetStringFromName("schemasHeading");
+      var valuesHeading = Bundle.GetStringFromName("valuesHeading");
+      var synonymsHeading = Bundle.GetStringFromName("synonymsHeading");
+      var addCmdLabel = Bundle.GetStringFromName("addCmdLabel");
+      var removeCmdLabel = Bundle.GetStringFromName("removeCmdLabel");
+      var okCmdLabel = Bundle.GetStringFromName("okCmdLabel");
+      var cancelCmdLabel = Bundle.GetStringFromName("cancelCmdLabel");
+
       /* for xpconnect */
       var walleteditor =
         Components.classes
@@ -384,7 +395,7 @@
         top.frames[title_frame].document.open();
         top.frames[title_frame].document.write(
           "<body bgcolor='#cccccc' name='schema'>" +
-            "<h3><center><b>Manage Personal Data</b></center></h3>" +
+            "<h3><center><b>" + manageData + "</b></center></h3>" +
           "</body>"
         );
         top.frames[title_frame].document.close();
@@ -393,7 +404,7 @@
         top.frames[schema_frame].document.open();
         top.frames[schema_frame].document.write(
           "<body bgcolor='#cccccc' name='schema'>" +
-          "<b>Field Names:</b><br>" +
+          "<b>" + schemasHeading + "</b><br>" +
           "<form name='schema'>" +
             "<table border='0' width='50%' bgcolor='#cccccc'>" +
               "<tr>" +
@@ -418,18 +429,18 @@
               "</tr>" +
               "<tr>" +
                 "<td>" +
-//                "<button onclick='parent.deleteSchema();'>Remove</button>" +
+//                "<button onclick='parent.deleteSchema();'>" + removeCmdLabel + "</button>" +
 // (bug 3317 workaround)
-                  "<button onclick=\"setTimeout('parent.deleteSchema();',0)\">Remove</button>" +
+                  "<button onclick=\"setTimeout('parent.deleteSchema();',0)\">" + removeCmdLabel + "</button>" +
                 "</td>" +
               "</tr>" +
               "<tr>" +
                 "<td>" +
                   "<nobr>" +
                     "<input type='text' size='8' name='newSchema'>" +
-//                  "<button onclick='parent.addSchema();'>Add</button>" +
+//                  "<button onclick='parent.addSchema();'>" + addCmdLabel + "</button>" +
 // (bug 3317 workaround)
-                    "<button onclick=\"setTimeout('parent.addSchema();',0)\">Add</button>" +
+                    "<button onclick=\"setTimeout('parent.addSchema();',0)\">" + addCmdLabel + "</button>" +
                   "</nobr>" +
                 "</td>" +
               "</tr>" +
@@ -443,7 +454,7 @@
         top.frames[value_frame].document.open();
         top.frames[value_frame].document.write(
           "<body bgcolor='#cccccc' name='schema'>" +
-          "<b>Entries for field:</b><br>" +
+          "<b>" + valuesHeading + "</b><br>" +
           "<form name=value>" +
             "<table border='0' width='50%' bgcolor='#cccccc'>" +
               "<tr>" +
@@ -468,15 +479,15 @@
                   "</select>" +
                 "</td>" +
                 "<td>" +
-//                "<button onclick='parent.deleteValue();'>Remove</button>" +
+//                "<button onclick='parent.deleteValue();'>" + removeCmdLabel + "</button>" +
 // (bug 3317 workaround)
-                  "<button onclick=\"setTimeout('parent.deleteValue();',0)\">Remove</button>" +
+                  "<button onclick=\"setTimeout('parent.deleteValue();',0)\">" + removeCmdLabel + "</button>" +
                   "<br/>" +
                   "<nobr>" +
                     "<input type='text' size='8' name='newValue'>" +
-//                  "<button onclick='parent.addValue();'>Add</button>" +
+//                  "<button onclick='parent.addValue();'>" + addCmdLabel + "</button>" +
 // (bug 3317 workaround)
-                    "<button onclick=\"setTimeout('parent.addValue();',0)\">Add</button>" +
+                    "<button onclick=\"setTimeout('parent.addValue();',0)\">" + addCmdLabel + "</button>" +
                   "</nobr>" +
                 "</td>" +
               "</tr>" +
@@ -490,7 +501,7 @@
         top.frames[synonym_frame].document.open();
         top.frames[synonym_frame].document.write(
           "<body bgcolor='#cccccc' name='schema'>" +
-          "<b>Entries that mean the same as the above:</b><br>" +
+          "<b>" + synonymsHeading + "</b><br>" +
           "<form name=synonym>" +
             "<table border='0' width='50%' bgcolor='#cccccc'>" +
               "<tr>" +
@@ -513,15 +524,15 @@
                   "</select>" +
                 "</td>" +
                 "<td>" +
-//                "<button onclick='parent.deleteSynonymSchema();'>Remove</button>" +
+//                "<button onclick='parent.deleteSynonymSchema();'>" + removeCmdLabel + "</button>" +
 // (bug 3317 workaround)
-                  "<button onclick=\"setTimeout('parent.deleteSynonym();',0)\">Remove</button>" +
+                  "<button onclick=\"setTimeout('parent.deleteSynonym();',0)\">" + removeCmdLabel + "</button>" +
                   "<br/>" +
                   "<nobr>" +
                     "<input type='text' size='8' name='newSynonym'>" +
-//                  "<button onclick='parent.addSynonym();'>Add</button>" +
+//                  "<button onclick='parent.addSynonym();'>" + addCmdLabel + "</button>" +
 // (bug 3317 workaround)
-                    "<button onclick=\"setTimeout('parent.addSynonym();',0)\">Add</button>" +
+                    "<button onclick=\"setTimeout('parent.addSynonym();',0)\">" + addCmdLabel + "</button>" +
                   "</nobr>" +
                 "</td>" +
               "</tr>" +
@@ -538,9 +549,9 @@
             "<hr/>" +
             "<form name=button>" +
               "<div align='right'>" +
-                "<button value='OK' onclick='parent.generateOutput(this.value);'>OK</button>" +
+                "<button value='OK' onclick='parent.generateOutput(this.value);'>" + okCmdLabel + "</button>" +
                 " &nbsp;&nbsp;" +
-                "<button value='Cancel' onclick='parent.generateOutput(this.value);'>Cancel</button>" +
+                "<button value='Cancel' onclick='parent.generateOutput(this.value);'>" + cancelCmdLabel + "</button>" +
               "</div>" +
             "</form>" +
           "</body>"

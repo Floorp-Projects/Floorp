@@ -1,3 +1,19 @@
+    /* for localization */
+    var Bundle = srGetStrBundle("chrome://wallet/locale/CookieViewer.properties");
+    var siteCookiename = Bundle.GetStringFromName("siteCookiename");
+    var cookiesTab = Bundle.GetStringFromName("cookiesTab");
+    var permissionsTab = Bundle.GetStringFromName("permissionsTab");
+    var cookiesStored = Bundle.GetStringFromName("cookiesStored");
+    var name = Bundle.GetStringFromName("name");
+    var value = Bundle.GetStringFromName("value");
+    var path = Bundle.GetStringFromName("path");
+    var secure = Bundle.GetStringFromName("secure");
+    var expires = Bundle.GetStringFromName("expires");
+    var permissionsStored = Bundle.GetStringFromName("permissionsStored");
+    var removeCmdLabel = Bundle.GetStringFromName("removeCmdLabel");
+    var okCmdLabel = Bundle.GetStringFromName("okCmdLabel");
+    var cancelCmdLabel = Bundle.GetStringFromName("cancelCmdLabel");
+
     /* for xpconnect */
     var cookieviewer =
       Components.classes
@@ -84,12 +100,12 @@
             "<tr>" +
               "<td align='center' valign='middle' bgcolor='#ffffff'>" +
                 "<font size='2' color='#666666'>" +
-                  "<b>View stored cookies</b>" +
+                  "<b>" + cookiesTab + "</b>" +
                 "</font>" +
               "</td>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadPermissions();' href=''>" +
-                  "<font size='2'>View sites that can or cannot store cookies</font>" +
+                  "<font size='2'>" + permissionsTab + "</font>" +
                 "</a>" +
               "</td>" +
             "</tr>" +
@@ -100,7 +116,7 @@
 
       top.frames[title_frame].document.open();
       top.frames[title_frame].document.write
-        ("&nbsp;Cookies stored on your system");
+        ("&nbsp;" + cookiesStored);
       top.frames[title_frame].document.close();
 
       top.frames[prop_frame].document.open();
@@ -113,12 +129,12 @@
       index = 8*(top.frames[list_frame].document.fSelectCookie.selname.selectedIndex) + 1;
       top.frames[prop_frame].document.open();
       top.frames[prop_frame].document.write(
-        "<nobr><b>Name: </b>" + cookieList[index+1] + "</nobr><br/>" +
-        "<nobr><b>Value: </b>" + cookieList[index+2] + "</nobr><br/>" +
+        "<nobr><b>" + name + "</b> " + cookieList[index+1] + "</nobr><br/>" +
+        "<nobr><b>" + value + "</b> " + cookieList[index+2] + "</nobr><br/>" +
         "<nobr><b>" + cookieList[index+3] + ": </b>" + cookieList[index+4] + "</nobr><br/>" +
-        "<nobr><b>Path: </b>" + cookieList[index+5] + "</nobr><br/>" +
-        "<nobr><b>Secure: </b>" + cookieList[index+6] + "</nobr><br/>" +
-        "<nobr><b>Expires: </b>" + cookieList[index+7] + "</nobr><br/>"
+        "<nobr><b>" + path + "</b> " + cookieList[index+5] + "</nobr><br/>" +
+        "<nobr><b>" + secure + "</b> " + cookieList[index+6] + "</nobr><br/>" +
+        "<nobr><b>" + expires + "</b> " + cookieList[index+7] + "</nobr><br/>"
       );
       top.frames[prop_frame].document.close();
     }
@@ -128,7 +144,7 @@
       top.frames[list_frame].document.write(
         "<form name='fSelectCookie'>" +
           "<p>" +
-            "<b>site:cookie-name</b>" +
+            "<b>" + Bundle.GetStringFromName("siteCookiename") + " </b>" +
             "<table border='0'>" +
               "<tr>" +
                 "<td width='100%' valign='top'>" +
@@ -167,12 +183,12 @@
             "<tr>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadCookies();' href=''>" +
-                  "<font size='2'>View stored cookies</font>" +
+                  "<font size='2'>" + cookiesTab + "</font>" +
                 "</a>" +
               "</td>" +
               "<td align='center' valign='middle' bgcolor='#ffffff'>" +
                 "<font size='2' color='#666666'>" +
-                  "<b>View sites that can or cannot store cookies</b>" +
+                  "<b>" + permissionsTab + "</b>" +
                 "</font>" +
               "</td>" +
               "<td>&nbsp;&nbsp;&nbsp;</td>" +
@@ -184,7 +200,7 @@
 
       top.frames[title_frame].document.open();
       top.frames[title_frame].document.write
-        ("&nbsp;Sites that can(+) or cannot(-) store cookies");
+        ("&nbsp;" + permissionsStored + "");
       top.frames[title_frame].document.close();
 
       top.frames[prop_frame].document.open();
@@ -233,11 +249,11 @@
         "<form name='buttons'>" +
           "<br/>" +
           "&nbsp;" +
-          "<button onclick='top.DeleteItemSelected();'>Remove</button>" +
+          "<button onclick='top.DeleteItemSelected();'>" + removeCmdLabel + "</button>" +
           "<div align='right'>" +
-            "<button onclick='parent.Save();'>OK</button>" +
+            "<button onclick='parent.Save();'>" + okCmdLabel + "</button>" +
             " &nbsp;&nbsp;" +
-            "<button onclick='parent.Cancel();'>Cancel</button>" +
+            "<button onclick='parent.Cancel();'>" + cancelCmdLabel + "</button>" +
           "</div>" +
           "<input type='hidden' name='goneC' value='' size='-1'/>" +
           "<input type='hidden' name='goneP' value='' size='-1'/>" +

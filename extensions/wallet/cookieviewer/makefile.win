@@ -49,7 +49,12 @@ libs:: $(LIBRARY)
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+        rm -f $(DIST)\bin\chrome\wallet\content\default\CookieViewer.xul
+        rm -f $(DIST)\bin\chrome\wallet\content\default\CookieViewer.js
+        rm -f $(DIST)\bin\chrome\wallet\locale\en-US\CookieViewer.properties
 
 install:: $(DLL)
-        $(MAKE_INSTALL) CookieViewer.xul $(DIST)\bin\res\samples
-        $(MAKE_INSTALL) CookieViewer.js $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) CookieViewer.xul $(DIST)\bin\chrome\wallet\content\default
+        $(MAKE_INSTALL) CookieViewer.js $(DIST)\bin\chrome\wallet\content\default
+        $(MAKE_INSTALL) CookieViewer.dtd $(DIST)\bin\chrome\wallet\locale\en-US
+        $(MAKE_INSTALL) CookieViewer.properties $(DIST)\bin\chrome\wallet\locale\en-US

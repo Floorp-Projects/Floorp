@@ -1,3 +1,10 @@
+    /* for localization */
+    var Bundle = srGetStrBundle("chrome://wallet/locale/WalletPreview.properties");
+    var heading = Bundle.GetStringFromName("bypass");
+    var bypass = Bundle.GetStringFromName("heading");
+    var okCmdLabel = Bundle.GetStringFromName("okCmdLabel");
+    var cancelCmdLabel = Bundle.GetStringFromName("cancelCmdLabel");
+
     /* for xpconnect */
     var walletpreview =
       Components.classes
@@ -24,7 +31,7 @@
     function loadFillins(){
       top.frames[title_frame].document.open();
       top.frames[title_frame].document.write
-        ("&nbsp;Following items can be pre-filled for you.");
+        ("&nbsp;" + heading);
       top.frames[title_frame].document.close();
 
       top.frames[list_frame].document.open();
@@ -77,14 +84,14 @@
         "<form name=buttons>" +
           "<br/>" +
           "<input type='checkbox' name='skip'> " +
-            "Bypass this screen when prefilling this form in the future" +
+            bypass +
           "</input> " +
           "<br/>" +
           "<br/>" +
           "<div align='center'>" +
-            "<button onclick='parent.Save();'>OK</button>" +
+            "<button onclick='parent.Save();'>" + okCmdLabel + "</button>" +
             " &nbsp;&nbsp;" +
-            "<button onclick='parent.Cancel();'>Cancel</button>" +
+            "<button onclick='parent.Cancel();'>" + cancelCmdLabel + "</button>" +
           "</div>" +
           "<input type='hidden' name='fillins' value=' ' size='-1'>" +
           "<input type='hidden' name='list' value=' ' size='-1'>" +

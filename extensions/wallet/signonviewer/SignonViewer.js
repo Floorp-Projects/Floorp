@@ -1,3 +1,18 @@
+    /* for localization */
+    var Bundle = srGetStrBundle("chrome://wallet/locale/SignonViewer.properties");
+    var logonsSavedTab = Bundle.GetStringFromName("logonsSavedTab");
+    var logonsNotSavedTab = Bundle.GetStringFromName("logonsNotSavedTab");
+    var formsNotPreviewedTab = Bundle.GetStringFromName("formsNotPreviewedTab");
+    var formsNotSavedTab = Bundle.GetStringFromName("formsNotSavedTab");
+    var logonsSaved = Bundle.GetStringFromName("logonsSaved");
+    var siteUsername = Bundle.GetStringFromName("siteUsername");
+    var logonsNotSaved = Bundle.GetStringFromName("logonsNotSaved");
+    var formsNotPreviewed = Bundle.GetStringFromName("formsNotPreviewed");
+    var formsNotSaved = Bundle.GetStringFromName("formsNotSaved");
+    var removeCmdLabel = Bundle.GetStringFromName("removeCmdLabel");
+    var okCmdLabel = Bundle.GetStringFromName("okCmdLabel");
+    var cancelCmdLabel = Bundle.GetStringFromName("cancelCmdLabel");
+
     /* for xpconnect */
 
     var signonviewer =
@@ -130,24 +145,24 @@
             "<tr>" +
               "<td align='center' valign='middle' bgcolor='#ffffff'>" +
                 "<font size='2' color='#666666'>" +
-                  "<b>Logons saved</b>" +
+                  "<b>" + logonsSavedTab + "</b>" +
                 "</font>" +
               "</td>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadRejects();' href=''>" +
-                  "<font size='2'>Logons not saved</font>" +
+                  "<font size='2'>" + logonsNotSavedTab + "</font>" +
                 "</a>" +
               "</td>" +
 //          "</tr>" +
 //          "<tr>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadNopreviews();' href=''>" +
-                  "<font size='2'>Forms not previewed</font>" +
+                  "<font size='2'>" + formsNotPreviewedTab + "</font>" +
                 "</a>" +
               "</td>" +
 //            "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
 //              "<a onclick='top.loadNocaptures();' href=''>" +
-//                "<font size='2'>Forms not saved</font>" +
+//                "<font size='2'>" + formsNotSavedTab + "</font>" +
 //              "</a>" +
 //            "</td>" +
             "<td>&nbsp;&nbsp;&nbsp;</td>" +
@@ -159,7 +174,7 @@
 
       top.frames[title_frame].document.open();
       top.frames[title_frame].document.write
-        ("&nbsp;Logon information that has been saved");
+        ("&nbsp;" + logonsSaved + "");
       top.frames[title_frame].document.close();
 
       loadSignonsList();
@@ -170,7 +185,7 @@
       top.frames[list_frame].document.write(
         "<form name='fSelectSignon'>" +
           "<p>" +
-            "<b>site:username</b>" +
+            "<b>" + siteUsername + "</b>" +
             "<table border='0'>" +
               "<tr>" +
                 "<td width='100%' valign='top'>" +
@@ -205,12 +220,12 @@
             "<tr>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadSignons();' href=''>" +
-                  "<font size='2'>Logons saved</font>" +
+                  "<font size='2'>" + logonsSavedTab + "</font>" +
                 "</a>" +
               "</td>" +
               "<td align='center' valign='middle' bgcolor='#ffffff'>" +
                 "<font size='2' color='#666666'>" +
-                  "<b>Logons not saved</b>" +
+                  "<b>" + logonsNotSavedTab + "</b>" +
                 "</font>" +
               "</td>" +
               "<td>&nbsp;&nbsp;&nbsp;</td>" +
@@ -218,12 +233,12 @@
 //          "<tr>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadNopreviews();' href=''>" +
-                  "<font size='2'>Forms not previewed</font>" +
+                  "<font size='2'>" + formsNotPreviewedTab + "</font>" +
                 "</a>" +
               "</td>" +
 //            "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
 //              "<a onclick='top.loadNocaptures();' href=''>" +
-//                "<font size='2'>Forms not saved</font>" +
+//                "<font size='2'>" + formsNotSavedTab + "</font>" +
 //              "</a>" +
 //            "</td>" +
               "<td>&nbsp;&nbsp;&nbsp;</td>" +
@@ -235,7 +250,7 @@
 
       top.frames[title_frame].document.open();
       top.frames[title_frame].document.write
-        ("&nbsp;Sites for which logon information won't be saved");
+        ("&nbsp;" + logonsNotSaved + "");
       top.frames[title_frame].document.close();
 
       loadRejectsList();
@@ -280,24 +295,24 @@
             "<tr>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadSignons();' href=''>" +
-                  "<font size='2'>Logons saved</font>" +
+                  "<font size='2'>" + logonsSavedTab + "</font>" +
                 "</a>" +
               "</td>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadRejects();' href=''>" +
-                  "<font size='2'>Logons not saved</font>" +
+                  "<font size='2'>" + logonsNotSavedTab + "</font>" +
                 "</a>" +
               "</td>" +
 //          "</tr>" +
 //          "<tr>" +
               "<td align='center' valign='middle' bgcolor='#ffffff'>" +
                 "<font size='2' color='#666666'>" +
-                  "<b>Forms not previewed</b>" +
+                  "<b>" + formsNotPreviewedTab + "</b>" +
                 "</font>" +
               "</td>" +
 //            "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
 //              "<a onclick='top.loadNocaptures();' href=''>" +
-//                "<font size='2'>Forms not saved</font>" +
+//                "<font size='2'>" + formsNotSavedTab + "</font>" +
 //              "</a>" +
 //            "</td>" +
               "<td>&nbsp;&nbsp;&nbsp;</td>" +
@@ -309,7 +324,7 @@
 
       top.frames[title_frame].document.open();
       top.frames[title_frame].document.write
-        ("&nbsp;Forms that won't be previewed before being pre-filled");
+        ("&nbsp;" + formsNotPreviewed + "");
       top.frames[title_frame].document.close();
 
       loadNopreviewsList();
@@ -354,24 +369,24 @@
             "<tr>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadSignons();' href=''>" +
-                  "<font size='2'>Logons saved</font>" +
+                  "<font size='2'>" + logonsSavedTab + "</font>" +
                 "</a>" +
               "</td>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadRejects();' href=''>" +
-                  "<font size='2'>Logons not saved</font>" +
+                  "<font size='2'>" + logonsNotSavedTab + "</font>" +
                 "</a>" +
               "</td>" +
             "</tr>" +
             "<tr>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadNopreviews();' href=''>" +
-                  "<font size='2'>Forms not previewed</font>" +
+                  "<font size='2'>" + formsNotPreviewedTab + "</font>" +
                 "</a>" +
               "</td>" +
               "<td align='center' valign='middle' bgcolor='#ffffff'>" +
                 "<font size='2' color='#666666'>" +
-                  "<b>Forms not saved</b>" +
+                  "<b>" + formsNotSavedtab + "</b>" +
                 "</font>" +
               "</td>" +
               "<td>&nbsp;&nbsp;&nbsp;</td>" +
@@ -383,7 +398,7 @@
 
       top.frames[title_frame].document.open();
       top.frames[title_frame].document.write
-        ("&nbsp;Forms that won't be saved");
+        ("&nbsp;" + formsNotSaved + "");
       top.frames[title_frame].document.close();
 
       loadNocapturesList();
@@ -425,11 +440,11 @@
         "<form name='buttons'>" +
           "<br/>" +
           "&nbsp;" +
-          "<button onclick='top.DeleteItemSelected();'>Remove</button>" +
+          "<button onclick='top.DeleteItemSelected();'>" + removeCmdLabel + "</button>" +
           "<div align='right'>" +
-            "<button onclick='parent.Save();'>OK</button>" +
+            "<button onclick='parent.Save();'>" + okCmdLabel + "</button>" +
             " &nbsp;&nbsp;" +
-            "<button onclick='parent.Cancel();'>Cancel</button>" +
+            "<button onclick='parent.Cancel();'>" + cancelCmdLabel + "</button>" +
           "</div>" +
           "<input type='hidden' name='goneS' value='' size='-1'/>" +
           "<input type='hidden' name='goneR' value='' size='-1'/>" +

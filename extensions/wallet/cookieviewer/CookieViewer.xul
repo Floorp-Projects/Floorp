@@ -3,6 +3,7 @@
 <xul:window xmlns="http://www.w3.org/TR/REC-html40"
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <script src="chrome://global/content/strres.js"/>
   <script src="CookieViewer.js"/>
 
   <frameset rows = "10,10,125,50" border="0" framespacing="0" onload="loadFrames();">

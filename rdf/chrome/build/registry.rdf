@@ -195,6 +195,30 @@
 
   </chrome> 
 
+  <chrome about="chrome://wallet/"> 
+
+    <skin> 
+      <RDF:Description about="chrome://wallet/skin/">
+        <base>resource:/chrome/wallet/skin/default/</base>
+        <main>wallet.css</main> 
+      </RDF:Description> 
+    </skin> 
+
+    <content> 
+      <RDF:Description about="chrome://wallet/content/">
+        <base>resource:/chrome/wallet/content/default/</base>
+        <main>CookieViewer.xul</main> 
+      </RDF:Description> 
+    </content> 
+
+    <locale> 
+      <RDF:Description about="chrome://wallet/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
+  </chrome> 
+
   <chrome about="chrome://bookmarks/"> 
 
     <content> 
