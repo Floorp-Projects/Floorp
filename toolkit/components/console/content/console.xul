@@ -34,7 +34,8 @@
         windowtype="global:console"
         width="640" height="480"
         screenX="10" screenY="10"
-        persist="screenX screenY width height"> 
+        persist="screenX screenY width height"
+        onclose="return closeWindow(false);"> 
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/console.js"/>
@@ -45,7 +46,7 @@
               events="select"
               oncommandupdate="updateCopyMenu()">
     <command id="cmd_copy" oncommand="copyItemToClipboard()"/>
-    <command id="cmd_close" oncommand="window.close()"/>
+    <command id="cmd_close" oncommand="closeWindow(true)"/>
   </commandset>
 
   <broadcaster id="Console:clear" label="&clear.label;" 
