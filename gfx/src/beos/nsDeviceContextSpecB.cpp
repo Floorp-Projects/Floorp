@@ -27,8 +27,7 @@
  
 #include "nsIPref.h" 
 #include "prenv.h" /* for PR_GetEnv */ 
- 
-#include "nsIAppShellComponentImpl.h" 
+
 #include "nsIDOMWindow.h" 
 #include "nsIServiceManager.h" 
 #include "nsIDialogParamBlock.h" 
