@@ -155,5 +155,3 @@ interface nsITransactionManager : nsISupports
   void RemoveListener(in nsITransactionListener aListener);
 };
 
-#endif // nsITransactionManager_h__
-
