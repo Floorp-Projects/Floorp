@@ -31,6 +31,7 @@ OBJS =  \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom	\
+	-I$(PUBLIC)\libxpt	\
 	-I$(MOZ_TOOLS)\include	\
 	$(NULL)
 
@@ -38,6 +39,7 @@ LINCS=-I$(PUBLIC)\xpcom	\
 MYDIR=C:\USR\LOCAL
 
 MYLIBS=                         \
+ $(DIST)\lib\libxpt32.lib		\
  $(MOZ_TOOLS)\lib\glib-1.1.lib        \
  $(MOZ_TOOLS)\lib\libidl-0.5.lib     \
  $(NULL)
