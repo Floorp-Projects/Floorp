@@ -26,6 +26,7 @@
 /* standard headers */
 #include <stdio.h>
 #include <string.h>
+#include <setjmp.h>
 
 /* system headers */
 #include <Files.h>
@@ -60,11 +61,16 @@ FILE * FSp_fopen(ConstFSSpecPtr spec, const char * open_mode);
 size_t mac_get_file_length(const char* filename);
 }
 
+/* external variables */
+extern jmp_buf exit_jump;
+extern int exit_status;
+
 /* global variables */
 CWPluginContext gPluginContext;
 
 /* local variables */
 static CWFileSpec gOutputDirectory;
+static CWFileSpec gObjectCodeDirectory;
 
 /*
  *	xpt_linker	-	main entry-point for linker plugin
@@ -148,27 +154,28 @@ static char* full_path_to(short vRefNum, long dirID)
 
 /**
  * Returns the length of a file, assuming it is always located in the
- * project's output directory.
+ * project's object code directory.
  */
 size_t mac_get_file_length(const char* filename)
 {
-	FSSpec filespec = { gOutputDirectory.vRefNum, gOutputDirectory.parID };
-	c2p_strcpy(filespec.name, filename);
+	FSSpec fileSpec = { gObjectCodeDirectory.vRefNum, gObjectCodeDirectory.parID };
+	c2p_strcpy(fileSpec.name, filename);
 	long dataSize, rsrcSize;
-	if (FSpGetFileSize(&filespec, &dataSize, &rsrcSize) != noErr)
+	if (FSpGetFileSize(&fileSpec, &dataSize, &rsrcSize) != noErr)
 		dataSize = 0;
 	return dataSize;
 }
 
 /**
- * replaces standard fopen, assuming the file is always located in the
- * project's output directory.
+ * replaces standard fopen -- opens files for writing in the project's output directory,
+ * and files for reading in the object code directory.
  */
 FILE* std::fopen(const char* filename, const char *mode)
 {
-	FSSpec filespec = { gOutputDirectory.vRefNum, gOutputDirectory.parID };
-	c2p_strcpy(filespec.name, filename);
-	return FSp_fopen(&filespec, mode);
+	CWFileSpec& fileDir = (mode[0] == 'r' ? gObjectCodeDirectory : gOutputDirectory);
+	FSSpec fileSpec = { fileDir.vRefNum, fileDir.parID };
+	c2p_strcpy(fileSpec.name, filename);
+	return FSp_fopen(&fileSpec, mode);
 }
 
 static CWResult GetSettings(CWPluginContext context, XPIDLSettings& settings)
@@ -192,8 +199,6 @@ static CWResult GetSettings(CWPluginContext context, XPIDLSettings& settings)
 	return noErr;
 }
 
-// #define USING_FULL_PATHS
-
 static CWResult	Link(CWPluginContext context)
 {
 	long		index;
@@ -206,12 +211,7 @@ static CWResult	Link(CWPluginContext context)
 	if (err != cwNoErr)
 		return (err);
 
-	/*
-	 *	Once all initialization has been done, the principal interaction 
-	 *	between the linker and the IDE occurs in a loop where the linker 
-	 *	processes all files in the project.
-	 */
-	 
+	// find out how many files there are to link.
 	err = CWGetProjectFileCount(context, &filecount);
 	if (err != cwNoErr)
 		return (err);
@@ -222,108 +222,43 @@ static CWResult	Link(CWPluginContext context)
 	int argc = 0;
 	argv[argc++] = "xpt_link";
 
-	// get the full path to the output directory.
-	FSSpec& outputDir = gOutputDirectory;
-	err = CWGetOutputFileDirectory(context, &outputDir);
+	// get the output directory.
+	err = CWGetOutputFileDirectory(context, &gOutputDirectory);
+	if (!CWSUCCESS(err))
+		return (err);
+	
+	// get the object code directory.
+	err = CWGetStoredObjectFileSpec(context, 0, &gObjectCodeDirectory);
 	if (!CWSUCCESS(err))
 		return (err);
 
-#ifdef USING_FULL_PATHS	
-	char* outputPrefix = full_path_to(outputDir.vRefNum, outputDir.parID);
-	if (outputPrefix == NULL)
-		return cwErrOutOfMemory;
-	size_t outputPrefixLen = strlen(outputPrefix);
-	
-	// full path to output file.
-	char* outputFilePath = new char[outputPrefixLen + settings.output[0] + 1];
-	if (outputFilePath == NULL)
-		return cwErrOutOfMemory;
-	strcpy(outputFilePath, outputPrefix);
-	p2c_strcpy(outputFilePath + outputPrefixLen, settings.output);
-	argv[argc++] = outputFilePath;
-#else
 	// push the output file name.
-	argv[argc++] = p2c_strdup(settings.output);
-#endif
+	if ((argv[argc++] = p2c_strdup(settings.output)) == NULL)
+		return cwErrOutOfMemory;
 
 	for (index = 0; (err == cwNoErr) && (index < filecount); index++) {
-		// use the newer way to get this?
+		// get the name of each output file.
 		CWFileSpec outputFile;
 		err = CWGetStoredObjectFileSpec(context, index, &outputFile);
 		if (err == cwNoErr) {
-			argv[argc++] = p2c_strdup(outputFile.name);
-			continue;
-		}
-
-		// first, get info about the file.
-		CWProjectFileInfo fileInfo;
-		err = CWGetFileInfo(context, index, false, &fileInfo);
-		if (err != cwNoErr)
-			continue;
-		
-		// create file spec for the resulting .xpt file.
-		// idea:  compiler could just store an alias to the darn file in each object code entry.
-		FSSpec& xptFile = fileInfo.filespec;
-		xptFile.vRefNum = outputDir.vRefNum;
-		xptFile.parID = outputDir.parID;
-		
-		// change the extension from .idl to .xpt.
-		size_t len = xptFile.name[0] - 2;
-		xptFile.name[len++] = 'x';
-		xptFile.name[len++] = 'p';
-		xptFile.name[len++] = 't';
-		
-#ifdef USING_FULL_PATHS
-		// construct a full path to the .xpt file.
-		char* xptFilePath = new char[outputPrefixLen + xptFile.name[0] + 1];
-		if (xptFilePath == NULL)
-			return cwErrOutOfMemory;
-		strcpy(xptFilePath, outputPrefix);
-		p2c_strcpy(xptFilePath + outputPrefixLen, xptFile.name);
-
-		argv[argc++] = xptFilePath;
-#else
-		argv[argc++] = p2c_strdup(xptFile.name);
-#endif
-
-#if 0		
-		/* determine if we need to process this file */
-		if (!fileInfo.hasobjectcode && !fileInfo.hasresources && !fileInfo.isresourcefile)
-			continue;
-		
-		if (fileInfo.isresourcefile) {
-			/* handle resource files here */
-		} else {
-			/*
-			 *	Other kinds of files store stuff in the project, either in the form 
-			 *	of object code or of a resource fork image.  We handle those here.
-			 */
-			
-			/* load the object data */
-			CWMemHandle objectData;
-			err = CWLoadObjectData(context, index, &objectData);
-			if (err != cwNoErr)
-				continue;
-			
-			if (fileInfo.hasobjectcode) {
-				/* link the object code */
+			if ((argv[argc++] = p2c_strdup(outputFile.name)) == NULL) {
+				err = cwErrOutOfMemory;
+				break;
 			}
-			
-			if (fileInfo.hasresources) {
-				/* copy resources */
-			}
-			
-			/* release the object code when done */
-			err = CWFreeObjectData(context, index, objectData);
 		}
-#endif
 	}
 	
-	try {
-		xptlink_main(argc, argv);
-	} catch (int status) {
+	if (err != cwNoErr)
+		return err;
+	
+	// trap calls to exit, which longjmp back to here.
+	if (setjmp(exit_jump) == 0) {
+		if (xptlink_main(argc, argv) != 0)
+			err = cwErrRequestFailed;
+	} else {
 		// evidently the good old exit function got called.
-		err = cwErrRequestFailed;
+		if (exit_status != 0)
+			err = cwErrRequestFailed;
 	}
 	
 	return (err);
@@ -343,27 +278,14 @@ static CWResult	Disassemble(CWPluginContext context)
 	if (!CWSUCCESS(err))
 		return (err);
 
-#if 0
-	// construct the output file's name from its input file.
-	CWProjectFileInfo fileInfo;
-	err = CWGetFileInfo(context, fileNum, false, &fileInfo);
-	if (!CWSUCCESS(err))
-		return (err);
-
-	CWFileSpec sourceFile = fileInfo.filespec;
-	char* outputName = p2c_strdup(sourceFile.name);
-	char* dot = strrchr(outputName, '.');
-	if (dot != NULL)
-		strcpy(dot + 1, "xpt");
-#else
 	// get the output file's location from the stored object data.
-	CWFileSpec outputFile;
-	err = CWGetStoredObjectFileSpec(context, fileNum, &outputFile);
+	err = CWGetStoredObjectFileSpec(context, fileNum, &gObjectCodeDirectory);
 	if (!CWSUCCESS(err))
 		return (err);
 	
-	char* outputName = p2c_strdup(outputFile.name);
-#endif
+	char* outputName = p2c_strdup(gObjectCodeDirectory.name);
+	if (outputName == NULL)
+		return cwErrOutOfMemory;
 
 	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
 	GetSettings(context, settings);
@@ -374,11 +296,14 @@ static CWResult	Disassemble(CWPluginContext context)
 	if (settings.verbose) argv[argc++] = "-v";
 	argv[argc++] = outputName;
 	
-	try {
-		xptdump_main(argc, argv);
-	} catch (int status) {
+	// trap calls to exit, which longjmp back to here.
+	if (setjmp(exit_jump) == 0) {
+		if (xptdump_main(argc, argv) != 0)
+			err = cwErrRequestFailed;
+	} else {
 		// evidently the good old exit function got called.
-		err = cwErrRequestFailed;
+		if (exit_status != 0)
+			err = cwErrRequestFailed;
 	}
 
 	delete[] outputName;
@@ -409,29 +334,20 @@ static CWResult	GetTargetInfo(CWPluginContext context)
 	targ.targetCPU = '****';
 	targ.targetOS = '****';
 	
-	/* load the relevant prefs */
+	// load the relevant settings.
 	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
 	err = GetSettings(context, settings);
 	if (err != cwNoErr)
 		return (err);
 	
 #if CWPLUGIN_HOST == CWPLUGIN_HOST_MACOS
-	targ.outfileCreator		= 'MOSS';
-	targ.outfileType		= 'TYPL';
+	// tell the IDE about the output file.
+	targ.outfileCreator		= 'MMCH';
+	targ.outfileType		= 'CWIE';
 	targ.debuggerCreator	= kDebuggerCreator;	/* so IDE can locate our debugger	*/
 
-	/* we put output file in same folder as project, but with name stored in prefs */
-	// targ.outfile.name[0] = strlen(prefsData.outfile);
-	// BlockMoveData(prefsData.outfile, targ.outfile.name + 1, targ.outfile.name[0]);
-	
-	/* we put SYM file in same folder as project, but with name stored in prefs */
-	BlockMoveData(targ.outfile.name, targ.symfile.name, StrLength(targ.outfile.name)+1);
-	{
-		char* cstr;
-		cstr = p2cstr(targ.symfile.name);
-		strcat(cstr, ".SYM");
-		c2pstr(cstr);
-	}
+	BlockMoveData(settings.output, targ.outfile.name, 1 + settings.output[0]);
+	targ.symfile.name[0] = 0;
 #endif
 
 #if CWPLUGIN_HOST == CWPLUGIN_HOST_WIN32
