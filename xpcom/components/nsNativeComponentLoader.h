@@ -68,6 +68,10 @@ class nsNativeComponentLoader : public nsIComponentLoader {
                                         nsIServiceManager *aServMgr,
                                         nsIFactory **aFactory);
 
+
+    nsresult DumpLoadError(nsDll *dll, 
+                           const char *aCallerName,
+                           const char *aNsprErrorMsg);
 };
 
 #endif /* nsNativeComponentLoader_h__ */

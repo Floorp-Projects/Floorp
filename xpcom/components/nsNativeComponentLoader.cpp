@@ -126,17 +126,8 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
             if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
                 PR_GetErrorText(errorMsg);
 
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Load(\"%s\") FAILED with error: %s",
-                    dll->GetNativePath(), errorMsg));
+            DumpLoadError(dll, "GetFactory", errorMsg);
 
-#ifdef PRINT_CRITICAL_ERROR_TO_SCREEN
-            // Put the error message on the screen.
-            printf("****************************************************\n"
-                   "nsComponentManager: Load(\"%s\") FAILED with error: %s\n"
-                   "****************************************************\n",
-                   dll->GetNativePath(), errorMsg);
-#endif
             return NS_ERROR_FAILURE;
         }
     }
@@ -459,15 +450,8 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll, const char *registryLocatio
             if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
                 PR_GetErrorText(errorMsg);
 
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsNativeComponentLoader: SelfRegisterDll(%s) Load FAILED with error:%s", dll->GetNativePath(), errorMsg));
+            DumpLoadError(dll, "SelfRegisterDll", errorMsg);
 
-#ifdef PRINT_CRITICAL_ERROR_TO_SCREEN
-            printf("**************************************************\n"
-                   "nsNativeComponentLoader: Load(%s) FAILED with error: %s\n"
-                   "**************************************************\n",
-                   dll->GetNativePath(), errorMsg);
-#endif
             return NS_ERROR_FAILURE;
         }
 
@@ -515,6 +499,88 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll, const char *registryLocatio
     SetRegistryDllInfo(registryLocation, dll->GetLastModifiedTime(), dll->GetSize());
 
     return res;
+}
+
+//
+// MOZ_DEMANGLE_SYMBOLS is only a linux + MOZ_DEBUG thing.
+//
+
+#if defined(MOZ_DEMANGLE_SYMBOLS)
+#include "nsTraceRefcnt.h" // for nsTraceRefcnt::DemangleSymbol()
+#endif
+
+nsresult 
+nsNativeComponentLoader::DumpLoadError(nsDll *dll, 
+                                       const char *aCallerName,
+                                       const char *aNsprErrorMsg)
+{
+    PR_ASSERT(aCallerName != NULL);
+    
+    if (nsnull == dll || nsnull == aNsprErrorMsg)
+        return NS_OK;
+
+    nsCAutoString errorMsg(aNsprErrorMsg);
+
+#if defined(MOZ_DEMANGLE_SYMBOLS)
+	// Demangle undefined symbols
+	nsCAutoString undefinedMagicString("undefined symbol:");
+    
+	PRInt32 offset = errorMsg.Find(undefinedMagicString, PR_TRUE);
+    
+	if (offset != kNotFound)
+	{
+        nsCAutoString symbol(errorMsg);
+        nsCAutoString demangledSymbol("");
+        
+        symbol.Cut(0,offset);
+        
+        symbol.Cut(0,undefinedMagicString.Length());
+        
+        symbol.StripWhitespace();
+        
+        char demangled[4096] = "\0";
+        
+        nsTraceRefcnt::DemangleSymbol(symbol,demangled,sizeof(demangled));
+        
+        if (demangled && strlen(demangled))
+            demangledSymbol = demangled;
+        
+        if (demangledSymbol != "")
+        {
+            nsCAutoString tmp(errorMsg);
+            
+            
+            tmp.Cut(offset + undefinedMagicString.Length(),
+                    tmp.Length() - offset - undefinedMagicString.Length());
+            
+            tmp += " \n";
+            
+            tmp += demangledSymbol;
+            
+            errorMsg = tmp;
+        }	  
+	}
+#endif // MOZ_DEMANGLE_SYMBOLS
+    
+    // Do NSPR log
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+           ("nsNativeComponentLoader: %s(%s) Load FAILED with error:%s", 
+            aCallerName,
+            dll->GetNativePath(), 
+            (const char *) errorMsg));
+    
+
+    // Dump to screen if needed
+#ifdef PRINT_CRITICAL_ERROR_TO_SCREEN
+    printf("**************************************************\n"
+           "nsNativeComponentLoader: %s(%s) Load FAILED with error: %s\n"
+           "**************************************************\n",
+           aCallerName,
+           dll->GetNativePath(), 
+           (const char *) errorMsg);
+#endif
+
+    return NS_OK;
 }
 
 nsresult
