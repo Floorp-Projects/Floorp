@@ -109,12 +109,17 @@ nsLDAPDataSource.prototype = {
      */
     Init: function(aServer, aPort, aBindname)
     {
-
-	// XXX - if this a "single-connection" datasource; we should figure
+	// XXX - if this a "single-connection" datasource 
+	// (ie non-anonymous to a specific server); we should figure
 	// that out here by noticing that there is a ; after "rdf:ldap", and
 	// that after that there is a cookie which happens to be an LDAP URL
 	// designating the connection.  for now, we just assume that this will
-	// be a "universal" datasource.
+	// be a "universal" (anonymous to any & all servers) datasource.  
+	//
+	// XXX rayw changed the delimiter char; it's not a ; any more.  
+	// I think it might be ? now.  He or waterson would know.  The code
+	// that knows about this is somewhere in rdf, perhaps in the XUL
+	// template builder.
 
 	// get the RDF service
 	//
@@ -245,7 +250,7 @@ nsLDAPDataSource.prototype = {
 		     // kick off a search
 		     //
 		     var searchOp = Components.classes[
-			 "mozilla.network.ldapoperation"].
+			 "@mozilla.org/network/ldap-operation;1"].
 		             createInstance(Components.interfaces.
 			         nsILDAPOperation);
 		     // XXX err handling
@@ -451,6 +456,8 @@ var nsLDAPDataSourceModule = {
       }
     },
 
+    // probably don't need this; use nsLDAPService instead
+    //
     nsLDAPConnectionRDFDelegateFactoryFactory: {
 	createInstance: function(outer, iid) {
 	  if (outer != null)
