@@ -239,7 +239,18 @@ nsNSSSocketInfo::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 NS_IMETHODIMP
 nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
-  mCallbacks = aCallbacks;
+  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+  if (!proxyman) 
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
+  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                              NS_GET_IID(nsIInterfaceRequestor),
+                              NS_STATIC_CAST(nsIInterfaceRequestor*,aCallbacks),
+                              PROXY_SYNC,
+                              getter_AddRefs(proxiedCallbacks));
+
+  mCallbacks = proxiedCallbacks;
   return NS_OK;
 }
 
