@@ -289,6 +289,8 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     m_totalAmountWritten = 0;
 #endif /* UNREADY_CODE */
 
+    m_sendDone = PR_FALSE;
+
     m_sizelimit = 0;
     m_totalMessageSize = 0;
     nsCOMPtr<nsIFileSpec> fileSpec;
@@ -378,7 +380,7 @@ const char * nsSmtpProtocol::GetUserDomainName()
 NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 nsresult aStatus)
 {
-  if (aStatus == NS_OK && m_nextState != SMTP_FREE) {
+  if (aStatus == NS_OK && !m_sendDone) {
     // if we are getting OnStopRequest() with NS_OK, 
     // but we haven't finished clean, that's spells trouble.
     // it means that the server has dropped us before we could send the whole mail
@@ -1400,6 +1402,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
   UpdateStatus(SMTP_PROGRESS_MAILSENT);
 
     /* else */
+    m_sendDone = PR_TRUE;
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
        SendData(url, "QUIT"CRLF); // send a quit command to close the connection with the server.
 	m_nextState = SMTP_RESPONSE;

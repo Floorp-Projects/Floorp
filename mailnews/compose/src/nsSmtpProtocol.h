@@ -189,6 +189,8 @@ private:
   
     PRBool m_tlsInitiated;
 
+    PRBool m_sendDone;
+
     PRInt32 m_totalAmountRead;
 #ifdef UNREADY_CODE 
     // message specific information
