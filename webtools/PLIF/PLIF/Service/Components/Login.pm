@@ -304,7 +304,7 @@ sub setupInstall {
         }
 
         # get the address of the administrator user
-        my $address = $app->input->getArgument('user.login.administrator.adddress');
+        my $address = $app->input->getArgument('user.login.administrator.address');
         if (not defined($address)) {
             return 'user.login.administrator.address';
         }
