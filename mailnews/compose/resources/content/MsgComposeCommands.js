@@ -1528,6 +1528,10 @@ function LoadIdentity(startup)
           
           if (needToCleanUp)
             awCleanupRows();
+
+          try {
+            msgCompose.SetSignature(currentIdentity);
+          } catch (ex) { dump("### Cannot set the signature: " + ex + "\n");}
         }
         
         //Setup autocomplete session, we can doit from here as it's use as a service
