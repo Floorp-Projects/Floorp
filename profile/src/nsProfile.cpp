@@ -324,7 +324,7 @@ nsresult
 nsProfile::LoadDefaultProfileDir(char *profstr)
 {
     nsresult rv;
-    nsIURI* profURL = nsnull;
+    nsCOMPtr<nsIURI> profURL;
     int numProfiles=0;
   
     PRInt32 profWinWidth  = 615;
@@ -371,11 +371,7 @@ nsProfile::LoadDefaultProfileDir(char *profstr)
 
     if (profstr)
         {
-#ifdef NECKO
-            rv = NS_NewURI(&profURL, profstr);
-#else
-            rv = NS_NewURL(&profURL, profstr);
-#endif
+            rv = NS_NewURI(getter_AddRefs(profURL), profstr);
 	
             if (NS_FAILED(rv)) {
                 return rv;
@@ -387,8 +383,6 @@ nsProfile::LoadDefaultProfileDir(char *profstr)
                                                     nsnull, profWinWidth, profWinHeight,
                                                     getter_AddRefs(profWindow));
 
-            NS_RELEASE(profURL);
-		
             if (NS_FAILED(rv)) 
                 {
                     return rv;
@@ -586,14 +580,14 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 
 				if (NS_SUCCEEDED(rv))
 				{
-					char* encodedProfileDir = nsnull;
+					nsXPIDLCString encodedProfileDir;
 
 					// Get the value of entry "directory"
-			        rv = m_reg->GetString( newKey, "directory", &encodedProfileDir );
+			        rv = m_reg->GetString( newKey, "directory", getter_Copies(encodedProfileDir));
 
 					if (NS_SUCCEEDED(rv))
 					{
-						char* isMigrated = nsnull;
+						nsXPIDLCString isMigrated;
                         nsXPIDLCString orgProfileDir;
 						
 						// Use persistent classes to make the directory names XPlatform
@@ -602,13 +596,11 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 						stream >> descriptor;
 						*profileDir = descriptor;
 
-						PR_FREEIF(encodedProfileDir);
-						
-						// nsXPIDLCString::operator =() now copies, and owns result.
 						orgProfileDir = profileDir->GetCString();
 
 						// Get the value of entry "migrated" to check the nature of the profile
-						m_reg->GetString( newKey, "migrated", &isMigrated);
+						m_reg->GetString( newKey, "migrated",
+                                          getter_Copies(isMigrated));
 				
 						// Set this to be a current profile only if it is a 5.0 profile
 						if (PL_strcmp(isMigrated, "yes") == 0)
@@ -714,14 +706,14 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 		if (NS_SUCCEEDED(rv))
 		{
 			// Enumerate all subkeys (immediately) under the given node.
-			nsIEnumerator *enumKeys;
+			nsCOMPtr<nsIEnumerator> enumKeys;
 			nsIRegistry::Key key;
 
 			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
 
 			if (NS_SUCCEEDED(rv))
 			{
-		        rv = m_reg->EnumerateSubtrees( key, &enumKeys );
+		        rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
 
 				if (NS_SUCCEEDED(rv))
 				{
@@ -730,9 +722,9 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 
 			        while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
 					{
-						nsISupports *base;
+						nsCOMPtr<nsISupports> base;
 
-						rv = enumKeys->CurrentItem( &base );
+						rv = enumKeys->CurrentItem( getter_AddRefs(base) );
 
 						if (NS_SUCCEEDED(rv)) 
 						{
@@ -746,10 +738,10 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 							if (NS_SUCCEEDED(rv)) 
 							{
 								// Get node name.
-		                        char *profile = nsnull;
+		                        nsXPIDLCString profile;
 								char *isMigrated = nsnull;
 
-			                    rv = node->GetName( &profile );
+			                    rv = node->GetName( getter_Copies(profile) );
 
 								if (NS_SUCCEEDED(rv) && (profile))
 								{
@@ -771,14 +763,12 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 										}
 									}
 								}
-								node->Release();
+								NS_RELEASE(node);
 					        }
-							base->Release();
 						}	
 						rv = enumKeys->Next();
 					}
 					*numProfiles = numKeys;
-					NS_RELEASE(enumKeys);
 				}
 				else
 				{
@@ -838,14 +828,14 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 		if (NS_SUCCEEDED(rv))
 		{
 	        // Enumerate all subkeys (immediately) under the given node.
-		    nsIEnumerator *enumKeys;
+		    nsCOMPtr<nsIEnumerator> enumKeys;
 			nsIRegistry::Key key;
 
 	        rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
 
 			if (NS_SUCCEEDED(rv))
 			{
-		        rv = m_reg->EnumerateSubtrees( key, &enumKeys );
+		        rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
 
 				if (NS_SUCCEEDED(rv))
 				{
@@ -854,8 +844,8 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 
 			        while(NS_SUCCEEDED(rv)&& !enumKeys->IsDone() ) 
 					{
-						nsISupports *base;
-						rv = enumKeys->CurrentItem( &base );		
+						nsCOMPtr<nsISupports> base;
+						rv = enumKeys->CurrentItem(getter_AddRefs(base));
 
 						if (NS_SUCCEEDED(rv))
 						{
@@ -926,7 +916,6 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 						}
 						rv = enumKeys->Next();
 					} //end while loop
-					NS_RELEASE(enumKeys);
 				}
 				else
 				{
@@ -1526,7 +1515,7 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 // In the process creates new profile subtree.
 nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 {
-	nsIEnumerator	 *enumKeys;
+	nsCOMPtr<nsIEnumerator> enumKeys;
     nsIRegistry::Key sourceKey, destKey, profileRootKey;
     
 	nsresult rv = m_reg->OpenDefault();
@@ -1547,7 +1536,7 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 
 				if (NS_SUCCEEDED(rv))
 				{
-	                rv = m_reg->EnumerateValues(sourceKey, &enumKeys );
+	                rv = m_reg->EnumerateValues(sourceKey, getter_AddRefs(enumKeys));
 
 					if (NS_SUCCEEDED(rv)) {
 						rv = enumKeys->First();
@@ -1555,8 +1544,8 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 						// Enumerate subkeys till done.
 						while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
 						{
-							nsISupports *base;
-							rv = enumKeys->CurrentItem( &base );
+							nsCOMPtr<nsISupports> base;
+							rv = enumKeys->CurrentItem(getter_AddRefs(base));
                     
 							// Test result.
 							if (NS_SUCCEEDED(rv)) 
@@ -1597,7 +1586,6 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 							}
 							rv = enumKeys->Next();
 						}
-						NS_RELEASE(enumKeys);
 					}
 				}
 			}
@@ -1738,14 +1726,14 @@ void nsProfile::GetAllProfiles()
         if (NS_SUCCEEDED(rv)) 
 		{
             // Enumerate all subkeys (immediately) under the given node.
-            nsIEnumerator *enumKeys;
+            nsCOMPtr<nsIEnumerator> enumKeys;
             nsIRegistry::Key key;
 
             rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
 
             if (NS_SUCCEEDED(rv)) 
 			{
-                rv = m_reg->EnumerateSubtrees( key, &enumKeys );
+                rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
 
                 if (NS_SUCCEEDED(rv)) 
 				{
@@ -1755,8 +1743,8 @@ void nsProfile::GetAllProfiles()
                     // Enumerate subkeys till done.
                     while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
                     {
-						nsISupports *base;
-						rv = enumKeys->CurrentItem( &base );
+						nsCOMPtr<nsISupports> base;
+						rv = enumKeys->CurrentItem(getter_AddRefs(base));
 
 						if (NS_SUCCEEDED(rv)) 
 						{
@@ -1802,9 +1790,8 @@ void nsProfile::GetAllProfiles()
 										}
 									}
 								}
-								node->Release();
+								NS_RELEASE(node);
 					        }
-							base->Release();
 						}	
 					    rv = enumKeys->Next();
 
@@ -1817,7 +1804,6 @@ void nsProfile::GetAllProfiles()
 						idx++;
 					}
 					g_numProfiles = idx;
-					NS_RELEASE(enumKeys);
 				}
             }
         }
@@ -1990,12 +1976,13 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 		if (NS_SUCCEEDED(rv))
 		{
             // Enumerate all subkeys (immediately) under the given node.
-            nsIEnumerator *enumKeys;
+            nsCOMPtr<nsIEnumerator> enumKeys;
 
             if (NS_SUCCEEDED(rv)) 
 			{
             
-				rv = m_reg->EnumerateSubtrees(nsIRegistry::Users, &enumKeys );
+				rv = m_reg->EnumerateSubtrees(nsIRegistry::Users,
+                                              getter_AddRefs(enumKeys));
 
                 if (NS_SUCCEEDED(rv)) 
 				{
@@ -2005,8 +1992,8 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 					// Enumerate subkeys till done.
                     while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
                     {
-						nsISupports *base;
-						rv = enumKeys->CurrentItem( &base );
+						nsCOMPtr<nsISupports> base;
+						rv = enumKeys->CurrentItem(getter_AddRefs(base));
 
 						if (NS_SUCCEEDED(rv)) 
 						{
@@ -2055,7 +2042,6 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 						}	
 					    rv = enumKeys->Next();
 					}
-					NS_RELEASE(enumKeys);
 				}
             }
 			m_reg->Close();
@@ -2647,14 +2633,14 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 		if (NS_SUCCEEDED(rv))
 		{
 			// Enumerate all subkeys (immediately) under the given node.
-			nsIEnumerator *enumKeys;
+			nsCOMPtr<nsIEnumerator> enumKeys;
 			nsIRegistry::Key key;
 
 			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
 
 			if (NS_SUCCEEDED(rv))
 			{
-		        rv = m_reg->EnumerateSubtrees( key, &enumKeys );
+		        rv = m_reg->EnumerateSubtrees( key, getter_AddRefs(enumKeys));
 
 				if (NS_SUCCEEDED(rv))
 				{
@@ -2663,9 +2649,9 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 
 			        while( NS_SUCCEEDED( rv ) && !enumKeys->IsDone() ) 
 					{
-						nsISupports *base;
+						nsCOMPtr<nsISupports> base;
 
-						rv = enumKeys->CurrentItem( &base );
+						rv = enumKeys->CurrentItem(getter_AddRefs(base));
 
 						if (NS_SUCCEEDED(rv)) 
 						{
@@ -2703,14 +2689,12 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 										}
 									}
 								}
-								node->Release();
+								NS_RELEASE(node);
 					        }
-							base->Release();
 						}	
 						rv = enumKeys->Next();
 					}
 					*numProfiles = numKeys;
-					NS_RELEASE(enumKeys);
 				}
 				else
 				{
