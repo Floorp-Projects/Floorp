@@ -44,7 +44,7 @@ public class JCASigTest {
 
     public static void usage() {
         System.out.println(
-            "Usage: java org.mozilla.jss.tests.JCASigTest <dbdir>");
+            "Usage: java org.mozilla.jss.tests.JCASigTest <dbdir> <passwordFile>");
     }
 
     public static void main(String args[]) {
@@ -56,17 +56,19 @@ public class JCASigTest {
         KeyPairGenerator kpgen;
         KeyPair keyPair;
 
-        if (args.length != 1) {
+        if (args.length != 2) {
             usage();
             return;
         }
         String dbdir = args[0];
-
+        String file = args[1];
         try {
             CryptoManager.InitializationValues vals = new
-                      CryptoManager.InitializationValues ( args[0] );
+                      CryptoManager.InitializationValues (dbdir );
+            vals.removeSunProvider = true;
             CryptoManager.initialize(vals);
             manager = CryptoManager.getInstance();
+            manager.setPasswordCallback( new FilePasswordCallback(file) );
 
             Debug.setLevel(Debug.OBNOXIOUS);
 
@@ -86,7 +88,7 @@ public class JCASigTest {
 
             // RSA MD5
             signer = Signature.getInstance("MD5/RSA");
-        
+
             System.out.println("Created a signing context");
             provider = signer.getProvider();
             System.out.println("The provider used to for the signer MD5/RSA was " + provider.getName() );
