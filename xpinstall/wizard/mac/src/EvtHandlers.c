@@ -134,18 +134,16 @@ void HandleKeyDown(EventRecord* evt)
 					return;
 				case kSetupTypeID:
 					ClearDiskSpaceMsgs();
-					KillControls(gWPtr);			
+					KillControls(gWPtr);	
 					/* treat last setup type selection as custom */
 					if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
 						ShowComponentsWin();
 					else
 						ShowTerminalWin();
 					return;				
-				case kComponentsID:
-					KillControls(gWPtr);
-					gControls->cw->compListBox.top = 0;
-					EraseRect(&gControls->cw->compListBox);
+				case kComponentsID:					
 					ClearDiskSpaceMsgs();
+					KillControls(gWPtr);
 					// if additions exist				// XXX_ADD
 						// show additions dialog
 					// else
@@ -160,6 +158,7 @@ void HandleKeyDown(EventRecord* evt)
 				case kTerminalID:
 					if (!sInstallStarted)
 					{
+					    ClearSiteSelector();
 						SpawnSDThread(Install, &tid);
 						sInstallStarted = true;
 					}

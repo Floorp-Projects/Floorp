@@ -127,7 +127,6 @@ if (err) 								\
 #define kSNameMaxLen	128	  /*    v--- for KV_DELIM char   */
 #define	kSectionMaxLen	(kKeyMaxLen+1+kValueMaxLen)*kMaxNumKeys
 #define kMaxURLPerComp	8
-#define kURLMaxLen		255
 #define kArchiveMaxLen	64
 #define kGenIDIFileSize	0x2000
 #define kEnableControl	0
@@ -142,7 +141,8 @@ if (err) 								\
 #define kMaxCoreFiles	256		
 #define kMaxProgUnits	100.0	
 #define kMaxRunApps		32
-#define kMaxLegacyChecks 32		/* end constants */
+#define kMaxLegacyChecks 32		
+#define kMaxSites		32		/* end constants */
 
 
 #define rRootWin 		128		/* widget rsrc ids */
@@ -169,10 +169,12 @@ if (err) 								\
 #define rStartMsgBox	160
 #define rAllProgBar		161
 #define rPerXPIProgBar	162
+#define rSiteSelector	163
 
 #define rGrayPixPattern 128
 
 #define rAlrtSelectCont	150
+#define rAlrtOS85Reqd	160
 
 	
 #define rMBar			128		/* menu rsrc ids */	
@@ -271,6 +273,7 @@ if (err) 								\
 #define sInstSize		24
 #define sAttributes		25
 #define	sURL			26
+#define sServerPath		45
 #define sDependee		31
 #define sRandomInstall	34
 
@@ -282,6 +285,11 @@ if (err) 								\
 #define	sFilename		39
 #define sVersion		40
 #define sMessage		41
+
+#define sSiteSelector	42
+#define sDomain			43
+#define sDescription	44
+#define sRedirect		45
 
 #define sTermDlg		27
 		
@@ -305,7 +313,8 @@ typedef struct InstComp {
 	long	size;
 	
 	/* URL details */
-	Handle 	url[kMaxURLPerComp];
+	Handle 	domain[kMaxURLPerComp];
+	Handle	serverPath[kMaxURLPerComp];
 	short	numURLs;
 	
 	/* attributes */
@@ -342,6 +351,17 @@ typedef struct LegacyCheck {
 	Handle	message;
 } LegacyCheck;
 
+typedef struct SiteSelector {
+	Handle 	desc;
+	Handle	domain;
+} SiteSelector;
+
+typedef struct Redirect {
+	Handle 	desc;
+	Handle 	url[kMaxSites];
+	short	numURLs;
+} Redirect; 
+
 typedef struct Config {
 	
 	/*------------------------------------------------------------*
@@ -368,7 +388,10 @@ typedef struct Config {
 	InstComp	comp[kMaxComponents];
 	
 	/* TerminalWin */
-	Handle	startMsg;
+	Handle		 startMsg;
+	short		 numSites;
+	SiteSelector site[kMaxSites];
+	Redirect	 redirect;
 	
 	/* "Tunneled" IDI keys */
 	Handle	coreFile;
@@ -405,6 +428,10 @@ typedef struct Options {
 	short			numCompSelected;
 		/* NOTE: if instChoice is not last (i.e. not Custom) then populate
 				 the compSelected list with the SetupType.comps associated */
+				 
+	/* from TerminalWin */
+	short			siteChoice;
+	
 } Options;
 
 typedef struct LicWin {
@@ -443,6 +470,7 @@ typedef struct TermWin {
 	TEHandle 		allProgressMsg;
 	ControlHandle	xpiProgressBar;
 	TEHandle		xpiProgressMsg;
+	ControlHandle	siteSelector;
 } TermWin;
 
 typedef struct InstWiz {
@@ -489,6 +517,7 @@ extern "C" {
 #endif
 
 void 		main(void);
+Boolean		VerifyEnv(void);
 void		Init(void);
 void		InitControlsObject(void);
 OSErr		GetCWD(long *outDirID, short *outVRefNum);
@@ -634,6 +663,7 @@ void		ShowTerminalWin(void);
 void		InTerminalContent(EventRecord*, WindowPtr);
 void		UpdateTerminalWin(void);
 Boolean		SpawnSDThread(ThreadEntryProcPtr, ThreadID *);
+void		ClearSiteSelector(void);
 void		EnableTerminalWin(void);
 void		DisableTerminalWin(void);
 
@@ -641,6 +671,8 @@ void		DisableTerminalWin(void);
  *   InstAction
  *-----------------------------------------------------------*/
 pascal void *Install(void*);
+Boolean		DownloadRedirect(short, long, FSSpecPtr);
+void		ParseRedirect(FSSpecPtr);
 Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
 Boolean		ExistArchives(short, long);
