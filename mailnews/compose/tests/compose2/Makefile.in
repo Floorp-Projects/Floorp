@@ -32,10 +32,12 @@ CPPSRCS		= test2.cpp
 
 LIBS		= \
 		$(MOZ_TIMER_LIBS) \
+		$(NSPR_LIBS)	\
 		-lxpcom \
 		-lmozjs \
 		-lraptorgfx \
 		$(NULL)
+
 
 include $(topsrcdir)/config/rules.mk
 

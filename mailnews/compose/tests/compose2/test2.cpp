@@ -68,6 +68,10 @@
 #endif
 #endif
 
+#ifndef TPATH_LEN
+#define TPATH_LEN 1024
+#endif
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
@@ -123,7 +127,8 @@ GetHackIdentity()
 {
 nsresult rv;
 
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) 
   {
     printf("Failure on Mail Session Init!\n");
@@ -131,16 +136,8 @@ nsresult rv;
   }  
 
   nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
-  nsCOMPtr<nsIMsgAccountManager>  accountManager;
 
-  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) 
-  {
-    printf("Failure getting account Manager!\n");
-    return nsnull;
-  }  
-
-  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+  rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
   {
     printf("Failure getting Identity!\n");
@@ -318,7 +315,7 @@ WriteTempMailFile(nsFileSpec *mailFile)
   nsIMsgIdentity *identity = GetHackIdentity();
   const char *to = "rhp@netscape.com";
   char  *aEmail = nsnull;
-  char  *aFullName = nsnull;
+  PRUnichar  *aFullName = nsnull;
   char  addr[256];
   char  subject[256];
   char  emailMessage[2048];
