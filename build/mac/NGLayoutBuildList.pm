@@ -533,16 +533,17 @@ sub BuildClientDist()
 	#WIDGET
     _InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
     _InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
-    _InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
-    _InstallFromManifest(":mozilla:widget:timer:public:MANIFEST",						"$distdirectory:widget:");
+    _InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",						"$distdirectory:widget:");
+    _InstallFromManifest(":mozilla:widget:timer:public:MANIFEST",					"$distdirectory:widget:");
 
     #RDF
     _InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
     _InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
     _InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
-    _InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",						"$distdirectory:rdf:");
+    _InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",					"$distdirectory:rdf:");
     _InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
     _InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
+    _InstallFromManifest(":mozilla:rdf:tests:domds:MANIFEST",						"$distdirectory:idl:");
     
     #BRPROF
 	_InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
@@ -551,7 +552,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:chrome:");
     
 	#EDITOR
-	_InstallFromManifest(":mozilla:editor:idl:MANIFEST",								"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:editor:idl:MANIFEST",							"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
 	_InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",					"$distdirectory:editor:txmgr");
 	_InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",					"$distdirectory:editor:txtsvc");
@@ -840,6 +841,8 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.mcp",	"prefm");
 		
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
+	BuildIDLProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSourceIDL.mcp",		"domds");
+	
 	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
 	BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
 	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp",	"bookmarks");
@@ -1035,16 +1038,18 @@ sub BuildCommonProjects()
 	}
 
 	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:profile:macbuild:profileservices.mcp",					"profileservices$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:profile:macbuild:profileservices.mcp",			"profileservices$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp",			"prefm$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp",	"prefm$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",     "Cookie$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",    		"Cookie$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",			"Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",	"WalletViewers$D.shlb", "walletviewer.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"BrowsingProfile$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    
+	BuildOneProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSource.mcp",		"DOMDataSource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
     
     BuildOneProject(":mozilla:db:mork:macbuild:mork.mcp",						"Mork$D.shlb", "Mork.toc", 1, $main::ALIAS_SYM_FILES, 1);
 #// XXX moved this TEMPORARILY to layout while we sort out a dependency
@@ -1176,6 +1181,9 @@ sub MakeResourceAliases()
 	
 	my($rdf_dir) = "$resource_dir" . "rdf:";
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
+
+	my($domds_dir) = "$samples_dir" . "rdf:";
+	_InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",					"$domds_dir");
 
 	my($xpinstall_dir) = "$resource_dir" . "xpinstall:";
 	_InstallResources(":mozilla:xpinstall:res:MANIFEST",                                "$xpinstall_dir");
