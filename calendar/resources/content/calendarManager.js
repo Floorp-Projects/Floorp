@@ -312,8 +312,7 @@ calendarManager.prototype.getSelectedCalendar = function calMan_getSelectedCalen
 calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrieveAndSaveRemoteCalendar( ThisCalendarObject )
 {
    //the image doesn't always exist. If it doesn't exist, it causes problems, so check for it here
-   if( document.getElementById( "calendar-list-image-"+ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) ) )
-      document.getElementById( "calendar-list-image-"+ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) ).setAttribute( "synching", "true" );
+   document.getElementById( ThisCalendarObject.getSubject() ).childNodes[1].childNodes[0].setAttribute( "synching", "true" );
 
    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
    
@@ -339,7 +338,7 @@ calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrie
       
       CalendarManager.CalendarWindow.currentView.refreshEvents();
    
-      //document.getElementById( "calendar-list-image-"+calendarToGet.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) ).removeAttribute( "synching" );
+      document.getElementById( ThisCalendarObject.getSubject() ).childNodes[1].childNodes[0].removeAttribute( "synching" );
    }
 
    var CalendarData = this.getRemoteCalendarText( Channel, onResponse, null );

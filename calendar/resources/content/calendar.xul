@@ -312,16 +312,16 @@
                      <listitem uri="rdf:*" 
                         calendarPath="rdf:http://home.netscape.com/NC-rdf#path"
                         onclick="switchCalendar( event );">
-                        <listcell id="calendar-list-item-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
-                           class="calendar-list-item-class"
+                        <listcell class="calendar-list-item-class"
                            label="rdf:http://home.netscape.com/NC-rdf#name"
                            flex="1"
                            type="checkbox"
                            checked="rdf:http://home.netscape.com/NC-rdf#active"
                            />
+                        <!-- If you add something between the above listcell and this listcell,
+                           or between the next listcell and the image tag, you have to modify calendarManager.js -->
                         <listcell>
-                           <image id="calendar-list-image-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
-                              class="calendar-list-item-class"/>
+                           <image class="calendar-list-item-class"/>
                         </listcell>
                      </listitem>
                   </rule>
