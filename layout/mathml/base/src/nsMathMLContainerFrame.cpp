@@ -41,7 +41,7 @@
 
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
-
+#include "nsIDOMMutationEvent.h"
 #include "nsIFrameManager.h"
 #include "nsStyleChangeList.h"
 
@@ -897,40 +897,15 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
   return TransmitAutomaticData(aPresContext);
 }
 
-// There are precise rules governing children of a MathML frame,
-// and properties such as the scriptlevel depends on those rules.
-// Hence for things to work, callers must use Append/Insert/etc wisely.
-
-nsresult
-nsMathMLContainerFrame::ChildListChanged(nsIPresContext* aPresContext,
-                                         nsIPresShell&   aPresShell)
-{
-  // wrap any new foreign child that may have crept in
-  WrapForeignFrames(aPresContext);
-
-  // re-sync our presentation data and embellishment data
-#ifdef DEBUG_rbs
-  PRBool old = NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags);
-#endif
-
-  RebuildAutomaticDataFor(aPresContext, this);
-
-#ifdef DEBUG_rbs
-  PRBool now = NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags);
-  if (old != now)
-    NS_WARNING("REMIND: case where the embellished hierarchy has to be rebuilt too");
-#endif
-
-  // grab the scriptlevel of our parent and re-resolve the style data in
-  // our subtree to sync any change of script sizes
-  nsPresentationData parentData;
-  GetPresentationDataFrom(mParent, parentData);
-  PropagateScriptStyleFor(aPresContext, this, parentData.scriptLevel);
- 
-  // Ask our parent frame to reflow us
-  return ReflowDirtyChild(&aPresShell, nsnull);
-}
-
+// Note that this method re-builds the automatic data in the children -- not
+// in aFrame itself (except for those particular operations that the frame
+// may do in aFrame->TransmitAutomaticData()). The reason it works this way
+// is because a container frame knows what it wants for its children, whereas
+// children have no clue who their parent is. For example, it is <mfrac> who
+// knows that its children have to be in scriptsizes, and has to transmit this
+// information to them. Hence, when changes occur in a child frame, the child
+// has to pass the re-build to its parent. Unfortunately, the extra cost for
+// this is that it will re-sync in the siblings of the child as well.
 /* static */ void
 nsMathMLContainerFrame::RebuildAutomaticDataFor(nsIPresContext* aPresContext,
                                                 nsIFrame*       aFrame)
@@ -957,6 +932,77 @@ nsMathMLContainerFrame::RebuildAutomaticDataFor(nsIPresContext* aPresContext,
   }
 }
 
+/* static */ nsresult
+nsMathMLContainerFrame::ReLayout(nsIPresContext* aPresContext,
+                                 nsIFrame*       aFrame)
+{
+  // walk-up to the first frame that is a MathML frame, stop if we reach <math>
+  PRInt32 parentScriptLevel = 0;
+  nsIFrame* frame = aFrame;
+  while (frame) {
+    // stop if it is a MathML frame
+    nsIMathMLFrame* mathMLFrame;
+    frame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
+      nsIFrame* parent;
+      frame->GetParent(&parent);
+      nsPresentationData parentData;
+      GetPresentationDataFrom(parent, parentData);
+      parentScriptLevel = parentData.scriptLevel;
+      break;
+    }
+    // stop if we reach the root <math> tag
+    nsCOMPtr<nsIAtom> tag;
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
+    content->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsMathMLAtoms::math) {
+      break;
+    }
+    // mark the frame dirty, and continue to climb up
+    nsFrameState state;
+    frame->GetFrameState(&state);
+    frame->SetFrameState(state | NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
+    frame->GetParent(&frame);
+  }
+
+  // re-sync the presentation data and embellishment data of our children
+#ifdef DEBUG_rbs
+  PRBool old = IsEmbellishOperator(frame);
+#endif
+
+  RebuildAutomaticDataFor(aPresContext, frame);
+
+#ifdef DEBUG_rbs
+  PRBool now = IsEmbellishOperator(frame);
+  if (old != now)
+    NS_WARNING("REMIND: case where the embellished hierarchy has to be rebuilt too");
+#endif
+
+  // re-resolve the style data in our subtree to sync any change of script sizes
+  PropagateScriptStyleFor(aPresContext, frame, parentScriptLevel);
+
+  // Ask our parent frame to reflow us
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  return frame->ReflowDirtyChild(presShell, nsnull);
+}
+
+// There are precise rules governing children of a MathML frame,
+// and properties such as the scriptlevel depends on those rules.
+// Hence for things to work, callers must use Append/Insert/etc wisely.
+
+nsresult
+nsMathMLContainerFrame::ChildListChanged(nsIPresContext* aPresContext,
+                                         PRInt32         aModType)
+{
+  if (aModType != nsIDOMMutationEvent::REMOVAL) {
+    // wrap any new foreign child that may have crept in
+    WrapForeignFrames(aPresContext);
+  }
+  return ReLayout(aPresContext, this);
+}
+
 NS_IMETHODIMP
 nsMathMLContainerFrame::AppendFrames(nsIPresContext* aPresContext,
                                      nsIPresShell&   aPresShell,
@@ -968,7 +1014,7 @@ nsMathMLContainerFrame::AppendFrames(nsIPresContext* aPresContext,
   }
   if (aFrameList) {
     mFrames.AppendFrames(this, aFrameList);
-    return ChildListChanged(aPresContext, aPresShell);
+    return ChildListChanged(aPresContext, nsIDOMMutationEvent::ADDITION);
   }
   return NS_OK;
 }
@@ -986,7 +1032,7 @@ nsMathMLContainerFrame::InsertFrames(nsIPresContext* aPresContext,
   if (aFrameList) {
     // Insert frames after aPrevFrame
     mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-    return ChildListChanged(aPresContext, aPresShell);
+    return ChildListChanged(aPresContext, nsIDOMMutationEvent::ADDITION);
   }
   return NS_OK;
 }
@@ -1002,7 +1048,7 @@ nsMathMLContainerFrame::RemoveFrame(nsIPresContext* aPresContext,
   }
   // remove the child frame
   mFrames.DestroyFrame(aPresContext, aOldFrame);
-  return ChildListChanged(aPresContext, aPresShell);
+  return ChildListChanged(aPresContext, nsIDOMMutationEvent::REMOVAL);
 }
 
 NS_IMETHODIMP
@@ -1024,7 +1070,7 @@ nsMathMLContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
   // XXX nobody seems to have been biten by the ambiguity yet
   aOldFrame->Destroy(aPresContext);
 
-  return ChildListChanged(aPresContext, aPresShell);
+  return ChildListChanged(aPresContext, nsIDOMMutationEvent::MODIFICATION);
 }
 
 NS_IMETHODIMP
