@@ -856,20 +856,27 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
   viewRect.x = viewRect.y = 0;
 
   nsRect damageRect;
+  nsRect paintRect;
   float  p2t;
   mContext->GetDevUnitsToAppUnits(p2t);
   aRegion->GetBoundingBox(&damageRect.x, &damageRect.y, &damageRect.width, &damageRect.height);
   damageRect.ScaleRoundOut(p2t);
 
-  if (damageRect.IntersectRect(damageRect, viewRect)) {
+  if (paintRect.IntersectRect(damageRect, viewRect)) {
     PRBool result;
     localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
-    localcx->SetClipRect(damageRect, nsClipCombine_kIntersect, result);
-    RenderViews(aView, *localcx, damageRect, result);
-  }
+    localcx->SetClipRect(paintRect, nsClipCombine_kIntersect, result);
+    RenderViews(aView, *localcx, paintRect, result);
 
-  if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
-    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+    if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
+      localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+  } else {
+#ifdef DEBUG
+    printf("XXX Damage rectangle (%d,%d,%d,%d) does not intersect the widget's view (%d,%d,%d,%d)!",
+           damageRect.x, damageRect.y, damageRect.width, damageRect.height,
+           viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+#endif
+  }
 
   mLastRefresh = PR_IntervalNow();
 
