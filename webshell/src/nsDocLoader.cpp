@@ -517,6 +517,8 @@ nsDocLoaderImpl::LoadOpenedDocument(nsIChannel * aOpenedChannel,
     if (aCurrentLoadGroup.get() != mLoadGroup.get())
       aOpenedChannel->SetLoadGroup(mLoadGroup);
   }
+
+  NS_RELEASE(loader);
   return rv;
 }
 
