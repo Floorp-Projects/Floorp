@@ -46,8 +46,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 EXTRA_DSO_LIBS += gkgfx
 
-CSRCS		= font_metrics.c
-
 CPPSRCS		= \
 		nsDeviceContextPS.cpp \
 		nsFontMetricsPS.cpp \

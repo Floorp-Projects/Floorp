@@ -79,8 +79,6 @@
 static PRLogModuleInfo *nsPostScriptObjLM = PR_NewLogModule("nsPostScriptObj");
 #endif /* PR_LOGGING */
 
-extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
-
 // These set the location to standard C and back
 // which will keep the "." from converting to a "," 
 // in certain languages for floating point output to postscript
@@ -451,13 +449,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->completion = nsnull;          // Called when translation finished 
     mPrintSetup->carg = nsnull;                // Data saved for completion routine 
     mPrintSetup->status = 0;                   // Status of URL on completion 
-	                                    // "other" font is for encodings other than iso-8859-1 
-    mPrintSetup->otherFontName[0] = nsnull;		   
-  				                            // name of "other" PostScript font 
-    mPrintSetup->otherFontInfo[0] = nsnull;	   
-    // font info parsed from "other" afm file 
-    mPrintSetup->otherFontCharSetID = 0;	      // charset ID of "other" font 
-    //mPrintSetup->cx = nsnull;                 // original context, if available 
+
     pi->page_height = mPrintSetup->height * 10;	// Size of printable area on page 
     pi->page_width = mPrintSetup->width * 10;	// Size of printable area on page 
     pi->page_break = 0;	              // Current page bottom 
@@ -603,30 +595,6 @@ FILE *f;
 
   fprintf(f, "] /isolatin1encoding exch def\n");
 
-#ifdef OLDFONTS
-  // output the fonts supported here    
-  for (i = 0; i < N_FONTS; i++){
-    fprintf(f, 
-	          "/F%d\n"
-	          "    /%s findfont\n"
-	          "    dup length dict begin\n"
-	          "	{1 index /FID ne {def} {pop pop} ifelse} forall\n"
-	          "	/Encoding isolatin1encoding def\n"
-	          "    currentdict end\n"
-	          "definefont pop\n"
-	          "/f%d { /csize exch def /F%d findfont csize scalefont setfont } bind def\n",
-		        i, PSFE_MaskToFI[i]->name, i, i);
-  }
-
-  for (i = 0; i < N_FONTS; i++){
-    if (mPrintContext->prSetup->otherFontName[i]) {
-	    fprintf(f, 
-	          "/of%d { /%s findfont exch scalefont setfont } bind def\n",
-		        i, mPrintContext->prSetup->otherFontName[i]);
-            //fprintf(f, "/of /of1;\n", mPrintContext->prSetup->otherFontName); 
-    }
-  }
-#else
   for(i=0;i<NUM_AFM_FONTS;i++){
     fprintf(f, 
 	          "/F%d\n"
@@ -640,12 +608,6 @@ FILE *f;
 		        i, gSubstituteFonts[i].mPSName, i, i);
 
   }
-#endif
-
-
-
-
-
 
   fprintf(f, "/rhc {\n");
   fprintf(f, "    {\n");
