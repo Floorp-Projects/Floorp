@@ -278,7 +278,7 @@ function doSearch()
 	if (contentArea)
 	{
 		contentArea.setAttribute("style", "height: 100; width: 100%;");
-		parent.frames[1].frames[0].document.location = "default.htm";
+		parent.frames[1].frames[0].document.location = "chrome://search/content/default.htm";
 	}
 
 	// enable "Save Search" button
