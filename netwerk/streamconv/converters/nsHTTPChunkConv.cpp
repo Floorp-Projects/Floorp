@@ -193,6 +193,8 @@ nsHTTPChunkConv::OnDataAvailable (
                     {
                         if (mChunkBufferLength > 0)
                         {
+                            mState = CHUNK_STATE_INIT;
+
                             nsCOMPtr<nsIByteArrayInputStream> convertedStreamSup;
                             rv = NS_NewByteArrayInputStream (getter_AddRefs(convertedStreamSup), mChunkBuffer, mChunkBufferLength);
                             if (NS_FAILED (rv)) 
@@ -209,8 +211,6 @@ nsHTTPChunkConv::OnDataAvailable (
 
                             if (NS_FAILED (rv))
                                 return rv;
-
-                            mState = CHUNK_STATE_INIT;
                         }
                         else
                         {
