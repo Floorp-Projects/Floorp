@@ -43,6 +43,7 @@
 
 /* forward declare classes from JavaScript::ICG */
 namespace JavaScript {
+    class StringAtom;
 namespace ICG {
     class ICodeModule;
 } /* namespace ICG */
@@ -74,6 +75,7 @@ namespace JSTypes {
             JSObject* object;
             JSArray* array;
             JSFunction *function;
+            String *string;
         };
         
         enum {
@@ -82,7 +84,7 @@ namespace JSTypes {
             i32_tag, u32_tag,
             i64_tag, u64_tag,
             f32_tag, f64_tag,
-            object_tag, array_tag, function_tag,
+            object_tag, array_tag, function_tag, string_tag,
             undefined_tag
         } tag;
         
@@ -92,12 +94,14 @@ namespace JSTypes {
         explicit JSValue(JSObject* object) : object(object), tag(object_tag) {}
         explicit JSValue(JSArray* array) : array(array), tag(array_tag) {}
         explicit JSValue(JSFunction* function) : function(function), tag(function_tag) {}
+        explicit JSValue(String* string) : string(string), tag(string_tag) {}
         
         int32& operator=(int32 i32)                     { return (tag = i32_tag, this->i32 = i32); }
         float64& operator=(float64 f64)                 { return (tag = f64_tag, this->f64 = f64); }
         JSObject*& operator=(JSObject* object)          { return (tag = object_tag, this->object = object); }
         JSArray*& operator=(JSArray* array)             { return (tag = array_tag, this->array = array); }
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
+        const String*& operator=(String* string)        { return (tag = string_tag, this->string = string); }
         
         int operator==(const JSValue& value) const;
     };

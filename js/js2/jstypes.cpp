@@ -72,6 +72,9 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     case JSValue::function_tag:
         printFormat(stdOut, "0x%08X", value.object);
         break;
+    case JSValue::string_tag:
+        f << *value.string;
+        break;
     default:
         f << "undefined";
         break;
