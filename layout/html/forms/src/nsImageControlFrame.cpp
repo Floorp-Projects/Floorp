@@ -65,10 +65,6 @@ public:
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -176,14 +172,6 @@ nsrefcnt nsImageControlFrame::Release(void)
 {
   NS_WARNING("not supported");
   return 1;
-}
-
-NS_IMETHODIMP
-nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                         nsIAtom*        aListName,
-                                         nsIFrame*       aChildList)
-{
-  return NS_OK;
 }
 
 NS_METHOD
