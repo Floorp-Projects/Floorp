@@ -41,7 +41,7 @@ static int MimeInlineTextVCard_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextVCard_parse_eof (MimeObject *, PRBool);
 static int MimeInlineTextVCard_parse_begin (MimeObject *obj);
 
-static int unique = 0;
+static int s_unique = 0;
 
 extern int MK_OUT_OF_MEMORY;
 
@@ -1003,7 +1003,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 			converted = rsrcString;
 	
 		htmlLine1 = PR_smprintf ("<FORM name=form1><INPUT type=reset value=\\\"%s\\\" onClick=\\\"showAdvanced%d();\\\"></INPUT></FORM>", 
-			converted, unique);
+			converted, s_unique);
 	}
 	else 
 	{
@@ -1015,7 +1015,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 			converted = rsrcString;
 
 		htmlLine1 = PR_smprintf ("<FORM name=form1><INPUT type=reset value=\\\"%s\\\" onClick=\\\"showBasic%d();\\\"></INPUT></FORM>", 
-			converted, unique);
+			converted, s_unique);
 	}
 	if (converted != rsrcString)
 		PR_FREEIF(converted);
@@ -1082,12 +1082,12 @@ static int BeginLayer(MimeObject *obj, PRBool basic)
 	if (basic)
 	{
     //CSS: START OF DIV		
-    captionLine = PR_smprintf ("<DIV ID=basic%d style=\"position: 'absolute';\">", unique);
+    captionLine = PR_smprintf ("<DIV ID=basic%d style=\"position: 'absolute';\">", s_unique);
 	}
 	else
 	{
     //CSS: START OF DIV		
-		captionLine = PR_smprintf ("<DIV ID=advanced%d style=\"position: 'absolute'; display: none;\">", unique);
+		captionLine = PR_smprintf ("<DIV ID=advanced%d style=\"position: 'absolute'; display: none;\">", s_unique);
   }
 
 	if (captionLine)
@@ -1167,21 +1167,21 @@ static int EndLayer(MimeObject *obj, PRBool basic, VObject* v)
     if (status < 0) return status;
 		status = WriteEachLineToStream (obj, "<P><SCRIPT>");
 		if (status < 0) return status;
-		captionLine = PR_smprintf ("function showAdvanced%d() {", unique);
+		captionLine = PR_smprintf ("function showAdvanced%d() {", s_unique);
 		if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		PR_FREEIF (captionLine);
 		captionLine = NULL;
 		if (status < 0) return status;
     //CSS: JS
-		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"none\";", unique);
+		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"none\";", s_unique);
     if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		PR_FREEIF (captionLine);
 		captionLine = NULL;
 		if (status < 0) return status;
     //CSS: JS
-    captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"block\";", unique);
+    captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"block\";", s_unique);
 		if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		PR_FREEIF (captionLine);
@@ -1189,19 +1189,19 @@ static int EndLayer(MimeObject *obj, PRBool basic, VObject* v)
 		if (status < 0) return status;
 		status = WriteEachLineToStream (obj, "};");
 		if (status < 0) return status;
-		captionLine = PR_smprintf ("function showBasic%d() {", unique);
+		captionLine = PR_smprintf ("function showBasic%d() {", s_unique);
 		if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		PR_FREEIF (captionLine);
 		captionLine = NULL;
 		if (status < 0) return status;
     //CSS: JS
- 		captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"none\";", unique);
+ 		captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"none\";", s_unique);
 		if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		if (status < 0) return status;
     //CSS: JS
- 		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"block\";", unique);
+ 		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"block\";", s_unique);
 		if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		PR_FREEIF (captionLine);
@@ -1254,7 +1254,7 @@ static int BeginVCard (MimeObject *obj)
         if (status < 0) return status;
     }
     
-	unique++;
+	s_unique++;
 	PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", LINEBREAK, LINEBREAK);
     status = COM_MimeObject_write(obj, htmlHeaders, PL_strlen(htmlHeaders), PR_TRUE);
 
