@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!DOCTYPE window [
+<!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
+%textcontextDTD;
+]>
 
 <bindings id="xulBindings"
    xmlns="http://www.mozilla.org/xbl"
@@ -236,10 +240,34 @@
   </binding>
 
   <binding id="textfield" extends="xul:box">
-    <content>
+    <content context="_child">
       <xul:box class="textfield-internal-box" flex="1">
         <html:input class="textfield-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
       </xul:box>
+      <xul:popupset>
+        <xul:popup oncreate="this.focus()">
+          <xul:menuitem value="&undoCmd.label;" accesskey="&undoCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
+            controller.doCommand('cmd_undo');"/>
+          <xul:menuseparator/>
+          <xul:menuitem value="&cutCmd.label;" accesskey="&cutCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+            controller.doCommand('cmd_cut');"/>
+          <xul:menuitem value="&copyCmd.label;" accesskey="&copyCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+            controller.doCommand('cmd_copy');"/>
+          <xul:menuitem value="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+            controller.doCommand('cmd_paste');"/>
+          <xul:menuitem value="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+            controller.doCommand('cmd_delete');"/>
+           <xul:menuseparator/>
+          <xul:menuitem value="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
+            controller.doCommand('cmd_selectAll');"/>
+        </xul:popup>
+      </xul:popupset>
     </content>
     <implementation>
       <property name="inputField" readonly="true">
@@ -327,10 +355,34 @@
   </binding>
 
   <binding id="textarea" extends="chrome://global/content/xulBindings.xml#textfield">
-    <content>
+    <content context="_child">
       <xul:box class="textarea-internal-box" flex="1">
         <html:textarea class="textfield-textarea" flex="1" inherits="onfocus,onblur,value,disabled,rows,cols,readonly"/>
       </xul:box>
+      <xul:popupset>
+        <xul:popup oncreate="this.focus()">
+          <xul:menuitem value="&undoCmd.label;" accesskey="&undoCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
+            controller.doCommand('cmd_undo');"/>
+          <xul:menuseparator/>
+          <xul:menuitem value="&cutCmd.label;" accesskey="&cutCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+            controller.doCommand('cmd_cut');"/>
+          <xul:menuitem value="&copyCmd.label;" accesskey="&copyCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+            controller.doCommand('cmd_copy');"/>
+          <xul:menuitem value="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+            controller.doCommand('cmd_paste');"/>
+          <xul:menuitem value="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+            controller.doCommand('cmd_delete');"/>
+           <xul:menuseparator/>
+          <xul:menuitem value="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" oncommand="
+            var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
+            controller.doCommand('cmd_selectAll');"/>
+        </xul:popup>
+      </xul:popupset>
     </content>
     <implementation>
       <property name="inputField" readonly="true">
