@@ -666,7 +666,6 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   nsWindow  * pWin = (nsWindow*) GetInstance( pWidget );
   nsresult    result;
   PhTile_t  * dmg = NULL;
-  PRBool      aClipState;
   nsPaintEvent pev;
   PhRect_t   extent;
 
@@ -721,7 +720,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 			if( pev.renderingContext ) {
 				nsIRegion *ClipRegion = pWin->GetRegion( );
 				ClipRegion->SetTo( nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height );
-				pev.renderingContext->SetClipRegion( NS_STATIC_CAST(const nsIRegion &, *(ClipRegion)), nsClipCombine_kReplace, aClipState );
+				pev.renderingContext->SetClipRegion( NS_STATIC_CAST(const nsIRegion &, *(ClipRegion)), nsClipCombine_kReplace );
 
 				NS_RELEASE( ClipRegion );
 				

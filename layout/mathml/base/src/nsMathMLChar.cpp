@@ -614,10 +614,9 @@ nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
                         nscoord              aY,
                         nsRect*              aClipRect)
 {
-  PRBool clipState;
   if (aClipRect) {
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(*aClipRect, nsClipCombine_kIntersect, clipState);
+    aRenderingContext.SetClipRect(*aClipRect, nsClipCombine_kIntersect);
   }
   if (aGlyphCode.font) {
     // glyph not associated to our primary font, it comes from an external font
@@ -2215,9 +2214,8 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
       aRenderingContext.SetColor(NS_RGB(255,0,0));
       aRenderingContext.DrawRect(clipRect);
 #endif
-      PRBool clipState;
       aRenderingContext.PushState();
-      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
+      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
       bm = bmdata[i];
       while (dy + bm.descent < start[i+1]) {
         if (2 > count) {
@@ -2393,9 +2391,8 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
       aRenderingContext.SetColor(NS_RGB(255,0,0));
       aRenderingContext.DrawRect(clipRect);
 #endif
-      PRBool clipState;
       aRenderingContext.PushState();
-      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
+      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
       bm = bmdata[i];
       while (dx + bm.rightBearing < start[i+1]) {
         if (2 > count) {

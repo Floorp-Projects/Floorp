@@ -91,9 +91,9 @@ public:
 
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aClipState);
 
-  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aCilpState);
+  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
   NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipState);
-  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipState);
+  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
   NS_IMETHOD CopyClipRegion(nsIRegion &aRegion);
   NS_IMETHOD GetClipRegion(nsIRegion **aRegion);
 

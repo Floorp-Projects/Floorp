@@ -477,19 +477,17 @@ nsClipCombine_to_string(nsClipCombine aCombine)
 #endif // TRACE_SET_CLIP
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
-                                                 nsClipCombine aCombine,
-                                                 PRBool &aClipEmpty)
+                                                 nsClipCombine aCombine)
 {
   nsRect trect = aRect;
   mTranMatrix->TransformCoord(&trect.x, &trect.y,
                               &trect.width, &trect.height);
-  SetClipRectInPixels(trect, aCombine, aClipEmpty);
+  SetClipRectInPixels(trect, aCombine);
   return NS_OK;
 }
 
 void nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect,
-                                                nsClipCombine aCombine,
-                                                PRBool &aClipEmpty)
+                                                nsClipCombine aCombine)
 {
   PRUint32 cnt = mStateCache.Count();
   nsGraphicsState *state = nsnull;
@@ -536,7 +534,6 @@ void nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect,
   FillRect(aRect);
   SetColor(color);
 #endif
-  aClipEmpty = mClipRegion->IsEmpty();
 }
 
 void nsRenderingContextGTK::UpdateGC()
@@ -582,7 +579,7 @@ void nsRenderingContextGTK::UpdateGC()
   mGC = gcCache->GetGC(mSurface->GetDrawable(),
                        &values,
                        valuesMask,
-                       rgn);
+                       nsnull /*rgn*/);
 
   if (mDashes)
     ::XSetDashes(GDK_DISPLAY(), GDK_GC_XGC(mGC),
@@ -590,8 +587,7 @@ void nsRenderingContextGTK::UpdateGC()
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
-                                                   nsClipCombine aCombine,
-                                                   PRBool &aClipEmpty)
+                                                   nsClipCombine aCombine)
 {
 
   PRUint32 cnt = mStateCache.Count();
@@ -628,8 +624,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
       mClipRegion->SetTo(aRegion);
       break;
   }
-
-  aClipEmpty = mClipRegion->IsEmpty();
 
   return NS_OK;
 }

@@ -627,7 +627,6 @@ NS_IMETHODIMP nsRenderingContextMac::SetClipRect(const nsRect& aRect, nsClipComb
 	}
 
 	mGS->mClipRegion = clipRgn;
-	aClipEmpty = ::EmptyRgn(clipRgn);
 	
 	// note that the clipping changed.
 	mChanges |= kClippingChanged;
@@ -655,7 +654,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetClipRect(nsRect &aRect, PRBool &aClipVal
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextMac::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
 	RgnHandle regionH;
 	aRegion.GetNativeRegion((void*&)regionH);
@@ -689,7 +688,6 @@ NS_IMETHODIMP nsRenderingContextMac::SetClipRegion(const nsIRegion& aRegion, nsC
 	}
 
 	mGS->mClipRegion = clipRgn;
-	aClipEmpty = ::EmptyRgn(clipRgn);
 
 	// note that the clipping changed.
 	mChanges |= kClippingChanged;

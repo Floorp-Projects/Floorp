@@ -254,8 +254,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetClipRect(nsRect &aRect, PRBool &aClipVa
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::SetClipRect(const nsRect& aRect, nsClipCombine aCombine,
-	PRBool &aClipEmpty) {
+NS_IMETHODIMP nsRenderingContextBeOS::SetClipRect(const nsRect& aRect, nsClipCombine aCombine) {
 	
 	PRUint32 cnt = mStateCache->Count();
 	nsGraphicsState *state = nsnull;
@@ -292,7 +291,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetClipRect(const nsRect& aRect, nsClipCom
 			break;
 	}
 	
-	aClipEmpty = mClipRegion->IsEmpty();
 	return NS_OK;
 } 
 
@@ -326,7 +324,7 @@ bool nsRenderingContextBeOS::LockAndUpdateView() {
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::SetClipRegion(const nsIRegion &aRegion,
-	nsClipCombine aCombine, PRBool &aClipEmpty) {
+	nsClipCombine aCombine) {
 	
 	PRUint32 cnt = mStateCache->Count();
 	nsGraphicsState *state = nsnull;
@@ -360,7 +358,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetClipRegion(const nsIRegion &aRegion,
 			break;
 	}
 	
-	aClipEmpty = mClipRegion->IsEmpty();
 	return NS_OK;
 }
 

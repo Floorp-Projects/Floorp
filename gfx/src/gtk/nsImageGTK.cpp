@@ -1748,10 +1748,9 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
             aX1 = aTileRect.x + aTileRect.width;
 
     // Set up clipping and call Draw().
-    PRBool clipState;
     aContext.PushState();
     ((nsRenderingContextGTK&)aContext).SetClipRectInPixels(
-      aTileRect, nsClipCombine_kIntersect, clipState);
+      aTileRect, nsClipCombine_kIntersect);
     ((nsRenderingContextGTK&)aContext).UpdateGC();
 
     if (mAlphaDepth==8) {

@@ -143,9 +143,9 @@ public:
 			return NS_OK;
 		}
    
-   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aCilpState);
+   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
    NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipState);
-   NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipState);
+   NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
 
 	 inline
    NS_IMETHODIMP CopyClipRegion(nsIRegion &aRegion)

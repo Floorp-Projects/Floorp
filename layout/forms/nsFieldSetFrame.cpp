@@ -215,7 +215,6 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
 
           // we should probably use PaintBorderEdges to do this but for now just use clipping
           // to achieve the same effect.
-          PRBool clipState;
 
           // draw left side
           nsRect clipRect(rect);
@@ -223,7 +222,7 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
           clipRect.height = border.top;
 
           aRenderingContext.PushState();
-          aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
+          aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
   
@@ -237,7 +236,7 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
           clipRect.height = border.top;
 
           aRenderingContext.PushState();
-          aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
+          aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
   
@@ -251,7 +250,7 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
           clipRect.height = mRect.height - (yoff + border.top);
         
           aRenderingContext.PushState();
-          aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
+          aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
   

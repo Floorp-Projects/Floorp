@@ -195,8 +195,7 @@ nsPageContentFrame::Paint(nsIPresContext*      aPresContext,
     rect.y = 0;
   }
 
-  PRBool clipEmpty;
-  aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
+  aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace);
 
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 

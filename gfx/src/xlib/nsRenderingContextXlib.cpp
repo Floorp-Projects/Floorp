@@ -490,20 +490,18 @@ nsRenderingContextXlib::IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
 
 NS_IMETHODIMP 
 nsRenderingContextXlib::SetClipRect(const nsRect& aRect,
-                                    nsClipCombine aCombine,
-                                    PRBool &aClipEmpty)
+                                    nsClipCombine aCombine)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRect()\n"));
   nsRect trect = aRect;
   mTranMatrix->TransformCoord(&trect.x, &trect.y,
                               &trect.width, &trect.height);
-  SetClipRectInPixels(trect, aCombine, aClipEmpty);
+  SetClipRectInPixels(trect, aCombine);
   return NS_OK;
 }
 
 void nsRenderingContextXlib::SetClipRectInPixels(const nsRect& aRect,
-                                                 nsClipCombine aCombine,
-                                                 PRBool &aClipEmpty)
+                                                 nsClipCombine aCombine)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRectInPixels()\n"));
 
@@ -522,8 +520,6 @@ void nsRenderingContextXlib::SetClipRectInPixels(const nsRect& aRect,
       mClipRegion->SetTo(aRect.x,aRect.y,aRect.width,aRect.height);
       break;
   }
-  
-  aClipEmpty = mClipRegion->IsEmpty();
 }
 
 NS_IMETHODIMP
@@ -543,7 +539,7 @@ nsRenderingContextXlib::GetClipRect(nsRect &aRect, PRBool &aClipState)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipState)
+nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRegion()\n"));
   switch(aCombine)
@@ -561,8 +557,6 @@ nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aC
       mClipRegion->SetTo(aRegion);
       break;
   }
-
-  aClipState = mClipRegion->IsEmpty();
 
   return NS_OK;
 }

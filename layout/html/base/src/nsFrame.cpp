@@ -768,8 +768,7 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
   }
 
   // Set updated clip-rect into the rendering context
-  PRBool clipState;
-  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
 }
 
 /********************************************************

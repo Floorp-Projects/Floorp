@@ -529,10 +529,9 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
     }
 
     // set up new clip and draw the text
-    PRBool clipEmpty;
     aRenderingContext.PushState();
     aRenderingContext.SetColor(NS_RGB(0,0,0));
-    aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
+    aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace);
 #ifdef IBMBIDI
     nsresult rv = NS_ERROR_FAILURE;
 
@@ -583,7 +582,6 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
   aRenderingContext.SetColor(NS_RGB(255,255,255));
 
   nsRect rect;
-  PRBool clipEmpty;
   PRBool specialClipIsSet = mClipRect.width != -1 || mClipRect.height != -1;
 
   if (specialClipIsSet) {
@@ -592,7 +590,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
       printf("*** ClipRect: %5d,%5d,%5d,%5d\n", mClipRect.x, mClipRect.y, mClipRect.width, mClipRect.height);
     }
 #endif
-    aRenderingContext.SetClipRect(mClipRect, nsClipCombine_kReplace, clipEmpty);
+    aRenderingContext.SetClipRect(mClipRect, nsClipCombine_kReplace);
     rect = mClipRect;
   } else {
     rect = mRect;

@@ -508,14 +508,13 @@ NS_IMETHODIMP nsRenderingContextOS2::IsVisibleRect( const nsRect &aRect,
 }
 
 // Return PR_TRUE if clip region is now empty
-NS_IMETHODIMP nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine aCombine)
 {
   nsRect  trect = aRect;
   RECTL   rcl;
-  int     cliptype = RGN_ERROR;
 
-	mTranMatrix->TransformCoord(&trect.x, &trect.y,
-                           &trect.width, &trect.height);
+  mTranMatrix->TransformCoord(&trect.x, &trect.y,
+			      &trect.width, &trect.height);
 
   mStates->mLocalClip = aRect;
   mStates->mFlags |= FLAG_LOCAL_CLIP_VALID;
@@ -539,8 +538,6 @@ NS_IMETHODIMP nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCom
 
       HRGN hrgn = GFX (::GpiCreateRegion( mPS, 1, &rcl), RGN_ERROR);
       OS2_SetClipRegion (mPS, hrgn);
-
-      cliptype = RGN_NULL;      // Should pretend that clipping region is empty
     }
     else if( aCombine == nsClipCombine_kUnion || aCombine == nsClipCombine_kSubtract)
     {
@@ -549,7 +546,7 @@ NS_IMETHODIMP nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCom
       // Clipping region is already correct. Just need to obtain it's complexity
       POINTL Offset = { 0, 0 };
 
-      cliptype = GFX (::GpiOffsetClipRegion (mPS, &Offset), RGN_ERROR);
+      GFX (::GpiOffsetClipRegion (mPS, &Offset), RGN_ERROR);
     }
     else
       NS_ASSERTION(PR_FALSE, "illegal clip combination");
@@ -561,7 +558,7 @@ NS_IMETHODIMP nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCom
       PushClipState();
 
       mSurface->NS2PM_ININ (trect, rcl);
-      cliptype = GFX (::GpiIntersectClipRectangle(mPS, &rcl), RGN_ERROR);
+      GFX (::GpiIntersectClipRectangle(mPS, &rcl), RGN_ERROR);
     }
     else if (aCombine == nsClipCombine_kUnion)
     {
@@ -571,14 +568,14 @@ NS_IMETHODIMP nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCom
       HRGN hrgn = GFX (::GpiCreateRegion(mPS, 1, &rcl), RGN_ERROR);
 
       if( hrgn )
-        cliptype = OS2_CombineClipRegion(mPS, hrgn, CRGN_OR);
+        OS2_CombineClipRegion(mPS, hrgn, CRGN_OR);
     }
     else if (aCombine == nsClipCombine_kSubtract)
     {
       PushClipState();
 
       mSurface->NS2PM_ININ (trect, rcl);
-      cliptype = GFX (::GpiExcludeClipRectangle(mPS, &rcl), RGN_ERROR);
+      GFX (::GpiExcludeClipRectangle(mPS, &rcl), RGN_ERROR);
     }
     else if (aCombine == nsClipCombine_kReplace)
     {
@@ -588,16 +585,11 @@ NS_IMETHODIMP nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCom
       HRGN hrgn = GFX (::GpiCreateRegion(mPS, 1, &rcl), RGN_ERROR);
 
       if( hrgn )
-        cliptype = OS2_SetClipRegion(mPS, hrgn);
+	OS2_SetClipRegion(mPS, hrgn);
     }
     else
       NS_ASSERTION(PR_FALSE, "illegal clip combination");
   }
-
-  if (cliptype == RGN_NULL)
-    aClipEmpty = PR_TRUE;
-  else
-    aClipEmpty = PR_FALSE;
 
   return NS_OK;
 }
@@ -617,13 +609,13 @@ NS_IMETHODIMP nsRenderingContextOS2::GetClipRect( nsRect &aRect, PRBool &aClipVa
 }
 
 // Return PR_TRUE if clip region is now empty
-NS_IMETHODIMP nsRenderingContextOS2::SetClipRegion( const nsIRegion &aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextOS2::SetClipRegion( const nsIRegion &aRegion, nsClipCombine aCombine)
 {
    nsRegionOS2 *pRegion = (nsRegionOS2 *) &aRegion;
    PRUint32     ulHeight = mSurface->GetHeight ();
 
    HRGN hrgn = pRegion->GetHRGN( ulHeight, mPS);
-  int cmode, cliptype;
+   int cmode;
 
    switch( aCombine)
    {
@@ -649,17 +641,12 @@ NS_IMETHODIMP nsRenderingContextOS2::SetClipRegion( const nsIRegion &aRegion, ns
   {
     mStates->mFlags &= ~FLAG_LOCAL_CLIP_VALID;
     PushClipState();
-    cliptype = OS2_CombineClipRegion( mPS, hrgn, cmode);
+    OS2_CombineClipRegion( mPS, hrgn, cmode);
   }
   else
     return PR_FALSE;
 
-  if (cliptype == RGN_NULL)
-    aClipEmpty = PR_TRUE;
-  else
-    aClipEmpty = PR_FALSE;
-
-   return NS_OK;
+  return NS_OK;
 }
 
 /**

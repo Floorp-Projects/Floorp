@@ -421,7 +421,6 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
     // if the cell originates in a row and/or col that is collapsed, the
     // bottom and/or right portion of the cell is painted by translating
     // the rendering context.
-    PRBool clipState;
     nsPoint offset;
     GetCollapseOffset(aPresContext, offset);
     PRBool pushed = PR_FALSE;
@@ -430,7 +429,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
       pushed = PR_TRUE;
       aRenderingContext.Translate(offset.x, offset.y);
       aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
-                                    nsClipCombine_kIntersect, clipState);
+                                    nsClipCombine_kIntersect);
     }
     else {
       if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow ||

@@ -5502,10 +5502,8 @@ SetClipRect(nsIRenderingContext& aRenderingContext, nsIFrame* aFrame)
 
   if (ComputeClipRect(aFrame, clipRect)) {
     // Set updated clip-rect into the rendering context
-    PRBool clipState;
-
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
+    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
     return PR_TRUE;
   }
 

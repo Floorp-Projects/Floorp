@@ -846,9 +846,8 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   // and nsIRenderingContext::SetClipRect always works in app coordinates. Stupid huh?
   // Also, SetClipRegion doesn't subject its argument to the current transform, but
   // SetClipRect does.
-  PRBool isClipped;
-  localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, isClipped);
-  localcx->SetClipRect(damageRect, nsClipCombine_kIntersect, isClipped);
+  localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace);
+  localcx->SetClipRect(damageRect, nsClipCombine_kIntersect);
 
   if (anyTransparentPixels) {
     // There are some bits here that aren't going to be completely painted unless we do it now.
@@ -868,8 +867,8 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     // Make damageRect twips-relative-to-widget-origin
     damageRect.MoveBy(-viewRect.x, -viewRect.y);
     // Reset clip region to widget-relative
-    localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, isClipped);
-    localcx->SetClipRect(damageRect, nsClipCombine_kIntersect, isClipped);
+    localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace);
+    localcx->SetClipRect(damageRect, nsClipCombine_kIntersect);
     // neither source nor destination are transformed
     localcx->CopyOffScreenBits(ds, 0, 0, widgetDamageRectInPixels, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
   } else {
@@ -1129,9 +1128,8 @@ static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidAr
 static void PushStateAndClip(nsIRenderingContext** aRCs, PRInt32 aCount, nsRect &aRect) {
   for (int i = 0; i < aCount; i++) {
     if (aRCs[i]) {
-      PRBool clipEmpty;
       aRCs[i]->PushState();
-      aRCs[i]->SetClipRect(aRect, nsClipCombine_kIntersect, clipEmpty);
+      aRCs[i]->SetClipRect(aRect, nsClipCombine_kIntersect);
     }
   }
 }
@@ -1403,9 +1401,8 @@ static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsDrawingSu
     return rv;
 
   // always initialize clipping, linux won't draw images otherwise.
-  PRBool clipEmpty;
   nsRect clip(0, 0, aRect.width, aRect.height);
-  context->SetClipRect(clip, nsClipCombine_kReplace, clipEmpty);
+  context->SetClipRect(clip, nsClipCombine_kReplace);
 
   context->Translate(-aRect.x, -aRect.y);
   
@@ -3189,8 +3186,7 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
 
   localcx->Translate(aX, aY);
 
-  PRBool isClipped;
-  localcx->SetClipRect(aClipRect, nsClipCombine_kReplace, isClipped);
+  localcx->SetClipRect(aClipRect, nsClipCombine_kReplace);
 
   // Paint the view. The clipping rect was set above set don't clip again.
   //aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);

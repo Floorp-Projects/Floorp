@@ -560,12 +560,11 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, f
 NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& rc, const nsRect& rect,
                                       PRUint32 aPaintFlags, PRBool &aResult)
 {
-  PRBool clipEmpty;
   rc.PushState();
   nsRect bounds;
   GetDimensions(bounds);
   bounds.x = bounds.y = 0;
-  rc.SetClipRect(bounds, nsClipCombine_kIntersect, clipEmpty);
+  rc.SetClipRect(bounds, nsClipCombine_kIntersect);
 
   nsresult rv = nsView::Paint(rc, rect, aPaintFlags, aResult);
 
@@ -577,12 +576,11 @@ NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& rc, const nsRect& rec
 NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& aRC, const nsIRegion& aRegion,
                                       PRUint32 aPaintFlags, PRBool &aResult)
 {
-  PRBool clipEmpty;
   aRC.PushState();
   nsRect bounds;
   GetDimensions(bounds);
   bounds.x = bounds.y = 0;
-  aRC.SetClipRect(bounds, nsClipCombine_kIntersect, clipEmpty);
+  aRC.SetClipRect(bounds, nsClipCombine_kIntersect);
 
   nsresult rv = nsView::Paint(aRC, aRegion, aPaintFlags, aResult);
 
