@@ -85,6 +85,7 @@ public:
     NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
     
     NS_IMETHOD SetMessageKey(nsMsgKey aKey);
+	NS_IMETHOD GetMessageKey(nsMsgKey * aKey);
     NS_IMETHOD SetNewsgroupName(char *aNewsgroupName);
      
 	// from nsIMsgMailNewsUrl:

@@ -378,6 +378,7 @@ char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 
 nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH), m_tempErrorFile(ERROR_PATH)
 {
+	m_messageID = nsnull;
 	m_cancelFromHdr = nsnull;
 	m_cancelNewsgroups = nsnull;
 	m_cancelDistribution = nsnull;
@@ -467,7 +468,9 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL)
 	m_newsRCListIndex = 0;
 	m_newsRCListCount = 0;
 	
+	PR_FREEIF(m_messageID);
 	m_messageID = nsnull;
+
 	m_articleNumber = 0;
 	m_originalContentLength = 0;
 	m_cancelID = nsnull;
@@ -482,7 +485,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
   PRBool bVal = FALSE;
   char *hostAndPort = nsnull;
   char *group = nsnull;
-  char *messageID = nsnull;
   char *commandSpecificData = nsnull;
   PRBool cancel = FALSE;
   nsCOMPtr <nsINNTPNewsgroupPost> message;
@@ -515,7 +517,9 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 	  goto FAIL;
   }
 
-  rv = ParseURL(aURL, &hostAndPort, &bVal, &group, &messageID, &commandSpecificData);
+  PR_FREEIF(m_messageID);
+  m_messageID = nsnull;
+  rv = ParseURL(aURL, &hostAndPort, &bVal, &group, &m_messageID, &commandSpecificData);
 
   // if we don't have a news host already, go get one...
   if (!m_newsHost)
@@ -555,10 +559,10 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
   if (NS_FAILED(rv)) 
 	goto FAIL;
 
-  if (messageID && commandSpecificData && !PL_strcmp (commandSpecificData, "?cancel"))
+  if (m_messageID && commandSpecificData && !PL_strcmp (commandSpecificData, "?cancel"))
 	cancel = TRUE;
 
-  NET_SACopy(&m_path, messageID);
+  NET_SACopy(&m_path, m_messageID);
 
   /* make sure the user has a news host configured */
 #if UNREADY_CODE
@@ -593,7 +597,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 	  NET_SACopy(&m_path, "");
 	}
   else 
-	if (messageID)
+	if (m_messageID)
 	{
 	  /* news:MESSAGE_ID
 		 news:/GROUP/MESSAGE_ID (useless)
@@ -759,7 +763,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 
   PR_FREEIF (hostAndPort);
   PR_FREEIF (group);
-  PR_FREEIF (messageID);
   PR_FREEIF (commandSpecificData);
 
   if (NS_FAILED(rv))
@@ -1866,8 +1869,13 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
             PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, UNTIL_STRING_BUNDLES_XP_HTML_ARTICLE_EXPIRED);
             m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
             
-            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_cancelID?m_cancelID:"(null)", m_articleNumber);
-            m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+			nsMsgKey key = nsMsgKey_None;
+			rv = m_runningURL->GetMessageKey(&key);
+            PR_ASSERT(m_messageID && (key != nsMsgKey_None));
+			if (m_messageID && (key != nsMsgKey_None)) {
+				PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_messageID, key);
+				m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+			}
             
             PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, m_hostName, group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
             m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
@@ -4227,7 +4235,7 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 	{
 		if (line[0] != '.')
 		{
-			long found_id = nsMsgKey_None;
+			nsMsgKey found_id = nsMsgKey_None;
             nsresult rv;
 			PR_sscanf(line, "%ld", &found_id);
             

@@ -79,7 +79,10 @@ public:
     // return a message db header for that message.
 	NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr) = 0;
 
+	// replace this with an IDL attribute.
     NS_IMETHOD SetMessageKey(nsMsgKey aKey) = 0;
+	NS_IMETHOD GetMessageKey(nsMsgKey * aKey) = 0;
+
     NS_IMETHOD SetNewsgroupName(char *aNewsgroupName) = 0;
 };
 

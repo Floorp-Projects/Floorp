@@ -1097,3 +1097,9 @@ NS_IMETHODIMP nsNntpUrl::SetMessageKey(nsMsgKey aKey)
     m_messageKey = aKey;
     return NS_OK;
 }
+
+NS_IMETHODIMP nsNntpUrl::GetMessageKey(nsMsgKey * aKey)
+{
+    *aKey = m_messageKey;
+    return NS_OK;
+}
