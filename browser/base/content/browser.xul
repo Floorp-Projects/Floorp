@@ -396,7 +396,7 @@ Contributor(s):
             <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
             <menuseparator/>
             <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
-            <menuitem label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
+            <menuitem id="menu_saveFrame" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
             <menuseparator/>
             <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="BrowserPrintSetup();"/>
             <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="BrowserPrintPreview();"/>
@@ -635,17 +635,13 @@ Contributor(s):
           </menupopup>
         </menu>
           
-      <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
+      <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;" onpopupshowing="javaItemEnabling();">
         <menupopup>
           <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
           <menuitem label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
           <menuseparator/>
-          <menu label="&webDevelopment.label;" accesskey="&webDevelopment.accesskey;">
-            <menupopup onpopupshowing="javaItemEnabling();">
-              <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
-              <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
-            </menupopup>
-          </menu>
+          <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
+          <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
         </menupopup>
       </menu>
       
