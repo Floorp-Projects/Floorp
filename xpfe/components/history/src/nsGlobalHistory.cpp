@@ -1313,23 +1313,21 @@ nsGlobalHistory::OpenDB()
   NS_ASSERTION((err == 0), "unable to create mdb env");
   if (err != 0) return NS_ERROR_FAILURE;
 
+	nsIMdbHeap* dbHeap = 0;
+	mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
+
   if (dbfile.Exists()) {
-    char buf[512];
-    PRInt32 bytesread;
+    mdb_bool canopen = 0;
+    mdbYarn outfmt = { nsnull, 0, 0, 0, 0, nsnull };
 
-    {
-      // This is in its own block scope so that the file will be
-      // closed when the scope exits.
-      nsIOFileStream strm(dbfile);
-      bytesread = strm.read(buf, sizeof(buf));
-      if (strm.failed()) return strm.error();
-    }
+    nsMdbPtr<nsIMdbFile> oldFileAnchor(mEnv); // ensures file is released
+		err = factory->OpenOldFile(mEnv, dbHeap, dbfile.GetNativePathCString(),
+			 dbFrozen, getter_Acquires(oldFileAnchor));
+		nsIMdbFile* oldFile = oldFileAnchor;
+    if ((err != 0) || !oldFile) return NS_ERROR_FAILURE;
 
-    mdbYarn header = { buf, bytesread, sizeof(buf), 0, 0, nsnull };
-    mdb_bool canopen;
-    mdbYarn outfmt;
-
-    err = factory->CanOpenFilePort(mEnv, dbfile.GetNativePathCString(), &header, &canopen, &outfmt);
+		err = factory->CanOpenFilePort(mEnv, oldFile, // the file to investigate
+			&canopen, &outfmt);
 
     // XXX possible that format out of date, in which case we should
     // just re-write the file.
@@ -1337,7 +1335,8 @@ nsGlobalHistory::OpenDB()
 
     nsIMdbThumb* thumb = nsnull;
     mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
-    err = factory->OpenFileStore(mEnv, nsnull, dbfile.GetNativePathCString(), &policy, &thumb);
+
+		err = factory->OpenFileStore(mEnv, dbHeap, oldFile, &policy, &thumb); 
     if ((err != 0) || !thumb) return NS_ERROR_FAILURE;
 
     mdb_count total;
@@ -1366,8 +1365,15 @@ nsGlobalHistory::OpenDB()
     if (err != 0) return NS_ERROR_FAILURE;
   }
   else {
+
+    nsMdbPtr<nsIMdbFile> newFileAnchor(mEnv); // ensures file is released
+		err = factory->CreateNewFile(mEnv, dbHeap, dbfile.GetNativePathCString(),
+			 getter_Acquires(newFileAnchor));
+		nsIMdbFile* newFile = newFileAnchor;
+    if ((err != 0) || !newFile) return NS_ERROR_FAILURE;
+
     mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
-    err = factory->CreateNewFileStore(mEnv, 0, dbfile.GetNativePathCString(), &policy, &mStore);
+    err = factory->CreateNewFileStore(mEnv, dbHeap, newFile, &policy, &mStore);
     if (err != 0) return NS_ERROR_FAILURE;
 
     rv = CreateTokens();
