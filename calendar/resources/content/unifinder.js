@@ -54,22 +54,33 @@ function calendarUnifinderInit( )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
+         // XXX This selection observer needs to be re written.
+
+         // Problems: When selecting everything, 
+         
          if( gCalendarEventTreeClicked === false )
          {
             var SearchTree = document.getElementById( UnifinderTreeName );
             
-            SearchTree.treeBoxObject.selection.clearSelection( );
-            
-            if( EventSelectionArray.length > 0 )
+            if( EventSelectionArray.length > 1 )
             {
+               //get all the rows for the events
                for( i = 0; i < EventSelectionArray.length; i++ )
                {
                   var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventSelectionArray[i] );
-                  
-                  SearchTree.treeBoxObject.ensureRowIsVisible( RowToScrollTo );
-
-                  SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
                }
+               //select all the rows in the tree.
+               
+            }
+            else if( EventSelectionArray.length == 1 )
+            {
+               SearchTree.treeBoxObject.selection.clearSelection( );
+            
+               var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventSelectionArray[0] );
+                  
+               SearchTree.treeBoxObject.ensureRowIsVisible( RowToScrollTo );
+
+               SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
             }
          }
          
@@ -431,10 +442,11 @@ function getEventTable( )
    //do this to allow all day events to show up all day long
    var StartDate = new Date( Today.getFullYear(), Today.getMonth(), Today.getDate(), 0, 0, 0 );
    
+   gEventSource.onlyFutureEvents = false;
+   
    switch( document.getElementById( "event-filter-menulist" ).selectedItem.value )
    {
       case "all":
-         gEventSource.onlyFutureEvents = false;
          eventTable = gEventSource.getCurrentEvents();
          break;
    
@@ -459,7 +471,8 @@ function getEventTable( )
          eventTable = gEventSource.getCurrentEvents();
          break;
       default: 
-         alert( "there's no case for ".event.currentTarget.selectedItem.value );
+         eventTable = new Array();
+         dump( "there's no case for "+document.getElementById( "event-filter-menulist" ).selectedItem.value );
          break;
    }
 
