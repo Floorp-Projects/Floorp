@@ -58,6 +58,7 @@
 #include "nsIDOMElement.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMFocusListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDocumentEncoder.h"
@@ -81,13 +82,16 @@ static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 #undef KeyPress
 #endif
 
+#define NATIVE_ERROR 05
+
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
                               public nsIJVMPluginTagInfo,
                               public nsIEventListener,
                               public nsITimerCallback,
                               public nsIDOMMouseListener,
-                              public nsIDOMKeyListener
+                              public nsIDOMKeyListener,
+                              public nsIDOMFocusListener
                               
 {
 public:
@@ -182,6 +186,10 @@ public:
     virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
   // end nsIDOMKeyListener interfaces
 
+  // nsIDOMFocuListener interfaces
+    virtual nsresult Focus(nsIDOMEvent * aFocusEvent);
+    virtual nsresult Blur(nsIDOMEvent * aFocusEvent);
+
   nsresult Destroy();  
 
   //nsIEventListener interface
@@ -228,6 +236,7 @@ private:
   
   nsresult DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent);
   nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent);
+  nsresult DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent);
 };
 
   // Mac specific code to fix up port position and clip during paint
@@ -1362,34 +1371,6 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
   if (!mInstanceOwner)
     return NS_ERROR_NULL_POINTER;
 #ifdef XP_WIN
-  nsPluginWindow * window;
-  mInstanceOwner->GetWindow(window);
-  if(window->type == nsPluginWindowType_Drawable)
-  {
-      switch (anEvent->message) 
-    {
-    //XXX: All of the button down's are handled by the DOM listener 
-      // case NS_MOUSE_LEFT_BUTTON_DOWN:
-      // case NS_MOUSE_LEFT_BUTTON_UP:
-      // case NS_MOUSE_LEFT_DOUBLECLICK:
-      // case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      // case NS_MOUSE_RIGHT_BUTTON_UP:
-      // case NS_MOUSE_RIGHT_DOUBLECLICK:
-      // case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      // case NS_MOUSE_MIDDLE_BUTTON_UP:
-      // case NS_MOUSE_MIDDLE_DOUBLECLICK:
-      // case NS_MOUSE_MOVE:
-      // case NS_KEY_UP:
-      // case NS_KEY_DOWN:
-      case NS_GOTFOCUS:
-      case NS_LOSTFOCUS:
-      //case set cursor should be here too:
-        *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
-        return rv;
-      default:
-        break;
-    }
-  }
   rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
   return rv;
 #endif
@@ -1400,14 +1381,6 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
 		break;
 	case NS_GOTFOCUS:
 	case NS_LOSTFOCUS:
-	//case NS_KEY_UP:
-	//case NS_KEY_DOWN:
-	//case NS_MOUSE_MOVE:
-	//case NS_MOUSE_ENTER:
-	//case NS_MOUSE_LEFT_BUTTON_UP:
-#ifndef XP_MAC
-	//case NS_MOUSE_LEFT_BUTTON_DOWN:
-#endif
 		*anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
 		break;
 		
@@ -1629,6 +1602,12 @@ nsresult nsPluginInstanceOwner::QueryInterface(const nsIID& aIID,
   
   if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {                                         
     *aInstancePtrResult = (void*)(nsIDOMKeyListener*) this;    
+    AddRef();
+    return NS_OK;                                                        
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMFocusListener))) {                                         
+    *aInstancePtrResult = (void*)(nsIDOMFocusListener*) this;    
     AddRef();
     return NS_OK;                                                        
   }
@@ -2463,6 +2442,7 @@ static void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
 	
 	switch (anEvent.message) {
 	case NS_GOTFOCUS:
+  case NS_FOCUS_EVENT_START:
 		aMacEvent.what = nsPluginEventType_GetFocusEvent;
 		break;
 	case NS_LOSTFOCUS:
@@ -2478,6 +2458,40 @@ static void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
 	}
 }
 #endif
+
+/*=============== nsIFocusListener ======================*/
+nsresult nsPluginInstanceOwner::Focus(nsIDOMEvent * aFocusEvent)
+{
+  return DispatchFocusToPlugin(aFocusEvent);
+}
+
+nsresult nsPluginInstanceOwner::Blur(nsIDOMEvent * aFocusEvent)
+{
+  return DispatchFocusToPlugin(aFocusEvent);
+}
+
+nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
+{
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aFocusEvent));
+  if (privateEvent) {
+    nsGUIEvent* focusEvent = nsnull;
+    privateEvent->GetInternalNSEvent((nsEvent**)&focusEvent);
+    if (focusEvent) {
+      nsEventStatus rv = ProcessEvent(*focusEvent);
+      if (nsEventStatus_eConsumeNoDefault == rv) {
+        aFocusEvent->PreventDefault();
+        aFocusEvent->PreventBubble();
+        return NS_ERROR_FAILURE; // means consume event
+      }
+    }
+    else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchFocusToPlugin failed, focusEvent null");   
+  }
+  else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchFocusToPlugin failed, privateEvent null");   
+  
+  return NS_OK;
+}    
+
+
 
 /*=============== nsIKeyListener ======================*/
 nsresult nsPluginInstanceOwner::KeyDown(nsIDOMEvent* aKeyEvent)
@@ -2613,7 +2627,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 #ifdef XP_MAC
     if (mWidget != NULL) {  // check for null mWidget
         EventRecord* event = (EventRecord*)anEvent.nativeMsg;
-        if (event == NULL || event->what == nullEvent) {
+        if ((event == NULL) || (event->what == nullEvent) || ((int)event < NATIVE_ERROR)) {
             EventRecord macEvent;
             GUItoMacEvent(anEvent, macEvent);
             event = &macEvent;
@@ -2642,9 +2656,25 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 nsresult
 nsPluginInstanceOwner::Destroy()
 {
-  // Unregister mouse event listener
   nsCOMPtr<nsIContent> content;
   mOwner->GetContent(getter_AddRefs(content));
+
+  // Unregister focus event listener
+  if (content) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    if (receiver) {
+      nsCOMPtr<nsIDOMFocusListener> focusListener;
+      QueryInterface(NS_GET_IID(nsIDOMFocusListener), getter_AddRefs(focusListener));
+      if (focusListener) { 
+        receiver->RemoveEventListenerByIID(focusListener, NS_GET_IID(nsIDOMFocusListener));
+      }
+      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
+    }
+    else NS_ASSERTION(PR_FALSE, "plugin was not an event listener");
+  }
+  else NS_ASSERTION(PR_FALSE, "plugin had no content");
+  
+  // Unregister mouse event listener
   if (content) {
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
     if (receiver) {
@@ -2794,10 +2824,23 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
   //do not addref to avoid circular refs. MMP
   mContext = aPresContext;
   mOwner = aFrame;
-
-  // Register mouse listener
+  
   nsCOMPtr<nsIContent> content;
   mOwner->GetContent(getter_AddRefs(content));
+  
+  // Register focus listener
+  if (content) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    if (receiver) {
+      nsCOMPtr<nsIDOMFocusListener> focusListener;
+      QueryInterface(NS_GET_IID(nsIDOMFocusListener), getter_AddRefs(focusListener));
+      if (focusListener) {
+        receiver->AddEventListenerByIID(focusListener, NS_GET_IID(nsIDOMFocusListener));
+      }
+    }
+  }
+
+  // Register mouse listener
   if (content) {
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
     if (receiver) {
