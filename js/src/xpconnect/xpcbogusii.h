@@ -135,7 +135,11 @@ public:
 class nsXPCParamInfo
 {
 public:
-    // add ctor/dtor
+    // XXX simple ctors, we can do better
+    nsXPCParamInfo() {}
+    nsXPCParamInfo(uint8 aFlags, const nsXPCType& aType)
+        : mFlags(aFlags), mType(aType) {}
+
     enum
     {
         IS_IN       = 0x80,
@@ -143,35 +147,46 @@ public:
         IS_RETVAL   = 0x20
     };
 
-    JSBool IsIn()  const    {return (JSBool) (flags & IS_IN);}
-    JSBool IsOut() const    {return (JSBool) (flags & IS_OUT);}
-    JSBool IsRetval() const {return (JSBool) (flags & IS_RETVAL);}
-    const nsXPCType& GetType() const {return type;}
+    JSBool IsIn()  const    {return (JSBool) (mFlags & IS_IN);}
+    JSBool IsOut() const    {return (JSBool) (mFlags & IS_OUT);}
+    JSBool IsRetval() const {return (JSBool) (mFlags & IS_RETVAL);}
+    const nsXPCType& GetType() const {return mType;}
     uint8 GetInterfaceIsArgNumber() const
     {
-        NS_PRECONDITION(type == nsXPCType::T_INTERFACE_IS,"not an interface_is");
-        return interface_is_arg_num;
+        NS_PRECONDITION(mType == nsXPCType::T_INTERFACE_IS,"not an interface_is");
+        return mInterfaceIsArgNum;
     }
     nsIInterfaceInfo* GetInterface() const
     {
-        NS_PRECONDITION(type == nsXPCType::T_INTERFACE,"not an interface");
-        return interface;
+        NS_PRECONDITION(mType == nsXPCType::T_INTERFACE,"not an interface");
+        return mInterface;
     }
 
 private:
-    uint8 flags;
-    nsXPCType type;
+    uint8 mFlags;
+    nsXPCType mType;
+    // XXX mostly ignoring this for now...
     union
     {
-        uint8 interface_is_arg_num;
-        nsIInterfaceInfo* interface;
+        uint8 mInterfaceIsArgNum;
+        nsIInterfaceInfo* mInterface;
     };
 };
 
 class nsXPCMethodInfo
 {
 public:
-    // add ctor/dtor
+    // XXX simple ctors, we can do better
+    // XXX the pointer stuff (especially) needs to be fixed
+    nsXPCMethodInfo() {}
+    nsXPCMethodInfo(uint8 aFlags,
+                    char* aName,
+                    uint8 aParamCount,
+                    nsXPCParamInfo* aParams,
+                    const nsXPCParamInfo& aResult)
+        : mFlags(aFlags), mName(aName),
+          mParamCount(aParamCount), mParams(aParams), mResult(aResult) {}
+
     enum
     {
         IS_GETTER         = 0x80,
@@ -180,31 +195,31 @@ public:
         IS_CONSTRUCTOR    = 0x10
     };
 
-    JSBool IsGetter()      const {return (JSBool) (flags & IS_GETTER);}
-    JSBool IsSetter()      const {return (JSBool) (flags & IS_SETTER);}
-    JSBool IsVarArgs()     const {return (JSBool) (flags & IS_VAR_ARGS);}
-    JSBool IsConstructor() const {return (JSBool) (flags & IS_CONSTRUCTOR);}
+    JSBool IsGetter()      const {return (JSBool) (mFlags & IS_GETTER);}
+    JSBool IsSetter()      const {return (JSBool) (mFlags & IS_SETTER);}
+    JSBool IsVarArgs()     const {return (JSBool) (mFlags & IS_VAR_ARGS);}
+    JSBool IsConstructor() const {return (JSBool) (mFlags & IS_CONSTRUCTOR);}
     const char* GetName()  const {return mName;}
-    uint8 GetParamCount()  const {return param_count;}
+    uint8 GetParamCount()  const {return mParamCount;}
     const nsXPCParamInfo& GetParam(uint8 index) const
     {
-        NS_PRECONDITION(index < param_count,"bad arg");
-        return params[index];
+        NS_PRECONDITION(index < mParamCount,"bad arg");
+        return mParams[index];
     }
-    const nsXPCParamInfo& GetResult() const {return result;}
+    const nsXPCParamInfo& GetResult() const {return mResult;}
 private:
-    uint8 flags;
+    uint8 mFlags;
     char* mName;
-    uint8 param_count;
-    nsXPCParamInfo* params;
-    nsXPCParamInfo result;
+    uint8 mParamCount;
+    nsXPCParamInfo* mParams;
+    nsXPCParamInfo mResult;
 };
 
 class nsXPCConstant
 {
 public:
-    // simple ctor
-    nsXPCConstant(){}
+    // XXX simple ctors, we can do better
+    nsXPCConstant() {}
     nsXPCConstant(char* aName, const nsXPCVarient& aVal)
         : mName(aName), mVal(aVal) {};
 

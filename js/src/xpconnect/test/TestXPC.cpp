@@ -143,12 +143,12 @@ int main()
 
     nsTestXPCFoo* foo = new nsTestXPCFoo();
 
-    nsXPCVarient v[2];
-    v[0].type = nsXPCType::T_I32; v[0].val.i32 = 1;
-    v[1].type = nsXPCType::T_I32; v[1].val.i32 = 2;
+//    nsXPCVarient v[2];
+//    v[0].type = nsXPCType::T_I32; v[0].val.i32 = 1;
+//    v[1].type = nsXPCType::T_I32; v[1].val.i32 = 2;
 
-    XPC_TestInvoke(foo, 3, 2, v);
-    XPC_TestInvoke(foo, 4, 0, NULL);
+//    XPC_TestInvoke(foo, 3, 2, v);
+//    XPC_TestInvoke(foo, 4, 0, NULL);
 
     nsIXPConnectWrappedNative* wrapper;
     nsIXPConnectWrappedNative* wrapper2;
@@ -170,19 +170,16 @@ int main()
             v = OBJECT_TO_JSVAL(jsobj);
             JS_SetProperty(cx, glob, "foo", &v);
 
-            char* p;
-            char txt1[] = "print('foo.five = '+ foo.five)";
-            char txt2[] = "print('foo.six = '+ foo.six)";
-            char txt3[] = "print('foo.bogus = '+ foo.bogus)";
+            char* txt[] = {
+                "print('foo.five = '+ foo.five)",
+                "print('foo.six = '+ foo.six)",
+                "print('foo.bogus = '+ foo.bogus)",
+                "foo.Test(10,20)",
+                0,
+            };
 
-            p = txt1;
-            JS_EvaluateScript(cx, glob, p, strlen(p), "builtin", 1, &rval);
-
-            p = txt2;
-            JS_EvaluateScript(cx, glob, p, strlen(p), "builtin", 1, &rval);
-
-            p = txt3;
-            JS_EvaluateScript(cx, glob, p, strlen(p), "builtin", 1, &rval);
+            for(char** p = txt; *p; p++)
+                JS_EvaluateScript(cx, glob, *p, strlen(*p), "builtin", 1, &rval);
 
             NS_RELEASE(obj);
             NS_RELEASE(com_obj);

@@ -115,7 +115,7 @@ nsXPConnect::GetInterfaceInfo(REFNSIID aIID,
     NS_PRECONDITION(info,"bad param");
     // XXX implement...FOR REAL...
 
-    *info = new nsInterfaceInfo(aIID, "name", NULL);
+    *info = new nsInterfaceInfo(aIID, "HARDCODED_INTERFACE_NAME", NULL);
 
     return NS_OK;
 }

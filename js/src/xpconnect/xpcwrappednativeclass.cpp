@@ -262,12 +262,40 @@ isConstructorID(JSContext *cx, jsid id)
 }
 
 const char*
-nsXPCWrappedNativeClass::GetMethodName(int MethodIndex) const
+nsXPCWrappedNativeClass::GetMemberName(const XPCNativeMemberDescriptor* desc) const
 {
-    const nsXPCMethodInfo* info;
-    if(NS_SUCCEEDED(mInfo->GetMethodInfo(MethodIndex, &info)))
-        return info->GetName();
+    switch(desc->category)
+    {
+    case XPCNativeMemberDescriptor::CONSTANT:
+    {
+        const nsXPCConstant* constant;
+        if(NS_SUCCEEDED(mInfo->GetConstant(desc->index, &constant)))
+            return constant->GetName();
+        break;
+    }
+    case XPCNativeMemberDescriptor::METHOD:
+    case XPCNativeMemberDescriptor::ATTRIB_RO:
+    case XPCNativeMemberDescriptor::ATTRIB_RW:
+    {
+        const nsXPCMethodInfo* info;
+        if(NS_SUCCEEDED(mInfo->GetMethodInfo(desc->index, &info)))
+            return info->GetName();
+        break;
+    }
+    default:
+        NS_ASSERTION(0,"bad category");
+        break;
+    }
+
     return NULL;
+}
+
+const char*
+nsXPCWrappedNativeClass::GetInterfaceName() const
+{
+    const char* name;
+    mInfo->GetName(&name);
+    return name;
 }
 
 void
@@ -286,7 +314,7 @@ nsXPCWrappedNativeClass::SetDescriptorCounts(XPCNativeMemberDescriptor* desc)
             break;
 
         uintN scratchWords = 0;
-        for(uint8 i = info->GetParamCount()-1 ; i >= 0; i--)
+        for(int i = info->GetParamCount()-1 ; i >= 0; i--)
         {
             const nsXPCParamInfo& param = info->GetParam(i);
             if(param.IsOut())
@@ -359,7 +387,8 @@ void
 nsXPCWrappedNativeClass::ReportError(const XPCNativeMemberDescriptor* desc,
                                      const char* msg)
 {
-    // XXX implement
+    JS_ReportError(GetJSContext(), "'%s' accessing '%s' of '%s'",
+                   msg, GetMemberName(desc), GetInterfaceName());
 }
 
 
@@ -383,7 +412,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     uint8 i;
     const nsXPCMethodInfo* info;
     uint8 requiredArgs;
-    uint8 paramCount = info->GetParamCount();
+    uint8 paramCount;
     jsval src;
     jsdouble num;
     uint8 vtblIndex;
@@ -425,8 +454,9 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     }
 
     // XXX ASSUMES that retval is last arg.
+    paramCount = info->GetParamCount();
     requiredArgs = paramCount -
-            (paramCount && info->GetParam(paramCount-1).IsRetval()) ? 0 : 1;
+            (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
     if(argc < requiredArgs)
     {
         ReportError(desc, "not enough arguments");
@@ -465,13 +495,16 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
         // set 'src' to be the object from which we get the value
 
         if(param.IsOut() /* implicit && param.IsIn() */ )
-            src = argv[i];
-        else if(!JSVAL_IS_OBJECT(argv[i]) ||
-                !JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &src))
         {
-            ReportError(desc, "no out val");
-            goto done;
+            if(!JSVAL_IS_OBJECT(argv[i]) ||
+               !JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &src))
+            {
+                ReportError(desc, "no out val");
+                goto done;
+            }
         }
+        else
+            src = argv[i];
 
         // XXX just ASSUME a number
 
@@ -556,7 +589,7 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
 {
     if(!desc->invokeFuncObj)
     {
-        const char* name = GetMethodName(desc->index);
+        const char* name = GetMemberName(desc);
         NS_ASSERTION(name,"bad method name");
 
         JSContext* cx = GetJSContext();
