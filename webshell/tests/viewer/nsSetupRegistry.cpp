@@ -255,8 +255,10 @@ NS_SetupRegistry()
   // NETLIB
   nsComponentManager::RegisterComponent(kCNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
+#ifndef XP_UNIX
   // UNICHARUTIL
   nsComponentManager::RegisterComponent(kCUnicharUtilCID,          NULL, NULL, UNICHARUTIL_DLL, PR_FALSE, PR_FALSE);
+#endif
 
   // PLUGIN
   nsComponentManager::RegisterComponent(kCPluginHostCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
