@@ -50,10 +50,16 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
+/*
+ * The patch for http://bugzilla.mozilla.org/show_bug.cgi?id=172699
+ * defined this value to be the result of an overlong UTF-8 sequence -
+ */
+var INVALID_CHAR = 0xFFFD;
+
 
 status = inSection(1);
 actual = decodeURI("%C0%AF").charCodeAt(0);
-expect = 65533; // this is 0xFFFD
+expect = INVALID_CHAR;
 addThis();
 
 
