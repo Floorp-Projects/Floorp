@@ -60,6 +60,7 @@ public:
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD InsertBreak();
+  NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
 
 // Transaction control
   NS_IMETHOD EnableUndo(PRBool aEnable);
@@ -70,7 +71,7 @@ public:
   NS_IMETHOD BeginTransaction();
   NS_IMETHOD EndTransaction();
 
-// Selection and navigation -- exposed here for convenience
+// Selection and navigation
   NS_IMETHOD MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection);
   NS_IMETHOD MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection);
   NS_IMETHOD MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection);
@@ -92,7 +93,8 @@ public:
   NS_IMETHOD OutputText(nsString& aOutputString);
   NS_IMETHOD OutputHTML(nsString& aOutputString);
 
-//=====================================
+// End of methods implemented in nsEditor
+//=============================================================
 // HTML Editing methods
   NS_IMETHOD AddBlockParent(nsString& aParentTag);
   NS_IMETHOD RemoveBlockParent();
@@ -103,6 +105,11 @@ public:
                          nsString& aHspace, nsString& aVspace,
                          nsString& aBorder,
                          nsString& aAlt, nsString& aAlignment);
+
+  // This should replace InsertLink and InsertImage once it is working
+  NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
+  NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
+  NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);
 
 // Table Editing (implemented in EditTable.cpp)
   NS_IMETHOD CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn);

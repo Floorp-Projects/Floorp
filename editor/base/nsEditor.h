@@ -108,6 +108,10 @@ public:
 
   NS_IMETHOD RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute);
 
+  //NOTE: Most callers are dealing with Nodes,
+  //  but these objects must supports nsIDOMElement
+  NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
+
   NS_IMETHOD CreateNode(const nsString& aTag,
                         nsIDOMNode *    aParent,
                         PRInt32         aPosition,

@@ -2341,3 +2341,10 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState    &aTypeInState,
   else { return NS_ERROR_FAILURE; }
   return NS_OK;
 }
+
+// This file should be rearranged to put all methods that simply call nsEditor together
+NS_IMETHODIMP
+nsTextEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
+{
+  return nsEditor::CopyAttributes(aDestNode, aSourceNode);
+}

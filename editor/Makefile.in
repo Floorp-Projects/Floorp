@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = public
 
 ifdef MOZ_EDITOR
-DIRS += base guimgr txmgr
+DIRS += base guimgr txmgr ui
 endif
 
 include $(topsrcdir)/config/config.mk

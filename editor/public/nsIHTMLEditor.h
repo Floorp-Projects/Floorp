@@ -27,6 +27,7 @@
 
 #include "nsIEditor.h"
 #include "nscore.h"
+#include "nsIDOMDocumentFragment.h"
 
 class nsIEditorCallback;
 class nsISupportsArray;
@@ -114,6 +115,11 @@ public:
                          nsString& aHspace, nsString& aVspace,
                          nsString& aBorder,
                          nsString& aAlt, nsString& aAlignment)=0;
+
+  // This should replace InsertLink and InsertImage once it is working
+  NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)=0;
 
 // Table editing Methods
   NS_IMETHOD InsertTable()=0;

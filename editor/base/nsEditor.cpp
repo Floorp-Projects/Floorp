@@ -23,9 +23,11 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDocument.h"
+#include "nsVector.h"
 #include "nsIServiceManager.h"
 #include "nsEditFactory.h"
 #include "nsTextEditFactory.h"
@@ -561,6 +563,79 @@ nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement,
     {
       nsAutoString value;
       result = (*aTxn)->Init(this, aElement, aAttribute, value, PR_TRUE);
+    }
+  }
+  return result;
+}
+
+// Objects must be DOM elements
+NS_IMETHODIMP
+nsEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
+{
+  nsresult result=NS_OK;
+
+  if (!aDestNode || !aSourceNode)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMElement> destElement = do_QueryInterface(aDestNode);
+  nsCOMPtr<nsIDOMElement> sourceElement = do_QueryInterface(aSourceNode);
+  if (!destElement || !sourceElement)
+    return NS_ERROR_NO_INTERFACE;
+
+  nsAutoString name;
+  nsAutoString value;
+  nsCOMPtr<nsIDOMNamedNodeMap> sourceAttributes;
+  sourceElement->GetAttributes(getter_AddRefs(sourceAttributes));
+  nsCOMPtr<nsIDOMNamedNodeMap> destAttributes;
+  destElement->GetAttributes(getter_AddRefs(destAttributes));
+  if (!sourceAttributes || !destAttributes)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 sourceCount;
+  sourceAttributes->GetLength(&sourceCount);
+  PRUint32 i, destCount;
+  destAttributes->GetLength(&destCount);
+  nsIDOMNode* attrNode;
+
+  // Clear existing attributes
+  for (i = 0; i < destCount; i++)
+  {
+    if( NS_SUCCEEDED(destAttributes->Item(i, &attrNode)) && attrNode)
+    {
+      nsCOMPtr<nsIDOMAttr> destAttribute = do_QueryInterface(attrNode);
+      if (destAttribute)
+      {
+        nsCOMPtr<nsIDOMAttr> resultAttribute;
+        destElement->RemoveAttributeNode(destAttribute, getter_AddRefs(resultAttribute));
+        // Is the resultAttribute deleted automagically?
+      }
+    }
+  }
+  // Set just the attributes that the source element has
+  for (i = 0; i < sourceCount; i++)
+  {
+    if( NS_SUCCEEDED(sourceAttributes->Item(i, &attrNode)) && attrNode)
+    {
+      nsCOMPtr<nsIDOMAttr> sourceAttribute = do_QueryInterface(attrNode);
+      if (sourceAttribute)
+      {
+        nsString sourceAttrName;
+        if (NS_SUCCEEDED(sourceAttribute->GetName(sourceAttrName)))
+        {
+          nsString sourceAttrValue;
+          if (NS_SUCCEEDED(sourceAttribute->GetValue(sourceAttrValue)) &&
+              sourceAttrValue != "")
+          {
+            destElement->SetAttribute(sourceAttrName, sourceAttrValue);
+          } else {
+            // Do we ever get here?
+            destElement->RemoveAttribute(sourceAttrName);
+#if DEBUG_cmanske
+            printf("Attribute in NamedNodeMap has empty value in nsEditor::CopyAttributes()\n");
+#endif
+          }
+        }        
+      }
     }
   }
   return result;
@@ -2131,7 +2206,6 @@ nsEditor::DebugDumpContent() const
   content->List();
   return NS_OK;
 }
-
 
 //END nsEditor Private methods
 
