@@ -472,7 +472,7 @@ nsBaseWidget::Enumerator::~Enumerator()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::Next()
 {
-  unsigned int itemCount = 0;
+  PRUint32 itemCount = 0;
   mParent.mChildren->Count(&itemCount);
   if (mCurrentPosition < itemCount -1 )
     mCurrentPosition ++;
@@ -501,7 +501,7 @@ nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
 
-  unsigned int itemCount = 0;
+  PRUint32 itemCount = 0;
   mParent.mChildren->Count(&itemCount);
   if (mCurrentPosition >= 0 && mCurrentPosition < itemCount ) {
     nsISupports* widget = mParent.mChildren->ElementAt(mCurrentPosition);
@@ -519,7 +519,7 @@ nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::First()
 {
-  unsigned int itemCount = 0;
+  PRUint32 itemCount = 0;
   mParent.mChildren->Count(&itemCount);
   if ( itemCount ) {
     mCurrentPosition = 0;
