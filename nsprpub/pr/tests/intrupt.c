@@ -42,6 +42,8 @@
 extern void SetupMacPrintfLog(char *logFile);
 #endif
 
+#define DEFAULT_TCP_PORT 12500
+
 static PRLock *ml = NULL;
 static PRCondVar *cv = NULL;
 
@@ -149,13 +151,90 @@ static void PR_CALLBACK AbortJoin(void *arg)
 {
 }  /* AbortJoin */
 
+static void setup_listen_socket(PRFileDesc **listner, PRNetAddr *netaddr)
+{
+    PRStatus rv;
+    PRInt16 port = DEFAULT_TCP_PORT;
+
+    *listner = PR_NewTCPSocket();
+    PR_ASSERT(*listner != NULL);
+    memset(netaddr, 0, sizeof(*netaddr));
+    (*netaddr).inet.ip = PR_htonl(PR_INADDR_ANY);
+    (*netaddr).inet.family = PR_AF_INET;
+    do
+    {
+        (*netaddr).inet.port = PR_htons(port);
+        rv = PR_Bind(*listner, netaddr);
+        port += 1;
+        PR_ASSERT(port < (DEFAULT_TCP_PORT + 10));
+    } while (PR_FAILURE == rv);
+
+    rv = PR_Listen(*listner, 5);
+
+	if (PR_GetSockName(*listner, netaddr) < 0) {
+		if (debug_mode) printf("intrupt: ERROR - PR_GetSockName failed\n");
+		passed = PR_FALSE;
+		return;
+	}
+
+}
+
+static void PR_CALLBACK IntrBlock(void *arg)
+{
+    PRStatus rv;
+    PRNetAddr netaddr;
+    PRFileDesc *listner;
+
+    /* some other thread (main) is doing the interrupt */
+	/* block the interrupt */
+	PR_BlockInterrupt();
+    PR_Lock(ml);
+    rv = PR_WaitCondVar(cv, PR_SecondsToInterval(4));
+	PR_Unlock(ml);
+    if (debug_mode)
+    {
+        printf("Expected success on wait CV and ");
+        if (PR_FAILURE == rv)
+        {
+            printf(
+                "%s\n", (PR_PENDING_INTERRUPT_ERROR == PR_GetError()) ?
+                "got interrupted" : "got a random failure");
+        } else
+        	printf("got it\n");
+    }
+    passed = ((PR_TRUE == passed) && (PR_SUCCESS == rv)) ? PR_TRUE : PR_FALSE;
+
+	setup_listen_socket(&listner, &netaddr);
+	PR_UnblockInterrupt();
+    if (PR_Accept(listner, &netaddr, PR_INTERVAL_NO_TIMEOUT) == NULL)
+    {
+        PRInt32 error = PR_GetError();
+        if (debug_mode) printf("Expected interrupt on PR_Accept() and ");
+        if (PR_PENDING_INTERRUPT_ERROR == error)
+        {
+            if (debug_mode) printf("got it\n");
+        }
+        else
+        {
+            if (debug_mode) printf("failed\n");
+            passed = PR_FALSE;
+        }
+    }
+    else
+    {
+        if (debug_mode) printf("Failed to interrupt PR_Accept()\n");
+        passed = PR_FALSE;
+    }
+
+    (void)PR_Close(listner); listner = NULL;
+}  /* TestIntrBlock */
+
 void PR_CALLBACK Intrupt(void *arg)
 {
     PRStatus rv;
     PRNetAddr netaddr;
     PRFileDesc *listner;
-    PRInt16 port = 12848;
-    PRThread *abortCV, *abortIO, *abortJoin;
+    PRThread *abortCV, *abortIO, *abortJoin, *intrBlock;
 
     ml = PR_NewLock();
     cv = PR_NewCondVar(ml);
@@ -192,26 +271,7 @@ void PR_CALLBACK Intrupt(void *arg)
 
     /* Part III */
     if (debug_mode) printf("Part III\n");
-    listner = PR_NewTCPSocket();
-    memset(&netaddr, 0, sizeof(netaddr));
-    netaddr.inet.ip = PR_htonl(PR_INADDR_ANY);
-    netaddr.inet.family = PR_AF_INET;
-    do
-    {
-        netaddr.inet.port = PR_htons(port);
-        rv = PR_Bind(listner, &netaddr);
-        port += 1;
-        PR_ASSERT(port < (12848 + 10));
-    } while (PR_FAILURE == rv);
-
-    rv = PR_Listen(listner, 5);
-
-	if (PR_GetSockName(listner, &netaddr) < 0) {
-		if (debug_mode) printf("intrupt: ERROR - PR_GetSockName failed\n");
-		passed = PR_FALSE;
-		return;
-	}
-
+	setup_listen_socket(&listner, &netaddr);
     abortIO = PR_CreateThread(
         PR_USER_THREAD, AbortIO, PR_CurrentThread(), PR_PRIORITY_NORMAL,
         thread_scope, PR_JOINABLE_THREAD, 0);
@@ -239,6 +299,17 @@ void PR_CALLBACK Intrupt(void *arg)
     (void)PR_Close(listner); listner = NULL;
 
     rv = PR_JoinThread(abortIO);
+    PR_ASSERT(PR_SUCCESS == rv);
+    /* Part VI */
+    if (debug_mode) printf("Part VI\n");
+    intrBlock = PR_CreateThread(
+        PR_USER_THREAD, IntrBlock, 0, PR_PRIORITY_NORMAL,
+        thread_scope, PR_JOINABLE_THREAD, 0);
+
+    PR_Sleep(PR_SecondsToInterval(2));
+    rv = PR_Interrupt(intrBlock);
+    PR_ASSERT(PR_SUCCESS == rv);
+    rv = PR_JoinThread(intrBlock);
     PR_ASSERT(PR_SUCCESS == rv);
 
     PR_DestroyCondVar(cv);

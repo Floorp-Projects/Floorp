@@ -258,6 +258,30 @@ PR_IMPLEMENT(void) PR_ClearInterrupt()
         if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSON(is);
 }
 
+PR_IMPLEMENT(void) PR_BlockInterrupt()
+{
+    PRIntn is;
+    PRThread *me = _PR_MD_CURRENT_THREAD();
+
+    if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSOFF(is);
+    _PR_THREAD_LOCK(me);
+    _PR_THREAD_BLOCK_INTERRUPT(me);
+    _PR_THREAD_UNLOCK(me);
+    if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSON(is);
+}  /* PR_BlockInterrupt */
+
+PR_IMPLEMENT(void) PR_UnblockInterrupt()
+{
+    PRIntn is;
+    PRThread *me = _PR_MD_CURRENT_THREAD();
+
+    if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSOFF(is);
+    _PR_THREAD_LOCK(me);
+    _PR_THREAD_UNBLOCK_INTERRUPT(me);
+    _PR_THREAD_UNLOCK(me);
+    if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSON(is);
+}  /* PR_UnblockInterrupt */
+
 /*
 ** Return the thread stack pointer of the given thread.
 */
