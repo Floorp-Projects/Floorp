@@ -20,19 +20,40 @@
  * Contributor(s): 
  */
 
-#ifndef nsIXULCommandDispatcher_h__
-#define nsIXULCommandDispatcher_h__
+/*
 
-// {A7033701-1502-11d3-BF87-00105A1B0627}
-#define NS_IXULCOMMANDDISPATCHER_IID \
-{ 0xa7033701, 0x1502, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
+  The XUL "controllers" object.
 
-class nsIXULCommandDispatcher: public nsISupports {
+*/
+
+#ifndef nsXULControllers_h__
+#define nsXULControllers_h__
+
+#include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
+#include "nsIControllers.h"
+#include "nsISupportsArray.h"
+
+class nsIDOMXULCommandDispatcher;
+
+class nsXULControllers : public nsIControllers
+{
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IXULCOMMANDDISPATCHER_IID; return iid; }
+    friend NS_IMETHODIMP
+    NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICONTROLLERS
+  
+protected:
+    nsXULControllers();
+    virtual ~nsXULControllers(void);
+
+    nsCOMPtr<nsISupportsArray> mControllers;
+    nsWeakPtr mCommandDispatcher;
 };
 
-extern nsresult
-NS_NewXULCommandDispatcher(nsIXULCommandDispatcher** result);
 
-#endif // nsIXULCommandDispatcher_h__
+
+
+#endif // nsXULControllers_h__

@@ -50,6 +50,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
@@ -82,6 +83,7 @@
 #include "nsIURL.h"
 #include "nsIXULContent.h"
 #include "nsIXULDocument.h"
+#include "nsXULControllers.h"
 #include "nsXULTreeElement.h"
 #include "nsXULEditorElement.h"
 #include "rdfutil.h"
@@ -131,8 +133,6 @@ static NS_DEFINE_CID(kXULContentUtilsCID,         NS_XULCONTENTUTILS_CID);
 
 static NS_DEFINE_IID(kIXULPopupListenerIID,       NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
-
-static NS_DEFINE_CID(kXULControllersCID,          NS_XULCONTROLLERS_CID);
 
 //----------------------------------------------------------------------
 
@@ -3244,16 +3244,30 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsXULElement::GetControllers(nsIControllers** aResult)
 {
-    if (! Controllers()){
+    if (! Controllers()) {
+        NS_PRECONDITION(mDocument != nsnull, "no document");
+        if (! mDocument)
+            return NS_ERROR_NOT_INITIALIZED;
+
         nsresult rv;
         rv = EnsureSlots();
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsComponentManager::CreateInstance(kXULControllersCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIControllers),
-                                                getter_AddRefs(mSlots->mControllers));
+        rv = NS_NewXULControllers(nsnull, NS_GET_IID(nsIControllers), getter_AddRefs(mSlots->mControllers));
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a controllers");
+        if (NS_FAILED(rv)) return rv;
+
+        // Set the command dispatcher on the new controllers object
+        nsCOMPtr<nsIDOMXULDocument> domxuldoc = do_QueryInterface(mDocument);
+        NS_ASSERTION(domxuldoc != nsnull, "not an nsIDOMXULDocument");
+        if (! domxuldoc)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher;
+        rv = domxuldoc->GetCommandDispatcher(getter_AddRefs(dispatcher));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mSlots->mControllers->SetCommandDispatcher(dispatcher);
         if (NS_FAILED(rv)) return rv;
     }
 

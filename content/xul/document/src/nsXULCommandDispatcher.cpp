@@ -21,119 +21,36 @@
  */
 
 /*
+
   This file provides the implementation for the XUL Command Dispatcher.
+
  */
 
-#include "nsCOMPtr.h"
-
-#include "nsVoidArray.h"
-
-#include "nsIDOMElement.h"
-#include "nsIDOMXULCommandDispatcher.h"
-#include "nsIXULCommandDispatcher.h"
-#include "nsIDOMFocusListener.h"
-#include "nsRDFCID.h"
-
-#include "nsIScriptObjectOwner.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsIDOMUIEvent.h"
-
-#include "nsIDOMXULElement.h"
-#include "nsIDOMNSHTMLTextAreaElement.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIControllers.h"
-
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMUIEvent.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMXULElement.h"
+#include "nsIDocument.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
-
+#include "nsRDFCID.h"
+#include "nsXULCommandDispatcher.h"
 #include "prlog.h"
-
-////////////////////////////////////////////////////////////////////////
-
-static NS_DEFINE_IID(kIScriptObjectOwnerIID,      NS_ISCRIPTOBJECTOWNER_IID);
-
-static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
-
-static NS_DEFINE_IID(kIDomNodeIID,            NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
 #endif
 
 ////////////////////////////////////////////////////////////////////////
-// XULCommandDispatcherImpl
-//
-//   This is the focus manager for XUL documents.
-//
-class XULCommandDispatcherImpl : public nsIDOMXULCommandDispatcher,
-                                 public nsIXULCommandDispatcher,
-                                 public nsIDOMFocusListener,
-                                 public nsIScriptObjectOwner
-{
-public:
-    XULCommandDispatcherImpl(void);
-    virtual ~XULCommandDispatcherImpl(void);
 
-public:
-    // nsISupports
-    NS_DECL_ISUPPORTS
-
-    // nsIDOMXULCommandDispatcher interface
-    NS_DECL_IDOMXULCOMMANDDISPATCHER
-   
-    // nsIDOMFocusListener
-    virtual nsresult Focus(nsIDOMEvent* aEvent);
-    virtual nsresult Blur(nsIDOMEvent* aEvent);
-
-    // nsIDOMEventListener
-    virtual nsresult HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
-
-    // nsIScriptObjectOwner interface
-    NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-    NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-protected:
-    NS_IMETHOD GetParentWindowFromElement(nsIDOMElement* aElement, nsPIDOMWindow** aPWindow);
-
-    void*                      mScriptObject;       // ????
-
-    // XXX THis was supposed to be WEAK, but c'mon, that's an accident
-    // waiting to happen! If somebody deletes the node, then asks us
-    // for the focus, we'll get killed!
-    nsCOMPtr<nsIDOMNode> mCurrentNode; // [OWNER]
-
-    class Updater {
-    public:
-        Updater(nsIDOMElement* aElement,
-                const nsString& aEvents,
-                const nsString& aTargets)
-            : mElement(aElement),
-              mEvents(aEvents),
-              mTargets(aTargets),
-              mNext(nsnull)
-        {}
-
-        nsIDOMElement* mElement; // [WEAK]
-        nsString       mEvents;
-        nsString       mTargets;
-        Updater*       mNext;
-    };
-
-    Updater* mUpdaters;
-
-    PRBool Matches(const nsString& aList, const nsString& aElement);
-};
-
-////////////////////////////////////////////////////////////////////////
-
-XULCommandDispatcherImpl::XULCommandDispatcherImpl(void)
+nsXULCommandDispatcher::nsXULCommandDispatcher(void)
     : mScriptObject(nsnull), mCurrentNode(nsnull), mUpdaters(nsnull)
 {
 	NS_INIT_REFCNT();
@@ -144,7 +61,7 @@ XULCommandDispatcherImpl::XULCommandDispatcherImpl(void)
 #endif
 }
 
-XULCommandDispatcherImpl::~XULCommandDispatcherImpl(void)
+nsXULCommandDispatcher::~nsXULCommandDispatcher(void)
 {
     while (mUpdaters) {
         Updater* doomed = mUpdaters;
@@ -153,48 +70,49 @@ XULCommandDispatcherImpl::~XULCommandDispatcherImpl(void)
     }
 }
 
-NS_IMPL_ADDREF(XULCommandDispatcherImpl)
-NS_IMPL_RELEASE(XULCommandDispatcherImpl)
+NS_IMPL_ADDREF(nsXULCommandDispatcher)
+NS_IMPL_RELEASE(nsXULCommandDispatcher)
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::QueryInterface(REFNSIID iid, void** result)
+nsXULCommandDispatcher::QueryInterface(REFNSIID iid, void** result)
 {
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(kISupportsIID)) {
-        *result = (nsISupports*)(nsIXULCommandDispatcher*)this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    else if (iid.Equals(nsIXULCommandDispatcher::GetIID())) {
-        *result = NS_STATIC_CAST(nsIXULCommandDispatcher*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    } 
-    else if (iid.Equals(nsIDOMXULCommandDispatcher::GetIID())) {
+    if (iid.Equals(NS_GET_IID(nsISupports)) ||
+        iid.Equals(NS_GET_IID(nsIDOMXULCommandDispatcher))) {
         *result = NS_STATIC_CAST(nsIDOMXULCommandDispatcher*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
     }
-    else if (iid.Equals(nsIDOMFocusListener::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIDOMFocusListener)) ||
+             iid.Equals(NS_GET_IID(nsIDOMEventListener))) {
         *result = NS_STATIC_CAST(nsIDOMFocusListener*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
     }
-    else if (iid.Equals(kIDomEventListenerIID)) {
-        *result = (nsIDOMEventListener*)(nsIDOMFocusListener*)this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    else if (iid.Equals(kIScriptObjectOwnerIID)) {
+    else if (iid.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
         *result = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
+    }
+    else if (iid.Equals(NS_GET_IID(nsISupportsWeakReference))) {
+        *result = NS_STATIC_CAST(nsISupportsWeakReference*, this);
+    }
+    else {
+        return NS_NOINTERFACE;
     }
 
-    return NS_NOINTERFACE;
+    NS_ADDREF_THIS();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::Create(nsIDOMXULCommandDispatcher** aResult)
+{
+    nsXULCommandDispatcher* dispatcher = new nsXULCommandDispatcher();
+    if (! dispatcher)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *aResult = dispatcher;
+    NS_ADDREF(*aResult);
+    return NS_OK;
 }
 
 
@@ -202,7 +120,7 @@ XULCommandDispatcherImpl::QueryInterface(REFNSIID iid, void** result)
 // nsIDOMXULTracker Interface
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::GetFocusedNode(nsIDOMNode** aNode)
+nsXULCommandDispatcher::GetFocusedNode(nsIDOMNode** aNode)
 {
   *aNode = mCurrentNode;
   NS_IF_ADDREF(*aNode);
@@ -210,7 +128,7 @@ XULCommandDispatcherImpl::GetFocusedNode(nsIDOMNode** aNode)
 }
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::SetFocusedNode(nsIDOMNode* aNode)
+nsXULCommandDispatcher::SetFocusedNode(nsIDOMNode* aNode)
 {
   // XXX On a blur, will need to fire an updatecommands (focus) on the
   // parent window.
@@ -221,7 +139,7 @@ XULCommandDispatcherImpl::SetFocusedNode(nsIDOMNode* aNode)
 }
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::AddCommandUpdater(nsIDOMElement* aElement,
+nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
                                             const nsString& aEvents,
                                             const nsString& aTargets)
 {
@@ -270,7 +188,7 @@ XULCommandDispatcherImpl::AddCommandUpdater(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::RemoveCommandUpdater(nsIDOMElement* aElement)
+nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
 {
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
@@ -301,7 +219,7 @@ XULCommandDispatcherImpl::RemoveCommandUpdater(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::UpdateCommands(const nsString& aEventName)
+nsXULCommandDispatcher::UpdateCommands(const nsString& aEventName)
 {
     nsresult rv;
 
@@ -364,7 +282,7 @@ XULCommandDispatcherImpl::UpdateCommands(const nsString& aEventName)
 }
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::GetControllers(nsIControllers** aResult)
+nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
 {
   //XXX: we should fix this so there's a generic interface that describes controllers, 
   //     so this code would have no special knowledge of what object might have controllers.
@@ -395,7 +313,7 @@ XULCommandDispatcherImpl::GetControllers(nsIControllers** aResult)
 /////
 
 nsresult 
-XULCommandDispatcherImpl::Focus(nsIDOMEvent* aEvent)
+nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
@@ -410,7 +328,7 @@ XULCommandDispatcherImpl::Focus(nsIDOMEvent* aEvent)
 }
 
 nsresult 
-XULCommandDispatcherImpl::Blur(nsIDOMEvent* aEvent)
+nsXULCommandDispatcher::Blur(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
@@ -424,7 +342,7 @@ XULCommandDispatcherImpl::Blur(nsIDOMEvent* aEvent)
 ////////////////////////////////////////////////////////////////////////
 // nsIScriptObjectOwner interface
 NS_IMETHODIMP
-XULCommandDispatcherImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+nsXULCommandDispatcher::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
     nsresult res = NS_OK;
     nsIScriptGlobalObject *global = aContext->GetGlobalObject();
@@ -440,7 +358,7 @@ XULCommandDispatcherImpl::GetScriptObject(nsIScriptContext *aContext, void** aSc
 
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::SetScriptObject(void *aScriptObject)
+nsXULCommandDispatcher::SetScriptObject(void *aScriptObject)
 {
     mScriptObject = aScriptObject;
     return NS_OK;
@@ -448,7 +366,7 @@ XULCommandDispatcherImpl::SetScriptObject(void *aScriptObject)
 
 
 PRBool
-XULCommandDispatcherImpl::Matches(const nsString& aList, const nsString& aElement)
+nsXULCommandDispatcher::Matches(const nsString& aList, const nsString& aElement)
 {
     if (aList == "*")
         return PR_TRUE; // match _everything_!
@@ -475,8 +393,9 @@ XULCommandDispatcherImpl::Matches(const nsString& aList, const nsString& aElemen
 }
 
 
-  NS_IMETHODIMP XULCommandDispatcherImpl::GetParentWindowFromElement(nsIDOMElement* aElement, nsPIDOMWindow** aPWindow)
-  {
+NS_IMETHODIMP
+nsXULCommandDispatcher::GetParentWindowFromElement(nsIDOMElement* aElement, nsPIDOMWindow** aPWindow)
+{
     nsCOMPtr<nsIDOMDocument> document;
     aElement->GetOwnerDocument(getter_AddRefs(document));
     if(!document) return NS_OK;
@@ -494,22 +413,23 @@ XULCommandDispatcherImpl::Matches(const nsString& aList, const nsString& aElemen
     privateDOMWindow->GetPrivateParent(aPWindow);
 
     return NS_OK;
-  }
+}
 
-  NS_IMETHODIMP XULCommandDispatcherImpl::GetControllerForCommand(const nsString& command, nsIController** _retval)
-  {
+NS_IMETHODIMP
+nsXULCommandDispatcher::GetControllerForCommand(const nsString& command, nsIController** _retval)
+{
     *_retval = nsnull;
 
     nsCOMPtr<nsIControllers> controllers;
     GetControllers(getter_AddRefs(controllers));
     if(controllers) {
-      nsCOMPtr<nsIController> controller;
-      controllers->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
-      if(controller) {
-        *_retval = controller;
-        NS_ADDREF(*_retval);
-        return NS_OK;
-      }
+        nsCOMPtr<nsIController> controller;
+        controllers->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
+        if(controller) {
+            *_retval = controller;
+            NS_ADDREF(*_retval);
+            return NS_OK;
+        }
     }
      
     if(!mCurrentNode) return NS_OK;
@@ -518,45 +438,33 @@ XULCommandDispatcherImpl::Matches(const nsString& aList, const nsString& aElemen
 
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mCurrentNode);
     if(element) {
-      GetParentWindowFromElement(element, getter_AddRefs(currentWindow));
+        GetParentWindowFromElement(element, getter_AddRefs(currentWindow));
     } else {
-      nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mCurrentNode);
-      if(!window) return NS_OK;
+        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mCurrentNode);
+        if(!window) return NS_OK;
 
-      window->GetPrivateParent(getter_AddRefs(currentWindow));
+        window->GetPrivateParent(getter_AddRefs(currentWindow));
     }
 
     while(currentWindow) {
-      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(currentWindow);
-      if(domWindow) {
-        nsCOMPtr<nsIControllers> controllers2;
-        domWindow->GetControllers(getter_AddRefs(controllers2));
-        if(controllers2) {
-          nsCOMPtr<nsIController> controller;
-          controllers2->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
-          if(controller) {
-            *_retval = controller;
-            NS_ADDREF(*_retval);
-            return NS_OK;
-          }
-        }
-      } 
-      nsCOMPtr<nsPIDOMWindow> parentPWindow = currentWindow;
-      parentPWindow->GetPrivateParent(getter_AddRefs(currentWindow));
+        nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(currentWindow);
+        if(domWindow) {
+            nsCOMPtr<nsIControllers> controllers2;
+            domWindow->GetControllers(getter_AddRefs(controllers2));
+            if(controllers2) {
+                nsCOMPtr<nsIController> controller;
+                controllers2->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
+                if(controller) {
+                    *_retval = controller;
+                    NS_ADDREF(*_retval);
+                    return NS_OK;
+                }
+            }
+        } 
+        nsCOMPtr<nsPIDOMWindow> parentPWindow = currentWindow;
+        parentPWindow->GetPrivateParent(getter_AddRefs(currentWindow));
     }
     
     return NS_OK;
-  }
-
-////////////////////////////////////////////////////////////////
-nsresult
-NS_NewXULCommandDispatcher(nsIXULCommandDispatcher** CommandDispatcher)
-{
-    XULCommandDispatcherImpl* focus = new XULCommandDispatcherImpl();
-    if (!focus)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    NS_ADDREF(focus);
-    *CommandDispatcher = focus;
-    return NS_OK;
 }
+

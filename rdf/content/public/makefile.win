@@ -27,7 +27,6 @@ DEPTH=..\..\..
 EXPORTS	= \
 	nsIDOMXULCommandDispatcher.h    \
 	nsIStreamLoadableDocument.h     \
-	nsIXULCommandDispatcher.h       \
 	nsIXULKeyListener.h             \
 	nsIXULPopupListener.h           \
         nsIDOMXULDocument.h             \
