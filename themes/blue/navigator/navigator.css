@@ -118,12 +118,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     list-style-image      : url("chrome://communicator/skin/document-error.gif");
   }  
-  
-#go-button  
-  {
-    display               : none;
-  }
-  
+ 
 #nav-bar-inner
   {
     padding-left          : 6px;
@@ -134,7 +129,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     margin-right          : 1px;
   }
   
-#homebutton
+#home-button
   {
     list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
   }

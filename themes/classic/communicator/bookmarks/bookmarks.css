@@ -30,17 +30,17 @@
 /**
  * Home button
  **/ 
-  #homebutton
+  #home-button
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/home.gif");
     }
     
-  #homebutton:hover
+  #home-button:hover
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/home-hover.gif");
     }
     
-  #homebutton:hover:active
+  #home-button:hover:active
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/home-active.gif");
     }

@@ -90,6 +90,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     NS_DECL_NSIWEBPROGRESSLISTENER
 
+    static PRUint32 gRefCnt;
+
   public:
     nsIDocShell* GetContentAreaDocShell();
     nsIDOMWindow* GetContentWindow();

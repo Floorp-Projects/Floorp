@@ -103,6 +103,8 @@
 #include "nsNetUtil.h"
 #include "nsICmdLineHandler.h"
 
+#include "nsIWindowMediator.h"
+
 #include "nsIDocumentCharsetInfo.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
@@ -153,6 +155,8 @@ static NS_DEFINE_IID(kCmdLineServiceCID,        NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kCGlobalHistoryCID,        NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kCPrefServiceCID,          NS_PREF_CID);
 static NS_DEFINE_CID(kTimeBombCID,     NS_TIMEBOMB_CID);
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+
 
 #ifdef DEBUG                                                           
 static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
@@ -370,6 +374,9 @@ void TimesUp(nsITimer *aTimer, void *aClosure)
 
 #endif //ENABLE_PAGE_CYCLER
 
+PRUint32 nsBrowserInstance::gRefCnt = 0;
+int ButtonShowHideCallback(const char* aPref, void* aClosure);
+static const char kShowToolbarElts[] = "browser.toolbars.showbutton";
 
 //*****************************************************************************
 //***    nsBrowserInstance: Object Management
@@ -385,11 +392,29 @@ nsBrowserInstance::nsBrowserInstance() : mIsClosed(PR_FALSE)
   mContentAreaDocShellWeak  = nsnull;
   mContentAreaDocLoaderWeak = nsnull;
   NS_INIT_REFCNT();
+  gRefCnt++;
+  if (gRefCnt == 1) {
+    nsresult rv;
+    // Add callback listeners for toolbar buttons showing/hiding.
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      prefs->RegisterCallback(kShowToolbarElts, ButtonShowHideCallback, nsnull);
+    }    
+  }
 }
 
 nsBrowserInstance::~nsBrowserInstance()
 {
   Close();
+  gRefCnt--;
+  if (gRefCnt == 0) {
+    // Remove callback listeners for toolbar buttons showing/hiding.
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      prefs->UnregisterCallback(kShowToolbarElts, ButtonShowHideCallback, nsnull);
+    }    
+  }
 }
 
 void
@@ -2384,3 +2409,79 @@ static nsModuleComponentInfo components[] = {
 
 NS_IMPL_NSGETMODULE("nsBrowserModule", components)
 
+// =================================================================================
+// Toolbar button pref callback
+// =================================================================================
+
+int ButtonShowHideCallback(const char* aPref, void* aClosure)
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  if (NS_FAILED(rv))
+    return 0;
+
+  // There is an intelligent mapping from
+  // the name of the pref to the id of the element in the XUL.
+  //
+  // browser.toolbars.showbutton.XXX maps to
+  // an element with an ID of XXX-button.  If the ID is of the
+  // correct form, then this code will scale tolerably
+  // as new buttons are added, and I won't need to have special
+  // "My Netscape" and "Net2Phone" cases in the Netscape tree (which
+  // would be non-ideal to say the least).
+  //
+  // hyatt
+
+  nsAutoString pref; pref.AssignWithConversion(aPref);
+  PRInt32 index = pref.RFindChar('.');
+  if (index == -1)
+    return 0;
+
+  nsAutoString element;
+  pref.Right(element, pref.Length()-index-1);
+  element += NS_LITERAL_STRING("-button");
+
+  PRBool show = PR_TRUE;
+  prefs->GetBoolPref(aPref, &show);
+
+  // Get the window mediator and loop over all navigator windows.
+  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+
+    if (NS_SUCCEEDED(windowMediator->GetEnumerator(NS_LITERAL_STRING("navigator:browser"), 
+                                                   getter_AddRefs(windowEnumerator)))) {
+      // Get each dom window
+      PRBool more;
+      windowEnumerator->HasMoreElements(&more);
+      while (more) {
+        nsCOMPtr<nsISupports> protoWindow;
+        windowEnumerator->GetNext(getter_AddRefs(protoWindow));
+        if (protoWindow) {
+          nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(protoWindow);
+          if (domWindow) {
+            nsCOMPtr<nsIDOMDocument> doc;
+            domWindow->GetDocument(getter_AddRefs(doc));
+            
+            nsCOMPtr<nsIDOMElement> elt;
+            doc->GetElementById(element, getter_AddRefs(elt));
+            if (elt) {
+              if (show)
+                elt->SetAttribute(NS_LITERAL_STRING("hidden"), NS_LITERAL_STRING("false"));
+              else elt->SetAttribute(NS_LITERAL_STRING("hidden"), NS_LITERAL_STRING("true"));
+
+              // Modality issues with the (sigh) modal prefs dialog necessitate a synchronous
+              // reflow.  Otherwise the reflow seems to get "lost".
+              // Do that here by flushing all pending reflows.
+              nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
+              document->FlushPendingNotifications();
+            }
+          }
+        }
+        windowEnumerator->HasMoreElements(&more);
+      }
+    }
+  }
+
+  return 0;
+}

@@ -21,3 +21,12 @@
 
 <!ENTITY  alwaysCheckWhenDropHome.label  "Always check when I drag an address to the Home button">
 <!ENTITY  alwaysCheckWhenDropHome.accesskey "d">
+
+<!ENTITY  header3.label             "Toolbar Customization">
+<!ENTITY  toolbarIntro.label        "Select the buttons that should be visible from the list below.">
+
+<!ENTITY  bookmarksButton.label     "Bookmarks">
+<!ENTITY  goButton.label            "Go">
+<!ENTITY  homeButton.label          "Home">
+<!ENTITY  printButton.label         "Print">
+<!ENTITY  searchButton.label        "Search">

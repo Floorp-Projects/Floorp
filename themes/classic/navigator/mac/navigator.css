@@ -193,11 +193,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     min-height            : 0px;
   }
 
-#go-button  
-  {
-    display               : none;
-  }
-  
 #nav-bar-inner
   {
     padding-left          : 6px;
