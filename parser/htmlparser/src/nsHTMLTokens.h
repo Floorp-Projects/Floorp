@@ -52,6 +52,7 @@ enum eHTMLTokenTypes {
 //*** tags. It simply makes normal tag handling more efficient.
 enum eHTMLTags
 {
+
   eHTMLTag_unknown=0,   eHTMLTag_doctype,     eHTMLTag_a,         eHTMLTag_acronym,
   eHTMLTag_address,     eHTMLTag_applet,      eHTMLTag_area,      eHTMLTag_bold,
   eHTMLTag_base,        eHTMLTag_basefont,    eHTMLTag_bdo,       eHTMLTag_big,         
@@ -77,11 +78,11 @@ enum eHTMLTags
   eHTMLTag_noembed,     eHTMLTag_noframes,    eHTMLTag_nolayer,   eHTMLTag_noscript,  //74
   eHTMLTag_note,        eHTMLTag_object,      eHTMLTag_ol,
   eHTMLTag_option,      eHTMLTag_paragraph,   eHTMLTag_param,     eHTMLTag_plaintext,   
-  eHTMLTag_pre,         eHTMLTag_quotation,   eHTMLTag_strike,    eHTMLTag_samp,        
-  eHTMLTag_script,      eHTMLTag_select,      
-  eHTMLTag_server,      eHTMLTag_small,     
-  eHTMLTag_spacer,      eHTMLTag_span,
-  eHTMLTag_strong,      eHTMLTag_style,       eHTMLTag_sub,       eHTMLTag_sup,         
+  eHTMLTag_pre,         eHTMLTag_quotation,   eHTMLTag_samp,      eHTMLTag_script,      
+  eHTMLTag_select,      eHTMLTag_server,      eHTMLTag_small,     
+  eHTMLTag_spacer,      eHTMLTag_span,        eHTMLTag_spell,
+  eHTMLTag_strong,      eHTMLTag_style,       eHTMLTag_strike,    eHTMLTag_sub,       
+  eHTMLTag_sup,           
   eHTMLTag_table,       eHTMLTag_tbody,       eHTMLTag_td,        //98
   
   eHTMLTag_text,  //used for plain text; this is not really a tag.  
@@ -91,7 +92,15 @@ enum eHTMLTags
   eHTMLTag_th,          eHTMLTag_thead,       eHTMLTag_title,     eHTMLTag_tr,
   eHTMLTag_tt,          eHTMLTag_monofont,    eHTMLTag_u,         eHTMLTag_ul,          
   eHTMLTag_var,         eHTMLTag_wbr,         eHTMLTag_whitespace,
-  eHTMLTag_xmp,         eHTMLTag_userdefined
+  eHTMLTag_xmp,         
+
+  //the following few enum values never occur in the document.
+  //they're used by the parser/dtd to enable implicit style resolution.
+  eHTMLTag_secret_h1style,  eHTMLTag_secret_h2style,
+  eHTMLTag_secret_h3style,  eHTMLTag_secret_h4style,
+  eHTMLTag_secret_h5style,  eHTMLTag_secret_h6style,
+
+  eHTMLTag_userdefined
 };
 
 //*** This enum is used to define the known universe of HTML attributes.

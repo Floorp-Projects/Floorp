@@ -26,11 +26,8 @@ CPPSRCS =     \
   nsParserNode.cpp  \
   nsScanner.cpp   \
   nsToken.cpp   \
-  nsTokenizer.cpp   \
   nsTokenHandler.cpp \
-  CNavDelegate.cpp  \
   CNavDTD.cpp \
-  COtherDelegate.cpp  \
   COtherDTD.cpp \
   nsHTMLParser.cpp  \
   nsHTMLTokens.cpp  \

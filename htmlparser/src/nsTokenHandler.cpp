@@ -25,9 +25,10 @@
 
 
 #include "nsTokenHandler.h"
-#include "nsHTMLParser.h"
-#include "nsHTMLTokens.h"
 #include "nsDebug.h"
+#include "nsIDTD.h"
+#include "nsToken.h"
+#include "nsParserTypes.h"
 
 static const char* kNullParserGiven = "Error: Null parser given as argument";
 
@@ -38,7 +39,7 @@ static const char* kNullParserGiven = "Error: Null parser given as argument";
  *  @param   
  *  @return  
  */
-CTokenHandler::CTokenHandler(dispatchFP aFP,eHTMLTokenTypes aType){
+CTokenHandler::CTokenHandler(dispatchFP aFP,PRInt32 aType){
   mType=aType;
   mFP=aFP;
 }
@@ -62,7 +63,7 @@ CTokenHandler::~CTokenHandler(){
  *  @param   
  *  @return  
  */
-eHTMLTokenTypes CTokenHandler::GetTokenType(void){
+PRInt32 CTokenHandler::GetTokenType(void){
   return mType;
 }
 
@@ -74,10 +75,10 @@ eHTMLTokenTypes CTokenHandler::GetTokenType(void){
  *  @param   
  *  @return  
  */
-PRInt32 CTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
+PRInt32 CTokenHandler::operator()(CToken* aToken,nsIDTD* aDTD){
   PRInt32 result=kNoError;
-  if((0!=aParser) && (0!=mFP)) {
-     result=(*mFP)(mType,aToken,aParser);
+  if((0!=aDTD) && (0!=mFP)) {
+     result=(*mFP)(aToken,aDTD);
   }
   return result;
 }

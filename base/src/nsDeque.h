@@ -50,10 +50,9 @@
  */
 class NS_BASE nsDequeFunctor{
 public:
-  virtual nsDequeFunctor& operator()(void* anObject)=0;
+  virtual void operator()(void* anObject)=0;
 };
 
-typedef void (* DEQUE_FREEOBJECT)(void *);
 
 /******************************************************
  * Here comes the nsDeque class itself...
@@ -72,7 +71,7 @@ typedef void (* DEQUE_FREEOBJECT)(void *);
 class NS_BASE nsDeque {
 friend class nsDequeIterator;
   public:
-                       nsDeque(PRBool aOwnsMemory=PR_TRUE,DEQUE_FREEOBJECT pFreeProc=0);
+                       nsDeque(nsDequeFunctor& aMemDestroyer);
                       ~nsDeque();
             
   /**
@@ -84,16 +83,7 @@ friend class nsDequeIterator;
    * @return  int contains element count
    */
   PRInt32 GetSize() const;
-
-  /**
-   * Sets the memory object free procedure.
-   *
-   * @update   jevering6/10/98
-   * @param    pFreeProc is pointer to the free procedure
-   * @return
-   */
-
-   void SetFreeProc(DEQUE_FREEOBJECT pFreeProc = 0);
+  
 
   /**
    * Pushes new member onto the end of the deque
@@ -180,16 +170,25 @@ friend class nsDequeIterator;
 
 protected:
 
-  PRInt32   mSize;
-  PRInt32   mCapacity;
-  PRInt32   mOrigin;
-  PRBool    mOwnsMemory;
-  void**    mData;
-  DEQUE_FREEOBJECT mFreeProc;
+  PRInt32         mSize;
+  PRInt32         mCapacity;
+  PRInt32         mOrigin;
+  nsDequeFunctor& mMemDestroyer;
+  void**          mData;
+
 
 private: 
   
   enum {eGrowthDelta=64}; 
+
+  /**
+   * Simple default constructor (PRIVATE)
+   * 
+   * @update	gess4/18/98
+   * @param 
+   * @return
+   */
+  nsDeque();
 
   /**
    * Copy constructor (PRIVATE)
@@ -198,7 +197,7 @@ private:
    * @param 
    * @return
    */
-  nsDeque(const nsDeque& other, DEQUE_FREEOBJECT pFreeProc);
+  nsDeque(const nsDeque& other);
 
   /**
    * Deque assignment operator (PRIVATE)

@@ -21,7 +21,6 @@
 
 #include "nshtmlpars.h"
 #include "nsISupports.h"
-#include "nsIURL.h"
 
 
 #define NS_IPARSER_IID      \
@@ -32,6 +31,9 @@
 class nsIContentSink;
 class nsIStreamListener;
 class nsString;
+class CToken;
+class nsIURL;
+class nsIDTD;
 
 /**
  *  This class defines the iparser interface. This XPCOM
@@ -44,6 +46,18 @@ class nsIParser : public nsISupports {
 
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
 
+    virtual void SetDTD(nsIDTD* aDTD)=0;
+
+    /**
+     *  Cause the tokenizer to consume the next token, and 
+     *  return an error result.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   anError -- ref to error code
+     *  @return  new token or null
+     */
+    virtual PRInt32 ConsumeToken(CToken*& aToken)=0;
+
     virtual PRInt32 Parse(nsIURL* aURL,
                           nsIStreamListener* aListener,
                           PRBool aIncremental=PR_TRUE) = 0;
@@ -54,9 +68,14 @@ class nsIParser : public nsISupports {
 
     virtual PRInt32 ResumeParse(void)=0;
 
-    virtual PRInt32 GetStack(PRInt32* aStackPtr)=0;
+    /**
+     * This method gets called when the tokens have been consumed, and it's time
+     * to build the model via the content sink.
+     * @update	gess5/11/98
+     * @return  YES if model building went well -- NO otherwise.
+     */
+    virtual PRInt32 IterateTokens(void)=0;
 
-    virtual PRBool  HasOpenContainer(PRInt32 aContainer) const=0;
 };
 
 extern NS_HTMLPARS nsresult NS_NewHTMLParser(nsIParser** aInstancePtrResult);

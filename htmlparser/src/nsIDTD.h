@@ -28,7 +28,6 @@
 
 #include "nsISupports.h"
 #include "prtypes.h"
-#include "nsString.h"
 
 #define NS_IDTD_IID      \
   {0x75634940, 0xcfdc,  0x11d1,  \
@@ -36,6 +35,8 @@
 
 
 class nsIParser;
+class CToken;
+class nsIContentSink;
 
 class nsIDTD : public nsISupports {
             
@@ -50,107 +51,75 @@ class nsIDTD : public nsISupports {
      *  @param   aChild -- tag enum of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const=0;
-
-    /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- tag enum of parent container
-     *  @param   aChild -- tag enum of child container
-     *  @return  PR_TRUE if parent can contain child
-     */
     virtual void SetParser(nsIParser* aParser)=0;
 
+   /**
+     * Select given content sink into parser for parser output
+     * @update	gess5/11/98
+     * @param   aSink is the new sink to be used by parser
+     * @return  old sink, or NULL
+     */
+    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink)=0;
+
     /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
+     * 
+     * @update	gess5/18/98
+     * @param 
+     * @return
+     */
+    virtual PRInt32 WillBuildModel(void)=0;
+
+    /**
+     * 
+     * @update	gess5/18/98
+     * @param 
+     * @return
+     */
+    virtual PRInt32 DidBuildModel(PRInt32 anErrorCode)=0;
+    
+    /**
      *  
      *  @update  gess 3/25/98
-     *  @param   aParent -- tag enum of parent container
-     *  @param   aChild -- tag enum of child container
-     *  @return  PR_TRUE if parent can contain child
+     *  @param   aToken -- token object to be put into content model
+     *  @return  0 if all is well; non-zero is an error
      */
-    virtual PRBool  CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const=0;
+    virtual PRInt32 HandleToken(CToken* aToken)=0;
+
 
     /**
-     *  This method gets called to determine whether a given 
-     *  tag is itself a container
+     *  Cause the tokenizer to consume the next token, and 
+     *  return an error result.
      *  
      *  @update  gess 3/25/98
-     *  @param   aTag -- tag to test for containership
-     *  @return  PR_TRUE if given tag can contain other tags
+     *  @param   anError -- ref to error code
+     *  @return  new token or null
      */
-    virtual PRBool  IsContainer(PRInt32 aTags)const=0;
+    virtual PRInt32 ConsumeToken(CToken*& aToken)=0;
+
 
     /**
-     *  This method gets called to determine whether a given 
-     *  tag can contain newlines. Most do not.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- tag type of parent
-     *  @param   aChild -- tag type of child
-     *  @return  PR_TRUE if given tag can contain other tags
+     * 
+     * @update	gess5/18/98
+     * @param 
+     * @return
      */
-    virtual PRBool CanOmit(PRInt32 aParent,PRInt32 aChild)const=0;
+    virtual void WillResumeParse(void)=0;
 
     /**
-     *  This method gets called to determine whether a given 
-     *  tag can contain newlines. Most do not.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- tag type of parent
-     *  @param   aChild -- tag type of child
-     *  @return  PR_TRUE if given tag can contain other tags
+     * 
+     * @update	gess5/18/98
+     * @param 
+     * @return
      */
-    virtual PRBool CanOmitEndTag(PRInt32 aParent,PRInt32 aChild)const=0;
+    virtual void WillInterruptParse(void)=0;
 
     /**
-     * This method gets called at various times by the parser
-     * whenever we want to verify a valid context stack. This
-     * method also gives us a hook to add debugging metrics.
-     *
-     * @update  gess4/6/98
-     * @param   aStack[] array of ints (tokens)
-     * @param   aCount number of elements in given array
-     * @return  TRUE if stack is valid, else FALSE
+     * 
+     * @update	gess5/18/98
+     * @param 
+     * @return
      */
-    virtual PRBool VerifyContextVector(PRInt32* aStack,PRInt32 aCount) const=0;
-
-    /**
-     * This method does two things: 1st, help construct
-     * our own internal model of the content-stack; and
-     * 2nd, pass this message on to the sink.
-     *
-     * @update  gess4/6/98
-     * @param   aNode -- next node to be added to model
-     * @return  TRUE if ok, FALSE if error
-     */
-    virtual PRInt32 GetDefaultParentTagFor(PRInt32 aTag) const=0;
-
-    /**
-     * This method tries to design a context map (without actually
-     * changing our parser state) from the parent down to the
-     * child. 
-     *
-     * @update  gess4/6/98
-     * @param   aParent -- tag type of parent
-     * @param   aChild -- tag type of child
-     * @return  True if closure was achieved -- other false
-     */
-    virtual PRBool ForwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const=0;
-
-    /**
-     * This method tries to design a context map (without actually
-     * changing our parser state) from the child up to the parent.
-     *
-     * @update  gess4/6/98
-     * @param   aParent -- tag type of parent
-     * @param   aChild -- tag type of child
-     * @return  True if closure was achieved -- other false
-     */
-    virtual PRBool BackwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const=0;
+    virtual PRInt32 Verify(const char* anOutputDir,PRBool aRecordStats)=0;
 
 };
 

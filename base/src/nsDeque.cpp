@@ -25,11 +25,10 @@
  * @update	gess4/18/98
  * @return  new deque
  */
-nsDeque::nsDeque(PRBool aOwnsMemory, DEQUE_FREEOBJECT pFreeProc ) {
-  mOwnsMemory=aOwnsMemory;
+nsDeque::nsDeque(nsDequeFunctor& aMemDestroyer) : mMemDestroyer(aMemDestroyer) {
+  mMemDestroyer=aMemDestroyer;
   mCapacity=eGrowthDelta;
   mOrigin=mSize=0;
-  mFreeProc = pFreeProc;
   mData=new void*[mCapacity];
 }
 
@@ -39,11 +38,9 @@ nsDeque::nsDeque(PRBool aOwnsMemory, DEQUE_FREEOBJECT pFreeProc ) {
  * @update	gess4/18/98
  */
 nsDeque::~nsDeque() {
-  if(mOwnsMemory)
-    Erase();
+  Erase();
   delete [] mData;
   mData=0;
-  mOwnsMemory=PR_FALSE;
 }
 
 
@@ -74,35 +71,13 @@ nsDeque& nsDeque::Empty() {
 }
 
 /**
- * Sets the memory object free procedure.
- *
- * @update   jevering6/10/98
- * @param    pFreeProc is pointer to the free procedure
- * @return
- */
-
-void nsDeque::SetFreeProc(DEQUE_FREEOBJECT pFreeProc)
-{
-   mFreeProc = pFreeProc;
-}
-
-/**
  * Remove and delete all items from container
  * 
  * @update	gess4/18/98
  * @return  this
  */
 nsDeque& nsDeque::Erase() {
-  nsDequeIterator iter1=Begin();
-  nsDequeIterator iter2=End();
-  void* temp;
-  while(iter1!=iter2) {
-    temp=(iter1++);
-    if (mFreeProc)
-       (*mFreeProc)(temp);
-    else
-       delete temp;
-  }
+  ForEach(mMemDestroyer);
   return Empty();
 }
 

@@ -23,19 +23,18 @@
  * 
  */
 
-#ifndef CITAGHANDLER__
-#define CITAGHANDLER__
+#ifndef ITOKENHANDLER__
+#define ITOKENHANDLER__
 
-#include "nsString.h"
 #include "prtypes.h"
 
 class CToken;
-class nsHTMLParser;
+class nsIDTD;
 
 class CITokenHandler {
 public:
                           
-  virtual   PRBool    operator()(CToken* aToken,nsHTMLParser* aParser)=0;
+  virtual PRInt32 operator()(CToken* aToken,nsIDTD* aDTD)=0;
 
 };
 

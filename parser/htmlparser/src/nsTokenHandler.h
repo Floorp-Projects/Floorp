@@ -26,26 +26,24 @@
 #define CTokenHandler__
 
 #include "prtypes.h"
-#include "nsString.h"
-#include "nsHTMLTokens.h"
 #include "nsITokenHandler.h"
 
 class CToken;
-class nsHTMLParser;
+class nsIDTD;
 
-typedef PRInt32 (*dispatchFP)(eHTMLTokenTypes,CToken*,nsHTMLParser*);
+typedef PRInt32 (*dispatchFP)(CToken*,nsIDTD*);
 
 class CTokenHandler : public CITokenHandler {
 public:
-                            CTokenHandler(dispatchFP aFP,eHTMLTokenTypes aType=eToken_unknown);
-  virtual                   ~CTokenHandler();
+                        CTokenHandler(dispatchFP aFP,PRInt32 aType=0);
+  virtual               ~CTokenHandler();
                           
-  virtual   eHTMLTokenTypes GetTokenType(void);
-  virtual   PRInt32         operator()(CToken* aToken,nsHTMLParser* aParser);
+  virtual   PRInt32     GetTokenType(void);
+  virtual   PRInt32     operator()(CToken* aToken,nsIDTD* aDTD);
 
 protected:
-            eHTMLTokenTypes mType;
-            dispatchFP      mFP;
+            PRInt32     mType;
+            dispatchFP  mFP;
 };
 
 

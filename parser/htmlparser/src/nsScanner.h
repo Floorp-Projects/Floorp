@@ -39,6 +39,7 @@
 #include <fstream.h>
 
 class nsIURL;
+//class ifstream;
 
 class CScanner {
   public:
