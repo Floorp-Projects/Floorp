@@ -19,12 +19,12 @@ use vars qw(@ISA @EXPORT);
 my(%embed_files) = ();
 
 
-sub GenerateManifest ($$$$$$$) {
-  my($moz, $manifest, $chrome, $locale, $out_desc, $dir_sep, $verbose) = @_;
+sub GenerateManifest ($$$$$$$$) {
+  my($moz, $manifest, $chrome, $locale, $platform, $out_desc, $dir_sep, $verbose) = @_;
   local(*OUTDESC) = $out_desc;  
 
   parse_input_manifest($moz, $manifest, $chrome, $locale, $verbose);
-  dump_output_manifest($moz, $manifest, $chrome, $locale, *OUTDESC, $dir_sep, $verbose);
+  dump_output_manifest($moz, $manifest, $chrome, $locale, $platform, *OUTDESC, $dir_sep, $verbose);
 }
 
 
@@ -60,8 +60,8 @@ sub parse_input_manifest ($$$$$) {
   close(MANIFEST);
 }
 
-sub dump_output_manifest ($$$$$$$) {
-  my($moz, $manifest, $chrome, $locale, $out_desc, $dir_sep, $verbose) = @_;
+sub dump_output_manifest ($$$$$$$$) {
+  my($moz, $manifest, $chrome, $locale, $platform, $out_desc, $dir_sep, $verbose) = @_;
   local(*OUTDESC) = $out_desc;
 
   print OUTDESC "embed.jar:\n";
@@ -69,6 +69,8 @@ sub dump_output_manifest ($$$$$$$) {
 
     $key =~ s/XXXX/$locale/g;
     $value =~ s/XXXX/$locale/g;
+    $key =~ s/YYYY/$platform/g;
+    $value =~ s/YYYY/$platform/g;
     if ( $dir_sep ne "/" ) {      # swap / for $dir_sep
       $value =~ s/\//$dir_sep/g;
     }
