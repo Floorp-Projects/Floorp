@@ -30,31 +30,33 @@
 #include "intl_csi.h"
 
 #ifdef DEBUG_shaver
-#define DEBUG_shaver_verbose
+/* #define DEBUG_shaver_verbose */
 #endif
 
 static JSBool
 lm_DOMInsertBefore(JSContext *cx, DOM_Node *node, DOM_Node *child,
-                   DOM_Node *ref)
+                   DOM_Node *ref, JSBool before)
 {
     return JS_TRUE;
 }
 
 static JSBool
 lm_DOMReplaceChild(JSContext *cx, DOM_Node *node, DOM_Node *child,
-                   DOM_Node *old)
+                   DOM_Node *old, JSBool before)
 {
     return JS_TRUE;
 }
 
 static JSBool
-lm_DOMRemoveChild(JSContext *cx, DOM_Node *node, DOM_Node *ild)
+lm_DOMRemoveChild(JSContext *cx, DOM_Node *node, DOM_Node *child,
+                  JSBool before)
 {
     return JS_TRUE;
 }
 
 static JSBool
-lm_DOMAppendChild(JSContext *cx, DOM_Node *node, DOM_Node *child)
+lm_DOMAppendChild(JSContext *cx, DOM_Node *node, DOM_Node *child,
+                  JSBool before)
 {
     return JS_TRUE;
 }
