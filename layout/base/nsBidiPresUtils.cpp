@@ -151,7 +151,8 @@ nsresult
 nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
                          nsIFrame*       aBlockFrame,
                          nsIFrame*       aFirstChild,
-                         PRBool&         aForceReflow)
+                         PRBool&         aForceReflow,
+                         PRBool          aIsVisualFormControl)
 {
   aForceReflow = PR_FALSE;
   mLogicalFrames.Clear();
@@ -211,8 +212,11 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
   }
 
   PRBool isVisual;
-  aPresContext->IsVisualMode(isVisual);
-
+  if (aIsVisualFormControl) {
+    isVisual = PR_FALSE;
+  } else {
+    aPresContext->IsVisualMode(isVisual);
+  }
   mSuccess = mBidiEngine->CountRuns(&runCount);
   if (NS_FAILED(mSuccess) ) {
     return mSuccess;

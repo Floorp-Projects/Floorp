@@ -46,7 +46,8 @@ public:
   nsresult Resolve(nsIPresContext* aPresContext,
                    nsIFrame*       aBlockFrame,
                    nsIFrame*       aFirstChild,
-                   PRBool&         aForceReflow);
+                   PRBool&         aForceReflow,
+                   PRBool          aIsVisualFormControl);
 
   /**
    * Reorder this line using Bidi engine.

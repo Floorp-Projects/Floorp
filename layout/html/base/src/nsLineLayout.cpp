@@ -62,7 +62,6 @@
 #include "nsTextFragment.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#include "nsIFormControlFrame.h"
 #include "nsITextFrame.h"
 #define FIX_FOR_BUG_40882
 #endif // IBMBIDI
@@ -1048,29 +1047,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #ifdef IBMBIDI
   PRBool bidiEnabled;
   mPresContext->GetBidiEnabled(&bidiEnabled);
-  PRBool visual;
-  PRBool setMode = PR_FALSE;
   PRInt32 start, end;
 
   if (bidiEnabled) {
     if (state & NS_FRAME_IS_BIDI) {
       aFrame->GetOffsets(start, end);
-    }
-    else {
-      nsCOMPtr<nsIFormControlFrame> formFrame(do_QueryInterface(aFrame) );
-      if (formFrame) {
-        mPresContext->IsVisualMode(visual);
-
-        PRUint32 options;
-        mPresContext->GetBidi(&options);
-        if ( (IBMBIDI_CONTROLSTEXTMODE_VISUAL == GET_BIDI_OPTION_CONTROLSTEXTMODE(options)
-              && !visual)
-             || (IBMBIDI_CONTROLSTEXTMODE_LOGICAL == GET_BIDI_OPTION_CONTROLSTEXTMODE(options)
-                 && visual) ) {
-          mPresContext->SetVisualMode(!visual);
-          setMode = PR_TRUE;
-        }
-      }
     }
   }
 #endif // IBMBIDI
@@ -1083,12 +1064,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     NS_WARNING( "Reflow of frame failed in nsLineLayout" );
     return rv;
   }
-
-#ifdef IBMBIDI
-  if (setMode) {
-    mPresContext->SetVisualMode(visual);
-  }
-#endif // IBMBIDI
 
   // SEC: added this next block for bug 45152
   // text frames don't know how to invalidate themselves on initial reflow.  Do it for them here.
