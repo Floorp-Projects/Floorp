@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <string.h>
 #include "nsIGenericFactory.h"
 #include "nsHttpGssapiAuth.h"
 
