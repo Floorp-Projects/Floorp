@@ -621,7 +621,7 @@ public abstract class ScriptableObject implements Scriptable {
     }
 
     /**
-     * Defines JavaScript objects from a Java class.
+     * Defines JavaScript objects from a Java class that implements Scriptable.
      *
      * If the given class has a method
      * <pre>
@@ -732,7 +732,7 @@ public abstract class ScriptableObject implements Scriptable {
      * 
      * @param scope The scope in which to define the constructor
      * @param clazz The Java class to use to define the JavaScript objects
-     *              and properties
+     *              and properties. The class must implement Scriptable.
      * @param sealed whether or not to create sealed standard objects that
      *               cannot be modified. 
      * @exception IllegalAccessException if access is not available
