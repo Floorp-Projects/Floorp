@@ -46,11 +46,14 @@ JSStubGen::~JSStubGen()
 void     
 JSStubGen::Generate(char *aFileName, 
                     char *aOutputDirName,
-                    IdlSpecification &aSpec)
+                    IdlSpecification &aSpec,
+                    int aIsGlobal)
 {
   if (!OpenFile(aFileName, aOutputDirName, kFilePrefix, kFileSuffix)) {
       throw new CantOpenFileException(aFileName);
   }
+
+  mIsGlobal = aIsGlobal;
 
   GenerateNPL();
   GenerateIncludes(aSpec);
@@ -570,6 +573,15 @@ static const char *kFinalizeStr =
 "  }\n"
 "}\n";
 
+static const char *kGlobalFinalizeStr = 
+"\n\n//\n"
+"// %s finalizer\n"
+"//\n"
+"PR_STATIC_CALLBACK(void)\n"
+"Finalize%s(JSContext *cx, JSObject *obj)\n"
+"{\n"
+"}\n";
+
 void     
 JSStubGen::GenerateFinalize(IdlSpecification &aSpec)
 {
@@ -577,8 +589,13 @@ JSStubGen::GenerateFinalize(IdlSpecification &aSpec)
   ofstream *file = GetFile();
   IdlInterface *iface = aSpec.GetInterfaceAt(0);
 
-  sprintf(buf, kFinalizeStr, iface->GetName(), iface->GetName(), 
-          iface->GetName(), iface->GetName());
+  if (mIsGlobal) {
+    sprintf(buf, kGlobalFinalizeStr, iface->GetName(), iface->GetName());
+  }
+  else {
+    sprintf(buf, kFinalizeStr, iface->GetName(), iface->GetName(), 
+            iface->GetName(), iface->GetName());
+  }
   *file << buf;
 }
 
@@ -1071,6 +1088,26 @@ JSStubGen::GenerateConstructor(IdlSpecification &aSpec)
   *file << buf;
 }
 
+static const char *kGlobalInitClassStr =
+"\n\n//\n"
+"// %s class initialization\n"
+"//\n"
+"nsresult NS_Init%sClass(nsIScriptContext *aContext, \n"
+"                        nsIScriptGlobalObject *aGlobal)\n"
+"{\n"
+"  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();\n"
+"  JSObject *global = JS_GetGlobalObject(jscontext);\n"
+"\n"
+"  JS_DefineProperties(jscontext, global, %sProperties);\n"
+"  JS_DefineFunctions(jscontext, global, %sMethods);\n"
+"\n"
+"  return NS_OK;\n"
+"}\n";
+
+#define JSGEN_GENERATE_GLOBALINITCLASS(buffer, className)  \
+   sprintf(buffer, kGlobalInitClassStr, className, className, className, \
+           className)
+
 static const char *kInitClassBeginStr =
 "\n\n//\n"
 "// %s class initialization\n"
@@ -1155,6 +1192,12 @@ JSStubGen::GenerateInitClass(IdlSpecification &aSpec)
   IdlInterface *primary_iface = aSpec.GetInterfaceAt(0);
   char *primary_class = primary_iface->GetName();
 
+  if (mIsGlobal) {
+    JSGEN_GENERATE_GLOBALINITCLASS(buf, primary_class);
+    *file << buf;
+    return;
+  }
+
   JSGEN_GENERATE_INITCLASSBEGIN(buf, primary_class);
   *file << buf;
 
@@ -1190,6 +1233,41 @@ JSStubGen::GenerateInitClass(IdlSpecification &aSpec)
   *file << kInitClassEndStr;
 }
 
+
+static const char *kNewGlobalJSObjectStr =
+"\n\n//\n"
+"// Method for creating a new %s JavaScript object\n"
+"//\n"
+"extern \"C\" NS_DOM NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn)\n"
+"{\n"
+"  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, \"null arg\");\n"
+"  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();\n"
+"\n"
+"  JSObject *global = ::JS_NewObject(jscontext, &%sClass, NULL, NULL);\n"
+"  if (global) {\n"
+"    // The global object has a to be defined in two step:\n"
+"    // 1- create a generic object, with no prototype and no parent which\n"
+"    //    will be passed to JS_InitStandardClasses. JS_InitStandardClasses \n"
+"    //    will make it the global object\n"
+"    // 2- define the global object to be what you really want it to be.\n"
+"    //\n"
+"    // The js runtime is not fully initialized before JS_InitStandardClasses\n"
+"    // is called, so part of the global object initialization has to be moved \n"
+"    // after JS_InitStandardClasses\n"
+"\n"
+"    // assign \"this\" to the js object, don't AddRef\n"
+"    ::JS_SetPrivate(jscontext, global, aSupports);\n"
+"\n"
+"    *aReturn = (void*)global;\n"
+"    return NS_OK;\n"
+"  }\n"
+"\n"
+"  return NS_ERROR_FAILURE;\n"
+"}\n";
+
+#define JSGEN_GENERATE_NEWGLOBALJSOBJECT(buffer, className)        \
+    sprintf(buffer, kNewGlobalJSObjectStr, className, className,   \
+            className, className)
 
 static const char *kNewJSObjectStr =
 "\n\n//\n"
@@ -1247,7 +1325,12 @@ JSStubGen::GenerateNew(IdlSpecification &aSpec)
   IdlInterface *primary_iface = aSpec.GetInterfaceAt(0);
   char *primary_class = primary_iface->GetName();
 
-  JSGEN_GENERATE_NEWJSOBJECT(buf, primary_class);
+  if (mIsGlobal) {
+    JSGEN_GENERATE_NEWGLOBALJSOBJECT(buf, primary_class);
+  }
+  else {
+    JSGEN_GENERATE_NEWJSOBJECT(buf, primary_class);
+  }
   *file << buf;
 }
 

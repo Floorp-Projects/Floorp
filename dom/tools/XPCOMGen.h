@@ -32,7 +32,7 @@ public:
      ~XPCOMGen();
 
      virtual void     Generate(char *aFileName, char *aOutputDirName, 
-			       IdlSpecification &aSpec);
+                               IdlSpecification &aSpec, int aIsGlobal);
 
 protected:
      void     GenerateIfdef(IdlSpecification &aSpec);
@@ -44,6 +44,8 @@ protected:
      void     GenerateMethods(IdlInterface &aInterface);
      void     GenerateEndClassDecl();
      void     GenerateEpilog(IdlSpecification &aSpec);
+
+     int mIsGlobal;
 };
 
 #endif // _XPCOMGen_h__ 

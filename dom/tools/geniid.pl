@@ -6,6 +6,7 @@ $uuid = 0x6f7652e0;
 $format = "{ 0x%x,  0xee43, 0x11d1, \\\
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }";
 $pattern = "--- IID GOES HERE ---";
+$mydir = cwd();
 
 sub replaceText {
     local ($oldname) = $_;
@@ -26,6 +27,7 @@ sub replaceText {
         close(FILE);
 
         if ($found) {
+	    print "Setting IID for file: ", $oldname, "\n";
             rename($oldname, $tempname)
                 || die "Unable to rename $oldname as $tempname";
             open(REPLACEFILE, ">$newname")
@@ -73,7 +75,10 @@ if (!$ARGV[0]) {
     &find('.');
 }
 else {
-    &find($ARGV[0]);
+    foreach $file (@ARGV) {
+	chdir $mydir
+        &find($file);
+    }
 }
 
 exit;

@@ -34,7 +34,7 @@ public:
      ~JSStubGen();
 
      virtual void     Generate(char *aFileName, char *aOutputDirName, 
-                               IdlSpecification &aSpec);
+                               IdlSpecification &aSpec, int aIsGlobal);
   
      friend PRIntn JSStubGen_IIDEnumerator(PLHashEntry *he, 
                                            PRIntn i, 
@@ -68,6 +68,8 @@ protected:
                                  IdlInterface &aInterface,
                                  IdlAttribute &aAttribute,
                                  PRBool aIsPrimary);
+
+     int mIsGlobal;
 };
 
 #endif // _JSStubGen_h__
