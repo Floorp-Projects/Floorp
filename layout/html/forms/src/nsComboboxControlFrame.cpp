@@ -337,7 +337,9 @@ PRBool
 nsComboboxControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
   nsAutoString name;
-  return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
+  PRBool disabled = PR_FALSE;
+  nsFormControlHelper::GetDisabled(mContent, &disabled);
+  return !disabled && (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
 }
 
 // If nothing is selected, and we have options, select item 0
