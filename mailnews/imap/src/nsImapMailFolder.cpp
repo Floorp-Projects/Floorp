@@ -528,8 +528,6 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
     }
 	else
 		rv = NS_ERROR_NULL_POINTER;
-
-    nsServiceManager::ReleaseService(kCImapService, imapService);
 	return rv;
 }
 
