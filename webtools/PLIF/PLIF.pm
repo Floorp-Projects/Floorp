@@ -70,7 +70,20 @@ sub create {
     }
 }
 
-sub init {} # stub
+# provide a constructor that always constructs a new copy of the
+# class. This is used to create service instances.
+sub serviceCreate {
+    my $class = shift;
+    if (ref($class)) {
+        $class = ref($class);
+    }
+    $class->dump(10, "Called service constructor of class $class, creating object...");
+    my $self = $class->bless(@_); # call our real constructor
+    $self->init(@_);
+    return $self;
+}
+
+sub init {} # stub for services
 
 # provide a constructor that always constructs a new copy of the
 # class. This is used by services that implement factories for objects
@@ -86,7 +99,7 @@ sub objectCreate {
     return $self;
 }
 
-sub objectInit {} # stub
+sub objectInit {} # stub for objects
 
 # internals of create and objectCreate
 sub bless {

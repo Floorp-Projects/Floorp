@@ -74,12 +74,14 @@ sub register {
     }
 }
 
-# helper method for input verifiers to add instantiated service
+# helper method for (e.g.) input verifiers to add instantiated service
 # objects specific to the current state (e.g. the current user in an
-# event loop). These should be wiped out when the state changes
-# (e.g. at the start of an event loop).
-# Objects should be created with $service->createObject(), not 
-# with $app->getServiceInstance().
+# event loop). These should be wiped out when the state changes (e.g.
+# at the start of an event loop).
+#
+# Objects should be created with $service->createObject(), not with
+# $app->getServiceInstance(), because they end up calling different
+# constructors -- init() vs objectInit().
 sub addObject {
     my $self = shift;
     foreach my $object (@_) {
@@ -200,8 +202,7 @@ sub getServiceInstance {
             # the service is being held by us, so the moment the
             # service goes out of scope, it will be freed. 
             # IMPORTANT! DON'T HOLD ON TO A SERVICE INSTANCE OBJECT!
-            local $" = '\', \'';
-            return $service->create($self, @data);
+            return $service->serviceCreate($self, @data);
         }
     }
     return undef;
