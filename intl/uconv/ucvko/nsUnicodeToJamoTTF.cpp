@@ -324,7 +324,7 @@ nsUnicodeToJamoTTF::Reset()
     PR_Free(mJamos);
   mJamos = mJamosStatic;
   mJamosMaxLength = sizeof(mJamosStatic) / sizeof(PRUnichar);
-  memset(mJamos, sizeof(mJamosStatic), 0);
+  memset(mJamos, 0, sizeof(mJamosStatic));
   mJamoCount = 0;
   mByteOff = 0;
 
