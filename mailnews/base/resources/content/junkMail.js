@@ -158,7 +158,7 @@ function storeSettings(aSettings, aLoggingEnabled)
 {
   aSettings.level = document.getElementById("level").checked ? 100 : 0;
   aSettings.moveOnSpam = document.getElementById("moveOnSpam").checked;
-  aSettings.moveTargetMode = document.getElementById("moveTargetMode").selectedItem.getAttribute("value");
+  aSettings.moveTargetMode = document.getElementById("moveTargetMode").value;
   aSettings.actionTargetAccount = document.getElementById("actionTargetAccount").getAttribute("uri");
   aSettings.actionTargetFolder = document.getElementById("actionTargetFolder").getAttribute("uri");
 
@@ -177,9 +177,8 @@ function conditionallyEnableUI(id)
     document.getElementById("whiteListAbURI").disabled = true;
     document.getElementById("moveOnSpam").disabled = true;
 
-    document.getElementById("moveTargetMode0").disabled = true;
+    document.getElementById("moveTargetMode").disabled = true;
     document.getElementById("actionTargetAccount").disabled = true;
-    document.getElementById("moveTargetMode1").disabled = true;
     document.getElementById("actionTargetFolder").disabled = true;
 
     document.getElementById("purge").disabled = true;
@@ -194,11 +193,10 @@ function conditionallyEnableUI(id)
   var enabled;
   if (!id || id == "moveOnSpam") {
     enabled = document.getElementById("moveOnSpam").checked;
-    var choice = document.getElementById("moveTargetMode").selectedItem.getAttribute("value");
+    var choice = document.getElementById("moveTargetMode").value;
  
-    document.getElementById("moveTargetMode0").disabled = !enabled;
+    document.getElementById("moveTargetMode").disabled = !enabled;
     document.getElementById("actionTargetAccount").disabled = !enabled || (choice == 1);
-    document.getElementById("moveTargetMode1").disabled = !enabled;
     document.getElementById("actionTargetFolder").disabled = !enabled || (choice == 0);
 
     var checked = document.getElementById("purge").checked;
