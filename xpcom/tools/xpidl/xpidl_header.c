@@ -96,8 +96,10 @@ pass_1(TreeState *state)
     GHashTable *hash = g_hash_table_new(g_str_hash, g_str_equal);
     if (!hash)
         return FALSE;
+    fputs("/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
+          " <filename goes here>\n */\n",
+          state->file);
     fputs("#include \"nscore.h\"\n", state->file);
-    fputs("#include \"nsISupports.h\"\n", state->file);
     IDL_tree_walk_in_order(state->tree, find_interface_refs, hash);
     g_hash_table_foreach(hash, write_header, state);
     g_hash_table_destroy(hash);
@@ -151,7 +153,7 @@ interface(TreeState *state)
                 fputs(", ", state->file);
         }
     }
-    fputs(" {\n", state->file);
+    fputs(" {\n public:", state->file);
     state->tree = IDL_INTERFACE(iface).body;
 
     if (!process_node(state))
@@ -351,7 +353,7 @@ attr_accessor(TreeState *state, gboolean getter)
         if (!xpcom_type(state))
             return FALSE;
         state->tree = orig;
-        fprintf(state->file, "%s%sa%c%s);\n",
+        fprintf(state->file, "%s%sa%c%s) = 0;\n",
                 (STARRED_TYPE(orig) ? "" : " "),
                 getter ? "*" : "",
                 toupper(attrname[0]), attrname + 1);
