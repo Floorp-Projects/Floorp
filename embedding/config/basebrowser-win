@@ -50,7 +50,7 @@ mozreg.dll
 img3250.dll
 jpeg3250.dll
 zlib.dll
-
+components\nspng.dll
 
 ; 
 ; Components: (need to trim fat)
@@ -82,7 +82,6 @@ components\editor.xpt
 ; embedding              
 components\webbrwsr.dll              
 components\webBrowser_core.xpt
-components\webBrowser_setup.xpt
 components\embedcomponents.dll
 components\windowwatcher.xpt
 
@@ -95,11 +94,13 @@ components\txtsvc.xpt
 components\gfx.xpt                      
 
 ; layout
-components\gkhtml.dll                   
+components\gkcontent.dll
+components\gklayout.dll                   
 components\gkparser.dll                 
 components\gkview.dll                   
 components\layout_base.xpt              
 components\layout_xul.xpt               
+components\content_base.xpt
 
 ; netwerk
 
@@ -164,7 +165,7 @@ res\charsetData.properties
 res\charsetalias.properties
 res\acceptlanguage.properties
 res\wincharset.properties
-res\strres.properties 
+; res\strres.properties 
 
 ; required i18n libs
 components\strres.dll
