@@ -41,7 +41,7 @@
 
 SOURCE_PREFIX = $(CORE_DEPTH)/dist
 ifdef MOZILLA_SECURITY_BUILD
-DIST          = $(CORE_DEPTH)/../dist
+SOURCE_PREFIX = $(CORE_DEPTH)/../dist
 else
 ifdef MOZILLA_CLIENT
 SOURCE_PREFIX = $(CORE_DEPTH)/../mozilla/dist
