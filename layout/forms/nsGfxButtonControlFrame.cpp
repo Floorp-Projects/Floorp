@@ -41,6 +41,7 @@ nsGfxButtonControlFrame::nsGfxButtonControlFrame()
   mRenderer.SetNameSpace(kNameSpaceID_None);
   mSuggestedWidth  = kSuggestedNotSet;
   mSuggestedHeight = kSuggestedNotSet;
+  mDefaultValueWasChanged = PR_FALSE;
 }
 
 PRBool
@@ -523,6 +524,7 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     } else {
       rv = NS_ERROR_UNEXPECTED;
     }
+    mDefaultValueWasChanged = PR_TRUE;
 
   // defer to HTMLButtonControlFrame
   } else {
@@ -692,12 +694,14 @@ nsGfxButtonControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** 
 
   // Compare to default value, and only save if needed (Bug 62713)
   nsAutoString defaultStateString;
-  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
-  if (formControl) {
-    formControl->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
+  if (!mDefaultValueWasChanged) {
+    nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
+    if (formControl) {
+      formControl->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
+    }
   }
 
-  if (! stateString.Equals(defaultStateString)) {
+  if (mDefaultValueWasChanged || !stateString.Equals(defaultStateString)) {
 
     // Construct a pres state and store value in it.
     res = NS_NewPresState(aState);
