@@ -1401,20 +1401,21 @@ PRIVATE int net_CacheWrite (NET_StreamClass *stream, CONST char* buffer, int32 l
     CacheDataObject* obj = stream->data_object;
     if (obj && obj->cache_object)
     {
-         if (!CacheObject_Write(obj->cache_object, buffer, len))
-         {
-             if (obj->URL_s)
-              obj->URL_s->dont_cache = TRUE;
+        if (!CacheObject_Write(obj->cache_object, buffer, len))
+        {
+            if (obj->URL_s)
+            obj->URL_s->dont_cache = TRUE;
 
-             /* CacheObject_MarkForDeletion(); TODO*/
-         }
+            /* CacheObject_MarkForDeletion(); TODO*/
+        }
+
         /* Write for next stream */
         if (obj->next_stream)
         {
             int status = 0;
             PR_ASSERT(buffer && (len >= 0));
             status = (*obj->next_stream->put_block)
-            (obj->next_stream, buffer, len);
+                (obj->next_stream, buffer, len);
 
             /* abort */
             if(status < 0)
@@ -2608,7 +2609,7 @@ NET_IsPartialCacheFile(URL_Struct *URL_s)
     /* Todo change this to just getObject, if null then... - Gagan */    
     if (CacheManager_Contains(URL_s->address))
     {
-     return CacheObject_IsPartial(CacheManager_GetObject(URL_s->address));
+        return CacheObject_IsPartial(CacheManager_GetObject(URL_s->address));
     }
     return PR_FALSE;
 }
@@ -2685,7 +2686,7 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
          if(!PL_strncasecmp(URL_s->address, "http", 4) || !PL_strncasecmp(URL_s->address, "ftp", 3))
          {
              URL_s->content_length = CacheObject_GetContentLength(pObject);
-             URL_s->real_content_length = CacheObject_GetContentLength(pObject); /* TODO */
+             URL_s->real_content_length = CacheObject_GetSize(pObject); 
          }
 
          URL_s->cache_object = pObject;
