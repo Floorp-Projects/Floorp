@@ -63,13 +63,13 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 		<html:label>
-		<html:input name="nonedefault" type="radio" id="pref:0:int:mousewheel.withnokey.action" val="checked" />
+		<html:input name="nonedefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withnokey.action" prefindex="0" id="mousewheel.withnokey.action" val="checked" />
 		&numberoflines.label;
 		</html:label>
-		<html:input name="nonenumlines" type="text" size="4" id="pref:int:mousewheel.withnokey.numlines" />
+		<html:input name="nonenumlines" type="text" size="4" pref="true" preftype="int" prefstring="mousewheel.withnokey.numlines" id="mousewheel.withnokey.numlines" />
 		<html:label>
-		<html:input name="nonesysnumlines" type="checkbox" id="pref:0:bool:mousewheel.withnokey.sysnumlines"
-          onclick="toggleField('pref:int:mousewheel.withnokey.numlines', 'pref:0:bool:mousewheel.withnokey.sysnumlines');" />
+		<html:input name="nonesysnumlines" type="checkbox" pref="true" preftype="bool" prefstring="mousewheel.withnokey.sysnumlines" prefindex="false" id="mousewheel.withnokey.sysnumlines"
+          onclick="toggleField('mousewheel.withnokey.numlines', 'mousewheel.withnokey.sysnumlines');" />
 		&sysdefault.label;
 		</html:label>
 	</html:td>
@@ -77,7 +77,7 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 		<html:label>
-		<html:input name="nonedefault" type="radio" id="pref:1:int:mousewheel.withnokey.action" />
+		<html:input name="nonedefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withnokey.action" prefindex="1" id="mousewheel.withnokey.action" />
 		&pageup.label;
 		</html:label>
 	</html:td>
@@ -85,7 +85,7 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 		<html:label>
-		<html:input name="nonedefault" type="radio" id="pref:2:int:mousewheel.withnokey.action" />
+		<html:input name="nonedefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withnokey.action" prefindex="2" id="mousewheel.withnokey.action" />
 		&history.label;
 		</html:label>
 	</html:td>
@@ -100,13 +100,13 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="controldefault" type="radio" id="pref:0:int:mousewheel.withcontrolkey.action" val="checked" />
+		<html:input name="controldefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.action" prefindex="0" id="mousewheel.withcontrolkey.action" val="checked" />
 		&numberoflines.label;
 	</html:label>
-	<html:input name="controlnumlines" type="text" size="4" id="pref:int:mousewheel.withcontrolkey.numlines" />
+	<html:input name="controlnumlines" type="text" size="4" pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.numlines" id="mousewheel.withcontrolkey.numlines" />
 	<html:label>
-		<html:input name="controlsysnumlines" type="checkbox" id="pref:0:bool:mousewheel.withcontrolkey.sysnumlines"
-          onclick="toggleField('pref:int:mousewheel.withcontrolkey.numlines', 'pref:0:bool:mousewheel.withcontrolkey.sysnumlines');" />
+		<html:input name="controlsysnumlines" type="checkbox" pref="true" preftype="bool" prefstring="mousewheel.withcontrolkey.sysnumlines" prefindex="0" id="mousewheel.withcontrolkey.sysnumlines"
+          onclick="toggleField('mousewheel.withcontrolkey.numlines', 'mousewheel.withcontrolkey.sysnumlines');" />
 		&sysdefault.label;
 	</html:label>
 	</html:td>
@@ -114,7 +114,7 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="controldefault" type="radio" id="pref:1:int:mousewheel.withcontrolkey.action" />
+		<html:input name="controldefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.action" prefindex="1" id="mousewheel.withcontrolkey.action" />
 		&pageup.label;
 	</html:label>
 	</html:td>
@@ -122,7 +122,7 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="controldefault" type="radio" id="pref:2:int:mousewheel.withcontrolkey.action" />
+		<html:input name="controldefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.action" prefindex="2" id="mousewheel.withcontrolkey.action" />
 		&history.label;
 		</html:label>
 	</html:td>
@@ -137,13 +137,13 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="shiftdefault" type="radio" id="pref:0:int:mousewheel.withshiftkey.action" val="checked" />
+		<html:input name="shiftdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withshiftkey.action" prefindex="0" id="mousewheel.withshiftkey.action" val="checked" />
 		&numberoflines.label;
 	</html:label>
-	<html:input name="shiftnumlines" type="text" size="4" id="pref:int:mousewheel.withshiftkey.numlines" />
+	<html:input name="shiftnumlines" type="text" size="4" pref="true" preftype="int" prefstring="mousewheel.withshiftkey.numlines" id="mousewheel.withshiftkey.numlines" />
 	<html:label>
-		<html:input name="shiftsysnumlines" type="checkbox" id="pref:0:bool:mousewheel.withshiftkey.sysnumlines"
-          onclick="toggleField('pref:int:mousewheel.withshiftkey.numlines', 'pref:0:bool:mousewheel.withshiftkey.sysnumlines');" />
+		<html:input name="shiftsysnumlines" type="checkbox" pref="true" preftype="bool" prefstring="mousewheel.withshiftkey.sysnumlines" id="mousewheel.withshiftkey.sysnumlines"
+          onclick="toggleField('mousewheel.withshiftkey.numlines', 'mousewheel.withshiftkey.sysnumlines');" />
 		&sysdefault.label;
 	</html:label>
 	</html:td>
@@ -151,7 +151,7 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="shiftdefault" type="radio" id="pref:1:int:mousewheel.withshiftkey.action" />
+		<html:input name="shiftdefault" type="radio" pref="true" preftype="bool" prefstring="mousewheel.withshiftkey.action" id="mousewheel.withshiftkey.action" />
 		&pageup.label;
 	</html:label>
 	</html:td>
@@ -159,7 +159,7 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="shiftdefault" type="radio" id="pref:2:int:mousewheel.withshiftkey.action" />
+		<html:input name="shiftdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withshiftkey.action" prefindex="2" id="mousewheel.withshiftkey.action" />
 		&history.label;
 	</html:label>
 	</html:td>
@@ -174,20 +174,20 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="altdefault" type="radio" id="pref:0:int:mousewheel.withaltkey.action" val="checked" />
+		<html:input name="altdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withaltkey.action" prefindex="0" id="mousewheel.withaltkey.action" val="checked" />
 		&numberoflines.label;
 	</html:label>
-	<html:input name="altnumlines" type="text" size="4" id="pref:int:mousewheel.withaltkey.numlines" />
+	<html:input name="altnumlines" type="text" size="4" pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines" id="mousewheel.withaltkey.numlines" />
 	<html:label>
-		<html:input name="altsysnumlines" type="checkbox" id="pref:0:bool:mousewheel.withaltkey.sysnumlines"
-          onclick="toggleField('pref:int:mousewheel.withaltkey.numlines', 'pref:0:bool:mousewheel.withaltkey.sysnumlines');" />
+		<html:input name="altsysnumlines" type="checkbox" pref="true" preftype="bool" prefstring="mousewheel.withaltkey.sysnumlines" id="mousewheel.withaltkey.sysnumlines"
+          onclick="toggleField('mousewheel.withaltkey.numlines', 'mousewheel.withaltkey.sysnumlines');" />
 		&sysdefault.label;
 	</html:label>
 	</html:td></html:tr>
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="altdefault" type="radio" id="pref:1:int:mousewheel.withaltkey.action" />
+		<html:input name="altdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withaltkey.action" prefindex="1" id="mousewheel.withaltkey.action" />
 		&pageup.label;
 	</html:label>
 	</html:td>
@@ -195,7 +195,7 @@ function toggleField(aField, aCheckbox)
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="altdefault" type="radio" id="pref:2:int:mousewheel.withaltkey.action" />
+		<html:input name="altdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withaltkey.action" prefindex="2" id="mousewheel.withaltkey.action" />
 		&history.label;
 	</html:label>
 	</html:td>
