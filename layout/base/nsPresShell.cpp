@@ -5955,12 +5955,25 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       }
 
       // 3. Give event to the Frames for browser default processing.
-      // XXX The event isn't translated into the local coordinate space
-      // of the frame...
       if (GetCurrentEventFrame() && NS_SUCCEEDED (rv) &&
           aEvent->eventStructType != NS_EVENT) {
+        // Handle coordinate transformations.  Note that at times aView is null
+        // here.  When that happens, there isn't much we can do about getting
+        // coordinates right....
+        nsPoint offset(0,0);
+        if (aView) {
+          nsIView* frameView = mCurrentEventFrame->GetClosestView();
+          offset = frameView->GetOffsetTo(aView);
+        }
+
+        // Transform aEvent->point from aView's coordinate system to
+        // that of mCurrentEventFrame's closest view
+        aEvent->point -= offset;
+        
         rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent,
                                              aStatus);
+        // Now transform back
+        aEvent->point += offset;
       }
 
       // 4. Give event to event manager for post event state changes and
