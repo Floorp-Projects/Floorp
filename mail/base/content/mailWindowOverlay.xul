@@ -1074,6 +1074,28 @@
             </menupopup>
           </menu>
           <menuseparator/>
+          
+          <menu label="&getNewMsgForCmd.label;" accesskey="&getNewMsgForCmd.accesskey;"
+                sortResource="http://home.netscape.com/NC-rdf#FolderTreeName" sortDirection="ascending"
+                datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+                containment="http://home.netscape.com/NC-rdf#child"
+                ref="msgaccounts:/"
+                observes="cmd_getNewMessages">
+            <menupopup>
+              <menuitem label="&getAllNewMsgCmd.label;" key="key_getAllNewMessages" observes="cmd_getMsgsForAuthAccounts"/>
+              <menuseparator/>
+            </menupopup>
+            <template>
+              <rule nc:IsServer="true" nc:CanGetMessages="true">
+                <menupopup>
+                   <menuitem uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name" 
+                             oncommand="MsgGetMessagesForAccount(event)"/>
+                </menupopup>
+              </rule>
+            </template>
+            <menupopup/>
+          </menu>
+
           <menuitem id="menu_getnextnmsg" label="&getNextNMsgCmd.label;" accesskey="&getNextNMsgCmd.accesskey;"
            observes="cmd_getNextNMessages"/>
           <menuitem id="menu_sendunsentmsgs" label="&sendUnsentCmd.label;"
@@ -1650,11 +1672,30 @@
   </toolbar>
 
   <toolbarpalette id="MailToolbarPalette">
-      <toolbarbutton id="button-getmsg" 
+      <toolbarbutton id="button-getmsg" type="menu-button"
                      class="toolbarbutton-1"
                      label="&getMsgButton.label;"
                      tooltiptext="&getMsgButton.tooltip;" 
-                     oncommand="goDoCommand('cmd_getNewMessages')"/>
+                     oncommand="goDoCommand('cmd_getNewMessages')"
+                     sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+                     sortDirection="ascending"
+                     observes="button_getNewMessages" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
+                     containment="http://home.netscape.com/NC-rdf#child" 
+                     ref="msgaccounts:/">
+        <menupopup onpopupshowing="getMsgToolbarMenu_init()">
+          <menuitem label="&getAllNewMsgCmd.label;" observes="cmd_getMsgsForAuthAccounts"/>
+          <menuseparator/>
+        </menupopup>
+        <template>
+          <rule nc:IsServer="true" nc:CanGetMessages="true">
+            <menupopup>
+              <menuitem uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgGetMessagesForAccount(event);"/>
+            </menupopup>
+          </rule>
+        </template>       
+        <menupopup/>
+      </toolbarbutton>
+
       <toolbarbutton id="button-newmsg" class="toolbarbutton-1" label="&newMsgButton.label;" tooltiptext="&newMsgButton.tooltip;" oncommand="MsgNewMessage(event)"/>
 
       <toolbarbutton id="button-reply" class="toolbarbutton-1" label="&replyButton.label;" tooltiptext="&replyButton.tooltip;" observes="button_reply" oncommand="MsgReplyMessage(event)"/>
