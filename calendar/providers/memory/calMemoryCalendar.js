@@ -433,7 +433,7 @@ calMemoryCalendar.prototype = {
     observeDeleteItem: function (aDeletedItem) {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].observer.onDeleteItem (aDeletedItem);
-    },
+    }
 }
 
 /****

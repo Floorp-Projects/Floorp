@@ -269,8 +269,9 @@
                 this.mYearCell.setAttribute("value", aDate.getFullYear());
 
                 //-------- Update the month popup
+                var i;
                 var months = document.getAnonymousNodes(this)[0].childNodes[2].childNodes;
-                for (var i = 0; i < months.length; i++) {
+                for (i = 0; i < months.length; i++) {
                   months[i].setAttribute("label", this.mMonthNames[i]);
                   months[i].setAttribute("value", i);
                   months[i].setAttribute("current", "false");
@@ -282,7 +283,7 @@
                 var years = document.getAnonymousNodes(this)[0].childNodes[3].childNodes;
                 var year = new Date(aDate.toString());
                 year.setFullYear(aDate.getFullYear() - (years.length%2 + 1));
-                for (var i = 0; i < years.length; i++) {
+                for (i = 0; i < years.length; i++) {
                   years[i].setAttribute("label", year.getFullYear());
                   years[i].setAttribute("value", year.getFullYear());
                   years[i].setAttribute("current", "false");
@@ -302,7 +303,7 @@
                    var row = calbox.childNodes[k];
 
 
-                   for (var i = 0; i < 7; i++) {
+                   for (i = 0; i < 7; i++) {
                        var day = row.childNodes[i];
 
                        if (aDate.getMonth() != date.getMonth()) {
