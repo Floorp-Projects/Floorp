@@ -59,6 +59,64 @@ nsHTMLEditUtils::IsBig(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// IsInlineStyle true if node is an inline style
+//                  
+PRBool 
+nsHTMLEditUtils::IsInlineStyle(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsInlineStyle");
+  nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(node);
+  return (nodeAtom == nsEditProperty::b)
+      || (nodeAtom == nsEditProperty::i)
+      || (nodeAtom == nsEditProperty::u)
+      || (nodeAtom == nsEditProperty::tt)
+      || (nodeAtom == nsEditProperty::s)
+      || (nodeAtom == nsEditProperty::strike)
+      || (nodeAtom == nsEditProperty::big)
+      || (nodeAtom == nsEditProperty::small)
+      || (nodeAtom == nsEditProperty::blink)
+      || (nodeAtom == nsEditProperty::sub)
+      || (nodeAtom == nsEditProperty::sup)
+      || (nodeAtom == nsEditProperty::font);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// IsFormatNode true if node is a format node
+// 
+PRBool
+nsHTMLEditUtils::IsFormatNode(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsFormatNode");
+  nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(node);
+  return (nodeAtom == nsEditProperty::p)
+      || (nodeAtom == nsEditProperty::pre)
+      || (nodeAtom == nsEditProperty::h1)
+      || (nodeAtom == nsEditProperty::h2)
+      || (nodeAtom == nsEditProperty::h3)
+      || (nodeAtom == nsEditProperty::h4)
+      || (nodeAtom == nsEditProperty::h5)
+      || (nodeAtom == nsEditProperty::h6)
+      || (nodeAtom == nsEditProperty::address);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// IsNodeThatCanOutdent true if node is a list, list item, or blockquote      
+//
+PRBool
+nsHTMLEditUtils::IsNodeThatCanOutdent(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsNodeThatCanOutdent");
+  nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(node);
+  return (nodeAtom == nsEditProperty::ul)
+      || (nodeAtom == nsEditProperty::ol)
+      || (nodeAtom == nsEditProperty::dl)
+      || (nodeAtom == nsEditProperty::li)
+      || (nodeAtom == nsEditProperty::dd)
+      || (nodeAtom == nsEditProperty::dt)
+      || (nodeAtom == nsEditProperty::blockquote);
+}
+
+///////////////////////////////////////////////////////////////////////////
 //                  
 PRBool 
 nsHTMLEditUtils::IsSmall(nsIDOMNode *node)
@@ -140,6 +198,22 @@ nsHTMLEditUtils::IsTableElement(nsIDOMNode *node)
       || (nodeAtom == nsEditProperty::caption);
 }
 
+///////////////////////////////////////////////////////////////////////////
+// IsTableElementButNotTable: true if node an html td, tr, ... (doesn't include table)
+//                  
+PRBool 
+nsHTMLEditUtils::IsTableElementButNotTable(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableElementButNotTable");
+  nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(node);
+  return (nodeAtom == nsEditProperty::tr)
+      || (nodeAtom == nsEditProperty::td)
+      || (nodeAtom == nsEditProperty::th)
+      || (nodeAtom == nsEditProperty::thead)
+      || (nodeAtom == nsEditProperty::tfoot)
+      || (nodeAtom == nsEditProperty::tbody)
+      || (nodeAtom == nsEditProperty::caption);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // IsTable: true if node an html table

@@ -5524,14 +5524,14 @@ nsHTMLEditor::IsEmptyNodeImpl( nsIDOMNode *aNode,
           if (isListItemOrCell)
           {
             if (nsHTMLEditUtils::IsList(node) || nsHTMLEditUtils::IsTable(node))
-            { // break out if we find we aren't emtpy
+            { // break out if we find we aren't empty
               *outIsEmptyNode = PR_FALSE;
               return NS_OK;
             }
           }
           // is it a form widget?
           else if (nsHTMLEditUtils::IsFormWidget(aNode))
-          { // break out if we find we aren't emtpy
+          { // break out if we find we aren't empty
             *outIsEmptyNode = PR_FALSE;
             return NS_OK;
           }
@@ -5993,18 +5993,7 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
   }
   nsCOMPtr<nsIDOMNode> newStyles = nsnull, deepestStyle = nsnull;
   while (child && (child != aPreviousBlock)) {
-    if (nsEditor::NodeIsType(child, nsEditProperty::b)      ||
-        nsEditor::NodeIsType(child, nsEditProperty::i)      ||
-        nsEditor::NodeIsType(child, nsEditProperty::u)      ||
-        nsEditor::NodeIsType(child, nsEditProperty::tt)     ||
-        nsEditor::NodeIsType(child, nsEditProperty::s)      ||
-        nsEditor::NodeIsType(child, nsEditProperty::strike) ||
-        nsHTMLEditUtils::IsBig(child)                       ||
-        nsHTMLEditUtils::IsSmall(child)                     ||
-        nsEditor::NodeIsType(child, nsEditProperty::blink)  ||
-        nsEditor::NodeIsType(child, nsEditProperty::sub)    ||
-        nsEditor::NodeIsType(child, nsEditProperty::sup)    ||
-        nsEditor::NodeIsType(child, nsEditProperty::font)   ||
+    if (nsHTMLEditUtils::IsInlineStyle(child) ||
         nsEditor::NodeIsType(child, nsEditProperty::span)) {
       nsAutoString domTagName;
       child->GetNodeName(domTagName);
