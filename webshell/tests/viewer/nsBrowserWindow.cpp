@@ -49,7 +49,7 @@
 #if defined(XP_MAC)
 #include "ostrstream.h"
 #else
-include <strstream.h>
+#include <strstream.h>
 #endif
 #endif
 
