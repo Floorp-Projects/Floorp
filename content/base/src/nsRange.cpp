@@ -241,7 +241,7 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   else
   {
     nsCOMPtr<nsIContent> cN(do_QueryInterface(*outParent));
-    if (!cn || NS_FAILED(cN->IndexOf(aNode, indx)))
+    if (!cN || NS_FAILED(cN->IndexOf(aNode, indx)))
       return PR_FALSE;
     *outStartOffset = indx;
     *outEndOffset = indx+1;
