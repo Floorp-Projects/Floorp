@@ -340,31 +340,15 @@
       <property name="radioGroup">
         <getter>
         <![CDATA[
-          var parent = this.parentNode;
-          while (parent) {
+          var parent = this;
+          while (parent = parent.parentNode) {
             if (parent.localName == "radiogroup")
               return parent;
-            parent = parent.parentNode;
           }
           return null;
         ]]>
         </getter>
       </property>
     </implementation>
-    <handlers>
-      <handler event="click" button="0">
-        <![CDATA[
-          if (!this.disabled)
-            this.radioGroup.selectedItem = this;
-         ]]>
-      </handler>
-
-      <handler event="mousedown" button="0">
-        <![CDATA[
-          if (!this.disabled)
-            this.radioGroup.focusedItem = this;
-         ]]>
-      </handler>
-    </handlers>
   </binding>
 </bindings>
