@@ -601,6 +601,12 @@ sub LogDependencyActivity {
     return 0;
 }
 
+delete $::FORM{'resolution'};   # Make sure we don't test the resolution
+                                # against our permissions; we've already done
+                                # that kind of testing, and this form field
+                                # is actually usually not used.
+
+
 # this loop iterates once for each bug to be processed (eg when this script
 # is called with multiple bugs selected from buglist.cgi instead of
 # show_bug.cgi).
