@@ -156,7 +156,9 @@ nsMathMLmsqrtFrame::Paint(nsPresContext*      aPresContext,
     mSqrChar.Paint(aPresContext, aRenderingContext,
                    aDirtyRect, aWhichLayer, this);
 
-    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && !mBarRect.IsEmpty()) {
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
+        mStyleContext->GetStyleVisibility()->IsVisible() &&
+        !mBarRect.IsEmpty()) {
       // paint the overline bar
       const nsStyleColor* color = GetStyleColor();
       aRenderingContext.SetColor(color->mColor);

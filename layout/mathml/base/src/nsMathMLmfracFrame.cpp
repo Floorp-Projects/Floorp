@@ -233,6 +233,7 @@ nsMathMLmfracFrame::Paint(nsPresContext*      aPresContext,
                       aDirtyRect, aWhichLayer, this);
   }
   else if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) &&
+           mStyleContext->GetStyleVisibility()->IsVisible() &&
            !NS_MATHML_HAS_ERROR(mPresentationData.flags) &&
            !mLineRect.IsEmpty()) {
     // paint the fraction line with the current text color
