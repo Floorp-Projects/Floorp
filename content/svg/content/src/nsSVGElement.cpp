@@ -396,25 +396,25 @@ nsSVGElement::GetLocalName(nsAString& aLocalName)
 NS_IMETHODIMP
 nsSVGElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doInsertBefore(aNewChild, aRefChild, aReturn);
+  return nsGenericElement::doInsertBefore(this, aNewChild, aRefChild, aReturn);
 }
 
 NS_IMETHODIMP
 nsSVGElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doReplaceChild(aNewChild, aOldChild, aReturn);
+  return nsGenericElement::doReplaceChild(this, aNewChild, aOldChild, aReturn);
 }
 
 NS_IMETHODIMP
 nsSVGElement::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doRemoveChild(aOldChild, aReturn);
+  return nsGenericElement::doRemoveChild(this, aOldChild, aReturn);
 }
 
 NS_IMETHODIMP
 nsSVGElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doInsertBefore(aNewChild, nsnull, aReturn);
+  return nsGenericElement::doInsertBefore(this, aNewChild, nsnull, aReturn);
 }
 
 NS_IMETHODIMP

@@ -2577,10 +2577,10 @@ isSelfOrAncestor(nsIContent *aNode, nsIContent *aChild)
 }
 
 
+// static
 nsresult
-nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
-                                 nsIDOMNode* aRefChild,
-                                 nsIDOMNode** aReturn)
+nsGenericElement::doInsertBefore(nsIContent *aElement, nsIDOMNode *aNewChild,
+                                 nsIDOMNode *aRefChild, nsIDOMNode **aReturn)
 {
   if (!aReturn) {
     return NS_ERROR_NULL_POINTER;
@@ -2607,13 +2607,13 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
 
-    refPos = IndexOf(refContent);
+    refPos = aElement->IndexOf(refContent);
 
     if (refPos < 0) {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
   } else {
-    refPos = GetChildCount();
+    refPos = aElement->GetChildCount();
   }
 
   PRUint16 nodeType = 0;
@@ -2648,7 +2648,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
   }
 
   nsCOMPtr<nsIDocument> old_doc = newContent->GetDocument();
-  if (old_doc && old_doc != mDocument &&
+  if (old_doc && old_doc != aElement->GetDocument() &&
       !nsContentUtils::CanCallerAccess(aNewChild)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -2658,7 +2658,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
    * ancestors. Doing this check here should be safe even if newContent
    * is a document fragment.
    */
-  if (isSelfOrAncestor(this, newContent)) {
+  if (isSelfOrAncestor(aElement, newContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -2675,7 +2675,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 
     PRUint32 count = newContent->GetChildCount();
 
-    PRUint32 old_count = GetChildCount();
+    PRUint32 old_count = aElement->GetChildCount();
 
     PRBool do_notify = !!aRefChild;
 
@@ -2683,7 +2683,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
     // ourselves...  Also, if count is 0 there will be no updates.  So we only
     // want an update batch to happen if count is nonzero and do_notify is not
     // true.
-    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL,
+    mozAutoDocUpdate updateBatch(aElement->GetDocument(), UPDATE_CONTENT_MODEL,
                                  count && !do_notify);
     
     /*
@@ -2703,7 +2703,8 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
       childContent = newContent->GetChildAt(i);
 
       // Insert the child and increment the insertion position
-      res = InsertChildAt(childContent, refPos++, do_notify, PR_TRUE);
+      res = aElement->InsertChildAt(childContent, refPos++, do_notify,
+                                    PR_TRUE);
 
       if (NS_FAILED(res)) {
         break;
@@ -2720,8 +2721,10 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
       return res;
     }
 
-    if (count && !do_notify && mDocument) {
-      mDocument->ContentAppended(this, old_count);
+    nsIDocument *doc = aElement->GetDocument();
+
+    if (count && !do_notify && doc) {
+      doc->ContentAppended(aElement, old_count);
     }
 
     doc_fragment->DropChildReferences();
@@ -2742,14 +2745,14 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
     if (oldParent) {
       nsCOMPtr<nsIDOMNode> tmpNode;
 
-      PRUint32 origChildCount = GetChildCount();
+      PRUint32 origChildCount = aElement->GetChildCount();
 
       /*
        * We don't care here if the return fails or not.
        */
       oldParent->RemoveChild(aNewChild, getter_AddRefs(tmpNode));
 
-      PRUint32 newChildCount = GetChildCount();
+      PRUint32 newChildCount = aElement->GetChildCount();
 
       /*
        * Check if our child count changed during the RemoveChild call, if
@@ -2764,7 +2767,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
            * previous siblings.
            */
 
-          if (refContent == GetChildAt(refPos - 1)) {
+          if (refContent == aElement->GetChildAt(refPos - 1)) {
             refPos--;
           }
         } else {
@@ -2776,10 +2779,10 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
       }
     }
 
-    nsContentUtils::ReparentContentWrapper(newContent, this, mDocument,
-                                           old_doc);
+    nsContentUtils::ReparentContentWrapper(newContent, aElement,
+                                           aElement->GetDocument(), old_doc);
 
-    res = InsertChildAt(newContent, refPos, PR_TRUE, PR_TRUE);
+    res = aElement->InsertChildAt(newContent, refPos, PR_TRUE, PR_TRUE);
 
     if (NS_FAILED(res)) {
       return res;
@@ -2793,10 +2796,10 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 }
 
 
+// static
 nsresult
-nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
-                                 nsIDOMNode* aOldChild,
-                                 nsIDOMNode** aReturn)
+nsGenericElement::doReplaceChild(nsIContent* aElement, nsIDOMNode* aNewChild,
+                                 nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
   if (!aReturn) {
     return NS_ERROR_NULL_POINTER;
@@ -2821,13 +2824,13 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  oldPos = IndexOf(oldContent);
+  oldPos = aElement->IndexOf(oldContent);
 
   if (oldPos < 0) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  nsCOMPtr<nsIContent> replacedChild = GetChildAt(oldPos);
+  nsCOMPtr<nsIContent> replacedChild = aElement->GetChildAt(oldPos);
 
   PRUint16 nodeType = 0;
 
@@ -2861,7 +2864,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
   }
 
   nsCOMPtr<nsIDocument> old_doc = newContent->GetDocument();
-  if (old_doc && old_doc != mDocument &&
+  if (old_doc && old_doc != aElement->GetDocument() &&
       !nsContentUtils::CanCallerAccess(aNewChild)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -2871,7 +2874,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
    * ancestors. Doing this check here should be safe even if newContent
    * is a document fragment.
    */
-  if (isSelfOrAncestor(this, newContent)) {
+  if (isSelfOrAncestor(aElement, newContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -2902,9 +2905,11 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
 
       // Insert the child and increment the insertion position
       if (i) {
-        res = InsertChildAt(childContent, oldPos++, PR_TRUE, PR_TRUE);
+        res = aElement->InsertChildAt(childContent, oldPos++, PR_TRUE,
+                                      PR_TRUE);
       } else {
-        res = ReplaceChildAt(childContent, oldPos++, PR_TRUE, PR_TRUE);
+        res = aElement->ReplaceChildAt(childContent, oldPos++, PR_TRUE,
+                                       PR_TRUE);
       }
 
       if (NS_FAILED(res)) {
@@ -2928,14 +2933,14 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
     if (oldParent) {
       nsCOMPtr<nsIDOMNode> tmpNode;
 
-      PRUint32 origChildCount = GetChildCount();
+      PRUint32 origChildCount = aElement->GetChildCount();
 
       /*
        * We don't care here if the return fails or not.
        */
       oldParent->RemoveChild(aNewChild, getter_AddRefs(tmpNode));
 
-      PRUint32 newChildCount = GetChildCount();
+      PRUint32 newChildCount = aElement->GetChildCount();
 
       /*
        * Check if our child count changed during the RemoveChild call, if
@@ -2947,7 +2952,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
          * Check if aOldChild is now at oldPos - 1, this will happend if
          * the new child was one of aOldChilds' previous siblings.
          */
-        nsIContent *tmpContent = GetChildAt(oldPos - 1);
+        nsIContent *tmpContent = aElement->GetChildAt(oldPos - 1);
 
         if (oldContent == tmpContent) {
           oldPos--;
@@ -2955,8 +2960,8 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
       }
     }
 
-    nsContentUtils::ReparentContentWrapper(newContent, this, mDocument,
-                                           old_doc);
+    nsContentUtils::ReparentContentWrapper(newContent, aElement,
+                                           aElement->GetDocument(), old_doc);
 
     if (aNewChild == aOldChild) {
       // We're replacing a child with itself. In this case the child
@@ -2965,9 +2970,9 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
       // longer at oldPos). In stead we'll call InsertChildAt() to put
       // the child back where it was.
 
-      res = InsertChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
+      res = aElement->InsertChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
     } else {
-      res = ReplaceChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
+      res = aElement->ReplaceChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
     }
 
     if (NS_FAILED(res)) {
@@ -2979,8 +2984,10 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
 }
 
 
+// static
 nsresult
-nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+nsGenericElement::doRemoveChild(nsIContent *aElement, nsIDOMNode *aOldChild,
+                                nsIDOMNode **aReturn)
 {
   *aReturn = nsnull;
 
@@ -3000,7 +3007,7 @@ nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  PRInt32 pos = IndexOf(content);
+  PRInt32 pos = aElement->IndexOf(content);
 
   if (pos < 0) {
     /*
@@ -3009,7 +3016,7 @@ nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  res = RemoveChildAt(pos, PR_TRUE);
+  res = aElement->RemoveChildAt(pos, PR_TRUE);
 
   *aReturn = aOldChild;
   NS_ADDREF(aOldChild);
