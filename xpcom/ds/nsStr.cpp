@@ -648,6 +648,7 @@ PRBool nsStr::Realloc(nsStr& aDest,PRUint32 aCount){
     Free(aDest);
     aDest.mStr=temp.mStr;
     aDest.mCapacity=temp.mCapacity;
+    aDest.mOwnsBuffer=temp.mOwnsBuffer;
   }
   return result;
 }
