@@ -43,8 +43,8 @@
          hidden/shown upon display, based on what the user has clicked-on.
      -->
     <popup id="contentAreaContextMenu"
-           onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-           onpopuphiding="gContextMenu = null;">
+           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
+           onpopuphiding="if (event.target == this) gContextMenu = null;">
       <menuitem id="popupwindow-reject"
                 label="&popupWindowRejectCmd.label;"
                 accesskey="&popupWindowRejectCmd.accesskey;"
