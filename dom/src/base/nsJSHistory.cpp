@@ -218,7 +218,6 @@ PR_STATIC_CALLBACK(JSBool)
 HistoryBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -266,7 +265,6 @@ PR_STATIC_CALLBACK(JSBool)
 HistoryForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -314,7 +312,6 @@ PR_STATIC_CALLBACK(JSBool)
 HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
 
   *rval = JSVAL_NULL;

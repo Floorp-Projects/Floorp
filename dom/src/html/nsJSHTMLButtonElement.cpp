@@ -360,7 +360,6 @@ NSHTMLButtonElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -414,7 +413,6 @@ NSHTMLButtonElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 

@@ -264,7 +264,6 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleSheetInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRUint32 nativeRet;
   nsAutoString b0;
   PRUint32 b1;
@@ -322,7 +321,6 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleSheetDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRUint32 b0;
 
   *rval = JSVAL_NULL;

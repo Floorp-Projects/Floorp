@@ -705,7 +705,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLInputElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLInputElement *nativeThis = (nsIDOMHTMLInputElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -753,7 +752,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLInputElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLInputElement *nativeThis = (nsIDOMHTMLInputElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -801,7 +799,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLInputElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLInputElement *nativeThis = (nsIDOMHTMLInputElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -849,7 +846,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLInputElementClick(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLInputElement *nativeThis = (nsIDOMHTMLInputElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 

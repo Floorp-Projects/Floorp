@@ -584,7 +584,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementCreateTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -633,7 +632,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementDeleteTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -681,7 +679,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementCreateTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -730,7 +727,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementDeleteTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -778,7 +774,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementCreateCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -827,7 +822,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementDeleteCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -875,7 +869,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementInsertRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
   PRInt32 b0;
 
@@ -930,7 +923,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementDeleteRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
 
   *rval = JSVAL_NULL;

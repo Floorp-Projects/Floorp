@@ -794,7 +794,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -842,7 +841,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
 
@@ -894,7 +892,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNodeList* nativeRet;
   nsAutoString b0;
 
@@ -952,7 +949,6 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
 
   *rval = JSVAL_NULL;
@@ -1007,7 +1003,6 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
 
@@ -1065,7 +1060,6 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1119,7 +1113,6 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1173,7 +1166,6 @@ NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 

@@ -259,7 +259,6 @@ PR_STATIC_CALLBACK(JSBool)
 PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMPlugin *nativeThis = (nsIDOMPlugin*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMMimeType* nativeRet;
   PRUint32 b0;
 
@@ -314,7 +313,6 @@ PR_STATIC_CALLBACK(JSBool)
 PluginNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMPlugin *nativeThis = (nsIDOMPlugin*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMMimeType* nativeRet;
   nsAutoString b0;
 

@@ -208,7 +208,6 @@ PR_STATIC_CALLBACK(JSBool)
 MimeTypeArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMimeTypeArray *nativeThis = (nsIDOMMimeTypeArray*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMMimeType* nativeRet;
   PRUint32 b0;
 
@@ -263,7 +262,6 @@ PR_STATIC_CALLBACK(JSBool)
 MimeTypeArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMimeTypeArray *nativeThis = (nsIDOMMimeTypeArray*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMMimeType* nativeRet;
   nsAutoString b0;
 

@@ -491,7 +491,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTextAreaElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -539,7 +538,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTextAreaElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -587,7 +585,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTextAreaElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 

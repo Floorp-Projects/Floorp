@@ -178,7 +178,6 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleRuleCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleRuleCollection *nativeThis = (nsIDOMCSSStyleRuleCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMCSSStyleRule* nativeRet;
   PRUint32 b0;
 

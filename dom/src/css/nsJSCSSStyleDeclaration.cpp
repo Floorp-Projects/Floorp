@@ -204,7 +204,6 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
   nsAutoString b0;
 
@@ -256,7 +255,6 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
   nsAutoString b0;
 
@@ -308,7 +306,6 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsAutoString b1;
   nsAutoString b2;
@@ -365,7 +362,6 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
   PRUint32 b0;
 

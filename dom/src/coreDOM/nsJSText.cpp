@@ -146,7 +146,6 @@ PR_STATIC_CALLBACK(JSBool)
 TextSplitText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMText *nativeThis = (nsIDOMText*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMText* nativeRet;
   PRUint32 b0;
 

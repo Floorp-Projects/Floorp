@@ -178,7 +178,6 @@ PR_STATIC_CALLBACK(JSBool)
 NodeListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNodeList *nativeThis = (nsIDOMNodeList*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   PRUint32 b0;
 

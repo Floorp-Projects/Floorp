@@ -444,7 +444,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLFormElementSubmit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLFormElement *nativeThis = (nsIDOMHTMLFormElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -492,7 +491,6 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLFormElement *nativeThis = (nsIDOMHTMLFormElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -546,7 +544,6 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
 

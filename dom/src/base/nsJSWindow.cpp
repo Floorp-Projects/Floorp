@@ -935,7 +935,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -986,7 +985,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1034,7 +1032,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRBool nativeRet;
 
   *rval = JSVAL_NULL;
@@ -1083,7 +1080,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowPrompt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
 
   *rval = JSVAL_NULL;
@@ -1132,7 +1128,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1180,7 +1175,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1228,7 +1222,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1276,7 +1269,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1324,7 +1316,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1372,7 +1363,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowHome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1420,7 +1410,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1468,7 +1457,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowPrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -1516,7 +1504,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
   PRInt32 b1;
 
@@ -1576,7 +1563,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowMoveBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
   PRInt32 b1;
 
@@ -1636,7 +1622,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowResizeTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
   PRInt32 b1;
 
@@ -1696,7 +1681,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
   PRInt32 b1;
 
@@ -1756,7 +1740,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowScrollTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
   PRInt32 b1;
 
@@ -1816,7 +1799,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowScrollBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
   PRInt32 b1;
 
@@ -1876,7 +1858,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
 
   *rval = JSVAL_NULL;
@@ -1930,7 +1911,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 b0;
 
   *rval = JSVAL_NULL;
@@ -1984,7 +1964,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 nativeRet;
 
   *rval = JSVAL_NULL;
@@ -2033,7 +2012,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 nativeRet;
 
   *rval = JSVAL_NULL;
@@ -2082,7 +2060,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowCreatePopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMWindow* nativeRet;
   nsIDOMElementPtr b0;
   nsIDOMElementPtr b1;
@@ -2170,7 +2147,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMWindow* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -2219,7 +2195,6 @@ PR_STATIC_CALLBACK(JSBool)
 WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMWindow* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -2274,7 +2249,6 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -2331,7 +2305,6 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -2388,7 +2361,6 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsIDOMEventListener* b1;
   PRBool b2;
@@ -2463,7 +2435,6 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsIDOMEventListener* b1;
   PRBool b2;
