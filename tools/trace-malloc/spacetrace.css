@@ -51,10 +51,12 @@ body {
 /* footer stuff */
 .footer-separator {
   border: 1px inset;
+  display: none;
 }
 
 .footer {
   text-align: right;
+  display: none;
 }
 
 .footer-text {
@@ -88,8 +90,42 @@ body {
   border: thin inset;
 }
 
+.callsite-header {
+  padding: 10px;
+}
 /* data tables */
+#callsite-details {
+  position: absolute;
+  right: 1px;
+  top: 40px;
+  width: 20%;
+}
 
+#top-callsites {
+  width: 75%;
+  height: 40%;
+  overflow: scroll;
+}
+
+#callsites {
+  height: 45%;
+  width: 75%;
+  overflow: scroll;
+  padding-top: 5px;
+}
+
+#top-allocations {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  height: 40%;
+  width: 20%;
+  overflow: scroll;
+}
+
+#top-allocations tbody { 
+/*  overflow: scroll; */
+}
 /* headers at the top of specific call site pages */
 
 table.summary {
@@ -130,3 +166,4 @@ th.callsite {
 a.source, a.callsite {
   text-decoration: none;
 }
+

@@ -2356,7 +2356,7 @@ htmlHeader(STRequest * inRequest, const char *aTitle)
     PR_fprintf(inRequest->mFD, "</span>\n");    /* class=navigate */
 
     PR_fprintf(inRequest->mFD,
-               "</div>\n<div class=\"header-separator\"></div>\n");
+               "</div>\n\n<div class=\"header-separator\"></div>\n\n");
 }
 
 /*
@@ -2368,10 +2368,10 @@ void
 htmlFooter(STRequest * inRequest)
 {
     PR_fprintf(inRequest->mFD,
-               "<div class=\"footer-separator\"></div>\n"
+               "<div class=\"footer-separator\"></div>\n\n"
                "<div class=\"footer\">\n"
                "<span class=\"footer-text\">SpaceTrace</span>\n"
-               "</div>\n" "</body>\n" "</html>\n");
+               "</div>\n\n" "</body>\n" "</html>\n");
 }
 
 /*
@@ -2388,19 +2388,27 @@ htmlNotFound(STRequest * inRequest)
 }
 
 void
-htmlStartTable(STRequest* inRequest, const char* table_class, const char * const headers[], PRUint32 header_length)
+htmlStartTable(STRequest* inRequest,
+               const char* table_class,
+               const char* id,
+               const char* caption,
+               const char * const headers[], PRUint32 header_length)
 {
         PRUint32 i;
         
         PR_fprintf(inRequest->mFD,
-                   "<table class=\"data %s\">\n"
-                   "  <tr class=\"row-header\">\n", table_class ? table_class : "");
+                   "<div id=\"%s\"><table class=\"data %s\">\n"
+                   "  <caption>%s</caption>"
+                   "  <thead>\n"
+                   "    <tr class=\"row-header\">\n", id,
+                   table_class ? table_class : "",
+                   caption);
         
         for (i=0; i< header_length; i++)
             PR_fprintf(inRequest->mFD,
-                       "    <th>%s</th>\n", headers[i]);
+                       "      <th>%s</th>\n", headers[i]);
         
-        PR_fprintf(inRequest->mFD, "</tr>\n");
+        PR_fprintf(inRequest->mFD, "    </tr>  </thead>  <tbody>\n");
 }
 
 /*
@@ -2691,7 +2699,9 @@ getDataString(const FormData * aGetData, const char *aCheckFor, int inIndex,
 ** Returns !0 on failure.
 */
 int
-displayTopAllocations(STRequest * inRequest, STRun * aRun, int aWantCallsite)
+displayTopAllocations(STRequest * inRequest, STRun * aRun,
+                      const char* caption,
+                      int aWantCallsite)
 {
     int retval = 0;
 
@@ -2711,10 +2721,13 @@ displayTopAllocations(STRequest * inRequest, STRun * aRun, int aWantCallsite)
             };
 
             if (aWantCallsite)
-                htmlStartTable(inRequest, NULL, headers_callsite,
+                htmlStartTable(inRequest, NULL, "top-allocations",
+                               caption,
+                               headers_callsite,
                                sizeof(headers_callsite) / sizeof(headers_callsite[0]));
             else
-                htmlStartTable(inRequest, NULL, headers,
+                htmlStartTable(inRequest, NULL, "top-allocations", caption,
+                               headers,
                                sizeof(headers) / sizeof(headers[0]));                           
             /*
              ** Loop over the items, up to some limit or until the end.
@@ -2795,7 +2808,7 @@ displayTopAllocations(STRequest * inRequest, STRun * aRun, int aWantCallsite)
                 }
             }
 
-            PR_fprintf(inRequest->mFD, "</table>\n");
+            PR_fprintf(inRequest->mFD, "</tbody>\n</table></div>\n\n");
         }
     }
     else {
@@ -2829,7 +2842,7 @@ displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
             "Weight", "Heap Op (sec)", "Origin Callsite"
         };
         
-        htmlStartTable(inRequest, NULL, headers,
+        htmlStartTable(inRequest, NULL, "memory-leaks", "Memory Leaks", headers,
                        sizeof(headers) / sizeof(headers[0]));
 
         /*
@@ -2923,7 +2936,7 @@ displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
             }
         }
 
-        PR_fprintf(inRequest->mFD, "</table>\n");
+        PR_fprintf(inRequest->mFD, "</tbody></table></div>\n\n");
     }
     else {
         retval = __LINE__;
@@ -2943,7 +2956,9 @@ displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
 */
 int
 displayCallsites(STRequest * inRequest, tmcallsite * aCallsite, int aFollow,
-                 PRUint32 aStamp, int aRealNames)
+                 PRUint32 aStamp,
+                 const char* caption,
+                 int aRealNames)
 {
     int retval = 0;
 
@@ -2973,7 +2988,6 @@ displayCallsites(STRequest * inRequest, tmcallsite * aCallsite, int aFollow,
                      ** We got a header?
                      */
                     if (0 == headerDisplayed) {
-                        headerDisplayed = __LINE__;
 
                         static const char* const headers[] = {
                             "Callsite",
@@ -2983,7 +2997,8 @@ displayCallsites(STRequest * inRequest, tmcallsite * aCallsite, int aFollow,
                             "<abbr title=\"Heap Object Count\">H.O. Count</abbr>",
                             "<abbr title=\"Composite Heap Operation Seconds\">C.H. Operation (sec)</abbr>"
                         };
-                        htmlStartTable(inRequest, NULL, headers,
+                        headerDisplayed = __LINE__;
+                        htmlStartTable(inRequest, NULL, "callsites", caption, headers,
                                        sizeof(headers)/sizeof(headers[0]));
                     }
 
@@ -3078,7 +3093,7 @@ displayCallsites(STRequest * inRequest, tmcallsite * aCallsite, int aFollow,
          ** Terminate the table if we should.
          */
         if (0 != headerDisplayed) {
-            PR_fprintf(inRequest->mFD, "</table>\n");
+            PR_fprintf(inRequest->mFD, "</tbody></table></div>\n\n");
         }
     }
     else {
@@ -3117,10 +3132,10 @@ displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
         LL_UI2L(timeval64, timeval);
         LL_MUL(weight64, bytesize64, timeval64);
 
-        PR_fprintf(inRequest->mFD, "Allocation %u Details:<p>\n",
+        PR_fprintf(inRequest->mFD, "<p>Allocation %u Details:</p>\n",
                    aAllocation->mRunIndex);
 
-        PR_fprintf(inRequest->mFD, "<table class=\"data summary\">\n");
+        PR_fprintf(inRequest->mFD, "<div id=\"allocation-details\"><table class=\"data summary\">\n");
         PR_fprintf(inRequest->mFD,
                    "<tr><td align=left>Final Size:</td><td align=right>%u</td></tr>\n",
                    bytesize);
@@ -3135,22 +3150,24 @@ displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
                    "<tr><td align=left>Heap Operation Seconds:</td><td align=right>"
                    ST_MICROVAL_FORMAT "</td></tr>\n",
                    ST_MICROVAL_PRINTABLE(heapCost));
-        PR_fprintf(inRequest->mFD, "</table><p>\n");
+        PR_fprintf(inRequest->mFD, "</table></div>\n");
 
         /*
          ** The events.
          */
-        PR_fprintf(inRequest->mFD, "%u Life Event(s):<br>\n",
-                   aAllocation->mEventCount);
-        PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
-        PR_fprintf(inRequest->mFD, "<tr>\n");
-        PR_fprintf(inRequest->mFD, "<td></td>\n");
-        PR_fprintf(inRequest->mFD, "<th>Operation</th>\n");
-        PR_fprintf(inRequest->mFD, "<th>Size</th>\n");
-        PR_fprintf(inRequest->mFD, "<th>Seconds</th>\n");
-        PR_fprintf(inRequest->mFD, "<td></td>\n");
-        PR_fprintf(inRequest->mFD, "</tr>\n");
+        
+        {
+            static const char* const headers[] = {
+                "Operation", "Size", "Seconds", ""
+            };
 
+            char caption[100];
+            PR_snprintf(caption, sizeof(caption), "%u Life Event(s):<br>\n",
+                       aAllocation->mEventCount);
+            htmlStartTable(inRequest, NULL, "allocation-details", caption, headers,
+                           sizeof(headers) / sizeof(headers[0]));
+        }
+        
         for (traverse = 0;
              traverse < aAllocation->mEventCount
              && traverse < inRequest->mOptions.mListItemMax; traverse++) {
@@ -3211,7 +3228,7 @@ displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
                 displayRes =
                     displayCallsites(inRequest,
                                      aAllocation->mEvents[traverse].mCallsite,
-                                     ST_FOLLOW_PARENTS, 0, __LINE__);
+                                     ST_FOLLOW_PARENTS, 0, "(?? fill me in ??)", __LINE__);
                 if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayCallsite);
@@ -3221,7 +3238,7 @@ displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
 
             PR_fprintf(inRequest->mFD, "</tr>\n");
         }
-        PR_fprintf(inRequest->mFD, "</table><p>\n");
+        PR_fprintf(inRequest->mFD, "</table></div>\n");
     }
     else {
         retval = __LINE__;
@@ -3374,7 +3391,9 @@ compareCallsites(const void *aSite1, const void *aSite2, void *aContext)
 */
 int
 displayTopCallsites(STRequest * inRequest, tmcallsite ** aCallsites,
-                    PRUint32 aCallsiteCount, PRUint32 aStamp, int aRealName)
+                    PRUint32 aCallsiteCount, PRUint32 aStamp,
+                    const char* caption,
+                    int aRealName)
 {
     int retval = 0;
 
@@ -3417,19 +3436,19 @@ displayTopCallsites(STRequest * inRequest, tmcallsite ** aCallsites,
                  ** We got a header yet?
                  */
                 if (0 == headerDisplayed) {
+                    static const char* const headers[] = {
+                        "Rank",
+                        "Callsite",
+                        "<abbr title=\"Composite Size\">Size</abbr>",
+                        "<abbr title=\"Composite Seconds\">Seconds</abbr>",
+                        "<abbr title=\"Composite Weight\">Weight</abbr>",
+                        "<abbr title=\"Heap Object Count\">Object Count</abbr>",
+                        "<abbr title=\"Composite Heap Operation Seconds\">C.H. Operation (sec)</abbr>"
+                    };
                     headerDisplayed = __LINE__;
 
-                    PR_fprintf(inRequest->mFD,
-                               "<table class=\"data\">\n"
-                               "<tr class=\"row-header\">\n"
-                               "<th>Rank</th>\n"
-                               "<th class=\"callsite\">Callsite</th>\n"
-                               "<th><abbr title=\"Composite Size\">C. Size</abbr></th>\n"
-                               "<th><abbr title=\"Composite Seconds\">C. Seconds</abbr></th>\n"
-                               "<th><abbr title=\"Composite Weight\">C. Weight</abbr></th>\n"
-                               "<th><abbr title=\"Heap Object Count\">H.O. Count</abbr></th>\n"
-                               "<th><abbr title=\"Composite Heap Operation Seconds\">C.H. Operation (sec)</abbr></th>\n"
-                               "</tr>\n");
+                    htmlStartTable(inRequest, NULL, "top-callsites", caption, headers,
+                                   sizeof(headers) / sizeof(headers[0]));
                 }
 
                 displayed++;
@@ -3512,7 +3531,7 @@ displayTopCallsites(STRequest * inRequest, tmcallsite ** aCallsites,
          ** We need to terminate anything?
          */
         if (0 != headerDisplayed) {
-            PR_fprintf(inRequest->mFD, "</table>\n");
+            PR_fprintf(inRequest->mFD, "</table></div>\n");
         }
     }
     else {
@@ -3543,24 +3562,26 @@ displayCallsiteDetails(STRequest * inRequest, tmcallsite * aCallsite)
         const char *sourceFile = NULL;
 
         sourceFile = resolveSourceFile(aCallsite->method);
-        if (NULL != sourceFile) {
+
+        PR_fprintf(inRequest->mFD, "<div class=\"callsite-header\">\n");
+        if (sourceFile) {
             PR_fprintf(inRequest->mFD, "<b>%s</b>",
                        tmmethodnode_name(aCallsite->method));
             PR_fprintf(inRequest->mFD,
-                       "<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" class=\"lxr\" target=\"_st_lxr\">(%s:%u)</a>",
+                       " [<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" class=\"lxr\" target=\"_st_lxr\">%s:%u</a>]",
                        aCallsite->method->sourcefile,
                        aCallsite->method->linenumber, sourceFile,
                        aCallsite->method->linenumber);
-            PR_fprintf(inRequest->mFD, " Callsite Details:<p>\n");
         }
         else {
             PR_fprintf(inRequest->mFD,
-                       "<b>%s</b>+%u(%u) Callsite Details:<p>\n",
+                       "<p><b>%s</b>+%u(%u) Callsite Details:</p>\n",
                        tmmethodnode_name(aCallsite->method),
                        aCallsite->offset, (PRUint32) aCallsite->entry.key);
         }
 
-        PR_fprintf(inRequest->mFD, "<table class=\"data summary\">\n");
+        PR_fprintf(inRequest->mFD, "</div>\n\n");
+        PR_fprintf(inRequest->mFD, "<div id=\"callsite-details\"><table class=\"data summary\">\n");
         PR_fprintf(inRequest->mFD,
                    "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n",
                    thisRun->mStats[inRequest->mContext->mIndex].mSize);
@@ -3583,7 +3604,7 @@ displayCallsiteDetails(STRequest * inRequest, tmcallsite * aCallsite)
                    ST_MICROVAL_PRINTABLE(thisRun->
                                          mStats[inRequest->mContext->mIndex].
                                          mHeapRuntimeCost));
-        PR_fprintf(inRequest->mFD, "</table>\n<p>\n");
+        PR_fprintf(inRequest->mFD, "</table></div>\n\n");
 
         /*
          ** Kids (callsites we call):
@@ -3604,16 +3625,14 @@ displayCallsiteDetails(STRequest * inRequest, tmcallsite * aCallsite)
                 /*
                  ** Got something to show.
                  */
-                PR_fprintf(inRequest->mFD, "Children Callsites:<br>\n");
-
                 displayRes =
                     displayTopCallsites(inRequest, sites, siteCount, 0,
+                                        "Children Callsites",
                                         __LINE__);
                 if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayTopCallsites);
                 }
-                PR_fprintf(inRequest->mFD, "<p>\n");
 
                 /*
                  ** Done with array.
@@ -3629,15 +3648,14 @@ displayCallsiteDetails(STRequest * inRequest, tmcallsite * aCallsite)
         if (NULL != aCallsite->parent && NULL != aCallsite->parent->method) {
             int displayRes = 0;
 
-            PR_fprintf(inRequest->mFD, "Parent Callsites:<br>\n");
             displayRes =
                 displayCallsites(inRequest, aCallsite->parent,
-                                 ST_FOLLOW_PARENTS, 0, __LINE__);
+                                 ST_FOLLOW_PARENTS, 0, "Caller stack",
+                                 __LINE__);
             if (0 != displayRes) {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displayCallsites);
             }
-            PR_fprintf(inRequest->mFD, "<p>\n");
         }
 
         /*
@@ -3659,14 +3677,14 @@ displayCallsiteDetails(STRequest * inRequest, tmcallsite * aCallsite)
                     if (0 == sortRes) {
                         int displayRes = 0;
 
-                        PR_fprintf(inRequest->mFD, "Allocations:<br>\n");
                         displayRes =
-                            displayTopAllocations(inRequest, sortedRun, 0);
+                            displayTopAllocations(inRequest, sortedRun,
+                                                  "Allocations",
+                                                  0);
                         if (0 != displayRes) {
                             retval = __LINE__;
                             REPORT_ERROR(__LINE__, displayTopAllocations);
                         }
-                        PR_fprintf(inRequest->mFD, "<p>\n");
                     }
                     else {
                         retval = __LINE__;
@@ -5366,7 +5384,9 @@ handleRequest(tmreader * aTMR, PRFileDesc * aFD,
                 htmlHeader(&request, "SpaceTrace Top Allocations Report");
                 displayRes =
                     displayTopAllocations(&request,
-                                          request.mContext->mSortedRun, 1);
+                                          request.mContext->mSortedRun,
+                                          "SpaceTrace Top Allocations Report",
+                                          1);
                 if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayTopAllocations);
@@ -5392,7 +5412,9 @@ handleRequest(tmreader * aTMR, PRFileDesc * aFD,
                     if (0 != arrayCount && NULL != array) {
                         displayRes =
                             displayTopCallsites(&request, array, arrayCount,
-                                                0, 0);
+                                                0,
+                                                "Top Callsites Report",
+                                                0);
                         if (0 != displayRes) {
                             retval = __LINE__;
                             REPORT_ERROR(__LINE__, displayTopCallsites);
@@ -5500,7 +5522,9 @@ handleRequest(tmreader * aTMR, PRFileDesc * aFD,
                 htmlHeader(&request, "SpaceTrace Root Callsites");
                 displayRes =
                     displayCallsites(&request, aTMR->calltree_root.kids,
-                                     ST_FOLLOW_SIBLINGS, 0, __LINE__);
+                                     ST_FOLLOW_SIBLINGS, 0,
+                                     "SpaceTrace Root Callsites",
+                                     __LINE__);
                 if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayCallsites);
@@ -5742,7 +5766,7 @@ handleClient(void *inArg)
                  */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
                 PR_fprintf(aFD, "Server: %s%s",
-                           "$Id: spacetrace.c,v 1.46 2003/06/17 23:01:45 alecf%flett.org Exp $",
+                           "$Id: spacetrace.c,v 1.47 2003/06/18 02:02:01 alecf%flett.org Exp $",
                            crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if (NULL != strstr(start, ".png")) {
