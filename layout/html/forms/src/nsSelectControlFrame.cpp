@@ -117,9 +117,9 @@ public:
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
-    // nsIFormControLFrame
+  // nsIFormControLFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue);
 
 protected:
   PRUint32 mNumRows;
@@ -138,6 +138,18 @@ protected:
 
   PRBool mIsComboBox;
   PRBool mOptionsAdded;
+
+  // Store the state of the options in a local array whether the widget is 
+  // GFX-rendered or not.  This is used to detect changes in MouseClicked
+  PRUint32 mNumOptions;
+  PRBool* mOptionSelected;
+
+  // Accessor methods for mOptionsSelected and mNumOptions
+  void GetOptionSelected(PRUint32 index, PRBool* aValue);
+  void SetOptionSelected(PRUint32 index, PRBool aValue);
+
+  // Free our locally cached option array
+  ~nsSelectControlFrame();
 };
 
 nsresult
@@ -156,6 +168,15 @@ nsSelectControlFrame::nsSelectControlFrame()
   mIsComboBox   = PR_FALSE;
   mOptionsAdded = PR_FALSE;
   mNumRows      = 0;
+  mNumOptions   = 0;
+  mOptionSelected = nsnull;
+}
+
+// XXX is this the right way to clean up?
+nsSelectControlFrame::~nsSelectControlFrame()
+{
+  if (mOptionSelected)
+    delete mOptionSelected;
 }
 
 nscoord 
@@ -487,6 +508,14 @@ nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
       options->GetLength(&numOptions);
       nsIDOMNode* node;
       nsIDOMHTMLOptionElement* option;
+
+      // Initialize the locally cached numOptions and optionSelected array.
+      // The values of the optionsSelected array are filled in by Reset()
+      mNumOptions = numOptions;
+      if ((numOptions > 0) && (mOptionSelected == nsnull)) {
+        mOptionSelected = new PRBool[numOptions];
+      }
+
       for (PRUint32 i = 0; i < numOptions; i++) {
         options->Item(i, &node);
         if (node) {
@@ -535,6 +564,7 @@ nsSelectControlFrame::GetMaxNumValues()
     nsIDOMHTMLCollection* options = GetOptions();
     if (options) {
       options->GetLength(&length);
+      NS_RELEASE(options);
     }
     return (PRInt32)length; // XXX fix return on GetMaxNumValues
   } else {
@@ -629,14 +659,17 @@ nsSelectControlFrame::Reset()
       nsIDOMHTMLOptionElement* option = GetOption(*options, i);
       if (option) {
         PRBool selected = PR_FALSE;
-        option->GetSelected(&selected);
-        option->SetDefaultSelected(selected); // Hmmm, the meaning seems reversed here...
+
+        // Cache the state of each option locally
+        option->GetDefaultSelected(&selected);
+        SetOptionSelected(i, selected);
+
+        // Store the index of each option in the DOM
+        option->SetIndex(i);
         if (selected) {
           listWidget->SelectItem(i);
-          if (selectedIndex < 0) selectedIndex = i; // First selected index in multiple
-          if (!multiple) { // Optimization
-            break;  
-          }
+          if (selectedIndex < 0)
+            selectedIndex = i;
         }
         NS_RELEASE(option);
       }
@@ -645,18 +678,10 @@ nsSelectControlFrame::Reset()
 
   // if none were selected, select 1st one if we are a combo box
   if (mIsComboBox && (numOptions > 0) && (selectedIndex < 0)) {
-    selectedIndex = 0;
-    listWidget->SelectItem(selectedIndex);
+    listWidget->SelectItem(0);
   }
   NS_RELEASE(listWidget);
   NS_RELEASE(options);
-
-  // reflect the selectedIndex into the content model
-  if (selectedIndex >= 0) {
-    nsIDOMHTMLSelectElement* selectElement = GetSelect();
-    selectElement->SetSelectedIndex(selectedIndex);
-    NS_RELEASE(selectElement);
-  }
 }
 
 
@@ -906,96 +931,58 @@ nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
       nsIListWidget* listWidget;
       nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
       if ((NS_OK == result) && listWidget) {
-        PRInt32 contentIndex;
         PRInt32 viewIndex = listWidget->GetSelectedIndex();
         NS_RELEASE(listWidget);
 
-        nsIDOMHTMLSelectElement* selectElement = GetSelect();
-    if (selectElement) {
-      selectElement->GetSelectedIndex(&contentIndex);
-
-          if (contentIndex != viewIndex) {
-        changed = PR_TRUE;
-        selectElement->SetSelectedIndex(viewIndex); // Keep content up to date w/ view
-      }
-      NS_RELEASE(selectElement);
-
+        PRBool wasSelected = PR_FALSE;
+        GetOptionSelected(viewIndex, &wasSelected);
+        
+        if (wasSelected = PR_FALSE) {
+          changed = PR_TRUE;
         }
       }
     } else {
-      // Get content model options
-      nsIDOMHTMLCollection* options = GetOptions();
-      if (!options) {
-        return;
-      }
-      PRUint32 numOptions;
-      options->GetLength(&numOptions);
-
-      // Get the selected option from the view
+      // Get the selected option from the widget
       nsIListBox* listBox;
       nsresult result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
       if (!(NS_OK == result) || !listBox) {
         return;
       }
       PRUint32 numSelected = listBox->GetSelectedCount();
-      PRInt32* selOptions;
+      PRInt32* selOptions = nsnull;
       if (numSelected >= 0) {
         selOptions = new PRInt32[numSelected];
         listBox->GetSelectedIndices(selOptions, numSelected);
       }
       NS_RELEASE(listBox);
 
-      // Assume options are sorted in selOptions XXX sort them:pollmann
+      // XXX Assume options are sorted in selOptions
 
-      // Walk through the content option list and synchronize it with the view
       PRUint32 selIndex = 0;
       PRUint32 nextSel = 0;
-      if (numSelected > 0) {
+      if ((nsnull != selOptions) && (numSelected > 0)) {
         nextSel = selOptions[selIndex];
       }
 
-      PRInt32 selectedIndex = -1;
+      // Step through each option in local cache
+      for (PRUint32 i=0; i < mNumOptions; i++) {
+        PRBool selectedInLocalCache = PR_FALSE;
+        PRBool selectedInView = (i == nextSel);
+        GetOptionSelected(i, &selectedInLocalCache);
+        if (selectedInView != selectedInLocalCache) {
+          changed = 1;
+          SetOptionSelected(i, selectedInView);
 
-      // Step through each option in content model
-      for (PRUint32 i=0; i < numOptions; i++) {
-        PRBool selected = PR_FALSE;
-        nsIDOMHTMLOptionElement* option = GetOption(*options, i);
-        if (option) {
-          option->GetDefaultSelected(&selected);
-          if (i == nextSel) { // If this option is selected in view
-            if (!selected) { // If not selected in content model
-              changed = 1;
-              option->SetDefaultSelected(PR_TRUE); // Meaning reversed: Update contend model
-            }
-
-            // Update selectedIndex to point at first selected option in content model
-            if (selectedIndex < 0) {
-              selectedIndex = i;
-            }
-
+          if (selectedInView) {
             // Get the next selected option in the view
             selIndex++; 
             if (selIndex < numSelected) {
               nextSel = selOptions[selIndex];
             }
-          } else { //not selected in view
-            if (selected) {
-              changed = 1;
-              option->SetDefaultSelected(PR_FALSE); //Meaning reversed: Update content model
-            }
           }
         }
-        NS_RELEASE(option);
       }
       delete[] selOptions;
-      NS_RELEASE(options);
-
-      // reflect the selectedIndex into the content model
-      if (selectedIndex >= 0) {
-        nsIDOMHTMLSelectElement* selectElement = GetSelect();
-        selectElement->SetSelectedIndex(selectedIndex);
-        NS_RELEASE(selectElement);
-      }
     }
 
     if (changed) {
@@ -1011,13 +998,105 @@ nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
   }
 }
 
+// Get the selected state from the local cache (not widget)
+void nsSelectControlFrame::GetOptionSelected(PRUint32 index, PRBool* aValue)
+{
+  if (nsnull != mOptionSelected) {
+    if (mNumOptions >= index) {
+      *aValue = mOptionSelected[index];
+      return;
+    }
+  }
+  *aValue = PR_FALSE;
+}       
+
+// Update the locally cached selection state (not widget)
+void nsSelectControlFrame::SetOptionSelected(PRUint32 index, PRBool aValue)
+{
+  if (nsnull != mOptionSelected) {
+    if (mNumOptions >= index) {
+      mOptionSelected[index] = aValue;
+    }
+  }
+}         
 
 NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
+  if (nsHTMLAtoms::selected == aName) {
+    return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
+  } else if (nsHTMLAtoms::selectedindex == aName) {
+    PRInt32 error = 0;
+    PRInt32 selectedIndex = aValue.ToInteger(&error, 10); // Get index from aValue
+    if (error) {
+      return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
+    } else {
+      // Update local cache of selected values
+      for (PRUint32 i=0; i < mNumOptions; i++)
+        SetOptionSelected(i, PR_FALSE);
+      SetOptionSelected(selectedIndex, PR_TRUE);
+
+      // Update widget
+      nsIListWidget* listWidget;
+      nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
+      if ((NS_OK == result) && (nsnull != listWidget)) {
+        listWidget->Deselect();
+        listWidget->SelectItem(selectedIndex);
+        NS_RELEASE(listWidget);
+      }
+    }
+  } else {
+    return nsFormControlFrame::SetProperty(aName, aValue);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSelectControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
+  // Get the selected value of option from local cache (optimization vs. widget)
+  if (nsHTMLAtoms::selected == aName) {
+    PRInt32 error = 0;
+    PRBool selected = PR_FALSE;
+    PRInt32 index = aValue.ToInteger(&error, 10); // Get index from aValue
+    if (error == 0)
+      GetOptionSelected(index, &selected);
+    if (selected) {
+      aValue = "1";
+    } else {
+      aValue = "0";
+    }
+    
+  // For selectedIndex, get the value from the widget
+  } else if (nsHTMLAtoms::selectedindex == aName) {
+    PRInt32 selectedIndex = -1;
+    PRBool multiple;
+    GetMultiple(&multiple);
+    if (!multiple) {
+      nsIListWidget* listWidget;
+      nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
+      if ((NS_OK == result) && (nsnull != listWidget)) {
+        selectedIndex = listWidget->GetSelectedIndex();
+        NS_RELEASE(listWidget);
+      }
+    } else {
+      // Listboxes don't do GetSelectedIndex on windows.  Use GetSelectedIndices
+      nsIListBox* listBox;
+      nsresult result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
+      if ((NS_OK == result) && (nsnull != listBox)) {
+        PRUint32 numSelected = listBox->GetSelectedCount();
+        PRInt32* selOptions = nsnull;
+        if (numSelected > 0) {
+          // Could we set numSelected to 1 here? (memory, speed optimization)
+          selOptions = new PRInt32[numSelected];
+          listBox->GetSelectedIndices(selOptions, numSelected);
+          selectedIndex = selOptions[0];
+          delete[] selOptions;
+        }
+        NS_RELEASE(listBox);
+      }
+    }
+    aValue.Append(selectedIndex, 10);
+  } else {
+    return nsFormControlFrame::GetProperty(aName, aValue);
+  }
   return NS_OK;
 }

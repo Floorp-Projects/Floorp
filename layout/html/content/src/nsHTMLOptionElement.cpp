@@ -31,11 +31,21 @@
 #include "nsIForm.h"
 #include "nsIDOMText.h"
 
+// Notify/query select frame for selected state
+#include "nsIFormControlFrame.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIFrame.h"
+#include "nsIDOMHTMLSelectElement.h"
+
+
+static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
+static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 
 class nsHTMLOptionElement : public nsIDOMHTMLOptionElement,
                      public nsIScriptObjectOwner,
@@ -89,6 +99,9 @@ public:
 protected:
   nsGenericHTMLContainerElement mInner;
   nsIForm* mForm;
+
+  // Return the primary frame associated with this content
+  nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame);
 };
 
 nsresult
@@ -180,20 +193,52 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return result;
 }
 
-NS_IMETHODIMP
-nsHTMLOptionElement::GetSelected(PRBool *aSelected)
+NS_IMETHODIMP 
+nsHTMLOptionElement::GetSelected(PRBool* aValue)
 {
-  nsHTMLValue val;
-  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::selected, val);
-  *aSelected = NS_CONTENT_ATTR_NOT_THERE != rv;
-  return NS_OK;
+  nsIFormControlFrame* formControlFrame = nsnull;
+  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+    PRInt32 index;
+    if (NS_OK == GetIndex(&index)) {
+      nsString value;
+      value.Append(index, 10); // Save the index in base 10
+      formControlFrame->GetProperty(nsHTMLAtoms::selected, value);
+      if (value == "1")
+        *aValue = PR_TRUE;
+      else
+        *aValue = PR_FALSE;
+    }
+    NS_RELEASE(formControlFrame);
+  }
+  return NS_OK;      
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
+//NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
 NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index)
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
+
+NS_IMETHODIMP 
+nsHTMLOptionElement::GetDefaultSelected(PRBool* aDefaultSelected)
+{
+  nsHTMLValue val;                                                 
+  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::selected, val);       
+  *aDefaultSelected = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
+  return NS_OK;                                                     
+}
+
+NS_IMETHODIMP
+nsHTMLOptionElement::SetDefaultSelected(PRBool aDefaultSelected)
+{
+  nsHTMLValue empty(eHTMLUnit_Empty);
+  if (aDefaultSelected) {
+    return mInner.SetHTMLAttribute(nsHTMLAtoms::selected, empty, PR_TRUE);
+  } else {
+    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
+    return NS_OK;
+  }
+}
 
 NS_IMETHODIMP
 nsHTMLOptionElement::StringToAttribute(nsIAtom* aAttribute,
@@ -272,4 +317,45 @@ nsHTMLOptionElement::GetStyleHintForAttributeChange(
 {
   nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
+}
+
+// Options don't have frames, so get the select frame.
+nsresult nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame)
+{
+  // Get the containing element.
+  nsresult res = NS_NOINTERFACE;
+  nsIDOMNode* parentNode = nsnull;
+  nsresult gotParent = this->GetParentNode(&parentNode);
+  if (NS_OK == gotParent) {
+    nsIDOMHTMLSelectElement* selectElement = nsnull;
+    // XXX Optgroups: if this is not NS_OK then we need to GetParentNode again.
+    nsresult isSelect = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
+    if (NS_OK == isSelect) {
+      nsIContent* selectContent = nsnull;
+      nsresult gotContent = selectElement->QueryInterface(kIContentIID, (void**)&selectContent);
+      if (NS_OK == gotContent) {
+
+      nsIDocument* doc = nsnull;
+      // Get the document
+      if (NS_OK == GetDocument(doc)) {
+        // Get presentation shell 0
+        nsIPresShell* presShell = doc->GetShellAt(0);
+        if (nsnull != presShell) {
+          nsIFrame *frame = nsnull;
+          presShell->GetPrimaryFrameFor(selectContent, frame);
+          if (nsnull != frame) {
+            res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aIFormControlFrame);
+          }
+          NS_RELEASE(presShell);
+        }
+        NS_RELEASE(doc);
+
+      }
+        NS_RELEASE(selectContent);
+      }
+      NS_RELEASE(selectElement);
+    }
+    NS_RELEASE(parentNode);
+  }
+  return res;
 }
