@@ -2118,9 +2118,24 @@ PRStatus
 _PR_MD_OPEN_DIR(_MDDir *d, const char *name)
 {
     char filename[ MAX_PATH ];
+    int len;
 
-    PR_snprintf(filename, MAX_PATH, "%s%s%s",
-                name, PR_DIRECTORY_SEPARATOR_STR, "*.*");
+    len = strlen(name);
+    /* Need 5 bytes for \*.* and the trailing null byte. */
+    if (len + 5 > MAX_PATH) {
+        PR_SetError(PR_NAME_TOO_LONG_ERROR, 0);
+        return PR_FAILURE;
+    }
+    strcpy(filename, name);
+
+    /*
+     * If 'name' ends in a slash or backslash, do not append
+     * another backslash.
+     */
+    if (filename[len - 1] == '/' || filename[len - 1] == '\\') {
+        len--;
+    }
+    strcpy(&filename[len], "\\*.*");
     FlipSlashes( filename, strlen(filename) );
 
     d->d_hdl = FindFirstFile( filename, &(d->d_entry) );
