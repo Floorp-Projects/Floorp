@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="bookmarks.css" type="text/css"?>
+
+<xul:window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script>
+  function BookmarksNewWindow()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/rdf/bookmarks.xul",
+                             window);
+    }
+  }
+  </html:script>
+
+  <menubar>
+    <menu name="File">
+      <menuitem name="New Window" onClick="BookmarksNewWindow();"/>
+      <menuitem name="New Bookmarks..."/>
+      <menuitem name="New Folder..."/>
+      <menuitem name="New Separator"/>
+      <separator/>
+      <menuitem name="Close"/>
+    </menu>
+    <menu name="Edit">
+      <menuitem name="Undo"/>
+      <menuitem name="Redo"/>
+      <separator/>
+      <menuitem name="Cut"/>
+      <menuitem name="Copy"/>
+      <menuitem name="Paste"/>
+      <menuitem name="Delete"/>
+      <menuitem name="Select All"/>
+      <separator/>
+      <menuitem name="Find in Bookmarks..."/>
+      <menuitem name="Find Again"/>
+    </menu>
+  </menubar>
+
+<tree datasources="rdf:bookmarks">
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treecol rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+  <treehead>
+    <treeitem>
+      <treecell>Name</treecell>
+      <treecell>URL</treecell>
+      <treecell>Last Modified</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody>
+    <treeitem open="true">
+      <treechildren>
+
+        <treeitem>
+          <treecell>
+            <treeindentation/>Hard-<html:i>coded</html:i> <html:b>Item</html:b>
+          </treecell>
+          <treecell>http://blah.blah.com</treecell>
+
+          <treechildren>
+            <treeitem>
+              <treecell><treeindentation/>
+                 <html:img src="http://www.mozilla.org/images/logo-star.gif"/>
+                 <html:i>Another</html:i> hard-coded <html:font color="green">item</html:font>
+              </treecell>
+              <treecell>http://moreblah.blah.com</treecell>
+            </treeitem>
+          </treechildren>
+
+        </treeitem>
+
+      </treechildren>
+    </treeitem>
+
+    <treeitem id="NC:BookmarksRoot">
+      <treecell>Bookmarks</treecell>
+      <treecell></treecell>
+      <treecell></treecell>
+    </treeitem>
+
+  </treebody>
+</tree>
+
+</window>

@@ -1,0 +1,34 @@
+window { 
+ display: block; 
+} 
+
+tree { 
+ display: table; 
+ background-color: #FFFFFF; 
+ border: none; 
+ border-spacing: 0px; 
+ border-collapse: collapse; 
+} 
+
+treeitem { 
+ display: table-row; 
+} 
+
+treehead { 
+ display: table-header-group; 
+} 
+
+treebody { 
+ display: table-row-group; 
+
+} 
+
+treecell { 
+ display: table-cell; 
+} 
+
+treehead treeitem treecell { 
+ background-color: #c0c0c0; 
+ border: thin black solid; 
+} 
+  
