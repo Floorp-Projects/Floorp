@@ -33,6 +33,10 @@
 
 #include "nsWidgetsCID.h"
 
+#ifdef MOZ_FULLCIRCLE
+#include "fullsoft.h"
+#endif
+
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -95,7 +99,10 @@ NS_IMETHODIMP
 nsAppShellService::Initialize(void)
 {
   nsresult rv;
-
+  
+#ifdef MOZ_FULLCIRCLE
+  FC_Initialize();
+#endif
   // Create the Event Queue for the UI thread...
   nsIEventQueueService* mEventQService;
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
