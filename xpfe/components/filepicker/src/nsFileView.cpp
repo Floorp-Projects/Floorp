@@ -76,7 +76,7 @@ public:
 protected:
   virtual ~nsFileView();
   
-  PRInt32 FilterFiles();
+  void FilterFiles();
   void ReverseArray(nsISupportsArray* aArray);
   void SortArray(nsISupportsArray* aArray);
   void SortInternal();
@@ -188,9 +188,9 @@ nsFileView::SetShowOnlyDirectories(PRBool aOnlyDirs)
       mTree->RowCountChanged(mTotalRows, -rowDiff);
   } else {
     // Run the filter again to get the file list back
-    PRInt32 rowsAdded = FilterFiles();
-    if (rowsAdded)
-      mTree->RowCountChanged(dirCount, rowsAdded);
+    FilterFiles();
+    if (mTree)
+      mTree->RowCountChanged(dirCount, mTotalRows - dirCount);
   }
 
   return NS_OK;
@@ -256,7 +256,6 @@ nsFileView::SetDirectory(nsIFile* aDirectory)
   mDirList->Clear();
 
   PRBool hasMore = PR_FALSE;
-  PRInt32 dirCount = 0, fileCount = 0;
 
   while (NS_SUCCEEDED(dirEntries->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> nextItem;
@@ -271,23 +270,23 @@ nsFileView::SetDirectory(nsIFile* aDirectory)
       theFile->IsHidden(&isHidden);
       if (mShowHiddenFiles || !isHidden) {
         mDirList->AppendElement(theFile);
-        ++dirCount;
       }
     }
     else {
       mFileList->AppendElement(theFile);
-      ++fileCount;
     }
   }
 
-  PRInt32 oldRows = mTotalRows;
+  if (mTree) {
+    mTree->BeginUpdateBatch();
+    mTree->RowCountChanged(0, -mTotalRows);
+  }
 
   FilterFiles();
   SortInternal();
 
   if (mTree) {
-    mTree->RowCountChanged(0, -oldRows);
-    mTree->RowCountChanged(0, mTotalRows);
+    mTree->EndUpdateBatch();
     mTree->ScrollToRow(0);
   }
 
@@ -319,24 +318,23 @@ nsFileView::SetFilter(const PRUnichar* aFilterString)
     mCurrentFilters.AppendElement(aNewString);
   }
 
+  if (mTree) {
+    mTree->BeginUpdateBatch();
+    PRUint32 count;
+    mDirList->Count(&count);
+    mTree->RowCountChanged(count, count - mTotalRows);
+  }
+
   mFilteredFiles->Clear();
 
-  PRUint32 dirCount;
-  mDirList->Count(&dirCount);
-  PRInt32 oldFileRows = mTotalRows - dirCount;
-  PRInt32 newFileRows = FilterFiles();
+  FilterFiles();
 
   SortArray(mFilteredFiles);
   if (mReverseSort)
     ReverseArray(mFilteredFiles);
 
-  if (mTree) {
-    mTree->RowCountChanged(dirCount, newFileRows - oldFileRows);
-
-    PRInt32 commonRange = PR_MIN(newFileRows, oldFileRows);
-    if (commonRange)
-      mTree->InvalidateRange(dirCount, dirCount + commonRange);
-  }
+  if (mTree)
+    mTree->EndUpdateBatch();
 
   return NS_OK;
 }
@@ -647,10 +645,12 @@ nsFileView::PerformActionOnCell(const PRUnichar* aAction, PRInt32 aRow,
 
 // Private methods
 
-PRInt32
+void
 nsFileView::FilterFiles()
 {
-  PRUint32 count = 0, filteredFiles = 0;
+  PRUint32 count = 0;
+  mDirList->Count(&count);
+  mTotalRows = count;
   mFileList->Count(&count);
   mFilteredFiles->Clear();
   PRInt32 filterCount = mCurrentFilters.Count();
@@ -682,16 +682,12 @@ nsFileView::FilterFiles()
 
         if (matched) {
           mFilteredFiles->AppendElement(file);
-          ++filteredFiles;
+          ++mTotalRows;
           break;
         }
       }
     }
   }
-
-  mDirList->Count(&count);
-  mTotalRows = count + filteredFiles;
-  return filteredFiles;
 }
 
 void
