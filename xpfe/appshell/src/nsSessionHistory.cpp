@@ -79,14 +79,14 @@ public:
   nsresult DestroyChildren();
 
   /**
-   * Get the name of the page 
+   * Get the Title of the page 
    */
-  nsresult GetName(const PRUnichar ** aName);
+  nsresult GetTitle(const PRUnichar ** aName);
 
   /**
-   * Set the name  of the page 
+   * Set the title of the page 
    */
-  nsresult SetName(const PRUnichar * aName);
+  nsresult SetTitle(const PRUnichar * aName);
 
   /**
    * Get the URL  of the page 
@@ -151,12 +151,10 @@ public:
    */
   nsHistoryEntry *  GetRootDoc();
 
-
-private:
   
   nsIWebShell *       mWS;    //Webshell corresponding to this history entry
   nsString *          mURL;   // URL for this history entry
-  nsString *          mName;  // Name of the document
+  nsString *          mTitle;  // Name of the document
   nsVoidArray         mChildren;  //  children list
   PRInt32             mChildCount; // # of children
   nsHistoryEntry *    mParent;     
@@ -171,18 +169,45 @@ nsHistoryEntry::nsHistoryEntry()
    mHistoryList = nsnull;
    mParent = nsnull;
    mURL = nsnull;
-   mName = nsnull;
-
+   mTitle = nsnull;
+   
+ 
 //  NS_INIT_REFCNT();
 }
 
 nsHistoryEntry::~nsHistoryEntry()
 {
+   if (mTitle)
+     delete mTitle;
+   if (mURL)
+	 delete mURL;
+   NS_IF_RELEASE(mWS);
+   NS_IF_RELEASE(mHistoryList);
+
    DestroyChildren();
 }
 
 //NS_IMPL_ADDREF(nsHistoryEntry)
 //NS_IMPL_RELEASE(nsHistoryEntry)
+
+nsresult
+nsHistoryEntry::DestroyChildren() {
+   nsHistoryEntry * hEntry=nsnull;
+   nsHistoryEntry * parent=nsnull;
+
+  PRInt32 i, n;
+
+  n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsHistoryEntry* child = (nsHistoryEntry *) mChildren.ElementAt(i);
+    child->SetParent(nsnull);
+    delete child;
+    mChildCount--;
+  }
+  mChildren.Clear();
+  return NS_OK;
+
+}
 
 
 nsresult
@@ -217,6 +242,24 @@ nsHistoryEntry::SetWebShell(nsIWebShell * aWebShell)
   return NS_OK;
 }
 
+nsresult
+nsHistoryEntry::GetTitle(const PRUnichar** aTitle)
+{
+  if (mTitle)
+    *aTitle = mTitle->GetUnicode();
+  return NS_OK;
+}
+
+nsresult
+nsHistoryEntry::SetTitle(const PRUnichar* aTitle)
+{
+
+  if (mTitle)
+    delete mTitle;
+  if (aTitle)
+    mTitle =  new nsString(aTitle);
+  return NS_OK;
+}
 
 PRInt32 
 nsHistoryEntry::GetChildCnt()
@@ -241,9 +284,9 @@ nsHistoryEntry::GetChildAt(PRInt32 aIndex, nsHistoryEntry *& aResult)
 nsresult
 nsHistoryEntry::SetSessionHistoryID(nsISessionHistory * aHistoryListID)
 {
-//   NS_IF_RELEASE(mHistoryList);
+	NS_IF_RELEASE(mHistoryList);
    mHistoryList = aHistoryListID;
-//   NS_IF_ADDREF(aHistoryListID);
+   NS_ADDREF(aHistoryListID);
    return NS_OK;
 }
 
@@ -284,25 +327,6 @@ nsHistoryEntry::AddChild(nsHistoryEntry* aChild)
 }
 
   
-nsresult
-nsHistoryEntry::DestroyChildren() {
-   nsHistoryEntry * hEntry=nsnull;
-   nsHistoryEntry * parent=nsnull;
-
-  PRInt32 i, n;
-
-  n = mChildren.Count();
-  for (i = 0; i < n; i++) {
-    nsHistoryEntry* child = (nsHistoryEntry *) mChildren.ElementAt(i);
-    child->SetParent(nsnull);
-    delete child;
-//    NS_RELEASE(child);
-    mChildCount--;
-  }
-  mChildren.Clear();
-  return NS_OK;
-
-}
 
 
 /* Create a historyentry for the given webshell. If the
@@ -639,6 +663,17 @@ public:
   NS_IMETHOD SetURLForIndex(PRInt32 aIndex, const PRUnichar * aURL);
 
 
+  /**
+   * Get the title of the index
+   */
+  NS_IMETHOD GetTitleForIndex(PRInt32 aIndex, const PRUnichar ** aTitle);
+
+
+  /**
+   * Set the Title of the index
+   */
+
+  NS_IMETHOD SetTitleForIndex(PRInt32 aIndex, const PRUnichar * aTitle);
 protected:
 
    virtual ~nsSessionHistory();
@@ -1098,6 +1133,45 @@ nsSessionHistory::SetURLForIndex(PRInt32 aIndex, const PRUnichar* aURL)
   hist->SetURL(aURL);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSessionHistory::GetTitleForIndex(PRInt32 aIndex, const PRUnichar** aTitle)
+{
+
+  nsHistoryEntry * hist=nsnull;
+
+  if (aIndex < 0 || aIndex >= mHistoryLength)
+  {
+     if (APP_DEBUG) printf("nsSessionHistory::GetTitleForIndex Returning error in GetURL for Index\n");
+     return NS_ERROR_FAILURE;
+  }
+
+  hist = (nsHistoryEntry *) mHistoryEntries.ElementAt(aIndex);
+  
+  if (hist)
+    hist->GetTitle(aTitle);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSessionHistory::SetTitleForIndex(PRInt32 aIndex, const PRUnichar* aTitle)
+{
+
+  nsHistoryEntry * hist=nsnull;
+
+  if (aIndex < 0 || aIndex >= mHistoryLength)
+     return NS_ERROR_FAILURE; 
+
+  hist = (nsHistoryEntry *) mHistoryEntries.ElementAt(aIndex);
+
+  hist->SetTitle(aTitle);
+  nsString title(aTitle);
+  if(APP_DEBUG) printf("Setting title %s for index %d\n", title.ToNewCString(), aIndex);
+  return NS_OK;
+}
+
 
 
 NS_EXPORT nsresult NS_NewSessionHistory(nsISessionHistory** aResult)
