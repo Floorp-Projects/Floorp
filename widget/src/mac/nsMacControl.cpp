@@ -151,6 +151,7 @@ PRBool  nsMacControl::DispatchMouseEvent(nsMouseEvent &aEvent)
 	PRBool eatEvent = PR_FALSE;
 	switch (aEvent.message)
 	{
+		case NS_MOUSE_LEFT_DOUBLECLICK:
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
 			if (mEnabled)
 			{
@@ -166,7 +167,7 @@ PRBool  nsMacControl::DispatchMouseEvent(nsMouseEvent &aEvent)
 				eatEvent = PR_TRUE;
 			// if the mouseUp happened on another widget, eat the event too
 			// (the widget which got the mouseDown is always notified of the mouseUp)
-			if (aEvent.widget != this)
+			if (! mMouseInButton)
 				eatEvent = PR_TRUE;
 			mWidgetArmed = PR_FALSE;
 			if (mMouseInButton)
