@@ -1160,9 +1160,9 @@ function MsgOpenExistingWindowForMessage(aMessageUri)
           // This has to be done before the call to CreateView().
           windowID.gCurrentMessageUri = messageUri;
           windowID.gCurrentFolderUri = msgHdr.folder.URI;
-          windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
           windowID.CreateView(gDBView);
           windowID.LoadMessageByMsgKey(msgHdr.messageKey);
+          windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
         }
         else
           return false;
