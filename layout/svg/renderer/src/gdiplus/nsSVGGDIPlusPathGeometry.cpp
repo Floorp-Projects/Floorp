@@ -56,6 +56,9 @@ using namespace Gdiplus;
 #include "nsISVGRendererPathBuilder.h"
 #include "nsSVGGDIPlusGradient.h"
 #include "nsMemory.h"
+#include "nsIDOMSVGRect.h"
+#include "nsSVGTypeCIDs.h"
+#include "nsIComponentManager.h"
 
 /**
  * \addtogroup gdiplus_renderer GDI+ Rendering Engine
@@ -558,6 +561,35 @@ nsSVGGDIPlusPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
    if (GetHitTestRegion()->IsVisible(x,y)) {
      *_retval = PR_TRUE;
    }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGGDIPlusPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
+{
+  *aBoundingBox = nsnull;
+
+  GraphicsPath *path = GetFill();
+  if (!path)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
+
+  NS_ASSERTION(rect, "could not create rect");
+  if (!rect)
+    return NS_ERROR_FAILURE;
+
+  RectF bounds;
+  path->GetBounds(&bounds);
+
+  rect->SetX(bounds.X);
+  rect->SetY(bounds.Y);
+  rect->SetWidth(bounds.Width);
+  rect->SetHeight(bounds.Height);
+
+  *aBoundingBox = rect;
+  NS_ADDREF(*aBoundingBox);
   
   return NS_OK;
 }

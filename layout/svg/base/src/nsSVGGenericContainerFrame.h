@@ -107,6 +107,7 @@ public:
   NS_IMETHOD NotifyCanvasTMChanged();
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
+  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate) { return NS_ERROR_FAILURE; }
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGContainerFrame interface:

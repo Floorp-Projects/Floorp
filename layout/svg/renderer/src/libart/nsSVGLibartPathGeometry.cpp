@@ -54,6 +54,9 @@
 #include "nsMemory.h"
 #include "prdtoa.h"
 #include "nsString.h"
+#include "nsIDOMSVGRect.h"
+#include "nsSVGTypeCIDs.h"
+#include "nsIComponentManager.h"
 
 // comment from art_vpath_path.c: The Adobe PostScript reference
 // manual defines flatness as the maximum deviation between any
@@ -463,4 +466,33 @@ nsSVGLibartPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   }
   
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGLibartPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
+{
+  *aBoundingBox = nsnull;
+
+  ArtSVP *path = GetFill();
+  if (!path)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
+
+  NS_ASSERTION(rect, "could not create rect");
+  if (!rect) return NS_ERROR_FAILURE;
+
+  ArtDRect bound;
+  art_drect_svp(&bound, path);
+
+  rect->SetX(bound.x0);
+  rect->SetY(bound.y0);
+  rect->SetWidth(bound.x1 - bound.x0);
+  rect->SetHeight(bound.y1 - bound.y0);
+
+  *aBoundingBox = rect;
+  NS_ADDREF(*aBoundingBox);
+  
+  return NS_OK;
+
 }

@@ -100,6 +100,7 @@ public:
   NS_IMETHOD NotifyCanvasTMChanged();
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
+  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISupportsWeakReference
@@ -123,6 +124,7 @@ protected:
 private:
   nsCOMPtr<nsISVGRendererPathGeometry> mGeometry;
   PRUint32 mUpdateFlags;
+  PRBool mPropagateTransform;
 
   void GetMarkerFrames(nsSVGMarkerFrame **markerStart,
                        nsSVGMarkerFrame **markerMid,

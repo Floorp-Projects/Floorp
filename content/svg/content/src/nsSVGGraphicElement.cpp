@@ -130,7 +130,12 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
     frame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&svgframe);
     NS_ASSERTION(svgframe, "wrong frame type");
     if (svgframe) {
-      return svgframe->GetBBox(_retval);
+      svgframe->SetMatrixPropagation(PR_FALSE);
+      svgframe->NotifyCanvasTMChanged();
+      nsresult rv = svgframe->GetBBox(_retval);
+      svgframe->SetMatrixPropagation(PR_TRUE);
+      svgframe->NotifyCanvasTMChanged();
+      return rv;
     }
   }
   return NS_ERROR_FAILURE;

@@ -57,6 +57,7 @@
 #include "nsIDOMSVGRect.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsSVGRect.h"
+#include "nsSVGMatrix.h"
 
 typedef nsContainerFrame nsSVGTSpanFrameBase;
 
@@ -124,6 +125,7 @@ public:
   NS_IMETHOD NotifyCanvasTMChanged();
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
+  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGContainerFrame interface:
@@ -156,6 +158,7 @@ protected:
 private:
   PRUint32 mCharOffset; // index of first character of this node relative to the enclosing <text>-element
   PRBool mFragmentTreeDirty; 
+  PRBool mPropagateTransform;
 };
 
 //----------------------------------------------------------------------
@@ -511,6 +514,13 @@ nsSVGTSpanFrame::NotifyRedrawUnsuspended()
 }
 
 NS_IMETHODIMP
+nsSVGTSpanFrame::SetMatrixPropagation(PRBool aPropagate)
+{
+  mPropagateTransform = aPropagate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGTSpanFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
@@ -584,6 +594,12 @@ nsSVGTSpanFrame::GetOuterSVGFrame()
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGTSpanFrame::GetCanvasTM()
 {
+  if (!mPropagateTransform) {
+    nsIDOMSVGMatrix *retval;
+    NS_NewSVGMatrix(&retval);
+    return retval;
+  }
+
   NS_ASSERTION(mParent, "null parent");
   
   nsISVGContainerFrame *containerFrame;

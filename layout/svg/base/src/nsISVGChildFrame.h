@@ -49,9 +49,8 @@ class nsPresContext;
 class nsIDOMSVGRect;
 struct nsRect;
 
-// {64BEAA3A-E188-4C44-BEB8-CCB609CED126}
 #define NS_ISVGCHILDFRAME_IID \
-{ 0x64beaa3a, 0xe188, 0x4c44, { 0xbe, 0xb8, 0xcc, 0xb6, 0x09, 0xce, 0xd1, 0x26 } }
+{ 0x13c16e09, 0x049d, 0x407c, { 0x91, 0xf2, 0xf0, 0xbc, 0xf1, 0xb3, 0xab, 0x81 } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
@@ -67,6 +66,8 @@ public:
   NS_IMETHOD NotifyCanvasTMChanged()=0;
   NS_IMETHOD NotifyRedrawSuspended()=0;
   NS_IMETHOD NotifyRedrawUnsuspended()=0;
+
+  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate)=0;
 
   // XXX move this function into interface nsISVGLocatableMetrics
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval)=0; // bbox in local coords

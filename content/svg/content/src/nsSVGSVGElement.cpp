@@ -67,6 +67,7 @@
 #include "nsDOMError.h"
 #include "nsIDOMSVGZoomAndPan.h"
 #include "nsSVGEnum.h"
+#include "nsISVGChildFrame.h"
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 
@@ -922,8 +923,35 @@ nsSVGSVGElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewpor
 NS_IMETHODIMP
 nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = nsnull;
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) return NS_ERROR_FAILURE;
+  nsIPresShell *presShell = doc->GetShellAt(0);
+  NS_ASSERTION(presShell, "no presShell");
+  if (!presShell) return NS_ERROR_FAILURE;
+
+  nsIFrame* frame;
+  presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
+
+  NS_ASSERTION(frame, "can't get bounding box for element without frame");
+
+  if (frame) {
+    nsISVGChildFrame* svgframe;
+    frame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&svgframe);
+    if (svgframe) {
+      svgframe->SetMatrixPropagation(PR_FALSE);
+      svgframe->NotifyCanvasTMChanged();
+      nsresult rv = svgframe->GetBBox(_retval);
+      svgframe->SetMatrixPropagation(PR_TRUE);
+      svgframe->NotifyCanvasTMChanged();
+      return rv;
+    } else {
+      // XXX: outer svg
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /* nsIDOMSVGMatrix getCTM (); */

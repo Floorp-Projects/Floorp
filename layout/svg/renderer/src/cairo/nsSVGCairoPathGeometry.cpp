@@ -53,10 +53,11 @@
 #include <float.h>
 #include <cairo.h>
 #include "nsSVGCairoRegion.h"
-
 #include "nsISVGGradient.h"
 #include "nsSVGCairoGradient.h"
-
+#include "nsIDOMSVGRect.h"
+#include "nsSVGTypeCIDs.h"
+#include "nsIComponentManager.h"
 
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
@@ -453,5 +454,36 @@ nsSVGCairoPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 
   cairo_destroy(ctx);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGCairoPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
+{
+  *aBoundingBox = nsnull;
+
+  nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
+
+  NS_ASSERTION(rect, "could not create rect");
+  if (!rect) return NS_ERROR_FAILURE;
+
+  double xmin, ymin, xmax, ymax;
+  cairo_t *ctx = cairo_create();
+  GeneratePath(ctx);
+
+  cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  cairo_transform_point(ctx, &xmin, &ymin);
+  cairo_transform_point(ctx, &xmax, &ymax);
+
+  cairo_destroy(ctx);
+
+  rect->SetX(xmin);
+  rect->SetY(ymin);
+  rect->SetWidth(xmax - xmin);
+  rect->SetHeight(ymax - ymin);
+
+  *aBoundingBox = rect;
+  NS_ADDREF(*aBoundingBox);
+  
   return NS_OK;
 }

@@ -45,6 +45,10 @@ typedef nsSVGDefsFrame nsSVGGFrameBase;
 
 class nsSVGGFrame : public nsSVGGFrameBase
 {
+public:
+  nsSVGGFrame() : mPropagateTransform(PR_TRUE) {}
+
+protected:
   friend nsresult
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
@@ -52,6 +56,13 @@ class nsSVGGFrame : public nsSVGGFrameBase
   NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
   NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
+  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
+  NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
+
+  // nsISVGContainerFrame interface:
+  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+
+  PRBool mPropagateTransform;
 };
 
 #endif

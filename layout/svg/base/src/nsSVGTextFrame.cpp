@@ -62,6 +62,7 @@
 #include "nsIDOMSVGRect.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsSVGRect.h"
+#include "nsSVGMatrix.h"
 
 typedef nsContainerFrame nsSVGTextFrameBase;
 
@@ -141,6 +142,7 @@ public:
   NS_IMETHOD NotifyCanvasTMChanged();
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
+  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGContainerFrame interface:
@@ -182,6 +184,7 @@ protected:
   PRBool mFragmentTreeDirty;
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+  PRBool mPropagateTransform;
 };
 
 //----------------------------------------------------------------------
@@ -213,7 +216,8 @@ NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent,
 
 nsSVGTextFrame::nsSVGTextFrame()
     : mFragmentTreeState(suspended), mMetricsState(suspended),
-      mFragmentTreeDirty(PR_FALSE), mPositioningDirty(PR_FALSE)
+      mFragmentTreeDirty(PR_FALSE), mPositioningDirty(PR_FALSE),
+      mPropagateTransform(PR_TRUE)
 {
 }
 
@@ -682,6 +686,13 @@ nsSVGTextFrame::NotifyRedrawUnsuspended()
 }
 
 NS_IMETHODIMP
+nsSVGTextFrame::SetMatrixPropagation(PRBool aPropagate)
+{
+  mPropagateTransform = aPropagate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGTextFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
@@ -758,6 +769,12 @@ already_AddRefed<nsIDOMSVGMatrix>
 nsSVGTextFrame::GetCanvasTM()
 {
   if (!mCanvasTM) {
+    if (!mPropagateTransform) {
+      nsIDOMSVGMatrix *retval;
+      NS_NewSVGMatrix(&retval);
+      return retval;
+    }
+
     // get our parent's tm and append local transforms (if any):
     NS_ASSERTION(mParent, "null parent");
     nsISVGContainerFrame *containerFrame;

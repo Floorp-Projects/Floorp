@@ -56,12 +56,13 @@
 #include "nsSVGMarkerFrame.h"
 #include "nsISVGMarkable.h"
 #include "nsIViewManager.h"
+#include "nsSVGMatrix.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathGeometryFrame
 
 nsSVGPathGeometryFrame::nsSVGPathGeometryFrame()
-    : mUpdateFlags(0)
+  : mUpdateFlags(0), mPropagateTransform(PR_TRUE)
 {
 #ifdef DEBUG
 //  printf("nsSVGPathGeometryFrame %p CTOR\n", this);
@@ -330,10 +331,16 @@ nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
 }
 
 NS_IMETHODIMP
+nsSVGPathGeometryFrame::SetMatrixPropagation(PRBool aPropagate)
+{
+  mPropagateTransform = aPropagate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
-  *_retval = nsnull;
-  return NS_ERROR_FAILURE;
+  return GetGeometry()->GetBoundingBox(_retval);
 }
 
 //----------------------------------------------------------------------
@@ -375,6 +382,9 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 {
   *aCTM = nsnull;
+
+  if (!mPropagateTransform)
+    return NS_NewSVGMatrix(aCTM);
 
   nsISVGContainerFrame *containerFrame;
   mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
