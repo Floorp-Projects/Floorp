@@ -28,6 +28,10 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
+!if !defined(DISABLE_LDAP)
+LCFLAGS = $(LCFLAGS) -DMOZ_LDAP_XPCOM
+!endif
+
 CPP_OBJS=                            \
         .\$(OBJDIR)\nsModule.obj  \
 	$(NULL)

@@ -44,6 +44,9 @@ LINCS = \
 #//------------------------------------------------------------------------
 OBJS =							\
 	.\$(OBJDIR)\nsAutoComplete.obj	\
+!if !defined(DISABLE_LDAP)
+	.\$(OBJDIR)\nsLDAPAutoCompleteSession.obj \
+!endif
 	$(NULL)
 
 #//------------------------------------------------------------------------

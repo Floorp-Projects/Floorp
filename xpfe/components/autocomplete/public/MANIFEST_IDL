@@ -1,1 +1,2 @@
 nsIAutoCompleteSession.idl
+nsILDAPAutoCompleteSession.idl

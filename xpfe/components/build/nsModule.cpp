@@ -35,6 +35,9 @@
 #include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
 #endif // Windows
+#if defined(MOZ_LDAP_XPCOM)
+#include "nsLDAPAutoCompleteSession.h"
+#endif
 
 // Factory constructors
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
@@ -52,7 +55,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
-
+#if defined(MOZ_LDAP_XPCOM)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
+#endif
 
 static NS_METHOD
 RegisterProc(nsIComponentManager *aCompMgr,
@@ -136,6 +141,11 @@ static nsModuleComponentInfo components[] = {
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID, 
       nsWindowsHooksConstructor },
 #endif // Windows
+#if defined(MOZ_LDAP_XPCOM)
+    { "LDAP Autocomplete Session", NS_LDAPAUTOCOMPLETESESSION_CID,
+	  "@mozilla.org/autocompleteSession;1?type=ldap", 
+	  nsLDAPAutoCompleteSessionConstructor },
+#endif
 };
 
 NS_IMPL_NSGETMODULE("application", components)

@@ -34,6 +34,11 @@ REQUIRES	= xpcom string layout rdf necko timer intl mork widget locale dom pref 
 
 CPPSRCS		= nsModule.cpp
 
+ifdef MOZ_LDAP_XPCOM
+REQUIRES	+= mozldap
+DEFINES		+= -DMOZ_LDAP_XPCOM
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXTRA_DSO_LIBS	= autocomplete_s bookmarks_s directory_s history_s related_s \
 		search_s timebomb_s urlbarhistory_s	

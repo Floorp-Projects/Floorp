@@ -31,6 +31,11 @@ XPIDLSRCS=\
 	.\nsIAutoCompleteListener.idl \
 	.\nsIAutoCompleteResults.idl \
 	.\nsIAutoCompleteSession.idl \
+!if !defined(DISABLE_LDAP)
+	.\nsILDAPAutoCompleteSession.idl \
+!endif
     $(NULL)
 
+
+  
 include <$(DEPTH)\config\rules.mak>
