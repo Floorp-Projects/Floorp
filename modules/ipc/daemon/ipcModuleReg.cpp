@@ -200,11 +200,31 @@ IPC_ShutdownModuleReg()
     //
     for (int i = ipcModuleCount - 1; i >= 0; --i) {
         ipcModuleRegEntry &entry = ipcModules[i];
-        if (entry.methods)
+        if (entry.methods->shutdown)
             entry.methods->shutdown();
         if (entry.lib)
             PR_UnloadLibrary(entry.lib);
     }
     // memset(ipcModules, 0, sizeof(ipcModules));
     ipcModuleCount = 0;
+}
+
+void
+IPC_NotifyClientUp(ipcClient *client)
+{
+    for (int i = 0; i < ipcModuleCount; ++i) {
+        ipcModuleRegEntry &entry = ipcModules[i];
+        if (entry.methods->clientUp)
+            entry.methods->clientUp(client);
+    }
+}
+
+void
+IPC_NotifyClientDown(ipcClient *client)
+{
+    for (int i = 0; i < ipcModuleCount; ++i) {
+        ipcModuleRegEntry &entry = ipcModules[i];
+        if (entry.methods->clientDown)
+            entry.methods->clientDown(client);
+    }
 }
