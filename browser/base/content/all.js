@@ -61,7 +61,6 @@ pref("browser.cache.disk.enable",           true);
 pref("browser.cache.disk.capacity",         50000);
 pref("browser.cache.memory.enable",         true);
 pref("browser.cache.memory.capacity",       4096);
-pref("browser.cache.disk_cache_ssl",        false);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);
 
@@ -126,14 +125,6 @@ pref("browser.history_expire_days", 9);
 pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
  
-// Platform for Internet Content Selection
-pref("browser.PICS.ratings_enabled", false);
-pref("browser.PICS.pages_must_be_rated", false);
-pref("browser.PICS.disable_for_this_session", false);
-pref("browser.PICS.reenable_for_this_session", false);
-pref("browser.PICS.service.http___home_netscape_com_default_rating.service_enabled", true);
-pref("browser.PICS.service.http___home_netscape_com_default_rating.s", 0);
-
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
 
@@ -143,11 +134,9 @@ pref("browser.forms.submit.backwards_compatible", true);
 // Tab browser preferences.
 pref("browser.tabs.autoHide", true);
 pref("browser.tabs.forceHide", false);
-pref("browser.tabs.loadInBackground", false);
-pref("browser.tabs.opentabfor.middleclick", false);
-pref("browser.tabs.opentabfor.urlbar", false);
-pref("browser.tabs.opentabfor.windowopen", false);
-pref("browser.tabs.opentabfor.bookmarks", false);
+pref("browser.tabs.loadInBackground", true);
+pref("browser.tabs.opentabfor.middleclick", true);
+pref("browser.tabs.opentabfor.urlbar", true);
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -417,9 +406,6 @@ pref("network.dir.format", 2);
 // post to the server specified by this pref.
 pref("network.hosts.nntp_server",           "news.mozilla.org");
 
-pref("network.hosts.socks_server",          "");
-pref("network.hosts.socks_serverport",      1080);
-pref("network.hosts.socks_conf",            "");
 pref("network.image.imageBehavior",         0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
 pref("network.image.warnAboutImages",       false);
 pref("network.proxy.autoconfig_url",        "");
@@ -441,10 +427,7 @@ pref("network.proxy.socks_port",            0);
 pref("network.proxy.socks_version",         5);
 pref("network.proxy.no_proxies_on",         "");
 pref("network.online",                      true); //online/offline
-pref("network.accept_cookies",              0);     // 0 = Always, 1 = warn, 2 = never
-pref("network.foreign_cookies",             0); // 0 = Accept, 1 = Don't accept
 pref("network.cookie.cookieBehavior",       3); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
-pref("network.cookie.disableCookieForMailNews", true); // disable all cookies for mail
 pref("network.cookie.warnAboutCookies",     false);
 pref("network.cookie.lifetime.enabled",     false);
 pref("network.cookie.lifetime.behavior",    0);
@@ -489,13 +472,8 @@ pref("font.language.group",                 "chrome://navigator/locale/navigator
 pref("mail.signature_file",             "");
 pref("mail.directory",                  "");
 
-pref("images.dither", "auto");
 pref("news.directory",                  "");
 pref("security.directory",              "");
-
-pref("autoupdate.enabled",              true);
-
-pref("browser.editor.disabled", false);
 
 pref("spellchecker.dictionary", "");
 
