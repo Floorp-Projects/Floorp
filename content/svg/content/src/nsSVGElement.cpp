@@ -75,7 +75,6 @@ nsSVGElement::~nsSVGElement()
   for (i = 0; i < count; ++i) {
     mMappedAttributes.AttrAt(i)->GetSVGValue()->RemoveObserver(this);
   }
-  mMappedAttributes.Clear();
 }
 
 //----------------------------------------------------------------------

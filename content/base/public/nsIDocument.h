@@ -626,27 +626,6 @@ public:
    */
   virtual PRInt32 GetDefaultNamespaceID() const = 0;
 
-  /**
-   * Returns false if aContent is an orphan (an orphan is a node that is not a
-   * descendant of this document but whose ownerDocument pointer points to this
-   * document).
-   */
-  virtual PRBool IsOrphan(nsIContent* aContent) = 0;
-
-  /**
-   * Add aContent as an orphan of this document (an orphan is a node that is
-   * not a descendant of this document but whose ownerDocument pointer points
-   * to this document).
-   */
-  virtual PRBool AddOrphan(nsIContent* aContent) = 0;
-
-  /**
-   * Remove aContent as an orphan of this document (an orphan is a node that is
-   * not a descendant of this document but whose ownerDocument pointer points
-   * to this document).
-   */
-  virtual void RemoveOrphan(nsIContent* aContent) = 0;
-
 protected:
   nsString mDocumentTitle;
   nsCOMPtr<nsIURI> mDocumentURI;

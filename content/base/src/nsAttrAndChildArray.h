@@ -108,11 +108,12 @@ public:
   void WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker);
 
   void Compact();
-  void Clear();
 
 private:
   nsAttrAndChildArray(const nsAttrAndChildArray& aOther); // Not to be implemented
   nsAttrAndChildArray& operator=(const nsAttrAndChildArray& aOther); // Not to be implemented
+
+  void Clear();
 
   PRUint32 NonMappedAttrCount() const;
   PRUint32 MappedAttrCount() const;

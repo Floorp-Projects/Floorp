@@ -56,7 +56,6 @@ class nsINodeInfo;
 class nsURI;
 
 #define PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER ((PtrBits)0x1 << 0)
-#define PARENT_BIT_BITPTR_IS_CONTENT             ((PtrBits)0x1 << 1)
 
 class nsGenericDOMDataNode : public nsITextContent
 {
@@ -169,12 +168,27 @@ public:
   nsIDocument* GetDocument() const;
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
-  PRBool IsInDoc() const;
-  nsIDocument *GetOwnerDoc() const;
-  nsIContent *GetParent() const
+  PRBool IsInDoc() const
   {
-    return ParentIsContent() ? ParentPtrBitsAsContent() : nsnull;
+    return !!mDocument;
   }
+
+  nsIDocument *GetCurrentDoc() const
+  {
+    return mDocument;
+  }
+
+  nsIDocument *GetOwnerDoc() const
+  {
+    if (mDocument) {
+      return mDocument;
+    }
+
+    nsIContent *parent = GetParent();
+
+    return parent ? parent->GetOwnerDoc() : nsnull;
+  }
+
   virtual void SetParent(nsIContent* aParent);
   virtual PRBool IsNativeAnonymous() const;
   virtual void SetNativeAnonymous(PRBool aAnonymous);
@@ -291,24 +305,7 @@ private:
             nsGenericElement::sEventListenerManagersHash.ops);
   }
 
-  PRBool ParentIsDocument() const
-  {
-    return !(mParentPtrBits & PARENT_BIT_BITPTR_IS_CONTENT);
-  }
-  nsIDocument *ParentPtrBitsAsDocument() const
-  {
-    return NS_REINTERPRET_CAST(nsIDocument *,
-                               mParentPtrBits & ~kParentBitMask);
-  }
-  PRBool ParentIsContent() const
-  {
-    return mParentPtrBits & PARENT_BIT_BITPTR_IS_CONTENT;
-  }
-  nsIContent *ParentPtrBitsAsContent() const
-  {
-    return NS_REINTERPRET_CAST(nsIContent *,
-                               mParentPtrBits & ~kParentBitMask);
-  }
+  nsIDocument *mDocument;
 };
 
 //----------------------------------------------------------------------

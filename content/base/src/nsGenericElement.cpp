@@ -858,8 +858,6 @@ nsGenericElement::~nsGenericElement()
     delete slots;
   }
 
-  mAttrsAndChildren.Clear();
-
   // No calling GetFlags() beyond this point...
 }
 

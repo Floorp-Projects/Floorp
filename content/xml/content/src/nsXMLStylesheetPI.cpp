@@ -132,14 +132,9 @@ nsXMLStylesheetPI::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   nsAutoString data;
   GetData(data);
 
-  nsIDocument *document = GetOwnerDoc();
-  nsXMLStylesheetPI *pi = new nsXMLStylesheetPI(data, document);
+  nsXMLStylesheetPI *pi = new nsXMLStylesheetPI(data, nsnull);
   if (!pi) {
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (document) {
-    document->AddOrphan(pi);
   }
 
   NS_ADDREF(*aReturn = pi);
@@ -246,12 +241,8 @@ NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
 {
   *aInstancePtrResult = nsnull;
   
-  nsCOMPtr<nsIContent> instance = new nsXMLStylesheetPI(aData, aOwnerDocument);
+  nsCOMPtr<nsIContent> instance = new nsXMLStylesheetPI(aData, nsnull);
   if (!instance) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (aOwnerDocument && !aOwnerDocument->AddOrphan(instance)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
