@@ -395,8 +395,10 @@ PRIVATE PRBool uCheckAndScanAlways2ByteShiftGR(
 		PRUint32*				inscanlen
 )
 {
-  // Both bytes should be in the range of [0xa1,0xfe] for 94x94 character sets
-  // invoked on GR. No encoding implemented in Mozilla uses 96x96 char. sets.
+  /*
+   *Both bytes should be in the range of [0xa1,0xfe] for 94x94 character sets
+   * invoked on GR. No encoding implemented in Mozilla uses 96x96 char. sets.
+   */
 	if(inbuflen < 2 || ! CHK_GR94_2Byte(in[1],in[0]))
 		return PR_FALSE;
 	else
