@@ -187,6 +187,7 @@ BUILD_OFFICIAL=1 ./configure --prefix=%{_prefix} --enable-optimize \
 	--without-mng \
 	--enable-crypto \
 	--disable-xprint \
+	--without-system-nspr \
 	--disable-freetype2
 
 #BUILD_OFFICIAL=1 make -s export
