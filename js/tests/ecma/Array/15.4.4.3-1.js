@@ -20,15 +20,20 @@
  * 
  */
 /**
-    File Name:          15.4.4.3-1.js
-    ECMA Section:       15.4.4.3-1 Array.prototype.join()
-    Description:        The elements of this object are converted to strings
-                        and these strings are then concatenated, separated by
-                        comma characters.  The result is the same as if the
-                        built-in join method were invoiked for this object
-                        with no argument.
-    Author:             christine@netscape.com
-    Date:               7 october 1997
+    File Name:    15.4.4.3-1.js
+    ECMA Section: 15.4.4.3-1 Array.prototype.join()
+    Description:  The elements of this object are converted to strings and
+                  these strings are then concatenated, separated by comma
+                  characters. The result is the same as if the built-in join
+                  method were invoiked for this object with no argument.
+    Author:       christine@netscape.com, pschwartau@netscape.com
+    Date:         07 October 1997
+    Modified:     14 July 2002
+    Reason:       See http://bugzilla.mozilla.org/show_bug.cgi?id=155285
+                  ECMA-262 Ed.3  Section 15.4.4.5 Array.prototype.join()
+                  Step 3: If |separator| is |undefined|, let |separator|
+                          be the single-character string ","
+*
 */
 
     var SECTION = "15.4.4.3-1";
@@ -78,7 +83,7 @@ function getTestCases() {
     // length is greater than 0, separator is undefined
     array[item++] = new TestCase(   SECTION,
                                     "var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join(void 0)",
-                                    "undefinedundefinedtrueundefinedfalseundefined123undefined[object Object]undefinedtrue",
+                                    ",,true,false,123,[object Object],true",
                                     eval("var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join(void 0)") );
 
     // length is greater than 0, separator is not supplied
