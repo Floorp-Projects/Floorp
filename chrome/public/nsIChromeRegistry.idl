@@ -27,7 +27,6 @@
 #include "nsIEnumerator.idl"
 #include "nsISupportsArray.idl"
 interface nsIDocShell;
-interface nsIRDFResource;
 
 [scriptable, uuid(D8C7D8A1-E84C-11d2-BF87-00105A1B0627)]
 interface nsIChromeRegistry : nsISupports
@@ -104,6 +103,10 @@ interface nsIChromeRegistry : nsISupports
   boolean allowScriptsForSkin(in nsIURI url);
 
   void checkForNewChrome();
+
+  boolean checkThemeVersion(in wstring skinName);
+
+  boolean checkLocaleVersion(in wstring localeName);
 
 };
 
