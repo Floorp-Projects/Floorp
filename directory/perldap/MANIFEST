@@ -4,7 +4,7 @@ API.xs
 MANIFEST
 Makefile.PL
 constant.h
-test.pl
+oldtest.pl
 typemap
 Entry.pm
 Conn.pm
@@ -12,6 +12,8 @@ LDIF.pm
 Utils.pm
 README
 INSTALL
+CREDITS
+RELEASE
 MPL-1.0.txt
 test_api/search.pl
 test_api/write.pl
@@ -19,6 +21,11 @@ test_api/api.pl
 t/conn.pl
 t/entry.pl
 t/ChangeLog
+t/api.t
+t/conn.t
+t/entry.t
+t/ldif.t
+t/utils.t
 examples/ChangeLog
 examples/lfinger.pl
 examples/qsearch.pl
@@ -30,4 +37,4 @@ examples/modattr.pl
 examples/rename.pl
 examples/psoftsync.pl
 examples/changes2ldif.pl
-install-bin
+examples/rand_mods.pl

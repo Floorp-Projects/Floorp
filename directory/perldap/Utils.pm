@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Utils.pm,v 1.12 1999/03/22 04:13:02 leif%netscape.com Exp $
+# $Id: Utils.pm,v 1.13 1999/08/24 22:30:48 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -26,13 +26,16 @@
 
 package Mozilla::LDAP::Utils;
 
-use Mozilla::LDAP::API qw(:constant);
+use Mozilla::LDAP::API 1.4 qw(:constant);
 use Mozilla::LDAP::Conn;
-use vars qw(@ISA %EXPORT_TAGS);
+use Exporter;
 
-require Exporter;
+use strict;
+use vars qw($VERSION @ISA %EXPORT_TAGS);
 
 @ISA = qw(Exporter);
+$VERSION = "1.4";
+
 %EXPORT_TAGS = (
 		all => [qw(normalizeDN
 			   isUrl
@@ -87,7 +90,8 @@ sub isURL
 sub printEntry
 {
   my $entry = $_[0];
-  my $attr;
+  my ($attr);
+
   local $_;
 
   print "dn: ", $entry->{"dn"},"\n";
@@ -112,9 +116,9 @@ sub printEntry
 #
 sub encodeBase64
 {
-  my $res = "";
-  my $eol = "$_[1]";
-  my $padding;
+  my ($res) = "";
+  my ($eol) = "$_[1]";
+  my ($padding);
 
   pos($_[0]) = 0;                          # ensure start at the beginning
   while ($_[0] =~ /(.{1,45})/gs) {
@@ -140,9 +144,9 @@ sub encodeBase64
 #
 sub decodeBase64
 {
-  my $str = shift;
-  my $res = "";
-  my $len;
+  my ($str) = shift;
+  my ($res) = "";
+  my ($len);
  
   $str =~ tr|A-Za-z0-9+=/||cd;
   Carp::croak("Base64 decoder requires string length to be a multiple of 4")
@@ -165,7 +169,7 @@ sub decodeBase64
 #
 sub str2Scope
 {
-  my $str = $_[0];
+  my ($str) = $_[0];
 
   return $str if ($str =~ /^[0-9]+$/);
 
@@ -192,8 +196,8 @@ sub str2Scope
 #
 sub askPassword
 {
-  my $prompt = $_[0];
-  my $hasReadKey = 0;
+  my ($prompt) = $_[0];
+  my ($hasReadKey) = 0;
 
   eval "use Term::ReadKey";
   $hasReadKey=1 unless ($@);
@@ -225,7 +229,7 @@ sub askPassword
 sub ldapArgs
 {
   my ($bind, $base) = @_;
-  my %ld;
+  my (%ld);
 
   $main::opt_v = $main::opt_n if defined($main::opt_n);
   $main::opt_p = LDAPS_PORT if (!defined($main::opt_p) &&
@@ -256,9 +260,9 @@ sub ldapArgs
 #
 sub unixCrypt
 {
-   my $ascii =
+   my ($ascii) =
       "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-   my $salt = substr($ascii, rand(62), 1) . substr($ascii, rand(62), 1);
+   my ($salt) = substr($ascii, rand(62), 1) . substr($ascii, rand(62), 1);
 
    srand(time ^ $$);
    crypt($_[0], $salt);
@@ -272,11 +276,12 @@ sub unixCrypt
 sub userCredentials
 {
   my ($ld) = @_;
-  my ($conn, $entry, $pswd);
+  my ($conn, $entry, $pswd, $search);
 
   if ($ld->{"bind"} eq "")
     {
-      my $base = $ld->{"base"} || $ld->{"root"};
+      my ($base) = $ld->{"base"} || $ld->{"root"};
+
       $conn = new Mozilla::LDAP::Conn($ld);
       die "Could't connect to LDAP server " . $ld->{"host"} unless $conn;
 

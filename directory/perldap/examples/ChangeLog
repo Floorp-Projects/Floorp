@@ -1,3 +1,7 @@
+1999-06-30  Leif Hedstrom  <leif@netscape.com>
+
+	* rmentry.pl: Added support for "-p".
+
 1999-01-05  Leif Hedstrom  <leif@netscape.com>
 
 	* psoftsync.pl (delAttr): Fixed annoying bug where I missed to

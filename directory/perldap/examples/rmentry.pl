@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: rmentry.pl,v 1.4 1999/01/21 23:52:47 leif%netscape.com Exp $
+# $Id: rmentry.pl,v 1.5 1999/08/24 22:30:51 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -36,7 +36,8 @@ use Mozilla::LDAP::Utils;		# LULU, utilities.
 # Constants, shouldn't have to edit these...
 #
 $APPNAM	= "rmentry";
-$USAGE	= "$APPNAM [-nvI] -b base -h host -D bind -w pswd -P cert filter ...";
+$USAGE	= "$APPNAM [-nvI] -b base -h host -p port -D bind -w pswd" .
+          "-P cert filter ...";
 
 @ATTRIBUTES = ("uid");
 
@@ -44,7 +45,7 @@ $USAGE	= "$APPNAM [-nvI] -b base -h host -D bind -w pswd -P cert filter ...";
 #################################################################################
 # Check arguments, and configure some parameters accordingly..
 #
-if (!getopts('nvIb:h:D:w:P:'))
+if (!getopts('nvIb:h:p:D:w:P:'))
 {
   print "usage: $APPNAM $USAGE\n";
   exit;

@@ -1,6 +1,6 @@
 #############################################################################
 #                                                                           #
-#            PerLDAP v1.0 - A Perl Developers' Kit for LDAP                 #
+#            PerLDAP v1.4 - A Perl Developers' Kit for LDAP		    #
 #                                                                           #
 #############################################################################
 
@@ -23,57 +23,6 @@ involvement, PerLDAP will continue to evolve to include additional
 functionality in future releases.
 
 
-Installing PerLDAP Binaries
-===========================
-
-You will first need version 3.0 of the LDAP C SDK from Netscape.  This is
-available from the DevEdge page at:
-
-    http://developer.netscape.com/tech/directory/
-
-You will also need Perl v5.004, available at http://www.perl.com/.
-Earlier, or later, versions of Perl will NOT work with these binaries. If
-you wish to use v5.005, you will need to compile PerLDAP from source.
-
-On Unix (Solaris Only...HPUX, IRIX, AIX to follow):
-  1. Be sure that the libraries from the C SDK are installed in locations
-     referenced by the environment variable LD_LIBRARY_PATH, or one of the
-     default system lib directories (e.g. /usr/lib). Alternatively you can
-     later also copy the SDK libraries to the same "site" directory where
-     Perl installed the PerLDAP libraries.
-
-  2. Save the file in a temporary location
-
-  3. Unzip the file by entering the command:
-      gunzip <filename>.tar.gz
-
-  4. Untar the resulting tar file by entering the command:
-      tar xvof <filename>.tar
-
-  5. Change to the extract directory:
-      cd PerLDAP-1.1
-
-  6. Execute the following command in as the super-user (root):
-      perl install-bin
-
-On Windows NT:
-  1. Put the LDAP C SDK DLL in the same directory as the perl.exe
-  binary. You can also set your PATH to point to the directory where you
-  have the C SDK installed. Alternatively, you can put the DLL in the
-  system32 folder, but avoid that if possible.
-
-  2. Save the file in a temporary location
-
-  3. Unzip the file by entering the command:
-      I don't have a tool for creating self-extracting archives...
-
-  4. Change to the extract directory:
-      cd PerLDAP-1.1
-
-  5. Execute the following command:
-      perl install-bin
-
-
 Compiling the PerLDAP Sources
 =============================
 
@@ -81,8 +30,8 @@ The source to PerLDAP is available on the Mozilla site at:
 
   http://www.mozilla.org/directory/
 
-You can either retrieve the .tar file with the source distribution, or use
-CVS to checkout the module directly. The name of the CVS module is
+You can either retrieve the .tar/zip file with the source distribution, or
+use CVS to checkout the module directly. The name of the CVS module is
 PerLDAP, and it checks out the directory
 
   mozilla/directory/perldap
@@ -91,13 +40,15 @@ Further instructions for using CVS and Mozilla is available at
 
   http://www.mozilla.org/cvs.html
 
-and an FAQ is at
+and an FAQ for PerLDAP is at
 
   http://www.mozilla.org/directory/faq/perldap-faq.html
 
 
 Instructions for building the source can be found in the INSTALL file
-in the source distribution.
+in the source distribution. The latest stable release of PerLDAP is
+v1.4, the next version is planned to be v2.0 (development continues on the
+v1.9 development branch).
 
 
 Getting Started
@@ -176,8 +127,5 @@ Known Bugs
 There are a number of issues still outstanding at the time of release.  Most
 of these are already in the process of being resolved.
 
- - There is a possible memory leak in the search routines. The OO layer
-   is also more memory than it should.
  - The Rebind operation on NT does NOT work properly when set to a Perl
    function.  This is being investigated.
- - Some of the documentation is incomplete.
