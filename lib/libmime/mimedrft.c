@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+/* mimedrft.c --- save and restore drafts of unfinished messages
+ */
+
 #include "xp.h"
 #include "xpgetstr.h"
 #include "libi18n.h"
