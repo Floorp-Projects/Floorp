@@ -1,3 +1,6 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /*
  *
  * The contents of this file are subject to the Mozilla Public

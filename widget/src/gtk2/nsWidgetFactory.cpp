@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -52,93 +55,93 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 
 static
 nsresult nsHorizScrollbarConstructor (nsISupports *aOuter,
-				      REFNSIID     aIID,
-				      void       **aResult)
+                                      REFNSIID     aIID,
+                                      void       **aResult)
 {
-  nsresult rv;
-  nsISupports *inst = nsnull;
+    nsresult rv;
+    nsISupports *inst = nsnull;
 
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
+    if (!aResult)
+        return NS_ERROR_NULL_POINTER;
 
-  *aResult = nsnull;
+    *aResult = nsnull;
 
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
 
-  inst = (nsISupports *)(nsBaseWidget *)(nsCommonWidget *)
-    new nsScrollbar(PR_FALSE);
+    inst = (nsISupports *)(nsBaseWidget *)(nsCommonWidget *)
+        new nsScrollbar(PR_FALSE);
 
-  if (!inst)
-    return NS_ERROR_OUT_OF_MEMORY;
+    if (!inst)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
+    NS_ADDREF(inst);
+    rv = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
 
-  return rv;
+    return rv;
 }
 
 static
 nsresult nsVertScrollbarConstructor   (nsISupports *aOuter,
-				       REFNSIID     aIID,
-				       void       **aResult)
+                                       REFNSIID     aIID,
+                                       void       **aResult)
 {
-  nsresult rv;
-  nsISupports *inst = nsnull;
+    nsresult rv;
+    nsISupports *inst = nsnull;
 
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
+    if (!aResult)
+        return NS_ERROR_NULL_POINTER;
 
-  *aResult = nsnull;
+    *aResult = nsnull;
 
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
 
-  inst = (nsISupports *)(nsBaseWidget *)(nsCommonWidget *)
-    new nsScrollbar(PR_TRUE);
+    inst = (nsISupports *)(nsBaseWidget *)(nsCommonWidget *)
+        new nsScrollbar(PR_TRUE);
 
-  if (!inst)
-    return NS_ERROR_OUT_OF_MEMORY;
+    if (!inst)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
+    NS_ADDREF(inst);
+    rv = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
 
-  return rv;
+    return rv;
 }
 
 static const nsModuleComponentInfo components[] =
 {
-  { "Gtk2 Window",
-    NS_WINDOW_CID,
-    "@mozilla.org/widget/window/gtk;1",
-    nsWindowConstructor },
-  { "Gtk2 Child Window",
-    NS_CHILD_CID,
-    "@mozilla.org/widgets/child_window/gtk;1",
-    nsChildWindowConstructor },
-  { "Gtk2 AppShell",
-    NS_APPSHELL_CID,
-    "@mozilla.org/widget/appshell/gtk;1",
-    nsAppShellConstructor },
-  { "Gtk2 Look And Feel",
-    NS_LOOKANDFEEL_CID,
-    "@mozilla.org/widget/lookandfeel/gtk;1",
-    nsLookAndFeelConstructor },
-  { "Gtk2 Horiz Scrollbar",
-    NS_HORZSCROLLBAR_CID,
-    "@mozilla.org/widgets/hoizscroll/gtk;1",
-    nsHorizScrollbarConstructor },
-  { "Gtk2 Vert Scrollbar",
-    NS_VERTSCROLLBAR_CID,
-    "@mozilla.org/widgets/vertscroll/gtk;1",
-    nsVertScrollbarConstructor },
+    { "Gtk2 Window",
+      NS_WINDOW_CID,
+      "@mozilla.org/widget/window/gtk;1",
+      nsWindowConstructor },
+    { "Gtk2 Child Window",
+      NS_CHILD_CID,
+      "@mozilla.org/widgets/child_window/gtk;1",
+      nsChildWindowConstructor },
+    { "Gtk2 AppShell",
+      NS_APPSHELL_CID,
+      "@mozilla.org/widget/appshell/gtk;1",
+      nsAppShellConstructor },
+    { "Gtk2 Look And Feel",
+      NS_LOOKANDFEEL_CID,
+      "@mozilla.org/widget/lookandfeel/gtk;1",
+      nsLookAndFeelConstructor },
+    { "Gtk2 Horiz Scrollbar",
+      NS_HORZSCROLLBAR_CID,
+      "@mozilla.org/widgets/hoizscroll/gtk;1",
+      nsHorizScrollbarConstructor },
+    { "Gtk2 Vert Scrollbar",
+      NS_VERTSCROLLBAR_CID,
+      "@mozilla.org/widgets/vertscroll/gtk;1",
+      nsVertScrollbarConstructor },
 #ifdef IBMBIDI
-  { "Gtk2 Bidi Keyboard",
-    NS_BIDIKEYBOARD_CID,
-    "@mozilla.org/widget/bidikeyboard;1",
-    nsBidiKeyboardConstructor },
+    { "Gtk2 Bidi Keyboard",
+      NS_BIDIKEYBOARD_CID,
+      "@mozilla.org/widget/bidikeyboard;1",
+      nsBidiKeyboardConstructor },
 #endif /* IBMBIDI */
 };
 
@@ -148,5 +151,5 @@ nsWidgetGtk2ModuleDtor(nsIModule *aSelf)
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetGtk2Module,
-			      components,
-			      nsWidgetGtk2ModuleDtor)
+                              components,
+                              nsWidgetGtk2ModuleDtor)

@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -44,13 +47,13 @@ static void value_changed_cb (GtkAdjustment *adjustment, gpointer data);
 
 nsScrollbar::nsScrollbar(PRBool aIsVertical)
 {
-  if (aIsVertical)
-    mOrientation = GTK_ORIENTATION_VERTICAL;
-  else
-    mOrientation = GTK_ORIENTATION_HORIZONTAL;
+    if (aIsVertical)
+        mOrientation = GTK_ORIENTATION_VERTICAL;
+    else
+        mOrientation = GTK_ORIENTATION_HORIZONTAL;
 
-  mWidget     = nsnull;
-  mAdjustment = nsnull;
+    mWidget     = nsnull;
+    mAdjustment = nsnull;
 }
 
 nsScrollbar::~nsScrollbar()
@@ -72,8 +75,8 @@ nsScrollbar::Create(nsIWidget        *aParent,
                     nsIToolkit       *aToolkit,
                     nsWidgetInitData *aInitData)
 {
-  return NativeCreate(aParent, nsnull, aRect, aHandleEventFunction,
-		      aContext, aAppShell, aToolkit, aInitData);
+    return NativeCreate(aParent, nsnull, aRect, aHandleEventFunction,
+                        aContext, aAppShell, aToolkit, aInitData);
 }
 
 NS_IMETHODIMP
@@ -85,167 +88,167 @@ nsScrollbar::Create(nsNativeWidget aParent,
                     nsIToolkit       *aToolkit,
                     nsWidgetInitData *aInitData)
 {
-  return NativeCreate(nsnull, aParent, aRect, aHandleEventFunction,
-		      aContext, aAppShell, aToolkit, aInitData);
+    return NativeCreate(nsnull, aParent, aRect, aHandleEventFunction,
+                        aContext, aAppShell, aToolkit, aInitData);
 }
 
 NS_IMETHODIMP
 nsScrollbar::Destroy(void)
 {
-  if (mIsDestroyed)
+    if (mIsDestroyed)
+        return NS_OK;
+
+    LOG(("nsScrollbar::Destroy [%p]\n", (void *)this));
+    mIsDestroyed = PR_TRUE;
+
+    NativeShow(PR_FALSE);
+
+    if (mWidget) {
+        gtk_widget_destroy(mWidget);
+        mWidget = NULL;
+        // this is just a ref into the widget above
+        mAdjustment = NULL;
+    }
+
+    OnDestroy();
+
     return NS_OK;
-
-  LOG(("nsScrollbar::Destroy [%p]\n", (void *)this));
-  mIsDestroyed = PR_TRUE;
-
-  NativeShow(PR_FALSE);
-
-  if (mWidget) {
-    gtk_widget_destroy(mWidget);
-    mWidget = NULL;
-    // this is just a ref into the widget above
-    mAdjustment = NULL;
-  }
-
-  OnDestroy();
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsScrollbar::IsVisible(PRBool & aState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::Move(PRInt32 aX, PRInt32 aY)
 {
-  if (aX == mBounds.x && aY == mBounds.y)
+    if (aX == mBounds.x && aY == mBounds.y)
+        return NS_OK;
+
+    LOG(("nsScrollbar::Move [%p] %d %d\n", (void *)this,
+         aX, aY));
+
+    mBounds.x = aX;
+    mBounds.y = aY;
+
+    // If the bounds aren't sane then don't actually move the window.
+    // It will be moved to the proper position when the bounds become
+    // sane.
+    if (AreBoundsSane())
+        moz_container_move(MOZ_CONTAINER(gtk_widget_get_parent(mWidget)),
+                           mWidget, aX, aY, mBounds.width, mBounds.height);
+
     return NS_OK;
-
-  LOG(("nsScrollbar::Move [%p] %d %d\n", (void *)this,
-       aX, aY));
-
-  mBounds.x = aX;
-  mBounds.y = aY;
-
-  // If the bounds aren't sane then don't actually move the window.
-  // It will be moved to the proper position when the bounds become
-  // sane.
-  if (AreBoundsSane())
-    moz_container_move(MOZ_CONTAINER(gtk_widget_get_parent(mWidget)),
-		       mWidget, aX, aY, mBounds.width, mBounds.height);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsScrollbar::Enable(PRBool aState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::SetFocus(PRBool aRaise)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsIFontMetrics*
 nsScrollbar::GetFont(void)
 {
-  return nsnull;
+    return nsnull;
 }
 
 NS_IMETHODIMP
 nsScrollbar::SetFont(const nsFont &aFont)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::Invalidate(PRBool aIsSynchronous)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::Update()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::SetColorMap(nsColorMap *aColorMap)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void*
 nsScrollbar::GetNativeData(PRUint32 aDataType)
 {
-  return nsnull;
+    return nsnull;
 }
 
 NS_IMETHODIMP
 nsScrollbar::SetTitle(const nsString& aTitle)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::SetMenuBar(nsIMenuBar * aMenuBar)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::ShowMenuBar(PRBool aShow)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::BeginResizingChildren(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsScrollbar::EndResizingChildren(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -253,7 +256,7 @@ nsScrollbar::CaptureRollupEvents(nsIRollupListener * aListener,
                                  PRBool aDoCapture,
                                  PRBool aConsumeRollupEvent)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -262,113 +265,113 @@ nsScrollbar::CaptureRollupEvents(nsIRollupListener * aListener,
 NS_IMETHODIMP
 nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
-  if (mAdjustment) {
-    mAdjustment->upper = aEndRange;
-    gtk_adjustment_changed(mAdjustment);
-  }
+    if (mAdjustment) {
+        mAdjustment->upper = aEndRange;
+        gtk_adjustment_changed(mAdjustment);
+    }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsScrollbar::GetMaxRange(PRUint32& aMaxRange)
 {
-  if (mAdjustment)
-    aMaxRange = (PRUint32)mAdjustment->upper;
-  else
-    aMaxRange = 0;
-  
-  return NS_OK;
+    if (mAdjustment)
+        aMaxRange = (PRUint32)mAdjustment->upper;
+    else
+        aMaxRange = 0;
+
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsScrollbar::SetPosition(PRUint32 aPos)
 {
-  if (mAdjustment && (PRUint32)mAdjustment->value != aPos) {
-    mAdjustment->value = (gdouble)aPos;
-    gtk_adjustment_changed(mAdjustment);
-  }
-  
-  return NS_OK;
+    if (mAdjustment && (PRUint32)mAdjustment->value != aPos) {
+        mAdjustment->value = (gdouble)aPos;
+        gtk_adjustment_changed(mAdjustment);
+    }
+
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsScrollbar::GetPosition(PRUint32& aPos)
 {
-  if (mAdjustment)
-    aPos = (PRUint32)mAdjustment->value;
-  else
-    aPos = 0;
+    if (mAdjustment)
+        aPos = (PRUint32)mAdjustment->value;
+    else
+        aPos = 0;
 
-  return NS_OK;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-  if (mAdjustment) {
-    mAdjustment->page_increment = aSize;
-    mAdjustment->page_size = aSize;
-    gtk_adjustment_changed(mAdjustment);
-  }
+    if (mAdjustment) {
+        mAdjustment->page_increment = aSize;
+        mAdjustment->page_size = aSize;
+        gtk_adjustment_changed(mAdjustment);
+    }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsScrollbar::GetThumbSize(PRUint32& aSize)
 {
-  if (mAdjustment)
-    aSize = (PRUint32)mAdjustment->page_size;
-  else
-    aSize = 0;
+    if (mAdjustment)
+        aSize = (PRUint32)mAdjustment->page_size;
+    else
+        aSize = 0;
 
-  return NS_OK;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsScrollbar::SetLineIncrement(PRUint32 aSize)
 {
-  if (mAdjustment) {
-    mAdjustment->step_increment = aSize;
-    gtk_adjustment_changed(mAdjustment);
-  }
+    if (mAdjustment) {
+        mAdjustment->step_increment = aSize;
+        gtk_adjustment_changed(mAdjustment);
+    }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsScrollbar::GetLineIncrement(PRUint32& aSize)
 {
-  if (mAdjustment)
-    aSize = (PRUint32)mAdjustment->step_increment;
-  else 
-    aSize = 0;
+    if (mAdjustment)
+        aSize = (PRUint32)mAdjustment->step_increment;
+    else 
+        aSize = 0;
 
-  return NS_OK;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
-			   PRUint32 aPosition, PRUint32 aLineIncrement)
+               PRUint32 aPosition, PRUint32 aLineIncrement)
 {
-  if (mAdjustment) {
-    mAdjustment->lower = 0;
-    mAdjustment->upper = aMaxRange;
-    mAdjustment->page_size = aThumbSize;
-    mAdjustment->page_increment = aThumbSize;
-    mAdjustment->step_increment = aLineIncrement;
-    gtk_adjustment_changed(mAdjustment);
-  }
+    if (mAdjustment) {
+        mAdjustment->lower = 0;
+        mAdjustment->upper = aMaxRange;
+        mAdjustment->page_size = aThumbSize;
+        mAdjustment->page_increment = aThumbSize;
+        mAdjustment->step_increment = aLineIncrement;
+        gtk_adjustment_changed(mAdjustment);
+    }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 
@@ -376,169 +379,169 @@ nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 NS_IMETHODIMP
 nsScrollbar::SetBounds (const nsRect &aRect)
 {
-  LOG(("nsScrollbar::SetBounds [%p] %d %d %d %d\n",
-	 (void *)this, aRect.x, aRect.y,
-       aRect.width, aRect.height));
+    LOG(("nsScrollbar::SetBounds [%p] %d %d %d %d\n",
+         (void *)this, aRect.x, aRect.y,
+         aRect.width, aRect.height));
 
-  if (mWidget) {
-    LOG(("widget allocation %d %d %d %d\n",
-	 mWidget->allocation.x,
-	 mWidget->allocation.y,
-	 mWidget->allocation.width,
-	 mWidget->allocation.height));
-    nsCommonWidget::SetBounds(aRect);
-    
-    // update the x/y with our new sizes
-    mWidget->allocation.x = aRect.x;
-    mWidget->allocation.y = aRect.y;
-    
-    moz_container_scroll_update (MOZ_CONTAINER(gtk_widget_get_parent(mWidget)),
-				 mWidget, aRect.x, aRect.y);
-  }
-  return NS_OK;
+    if (mWidget) {
+        LOG(("widget allocation %d %d %d %d\n",
+             mWidget->allocation.x,
+             mWidget->allocation.y,
+             mWidget->allocation.width,
+             mWidget->allocation.height));
+        nsCommonWidget::SetBounds(aRect);
+
+        // update the x/y with our new sizes
+        mWidget->allocation.x = aRect.x;
+        mWidget->allocation.y = aRect.y;
+
+        moz_container_scroll_update (MOZ_CONTAINER(gtk_widget_get_parent(mWidget)),
+                                     mWidget, aRect.x, aRect.y);
+    }
+    return NS_OK;
 }
 
 nsresult
 nsScrollbar::NativeCreate(nsIWidget        *aParent,
-			  nsNativeWidget    aNativeParent,
-			  const nsRect     &aRect,
-			  EVENT_CALLBACK    aHandleEventFunction,
-			  nsIDeviceContext *aContext,
-			  nsIAppShell      *aAppShell,
-			  nsIToolkit       *aToolkit,
-			  nsWidgetInitData *aInitData)
+                          nsNativeWidget    aNativeParent,
+                          const nsRect     &aRect,
+                          EVENT_CALLBACK    aHandleEventFunction,
+                          nsIDeviceContext *aContext,
+                          nsIAppShell      *aAppShell,
+                          nsIToolkit       *aToolkit,
+                          nsWidgetInitData *aInitData)
 {
-  // initialize all the common bits of this class
-  BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
-	     aAppShell, aToolkit, aInitData);
+    // initialize all the common bits of this class
+    BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
+               aAppShell, aToolkit, aInitData);
 
-  // and do our common creation
-  CommonCreate(aParent, aNativeParent);
+    // and do our common creation
+    CommonCreate(aParent, aNativeParent);
 
-  // save our bounds
-  mBounds = aRect;
+    // save our bounds
+    mBounds = aRect;
 
-  // find our parent window
-  GdkWindow *parentWindow;
-  if (aParent)
-    parentWindow = GDK_WINDOW(aParent->GetNativeData(NS_NATIVE_WINDOW));
-  else
-    parentWindow = GDK_WINDOW(aNativeParent);
+    // find our parent window
+    GdkWindow *parentWindow;
+    if (aParent)
+        parentWindow = GDK_WINDOW(aParent->GetNativeData(NS_NATIVE_WINDOW));
+    else
+        parentWindow = GDK_WINDOW(aNativeParent);
 
-  if (!parentWindow)
-    return NS_ERROR_FAILURE;
+    if (!parentWindow)
+        return NS_ERROR_FAILURE;
 
-  // use the parent window to find the parent widget
-  gpointer user_data;
-  gdk_window_get_user_data(parentWindow, &user_data);
+    // use the parent window to find the parent widget
+    gpointer user_data;
+    gdk_window_get_user_data(parentWindow, &user_data);
 
-  if (!user_data)
-    return NS_ERROR_FAILURE;
+    if (!user_data)
+        return NS_ERROR_FAILURE;
 
-  // our parent widget
-  GtkWidget *parentWidget = GTK_WIDGET(user_data);
+    // our parent widget
+    GtkWidget *parentWidget = GTK_WIDGET(user_data);
 
-  // create the right widget
-  if (mOrientation == GTK_ORIENTATION_VERTICAL)
-    mWidget = gtk_vscrollbar_new(NULL);
-  else
-    mWidget = gtk_hscrollbar_new(NULL);
+    // create the right widget
+    if (mOrientation == GTK_ORIENTATION_VERTICAL)
+        mWidget = gtk_vscrollbar_new(NULL);
+    else
+        mWidget = gtk_hscrollbar_new(NULL);
 
-  // set the parent of the scrollbar to be the gdk window of the
-  // parent window.
-  gtk_widget_set_parent_window(mWidget, parentWindow);
+    // set the parent of the scrollbar to be the gdk window of the
+    // parent window.
+    gtk_widget_set_parent_window(mWidget, parentWindow);
 
-  // add this widget to the parent window, assuming it's a container
-  // of course.
-  moz_container_put(MOZ_CONTAINER(parentWidget), mWidget,
-		    mBounds.x, mBounds.y);
+    // add this widget to the parent window, assuming it's a container
+    // of course.
+    moz_container_put(MOZ_CONTAINER(parentWidget), mWidget,
+                      mBounds.x, mBounds.y);
 
-  // and realize the widget
-  gtk_widget_realize(mWidget);
+    // and realize the widget
+    gtk_widget_realize(mWidget);
 
-  // resize so that everything is set to the right dimensions
-  Resize(mBounds.width, mBounds.height, PR_FALSE);
+    // resize so that everything is set to the right dimensions
+    Resize(mBounds.width, mBounds.height, PR_FALSE);
 
-  // get a handle to the adjustment for later use - this doesn't
-  // addref
-  mAdjustment = gtk_range_get_adjustment(GTK_RANGE(mWidget));
+    // get a handle to the adjustment for later use - this doesn't
+    // addref
+    mAdjustment = gtk_range_get_adjustment(GTK_RANGE(mWidget));
 
-  // add a label so we can get back here if we need to
-  g_object_set_data(G_OBJECT(mAdjustment), "nsScrollbar",
-		    this);
+    // add a label so we can get back here if we need to
+    g_object_set_data(G_OBJECT(mAdjustment), "nsScrollbar",
+                      this);
 
-  // add a callback so we will get value changes
-  g_signal_connect(G_OBJECT(mAdjustment), "value_changed",
-		   G_CALLBACK(value_changed_cb), this);
+    // add a callback so we will get value changes
+    g_signal_connect(G_OBJECT(mAdjustment), "value_changed",
+                     G_CALLBACK(value_changed_cb), this);
 
-  LOG(("nsScrollbar [%p] %s %p %lx\n", (void *)this,
-       (mOrientation == GTK_ORIENTATION_VERTICAL)
-       ? "vertical" : "horizontal", 
-       (void *)mWidget, GDK_WINDOW_XWINDOW(mWidget->window)));
-  LOG(("\tparent was %p %lx\n", (void *)parentWindow,
-       GDK_WINDOW_XWINDOW(parentWindow)));
-  
-  return NS_OK;
+    LOG(("nsScrollbar [%p] %s %p %lx\n", (void *)this,
+         (mOrientation == GTK_ORIENTATION_VERTICAL)
+         ? "vertical" : "horizontal", 
+         (void *)mWidget, GDK_WINDOW_XWINDOW(mWidget->window)));
+    LOG(("\tparent was %p %lx\n", (void *)parentWindow,
+         GDK_WINDOW_XWINDOW(parentWindow)));
+
+    return NS_OK;
 }
 
 void
 nsScrollbar::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  LOG(("nsScrollbar::NativeResize [%p] %d %d\n", (void *)this,
-       aWidth, aHeight));
-  // clear our resize flag
-  mNeedsResize = PR_FALSE;
+    LOG(("nsScrollbar::NativeResize [%p] %d %d\n", (void *)this,
+         aWidth, aHeight));
+    // clear our resize flag
+    mNeedsResize = PR_FALSE;
 
-  moz_container_move(MOZ_CONTAINER(gtk_widget_get_parent(mWidget)),
-		     mWidget, mBounds.x, mBounds.y, aWidth, aHeight);
+    moz_container_move(MOZ_CONTAINER(gtk_widget_get_parent(mWidget)),
+                       mWidget, mBounds.x, mBounds.y, aWidth, aHeight);
 }
-  
+
 void
 nsScrollbar::NativeResize(PRInt32 aX, PRInt32 aY,
-			  PRInt32 aWidth, PRInt32 aHeight,
-			  PRBool  aRepaint)
+                          PRInt32 aWidth, PRInt32 aHeight,
+                          PRBool  aRepaint)
 {
-  LOG(("nsScrollbar::NativeResize [%p] %d %d %d %d\n", (void *)this,
-       aX, aY, aWidth, aHeight));
-  // clear our resize flag
-  mNeedsResize = PR_FALSE;
+    LOG(("nsScrollbar::NativeResize [%p] %d %d %d %d\n", (void *)this,
+         aX, aY, aWidth, aHeight));
+    // clear our resize flag
+    mNeedsResize = PR_FALSE;
 
-  moz_container_move(MOZ_CONTAINER(gtk_widget_get_parent(mWidget)),
-		     mWidget, aX, aY, aWidth, aHeight);
+    moz_container_move(MOZ_CONTAINER(gtk_widget_get_parent(mWidget)),
+                       mWidget, aX, aY, aWidth, aHeight);
 }
-  
+
 void
 nsScrollbar::NativeShow (PRBool  aAction)
 {
-  LOG(("nsScrollbar::NativeShow [%p] %d\n", (void *)this, aAction));
+    LOG(("nsScrollbar::NativeShow [%p] %d\n", (void *)this, aAction));
 
-  if (aAction) {
-    // unset our flag now that our window has been shown
-    mNeedsShow = PR_FALSE;
-    gtk_widget_show(mWidget);
-  }
-  else {
-    gtk_widget_hide(mWidget);
-  }
+    if (aAction) {
+        // unset our flag now that our window has been shown
+        mNeedsShow = PR_FALSE;
+        gtk_widget_show(mWidget);
+    }
+    else {
+        gtk_widget_hide(mWidget);
+    }
 }
 
 void
 nsScrollbar::OnValueChanged(void)
 {
-  LOG(("nsScrollbar::OnValueChanged [%p]\n", (void *)this));
-  nsScrollbarEvent event;
-  InitScrollbarEvent(event, NS_SCROLLBAR_POS);
-  event.position = (PRUint32)mAdjustment->value;
-  
-  nsEventStatus status;
-  DispatchEvent(&event, status);
+    LOG(("nsScrollbar::OnValueChanged [%p]\n", (void *)this));
+    nsScrollbarEvent event;
+    InitScrollbarEvent(event, NS_SCROLLBAR_POS);
+    event.position = (PRUint32)mAdjustment->value;
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
 }
 
 /* static */
 void
 value_changed_cb (GtkAdjustment *adjustment, gpointer data)
 {
-  nsScrollbar *scrollbar = NS_STATIC_CAST(nsScrollbar *, data);
+    nsScrollbar *scrollbar = NS_STATIC_CAST(nsScrollbar *, data);
 
-  scrollbar->OnValueChanged();
+    scrollbar->OnValueChanged();
 }

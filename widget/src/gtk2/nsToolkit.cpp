@@ -1,4 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -51,8 +53,8 @@ static PRUintn gToolkitTLSIndex = 0;
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()
 {
-  NS_INIT_REFCNT();
-  mSharedGC = nsnull;
+    NS_INIT_REFCNT();
+    mSharedGC = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -62,12 +64,12 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
-  if (mSharedGC) {
-    gdk_gc_unref(mSharedGC);
-  }
+    if (mSharedGC) {
+        gdk_gc_unref(mSharedGC);
+    }
 
-  // Remove the TLS reference to the toolkit...
-  PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
+    // Remove the TLS reference to the toolkit...
+    PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
 
 //-------------------------------------------------------------------------
@@ -80,19 +82,19 @@ NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
 void nsToolkit::CreateSharedGC(void)
 {
-  GdkPixmap *pixmap;
+    GdkPixmap *pixmap;
 
-  if (mSharedGC)
-    return;
+    if (mSharedGC)
+        return;
 
-  pixmap = gdk_pixmap_new(NULL, 1, 1, gdk_rgb_get_visual()->depth);
-  mSharedGC = gdk_gc_new(pixmap);
-  gdk_pixmap_unref(pixmap);
+    pixmap = gdk_pixmap_new(NULL, 1, 1, gdk_rgb_get_visual()->depth);
+    mSharedGC = gdk_gc_new(pixmap);
+    gdk_pixmap_unref(pixmap);
 }
 
 GdkGC *nsToolkit::GetSharedGC(void)
 {
-  return gdk_gc_ref(mSharedGC);
+    return gdk_gc_ref(mSharedGC);
 }
 
 //-------------------------------------------------------------------------
@@ -101,9 +103,9 @@ GdkGC *nsToolkit::GetSharedGC(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 {
-  CreateSharedGC();
+    CreateSharedGC();
 
-  return NS_OK;
+    return NS_OK;
 }
 
 
@@ -115,45 +117,45 @@ NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 //-------------------------------------------------------------------------
 NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
 {
-  nsIToolkit* toolkit = nsnull;
-  nsresult rv = NS_OK;
-  PRStatus status;
+    nsIToolkit* toolkit = nsnull;
+    nsresult rv = NS_OK;
+    PRStatus status;
 
-  // Create the TLS index the first time through...
-  if (0 == gToolkitTLSIndex) {
-    status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, NULL);
-    if (PR_FAILURE == status) {
-      rv = NS_ERROR_FAILURE;
+    // Create the TLS index the first time through...
+    if (0 == gToolkitTLSIndex) {
+        status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, NULL);
+        if (PR_FAILURE == status) {
+            rv = NS_ERROR_FAILURE;
+        }
     }
-  }
 
-  if (NS_SUCCEEDED(rv)) {
-    toolkit = (nsIToolkit*)PR_GetThreadPrivate(gToolkitTLSIndex);
+    if (NS_SUCCEEDED(rv)) {
+        toolkit = (nsIToolkit*)PR_GetThreadPrivate(gToolkitTLSIndex);
 
-    //
-    // Create a new toolkit for this thread...
-    //
-    if (!toolkit) {
-      toolkit = new nsToolkit();
-
-      if (!toolkit) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      } else {
-        NS_ADDREF(toolkit);
-        toolkit->Init(PR_GetCurrentThread());
         //
-        // The reference stored in the TLS is weak.  It is removed in the
-        // nsToolkit destructor...
+        // Create a new toolkit for this thread...
         //
-        PR_SetThreadPrivate(gToolkitTLSIndex, (void*)toolkit);
-      }
-    } else {
-      NS_ADDREF(toolkit);
+        if (!toolkit) {
+            toolkit = new nsToolkit();
+
+            if (!toolkit) {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            } else {
+                NS_ADDREF(toolkit);
+                toolkit->Init(PR_GetCurrentThread());
+                //
+                // The reference stored in the TLS is weak.  It is
+                // removed in the nsToolkit destructor...
+                //
+                PR_SetThreadPrivate(gToolkitTLSIndex, (void*)toolkit);
+            }
+        } else {
+            NS_ADDREF(toolkit);
+        }
+        *aResult = toolkit;
     }
-    *aResult = toolkit;
-  }
 
-  return rv;
+    return rv;
 }
 
 

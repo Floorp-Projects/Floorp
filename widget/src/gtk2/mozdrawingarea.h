@@ -1,3 +1,6 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,31 +58,31 @@ typedef struct _MozDrawingareaClass MozDrawingareaClass;
 
 struct _MozDrawingarea
 {
-  GObject         parent_instance;
-  GdkWindow      *clip_window;
-  GdkWindow      *inner_window;
-  MozDrawingarea *parent;
+    GObject         parent_instance;
+    GdkWindow      *clip_window;
+    GdkWindow      *inner_window;
+    MozDrawingarea *parent;
 };
 
 struct _MozDrawingareaClass
 {
-  GObjectClass parent_class;
+    GObjectClass parent_class;
 };
 
 GtkType         moz_drawingarea_get_type       (void);
 MozDrawingarea *moz_drawingarea_new            (MozDrawingarea *parent,
-						MozContainer *widget_parent);
+                                                MozContainer *widget_parent);
 void            moz_drawingarea_move           (MozDrawingarea *drawingarea,
-						gint x, gint y);
+                                                gint x, gint y);
 void            moz_drawingarea_resize         (MozDrawingarea *drawingarea,
-						gint width, gint height);
+                                                gint width, gint height);
 void            moz_drawingarea_move_resize    (MozDrawingarea *drawingarea,
-						gint x, gint y,
-						gint width, gint height);
+                                                gint x, gint y,
+                                                gint width, gint height);
 void            moz_drawingarea_set_visibility (MozDrawingarea *drawingarea,
-						gboolean visibility);
+                                                gboolean visibility);
 void            moz_drawingarea_scroll         (MozDrawingarea *drawingarea,
-						gint x, gint y);
+                                                gint x, gint y);
 
 #ifdef __cplusplus
 }

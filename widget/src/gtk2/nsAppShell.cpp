@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -53,15 +56,15 @@ PRLogModuleInfo *gWidgetLog = nsnull;
 #endif
 
 static gboolean event_processor_callback (GIOChannel *source,
-					  GIOCondition condition,
-					  gpointer data)
+                                          GIOCondition condition,
+                                          gpointer data)
 {
-  nsIEventQueue *eventQueue = (nsIEventQueue *)data;
-  if (eventQueue)
-    eventQueue->ProcessPendingEvents();
+    nsIEventQueue *eventQueue = (nsIEventQueue *)data;
+    if (eventQueue)
+        eventQueue->ProcessPendingEvents();
 
-  // always remove the source event
-  return TRUE;
+    // always remove the source event
+    return TRUE;
 }
 
 #define NUMBER_HASH_KEY(_num) ((PLHashNumber) _num)
@@ -69,16 +72,16 @@ static gboolean event_processor_callback (GIOChannel *source,
 static PLHashNumber
 IntHashKey(PRInt32 key)
 {
-  return NUMBER_HASH_KEY(key);
+    return NUMBER_HASH_KEY(key);
 }
 
 nsAppShell::nsAppShell(void)
 {
-  NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 
 #ifdef PR_LOGGING
-  if (!gWidgetLog)
-    gWidgetLog = PR_NewLogModule("Widget");
+    if (!gWidgetLog)
+        gWidgetLog = PR_NewLogModule("Widget");
 #endif
 }
 
@@ -91,179 +94,181 @@ NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 NS_IMETHODIMP
 nsAppShell::Create(int *argc, char **argv)
 {
-  if (sInitialized)
+    if (sInitialized)
+        return NS_OK;
+
+    sInitialized = PR_TRUE;
+
+    // XXX add all of the command line handling
+
+    gtk_init(argc, &argv);
+
+    if (PR_GetEnv("MOZ_DEBUG_PAINTS")) {
+        gdk_window_set_debug_updates(TRUE);
+    }
+
     return NS_OK;
-
-  sInitialized = PR_TRUE;
-
-  // XXX add all of the command line handling
-
-  gtk_init(argc, &argv);
-  
-  if (PR_GetEnv("MOZ_DEBUG_PAINTS")) {
-    gdk_window_set_debug_updates(TRUE);
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAppShell::Run(void)
 {
-  if (!mEventQueue)
-    Spinup();
+    if (!mEventQueue)
+        Spinup();
 
-  if (!mEventQueue)
-    return NS_ERROR_NOT_INITIALIZED;
+    if (!mEventQueue)
+        return NS_ERROR_NOT_INITIALIZED;
 
-  // go go gadget gtk2!
-  gtk_main();
+    // go go gadget gtk2!
+    gtk_main();
 
-  Spindown();
-  
-  return NS_OK;
+    Spindown();
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAppShell::Spinup(void)
 {
-  nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
 
-  // get the event queue service
-  nsCOMPtr <nsIEventQueueService> eventQService = 
-    do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+    // get the event queue service
+    nsCOMPtr <nsIEventQueueService> eventQService = 
+        do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
 
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to get event queue service");
-    return rv;
-  }
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to get event queue service");
+        return rv;
+    }
 
-  // get the event queue for this thread
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-					  getter_AddRefs(mEventQueue));
+    // get the event queue for this thread
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                            getter_AddRefs(mEventQueue));
 
-  // if we got an event queue, just use it
-  if (mEventQueue)
-    goto done;
+    // if we got an event queue, just use it
+    if (mEventQueue)
+        goto done;
 
-  // otherwise creaet a new event queue for the thread
-  rv = eventQService->CreateThreadEventQueue();
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Could not create the thread event queue");
-    return rv;
-  }
+    // otherwise creaet a new event queue for the thread
+    rv = eventQService->CreateThreadEventQueue();
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Could not create the thread event queue");
+        return rv;
+    }
 
-  // ask again for the event queue now that we have create one.
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-					  getter_AddRefs(mEventQueue));
+    // ask again for the event queue now that we have create one.
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                            getter_AddRefs(mEventQueue));
 
  done:
-  ListenToEventQueue(mEventQueue, PR_TRUE);
+    ListenToEventQueue(mEventQueue, PR_TRUE);
 
-  return rv;
+    return rv;
 }
 
 NS_IMETHODIMP
 nsAppShell::Spindown(void)
 {
-  // stop listening to the event queue
-  if (mEventQueue) {
-    ListenToEventQueue(mEventQueue, PR_FALSE);
-    mEventQueue->ProcessPendingEvents();
-    mEventQueue = nsnull;
-  }
-  return NS_OK;
-
+    // stop listening to the event queue
+    if (mEventQueue) {
+        ListenToEventQueue(mEventQueue, PR_FALSE);
+        mEventQueue->ProcessPendingEvents();
+        mEventQueue = nsnull;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
 {
-  LOG(("ListenToEventQueue %p %d\n", (void *)aQueue, aListen));
-  // initialize our hash tables if we have to
-  if (!sQueueHashTable)
-    sQueueHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
-				      PL_CompareValues, PL_CompareValues, 0, 0);
-  if (!sCountHashTable)
-    sCountHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
-				      PL_CompareValues, PL_CompareValues, 0, 0);
+    LOG(("ListenToEventQueue %p %d\n", (void *)aQueue, aListen));
+    // initialize our hash tables if we have to
+    if (!sQueueHashTable)
+        sQueueHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
+                                          PL_CompareValues,
+                                          PL_CompareValues, 0, 0);
+    if (!sCountHashTable)
+        sCountHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
+                                          PL_CompareValues, 
+                                          PL_CompareValues, 0, 0);
 
-  PRInt32 key = aQueue->GetEventQueueSelectFD();
+    PRInt32 key = aQueue->GetEventQueueSelectFD();
 
-  /* add a listener */
-  if (aListen) {
-    /* only add if we arn't already in the table */
-    if (!PL_HashTableLookup(sQueueHashTable, GINT_TO_POINTER(key))) {
-      GIOChannel *ioc;
-      guint       tag;
-      ioc = g_io_channel_unix_new(key);
-      tag = g_io_add_watch_full (ioc, G_PRIORITY_HIGH_IDLE,
-				 G_IO_IN,
-				 event_processor_callback, aQueue, NULL);
-      // it's owned by the mainloop now
-      g_io_channel_unref(ioc);
-      PL_HashTableAdd(sQueueHashTable, GINT_TO_POINTER(key),
-		      GUINT_TO_POINTER(tag));
-      LOG(("created tag %d from key %d\n", tag, key));
+    /* add a listener */
+    if (aListen) {
+        /* only add if we arn't already in the table */
+        if (!PL_HashTableLookup(sQueueHashTable, GINT_TO_POINTER(key))) {
+            GIOChannel *ioc;
+            guint       tag;
+            ioc = g_io_channel_unix_new(key);
+            tag = g_io_add_watch_full (ioc, G_PRIORITY_HIGH_IDLE,
+                                       G_IO_IN,
+                                       event_processor_callback, aQueue, NULL);
+            // it's owned by the mainloop now
+            g_io_channel_unref(ioc);
+            PL_HashTableAdd(sQueueHashTable, GINT_TO_POINTER(key),
+                            GUINT_TO_POINTER(tag));
+            LOG(("created tag %d from key %d\n", tag, key));
+        }
+        /* bump up the count */
+        gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable, 
+                                                        GINT_TO_POINTER(key)));
+        PL_HashTableAdd(sCountHashTable, GINT_TO_POINTER(key), 
+                        GINT_TO_POINTER(count+1));
+        LOG(("key %d now has count %d\n", key, count+1));
+    } else {
+        /* remove listener */
+        gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable,
+                                                        GINT_TO_POINTER(key)));
+        LOG(("key %d will have count %d\n", key, count-1));
+        if (count - 1 == 0) {
+            guint tag;
+            tag = GPOINTER_TO_UINT(PL_HashTableLookup(sQueueHashTable,
+                                                      GINT_TO_POINTER(key)));
+            LOG(("shutting down tag %d\n", tag));
+            g_source_remove(tag);
+            PL_HashTableRemove(sQueueHashTable, GINT_TO_POINTER(key));
+            PL_HashTableRemove(sCountHashTable, GINT_TO_POINTER(key));
+        }
+        else {
+            // update the count for this key
+            PL_HashTableAdd(sCountHashTable, GINT_TO_POINTER(key),
+                            GINT_TO_POINTER(count-1));
+        }
     }
-    /* bump up the count */
-    gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable, 
-						    GINT_TO_POINTER(key)));
-    PL_HashTableAdd(sCountHashTable, GINT_TO_POINTER(key), 
-		    GINT_TO_POINTER(count+1));
-    LOG(("key %d now has count %d\n", key, count+1));
-  } else {
-    /* remove listener */
-    gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable,
-						    GINT_TO_POINTER(key)));
-    LOG(("key %d will have count %d\n", key, count-1));
-    if (count - 1 == 0) {
-      guint tag = GPOINTER_TO_UINT(PL_HashTableLookup(sQueueHashTable,
-						      GINT_TO_POINTER(key)));
-      LOG(("shutting down tag %d\n", tag));
-      g_source_remove(tag);
-      PL_HashTableRemove(sQueueHashTable, GINT_TO_POINTER(key));
-      PL_HashTableRemove(sCountHashTable, GINT_TO_POINTER(key));
-    }
-    else {
-      // update the count for this key
-      PL_HashTableAdd(sCountHashTable, GINT_TO_POINTER(key),
-		      GINT_TO_POINTER(count-1));
-    }
-  }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAppShell::GetNativeEvent(PRBool &aRealEvent, void * &aEvent)
 {
-  aRealEvent = PR_FALSE;
-  aEvent = 0;
+    aRealEvent = PR_FALSE;
+    aEvent = 0;
 
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-  if (!mEventQueue)
-    return NS_ERROR_NOT_INITIALIZED;
-  
-  g_main_context_iteration(NULL, TRUE);
+    if (!mEventQueue)
+        return NS_ERROR_NOT_INITIALIZED;
 
-  return NS_OK;
+    g_main_context_iteration(NULL, TRUE);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAppShell::SetDispatchListener(nsDispatchListener *aDispatchListener)
 {
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAppShell::Exit(void)
 {
-  gtk_main_quit();
-  return NS_OK;
+    gtk_main_quit();
+    return NS_OK;
 }

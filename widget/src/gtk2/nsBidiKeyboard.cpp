@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,7 +42,7 @@ NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
 {
-  NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 }
 
 nsBidiKeyboard::~nsBidiKeyboard()
@@ -48,17 +51,17 @@ nsBidiKeyboard::~nsBidiKeyboard()
 
 NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
 {
-  *aIsRTL = PR_FALSE;
+    *aIsRTL = PR_FALSE;
 #ifdef IBMBIDI
-  // XXX Insert platform specific code to determine keyboard direction
+    // XXX Insert platform specific code to determine keyboard direction
 #endif
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
 {
 #ifdef IBMBIDI
-  // XXX Insert platform specific code to set keyboard language
+    // XXX Insert platform specific code to set keyboard language
 #endif
-  return NS_OK;
+    return NS_OK;
 }
