@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+/* THIS FILE IS OBSOLETE */
  
 /* nsDllStore
  *
