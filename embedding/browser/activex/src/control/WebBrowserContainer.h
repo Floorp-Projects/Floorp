@@ -40,9 +40,11 @@
 #define WEBBROWSERCONTAINER_H
 
 #include "nsIContextMenuListener.h"
+#include "nsITooltipListener.h"
 #include "nsICommandHandler.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIURIContentListener.h"
+#include "nsIWebBrowserChromeFocus.h"
 #include "nsWeakReference.h"
 
 
@@ -58,6 +60,7 @@ class CWebBrowserContainer :
         public nsIInterfaceRequestor,
         public nsIContextMenuListener,
         public nsICommandHandler,
+        public nsIWebBrowserChromeFocus,
         public nsSupportsWeakReference
 {
 public:
@@ -76,7 +79,6 @@ protected:
     CDWebBrowserEvents1 *m_pEvents1;
     CDWebBrowserEvents2 *m_pEvents2;
 
-
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIEMBEDDINGSITEWINDOW
@@ -86,6 +88,7 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSICONTEXTMENULISTENER
+    NS_DECL_NSIWEBBROWSERCHROMEFOCUS
     NS_DECL_NSICOMMANDHANDLER
 };
 

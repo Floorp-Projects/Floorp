@@ -170,6 +170,8 @@ BEGIN_MSG_MAP(CMozillaBrowser)
     MESSAGE_HANDLER(WM_PAINT, OnPaint)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
     MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
+    MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
+    MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
     COMMAND_ID_HANDLER(ID_PRINT, OnPrint)
     COMMAND_ID_HANDLER(ID_PAGESETUP, OnPageSetup)
     COMMAND_ID_HANDLER(ID_SAVEAS, OnSaveAs)
@@ -315,6 +317,11 @@ END_OLECOMMAND_TABLE()
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
     LRESULT OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -409,6 +416,8 @@ protected:
     virtual int MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption = _T(""), UINT nType = MB_OK);
     virtual void ShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
     virtual void ShowURIPropertyDlg(const nsString &aURI);
+    virtual void NextDlgControl();
+    virtual void PrevDlgControl();
 
 public:
 // IOleObjectImpl overrides
