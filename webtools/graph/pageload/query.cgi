@@ -1,12 +1,15 @@
 #!/usr/bin/perl
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Request;
-use POSIX qw(strftime);
+#use POSIX qw(strftime);
+use Date::Calc qw(Add_Delta_Days);  # http://www.engelschall.com/u/sb/download/Date-Calc/
+
 
 my $req = new CGI::Request;
 
 my $TBOX      = lc($req->param('tbox'));
 my $AUTOSCALE = lc($req->param('autoscale'));
+my $DAYS      = lc($req->param('days'));
 my $DATAFILE  = "db/$TBOX";
 
 sub make_machine_list {
@@ -42,8 +45,8 @@ sub print_machines {
 }
 
 sub show_graph {
-  die "$TBOX is not a valid machine name"
-        unless -e $DATAFILE;
+  die "$TBOX: no data file found" 
+	unless -e $DATAFILE; 
 
   my $PNGFILE  = "/tmp/gnuplot.$$";
 
@@ -58,7 +61,29 @@ sub show_graph {
         die "Can't find gnuplot.";
   }
 
-  # Auto-scale y-axis?
+  # Set scaling for x-axis (time)
+  my $xscale;
+  my $today;
+  my $n_days_ago;
+
+  # Get current time, $today.
+  my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdat) = localtime();  
+  $year += 1900;
+  $mon += 1;
+  $today = sprintf "%04d:%02d:%02d:%02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
+
+  # Calculate date $DAYS before $today.
+  my ($year2, $mon2, $mday2) = Add_Delta_Days($year, $mon, $mday, -$DAYS);
+  $n_days_ago= sprintf "%04d:%02d:%02d:%02d:%02d:%02d", $year2, $mon2, $mday2, $hour, $min, $sec;
+
+  if($DAYS) {
+	# Assume we want to see 7 days on the graph, so we set the max value also.
+	$xscale = "set xrange [\"$n_days_ago\" : \"$today\"]";
+  } else {
+	$xscale = "";	
+  }
+
+  # Set scaling for y-axis.
   my $yscale;
   if($AUTOSCALE) {
 	$yscale = "";
@@ -69,38 +94,44 @@ sub show_graph {
 	$yscale = "set yrange [ 1300 : 1400 ]";
   }
 
-
-  use constant DAY => 60*60*24;
-  my $rightNow = time();
-  my $endOfDay = $rightNow + 2 * DAY - $rightNow % DAY;
-  my $upperDay = strftime "%Y/%m/%d/%H/%M/%S", gmtime($endOfDay);
-  my $lowerDay = strftime "%Y/%m/%d/%H/%M/%S", gmtime($endOfDay - 7*DAY);
-  #set xrange [ $lowerDay : $upperDay ]
+# Trying Date::Calc module, jrgm & I started two implementations
+# at the same time... -mcafee
+#
+#  use constant DAY => 60*60*24;
+#  my $rightNow = time();
+#  my $endOfDay = $rightNow + 2 * DAY - $rightNow % DAY;
+#  my $upperDay = strftime "%Y/%m/%d/%H/%M/%S", gmtime($endOfDay);
+#  my $lowerDay = strftime "%Y/%m/%d/%H/%M/%S", gmtime($endOfDay - 7*DAY);
+#  #set xrange [ $lowerDay : $upperDay ]
 #                               set timefmt "%Y/%m/%d/%H/%M/%S"
 #                                set xrange [ $lowerDay : $upperDay ]
   # interpolate params into gnuplot command
   my $cmds = qq{
-                                reset
-                                set term png color
-                                set output "$PNGFILE"
-                                set title  "$TBOX Pageload Times"
-                                set key graph 0.1,0.95 reverse spacing .75 width -18
-                                set linestyle 1 lt 1 lw 1 pt 7 ps 0
-                                set linestyle 2 lt 1 lw 1 pt 7 ps 1
-                                set data style points
-                                set timefmt "%Y:%m:%d:%H:%M:%S"
-                                $yscale
-                                set xdata time
-                                set ylabel "Pageload time (msec.)"
-                                set timestamp "Generated: %d/%b/%y %H:%M" 0,0
-                                set format x "%h %d"
-                                set grid
-                                plot "$DATAFILE" using 1:2 with points ls 1, "$DATAFILE" using 1:2 with lines ls 2
-                           };
+				reset
+				set term png color
+				set output "$PNGFILE"
+				set title  "$TBOX Pageload Times"
+				set key graph 0.1,0.95 reverse spacing .75 width -18
+				set linestyle 1 lt 1 lw 1 pt 7 ps 0
+				set linestyle 2 lt 1 lw 1 pt 7 ps 1
+				set data style points
+				set timefmt "%Y:%m:%d:%H:%M:%S"
+				set xdata time
+				$xscale
+				$yscale
+				set ylabel "Pageload time (ms)"
+				set timestamp "Generated: %d/%b/%y %H:%M" 0,0
+				set format x "%h %d"
+				set grid
+				plot "$DATAFILE" using 1:2 with points ls 1, "$DATAFILE" using 1:2 with lines ls 2
+			   };
 
+  # Set up command string for gnuplot
   open  (GNUPLOT, "| $gnuplot") || die "can't fork: $!";
   print  GNUPLOT $cmds;
-  close (GNUPLOT) || die "can't close: $!";
+  close (GNUPLOT) || die "Empty data set?  Gnuplot failed to set up the plot command string : $!";
+
+  # Actually do the gnuplot command.
   open  (GNUPLOT, "< $PNGFILE") || die "can't read: $!";
   { local $/; $blob = <GNUPLOT>; }
   close (GNUPLOT) || die "can't close: $!";
