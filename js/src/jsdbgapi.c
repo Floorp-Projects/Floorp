@@ -69,10 +69,10 @@ FindTrap(JSRuntime *rt, JSScript *script, jsbytecode *pc)
     JSTrap *trap;
 
     for (trap = (JSTrap *)rt->trapList.next;
-	 trap != (JSTrap *)&rt->trapList;
-	 trap = (JSTrap *)trap->links.next) {
-	if (trap->script == script && trap->pc == pc)
-	    return trap;
+         trap != (JSTrap *)&rt->trapList;
+         trap = (JSTrap *)trap->links.next) {
+        if (trap->script == script && trap->pc == pc)
+            return trap;
     }
     return NULL;
 }
@@ -84,14 +84,14 @@ js_PatchOpcode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op)
 
     trap = FindTrap(cx->runtime, script, pc);
     if (trap)
-	trap->op = op;
+        trap->op = op;
     else
-	*pc = (jsbytecode)op;
+        *pc = (jsbytecode)op;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-	   JSTrapHandler handler, void *closure)
+           JSTrapHandler handler, void *closure)
 {
     JSRuntime *rt;
     JSTrap *trap;
@@ -99,15 +99,15 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     rt = cx->runtime;
     trap = FindTrap(rt, script, pc);
     if (trap) {
-	/* Restore opcode at pc so it can be saved again. */
-	*pc = (jsbytecode)trap->op;
+        /* Restore opcode at pc so it can be saved again. */
+        *pc = (jsbytecode)trap->op;
     } else {
-	trap = (JSTrap *) JS_malloc(cx, sizeof *trap);
-	if (!trap || !js_AddRoot(cx, &trap->closure, "trap->closure")) {
-	    if (trap)
-		JS_free(cx, trap);
-	    return JS_FALSE;
-	}
+        trap = (JSTrap *) JS_malloc(cx, sizeof *trap);
+        if (!trap || !js_AddRoot(cx, &trap->closure, "trap->closure")) {
+            if (trap)
+                JS_free(cx, trap);
+            return JS_FALSE;
+        }
     }
     JS_APPEND_LINK(&trap->links, &rt->trapList);
     trap->script = script;
@@ -126,8 +126,8 @@ JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
 
     trap = FindTrap(cx->runtime, script, pc);
     if (!trap) {
-	JS_ASSERT(0);	/* XXX can't happen */
-	return JSOP_LIMIT;
+        JS_ASSERT(0);   /* XXX can't happen */
+        return JSOP_LIMIT;
     }
     return trap->op;
 }
@@ -143,17 +143,17 @@ DestroyTrap(JSContext *cx, JSTrap *trap)
 
 JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-	     JSTrapHandler *handlerp, void **closurep)
+             JSTrapHandler *handlerp, void **closurep)
 {
     JSTrap *trap;
 
     trap = FindTrap(cx->runtime, script, pc);
     if (handlerp)
-	*handlerp = trap ? trap->handler : NULL;
+        *handlerp = trap ? trap->handler : NULL;
     if (closurep)
-	*closurep = trap ? trap->closure : NULL;
+        *closurep = trap ? trap->closure : NULL;
     if (trap)
-	DestroyTrap(cx, trap);
+        DestroyTrap(cx, trap);
 }
 
 JS_PUBLIC_API(void)
@@ -164,11 +164,11 @@ JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 
     rt = cx->runtime;
     for (trap = (JSTrap *)rt->trapList.next;
-	 trap != (JSTrap *)&rt->trapList;
-	 trap = next) {
-	next = (JSTrap *)trap->links.next;
-	if (trap->script == script)
-	    DestroyTrap(cx, trap);
+         trap != (JSTrap *)&rt->trapList;
+         trap = next) {
+        next = (JSTrap *)trap->links.next;
+        if (trap->script == script)
+            DestroyTrap(cx, trap);
     }
 }
 
@@ -180,10 +180,10 @@ JS_ClearAllTraps(JSContext *cx)
 
     rt = cx->runtime;
     for (trap = (JSTrap *)rt->trapList.next;
-	 trap != (JSTrap *)&rt->trapList;
-	 trap = next) {
-	next = (JSTrap *)trap->links.next;
-	DestroyTrap(cx, trap);
+         trap != (JSTrap *)&rt->trapList;
+         trap = next) {
+        next = (JSTrap *)trap->links.next;
+        DestroyTrap(cx, trap);
     }
 }
 
@@ -196,8 +196,8 @@ JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval)
 
     trap = FindTrap(cx->runtime, script, pc);
     if (!trap) {
-	JS_ASSERT(0);	/* XXX can't happen */
-	return JSTRAP_ERROR;
+        JS_ASSERT(0);   /* XXX can't happen */
+        return JSTRAP_ERROR;
     }
     /*
      * It's important that we not use 'trap->' after calling the callback --
@@ -206,8 +206,8 @@ JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval)
     op = (jsint)trap->op;
     status = trap->handler(cx, script, pc, rval, trap->closure);
     if (status == JSTRAP_CONTINUE) {
-	/* By convention, return the true op to the interpreter in rval. */
-	*rval = INT_TO_JSVAL(op);
+        /* By convention, return the true op to the interpreter in rval. */
+        *rval = INT_TO_JSVAL(op);
     }
     return status;
 }
@@ -224,9 +224,9 @@ JS_PUBLIC_API(JSBool)
 JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep)
 {
     if (handlerp)
-	*handlerp = (JSTrapHandler)rt->interruptHandler;
+        *handlerp = (JSTrapHandler)rt->interruptHandler;
     if (closurep)
-	*closurep = rt->interruptHandlerData;
+        *closurep = rt->interruptHandlerData;
     rt->interruptHandler = 0;
     rt->interruptHandlerData = 0;
     return JS_TRUE;
@@ -235,7 +235,7 @@ JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep)
 
 typedef struct JSWatchPoint {
     JSCList             links;
-    JSObject            *object;	/* weak link, see js_FinalizeObject */
+    JSObject            *object;        /* weak link, see js_FinalizeObject */
     jsval               userid;
     JSScopeProperty     *sprop;
     JSPropertyOp        setter;
@@ -250,11 +250,11 @@ static void
 DropWatchPoint(JSContext *cx, JSWatchPoint *wp)
 {
     if (--wp->nrefs != 0)
-	return;
+        return;
     SPROP_SETTER(wp->sprop, wp->object) = wp->setter;
     JS_LOCK_OBJ_VOID(cx, wp->object,
-		     js_DropScopeProperty(cx, OBJ_SCOPE(wp->object),
-					  wp->sprop));
+                     js_DropScopeProperty(cx, OBJ_SCOPE(wp->object),
+                                          wp->sprop));
     JS_REMOVE_LINK(&wp->links);
     js_RemoveRoot(cx->runtime, &wp->closure);
     JS_free(cx, wp);
@@ -266,10 +266,10 @@ FindWatchPoint(JSRuntime *rt, JSObject *obj, jsval userid)
     JSWatchPoint *wp;
 
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-	 wp != (JSWatchPoint *)&rt->watchPointList;
-	 wp = (JSWatchPoint *)wp->links.next) {
-	if (wp->object == obj && wp->userid == userid)
-	    return wp;
+         wp != (JSWatchPoint *)&rt->watchPointList;
+         wp = (JSWatchPoint *)wp->links.next) {
+        if (wp->object == obj && wp->userid == userid)
+            return wp;
     }
     return NULL;
 }
@@ -281,7 +281,7 @@ js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsval userid)
 
     wp = FindWatchPoint(rt, obj, userid);
     if (!wp)
-	return NULL;
+        return NULL;
     return wp->sprop;
 }
 
@@ -300,42 +300,42 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     rt = cx->runtime;
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-	 wp != (JSWatchPoint *)&rt->watchPointList;
-	 wp = (JSWatchPoint *)wp->links.next) {
-	sprop = wp->sprop;
-	if (wp->object == obj && sprop->id == id) {
-	    JS_LOCK_OBJ(cx, obj);
-	    sym = sprop->symbols;
-	    if (!sym) {
-		userid = wp->userid;
-		atom = NULL;
-		if (JSVAL_IS_INT(userid)) {
-		    symid = (jsid)userid;
-		} else {
-		    atom = js_ValueToStringAtom(cx, userid);
-		    if (!atom) {
-			JS_UNLOCK_OBJ(cx, obj);
-			return JS_FALSE;
-		    }
-		    symid = (jsid)atom;
-		}
-		scope = OBJ_SCOPE(obj);
-		JS_ASSERT(scope->props);
-		ok = LOCKED_OBJ_GET_CLASS(obj)->addProperty(cx, obj, sprop->id,
-							    &value);
-		if (!ok) {
-		    JS_UNLOCK_OBJ(cx, obj);
-		    return JS_FALSE;
-		}
-		ok = (scope->ops->add(cx, scope, symid, sprop) != NULL);
-		if (!ok) {
-		    JS_UNLOCK_OBJ(cx, obj);
-		    return JS_FALSE;
-		}
-		sym = sprop->symbols;
-	    }
-	    JS_UNLOCK_OBJ(cx, obj);
-	    HoldWatchPoint(wp);
+         wp != (JSWatchPoint *)&rt->watchPointList;
+         wp = (JSWatchPoint *)wp->links.next) {
+        sprop = wp->sprop;
+        if (wp->object == obj && sprop->id == id) {
+            JS_LOCK_OBJ(cx, obj);
+            sym = sprop->symbols;
+            if (!sym) {
+                userid = wp->userid;
+                atom = NULL;
+                if (JSVAL_IS_INT(userid)) {
+                    symid = (jsid)userid;
+                } else {
+                    atom = js_ValueToStringAtom(cx, userid);
+                    if (!atom) {
+                        JS_UNLOCK_OBJ(cx, obj);
+                        return JS_FALSE;
+                    }
+                    symid = (jsid)atom;
+                }
+                scope = OBJ_SCOPE(obj);
+                JS_ASSERT(scope->props);
+                ok = LOCKED_OBJ_GET_CLASS(obj)->addProperty(cx, obj, sprop->id,
+                                                            &value);
+                if (!ok) {
+                    JS_UNLOCK_OBJ(cx, obj);
+                    return JS_FALSE;
+                }
+                ok = (scope->ops->add(cx, scope, symid, sprop) != NULL);
+                if (!ok) {
+                    JS_UNLOCK_OBJ(cx, obj);
+                    return JS_FALSE;
+                }
+                sym = sprop->symbols;
+            }
+            JS_UNLOCK_OBJ(cx, obj);
+            HoldWatchPoint(wp);
             ok = wp->handler(cx, obj, js_IdToValue(sym_id(sym)),
                              (SPROP_HAS_VALID_SLOT(sprop))
                              ? OBJ_GET_SLOT(cx, obj, wp->sprop->slot)
@@ -355,20 +355,20 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 frame.fun = fun;
                 frame.down = cx->fp;
                 cx->fp = &frame;
-		ok = wp->setter(cx, obj, id, vp);
+                ok = wp->setter(cx, obj, id, vp);
                 cx->fp = frame.down;
             }
-	    DropWatchPoint(cx, wp);
-	    return ok;
-	}
+            DropWatchPoint(cx, wp);
+            return ok;
+        }
     }
-    JS_ASSERT(0);	/* XXX can't happen */
+    JS_ASSERT(0);       /* XXX can't happen */
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
-		 JSWatchPointHandler handler, void *closure)
+                 JSWatchPointHandler handler, void *closure)
 {
     JSAtom *atom;
     jsid symid;
@@ -378,85 +378,85 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     JSWatchPoint *wp;
 
     if (!OBJ_IS_NATIVE(obj)) {
-	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
-			     OBJ_GET_CLASS(cx, obj)->name);
-	return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
+                             OBJ_GET_CLASS(cx, obj)->name);
+        return JS_FALSE;
     }
 
     if (JSVAL_IS_INT(id)) {
-	symid = (jsid)id;
-	atom = NULL;
+        symid = (jsid)id;
+        atom = NULL;
     } else {
-	atom = js_ValueToStringAtom(cx, id);
-	if (!atom)
-	    return JS_FALSE;
-	symid = (jsid)atom;
+        atom = js_ValueToStringAtom(cx, id);
+        if (!atom)
+            return JS_FALSE;
+        symid = (jsid)atom;
     }
 
     if (!js_LookupProperty(cx, obj, symid, &pobj, (JSProperty **)&sprop))
-	return JS_FALSE;
+        return JS_FALSE;
     rt = cx->runtime;
     if (!sprop) {
-	/* Check for a deleted symbol watchpoint, which holds its property. */
-	sprop = js_FindWatchPoint(rt, obj, id);
-	if (sprop) {
+        /* Check for a deleted symbol watchpoint, which holds its property. */
+        sprop = js_FindWatchPoint(rt, obj, id);
+        if (sprop) {
 #ifdef JS_THREADSAFE
-	    /* Emulate js_LookupProperty if thread-safe. */
-	    JS_LOCK_OBJ(cx, obj);
-	    sprop->nrefs++;
+            /* Emulate js_LookupProperty if thread-safe. */
+            JS_LOCK_OBJ(cx, obj);
+            sprop->nrefs++;
 #endif
-	} else {
-	    /* Make a new property in obj so we can watch for the first set. */
-	    if (!js_DefineProperty(cx, obj, symid, JSVAL_VOID, NULL, NULL, 0,
-				   (JSProperty **)&sprop)) {
-		sprop = NULL;
-	    }
-	}
+        } else {
+            /* Make a new property in obj so we can watch for the first set. */
+            if (!js_DefineProperty(cx, obj, symid, JSVAL_VOID, NULL, NULL, 0,
+                                   (JSProperty **)&sprop)) {
+                sprop = NULL;
+            }
+        }
     } else if (pobj != obj) {
-	/* Clone the prototype property so we can watch the right object. */
-	jsval value;
-	JSPropertyOp getter, setter;
-	uintN attrs;
+        /* Clone the prototype property so we can watch the right object. */
+        jsval value;
+        JSPropertyOp getter, setter;
+        uintN attrs;
 
-	if (OBJ_IS_NATIVE(pobj)) {
+        if (OBJ_IS_NATIVE(pobj)) {
             value = (SPROP_HAS_VALID_SLOT(sprop))
                     ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
                     : JSVAL_VOID;
-	} else {
-	    if (!OBJ_GET_PROPERTY(cx, pobj, id, &value)) {
-		OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
-		return JS_FALSE;
-	    }
-	}
-	getter = SPROP_GETTER(sprop, pobj);
-	setter = SPROP_SETTER(sprop, pobj);
-	attrs = sprop->attrs;
-	OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+        } else {
+            if (!OBJ_GET_PROPERTY(cx, pobj, id, &value)) {
+                OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+                return JS_FALSE;
+            }
+        }
+        getter = SPROP_GETTER(sprop, pobj);
+        setter = SPROP_SETTER(sprop, pobj);
+        attrs = sprop->attrs;
+        OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
 
-	if (!js_DefineProperty(cx, obj, symid, value, getter, setter, attrs,
-			       (JSProperty **)&sprop)) {
-	    sprop = NULL;
-	}
+        if (!js_DefineProperty(cx, obj, symid, value, getter, setter, attrs,
+                               (JSProperty **)&sprop)) {
+            sprop = NULL;
+        }
     }
     if (!sprop)
-	return JS_FALSE;
+        return JS_FALSE;
 
     wp = FindWatchPoint(rt, obj, id);
     if (!wp) {
-	wp = (JSWatchPoint *) JS_malloc(cx, sizeof *wp);
-	if (!wp)
-	    return JS_FALSE;
-	if (!js_AddRoot(cx, &wp->closure, "wp->closure")) {
-	    JS_free(cx, wp);
-	    return JS_FALSE;
-	}
-	JS_APPEND_LINK(&wp->links, &rt->watchPointList);
-	wp->object = obj;
-	wp->userid = id;
-	wp->sprop = js_HoldScopeProperty(cx, OBJ_SCOPE(obj), sprop);
-	wp->setter = SPROP_SETTER(sprop, obj);
-	SPROP_SETTER(sprop, obj) = js_watch_set;
-	wp->nrefs = 1;
+        wp = (JSWatchPoint *) JS_malloc(cx, sizeof *wp);
+        if (!wp)
+            return JS_FALSE;
+        if (!js_AddRoot(cx, &wp->closure, "wp->closure")) {
+            JS_free(cx, wp);
+            return JS_FALSE;
+        }
+        JS_APPEND_LINK(&wp->links, &rt->watchPointList);
+        wp->object = obj;
+        wp->userid = id;
+        wp->sprop = js_HoldScopeProperty(cx, OBJ_SCOPE(obj), sprop);
+        wp->setter = SPROP_SETTER(sprop, obj);
+        SPROP_SETTER(sprop, obj) = js_watch_set;
+        wp->nrefs = 1;
     }
     wp->handler = handler;
     wp->closure = closure;
@@ -466,28 +466,28 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 
 JS_PUBLIC_API(void)
 JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsval id,
-		   JSWatchPointHandler *handlerp, void **closurep)
+                   JSWatchPointHandler *handlerp, void **closurep)
 {
     JSRuntime *rt;
     JSWatchPoint *wp;
 
     rt = cx->runtime;
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-	 wp != (JSWatchPoint *)&rt->watchPointList;
-	 wp = (JSWatchPoint *)wp->links.next) {
-	if (wp->object == obj && wp->userid == id) {
-	    if (handlerp)
-		*handlerp = wp->handler;
-	    if (closurep)
-		*closurep = wp->closure;
-	    DropWatchPoint(cx, wp);
-	    return;
-	}
+         wp != (JSWatchPoint *)&rt->watchPointList;
+         wp = (JSWatchPoint *)wp->links.next) {
+        if (wp->object == obj && wp->userid == id) {
+            if (handlerp)
+                *handlerp = wp->handler;
+            if (closurep)
+                *closurep = wp->closure;
+            DropWatchPoint(cx, wp);
+            return;
+        }
     }
     if (handlerp)
-	*handlerp = NULL;
+        *handlerp = NULL;
     if (closurep)
-	*closurep = NULL;
+        *closurep = NULL;
 }
 
 JS_PUBLIC_API(void)
@@ -498,11 +498,11 @@ JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
 
     rt = cx->runtime;
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-	 wp != (JSWatchPoint *)&rt->watchPointList;
-	 wp = next) {
-	next = (JSWatchPoint *)wp->links.next;
-	if (wp->object == obj)
-	    DropWatchPoint(cx, wp);
+         wp != (JSWatchPoint *)&rt->watchPointList;
+         wp = next) {
+        next = (JSWatchPoint *)wp->links.next;
+        if (wp->object == obj)
+            DropWatchPoint(cx, wp);
     }
 }
 
@@ -514,10 +514,10 @@ JS_ClearAllWatchPoints(JSContext *cx)
 
     rt = cx->runtime;
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-	 wp != (JSWatchPoint *)&rt->watchPointList;
-	 wp = next) {
-	next = (JSWatchPoint *)wp->links.next;
-	DropWatchPoint(cx, wp);
+         wp != (JSWatchPoint *)&rt->watchPointList;
+         wp = next) {
+        next = (JSWatchPoint *)wp->links.next;
+        DropWatchPoint(cx, wp);
     }
 }
 
@@ -572,20 +572,20 @@ JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
 {
     if (fp->annotation) {
-	JSPrincipals *principals = fp->script
-	    ? fp->script->principals
-	    : NULL;
+        JSPrincipals *principals = fp->script
+            ? fp->script->principals
+            : NULL;
 
-	if (principals == NULL)
-	    return NULL;
+        if (principals == NULL)
+            return NULL;
 
-	if (principals->globalPrivilegesEnabled(cx, principals)) {
-	    /*
-	     * Only give out an annotation if privileges have not
-	     * been revoked globally.
-	     */
-	    return fp->annotation;
-	}
+        if (principals->globalPrivilegesEnabled(cx, principals)) {
+            /*
+             * Only give out an annotation if privileges have not
+             * been revoked globally.
+             */
+            return fp->annotation;
+        }
     }
 
     return NULL;
@@ -601,12 +601,12 @@ JS_PUBLIC_API(void *)
 JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp)
 {
     JSPrincipals *principals = fp->script
-	? fp->script->principals
-	: NULL;
+        ? fp->script->principals
+        : NULL;
 
     return principals
-	? principals->getPrincipalArray(cx, principals)
-	: NULL;
+        ? principals->getPrincipalArray(cx, principals)
+        : NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -724,7 +724,7 @@ JS_SetNewScriptHook(JSRuntime *rt, JSNewScriptHook hook, void *callerdata)
 
 JS_PUBLIC_API(void)
 JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
-			void *callerdata)
+                        void *callerdata)
 {
     rt->destroyScriptHook = hook;
     rt->destroyScriptHookData = callerdata;
@@ -733,22 +733,42 @@ JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
 /***************************************************************************/
 
 JS_PUBLIC_API(JSBool)
-JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
-			const char *bytes, uintN length,
-			const char *filename, uintN lineno,
-			jsval *rval)
+JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
+                          const jschar *bytes, uintN length,
+                          const char *filename, uintN lineno,
+                          jsval *rval)
 {
     JSScript *script;
     JSBool ok;
 
-    script = JS_CompileScriptForPrincipals(cx, fp->scopeChain,
-					   fp->script ? fp->script->principals
-						      : NULL,
-					   bytes, length, filename, lineno);
+    script = JS_CompileUCScriptForPrincipals(cx, fp->scopeChain,
+                                             fp->script ? fp->script->principals
+                                             : NULL,
+                                             bytes, length, filename, lineno);
     if (!script)
-	return JS_FALSE;
-    ok = js_Execute(cx, fp->scopeChain, script, fp, JSFRAME_DEBUGGER, rval);
+        return JS_FALSE;
+    ok = js_Execute(cx, fp->scopeChain, script, fp,
+                    JSFRAME_DEBUGGER | JSFRAME_EVAL, rval);
     js_DestroyScript(cx, script);
+    return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
+                        const char *bytes, uintN length,
+                        const char *filename, uintN lineno,
+                        jsval *rval)
+{
+    jschar *chars;
+    JSBool ok;
+
+    chars = js_InflateString(cx, bytes, length);
+    if (!chars)
+        return JS_FALSE;
+    ok = JS_EvaluateUCInStackFrame(cx, fp, chars, length, filename, lineno,
+                                   rval);
+    JS_free(cx, chars);
+
     return ok;
 }
 
@@ -771,7 +791,7 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
 
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
-		   JSPropertyDesc *pd)
+                   JSPropertyDesc *pd)
 {
     JSSymbol *sym;
     JSPropertyOp getter;
@@ -785,13 +805,13 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     }
     getter = SPROP_GETTER(sprop, obj);
     pd->flags = ((sprop->attrs & JSPROP_ENUMERATE)      ? JSPD_ENUMERATE : 0)
-	      | ((sprop->attrs & JSPROP_READONLY)       ? JSPD_READONLY  : 0)
-	      | ((sprop->attrs & JSPROP_PERMANENT)      ? JSPD_PERMANENT : 0)
+              | ((sprop->attrs & JSPROP_READONLY)       ? JSPD_READONLY  : 0)
+              | ((sprop->attrs & JSPROP_PERMANENT)      ? JSPD_PERMANENT : 0)
 #if JS_HAS_CALL_OBJECT
-	      | ((getter == js_GetCallVariable)  ? JSPD_VARIABLE  : 0)
+              | ((getter == js_GetCallVariable)  ? JSPD_VARIABLE  : 0)
 #endif /* JS_HAS_CALL_OBJECT */
-	      | ((getter == js_GetArgument)      ? JSPD_ARGUMENT  : 0)
-	      | ((getter == js_GetLocalVariable) ? JSPD_VARIABLE  : 0);
+              | ((getter == js_GetArgument)      ? JSPD_ARGUMENT  : 0)
+              | ((getter == js_GetLocalVariable) ? JSPD_VARIABLE  : 0);
 #if JS_HAS_CALL_OBJECT
     /* for Call Object 'real' getter isn't passed in to us */
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
@@ -810,13 +830,13 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 #endif /* JS_HAS_CALL_OBJECT */
     pd->spare = 0;
     pd->slot = (pd->flags & (JSPD_ARGUMENT | JSPD_VARIABLE))
-	       ? JSVAL_TO_INT(sprop->id)
-	       : 0;
+               ? JSVAL_TO_INT(sprop->id)
+               : 0;
     if (!sym || !sym->next || (pd->flags & (JSPD_ARGUMENT | JSPD_VARIABLE))) {
-	pd->alias = JSVAL_VOID;
+        pd->alias = JSVAL_VOID;
     } else {
-	pd->alias = js_IdToValue(sym_id(sym->next));
-	pd->flags |= JSPD_ALIAS;
+        pd->alias = js_IdToValue(sym_id(sym->next));
+        pd->flags |= JSPD_ALIAS;
     }
     return JS_TRUE;
 }
@@ -832,37 +852,37 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 
     clasp = OBJ_GET_CLASS(cx, obj);
     if (!OBJ_IS_NATIVE(obj) || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
-	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-			     JSMSG_CANT_DESCRIBE_PROPS, clasp->name);
-    	return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_CANT_DESCRIBE_PROPS, clasp->name);
+        return JS_FALSE;
     }
     if (!clasp->enumerate(cx, obj))
-	return JS_FALSE;
+        return JS_FALSE;
 
     /* have no props, or object's scope has not mutated from that of proto */
     scope = OBJ_SCOPE(obj);
     if (!scope->props ||
-	(OBJ_GET_PROTO(cx,obj) && scope == OBJ_SCOPE(OBJ_GET_PROTO(cx,obj)))) {
-	pda->length = 0;
-	pda->array = NULL;
-	return JS_TRUE;
+        (OBJ_GET_PROTO(cx,obj) && scope == OBJ_SCOPE(OBJ_GET_PROTO(cx,obj)))) {
+        pda->length = 0;
+        pda->array = NULL;
+        return JS_TRUE;
     }
 
     n = scope->map.freeslot;
     pd = (JSPropertyDesc *) JS_malloc(cx, (size_t)n * sizeof(JSPropertyDesc));
     if (!pd)
-	return JS_FALSE;
+        return JS_FALSE;
     i = 0;
     for (sprop = scope->props; sprop; sprop = sprop->next) {
-	if (!js_AddRoot(cx, &pd[i].id, NULL))
-	    goto bad;
-	if (!js_AddRoot(cx, &pd[i].value, NULL))
-	    goto bad;
-	JS_GetPropertyDesc(cx, obj, sprop, &pd[i]);
-	if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, &pd[i].alias, NULL))
-	    goto bad;
-	if (++i == n)
-	    break;
+        if (!js_AddRoot(cx, &pd[i].id, NULL))
+            goto bad;
+        if (!js_AddRoot(cx, &pd[i].value, NULL))
+            goto bad;
+        JS_GetPropertyDesc(cx, obj, sprop, &pd[i]);
+        if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, &pd[i].alias, NULL))
+            goto bad;
+        if (++i == n)
+            break;
     }
     pda->length = i;
     pda->array = pd;
@@ -883,10 +903,10 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 
     pd = pda->array;
     for (i = 0; i < pda->length; i++) {
-	js_RemoveRoot(cx->runtime, &pd[i].id);
-	js_RemoveRoot(cx->runtime, &pd[i].value);
-	if (pd[i].flags & JSPD_ALIAS)
-	    js_RemoveRoot(cx->runtime, &pd[i].alias);
+        js_RemoveRoot(cx->runtime, &pd[i].id);
+        js_RemoveRoot(cx->runtime, &pd[i].value);
+        if (pd[i].flags & JSPD_ALIAS)
+            js_RemoveRoot(cx->runtime, &pd[i].alias);
     }
     JS_free(cx, pd);
 }
