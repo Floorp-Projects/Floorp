@@ -297,6 +297,7 @@ nsXIEngine::FTPAnonGet(char *aHost, char *aDir, char *aArchive)
 ftp -n %s <<EndFTP\n\
 user anonymous dev@null.edu\n\
 binary\n\
+passive\n\
 get %s %s\n\
 EndFTP\n\
 \
