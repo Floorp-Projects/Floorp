@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -81,7 +81,7 @@ Py_nsIID::IIDFromPyObject(PyObject *ob, nsIID *pRet) {
 	PRBool ok = PR_TRUE;
 	nsIID iid;
 	if (ob==NULL) {
-		PyErr_SetString(PyExc_RuntimeError, "The object is invalid!");
+		PyErr_SetString(PyExc_RuntimeError, "The IID object is invalid!");
 		return PR_FALSE;
 	}
 	if (PyString_Check(ob)) {
@@ -161,7 +161,7 @@ Py_nsIID::PyTypeMethod_getattr(PyObject *self, char *name)
 		PyObject *ret;
 		if (iid_repr != nsnull) {
 			ret = PyString_FromString(iid_repr);
-			nsAllocator::Free(iid_repr);
+			nsMemory::Free(iid_repr);
 		} else
 			ret = PyString_FromString("<cant get IID info!>");
 		return ret;
@@ -184,7 +184,7 @@ Py_nsIID::PyTypeMethod_repr(PyObject *self)
 	char buf[256];
 	char *sziid = s_iid->m_iid.ToString();
 	sprintf(buf, "_xpcom.IID('%s')", sziid);
-	nsAllocator::Free(sziid);
+	nsMemory::Free(sziid);
 	return PyString_FromString(buf);
 }
 
@@ -194,7 +194,7 @@ Py_nsIID::PyTypeMethod_str(PyObject *self)
 	Py_nsIID *s_iid = (Py_nsIID *)self;
 	char *sziid = s_iid->m_iid.ToString();
 	PyObject *ret = PyString_FromString(sziid);
-	nsAllocator::Free(sziid);
+	nsMemory::Free(sziid);
 	return ret;
 }
 

@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -120,51 +120,11 @@ Py_nsISupports::Constructor(nsISupports *pInitObj, const nsIID &iid)
 				       type);
 }
 
-/*static*/PRBool
-Py_nsISupports::InterfaceFromPyObject(PyObject *ob, 
-					   const nsIID &iid, 
-					   nsISupports **ppv, 
-					   PRBool bNoneOK,
-					   PRBool bTryAutoWrap /* = PR_TRUE */)
+PRBool
+Py_nsISupports::InterfaceFromPyISupports(PyObject *ob, 
+                                         const nsIID &iid, 
+                                         nsISupports **ppv)
 {
-	if ( ob == NULL )
-	{
-		// don't overwrite an error message
-		if ( !PyErr_Occurred() )
-			PyErr_SetString(PyExc_TypeError, "The Python object is invalid");
-		return PR_FALSE;
-	}
-	if ( ob == Py_None )
-	{
-		if ( bNoneOK )
-		{
-			*ppv = NULL;
-			return PR_TRUE;
-		}
-		else
-		{
-			PyErr_SetString(PyExc_TypeError, "None is not a invalid interface object in this context");
-			return PR_FALSE;
-		}
-	}
-
-	if (PyInstance_Check(ob)) {
-		// Get the _comobj_ attribute
-		PyObject *use_ob = PyObject_GetAttrString(ob, "_comobj_");
-		if (use_ob==NULL) {
-			PyErr_Clear();
-			if (bTryAutoWrap)
-				// Try and auto-wrap it - errors will leave Py exception set,
-				return PyXPCOM_XPTStub::AutoWrapPythonInstance(ob, iid, ppv);
-			PyErr_SetString(PyExc_TypeError, "The Python instance can not be converted to an XP COM object");
-			return PR_FALSE;
-		} else
-			ob = use_ob;
-
-	} else {
-		Py_XINCREF(ob);
-	}
-
 	nsISupports *pis;
 	PRBool rc = PR_FALSE;
 	if ( !Check(ob) )
@@ -204,12 +164,81 @@ Py_nsISupports::InterfaceFromPyObject(PyObject *ob,
 			/* note: the QI added a ref for the return value */
 		}
 	}
-
 	rc = PR_TRUE;
 done:
-	Py_XDECREF(ob);
 	return rc;
 }
+
+PRBool
+Py_nsISupports::InterfaceFromPyObject(PyObject *ob, 
+					   const nsIID &iid, 
+					   nsISupports **ppv, 
+					   PRBool bNoneOK,
+					   PRBool bTryAutoWrap /* = PR_TRUE */)
+{
+	if ( ob == NULL )
+	{
+		// don't overwrite an error message
+		if ( !PyErr_Occurred() )
+			PyErr_SetString(PyExc_TypeError, "The Python object is invalid");
+		return PR_FALSE;
+	}
+	if ( ob == Py_None )
+	{
+		if ( bNoneOK )
+		{
+			*ppv = NULL;
+			return PR_TRUE;
+		}
+		else
+		{
+			PyErr_SetString(PyExc_TypeError, "None is not a invalid interface object in this context");
+			return PR_FALSE;
+		}
+	}
+
+	// support nsIVariant
+	if (iid.Equals(NS_GET_IID(nsIVariant)) || iid.Equals(NS_GET_IID(nsIWritableVariant))) {
+		// Check it is not already nsIVariant
+		if (PyInstance_Check(ob)) {
+			PyObject *sub_ob = PyObject_GetAttrString(ob, "_comobj_");
+			if (sub_ob==NULL) {
+				PyErr_Clear();
+			} else {
+				if (InterfaceFromPyISupports(sub_ob, iid, ppv)) {
+					Py_DECREF(sub_ob);
+					return PR_TRUE;
+				}
+				PyErr_Clear();
+				Py_DECREF(sub_ob);
+			}
+		}
+		*ppv = PyObject_AsVariant(ob);
+		return *ppv != NULL;
+	}
+	// end of variant support.
+
+	if (PyInstance_Check(ob)) {
+		// Get the _comobj_ attribute
+		PyObject *use_ob = PyObject_GetAttrString(ob, "_comobj_");
+		if (use_ob==NULL) {
+			PyErr_Clear();
+			if (bTryAutoWrap)
+				// Try and auto-wrap it - errors will leave Py exception set,
+				return PyXPCOM_XPTStub::AutoWrapPythonInstance(ob, iid, ppv);
+			PyErr_SetString(PyExc_TypeError, "The Python instance can not be converted to an XPCOM object");
+			return PR_FALSE;
+		} else
+			ob = use_ob;
+
+	} else {
+		Py_INCREF(ob);
+	}
+	PRBool rc = InterfaceFromPyISupports(ob, iid, ppv);
+	Py_DECREF(ob);
+	return rc;
+}
+
 
 // Interface conversions
 /*static*/void
@@ -227,6 +256,28 @@ Py_nsISupports::RegisterInterface( const nsIID &iid, PyTypeObject *t)
 }
 
 /*static */PyObject *
+Py_nsISupports::PyObjectFromInterfaceOrVariant(nsISupports *pis, 
+				      const nsIID &riid, 
+				      PRBool bAddRef, 
+				      PRBool bMakeNicePyObject /* = PR_TRUE */)
+{
+	// Quick exit.
+	if (pis==NULL) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+	if (riid.Equals(NS_GET_IID(nsIVariant))) {
+		PyObject *ret = PyObject_FromVariant((nsIVariant *)pis);
+		// If we were asked not to add a reference, then there
+		// will be a spare reference on pis() - remove it.
+		if (!bAddRef)
+			pis->Release();
+		return ret;
+	}
+	return PyObjectFromInterface(pis, riid, bAddRef, bMakeNicePyObject);
+}
+
+/*static */PyObject *
 Py_nsISupports::PyObjectFromInterface(nsISupports *pis, 
 				      const nsIID &riid, 
 				      PRBool bAddRef, 
@@ -241,7 +292,6 @@ Py_nsISupports::PyObjectFromInterface(nsISupports *pis,
 	// If the IID is for nsISupports, dont bother with
 	// a map lookup as we know the type!
 	if (!riid.Equals(NS_GET_IID(nsISupports))) {
-
 		// Look up the map
 		PyObject *obiid = Py_nsIID::PyObjectFromIID(riid);
 		if (!obiid) return NULL;

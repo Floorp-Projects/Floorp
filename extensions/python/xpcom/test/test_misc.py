@@ -151,7 +151,7 @@ def _doTestRepr(progid, interfaces):
         ob = xpcom.components.classes[progid].createInstance()
     except xpcom.COMException, details:
         print "Could not test repr for progid '%s' - %s" % (progid, details)
-        return false
+        return 0
 
     ok = 1
     if repr(ob).find(progid) < 0:

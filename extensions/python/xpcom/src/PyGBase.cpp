@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -115,7 +115,7 @@ PyG_Base::PyG_Base(PyObject *instance, const nsIID &iid)
 		PyObject *real_repr = PyObject_Repr(real_instance);
 
 		PYXPCOM_LOG_DEBUG("PyG_Base created at %p\n  instance_repr=%s\n  IID=%s\n", this, PyString_AsString(real_repr), iid_repr);
-		nsAllocator::Free(iid_repr);
+		nsMemory::Free(iid_repr);
 		Py_XDECREF(real_instance);
 		Py_XDECREF(real_repr);
 	}
@@ -281,9 +281,11 @@ done:
 	}
 	Py_XDECREF(obIID);
 	Py_XDECREF(obParamDesc);
-	if (result==NULL) // we had an error.
+	if (result==NULL) { // we had an error.
+		PyErr_Clear(); // but are not reporting it back to Python itself!
 		// return our obISupports.  If NULL, we are really hosed and nothing we can do.
 		return obISupports;
+	}
 	// Dont need to return this - we have a better result.
 	Py_XDECREF(obISupports);
 	return result;

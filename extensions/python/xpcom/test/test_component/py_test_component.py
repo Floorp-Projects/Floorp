@@ -217,7 +217,10 @@ class PythonTestComponent:
     def UpWideString(self, val):
         return val.upper()
     UpWideString2 = UpWideString
-
+    def CopyUTF8String(self, v):
+        return v
+    def CopyUTF8String2(self, v):
+        return v.encode("utf8")
     # Test we can get an "out" array with an "in" size (and the size is not used anywhere as a size for an in!)
     def GetFixedWideString(self, count):
         # void GetFixedWideString(in PRUint32 count, [size_is(count)out string out_str);
@@ -251,6 +254,8 @@ class PythonTestComponent:
                 ret = 0
                 break
         return ret
+    def CopyInterfaceArray(self, a):
+        return a
     def GetInterfaceArray(self):
         # void GetInterfaceArray(out PRUint32 count,
         #                          [array, size_is(count)] out nsISupports data);
@@ -316,6 +321,26 @@ class PythonTestComponent:
         if array2 is not None:
             rc.extend(array2)
         return rc
+    # Test nsIVariant support
+    def AppendVariant(self, invar, inresult):
+        if type(invar)==type([]):
+            invar_use = invar[0]
+            for v in invar[1:]:
+                invar_use += v
+        else:
+            invar_use = invar
+        if type(inresult)==type([]):
+            inresult_use = inresult[0]
+            for v in inresult[1:]:
+                inresult_use += v
+        else:
+            inresult_use = inresult
+        if inresult_use is None and invar_use is None:
+            return None
+        return inresult_use + invar_use
+
+    def CopyVariant(self, invar):
+        return invar
 
     # Some tests for the "new" (Feb-2001) DOMString type.
     def GetDOMStringResult( self, length ):

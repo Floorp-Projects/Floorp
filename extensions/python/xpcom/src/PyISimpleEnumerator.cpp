@@ -120,7 +120,7 @@ static PyObject *PyFetchBlock(PyObject *self, PyObject *args)
 		return NULL;
 	}
 	memset(fetched, 0, sizeof(nsISupports *) * n_wanted);
-	nsresult r;
+	nsresult r = NS_OK;
 	PRBool more;
 	Py_BEGIN_ALLOW_THREADS;
 	for (;n_fetched<n_wanted;) {

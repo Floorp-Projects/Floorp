@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -118,8 +118,8 @@ static PyObject *PyCLSIDToContractID(PyObject *self, PyObject *args)
 	PyObject *ob_pid = PyString_FromString(ret_pid);
 	PyObject *ob_class = PyString_FromString(ret_class);
 	PyObject *ret = Py_BuildValue("OO", ob_pid, ob_class);
-	nsAllocator::Free(ret_pid);
-	nsAllocator::Free(ret_class);
+	nsMemory::Free(ret_pid);
+	nsMemory::Free(ret_class);
 	Py_XDECREF(ob_pid);
 	Py_XDECREF(ob_class);
 	return ret;

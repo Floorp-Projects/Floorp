@@ -21,6 +21,7 @@
 // We try to get as many data-types etc exposed, meaning this
 // doesnt really make a good demo of a "simple component"
 #include "nsISupports.idl"
+#include "nsIVariant.idl"
 
 [scriptable, uuid(1ECAED4F-E4D5-4ee7-ABF0-7D72AE1441D7)]
 interface nsIPythonTestInterface : nsISupports
@@ -121,6 +122,8 @@ interface nsIPythonTestInterfaceExtra : nsIPythonTestInterface
     void UpString2(in PRUint32 count, 
                       [size_is(count)] in string in_str,
                       [size_is(count)]out string out_str);
+    void CopyUTF8String(in AUTF8String in_str, out AUTF8String out_str);
+    void CopyUTF8String2(in AUTF8String in_str, out AUTF8String out_str);
     // Test we can get an "out" array with an "in" size (and the size is not used anywhere as a size for an in!)
     void GetFixedString(in PRUint32 count, [size_is(count)]out string out_str);
 
@@ -154,6 +157,10 @@ interface nsIPythonTestInterfaceExtra : nsIPythonTestInterface
     void CheckInterfaceArray(in PRUint32 count,
                              [array, size_is(count)] in nsISupports data,
                              [retval] out PRBool all_non_null);
+    void CopyInterfaceArray(in PRUint32 count,
+                             [array, size_is(count)] in nsISupports data,
+                             [array, size_is(out_count)] out nsISupports out_data,
+                            out PRUint32 out_count);
     void GetInterfaceArray(out PRUint32 count,
                              [array, size_is(count)] out nsISupports data);
     void ExtendInterfaceArray(inout PRUint32 count,
@@ -181,6 +188,8 @@ interface nsIPythonTestInterfaceExtra : nsIPythonTestInterface
     void CopyAndDoubleArray(inout PRUint32 count, [array, size_is(count)]in PRInt32 array1, [array, size_is(count)]out PRInt32 array2);
     // Test our "in-out" count param can be shared as one "in", plus one  "in-out" param.
     void AppendArray(inout PRUint32 count, [array, size_is(count)]in PRInt32 array1, [array, size_is(count)]inout PRInt32 array2);
+    void AppendVariant(in nsIVariant variant, inout nsIVariant result);
+    nsIVariant CopyVariant(in nsIVariant variant);
 };
 
 // DOM String support is a "recent" (01/2001) addition to XPCOM.  These test 

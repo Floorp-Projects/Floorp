@@ -12,7 +12,7 @@
 # Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
 # ActiveState Tool Corp.  All Rights Reserved.
 #
-# Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+# Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
 #
 
 import os
@@ -75,11 +75,14 @@ interface_method_cache = {}
 
 # Keyed by clsid from nsIClassInfo - everything ever queried for the CID.
 contractid_info_cache = {}
+have_shutdown = 0
 
 def _shutdown():
     interface_cache.clear()
     interface_method_cache.clear()
     contractid_info_cache.clear()
+    global have_shutdown
+    have_shutdown = 1
 
 # Fully process the named method, generating method code etc.
 def BuildMethod(method_info, iid):
@@ -112,6 +115,7 @@ FLAGS_TO_IGNORE = XPT_MD_NOTXPCOM | XPT_MD_CTOR | XPT_MD_HIDDEN
 # Pre-process the interface - generate a list of methods, constants etc,
 # but don't actually generate the method code.
 def BuildInterfaceInfo(iid):
+    assert not have_shutdown, "Can't build interface info after a shutdown"
     ret = interface_cache.get(iid, None)
     if ret is None:
         # Build the data for the cache.

@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -72,7 +72,7 @@ static PyObject *DoPyRead_Buffer(nsIInputStream *pI, PyObject *obBuffer, PRUint3
 
 static PyObject *DoPyRead_Size(nsIInputStream *pI, PRUint32 n)
 {
-	if (n==-1) {
+	if (n==(PRUint32)-1) {
 		nsresult r;
 		Py_BEGIN_ALLOW_THREADS;
 		r = pI->Available(&n);
@@ -80,7 +80,7 @@ static PyObject *DoPyRead_Size(nsIInputStream *pI, PRUint32 n)
 		if (NS_FAILED(r))
 			return PyXPCOM_BuildPyException(r);
 	}
-	char *buf = (char *)nsAllocator::Alloc(n);
+	char *buf = (char *)nsMemory::Alloc(n);
 	if (buf==NULL) {
 		PyErr_NoMemory();
 		return NULL;
@@ -108,7 +108,7 @@ static PyObject *DoPyRead_Size(nsIInputStream *pI, PRUint32 n)
 		}
 	} else
 		PyXPCOM_BuildPyException(r);
-	nsAllocator::Free(buf);
+	nsMemory::Free(buf);
 	return rc;
 }
 

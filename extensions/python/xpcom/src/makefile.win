@@ -15,7 +15,7 @@
 # Portions created by ActiveState are Copyright (C) 2000 ActiveState.
 # All Rights Reserved.
 #
-# Contributor(s): Mark Hammond <MarkH@ActiveState.com>
+# Contributor(s): Mark Hammond <mhammond@skippinet.com.au>
 #
 
 DIRS =             \
@@ -52,6 +52,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\PyIInterfaceInfoManager.obj \
 	.\$(OBJDIR)\PyISimpleEnumerator.obj \
 	.\$(OBJDIR)\PyISupports.obj \
+	.\$(OBJDIR)\PyIVariant.obj \
 	.\$(OBJDIR)\Pyxpt_info.obj \
 	.\$(OBJDIR)\TypeObject.obj \
 	.\$(OBJDIR)\VariantUtils.obj \
