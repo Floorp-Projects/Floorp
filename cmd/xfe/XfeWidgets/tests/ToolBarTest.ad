@@ -56,8 +56,9 @@ ToolBarTest*ToolBar.forceWidth:				false
 ToolBarTest*ToolBar.usePreferredWidth:		true
 ToolBarTest*ToolBar.usePreferredHeight:		true
 
-ToolBarTest*ToolBar.selectionPolicy:		tool_bar_select_single
-ToolBarTest*ToolBar.selectionModifiers:		Shift
+!ToolBarTest*ToolBar.selectionPolicy:		tool_bar_select_single
+!ToolBarTest*ToolBar.selectionModifiers:		Shift
+ToolBarTest*ToolBar*editModifiers:		        Shift
 
 
 ToolBarTest*ToolBar.allowWrap:					true
@@ -125,7 +126,7 @@ ToolBarTest*Hide.leftWidget:			        Scale
 ToolBarTest*Hide.leftOffset:				50
 ToolBarTest*Hide.labelString:				Hide Indicator
 
-ToolBarTest*ToolBar*Indicator.background:		Red
+!ToolBarTest*ToolBar*Indicator.background:		Red
 
 ToolBarTest*LocationToolBar.leftAttachment:		attach_widget
 ToolBarTest*LocationToolBar.topAttachment:		attach_widget

@@ -73,9 +73,15 @@ ButtonTest*ButtonTarget.marginRight:				10
 ButtonTest*ButtonTarget.marginTop:					10
 ButtonTest*ButtonTarget.marginBottom:				10
 
-ButtonTest*ButtonTarget.buttonTrigger: button_trigger_either
+!ButtonTest*ButtonTarget.buttonTrigger: button_trigger_either
 
 !ButtonTest*ButtonTarget.cursor:						hand2
 ButtonTest*ButtonTarget.transparentCursor:			cross
+
+!ButtonTest*ButtonTarget.selectionModifiers:		Shift
+ButtonTest*ButtonTarget.editModifiers:		    Shift
+
+
+
 
 
