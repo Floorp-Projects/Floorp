@@ -38,14 +38,14 @@ public:
                        PRBool aTruthValue,
                        nsIRDFNode **_retval);
 
-  /* nsIRDFAssertionCursor GetTargets (in nsIRDFResource source, in nsIRDFResource property, in boolean aTruthValue); */
+  /* nsISimpleEnumerator GetTargets (in nsIRDFResource source, in nsIRDFResource property, in boolean aTruthValue); */
   NS_IMETHOD GetTargets(nsIRDFResource *source,
                         nsIRDFResource *property,
                         PRBool aTruthValue,
-                        nsIRDFAssertionCursor **_retval);
+                        nsISimpleEnumerator **_retval);
 
-  /* nsIRDFArcsOutCursor ArcLabelsOut (in nsIRDFResource source); */
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource *source, nsIRDFArcsOutCursor **_retval);
+  /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource source); */
+  NS_IMETHOD ArcLabelsOut(nsIRDFResource *source, nsISimpleEnumerator **_retval);
 
 
 protected:
@@ -113,12 +113,12 @@ nsMsgServerDataSource::GetTarget(nsIRDFResource *source,
 }
 
 
-/* nsIRDFAssertionCursor GetTargets (in nsIRDFResource source, in nsIRDFResource property, in boolean aTruthValue); */
+/* nsISimpleEnumerator GetTargets (in nsIRDFResource source, in nsIRDFResource property, in boolean aTruthValue); */
 NS_IMETHODIMP
 nsMsgServerDataSource::GetTargets(nsIRDFResource *source,
                                    nsIRDFResource *property,
                                    PRBool aTruthValue,
-                                   nsIRDFAssertionCursor **_retval)
+                                   nsISimpleEnumerator **_retval)
 {
   nsresult rv = NS_RDF_NO_VALUE;
 
@@ -130,10 +130,10 @@ nsMsgServerDataSource::GetTargets(nsIRDFResource *source,
   
 }
 
-/* nsIRDFArcsOutCursor ArcLabelsOut (in nsIRDFResource source); */
+/* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource source); */
 NS_IMETHODIMP
 nsMsgServerDataSource::ArcLabelsOut(nsIRDFResource *source,
-                                     nsIRDFArcsOutCursor **_retval)
+                                     nsISimpleEnumerator **_retval)
 {
 
   return NS_ERROR_NOT_IMPLEMENTED;
