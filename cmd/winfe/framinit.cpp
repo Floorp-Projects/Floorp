@@ -187,7 +187,7 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext *pContext)
         else
         {
             m_pToolBarController = new CEnderBar();
-            if (m_pToolBarController || !m_pToolBarController->Init(this,TRUE))
+            if (!m_pToolBarController || !m_pToolBarController->Init(this,TRUE))
             {
                 TRACE("Bad ComposeBar");
                 if (m_pToolBarController)
