@@ -48,7 +48,7 @@
 // nsIDNService
 //-----------------------------------------------------------------------------
 
-#define kACEPrefixLen 6 
+#define kACEPrefixLen 4 
 
 class nsIDNService : public nsIIDNService
 {
@@ -64,6 +64,7 @@ private:
   nsresult stringPrepAndACE(const nsAString& in, nsACString& out);
   nsresult encodeToACE(const nsAString& in, nsACString& out);
   nsresult stringPrep(const nsAString& in, nsAString& out);
+  nsresult decodeACE(const nsACString& in, nsACString& out);
   
   PRBool mMultilingualTestBed;  // if true generates extra node for mulitlingual testbed 
   idn_nameprep_t mNamePrepHandle;
