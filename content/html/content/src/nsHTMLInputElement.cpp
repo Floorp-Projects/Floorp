@@ -2310,9 +2310,8 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
       //
       nsAutoString filename;
       rv = file->GetLeafName(filename);
-      NS_ENSURE_SUCCESS(rv, rv);
 
-      if (!filename.IsEmpty()) {
+      if (NS_SUCCEEDED(rv) && !filename.IsEmpty()) {
         PRBool acceptsFiles = aFormSubmission->AcceptsFiles();
 
         if (acceptsFiles) {
@@ -2368,6 +2367,9 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
             nsnull, NS_LITERAL_CSTRING("application/octet-stream"),
             PR_FALSE);
         return rv;
+      } else {
+        // Ignore error returns from GetLeafName.  See bug 199053
+        rv = NS_OK;
       }
     }
     
