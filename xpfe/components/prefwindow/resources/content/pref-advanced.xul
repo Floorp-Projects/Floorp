@@ -86,6 +86,19 @@
 					&sendAddFtpCheck.label;
 				</html:label>
 			</html:div>
+			<html:div>
+			<html:input type="checkbox" id="pref:0:bool:signon.rememberSignons" />
+				<html:label for="pref:0:bool:signon.rememberSignons" accesskey="r" tabindex="0">
+					&remSignCheck.label; 
+				</html:label>
+			</html:div>
+			<html:div>
+			<html:input type="checkbox" checked="true" id="pref:0:bool:wallet.captureForms" />
+				<html:label for="pref:0:bool:wallet.captureForms" accesskey="c" tabindex="0">
+					&capFormsCheck.label;
+				</html:label>
+			</html:div>
+
 				
 	</html:fieldset>
 	</box>

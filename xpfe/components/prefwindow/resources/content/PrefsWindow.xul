@@ -41,9 +41,9 @@
 	<html:tr>
 		<html:td valign="right" width="200">
 			<html:center>					
-				<html:input type="button" align="bottom" value="&helpButton.label;" />				
-				<html:input type="button" align="bottom" value="&cancelButton.label;" onclick="prefwindow.cancelPrefs();" />				
-				<html:input type="button" align="bottom" value="&okButton.label;" onclick="prefwindow.savePrefs();" />
+				<titledbutton align="bottom" value="&helpButton.label;" />				
+				<titledbutton align="bottom" value="&cancelButton.label;" onclick="prefwindow.cancelPrefs();" />				
+				<titledbutton align="bottom" value="&okButton.label;" onclick="prefwindow.savePrefs();" />
 			 </html:center>	  
 		  </html:td>
 	  </html:tr>
