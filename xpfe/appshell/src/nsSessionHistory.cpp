@@ -260,13 +260,16 @@ nsresult
 nsHistoryEntry::GetHistoryState(nsISupports ** aResult)
 {
   *aResult = mHistoryState;
+    NS_IF_ADDREF(mHistoryState);
   return NS_OK;
 }
 
 nsresult
 nsHistoryEntry::SetHistoryState(nsISupports * aState)
 {
+  NS_IF_RELEASE(mHistoryState);
   mHistoryState = aState;
+  NS_IF_ADDREF(aState);
   return NS_OK;
 }
 
@@ -514,9 +517,9 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
             /* Get the child count of the current page and previous page */
             PRInt32  pcount=0, ccount=0;
             prev->GetChildCount(pcount);
-			ccount = cur->GetChildCnt();
-            nsISupports * historyObject = nsnull;
-			GetHistoryState(&historyObject);
+            ccount = cur->GetChildCnt();
+            nsCOMPtr<nsISupports>  historyObject;
+			      GetHistoryState(getter_AddRefs(historyObject));
             prev->LoadURL(cURL, nsnull, PR_FALSE, (nsLoadFlags) (aIsReload?nsIChannel::LOAD_NORMAL:LOAD_HISTORY), 0, historyObject);
             if (aIsReload && (pcount > 0)) {
               /* If this is a reload, on a page with frames, you want to return
