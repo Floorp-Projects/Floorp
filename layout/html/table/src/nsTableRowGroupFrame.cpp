@@ -170,6 +170,55 @@ NS_METHOD nsTableRowGroupFrame::GetMaxColumns(PRInt32 &aMaxColumns) const
   return NS_OK;
 }
 
+nsresult
+nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame)
+{
+  nsIFrame* originalRowFrame;
+  nsIFrame* copyRowFrame = mFrames.FirstChild();
+
+  aHeaderFooterFrame->FirstChild(nsnull, &originalRowFrame);
+  while (copyRowFrame) {
+    // Set the row frame index
+    int rowIndex = ((nsTableRowFrame*)originalRowFrame)->GetRowIndex();
+    ((nsTableRowFrame*)copyRowFrame)->SetRowIndex(rowIndex);
+
+    // For each table cell frame set its column index
+    nsIFrame* originalCellFrame;
+    nsIFrame* copyCellFrame;
+    originalRowFrame->FirstChild(nsnull, &originalCellFrame);
+    copyRowFrame->FirstChild(nsnull, &copyCellFrame);
+    while (copyCellFrame) {
+      nsIAtom*  frameType;
+      copyCellFrame->GetFrameType(&frameType);
+
+      if (nsLayoutAtoms::tableCellFrame == frameType) {
+  #ifdef NS_DEBUG
+        nsIContent* content1;
+        nsIContent* content2;
+        originalCellFrame->GetContent(&content1);
+        copyCellFrame->GetContent(&content2);
+        NS_ASSERTION(content1 == content2, "cell frames have different content");
+        NS_IF_RELEASE(content1);
+        NS_IF_RELEASE(content2);
+  #endif
+        PRInt32 colIndex;
+        ((nsTableCellFrame*)originalCellFrame)->GetColIndex(colIndex);
+        ((nsTableCellFrame*)copyCellFrame)->InitCellFrame(colIndex);
+      }
+      NS_IF_RELEASE(frameType);
+
+      // Move to the next cell frame
+      copyCellFrame->GetNextSibling(&copyCellFrame);
+      originalCellFrame->GetNextSibling(&originalCellFrame);
+    }
+
+    // Move to the next row frame
+    originalRowFrame->GetNextSibling(&originalRowFrame);
+    copyRowFrame->GetNextSibling(&copyRowFrame);
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsTableRowGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,

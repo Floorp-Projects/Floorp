@@ -116,6 +116,17 @@ public:
   /** get the maximum number of columns taken up by any row in this rowgroup */
   NS_METHOD GetMaxColumns(PRInt32 &aMaxColumns) const;
 
+  /**
+   * Used for header and footer row group frames that are repeated when
+   * splitting a table frame.
+   *
+   * Performs any table specific initialization
+   *
+   * @param aHeaderFooterFrame the original header or footer row group frame
+   * that was repeated
+   */
+  nsresult  InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame);
+
 protected:
 
   /** implement abstract method on nsHTMLContainerFrame */

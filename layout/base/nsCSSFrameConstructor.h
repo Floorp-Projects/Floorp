@@ -393,6 +393,13 @@ protected:
                                            nsIStyleContext* aStyleContext,
                                            nsIFrame**       aContinuingFrame);
 
+  nsresult CreateContinuingTableFrame(nsIPresContext*  aPresContext,
+                                      nsIFrame*        aFrame,
+                                      nsIFrame*        aParentFrame,
+                                      nsIContent*      aContent,
+                                      nsIStyleContext* aStyleContext,
+                                      nsIFrame**       aContinuingFrame);
+
 protected:
   nsIDocument*        mDocument;
 
