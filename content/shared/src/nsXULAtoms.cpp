@@ -30,6 +30,7 @@ nsIAtom* nsXULAtoms::checkbox;
 nsIAtom* nsXULAtoms::radio;
 nsIAtom* nsXULAtoms::text;
 nsIAtom* nsXULAtoms::toolbar;
+nsIAtom* nsXULAtoms::toolbox;
 nsIAtom* nsXULAtoms::tree;
 nsIAtom* nsXULAtoms::widget;
 nsIAtom* nsXULAtoms::window;
@@ -55,6 +56,7 @@ void nsXULAtoms::AddrefAtoms() {
     radio = NS_NewAtom("radio");
     text = NS_NewAtom("text");
     toolbar = NS_NewAtom("toolbar");
+    toolbox = NS_NewAtom("toolbox");
     tree = NS_NewAtom("tree");
     window = NS_NewAtom("widget");
     window = NS_NewAtom("window");
@@ -71,6 +73,7 @@ void nsXULAtoms::ReleaseAtoms() {
     NS_RELEASE(radio);
     NS_RELEASE(text);
     NS_RELEASE(toolbar);
+    NS_RELEASE(toolbox);
     NS_RELEASE(tree);
     NS_RELEASE(window);
     NS_IF_RELEASE(gNameSpaceManager);
