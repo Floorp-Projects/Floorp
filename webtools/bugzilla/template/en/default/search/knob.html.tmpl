@@ -33,7 +33,7 @@
 [% IF NOT userid %]
   <input type="hidden" name="cmdtype" value="doit">
 [% ELSE %]
-  <script> <!--
+  <script type="text/javascript"> <!--
     function remCheckboxChanged() {
       if (document.queryform.remember.checked == true) {
         document.queryform.remtype[0].disabled = false;
@@ -68,7 +68,7 @@
   <table>
     <tr>
       <td>
-        <input type="radio"id="cmdtype-doit"
+        <input type="radio" id="cmdtype-doit"
                name="cmdtype" value="doit" checked="checked">
         <label for="cmdtype-doit">Run this search</label>
       </td>
@@ -121,7 +121,7 @@
     </tr>
   </table>
   
-  <script> <!--
+  <script type="text/javascript"> <!--
     remCheckboxChanged();
     remTypeChanged(); 
     // -->
