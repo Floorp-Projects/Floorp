@@ -76,7 +76,7 @@ var progressListener = {
           docTitle = docTitleStr;
           dialog.title.value = docTitle;
         }
-        var docURLStr = elipseString(rogressParams.docURL, true);
+        var docURLStr = elipseString(ProgressParams.docURL, true);
         if (docURLStr != docURL && dialog.title != null) {
           docURL = docURLStr;
           if (docTitle == "") {
