@@ -318,10 +318,13 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
       m_newMailParser->SetDBFolderStream(m_outFileStream); 
     }
 
-    if (uidlDownload && m_newMailParser)
+    if (m_newMailParser)
+    {
+      if (uidlDownload)
         m_newMailParser->DisableFilters();
+      FindPartialMessages(&fileSpec);
+    }
 
-    FindPartialMessages(&fileSpec);
 
 #ifdef DEBUG
     printf("Begin mail message delivery.\n");
