@@ -498,7 +498,10 @@ nsHTTPResponse::GetHeader(const char* i_Header, char* *o_Value)
     if (!i_Header || !o_Value)
         return NS_ERROR_NULL_POINTER;
 
-    nsIAtom* header = NS_NewAtom(i_Header);
+    nsAutoString lowerHeader(i_Header);
+    lowerHeader.ToLowerCase();    
+
+    nsIAtom* header = NS_NewAtom(lowerHeader);
     if (!header)
         return NS_ERROR_OUT_OF_MEMORY;
 
