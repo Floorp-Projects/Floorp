@@ -1159,8 +1159,10 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
         if (mHasVerticalScrollbar) {
           // We left room for the vertical scrollbar, but it's not needed;
           // remove it.
-          if (RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight))
+          if (RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight)) {
             needsLayout = PR_TRUE;
+            SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
+          }
         }
       } else {
         if (!mHasVerticalScrollbar) {
@@ -1214,6 +1216,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
       if (mHasHorizontalScrollbar) {
           if (RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom))
              needsLayout = PR_TRUE;
+             SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);
       }
     }
   }
@@ -1281,8 +1284,11 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   }
 
   if (mHasVerticalScrollbar && (vMinSize.width > vRect.width || vMinSize.height > vRect.height)) {
-    if (RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight))
+    if (RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight)) {
         needsLayout = PR_TRUE;
+        SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
+    }
+
 
     mVScrollbarBox->GetPrefSize(aState, vSize);
   }
@@ -1316,8 +1322,10 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   }
 
   if (mHasHorizontalScrollbar && (hMinSize.width > hRect.width || hMinSize.height > hRect.height)) {
-    if (RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom))
+    if (RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom)) {
       needsLayout = PR_TRUE;
+      SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);
+    }
   } 
 
   // we only need to set the rect. The inner child stays the same size.
