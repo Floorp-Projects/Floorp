@@ -1058,10 +1058,6 @@ tree {
   border-spacing: 0px;
 }
 
-treecol[hidden="true"] {
-  visibility: collapse;
-}
- 
 /* BEN: making dialog trees nicely inset */
 tree.inset {
   border: 1px inset white;
