@@ -70,6 +70,8 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	     key="&reduceTextSizeCmd.commandkey;"
 	     observes="Browser:ReduceTextSize"/>
         -->
+	<key id="key_viewsource"  xulkey="true"  key="&pageSourceCmd.commandkey;" observes="View:PageSource"/>
+
 
 	<!-- Search Menu -->	
 	<key id="key_find"            xulkey="true"  key="&findOnCmd.commandkey;" observes="Browser:Find"/>
@@ -134,6 +136,8 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<broadcaster id="cmd_viewnavbar" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
 	<broadcaster id="cmd_viewpersonaltoolbar" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
 	<broadcaster id="cmd_viewtaskbar" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
+	<broadcaster id="View:PageSource"  value="&pageSourceCmd.label;" oncommand="BrowserViewSource();"/>
+
 
 	<broadcaster id="Browser:Open"  value="&openCmd.label;"        	oncommand="BrowserOpenWindow();"/>
 	<broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
@@ -161,7 +165,6 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<broadcaster id="Browser:SavePage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
 
 </broadcasterset>
-
 
 
 <!-- Menu -->
@@ -239,12 +242,12 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
         </menupopup>
       </menu>
       <menuseparator />
-      <menuitem id="menuitem-reload" key="key_reload" value="&reloadCmd.label;" observes="canReload" />
+      <menuitem id="menuitem-reload" accesskey="&reloadCmd.accesskey;" key="key_reload" value="&reloadCmd.label;" observes="canReload" />
       <menuitem value="&showImagesCmd.label;" disabled="true" oncommand="BrowserReload();"/>
       <menuitem value="&stopCmd.label;" id="menuitem-stop" oncommand="BrowserStop();"/>
       <menuseparator />
-      <menuitem value="&pageSourceCmd.label;" oncommand="BrowserViewSource();"/>
-      <menuitem value="&pageInfoCmd.label;" oncommand="BrowserPageInfo();"/>
+      <menuitem accesskey="&pageSourceCmd.accesskey;" key="key_viewsource" observes="View:PageSource"/>
+      <menuitem accesskey="&pageInfoCmd.accesskey;" value="&pageInfoCmd.label;" oncommand="BrowserPageInfo();"/>
       <menuseparator />
       <menuitem value="&translateMenu.label;" oncommand="Translate();"/>
       <menu value="&webContentMenu.label;" 
