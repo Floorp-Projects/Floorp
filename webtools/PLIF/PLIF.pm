@@ -284,7 +284,7 @@ sub getFatalHandlerList {
     return \@FATAL;
 }
 
-# returns a reference to the $LOCKED variable for modules that which
+# returns a reference to the $LOCKED variable for modules that wish
 # to block @FATAL reporting
 sub getFatalHandlerLock {
     return \$LOCKED;
