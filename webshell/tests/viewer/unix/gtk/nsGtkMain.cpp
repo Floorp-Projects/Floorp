@@ -124,7 +124,7 @@ ah_crap_handler(int signum)
          getpid(),
          strsignal(signum));
   
-  printf("stack\n",stack);
+  printf("stack logged to someplace\n");
   nsTraceRefcnt::WalkTheStack(stdout);
 
   printf("Sleeping for 5 minutes.\n");
