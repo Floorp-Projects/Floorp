@@ -42,10 +42,13 @@ EX_LIBS = \
 	$(DIST)/bin/libnetlib.so  \
         $(DIST)/bin/libreg.so	\
 	$(DIST)/bin/libxpcom.so	\
+	$(DIST)/bin/libpwcac.so \
+	$(DIST)/bin/libdbm.so	\
 	$(DIST)/bin/libxp.so	\
 	$(DIST)/bin/libpref.so	\
 	$(DIST)/bin/libjs.so	\
 	$(DIST)/bin/libraptorbase.so \
+	$(DIST)/bin/libsecfree.so \
 	$(DIST)/lib/libplc21.so \
 	$(DIST)/lib/libplds21.so	\
 	$(DIST)/lib/libnspr21.so \
