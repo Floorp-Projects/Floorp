@@ -1112,6 +1112,8 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   }
   else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0) {
     result = mPageMenu;
+    [mBackItem setEnabled: [[mBrowserView getBrowserView] canGoBack]];
+    [mForwardItem setEnabled: [[mBrowserView getBrowserView] canGoForward]];
   }
   
   return result;

@@ -54,7 +54,9 @@
                 mAddBookmarkFolderField = id; 
                 mAddBookmarkSheetWindow = id; 
                 mAddBookmarkTitleField = id; 
+                mBackItem = id; 
                 mCachedBMDS = id; 
+                mForwardItem = id; 
                 mHistoryDataSource = id; 
                 mImageLinkMenu = id; 
                 mImageMenu = id; 
@@ -146,7 +148,8 @@
             }; 
             SUPERCLASS = NSView; 
         }, 
-        {CLASS = RDFOutlineViewItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+        {CLASS = RDFOutlineViewItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = ThrobberHandler; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
     ); 
     IBVersion = 1; 
 }

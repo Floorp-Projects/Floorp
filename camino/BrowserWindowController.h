@@ -108,6 +108,10 @@ class nsIDOMNode;
   IBOutlet id mLinkMenu;
   IBOutlet id mImageLinkMenu;
 
+  // Context menu item outlets
+  IBOutlet id mBackItem;
+  IBOutlet id mForwardItem;
+  
   NSToolbarItem *mLocationToolbarItem;
   NSToolbarItem *mSidebarToolbarItem;
 
