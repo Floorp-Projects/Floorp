@@ -884,6 +884,9 @@ cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
   if (!firstURL) {
     return PR_FALSE;
   }
+  if (!PL_strncasecmp(firstURL, "chrome:", 7)) {
+     return PR_FALSE; // chrome URLs are never foreign (otherwise sidebar cookies won't work)
+  }
   nsCAutoString curHost, firstHost;
   nsresult rv;
   NS_ASSERTION(ioService, "IOService not available");
