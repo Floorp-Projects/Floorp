@@ -20,4 +20,6 @@
             attribute  DOMString            useMap;
             attribute  DOMString            vspace;
             attribute  DOMString            width;
- };
+ // Introduced in DOM Level 2:
+            attribute  Document             contentDocument;
+};

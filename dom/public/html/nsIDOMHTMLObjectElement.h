@@ -30,6 +30,7 @@
 #include "nsIDOMHTMLElement.h"
 
 class nsIDOMHTMLFormElement;
+class nsIDOMDocument;
 
 #define NS_IDOMHTMLOBJECTELEMENT_IID \
  { 0xa6cf90ac, 0x15b3, 0x11d2, \
@@ -91,6 +92,9 @@ public:
 
   NS_IMETHOD    GetWidth(nsString& aWidth)=0;
   NS_IMETHOD    SetWidth(const nsString& aWidth)=0;
+
+  NS_IMETHOD    GetContentDocument(nsIDOMDocument** aContentDocument)=0;
+  NS_IMETHOD    SetContentDocument(nsIDOMDocument* aContentDocument)=0;
 };
 
 
@@ -130,6 +134,8 @@ public:
   NS_IMETHOD    SetVspace(const nsString& aVspace);  \
   NS_IMETHOD    GetWidth(nsString& aWidth);  \
   NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+  NS_IMETHOD    GetContentDocument(nsIDOMDocument** aContentDocument);  \
+  NS_IMETHOD    SetContentDocument(nsIDOMDocument* aContentDocument);  \
 
 
 
@@ -169,6 +175,8 @@ public:
   NS_IMETHOD    SetVspace(const nsString& aVspace) { return _to SetVspace(aVspace); } \
   NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
   NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
+  NS_IMETHOD    GetContentDocument(nsIDOMDocument** aContentDocument) { return _to GetContentDocument(aContentDocument); } \
+  NS_IMETHOD    SetContentDocument(nsIDOMDocument* aContentDocument) { return _to SetContentDocument(aContentDocument); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLObjectElementClass(nsIScriptContext *aContext, void **aPrototype);

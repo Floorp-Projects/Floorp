@@ -478,6 +478,7 @@
     "htmlobjectelement.code", \
     "htmlobjectelement.codebase", \
     "htmlobjectelement.codetype", \
+    "htmlobjectelement.contentdocument", \
     "htmlobjectelement.data", \
     "htmlobjectelement.declare", \
     "htmlobjectelement.form", \

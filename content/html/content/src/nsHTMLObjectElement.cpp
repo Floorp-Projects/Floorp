@@ -30,6 +30,7 @@
 #include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_IID(kIDOMHTMLObjectElementIID, NS_IDOMHTMLOBJECTELEMENT_IID);
 
@@ -54,41 +55,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLObjectElement
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD GetCode(nsString& aCode);
-  NS_IMETHOD SetCode(const nsString& aCode);
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
-  NS_IMETHOD GetArchive(nsString& aArchive);
-  NS_IMETHOD SetArchive(const nsString& aArchive);
-  NS_IMETHOD GetBorder(nsString& aBorder);
-  NS_IMETHOD SetBorder(const nsString& aBorder);
-  NS_IMETHOD GetCodeBase(nsString& aCodeBase);
-  NS_IMETHOD SetCodeBase(const nsString& aCodeBase);
-  NS_IMETHOD GetCodeType(nsString& aCodeType);
-  NS_IMETHOD SetCodeType(const nsString& aCodeType);
-  NS_IMETHOD GetData(nsString& aData);
-  NS_IMETHOD SetData(const nsString& aData);
-  NS_IMETHOD GetDeclare(PRBool* aDeclare);
-  NS_IMETHOD SetDeclare(PRBool aDeclare);
-  NS_IMETHOD GetHeight(nsString& aHeight);
-  NS_IMETHOD SetHeight(const nsString& aHeight);
-  NS_IMETHOD GetHspace(nsString& aHspace);
-  NS_IMETHOD SetHspace(const nsString& aHspace);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetStandby(nsString& aStandby);
-  NS_IMETHOD SetStandby(const nsString& aStandby);
-  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
-  NS_IMETHOD GetUseMap(nsString& aUseMap);
-  NS_IMETHOD SetUseMap(const nsString& aUseMap);
-  NS_IMETHOD GetVspace(nsString& aVspace);
-  NS_IMETHOD SetVspace(const nsString& aVspace);
-  NS_IMETHOD GetWidth(nsString& aWidth);
-  NS_IMETHOD SetWidth(const nsString& aWidth);
+  NS_DECL_IDOMHTMLOBJECTELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -180,6 +147,21 @@ NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, UseMap, usemap)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Width, width)
+
+NS_IMETHODIMP
+nsHTMLObjectElement::GetContentDocument(nsIDOMDocument** aContentDocument)
+{
+  NS_ENSURE_ARG_POINTER(aContentDocument);
+  *aContentDocument = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLObjectElement::SetContentDocument(nsIDOMDocument* aContentDocument)
+{
+  return NS_ERROR_DOM_INVALID_MODIFICATION_ERR;
+}
 
 NS_IMETHODIMP
 nsHTMLObjectElement::StringToAttribute(nsIAtom* aAttribute,
