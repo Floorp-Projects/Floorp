@@ -31,7 +31,7 @@ static NS_DEFINE_CID(kmozStorageConnectionCID, MOZ_STORAGE_CONNECTION_CID);
 #ifdef XP_UNIX
 #define TEST_DB NS_LITERAL_CSTRING("/tmp/foo.sdb")
 #else
-#define TEST_DB NS_LITERAL_STRING("foo.sdb")
+#define TEST_DB NS_LITERAL_CSTRING("foo.sdb")
 #endif
 
 int gerr;
