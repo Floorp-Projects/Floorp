@@ -30,6 +30,16 @@ MODULE		= dom
 XPIDL_MODULE	= dom_css
 GRE_MODULE	= 1
 
+SDK_XPIDLSRCS = 				\
+	nsIDOMCSSPrimitiveValue.idl		\
+	nsIDOMCSSRule.idl			\
+	nsIDOMCSSRuleList.idl			\
+	nsIDOMCSSStyleDeclaration.idl		\
+	nsIDOMCSSStyleSheet.idl			\
+	nsIDOMCSSValue.idl			\
+	nsIDOMCSSValueList.idl			\
+	$(NULL)
+
 XPIDLSRCS =					\
 	nsIDOMCSS2Properties.idl		\
 	nsIDOMCSSCharsetRule.idl		\
@@ -37,15 +47,8 @@ XPIDLSRCS =					\
 	nsIDOMCSSImportRule.idl			\
 	nsIDOMCSSMediaRule.idl			\
 	nsIDOMCSSPageRule.idl			\
-	nsIDOMCSSPrimitiveValue.idl		\
-	nsIDOMCSSRule.idl			\
-	nsIDOMCSSRuleList.idl			\
-	nsIDOMCSSStyleDeclaration.idl		\
 	nsIDOMCSSStyleRule.idl			\
-	nsIDOMCSSStyleSheet.idl			\
 	nsIDOMCSSUnknownRule.idl		\
-	nsIDOMCSSValue.idl			\
-	nsIDOMCSSValueList.idl			\
 	nsIDOMCounter.idl			\
 	nsIDOMDocumentCSS.idl			\
 	nsIDOMElementCSSInlineStyle.idl		\

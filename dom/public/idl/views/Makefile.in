@@ -30,7 +30,7 @@ MODULE		= dom
 XPIDL_MODULE	= dom_views
 GRE_MODULE	= 1
 
-XPIDLSRCS =                                     \
+SDK_XPIDLSRCS =                                 \
 	nsIDOMDocumentView.idl			\
 	nsIDOMAbstractView.idl			\
 	$(NULL)
