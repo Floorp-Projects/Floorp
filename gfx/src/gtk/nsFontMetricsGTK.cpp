@@ -1057,6 +1057,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "johabs-1",           &X11Johab      },
   { "johabsh-1",          &X11Johab      },
   { "ksc5601.1987-0",     &KSC5601       },
+  { "microsoft-cp1251",   &CP1251        },
   { "misc-fontspecific",  &Ignore        },
   { "sgi-fontspecific",   &Ignore        },
   { "sun-fontspecific",   &Ignore        },
@@ -1207,7 +1208,7 @@ GetMapFor10646Font(XFontStruct* aFont)
         PRInt32 offset = (((row - minByte1) * charsPerRow) - minByte2);
         for (PRInt32 cell = minByte2; cell <= maxByte2; cell++) {
           XCharStruct* bounds = &aFont->per_char[offset + cell];
-          if ((!bounds->ascent) && (!bounds->descent)) {
+          if (bounds->ascent || bounds->descent) {
             SET_REPRESENTABLE(map, (row << 8) | cell);
           }
         }
