@@ -212,7 +212,7 @@
     (error "Type ~A doesn't have label ~A" type label))
   (let ((type-name (type-name type)))
     (unless type-name
-      (warn "Accessing field ~A of anonymous type ~S" label type)
+      ;(warn "Accessing field ~A of anonymous type ~S" label type)
       (setq link nil))
     (depict-link (markup-stream link "D-" (symbol-upper-mixed-case-name type-name) nil)
       (depict-char-style (markup-stream :field-name)
@@ -1244,27 +1244,34 @@
       (depict-commands markup-stream world depict-env commands))))
 
 
-; (%heading <level> "heading-name")
-; (%heading (<level <mode>) "heading-name")
+(defun depict-text-paragraph (markup-stream world depict-env paragraph-style text)
+  (depict-paragraph (markup-stream paragraph-style)
+    (let ((grammar-info (depict-env-grammar-info depict-env))
+          (*styled-text-world* world))
+      (if grammar-info
+        (let ((*styled-text-grammar-parametrization* (grammar-info-grammar grammar-info)))
+          (depict-styled-text markup-stream text))
+        (depict-styled-text markup-stream text)))))
+
+
+; (%heading <level> . <styled-text>)
+; (%heading (<level <mode>) . <styled-text>)
 ; <mode> is one of:
 ;   :syntax     This is a comment about the syntax
 ;   :semantics  This is a comment about the semantics (not displayed when semantics are not displayed)
 ;   nil         This is a general comment
-(defun depict-%heading (markup-stream world depict-env level-mode heading-name)
-  (declare (ignore world))
+(defun depict-%heading (markup-stream world depict-env level-mode &rest text)
   (let ((level level-mode)
         (mode nil))
     (unless (integerp level-mode)
-      (assert-type level-mode (tuple integer symbol))
+      (unless (structured-type? level-mode '(tuple integer symbol))
+        (error "~S should be either <level> or (<level> <mode>)" level-mode))
       (setq level (first level-mode))
       (setq mode (second level-mode)))
-    (unless (stringp heading-name)
-      (error "~S should be a string" heading-name))
     (let* ((heading-level (+ level (depict-env-heading-offset depict-env)))
            (heading-style (svref #(:heading1 :heading2 :heading3 :heading4 :heading5 :heading6) (1- heading-level))))
       (when (quiet-depict-mode depict-env mode)
-        (depict-paragraph (markup-stream heading-style)
-          (depict markup-stream heading-name))))))
+        (depict-text-paragraph markup-stream world depict-env heading-style text)))))
 
 
 ; (%text <mode> . <styled-text>)
@@ -1275,13 +1282,7 @@
 ;   nil         This is a general comment
 (defun depict-%text (markup-stream world depict-env mode &rest text)
   (when (depict-mode markup-stream depict-env (if (eq mode :comment) :semantics mode))
-    (depict-paragraph (markup-stream (if (eq mode :comment) :semantic-comment :body-text))
-      (let ((grammar-info (depict-env-grammar-info depict-env))
-            (*styled-text-world* world))
-        (if grammar-info
-          (let ((*styled-text-grammar-parametrization* (grammar-info-grammar grammar-info)))
-            (depict-styled-text markup-stream text))
-          (depict-styled-text markup-stream text))))))
+    (depict-text-paragraph markup-stream world depict-env (if (eq mode :comment) :semantic-comment :body-text) text)))
 
 
 ; (grammar-argument <argument> <attribute> <attribute> ... <attribute>)
@@ -1730,17 +1731,31 @@
 (setf (styled-text-depictor :label) #'depict-styled-text-label)
 
 
-; (:global <name>)
-(defun depict-styled-text-global-variable (markup-stream name)
+; (:global <name> [<link>])
+(defun depict-styled-text-global-variable (markup-stream name &optional (link :reference))
   (let ((interned-name (world-find-symbol *styled-text-world* name)))
     (if (and interned-name (symbol-primitive interned-name))
       (depict-primitive markup-stream (symbol-primitive interned-name))
       (progn
         (unless (symbol-type interned-name)
           (warn "~A is depicted as a global variable but isn't one" name))
-        (depict-global-variable markup-stream name :reference)))))
+        (depict-global-variable markup-stream name link)))))
 
 (setf (styled-text-depictor :global) #'depict-styled-text-global-variable)
+
+
+; (:global-call <global-name> <local-name> ... <local-name>)
+(defun depict-styled-text-global-call (markup-stream global-name &rest local-names)
+  (depict-styled-text-global-variable markup-stream global-name nil)
+  (depict markup-stream "(")
+  (when local-names
+    (depict-local-variable markup-stream (first local-names))
+    (dolist (local-name (rest local-names))
+      (depict markup-stream "," :nbsp)
+      (depict-local-variable markup-stream local-name)))
+  (depict markup-stream ")"))
+
+(setf (styled-text-depictor :global-call) #'depict-styled-text-global-call)
 
 
 ; (:local <name>)
