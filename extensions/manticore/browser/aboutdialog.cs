@@ -42,7 +42,7 @@ namespace Silverstone.Manticore.AboutDialog
       // Borderless dialog
       this.FormBorderStyle = FormBorderStyle.None;
 
-      this.BackgroundImage = Image.FromFile("manticore.png");
+      this.BackgroundImage = Image.FromFile("resources\\manticore.png");
       
       this.Text = "About Manticore"; // XXX localize
 
