@@ -39,6 +39,7 @@ components\msgMapi.dll
 components\mapihook.xpt
 components\nsSetDefaultMail.js
 components\nsUnsetDefaultMail.js
+components\offlineStartup.js
 
 components\mdn-service.js
 
