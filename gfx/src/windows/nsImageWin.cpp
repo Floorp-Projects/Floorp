@@ -706,7 +706,7 @@ nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY,
   /* Copy from the HDC */
   BOOL retval = ::BitBlt(memDC, 0, 0, aDWidth, aDHeight,
                          TheHDC, aDX, aDY, SRCCOPY);
-  if (!retval) {
+  if (!retval || !::GdiFlush()) {
     /* select the old object again... */
     ::SelectObject(memDC, oldBitmap);
     ::DeleteObject(tmpBitmap);
@@ -918,6 +918,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       // Copy from the HDC to the memory DC
       // this will be the image on the screen into a buffer for the blend.
       ::StretchBlt(memDC, 0, 0, width, height,theHDC, aDestRect.x, aDestRect.y, width, height, SRCCOPY);
+      ::GdiFlush();
   
       imageBytesPerPixel = mBHead->biBitCount/8;
 
@@ -2037,6 +2038,8 @@ CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
                         aImageBits, (LPBITMAPINFO)aBHead,
                         256 == aNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS,
                         SRCPAINT);
+
+        ::GdiFlush();
 
         // output the composed image
         ::StretchDIBits(aTheHDC, aDX, aDY, aDWidth, aDHeight,
