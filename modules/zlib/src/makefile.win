@@ -104,11 +104,7 @@ GARBAGE	= $(GARBAGE) _gen
 #// Include the common makefile rules
 #//
 #//------------------------------------------------------------------------
-!ifdef MOZ_JAVA
-include <$(DEPTH)/sun-java/config/rules.mak>
-!else
 include <$(DEPTH)/config/rules.mak>
-!endif
 
 export:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
