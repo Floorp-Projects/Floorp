@@ -1,21 +1,35 @@
-var err = StartInstall("Mozilla Seamonkey", "Seamonkey", "$Version$"); 
-LogComment("StartInstall: " + err);
+// main
+var srDest;
+var err;
+var communicatorFolder;
 
-var communicatorFolder = Install.GetFolder("Communicator");
-LogComment("communicatorFolder: " + communicatorFolder);
+srDest = $SpaceRequired$:bin;
+err    = startInstall("Mozilla Seamonkey", "", "$Version$"); 
+logComment("startInstall: " + err);
 
-err = AddDirectory("Program",
-                   "$Version$",
-                   "bin",              // fileName in jar, 
-                   communicatorFolder, // Where to put this file (Returned from GetFolder) 
-                   "",                 // fileName in jar, 
-                   false);             // Force Flag 
-LogComment("AddDirectory() returned: " + err);
+communicatorFolder = getFolder("Communicator");
+logComment("communicatorFolder: " + communicatorFolder);
 
-var fileComponentReg = communicatorFolder + "\\component.reg";
-err  = Install.FileDelete(fileComponentReg);
-LogComment("FileDelete() returned: " + err);
+if(verifyDiskSpace(communicatorFolder, srDest) == true)
+{
+  err = addDirectory("Program",
+                     "$Version$",
+                     "bin",              // dir name in jar to extract 
+                     communicatorFolder, // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to communicatorFolder
+                     false);             // Force Flag 
+  logComment("addDirectory() returned: " + err);
 
-err = FinalizeInstall(); 
-LogComment("FinalizeInstall() returned: " + err);
+  // check return value
+  if(!checkError(err))
+  {
+    var fileComponentReg = communicatorFolder + "component.reg";
+    err = fileDelete(fileComponentReg);
+    logComment("fileDelete() returned: " + err);
 
+    err = finalizeInstall(); 
+    logComment("finalizeInstall() returned: " + err);
+  }
+}
+
+// end main
