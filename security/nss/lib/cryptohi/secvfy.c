@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secvfy.c,v 1.6 2001/09/20 21:30:48 relyea%netscape.com Exp $
+ * $Id: secvfy.c,v 1.7 2002/12/12 06:05:17 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -173,31 +173,42 @@ decodeSigAlg(SECOidTag alg, SECOidTag *hashalg)
       /* We probably shouldn't be generating MD2 signatures either */
       case SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION:
         *hashalg = SEC_OID_MD2;
-	return SECSuccess;
+	break;
       case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
         *hashalg = SEC_OID_MD5;
-	return SECSuccess;
+	break;
       case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
       case SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE:
         *hashalg = SEC_OID_SHA1;
-	return SECSuccess;
+	break;
+
+      case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
+	*hashalg = SEC_OID_SHA256;
+	break;
+      case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
+	*hashalg = SEC_OID_SHA384;
+	break;
+      case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
+	*hashalg = SEC_OID_SHA512;
+	break;
+
       /* what about normal DSA? */
       case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
       case SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST:
         *hashalg = SEC_OID_SHA1;
-	return SECSuccess;
+	break;
       case SEC_OID_MISSI_DSS:
       case SEC_OID_MISSI_KEA_DSS:
       case SEC_OID_MISSI_KEA_DSS_OLD:
       case SEC_OID_MISSI_DSS_OLD:
         *hashalg = SEC_OID_SHA1;
-	return SECSuccess;
+	break;
       /* we don't implement MD4 hashes */
       case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
       default:
-        break;
+	return SECFailure;
     }
-    return SECFailure;
+    return SECSuccess;
 }
 
 VFYContext *
@@ -214,7 +225,7 @@ VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig, SECOidTag algid,
 	cx->sigAlg = algid;
 	rv = SECSuccess;
 	switch (key->keyType) {
-	  case rsaKey:
+	case rsaKey:
 	    cx->type = VFY_RSA;
 	    cx->key = SECKEY_CopyPublicKey(key); /* extra safety precautions */
 	    if (sig) {
@@ -226,8 +237,8 @@ VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig, SECOidTag algid,
 		rv = decodeSigAlg(algid,&cx->alg);
 	    }
 	    break;
-	  case fortezzaKey:
-	  case dsaKey:
+	case fortezzaKey:
+	case dsaKey:
 	    cx->type = VFY_DSA;
 	    cx->alg = SEC_OID_SHA1;
 	    cx->key = SECKEY_CopyPublicKey(key);
@@ -235,17 +246,20 @@ VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig, SECOidTag algid,
 	    	rv = decodeDSASignature(algid,sig,&cx->digest[0]);
 	    }
 	    break;
-	  default:
+	default:
 	    rv = SECFailure;
 	    break;
 	}
 	if (rv) goto loser;
 	switch (cx->alg) {
-	  case SEC_OID_MD2:
-	  case SEC_OID_MD5:
-	  case SEC_OID_SHA1:
+	case SEC_OID_MD2:
+	case SEC_OID_MD5:
+	case SEC_OID_SHA1:
+	case SEC_OID_SHA256:
+	case SEC_OID_SHA384:
+	case SEC_OID_SHA512:
 	    break;
-	  default:
+	default:
 	    PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	    goto loser;
 	}
@@ -282,20 +296,9 @@ VFY_Begin(VFYContext *cx)
 	cx->hashcx = NULL;
     }
 
-    switch (cx->alg) {
-      case SEC_OID_MD2:
-	cx->hashobj = &SECHashObjects[HASH_AlgMD2];
-	break;
-      case SEC_OID_MD5:
-	cx->hashobj = &SECHashObjects[HASH_AlgMD5];
-	break;
-      case SEC_OID_SHA1:
-	cx->hashobj = &SECHashObjects[HASH_AlgSHA1];
-	break;
-      default:
-	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-	return SECFailure;
-    }
+    cx->hashobj = HASH_GetHashObjectByOidTag(cx->alg);
+    if (!cx->hashobj) 
+	return SECFailure;	/* error code is set */
 
     cx->hashcx = (*cx->hashobj->create)();
     if (cx->hashcx == NULL)

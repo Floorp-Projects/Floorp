@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.36 2002/12/11 01:44:37 thayes%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.37 2002/12/12 06:05:43 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -113,6 +113,7 @@ Usage(char *progName)
     fprintf(stderr, "  -N nick      use certificate named \"nick\" for signing\n");
     fprintf(stderr, "  -T           do not include content in CMS message\n");
     fprintf(stderr, "  -G           include a signing time attribute\n");
+    fprintf(stderr, "  -H hash      use hash (default:SHA1)\n");
     fprintf(stderr, "  -P           include a SMIMECapabilities attribute\n");
     fprintf(stderr, "  -Y nick      include a EncryptionKeyPreference attribute with cert\n");
     fprintf(stderr, "                 (use \"NONE\" to omit)\n");
@@ -171,6 +172,7 @@ struct signOptionsStr {
     PRBool signingTime;
     PRBool smimeProfile;
     PRBool detached;
+    SECOidTag hashAlgTag;
 };
 
 struct envelopeOptionsStr {
@@ -460,8 +462,8 @@ signed_data(struct signOptionsStr *signOptions)
     /* 
      * create & attach signer information
      */
-    if ((signerinfo = NSS_CMSSignerInfo_Create(cmsg, cert, SEC_OID_SHA1)) 
-          == NULL) {
+    signerinfo = NSS_CMSSignerInfo_Create(cmsg, cert, signOptions->hashAlgTag);
+    if (signerinfo == NULL) {
 	fprintf(stderr, "ERROR: cannot create CMS signerInfo object.\n");
 	goto loser;
     }
@@ -585,7 +587,7 @@ signed_data(struct signOptionsStr *signOptions)
 	goto loser;
     }
     if (cms_verbose) {
-	fprintf(stderr, "created signed-date message\n");
+	fprintf(stderr, "created signed-data message\n");
     }
     if (ekpcert) {
 	CERT_DestroyCertificate(ekpcert);
@@ -991,6 +993,8 @@ main(int argc, char **argv)
     SECStatus rv;
 
     progName = strrchr(argv[0], '/');
+    if (!progName)
+       progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
     inFile = PR_STDIN;
@@ -1007,6 +1011,7 @@ main(int argc, char **argv)
     signOptions.signingTime = PR_FALSE;
     signOptions.smimeProfile = PR_FALSE;
     signOptions.encryptionKeyPreferenceNick = NULL;
+    signOptions.hashAlgTag = SEC_OID_SHA1;
     envelopeOptions.recipients = NULL;
     encryptOptions.recipients = NULL;
     encryptOptions.envmsg = NULL;
@@ -1019,7 +1024,7 @@ main(int argc, char **argv)
      * Parse command line arguments
      */
     optstate = PL_CreateOptState(argc, argv, 
-                                 "CDSEOnN:TGPY:vh:p:i:c:d:e:o:s:u:r:");
+				 "CDEGH:N:OPSTY:c:d:e:h:i:no:p:r:s:u:v");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	case '?':
@@ -1099,6 +1104,38 @@ main(int argc, char **argv)
 	    }
 	    signOptions.signingTime = PR_TRUE;
 	    break;
+
+       case 'H':
+           if (mode != SIGN) {
+               fprintf(stderr,
+                       "%s: option -n only supported with option -D.\n",
+                       "%s: option -H only supported with option -S.\n",
+                       progName);
+               Usage(progName);
+               exit(1);
+           }
+           decodeOptions.suppressContent = PR_TRUE;
+           if (!strcmp(optstate->value, "MD2"))
+               signOptions.hashAlgTag = SEC_OID_MD2;
+           else if (!strcmp(optstate->value, "MD4"))
+               signOptions.hashAlgTag = SEC_OID_MD4;
+           else if (!strcmp(optstate->value, "MD5"))
+               signOptions.hashAlgTag = SEC_OID_MD5;
+           else if (!strcmp(optstate->value, "SHA1"))
+               signOptions.hashAlgTag = SEC_OID_SHA1;
+           else if (!strcmp(optstate->value, "SHA256"))
+               signOptions.hashAlgTag = SEC_OID_SHA256;
+           else if (!strcmp(optstate->value, "SHA384"))
+               signOptions.hashAlgTag = SEC_OID_SHA384;
+           else if (!strcmp(optstate->value, "SHA512"))
+               signOptions.hashAlgTag = SEC_OID_SHA512;
+           else {
+               fprintf(stderr,
+           "%s: -H requires one of MD2,MD4,MD5,SHA1,SHA256,SHA384,SHA512\n",
+                       progName);
+               exit(1);
+           }
+           break;
 
 	case 'P':
 	    if (mode != SIGN) {
@@ -1387,7 +1424,7 @@ main(int argc, char **argv)
 	}
 	if (cms_verbose) {
 	    fprintf(stderr, "input len [%d]\n", input.len);
-	    { int j; 
+	    { unsigned int j; 
 		for(j=0;j<input.len;j++)
 	     fprintf(stderr, "%2x%c", input.data[j], (j>0&&j%35==0)?'\n':' ');
 	    }

@@ -1053,65 +1053,43 @@ CK_RV NSC_DigestInit(CK_SESSION_HANDLE hSession,
 {
     PK11Session *session;
     PK11SessionContext *context;
-    MD2Context *md2_context;
-    MD5Context *md5_context;
-    SHA1Context *sha1_context;
     CK_RV crv = CKR_OK;
 
     session = pk11_SessionFromHandle(hSession);
-    if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
+    if (session == NULL) 
+    	return CKR_SESSION_HANDLE_INVALID;
     crv = pk11_InitGeneric(session,&context,PK11_HASH,NULL,0,NULL, 0, 0);
     if (crv != CKR_OK) {
 	pk11_FreeSession(session);
 	return crv;
     }
 
+
+#define INIT_MECH(mech,mmm) \
+    case mech: { \
+	mmm ## Context * mmm ## _ctx = mmm ## _NewContext(); \
+	context->cipherInfo    = (void *)mmm ## _ctx; \
+	context->cipherInfoLen = mmm ## _FlattenSize(mmm ## _ctx); \
+	context->currentMech   = mech; \
+	context->hashUpdate    = (PK11Hash)    mmm ## _Update; \
+	context->end           = (PK11End)     mmm ## _End; \
+	context->destroy       = (PK11Destroy) mmm ## _DestroyContext; \
+	context->maxLen        = mmm ## _LENGTH; \
+        if (mmm ## _ctx) \
+	    mmm ## _Begin(mmm ## _ctx); \
+	else  \
+	    crv = CKR_HOST_MEMORY; \
+	break; \
+    }
+
     switch(pMechanism->mechanism) {
-    case CKM_MD2:
-	md2_context = MD2_NewContext();
-	context->cipherInfo = (void *)md2_context;
-	context->cipherInfoLen = MD2_FlattenSize(md2_context);
-	context->currentMech = CKM_MD2;
-        if (context->cipherInfo == NULL) {
-	    crv= CKR_HOST_MEMORY;
-	    
-	}
-	context->hashUpdate = (PK11Hash) MD2_Update;
-	context->end = (PK11End) MD2_End;
-	context->destroy = (PK11Destroy) MD2_DestroyContext;
-	context->maxLen = MD2_LENGTH;
-	MD2_Begin(md2_context);
-	break;
-    case CKM_MD5:
-	md5_context = MD5_NewContext();
-	context->cipherInfo = (void *)md5_context;
-	context->cipherInfoLen = MD5_FlattenSize(md5_context);
-	context->currentMech = CKM_MD5;
-        if (context->cipherInfo == NULL) {
-	    crv= CKR_HOST_MEMORY;
-	    
-	}
-	context->hashUpdate = (PK11Hash) MD5_Update;
-	context->end = (PK11End) MD5_End;
-	context->destroy = (PK11Destroy) MD5_DestroyContext;
-	context->maxLen = MD5_LENGTH;
-	MD5_Begin(md5_context);
-	break;
-    case CKM_SHA_1:
-	sha1_context = SHA1_NewContext();
-	context->cipherInfo = (void *)sha1_context;
-	context->cipherInfoLen = SHA1_FlattenSize(sha1_context);
-	context->currentMech = CKM_SHA_1;
-        if (context->cipherInfo == NULL) {
-	    crv= CKR_HOST_MEMORY;
-	    break;
-	}
-	context->hashUpdate = (PK11Hash) SHA1_Update;
-	context->end = (PK11End) SHA1_End;
-	context->destroy = (PK11Destroy) SHA1_DestroyContext;
-	SHA1_Begin(sha1_context);
-	context->maxLen = SHA1_LENGTH;
-	break;
+    INIT_MECH(CKM_MD2,    MD2)
+    INIT_MECH(CKM_MD5,    MD5)
+    INIT_MECH(CKM_SHA_1,  SHA1)
+    INIT_MECH(CKM_SHA256, SHA256)
+    INIT_MECH(CKM_SHA384, SHA384)
+    INIT_MECH(CKM_SHA512, SHA512)
+
     default:
 	crv = CKR_MECHANISM_INVALID;
 	break;
@@ -1206,50 +1184,30 @@ CK_RV NSC_DigestFinal(CK_SESSION_HANDLE hSession,CK_BYTE_PTR pDigest,
 }
 
 /*
- * this helper functions are used by Generic Macing and Signing functions
+ * these helper functions are used by Generic Macing and Signing functions
  * that use hashes as part of their operations. 
  */
-static CK_RV
-pk11_doSubMD2(PK11SessionContext *context) {
-	MD2Context *md2_context = MD2_NewContext();
-	context->hashInfo = (void *)md2_context;
-        if (context->hashInfo == NULL) {
-	    return CKR_HOST_MEMORY;
-	}
-	context->hashUpdate = (PK11Hash) MD2_Update;
-	context->end = (PK11End) MD2_End;
-	context->hashdestroy = (PK11Destroy) MD2_DestroyContext;
-	MD2_Begin(md2_context);
-	return CKR_OK;
+#define DOSUB(mmm) \
+static CK_RV \
+pk11_doSub ## mmm(PK11SessionContext *context) { \
+    mmm ## Context * mmm ## _ctx = mmm ## _NewContext(); \
+    context->hashInfo    = (void *)      mmm ## _ctx; \
+    context->hashUpdate  = (PK11Hash)    mmm ## _Update; \
+    context->end         = (PK11End)     mmm ## _End; \
+    context->hashdestroy = (PK11Destroy) mmm ## _DestroyContext; \
+    if (!context->hashInfo) { \
+	return CKR_HOST_MEMORY; \
+    } \
+    mmm ## _Begin( mmm ## _ctx ); \
+    return CKR_OK; \
 }
 
-static CK_RV
-pk11_doSubMD5(PK11SessionContext *context) {
-	MD5Context *md5_context = MD5_NewContext();
-	context->hashInfo = (void *)md5_context;
-        if (context->hashInfo == NULL) {
-	    return CKR_HOST_MEMORY;
-	}
-	context->hashUpdate = (PK11Hash) MD5_Update;
-	context->end = (PK11End) MD5_End;
-	context->hashdestroy = (PK11Destroy) MD5_DestroyContext;
-	MD5_Begin(md5_context);
-	return CKR_OK;
-}
-
-static CK_RV
-pk11_doSubSHA1(PK11SessionContext *context) {
-	SHA1Context *sha1_context = SHA1_NewContext();
-	context->hashInfo = (void *)sha1_context;
-        if (context->hashInfo == NULL) {
-	    return CKR_HOST_MEMORY;
-	}
-	context->hashUpdate = (PK11Hash) SHA1_Update;
-	context->end = (PK11End) SHA1_End;
-	context->hashdestroy = (PK11Destroy) SHA1_DestroyContext;
-	SHA1_Begin(sha1_context);
-	return CKR_OK;
-}
+DOSUB(MD2)
+DOSUB(MD5)
+DOSUB(SHA1)
+DOSUB(SHA256)
+DOSUB(SHA384)
+DOSUB(SHA512)
 
 /*
  * HMAC General copies only a portion of the result. This update routine likes
@@ -1404,8 +1362,8 @@ pk11_doSSLMACInit(PK11SessionContext *context,SECOidTag oid,
 
     if (oid == SEC_OID_SHA1) {
 	crv = pk11_doSubSHA1(context);
-	begin = (PK11Begin) SHA1_Begin;
 	if (crv != CKR_OK) return crv;
+	begin = (PK11Begin) SHA1_Begin;
 	padSize = 40;
     } else {
 	crv = pk11_doSubMD5(context);
@@ -1847,43 +1805,25 @@ CK_RV NSC_SignInit(CK_SESSION_HANDLE hSession,
 
     context->multi = PR_FALSE;
 
+#define INIT_RSA_SIGN_MECH(mmm) \
+    case CKM_ ## mmm ## _RSA_PKCS: \
+        context->multi = PR_TRUE; \
+	crv = pk11_doSub ## mmm (context); \
+	if (crv != CKR_OK) break; \
+	context->update = (PK11Cipher) pk11_HashSign; \
+	info = PORT_New(PK11HashSignInfo); \
+	if (info == NULL) { crv = CKR_HOST_MEMORY; break; } \
+	info->hashOid = SEC_OID_ ## mmm ; \
+	goto finish_rsa; 
+
     switch(pMechanism->mechanism) {
-    case CKM_MD5_RSA_PKCS:
-        context->multi = PR_TRUE;
-	crv = pk11_doSubMD5(context);
-	if (crv != CKR_OK) break;
-	context->update = (PK11Cipher) pk11_HashSign;
-	info = (PK11HashSignInfo *)PORT_Alloc(sizeof(PK11HashSignInfo));
-	if (info == NULL) {
-	   crv = CKR_HOST_MEMORY;
-	   break;
-	}
-	info->hashOid = SEC_OID_MD5;
-	goto finish_rsa;
-    case CKM_MD2_RSA_PKCS:
-        context->multi = PR_TRUE;
-	crv = pk11_doSubMD2(context);
-	if (crv != CKR_OK) break;
-	context->update = (PK11Cipher) pk11_HashSign;
-	info = (PK11HashSignInfo *)PORT_Alloc(sizeof(PK11HashSignInfo));
-	if (info == NULL) {
-	   crv = CKR_HOST_MEMORY;
-	   break;
-	}
-	info->hashOid = SEC_OID_MD2;
-	goto finish_rsa;
-    case CKM_SHA1_RSA_PKCS:
-        context->multi = PR_TRUE;
-	crv = pk11_doSubSHA1(context);
-	if (crv != CKR_OK) break;
-	context->update = (PK11Cipher) pk11_HashSign;
-	info = (PK11HashSignInfo *)PORT_Alloc(sizeof(PK11HashSignInfo));
-	if (info == NULL) {
-	   crv = CKR_HOST_MEMORY;
-	   break;
-	}
-	info->hashOid = SEC_OID_SHA1;
-	goto finish_rsa;
+    INIT_RSA_SIGN_MECH(MD5)
+    INIT_RSA_SIGN_MECH(MD2)
+    INIT_RSA_SIGN_MECH(SHA1)
+    INIT_RSA_SIGN_MECH(SHA256)
+    INIT_RSA_SIGN_MECH(SHA384)
+    INIT_RSA_SIGN_MECH(SHA512)
+
     case CKM_RSA_PKCS:
 	context->update = (PK11Cipher) RSA_Sign;
 	goto finish_rsa;
@@ -1939,20 +1879,22 @@ finish_rsa:
 	context->maxLen     = DSA_SIGNATURE_LEN;
 
 	break;
-    case CKM_MD2_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,HASH_AlgMD2,key,
-				*(CK_ULONG *)pMechanism->pParameter);
-	break;
-    case CKM_MD2_HMAC:
-	crv = pk11_doHMACInit(context,HASH_AlgMD2,key,MD2_LENGTH);
-	break;
-    case CKM_MD5_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,HASH_AlgMD5,key,
-				*(CK_ULONG *)pMechanism->pParameter);
-	break;
-    case CKM_MD5_HMAC:
-	crv = pk11_doHMACInit(context,HASH_AlgMD5,key,MD5_LENGTH);
-	break;
+
+#define INIT_HMAC_MECH(mmm) \
+    case CKM_ ## mmm ## _HMAC_GENERAL: \
+	crv = pk11_doHMACInit(context, HASH_Alg ## mmm ,key, \
+				*(CK_ULONG *)pMechanism->pParameter); \
+	break; \
+    case CKM_ ## mmm ## _HMAC: \
+	crv = pk11_doHMACInit(context, HASH_Alg ## mmm ,key, mmm ## _LENGTH); \
+	break; 
+
+    INIT_HMAC_MECH(MD2)
+    INIT_HMAC_MECH(MD5)
+    INIT_HMAC_MECH(SHA256)
+    INIT_HMAC_MECH(SHA384)
+    INIT_HMAC_MECH(SHA512)
+
     case CKM_SHA_1_HMAC_GENERAL:
 	crv = pk11_doHMACInit(context,HASH_AlgSHA1,key,
 				*(CK_ULONG *)pMechanism->pParameter);
@@ -1960,6 +1902,7 @@ finish_rsa:
     case CKM_SHA_1_HMAC:
 	crv = pk11_doHMACInit(context,HASH_AlgSHA1,key,SHA1_LENGTH);
 	break;
+
     case CKM_SSL3_MD5_MAC:
 	crv = pk11_doSSLMACInit(context,SEC_OID_MD5,key,
 					*(CK_ULONG *)pMechanism->pParameter);
@@ -2273,43 +2216,25 @@ CK_RV NSC_VerifyInit(CK_SESSION_HANDLE hSession,
 
     context->multi = PR_FALSE;
 
+#define INIT_RSA_VFY_MECH(mmm) \
+    case CKM_ ## mmm ## _RSA_PKCS: \
+        context->multi = PR_TRUE; \
+	crv = pk11_doSub ## mmm (context); \
+	if (crv != CKR_OK) break; \
+	context->verify = (PK11Verify) pk11_hashCheckSign; \
+	info = PORT_New(PK11HashVerifyInfo); \
+	if (info == NULL) { crv = CKR_HOST_MEMORY; break; } \
+	info->hashOid = SEC_OID_ ## mmm ; \
+	goto finish_rsa; 
+
     switch(pMechanism->mechanism) {
-    case CKM_MD5_RSA_PKCS:
-        context->multi = PR_TRUE;
-	crv = pk11_doSubMD5(context);
-	if (crv != CKR_OK) break;
-	context->verify = (PK11Verify) pk11_hashCheckSign;
-	info = (PK11HashVerifyInfo *)PORT_Alloc(sizeof(PK11HashVerifyInfo));
-	if (info == NULL) {
-	   crv = CKR_HOST_MEMORY;
-	   break;
-	}
-	info->hashOid = SEC_OID_MD5;
-	goto finish_rsa;
-    case CKM_MD2_RSA_PKCS:
-        context->multi = PR_TRUE;
-	crv = pk11_doSubMD2(context);
-	if (crv != CKR_OK) break;
-	context->verify = (PK11Verify) pk11_hashCheckSign;
-	info = (PK11HashVerifyInfo *)PORT_Alloc(sizeof(PK11HashVerifyInfo));
-	if (info == NULL) {
-	   crv = CKR_HOST_MEMORY;
-	   break;
-	}
-	info->hashOid = SEC_OID_MD2;
-	goto finish_rsa;
-    case CKM_SHA1_RSA_PKCS:
-        context->multi = PR_TRUE;
-	crv = pk11_doSubSHA1(context);
-	if (crv != CKR_OK) break;
-	context->verify = (PK11Verify) pk11_hashCheckSign;
-	info = (PK11HashVerifyInfo *)PORT_Alloc(sizeof(PK11HashVerifyInfo));
-	if (info == NULL) {
-	   crv = CKR_HOST_MEMORY;
-	   break;
-	}
-	info->hashOid = SEC_OID_SHA1;
-	goto finish_rsa;
+    INIT_RSA_VFY_MECH(MD5) 
+    INIT_RSA_VFY_MECH(MD2) 
+    INIT_RSA_VFY_MECH(SHA1) 
+    INIT_RSA_VFY_MECH(SHA256) 
+    INIT_RSA_VFY_MECH(SHA384) 
+    INIT_RSA_VFY_MECH(SHA512) 
+
     case CKM_RSA_PKCS:
 	context->verify = (PK11Verify) RSA_CheckSign;
 	goto finish_rsa;
@@ -2355,20 +2280,13 @@ finish_rsa:
 	context->destroy    = pk11_Null;
 	break;
 
-    case CKM_MD2_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,HASH_AlgMD2,key,
-				*(CK_ULONG *)pMechanism->pParameter);
-	break;
-    case CKM_MD2_HMAC:
-	crv = pk11_doHMACInit(context,HASH_AlgMD2,key,MD2_LENGTH);
-	break;
-    case CKM_MD5_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,HASH_AlgMD5,key,
-				*(CK_ULONG *)pMechanism->pParameter);
-	break;
-    case CKM_MD5_HMAC:
-	crv = pk11_doHMACInit(context,HASH_AlgMD5,key,MD5_LENGTH);
-	break;
+
+    INIT_HMAC_MECH(MD2)
+    INIT_HMAC_MECH(MD5)
+    INIT_HMAC_MECH(SHA256)
+    INIT_HMAC_MECH(SHA384)
+    INIT_HMAC_MECH(SHA512)
+
     case CKM_SHA_1_HMAC_GENERAL:
 	crv = pk11_doHMACInit(context,HASH_AlgSHA1,key,
 				*(CK_ULONG *)pMechanism->pParameter);
@@ -2376,6 +2294,7 @@ finish_rsa:
     case CKM_SHA_1_HMAC:
 	crv = pk11_doHMACInit(context,HASH_AlgSHA1,key,SHA1_LENGTH);
 	break;
+
     case CKM_SSL3_MD5_MAC:
 	crv = pk11_doSSLMACInit(context,SEC_OID_MD5,key,
 					*(CK_ULONG *)pMechanism->pParameter);

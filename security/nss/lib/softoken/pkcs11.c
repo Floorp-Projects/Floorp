@@ -261,6 +261,9 @@ static const struct mechanismList mechanisms[] = {
      {CKM_MD2_RSA_PKCS,		{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
      {CKM_MD5_RSA_PKCS,		{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
      {CKM_SHA1_RSA_PKCS,	{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
+     {CKM_SHA256_RSA_PKCS,	{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
+     {CKM_SHA384_RSA_PKCS,	{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
+     {CKM_SHA512_RSA_PKCS,	{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
      /* ------------------------- DSA Operations --------------------------- */
      {CKM_DSA_KEY_PAIR_GEN,	{512, 1024, CKF_GENERATE_KEY_PAIR}, PR_TRUE},
      {CKM_DSA,			{512, 1024, CKF_SN_VR},		PR_TRUE},
@@ -317,6 +320,15 @@ static const struct mechanismList mechanisms[] = {
      {CKM_SHA_1,		{0,   0, CKF_DIGEST},		PR_FALSE},
      {CKM_SHA_1_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
      {CKM_SHA_1_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_SHA256,		{0,   0, CKF_DIGEST},		PR_FALSE},
+     {CKM_SHA256_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_SHA256_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_SHA384,		{0,   0, CKF_DIGEST},		PR_FALSE},
+     {CKM_SHA384_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_SHA384_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_SHA512,		{0,   0, CKF_DIGEST},		PR_FALSE},
+     {CKM_SHA512_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
+     {CKM_SHA512_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_TRUE},
      {CKM_TLS_PRF_GENERAL,	{0, 512, CKF_SN_VR},		PR_FALSE},
      /* ------------------------- CAST Operations --------------------------- */
 #ifdef NSS_SOFTOKEN_DOES_CAST

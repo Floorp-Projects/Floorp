@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secdig.c,v 1.2 2001/01/07 08:13:12 nelsonb%netscape.com Exp $
+ * $Id: secdig.c,v 1.3 2002/12/12 06:05:20 nelsonb%netscape.com Exp $
  */
 #include "secdig.h"
 
@@ -102,6 +102,9 @@ SGN_CreateDigestInfo(SECOidTag algorithm, unsigned char *sig, unsigned len)
       case SEC_OID_MD2:
       case SEC_OID_MD5:
       case SEC_OID_SHA1:
+      case SEC_OID_SHA256:
+      case SEC_OID_SHA384:
+      case SEC_OID_SHA512:
 	break;
       default:
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);

@@ -76,6 +76,9 @@ PK11DefaultArrayEntry PK11_DefaultArray[] = {
 	{ "AES", SECMOD_AES_FLAG, CKM_AES_CBC },
 	{ "RC5", SECMOD_RC5_FLAG, CKM_RC5_CBC },
 	{ "SHA-1", SECMOD_SHA1_FLAG, CKM_SHA_1 },
+	{ "SHA256", SECMOD_SHA256_FLAG, CKM_SHA256 },
+/*	{ "SHA384", SECMOD_SHA512_FLAG, CKM_SHA384 }, */
+	{ "SHA512", SECMOD_SHA512_FLAG, CKM_SHA512 },
 	{ "MD5", SECMOD_MD5_FLAG, CKM_MD5 },
 	{ "MD2", SECMOD_MD2_FLAG, CKM_MD2 },
 	{ "SSL", SECMOD_SSL_FLAG, CKM_SSL3_PRE_MASTER_KEY_GEN },
@@ -84,7 +87,8 @@ PK11DefaultArrayEntry PK11_DefaultArray[] = {
 	{ "Publicly-readable certs", SECMOD_FRIENDLY_FLAG, CKM_INVALID_MECHANISM },
 	{ "Random Num Generator", SECMOD_RANDOM_FLAG, CKM_FAKE_RANDOM },
 };
-int num_pk11_default_mechanisms = sizeof(PK11_DefaultArray) / sizeof(PK11_DefaultArray[0]);
+const int num_pk11_default_mechanisms = 
+                sizeof(PK11_DefaultArray) / sizeof(PK11_DefaultArray[0]);
 
 /*
  * These  slotlists are lists of modules which provide default support for
@@ -104,7 +108,9 @@ static PK11SlotList pk11_aesSlotList,
     pk11_ideaSlotList,
     pk11_sslSlotList,
     pk11_tlsSlotList,
-    pk11_randomSlotList;
+    pk11_randomSlotList,
+    pk11_sha256SlotList,
+    pk11_sha512SlotList;	/* slots do SHA512 and SHA384 */
 
 /*
  * Tables used for Extended mechanism mapping (currently not used)
@@ -1239,6 +1245,8 @@ PK11_InitSlotLists(void)
     pk11_initSlotList(&pk11_sslSlotList);
     pk11_initSlotList(&pk11_tlsSlotList);
     pk11_initSlotList(&pk11_randomSlotList);
+    pk11_initSlotList(&pk11_sha256SlotList);
+    pk11_initSlotList(&pk11_sha512SlotList);
     return SECSuccess;
 }
 
@@ -1260,6 +1268,8 @@ PK11_DestroySlotLists(void)
     pk11_freeSlotList(&pk11_sslSlotList);
     pk11_freeSlotList(&pk11_tlsSlotList);
     pk11_freeSlotList(&pk11_randomSlotList);
+    pk11_freeSlotList(&pk11_sha256SlotList);
+    pk11_freeSlotList(&pk11_sha512SlotList);
     return;
 }
 
@@ -1287,6 +1297,11 @@ PK11_GetSlotList(CK_MECHANISM_TYPE type)
 	return &pk11_rc5SlotList;
     case CKM_SHA_1:
 	return &pk11_sha1SlotList;
+    case CKM_SHA256:
+	return &pk11_sha256SlotList;
+    case CKM_SHA384:
+    case CKM_SHA512:
+	return &pk11_sha512SlotList;
     case CKM_MD5:
 	return &pk11_md5SlotList;
     case CKM_MD2:
@@ -1355,8 +1370,7 @@ PK11_LoadSlotList(PK11SlotInfo *slot, PK11PreSlotInfo *psi, int count)
 	return;
     }
 
-    for (i=0; i < sizeof(PK11_DefaultArray)/sizeof(PK11_DefaultArray[0]);
-								i++) {
+    for (i=0; i < num_pk11_default_mechanisms; i++) {
 	if (slot->defaultFlags & PK11_DefaultArray[i].flag) {
 	    CK_MECHANISM_TYPE mechanism = PK11_DefaultArray[i].mechanism;
 	    PK11SlotList *slotList = PK11_GetSlotList(mechanism);
@@ -1418,8 +1432,7 @@ PK11_ClearSlotList(PK11SlotInfo *slot)
     if (slot->disabled) return;
     if (slot->defaultFlags == 0) return;
 
-    for (i=0; i < sizeof(PK11_DefaultArray)/sizeof(PK11_DefaultArray[0]);
-								i++) {
+    for (i=0; i < num_pk11_default_mechanisms; i++) {
 	if (slot->defaultFlags & PK11_DefaultArray[i].flag) {
 	    CK_MECHANISM_TYPE mechanism = PK11_DefaultArray[i].mechanism;
 	    PK11SlotList *slotList = PK11_GetSlotList(mechanism);
@@ -2584,8 +2597,13 @@ PK11_GetBestSlotMultiple(CK_MECHANISM_TYPE *type, int mech_count, void *wincx)
 
     listNeedLogin = PR_FALSE;
     for (i=0; i < mech_count; i++) {
-	if ((type[i] != CKM_FAKE_RANDOM) && (type[i] != CKM_SHA_1) &&
-			(type[i] != CKM_MD5) && (type[i] != CKM_MD2)) {
+	if ((type[i] != CKM_FAKE_RANDOM) && 
+	    (type[i] != CKM_SHA_1) &&
+	    (type[i] != CKM_SHA256) &&
+	    (type[i] != CKM_SHA384) &&
+	    (type[i] != CKM_SHA512) &&
+	    (type[i] != CKM_MD5) && 
+	    (type[i] != CKM_MD2)) {
 	    listNeedLogin = PR_TRUE;
 	    break;
 	}
@@ -2847,6 +2865,9 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len)
     case CKM_MD2_RSA_PKCS:
     case CKM_MD5_RSA_PKCS:
     case CKM_SHA1_RSA_PKCS:
+    case CKM_SHA256_RSA_PKCS:
+    case CKM_SHA384_RSA_PKCS:
+    case CKM_SHA512_RSA_PKCS:
     case CKM_KEY_WRAP_SET_OAEP:
     case CKM_RSA_PKCS_KEY_PAIR_GEN:
 	return CKK_RSA;
@@ -2876,6 +2897,12 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len)
     case CKM_TLS_KEY_AND_MAC_DERIVE:
     case CKM_SHA_1_HMAC:
     case CKM_SHA_1_HMAC_GENERAL:
+    case CKM_SHA256_HMAC:
+    case CKM_SHA256_HMAC_GENERAL:
+    case CKM_SHA384_HMAC:
+    case CKM_SHA384_HMAC_GENERAL:
+    case CKM_SHA512_HMAC:
+    case CKM_SHA512_HMAC_GENERAL:
     case CKM_MD2_HMAC:
     case CKM_MD2_HMAC_GENERAL:
     case CKM_MD5_HMAC:
@@ -3000,6 +3027,9 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_MD2_RSA_PKCS:
     case CKM_MD5_RSA_PKCS:
     case CKM_SHA1_RSA_PKCS:
+    case CKM_SHA256_RSA_PKCS:
+    case CKM_SHA384_RSA_PKCS:
+    case CKM_SHA512_RSA_PKCS:
     case CKM_KEY_WRAP_SET_OAEP:
     case CKM_RSA_PKCS_KEY_PAIR_GEN:
 	return CKM_RSA_PKCS_KEY_PAIR_GEN;
@@ -3026,6 +3056,12 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
 	return CKM_SSL3_PRE_MASTER_KEY_GEN;
     case CKM_SHA_1_HMAC:
     case CKM_SHA_1_HMAC_GENERAL:
+    case CKM_SHA256_HMAC:
+    case CKM_SHA256_HMAC_GENERAL:
+    case CKM_SHA384_HMAC:
+    case CKM_SHA384_HMAC_GENERAL:
+    case CKM_SHA512_HMAC:
+    case CKM_SHA512_HMAC_GENERAL:
     case CKM_MD2_HMAC:
     case CKM_MD2_HMAC_GENERAL:
     case CKM_MD5_HMAC:

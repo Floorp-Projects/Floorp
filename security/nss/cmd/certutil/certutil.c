@@ -347,14 +347,56 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
     return rv;
 }
 
+/* This function belongs in libNSS somewhere. */
+static SECOidTag
+getSignatureOidTag(KeyType keyType, SECOidTag hashAlgTag)
+{
+    SECOidTag sigTag = SEC_OID_UNKNOWN;
+
+    switch (keyType) {
+    case rsaKey:
+	switch (hashAlgTag) {
+	case SEC_OID_MD2:
+	    sigTag = SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_UNKNOWN:	/* default for RSA if not specified */
+	case SEC_OID_MD5:
+	    sigTag = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_SHA1:
+	    sigTag = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_SHA256:
+	    sigTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_SHA384:
+	    sigTag = SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_SHA512:
+	    sigTag = SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION;	break;
+	default:
+	    break;
+	}
+	break;
+    case dsaKey:
+	switch (hashAlgTag) {
+	case SEC_OID_UNKNOWN:	/* default for DSA if not specified */
+	case SEC_OID_SHA1:
+	    sigTag = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST; break;
+	default:
+	    break;
+	}
+	break;
+    default:
+    	break;
+    }
+    return sigTag;
+}
+
 static SECStatus
 CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
-	CERTName *subject, char *phone, int ascii, const char *emailAddrs,
-        PRFileDesc *outFile)
+        SECOidTag hashAlgTag, CERTName *subject, char *phone, int ascii, 
+	const char *emailAddrs, PRFileDesc *outFile)
 {
     CERTSubjectPublicKeyInfo *spki;
     CERTCertificateRequest *cr;
     SECItem *encoding;
+    SECOidTag signAlgTag;
     SECItem result;
     SECStatus rv;
     PRArenaPool *arena;
@@ -389,20 +431,13 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
     }
 
     /* Sign the request */
-    switch (keyType) {
-    case rsaKey:
-	rv = SEC_DerSignData(arena, &result, encoding->data, encoding->len, 
-	                     privk, SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION);
-	break;
-    case dsaKey:
-	rv = SEC_DerSignData(arena, &result, encoding->data, encoding->len, 
-	                 privk, SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST);
-	break;
-    default:
-	SECU_PrintError(progName, "Must use rsa or dsa key type");
+    signAlgTag = getSignatureOidTag(keyType, hashAlgTag);
+    if (signAlgTag == SEC_OID_UNKNOWN) {
+	SECU_PrintError(progName, "unknown Key or Hash type");
 	return SECFailure;
     }
-
+    rv = SEC_DerSignData(arena, &result, encoding->data, encoding->len, 
+			 privk, signAlgTag);
     if (rv) {
 	SECU_PrintError(progName, "signing of data failed");
 	return SECFailure;
@@ -1547,7 +1582,6 @@ static SECStatus
 AddEmailSubjectAlt(void *extHandle, const char *emailAddrs)
 {
     SECItem item = { 0, NULL, 0 };
-    void *value;
     CERTGeneralName *emailList = NULL;
     CERTGeneralName *current;
     PRCList *prev = NULL;
@@ -1686,9 +1720,9 @@ AddBasicConstraint(void *extHandle)
 }
 
 static SECItem *
-SignCert(CERTCertDBHandle *handle, 
-CERTCertificate *cert, PRBool selfsign, 
-SECKEYPrivateKey *privKey, char *issuerNickName, void *pwarg)
+SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign, 
+         SECOidTag hashAlgTag,
+         SECKEYPrivateKey *privKey, char *issuerNickName, void *pwarg)
 {
     SECItem der;
     SECItem *result = NULL;
@@ -1716,17 +1750,10 @@ SECKEYPrivateKey *privKey, char *issuerNickName, void *pwarg)
 	
     arena = cert->arena;
 
-    switch(privKey->keyType) {
-      case rsaKey:
-	algID = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
-	break;
-      case dsaKey:
-	algID = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
-	break;
-      default:
-	fprintf(stderr, "Unknown key type for issuer.");
+    algID = getSignatureOidTag(privKey->keyType, hashAlgTag);
+    if (algID == SEC_OID_UNKNOWN) {
+	fprintf(stderr, "Unknown key or hash type for issuer.");
 	goto done;
-	break;
     }
 
     rv = SECOID_SetAlgorithmID(arena, &cert->signature, algID, 0);
@@ -1754,8 +1781,7 @@ SECKEYPrivateKey *privKey, char *issuerNickName, void *pwarg)
 	goto done;
     }
 
-    rv = SEC_DerSignData (arena, result, der.data, der.len, privKey,
-			  algID);
+    rv = SEC_DerSignData(arena, result, der.data, der.len, privKey, algID);
     if (rv != SECSuccess) {
 	fprintf (stderr, "Could not sign encoded certificate data.\n");
 	PORT_Free(result);
@@ -1950,6 +1976,7 @@ CreateCert(
 	PRFileDesc *outFile, 
 	SECKEYPrivateKey *selfsignprivkey,
 	void 	*pwarg,
+	SECOidTag hashAlgTag,
 	unsigned int serialNumber, 
 	int     warpmonths,
 	int     validitylength,
@@ -2043,12 +2070,14 @@ CreateCert(
 
 	CERT_FinishExtensions(extHandle);
 
-	certDER = SignCert (handle, subjectCert, selfsign, selfsignprivkey, issuerNickName,pwarg);
+	certDER = SignCert(handle, subjectCert, selfsign, hashAlgTag,
+	                   selfsignprivkey, issuerNickName,pwarg);
 
 	if (certDER) {
 	   if (ascii) {
 		PR_fprintf(outFile, "%s\n%s\n%s\n", NS_CERT_HEADER, 
-		        BTOA_DataToAscii(certDER->data, certDER->len), NS_CERT_TRAILER);
+		           BTOA_DataToAscii(certDER->data, certDER->len), 
+			   NS_CERT_TRAILER);
 	   } else {
 		PR_Write(outFile, certDER->data, certDER->len);
 	   }
@@ -2126,7 +2155,8 @@ enum {
     opt_SelfSign,
     opt_RW,
     opt_Exponent,
-    opt_NoiseFile
+    opt_NoiseFile,
+    opt_Hash
 };
 
 static secuCommandFlag certutil_commands[] =
@@ -2189,7 +2219,8 @@ static secuCommandFlag certutil_options[] =
 	{ /* opt_SelfSign            */  'x', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_RW                  */  'X', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_Exponent            */  'y', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_NoiseFile           */  'z', PR_TRUE,  0, PR_FALSE }
+	{ /* opt_NoiseFile           */  'z', PR_TRUE,  0, PR_FALSE },
+	{ /* opt_Hash                */  'Z', PR_TRUE,  0, PR_FALSE }
 };
 
 int 
@@ -2205,9 +2236,8 @@ main(int argc, char **argv)
     char *      slotname        = "internal";
     char *      certPrefix      = "";
     KeyType     keytype         = rsaKey;
-    /*char *	keyslot	        = NULL;*/
-    /*char *      keynickname     = NULL;*/
     char *      name            = NULL;
+    SECOidTag   hashAlgTag      = SEC_OID_UNKNOWN;
     int	        keysize	        = DEFAULT_KEY_BITS;
     int         publicExponent  = 0x010001;
     unsigned int serialNumber   = 0;
@@ -2267,17 +2297,42 @@ main(int argc, char **argv)
 	    slotname = PL_strdup(certutil.options[opt_TokenName].arg);
     }
 
+    /*  -Z hash type  */
+    if (certutil.options[opt_Hash].activated) {
+	char * arg = certutil.options[opt_Hash].arg;
+	if (!PL_strcmp(arg, "MD2")) {
+	    hashAlgTag = SEC_OID_MD2;
+	} else if (!PL_strcmp(arg, "MD4")) {
+	    hashAlgTag = SEC_OID_MD4;
+	} else if (!PL_strcmp(arg, "MD5")) {
+	    hashAlgTag = SEC_OID_MD5;
+	} else if (!PL_strcmp(arg, "SHA1")) {
+	    hashAlgTag = SEC_OID_SHA1;
+	} else if (!PL_strcmp(arg, "SHA256")) {
+	    hashAlgTag = SEC_OID_SHA256;
+	} else if (!PL_strcmp(arg, "SHA384")) {
+	    hashAlgTag = SEC_OID_SHA384;
+	} else if (!PL_strcmp(arg, "SHA512")) {
+	    hashAlgTag = SEC_OID_SHA512;
+	} else {
+	    PR_fprintf(PR_STDERR, "%s -Z:  %s is not a recognized type.\n",
+	               progName, arg);
+	    return 255;
+	}
+    }
+
     /*  -k key type  */
     if (certutil.options[opt_KeyType].activated) {
-	if (PL_strcmp(certutil.options[opt_KeyType].arg, "rsa") == 0) {
+	char * arg = certutil.options[opt_KeyType].arg;
+	if (PL_strcmp(arg, "rsa") == 0) {
 	    keytype = rsaKey;
-	} else if (PL_strcmp(certutil.options[opt_KeyType].arg, "dsa") == 0) {
+	} else if (PL_strcmp(arg, "dsa") == 0) {
 	    keytype = dsaKey;
-	} else if (PL_strcmp(certutil.options[opt_KeyType].arg, "all") == 0) {
+	} else if (PL_strcmp(arg, "all") == 0) {
 	    keytype = nullKey;
 	} else {
 	    PR_fprintf(PR_STDERR, "%s -k:  %s is not a recognized type.\n",
-	               progName, certutil.options[opt_KeyType].arg);
+	               progName, arg);
 	    return 255;
 	}
     }
@@ -2670,7 +2725,7 @@ main(int argc, char **argv)
     /*  Make a cert request (-R or -S).  */
     if (certutil.commands[cmd_CreateAndAddCert].activated ||
          certutil.commands[cmd_CertReq].activated) {
-	rv = CertReq(privkey, pubkey, keytype, subject,
+	rv = CertReq(privkey, pubkey, keytype, hashAlgTag, subject,
 	             certutil.options[opt_PhoneNumber].arg,
 	             certutil.options[opt_ASCIIForIO].activated,
 		     certutil.options[opt_ExtendedEmailAddrs].arg,
@@ -2710,7 +2765,7 @@ main(int argc, char **argv)
          certutil.commands[cmd_CreateNewCert].activated) {
 	rv = CreateCert(certHandle, 
 	                certutil.options[opt_IssuerName].arg,
-	                inFile, outFile, privkey, &pwdata,
+	                inFile, outFile, privkey, &pwdata, hashAlgTag,
 	                serialNumber, warpmonths, validitylength,
 		        certutil.options[opt_ExtendedEmailAddrs].arg,
 	                certutil.options[opt_ASCIIForIO].activated,

@@ -34,7 +34,7 @@
 /*
  * SMIME message methods
  *
- * $Id: smimemessage.c,v 1.4 2000/12/22 17:16:21 relyea%netscape.com Exp $
+ * $Id: smimemessage.c,v 1.5 2002/12/12 06:05:39 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -166,7 +166,7 @@ NSS_SMIMEMessage_CreateSigned(CERTCertificate *scert,
     NSSCMSSignerInfo *signerinfo;
 
     /* See note in header comment above about digestalg. */
-    PORT_Assert (digestalgtag == SEC_OID_SHA1);
+    /* Doesn't explain this.  PORT_Assert (digestalgtag == SEC_OID_SHA1); */
 
     cmsg = NSS_CMSMessage_Create(NULL);
     if (cmsg == NULL)

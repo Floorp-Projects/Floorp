@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.6 2001/12/07 01:36:13 relyea%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.7 2002/12/12 06:05:38 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -258,7 +258,7 @@ NSS_CMSRecipientInfo_GetEncryptedKey(NSSCMSRecipientInfo *ri, int subIndex)
 SECOidTag
 NSS_CMSRecipientInfo_GetKeyEncryptionAlgorithmTag(NSSCMSRecipientInfo *ri)
 {
-    SECOidTag encalgtag = SEC_OID_SHA1; /* set to not a valid encryption alg */
+    SECOidTag encalgtag = SEC_OID_UNKNOWN; /* an invalid encryption alg */
 
     switch (ri->recipientInfoType) {
     case NSSCMSRecipientInfoID_KeyTrans:

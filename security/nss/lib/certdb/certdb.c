@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.46 2002/10/23 22:00:48 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.47 2002/12/12 06:05:25 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -45,7 +45,6 @@
 #include "secder.h"
 #include "secoid.h"
 #include "secasn1.h"
-#include "blapi.h"		/* for SHA1_HashBuf */
 #include "genname.h"
 #include "keyhi.h"
 #include "secitem.h"

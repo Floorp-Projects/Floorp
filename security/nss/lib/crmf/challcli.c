@@ -37,6 +37,7 @@
 #include "secitem.h"
 #include "pk11func.h"
 #include "secder.h"
+#include "sechash.h"
 
 CMMFPOPODecKeyChallContent*
 CMMF_CreatePOPODecKeyChallContentFromDER(const char *buf, long len)
@@ -118,16 +119,14 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
 {
     CMMFChallenge  *challenge;
     SECItem        *decryptedRand=NULL;
-    SECStatus       rv = SECFailure;
+    SECAlgorithmID *owf;
     PK11SlotInfo   *slot;
     PK11SymKey     *symKey = NULL;
+    SECStatus       rv     = SECFailure;
     CMMFRand        randStr;
-    SECAlgorithmID *owf;
-    unsigned char   hash[SHA1_LENGTH]; /*SHA1 is the longest, so we'll use
-					*it's length.
-					*/
     SECItem         hashItem;
     SECOidTag       tag;
+    unsigned char   hash[HASH_LENGTH_MAX]; 
 
     PORT_Assert(inChalCont != NULL && inPrivKey != NULL);
     if (inChalCont == NULL || inIndex <0 || inIndex > inChalCont->numChallenges
@@ -158,9 +157,9 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
     decryptedRand = PK11_GetKeyData(symKey);
     rv = SEC_ASN1DecodeItem(NULL, &randStr, CMMFRandTemplate,
 			    decryptedRand); 
-    /* The decryptedRand returned points to a member within the symKey structure,
-     * so we don't want to free it. Let the symKey destruction function deal with
-     * freeing that memory.
+    /* The decryptedRand returned points to a member within the symKey 
+     * structure, so we don't want to free it. Let the symKey destruction 
+     * function deal with freeing that memory.
      */
     if (rv != SECSuccess) {
         goto loser;
@@ -175,19 +174,10 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
     }
     /* Verify the hashes in the challenge */
     tag = SECOID_FindOIDTag(&owf->algorithm);
-    switch (tag) {
-    case SEC_OID_MD2:
-        hashItem.len = MD2_LENGTH;
-	break;
-    case SEC_OID_MD5:
-        hashItem.len = MD5_LENGTH;
-	break;
-    case SEC_OID_SHA1:
-        hashItem.len = SHA1_LENGTH;
-	break;
-    default:
-        goto loser;
-    }
+    hashItem.len = HASH_ResultLenByOidTag(tag);
+    if (!hashItem.len)
+        goto loser;	/* error code has been set */
+
     rv = PK11_HashBuf(tag, hash, randStr.integer.data, randStr.integer.len);
     if (rv != SECSuccess) {
         goto loser;

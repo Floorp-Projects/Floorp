@@ -60,6 +60,12 @@ sec_pkcs12_algtag_to_mech(SECOidTag algtag)
 	return CKM_MD5_HMAC;
     case SEC_OID_SHA1:
 	return CKM_SHA_1_HMAC;
+    case SEC_OID_SHA256:
+	return CKM_SHA256_HMAC;
+    case SEC_OID_SHA384:
+	return CKM_SHA384_HMAC;
+    case SEC_OID_SHA512:
+	return CKM_SHA512_HMAC;
     default:
 	break;
     }

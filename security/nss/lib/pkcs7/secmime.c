@@ -35,7 +35,7 @@
  * Stuff specific to S/MIME policy and interoperability.
  * Depends on PKCS7, but there should be no dependency the other way around.
  *
- * $Id: secmime.c,v 1.1 2000/03/31 19:16:08 relyea%netscape.com Exp $
+ * $Id: secmime.c,v 1.2 2002/12/12 06:05:36 nelsonb%netscape.com Exp $
  */
 
 #include "secmime.h"
@@ -857,7 +857,7 @@ SECMIME_CreateSigned (CERTCertificate *scert,
     SECStatus rv;
 
     /* See note in header comment above about digestalg. */
-    PORT_Assert (digestalg == SEC_OID_SHA1);
+    /* Doesn't explain this. PORT_Assert (digestalg == SEC_OID_SHA1); */
 
     cinfo = SEC_PKCS7CreateSignedData (scert, certUsageEmailSigner,
 				       certdb, digestalg, digest,

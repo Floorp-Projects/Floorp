@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secsign.c,v 1.4 2002/09/19 01:07:43 nicolson%netscape.com Exp $
+ * $Id: secsign.c,v 1.5 2002/12/12 06:05:17 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -85,6 +85,23 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
 	signalg = SEC_OID_PKCS1_RSA_ENCRYPTION;
 	keyType = rsaKey;
 	break;
+
+      case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
+	hashalg = SEC_OID_SHA256;
+	signalg = SEC_OID_PKCS1_RSA_ENCRYPTION;
+	keyType = rsaKey;
+	break;
+      case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
+	hashalg = SEC_OID_SHA384;
+	signalg = SEC_OID_PKCS1_RSA_ENCRYPTION;
+	keyType = rsaKey;
+	break;
+      case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
+	hashalg = SEC_OID_SHA512;
+	signalg = SEC_OID_PKCS1_RSA_ENCRYPTION;
+	keyType = rsaKey;
+	break;
+
       /* what about normal DSA? */
       case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
       case SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST:
@@ -147,20 +164,9 @@ SGN_Begin(SGNContext *cx)
 	cx->hashcx = NULL;
     }
 
-    switch (cx->hashalg) {
-      case SEC_OID_MD2:
-	cx->hashobj = &SECHashObjects[HASH_AlgMD2];
-	break;
-      case SEC_OID_MD5:
-	cx->hashobj = &SECHashObjects[HASH_AlgMD5];
-	break;
-      case SEC_OID_SHA1:
-	cx->hashobj = &SECHashObjects[HASH_AlgSHA1];
-	break;
-      default:
-	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-	return SECFailure;
-    }
+    cx->hashobj = HASH_GetHashObjectByOidTag(cx->hashalg);
+    if (!cx->hashobj)
+	return SECFailure;	/* error code is already set */
 
     cx->hashcx = (*cx->hashobj->create)();
     if (cx->hashcx == NULL)

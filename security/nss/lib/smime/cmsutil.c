@@ -34,7 +34,7 @@
 /*
  * CMS miscellaneous utility functions.
  *
- * $Id: cmsutil.c,v 1.7 2001/11/02 00:03:32 ddrinan%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.8 2002/12/12 06:05:39 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -178,19 +178,30 @@ NSS_CMSAlgArray_GetIndexByAlgID(SECAlgorithmID **algorithmArray, SECAlgorithmID 
  *  algorithm was not found.
  */
 int
-NSS_CMSAlgArray_GetIndexByAlgTag(SECAlgorithmID **algorithmArray, SECOidTag algtag)
+NSS_CMSAlgArray_GetIndexByAlgTag(SECAlgorithmID **algorithmArray, 
+                                 SECOidTag algtag)
 {
     SECOidData *algid;
-    int i;
+    int i = -1;
 
     if (algorithmArray == NULL || algorithmArray[0] == NULL)
-	return -1;
+	return i;
 
+#ifdef ORDER_N_SQUARED
     for (i = 0; algorithmArray[i] != NULL; i++) {
 	algid = SECOID_FindOID(&(algorithmArray[i]->algorithm));
 	if (algid->offset == algtag)
 	    break;	/* bingo */
     }
+#else
+    algid = SECOID_FindOIDByTag(algtag);
+    if (!algid) 
+    	return i;
+    for (i = 0; algorithmArray[i] != NULL; i++) {
+	if (SECITEM_ItemsAreEqual(&algorithmArray[i]->algorithm, &algid->oid))
+	    break;	/* bingo */
+    }
+#endif
 
     if (algorithmArray[i] == NULL)
 	return -1;	/* not found */
@@ -201,29 +212,9 @@ NSS_CMSAlgArray_GetIndexByAlgTag(SECAlgorithmID **algorithmArray, SECOidTag algt
 const SECHashObject *
 NSS_CMSUtil_GetHashObjByAlgID(SECAlgorithmID *algid)
 {
-    SECOidData *oiddata;
-    const SECHashObject *digobj;
+    SECOidTag oidTag = SECOID_FindOIDTag(&(algid->algorithm));
+    const SECHashObject *digobj = HASH_GetHashObjectByOidTag(oidTag);
 
-    /* here are the algorithms we know */
-    oiddata = SECOID_FindOID(&(algid->algorithm));
-    if (oiddata == NULL) {
-	digobj = NULL;
-    } else {
-	switch (oiddata->offset) {
-	case SEC_OID_MD2:
-	    digobj = HASH_GetHashObject(HASH_AlgMD2);
-	    break;
-	case SEC_OID_MD5:
-	    digobj = HASH_GetHashObject(HASH_AlgMD5);
-	    break;
-	case SEC_OID_SHA1:
-	    digobj = HASH_GetHashObject(HASH_AlgSHA1);
-	    break;
-	default:
-	    digobj = NULL;
-	    break;
-	}
-    }
     return digobj;
 }
 
@@ -243,6 +234,12 @@ NSS_CMSUtil_MakeSignatureAlgorithm(SECOidTag hashalg, SECOidTag encalg)
 	    return SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
 	  case SEC_OID_SHA1:
 	    return SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;
+	  case SEC_OID_SHA256:
+	    return SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
+	  case SEC_OID_SHA384:
+	    return SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION;
+	  case SEC_OID_SHA512:
+	    return SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION;
 	  default:
 	    return SEC_OID_UNKNOWN;
 	}
