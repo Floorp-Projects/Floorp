@@ -53,8 +53,6 @@ class InterpreterData implements Serializable {
         itsStringTable = new String[INITIAL_STRINGTABLE_SIZE];
 
         itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
-        if (securityDomain == null)
-            Context.checkSecurityDomainRequired();
         this.securityDomain = securityDomain;
     }
 

@@ -38,9 +38,14 @@ This interface can be implemented to control the actions the JavaScript
 engine takes when it encounters errors.</li>
 
 <li>
-<a href="org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
+<a href="org/mozilla/javascript/SecurityController.html">SecurityController</a>
 - Optional support routines that must be provided by embeddings implementing
 security controls on scripts.</li>
+
+<li>
+<a href="org/mozilla/javascript/ClassShutter.html">ClassShutter</a>
+- Embeddings that wish to filter Java classes that are visible to scripts
+through the LiveConnect, should implement this interface.</li>
 
 <li>
 <a href="org/mozilla/javascript/Wrapper.html">Wrapper</a> - Interface implemented

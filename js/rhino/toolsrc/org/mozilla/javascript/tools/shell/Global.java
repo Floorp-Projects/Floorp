@@ -397,7 +397,7 @@ class Runner implements Runnable {
     }
 
     public void run() {
-        Context cx = Context.enter();
+        Context cx = Main.enterContext();
 
         try {
             if (f != null)

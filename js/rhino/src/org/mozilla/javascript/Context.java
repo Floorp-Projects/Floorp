@@ -96,22 +96,6 @@ public class Context {
      * @see org.mozilla.javascript.Context#enter
      */
     public Context() {
-        init();
-    }
-
-    /**
-     * Create a new context with the associated security support.
-     *
-     * @param securitySupport an encapsulation of the functionality
-     *        needed to support security for scripts.
-     * @see org.mozilla.javascript.SecuritySupport
-     */
-    public Context(SecuritySupport securitySupport) {
-        this.securitySupport = securitySupport;
-        init();
-    }
-
-    private void init() {
         setLanguageVersion(VERSION_DEFAULT);
         optimizationLevel = codegenClass != null ? 0 : -1;
         Object[] array = contextListeners;
@@ -120,6 +104,14 @@ public class Context {
                 ((ContextListener)array[i]).contextCreated(this);
             }
         }
+    }
+
+/**
+@deprecated The {@link SecuritySupport} class is deprecated. See its documentation for the upgrade path.
+*/
+    public Context(SecuritySupport x) {
+        this();
+        setClassShutter(x);
     }
 
     /**
@@ -1473,54 +1465,48 @@ public class Context {
     }
 
     /**
-     * Set the security support for this context.
-     * <p> SecuritySupport may only be set if it is currently null.
+     * Set the security controller for this context.
+     * <p> SecurityController may only be set if it is currently null.
      * Otherwise a SecurityException is thrown.
-     * @param supportObj a SecuritySupport object
-     * @throws SecurityException if there is already a SecuritySupport
+     * @param controller a SecurityController object
+     * @throws SecurityException if there is already a SecurityController
      *         object for this Context
      */
-    public synchronized void setSecuritySupport(SecuritySupport supportObj) {
-        if (securitySupport != null) {
+    public void setSecurityController(SecurityController controller) {
+        if (controller == null) throw new IllegalArgumentException();
+        if (securityController != null) {
             throw new SecurityException("Cannot overwrite existing " +
-                                        "SecuritySupport object");
+                                        "SecurityController object");
         }
-        securitySupport = supportObj;
+        securityController = controller;
+    }
+
+/**
+@deprecated The {@link SecuritySupport} class is deprecated. See its documentation for the upgrade path.
+*/
+    public void setSecuritySupport(SecuritySupport x) {
+        setClassShutter(x);
     }
 
     /**
-     * Return true if a security domain is required on calls to
-     * compile and evaluate scripts.
-     *
-     * @since 1.4 Release 2
+     * Set the LiveConnect access filter for this context.
+     * <p> {@link ClassShutter} may only be set if it is currently null.
+     * Otherwise a SecurityException is thrown.
+     * @param shutter a ClassShutter object
+     * @throws SecurityException if there is already a ClassShutter
+     *         object for this Context
      */
-    public static boolean isSecurityDomainRequired() {
-        return requireSecurityDomain;
+    public void setClassShutter(ClassShutter shutter) {
+        if (shutter == null) throw new IllegalArgumentException();
+        if (classShutter != null) {
+            throw new SecurityException("Cannot overwrite existing " +
+                                        "ClassShutter object");
+        }
+        classShutter = shutter;
     }
 
-    /**
-     * Returns the security context associated with the innermost
-     * script or function being executed by the interpreter.
-     * @since 1.4 release 2
-     */
-    public Object getInterpreterSecurityDomain() {
-        return interpreterSecurityDomain;
-    }
-
-    /**
-     * Returns true if the class parameter is a class in the
-     * interpreter. Typically used by embeddings that get a class
-     * context to check security. These embeddings must know
-     * whether to get the security context associated with the
-     * interpreter or not.
-     *
-     * @param cl a class to test whether or not it is an interpreter
-     *           class
-     * @return true if cl is an interpreter class
-     * @since 1.4 release 2
-     */
-    public boolean isInterpreterClass(Class cl) {
-        return cl == Interpreter.class;
+    ClassShutter getClassShutter() {
+        return classShutter;
     }
 
     /**
@@ -1943,11 +1929,17 @@ public class Context {
                            boolean returnFunction)
         throws IOException
     {
+        Object dynamicDoamin = null;
+        if (securityController != null) {
+            dynamicDoamin = securityController.
+                getDynamicSecurityDomain(securityDomain);
+        }
+
         if (debugger != null && in != null) {
             in = new DebugReader(in);
         }
         TokenStream ts = new TokenStream(in, scope, sourceName, lineno);
-        return compile(scope, ts, securityDomain, in, returnFunction);
+        return compile(scope, ts, dynamicDoamin, in, returnFunction);
     }
 
     private static Class codegenClass;
@@ -2001,7 +1993,7 @@ public class Context {
     }
 
     private Object compile(Scriptable scope, TokenStream ts,
-                           Object securityDomain, Reader in,
+                           Object dynamicSecurityDomain, Reader in,
                            boolean returnFunction)
         throws IOException
     {
@@ -2038,8 +2030,10 @@ public class Context {
             tree.putProp(Node.DEBUGSOURCE_PROP, dr.getSaved());
         }
 
-        Object result = compiler.compile(this, scope, tree, securityDomain,
-                                         securitySupport, nameHelper);
+        Object result = compiler.compile(this, scope, tree,
+                                         dynamicSecurityDomain,
+                                         securityController,
+                                         nameHelper);
 
         return errorCount == 0 ? result : null;
     }
@@ -2120,80 +2114,14 @@ public class Context {
         return version == VERSION_DEFAULT || version >= VERSION_1_3;
     }
 
-    /**
-     * Get the security context from the given class.
-     * <p>
-     * When some form of security check needs to be done, the class context
-     * must retrieved from the security manager to determine what class is
-     * requesting some form of privileged access.
-     * @since 1.4 release 2
-     */
-    Object getSecurityDomainFromClass(Class cl) {
-        if (cl == Interpreter.class)
-            return interpreterSecurityDomain;
-        return securitySupport.getSecurityDomain(cl);
-    }
-
-    SecuritySupport getSecuritySupport() {
-        return securitySupport;
-    }
-
-    Object getSecurityDomainForStackDepth(int depth) {
-        Object result = null;
-        if (securitySupport != null) {
-            Class[] classes = securitySupport.getClassContext();
-            if (classes != null) {
-                if (depth != -1) {
-                    int depth1 = depth + 1;
-                    result = getSecurityDomainFromClass(classes[depth1]);
-                } else {
-                    for (int i=1; i < classes.length; i++) {
-                        result = getSecurityDomainFromClass(classes[i]);
-                        if (result != null)
-                            break;
-                    }
-                }
-            }
-        }
-        if (result != null)
-            return result;
-        if (requireSecurityDomain)
-            checkSecurityDomainRequired();
-        return null;
-    }
-
-    private static boolean requireSecurityDomain = true;
-    private static boolean resourceMissing = false;
-    final static String securityResourceName =
-        "org.mozilla.javascript.resources.Security";
-    static {
-        try {
-            ResourceBundle rb = ResourceBundle.getBundle(securityResourceName);
-            String s = rb.getString("security.requireSecurityDomain");
-            requireSecurityDomain = s.equals("true");
-        } catch (java.util.MissingResourceException mre) {
-            requireSecurityDomain = true;
-            resourceMissing = true;
-        } catch (SecurityException se) {
-            requireSecurityDomain = true;
-        }
-    }
-
-    final public static void checkSecurityDomainRequired() {
-        if (requireSecurityDomain) {
-            String msg = "Required security context not found";
-            if (resourceMissing) {
-                msg += ". Didn't find properties file at " +
-                       securityResourceName;
-            }
-            throw new SecurityException(msg);
-        }
+// Should not be public
+    SecurityController getSecurityController() {
+        return securityController;
     }
 
     public boolean isGeneratingDebugChanged() {
         return generatingDebugChanged;
     }
-
 
     /**
      * Add a name to the list of names forcing the creation of real
@@ -2259,7 +2187,8 @@ public class Context {
     int version;
     int errorCount;
 
-    private SecuritySupport securitySupport;
+    private SecurityController securityController;
+    private ClassShutter classShutter;
     private ErrorReporter errorReporter;
     private Thread currentThread;
     private RegExpProxy regExpProxy;

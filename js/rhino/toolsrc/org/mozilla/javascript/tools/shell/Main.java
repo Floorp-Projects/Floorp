@@ -65,6 +65,14 @@ public class Main {
      * execute scripts.
      */
     public static void main(String args[]) {
+        try {
+            if (Boolean.getBoolean("rhino.use_java_policy_security")) {
+                initJavaPolicySecuritySupport();
+            }
+        }catch (SecurityException ex) {
+            ex.printStackTrace(System.err);
+        }
+
         int result = exec(args);
         if (result != 0)
             System.exit(result);
@@ -74,7 +82,7 @@ public class Main {
      *  Execute the given arguments, but don't System.exit at the end.
      */
     public static int exec(String args[]) {
-        Context cx = Context.enter();
+        Context cx = enterContext();
         // Create the top-level scope object.
         global = getGlobal();
         errorReporter = new ToolErrorReporter(false, global.getErr());
@@ -102,13 +110,21 @@ public class Main {
     public static Global getGlobal() {
         if (global == null) {
             try {
-                global = new Global(Context.enter());
+                global = new Global(enterContext());
             }
             finally {
                 Context.exit();
             }
         }
         return global;
+    }
+
+    static Context enterContext() {
+        Context cx = new Context();
+		if (securityImpl != null) {
+        	cx.setSecurityController(securityImpl);
+		}
+        return Context.enter(cx);
     }
 
     /**
@@ -147,7 +163,7 @@ public class Main {
                 if (++i == args.length)
                     usage(arg);
                 Reader reader = new StringReader(args[i]);
-                evaluateReader(cx, global, reader, "<command>", 1);
+                evaluateReader(cx, global, reader, "<command>", 1, null);
                 continue;
             }
             if (arg.equals("-w")) {
@@ -172,6 +188,25 @@ public class Main {
     public static void usage(String s) {
         p(ToolErrorReporter.getMessage("msg.shell.usage", s));
         System.exit(1);
+    }
+
+    private static void initJavaPolicySecuritySupport() {
+        Throwable exObj;
+        try {
+            Class cl = Class.forName
+                ("org.mozilla.javascript.tools.shell.JavaPolicySecurity");
+            securityImpl = (SecurityProxy)cl.newInstance();
+            return;
+        }catch (ClassNotFoundException ex) {
+            exObj = ex;
+        }catch (IllegalAccessException ex) {
+            exObj = ex;
+        }catch (InstantiationException ex) {
+            exObj = ex;
+        }catch (LinkageError ex) {
+            exObj = ex;
+        }
+        throw new RuntimeException("Can not load security support: "+exObj);
     }
 
     /**
@@ -223,7 +258,7 @@ public class Main {
                 }
                 Reader reader = new StringReader(source);
                 Object result = evaluateReader(cx, global, reader,
-                                               "<stdin>", startline);
+                                               "<stdin>", startline, null);
                 if (result != cx.getUndefinedValue()) {
                     try {
                         global.getErr().println(cx.toString(result));
@@ -251,6 +286,16 @@ public class Main {
 
     public static void processFile(Context cx, Scriptable scope,
                                    String filename)
+    {
+        if (securityImpl == null) {
+            processFileSecure(cx, scope, filename, null);
+        }else {
+            securityImpl.callProcessFileSecure(cx, scope, filename);
+        }
+    }
+
+    static void processFileSecure(Context cx, Scriptable scope,
+                                  String filename, Object securityDomain)
     {
         Reader in = null;
         // Try filename first as URL
@@ -306,16 +351,17 @@ public class Main {
         // Here we evalute the entire contents of the file as
         // a script. Text is printed only if the print() function
         // is called.
-        evaluateReader(cx, scope, in, filename, 1);
+        evaluateReader(cx, scope, in, filename, 1, securityDomain);
     }
 
     public static Object evaluateReader(Context cx, Scriptable scope,
                                         Reader in, String sourceName,
-                                        int lineno)
+                                        int lineno, Object securityDomain)
     {
         Object result = cx.getUndefinedValue();
         try {
-            result = cx.evaluateReader(scope, in, sourceName, lineno, null);
+            result = cx.evaluateReader(scope, in, sourceName, lineno,
+                                       securityDomain);
         }
         catch (WrappedException we) {
             global.getErr().println(we.getWrappedException().toString());
@@ -402,4 +448,5 @@ public class Main {
     //static private DebugShell debugShell;
     static boolean processStdin = true;
     static Vector fileList = new Vector(5);
+    private static SecurityProxy securityImpl;
 }

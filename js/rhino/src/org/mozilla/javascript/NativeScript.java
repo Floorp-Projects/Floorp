@@ -159,10 +159,7 @@ public class NativeScript extends NativeFunction implements Script {
                 filename = "<Script object>";
                 linep[0] = 1;
             }
-            Object securityDomain =
-                cx.getSecurityDomainForStackDepth(5);
-            return cx.compileReader(scope, reader, filename, linep[0],
-                                    securityDomain);
+            return cx.compileReader(scope, reader, filename, linep[0], null);
         }
         catch (IOException e) {
             throw new RuntimeException("Unexpected IOException");

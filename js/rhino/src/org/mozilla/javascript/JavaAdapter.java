@@ -334,10 +334,10 @@ public class JavaAdapter extends ScriptableObject {
             }
         }
 
-        SecuritySupport ss = cx.getSecuritySupport();
-        if (ss != null) {
-            Object securityDomain = cx.getSecurityDomainForStackDepth(-1);
-            Class result = ss.defineClass(adapterName, bytes, securityDomain);
+        SecurityController sc = cx.getSecurityController();
+        if (sc != null) {
+            Object securityDomain = sc.getDynamicSecurityDomain(null);
+            Class result = sc.defineClass(adapterName, bytes, securityDomain);
             if (result != null)
                 return result;
         }

@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Norris Boyd
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -33,16 +33,13 @@
  * file under either the NPL or the GPL.
  */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.tools.shell;
 
-/**
-@deprecated Since Rhino 1.5 R4 this interface is split into {@link ClassShutter} interface with the single {@link ClassShutter#visibleToScripts(String fullClassName)} method and the abstract {@link SecurityController} class to implement domain-based security restrictions.
-<p>
-For binary compatibility with older code implementing SecuritySupport only to restrict class access via the visibleToScripts method, this interface extends {@link ClassShutter}, so to upgrade you code in this case simply replace SecuritySupport by ClassShutter and remove empty implementation of the defineClass, getClassContext and getSecurityDomain methods. Then call {@link Context#setClassShutter(ClassShutter)} in place of{@link Context#setSecuritySupport(SecuritySupport)}.
-<p>
-The new {@link SecurityController} is incompatible with the old security implementation, so if you previously had non-trivial implementation of the defineClass, getClassContext and getSecurityDomain methods, you need to upgrade you code to use the new {@link SecurityController}.
-*/
-public interface SecuritySupport extends ClassShutter {
+import org.mozilla.javascript.*;
 
-    public boolean visibleToScripts(String fullClassName);
+public abstract class SecurityProxy extends SecurityController
+{
+    protected abstract void callProcessFileSecure(Context cx, Scriptable scope,
+                                                  String filename);
+
 }

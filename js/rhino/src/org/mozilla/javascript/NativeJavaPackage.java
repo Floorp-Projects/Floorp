@@ -68,7 +68,7 @@ public class NativeJavaPackage extends ScriptableObject {
         "java.applet",
     };
 
-    public static class TopLevelPackage extends NativeJavaPackage 
+    public static class TopLevelPackage extends NativeJavaPackage
                                         implements Function
     {
         public TopLevelPackage() {
@@ -209,10 +209,10 @@ public class NativeJavaPackage extends ScriptableObject {
                             ? name
                             : packageName + "." + name;
         Context cx = Context.getContext();
-        SecuritySupport ss = cx.getSecuritySupport();
+        ClassShutter shutter = cx.getClassShutter();
         Scriptable newValue;
         try {
-            if (ss != null && !ss.visibleToScripts(newPackage))
+            if (shutter != null && !shutter.visibleToScripts(newPackage))
                 throw new ClassNotFoundException();
             Class newClass = classLoader != null
                 ? classLoader.loadClass(newPackage)

@@ -72,9 +72,8 @@ public class Interpreter {
 
     public Object compile(Context cx, Scriptable scope, Node tree,
                           Object securityDomain,
-                          SecuritySupport securitySupport,
+                          SecurityController securityController,
                           ClassNameHelper nameHelper)
-        throws IOException
     {
         version = cx.getLanguageVersion();
         itsData = new InterpreterData(cx, securityDomain);
@@ -1528,15 +1527,8 @@ public class Interpreter {
         throws JavaScriptException
     {
         if (cx.interpreterSecurityDomain != idata.securityDomain) {
-           // If securityDomain is different, update domain in Cotext
-           // and call self under new domain
-            Object savedDomain = cx.interpreterSecurityDomain;
-            cx.interpreterSecurityDomain = idata.securityDomain;
-            try {
-                return interpret(cx, scope, thisObj, args, fnOrScript, idata);
-            } finally {
-                cx.interpreterSecurityDomain = savedDomain;
-            }
+            return execWithNewDomain(cx, scope, thisObj, args, fnOrScript,
+                                     idata);
         }
 
         final Object DBL_MRK = Interpreter.DBL_MRK;
@@ -2786,6 +2778,35 @@ public class Interpreter {
         String name = f.argNames[slot];
         activation.put(name, activation, value);
     }
+
+    private static Object execWithNewDomain(Context cx, Scriptable scope,
+                                            final Scriptable thisObj,
+                                            final Object[] args,
+                                            final NativeFunction fnOrScript,
+                                            final InterpreterData idata)
+        throws JavaScriptException
+    {
+        if (cx.interpreterSecurityDomain == idata.securityDomain)
+            Context.codeBug();
+
+        Script code = new Script() {
+            public Object exec(Context cx, Scriptable scope)
+                throws JavaScriptException
+            {
+                return interpret(cx, scope, thisObj, args, fnOrScript, idata);
+            }
+        };
+
+        Object savedDomain = cx.interpreterSecurityDomain;
+        cx.interpreterSecurityDomain = idata.securityDomain;
+        try {
+            return cx.getSecurityController().
+                    execWithDomain(cx, scope, code, idata.securityDomain);
+        }finally {
+            cx.interpreterSecurityDomain = savedDomain;
+        }
+    }
+
 
     private boolean itsInFunctionFlag;
 

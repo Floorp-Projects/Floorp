@@ -495,14 +495,13 @@ public class NativeGlobal implements IdFunctionMaster {
 
         try {
             StringReader in = new StringReader((String) x);
-            Object securityDomain = cx.getSecurityDomainForStackDepth(3);
 
             // Compile the reader with opt level of -1 to force interpreter
             // mode.
             int oldOptLevel = cx.getOptimizationLevel();
             cx.setOptimizationLevel(-1);
             Script script = cx.compileReader(scope, in, sourceName, 1,
-                                             securityDomain);
+                                             null);
             cx.setOptimizationLevel(oldOptLevel);
 
             // if the compile fails, an error has been reported by the

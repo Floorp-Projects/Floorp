@@ -69,7 +69,7 @@ public class Codegen extends Interpreter {
 
     public Object compile(Context cx, Scriptable scope, Node tree,
                           Object securityDomain,
-                          SecuritySupport securitySupport,
+                          SecurityController securityController,
                           ClassNameHelper nameHelper)
     {
         ObjArray classFiles = new ObjArray();
@@ -78,7 +78,10 @@ public class Codegen extends Interpreter {
 
         Exception e = null;
         Class result = null;
-        DefiningClassLoader classLoader = new DefiningClassLoader();
+        DefiningClassLoader classLoader = null;
+        if (securityController == null) {
+            classLoader = new DefiningClassLoader();
+        }
         nameHelper.reset();
 
         try {
@@ -97,12 +100,15 @@ public class Codegen extends Interpreter {
                 try {
                     if (repository.storeClass(name, classFile, isTopLevel)) {
                         Class clazz = null;
-                        if (securitySupport != null) {
-                            clazz = securitySupport.defineClass(name, classFile,
-                                                                securityDomain);
-                        }
-                        if (clazz == null) {
-                            Context.checkSecurityDomainRequired();
+                        if (securityController != null) {
+                            clazz = securityController.
+                                defineClass(name, classFile, securityDomain);
+                            if (clazz == null) {
+                                throw new NullPointerException
+                                    ("SecurityController.defineClass"
+                                     +" may not return null");
+                            }
+                        } else {
                             clazz = classLoader.defineClass(name, classFile);
                             ClassLoader loader = clazz.getClassLoader();
                             clazz = loader.loadClass(name);
