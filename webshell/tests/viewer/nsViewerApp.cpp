@@ -27,7 +27,7 @@
 #include "nsIPref.h"
 #include "nsINetService.h"
 #include "nsRepository.h"
-#include "nsDocLoader.h"
+#include "nsWebCrawler.h"
 #include "prprf.h"
 #include "plstr.h"
 
@@ -188,10 +188,14 @@ PrintHelpInfo(char **argv)
   fprintf(stderr, "\t-d # -- set the delay between URL loads to # (in milliseconds)\n");
   fprintf(stderr, "\t-r # -- set the repeat count, which is the number of times the URLs will be loaded in batch mode.\n");
   fprintf(stderr, "\t-f filename -- read a list of URLs from <filename>\n");
+  fprintf(stderr, "\t-C -- enable crawler\n");
+  fprintf(stderr, "\t-R filename -- record pages visited in <filename>\n");
+  fprintf(stderr, "\t-S domain -- add a domain/host that is safe to crawl (e.g. www.netscape.com)\n");
+  fprintf(stderr, "\t-A domain -- add a domain/host that should be avoided (e.g. microsoft.com)\n");
 }
 
 static void
-AddTestDocsFromFile(nsDocLoader* aDocLoader, const nsString& aFileName)
+AddTestDocsFromFile(nsWebCrawler* aCrawler, const nsString& aFileName)
 {
   char cfn[1000];
   aFileName.ToCString(cfn, sizeof(cfn));
@@ -201,6 +205,7 @@ AddTestDocsFromFile(nsDocLoader* aDocLoader, const nsString& aFileName)
   FILE* fp = fopen(cfn, "r");
 #endif
 
+  nsAutoString line;
   for (;;) {
     char linebuf[2000];
     char* cp = fgets(linebuf, sizeof(linebuf), fp);
@@ -226,7 +231,8 @@ AddTestDocsFromFile(nsDocLoader* aDocLoader, const nsString& aFileName)
 
     // Add non-empty lines to the test list
     if (0 != len) {
-      aDocLoader->AddURL(linebuf);
+      line = linebuf;
+      aCrawler->AddURL(line);
     }
   }
 
@@ -236,6 +242,9 @@ AddTestDocsFromFile(nsDocLoader* aDocLoader, const nsString& aFileName)
 NS_IMETHODIMP
 nsViewerApp::ProcessArguments(int argc, char** argv)
 {
+  mCrawler = new nsWebCrawler(this);
+  mCrawler->AddRef();
+
   int i;
   for (i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
@@ -250,9 +259,12 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
             exit(-1);
           }
         }
+        mCrawl = PR_TRUE;
       }
       else if (PL_strcmp(argv[i], "-q") == 0) {
-        mJiggleLayout = PR_TRUE;
+        mCrawler->EnableJiggleLayout();
+        mCrawler->SetExitOnDone(PR_TRUE);
+        mCrawl = PR_TRUE;
       }
       else if (PL_strcmp(argv[i], "-f") == 0) {
         mLoadTestFromFile = PR_TRUE;
@@ -263,14 +275,18 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           exit(-1);
         }
         mInputFileName = argv[i];
+        mCrawler->SetExitOnDone(PR_TRUE);
+        mCrawl = PR_TRUE;
       }
       else if (PL_strcmp(argv[i], "-d") == 0) {
+        int delay;
         i++;
-        if (i>=argc || 1!=sscanf(argv[i], "%d", &mDelay))
+        if (i>=argc || 1!=sscanf(argv[i], "%d", &delay))
         {
           PrintHelpInfo(argv);
           exit(-1);
         }
+        mCrawler->SetDelay(delay);
       }
       else if (PL_strcmp(argv[i], "-r") == 0) {
         i++;
@@ -279,6 +295,39 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
+      }
+      else if (PL_strcmp(argv[i], "-C") == 0) {
+        mCrawler->EnableCrawler();
+        mCrawl = PR_TRUE;
+      }
+      else if (PL_strcmp(argv[i], "-R") == 0) {
+        i++;
+        if (i>=argc) {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        FILE* fp = fopen(argv[i], "w");
+        if (nsnull == fp) {
+          fprintf(stderr, "can't create '%s'\n", argv[i]);
+          exit(-1);
+        }
+        mCrawler->SetRecordFile(fp);
+      }
+      else if (PL_strcmp(argv[i], "-S") == 0) {
+        i++;
+        if (i>=argc) {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        mCrawler->AddSafeDomain(argv[i]);
+      }
+      else if (PL_strcmp(argv[i], "-A") == 0) {
+        i++;
+        if (i>=argc) {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        mCrawler->AddAvoidDomain(argv[i]);
       }
       else {
         PrintHelpInfo(argv);
@@ -305,37 +354,27 @@ nsViewerApp::OpenWindow()
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0));
   bw->Show();
+  mCrawler->SetBrowserWindow(bw);
 
   if (mDoPurify) {
-    mDocLoader = new nsDocLoader(bw, this, mDelay, PR_TRUE, mJiggleLayout);
-    mDocLoader->AddRef();
     for (PRInt32 i = 0; i < mRepeatCount; i++) {
       for (int docnum = 0; docnum < mNumSamples; docnum++) {
         char url[500];
         PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, docnum);
-        mDocLoader->AddURL(url);
+        mCrawler->AddURL(url);
       }
     }
-    mDocLoader->StartTimedLoading();
+    mCrawler->Start();
   }
   else if (mLoadTestFromFile) {
-    mDocLoader = new nsDocLoader(bw, this, mDelay, PR_TRUE, mJiggleLayout);
-    mDocLoader->AddRef();
     for (PRInt32 i = 0; i < mRepeatCount; i++) {
-      AddTestDocsFromFile(mDocLoader, mInputFileName);
+      AddTestDocsFromFile(mCrawler, mInputFileName);
     }
-    if (0 == mDelay) {
-      mDocLoader->StartLoading();
-    }
-    else {
-      mDocLoader->StartTimedLoading();
-    }
+    mCrawler->Start();
   }
-  else if (mJiggleLayout) {
-    mDocLoader = new nsDocLoader(bw, this, mDelay, PR_TRUE, PR_TRUE);
-    mDocLoader->AddRef();
-    mDocLoader->AddURL(mStartURL);
-    mDocLoader->StartLoading();
+  else if (mCrawl) {
+    mCrawler->AddURL(mStartURL);
+    mCrawler->Start();
   }
   else {
     bw->LoadURL(mStartURL);
