@@ -497,6 +497,20 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
     }
 #elif defined(XP_PC)
     rv = GetWindowsFolder(CSIDL_APPDATA, aLocalFile);
+    if (NS_SUCCEEDED(rv)) {
+        rv = (*aLocalFile)->Exists(&exists);
+        if (NS_SUCCEEDED(rv) && !exists) {            
+            char path[_MAX_PATH];
+            PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
+            
+            // Need enough space to add the trailing backslash
+            if (len <= _MAX_PATH-2) {
+                path[len]   = '\\';
+                path[len+1] = '\0';
+            }
+            rv = NS_NewLocalFile(path, PR_TRUE, aLocalFile);
+        }
+    }
     NS_ENSURE_SUCCESS(rv, rv);
     pLocalFile = *aLocalFile;
     pLocalFile->AppendRelativePath("Mozilla");
