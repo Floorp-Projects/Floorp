@@ -3,9 +3,9 @@
 
 <!DOCTYPE window> 
 
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
-			xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			xul:onConstruction="Startup()"> 
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onConstruction="Startup()"> 
 
   <html:style>
       #header {
@@ -151,80 +151,80 @@
 
   </html:script>
 
-  <xul:broadcaster id="canGoBack"/>
-  <xul:broadcaster id="canGoForward"/>
-  <xul:broadcaster id="canReload"/>
-  <xul:broadcaster id="canStop"/>
-  <xul:broadcaster id="canPrint"/>
+  <broadcaster id="canGoBack"/>
+  <broadcaster id="canGoForward"/>
+  <broadcaster id="canReload"/>
+  <broadcaster id="canStop"/>
+  <broadcaster id="canPrint"/>
   
-  <xul:menubar>
-    <xul:menu name="File">
-      <xul:menuitem name="New Window" onClick="BrowserNewWindow();"/>
-      <xul:menuitem name="Change Icons" onClick="BrowserPrintPreview();"/>
-      <xul:separator />
-      <xul:menuitem name="Print Setup" onClick=""/>
-      <xul:menuitem name="Print Preview" onClick="BrowserPrintPreview();"/>
-      <xul:menuitem name="Print" onClick=""/>
-      <xul:separator />
-      <xul:menuitem name="Close" onClick=""/>
-      <xul:menuitem name="Exit" onClick="BrowserExit();"/>
-    </xul:menu>
-    <xul:menu name="View">
-      <xul:menuitem name="Reload" onClick="BrowserReload();"/>
-    </xul:menu>
-    <xul:menu name="Go">
-      <xul:menuitem name="Back" onClick="BrowserBack();"/>
-      <xul:menuitem name="Forward" onClick="BrowserForward();" />
-      <xul:menuitem name="Home" onClick="BrowserHome();"/>
-    </xul:menu>
+  <menubar>
+    <menu name="File">
+      <menuitem name="New Window" onClick="BrowserNewWindow();"/>
+      <menuitem name="Change Icons" onClick="BrowserPrintPreview();"/>
+      <separator />
+      <menuitem name="Print Setup" onClick=""/>
+      <menuitem name="Print Preview" onClick="BrowserPrintPreview();"/>
+      <menuitem name="Print" onClick=""/>
+      <separator />
+      <menuitem name="Close" onClick=""/>
+      <menuitem name="Exit" onClick="BrowserExit();"/>
+    </menu>
+    <menu name="View">
+      <menuitem name="Reload" onClick="BrowserReload();"/>
+    </menu>
+    <menu name="Go">
+      <menuitem name="Back" onClick="BrowserBack();"/>
+      <menuitem name="Forward" onClick="BrowserForward();" />
+      <menuitem name="Home" onClick="BrowserHome();"/>
+    </menu>
 
-  </xul:menubar>
+  </menubar>
   
   <html:div html:id="header">
-  <xul:toolbox>
+  <toolbox>
   
-    <xul:toolbar>
-	  <xul:titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onClick="BrowserBack()">	
-			  <xul:observes xul:element="canGoBack" xul:attribute="disabled"/>			
-      </xul:titledbutton>
+    <toolbar>
+	  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onClick="BrowserBack()">	
+			  <observes element="canGoBack" attribute="disabled"/>			
+      </titledbutton>
 
-      <xul:titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward" 
+      <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward" 
 			onClick="BrowserForward()" style="background-color:rgb(192,192,50);">
-			  <xul:observes xul:element="canGoForward" xul:attribute="disabled"/>
-      </xul:titledbutton>
+			  <observes element="canGoForward" attribute="disabled"/>
+      </titledbutton>
 
-      <xul:titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload" 
+      <titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload" 
 			  onClick="window.frames[0].location.reload()">
-			  <xul:observes xul:element="canReload" xul:attribute="disabled"/>
-      </xul:titledbutton>
+			  <observes element="canReload" attribute="disabled"/>
+      </titledbutton>
 
-      <xul:titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" 
+      <titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" 
 			onClick="window.frames[0].stop()">
-        <xul:observes xul:element="canStop" xul:attribute="disabled"/>
-      </xul:titledbutton>
+        <observes element="canStop" attribute="disabled"/>
+      </titledbutton>
 
-      <xul:titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home" 
+      <titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home" 
 			onClick="window.frames[0].home()"/>
 
-      <xul:titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
+      <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
 			onClick="window.frames[0].print()">
-        <xul:observes xul:element="canPrint" xul:attribute="disabled"/>
-      </xul:titledbutton>
+        <observes element="canPrint" attribute="disabled"/>
+      </titledbutton>
 
 	  <html:input html:id="urlbar" html:style="vertical-align: center" html:type="text" 
 		  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementByID('urlbar').value; }" style="width:325px;"/>   
 	  
-      <xul:titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>
+      <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>
          
 
-    </xul:toolbar>
+    </toolbar>
 
-    <xul:toolbar>
-      <xul:titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" onClick="window.frames[0].location.href='http://www.mozilla.org'"/>
-	  <xul:titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News" onClick="window.frames[0].location.href='http://www.abcnews.com'"/>
-    </xul:toolbar>
+    <toolbar>
+      <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" onClick="window.frames[0].location.href='http://www.mozilla.org'"/>
+	  <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News" onClick="window.frames[0].location.href='http://www.abcnews.com'"/>
+    </toolbar>
     
-  </xul:toolbox>
+  </toolbox>
   </html:div>
 
   <html:div html:id="main">
@@ -235,6 +235,6 @@
      <html:iframe html:name="status" html:src="status.html" html:width="100%" html:height="34"></html:iframe>
   </html:div>
 
-</xul:window>
+</window>
 
 
