@@ -271,6 +271,17 @@ bin/chrome/chromelist.txt
 ;-bin/chrome/comm/content/editor/content/sb-file-panel.xul
 ;-bin/chrome/comm/content/editor/content/sb-FileWidgetFileHandler.js
 
+; window icons
+bin/chrome/icons/default/bmPropsWindow*.xpm
+bin/chrome/icons/default/bookmark-window*.xpm
+bin/chrome/icons/default/downloadManager*.xpm
+bin/chrome/icons/default/editorWindow*.xpm
+bin/chrome/icons/default/findBookmarkWindow*.xpm
+bin/chrome/icons/default/findHistoryWindow*.xpm
+bin/chrome/icons/default/history-window*.xpm
+bin/chrome/icons/default/jsconsoleWindow*.xpm
+bin/chrome/icons/default/main-window*.xpm
+
 ; all the pref files must be part of base
 ; to prevent migration bugs
 bin/defaults/pref/*
@@ -354,13 +365,21 @@ bin/components/libmsgmdn.so
 bin/components/msgmdn.xpt
 bin/components/mdn-service.js
 
+; window icons
+bin/chrome/icons/default/abcardWindow*.xpm
+bin/chrome/icons/default/addressbookWindow*.xpm
+bin/chrome/icons/default/messengerWindow*.xpm
+bin/chrome/icons/default/msgcomposeWindow*.xpm
+
 [chatzilla]
 bin/components/chatzilla-service.js
 bin/chrome/chatzilla.jar
+bin/chrome/icons/default/chatzilla-window*.xpm
 
 [venkman]
 bin/components/venkman-service.js
 bin/chrome/venkman.jar
+bin/chrome/icons/default/venkman-window*.xpm
 
 [talkback]
 ; Dummy talkback.xpi must be generated so deliver.pl and 
@@ -397,3 +416,4 @@ bin/chrome/inspector.jar
 bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
+bin/chrome/icons/default/winInspectorMain*.xpm
