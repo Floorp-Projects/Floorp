@@ -340,7 +340,6 @@ NS_IMETHODIMP nsMsgOfflineManager::GoOnline(PRBool sendUnsentMessages, PRBool pl
 NS_IMETHODIMP nsMsgOfflineManager::SynchronizeForOffline(PRBool downloadNews, PRBool downloadMail, PRBool sendUnsentMessages, PRBool goOfflineWhenDone, nsIMsgWindow *aMsgWindow)
 {
   m_curOperation = eDownloadingForOffline;
-	nsresult rv = NS_OK;
   m_downloadNews = downloadNews;
   m_downloadMail = downloadMail;
   m_sendUnsentMessages = sendUnsentMessages;

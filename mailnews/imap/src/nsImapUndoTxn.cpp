@@ -189,7 +189,6 @@ nsImapMoveCopyMsgTxn::UndoTransaction(void)
       PRBool deletedMsgs = PR_TRUE; //default is true unless imapDelete model
       nsMsgImapDeleteModel deleteModel;
       rv = GetImapDeleteModel(srcFolder, &deleteModel);
-      PRBool deleteIsMoveToTrash = NS_FAILED(rv) || deleteModel == nsMsgImapDeleteModels::MoveToTrash;
 
       if (NS_SUCCEEDED(rv) && deleteModel == nsMsgImapDeleteModels::IMAPDelete)
         CheckForToggleDelete(srcFolder, m_srcKeyArray.GetAt(0), &deletedMsgs);

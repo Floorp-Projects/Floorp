@@ -129,7 +129,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::SetMessageKey(nsMsgKey aMessageKey)
 NS_IMETHODIMP nsMsgOfflineImapOperation::GetFlagOperation(imapMessageFlagsType *aFlagOperation)
 {
   NS_ENSURE_ARG(aFlagOperation);
-  nsresult rv = m_mdb->GetUint32Property(m_mdbRow, PROP_OPERATION_FLAGS, &m_operationFlags, 0);
+  (void) m_mdb->GetUint32Property(m_mdbRow, PROP_OPERATION_FLAGS, &m_operationFlags, 0);
   *aFlagOperation = m_operationFlags;
   return NS_OK;
 }
@@ -163,7 +163,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::SetNewFlags(imapMessageFlagsType aNewFl
 NS_IMETHODIMP nsMsgOfflineImapOperation::GetDestinationFolderURI(char * *aDestinationFolderURI)
 {
   NS_ENSURE_ARG(aDestinationFolderURI);
-  nsresult rv = m_mdb->GetProperty(m_mdbRow, PROP_MOVE_DEST_FOLDER_URI, getter_Copies(m_moveDestination));
+  (void) m_mdb->GetProperty(m_mdbRow, PROP_MOVE_DEST_FOLDER_URI, getter_Copies(m_moveDestination));
   *aDestinationFolderURI = nsCRT::strdup(m_moveDestination);
   return (*aDestinationFolderURI) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

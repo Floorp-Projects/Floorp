@@ -1093,7 +1093,7 @@ NS_IMETHODIMP
 nsSmtpService::GetSmtpServerByIdentity(nsIMsgIdentity *aSenderIdentity, nsISmtpServer **aSmtpServer)
 {
   NS_ENSURE_ARG_POINTER(aSmtpServer);
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
 
   // First try the identity's preferred server
   if (aSenderIdentity) {

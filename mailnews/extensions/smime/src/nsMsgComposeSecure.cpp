@@ -666,7 +666,6 @@ nsresult nsMsgComposeSecure::MimeFinishMultipartSigned (PRBool aOuter, nsIMsgSen
   unsigned char * sec_item_data;
   nsCOMPtr<nsICMSMessage> cinfo = do_CreateInstance(NS_CMSMESSAGE_CONTRACTID, &rv);
   nsCOMPtr<nsICMSEncoder> encoder = do_CreateInstance(NS_CMSENCODER_CONTRACTID, &rv);
-  PRStatus ds_status = PR_FAILURE;
   char * header = nsnull;
 
   /* Compute the hash...
@@ -856,7 +855,6 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
                                                  PRBool aEncrypt,
                                                  PRBool aSign)
 {
-  int status = 0;
   char *all_mailboxes = 0, *mailboxes = 0, *mailbox_list = 0;
   const char *mailbox = 0;
   PRUint32 count = 0;
@@ -869,8 +867,6 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   if (NS_FAILED(res)) {
     return res;
   }
-
-  PRBool no_clearsigning_p = PR_FALSE;
 
   PR_ASSERT(aEncrypt || aSign);
   certdb->FindEmailEncryptionCert(mEncryptionCertName, getter_AddRefs(mSelfEncryptionCert));

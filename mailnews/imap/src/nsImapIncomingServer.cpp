@@ -1467,7 +1467,6 @@ NS_IMETHODIMP nsImapIncomingServer::AllowFolderConversion(PRBool *allowConversio
   NS_ENSURE_ARG_POINTER(allowConversion);
 
   nsresult rv;
-  PRInt32 stringId = 0;
   *allowConversion = PR_FALSE;
 
   // See if the redirector type allows folder name conversion. The pref setting is like:
@@ -1491,7 +1490,6 @@ NS_IMETHODIMP nsImapIncomingServer::ConvertFolderName(const char *originalName, 
   NS_ENSURE_ARG_POINTER(convertedName);
 
   nsresult rv = NS_OK;
-  PRInt32 stringId = 0;
   *convertedName = nsnull;
 
   nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);

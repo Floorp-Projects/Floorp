@@ -122,7 +122,8 @@ typedef struct MimeCMSdata
   
   ~MimeCMSdata()
   {
-    PR_FREEIF(sender_addr);
+    if(sender_addr)
+      PR_Free(sender_addr);
 
     // Do an orderly release of nsICMSDecoder and nsICMSMessage //
     if (decoder_context)

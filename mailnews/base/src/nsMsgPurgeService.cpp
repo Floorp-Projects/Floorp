@@ -315,7 +315,6 @@ nsresult nsMsgPurgeService::PerformPurge()
     if(current->nextPurgeTime < currentTime)
     {
       PRBool serverBusy = PR_FALSE;
-      PRBool serverRequiresPassword = PR_TRUE;
       nsXPIDLCString password;
       // we don't want to prompt the user for password UI so pass in false to
       // the server->GetPassword method. If we don't already know the passsword then 

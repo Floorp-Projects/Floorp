@@ -6560,6 +6560,7 @@ NS_IMETHODIMP nsImapMailFolder::GetFolderURL(char **aFolderURL)
   NS_ENSURE_ARG_POINTER(aFolderURL);
   nsCOMPtr<nsIMsgFolder> rootFolder;
   nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
   nsXPIDLCString rootURI;
   rootFolder->GetURI(getter_Copies(rootURI));
 

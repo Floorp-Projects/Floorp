@@ -979,7 +979,6 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 {
   int status = 0;
   char * htmlLine1 = NULL;
-  char * htmlLine2 = NULL;
   char* vCard = NULL;
   char* vEscCard = NULL;
   int len = 0;

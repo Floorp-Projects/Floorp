@@ -69,6 +69,8 @@ nsMsgFilterList::nsMsgFilterList() :
 {
   // I don't know how we're going to report this error if we failed to create the isupports array...
   nsresult rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Fixme bug 180312: NS_NewISupportsArray() failed");
+
   m_loggingEnabled = PR_FALSE;
   m_startWritingToBuffer = PR_FALSE; 
   m_curFilter = nsnull;

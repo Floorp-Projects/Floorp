@@ -743,8 +743,6 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
                                                 nsIDocShell *aDocShell, const char *aUser)
 {
   nsresult      rv;
-  char          *mojoUser = nsnull;
-  char          *mojoSnack = nsnull;
 
   // Only try if we are not currently busy!
   if (mPostEngineState != nsIAbSyncPostEngineState::nsIAbSyncPostIdle)

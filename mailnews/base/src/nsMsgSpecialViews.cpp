@@ -139,7 +139,7 @@ nsresult nsMsgWatchedThreadsWithUnreadDBView::AddMsgToThreadNotInView(nsIMsgThre
 {
   nsresult rv = NS_OK;
   PRUint32 threadFlags;
-  PRUint32 msgFlags, newFlags;
+  PRUint32 msgFlags;
   msgHdr->GetFlags(&msgFlags);
   threadHdr->GetFlags(&threadFlags);
   if (threadFlags & MSG_FLAG_WATCHED)

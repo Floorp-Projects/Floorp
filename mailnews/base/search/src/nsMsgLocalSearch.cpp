@@ -384,7 +384,6 @@ nsresult nsMsgSearchOfflineMail::ConstructExpressionTree(nsIMsgDBHdr *msgToMatch
                                             nsMsgSearchBoolExpression ** aExpressionTree,
 											PRBool *pResult)
 {
-    nsresult err = NS_OK;
     PRBool result;
 
 	NS_ENSURE_ARG_POINTER(pResult);
