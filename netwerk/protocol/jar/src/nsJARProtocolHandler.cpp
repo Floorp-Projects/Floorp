@@ -104,6 +104,7 @@ nsJARProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsJARProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
+                                   nsILoadGroup* loadGroup,
                                    nsIEventSinkGetter* eventSinkGetter,
                                    nsIChannel* *result)
 {
