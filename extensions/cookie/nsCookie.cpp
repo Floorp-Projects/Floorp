@@ -2375,10 +2375,16 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
       cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(count));
       NS_ASSERTION(cookie, "corrupt cookie list");
       if (cookie_InSequence(gone, count)) {
-        if (PL_strlen(block) && block[0]=='t') {
+        if (block[0] != '\0' && block[0] == 't' && cookie->host) {
           char * hostname = nsnull;
-          StrAllocCopy(hostname, cookie->host);
-          permission_Add(hostname, PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+          char * hostnameAfterDot = cookie->host;
+          while (*hostnameAfterDot == '.') {
+            hostnameAfterDot++;
+          }
+          StrAllocCopy(hostname, hostnameAfterDot);
+          if (hostname) {
+            permission_Add(hostname, PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+          }
         }
         cookie_cookieList->RemoveElementAt(count);
         deleteCookie((void*)cookie, nsnull);
