@@ -544,70 +544,6 @@ Local_SACopy(char **destination, const char *source) {
   return *destination;
 }
 
-/* Remove misleading portions from URL name */
-
-const char* empty = "empty";
-
-PRIVATE char*
-si_StrippedURL (const char* passwordRealm) {
-  char *result = 0;
-  char *s, *t;
-
-  /* check for null passwordRealm */
-  if (passwordRealm == NULL || PL_strlen(passwordRealm) == 0) {
-    return NULL;
-  }
-
-  /* remove protocol */
-  s = (char*) PL_strchr(passwordRealm +1, '/');
-  if (s && *s == '/' && *(s+1) == '/') {
-    s += 2;
-  }
-  if (s) {
-    StrAllocCopy(result, s);
-  } else {
-    StrAllocCopy(result, passwordRealm);
-  }
-
-  /* remove everything after hostname */
-  s = result;
-  s = (char*) PL_strchr(s, '/');
-  if (s) {
-    *s = '\0';
-  }
-
-  /* remove everything after and including first question mark */
-  s = result;
-  s = (char*) PL_strchr(s, '?');
-  if (s) {
-    *s = '\0';
-  }
-
-  /* remove socket number from result */
-  s = result;
-  while ((s = (char*) PL_strchr(s+1, ':'))) {
-    /* s is at next colon */
-    if (*(s+1) != '/') {
-      /* and it's not :// so it must be start of socket number */
-      if ((t = (char*) PL_strchr(s+1, '/'))) {
-        /* t is at slash terminating the socket number */
-        do {
-          /* copy remainder of t to s */
-          *s++ = *t;
-        } while (*(t++));
-      }
-      break;
-    }
-  }
-
-  /* all done */
-  if (PL_strlen(result)) {
-    return result;
-  } else {
-    return PL_strdup(empty);
-  }
-}
-
 /* remove terminating CRs or LFs */
 PRIVATE void
 si_StripLF(nsAutoString buffer) {
@@ -742,7 +678,6 @@ PRIVATE PRBool si_signon_list_changed = PR_FALSE;
 PRIVATE si_SignonURLStruct *
 si_GetURL(const char * passwordRealm) {
   si_SignonURLStruct * url;
-  char *strippedRealm = 0;
   if (!passwordRealm) {
     /* no passwordRealm specified, return first URL (returns NULL if not URLs) */
     if (LIST_COUNT(si_signon_list)==0) {
@@ -750,16 +685,13 @@ si_GetURL(const char * passwordRealm) {
     }
     return (si_SignonURLStruct *) (si_signon_list->ElementAt(0));
   }
-  strippedRealm = si_StrippedURL(passwordRealm);
   PRInt32 urlCount = LIST_COUNT(si_signon_list);
   for (PRInt32 i=0; i<urlCount; i++) {
     url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
-    if(url->passwordRealm && !PL_strcmp(strippedRealm, url->passwordRealm)) {
-      PR_Free(strippedRealm);
+    if(url->passwordRealm && !PL_strcmp(passwordRealm, url->passwordRealm)) {
       return url;
     }
   }
-  PR_Free(strippedRealm);
   return (NULL);
 }
 
@@ -1353,9 +1285,12 @@ si_PutData(const char * passwordRealm, nsVoidArray * signonData, PRBool save) {
     }
 
     /* fill in fields of new node */
-    url->passwordRealm = si_StrippedURL(passwordRealm);
+	url->passwordRealm = nsnull;
+	if (passwordRealm) {
+    	url->passwordRealm = PL_strdup(passwordRealm);
+	}
+
     if (!url->passwordRealm) {
-      PR_Free(url);
       if (save) {
         si_unlock_signon_list();
       }
@@ -1835,7 +1770,6 @@ si_SaveSignonDataLocked() {
 /* Ask user if it is ok to save the signon data */
 PRIVATE PRBool
 si_OkToSave(char *passwordRealm, nsAutoString userName) {
-  char *strippedRealm = 0;
 
   /* if url/user already exists, then it is safe to save it again */
   if (si_CheckForUser(passwordRealm, userName)) {
@@ -1856,9 +1790,7 @@ si_OkToSave(char *passwordRealm, nsAutoString userName) {
   }
 #endif
 
-  strippedRealm = si_StrippedURL(passwordRealm);
-  if (si_CheckForReject(strippedRealm, userName)) {
-    PR_Free(strippedRealm);
+  if (si_CheckForReject(passwordRealm, userName)) {
     return PR_FALSE;
   }
 
@@ -1871,10 +1803,9 @@ si_OkToSave(char *passwordRealm, nsAutoString userName) {
 
   PRInt32 button = si_3ButtonConfirm(message);
   if (button == NEVER_BUTTON) {
-    si_PutReject(strippedRealm, userName, PR_TRUE);
+    si_PutReject(passwordRealm, userName, PR_TRUE);
   }
   Recycle(message);
-  PR_Free(strippedRealm);
   return (button == YES_BUTTON);
 }
 
