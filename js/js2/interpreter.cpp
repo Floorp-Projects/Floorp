@@ -160,11 +160,11 @@ ICodeModule* Context::compileFunction(const String &source)
     ICodeGenerator icg(this);
     ASSERT(e->getKind() == ExprNode::functionLiteral);
     FunctionExprNode* f = static_cast<FunctionExprNode*>(e);
-    icg.allocateParameter(getWorld().identifiers["this"]);   // always parameter #0
+    icg.allocateParameter(getWorld().identifiers["this"], false);   // always parameter #0
     VariableBinding* v = f->function.parameters;
     while (v) {
         if (v->name && (v->name->getKind() == ExprNode::identifier))
-            icg.allocateParameter((static_cast<IdentifierExprNode*>(v->name))->name);
+            icg.allocateParameter((static_cast<IdentifierExprNode*>(v->name))->name, false);
         v = v->next;
     }
     icg.genStmt(f->function.body);
@@ -719,97 +719,85 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         ICodeModule *icm = target->getICode();
                         ArgumentList *args = op4(call);
 
-                        // mParameterCount includes 'this' and also 1 for a named rest parameter
+                        // the parameter count includes 'this' and any named rest parameter
                         //
-                        uint32 pCount = icm->mParameterCount - 1;
+                        uint32 pCount = icm->itsParameters->size() - 1;   // we won't be passing 'this' via the arg list array
+                        // callArgs will be the actual args passed to the target, put into correct register order.
+                        // It has room for the rest parameter.
                         ArgumentList *callArgs = new ArgumentList(pCount, Argument(TypedRegister(NotARegister, &Null_Type), NULL));
-                        if (icm->mHasNamedRestParameter) pCount--;
 
-/*
-
-    For new style, there must be enough un-named parameters to satisfy #unnamed-positional, but no
-    more than #total positional (unless there's a rest parameter). Extras go to the optional parameters first, then to rest.
-
-    Named parameters 
-
-*/
-
-
-                        // walk along the given arguments, handling each.
-                        // might be good to optimize the case of calls without named arguments and/or rest parameters
-                        JSArray *restArg = NULL;
-                        uint32 restIndex = 0;
+                        // don't want to count the rest parameter while processing the others 
+                        if (icm->itsParameters->mRestParameter != ParameterList::NoRestParameter) pCount--;
+                        
+                        
                         uint32 i;
+                        JSArray *restArg = NULL;
+                        
+                        // first match all named arguments with their intended target locations
                         for (i = 0; i < args->size(); i++) {
-                            if ((*args)[i].second) {       // a named argument
-                                TypedRegister r = icm->itsVariables->findVariable(*((*args)[i].second));
-                                bool isParameter = false;
-                                if (r.first != NotABanana) {   // we found the name in the target's list of variables
-                                    if (r.first < icm->mParameterCount) { // make sure we didn't match a local var                                            
-                                        ASSERT(r.first <= callArgs->size());
-                                        // the named argument is arriving in slot i, but needs to be r instead
-                                        // r.first is the intended target register, we subtract 1 since the callArgs array doesn't include 'this'
-                                        // here's where we could detect over-writing a positional arg with a named one if that is illegal
-                                        // if (callArgs[r.first - 1].first.first != NotARegister)...
-                                        (*registers)[(*args)[i].first.first] = (*registers)[(*args)[i].first.first].convert(r.second);
-                                        (*callArgs)[r.first - 1] = Argument((*args)[i].first, NULL);   // no need to copy the name through?
-                                        isParameter = true;
-                                    }
-                                }
-                                if (!isParameter) {     // wasn't a parameter, make it a property of the rest parameter (if there is one) 
-                                    if (icm->mHasRestParameter) {
-                                        if (icm->mHasNamedRestParameter) {
-                                            if (restArg == NULL) {
-                                                restArg = new JSArray();
-                                                restArg->setProperty(*(*args)[i].second, (*registers)[(*args)[i].first.first]);
-                                                (*registers)[(*args)[i].first.first] = restArg;
-                                                (*callArgs)[pCount] = Argument(TypedRegister((*args)[i].first.first, &Array_Type), NULL);
-                                            }
-                                            else
-                                                restArg->setProperty(*(*args)[i].second, (*registers)[(*args)[i].first.first]);
+                            
+                            const StringAtom *argName = (*args)[i].second;
 
+                            TypedRegister parameter = icm->itsParameters->findVariable(*argName);
+                            if (parameter.first == NotARegister) {  
+                                // arg name doesn't match any parameter name, it's a candidate
+                                // for the rest parameter (if there is one)
+                                if (icm->itsParameters->mRestParameter == ParameterList::NoRestParameter)
+                                    throw new JSException("Named argument doesn't match parameter name in call with no rest parameter");
+                                else {
+                                    if (icm->itsParameters->mRestParameter != ParameterList::HasUnnamedRestParameter) {
+                                        // if the name is a numeric literal >= 0, use it as an array index
+                                        // otherwise just set the named property.
+                                        const char16 *c = argName->c_str();
+                                        const char16 *end;
+                                        double d = stringToDouble(c, c + argName->length(), end);
+
+                                        if ((d != d) || (d < 0) || (d != (int)d)) { // a non-numeric or negative value                                             
+                                            if (icm->itsParameters->mRestParameter == ParameterList::HasRestParameterBeforeBar)
+                                                throw new JSException("Non-numeric or negative argument name for positional rest parameter");
                                         }
-                                        // else just throw it away 
+                                        else {  // shift the index value down by the number of positional parameters
+                                            StringFormatter s;
+                                            s << ((int)d - icm->itsParameters->mPositionalCount);
+                                            argName = &mWorld.identifiers[s];
+                                        }
+                                        
+                                        TypedRegister argument = (*args)[i].first;   // this is the argument whose name didn't match
+
+                                        if (restArg == NULL) {
+                                            // allocate the rest argument and then subvert the register being used for the
+                                            // argument under consideration to hold the newly created rest argument.
+                                            restArg = new JSArray();
+                                            restArg->setProperty(*argName, (*registers)[argument.first]);   // put it into the rest argument
+                                            (*registers)[argument.first] = restArg;
+                                            // The callArgs for the rest parameter position gets loaded from that slot 
+                                            (*callArgs)[pCount] = Argument(TypedRegister(argument.first, &Array_Type), NULL);
+                                        }
+                                        else
+                                            restArg->setProperty(*argName, (*registers)[argument.first]);
                                     }
-                                    else 
-                                        throw new JSException("Named argument doesn't match parameter name in call with no rest parameter");
-                                        // what about matching the named rest parameter ? aaarrggh!
+                                    // else just throw it away 
                                 }
                             }
                             else {
-                                if (i >= pCount) {  // more args than expected
-                                    if (icm->mHasRestParameter) {
-                                        if (icm->mHasNamedRestParameter) {
-                                            if (restArg == NULL) {
-                                                restArg = new JSArray();
-                                                (*restArg)[restIndex++] = (*registers)[(*args)[i].first.first];
-                                                (*registers)[(*args)[i].first.first] = restArg;
-                                                (*callArgs)[pCount] = Argument(TypedRegister((*args)[i].first.first, &Array_Type), NULL);
-                                            }
-                                            else
-                                                (*restArg)[restIndex++] = (*registers)[(*args)[i].first.first];
-                                        }
-                                        // else just throw it away 
-                                    }
-                                    else
-                                        throw new JSException("Too many arguments in call");
-                                }
-                                else {
-                                    TypedRegister r = icm->itsVariables->getRegister(i + 1);    // the variable list includes 'this'
-                                    (*registers)[(*args)[i].first.first] = (*registers)[(*args)[i].first.first].convert(r.second);
-                                    (*callArgs)[i] = (*args)[i];  // it's a positional, just slap it in place
-                                }
+                                uint32 targetIndex = parameter.first - 1;           // this is the register number we're targetting
+                                TypedRegister targetParameter = (*callArgs)[targetIndex].first;
+                                if (targetParameter.first != NotARegister)          // uh oh, some other argument wants this parameter
+                                    throw new JSException("Two (or more) arguments have the same name");
+                                (*callArgs)[targetIndex] = (*args)[i];
                             }
                         }
-                        uint32 contiguousArgs = 0;
-                        for (i = 0; i < args->size(); i++) {
-                            Argument &arg = (*args)[i];
-                            if (arg.first.first == NotARegister) break;
-                            contiguousArgs++;
+
+
+                        // make sure that all non-optional parameters have values
+                        for (i = 0; i < pCount; i++) {
+                            TypedRegister parameter = (*callArgs)[i].first;
+                            if (parameter.first == NotARegister) {  // doesn't have an assigned argument
+                                if (!icm->itsParameters->isOptional(i + 1))     // and parameter (allowing for 'this') doesn't have an optional value
+                                    throw new JSException("No argument supplied for non-optional parameter");
+                            }
                         }
-                        if ((contiguousArgs + 1) < icm->mNonOptionalParameterCount) // there's always a 'this' in R0 (even though it might be null)
-                            throw new JSException("Too few arguments in call");
-                        
+
                         mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, op1(call));
                         mActivation = new Activation(icm, mActivation, (*registers)[op3(call).first], callArgs);
                         registers = &mActivation->mRegisters;

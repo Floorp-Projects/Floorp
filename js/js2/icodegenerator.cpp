@@ -75,16 +75,14 @@ Formatter& operator<<(Formatter &f, ICodeModule &i)
 
 ICodeGenerator::ICodeGenerator(Context *cx, JSClass *aClass, ICodeGeneratorFlags flags)
     :   mTopRegister(0), 
-        mParameterCount(0),
         mExceptionRegister(TypedRegister(NotARegister, &None_Type)),
         variableList(new VariableList()),
+        parameterList(new ParameterList()),
         mContext(cx),
         mInstructionMap(new InstructionMap()),
         mClass(aClass),
         mFlags(flags),
         pLabels(NULL),
-        mHasRestParameter(false),
-        mHasNamedRestParameter(false),
         mInitName(cx->getWorld().identifiers["__init__"])
 { 
     iCode = new InstructionStream();
@@ -106,7 +104,7 @@ JSType *ICodeGenerator::findType(const StringAtom& typeName)
     -Theoretically, mPermanentRegister[n] can be become false when a scope ends and
      the registers allocated to contained variables are then available for re-use.
     -Mostly the need is to handle overlapping allocation of temps & permanents as the
-     variables declarations are encountered. This wouldn't be necessary if a function
+     variables' declarations are encountered. This wouldn't be necessary if a function
      presented a list of all variables, or a pre-pass executed to discover same.
 */
 TypedRegister ICodeGenerator::allocateRegister(const StringAtom& name, JSType *type) 
@@ -122,26 +120,10 @@ TypedRegister ICodeGenerator::allocateRegister(const StringAtom& name, JSType *t
     mPermanentRegister[r] = true;
 
     TypedRegister result(r, type); 
-    variableList->add(name, result);
     mTopRegister = ++r;
     return result;
 }
 
-
-TypedRegister ICodeGenerator::allocateVariable(const StringAtom& name, const StringAtom& typeName) 
-{ 
-    return allocateRegister(name, findType(typeName)); 
-}
-
-TypedRegister ICodeGenerator::allocateVariable(const StringAtom& name) 
-{ 
-    return allocateRegister(name, &Any_Type); 
-}
-
-TypedRegister ICodeGenerator::allocateVariable(const StringAtom& name, JSType *type) 
-{ 
-    return allocateRegister(name, type); 
-}
 
 ICodeModule *ICodeGenerator::complete(JSType *resultType)
 {
@@ -188,16 +170,13 @@ ICodeModule *ICodeGenerator::complete(JSType *resultType)
     */
     ICodeModule* module = new ICodeModule(iCode, 
                                             variableList, 
+                                            parameterList,
                                             mPermanentRegister.size(), 
-                                            mParameterCount, 
                                             mInstructionMap, 
-                                            mHasRestParameter, 
-                                            mHasNamedRestParameter,
                                             resultType);
     if (pLabels) {
         uint32 i;
         uint32 parameterInits = pLabels->size() - 1;        // there's an extra label at the end for the actual entryPoint
-        module->mNonOptionalParameterCount -= parameterInits;
         module->mParameterInit = new uint32[parameterInits];
         for (i = 0; i < parameterInits; i++) {
             module->mParameterInit[i] = (*pLabels)[i]->mOffset;
@@ -742,6 +721,8 @@ ICodeGenerator::LValueKind ICodeGenerator::resolveIdentifier(const StringAtom &n
 {
     if (!isWithinWith()) {
         v = variableList->findVariable(name);
+        if (v.first == NotARegister)
+            v = parameterList->findVariable(name);
         if (v.first != NotARegister)
             return Var;
         else {
@@ -1218,12 +1199,11 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                     if (p->field && (p->field->getKind() == ExprNode::string))
                         args->push_back(Argument(genExpr(p->value), &mContext->getWorld().identifiers[(static_cast<StringExprNode *>(p->field))->str]));
                     else {
-/*  do this for new argument style to provide default 'positional' name
                         s << count;
                         args->push_back(Argument(genExpr(p->value), &mContext->getWorld().identifiers[s] ));
                         s.clear();
-*/
-                        args->push_back(Argument(genExpr(p->value), NULL ));
+
+//                        args->push_back(Argument(genExpr(p->value), NULL ));
                     }
                 count++;
                 p = p->next;
@@ -1561,15 +1541,16 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         }
         break;
 
-    case ExprNode::functionLiteral:
+    case ExprNode::functionLiteral:     // XXX FIXME!! This needs to handled by calling genFunction !!!
+                                        // - the parameter handling is all wrong
         {
             FunctionExprNode *f = static_cast<FunctionExprNode *>(p);
             ICodeGenerator icg(mContext);
-            icg.allocateParameter(mContext->getWorld().identifiers["this"]);   // always parameter #0
+            icg.allocateParameter(mContext->getWorld().identifiers["this"], false);   // always parameter #0
             VariableBinding *v = f->function.parameters;
             while (v) {
                 if (v->name && (v->name->getKind() == ExprNode::identifier))
-                    icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name);
+                    icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name, false, &Any_Type);
                 v = v->next;
             }
             icg.genStmt(f->function.body);
@@ -1649,21 +1630,54 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
     ICodeGeneratorFlags flags = (isStatic) ? kIsStaticMethod : kNoFlags;
     
     ICodeGenerator icg(mContext, mClass, flags);
-    icg.allocateParameter(mContext->getWorld().identifiers["this"], (mClass) ? mClass : &Any_Type);   // always parameter #0
+    icg.allocateParameter(mContext->getWorld().identifiers["this"], false, (mClass) ? mClass : &Any_Type);   // always parameter #0
     VariableBinding *v = f->function.parameters;
+    bool unnamed = true;
+    uint32 positionalCount = 0;
+    StringFormatter s;
     while (v) {
-        if (v->name && (v->name->getKind() == ExprNode::identifier)) {
-            JSType *pType;
-            if ((v == f->function.restParameter) && (v->type == NULL))
-                pType = &Array_Type;
-            else
-                pType = extractType(v->type);
-            icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name, pType);
+        if (unnamed && (v == f->function.namedParameters)) { // Track when we hit the first named parameter.
+            icg.parameterList->setPositionalCount(positionalCount);
+            unnamed = false;
         }
-        else
-            NOT_REACHED("qualified or un-named parameters not handled; bugger off.");
+        positionalCount++;
+
+        // The rest parameter is ignored in this processing - we push it to the end of the list.
+        // But we need to track whether it comes before or after the |
+        if (v == f->function.restParameter) {
+            icg.parameterList->setRestParameter( (unnamed) ? ParameterList::HasRestParameterBeforeBar : ParameterList::HasRestParameterAfterBar );
+        }
+        else {
+            if (v->name && (v->name->getKind() == ExprNode::identifier)) {
+                JSType *pType = extractType(v->type);
+                TypedRegister r = icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name, (v->initializer != NULL), pType);
+                IdentifierList *a = v->aliases;
+                while (a) {
+                    icg.parameterList->add(a->name, r, (v->initializer != NULL));
+                    a = a->next;
+                }
+                // every unnamed parameter is also named with it's positional name
+                if (unnamed) {
+                    s << r.first - 1;  // the first positional parameter is '0'
+                    icg.parameterList->add(mContext->getWorld().identifiers[s], r, (v->initializer != NULL));
+                    s.clear();
+                }
+            }
+        }
         v = v->next;
     }
+
+    // now allocate the rest parameter
+    if (f->function.restParameter) {
+        v = f->function.restParameter;
+        JSType *pType = (v->type == NULL) ? &Array_Type : extractType(v->type);
+        if (v->name && (v->name->getKind() == ExprNode::identifier))
+            icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name, (v->initializer != NULL), pType);
+        else
+            icg.parameterList->setRestParameter(ParameterList::HasUnnamedRestParameter);
+    }
+
+    // generate the code for optional initializers
     v = f->function.optParameters;
     if (v) {
         while (v) {    // include the rest parameter, as it may have an initializer
@@ -1689,13 +1703,7 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
         }
         icg.addParameterLabel(icg.setLabel(icg.getLabel()));    // to provide the entry-point for the default case
     }
-    v = f->function.restParameter;
-    if (v) {
-        icg.mHasRestParameter = true;
-        if (v->name && (v->name->getKind() == ExprNode::identifier)) {
-            icg.mHasNamedRestParameter = true;
-        }
-    }
+
     if (isConstructor) {
         /*
            See if the first statement is an expression statement consisting
@@ -1851,7 +1859,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                       // constructor code generator. Slot variable
                       // initializers get added to this function.
                     ccg = new ICodeGenerator(classContext, thisClass, kNoFlags);   
-                    ccg->allocateParameter(mContext->getWorld().identifiers["this"], thisClass);   // always parameter #0
+                    ccg->allocateParameter(mContext->getWorld().identifiers["this"], false, thisClass);   // always parameter #0
                 }
                 
                 ICodeGenerator scg(classContext, thisClass, kIsStaticMethod);   // static initializer code generator.
@@ -1939,7 +1947,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     TypedRegister thisValue = TypedRegister(0, thisClass);
                     ArgumentList *args = new ArgumentList();
                     ICodeGenerator icg(classContext, thisClass, kIsStaticMethod);
-                    icg.allocateParameter(mContext->getWorld().identifiers["this"], thisClass);   // always parameter #0
+                    icg.allocateParameter(mContext->getWorld().identifiers["this"], false, thisClass);   // always parameter #0
                     if (superclass)
                         icg.call(icg.getStatic(superclass, superclass->getName()), thisValue, args);
                     if (thisClass->hasStatic(mInitName))
@@ -2325,7 +2333,6 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     // Bind the incoming exception ...
                     if (mExceptionRegister.first == NotABanana)
                         mExceptionRegister = allocateRegister(mContext->getWorld().identifiers["__exceptionObject__"], &Any_Type);
-                    variableList->setRegisterForVariable(c->name, mExceptionRegister);
 
                     genStmt(c->stmt);
                     if (finallyLabel)
@@ -2419,7 +2426,7 @@ void ICodeGenerator::readICode(const char *fileName)
             Context *classContext = new Context(mContext->getWorld(), thisScope);
             ICodeGenerator scg(classContext, thisClass, kIsStaticMethod);
             ICodeGenerator ccg(classContext, thisClass, kNoFlags);
-            ccg.allocateParameter(mContext->getWorld().identifiers["this"], thisClass);
+            ccg.allocateParameter(mContext->getWorld().identifiers["this"], false, thisClass);
             thisClass->defineStatic(mInitName, &Function_Type);
 
             mContext->getGlobalObject()->defineVariable(className, &Type_Type, JSValue(thisClass));
@@ -2433,8 +2440,8 @@ void ICodeGenerator::readICode(const char *fileName)
                     String methodName, resultTypeName;
                     element->getValue(widenCString("name"), methodName);
                     element->getValue(widenCString("type"), resultTypeName);
-                    VariableList *theVariableList = new VariableList();
-                    theVariableList->add(mContext->getWorld().identifiers["this"], TypedRegister(0, thisClass));
+                    ParameterList *theParameterList = new ParameterList();
+                    theParameterList->add(mContext->getWorld().identifiers["this"], TypedRegister(0, thisClass), false);
                     uint32 pCount = 1;
                     XMLNodeList &parameters = element->children();
                     for (XMLNodeList::const_iterator k = parameters.begin(); k != parameters.end(); k++) {
@@ -2445,7 +2452,7 @@ void ICodeGenerator::readICode(const char *fileName)
                             element->getValue(widenCString("name"), parameterName);
                             element->getValue(widenCString("type"), parameterTypeName);
                             JSType *parameterType = findType(mContext->getWorld().identifiers[parameterTypeName]);
-                            theVariableList->add(mContext->getWorld().identifiers[parameterName], TypedRegister(pCount++, parameterType));
+                            theParameterList->add(mContext->getWorld().identifiers[parameterName], TypedRegister(pCount++, parameterType), false);
                         }
                     }
                     
@@ -2461,12 +2468,10 @@ void ICodeGenerator::readICode(const char *fileName)
                         icp.ParseSourceFromString(str);
 
                         ICodeModule *icm = new ICodeModule(icp.mInstructions, 
-                                                            theVariableList,       /* VariableList *variables */
+                                                            NULL,                   /* VariableList *variables */
+                                                            theParameterList,       /* ParameterList *parameters */
                                                             icp.mMaxRegister, 
-                                                            pCount,                 /* uint32 maxParameter, */
                                                             NULL,                   /* InstructionMap *instructionMap */
-                                                            false,                  /* bool hasRestParameter, */
-                                                            false,                  /* bool hasNamedRestParameter */
                                                             resultType);
                         thisClass->defineMethod(methodName, new JSFunction(icm));
                     }
@@ -2493,7 +2498,7 @@ void ICodeGenerator::readICode(const char *fileName)
                 TypedRegister thisValue = TypedRegister(0, thisClass);
                 ArgumentList *args = new ArgumentList(0);
                 ICodeGenerator icg(mContext, thisClass, kIsStaticMethod);
-                icg.allocateParameter(mContext->getWorld().identifiers["this"], thisClass);   // always parameter #0
+                icg.allocateParameter(mContext->getWorld().identifiers["this"], false, thisClass);   // always parameter #0
                 if (superclass)
                     icg.call(icg.getStatic(superclass, superclass->getName()), thisValue, args);
                 if (thisClass->hasStatic(mInitName))
