@@ -234,6 +234,12 @@ lo_duplicate_element(MWContext *context, lo_DocState *state,
 			XP_BCOPY((char *)eptr, (char *)(ret_eptr),
 				sizeof(LO_EmbedStruct));
 			break;
+#ifdef SHACK
+		case LO_BUILTIN:
+			XP_BCOPY((char *)eptr, (char *)(ret_eptr),
+				sizeof(LO_BuiltinStruct));
+			break;
+#endif /* SHACK */
 #ifdef JAVA
 		case LO_JAVA:
 			XP_BCOPY((char *)eptr, (char *)(ret_eptr),
