@@ -350,7 +350,7 @@ nsMultiMixedConv::BuildURI(nsIChannel *aChannel, nsIURI **_retval) {
     rv = (*_retval)->GetSpec(&uriSpec);
     if (NS_FAILED(rv)) return rv;
 
-    nsString2 dummyURIStr(uriSpec, eOneByte);
+    nsCString dummyURIStr(uriSpec);
     dummyURIStr.Append('##');
     dummyURIStr.Append(mPartCount);
 
