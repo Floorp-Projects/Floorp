@@ -151,7 +151,7 @@ nsDST::Insert(void* aKey, void* aValue)
     previousValue = 0;
   }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_troy
   VerifyTree(mRoot);
 #endif
   return previousValue;
@@ -224,7 +224,7 @@ nsDST::Remove(void* aKey)
     }
 
     DestroyNode(tmp);
-#ifdef NS_DEBUG
+#ifdef DEBUG_troy
     VerifyTree(mRoot);
 #endif
     return value;
@@ -240,7 +240,7 @@ nsDST::Search(void* aKey) const
 {
   Node** result = SearchTree(aKey);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_troy
   if (!*result) {
     // Use an alternative algorithm to verify that the key is not in
     // the tree
