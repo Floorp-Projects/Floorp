@@ -1461,14 +1461,6 @@ void ClassOrInterface::runStaticInitializers()
 	  VM::theVM.getNoInvoke())
 	return;
 
-  /* KLUDGE ALERT Because codegen currently does not do longs, floats and
-   * doubles, we disable static initializers for those classes that
-   * use longs, floats and doubles. This should go away once codegen 
-   * catches up.
-   */
-  if (forbidden(name))
-	return;
-
   /* Let's initially do this the easy way. Linearly search through the
    * method array for static initializers
    */
@@ -1478,13 +1470,16 @@ void ClassOrInterface::runStaticInitializers()
   extern StringPool sp;
 
   const char *clinitp = sp.get("<clinit>");
-  const char *sigp = sp.get("()V");
 
   for (Int16 i = 0; i < methodCount; i++) {
-	if (methodInfos[i]->getName()->getUtfString() == clinitp &&
-		methodInfos[i]->getDescriptor()->getUtfString() == sigp) {
-	  Method &m = summary->getMethod(i);
+	if (methodInfos[i]->getName()->getUtfString() == clinitp) {
 
+#ifdef DEBUG
+      const char *sigp = sp.get("()V");
+      assert(methodInfos[i]->getDescriptor()->getUtfString() == sigp);
+#endif
+
+	  Method &m = summary->getMethod(i);
 	  m.compile();
 	  m.invoke(0, 0, 0);
 	}
