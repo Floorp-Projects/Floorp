@@ -165,7 +165,7 @@ XFE_Toolbar::updateButton(Widget w)
 	XP_ASSERT( XfeIsButton(w) );
 
 	// Make very sure we deal with a valid button/cascade
-	if (!w || !XfeIsButton(w) || !XfeIsAlive(w))
+	if (!w || !XfeIsButton(w) || !XfeIsAlive(w) || XfeIsPrivateComponent(w))
 	{
 		return;
 	}
@@ -286,7 +286,7 @@ XFE_CALLBACK_DEFN(XFE_Toolbar, updateCommand)(XFE_NotificationCenter */*obj*/,
 	
 	for (i = 0; i < num_children; i ++)
 	{
-		if (XfeIsButton(children[i]))
+		if (XfeIsButton(children[i]) && !XfeIsPrivateComponent(children[i]))
 		{
 			XFE_Button * button = 
 				(XFE_Button *) XfeInstancePointer(children[i]);
@@ -405,7 +405,7 @@ XFE_Toolbar::findButton(const char *name,
 
 	for (i = 0; i < num_children; i ++)
 	{
-		if (XfeIsButton(children[i]))
+		if (XfeIsButton(children[i]) && !XfeIsPrivateComponent(children[i]))
 		{
 			XFE_Button * button = 
 				(XFE_Button *) XfeInstancePointer(children[i]);

@@ -223,7 +223,7 @@ XFE_TaskBar::setIconGroupForCommand(CommandType cmd, IconGroup *icons)
 
 	for (i = 0; i < num_children; i ++)
     {
-		if (XfeIsButton(children[i]))
+		if (XfeIsButton(children[i]) && !XfeIsPrivateComponent(children[i]))
 		{
 			if (Command::intern(XtName(children[i])) == cmd)
 			{
