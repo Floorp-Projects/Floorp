@@ -259,15 +259,7 @@ XULPopupListenerImpl :: sTooltipPrefChanged (const char *, void * inData )
 nsresult
 XULPopupListenerImpl::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-// MacOS and Linux bring up context menus on mousedown, Windows on mouseup
-#ifdef XP_PC
-  if(popupType == eXULPopupType_context)
-    return PreLaunchPopup(aMouseEvent);
-  else 
-    return NS_OK;
-#else
   return NS_OK;
-#endif
 }
 
 nsresult
@@ -287,7 +279,10 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult
 XULPopupListenerImpl::ContextMenu(nsIDOMEvent* aMouseEvent)
 {
-  return NS_OK;
+  if(popupType == eXULPopupType_context)
+    return PreLaunchPopup(aMouseEvent);
+  else 
+    return NS_OK;
 }
 
 nsresult
@@ -355,18 +350,20 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
     case eXULPopupType_context:
       // Check for right mouse button down
       mouseEvent->GetButton(&button);
+#ifndef XP_PC
       if (button == 2) {
         // Time to launch a context menu
         
         // If the context menu launches on mousedown,
         // we have to fire focus on the content we clicked on
-#ifndef XP_PC
         FireFocusOnTargetContent(targetNode);
 #endif
         LaunchPopup(aMouseEvent);
         aMouseEvent->PreventBubble();
         aMouseEvent->PreventDefault();
+#ifndef XP_PC
       }
+#endif
       break;
     
     case eXULPopupType_tooltip:

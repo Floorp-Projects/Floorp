@@ -70,6 +70,10 @@
  
 #define NS_MENU_POPUP_LIST_INDEX   0
 
+#ifdef XP_PC
+#define NSCONTEXTMENUISMOUSEUP 1
+#endif
+
 static PRInt32 gEatMouseMove = PR_FALSE;
 
 nsMenuDismissalListener* nsMenuFrame::mDismissalListener = nsnull;
@@ -348,12 +352,29 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
         OpenMenu(PR_TRUE);
       }
   }
-  else if ( aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP && mMenuParent && !IsDisabled()) {
+  else if (
+#ifndef NSCONTEXTMENUISMOUSEUP
+            aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP &&
+#else
+            aEvent->message == NS_CONTEXTMENU &&
+#endif
+            mMenuParent && !IsDisabled()) {
     // if this menu is a context menu it accepts right-clicks...fire away!
+    // Make sure we cancel default processing of the context menu event so
+    // that it doesn't bubble and get seen again by the popuplistener and show
+    // another context menu.
+    //
+    // Furthermore (there's always more, isn't there?), on some platforms (win32
+    // being one of them) we get the context menu event on a mouse up while
+    // on others we get it on a mouse down. For the ones where we get it on a
+    // mouse down, we must continue listening for the right button up event to
+    // dismiss the menu.
     PRBool isContextMenu = PR_FALSE;
     mMenuParent->GetIsContextMenu(isContextMenu);
-    if ( isContextMenu )
+    if ( isContextMenu ) {
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
       Execute();
+    }
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() && mMenuParent && !IsDisabled()) {
     // First, flip "checked" state if we're a checkbox menu, or
