@@ -9,28 +9,41 @@
         onload="Startup()" title="Mozilla"> 
 
   <html:script>
+  var appCore = null;
   function Startup()
   {
     dump("Doing Startup...\n");
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
-    dump("Looking up BrowserAppCore...\n");
-    if (appCore == null) {
-      dump("Creating BrowserAppCore...\n");
-      appCore = new BrowserAppCore();
-      if (appCore != null) {
-        dump("BrowserAppCore has been created.\n");
-        appCore.Init("BrowserAppCore");
-	      appCore.setContentWindow(window.frames[0].frames[1]);
-	      appCore.setWebShellWindow(window);
-	      appCore.setToolbarWindow(window);
-        appCore.setDisableCallback("DoDisableButtons();");
-        appCore.setEnableCallback("DoEnableButtons();");
-        dump("Adding BrowserAppCore to AppCoreManager...\n");
-        dump("...probably for a second time, because the constructor of nsBaseAppCore does this!\n");
-        XPAppCoresManager.Add(appCore);  
-      }
+    dump("Creating browser app core\n");
+    appCore = new BrowserAppCore();
+    if (appCore != null) {
+      dump("BrowserAppCore has been created.\n");
+      appCore.Init("BrowserAppCore." + ( new Date() ).getTime().toString() );
+	  tryToSetContentWindow();
+      //appCore.setContentWindow( window.frames[0].frames[1] );
+	  appCore.setWebShellWindow(window);
+	  appCore.setToolbarWindow(window);
+      appCore.setDisableCallback("DoDisableButtons();");
+      appCore.setEnableCallback("DoEnableButtons();");
+    }
+  }
+
+  function tryToSetContentWindow() {
+    if ( window.frames[0].frames[1] ) {
+        dump("Setting content window\n");
+        appCore.setContentWindow( window.frames[0].frames[1] );
+        // Load initial page.
+        var args = document.getElementById("args");
+        var input = document.getElementById("urlbar");
+        if ( args &amp;&amp; input ) {
+            var url = args.getAttribute("value");
+            dump("Loading initial url: " + url + "\n");
+            input.setAttribute("value",url);
+            BrowserLoadURL();
+        }
     } else {
-      dump("BrowserAppCore has already been created! Why?\n");
+        // Try again.
+        dump("Scheduling later attempt to set content window\n");
+        window.setTimeout( "tryToSetContentWindow()", 100 );
     }
   }
 
@@ -56,7 +69,6 @@
 
   function BrowserBack()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Going Back\n");
       appCore.back();
@@ -68,7 +80,6 @@
 
   function BrowserForward()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Going Forward\n");
       appCore.forward();
@@ -103,7 +114,6 @@
 
   function BrowserNewWindow()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Opening New Window\n");
       appCore.newWindow();
@@ -114,7 +124,6 @@
 
   function BrowserOpenWindow()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Opening New Window\n");
       appCore.openWindow();
@@ -123,9 +132,24 @@
     }
   }
 
-	function BrowserCopy()
+  function OpenFile(url) {
+    // This is invoked from the browser app core.
+    core = XPAppCoresManager.Find("toolkitCore");
+    if ( !core ) {
+        core = new ToolkitCore();
+        if ( core ) {
+            core.Init("toolkitCore");
+        }
+    }
+    if ( core ) {
+        core.ShowWindowWithArgs( "resource:/res/samples/navigator.xul", window, url );
+    } else {
+        dump("Error; can't create toolkitCore\n");
+    }
+  }
+
+  function BrowserCopy()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Copying\n");
       appCore.copy();
@@ -184,7 +208,6 @@
     // Borrowing this method to show how to 
     // dynamically change icons
     dump("BrowserPrintPreview\n");
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Changing Icons\n");
       appCore.printPreview();
@@ -197,7 +220,6 @@
   {
     // Borrowing this method to show how to 
     // dynamically change icons
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
       appCore.print();
     }
@@ -205,7 +227,6 @@
 
   function BrowserSetDocumentCharacterSet(aCharset)
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
       appCore.SetDocumentCharset(aCharset);
     } else {
@@ -220,7 +241,6 @@
 
   function BrowserExit()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Exiting\n");
       appCore.exit();
@@ -231,7 +251,6 @@
 
   function BrowserLoadURL()
   {
-	appCore = XPAppCoresManager.Find("BrowserAppCore");
 	if (appCore == null)
 	{
 		dump("BrowserAppCore has not been initialized\n");
@@ -278,7 +297,6 @@
 
   function WalletEditor()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
       dump("Wallet Editor\n");
       appCore.walletEditor();
@@ -289,7 +307,6 @@
 
   function WalletSafeFillin()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
       dump("Wallet Safe Fillin\n");
       appCore.walletSafeFillin();
@@ -300,7 +317,6 @@
 
   function WalletQuickFillin()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
       dump("Wallet Quick Fillin\n");
       appCore.walletQuickFillin();
@@ -311,7 +327,6 @@
 
   function WalletSamples()
   {
-    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
       dump("Wallet Samples\n");
       appCore.walletSamples();
@@ -349,6 +364,22 @@
     }
   }
 
+  function BrowserViewSource()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      var url = window.frames[0].frames[1].location;
+      dump("Opening view of source for" + url + "\n");
+      toolkitCore.ShowWindowWithArgs("resource:/res/samples/viewSource.xul", window, url);
+    }
+  }
+
   function OpenEditor()
   {
     var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
@@ -379,6 +410,7 @@
   <broadcaster id="Browser:Security" secure="false"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
   
+  <broadcaster id="args" value="resource:/res/samples/BrowserInitPage.html"/>
   <menubar>
       <menu name="File">
       <menuitem name="New Browser Window" onclick="BrowserNewWindow();"/>
@@ -450,7 +482,7 @@
       <menuitem name="Show Images" onclick="BrowserReload();"/>
       <menuitem name="Stop" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Page Source" onclick="BrowserReload();"/>
+      <menuitem name="Page Source" onclick="BrowserViewSource();"/>
       <menuitem name="Page Info" onclick="BrowserReload();"/>
       <separator />
       <menu name="Translate">
