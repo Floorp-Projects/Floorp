@@ -68,8 +68,12 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
 #else
 	// The "Plugins" folder in the application's directory is where plugins are loaded from.
 	mError = getApplicationSpec(mSpec);
-	if (NS_SUCCEEDED(mError)) {
-		SetLeafName("Plugins");
+	if (NS_SUCCEEDED(mError)) 
+  {
+    if(location == PLUGINS_DIR_LOCATION_MAC_OLD)
+		  SetLeafName("Plug-ins");
+    else
+		  SetLeafName("Plugins");
 	}
 #endif
 }
