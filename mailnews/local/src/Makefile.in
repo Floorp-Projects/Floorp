@@ -34,6 +34,7 @@ CPPSRCS = \
 	nsMailboxProtocol.cpp 	\
 	nsMailboxUrl.cpp	\
 	nsLocalMailFolder.cpp \
+	nsMailboxService.cpp \
 	$(NULL)
 
 EXPORTS= \
@@ -43,6 +44,7 @@ EXPORTS= \
 	nsParseMailbox.h \
 	nsMailboxUrl.h \
 	nsMailboxProtocol.h \
+	nsMailboxService.h \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
