@@ -111,69 +111,6 @@ extern int fe_await_synchronous_url (MWContext *context);
 extern char * fe_MakeSashGeometry(char *old_geom_str, int pane_config,
 			unsigned int w, unsigned int h);
 
-
-static Boolean
-fe_hack_self_inserting_accelerator (Widget widget, XtPointer closure,
-				    XtPointer call_data)
-{
-#if 1
-
-  /* But actually we're not using this any more. */
-  return False;
-
-#else /* 0 */
-
-/* This is completely disgusting.
-   We want certain keys to be equivalent to menu items everywhere EXCEPT
-   in text fields, where we would like them to do the obvious thing.
-   This pile of code is what we need to do to implement that!!
- */
-
-  XmPushButtonCallbackStruct *cd = (XmPushButtonCallbackStruct *) call_data;
-  MWContext *context = (MWContext *) closure;
-  Widget focus = XmGetFocusWidget (CONTEXT_WIDGET (context));
-  Modifiers mods;
-  KeySym k;
-  char *s;
-
-  if (!focus||
-      (!XmIsText (focus) && !XmIsTextField (focus)))
-    return False;
-
-  if (!cd || !cd->event)	/* can this happen? */
-    return False;
-
-  if (cd->event->xany.type != KeyPress)
-    return False;
-
-  /* If any bits but control, shift, or lock are on, this can't be a
-     self-inserting character. */
-  if (cd->event->xkey.state & ~(ControlMask|ShiftMask|LockMask))
-    return False;
-
-  k = XtGetActionKeysym (cd->event, &mods);
-
-  if (! k)
-    return False;
-
-  s = XKeysymToString (k);
-  if (! s)
-    return False;
-
-  if (*s < ' ' || *s >= 127)  /* non-printing char */
-    return False;
-
-  if (s[1])		/* Not a self-inserting character - string is
-			   probably "osfCancel" or some such nonsense. */
-    return False;
-
-/* fe_text_insert moved to selection.c */
-  fe_text_insert (focus, s, CS_LATIN1);
-  return True;
-
-#endif /* 0 */
-}
-
 static void
 fe_page_forward_cb (Widget widget, XtPointer closure, XtPointer call_data)
 {
@@ -184,8 +121,6 @@ fe_page_forward_cb (Widget widget, XtPointer closure, XtPointer call_data)
 
   XP_ASSERT(sb);
   if (!sb) return;
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   XtVaGetValues (sb, XmNpageIncrement, &pi, XmNvalue, &v,
 		 XmNmaximum, &max, XmNminimum, &min, 0);
   cb.reason = XmCR_PAGE_INCREMENT;
@@ -209,8 +144,6 @@ fe_page_backward_cb (Widget widget, XtPointer closure, XtPointer call_data)
   XP_ASSERT(sb);
   if (!sb) return;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   XtVaGetValues (sb, XmNpageIncrement, &pi, XmNvalue, &v, XmNminimum, &min, 0);
   cb.reason = XmCR_PAGE_INCREMENT;
   cb.event = 0;
@@ -236,8 +169,6 @@ fe_line_forward_cb (Widget widget, XtPointer closure, XtPointer call_data)
   XP_ASSERT(sb);
   if (!sb) return;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   XtVaGetValues (sb, XmNincrement, &li, XmNvalue, &v,
 		 XmNmaximum, &max, XmNminimum, &min, 0);
   cb.reason = XmCR_INCREMENT;
@@ -265,8 +196,6 @@ fe_line_backward_cb (Widget widget, XtPointer closure, XtPointer call_data)
   XP_ASSERT(sb);
   if (!sb) return;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   XtVaGetValues (sb, XmNincrement, &li, XmNvalue, &v, XmNminimum, &min, 0);
   cb.reason = XmCR_INCREMENT;
   cb.event = 0;
@@ -287,8 +216,6 @@ fe_column_forward_cb (Widget widget, XtPointer closure, XtPointer call_data)
   XP_ASSERT(sb);
   if (!sb) return;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   XtVaGetValues (sb, XmNincrement, &li, XmNvalue, &v, XmNminimum, &min, 0);
   cb.reason = XmCR_INCREMENT;
   cb.event = 0;
@@ -310,8 +237,6 @@ fe_column_backward_cb (Widget widget, XtPointer closure, XtPointer call_data)
   XP_ASSERT(sb);
   if (!sb) return;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   XtVaGetValues (sb, XmNincrement, &li, XmNvalue, &v,
 		 XmNmaximum, &max, XmNminimum, &min, 0);
   cb.reason = XmCR_INCREMENT;
@@ -344,8 +269,6 @@ fe_upload_file_cb (Widget widget, XtPointer closure, XtPointer call_data)
   char *file, *msg;
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   file = fe_ReadFileName (context, title, 0, True, 0);
 
@@ -419,8 +342,6 @@ fe_reload_cb (Widget widget, XtPointer closure, XtPointer call_data)
   XmPushButtonCallbackStruct *cd = (XmPushButtonCallbackStruct *) call_data;
   
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   
   if (cd && cd->event->xkey.state & ShiftMask)
     fe_ReLayout (context, NET_SUPER_RELOAD);
@@ -434,8 +355,6 @@ fe_abort_cb (Widget widget, XtPointer closure, XtPointer call_data)
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   fe_AbortCallback (widget, closure, call_data);
 }
 
@@ -461,8 +380,6 @@ fe_refresh_cb (Widget widget, XtPointer closure, XtPointer call_data)
   win = XtWindow (wid);
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   XtVaGetValues (wid, XmNbackground, &gcv.foreground,
 		 XmNwidth, &w, XmNheight, &h, 0);
@@ -584,8 +501,6 @@ fe_save_as_cb (Widget widget, XtPointer closure, XtPointer call_data)
   URL_Struct *url;
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   {
     MWContext *ctx = fe_GetFocusGridOfContext (context);
@@ -610,8 +525,6 @@ fe_save_top_frame_as_cb (Widget widget, XtPointer closure, XtPointer call_data)
   URL_Struct *url;
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   url =	SHIST_CreateWysiwygURLStruct (context,
 					    SHIST_GetCurrent (&context->hist));
@@ -778,8 +691,6 @@ fe_mailNew_cb (Widget widget, XtPointer closure, XtPointer call_data)
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   MSG_Mail (context);
 }
 
@@ -789,8 +700,6 @@ fe_mailto_cb (Widget widget, XtPointer closure, XtPointer call_data)
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   /*
    * You cannot mail a frameset, you must mail the frame child
@@ -820,8 +729,6 @@ fe_print_cb (Widget widget, XtPointer closure, XtPointer call_data)
   URL_Struct *url;
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
 #ifdef EDITOR
   if (EDT_IS_EDITOR(context) && !FE_CheckAndSaveDocument(context))
@@ -869,8 +776,6 @@ fe_QuitCallback (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 #ifdef MOZ_MAIL_NEWS
   if (!fe_CheckUnsentMail ())
     return;
@@ -904,9 +809,7 @@ fe_find_cb (Widget widget, XtPointer closure, XtPointer call_data)
   if (!top_context) top_context = context;
 
   fe_UserActivity (top_context);
-  if (fe_hack_self_inserting_accelerator (CONTEXT_WIDGET(top_context),
-					  closure, call_data))
-    return;
+
   fe_FindDialog (top_context, False);
 }
 
@@ -924,9 +827,6 @@ fe_find_again_cb (Widget widget, XtPointer closure, XtPointer call_data)
   if (!top_context) top_context = context;
 
   fe_UserActivity (top_context);
-  if (fe_hack_self_inserting_accelerator (CONTEXT_WIDGET(top_context),
-					  closure, call_data))
-    return;
 
   find_data = CONTEXT_DATA(top_context)->find_data;
 
@@ -953,8 +853,6 @@ fe_fortezza_card_cb (Widget widget,
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   SSL_FortezzaMenu(context,SSL_FORTEZZA_CARD_SELECT);
 }
@@ -966,8 +864,6 @@ fe_fortezza_change_cb (Widget widget,
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   SSL_FortezzaMenu(context,SSL_FORTEZZA_CHANGE_PERSONALITY);
 }
 
@@ -978,8 +874,6 @@ fe_fortezza_view_cb (Widget widget,
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   SSL_FortezzaMenu(context,SSL_FORTEZZA_VIEW_PERSONALITY);
 }
 
@@ -990,8 +884,6 @@ fe_fortezza_info_cb (Widget widget,
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   SSL_FortezzaMenu(context,SSL_FORTEZZA_CARD_INFO);
 }
 
@@ -1002,8 +894,6 @@ fe_fortezza_logout_cb (Widget widget,
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   SSL_FortezzaMenu(context,SSL_FORTEZZA_LOGOUT);
 }
 #endif
@@ -1409,8 +1299,6 @@ fe_docinfo_cb (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
   char buf [1024], *in, *out;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   for (in = DOCINFO, out = buf; *in; in++, out++) *out = *in - HTTP_OFF;
     *out = 0;
 
@@ -1458,8 +1346,6 @@ fe_fishcam_cb (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
   char buf [1024], *in, *out;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   for (in = HTTP_FC, out = buf; *in; in++, out++) *out = *in - HTTP_OFF;
   *out = 0;
   fe_GetURL (context,NET_CreateURLStruct(buf, FALSE), FALSE);
@@ -1471,8 +1357,6 @@ fe_SearchCallback (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
   char* url;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   if ( PREF_GetUrl("internal_url.net_search", &url) ) {
     fe_GetURL (context,NET_CreateURLStruct(url, FALSE), FALSE);
   }
@@ -1486,9 +1370,6 @@ fe_GuideCallback (Widget widget, XtPointer closure, XtPointer call_data)
   int ok;
 
   fe_UserActivity (context);
-
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   ok = PREF_CopyConfigString("toolbar.places.default_url",&url);
 
@@ -1509,8 +1390,6 @@ fe_NetscapeCallback (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
   char* url;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   if ( PREF_GetUrl("toolbar.logo", &url) ) {
 	  /*
@@ -1528,8 +1407,6 @@ fe_sgi_menu_cb (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
   char buf [1024], *in, *out;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   for (in = HTTP_SGI_MENU, out = buf; *in; in++, out++) *out = *in - HTTP_OFF;
   *out = 0;
   fe_GetURL (context, NET_CreateURLStruct (buf, FALSE), FALSE);
@@ -1541,8 +1418,6 @@ fe_adobe_menu_cb (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
   char buf [1024], *in, *out;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   for (in = HTTP_ADOBE_MENU, out = buf; *in; in++, out++)
     *out = *in - HTTP_OFF;
   *out = 0;
@@ -1555,8 +1430,6 @@ fe_SGICallback (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
   char buf [1024], *in, *out;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   for (in = HTTP_SGI_BUTTON, out = buf; *in; in++, out++)
     *out = *in - HTTP_OFF;
   *out = 0;
@@ -1569,8 +1442,6 @@ fe_sgi_welcome_cb (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
   char buf [1024], *in, *out;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   for (in = HTTP_SGI_WELCOME, out = buf; *in; in++, out++)
     *out = *in - HTTP_OFF;
   *out = 0;
@@ -1594,8 +1465,6 @@ fe_load_images_cb (Widget widget, XtPointer closure, XtPointer call_data)
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   fe_LoadDelayedImages (context);
 }
 
@@ -1617,8 +1486,6 @@ fe_back_cb (Widget widget, XtPointer closure, XtPointer call_data)
           }
     }
   fe_UserActivity (top_context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   url = SHIST_CreateURLStructFromHistoryEntry (top_context,
 					       SHIST_GetPrevious (top_context));
   if (url)
@@ -1646,8 +1513,6 @@ fe_forward_cb (Widget widget, XtPointer closure, XtPointer call_data)
           }
     }
   fe_UserActivity (top_context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   url = SHIST_CreateURLStructFromHistoryEntry (top_context,
 					       SHIST_GetNext (top_context));
   if (url)
@@ -1667,8 +1532,6 @@ fe_home_cb (Widget widget, XtPointer closure, XtPointer call_data)
   URL_Struct *url;
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   if (!fe_globalPrefs.home_document || !*fe_globalPrefs.home_document)
     {
       XClearArea (XtDisplay (CONTEXT_WIDGET (context)),
@@ -1692,8 +1555,6 @@ fe_about_cb (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   fe_reuseBrowser(context, NET_CreateURLStruct ("about:", FALSE));
 }
@@ -1706,8 +1567,6 @@ fe_manual_cb (Widget widget, XtPointer closure, XtPointer call_data)
   char buf[1024], *in, *out;
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   url = HTTP_MANUAL;
 
@@ -1725,8 +1584,6 @@ fe_aboutPlugins_cb (Widget widget, XtPointer closure, XtPointer call_data)
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   fe_GetURL (context, NET_CreateURLStruct ("about:plugins", FALSE), FALSE);
 }
 #endif /* X_PLUGINS */
@@ -1736,8 +1593,6 @@ fe_aboutFonts_cb (Widget widget, XtPointer closure, XtPointer call_data)
 {
   MWContext *context = (MWContext *) closure;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   fe_GetURL (context, NET_CreateURLStruct ("about:fonts", FALSE), FALSE);
 }
 
@@ -1992,8 +1847,6 @@ fe_save_image_cb (Widget widget, XtPointer closure, XtPointer call_data)
   URL_Struct *url;
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   XtVaGetValues (widget, XmNlabelString, &xm_title, 0);
   XmStringGetLtoR (xm_title, XmFONTLIST_DEFAULT_TAG, &title);
@@ -2018,8 +1871,6 @@ fe_save_link_cb (Widget widget, XtPointer closure, XtPointer call_data)
   URL_Struct *url;
 
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
 
   XtVaGetValues (widget, XmNlabelString, &xm_title, 0);
   XmStringGetLtoR (xm_title, XmFONTLIST_DEFAULT_TAG, &title);
@@ -2040,8 +1891,6 @@ fe_open_image_cb (Widget widget, XtPointer closure, XtPointer call_data)
   MWContext *context = (MWContext *) closure;
   URL_Struct *url;
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data))
-    return;
   url =	fe_image_under_mouse;
   if (! url)
     FE_Alert (context, fe_globalData.not_over_image_message);
@@ -2067,9 +1916,7 @@ fe_clipboard_url_1 (Widget widget, XtPointer closure, XtPointer call_data,
 	       ? event->xbutton.time :
 	       XtLastTimestampProcessed (XtDisplay(CONTEXT_WIDGET (context))));
   fe_UserActivity (context);
-  if (fe_hack_self_inserting_accelerator (widget, closure, call_data)) {
-	  return;
-  }
+
   if (! url)
     FE_Alert (context, fe_globalData.not_over_link_message);
   else
@@ -2642,68 +2489,63 @@ fe_HackTranslations (MWContext *context, Widget widget)
 #ifdef EDITOR
     case MWContextEditor:
       has_display_area = FALSE;
-      global_translations = fe_globalData.global_translations;
+      global_translations    = fe_globalData.global_translations;
       secondary_translations = fe_globalData.editor_global_translations;
       break;
 #endif /*EDITOR*/
 
     case MWContextBrowser:
       has_display_area = TRUE;
-      global_translations = fe_globalData.global_translations;
-      secondary_translations = 0;
+      global_translations    = fe_globalData.global_translations;
+      secondary_translations = fe_globalData.browser_global_translations;
       break;
 
     case MWContextMail:
     case MWContextNews:
       has_display_area = TRUE;
-      global_translations = fe_globalData.global_translations;
+      global_translations    = fe_globalData.global_translations;
       secondary_translations = fe_globalData.mailnews_global_translations;
       break;
 
     case MWContextMailMsg:
       has_display_area = TRUE;
-      global_translations = fe_globalData.global_translations;
+      global_translations    = fe_globalData.global_translations;
       secondary_translations = fe_globalData.messagewin_global_translations;
       break;
 
     case MWContextMessageComposition:
       has_display_area = FALSE;
-      global_translations = 0;
+      global_translations    = fe_globalData.global_translations;
       secondary_translations = fe_globalData.mailcompose_global_translations;
       break;
 
-    case MWContextBookmarks:
-      has_display_area = FALSE;
-      global_translations = 0;
-      secondary_translations = fe_globalData.bm_global_translations;
-      break;
-    
-    case MWContextHistory:
-      has_display_area = FALSE;
-      global_translations = 0;
-      secondary_translations = fe_globalData.gh_global_translations;
-      break;
-    
     case MWContextAddressBook:
       has_display_area = FALSE;
-      global_translations = 0;
+      global_translations    = fe_globalData.global_translations;
       secondary_translations = fe_globalData.ab_global_translations;
       break;
     case MWContextDialog:
       has_display_area = TRUE;
-      global_translations = 0;
-      secondary_translations = fe_globalData.dialog_global_translations;
+      /*global_translations = 0;*/
+      /*secondary_translations = fe_globalData.dialog_global_translations;*/
+      global_translations    = fe_globalData.global_translations;
+      secondary_translations = fe_globalData.browser_global_translations;
       break;
-
+    case MWContextPane:  /*context used by navcenter right now */
+      global_translations    = fe_globalData.global_translations;
+      secondary_translations = fe_globalData.navcenter_global_translations;
     default:
       break;
   }
-
-  if (global_translations)
-    XtOverrideTranslations (widget, global_translations);
-  if (secondary_translations)
-    XtOverrideTranslations (widget, secondary_translations);
-
+  if (!XP_STRCMP( XtName(widget), "editorDrawingArea" )) {
+      XtOverrideTranslations (widget, fe_globalData.global_translations);
+      XtOverrideTranslations (widget, fe_globalData.editor_global_translations);
+  } else {
+      if (global_translations)
+          XtOverrideTranslations (widget, global_translations);
+      if (secondary_translations)
+          XtOverrideTranslations (widget, secondary_translations);
+  }
 
   if (XmIsTextField (widget) || XmIsText (widget) || XmIsList(widget))
     {
