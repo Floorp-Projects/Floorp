@@ -628,7 +628,7 @@ fe_DrawMaskedImageWithClipRegion(Display *dpy, Drawable drawable,
 JMC_PUBLIC_API(void)
 _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
                      IL_Pixmap* mask, jint x, jint y, jint x_offset,
-                     jint y_offset, jint width, jint height)
+                     jint y_offset, jint width, jint height, jint req_w, jint req_h)
 {
     int32 img_x_offset, img_y_offset;   /* Offset of image in drawable. */
     int32 rect_x_offset, rect_y_offset; /* Offset of update rect in
