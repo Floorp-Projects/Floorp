@@ -27,6 +27,17 @@
 interface nsIDOMWindowInternal;
 
 
+
+%{C++
+#define MOZXMLTERMSHELL_CLASSNAME  "XMLTerm Shell Component"
+#define MOZXMLTERMSHELL_CONTRACTID "@mozilla.org/xmlterm/xmltermshell;1"
+
+#define MOZXMLTERMSHELL_CID                  \
+{ /* 0eb82b31-43a2-11d3-8e76-006008948af5 */ \
+   0x0eb82b31, 0x43a2, 0x11d3,               \
+{0x8e, 0x76, 0x00, 0x60, 0x08, 0x94, 0x8a, 0xf5} }
+%}
+
 [scriptable, uuid(0eb82b30-43a2-11d3-8e76-006008948af5)]
 
 interface mozIXMLTermShell : nsISupports
@@ -84,16 +95,4 @@ interface mozIXMLTermShell : nsISupports
    */ 
   void Exit();
 };
-
-
-%{C++
-
-#define MOZXMLTERMSHELL_CID                  \
-{ /* 0eb82b31-43a2-11d3-8e76-006008948af5 */ \
-   0x0eb82b31, 0x43a2, 0x11d3,               \
-{0x8e, 0x76, 0x00, 0x60, 0x08, 0x94, 0x8a, 0xf5} }
-
-extern nsresult
-NS_NewXMLTermShell(mozIXMLTermShell** aXMLTermShell);
-%}
 

@@ -63,9 +63,9 @@ PTHREADLIBOPT = -lpthread
 endif
 
 ifdef USE_NCURSES
-LIBS = -lncurses -lxmlterm $(PTHREADLIBOPT)
+LIBS = -lncurses -llineterm_s $(PTHREADLIBOPT)
 else
-LIBS = -lxmlterm $(PTHREADLIBOPT)
+LIBS = -llineterm_s $(PTHREADLIBOPT)
 endif
 
 include $(topsrcdir)/config/config.mk

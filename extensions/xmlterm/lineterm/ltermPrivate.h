@@ -37,7 +37,7 @@
  *   LINUX:          for Linux2.0/glibc
  *   SOLARIS:        for Solaris2.6
  *   BSDFAMILY:      for FreeBSD, ...
- *   DEBUG:          to enable some debugging output
+ *   DEBUG_LTERM:          to enable some debugging output
  *   NO_PTY:         force use of pipes rather than PTY for process
  *                   communication
  *   MOZILLA_CLIENT: set if embedded in Mozilla

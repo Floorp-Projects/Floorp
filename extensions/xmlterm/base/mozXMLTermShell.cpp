@@ -49,38 +49,70 @@
 #include "nsIDOMWindowInternal.h"
 
 #include "mozXMLT.h"
+#include "mozLineTerm.h"
 #include "mozXMLTermUtils.h"
 #include "mozXMLTermShell.h"
-
-// Define Interface IDs
-static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 
 // Define Class IDs
 static NS_DEFINE_IID(kAppShellServiceCID,    NS_APPSHELL_SERVICE_CID);
 
 
 /////////////////////////////////////////////////////////////////////////
-// mozXMLTermShell factory
-/////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewXMLTermShell(mozIXMLTermShell** aXMLTermShell)
-{
-    NS_PRECONDITION(aXMLTermShell != nsnull, "null ptr");
-    if (! aXMLTermShell)
-        return NS_ERROR_NULL_POINTER;
-
-    *aXMLTermShell = new mozXMLTermShell();
-    if (! *aXMLTermShell)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aXMLTermShell);
-    return NS_OK;
-}
-
-/////////////////////////////////////////////////////////////////////////
 // mozXMLTermShell implementation
 /////////////////////////////////////////////////////////////////////////
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozXMLTermShell)
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(mozXMLTermShell, 
+                              mozIXMLTermShell);
+
+PRBool mozXMLTermShell::mLoggingInitialized = PR_FALSE;
+
+NS_METHOD
+mozXMLTermShell::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+
+  if (!mLoggingInitialized) {
+    // Set initial debugging message level for XMLterm
+    int messageLevel = 0;
+    char* debugStr = (char*) PR_GetEnv("XMLT_DEBUG");
+                      
+    if (debugStr && (strlen(debugStr) == 1)) {
+      messageLevel = 98;
+      debugStr = nsnull;
+    }
+
+    tlog_set_level(XMLT_TLOG_MODULE, messageLevel, debugStr);
+    mLoggingInitialized = PR_TRUE;
+  }
+
+  return mozXMLTermShellConstructor( aOuter,
+                                  aIID,
+                                  aResult );
+}
+
+NS_METHOD
+mozXMLTermShell::RegisterProc(nsIComponentManager *aCompMgr,
+                              nsIFile *aPath,
+                              const char *registryLocation,
+                              const char *componentType,
+                              const nsModuleComponentInfo *info)
+{
+  // Component specific actions at registration time
+  PR_LogPrint("mozXMLTermShell::RegisterProc: registered mozXMLTermShell\n");
+  return NS_OK;
+}
+
+NS_METHOD
+mozXMLTermShell::UnregisterProc(nsIComponentManager *aCompMgr,
+                                nsIFile *aPath,
+                                const char *registryLocation,
+                                const nsModuleComponentInfo *info)
+{
+  // Component specific actions at unregistration time
+  return NS_OK;  // Return value is not used
+}
+
 
 mozXMLTermShell::mozXMLTermShell() :
   mInitialized(PR_FALSE),
@@ -96,37 +128,6 @@ mozXMLTermShell::~mozXMLTermShell()
   Finalize();
 }
 
-
-// Implement AddRef and Release
-NS_IMPL_ADDREF(mozXMLTermShell)
-NS_IMPL_RELEASE(mozXMLTermShell)
-
-
-NS_IMETHODIMP 
-mozXMLTermShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  if (aInstancePtr == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  if ( aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*,
-                                   NS_STATIC_CAST(mozIXMLTermShell*,this));
-
-  } else if ( aIID.Equals(NS_GET_IID(mozIXMLTermShell)) ) {
-    *aInstancePtr = NS_STATIC_CAST(mozIXMLTermShell*,this);
-
-  } else {
-    return NS_ERROR_NO_INTERFACE;
-  }
-
-  NS_ADDREF_THIS();
-
-  return NS_OK;
-}
 
 
 NS_IMETHODIMP mozXMLTermShell::GetCurrentEntryNumber(PRInt32 *aNumber)
@@ -239,22 +240,20 @@ mozXMLTermShell::Init(nsIDOMWindowInternal* aContentWin,
   mContentAreaDocShell = docShell;  // SVN: does this assignment addref?
 
   // Create XMLTerminal
-  nsCOMPtr<mozIXMLTerminal> newXMLTerminal;
-  result = NS_NewXMLTerminal(getter_AddRefs(newXMLTerminal));
+  nsCOMPtr<mozIXMLTerminal> newXMLTerminal = do_CreateInstance(
+                                                MOZXMLTERMINAL_CONTRACTID,
+                                                &result);
+  if(NS_FAILED(result))
+    return result;
 
-  if(!newXMLTerminal)
-    result = NS_ERROR_OUT_OF_MEMORY;
+  // Initialize XMLTerminal with non-owning reference to us
+  result = newXMLTerminal->Init(mContentAreaDocShell, this, URL, args);
 
-  if (NS_SUCCEEDED(result)) {
-    // Initialize XMLTerminal with non-owning reference to us
-    result = newXMLTerminal->Init(mContentAreaDocShell, this, URL, args);
+  if (NS_FAILED(result))
+    return result;
 
-    if (NS_SUCCEEDED(result)) {
-      mXMLTerminal = newXMLTerminal;
-    }
-  }
-
-  return result;
+  mXMLTerminal = newXMLTerminal;
+  return NS_OK;
 }
 
 
@@ -334,11 +333,9 @@ NS_IMETHODIMP mozXMLTermShell::SendText(const PRUnichar* aString,
   if (!mXMLTerminal)
     return NS_ERROR_FAILURE;
 
-  nsAutoString sendStr (aString);
+  XMLT_LOG(mozXMLTermShell::SendText,10,("\n"));
 
-  XMLT_LOG(mozXMLTermShell::SendText,10,("length=%d\n", sendStr.Length()));
-
-  return mXMLTerminal->SendText(sendStr, aCookie);
+  return mXMLTerminal->SendText(aString, aCookie);
 }
 
 

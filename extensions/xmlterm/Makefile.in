@@ -64,13 +64,13 @@ DEBUG = 1
 
 ifdef STAND_ALONE
 
-DIRS = base tests linetest
+DIRS = lineterm tests linetest
 
 else    # not STAND_ALONE
 
 # XMLterm currently works on Linux and SunOS only (testing on BSD family)
 ifneq (,$(filter Linux SunOS FreeBSD HP-UX,$(OS_ARCH)))
-DIRS = base ui scripts doc tests
+DIRS = lineterm base ui build scripts doc tests
 else    # XMLterm not yet been ported to this platform; do nothing
 DIRS = 
 endif

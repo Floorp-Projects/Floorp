@@ -807,7 +807,7 @@ int ltermSendData(struct lterms *lts, const UNICHAR *buf, int count)
       success = (WRITE(lts->ltermProcess.processIN, &ch, 1) == 1);
 
     if (!success) {
-#if defined(DEBUG) && !defined(USE_NSPR_IO)
+#if defined(DEBUG_LTERM) && !defined(USE_NSPR_IO)
       int errcode = errno;
       perror("ltermSendData");
 #else
@@ -863,7 +863,7 @@ int ltermSendChar(struct lterms *lts, const char *buf, int count)
                      (SIZE_T) count) == count);
 
   if (!success) {
-#if defined(DEBUG) && !defined(USE_NSPR_IO)
+#if defined(DEBUG_LTERM) && !defined(USE_NSPR_IO)
     int errcode = errno;
     perror("ltermSendChar");
 #else

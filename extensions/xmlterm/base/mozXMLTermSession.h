@@ -29,6 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
+#include "nsIGenericFactory.h"
 #include "nsIPresShell.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
@@ -36,7 +37,7 @@
 #include "nsIContent.h"
 
 #include "mozXMLT.h"
-#include "mozILineTermAux.h"
+#include "mozILineTerm.h"
 #include "mozIXMLTerminal.h"
 #include "mozIXMLTermStream.h"
 

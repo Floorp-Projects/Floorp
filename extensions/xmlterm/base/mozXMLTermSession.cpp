@@ -23,8 +23,10 @@
 #include "nscore.h"
 #include "prlog.h"
 
+#include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsIComponentManager.h"
 
 #include "nsMemory.h"
 
@@ -51,8 +53,8 @@
 #include "nsIHTMLContent.h"
 
 #include "mozXMLT.h"
-#include "mozILineTermAux.h"
 #include "mozIXMLTerminal.h"
+#include "mozIXMLTermStream.h"
 #include "mozXMLTermUtils.h"
 #include "mozXMLTermSession.h"
 #include "nsISelectionController.h"
@@ -303,7 +305,7 @@ NS_IMETHODIMP mozXMLTermSession::Resize(mozILineTermAux* lineTermAux)
 
   // Determine current screen dimensions
   PRInt32 nRows, nCols, xPixels, yPixels;
-  result = mXMLTerminal->ScreenSize(nRows, nCols, xPixels, yPixels);
+  result = mXMLTerminal->ScreenSize(&nRows, &nCols, &xPixels, &yPixels);
   if (NS_FAILED(result))
     return result;
 
@@ -898,8 +900,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                 CopyUCS2toASCII(metaCommandOutput, cstrout);
               else
                 cstrout = "Error in displaying URL\n";
-              printf("mozXMLTermSession::ReadAll, DEFAULT_META output=%s\n",
-                     cstrout.get());
+              XMLT_LOG(mozXMLTermSession::ReadAll,63,
+                       ("DEFAULT_META output=%s\n", cstrout.get()));
 
             }
             break;
@@ -933,8 +935,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                 CopyUCS2toASCII(metaCommandOutput, cstrout);
               else
                 cstrout = "Error in executing JavaScript command\n";
-              printf("mozXMLTermSession::ReadAll, JS output=%s\n",
-                     cstrout.get());
+              XMLT_LOG(mozXMLTermSession::ReadAll,63,
+                       ("JS output=%s\n", cstrout.get()));
 
             }
             break;
@@ -1369,7 +1371,8 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
     if (NS_FAILED(result))
       return result;
 
-    result = NS_NewXMLTermStream(getter_AddRefs(mXMLTermStream));
+    mXMLTermStream = do_CreateInstance( MOZXMLTERMSTREAM_CONTRACTID,
+                                        &result);
     if (NS_FAILED(result))
       return result;
 
@@ -1384,8 +1387,7 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
                                               getter_AddRefs(outerDOMWindow));
 
     if (NS_FAILED(result) || !outerDOMWindow) {
-      fprintf(stderr,
-                "mozXMLTermSession::InitStream: Failed to convert webshell\n");
+      XMLT_ERROR("mozXMLTermSession::InitStream: Failed to convert webshell\n");
       return NS_ERROR_FAILURE;
     }
 
@@ -1418,8 +1420,7 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
                                   url.get(),
                                   contentType.get(), 800);
     if (NS_FAILED(result)) {
-      fprintf(stderr,
-              "mozXMLTermSession::InitStream: Failed to open stream\n");
+      XMLT_ERROR("mozXMLTermSession::InitStream: Failed to open stream\n");
       return result;
     }
 
@@ -1532,7 +1533,7 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(PRBool positionCursorBelow)
     // Close HTML/XML document
     result = mXMLTermStream->Close();
     if (NS_FAILED(result)) {
-      fprintf(stderr, "mozXMLTermSession::BreakOutput: Failed to close stream\n");
+      XMLT_ERROR("mozXMLTermSession::BreakOutput: Failed to close stream\n");
       return result;
     }
     mXMLTermStream = nsnull;
@@ -1635,7 +1636,7 @@ NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
 
         result = mXMLTermStream->Write(str.get());
         if (NS_FAILED(result)) {
-          fprintf(stderr, "mozXMLTermSession::ProcessOutput: Failed to write to stream\n");
+          XMLT_ERROR("mozXMLTermSession::ProcessOutput: Failed to write to stream\n");
           return result;
         }
       }

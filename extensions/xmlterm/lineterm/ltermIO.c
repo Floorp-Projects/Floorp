@@ -551,7 +551,7 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
     pollCode = POLL(lto->pollFD, (SIZE_T) lto->nfds, waitTime);
 
     if (pollCode == -1) {
-#if defined(DEBUG) && !defined(USE_NSPR_IO)
+#if defined(DEBUG_LTERM) && !defined(USE_NSPR_IO)
       int errcode = errno;
       perror("ltermRead");
 #else

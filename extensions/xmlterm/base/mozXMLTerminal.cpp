@@ -59,7 +59,6 @@
 #include "mozXMLT.h"
 #include "mozXMLTermUtils.h"
 #include "mozXMLTerminal.h"
-#include "mozIXMLTermSuspend.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIInterfaceRequestor.h"
@@ -68,38 +67,20 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
-
-static NS_DEFINE_IID(kIXMLTerminalIID,    MOZIXMLTERMINAL_IID);
-static NS_DEFINE_IID(kXMLTerminalCID,     MOZXMLTERMINAL_CID);
-
 static NS_DEFINE_CID(kCClipboardCID,      NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,   NS_TRANSFERABLE_CID);
 static NS_DEFINE_CID(kLookAndFeelCID,     NS_LOOKANDFEEL_CID);
 
 /////////////////////////////////////////////////////////////////////////
-// mozXMLTerminal factory
-/////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewXMLTerminal(mozIXMLTerminal** aXMLTerminal)
-{
-    NS_PRECONDITION(aXMLTerminal != nsnull, "null ptr");
-    if (!aXMLTerminal)
-        return NS_ERROR_NULL_POINTER;
-
-    *aXMLTerminal = new mozXMLTerminal();
-    if (! *aXMLTerminal)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aXMLTerminal);
-    return NS_OK;
-}
-
-
-/////////////////////////////////////////////////////////////////////////
 // mozXMLTerminal implementation
 /////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_THREADSAFE_ISUPPORTS4(mozXMLTerminal, 
+                              mozIXMLTerminal,
+                              nsIWebProgressListener,
+                              nsIObserver,
+                              nsISupportsWeakReference);
+
 mozXMLTerminal::mozXMLTerminal() :
   mInitialized(PR_FALSE),
 
@@ -133,25 +114,6 @@ mozXMLTerminal::~mozXMLTerminal()
 {
   Finalize();
 }
-
-
-// Implement AddRef and Release
-NS_IMPL_ADDREF(mozXMLTerminal)
-NS_IMPL_RELEASE(mozXMLTerminal)
-
-
-NS_INTERFACE_MAP_BEGIN(mozXMLTerminal)
-		/*
-			I maintained the order from the original, however,
-			the original called |XMLT_LOG| and in the interface-map form
-			it no longer does.  Is this an issue?
-		*/
-	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozIXMLTerminal)
-	NS_INTERFACE_MAP_ENTRY(mozIXMLTerminal)
-	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-	NS_INTERFACE_MAP_ENTRY(nsIObserver)
-	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
 
 
 NS_IMETHODIMP mozXMLTerminal::GetCurrentEntryNumber(PRInt32 *aNumber)
@@ -384,7 +346,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   nsCOMPtr<mozIXMLTermStream> stream;
   result = NS_NewXMLTermStream(getter_AddRefs(stream));
   if (NS_FAILED(result)) {
-    fprintf(stderr, "mozXMLTerminal::Activate: Failed to create stream\n");
+    XMLT_ERROR("mozXMLTerminal::Activate: Failed to create stream\n");
     return result;
   }
 
@@ -397,26 +359,26 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
                                               getter_AddRefs(outerDOMWindow));
 
   if (NS_FAILED(result) || !outerDOMWindow) {
-    fprintf(stderr, "mozXMLTerminal::Activate: Failed to convert docshell\n");
+    XMLT_ERROR("mozXMLTerminal::Activate: Failed to convert docshell\n");
     return NS_ERROR_FAILURE;
   }
 
   result = stream->Open(outerDOMWindow, "iframet", "chrome://dummy",
                         "text/html", 800);
   if (NS_FAILED(result)) {
-    fprintf(stderr, "mozXMLTerminal::Activate: Failed to open stream\n");
+    XMLT_ERROR("mozXMLTerminal::Activate: Failed to open stream\n");
     return result;
   }
 
   result = stream->Write(streamData.get());
   if (NS_FAILED(result)) {
-    fprintf(stderr, "mozXMLTerminal::Activate: Failed to write to stream\n");
+    XMLT_ERROR("mozXMLTerminal::Activate: Failed to write to stream\n");
     return result;
   }
 
   result = stream->Close();
   if (NS_FAILED(result)) {
-    fprintf(stderr, "mozXMLTerminal::Activate: Failed to close stream\n");
+    XMLT_ERROR("mozXMLTerminal::Activate: Failed to close stream\n");
     return result;
   }
 
@@ -467,7 +429,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
   // Determine current screen dimensions
   PRInt32 nRows, nCols, xPixels, yPixels;
-  result = ScreenSize(nRows, nCols, xPixels, yPixels);
+  result = ScreenSize(&nRows, &nCols, &xPixels, &yPixels);
   if (NS_FAILED(result))
     return result;
 
@@ -495,7 +457,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   // Instantiate LineTerm  
   XMLT_LOG(mozXMLTerminal::Activate,22,
            ("instantiating lineterm, nRows=%d, nCols=%d\n", nRows, nCols));
-  result = NS_NewLineTermAux(getter_AddRefs(mLineTermAux));
+  mLineTermAux = do_CreateInstance(MOZLINETERM_CONTRACTID, &result);
   if (NS_FAILED(result)) {
     XMLT_WARNING("mozXMLTerminal::Activate: Warning - Failed to instantiate LineTermAux\n");
     return result;
@@ -607,8 +569,8 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
  * @param (output) xPixels
  * @param (output) yPixels
  */
-NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32& rows, PRInt32& cols,
-                                         PRInt32& xPixels, PRInt32& yPixels)
+NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32* rows, PRInt32* cols,
+                                         PRInt32* xPixels, PRInt32* yPixels)
 {
   nsresult result;
 
@@ -661,33 +623,33 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32& rows, PRInt32& cols,
   xdel = pixelScale * fontWidth;
   ydel = pixelScale * fontHeight + 2;
 
-  xPixels = (int) (pixelScale * shellArea.width);
-  yPixels = (int) (pixelScale * shellArea.height);
+  *xPixels = (int) (pixelScale * shellArea.width);
+  *yPixels = (int) (pixelScale * shellArea.height);
 
   // Determine number of rows/columns
-  rows = (int) ((yPixels-16) / ydel);
-  cols = (int) ((xPixels-20) / xdel);
+  *rows = (int) ((*yPixels-16) / ydel);
+  *cols = (int) ((*xPixels-20) / xdel);
 
-  if (rows < 1) rows = 1;
-  if (cols < 1) cols = 1;
+  if (*rows < 1) *rows = 1;
+  if (*cols < 1) *cols = 1;
 
   XMLT_LOG(mozXMLTerminal::ScreenSize,72,
            ("rows=%d, cols=%d, xPixels=%d, yPixels=%d\n",
-            rows, cols, xPixels, yPixels));
+            *rows, *cols, *xPixels, *yPixels));
 
   return NS_OK;
 }
 
 
 // Transmit string to LineTerm (use saved cookie)
-NS_IMETHODIMP mozXMLTerminal::SendTextAux(const nsString& aString)
+NS_IMETHODIMP mozXMLTerminal::SendTextAux(const PRUnichar* aString)
 {
   return SendText(aString, mCookie.get());
 }
 
 
 // Transmit string to LineTerm
-NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
+NS_IMETHODIMP mozXMLTerminal::SendText(const PRUnichar* aString,
                                        const PRUnichar* aCookie)
 {
   nsresult result;
@@ -835,7 +797,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
       PRUnichar* text = nsnull;
       textDataObj->ToString ( &text );
       pasteString.Assign( text, objLen / 2 );
-      result = SendTextAux(pasteString);
+      result = SendTextAux(pasteString.get());
     }
   }
   nsMemory::Free(bestFlavor);

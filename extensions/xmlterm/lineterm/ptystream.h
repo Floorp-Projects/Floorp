@@ -72,7 +72,7 @@ struct ptys {                 /* PTY structure */
  * If NOECHO is true, tty echoing is turned off.
  * If NOEXPORT is true, then the current environment is not exported
  * to the new process.
- * If DEBUG is true, debugging messages are printed to STDERR.
+ * If DEBUG_LTERM is true, debugging messages are printed to STDERR.
  * Returns 0 on success and -1 on error.
  */
 int pty_create(struct ptys *ptyp, char *const argv[],

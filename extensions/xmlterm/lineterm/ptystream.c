@@ -32,11 +32,12 @@
 
 /* ptystream.c: pseudo-TTY stream implementation
  * CPP options:
- *   LINUX:     for Linux2.0/glibc
- *   SOLARIS:   for Solaris2.6
- *   BSDFAMILY: for FreeBSD, ...
- *   NOERRMSG:  for suppressing all error messages
- *   DEBUG:     for printing some debugging output to STDERR
+ *   LINUX:         for Linux2.0/glibc
+ *   SOLARIS:       for Solaris2.6
+ *   BSDFAMILY:     for FreeBSD, ...
+ *   NOERRMSG:      for suppressing all error messages
+ *   USE_NSPR_BASE: use NSPR to log error messages (defines NOERRMSG as well)
+ *   DEBUG_LTERM:   for printing some debugging output to STDERR
  */
 
 /* system header files */
@@ -63,6 +64,10 @@
 #include <string.h>
 #include <assert.h>
 
+#ifdef USE_NSPR_BASE
+#include "prlog.h"
+#define NOERRMSG 1
+#endif
 
 /* public declarations */
 #include "ptystream.h"
@@ -115,7 +120,7 @@ int pty_create(struct ptys *ptyp, char *const argv[],
   /* Set debug flag */
   ptyp->debug = debug;
 
-#ifdef DEBUG
+#ifdef DEBUG_LTERM
   if (ptyp->debug)
     fprintf(stderr, "00-pty_create: errfd=%d, noblock=%d, noecho=%d, noexport=%d\n",
                      errfd, noblock, noecho, noexport);
@@ -158,7 +163,7 @@ int pty_create(struct ptys *ptyp, char *const argv[],
 
   ptyp->pid = child_pid;
 
-#ifdef DEBUG
+#ifdef DEBUG_LTERM
   if (ptyp->debug)
     fprintf(stderr, "00-pty_create: Fork child pid = %d, initially attached to %s\n",
                      child_pid, ttyname(0));
@@ -325,7 +330,7 @@ static int openPTY(struct ptys *ptyp, int noblock)
 
   ptyp->ptyFD = ptyFD;
 
-#ifdef DEBUG
+#ifdef DEBUG_LTERM
   if (ptyp->debug)
     fprintf(stderr, "00-openPTY: Opened pty %s on fd %d\n", ptyName, ptyFD);
 #endif
@@ -347,7 +352,7 @@ static int attachToTTY(struct ptys *ptyp, int errfd, int noecho)
   /* Create new session */
   sid = setsid();
 
-#ifdef DEBUG
+#ifdef DEBUG_LTERM
   if (ptyp->debug)
     fprintf(stderr, "00-attachToTTY: Returned %d from setsid\n", sid);
 #endif
@@ -364,7 +369,7 @@ static int attachToTTY(struct ptys *ptyp, int errfd, int noecho)
     return -1;
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_LTERM
   if (ptyp->debug)
     fprintf(stderr,"00-attachToTTY: Attaching process %d to TTY %s on fd %d\n",
                     getpid(), ptyp->ttydev, ttyFD);
@@ -529,6 +534,16 @@ static void pty_error(const char *errmsg, const char *errmsg2) {
       fprintf(stderr, "%s\n", errmsg);
     }
   }
+#else
+#ifdef USE_NSPR_BASE
+  if (errmsg != NULL) {
+    if (errmsg2 != NULL) {
+      PR_LogPrint("%s%s\n", errmsg, errmsg2);
+    } else {
+      PR_LogPrint("%s\n", errmsg);
+    }
+  }
+#endif
 #endif
 
 }

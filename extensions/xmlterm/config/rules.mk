@@ -82,7 +82,7 @@ PROGOBJS = $(OBJS)
 endif
 
 # Targets
-all: export libs progs
+all: export install progs
 
 export: $(EXPORTS)
 ifneq (,$(EXPORTS))
@@ -95,7 +95,7 @@ ifneq (,$(EXPORTS))
 endif
 	+$(LOOP_OVER_DIRS)
 
-libs: $(LIBRARY)
+install: $(LIBRARY)
 	mkdir -p  $(topsrcdir)/distrib/lib $(topsrcdir)/base/lib
 	+$(LOOP_OVER_DIRS)
 
@@ -152,7 +152,7 @@ $(OBJDIR)/%.o: %.cpp $(wildcard *.h) $(wildcard $(topsrcdir)/distrib/include/*.h
 .SUFFIXES: .a .o .c .cpp .h .pl .class .java .html .mk .in
 
 # Always recognized targets
-.PHONY: all clean clobber clobber_all export install libs
+.PHONY: all clean clobber clobber_all export install
 
 # OS configuration
 os_config:

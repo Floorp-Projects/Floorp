@@ -32,7 +32,7 @@
 
 /* tracelog.h: Tracing/logging module header
  * CPP options:
- *   DEBUG:          to enable debugging output
+ *   DEBUG_LTERM:          to enable debugging output
  *   _UNISTRING_H:   for unicode messages compatible with "unistring.h"
  */
 
@@ -129,14 +129,21 @@ extern TlogGlobal tlogGlobal;
 }
 #endif
 
-#define TLOG_ERROR tlog_message
+#if defined(USE_NSPR_BASE) && !defined(DEBUG_LTERM)
+#include "prlog.h"
+#define TLOG_MESSAGE PR_LogPrint
+#else
+#define TLOG_MESSAGE tlog_message
+#endif
 
-#define TLOG_WARNING tlog_warning
+#define TLOG_ERROR TLOG_MESSAGE
+
+#define TLOG_WARNING if (tlogGlobal.debugOn) TLOG_MESSAGE
 
 #define TLOG_PRINT(imodule,procname,level,args) \
 do {                                            \
   if (tlogGlobal.debugOn && tlog_test(imodule,":" #procname ":",level)) {  \
-      tlog_message args;                                                  \
+      TLOG_MESSAGE args;                                                  \
   }                                             \
 } while(0)
 
