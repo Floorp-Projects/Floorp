@@ -23,7 +23,6 @@ LIBRARY_NAME = raptorhtmlbase_s
 CPPSRCS =				\
 	nsAbsoluteFrame.cpp		\
 	nsBRPart.cpp			\
-	nsBlockFrame.cpp		\
 	nsBodyFrame.cpp			\
 	nsBodyPart.cpp			\
 	nsGlobalVariables.cpp		\
@@ -41,7 +40,6 @@ CPPSRCS =				\
 	nsHTMLTagContent.cpp		\
 	nsHTMLTags.cpp			\
 	nsImageMap.cpp			\
-	nsInlineFrame.cpp		\
 	nsLeafFrame.cpp			\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\

@@ -118,7 +118,8 @@ NS_METHOD
 nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus)
 {
-  NS_FRAME_TRACE_MSG(("enter nsContainerFrame::DidReflow: status=%d",
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
+                     ("enter nsContainerFrame::DidReflow: status=%d",
                       aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsFrameState state;
@@ -492,7 +493,6 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
-       
       aKidFrame->GetGeometricParent(parent);
       ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aKidFrame);
     }
@@ -510,7 +510,8 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
  * @param   aChild child this child's next-in-flow
  * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
-PRBool nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
+PRBool
+nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
 {
   NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
@@ -527,7 +528,7 @@ PRBool nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
 
   nextInFlow->GetNextInFlow(nextNextInFlow);
   if (nsnull != nextNextInFlow) {
-    ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(nextInFlow);
+    parent->DeleteChildsNextInFlow(nextInFlow);
   }
 
 #ifdef NS_DEBUG
@@ -594,17 +595,11 @@ PRBool nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
   WillDeleteNextInFlowFrame(nextInFlow);
   nextInFlow->DeleteFrame();
   parent->mChildCount--;
-#ifdef NS_DEBUG
-#if XXX_new_block_doesn_t_work_with_this_check
-  if (0 != parent->mChildCount) {
-    parent->CheckContentOffsets();
-  }
-#endif
 
+#ifdef NS_DEBUG
   aChild->GetNextInFlow(nextInFlow);
   NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
-
   return PR_TRUE;
 }
 
@@ -764,74 +759,6 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
 #endif
     mOverflowList = aFromChild;
   }
-}
-
-// Note: mLastContentIsComplete is not set correctly by this routine
-// (we don't always know the correct value at this time)
-nsIFrame* nsContainerFrame::PullUpOneChild(nsContainerFrame* aNextInFlow,
-                                           nsIFrame*         aLastChild)
-{
-  NS_PRECONDITION(nsnull != aNextInFlow, "null ptr");
-#ifdef NS_DEBUG
-  if (nsnull != aLastChild) {
-    NS_PRECONDITION(IsLastChild(aLastChild), "bad last child");
-  }
-#endif
-
-  // Get first available frame from the next-in-flow
-  NS_ASSERTION(nsnull == aNextInFlow->mOverflowList, "bad next in flow");
-  nsIFrame* kidFrame = aNextInFlow->mFirstChild;
-  if (nsnull == kidFrame) {
-    return nsnull;
-  }
-
-#ifdef NOISY
-    ListTag(stdout);
-    printf(": pulled ");
-    kidFrame->ListTag(stdout);
-    printf("\n");
-#endif
-
-  // Take the frame away from the next-in-flow. Update it's first
-  // content offset and propagate upward the offset if the
-  // next-in-flow is a pseudo-frame.
-  kidFrame->GetNextSibling(aNextInFlow->mFirstChild);
-  aNextInFlow->mChildCount--;
-  if (nsnull != aNextInFlow->mFirstChild) {
-    aNextInFlow->SetFirstContentOffset(aNextInFlow->mFirstChild);
-    if (aNextInFlow->IsPseudoFrame()) {
-      aNextInFlow->PropagateContentOffsets();
-    }
-  } else {
-#ifdef NOISY
-    ListTag(stdout);
-    printf(": drained next-in-flow %p\n", aNextInFlow);
-#endif
-  }
-
-  // Now give the frame to this container
-  kidFrame->SetGeometricParent(this);
-
-  nsIFrame* contentParent;
-
-  kidFrame->GetContentParent(contentParent);
-  if (aNextInFlow == contentParent) {
-    kidFrame->SetContentParent(this);
-  }
-  if (nsnull == aLastChild) {
-    mFirstChild = kidFrame;
-    SetFirstContentOffset(kidFrame);
-    // If we are a pseudo-frame propagate our first offset upward
-    if (IsPseudoFrame()) {
-      PropagateContentOffsets();
-    }
-  } else {
-    aLastChild->SetNextSibling(kidFrame);
-  }
-  kidFrame->SetNextSibling(nsnull);
-  mChildCount++;
-
-  return kidFrame;
 }
 
 /**
@@ -1020,9 +947,6 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Output the children
   if (mChildCount > 0) {
-    if (!mLastContentIsComplete) {
-      fputs(", !complete", out);
-    }
     if (0 != mState) {
       fprintf(out, " [state=%08x]", mState);
     }

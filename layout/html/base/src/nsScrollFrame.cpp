@@ -100,7 +100,8 @@ nsScrollBodyFrame::Reflow(nsIPresContext*      aPresContext,
                           const nsReflowState& aReflowState,
                           nsReflowStatus&      aStatus)
 {
-  NS_FRAME_TRACE_MSG(("enter nsScrollBodyFrame::Reflow: maxSize=%d,%d",
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
+                     ("enter nsScrollBodyFrame::Reflow: maxSize=%d,%d",
                       aReflowState.maxSize.width,
                       aReflowState.maxSize.height));
 
@@ -259,9 +260,9 @@ nsScrollBodyFrame::Reflow(nsIPresContext*      aPresContext,
   PostReflowCheck(aStatus);
 #endif
 
-  NS_FRAME_TRACE_MSG(
-    ("exit nsScrollBodyFrame::Reflow: status=%d width=%d height=%d",
-     aStatus, aDesiredSize.width, aDesiredSize.height));
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
+     ("exit nsScrollBodyFrame::Reflow: status=%d width=%d height=%d",
+      aStatus, aDesiredSize.width, aDesiredSize.height));
   return NS_OK;
 }
 
@@ -324,7 +325,8 @@ nsScrollInnerFrame::Reflow(nsIPresContext*      aPresContext,
                            const nsReflowState& aReflowState,
                            nsReflowStatus&      aStatus)
 {
-  NS_FRAME_TRACE_MSG(("enter nsScrollInnerFrame::Reflow: maxSize=%d,%d",
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
+                     ("enter nsScrollInnerFrame::Reflow: maxSize=%d,%d",
                       aReflowState.maxSize.width,
                       aReflowState.maxSize.height));
 
@@ -406,7 +408,7 @@ nsScrollInnerFrame::Reflow(nsIPresContext*      aPresContext,
     aDesiredSize.height  = aReflowState.maxSize.height;
   }
 
-  NS_FRAME_TRACE_MSG(
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
     ("exit nsScrollInnerFrame::Reflow: status=%d width=%d height=%d",
      aStatus, aDesiredSize.width, aDesiredSize.height));
   return NS_OK;
@@ -457,7 +459,8 @@ nsScrollOuterFrame::Reflow(nsIPresContext*      aPresContext,
                            const nsReflowState& aReflowState,
                            nsReflowStatus&      aStatus)
 {
-  NS_FRAME_TRACE_MSG(("enter nsScrollOuterFrame::Reflow: maxSize=%d,%d",
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
+                     ("enter nsScrollOuterFrame::Reflow: maxSize=%d,%d",
                       aReflowState.maxSize.width,
                       aReflowState.maxSize.height));
 
@@ -521,7 +524,7 @@ nsScrollOuterFrame::Reflow(nsIPresContext*      aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  NS_FRAME_TRACE_MSG(
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
     ("exit nsScrollOuterFrame::Reflow: status=%d width=%d height=%d",
      aStatus, aDesiredSize.width, aDesiredSize.height));
   return NS_OK;

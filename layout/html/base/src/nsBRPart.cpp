@@ -20,34 +20,31 @@
 #include "nsHTMLTagContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
-#include "nsBlockFrame.h"
+#include "nsIInlineReflow.h"
+#include "nsCSSLineLayout.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLAtoms.h"
 #include "nsIStyleContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 
-class BRFrame : public nsFrame, public nsIInlineFrame {
+class BRFrame : public nsFrame, public nsIInlineReflow {
 public:
   BRFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
-  NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
-                              nsReflowMetrics& aMetrics);
 
-  // nsIInlineFrame
-  NS_IMETHOD ReflowInline(nsLineLayout&        aLineLayout,
+  // nsIInlineReflow
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout);
+  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
                           nsReflowMetrics&     aDesiredSize,
-                          const nsReflowState& aReflowState,
-                          nsReflowStatus&      aStatus);
+                          const nsReflowState& aReflowState);
 
 protected:
   virtual ~BRFrame();
@@ -63,20 +60,6 @@ BRFrame::~BRFrame()
 {
 }
 
-nsrefcnt
-BRFrame::AddRef(void)
-{
-  NS_ERROR("not supported");
-  return 0;
-}
-
-nsrefcnt
-BRFrame::Release(void)
-{
-  NS_ERROR("not supported");
-  return 0;
-}
-
 NS_IMETHODIMP
 BRFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 {
@@ -84,8 +67,8 @@ BRFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIInlineFrameIID)) {
-    *aInstancePtrResult = (void*) ((nsIInlineFrame*)this);
+  if (aIID.Equals(kIInlineReflowIID)) {
+    *aInstancePtrResult = (void*) ((nsIInlineReflow*)this);
     return NS_OK;
   }
   return nsFrame::QueryInterface(aIID, aInstancePtrResult);
@@ -106,9 +89,17 @@ BRFrame::Paint(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-NS_METHOD
-BRFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
-                          nsReflowMetrics& aMetrics)
+NS_IMETHODIMP
+BRFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
+{
+  aLineLayout.EndTextRun();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BRFrame::InlineReflow(nsCSSLineLayout&      aLineLayout,
+                      nsReflowMetrics&      aMetrics,
+                      const nsReflowState&  aReflowState)
 {
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = 0;
@@ -116,9 +107,9 @@ BRFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
   }
 
   // We have no width, but we're the height of the default font
-  const nsStyleFont* font =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  nsIFontMetrics* fm = aPresContext->GetMetricsFor(font->mFont);
+  const nsStyleFont* font = (const nsStyleFont*)
+    mStyleContext->GetStyleData(eStyleStruct_Font);
+  nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(font->mFont);
 
   aMetrics.width = 0;
   if (nsIFrame::GetShowFrameBorders()) {
@@ -132,45 +123,16 @@ BRFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
   aMetrics.descent = fm->GetMaxDescent();
   NS_RELEASE(fm);
 
-  // Get cached state for containing block frame
-  nsBlockReflowState* state =
-    nsBlockFrame::FindBlockReflowState(aPresContext, this);
-  if (nsnull != state) {
-    nsLineLayout* lineLayoutState = state->mCurrentLine;
-    if (nsnull != lineLayoutState) {
-      lineLayoutState->mReflowResult =
-        NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-        mStyleContext->GetStyleData(eStyleStruct_Display);
-      lineLayoutState->mPendingBreak = display->mBreakType;
-      if (NS_STYLE_CLEAR_NONE == lineLayoutState->mPendingBreak) {
-        lineLayoutState->mPendingBreak = NS_STYLE_CLEAR_LINE;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BRFrame::ReflowInline(nsLineLayout&        aLineLayout,
-                      nsReflowMetrics&     aDesiredSize,
-                      const nsReflowState& aReflowState,
-                      nsReflowStatus&      aStatus)
-{
-  GetReflowMetrics(aLineLayout.mPresContext, aDesiredSize);
-  aStatus = NS_FRAME_COMPLETE;
-
-  aLineLayout.mReflowResult =
-    NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
+  // Return our inline reflow status
   const nsStyleDisplay* display = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
-  aLineLayout.mPendingBreak = display->mBreakType;
-  if (NS_STYLE_CLEAR_NONE == aLineLayout.mPendingBreak) {
-    aLineLayout.mPendingBreak = NS_STYLE_CLEAR_LINE;
+  PRUint32 breakType = display->mBreakType;
+  if (NS_STYLE_CLEAR_NONE == breakType) {
+    breakType = NS_STYLE_CLEAR_LINE;
   }
 
-  return NS_OK;
+  return NS_INLINE_REFLOW_BREAK_AFTER |
+    NS_INLINE_REFLOW_MAKE_BREAK_TYPE(breakType);
 }
 
 //----------------------------------------------------------------------

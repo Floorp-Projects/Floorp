@@ -207,62 +207,6 @@ static void AdjustIndexInParents(nsIFrame*         aContainerFrame,
   }
 }
 
-nsresult
-nsHTMLContainerFrame::CreateFrameFor(nsIPresContext*  aPresContext,
-                                     nsIContent*      aContent,
-                                     nsIStyleContext* aStyleContext,
-                                     nsIFrame*&       aResult)
-{
-  // Get the style data for the frame
-  const nsStylePosition*  position = (const nsStylePosition*)
-    aStyleContext->GetStyleData(eStyleStruct_Position);
-  const nsStyleDisplay*   display = (const nsStyleDisplay*)
-    aStyleContext->GetStyleData(eStyleStruct_Display);
-  nsIFrame*               frame = nsnull;
-
-  // See whether it wants any special handling
-  nsresult rv;
-  if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-    rv = nsAbsoluteFrame::NewFrame(&frame, aContent, this);
-    if (NS_OK == rv) {
-      frame->SetStyleContext(aPresContext, aStyleContext);
-    }
-  }
-  else if (display->mFloats != NS_STYLE_FLOAT_NONE) {
-    rv = nsPlaceholderFrame::NewFrame(&frame, aContent, this);
-    if (NS_OK == rv) {
-      frame->SetStyleContext(aPresContext, aStyleContext);
-    }
-  }
-  else if ((NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) ||
-           (NS_STYLE_OVERFLOW_AUTO == display->mOverflow)) {
-    rv = NS_NewScrollFrame(&frame, aContent, this);
-    if (NS_OK == rv) {
-      frame->SetStyleContext(aPresContext, aStyleContext);
-    }
-  }
-  else if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-    rv = nsFrame::NewFrame(&frame, aContent, this);
-    if (NS_OK == rv) {
-      frame->SetStyleContext(aPresContext, aStyleContext);
-    }
-  }
-  else {
-    // Ask the content delegate to create the frame
-    nsIContentDelegate* delegate = aContent->GetDelegate(aPresContext);
-    rv = delegate->CreateFrame(aPresContext, aContent, this,
-                               aStyleContext, frame);
-    NS_RELEASE(delegate);
-  }
-  if (NS_OK == rv) {
-    // Wrap the frame in a view if necessary
-    rv = nsHTMLBase::CreateViewForFrame(aPresContext, frame, aStyleContext,
-                                         PR_FALSE);
-  }
-  aResult = frame;
-  return rv;
-}
-
 NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
                                                 nsIPresContext* aPresContext,
                                                 nsIContent*     aContainer,
@@ -321,7 +265,8 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
   nsIStyleContext* kidSC;
   kidSC = aPresContext->ResolveStyleContextFor(aChild, parent);
   nsIFrame* newFrame;
-  nsresult rv = parent->CreateFrameFor(aPresContext, aChild, kidSC, newFrame);
+//XXX  nsresult rv = parent->CreateFrameFor(aPresContext, aChild, kidSC, newFrame);
+  nsresult rv = nsHTMLBase::CreateFrame(aPresContext, this, aChild, nsnull, newFrame);
   if (NS_OK != rv) {
     return rv;
   }
@@ -369,23 +314,25 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
 nsresult
 nsHTMLContainerFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
 {
-  const nsStyleDisplay* display = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-               ("nsHTMLContainerFrame::ProcessInitialReflow: display=%d",
-                display->mDisplay));
-  if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
-    // This container is a list-item container. Therefore it needs a
-    // bullet content object.
-    nsIHTMLContent* bullet;
-    nsresult rv = NS_NewHTMLBullet(&bullet);
-    if (NS_OK != rv) {
-      return rv;
-    }
+  if (nsnull == mPrevInFlow) {
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+                 ("nsHTMLContainerFrame::ProcessInitialReflow: display=%d",
+                  display->mDisplay));
+    if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
+      // This container is a list-item container. Therefore it needs a
+      // bullet content object.
+      nsIHTMLContent* bullet;
+      nsresult rv = NS_NewHTMLBullet(&bullet);
+      if (NS_OK != rv) {
+        return rv;
+      }
 
-    // Insert the bullet. Do not allow an incremental reflow operation
-    // to occur.
-    mContent->InsertChildAt(bullet, 0, PR_FALSE);
+      // Insert the bullet. Do not allow an incremental reflow operation
+      // to occur.
+      mContent->InsertChildAt(bullet, 0, PR_FALSE);
+    }
   }
 
   return NS_OK;

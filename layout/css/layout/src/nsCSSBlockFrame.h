@@ -19,7 +19,7 @@
 #ifndef nsCSSBlockFrame_h___
 #define nsCSSBlockFrame_h___
 
-#include "nsContainerFrame.h"
+#include "nsCSSContainerFrame.h"
 #include "nsCSSLineLayout.h"
 #include "nsCSSInlineLayout.h"
 #include "nsVoidArray.h"
@@ -29,6 +29,10 @@ class nsCSSBlockFrame;
 struct nsCSSInlineLayout;
 struct LineData;
 
+/* 52b33130-0b99-11d2-932e-00805f8add32 */
+#define NS_BLOCK_FRAME_CID \
+{ 0x52b33130, 0x0b99, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+
 // XXX hide this as soon as list bullet code is cleaned up
 
 struct nsCSSBlockReflowState : public nsReflowState {
@@ -37,7 +41,7 @@ struct nsCSSBlockReflowState : public nsReflowState {
                         nsCSSBlockFrame*     aBlock,
                         nsIStyleContext*     aBlockSC,
                         const nsReflowState& aReflowState,
-                        nsSize*              aMaxElementSize);
+                        PRBool               aComputeMaxElementSize);
 
   ~nsCSSBlockReflowState();
 
@@ -67,14 +71,16 @@ struct nsCSSBlockReflowState : public nsReflowState {
   nscoord mDeltaWidth;
   nscoord mBottomEdge;          // maximum Y
 
-  PRPackedBool mUnconstrainedWidth, mUnconstrainedHeight;
+  PRPackedBool mUnconstrainedWidth;
+  PRPackedBool mUnconstrainedHeight;
   PRPackedBool mNoWrap;
+  PRPackedBool mComputeMaxElementSize;
   nscoord mX, mY;
   nscoord mPrevPosBottomMargin;
   nscoord mPrevNegBottomMargin;
   nscoord mKidXMost;
 
-  nsSize* mMaxElementSize;
+  nsSize mMaxElementSize;
 
   nsCSSLineLayout mLineLayout;
 

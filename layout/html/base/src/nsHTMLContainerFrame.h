@@ -56,12 +56,8 @@ protected:
 
   virtual PRIntn GetSkipSides() const = 0;
 
-  nsresult CreateFrameFor(nsIPresContext*  aPresContext,
-                          nsIContent*      aContent,
-                          nsIStyleContext* aStyleContext,
-                          nsIFrame*&       aResult);
-
   nsresult ProcessInitialReflow(nsIPresContext* aPresContext);
 };
 
 #endif /* nsHTMLContainerFrame_h___ */
+

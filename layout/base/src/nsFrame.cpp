@@ -1026,7 +1026,8 @@ nsFrame::SetFrameState(nsFrameState aNewState)
 NS_METHOD
 nsFrame::WillReflow(nsIPresContext& aPresContext)
 {
-  NS_FRAME_TRACE_MSG(("WillReflow: oldState=%x", mState));
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
+                     ("WillReflow: oldState=%x", mState));
   mState |= NS_FRAME_IN_REFLOW;
   return NS_OK;
 }
@@ -1035,7 +1036,8 @@ NS_METHOD
 nsFrame::DidReflow(nsIPresContext& aPresContext,
                    nsDidReflowStatus aStatus)
 {
-  NS_FRAME_TRACE_MSG(("nsFrame::DidReflow: aStatus=%d", aStatus));
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
+                     ("nsFrame::DidReflow: aStatus=%d", aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW);
 

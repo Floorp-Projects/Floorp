@@ -59,6 +59,7 @@ nsCSSLineLayout::nsCSSLineLayout(nsIPresContext* aPresContext,
   mLineNumber = 0;
   mLeftEdge = 0;
   mColumn = 0;
+  mSkipLeadingWS = PR_TRUE;
 }
 
 nsCSSLineLayout::~nsCSSLineLayout()

@@ -33,10 +33,10 @@ CPP_OBJS=.\$(OBJDIR)\nsForm.obj .\$(OBJDIR)\nsInput.obj \
     .\$(OBJDIR)\nsInputRadio.obj \
     .\$(OBJDIR)\nsInputText.obj .\$(OBJDIR)\nsSelect.obj 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I..\..\base\src -I..\..\style\src \
-  -I..\..\..\base\src \
-  -I$(PUBLIC)\dom  -I$(PUBLIC)\netlib
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
+  -I$(PUBLIC)\dom  -I$(PUBLIC)\netlib				\
+  -I..\..\base\src -I..\..\style\src -I..\..\..\css\layout\src	\
+  -I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

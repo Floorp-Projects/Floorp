@@ -21,15 +21,12 @@
 #include "nsInputFile.h"
 #include "nsIContent.h"
 #include "prtypes.h"
-#include "nsIFrame.h"
-#include "nsISupports.h"
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLForms.h"
-#include "nsInlineFrame.h"
 #include "nsIFileWidget.h"
 #include "nsITextWidget.h"
 #include "nsWidgetsCID.h"
@@ -40,7 +37,7 @@ PRInt32 nsInputFileFrame::gSpacing = 40;
 nsString* nsInputFile::gFILE_TYPE = new nsString("file");
 
 nsInputFileFrame::nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsInlineFrame(aContent, aParentFrame)
+  : nsCSSInlineFrame(aContent, aParentFrame)
 {
 }
 
@@ -106,6 +103,11 @@ void nsInputFileFrame::MouseClicked(nsIPresContext* aPresContext)
   NS_RELEASE(textWidget);
 }
 
+// XXX this method is 100% wrong; if nsInputFileFrame really is a
+// container then it's children's coordinates will be relative to the
+// container, and when the container is moved the children will
+// (therefore) automatically move with it.
+
 NS_IMETHODIMP
 nsInputFileFrame::MoveTo(nscoord aX, nscoord aY)
 {
@@ -125,6 +127,8 @@ nsInputFileFrame::MoveTo(nscoord aX, nscoord aY)
   return NS_OK;
 }
 
+// XXX this shouldn't need to be done either
+
 NS_IMETHODIMP
 nsInputFileFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 {
@@ -140,6 +144,9 @@ nsInputFileFrame::SizeTo(nscoord aWidth, nscoord aHeight)
   }
   return NS_OK;
 }
+
+// XXX hey chris: nsInlineFrame doesn't implement this anymore; this
+// needs to be reworked to deal with the new inline frame code
 
 NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext*      aCX, 
                                        nsReflowMetrics&     aDesiredSize,

@@ -23,8 +23,7 @@
 #include "nsIStyleContext.h"
 #include "nsCSSLayout.h"
 #include "nsIView.h"
-
-static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
+#include "nsHTMLIIDs.h"
 
 nsresult
 nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
@@ -112,7 +111,7 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     }
 
     // Notify our containing block that there's a new floater
-    container->AddFloater(aPresContext, mAnchoredItem, this);
+    container->AddFloater(aPresContext, aReflowState, mAnchoredItem, this);
 
   } else {
     // XXX This causes anchored-items sizes to get fixed up; this is
@@ -125,7 +124,8 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     mAnchoredItem->WillReflow(*aPresContext);
     mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
     mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);
-    container->PlaceFloater(aPresContext, mAnchoredItem, this);
+
+//XXXdeprecated    container->PlaceFloater(aPresContext, mAnchoredItem, this);
     mAnchoredItem->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 

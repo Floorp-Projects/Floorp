@@ -282,7 +282,7 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
 }
 
 // XXX Hack
-#define PAGE_SPACING 100
+#define PAGE_SPACING_TWIPS 100
 
 NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
                                    nsReflowMetrics&     aDesiredSize,
@@ -342,35 +342,45 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
     // Resize our frames
     if (nsnull != mFirstChild) {
       if (aPresContext->IsPaginated()) {
-        nscoord         y = PAGE_SPACING;
+        nscoord         y = PAGE_SPACING_TWIPS;
         nsReflowMetrics kidSize(aDesiredSize.maxElementSize);
+
+        // Compute the size of each page and the x coordinate within
+        // ourselves that the pages will be placed at.
         nsSize          pageSize(aPresContext->GetPageWidth(),
                                  aPresContext->GetPageHeight());
+        nsIDeviceContext *dx = aPresContext->GetDeviceContext();
+        PRInt32 extra = aReflowState.maxSize.width - PAGE_SPACING_TWIPS*2 -
+          pageSize.width - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+        NS_RELEASE(dx);
+
+        // Note: nscoord is an unsigned type so don't combine these
+        // two statements or the extra will be promoted to unsigned
+        // and the >0 won't work!
+        nscoord x = PAGE_SPACING_TWIPS;
+        if (extra > 0) {
+          x += extra / 2;
+        }
   
         // Tile the pages vertically
         for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
           // Reflow the page
-          nsReflowState   kidReflowState(kidFrame, aReflowState, pageSize, reflowReason);
+          nsReflowState   kidReflowState(kidFrame, aReflowState, pageSize,
+                                         reflowReason);
           nsReflowStatus  status;
 
-          // Place and size the page. If the page is narrower than our max width then
-          // center it horizontally
-          nsIDeviceContext *dx = aPresContext->GetDeviceContext();
-          PRInt32 extra = aReflowState.maxSize.width - kidSize.width -
-                          NS_TO_INT_ROUND(dx->GetScrollBarWidth());
-          NS_RELEASE(dx);
-          nscoord         x = extra > 0 ? extra / 2 : 0;
-
+          // Place and size the page. If the page is narrower than our
+          // max width then center it horizontally
           kidFrame->WillReflow(*aPresContext);
           kidFrame->MoveTo(x, y);
-          status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
-  
+          status = ReflowChild(kidFrame, aPresContext, kidSize,
+                               kidReflowState);
           kidFrame->SetRect(nsRect(x, y, kidSize.width, kidSize.height));
           kidFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
           y += kidSize.height;
   
           // Leave a slight gap between the pages
-          y += PAGE_SPACING;
+          y += PAGE_SPACING_TWIPS;
   
           // Is the page complete?
           nsIFrame* kidNextInFlow;
@@ -404,8 +414,14 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
         }
   
         // Return our desired size
-        aDesiredSize.width = aReflowState.maxSize.width;
         aDesiredSize.height = y;
+        if (aDesiredSize.height < aReflowState.maxSize.height) {
+          aDesiredSize.height = aReflowState.maxSize.height;
+        }
+        aDesiredSize.width = PAGE_SPACING_TWIPS*2 + pageSize.width;
+        if (aDesiredSize.width < aReflowState.maxSize.width) {
+          aDesiredSize.width = aReflowState.maxSize.width;
+        }
   
       } else {
         // Allow the frame to be as wide as our max width, and as high

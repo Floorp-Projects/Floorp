@@ -18,7 +18,6 @@
 #include "nsBodyFrame.h"
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
-#include "nsBlockFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -26,12 +25,11 @@
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIDeviceContext.h"
-#include "nsBlockFrame.h"
+#include "nsIRunaround.h"
 #include "nsSpaceManager.h"
 #include "nsHTMLAtoms.h"
-
-static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
-static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
+#include "nsHTMLIIDs.h"
+#include "nsCSSBlockFrame.h"
 
 nsresult nsBodyFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                nsIContent* aContent,
@@ -78,27 +76,28 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
 {
+  nsIStyleContext* styleContext =
+   aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo, this);
+
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
     // No, create a column pseudo frame
-    nsBlockFrame::NewFrame(&mFirstChild, mContent, this);
+    NS_NewCSSBlockFrame(&mFirstChild, mContent, this);
     mChildCount = 1;
-
-    // Resolve style and set the style context
-    nsIStyleContext* styleContext =
-      aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo, this);
     mFirstChild->SetStyleContext(aPresContext,styleContext);
-    NS_RELEASE(styleContext);
   } else {
-    nsBodyFrame*  prevBody = (nsBodyFrame*)mPrevInFlow;
-
-    nsIFrame* prevColumn = prevBody->mFirstChild;
-    NS_ASSERTION(prevBody->ChildIsPseudoFrame(prevColumn), "bad previous column");
-
     // Create a continuing column
-    prevColumn->CreateContinuingFrame(aPresContext, this, nsnull, mFirstChild);
+    nsBodyFrame*  prevBody = (nsBodyFrame*)mPrevInFlow;
+    nsIFrame* prevColumn = prevBody->mFirstChild;
+    NS_ASSERTION(prevBody->ChildIsPseudoFrame(prevColumn),
+                 "bad previous column");
+
+    prevColumn->CreateContinuingFrame(aPresContext, this, styleContext,
+                                      mFirstChild);
     mChildCount = 1;
   }
+
+  NS_RELEASE(styleContext);
 }
 
 nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
@@ -240,11 +239,15 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     mFirstChild->SetRect(desiredRect);
     mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
   
+#if XXX
+    // the block knows to PropagateContentOffsets so this isn't necessary
+
     // Set our last content offset and whether the last content is complete
     // based on the state of the pseudo frame
-    nsBlockFrame* blockPseudoFrame = (nsBlockFrame*)mFirstChild;
+    nsCSSBlockFrame* blockPseudoFrame = (nsCSSBlockFrame*)mFirstChild;
     mLastContentOffset = blockPseudoFrame->GetLastContentOffset();
     mLastContentIsComplete = blockPseudoFrame->GetLastContentIsComplete();
+#endif
   
     // Return our desired size
     ComputeDesiredSize(desiredRect, aReflowState.maxSize, borderPadding, aDesiredSize);
@@ -260,7 +263,8 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     }
   }
   
-  NS_FRAME_TRACE_MSG(("exit nsBodyFrame::Reflow: status=%d width=%d height=%d",
+  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
+                     ("exit nsBodyFrame::Reflow: status=%d width=%d height=%d",
                       aStatus, aDesiredSize.width, aDesiredSize.height));
   return NS_OK;
 }

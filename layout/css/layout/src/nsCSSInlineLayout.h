@@ -19,7 +19,7 @@
 #ifndef nsCSSInlineLayout_h___
 #define nsCSSInlineLayout_h___
 
-#include "nsIFrame.h"
+#include "nsCSSContainerFrame.h"
 #include "nsIInlineReflow.h"
 class nsCSSLineLayout;
 struct nsStyleDisplay;
@@ -34,7 +34,7 @@ struct nsStyleText;
  */
 struct nsCSSInlineLayout {
   nsCSSInlineLayout(nsCSSLineLayout&     aLineLayout,
-                    nsIFrame*            aContainerFrame,
+                    nsCSSContainerFrame* aContainerFrame,
                     nsIStyleContext*     aContainerStyle);
   ~nsCSSInlineLayout();
 
@@ -42,7 +42,7 @@ struct nsCSSInlineLayout {
 
   void Prepare(PRBool aUnconstrainedWidth,
                PRBool aNoWrap,
-               nsSize* aMaxElementSize);
+               PRBool aComputeMaxElementSize);
 
   void SetReflowSpace(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
@@ -79,7 +79,7 @@ struct nsCSSInlineLayout {
                                  nsIFrame*& aNextInFlowResult);
 
   nsCSSLineLayout& mLineLayout;
-  nsIFrame* mContainerFrame;
+  nsCSSContainerFrame* mContainerFrame;
   const nsStyleFont* mContainerFont;
   const nsStyleText* mContainerText;
   const nsStyleDisplay* mContainerDisplay;
@@ -88,6 +88,7 @@ struct nsCSSInlineLayout {
 
   PRPackedBool mUnconstrainedWidth;
   PRPackedBool mNoWrap;
+  PRPackedBool mComputeMaxElementSize;
   nscoord mAvailWidth;
   nscoord mAvailHeight;
   nscoord mX, mY;
@@ -100,7 +101,7 @@ struct nsCSSInlineLayout {
 
   nscoord mMaxAscent;
   nscoord mMaxDescent;
-  nsSize* mMaxElementSize;
+  nsSize mMaxElementSize;
 };
 
 #endif /* nsCSSInlineLayout_h___ */

@@ -23,25 +23,12 @@
 
 class nsCSSContainerFrame : public nsHTMLContainerFrame {
 public:
-#if 0
-  NS_IMETHOD ContentAppended(nsIPresShell*   aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent*     aContainer);
-#endif
+
+  virtual PRBool DeleteNextInFlowsFor(nsIFrame* aChild) = 0;
 
 protected:
   nsCSSContainerFrame(nsIContent* aContent, nsIFrame* aParent);
   ~nsCSSContainerFrame();
-
-#if 0
-  PRInt32 NextChildOffset() const {
-    return mLastContentOffset + (mLastContentIsComplete ? 1 : 0);
-  }
-
-  PRInt32 mFirstContentOffset;
-  PRInt32 mLastContentOffset;
-  PRBool mLastContentIsComplete;        // XXX move into frame-state
-#endif
 };
 
 #endif /* nsCSSContainerFrame_h___ */

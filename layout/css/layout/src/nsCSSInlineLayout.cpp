@@ -25,17 +25,17 @@
 #include "nsIFontMetrics.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
+#include "nsIReflowCommand.h"
 #include "nsIRunaround.h"
 
 nsCSSInlineLayout::nsCSSInlineLayout(nsCSSLineLayout&     aLineLayout,
-                                     nsIFrame*            aContainerFrame,
+                                     nsCSSContainerFrame* aContainerFrame,
                                      nsIStyleContext*     aContainerStyle)
   : mLineLayout(aLineLayout)
 {
   mContainerFrame = aContainerFrame;
   mAscents = mAscentBuf;
   mMaxAscents = sizeof(mAscentBuf) / sizeof(mAscentBuf[0]);
-  mMaxElementSize = nsnull;
 
   mContainerFont = (const nsStyleFont*)
     aContainerStyle->GetStyleData(eStyleStruct_Font);
@@ -80,13 +80,18 @@ nsCSSInlineLayout::SetAscent(nscoord aAscent)
 }
 
 void
-nsCSSInlineLayout::Prepare(PRBool aUnconstrainedWidth, PRBool aNoWrap,
-                           nsSize* aMaxElementSize)
+nsCSSInlineLayout::Prepare(PRBool aUnconstrainedWidth,
+                           PRBool aNoWrap,
+                           PRBool aComputeMaxElementSize)
 {
   mFrameNum = 0;
   mUnconstrainedWidth = aUnconstrainedWidth;
   mNoWrap = aNoWrap;
-  mMaxElementSize = aMaxElementSize;
+  mComputeMaxElementSize = aComputeMaxElementSize;
+  if (aComputeMaxElementSize) {
+    mMaxElementSize.width = 0;
+    mMaxElementSize.height = 0;
+  }
   mMaxAscent = 0;
   mMaxDescent = 0;
 }
@@ -128,7 +133,13 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   // reason will be wrong so we need to check the frame state.
   nsReflowReason reason = eReflowReason_Resize;
   if (nsnull != mContainerReflowState->reflowCommand) {
-    reason = eReflowReason_Incremental;
+    // If the reflow command was targeted at the container we are
+    // reflowing for, don't make the reason incremental.
+    nsIFrame* target;
+    mContainerReflowState->reflowCommand->GetTarget(target);
+    if (mContainerFrame != target) {
+      reason = eReflowReason_Incremental;
+    }
   }
   else {
     nsFrameState state;
@@ -141,7 +152,10 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   // Setup reflow state for reflowing the frame
   nsReflowState reflowState(aFrame, *mContainerReflowState, maxSize, reason);
   nsInlineReflowStatus rs;
-  nsReflowMetrics metrics(mMaxElementSize);
+  nsSize frameMaxElementSize;
+  nsReflowMetrics metrics(mComputeMaxElementSize
+                          ? &frameMaxElementSize
+                          : nsnull);
   PRBool isAware;
   aFrame->WillReflow(*mLineLayout.mPresContext);
   rs = ReflowFrame(aFrame, metrics, reflowState, isAware);
@@ -150,6 +164,10 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   }
   if (NS_INLINE_REFLOW_BREAK_BEFORE == (rs & NS_INLINE_REFLOW_REFLOW_MASK)) {
     return rs;
+  }
+
+  if (!isAware && ((0 != metrics.width) || (0 != metrics.height))) {
+    mLineLayout.SetSkipLeadingWhiteSpace(PR_FALSE);
   }
 
   // It's possible the frame didn't fit
@@ -253,7 +271,7 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
       aKidFrame->GetGeometricParent(parent);
-      parent->DeleteChildsNextInFlow(aKidFrame);
+      ((nsCSSContainerFrame*)parent)->DeleteNextInFlowsFor(aKidFrame);
     }
   }
 
@@ -302,6 +320,7 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
       }
     }
   }
+  nscoord totalWidth = 0;
   if (!isBullet) {
     // Place normal in-flow child
     aFrame->SetRect(aFrameRect);
@@ -326,7 +345,7 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
       horizontalMargins = aFrameMargin.left + aFrameMargin.right;
       break;
     }
-    nscoord totalWidth = aFrameMetrics.width + horizontalMargins;
+    totalWidth = aFrameMetrics.width + horizontalMargins;
     mX += totalWidth;
   }
 
@@ -336,21 +355,18 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
                 aFrameRect.x, aFrameRect.y,
                 aFrameRect.width, aFrameRect.height));
 
-#if XXX_fix_me
   // XXX this is not right; the max-element-size of a child depends on
   // it's margins which it doesn't know how to add in
 
-  if (nsnull != mMaxElementSize) {
-    // XXX I'm not certain that this is doing the right thing; rethink this
-    nscoord elementWidth = kidMaxElementSize->width + horizontalMargins;
-    if (elementWidth > mMaxElementSize->width) {
-      mMaxElementSize->width = elementWidth;
+  // Fold in child's max-element-size information into our own
+  if (mComputeMaxElementSize) {
+    if (aFrameMetrics.maxElementSize->width > mMaxElementSize.width) {
+      mMaxElementSize.width = aFrameMetrics.maxElementSize->width;
     }
-    if (aFrameMetrics.height > mMaxElementSize->height) {
-      mMaxElementSize->height = aFrameMetrics.height;
+    if (aFrameMetrics.maxElementSize->height > mMaxElementSize.height) {
+      mMaxElementSize.height = aFrameMetrics.maxElementSize->height;
     }
   }
-#endif
 
   if (aFrameMetrics.ascent > mMaxAscent) {
     mMaxAscent = aFrameMetrics.ascent;
@@ -363,22 +379,6 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
     return nsInlineReflowStatus(rv);
   }
   mFrameNum++;
-
-#if XXX_fix_me
-  mLine->mLastContentOffset = mKidContentIndex;
-  switch (aFrameReflowStatus & NS_INLINE_REFLOW_REFLOW_MASK) {
-  case NS_INLINE_REFLOW_COMPLETE:
-  case NS_INLINE_REFLOW_BREAK_AFTER:
-    mLine->mLastContentIsComplete = PR_TRUE;
-    mKidPrevInFlow = nsnull;
-    break;
-
-  case NS_INLINE_REFLOW_NOT_COMPLETE:
-    mLine->mLastContentIsComplete = PR_FALSE;
-    mKidPrevInFlow = mKidFrame;
-    break;
-  }
-#endif
 
   return aFrameReflowStatus;
 }
