@@ -1438,10 +1438,10 @@ nsRenderingContextQT::GetBoundingMetrics(const char *aString,PRUint32 aLength,
       buf[i] = QChar(aString[i]);
     }
     QString qStr(buf,aLength);
-    QFontMetrics qFM(mCurrentFont);
+    QFontMetrics qFM(*(mCurrentFont->mFont));
 
     aBoundingMetrics.width = qFM.width(qStr);
-    aBoundingMetrics.leftBearing = qFM.leftBearing(buf)[0]);
+    aBoundingMetrics.leftBearing = qFM.leftBearing(buf[0]);
     aBoundingMetrics.rightBearing = qFM.rightBearing(buf[aLength - 1]);
     aBoundingMetrics.ascent = qFM.ascent();
     aBoundingMetrics.descent = qFM.descent();
