@@ -32,6 +32,15 @@
 * file under either the NPL or the GPL.
 */
 
+#ifdef _WIN32
+ // Turn off warnings about identifiers too long in browser information
+#pragma warning(disable: 4786)
+#pragma warning(disable: 4711)
+#pragma warning(disable: 4710)
+#endif
+
+#ifndef bytecodecontainer_h___
+#define bytecodecontainer_h___
 
 #include "world.h"
 #include "utilities.h"
@@ -43,10 +52,15 @@ namespace JavaScript {
 namespace MetaData {
 
 
+class Multiname;
+
 class BytecodeContainer {
 public:
     BytecodeContainer() : mBuffer(new CodeBuffer), mStackTop(0), mStackMax(0) { }
+    BytecodeContainer::~BytecodeContainer() ;
+
     
+    JS2Op *getCodeStart()                   { return (JS2Op *)(mBuffer->begin()); }
 
 
     void emitOp(JS2Op op)                   { adjustStack(op); addByte((uint8)op); }
@@ -54,12 +68,19 @@ public:
 
     void addByte(uint8 v)                   { mBuffer->push_back(v); }
     
-    void addMultiname(
+    void addPointer(void *v)                { ASSERT(sizeof(void *) == sizeof(uint32)); addLong((uint32)(v)); }
+    
+    void addFloat64(float64 v)              { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(float64)); }
+    void addLong(uint32 v)                  { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
+
+    void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addPointer(mn); }
 
 
     typedef std::vector<uint8> CodeBuffer;
 
     CodeBuffer *mBuffer;
+    std::vector<Multiname *> mMultinameList;      // gc tracking 
+
     int32 mStackTop;                // keep these as signed so as to
     int32 mStackMax;                // track if they go negative.
 
@@ -68,3 +89,5 @@ public:
 
 }
 }
+
+#endif

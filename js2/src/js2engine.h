@@ -31,8 +31,9 @@
 * file under either the NPL or the GPL.
 */
 
+#ifndef js2engine_h___
+#define js2engine_h___
 
-/* JS2 Engine - */
 
 #ifdef _WIN32
  // Turn off warnings about identifiers too long in browser information
@@ -52,7 +53,8 @@ enum JS2Op {
     eTrue,
     eFalse,
     eLexicalRead,       // <multiname index>
-    eLexicalWrite,
+    eLexicalWrite,      // <multiname index>
+    eReturn
 };
 
 
@@ -62,9 +64,9 @@ public:
 
     JS2Engine(World &world);
 
-    void interpret(uint8 *pc);
+    js2val interpret(JS2Op *start);
 
-    void interpreterLoop();
+    js2val interpreterLoop();
 
     void *gc_alloc_8();
     float64 *newDoubleValue(float64 x);
@@ -97,7 +99,7 @@ public:
     
     js2val *execStack;
     js2val *sp;
-
+    
 
     static int getStackEffect(JS2Op op);
 
@@ -110,3 +112,8 @@ public:
 
 }
 }
+
+
+
+#endif
+

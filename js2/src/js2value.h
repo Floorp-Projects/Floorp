@@ -31,6 +31,9 @@
  * file under either the NPL or the GPL.
  */
 
+#ifndef js2value_h___
+#define js2value_h___
+
 
 #define JS2_BIT(n)       ((uint32)1 << (n))
 #define JS2_BITMASK(n)   (JS2_BIT(n) - 1)
@@ -133,3 +136,7 @@
 #define JS2VAL_UNDEFINED JS2VAL_VOID
 
 typedef uint32 js2val;
+
+
+#endif
+

@@ -48,14 +48,22 @@
 namespace JavaScript {
 namespace MetaData {
 
-
-void JS2Engine::interpreterLoop()
+js2val JS2Engine::interpret(JS2Op *start)
 {
+    pc = start;
+    return interpreterLoop();
+}
+
+js2val JS2Engine::interpreterLoop()
+{
+    js2val retval;
     while (true) {
         switch (*pc) {
 #include "js2op_arithmetic.cpp"
+#include "js2op_invocation.cpp"
         }
     }
+    return retval;
 }
 
 // return a pointer to an 8 byte chunk in the gc heap
@@ -189,6 +197,7 @@ JS2Engine::JS2Engine(World &world)
 int JS2Engine::getStackEffect(JS2Op op)
 {
     switch (op) {
+    case eReturn:
     case ePlus:
         return -1;
     case eTrue:

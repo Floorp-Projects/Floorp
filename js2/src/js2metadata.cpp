@@ -147,7 +147,8 @@ namespace MetaData {
     }
 
     /*
-     * Evaluate the linked list of statement nodes beginning at 'p'
+     * Evaluate the linked list of statement nodes beginning at 'p' (generate bytecode)
+     * and then execute that bytecode
      */
     js2val JS2Metadata::EvalStmtList(Phase phase, StmtNode *p) {
         js2val retval = JS2VAL_VOID;
@@ -155,11 +156,15 @@ namespace MetaData {
             retval = EvalStmt(&env, phase, p);
             p = p->next;
         }
+        bCon->emitOp(eReturn);
+        engine->interpret(bCon->getCodeStart());
         return retval;
     }
 
     /*
      * Evaluate an individual statement 'p', including it's children
+     *  - this generates bytecode for each statement, but doesn't actually
+     * execute it.
      */
     js2val JS2Metadata::EvalStmt(Environment *env, Phase phase, StmtNode *p) 
     {

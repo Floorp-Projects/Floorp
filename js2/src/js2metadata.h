@@ -32,6 +32,9 @@
 * file under either the NPL or the GPL.
 */
 
+#ifndef js2metadata_h___
+#define js2metadata_h___
+
 
 #include "world.h"
 #include "utilities.h"
@@ -100,7 +103,7 @@ public:
     StringAtom &name;       // The namespace's name used by toString
 };
 
-
+// A QualifiedName is the combination of an identifier and a namespace
 class QualifiedName {
 public:
     QualifiedName(Namespace *nameSpace, const StringAtom &id) : nameSpace(nameSpace), id(id) { }
@@ -595,7 +598,7 @@ public:
     Parser *mParser;                // used for error reporting
     size_t errorPos;
 
-    BytecodeContainer *bCon;
+    BytecodeContainer *bCon;        // the current output container
 
     GlobalObject glob;
     Environment env;
@@ -607,3 +610,5 @@ public:
 
 }; // namespace MetaData
 }; // namespace Javascript
+
+#endif
