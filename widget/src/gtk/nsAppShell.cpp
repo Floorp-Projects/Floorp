@@ -49,6 +49,7 @@ public:
   gint mToken;
   EventQueueToken *next;
 };
+
 EventQueueToken::EventQueueToken(const nsIEventQueue *aQueue, const gint aToken) {
   mQueue = aQueue;
   mToken = aToken;
@@ -64,13 +65,16 @@ public:
 private:
   EventQueueToken *mHead;
 };
+
 EventQueueTokenQueue::EventQueueTokenQueue() {
   mHead = 0;
 }
+
 EventQueueTokenQueue::~EventQueueTokenQueue() {
   NS_ASSERTION(!mHead, "event queue token deleted when not empty");
   // and leak. it's an error, anyway
 }
+
 void EventQueueTokenQueue::PushToken(nsIEventQueue *aQueue, gint aToken) {
   EventQueueToken *newToken = new EventQueueToken(aQueue, aToken);
   NS_ASSERTION(newToken, "couldn't allocate token queue element");
@@ -79,6 +83,7 @@ void EventQueueTokenQueue::PushToken(nsIEventQueue *aQueue, gint aToken) {
     mHead = newToken;
   }
 }
+
 PRBool EventQueueTokenQueue::PopToken(nsIEventQueue *aQueue, gint *aToken) {
   EventQueueToken *token, *lastToken;
   PRBool          found = PR_FALSE;
@@ -104,6 +109,8 @@ PRBool EventQueueTokenQueue::PopToken(nsIEventQueue *aQueue, gint *aToken) {
   return found;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsAppShell);
+
 //-------------------------------------------------------------------------
 //
 // nsAppShell constructor
@@ -111,6 +118,7 @@ PRBool EventQueueTokenQueue::PopToken(nsIEventQueue *aQueue, gint *aToken) {
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 {
+  MOZ_COUNT_CTOR(nsAppShell);
   NS_INIT_REFCNT();
   mDispatchListener = 0;
   mLock = PR_NewLock();
@@ -127,6 +135,7 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
+  MOZ_COUNT_DTOR(nsAppShell);
   PR_DestroyLock(mLock);
   delete mEventQueueTokens;
 }
@@ -136,7 +145,35 @@ nsAppShell::~nsAppShell()
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
+
+#ifdef LOG_REFCNTS
+extern "C" {
+  void __log_addref(void* p, int oldrc, int newrc);
+  void __log_release(void* p, int oldrc, int newrc);
+}
+
+nsrefcnt nsAppShell::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
+  return ++mRefCnt;
+}
+
+nsrefcnt nsAppShell::Release(void)
+{
+  __log_release((void*) this, mRefCnt, mRefCnt - 1);
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  if (--mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+
+NS_IMPL_QUERY_INTERFACE1(nsAppShell, nsIAppShell)
+#else
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
+#endif
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)

@@ -192,6 +192,7 @@ protected:
 #endif
 };
 
+MOZ_DECL_CTOR_COUNTER(StyleSetImpl);
 
 StyleSetImpl::StyleSetImpl()
   : mOverrideSheets(nsnull),
@@ -200,11 +201,13 @@ StyleSetImpl::StyleSetImpl()
     mRecycler(nsnull),
     mFrameConstructor(nsnull)
 {
+  MOZ_COUNT_CTOR(StyleSetImpl);
   NS_INIT_REFCNT();
 }
 
 StyleSetImpl::~StyleSetImpl()
 {
+  MOZ_COUNT_DTOR(StyleSetImpl);
   NS_IF_RELEASE(mOverrideSheets);
   NS_IF_RELEASE(mDocSheets);
   NS_IF_RELEASE(mBackstopSheets);
