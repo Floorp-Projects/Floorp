@@ -593,6 +593,8 @@ basic_nsAReadableString<CharT>::CountChar( CharT c ) const
           return result;
         iter += lengthToExamineInThisFragment;
       }
+      // never reached; quiets warnings
+    return 0;
 #endif
   }
 
@@ -1345,7 +1347,7 @@ class basic_nsPromiseFlatString :
   PRUint32 mLength;
   const CharT *mBuffer;
   PRBool mOwnsBuffer;
-  CharT mInlineBuffer[kDefaultFlatStringSize<<sizeof(CharT)];
+  CharT mInlineBuffer[kDefaultFlatStringSize];
 };
 
 template <class CharT>
@@ -1381,7 +1383,7 @@ basic_nsPromiseFlatString<CharT>::basic_nsPromiseFlatString( const basic_nsARead
   // Otherwise copy into our internal buffer
   else {
     mBuffer = mInlineBuffer;
-    copy_string( start, end, mInlineBuffer );
+    copy_string( start, end, NS_STATIC_CAST(CharT *, &mInlineBuffer[0]));
     mInlineBuffer[mLength] = 0;
   }
 }
