@@ -190,6 +190,17 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       // are sent...
       htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
     }
+
+    // If this is a resize reflow and we have non-zero border or padding
+    // then do a repaint to make sure we repaint correctly.
+    // XXX We could be smarter about only damaging the border/padding area
+    // that was affected by the resize...
+    if ((eReflowReason_Resize == aReflowState.reason) &&
+        ((borderPadding.left != 0) || (borderPadding.top != 0) ||
+         (borderPadding.right != 0) || (borderPadding.bottom) != 0)) {
+      nsRect  damageRect(0, 0, aReflowState.maxSize.width, aReflowState.maxSize.height);
+      Invalidate(damageRect, PR_FALSE);
+    }
   }
 
   // Return the max size as our desired size
