@@ -64,7 +64,6 @@ Rights Reserved.
 	<!-- File Menu -->
 	<broadcaster id="cmd_newNavigator"/>
 	<broadcaster id="cmd_newEditor"/>
-	<broadcaster id="cmd_newMessage"/>
 	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()"/>
  	<broadcaster id="cmd_close" oncommand="AbClose()"/>
  	<broadcaster id="cmd_quit"/>
@@ -88,7 +87,6 @@ Rights Reserved.
 <keyset id="keyset">
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
-	<key id="key_newMessage"/>
 	<key id="key_PrintCard" xulkey="true" key="&printCardViewCmd.key;" observes="cmd_PrintCard" />
 	<key id="key_close"/>
 	<key id="key_quit"/>
@@ -117,8 +115,6 @@ Rights Reserved.
 						<menuitem value="&newDirectoryCmd.label;" accesskey="&newDirectoryCmd.accesskey;" disabled="true" oncommand="AbNewDirectoryt()"/>
 						<menuseparator/>
 						<menuitem id="menu_newNavigator"/>
-						<menuitem id="menu_newMessage"/>
-						<menuitem id="cmd_newCard"/>
   					<menuitem id="menu_newEditor"/>
 					</menupopup>
 				</menu>

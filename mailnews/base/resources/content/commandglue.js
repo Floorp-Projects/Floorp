@@ -177,6 +177,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
   {
 	try
 	{
+		SetBusyCursor(window, true);
 		gCurrentFolderToReroot = uri;
 		gCurrentLoadingFolderIsThreaded = isThreaded;
 		gCurrentLoadingFolderSortID = sortID;
@@ -191,6 +192,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
   }
   else
   {
+    SetBusyCursor(window, true);
 	gCurrentFolderToReroot = "";
 	gCurrentLoadingFolderIsThreaded = false;
 	gCurrentLoadingFolderSortID = "";
@@ -240,9 +242,9 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
   var column = FindThreadPaneColumnBySortResource(sortID);
 
   if(column)
-	SortThreadPane(column, sortID, "http://home.netscape.com/NC-rdf#Date", false, sortDirection);
+	SortThreadPane(column, sortID, "http://home.netscape.com/NC-rdf#Date", false, sortDirection, false);
   else
-	SortThreadPane("DateColumn", "http://home.netscape.com/NC-rdf#Date", "", false, null);
+	SortThreadPane("DateColumn", "http://home.netscape.com/NC-rdf#Date", "", false, null, false);
 
   SetSentFolderColumns(IsSpecialFolder(newFolder, "Sent"));
 
@@ -256,6 +258,7 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
     msgNavigationService.EnsureDocumentIsLoaded(document);
 
   UpdateStatusMessageCounts(newFolder);
+
 }
 
 function SetSentFolderColumns(isSentFolder)
@@ -352,9 +355,13 @@ function RestoreThreadPaneSelection(selectionArray)
 			messageElement = document.getElementById(selectionArray[i]);
 
 		}
-		tree.addItemToSelection(messageElement);
-		if(messageElement && (i==0))
-			tree.ensureElementIsVisible(messageElement);
+		if(messageElement)
+		{
+			dump("We have a messageElement\n");
+			tree.addItemToSelection(messageElement);
+			if(i==0)
+				tree.ensureElementIsVisible(messageElement);
+		}
 	}
 
 }
@@ -394,9 +401,9 @@ function FindThreadPaneColumnBySortResource(sortID)
 
 //If toggleCurrentDirection is true, then get current direction and flip to opposite.
 //If it's not true then use the direction passed in.
-function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirection, direction)
+function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirection, direction, changeCursor)
 {
-	dump("In SortThreadPane\n");
+	//dump("In SortThreadPane\n");
 	var node = document.getElementById(column);
 	if(!node)
 		return false;
@@ -430,7 +437,11 @@ function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirectio
 	var selection = SaveThreadPaneSelection();
 	var beforeSortTime = new Date();
 
+	if(changeCursor)
+		SetBusyCursor(window, true);
 	var result = SortColumn(node, sortKey, secondarySortKey, direction);
+	if(changeCursor)
+		SetBusyCursor(window, false);
 	var afterSortTime = new Date();
 	var timeToSort = (afterSortTime.getTime() - beforeSortTime.getTime())/1000;
 

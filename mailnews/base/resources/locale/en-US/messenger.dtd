@@ -42,6 +42,7 @@ Rights Reserved.
 <!ENTITY saveAsTemplateCmd.accesskey	"t">  
 <!ENTITY getNewMsgCmd.label				"Get New Messages">  
 <!ENTITY getNewMsgCmd.accesskey			"g">  
+<!ENTITY getNewMsgCmd.key				"t">  
 <!ENTITY sendUnsentCmd.label			"Send Unsent Messages">  
 <!ENTITY sendUnsentCmd.accesskey		"d">  
 <!ENTITY loadFirstDraft.label			"Load First Draft Message">
@@ -219,8 +220,10 @@ Rights Reserved.
 <!ENTITY searchMenu.label "Search">
 <!ENTITY findCmd.label "Find...">  
 <!ENTITY findCmd.accesskey "f">  
+<!ENTITY findCmd.key "f">  
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.key "g">
 <!-- LOCALIZATION NOTE (searchCurrentCmd.label) : Do not translate "&lt;" and "&gt;" in below line. -->
 <!ENTITY searchCurrentCmd.label ".Search in &lt;current&gt;">
 <!ENTITY searchCurrentCmd.accesskey "">
@@ -249,7 +252,7 @@ Rights Reserved.
 <!ENTITY nextMenu.accesskey "n"> 
 <!ENTITY nextMsgCmd.label "Message">  
 <!ENTITY nextMsgCmd.accesskey "m">  
-<!ENTITY nextMsgCmd.key "n">  
+<!ENTITY nextMsgCmd.key "f">  
 <!ENTITY nextUnreadMsgCmd.label "Unread Message">  
 <!ENTITY nextUnreadMsgCmd.accesskey "u">  
 <!ENTITY nextUnreadMsgCmd.key "n">  
@@ -263,7 +266,7 @@ Rights Reserved.
 <!ENTITY prevMenu.accesskey "p"> 
 <!ENTITY prevMsgCmd.label "Message">  
 <!ENTITY prevMsgCmd.accesskey "m">  
-<!ENTITY previousMsgCmd.key "p">  
+<!ENTITY previousMsgCmd.key "b">  
 <!ENTITY previousMsgCmd.accesskey "m">  
 <!ENTITY prevUnreadMsgCmd.label "Unread Message">  
 <!ENTITY prevUnreadMsgCmd.accesskey "u">  
@@ -316,6 +319,7 @@ Rights Reserved.
 <!ENTITY markMenu.accesskey "k">  
 <!ENTITY markAsReadCmd.label "As Read">  
 <!ENTITY markAsReadCmd.accesskey "r">  
+<!ENTITY markAsReadCmd.key "m">  
 <!ENTITY markAsUnreadCmd.label "As Unread">  
 <!ENTITY markAsUnreadCmd.accesskey "u">  
 <!ENTITY markThreadAsReadCmd.label "Thread As Read">  
@@ -324,6 +328,7 @@ Rights Reserved.
 <!ENTITY markByDateCmd.accesskey "d">  
 <!ENTITY markAllReadCmd.label "All Read">  
 <!ENTITY markAllReadCmd.accesskey "a">  
+<!ENTITY markAllReadCmd.key "a">  
 <!ENTITY markFlaggedCmd.label "Flag">  
 <!ENTITY markFlaggedCmd.accesskey "f">  
 <!ENTITY openMessageWindowCmd.label "Open Message">

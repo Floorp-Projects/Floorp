@@ -73,23 +73,18 @@ Rights Reserved.
 	<broadcaster id="cmd_previousUnreadMsg" oncommand="goDoCommand('cmd_previousUnreadMsg')" disabled="true"/>
 	<broadcaster id="cmd_previousFlaggedMsg" oncommand="goDoCommand('cmd_previousFlaggedMsg')" disabled="true"/>
 
-	<broadcaster id="cmd_sortBySubject" oncommand="goDoCommand('cmd_sortBySubject')" disabled="true"/>
-	<broadcaster id="cmd_sortByDate" oncommand="goDoCommand('cmd_sortByDate')" disabled="true"/>
-	<broadcaster id="cmd_sortByFlag" oncommand="goDoCommand('cmd_sortByFlag')" disabled="true"/>
-	<broadcaster id="cmd_sortByPriority" oncommand="goDoCommand('cmd_sortByPriority')" disabled="true"/>
-	<broadcaster id="cmd_sortBySender" oncommand="goDoCommand('cmd_sortBySender')" disabled="true"/>
-	<broadcaster id="cmd_sortBySize" oncommand="goDoCommand('cmd_sortBySize')" disabled="true"/>
-	<broadcaster id="cmd_sortByRead" oncommand="goDoCommand('cmd_sortByRead')" disabled="true"/>
-	<broadcaster id="cmd_sortByStatus" oncommand="goDoCommand('cmd_sortByStatus')" disabled="true"/>
-	<broadcaster id="cmd_sortByUnread" oncommand="goDoCommand('cmd_sortByUnread')" disabled="true"/>
-	<broadcaster id="cmd_sortByOrderReceived" oncommand="goDoCommand('cmd_sortByOrderReceived')" disabled="true"/>
 
 	<broadcaster id="cmd_viewAllMsgs" oncommand="goDoCommand('cmd_viewAllMsgs')" disabled="true"/>
 	<broadcaster id="cmd_viewUnreadMsgs" oncommand="goDoCommand('cmd_viewUnreadMsgs')" disabled="true"/>
 	<broadcaster id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
 	<broadcaster id="cmd_reply" oncommand="goDoCommand('cmd_reply')"/>
+	<broadcaster id="cmd_replySender" oncommand="goDoCommand('cmd_replySender')"/>
+	<broadcaster id="cmd_replyGroup" oncommand="goDoCommand('cmd_replyGroup')"/>
 	<broadcaster id="cmd_replyall" oncommand="goDoCommand('cmd_replyall')"/>
 	<broadcaster id="cmd_forward" oncommand="goDoCommand('cmd_forward')"/>
+	<broadcaster id="cmd_forwardInline" oncommand="goDoCommand('cmd_forwardInline')"/>
+	<broadcaster id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
+	<broadcaster id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
 	<broadcaster id="button_reply"/>
 	<broadcaster id="button_replyall"/>
 	<broadcaster id="button_forward"/>
@@ -104,6 +99,16 @@ Rights Reserved.
 	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')" disabled="true"/>
 	<broadcaster id="cmd_viewPageSource" oncommand="goDoCommand('cmd_viewPageSource')" disabled="true"/>
 	<broadcaster id="cmd_reload" oncommand="goDoCommand('cmd_reload')" disabled="true"/>
+	<broadcaster id="cmd_getNewMessages" oncommand="goDoCommand('cmd_getNewMessages')" disabled="true"/>
+	<broadcaster id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
+	<broadcaster id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
+	<broadcaster id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead')" disabled="true"/>
+	<broadcaster id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead')" disabled="true"/>
+	<broadcaster id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead')" disabled="true"/>
+	<broadcaster id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged')" disabled="true"/>
+	<broadcaster id="cmd_file" disabled="true"/>
+	<broadcaster id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
+	<broadcaster id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
 
 </broadcasterset>
 
@@ -123,10 +128,12 @@ Rights Reserved.
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
   
-	<key id="key_nextMsg" key="&nextMsgCmd.key;" control="false" shift="true" observes="cmd_nextMsg"/>
-	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_nextUnreadMsg"/>
+	<key id="key_toggleRead" key="&markAsReadCmd.key;" alt="false" control="false" shift="false" observes="cmd_markAsRead"/>
+	<key id="key_markAllRead" key="&markAllReadCmd.key;" alt="false" control="false" shift="false" observes="cmd_markAllRead"/>
+	<key id="key_nextMsg" key="&nextMsgCmd.key;" alt="false" control="false" shift="false" observes="cmd_nextMsg"/>
+	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" alt="false" control="false" shift="false" observes="cmd_nextUnreadMsg"/>
 	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" control="false" shift="false" alt="false" observes="cmd_nextUnreadThread"/>
-	<key id="key_previousMsg" key="&previousMsgCmd.key;" control="false" shift="true" observes="cmd_previousMsg"/>
+	<key id="key_previousMsg" key="&previousMsgCmd.key;" alt="false" control="false" shift="false" observes="cmd_previousMsg"/>
 	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_previousUnreadMsg"/>
 	<key id="key_reply" key="&replyMsgCmd.key;" xulkey="true" shift="false" observes="cmd_reply"/>
 	<key id="key_replyall" key="&replyToAllMsgCmd.key;" xulkey="true" shift="true" observes="cmd_replyall"/>
@@ -135,6 +142,9 @@ Rights Reserved.
 	<key id="key_print" key="&printCmd.key;" xulkey="true" shift="false" observes="cmd_print"/>
 	<key id="key_saveAsFile" key="&saveAsFileCmd.key;" xulkey="true" shift="false" observes="cmd_saveAsFile"/>
 	<key id="key_viewPageSource" key="&pageSourceCmd.key;" xulkey="true" shift="false" observes="cmd_viewPageSource"/>
+	<key id="key_getNewMessages" key="&getNewMsgCmd.key;" xulkey="true" shift="false" observes="cmd_getNewMessages"/>
+	<key id="key_find" key="&findCmd.key;" xulkey="true" shift="false" observes="cmd_find"/>
+	<key id="key_findAgain" key="&findAgainCmd.key;" xulkey="true" shift="false" observes="cmd_findAgain"/>
 
 </keyset>
 
@@ -560,7 +570,8 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem value="&getNewMsgCmd.label;"
 			 accesskey="&getNewMsgCmd.accesskey;"
-			 oncommand="MsgGetMessage();"/>
+			 key="key_getNewMessages"
+			 observes="cmd_getNewMessages"/>
 			<menuitem value="&sendUnsentCmd.label;"
 			 accesskey="&sendUnsentCmd.accesskey;"
 			 oncommand="MsgSendUnsentMsg();"/>
@@ -571,11 +582,11 @@ Rights Reserved.
 			<menuitem id="menu_renameFolder" value="&renameFolder.label;"
              accesskey="&renameFolder.accesskey;"
              observes="cmd_renameFolder"/>
-			<menuitem value="&emptyTrashCmd.label;"
+			<menuitem id="menu_emptyTrash" value="&emptyTrashCmd.label;"
              accesskey="&emptyTrashCmd.accesskey;"
-             oncommand="MsgEmptyTrash();"/>
-			<menuitem value="&compactFolder.label;" accesskey="&compactFolder.accesskey;" oncommand="MsgCompactFolder();"/>
-			<menuseparator/>
+             observes="cmd_emptyTrash"/>
+			<menuitem id="menu_compactFolder" value="&compactFolder.label;" accesskey="&compactFolder.accesskey;" observes="cmd_compactFolder"/>
+			<menuseparator id="trashMenuSeparator"/>
 			<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
 			<menuseparator/>
 			<menuitem id="printMenuItem" key="key_print" value="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print"/>
@@ -624,17 +635,17 @@ Rights Reserved.
 			 accesskey="&showMessageCmd.accesskey;"
 			 oncommand="MsgToggleMessagePane();"/>
 			<menuseparator/>
-			<menu id="viewSortMenu" value="&sortMenu.label;">
+			<menu id="viewSortMenu"  value="&sortMenu.label;">
 				<menupopup>
-					<menuitem id="sortByDateMenuitem" type="checkbox" value="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" observes="cmd_sortByDate"/>
-					<menuitem id="sortByFlagMenuitem" type="checkbox" value="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" observes="cmd_sortByFlag"/>
-					<menuitem id="sortByOrderReceivedMenuitem" type="checkbox" value="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" observes="cmd_sortByOrderReceived"/>
-					<menuitem id="sortByPriorityMenuitem" type="checkbox" value="&sortByPriorityCmd.label;" accesskey="&sortByPriorityCmd.accesskey;" observes="cmd_sortByPriority"/>
-					<menuitem id="sortBySenderMenuitem" type="checkbox" value="&sortBySenderCmd.label;" accesskey="&sortBySenderCmd.accesskey;" observes="cmd_sortBySender"/>
-					<menuitem id="sortBySizeMenuitem" type="checkbox" value="&sortBySizeCmd.label;" accesskey="&sortBySizeCmd.accesskey;" observes="cmd_sortBySize"/>
-					<menuitem id="sortByStatusMenuitem" type="checkbox" value="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" observes="cmd_sortByStatus"/>
-					<menuitem id="sortBySubjectMenuitem" type="checkbox" value="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" observes="cmd_sortBySubject"/>
-					<menuitem id="sortByUnreadMenuitem" type="checkbox" value="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" observes="cmd_sortByRead"/>
+					<menuitem id="sortByDateMenuitem" type="checkbox" value="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" oncommand="MsgSortByDate()"/>
+					<menuitem id="sortByFlagMenuitem" type="checkbox" value="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" oncommand="MsgSortByFlagged()"/>
+					<menuitem id="sortByOrderReceivedMenuitem" type="checkbox" value="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" oncommand="MsgSortByOrderReceived()"/>
+					<menuitem id="sortByPriorityMenuitem" type="checkbox" value="&sortByPriorityCmd.label;" accesskey="&sortByPriorityCmd.accesskey;" oncommand="MsgSortByPriority()"/>
+					<menuitem id="sortBySenderMenuitem" type="checkbox" value="&sortBySenderCmd.label;" accesskey="&sortBySenderCmd.accesskey;" oncommand="MsgSortBySender()"/>
+					<menuitem id="sortBySizeMenuitem" type="checkbox" value="&sortBySizeCmd.label;" accesskey="&sortBySizeCmd.accesskey;" oncommand="MsgSortBySize()"/>
+					<menuitem id="sortByStatusMenuitem" type="checkbox" value="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" oncommand="MsgSortByStatus()"/>
+					<menuitem id="sortBySubjectMenuitem" type="checkbox" value="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" oncommand="MsgSortBySubject()"/>
+					<menuitem id="sortByUnreadMenuitem" type="checkbox" value="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByRead()"/>
 				</menupopup>
 			</menu>
 			<menu value="&msgsMenu.label;" id="viewMessagesMenu" accesskey="&msgsMenu.accesskey;" oncreate="InitViewMessagesMenu();">
@@ -682,8 +693,8 @@ Rights Reserved.
 	</menu>
 	<menu value="&searchMenu.label;" accesskey="&searchMenu.accesskey;">
 		<menupopup>
-			<menuitem value="&findCmd.label;" accesskey="&findCmd.accesskey;" oncommand="MsgFind();"/>
-			<menuitem value="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" oncommand="MsgFindAgain();"/>
+			<menuitem value="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
+			<menuitem value="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
 			<menuseparator/>
 			<menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://search.netscape.com/')"/>
 			<menuitem value="&searchMailCmd.label;" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages();"/>
@@ -721,29 +732,29 @@ Rights Reserved.
 		<menuitem id="replyMainMenu" value="&replyMsgCmd.label;" 
 			accesskey="&replyMsgCmd.accesskey;"
 			key="key_reply"
-			oncommand="MsgReplyMessage(event);"/>
+			observes="cmd_reply"/>
 		<menuitem id="replySenderMainMenu" value="&replySenderCmd.label;" 
 			accesskey="&replySenderCmd.accesskey;"
-			oncommand="MsgReplySender(event);"/>
+			observes="cmd_replySender"/>
 		<menuitem id="replyNewsgroupMainMenu" value="&replyNewsgroupCmd.label;" 
 			accesskey="&replyNewsgroupCmd.accesskey;"
 			key="key_reply"
-			oncommand="MsgReplyGroup(event);"/>
+			observes="cmd_replyGroup"/>
 		<menuitem value="&replyToAllMsgCmd.label;"
 			accesskey="&replyToAllMsgCmd.accesskey;"
 			key="key_replyall"
-			oncommand="MsgReplyToAllMessage(event);"/>
+			observes="cmd_replyall"/>
 		<menuitem value="&forwardMsgCmd.label;"
 			accesskey="&forwardMsgCmd.accesskey;"
 			key="key_forward"
-			oncommand="MsgForwardMessage(event);"/>
+			observes="cmd_forward"/>
  		<menu value="&forwardAsMenu.label;" accesskey="&forwardAsMenu.accesskey;">
 			<menupopup>
-				<menuitem value="&forwardAsInline.label;" accesskey="&forwardAsInline.accesskey;" oncommand="MsgForwardAsInline(event);"/>
-				<menuitem value="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" oncommand="MsgForwardAsAttachment(event);"/>
+				<menuitem value="&forwardAsInline.label;" accesskey="&forwardAsInline.accesskey;" observes="cmd_forwardInline"/>
+				<menuitem value="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" observes="cmd_forwardAttachment"/>
 			</menupopup>
 		</menu>
-		<menuitem value="&editMsgAsNewCmd.label;" accesskey="&editMsgAsNewCmd.accesskey;" oncommand="MsgEditMessageAsNew();"/>
+		<menuitem value="&editMsgAsNewCmd.label;" accesskey="&editMsgAsNewCmd.accesskey;" observes="cmd_editAsNew"/>
 		<menuseparator/>
 		<menu value="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
 		 rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
@@ -847,11 +858,11 @@ Rights Reserved.
 		<menuseparator/>
 		<menu value="&markMenu.label;" accesskey="&markMenu.accesskey;" oncreate="InitMessageMarkMenu()">
 			<menupopup>
-				<menuitem type="checkbox" id="markReadMenuItem" value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" oncommand="MsgMarkMsgAsRead(event.target.getAttribute('checked') == 'true');"/>
-				<menuitem value="&markThreadAsReadCmd.label;" accesskey="&markThreadAsReadCmd.accesskey;" oncommand="MsgMarkThreadAsRead();"/>
-				<menuitem value="&markAllReadCmd.label;" accesskey="&markAllReadCmd.accesskey;" oncommand="MsgMarkAllRead();"/>
+				<menuitem type="checkbox" key="key_toggleRead" id="markReadMenuItem" value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"/>
+				<menuitem value="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
+				<menuitem value="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
 				<menuseparator/>
-				<menuitem type="checkbox" id="markFlaggedMenuItem" value="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" oncommand="MsgMarkAsFlagged(event.target.getAttribute('checked') == 'true');"/>
+				<menuitem type="checkbox" id="markFlaggedMenuItem" value="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
 			</menupopup>
 		</menu>
 	</menupopup>
@@ -865,15 +876,15 @@ Rights Reserved.
 <toolbox id="mailToolbarToolbox">
 	<toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
 		<box id="toolbar_button_box">
-			<button class="button-toolbar-2 top" id="button-getmsg" value="&getMsgButton.label;" tooltip="aTooltip" tooltiptext="&getMsgButton.tooltip;" onclick="MsgGetMessage()"/>
+			<button class="button-toolbar-2 top" id="button-getmsg" value="&getMsgButton.label;" tooltip="aTooltip" tooltiptext="&getMsgButton.tooltip;" observes="cmd_getNewMessages"/>
 			<button class="button-toolbar-2 top" id="button-newmsg" value="&newMsgButton.label;" tooltip="aTooltip" tooltiptext="&newMsgButton.tooltip;" onclick="MsgNewMessage(event)"/>
 			<separator/>
 			<button class="button-toolbar-2 top" id="button-reply" value="&replyButton.label;" tooltip="aTooltip" tooltiptext="&replyButton.tooltip;" observes="button_reply" onclick="MsgReplyMessage(event)"/>
 			<button class="button-toolbar-2 top" id="button-replyall" value="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" onclick="MsgReplyToAllMessage(event)"/>
 			<button class="button-toolbar-2 top" id="button-forward" value="&forwardButton.label;" tooltip="aTooltip"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" onclick="MsgForwardMessage(event)"/>
 			<separator/>
-			<menu id="FileButtonMenu" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
-				<button class="button-toolbar-2 top" id="button-file" value="&fileButton.label;"  tooltip="aTooltip" tooltiptext="&fileButton.tooltip;"/>
+			<menu id="FileButtonMenu" observes="cmd_file" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+				<button class="button-toolbar-2 top" observes="cmd_file" id="button-file" value="&fileButton.label;"  tooltip="aTooltip" tooltiptext="&fileButton.tooltip;"/>
 				<template> 
 					<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 						<menupopup>
@@ -921,7 +932,7 @@ Rights Reserved.
 				</template>
 				<menupopup/>
 			</menu>
-			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" onclick="MsgNextUnreadMessage()"/>
+			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="cmd_nextUnreadMsg"/>
 			<button class="button-toolbar-2 top" id="button-delete" value="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" onclick="goDoCommand('button_delete')"/>
       <menubutton class="menubutton-dual toolbar top" id="button-print" value="&printButton.label;" 
                   crop="right" observes="cmd_print" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  

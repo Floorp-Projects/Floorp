@@ -41,7 +41,7 @@
   <!-- navigator specific UI items -->
   <menupopup id="menu_NewPopup">
     <menuitem id="menu_newCard" insertafter="menu_newNavigator" observes="cmd_newCard" position="3"/>
-    <menuitem id="menu_newMessage" insertafter="menu_newNavigator" observes="cmd_newMessage" position="2"/>
+    <menuitem id="menu_newMessage" insertafter="menu_newNavigator" key="key_newMessage" observes="cmd_newMessage" position="2"/>
   </menupopup>
 
   <menupopup id="menu_FilePopup">

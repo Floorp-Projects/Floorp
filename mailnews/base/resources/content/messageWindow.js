@@ -181,6 +181,17 @@ function HideMenus()
 	if(goNextSeparator)
 		goNextSeparator.setAttribute("hidden", "true");
 
+	var emptryTrashMenu = document.getElementById('menu_emptyTrash');
+	if(emptryTrashMenu)
+		emptryTrashMenu.setAttribute("hidden", "true");
+
+	var compactFolderMenu = document.getElementById('menu_compactFolder');
+	if(compactFolderMenu)
+		compactFolderMenu.setAttribute("hidden", "true");
+
+	var trashSeparator = document.getElementById('trashMenuSeparator');
+	if(trashSeparator)
+		trashSeparator.setAttribute("hidden", "true");
 
 }
 
@@ -224,6 +235,19 @@ function GetSelectedMsgFolders()
 	return folderArray;
 }
 
+function GetSelectedMessage(index)
+{
+	return GetLoadedMessage();
+}
+
+function GetNumSelectedMessages()
+{
+	if(gCurrentMessageUri)
+		return 1;
+	else
+		return 0;
+}
+
 function GetSelectedMessages()
 {
 	var messageArray = new Array(1);
@@ -237,25 +261,39 @@ function GetSelectedMessages()
 
 function GetLoadedMsgFolder()
 {
-	var folderResource = RDF.GetResource(gCurrentFolderUri);
-	if(folderResource)
+	if(gCurrentFolderUri)
 	{
-		var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-		return msgFolder;
+		var folderResource = RDF.GetResource(gCurrentFolderUri);
+		if(folderResource)
+		{
+			var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+			return msgFolder;
+		}
 	}
 	return null;
 }
 
 function GetLoadedMessage()
 {
-	var messageResource = RDF.GetResource(gCurrentMessageUri);
-	if(messageResource)
+	if(gCurrentMessageUri)
 	{
-		var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
-		return message;
+		var messageResource = RDF.GetResource(gCurrentMessageUri);
+		if(messageResource)
+		{
+			var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
+			return message;
+		}
 	}
 	return null;
 
+}
+
+//Clear everything related to the current message. called after load start page.
+function ClearMessageSelection()
+{
+	gCurrentMessageUri = null;
+	gCurrentFolderUri = null;
+	CommandUpdate_Mail();
 }
 
 function GetCompositeDataSource(command)
@@ -295,6 +333,17 @@ var MessageWindowController =
 
 		switch ( command )
 		{
+			case "cmd_reply":
+			case "button_reply":
+			case "cmd_replySender":
+			case "cmd_replyGroup":
+			case "cmd_replyall":
+			case "button_replyall":
+			case "cmd_forward":
+			case "button_forward":
+			case "cmd_forwardInline":
+			case "cmd_forwardAttachment":
+			case "cmd_editAsNew":
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
@@ -303,6 +352,14 @@ var MessageWindowController =
 			case "cmd_saveAsTemplate":
 			case "cmd_viewPageSource":
 			case "cmd_reload":
+			case "cmd_getNewMessages":
+			case "cmd_find":
+			case "cmd_findAgain":
+			case "cmd_markAsRead":
+			case "cmd_markAllRead":
+			case "cmd_markThreadAsRead":
+			case "cmd_markAsFlagged":
+			case "cmd_file":
 				return true;
 			default:
 				return false;
@@ -313,6 +370,17 @@ var MessageWindowController =
 	{
 		switch ( command )
 		{
+			case "cmd_reply":
+			case "button_reply":
+			case "cmd_replySender":
+			case "cmd_replyGroup":
+			case "cmd_replyall":
+			case "button_replyall":
+			case "cmd_forward":
+			case "button_forward":
+			case "cmd_forwardInline":
+			case "cmd_forwardAttachment":
+			case "cmd_editAsNew":
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
@@ -321,11 +389,20 @@ var MessageWindowController =
 			case "cmd_saveAsTemplate":
 			case "cmd_viewPageSource":
 			case "cmd_reload":
+			case "cmd_find":
+			case "cmd_findAgain":
+			case "cmd_markAsRead":
+			case "cmd_markAllRead":
+			case "cmd_markThreadAsRead":
+			case "cmd_markAsFlagged":
+			case "cmd_file":
 				if ( command == "cmd_delete")
 				{
 					goSetMenuValue(command, 'valueMessage');
 				}
 				return ( gCurrentMessageUri != null);
+			case "cmd_getNewMessages":
+				return IsGetNewMessagesEnabled();
 			default:
 				return false;
 		}
@@ -337,6 +414,33 @@ var MessageWindowController =
 
 		switch ( command )
 		{
+			case "cmd_getNewMessages":
+				MsgGetMessage();
+				break;
+			case "cmd_reply":
+				MsgReplyMessage(null);
+				break;
+			case "cmd_replySender":
+				MsgReplySender(null);
+				break;
+			case "cmd_replyGroup":
+				MsgReplyGroup(null);
+				break;
+			case "cmd_replyall":
+				MsgReplyToAllMessage(null);
+				break;
+			case "cmd_forward":
+				MsgForwardMessage(null);
+				break;
+			case "cmd_forwardInline":
+				MsgForwardAsInline(null);
+				break;
+			case "cmd_forwardAttachment":
+				MsgForwardAsAttachment(null);
+				break;
+			case "cmd_editAsNew":
+				MsgEditMessageAsNew();
+				break;
 			case "cmd_delete":
 				MsgDeleteMessage(false, false);
 				break;
@@ -361,6 +465,24 @@ var MessageWindowController =
 			case "cmd_reload":
 				MsgReload();
 				break;
+			case "cmd_find":
+				MsgFind();
+				break;
+			case "cmd_findAgain":
+				MsgFindAgain();
+				break;
+			case "cmd_markAsRead":
+				MsgMarkMsgAsRead(null);
+				return;
+			case "cmd_markThreadAsRead":
+				MsgMarkThreadAsRead();
+				return;
+			case "cmd_markAllRead":
+				MsgMarkAllRead();
+				return;
+			case "cmd_markAsFlagged":
+				MsgMarkAsFlagged(null);
+				return;
 		}
 	},
 	
@@ -372,6 +494,17 @@ var MessageWindowController =
 
 function CommandUpdate_Mail()
 {
+	goUpdateCommand('cmd_reply');
+	goUpdateCommand('cmd_replySender');
+	goUpdateCommand('cmd_replyGroup');
+	goUpdateCommand('cmd_replyall');
+	goUpdateCommand('cmd_forward');
+	goUpdateCommand('cmd_forwardInline');
+	goUpdateCommand('cmd_forwardAttachment');
+	goUpdateCommand('button_reply');
+	goUpdateCommand('button_replyall');
+	goUpdateCommand('button_forward');
+	goUpdateCommand('cmd_editAsNew');
 	goUpdateCommand('cmd_delete');
 	goUpdateCommand('button_delete');
 	goUpdateCommand('cmd_shiftDelete');
@@ -380,6 +513,15 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_saveAsTemplate');
 	goUpdateCommand('cmd_viewPageSource');
 	goUpdateCommand('cmd_reload');
+	goUpdateCommand('cmd_getNewMessages');
+	goUpdateCommand('cmd_find');
+	goUpdateCommand('cmd_findAgain');
+	goUpdateCommand('cmd_markAsRead');
+	goUpdateCommand('cmd_markThreadAsRead');
+	goUpdateCommand('cmd_markAllRead');
+	goUpdateCommand('cmd_markAsFlagged');
+	goUpdateCommand('cmd_file');
+
 }
 
 function SetupCommandUpdateHandlers()
@@ -391,3 +533,4 @@ function CommandUpdate_UndoRedo()
 {
 
 }
+

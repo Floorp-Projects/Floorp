@@ -52,12 +52,11 @@ function InitViewMessagesMenu()
 
 function InitMessageMenu()
 {
-	var messages = GetSelectedMessages();
-	var numMessages = messages.length;
+	var aMessage = GetSelectedMessage(0);
 	var isNews = false;
-	if(numMessages > 0)
+	if(aMessage)
 	{
-		isNews = GetMessageType(messages[0]) == "news";
+		isNews = GetMessageType(aMessage) == "news";
 	}
 
 	//We show reply to Newsgroups only for news messages.
@@ -77,6 +76,15 @@ function InitMessageMenu()
 	{
 		replySenderMenuItem.setAttribute("hidden", isNews ? "" : "true");
 	}
+
+	//disable the move and copy menus only if there are no messages selected.
+	var moveMenu = document.getElementById("moveMenu");
+	if(moveMenu)
+		moveMenu.setAttribute("disabled", !aMessage);
+
+	var copyMenu = document.getElementById("copyMenu");
+	if(copyMenu)
+		copyMenu.setAttribute("disabled", !aMessage);
 
 }
 
@@ -100,60 +108,62 @@ function InitMessageMarkMenu()
 
 function InitMarkReadMenuItem()
 {
-	var messages = GetSelectedMessages();
-	var numMessages = messages.length;
 
-	var compositeDS = GetCompositeDataSource("MarkMessageRead");
-	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#IsUnread');
-
-	var areMessagesRead;
-
-	if(numMessages == 0)
-		areMessagesRead = false;
-	else
-	{
-		areMessagesRead = true;
-		for(var i = 0; i < numMessages; i++)
-		{
-			var result = compositeDS.GetTarget(messages[i], property, true);
-			result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
-			if(result.Value == "true")
-			{
-				areMessagesRead = false;
-				break;
-			}
-		}
-	}
+	areMessagesRead = SelectedMessagesAreRead();
 
 	var markReadMenuItem = document.getElementById("markReadMenuItem");
 	if(markReadMenuItem)
 		markReadMenuItem.setAttribute("checked", areMessagesRead);
 }
 
+function SelectedMessagesAreRead()
+{
+	var aMessage = GetSelectedMessage(0);
+
+	var compositeDS = GetCompositeDataSource("MarkMessageRead");
+	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#IsUnread');
+
+	var areMessagesRead =false;
+
+	if(!aMessage)
+		areMessagesRead = false;
+	else
+	{
+		var result = compositeDS.GetTarget(aMessage, property, true);
+		result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		areMessagesRead = result.Value != "true"
+	}
+
+	return areMessagesRead;
+}
+
 function InitMarkFlaggedMenuItem()
 {
-	var messages = GetSelectedMessages();
-	var numMessages = messages.length;
+	areMessagesFlagged = SelectedMessagesAreFlagged();
+
+	var markFlaggedMenuItem = document.getElementById("markFlaggedMenuItem");
+	if(markFlaggedMenuItem)
+		markFlaggedMenuItem.setAttribute("checked", areMessagesFlagged);
+}
+
+function SelectedMessagesAreFlagged()
+{
+	var aMessage = GetSelectedMessage(0);
 
 	var compositeDS = GetCompositeDataSource("MarkMessageFlagged");
 	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#Flagged');
 
 	var areMessagesFlagged = false;
 
-	for(var i = 0; i < numMessages; i++)
+	if(!aMessage)
+		areMessagesFlagged = false;
+	else
 	{
-		var result = compositeDS.GetTarget(messages[i], property, true);
+		var result = compositeDS.GetTarget(aMessage, property, true);
 		result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
-		if(result.Value == "flagged")
-		{
-			areMessagesFlagged = true;
-			break;
-		}
+		areMessagesFlagged = (result.Value == "flagged");
 	}
-
-	var markFlaggedMenuItem = document.getElementById("markFlaggedMenuItem");
-	if(markFlaggedMenuItem)
-		markFlaggedMenuItem.setAttribute("checked", areMessagesFlagged);
+	return areMessagesFlagged;
 }
 
 function GetFirstSelectedMsgFolder()
@@ -454,6 +464,10 @@ function CloseMailWindow()
 
 function MsgMarkMsgAsRead(markRead)
 {
+	if(markRead == null)
+	{
+		markRead= !SelectedMessagesAreRead();
+	}
 	var selectedMessages = GetSelectedMessages();
 	var compositeDataSource = GetCompositeDataSource("MarkMessageRead");
 
@@ -462,6 +476,11 @@ function MsgMarkMsgAsRead(markRead)
 
 function MsgMarkAsFlagged(markFlagged)
 {
+	if(markFlagged == null)
+	{
+		markFlagged= !SelectedMessagesAreFlagged();
+	}
+
 	var selectedMessages = GetSelectedMessages();
 	var compositeDataSource = GetCompositeDataSource("MarkMessageFlagged");
 
@@ -582,6 +601,57 @@ function PrintEnginePrint()
 	return true;
 }
 
+function IsMailFolderSelected()
+{
+	var selectedFolders = GetSelectedMsgFolders();
+	var numFolders = selectedFolders.length;
+	if(numFolders !=1)
+		return false;
+		
+	var folder = selectedFolders[0];
+	if (!folder)
+		return false;
+	
+	var server = folder.server;
+	var serverType = server.type;
+	
+	if((serverType == "nntp"))
+		return false;
+	else return true;
+}
+
+function IsGetNewMessagesEnabled()
+{
+	var selectedFolders = GetSelectedMsgFolders();
+	var numFolders = selectedFolders.length;
+	if(numFolders !=1)
+		return false;
+		
+	var folder = selectedFolders[0];
+	if (!folder)
+		return false;
+	
+	var server = folder.server;
+	var isServer = folder.isServer;
+	var serverType = server.type;
+	
+	if(isServer && (serverType == "nntp"))
+		return false;
+	else if(serverType == "none")
+		return false;
+	else
+		return true;	
+}
+
+function IsEmptyTrashEnabled()
+{
+	return IsMailFolderSelected();
+}
+
+function IsCompactFolderEnabled()
+{
+	return IsMailFolderSelected();
+}
 
 function MsgMarkByDate() {}
 function MsgOpenAttachment() {}

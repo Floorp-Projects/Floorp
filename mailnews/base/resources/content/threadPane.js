@@ -85,62 +85,62 @@ function ThreadPaneDoubleClick(treeitem)
 
 function MsgSortByDate()
 {
-	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date', null, true, null);
+	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date', null, true, null, true);
 }
 
 function MsgSortBySender()
 {
-	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender', 'http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
 
 function MsgSortByRecipient()
 {
-	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Recipient', 'http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Recipient', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
 
 function MsgSortByStatus()
 {
-	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status', 'http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
 
 function MsgSortBySubject()
 {
-	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject', 'http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
 
 function MsgSortByFlagged() 
 {
-	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged', 'http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
 
 function MsgSortByPriority()
 {
-	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority', 'http://home.netscape.com/NC-rdf#Date',true, null);
+	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority', 'http://home.netscape.com/NC-rdf#Date',true, null, true);
 }
 
 function MsgSortBySize() 
 {
-	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
 
 function MsgSortByUnread()
 {
-	SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages','http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages','http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
 
 function MsgSortByOrderReceived()
 {
-	SortThreadPane('OrderReceivedColumn', 'http://home.netscape.com/NC-rdf#OrderReceived','http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('OrderReceivedColumn', 'http://home.netscape.com/NC-rdf#OrderReceived','http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
 
 function MsgSortByRead()
 {
-	SortThreadPane('UnreadButtonColumn', 'http://home.netscape.com/NC-rdf#IsUnread','http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('UnreadButtonColumn', 'http://home.netscape.com/NC-rdf#IsUnread','http://home.netscape.com/NC-rdf#Date', true, null,true);
 }
 
 function MsgSortByTotal()
 {
-	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages', 'http://home.netscape.com/NC-rdf#Date', true, null);
+	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
 
 function MsgSortByThread()
@@ -209,7 +209,14 @@ function ThreadPaneSelectionChange()
 	if(!collapsed)
 	{
 		LoadSelectionIntoMessagePane();
+		
 	}
+
+	var tree = GetThreadTree();
+	var selectedMessages = tree.selectedItems;
+	var numSelected = selectedMessages.length;
+	if(numSelected == 0 | numSelected == 1)
+		document.commandDispatcher.updateCommands('threadTree-select');
 }
 
 function GetThreadTree()

@@ -196,7 +196,7 @@ Rights Reserved.
 </popupset>
 <popupset id="aTooltipSet"/>
 
-<keyset id="msgComposeKeySet">
+<keyset id="keyset">
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
 	<key id="key_close"/>

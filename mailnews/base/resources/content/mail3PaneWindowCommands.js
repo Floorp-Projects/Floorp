@@ -59,13 +59,18 @@ var FolderPaneController =
                      folderTree.selectedItems.length > 0)
                 {
 					var specialFolder = null;
+					var isServer = null;
+					var serverType = null;
 					try {
-                    	specialFolder = folderTree.selectedItems[0].getAttribute('SpecialFolder');
+						var selectedFolder = folderTree.selectedItems[0];
+                    	specialFolder = selectedFolder.getAttribute('SpecialFolder');
+                    	isServer = selectedFolder.getAttribute('IsServer');
+						serverType = selectedFolder.getAttribute('ServerType');
 					}
 					catch (ex) {
 						//dump("specialFolder failure: " + ex + "\n");
 					}
-                    if (specialFolder == "Inbox" || specialFolder == "Trash")
+                    if (specialFolder == "Inbox" || specialFolder == "Trash" || isServer == "true")
                        return false;
                     else
 					   return true;
@@ -175,10 +180,15 @@ var DefaultController =
 		{
 			case "cmd_reply":
 			case "button_reply":
+			case "cmd_replySender":
+			case "cmd_replyGroup":
 			case "cmd_replyall":
 			case "button_replyall":
 			case "cmd_forward":
 			case "button_forward":
+			case "cmd_forwardInline":
+			case "cmd_forwardAttachment":
+			case "cmd_editAsNew":
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
@@ -189,16 +199,6 @@ var DefaultController =
 			case "cmd_previousMsg":
 			case "cmd_previousUnreadMsg":
 			case "cmd_previousFlaggedMsg":
-			case "cmd_sortBySubject":
-			case "cmd_sortByDate":
-			case "cmd_sortByFlag":
-			case "cmd_sortByPriority":
-			case "cmd_sortBySender":
-			case "cmd_sortBySize":
-			case "cmd_sortByStatus":
-			case "cmd_sortByRead":
-			case "cmd_sortByOrderReceived":
-			case "cmd_sortByThread":
 			case "cmd_viewAllMsgs":
 			case "cmd_viewUnreadMsgs":
             case "cmd_undo":
@@ -212,6 +212,17 @@ var DefaultController =
 			case "cmd_saveAsTemplate":
 			case "cmd_viewPageSource":
 			case "cmd_reload":
+			case "cmd_getNewMessages":
+			case "cmd_find":
+			case "cmd_findAgain":
+			case "cmd_markAsRead":
+			case "cmd_markAllRead":
+			case "cmd_markThreadAsRead":
+			case "cmd_markAsFlagged":
+			case "cmd_file":
+			case "cmd_emptyTrash":
+			case "cmd_compactFolder":
+			case "cmd_sortByThread":
 				return true;
 			default:
 				return false;
@@ -224,10 +235,15 @@ var DefaultController =
 		{
 			case "cmd_reply":
 			case "button_reply":
+			case "cmd_replySender":
+			case "cmd_replyGroup":
 			case "cmd_replyall":
 			case "button_replyall":
 			case "cmd_forward":
 			case "button_forward":
+			case "cmd_forwardInline":
+			case "cmd_forwardAttachment":
+			case "cmd_editAsNew":
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
@@ -237,10 +253,11 @@ var DefaultController =
 			case "cmd_saveAsTemplate":
 			case "cmd_viewPageSource":
 			case "cmd_reload":
-				var threadTree = GetThreadTree();
-				var numSelected = 0;
-				if ( threadTree && threadTree.selectedItems )
-					numSelected = threadTree.selectedItems.length;
+			case "cmd_markThreadAsRead":
+			case "cmd_markAsFlagged":
+			case "cmd_file":
+				var numSelected = GetNumSelectedMessages();
+
 				if ( command == "cmd_delete")
 				{
 					if ( numSelected < 2 )
@@ -254,20 +271,17 @@ var DefaultController =
 			case "cmd_nextUnreadThread":
 			case "cmd_previousMsg":
 			case "cmd_previousUnreadMsg":
-			    //Input and TextAreas should get access to the keys that cause these commands.
-				//Currently if we don't do this then we will steal the key away and you can't type them
-				//in these controls. This is a bug that should be fixed and when it is we can get rid of
-				//this.
-				var focusedElement = top.document.commandDispatcher.focusedElement;
-				if(focusedElement)
-				{
-					var name = focusedElement.localName;
-					return ((name != "INPUT") && (name != "TEXTAREA"));
-				}
+				return MailAreaHasFocus() && IsViewNavigationItemEnabled();
+			case "cmd_markAsRead":
+				if(!MailAreaHasFocus())
+					return false;
 				else
-				{
-					return true;
-				}
+					return(GetNumSelectedMessages() > 0);
+			case "cmd_markAllRead":
+				return(MailAreaHasFocus() && IsFolderSelected());
+			case "cmd_find":
+			case "cmd_findAgain":
+				return IsFindEnabled();
 				break;
 			case "cmd_expandAllThreads":
 			case "cmd_collapseAllThreads":
@@ -275,15 +289,7 @@ var DefaultController =
 				break;
 			case "cmd_nextFlaggedMsg":
 			case "cmd_previousFlaggedMsg":
-			case "cmd_sortBySubject":
-			case "cmd_sortByDate":
-			case "cmd_sortByFlag":
-			case "cmd_sortByPriority":
-			case "cmd_sortBySender":
-			case "cmd_sortBySize":
-			case "cmd_sortByStatus":
-			case "cmd_sortByRead":
-			case "cmd_sortByOrderReceived":
+				return IsViewNavigationItemEnabled();
 			case "cmd_viewAllMsgs":
 				return true;
 			case "cmd_sortByThread":
@@ -297,6 +303,12 @@ var DefaultController =
                 return SetupUndoRedoCommand(command);
 			case "cmd_renameFolder":
 				return IsRenameFolderEnabled();
+			case "cmd_getNewMessages":
+				return IsGetNewMessagesEnabled();
+			case "cmd_emptyTrash":
+				return IsEmptyTrashEnabled();
+			case "cmd_compactFolder":
+				return IsCompactFolderEnabled();
 			default:
 				return false;
 		}
@@ -308,14 +320,32 @@ var DefaultController =
 
 		switch ( command )
 		{
+			case "cmd_getNewMessages":
+				MsgGetMessage();
+				break;
 			case "cmd_reply":
 				MsgReplyMessage(null);
+				break;
+			case "cmd_replySender":
+				MsgReplySender(null);
+				break;
+			case "cmd_replyGroup":
+				MsgReplyGroup(null);
 				break;
 			case "cmd_replyall":
 				MsgReplyToAllMessage(null);
 				break;
 			case "cmd_forward":
 				MsgForwardMessage(null);
+				break;
+			case "cmd_forwardInline":
+				MsgForwardAsInline(null);
+				break;
+			case "cmd_forwardAttachment":
+				MsgForwardAsAttachment(null);
+				break;
+			case "cmd_editAsNew":
+				MsgEditMessageAsNew();
 				break;
 			case "cmd_delete":
 				MsgDeleteMessage(false, false);
@@ -346,33 +376,6 @@ var DefaultController =
 				break;
 			case "cmd_previousFlaggedMsg":
 				MsgPreviousFlaggedMessage();
-				break;
-			case "cmd_sortBySubject":
-				MsgSortBySubject();
-				break;
-			case "cmd_sortByDate":
-				MsgSortByDate();
-				break;
-			case "cmd_sortByFlag":
-				MsgSortByFlagged();
-				break;
-			case "cmd_sortByPriority":
-				MsgSortByPriority();
-				break;
-			case "cmd_sortBySender":
-				MsgSortBySender();
-				break;
-			case "cmd_sortBySize":
-				MsgSortBySize();
-				break;
-			case "cmd_sortByStatus":
-				MsgSortByStatus();
-				break;
-			case "cmd_sortByRead":
-				MsgSortByRead();
-				break;
-			case "cmd_sortByOrderReceived":
-				MsgSortByOrderReceived();
 				break;
 			case "cmd_sortByThread":
 				MsgSortByThread();
@@ -416,6 +419,30 @@ var DefaultController =
 			case "cmd_reload":
 				MsgReload();
 				return;
+			case "cmd_find":
+				MsgFind();
+				return;
+			case "cmd_findAgain":
+				MsgFindAgain();
+				return;
+			case "cmd_markAsRead":
+				MsgMarkMsgAsRead(null);
+				return;
+			case "cmd_markThreadAsRead":
+				MsgMarkThreadAsRead();
+				return;
+			case "cmd_markAllRead":
+				MsgMarkAllRead();
+				return;
+			case "cmd_markAsFlagged":
+				MsgMarkAsFlagged(null);
+				return;
+			case "cmd_emptyTrash":
+				MsgEmptyTrash();
+				return;
+			case "cmd_compactFolder":
+				MsgCompactFolder();
+				return;
 		}
 	},
 	
@@ -431,6 +458,29 @@ var DefaultController =
 	}
 };
 
+function MailAreaHasFocus()
+{
+	//Input and TextAreas should get access to the keys that cause these commands.
+	//Currently if we don't do this then we will steal the key away and you can't type them
+	//in these controls. This is a bug that should be fixed and when it is we can get rid of
+	//this.
+	var focusedElement = top.document.commandDispatcher.focusedElement;
+	if(focusedElement)
+	{
+		var name = focusedElement.localName;
+		return ((name != "INPUT") && (name != "TEXTAREA"));
+	}
+	return true;
+}
+
+function GetNumSelectedMessages()
+{
+	var threadTree = GetThreadTree();
+	var numSelected = 0;
+	if ( threadTree && threadTree.selectedItems )
+		numSelected = threadTree.selectedItems.length;
+	return numSelected;
+}
 
 function CommandUpdate_Mail()
 {
@@ -449,11 +499,6 @@ function CommandUpdate_Mail()
 	}*/
 		
 	goUpdateCommand('cmd_delete');
-	goUpdateCommand('button_delete');
-	goUpdateCommand('button_reply');
-	goUpdateCommand('button_replyall');
-	goUpdateCommand('button_forward');
-	goUpdateCommand('cmd_shiftDelete');
 	goUpdateCommand('cmd_nextMsg');
 	goUpdateCommand('cmd_nextUnreadMsg');
 	goUpdateCommand('cmd_nextUnreadThread');
@@ -461,27 +506,45 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_previousMsg');
 	goUpdateCommand('cmd_previousUnreadMsg');
 	goUpdateCommand('cmd_previousFlaggedMsg');
-	goUpdateCommand('cmd_sortBySubject');
-	goUpdateCommand('cmd_sortByDate');
-	goUpdateCommand('cmd_sortByFlag');
-	goUpdateCommand('cmd_sortByPriority');
-	goUpdateCommand('cmd_sortBySender');
-	goUpdateCommand('cmd_sortBySize');
-	goUpdateCommand('cmd_sortByStatus');
-	goUpdateCommand('cmd_sortByRead');
-	goUpdateCommand('cmd_sortByOrderReceived');
 	goUpdateCommand('cmd_sortByThread');
 	goUpdateCommand('cmd_viewAllMsgs');
 	goUpdateCommand('cmd_viewUnreadMsgs');
 	goUpdateCommand('cmd_expandAllThreads');
 	goUpdateCommand('cmd_collapseAllThreads');
 	goUpdateCommand('cmd_renameFolder');
+	goUpdateCommand('cmd_getNewMessages');
+	goUpdateCommand('cmd_find');
+	goUpdateCommand('cmd_findAgain');
+	goUpdateCommand('cmd_markAllRead');
+	goUpdateCommand('cmd_emptyTrash');
+	goUpdateCommand('cmd_compactFolder');
+}
+
+function ThreadTreeUpdate_Mail(command)
+{
+	goUpdateCommand('button_delete');
+	goUpdateCommand('button_reply');
+	goUpdateCommand('button_replyall');
+	goUpdateCommand('button_forward');
+	goUpdateCommand('cmd_shiftDelete');
+	goUpdateCommand('cmd_reply');
+	goUpdateCommand('cmd_replySender');
+	goUpdateCommand('cmd_replyGroup');
+	goUpdateCommand('cmd_replyall');
+	goUpdateCommand('cmd_forward');
+	goUpdateCommand('cmd_forwardInline');
+	goUpdateCommand('cmd_forwardAttachment');
+	goUpdateCommand('cmd_editAsNew');
 	goUpdateCommand('cmd_openMessage');
 	goUpdateCommand('cmd_print');
 	goUpdateCommand('cmd_saveAsFile');
 	goUpdateCommand('cmd_saveAsTemplate');
 	goUpdateCommand('cmd_viewPageSource');
 	goUpdateCommand('cmd_reload');
+	goUpdateCommand('cmd_markAsRead');
+	goUpdateCommand('cmd_markThreadAsRead');
+	goUpdateCommand('cmd_markAsFlagged');
+	goUpdateCommand('cmd_file');
 }
 
 function SetupUndoRedoCommand(command)
@@ -599,6 +662,32 @@ function IsRenameFolderEnabled()
 		return false;
 
 }
+
+function IsViewNavigationItemEnabled()
+{
+	return IsFolderSelected();
+}
+
+function IsFolderSelected()
+{
+	var tree = GetFolderTree();
+	var folderList = tree.selectedItems;
+
+	if(folderList.length == 1)
+	{
+		var folderNode = folderList[0];
+		return(folderNode.getAttribute("IsServer") != "true");
+	}
+	else
+		return false;
+}
+
+function IsFindEnabled()
+{
+	return (!IsThreadAndMessagePaneSplitterCollapsed() && (gCurrentDisplayedMessage != null));
+
+}
+
 function MsgDeleteFolder()
 {
 	//get the selected elements

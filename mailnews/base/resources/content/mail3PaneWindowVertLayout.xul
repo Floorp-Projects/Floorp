@@ -68,7 +68,10 @@ Rights Reserved.
 				commandupdater="true"
 				events="focus,tree-select"
 				oncommandupdate="CommandUpdate_Mail()"/>
-
+	<commandset id="ThreadTreeUpdate_Mail"
+				commandupdater="true"
+				events="threadTree-select"
+				oncommandupdate="ThreadTreeUpdate_Mail()"/>
 	<commandset id="globalEditMenuItems"/>
 	<commandset id="selectEditMenuItems"/>
 	<commandset id="undoEditMenuItems"/>

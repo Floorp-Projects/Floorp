@@ -34,7 +34,10 @@ Rights Reserved.
 
 
 <tree datasources="rdf:null" id="threadTree"
-	  		  onselect="top.ThreadPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
+              onclick="ThreadPaneOnClick(event);"
+              ondraggesture="return BeginDragThreadTree(event);"
+              ondragdrop="return DropOnThreadTree(event);" 
+	  		  onselect="top.ThreadPaneSelectionChange();"
               onblur="goOnEvent(this,'blur')"
               containment="http://home.netscape.com/NC-rdf#MessageChild"
 			  allownegativeassertions="false"
@@ -43,10 +46,7 @@ Rights Reserved.
        
   <template>
   	<rule>
-    <treechildren flex="1"
-              onclick="ThreadPaneOnClick(event);"
-              ondraggesture="return BeginDragThreadTree(event);"
-              ondragdrop="return DropOnThreadTree(event);" >
+    <treechildren flex="1">
         <treeitem uri="..." id="threadTreeTemplateTreeItem">
 
               <treerow class="tree-thread-row" IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread" >

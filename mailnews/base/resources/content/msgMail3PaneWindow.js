@@ -112,6 +112,7 @@ var folderListener = {
 						gCurrentLoadingFolderIsThreaded = false;
 						gCurrentLoadingFolderSortID = "";
 						gCurrentLoadingFolderSortDirection = null;
+
 					}
 				}
 				if(uri == gCurrentLoadingFolderURI)
@@ -133,6 +134,7 @@ var folderListener = {
 					  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
 				  	  dump("of which scrolling to new is" + timeToScroll + "seconds\n");
 				  }
+    				SetBusyCursor(window, false);
 				}
 			}
 
@@ -289,24 +291,6 @@ function Create3PaneGlobals()
 
 }
 
-
-function loadStartPage() {
-    try {
-		startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
-        
-		if (startpageenabled) {
-			startpage = pref.CopyCharPref("mailnews.start_page.url");
-            if (startpage != "") {
-                window.frames["messagepane"].location = startpage;
-                dump("start message pane with: " + startpage + "\n");
-            }
-        }
-	}
-    catch (ex) {
-        dump("Error loading start page.\n");
-        return;
-    }
-}
 
 function PerformExpandForAllOpenServers(tree)
 {
@@ -536,6 +520,8 @@ function FindMessenger()
 
 function RefreshThreadTreeView()
 {
+	SetBusyCursor(window, true);
+
 	var selection = SaveThreadPaneSelection();
 
 	var currentFolder = GetThreadTreeFolder();  
@@ -544,6 +530,8 @@ function RefreshThreadTreeView()
 	currentFolder.setAttribute('ref', currentFolderID);
 
 	RestoreThreadPaneSelection(selection);
+	SetBusyCursor(window, false);
+
 }
 
 function ClearThreadTreeSelection()
@@ -742,6 +730,30 @@ function GetSelectedMsgFolders()
 	return folderArray;
 }
 
+function GetSelectedMessage(index)
+{
+	var threadTree = GetThreadTree();
+	var selectedMessages = threadTree.selectedItems;
+	var numMessages = selectedMessages.length;
+	if(index <0 || index > (numMessages - 1))
+		return null;
+
+	var messageNode = selectedMessages[index];
+	var messageUri = messageNode.getAttribute("id");
+	var messageResource = RDF.GetResource(messageUri);
+	var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
+	return message;
+
+}
+
+function GetNumSelectedMessages()
+{
+	var threadTree = GetThreadTree();
+	var selectedMessages = threadTree.selectedItems;
+	var numMessages = selectedMessages.length;
+	return numMessages;
+}
+
 function GetSelectedMessages()
 {
 	var threadTree = GetThreadTree();
@@ -799,6 +811,12 @@ function GetLoadedMessage()
 	}
 	return null;
 
+}
+
+//Clear everything related to the current message. called after load start page.
+function ClearMessageSelection()
+{
+	ClearThreadTreeSelection();
 }
 
 function GetCompositeDataSource(command)
@@ -862,4 +880,16 @@ function ReloadMessage()
 }
 
 
+function SetBusyCursor(window, enable)
+{
+	if(enable)
+		window.setCursor("wait");
+	else
+		window.setCursor("auto");
 
+	numFrames = window.frames.length;
+	for(var i = 0; i < numFrames; i++)
+	{
+		SetBusyCursor(window.frames[i], enable);
+	}
+}

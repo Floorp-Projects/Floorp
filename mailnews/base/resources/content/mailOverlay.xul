@@ -44,5 +44,9 @@
   <keyset id="keyset">
   	<key id="key_newMessage" xulkey="true" shift="false" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
   </keyset>
-         
+   
+  <keyset id="defaultKeySet">
+  	<key id="key_newMessage" xulkey="true" shift="false" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
+  </keyset>
+        
 </overlay>
