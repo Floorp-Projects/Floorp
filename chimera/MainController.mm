@@ -453,22 +453,47 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 -(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
 {
   // disable items that aren't relevant if there's no main browser window open
-  if ([aMenuItem action] == @selector(newTab:) ||
+  SEL action = [aMenuItem action];
+  if (action == @selector(newTab:) ||
         /* ... many more items go here ... */
-        [aMenuItem action] == @selector(savePage:)) {
+        action == @selector(printPage:) ||
+        action == @selector(findInPage:) ||
+        action == @selector(findAgain:) ||
+        action == @selector(toggleBookmarksToolbar:) ||
+        action == @selector(doStop:) ||
+        action == @selector(doReload:) ||
+        action == @selector(biggerTextSize:) ||
+        action == @selector(smallerTextSize:) ||
+        action == @selector(viewSource:) ||
+        action == @selector(goHome:) ||
+        action == @selector(addBookmark:) ||			// doesn't work, not sure why
+        action == @selector(savePage:)) {
     if ([[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]])
       return YES;
     return NO;
   }
   
   // only activate if we've got multiple tabs open.
-  if (([aMenuItem action] == @selector(closeTab:) ||
-       [aMenuItem action] == @selector (nextTab:) ||
-       [aMenuItem action] == @selector (previousTab:))) {
+  if ((action == @selector(closeTab:) ||
+       action == @selector (nextTab:) ||
+       action == @selector (previousTab:))) {
     if ([[[[mApplication mainWindow] windowController] getTabBrowser] numberOfTabViewItems] > 1)
       return YES;
     return NO;
   }
+
+  if ( action == @selector(goBack:) || action == @selector(goForward:) ) {
+    NSWindow* mainWindow = [mApplication mainWindow];
+    if (mainWindow) {
+      if (action == @selector(goBack:))
+        return [[[[mainWindow windowController] getBrowserWrapper] getBrowserView] canGoBack];
+      if (action == @selector(goForward:))
+        return [[[[mainWindow windowController] getBrowserWrapper] getBrowserView] canGoForward];
+    }
+    else
+      return NO;
+  }
+  
   // default return
   return YES;
 }

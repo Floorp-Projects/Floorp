@@ -118,16 +118,40 @@
 - (int)confirmEx:(NSWindow*)parent title:(NSString*)title text:(NSString*)text
    button1:(NSString*)btn1 button2:(NSString*)btn2 button3:(NSString*)btn3
 {
-  printf("ConfirmEx invoked, and this is not yet implemented!\n");
-  return 0;
+  [confirmPanelText setStringValue:text];
+  [confirmPanel setTitle:title];
+
+  [confirmPanelButton1 setTitle:btn1];
+  [confirmPanelButton2 setTitle:btn2];
+  [confirmPanelButton3 setTitle:btn3];  
+
+  int result = [NSApp runModalForWindow:confirmPanel relativeToWindow:parent];
+  
+  [confirmPanel close];
+
+  return (result == 1);
 }
 
 - (int)confirmCheckEx:(NSWindow*)parent title:(NSString*)title text:(NSString*)text 
   button1:(NSString*)btn1 button2:(NSString*)btn2 button3:(NSString*)btn3
   checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue
 {
-  printf("ConfirmCheckEx invoked, and this is not yet implemented!\n");
-  return 0;
+  [confirmCheckPanelText setStringValue:text];
+  [confirmCheckPanel setTitle:title];
+  int state = (*checkValue ? NSOnState : NSOffState);
+  [confirmCheckPanelCheck setState:state];
+  [confirmCheckPanelCheck setTitle:checkMsg];
+
+  [confirmCheckPanelButton1 setTitle:btn1];
+  [confirmCheckPanelButton2 setTitle:btn2];
+  [confirmCheckPanelButton3 setTitle:btn3];  
+  
+  int result = [NSApp runModalForWindow:confirmCheckPanel relativeToWindow:parent];
+
+  *checkValue = ([confirmCheckPanelCheck state] == NSOnState);
+  [confirmCheckPanel close];
+
+  return (result == 1);
 }
 
 - (BOOL)prompt:(NSWindow*)parent title:(NSString*)title text:(NSString*)text promptText:(NSMutableString*)promptText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck

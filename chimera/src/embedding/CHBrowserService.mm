@@ -315,6 +315,72 @@ nsCocoaBrowserService::ConfirmCheck(nsIDOMWindow *parent,
   return NS_OK;
 }
 
+NSString *
+nsCocoaBrowserService::GetCommonDialogLocaleString(const char *key)
+{
+  NSString *returnValue = @"";
+
+  nsresult rv;
+  if (!mCommonDialogStringBundle) {
+    #define kCommonDialogsStrings "chrome://global/locale/commonDialogs.properties"
+    nsCOMPtr<nsIStringBundleService> service = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if ( service )
+      rv = service->CreateBundle(kCommonDialogsStrings, getter_AddRefs(mCommonDialogStringBundle));
+    else
+      rv = NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) return returnValue;
+  }
+
+  nsXPIDLString string;
+  rv = mCommonDialogStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(key).get(), getter_Copies(string));
+  if (NS_FAILED(rv)) return returnValue;
+
+  returnValue = [NSString stringWithCharacters:string length:(string ? nsCRT::strlen(string) : 0)];
+  return returnValue;
+}
+
+NSString *
+nsCocoaBrowserService::GetButtonStringFromFlags(PRUint32 btnFlags,
+                                                PRUint32 btnIDAndShift,
+                                                const PRUnichar *btnTitle)
+{
+  NSString *btnStr = nsnull;
+  switch ((btnFlags >> btnIDAndShift) & 0xff) {
+    case BUTTON_TITLE_OK:
+      btnStr = GetCommonDialogLocaleString("OK");
+      break;
+    case BUTTON_TITLE_CANCEL:
+      btnStr = GetCommonDialogLocaleString("Cancel");
+      break;
+    case BUTTON_TITLE_YES:
+      btnStr = GetCommonDialogLocaleString("Yes");
+      break;
+    case BUTTON_TITLE_NO:
+      btnStr = GetCommonDialogLocaleString("No");
+      break;
+    case BUTTON_TITLE_SAVE:
+      btnStr = GetCommonDialogLocaleString("Save");
+      break;
+    case BUTTON_TITLE_DONT_SAVE:
+      btnStr = GetCommonDialogLocaleString("DontSave");
+      break;
+    case BUTTON_TITLE_REVERT:
+      btnStr = GetCommonDialogLocaleString("Revert");
+      break;
+    case BUTTON_TITLE_IS_STRING:
+      btnStr = [NSString stringWithCharacters:btnTitle length:(btnTitle ? nsCRT::strlen(btnTitle) : 0)];
+  }
+
+  return btnStr;
+}
+
+// these constants are used for identifying the buttons and are intentionally overloaded to
+// correspond to the number of bits needed for shifting to obtain the flags for a particular
+// button (should be defined in nsIPrompt*.idl instead of here)
+const PRUint32 kButton0 = 0;
+const PRUint32 kButton1 = 8;
+const PRUint32 kButton2 = 16;
+
 /* void confirmEx (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text, in unsigned long buttonFlags, in wstring button0Title, in wstring button1Title, in wstring button2Title, in wstring checkMsg, inout boolean checkValue, out PRInt32 buttonPressed); */
 NS_IMETHODIMP 
 nsCocoaBrowserService::ConfirmEx(nsIDOMWindow *parent, 
@@ -337,9 +403,9 @@ nsCocoaBrowserService::ConfirmEx(nsIDOMWindow *parent,
   NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  NSString* btn1Str = [NSString stringWithCharacters:button0Title length:(button0Title ? nsCRT::strlen(button0Title) : 0)];
-  NSString* btn2Str = [NSString stringWithCharacters:button1Title length:(button1Title ? nsCRT::strlen(button1Title) : 0)];
-  NSString* btn3Str = [NSString stringWithCharacters:button2Title length:(button2Title ? nsCRT::strlen(button2Title) : 0)];
+  NSString* btn1Str = GetButtonStringFromFlags(buttonFlags, kButton0, button0Title);
+  NSString* btn2Str = GetButtonStringFromFlags(buttonFlags, kButton1, button1Title);
+  NSString* btn3Str = GetButtonStringFromFlags(buttonFlags, kButton2, button2Title);
   
   if (checkValue) {
     BOOL valueBool = *checkValue ? YES : NO;
@@ -354,9 +420,7 @@ nsCocoaBrowserService::ConfirmEx(nsIDOMWindow *parent,
     *buttonPressed = (PRInt32)[controller confirmEx:window title:titleStr text:textStr
                                button1: btn1Str button2: btn2Str button3: btn3Str];
   }
-  
-  printf("Uh-oh! Not posing the confirm yet, but just assuming OK was pressed.\n");
-  
+
   return NS_OK;
 
 }

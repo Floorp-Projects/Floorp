@@ -37,11 +37,11 @@
   // Hookup cookie prefs. Relies on the tags of the radio buttons in the matrix being
   // set such that "enable all" is 0 and "disable all" is 2.
   PRInt32 acceptCookies = 0;
-  mPrefService->GetIntPref("network.accept_cookies", &acceptCookies);
+  mPrefService->GetIntPref("network.cookie.cookieBehavior", &acceptCookies);
   if ( acceptCookies == 1 )					// be safe in case of importing a mozilla profile
     acceptCookies = 2;
   if ( [mCookies selectCellWithTag:acceptCookies] != YES )
-    NS_WARNING("Bad value for network.accept_cookies");
+    NS_WARNING("Bad value for network.cookie.cookieBehavior");
     
   PRBool warnAboutCookies = PR_TRUE;
   mPrefService->GetBoolPref("network.cookie.warnAboutCookies", &warnAboutCookies);
@@ -103,7 +103,7 @@
 {
   if ( !mPrefService )
     return;
-  mPrefService->SetIntPref("network.accept_cookies", [[mCookies selectedCell] tag]);
+  mPrefService->SetIntPref("network.cookie.cookieBehavior", [[mCookies selectedCell] tag]);
 }
 
 //
