@@ -118,6 +118,19 @@ private:
   nsString mNextAutoUpdateDate;
 };
 
+class nsNSSCertCache : public nsINSSCertCache
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSINSSCERTCACHE
+
+  nsNSSCertCache();
+  virtual ~nsNSSCertCache();
+
+private:
+  PRLock *mutex;
+  CERTCertList *mCertList;
+};
 
 class nsNSSCertificateDB : public nsIX509CertDB
 {
@@ -141,6 +154,12 @@ private:
                                     PRUint32 length);
   nsresult handleCACertDownload(nsISupportsArray *x509Certs, 
                                 nsIInterfaceRequestor *ctx);
+
+  PRBool GetCertsByTypeFromCertList(CERTCertList *aCertList,
+                                    PRUint32 aType,
+                                    nsCertCompareFunc  aCertCmpFn,
+                                    void              *aCertCmpFnArg,
+                                    nsISupportsArray **_certs);
 };
 
 // Use this function to generate a default nickname for a user

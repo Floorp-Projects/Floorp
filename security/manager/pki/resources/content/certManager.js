@@ -32,7 +32,8 @@ const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
 const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
-
+const nsINSSCertCache = Components.interfaces.nsINSSCertCache;
+const nsNSSCertCache = "@mozilla.org/security/nsscertcache;1";
 
 var key;
 
@@ -48,30 +49,35 @@ var userTreeView;
 function LoadCerts()
 {
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+  certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
+  
+  certcache.cacheAllCerts();
 
   caTreeView = Components.classes[nsCertTree]
                     .createInstance(nsICertTree);
-  caTreeView.loadCerts(nsIX509Cert.CA_CERT);
+  caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
   document.getElementById('ca-tree')
    .treeBoxObject.view = caTreeView;
 
   serverTreeView = Components.classes[nsCertTree]
                         .createInstance(nsICertTree);
-  serverTreeView.loadCerts(nsIX509Cert.SERVER_CERT);
+  serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
   document.getElementById('server-tree')
    .treeBoxObject.view = serverTreeView;
 
   emailTreeView = Components.classes[nsCertTree]
                        .createInstance(nsICertTree);
-  emailTreeView.loadCerts(nsIX509Cert.EMAIL_CERT);
+  emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
   document.getElementById('email-tree')
    .treeBoxObject.view = emailTreeView; 
 
   userTreeView = Components.classes[nsCertTree]
                       .createInstance(nsICertTree);
-  userTreeView.loadCerts(nsIX509Cert.USER_CERT);
+  userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
   document.getElementById('user-tree')
    .treeBoxObject.view = userTreeView;
+
+  certcache = null;
 
   var rowCnt = userTreeView.rowCount;
   var enableBackupAllButton=document.getElementById('mine_backupAllButton');
