@@ -889,8 +889,12 @@ void nsImapProtocol::ProcessCurrentURL()
 	nsresult rv = NS_OK;
 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
-    if (NS_SUCCEEDED(rv) && mailnewsurl)
-        mailnewsurl->SetUrlState(PR_FALSE, NS_OK);  // we are done with this url.
+    if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
+    {
+        m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_FALSE,
+                                             NS_OK);  // we are done with this
+                                                      // url.
+    }
     m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
 	PseudoInterrupt(FALSE);	// clear this, because we must be done interrupting?
     nsCOMPtr<nsISupports> copyState;
@@ -964,8 +968,11 @@ NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIChannel * /* aChannel */, nsISup
     PR_CEnterMonitor(this);
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
-    if (NS_SUCCEEDED(rv) && mailnewsurl)
-        mailnewsurl->SetUrlState(PR_TRUE, NS_OK);
+    if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
+    {
+        m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_TRUE,
+                                             NS_OK);
+    }
     PR_CExitMonitor(this);
 	return NS_OK;
 }
@@ -976,8 +983,11 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIChannel * /* aChannel */, nsISupp
     PR_CEnterMonitor(this);
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
-    if (NS_SUCCEEDED(rv) && mailnewsurl)
-        mailnewsurl->SetUrlState(PR_FALSE, aStatus); // set change in url
+    if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
+    {
+        m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_FALSE,
+                                             aStatus); // set change in url
+    }
     m_channel = null_nsCOMPtr();
     m_outputStream = null_nsCOMPtr();
     m_inputStream = null_nsCOMPtr();

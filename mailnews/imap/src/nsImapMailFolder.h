@@ -301,6 +301,10 @@ public:
                                  nsIImapIncomingServer *aInfo);
     NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
                                      nsISupports* copyState);
+    NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
+                           nsIMsgMailNewsUrl* aUrl,
+                           PRBool isRunning,
+                           nsresult statusCode);
 
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 	// nsIMsgFilterHitNotification method(s)

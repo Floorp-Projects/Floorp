@@ -23,6 +23,7 @@
 #include "nsImapCore.h"
 #include "nsIImapProtocol.h"
 #include "MailNewsTypes.h"
+#include "nsIMsgMailNewsUrl.h"
 
 class nsIImapIncomingServer;
 
@@ -84,6 +85,10 @@ public:
 													 nsIImapIncomingServer *incomingServer) = 0;
   NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
                                    nsISupports* copyState) = 0;
+  NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
+                         nsIMsgMailNewsUrl* aUrl,
+                         PRBool isRunning,
+                         nsresult statusCode) = 0;
 };
 
 

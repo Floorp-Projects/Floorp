@@ -338,24 +338,6 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
         // doesn't end with .sbd
 
         PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
-		if (mDepth == 0)
-		{
-#if 0
-			// temporary until we do folder discovery correctly.
-			nsAutoString name("Inbox");
-			nsCOMPtr<nsIMsgFolder> child;
-
-			AddSubfolder(name, getter_AddRefs(child));
-			if (NS_SUCCEEDED(GetDatabase()))
-			{
-				nsCOMPtr <nsIDBFolderInfo> dbFolderInfo ;
-				mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-
-				if (dbFolderInfo)
-					dbFolderInfo->SetMailboxName(name);
-			}
-#endif
-		}
         if (path.IsDirectory()) {
             newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
             SetFlag(newFlags);
@@ -2905,6 +2887,17 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
     return rv;
 }
 
+NS_IMETHODIMP
+nsImapMailFolder::SetUrlState(nsIImapProtocol* aProtocol,
+                              nsIMsgMailNewsUrl* aUrl,
+                              PRBool isRunning,
+                              nsresult statusCode)
+{
+    if (aUrl)
+        return aUrl->SetUrlState(isRunning, statusCode);
+    return statusCode;
+}
+
 nsresult
 nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
 {
@@ -3133,6 +3126,9 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                                             PR_TRUE, isDraftOrTemplate,
                                             urlListener, nsnull,
                                             copySupport);
+    if (NS_SUCCEEDED(rv))
+        imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+
     return rv;
 }
 

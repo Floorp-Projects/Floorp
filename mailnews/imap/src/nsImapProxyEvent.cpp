@@ -1839,6 +1839,37 @@ nsImapMiscellaneousSinkProxy::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
     return res;
 }
 
+NS_IMETHODIMP
+nsImapMiscellaneousSinkProxy::SetUrlState(nsIImapProtocol* aProtocol,
+                                          nsIMsgMailNewsUrl* aUrl,
+                                          PRBool isRunning,
+                                          nsresult statusCode)
+{
+    nsresult res = NS_OK;
+    NS_PRECONDITION (aUrl, "Oops... null url");
+    if(!aUrl)
+        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        SetUrlStateProxyEvent *ev =
+            new SetUrlStateProxyEvent(this, aUrl, isRunning, statusCode);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+        {
+            ev->PostEvent(m_eventQueue);
+        }
+    }
+    else
+    {
+        res = m_realImapMiscellaneousSink->SetUrlState(aProtocol, aUrl,
+                                                       isRunning, statusCode);
+    }
+    return res;
+}
+
 nsImapMailFolderSinkProxyEvent::nsImapMailFolderSinkProxyEvent(nsImapMailFolderSinkProxy*
                                                        aProxy)
 {
@@ -3652,6 +3683,30 @@ CopyNextStreamMessageProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->CopyNextStreamMessage(
         m_proxy->m_protocol, m_copyState);
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+
+SetUrlStateProxyEvent::SetUrlStateProxyEvent(
+    nsImapMiscellaneousSinkProxy* aProxy, nsIMsgMailNewsUrl* aUrl,
+    PRBool isRunning, nsresult statusCode) :
+    nsImapMiscellaneousSinkProxyEvent(aProxy), m_isRunning(isRunning),
+    m_status(statusCode)
+{
+    NS_ASSERTION (aUrl, "Oops... a null url");
+    m_url = do_QueryInterface(aUrl);
+}
+
+SetUrlStateProxyEvent::~SetUrlStateProxyEvent()
+{
+}
+
+NS_IMETHODIMP
+SetUrlStateProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapMiscellaneousSink->SetUrlState(
+        m_proxy->m_protocol, m_url, m_isRunning, m_status);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
