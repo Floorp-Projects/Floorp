@@ -120,19 +120,31 @@ sub serviceInstanceInit {
     my $self = shift;
     $self->SUPER::serviceInstanceInit(@_);
     my($app, $session, $protocol) = @_;
-    $self->propertySet('actualSession', $session);
-    $self->propertySet('actualProtocol', $protocol);
-    $self->propertySet('outputter', $self->{app}->getService("output.generic.$protocol"));
+    $self->{actualSession} = $session;
+    $self->{actualProtocol} = $protocol;
 }
 
 # output.generic service instance method
 sub output {
     my $self = shift;
     my($string, $data, $session) = @_;
+    $self->dump(9, "outputting string '$string' on protocol '". ($self->{actualProtocol}) .'\'');
+    if (not defined($self->{outputter})) {
+        $self->{outputter} = $self->{app}->getService("output.generic.$self->{actualProtocol}");
+    }
+    $self->{outputter}->output($self->getOutput($string, $data, $session));
+}
+
+# output.generic service instance method
+# same as output, but don't actually output.
+# returns a hash with data about the output.
+# you want $output->{'string'}
+sub getOutput {
+    my $self = shift;
+    my($string, $data, $session) = @_;
     if (not defined($session)) {
         $session = $self->{actualSession};
     }
-    $self->dump(9, "outputting string '$string' on protocol '". ($self->{actualProtocol}) .'\'');
     $self->fillData($data);
     my $outputArgs = {
         'app' => $self->{app},
@@ -141,11 +153,14 @@ sub output {
         'name' => $string,
         'data' => $data,
     };
-    $self->getExpandedString($outputArgs); # modifies $outputArgs in place (adds 'string')
+    # for efficiency, we modify $outputArgs in place:
+    if ($self->getExpandedString($outputArgs)) {
+        $self->error("Failed to output string '$outputArgs->{'name'}'");
+    }
     foreach my $filter ($self->{app}->getObjectList('output.filter')) {
         $string = $filter->filterOutput($outputArgs);
     }
-    $self->{outputter}->output($outputArgs);
+    return $outputArgs;
 }
 
 # output.generic service instance method
@@ -208,6 +223,7 @@ sub getExpandedString {
     my $self = shift;
     my($args) = @_;
     $self->getString($args);
+    return 1 if (not defined $args->{'string'});
     $self->expandString($args);
     return 1 if (not defined $args->{'string'});
     return;
