@@ -221,9 +221,6 @@ endif
 ifdef MOZ_ENABLE_PHOTON
 COMPONENT_LIBS += widget_photon
 endif
-ifdef MOZ_ENABLE_XREMOTE
-COMPONENT_LIBS += xremote_client
-endif
 
 ifdef MOZ_OJI
 STATIC_LIBS += jsj

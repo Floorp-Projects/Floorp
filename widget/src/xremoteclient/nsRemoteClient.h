@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:expandtab:shiftwidth=4:tabstop=4:
  */
 /* ***** BEGIN LICENSE BLOCK *****
@@ -16,12 +16,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Christopher Blizzard. Portions created Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
+ * The Initial Developer of the Original Code is Christopher Blizzard.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,19 +37,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsRemoteClient_h__
+#define nsRemoteClient_h__
 
-[scriptable, uuid(0bafc924-1dd2-11b2-8345-b59762ae0df7)]
-interface nsIXRemoteClient : nsISupports
+#include "nscore.h"
+
+/**
+ * Pure-virtual common base class for remoting implementations.
+ */
+
+class nsRemoteClient
 {
+public:
   /**
    * Initializes the client
    */
-   void init();
+  virtual nsresult Init() = 0;
 
   /**
-   * Sends a command to a running instance.  If it returns false then
-   * there is no running instance.
+   * Sends a command to a running instance.
    *
    * @param aProgram This is the preferred program that we want to use
    * for this particular command.
@@ -62,11 +68,11 @@ interface nsIXRemoteClient : nsISupports
    * of the server that's running under a particular username.  If
    * this isn't specified here it's pulled from the LOGNAME
    * environmental variable if it's set.
-
+   *
    * @param aProfile This allows you to specify a particular server
    * running under a named profile.  If it is not specified the
    * profile is not checked.
-
+   *
    * @param aCommand This is the command that is passed to the server.
    * Please see the additional information located at:
    * http://www.mozilla.org/unix/remote.html
@@ -74,14 +80,24 @@ interface nsIXRemoteClient : nsISupports
    * @param aResponse If there is a response, it will be here.  This
    * includes error messages.  The string is allocated using stdlib
    * string functions, so free it with free().
-  */
-  boolean sendCommand(in string aProgram, in string aUsername,
-                      in string aProfile, in string aCommand,
-                      out string aResponse);
+   *
+   * @retun true if succeeded, false if no running instance was found.
+   */
+  virtual nsresult SendCommand(const char *aProgram, const char *aUsername,
+                               const char *aProfile, const char *aCommand,
+                               char **aResponse, PRBool *aSucceeded) = 0;
 
   /**
-   * Shuts down the client
+   * Send a complete command line to a running instance.
+   *
+   * @see sendCommand
+   * @param argc The number of command-line arguments.
+   * 
    */
-  void shutdown();
-   
+  virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
+                                   const char *aProfile,
+                                   PRInt32 argc, char **argv,
+                                   char **aResponse, PRBool *aSucceeded) = 0;
 };
+
+#endif // nsRemoteClient_h__

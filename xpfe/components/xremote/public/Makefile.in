@@ -42,11 +42,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xremoteservice
+MODULE = appcomps
 XPIDL_MODULE	= xremoteservice
 
 XPIDLSRCS	= \
-		nsIXRemoteService.idl \
+		nsISuiteRemoteService.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

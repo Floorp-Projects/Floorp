@@ -49,7 +49,6 @@ DIRS	= \
 		obsolete \
 		profile \
 		xre \
-		components \
 		mozapps \
 		themes \
 		$(NULL)

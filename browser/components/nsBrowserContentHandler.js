@@ -61,6 +61,7 @@ const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
 
 const NS_BINDING_ABORTED = 0x80020006;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
+const NS_ERROR_ABORT = Components.results.NS_ERROR_ABORT;
 
 function needHomepageOverride(prefb) {
   var savedmstone;
@@ -94,7 +95,7 @@ function openWindow(parent, url, target, features, args)
                             .createInstance(nsISupportsString);
     argstring.data = args;
   }
-  wwatch.openWindow(parent, url, target, features, argstring);
+  return wwatch.openWindow(parent, url, target, features, argstring);
 }
 
 function getMostRecentWindow(aType) {
@@ -166,6 +167,63 @@ var nsBrowserContentHandler = {
                  "chrome,dialog=no,all" + this.getFeatures(cmdLine),
                  this.defaultArgs);
       cmdLine.preventDefault = true;
+    }
+
+    try {
+      var remoteCommand = cmdLine.handleFlagWithParam("remote", true);
+    }
+    catch (e) {
+      throw NS_ERROR_ABORT;
+    }
+
+    if (remoteCommand != null) {
+      try {
+        var a = /^\s*(\w+)\(([^\)]*)\)\s*$/.exec(remoteCommand);
+        var remoteVerb = a[1].toLowerCase();
+        var remoteParams = a[2].split(",");
+
+        switch (remoteVerb) {
+        case "openurl":
+        case "openfile":
+          // openURL(<url>)
+          // openURL(<url>,new-window)
+          // openURL(<url>,new-tab)
+
+          var uri = cmdLine.resolveURI(remoteParams[0]);
+
+          var location = nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW;
+          if (/new-window/.test(remoteParams[1]))
+            location = nsIBrowserDOMWindow.OPEN_NEWWINDOW;
+          else if (/new-tab/.test(remoteParams[1]))
+            location = nsIBrowserDOMWindow.OPEN_NEWTAB;
+
+          handURIToExistingBrowser(uri, location);
+          break;
+
+        case "xfedocommand":
+          // xfeDoCommand(openBrowser)
+          if (remoteParams[0].toLowerCase() != "openbrowser")
+            throw NS_ERROR_ABORT;
+
+          openWindow(null, this.chromeURL, "_blank",
+                     "chrome,dialog=no,all" + this.getFeatures(cmdLine),
+                     this.defaultArgs);
+          break;
+
+        default:
+          // Somebody sent us a remote command we don't know how to process:
+          // just abort.
+          throw NS_ERROR_ABORT;
+        }
+
+        cmdLine.preventDefault = true;
+      }
+      catch (e) {
+        // If we had a -remote flag but failed to process it, throw
+        // NS_ERROR_ABORT so that the xremote code knows to return a failure
+        // back to the handling code.
+        throw NS_ERROR_ABORT;
+      }
     }
 
     try {
@@ -288,6 +346,28 @@ const bch_contractID = "@mozilla.org/browser/clh;1";
 const bch_CID = Components.ID("{5d0ce354-df01-421a-83fb-7ead0990c24e}");
 const CONTRACTID_PREFIX = "@mozilla.org/uriloader/content-handler;1?type=";
 
+function handURIToExistingBrowser(uri, location)
+{
+  var navWin = getMostRecentWindow("navigator:browser");
+  if (!navWin) {
+    // if we couldn't load it in an existing window, open a new one
+    openWindow(null, nsBrowserContentHandler.chromeURL, "_blank",
+               "chrome,dialog=no,all" + nsBrowserContentHandler.getFeatures(cmdLine),
+               uri.spec);
+    return;
+  }
+
+  var navNav = navWin.QueryInterface(nsIInterfaceRequestor)
+                     .getInterface(nsIWebNavigation);
+  var rootItem = navNav.QueryInterface(nsIDocShellTreeItem).rootTreeItem;
+  var rootWin = rootItem.QueryInterface(nsIInterfaceRequestor)
+                        .getInterface(nsIDOMWindow);
+  var bwin = rootWin.QueryInterface(nsIDOMChromeWindow).browserDOMWindow;
+  bwin.openURI(uri, null, location,
+               nsIBrowserDOMWindow.OPEN_EXTERNAL);
+}
+
+
 var nsDefaultCommandLineHandler = {
   /* nsISupports */
   QueryInterface : function dch_QI(iid) {
@@ -335,28 +415,15 @@ var nsDefaultCommandLineHandler = {
     }
 
     if (urilist.length) {
-      existingWindow:
       if (cmdLine.state != nsICommandLine.STATE_INITIAL_LAUNCH &&
           urilist.length == 1) {
         // Try to find an existing window and load our URI into the
         // current tab, new tab, or new window as prefs determine.
-
         try {
-          var navWin = getMostRecentWindow("navigator:browser");
-          if (!navWin)
-            break existingWindow;
-          var navNav = navWin.QueryInterface(nsIInterfaceRequestor)
-                             .getInterface(nsIWebNavigation);
-          var rootItem = navNav.QueryInterface(nsIDocShellTreeItem).rootTreeItem;
-          var rootWin = rootItem.QueryInterface(nsIInterfaceRequestor)
-                                .getInterface(nsIDOMWindow);
-          var bwin = rootWin.QueryInterface(nsIDOMChromeWindow).browserDOMWindow;
-          bwin.openURI(urilist[0], null, nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
-                       nsIBrowserDOMWindow.OPEN_EXTERNAL);
+          handURIToExistingBrowser(urilist[0], nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW);
           return;
         }
         catch (e) {
-          dump("Failed to hand off external URL to extant window: " + e + "\n");
         }
       }
 

@@ -45,6 +45,43 @@ const nsISupportsString        = Components.interfaces.nsISupportsString;
 const nsIWindowMediator        = Components.interfaces.nsIWindowMediator;
 const nsIWindowWatcher         = Components.interfaces.nsIWindowWatcher;
 
+const NS_ERROR_ABORT = Components.results.NS_ERROR_ABORT;
+
+function mayOpenURI(uri)
+{
+  var ext = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+    .getService(Components.interfaces.nsIExternalProtocolService);
+
+  return ext.isExposedProtocol(uri.scheme);
+}
+
+function openURI(uri)
+{
+  if (!mayOpenURI())
+    throw Components.results.NS_ERROR_FAILURE;
+
+  var io = Components.classes["@mozilla.org/network/io-service;1"]
+                     .getService(Components.interfaces.nsIIOService);
+  var channel = io.newChannelFromURI(uri);
+  var loader = Components.classes["@mozilla.org/uriloader;1"]
+                         .getService(Components.interfaces.nsIURILoader);
+  var listener = {
+    onStartURIOpen: function(uri) { return false; },
+    doContent: function(ctype, preferred, request, handler) { return false; },
+    isPreferred: function(ctype, desired) { return false; },
+    canHandleContent: function(ctype, preferred, desired) { return false; },
+    loadCookie: null,
+    parentContentListener: null,
+    getInterface: function(iid) {
+      if (iid.equals(Components.interfaces.nsIURIContentListener))
+        return this;
+
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+  };
+  loader.openURI(channel, true, listener);
+}
+
 var nsMailDefaultHandler = {
   /* nsISupports */
 
@@ -61,6 +98,84 @@ var nsMailDefaultHandler = {
 
   handle : function mdh_handle(cmdLine) {
     var uri;
+
+    try {
+      var remoteCommand = cmdLine.handleFlagWithParam("remote", true);
+    }
+    catch (e) {
+      throw NS_ERROR_ABORT;
+    }
+
+    if (remoteCommand != null) {
+      try {
+        var a = /^\s*(\w+)\(([^\)]*)\)\s*$/.exec(remoteCommand);
+        var remoteVerb = a[1].toLowerCase();
+        var remoteParams = a[2].split(",");
+
+        switch (remoteVerb) {
+        case "openurl":
+          var xuri = cmdLine.resolveURI(remoteParams[0]);
+          openURI(xuri);
+          break;
+
+        case "mailto":
+          var xuri = cmdLine.resolveURI("mailto:" + remoteParams[0]);
+          openURI(xuri);
+          break;
+
+        case "xfedocommand":
+          // xfeDoCommand(openBrowser)
+          switch (remoteParams[0].toLowerCase()) {
+          case "openinbox":
+            var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                               .getService(Components.classes.nsIWindowMediator);
+            var win = wm.getMostRecentWindow("mail:3pane");
+            if (win) {
+              win.focus();
+            }
+            else {
+              var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                                     .getService(nsIWindowWatcher);
+
+              // Bug 277798 - we have to pass an argument to openWindow(), or
+              // else it won't honor the dialog=no instruction.
+              var argstring = Components.classes["@mozilla.org/supports-string;1"]
+                                        .createInstance(nsISupportsString);
+              wwatch.openWindow(null, "chrome://messenger/content/", "_blank",
+                                "chrome,dialog=no,all", argstring);
+            }
+            break;
+
+          case "composemessage":
+            var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                                   .getService(nsIWindowWatcher);
+            var argstring = Components.classes["@mozilla.org/supports-string;1"]
+                                      .createInstance(nsISupportsString);
+            wwatch.openWindow(null, "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank",
+                              "chrome,dialog=no,all", argstring);
+            break;
+
+          default:
+            throw Components.results.NS_ERROR_ABORT;
+          }
+          break;
+
+        default:
+          // Somebody sent us a remote command we don't know how to process:
+          // just abort.
+          throw Components.results.NS_ERROR_ABORT;
+        }
+
+        cmdLine.preventDefault = true;
+      }
+      catch (e) {
+        // If we had a -remote flag but failed to process it, throw
+        // NS_ERROR_ABORT so that the xremote code knows to return a failure
+        // back to the handling code.
+        dump(e);
+        throw Components.results.NS_ERROR_ABORT;
+      }
+    }
 
     var count = cmdLine.length;
     if (count) {

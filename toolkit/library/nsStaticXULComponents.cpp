@@ -131,12 +131,6 @@
 #define XPRINT_MODULES
 #endif
 
-#ifdef MOZ_ENABLE_XREMOTE
-#define XREMOTE_MODULES MODULE(XRemoteClientModule)
-#else
-#define XREMOTE_MODULES
-#endif
-
 #ifdef OJI
 #define OJI_MODULES MODULE(nsCJVMManagerModule)
 #else
@@ -167,7 +161,6 @@
     POSTSCRIPT_MODULES                       \
     GFX_MODULES                              \
     WIDGET_MODULES                           \
-    XREMOTE_MODULES                          \
     MODULE(nsImageLib2Module)                \
     ICON_MODULE                              \
     MODULE(nsPluginModule)                   \

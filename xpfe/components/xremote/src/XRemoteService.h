@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,12 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXRemoteService.h"
-#include "nsHashtable.h"
-#include "nsIDOMWindow.h"
-#include "nsIWidget.h"
+#include "nsISuiteRemoteService.h"
+
 #include "nsCOMPtr.h"
-#include "nsIObserver.h"
+#include "nsString.h"
+
+class nsIDOMWindowInternal;
 
 // {3dfe7324-1dd2-11b2-9ff2-8853f91e8a20}
 
@@ -47,7 +48,8 @@
   { 0x3dfe7324, 0x1dd2, 0x11b2, \
   { 0x9f, 0xf2, 0x88, 0x53, 0xf9, 0x1e, 0x8a, 0x20 } }
 
-class XRemoteService : public nsIXRemoteService, public nsIObserver {
+class XRemoteService : public nsISuiteRemoteService
+{
  public:
   XRemoteService();
   virtual ~XRemoteService();
@@ -56,18 +58,9 @@ class XRemoteService : public nsIXRemoteService, public nsIObserver {
 
   NS_DECL_ISUPPORTS
 
-  NS_DECL_NSIXREMOTESERVICE
-  NS_DECL_NSIOBSERVER
+  NS_DECL_NSISUITEREMOTESERVICE
 
  private:
-
-  // create and destroy the proxy window
-  void CreateProxyWindow();
-  void DestroyProxyWindow();
-
-  // this builds a response for any parsing
-  char *BuildResponse(const char *aError, const char *aMessage);
-
   // find the last argument in an argument string
   void FindLastInList(nsCString &aString, nsCString &retString,
                       PRUint32 *aIndexRet);
@@ -94,36 +87,16 @@ class XRemoteService : public nsIXRemoteService, public nsIObserver {
 
   // remote command handlers
   nsresult OpenURL(nsCString &aArgument,
-		   nsIDOMWindowInternal *aParent,
-		   PRBool aOpenBrowser);
+                   nsIDOMWindow* aParent,
+                   PRBool aOpenBrowser);
 
-  nsresult OpenURLDialog(nsIDOMWindowInternal *aParent);
+  nsresult OpenURLDialog(nsIDOMWindow* aParent);
 
   // handle xfe commands
   nsresult XfeDoCommand(nsCString &aArgument,
-			nsIDOMWindowInternal *aParent);
+                        nsIDOMWindow* aParent);
 
   // find the most recent window of a certain type
   nsresult FindWindow(const PRUnichar *aType,
-		      nsIDOMWindowInternal **_retval);
-
-  // Save the profile name
-  void GetProfileName(nsACString &aProfile);
-
-  // hidden window for proxy requests
-  nsCOMPtr<nsIWidget> mProxyWindow;
-  
-  // native window to internal dom window map
-  nsHashtable mWindowList;
-  // internal dom window to native window map
-  nsHashtable mBrowserList;
-
-  // the number of non-proxy windows that are set up for X Remote
-  PRUint32 mNumWindows;
-
-  // have we been started up from the main loop yet?
-  PRBool   mRunning;
-
-  // Name of our program
-  nsCString mProgram;
+                      nsIDOMWindowInternal **_retval);
 };

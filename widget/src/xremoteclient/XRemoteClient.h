@@ -37,24 +37,23 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
-#include "nsIXRemoteClient.h"
+#include "nsRemoteClient.h"
 
-class XRemoteClient
-#ifndef XREMOTE_STANDALONE
-: public nsIXRemoteClient
-#endif
+class XRemoteClient : public nsRemoteClient
 {
- public:
+public:
   XRemoteClient();
-  virtual ~XRemoteClient();
+  ~XRemoteClient();
 
-#ifndef XREMOTE_STANDALONE
-  // nsISupports
-  NS_DECL_ISUPPORTS
-#endif
-
-  // nsIXRemoteClient
-  NS_DECL_NSIXREMOTECLIENT
+  virtual nsresult Init();
+  virtual nsresult SendCommand(const char *aProgram, const char *aUsername,
+                               const char *aProfile, const char *aCommand,
+                               char **aResponse, PRBool *aSucceeded);
+  virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
+                                   const char *aProfile,
+                                   PRInt32 argc, char **argv,
+                                   char **aResponse, PRBool *aSucceeded);
+  void Shutdown();
 
 private:
 
@@ -62,23 +61,33 @@ private:
   Window         CheckChildren    (Window aWindow);
   nsresult       GetLock          (Window aWindow, PRBool *aDestroyed);
   nsresult       FreeLock         (Window aWindow);
-  Window         FindBestWindow   (const char *aProgram, const char *aUsername,
-				   const char *aProfile);
+  Window         FindBestWindow   (const char *aProgram,
+                                   const char *aUsername,
+                                   const char *aProfile,
+                                   PRBool aSupportsCommandLine);
   nsresult       DoSendCommand    (Window aWindow,
-				   const char *aCommand,
-				   char **aResponse,
-				   PRBool *aDestroyed);
+                                   const char *aCommand,
+                                   char **aResponse,
+                                   PRBool *aDestroyed);
+  nsresult       DoSendCommandLine(Window aWindow,
+                                   PRInt32 argc, char **argv,
+                                   char **aResponse,
+                                   PRBool *aDestroyed);
+  PRBool         WaitForResponse  (Window aWindow, char **aResponse,
+                                   PRBool *aDestroyed, Atom aCommandAtom);
 
   Display       *mDisplay;
 
   Atom           mMozVersionAtom;
   Atom           mMozLockAtom;
   Atom           mMozCommandAtom;
+  Atom           mMozCommandLineAtom;
   Atom           mMozResponseAtom;
   Atom           mMozWMStateAtom;
   Atom           mMozUserAtom;
   Atom           mMozProfileAtom;
   Atom           mMozProgramAtom;
+  Atom           mMozSupportsCLAtom;
 
   char          *mLockData;
 

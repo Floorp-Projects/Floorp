@@ -39,6 +39,7 @@
 
 #include "nsICategoryManager.h"
 #include "nsICommandLineHandler.h"
+#include "nsIDOMWindow.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIStringEnumerator.h"
@@ -90,6 +91,7 @@ protected:
   nsStringArray     mArgs;
   PRUint32          mState;
   nsCOMPtr<nsIFile> mWorkingDir;
+  nsCOMPtr<nsIDOMWindow> mWindowContext;
   PRBool            mPreventDefault;
 };
 
@@ -242,6 +244,20 @@ nsCommandLine::GetWorkingDirectory(nsIFile* *aResult)
   NS_ENSURE_TRUE(mWorkingDir, NS_ERROR_NOT_INITIALIZED);
 
   NS_ADDREF(*aResult = mWorkingDir);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommandLine::GetWindowContext(nsIDOMWindow* *aResult)
+{
+  NS_IF_ADDREF(*aResult = mWindowContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommandLine::SetWindowContext(nsIDOMWindow* aValue)
+{
+  mWindowContext = aValue;
   return NS_OK;
 }
 

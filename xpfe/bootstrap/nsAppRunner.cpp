@@ -103,9 +103,12 @@
 
 // for X remote support
 #ifdef MOZ_ENABLE_XREMOTE
-#include "nsXRemoteClientCID.h"
-#include "nsIXRemoteClient.h"
-#include "nsIXRemoteService.h"
+#ifdef MOZ_WIDGET_PHOTON
+#include "PhRemoteClient.h"
+#else
+#include "XRemoteClient.h"
+#endif
+#include "nsIRemoteService.h"
 #endif
 
 // see DoOnShutdown()
@@ -1297,10 +1300,23 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // if we have X remote support and we have our one window up and
   // running start listening for requests on the proxy window.
   // It will shut itself down before the event queue stops processing events.
-  nsCOMPtr<nsIXRemoteService> remoteService;
-  remoteService = do_GetService(NS_IXREMOTESERVICE_CONTRACTID);
-  if (remoteService)
-    remoteService->Startup(MOZ_APP_NAME);
+  nsCOMPtr<nsIRemoteService> remoteService
+    (do_GetService("@mozilla.org/toolkit/remote-service;1"));
+  NS_ASSERTION(remoteService, "Couldn't create remote service?");
+  if (remoteService) {
+    nsCAutoString pname;
+
+    nsCOMPtr<nsIProfile> pm (do_GetService(NS_PROFILE_CONTRACTID));
+    if (pm) {
+      nsXPIDLString name;
+      pm->GetCurrentProfile(getter_Copies(name));
+      if (name) {
+        CopyUTF16toUTF8(name, pname);
+      }
+    }
+
+    remoteService->Startup(MOZ_APP_NAME, pname.IsEmpty() ? nsnull : pname.get());
+  }
 #endif /* MOZ_ENABLE_XREMOTE */
 
   // remove the nativeApp as an XPCOM autoreg observer
@@ -1493,13 +1509,11 @@ static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
     return 0; // No remote argument == success
 
   // try to get the X remote client
-  nsCOMPtr<nsIXRemoteClient> client (do_CreateInstance(NS_XREMOTECLIENT_CONTRACTID));
-  if (!client)
-    return 1;
+  XRemoteClient client;
 
   nsresult rv;
   // try to init - connects to the X server and stuff
-  rv = client->Init();
+  rv = client.Init();
   if (NS_FAILED(rv)) {
     PR_fprintf(PR_STDERR, "Error: Failed to connect to X server.\n");
     return 1;
@@ -1517,8 +1531,8 @@ static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
 
   char *response = NULL;
   PRBool success = PR_FALSE;
-  rv = client->SendCommand(program, username, profile, remote,
-                           &response, &success);
+  rv = client.SendCommand(program, username, profile, remote,
+                          &response, &success);
 
   // did the command fail?
   if (NS_FAILED(rv)) {
@@ -1540,7 +1554,6 @@ static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
     return 2;
   }
 
-  client->Shutdown();
   // success
   return 0;
 }

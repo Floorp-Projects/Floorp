@@ -102,6 +102,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
 #include "nsXREDirProvider.h"
+#include "nsToolkitCompsCID.h"
 
 #include "nsINIParser.h"
 
@@ -130,9 +131,12 @@
 
 // for X remote support
 #ifdef MOZ_ENABLE_XREMOTE
-#include "nsXRemoteClientCID.h"
-#include "nsIXRemoteClient.h"
-#include "nsIXRemoteService.h"
+#ifdef MOZ_WIDGET_PHOTON
+#include "PhRemoteClient.h"
+#else
+#include "XRemoteClient.h"
+#endif
+#include "nsIRemoteService.h"
 #endif
 
 #ifdef NS_TRACE_MALLOC
@@ -906,43 +910,72 @@ HandleRemoteArgument(const char* remote)
     return 1;
   }
 
-  // start XPCOM
-  ScopedXPCOMStartup xpcom;
-  rv = xpcom.Initialize();
-  NS_ENSURE_SUCCESS(rv, 1);
+  XRemoteClient client;
+  rv = client.Init();
+  if (NS_FAILED(rv)) {
+    PR_fprintf(PR_STDERR, "Error: Failed to connect to X server.\n");
+    return 1;
+  }
 
-  { // scope the comptr so we don't hold on to XPCOM objects beyond shutdown
-    // try to get the X remote client
-    nsCOMPtr<nsIXRemoteClient> client (do_CreateInstance(NS_XREMOTECLIENT_CONTRACTID));
-    NS_ENSURE_TRUE(client, 1);
+  nsXPIDLCString response;
+  PRBool success = PR_FALSE;
+  rv = client.SendCommand(program.get(), username, profile, remote,
+                           getter_Copies(response), &success);
+  // did the command fail?
+  if (NS_FAILED(rv)) {
+    PR_fprintf(PR_STDERR, "Error: Failed to send command: %s\n",
+               response ? response.get() : "No response included");
+    return 1;
+  }
 
-    // try to init - connects to the X server and stuff
-    rv = client->Init();
-    if (NS_FAILED(rv)) {
-      PR_fprintf(PR_STDERR, "Error: Failed to connect to X server.\n");
-      return 1;
-    }
-
-    nsXPIDLCString response;
-    PRBool success = PR_FALSE;
-    rv = client->SendCommand(program.get(), username, profile, remote,
-                             getter_Copies(response), &success);
-    // did the command fail?
-    if (NS_FAILED(rv)) {
-      PR_fprintf(PR_STDERR, "Error: Failed to send command: %s\n",
-                 response ? response.get() : "No response included");
-      return 1;
-    }
-
-    if (!success) {
-      PR_fprintf(PR_STDERR, "Error: No running window found\n");
-      return 2;
-    }
-
-    client->Shutdown();
+  if (!success) {
+    PR_fprintf(PR_STDERR, "Error: No running window found\n");
+    return 2;
   }
 
   return 0;
+}
+
+static PRBool
+RemoteCommandLine()
+{
+  nsresult rv;
+  ArgResult ar;
+
+  nsCAutoString program(gAppData->appName);
+  ToLowerCase(program);
+  const char *username = getenv("LOGNAME");
+
+  const char *temp = nsnull;
+  ar = CheckArg("a", &temp);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -a requires an application name\n");
+    return PR_FALSE;
+  } else if (ar == ARG_FOUND) {
+    program.Assign(temp);
+  }
+
+  ar = CheckArg("u", &username);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -u requires a username\n");
+    return PR_FALSE;
+  }
+
+  XRemoteClient client;
+  rv = client.Init();
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+ 
+  nsXPIDLCString response;
+  PRBool success = PR_FALSE;
+  rv = client.SendCommandLine(program.get(), username, nsnull,
+                              gArgc, gArgv,
+                              getter_Copies(response), &success);
+  // did the command fail?
+  if (NS_FAILED(rv) || !success)
+    return PR_FALSE;
+
+  return PR_TRUE;
 }
 #endif // MOZ_ENABLE_XREMOTE
 
@@ -1768,6 +1801,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   if (ar) {
     return HandleRemoteArgument(xremotearg);
   }
+
+  // Try to remote the entire command line. If this fails, start up normally.
+  if (RemoteCommandLine())
+    return 0;
 #endif
 
   nsCOMPtr<nsIProfileLock> profileLock;
@@ -1990,10 +2027,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef MOZ_ENABLE_XREMOTE
           // if we have X remote support and we have our one window up and
           // running start listening for requests on the proxy window.
-          nsCOMPtr<nsIXRemoteService> remoteService;
-          remoteService = do_GetService(NS_IXREMOTESERVICE_CONTRACTID);
+          nsCOMPtr<nsIRemoteService> remoteService;
+          remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
           if (remoteService)
-            remoteService->Startup(aAppData->appName);
+            remoteService->Startup(gAppData->appName, nsnull);
 #endif /* MOZ_ENABLE_XREMOTE */
 
           // enable win32 DDE responses and Mac appleevents responses

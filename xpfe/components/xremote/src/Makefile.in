@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xremoteservice
+MODULE		= appcomps
 LIBRARY_NAME	= xremoteservice
 EXPORT_LIBRARY	= 1
 IS_COMPONENT    = 1
@@ -54,7 +54,6 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  widget \
-		  gfx \
 		  uriloader \
 		  docshell \
 		  pref \
@@ -74,5 +73,6 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) 
-
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)

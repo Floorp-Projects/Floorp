@@ -38,6 +38,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <plgetopt.h>
 #ifdef MOZ_WIDGET_PHOTON
 #include "PhRemoteClient.h"
