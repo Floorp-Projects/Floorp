@@ -231,7 +231,7 @@ nsresult nsMailtoUrl::ParseUrl()
     // now parse out the search field...
     nsCAutoString searchPart;
     m_toPart.Mid(searchPart, startOfSearchPart, -1);
-    if (searchPart)
+    if (!searchPart.IsEmpty())
     {
 		  ParseMailtoUrl(searchPart);
       // now we need to strip off the search part from the
