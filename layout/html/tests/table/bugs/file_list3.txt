@@ -10,6 +10,8 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug219693-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug219693-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug22019.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug22122.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug221784-1.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug221784-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug22246-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug22246-2a.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug22246-3.html
