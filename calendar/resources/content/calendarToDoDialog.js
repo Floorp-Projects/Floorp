@@ -523,15 +523,30 @@ function alarmLengthKeyDown( repeatField )
 }
 
 
+var launch = true;
+
 /* URL */
 function launchBrowser()
 {
+   if( launch == false ) //stops them from clicking on it twice
+      return;
+
+   launch = false;
    //get the URL from the text box
    var UrlToGoTo = document.getElementById( "uri-field" ).value;
    
+   if( UrlToGoTo.length < 4 ) //it has to be > 4, since it needs at least 1 letter, a . and a two letter domain name.
+      return;
+
+   //check if it has a : in it
+   if( UrlToGoTo.indexOf( ":" ) == -1 )
+      UrlToGoTo = "http://"+UrlToGoTo;
+
    //launch the browser to that URL
-   opener.open( UrlToGoTo, "calendar-opened-window" );
+   window.open( UrlToGoTo, "calendar-opened-window" );
+   launch = true;
 }
+
 
 
 

@@ -77,7 +77,6 @@
   <keyset id="navKeys">
     <!-- File Menu -->
     <key id="key_close"/>
-    
     <!-- Edit Menu -->
     <key id="key_undo"/>
     <key id="key_redo"/>

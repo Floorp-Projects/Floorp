@@ -201,8 +201,6 @@ function CalendarWindow( calendarDataSource )
    // add the observer to the event source
    
    gICalLib.addObserver( this.calendarEventDataSourceObserver );
-
-   var FilterList = document.getElementById( "event-filter-menulist" ); 
 }
 
 
@@ -214,7 +212,7 @@ function CalendarWindow( calendarDataSource )
 
 CalendarWindow.prototype.close = function calWin_close( )
 {
-   gICalLib.removeObserver(  this.calendarEventDataSourceObserver ); 
+   this.eventSource.removeObserver(  this.calendarEventDataSourceObserver ); 
 }
 
 

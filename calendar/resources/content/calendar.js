@@ -143,8 +143,9 @@ function calendarInit()
    
    //when you switch to a view, it takes care of refreshing the events, so that call is not needed.
    gCalendarWindow.currentView.switchTo( gCalendarWindow.currentView );
-   
+
    // set up the unifinder
+   
    prepareCalendarUnifinder();
 
    prepareCalendarToDoUnifinder();
@@ -360,7 +361,7 @@ function weekViewHourDoubleClick( event )
 
 function monthEventBoxClickEvent( eventBox, event )
 {
-   gCalendarWindow.MonthView.clickEventBox( eventBox, event );
+   gCalendarWindow.monthView.clickEventBox( eventBox, event );
 
    if ( event ) 
    {
@@ -643,10 +644,6 @@ function closeCalendar()
    self.close();
 }
 
-
-/**
-*  Called when a user hovers over an element and the text for the mouse over is changed.
-*/
 
 /**
 *  Called when a user hovers over an element and the text for the mouse over is changed.

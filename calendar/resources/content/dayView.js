@@ -305,17 +305,6 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    
    var hourDuration = eventDuration / (3600000);
    
-   /*if( calendarEventDisplay.event.location )
-   {
-      eventText += "\n" + calendarEventDisplay.event.location;
-   }
-      
-   if(  calendarEventDisplay.event.description )
-   {
-      eventText += "\n" + calendarEventDisplay.event.description;
-   }
-   */
-      
    var eventBox = document.createElement( "hbox" );
    
    var topHeight = eval( ( startHour*kDayViewHourHeight ) + ( ( startMinutes/60 ) * kDayViewHourHeight ) );
@@ -328,9 +317,6 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    var left = eval( ( ( calendarEventDisplay.CurrentSpot - 1 ) * width )  + kDayViewHourLeftStart );
    left = left - ( 1 * ( calendarEventDisplay.CurrentSpot - 1 ));
    eventBox.setAttribute( "left", Math.round( left ) );
-   //eventBox.setAttribute( "style", "border: 1px solid red; width: "+width+"px; max-width: "+width+"px;max-height: "+eventBox.getAttribute( "height" )+"px;overflow: never;" );
-   //eventBox.setAttribute( "style", "border: 1px solid red;" );
-
    eventBox.setAttribute( "class", "day-view-event-class" );
    eventBox.setAttribute( "flex", "1" );
    eventBox.setAttribute( "eventbox", "dayview" );
@@ -347,7 +333,6 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    var eventHTMLElement = document.createElement( "label" );
    eventHTMLElement.setAttribute( "id", "day-view-event-html"+calendarEventDisplay.event.id );
    var eventTextElement = document.createTextNode( eventText );
-   //eventHTMLElement.setAttribute( "class", "day-view-event-text-class" );
    eventHTMLElement.appendChild( eventTextElement );
    eventHTMLElement.setAttribute( "flex", "1" );
    eventHTMLElement.setAttribute( "crop", "end" );

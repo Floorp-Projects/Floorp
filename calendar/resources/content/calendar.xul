@@ -238,7 +238,6 @@
    <menuitem label="&calendar.context.refreshserver.label;" observes="refresh_remote_calendars"/>
 </popup>
 
-
 <popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
 
 <commandset id="commands"/>
@@ -271,7 +270,7 @@
 
 <!-- V I S I B L E  C O N T E N T  -->
 
-<vbox id="calendar-top-box" flex="1" context="context-menu" >
+<vbox id="calendar-top-box" flex="1" context="context-menu">
 
   <!-- Calendar Controls-->
  
@@ -303,7 +302,6 @@
             <box align="center">
                <checkbox id="only-completed-checkbox" label="&calendar.unifinder.hidecompletedtodos.label;" flex="1" crop="end" oncommand="toDoUnifinderRefresh( event )" persist="checked"/>
             </box>
-
             <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false">
                <treecols id="unifinder-todo-tree-cols">
                   <treecol id="unifinder-todo-tree-col-completed"

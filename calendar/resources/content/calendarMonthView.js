@@ -275,7 +275,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          }
             
          eventBox.setAttribute( "eventbox", "monthview" );
-         eventBox.setAttribute( "onclick", "gCalendarWindow.monthView.clickEventBox( this, event )" );
+         eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
          eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          eventBox.setAttribute( "tooltip", "savetip" );
@@ -781,11 +781,6 @@ MonthView.prototype.clickEventBox = function monthView_clickEventBox( eventBox, 
    this.calendarWindow.selectedDate.setDate( eventBox.calendarEventDisplay.event.start.day );
 
    this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
-   // Do not let the click go through, suppress default selection
-   if ( event ) 
-   {
-      event.stopPropagation();
-   }
 }
 
 MonthView.prototype.clearSelectedEvent = function monthView_clearSelectedEvent( )
