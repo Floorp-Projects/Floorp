@@ -101,6 +101,11 @@
       <children/>
     </content>
     <implementation>
+      <field name="mPrefs" readonly="true">
+        Components.classes['@mozilla.org/preferences-service;1']
+                  .getService(Components.interfaces.nsIPrefService)
+                  .getBranch(null);
+      </field>
       <field name="mTabBox">
         document.getAnonymousNodes(this)[1]
       </field>
@@ -282,8 +287,8 @@
         <parameter name="aURI"/>
         <body>
           <![CDATA[
-            return (aURI && pref.getBoolPref("browser.chrome.site_icons") &&
-                    pref.getBoolPref("browser.chrome.favicons") && 
+            return (aURI && this.mPrefs.getBoolPref("browser.chrome.site_icons") &&
+                    this.mPrefs.getBoolPref("browser.chrome.favicons") && 
                     ("schemeIs" in aURI) && (aURI.schemeIs("http") || aURI.schemeIs("https")));
           ]]>
         </body>
@@ -416,7 +421,8 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            if (!pref.getBoolPref("browser.chrome.site_icons"))
+            var tabBrowser = this.parentNode.parentNode;
+            if (!tabBrowser.mPrefs.getBoolPref("browser.chrome.site_icons"))
               return;
 
             if (!event.target.rel.match((/(?:^|\s)icon(?:\s|$)/i)))
@@ -437,7 +443,6 @@
             var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance();
             uri = uri.QueryInterface(Components.interfaces.nsIURI);
   
-            var tabBrowser = this.parentNode.parentNode;
             var notifyListeners = true;
             var i;
             
@@ -642,8 +647,7 @@
               return; // Don't allow the last tab to close.
 
             if (l == 2) {              
-              var pref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
-              var autohide = pref.getBoolPref("browser.tabs.autoHide");
+              var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
               if (autohide)
                 this.setStripVisibilityTo(false);
             }
@@ -726,8 +730,7 @@
           <![CDATA[
             if (!this.mProgressListeners) {
               this.mProgressListeners = new Array();
-              var pref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
-              var autohide = pref.getBoolPref("browser.tabs.autoHide");
+              var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
               if (!autohide) {
                 this.setStripVisibilityTo(true);
                 
@@ -834,8 +837,7 @@
             if (!url || !url.length || url.indexOf(" ", 0) != -1) 
               return;
             
-            var pref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
-            var bgLoad = pref.getBoolPref("browser.tabs.loadInBackground");
+            var bgLoad = this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
 
             if (aEvent.target.localName == "tabs") {
               // We're adding a new tab.
