@@ -31,6 +31,7 @@
 #include "nsIDocShellTreeItem.h"
 
 // Interfaces needed to include
+#include "nsIPrompt.h"
 #include "nsIWindowMediator.h"
 
 // CIDs
@@ -71,9 +72,9 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 {
    NS_ENSURE_ARG_POINTER(aSink);
 
-//   if(aIID.Equals(NS_GET_IID(nsISomeInterface)))
-//      *aSink = NS_STATIC_CAST(nsISomeInterface*, this);
-//   else
+   if(aIID.Equals(NS_GET_IID(nsIPrompt)))
+      return mXULWindow->QueryInterface(aIID, aSink);
+   else
       return QueryInterface(aIID, aSink);
 
    NS_IF_ADDREF(((nsISupports*)*aSink));
