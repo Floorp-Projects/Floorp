@@ -483,7 +483,8 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
                                    nsIDocument* aDocument,
                                    nsIURI** aURI)
 {
-  NS_WARN_IF_FALSE(aDocument, "Must have a document");
+  // XXXbz Commented out precondition pending fix for bug 198486
+  //  NS_PRECONDITION(aDocument, "Must have a document");
   NS_PRECONDITION(aURI, "Null out param");
 
   nsresult rv = NS_OK;
