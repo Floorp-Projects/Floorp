@@ -355,6 +355,8 @@ PRIVATE void stub_AllConnectionsComplete(MWContext *context)
 #define stub_FileSortMethod                 (FileSortMethod_t)stub_noop
 #define stub_ShowAllNewsArticles            (ShowAllNewsArticles_t)stub_noop
 #define stub_Confirm                        (Confirm_t)stub_Confirm
+#define stub_CheckConfirm                   (CheckConfirm_t)stub_noop
+#define stub_SelectDialog                   (SelectDialog_t)stub_noop
 #define stub_Prompt                         (Prompt_t)stub_Prompt
 #define stub_PromptWithCaption              (PromptWithCaption_t)stub_noop
 #define stub_PromptUsernameAndPassword      (PromptUsernameAndPassword_t)stub_PromptUsernameAndPassword
