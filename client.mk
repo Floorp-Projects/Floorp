@@ -588,7 +588,7 @@ depend:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Build it
 
 build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	$(MOZ_MAKE) export && $(MOZ_MAKE) install
+	$(MOZ_MAKE)
 
 ####################################
 # Other targets
