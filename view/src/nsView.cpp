@@ -1388,7 +1388,7 @@ static void calc_extents(nsIView *view, nsRect *extents, nscoord ox, nscoord oy)
     bounds.x += ox;
     bounds.y += oy;
 
-    extents->IntersectRect(*extents, bounds);
+    extents->UnionRect(*extents, bounds);
 
     calc_extents(kid, extents, bounds.x, bounds.y);
   }
