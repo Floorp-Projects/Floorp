@@ -535,10 +535,10 @@ nsTraceRefcnt::DemangleSymbol(const char * aSymbol,
                               int aBufLen)
 {
   NS_ASSERTION(nsnull != aSymbol,"null symbol");
-  NS_ASSERTION(nsnull != aDemangledSymbol,"null out param");
+  NS_ASSERTION(nsnull != aBuffer,"null buffer");
 
   // lose
-  *aDemangledSymbol = nsnull;
+  aBuffer[0] = '\0';
 }
 #endif // __linux__
 
