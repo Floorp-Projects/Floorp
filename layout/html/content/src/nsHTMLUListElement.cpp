@@ -172,7 +172,7 @@ nsHTMLUListElement::AttributeToString(nsIAtom* aAttribute,
       case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
       case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
         nsGenericHTMLElement::EnumValueToString(aValue, kOldListTypeTable,
-                                                aResult);
+                                                aResult, PR_FALSE);
         break;
       default:
         nsGenericHTMLElement::EnumValueToString(aValue, kListTypeTable,

@@ -172,8 +172,17 @@ nsHTMLLIElement::AttributeToString(nsIAtom* aAttribute,
                                    nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    nsGenericHTMLElement::EnumValueToString(aValue, kListItemTypeTable,
-                                            aResult);
+    PRInt32 v = aValue.GetIntValue();
+    switch (v) {
+      case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
+      case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
+        nsGenericHTMLElement::EnumValueToString(aValue, kListItemTypeTable,
+                                                aResult, PR_FALSE);
+        break;
+      default:
+        nsGenericHTMLElement::EnumValueToString(aValue, kListItemTypeTable,
+                                                aResult, PR_TRUE);
+    }
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   return mInner.AttributeToString(aAttribute, aValue, aResult);

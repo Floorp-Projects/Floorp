@@ -159,7 +159,8 @@ public:
 
   static PRBool EnumValueToString(const nsHTMLValue& aValue,
                                   EnumTable* aTable,
-                                  nsString& aResult);
+                                  nsString& aResult,
+                                  PRBool aFoldCase=PR_TRUE);
 
   static PRBool ParseValueOrPercent(const nsString& aString,
                                     nsHTMLValue& aResult,
