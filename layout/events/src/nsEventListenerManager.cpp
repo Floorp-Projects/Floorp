@@ -539,6 +539,17 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
 }
 
 /**
+* Creates a DOM event
+*/
+
+nsresult nsEventListenerManager::CreateEvent(nsIPresContext& aPresContext,
+                                             nsEvent* aEvent,
+                                             nsIDOMEvent** aDOMEvent)
+{
+    return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+}
+
+/**
 * Captures all events designated for descendant objects at the current level.
 * @param an event listener
 */

@@ -127,7 +127,12 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
 
 NS_METHOD nsDOMEvent::SetTarget(nsIDOMNode* aTarget)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mTarget != aTarget) {
+    NS_IF_RELEASE(mTarget);
+    NS_IF_ADDREF(aTarget);
+    mTarget = aTarget;
+  }
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
