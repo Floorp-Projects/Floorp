@@ -23,7 +23,7 @@
 
 $cvs = "/opt/cvs-tools/bin/cvs";
     
-$dontcommit = 1;                # I don't want to commit anything at all, yet.
+$dontcommit = 0;
 $usertoblame = "";
 
 for ($i=0 ; $i<@ARGV ; $i++) {
