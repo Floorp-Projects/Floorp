@@ -20,16 +20,17 @@
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
  * Seth Spitzer <sspitzer@netscape.com>
+ * Håkan Waara <hwaara@chello.se>
  */
 
-var currentDomain;
+var gCurrentDomain;
 var gPrefsBundle;
 
 function validate(data)
 {
   var name = document.getElementById("fullName").value;
 
-  if (! name || name=="") {
+  if (!name) {
     var alertText = gPrefsBundle.getString("enterName");
     window.alert(alertText);
     return false;
@@ -49,21 +50,19 @@ function validate(data)
 // - if the user ALSO entered an @domain, then we just chop it off
 // - at some point it would be useful to keep the @domain, in case they
 //   wish to override the domain.
-function validateEmail() {
+function validateEmail() { 
   var emailElement = document.getElementById("email");
   var email = emailElement.value;
-
-  
   var emailArray = email.split('@');
 
-  if (currentDomain) {
-    // check if user entered and @ sign even though we have a domain
+  if (gCurrentDomain) {
+    // check if user entered an @ sign even though we have a domain
     if (emailArray.length >= 2) {
       email = emailArray[0];
       emailElement.value = email;
     }
     
-    if (email.length =="") {
+    if (!email.length || containsIllegalChar(email)) {
       var alertText = gPrefsBundle.getString("enterValidEmailPrefix");
       window.alert(alertText);
       return false;
@@ -72,8 +71,10 @@ function validateEmail() {
 
   else {
     if (emailArray.length != 2 ||
-        emailArray[0] == "" ||
-        emailArray[1] == "") {
+        !emailArray[0].length ||
+        !emailArray[1].length || 
+        containsIllegalChar(emailArray[0]) ||
+        containsIllegalChar(emailArray[1])) {
       alertText = gPrefsBundle.getString("enterValidEmail");
       window.alert(alertText);
       return false;
@@ -82,6 +83,23 @@ function validateEmail() {
     
   return true;
 }
+
+// This function checks for common illegal
+// characters. This shouldn't be too strict, since
+// we do more extensive tests later. -Håkan
+function containsIllegalChar(aString)
+{
+  for (var i=0; i < aString.length; i++) {
+    var code = aString.charCodeAt(i);
+    if (code > 127)
+      return true; // non-ASCII
+    else if (code == 9 || code == 10 || code == 11 || code == 32)
+      return true; // white space
+    else if (code == 64)
+      return true; // '@'
+  }
+  return false;
+} 
 
 function onInit()
 {
@@ -162,10 +180,10 @@ function checkForDomain()
   if (!accountData.domain) return;
 
   // save in global variable
-  currentDomain = accountData.domain;
+  gCurrentDomain = accountData.domain;
   
   var postEmailText = document.getElementById("postEmailText");
-  postEmailText.setAttribute("value", "@" + currentDomain);
+  postEmailText.setAttribute("value", "@" + gCurrentDomain);
 }
 
 function checkForFullName() {
