@@ -51,7 +51,6 @@
 #include "nsStyleConsts.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
-#include "nsButtonFrameRenderer.h"
 #include "nsBoxLayoutState.h"
 
 #include "nsHTMLParts.h"
