@@ -1102,7 +1102,6 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   nsTimeoutImpl *timeout, **insertion_point;
   jsdouble interval;
   PRInt64 now, delta;
-  JSPrincipals principals;
 
   if (argc >= 2) {
     if (!JS_ValueToNumber(cx, argv[1], &interval)) {

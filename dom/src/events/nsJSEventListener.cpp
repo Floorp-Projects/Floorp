@@ -65,7 +65,6 @@ NS_IMPL_RELEASE(nsJSEventListener)
 nsresult nsJSEventListener::ProcessEvent(nsIDOMEvent* aEvent)
 {
   jsval funval, result;
-  JSFunction *fun;
   jsval argv[1];
   JSObject *mEventObj;
   char* mEventChars;
