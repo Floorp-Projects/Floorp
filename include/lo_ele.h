@@ -247,6 +247,8 @@ typedef struct LO_BlockInitializeStruct_struct {
     int32 width;
     XP_Bool has_height;
     int32 height;
+	uint8 percent_width;
+	uint8 percent_height;
     char *name;
     char *id;
     char *above;
@@ -1258,8 +1260,8 @@ typedef struct LO_BlockQuote_struct {
 
 typedef struct LO_Layer_struct {
     LO_Any lo_any;
-
-    Bool is_end;
+	Bool is_end;
+	void /* lo_LayerDocState */ *layerDoc;
     LO_BlockInitializeStruct *initParams;
 } LO_LayerStruct;
 

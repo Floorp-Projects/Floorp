@@ -26,6 +26,7 @@
 #endif
 #include "layers.h"
 #include "pa_parse.h"
+#include "laylayer.h"
 
 #define IL_CLIENT               /* XXXM12N Defined by Image Library clients */
 #include "libimg.h"             /* Image Library public API. */
@@ -762,6 +763,20 @@ lo_ScrapeElement(MWContext *context, LO_Element *element, Bool freeTableOrCellSt
 			{
 				XP_FREE ( element->lo_textBlock.break_table );
 				element->lo_textBlock.break_table = NULL;
+			}
+			break;
+		case LO_LAYER:
+			if ( element->lo_layer.initParams )
+			{
+				lo_FreeBlockInitializeStruct( element->lo_layer.initParams );
+				element->lo_layer.initParams = NULL;
+			}
+			if ( element->lo_layer.layerDoc )
+			{
+				/* We are going to let the layer cleanup function, 
+				   lo_DeleteLayerState() clean the lo_Block structure 
+				   on the layer doc state (lo_LayerDocState) */
+				element->lo_layer.layerDoc = NULL;
 			}
 			break;
 	}

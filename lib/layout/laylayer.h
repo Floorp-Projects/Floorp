@@ -51,7 +51,7 @@ struct lo_LayerDocState
     CL_Layer *layer;
     void *mocha_object;
     lo_DocLists *doc_lists;      /* Layout element lists, e.g. embeds, forms */
-    lo_Block *temp_block;       /* Data used only during HTML layer layout */
+    lo_Block *temp_block;       /* Data used during HTML layer layout and reflow */
 };
 
 struct lo_LayerStack {

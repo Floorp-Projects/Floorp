@@ -1202,7 +1202,6 @@ extern LO_AnchorData *lo_GetElementAnchor(LO_Element *element);
 extern void lo_GetElementFGColor(LO_Element *element, LO_Color *color);
 extern void lo_SetElementFGColor(LO_Element *element, LO_Color *color);
 
-extern void lo_ShiftElementList(LO_Element *, int32, int32);
 extern void lo_RenumberCell(lo_DocState *, LO_CellStruct *);
 extern void lo_ShiftCell(LO_CellStruct *, int32, int32);
 extern int32 lo_CleanTextWhitespace(char *, int32);
@@ -1468,6 +1467,14 @@ extern void lo_SetupStateForBeginMulticol( lo_DocState *state, lo_MultiCol *mult
 /* Common code for layout and relayout of spacers */
 extern void lo_LayoutSpacerElement(MWContext *context, lo_DocState *state, LO_SpacerStruct *spacer, Bool relayout);
 
+/* Reflow of layers */
+extern void lo_BeginLayerReflow(MWContext *context, lo_DocState *state,
+			   LO_BlockInitializeStruct *param,
+			   lo_LayerDocState *layer_state);
+extern void lo_EndLayerReflow(MWContext *context, lo_DocState *state);
+
+extern void lo_FreeBlockInitializeStruct(LO_BlockInitializeStruct *param);
+
 /* 
  * Adds a soft line break to the end of the line list and adds the line list to the line array.  
  * Resets line list to NULL.  Should be used during relayout only.
@@ -1485,6 +1492,10 @@ extern void lo_PrepareElementForReuse( MWContext *context, lo_DocState *state, L
 		ED_Element *edit_element, intn edit_offset);
 extern void LO_Reflow(MWContext *context, lo_DocState * state, LO_Element *startElement,
 	LO_Element *endElement);
+
+/* Reflow version of lo_FlushLineList() */
+extern void lo_rl_FlushLineList( MWContext *context, lo_DocState *state, 
+								uint32 break_type, uint32 clear_type, Bool breaking );
 
 extern Bool lo_IsDummyLayoutElement(LO_Element *ele);
 

@@ -1092,165 +1092,9 @@ lo_FlushLineList(MWContext *context, lo_DocState *state, uint32 break_type, uint
 {
 	
 	LO_LinefeedStruct *linefeed;
-	/*
-	LO_Element **line_array;
-	*/
-	/* int32 justification_remainder=0;*/
-	/*
-#ifdef XP_WIN16
-	int32 a_size;
-	int32 a_indx;
-	int32 a_line;
-	XP_Block *larray_array;
-#endif 
-	*/
-	/* XP_WIN16 */
 
 	lo_UpdateStateWhileFlushingLine( context, state );
 
-	/*
-	if (state->top_state->nothing_displayed != FALSE) {
-	*/
-		/*
-		 * If we are displaying elements we are
-		 * no longer in the HEAD section of the HTML
-		 * we are in the BODY section.
-		 */
-	/*
-		state->top_state->in_head = FALSE;
-		state->top_state->in_body = TRUE;
-
-        lo_use_default_doc_background(context, state);
-        state->top_state->nothing_displayed = FALSE;
-    }
-	*/
-
-	/*
-	 * There is a break at the end of this line.
-	 * this may change min_width.
-	 */
-	/*
-	{
-		int32 new_break_holder;
-		int32 min_width;
-		int32 indent;
-
-		new_break_holder = state->x;
-		min_width = new_break_holder - state->break_holder;
-		indent = state->list_stack->old_left_margin - state->win_left;
-		min_width += indent;
-		if (min_width > state->min_width)
-		{
-			state->min_width = min_width;
-		}
-	*/
-		/* If we are not within <NOBR> content, allow break_holder
-		 * to be set to the new position where a line break can occur.
-		 * This fixes BUG #70782
-		 */
-	/*
-		if (state->breakable != FALSE) {
-			state->break_holder = new_break_holder;
-		}
-	}
-	*/
-
-	/*
-	 * If in a division centering or right aligning this line
-	 */
-	/*
-	if ((state->align_stack != NULL)&&(state->delay_align == FALSE))
-	{
-		int32 push_right;
-		LO_Element *tptr;
-
-		if (state->align_stack->alignment == LO_ALIGN_CENTER)
-		{
-			push_right = (state->right_margin - state->x) / 2;
-		}
-		else if (state->align_stack->alignment == LO_ALIGN_RIGHT)
-		{
-			push_right = state->right_margin - state->x;
-		}
-		else if(state->align_stack->alignment == LO_ALIGN_JUSTIFY)
-		{
-			push_right = lo_calc_push_right_for_justify(state, &justification_remainder);
-		}
-		else
-		{
-			push_right = 0;
-		}
-
-		if ((push_right > 0 || justification_remainder)
-			&&(state->line_list != NULL))
-		{
-			int32 count = 0;
-			int32 move_delta;
-			tptr = state->line_list;
-
-			if(state->align_stack->alignment == LO_ALIGN_JUSTIFY)
-				move_delta = 0;
-			else
-				move_delta = push_right;
-
-			while (tptr != NULL)
-			{
-	*/
-                /* 
-                 * We don't shift over inflow layers, since their contents
-                 * have already been shifted over.
-                 */
-		/*
-		 * We also don't shift bullets of type BULLET_MQUOTE.
-		 */
-	/*
-                if (((tptr->type != LO_CELL)||
-			(!tptr->lo_cell.cell_inflow_layer))&&
-			((tptr->type != LO_BULLET)||
-			((tptr->type == LO_BULLET)&&
-			 (tptr->lo_bullet.bullet_type != BULLET_MQUOTE))))
-		{
-				tptr->lo_any.x += move_delta;
-		}
-	*/
-
-				/* justification push_rights are additive */
-	/*
-				if(state->align_stack->alignment == LO_ALIGN_JUSTIFY)
-				{
-					move_delta += push_right;
-	*/
-					/* if there is a justification remainder, add a pixel
-					 * to the first n word breaks
-					 */
-	/*
-					if(count < justification_remainder)
-						move_delta++;
-				}
-	*/
-                /* 
-                 * Note that if this is an inflow layer, we don't want
-                 * to shift it since the alignment has already propogated
-                 * to its contents.
-                 */
-	/*
-				if ((tptr->type == LO_CELL) &&
-                    !tptr->lo_cell.cell_inflow_layer)
-				{
-					lo_ShiftCell((LO_CellStruct *)tptr, move_delta, 0);
-				}
-				tptr = tptr->lo_any.next;
-
-				count++;
-			}
-
-			if(state->align_stack->alignment == LO_ALIGN_JUSTIFY)
-				state->x = state->right_margin;
-			else
-				state->x += push_right;
-		}
-	}
-	*/
 #if 0
 	/* apply line-height stack mods (if exists) */
 	if(state->line_height_stack && state->end_last_line) 
@@ -1318,122 +1162,6 @@ lo_FlushLineList(MWContext *context, lo_DocState *state, uint32 break_type, uint
 	if (linefeed != NULL)
 	{
 		lo_AppendLineFeed( context, state, linefeed, breaking, TRUE );
-
-		/*
-		LO_Element *tptr;
-
-		if (breaking != FALSE)
-		{
-			linefeed->ele_attrmask |= LO_ELE_BREAKING;
-		}
-		*/
-
-		/*
-		 * Horrible bitflag overuse!!!  For multicolumn text
-		 * we need to know if a line of text can be used for
-		 * a column break, or if it cannot because it is wrapped
-		 * around some object in the margin.  For lines that can be
-		 * used for column breaks, we will set the BREAKABLE
-		 * flag in their element mask.
-		 */
-		/*
-		if ((state->left_margin_stack == NULL)&&
-			(state->right_margin_stack == NULL))
-		{
-			linefeed->ele_attrmask |= LO_ELE_BREAKABLE;
-		}
-
-		if ((state->align_stack != NULL)&&
-		    (state->delay_align != FALSE)&&
-		    (state->align_stack->alignment != LO_ALIGN_LEFT))
-		{
-			if (state->align_stack->alignment == LO_ALIGN_CENTER)
-			{
-				linefeed->ele_attrmask |= LO_ELE_DELAY_CENTER;
-			}
-			else if (state->align_stack->alignment == LO_ALIGN_RIGHT)
-			{
-				linefeed->ele_attrmask |= LO_ELE_DELAY_RIGHT;
-			}
-		}
-
-		tptr = state->line_list;
-
-		if (tptr == NULL)
-		{
-			state->line_list = (LO_Element *)linefeed;
-			linefeed->prev = NULL;
-		}
-		else
-		{
-			while (tptr != NULL)
-			{
-		*/
-				/*
-				 * If the display is blocked for an element
-				 * we havn't reached yet, check to see if
-				 * it is in this line, and if so, save its
-				 * y position.
-				 */
-		/*
-				if ((state->display_blocked != FALSE)&&
-#ifdef EDITOR
-				    (!state->edit_relayout_display_blocked)&&
-#endif
-				    (state->is_a_subdoc == SUBDOC_NOT)&&
-				    (state->display_blocking_element_y == 0)&&
-				    (state->display_blocking_element_id != -1)&&
-				    (tptr->lo_any.ele_id >=
-					state->display_blocking_element_id))
-				{
-					state->display_blocking_element_y =
-						state->y;
-		*/
-					/*
-					 * Special case, if the blocking element
-					 * is on the first line, no blocking
-					 * at all needs to happen.
-					 */
-		/*
-					if (state->y == state->win_top)
-					{
-						state->display_blocked = FALSE;
-						FE_SetDocPosition(context,
-						    FE_VIEW, 0, state->base_y);
-                        if (context->compositor)
-						{
-						  XP_Rect rect;
-						  
-						  rect.left = 0;
-						  rect.top = 0;
-						  rect.right = state->win_width;
-						  rect.bottom = state->win_height;
-						  CL_UpdateDocumentRect(context->compositor,
-                                                &rect, (PRBool)FALSE);
-						}
-					}
-				}
-				tptr->lo_any.line_height = state->line_height;
-		*/
-				/*
-				 * Special for bullets of type BULLET_MQUOTE
-				 * They should always be as tall as the line.
-				 */
-		/*
-				if ((tptr->type == LO_BULLET)&&
-					(tptr->lo_bullet.bullet_type ==
-						BULLET_MQUOTE))
-				{
-					tptr->lo_any.y_offset = 0;
-					tptr->lo_any.height =
-						tptr->lo_any.line_height;
-				}
-				tptr = tptr->lo_any.next;
-			}
-			linefeed->prev = tptr;
-		}
-		state->x += linefeed->width;
-		*/
 	} 
 	else
 	{
@@ -1448,180 +1176,7 @@ lo_FlushLineList(MWContext *context, lo_DocState *state, uint32 break_type, uint
 		return;
 	}
 
-	/*
-	 * We are in a layer within this (sub)doc, stuff the line there instead.
-	 */
-	if (state->layer_nest_level > 0)
-	{
-		lo_AddLineListToLayer(context, state, (LO_Element *)linefeed);
-		state->line_list = NULL;
-		state->old_break = NULL;
-		state->old_break_block = NULL;
-		state->old_break_pos = -1;
-		state->old_break_width = 0;
-		state->baseline = 0;
-		return;
-	}
-
-	/*
-	 * If necessary, grow the line array to hold more lines.
-	 */
-/*
-#ifdef XP_WIN16
-	a_size = SIZE_LIMIT / sizeof(LO_Element *);
-	a_indx = (state->line_num - 1) / a_size;
-	a_line = state->line_num - (a_indx * a_size);
-
-	XP_LOCK_BLOCK(larray_array, XP_Block *, state->larray_array);
-	state->line_array = larray_array[a_indx];
-
-	if (a_line == a_size)
-	{
-		state->line_array = XP_ALLOC_BLOCK(LINE_INC *
-					sizeof(LO_Element *));
-		if (state->line_array == NULL)
-		{
-			XP_UNLOCK_BLOCK(state->larray_array);
-			state->top_state->out_of_memory = TRUE;
-			return;
-		}
-		XP_LOCK_BLOCK(line_array, LO_Element **, state->line_array);
-		line_array[0] = NULL;
-		XP_UNLOCK_BLOCK(state->line_array);
-		state->line_array_size = LINE_INC;
-
-		state->larray_array_size++;
-		XP_UNLOCK_BLOCK(state->larray_array);
-		state->larray_array = XP_REALLOC_BLOCK(
-			state->larray_array, (state->larray_array_size
-			* sizeof(XP_Block)));
-		if (state->larray_array == NULL)
-		{
-			state->top_state->out_of_memory = TRUE;
-			return;
-		}
-		XP_LOCK_BLOCK(larray_array, XP_Block *, state->larray_array);
-		larray_array[state->larray_array_size - 1] = state->line_array;
-		state->line_array = larray_array[a_indx];
-	}
-	else if (a_line >= state->line_array_size)
-	{
-		state->line_array_size += LINE_INC;
-		if (state->line_array_size > a_size)
-		{
-			state->line_array_size = (intn)a_size;
-		}
-		state->line_array = XP_REALLOC_BLOCK(state->line_array,
-		    (state->line_array_size * sizeof(LO_Element *)));
-		if (state->line_array == NULL)
-		{
-			XP_UNLOCK_BLOCK(state->larray_array);
-			state->top_state->out_of_memory = TRUE;
-			return;
-		}
-		larray_array[a_indx] = state->line_array;
-	}
-*/
-	/*
-	 * Place this line of elements into the line array.
-	 */
-/*
-	XP_LOCK_BLOCK(line_array, LO_Element **, state->line_array);
-	line_array[a_line - 1] = state->line_list;
-	XP_UNLOCK_BLOCK(state->line_array);
-
-	XP_UNLOCK_BLOCK(state->larray_array);
-#else
-	if (state->line_num > state->line_array_size)
-	{
-		int32 line_inc;
-
-		if (state->line_array_size > (LINE_INC * 10))
-		{
-			line_inc = state->line_array_size / 10;
-		}
-		else
-		{
-			line_inc = LINE_INC;
-		}
-
-		state->line_array = XP_REALLOC_BLOCK(state->line_array,
-			((state->line_array_size + line_inc) *
-			sizeof(LO_Element *)));
-		if (state->line_array == NULL)
-		{
-			state->top_state->out_of_memory = TRUE;
-			return;
-		}
-		state->line_array_size += line_inc;
-	}
-*/
-	/*
-	 * Place this line of elements into the line array.
-	 */
-/*
-	 XP_LOCK_BLOCK(line_array, LO_Element **, state->line_array);
-	line_array[state->line_num - 1] = state->line_list;
-	XP_UNLOCK_BLOCK(state->line_array);
-#endif */
-
-/* XP_WIN16 */
-
-	/*
-	 * connect the complete doubly linked list between this line
-	 * and the last one.
-	 */
-/*
-	if (state->end_last_line != NULL)
-	{
-		state->end_last_line->lo_any.next = state->line_list;
-		state->line_list->lo_any.prev = state->end_last_line;
-	}
-	state->end_last_line = (LO_Element *)linefeed;
-
-	state->line_list = NULL;
-	state->line_num++;
-*/
-	/* 
-	 *Don't draw if we're doing layers...we'll just refresh when the 
-	 * the layer size increases.
-	 */
-/*
-#ifdef LAYERS
-*/
-	/*
-	 * Have the front end display this line.
-	 */
-    /* For layers, only draw if a compositor doesn't exist */
-/*
-    if (!context->compositor)
-*/
-        /* We need to supply a display rectangle that is guaranteed to
-           encompass all elements on the line.  The special 0x3fffffff
-           value is approximately half the range of a 32-bit int, so
-           it leaves room for overflow if arithmetic is done on these
-           values. */
-/*
-        lo_DisplayLine(context, state, (state->line_num - 2),
-                       0, 0, 0x3fffffffL, 0x3fffffffL);
-#else
-        lo_DisplayLine(context, state, (state->line_num - 2),
-                       0, 0, 0x3fffffffL, 0x3fffffffL);
-#endif */ /* LAYERS */
-
 	lo_UpdateStateAfterFlushingLine( context, state, linefeed, FALSE );
-	/*
-	 * We are starting a new line.  Clear any old break
-	 * positions left over, clear the line_list, and increase
-	 * the line number.
-	 */
-	/*
-	state->old_break = NULL;
-	state->old_break_block = NULL;
-	state->old_break_pos = -1;
-	state->old_break_width = 0;
-	state->baseline = 0;
-	*/
 }
 
 
@@ -4081,6 +3636,72 @@ static void *hooked_data_object = NULL;
 static intn hooked_status = 0;
 static PA_Tag *hooked_tag = NULL;
 
+#ifdef DOM
+char *element_names[] = {
+    "NONE",
+    "TEXT",
+    "LINEFEED",
+    "HRULE",
+    "IMAGE",
+    "BULLET",
+    "FORM_ELE",
+    "SUBDOC",
+    "TABLE",
+    "CELL",
+    "EMBED",
+    "EDGE",
+    "JAVA",
+    "SCRIPT",
+    "OBJECT",
+    "PARAGRAPH",
+    "CENTER",
+    "MULTICOL",
+    "FLOAT",
+    "TEXTBLOCK",
+    "LIST",
+    "DESCTITLE",
+    "DESCTEXT",
+    "BLOCKQUOTE",
+    "LAYER",
+    "HEADING",
+    "SPAN",
+    "BUILTIN",
+    "SPACER",
+    "SUPER",
+    "SUB"
+};
+
+static void
+DumpNodeElements(DOM_Node *node)
+{
+#ifdef DEBUG_shaver
+    LO_Element *eptr;
+    if (node->type != NODE_TYPE_ELEMENT &&
+        node->type != NODE_TYPE_TEXT)
+        return;
+    fprintf(stderr, "%s %s elements:",
+            PA_TagString(ELEMENT_PRIV(node)->tagtype),
+            node->name ? node->name : "");
+    if (ELEMENT_PRIV(node)->tagtype == P_TABLE_ROW ||
+        ELEMENT_PRIV(node)->tagtype == P_TABLE_DATA) {
+        fprintf(stderr, " <NOT REALLY AN ELEMENT>\n");
+        return;
+    }
+    eptr = ELEMENT_PRIV(node)->ele_start;
+    if (!eptr) {
+        fprintf(stderr, " <none> (SHOULD REMOVE FROM TREE!)\n");
+        return;
+    }
+    while (eptr && eptr != ELEMENT_PRIV(node)->ele_end) {
+        fprintf(stderr, " %s", element_names[eptr->type]);
+        eptr = eptr->lo_any.next;
+    }
+    if (eptr)
+        fprintf(stderr, " %s", element_names[eptr->type]);
+    fprintf(stderr, "\n");
+#endif
+}
+#endif
 
 /*************************************
  * Function: LO_ProcessTag
@@ -8145,7 +7766,22 @@ void lo_AppendLineListToLineArray( MWContext *context, lo_DocState *state, LO_El
 void lo_UpdateStateAfterFlushingLine( MWContext *context, lo_DocState *state, LO_LinefeedStruct *linefeed, Bool inRelayout )
 {
 	/* LO_LinefeedStruct *linefeed; */
-	
+
+	/*
+	 * We are in a layer within this (sub)doc, stuff the line there instead.
+	 */
+	if (state->layer_nest_level > 0)
+	{
+		lo_AddLineListToLayer(context, state, (LO_Element *)linefeed);
+		state->line_list = NULL;
+		state->old_break = NULL;
+		state->old_break_block = NULL;
+		state->old_break_pos = -1;
+		state->old_break_width = 0;
+		state->baseline = 0;
+		return;
+	}
+
 	lo_AppendLineListToLineArray( context, state, (LO_Element *) linefeed );
 
 	/* 

@@ -70,7 +70,17 @@ struct lo_Block {
 	char *source_url;
 };
 
-static int lo_AppendLayerElement(MWContext *context, lo_DocState *state, int32 is_end);
+static int lo_AppendLayerElement(MWContext *context, lo_DocState *state, 
+								 LO_BlockInitializeStruct *param, 
+								 lo_LayerDocState *layerDoc, Bool is_end);
+
+static PRBool
+lo_SetupDocStateForLayer(lo_DocState *state,
+                         lo_LayerDocState *layer_state,
+                         int32 width,
+                         int32 height,
+                         PRBool is_inflow,
+						 PRBool reflow);
 
 #ifdef XP_MAC
 PRIVATE
@@ -614,9 +624,7 @@ lo_BeginLayer(MWContext *context,
 			  LO_BlockInitializeStruct *param,
 			  XP_Bool is_inflow);
 
-#ifdef XP_MAC
-PRIVATE
-#endif
+
 void
 lo_FreeBlockInitializeStruct(LO_BlockInitializeStruct *param)
 {
@@ -740,6 +748,13 @@ lo_BeginLayerTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	val = (char*)lo_FetchParamValue(context, tag, PARAM_WIDTH);
 	if(val)
 	{
+		Bool is_percent;
+		int32 ival;
+
+		ival = lo_ValueOrPercent(val, &is_percent);
+		if (is_percent)
+			param->percent_width = (uint8) ival;
+
         param->has_width = TRUE;
 		param->width = lo_parse_horizontal_param(val, state, context);
 		XP_FREE(val);
@@ -752,6 +767,13 @@ lo_BeginLayerTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	val = (char*)lo_FetchParamValue(context, tag, PARAM_HEIGHT);
 	if(val)
 	{
+		Bool is_percent;
+		int32 ival;
+
+		ival = lo_ValueOrPercent(val, &is_percent);
+		if (is_percent)
+			param->percent_height = (uint8) ival;
+
         param->has_height = TRUE;
 		param->height = lo_parse_vertical_param(val, state, context);
 		XP_FREE(val);
@@ -818,11 +840,14 @@ lo_BeginLayerTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	param->tag = tag;
     param->ss_tag = NULL;
 
-	if (lo_BeginLayer(context, state, param, tag->type == P_ILAYER))
-		lo_FreeBlockInitializeStruct(param);
+	lo_BeginLayer(context, state, param, tag->type == P_ILAYER);
+
+		/* lo_FreeBlockInitializeStruct(param); */
 }
 
-static int lo_AppendLayerElement(MWContext *context, lo_DocState *state, int32 is_end)
+static int lo_AppendLayerElement(MWContext *context, lo_DocState *state, 
+								 LO_BlockInitializeStruct *param, 
+								 lo_LayerDocState *layerDoc, Bool is_end)
 {
 	LO_LayerStruct *layer;
 	layer = (LO_LayerStruct*)lo_NewElement(context, state, LO_LAYER, NULL, 0);
@@ -842,7 +867,8 @@ static int lo_AppendLayerElement(MWContext *context, lo_DocState *state, int32 i
 	layer->lo_any.ele_id = NEXT_ELEMENT;
 
 	layer->is_end = is_end;
-	layer->initParams = NULL;	/* Not keeping params for now.  Just trying to fix ILAYER crash. */
+	layer->initParams = param;
+	layer->layerDoc = layerDoc;
 	
 	lo_AppendToLineList(context, state, (LO_Element*)layer, 0);
 
@@ -1218,6 +1244,8 @@ lo_SetStyleSheetLayerProperties(MWContext *context,
 	ss_num = STYLESTRUCT_GetNumber(style_struct, HEIGHT_STYLE);
 	if(ss_num)
 	{
+		if(!XP_STRCMP(ss_num->units, "%"))		
+			param->percent_height = (uint8) ss_num->value;
 		LO_AdjustSSUnits(ss_num, HEIGHT_STYLE, context, state);
 		param->height = FEUNITS_Y((int32)ss_num->value, context);
 		param->has_height = TRUE;
@@ -1225,9 +1253,19 @@ lo_SetStyleSheetLayerProperties(MWContext *context,
 	}
 
 	/* don't set width. normal style sheets will handle it */
+	/* NRA: I think we do need to set the width.  But, need to check with Scott. */
+	ss_num = STYLESTRUCT_GetNumber(style_struct, WIDTH_STYLE);
+	if(ss_num)
+	{
+		if(!XP_STRCMP(ss_num->units, "%"))		
+			param->percent_width = (uint8) ss_num->value;
+		LO_AdjustSSUnits(ss_num, WIDTH_STYLE, context, state);
+		param->width = FEUNITS_X((int32)ss_num->value, context);
+		param->has_width = TRUE;
+		STYLESTRUCT_FreeSSNumber(style_struct, ss_num);
+	}
 
 	prop = STYLESTRUCT_GetString(style_struct, CLIP_STYLE);
-
 	if(prop) {
 		param->clip = lo_ParseStyleCoords(context, state, style_struct, prop);
         param->clip_expansion_policy = LO_AUTO_EXPAND_NONE;
@@ -1281,8 +1319,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context,
 	param->tag = NULL;
     param->ss_tag = tag;
 
-	if (lo_BeginLayer(context, state, param, is_inflow))
-		lo_FreeBlockInitializeStruct(param);
+	lo_BeginLayer(context, state, param, is_inflow);
 }
 #endif /* DOM */
 
@@ -1315,7 +1352,7 @@ lo_SaveDocState(lo_Block *block, lo_DocState *state)
 }
 
 static void
-lo_RestoreDocState(lo_Block *block, lo_DocState *state)
+lo_RestoreDocState(lo_Block *block, lo_DocState *state, Bool reflow)
 {
     lo_DocState *saved = block->saved_state;
     lo_FontStack *font_stack;
@@ -1334,7 +1371,8 @@ lo_RestoreDocState(lo_Block *block, lo_DocState *state)
     }
     state->top_state->body_attr = block->old_body_attr;
 
-    lo_SetBaseUrl(state->top_state, block->old_base_url, FALSE);
+	if (!reflow)
+		lo_SetBaseUrl(state->top_state, block->old_base_url, FALSE);
 
 	if (block->is_inflow) {
         state->line_num = saved->line_num;
@@ -1411,7 +1449,8 @@ lo_SetupDocStateForLayer(lo_DocState *state,
                          lo_LayerDocState *layer_state,
                          int32 width,
                          int32 height,
-                         PRBool is_inflow)
+                         PRBool is_inflow,
+						 PRBool reflow)
 {
     lo_Block *block = layer_state->temp_block;
     MWContext *context = block->context;
@@ -1427,7 +1466,7 @@ lo_SetupDocStateForLayer(lo_DocState *state,
 	state->float_list = NULL;
 	state->line_list = NULL;
 
-	if (state->top_state->base_url)
+	if (state->top_state->base_url && !reflow)
 		block->old_base_url = XP_STRDUP(state->top_state->base_url);
 
     if (is_inflow)
@@ -1832,19 +1871,16 @@ lo_begin_layer_internal(MWContext *context,
         inherit_visibility = (PRBool)!XP_STRCASECMP(param->visibility, "inherit");
 	}
 
-	if (is_inflow)
-	{
-		/* Add a new LO_LAYER dummy layout element to the line list.  Relayout will step through
-		   the line list and reflow the layer when the LO_LAYER element is encountered. */
-		if (!lo_AppendLayerElement(context, state, FALSE)) 
-			return;
-	}
+	/* Add a new LO_LAYER dummy layout element to the line list.  Relayout will step through
+	   the line list and reflow the layer when the LO_LAYER element is encountered. */
+	if (!lo_AppendLayerElement(context, state, param, layer_state, FALSE)) 
+		return;
     
 	/* Reset document layout state, saving old state to be restored
        after we lay out this layer. */
     if (!lo_SetupDocStateForLayer(state, layer_state,
                                   block_wrap_width, layer_state->height,
-                                  (PRBool)is_inflow)) {
+                                  (PRBool)is_inflow, PR_FALSE)) {
 		state->top_state->out_of_memory = TRUE;
 		lo_DeleteLayerState(context, state, layer_state);
 		return;
@@ -2128,6 +2164,12 @@ lo_BeginLayer(MWContext *context,
     if (!context->compositor || !param)
         return TRUE;
 
+	lo_begin_layer_internal(context, state, param, is_inflow);
+	return TRUE;
+
+/* We no longer recreate layers on resizes, so the following code that rehooks up
+   layout's layer data structures with the JS layer objects can go away. */
+#if 0 
 	if (state->top_state->resize_reload && !state->in_relayout &&
         !lo_IsAnyCurrentAncestorDynamic(state) && LM_CanDoJS(context)) {
 		lo_RestoreLayerClosure *closure;
@@ -2177,6 +2219,7 @@ lo_BeginLayer(MWContext *context,
 		lo_begin_layer_internal(context, state, param, is_inflow);
 		return TRUE;
 	}
+#endif
 }
 
 void
@@ -2486,14 +2529,11 @@ lo_EndLayer(MWContext *context,
     }
 
     /* Restore document layout state, if necessary */
-    lo_RestoreDocState(block, state);
+    lo_RestoreDocState(block, state, FALSE);
 
-	if (block->is_inflow)
-	{
-		/* Mark the </LAYER> tag by appending a LO_LAYER element to the line list. */
-		if (!lo_AppendLayerElement(context, state, TRUE)) 
-			return;
-	}
+	/* Mark the </(I)LAYER> tag by appending a LO_LAYER element to the line list. */
+	if (!lo_AppendLayerElement(context, state, NULL, NULL, TRUE)) 
+		return;
 
 	if (cell != NULL  && !block->is_inflow)
 	{
@@ -2558,8 +2598,6 @@ lo_EndLayer(MWContext *context,
         ET_SendLoadEvent(context, EVENT_LOAD, NULL, NULL, layer_state->id,
                          state->top_state->resize_reload);
 
-	lo_DeleteBlock(block);
-    layer_state->temp_block = NULL;
 }
 
 void
@@ -2766,7 +2804,7 @@ lo_init_block(MWContext *context, lo_DocState *state,
 	layer_state->temp_block = block;
 
     if (!lo_SetupDocStateForLayer(state, layer_state,
-                                  width, layer_state->height, PR_FALSE)) {
+                                  width, layer_state->height, PR_FALSE, PR_FALSE)) {
         lo_DeleteBlock(block);
         layer_state->temp_block = NULL;
         return NULL;
@@ -3038,4 +3076,272 @@ LO_CreateNewLayer(MWContext *context, int32 wrap_width, int32 parent_layer_id)
     CL_InsertChild(parent_layer, layer, NULL, CL_ABOVE);
 
     return layer_id;
+}
+
+
+/* Called when you see a start LO_LAYER element.  Reflow version of lo_begin_layer_internal */
+void
+lo_BeginLayerReflow(MWContext *context, lo_DocState *state,
+			   LO_BlockInitializeStruct *param,
+			   lo_LayerDocState *layer_state)
+{
+	lo_Block *block;
+    lo_LayerDocState *parent_layer_state;
+	int32 block_wrap_width, x_parent_offset, y_parent_offset;
+	CL_Layer *layer, *parent_layer;
+	int32 block_x, block_y;
+	Bool is_inflow;
+	XP_Rect bbox;
+	LO_CellStruct *cell;
+	lo_GroupLayerClosure *closure;
+	lo_HTMLBlockClosure *content_closure;
+
+    if (!context->compositor || !param || !layer_state)
+        return;
+
+	block = layer_state->temp_block;
+	is_inflow = block->is_inflow;
+	cell = layer_state->cell;
+	layer = layer_state->layer;
+
+    /*
+     * If this is a nested inflow layer, then flush the line list into our parent
+     * (without introducing a line break). This ensures that whatever line changes
+     * (specifically shifting of cell origin) that occur while laying out this ilayer
+     * are reflected in our parent.
+     */
+    if (lo_InsideInflowLayer(state) && is_inflow)
+    {
+        lo_rl_AddBreakAndFlushLine(context, state, LO_LINEFEED_BREAK_SOFT, LO_CLEAR_NONE, FALSE);
+    }
+
+    /* In-flow layers use coordinates that are relative to their
+       "natural", in-flow position. */
+    if (block->is_inflow) {
+        block->x_offset = state->x;
+        block->y_offset = state->y;
+    } else {
+        block->x_offset = 0;
+        block->y_offset = 0;
+    }
+
+    x_parent_offset = y_parent_offset = 0;
+    parent_layer_state = lo_CurrentLayerState(state);
+    parent_layer = parent_layer_state->layer;
+    if (parent_layer)           /* Paranoia */
+        lo_GetLayerXYShift(parent_layer, &x_parent_offset, &y_parent_offset);
+
+	/*
+	 * Get the X position of the block
+	 */
+    if (param->has_left)
+    {
+        block_x = param->left;
+    } else {
+        if (block->is_inflow) {
+            block_x = 0;
+        } else {
+            block_x = state->x - x_parent_offset;
+        }
+	}
+
+	/*
+	 * Get the Y position of the block
+	 */
+    if (param->has_top)
+    {
+		block_y = param->top;
+	} else {
+        if (block->is_inflow) {
+            block_y = 0;
+        } else {
+            block_y = state->y - y_parent_offset;
+        }
+	}
+
+	XP_BZERO(&bbox, sizeof(bbox));
+
+	/*
+	 * Get the width parameter, in absolute or percentage.
+	 * If percentage, make it absolute.
+	 */
+	if (param->has_width)
+		block_wrap_width = param->width;
+    else if (param->has_left)
+        block_wrap_width = state->right_margin - param->left;
+    else
+        block_wrap_width = state->right_margin - state->x;
+
+
+	/*
+	 * Parse the comma separated coordinate list into an
+	 * array of integers.
+	 */
+	if (param->clip)
+	{
+        bbox = *param->clip;
+
+        /* Don't allow the layer's clip to expand */
+        block->clip_expansion_policy = param->clip_expansion_policy;
+	} else {
+        /* Allow the clip to expand to include the layer's contents. */
+        block->clip_expansion_policy = LO_AUTO_EXPAND_CLIP;
+        if (param->has_width)
+            bbox.right = block_wrap_width;
+    }
+
+    if (param->has_height) {
+        layer_state->height = param->height;
+        /* If no CLIP set, set initial bottom edge of layer clip to be
+           the same as HEIGHT. */
+        if (block->clip_expansion_policy & LO_AUTO_EXPAND_CLIP_BOTTOM)
+            bbox.bottom = param->height;
+    }
+
+    /* Treat any value of OVERFLOW, except "hidden" to be the same as
+       "visible".  For compatibility with the older CSS positioning
+       spec, we also treat "none" specially.  Can't set OVERFLOW
+       unless HEIGHT is provided. */
+    if (param->has_height &&
+        param->overflow &&
+        XP_STRCASECMP(param->overflow, "none") &&
+        XP_STRCASECMP(param->overflow, "visible")) {
+
+        /* Constrain all drawing to {0, 0, width, height} box */
+        XP_Rect *viewRect = &layer_state->viewRect;
+        viewRect->left = 0;
+        viewRect->top = 0;
+        viewRect->right = block_wrap_width;
+        viewRect->bottom = param->height;
+    }
+
+	/* Reset document layout state, saving old state to be restored
+       after we lay out this layer. */
+    if (!lo_SetupDocStateForLayer(state, layer_state,
+                                  block_wrap_width, layer_state->height,
+                                  (PRBool)is_inflow, PR_TRUE)) {
+		state->top_state->out_of_memory = TRUE;
+		lo_DeleteLayerState(context, state, layer_state);
+		return;
+	}
+
+	/* Reset cell struct variables that depend on the doc state */
+	cell->ele_id = NEXT_ELEMENT;
+	cell->x = state->x;
+	cell->y = state->y;
+	cell->width = 0;
+	cell->height = 0;
+	cell->x_offset = 0;
+	cell->y_offset = 0;
+
+	
+	closure = (lo_GroupLayerClosure *)CL_GetLayerClientData(layer);
+	if (closure)
+	{
+		/* Reset group layer closure's properties */	
+		XP_ASSERT(closure->type == LO_GROUP_LAYER);
+		closure->x_offset = block->x_offset;
+		closure->y_offset = block->y_offset;			
+		closure->wrap_width	= block_wrap_width;
+	}	
+
+    /* Move layer into position.  Set clip dimensions and initial visibility. */	
+    LO_MoveLayer(layer, block_x, block_y);
+    LO_SetLayerBbox(layer, &bbox);
+    lo_expand_parent_bbox(layer);
+	CL_ChangeLayerFlag(layer, CL_HIDDEN, hidden);
+
+	/* Resize the layer */
+	CL_ResizeLayer(layer, block_wrap_width, layer_state->height);
+
+    /* Push this layer on the layer stack */
+    lo_PushLayerState(state->top_state, layer_state);
+	state->layer_nest_level++;
+}
+
+/* Called when the end LO_LAYER element is seen by the reflow code */
+void
+lo_EndLayerReflow(MWContext *context, lo_DocState *state)
+{
+    lo_LayerDocState *layer_state = lo_CurrentLayerState(state);
+    lo_Block *block = layer_state->temp_block;
+	LO_CellStruct *cell = NULL;
+	int32 right_edge;
+
+    /* During destruction, the compositor can disappear out from underneath us. */
+    if (!context->compositor || !block)
+        return;
+
+    if (! block->is_inflow) {
+        lo_EndLayoutDuringReflow(context, state);
+    }
+    else {
+		lo_rl_FlushLineList(context, state, LO_LINEFEED_BREAK_SOFT, LO_CLEAR_NONE, FALSE);
+    }
+
+    cell = lo_compose_block(context, state, block);
+
+    /* For an in-flow layer, expand the enclosing cell's size on the
+       right and bottom edges to contain any descendant
+       layers. However, we only do this for ILAYER tags, not for
+       layers created as a result of 'position:relative' applied to
+       style-sheet elements. */
+    if (block->is_inflow && !block->uses_ss_positioning) {
+        int32 grow_width, grow_height;
+        XP_Rect bbox;
+
+        CL_GetLayerBbox(block->layer, &bbox);
+        grow_width = (bbox.right - cell->width);
+        grow_height = (bbox.bottom - cell->height);
+
+        /* Position of right-edge of cell containing layer */
+        right_edge = state->x;
+
+        /* If the inflow layer is caused to grow vertically, force a
+           line break. */
+        if (grow_height > 0) {
+			lo_SetLineBreakState ( context, state, FALSE, LO_LINEFEED_BREAK_HARD, 1, TRUE);
+            cell->height = bbox.bottom;
+            state->y += grow_height;
+        }
+
+        /* Compute new position of cell's right edge. */
+        if (grow_width > 0) {
+            right_edge += grow_width;
+            cell->width = bbox.right;
+        }
+
+        /* Set minimum and maximum possible layout widths so that any
+           enclosing table cells will be dimensioned properly. */
+        if (right_edge + state->win_right > state->max_width)
+            state->max_width = right_edge + state->win_right;
+        if (right_edge + state->win_right > state->min_width)
+            state->min_width = right_edge + state->win_right;
+    }
+
+	/* Restore document layout state, if necessary */
+    lo_RestoreDocState(block, state, TRUE);
+
+	if (cell != NULL  && !block->is_inflow)
+	{
+		int32 max_y;
+
+		cell->next = NULL;
+		cell->ele_id = NEXT_ELEMENT;
+		lo_RenumberCell(state, cell);
+
+        /* XXX - Do we really want to expand the document size to
+           include the layer ? */
+		max_y = cell->y + cell->y_offset + cell->height;
+		if (max_y > state->max_height)
+		{
+			state->max_height = max_y;
+		}
+    }
+	state->layer_nest_level--;
+    lo_PopLayerState(state);
+
+	ET_SendLoadEvent(context, EVENT_LOAD, NULL, NULL, layer_state->id, 
+		TRUE);
+
 }

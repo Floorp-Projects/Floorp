@@ -2837,7 +2837,7 @@ lo_ActivateImageLayer(MWContext *context, LO_ImageStruct *image)
         /* Move layer to new position and unhide it. */
         CL_MoveLayer(layer,	x, y);
         CL_SetLayerHidden(layer, PR_FALSE);
-        image->ele_attrmask |= LO_ELE_DRAWN;
+        /* image->ele_attrmask |= LO_ELE_DRAWN; */
 
         /* In order to increase the perceived speed of image loading,
            non-backdrop, non-icon images have the delayed icon, ALT text

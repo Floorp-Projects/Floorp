@@ -143,7 +143,8 @@ void lo_FillInBuiltinGeometry(lo_DocState *state, LO_BuiltinStruct *builtin,
 							  Bool relayout);
 void lo_UpdateStateAfterBuiltinLayout (lo_DocState *state, LO_BuiltinStruct *builtin,
 									   int32 line_inc, int32 baseline_inc);
-
+static void
+lo_rl_SetLayerDimensions( lo_RelayoutState *relay_state, LO_BlockInitializeStruct *layerParams );
 
 /*	NRA - 10/3/97: Main Relayout Entry Point
  *  This function walks through the layout element list and re-lays out
@@ -1530,25 +1531,104 @@ lo_rl_FitTextBlock( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 	return next;
 }
 
+static void
+lo_rl_SetLayerDimensions( lo_RelayoutState *relay_state, LO_BlockInitializeStruct *layerParams )
+{
+	XP_ASSERT(layerParams != NULL);
+	if (layerParams)
+	{
+		if (layerParams->percent_width > 0)
+		{
+			int32 parent_width = lo_GetEnclosingLayerWidth(relay_state->doc_state);
+			layerParams->width = (parent_width * layerParams->percent_width) / 100;
+		}
+
+		if (layerParams->percent_height > 0)
+		{
+			int32 parent_height = lo_GetEnclosingLayerHeight(relay_state->doc_state);
+			layerParams->height = (parent_height * layerParams->percent_height) / 100;
+		}
+	}
+}
+
 static LO_Element *
 lo_rl_FitLayer( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 {
-	LO_Element *next;
+	LO_LayerStruct *layerEle = (LO_LayerStruct *)lo_ele;
+	LO_Element *next = lo_tv_GetNextLayoutElement( relay_state->doc_state, lo_ele, TRUE );
 	
-	XP_ASSERT(lo_ele->lo_layer.is_end == FALSE);
-
-	/* Skip all elements between the start and end LO_LAYER elements */
-	next = lo_ele;
-	do 
+	if(layerEle && layerEle->is_end == FALSE)
 	{
-		next = lo_tv_GetNextLayoutElement( relay_state->doc_state, next, TRUE);
-	} while (next != NULL && next->lo_any.type != LO_LAYER);
+		LO_LayerStruct *endLayer = NULL;
+		LO_Element *lastFloat = NULL;
+		LO_CellStruct *cell = NULL;
 
-	if (next->lo_any.type == LO_LAYER) {
-		XP_ASSERT(next->lo_layer.is_end == TRUE);
-		next = lo_tv_GetNextLayoutElement( relay_state->doc_state, next, TRUE);
+		lo_AppendToLineList( relay_state->context, relay_state->doc_state, lo_ele, 0 );
+		lo_rl_SetLayerDimensions( relay_state, layerEle->initParams );
+		lo_BeginLayerReflow( relay_state->context, relay_state->doc_state, layerEle->initParams,
+			layerEle->layerDoc );
+
+		if (next->lo_any.type == LO_CELL)
+		{
+			/* We are reflowing an ILAYER */
+			cell = (LO_CellStruct *) next;
+
+			/* Set "next" to the layout element following the LO_CELL */
+			next = lo_tv_GetNextLayoutElement( relay_state->doc_state, next, TRUE);
+
+			/* Set the cell's next pointer to null.  We've got to fool the end layer
+			code into thinking that this cell is the last element on the line list. */
+			cell->next = NULL;
+		}
+		else
+		{
+			/* We are reflowing a LAYER.  So, we get the cell from the lo_LayerDocState structure */
+			lo_LayerDocState *layerDoc = (lo_LayerDocState *) layerEle->layerDoc;
+			cell = layerDoc->cell;
+		}
+
+		/* Assert that next is a dummy layout element marking the end of the layer */
+		XP_ASSERT(next->lo_any.type == LO_LAYER && next->lo_layer.is_end == TRUE);
+		endLayer = (LO_LayerStruct *) next;
+
+		next = cell->cell_list;
+		if (next)
+		{
+			/* The next layout element to be fitted is the first element on the cell list.
+			   Once the cell list has been fitted we want to end the layer, so we append
+			   the end layer element to the cell list. */
+			XP_ASSERT(cell->cell_list_end && cell->cell_list_end->lo_any.next == NULL);
+			cell->cell_list_end->lo_any.next = (LO_Element*) endLayer;
+
+			/* We also need to append the cell's float list to the state's float list */
+			lastFloat = lo_GetLastElementInList(relay_state->doc_state->float_list);
+			if (lastFloat)
+				lastFloat->lo_any.next = cell->cell_float_list;				
+		}
+		else
+		{
+			/* There is nothing on the cell's line list to reflow.  So, the float list should
+			   also be null.  The next element to be fitted is set to the end layer element. */
+			XP_ASSERT(cell->cell_float_list == NULL);
+			next = endLayer;
+		}		
+
+		/* Since the elements inside the layer are going to be reflowed while state->layer_nest_level
+		   is greater than zero, lo_FlushLineList() will append the layout elements onto the cell's 
+		   line list.  So, the cell's line list and float lists need to be initialized to null. */
+		if (cell)
+		{
+			cell->cell_list = NULL;
+			cell->cell_float_list = NULL;
+			cell->cell_list_end = NULL;
+		}			
 	}
-
+	else
+	{
+		lo_EndLayerReflow( relay_state->context, relay_state->doc_state );
+		lo_AppendToLineList( relay_state->context, relay_state->doc_state, lo_ele, 0 );
+	}
+		
 	return next;
 }
 
@@ -1703,6 +1783,21 @@ void lo_rl_AppendLinefeedAndFlushLine( MWContext *context, lo_DocState *state, L
 	lo_UpdateFEProgressBar(context, state);
 }
 
+/* Reflow version of lo_FlushLineList() */
+void lo_rl_FlushLineList( MWContext *context, lo_DocState *state, 
+						 uint32 break_type, uint32 clear_type, Bool breaking )
+{
+	LO_LinefeedStruct *linefeed = NULL;
+
+	lo_UpdateStateWhileFlushingLine( context, state );	
+	linefeed = lo_NewLinefeed( state, context, break_type, clear_type );
+	if (linefeed != NULL)
+	{
+		lo_AppendLineFeed( context, state, linefeed, breaking, FALSE );
+	}
+	lo_UpdateStateAfterFlushingLine( context, state, linefeed, TRUE );
+}
+
 /* 
  * Append a dummy layout element in the line list.  When the relayout engine
  * will see this dummy element, it will call lo_LayoutFloat{Image,JavaApp,Embed}()
@@ -1738,8 +1833,6 @@ void lo_rl_ReflowCell( MWContext *context, lo_DocState *state, LO_CellStruct *ce
 	lo_RelayoutState *relay_state;
 	LO_Element *first;
 
-	LO_LockLayout();
-
 	/* Copy over cell line lists, float lists to state */
 	lo_rl_CopyCellToState( cell, state );
 
@@ -1759,16 +1852,12 @@ void lo_rl_ReflowCell( MWContext *context, lo_DocState *state, LO_CellStruct *ce
 	/* Done with relayout.  Destroy relayout state. */
 	lo_rl_DestroyRelayoutState( relay_state );
 
-	LO_UnlockLayout();
-
 }
 
 void lo_rl_ReflowDocState( MWContext *context, lo_DocState *state )
 {
 	lo_RelayoutState *relay_state;
 	LO_Element *first;
-
-	LO_LockLayout();
 
 	/* Create relayout state */
 	relay_state = lo_rl_CreateRelayoutState();
@@ -1783,14 +1872,14 @@ void lo_rl_ReflowDocState( MWContext *context, lo_DocState *state )
 
 	/* Dummy Floating elements on a new line at the end of a document were not getting put into
 	   the line_array.  This code should ensure that anything left on the line_list gets flushed
-	   to the line_array. */	
+	   to the line_array. */
+	/*
 	if (state->line_list != NULL)
 		lo_AppendLineListToLineArray( context, state, lo_GetLastElementInList(state->line_list) );
+	*/
 
 	/* Done with relayout.  Destroy relayout state. */
 	lo_rl_DestroyRelayoutState( relay_state );
-
-	LO_UnlockLayout();
 }
 
 void lo_PrepareElementForReuse( MWContext *context, lo_DocState *state, LO_Element * eptr,

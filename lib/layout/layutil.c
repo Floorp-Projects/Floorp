@@ -229,30 +229,6 @@ lo_SetElementFGColor(LO_Element *element, LO_Color *color)
 	}
 }
 
-void
-lo_ShiftElementList(LO_Element *e_list, int32 dx, int32 dy)
-{
-	LO_Element *eptr;
-
-	if (e_list == NULL)
-	{
-		return;
-	}
-
-	eptr = e_list;
-	while (eptr != NULL)
-	{
-		eptr->lo_any.x += dx;
-		eptr->lo_any.y += dy;
-		if (eptr->type == LO_CELL)
-		{
-			lo_ShiftCell((LO_CellStruct *)eptr, dx, dy);
-		}
-
-		eptr = eptr->lo_any.next;
-	}
-}
-
 NET_ReloadMethod
 LO_GetReloadMethod(MWContext *context)
 {
