@@ -3049,11 +3049,6 @@ nsFontMetricsWin::RealizeFont()
   }
 
   nsFontWin* font = FindFont(dc1, 'a');
-  if (!font) {
-    //XXXrbs isn't this equivalent to ReleaseDC(win, dc1)???
-    ::ReleaseDC(win, mDeviceContext->mDC ? dc : dc1);
-    return NS_ERROR_FAILURE;
-  }
   mFontHandle = font->mFont;
 
   HFONT oldfont = (HFONT)::SelectObject(dc, (HGDIOBJ) mFontHandle);
@@ -3118,7 +3113,7 @@ nsFontMetricsWin::RealizeFont()
 
   ::SelectObject(dc, oldfont);
 
-  ::ReleaseDC(win, mDeviceContext->mDC ? dc : dc1);
+  ::ReleaseDC(win, mDeviceContext->mDC ? dc1 : dc);
   return NS_OK;
 }
 
