@@ -147,12 +147,6 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
     } else
         specLen = flat.Length();
 
-    if (specLen == 0) {
-        mScheme.Truncate();
-        mPath.Truncate();
-        return NS_OK;
-    }
-
     // nsSimpleURI currently restricts the charset to US-ASCII
     nsCAutoString spec;
     NS_EscapeURL(specPtr, specLen, esc_OnlyNonASCII|esc_AlwaysCopy, spec);
