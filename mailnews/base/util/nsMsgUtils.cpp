@@ -696,6 +696,7 @@ nsresult IsRFC822HeaderFieldName(const char *aHdr, PRBool *aResult)
   return NS_OK;
 }
 
+// Warning, currently this routine only works for the Junk Folder
 nsresult
 GetOrCreateFolder(const nsACString &aURI, nsIUrlListener *aListener)
 {
@@ -747,8 +748,19 @@ GetOrCreateFolder(const nsACString &aURI, nsIUrlListener *aListener)
       folderPath->Exists(&exists);
     if (!exists)
     {
+      // Hack to work around a localization bug with the Junk Folder.
+      // Please see Bug #270261 for more information...
+      nsXPIDLString localizedJunkName; 
+      msgFolder->GetName(getter_Copies(localizedJunkName));
+
+      // force the junk folder name to be Junk so it gets created on disk correctly...
+      msgFolder->SetName(NS_LITERAL_STRING("Junk").get());
+
       rv = msgFolder->CreateStorageIfMissing(aListener);
       NS_ENSURE_SUCCESS(rv,rv);
+
+      // now restore the localized folder name...
+      msgFolder->SetName(localizedJunkName.get());
 
       // XXX TODO
       // JUNK MAIL RELATED
