@@ -133,7 +133,9 @@ nsMacMessagePump::DoMessagePump()
 		}
 		else
 		{
-			DoMouseMove(theEvent);
+			DoIdle(theEvent);
+			if (mRunning)
+				LPeriodical::DevoteTimeToIdlers(theEvent);
 		}
 
 		if (mRunning)
@@ -167,7 +169,7 @@ void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 				::PenSize(2,2);
 				::ClipRect(&whichWindow->portRect);
 				::FrameRgn(whichWindow->visRgn);
-#endif	//¥¥¥test¥¥¥
+#endif	//¥¥¥¥¥¥¥¥¥
 		// The app can do its own updates here
 		DispatchOSEventToRaptor(anEvent, whichWindow);
 		::EndUpdate(whichWindow);
@@ -214,20 +216,25 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inDrag:
 			{
+				::SetPort(whichWindow);
 				if (!(anEvent.modifiers & cmdKey))
 					::SelectWindow(whichWindow);
 				Rect screenRect = qd.screenBits.bounds;
 				::InsetRect(&screenRect, 4, 4);
 				screenRect.top += ::LMGetMBarHeight();
 				::DragWindow(whichWindow, anEvent.where, &screenRect);
-// Why is this here? I don't think we want to do this as the event is totally
-// handled by the time ::DragWindow() completes (pinkerton).
-//				DispatchOSEventToRaptor(anEvent, whichWindow);
+
+				::GetMouse(&anEvent.where);
+				::LocalToGlobal(&anEvent.where);
+				// it's not really necessary to send that event to Raptor but (who knows?)
+				// some windows may want to know that they have been moved
+				DispatchOSEventToRaptor(anEvent, whichWindow);
 				break;
 			}
 
 			case inGrow:
 			{
+				::SetPort(whichWindow);
 #ifdef DRAW_ON_RESIZE
 				Point oldPt = anEvent.where;
 				while (::WaitMouseUp())
@@ -269,6 +276,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inGoAway:
 			{
+				::SetPort(whichWindow);
 				if (::TrackGoAway(whichWindow, anEvent.where))
 					DispatchOSEventToRaptor(anEvent, whichWindow);
 				break;
@@ -311,12 +319,6 @@ void nsMacMessagePump::DoMouseUp(EventRecord &anEvent)
 //-------------------------------------------------------------------------
 void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 {
-		static Point	lastWhere = {0, 0};
-
-	if (*(long*)&lastWhere == *(long*)&anEvent.where)
-		return;
-	lastWhere = anEvent.where;
-
 	// same thing as DoMouseUp
 		WindowPtr			whichWindow;
 		PRInt16				partCode;
@@ -338,7 +340,7 @@ void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 {
 	char theChar = (char)(anEvent.message & charCodeMask);
-	if ( (anEvent.what == keyDown) && ((anEvent.modifiers & cmdKey) != 0) )
+	if ((anEvent.what == keyDown) && ((anEvent.modifiers & cmdKey) != 0))
 	{
 		// do a menu key command
 		long menuResult = ::MenuKey(theChar);
@@ -394,6 +396,35 @@ void  nsMacMessagePump::DoActivate(EventRecord &anEvent)
 	}
 
 	DispatchOSEventToRaptor(anEvent, whichWindow);
+}
+
+
+//-------------------------------------------------------------------------
+//
+// DoIdle
+//
+//-------------------------------------------------------------------------
+void  nsMacMessagePump::DoIdle(EventRecord &anEvent)
+{
+	// send mouseMove event
+		static Point	lastWhere = {0, 0};
+
+	if (*(long*)&lastWhere == *(long*)&anEvent.where)
+		return;
+
+	lastWhere = anEvent.where;
+	DoMouseMove(anEvent);
+
+	// idle controls						//¥TODO? : is this really necessary?
+	WindowPtr win = ::FrontWindow();
+	while (win)
+	{
+		::SetPort(win);
+		::SetOrigin(0,0);
+		::ClipRect(&win->portRect);
+		::IdleControls(win);
+		win = ::GetNextWindow(win);
+	}
 }
 
 
