@@ -49,6 +49,14 @@
 
 #include "nsIAtom.h"  //hack!  Need a way to define a component as threadsafe (ie. sta).
 
+/**
+ * Map the nsAUTF8String, nsUTF8String classes to the nsACString and
+ * nsCString classes respectively for now.  These defines need to be removed
+ * once Jag lands his nsUTF8String implementation.
+ */
+#define nsAUTF8String nsACString
+#define nsUTF8String nsCString
+
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
         
 static void* PR_CALLBACK EventHandler(PLEvent *self);
@@ -138,30 +146,62 @@ nsProxyObjectCallInfo::CopyStrings(PRBool copy)
         {
             const nsXPTType& type = paramInfo.GetType();
             uint8 type_tag = type.TagPart();
+            void *ptr = mParameterList[i].val.p;
 
-            if (type_tag == nsXPTType::T_CHAR_STR || type_tag == nsXPTType::T_WCHAR_STR)
-            {
-                if (mParameterList[i].val.p != nsnull)
+            if (!ptr)
+                continue;
+
+            if (copy)
+            {                
+                switch (type_tag) 
                 {
-                    if (copy)
-                    {
-                        void *ptr = mParameterList[i].val.p;
-
-                        if (type_tag == nsXPTType::T_CHAR_STR)
-                        {
-                            mParameterList[i].val.p =
-                                nsCRT::strdup((const char *)ptr);
-                        }
-                        else if (type_tag == nsXPTType::T_WCHAR_STR)
-                        {
-                            mParameterList[i].val.p =
-                                nsCRT::strdup((const PRUnichar *)ptr);
-                        }
-                    }
-                    else
-                    {
-                        Recycle((char*)mParameterList[i].val.p);
-                    }
+                    case nsXPTType::T_CHAR_STR:                                
+                        mParameterList[i].val.p =
+                            PL_strdup((const char *)ptr);
+                        break;
+                    case nsXPTType::T_WCHAR_STR:
+                        mParameterList[i].val.p =
+                            nsCRT::strdup((const PRUnichar *)ptr);
+                        break;
+                    case nsXPTType::T_DOMSTRING:
+                    case nsXPTType::T_ASTRING:
+                        mParameterList[i].val.p = 
+                            new nsString(*((nsAString*) ptr));
+                        break;
+                    case nsXPTType::T_CSTRING:
+                        mParameterList[i].val.p = 
+                            new nsCString(*((nsACString*) ptr));
+                        break;
+                    case nsXPTType::T_UTF8STRING:                        
+                        mParameterList[i].val.p = 
+                            new nsUTF8String(*((nsAUTF8String*) ptr));
+                        break;
+                    default:
+                        // Other types are ignored
+                        break;                    
+                }
+            }
+            else
+            {
+                switch (type_tag) 
+                {
+                    case nsXPTType::T_CHAR_STR:
+                    case nsXPTType::T_WCHAR_STR:
+                        PL_strfree((char*) ptr);
+                        break;
+                    case nsXPTType::T_DOMSTRING:
+                    case nsXPTType::T_ASTRING:
+                        delete (nsString*) ptr;
+                        break;
+                    case nsXPTType::T_CSTRING:
+                        delete (nsCString*) ptr;
+                        break;
+                    case nsXPTType::T_UTF8STRING:
+                        delete (nsUTF8String*) ptr;
+                        break;
+                    default:
+                        // Other types are ignored
+                        break;
                 }
             }
         }
