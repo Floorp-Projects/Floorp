@@ -107,6 +107,7 @@
  */
 
 interface nsIDOMWindowInternal;
+interface nsIDOMElement;
 
 /* nsIWindowsHooksSettings
  *
@@ -189,6 +190,13 @@ interface nsIWindowsHooks : nsISupports {
      * if not done already.
      */
     void startupTurboDisable();
+
+    /**
+     * Accepts an element, either an HTML img element or an element with
+     * a background image, serializes the image to a bitmap file
+     * in the windows directory, and sets it to be the desktop wallpaper.
+     */
+    void setImageAsWallpaper(in nsIDOMElement aImageElement, in boolean useBackground);
 };
 
 %{C++
