@@ -1241,7 +1241,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(
   char * p = aCharsetList;
   char * q = p;
   while (*p != 0) {
-    for (; (*q != ',') && (*q != ' ') && (*q != 0); q++);
+	  for (; (*q != ',') && (*q != ' ') && (*q != 0); q++) {;}
     char temp = *q;
     *q = 0;
 
@@ -1266,7 +1266,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(
     }
 
     *q = temp;
-    for (; (*q == ',') || (*q == ' '); q++);
+    for (; (*q == ',') || (*q == ' '); q++) {;}
     p=q;
   }
 
