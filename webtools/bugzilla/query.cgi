@@ -877,6 +877,8 @@ if ($::COOKIE{'LASTORDER'}) {
     unshift(@orders, $deforder);
 }
 
+if ($::FORM{'order'}) { $deforder = $::FORM{'order'} }
+
 my $defquerytype = $userdefaultquery ? "my" : "the";
 
 print make_options(\@orders, $deforder);
