@@ -24,7 +24,6 @@
 
 #include "macstdlibextras.h"
 
-extern void* Flush_Allocate(size_t, Boolean);
 
 int strcmpcore(const char*, const char*, int, int);
 
@@ -123,7 +122,7 @@ char *strdup(const char *source)
 	
 	/* since this gets freed by an XP_FREE, it must do an XP_ALLOC */
 	/* newAllocation = (char *)XP_ALLOC(stringLength); */
-	newAllocation = (char *)Flush_Allocate(stringLength, 0);
+	newAllocation = (char *)malloc(stringLength);
 	if (newAllocation == NULL)
 		return NULL;
 	BlockMoveData(source, newAllocation, stringLength);
