@@ -3611,7 +3611,7 @@ GetAllFontNames(void)
     if (!gGlobalList) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*", gGlobalList);
+    GetFontNames("-*", gGlobalList);
   }
 
   return NS_OK;
