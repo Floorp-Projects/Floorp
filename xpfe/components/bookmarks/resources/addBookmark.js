@@ -107,7 +107,13 @@ function Startup()
   
   var shouldSetOKButton = true;
   if ("arguments" in window) {
-    switch (window.arguments[4]) {
+    var folderItem;
+    var arg;
+    if (window.arguments.length < 5)
+      arg = null;
+    else
+      arg = window.arguments[4];
+    switch (arg) {
     case "selectFolder":
       // If we're being opened as a folder selection window
       document.getElementById("bookmarknamegrid").setAttribute("hidden", "true");
@@ -117,7 +123,7 @@ function Startup()
       var windowNode = document.getElementById("newBookmarkWindow");
       windowNode.setAttribute("title", windowNode.getAttribute("title-selectFolder"));
       shouldSetOKButton = false;
-      var folderItem = document.getElementById(window.arguments[2]);
+      folderItem = document.getElementById(window.arguments[2]);
       if (folderItem)
         gFolderTree.selectItem(folderItem);
       break;
@@ -138,7 +144,7 @@ function Startup()
       setupFields();
       if (window.arguments[2]) {
         gCreateInFolder = window.arguments[2];
-        var folderItem = document.getElementById(gCreateInFolder);
+        folderItem = document.getElementById(gCreateInFolder);
         if (folderItem)
           gFolderTree.selectItem(folderItem);
       }
