@@ -220,8 +220,8 @@ toolbarbutton:hover > stack > .toolbarbutton-menubutton-dropmarker {
 }
 
 toolbarbutton[disabled="true"] > stack > .toolbarbutton-menubutton-dropmarker,
-toolbarbutton[disabled="true"]:hover > stack > .toolbarbutton-menubutton-dropmarker:hover {
-  list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png");
+toolbarbutton[disabled="true"]:hover > stack > .toolbarbutton-menubutton-dropmarker {
+  list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png") !important;
   -moz-image-region: rect(0px 44px 15px 30px) !important;
 }
 
