@@ -47,7 +47,6 @@ CPPSRCS		= \
 		nsUnicodeToCNS11643p5.cpp \
 		nsUnicodeToCNS11643p6.cpp \
 		nsUnicodeToCNS11643p7.cpp \
-#		nsUCvTw2Module.cpp \
 		$(NULL)
 
 #SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX)
