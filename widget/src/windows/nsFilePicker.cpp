@@ -159,8 +159,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = MAX_PATH;
 
-    // XXX use OFN_NOCHANGEDIR  for M5
-    ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+    ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
     // Get file extension from suggested filename
     //  to detect if we are saving an html file
