@@ -477,8 +477,6 @@ System.out.println();
                     || (source[state.cp] == '|')) {
                 if (headTerm == null) {
                     state.result = new RENode(REOP_EMPTY);
-                    if (state.result == null) 
-                        return false;
                 }
                 else
                     state.result = headTerm;
@@ -760,14 +758,10 @@ System.out.println();
         /* assertions and atoms */
         case '^':
             state.result = new RENode(REOP_BOL);
-            if (state.result == null) 
-                return false;
             state.progLength++;
             return true;
         case '$':
             state.result = new RENode(REOP_EOL);
-            if (state.result == null) 
-                return false;
             state.progLength++;
             return true;
         case '\\':
@@ -777,14 +771,10 @@ System.out.println();
                 /* assertion escapes */
                 case 'b' :
                     state.result = new RENode(REOP_WBDRY);
-                    if (state.result == null) 
-                        return false;
                     state.progLength++;
                     return true;
                 case 'B':
                     state.result = new RENode(REOP_WNONBDRY);
-                    if (state.result == null) 
-                        return false;
                     state.progLength++;
                     return true;
                 /* Decimal escape */
@@ -849,8 +839,6 @@ System.out.println();
                     }
                     /* otherwise, it's a back-reference */   
                     state.result = new RENode(REOP_BACKREF);
-                    if (state.result == null) 
-                        return false;
                     state.result.parenIndex = num - 1;
                     state.progLength += 3;
                     break;
@@ -918,8 +906,6 @@ System.out.println();
                 /* Character class escapes */
                 case 'd':
                     state.result = new RENode(REOP_DIGIT);
-                    if (state.result == null) 
-                        return false;
                     state.progLength++;
                     break;
                 case 'D':
@@ -945,8 +931,6 @@ System.out.println();
                 /* IdentityEscape */
                 default:
                     state.result = new RENode(REOP_FLAT);
-                    if (state.result == null) 
-                        return false;
                     state.result.chr = c;
                     state.result.length = 1;                    
                     state.result.flatIndex = state.cp - 1;
@@ -973,15 +957,11 @@ System.out.println();
                     switch (src[state.cp++]) {
                     case '=':
                         result = new RENode(REOP_ASSERT);
-                        if (result == null) 
-                            return false;
                         /* ASSERT, <next>, ... ASSERTTEST */
                         state.progLength += 4;    
                         break;
                     case '!':
                         result = new RENode(REOP_ASSERT_NOT);
-                        if (result == null) 
-                            return false;
                         /* ASSERTNOT, <next>, ... ASSERTNOTTEST */
                         state.progLength += 4;
                         break;
@@ -991,8 +971,6 @@ System.out.println();
                     result = new RENode(REOP_LPAREN);
                     /* LPAREN, <index>, ... RPAREN, <index> */
                     state.progLength += 6;
-                    if (result == null) 
-                        return false;
                     result.parenIndex = state.parenCount++;
                 }
                 if (!parseDisjunction(state)) 
@@ -1012,8 +990,6 @@ System.out.println();
             }
         case '[':
             state.result = new RENode(REOP_CLASS);
-            if (state.result == null) 
-                return false;
             termStart = state.cp;
             state.result.startIndex = termStart;
             while (true) {
@@ -1047,8 +1023,6 @@ System.out.println();
             break;
         default:
             state.result = new RENode(REOP_FLAT);
-            if (state.result == null) 
-                return false;
             state.result.chr = c;
             state.result.length = 1;                    
             state.result.flatIndex = state.cp - 1;
@@ -1062,8 +1036,6 @@ System.out.println();
             switch (src[state.cp]) {
             case '+':
                 state.result = new RENode(REOP_QUANT);
-                if (state.result == null) 
-                    return false;
                 state.result.min = 1;
                 state.result.max = -1;
                 /* <PLUS>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
@@ -1072,8 +1044,6 @@ System.out.println();
                 break;
             case '*':
                 state.result = new RENode(REOP_QUANT);
-                if (state.result == null) 
-                    return false;
                 state.result.min = 0;
                 state.result.max = -1;
                 /* <STAR>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
@@ -1082,8 +1052,6 @@ System.out.println();
                 break;
             case '?':
                 state.result = new RENode(REOP_QUANT);
-                if (state.result == null) 
-                    return false;
                 state.result.min = 0;
                 state.result.max = 1;
                 /* <OPT>, <parencount>, <parenindex>, <next> ... <ENDCHILD> */
@@ -1097,8 +1065,6 @@ System.out.println();
                     int errIndex = state.cp++;
             
                     state.result = new RENode(REOP_QUANT);
-                    if (state.result == null) 
-                        return false;
 
                     c = src[state.cp];
                     if (isDigit(c)) {
@@ -1579,8 +1545,6 @@ System.out.println();
         charSet.sense = true;
         byteLength = (charSet.length / 8) + 1;    
         charSet.bits = new byte[byteLength];
-        if (charSet.bits == null)
-            return false;
     
         if (src == end)
             return true;
