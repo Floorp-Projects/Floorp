@@ -33,7 +33,7 @@
    class="dialog"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	 xmlns:html="http://www.w3.org/TR/REC-html40"
-   onload = "Startup()"
+   onload = "Startup()" onunload="onUnload()"
    align="vertical" >
 
   <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -55,25 +55,25 @@
           <box align="horizontal">
             <html:div> &LinkURLEditField.label;</html:div>
             <spring flex="100%"/>
-	          <html:div><titledbutton id="RemoveLink" onclick="RemoveLink()" value="&RemoveLinkButton.label;"/>
+	          <html:div><titledbutton id="RemoveLink" onclick="RemoveLink()" value="&RemoveLinkButton.label;" style="width: 7em"/>
             </html:div>
 	        </box>
 	        <box align="horizontal">
   	        <html:input type="text" size="25" length="25" id="hrefInput"></html:input>
             <spring flex="100%"/>
 	          <!-- The div prevents button from being the same height as the input field -->
-            <html:div><titledbutton id="ChooseFile" onclick="ChooseFile()" value="&LinkChooseFileButton.label;"/></html:div>
+            <html:div><titledbutton id="ChooseFile" onclick="ChooseFile()" value="&LinkChooseFileButton.label;" style="width: 7em"/></html:div>
           </box>
         </box>
         <!-- ***** The style: width setting is need to cover a bug in button width resizing when text changes ***** -->
-        <html:div><titledbutton id="MoreFewerButton" align="left" style="width: 10em" onclick="onMoreFewer()"/></html:div>
+        <html:div><titledbutton id="MoreFewerButton" align="left" style="width: 10em" onclick="onMoreFewer()" persist="more"/></html:div>
         <box id="MoreSection" align="vertical">
           <spring class="spacer"/>
           <html:div>&NamedAnchorMsg.label;</html:div>
-          <html:select id="NamedAnchorList" size="3" style="min-width: 1em"  onchange="SelectNamedAnchor()"/>
+          <html:select id="NamedAnchorList" size="3" onchange="SelectNamedAnchor()"/>
           <spring class="spacer"/>
           <html:div>&HeadingMsg.label;</html:div>
-          <html:select id="HeadingsList" size="3" style="min-width: 1em" onchange="SelectHeading()"/>
+          <html:select id="HeadingsList" size="3" onchange="SelectHeading()"/>
           <html:div>&HeadingMsg2.label;</html:div>
         </box>
       </box>

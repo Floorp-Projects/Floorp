@@ -172,9 +172,12 @@ function Startup()
       linkTextInput = null;
     }
   }
-  //TODO; We should get the current state of the "More" area from a pref
-  // Initialize to true, but calling onMoreFewer will toggle to "Fewer"
-  SeeMore = true;
+  var moreAtt =  MoreFewerButton.getAttribute("more");
+  dump("More att: "+moreAtt+"\n");
+
+  // Set the bool to the OPPOSITE of the current state,
+  //   onMoreFewer will toggle it
+  SeeMore = (moreAtt == "1");
   onMoreFewer();
 }
 
@@ -298,7 +301,7 @@ function onMoreFewer()
 //    MoreSection.setAttribute("style","visibility:collapse");
     MoreSection.setAttribute("style","display: none");
     MoreFewerButton.setAttribute("value",GetString("MoreAttributes"));
-    MoreFewerButton.removeAttribute("more");
+    MoreFewerButton.setAttribute("more","0");
     //AdvancedEditSection.setAttribute("style","display: none");
   }
   else
@@ -410,3 +413,9 @@ function onOK()
   return false;
 }
 
+
+function onUnload()
+{
+  dump("Unloading LinkProperties -- More value is "+SeeMore+"\n");
+  document.persist("MoreFewerButton", "more");
+}

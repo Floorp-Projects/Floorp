@@ -31,31 +31,48 @@ toolbox#EditorToolbars {
 }
 
 toolbar#FormatToolbar {
-	background-color: #99CCCC;
+  border-bottom: 1px solid #003366;
 }
 
-/* global.css has "box#status-bar". 
-   This should be a class so we can use the same colors here 
-*/
+/* A small "toolbar" below content, above status */
 box#DisplayModeBar {
-  /*margin-top: -2px;*/
-  margin-bottom: 0px;
-  border-top: 1px solid darkgray;
+  padding: 0px;
+  /* Same as "standard" toolbar background */
+  border-top: 1px solid #003366;
   border-bottom: 1px solid darkgray;
+  margin-bottom: 0px;
   min-width:1em;
-  color: white;
-	background-color: #333366;
+  color: black;
+	background-color: #CCCCCC;
 }
 
-titledbutton#TextColorPopupButton {
+toolbar#EditToolbar titledbutton#SaveButton {
+  list-style-image:url(chrome://editor/skin/images/savefile.gif); 
+}
+
+toolbar#EditToolbar titledbutton#SaveButton[dirty="true"] {
+  list-style-image:url(chrome://editor/skin/images/savemod.gif); 
+}
+
+toolbar#FormatToolbar titledbutton:hover {
+    border: 1px solid white;
+}
+
+titledbutton[class~=popup]:hover {
+    border: 1px solid white;
+  list-style-image:url(chrome://editor/skin/images/savefile.gif); 
+}
+
+/* Use negative margins to bring buttons together to look like one */
+toolbar#FormatToolbar titledbutton#TextColorPopupButton {
   margin-right: -3px;
 }
 
-titledbutton#BackColorPopupButton {
+toolbar#FormatToolbar titledbutton#BackColorPopupButton {
   margin-left: -3px;
 }
 
-titledbutton#boldButton {
+toolbar#FormatToolbar titledbutton#boldButton {
   min-width: 16px; 
   font-size: 19px; 
   font-weight: bold; 
@@ -65,11 +82,11 @@ titledbutton#boldButton {
   padding-top: 2px;
 }
 
-titledbutton#boldButton:hover {
+toolbar#FormatToolbar titledbutton#boldButton:hover {
   text-decoration: none;
 }
 
-titledbutton#italicButton {
+toolbar#FormatToolbar titledbutton#italicButton {
   min-width: 16px; 
   font-size: 19px; 
   font-weight: bold; 
@@ -80,11 +97,11 @@ titledbutton#italicButton {
   padding-top: 2px;
 }
 
-titledbutton#italicButton:hover {
+toolbar#FormatToolbar titledbutton#italicButton:hover {
   text-decoration: none;
 }
 
-titledbutton#underlineButton {
+toolbar#FormatToolbar titledbutton#underlineButton {
   min-width: 16px; 
   font-size: 19px; 
   font-weight: normal; 
@@ -95,51 +112,48 @@ titledbutton#underlineButton {
   padding-top: 2px;
 }
 
-titledbutton[class~=DisplayModeButton] {
+box#DisplayModeBar titledbutton[class~=DisplayModeButton] {
   border: 1px solid transparent;
   border-left: 1px solid darkgray;
-  padding: 1px 4px 0px 4px;
+  padding: 0px 4px 0px 4px;
   margin: 0px;
+  /* Same as toolbar.standard titledbutton */
+	color: #CCFFFF;
+	background-color: #003366;
+}
+
+box#DisplayModeBar titledbutton[class~=DisplayModeButton]:hover {
+  border:  1px solid white;
+  padding: 0px 4px 0px 4px;
+  margin: 0px;
+}
+
+box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"] {
+  border:  1px outset white;
+  padding: 1px 4px 0px 4px;
+  margin: -2px 0px 0px 0px;
   color: black;
 	background-color: #99CCCC;
 }
 
-titledbutton[class~=DisplayModeButton]:hover {
+box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"]:hover {
   border:  1px solid white;
-  padding: 1px 4px 0px 4px;
-  margin: 0px;
+  text-decoration: none;
 }
 
-titledbutton[class~=DisplayModeButton][selected="1"] {
-  border:  1px outset outset;
-  padding: 2px 4px 0px 4px;
-  margin: -2px 0px 0px 0px;
-  color: black;
-	background-color: #99FFFF;
-}
-
-titledbutton[class~=DisplayModeButton][selected="1"]:hover {
-  border:  1px solid white;
-}
-
-/* Color must be same as for DisplayModeButton's border-left */
-window html|div.VerticalSeparator { 
+box#DisplayModeBar div.VerticalSeparator { 
 	 height: 100%; 
 	 max-width: 1px; 
-   border-left: 1px solid white;
+   border-left: 1px solid darkgray;
 	 margin: 1px 0px;
 }
 
-titledbutton.PopupButton {
-  min-width: 50px;
-  min-height: 10px;
-  list-style-image: url(chrome://editor/skin/images/left.gif); 
+spring.spacer3 {
+      width:  3px;
+      height: 3px;
 }
 
-titledbutton#SaveButton {
-  list-style-image:url(chrome://editor/skin/images/savefile.gif); 
-}
-
-titledbutton#SaveButton[dirty="true"] {
-  list-style-image:url(chrome://editor/skin/images/savemod.gif); 
+spring.spacer5 {
+      width:  5px;
+      height: 5px;
 }

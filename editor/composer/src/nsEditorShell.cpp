@@ -30,6 +30,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDiskDocument.h"
 #include "nsIDocument.h"
@@ -135,6 +136,53 @@ NS_NewEditorShell(nsIEditorShell** aEditorShell)
 
     NS_ADDREF(*aEditorShell);
     return NS_OK;
+}
+
+/////////////////////////////////////////////////////////////////////////
+// Utility to extract document from a webshell object.
+static nsresult
+GetDocument(nsIWebShell *aWebShell, nsIDocument **aDoc ) 
+{
+  // Get content viewer from the web shell.
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  nsresult res = (aWebShell && aDoc)? aWebShell->GetContentViewer(getter_AddRefs(contentViewer))
+                   : NS_ERROR_NULL_POINTER;
+
+  if ( NS_SUCCEEDED(res) && contentViewer )
+  {
+    // Up-cast to a document viewer.
+    nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
+    if ( docViewer )
+    {
+      // Get the document from the doc viewer.
+      res = docViewer->GetDocument(*aDoc);
+    }
+  }
+  return res;
+}
+
+// Utility to set and attribute of an element (used for throbber)
+static nsresult 
+SetXULDocAttribute( nsIWebShell *shell, const char *id, 
+                    const char *name,  const nsString &value )
+{
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = GetDocument( shell, getter_AddRefs(doc) );
+  if(NS_SUCCEEDED(rv) && doc)
+  {
+    // Up-cast.
+    nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
+    if ( xulDoc )
+    {
+      // Find specified element.
+      nsCOMPtr<nsIDOMElement> elem;
+      rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
+      if ( elem )
+        // Set the text attribute.
+        rv = elem->SetAttribute( name, value );
+    }
+  }
+  return rv;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -390,42 +438,18 @@ nsEditorShell::DoEditorMode(nsIWebShell *aWebShell)
   if (!aWebShell)
       return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIContentViewer> contViewer;
-  aWebShell->GetContentViewer(getter_AddRefs(contViewer));
-  if (contViewer)
+  nsCOMPtr<nsIDocument> Doc;
+  err = GetDocument(aWebShell, getter_AddRefs(Doc));
+  if (NS_SUCCEEDED(err) && Doc)
   {
-    nsCOMPtr<nsIDocumentViewer> docViewer;
-    if (NS_SUCCEEDED(contViewer->QueryInterface(nsIDocumentViewer::GetIID(), (void**)getter_AddRefs(docViewer))))
+    nsCOMPtr<nsIDOMDocument>  DOMDoc;
+    if (NS_SUCCEEDED(Doc->QueryInterface(nsIDOMDocument::GetIID(), (void**)getter_AddRefs(DOMDoc))))
     {
-      nsCOMPtr<nsIDocument> Doc;
-      docViewer->GetDocument(*getter_AddRefs(Doc));
-      if (Doc)
-      {
-        nsCOMPtr<nsIDOMDocument>  DOMDoc;
-        if (NS_SUCCEEDED(Doc->QueryInterface(nsIDOMDocument::GetIID(), (void**)getter_AddRefs(DOMDoc))))
-        {
-          nsCOMPtr<nsIPresShell> presShell = dont_AddRef(GetPresShellFor(aWebShell));
-          if( presShell )
-          {
-            err = InstantiateEditor(DOMDoc, presShell);
-          }
-        }
-      }
+      nsCOMPtr<nsIPresShell> presShell = dont_AddRef(GetPresShellFor(aWebShell));
+      if( presShell )
+        err = InstantiateEditor(DOMDoc, presShell);
     }
-
-#if 0    
-// Not sure if this makes sense any more
-    PRInt32 i, n;
-    aWebShell->GetChildCount(n);
-    for (i = 0; i < n; i++) {
-      nsIWebShell* mChild;
-      aWebShell->ChildAt(i, mChild);
-      DoEditorMode(mChild);
-      NS_RELEASE(mChild);
-    }
-#endif
   }
-  
   return err;
 }
 
@@ -3521,7 +3545,9 @@ nsEditorShell::StopLogging()
 NS_IMETHODIMP
 nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand)
 {
-   return NS_OK;
+  // Start the throbber
+  // TODO: We should also start/stop it for saving and publishing?
+  return SetXULDocAttribute( mWebShell, "Editor:Throbber", "busy", "true" );
 }
 
 NS_IMETHODIMP
@@ -3536,14 +3562,17 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
   // for pages with charsets, this gets called the first time with a 
   // non-zero status value. Don't prepare the editor that time.
   // aStatus will be NS_BINDING_ABORTED then.
+  nsresult res = NS_OK;
 	if (NS_SUCCEEDED(aStatus))
 	{
     nsCOMPtr<nsIURI>  aUrl;
     channel->GetURI(getter_AddRefs(aUrl));
-    return PrepareDocumentForEditing(aUrl);
+    res = PrepareDocumentForEditing(aUrl);
+    if (NS_SUCCEEDED(res))
+      res = SetXULDocAttribute( mWebShell, "Editor:Throbber", "busy", "false" );
   }
   
-  return NS_OK;
+  return res;
 }
 
 NS_IMETHODIMP

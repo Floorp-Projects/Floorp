@@ -44,6 +44,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\spell.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\table.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\anchor.gif           $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\anchor-in-doc.gif    $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\underline.gif	$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\undo.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\text-color.gif $(DIST)\bin\chrome\editor\skin\default\images
@@ -88,6 +89,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\spell.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\table.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\anchor.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\anchor-in-doc.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\underline.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\undo.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\text-color.gif			

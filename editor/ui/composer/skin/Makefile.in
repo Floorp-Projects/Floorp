@@ -46,6 +46,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/spell.gif \
 		$(srcdir)/images/table.gif \
 		$(srcdir)/images/anchor.gif \
+		$(srcdir)/images/anchor-in-doc.gif \
 		$(srcdir)/images/underline.gif \
 		$(srcdir)/images/undo.gif \
 		$(srcdir)/images/text-color.gif \
