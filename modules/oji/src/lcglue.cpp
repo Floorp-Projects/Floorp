@@ -25,7 +25,7 @@
 #include "libmocha.h"
 #include "libevent.h"
 #include "nsJVMManager.h"
-#include "nsIPluginInstancePeer.h"
+#include "nsIPluginInstancePeer2.h"
 //#include "npglue.h"
 #include "nsCCapsManager.h"
 #include "prinrval.h"
@@ -102,21 +102,6 @@ JVMContext* GetJVMContext()
 	return context;
 }
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIJVMManagerIID, NS_IJVMMANAGER_IID);
-static NS_DEFINE_IID(kCJVMManagerCID,  NS_JVMMANAGER_CID);
-static NS_DEFINE_IID(kIThreadManagerIID, NS_ITHREADMANAGER_IID);
-static NS_DEFINE_IID(kIJVMPluginIID, NS_IJVMPLUGIN_IID);
-static NS_DEFINE_IID(kISymantecDebugManagerIID, NS_ISYMANTECDEBUGMANAGER_IID);
-static NS_DEFINE_IID(kIJVMPluginInstanceIID, NS_IJVMPLUGININSTANCE_IID);
-static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID);
-static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
-static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
-static NS_DEFINE_IID(kIJVMConsoleIID, NS_IJVMCONSOLE_IID);
-static NS_DEFINE_IID(kISymantecDebuggerIID, NS_ISYMANTECDEBUGGER_IID);
-static NS_DEFINE_IID(kISecurityContextIID, NS_ISECURITYCONTEXT_IID);
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // LiveConnect callbacks
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +109,6 @@ static NS_DEFINE_IID(kISecurityContextIID, NS_ISECURITYCONTEXT_IID);
 PR_BEGIN_EXTERN_C
 
 #include "jscntxt.h"
-
 
 static JSContext* PR_CALLBACK
 map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp)
@@ -228,7 +212,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 	nsIPluginInstancePeer* pluginPeer;
 	if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
 		nsIJVMPluginTagInfo* tagInfo;
-		if (pluginPeer->QueryInterface(kIJVMPluginTagInfoIID, (void**) &tagInfo) == NS_OK) {
+		if (pluginPeer->QueryInterface(nsIJVMPluginTagInfo::GetIID(), (void**) &tagInfo) == NS_OK) {
 			err = tagInfo->GetMayScript(&mayscript);
 			// PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
 			NS_RELEASE(tagInfo);
@@ -236,7 +220,12 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 		if ( !mayscript ) {
 			*errp = strdup("JSObject.getWindow() requires mayscript attribute on this Applet");
 		} else {
-			err = pluginPeer->GetJSWindow(&window);
+			nsIPluginInstancePeer2* pluginPeer2 = nsnull;
+			if (pluginPeer->QueryInterface(nsIPluginInstancePeer2::GetIID(),
+			                              (void**) &pluginPeer2) == NS_OK) {
+				err = pluginPeer2->GetJSWindow(&window);
+				NS_RELEASE(pluginPeer2);
+			}
 		}
 		NS_RELEASE(pluginPeer);
 	}
