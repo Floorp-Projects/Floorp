@@ -68,10 +68,14 @@ protected:
         NS_DECL_ISUPPORTS
 
         Enumerator();
-        ~Enumerator();
-
-        NS_IMETHOD_(nsISupports*) Next();
-        NS_IMETHOD_(void) Reset();
+        virtual ~Enumerator();
+        
+        virtual nsresult First();
+        virtual nsresult Last();
+        virtual nsresult Next();
+        virtual nsresult Prev();
+        virtual nsresult CurrentItem(nsISupports **aItem);
+        virtual nsresult IsDone(PRBool *aDone);
 
         void Append(nsIRadioButton* aWidget);
         void Remove(nsIRadioButton* aWidget);
