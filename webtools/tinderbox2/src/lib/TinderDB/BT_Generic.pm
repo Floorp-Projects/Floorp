@@ -74,7 +74,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.10 $ )[1];
+$VERSION = ( qw $Revision: 1.11 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -85,6 +85,8 @@ $VERSION = ( qw $Revision: 1.10 $ )[1];
 push @TinderDB::HTML_COLUMNS, TinderDB::BT->new();
 
 
+# name of the bug tracking system
+$BT_NAME = $TinderDB::BT_NAME || "BT";
 
 # remove all records from the database which are older then last_time.
 
@@ -189,7 +191,7 @@ sub status_table_header {
   my (@progress_states) = BTData::get_all_progress_states();
 
   foreach $progress (@progress_states) {  
-    $out .= "\t<th>BT $progress</th>\n";
+    $out .= "\t<th>$BT_NAME $progress</th>\n";
   }
 
   return ($out);
@@ -302,7 +304,7 @@ sub status_table_row {
 	# a link to the cgibin page which displays the bug
 	
 	my ($href) = BTData::bug_id2bug_url($rec);
-	my ($window_title) = "BT Info bug_id: $bug_id";
+	my ($window_title) = "$BT_NAME Info bug_id: $bug_id";
 
 	# we display the list of names in 'teletype font' so that the
 	# names do not bunch together. It seems to make a difference if

@@ -134,7 +134,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.16 $ )[1];
+$VERSION = ( qw $Revision: 1.17 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -147,6 +147,10 @@ push @TinderDB::HTML_COLUMNS, TinderDB::VC_CVS->new();
 
 
 $CURRENT_YEAR = 1900 + (gmtime(time()))[5];
+
+# name of the version control system
+$VC_NAME = $TinderDB::VC_NAME || "CVS";
+
 
 
 
@@ -468,7 +472,7 @@ sub status_table_legend {
   $out .= "\t<table $TinderDB::LEGEND_BORDER>\n";
   
   $out .= ("\t\t<thead><tr><td align=center>".
-           "VC Cell Colors".
+           "$VC_NAME Cell Colors".
            "</td></tr></thead>\n");
 
   foreach $state (TreeData::get_all_tree_states()) {
@@ -486,7 +490,7 @@ sub status_table_legend {
 
 
 sub status_table_header {
-  return ("\t<th>VC checkins</th>\n");
+  return ("\t<th>$VC_NAME checkins</th>\n");
 }
 
 
@@ -650,7 +654,7 @@ sub status_table_row {
                           "linktxt" => "\t\t<tt>$author</tt>",
                           
                           "windowtxt" => $table,
-                          "windowtitle" => ("VC Info ".
+                          "windowtitle" => ("$VC_NAME Info ".
                                             "Author: $author ".
                                             "$time_interval_str "),
 

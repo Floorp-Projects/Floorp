@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.11 $ 
-# $Date: 2001/10/05 22:11:50 $ 
+# $Revision: 1.12 $ 
+# $Date: 2001/10/09 15:30:16 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -210,6 +210,10 @@ $VCDisplayImpl = (
 		  #'VCDisplay::Bonsai',
 		 );
 
+# The name of the version control system as it should appear on the
+# column heading.
+
+$VC_NAME = "CVS";
 
 # Pick one method for storting data, Data::Dumper is slow but text
 # files allows great debugging capabilities and Storable, availible
@@ -240,6 +244,11 @@ $BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
 # to point to the bug tracking CGI programs.
 
 $BT_URL	= 'http://bugzilla.mozilla.org/';
+
+# The name of the bug tracking system as it should appear on the
+# column heading.
+
+$BT_NAME = "BT";
 
 # The default number of hours shown on the status page
 
