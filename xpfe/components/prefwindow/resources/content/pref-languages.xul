@@ -35,23 +35,48 @@
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
-  <html:fieldset style="width: 100%">
-    <html:div>&prefLangDecript;</html:div>
+  <html:fieldset flex="100%">
+    <html:div class="hspace-both">&prefLangDecript;</html:div>
     <spring style="height: 10px;"/>
-    <box align="horizontal" flex="100%" style="width: 100%">
-      <box align="vertical" flex="100%">
-				<html:select name="textstyle" size="5" id="intlAcceptLanguages"
-                     pref="true" preftype="string" prefstring="intl.accept_languages" flex="100%">
-					<html:optgroup>
-						<html:option value="0">&engOption.label;</html:option>
-					</html:optgroup>
-				</html:select>
+    <box align="horizontal" class="hspace-both" flex="100%" style="width: 93%; height: 100%;">
+      <box align="horizontal" flex="100%">
+        <tree id="langTree" class="inset" flex="100%" style="width: 100%; height: 50%">
+          <treecol style="width: 10%"/>
+          <treecol />
+          <treehead>
+            <treerow>
+              <treecell />
+              <treecell value="&languageColumnHeader.label;" />
+            </treerow>
+          </treehead>
+          <treechildren>
+            <treeitem>
+              <treerow>
+                <treecell class="propertylist" value="&engOrder.label;"/>
+                <treecell class="propertylist" value="&engOption.label;"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </tree>
+        <!-- XXX hard coding language value for now until tree is hooked up -->
+        <html:input type="hidden" id="intlAcceptLanguages"
+                    value="&engOption.label;"
+                    pref="true" preftype="string" prefstring="intl.accept_languages"/>
       </box>
+      <spring flex="3%"/>
+      <box align="vertical">
+        <spring flex="100%"/>
+        <html:div><titledbutton id="up" class="dialog push up" /></html:div>
+        <html:div><titledbutton id="down" class="dialog push down" /></html:div>
+        <spring flex="100%"/>
+      </box>
+      <spring flex="3%"/>
       <box align="vertical">
 				<titledbutton class="dialog push" value="&addButton.label;"/>
 				<titledbutton class="dialog push" value="&deleteButton.label;"/>
       </box>
     </box>
-    <spring style="height: 37px;"/>
   </html:fieldset>
+  <spring flex="75%"/>
+  
 </window>
