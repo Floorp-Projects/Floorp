@@ -5302,7 +5302,9 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       ProcessReflowCommand(mReflowCommands, aInterruptible, desiredSize, maxSize, *rcx);
       if (aInterruptible) {
         LL_I2L(maxTime, gMaxRCProcessingTime);
-        if (LL_CMP(mAccumulatedReflowTime, >, maxTime))
+        PRInt64 temp;
+        LL_I2L(temp, mAccumulatedReflowTime);
+        if (LL_CMP(temp, >, maxTime))
           break;          
       }
     }
