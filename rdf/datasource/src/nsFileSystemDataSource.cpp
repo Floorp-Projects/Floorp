@@ -171,25 +171,26 @@ nsIRDFResource		*FileSystemDataSource::kNC_pulse;
 nsIRDFResource		*FileSystemDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FileSystemDataSource::kRDF_type;
 
+static const char	kFileProtocol[] = "file://";
 
 
 
 PRBool
 FileSystemDataSource::isFileURI(nsIRDFResource *r)
 {
-	PRBool		isFileURI = PR_FALSE;
+	PRBool		isFileURIFlag = PR_FALSE;
 	nsXPIDLCString uri;
 	
 	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, "file://", 7))
+	if (!strncmp(uri, kFileProtocol, sizeof(kFileProtocol) - 1))
 	{
 		// XXX HACK HACK HACK
 		if (!strchr(uri, '#'))
 		{
-			isFileURI = PR_TRUE;
+			isFileURIFlag = PR_TRUE;
 		}
 	}
-	return(isFileURI);
+	return(isFileURIFlag);
 }
 
 
@@ -241,7 +242,11 @@ FileSystemDataSource::~FileSystemDataSource (void)
     }
 }
 
+
+
 NS_IMPL_ISUPPORTS(FileSystemDataSource, nsIRDFDataSource::GetIID());
+
+
 
 NS_IMETHODIMP
 FileSystemDataSource::GetURI(char **uri)
@@ -288,7 +293,7 @@ FileSystemDataSource::GetSources(nsIRDFResource *property,
                                  PRBool tv,
                                  nsISimpleEnumerator **sources /* out */)
 {
-    NS_NOTYETIMPLEMENTED("write me");
+	NS_NOTYETIMPLEMENTED("write me");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -300,17 +305,17 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
                                 PRBool tv,
                                 nsIRDFNode **target /* out */)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
-    if (! source)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(source != nsnull, "null ptr");
+	if (! source)
+		return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(property != nsnull, "null ptr");
-    if (! property)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(property != nsnull, "null ptr");
+	if (! property)
+		return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(target != nsnull, "null ptr");
-    if (! target)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(target != nsnull, "null ptr");
+	if (! target)
+		return NS_ERROR_NULL_POINTER;
 
 	nsresult		rv = NS_RDF_NO_VALUE;
 
@@ -395,23 +400,24 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 }
 
 
+
 NS_IMETHODIMP
 FileSystemDataSource::GetTargets(nsIRDFResource *source,
-								 nsIRDFResource *property,
-								 PRBool tv,
-								 nsISimpleEnumerator **targets /* out */)
+				nsIRDFResource *property,
+				PRBool tv,
+				nsISimpleEnumerator **targets /* out */)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
-    if (! source)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(source != nsnull, "null ptr");
+	if (! source)
+		return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(property != nsnull, "null ptr");
-    if (! property)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(property != nsnull, "null ptr");
+	if (! property)
+		return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(targets != nsnull, "null ptr");
-    if (! targets)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(targets != nsnull, "null ptr");
+	if (! targets)
+		return NS_ERROR_NULL_POINTER;
 
 	// we only have positive assertions in the file system data source.
 	if (! tv)
@@ -541,6 +547,7 @@ FileSystemDataSource::Unassert(nsIRDFResource *source,
 }
 
 
+
 NS_IMETHODIMP
 FileSystemDataSource::Change(nsIRDFResource* aSource,
 							 nsIRDFResource* aProperty,
@@ -549,6 +556,7 @@ FileSystemDataSource::Change(nsIRDFResource* aSource,
 {
 	return NS_RDF_ASSERTION_REJECTED;
 }
+
 
 
 NS_IMETHODIMP
@@ -560,6 +568,8 @@ FileSystemDataSource::Move(nsIRDFResource* aOldSource,
 	return NS_RDF_ASSERTION_REJECTED;
 }
 
+
+
 NS_IMETHODIMP
 FileSystemDataSource::HasAssertion(nsIRDFResource *source,
                              nsIRDFResource *property,
@@ -567,21 +577,21 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
                              PRBool tv,
                              PRBool *hasAssertion /* out */)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
-    if (! source)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(source != nsnull, "null ptr");
+	if (! source)
+		return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(property != nsnull, "null ptr");
-    if (! property)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(property != nsnull, "null ptr");
+	if (! property)
+		return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(target != nsnull, "null ptr");
-    if (! target)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(target != nsnull, "null ptr");
+	if (! target)
+		return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(hasAssertion != nsnull, "null ptr");
-    if (! hasAssertion)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(hasAssertion != nsnull, "null ptr");
+	if (! hasAssertion)
+		return NS_ERROR_NULL_POINTER;
 
 	// we only have positive assertions in the file system data source.
 	if (! tv) {
@@ -611,7 +621,7 @@ NS_IMETHODIMP
 FileSystemDataSource::ArcLabelsIn(nsIRDFNode *node,
                             nsISimpleEnumerator ** labels /* out */)
 {
-    NS_NOTYETIMPLEMENTED("write me");
+	NS_NOTYETIMPLEMENTED("write me");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -621,15 +631,15 @@ NS_IMETHODIMP
 FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
                              nsISimpleEnumerator **labels /* out */)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
-    if (! source)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(source != nsnull, "null ptr");
+	if (! source)
+		return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(labels != nsnull, "null ptr");
-    if (! labels)
-        return NS_ERROR_NULL_POINTER;
+	NS_PRECONDITION(labels != nsnull, "null ptr");
+	if (! labels)
+		return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
+	nsresult rv;
 
 	if (source == kNC_FileSystemRoot)
 	{
@@ -722,6 +732,7 @@ FileSystemDataSource::RemoveObserver(nsIRDFObserver *n)
 	mObservers->RemoveElement(n);
 	return NS_OK;
 }
+
 
 
 NS_IMETHODIMP
@@ -856,6 +867,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 }
 
 
+
 PRBool
 FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
 {
@@ -965,5 +977,3 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	*aResult = literal;
 	return NS_OK;
 }
-
-
