@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Owner(s)
+ * Original Author
  * Michael F. Judge mjudge@netscape.com
  */
 
