@@ -23,8 +23,8 @@ mySample.prototype = {
      * properties on the JS object, follow the expected rules for prototype
      * delegation, and make a mean cup of coffee.
      */
-    value getter: function () { return this.val; },
-    value setter: function (newval) { return this.val = newval; },
+    get value() { return this.val; },
+    set value(newval) { return this.val = newval; },
 
     writeValue: function (aPrefix) {
         dump("mySample::writeValue => " + aPrefix + this.val + "\n");
