@@ -843,6 +843,8 @@ case "$target" in
     AC_DEFINE(NO_UDSOCK)
     AC_DEFINE(POLL_WITH_XCONNECTIONNUMBER)
     USE_PTHREADS=1
+    MKSHLIB_FORCE_ALL='-all'
+    MKSHLIB_UNFORCE_ALL='-none'
     ;;
 
 
