@@ -62,7 +62,8 @@
         <menuitem value="doesntcontain" label="&search.doesntcontain.label;"/>
       </menupopup>
     </menulist>
-    <textbox id="searchField" onkeypress="if (event.keyCode == 13) find();" flex="1"/>
+    <textbox id="searchField" onkeypress="if (event.keyCode == 13) find();" flex="1"
+             oninput="doEnabling();"/>
   </hbox>
 
   <separator/>

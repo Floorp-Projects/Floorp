@@ -293,3 +293,25 @@ var fileButton = {
 };
 
 */
+
+// requires mailNavigatorOverlay.xul
+function sendBookmarksLink()
+{
+  var selectedItem = document.getElementById('bookmarksTree').selectedItems[0];
+  sendLink(LITERAL(gBookmarksShell.db, selectedItem, NC_NS + 'URL'),
+           LITERAL(gBookmarksShell.db, selectedItem, NC_NS + 'Name'));
+}
+
+function updateSendLinkItem()
+{
+  var menuitem = document.getElementById("menu_sendLink");
+  if (menuitem) {
+    var selectedItems = document.getElementById("bookmarksTree").selectedItems;
+    var command = document.getElementById("Browser:SendLink");
+    if (selectedItems.length == 1 && selectedItems[0].getAttribute("type") != NC_NS + "Folder")
+      command.removeAttribute("disabled");
+    else
+      command.setAttribute("disabled", "true");
+  }
+}
+           
