@@ -2142,6 +2142,7 @@ function AppendRecentMenuitem(menupopup, title, url, menuIndex)
         itemString += "]";
 
       menuItem.setAttribute("label", itemString);
+      menuItem.setAttribute("crop", "center");
       menuItem.setAttribute("value", url);
       if (accessKey != " ")
         menuItem.setAttribute("accesskey", accessKey);
