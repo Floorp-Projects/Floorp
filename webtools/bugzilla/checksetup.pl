@@ -97,7 +97,6 @@ use strict;
 #
 # This are the --LOCAL-- variables defined in 'localconfig'
 # 
-
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
 # variables from this location.  We don't want these declared here.  They'll
 # automatically get declared in the process of reading in localconfig, and
@@ -123,7 +122,7 @@ sub trim {
 # Here we check for --MODULES--
 #
 
-print "Checking perl modules ...\n";
+print "\nChecking perl modules ...\n";
 unless (eval "require 5.004") {
     die "Sorry, you need at least Perl 5.004\n";
 }
@@ -186,32 +185,24 @@ sub have_vers {
   return $vok;
 }
 
-unless (have_vers("DBI","1.13")) {
-    die "Please install the DBI module. You can do this by running (as root)\n\n",
-        "       perl -MCPAN -eshell\n",
-        "       install DBI\n";
-}
+# Check versions of dependencies.  0 for version = any version acceptible
 
-unless (have_vers("Data::Dumper",0)) { # 0 = any version
-    die "Please install the Data::Dumper module. You can do this by running (as root)\n\n",
-        "       perl -MCPAN -eshell\n",
-        "       install Data::Dumper\n";
-}
+my @missing = ();
+unless (have_vers("DBI","1.13"))     { push @missing,"DBI" }
+unless (have_vers("Data::Dumper",0)) { push @missing,"Data::Dumper" }
+unless (have_vers("Mysql",0))        { push @missing,"Mysql" }
+unless (have_vers("Date::Parse",0))  { push @missing,"Data::Parse" }
 
-unless (have_vers("Mysql",0)) { # 0 = any version
-    die "Please install the Mysql database driver. You can do this by running (as root)\n\n",
-        "       perl -MCPAN -eshell\n",
-        "       install Msql-Mysql\n\n",
-        "Be sure to enable the Mysql emulation!\n";
-}
+# If CGI::Carp was loaded successfully for version checking, it changes the
+# die and warn handlers, we don't want them changed, so we need to stash the
+# original ones and set them back afterwards -- justdave@syndicomm.com
+my $saved_die_handler = $::SIG{__DIE__};
+my $saved_warn_handler = $::SIG{__WARN__};
+unless (have_vers("CGI::Carp",0))    { push @missing,"CGI::Carp" }
+$::SIG{__DIE__} = $saved_die_handler;
+$::SIG{__WARN__} = $saved_warn_handler;
 
-unless (have_vers("Date::Parse",0)) { # 0 = any version
-    die "Please install the Date::Parse module. You can do this by running (as root)\n\n",
-        "       perl -MCPAN -eshell\n",
-        "       install Date::Parse\n";
-}
-
-print "The following two modules are optional:\n";
+print "\nThe following two modules are optional:\n";
 my $charts = 0;
 $charts++ if have_vers("GD","1.19");
 $charts++ if have_vers("Chart::Base","0.99");
@@ -224,8 +215,16 @@ if ($charts != 2) {
     "   install N/NI/NINJAZ/Chart-0.99b.tar.gz\n\n";
 }
 
-
-
+if (@missing > 0) {
+    print "\n\n";
+    print "You are missing some Perl modules which are required by Bugzilla.\n";
+    print "They can be installed by running (as root) the following:\n";
+    foreach my $module (@missing) {
+        print "   perl -MCPAN -e 'install \"$module\"'\n";
+    }
+    print "\n";
+    exit;
+}
 
 
 ###########################################################################
@@ -574,7 +573,10 @@ if ($my_db_check) {
 # removed the $db_name because we don't know it exists yet, and this will fail
 # if we request it here and it doesn't. - justdave@syndicomm.com 2000/09/16
     my $dsn = "DBI:$db_base:;$my_db_host;$my_db_port";
-    my $dbh = DBI->connect($dsn, $my_db_user, $my_db_pass);
+    my $dbh = DBI->connect($dsn, $my_db_user, $my_db_pass)
+      or die "Can't connect to the $db_base database. Is the database " .
+        "installed and\nup and running?  Do you have the correct username " .
+        "and password selected in\nlocalconfig?\n\n";
     printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)");
     my $qh = $dbh->prepare("SELECT VERSION()");
     $qh->execute;
