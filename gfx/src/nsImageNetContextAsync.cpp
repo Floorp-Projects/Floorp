@@ -24,6 +24,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsITimer.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -42,6 +43,7 @@ class ImageConsumer;
 class ImageNetContextImpl : public ilINetContext {
 public:
   ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
+                      nsIURLGroup* aURLGroup,
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg);
   ~ImageNetContextImpl();
@@ -72,6 +74,7 @@ public:
 
   nsVoidArray *mRequests;
   NET_ReloadMethod mReloadPolicy;
+  nsIURLGroup* mURLGroup;
   nsReconnectCB mReconnectCallback;
   void* mReconnectArg;
 };
@@ -333,11 +336,14 @@ ImageConsumer::~ImageConsumer()
 }
 
 ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
+                                         nsIURLGroup* aURLGroup,
                                          nsReconnectCB aReconnectCallback,
                                          void* aReconnectArg)
 {
   NS_INIT_REFCNT();
   mRequests = nsnull;
+  mURLGroup = aURLGroup;
+  NS_IF_ADDREF(mURLGroup);
   mReloadPolicy = aReloadPolicy;
   mReconnectCallback = aReconnectCallback;
   mReconnectArg = aReconnectArg;
@@ -354,6 +360,7 @@ ImageNetContextImpl::~ImageNetContextImpl()
     }
     delete mRequests;
   }
+  NS_IF_RELEASE(mURLGroup);
 }
 
 NS_IMPL_ISUPPORTS(ImageNetContextImpl, kIImageNetContextIID)
@@ -363,7 +370,7 @@ ImageNetContextImpl::Clone()
 {
   ilINetContext *cx;
 
-  if (NS_NewImageNetContext(&cx, mReconnectCallback, mReconnectArg) == NS_OK) {
+  if (NS_NewImageNetContext(&cx, mURLGroup, mReconnectCallback, mReconnectArg) == NS_OK) {
     return cx;
   }
   else {
@@ -400,7 +407,7 @@ ImageNetContextImpl::CreateURL(const char *aURL,
 {
   ilIURL *url;
 
-  if (NS_NewImageURL(&url, aURL) == NS_OK) {
+  if (NS_NewImageURL(&url, aURL, mURLGroup) == NS_OK) {
     return url;
   }
   else {
@@ -490,6 +497,7 @@ ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer)
 
 extern "C" NS_GFX_(nsresult)
 NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
+                      nsIURLGroup* aURLGroup,
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg)
 {
@@ -499,6 +507,7 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
   }
   
   ilINetContext *cx = new ImageNetContextImpl(NET_NORMAL_RELOAD,
+                                              aURLGroup,
                                               aReconnectCallback,
                                               aReconnectArg);
   if (cx == nsnull) {

@@ -22,6 +22,7 @@
 #include "ilINetReader.h"
 #include "ilIURL.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsString.h"
 #include "il_strm.h"
 
@@ -30,7 +31,7 @@ static NS_DEFINE_IID(kIImageURLIID, IL_IURL_IID);
 
 class ImageURLImpl : public ilIURL {
 public:
-  ImageURLImpl(const char *aURL);
+  ImageURLImpl(const char *aURL, nsIURLGroup* aURLGroup);
   ~ImageURLImpl();
 
   NS_DECL_ISUPPORTS
@@ -56,22 +57,21 @@ private:
   ilINetReader *mReader;
 };
 
-ImageURLImpl::ImageURLImpl(const char *aURL)
+ImageURLImpl::ImageURLImpl(const char *aURL, nsIURLGroup* aURLGroup)
 {
     NS_INIT_REFCNT();
-    NS_NewURL(&mURL, aURL);
+    if (nsnull != aURLGroup) {
+      aURLGroup->CreateURL(&mURL, nsnull, aURL, nsnull);
+    } else {
+      NS_NewURL(&mURL, nsnull, aURL);
+    }
     mReader = nsnull;
 }
 
 ImageURLImpl::~ImageURLImpl()
 {
-    if (mURL != nsnull) {
-        NS_RELEASE(mURL);
-    }
-
-    if (mReader != nsnull) {
-        NS_RELEASE(mReader);
-    }
+  NS_IF_RELEASE(mURL);
+  NS_IF_RELEASE(mReader);
 }
 
 nsresult 
@@ -117,25 +117,19 @@ nsrefcnt ImageURLImpl::Release(void)
 void 
 ImageURLImpl::SetReader(ilINetReader *aReader)
 {
-    if (mReader != nsnull) {
-        NS_RELEASE(mReader);
-    }
+  NS_IF_RELEASE(mReader);
 
-    mReader = aReader;
+  mReader = aReader;
 
-    if (mReader != nsnull) {
-        NS_ADDREF(mReader);
-    }
+  NS_IF_ADDREF(mReader);
 }
 
 ilINetReader *
 ImageURLImpl::GetReader()
 {
-    if (mReader != nsnull) {
-        NS_ADDREF(mReader);
-    }
+  NS_IF_ADDREF(mReader);
     
-    return mReader;
+  return mReader;
 }
 
 int 
@@ -178,14 +172,15 @@ ImageURLImpl::SetOwnerId(int aOwnerId)
 }
 
 extern "C" NS_GFX_(nsresult)
-NS_NewImageURL(ilIURL **aInstancePtrResult, const char *aURL)
+NS_NewImageURL(ilIURL **aInstancePtrResult, const char *aURL, 
+               nsIURLGroup* aURLGroup)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
   
-  ilIURL *url = new ImageURLImpl(aURL);
+  ilIURL *url = new ImageURLImpl(aURL, aURLGroup);
   if (url == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -111,7 +111,7 @@ ImageNetContextSyncImpl::CreateURL(const char*      aURL,
 {
   ilIURL *url;
 
-  if (NS_NewImageURL(&url, aURL) == NS_OK) {
+  if (NS_NewImageURL(&url, aURL, nsnull) == NS_OK) {
     return url;
   }
 
