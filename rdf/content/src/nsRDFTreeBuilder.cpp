@@ -384,12 +384,12 @@ RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
     // Now see if there's anything we can do about it.
 
     if ((parentNameSpaceID == kNameSpaceID_XUL) &&
-        ((parentNameAtom == kTreeChildrenAtom) ||
-         (parentNameAtom == kTreeBodyAtom))) {
+        ((parentNameAtom.get() == kTreeChildrenAtom) ||
+         (parentNameAtom.get() == kTreeBodyAtom))) {
         // The parent is a xul:treechildren or xul:treebody...
 
         if ((childNameSpaceID == kNameSpaceID_XUL) &&
-            (childNameAtom == kTreeItemAtom)) {
+            (childNameAtom.get() == kTreeItemAtom)) {
 
             // ...and the child is a tree item. We can do this. First,
             // get the rdf:property out of the child to see what the
@@ -453,14 +453,14 @@ RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
         }
     }
     else if ((parentNameSpaceID == kNameSpaceID_XUL) &&
-             (parentNameAtom == kTreeItemAtom)) {
+             (parentNameAtom.get() == kTreeItemAtom)) {
 
         // The parent is a xul:treeitem. We really only care about
         // treeitems in the body; not treeitems in the header...
         NS_NOTYETIMPLEMENTED("write me");
     }
     else if ((parentNameSpaceID == kNameSpaceID_XUL) &&
-             (parentNameAtom == kTreeCellAtom)) {
+             (parentNameAtom.get() == kTreeCellAtom)) {
 
         // The parent is a xul:treecell. We really only care about
         // cells in the body; not cells in the header...
