@@ -76,7 +76,7 @@ namespace VM {
         SET_PROP, /* object, name, source */
         SUBTRACT, /* dest, source1, source2 */
         THROW,    /* exception object */
-        TRY,      /* catch */
+        TRY      /* catch */
     };
 
     
