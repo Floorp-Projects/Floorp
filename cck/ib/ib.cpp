@@ -4,6 +4,7 @@
 #include "globals.h"
 #include "comp.h"
 #include "ib.h"
+#include "fstream.h"
 #include <afxtempl.h>
 #include <afxdisp.h>
 #include "resource.h"
@@ -144,6 +145,44 @@ void ModifyPref(char *buffer, CString entity, CString newvalue)
 	buf.Insert(i, newvalue);
 
 	strcpy(buffer, (char *)(LPCTSTR) buf);
+}
+
+int ModifyProperties(CString xpifile, CString entity, CString newvalue)
+{
+
+	int rv = TRUE;
+	CString propFile = xpifile;
+	CString tempFile = xpifile + ".temp";
+	char properties[400];
+
+	ofstream tf(tempFile);
+	if(!tf) 
+	{
+		rv = FALSE;
+		cout <<"Cannot open: "<<tempFile<<"\n";
+		return rv;
+	}
+
+	tf<< entity <<"="<<newvalue <<"\n";
+
+	ifstream pf(propFile);
+	if (!pf)
+	{
+		rv = FALSE;
+		cout <<"Cannot open: "<<propFile<<"\n";
+		return rv;
+	}
+	
+	while (!pf.eof()) 
+	{
+		pf.getline(properties,400);
+		tf <<properties<<"\n";
+	}
+	pf.close();
+	tf.close();
+	remove(xpifile);
+	rename(tempFile, xpifile);
+	return rv;
 }
 
 int ModifyJS(CString xpifile, CString entity, CString newvalue)
@@ -318,7 +357,8 @@ int interpret(char *cmd)
 		}
 	}
 	else if ((strcmp(cmdname, "modifyDTD") == 0) ||
-			(strcmp(cmdname, "modifyJS") == 0))
+			(strcmp(cmdname, "modifyJS") == 0) ||
+			(strcmp(cmdname, "modifyProperties") == 0))
 	{
 		char *xpiname	= strtok(NULL, ",)");
 		char *xpifile	= strtok(NULL, ",)");
@@ -339,6 +379,8 @@ int interpret(char *cmd)
 		ExtractXPIFile(xpiname, xpifile);
 		if(strcmp(cmdname, "modifyJS") == 0)
 			ModifyJS(xpifile,entity,newvalue);
+		else if (strcmp(cmdname, "modifyProperties") == 0)
+			ModifyProperties(xpifile,entity,newvalue);
 		else
 			ModifyDTD(xpifile, entity, newvalue);
 	}
