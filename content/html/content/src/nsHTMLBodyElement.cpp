@@ -974,9 +974,27 @@ static nsIHTMLCSSStyleSheet* GetInlineStyleSheet(nsIDocument* aDocument)
 NS_IMETHODIMP
 nsHTMLBodyElement::GetInlineStyleRules(nsISupportsArray* aRules)
 {
+  PRBool useBodyFixupRule = PR_FALSE;
+
   mInner.GetInlineStyleRules(aRules);
 
-  if (nsnull == mInner.mInlineStyleRule) {
+  // The BodyFixupRule only applies when we have HTML as the parent of the BODY
+  // - check if this is the case, and set the flag to use the rule only if 
+  //   the HTML is the parent of the BODY
+  nsCOMPtr<nsIContent> parentElement;
+  GetParent(*getter_AddRefs(parentElement));
+  if (parentElement) {
+    nsCOMPtr<nsIAtom> tag;
+    if (NS_SUCCEEDED(parentElement->GetTag(*getter_AddRefs(tag))) && tag){
+      if (tag.get() == nsHTMLAtoms::html) {
+        // create the fixup rule
+        useBodyFixupRule = PR_TRUE;
+      }
+    }
+  }
+
+  if (nsnull == mInner.mInlineStyleRule &&
+      useBodyFixupRule) {
     nsIHTMLCSSStyleSheet*  sheet = nsnull;
 
     if (nsnull != mInner.mDocument) {  // find style sheet
