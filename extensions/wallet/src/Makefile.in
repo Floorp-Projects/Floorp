@@ -72,9 +72,8 @@ DEFAULTS_FILES	= \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
-		$(NSPR_LIBS) \
-		$(XPCOM_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
