@@ -39,25 +39,67 @@
 namespace JavaScript {
 namespace JSClasses {
 
+    using JSTypes::JSValue;
+    using JSTypes::JSType;
     using JSTypes::JSScope;
     
+    
+    struct JSSlot {
+        const JSType* mType;
+        uint32 mIndex;
+        
+        JSSlot() : mType(0)
+        {
+        }
+    };
+
+#if defined(XP_MAC)
+    // copied from default template parameters in map.
+    typedef gc_allocator<std::pair<const String, JSSlot> > gc_slot_allocator;
+#elif defined(XP_UNIX)
+    typedef JSTypes::gc_map_allocator gc_slot_allocator;
+#elif defined(_WIN32)
+    typedef gc_allocator<JSSlot> gc_slot_allocator;
+#endif
+
     /**
      * Represents a class in the JavaScript 2 (ECMA 4) language.
-     * Since a class is in essence a scope, we make this explicit
-     * by deriving JSClass from JSScope.
+     * Since a class defines a scope, and is defined in a scope,
+     * a new scope is created whose parent scope is the scope of
+     * class definition.
      */
-    class JSClass : public JSScope {
+    class JSClass : public JSType {
     protected:
         String mName;
         JSClass* mSuperClass;
+        JSScope* mScope;        
+        uint32 mSlotCount;
+        std::map<String, JSSlot, std::less<const String>, gc_slot_allocator> mSlots;
     public:
-        JSClass(const String& name, JSClass* superClass = 0)
-            : mName(name), mSuperClass(superClass)
+        JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
+            : JSType(superClass), mName(name), mSuperClass(superClass), mSlotCount(0)
         {
+            mScope = new JSScope(scope);
+            setProperty(widenCString("methods"), JSValue(mScope));
         }
         
         const String& getName()     { return mName; }
         JSClass* getSuperClass()    { return mSuperClass; }
+        JSScope* getScope()         { return mScope; }
+        
+        JSSlot& addSlot(const String& name, const JSType* type)
+        {
+            JSSlot& slot = mSlots[name];
+            ASSERT(slot.mType == 0);
+            slot.mType = type;
+            slot.mIndex = mSlotCount++;
+            return slot;
+        }
+        
+        JSSlot& getSlot(const String& name)
+        {
+            return mSlots[name];
+        }
     };
     
 } /* namespace JSClasses */
