@@ -804,26 +804,6 @@ nsStringArray::IndexOf(const nsAReadableString& aPossibleString) const
   return -1;
 }
 
-PRInt32 
-nsStringArray::IndexOfIgnoreCase(const nsAReadableString& aPossibleString) const
-{
-  if (mImpl)
-  {
-    void** ap = mImpl->mArray;
-    void** end = ap + mImpl->mCount;
-    while (ap < end)
-    {
-      nsString* string = NS_STATIC_CAST(nsString*, *ap);
-      if (!Compare(*string, aPossibleString, nsCaseInsensitiveStringComparator()))
-      {
-        return ap - mImpl->mArray;
-      }
-      ap++;
-    }
-  }
-  return -1;
-}
-
 PRBool 
 nsStringArray::InsertStringAt(const nsAReadableString& aString, PRInt32 aIndex)
 {
@@ -853,17 +833,6 @@ PRBool
 nsStringArray::RemoveString(const nsAReadableString& aString)
 {
   PRInt32 index = IndexOf(aString);
-  if (-1 < index)
-  {
-    return RemoveStringAt(index);
-  }
-  return PR_FALSE;
-}
-
-PRBool 
-nsStringArray::RemoveStringIgnoreCase(const nsAReadableString& aString)
-{
-  PRInt32 index = IndexOfIgnoreCase(aString);
   if (-1 < index)
   {
     return RemoveStringAt(index);
@@ -901,20 +870,9 @@ CompareString(const nsString* aString1, const nsString* aString2, void*)
   return Compare(*aString1, *aString2);
 }
 
-PR_STATIC_CALLBACK(int)
-CompareStringIgnoreCase(const nsString* aString1, const nsString* aString2, void*)
-{
-  return Compare(*aString1, *aString2, nsCaseInsensitiveStringComparator());
-}
-
 void nsStringArray::Sort(void)
 {
   Sort(CompareString, nsnull);
-}
-
-void nsStringArray::SortIgnoreCase(void)
-{
-  Sort(CompareStringIgnoreCase, nsnull);
 }
 
 void nsStringArray::Sort(nsStringArrayComparatorFunc aFunc, void* aData)
@@ -1055,7 +1013,7 @@ nsCStringArray::IndexOfIgnoreCase(const nsCString& aPossibleString) const
     while (ap < end)
     {
       nsCString* string = NS_STATIC_CAST(nsCString*, *ap);
-      if (string->EqualsIgnoreCase(aPossibleString))
+      if (nsCRT::strcasecmp((*string).get(),aPossibleString.get())==0)
       {
         return ap - mImpl->mArray;
       }
