@@ -512,10 +512,12 @@ function GetNextMessageAfterDelete(messages)
 
 	var curMessage = messages[0];
 	var nextMessage = null;
+	var tree = GetThreadTree();
+
 	//search forward
 	while(curMessage)
 	{
-		nextMessage = GetNextMessage(curMessage, GoMessage, false);
+		nextMessage = GetNextMessage(tree, curMessage, GoMessage, false);
 		if(nextMessage)
 		{
 			if(!MessageInSelection(nextMessage, messages))
