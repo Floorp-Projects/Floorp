@@ -319,7 +319,8 @@ pref("security.checkuri", true);
 pref("security.checkdomprops", true);
 pref("security.checkxpconnect", true);
 
-pref("security.policies", "default");
+pref("signed.applets.codebase_principal_support", false);
+
 pref("security.policy.default.htmlinputelement.value", "sameOrigin");
 
 pref("security.policy.default.htmlimageelement.src", "sameOrigin");
@@ -332,10 +333,9 @@ pref("security.policy.default.location.pathname", "sameOrigin");
 pref("security.policy.default.location.port", "sameOrigin");
 pref("security.policy.default.location.protocol", "sameOrigin");
 pref("security.policy.default.location.search", "sameOrigin");
-pref("security.policy.default.location.replace", "sameOrigin");
 pref("security.policy.default.location.tostring", "sameOrigin");
-pref("security.policy.default.location.reload", "sameOrigin");
-pref("security.policy.default.location.replace", "sameOrigin");
+pref("security.policy.default.nslocation.reload", "sameOrigin");
+pref("security.policy.default.nslocation.replace", "sameOrigin");
 
 pref("security.policy.default.htmldocument.anchors", "sameOrigin");
 pref("security.policy.default.htmldocument.applets", "sameOrigin");
@@ -343,12 +343,13 @@ pref("security.policy.default.htmldocument.cookie", "sameOrigin");
 pref("security.policy.default.htmldocument.domain", "sameOrigin");
 pref("security.policy.default.htmldocument.getelementbyid", "sameOrigin");
 pref("security.policy.default.htmldocument.getelementsbyname", "sameOrigin");
-pref("security.policy.default.htmldocument.embeds", "sameOrigin");
 pref("security.policy.default.htmldocument.forms", "sameOrigin");
-pref("security.policy.default.htmldocument.lastmodified", "sameOrigin");
 pref("security.policy.default.htmldocument.links", "sameOrigin");
 pref("security.policy.default.htmldocument.referrer", "sameOrigin");
 pref("security.policy.default.htmldocument.title", "sameOrigin");
 pref("security.policy.default.htmldocument.url", "sameOrigin");
+pref("security.policy.default.nshtmldocument.embeds", "sameOrigin");
+pref("security.policy.default.nshtmldocument.lastmodified", "sameOrigin");
 
-
+pref("security.policy.default.navigator.preference.read", "UniversalPreferencesRead");
+pref("security.policy.default.navigator.preference.write", "UniversalPreferencesWrite");

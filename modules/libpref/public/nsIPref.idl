@@ -27,6 +27,7 @@
 
 
 typedef int (*PrefChangedFunc)(const char *, void *);
+typedef void (*PrefEnumerationFunc)(const char *, void *);
  
 #define NS_PREF_CID                                    \
   { /* {dc26e0e0-ca94-11d1-a9a4-00805f8a7ac4} */       \
@@ -44,6 +45,7 @@ typedef int (*PrefChangedFunc)(const char *, void *);
 [ptr] native JSContext(JSContext);
 [ptr] native JSObject(JSObject);
 native PrefChangedFunc(PrefChangedFunc);
+native PrefEnumerationFunc(PrefEnumerationFunc);
 
 interface nsIFileSpec; 
 
@@ -167,4 +169,17 @@ interface nsIPref : nsISupports {
   string CreateChildList(in string parent_node);
   string NextChild(in string child_list, out short index);
 
+  /**
+   * EnumerateChildren
+   *
+   * Call back function "callback" with every preference string
+   * having prefix "parent". Pass "data" to "callback" when calling.
+   * 
+   * @param parent A string representation of a prefix of preferences
+   * @param callback A function to call back for each matching preference
+   * @param data A piece of data to pass on to the callback
+   */
+  [noscript] void EnumerateChildren(in string parent, 
+                                    in PrefEnumerationFunc callback, 
+                                    in voidStar data);
 };
