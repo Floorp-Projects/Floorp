@@ -59,13 +59,13 @@ NS_IMETHODIMP
 nsPresState::GetStateProperty(const nsString& aName, nsString& aResult)
 {
   // Retrieve from hashtable.
-  nsCOMPtr<nsISupportsString> str;
+  nsCOMPtr<nsISupportsWString> str;
   nsStringKey key(aName);
   if (mPropertyTable)
-    str = dont_AddRef(NS_STATIC_CAST(nsISupportsString*, mPropertyTable->Get(&key)));
+    str = dont_AddRef(NS_STATIC_CAST(nsISupportsWString*, mPropertyTable->Get(&key)));
    
   if (str) {
-    char* data;
+    PRUnichar* data;
     str->GetData(&data);
     aResult = data;
     nsAllocator::Free(data);
@@ -84,11 +84,11 @@ nsPresState::SetStateProperty(const nsString& aName, const nsString& aValue)
   // Add to hashtable
   nsStringKey key(aName);
 
-  nsCOMPtr<nsISupportsString> supportsStr;
-  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                                    NS_GET_IID(nsISupportsString), getter_AddRefs(supportsStr));
+  nsCOMPtr<nsISupportsWString> supportsStr;
+  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+                                                    NS_GET_IID(nsISupportsWString), getter_AddRefs(supportsStr));
 
-  char* val = aValue.ToNewCString();
+  PRUnichar* val = aValue.ToNewUnicode();
   supportsStr->SetData(val);
   nsAllocator::Free(val);
   mPropertyTable->Put(&key, supportsStr);
