@@ -85,6 +85,7 @@
 #include "nsIURI.h"
 #include "nsIImageLoadingContent.h"
 #include "nsINameSpaceManager.h"
+#include "nsITimer.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -1501,6 +1502,52 @@ NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *_retval)
 NS_IMETHODIMP nsAccessible::GetNativeInterface(void **aOutAccessible)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void nsAccessible::DoCommandCallback(nsITimer *aTimer, void *aClosure)
+{
+  NS_ASSERTION(gDoCommandTimer, "How did we get here if there was no gDoCommandTimer?");
+  NS_RELEASE(gDoCommandTimer);
+  gDoCommandTimer = nsnull;
+
+  nsIDOMNode *node = NS_REINTERPRET_CAST(nsIDOMNode*, aClosure);
+  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(node));
+  if (xulElement) {
+    xulElement->Click();
+  }
+  else {
+    nsCOMPtr<nsIDOMHTMLInputElement> htmlElement(do_QueryInterface(node));
+    if (htmlElement)
+      htmlElement->Click();
+  }
+}
+
+/*
+ * Use Timer to execute "Click" command of XUL/HTML element (e.g. menuitem, button...).
+ *
+ * When "Click" is to open a "modal" dialog/window, it won't return untill the
+ * dialog/window is closed. If executing "Click" command directly in
+ * nsXXXAccessible::DoAction, it will block AT-Tools(e.g. GOK) that invoke
+ * "action" of mozilla accessibles direclty.
+ */
+nsresult nsAccessible::DoCommand()
+
+{
+  if (gDoCommandTimer) {
+    // Already have timer going for another command
+    NS_WARNING("Doubling up on do command timers doesn't work. This wasn't expected.");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
+  if (!timer) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  } 
+
+  NS_ADDREF(gDoCommandTimer = timer);
+  return gDoCommandTimer->InitWithFuncCallback(DoCommandCallback,
+                                               (void*)mDOMNode, 0,
+                                               nsITimer::TYPE_ONE_SHOT);
 }
 
 #ifdef MOZ_ACCESSIBILITY_ATK

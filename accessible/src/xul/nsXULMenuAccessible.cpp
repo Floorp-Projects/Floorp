@@ -237,10 +237,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
 NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Select) {   // default action
-    nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(mDOMNode));
-    if (xulElement)
-      xulElement->Click();
-
+    DoCommand();
     nsCOMPtr<nsIAccessible> parentAccessible;
     GetParent(getter_AddRefs(parentAccessible));
     if (parentAccessible) {
