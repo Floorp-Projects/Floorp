@@ -129,6 +129,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "jbsr  _invoke_count_words\n\t"     /* count words */
     "addql #8, sp\n\t"
     "lsll  #2, d0\n\t"      /* *= 4 */
+    "movl  sp, a2\n\t"	    /* save original sp */
     "subl  d0, sp\n\t"      /* make room for params */
     "movl  sp, a0\n\t"
     "movl  %4, sp@-\n\t"
@@ -137,18 +138,22 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "jbsr  _invoke_copy_to_stack\n\t"   /* copy params */
     "addl  #12, sp\n\t"
     "movl  %1, a0\n\t"
-    "movl  a0, sp@-\n\t"
-    "movl  a0@, a0\n\t"
+    "movl  a0@, a1\n\t"
     "movl  %2, d0\n\t"      /* function index */
-    "movl  a0@(12,d0:l:8), a0\n\t"
-    "jbsr  a0@\n\t"         /* safe to not cleanup sp */
-    "movl  d0, %0"
+    "movl  a0, d1\n\t"
+    "movw  a1@(8,d0:l:8), a0\n\t"
+    "addl  a0, d1\n\t"
+    "movl  a1@(12,d0:l:8), a1\n\t"
+    "movl  d1, sp@-\n\t"
+    "jbsr  a1@\n\t"
+    "movl  a2, sp\n\t"	    /* restore original sp */
+    "movl  d0, %0\n\t"
     : "=g" (result)         /* %0 */
     : "g" (that),           /* %1 */
       "g" (methodIndex),    /* %2 */
       "g" (paramCount),     /* %3 */
       "g" (params)          /* %4 */
-    : "a0", "a1", "d0", "d1", "memory"
+    : "a0", "a1", "a2", "d0", "d1", "memory"
     );
   
   return result;

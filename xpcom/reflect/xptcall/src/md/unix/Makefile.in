@@ -105,11 +105,11 @@ endif
 #
 # NetBSD/ARM
 #
-#ifeq ($(OS_ARCH),NetBSD)
-#ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
-#CPPSRCS		:= xptcinvoke_arm.cpp xptcstubs_arm.cpp
-#endif
-#endif
+ifeq ($(OS_ARCH),NetBSD)
+ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_arm_netbsd.cpp xptcstubs_arm_netbsd.cpp
+endif
+endif
 
 ######################################################################
 # HPPA
@@ -181,6 +181,11 @@ CPPSRCS		:= xptcinvoke_ppc_linux.cpp xptcstubs_ppc_linux.cpp
 ASFILES		:= xptcinvoke_asm_ppc_linux.s xptcstubs_asm_ppc_linux.s
 endif
 
+ifneq (,$(filter NetBSDmacppc NetBSDbebox NetBSDofppc NetBSDprep NetBSDamigappc,$(OS_ARCH)$(OS_TEST)))                           
+CPPSRCS		:= xptcinvoke_ppc_netbsd.cpp xptcstubs_ppc_netbsd.cpp
+ASFILES		:= xptcinvoke_asm_ppc_netbsd.s xptcstubs_asm_ppc_netbsd.s
+endif
+
 ifeq ($(OS_ARCH),Rhapsody)
 CPPSRCS		:= xptcinvoke_ppc_rhapsody.cpp xptcstubs_ppc_rhapsody.cpp
 ASFILES		:= xptcinvoke_asm_ppc_rhapsody.s xptcstubs_asm_ppc_rhapsody.s
@@ -196,6 +201,13 @@ ifeq ($(OS_ARCH),Linux)
 ifneq (,$(findstring sparc,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
 ASFILES		:= xptcinvoke_asm_sparc_linux.s xptcstubs_asm_sparc_solaris.s
+endif
+#
+# NetBSD/SPARC
+#
+ifeq ($(OS_ARCH)$(OS_TEST),NetBSDsparc)
+CPPSRCS		:= xptcinvoke_sparc_netbsd.cpp xptcstubs_sparc_netbsd.cpp
+ASFILES		:= xptcinvoke_asm_sparc_netbsd.s xptcstubs_asm_sparc_netbsd.s
 endif
 endif
 #
