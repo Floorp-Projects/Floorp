@@ -748,6 +748,9 @@ public:
         NS_ASSERTION(mNamespaces, "called without matching Init()");
         if (!mNamespaces)
             return;
+        txListIterator iter(mNamespaces);
+        while (iter.hasNext())
+            delete (String*)iter.next();
         delete mNamespaces;
         mNamespaces = NULL;
     }
