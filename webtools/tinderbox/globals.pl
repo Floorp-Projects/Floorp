@@ -197,15 +197,13 @@ sub load_buildlog {
     }
 
     for $t (@treelist) {
-      use Backwards;
-    
-      my ($bw) = Backwards->new("$t->{name}/build.dat") or die;
-
-      while( $_ = $bw->readline ) {
+        open(BUILDLOG, "<$t->{name}/build.dat" );
+        while( <BUILDLOG> ){
             chomp;
             ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname) = 
                 split( /\|/ );
-	    last if $buildtime < $mindate;
+
+
             $buildrec = {    
                         mailtime => $mailtime,
                         buildtime => $buildtime,
@@ -217,11 +215,13 @@ sub load_buildlog {
                         td => $t
                    };
             if( $mailtime > 0 
+                    && $buildtime > $mindate 
                     && ($form{noignore} || !($t->{ignore_builds}->{$buildname} != 0)) 
                 ){
                 push @{$build_list}, $buildrec;
             }
         }
+        close( BUILDLOG );
     }
 }
 
