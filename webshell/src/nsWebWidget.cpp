@@ -51,6 +51,8 @@
 #include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
 
+#include "nsIDocumentLoader.h"
+
 #define UA_CSS_URL "resource:/res/ua.css"
 
 #define GET_OUTER() \
@@ -70,10 +72,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsNativeWidget aParent,
+  NS_IMETHOD Init(nsNativeWidget aParent,
                         const nsRect& aBounds,
                         nsScrollPreference aScrolling = nsScrollPreference_kAuto);
-  virtual nsresult Init(nsNativeWidget aParent,
+  NS_IMETHOD Init(nsNativeWidget aParent,
                         const nsRect& aBounds,
                         nsIDocument* aDocument,
                         nsIPresContext* aPresContext,
@@ -104,7 +106,7 @@ public:
 
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
 
-  NS_IMETHOD LoadURL(const nsString& aURL, nsIStreamListener* aListener,
+  NS_IMETHOD LoadURL(const nsString& aURL, nsIStreamObserver* aObserver,
                      nsIPostData* aPostData);
   virtual nsIDocument* GetDocument();
 
@@ -119,6 +121,8 @@ public:
   NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
   NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
   NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDocument);
+
+  NS_IMETHOD BindToDocument(nsISupports *aDoc, const char *aCommand);
 
 private:
   nsresult ProvideDefaultHandlers();
@@ -137,6 +141,7 @@ private:
   nsIStyleSheet* mUAStyleSheet;
   nsILinkHandler* mLinkHandler;
   nsISupports* mContainer;
+  nsIDocument* mDocument;
   nsIScriptGlobalObject *mScriptGlobal;
   nsIScriptContext* mScriptContext;
 
@@ -159,6 +164,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 // Note: operator new zeros our memory
 WebWidgetImpl::WebWidgetImpl()
 {
+    NS_INIT_REFCNT();
 }
 
 nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -167,8 +173,14 @@ nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+  static NS_DEFINE_IID(kIDocumentWidgetIID, NS_IDOCUMENTWIDGET_IID);
   if (aIID.Equals(kIWebWidgetIID)) {
     *aInstancePtr = (void*)(nsIWebWidget*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDocumentWidgetIID)) {
+    *aInstancePtr = (void*)(nsIDocumentWidget*)this;
     AddRef();
     return NS_OK;
   }
@@ -207,15 +219,26 @@ printf("del %d ", this);
 
   NS_IF_RELEASE(mLinkHandler);
 
+  NS_IF_RELEASE(mDocument);
+
   // Note: release context then shell
   NS_IF_RELEASE(mPresContext);
-  NS_IF_RELEASE(mPresShell);
+
+  if (nsnull != mPresShell) {
+    // Break circular reference first
+    mPresShell->EndObservingDocument();
+
+    // Then release the shell
+    NS_RELEASE(mPresShell);
+  }
+
   NS_IF_RELEASE(mUAStyleSheet);
 
   NS_IF_RELEASE(mScriptContext);
   NS_IF_RELEASE(mScriptGlobal);
   NS_IF_RELEASE(mDeviceContext);
 }
+
 
 void Check(WebWidgetImpl* ww) 
 {
@@ -402,10 +425,15 @@ nsresult WebWidgetImpl::MakeWindow(nsNativeWidget aNativeParent,
   return rv;
 }
 
-nsresult WebWidgetImpl::Init(nsNativeWidget aNativeParent,
-                             const nsRect& aBounds,
-                             nsScrollPreference aScrolling)
+NS_IMETHODIMP
+WebWidgetImpl::Init(nsNativeWidget aNativeParent,
+                    const nsRect& aBounds,
+                    nsScrollPreference aScrolling)
 {
+  if (nsnull == mDocument) {
+      return NS_ERROR_NULL_POINTER;
+  }
+
   // Create presentation context
 
   static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
@@ -423,14 +451,13 @@ nsresult WebWidgetImpl::Init(nsNativeWidget aNativeParent,
   }
 
   rv = NS_NewGalleyContext(&mPresContext);
-
   if (NS_OK != rv) {
     return rv;
   }
 
   mPresContext->Init(mDeviceContext);
-
-  return MakeWindow(aNativeParent, aBounds, aScrolling);
+  rv = Init(aNativeParent, aBounds, mDocument, mPresContext, aScrolling);
+  return rv;
 }
 
 nsresult WebWidgetImpl::InitUAStyleSheet(void)
@@ -474,11 +501,12 @@ nsresult WebWidgetImpl::InitUAStyleSheet(void)
   return rv;
 }
 
-nsresult WebWidgetImpl::Init(nsNativeWidget aNativeParent,
-                             const nsRect& aBounds,
-                             nsIDocument* aDocument,
-                             nsIPresContext* aPresContext,
-                             nsScrollPreference aScrolling)
+NS_IMETHODIMP
+WebWidgetImpl::Init(nsNativeWidget aNativeParent,
+                    const nsRect& aBounds,
+                    nsIDocument* aDocument,
+                    nsIPresContext* aPresContext,
+                    nsScrollPreference aScrolling)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null ptr");
   NS_PRECONDITION(nsnull != aDocument, "null ptr");
@@ -592,13 +620,44 @@ nsresult WebWidgetImpl::ProvideDefaultHandlers()
   return NS_OK;
 }
 
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
+
+NS_IMETHODIMP
+WebWidgetImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
+{
+  nsresult rv;
+
+#ifdef NS_DEBUG
+  printf("WebWidgetImpl::BindToDocument\n");
+#endif
+
+  rv = aDoc->QueryInterface(kIDocumentIID, (void**)&mDocument);
+  return rv;
+
+}
+
+
+
 // XXX need to save old document in case of failure? Does caller do that?
 
 NS_IMETHODIMP
 WebWidgetImpl::LoadURL(const nsString& aURLSpec,
-                       nsIStreamListener* aListener,
+                       nsIStreamObserver* aObserver,
                        nsIPostData* aPostData)
 {
+    nsresult rv = NS_OK;
+///    nsIDocumentLoader* DocLoader;
+
+    PR_ASSERT(0);
+
+///    rv = NS_NewDocumentLoader(&DocLoader);
+///    if (NS_OK == rv) {
+///        rv = DocLoader->LoadURL(aURLSpec, this, nsnull, aObserver, aPostData);
+///    }
+
+    return rv;
+#if 0
+
 #ifdef NS_DEBUG
   printf("WebWidgetImpl::LoadURL: loadURL(");
   fputs(aURLSpec, stdout);
@@ -713,6 +772,7 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
   ForceRefresh();/* XXX temporary */
 
   return NS_OK;
+#endif /* 0 */
 }
 
 nsIDocument* WebWidgetImpl::GetDocument()
@@ -1082,6 +1142,7 @@ nsresult WebWidgetImpl::GetDOMDocument(nsIDOMDocument** aDocument)
 //static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCWebWidget, NS_WEBWIDGET_CID);
+static NS_DEFINE_IID(kCDocumentLoader, NS_DOCUMENTLOADER_CID);
 
 class nsWebWidgetFactory : public nsIFactory
 {   
@@ -1195,17 +1256,28 @@ nsresult nsWebWidgetFactory::LockFactory(PRBool aLock)
 // return the proper factory to the caller
 extern "C" NS_WEB nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 {
+  nsresult rv = NS_OK;
+
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aFactory = new nsWebWidgetFactory(aClass);
+  if (aClass.Equals(kCWebWidget)) {
+    nsIFactory* inst;
 
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    inst = new nsWebWidgetFactory(aClass);
+    NS_IF_ADDREF(inst);
+    *aFactory = inst;
+
+    if (nsnull == inst) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  else if (aClass.Equals(kCDocumentLoader)) {
+    rv = NS_NewDocumentLoaderFactory(aFactory);
   }
 
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+  return rv;
 }
 
 
