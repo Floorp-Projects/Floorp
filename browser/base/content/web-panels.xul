@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 
 <!DOCTYPE window [
 <!ENTITY % webPanelsDTD SYSTEM "chrome://browser/locale/web-panels.dtd" >
@@ -9,6 +9,16 @@
 <page id="webpanels-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+  <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
-  <description style="color:red; margin-top:1em">The implementation of this panel is in progress.</description>
+  <hbox align="center">
+    <label value="Active Panel:"/>
+    <menulist flex="1" label="(None)"/>
+  </hbox>
+  <browser id="browser" type="content" flex="1"
+           onclick="return contentAreaClick(event);"
+           ondragdrop="nsDragAndDrop.drop(event, panelAreaDNDObserver);"/>
 </page>
