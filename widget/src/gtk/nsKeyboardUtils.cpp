@@ -151,12 +151,14 @@ nsXKBModeSwitch::HandleMappingNotify()
   }
   XFreeModifiermap(xmodmap);
 
+#ifdef DEBUG_bzbarsky
   if (!gModeSwitchKeycode1) {
     NS_WARNING("\n\nnsXKBModeSwitch::HandleMappingNotify: no Mode_switch\n\n");
   }
   NS_WARNING("\n\nnsXKBModeSwitch::HandleMappingNotify:");
   NS_WARNING(nsPrintfCString("    gModeSwitchKeycode1 = %d", gModeSwitchKeycode1).get());
   NS_WARNING(nsPrintfCString("    gModeSwitchKeycode2 = %d", gModeSwitchKeycode2).get());
+#endif
 
 #if defined(HAVE_X11_XKBLIB_H) && \
   defined(XkbMajorVersion) && defined(XbMinorVersion)
