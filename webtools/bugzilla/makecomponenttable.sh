@@ -95,7 +95,6 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("I18N Library", "Mozilla", "bobj@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Java Stubs", "Mozilla", "warren@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("JavaScript", "Mozilla", "mccabe@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("JavaScript Debugger", "Mozilla", "jband@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("JavaScript/Java Reflection", "Mozilla", "fur@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Layout", "Mozilla", "rickg@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("LibMocha", "Mozilla", "mlm@netscape.com", "");
