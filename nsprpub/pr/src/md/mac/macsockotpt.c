@@ -173,9 +173,9 @@ static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode otEvent, O
 				if (_PR_MD_GET_INTSOFF()) {
 					dnsContext.thread->md.missedIONotify = PR_TRUE;
 					cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-					return;
 				}
-				DoneWaitingOnThisThread(dnsContext.thread);
+				else
+					DoneWaitingOnThisThread(dnsContext.thread);
 				break;
 		
         case kOTProviderWillClose:
@@ -189,9 +189,10 @@ static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode otEvent, O
 				if (_PR_MD_GET_INTSOFF()) {
 					dnsContext.thread->md.missedIONotify = PR_TRUE;
 					cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-					return;
 				}
-				DoneWaitingOnThisThread(dnsContext.thread);
+				else {
+					DoneWaitingOnThisThread(dnsContext.thread);
+				}
                 break;
 
         default: // or else we don't handle the event
@@ -199,6 +200,8 @@ static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode otEvent, O
 		
 	}
 	// or else we don't handle the event
+	
+	SignalIdleSemaphore();
 }
 
 
@@ -296,10 +299,13 @@ WakeUpNotifiedThread(PRThread *thread, OTResult result)
 		if (_PR_MD_GET_INTSOFF()) {
 			thread->md.missedIONotify = PR_TRUE;
 			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-			return;
 		}
-		DoneWaitingOnThisThread(thread);
+		else {
+			DoneWaitingOnThisThread(thread);
+		}
 	}
+	
+	SignalIdleSemaphore();
 }
 
 // Notification routine
@@ -1169,10 +1175,13 @@ static pascal void  RawEndpointNotifierRoutine(void * contextPtr, OTEventCode co
 		if (_PR_MD_GET_INTSOFF()) {
 			thread->md.asyncNotifyPending = PR_TRUE;
 			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-			return;
 		}
-		DoneWaitingOnThisThread(thread);
+		else {
+			DoneWaitingOnThisThread(thread);
+		}
 	}
+
+	SignalIdleSemaphore();
 }
 
 PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout)
@@ -1583,7 +1592,6 @@ static PRInt32 SendReceiveDgram(PRFileDesc *fd, void *buf, PRInt32 amount,
     PRThread *me = _PR_MD_CURRENT_THREAD();
     PRInt32 bytesLeft = amount;
     TUnitData dgram;
-    OTResult	result;
 
     PR_ASSERT(flags == 0);
     
@@ -1618,13 +1626,13 @@ static PRInt32 SendReceiveDgram(PRFileDesc *fd, void *buf, PRInt32 amount,
 			fd->secret->md.write.thread = me;
 			fd->secret->md.writeReady = PR_FALSE;				// expect the worst
             err = OTSndUData(endpoint, &dgram);
-			if (result != kOTFlowErr)							// hope for the best
+			if (err != kOTFlowErr)							// hope for the best
 				fd->secret->md.writeReady = PR_TRUE;
 		} else {
 			fd->secret->md.read.thread = me;
 			fd->secret->md.readReady = PR_FALSE;				// expect the worst			
             err = OTRcvUData(endpoint, &dgram, NULL);
-			if (result != kOTNoDataErr)							// hope for the best
+			if (err != kOTNoDataErr)							// hope for the best
 				fd->secret->md.readReady = PR_TRUE;
 		}
 

@@ -226,18 +226,7 @@ void _MD_PauseCPU(PRIntervalTime timeout)
 {
     if (timeout != PR_INTERVAL_NO_WAIT)
     {
-        EventRecord theEvent;
-	
-         /*
-            ** Calling WaitNextEvent() here is suboptimal. This routine should
-            ** pause the process until IO or the timeout occur, yielding time to
-            ** other processes on operating systems that require this (Mac OS classic).
-            ** WaitNextEvent() may incur too much latency, and has other problems,
-            ** such as the potential to drop suspend/resume events, and to handle
-            ** AppleEvents at a time at which we're not prepared to handle them.
-         */
-        (void) WaitNextEvent(nullEvent, &theEvent, 1, NULL);
-	   
+        WaitOnIdleSemaphore(timeout);
         (void) _MD_IOInterrupt();
     }
 }
@@ -528,19 +517,25 @@ void _MD_SetIntsOff(PRInt32 ints)
 #pragma mark -
 #pragma mark CRITICAL REGION SUPPORT
 
+
+static PRBool RunningOnOSX()
+{
+    long    systemVersion;
+    OSErr   err = Gestalt(gestaltSystemVersion, &systemVersion);
+    return (err == noErr) && (systemVersion >= 0x00001000);
+}
+
+
 #if MAC_CRITICAL_REGIONS
 
 MDCriticalRegionID  gCriticalRegion;
 
 void InitCriticalRegion()
 {
-    long        systemVersion;
     OSStatus    err;    
     
     // we only need to do critical region stuff on Mac OS X    
-    err = Gestalt(gestaltSystemVersion, &systemVersion);
-    gUseCriticalRegions = (err == noErr) && (systemVersion >= 0x00001000);
-    
+    gUseCriticalRegions = RunningOnOSX();
     if (!gUseCriticalRegions) return;
     
     err = MD_CriticalRegionCreate(&gCriticalRegion);
@@ -585,4 +580,91 @@ void LeaveCritialRegion()
 
 
 #endif // MAC_CRITICAL_REGIONS
+
+//##############################################################################
+//##############################################################################
+#pragma mark -
+#pragma mark IDLE SEMAPHORE SUPPORT
+
+/*
+     Since the WaitNextEvent() in _MD_PauseCPU() is causing all sorts of
+     headache under Mac OS X we're going to switch to MPWaitOnSemaphore()
+     which should do what we want
+*/
+
+#if TARGET_CARBON
+PRBool					gUseIdleSemaphore = PR_FALSE;
+MPSemaphoreID			gIdleSemaphore = NULL;
+#endif
+ProcessSerialNumber		gApplicationProcess;
+
+void InitIdleSemaphore()
+{
+    // we only need to do idle semaphore stuff on Mac OS X
+#if TARGET_CARBON
+	gUseIdleSemaphore = RunningOnOSX();
+	if (gUseIdleSemaphore)
+	{
+		OSStatus  err = MPCreateSemaphore(1 /* max value */, 0 /* initial value */, &gIdleSemaphore);
+		PR_ASSERT(err == noErr);
+	}
+	else
+#endif
+	{
+		GetCurrentProcess(&gApplicationProcess);
+	}
+}
+
+void TermIdleSemaphore()
+{
+#if TARGET_CARBON
+	if (gUseIdleSemaphore)
+	{
+		OSStatus  err = MPDeleteSemaphore(gIdleSemaphore);
+		PR_ASSERT(err == noErr);
+		gUseIdleSemaphore = NULL;
+	}
+#endif
+}
+
+
+void WaitOnIdleSemaphore(PRIntervalTime timeout)
+{
+#if TARGET_CARBON
+	if (gUseIdleSemaphore)
+	{
+		OSStatus  err = MPWaitOnSemaphore(gIdleSemaphore, kDurationMillisecond * PR_IntervalToMilliseconds(timeout));
+		PR_ASSERT(err == noErr);
+	}
+	else
+#endif
+	{
+		EventRecord   theEvent;
+		/*
+		** Calling WaitNextEvent() here is suboptimal. This routine should
+		** pause the process until IO or the timeout occur, yielding time to
+		** other processes on operating systems that require this (Mac OS classic).
+		** WaitNextEvent() may incur too much latency, and has other problems,
+		** such as the potential to drop suspend/resume events.
+		*/
+		(void)WaitNextEvent(nullEvent, &theEvent, 1, NULL);
+	}
+}
+
+
+void SignalIdleSemaphore()
+{
+#if TARGET_CARBON
+	if (gUseIdleSemaphore)
+	{
+		// often we won't be waiting on the semaphore here, so ignore any errors
+		(void)MPSignalSemaphore(gIdleSemaphore);
+	}
+	else
+#endif
+	{
+		WakeUpProcess(&gApplicationProcess);
+	}
+}
+
 
