@@ -293,6 +293,27 @@ nsRange::~nsRange()
   // note that "nsCOMPtr<nsIDOMmNode>()" is the moral equivalent of null
 } 
 
+// for layout module destructor
+void nsRange::Shutdown()
+{
+  if (mMonitor) {
+    PR_DestroyMonitor(mMonitor);
+    mMonitor = nsnull;
+  }
+
+  delete mStartAncestors;      
+  mStartAncestors = nsnull;      
+
+  delete mEndAncestors;        
+  mEndAncestors = nsnull;        
+
+  delete mStartAncestorOffsets; 
+  mStartAncestorOffsets = nsnull; 
+
+  delete mEndAncestorOffsets;  
+  mEndAncestorOffsets = nsnull;  
+}
+
 /******************************************************
  * nsISupports
  ******************************************************/

@@ -47,6 +47,9 @@ public:
   nsRange();
   virtual ~nsRange();
 
+  // for layout module destructor
+  static void Shutdown();
+
   // nsIDOMRange interface
   
   NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned);
