@@ -624,7 +624,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 
-  if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus)) {
+  if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus) &&
+      !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     switch (aEvent->message) {
       case NS_FOCUS_CONTENT:
       {

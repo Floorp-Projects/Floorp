@@ -338,7 +338,8 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                        aFlags, aEventStatus);
 
-  if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus)) {
+  if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus) &&
+      !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     // If this anchor element has an HREF then it is sensitive to
     // mouse events (otherwise ignore them).
     nsAutoString href;
