@@ -38,6 +38,22 @@
 * SUMMARY: arr.sort() should not output |undefined| when |arr| is empty
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=178722
 *
+* ECMA-262 Ed.3: 15.4.4.11 Array.prototype.sort (comparefn)
+*
+* 1. Call the [[Get]] method of this object with argument "length".
+* 2. Call ToUint32(Result(1)).
+* 3. Perform an implementation-dependent sequence of calls to the [[Get]],
+*    [[Put]], and [[Delete]] methods of this object, etc. etc.
+* 4. Return this object.
+*
+*
+* Note that sort() is done in-place on |arr|. In other words, sort() is a
+* "destructive" method rather than a "functional" method. The return value
+* of |arr.sort()| and |arr| are the same object.
+*
+* If |arr| is an empty array, the return value of |arr.sort()| should be
+* an empty array, not the value |undefined| as was occurring in bug 178722.
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
