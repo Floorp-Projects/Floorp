@@ -128,4 +128,7 @@ protected: // Data Members
   nsISupportsArray* mContentChain; // Our content chain
 
   nsCSSFrameConstructor* mFrameConstructor; // We don't own this. (No addref/release allowed, punk.)
+
+  nscoord mRowGroupHeight; // The height of the row group.
+
 }; // class nsTreeRowGroupFrame
