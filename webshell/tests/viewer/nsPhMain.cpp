@@ -39,7 +39,6 @@
 #include "nsBrowserWindow.h"
 #include "nsWidgetsCID.h"
 #include "nsIServiceManager.h"
-#include "nsIImageManager.h"
 #include "nsIComponentManager.h"
 #include "nsIMenuBar.h"
 #include "nsIMenu.h"
@@ -198,8 +197,6 @@ int main(int argc, char **argv)
     gTheApp->Initialize(argc, argv);
     gTheApp->Run();
     delete gTheApp;
-
-    NS_FreeImageManager();
 
     // Shutdown XPCOM
     rv = NS_ShutdownXPCOM(nsnull);
