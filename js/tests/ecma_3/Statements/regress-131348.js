@@ -35,11 +35,15 @@
 *
 *
 * Date:    10 Apr 2002
+* Revised: 14 July 2002
+*
 * SUMMARY: JS should NOT error on |for(i in undefined)|, |for(i in null)|
 *
 * ECMA-262 3rd Edition Final spec says such statements SHOULD error. See:
-* Section 12.6.4  The for-in Statement
-* Section 9.9     ToObject
+*
+*               Section 12.6.4  The for-in Statement
+*               Section 9.9     ToObject
+*
 *
 * But SpiderMonkey has decided NOT to follow this; it's a bug in the spec.
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=131348
