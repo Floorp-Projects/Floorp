@@ -5097,8 +5097,16 @@ XP_TRACE(("lo_PointToLine says line %d\n", line));
          *  to return if no other element is found
         */
         tptrCell = tptr;
-		tptr = lo_XYToCellElement(context, state,
-			(LO_CellStruct *)tptr, x, y, TRUE, into_cells, into_ilayers);
+		tptr = lo_XYToCellElement(context, state, &(tptr->lo_cell),
+			x, y, TRUE, into_cells, into_ilayers);
+        if (!tptr && editMode)
+        {
+            tptr = lo_XYToNearestCellElement(context, state,
+                                             &(tptrCell->lo_cell),
+                                             x, y);
+            if (!tptr)
+                tptr = tptrCell;
+        }
     }
 
 	*ret_x = x;
