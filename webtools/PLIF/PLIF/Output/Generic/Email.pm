@@ -34,8 +34,6 @@ use Net::SMTP; # DEPENDENCY
 @ISA = qw(PLIF::Service);
 1;
 
-# Could cache SMTP object, could move uset Net::SMTP to constructor
-
 sub provides {
     my $class = shift;
     my($service) = @_;
@@ -44,23 +42,31 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
+sub init {
+    my $self = shift;
+    my($app) = @_;
+    $self->SUPER::init(@_);
+    $self->handle(Net::SMTP->new('localhost')); # XXX
+}
+
 # output.generic.email
 sub output {
     my $self = shift;
     my($app, $session, $string) = @_;
-    my $emailAddress = $session->getAddress('email');
-    my $smtp = Net::SMTP->new();
-    $smtp->mail('XXX@spam.hixie.ch');
-    $smtp->to($emailAddress);
-    $smtp->data($string);
-    $smtp->quit;
+    $self->handle->mail('XXX@spam.hixie.ch');
+    $self->handle->to($session->getAddress('email'));
+    $self->handle->data($string);
 }
 
 # protocol.smtp
 sub checkAddress {
+    my $self = shift;
     my($app, $username) = @_;
-    my $smtp = Net::SMTP->new();
-    my $result = $smtp->verify($username);
-    $smtp->quit;
+    my $result = $self->handle->verify($username);
     return $result;
+}
+
+sub DESTROY {
+    my $self = shift;
+    $self->handle->quit();
 }
