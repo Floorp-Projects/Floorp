@@ -734,8 +734,8 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   tmpY = NSTwipsToIntPixels(tmpY, t2p);
 
   //change to screen co-ord
-  nsIWidget *frameWidget;
-  if (NS_SUCCEEDED(tmpFrame->GetWindow(context, &frameWidget))) {
+  nsIWidget *frameWidget = tmpFrame->GetWindow();
+  if (frameWidget) {
     nsRect oldRect(tmpX, tmpY, 0, 0), newRect;
     if (NS_SUCCEEDED(frameWidget->WidgetToScreen(oldRect, newRect))) {
       tmpX = newRect.x;
