@@ -705,6 +705,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
   mDidDrag        = PR_FALSE;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
   if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIRenderingContext> acx;      
     rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
@@ -720,7 +721,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
             if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection,
                                                   (void **)&frameselection))) {
               frameselection->EnableFrameNotification(PR_FALSE);
-              frameselection->TakeFocus(tracker, this, startPos, contentOffset, PR_FALSE);
+              frameselection->TakeFocus(tracker, this, startPos, contentOffset, inputEvent->isShift);
               frameselection->EnableFrameNotification(PR_TRUE);//prevent cyclic call to reset selection.
               NS_RELEASE(frameselection);
             }
