@@ -370,6 +370,7 @@ NS_IMETHODIMP \
 className##Module::CanUnload( nsIComponentManager*, PRBool* canUnload) { \
       if (!canUnload) return NS_ERROR_NULL_POINTER; \
       *canUnload = nsInstanceCounter::CanUnload(); \
+      return NS_OK; \
 } \
 NS_IMPL_IAPPSHELLCOMPONENTIMPL_CTORDTOR( className ) \
 NS_IMPL_NSGETMODULE(className##Module)
