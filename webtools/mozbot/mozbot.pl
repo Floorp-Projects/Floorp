@@ -55,7 +55,7 @@ use Chatbot::Eliza;
 
 $|++;
 
-my $VERSION = "1.33"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.35"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -209,7 +209,6 @@ sub sendmsg {
         $bot->privmsg($who, $msg);
         $lastsenttime = $now;
     } else {
-        debug("queuing: $who $msg");
         push(@msgqueue, [$who, $msg]);
         if (1 == @msgqueue) {
             $bot->schedule(0, \&drainmsgqueue);
@@ -218,10 +217,8 @@ sub sendmsg {
 }
 
 sub drainmsgqueue {
-    debug("In drainmsgqueue");
     if (0 < @msgqueue) {
         my ($who, $msg) = (@{shift(@msgqueue)});
-        debug("-- drainmsgqueue: $who $msg");
         $bot->privmsg($who, $msg);
         $lastsenttime = time();
         if (0 < @msgqueue) {
@@ -365,9 +362,12 @@ sub bot_say {
 
 sub bot_list {
     my ($nick, $cmd, $rest) = (@_);
+    my @list;
     foreach (sort keys %admins) {
-        sendmsg($nick, "$_ $admins{$_}");
+        push(@list, "$_ $admins{$_}");
     }
+    my $spacer = " ... ";
+    saylongline($nick, join($spacer, @list), $spacer);
 }
 
 
