@@ -186,13 +186,13 @@ char *nsMsgSearchNews::EncodeTerm (nsIMsgSearchTerm *term)
   nsCOMPtr <nsIMsgSearchValue> searchValue;
 
   nsresult rv = term->GetValue(getter_AddRefs(searchValue));
-  if (!NS_SUCCEEDED(rv) || !searchValue)
+  if (NS_FAILED(rv) || !searchValue)
     return nsnull;
 
 
   nsXPIDLString intlNonRFC1522Value;
   rv = searchValue->GetStr(getter_Copies(intlNonRFC1522Value));
-	if (!NS_SUCCEEDED(rv) || !intlNonRFC1522Value)
+	if (NS_FAILED(rv) || !intlNonRFC1522Value)
 		return nsnull;
 		
 	PRUnichar *caseInsensitiveValue = EncodeToWildmat (intlNonRFC1522Value);

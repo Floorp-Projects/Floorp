@@ -542,7 +542,7 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
       nsCOMPtr <nsIMsgFolder> inboxFolder;
 
       rv = GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inboxFolder));
-      if (!NS_SUCCEEDED(rv) || numFolders == 0 || !inboxFolder)
+      if (NS_FAILED(rv) || numFolders == 0 || !inboxFolder)
       {
         // create an inbox if we don't have one.
         CreateClientSubfolderInfo("INBOX", kOnlineHierarchySeparatorUnknown,0);
@@ -3596,7 +3596,7 @@ nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
 		rv = mDatabase->ContainsKey(msgKey , &containsKey);
 		// if we don't have the header, don't diddle the flags.
 		// GetMsgHdrForKey will create the header if it doesn't exist.
-		if (!NS_SUCCEEDED(rv) || !containsKey)
+		if (NS_FAILED(rv) || !containsKey)
 			return rv;
 
 		rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(dbHdr));
@@ -4232,7 +4232,7 @@ nsImapMailFolder::NotifySearchHit(nsIMsgMailNewsUrl * aUrl,
                                   const char* searchHitLine)
 {
   nsresult rv = GetDatabase(nsnull /* don't need msg window, that's more for local mbox parsing */);
-  if (!mDatabase || !NS_SUCCEEDED(rv))
+  if (!mDatabase || NS_FAILED(rv))
     return rv;
   // expect search results in the form of "* SEARCH <hit> <hit> ..."
                 // expect search results in the form of "* SEARCH <hit> <hit> ..."
@@ -5076,7 +5076,7 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
           nsCOMPtr <nsIMsgDBHdr> newMailHdr;
           rv = mDatabase->CopyHdrFromExistingHdr(fakeBase + sourceKeyIndex, mailHdr,
             PR_TRUE, getter_AddRefs(newMailHdr));
-          if (!newMailHdr || !NS_SUCCEEDED(rv))
+          if (!newMailHdr || NS_FAILED(rv))
           {
             NS_ASSERTION(PR_FALSE, "failed to copy hdr");
             stopit = rv;

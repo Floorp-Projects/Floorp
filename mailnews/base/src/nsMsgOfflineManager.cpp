@@ -124,7 +124,7 @@ nsresult nsMsgOfflineManager::StopRunning(nsresult exitStatus)
 
 nsresult nsMsgOfflineManager::AdvanceToNextState(nsresult exitStatus)
 {
-  if (!NS_SUCCEEDED(exitStatus))
+  if (NS_FAILED(exitStatus))
   {
     return StopRunning(exitStatus);
   }
@@ -303,7 +303,7 @@ nsresult nsMsgOfflineManager::DownloadOfflineNewsgroups()
   if (NS_SUCCEEDED(rv) && nntpService)
     rv = nntpService->DownloadNewsgroupsForOffline(m_window, this);
 
-  if (!NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     return AdvanceToNextState(rv);
   return rv;
 }

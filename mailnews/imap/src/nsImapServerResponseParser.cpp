@@ -1866,7 +1866,7 @@ void nsImapServerResponseParser::msg_fetch_content(PRBool chunk, PRInt32 origin,
 	if ((!chunk || (origin == 0)) && !GetDownloadingHeaders() &&
 		(GetFillingInShell() ? m_shell->GetGeneratingWholeMessage() : PR_TRUE))
 	{
-    if (!NS_SUCCEEDED(BeginMessageDownload(content_type)))
+    if (NS_FAILED(BeginMessageDownload(content_type)))
       return;
 	}
 

@@ -145,7 +145,7 @@ nsFolderCompactState::InitDB(nsIMsgDatabase *db)
                                      PR_FALSE,
                                      getter_AddRefs(m_db));
 
-    if(!NS_SUCCEEDED(folderOpen) &&
+    if(NS_FAILED(folderOpen) &&
        folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || 
        folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
     {
@@ -606,7 +606,7 @@ nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt
     if (NS_FAILED(rv)) goto done;
     rv = m_messageService->CopyMessage(m_messageUri.get(), this, PR_FALSE, nsnull,
                                        /* ### should get msg window! */ nsnull, nsnull);
-   if (!NS_SUCCEEDED(rv))
+   if (NS_FAILED(rv))
    {
      PRUint32 resultFlags;
      msgHdr->AndFlags(~MSG_FLAG_OFFLINE, &resultFlags);

@@ -1748,7 +1748,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
 
   nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
-  if (!NS_SUCCEEDED(res) || !selection)
+  if (NS_FAILED(res) || !selection)
     return NS_ERROR_FAILURE;
 
   // hand off to the rules system, see if it has anything to say about this
@@ -1765,7 +1765,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
       nsCOMPtr<nsIDOMNode> tempNode;
       PRInt32 tempOffset;
       nsresult result = DeleteSelectionAndPrepareToCreateNode(tempNode,tempOffset);
-      if (!NS_SUCCEEDED(result))
+      if (NS_FAILED(result))
         return result;
     }
 
@@ -2608,7 +2608,7 @@ NODE_FOUND:
     // Search up the parent chain
     // We should never fail because of root test below, but lets be safe
     // XXX: ERROR_HANDLING error return code lost
-    if (!NS_SUCCEEDED(currentNode->GetParentNode(getter_AddRefs(parent))) || !parent)
+    if (NS_FAILED(currentNode->GetParentNode(getter_AddRefs(parent))) || !parent)
       break;
 
     // Stop searching if parent is a body tag
@@ -2617,7 +2617,7 @@ NODE_FOUND:
     // Note: Originally used IsRoot to stop at table cells,
     //  but that's too messy when you are trying to find the parent table
     //PRBool isRoot;
-    //if (!NS_SUCCEEDED(IsRootTag(parentTagName, isRoot)) || isRoot)
+    //if (NS_FAILED(IsRootTag(parentTagName, isRoot)) || isRoot)
     if(parentTagName.EqualsIgnoreCase("body"))
       break;
 
@@ -4075,7 +4075,7 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
 
   nsString prestr ("PRE");  // GetFirstNodeOfType requires capitals
   nsCOMPtr<nsIDOMNode> preNode;
-  if (!NS_SUCCEEDED(nsEditor::GetFirstNodeOfType(rootNode, prestr,
+  if (NS_FAILED(nsEditor::GetFirstNodeOfType(rootNode, prestr,
                                                  getter_AddRefs(preNode))))
     return 0;
 

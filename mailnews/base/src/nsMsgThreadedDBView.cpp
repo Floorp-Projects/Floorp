@@ -319,7 +319,7 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
   {
     nsCOMPtr <nsISupports> supports;
     rv = m_threadEnumerator->GetNext(getter_AddRefs(supports));
-    if (!NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
     {
       threadHdr = nsnull;
       break;

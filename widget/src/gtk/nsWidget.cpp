@@ -2629,9 +2629,9 @@ static void      debugSetupWindow   (void)
   
   debugCheckedDebugWindow = PR_TRUE;
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-  if (!NS_FAILED(rv) && (prefs)) {
+  if (NS_SUCCEEDED(rv) && (prefs)) {
     rv = prefs->GetBoolPref(debugPrefName, &enable_window);
-    if (!NS_FAILED(rv) && enable_window) {
+    if (NS_SUCCEEDED(rv) && enable_window) {
       debugTopLevel = gtk_window_new(GTK_WINDOW_TOPLEVEL);
       gtk_signal_connect(GTK_OBJECT(debugTopLevel),
                          "delete_event",
@@ -2666,16 +2666,16 @@ static int debugWindowPrefChanged (const char *newpref, void *data)
   PRBool enable_window;
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-  if (!NS_FAILED(rv) && (prefs)) {
+  if (NS_SUCCEEDED(rv) && (prefs)) {
     rv = prefs->GetBoolPref(debugPrefName, &enable_window);
-    if (!NS_FAILED(rv) && enable_window) {
+    if (NS_SUCCEEDED(rv) && enable_window) {
       if (!debugTopLevel) {
         // this will trigger the creation of the window
         debugCheckedDebugWindow = PR_FALSE;
         debugSetupWindow();
       }
     }
-    else if (!NS_FAILED(rv) && (!enable_window)) {
+    else if (NS_SUCCEEDED(rv) && (!enable_window)) {
       if (debugTopLevel) {
         debugDestroyWindow();
       }
@@ -2691,7 +2691,7 @@ static void      debugRegisterCallback  (void)
   // make sure we don't call in here again
   debugCallbackRegistered = PR_TRUE;
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-  if (!NS_FAILED(rv)) {
+  if (NS_SUCCEEDED(rv)) {
     rv = prefs->RegisterCallback(debugPrefName, debugWindowPrefChanged, NULL);
   }
 }

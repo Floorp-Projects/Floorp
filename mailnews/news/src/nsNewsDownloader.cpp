@@ -303,7 +303,7 @@ NS_IMETHODIMP nsNewsDownloader::OnSearchDone(nsresult status)
       return m_listener->OnStopRunningUrl(nsnull, NS_OK);
   }
   nsresult rv = DownloadArticles(m_window, m_folder, &m_keysToDownload);
-  if (!NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     if (m_listener)
       m_listener->OnStopRunningUrl(nsnull, rv);
 
@@ -463,7 +463,7 @@ nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextGroup(PRBool *done)
      rv = AdvanceToNextServer(done);
   else
     rv = m_serverEnumerator->Next();
-  if (!NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     rv = AdvanceToNextServer(done);
 
   if (NS_SUCCEEDED(rv) && !*done && m_serverEnumerator)
@@ -508,7 +508,7 @@ nsresult nsMsgDownloadAllNewsgroups::ProcessNextGroup()
         break;
     }
   }
-  if (!NS_SUCCEEDED(rv) || done)
+  if (NS_FAILED(rv) || done)
   {
     if (m_listener)
       return m_listener->OnStopRunningUrl(nsnull, NS_OK);

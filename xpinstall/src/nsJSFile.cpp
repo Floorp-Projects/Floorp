@@ -1266,7 +1266,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     nsCOMPtr<nsIFile> iFileAlias;
     rv1 = iFileSourceOrig->Clone(getter_AddRefs(iFileSource));
     rv2 = iFileAliasOrig->Clone(getter_AddRefs(iFileAlias));
-    if (!NS_SUCCEEDED(rv1) || !NS_SUCCEEDED(rv2))
+    if (NS_FAILED(rv1) || NS_FAILED(rv2))
     {
         *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
         return JS_TRUE;
@@ -1299,7 +1299,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     
     rv2 = iFileAlias->Append(NS_LossyConvertUCS2toASCII(aliasLeaf).get());
-	if (!NS_SUCCEEDED(rv1) || !NS_SUCCEEDED(rv2))
+	if (NS_FAILED(rv1) || NS_FAILED(rv2))
 	{
 		*rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 		return JS_TRUE;

@@ -393,7 +393,7 @@ void CTests::OnToolsRemoveGHPage()
 		return;
 	}
 	nsCOMPtr<nsIBrowserHistory> myHistory = do_QueryInterface(myGHistory, &rv);
-	if(!NS_SUCCEEDED(rv)) {
+	if(NS_FAILED(rv)) {
 		QAOutput("Could not get the history object.", 2);
 		return;
 	}
@@ -433,7 +433,7 @@ void CTests::OnToolsRemoveAllGH()
 		return;
 	}
 	nsCOMPtr<nsIBrowserHistory> myHistory = do_QueryInterface(myGHistory, &rv);
-	if(!NS_SUCCEEDED(rv)) {
+	if(NS_FAILED(rv)) {
 		QAOutput("Could not get the history object.", 2);
 		return;
 	}

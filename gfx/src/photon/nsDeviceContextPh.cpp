@@ -199,7 +199,7 @@ void nsDeviceContextPh :: CommonInit( nsNativeDeviceContext aDC ) {
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
     if( NS_SUCCEEDED( res ) && prefs ) {
       res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal);
-      if( !NS_SUCCEEDED( res ) ) {
+      if( NS_FAILED( res ) ) {
         prefVal = 96;
       	}
 

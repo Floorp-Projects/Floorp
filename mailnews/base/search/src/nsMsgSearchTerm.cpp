@@ -949,7 +949,7 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 	*pResult = PR_FALSE;
 	PRBool result;
 	nsresult err = InitHeaderAddressParser();
-	if (!NS_SUCCEEDED(err))
+	if (NS_FAILED(err))
 		return err;
 	// Isolate the RFC 822 parsing weirdnesses here. MSG_ParseRFC822Addresses
 	// returns a catenated string of null-terminated strings, which we walk

@@ -339,7 +339,7 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 			// ### evil cast until MDB supports file streams.
 			rv = OpenMDB((const char *) m_dbFileSpec, exists);
       // if this fails and panacea.dat exists, try blowing away the db and recreating it
-      if (!NS_SUCCEEDED(rv) && exists)
+      if (NS_FAILED(rv) && exists)
       {
 	      if (m_mdbStore)
 		      m_mdbStore->Release();

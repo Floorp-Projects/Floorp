@@ -1838,7 +1838,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   destIFolder->GetPath(getter_AddRefs(destIFolderSpec));
   err = destIFolderSpec->GetFileSpec(&destFolderSpec);
   
-  if (!NS_SUCCEEDED(err))
+  if (NS_FAILED(err))
     return err;
   
   nsCOMPtr <nsISupports> myISupports = do_QueryInterface(NS_STATIC_CAST(nsIMsgParseMailMsgState*, this));

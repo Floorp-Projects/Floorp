@@ -169,7 +169,7 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
 					PRBool applyMore;
 
 					ret  = listener->ApplyFilterHit(filter, msgWindow, &applyMore);
-					if (!NS_SUCCEEDED(ret) || !applyMore)
+					if (NS_FAILED(ret) || !applyMore)
 						break;
 				}
 			}

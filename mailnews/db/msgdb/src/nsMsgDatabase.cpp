@@ -2288,7 +2288,7 @@ nsresult nsMsgDBEnumerator::PrefetchNext()
 	if (!mRowCursor)
 	{
 		rv = GetRowCursor();
-		if (!NS_SUCCEEDED(rv))
+		if (NS_FAILED(rv))
 			return rv;
 	}
 
@@ -2473,7 +2473,7 @@ nsresult nsMsgDBThreadEnumerator::PrefetchNext()
 	if (!mTableCursor)
 	{
 		rv = GetTableCursor();
-		if (!NS_SUCCEEDED(rv))
+		if (NS_FAILED(rv))
 			return rv;
 	}
     while (PR_TRUE) 
@@ -2903,7 +2903,7 @@ nsIMsgHeaderParser *nsMsgDatabase::GetHeaderParser()
 													NULL, 
 													NS_GET_IID(nsIMsgHeaderParser), 
 													(void **) &m_HeaderParser);
-		if (!NS_SUCCEEDED(rv))
+		if (NS_FAILED(rv))
 			m_HeaderParser = nsnull;
 	}
 	return m_HeaderParser;

@@ -1570,7 +1570,7 @@ PresShell::Init(nsIDocument* aDocument,
   nsresult result = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
                                                  NS_GET_IID(nsIFrameSelection),
                                                  getter_AddRefs(mSelection));
-  if (!NS_SUCCEEDED(result))
+  if (NS_FAILED(result))
     return result;
 
   // Create and initialize the frame manager
@@ -1584,7 +1584,7 @@ PresShell::Init(nsIDocument* aDocument,
   }
 
   result = mSelection->Init((nsIFocusTracker *) this, nsnull);
-  if (!NS_SUCCEEDED(result))
+  if (NS_FAILED(result))
     return result;
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET

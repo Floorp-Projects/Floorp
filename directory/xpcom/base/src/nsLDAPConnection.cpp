@@ -531,7 +531,7 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     // callback which should happen on another thread)
     //
     rv = operation->GetMessageListener(getter_AddRefs(listener));
-    if (!NS_SUCCEEDED(rv)) {
+    if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPConnection::InvokeMessageCallback(): probable "
                  "memory corruption: GetMessageListener() returned error");
         delete key;
@@ -547,7 +547,7 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     //
     if (aRemoveOpFromConnQ) {
         rv = mPendingOperations->Remove(key);
-        if (!NS_SUCCEEDED(rv)) {
+        if (NS_FAILED(rv)) {
             NS_ERROR("nsLDAPConnection::InvokeMessageCallback: unable to "
                      "remove operation from the connection queue\n");
             delete key;

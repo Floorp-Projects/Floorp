@@ -1381,7 +1381,7 @@ NS_IMETHODIMP nsPlaintextEditor::Cut()
 {
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     return res;
 
   PRBool isCollapsed;
@@ -1699,7 +1699,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAReadableString& aQuotedText,
   // Let the citer quote it for us:
   nsString quotedStuff;
   nsresult rv = citer->GetCiteString(aQuotedText, quotedStuff);
-  if (!NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     return rv;
 
   // It's best to put a blank line after the quoted text so that mails

@@ -427,7 +427,7 @@ cookie_LifetimeLimitPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!NS_FAILED(rv) && !NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
+  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
     cookie_SetLifetimeLimit(n);
   }
   return 0;
@@ -463,7 +463,7 @@ cookie_LifetimeDaysPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (!prefs || !NS_FAILED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
+  if (!prefs || NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
     cookie_lifetimeDays = n;
     if (!cookie_lifetimeCurrentSession) {
       cookie_SetLifetimeLimit(n);
@@ -521,14 +521,14 @@ COOKIE_RegisterPrefCallbacks(void) {
   cookie_lifetimeDays = 90;
   cookie_lifetimeCurrentSession = PR_FALSE;
 
-  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
+  if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
     cookie_lifetimeDays = n;
   }
-  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeBehaviorPref, &n))) {
+  if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeBehaviorPref, &n))) {
     cookie_lifetimeCurrentSession = (n==0);
     cookie_SetLifetimeLimit((n==0) ? 0 : cookie_lifetimeDays);
   }
-  if (!NS_FAILED(prefs->GetBoolPref(cookie_lifetimeEnabledPref, &n))) {
+  if (NS_SUCCEEDED(prefs->GetBoolPref(cookie_lifetimeEnabledPref, &n))) {
     cookie_SetLifetimePref(n ? COOKIE_Trim : COOKIE_Normal);
   }
   prefs->RegisterCallback(cookie_lifetimeEnabledPref, cookie_LifetimeEnabledPrefChanged, nsnull);
@@ -536,12 +536,12 @@ COOKIE_RegisterPrefCallbacks(void) {
   prefs->RegisterCallback(cookie_lifetimeDaysPref, cookie_LifetimeDaysPrefChanged, nsnull);
 
   // Override cookie_lifetime initialization if the older prefs (with no UI) are used
-  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
+  if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
     cookie_SetLifetimePref((COOKIE_LifetimeEnum)n);
   }
   prefs->RegisterCallback(cookie_lifetimePref, cookie_LifetimeOptPrefChanged, nsnull);
 
-  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
+  if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
     cookie_SetLifetimeLimit(n);
   }
   prefs->RegisterCallback(cookie_lifetimeValue, cookie_LifetimeLimitPrefChanged, nsnull);

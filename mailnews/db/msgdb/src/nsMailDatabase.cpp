@@ -843,7 +843,7 @@ nsresult nsMsgOfflineOpEnumerator::PrefetchNext()
   if (!mRowCursor)
   {
     rv = GetRowCursor();
-    if (!NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
       return rv;
   }
 

@@ -52,7 +52,7 @@ nsGetInterface::operator()( const nsIID& aIID, void** aInstancePtr ) const
 			if ( factoryPtr )
 				status = factoryPtr->GetInterface(aIID, aInstancePtr);
 
-			if ( !NS_SUCCEEDED(status) )
+			if ( NS_FAILED(status) )
 				*aInstancePtr = 0;
 		}
 	else

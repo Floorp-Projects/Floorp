@@ -1170,7 +1170,7 @@ static int InitProfiles( char *aProfileDir, char *aProfileName ) {
 		// Load preferences service
 		nsIPref *mPrefs;
 		rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports **)&mPrefs);
-		if( !NS_FAILED( rv ) ) {
+		if( NS_SUCCEEDED( rv ) ) {
     	mPrefs->ResetPrefs();
   	  mPrefs->ReadUserPrefs( nsnull );  //Reads from default_prefs.js
 			}

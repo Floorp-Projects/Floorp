@@ -157,7 +157,7 @@ PUBLIC void
 SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
   nsresult ret;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
-  if (!NS_FAILED(ret)) {
+  if (NS_SUCCEEDED(ret)) {
     ret = pPrefService->RegisterCallback(domain, callback, instance_data);
   }
 }
@@ -166,7 +166,7 @@ PUBLIC void
 SI_UnregisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
   nsresult ret;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
-  if (!NS_FAILED(ret)) {
+  if (NS_SUCCEEDED(ret)) {
     ret = pPrefService->UnregisterCallback(domain, callback, instance_data);
   }
 }
@@ -175,9 +175,9 @@ PUBLIC void
 SI_SetBoolPref(const char * prefname, PRBool prefvalue) {
   nsresult ret;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
-  if (!NS_FAILED(ret)) {
+  if (NS_SUCCEEDED(ret)) {
     ret = pPrefService->SetBoolPref(prefname, prefvalue);
-    if (!NS_FAILED(ret)) {
+    if (NS_SUCCEEDED(ret)) {
       ret = pPrefService->SavePrefFile(nsnull); 
     }
   }
@@ -188,7 +188,7 @@ SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
   nsresult ret;
   PRBool prefvalue = defaultvalue;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
-  if (!NS_FAILED(ret)) {
+  if (NS_SUCCEEDED(ret)) {
     ret = pPrefService->GetBoolPref(prefname, &prefvalue);
   }
   return prefvalue;
@@ -201,9 +201,9 @@ SI_SetCharPref(const char * prefname, const char * prefvalue) {
   }
   nsresult ret;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
-  if (!NS_FAILED(ret)) {
+  if (NS_SUCCEEDED(ret)) {
     ret = pPrefService->SetCharPref(prefname, prefvalue);
-    if (!NS_FAILED(ret)) {
+    if (NS_SUCCEEDED(ret)) {
       ret = pPrefService->SavePrefFile(nsnull); 
     }
   }
@@ -213,7 +213,7 @@ PUBLIC void
 SI_GetCharPref(const char * prefname, char** aPrefvalue) {
   nsresult ret;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
-  if (!NS_FAILED(ret)) {
+  if (NS_SUCCEEDED(ret)) {
     ret = pPrefService->CopyCharPref(prefname, aPrefvalue);
     if (NS_FAILED(ret)) {
       *aPrefvalue = nsnull;
@@ -227,7 +227,7 @@ PUBLIC void
 SI_GetLocalizedUnicharPref(const char * prefname, PRUnichar** aPrefvalue) {
   nsresult ret;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
-  if (!NS_FAILED(ret)) {
+  if (NS_SUCCEEDED(ret)) {
     ret = pPrefService->GetLocalizedUnicharPref(prefname, aPrefvalue);
     if (NS_FAILED(ret)) {
       *aPrefvalue = nsnull;

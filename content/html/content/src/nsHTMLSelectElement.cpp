@@ -1969,7 +1969,7 @@ nsHTMLSelectElement::InitializeOption(nsIDOMHTMLOptionElement * aOption,
 {
   PRBool selected;
   nsresult rv = aOption->GetDefaultSelected(&selected);
-  if (!NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
     selected = PR_FALSE;
   }
   SetOptionSelected(aOption, selected);

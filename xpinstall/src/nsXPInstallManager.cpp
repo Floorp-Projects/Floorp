@@ -233,7 +233,7 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
     PRInt32 cbstatus = 0;  // callback status
     if (NS_SUCCEEDED(rv) && !OKtoInstall )
         cbstatus = nsInstall::USER_CANCELLED;
-    else if (!NS_SUCCEEDED(rv))
+    else if (NS_FAILED(rv))
         cbstatus = nsInstall::UNEXPECTED_ERROR;
 
     if ( cbstatus != 0 )
@@ -748,7 +748,7 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
         mItem->mOutStream = nsnull;
     }
 
-    if (!NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
     {
         if ( mItem->mFile )
         {

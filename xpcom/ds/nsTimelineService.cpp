@@ -395,7 +395,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineOutdent()
 PR_IMPLEMENT(nsresult) NS_TimelineEnter(const char *text)
 {
     nsresult rv = NS_TimelineMark("%s...", text);
-    if (!NS_SUCCEEDED(rv)) {
+    if (NS_FAILED(rv)) {
         return rv;
     }
     return NS_TimelineIndent();
@@ -404,7 +404,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineEnter(const char *text)
 PR_IMPLEMENT(nsresult) NS_TimelineLeave(const char *text)
 {
     nsresult rv = NS_TimelineOutdent();
-    if (!NS_SUCCEEDED(rv)) {
+    if (NS_FAILED(rv)) {
         return rv;
     }
     return NS_TimelineMark("...%s", text);

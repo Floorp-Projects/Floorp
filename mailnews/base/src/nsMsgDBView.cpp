@@ -2978,7 +2978,7 @@ nsresult nsMsgDBView::CollapseByIndex(nsMsgViewIndex index, PRUint32 *pNumCollap
 	firstIdInThread = m_keys[index];
 	nsCOMPtr <nsIMsgDBHdr> msgHdr;
   rv = m_db->GetMsgHdrForKey(firstIdInThread, getter_AddRefs(msgHdr));
-	if (!NS_SUCCEEDED(rv) || msgHdr == nsnull)
+	if (NS_FAILED(rv) || msgHdr == nsnull)
 	{
 		NS_ASSERTION(PR_FALSE, "error collapsing thread");
 		return NS_MSG_MESSAGE_NOT_FOUND;

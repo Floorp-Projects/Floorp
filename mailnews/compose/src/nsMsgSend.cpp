@@ -3139,7 +3139,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   nsCOMPtr<nsIAbAddressCollecter> addressCollecter = 
            do_GetService(kCAddressCollecter, &rv);
 
-  if (!NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     addressCollecter = nsnull;
 
   PRBool collectAddresses = (collectOutgoingAddresses && addressCollecter);

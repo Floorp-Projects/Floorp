@@ -126,7 +126,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
     nsCOMPtr<nsISoftwareUpdate> softwareUpdate = 
              do_GetService(kSoftwareUpdateCID, &rv);
 
-    if (!NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
 
     {
         NS_WARNING("shouldn't have RunInstall() if we can't get SoftwareUpdate");
@@ -382,7 +382,7 @@ extern "C" void RunInstallOnThread(void *data)
     nsCOMPtr<nsISoftwareUpdate> softwareUpdate = 
              do_GetService(kSoftwareUpdateCID, &rv);
 
-    if (!NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
     {
         NS_WARNING("shouldn't have RunInstall() if we can't get SoftwareUpdate");
         return;

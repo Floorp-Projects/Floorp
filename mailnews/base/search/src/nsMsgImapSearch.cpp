@@ -138,12 +138,12 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
         nsCOMPtr <nsIMsgSearchValue> searchValue;
 
         nsresult rv = pTerm->GetValue(getter_AddRefs(searchValue));
-        if (!NS_SUCCEEDED(rv) || !searchValue)
+        if (NS_FAILED(rv) || !searchValue)
           continue;
 
 
         rv = searchValue->GetStr(getter_Copies(pchar));
-      	if (!NS_SUCCEEDED(rv) || !pchar)
+      	if (NS_FAILED(rv) || !pchar)
       		continue;
         asciiOnly = nsCRT::IsAscii(NS_CONST_CAST(PRUnichar*, pchar.get()));
 			}

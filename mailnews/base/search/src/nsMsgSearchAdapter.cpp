@@ -392,7 +392,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
   nsCOMPtr <nsIMsgSearchValue> searchValue;
   nsresult rv = term->GetValue(getter_AddRefs(searchValue));
 
-  if (!NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     return rv;
 
   nsMsgSearchOpValue op;

@@ -178,7 +178,7 @@ nsresult nsImapOfflineSync::AdvanceToNextFolder()
      rv = AdvanceToNextServer();
   else
     rv = m_serverEnumerator->Next();
-  if (!NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     rv = AdvanceToNextServer();
 
   if (NS_SUCCEEDED(rv) && m_serverEnumerator)

@@ -145,7 +145,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
             nsString tmpCharset;
             nsCOMPtr<nsICharsetConverterManager> ccm = 
                   do_GetService(kCharsetConverterManagerCID, &rv);
-            if (!NS_FAILED(rv)) {
+            if (NS_SUCCEEDED(rv)) {
               tmpCharset.AssignWithConversion("EUC-KR");
               rv = ccm->GetUnicodeDecoder(&tmpCharset, &mEUCKRDecoder);
             }

@@ -1020,7 +1020,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
     res = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
     NS_RELEASE(uri);
-    if (!NS_FAILED(res)) {
+    if (NS_SUCCEEDED(res)) {
 //      res = walletservice->WALLET_PreEdit(url);
       NS_RELEASE(walletservice);
     }

@@ -938,7 +938,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, PRBool 
 	nsCOMPtr<nsISupports> aItem;
 
 	rv = aEnumerator->First();
-	if (!NS_SUCCEEDED(rv))
+	if (NS_FAILED(rv))
 		return NS_OK;	// it's OK, there are no sub-folders.
 
 	while(NS_SUCCEEDED(rv))
@@ -974,7 +974,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, PRBool 
 			}
 		}
 		rv = aEnumerator->Next();
-		if (!NS_SUCCEEDED(rv))
+		if (NS_FAILED(rv))
 		{
 			rv = NS_OK;
 			break;
@@ -1544,7 +1544,7 @@ NS_IMETHODIMP nsMsgFolder::SetFlag(PRUint32 flag)
 	PRBool flagSet;
 	nsresult rv;
 
-	if(!NS_SUCCEEDED(rv = GetFlag(flag, &flagSet)))
+	if(NS_FAILED(rv = GetFlag(flag, &flagSet)))
 		return rv;
 
 	if (!flagSet)
@@ -1562,7 +1562,7 @@ NS_IMETHODIMP nsMsgFolder::ClearFlag(PRUint32 flag)
 	PRBool flagSet;
 	nsresult rv;
 
-	if(!NS_SUCCEEDED(rv = GetFlag(flag, &flagSet)))
+	if(NS_FAILED(rv = GetFlag(flag, &flagSet)))
 		return rv;
 
 	if (flagSet)

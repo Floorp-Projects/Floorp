@@ -231,7 +231,7 @@ nsSHistory::GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult)
 	 nsCOMPtr<nsISHTransaction>  tempPtr;
        
        rv = GetRootTransaction(getter_AddRefs(tempPtr));
-       if (!NS_SUCCEEDED(rv) || !tempPtr)
+       if (NS_FAILED(rv) || !tempPtr)
                return NS_ERROR_FAILURE;
 
      while(1) {
@@ -274,7 +274,7 @@ nsSHistory::PrintHistory()
 			     break;
               nsCOMPtr<nsISHEntry>  entry;
               rv = txn->GetSHEntry(getter_AddRefs(entry));
-              if (!NS_SUCCEEDED(rv) && !entry)
+              if (NS_FAILED(rv) && !entry)
                       return NS_ERROR_FAILURE;
 
               nsCOMPtr<nsILayoutHistoryState> layoutHistoryState;
@@ -826,7 +826,7 @@ nsSHistory::GetSHistoryEnumerator(nsISimpleEnumerator** aEnumerator)
 
   NS_ENSURE_ARG_POINTER(aEnumerator);
   nsSHEnumerator * iterator = new nsSHEnumerator(this);
-  if (iterator && !NS_SUCCEEDED(status = CallQueryInterface(iterator, aEnumerator)))
+  if (iterator && NS_FAILED(status = CallQueryInterface(iterator, aEnumerator)))
     delete iterator;
   return status;
 }

@@ -112,7 +112,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 
 	if(sizeLimitEnabled == -1){
 		rv = pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, &sizeLimitEnabled);
-		if (!NS_SUCCEEDED(rv))
+		if (NS_FAILED(rv))
 			return rv;
 	}
 
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 	if(sizeLimitEnabled && maxCABsize == -1){
 		PRInt32 max = 0;
     rv = pPref->GetIntPref(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, &max);
-		if (!NS_SUCCEEDED(rv))
+		if (NS_FAILED(rv))
 			return rv;
 		maxCABsize = max;
 	}
@@ -128,7 +128,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 	if (!m_historyAB)
 	{
 		rv = OpenHistoryAB(getter_AddRefs(m_historyAB));
-		if (!NS_SUCCEEDED(rv) || !m_historyAB)
+		if (NS_FAILED(rv) || !m_historyAB)
 			return rv;
 	}
 	// note that we're now setting the whole recipient list,
@@ -248,7 +248,7 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
                 {
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
-                        if (!NS_SUCCEEDED(rv))
+                        if (NS_FAILED(rv))
                         {
                           // blow away corrupt db's
                           dbPath->Delete(PR_FALSE);

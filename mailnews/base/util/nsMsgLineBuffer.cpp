@@ -371,7 +371,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
         // try growing buffer by twice as much as we need.
         nsresult rv = GrowBuffer(m_dataBufferSize + growBy);
         // if we can't grow the buffer, we have to bail.
-        if (!NS_SUCCEEDED(rv))
+        if (NS_FAILED(rv))
           return nsnull;
         startOfLine = m_dataBuffer;
         numFreeBytesInBuffer += growBy;

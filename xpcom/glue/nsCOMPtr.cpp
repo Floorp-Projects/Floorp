@@ -77,7 +77,7 @@ void
 nsCOMPtr_base::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& iid )
 	{
 		nsISupports* newRawPtr;
-		if ( !NS_SUCCEEDED( helper(iid, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+		if ( NS_FAILED( helper(iid, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
 			newRawPtr = 0;
     assign_assuming_AddRef(newRawPtr);
 	}

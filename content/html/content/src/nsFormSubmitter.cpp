@@ -260,7 +260,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
 
     if (href.IsEmpty()) {
       nsCOMPtr<nsIHTMLDocument> htmlDoc;
-      if (!NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIHTMLDocument),
+      if (NS_FAILED(document->QueryInterface(NS_GET_IID(nsIHTMLDocument),
                                              getter_AddRefs(htmlDoc)))) {
         // Must be a XML, XUL or other non-HTML document type
         // so do nothing.

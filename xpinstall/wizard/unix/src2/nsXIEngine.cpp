@@ -685,7 +685,7 @@ nsXIEngine::InstallXPI(nsComponent *aXPI, xpistub_t *aStub)
 printf("DEBUG: XPI_Install %s returned %d\n", aXPI->GetArchive(), rv);
 #endif
 
-    if (!NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
         err = E_INSTALL;
 
     return err;

@@ -504,7 +504,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
         if (!request)
           return NS_ERROR_FAILURE;
         request->GetStatus(&rv);
-        if (!NS_SUCCEEDED(rv))
+        if (NS_FAILED(rv))
         {
           nsresult res;
           removeUrlFromQueue = PR_TRUE;
@@ -2180,7 +2180,7 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 				if (NS_SUCCEEDED(rv) && childFolder)
 				{
 					rv = GetUnverifiedSubFolders(childFolder, aFoldersArray, aNumUnverifiedFolders);
-					if (!NS_SUCCEEDED(rv))
+					if (NS_FAILED(rv))
 						break;
 				}
 			}

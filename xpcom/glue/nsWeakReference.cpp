@@ -32,7 +32,7 @@ nsQueryReferent::operator()( const nsIID& aIID, void** answer ) const
     nsresult status;
     if ( mWeakPtr )
       {
-        if ( !NS_SUCCEEDED(status = mWeakPtr->QueryReferent(aIID, answer)) )
+        if ( NS_FAILED(status = mWeakPtr->QueryReferent(aIID, answer)) )
           *answer = 0;
       }
     else

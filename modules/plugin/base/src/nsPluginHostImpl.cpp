@@ -5491,7 +5491,7 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
       nsresult rv;
       nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
       if (prefs) rv = prefs->GetIntPref(NS_PREF_MAX_NUM_CACHED_PLUGINS,(int *)&max_num);
-      if (!NS_SUCCEEDED(rv)) max_num = DEFAULT_NUMBER_OF_STOPPED_PLUGINS;
+      if (NS_FAILED(rv)) max_num = DEFAULT_NUMBER_OF_STOPPED_PLUGINS;
 
       if(mActivePluginList.getStoppedCount() >= max_num)
       {

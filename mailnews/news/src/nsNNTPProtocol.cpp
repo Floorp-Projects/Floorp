@@ -3474,7 +3474,7 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	}
 
     /* convert nsresult->status */
-    status = !NS_SUCCEEDED(rv);
+    status = NS_FAILED(rv);
 
 	if (status < 0) 
 	  return status;
@@ -3664,7 +3664,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupResponse()
 	  /* Give the message number to the header parser. */
       rv = m_newsgroupList->ProcessNonXOVER(m_responseText);
       /* convert nsresult->status */
-      return !NS_SUCCEEDED(rv);
+      return NS_FAILED(rv);
   }
   else
   {
@@ -3711,7 +3711,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
   rv = m_newsgroupList->ProcessNonXOVER(line);
   /* convert nsresult->status */
   PR_FREEIF(line);
-  return !NS_SUCCEEDED(rv);
+  return NS_FAILED(rv);
 }
 
 

@@ -529,7 +529,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
 		{
 			folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
-			if(!NS_SUCCEEDED(folderOpen) &&
+			if(NS_FAILED(folderOpen) &&
 				folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
 			{
         nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
@@ -546,7 +546,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
           dbFolderInfo = nsnull;
         }
 				// if it's out of date then reopen with upgrade.
-				if(!NS_SUCCEEDED(rv = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase))))
+				if(NS_FAILED(rv = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase))))
 				{
 					return rv;
 				}
@@ -1839,7 +1839,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 		if (msgSupport)
 		{
 			rv = CopyMessageTo(msgSupport, this, msgWindow, isMove);
-		  if (!NS_SUCCEEDED(rv))
+		  if (NS_FAILED(rv))
       {
         NS_ASSERTION(PR_FALSE, "copy message failed");
 			  ClearCopyState(PR_FALSE);

@@ -697,7 +697,7 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
         {
           msgDBHdr = do_QueryInterface(currentItem, &dbErr);
         }
-        if (!NS_SUCCEEDED(dbErr))      
+        if (NS_FAILED(dbErr))      
           *aDone = PR_TRUE; //###phil dbErr is dropped on the floor. just note that we did have an error so we'll clean up later
         else
         {
