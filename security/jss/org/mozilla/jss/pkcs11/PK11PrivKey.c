@@ -39,6 +39,7 @@
 #include <secerr.h>
 #include <nspr.h>
 #include <key.h>
+#include <secitem.h>
 
 #include <jssutil.h>
 #include <jss_exceptions.h>
@@ -59,20 +60,31 @@ JSS_PK11_wrapPrivKey(JNIEnv *env, SECKEYPrivateKey **privk)
 	jmethodID constructor;
 	jbyteArray ptrArray;
 	jobject Key=NULL;
+    const char *className = NULL;
 
 	PR_ASSERT(env!=NULL && privk!=NULL && *privk!=NULL);
 
 	/* Find the class */
-	keyClass = (*env)->FindClass(env, PK11PRIVKEY_CLASS_NAME);
+    switch( (*privk)->keyType ) {
+      case rsaKey:
+        className = "org/mozilla/jss/pkcs11/PK11RSAPrivateKey";
+        break;
+      case dsaKey:
+        className = "org/mozilla/jss/pkcs11/PK11DSAPrivateKey";
+        break;
+      default:
+        className = "org/mozilla/jss/pkcs11/PK11PrivKey";
+        break;
+    }
+      
+	keyClass = (*env)->FindClass(env, className);
 	if(keyClass == NULL) {
 		ASSERT_OUTOFMEM(env);
 		goto finish;
 	}
 
 	/* find the constructor */
-	constructor = (*env)->GetMethodID(env, keyClass,
-										PK11PRIVKEY_CONSTRUCTOR_NAME,
-										PK11PRIVKEY_CONSTRUCTOR_SIG);
+	constructor = (*env)->GetMethodID(env, keyClass, "<init>", "([B)V");
 	if(constructor == NULL) {
 		ASSERT_OUTOFMEM(env);
 		goto finish;
@@ -556,4 +568,100 @@ finish:
         (*env)->Throw(env, excep);
     }
     return keyObj;
+}
+
+#define ZERO_SECITEM(item)  (item).data=NULL; (item).len=0;
+
+/***********************************************************************
+ * getDSAParamsNative
+ *
+ * Returns a 3-element array of byte[]. The elements are P, Q, and G.
+ */
+
+JNIEXPORT jobjectArray JNICALL
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getDSAParamsNative
+    (JNIEnv *env, jobject this)
+{
+    SECKEYPrivateKey *key = NULL;
+    SECKEYPQGParams *pqgParams = NULL;
+
+    /*----PQG parameters and friends----*/
+    SECItem P;      /* prime */
+    SECItem Q;      /* subPrime */
+    SECItem G;      /* base */
+
+    /*----Java versions of the PQG parameters----*/
+    jobject jP = NULL;
+    jobject jQ = NULL;
+    jobject jG = NULL;
+    jobjectArray pqgArray = NULL;
+
+    PR_ASSERT(env!=NULL && this!=NULL);
+
+    /* clear the SECItems so we can free them indiscriminately at the end */
+    ZERO_SECITEM(P);
+    ZERO_SECITEM(Q);
+    ZERO_SECITEM(G);
+
+    /*
+     * Get the private key C structure
+     */
+    if( JSS_PK11_getPrivKeyPtr(env, this, &key) != PR_SUCCESS) {
+        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
+        goto finish;
+    }
+
+    /*
+     * Get the PQG params from the private key
+     */
+    pqgParams = PK11_GetPQGParamsFromPrivateKey(key);
+    if( pqgParams == NULL ) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION,
+            "Unable to extract PQG parameters from private key");
+        goto finish;
+    }
+
+    if( PK11_PQG_GetPrimeFromParams( pqgParams, &P) ||
+        PK11_PQG_GetSubPrimeFromParams( pqgParams, &Q) ||
+        PK11_PQG_GetBaseFromParams( pqgParams, &G) )
+    {
+        JSS_throwMsg(env, TOKEN_EXCEPTION,
+            "Unable to extract PQG parameters from private key");
+        goto finish;
+    }
+
+    /*
+     * Now turn them into byte arrays
+     */
+    if( !(jP = JSS_OctetStringToByteArray(env, &P)) ||
+        !(jQ = JSS_OctetStringToByteArray(env, &Q)) ||
+        !(jG = JSS_OctetStringToByteArray(env, &G)) )
+    {
+        goto finish;
+    }
+
+    /*
+     * Stash the byte arrays into an array of arrays.
+     */
+    pqgArray = (*env)->NewObjectArray(  env,
+                                        3,
+                                        (*env)->GetObjectClass(env, jP),
+                                        NULL);
+    if( pqgArray == NULL ) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+    (*env)->SetObjectArrayElement(env, pqgArray, 0, jP);
+    (*env)->SetObjectArrayElement(env, pqgArray, 1, jQ);
+    (*env)->SetObjectArrayElement(env, pqgArray, 2, jG);
+
+finish:
+    if(pqgParams!=NULL) {
+        PK11_PQG_DestroyParams(pqgParams);
+    }
+    SECITEM_FreeItem(&P, PR_FALSE /*don't free P itself*/);
+    SECITEM_FreeItem(&Q, PR_FALSE);
+    SECITEM_FreeItem(&G, PR_FALSE);
+
+    return pqgArray;
 }

@@ -38,7 +38,10 @@ import org.mozilla.jss.crypto.PrivateKey;
 import org.mozilla.jss.crypto.CryptoToken;
 import org.mozilla.jss.crypto.TokenException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.DSAParameterSpec;
+import java.security.interfaces.DSAParams;
 import org.mozilla.jss.util.*;
+import java.math.BigInteger;
 
 public class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
 	implements PrivateKey {
@@ -106,6 +109,22 @@ public class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
      */
     public static native PK11PrivKey
     fromPrivateKeyInfo(byte[] pki, CryptoToken token);
+
+    protected DSAParameterSpec
+    getDSAParams() throws TokenException {
+        byte[][] pqgArray = getDSAParamsNative();
+
+        return new DSAParameterSpec(
+            new BigInteger(pqgArray[0]),
+            new BigInteger(pqgArray[1]),
+            new BigInteger(pqgArray[2])
+        );
+    }
+
+    private native byte[][]
+    getDSAParamsNative() throws TokenException;
+    
+        
 }
 
 class PrivateKeyProxy extends KeyProxy {

@@ -8,7 +8,6 @@ use File::Copy;
 @excluded_sources = qw(
 Debug_.*\.java
 provider\.new/
-org/mozilla/jss/pkcs11/PK11DSAPrivateKey\.java
 org/mozilla/jss/provider/java/security/KeyFactorySpi1_4\.java
 org/mozilla/jss/pkix/cert/X509Certificate\.java
 samples/

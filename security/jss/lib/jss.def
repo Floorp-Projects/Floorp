@@ -241,6 +241,7 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineIsCertificateEn
 Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNative;
 Java_org_mozilla_jss_CryptoManager_initializeAllNative2;
 Java_org_mozilla_jss_ssl_SocketBase_getLocalAddressNative;
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getDSAParamsNative;
 ;+    local:
 ;+       *;
 ;+};
