@@ -4091,8 +4091,12 @@ NavigatorImpl::Preference()
   nsCOMPtr<nsIScriptSecurityManager> secMan = 
       do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = secMan->CheckPropertyAccess(argc == 1 ? nsIXPCSecurityManager::ACCESS_GET_PROPERTY :
-                                               nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
+  PRUint32 action;
+  if (argc == 1)
+      action = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
+  else
+      action = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
+  rv = secMan->CheckPropertyAccess(action,
                                    cx, nsnull, nsnull, nsnull, "Navigator", "preferenceinternal",
                                    PR_TRUE);
   if (NS_FAILED(rv))
