@@ -23,6 +23,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentViewer.h"
+#include "nsIDeviceContext.h"
 
 #include "nsDocShellBase.h"
 
@@ -212,21 +213,36 @@ NS_IMETHODIMP nsDocShellBase::GetRootDocShell(nsIDocShell** aRootDocShell)
 NS_IMETHODIMP nsDocShellBase::GetZoom(float* zoom)
 {
    NS_ENSURE_ARG_POINTER(zoom);
+   NS_ENSURE_STATE(mContentViewer);
 
-   //XXX First Check
-	/**
-	* Set/Get the document scale factor
-	*/
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIPresContext> presContext;
+   NS_ENSURE_SUCCESS(GetPresContext(getter_AddRefs(presContext)), 
+      NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIDeviceContext> deviceContext;
+   NS_ENSURE_SUCCESS(presContext->GetDeviceContext(getter_AddRefs(deviceContext)),
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(deviceContext->GetZoom(*zoom), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetZoom(float zoom)
 {
-   //XXX First Check
-	/**
-	* Set/Get the document scale factor
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mContentViewer);
+
+   nsCOMPtr<nsIPresContext> presContext;
+   NS_ENSURE_SUCCESS(GetPresContext(getter_AddRefs(presContext)), 
+      NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIDeviceContext> deviceContext;
+   NS_ENSURE_SUCCESS(presContext->GetDeviceContext(getter_AddRefs(deviceContext)),
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(deviceContext->SetZoom(zoom), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -1037,50 +1053,3 @@ nsresult nsDocShellBase::GetPresShell(nsIPresShell** aPresShell)
 
    return NS_OK;
 }
-
-/*
-
-// null result aPresContext is legal 
-NS_IMETHODIMP nsDocShellBase::GetPresContext(nsIPresContext** aPresContext) 
-{ 
-  NS_ENSURE_ARG_POINTER(aPresContext); 
-
-  nsCOMPtr<nsIContentViewer> cv; 
-  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv))); 
-  // null content viewer is legal 
-
-  if (cv) 
-  { 
-    nsIDocumentViewer* docv = nsnull; 
-    cv->QueryInterface(kIDocumentViewerIID, (void**) &docv); 
-    if (docv) 
-    { 
-      nsIPresContext* cx; 
-      NS_ENSURE_SUCCESS(docv->GetPresContext(aPresContext)); 
-    } 
-  } 
-
-  return NS_OK; 
-} 
-
-
-NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument) 
-{ 
-  NS_ENSURE_ARG_POINTER(aDocument); 
-
-  nsCOMPtr<nsIPresShell> presShell; 
-  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell))); 
-  NS_ENSURE(presShell, NS_ERROR_FAILURE); 
-
-  nsCOMPtr<nsIDocument>doc; 
-  NS_ENSURE_SUCCESS(PresShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE); 
-  NS_ENSURE(doc, NS_ERROR_NULL_POINTER); 
-
-  // the result's addref comes from this QueryInterface call 
-  NS_ENSURE_SUCCESS(CallQueryInterface(doc, aDocument), NS_ERROR_FAILURE); 
-
-  return NS_OK; 
-} 
-
-       
-         */
