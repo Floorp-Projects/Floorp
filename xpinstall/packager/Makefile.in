@@ -33,12 +33,16 @@ include $(DEPTH)/config/autoconf.mk
 # to add .rpm (RPM) and .deb (DEB) later.
 #
 ifndef MOZ_PKG_FORMAT
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+MOZ_PKG_FORMAT	= DMG
+else
 ifeq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
 MOZ_PKG_FORMAT  = ZIP
 else
 MOZ_PKG_FORMAT	= TGZ
 endif
 endif
+endif # MOZ_PKG_FORMAT
 ifndef MOZ_PKG_APPNAME
 MOZ_PKG_APPNAME = mozilla
 endif
@@ -81,6 +85,20 @@ ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
 MAKE_PACKAGE	= $(ZIP) -r9 $(PACKAGE) $(MOZ_PKG_APPNAME)
 MAKE_SDK	= $(ZIP) -r9 $(SDK) $(MOZ_PKG_APPNAME)-$(SDK_DIR)
+endif
+ifeq ($(MOZ_PKG_FORMAT),DMG)
+ifndef MOZ_PKG_APPNAME
+MOZ_PKG_APPNAME = Mozilla
+endif
+ifdef MOZ_DEBUG
+_APPNAME	= MozillaDebug.app
+else
+_APPNAME	= Mozilla.app
+endif
+PKG_SUFFIX	= .dmg
+_ABS_TOPSRCDIR	= $(shell cd $(topsrcdir) && pwd)
+MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/make-diskimage $(PACKAGE) $(MOZ_PKG_APPNAME) $(MOZ_PKG_APPNAME)
+MAKE_SDK	=
 endif
 ifeq ($(MOZ_PKG_FORMAT),RPM)
 PKG_SUFFIX	= .rpm
@@ -134,10 +152,12 @@ PLATFORM_EXCLUDE_LIST = ! -name "*.ico"
 endif
 
 $(SDK):
+ifdef MAKE_SDK
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME)-$(SDK_DIR) $@
 	@mkdir $(DIST)/$(MOZ_PKG_APPNAME)-$(SDK_DIR)
 	@cd $(DIST)/$(SDK_DIR) && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_APPNAME)-$(SDK_DIR); tar -xf -)
 	cd $(DIST) && $(MAKE_SDK)
+endif
 
 $(PACKAGE): $(MOZILLA_BIN)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
@@ -145,6 +165,9 @@ $(PACKAGE): $(MOZILLA_BIN)
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
 	@mkdir $(DIST)/$(MOZ_PKG_APPNAME)
+ifeq ($(MOZ_PKG_FORMAT),DMG)
+	@cd $(DIST) && rsync -auvL $(_APPNAME) $(MOZ_PKG_APPNAME)
+else
 	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_APPNAME); tar -xf -)
 ifdef MOZ_NATIVE_NSPR
 ifndef EXCLUDE_NSPR_LIBS
@@ -157,6 +180,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 # Copy the C runtime
 	@cp -p $(VACPP365)/runtime/cpprmi36.dll $(DIST)/$(MOZ_PKG_APPNAME)
 endif
+endif # DMG
 	@echo "Stripping package directory..."
 	@cd $(DIST)/$(MOZ_PKG_APPNAME); find . ! -type d \
 			! -name "*.js" \
