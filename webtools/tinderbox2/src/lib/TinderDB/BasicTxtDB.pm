@@ -6,8 +6,8 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.11 $ 
-# $Date: 2003/06/18 15:49:50 $ 
+# $Revision: 1.12 $ 
+# $Date: 2003/08/17 01:45:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
@@ -32,10 +32,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
@@ -50,7 +48,7 @@ use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.11 $ )[1];
+$VERSION = ( qw $Revision: 1.12 $ )[1];
 
 
 # To help preserve the database in the event of a serious system
