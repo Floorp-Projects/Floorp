@@ -105,10 +105,18 @@ function markLinkVisited(href, linkNode)
                                .getService(Components.interfaces.nsIGlobalHistory);
    if (!globalHistory.isVisited(href)) {
      globalHistory.addPage(href);
-     var oldHref = linkNode.href;
-     linkNode.href = "";
-     linkNode.href = oldHref;
-   }    
+     var oldHref = linkNode.getAttribute("href");
+     if (typeof oldHref == "string") {
+       // Use setAttribute instead of direct assignment.
+       // (bug 217195, bug 187195)
+       linkNode.setAttribute("href", "");
+       linkNode.setAttribute("href", oldHref);
+     }
+     else {
+       // Converting to string implicitly would be a 
+       // minor security hole (similar to bug 202994).
+     }
+   }
 }
 
 function urlSecurityCheck(url, doc) 

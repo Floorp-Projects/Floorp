@@ -19,6 +19,8 @@
 <!ENTITY linksOnlyTypeAheadFind.label "to search links only">
 
 <!-- PROVISIONAL SECURITY UI ONLY -->
+<!ENTITY securityUIDisclaimer.label   "This section is PROVISIONAL and will change or disappear in future releases! It exists here now only to provide this functionality where no other access point is available.">
+
 <!-- Certs -->
 <!ENTITY certs.label                  "Certificates">
 <!ENTITY SSLClientAuthMethod          "Client Certificate Selection">
