@@ -35,7 +35,7 @@ Contributor(s): ______________________________________. -->
       <spring style="height: 10px;"/>
       <html:div>
         <html:label for="browserScreenResolution">&resolution;</html:label>
-        <html:input type="text" id="browserScreenResolution" pref="true" preftype="string"
+        <html:input type="text" id="browserScreenResolution" pref="true" preftype="int"
                     prefstring="browser.screen_resolution" value="&defaultScaling;" size="3"/>
         <html:label>&fontScalingExample;</html:label>
       </html:div>
