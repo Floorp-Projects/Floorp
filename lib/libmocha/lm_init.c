@@ -58,7 +58,6 @@
 #define UNICODE /* remove after working everywhere */
 
 extern PRThread *mozilla_thread;
-extern QueueStackElement    *et_TopQueue;
 
 char js_language_name[]  = "JavaScript";
 char js_content_type[]   = APPLICATION_JAVASCRIPT;
@@ -130,27 +129,11 @@ const char *lm_event_argv[] = {lm_event_str};
 JSRuntime       *lm_runtime;
 static uint32   lm_max_gc_bytes = 4L * 1024L * 1024L;   /* XXX use a pref */
 
-MochaDecoder    *lm_crippled_decoder;
-JSContext       *lm_crippled_context;   /* exported to jsStubs.c */
-
-PRThread        *lm_InterpretThread;    /* interpreter now in its own thread */
 #ifdef OJI
 JNIEnv          *lm_JSEnv;              /* Java env for lm_InterpretThread */
 #elif defined(JAVA)
 JRIEnv          *lm_JSEnv;              /* Java env for lm_InterpretThread */
 #endif /* ! (OJI || JAVA) */
-PREventQueue    *lm_InterpretQueue;     /* for "normal" event messages */
-PREventQueue    *lm_PriorityQueue;      /* for stop and death messages */
-
-/*
- * This is the big lock that ensures serialization of mocha execution.
- * It must be acquired before executing any mocha code in order to
- * preserve run-to-completion semantics.
- */
-static PRThread *lm_owner;        /* the only thread running mocha */
-PRMonitor *lm_owner_mon = NULL;   /* lock protecting lm_owner */
-static MWContext *lm_owner_context;
-static int32      lm_owner_count;
 
 #ifdef JAVA
 extern LJ_JSJ_Init(void);
@@ -162,6 +145,29 @@ static JSClass lm_dummy_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
 };
 JSObject *lm_DummyObject;
+
+MochaDecoder    *crippled_decoder;
+JSContext       *crippled_context;   /* exported to jsStubs.c */
+
+MochaDecoder *LM_GetCrippledDecoder()
+{
+    JS_SetContextThread(crippled_decoder->js_context);
+    return crippled_decoder;
+}
+
+void LM_SetCrippledDecoder(MochaDecoder *md)
+{
+    crippled_decoder = md;
+    if(crippled_decoder)  {
+        crippled_context = crippled_decoder->js_context;
+    }
+}
+
+JSContext *LM_GetCrippledContext()
+{
+    JS_SetContextThread(crippled_decoder->js_context);
+    return crippled_context;
+}
 
 PR_STATIC_CALLBACK(JSBool)
 lm_alert(JSContext *cx, JSObject *obj, uint argc, jsval *argv, jsval *rval)
@@ -513,8 +519,8 @@ lm_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
     if (last) {
 	if (java_errors) {
-	    JS_EvaluateScript(lm_crippled_context, 
-			      JS_GetGlobalObject(lm_crippled_context),
+	    JSContext *crc = LM_GetCrippledContext();
+	    JS_EvaluateScript(crc, JS_GetGlobalObject(crc),
 			      last, strlen(last), NULL, 0, &rval);
 	}
 	else {
@@ -546,7 +552,9 @@ lm_new_decoder(JSRuntime *rt, JSClass *clasp)
         XP_DELETE(decoder);
         return NULL;
     }
-    
+    JS_BeginRequest(cx);
+    JS_SetGCCallback(cx, LM_ShouldRunGC);
+
     decoder->forw_count = 1;
     decoder->js_context = cx;
     JS_SetBranchCallback(cx, lm_BranchCallback);
@@ -554,6 +562,7 @@ lm_new_decoder(JSRuntime *rt, JSClass *clasp)
 
     obj = JS_NewObject(cx, clasp, NULL, NULL);
     if (!obj || !JS_SetPrivate(cx, obj, decoder)) {
+        JS_EndRequest(cx);
         JS_DestroyContext(cx);
         XP_DELETE(decoder);
         return NULL;
@@ -571,6 +580,7 @@ lm_new_decoder(JSRuntime *rt, JSClass *clasp)
 /* XXX end common */
 
     JS_DefineFunctions(cx, obj, lm_global_functions);
+    JS_EndRequest(cx);
 
     return decoder;
 }
@@ -659,6 +669,8 @@ static char lm_jsEnabled[] = "javascript.enabled";
 static char lm_jsEnabledMN[] = "javascript.allow.mailnews";
 static char lm_jsEnabledSigning[] = "javascript.allow.signing";
 static char lm_jsEnabledCrossOrigin[] = "javascript.allow.crossOrigin";
+
+static JSBool mochaInited = JS_FALSE;
 static char lm_jsEnabledUnsignedExecution[] = 
                 "javascript.allow.unsignedExecution";
 
@@ -676,13 +688,18 @@ lm_PrefChangedFunc(const char *pref, void *data)
      * If we started up w/ JS turned off we will have not bothered
      *   the separate thread and event queues, do it now
      */
-    if (lm_owner_mon == NULL && lm_enabled)
+    /* MLM - Use the boolean mochaInited instead of checking for the thread. */
+    if (!mochaInited && lm_enabled)
         LM_InitMocha();
 
     return PREF_NOERROR;
 }
 
-static JSBool mochaInited = JS_FALSE;
+/* has mocha been inited?  MLM */
+JSBool lm_inited(void)
+{
+    return mochaInited;
+}
 
 /*
  * create the mocha thread, event queues, and stream converters
@@ -690,8 +707,6 @@ static JSBool mochaInited = JS_FALSE;
 static void
 lm_ReallyInitMocha(void)
 {
-    int priority;
-
     /* register callback in case pref changes while we're running */
     PREF_RegisterCallback(lm_jsEnabled, lm_PrefChangedFunc, NULL);
     PREF_RegisterCallback(lm_jsEnabledMN, lm_PrefChangedFunc, NULL);
@@ -711,12 +726,13 @@ lm_ReallyInitMocha(void)
     mochaInited = JS_TRUE;
     
     /* Initialize a crippled decoder/context for use by Java. */
-    lm_crippled_decoder = lm_new_decoder(lm_runtime, &lm_dummy_class);
-    lm_crippled_context = lm_crippled_decoder->js_context;
+    crippled_decoder = lm_new_decoder(lm_runtime, &lm_dummy_class);
+    crippled_context = crippled_decoder->js_context;
 
 #if defined(OJI)
     if (JVM_MaybeStartupLiveConnect())
-        JSJ_InitJSContext(lm_crippled_context, JS_GetGlobalObject(lm_crippled_context), NULL);
+        JSJ_InitJSContext(LM_GetCrippledContext(), 
+			  JS_GetGlobalObject(LM_GetCrippledContext()), NULL);
 
 #elif defined(JAVA)
     LJ_JSJ_Init();
@@ -725,11 +741,11 @@ lm_ReallyInitMocha(void)
      * Get liveconnect functions defined for the crippled context
      *   so we can pass error messages to the JavaConsole
      */
-    JSJ_InitContext(lm_crippled_context, JS_GetGlobalObject(lm_crippled_context));
+    JSJ_InitContext(crippled_context, JS_GetGlobalObject(crippled_context));
 #endif
 
     /* Initialize a dummy object used for unreflectable applets and embeds. */
-    lm_DummyObject = lm_crippled_decoder->window_object;
+    lm_DummyObject = crippled_decoder->window_object;
 
     /* Associate a JS netlib "converter" with our mime type. */
     /* Cool, we are still in the mozilla thread at this point so
@@ -748,42 +764,8 @@ lm_ReallyInitMocha(void)
     /* Make sure the mozilla event queue is around */
     XP_ASSERT(mozilla_event_queue != NULL);
 
-    /* run at slightly lower priority than the mozilla thread */
-    priority = PR_GetThreadPriority(PR_CurrentThread());
-    PR_ASSERT(priority >= PR_PRIORITY_FIRST && priority <= PR_PRIORITY_LAST);
-
-    if (priority == PR_PRIORITY_NORMAL)
-	priority = PR_PRIORITY_LOW;
-    else if (priority == PR_PRIORITY_HIGH)
-	priority = PR_PRIORITY_NORMAL;
-    else if (priority == PR_PRIORITY_URGENT)
-	priority = PR_PRIORITY_HIGH;
-    else
-	priority = PR_PRIORITY_LOW;	
-
-    /* create the monitor for the owner */
-    if (lm_owner_mon == NULL)
-        lm_owner_mon = PR_NewMonitor();
-
-    /* create the interpreter thread. */
-    /*
-     * Grab the lm_owner_mon until we are done with thread creation and
-     *   initialization.  The thread will immediately try to grab the 
-     *   same monitor when it starts up, so if its able to get the monitor
-     *   it can be certain that all of the thread state has been initialized
-     */
-    PR_EnterMonitor(lm_owner_mon);
-    lm_InterpretThread = PR_CreateThreadGCAble(PR_USER_THREAD, 
-					       lm_wait_for_events, NULL,
-					       priority, PR_LOCAL_THREAD, 
-					       PR_UNJOINABLE_THREAD,
-					       0);  /* default stack size */
-
-    lm_InterpretQueue = PR_CreateEventQueue("mocha-event-queue",
-					    lm_InterpretThread);
-
-    PR_Notify(lm_owner_mon);
-    PR_ExitMonitor(lm_owner_mon);
+    /* MLM - init the first window group and therefore the first JS thread */
+    lm_InitWindowGroups();
 
     /* AutoInstall trigger functions for JS config object */
     lm_DefineTriggers();
@@ -793,12 +775,6 @@ lm_ReallyInitMocha(void)
 #endif
 
     return;
-}
-
-JSContext*
-LM_GetCrippledContext(void)
-{
-    return lm_crippled_context;
 }
 
 void
@@ -829,12 +805,11 @@ LM_InitMocha(void)
     PREF_GetBoolPref(lm_jsEnabledUnsignedExecution, 
                      &lm_enabledUnsignedExecution);
 
-    /* set up the initial queue stack pointers */
-    if (!et_TopQueue) {
-        et_TopQueue = XP_NEW_ZAP(QueueStackElement);
-        if (!et_TopQueue)
-            return;
-    }
+    /* XXXMLM - there used to be a race condition where et_TopQueue was being
+     *           initialized here because someone was putting events on it
+     *           before lm_ReallyInitMocha() had been called.  Is this still
+     *           an issue?  We don't have the default window group yet here.
+     */
 
     if (!lm_enabled)
         return;
@@ -855,11 +830,17 @@ void MojaLogModuleInit()
 int
 LM_InitMoja()
 {
+    LMWindowGroup *grp;
+
     /* XXX assert mozilla thread */
     /* this stuff should only be done once.  since it is always
      * called on the moz thread we can do it the easy way */
     if (lm_moja_initialized != LM_MOJA_UNINITIALIZED)
         return lm_moja_initialized;
+
+    /* BONEHEAD - does this stuff need to be cross-thread, or will one do? */
+    grp = LM_GetDefaultWindowGroup(NULL);
+
 #if defined(OJI)
     {
         nsJVMStatus status = JVM_GetJVMStatus();
@@ -872,7 +853,7 @@ LM_InitMoja()
     }
 #elif defined(JAVA)
     /* initialize the java env associated with the mocha thread */
-    lm_JSEnv = LJ_EnsureJavaEnv(lm_InterpretThread);
+    lm_JSEnv = LJ_EnsureJavaEnv(grp->thread);
     if (lm_JSEnv == NULL) {
         lm_moja_initialized = LM_MOJA_JAVA_FAILED;
         return lm_moja_initialized;
@@ -902,38 +883,30 @@ LM_FinishMoja()
 }
 
 
+/* BONEHEAD - defaults to the default thread group.  Hmm. */
 PRBool PR_CALLBACK
 LM_HandOffJSLock(PRThread * oldOwner, PRThread *newOwner)
 {
         /* XXX note this doesn't worry about the lm_owner_count,
          * assumes it's pushed/popped properly */
+        LMWindowGroup *grp;
         PRBool didHandOff = PR_FALSE;
-        PR_EnterMonitor(lm_owner_mon);
-        if (lm_owner == oldOwner) {
-                lm_owner = newOwner;
+        grp = LM_GetDefaultWindowGroup(NULL);
+        PR_EnterMonitor(grp->owner_monitor);
+        if (grp->owner == oldOwner) {
+                grp->owner = newOwner;
                 didHandOff = PR_TRUE;
         }
-        PR_Notify(lm_owner_mon);
-        PR_ExitMonitor(lm_owner_mon);
+        PR_Notify(grp->owner_monitor);
+        PR_ExitMonitor(grp->owner_monitor);
         return didHandOff;
 }
-
-static PRBool            mozWantsJSLock  = PR_FALSE;
-static PRBool            mozGotJSLock    = PR_FALSE;
-
-typedef struct lm_lock_waiter {
-    JSLockReleaseFunc       fn;
-    void                  * data;
-    struct lm_lock_waiter * next;
-} lm_lock_waiter;
-
-static lm_lock_waiter * lm_waiting_list = NULL;
 
 /*
  * push the mozilla event loop until the jslock is obtained
  */
 static void
-LM_WaitForJSLock(void)
+LM_WaitForJSLock(LMWindowGroup *grp)
 {
     PREventQueue *q = mozilla_event_queue;
     PRMonitor *mon = PR_GetEventQueueMonitor(q);
@@ -944,37 +917,49 @@ LM_WaitForJSLock(void)
     hadLayoutLock = (JSBool)(!LO_VerifyUnlockedLayout());
     if (hadLayoutLock)
         LO_UnlockLayout();
-    while (!mozGotJSLock) {
+    while (!(grp->mozGotLock)) {
         PR_EnterMonitor(mon);
         if (!PR_EventAvailable(q))
             PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT);
         PR_ExitMonitor(mon);
         PR_ProcessPendingEvents(q);
     }
+    /* XXXMLM - We need a JSContext to set the thread on! */
+    /*           In current code, though, modules/applet is no
+     *           longer active.  Does this mean Mozilla isn't
+     *           going to try to get the lock anymore?
+     */
     if (hadLayoutLock)
         LO_LockLayout();
 }
 
 /*
- * Wait until we get the JSLock
+ * Wait until we get the JSLock for a given MWContext
  */
-#ifdef OJI
 JSBool PR_CALLBACK
-LM_LockJS(char **errp)
-#else
-void PR_CALLBACK
-LM_LockJS()
-#endif
+LM_LockJS(MWContext *mwc, char **errp)
+{
+    LMWindowGroup *grp = lm_MWContextToGroup(mwc);
+
+    if(grp == NULL)  {
+        grp = LM_GetDefaultWindowGroup(mwc);
+        LM_AddContextToGroup(grp, mwc);
+    }
+    return LM_LockJSByGroup(grp, errp);
+}
+
+JSBool PR_CALLBACK
+LM_LockJSByGroup(LMWindowGroup *grp, char **errp)
 {
     PRThread *t = PR_CurrentThread();
 
-    XP_ASSERT(lm_owner_mon != NULL);
+    XP_ASSERT(grp->owner_monitor != NULL);
 
-    PR_EnterMonitor(lm_owner_mon);
+    PR_EnterMonitor(grp->owner_monitor);
 
-    while (lm_owner != t) {
-        if (lm_owner == NULL) {
-            lm_owner = t;
+    while (grp->owner != t) {
+        if (grp->owner == NULL) {
+            grp->owner = t;
             break;
         }
         if (PR_CurrentThread() == mozilla_thread) {
@@ -983,23 +968,21 @@ LM_LockJS()
              * to the moz thread through et_moz.c or others. */
 
             /* while we wait, run another event loop */
-            mozWantsJSLock = PR_TRUE;
-            mozGotJSLock = PR_FALSE;
-            PR_ExitMonitor(lm_owner_mon);
-            LM_WaitForJSLock();
-            PR_EnterMonitor(lm_owner_mon);
-            XP_ASSERT(lm_owner == mozilla_thread);
-            mozWantsJSLock = PR_FALSE;
-            mozGotJSLock = PR_FALSE;
+            grp->mozWantsLock = PR_TRUE;
+            grp->mozGotLock   = PR_FALSE;
+            PR_ExitMonitor(grp->owner_monitor);
+            LM_WaitForJSLock(grp);
+            PR_EnterMonitor(grp->owner_monitor);
+            XP_ASSERT(grp->owner == mozilla_thread);
+            grp->mozWantsLock = PR_FALSE;
+            grp->mozGotLock   = PR_FALSE;
         } else {
-            PR_Wait(lm_owner_mon, PR_INTERVAL_NO_TIMEOUT);
+            PR_Wait(grp->owner_monitor, PR_INTERVAL_NO_TIMEOUT);
         }
     }
-    lm_owner_count++;
-    PR_ExitMonitor(lm_owner_mon);
-#ifdef OJI
-    return( PR_TRUE );
-#endif
+    grp->current_count++;
+    PR_ExitMonitor(grp->owner_monitor);
+    return( JS_TRUE );
 }
 
 /*
@@ -1007,23 +990,30 @@ LM_LockJS()
  *   get it, don't wait since we could deadlock
  */
 JSBool PR_CALLBACK
-LM_AttemptLockJS(JSLockReleaseFunc fn, void * data)
+LM_AttemptLockJS(MWContext *mwc, JSLockReleaseFunc fn, void * data)
 {
     PRThread *t = PR_CurrentThread();
+    LMWindowGroup *grp = lm_MWContextToGroup(mwc);
 
     /*
      * If javascript is disabled this might have never been
      *   created.  In that case its never possible to get the
      *   js lock.
      */
-    if (!lm_owner_mon)
+    /* MLM - changing to use mochaInited */
+    if (!mochaInited)
        return JS_FALSE;
 
-    PR_EnterMonitor(lm_owner_mon);
-    if (lm_owner == NULL || lm_owner == t) {
-        lm_owner = t;
-        lm_owner_count++;
-        PR_ExitMonitor(lm_owner_mon);
+    if(grp == NULL)  {
+        grp = LM_GetDefaultWindowGroup(mwc);
+        LM_AddContextToGroup(grp, mwc);
+    }
+
+    PR_EnterMonitor(grp->owner_monitor);
+    if (grp->owner == NULL || grp->owner == t) {
+        grp->owner = t;
+        grp->current_count++;
+        PR_ExitMonitor(grp->owner_monitor);
         return JS_TRUE;
     }
 
@@ -1031,7 +1021,7 @@ LM_AttemptLockJS(JSLockReleaseFunc fn, void * data)
         lm_lock_waiter ** p;
         lm_lock_waiter * waiter = XP_NEW_ZAP(lm_lock_waiter);
         if (!waiter) {
-            PR_ExitMonitor(lm_owner_mon);
+            PR_ExitMonitor(grp->owner_monitor);
             return JS_FALSE;
         }
 
@@ -1039,24 +1029,27 @@ LM_AttemptLockJS(JSLockReleaseFunc fn, void * data)
         waiter->data = data;
 
         /* double indirection! */
-        for (p = &lm_waiting_list; *p; p = &(*p)->next)
+        for (p = &grp->waiting_list; *p; p = &(*p)->next)
             ;
 
         *p = waiter;
     }
 
-    PR_ExitMonitor(lm_owner_mon);
+    PR_ExitMonitor(grp->owner_monitor);
     return JS_FALSE;
 
 }
 
 JSBool PR_CALLBACK
-LM_ClearAttemptLockJS(JSLockReleaseFunc fn, void * data)
+LM_ClearAttemptLockJS(MWContext *mwc, JSLockReleaseFunc fn, void * data)
 {
+    LMWindowGroup *grp = lm_MWContextToGroup(mwc);
     lm_lock_waiter ** p;
     lm_lock_waiter * waiter;
 
-    for (p = &lm_waiting_list; (waiter = *p) != NULL; p = &waiter->next) {
+    XP_ASSERT(grp != NULL);
+
+    for (p = &grp->waiting_list; (waiter = *p) != NULL; p = &waiter->next) {
 	if (waiter->fn == fn && waiter->data == data) {
 	    *p = waiter->next;
             XP_FREE(waiter);
@@ -1079,36 +1072,47 @@ lm_MozGotJSLock(void *data)
  * Release the JSLock
  */
 void PR_CALLBACK
-LM_UnlockJS()
+LM_UnlockJS(MWContext *mwc)
 {
-    XP_ASSERT(PR_CurrentThread() == lm_owner);
-    PR_EnterMonitor(lm_owner_mon);
-    XP_ASSERT(lm_owner_count > 0);
-    if (--lm_owner_count <= 0) {
-        lm_owner_count = 0;
-        lm_owner = NULL;
-        lm_owner_context = NULL;
+    LMWindowGroup *grp = lm_MWContextToGroup(mwc);
+
+    XP_ASSERT(grp != NULL);
+
+    LM_UnlockJSByGroup(grp);
+}
+
+
+void PR_CALLBACK
+LM_UnlockJSByGroup(LMWindowGroup *grp)
+{
+    XP_ASSERT(PR_CurrentThread() == grp->owner);
+    PR_EnterMonitor(grp->owner_monitor);
+    XP_ASSERT(grp->current_count > 0);
+    if (--grp->current_count <= 0) {
+
+        grp->current_count = 0;
+        grp->owner = NULL;
+        grp->current_context = NULL;
 
         /* was anyone waiting for us to release the JSLock? */
 
         /* moz gets priority, and we hand the lock off immediately */
-        if (mozWantsJSLock) {
-            lm_owner = mozilla_thread;
-            lm_owner_count = 0;
-            mozWantsJSLock = PR_FALSE;
-            mozGotJSLock = PR_TRUE;
+        if (grp->mozWantsLock) {
+            grp->owner = mozilla_thread;
+            grp->current_count = 0;
+            grp->mozWantsLock = PR_FALSE;
+            grp->mozGotLock   = PR_TRUE;
             ET_moz_CallFunctionAsync(lm_MozGotJSLock, NULL);
-        } else if (lm_waiting_list) {
-            lm_lock_waiter * waiter = lm_waiting_list;
-            lm_waiting_list = waiter->next;
+        } else if (grp->waiting_list) {
+            lm_lock_waiter * waiter = grp->waiting_list;
+            grp->waiting_list = waiter->next;
             ET_moz_CallFunctionAsync(waiter->fn, waiter->data);
             XP_FREE(waiter);
         }
 
-        PR_Notify(lm_owner_mon);
+        PR_Notify(grp->owner_monitor);
     }
-    PR_ExitMonitor(lm_owner_mon);
-
+    PR_ExitMonitor(grp->owner_monitor);
 }
 
 /*
@@ -1119,18 +1123,25 @@ LM_UnlockJS()
 void
 LM_JSLockSetContext(MWContext * context)
 {
-    XP_ASSERT(lm_owner_mon != NULL);
-    PR_EnterMonitor(lm_owner_mon);
-    XP_ASSERT(lm_owner == PR_CurrentThread());
-    lm_owner_context = context;
-    PR_ExitMonitor(lm_owner_mon);
+    LMWindowGroup *grp = lm_MWContextToGroup(context);
+    if(grp == NULL)  {
+        grp = LM_GetDefaultWindowGroup(context);
+        LM_AddContextToGroup(grp, context);
+    }
+
+    XP_ASSERT(grp->owner_monitor != NULL);
+    PR_EnterMonitor(grp->owner_monitor);
+    XP_ASSERT(grp->owner == PR_CurrentThread());
+    grp->current_context = context;
+    PR_ExitMonitor(grp->owner_monitor);
 }
 
-/* this could race.  does it matter ? */
 MWContext *
-LM_JSLockGetContext()
+LM_JSLockGetContext(MWContext *mwc)
 {
-    return lm_owner_context;
+    LMWindowGroup *grp = lm_MWContextToGroup(mwc);
+    XP_ASSERT(grp != NULL);
+    return grp->current_context;
 }
 
 
@@ -1146,15 +1157,25 @@ LM_GetMochaDecoder(MWContext *context)
     /* Get the context's JS decoder, creating one if necessary. */
     cx = context->mocha_context;
     if (cx) {
+	JS_SetContextThread(cx);
+	/* XXXMLM - are we already in the request here? */
+	JS_BeginRequest(cx);
         decoder = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
+	JS_EndRequest(cx);
     } else {
         decoder = lm_NewWindow(context);
         if (!decoder)
             return NULL;
         cx = decoder->js_context;
     }
-    if (!decoder->document && !lm_InitWindowContent(decoder))
-        return NULL;
+    if (!decoder->document)  {
+        JS_BeginRequest(cx);
+	if(!lm_InitWindowContent(decoder))  {
+            JS_EndRequest(cx);
+            return NULL;
+	}
+        JS_EndRequest(cx);
+    }
     /* The decoder has at least one forward ref from context. */
     XP_ASSERT(decoder->forw_count > 0);
     decoder->forw_count++;
@@ -1244,10 +1265,12 @@ JSBool
 LM_IsActive(MWContext *context)
 {
     JSContext *cx = context->mocha_context;
+    JSBool ans;
     if (!cx)
         return JS_FALSE;
-    
-    return (JSBool)(JS_IsRunning(cx) || (context->js_timeouts_pending > 0));
+    /* No need to lock here.  MLM */
+    ans = JS_IsRunning(cx);
+    return (JSBool)(ans || (context->js_timeouts_pending > 0));
 }
 
 const char *
@@ -1397,7 +1420,15 @@ LM_EvaluateAttribute(MWContext *context, char *expr, uint lineno)
     decoder->doc_id = XP_DOCID(context);
 
     cx = decoder->js_context;
+
+    /* Make sure the correct thread ID is set on the JS context */
+    JS_SetContextThread(cx);
+
+    /* Since we're on the Mozilla thread, we haven't begun a request yet. */
+    JS_BeginRequest(cx);
+
     if (!JS_AddRoot(cx, &result)) {   /* XXX chouck - can we do a lockGCThing here */
+	JS_EndRequest(cx);
         LM_PutMochaDecoder(decoder);
         return bytes;
     }
@@ -1412,6 +1443,7 @@ LM_EvaluateAttribute(MWContext *context, char *expr, uint lineno)
         JSPRINCIPALS_DROP(cx, principals);
     }
     JS_RemoveRoot(cx, &result);
+    JS_EndRequest(cx);
     LM_PutMochaDecoder(decoder);
     return bytes;
 }

@@ -70,6 +70,7 @@ JSBool lm_DefineTriggers()
 	JSContext	*globalContext = NULL;
 	JSObject	*globalObject = NULL;
 	JSObject	*autoInstallObject, *versionObject;
+	JSBool          ans;
 
 	/* get global mocha context and object */
     PREF_GetConfigContext(&globalContext);
@@ -79,6 +80,7 @@ JSBool lm_DefineTriggers()
         return JS_FALSE;
     }
 
+    JS_BeginRequest(globalContext);
 	/* define AutoInstall object in global object */
 	autoInstallObject = JS_DefineObject(globalContext, globalObject, 
 					    "AutoInstall",
@@ -86,20 +88,28 @@ JSBool lm_DefineTriggers()
 					    NULL, 
 					    JSPROP_ENUMERATE|JSPROP_READONLY);
 					    
-	if (!autoInstallObject)
+	if (!autoInstallObject)  {
+		JS_EndRequest(globalContext);
 		return JS_FALSE;
+	}
+
 	
 	/* define Version class in AutoInstall */
     versionObject = JS_InitClass(globalContext, autoInstallObject, NULL,
 		        		&version_class, asd_Version, 0, NULL, NULL, NULL, NULL);
 	
-	if (!versionObject)
+	if (!versionObject)  {
+		JS_EndRequest(globalContext);
 		return JS_FALSE;
+	}
     
     /* define some global config utility functions */
     JS_DefineFunctions(globalContext, globalObject, globalconfig_methods);
     
-	return JS_DefineFunctions(globalContext, autoInstallObject, autoinstall_methods);
+    ans = JS_DefineFunctions(globalContext, autoInstallObject, 
+			     autoinstall_methods);
+    JS_EndRequest(globalContext);
+    return ans;
 }
 
 /* Convert VERSION type to Version JS object */

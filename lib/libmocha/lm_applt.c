@@ -299,7 +299,7 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
                          lo_applet, javaobject, obj));
 
     if (obj)
-      	lm_java_clasp = JS_GetClass(obj);
+      	lm_java_clasp = JS_GetClass(cx, obj);
 	    return lo_applet->objTag.mocha_object = obj;
 }
 

@@ -1080,8 +1080,8 @@ input_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 		if (!JS_InstanceOf(cx, JSVAL_TO_OBJECT(*vp), &lm_option_class,
 				   NULL)) {
 		    JS_ReportError(cx, "cannot set %s.%s to incompatible %s",
-				   JS_GetClass(obj)->name, lm_options_str,
-				   JS_GetClass(JSVAL_TO_OBJECT(*vp))->name);
+				   JS_GetClass(cx, obj)->name, lm_options_str,
+				   JS_GetClass(cx, JSVAL_TO_OBJECT(*vp))->name);
 		    goto bad;
 		}
 		option = JS_GetPrivate(cx, JSVAL_TO_OBJECT(*vp));
@@ -1823,10 +1823,10 @@ LM_ReflectFormElement(MWContext *context, int32 layer_id, int32 form_id,
     JSInputBase *base;
     JSInputArray *array;
     jsval val;
-    static uint recurring;	/* XXX thread-unsafe */
     lo_FormData * form_data;
     lo_TopState *top_state;
     int32 element_index;
+    LMWindowGroup *grp;
 
     /* reflect the form */
     if (!LM_ReflectForm(context, NULL, NULL, layer_id, form_id)) 
@@ -1892,6 +1892,12 @@ LM_ReflectFormElement(MWContext *context, int32 layer_id, int32 form_id,
     type = data->type;
     if ((char *)data->ele_minimal.name)
 	name = XP_STRDUP((char *)data->ele_minimal.name);
+
+    grp = lm_MWContextToGroup(context);
+    if(!grp)  {
+	grp = LM_GetDefaultWindowGroup(context);
+    }
+
     switch (type) {
       case FORM_TYPE_TEXT:
       case FORM_TYPE_TEXTAREA:
@@ -1902,12 +1908,12 @@ LM_ReflectFormElement(MWContext *context, int32 layer_id, int32 form_id,
         break;
 
       case FORM_TYPE_RADIO:
-        if (!recurring) {
-	    recurring++;
+        if (!grp->inputRecurring) {
+	    grp->inputRecurring++;
 	    ok = lm_ReflectRadioButtonArray(context, layer_id,
                                             form_element->form_id,
                                             name, tag);
-	    recurring--;
+	    grp->inputRecurring--;
 	    obj = form_element->mocha_object;
 	    if (obj) {
 		LM_PutMochaDecoder(decoder);
@@ -1967,7 +1973,7 @@ LM_ReflectFormElement(MWContext *context, int32 layer_id, int32 form_id,
     if (name) {
 	old_obj = JSVAL_IS_OBJECT(val) ? JSVAL_TO_OBJECT(val) : NULL;
 	if (old_obj) {
-	    clasp = JS_GetClass(old_obj);
+	    clasp = JS_GetClass(cx, old_obj);
 	    if (clasp != &lm_input_class && clasp != &lm_input_array_class)
 	    	old_obj = NULL;
 	}

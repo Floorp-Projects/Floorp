@@ -46,9 +46,7 @@
 #define CHECKBOX_CHECKBIT	0x02
 
 /* pointer to the mocha thread */
-extern PRThread		    *lm_InterpretThread;
 extern PRThread		    *mozilla_thread;
-extern QueueStackElement    *et_TopQueue;
 
 /****************************************************************************/
 
@@ -321,6 +319,7 @@ et_HandleEvent_SetTimeout(MozillaEvent_Timeout* e)
     event->pClosure = e->pClosure;
     event->ulTime = e->ulTime;
     event->ce.doc_id = e->ce.doc_id;
+    event->ce.context = e->ce.context;
     event->pTimerId = FE_SetTimeout(ET_FireTimeoutCallBack, event, e->ulTime);
     
     return(event->pTimerId);
@@ -341,6 +340,11 @@ ET_PostSetTimeout(TimeoutCallbackFunction fnCallback, void * pClosure,
     event->fnCallback = fnCallback;
     event->pClosure = pClosure;
     event->ulTime = ulTime;
+
+    /* XXXMLM - pClosure appears to be an MWContext pointer in all the
+     *           instances I've seen.  I'll use it for now.
+     */
+    event->ce.context = (MWContext *) pClosure;
 
     ret = et_PostEvent(&event->ce, TRUE);
     return(ret);
@@ -687,14 +691,21 @@ typedef struct {
     URL_Struct      * pUrl;
     char            * szName;
     Chrome          * pChrome;
+    LMWindowGroup   * group;
 } MozillaEvent_NewWindow;
 
 
 PR_STATIC_CALLBACK(void*)
 et_HandleEvent_NewWindow(MozillaEvent_NewWindow* e)
 {
-    return((void *)FE_MakeNewWindow(e->ce.context, e->pUrl, e->szName, 
-                                    e->pChrome));
+    LMWindowGroup *grp = e->group;
+
+    MWContext *ans = FE_MakeNewWindow(e->ce.context, e->pUrl, 
+                                      e->szName, e->pChrome);
+    if(grp != NULL)  {
+        LM_AddContextToGroup(grp, ans);
+    }
+    return (void *) ans;
 }
 
 PR_STATIC_CALLBACK(void)
@@ -708,7 +719,7 @@ et_DestroyEvent_NewWindow(MozillaEvent_NewWindow* event)
 
 MWContext *
 ET_PostNewWindow(MWContext* context, URL_Struct * pUrl, 
-                 char * szName, Chrome * pChrome)
+                 char * szName, Chrome * pChrome, LMWindowGroup *grp)
 {
     MWContext * ret;
     MozillaEvent_NewWindow* event = PR_NEW(MozillaEvent_NewWindow);
@@ -724,6 +735,7 @@ ET_PostNewWindow(MWContext* context, URL_Struct * pUrl,
     else
 	event->szName = NULL;
     event->pChrome = pChrome;
+    event->group = grp;
 
     ret = (MWContext *) et_PostEvent(&event->ce, TRUE);
     return(ret);
@@ -1595,39 +1607,44 @@ et_DestroyEvent_DocWrite(MozillaEvent_DocWrite* e)
     XP_FREE(e);
 }
 
-static uint et_EventQueueDepth;	/* number of active entries on stack */
-static uint et_EventQueueCount;	/* allocated entries, including inactive */
-
 static QueueStackElement *
 et_PushEventQueue(MWContext * context)
 {
+    LMWindowGroup *grp;
     QueueStackElement * qse;
     char name[32];
 
+    grp = lm_MWContextToGroup(context);
+    if(grp == NULL)  {
+        grp = LM_GetDefaultWindowGroup(context);
+        LM_AddContextToGroup(grp, context);
+    }
+
     /* catch script src= tags that generate themselves. */
-    if (et_EventQueueDepth >= 5)
+    if (grp->queue_depth >= 5)
 	return NULL;
 
     /* see if we've already got one */
-    qse = et_TopQueue->up;
+    qse = grp->queue_stack->up;
     if (!qse) {
 	qse = XP_NEW_ZAP(QueueStackElement);
 	if (!qse)
 	    return NULL;
 
-	PR_snprintf(name, sizeof name, "mocha-stack-queue-%d", et_EventQueueDepth + 1);
-	qse->queue  = PR_CreateEventQueue(name, lm_InterpretThread);
+	PR_snprintf(name, sizeof name, "mocha-stack-queue-%d", 
+                    grp->queue_depth + 1);
+	qse->queue  = PR_CreateEventQueue(name, grp->thread);
 
 	if (!qse->queue) {
 	    XP_DELETE(qse);
 	    return NULL;
 	}
 
-	et_EventQueueCount++;
-	qse->down = et_TopQueue;
-	et_TopQueue->up = qse;
+	grp->queue_count++;
+	qse->down = grp->queue_stack;
+	grp->queue_stack->up = qse;
     }
-    et_EventQueueDepth++;
+    grp->queue_depth++;
     qse->context = context;
     qse->done = FALSE;
 
@@ -1636,27 +1653,31 @@ et_PushEventQueue(MWContext * context)
      */
     qse->doc_id = -1;  
 
-    et_TopQueue = qse;
+    grp->queue_stack = qse;
     return qse;
 
 }
 
 static void *		      
-et_PopEventQueue(void)
+et_PopEventQueue(MWContext *mwc)
 {
+    LMWindowGroup *grp;
     QueueStackElement * qse;
     void * ret;
     
-    qse = et_TopQueue;
+    grp = lm_MWContextToGroup(mwc);
+    XP_ASSERT(grp != NULL);
+
+    qse = grp->queue_stack;
     ret = qse->retval;
-    et_TopQueue = qse->down;
-    et_EventQueueDepth--;
-    if (et_EventQueueCount > 2) {
+    grp->queue_stack = qse->down;
+    grp->queue_depth--;
+    if (grp->queue_count > 2) {
 	/* free the entry we're popping */
-	et_TopQueue->up = NULL;
+	grp->queue_stack->up = NULL;
 	PR_DestroyEventQueue(qse->queue);
 	XP_DELETE(qse);
-	et_EventQueueCount--;
+	grp->queue_count--;
     }
     return ret;
 }
@@ -1733,7 +1754,9 @@ ET_lo_DoDocWrite(JSContext *cx, MWContext * context, NET_StreamClass * stream,
     /*
      * Set the reciever doc_id to the one that gets passed in
      */
-    et_TopQueue->doc_id = doc_id;
+    /* MLM - this used to be et_TopQueue, but we know that et_TopQueue
+     *        and qse are equivalent at this point. */
+    qse->doc_id = doc_id;
 
     PR_InitEvent(&event->ce.event, context,
 		 (PRHandleEventProc)et_HandleEvent_DocWrite,
@@ -1749,7 +1772,7 @@ ET_lo_DoDocWrite(JSContext *cx, MWContext * context, NET_StreamClass * stream,
 
     /* spin here until we get our DocWriteAck */
     et_SubEventLoop(qse);
-    ret = (int) et_PopEventQueue();
+    ret = (int) et_PopEventQueue(context);
 
     /* Sample the doc_id, since we know that it's good */
     /* XXX do this in InitWindowContent only, not here and in DefineDocument */
@@ -1950,7 +1973,9 @@ ET_lo_DiscardDocument(MWContext * pContext)
 	return;
     }
 
-    et_TopQueue->doc_id = XP_DOCID(pContext);
+    /* MLM - this used to be et_TopQueue, but we know that et_TopQueue
+     *        and qse are equivalent at this point. */
+    qse->doc_id = XP_DOCID(pContext);
 
     PR_InitEvent(&event->ce.event, pContext,
 		 (PRHandleEventProc)et_HandleEvent_DiscardDocument,
@@ -1967,7 +1992,7 @@ ET_lo_DiscardDocument(MWContext * pContext)
     et_SubEventLoop(qse);
 
     qse->discarding = FALSE;
-    et_PopEventQueue();
+    et_PopEventQueue(pContext);
 }
 
 /****************************************************************************/
@@ -2125,7 +2150,7 @@ ET_moz_CallAsyncAndSubEventLoop(ETVoidPtrFunc fn, void *data,
     ET_moz_CallFunctionAsync(fn, data);
     
     et_SubEventLoop(qse);
-    (void)et_PopEventQueue();
+    (void)et_PopEventQueue(context);
     return;
 }
 
@@ -2951,6 +2976,46 @@ ET_moz_CompMethodFunction(ETCompMethodFunc fn, int32 argc, JSCompArg *argv)
 	XP_MEMCPY(event->argv, argv, (argc * sizeof(JSCompArg)));
 
     return (void *)et_PostEvent(&event->ce, TRUE);
+}
+
+/****************************************************************************/
+
+typedef struct {
+    ETEvent        ce;
+    MWContext      *context; 
+    const char     *script_name; 
+    JSCFCookieData *data; 
+    Bool           *data_changed;
+} MozillaEvent_JSCFExecute;
+
+PR_STATIC_CALLBACK(void *)
+et_HandleEvent_JSCFExecute(MozillaEvent_JSCFExecute* e)
+{
+    void *ans;
+    JSCFResult res;
+    res = JSCF_Execute(e->context, e->script_name, e->data, e->data_changed);
+    return (void *) (&res);
+}
+
+JSCFResult 
+ET_JSCFExecute(MWContext *context, const char *script_name, 
+               JSCFCookieData *data, Bool *data_changed)
+{
+    JSCFResult *res;
+    MozillaEvent_JSCFExecute* event = PR_NEW(MozillaEvent_JSCFExecute);
+    if(!event)
+	return NULL;
+
+    PR_InitEvent(&event->ce.event, NULL,
+		 (PRHandleEventProc)et_HandleEvent_JSCFExecute,
+		 (PRDestroyEventProc)et_DestroyEvent_GenericEvent);
+    event->context = context;
+    event->script_name = script_name;
+    event->data = data;
+    event->data_changed = data_changed;
+
+    res = et_PostEvent(&event->ce, TRUE);
+    return *res;
 }
 
 /****************************************************************************/

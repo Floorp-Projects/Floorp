@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 /*
  * JS reflection of the current Navigator Window.
  *
@@ -679,17 +680,18 @@ lm_ResolveWindowProps(JSContext *cx, MochaDecoder *decoder, JSObject *obj,
 
     if (!XP_STRCMP(name, lm_navigator_str)) {
         /* see if there is a global navigator object yet */
-        if (!lm_crippled_decoder->navigator) {
-            lm_DefinePluginClasses(lm_crippled_decoder);
-            lm_crippled_decoder->navigator = lm_DefineNavigator(lm_crippled_decoder);
-            if (!lm_crippled_decoder->navigator)
+	MochaDecoder *crd = LM_GetCrippledDecoder();
+        if (!crd->navigator) {
+            lm_DefinePluginClasses(crd);
+            crd->navigator = lm_DefineNavigator(crd);
+            if (!crd->navigator)
                 return JS_FALSE;
-            if (!JS_AddRoot(cx, &lm_crippled_decoder->navigator))
+            if (!JS_AddRoot(cx, &crd->navigator))
                 return JS_FALSE;
         }
 
         /* use the global navigator */
-        decoder->navigator = lm_crippled_decoder->navigator;
+        decoder->navigator = crd->navigator;
         if (!JS_DefineProperty(cx, obj, lm_navigator_str,
                                OBJECT_TO_JSVAL(decoder->navigator),
                                NULL, NULL,
@@ -701,17 +703,18 @@ lm_ResolveWindowProps(JSContext *cx, MochaDecoder *decoder, JSObject *obj,
 
     if (!XP_STRCMP(name, lm_components_str)) {
         /* see if there is a global components object yet */
-        if (!lm_crippled_decoder->components) {
-            lm_crippled_decoder->components =
-                lm_DefineComponents(lm_crippled_decoder);
-            if (!lm_crippled_decoder->components)
+	MochaDecoder *crd = LM_GetCrippledDecoder();
+        if (!crd->components) {
+            crd->components =
+                lm_DefineComponents(crd);
+            if (!crd->components)
                 return JS_FALSE;
-            if (!JS_AddRoot(cx, &lm_crippled_decoder->components))
+            if (!JS_AddRoot(cx, &crd->components))
                 return JS_FALSE;
         }
 
         /* use the global navigator */
-        decoder->components = lm_crippled_decoder->components;
+        decoder->components = crd->components;
         if (!JS_DefineProperty(cx, obj, lm_components_str,
                                OBJECT_TO_JSVAL(decoder->components),
                                NULL, NULL,
@@ -935,10 +938,28 @@ win_has_option(char *options, char *name)
 static uint lm_window_count = 0;
 static uint lm_window_limit = 100;
 
+JSBool PR_CALLBACK
+real_win_open(JSContext *cx, JSObject *obj,
+              uint argc, jsval *argv, jsval *rval, PRBool newGroup);
+
 /* XXX this can't be static yet, it's called by lm_doc.c/doc_open */
 JSBool PR_CALLBACK
 win_open(JSContext *cx, JSObject *obj,
          uint argc, jsval *argv, jsval *rval)
+{
+    return real_win_open(cx, obj, argc, argv, rval, PR_FALSE);
+}
+
+JSBool PR_CALLBACK 
+win_spawn(JSContext *cx, JSObject *obj,
+          uint argc, jsval *argv, jsval *rval)
+{
+    return real_win_open(cx, obj, argc, argv, rval, PR_TRUE);
+}
+
+JSBool PR_CALLBACK
+real_win_open(JSContext *cx, JSObject *obj,
+              uint argc, jsval *argv, jsval *rval, PRBool newGroup)
 {
     MochaDecoder *decoder, *new_decoder;
     URL_Struct *url_struct;
@@ -999,6 +1020,7 @@ win_open(JSContext *cx, JSObject *obj,
         window_name = NULL;
     }
 
+
     /* Check for window chrome options. */
     chrome = XP_NEW_ZAP(Chrome);
     if(chrome == NULL)
@@ -1055,6 +1077,7 @@ win_open(JSContext *cx, JSObject *obj,
                 chrome->hide_title_bar = chrome->disable_commands = 0;
             }
         }
+
 
         /* In order to not start Java for every single window open we 
 	 * have to first check if we need to check, and then check.  
@@ -1151,7 +1174,7 @@ win_open(JSContext *cx, JSObject *obj,
     else
         context = NULL;
 
-    if (context) {
+    if (context && !newGroup) {
         new_decoder = LM_GetMochaDecoder(context);
         if (!new_decoder)
             goto fail;
@@ -1167,13 +1190,25 @@ win_open(JSContext *cx, JSObject *obj,
 	if (argc > 2)
 	    ET_PostUpdateChrome(context, chrome);
     } else {
+        LMWindowGroup *grp;
+
         if (lm_window_count >= lm_window_limit)
             goto fail;
+
+        if(newGroup)  {
+            grp = lm_NewWindowGroup();
+        }  else  {
+            grp = lm_MWContextToGroup(old_context);
+        }
+
         context = ET_PostNewWindow(old_context, url_struct,
                                    (char*)window_name,
-                                   chrome);
-        if (!context)
+                                   chrome, grp);
+
+        if (!context)  {
             goto fail;
+        }
+
         /* ET_PostNewWindow() stashed a url_struct pointer, and owns it now. */
         url_struct = 0;
         new_decoder = LM_GetMochaDecoder(context);
@@ -1195,6 +1230,7 @@ win_open(JSContext *cx, JSObject *obj,
     lm_window_count++;
     LM_PutMochaDecoder(new_decoder);
     *rval = OBJECT_TO_JSVAL(new_decoder->window_object);
+
     XP_FREE(chrome);
     XP_FREEIF(window_name);
     return JS_TRUE;
@@ -1388,6 +1424,36 @@ win_close(JSContext *cx, JSObject *obj, uint argc, jsval *argv, jsval *rval)
  */
 static uint  lm_timeout_count = 0;
 static uint  lm_timeout_limit = 1000;
+PRMonitor *lm_timeout_monitor = NULL;
+
+uint lm_GetTimeoutCount(void)
+{
+    uint ans;
+    if(!lm_timeout_monitor)
+	lm_timeout_monitor = PR_NewMonitor();
+    PR_EnterMonitor(lm_timeout_monitor);
+    ans = lm_timeout_count;
+    PR_ExitMonitor(lm_timeout_monitor);
+    return ans;
+}
+
+void lm_IncrementTimeoutCount(void)
+{
+    if(!lm_timeout_monitor)
+	lm_timeout_monitor = PR_NewMonitor();
+    PR_EnterMonitor(lm_timeout_monitor);
+    lm_timeout_count++;
+    PR_ExitMonitor(lm_timeout_monitor);
+}
+
+void lm_DecrementTimeoutCount(void)
+{
+    if(!lm_timeout_monitor)
+	lm_timeout_monitor = PR_NewMonitor();
+    PR_EnterMonitor(lm_timeout_monitor);
+    lm_timeout_count--;
+    PR_ExitMonitor(lm_timeout_monitor);
+}
 
 #define HOLD_TIMEOUT(cx,to) ((to)->ref_count++)
 #define DROP_TIMEOUT(decoder,to)                                             \
@@ -1425,7 +1491,7 @@ free_timeout(MochaDecoder *decoder, JSTimeout *timeout)
         JSPRINCIPALS_DROP(cx, timeout->principals);
     XP_FREEIF(timeout->filename);
     JS_free(cx, timeout);
-    lm_timeout_count--;
+    lm_DecrementTimeoutCount();
 }
 
 /* Re-insert timeout before the first list item with greater deadline, or at
@@ -1448,9 +1514,6 @@ insert_timeout_into_list(JSTimeout **listp, JSTimeout *timeout)
     *listp = timeout;
 }
 
-static JSTimeout *js_timeout_running = NULL;
-static JSTimeout **js_timeout_insertion_point = NULL;
-
 static void
 win_run_timeout(void *closure)
 {
@@ -1461,6 +1524,7 @@ win_run_timeout(void *closure)
     JSContext *cx;
     int64 now;
     jsval result;
+    LMWindowGroup *grp;
     MWContext * context = (MWContext *)((MozillaEvent_Timeout *)closure)->pClosure;
     void *timer_id;
 
@@ -1479,6 +1543,7 @@ win_run_timeout(void *closure)
         return;
     }
 
+    grp = lm_MWContextToGroup(context);
     cx = decoder->js_context;
 
     /*
@@ -1518,8 +1583,8 @@ restart:
        dummy timeout. */
     dummy_timeout.ref_count = 2;
    
-    XP_ASSERT(!js_timeout_insertion_point);
-    js_timeout_insertion_point = &dummy_timeout.next;
+    XP_ASSERT(!grp->js_timeout_insertion_point);
+    grp->js_timeout_insertion_point = &dummy_timeout.next;
     
     for (timeout = decoder->timeouts; timeout != &dummy_timeout; timeout = next) {
         next = timeout->next;
@@ -1540,7 +1605,7 @@ restart:
 
         /* Hold the timeout in case expr or funobj releases its doc. */
         HOLD_TIMEOUT(cx, timeout);
-        js_timeout_running = timeout;
+        grp->js_timeout_running = timeout;
 
         if (timeout->expr) {
             /* Evaluate the timeout expression. */
@@ -1571,7 +1636,7 @@ restart:
         /* If timeout's reference count is now 1, its doc was released
          * and we should restart this function.
          */
-        js_timeout_running = NULL;
+        grp->js_timeout_running = NULL;
         if (timeout->ref_count == 1) {
             free_timeout(decoder, timeout);
             goto restart;
@@ -1619,14 +1684,14 @@ restart:
         } else {
             /* Reschedule an interval timeout */
             /* Insert interval timeout onto list sorted in deadline order. */
-            insert_timeout_into_list(js_timeout_insertion_point, timeout);
+            insert_timeout_into_list(grp->js_timeout_insertion_point, timeout);
         }
     }
 
     /* Take the dummy timeout off the head of the list */
     XP_ASSERT(decoder->timeouts == &dummy_timeout);
     decoder->timeouts = dummy_timeout.next;
-    js_timeout_insertion_point = NULL;
+    grp->js_timeout_insertion_point = NULL;
 
     LM_PutMochaDecoder(decoder);
 }
@@ -1635,6 +1700,13 @@ void
 lm_ClearWindowTimeouts(MochaDecoder *decoder)
 {
     JSTimeout *timeout, *next;
+    LMWindowGroup *grp;
+    
+    if(decoder->window_context)  {
+	grp = lm_MWContextToGroup(decoder->window_context);
+	if(!grp)
+	    grp = LM_GetDefaultWindowGroup(decoder->window_context);
+    }
 
     for (timeout = decoder->timeouts; timeout; timeout = next) {
         /* If win_run_timeouts() is higher up on the stack for this
@@ -1642,8 +1714,8 @@ lm_ClearWindowTimeouts(MochaDecoder *decoder)
            then we need to reset the list insertion point for
            newly-created timeouts in case the user adds a timeout,
            before we pop the stack back to win_run_timeouts(). */
-        if (js_timeout_running == timeout)
-            js_timeout_insertion_point = NULL;
+        if (grp->js_timeout_running == timeout)
+            grp->js_timeout_insertion_point = NULL;
         
         next = timeout->next;
         if (timeout->toid)
@@ -1776,11 +1848,12 @@ win_set_timeout_or_interval(JSContext *cx, JSObject *obj,
     int64 now, delta;
     JSObject *funobj;
     JSStackFrame *fp;
+    LMWindowGroup *grp;
 
     if (!(decoder = JS_GetInstancePrivate(cx, obj, &lm_window_class, argv)))
         return JS_FALSE;
 
-    if (lm_timeout_count >= lm_timeout_limit) {
+    if (lm_GetTimeoutCount() >= lm_timeout_limit) {
         JS_ReportError(cx, "too many timeouts and intervals");
         return JS_FALSE;
     }
@@ -1856,8 +1929,12 @@ win_set_timeout_or_interval(JSContext *cx, JSObject *obj,
     /* Keep track of any pending timeouts so that FE can tell whether
        the stop button should be active. */
     context = decoder->window_context;
-    if (context)
+    if (context)  {
         context->js_timeouts_pending++;
+	grp = lm_MWContextToGroup(context);
+    }  else  {
+	grp = LM_GetDefaultWindowGroup(NULL);
+    }
 
     if (expr) {
         timeout->argv = 0;
@@ -1905,15 +1982,15 @@ win_set_timeout_or_interval(JSContext *cx, JSObject *obj,
         return JS_FALSE;
     }
 
-    if (js_timeout_insertion_point == NULL)
+    if (grp->js_timeout_insertion_point == NULL)
         insertion_point = &decoder->timeouts;
     else
-        insertion_point = js_timeout_insertion_point;
+        insertion_point = grp->js_timeout_insertion_point;
 
     /* Insert interval timeout onto list sorted in deadline order */
     insert_timeout_into_list(insertion_point, timeout);
 
-    lm_timeout_count++;
+    lm_IncrementTimeoutCount();
 
     timeout->public_id = ++timeout_public_id_counter;
     *rval = INT_TO_JSVAL((jsint)timeout->public_id);
@@ -1941,6 +2018,7 @@ win_clear_timeout(JSContext *cx, JSObject *obj,
     MochaDecoder *decoder;
     uint32 public_id;
     JSTimeout **top, *timeout;
+    LMWindowGroup *grp;
 
     if (!(decoder = JS_GetInstancePrivate(cx, obj, &lm_window_class, argv)))
         return JS_FALSE;
@@ -1949,9 +2027,16 @@ win_clear_timeout(JSContext *cx, JSObject *obj,
     public_id = (uint32)JSVAL_TO_INT(argv[0]);
     if (!public_id)    /* id of zero is reserved for internal use */
 	return JS_TRUE;
+    if(decoder->window_context)  {
+	grp = lm_MWContextToGroup(decoder->window_context);
+	if(!grp)
+	    grp = LM_GetDefaultWindowGroup(decoder->window_context);
+    }  else  {
+	grp = LM_GetDefaultWindowGroup(NULL);
+    }
     for (top = &decoder->timeouts; ((timeout = *top) != NULL); top = &timeout->next) {
         if (timeout->public_id == public_id) {
-            if (js_timeout_running == timeout) {
+            if (grp->js_timeout_running == timeout) {
                 /* We're running from inside the timeout.  Mark this
                    timeout for deferred deletion by the code in
                    win_run_timeout() */
@@ -2719,6 +2804,7 @@ static JSFunctionSpec lm_window_methods[] = {
     {"close",           win_close,              0},
     {"confirm",         win_confirm,            1},
     {"open",            win_open,               1},
+    {"spawn",           win_spawn,              1},
     {"setZOptions",     win_set_zoptions,       1},
     {"setHotkeys",      win_set_hotkeys,        1},
     {"setResizable",    win_set_resizable,      1},

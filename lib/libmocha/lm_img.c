@@ -657,7 +657,7 @@ LM_ReflectImage(MWContext *context, LO_ImageStruct *image_data,
 	/* XXX backward compatibility with 3.0 bug: lo_BlockedImageLayout
 	       would eagerly reflect images outside of any active form, so
 	       they'd end up in document scope. */
-	if (JS_GetClass(outer_obj) == &lm_form_class &&
+	if (JS_GetClass(cx, outer_obj) == &lm_form_class &&
 	    (doc_obj = JS_GetParent(cx, outer_obj)) != NULL &&
 	    !JS_DefineProperty(cx, doc_obj, (const char *) name, 
 			       OBJECT_TO_JSVAL(obj), NULL, NULL,

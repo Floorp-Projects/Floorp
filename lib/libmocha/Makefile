@@ -61,6 +61,7 @@ CSRCS		= et_mocha.c \
 		  lm_trggr.c \
 		  lm_url.c \
 		  lm_win.c \
+		  lm_wngrp.c \
 		  lm_layer.c \
 		  $(NULL)
 

@@ -229,11 +229,12 @@ lm_RegisterComponentProp(const char *comp, const char *targetName,
     JSObject *arrayObj, *obj;
     jsval val;
     char *type, *set, *get;
+    MochaDecoder *cd = LM_GetCrippledDecoder();
     
-    if (!comp || !targetName || !(cx = lm_crippled_decoder->js_context))
+    if (!comp || !targetName || !(cx = cd->js_context))
 	return;
 
-    arrayObj = lm_DefineComponents(lm_crippled_decoder);
+    arrayObj = lm_DefineComponents(cd);
     if (!arrayObj)
 	return;
 
@@ -390,11 +391,12 @@ lm_RegisterComponentMethod(const char *comp, const char *targetName,
     JSObject *arrayObj, *obj, *func_obj;
     JSFunction *func;
     jsval val;
+    MochaDecoder *cd = LM_GetCrippledDecoder();
     
-    if (!comp || !targetName || !(cx = lm_crippled_decoder->js_context))
+    if (!comp || !targetName || !(cx = cd->js_context))
 	return;
 
-    arrayObj = lm_DefineComponents(lm_crippled_decoder);
+    arrayObj = lm_DefineComponents(cd);
     if (!arrayObj)
 	return;
 
@@ -513,11 +515,12 @@ lm_RegisterComponent(const char *targetName, ETBoolPtrFunc active_callback,
     JSComponentArray *array;
     JSComponent *component;
     jsval val;
+    MochaDecoder *cd = LM_GetCrippledDecoder();
 
-    if (!(cx = lm_crippled_decoder->js_context) || !targetName)
+    if (!(cx = cd->js_context) || !targetName)
 	return;
 	
-    arrayObj = lm_DefineComponents(lm_crippled_decoder);
+    arrayObj = lm_DefineComponents(cd);
     if (!arrayObj)
 	return;
 

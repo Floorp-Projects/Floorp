@@ -43,72 +43,117 @@
 #include "jsjava.h"
 #endif
 #include "intl_csi.h"
-/* #include "netcache.h" */
 
 #ifdef LAYPROBE_API
 #include "layprobe.h"
 #endif /* LAYPROBE_API */
 
-QueueStackElement * et_TopQueue = NULL;
-
-PRIVATE PRMonitor * lm_queue_monitor = NULL;
-PRIVATE JSBool lm_InterruptCurrentOp = JS_FALSE;
-
 #ifdef XP_WIN16
 #define MOCHA_NORMAL_PRIORITY PR_PRIORITY_NORMAL
-extern PRThread     *lm_InterpretThread;
 #endif
 
 /**********************************************************************/
 
 
-#define MAKE_EAGER_INHERIT(e)						     \
-                      if (et_TopQueue->inherit_parent &&		     \
+#define MAKE_EAGER_INHERIT(e, q)					     \
+                      if (q->inherit_parent &&				     \
 			  e->ce.handle_eagerly == JS_FALSE &&		     \
 			  e->ce.context->grid_parent) {			     \
 			  e->ce.handle_eagerly = 			     \
 			    (XP_DOCID(e->ce.context->grid_parent) ==         \
-			     et_TopQueue->doc_id);			     \
+			     q->doc_id);				     \
 		      }
 
-#define MAKE_EAGER(e) if (et_TopQueue->doc_id == 0 && 			     \
-			  et_TopQueue->context == e->ce.context) {	     \
-			  et_TopQueue->doc_id = XP_DOCID(e->ce.context);     \
+#define MAKE_EAGER(e, q) if (q->doc_id == 0 && 				     \
+			  q->context == e->ce.context) {		\
+			  q->doc_id = XP_DOCID(e->ce.context);     	\
 			  e->ce.handle_eagerly = JS_TRUE;		     \
 		      } else {						     \
 			  e->ce.handle_eagerly = 			     \
-			    (XP_DOCID(e->ce.context) == et_TopQueue->doc_id);\
+			    (XP_DOCID(e->ce.context) == q->doc_id);	\
 		      }							     \
-                      MAKE_EAGER_INHERIT(e)
+                      MAKE_EAGER_INHERIT(e,q)
 			  
 /**********************************************************************/
+
+/* MLM - had to move these up here so we could do a comparison in 
+ *        et_event_to_mocha. 
+ */
+typedef struct {
+    ETEvent	          ce;
+    MochaDecoder        * decoder;
+    LMWindowGroup       * group;
+} PutDecoderEvent;
+
+PR_STATIC_CALLBACK(void)
+et_putdecoder_handler(PutDecoderEvent * e);
+
+PR_STATIC_CALLBACK(void)
+et_firetimeout_handler(MozillaEvent_Timeout * e);
 
 static void
 et_event_to_mocha(ETEvent * e)
 {
     JSBool canDoJS;
+    LMWindowGroup *grp;
     
-    if(e->context) {
-	e->doc_id = XP_DOCID(e->context);
-	canDoJS = LM_CanDoJS(e->context);
-    } else {
-	/* source of event must be timeout or someone else who can do mocha*/
-	canDoJS = JS_TRUE;
-    }
-    
-    if (!lm_InterpretQueue || !canDoJS) {
+    if(!lm_inited())  {
 	e->event.destructor((PREvent *) e);
 	return;
     }
 
+    if(e->context) {
+	e->doc_id = XP_DOCID(e->context);
+	canDoJS = LM_CanDoJS(e->context);
+        grp = lm_MWContextToGroup(e->context);
+    } else {
+	/* source of event must be timeout or someone else who can do mocha*/
+	canDoJS = JS_TRUE;
+
+        /* XXXMLM - is this right?  Can we just use the default? 
+         *           Timeouts should go to proper queue now.
+         */
+        grp = LM_GetDefaultWindowGroup(NULL);
+    }
+
+    if(!grp)  {
+        /* XXXMLM - Is this right?  Am I introducing a race with the window 
+         *           spawn command? 
+         */
+        grp = LM_GetDefaultWindowGroup(e->context);
+        LM_AddContextToGroup(grp, e->context);
+    }
+    
+    if (!canDoJS)  {
+	e->event.destructor((PREvent *) e);
+	return;
+    }
+
+    /* Special case: The MWContext is about to be zapped if this is a
+     *                "put mocha decoder" event.  So, pre-zap it now 
+     *                that we have the right queue.
+     */
+    if((e->event.handler) == ((PRHandleEventProc)et_putdecoder_handler))  {
+	e->context = NULL;
+    }
+
+    /* Same deal: The MWContext may go away.  We have the correct queue,
+     *             so zap the context.
+     */
+    /****************************************************** MLM *
+    if((e->event.handler) == ((PRHandleEventProc)et_firetimeout_handler))  {
+	e->context = NULL;
+    }
+     ****************************************************** MLM */
+
     /*
-     * Decide which queue to put this event on.  The et_TopQueue may
-     *   actually be the same as lm_InterpretQueue
+     * Decide which queue to put this event on.  The queue stack's top may
+     *   actually be the same as the interpret queue
      */
     if (e->handle_eagerly) 
-	PR_PostEvent(et_TopQueue->queue, &e->event);
+	PR_PostEvent(grp->queue_stack->queue, &e->event);
     else
-	PR_PostEvent(lm_InterpretQueue, &e->event);
+	PR_PostEvent(grp->interpret_queue, &e->event);
 
 #ifdef XP_WIN16
     /* Raise the mocha thread priority, otherwise mocha may not get 
@@ -117,14 +162,14 @@ et_event_to_mocha(ETEvent * e)
      *   to the mozilla-event-queue and Navigator stops reacting to 
      *   the input events
      */
-    PR_SetThreadPriority ( lm_InterpretThread, PR_PRIORITY_URGENT );
+    PR_SetThreadPriority ( grp->thread, PR_PRIORITY_URGENT );
 #endif
 
-    if(lm_queue_monitor) {
+    if(grp->queue_monitor) {
         /* wake up the processing routine */
-        PR_EnterMonitor(lm_queue_monitor);
-        PR_Notify(lm_queue_monitor);
-        PR_ExitMonitor(lm_queue_monitor);
+        PR_EnterMonitor(grp->queue_monitor);
+        PR_Notify(grp->queue_monitor);
+        PR_ExitMonitor(grp->queue_monitor);
     }
 
 }
@@ -329,7 +374,11 @@ done:
      *   has transfered event to the mozilla-event-queue ( if necessary, 
      *   i.e. if e->fnClosure != NULL 
      */
-    PR_SetThreadPriority ( lm_InterpretThread, MOCHA_NORMAL_PRIORITY );
+    {
+        LMWindowGroup *grp = lm_MWContextToGroup(e->ce.context);
+        XP_ASSERT(grp != NULL);
+        PR_SetThreadPriority ( grp->thread, MOCHA_NORMAL_PRIORITY );
+    }
 #endif
 
     ET_END_EVENT_HANDLER(e);
@@ -345,18 +394,20 @@ JSBool
 ET_SendEvent(MWContext * pContext, LO_Element *pElement, JSEvent *pEvent, 
              ETClosureFunc fnClosure, void * whatever) 
 {
+    LMWindowGroup *grp;
+
 #ifdef LAYPROBE_API
-	LAPIEventInfo ei;
-	ei.type = pEvent->type;
-	ei.x = pEvent->x;
-	ei.y = pEvent->y;
-	ei.docx = pEvent->docx;
-	ei.docy = pEvent->docy;
-	ei.screenx = pEvent->screenx;
-	ei.screeny = pEvent->screeny;
-	ei.Context = pContext;
-	ei.lo_element = pElement;
-	LAPINotificationHandler(&ei);
+    LAPIEventInfo ei;
+    ei.type = pEvent->type;
+    ei.x = pEvent->x;
+    ei.y = pEvent->y;
+    ei.docx = pEvent->docx;
+    ei.docy = pEvent->docy;
+    ei.screenx = pEvent->screenx;
+    ei.screeny = pEvent->screeny;
+    ei.Context = pContext;
+    ei.lo_element = pElement;
+    LAPINotificationHandler(&ei);
 #endif /* LAYPROBE_API */
 
     /* make sure we are able to process Mocha events before bothering */
@@ -370,12 +421,34 @@ ET_SendEvent(MWContext * pContext, LO_Element *pElement, JSEvent *pEvent,
 	return(JS_TRUE);
     }
 
+    grp = lm_MWContextToGroup(pContext);
+    if(grp == NULL)  {
+        /* MLM - check to see if this is a type of event we should care
+         *        about right now.  The window hasn't used JS yet, so we
+         *        don't care about mouse moves, focus, etc.  So far the 
+         *        only one we think we care about is a load event.
+         */
+        if(pEvent->type == EVENT_LOAD)  {
+            grp = LM_GetDefaultWindowGroup(pContext);
+            LM_AddContextToGroup(grp, pContext);
+        }  else  {
+            /* Else dump the event, and call closure if present. */
+	    ETEventStatus status = EVENT_OK;
+            if(pEvent->type == EVENT_MOUSEOVER)
+                status = EVENT_CANCEL;
+            if (fnClosure)
+                fnClosure(pContext, pElement, pEvent->type, whatever, status);
+            XP_FREE(pEvent);
+            return(JS_TRUE);
+        }
+    }
+
     PR_InitEvent(&pEvent->ce.event, pContext,
                  (PRHandleEventProc)et_event_handler, 
                  (PRDestroyEventProc)et_event_destructor);
 
     pEvent->ce.context = pContext;
-    MAKE_EAGER_INHERIT(pEvent);
+    MAKE_EAGER_INHERIT(pEvent, grp->queue_stack);
     if(pElement)
 	pEvent->id = pElement->lo_any.ele_id;
     pEvent->lo_element = pElement;
@@ -462,7 +535,7 @@ void
 ET_SendLoadEvent(MWContext * pContext, int32 type, ETVoidPtrFunc fnClosure,
 		 NET_StreamClass *stream, int32 layer_id, Bool resize_reload)
 {
-
+    LMWindowGroup *grp;
     LoadEvent * pEvent;
 
     /* 
@@ -483,9 +556,14 @@ ET_SendLoadEvent(MWContext * pContext, int32 type, ETVoidPtrFunc fnClosure,
                  (PRHandleEventProc)et_load_event_handler, 
                  (PRDestroyEventProc)et_generic_destructor);
 
+    grp = lm_MWContextToGroup(pContext);
+    if(grp == NULL)  {
+        grp = LM_GetDefaultWindowGroup(pContext);
+        LM_AddContextToGroup(grp, pContext);
+    }
     pEvent->type = type;
     pEvent->ce.context = pContext;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
     pEvent->layer_id = layer_id;
     pEvent->fnClosure = fnClosure;
     pEvent->data = stream;
@@ -517,7 +595,7 @@ et_setactiveform_handler(JSEvent * e)
 void
 ET_SetActiveForm(MWContext * pContext, lo_FormData * form)
 {
-
+    LMWindowGroup *grp;
     JSEvent      * pEvent = (JSEvent *) XP_NEW_ZAP(JSEvent);
     if(!pEvent)
         return;
@@ -526,8 +604,10 @@ ET_SetActiveForm(MWContext * pContext, lo_FormData * form)
                  (PRHandleEventProc)et_setactiveform_handler, 
                  (PRDestroyEventProc)et_generic_destructor);
 
+    grp = lm_MWContextToGroup(pContext);
+    XP_ASSERT(grp != NULL);
     pEvent->ce.context = pContext;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
 
     /* form can be NULL when there should be no active form */
     if(form)
@@ -585,7 +665,9 @@ ET_SetActiveLayer(MWContext * pContext, int32 layer_id)
 JSBool
 ET_ContinueProcessing(MWContext * context)
 {
-    return (JSBool)(lm_InterruptCurrentOp == JS_FALSE);
+    LMWindowGroup *grp = lm_MWContextToGroup(context);
+    XP_ASSERT(grp != NULL);
+    return (JSBool)(grp->interruptCurrentOp == JS_FALSE);
 }
 
 /**********************************************************************/
@@ -593,12 +675,14 @@ ET_ContinueProcessing(MWContext * context)
 static void
 et_RevokeEvents(MWContext * pContext)
 {
+    LMWindowGroup *grp = lm_MWContextToGroup(pContext);
     QueueStackElement *qse;
+    XP_ASSERT(grp != NULL);
 
-    for (qse = et_TopQueue; qse; qse = qse->down) {
+    for (qse = grp->queue_stack; qse; qse = qse->down) {
         PR_RevokeEvents(qse->queue, pContext);
     }
-    for (qse = et_TopQueue->up; qse; qse = qse->up) {
+    for (qse = grp->queue_stack->up; qse; qse = qse->up) {
         PR_RevokeEvents(qse->queue, pContext);
     }
 }
@@ -606,21 +690,30 @@ et_RevokeEvents(MWContext * pContext)
 void
 ET_InterruptContext(MWContext * pContext)
 {
+    LMWindowGroup *grp;
 
     /* make sure the context can do mocha before bothering */
-    if (!lm_queue_monitor || !LM_CanDoJS(pContext))
+    if (!lm_inited() || !LM_CanDoJS(pContext))
 	return;
 
+    grp = lm_MWContextToGroup(pContext);
+    if(grp == NULL)  {
+        /* We sometimes get called on a context that's never done JS
+         * before.  If so, just bail.
+         */
+        return;
+    }
+
     /* need to lock the JS-thread from starting new events */
-    PR_EnterMonitor(lm_queue_monitor);
+    PR_EnterMonitor(grp->queue_monitor);
 
     /* Is our context currently running in mocha ? */
-    if (LM_JSLockGetContext() == pContext) {
+    if (LM_JSLockGetContext(pContext) == pContext) {
 	/* 
 	 * if the owner of the JSLock is the context we are
 	 *   interrupting set a flag so it will stop soon
 	 */
-	lm_InterruptCurrentOp = JS_TRUE;
+	grp->interruptCurrentOp = JS_TRUE;
 
     }
 
@@ -628,7 +721,7 @@ ET_InterruptContext(MWContext * pContext)
     et_RevokeEvents(pContext);
 
     /* need to unlock the JS-thread from starting new events */
-    PR_ExitMonitor(lm_queue_monitor);
+    PR_ExitMonitor(grp->queue_monitor);
  
     /* Interrupt the JS image context. */
     if (pContext->mocha_context)
@@ -853,6 +946,8 @@ void
 ET_ReflectObject(MWContext * pContext, void * lo_ele, void * tag, 
                  int32 layer_id, uint index, ReflectedObject type)
 {
+    LMWindowGroup *grp;
+
     /* create our event object */
     Reflect_Event * pEvent = (Reflect_Event *) XP_NEW_ZAP(Reflect_Event);
     if(!pEvent)
@@ -865,6 +960,9 @@ ET_ReflectObject(MWContext * pContext, void * lo_ele, void * tag,
     if (type == LM_APPLETS || type == LM_EMBEDS)
         ET_InitMoja(pContext);
 #endif
+
+    grp = lm_MWContextToGroup(pContext);
+    XP_ASSERT(grp != NULL);
 
     /* do a PR_InitEvent on the event structure */
     PR_InitEvent(&pEvent->ce.event, pContext,
@@ -882,7 +980,7 @@ ET_ReflectObject(MWContext * pContext, void * lo_ele, void * tag,
 
     pEvent->index = index;
     pEvent->layer_id = layer_id;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
 
     /* add the event to the event queue */
     et_event_to_mocha(&pEvent->ce);
@@ -964,6 +1062,8 @@ void
 ET_ReflectFormElement(MWContext * pContext, void * form,
 		      LO_FormElementStruct * form_element, PA_Tag * tag)
 {
+    LMWindowGroup *grp;
+
     /* create our event object */
     ReflectForm_Event * pEvent;
 
@@ -973,6 +1073,9 @@ ET_ReflectFormElement(MWContext * pContext, void * form,
     pEvent = (ReflectForm_Event *) XP_NEW_ZAP(ReflectForm_Event);
     if (!pEvent)
         return;
+
+    grp = lm_MWContextToGroup(pContext);
+    XP_ASSERT(grp != NULL);
 
     PR_InitEvent(&pEvent->ce.event, pContext,
 		 (PRHandleEventProc)et_reflectElement_handler, 
@@ -987,7 +1090,7 @@ ET_ReflectFormElement(MWContext * pContext, void * form,
     pEvent->element_index = form_element->element_index;
     pEvent->form_index = ((lo_FormData *)form)->id;
     pEvent->layer_id = form_element->layer_id;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
 
     et_event_to_mocha(&pEvent->ce);
 
@@ -1140,7 +1243,7 @@ void
 ET_EvaluateScript(MWContext * pContext, char * buffer, ETEvalStuff * stuff,
 		  ETEvalAckFunc fn)
 {
-
+    LMWindowGroup *grp;
     EvalStruct * pEvent;
     int len;
     int16 charset;
@@ -1156,6 +1259,12 @@ ET_EvaluateScript(MWContext * pContext, char * buffer, ETEvalStuff * stuff,
 	return;
     }
     
+    grp = lm_MWContextToGroup(pContext);
+    if(grp == NULL)  {
+        grp = LM_GetDefaultWindowGroup(pContext);
+        LM_AddContextToGroup(grp, pContext);
+    }
+
     /* create our event object */
     pEvent = (EvalStruct *) XP_NEW_ZAP(EvalStruct);
     if (!pEvent) {
@@ -1169,7 +1278,7 @@ ET_EvaluateScript(MWContext * pContext, char * buffer, ETEvalStuff * stuff,
 		 (PRDestroyEventProc)et_evalbuffer_destructor);
 
     pEvent->ce.context = pContext;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
 
     /*
      * We are going to make our own copy of the buffer in order
@@ -1229,11 +1338,14 @@ ET_EvaluateScript(MWContext * pContext, char * buffer, ETEvalStuff * stuff,
 PR_STATIC_CALLBACK(void)
 et_firetimeout_handler(MozillaEvent_Timeout * e)
 {
-/*    ET_BEGIN_EVENT_HANDLER(e);*/	/* since we don't use the MWContext */
+    /* MLM - we use the MWContext now, so we need to have this happen */
+    ET_BEGIN_EVENT_HANDLER(e);
  
+    e->ce.context = _c;
+
     (e->fnCallback) ((void *)e);
 
-/*    ET_END_EVENT_HANDLER(e);*/
+    ET_END_EVENT_HANDLER(e);
 }
 
 void
@@ -1246,6 +1358,11 @@ ET_FireTimeoutCallBack(void * obj)
      *   valid destructor function
      */
     MozillaEvent_Timeout * pEvent = (MozillaEvent_Timeout *) obj;
+
+    /* XXXMLM - this event should have a context now, if it doesn't, it's
+     *        going to use the default thread group.
+     */
+    XP_ASSERT(pEvent->ce.context != NULL);
 
     /* reuse our event */    
     PR_InitEvent(&pEvent->ce.event, NULL,
@@ -1425,16 +1542,21 @@ et_destroylayer_handler(DestroyLayerStruct * e)
 void
 ET_DestroyLayer(MWContext * pContext, JSObject *layer_obj)
 {
+    LMWindowGroup *grp;
+
     DestroyLayerStruct * pEvent = XP_NEW_ZAP(DestroyLayerStruct);
     if(!pEvent)
         return;
+
+    grp = lm_MWContextToGroup(pContext);
+    XP_ASSERT(grp != NULL);
 
     PR_InitEvent(&pEvent->ce.event, pContext,
 		 (PRHandleEventProc)et_destroylayer_handler, 
 		 (PRDestroyEventProc)et_generic_destructor);
 
     pEvent->ce.context = pContext;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
     pEvent->layer_obj = layer_obj;
     et_event_to_mocha(&pEvent->ce);
 }
@@ -1459,10 +1581,19 @@ et_releasedocument_handler(ReleaseDocStruct * e)
 void
 ET_ReleaseDocument(MWContext * pContext, JSBool resize_reload)
 {
+    LMWindowGroup *grp;
+
     /* create our event object */
     ReleaseDocStruct * pEvent = XP_NEW_ZAP(ReleaseDocStruct);
     if(!pEvent)
         return;
+
+    grp = lm_MWContextToGroup(pContext);
+    if(grp == NULL)  {
+        /* XXXMLM - This window hasn't used JS yet; just ignore the event. */
+        XP_DELETE(pEvent);
+        return;
+    }
 
     /* 
      * give this event a NULL owner so it can't get revoked by an
@@ -1473,7 +1604,7 @@ ET_ReleaseDocument(MWContext * pContext, JSBool resize_reload)
 		 (PRDestroyEventProc)et_generic_destructor);
 
     pEvent->ce.context = pContext;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
     pEvent->resize_reload = resize_reload;
     et_event_to_mocha(&pEvent->ce);
 
@@ -1567,16 +1698,21 @@ et_nestingurl_destructor(NestingUrlEvent * e)
 void
 ET_SetNestingUrl(MWContext * pContext, char * url)
 {
+    LMWindowGroup *grp;
+
     NestingUrlEvent * pEvent = XP_NEW_ZAP(NestingUrlEvent);
     if(!pEvent)
         return;
+
+    grp = lm_MWContextToGroup(pContext);
+    XP_ASSERT(grp != NULL);
 
     PR_InitEvent(&pEvent->ce.event, pContext,
 		 (PRHandleEventProc)et_nestingurl_handler, 
 		 (PRDestroyEventProc)et_nestingurl_destructor);
 
     pEvent->ce.context = pContext;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
     if(url)
 	pEvent->szUrl = XP_STRDUP(url);
     else
@@ -1656,10 +1792,13 @@ et_removewindow_handler(RemoveWindowEvent * e)
 
     /* remove any messages for this context that are waiting for us */
     /* what prevents one from getting added while running this? 
-       A: Being in the monitor of lm_InterpretQueue, both when you do
+       A: Being in the monitor of interpretQueue, both when you do
        this, and when you deliver the events. -Warren */
 /*    XP_ASSERT(PR_InMonitor(lm_queue_monitor));*/
     et_RevokeEvents(e->ce.context);
+
+    /* remove the window from its group, if any */
+    LM_RemoveContextFromGroup(e->ce.context);
 
     ET_moz_CallFunction(et_moz_removewindow_epilog, e);
 }
@@ -1721,15 +1860,22 @@ ET_RemoveWindowContext(MWContext * pContext, ETVoidPtrFunc fn, void * data)
 
 /**********************************************************************/
 
-typedef struct {
-    ETEvent	          ce;
-    MochaDecoder        * decoder;
-} PutDecoderEvent;
-
 PR_STATIC_CALLBACK(void)
 et_putdecoder_handler(PutDecoderEvent * e)
 {
+    /* et_SubEventLoopGroup doesn't lock because the context is no longer
+     * valid, so we have to lock ourselves now. */
+    if(e->group == NULL)  {
+        /* jiminy christmas, the context has gone away so we couldn't
+	 * figure out which group to use
+	 */
+	e->group = LM_GetDefaultWindowGroup(NULL);
+    }
+    HOLD_BACK_COUNT(e->decoder);
+    LM_BeginRequest(e->group, e->decoder->js_context);
     LM_PutMochaDecoder(e->decoder);
+    LM_EndRequest(e->group, e->decoder->js_context);
+    DROP_BACK_COUNT(e->decoder);
 }
 
 /*
@@ -1742,6 +1888,7 @@ void
 et_PutMochaDecoder(MWContext *pContext, MochaDecoder *decoder)
 {
     PutDecoderEvent * pEvent;
+    PREventQueue    * queue;
     pEvent = XP_NEW_ZAP(PutDecoderEvent);
     if (!pEvent)
         return;
@@ -1752,6 +1899,8 @@ et_PutMochaDecoder(MWContext *pContext, MochaDecoder *decoder)
 
     pEvent->ce.context = pContext;
     pEvent->decoder = decoder;
+    pEvent->group = lm_MWContextToGroup(pContext);
+
     et_event_to_mocha(&pEvent->ce);
 
 }
@@ -1886,6 +2035,7 @@ void
 ET_MochaStreamComplete(MWContext * pContext, void * buf, int len, 
 		       char *content_type, Bool isUnicode)
 {
+    LMWindowGroup *grp;
     StreamEvent * pEvent;
 
     pEvent = XP_NEW_ZAP(StreamEvent);
@@ -1894,12 +2044,15 @@ ET_MochaStreamComplete(MWContext * pContext, void * buf, int len,
         return;
     }
 
+    grp = lm_MWContextToGroup(pContext);
+    XP_ASSERT(grp != NULL);
+
     PR_InitEvent(&pEvent->ce.event, pContext,
 		 (PRHandleEventProc)et_streamcomplete_handler, 
 		 (PRDestroyEventProc)et_streamcomplete_destructor);
 
     pEvent->ce.context = pContext;    
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
     pEvent->buf = buf;
     pEvent->len = len;
     pEvent->isUnicode = isUnicode;
@@ -2014,11 +2167,15 @@ ET_RestoreLayerState(MWContext *context, int32 layer_id,
                      LO_BlockInitializeStruct *param, ETRestoreAckFunc fn,
                      void *data)
 {
+    LMWindowGroup *grp;
 
     RestoreStruct * pEvent = XP_NEW_ZAP(RestoreStruct);
 
     if(!pEvent)
         return;
+
+    grp = lm_MWContextToGroup(context);
+    XP_ASSERT(grp != NULL);
 
     PR_InitEvent(&pEvent->ce.event, context,
 		 (PRHandleEventProc)et_restorelayerstate_handler, 
@@ -2029,7 +2186,7 @@ ET_RestoreLayerState(MWContext *context, int32 layer_id,
     pEvent->param = param;
     pEvent->fn = fn;
     pEvent->data = data;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
     et_event_to_mocha(&pEvent->ce);
 }
 
@@ -2162,17 +2319,21 @@ ET_ReflectWindow(MWContext * pContext,
                  PA_Block id, char *all, Bool bDelete, 
                  int newline_count)
 {
+    LMWindowGroup *grp;
 
     ReflectWindowEvent * pEvent = XP_NEW_ZAP(ReflectWindowEvent);
     if(!pEvent)
         return;
+
+    grp = lm_MWContextToGroup(pContext);
+    XP_ASSERT(grp != NULL);
 
     PR_InitEvent(&pEvent->ce.event, pContext,
 		 (PRHandleEventProc)et_reflectwindow_handler, 
 		 (PRDestroyEventProc)et_generic_destructor);
 
     pEvent->ce.context = pContext;
-    MAKE_EAGER(pEvent);
+    MAKE_EAGER(pEvent, grp->queue_stack);
     pEvent->onload = onLoad;
     pEvent->onunload = onUnload;
     pEvent->onfocus = onFocus;
@@ -2208,10 +2369,10 @@ et_FinishMochaHandler(JSEvent * e)
 {
     MochaDecoder *decoder;
 
-    decoder = lm_crippled_decoder;
+    decoder = LM_GetCrippledDecoder();
     if (decoder) {
 	LM_PutMochaDecoder(decoder);
-	lm_crippled_decoder = 0;
+	LM_SetCrippledDecoder(NULL);
     }
 
 #if defined(OJI)
@@ -2229,7 +2390,6 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *);
     JS_Finish(lm_runtime);
 
     /* turn off the mocha thread here! */
-
 }
 
 void
@@ -2242,7 +2402,7 @@ ET_FinishMocha(void)
      * Annoyingly, the winfe might call us without event actually
      *   initializing mocha (if an instance is already running)
      */
-    if (!lm_InterpretQueue)
+    if (!lm_inited())
 	return;
 
     pEvent = XP_NEW_ZAP(JSEvent);
@@ -2252,6 +2412,10 @@ ET_FinishMocha(void)
     PR_InitEvent(&pEvent->ce.event, NULL,
 		 (PRHandleEventProc)et_FinishMochaHandler, 
 		 (PRDestroyEventProc)et_generic_destructor);
+
+    /* We'll just call this one on the default mocha thread. */
+    /* et_event_to_mocha does that if ce.context is null. */
+    pEvent->ce.context = NULL;
 
     et_event_to_mocha(&pEvent->ce);
 
@@ -2268,9 +2432,17 @@ typedef struct {
 PR_STATIC_CALLBACK(void)
 et_docwriteack_handler(DocWriteAckEvent * e)
 {
+    LMWindowGroup *grp;
+
+    /* MLM - this context should not be NULL; it should have a group
+     *        already. 
+     */
+    grp = lm_MWContextToGroup(e->ce.context);
+    XP_ASSERT(grp != NULL);
+
     e->processed = JS_TRUE;
-    et_TopQueue->done = TRUE;
-    et_TopQueue->retval = e->data;
+    grp->queue_stack->done = TRUE;
+    grp->queue_stack->retval = e->data;
 }
 
 PR_STATIC_CALLBACK(void)
@@ -2303,31 +2475,59 @@ ET_DocWriteAck(MWContext * context, int status)
 /**********************************************************************/
 
 void
-et_SubEventLoop(QueueStackElement * qse)
+et_SubEventLoopGroup(LMWindowGroup *grp);
+
+void et_SubEventLoop(QueueStackElement *qse)
+{
+    LMWindowGroup *grp = lm_QueueStackToGroup(qse);
+    XP_ASSERT(grp != NULL);
+    et_SubEventLoopGroup(grp);
+}
+
+void
+et_SubEventLoopGroup(LMWindowGroup *grp)
 {
     PREvent      * pEvent;
+    QueueStackElement *qse = grp->queue_stack;
+    XP_ASSERT(qse != NULL);
 
     /* while there are events process them */
-    while (!qse->done) {
-
+    while ((!qse->done) && (!grp->done))  {
 	/* can't be interrupted yet */
-	lm_InterruptCurrentOp = JS_FALSE;
+	grp->interruptCurrentOp = JS_FALSE;
+        
+        LM_LockJSByGroup(grp, NULL);
 
-#ifdef OJI
-        LM_LockJS(NULL);
-#else
-        LM_LockJS();
-#endif
 	/* need to interlock the getting of an event with ET_Interrupt */
-        PR_EnterMonitor(lm_queue_monitor);
+        PR_EnterMonitor(grp->queue_monitor);
         pEvent = PR_GetEvent(qse->queue);
 
 	/* if we got an event handle it else wait for something */
         if(pEvent) {
-            PR_ExitMonitor(lm_queue_monitor);
-	    LM_JSLockSetContext(((ETEvent *)pEvent)->context);
-            PR_HandleEvent(pEvent);
-            LM_UnlockJS();
+	    MochaDecoder *md;
+            JSContext *jsc;
+            PR_ExitMonitor(grp->queue_monitor);
+
+	    if( (((ETEvent *)pEvent)->context == NULL) ||
+		(!XP_IsContextInList(((ETEvent *)pEvent)->context)) )  {
+		/* This must be a put mocha decoder event, or the context
+		 *  has disappeared from under us somehow. */
+		PR_HandleEvent(pEvent);
+	    }  else  {
+                md = LM_GetMochaDecoder(((ETEvent *)pEvent)->context);
+	        XP_ASSERT(md != NULL);
+                jsc = md->js_context;
+	        LM_JSLockSetContext(((ETEvent *)pEvent)->context);
+                if(!LM_IsLocked(grp))  {
+	    	    LM_BeginRequest(grp, jsc);
+                    PR_HandleEvent(pEvent);
+                    LM_EndRequest(grp, jsc);
+                }  else  {
+                    PR_HandleEvent(pEvent);
+	        }
+                LM_PutMochaDecoder(md);
+	    }
+            LM_UnlockJSByGroup(grp);
 #ifdef DEBUG
 	    /* make sure we don't have the layout lock */
 	    while(!LO_VerifyUnlockedLayout()) {
@@ -2339,16 +2539,13 @@ et_SubEventLoop(QueueStackElement * qse)
         }
         else {
             /* queue is empty, wait for something to show up */
-            LM_UnlockJS();
-            PR_Wait(lm_queue_monitor, PR_INTERVAL_NO_TIMEOUT);
-            PR_ExitMonitor(lm_queue_monitor);
+            LM_UnlockJSByGroup(grp);
+            PR_Wait(grp->queue_monitor, PR_INTERVAL_NO_TIMEOUT);
+            PR_ExitMonitor(grp->queue_monitor);
         }
          
     }
 }
-
-extern PRThread		    *lm_InterpretThread;
-extern PRMonitor *lm_owner_mon;
 
 /*
  * Sit around in the mocha thread waiting for events to show up
@@ -2356,7 +2553,9 @@ extern PRMonitor *lm_owner_mon;
 void PR_CALLBACK
 lm_wait_for_events(void * pB)
 {
-    XP_ASSERT(et_TopQueue);
+    LMWindowGroup *wingrp = pB;
+
+    XP_ASSERT(wingrp);
 
     /*
      * In NSPR 2.0 this thread could get created and it could start
@@ -2367,27 +2566,13 @@ lm_wait_for_events(void * pB)
      *   So we are assured that if we can get the monitor here the
      *   mozilla thread has released it and we are OK to run.
      */
-    PR_EnterMonitor(lm_owner_mon);
-    PR_ExitMonitor(lm_owner_mon);
+    PR_EnterMonitor(wingrp->owner_monitor);
+    PR_ExitMonitor(wingrp->owner_monitor);
 
-    /* set up the initial queue stack pointers */
-    et_TopQueue->queue = lm_InterpretQueue;
-
-    /* create our monitor if it doesn't exist already */
-    if(lm_queue_monitor == NULL) {
-        lm_queue_monitor = PR_NewNamedMonitor("lm-queue-monitor");
-        if(!lm_queue_monitor)
-            return;
+    while (!wingrp->done) {
+	et_SubEventLoopGroup(wingrp);
     }
-
-    while (TRUE) {
-	et_SubEventLoop(et_TopQueue);
-
-	/* should never get here but just in case behave nicely */
-	XP_ASSERT(0);
-	et_TopQueue->done = FALSE;
-    }
-
+    lm_DestroyWindowGroup(wingrp);
 }
 
 /**********************************************************************/
@@ -2436,6 +2621,8 @@ ET_RegisterComponent(char *name, void *active_callback, void *startup_callback)
     pEvent->startup_callback = (ETVoidPtrFunc)startup_callback;
 
     /* add the event to the event queue */
+    /* BONEHEAD - context? */
+    XP_ASSERT(pEvent->ce.context != NULL);
     et_event_to_mocha(&pEvent->ce);
 }
 
@@ -2494,6 +2681,7 @@ ET_RegisterComponentProp(char *comp, char *name, uint8 retType, void *setter,
     pEvent->getter = getter;
 
     /* add the event to the event queue */
+    XP_ASSERT(pEvent->ce.context != NULL);
     et_event_to_mocha(&pEvent->ce);
 }
 
@@ -2546,6 +2734,7 @@ ET_RegisterComponentMethod(char *comp, char *name, uint8 retType, void *method,
     pEvent->argc = argc;
 
     /* add the event to the event queue */
+    XP_ASSERT(pEvent->ce.context != NULL);
     et_event_to_mocha(&pEvent->ce);
 }
 

@@ -176,7 +176,7 @@ lm_InitSecurity(MochaDecoder *decoder)
     obj = decoder->window_object;
     while (proto = JS_GetPrototype(cx, obj))
         obj = proto;
-    objectClass = JS_GetClass(obj);
+    objectClass = JS_GetClass(cx, obj);
 
     if (!JS_GetProperty(cx, decoder->window_object, "netscape", &v))
         return JS_FALSE;
@@ -1126,7 +1126,11 @@ lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
     const char *fn;
 
     if(decoder->principals)  {
+	/* The decoder's js_context isn't in a request, so we should put it
+	 *   in one during this call. */
+	JS_BeginRequest(decoder->js_context);
         principals = lm_GetInnermostPrincipals(decoder->js_context, obj, NULL);
+	JS_EndRequest(decoder->js_context);
     }  else  {
         principals = NULL;
     }

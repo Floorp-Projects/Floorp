@@ -879,6 +879,7 @@ pluginlist_refresh(JSContext *cx, JSObject *obj,
     JSPluginList* pluginlist;
     JSObject* navigator;
     MochaDecoder* decoder;
+    MochaDecoder* crippled_decoder;
     NPError error = NPERR_NO_ERROR;
 
     if (!(pluginlist = JS_GetInstancePrivate(cx, obj, &pluginlist_class, argv)))
@@ -910,9 +911,9 @@ pluginlist_refresh(JSContext *cx, JSObject *obj,
      */
     navigator = decoder->navigator;
     decoder->navigator = NULL;  /* Prevent lm_DefineNavigator from short-circuiting */
-  /*  lm_crippled_decoder = NULL; */
-    lm_crippled_decoder->navigator = NULL; 
-    lm_crippled_decoder->navigator = lm_DefineNavigator(decoder);
+    crippled_decoder = LM_GetCrippledDecoder();
+    crippled_decoder->navigator = NULL; 
+    crippled_decoder->navigator = lm_DefineNavigator(decoder);
     if (!decoder->navigator)
     {
 	/*

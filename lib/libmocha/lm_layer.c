@@ -2920,7 +2920,7 @@ lm_InitRectClass(MochaDecoder *decoder)
 static JSPrincipals **
 getContainerPrincipalsAddress(JSContext *cx, JSObject *container)
 {
-    JSClass *classp = JS_GetClass(container);
+    JSClass *classp = JS_GetClass(cx, container);
 
     if (classp == &lm_window_class) {
         MochaDecoder *decoder = JS_GetPrivate(cx, container);
@@ -2980,7 +2980,7 @@ lm_GetPrincipalsCompromise(JSContext *cx, JSObject *obj)
     JSLayer *js_layer;
     JSBool flag;
 
-    clasp = JS_GetClass(obj);
+    clasp = JS_GetClass(cx, obj);
     if (clasp == &lm_window_class) {
 	decoder = JS_GetPrivate(cx, obj);
 	flag = (JSBool)decoder->principals_compromised;
