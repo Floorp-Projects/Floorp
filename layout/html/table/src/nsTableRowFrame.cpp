@@ -43,8 +43,6 @@ static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 
 NS_DEF_PTR(nsIStyleContext);
 
-static PRBool gsDebugReflow = PR_FALSE;
-
 /* ----------- RowReflowState ---------- */
 
 struct RowReflowState {
@@ -1385,7 +1383,7 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus&          aStatus)
 {
-  if (gsDebugReflow) nsTableFrame::DebugReflow("TR::Rfl en", this, &aReflowState, nsnull);
+  if (DEBUG_REFLOW_ROW) nsTableFrame::DebugReflow("TR::Rfl en", this, &aReflowState, nsnull);
   nsresult rv = NS_OK;
 
   // Initialize 'out' parameters (aStatus set below, undefined if rv returns an error)
@@ -1441,7 +1439,7 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
     break;
   }
 
-  if (gsDebugReflow) nsTableFrame::DebugReflow("TR::Rfl ex", this, nsnull, &aDesiredSize);
+  if (DEBUG_REFLOW_ROW) nsTableFrame::DebugReflow("TR::Rfl ex", this, nsnull, &aDesiredSize);
   return rv;
 }
 
