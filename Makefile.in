@@ -61,9 +61,9 @@ endif
 
 DIRS		+= \
 		include \
+		modules/libutil \
 		netwerk \
 		uriloader \
-		modules/libutil \
 		intl \
 		js \
 		modules/libpref \
