@@ -462,6 +462,12 @@ MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
   [],
   [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
 
+MOZ_ARG_ENABLE_BOOL_OR_STRING(gprof,
+[  --enable-gprof	  enable gprof symbols and debugging],
+  [ MOZ_DEBUG=1 OPTIMIZE="-pg -g" ],
+  [],
+  [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
+
 MOZ_ARG_ENABLE_BOOL(profile,
 [  --enable-profile        enable profiling (solaris only)],
   MOZILLA_GPROF=1)
