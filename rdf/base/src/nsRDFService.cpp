@@ -29,46 +29,24 @@
 
  */
 
+#include "nsCOMPtr.h"
 #include "nsIAtom.h"
+#include "nsIComponentManager.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFService.h"
 #include "nsIRDFResourceFactory.h"
+#include "nsIRDFService.h"
+#include "nsIRDFXMLDataSource.h"
+#include "nsRDFCID.h"
 #include "nsString.h"
-#include "nsIComponentManager.h"
 #include "plhash.h"
 #include "plstr.h"
-#include "prprf.h"
 #include "prlog.h"
-#include "nsIRDFXMLDataSource.h"
-
-#if 0
-#ifdef XP_MAC
-#define HACK_DONT_USE_LIBREG 1
-#endif
-#endif
-
-#if HACK_DONT_USE_LIBREG
-#include "nsIServiceManager.h"
-#include "nsRDFCID.h"
-static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFContentSinkCID,         NS_RDFCONTENTSINK_CID);
-static NS_DEFINE_CID(kRDFHTMLBuilderCID,         NS_RDFHTMLBUILDER_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFTreeBuilderCID,         NS_RDFTREEBUILDER_CID);
-static NS_DEFINE_CID(kRDFMenuBuilderCID,         NS_RDFMENUBUILDER_CID);
-static NS_DEFINE_CID(kRDFToolbarBuilderCID,      NS_RDFTOOLBARBUILDER_CID);
-static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
-static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
-static NS_DEFINE_CID(kXULDataSourceCID,			 NS_XULDATASOURCE_CID);
-static NS_DEFINE_CID(kXULDocumentCID,            NS_XULDOCUMENT_CID);
-static NS_DEFINE_CID(kRDFDefaultResourceCID,     NS_RDFDEFAULTRESOURCE_CID);
-#endif
+#include "prprf.h"
 
 ////////////////////////////////////////////////////////////////////////
+
+static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
@@ -542,22 +520,10 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
     PRInt32 pos = uriStr.Find(':');
     if (pos < 0) {
         // no colon, so try the default resource factory
-#if HACK_DONT_USE_LIBREG
-        nsIServiceManager* servMgr;
-        nsServiceManager::GetGlobalServiceManager(&servMgr);
-        nsIFactory* fact;
-        rv = NSGetFactory(servMgr, kRDFDefaultResourceCID,
-                          "", NS_RDF_RESOURCE_FACTORY_PROGID, &fact);
-        if (rv == NS_OK) {
-            rv = fact->CreateInstance(nsnull, nsIRDFResource::GetIID(),
-                                      (void**)&result);
-            NS_RELEASE(fact);
-        }
-#else
         rv = nsComponentManager::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
                                           nsnull, nsIRDFResource::GetIID(),
                                           (void**)&result);
-#endif
+
         if (NS_FAILED(rv)) {
             NS_ERROR("unable to create resource");
             return rv;
@@ -581,43 +547,18 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
 
         progIDStr.ToCString(progID, progIDStr.Length() + 1);
 
-#if HACK_DONT_USE_LIBREG
-        nsIServiceManager* servMgr;
-        nsServiceManager::GetGlobalServiceManager(&servMgr);
-        nsIFactory* fact;
-        rv = NSGetFactory(servMgr, kRDFDefaultResourceCID,
-                          "", progID, &fact);
-        if (rv == NS_OK) {
-            rv = fact->CreateInstance(nsnull, nsIRDFResource::GetIID(),
-                                      (void**)&result);
-            NS_RELEASE(fact);
-        }
-#else
         rv = nsComponentManager::CreateInstance(progID, nsnull,
                                           nsIRDFResource::GetIID(),
                                           (void**)&result);
-#endif
+
         if (progID != buf)
             delete[] progID;
 
         if (NS_FAILED(rv)) {
             // if we failed, try the default resource factory
-#if HACK_DONT_USE_LIBREG
-            nsIServiceManager* servMgr;
-            nsServiceManager::GetGlobalServiceManager(&servMgr);
-            nsIFactory* fact;
-            rv = NSGetFactory(servMgr, kRDFDefaultResourceCID,
-                              "", NS_RDF_RESOURCE_FACTORY_PROGID, &fact);
-            if (rv == NS_OK) {
-                rv = fact->CreateInstance(nsnull, nsIRDFResource::GetIID(),
-                                          (void**)&result);
-                NS_RELEASE(fact);
-            }
-#else
             rv = nsComponentManager::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
                                               nsnull, nsIRDFResource::GetIID(),
                                               (void**)&result);
-#endif
             if (NS_FAILED(rv)) {
                 NS_ERROR("unable to create resource");
                 return rv;
@@ -859,10 +800,12 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
     // Nope. So go to the repository to try to create it.
     nsresult rv;
 	nsAutoString rdfName(uri);
-    if (rdfName.Find("rdf:") == 0) {    // if this is a datasource component
-        PRInt32 pos = 3;
+    static const char kRDFPrefix[] = "rdf:";
+    PRInt32 pos = rdfName.Find(kRDFPrefix);
+    if (pos == 0) {
+        // It's a built-in data source
         nsAutoString dataSourceName;
-        rdfName.Right(dataSourceName, rdfName.Length() - (pos + 1));
+        rdfName.Right(dataSourceName, rdfName.Length() - (pos + sizeof(kRDFPrefix) - 1));
 
         nsAutoString progIDStr(NS_RDF_DATASOURCE_PROGID_PREFIX);
         progIDStr.Append(dataSourceName);
@@ -878,51 +821,36 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 
         progIDStr.ToCString(progID, progIDStr.Length() + 1);
 
-#if HACK_DONT_USE_LIBREG
-        nsIServiceManager* servMgr;
-        nsServiceManager::GetGlobalServiceManager(&servMgr);
-        nsIFactory* fact;
-        nsCID cid;
-        if (dataSourceName.Equals("bookmarks"))
-            cid = kRDFBookmarkDataSourceCID;
-        else if (dataSourceName.Equals("composite-datasource"))
-            cid = kRDFCompositeDataSourceCID;
-        else if (dataSourceName.Equals("in-memory-datasource"))
-            cid = kRDFInMemoryDataSourceCID;
-        else if (dataSourceName.Equals("xml-datasource"))
-            cid = kRDFXMLDataSourceCID;
-        else if (dataSourceName.Equals("xul-datasource"))
-            cid = kXULDataSourceCID;
-        else {
-            NS_ERROR("unknown data source");
-        }
-
-        rv = NSGetFactory(servMgr, cid,
-                          "", progID, &fact);
-        if (rv == NS_OK) {
-            rv = fact->CreateInstance(nsnull, nsIRDFDataSource::GetIID(),
-                                      (void**)&ds);
-            NS_RELEASE(fact);
-        }
-#else
         rv = nsComponentManager::CreateInstance(progID, nsnull,
                                                 nsIRDFDataSource::GetIID(),
-                                                (void**)&ds);
-#endif
-
+                                                (void**)aDataSource);
         if (progID != buf)
             delete[] progID;
-
-        if (NS_FAILED(rv)) {
-            // XXX only a warning, because the URI may have been ill-formed.
-            NS_WARNING("unable to create data source");
-            return rv;
-        }
     }
     else {
-        // else try to load it as a file and create an xml datasource
-        rv = NS_NewRDFXMLDataSource((nsIRDFXMLDataSource**)&ds);
-        if (NS_FAILED(rv)) return rv;
+        // Try to load this as an RDF/XML data source
+        rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
+                                                nsnull,
+                                                nsIRDFDataSource::GetIID(),
+                                                (void**)aDataSource);
+
+        // XXX hack for now: make sure that the data source is
+        // synchronously loaded. In the long run, we should factor out
+        // the "loading" from the "creating". See nsRDFXMLDataSource::Init().
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIRDFXMLDataSource> rdfxmlDataSource(do_QueryInterface(*aDataSource));
+            NS_ASSERTION(rdfxmlDataSource, "not an RDF/XML data source!");
+            if (rdfxmlDataSource) {
+                rv = rdfxmlDataSource->SetSynchronous(PR_TRUE);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to make RDF/XML data source synchronous");
+            }
+        }
+    }
+
+    if (NS_FAILED(rv)) {
+        // XXX only a warning, because the URI may have been ill-formed.
+        NS_WARNING("unable to create data source");
+        return rv;
     }
 
     rv = ds->Init(uri);
