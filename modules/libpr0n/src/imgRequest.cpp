@@ -39,7 +39,9 @@
 
 #include "gfxIImageFrame.h"
 
+#ifdef MOZ_NEW_CACHE
 #include "nsICachingChannel.h"
+#endif
 #include "ImageCache.h"
 
 #include "ImageLogging.h"
@@ -535,9 +537,10 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   /* set our processing flag to false */
   mProcessing = PR_FALSE;
 
+#ifdef MOZ_NEW_CACHE
   /* break the cycle from the cache entry. */
   mCacheEntry = nsnull;
-
+#endif
   switch(status) {
   case NS_BINDING_ABORTED:
   case NS_BINDING_FAILED:
