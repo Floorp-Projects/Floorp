@@ -41,6 +41,20 @@
       padding               : 2px 2px 0px 4px;
       border                : none;
     }
+    
+  .button-toolbar[toggled="true"]
+    {
+      border                : 1px solid #999999;
+      background-color      : #EEEEEE;
+    }    
+    
+  .button-toolbar[disabled="true"],
+  .button-toolbar[disabled="true"]:hover,
+  .button-toolbar[disabled="true"]:hover:active
+    {
+      color                 : #999999;
+      border                : none;
+    }
 
 /** The largest type of toolbar buttons. In the Seamonkey implementation, 
  *  these are only used in the navigation toolbar in the navigator package.
