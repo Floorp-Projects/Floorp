@@ -74,8 +74,8 @@ skin,install,url,jar:resource:/chrome/inspector.jar!/skin/modern/inspector/
 
 # optional registration for offline support which may or may not be installed
 content,install,url,jar:resource:/chrome/offline.jar!/content/messenger-offline/
-locale,install,url,jar:resource:/chrome/offline.jar!/content/messenger-offline/
-locale,install,url,jar:resource:/chrome/offline.jar!/locale/en-US/messenger-offline/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/content/messenger-offline/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-offline/
 skin,install,url,jar:resource:/chrome/offline.jar!/content/messenger-offline/
 
 # optional registration for RSS support which may or may not be installed
