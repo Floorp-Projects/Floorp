@@ -24,34 +24,37 @@
 # Send comments, improvements, bugs to ramiro@netscape.com
 # 
 
-# Make sure a Makefile.in exists
-#if [ $# -lt 1 ]
-#then
-#	echo
-#	echo "Usage: `basename $0` match [dir1 dir2 ... dirn]"
-#	echo
-#
-#	exit 1
-#fi
-
-# Make sure a Makefile.in exists
-if [ ! -f Makefile.in ]
-then
-	echo
-	echo "There ain't no 'Makefile.in' over here: $pwd, dude."
-	echo
-
-	exit 1
+if [ -f Makefile ]; then
+	MAKEFILE="Makefile"
+else
+	if [ -f Makefile.in ]; then
+		MAKEFILE="Makefile.in"
+	else
+		echo
+		echo "There ain't no 'Makefile' or 'Makefile.in' over here: $pwd, dude."
+		echo
+		exit 1
+	fi
 fi
 
 # Use DEPTH in the Makefile.in to determine the depth
-depth=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`
+depth=`grep -w DEPTH ${MAKEFILE}  | grep -e "\.\." | awk -F"=" '{ print $2; }'`
 
 # Determine the depth count
 n=`echo $depth | tr '/' ' ' | wc -w`
 
 # Determine the path (strip anything before the mozilla/ root)
-path=`pwd | awk -v count=$n -F"/" '\
+# If we are building in the source directory then the Makefile will have
+# srcdir set to '.' and we have to get the path from the pwd command.
+# If we are building outside of the source tree then we can get the information
+# we need from the srcdir statement in the Makefile.
+
+tpth=`grep '^srcdir.*/mozilla/' ${MAKEFILE}`
+if [ "$tpth" = "" ]; then
+	tpth=`pwd`
+fi
+
+path=`echo $tpth | awk -v count=$n -F"/" '\
 { for(i=NF-count+0; i <= NF ; i++) \
 { \
 if (i!=NF) \
