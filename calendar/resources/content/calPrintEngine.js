@@ -71,7 +71,10 @@ var startOfWeek;
 var gMyTitle;
 var gShowprivate ;
 var gCalendarWindow ;
-var gHtmlDocument ;
+var gHtmlDocument;
+var gHtmlString;
+var gTempFile = null;
+var gTempUri;
 
 var gPrintSettingsAreGlobal = true;
 var gSavePrintSettings = true;
@@ -157,6 +160,10 @@ function FinishPrintPreview()
     var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
     if (webBrowserPrint) {
       gPrintSettings = GetPrintSettings();
+      // Don't print the fake title and url
+      gPrintSettings.docURL=" ";
+      gPrintSettings.title=" ";
+      
       webBrowserPrint.printPreview(gPrintSettings, null, gWebProgress.value);
     }
     showPrintPreviewToolbar();
@@ -189,16 +196,40 @@ function OnLoadPrintEngine(){
     prevWeeksInView=gArgs.prevWeeksInView;
     startOfWeek=gArgs.startOfWeek;
 
-    gHtmlDocument = window.content.document ;
+    gHtmlDocument = window.content.document;
+    gHtmlString = "";
     initHTMLView();
     eval(HTMLViewFunction)(HTMLFunctionArgs);
     finishHTMLView() ;
+
+    // Fail-safe check to not init twoce, to prevent leaking files
+    if (!gTempFile) {
+      const nsIFile = Components.interfaces.nsIFile;
+      var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
+                                 .getService(Components.interfaces.nsIProperties);
+      gTempFile = dirService.get("TmpD", nsIFile);
+      gTempFile.append("calendarPrint.html");
+      gTempFile.createUnique(nsIFile.NORMAL_FILE_TYPE, 0600);
+      dump("tf: "+gTempFile.path+"\n");
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService);
+      var gTempUri = ioService.newFileURI(gTempFile); 
+    }
+
+    var stream = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                              .createInstance(Components.interfaces.nsIFileOutputStream);
+    // 0x2A = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE
+    stream.init(gTempFile, 0x2A, 0600, 0);
+    stream.write(gHtmlString, gHtmlString.length);
+   
+    gHtmlDocument.location.href = gTempUri.spec;
   }
   BrowserPrintPreview();
 }
 
 function OnUnloadPrintEngine()
 {
+  gTempFile.remove(false);
 }
 
 function showPrintPreviewToolbar()
@@ -220,26 +251,24 @@ function BrowserExitPrintPreview()
 
 function initHTMLView()
 {
-  //printwindow.document.open();
-  gHtmlDocument.write("<html><head><title>"+windowTitle+"</title></head><body style='font-size:11px;'>");
+  gHtmlString += "<html><head><title>"+windowTitle+"</title></head><body style='font-size:11px;'>";
   if (gMyTitle.length > 0)
   {
-//  gHtmlDocument.write("<tr><td colspan=3 align=center style='font-size:26px;font-weight:bold;'>>");
-//  gHtmlDocument.write("<tr><td colspan=2 align=center style='font-size:26px;font-weight:bold;'>");
-//  gHtmlDocument.write(mytitle);
-//  gHtmlDocument.write("</td></tr>");
+//  gHtmlString += "<tr><td colspan=3 align=center style='font-size:26px;font-weight:bold;'>>";
+//  gHtmlString += "<tr><td colspan=2 align=center style='font-size:26px;font-weight:bold;'>";
+//  gHtmlString += mytitle;
+//  gHtmlString += "</td></tr>";
 
-    gHtmlDocument.write("<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr><td valign=bottom align=center>");
-    gHtmlDocument.write(gMyTitle);
-    gHtmlDocument.write("</td></tr></table>");
+    gHtmlString += "<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr><td valign=bottom align=center>";
+    gHtmlString += gMyTitle;
+    gHtmlString += "</td></tr></table>";
   }
-  return gHtmlDocument;
+  return;
 }
 
 function finishHTMLView() 
 {
-  gHtmlDocument.write("</body></html>");
-  gHtmlDocument.close();
+  gHtmlString += "</body></html>";
 }
 
 function printMultiWeekView(currentDate)
@@ -250,17 +279,17 @@ function printMultiWeekView(currentDate)
 
   var weekNumber = DateUtils.getWeekNumber(currentDate) ;
 
-  gHtmlDocument.write("<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr ><td align=center valign=bottom>Week "+weekNumber+"</td></tr></table>");
-  gHtmlDocument.write("<table style='border:1px solid black;' width=100%>")
-  gHtmlDocument.write("<tr>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[weekStart.getDay()]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+1 >6) ? weekStart.getDay()+1-7:weekStart.getDay()+1]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+2 >6) ? weekStart.getDay()+2-7:weekStart.getDay()+2]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+3 >6) ? weekStart.getDay()+3-7:weekStart.getDay()+3]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+4 >6) ? weekStart.getDay()+4-7:weekStart.getDay()+4]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+5 >6) ? weekStart.getDay()+5-7:weekStart.getDay()+5]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+6 >6) ? weekStart.getDay()+6-7:weekStart.getDay()+6]+"</td>");
-  gHtmlDocument.write("</tr>");
+  gHtmlString += "<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr ><td align=center valign=bottom>Week "+weekNumber+"</td></tr></table>";
+  gHtmlString += "<table style='border:1px solid black;' width=100%>";
+  gHtmlString += "<tr>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[weekStart.getDay()]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+1 >6) ? weekStart.getDay()+1-7:weekStart.getDay()+1]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+2 >6) ? weekStart.getDay()+2-7:weekStart.getDay()+2]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+3 >6) ? weekStart.getDay()+3-7:weekStart.getDay()+3]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+4 >6) ? weekStart.getDay()+4-7:weekStart.getDay()+4]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+5 >6) ? weekStart.getDay()+5-7:weekStart.getDay()+5]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+6 >6) ? weekStart.getDay()+6-7:weekStart.getDay()+6]+"</td>";
+  gHtmlString += "</tr>";
 
   // content here
   dayToStart=weekStart.getDate();
@@ -269,16 +298,16 @@ function printMultiWeekView(currentDate)
 
   for (var w=0; w<weeksInView; w++)
   {
-    gHtmlDocument.write("<tr>");
+    gHtmlString += "<tr>";
     for (var i=0; i<7; i++)
     {
       var thisDaysDate=new Date(yearToStart, monthToStart, dayToStart+i+(w*7));
-      gHtmlDocument.write("<td style='border:1px solid black;' valign=top width=14%>");
-      gHtmlDocument.write("<table valign=top height=100 width=100% border=0>");
-      gHtmlDocument.write("<tr valign=top><td colspan=2 align=center valign=top >");
-      gHtmlDocument.write(monthNames[thisDaysDate.getMonth()].substring(0,3)+" "+thisDaysDate.getDate());
-      gHtmlDocument.write("</td></tr>");
-      gHtmlDocument.write("<tr valign=top><td valign=top width=20%></td><td valign=top width=80%></td></tr>");
+      gHtmlString += "<td style='border:1px solid black;' valign=top width=14%>";
+      gHtmlString += "<table valign=top height=100 width=100% border=0>";
+      gHtmlString += "<tr valign=top><td colspan=2 align=center valign=top >";
+      gHtmlString += monthNames[thisDaysDate.getMonth()].substring(0,3)+" "+thisDaysDate.getDate();
+      gHtmlString += "</td></tr>";
+      gHtmlString += "<tr valign=top><td valign=top width=20%></td><td valign=top width=80%></td></tr>";
       var calendarEventDisplay
       // add each calendarEvent
       dayEventList = eventSource.getEventsForDay( thisDaysDate );
@@ -301,22 +330,22 @@ function printMultiWeekView(currentDate)
           if (calendarEventDisplay.event.allDay)
             formattedTime=''; // all day event
           if (calendarEventDisplay.event.allDay)
-            gHtmlDocument.write("<tr valign=top><td valign=top colspan=2 style='font-size:11px;'>");
+            gHtmlString += "<tr valign=top><td valign=top colspan=2 style='font-size:11px;'>";
           else
-            gHtmlDocument.write("<tr valign=top><td valign=top colspan=2 style='font-size:11px;'>"+formattedTime+"</td></tr><tr><td></td><td valign=top style='font-size:11px;'>");
-          gHtmlDocument.write(eventTitle);
+            gHtmlString += "<tr valign=top><td valign=top colspan=2 style='font-size:11px;'>"+formattedTime+"</td></tr><tr><td></td><td valign=top style='font-size:11px;'>";
+          gHtmlString += eventTitle;
           if (calendarEventDisplay.event.location)
-            gHtmlDocument.write("</td></tr><tr valign=top><td></td><td valign=top style='font-size:11px;'>"+locationTag+": "+calendarEventDisplay.event.location);
+            gHtmlString += "</td></tr><tr valign=top><td></td><td valign=top style='font-size:11px;'>"+locationTag+": "+calendarEventDisplay.event.location;
           if (calendarEventDisplay.event.url)
-            gHtmlDocument.write("</td></tr><tr valign=top><td></td><td valign=top style='font-size:11px;'>"+uriTag+": "+calendarEventDisplay.event.url);
-          gHtmlDocument.write("</td></tr>");
+            gHtmlString += "</td></tr><tr valign=top><td></td><td valign=top style='font-size:11px;'>"+uriTag+": "+calendarEventDisplay.event.url;
+          gHtmlString += "</td></tr>";
         }
       }
-      gHtmlDocument.write("</table>");
+      gHtmlString += "</table>";
     }
-    gHtmlDocument.write("</tr>");
+    gHtmlString += "</tr>";
   } // end of all weeks
-  gHtmlDocument.write("</table>")
+  gHtmlString += "</table>";
 }
 
 function printWeekView(currentDate)
@@ -326,32 +355,32 @@ function printWeekView(currentDate)
   var weekStart=new Date(currentDate.getFullYear(), currentDate.getMonth(), dayStart - dowStart);
   var weekNumber = DateUtils.getWeekNumber(currentDate) ;
 
-  gHtmlDocument.write("<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr ><td align=center valign=bottom>Week "+weekNumber+"</td></tr></table>");
-  gHtmlDocument.write("<table style='border:1px solid black;' width=100%>")
-  gHtmlDocument.write("<tr>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[weekStart.getDay()]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+1 >6) ? weekStart.getDay()+1-7:weekStart.getDay()+1]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+2 >6) ? weekStart.getDay()+2-7:weekStart.getDay()+2]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+3 >6) ? weekStart.getDay()+3-7:weekStart.getDay()+3]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+4 >6) ? weekStart.getDay()+4-7:weekStart.getDay()+4]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+5 >6) ? weekStart.getDay()+5-7:weekStart.getDay()+5]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+6 >6) ? weekStart.getDay()+6-7:weekStart.getDay()+6]+"</td>");
-  gHtmlDocument.write("</tr>");
+  gHtmlString += "<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr ><td align=center valign=bottom>Week "+weekNumber+"</td></tr></table>";
+  gHtmlString += "<table style='border:1px solid black;' width=100%>";
+  gHtmlString += "<tr>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[weekStart.getDay()]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+1 >6) ? weekStart.getDay()+1-7:weekStart.getDay()+1]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+2 >6) ? weekStart.getDay()+2-7:weekStart.getDay()+2]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+3 >6) ? weekStart.getDay()+3-7:weekStart.getDay()+3]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+4 >6) ? weekStart.getDay()+4-7:weekStart.getDay()+4]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+5 >6) ? weekStart.getDay()+5-7:weekStart.getDay()+5]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+6 >6) ? weekStart.getDay()+6-7:weekStart.getDay()+6]+"</td>";
+  gHtmlString += "</tr>";
   // content here
   dayToStart=weekStart.getDate();
   monthToStart=weekStart.getMonth();
   yearToStart=weekStart.getFullYear();
 
-  gHtmlDocument.write("<tr>");
+  gHtmlString += "<tr>";
   for (var i=0; i<7; i++)
   {
     var thisDaysDate=new Date(yearToStart, monthToStart, dayToStart+i);
-    gHtmlDocument.write("<td style='border:1px solid black;' valign=top width=14% height=500>");
-    gHtmlDocument.write("<table valign=top width=100 border=0>"); // to force uniform width
-    gHtmlDocument.write("<tr valign=top><td valign=top colspan=2 align=center>");
-    gHtmlDocument.write(monthNames[thisDaysDate.getMonth()].substring(0,3)+" "+thisDaysDate.getDate());
-    gHtmlDocument.write("</td></tr>");
-    gHtmlDocument.write("<tr><td width=20%></td><td width=80%></td></tr>");
+    gHtmlString += "<td style='border:1px solid black;' valign=top width=14% height=500>";
+    gHtmlString += "<table valign=top width=100 border=0>"; // to force uniform width
+    gHtmlString += "<tr valign=top><td valign=top colspan=2 align=center>";
+    gHtmlString += monthNames[thisDaysDate.getMonth()].substring(0,3)+" "+thisDaysDate.getDate();
+    gHtmlString += "</td></tr>";
+    gHtmlString += "<tr><td width=20%></td><td width=80%></td></tr>";
     var calendarEventDisplay
     // add each calendarEvent
     dayEventList = eventSource.getEventsForDay( thisDaysDate );
@@ -372,35 +401,35 @@ function printWeekView(currentDate)
         var formattedEndTime=returnTime(eventEndTime);
         var formattedTime=formattedStartTime+"-"+formattedEndTime;
         if (calendarEventDisplay.event.allDay)
-          gHtmlDocument.write("<tr valign=top><td valign=top colspan=2 style='font-size:11px;'>");
+          gHtmlString += "<tr valign=top><td valign=top colspan=2 style='font-size:11px;'>";
         else
-          gHtmlDocument.write("<tr valign=top><td valign=top colspan=2 style='font-size:11px;'>"+formattedTime+"</td></tr><tr><td></td><td valign=top style='font-size:11px;'>");
-        gHtmlDocument.write(eventTitle);
+          gHtmlString += "<tr valign=top><td valign=top colspan=2 style='font-size:11px;'>"+formattedTime+"</td></tr><tr><td></td><td valign=top style='font-size:11px;'>";
+        gHtmlString += eventTitle;
         if (calendarEventDisplay.event.location)
-          gHtmlDocument.write("</td></tr><tr valign=top><td></td><td valign=top style='font-size:11px;'>"+locationTag+": "+calendarEventDisplay.event.location);
+          gHtmlString += "</td></tr><tr valign=top><td></td><td valign=top style='font-size:11px;'>"+locationTag+": "+calendarEventDisplay.event.location;
         if (calendarEventDisplay.event.url)
-          gHtmlDocument.write("</td></tr><tr valign=top><td></td><td valign=top style='font-size:11px;'>"+uriTag+": "+calendarEventDisplay.event.url);
-        gHtmlDocument.write("</td></tr>");
+          gHtmlString += "</td></tr><tr valign=top><td></td><td valign=top style='font-size:11px;'>"+uriTag+": "+calendarEventDisplay.event.url;
+        gHtmlString += "</td></tr>";
       }
     }
-    gHtmlDocument.write("</table>");
+    gHtmlString += "</table>";
 
   }
-  gHtmlDocument.write("</tr>");
+  gHtmlString += "</tr>";
 
-  gHtmlDocument.write("</table>")
+  gHtmlString += "</table>";
 }
 
 function printDayView(currentDate) {
   var dayStart = currentDate.getDate();
 
   var mydateshow= gCalendarWindow.dateFormater.getLongFormatedDate(currentDate);
-  gHtmlDocument.write("<table style='border:1px solid black;' width=100%>");
-  gHtmlDocument.write("<tr ><td colspan=2 align=center style='font-size:26px;font-weight:bold;border-bottom:1px solid black;'>");
-  gHtmlDocument.write(mydateshow);
-  gHtmlDocument.write("</td></tr>");
-  gHtmlDocument.write("<tr><td width=20% style='border-bottom:1px solid black;'>Time</td><td width=80% style='border-bottom:1px solid black;'>Event</td></tr>");
-  gHtmlDocument.write("<tr style='height=20px;'><td colspan=2 style='border-bottom:1px solid black;'> </td></tr>"); // for entering a new appt
+  gHtmlString += "<table style='border:1px solid black;' width=100%>";
+  gHtmlString += "<tr ><td colspan=2 align=center style='font-size:26px;font-weight:bold;border-bottom:1px solid black;'>";
+  gHtmlString += mydateshow;
+  gHtmlString += "</td></tr>";
+  gHtmlString += "<tr><td width=20% style='border-bottom:1px solid black;'>Time</td><td width=80% style='border-bottom:1px solid black;'>Event</td></tr>";
+  gHtmlString += "<tr style='height=20px;'><td colspan=2 style='border-bottom:1px solid black;'> </td></tr>"; // for entering a new appt
   var calendarEventDisplay
   // add each calendarEvent
   dayEventList = eventSource.getEventsForDay( currentDate );
@@ -415,7 +444,7 @@ function printDayView(currentDate) {
         listpriv=false;
     if (listpriv)
     {
-      gHtmlDocument.write("<tr style='height=20px;'><td valign=top style='border-bottom:1px solid black;'>");
+      gHtmlString += "<tr style='height=20px;'><td valign=top style='border-bottom:1px solid black;'>";
       var eventStartTime = new Date( calendarEventDisplay.event.start.getTime() ) ;
       var formattedStartTime=returnTime(eventStartTime);
       var eventEndTime = new Date( calendarEventDisplay.event.end.getTime() ) ;
@@ -423,32 +452,32 @@ function printDayView(currentDate) {
       var formattedTime=formattedStartTime+"-"+formattedEndTime;
       if (calendarEventDisplay.event.allDay)
         formattedTime='All Day'; // all day event
-      gHtmlDocument.write(formattedTime);
-      gHtmlDocument.write("</td><td valign=top style='border-bottom:1px solid black;'>"+calendarEventDisplay.event.title);
+      gHtmlString += formattedTime;
+      gHtmlString += "</td><td valign=top style='border-bottom:1px solid black;'>"+calendarEventDisplay.event.title;
       if (calendarEventDisplay.event.description)
-        gHtmlDocument.write("<br><Strong>"+descriptionTag+"</strong>: "+calendarEventDisplay.event.description);
+        gHtmlString += "<br><Strong>"+descriptionTag+"</strong>: "+calendarEventDisplay.event.description;
       if (calendarEventDisplay.event.location)
-        gHtmlDocument.write("<br><strong>"+locationTag+"</strong>: "+calendarEventDisplay.event.location);
+        gHtmlString += "<br><strong>"+locationTag+"</strong>: "+calendarEventDisplay.event.location;
       if (calendarEventDisplay.event.url)
-        gHtmlDocument.write("<br><strong>"+uriTag+"</strong>: "+calendarEventDisplay.event.url);
+        gHtmlString += "<br><strong>"+uriTag+"</strong>: "+calendarEventDisplay.event.url;
       var mystat='Cancelled';
       if (calendarEventDisplay.event.status == 10029)
         mystat='Tentative';
       if (calendarEventDisplay.event.status == 10030)
         mystat='Confirmed';
-      gHtmlDocument.write("<br><strong>Status</strong>: "+mystat);
-      gHtmlDocument.write("</td></tr>");
-      gHtmlDocument.write("<tr style='height=20px;'><td colspan=2  style='border-bottom:1px solid black;'> </td></tr>"); // for entering a new appt
+      gHtmlString += "<br><strong>Status</strong>: "+mystat;
+      gHtmlString += "</td></tr>";
+      gHtmlString += "<tr style='height=20px;'><td colspan=2  style='border-bottom:1px solid black;'> </td></tr>"; // for entering a new appt
     }
   }
 
-  gHtmlDocument.write("</table>");
+  gHtmlString += "</table>";
 }
 
 function printEventArray( calendarEventArray)
 {
-  gHtmlDocument.write("<table width=100%>");
-  gHtmlDocument.write("<tr><td width=20%>Starts</td><td width=20%>Ends</td><td width=60%>Event</td></tr>");
+  gHtmlString += "<table width=100%>";
+  gHtmlString += "<tr><td width=20%>Starts</td><td width=20%>Ends</td><td width=60%>Event</td></tr>";
   for (i in calendarEventArray)
   {
     var calEvent=calendarEventArray[i];
@@ -459,35 +488,35 @@ function printEventArray( calendarEventArray)
         useit=false;
     if (useit)
     {
-      gHtmlDocument.write("<tr><td valign=top>");
+      gHtmlString += "<tr><td valign=top>";
       if (calEvent.allDay)
       {
-        gHtmlDocument.write("All Day");
-        gHtmlDocument.write("</td><td>");
+        gHtmlString += "All Day";
+        gHtmlString += "</td><td>";
       } else {
-        gHtmlDocument.write(calEvent.start);
-        gHtmlDocument.write("</td><td valign=top>");
-        gHtmlDocument.write(calEvent.end);
+        gHtmlString += calEvent.start;
+        gHtmlString += "</td><td valign=top>";
+        gHtmlString += calEvent.end;
       }
-      gHtmlDocument.write("</td><td valign=top>");
-      gHtmlDocument.write(calEvent.title);
+      gHtmlString += "</td><td valign=top>";
+      gHtmlString += calEvent.title;
       if (calEvent.description)
-        gHtmlDocument.write("<br>"+descriptionTag+": "+calEvent.description);
+        gHtmlString += "<br>"+descriptionTag+": "+calEvent.description;
       if (calEvent.location)
-        gHtmlDocument.write("<br>"+locationTag+": "+calEvent.location);
+        gHtmlString += "<br>"+locationTag+": "+calEvent.location;
       if (calEvent.url)
-        gHtmlDocument.write("<br>"+uriTag+": "+calEvent.url);
+        gHtmlString += "<br>"+uriTag+": "+calEvent.url;
       var mystat='Cancelled';
       if (calEvent.status == 10029)
         mystat='Tentative';
       if (calEvent.status == 10030)
         mystat='Confirmed';
 
-      gHtmlDocument.write("<br>Status: "+mystat);
-      gHtmlDocument.write("</td></tr>");
+      gHtmlString += "<br>Status: "+mystat;
+      gHtmlString += "</td></tr>";
     }
   }
-  gHtmlDocument.write("</table>");
+  gHtmlString += "</table>";
 }
 
 function printMonthView(currentDate) {
@@ -500,18 +529,17 @@ function printMonthView(currentDate) {
   var endOfMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth()+1, 0);
   var daysInMonth =  endOfMonthDate.getDate();
 
-  gHtmlDocument.write("<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr ><td align=center valign=bottom>"+monthNames[currentDate.getMonth()]+" "+currentDate.getFullYear()+"</td></tr></table>");
-  gHtmlDocument.write("<table style='border:1px solid black;' width=100%>")
-  gHtmlDocument.write("<tr>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[weekStart.getDay()]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+1 >6) ? weekStart.getDay()+1-7:weekStart.getDay()+1]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+2 >6) ? weekStart.getDay()+2-7:weekStart.getDay()+2]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+3 >6) ? weekStart.getDay()+3-7:weekStart.getDay()+3]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+4 >6) ? weekStart.getDay()+4-7:weekStart.getDay()+4]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+5 >6) ? weekStart.getDay()+5-7:weekStart.getDay()+5]+"</td>");
-  gHtmlDocument.write("<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+6 >6) ? weekStart.getDay()+6-7:weekStart.getDay()+6]+"</td>");
-  gHtmlDocument.write("</tr>");
-
+  gHtmlString += "<table border=0 width=100% style='font-size:26px;font-weight:bold;'><tr ><td align=center valign=bottom>"+monthNames[currentDate.getMonth()]+" "+currentDate.getFullYear()+"</td></tr></table>";
+  gHtmlString += "<table style='border:1px solid black;' width=100%>";
+  gHtmlString += "<tr>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[weekStart.getDay()]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+1 >6) ? weekStart.getDay()+1-7:weekStart.getDay()+1]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+2 >6) ? weekStart.getDay()+2-7:weekStart.getDay()+2]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+3 >6) ? weekStart.getDay()+3-7:weekStart.getDay()+3]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+4 >6) ? weekStart.getDay()+4-7:weekStart.getDay()+4]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+5 >6) ? weekStart.getDay()+5-7:weekStart.getDay()+5]+"</td>";
+  gHtmlString += "<td align=center style='border:1px solid black;background-color:#e0e0e0;FONT-SIZE:12px;FONT-WEIGHT: bold'>"+ArrayOfDayNames[(weekStart.getDay()+6 >6) ? weekStart.getDay()+6-7:weekStart.getDay()+6]+"</td>";
+  gHtmlString += "</tr>";
   dayToStart=weekStart.getDate();
   monthToStart=weekStart.getMonth();
   yearToStart=weekStart.getFullYear();
@@ -522,14 +550,13 @@ function printMonthView(currentDate) {
   {
     if (inMonth)
     {
-      gHtmlDocument.write("<tr>");
+      gHtmlString += "<tr>";
       for (var i=0; i<7; i++)
       {
-        gHtmlDocument.write("<td align=left valign=top style='border:1px solid black;vertical-alignment:top;' >");
-        gHtmlDocument.write("<table valign=top height=100 width=100 style='font-size:10px;'><tr valign=top><td valign=top width=20%>");
+        gHtmlString += "<td align=left valign=top style='border:1px solid black;vertical-alignment:top;' >";        gHtmlString += "<table valign=top height=100 width=100 style='font-size:10px;'><tr valign=top><td valign=top width=20%>";
         if (thisDaysDate.getMonth()==currentDate.getMonth())
-          gHtmlDocument.write(thisDaysDate.getDate());
-        gHtmlDocument.write("</td><td width=80% valign=top></td></tr>");
+          gHtmlString += thisDaysDate.getDate();
+        gHtmlString += "</td><td width=80% valign=top></td></tr>";
         if (thisDaysDate.getMonth()==currentDate.getMonth())
         {
           dayEventList = eventSource.getEventsForDay( thisDaysDate );
@@ -548,27 +575,27 @@ function printMonthView(currentDate) {
               var eventStartTime = new Date( calendarEventDisplay.event.start.getTime() ) ;
               var formattedStartTime=returnTime(eventStartTime);
               if (calendarEventDisplay.event.allDay)
-                gHtmlDocument.write("<tr><td valign=top colspan=2 style='font-size:11px;'>");
+                gHtmlString += "<tr><td valign=top colspan=2 style='font-size:11px;'>";
               else
-                gHtmlDocument.write("<tr><td valign=top align=right style='font-size:11px;'>"+formattedStartTime+"</td><td valign=top style='font-size:11px;'>");
-              gHtmlDocument.write(eventTitle);
-              gHtmlDocument.write("</td></tr>");
+                gHtmlString += "<tr><td valign=top align=right style='font-size:11px;'>"+formattedStartTime+"</td><td valign=top style='font-size:11px;'>";
+              gHtmlString += eventTitle;
+              gHtmlString += "</td></tr>";
             }
           } //end of events
         } // if it was in the month
-        gHtmlDocument.write("</table>");
-        gHtmlDocument.write("</td>")
+        gHtmlString += "</table>";
+        gHtmlString += "</td>";
 	//advance to the next day
 	thisDaysDate.setDate(thisDaysDate.getDate()+1);
       } //end of each day
-      gHtmlDocument.write("</tr>");
+      gHtmlString += "</tr>";
     } // ok it was in the month
     if ( ( thisDaysDate.getMonth() > currentDate.getMonth() ) ||
         ( thisDaysDate.getFullYear() > currentDate.getFullYear() ) )
       inMonth=false;
   } // end of each week
 
-  gHtmlDocument.write("</table>")
+  gHtmlString += "</table>";
 }
 
 function returnTime(timeval) {
