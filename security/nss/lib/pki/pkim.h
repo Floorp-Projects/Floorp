@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.8 $ $Date: 2001/11/29 19:34:07 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.9 $ $Date: 2001/12/06 23:43:14 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -47,6 +47,12 @@ static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.8 $ $D
 #endif /* PKITM_H */
 
 PR_BEGIN_EXTERN_C
+
+NSS_EXTERN NSSToken *
+STAN_GetDefaultCryptoToken
+(
+  void
+);
 
 /* Token ordering routines */
 

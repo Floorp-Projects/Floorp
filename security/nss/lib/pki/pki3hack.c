@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.6 $ $Date: 2001/11/29 19:34:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.7 $ $Date: 2001/12/06 23:43:14 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -79,6 +79,16 @@ NSSCryptoContext *
 STAN_GetDefaultCryptoContext()
 {
     return g_default_crypto_context;
+}
+
+NSS_IMPLEMENT NSSToken *
+STAN_GetDefaultCryptoToken
+(
+  void
+)
+{
+    PK11SlotInfo *pk11slot = PK11_GetInternalSlot();
+    return PK11Slot_GetNSSToken(pk11slot);
 }
 
 NSS_IMPLEMENT void
@@ -374,12 +384,41 @@ get_nss3trust_from_cktrust(CK_TRUST t)
 }
 
 static CERTCertTrust * 
-nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, NSSToken *token, 
-                                 CERTCertificate *cc)
+nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
 {
     CERTCertTrust *rvTrust = PORT_ArenaAlloc(cc->arena, sizeof(CERTCertTrust));
     unsigned int client;
-    NSSTrust *t = nssToken_FindTrustForCert(token, NULL, c);
+    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
+    NSSToken *tok;
+    NSSTrust *tokenTrust;
+    NSSTrust *t = NULL;
+    for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
+         tok != (NSSToken *)NULL;
+         tok  = (NSSToken *)nssListIterator_Next(td->tokens))
+    {
+	tokenTrust = nssToken_FindTrustForCert(tok, NULL, c);
+	if (tokenTrust) {
+	    if (t) {
+		if (t->serverAuth == CKT_NETSCAPE_TRUST_UNKNOWN) {
+		    t->serverAuth = tokenTrust->serverAuth;
+		}
+		if (t->clientAuth == CKT_NETSCAPE_TRUST_UNKNOWN) {
+		    t->clientAuth = tokenTrust->clientAuth;
+		}
+		if (t->emailProtection == CKT_NETSCAPE_TRUST_UNKNOWN) {
+		    t->emailProtection = tokenTrust->emailProtection;
+		}
+		if (t->codeSigning == CKT_NETSCAPE_TRUST_UNKNOWN) {
+		    t->codeSigning = tokenTrust->codeSigning;
+		}
+		(void)nssPKIObject_Destroy(&tokenTrust->object);
+	    } else {
+		t = tokenTrust;
+		continue;
+	    }
+	}
+    }
+    nssListIterator_Finish(td->tokens);
     if (!t) {
 	return NULL;
     }
@@ -424,12 +463,12 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
     }
     if (instance) {
 	nssCryptokiInstance *cryptoki = &instance->cryptoki;
-	/* slot (ownSlot ?) (addref ?) */
+	/* slot */
 	cc->slot = cryptoki->token->pk11slot;
 	/* pkcs11ID */
 	cc->pkcs11ID = cryptoki->handle;
 	/* trust */
-	cc->trust = nssTrust_GetCERTCertTrustForCert(c, cryptoki->token, cc);
+	cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
 	/* database handle is now the trust domain */
 	cc->dbhandle = instance->trustDomain;
     } 
@@ -455,9 +494,7 @@ STAN_GetCERTCertificate(NSSCertificate *c)
 	fill_CERTCertificateFields(c, cc);
     } else if (!cc->trust) {
 	nssPKIObjectInstance *instance = get_cert_instance(c);
-	cc->trust = nssTrust_GetCERTCertTrustForCert(c, 
-	                                             instance->cryptoki.token, 
-	                                             cc);
+	cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
     }
     return cc;
 }
@@ -560,13 +597,16 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 {
     PRStatus nssrv;
     NSSCertificate *c = STAN_GetNSSCertificate(cc);
-    nssPKIObjectInstance *instance;
+    NSSToken *tok;
+    NSSTrustDomain *td;
     NSSTrust nssTrust;
+    PRBool moving_object;
     /* Set the CERTCertificate's trust */
     cc->trust = trust;
     /* Set the NSSCerticate's trust */
     nssTrust.certificate = c;
     nssTrust.object.arena = nssArena_Create();
+    nssTrust.object.refCount = 1;
     nssTrust.object.instanceList = nssList_Create(nssTrust.object.arena, 
                                                   PR_FALSE);
     nssTrust.object.instances = nssList_CreateIterator(
@@ -575,10 +615,36 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     nssTrust.clientAuth = get_stan_trust(trust->sslFlags, PR_TRUE);
     nssTrust.emailProtection = get_stan_trust(trust->emailFlags, PR_FALSE);
     nssTrust.codeSigning = get_stan_trust(trust->objectSigningFlags, PR_FALSE);
-    instance = get_cert_instance(c);
-    /* maybe GetDefaultTrustToken()? */
-    nssrv = nssToken_ImportTrust(instance->cryptoki.token, NULL, &nssTrust, 
-                              instance->trustDomain, instance->cryptoContext);
+    td = STAN_GetDefaultTrustDomain();
+    if (PK11_IsReadOnly(cc->slot)) {
+	for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
+	     tok != (NSSToken *)NULL;
+	     tok  = (NSSToken *)nssListIterator_Next(td->tokens))
+	{
+	    if (!PK11_IsReadOnly(tok->pk11slot)) break;
+	}
+	nssListIterator_Finish(td->tokens);
+	moving_object = PR_TRUE;
+    } else {
+	/* by default, store trust on same token as cert if writeable */
+	tok = PK11Slot_GetNSSToken(cc->slot);
+	moving_object = PR_FALSE;
+    }
+    if (tok) {
+	nssPKIObjectInstance *instance = get_cert_instance(c);
+	if (moving_object) {
+	    /* this is kind of hacky.  the softoken needs the cert
+	     * object in order to store trust.  forcing it to be perm
+	     */
+	    nssrv = nssToken_ImportCertificate(tok, NULL, c, td, NULL);
+	    if (nssrv != PR_SUCCESS) return nssrv;
+	}
+	nssrv = nssToken_ImportTrust(tok, NULL, &nssTrust, 
+	                             instance->trustDomain,
+	                             instance->cryptoContext);
+    } else {
+	nssrv = PR_FAILURE;
+    }
     (void)nssPKIObject_Destroy(&nssTrust.object);
     return nssrv;
 }
@@ -688,12 +754,6 @@ get_cert_type(NSSCertificateType nssType)
     }
 }
 #endif
-
-NSS_IMPLEMENT NSSToken *
-STAN_GetInternalToken(void)
-{
-    return NULL;
-}
 
 /* CERT_AddTempCertToPerm */
 NSS_EXTERN PRStatus

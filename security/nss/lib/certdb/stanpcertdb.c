@@ -111,15 +111,8 @@ CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
     PRStatus ret;
 
     CERT_LockCertTrust(cert);
-    if (PK11_IsReadOnly(cert->slot)) {
-	char *nickname = cert_parseNickname(cert->nickname);
-	/* XXX store it on a writeable token */
-	goto done;
-    } else {
-	ret = STAN_ChangeCertTrust(cert, trust);
-	rv = (ret == PR_SUCCESS) ? SECSuccess : SECFailure;
-    }
-done:
+    ret = STAN_ChangeCertTrust(cert, trust);
+    rv = (ret == PR_SUCCESS) ? SECSuccess : SECFailure;
     CERT_UnlockCertTrust(cert);
     return rv;
 }
