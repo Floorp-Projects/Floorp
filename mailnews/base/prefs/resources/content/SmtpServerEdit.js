@@ -23,7 +23,7 @@
 
 
 var smtpService;
-var server;
+var smtpServer;
 
 function onLoad(event)
 {
@@ -33,18 +33,34 @@ function onLoad(event)
             Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
     }
 
-    var serverArg = window.arguments[0].server;
+    var server = window.arguments[0].server;
  
-    if (serverArg) {
-        initializeDialog(serverArg);
+    if (server) {
+        initializeDialog(server);
     }
+
+    doSetOKCancel(onOk, 0);
 }
 
-function initializeDialog(serverArg)
+function initializeDialog(server)
 {
-    server = serverArg;
-    dump("initting with " + server + "\n");
-    dump("hostname = " + server.hostname + "\n");
-    dump("key = " + server.key + "\n");
+    smtpServer = server;
 
+    initSmtpSettings(server);
+}
+
+function onOk()
+{
+    // if we didn't have an SMTP server to initialize with,
+    // we must be creating one.
+    try {
+        if (!smtpServer)
+            smtpServer = smtpService.createSmtpServer();
+        
+        saveSmtpSettings(smtpServer);
+    } catch (ex) {
+        dump("Error saving smtp server: " + ex + "\n");
+    }
+
+    window.close();
 }

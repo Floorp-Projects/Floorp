@@ -29,11 +29,31 @@
 <overlay  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <box id="smtpServerEditor" align="horizontal">
-    <box align="vertical">
+  <script src="smtpEditOverlay.js"/>
+
+  <box id="smtpServerEditor" orient="vertical">
+    <box orient="horizontal">
       <text value="&serverName.label;"/>
-      <textedit/>
+      <textfield id="smtp.hostname"/>
     </box>
+    <!-- use a grid here when it's implemented -->
+    <box orient="vertical">
+      <checkbox id="smtp.alwaysUseUsername" value="&alwaysUseUsername.label;"/>
+      <box orient="vertical" style="margin-left: 2em">
+        <box orient="horizontal">
+          <text value="&userName.label;"/>
+          <textfield id="smtp.username"/>
+        </box>
+        <checkbox id="smtp.savePassword" value="&savePassword.label;"/>
+      </box>
+     </box>
+     <checkbox value="&isSecure.label;"/>
+     <radiogroup id="smtp.trySSL">
+       <box orient="horizontal">
+         <radio value="&alwaysSecure.label;"/>
+         <radio value="&sometimesSecure.label;"/>
+       </box>
+     </radiogroup>
   </box>
 
 </overlay>

@@ -35,6 +35,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   align="vertical"
   onload="onLoad();"
+  width="30em"
 >
 
 <script language="javascript" src="chrome://global/content/strres.js"/>
@@ -48,7 +49,7 @@
   <html flex="1">&smtpListDesc.label;</html>
 </box>
 <box align="horizontal">
-  <tree id="smtpTree" onselect="onSelectionChange(event);">
+  <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" style="height: 0em">
     <treechildren id="smtpTreeChildren"/>
   </tree>
   <box align="vertical">
