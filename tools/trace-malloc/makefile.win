@@ -36,15 +36,31 @@ PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
 
 CPP_OBJS=.\$(OBJDIR)\tmreader.obj
 
-LINCS=\
+LINCS= $(LINCS) \
 	-I$(DEPTH)\config\os2 \
 	$(NULL)
 
-LLIBS= \
+LLIBS= $(LLIBS) \
 	$(DIST)\lib\xpcom.lib \
 	$(LIBNSPR) \
 	$(LIB1) \
 	$(NULL)
+
+!if "" != "$(HAVE_BOUTELL_GD)"
+LCFLAGS= $(LCFLAGS) \
+	-DHAVE_BOUTELL_GD \
+	$(NULL)
+
+LLIBS= $(LLIBS) \
+	$(HAVE_BOUTELL_GD)\gd.lib \
+	$(NULL)
+
+LINCS= $(LINCS) \
+	-I$(HAVE_BOUTELL_GD) \
+	$(NULL)
+!endif
+
+.DEFAULT: install
 
 include <$(DEPTH)\config\rules.mak>
 
