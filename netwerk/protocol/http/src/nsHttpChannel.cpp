@@ -302,7 +302,8 @@ nsHttpChannel::SetupTransaction()
     const char* requestURI;
     if (!mConnectionInfo->ProxyHost() ||
         mConnectionInfo->UsingSSL() ||
-        !PL_strcmp(mConnectionInfo->ProxyType(), "socks")) {
+        !PL_strcmp(mConnectionInfo->ProxyType(), "socks") ||
+        !PL_strcmp(mConnectionInfo->ProxyType(), "socks4")) {
         rv = mURI->GetPath(getter_Copies(requestURIStr));
         if (NS_FAILED(rv)) return rv;
         requestURI = requestURIStr.get();

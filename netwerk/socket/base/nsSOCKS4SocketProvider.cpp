@@ -23,35 +23,35 @@
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsSOCKSSocketProvider.h"
+#include "nsSOCKS4SocketProvider.h"
 #include "nsSOCKSIOLayer.h"
 
 //////////////////////////////////////////////////////////////////////////
 
-nsSOCKSSocketProvider::nsSOCKSSocketProvider()
+nsSOCKS4SocketProvider::nsSOCKS4SocketProvider()
 {
     NS_INIT_REFCNT();
 }
 
 nsresult
-nsSOCKSSocketProvider::Init()
+nsSOCKS4SocketProvider::Init()
 {
     nsresult rv = NS_OK;
     return rv;
 }
 
-nsSOCKSSocketProvider::~nsSOCKSSocketProvider()
+nsSOCKS4SocketProvider::~nsSOCKS4SocketProvider()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSOCKSSocketProvider, nsISocketProvider, nsISOCKSSocketProvider);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSOCKS4SocketProvider, nsISocketProvider, nsISOCKS4SocketProvider);
 
 NS_METHOD
-nsSOCKSSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+nsSOCKS4SocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
     
-    nsSOCKSSocketProvider * inst;
+    nsSOCKS4SocketProvider * inst;
     
     if (NULL == aResult) {
         rv = NS_ERROR_NULL_POINTER;
@@ -63,7 +63,7 @@ nsSOCKSSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult
         return rv;
     }
     
-    NS_NEWXPCOM(inst, nsSOCKSSocketProvider);
+    NS_NEWXPCOM(inst, nsSOCKS4SocketProvider);
     if (NULL == inst) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         return rv;
@@ -76,7 +76,7 @@ nsSOCKSSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketProvider::NewSocket(const char *host, 
+nsSOCKS4SocketProvider::NewSocket(const char *host, 
                                  PRInt32 port,
                                  const char *proxyHost,
                                  PRInt32 proxyPort,
@@ -87,7 +87,7 @@ nsSOCKSSocketProvider::NewSocket(const char *host,
                                           port,
                                           proxyHost,
                                           proxyPort,
-                                          5,          // SOCKS 5
+                                          4,          // SOCKS 4
                                           _result, 
                                           socksInfo);
     
@@ -95,7 +95,7 @@ nsSOCKSSocketProvider::NewSocket(const char *host,
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketProvider::AddToSocket(const char *host,
+nsSOCKS4SocketProvider::AddToSocket(const char *host,
                                    PRInt32 port,
                                    const char *proxyHost,
                                    PRInt32 proxyPort,
@@ -106,7 +106,7 @@ nsSOCKSSocketProvider::AddToSocket(const char *host,
                                             port,
                                             proxyHost,
                                             proxyPort,
-                                            5,        // SOCKS 5
+                                            4,        // SOCKS 4
                                             socket, 
                                             socksInfo);
     

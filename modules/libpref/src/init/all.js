@@ -341,6 +341,7 @@ pref("network.proxy.ssl",                   "");
 pref("network.proxy.ssl_port",              0);
 pref("network.proxy.socks",                 "");
 pref("network.proxy.socks_port",            0);
+pref("network.proxy.socks_version",         5);
 pref("network.proxy.no_proxies_on",         "");
 pref("network.online",                      true); //online/offline
 pref("network.accept_cookies",              0);     // 0 = Always, 1 = warn, 2 = never

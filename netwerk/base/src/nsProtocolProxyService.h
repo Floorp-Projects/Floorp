@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-
+ 
 #ifndef __nsprotocolproxyservice___h___
 #define __nsprotocolproxyservice___h___
 
@@ -80,6 +80,7 @@ protected:
     
     nsXPIDLCString          mSOCKSProxyHost;
     PRInt32                 mSOCKSProxyPort;
+    PRInt32                 mSOCKSProxyVersion;
 
     nsCOMPtr<nsIProxyAutoConfig> mPAC;
     nsXPIDLCString          mPACURL;

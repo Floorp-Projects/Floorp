@@ -32,6 +32,7 @@ nsresult nsSOCKSIOLayerNewSocket(const char *host,
                                  PRInt32 port,
                                  const char *proxyHost,
                                  PRInt32 proxyPort,
+                                 PRInt32 socksVersion,
                                  PRFileDesc **fd, 
                                  nsISupports **info);
 
@@ -39,6 +40,7 @@ nsresult nsSOCKSIOLayerAddToSocket(const char *host,
                                    PRInt32 port,
                                    const char *proxyHost,
                                    PRInt32 proxyPort,
+                                   PRInt32 socksVersion,
                                    PRFileDesc *fd, 
                                    nsISupports **info);
 

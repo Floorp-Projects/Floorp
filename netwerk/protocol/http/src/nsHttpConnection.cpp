@@ -361,7 +361,8 @@ nsHttpConnection::ActivateConnection()
         // unless its SOCKS.
         if (mConnectionInfo->UsingSSL() &&
             mConnectionInfo->ProxyHost() &&
-            PL_strcmp(mConnectionInfo->ProxyType(), "socks")) {
+            PL_strcmp(mConnectionInfo->ProxyType(), "socks") &&
+            PL_strcmp(mConnectionInfo->ProxyType(), "socks4")) {
             rv = SetupSSLProxyConnect();
             if (NS_FAILED(rv)) return rv;
         }
@@ -457,6 +458,11 @@ nsHttpConnection::CreateTransport()
 
     if (!PL_strcasecmp(mConnectionInfo->ProxyType(), "socks")) {
         types[count] = "socks";
+        count++;
+    }
+
+    if (!PL_strcasecmp(mConnectionInfo->ProxyType(), "socks4")) {
+        types[count] = "socks4";
         count++;
     }
 
