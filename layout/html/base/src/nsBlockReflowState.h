@@ -2511,12 +2511,33 @@ nsBlockFrame::UpdateBulletPosition(nsBlockReflowState& aState)
     if (mBullet && HaveOutsideBullet()) {
       // We now have an inside bullet, but used to have an outside
       // bullet.  Adjust the frame line list
-      nsLineBox* line = aState.NewLineBox(mBullet, 1, PR_FALSE);
-      if (!line) {
-        return NS_ERROR_OUT_OF_MEMORY;
+      if (mLines) {
+        // if we have a line already, then move the bullet to the front of the
+        // first line
+        nsIFrame* child = nsnull;
+        
+#ifdef DEBUG
+        // bullet should not have any siblings if it was an outside bullet
+        nsIFrame* next = nsnull;
+        mBullet->GetNextSibling(&next);
+        NS_ASSERTION(!next, "outside bullet should not have siblings");
+#endif
+        // move bullet to front and chain the previous frames, and update the line count
+        child = mLines->mFirstChild;
+        mLines->mFirstChild = mBullet;
+        mBullet->SetNextSibling(child);
+        PRInt32 count = mLines->GetChildCount();
+        mLines->SetChildCount(count+1);
+        // dirty it here in case the caller does not
+        mLines->MarkDirty();
+      } else {
+        // no prior lines, just create a new line for the bullet
+        nsLineBox* line = aState.NewLineBox(mBullet, 1, PR_FALSE);
+        if (!line) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        mLines = line;
       }
-      line->mNext = mLines;
-      mLines = line;
     }
     mState &= ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
   }
