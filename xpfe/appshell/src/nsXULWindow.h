@@ -76,6 +76,7 @@ protected:
                         PRInt32 aSpecWidth, PRInt32 aSpecHeight);
    NS_IMETHOD LoadPositionAndSizeFromXUL(PRBool aPosition, PRBool aSize);
    NS_IMETHOD LoadTitleFromXUL();
+   NS_IMETHOD LoadIconFromXUL();
    NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode);
 
    NS_IMETHOD GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow);

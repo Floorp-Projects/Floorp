@@ -757,6 +757,12 @@ nsBaseWidget::GetAttention() {
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBaseWidget::SetIcon(const nsAReadableString&)
+{
+  return NS_OK;
+}
+
 #ifdef NS_DEBUG
 //////////////////////////////////////////////////////////////
 //

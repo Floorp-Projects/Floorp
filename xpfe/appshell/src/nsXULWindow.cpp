@@ -55,6 +55,9 @@
 #include "nsIPref.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWindowWatcher.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMViewCSS.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 
 #include "nsStyleConsts.h"
 
@@ -703,6 +706,7 @@ void nsXULWindow::OnChromeLoaded()
     mContentTreeOwner->ApplyChromeFlags();
 
   LoadTitleFromXUL();
+  LoadIconFromXUL();
 #ifdef XP_UNIX
   /* don't override wm placement prefs on unix --dr */
   LoadPositionAndSizeFromXUL(PR_FALSE, PR_TRUE);
@@ -941,6 +945,68 @@ NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
    mChromeTreeOwner->SetTitle(windowTitle.GetUnicode());
 
    return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
+{
+    NS_ENSURE_STATE(mWindow);
+
+    // Get <window> element.
+    nsCOMPtr<nsIDOMElement> windowElement;
+    GetWindowDOMElement(getter_AddRefs(windowElement));
+    NS_ENSURE_TRUE(windowElement, NS_ERROR_FAILURE);
+
+    // Get document in which this <window> is contained.
+    nsCOMPtr<nsIDOMDocument> document;
+    windowElement->GetOwnerDocument(getter_AddRefs(document));
+    NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
+
+    // Get document view.
+    nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(document));
+    NS_ENSURE_TRUE(docView, NS_ERROR_FAILURE);
+
+    // Get default/abstract view.
+    nsCOMPtr<nsIDOMAbstractView> abstractView;
+    docView->GetDefaultView(getter_AddRefs(abstractView));
+    NS_ENSURE_TRUE(abstractView, NS_ERROR_FAILURE);
+
+    // Get "view CSS."
+    nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(abstractView));
+    NS_ENSURE_TRUE(viewCSS, NS_ERROR_FAILURE);
+
+    // Next, get CSS style declaration.
+    nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+    nsAutoString empty;
+    viewCSS->GetComputedStyle(windowElement, empty, getter_AddRefs(cssDecl));
+    NS_ENSURE_TRUE(cssDecl, NS_ERROR_FAILURE);
+
+    // Whew.  Now get "list-style-image" property value.
+    nsAutoString windowIcon;
+    windowIcon.Assign(NS_LITERAL_STRING("-moz-window-icon"));
+    nsAutoString value;
+    cssDecl->GetPropertyValue(windowIcon, value);
+
+    // If no icon specified via -moz-window-icon, then use id= attr.
+    if ( value.IsEmpty() )
+    {
+        value.Assign(NS_LITERAL_STRING("resource:///chrome/icons/default/"));
+        nsAutoString attr;
+        attr.Assign(NS_LITERAL_STRING("id"));
+        nsAutoString id;
+        windowElement->GetAttribute(attr,id);
+        if(!id.IsEmpty())
+        {
+            value.Append(id);
+        }
+        else
+        {
+            value.Append(NS_LITERAL_STRING("default"));
+        }
+    }
+    
+    // Finally, set the icon using that attribute value.
+    mWindow->SetIcon(value);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode)
