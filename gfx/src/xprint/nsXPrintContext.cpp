@@ -960,12 +960,26 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
    * Y-axis - therefore we want to get the "best"(=smallest job size) out
    * of the scaling factor...).
    */
-  scalingFactor *= (scale_x < scale_y)?(scale_x):(scale_y);
+  scalingFactor *= PR_MIN(scale_x, scale_y);
   
   /* Adjust destination size to the match the scaling factor */
   imageResolution = long(   double(mPrintResolution) * scalingFactor);
   aDWidth_scaled  = PRInt32(double(aDWidth)          * scalingFactor);
   aDHeight_scaled = PRInt32(double(aDHeight)         * scalingFactor);
+
+  /* Check if we scaled the image to zero width/height - if "yes" then use the
+   * smaller scaling factor and try again ... */
+  if( (aDWidth_scaled <= 0) || (aDHeight_scaled <= 0) )
+  {
+    /* Chose smaller scaling factor (e.g. the reverse of what we're doing above...) */
+    scalingFactor = 1.0 / pixelscale; /* Revert to original value */
+    scalingFactor *= PR_MAX(scale_x, scale_y);
+
+    /* Adjust destination size to the match the (new) scaling factor */
+    imageResolution = long(   double(mPrintResolution) * scalingFactor);
+    aDWidth_scaled  = PRInt32(double(aDWidth)          * scalingFactor);
+    aDHeight_scaled = PRInt32(double(aDHeight)         * scalingFactor);
+  }
 
   /* Image scaled to 0 width/height ? */
   NS_ASSERTION(!((aDWidth_scaled <= 0) || (aDHeight_scaled <= 0)),
