@@ -40,6 +40,10 @@
 #ifndef nsEmbedString_h___
 #define nsEmbedString_h___
 
+#ifndef MOZILLA_STRICT_API
+#error nsEmbedString requires defining MOZILLA_STRICT_API
+#endif
+
 #include "nsStringAPI.h"
 
 class nsEmbedString : public nsStringContainer

@@ -50,6 +50,9 @@
 # define NS_NewNativeLocalFile       NS_NewNativeLocalFile_P
 # define NS_GetDebug                 NS_GetDebug_P
 # define NS_GetTraceRefcnt           NS_GetTraceRefcnt_P
+# define NS_Alloc                    NS_Alloc_P
+# define NS_Realloc                  NS_Realloc_P
+# define NS_Free                     NS_Free_P
 #endif
 
 #include "nscore.h"
@@ -208,6 +211,52 @@ NS_NewNativeLocalFile(const nsACString &path,
                       PRBool followLinks, 
                       nsILocalFile* *result);
 
+/**
+ * Allocates a block of memory of a particular size. If the memory cannot
+ * be allocated (because of an out-of-memory condition), null is returned.
+ *
+ * @status FROZEN
+ *
+ * @param size   The size of the block to allocate
+ * @result       The block of memory
+ * @note         This function is thread-safe.
+ */
+extern "C" NS_COM void*
+NS_Alloc(PRSize size);
+
+/**
+ * Reallocates a block of memory to a new size.
+ *
+ * @status FROZEN
+ *
+ * @param ptr     The block of memory to reallocate. This block must originally
+                  have been allocated by NS_Alloc or NS_Realloc
+ * @param size    The new size. If 0, frees the block like NS_Free
+ * @result        The reallocated block of memory
+ * @note          This function is thread-safe.
+ *
+ * If ptr is null, this function behaves like NS_Alloc.
+ * If s is the size of the block to which ptr points, the first min(s, size)
+ * bytes of ptr's block are copied to the new block. If the allocation
+ * succeeds, ptr is freed and a pointer to the new block is returned. If the
+ * allocation fails, ptr is not freed and null is returned. The returned
+ * value may be the same as ptr.
+ */
+extern "C" NS_COM void*
+NS_Realloc(void* ptr, PRSize size);
+
+/**
+ * Frees a block of memory. Null is a permissible value, in which case no
+ * action is taken.
+ *
+ * @status FROZEN
+ *
+ * @param ptr   The block of memory to free. This block must originally have
+ *              been allocated by NS_Alloc or NS_Realloc
+ * @note        This function is thread-safe.
+ */
+extern "C" NS_COM void
+NS_Free(void* ptr);
 
 extern "C" NS_COM nsresult
 NS_GetDebug(nsIDebug* *result);

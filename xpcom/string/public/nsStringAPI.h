@@ -637,14 +637,14 @@ NS_UTF16ToCString(const nsAString &aSource, nsCStringEncoding aDestEncoding,
  * internal definition of these classes from nsAString.h in the Mozilla tree.
  */
 
-#ifndef _IMPL_NS_STRINGAPI
+#ifdef MOZILLA_STRICT_API
 #define nsAString_external nsAString
 #define nsACString_external nsACString
 #endif
 
 class nsAString_external
 {
-#ifndef _IMPL_NS_STRINGAPI
+#ifdef MOZILLA_STRICT_API
 
 public:
   typedef PRUnichar             char_type;
@@ -718,7 +718,7 @@ public:
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
-#endif // _IMPL_NS_STRINGAPI
+#endif // MOZILLA_STRICT_API
 
 private:
   void *v;
@@ -726,7 +726,7 @@ private:
 
 class nsACString_external
 {
-#ifndef _IMPL_NS_STRINGAPI
+#ifdef MOZILLA_STRICT_API
 
 public:
   typedef char                  char_type;
@@ -800,7 +800,7 @@ public:
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
-#endif // _IMPL_NS_STRINGAPI
+#endif // MOZILLA_STRICT_API
 
 private:
   void *v;

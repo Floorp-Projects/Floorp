@@ -48,7 +48,9 @@ DIRS            = standalone
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue_s
 
-REQUIRES	= $(NULL)
+REQUIRES = \
+		string \
+		$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../build \

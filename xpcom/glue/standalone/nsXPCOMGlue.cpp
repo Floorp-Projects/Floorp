@@ -39,7 +39,6 @@
 #include "nsXPCOMGlue.h"
 
 #include "nspr.h"
-#include "nsMemory.h"
 #include "nsDebug.h"
 #include "nsIServiceManager.h"
 #include "nsGREDirServiceProvider.h"
@@ -54,9 +53,7 @@
 
 void GRE_AddGREToEnvironment();
 
-// functions provided by nsMemory.cpp and nsDebug.cpp
-nsresult GlueStartupMemory();
-void GlueShutdownMemory();
+// functions provided by nsDebug.cpp
 nsresult GlueStartupDebug();
 void GlueShutdownDebug();
 
@@ -152,13 +149,6 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
     if (NS_FAILED(rv))
         goto bail;
 
-    // startup the nsMemory
-    rv = GlueStartupMemory();
-    if (NS_FAILED(rv)) {
-        GlueShutdownDebug();
-        goto bail;
-    }
-
     GRE_AddGREToEnvironment();
     return NS_OK;
 
@@ -176,8 +166,6 @@ nsresult XPCOMGlueShutdown()
 #ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
     return NS_OK;
 #else
-
-    GlueShutdownMemory();
 
     GlueShutdownDebug();
 
@@ -411,7 +399,7 @@ NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 }
 
 extern "C" NS_COM nsresult
-NS_CStringToUTF16(const nsACString &aSrc, PRUint32 aSrcEncoding, nsAString &aDest)
+NS_CStringToUTF16(const nsACString &aSrc, nsCStringEncoding aSrcEncoding, nsAString &aDest)
 {
     if (!xpcomFunctions.cstringToUTF16)
         return NS_ERROR_NOT_INITIALIZED;
@@ -419,11 +407,34 @@ NS_CStringToUTF16(const nsACString &aSrc, PRUint32 aSrcEncoding, nsAString &aDes
 }
 
 extern "C" NS_COM nsresult
-NS_UTF16ToCString(const nsAString &aSrc, PRUint32 aDestEncoding, nsACString &aDest)
+NS_UTF16ToCString(const nsAString &aSrc, nsCStringEncoding aDestEncoding, nsACString &aDest)
 {
     if (!xpcomFunctions.utf16ToCString)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.utf16ToCString(aSrc, aDestEncoding, aDest);
+}
+
+extern "C" NS_COM void*
+NS_Alloc(PRSize size)
+{
+    if (!xpcomFunctions.allocFunc)
+        return nsnull;
+    return xpcomFunctions.allocFunc(size);
+}
+
+extern "C" NS_COM void*
+NS_Realloc(void* ptr, PRSize size)
+{
+    if (!xpcomFunctions.reallocFunc)
+        return nsnull;
+    return xpcomFunctions.reallocFunc(ptr, size);
+}
+
+extern "C" NS_COM void
+NS_Free(void* ptr)
+{
+    if (xpcomFunctions.freeFunc)
+        xpcomFunctions.freeFunc(ptr);
 }
 
 #endif // #ifndef  XPCOM_GLUE_NO_DYNAMIC_LOADING

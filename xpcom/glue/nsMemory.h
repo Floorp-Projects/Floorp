@@ -38,6 +38,7 @@
 #ifndef nsMemory_h__
 #define nsMemory_h__
 
+#include "nsXPCOM.h"
 #include "nsIMemory.h"
 
 #define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
@@ -63,11 +64,17 @@
 class nsMemory
 {
 public:
-    static NS_COM_GLUE void*      Alloc(size_t size);
-    static NS_COM_GLUE void*      Realloc(void* ptr, size_t size);
-    static NS_COM_GLUE void       Free(void* ptr);
+    static NS_HIDDEN_(void*) Alloc(size_t size)
+        { return NS_Alloc(size); }
+
+    static NS_HIDDEN_(void*) Realloc(void* ptr, PRSize size)
+        { return NS_Realloc(ptr, size); }
+
+    static NS_HIDDEN_(void) Free(void* ptr)
+        { NS_Free(ptr); }
+
     static NS_COM_GLUE nsresult   HeapMinimize(PRBool aImmediate);
-    static NS_COM_GLUE void*      Clone(const void* ptr, size_t size);
+    static NS_COM_GLUE void*      Clone(const void* ptr, PRSize size);
     static NS_COM_GLUE nsIMemory* GetGlobalMemoryService();       // AddRefs
 };
 
@@ -105,7 +112,7 @@ public:
         PRInt32 iter_ = PRInt32(size);                                        \
         while (--iter_ >= 0)                                                  \
             freeFunc((array)[iter_]);                                         \
-        nsMemory::Free((array));                                              \
+        NS_Free((array));                                                     \
     PR_END_MACRO
 
 // convenience macros for commonly used calls.  mmmmm.  syntactic sugar.
@@ -121,7 +128,7 @@ public:
  * @param array     The array to be freed.
  */
 #define NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(size, array)                    \
-    NS_FREE_XPCOM_POINTER_ARRAY((size), (array), nsMemory::Free)
+    NS_FREE_XPCOM_POINTER_ARRAY((size), (array), NS_Free)
 
 /**
  * Macro to free an array of pointers to nsISupports (or classes

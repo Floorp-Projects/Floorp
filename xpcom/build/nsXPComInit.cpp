@@ -384,21 +384,6 @@ static const nsModuleComponentInfo components[] = {
 
 const int components_length = sizeof(components) / sizeof(components[0]);
 
-// gMemory will be freed during shutdown.
-static nsIMemory* gMemory = nsnull;
-nsresult NS_COM NS_GetMemoryManager(nsIMemory* *result)
-{
-    nsresult rv = NS_OK;
-    if (!gMemory)
-    {
-        rv = nsMemoryImpl::Create(nsnull,
-                                  NS_GET_IID(nsIMemory),
-                                  (void**)&gMemory);
-    }
-    NS_IF_ADDREF(*result = gMemory);
-    return rv;
-}
-
 // gDebug will be freed during shutdown.
 static nsIDebug* gDebug = nsnull;
 nsresult NS_COM NS_GetDebug(nsIDebug** result)
@@ -856,7 +841,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     EmptyEnumeratorImpl::Shutdown();
     nsMemoryImpl::Shutdown();
-    NS_IF_RELEASE(gMemory);
 
     nsThread::Shutdown();
     NS_PurgeAtomTable();
@@ -875,66 +859,4 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
 
     return NS_OK;
-}
-
-#define GET_FUNC(_tag, _decl, _name)                        \
-  functions->_tag = (_decl) PR_FindSymbol(xpcomLib, _name); \
-  if (!functions->_tag) goto end
-
-nsresult NS_COM PR_CALLBACK
-NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
-{
-    if (!functions)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (functions->version != XPCOM_GLUE_VERSION)
-        return NS_ERROR_FAILURE;
-
-    PRLibrary *xpcomLib = PR_LoadLibrary(libraryPath);
-    if (!xpcomLib)
-        return NS_ERROR_FAILURE;
-
-    nsresult rv = NS_ERROR_FAILURE;
-
-    GET_FUNC(init,                  InitFunc,                       "NS_InitXPCOM2");
-    GET_FUNC(shutdown,              ShutdownFunc,                   "NS_ShutdownXPCOM");
-    GET_FUNC(getServiceManager,     GetServiceManagerFunc,          "NS_GetServiceManager");
-    GET_FUNC(getComponentManager,   GetComponentManagerFunc,        "NS_GetComponentManager");
-    GET_FUNC(getComponentRegistrar, GetComponentRegistrarFunc,      "NS_GetComponentRegistrar");
-    GET_FUNC(getMemoryManager,      GetMemoryManagerFunc,           "NS_GetMemoryManager");
-    GET_FUNC(newLocalFile,          NewLocalFileFunc,               "NS_NewLocalFile");
-    GET_FUNC(newNativeLocalFile,    NewNativeLocalFileFunc,         "NS_NewNativeLocalFile");
-    GET_FUNC(registerExitRoutine,   RegisterXPCOMExitRoutineFunc,   "NS_RegisterXPCOMExitRoutine");
-    GET_FUNC(unregisterExitRoutine, UnregisterXPCOMExitRoutineFunc, "NS_UnregisterXPCOMExitRoutine");
-
-    // these functions were added post 1.4 (need to check size of |functions|)
-    if (functions->size > offsetof(XPCOMFunctions, getTraceRefcnt)) {
-        GET_FUNC(getDebug,          GetDebugFunc,                   "NS_GetDebug");
-        GET_FUNC(getTraceRefcnt,    GetTraceRefcntFunc,             "NS_GetTraceRefcnt");
-    }
-
-    // these functions were added post 1.6 (need to check size of |functions|)
-    if (functions->size > offsetof(XPCOMFunctions, cstringCloneData)) {
-        GET_FUNC(stringContainerInit,    StringContainerInitFunc,        "NS_StringContainerInit");
-        GET_FUNC(stringContainerFinish,  StringContainerFinishFunc,      "NS_StringContainerFinish");
-        GET_FUNC(stringGetData,          StringGetDataFunc,              "NS_StringGetData");
-        GET_FUNC(stringSetData,          StringSetDataFunc,              "NS_StringSetData");
-        GET_FUNC(stringSetDataRange,     StringSetDataRangeFunc,         "NS_StringSetDataRange");
-        GET_FUNC(stringCopy,             StringCopyFunc,                 "NS_StringCopy");
-        GET_FUNC(cstringContainerInit,   CStringContainerInitFunc,       "NS_CStringContainerInit");
-        GET_FUNC(cstringContainerFinish, CStringContainerFinishFunc,     "NS_CStringContainerFinish");
-        GET_FUNC(cstringGetData,         CStringGetDataFunc,             "NS_CStringGetData");
-        GET_FUNC(cstringSetData,         CStringSetDataFunc,             "NS_CStringSetData");
-        GET_FUNC(cstringSetDataRange,    CStringSetDataRangeFunc,        "NS_CStringSetDataRange");
-        GET_FUNC(cstringCopy,            CStringCopyFunc,                "NS_CStringCopy");
-        GET_FUNC(cstringToUTF16,         CStringToUTF16,                 "NS_CStringToUTF16");
-        GET_FUNC(utf16ToCString,         UTF16ToCString,                 "NS_UTF16ToCString");
-        GET_FUNC(stringCloneData,        StringCloneDataFunc,            "NS_StringCloneData");
-        GET_FUNC(cstringCloneData,       CStringCloneDataFunc,           "NS_CStringCloneData");
-    }
-
-    rv = NS_OK;
-end:
-    PR_UnloadLibrary(xpcomLib); // the library is refcnt'ed above by the caller.
-    return rv;
 }
