@@ -140,7 +140,7 @@ NS_INTERFACE_MAP_BEGIN(GeckoContainer)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) // optional
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
+   NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener2)
    NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
    NS_INTERFACE_MAP_ENTRY(nsIGeckoContainer)
 NS_INTERFACE_MAP_END
@@ -449,12 +449,17 @@ NS_IMETHODIMP GeckoContainer::Observe(nsISupports *aSubject, const char *aTopic,
 // GeckoContainer::nsIContextMenuListener
 //*****************************************************************************   
 
-/* void OnShowContextMenu (in unsigned long aContextFlags, in nsIDOMEvent aEvent, in nsIDOMNode aNode); */
-NS_IMETHODIMP GeckoContainer::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
+//*****************************************************************************
+// GeckoContainer::nsIContextMenuListener2
+//*****************************************************************************   
+
+/* void onShowContextMenu (in unsigned long aContextFlags, in nsIContextMenuInfo aUtils); */
+NS_IMETHODIMP GeckoContainer::OnShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *aContextMenuInfo)
 {
-    mUI->ShowContextMenu(aContextFlags, aEvent, aNode);
+    mUI->ShowContextMenu(aContextFlags, aContextMenuInfo);
     return NS_OK;
 }
+
 
 //*****************************************************************************
 // GeckoContainer::nsITooltipListener

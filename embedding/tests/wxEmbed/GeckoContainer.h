@@ -49,6 +49,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIContextMenuListener.h"
+#include "nsIContextMenuListener2.h"
 #include "nsITooltipListener.h"
 
 class GeckoContainerUI;
@@ -78,7 +79,7 @@ class GeckoContainer   :
     public nsIEmbeddingSiteWindow2,
     public nsIInterfaceRequestor,
     public nsIObserver,
-    public nsIContextMenuListener,
+    public nsIContextMenuListener2,
     public nsITooltipListener,
     public nsIGeckoContainer,
     public nsSupportsWeakReference
@@ -98,7 +99,7 @@ public:
     NS_DECL_NSIEMBEDDINGSITEWINDOW2
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIOBSERVER
-    NS_DECL_NSICONTEXTMENULISTENER
+    NS_DECL_NSICONTEXTMENULISTENER2
     NS_DECL_NSITOOLTIPLISTENER
     NS_DECL_NSIGECKOCONTAINER
 
@@ -159,7 +160,7 @@ public:
     virtual void UpdateProgress(PRInt32 aCurrent, PRInt32 aMax);
     virtual void GetResourceStringById(PRInt32 aID, char ** aReturn);
     // Called when a context menu event has been detected on the page
-    virtual void ShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
+    virtual void ShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *aContextMenuInfo);
     // Called when a tooltip should be shown
     virtual void ShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText);
     // Called when a tooltip should be hidden

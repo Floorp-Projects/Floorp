@@ -37,6 +37,8 @@
 
 #include "BrowserFrame.h"
 #include "MailFrame.h"
+#include "ChatFrame.h"
+
 #include "GeckoProtocolHandler.h"
 #include "GeckoWindowCreator.h"
 
@@ -77,12 +79,14 @@ class EmbedApp : public wxApp
     void OnQuit(wxCommandEvent &event);
     void OnAbout(wxCommandEvent &event);
     void OnMail(wxCommandEvent &event);
+    void OnChat(wxCommandEvent &event);
 };
 
 BEGIN_EVENT_TABLE(EmbedApp, wxApp)
     EVT_MENU(XRCID("menu_quit"),  EmbedApp::OnQuit)
     EVT_MENU(XRCID("menu_about"), EmbedApp::OnAbout)
     EVT_MENU(XRCID("menu_mail"),  EmbedApp::OnMail)
+    EVT_MENU(XRCID("menu_chat"),  EmbedApp::OnChat)
 END_EVENT_TABLE()
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -110,7 +114,7 @@ bool EmbedApp::OnInit()
 
     GeckoProtocolHandler::RegisterHandler("foo", "Test handler", new FooCallback);
 
-    // create an nsWindowCreator and give it to the WindowWatcher service
+    // Register a window creator for popups
     GeckoWindowCreator *creatorCallback = new GeckoWindowCreator();
     if (creatorCallback)
     {
@@ -166,3 +170,8 @@ void EmbedApp::OnMail(wxCommandEvent & WXUNUSED(event))
     frame->Show(TRUE);
 }
 
+void EmbedApp::OnChat(wxCommandEvent & WXUNUSED(event))
+{
+    ChatFrame * frame = new ChatFrame(NULL);
+    frame->Show(TRUE);
+}

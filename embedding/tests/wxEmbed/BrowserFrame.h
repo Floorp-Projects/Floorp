@@ -63,6 +63,7 @@ public :
          nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow);
     virtual void UpdateStatusBarText(const PRUnichar* aStatusText);
     virtual void UpdateCurrentURI();
+    virtual void ShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *aContextMenuInfo);
 };
 
 #endif

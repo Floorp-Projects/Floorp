@@ -226,3 +226,74 @@ void BrowserFrame::UpdateCurrentURI()
         }
     }
 }
+
+#include "nsIDOMMouseEvent.h"
+
+void BrowserFrame::ShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *aContextMenuInfo)
+{
+    nsCOMPtr<nsIDOMEvent> event;
+    aContextMenuInfo->GetMouseEvent(getter_AddRefs(event));
+    if (!event)
+    {
+        return;
+    }
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(event);
+    if (mouseEvent)
+    {
+        PRInt32 x, y;
+        mouseEvent->GetClientX(&x);
+        mouseEvent->GetClientY(&y);
+
+        char *menuName = NULL;
+
+        // CONTEXT_LINK                   <A>
+        // CONTEXT_IMAGE                  <IMG>
+        // CONTEXT_IMAGE | CONTEXT_LINK   <IMG> with <A> as an ancestor
+        // CONTEXT_INPUT                  <INPUT>
+        // CONTEXT_INPUT | CONTEXT_IMAGE  <INPUT> with type=image
+        // CONTEXT_TEXT                   <TEXTAREA>
+        // CONTEXT_DOCUMENT               <HTML>
+        // CONTEXT_BACKGROUND_IMAGE       <HTML> with background image
+        
+        if (aContextFlags & nsIContextMenuListener2::CONTEXT_IMAGE)
+        {
+            if (aContextFlags & nsIContextMenuListener2::CONTEXT_LINK)
+                menuName = "context_browser_image"; // TODO
+            else if (aContextFlags & nsIContextMenuListener2::CONTEXT_INPUT)
+                menuName = "context_browser_image"; // TODO
+            else
+                menuName = "context_browser_image"; // TODO
+        }
+        else if (aContextFlags & nsIContextMenuListener2::CONTEXT_LINK)
+        {
+            menuName = "context_browser_link";
+        }
+        else if (aContextFlags & nsIContextMenuListener2::CONTEXT_INPUT)
+        {
+            menuName = "context_browser_input";
+        }
+        else if (aContextFlags & nsIContextMenuListener2::CONTEXT_TEXT)
+        {
+            menuName = "context_browser_text";
+        }
+        else if (aContextFlags & nsIContextMenuListener2::CONTEXT_DOCUMENT)
+        {
+            menuName = "context_browser_document";
+        }
+        else if (aContextFlags & nsIContextMenuListener2::CONTEXT_BACKGROUND_IMAGE)
+        {
+            menuName = "context_browser_document";
+        }
+
+        if (!menuName)
+            return;
+
+// Hack for Win32 that has a #define for LoadMenu
+#undef LoadMenu
+        wxMenu *menu = wxXmlResource::Get()->LoadMenu(menuName);
+        if (menu)
+            PopupMenu(menu, x, y);
+    }
+}
+
+

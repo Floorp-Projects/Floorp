@@ -48,6 +48,6 @@ public :
 
     GeckoWindow            *mGeckoWnd;
     nsCOMPtr<nsIWebBrowser> mWebbrowser;
-  };
+};
 
 #endif

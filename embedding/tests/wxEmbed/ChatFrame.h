@@ -29,79 +29,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "global.h"
+#ifndef CHATFRAME_H
 
 #include "GeckoContainer.h"
+#include "GeckoWindow.h"
 
-
-nsresult GeckoContainerUI::CreateBrowserWindow(PRUint32 aChromeFlags,
-         nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow)
+class ChatFrame :
+    public wxFrame,
+    public GeckoContainerUI
 {
-    return NS_ERROR_FAILURE;
-}
+public :
+    ChatFrame(wxWindow* aParent);
 
-void GeckoContainerUI::Destroy()
-{
-}
+    DECLARE_EVENT_TABLE()
 
-void GeckoContainerUI::Destroyed()
-{
-}
+    GeckoWindow            *mGeckoWnd;
+    nsCOMPtr<nsIWebBrowser> mWebbrowser;
+};
 
-void GeckoContainerUI::SetFocus()
-{
-}
-
-void GeckoContainerUI::KillFocus()
-{
-}
-
-void GeckoContainerUI::UpdateStatusBarText(const PRUnichar* aStatusText)
-{
-}
-
-void GeckoContainerUI::UpdateCurrentURI()
-{
-}
-
-void GeckoContainerUI::UpdateBusyState(PRBool aBusy)
-{
-    mBusy = aBusy;
-}
-
-void GeckoContainerUI::UpdateProgress(PRInt32 aCurrent, PRInt32 aMax)
-{
-}
-
-void GeckoContainerUI::GetResourceStringById(PRInt32 aID, char ** aReturn)
-{
-}
-
-void GeckoContainerUI::ShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *aContextMenuInfo)
-{
-}
-
-void GeckoContainerUI::ShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
-{
-}
-
-void GeckoContainerUI::HideTooltip()
-{
-}
-
-void GeckoContainerUI::ShowWindow(PRBool aShow)
-{
-}
-
-void GeckoContainerUI::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
-{
-}
-
-void GeckoContainerUI::EnableChromeWindow(PRBool aEnabled)
-{
-}
-
-PRUint32 GeckoContainerUI::RunEventLoop(PRBool &aRunCondition)
-{
-    return 0;
-}
+#endif

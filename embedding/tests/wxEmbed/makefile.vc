@@ -9,6 +9,7 @@ OBJECTS = \
     EmbedApp.obj \
     BrowserFrame.obj \
     MailFrame.obj \
+    ChatFrame.obj \
     GeckoContainer.obj \
     GeckoContainerUI.obj \
     GeckoWindow.obj \
@@ -18,8 +19,9 @@ OBJECTS = \
     $(NULL)
 
 XRC = \
-    rc\mail.xrc \
     rc\browser.xrc \
+    rc\mail.xrc \
+    rc\chat.xrc \
     $(NULL)
 
 # Needing to include this big long list of includes STINKS!!!
