@@ -112,8 +112,6 @@ class EmbedPrivate {
   static char                   *sCompPath;
   // the appshell we have created
   static nsIAppShell            *sAppShell;
-  // has the window creator service been set up?
-  static PRBool                  sCreatorInit;
   // the list of all open windows
   static nsVoidArray            *sWindowList;
   // what is our profile path?
