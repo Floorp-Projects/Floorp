@@ -1145,7 +1145,7 @@ treeitem > treerow > treecell > .tree-icon > .twisty[disabled="true"] {
  list-style-image: none;
 }
 
-treeitem[open="true"] > treerow > treecell > .tree-icon > .twisty {
+treeitem[container="true"][open="true"] > treerow > treecell > .tree-icon > .twisty {
  list-style-image: url("chrome://global/skin/opentwisty.gif");
 }
 
