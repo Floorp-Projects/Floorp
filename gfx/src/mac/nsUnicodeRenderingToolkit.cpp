@@ -140,6 +140,19 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 #define IN_ARABIC_PRESENTATION_B(a) ((0xfe70 <= (a)) && ((a) <= 0xfeff))
 #define IN_ARABIC_PRESENTATION_A_OR_B(a) (IN_ARABIC_PRESENTATION_A(a) || IN_ARABIC_PRESENTATION_B(a))
 
+// we should not ues TEC fallback for characters in latin, greek and cyrillic script
+// because Japanese, Chinese and Korean font have these chracters. If we let them 
+// render in the TEC fallback process, then we will use a Japanese/korean/chinese font
+// to render it even the current font have a glyph in it
+// if we skip the TEC fallback, then the ATSUI fallback will try to use the glyph 
+// in the font first (TEC or TEC fallback are using QuickDraw, which can only use 
+// the glyphs that in the font script's encodign. but a lot of TrueType font
+// have houndred more glyph in additional to the font scripts
+#define IS_LATIN(c)  ( IN_RANGE(c, 0x0000, 0x024F) || IN_RANGE(c, 0x1e00, 0x1eff) )
+#define IS_GREEK(c)  ( IN_RANGE(c, 0x0370, 0x03FF) || IN_RANGE(c, 0x1f00, 0x1fff) )
+#define IS_CYRILLIC(c)  IN_RANGE(c, 0x0400, 0x04ff)
+#define IS_SKIP_TEC_FALLBACK(c) (IS_LATIN(c) || IS_GREEK(c) || IS_CYRILLIC(c))
+
 //------------------------------------------------------------------------
 #pragma mark -
 //------------------------------------------------------------------------
@@ -1264,7 +1277,8 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
       
 #ifndef DISABLE_TEC_FALLBACK
       // Fallback by try different Script code
-     fallbackDone = TECFallbackGetDimensions(aString, segDim, fontNum, fontMapping);
+      if (! IS_SKIP_TEC_FALLBACK(*aString))
+        fallbackDone = TECFallbackGetDimensions(aString, segDim, fontNum, fontMapping);
 #endif
 
       //
@@ -1428,7 +1442,8 @@ nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
       segBoundingMetrics.Clear();
 
 #ifndef DISABLE_TEC_FALLBACK
-      fallbackDone = TECFallbackGetBoundingMetrics(aString, segBoundingMetrics, fontNum, fontMapping);
+      if (! IS_SKIP_TEC_FALLBACK(*aString))
+        fallbackDone = TECFallbackGetBoundingMetrics(aString, segBoundingMetrics, fontNum, fontMapping);
 #endif
 
 #ifndef DISABLE_ATSUI_FALLBACK  
@@ -1545,7 +1560,8 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 
 #ifndef DISABLE_TEC_FALLBACK
 		  // Fallback by try different Script code
-		  fallbackDone = TECFallbackDrawChar(aString, x, y, thisWidth, fontNum, fontMapping);
+		  if (! IS_SKIP_TEC_FALLBACK(*aString))
+  		  fallbackDone = TECFallbackDrawChar(aString, x, y, thisWidth, fontNum, fontMapping);
 #endif
 		  //
 		  // We really don't care too much of performance after this
