@@ -20,6 +20,7 @@
   #
   # Contributor(s):
   #
+  # The Initial Developer wrote this software to the Glory of God.
   # ***** END LICENSE BLOCK ***** %]
   
 [% script = BLOCK %]
@@ -112,20 +113,19 @@ function onLoad() {
         >[% form.comments FILTER html %]</textarea>
       </td>
     </tr>
+    <tr>
+      <td></td>
+      <td>
+        <input id="send-feedback" type="submit" value="Send Feedback"/>
+      </td>
+    </tr>
   </table>
-  <input type="hidden" name="action" value="submit"/>
-  
-  [%# Add JS to only enable button when form is filled in %]
-  
-  <input id="send-feedback" type="submit" value="Send Feedback"/>
+  <input type="hidden" name="action" value="submit"/>  
+  <input type="hidden" name="stylesheet" value="[% stylesheet FILTER html %]"/>  
 </form>
 
 <p>
 Information from this form will be published to the newsgroup <span class="newsgroup">[% newsgroup %]</span> so project contributors can read it. Do not submit any information unless you wish it to be made public. Your email address will be spam-proofed.
 </p>
-
-<p class="footnote">Why "Hendrix"? The late 
-<a href="http://en.wikipedia.org/wiki/Jimi_Hendrix">Jimi Hendrix</a>
-is credited with making popular the technique of making feedback useful in the creation of music :-).</p>
 
 [% PROCESS footer.html.tmpl %]

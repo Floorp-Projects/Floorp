@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #
+# The Initial Developer wrote this software to the Glory of God.
 # ***** END LICENSE BLOCK *****
 
 use strict;
@@ -44,7 +45,7 @@ my $form = $cgi->Vars;
 my $vars;
 $vars->{'form'} = $form;
 $vars->{'newsgroup'} = $newsgroup;
-$vars->{'stylesheet'} = $form->{'stylesheet'} || "hendrix.css";
+$vars->{'stylesheet'} = $form->{'stylesheet'} || "skin/default.css";
 
 my $template = Template->new({
     INCLUDE_PATH => ["template"],

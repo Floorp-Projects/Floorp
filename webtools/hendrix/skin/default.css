@@ -22,18 +22,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#header-img {
+.sidebar {
   float: right;
+  width: 200px;
+  font-size: small;
+  text-align: center;
+}
+
+#header-img {
   border: 1px grey solid;
   margin-left: 10px;
 }
 
 p.error {
   color: red;
-}
-
-.footnote {
-  font-size: small;
 }
 
 h1 {
