@@ -1,4 +1,5 @@
 rdf.h
+nsIRDFContentSink.h
 nsIRDFCursor.h
 nsIRDFDataBase.h
 nsIRDFDataSource.h
@@ -6,4 +7,5 @@ nsIRDFNode.h
 nsIRDFObserver.h
 nsIRDFResourceFactory.h
 nsIRDFService.h
+nsIRDFXMLDocument.h
 nsIRDFXMLSource.h

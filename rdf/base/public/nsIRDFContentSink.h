@@ -30,9 +30,9 @@
 #include "nsIXMLContentSink.h"
 class nsIDocument;
 class nsIRDFDataSource;
+class nsIRDFXMLDocument;
 class nsINameSpaceManager;
 class nsIURL;
-class nsIWebShell;
 
 // {751843E2-8309-11d2-8EAC-00805F29F370}
 #define NS_IRDFCONTENTSINK_IID \
@@ -58,18 +58,9 @@ public:
      * Retrieve the content sink's RDF data source.
      */
     NS_IMETHOD GetDataSource(nsIRDFDataSource*& rDataSource) = 0;
+
+    NS_IMETHOD SetRDFXMLDocument(nsIRDFXMLDocument* aDocument) = 0;
 };
-
-
-/**
- * This constructs a content sink that is intended to be used
- * with an nsIDocument to construct a content model.
- */
-nsresult
-NS_NewRDFDocumentContentSink(nsIRDFContentSink** aResult,
-                             nsIDocument* aDoc,
-                             nsIURL* aURL,
-                             nsIWebShell* aWebShell);
 
 
 /**
@@ -77,7 +68,7 @@ NS_NewRDFDocumentContentSink(nsIRDFContentSink** aResult,
  * document, say, to create a stand-alone in-memory graph.
  */
 nsresult
-NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult);
+NS_NewRDFContentSink(nsIRDFContentSink** aResult);
 
 
 #endif // nsIRDFContentSink_h___

@@ -43,6 +43,8 @@ class nsIRDFLiteral;
 class nsIRDFResource;
 class nsIRDFResourceFactory;
 
+typedef nsresult (*NSDataSourceConstructorCallback)(nsIRDFDataSource** aResult);
+
 class nsIRDFService : public nsISupports {
 public:
 
@@ -99,19 +101,50 @@ public:
     // Data source management routines
 
     /**
-     * Register a <i>named data source</i> with the specified URI.
+     * Register a <i>named data source</i>. The RDF service will call
+     * <tt>nsIRDFDataSource::GetURI()</tt> to determine the URI under which to 
+     * register the data source.
+     *
+     * Note that the data source will <i>not</i> be refcounted by the
+     * RDF service! The assumption is that an RDF data source registers
+     * with the service once it is initialized (via <tt>nsIRDFDataSource::Init()</tt>),
+     * and unregisters when the last reference to the data source is
+     * released.
      */
-    NS_IMETHOD RegisterNamedDataSource(const char* uri, nsIRDFDataSource* dataSource) = 0;
+    NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource) = 0;
 
     /**
-     * Unregister a <i>named data source</i>.
+     * Unregister a <i>named data source</i>. The RDF service will call
+     * <tt>nsIRDFDataSource::GetURI()</tt> to determine the URI under which the
+     * data source was registered.
      */
-    NS_IMETHOD UnRegisterNamedDataSource(const char* uri) = 0;
+    NS_IMETHOD UnregisterDataSource(nsIRDFDataSource* dataSource) = 0;
 
     /**
-     * Get the <i>named data source</i> corresponding to the URI.
+     * Register a constructor function that will create a named data source.
+     * The RDF service will call this function to attempt to create a
+     * named data source.
+     */
+    NS_IMETHOD RegisterDataSourceConstructor(const char* aURI, NSDataSourceConstructorCallback aFn) = 0;
+
+    /**
+     * Unregister the constructor function for a named data source.
+     */
+    NS_IMETHOD UnregisterDataSourceConstructor(const char* aURI) = 0;
+
+    /**
+     * Get the <i>named data source</i> corresponding to the URI. If a data
+     * source has been registered via <tt>RegisterDataSource()</tt>, that
+     * data source will be returned.
+     *
+     * If no data source is currently
+     * registered for the specified URI, and a data source <i>constructor</i>
+     * function has been registered via <tt>RegisterDatasourceConstructor()</tt>,
+     * the RDF service will call the constructor to attempt to construct a
+     * new data source. If construction is successful, the data source will
+     * be initialized via <tt>nsIRDFDataSource::Init()</tt>.
      */ 
-    NS_IMETHOD GetNamedDataSource(const char* uri, nsIRDFDataSource** dataSource) = 0;
+    NS_IMETHOD GetDataSource(const char* uri, nsIRDFDataSource** dataSource) = 0;
 
     /**
      * Create a database that contains the specified named data

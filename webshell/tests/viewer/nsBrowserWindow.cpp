@@ -866,11 +866,10 @@ static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
 
   nsresult rv;
 
-  nsIRDFDataSource* ds       = nsnull;
-  nsIRDFDataBase* db         = nsnull;
   nsIRDFDocument* doc        = nsnull;
   nsIRDFContentModelBuilder* builder = nsnull;
   nsIRDFService* service     = nsnull;
+  nsIURL* uri                = nsnull;
   nsIRDFResource* root       = nsnull;
 
   result = nsnull; // reasonable default
@@ -895,55 +894,26 @@ static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
   if (NS_FAILED(rv = doc->Init(builder)))
     goto done;
 
-  if (NS_FAILED(rv = doc->GetDataBase(db)))
-    goto done;
-
-  // XXX Allright, all this hand-coding of data sources is getting
-  // ridiculous and needs to be moved to the RDF back-end. I'll do
-  // that ASAP...
-  if (NS_FAILED(rv = service->GetNamedDataSource("rdf:mail", &ds)))
-    goto done;
-
-  if (NS_FAILED(rv = db->AddDataSource(ds)))
-    goto done;
-
-  NS_RELEASE(ds);
-
-  if (NS_FAILED(rv = service->GetNamedDataSource("rdf:bookmarks", &ds)))
-    goto done;
-
-  if (NS_FAILED(rv = db->AddDataSource(ds)))
-    goto done;
-
-  NS_RELEASE(ds);
-
-  if (NS_FAILED(rv = service->GetNamedDataSource("resource://res/rdf/LocalStore.rdf", &ds)))
-    goto done;
-
-  if (NS_FAILED(rv = db->AddDataSource(ds)))
-    goto done;
-
-  if (NS_FAILED(rv = service->GetResource("resource://res/rdf/LocalStore.rdf#root", &root)))
-    goto done;
-
-  if (NS_FAILED(rv = doc->SetRootResource(root)))
+  if (NS_FAILED(rv = NS_NewURL(&uri, "resource://res/rdf/LocalStore.rdf")))
     goto done;
 
   if (NS_FAILED(rv = doc->QueryInterface(kIDocumentIID, (void**) &result)))
+    goto done;
+
+  if (NS_FAILED(rv = result->StartDocumentLoad(uri, nsnull, nsnull, nsnull)))
     goto done;
 
   // implicit addref on "result" from the QI
 
 done:
   NS_IF_RELEASE(root);
+  NS_IF_RELEASE(uri);
   if (service) {
     nsServiceManager::ReleaseService(kRDFServiceCID, service);
     service = nsnull;
   }
   NS_IF_RELEASE(builder);
   NS_IF_RELEASE(doc);
-  NS_IF_RELEASE(db);
-  NS_IF_RELEASE(ds);
   return rv;
 }
 

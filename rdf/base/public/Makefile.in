@@ -26,6 +26,7 @@ MODULE = rdf
 
 EXPORTS =			\
         rdf.h                   \
+	nsIRDFContentSink.h	\
 	nsIRDFCursor.h          \
 	nsIRDFDataBase.h        \
 	nsIRDFDataSource.h      \
@@ -33,6 +34,7 @@ EXPORTS =			\
 	nsIRDFObserver.h        \
 	nsIRDFResourceFactory.h	\
         nsIRDFService.h         \
+	nsIRDFXMLDocument.h	\
         nsIRDFXMLSource.h       \
         $(NULL)
 
