@@ -1074,9 +1074,16 @@ nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
   nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
   NS_ENSURE_TRUE(metrics, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIAtom> langGroup;
-  mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
-  mPSObj->setlanggroup(langGroup);
+  // When FT2 printing is enabled, we don't need to set langgroup
+#if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
+  if (!NS_REINTERPRET_CAST(nsDeviceContextPS *, mContext.get())->mFTPEnable) {
+#endif
+    nsCOMPtr<nsIAtom> langGroup;
+    mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
+    mPSObj->setlanggroup(langGroup);
+#if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
+  }
+#endif
 
   if (aLength == 0)
     return NS_OK;
@@ -1123,9 +1130,16 @@ nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
   nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
   NS_ENSURE_TRUE(metrics, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIAtom> langGroup = nsnull;
-  mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
-  mPSObj->setlanggroup(langGroup.get());
+#if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
+  // When FT2 printing is enabled, we don't need to set langgroup
+  if (!NS_REINTERPRET_CAST(nsDeviceContextPS *, mContext.get())->mFTPEnable) {
+#endif
+    nsCOMPtr<nsIAtom> langGroup = nsnull;
+    mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
+    mPSObj->setlanggroup(langGroup);
+#if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
+  }
+#endif
 
   /* build up conversion table */
   mPSObj->preshow(aString, aLength);

@@ -78,6 +78,8 @@
 #include "nsBuildID.h"
 #endif /* !NS_BUILD_ID */
 
+#include "nsPrintfCString.h"
+
 #include "prenv.h"
 #include "prprf.h"
 #include "prerror.h"
@@ -404,7 +406,7 @@ nsPostScriptObj::initialize_translation(PrintSetup* pi)
  *  @param aHandle File handle which receives the prolog
  */
 void 
-nsPostScriptObj::write_prolog(FILE *aHandle)
+nsPostScriptObj::write_prolog(FILE *aHandle, PRBool aFTPEnable)
 {
   int i;
   FILE *f = aHandle;
@@ -505,7 +507,44 @@ nsPostScriptObj::write_prolog(FILE *aHandle)
     "  ifelse\n"
     "  bind def\n");
 
-  for(i=0;i<NUM_AFM_FONTS;i++){
+  // Procedure to stroke a rectangle. Coordinates are rounded
+  // to device pixel boundaries. See Adobe Technical notes 5111 and
+  // 5126 and the "Scan Conversion" section of the PS Language
+  // Reference for background.
+  fprintf(f, "%s",
+    "/Mrect { % x y w h Mrect -\n"
+    "  2 index add\n"		// x y w h+y
+    "  4 1 roll\n"		// h+y x y w
+    "  2 index add\n"		// h+y x y w+x
+    "  4 1 roll\n"		// w+x h+y x y
+    "  transform round .1 add exch round .1 add exch itransform\n"
+    "  4 -2 roll\n"		// x' y' w+x h+x
+    "  transform round .1 sub exch round .1 sub exch itransform\n"
+    "  2 index sub\n"		// x' y' w'+x h'
+    "  4 1 roll\n"		// h' x' y' w'+x
+    "  2 index sub\n"		// h' x' y' w'
+    "  4 1 roll\n"		// w' h' x' y'
+    "  moveto\n"		// w' h'
+    "  dup 0 exch rlineto\n"	// w' h'
+    "  exch 0 rlineto\n"	// h'
+    "  neg 0 exch rlineto\n"	// -
+    "  closepath\n"
+    "} bind def\n"
+
+    // Setstrokeadjust, or null if not supported
+    "/Msetstrokeadjust /setstrokeadjust where\n"
+    "  { pop /setstrokeadjust } { /pop } ifelse\n"
+    "  load def\n"
+
+    "\n"
+    );
+
+  if (aFTPEnable) {
+    fprintf(f, "%%%%EndProlog\n");
+    return;
+  }
+
+  for(i = 0;i < NUM_AFM_FONTS; i++){
     fprintf(f, 
       "/F%d /%s Mfr\n"
       "/f%d { dup /csize exch def /F%d Msf } bind def\n",
@@ -1777,38 +1816,6 @@ nsPostScriptObj::write_prolog(FILE *aHandle)
     "} bind def\n"
     );
 
-    // Procedure to stroke a rectangle. Coordinates are rounded
-    // to device pixel boundaries. See Adobe Technical notes 5111 and
-    // 5126 and the "Scan Conversion" section of the PS Language
-    // Reference for background.
-  fprintf(f, "%s",
-    "/Mrect { % x y w h Mrect -\n"
-    "  2 index add\n"		// x y w h+y
-    "  4 1 roll\n"		// h+y x y w
-    "  2 index add\n"		// h+y x y w+x
-    "  4 1 roll\n"		// w+x h+y x y
-    "  transform round .1 add exch round .1 add exch itransform\n"
-    "  4 -2 roll\n"		// x' y' w+x h+x
-    "  transform round .1 sub exch round .1 sub exch itransform\n"
-    "  2 index sub\n"		// x' y' w'+x h'
-    "  4 1 roll\n"		// h' x' y' w'+x
-    "  2 index sub\n"		// h' x' y' w'
-    "  4 1 roll\n"		// w' h' x' y'
-    "  moveto\n"		// w' h'
-    "  dup 0 exch rlineto\n"	// w' h'
-    "  exch 0 rlineto\n"	// h'
-    "  neg 0 exch rlineto\n"	// -
-    "  closepath\n"
-    "} bind def\n"
-
-    // Setstrokeadjust, or null if not supported
-    "/Msetstrokeadjust /setstrokeadjust where\n"
-    "  { pop /setstrokeadjust } { /pop } ifelse\n"
-    "  load def\n"
-
-    "\n"
-    );
-
   // setup prolog for each langgroup
   initlanggroup(f);
 
@@ -2043,8 +2050,35 @@ nsPostScriptObj::show(const PRUnichar* txt, int len,
   fprintf(mScriptFP, ") %sunicodeshow\n", align);
 }
 
+#if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
+void 
+nsPostScriptObj::show(const PRUnichar* aTxt, int aLen,
+                      const nsAFlatString& aCharList, PRUint16 aSubFontIdx)
+{
+  int i;
+  fputc('<', mScriptFP);
 
+  const PRUint16 subFontSize = nsPSFontGenerator::kSubFontSize;
 
+  // the character repertoire of a subfont (255 characters max)
+  const nsAString& repertoire = 
+        Substring(aCharList, aSubFontIdx * subFontSize,
+                  PR_MIN(subFontSize, 
+                  aCharList.Length() - aSubFontIdx * subFontSize));
+
+  for (i = 0; i < aLen; i++) {
+    // XXX This is a little inefficient, but printing is not perf. critical. 
+    NS_ASSERTION(repertoire.FindChar(aTxt[i]) != kNotFound,
+        "character is not covered by this subfont");
+      
+    // Type 1 encoding vector has 256 slots, but the 0-th slot is 
+    // reserved for /.notdef so that we use the 1st through 255th slots
+    // for actual characters (hence '+ 1')
+    fprintf(mScriptFP, "%02x", repertoire.FindChar(aTxt[i]) + 1); 
+  }
+  fputs("> show\n", mScriptFP);
+}
+#endif
 
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
@@ -2422,9 +2456,11 @@ float greyBrightness;
 }
 
 
-void nsPostScriptObj::setfont(const nsCString aFontName, PRUint32 aHeight)
+void nsPostScriptObj::setfont(const nsCString& aFontName, PRUint32 aHeight,
+                              PRInt32 aSubFont)
 {
-  fprintf(mScriptFP, "%d /%s Msf\n", aHeight, aFontName.get());
+  fprintf(mScriptFP, "%d /%s%s Msf\n", aHeight, aFontName.get(),
+          aSubFont >= 0 ? nsPrintfCString(".Set%d", aSubFont).get() : "");
 }
 
 /** ---------------------------------------------------
