@@ -1645,20 +1645,20 @@ nsGfxScrollFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowSta
   nsBoxInfo scrollAreaInfo, vboxInfo, hboxInfo;
   nsIBox* ibox = nsnull;
   rv = mInner->mScrollAreaFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
-  ibox->GetBoxInfo(aPresContext, aReflowState, scrollAreaInfo);
+  if (ibox) ibox->GetBoxInfo(aPresContext, aReflowState, scrollAreaInfo);
   NS_ASSERTION(NS_SUCCEEDED(rv),"Scrollarea must implement box!!");
 
   if (mInner->mHasVerticalScrollbar) {
     ibox = nsnull;
     mInner->mVScrollbarFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
-    ibox->GetBoxInfo(aPresContext, aReflowState, vboxInfo);
+    if (ibox) ibox->GetBoxInfo(aPresContext, aReflowState, vboxInfo);
     NS_ASSERTION(NS_SUCCEEDED(rv),"Scrollarea must implement box!!");
   }
 
   if (mInner->mHasHorizontalScrollbar) {
     ibox = nsnull;
     mInner->mHScrollbarFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox);
-    ibox->GetBoxInfo(aPresContext, aReflowState, hboxInfo);
+    if (ibox) ibox->GetBoxInfo(aPresContext, aReflowState, hboxInfo);
     NS_ASSERTION(NS_SUCCEEDED(rv),"Scrollarea must implement box!!");
   }
 
@@ -1772,7 +1772,7 @@ nsGfxScrollFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& a
         if (NS_FAILED(rv))
             return rv;
 
-        ibox->Dirty(aPresContext, aReflowState, incrementalChild);
+        if (ibox) ibox->Dirty(aPresContext, aReflowState, incrementalChild);
         break;
     }
 

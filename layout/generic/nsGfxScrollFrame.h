@@ -123,8 +123,6 @@ public:
                          nscoord *aWidth, 
                          nscoord *aHeight) const;
   /**
-  
-  /**
    * Get the "type" of the frame
    *
    * @see nsLayoutAtoms::scrollFrame
