@@ -31,3 +31,9 @@ JS::StringAtom &JS::StringAtomTable::operator[](const String &s)
 	else
 		return ht.insert(r, s);
 }
+
+
+JS::World::World()
+{
+	initKeywords(*this);
+}
