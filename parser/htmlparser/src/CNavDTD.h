@@ -379,7 +379,6 @@ protected:
 
     eHTMLTags           mSkipTarget;
     PRInt32             mLineNumber;
-    PRInt32             mOpenHeadCount;
     PRInt32             mOpenMapCount;
 
     PRUint16            mFlags;

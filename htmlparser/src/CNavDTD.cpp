@@ -113,18 +113,19 @@ static char gShowCRC;
 
 
 #define NS_DTD_FLAG_NONE                   0x00000000
-#define NS_DTD_FLAG_HAS_OPEN_BODY          0x00000001
-#define NS_DTD_FLAG_HAS_OPEN_FORM          0x00000002
-#define NS_DTD_FLAG_HAS_OPEN_SCRIPT        0x00000004
-#define NS_DTD_FLAG_HAD_BODY               0x00000008
-#define NS_DTD_FLAG_HAD_FRAMESET           0x00000010
-#define NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE  0x00000020
-#define NS_DTD_FLAG_REQUESTED_HEAD         0x00000040
-#define NS_DTD_FLAG_SCRIPT_ENABLED         0x00000100
-#define NS_DTD_FLAG_FRAMES_ENABLED         0x00000200
-#define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000400 // NOFRAMES, NOSCRIPT 
-#define NS_DTD_FLAG_MISPLACED_CONTENT      0x00000800
-#define NS_DTD_FLAG_STOP_PARSING           0x00001000
+#define NS_DTD_FLAG_HAS_OPEN_HEAD          0x00000001
+#define NS_DTD_FLAG_HAS_OPEN_BODY          0x00000002
+#define NS_DTD_FLAG_HAS_OPEN_FORM          0x00000004
+#define NS_DTD_FLAG_HAS_OPEN_SCRIPT        0x00000008
+#define NS_DTD_FLAG_HAD_BODY               0x00000010
+#define NS_DTD_FLAG_HAD_FRAMESET           0x00000020
+#define NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE  0x00000040
+#define NS_DTD_FLAG_REQUESTED_HEAD         0x00000100
+#define NS_DTD_FLAG_SCRIPT_ENABLED         0x00000200
+#define NS_DTD_FLAG_FRAMES_ENABLED         0x00000400
+#define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000800 // NOFRAMES, NOSCRIPT 
+#define NS_DTD_FLAG_MISPLACED_CONTENT      0x00001000
+#define NS_DTD_FLAG_STOP_PARSING           0x00002000
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -182,7 +183,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mParserCommand(eViewNormal),
     mSkipTarget(eHTMLTag_unknown),
     mLineNumber(1),
-    mOpenHeadCount(0),
     mOpenMapCount(0),
     mFlags(NS_DTD_FLAG_NONE)
 #ifdef ENABLE_CRC
@@ -1496,17 +1496,15 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
     if(NS_OK==result) {
       result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
     }
-
+    
     //this code is here to make sure the head is closed before we deal 
     //with any tags that don't belong in the head.
-    if(NS_OK==result) {
-      if(mOpenHeadCount>0){
-        static eHTMLTags skip2[]={eHTMLTag_newline,eHTMLTag_whitespace};
-        if(!FindTagInSet(aTag,skip2,sizeof(skip2)/sizeof(eHTMLTag_unknown))){
-          PRBool theExclusive=PR_FALSE;
-          if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag,theExclusive)){
-            result = CloseHead();
-          }
+    if (NS_SUCCEEDED(result) && mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD) {
+      static eHTMLTags skip2[] = {eHTMLTag_newline,eHTMLTag_whitespace};
+      if (!FindTagInSet(aTag,skip2,sizeof(skip2)/sizeof(eHTMLTag_unknown))) {
+        PRBool theExclusive = PR_FALSE;
+        if (!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag, theExclusive)) {      
+          result = CloseHead();
         }
       }
     }
@@ -1774,25 +1772,16 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
             break;
       }//switch
 
-#if 0
-        //we'll move to this approach after beta...
       if(!isTokenHandled) {
+        if(theHeadIsParent || ((mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)  && 
+                               (eHTMLTag_newline == theChildTag || 
+                                eHTMLTag_whitespace == theChildTag))) {
+            result = AddHeadLeaf(theNode);
+        }
+        else 
+          result = HandleDefaultStartToken(aToken,theChildTag,theNode); 
+      }
 
-        if(theHeadIsParent && (theExclusive || mOpenHeadCount>0)) {
-          result=AddHeadLeaf(theNode);
-        }
-        else result=HandleDefaultStartToken(aToken,theChildTag,theNode); 
-      }
-#else
-        //the old way...
-      if(!isTokenHandled) {
-        if(theHeadIsParent || 
-          (mOpenHeadCount>0  && (eHTMLTag_newline==theChildTag || eHTMLTag_whitespace==theChildTag))) {
-            result=AddHeadLeaf(theNode);
-        }
-        else result=HandleDefaultStartToken(aToken,theChildTag,theNode); 
-      }
-#endif
       //now do any post processing necessary on the tag...
       if(NS_OK==result)
         DidHandleStartTag(*theNode,theChildTag);
@@ -2919,7 +2908,8 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
 
   // No need to open transient styles in head context - Fix for 41427
   if((mFlags & NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE) && 
-     eHTMLTag_newline!=aChildTag && mOpenHeadCount==0) {
+     eHTMLTag_newline!=aChildTag && 
+     !(mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)) {
 
 #ifdef  ENABLE_RESIDUALSTYLE
 
@@ -3083,15 +3073,16 @@ nsresult CNavDTD::CloseHTML(){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult CNavDTD::OpenHead(const nsIParserNode *aNode){
-
-  nsresult result=NS_OK;
+nsresult CNavDTD::OpenHead(const nsIParserNode *aNode)
+{
+  nsresult result = NS_OK;
 
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenHead(), this=%p\n", this));
 
-  if (!mOpenHeadCount++) {
-    result=(mSink) ? mSink->OpenHead(*aNode) : NS_OK;
+  if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)) {
+    mFlags |= NS_DTD_FLAG_HAS_OPEN_HEAD;
+    result = mSink ? mSink->OpenHead(*aNode) : NS_OK;
   }
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenHead(), this=%p\n", this));
@@ -3108,17 +3099,20 @@ nsresult CNavDTD::OpenHead(const nsIParserNode *aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult CNavDTD::CloseHead(){
-  nsresult result=NS_OK;
+nsresult CNavDTD::CloseHead()
+{
+  nsresult result = NS_OK;
 
-  if (mOpenHeadCount && --mOpenHeadCount==0) {
-      STOP_TIMER();
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
+  if (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD) {
+    mFlags &= ~NS_DTD_FLAG_HAS_OPEN_HEAD;
 
-      result = (mSink) ? mSink->CloseHead() : NS_OK; 
+    STOP_TIMER();
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
 
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
-      START_TIMER();
+    result = mSink ? mSink->CloseHead() : NS_OK;
+
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
+    START_TIMER();
   }
 
   return result;
@@ -3378,18 +3372,12 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
     case eHTMLTag_body:
       {
         eHTMLTags theParent=mBodyContext->Last();
-        if(!gHTMLElements[aTag].IsSpecialParent(theParent)) {
-          if(mOpenHeadCount>0) {
-            // setting the count to 1 would force head to close.
-            // XXX - But what did we actually do in counting the heads?
-            mOpenHeadCount=1; 
-          }
+        if (!gHTMLElements[aTag].IsSpecialParent(theParent)) {
           mFlags |= NS_DTD_FLAG_HAS_OPEN_BODY;
-          CloseHead(); //do this just in case someone left the HEAD open...
-          result=OpenBody(aNode); 
+          result = OpenBody(aNode); 
         }
         else {
-          done=PR_FALSE;
+          done = PR_FALSE;
         }
       }
       break;
@@ -3402,33 +3390,23 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
       break;
 
     case eHTMLTag_textarea:
-      result=AddLeaf(aNode);
+      result = AddLeaf(aNode);
       break;
 
     case eHTMLTag_map:
-      result=OpenMap(aNode);
+      result = OpenMap(aNode);
       break;
 
     case eHTMLTag_form:
-      result=OpenForm(aNode); break;
+      result = OpenForm(aNode); 
+      break;
 
     case eHTMLTag_frameset:
-      if(mOpenHeadCount>0) {
-        // setting the count to 1 would force head to close.
-        // XXX - But what did we actually do in counting the heads?
-        mOpenHeadCount=1; 
-      }
-      CloseHead(); //do this just in case someone left it open...
-      result=OpenFrameset(aNode); break;
+      result = OpenFrameset(aNode); 
+      break;
 
     case eHTMLTag_script:
-      if(mOpenHeadCount>0) {
-        // setting the count to 1 would force head to close.
-        // XXX - But what did we actually do in counting the heads?
-        mOpenHeadCount=1; 
-      }
-      CloseHead(); //do this just in case someone left it open...
-      result=HandleScriptToken(aNode);
+      result = HandleScriptToken(aNode);
       break;
     
     case eHTMLTag_noscript:

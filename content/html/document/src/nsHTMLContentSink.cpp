@@ -3147,8 +3147,10 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
                   eHTMLTag_body,
                   mCurrentContext->mStackPos, 
                   this);
-  // Add attributes, if any, to the current BODY node
 
+  CloseHeadContext();  // do this just in case if the HEAD was left open!
+
+  // Add attributes, if any, to the current BODY node
   if (mBody) {
     AddAttributes(aNode, mBody, PR_TRUE);
 
@@ -3364,8 +3366,9 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
                   mCurrentContext->mStackPos, 
                   this);
 
-  nsresult rv = mCurrentContext->OpenContainer(aNode);
+  CloseHeadContext(); // do this just in case if the HEAD was left open!
 
+  nsresult rv = mCurrentContext->OpenContainer(aNode);
   if (NS_SUCCEEDED(rv) && !mFrameset &&
       (mFlags & NS_SINK_FLAG_FRAMES_ENABLED)) {
     mFrameset =
@@ -4458,7 +4461,8 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
 nsresult
 HTMLContentSink::OpenHeadContext()
 {
-  nsresult rv = NS_OK;
+  if (mCurrentContext && mCurrentContext->IsCurrentContainer(eHTMLTag_head))
+    return NS_OK;
 
   // Flush everything in the current context so that we don't have
   // to worry about insertions resulting in inconsistent frame creation.
@@ -4477,7 +4481,7 @@ HTMLContentSink::OpenHeadContext()
     NS_ENSURE_TRUE(mHeadContext, NS_ERROR_OUT_OF_MEMORY);
 
     mHeadContext->SetPreAppend(PR_TRUE);
-    rv = mHeadContext->Begin(eHTMLTag_head, mHead, 0, -1);
+    nsresult rv = mHeadContext->Begin(eHTMLTag_head, mHead, 0, -1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -4490,9 +4494,10 @@ HTMLContentSink::OpenHeadContext()
 nsresult
 HTMLContentSink::CloseHeadContext()
 {
-  NS_ASSERTION(mCurrentContext == mHeadContext, "context mismatch!");
-  PRInt32 n = mContextStack.Count() - 1;
+  if (mCurrentContext && !mCurrentContext->IsCurrentContainer(eHTMLTag_head))
+    return NS_OK;
 
+  PRInt32 n = mContextStack.Count() - 1;
   mCurrentContext = (SinkContext*) mContextStack.ElementAt(n);
   mContextStack.RemoveElementAt(n);
 
