@@ -79,6 +79,10 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
    nsIContent* tabpanel = nsnull;
    GetChildWithTag(nsXULAtoms::tabpanel, tabcontrol, tabpanel);
 
+   if (!tabpanel) {
+	return;
+   }
+
    /*
     // set visiblity
     PRInt32 count = 0;
@@ -101,7 +105,6 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
    sprintf(value, "%d", index);
 
    tabpanel->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, value, PR_TRUE);
-   
 }
 
 nsresult
