@@ -49,6 +49,9 @@ LIBS = \
 	-lraptorhtml \
 	-lpref \
 	-lsecfree \
+	-lraptorgfx \
+	-lgfx$(MOZ_TOOLKIT) \
+	-lgfxps \
 	-limg \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	$(PNG_LIBS) \

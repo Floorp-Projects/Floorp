@@ -60,8 +60,9 @@ LIBS = \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-ljsdom \
 	-lraptorgfx \
+	-lgfx$(MOZ_TOOLKIT) \
+	-lgfxps \
 	-lxpcom \
-	-lreg \
 	-lxp \
 	-lraptorhtmlpars \
 	-lexpat \
