@@ -57,7 +57,25 @@ static NS_DEFINE_IID(kPICSCID,                 NS_PICS_CID);
 
 
 NS_IMPL_ADDREF(nsPICSElementObserver)                       \
-NS_IMPL_RELEASE(nsPICSElementObserver)    
+NS_IMPL_RELEASE(nsPICSElementObserver)
+
+
+NS_INTERFACE_MAP_BEGIN(nsPICSElementObserver)
+		/*
+			Slight problem here: there is no |class nsIPICSElementObserver|,
+			so, this is a slightly un-orthodox entry, which will have to be
+			fixed before we could switch over to the table-driven mechanism.
+		 */
+	if ( aIID.Equals(kIPICSElementObserverIID) )
+	  foundInterface = NS_STATIC_CAST(nsIElementObserver*, this);
+	else
+
+	NS_INTERFACE_MAP_ENTRY(nsIElementObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIObserver)
+	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIElementObserver)
+NS_INTERFACE_MAP_END
+
 
 NS_PICS nsresult NS_NewPICSElementObserver(nsIObserver** anObserver)
 {
@@ -83,38 +101,6 @@ nsPICSElementObserver::nsPICSElementObserver()
 nsPICSElementObserver::~nsPICSElementObserver(void)
 {
 
-}
-
-NS_IMETHODIMP nsPICSElementObserver::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-
-  if( NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aInstancePtr = NULL;
-
-  if( aIID.Equals ( kIPICSElementObserverIID )) {
-    *aInstancePtr = (void*) ((nsIElementObserver*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if( aIID.Equals ( kIElementObserverIID )) {
-    *aInstancePtr = (void*) ((nsIElementObserver*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if( aIID.Equals ( kIObserverIID )) {
-    *aInstancePtr = (void*) ((nsIObserver*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if( aIID.Equals ( kISupportsIID )) {
-    *aInstancePtr = (void*) (this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
 }
 
 const char* nsPICSElementObserver::GetTagNameAt(PRUint32 aTagIndex)

@@ -125,39 +125,18 @@ NS_IMPL_ADDREF(mozXMLTerminal)
 NS_IMPL_RELEASE(mozXMLTerminal)
 
 
-NS_IMETHODIMP 
-mozXMLTerminal::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  if (aInstancePtr == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  if ( aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*,
-                                   NS_STATIC_CAST(mozIXMLTerminal*,this));
-
-  } else if ( aIID.Equals(mozIXMLTerminal::GetIID()) ) {
-    *aInstancePtr = NS_STATIC_CAST(mozIXMLTerminal*,this);
-
-  } else if (aIID.Equals(nsIDocumentLoaderObserver::GetIID())) {
-    *aInstancePtr = NS_STATIC_CAST(nsIDocumentLoaderObserver*,this);
-
-  } else if (aIID.Equals(nsIObserver::GetIID())) {
-    *aInstancePtr = NS_STATIC_CAST(nsIObserver*,this);
-
-  } else {
-    return NS_ERROR_NO_INTERFACE;
-  }
-
-  NS_ADDREF_THIS();
-
-  XMLT_LOG(mozXMLTerminal::QueryInterface,20,("mRefCnt = %d\n", mRefCnt));
-
-  return NS_OK;
-}
+NS_INTERFACE_MAP_BEGIN(mozXMLTerminal)
+		/*
+			I maintained the order from the original, however,
+			the original called |XMLT_LOG| and in the interface-map form
+			it no longer does.  Is this an issue?
+		*/
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozIXMLTerminal)
+	NS_INTERFACE_MAP_ENTRY(mozIXMLTerminal)
+	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIObserver)
+	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
 
 
 NS_IMETHODIMP mozXMLTerminal::GetCurrentEntryNumber(PRInt32 *aNumber)

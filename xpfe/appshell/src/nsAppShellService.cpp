@@ -30,6 +30,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
 #include "nsITimer.h"
 
@@ -103,7 +104,8 @@ static char *gEQActivatedNotification = "nsIEventQueueActivated";
 static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
 
 class nsAppShellService : public nsIAppShellService,
-                          public nsIObserver
+                          public nsIObserver,
+                          public nsSupportsWeakReference
 {
 public:
   nsAppShellService(void);
@@ -173,7 +175,15 @@ nsAppShellService::~nsAppShellService()
 /*
  * Implement the nsISupports methods...
  */
-NS_IMPL_ISUPPORTS2(nsAppShellService, nsIAppShellService, nsIObserver);
+NS_IMPL_ADDREF(nsAppShellService)
+NS_IMPL_RELEASE(nsAppShellService)
+
+NS_INTERFACE_MAP_BEGIN(nsAppShellService)
+	NS_INTERFACE_MAP_ENTRY(nsIAppShellService)
+	NS_INTERFACE_MAP_ENTRY(nsIObserver)
+	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAppShellService)
+NS_INTERFACE_MAP_END
 
 
 NS_IMETHODIMP

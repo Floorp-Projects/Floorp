@@ -28,6 +28,7 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 #include "nsString.h"
 #include "nsISupports.h"
 
@@ -60,7 +61,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
                           public nsIDocumentLoaderObserver,
                           public nsIObserver,
 					                public nsISessionHistory,
-                          public nsIURIContentListener {
+                          public nsIURIContentListener,
+                          public nsSupportsWeakReference {
   public:
 
     nsBrowserInstance();

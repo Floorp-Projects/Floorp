@@ -240,21 +240,25 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
 
 #ifndef XSL
 
-NS_IMPL_ISUPPORTS3(nsXMLContentSink, 
-                   nsIXMLContentSink,
-                   nsIContentSink,
-                   nsIUnicharStreamLoaderObserver)
+NS_IMPL_ADDREF(nsXMLContentSink)
+NS_IMPL_RELEASE(nsXMLContentSink)
 
 #else
 
 NS_IMPL_THREADSAFE_ADDREF(nsXMLContentSink)
 NS_IMPL_THREADSAFE_RELEASE(nsXMLContentSink)
-NS_IMPL_QUERY_INTERFACE4(nsXMLContentSink,
-                         nsIXMLContentSink,
-                         nsIContentSink,
-                         nsIObserver,
-                         nsIUnicharStreamLoaderObserver)
+
 #endif
+
+NS_INTERFACE_MAP_BEGIN(nsXMLContentSink)
+	NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
+#ifdef XSL
+	NS_INTERFACE_MAP_ENTRY(nsIObserver)
+	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+#endif
+	NS_INTERFACE_MAP_ENTRY(nsIUnicharStreamLoaderObserver)
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLContentSink)
+NS_INTERFACE_MAP_END
 
   // nsIContentSink
 NS_IMETHODIMP

@@ -165,16 +165,17 @@ nsBrowserAppCore::~nsBrowserAppCore()
   NS_IF_RELEASE(mSHistory);
 }
 
-NS_IMPL_ADDREF(nsBrowserAppCore)
-NS_IMPL_RELEASE(nsBrowserAppCore)
+NS_IMPL_ADDREF(nsBrowserInstance)
+NS_IMPL_RELEASE(nsBrowserInstance)
 
-
-NS_IMPL_QUERY_HEAD(nsBrowserAppCore)
-   NS_IMPL_QUERY_BODY(nsIBrowserInstance)
-   NS_IMPL_QUERY_BODY(nsIDocumentLoaderObserver)
-   NS_IMPL_QUERY_BODY(nsIObserver)
-   NS_IMPL_QUERY_BODY(nsIURIContentListener)
-NS_IMPL_QUERY_TAIL(nsIBrowserInstance)
+NS_INTERFACE_MAP_BEGIN(nsBrowserInstance)
+   NS_INTERFACE_MAP_ENTRY(nsIBrowserInstance)
+   NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
+NS_INTERFACE_MAP_END
 
 
 static
@@ -948,7 +949,7 @@ nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
 #ifdef DEBUG
 #include "nsProxyObjectManager.h"
 
-class PageCycler : public nsIObserver {
+class PageCycler : public nsIObserver, public nsSupportsWeakReference {
 public:
   NS_DECL_ISUPPORTS
 
@@ -1059,7 +1060,14 @@ protected:
   nsAutoString          mLastRequest;
 };
 
-NS_IMPL_ISUPPORTS1(PageCycler, nsIObserver);
+NS_IMPL_ADDREF(PageCycler)
+NS_IMPL_RELEASE(PageCycler)
+
+NS_INTERFACE_MAP_BEGIN(PageCycler)
+	NS_INTERFACE_MAP_ENTRY(nsIObserver)
+	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+NS_INTERFACE_MAP_END
 
 #endif
 

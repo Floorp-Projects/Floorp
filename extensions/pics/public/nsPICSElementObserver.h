@@ -26,6 +26,7 @@
 #include "nsIFactory.h"
 #include "nsIElementObserver.h"
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 
 // {E12F6997-F28F-11d2-8ACE-00105A1B8860}
@@ -34,7 +35,11 @@
 
 
 
-class nsPICSElementObserver : public nsIElementObserver, public nsIObserver {
+class nsPICSElementObserver
+  : public nsIElementObserver,
+    public nsIObserver,
+    public nsSupportsWeakReference
+{
 public:
  
     nsPICSElementObserver();
