@@ -2436,12 +2436,8 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
           aRenderingContext.DrawString(currenttext, currentlength, currentX, dy);
 
           currentX+=newWidth;//increment twips X start
+
           iter.Next();
-        }
-        else
-        {
-          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
-          aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
         }
       }
       else
