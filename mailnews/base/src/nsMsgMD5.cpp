@@ -38,7 +38,7 @@ typedef	union md5_endian {
 		MD5_BYTE m_0, m_1, m_2, m_3;
 		}	m_bytes;
 #endif
-#ifdef ISBIG_ENDIAN
+#ifdef IS_BIG_ENDIAN
 	MD5_WORD	m_word;
 	struct	{
 		MD5_BYTE m_3, m_2, m_1, m_0;
