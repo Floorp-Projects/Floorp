@@ -62,8 +62,6 @@ public class NativeDate extends IdScriptable {
 
     public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
 
-        super.scopeInit(cx, scope, sealed);
-
         // Set the value of the prototype Date to NaN ('invalid date');
         date = ScriptRuntime.NaN;
 
@@ -73,6 +71,8 @@ public class NativeDate extends IdScriptable {
             thisTimeZone = java.util.TimeZone.getDefault();
             LocalTZA = thisTimeZone.getRawOffset();
         }
+
+        super.scopeInit(cx, scope, sealed);
     }
 
     protected void fillConstructorProperties
@@ -122,13 +122,13 @@ public class NativeDate extends IdScriptable {
     {
         switch (methodId) {
         case ConstructorId_UTC: return wrap_double
-            (jsStaticFunction_UTC(cx, thisObj, args, f));
+            (jsStaticFunction_UTC(args));
 
         case ConstructorId_parse: return wrap_double
             (jsStaticFunction_parse(ScriptRuntime.toString(args, 0)));
 
         case CONSTRUCTOR_ID:
-            return jsConstructor(cx, args, f, thisObj == null);
+            return jsConstructor(args, thisObj == null);
 
         case Id_toString: return realThis(thisObj, f, true).
             jsFunction_toString();
@@ -158,7 +158,7 @@ public class NativeDate extends IdScriptable {
             jsFunction_getTime());
 
         case Id_getYear: return wrap_double(realThis(thisObj, f, true).
-            jsFunction_getYear());
+            jsFunction_getYear(cx));
 
         case Id_getFullYear: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getFullYear());
@@ -202,61 +202,76 @@ public class NativeDate extends IdScriptable {
         case Id_getUTCSeconds: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getUTCSeconds());
 
-        case Id_getMilliseconds: return wrap_double(realThis(thisObj, f, true).
-            jsFunction_getMilliseconds());
+        case Id_getMilliseconds: 
+            return wrap_double(realThis(thisObj, f, true).
+                jsFunction_getMilliseconds());
 
         case Id_getUTCMilliseconds: 
-			return wrap_double(realThis(thisObj, f, true).
-            	jsFunction_getUTCMilliseconds());
+            return wrap_double(realThis(thisObj, f, true).
+                jsFunction_getUTCMilliseconds());
 
         case Id_getTimezoneOffset: 
-			return wrap_double(realThis(thisObj, f, true).
-            	jsFunction_getTimezoneOffset());
+            return wrap_double(realThis(thisObj, f, true).
+                jsFunction_getTimezoneOffset());
 
         case Id_setTime: return wrap_double(realThis(thisObj, f, true).
             jsFunction_setTime(ScriptRuntime.toNumber(args, 0)));
 
-        case Id_setMilliseconds: return wrap_double
-            (jsFunction_setMilliseconds(cx, thisObj, args, f));
+        case Id_setMilliseconds: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setMilliseconds(args));
 
-        case Id_setUTCMilliseconds: return wrap_double(
-            jsFunction_setUTCMilliseconds(cx, thisObj, args, f));
+        case Id_setUTCMilliseconds: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setUTCMilliseconds(args));
 
-        case Id_setSeconds: return wrap_double(
-            jsFunction_setSeconds(cx, thisObj, args, f));
+        case Id_setSeconds: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setSeconds(args));
 
-        case Id_setUTCSeconds: return wrap_double(
-            jsFunction_setUTCSeconds(cx, thisObj, args, f));
+        case Id_setUTCSeconds: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setUTCSeconds(args));
 
-        case Id_setMinutes: return wrap_double(
-            jsFunction_setMinutes(cx, thisObj, args, f));
+        case Id_setMinutes: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setMinutes(args));
 
-        case Id_setUTCMinutes: return wrap_double(
-            jsFunction_setUTCMinutes(cx, thisObj, args, f));
+        case Id_setUTCMinutes: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setUTCMinutes(args));
 
-        case Id_setHours: return wrap_double(
-            jsFunction_setHours(cx, thisObj, args, f));
+        case Id_setHours: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setHours(args));
 
-        case Id_setUTCHours: return wrap_double(
-            jsFunction_setUTCHours(cx, thisObj, args, f));
+        case Id_setUTCHours: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setUTCHours(args));
 
-        case Id_setDate: return wrap_double(
-            jsFunction_setDate(cx, thisObj, args, f));
+        case Id_setDate: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setDate(args));
 
-        case Id_setUTCDate: return wrap_double(
-            jsFunction_setUTCDate(cx, thisObj, args, f));
+        case Id_setUTCDate: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setUTCDate(args));
 
-        case Id_setMonth: return wrap_double(
-            jsFunction_setMonth(cx, thisObj, args, f));
+        case Id_setMonth: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setMonth(args));
 
-        case Id_setUTCMonth: return wrap_double(
-            jsFunction_setUTCMonth(cx, thisObj, args, f));
+        case Id_setUTCMonth: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setUTCMonth(args));
 
-        case Id_setFullYear: return wrap_double(
-            jsFunction_setFullYear(cx, thisObj, args, f));
+        case Id_setFullYear: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setFullYear(args));
 
-        case Id_setUTCFullYear: return wrap_double(
-            jsFunction_setUTCFullYear(cx, thisObj, args, f));
+        case Id_setUTCFullYear: 
+            return wrap_double(realThis(thisObj, f, false).
+                jsFunction_setUTCFullYear(args));
 
         case Id_setYear: return wrap_double(realThis(thisObj, f, true).
             jsFunction_setYear(ScriptRuntime.toNumber(args, 0)));
@@ -369,14 +384,15 @@ public class NativeDate extends IdScriptable {
      */
 
     private static double DayFromMonth(int m, boolean leap) {
-        double firstDay[] = {0.0, 31.0, 59.0, 90.0, 120.0, 151.0,
-                             181.0, 212.0, 243.0, 273.0, 304.0, 334.0};
-        double leapFirstDay[] = {0.0, 31.0, 60.0, 91.0, 121.0, 152.0,
-                                 182.0, 213.0, 244.0, 274.0, 305.0, 335.0};
-        if (leap)
-            return leapFirstDay[m];
-        else
-            return firstDay[m];
+        int day = m * 30;
+
+        if (m >= 7) { day += m / 2 - 1; }
+        else if (m >= 2) { day += (m - 1) / 2 - 1; }
+        else { day += m; }
+
+        if (leap && m >= 2) { ++day; }
+
+        return day;
     }
 
     private static int MonthFromTime(double t) {
@@ -630,9 +646,7 @@ public class NativeDate extends IdScriptable {
 
 
     private static final int MAXARGS = 7;
-    public static double jsStaticFunction_UTC(Context cx, Scriptable thisObj,
-                                              Object[] args, Function funObj)
-    {
+    private static double jsStaticFunction_UTC(Object[] args) {
         double array[] = new double[MAXARGS];
         int loop;
         double d;
@@ -900,7 +914,7 @@ public class NativeDate extends IdScriptable {
         return msec;
     }
 
-    public static double jsStaticFunction_parse(String s) {
+    private static double jsStaticFunction_parse(String s) {
         return date_parseString(s);
     }
 
@@ -910,7 +924,7 @@ public class NativeDate extends IdScriptable {
 
     private static String date_format(double t, int format) {
         if (t != t)
-            return js_NaN_date_str;
+            return jsFunction_NaN_date_str;
 
         StringBuffer result = new StringBuffer(60);
         double local = LocalTime(t);
@@ -993,9 +1007,7 @@ public class NativeDate extends IdScriptable {
     }
 
     /* the javascript constructor */
-    public static Object jsConstructor(Context cx, Object[] args,
-                                       Function ctorObj, boolean inNewExpr)
-    {
+    private static Object jsConstructor(Object[] args, boolean inNewExpr) {
         // if called as a function, just return a string
         // representing the current time.
         if (!inNewExpr)
@@ -1065,7 +1077,7 @@ public class NativeDate extends IdScriptable {
     }
 
     /* constants for toString, toUTCString */
-    private static String js_NaN_date_str = "Invalid Date";
+    private static String jsFunction_NaN_date_str = "Invalid Date";
 
     private static String[] days = {
         "Sun","Mon","Tue","Wed","Thu","Fri","Sat"
@@ -1076,15 +1088,15 @@ public class NativeDate extends IdScriptable {
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     };
 
-    public String jsFunction_toString() {
+    private String jsFunction_toString() {
         return date_format(this.date, FORMATSPEC_FULL);
     }
 
-    public String jsFunction_toTimeString() {
+    private String jsFunction_toTimeString() {
         return date_format(this.date, FORMATSPEC_TIME);
     }
 
-    public String jsFunction_toDateString() {
+    private String jsFunction_toDateString() {
         return date_format(this.date, FORMATSPEC_DATE);
     }
 
@@ -1092,13 +1104,13 @@ public class NativeDate extends IdScriptable {
                                           java.text.DateFormat formatter)
     {
         if (t != t)
-            return js_NaN_date_str;
+            return jsFunction_NaN_date_str;
 
         java.util.Date tempdate = new Date((long) t);
         return formatter.format(tempdate);
     }
 
-    public String jsFunction_toLocaleString() {
+    private String jsFunction_toLocaleString() {
         if (localeDateTimeFormatter == null)
             localeDateTimeFormatter =
                 DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
@@ -1106,23 +1118,23 @@ public class NativeDate extends IdScriptable {
         return toLocale_helper(this.date, localeDateTimeFormatter);
     }
 
-    public String jsFunction_toLocaleTimeString() {
+    private String jsFunction_toLocaleTimeString() {
         if (localeTimeFormatter == null)
             localeTimeFormatter = DateFormat.getTimeInstance(DateFormat.LONG);
 
         return toLocale_helper(this.date, localeTimeFormatter);
     }
 
-    public String jsFunction_toLocaleDateString() {
+    private String jsFunction_toLocaleDateString() {
         if (localeDateFormatter == null)
             localeDateFormatter = DateFormat.getDateInstance(DateFormat.LONG);
 
         return toLocale_helper(this.date, localeDateFormatter);
     }
 
-    public String jsFunction_toUTCString() {
+    private String jsFunction_toUTCString() {
         if (this.date != this.date)
-            return js_NaN_date_str;
+            return jsFunction_NaN_date_str;
 
         StringBuffer result = new StringBuffer(60);
 
@@ -1169,15 +1181,15 @@ public class NativeDate extends IdScriptable {
         return result.toString();
     }
 
-    public double jsFunction_valueOf() {
+    private double jsFunction_valueOf() {
         return this.date;
     }
 
-    public double jsFunction_getTime() {
+    private double jsFunction_getTime() {
         return this.date;
     }
 
-    public double jsFunction_getYear() {
+    private double jsFunction_getYear(Context cx) {
         if (this.date != this.date)
             return this.date;
 
@@ -1194,7 +1206,6 @@ public class NativeDate extends IdScriptable {
          * we try to protect existing scripts that have specified a
          * version...
          */
-        Context cx = Context.getContext();
         int version = cx.getLanguageVersion();
         if (version == Context.VERSION_1_0 ||
             version == Context.VERSION_1_1 ||
@@ -1208,126 +1219,114 @@ public class NativeDate extends IdScriptable {
         return result;
     }
 
-    public double jsFunction_getFullYear() {
+    private double jsFunction_getFullYear() {
         if (this.date != this.date)
             return this.date;
         return YearFromTime(LocalTime(this.date));
     }
 
-    public double jsFunction_getUTCFullYear() {
+    private double jsFunction_getUTCFullYear() {
         if (this.date != this.date)
             return this.date;
         return YearFromTime(this.date);
     }
 
-    public double jsFunction_getMonth() {
+    private double jsFunction_getMonth() {
         if (this.date != this.date)
             return this.date;
         return MonthFromTime(LocalTime(this.date));
     }
 
-    public double jsFunction_getUTCMonth() {
+    private double jsFunction_getUTCMonth() {
         if (this.date != this.date)
             return this.date;
         return MonthFromTime(this.date);
     }
 
-    public double jsFunction_getDate() {
+    private double jsFunction_getDate() {
         if (this.date != this.date)
             return this.date;
         return DateFromTime(LocalTime(this.date));
     }
 
-    public double jsFunction_getUTCDate() {
+    private double jsFunction_getUTCDate() {
         if (this.date != this.date)
             return this.date;
         return DateFromTime(this.date);
     }
 
-    public double jsFunction_getDay() {
+    private double jsFunction_getDay() {
         if (this.date != this.date)
             return this.date;
         return WeekDay(LocalTime(this.date));
     }
 
-    public double jsFunction_getUTCDay() {
+    private double jsFunction_getUTCDay() {
         if (this.date != this.date)
             return this.date;
         return WeekDay(this.date);
     }
 
-    public double jsFunction_getHours() {
+    private double jsFunction_getHours() {
         if (this.date != this.date)
             return this.date;
         return HourFromTime(LocalTime(this.date));
     }
 
-    public double jsFunction_getUTCHours() {
+    private double jsFunction_getUTCHours() {
         if (this.date != this.date)
             return this.date;
         return HourFromTime(this.date);
     }
 
-    public double jsFunction_getMinutes() {
+    private double jsFunction_getMinutes() {
         if (this.date != this.date)
             return this.date;
         return MinFromTime(LocalTime(this.date));
     }
 
-    public double jsFunction_getUTCMinutes() {
+    private double jsFunction_getUTCMinutes() {
         if (this.date != this.date)
             return this.date;
         return MinFromTime(this.date);
     }
 
-    public double jsFunction_getSeconds() {
+    private double jsFunction_getSeconds() {
         if (this.date != this.date)
             return this.date;
         return SecFromTime(LocalTime(this.date));
     }
 
-    public double jsFunction_getUTCSeconds() {
+    private double jsFunction_getUTCSeconds() {
         if (this.date != this.date)
             return this.date;
         return SecFromTime(this.date);
     }
 
-    public double jsFunction_getMilliseconds() {
+    private double jsFunction_getMilliseconds() {
         if (this.date != this.date)
             return this.date;
         return msFromTime(LocalTime(this.date));
     }
 
-    public double jsFunction_getUTCMilliseconds() {
+    private double jsFunction_getUTCMilliseconds() {
         if (this.date != this.date)
             return this.date;
         return msFromTime(this.date);
     }
 
-    public double jsFunction_getTimezoneOffset() {
+    private double jsFunction_getTimezoneOffset() {
         if (this.date != this.date)
             return this.date;
         return (this.date - LocalTime(this.date)) / msPerMinute;
     }
 
-    public double jsFunction_setTime(double time) {
+    private double jsFunction_setTime(double time) {
         this.date = TimeClip(time);
         return this.date;
     }
 
-    private static NativeDate checkInstance(Scriptable obj,
-                                            Function funObj) {
-        if (obj == null || !(obj instanceof NativeDate)) {
-            String name = ((NativeFunction) funObj).names[0];
-            throw NativeGlobal.typeError1("msg.incompat.call", name, funObj);
-        }
-        return (NativeDate) obj;
-    }
-
-    private static double makeTime(Scriptable dateObj, Object[] args,
-                                   int maxargs, boolean local,
-                                   Function funObj)
-    {
+    private double makeTime(Object[] args, int maxargs, boolean local) {
         int i;
         double conv[] = new double[4];
         double hour, min, sec, msec;
@@ -1336,8 +1335,7 @@ public class NativeDate extends IdScriptable {
         double time;
         double result;
 
-        NativeDate d = checkInstance(dateObj, funObj);
-        double date = d.date;
+        double date = this.date;
 
         /* just return NaN if the date is already NaN */
         if (date != date)
@@ -1359,8 +1357,8 @@ public class NativeDate extends IdScriptable {
 
             // limit checks that happen in MakeTime in ECMA.
             if (conv[i] != conv[i] || Double.isInfinite(conv[i])) {
-                d.date = ScriptRuntime.NaN;
-                return d.date;
+                this.date = ScriptRuntime.NaN;
+                return this.date;
             }
             conv[i] = ScriptRuntime.toInteger(conv[i]);
         }
@@ -1400,86 +1398,50 @@ public class NativeDate extends IdScriptable {
             result = internalUTC(result);
         date = TimeClip(result);
 
-        d.date = date;
+        this.date = date;
         return date;
     }
 
-    public static double jsFunction_setMilliseconds(Context cx,
-                                                    Scriptable thisObj,
-                                                    Object[] args,
-                                                    Function funObj)
-    {
-        return makeTime(thisObj, args, 1, true, funObj);
+    private double jsFunction_setMilliseconds(Object[] args) {
+        return makeTime(args, 1, true);
     }
 
-    public static double jsFunction_setUTCMilliseconds(Context cx,
-                                                       Scriptable thisObj,
-                                                       Object[] args,
-                                                       Function funObj)
-    {
-        return makeTime(thisObj, args, 1, false, funObj);
+    private double jsFunction_setUTCMilliseconds(Object[] args) {
+        return makeTime(args, 1, false);
     }
 
-    public static double jsFunction_setSeconds(Context cx,
-                                               Scriptable thisObj,
-                                               Object[] args,
-                                               Function funObj)
-    {
-        return makeTime(thisObj, args, 2, true, funObj);
+    private double jsFunction_setSeconds(Object[] args) {
+        return makeTime(args, 2, true);
     }
 
-    public static double jsFunction_setUTCSeconds(Context cx,
-                                                  Scriptable thisObj,
-                                                  Object[] args,
-                                                  Function funObj)
-    {
-        return makeTime(thisObj, args, 2, false, funObj);
+    private double jsFunction_setUTCSeconds(Object[] args) {
+        return makeTime(args, 2, false);
     }
 
-    public static double jsFunction_setMinutes(Context cx,
-                                               Scriptable thisObj,
-                                               Object[] args,
-                                               Function funObj)
-    {
-        return makeTime(thisObj, args, 3, true, funObj);
+    private double jsFunction_setMinutes(Object[] args) {
+        return makeTime(args, 3, true);
     }
 
-    public static double jsFunction_setUTCMinutes(Context cx,
-                                                  Scriptable thisObj,
-                                                  Object[] args,
-                                                  Function funObj)
-    {
-        return makeTime(thisObj, args, 3, false, funObj);
+    private double jsFunction_setUTCMinutes(Object[] args) {
+        return makeTime(args, 3, false);
     }
 
-    public static double jsFunction_setHours(Context cx,
-                                             Scriptable thisObj,
-                                             Object[] args,
-                                             Function funObj)
-    {
-        return makeTime(thisObj, args, 4, true, funObj);
+    private double jsFunction_setHours(Object[] args) {
+        return makeTime(args, 4, true);
     }
 
-    public static double jsFunction_setUTCHours(Context cx,
-                                                Scriptable thisObj,
-                                                Object[] args,
-                                                Function funObj)
-    {
-        return makeTime(thisObj, args, 4, false, funObj);
+    private double jsFunction_setUTCHours(Object[] args) {
+        return makeTime(args, 4, false);
     }
 
-    private static double makeDate(Scriptable dateObj, Object[] args,
-                                   int maxargs, boolean local,
-                                   Function funObj)
-    {
+    private double makeDate(Object[] args, int maxargs, boolean local) {
         int i;
         double conv[] = new double[3];
         double year, month, day;
         double lorutime; /* local or UTC version of date */
         double result;
 
-        NativeDate d = checkInstance(dateObj, funObj);
-        double date = d.date;
+        double date = this.date;
 
         /* See arg padding comment in makeTime.*/
         if (args.length == 0)
@@ -1490,8 +1452,8 @@ public class NativeDate extends IdScriptable {
 
             // limit checks that happen in MakeDate in ECMA.
             if (conv[i] != conv[i] || Double.isInfinite(conv[i])) {
-                d.date = ScriptRuntime.NaN;
-                return d.date;
+                this.date = ScriptRuntime.NaN;
+                return this.date;
             }
             conv[i] = ScriptRuntime.toInteger(conv[i]);
         }
@@ -1537,59 +1499,35 @@ public class NativeDate extends IdScriptable {
 
         date = TimeClip(result);
 
-        d.date = date;
+        this.date = date;
         return date;
     }
 
-    public static double jsFunction_setDate(Context cx,
-                                            Scriptable thisObj,
-                                            Object[] args,
-                                            Function funObj)
-    {
-        return makeDate(thisObj, args, 1, true, funObj);
+    private double jsFunction_setDate(Object[] args) {
+        return makeDate(args, 1, true);
     }
 
-    public static double jsFunction_setUTCDate(Context cx,
-                                               Scriptable thisObj,
-                                               Object[] args,
-                                               Function funObj)
-    {
-        return makeDate(thisObj, args, 1, false, funObj);
+    private double jsFunction_setUTCDate(Object[] args) {
+        return makeDate(args, 1, false);
     }
 
-    public static double jsFunction_setMonth(Context cx,
-                                             Scriptable thisObj,
-                                             Object[] args,
-                                             Function funObj)
-    {
-        return makeDate(thisObj, args, 2, true, funObj);
+    private double jsFunction_setMonth(Object[] args) {
+        return makeDate(args, 2, true);
     }
 
-    public static double jsFunction_setUTCMonth(Context cx,
-                                                Scriptable thisObj,
-                                                Object[] args,
-                                                Function funObj)
-    {
-        return makeDate(thisObj, args, 2, false, funObj);
+    private double jsFunction_setUTCMonth(Object[] args) {
+        return makeDate(args, 2, false);
     }
 
-    public static double jsFunction_setFullYear(Context cx,
-                                                Scriptable thisObj,
-                                                Object[] args,
-                                                Function funObj)
-    {
-        return makeDate(thisObj, args, 3, true, funObj);
+    private double jsFunction_setFullYear(Object[] args) {
+        return makeDate(args, 3, true);
     }
 
-    public static double jsFunction_setUTCFullYear(Context cx,
-                                                   Scriptable thisObj,
-                                                   Object[] args,
-                                                   Function funObj)
-    {
-        return makeDate(thisObj, args, 3, false, funObj);
+    private double jsFunction_setUTCFullYear(Object[] args) {
+        return makeDate(args, 3, false);
     }
 
-    public double jsFunction_setYear(double year) {
+    private double jsFunction_setYear(double year) {
         double day, result;
         if (year != year || Double.isInfinite(year)) {
             this.date = ScriptRuntime.NaN;
