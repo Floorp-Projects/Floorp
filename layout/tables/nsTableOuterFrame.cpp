@@ -1373,30 +1373,56 @@ nsTableOuterFrame::UpdateReflowMetrics(nsIPresContext*      aPresContext,
   if (aMet.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aMet.mMaximumWidth = GetMaxWidth(aCaptionSide, aInnerMarginNoAuto, aCaptionMarginNoAuto);
   }
-  // see if the caption leaks out
-  if (NS_SIDE_LEFT == aCaptionSide) {
-    if (aCaptionMarginNoAuto.left < 0) {
-      aMet.mOverflowArea.x = aCaptionMarginNoAuto.left;
-      aMet.mOverflowArea.y = 0;
-      aMet.mOverflowArea.width = aMet.width - aCaptionMarginNoAuto.left;
-      aMet.mOverflowArea.height = aMet.height;
-      nsFrameState  frameState;
-      GetFrameState(&frameState);
-      frameState |= NS_FRAME_OUTSIDE_CHILDREN;
-      SetFrameState(frameState);
-    }
+  // see if the caption or the inner table frame leaks out
+  // the overflow area of the inner table and caption frame needs to be factored in once 
+  // one can retrieve them from the frames (see bug 197581)
+  switch (aCaptionSide) {
+    case NS_SIDE_LEFT:
+      aMet.mOverflowArea.x      = PR_MIN(0, aCaptionMarginNoAuto.left);
+      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x - 
+                                  PR_MIN(0, aInnerMarginNoAuto.right);
+      aMet.mOverflowArea.y      = PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.top), aInnerMarginNoAuto.top);
+      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y -
+                                  PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.bottom), aInnerMarginNoAuto.bottom); 
+      break;
+    case NS_SIDE_RIGHT:
+      aMet.mOverflowArea.x      = PR_MIN(0, aInnerMarginNoAuto.left);
+      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x - 
+                                  PR_MIN(0, aCaptionMarginNoAuto.right);
+      aMet.mOverflowArea.y      = PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.top), aInnerMarginNoAuto.top);
+      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y -
+                                  PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.bottom), aInnerMarginNoAuto.bottom);
+      break;
+    case NS_SIDE_BOTTOM:
+      aMet.mOverflowArea.x      = PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.left), aInnerMarginNoAuto.left);
+      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x -
+                                  PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.right), aInnerMarginNoAuto.right);
+      aMet.mOverflowArea.y      = PR_MIN(0, aInnerMarginNoAuto.top);
+      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y - 
+                                  PR_MIN(0, aCaptionMarginNoAuto.bottom);
+      break;
+    case NS_SIDE_TOP:
+      aMet.mOverflowArea.x      = PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.left), aInnerMarginNoAuto.left);
+      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x -
+                                  PR_MIN(PR_MIN(0, aCaptionMarginNoAuto.right), aInnerMarginNoAuto.right);
+      aMet.mOverflowArea.y      = PR_MIN(0, aCaptionMarginNoAuto.top);
+      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y - 
+                                  PR_MIN(0, aInnerMarginNoAuto.bottom);
+      break;
+    default: // no caption
+      aMet.mOverflowArea.x      = PR_MIN(0, aInnerMarginNoAuto.left);
+      aMet.mOverflowArea.width  = aMet.width - aMet.mOverflowArea.x - PR_MIN(0, aInnerMarginNoAuto.right);
+      aMet.mOverflowArea.y      = PR_MIN(0, aInnerMarginNoAuto.top);
+      aMet.mOverflowArea.height = aMet.height - aMet.mOverflowArea.y - PR_MIN(0, aInnerMarginNoAuto.bottom);
   }
-  else if (NS_SIDE_RIGHT == aCaptionSide) {
-    if (aCaptionMarginNoAuto.right <0) {
-      aMet.mOverflowArea.x = 0;
-      aMet.mOverflowArea.y = 0;
-      aMet.mOverflowArea.width = aMet.width - aCaptionMarginNoAuto.right;
-      aMet.mOverflowArea.height = aMet.height;
-      nsFrameState  frameState;
-      GetFrameState(&frameState);
-      frameState |= NS_FRAME_OUTSIDE_CHILDREN;
-      SetFrameState(frameState);
-    }
+  if ((aMet.mOverflowArea.x < 0) ||
+      (aMet.mOverflowArea.y < 0) ||
+      (aMet.mOverflowArea.XMost() > aMet.width) ||
+      (aMet.mOverflowArea.YMost() > aMet.height)) {
+    mState |= NS_FRAME_OUTSIDE_CHILDREN;
+  } 
+  else {
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
   } 
 }
 
