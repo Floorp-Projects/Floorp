@@ -57,6 +57,7 @@ public:
 
 class nsITokenizer : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITOKENIZER_IID)
 
   virtual nsresult          WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator)=0;
   virtual nsresult          ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)=0;
