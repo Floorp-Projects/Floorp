@@ -58,6 +58,11 @@ endif
 ifdef MODULE
 _RC_STRING += -MODNAME $(MODULE)
 endif
+ifdef PROGRAM
+_RC_STRING += -BINARY $(PROGRAM)
+else
+_RC_STRING += -BINARY $(SHARED_LIBRARY)
+endif
 ifdef RCINCLUDE
 _RC_STRING += -RCINCLUDE $(srcdir)/$(RCINCLUDE)
 endif
