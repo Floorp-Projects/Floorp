@@ -1695,7 +1695,7 @@ XULSortServiceImpl::InplaceSort(contentSortInfo *info1, contentSortInfo *info2, 
 
 
 
-int
+int PR_CALLBACK
 inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 {
 	/// Note: inplaceSortCallback is a small C callback stub for NS_QuickSort
@@ -1715,7 +1715,7 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 
 
 
-int
+int PR_CALLBACK
 testSortCallback(const void *data1, const void *data2, void *privateData)
 {
 	/// Note: inplaceSortCallback is a small C callback stub for NS_QuickSort
