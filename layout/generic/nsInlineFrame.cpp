@@ -810,6 +810,7 @@ NS_METHOD nsInlineFrame::GetReflowMetrics(nsIPresContext* aPresContext,
  * Setup aState to the state it would have had we just reflowed our
  * children up to, but not including, aSkipChild. Return the index
  * of aSkipChild in our list of children.
+ * If aSkipChild is nsnull then resets the state for appended content.
  */
 PRIntn nsInlineFrame::RecoverState(nsIPresContext* aPresContext,
                                    nsInlineState& aState,
@@ -823,7 +824,7 @@ PRIntn nsInlineFrame::RecoverState(nsIPresContext* aPresContext,
   nscoord x = aState.x;
   nscoord maxAscent = 0;
   nscoord maxDescent = 0;
-  while (kid != aSkipChild) {
+  while ((nsnull != kid) && (kid != aSkipChild)) {
     nsReflowMetrics kidMetrics;
     kid->GetReflowMetrics(aPresContext, kidMetrics);
     aState.ascents[i] = kidMetrics.ascent;
@@ -839,7 +840,7 @@ PRIntn nsInlineFrame::RecoverState(nsIPresContext* aPresContext,
   aState.maxAscent = maxAscent;
   aState.maxDescent = maxDescent;
   aState.x = x;
-  return (nsnull == aSkipChild) ? 0 : i;
+  return i;
 }
 
 NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
@@ -849,6 +850,46 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                            ReflowStatus&    aStatus)
 {
   aStatus = frComplete;  // initialize out parameter
+
+  // Get the style molecule
+  nsStyleFont* styleFont =
+    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+  nsStyleSpacing* styleSpacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  const nsMargin&  insets = styleSpacing->mBorderPadding;
+  nscoord lineHeight;
+
+  nsInlineState state(styleFont, styleSpacing, aMaxSize, nsnull);
+  state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
+
+  if (aReflowCommand.GetTarget() == this) {
+    switch (aReflowCommand.GetType()) {
+    case nsReflowCommand::FrameAppended:
+      // Recover our state
+      RecoverState(aPresContext, state, nsnull);
+      aStatus = ReflowUnmappedChildren(aPresContext, state);
+
+      // Vertically align the children
+      lineHeight = nsCSSLayout::VerticallyAlignChildren(aPresContext, this, styleFont,
+                     insets.top, mFirstChild, mChildCount, state.ascents, state.maxAscent);
+    
+      // XXX I don't think our return size properly accounts for the lineHeight
+      // (which may not == state.maxAscent + state.maxDescent)
+      // Return our size and our status
+      aDesiredSize.width = state.x + insets.right;
+      aDesiredSize.ascent = insets.top + state.maxAscent;
+      aDesiredSize.descent = state.maxDescent + insets.bottom;
+      aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+      break;
+    
+    default:
+      NS_NOTYETIMPLEMENTED("unexpected reflow command");
+      break;
+    }
+
+  } else {
+    NS_NOTYETIMPLEMENTED("unexpected reflow command");
+  }
 
 #if 0
   if (aReflowCommand.GetTarget() == this) {
