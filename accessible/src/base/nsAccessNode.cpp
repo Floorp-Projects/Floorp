@@ -37,21 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessNode.h"
-#include "nsIStringBundle.h"
-#include "nsIServiceManager.h"
-#include "nsAccessibilityAtoms.h"
-#include "nsHashtable.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-
-nsIStringBundle *nsAccessNode::gStringBundle = 0;
-nsIStringBundle *nsAccessNode::gKeyStringBundle = 0;
-nsIDOMNode *nsAccessNode::gLastFocusedNode = 0;
-nsSupportsHashtable *nsAccessNode::gGlobalAccessibleDocCache = nsnull;
 
 /*
  * Class nsAccessNode
@@ -61,17 +51,10 @@ nsSupportsHashtable *nsAccessNode::gGlobalAccessibleDocCache = nsnull;
 // construction 
 //-----------------------------------------------------
 
-NS_INTERFACE_MAP_BEGIN(nsAccessNode)
-  NS_INTERFACE_MAP_ENTRY(nsIAccessNode)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-//NS_IMPL_QUERYINTERFACE1(nsAccessNode, nsIAccessNode)
-NS_IMPL_ADDREF(nsAccessNode)
-NS_IMPL_RELEASE(nsAccessNode)
+NS_IMPL_ISUPPORTS1(nsAccessNode, nsIAccessNode)
 
 nsAccessNode::nsAccessNode(nsIDOMNode *aNode): 
-  mDOMNode(aNode), mRootAccessibleDoc(nsnull), mSiblingIndex(eSiblingsUninitialized)
+  mDOMNode(aNode), mRootAccessibleDoc(nsnull)
 {
 }
 
@@ -103,118 +86,8 @@ NS_IMETHODIMP nsAccessNode::Shutdown()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessNode::GetUniqueID(void **aUniqueID)
-{
-  *aUniqueID = NS_STATIC_CAST(void*, mDOMNode.get());
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsAccessNode::GetOwnerWindow(void **aWindow)
 {
   NS_ASSERTION(mRootAccessibleDoc, "No root accessible pointer back, Init() not called.");
   return mRootAccessibleDoc->GetWindow(aWindow);
 }
-
-void nsAccessNode::InitAccessibility()
-{
-  if (gIsAccessibilityActive) {
-    return;
-  }
-  nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID));
-  if (stringBundleService) {
-    // Static variables are released in nsRootAccessible::ShutdownAll();
-    stringBundleService->CreateBundle(ACCESSIBLE_BUNDLE_URL, 
-                                      &gStringBundle);
-    NS_IF_ADDREF(gStringBundle);
-    stringBundleService->CreateBundle(PLATFORM_KEYS_BUNDLE_URL, 
-                                      &gKeyStringBundle);
-    NS_IF_ADDREF(gKeyStringBundle);
-  }
-  nsAccessibilityAtoms::AddRefAtoms();
-
-  gGlobalAccessibleDocCache = new nsSupportsHashtable;
-
-  gIsAccessibilityActive = PR_TRUE;
-}
-
-void nsAccessNode::ShutdownAccessibility()
-{
-  // Called by nsAccessibilityService::Shutdown()
-  // which happens when xpcom is shutting down
-  // at exit of program
-
-  if (!gIsAccessibilityActive) {
-    return;
-  }
-  NS_IF_RELEASE(gLastFocusedNode);
-  NS_IF_RELEASE(gStringBundle);
-  NS_IF_RELEASE(gKeyStringBundle);
-
-  // And just to be safe
-  gLastFocusedNode = nsnull;
-  gStringBundle = gKeyStringBundle = nsnull;
-
-  nsAccessibilityAtoms::ReleaseAtoms();
-
-  ClearCache(gGlobalAccessibleDocCache);
-  delete gGlobalAccessibleDocCache;
-  gGlobalAccessibleDocCache = nsnull;
-
-  gIsAccessibilityActive = PR_FALSE;
-}
-
-/***************** Hashtable of nsIAccessNode's *****************/
-
-// For my hash table, I'm using a void* key, and nsISupports data. 
-// However, I want a custom Shutdown() method called whenever an entry is removed.
-// Should I use nsObjectHashtable instead of nsSupportsHashtable so that I can give 
-// it my custom Shutdown/destroyElement method?
-// Or should I use an nsSupportsHashtable and enumerate through the 
-// hash myself for Shutdown() of elements?   
-
-void nsAccessNode::PutCacheEntry(nsSupportsHashtable *aCache, void* aUniqueID, 
-                                 nsIAccessNode *aAccessNode)
-{
-  nsVoidKey key(aUniqueID);
-
-  NS_ASSERTION(!aCache->Exists(&key), "This cache entry shouldn't exist already");
-
-  aCache->Put(&key, aAccessNode);
-}
-
-void nsAccessNode::GetCacheEntry(nsSupportsHashtable *aCache, void* aUniqueID, 
-                                 nsIAccessNode **aAccessNode)
-{
-  nsVoidKey key(aUniqueID);
-
-  *aAccessNode = NS_STATIC_CAST(nsIAccessNode*, aCache->Get(&key));  // AddRefs for us
-}
-
-PRIntn PR_CALLBACK nsAccessNode::ClearCacheEntry(nsHashKey *aKey, void *aData, 
-                                                 void* aClosure)
-{
-  NS_STATIC_CAST(nsIAccessNode*, aData)->Shutdown();
-
-  return kHashEnumerateNext; // Or kHashEnumerateRemove?
-}
-
-void nsAccessNode::ClearCache(nsSupportsHashtable *aCache)
-{
-  aCache->Enumerate(ClearCacheEntry);  
-}
-
-void nsAccessNode::GetDocumentAccessible(nsIDOMNode *aDocNode, 
-                                         nsIAccessibleDocument **aDocAccessible)
-{
-  NS_ASSERTION(gGlobalAccessibleDocCache, "Global doc cache does not exist");
-
-  nsCOMPtr<nsIAccessNode> docAccessNode;
-
-  GetCacheEntry(gGlobalAccessibleDocCache, NS_STATIC_CAST(void*, aDocNode), 
-    getter_AddRefs(docAccessNode));
-
-  nsCOMPtr<nsIAccessible> docAccessible(do_QueryInterface(docAccessNode));
-
-  NS_IF_ADDREF(*aDocAccessible = docAccessible);
-}
-
