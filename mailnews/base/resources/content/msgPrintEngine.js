@@ -39,6 +39,10 @@ function OnLoadPrintEngine()
 
 function OnUnloadPrintEngine()
 {
+  if (printEngine.doPrintPreview) {
+    var webBrowserPrint = printEngine.webBrowserPrint;
+    webBrowserPrint.exitPrintPreview(); 
+  }
 }
 
 function PrintEngineCreateGlobals()
@@ -73,8 +77,6 @@ function showPrintPreviewToolbar()
 
 function BrowserExitPrintPreview()
 {
-  var webBrowserPrint = printEngine.webBrowserPrint;
-  webBrowserPrint.exitPrintPreview(); 
   window.close();
 }
 
