@@ -164,8 +164,7 @@ nsCiphers::nsCiphers()
     PRUint16 array_index = 0;
     if (isCipherWithHistoricaPrefString(data.id, array_index))
     {
-      data.prefString = historical_cipher_pref_strings[array_index].pref_string;
-      data.isHeapString = PR_FALSE;
+      data.setDataSegmentPrefString( historical_cipher_pref_strings[array_index].pref_string );
     }
     else
     {
@@ -174,8 +173,7 @@ nsCiphers::nsCiphers()
       pref.Append( SSL_IS_SSL2_CIPHER(data.info.cipherSuite) ? "ssl2." : "ssl3." );
       pref.Append(data.info.cipherSuiteName);
       ToLowerCase(pref);
-      data.prefString = ToNewCString(pref);
-      data.isHeapString = PR_TRUE;
+      data.setHeapString(ToNewCString(pref));
     }
   }
 }
@@ -195,7 +193,7 @@ void nsCiphers::SetAllCiphersFromPrefs(nsIPref *ipref)
 
     CipherData &cd = singleton->mCiphers[iCipher];
 
-    ipref->GetBoolPref(cd.prefString, &enabled);
+    ipref->GetBoolPref(cd.GetPrefString(), &enabled);
     SSL_CipherPrefSetDefault(cd.id, enabled);
   }
 }
@@ -211,9 +209,9 @@ void nsCiphers::SetCipherFromPref(nsIPref *ipref, const char *prefname)
     CipherData &cd = singleton->mCiphers[iCipher];
 
     // find cipher ID
-    if (!nsCRT::strcmp(prefname, cd.prefString))
+    if (!nsCRT::strcmp(prefname, cd.GetPrefString()))
     {
-      ipref->GetBoolPref(cd.prefString, &enabled);
+      ipref->GetBoolPref(cd.GetPrefString(), &enabled);
       SSL_CipherPrefSetDefault(cd.id, enabled);
       break;
     }
@@ -411,6 +409,6 @@ NS_IMETHODIMP nsCipherInfo::GetPrefString(char * *aPrefString)
     return NS_OK;
   }
 
-  *aPrefString = ToNewCString(nsDependentCString(nsCiphers::singleton->mCiphers[mCipherIndex].prefString));
+  *aPrefString = ToNewCString(nsDependentCString(nsCiphers::singleton->mCiphers[mCipherIndex].GetPrefString()));
   return NS_OK;
 }

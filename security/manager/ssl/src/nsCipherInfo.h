@@ -61,20 +61,29 @@ private:
 
   struct CipherData {
     CipherData() 
-    :id(0), prefString(nsnull), isHeapString(PR_FALSE), isWanted(PR_FALSE), isGood(PR_FALSE) {}
+    :id(0), isWanted(PR_FALSE), isGood(PR_FALSE), heapString(nsnull), dataSegmentString(nsnull) {}
     
     ~CipherData() {
-      if (isHeapString) {
-        delete [] prefString;
-      }
+      if (heapString) nsMemory::Free(heapString);
     }
   
     PRUint16 id;
-    const char *prefString;
-    PRPackedBool isHeapString;
+    void setDataSegmentPrefString(const char *dss) {
+      dataSegmentString = dss;
+    }
+    void setHeapString(char *hs) {
+      if (heapString) nsMemory::Free(heapString);
+      heapString = hs;
+    }
+    const char *GetPrefString() {
+      return heapString ? heapString : dataSegmentString;
+    }
     PRPackedBool isWanted;
     PRPackedBool isGood;
     SSLCipherSuiteInfo info;
+  private:
+    char *heapString;
+    const char *dataSegmentString;
   };
 
   struct CipherData *mCiphers;
