@@ -464,6 +464,7 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     // For now filter out load and unload, since they cause problems.
     if ((aEvent->message != NS_PAGE_LOAD) &&
         (aEvent->message != NS_PAGE_UNLOAD) &&
+        (aEvent->message != NS_IMAGE_LOAD) &&
         (aEvent->message != NS_FOCUS_CONTENT) &&
         (aEvent->message != NS_BLUR_CONTENT)) {
       mChromeEventHandler->HandleChromeEvent(aPresContext, aEvent,
