@@ -43,6 +43,8 @@
 
 #include <SIOUX.h>
 #include <SIOUXWindows.h>
+#include <console_io.h>
+#include <stdlib.h>
 
 static CFBundleRef getBundle(CFStringRef frameworkPath)
 {
@@ -70,9 +72,9 @@ static void* getSystemFunction(CFStringRef functionName)
 
 // Useful Carbon-CFM debugging tool, printf that goes to the system console.
 
-typedef int (*read_write_proc_ptr) (int fd, void* buffer, long count);
-static read_write_proc_ptr _read = (read_write_proc_ptr) getSystemFunction(CFSTR("read"));
-static read_write_proc_ptr _write = (read_write_proc_ptr) getSystemFunction(CFSTR("write"));
+typedef int (*io_proc_ptr) (int fd, void* buffer, long count);
+static io_proc_ptr system_read = (io_proc_ptr) getSystemFunction(CFSTR("read"));
+static io_proc_ptr system_write = (io_proc_ptr) getSystemFunction(CFSTR("write"));
 
 /*
  *	The following four functions provide the UI for the console package.
@@ -109,6 +111,7 @@ short InstallConsole(short fd)
         err = GetSharedLibrary("\pNSConsole", kCompiledCFragArch, kReferenceCFrag,
                                &gConsoleLibrary, NULL, NULL);
         if (err == noErr) {
+            atexit(&RemoveConsole);
             // transfer the SIOUX settings.
             tSIOUXSettings *sioux_settings = (tSIOUXSettings*) find_symbol(gConsoleLibrary, "\pSIOUXSettings");
             if (sioux_settings) {
@@ -163,7 +166,7 @@ long WriteCharsToConsole(char *buffer, long n)
     } else {
         for (char* cr = strchr(buffer, '\r'); cr; cr = strchr(cr + 1, '\r'))
             *cr = '\n';
-        if (_write) return _write(1, buffer, n);
+        if (system_write) return system_write(1, buffer, n);
     }
 	return 0;
 }
@@ -188,7 +191,7 @@ long ReadCharsFromConsole(char *buffer, long n)
         if (read_chars)
             return read_chars(buffer, n);
     } else {
-        if (_read) return _read(0, buffer, n);
+        if (system_read) return system_read(0, buffer, n);
     }
 	return -1;
 }
@@ -239,4 +242,70 @@ Boolean SIOUXIsAppWindow(WindowPtr window)
             return is_app_window(window);
     }
     return false;
+}
+
+/**
+ * Lower level console implementation. Let's us distinguish stdout from stderr.
+ */
+
+static int check_console()
+{
+    static short status = (InstallConsole(0) == 0);
+    return status;
+}
+
+using namespace std;
+
+int __read_console(__file_handle handle, unsigned char * buffer, size_t * count, __idle_proc idle_proc)
+{
+	if (!check_console())
+		return(__io_error);
+
+	fflush(stdout);
+
+    long n = *count;
+    if (gConsoleLibrary) {
+        static long (*read_chars) (char*, long) = (long (*) (char*, long)) find_symbol(gConsoleLibrary, "\pReadCharsFromConsole");
+        if (read_chars)
+            n = read_chars((char*)buffer, n);
+        else
+            n = -1;
+    } else {
+        if (system_read)
+            n = system_read(handle, buffer, n);
+        else
+            n = -1;
+    }
+    *count = n;
+	return (n == -1 ? __io_error : __no_io_error);
+}
+
+int __write_console(__file_handle handle, unsigned char * buffer, size_t * count, __idle_proc idle_proc)
+{
+	if (!check_console())
+		return(__io_error);
+	
+	long n = *count;
+    if (gConsoleLibrary) {
+        static long (*write_chars) (char*, long) = (long (*) (char*, long)) find_symbol(gConsoleLibrary, "\pWriteCharsToConsole");
+        if (write_chars)
+            n = write_chars((char*)buffer, n);
+        else
+            n = -1;
+    } else {
+        if (system_write) {
+            for (char* cr = strchr((char*)buffer, '\r'); cr; cr = strchr(cr + 1, '\r'))
+                *cr = '\n';
+            n = system_write(handle, buffer, n);
+        } else {
+            n = -1;
+        }
+    }
+    *count = n;
+	return (n == -1 ? __io_error : __no_io_error);
+}
+
+int __close_console(__file_handle handle)
+{
+	return(__no_io_error);
 }
