@@ -24,6 +24,7 @@
 #include "nsFileWidget.h"
 #include "nsFileSpec.h"
 #include <windows.h>
+#include <SHLOBJ.H>
 
 static NS_DEFINE_IID(kIFileWidgetIID,    NS_IFILEWIDGET_IID);
 
@@ -102,12 +103,12 @@ PRBool nsFileWidget::Show()
      ofn.lpstrInitialDir = initialDir;
   }
 
-  ofn.lpstrTitle = title;
-  ofn.lpstrFilter = filterBuffer;
+  ofn.lpstrTitle   = title;
+  ofn.lpstrFilter  = filterBuffer;
   ofn.nFilterIndex = 1;
-  ofn.hwndOwner = mWnd;
-  ofn.lpstrFile = fileBuffer;
-  ofn.nMaxFile = MAX_PATH;
+  ofn.hwndOwner    = mWnd;
+  ofn.lpstrFile    = fileBuffer;
+  ofn.nMaxFile     = MAX_PATH;
 
   // XXX use OFN_NOCHANGEDIR  for M5
   ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
@@ -267,6 +268,7 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
 nsFileDlgResults nsFileWidget::GetFile(nsIWidget        * aParent,
                                        nsString         & promptString,    
                                        nsFileSpec       & theFileSpec)
@@ -283,21 +285,45 @@ nsFileDlgResults nsFileWidget::GetFile(nsIWidget        * aParent,
   return status;
 }
 
+//-------------------------------------------------------------------------
 nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
                                          nsString         & promptString,    
                                          nsFileSpec       & theFileSpec)
 {
   Create(aParent, promptString, eMode_load, nsnull, nsnull);
-  PRBool result = Show();
+  TCHAR buffer[MAX_PATH];
+  char *title = mTitle.ToNewCString();
+
+  BROWSEINFO browserInfo;
+  browserInfo.hwndOwner      = mWnd;
+  browserInfo.pidlRoot       = nsnull;
+  browserInfo.pszDisplayName = (LPSTR)buffer;
+  browserInfo.lpszTitle      = title;
+  browserInfo.ulFlags        = BIF_RETURNONLYFSDIRS;//BIF_STATUSTEXT | BIF_RETURNONLYFSDIRS;
+  browserInfo.lpfn           = nsnull;
+  browserInfo.lParam         = nsnull;
+  browserInfo.iImage         = nsnull;
+
+  // XXX UNICODE support is needed here
   nsFileDlgResults status = nsFileDlgResults_Cancel;
-  if (result && mFile.Length() > 0) {
-    nsFilePath filePath(mFile);
-    nsFileSpec fileSpec(filePath);
-    theFileSpec = fileSpec;
+  LPITEMIDLIST list = ::SHBrowseForFolder(&browserInfo);
+  if (list != NULL) {
+    TCHAR path[MAX_PATH];
+    BOOL st = ::SHGetPathFromIDList(list, (LPSTR)path);
+    if (st) {
+      //printf("[%s]\n", path);
+      nsFilePath filePath(path);
+      nsFileSpec fileSpec(filePath);
+      theFileSpec = fileSpec;
+      status = nsFileDlgResults_OK;
+    }
   }
+
+  delete[] title;
   return status;
 }
 
+//-------------------------------------------------------------------------
 nsFileDlgResults nsFileWidget::PutFile(nsIWidget        * aParent,
                                        nsString         & promptString,    
                                        nsFileSpec       & theFileSpec)
