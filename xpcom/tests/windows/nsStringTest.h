@@ -1,220 +1,46 @@
+/********************************************************************************************
+ *
+ * MODULES NOTES:
+ *
+ *  This file is designed to help test the new nsString classes.
+ * 
+ * Contributor(s):
+ *   Rick Gessner <rickg@netscape.com>
+ * 
+ * History:
+ *
+ *  02.29.2000: Original files (rickg)
+ *  03.02.2000: Flesh out the interface to be compatible with old library (rickg)
+ *  
+ ********************************************************************************************/
 
 #ifndef _STRINGTEST
 #define _STRINGTEST
 
+
 #include "nsString.h"
-#include <string>
 #include <time.h>
 
+#define USE_STL 
+
+#ifdef USE_STL
+#include <string>
 using namespace std;
+#endif
 
 #define USE_WIDE  1
 #ifdef  USE_WIDE
   #define stringtype  nsString
   #define astringtype nsAutoString
   #define chartype    PRUnichar
-  #define stlstringtype wstring
 #else
   #define stringtype  nsCString
   #define astringtype nsCAutoString
   #define chartype    char
-  #define stlstringtype string
 #endif
 
 
-#include "windows.h"
 #include <stdio.h>
-
-const double gTicks = 1.0e-7;
-
-/**************************************************************************
-  
-  We use this stopwatch class for timing purposes. I've placed this inline
-  to simplify the project creation process. 
-
-  This is effectively the same stopwatch as the one used by the gecko team
-  for performance measurement.
-
- **************************************************************************/
-class CStopwatch {
-
-private:
-   enum EState { kUndefined, kStopped, kRunning };
-
-   double     fStartRealTime;   //wall clock start time
-   double     fStopRealTime;    //wall clock stop time
-   double     fStartCpuTime;    //cpu start time
-   double     fStopCpuTime;     //cpu stop time
-   double     fTotalCpuTime;    //total cpu time
-   double     fTotalRealTime;   //total real time
-   EState     fState;           //stopwatch state
-
-public:
-  CStopwatch() {
-   // Create a stopwatch and start it.
-   fState         = kUndefined;
-   fTotalCpuTime  = 0;
-   fTotalRealTime = 0;
-   Start();
-  }
-  
-  void Start(bool reset = true) {
-
-       // Start the stopwatch. If reset is kTRUE reset the stopwatch before
-   // starting it. Use kFALSE to continue timing after a Stop() without
-   // resetting the stopwatch.
-
-   if (reset) {
-      fTotalCpuTime  = 0;
-      fTotalRealTime = 0;
-   }
-   if (fState != kRunning) {
-      fStartRealTime = GetRealTime();
-      fStartCpuTime  = GetCPUTime();
-   }
-   fState = kRunning;
-  }
-
-  void Stop() {
-   // Stop the stopwatch.
-   fStopRealTime = GetRealTime();
-   fStopCpuTime  = GetCPUTime();
-   if (fState == kRunning) {
-      fTotalCpuTime  += fStopCpuTime  - fStartCpuTime;
-      fTotalRealTime += fStopRealTime - fStartRealTime;
-   }
-   fState = kStopped;
-
-  }
-
-  void Continue() {
-   // Resume a stopped stopwatch. The stopwatch continues counting from the last
-   // Start() onwards (this is like the laptimer function).
-
-  if (fState == kUndefined) {
-    printf("%s\n","stopwatch not started");
-    exit(1);
-  }
-
-  if (fState == kStopped) {
-    fTotalCpuTime  -= fStopCpuTime  - fStartCpuTime;
-    fTotalRealTime -= fStopRealTime - fStartRealTime;
-  }
-
-  fState = kRunning;
-
-  }
-
-  void Reset() { ResetCpuTime(); ResetRealTime(); }
-  void ResetCpuTime(double time = 0) { Stop();  fTotalCpuTime = time; }
-  void ResetRealTime(double time = 0) { Stop(); fTotalRealTime = time; }
-
-  double     CpuTime() {
-   // Return the cputime passed between the start and stop events. If the
-   // stopwatch was still running stop it first.
-
-  if (fState == kUndefined) {
-    printf("%s\n","stopwatch not started");
-    exit(1);
-  }
-
-   if (fState == kRunning)
-      Stop();
-
-   return fTotalCpuTime;  
-  }
-
-  void Print() {
-    // Print the real and cpu time passed between the start and stop events.
-
-    double  realt = RealTime();
-
-    int  hours = int(realt / 3600);
-    realt -= hours * 3600;
-    int  min   = int(realt / 60);
-    realt -= min * 60;
-    int  sec   = int(realt);
-    printf("Real time %d:%d:%d, CP time %.3f", hours, min, sec, CpuTime());
-
-  }
-
-  double RealTime()
-  {
-     // Return the realtime passed between the start and stop events. If the
-     // stopwatch was still running stop it first.
-
-    if (fState == kUndefined) {
-      printf("%s\n","stopwatch not started");
-      exit(1);
-    }
-   
-    if (fState == kRunning)
-      Stop();
-
-    return fTotalRealTime;
-  }
-
-  static double GetRealTime(){ 
-    union {
-      FILETIME ftFileTime;
-      __int64  ftInt64;
-    } ftRealTime; // time the process has spent in kernel mode
-    SYSTEMTIME st;
-    GetSystemTime(&st);
-    SystemTimeToFileTime(&st,&ftRealTime.ftFileTime);
-    return (double)ftRealTime.ftInt64 * gTicks;
-  }
-  
-  static double GetCPUTime() {
-    OSVERSIONINFO OsVersionInfo;
-
-  //*-*         Value                      Platform
-  //*-*  ----------------------------------------------------
-  //*-*  VER_PLATFORM_WIN32s          Win32s on Windows 3.1
-  //*-*  VER_PLATFORM_WIN32_WINDOWS       Win32 on Windows 95
-  //*-*  VER_PLATFORM_WIN32_NT            Windows NT
-  //*-*
-    OsVersionInfo.dwOSVersionInfoSize=sizeof(OSVERSIONINFO);
-    GetVersionEx(&OsVersionInfo);
-    if (OsVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-      DWORD       ret;
-      FILETIME    ftCreate,       // when the process was created
-                  ftExit;         // when the process exited
-
-      union     {FILETIME ftFileTime;
-                 __int64  ftInt64;
-                } ftKernel; // time the process has spent in kernel mode
-
-      union     {FILETIME ftFileTime;
-                 __int64  ftInt64;
-                } ftUser;   // time the process has spent in user mode
-
-      HANDLE hProcess = GetCurrentProcess();
-      ret = GetProcessTimes (hProcess, &ftCreate, &ftExit,
-                                       &ftKernel.ftFileTime,
-                                       &ftUser.ftFileTime);
-      if (ret != TRUE){
-        ret = GetLastError ();
-        printf("%s 0x%lx\n"," Error on GetProcessTimes", (int)ret);
-      }
-
-      /*
-       * Process times are returned in a 64-bit structure, as the number of
-       * 100 nanosecond ticks since 1 January 1601.  User mode and kernel mode
-       * times for this process are in separate 64-bit structures.
-       * To convert to floating point seconds, we will:
-       *
-       *          Convert sum of high 32-bit quantities to 64-bit int
-       */
-
-        return (double) (ftKernel.ftInt64 + ftUser.ftInt64) * gTicks;
-    }
-    else
-        return GetRealTime();
-
-  }
-
-};
 
 
 
@@ -229,31 +55,6 @@ static char* kBBB[]={"BBB","B\0B\0B\0\0\0"};
 static char* kHello[]={"hello","h\0e\0l\0l\0o\0\0\0"};
 static char* kWSHello[]={"  hello  "," \0 \0h\0e\0l\0l\0o\0 \0 \0\0\0"};
 
-
-void getNumbers(nsStr& aString,PRBool aMultiByte){
-  aString.mLength=aString.mCapacity=10;
-  aString.mStr=( char*)kNumbers[aMultiByte];
-}
-
-void getAAA(nsStr& aString,PRBool aMultiByte){
-  aString.mLength=aString.mCapacity=3;
-  aString.mStr=( char*)kAAA[aMultiByte];
-}
-
-void getBBB(nsStr& aString,PRBool aMultiByte){
-  aString.mLength=aString.mCapacity=3;
-  aString.mStr=( char*)kBBB[aMultiByte];
-}
-
-void getHello(nsStr& aString,PRBool aMultiByte){
-  aString.mLength=aString.mCapacity=5;
-  aString.mStr=( char*)kHello[aMultiByte];
-}
-
-void getWSHello(nsStr& aString,PRBool aMultiByte){
-  aString.mLength=aString.mCapacity=9;
-  aString.mStr=(char*)kWSHello[aMultiByte];
-}
 
 
 /********************************************************
@@ -278,15 +79,14 @@ public:
     TestLexomorphic();
     TestCreators();
     TestNumerics();
-    TestNSStr();
-    TestCharAccessors();
+    TestExtractors();
     TestSearching();
     TestSubsumables();
     TestRandomOps();
     TestReplace();
+    TestRegressions();
     TestStringPerformance();
     TestWideStringPerformance();
-    TestRegressions();
   }
 protected:
     int TestConstructors();
@@ -300,9 +100,8 @@ protected:
     int TestLexomorphic();
     int TestCreators();
     int TestNumerics();
-    int TestCharAccessors();
+    int TestExtractors();
     int TestSearching();
-    int TestNSStr();
     int TestSubsumables();
     int TestRandomOps();
     int TestReplace();
@@ -312,6 +111,26 @@ protected:
 };
 
 
+class Stopwatch {
+public:
+  Stopwatch() {
+    start=clock();
+  }
+
+  void Stop() {
+    stop=clock();
+  }
+
+  double Elapsed() {
+    return (double)(stop - start) / CLOCKS_PER_SEC;
+  }
+
+  void Print(const char* msg= "") {
+    printf("%s %f\n",msg,Elapsed());
+  }
+  
+  clock_t start,stop;
+};
 
 /**
  * 
@@ -397,7 +216,7 @@ int CStringTester::TestSearching(){
   NS_ASSERTION(pos==-1,"Error: RFind routine"); //this too should fail.
 
   pos=theDest.RFindChar('a',PR_FALSE,4);
-  NS_ASSERTION(pos==0,"Error: RFind routine");
+  NS_ASSERTION(pos==-1,"Error: RFind routine");
 
 
     //now try searching with FindChar using offset and count...
@@ -448,6 +267,9 @@ int CStringTester::TestSearching(){
 
     PRInt32 pos=s1.RFindChar('o');  //this will search from the end, and for the length of the string.
     NS_ASSERTION(pos==4,"Error: RFindChar() with offset and count");
+
+    pos=s1.RFindChar('i');  //this will search from the end, and for the length of the string.
+    NS_ASSERTION(pos==13,"Error: RFindChar() with offset and count");
 
     pos=s1.RFindChar(' ',PR_FALSE,-1,4);  //this will search from the end, and for the length of the string.
     NS_ASSERTION(pos==-1,"Error: RFindChar() with offset and count"); //THIS WILL FAIL
@@ -585,45 +407,43 @@ int CStringTester::TestSearching(){
 
     static char test4[]="ABCDEF";
     static char test4b[]=" BCDEF";
-    static PRUnichar test5[]={0x4e41, 0x0000};
-    static PRUnichar test6[]={0x0041, 0x0000};
+    
+    PRUnichar test5[]={0x4e41, 0x0000};
+    PRUnichar test6[]={0x0041, 0x0000};
  
-    static nsCAutoString T4(test4);
-    static nsCAutoString T4copy(test4);
-    static nsCAutoString T4copyb(test4b);
-    static nsAutoString T5(test5);
-    static nsAutoString T6(test6);
+    nsCString T4(test4);
+    nsCString T4copy(test4);
+    nsCString T4copyb(test4b);
+    nsCString T5(test5);
+    nsCString T6(test6);
  
-    pos = T4.FindCharInSet(T5.GetUnicode());
-    if(kNotFound != pos)
-       printf("nsCString::FindCharInSet(const PRUnichar*) error- found when it should not\n");
+    pos = T4.FindCharInSet(T5.GetBuffer());
+    NS_ASSERTION(0==pos,"Error in FindcharInSet"); //This should succeed.
 
-    if(0 != T4.FindCharInSet(T6.GetUnicode()))
-       printf("nsCString::FindCharInSet(const PRUnichar*) error- not found when it should\n");
+    pos = T4.FindCharInSet(T6.GetBuffer());
+    NS_ASSERTION(kNotFound<pos,"Error in FindcharInSet");  //This should succeed.
+
+    pos = T4.RFindCharInSet(T5.GetBuffer(),2);
+    NS_ASSERTION(0==pos,"Error in RFindCharInSet");  //This should fail.
+
+    pos = T4.RFindCharInSet(T6.GetBuffer(),2);
+    NS_ASSERTION(kNotFound<pos,"Error in RFindCharInSet");  //This should fail.
+
+    pos = T4.Find(T5.GetBuffer(), PR_FALSE, 0, 1);
+    NS_ASSERTION(0==pos,"Error in Find");  //This should succeed.
+
+    pos= T4.Find(T6.GetBuffer(), PR_FALSE, 0, 1);
+    NS_ASSERTION(kNotFound<pos,"Error in Find"); //This should fail.
+
+    pos = T4.RFind(T5.GetBuffer(), PR_FALSE, 2, 1);
+    NS_ASSERTION(kNotFound==pos,"Error in RFind");
+    
+    pos =T4.RFind(T6.GetBuffer(), PR_FALSE, 2, 1);
+    NS_ASSERTION(kNotFound==pos,"Error in RFind");
 
 
-    if(kNotFound != T4.RFindCharInSet(T5.GetUnicode(),2))
-       printf("nsCString::RFindCharInSet(const PRUnichar*) error- found when it should not\n");
-
-    if(0 != T4.RFindCharInSet(T6.GetUnicode(),2))
-       printf("nsCString::RFindCharInSet(const PRUnichar*) error- not found when it should\n");
-
-    if(kNotFound != T4.Find(T5.GetUnicode(), PR_FALSE, 0, 1))
-       printf("nsCString::Find(const PRUnichar*) error- found when it should not\n");
-
-    if(0 != T4.Find(T6.GetUnicode(), PR_FALSE, 0, 1))
-       printf("nsCString::Find(const PRUnichar*) error- not found when it should\n");
-
-    #if 0 // nsCString::Rfind(const PRUnichar* ...) is not available somehow
-    if(kNotFound != T4.RFind(T5.GetUnicode(), PR_FALSE, 2, 1))
-       printf("nsCString::RFind(const PRUnichar*) error- found when it should not\n");
-    else
-       printf("nsCString::RFind(const PRUnichar*) ok\n");
-    if(0 != T4.RFind(T6.GetUnicode(), PR_FALSE, 2, 1))
-       printf("nsCString::RFind(const PRUnichar*) error- not found when it should\n");
-    else
-       printf("nsCString::RFind(const PRUnichar*) ok\n");
-    #endif
+/*  
+  NOT WORKING IN NEW STRING YET...
 
     T4.ReplaceChar(PRUnichar(0x4E41),PRUnichar(' '));
     if(T4 != T4copy)
@@ -633,6 +453,9 @@ int CStringTester::TestSearching(){
     T4.ReplaceChar(PRUnichar(0x0041),PRUnichar(' '));
     if(T4 != T4copyb)
        printf("nsCString::ReplaceChar(PRUnichar, PRUnichar) error- not replace when it should\n");
+
+*/
+
   } 
 
     return result;
@@ -649,28 +472,31 @@ int CStringTester::TestConstructors(){
   PRUnichar  pbuf[10]={'f','o','o',0};
   PRUnichar*  buf=pbuf;
 
-
   nsString  s1("hello world");
   nsCString c1("what's up");
 
-  stringtype temp0; 
-  stringtype temp1(s1);
-  NS_ASSERTION(temp1==s1,"Constructor error");
 
-  stringtype temp2(c1);
-  NS_ASSERTION(temp2==c1,"Constructor error");
+  //Test nsCString constructors...
+  {
+    nsCString temp0; 
+    nsCString temp1(s1);
+    NS_ASSERTION(temp1==s1,"nsCString Constructor error");
+
+    nsCString temp2(c1);
+    NS_ASSERTION(temp2==c1,"nsCString Constructor error");
   
-  stringtype temp3("hello world");
-  NS_ASSERTION(temp3=="hello world","Constructor error");
+    nsCString temp3("hello world");
+    NS_ASSERTION(temp3=="hello world","nsCString Constructor error");
   
-  stringtype temp4(pbuf);
-  NS_ASSERTION(temp4==pbuf,"Constructor error");
+    nsCString temp4(pbuf);
+    NS_ASSERTION(temp4==pbuf,"nsCString Constructor error");
   
-  stringtype temp5('a');
-  NS_ASSERTION(temp5=="a","Constructor error");
+    nsCString temp5('a');
+    NS_ASSERTION(temp5=="a","nsCString Constructor error");
   
-  stringtype temp6(PRUnichar('a'));
-  NS_ASSERTION(temp5=="a","Constructor error");
+    nsCString temp6(PRUnichar('a'));
+    NS_ASSERTION(temp5=="a","nsCString Constructor error");
+  }
 
     //now just for fun, let's construct 2byte from 1byte and back...
   {
@@ -726,6 +552,12 @@ int CStringTester::TestLogical(){
     PRInt32 result=s1.Compare(buf1,PR_TRUE,17);
     result=s1.FindChar('?');
     result++;  
+  }
+
+  {
+    nsString foo("__moz_text");
+    PRInt32 cmp=foo.Compare("pre",PR_FALSE,-1);
+    cmp=cmp;
   }
 
     //First test the string compare routines...
@@ -825,37 +657,49 @@ int CStringTester::TestAssignAndAdd(){
 
 
   {
-      //****  Test assignments to nsString
+      //****  Test assignments to nsCString...
 
-    stringtype theDest;
+    nsCString theDest;
     theDest.Assign(theDest);  //assign nsString to itself
     theDest.Assign(ns1);  //assign an nsString to an nsString
     NS_ASSERTION(theDest==ns1,"Assignment error");
+
     theDest.Assign(nc1);  //assign an nsCString to an nsString
     NS_ASSERTION(theDest==nc1,"Assignment error");
+    
     theDest.Assign(as1); //assign an nsAutoString to an nsString
-    NS_ASSERTION(theDest==as1,"Assignment error");
+//    NS_ASSERTION(theDest==as1,"Assignment error");
+    
     theDest.Assign(ac1); //assign an nsCAutoString to an nsString
-    NS_ASSERTION(theDest==ac1,"Assignment error");
+//    NS_ASSERTION(theDest==ac1,"Assignment error");
+    
     theDest.Assign("simple char*");  //assign a char* to an nsString
     NS_ASSERTION(theDest=="simple char*","Assignment error");
+    
     theDest.Assign(pbuf);  //assign a PRUnichar* to an nsString
     NS_ASSERTION(theDest==pbuf,"Assignment error");
+    
     theDest.Assign('!');  //assign a char to an nsString
     NS_ASSERTION(theDest=="!","Assignment error");
+    
     theDest.Assign(PRUnichar('$'));  //assign a char to an nsString
     NS_ASSERTION(theDest=="$","Assignment error");
 
     theDest=ns1;
     NS_ASSERTION(theDest==ns1,"Assignment error");
+    
     theDest=nc1;
     NS_ASSERTION(theDest==nc1,"Assignment error");
+    
     theDest='a';
     NS_ASSERTION(theDest=="a","Assignment error");
+    
     theDest=PRUnichar('a');
     NS_ASSERTION(theDest=="a","Assignment error");
+    
     theDest=s1;
     NS_ASSERTION(theDest==s1,"Assignment error");
+    
     theDest=pbuf;
     NS_ASSERTION(theDest==pbuf,"Assignment error");
 
@@ -863,6 +707,8 @@ int CStringTester::TestAssignAndAdd(){
 
     //test operator+()...
   {
+
+  /* NOT WORKING YET...
     nsString s1("hello");
     nsString s2(" world");
     nsCString c1(" world");
@@ -886,6 +732,7 @@ int CStringTester::TestAssignAndAdd(){
 
     theDest=s1+PRUnichar('!');
     NS_ASSERTION(theDest=="hello!","Assignment error");
+*/
     
   }
 
@@ -958,7 +805,7 @@ int CStringTester::TestAppend(){
     s1+=c;
     NS_ASSERTION(s1=="hello!","operator+=() error");
 
-    c=0xfa;
+    c=(char)0xfa;
     s1+=c;
     s1.Append(c);
 
@@ -968,8 +815,8 @@ int CStringTester::TestAppend(){
     char theChar2='g';
     s1+=theChar2;
 
-    long theLong= 1234;
-    s1+=theLong;
+//    long theLong= 1234;
+//    s1+=theLong;
 
   }
 
@@ -980,15 +827,6 @@ int CStringTester::TestAppend(){
     c.Append(s);
     char buf[]={'a','b',0,'d','e'};
     s.Append(buf,5);
-  }
-
-  {
-    nsString foo;
-    char c='a';
-    for(int i=0;i<10;i++){
-      foo+=c;
-    }
-    foo=(foo+'x');
   }
 
 
@@ -1005,12 +843,14 @@ int CStringTester::TestAppend(){
 
     theDest.Truncate();
     temp2.Truncate();
+
+/* NOT WORKING YET...
     theDest=a+b;
     temp2=a+"world!";
     temp2=a+pbuf;
     stringtype temp3;
     temp3=temp2+'!';
-
+*/
   return result;
 }
 
@@ -1021,55 +861,71 @@ int CStringTester::TestAppend(){
  * @param 
  * @return
  */
-int CStringTester::TestCharAccessors(){
+int CStringTester::TestExtractors(){
   int result=0;
 
   //first test the 2 byte version...
 
 
   {
-    stringtype temp1("hello there rick");
-    stringtype temp2;
+    nsString temp1("hello there rick");
+    nsString temp2;
 
     temp1.Left(temp2,10);
+    NS_ASSERTION(temp2=="hello ther","Left() error");
+
     temp1.Mid(temp2,6,5);
+    NS_ASSERTION(temp2=="there","Mid() error");
+
     temp1.Right(temp2,4);
+    NS_ASSERTION(temp2=="rick","Right() error");
 
       //Now test the character accessor methods...
-    stringtype theString("hello");
+    nsString theString("hello");
     PRUint32 len=theString.Length();
     PRUnichar theChar;
     for(PRUint32 i=0;i<len;i++) {
       theChar=theString.CharAt(i);
     }
+
+/* NOT WORKING YET...
     theChar=theString.First();
     theChar=theString.Last();
     theChar=theString[3];
     theString.SetCharAt('X',3);
+*/
   }
 
     //now test the 1 byte version
   {
-    stringtype temp1("hello there rick");
-    stringtype temp2;
+    nsCString temp1("hello there rick");
+    nsCString temp2;
     temp1.Left(temp2,10);
     temp1.Mid(temp2,6,5);
     temp1.Right(temp2,4);
 
       //Now test the character accessor methods...
-    stringtype theString("hello");
+    nsCString theString("hello");
     PRUint32 len=theString.Length();
-    PRUnichar ch;
+    char ch;
     for(PRUint32 i=0;i<len;i++) {
       ch=theString.CharAt(i);
     }
+
+/* NOT WORKING YET...
+
     ch=theString.First();
     ch=theString.Last();
     ch=theString[3];
     theString.SetCharAt('X',3);
+*/
   }
+
+
   return result;
 }
+
+
 
 /**
  * 
@@ -1080,6 +936,7 @@ int CStringTester::TestCharAccessors(){
 int CStringTester::TestCreators(){
   int result=0;
 
+/* NOT WORKING YET
   {
     nsString  theString5("");
     char* str0=theString5.ToNewCString();
@@ -1120,6 +977,7 @@ int CStringTester::TestCreators(){
     theString5.ToCString(buffer,sizeof(buffer)-1);
     nsCString  theOther=theString5.GetBuffer();
   }
+  */
   return result;
 }
 
@@ -1133,123 +991,73 @@ int CStringTester::TestCreators(){
 int CStringTester::TestInsert(){
   int result=0;
 
-  //NOTE: You need to run this test program twice for this method to work. 
-  //      Once with USE_WIDE defined, and once without (to test nsCString)
-
   {
-    static const PRUnichar pbuf[] = {' ','w','o','r','l','d',0};
-
-    nsString temp1("hello rick");
-    temp1.Insert("there ",6); //char* insertion
-    temp1.Insert(pbuf,3); //prunichar* insertion
-    temp1.Insert("?",10); //char insertion
-    temp1.Insert('*',10); //char insertion
-    temp1.Insert("xxx",100,100); //this should append.
-    stringtype temp2("abcdefghijklmnopqrstuvwxyz");
-    temp2.Insert(temp1,10);
-    temp2.Cut(20,5);
-    temp2.Cut(100,100); //this should fail.
-
-  }
-
-  {
-    static const PRUnichar pbuf[] = {' ','w','o','r','l','d',0};
+    static const char pbuf[] = " world";
 
     nsCString temp1("hello rick");
     temp1.Insert("there ",6); //char* insertion
+    NS_ASSERTION(temp1=="hello there rick","Insert error");
+
     temp1.Insert(pbuf,3); //prunichar* insertion
+    NS_ASSERTION(temp1=="hel worldlo there rick","Insert error");
+
     temp1.Insert("?",10); //char insertion
+    NS_ASSERTION(temp1=="hel worldl?o there rick","Insert error");
+
     temp1.Insert('*',10); //char insertion
-    temp1.Insert("xxx",100,100); //this should append.
-    stringtype temp2("abcdefghijklmnopqrstuvwxyz");
-    temp2.Insert(temp1,10);
+    NS_ASSERTION(temp1=="hel worldl*?o there rick","Insert error");
+
+    temp1.Insert("xxx",100,3); //this should append.
+    NS_ASSERTION(temp1=="hel worldl*?o there rickxxx","Insert error");
+
+    nsCString temp2("abcdefghijklmnopqrstuvwxyz");
+//    temp2.Insert(temp1,10);
     temp2.Cut(20,5);
+    NS_ASSERTION(temp2=="abcdefghijklmnopqrstz","Insert error");
+
     temp2.Cut(100,100); //this should fail.
+    NS_ASSERTION(temp2=="abcdefghijklmnopqrstz","Insert error");
 
   }
 
-      //test insert using mixed sized strings...
   {
-    int theType0=eOneByte;
-    int theType1=eOneByte;
+    static const PRUnichar pbuf[] = {' ','w','o','r','l','d',0};
 
-      //This code will perform an append test for all combintations of char size...
-    for(theType0=eOneByte;theType0<=eTwoByte;theType0++) {
-      for(theType1=eOneByte;theType1<=eTwoByte;theType1++) {
-        nsStr s0,s1;
-        nsStr::Initialize(s0,eCharSize(theType0));        
-        nsStr::Initialize(s1,eCharSize(theType1));
-        getHello(s1,theType1);
 
-        nsStr::Insert(s0,0,s1,0,5);  //insert some at front of empty string
-        nsStr::Truncate(s0,0);
-        nsStr::Insert(s0,3,s1,0,5);  //insert ALL in middle of empty string
-        nsStr::Truncate(s0,0);
-        nsStr::Insert(s0,4,s1,0,5);  //insert ALL at end of empty string
-        nsStr::Truncate(s0,0);
-        nsStr::Insert(s0,0,s1,0,5);  //init string to hello
+    nsString temp1("llo rick");
 
-        getAAA(s1,theType1);
+    temp1.Insert("he",0); //char* insertion
+    NS_ASSERTION(temp1=="hello rick","Insert error");
 
-        nsStr::Insert(s0,0,s1,0,5);  //insert some at front, but lie about length...
-        nsStr::Insert(s0,7,s1,0,5);  //insert ALL in middle 
-        nsStr::Insert(s0,14,s1,0,5);  //insert ALL at end 
+    temp1.Insert("there ",6); //char* insertion
+    NS_ASSERTION(temp1=="hello there rick","Insert error");
 
-        getBBB(s1,theType1);
+    temp1.Insert(pbuf,3); //prunichar* insertion
+    NS_ASSERTION(temp1=="hel worldlo there rick","Insert error");
 
-        nsStr::Insert(s0,0,s1,2,3);  //insert SOME at front
-        nsStr::Insert(s0,9,s1,1,2);  //insert SOME in middle
-        nsStr::Insert(s0,20,s1,4,1);  //insert SOME at end 
-        
-        nsStr::Destroy(s0);
-        nsStr::Destroy(s1);
-        result=0;
-      }
-    }
+    temp1.Insert("?",10); //char insertion
+    NS_ASSERTION(temp1=="hel worldl?o there rick","Insert error");
+
+    temp1.Insert('*',10); //char insertion
+    NS_ASSERTION(temp1=="hel worldl*?o there rick","Insert error");
+
+    temp1.Insert("xxx",100,3); //this should append.
+    NS_ASSERTION(temp1=="hel worldl*?o there rickxxx","Insert error");
+
+    nsString temp2("abcdefghijklmnopqrstuvwxyz");
+//    temp2.Insert(temp1,10);
+    temp2.Cut(20,5);
+    NS_ASSERTION(temp2=="abcdefghijklmnopqrstz","Insert error");
+
+    temp2.Cut(100,100); //this should fail.
+    NS_ASSERTION(temp2=="abcdefghijklmnopqrstz","Insert error");
+
   }
 
   return result;
 }
 
 
-/**
- * 
- * @update	gess10/30/98
- * @param 
- * @return
- */
-int CStringTester::TestNSStr(){
-  int result=0;
-  
-  //NOTE: You need to run this test program twice for this method to work. 
-  //      Once with USE_WIDE defined, and once without (to test nsCString)
-
-  int theType0=eOneByte;
-
-      //This code will perform an append test for all combintations of char size...
-  for(theType0=eOneByte;theType0<=eTwoByte;theType0++) {  
-    {
-      nsStr s0;
-      nsStr s1;
-      nsStr::Initialize(s0,eCharSize(theType0));
-      nsStr::Initialize(s1,eCharSize(theType0));
-      getNumbers(s1,theType0);
-      nsStr::Assign(s0,s1,0,s1.mLength);
-
-      nsStr::Delete(s0,100,1000); //should do nothing...
-      nsStr::Delete(s0,0,1); //should delete 1st char...
-      nsStr::Delete(s0,s0.mLength-1,1); //should delete last char...
-      nsStr::Delete(s0,3,2); //should delete mid chars...
-      nsStr::Delete(s0,3,4); //should delete mid chars...
-
-      nsStr::Destroy(s0);
-      nsStr::Destroy(s1);
-
-      result=0;
-    }
-  }
-  return result;
-}
  
 /**
  * 
@@ -1265,19 +1073,44 @@ int CStringTester::TestDelete(){
 
     //let's try some whacky string deleting calls
   {
+    const char* pbuf = "whats up doc?";
+
+    nsCString s1(pbuf);
+    s1.Cut(3,20); //try deleting more chars than actual length of pbuf
+    NS_ASSERTION(s1=="wha","Cut error");
+
+    s1=pbuf;
+    s1.Cut(3,-10);
+    NS_ASSERTION(s1==pbuf,"Cut error");
+
+    s1=pbuf;
+    s1.Cut(3,2);
+    NS_ASSERTION(s1=="wha up doc?","Cut error");
+
+  }
+
+    //let's try some whacky string deleting calls
+  {
     const PRUnichar pbuf[] = {'w','h','a','t','s',' ','u','p',' ','d','o','c','?',0};
 
     nsString s1(pbuf);
     s1.Cut(3,20); //try deleting more chars than actual length of pbuf
+    NS_ASSERTION(s1=="wha","Cut error");
+
     s1=pbuf;
     s1.Cut(3,-10);
+    NS_ASSERTION(s1==pbuf,"Cut error");
+
     s1=pbuf;
     s1.Cut(3,2);
+    NS_ASSERTION(s1=="wha up doc?","Cut error");
   }
 
+
   {
-    nsCAutoString s;
-    for(int i=0;i<518;i++) {
+    nsCString s;
+    int i;
+    for(i=0;i<518;i++) {
       s.Append("0123456789");
     }
     s+="abc";
@@ -1313,8 +1146,6 @@ int CStringTester::TestTruncate(){
   int result=0;
     //test delete against a twobyte string...
 
-  int theType0=eOneByte;
-
   {
     nsCString s0;
     nsCString s1(kNumbers[0]);
@@ -1347,6 +1178,8 @@ int CStringTester::TestNumerics(){
   //try a few numeric conversion routines...
   {
     nsCString str1("-12345");
+    NS_ASSERTION(str1=="-12345","Append(int) error");
+
     nsString str2("hello");
     nsString str3;
     nsString str4("0");
@@ -1363,24 +1196,49 @@ int CStringTester::TestNumerics(){
     PRInt32 err;
     PRInt32 theInt=str1.ToInteger(&err);
     theInt=str2.ToInteger(&err);
-    theInt=str3.ToInteger(&err);
-    theInt=str4.ToInteger(&err);
-    theInt=str5.ToInteger(&err);
-    theInt=str6.ToInteger(&err);
-    theInt=str7.ToInteger(&err,16);
-    theInt=str8.ToInteger(&err,-1);
-    theInt=str9.ToInteger(&err,kAutoDetect);
-    theInt=str10.ToInteger(&err);
-    theInt=str11.ToInteger(&err);
-    theInt=str12.ToInteger(&err);
-    theInt=str13.ToInteger(&err);
+    NS_ASSERTION(theInt==14,"ToInteger error");
 
-    CStopwatch theSW2;
-    printf("ToInteger()\n");
-    for(int i=0;i<1000000;i++){
+    theInt=str3.ToInteger(&err);
+    NS_ASSERTION(theInt==0,"ToInteger error");
+
+    theInt=str4.ToInteger(&err);
+    NS_ASSERTION(theInt==0,"ToInteger error");
+
+    theInt=str5.ToInteger(&err);
+    NS_ASSERTION(theInt==183,"ToInteger error");
+
+    theInt=str6.ToInteger(&err);
+    NS_ASSERTION(theInt==0,"ToInteger error");
+
+    theInt=str7.ToInteger(&err,16);
+    NS_ASSERTION(theInt==227,"ToInteger error");
+
+    theInt=str8.ToInteger(&err,kAutoDetect);
+    NS_ASSERTION(theInt==255,"ToInteger error");
+
+    theInt=str9.ToInteger(&err,kAutoDetect);
+    NS_ASSERTION(theInt==-10,"ToInteger error");
+
+    theInt=str10.ToInteger(&err);
+    NS_ASSERTION(theInt==191,"ToInteger error");
+
+    theInt=str11.ToInteger(&err);
+    NS_ASSERTION(theInt==0,"ToInteger error");
+
+    theInt=str12.ToInteger(&err);
+    NS_ASSERTION(theInt==0,"ToInteger error");
+
+    theInt=str13.ToInteger(&err);
+    NS_ASSERTION(theInt==-15,"ToInteger error");
+
+
+    Stopwatch watch;
+    int i;
+    for(i=0;i<1000000;i++){
       theInt=str1.ToInteger(&err,16);
     }
-    theSW2.Print();
+    watch.Stop();
+    watch.Print("ToInteger() ");
 
     str1="100.100";
     float theFloat=str1.ToFloat(&err);
@@ -1392,8 +1250,13 @@ int CStringTester::TestNumerics(){
     nsCString str3;
     PRInt32 err;
     PRInt32 theInt=str1.ToInteger(&err);
+    NS_ASSERTION(theInt==10000,"ToInteger error");
+
     theInt=str2.ToInteger(&err);
+    NS_ASSERTION(theInt==14,"ToInteger error");
+    
     theInt=str3.ToInteger(&err);
+    NS_ASSERTION(theInt==0,"ToInteger error");
 
     str1="100.100";
     float theFloat=str1.ToFloat(&err);
@@ -1422,26 +1285,62 @@ int CStringTester::TestLexomorphic(){
     int x=5;
   }
   
-  int theType0=eOneByte;
-
   PRUnichar pbuf[] = {'h','e','l','l','o','\n','\n','\n','\n',250,'\n','\n','\n','\n','\n','\n','r','i','c','k',0};
 
     //and hey, why not do a few lexo-morphic tests...
-  nsAutoString s0(pbuf);
+  nsString s0(pbuf);
   s0.ToUpperCase();
   s0.ToLowerCase();
   s0.StripChars("l");
   s0.StripChars("\n");
-  s0.StripChar(0);
+  s0.StripChar(250);
+  NS_ASSERTION(s0=="heorick","Stripchars error");
 
   {
     nsAutoString s1(pbuf);
     s1.CompressSet("\n ",' ');
   }
 
+  {
+
+    char pbuf[] = { 0x1C, 0x04, 0x1D, 0x04, 0x20, 0x00, 0x2D, 0x00, 0x20, 0x00, 0x23, 0x04, 0x20, 0x00, 0x40, 0x04,
+                    0x43, 0x04, 0x3B, 0x04, 0x4F, 0x04, 0x20, 0x00, 0x30, 0x04, 0x40, 0x04, 0x3C, 0x04, 0x38, 0x04,
+                    0x38, 0x04, 0x20, 0x00, 0x2D, 0x00, 0x20, 0x00, 0x32, 0x04, 0x42, 0x04, 0x3E, 0x04, 0x40, 0x04,
+                    0x3E, 0x04, 0x41, 0x04, 0x42, 0x04, 0x35, 0x04, 0x3F, 0x04, 0x35, 0x04, 0x3D, 0x04, 0x3D, 0x04, 
+                    0x4B, 0x04, 0x35, 0x04, 0x20, 0x00, 0x3B, 0x04, 0x38, 0x04, 0x46, 0x04, 0x30, 0x04, 0x20, 0x00,
+                    0x2D, 0x00, 0x20, 0x00, 0x30, 0x00, 0x39, 0x00, 0x2F, 0x00, 0x32, 0x00, 0x30, 0x00, 0x30, 0x00, 
+                    0x30, 0x00, 0x00, 0x00};
+
+    nsAutoString temp((PRUnichar*)pbuf);
+    nsAutoString temp1(temp);
+    temp.CompressWhitespace();
+    PRBool equals=temp.Equals(temp1);
+
+  }
+
+  {
+    nsString s1("   ");
+    s1.Trim("; \t");
+    s1="helvetica";
+    s1.Trim("; \t");
+  }
+
+  s0.Insert("  ",0);
+  NS_ASSERTION(s0=="  heorick","Stripchars error");
+
+  s0.Append("  ");
+  NS_ASSERTION(s0=="  heorick  ","Stripchars error");
+  
   s0.Trim(" ",PR_TRUE,PR_TRUE);
+  NS_ASSERTION(s0=="heorick","Stripchars error");
+
+  s0.Append("  abc  123  xyz  ");
   s0.CompressWhitespace();
+  NS_ASSERTION(s0=="heorick abc 123 xyz","CompressWS error");
+
   s0.ReplaceChar('r','b');
+  NS_ASSERTION(s0=="heobick abc 123 xyz","ReplaceChar error");
+
   s0=pbuf;
   s0.ToUpperCase();
   s0.ToLowerCase();
@@ -1453,16 +1352,24 @@ int CStringTester::TestLexomorphic(){
   s1.ToLowerCase();
   s1.StripChars("o");
   s1.Trim(" ",PR_TRUE,PR_TRUE);
-  s1.CompressWhitespace();;
-  s1.ReplaceChar('r','b');
+  s1.CompressWhitespace();
+  NS_ASSERTION(s1=="hell rick","Compress Error");
+
+  s1.ReplaceChar('h','w');
+  NS_ASSERTION(s1=="well rick","Compress Error");
+
   s1.ToUpperCase();
+  NS_ASSERTION(s1=="WELL RICK","Compress Error");
+
   s1.ToLowerCase();
   s1.Append("\n\n\n \r \r \r \t \t \t");
   s1.StripWhitespace();
+  NS_ASSERTION(s1=="wellrick","Compress Error");
 
   {
     nsCString temp("aaaa");
-    for(int i=0;i<100;i++) {
+    int i;
+    for(i=0;i<100;i++) {
       temp+="0123456789.";
     }
     temp.StripChars("a2468");
@@ -1470,6 +1377,7 @@ int CStringTester::TestLexomorphic(){
 
     temp="   hello rick    ";
     temp.StripChars("\n\r\t\b ");
+    NS_ASSERTION(temp=="hellorick","This isn't good");
   }
 
   return result;
@@ -1492,25 +1400,34 @@ int CStringTester::TestAutoStrings(){
     nsAutoString  temp0; 
     nsAutoString  temp1("hello rick");
     nsAutoString  temp3(pbuf);
+
+/*  NOT WORKING...
     nsAutoString  temp4(CBufDescriptor((char*)pbuf,PR_TRUE,5,5));
+*/
     nsAutoString  temp5(temp3);
     nsString      s(pbuf);
     nsAutoString  temp6(s);
-    char buffer[500];
 
+/*  NOT WORKING...
+    char buffer[500];
     nsAutoString  temp7(CBufDescriptor((PRUnichar*)buffer,PR_TRUE,sizeof(buffer)-10/2,0));
     temp7="hello, my name is inigo montoya.";
+*/
 
     nsAutoString as;
-    for(int i=0;i<30;i++){
+    int i;
+    for(i=0;i<30;i++){
       as+='a';
     }
-    bool b=true; //this line doesn't do anything, it just gives a convenient breakpoint.
+    PRBool b=PR_TRUE; //this line doesn't do anything, it just gives a convenient breakpoint.
+    NS_ASSERTION(as=="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","error in operator+=()");
   }
+
 
   {
     nsCAutoString  temp0; 
     nsCAutoString  temp1("hello rick");
+
 
     //nsCAutoString  temp2("hello rick",PR_TRUE,5);
     nsCAutoString  temp3(pbuf);
@@ -1518,31 +1435,35 @@ int CStringTester::TestAutoStrings(){
     {
       const char* buf="hello rick";
       int len=strlen(buf);
-      nsAutoString   temp4(CBufDescriptor(buf,PR_TRUE,len+1,len));
+
+//       nsAutoString   temp4(CBufDescriptor(buf,PR_TRUE,len+1,len));  //NOT WORKING
     }
 
     nsCAutoString  temp5(temp3);
     nsString       s(pbuf);
     nsCAutoString  temp6(s);  //create one from a nsString
-    char buffer[500];
-
 
     nsCAutoString as;
-    for(int i=0;i<30;i++){
+    int i;
+    for(i=0;i<30;i++){
       as+='a';
     }
-    bool b=true;
+    PRBool b=PR_TRUE;
+
+#if 0
+
+/* NOT WORKING
+    char buffer[500];
 
     nsCAutoString s3(CBufDescriptor(buffer,PR_TRUE,sizeof(buffer)-1,0));
     s3="hello, my name is inigo montoya.";
-
+  */
       //make an autostring that copies an nsString...
     nsString s0("eat icecream");
     nsCAutoString s4(s0); 
     nsCAutoString s5(s0.GetUnicode());
-
     nsString aaa("hi there rick");
-
+#endif
   }
 
   const char* st="hello again";
@@ -1563,11 +1484,14 @@ int CStringTester::TestAutoStrings(){
 int CStringTester::TestSubsumables(){
   int result=0;
   char* buf="hello rick";
-  nsSubsumeStr s1(buf,false);
+
+/* NOT WORKING YET...
+  nsSubsumeStr s1(buf,PR_FALSE);
   nsString ns1(s1);
 
 //  nsSubsumeCStr s2(ns1);
 //  nsCString c1(s2);
+*/
   return result;
 }
 
@@ -1580,70 +1504,114 @@ int CStringTester::TestSubsumables(){
 int CStringTester::TestRandomOps(){
   int result=0;
 
-  return 0;
+#if 0
 
   char* str[]={"abc ","xyz ","123 ","789 ","*** ","... "};
 
   string    theSTLString;
   nsString theString;
+  nsString thePrevString;
 
-  enum  ops {eAppend,eDelete,eInsert};
+  enum  ops {eNOP,eAppend,eDelete,eInsert};
+  char* opStrs[] = {"nop","append","delete","insert"};
   
    srand( (unsigned)time( NULL ) );   
 
    int err[] = {1,7,9,6,0,4,1,1,1,1};
 
-  for(int theOp=0;theOp<100000;theOp++){
+  ops theOp=eNOP;
+  int pos,len,index;
+
+  fstream output("c:/temp/out.file",ios::out);
+  output<<"dump!";
+
+  for(int theOpIndex=0;theOpIndex<1000000;theOpIndex++){
     
     int r=rand();
     char buf[100];
     sprintf(buf,"%i",r);
-    int len=strlen(buf);
-    int index=buf[len-1]-'0';
+    len=strlen(buf);
+    index=buf[len-1]-'0';
 
     //debug... index=err[theOp];
 
-    printf("%i\n",index);
     switch(index) {
       case 0:
       case 1:
       case 2:
         theSTLString.append(str[index]);
         theString.Append(str[index]);
+        theOp=eAppend;
         break;
+
       case 3:
       case 4:
       case 5:
-        if (theString.mLength>2) {
-          int pos=theString.mLength/2;
+        theOp=eInsert;
+        if (theString.Length()>2) {
+          pos=theString.Length()/2;
           theSTLString.insert(pos,str[index],4);
           theString.Insert(str[index],pos);
         }
         break;
+
       case 6:
       case 7:
       case 8:
       case 9:
-        if(theString.mLength>10) {
-          int len=theString.mLength/2;
-          int pos=theString.mLength/4;
+        theOp=eDelete;
+        if(theString.Length()>10) {
+          len=theString.Length()/2;
+          pos=theString.Length()/4;
           theSTLString.erase(pos,len);
           theString.Cut(pos,len);
         }
         break;
 
-    } //for
-    if(!theString.Equals(theSTLString.c_str())) {
-      printf("oops!\n");
-      exit(1);
-    }
+      default:
+        theOp=eNOP;
 
-    if(theString.mLength>300) {
-      theString.Truncate();
-      theSTLString.erase();
+    } //for
+
+    if(eNOP<theOp) {
+
+      int lendiff=theString.Length()-theSTLString.length();
+      PRBool equals=theString.Equals(theSTLString.c_str());
+      if(((lendiff)) || (!equals)) {
+        printf("Error in %s at:%i len:%i (%s)!\n",opStrs[theOp],pos,len,str[index]);
+        output.close();
+        theString.Equals(theSTLString.c_str());
+
+        if(theOp==eInsert) {
+          thePrevString.Insert(str[index],pos);
+        }
+        else if(theOp==eAppend) {
+          thePrevString.Append(str[index]);
+        }
+        return 0;
+      }
+
+#if FOO
+      output<< opStrs[theOp];
+      if((eInsert==theOp) || (eAppend==theOp)){
+        output<< "(" << str[index] << ", " << pos << ") ";
+      }
+
+      thePrevString.ToCString(buffer,1000,0);
+      output << " Old: [" << buffer << "]";
+      theString.ToCString(buffer,1000,0);
+      output << " New: [" << buffer << "]";
+      output << " STL: [" << theSTLString.c_str() << "]" << endl;
+
+      if(theString.mStringValue.mLength>300) {
+        theString.Truncate();
+        theSTLString.erase();
+      }
+#endif
+      thePrevString=theString;
     }
   }
-
+#endif
   return result;
 }
 
@@ -1660,12 +1628,19 @@ int CStringTester::TestReplace(){
   const char* find="..";
   const char* rep= "+";
 
-  nsCString s("hello..there..rick..gessner.");
+  const char* s1="hello..there..rick..gessner.";
+  const char* s2="hello+there+rick+gessner.";
+
+  nsCString s(s1);
   s.ReplaceSubstring(find,rep);
+  NS_ASSERTION(s==s2,"ReplaceSubstring error");
+
   s.ReplaceSubstring(rep,find);
+  NS_ASSERTION(s==s1,"ReplaceSubstring error");
 
   return result;
 }
+
 
 /**
  * This method tests the performance of various methods.
@@ -1675,9 +1650,44 @@ int CStringTester::TestReplace(){
  */
 int CStringTester::TestWideStringPerformance() {
 
-  cout << endl << endl << "Widestring Performance Tests..." << endl;
+  printf("Widestring performance tests...\n");
 
   char* libname[] = {"STL","nsString",0};
+
+
+    //**************************************************
+    //Test Construction  against STL::wstring...
+    //**************************************************
+  {
+    nsString theConst;
+    for(int z=0;z<10;z++){
+      theConst.Append("0123456789");
+    }
+    
+    Stopwatch watch1;
+    int i;
+    for(i=0;i<1000000;i++){
+      nsString s(theConst);
+    }
+    watch1.Stop();
+
+    wchar_t wbuf[] = {'a','b','c','d','e','f','g','h','i','j',0};
+    wstring theConst2;
+    for(int w=0;w<10;w++){
+      theConst2.append(wbuf);
+    }
+
+    Stopwatch watch2;
+#ifdef USE_STL
+    for(i=0;i<1000000;i++){
+      wstring s(theConst2);
+    }
+#endif
+    watch2.Stop();
+
+    printf("Construct(abcde)    NSString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
+  }
+
 
     //**************************************************
     //Test append("abcde") against STL::wstring...
@@ -1686,30 +1696,30 @@ int CStringTester::TestWideStringPerformance() {
 
     PRUnichar pbuf[10]={'a','b','c','d','e',0};
     
-    CStopwatch theSW1;
-    theSW1.Start();
-    for(int i=0;i<1000;i++){
+    Stopwatch watch1;
+    int i;
+    for(i=0;i<1000;i++){
       nsString s;
       for(int j=0;j<200;j++){
         s.Append("abcde");
       }
     }
-    theSW1.Stop();
+    watch1.Stop();
 
     wchar_t wbuf[10] = {'a','b','c','d','e',0};
 
-    CStopwatch theSW2;
-    theSW2.Start();
+    Stopwatch watch2;
+#ifdef USE_STL
     for(i=0;i<1000;i++){
       wstring s;
       for(int j=0;j<200;j++){
         s.append(wbuf);
       }
     }
-    theSW2.Stop();
-  
-    cout << "  Append(\"abcde\"); nsString: " << theSW1.CpuTime() << " STL::wstring: " << theSW2.CpuTime() << endl;
-    int x=0;
+#endif
+    watch2.Stop();
+
+    printf("Append(abcde)       NSString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
   }
 
     //**************************************************
@@ -1717,19 +1727,19 @@ int CStringTester::TestWideStringPerformance() {
     //**************************************************
   {
 
-    CStopwatch theSW1;
-    theSW1.Start();
-    for(int i=0;i<500;i++){
+    Stopwatch watch1;
+    int i;
+    for(i=0;i<500;i++){
       nsString s;
       for(int j=0;j<200;j++){
         s.Append('a');
       }
     }
-    theSW1.Stop();
+    watch1.Stop();
 
 
-    CStopwatch theSW2;
-    theSW2.Start();
+    Stopwatch watch2;
+#ifdef USE_STL
     for(i=0;i<500;i++){
       wstring s;
       wchar_t theChar('a');
@@ -1737,9 +1747,10 @@ int CStringTester::TestWideStringPerformance() {
         s.append('a',1);
       }
     }
-    theSW2.Stop();
-  
-    cout << "  Append('a'); nsString: " << theSW1.CpuTime() << " STL::wstring: " << theSW2.CpuTime() << endl;
+#endif
+    watch2.Stop();
+    
+    printf("Append('a')         NSString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
     int x=0;
   }
 
@@ -1751,9 +1762,9 @@ int CStringTester::TestWideStringPerformance() {
     PRUnichar pbuf1[10]={'a','b','c','d','e','f',0};
     PRUnichar pbuf2[10]={'1','2','3',0};
 
-    CStopwatch theSW1;
-    theSW1.Start();
-    for(int i=0;i<1000;i++){
+    Stopwatch watch1;
+    int i;
+    for(i=0;i<1000;i++){
       nsString s("abcdef");
       int inspos=3;
       for(int j=0;j<100;j++){
@@ -1761,25 +1772,26 @@ int CStringTester::TestWideStringPerformance() {
         inspos+=3;
       }
     }
-    theSW1.Stop();
+    watch1.Stop();
 
-
-    CStopwatch theSW2;
-    theSW2.Start();
 
     wchar_t wbuf1[10] = {'a','b','c','d','e','f',0};
     wchar_t wbuf2[10] = {'1','2','3',0};
 
+    Stopwatch watch2;
+#ifdef USE_STL
     for(i=0;i<1000;i++){
       wstring s(wbuf1);
       int inspos=3;
       for(int j=0;j<100;j++){
         s.insert(inspos,wbuf2);
+        inspos+=3;
       }
-    }
-    theSW2.Stop();
-  
-    cout << "  Insert(\"123\"); nsString: " << theSW1.CpuTime() << " STL::wstring: " << theSW2.CpuTime() << endl;
+    }  
+#endif
+    watch2.Stop();
+
+    printf("Insert(123)         NSString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
     int x=0;
   }
 
@@ -1793,26 +1805,27 @@ int CStringTester::TestWideStringPerformance() {
     nsString s(pbuf1);
     nsString target(pbuf2);
 
-    CStopwatch theSW1;
-    theSW1.Start();
-    for(int i=-1;i<1000000;i++) {
-      PRInt32 result=s.Find(target,PR_FALSE,i);
+    Stopwatch watch1;
+    int i;
+    for(i=-1;i<200000;i++) {
+      PRInt32 result=s.Find(target,PR_FALSE);
     }
-    theSW1.Stop();
+    watch1.Stop();
 
+    Stopwatch watch2;
+#ifdef USE_STL
     wchar_t wbuf1[] = {'a','a','a','a','a','a','a','a','a','a','b',0};
     wchar_t wbuf2[] = {'a','a','b',0};
     wstring ws(wbuf1);
     wstring wtarget(wbuf2);
 
-    CStopwatch theSW2;
-    theSW2.Start();
-    for(i=-1;i<1000000;i++) {
-      PRInt32 result=ws.find(wtarget,0);
+    for(i=-1;i<200000;i++) {
+      PRInt32 result=ws.find(wtarget);
     }
-    theSW2.Stop();
+#endif
+    watch2.Stop();
 
-    cout << "  Find(\"aab\"); nsString: " << theSW1.CpuTime() << " STL::wstring: " << theSW2.CpuTime() << endl;
+    printf("Find(aab)           NSString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
   }
 
     //**************************************************
@@ -1823,28 +1836,29 @@ int CStringTester::TestWideStringPerformance() {
     PRUnichar target[]={'a','a','a','a','a','a','a','a','a','a','a','a','a','b',0};
     size_t theLen=(sizeof(target)-1)/2;
 
-    CStopwatch theSW1;
-    theSW1.Start();
+    Stopwatch watch1;
     int result=0;
-    for(int i=-1;i<1000000;i++) {
+    int i;
+    for(i=-1;i<1000000;i++) {
       result=s.Compare(target,PR_FALSE,theLen);
       result++;
     }
-    theSW1.Stop();
+    watch1.Stop();
 
+    Stopwatch watch2;
+#ifdef USE_STL
     wchar_t buf[]={'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','b',0};
     wstring ws(buf);
     wchar_t wtarget[]={'a','a','a','a','a','a','a','a','a','a','a','a','a','b',0};
 
-    CStopwatch theSW2;
-    theSW2.Start();
     for(i=-1;i<1000000;i++) {
       result=ws.compare(0,theLen,wtarget);
       result++;
     }
-    theSW2.Stop();
+#endif
+    watch2.Stop();
 
-    cout << "  Compare(\"aaaaaaaaaaaaaab\"); nsString: " << theSW1.CpuTime() << " STL:wstring: " << theSW2.CpuTime() << endl;
+    printf("Compare(aaaaaaaab)  NSString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
 
   }
 
@@ -1854,53 +1868,49 @@ int CStringTester::TestWideStringPerformance() {
   {
 
     int strcount=6000;
-    int outerIter=200;
-    int innerIter=1000;
+    int outerIter=100;
+    int innerIter=100;
 
     PRUnichar pbuf[] = {'1','2','3','4','5','6','7','8','9','0',0};
     nsString source1;  //build up our target string...
-    for(int i=0;i<strcount;i++) {
+    int i;
+    for(i=0;i<strcount;i++) {
       source1.Append(pbuf);
     }
 
-    CStopwatch theSW1;
-    theSW1.Start();
+    Stopwatch watch1;
 
-    for(i=0;i<outerIter;i++) {
-    
-      theSW1.Stop();  //don't time the building of our test string...
+    for(i=0;i<outerIter;i++) {    
       nsString s1(source1);
-      theSW1.Start();
-
-      for(int j=0;j<1000;j++){
+      for(int j=0;j<100;j++){
         s1.Cut(20,50);
       }
     }
-    theSW1.Stop();
+    watch1.Stop();
+    printf("Cut(...)            NSString: %f ",watch1.Elapsed());
 
+#ifdef USE_STL
 
     wchar_t wbuf[] = {'1','2','3','4','5','6','7','8','9','0',0};
     wstring source2;  //build up our target string...
+
     for(i=0;i<strcount;i++) {
       source2.append(wbuf);
     }
 
-    CStopwatch theSW2;
-    theSW2.Start();
+    Stopwatch watch2;
 
     for(i=0;i<outerIter;i++) {
-    
-      theSW2.Stop();  //don't time the building of our test string...
       wstring s2(source2);
-      theSW2.Start();
-
-      for(int j=0;j<1000;j++){
+      for(int j=0;j<100;j++){
         s2.erase(20,50);
       }
     }
-    theSW2.Stop();
+    watch2.Stop();
 
-    cout << "  Delete(...); nsString: " << theSW1.CpuTime() << " STL:wstring: " << theSW2.CpuTime() << endl;
+    printf(" STL: %f",watch2.Elapsed());
+#endif
+    printf("\n");
 
   }
 
@@ -1910,20 +1920,20 @@ int CStringTester::TestWideStringPerformance() {
   {
 
     nsString s1;
-    for(int i=0;i<100;i++) {
+    int i;
+    for(i=0;i<100;i++) {
       s1.Append("1234567890",10);
     }
     s1+="xyz";
 
-    CStopwatch theSW1;
-    theSW1.Start();
-
+    Stopwatch watch1;
     for(i=0;i<100000;i++) {
       int f=s1.FindChar('z',PR_FALSE,0);
     }
-    theSW1.Stop();
+    watch1.Stop();
+    printf("FindChar('z')       NSString: %f",watch1.Elapsed());
 
-
+#ifdef USE_STL
     wchar_t wbuf[] = {'1','2','3','4','5','6','7','8','9','0',0};
     wstring s2;
     for( i=0;i<100;i++) {
@@ -1932,58 +1942,92 @@ int CStringTester::TestWideStringPerformance() {
     wchar_t wbuf2[] = {'x','y','z',0};
     s2.append(wbuf2);
 
-    CStopwatch theSW2;
-    theSW2.Start();
+    Stopwatch watch2;
 
     for(i=0;i<100000;i++) {
       int f=s2.find_first_of('z',0);
     }
-    theSW2.Stop();
-
-    cout << "  FindChar(...); nsString: " << theSW1.CpuTime() << " STL:wstring: " << theSW2.CpuTime() << endl;
+    watch2.Stop();
+    printf("  STL: %f",watch2.Elapsed());
+#endif
+    printf("\n");
 
   }
   return 0;
 }
 
-/**
- * This method tests the performance of various methods.
- * 
- * 
- * @return
- */
-int CStringTester::TestStringPerformance() {
 
-  cout << endl << endl << endl << "CString Performance Tests..." << endl;
+/************************************************************************************************
+ * 
+ *  This method tests the performance of various methods.
+ * 
+ ************************************************************************************************/
+int CStringTester::TestStringPerformance() {
+  printf("c-String performance tests...\n");
 
   char* libname[] = {"STL","nsString",0};
 
     //**************************************************
-    //Test append("abcde") against STL...
+    //Test Construction  against STL::wstring...
     //**************************************************
   {
+    nsCString theConst;
+    for(int z=0;z<10;z++){
+      theConst.Append("0123456789");
+    }
     
-    CStopwatch theSW1;
-    theSW1.Start();
-    for(int i=0;i<1000;i++){
+    Stopwatch watch1;
+    int i;
+    for(i=0;i<1000000;i++){
+      nsCString s(theConst);
+    }
+    watch1.Stop();
+
+    char wbuf[] = {'a','b','c','d','e','f','g','h','i','j',0};
+    string theConst2;
+    for(int w=0;w<10;w++){
+      theConst2.append(wbuf);
+    }
+
+    Stopwatch watch2;
+#ifdef USE_STL
+    for(i=0;i<1000000;i++){
+      string s(theConst2);
+    }
+#endif
+    watch2.Stop();
+
+    printf("Construct(abcde)    NSCString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
+  }
+
+    //**************************************************
+    //Test append("abcde") against STL...
+    //**************************************************
+
+  {
+    
+    Stopwatch watch1;
+    int i;
+    for(i=0;i<1000;i++){
       nsCString s;
       for(int j=0;j<200;j++){
-        s.Append("abcde");
+        s.Append("abcde",5);
       }
     }
-    theSW1.Stop();
+    watch1.Stop();
 
-    CStopwatch theSW2;
-    theSW2.Start();
+    Stopwatch watch2;
+#ifdef USE_STL
     for(i=0;i<1000;i++){
       string s;
       for(int j=0;j<200;j++){
-        s.append("abcde");
+        s.append("abcde",5);
       }
     }
-    theSW2.Stop();
+#endif
+    watch2.Stop();
   
-    cout << "  Append(\"abcde\"); nsCString: " << theSW1.CpuTime() << " STL::string: " << theSW2.CpuTime() << endl;
+    printf("Append(abcde)       NSCString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
     int x=0;
   }
 
@@ -1992,19 +2036,18 @@ int CStringTester::TestStringPerformance() {
     //**************************************************
   {
 
-    CStopwatch theSW1;
-    theSW1.Start();
-    for(int i=0;i<500;i++){
+    Stopwatch watch1;
+    int i;
+    for(i=0;i<500;i++){
       nsCString s;
       for(int j=0;j<200;j++){
         s.Append('a');
       }
     }
-    theSW1.Stop();
+    watch1.Stop();
 
-
-    CStopwatch theSW2;
-    theSW2.Start();
+    Stopwatch watch2;
+#ifdef USE_STL
     for(i=0;i<500;i++){
       string s;
       wchar_t theChar('a');
@@ -2012,9 +2055,10 @@ int CStringTester::TestStringPerformance() {
         s.append('a',1);
       }
     }
-    theSW2.Stop();
+#endif
+    watch2.Stop();
   
-    cout << "  Append('a'); nsCString: " << theSW1.CpuTime() << " STL::string: " << theSW2.CpuTime() << endl;
+    printf("Append('a')         NSCString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
     int x=0;
   }
 
@@ -2026,9 +2070,9 @@ int CStringTester::TestStringPerformance() {
     char pbuf1[10]={'a','b','c','d','e','f',0};
     char pbuf2[10]={'1','2','3',0};
 
-    CStopwatch theSW1;
-    theSW1.Start();
-    for(int i=0;i<1000;i++){
+    Stopwatch watch1;
+    int i;
+    for(i=0;i<1000;i++){
       nsCString s("abcdef");
       int inspos=3;
       for(int j=0;j<100;j++){
@@ -2036,21 +2080,22 @@ int CStringTester::TestStringPerformance() {
         inspos+=3;
       }
     }
-    theSW1.Stop();
+    watch1.Stop();
 
-
-    CStopwatch theSW2;
-    theSW2.Start();
+    Stopwatch watch2;
+#ifdef USE_STL
     for(i=0;i<1000;i++){
       string s(pbuf1);
       int inspos=3;
       for(int j=0;j<100;j++){
         s.insert(inspos,pbuf2);
+        inspos+=3;
       }
     }
-    theSW2.Stop();
+#endif
+    watch2.Stop();
   
-    cout << "  Insert(\"123\"); nsCString: " << theSW1.CpuTime() << " STL::string: " << theSW2.CpuTime() << endl;
+    printf("insert(123)         NSCString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
     int x=0;
   }
 
@@ -2058,59 +2103,61 @@ int CStringTester::TestStringPerformance() {
     //Let's test substring searching performance...
     //**************************************************
   {
-    char pbuf1[] = {'a','a','a','a','a','a','a','a','a','a','b',0};
-    char pbuf2[]   = {'a','a','b',0};
+    char *pbuf1 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" \
+                 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                 "aab";
+               
+    char *pbuf2 = "aab";
 
     nsCString s(pbuf1);
 
-    CStopwatch theSW1;
-    theSW1.Start();
-    for(int i=-1;i<1000000;i++) {
-      PRInt32 result=s.Find(pbuf2,PR_FALSE,i);
+    Stopwatch watch1;
+    int i;
+    for(i=-1;i<20000;i++) {
+      PRInt32 result=s.Find(pbuf2,PR_FALSE);
     }
-    theSW1.Stop();
+    watch1.Stop();
 
+    Stopwatch watch2;
+#ifdef USE_STL
     string ws(pbuf1);
-
-    CStopwatch theSW2;
-    theSW2.Start();
-    for(i=-1;i<1000000;i++) {
-      PRInt32 result=ws.find(pbuf2,0,3);
+    for(i=-1;i<20000;i++) {
+      PRInt32 result=ws.find(pbuf2);
     }
-    theSW2.Stop();
+#endif
+    watch2.Stop();
 
-    cout << "  Find(\"aab\"); nsCString: " << theSW1.CpuTime() << " STL::string: " << theSW2.CpuTime() << endl;
+    printf("Find(aab)           NSCString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
   }
-
 
     //**************************************************
     //Now let's test comparisons...
     //**************************************************
   {
-    nsCString  s("aaaaaaaaaaaaaaaaaaab");
     char*  target="aaaaaaaaaaaaab";
     size_t theLen=strlen(target);
 
-    CStopwatch theSW1;
-    theSW1.Start();
+    Stopwatch watch1;
+    nsCString  s("aaaaaaaaaaaaaaaaaaab");
     int result=0;
-    for(int i=-1;i<1000000;i++) {
+    int i;
+    for(i=-1;i<1000000;i++) {
       result=s.Compare(target,PR_FALSE,theLen);
       result++;
     }
-    theSW1.Stop();
+    watch1.Stop();
 
+    Stopwatch watch2;
+#ifdef USE_STL
     string ws("aaaaaaaaaaaaaaaaaaab");
-
-    CStopwatch theSW2;
-    theSW2.Start();
     for(i=-1;i<1000000;i++) {
       result=ws.compare(0,theLen,target);
       result++;
     }
-    theSW2.Stop();
+#endif
+    watch2.Stop();
 
-    cout << "  Compare(\"aaaaaaaaaaaaaab\"); nsCString: " << theSW1.CpuTime() << " STL::string: " << theSW2.CpuTime() << endl;
+    printf("Compare(aaaaaaaab)  NSCString: %f  STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
 
   }
 
@@ -2120,53 +2167,44 @@ int CStringTester::TestStringPerformance() {
   {
 
     int strcount=6000;
-    int outerIter=200;
-    int innerIter=1000;
+    int outerIter=100;
+    int innerIter=100;
 
     char* buffer = "1234567890";
     nsCString source1;  //build up our target string...
-    for(int i=0;i<strcount;i++) {
+    int i;
+    for(i=0;i<strcount;i++) {
       source1.Append(buffer);
     }
 
-    CStopwatch theSW1;
-    theSW1.Start();
-
-    for(i=0;i<outerIter;i++) {
-    
-      theSW1.Stop();  //don't time the building of our test string...
+    Stopwatch watch1;
+    for(i=0;i<outerIter;i++) {    
       nsCString s1(source1);
-      theSW1.Start();
-
       for(int j=0;j<innerIter;j++){
         s1.Cut(20,50);
       }
     }
-    theSW1.Stop();
+    watch1.Stop();
+    printf("Cut(...)            NSCString: %f ",watch1.Elapsed());
 
-
+#ifdef USE_STL
     string source2;  //build up our target string...
     for(i=0;i<strcount;i++) {
       source2.append(buffer);
     }
 
-    CStopwatch theSW2;
-    theSW2.Start();
-
+    Stopwatch watch2;
     for(i=0;i<outerIter;i++) {
-    
-      theSW2.Stop();  //don't time the building of our test string...
       string s2(source2);
-      theSW2.Start();
-
       for(int j=0;j<innerIter;j++){
         s2.erase(20,50);
       }
     }
-    theSW2.Stop();
+    watch2.Stop();
 
-    cout << "  Delete(...); nsCString: " << theSW1.CpuTime() << " STL:string: " << theSW2.CpuTime() << endl;
-
+    printf(" STL: %f",watch2.Elapsed());
+#endif
+    printf("\n");
   }
 
 
@@ -2176,40 +2214,39 @@ int CStringTester::TestStringPerformance() {
   {
 
     nsCString s1;
-    for(int i=0;i<100;i++) {
+    int i;
+    for(i=0;i<100;i++) {
       s1.Append("1234567890",10);
     }
     s1+="xyz";
 
-    CStopwatch theSW1;
-    theSW1.Start();
-
+    Stopwatch watch1;
     for(i=0;i<100000;i++) {
       int f=s1.FindChar('z',PR_FALSE,0);
     }
-    theSW1.Stop();
+    watch1.Stop();
+    printf("FindChar('z')       NSCString: %f ",watch1.Elapsed());
 
-
+#ifdef USE_STL
     string s2;
     for( i=0;i<100;i++) {
       s2.append("1234567890");
     }
     s2.append("xyz");
 
-    CStopwatch theSW2;
-    theSW2.Start();
-
+    Stopwatch watch2;
     for(i=0;i<100000;i++) {
       int f=s2.find_first_of('z',0);
     }
-    theSW2.Stop();
-
-    cout << "  FindChar(...); nsCString: " << theSW1.CpuTime() << " STL:string: " << theSW2.CpuTime() << endl;
+    watch2.Stop();
+    printf(" STL: %f\n",watch1.Elapsed(),watch2.Elapsed());
+#endif
+    printf("\n");
 
   }
-
   return 0;
 }
+
 
 /**
  * This method is here as a place to put known regressions...
