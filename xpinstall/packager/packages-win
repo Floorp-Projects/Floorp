@@ -167,14 +167,6 @@ bin\components\nsDictionary.js
 bin\components\nsXmlRpcClient.js
 
 ; chrome stuff
-bin\chrome\autocomplete.xml
-bin\chrome\htmlBindings.xml
-bin\chrome\menulistBindings.xml
-bin\chrome\platformHTMLBindings.xml
-bin\chrome\radioBindings.xml
-bin\chrome\treeBindings.xml
-bin\chrome\xul.css
-bin\chrome\xulBindings.xml
 bin\chrome\packages\core\*
 bin\chrome\packages\widget-toolkit\*
 bin\chrome\locales\en-US\*
