@@ -2410,7 +2410,42 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
     nsCOMPtr<nsIDOMHTMLLinkElement> nodeAsLink = do_QueryInterface(aNode);
     if (nodeAsLink)
     {
-        StoreURIAttribute(aNode, "href");
+        // Test if the link has a rel value indicating it to be a stylesheet
+        nsAutoString linkRel;
+        if (NS_SUCCEEDED(nodeAsLink->GetRel(linkRel)) && !linkRel.IsEmpty())
+        {
+            nsReadingIterator<PRUnichar> start;
+            nsReadingIterator<PRUnichar> end;
+            nsReadingIterator<PRUnichar> current;
+
+            linkRel.BeginReading(start);
+            linkRel.EndReading(end);
+
+            // Walk through space delimited string looking for "stylesheet"
+            for (current = start; current != end; current++)
+            {
+                // Ignore whitespace
+                if (nsCRT::IsAsciiSpace(*current))
+                    continue;
+
+                // Grab the next space delimited word
+                nsReadingIterator<PRUnichar> startWord = current;
+                do {
+                    current++;
+                } while (!nsCRT::IsAsciiSpace(*current) && current != end);
+
+                // Store the link for fix up if it says "stylesheet"
+                nsAutoString subString; subString = Substring(startWord, current);
+                ToLowerCase(subString);
+                if (subString.Equals(NS_LITERAL_STRING("stylesheet")))
+                {
+                    StoreURIAttribute(aNode, "href");
+                    return NS_OK;
+                }
+                if (current == end)
+                    break;
+            }
+        }
         return NS_OK;
     }
 
@@ -2632,9 +2667,15 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
-            FixupNodeAttribute(*aNodeOut, "href");
-        // TODO if "type" attribute == "text/css"
-        //        fixup stylesheet
+            // First see if the link represents linked content
+            rv = FixupNodeAttribute(*aNodeOut, "href");
+            if (NS_FAILED(rv))
+            {
+                // Perhaps this link is actually an anchor to related content
+                FixupAnchor(*aNodeOut);
+            }
+            // TODO if "type" attribute == "text/css"
+            //        fixup stylesheet
         }
         return rv;
     }
@@ -2828,11 +2869,14 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
     {
         nsString uri;
         attrNode->GetNodeValue(uri);
-        FixupURI(uri);
-        attrNode->SetNodeValue(uri);
+        rv = FixupURI(uri);
+        if (NS_SUCCEEDED(rv))
+        {
+            attrNode->SetNodeValue(uri);
+        }
     }
 
-    return NS_OK;
+    return rv;
 }
 
 nsresult
