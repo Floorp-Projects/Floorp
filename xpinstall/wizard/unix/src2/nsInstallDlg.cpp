@@ -66,7 +66,6 @@ static int              bDownload = FALSE;
 static struct timeval   sDLStartTime;
 static int              bDLPause = FALSE;
 static int              bDLCancel = FALSE;
-static int              bInstallClicked = FALSE;
 
 nsInstallDlg::nsInstallDlg() :
     mMsg0(NULL)
@@ -179,8 +178,6 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
         if (bDownload && sDLTable)
             gtk_widget_hide(sDLTable);
         XI_GTK_UPDATE_UI();
-
-        bInstallClicked = TRUE;
     }
 
     PerformInstall();
@@ -558,9 +555,9 @@ nsInstallDlg::PerformInstall()
     err = engine->Download(bCus, comps);
     if (err == E_DL_DROP_CXN)
     {
+        ShowCxnDroppedDlg();
         if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
             DLPause(NULL, NULL);
-        ShowCxnDroppedDlg();
         return err;
     }
     else if (err == E_CRC_FAILED)
@@ -1030,6 +1027,8 @@ nsInstallDlg::DLPause(GtkWidget *aWidget, gpointer aData)
 
     // enable resume button
     gtk_widget_set_sensitive(gCtx->next, TRUE);
+
+    gtk_main();
 }
 
 void
@@ -1043,13 +1042,6 @@ nsInstallDlg::DLResume(GtkWidget *aWidget, gpointer aData)
         return;
     }
 
-    if (bInstallClicked)
-    {
-        DUMP("Lingering signal from when Install clicked");
-        bInstallClicked = FALSE;
-        return;
-    }
-
     DUMP("Unsetting bDLPause");
     bDLPause = FALSE;
 
@@ -1058,6 +1050,8 @@ nsInstallDlg::DLResume(GtkWidget *aWidget, gpointer aData)
 
     // enable pause button
     gtk_widget_set_sensitive(gCtx->back, TRUE);
+
+    gtk_main_quit();
 
     PerformInstall();
  
@@ -1083,9 +1077,7 @@ nsInstallDlg::DLCancel(GtkWidget *aWidget, gpointer aData)
     // already paused then take explicit action to quit
     if (bDLPause)
     {
-        // mode auto has no call to gtk_main()
-        if (gCtx->opt->mMode != nsXIOptions::MODE_AUTO)
-            gtk_main_quit();
+         gtk_main_quit();
     }
 }
 
