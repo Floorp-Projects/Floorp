@@ -214,7 +214,9 @@ struct _MDCPU {
  * _irix.h seems to be quite different in regard to these macros.
  */
 #define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
+extern PRIntervalTime _PR_UNIX_GetInterval(void);
 #define _MD_INTERVAL_PER_SEC              _PR_UNIX_TicksPerSecond
+extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 
 #define _MD_EARLY_INIT		_MD_EarlyInit
 void _MD_EarlyInit(void);
