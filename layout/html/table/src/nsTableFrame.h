@@ -96,7 +96,6 @@ public:
     *   set mFirstPassValid to true
     *   do pass 2
     *     use column widths to Reflow cells
-    *     shrinkWrap Cells in each row to tallest, realigning contents within the cell
     * </pre>
     *
     * @see ResizeReflowPass1
@@ -115,21 +114,6 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
 
-  /** resize myself and my children according to the arcane rules of cell height magic. 
-    * By default, the height of a cell is the max (height of cells in its row)
-    * In the case of a cell with rowspan>1 (lets call this C),
-    *   if the sum of the height of the rows spanned (excluding C in the calculation)
-    *   is greater than or equal to the height of C, 
-    *     the cells in the rows are sized normally and 
-    *     the height of C is set to the sum of the heights (taking into account borders, padding, and margins)
-    *   else
-    *     the height of each row is expanded by a percentage of the difference between
-    *     the row's desired height and the height of C
-    */
-  virtual void ShrinkWrapChildren(nsIPresContext* aPresContext, 
-                                  nsReflowMetrics& aDesiredSize,
-                                  nsSize* aMaxElementSize);
-  
   /** allow the cell and row attributes to effect the column frame
     * currently, the only reason this exists is to support the HTML "rule"
     * that a width attribute on a cell in the first column sets the column width.
