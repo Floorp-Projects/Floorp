@@ -162,7 +162,7 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
   }
 
   // verify that uristr starts with rooturi
-  nsAutoString uri = uriStr;
+  nsAutoString uri; uri.AssignWithConversion(uriStr);
   if (uri.Find(rootURI) != 0)
     return NS_ERROR_FAILURE;
 

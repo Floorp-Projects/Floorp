@@ -388,7 +388,7 @@ NS_IMETHODIMP nsMailboxUrl::SetSpec(const char * aSpec)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
 	if (NS_SUCCEEDED(rv))
-		rv = ParseUrl("");
+		rv = ParseUrl(nsAutoString());
 	return rv;
 }
 

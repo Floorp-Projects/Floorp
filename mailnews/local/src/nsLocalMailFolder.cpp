@@ -217,7 +217,7 @@ nsFolderCompactState::FinishCompact()
 
     // add the node back the tree
   nsCOMPtr<nsIMsgFolder> child;
-  nsAutoString folderName = (const char*) idlName;
+  nsAutoString folderName; folderName.AssignWithConversion((const char*) idlName);
   rv = parentFolder->AddSubfolder(&folderName, getter_AddRefs(child));
   if (child) 
   {
@@ -491,7 +491,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 
 		folderName = currentFolderPath.GetLeafName();
-		currentFolderNameStr = folderName;
+		currentFolderNameStr.AssignWithConversion(folderName);
 		if (nsShouldIgnoreFile(currentFolderNameStr))
 		{
 			PL_strfree(folderName);
@@ -519,8 +519,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	if(NS_FAILED(rv)) return rv;
 
 	nsAutoString uri;
-	uri.Append(mURI);
-	uri.Append('/');
+	uri.AppendWithConversion(mURI);
+	uri.AppendWithConversion('/');
 	uri.Append(*name);
 
 	nsCOMPtr<nsIRDFResource> res;
@@ -544,15 +544,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	//Only set these is these are top level children.
 	if(NS_SUCCEEDED(rv) && isServer)
 	{
-		if(name->Compare("Inbox", PR_TRUE) == 0)
+		if(name->CompareWithConversion("Inbox", PR_TRUE) == 0)
 		{
 			flags |= MSG_FOLDER_FLAG_INBOX;
 			mBiffState = nsMsgBiffState_Unknown;
 		}
-		else if(name->Compare("Trash", PR_TRUE) == 0)
+		else if(name->CompareWithConversion("Trash", PR_TRUE) == 0)
 			flags |= MSG_FOLDER_FLAG_TRASH;
-		else if(name->Compare("Unsent Messages", PR_TRUE) == 0 
-			|| name->Compare("Outbox", PR_TRUE) == 0)
+		else if(name->CompareWithConversion("Unsent Messages", PR_TRUE) == 0 
+			|| name->CompareWithConversion("Outbox", PR_TRUE) == 0)
 			flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
 		//These should probably be read in from a preference.  Hacking in here for the moment.
@@ -630,7 +630,7 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
     // unfortunately we can't just say:
     //          path += sep;
     // here because of the way nsFileSpec concatenates
-    nsAutoString str((nsFilePath)path);
+    nsAutoString str; str.AssignWithConversion(NS_STATIC_CAST(nsFilePath, path));
     str += sep;
     path = nsFilePath(str);
 
@@ -1281,13 +1281,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
         parentFolder->PropagateDelete(this, PR_FALSE);
     }
 
-    nsCAutoString newNameStr(aNewName);
+    nsCAutoString newNameStr; newNameStr.AssignWithConversion(aNewName);
     oldPathSpec->Rename(newNameStr.GetBuffer());
     newNameStr += ".msf";
     oldSummarySpec.Rename(newNameStr.GetBuffer());
     if (NS_SUCCEEDED(rv) && cnt > 0)
     {
-      nsCAutoString newNameDirStr(aNewName);
+      nsCAutoString newNameDirStr; newNameDirStr.AssignWithConversion(aNewName);
       newNameDirStr += ".sbd";
       dirSpec.Rename(newNameDirStr.GetBuffer());
     }

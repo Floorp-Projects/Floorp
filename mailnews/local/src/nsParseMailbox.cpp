@@ -229,9 +229,9 @@ void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
 			{
 				// all this ugly conversion stuff is necessary because we can't sprintf a value
 				// with a PRUnichar string.
-				nsCAutoString cstr (statusString);
+				nsCAutoString cstr; cstr.AssignWithConversion(statusString);
 				char * finalString = PR_smprintf(cstr.GetBuffer(), (const char *) m_folderName);
-				nsAutoString uniFinalString(finalString);
+				nsAutoString uniFinalString; uniFinalString.AssignWithConversion(finalString);
 				m_statusFeedback->ShowStatusString(uniFinalString.GetUnicode());
 				PL_strfree(finalString);
 			}
@@ -1712,7 +1712,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 				// so we use an nsString from above.
 				PRUnichar *folderName = nsnull;
 				rv = trash->GetName(&folderName);
-				trashNameVal = nsCAutoString(folderName);
+				trashNameVal.AssignWithConversion(folderName);
 				PR_FREEIF(folderName);
 				value = (void *) trashNameVal.GetBuffer();
 			}

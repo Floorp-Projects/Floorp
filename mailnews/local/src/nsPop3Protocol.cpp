@@ -1970,9 +1970,9 @@ nsPop3Protocol::SendRetr()
 			{
 				// all this ugly conversion stuff is necessary because we can't sprintf a value
 				// with a PRUnichar string.
-				nsCAutoString cstr (statusString);
+				nsCAutoString cstr; cstr.AssignWithConversion(statusString);
 				char * finalString = PR_smprintf(cstr.GetBuffer(),m_pop3ConData->real_new_counter, m_pop3ConData->really_new_messages);
-				nsAutoString uniFinalString(finalString);
+				nsAutoString uniFinalString; uniFinalString.AssignWithConversion(finalString);
 				if (m_statusFeedback)
 					m_statusFeedback->ShowStatusString(uniFinalString.GetUnicode());
 				PL_strfree(finalString);
