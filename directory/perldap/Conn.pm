@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.4 1998/07/29 08:23:53 leif Exp $
+# $Id: Conn.pm,v 1.5 1998/07/29 08:41:39 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -29,7 +29,7 @@
 
 package Mozilla::LDAP::Conn;
 
-use Mozilla::LDAP::Utils qw(:all);
+use Mozilla::LDAP::Utils;
 use Mozilla::LDAP::API qw(/.+/);
 use Mozilla::LDAP::Entry;
 
@@ -183,7 +183,7 @@ sub search
   my $entry;
   my $res = \$resv;
 
-  $scope = str2Scope($scope);
+  $scope = Mozilla::LDAP::Utils::str2Scope($scope);
   $filter = "(objectclass=*)" if ($filter =~ /^ALL$/i);
 
   ldap_msgfree($self->{ldres}) if defined($self->{ldres});
