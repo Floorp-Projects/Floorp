@@ -58,11 +58,11 @@ ProcessorState::ProcessorState(Document* aSourceDocument,
     : mXslKeys(MB_TRUE),
       mDecimalFormats(MB_TRUE),
       mEvalContext(0),
+      mLocalVariables(0),
+      mGlobalVariableValues(MB_TRUE),
       mSourceDocument(aSourceDocument),
       xslDocument(aXslDocument),
-      resultDocument(aResultDocument),
-      mLocalVariables(0),
-      mGlobalVariableValues(MB_TRUE)
+      resultDocument(aResultDocument)
 {
     NS_ASSERTION(aSourceDocument, "missing source document");
     NS_ASSERTION(aXslDocument, "missing xslt document");
@@ -423,7 +423,6 @@ Node* ProcessorState::findTemplate(Node* aNode,
         return 0;
 
     Node* matchTemplate = 0;
-    double currentPriority = Double::NEGATIVE_INFINITY;
     ImportFrame* endFrame = 0;
     txListIterator frameIter(&mImportFrames);
 
@@ -536,7 +535,7 @@ Expr* ProcessorState::getExpr(Element* aElem, ExprAttr aAttr)
         return expr;
     }
     String attr;
-    MBool hasAttr;
+    MBool hasAttr = MB_FALSE;
     switch (aAttr) {
         case SelectAttr:
             hasAttr = aElem->getAttr(txXSLTAtoms::select, kNameSpaceID_None,
@@ -1070,7 +1069,7 @@ void ProcessorState::receiveError(const String& errorMessage, nsresult aRes)
  * This method is used for XPath Extension Functions.
  * @return the FunctionCall for the function with the given name.
 **/
-#define CHECK_FN(_name) aName == txXSLTAtoms::##_name
+#define CHECK_FN(_name) aName == txXSLTAtoms::_name
 
 nsresult ProcessorState::resolveFunctionCall(txAtom* aName, PRInt32 aID,
                                              Element* aElem,
