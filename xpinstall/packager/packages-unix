@@ -231,6 +231,8 @@ bin/res/xpinstall/*
 bin/res/throbber/*
 bin/res/toolbar/*
 bin/res/ua.css
+;debug menus reference samples dir - remove for actual releases:
+bin/res/samples/*
 
 ; this is only there if you build the irc client
 ; bin/irc/*
