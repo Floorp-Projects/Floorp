@@ -774,6 +774,7 @@
       <method name="addTab">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
         <body>
           <![CDATA[
             if (!this.mTabbedMode)
@@ -828,7 +829,7 @@
               // the document successfully loads
               b.userTypedValue = aURI;
 
-              b.loadURI(aURI, aReferrerURI);
+              b.loadURI(aURI, aReferrerURI, aCharset);
             }
 
             return t;
@@ -1255,9 +1256,10 @@
       <method name="loadURI">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
         <body>
           <![CDATA[
-            return this.mCurrentBrowser.loadURI(aURI, aReferrerURI);
+            return this.mCurrentBrowser.loadURI(aURI, aReferrerURI, aCharset);
           ]]>
         </body>
       </method>
@@ -1267,9 +1269,10 @@
         <parameter name="aURI"/>
         <parameter name="aFlags"/>
         <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
         <body>
           <![CDATA[
-            return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI);
+            return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset);
           ]]>
         </body>
       </method>

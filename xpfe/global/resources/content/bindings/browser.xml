@@ -110,11 +110,12 @@
       <method name="loadURI">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
         <body>
           <![CDATA[
             const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
             const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
-            this.loadURIWithFlags(aURI, flags, aReferrerURI);
+            this.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset);
           ]]>
         </body>
       </method>
@@ -124,11 +125,19 @@
         <parameter name="aURI"/>
         <parameter name="aFlags"/>
         <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
         <body>
           <![CDATA[
             if (!aURI)
               aURI = "about:blank";
 
+            if (aCharset) {
+              try { 
+                this.documentCharsetInfo.parentCharset = this.mAtomService.getAtom(aCharset);
+              }
+              catch (e) {
+              }
+            }
             this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, null, null);
           ]]>
         </body>
@@ -236,6 +245,11 @@
         Components.classes['@mozilla.org/preferences-service;1']
                   .getService(Components.interfaces.nsIPrefService)
                   .getBranch(null);
+      </field>
+
+      <field name="mAtomService" readonly="true">
+        Components.classes['@mozilla.org/atom-service;1']
+                  .getService(Components.interfaces.nsIAtomService);
       </field>
 
       <field name="_mStrBundle">null</field>

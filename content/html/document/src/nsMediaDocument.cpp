@@ -46,6 +46,11 @@
 #include "nsITextToSubURI.h"
 #include "nsIURL.h"
 #include "nsPrintfCString.h"
+#include "nsIContentViewer.h"
+#include "nsIMarkupDocumentViewer.h"
+#include "nsIDocShell.h"
+#include "nsIParser.h" // kCharsetFrom* macro definition
+#include "nsIDocumentCharsetInfo.h" 
 
 nsMediaDocumentStreamListener::nsMediaDocumentStreamListener(nsMediaDocument *aDocument)
 {
@@ -163,6 +168,60 @@ nsMediaDocument::StartDocumentLoad(const char*         aCommand,
 
   RetrieveRelevantHeaders(aChannel);
 
+  // We try to set the charset of the current document to that of the 
+  // 'genuine' (as opposed to an intervening 'chrome') parent document 
+  // that may be in a different window/tab. Even if we fail here,
+  // we just return NS_OK because another attempt is made in 
+  // |UpdateTitleAndCharset| and the worst thing possible is a mangled 
+  // filename in the titlebar and the file picker.
+
+  // When this document is opened in the window/tab of the referring 
+  // document (by a simple link-clicking), |prevDocCharacterSet| contains 
+  // the charset of the referring document. On the other hand, if the
+  // document is opened in a new window, it is |defaultCharacterSet| of |muCV| 
+  // where the charset of our interest is stored. In case of openining 
+  // in a new tab, we get the charset from |documentCharsetInfo|. Note that we 
+  // exclude UTF-8 as 'invalid' because UTF-8 is likely to be the charset 
+  // of a chrome document that has nothing to do with the actual content 
+  // whose charset we want to know. Even if "the actual content" is indeed 
+  // in UTF-8, we don't lose anything because the default empty value is 
+  // considered synonymous with UTF-8. 
+    
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
+  NS_ENSURE_TRUE(docShell, NS_OK); 
+
+  nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
+  nsCAutoString charset;
+
+  docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
+  if (dcInfo) {
+    nsCOMPtr<nsIAtom> csAtom;
+    dcInfo->GetParentCharset(getter_AddRefs(csAtom));
+    if (csAtom) {   // opening in a new tab
+      csAtom->ToUTF8String(charset);
+    }
+  }
+
+  if (charset.IsEmpty() || charset.Equals("UTF-8")) {
+    nsCOMPtr<nsIContentViewer> cv;
+    docShell->GetContentViewer(getter_AddRefs(cv));
+    NS_ENSURE_TRUE(cv, NS_OK); 
+    if (cv) {
+      nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);
+      if (muCV) {
+        muCV->GetPrevDocCharacterSet(charset);   // opening in the same window/tab
+        if (charset.Equals("UTF-8") || charset.IsEmpty()) {
+          muCV->GetDefaultCharacterSet(charset); // opening in a new window
+        }
+      } // muCV
+    } // cv
+  }
+
+  if (!charset.IsEmpty() && !charset.Equals("UTF-8")) {
+    SetDocumentCharacterSet(charset);
+    mCharacterSetSource = kCharsetFromUserDefault;
+  }
+
   return NS_OK;
 }
 
@@ -250,26 +309,36 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
   nsXPIDLString fileStr;
   nsCOMPtr<nsIURI> uri = do_QueryInterface(mDocumentURL);
   if (uri) {
-    nsCAutoString originCharset;
-    uri->GetOriginCharset(originCharset);
     nsCAutoString fileName;
     nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
     if (url)
       url->GetFileName(fileName);
-    if (!originCharset.IsEmpty()) {
-      // set doc. charset to that of the referring document if known so that
-      // filepicker comes up with the correct non-ascii filename.
-      SetDocumentCharacterSet(originCharset);
-      if (!fileName.IsEmpty()) {
-        nsresult rv;
-        nsCOMPtr<nsITextToSubURI> textToSubURI = 
-          do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv))
-          rv = textToSubURI->UnEscapeURIForUI(originCharset, fileName, fileStr);
-      }
+
+    nsCAutoString docCharset;
+
+    // Now that the charset is set in |StartDocumentLoad| to the charset of
+    // the document viewer instead of a bogus value ("ISO-8859-1" set in
+    // |nsDocument|'s ctor), the priority is given to the current charset. 
+    // This is necessary to deal with a media document being opened in a new 
+    // window or a new tab, in which case |originCharset| of |nsIURI| is not 
+    // reliable.
+    if (mCharacterSetSource != kCharsetUninitialized) {  
+      docCharset = mCharacterSet;
+    }
+    else {  
+      // resort to |originCharset|
+      uri->GetOriginCharset(docCharset);
+      SetDocumentCharacterSet(docCharset);
+    }
+    if (!fileName.IsEmpty()) {
+      nsresult rv;
+      nsCOMPtr<nsITextToSubURI> textToSubURI = 
+        do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = textToSubURI->UnEscapeURIForUI(docCharset, fileName, fileStr);
     }
     if (fileStr.IsEmpty())
-      fileStr.Assign(NS_ConvertUTF8toUCS2(fileName));
+      CopyUTF8toUTF16(fileName, fileStr);
   }
 
 
