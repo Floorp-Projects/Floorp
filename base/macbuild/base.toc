@@ -2,6 +2,7 @@
 mozilla/base/src/mac/nsTimerMac.cpp
 mozilla/base/src/nsArena.cpp
 mozilla/base/src/nsAtomTable.cpp
+mozilla/base/src/nsBaseDLL.cpp
 mozilla/base/src/nsBTree.cpp
 mozilla/base/src/nsByteBuffer.cpp
 mozilla/base/src/nsCRT.cpp
@@ -10,6 +11,7 @@ mozilla/base/src/nsEscape.cpp
 mozilla/base/src/nsFileSpec.cpp
 mozilla/base/src/nsFileStream.cpp
 mozilla/base/src/nsRBTree.cpp
+mozilla/base/src/nsProperties.cpp
 mozilla/base/src/nsSizeOfHandler.cpp
 mozilla/base/src/nsString.cpp
 mozilla/base/src/nsUnicharBuffer.cpp
