@@ -27,32 +27,21 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 FILES=\
-        content1.xul					\
-        content2.xul					\
-        content3.xul					\
-        content4.xul					\
-		contentManager4.xul				\
-        cpw.xul							\
-        navigationStart.xul				\
-		navigationFinish.xul			\
-        navigationManagerStart.xul		\
-		navigationManagerFinish.xul		\
-        cpwManager.xul					\
-		renameProfile.html				\
-		profileManagerContainer.xul		\
-		profileManager.html				\
-		errorDialog.html				\
-        common.css						\
-		pm.css							\
-		pm.xul							\
-		pm.js							\
-		pmrename.xul					\
-	 	cpwPreg.xul						\
-		navStartPreg.xul				\
-		navFinishPreg.xul				\
-		preg.html						\
-		pmDelete.xul					\
-		pmMigrateAll.xul				\
+        common.css				\
+        cpw.css					\
+        cpw.js					\
+        cpw.xul					\
+        pm.css					\
+		pm.js					\
+        pm.xul					\
+		pmDelete.xul			\
+        pmMigrateAll.xul		\
+		pmRename.xul			\
+		test-content1_1.xul		\
+		test-content1_2.xul		\
+		test-tab2.xul			\
+        test-tab3.xul			\
+		test-tab4.xul			\
         $(NULL)
 
 
