@@ -39,6 +39,13 @@
 
 #undef CHEAP_PERFORMANCE_MEASURMENT
 
+/* XXX we are simply creating a GC and setting its function to Copy.
+   we shouldn't be doing this every time this method is called.  this creates
+   way more trips to the server than we should be doing so we are creating a
+   static one.
+*/
+static GdkGC *s1bitGC = nsnull;
+static GdkGC *sXbitGC = nsnull;
 
 NS_IMPL_ISUPPORTS1(nsImageGTK, nsIImage)
 
@@ -312,7 +319,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
   gdk_draw_rgb_image (drawing->GetDrawable(),
-                      drawing->GetGC(),
+                      ((nsRenderingContextGTK&)aContext).GetGC(),
                       aDX, aDY, aDWidth, aDHeight,
                       GDK_RGB_DITHER_MAX,
                       mImageBits + mRowBytes * aSY + 3 * aDX,
@@ -353,7 +360,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   // make a copy of the GC so that we can completly restore the things we are about to change
   GdkGC *copyGC;
   copyGC = gdk_gc_new(drawing->GetDrawable());
-  gdk_gc_copy(copyGC, drawing->GetGC());
+  gdk_gc_copy(copyGC, ((nsRenderingContextGTK&)aContext).GetGC());
 
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
   gStartTime = gPixmapTime = PR_Now();
@@ -367,8 +374,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   Pixmap pixmap = 0;
   Display *dpy = nsnull;
   Visual *visual = nsnull;
-  GC      gc;
-  XGCValues gcv;
 
   // Create gc clip-mask on demand
   if (mAlphaBits && IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
@@ -417,10 +422,13 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     // Write into the pixemap that is underneath gdk's mAlphaPixmap
     // the image we just created.
     pixmap = GDK_WINDOW_XWINDOW(mAlphaPixmap);
-    memset(&gcv, 0, sizeof(XGCValues));
-    gcv.function = GXcopy;
-    gc = XCreateGC(dpy, pixmap, GCFunction, &gcv);
 
+    if (!s1bitGC) {
+      GdkGCValues gcv;
+      memset(&gcv, 0, sizeof(GdkGCValues));
+      gcv.function = GDK_COPY;
+      s1bitGC = gdk_gc_new_with_values(mAlphaPixmap, &gcv, GDK_GC_FUNCTION);
+    }
 
     // does this code do anything other than cause a few problems?
 #if 0
@@ -435,9 +443,8 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     NS_RELEASE(clipRegion);
 #endif
 
-    XPutImage(dpy, pixmap, gc, x_image, 0, 0, 0, 0,
+    XPutImage(dpy, pixmap, GDK_GC_XGC(s1bitGC), x_image, 0, 0, 0, 0,
               aWidth, aHeight);
-    XFreeGC(dpy, gc);
 
     // Now we are done with the temporary image
     x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
@@ -507,24 +514,28 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
   if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
 
-    GdkGC *ggc;
-    ggc = gdk_gc_new(mImagePixmap);
+    if (!sXbitGC) {
+      GdkGCValues gcv;
+      memset(&gcv, 0, sizeof(GdkGCValues));
+      gcv.function = GDK_COPY;
+      sXbitGC = gdk_gc_new(mImagePixmap);
+    }
+    /*    GdkGC *ggc;
+          ggc = gdk_gc_new(mImagePixmap);*/
 
     // Render the image bits into an off screen pixmap
     gdk_draw_rgb_image (mImagePixmap,
-                        ggc,
+                        sXbitGC,
                         0, 0, aWidth, aHeight,
                         GDK_RGB_DITHER_MAX,
                         mImageBits, mRowBytes);
-
-    gdk_gc_destroy(ggc);
   }
 
   if (mAlphaPixmap)
   {
     // Setup gc to use the given alpha-pixmap for clipping
-    gdk_gc_set_clip_mask(drawing->GetGC(), mAlphaPixmap);
-    gdk_gc_set_clip_origin(drawing->GetGC(), aX, aY);
+    gdk_gc_set_clip_mask(copyGC, mAlphaPixmap);
+    gdk_gc_set_clip_origin(copyGC, aX, aY);
   }
 
 #ifdef TRACE_IMAGE_ALLOCATION
@@ -536,34 +547,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
          aHeight);
 #endif
 
-#if 0
-  // code to apply the clip region to the alpha mask
-  nsIRegion *clipRegion = nsnull;
-  if (NS_SUCCEEDED(aContext.GetClipRegion(&clipRegion)) && mImagePixmap && mAlphaPixmap)
-  {
-    GdkDrawable = gdk_pixmap_new(nsnull, mAlphaWidth, mAlphaHeight, )
-    PRInt32 x, y, w, h;
-    clipRegion->GetBoundingBox(&x, &y, &w, &h);
-
-    aContext.SetColor(NS_RGB(255, 255, 255));
-    gdk_gc_set_function(drawing->GetGC(), GDK_XOR);
-    // flip the current contents
-    gdk_draw_rectangle(mAlphaPixmap, drawing->GetGC(), TRUE, 0, 0, mAlphaWidth, mAlphaHeight);
-
-    gint dw, dh;
-    gdk_window_get_size(drawing->GetDrawable(), &dw, &dh);
-
-    //  gdk_draw_rectangle(mAlphaPixmap, drawing->GetGC(), TRUE, 0 - aX, y, w, h);
-
-    gdk_gc_set_function(drawing->GetGC(), GDK_COPY);
-
-    NS_RELEASE(clipRegion);
-  }
-#endif
-
   // copy our off screen pixmap onto the window.
   gdk_window_copy_area(drawing->GetDrawable(),      // dest window
-                       drawing->GetGC(),            // gc
+                       copyGC,                      // gc
                        aX,                          // xsrc
                        aY,                          // ysrc
                        mImagePixmap,                // source window
@@ -573,8 +559,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
                        aHeight);                    // height
 
 
-  // restore GC we copied at the beginning
-  gdk_gc_copy(drawing->GetGC(), copyGC);
   gdk_gc_unref(copyGC);
 
 

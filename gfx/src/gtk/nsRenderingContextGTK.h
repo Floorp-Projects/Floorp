@@ -69,6 +69,7 @@ public:
   NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
   NS_IMETHOD GetHints(PRUint32& aResult);
 
+  NS_IMETHOD PushState(PRInt32 aFlags);
   NS_IMETHOD PushState(void);
   NS_IMETHOD PopState(PRBool &aClipEmpty);
 
@@ -158,6 +159,8 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
+  GdkGC *GetGC();
+
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string
@@ -195,6 +198,11 @@ protected:
  // graphic state stack (GraphicsState)
   nsVoidArray           *mStateCache;
 
+  GdkGC                 *mGC;
+  GdkFunction            mFunction;
+  GdkLineStyle           mLineStyle;
+  gchar                 *mDashList;
+  gint                   mDashes;
   nscolor                mCurrentColor;
   GdkFont               *mCurrentFont;
   nsLineStyle            mCurrentLineStyle;

@@ -27,8 +27,8 @@ nsGraphicsState::nsGraphicsState()
 {
   mMatrix = nsnull;
   mClipRegion = nsnull;
-  mColor = NS_RGB(0, 0, 0);
-  mLineStyle = nsLineStyle_kSolid;
+  mColor = -1;
+  mLineStyle = -1;
   mFontMetrics = nsnull;
 }
 //////////////////////////////////////////////////////////////////////////

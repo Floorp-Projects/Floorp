@@ -43,6 +43,7 @@ CPPSRCS		= \
 		nsGraphicsStateGTK.cpp \
 		nsImageGTK.cpp \
 		nsRegionGTK.cpp \
+		nsGCCache.cpp \
 		nsRenderingContextGTK.cpp \
 		$(NULL)
 

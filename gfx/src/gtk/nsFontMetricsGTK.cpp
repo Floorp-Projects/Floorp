@@ -2590,13 +2590,15 @@ nsFontMetricsGTK::GetWidth(nsFontGTK* aFont, const PRUnichar* aString,
 }
 
 void
-nsFontMetricsGTK::DrawString(nsDrawingSurfaceGTK* aSurface, nsFontGTK* aFont,
-  nscoord aX, nscoord aY, const PRUnichar* aString, PRUint32 aLength)
+nsFontMetricsGTK::DrawString(nsRenderingContextGTK* aContext, nsDrawingSurfaceGTK* aSurface,
+                             nsFontGTK* aFont,
+                             nscoord aX, nscoord aY,
+                             const PRUnichar* aString, PRUint32 aLength)
 {
   XChar2b buf[512];
   gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
     (char*) buf, sizeof(buf));
-  ::gdk_draw_text(aSurface->GetDrawable(), aFont->mFont, aSurface->GetGC(), aX,
+  ::gdk_draw_text(aSurface->GetDrawable(), aFont->mFont, aContext->GetGC(), aX,
     aY + aFont->mBaselineAdjust, (char*) buf, len);
 }
 

@@ -31,6 +31,7 @@
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
+#include "nsRenderingContextGTK.h"
 #include "nsDeviceContextGTK.h"
 
 #include <gdk/gdk.h>
@@ -126,9 +127,9 @@ public:
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
 #endif
-  static void DrawString(nsDrawingSurfaceGTK* aSurface, nsFontGTK* aFont,
+  static void DrawString(nsRenderingContextGTK* aContext, nsDrawingSurfaceGTK* aSurface, nsFontGTK* aFont,
                          nscoord aX, nscoord aY, const PRUnichar* aString,
-			 PRUint32 aLength);
+                         PRUint32 aLength);
   static void InitFonts(void);
 
   friend void PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,

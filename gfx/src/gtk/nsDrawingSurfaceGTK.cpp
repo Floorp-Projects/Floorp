@@ -89,6 +89,8 @@ nsDrawingSurfaceGTK :: ~nsDrawingSurfaceGTK()
 
   if (mImage)
     ::gdk_image_destroy(mImage);
+
+  gdk_gc_unref(mGC);
 }
 
 /**
@@ -321,7 +323,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: GetPixelFormat(nsPixelFormat *aFormat)
 
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 {
-  mGC = aGC;
+  mGC = gdk_gc_ref(aGC);
   mPixmap = aDrawable;
 // this is definatly going to be on the screen, as it will be the window of a
 // widget or something.
@@ -331,7 +333,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
      the whole window).  this might should be done on a per-drawable basis
      instead of having a 1 gc for the whole app which seems to be somewhat problematic.
   */
-  gdk_gc_set_clip_mask(aGC, nsnull);
+  //gdk_gc_set_clip_mask(aGC, nsnull);
 
   if (mImage)
     gdk_image_destroy(mImage);
@@ -346,7 +348,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
 //  ::g_return_val_if_fail (aGC != nsnull, NS_ERROR_FAILURE);
 //  ::g_return_val_if_fail ((aWidth > 0) && (aHeight > 0), NS_ERROR_FAILURE);
 
-  mGC = aGC;
+  mGC = gdk_gc_ref(aGC);
   mWidth = aWidth;
   mHeight = aHeight;
   mFlags = aFlags;
@@ -361,7 +363,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
      the whole window).  this might should be done on a per-drawable basis
      instead of having a 1 gc for the whole app which seems to be somewhat problematic.
   */
-  gdk_gc_set_clip_mask(aGC, nsnull);
+  //gdk_gc_set_clip_mask(aGC, nsnull);
 
   if (mImage)
     gdk_image_destroy(mImage);
@@ -370,27 +372,11 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDrawingSurfaceGTK :: GetGC(GdkGC *aGC)
-{
-  aGC = ::gdk_gc_ref(mGC);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDrawingSurfaceGTK :: ReleaseGC(void)
-{
-  ::gdk_gc_unref(mGC);
-  return NS_OK;
-}
-
 /* below are utility functions used mostly for nsRenderingContext and nsImage
  * to plug into gdk_* functions for drawing.  You should not set a pointer
  * that might hang around with the return from these.  instead use the ones
  * above.  pav
  */
-GdkGC *nsDrawingSurfaceGTK::GetGC(void)
-{
-  return mGC;
-}
 
 GdkDrawable *nsDrawingSurfaceGTK::GetDrawable(void)
 {
