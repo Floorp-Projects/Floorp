@@ -446,6 +446,7 @@ nsEditor::Undo(PRUint32 aCount)
 {
   if (gNoisy) { printf("Editor::Undo ----------\n"); }
   nsresult result = NS_OK;
+  ForceCompositionEnd();
 
   nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
 
@@ -632,6 +633,7 @@ nsEditor::EndPlaceHolderTransaction()
 NS_IMETHODIMP nsEditor::SelectAll()
 {
   if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
+  ForceCompositionEnd();
 
   nsCOMPtr<nsIDOMSelection> selection;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
