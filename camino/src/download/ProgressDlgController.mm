@@ -424,7 +424,7 @@ static id gSharedProgressController = nil;
 -(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay
 {
   [self rebuildViews]; // to swap in the completed view
-  [[[self window] toolbar] validateVisibleItems];    // force update which doesn't always happen
+  [[[self window] toolbar] validateVisibleItems]; // force update which doesn't always happen
 }
 
 -(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay

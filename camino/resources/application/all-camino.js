@@ -74,6 +74,7 @@ pref("browser.urlbar.autocomplete.enabled", true);
 // Default to auto download enabled but auto helper dispatch disabled
 pref("browser.download.autoDownload", true);
 pref("browser.download.autoDispatch", false);
+pref("browser.download.progressDnldDialog.keepAlive", true);
 
 pref("chimera.enable_rendezvous", true);
 

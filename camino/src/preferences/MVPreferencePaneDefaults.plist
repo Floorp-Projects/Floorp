@@ -2,5 +2,7 @@
   org.mozilla.chimera.preference.appearance,
   org.mozilla.chimera.preference.privacy,
   org.mozilla.chimera.preference.security,
-  org.mozilla.chimera.preference.webfeatures
+  org.mozilla.chimera.preference.webfeatures,
+  org.mozilla.camino.preference.tabs,
+  org.mozilla.camino.preference.downloads,
 )
