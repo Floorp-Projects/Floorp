@@ -23,16 +23,6 @@
 import com.compilercompany.ecmascript.*;
 import java.io.*;
 
-/**
- * Dummy command line parsing class.
- * Probably shouldn't use sun.tools.util.CommandLine.
- */
-class CommandLine {
-    static String[] parse(String[] args) throws IOException {
-        return args;
-    }
-}
-
 /*
  * The main driver.
  */
@@ -46,15 +36,6 @@ public class Main {
      */
 
     public static void main(String[] args) {
-		/* Preprocess @file arguments */
-		try {
-			args = CommandLine.parse(args);
-		} catch (FileNotFoundException e) {
-			System.out.println("Can't read "+ e.getMessage());
-		} catch (IOException e) {
-			System.out.println("I/O error " + e.getMessage());
-		}
-		
 		new Main(args).run();
 		System.exit(0);
 	}
