@@ -86,7 +86,6 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
 
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  nscoord width;
 
   if (disp->mVisible) {
     const nsStyleList* myList =
@@ -433,8 +432,6 @@ nsBulletFrame::Reflow(nsIPresContext& aPresContext,
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
-  const nsStyleSpacing* space =(const nsStyleSpacing*)
-    mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   nsHTMLReflowState::ComputeBorderPaddingFor(this,
                                              aReflowState.parentReflowState,
