@@ -565,7 +565,7 @@ void ImagePart::MapAttributesInto(nsIStyleContext* aContext,
       display->mFloats = NS_STYLE_FLOAT_RIGHT;
       break;
     default:
-      text->mVerticalAlign = mAlign;
+      text->mVerticalAlignFlags = mAlign;
       break;
     }
   }
