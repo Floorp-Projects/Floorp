@@ -225,7 +225,7 @@ sub sql_group_by {
 sub sql_string_concat {
     my ($self, @params) = @_;
     
-    return join(' || ', @params);
+    return '(' . join(' || ', @params) . ')';
 }
 
 sub sql_fulltext_search {
