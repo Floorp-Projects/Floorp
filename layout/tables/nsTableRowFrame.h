@@ -51,6 +51,8 @@ class nsReflowTimer;
 
 #define NS_ROW_NEED_SPECIAL_REFLOW          0x20000000
 #define NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT 0x40000000
+// This is also used on rows, from nsTableRowGroupFrame.h
+// #define NS_REPEATED_ROW_OR_ROWGROUP      0x10000000
 
 /**
  * nsTableRowFrame is the frame that maps table rows 

@@ -365,21 +365,29 @@ nsTableFrame::RePositionViews(nsIFrame* aFrame)
   nsContainerFrame::PositionChildViews(aFrame);
 }
 
+static PRBool
+IsRepeatedFrame(nsIFrame* kidFrame)
+{
+  return (kidFrame->GetType() == nsLayoutAtoms::tableRowFrame ||
+          kidFrame->GetType() == nsLayoutAtoms::tableRowGroupFrame) &&
+         (kidFrame->GetStateBits() & NS_REPEATED_ROW_OR_ROWGROUP);
+}
+
 PRBool
 nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
                              nsIFrame* aNextFrame)
 {
   const nsStyleDisplay* display = aSourceFrame.GetStyleDisplay();
-  // don't allow a page break after a repeated header
-  if (display->mBreakAfter && (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP != display->mDisplay)) {
-    return PR_TRUE;
+  // don't allow a page break after a repeated element ...
+  if (display->mBreakAfter && !IsRepeatedFrame(&aSourceFrame)) {
+    return !(aNextFrame && IsRepeatedFrame(aNextFrame)); // or before
   }
 
   if (aNextFrame) {
     display = aNextFrame->GetStyleDisplay();
-    // don't allow a page break before a repeated footer
-    if (display->mBreakBefore && (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP != display->mDisplay)) {
-      return PR_TRUE;
+    // don't allow a page break before a repeated element ...
+    if (display->mBreakBefore && !IsRepeatedFrame(aNextFrame)) {
+      return !IsRepeatedFrame(&aSourceFrame); // or after
     }
   }
   return PR_FALSE;
