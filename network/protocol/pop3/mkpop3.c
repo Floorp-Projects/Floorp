@@ -2188,8 +2188,8 @@ net_pop3_retr_response(ActiveEntry *ce)
 
 		TRACEMSG(("Done opening message stream!"));
 													
-		if(!cd->msg_closure)
-		    return(net_pop3_error(ce, MK_POP3_MESSAGE_WRITE_ERROR));
+		/* if(!cd->msg_closure)
+		    return(net_pop3_error(ce, MK_POP3_MESSAGE_WRITE_ERROR)); */
 	}
 
 	if (cd->data_buffer_size > 0)
@@ -2820,7 +2820,7 @@ net_ProcessPop3 (ActiveEntry *ce)
 					 */
             		if(ce->socket != NULL)
 					  {
-                		NET_TotalNumberOfOpenConnections--;
+                		if (NET_TotalNumberOfOpenConnections > 0) NET_TotalNumberOfOpenConnections--;
                 		NET_ClearConnectSelect(ce->window_id, ce->socket);
                 		TRACEMSG(("Closing and clearing socket ce->socket: %d", ce->socket));
                 		PR_Close(ce->socket);
@@ -2879,7 +2879,7 @@ net_ProcessPop3 (ActiveEntry *ce)
 					/* close and clear the socket here
 					 * so that we don't try and send a RSET
 					 */
-                	NET_TotalNumberOfOpenConnections--;
+                	if (NET_TotalNumberOfOpenConnections > 0) NET_TotalNumberOfOpenConnections--;
                 	NET_ClearConnectSelect(ce->window_id, ce->socket);
                 	TRACEMSG(("Closing and clearing socket ce->socket: %d", ce->socket));
                 	PR_Close(ce->socket);
@@ -3142,7 +3142,7 @@ net_ProcessPop3 (ActiveEntry *ce)
                 	TRACEMSG(("Closing and clearing socket ce->socket: %d",
 							  ce->socket));
                 	PR_Close(ce->socket);
-                	NET_TotalNumberOfOpenConnections--;
+                	if (NET_TotalNumberOfOpenConnections > 0) NET_TotalNumberOfOpenConnections--;
                 	ce->socket = NULL;
                   }
 
@@ -3150,7 +3150,7 @@ net_ProcessPop3 (ActiveEntry *ce)
 				  {
 					MSG_IncorporateAbort(cd);
 					cd->msg_closure = NULL;
-                    /*					MSG_AbortMailDelivery(cd->pane); */
+                    /* MSG_AbortMailDelivery(cd->pane); */
 			 	  }
 
 				if(cd->msg_del_started)
@@ -3272,6 +3272,8 @@ void *MSG_IncorporateBegin (ActiveEntry *ce) {
   Pop3ConData * cd = (Pop3ConData *)ce->con_data;
   void* rdf = cd->rdf;
   RDF_StartMessageDelivery(rdf);  
+  return (void*)1;
+
 }
 
 int MSG_IncorporateWrite (Pop3ConData *cd,   const char *block, int32 length) {  
@@ -3791,7 +3793,7 @@ ShowMailFolder (NET_StreamClass *stream, char* url) {
   char* buff = XP_ALLOC(2000);
   /* this really sucks. The right way is to have some javascript on the page that
      spits this out. Then it will be really customizable */
-  sprintf(buff, "<html>\n<body marginwidth=0 marginheight=0>\n<object  target=\"messages\" width=100%% height=100%% type=builtin/tree data=\"mailbox://%s\">\n<param name=\"title\" value=\"Summary\">\n<param name=\"Column\" value=\"mail:From\">\n<param name=\"Column\" value=\"mail:Subject\">\n<param name=\"Column\" value=\"mail:Date\">\n</object>", &url[17]);
+  sprintf(buff, "<html>\n<body marginwidth=0 marginheight=0>\n<object  title=\"Summary\" target=\"messages\" width=100%% height=100%% type=builtin/tree data=\"mailbox://%s\">\n<param name=\"title\" value=\"Summary\">\n<param name=\"Column\" value=\"mail:From\">\n<param name=\"Column\" value=\"mail:Subject\">\n<param name=\"Column\" value=\"mail:Date\">\n</object>", &url[17]);
   (*stream->put_block)(stream, buff, strlen(buff));
   sprintf(buff, "</body>\n</html>\n\n");
   (*stream->put_block)(stream, buff, strlen(buff));
