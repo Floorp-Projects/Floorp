@@ -5,7 +5,7 @@
 <!ENTITY  lHeader                                 "Fonts">
 <!ENTITY  displayFonts                            "Default fonts for displaying web pages">
 
-<!ENTITY  language.label                          "Fonts for:">
+<!ENTITY  language.label                          "Language encoding:">
 <!ENTITY  language.accesskey                      "o">
 
 <!ENTITY  serif.label                             "Serif:">
@@ -51,7 +51,7 @@
 <!ENTITY  newLanguages.label                      "New languages can be configured using the Languages Panel.">
 
 
-<!ENTITY  useDocumentFonts.label                  "Always use my font settings, overriding what web pages specify">
+<!ENTITY  useDocumentFonts.label                  "Always use my font settings, overriding web page font">
 <!ENTITY  useDocumentFonts.accesskey              "u">
 
 <!-- leaving this stuff in for now -->
