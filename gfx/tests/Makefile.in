@@ -67,6 +67,7 @@ LIBS +=		\
 	-lnetcnvts \
 	-lnetcache \
 	-lpwcac \
+        -lz \
 	$(NULL)
 else
 LIBS +=		\
