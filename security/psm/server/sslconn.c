@@ -106,43 +106,43 @@ SSMStatus SSMSSLDataConnection_Create(void* arg,
                                      SSMControlConnection* ctrlconn,
                                      SSMResource** res)
 {
-    SSMStatus rv = PR_SUCCESS;
+    PRStatus rv = PR_SUCCESS;
     SSMSSLDataConnection* conn=NULL;
 
-	/* check arguments */
-	if (arg == NULL || res == NULL) {
-		goto loser;
-	}
+    /* check arguments */
+    if (arg == NULL || res == NULL) {
+        goto loser;
+    }
 	
     *res = NULL; /* in case we fail */
     
     conn = (SSMSSLDataConnection*)PR_CALLOC(sizeof(SSMSSLDataConnection));
     if (!conn) {
-		goto loser;
-	}
+        goto loser;
+    }
 
     rv = SSMSSLDataConnection_Init(conn, (SSMInfoSSL*)arg, 
                                    SSM_RESTYPE_SSL_DATA_CONNECTION);
     if (rv != PR_SUCCESS) {
-		goto loser;
-	}
+        goto loser;
+    }
 
     SSMSSLDataConnection_Invariant(conn);
     
     *res = &conn->super.super.super;
-    return PR_SUCCESS;
+    return SSM_SUCCESS;
 
 loser:
     if (rv == PR_SUCCESS) {
-		rv = PR_FAILURE;
-	}
+        rv = PR_FAILURE;
+    }
 
     if (conn) {
-		SSM_ShutdownResource(SSMRESOURCE(conn), rv);
+        SSM_ShutdownResource(SSMRESOURCE(conn), rv);
         SSM_FreeResource(SSMRESOURCE(conn));
     }
         
-    return rv;
+    return (SSMStatus)rv;
 }
 
 SSMStatus SSMSSLDataConnection_Shutdown(SSMResource* arg, SSMStatus status)
@@ -974,8 +974,8 @@ SSMStatus
 SSM_SSLThreadReadFromClient(SSMSSLDataConnection* conn, 
 			    PRIntn oBufSize, char *outbound, PRPollDesc *pds)
 {
-  PRIntn read = 0;
-  PRIntn sent = 0;
+  PRIntn read;
+  PRIntn sent;
   SSMStatus rv = SSM_SUCCESS;
 
   SSM_DEBUG("Attempting to read %ld bytes from client "
@@ -1037,8 +1037,8 @@ SSM_SSLThreadReadFromServer(SSMSSLDataConnection* conn,
 			    char *inbound, PRIntn bufsize,
 			    PRPollDesc* pds)
 {
-  PRIntn read = 0;
-  PRIntn sent = 0;
+  PRIntn read;
+  PRIntn sent;
   SSMStatus rv=SSM_SUCCESS;
 
   SSM_DEBUG("Reading data from target socket.\n");
@@ -1086,7 +1086,7 @@ SSM_SSLThreadReadFromServer(SSMSSLDataConnection* conn,
       }
       
       /* remove the socket from the array */
-      pds->in_flags = NULL;
+      pds->in_flags = 0;
       PR_Shutdown(conn->socketSSL, PR_SHUTDOWN_RCV);
       rv = SSM_FAILURE;
     }
@@ -1133,10 +1133,10 @@ SSM_WaitingOnData(PRPollDesc *pds, PRIntn numPDs)
     int i;
 
     for (i=0; i<numPDs;i++) {
-      if (pds[i].in_flags & PR_POLL_READ) {
-	retVal = PR_TRUE;
-	break;
-      }
+        if (pds[i].in_flags & PR_POLL_READ) {
+	    retVal = PR_TRUE;
+	    break;
+        }
     }
 
     return retVal;
@@ -1273,6 +1273,7 @@ void SSM_SSLDataServiceThread(void* arg)
            takes priority over the I/O sockets. */
         for (i = (SSL_PDS-1); i >= 0; i--) {
             if (pds[i].fd == NULL || pds[i].in_flags == 0) {
+                pds[i].out_flags = 0;
                 continue;
             }
 
@@ -1306,6 +1307,7 @@ void SSM_SSLDataServiceThread(void* arg)
 		  goto loser;
 		}
             }
+            pds[i].out_flags = 0;
         }    /* end of for loop */
     }    /* end of while loop */
 loser:
