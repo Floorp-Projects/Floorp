@@ -37,6 +37,8 @@ calendar.jar:
     content/calendar/publish.js  (content/publish.js)
     content/calendar/publishDialog.js  (content/publishDialog.js)    
     content/calendar/publishDialog.xul  (content/publishDialog.xul)
+    content/calendar/printDialog.js  (content/printDialog.js)    
+    content/calendar/printDialog.xul  (content/printDialog.xul)
     content/calendar/selectAddressesDialog.js (content/selectAddressesDialog.js)
     content/calendar/serverDialog.js (content/serverDialog.js) 
     content/calendar/serverDialog.xul (content/serverDialog.xul) 
