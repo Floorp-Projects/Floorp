@@ -347,7 +347,7 @@ function CheckForWalletAndImage()
 function WalletAction( action ) 
 {
   if (action == "password" || action == "expire") {
-    wallet = Components.classes['component://netscape/wallet'];
+    wallet = Components.classes['component://netscape/wallet/wallet-service'];
     wallet = wallet.getService();
     wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
 
