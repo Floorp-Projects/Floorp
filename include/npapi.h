@@ -22,7 +22,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.8 $
+ *  npapi.h $Revision: 3.9 $
  *  Netscape client plug-in API spec
  */
 
@@ -39,7 +39,9 @@
  * int32, and uint32 typedefs conflict with those 
  * in this file. 
  */ 
+#ifndef NO_NSPR_10_SUPPORT
 #define NO_NSPR_10_SUPPORT
+#endif
 #include "jri.h"                /* Java Runtime Interface */
 
 #if defined (__OS2__ ) || defined (OS2)
