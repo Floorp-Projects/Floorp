@@ -73,6 +73,14 @@ scrollbarbutton {
   background: #B1BBC5 50% 50% no-repeat;
 }
 
+thumb:active {
+  background-color: #C2CCD6;
+  -moz-border-top-colors: #111111 #F5FCF3 #D4DBE3;
+  -moz-border-right-colors: #111111 #9FAEBE #B5BFCC;
+  -moz-border-bottom-colors: #111111 #9FAEBE #B5BFCC;
+  -moz-border-left-colors: #111111 #D5FCF3 #D4DBE3;
+}
+
 /* ::::: thumb (horizontal) ::::: */
 
 thumb {
