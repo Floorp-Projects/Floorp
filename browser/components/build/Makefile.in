@@ -1,121 +1,42 @@
-#
-# The contents of this file are subject to the Netscape Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/NPL/
-#
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
-#
-# The Original Code is mozilla.org code.
-#
-# The Initial Developer of the Original Code is Netscape
-# Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
-#
-# Contributor(s): 
-#
-
-#
-# ALERT:
-#  When migrating code to mozilla/browser, replace $(OLD_COMPONENTS_DIR) with
-#  $(srcdir)/../
-#
-
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=../../..
+topsrcdir=@top_srcdir@
+srcdir=@srcdir@
+VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= appcomps
-LIBRARY_NAME	= appcomps
+MODULE = browsercomps
+LIBRARY_NAME = browsercomps
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= application
-REQUIRES	= xpcom \
-		  string \
-		  content \
-		  rdf \
-		  necko \
-		  necko2 \
-		  nkcache \
-		  intl \
-		  locale \
-		  mork \
-		  widget \
-		  dom \
-		  downloadmanager \
-                  alerts\
-                  uriloader \
-                  webbrowserpersist \
-                  progressDlg \
-		  pref \
-		  docshell \
-		  webshell \
-		  $(NULL)
+FORCE_SHARED_LIB = 1
+IS_COMPONENT = 1
 
-CPPSRCS		= nsModule.cpp
+REQUIRES = xpcom \
+           string \
+           toolkitcomps \
+           mork \
+           pref \
+           rdf \
+           intl \
+           $(NULL)
 
-ifdef MOZ_LDAP_XPCOM
-REQUIRES	+= mozldap
-DEFINES		+= -DMOZ_LDAP_XPCOM
-endif
+EXPORTS = nsBrowserCompsCID.h
 
-ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS	+= mozutil_s
-endif
+CPPSRCS = nsModule.cpp \
+          $(NULL)
+
+LOCAL_INCLUDES = \
+    -I$(srcdir)/../history/src \
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)search_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)urlbarhistory_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)timebomb_s.$(LIB_SUFFIX) \
-	$(NULL)
+    $(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
+    $(NULL)
 
-OLD_COMPONENTS_DIR=$(topsrcdir)/xpfe/components
-
-LOCAL_INCLUDES	= \
-	-I$(OLD_COMPONENTS_DIR)/autocomplete/src  \
-	-I$(srcdir)/../bookmarks/src     \
-	-I$(OLD_COMPONENTS_DIR)/directory         \
-	-I$(OLD_COMPONENTS_DIR)/download-manager/src \
-	-I$(OLD_COMPONENTS_DIR)/history/src       \
-	-I$(OLD_COMPONENTS_DIR)/related/src       \
-	-I$(OLD_COMPONENTS_DIR)/search/src        \
-	-I$(OLD_COMPONENTS_DIR)/urlbarhistory/src \
-	$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
-	$(NULL)
-OS_LIBS		+= ole32.lib shell32.lib
-LOCAL_INCLUDES	+= \
-	-I$(OLD_COMPONENTS_DIR)/winhooks \
-        -I$(OLD_COMPONENTS_DIR)/alerts/src \
-	$(NULL)
-endif
-
-EXTRA_DSO_LDOPTS = \
-	$(MOZ_COMPONENT_LIBS) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_JS_LIBS) \
-	$(NULL)
+EXTRA_DSO_LDOPTS += \
+  $(EXTRA_DSO_LIBS) \
+  $(MOZ_UNICHARUTIL_LIBS) \
+  $(MOZ_COMPONENT_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
- 

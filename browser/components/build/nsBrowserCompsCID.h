@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,9 +13,9 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
+ * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,34 +34,18 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-#include "nsIGenericFactory.h"
 
-#include "nsBrowserCompsCID.h"
-#include "nsGlobalHistory.h"
+#define NS_GLOBALHISTORY_CONTRACTID \
+  "@mozilla.org/browser/global-history;1"
+
+#define NS_GLOBALHISTORY_DATASOURCE_CONTRACTID \
+  "@mozilla.org/rdf/datasource;1?name=history"
+
+#define NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID \
+    "@mozilla.org/autocomplete/search;1?name=history"
 
 /////////////////////////////////////////////////////////////////////////////
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
-
-/////////////////////////////////////////////////////////////////////////////
-
-static const nsModuleComponentInfo components[] =
-{
-  { "Global History",
-    NS_GLOBALHISTORY_CID,
-    NS_GLOBALHISTORY_CONTRACTID,
-    nsGlobalHistoryConstructor },
-    
-  { "Global History",
-    NS_GLOBALHISTORY_CID,
-    NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,
-    nsGlobalHistoryConstructor },
-    
-  { "Global History",
-    NS_GLOBALHISTORY_CID,
-    NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
-    nsGlobalHistoryConstructor }
-};
-
-NS_IMPL_NSGETMODULE(nsBrowserCompsModule, components);
+// {9491C382-E3C4-11D2-BDBE-0050040A9B44}
+#define NS_GLOBALHISTORY_CID \
+{ 0x9491c382, 0xe3c4, 0x11d2, { 0xbd, 0xbe, 0x0, 0x50, 0x4, 0xa, 0x9b, 0x44} }
