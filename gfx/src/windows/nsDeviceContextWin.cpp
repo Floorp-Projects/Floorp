@@ -82,6 +82,12 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
   }
 
   NS_IF_RELEASE(mSpec);
+
+  nsresult res = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  if (NS_SUCCEEDED(res)) {
+    prefs->UnregisterCallback(nav4rounding, PrefChanged, this);
+  }
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: Init(nsNativeWidget aWidget)
