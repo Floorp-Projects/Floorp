@@ -299,7 +299,7 @@ function prepareForStartup()
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
   gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
-  
+
   var webNavigation;
   try {
     // Create the browser instance component.
@@ -354,6 +354,8 @@ function prepareForStartup()
 
 function delayedStartup()
 {
+  gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
+
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
   gPrefService = gPrefService.getBranch(null);
@@ -1306,6 +1308,35 @@ function PageProxyDragGesture(aEvent)
     return true;
   }
   return false;
+}
+
+function URLBarOnDrop(evt)
+{
+  nsDragAndDrop.drop(evt, urlbarObserver);
+}
+
+var urlbarObserver = {
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+      var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+
+      // The URL bar automatically handles inputs with newline characters, 
+      // so we can get away with treating text/x-moz-url flavours as text/unicode.
+      if (url) {
+        gURLBar.value = url;
+        handleURLBarCommand();
+      }
+    },
+  getSupportedFlavours: function ()
+    {
+      var flavourSet = new FlavourSet();
+
+      // Plain text drops are often misidentified as "text/x-moz-url", so favor plain text.
+      flavourSet.appendFlavour("text/unicode");
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");     
+      return flavourSet;
+    }
 }
 
 function SearchBarPopupShowing(aEvent)
