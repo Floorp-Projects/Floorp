@@ -60,6 +60,9 @@ typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val ar
 
 typedef bool (Read)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
 typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
+typedef bool (DeleteProperty)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
+typedef bool (BracketRead)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
+typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
@@ -300,7 +303,7 @@ class Signature {
 // A base class for Instance and Local members for convenience.
 class Member {
 public:
-    enum MemberKind { Forbidden, DynamicVariableKind, Variable, ConstructorMethod, Setter, Getter, InstanceVariableKind, InstanceMethodKind, InstanceAccessorKind };
+    enum MemberKind { Forbidden, DynamicVariableKind, Variable, ConstructorMethod, Setter, Getter, InstanceVariableKind, InstanceMethodKind, InstanceGetterKind, InstanceSetterKind };
     
     Member(MemberKind kind) : kind(kind) { }
 
@@ -436,9 +439,15 @@ public:
     virtual void mark();
 };
 
-class InstanceAccessor : public InstanceMember {
+class InstanceGetter : public InstanceMember {
 public:
-    InstanceAccessor(Invokable *code, JS2Class *type, bool final) : InstanceMember(InstanceAccessorKind, type, final), code(code) { }
+    InstanceGetter(Invokable *code, JS2Class *type, bool final) : InstanceMember(InstanceGetterKind, type, final), code(code) { }
+    Invokable *code;        // A callable object which does the read or write; null if this method is abstract
+};
+
+class InstanceSetter : public InstanceMember {
+public:
+    InstanceSetter(Invokable *code, JS2Class *type, bool final) : InstanceMember(InstanceSetterKind, type, final), code(code) { }
     Invokable *code;        // A callable object which does the read or write; null if this method is abstract
 };
 
@@ -623,6 +632,8 @@ public:
 
     Read *read;    
     Write *write;    
+    BracketRead *bracketRead;    
+    BracketWrite *bracketWrite;    
 
 
     bool isAncestor(JS2Class *heir);
