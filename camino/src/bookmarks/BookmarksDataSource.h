@@ -59,12 +59,9 @@ class BookmarksService;
   IBOutlet id mDeleteBookmarkButton;
   
   NSString* mCachedHref;
-  
-  BookmarkInfoController* mBookmarkInfoController;
 }
 
 -(id) init;
--(void) dealloc;
 -(void) windowClosing;
 
 -(void) ensureBookmarks;
@@ -116,6 +113,7 @@ class BookmarksService;
 - (NSString*)url;
 - (NSNumber*)contentID;
 - (id)copyWithZone:(NSZone *)aZone;
+- (BOOL)isFolder;
 
 @end
 

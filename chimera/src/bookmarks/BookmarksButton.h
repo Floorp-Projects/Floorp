@@ -25,10 +25,12 @@
 #import <Appkit/Appkit.h>
 
 class nsIDOMElement;
+@class BookmarkItem;
 
 @interface CHBookmarksButton : NSButton {
 
   nsIDOMElement* mElement;
+  BookmarkItem* mBookmarkItem;
   BOOL mIsFolder;
 }
 

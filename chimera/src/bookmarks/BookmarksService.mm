@@ -176,9 +176,10 @@ BookmarksService::GetWrapperFor(nsIContent* aContent)
     return item;
 
   // Create an item.
-  item = [[[BookmarkItem alloc] init] autorelease]; // The dictionary retains us.
+  item = [[BookmarkItem alloc] init]; // The dictionary retains us.
   [item setContentNode: aContent];
   [gDictionary setObject: item forKey: [NSNumber numberWithInt: contentID]];
+  [item release];
   return item;
 }
 

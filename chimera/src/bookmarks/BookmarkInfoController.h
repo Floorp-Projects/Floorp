@@ -36,11 +36,9 @@
     
     BookmarkItem* mBookmarkItem;
     NSTextView* mFieldEditor;
-    
-    NSOutlineView* mOutlineView;
 }
 
--(id)initWithOutlineView: (id)aOutlineView;
++ (id)sharedBookmarkInfoController;
 
 -(void)setBookmark:(BookmarkItem*)aBookmark;
 

@@ -66,12 +66,6 @@
     return self;
 }
 
--(void) dealloc
-{
-  [mBookmarkInfoController release];
-  [super dealloc];
-}
-
 -(void) windowClosing
 {
   if (mBookmarks) {
@@ -431,14 +425,14 @@
        
     nsCOMPtr<nsIContent> content;
     if (!item)
-        mBookmarks->GetRootContent(getter_AddRefs(content));
+        BookmarksService::GetRootContent(getter_AddRefs(content));
     else
         content = [item contentNode];
     
     nsCOMPtr<nsIContent> child;
     content->ChildAt(index, *getter_AddRefs(child));
     if ( child )
-      return mBookmarks->GetWrapperFor(child);
+      return BookmarksService::GetWrapperFor(child);
     
     return nil;
 }
@@ -451,11 +445,7 @@
     if (!item)
         return YES; // The root node is always open.
     
-    nsCOMPtr<nsIAtom> tagName;
-    nsIContent* content = [item contentNode];
-    content->GetTag(*getter_AddRefs(tagName));
-
-    BOOL isExpandable = (tagName == BookmarksService::gFolderAtom);
+    BOOL isExpandable = [item isFolder];
 
 // XXXben - persistence of folder open state
 // I'm adding this code, turned off, until I can figure out how to refresh the NSOutlineView's
@@ -658,11 +648,50 @@
   return NO;
 }
 
+- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)item
+{
+  NSString* descStr = nil;
+  NSString* hrefStr = nil;
+  nsIContent* content = [item contentNode];
+  nsAutoString value;
+
+  content->GetAttr(kNameSpaceID_None, BookmarksService::gDescriptionAtom, value);
+  if (value.Length())
+    descStr = [NSString stringWithCharacters:value.get() length:value.Length()];
+
+  // Only description for folders
+  if ([item isFolder])
+    return descStr;
+  
+  // Extract the URL from the item
+  content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, value);
+  if (value.Length())
+    hrefStr = [NSString stringWithCharacters:value.get() length:value.Length()];
+
+  if (!hrefStr)
+    return descStr;
+  else if (!descStr)
+    return hrefStr;
+
+  // Display both URL and description
+  return [NSString stringWithFormat:@"%@\n%@", hrefStr, descStr];
+}
+
+/*
+- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item
+{
+ // TODO - return (custom?) context menu for item here.
+ // Note that according to HIG, there should never be disabled items in
+ // a context menu - instead, items that do not apply should be removed.
+ // We could nicely do that here.
+}
+*/
+
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren
 {
   if (!item)
     [mOutlineView reloadData];
-  else if ([mOutlineView isItemExpanded: item])
+  else
     [mOutlineView reloadItem: item reloadChildren: aReloadChildren];
 }
 
@@ -696,6 +725,10 @@
   if (index == -1)
     return;
   if ([mOutlineView numberOfSelectedRows] == 1) {
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+    if (!pref)
+        return; // Something bad happened if we can't get prefs.
+
     BookmarkItem* item = [mOutlineView itemAtRow: index];
     nsAutoString hrefAttr;
     [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, hrefAttr);
@@ -703,13 +736,16 @@
     // stuff it into the string
     NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
 
+    PRBool loadInBackground;
+    pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+
     nsAutoString group;
     [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
     if (group.IsEmpty()) 
-      [mBrowserWindowController openNewWindowWithURL: hrefStr referrer: nil loadInBackground: NO];
+      [mBrowserWindowController openNewWindowWithURL: hrefStr referrer: nil loadInBackground: loadInBackground];
     else {
       nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
-      [mBrowserWindowController openNewWindowWithGroup: elt loadInBackground: NO];
+      [mBrowserWindowController openNewWindowWithGroup: elt loadInBackground: loadInBackground];
     }
   }
 }
@@ -721,14 +757,13 @@
 
 -(IBAction)showBookmarkInfo:(id)aSender
 {
-  if (!mBookmarkInfoController) 
-    mBookmarkInfoController = [[BookmarkInfoController alloc] initWithOutlineView: mOutlineView]; 
+  BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController]; 
 
   int index = [mOutlineView selectedRow];
   BookmarkItem* item = [mOutlineView itemAtRow: index];
-  [mBookmarkInfoController setBookmark:item];
-  
-  [mBookmarkInfoController showWindow:mBookmarkInfoController];
+  [bic setBookmark:item];
+
+  [bic showWindow:bic];
 }
 
 -(void)outlineViewSelectionDidChange: (NSNotification*) aNotification
@@ -739,10 +774,12 @@
     [mDeleteBookmarkButton setEnabled:NO];
   }
   else {
+    BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController]; 
+
     [mEditBookmarkButton setEnabled:YES];
     [mDeleteBookmarkButton setEnabled:YES];
-    if ([[mBookmarkInfoController window] isVisible]) 
-      [mBookmarkInfoController setBookmark:[mOutlineView itemAtRow:index]];
+    if ([[bic window] isVisible]) 
+      [bic setBookmark:[mOutlineView itemAtRow:index]];
   }
 }
 
@@ -826,6 +863,14 @@
   BookmarkItem* copy = [[[self class] allocWithZone: aZone] init];
   [copy setContentNode: mContentNode];
   return copy;
+}
+
+- (BOOL)isFolder
+{
+    nsCOMPtr<nsIAtom> tagName;
+    mContentNode->GetTag(*getter_AddRefs(tagName));
+
+    return (tagName == BookmarksService::gFolderAtom);
 }
 
 @end
