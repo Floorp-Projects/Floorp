@@ -44,10 +44,10 @@ protected:
 
 private:
     /* additional members */
-    NS_IMETHOD FileURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
-    NS_IMETHOD ConvertFileToStringURI(nsString& aIn, nsString& aOut);
-    NS_IMETHOD ConvertStringURIToFileCharset(nsString& aIn, nsCString& aOut);
-    NS_IMETHOD KeywordURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
+    nsresult FileURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
+    nsresult ConvertFileToStringURI(nsString& aIn, nsString& aOut);
+    nsresult ConvertStringURIToFileCharset(nsString& aIn, nsCString& aOut);
+    nsresult KeywordURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
 
     nsCOMPtr<nsIPref> mPrefs;
 };

@@ -114,8 +114,8 @@ NS_IMETHODIMP nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, nsI
 }
 
 
-NS_IMETHODIMP nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI, 
-   nsIURI** aURI)
+nsresult nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI, 
+                                         nsIURI** aURI)
 {
     nsAutoString uriSpecIn(aStringURI);
     nsAutoString uriSpecOut(aStringURI);
@@ -138,7 +138,8 @@ NS_IMETHODIMP nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI,
 
 #define FILE_PROTOCOL "file://"
 
-NS_IMETHODIMP nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn, nsString& aOut)
+nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
+                                                   nsString& aOut)
 {
 #ifdef XP_PC
     // Check for \ in the url-string or just a drive (PC)
@@ -169,8 +170,8 @@ NS_IMETHODIMP nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn, nsString&
 }
 
 
-NS_IMETHODIMP nsDefaultURIFixup::ConvertStringURIToFileCharset(nsString& aIn, 
-   nsCString& aOut)
+nsresult nsDefaultURIFixup::ConvertStringURIToFileCharset(nsString& aIn, 
+                                                          nsCString& aOut)
 {
     aOut = "";
     // for file url, we need to convert the nsString to the file system
@@ -209,8 +210,8 @@ NS_IMETHODIMP nsDefaultURIFixup::ConvertStringURIToFileCharset(nsString& aIn,
 }
 
 
-NS_IMETHODIMP nsDefaultURIFixup::KeywordURIFixup(const PRUnichar* aStringURI, 
-   nsIURI** aURI)
+nsresult nsDefaultURIFixup::KeywordURIFixup(const PRUnichar* aStringURI, 
+                                            nsIURI** aURI)
 {
     // These are keyword formatted strings
     // "what is mozilla"
