@@ -121,7 +121,7 @@ CTagList  gInTR(1,0,eHTMLTag_tr);
 CTagList  gInDL(2,0,eHTMLTag_dl,eHTMLTag_body);
 CTagList  gInFrameset(1,0,eHTMLTag_frameset);
 CTagList  gInNoframes(1,0,eHTMLTag_noframes);
-CTagList  gInP(3,0,eHTMLTag_address,eHTMLTag_form,eHTMLTag_span);
+CTagList  gInP(4,0,eHTMLTag_address,eHTMLTag_form,eHTMLTag_span,eHTMLTag_table);
 CTagList  gOptgroupParents(2,0,eHTMLTag_optgroup,eHTMLTag_select);
 CTagList  gBodyParents(2,0,eHTMLTag_html,eHTMLTag_noframes);
 CTagList  gColParents(2,0,eHTMLTag_table,eHTMLTag_colgroup);
