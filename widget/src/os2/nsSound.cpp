@@ -70,10 +70,10 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         if (channel) {
             channel->GetURI(getter_AddRefs(uri));
             if (uri) {
-                char* uriSpec;
-                uri->GetSpec(&uriSpec);
-#ifdef DEBUG
-                printf("Failed to load %s\n", uriSpec ? uriSpec : "");
+                nsCAutoString uriSpec;
+                uri->GetSpec(uriSpec);
+#ifdef DEBUG // XXX Shouldn't this |#ifdef| be around more code?
+                printf("Failed to load %s\n", uriSpec.get());
 #endif
                 CRTFREEIF(uriSpec);
             }
