@@ -29,7 +29,6 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/messagel.gif \
 	$(srcdir)/navigator.css \
 	$(srcdir)/questionl.gif \
-	$(srcdir)/xul.css \
 	$(srcdir)/contentframe.css \
 	$(NULL)
 
