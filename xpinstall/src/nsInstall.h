@@ -264,6 +264,7 @@ class nsInstall
         PRInt32    Confirm(nsString& string, PRBool* aReturn);
         void       InternalAbort(PRInt32 errcode);
 
+        PRInt32    SaveError(PRInt32 errcode);
 
 
     private:
@@ -310,7 +311,6 @@ class nsInstall
         
         void        CurrentUserNode(nsString& userRegNode);
         PRBool      BadRegName(const nsString& regName);
-        PRInt32     SaveError(PRInt32 errcode);
 
         void        CleanUp();
 
