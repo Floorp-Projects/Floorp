@@ -25,6 +25,11 @@ if map(int, version) < [2, 3]:
 
 import urllib, re, os, netrc, email.Parser, optparse
 
+class ErrorURLopener(urllib.URLopener):
+    """URLopener that handles HTTP 404s"""
+    def http_error_404(self, url, fp, errcode, errmsg, headers, *extra):
+        raise ValueError, errmsg # 'File Not Found'
+
 # Set up some aliases -- partly to hide the less friendly fieldnames
 # behind the names actually used for them in the stock web page presentation,
 # and partly to provide a place for mappings if the Bugzilla fieldnames
@@ -186,7 +191,10 @@ def validate_fields(data):
 def submit_bug_POST(bugzilla, data):
     # Move the request over the wire
     postdata = urllib.urlencode(data)
-    url = urllib.urlopen("%s/post_bug.cgi" % bugzilla, postdata)
+    try:
+        url = ErrorURLopener().open("%s/post_bug.cgi" % bugzilla, postdata)
+    except ValueError:
+        error("Bugzilla site at %s not found (HTTP returned 404)" % bugzilla)
     ret = url.read()
     check_result_POST(ret, data)
 
@@ -239,17 +247,20 @@ def check_result_POST(ret, data):
         error("keyword(s) %r not registered in "
               "this Bugzilla instance" % keywords)
     if ret.find("The product name") != -1:
-        error("Product %r does not exist in this "
+        error("product %r does not exist in this "
               "Bugzilla instance" % product)
     # XXX: this should be smarter
     if ret.find("does not exist") != -1:
-        error("Could not mark dependencies for bugs %s: one or "
+        error("could not mark dependencies for bugs %s: one or "
               "more bugs didn't exist in this Bugzilla instance" % deps)
     if ret.find("Match Failed") != -1:
         # XXX: invalid CC hits on this error too
         error("the bug assignee %r isn't registered in " 
               "this Bugzilla instance" % assignee)
     # If all is well, return bug number posted
+    if ret.find("process_bug.cgi") == -1:
+        error("could not post bug to %s: are you sure this "
+              "is Bugzilla instance's top-level directory?" % bugzilla)
     m = re.search("Bug ([0-9]+) Submitted", ret)
     if not m:
         print ret
