@@ -22,22 +22,41 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_BIG5MappingTable[] = {
+static PRUint16 g_ufBig5Mapping[] = {
 #include "big5.uf"
 };
 
-static PRInt16 g_BIG5ShiftTable[] =  {
-  2, uMultibytesCharset,  
-  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
-  ShiftCell(u2BytesChar,  2, 0xA1, 0xFE, 0xA1, 0x40, 0xFE, 0xFE)
+static PRUint16 gAsciiShiftTable[] =  {
+  0, u1ByteCharset,
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
+
+static PRUint16 gBig5ShiftTable[] =  {
+  0, u2BytesCharset,
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
+ 
+static PRUint16 g_AsciiMapping[] = {
+  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
+};
+
+static PRUint16 *g_Big5MappingTable[2] = {
+  g_AsciiMapping,
+  g_ufBig5Mapping
+};
+
+static PRUint16 *g_Big5ShiftTable[2] =  {
+  gAsciiShiftTable,
+  gBig5ShiftTable
 };
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToBIG5 [implementation]
 
 nsUnicodeToBIG5::nsUnicodeToBIG5() 
-: nsTableEncoderSupport((uShiftTable*) &g_BIG5ShiftTable, 
-                        (uMappingTable*) &g_BIG5MappingTable)
+: nsMultiTableEncoderSupport(2,
+                        (uShiftTable**) &g_Big5ShiftTable, 
+                        (uMappingTable**) &g_Big5MappingTable)
 {
 }
 
@@ -58,6 +77,6 @@ NS_IMETHODIMP nsUnicodeToBIG5::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
+  *aDestLength = 2 * aSrcLength;
+  return NS_OK;
 }

@@ -18,26 +18,38 @@
  */
 
 #include "nsUnicodeToGB2312.h"
+#include "nsUCvCnDll.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_GB2312MappingTable[] = {
-#include "gb2312.uf"
+
+static PRInt16 g_ASCIIShiftTable[] =  {
+  0, u1ByteCharset,
+  ShiftCell(0,0,0,0,0,0,0,0)
 };
 
 static PRInt16 g_GB2312ShiftTable[] =  {
-  2, uMultibytesCharset,  
-  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
-  ShiftCell(u2BytesChar,  2, 0xA1, 0xFE, 0xA1, 0x40, 0xFE, 0xFE)
+  0, u2BytesGRCharset,
+  ShiftCell(0,0,0,0,0,0,0,0)
 };
 
+static PRInt16 *g_GB2312ShiftTableSet [] = {
+  g_ASCIIShiftTable,
+  g_GB2312ShiftTable
+};
+
+static PRUint16 *g_GB2312MappingTableSet [] ={
+  g_AsciiMapping,
+  g_ufGB2312Mapping
+};
 //----------------------------------------------------------------------
 // Class nsUnicodeToGB2312 [implementation]
 
 nsUnicodeToGB2312::nsUnicodeToGB2312() 
-: nsTableEncoderSupport((uShiftTable*) &g_GB2312ShiftTable, 
-                        (uMappingTable*) &g_GB2312MappingTable)
+: nsMultiTableEncoderSupport(2,
+                        (uShiftTable**) &g_GB2312ShiftTableSet, 
+                        (uMappingTable**) &g_GB2312MappingTableSet)
 {
 }
 
@@ -58,6 +70,6 @@ NS_IMETHODIMP nsUnicodeToGB2312::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
+  *aDestLength = 2 * aSrcLength;
+  return NS_OK;
 }

@@ -18,15 +18,12 @@
  */
 
 #include "nsEUCKRToUnicode.h"
+#include "nsUCvKODll.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_ASCIIMappingTable[] = {
-  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
-};
-
-static PRInt16 g_ASCIIShiftTable[] =  {
+static PRUint16 g_ASCIIShiftTable[] =  {
   0, u1ByteCharset,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
@@ -36,7 +33,7 @@ static PRUint16 g_EUCKRMappingTable[] = {
 #include "u20ksc.ut"
 };
 
-static PRInt16 g_EUCKRShiftTable[] =  {
+static PRUint16 g_EUCKRShiftTable[] =  {
   0, u2BytesCharset,  
   ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
 };
@@ -47,11 +44,7 @@ static uRange g_EUCKRRanges[] = {
 };
 #else
 
-static PRUint16 g_EUCKRMappingTable[] = {
-#include "u20kscgl.ut"
-};
-
-static PRInt16 g_EUCKRShiftTable[] =  {
+static PRUint16 g_EUCKRShiftTable[] =  {
   0, u2BytesGRCharset,  
   ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
 };
@@ -63,14 +56,14 @@ static uRange g_EUCKRRanges[] = {
 #endif
 
 
-static PRInt16 *g_EUCKRShiftTableSet [] = {
+static PRUint16 *g_EUCKRShiftTableSet [] = {
   g_ASCIIShiftTable,
   g_EUCKRShiftTable
 };
 
 static PRUint16 *g_EUCKRMappingTableSet [] ={
-  g_ASCIIMappingTable,
-  g_EUCKRMappingTable
+  g_AsciiMapping,
+  g_utKSC5601Mapping
 };
 
 

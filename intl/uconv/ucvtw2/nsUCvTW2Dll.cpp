@@ -48,6 +48,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
 
+
 typedef nsresult (* fpCreateInstance) (nsISupports **);
 
 struct FactoryData

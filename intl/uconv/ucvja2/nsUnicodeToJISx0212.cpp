@@ -54,5 +54,5 @@ NS_IMETHODIMP nsUnicodeToJISx0212::GetMaxLength(const PRUnichar * aSrc,
                                              PRInt32 * aDestLength)
 {
   *aDestLength = 2*aSrcLength;
-  return NS_OK;
+  return NS_OK_UENC_EXACTLENGTH;
 }
