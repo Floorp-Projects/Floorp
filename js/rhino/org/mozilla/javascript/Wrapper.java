@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -33,13 +33,23 @@
  * file under either the NPL or the GPL.
  */
 
+// API class
+
 package org.mozilla.javascript;
 
 /**
- * Objects that can wrap other values for reflection in the JS environment.
+ * Objects that can wrap other values for reflection in the JS environment
+ * will implement Wrapper. 
+ * 
+ * Wrapper defines a single method that can be called to unwrap the object.
  */
 
 public interface Wrapper {
 
-  public Object unwrap();
+    /**
+     * Unwrap the object by returning the wrapped value.
+     * 
+     * @return a wrapped value
+     */
+    public Object unwrap();
 }
