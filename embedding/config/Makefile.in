@@ -58,7 +58,7 @@ else
 		b=`basename $$f | sed -e 's|.jar$$||'` ; \
 		echo "$$b" ; \
 		$(NSINSTALL) -D $(DIST)/Embed/tmpchrome/$$b ;\
-		$(UNZIP) -o -d $(DIST)/Embed/tmpchrome/$$b $$f ; \
+		$(UNZIP) -q -o -d $(DIST)/Embed/tmpchrome/$$b $$f ; \
 	done
 	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/embedding/config/embed-jar.mn -mozpath $(MOZILLA_DIR) -chrome $(DIST)/Embed/tmpchrome > $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/Embed/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
