@@ -81,6 +81,7 @@ REQUIRES	+= \
 		  intl \
 		  profile \
 		  $(NULL)
+DIRS		+= os2turbo
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 REQUIRES	+= intl profile appcomps
