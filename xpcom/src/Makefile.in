@@ -43,7 +43,7 @@ CPPSRCS		= nsDebug.cpp \
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-CFLAGS		+= -D_IMPL_NS_COM -DUSE_NSREG
+DEFINES		+= -D_IMPL_NS_COM -DUSE_NSREG
 
 REQUIRES	= $(MODULE) libreg
 
