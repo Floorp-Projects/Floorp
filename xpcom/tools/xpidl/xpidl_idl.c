@@ -96,12 +96,22 @@ process_tree(TreeState *state)
     return process_tree_pass1(state);
 }
 
+#ifdef XP_MAC
+extern void mac_warning(const char* warning_message);
+#endif
+
 static int
 msg_callback(int level, int num, int line, const char *file,
              const char *message)
 {
+#ifdef XP_MAC
+    static char warning_message[1024];
+    sprintf(warning_message, "%s:%d: %s\n", file, line, message);
+    mac_warning(warning_message);
+#else
     /* XXX Mac */
     fprintf(stderr, "%s:%d: %s\n", file, line, message);
+#endif
     return 1;
 }
 
@@ -187,10 +197,15 @@ new_input_callback_data(const char *filename, IncludePathEntry *include_path)
     memset(new_data, 0, sizeof *new_data);
 #ifdef XP_MAC
     // if file is a full path name, just use fopen, otherwise search access paths.
+#if 0
     if (strchr(filename, ':') == NULL)
         new_data->input = mac_fopen(filename, "r");
     else
         new_data->input = fopen(filename, "r");
+#else
+    // on Mac, fopen knows how to find files.
+    new_data->input = fopen(filename, "r");
+#endif
 #else
     new_data->input = fopen_from_includes(filename, "r", include_path);
 #endif
@@ -494,10 +509,21 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     if (tmp)
         *tmp = '\0';
 
+#ifdef XP_MAC
+	  // on the Mac, we let CodeWarrior tell us where to put the output file.
+    if (!basename) {
+        outname = xpidl_strdup(filename);
+        tmp = strrchr(outname, '.');
+        if (tmp != NULL) *tmp = '\0';
+    } else {
+        outname = xpidl_strdup(basename);
+    }
+#else
     if (!basename)
         outname = xpidl_strdup(state.basename);
     else
         outname = xpidl_strdup(basename);
+#endif
 
     /* so we don't include it again! */
     g_hash_table_insert(stack.includes, filename, state.basename);
