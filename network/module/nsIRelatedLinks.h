@@ -68,6 +68,7 @@ public:
 
 };
 
+extern "C" void RL_Init();
 extern "C" nsIRelatedLinks * NS_NewRelatedLinks(); 
 
 #endif

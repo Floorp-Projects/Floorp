@@ -216,7 +216,7 @@ net_CheckForAuthorization(char * address, Bool exact_match)
     * http://uname:pwd@host.com, so make sure we don't compare an address
     * passed in with one with an auth struct->path until we remove/reduce the 
     * address passed in. */
-    if( (afterProto=PL_strstr(address, "://")) ) {
+    if( (afterProto=PL_strstr(address, "://")) != 0 ) {
     afterProto=afterProto+3;
     tmp=*afterProto;
     *afterProto='\0';
@@ -224,7 +224,7 @@ net_CheckForAuthorization(char * address, Bool exact_match)
     *afterProto=tmp;
 
     /* temporarily truncate after first slash, if any. */
-    if( (fSlash=PL_strchr(afterProto, '/')) )
+    if( (fSlash=PL_strchr(afterProto, '/')) != 0)
       *fSlash='\0';
     atSign=PL_strchr(afterProto, '@');
     if(fSlash)
@@ -915,8 +915,8 @@ NET_AskForAuthString(MWContext *context,
         prev_auth->password = password;
 		prev_auth->path = 0;
        /* Don't save username/password info in the auth struct path. */
-        if( (atSign=PL_strchr(new_address, '@')) ) {
-          if( (host=PL_strstr(new_address, "://")) ) {
+        if( (atSign=PL_strchr(new_address, '@')) != 0) {
+          if( (host=PL_strstr(new_address, "://")) != 0) {
             char tmp;
             host+=3;
             tmp=*host;

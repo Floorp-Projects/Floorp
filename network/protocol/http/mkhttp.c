@@ -88,7 +88,7 @@ extern int XP_PROGRESS_TRYAGAIN;
 extern int XP_PROGRESS_WAIT_REPLY;
 extern int XP_HR_TRANSFER_INTERRUPTED;
 extern int XP_TRANSFER_INTERRUPTED;
-extern int XP_ERRNO_EIO;      
+extern int XP_ERRNO_EIO;
 
 #ifdef TRUST_LABELS
 extern void ProcessCookiesAndTrustLabels( ActiveEntry *ce );
@@ -1264,9 +1264,9 @@ net_build_http_request (URL_Struct * URL_s,
                         char *atSign=NULL;            
                         char *path=NULL;
 
-                        if( (path=PL_strchr(colon+3, '/')) )
+                        if( (path=PL_strchr(colon+3, '/')) != 0)
                             *path='\0';
-                        if( (atSign=PL_strchr(colon, '@')) ) {
+                        if( (atSign=PL_strchr(colon, '@')) != 0) {
                             /* We found a username and/or a password, don't let it through */
                             char temp;
                             if(path)
@@ -1467,7 +1467,7 @@ net_build_http_request (URL_Struct * URL_s,
             /* Figure out which kind of proxy we're using: PAC or straight proxy. 
              * DON'T FREE tempURL!!!
              */
-            if ( (tempURL = net_GetPACUrl()) && (*tempURL) )
+            if ( (tempURL = net_GetPACUrl()) != NULL && (*tempURL) )
                 proxyServer = NET_ParseURL(tempURL, 
                                   GET_HOST_PART 
                                 | GET_PATH_PART
@@ -2545,7 +2545,7 @@ net_setup_http_stream(ActiveEntry * ce) {
         /* Figure out which kind of proxy we're using: PAC or straight proxy. 
          * DON'T FREE tempURL!!!
          */
-        if ( (tempURL = net_GetPACUrl()) && (*tempURL) )
+        if ( (tempURL = net_GetPACUrl()) != NULL && (*tempURL) )
             proxyServer = NET_ParseURL(tempURL, GET_HOST_PART | GET_PATH_PART | GET_USERNAME_PART | GET_PASSWORD_PART);
         else
             proxyServer = cd->proxy_server;
@@ -3788,7 +3788,7 @@ HTTP_ReadPrefs(void)
     NET_SetSendRefererHeader(b);
 }
 
-MODULE_PRIVATE int PR_CALLBACK HTTP_PrefChangedFunc(const char *pref, void *data)
+static int PR_CALLBACK HTTP_PrefChangedFunc(const char *pref, void *data)
 {
         HTTP_ReadPrefs();
         return TRUE;

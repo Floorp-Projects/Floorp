@@ -72,12 +72,12 @@ XP_GetBuiltinString(int16 i)
 
 	if
 	(
-		((ret = mcom_include_merrors_i_strings (i))) ||
-		((ret = mcom_include_secerr_i_strings  (i))) ||
-		((ret = mcom_include_sec_dialog_strings(i))) ||
-		((ret = mcom_include_sslerr_i_strings  (i))) ||
-		((ret = mcom_include_xp_error_i_strings(i))) ||
-		((ret = mcom_include_xp_msg_i_strings  (i)))
+		((ret = mcom_include_merrors_i_strings (i)) != 0) ||
+		((ret = mcom_include_secerr_i_strings  (i)) != 0) ||
+		((ret = mcom_include_sec_dialog_strings(i)) != 0) ||
+		((ret = mcom_include_sslerr_i_strings  (i)) != 0) ||
+		((ret = mcom_include_xp_error_i_strings(i)) != 0) ||
+		((ret = mcom_include_xp_msg_i_strings  (i)) != 0)
 	)
 	{
 		return ret;
