@@ -23,19 +23,25 @@
  */
 
 #include "nsISupports.idl"
-
-interface nsIFile;
-interface nsIPrefBranch;
+#include "nsIPrefBranch.idl"
+#include "nsIFile.idl"
 
 [scriptable, uuid(decb9cc7-c08f-4ea5-be91-a8fc637ce2d2)]
 interface nsIPrefService : nsISupports
 {
   /*
+   * ReadCFGFile
+   * 
+   * identify and read the configuration (.cfg) file
+   */
+  void readCFGFile();
+
+  /*
    * readUserPrefs
    * 
    * read a user preference file, pass in null for default file
    */
-  void readUserPrefs(in nsIFile spec);
+  void readUserPrefs(in nsIFile aFile);
 
   /*
    * resetPrefs
@@ -56,14 +62,20 @@ interface nsIPrefService : nsISupports
    * 
    * write current preferences state to a file, pass in null for default file
    */
-  void savePrefFile(in nsIFile filename);
+  void savePrefFile(in nsIFile aFile);
 
   /*
    * branch operations
    */
 
-  nsIPrefBranch getBranch(in string root);
-  nsIPrefBranch getDefaultBranch(in string root);
+  nsIPrefBranch getBranch(in string aPrefRoot);
+  nsIPrefBranch getDefaultBranch(in string aPrefRoot);
 
 };
 
+%{C++
+
+#define NS_PREFSERVICE_CONTRACTID "@mozilla.org/preferences-service;1"
+#define NS_PREFSERVICE_CLASSNAME "Preferences Server"
+
+%}
