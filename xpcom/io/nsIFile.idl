@@ -25,29 +25,33 @@
 [scriptable, uuid(c8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFile : nsISupports
 {
+
+	/**
+	 *	 Different path types that nsIFile can parse.
+	 *
+     *   NATIVE_PATH is a **native** path.  For example, on windows 
+	 *   this would be "c:\\foo\\bar" and on the mac it would be 
+	 *   "Macintosh HD:foo:bar"
+     *
+	 *   UNIX_PATH is a unix style path.  If you are running on unix 
+	 *   this is the same as InitWithNativePath.  This strings look like
+	 *   "/Development/MPW/SysErrs.err"
+	 *
+	 *   NSPR_PATH is a NSPR style path.  NSPR expects a UNIX path on unix 
+	 *   and Macintosh, but a native path on windows.  If you want to create 
+	 *   a nsIFile form a string that comes back from NSPR, use this call
+	 */
+
+	const unsigned long NATIVE_PATH = 0;
+	const unsigned long UNIX_PATH = 1;
+	const unsigned long NSPR_PATH = 2;
+
     /**
 	 *	 Initialization routines.  These functions shall be called to 
 	 *   setup the nsIFile.  
-	 *
-	 *   InitWithNativeString is called with a **native** path.  For
-	 *   example, on windows this would be "c:\\foo\\bar" and on the
-	 *   mac it would be "Macintosh HD:foo:bar"
-	 *
-	 *   InitWithUnixStyleString is called with a Unix style string.
-	 *   If you are running on unix this is the same as
-	 *   InitWithNativeString.  This strings look like like
-	 *   "/Development/MPW/SysErrs.err"
-	 *  
-	 *  InitWithNSPRStyleString is called with an nspr style string.
-	 *  NSPR expects a UNIX path on unix and Macintosh, but a native 
-	 *  path on windows.  If you want to create a nsIFile form a
-	 *  string that comes back from NSPR, use this call.
-	 *  
 	 */
-	void InitWithNativeString([const] in string filePath);
-	void InitWithUnixStyleString([const] in string filePath);
-	void InitWithNSPRStyleString([const] in string filePath);
-
+	void Init([const] in string filePath, in unsigned long pathType);
+	
 	/**
 	 *  Create() will create a new file, directory or symlink in the file system.  
 	 *  Any nodes that have not been created or resolved, will be.
@@ -61,8 +65,13 @@ interface nsIFile : nsISupports
 	 *  Append() will create concatenate a relative path to this nsIFile.  It
 	 *  is used for constructing the nsIFile of a descendant.  If this object is 
 	 *  already Created, it must be either a directory or symlink to a directory. 
+     *  Append() will do what nsString does, it will tag the |node| at the end
+	 *  of what the nsIFile already has stuff in it.  It will also do
+     *  non-terminal symlink resolution.
+	 *
+	 *  pathType is only meaningful if |node| is a compound path (eg. "foo/bar/i/am/")
 	 */
-	void Append([const] in string node);
+	void Append([const] in string node, in unsigned long pathType);
 
 	/**
 	 *	 Accessor to the file name (the leaf name not the full file path) of the file itself.   
@@ -134,13 +143,12 @@ interface nsIFile : nsISupports
 
 	readonly attribute nsIFile Parent;
 	
-	boolean Exists();
-	boolean Writeable();
-	boolean Readable();
-	boolean Directory();
-	boolean File();
-	
-    boolean Hidden();
-	boolean Symlink();
+	boolean IsExists();
+	boolean IsWriteable();
+	boolean IsReadable();
+	boolean IsDirectory();
+	boolean IsFile();
+	boolean IsHidden();
+	boolean IsSymlink();
 
 };
