@@ -145,51 +145,69 @@ nsSocket::Open()
 
     mFd = socket(AF_INET, SOCK_STREAM, 0);
 #ifdef _WINDOWS
-		if (mFd == INVALID_SOCKET)
-		{
+	if (mFd == INVALID_SOCKET) {
 			printf("Last error: %d\n", WSAGetLastError());
-		}
+    }
+    if ( mFd != INVALID_SOCKET ) {
+#else
+    if ( mFd != -1 ) {
 #endif
 
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(mPort);
+        int windowSize = 32768;   // we could tune this, but for now...
+        socklen_t newTCPWin, len;
+       
+        len = sizeof( newTCPWin );
+ 
+        setsockopt( mFd, SOL_SOCKET, SO_RCVBUF, (char*) &windowSize, sizeof( windowSize ));
+#ifdef DEBUG
+        getsockopt( mFd, SOL_SOCKET, SO_RCVBUF, (char*) &newTCPWin, &len );
+#endif
+ 
+        setsockopt( mFd, SOL_SOCKET, SO_SNDBUF, (char*) &windowSize, sizeof( windowSize ));
+#ifdef DEBUG
+        getsockopt( mFd, SOL_SOCKET, SO_RCVBUF, (char*) &newTCPWin, &len );
+#endif
 
-    if ((hptr = gethostbyname(mHost)) == NULL )
-    {
-        if (IsIPAddress(mHost) == OK)
+        memset(&servaddr, 0, sizeof(servaddr));
+        servaddr.sin_family = AF_INET;
+        servaddr.sin_port = htons(mPort);
+
+        if ((hptr = gethostbyname(mHost)) == NULL )
         {
-            unsigned long netAddr;
+            if (IsIPAddress(mHost) == OK)
+            {
+                unsigned long netAddr;
 
-            netAddr = inet_addr(mHost);
-            if ((hptr = gethostbyaddr((const char *)&netAddr, sizeof(unsigned long), AF_INET)) == NULL )
+                netAddr = inet_addr(mHost);
+                if ((hptr = gethostbyaddr((const char *)&netAddr, sizeof(unsigned long), AF_INET)) == NULL )
+                    return E_INVALID_HOST;
+            }
+            else
+            {
                 return E_INVALID_HOST;
+            }
+        }
+
+        memcpy(&servaddr.sin_addr, (struct in_addr **) hptr->h_addr_list[0], sizeof(struct in_addr));
+
+        rv = connect(mFd, (struct sockaddr *) &servaddr, sizeof(servaddr));
+        if (rv < 0)
+        {
+#if defined(DEBUG) && (defined(__unix) || defined(__unix__))
+            printf("ETIMEDOUT: %d\n", ETIMEDOUT);
+            printf("ECONNREFUSED: %d\n", ECONNREFUSED);
+            printf("EHOSTUNREACH: %d\n", EHOSTUNREACH);
+            printf("ENETUNREACH: %d\n", ENETUNREACH);
+
+            printf("connect error: %d\n", errno);
+#endif /* DEBUG && (__unix || __unix__) */
+            mFd = -1;
+            rv = E_SOCK_OPEN;
         }
         else
-        {
-            return E_INVALID_HOST;
-        }
-    }
-
-    memcpy(&servaddr.sin_addr, (struct in_addr **) hptr->h_addr_list[0],
-           sizeof(struct in_addr));
-
-    rv = connect(mFd, (struct sockaddr *) &servaddr, sizeof(servaddr));
-    if (rv < 0)
-    {
-#if defined(DEBUG) && (defined(__unix) || defined(__unix__))
-        printf("ETIMEDOUT: %d\n", ETIMEDOUT);
-        printf("ECONNREFUSED: %d\n", ECONNREFUSED);
-        printf("EHOSTUNREACH: %d\n", EHOSTUNREACH);
-        printf("ENETUNREACH: %d\n", ENETUNREACH);
-
-        printf("connect error: %d\n", errno);
-#endif /* DEBUG && (__unix || __unix__) */
-        mFd = -1;
+            rv = OK;
+    } else
         rv = E_SOCK_OPEN;
-    }
-    else
-        rv = OK;
 
     return rv;
 }
