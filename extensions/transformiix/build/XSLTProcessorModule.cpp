@@ -146,10 +146,14 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    char* iidString = NS_GET_IID(nsIDocumentTransformer).ToString();
+    if (!iidString)
+      return NS_ERROR_OUT_OF_MEMORY;
     rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
                                   "nsIDocumentTransformer",
-                                  NS_GET_IID(nsIDocumentTransformer).ToString(),
+                                  iidString,
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
+    nsCRT::free(iidString);
 
     return rv;
 }
