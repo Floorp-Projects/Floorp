@@ -75,7 +75,7 @@
 
 #FIXME - all will be sourced by the wrapper wrapper will do cleanup etc
 
-TESTS="cert ssl sdr cipher smime perf tools"
+TESTS="cert ssl sdr cipher smime perf tools fips"
 SCRIPTNAME=all.sh
 CLEANUP="${SCRIPTNAME}"
 cd `dirname $0`	#FIXME - if sourced 
