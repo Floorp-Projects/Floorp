@@ -203,23 +203,42 @@ nsresult
 nsTextTransformer::Init(nsIFrame* aFrame,
                         nsIContent* aContent,
                         PRInt32 aStartingOffset,
+                        PRBool aForceArabicShaping,
                         PRBool aLeaveAsAscii)
 {
-#ifdef IBMBIDI
+  /*
+   * If the document has Bidi content, check whether we need to do
+   * Arabic shaping.
+   *
+   *  Does the frame contains Arabic characters
+   *   (mCharType == eCharType_RightToLeftArabic)?
+   *  Are we rendering character by character (aForceArabicShaping ==
+   *   PR_TRUE)? If so, we always do our own Arabic shaping, even if
+   *   the platform has native shaping support. Otherwise, we only do
+   *   shaping if the platform has no shaping support.
+   *
+   *  We do numeric shaping in all Bidi documents.
+   */
   PRBool bidiEnabled;
 
   mPresContext->GetBidiEnabled(&bidiEnabled);
   if (bidiEnabled) {
-    PRBool isBidiSystem;
     aFrame->GetBidiProperty(mPresContext, nsLayoutAtoms::charType,
                             (void**)&mCharType, sizeof(mCharType));
-    mPresContext->GetIsBidiSystem(isBidiSystem);
-    if (mCharType == eCharType_RightToLeftArabic && !isBidiSystem) {
-      SetNeedsArabicShaping(PR_TRUE);
+    if (mCharType == eCharType_RightToLeftArabic) {
+      if (aForceArabicShaping) {
+        SetNeedsArabicShaping(PR_TRUE);
+      }
+      else {
+        PRBool isBidiSystem;
+        mPresContext->GetIsBidiSystem(isBidiSystem);
+        if (!isBidiSystem) {
+          SetNeedsArabicShaping(PR_TRUE);
+        }
+      }
     }
     SetNeedsNumericShaping(PR_TRUE);
   }
-#endif
 
   // Get the contents text content
   nsresult rv;
