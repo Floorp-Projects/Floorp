@@ -244,6 +244,8 @@ function updateMapi()
   var winsysMapi32File;
   var mapiProxyFile;
   var subkey;
+  var oldVersionIsDefautClient = false;
+
   var mailDefaultDescription = "$ProductName$";
 
   winreg = getWinRegistry();
@@ -352,10 +354,51 @@ function updateMapi()
     winreg.createKey(subkey      + "\\protocols\\snews\\DefaultIcon", "");
     winreg.setValueString(subkey + "\\protocols\\snews\\DefaultIcon", sfpMainExePath + ",0");
 
+    subkey              = "SOFTWARE\\$ProductName$\\Desktop";
+    szCurrentVersion    = winreg.getValueString(subkey, "CurrentVersion");
+    logComment("szCurrentVersion: " + szCurrentVersion);
+
     // Register MapiProxy.dll
     mapiProxyFile = getFolder("Program", "MapiProxy.dll");
     err = File.windowsRegisterServer(mapiProxyFile);
     logComment("File.windowsRegisterServer(" + mapiProxyFile + ") returned: " + err);
+
+    // Ok, we've registered ourselves as a Mail and News client. We've registered all of the protocols we support.
+    // If the user was using Thunderbird as their default client but had Thunderbird installed in a different directory
+    // than what the installer is installing into, then we end up with the wrong version of Thunderbird as the default app.
+    // to work around this, we are going to test what the current default mail app is. If it contains Thunderbird and it is not
+    // pointing to us, then write into the registry the values necessary for Thunderbird to re-ask the user about being the default
+    // mail app the next time the newly installed version comes up. This case happens a lot because we've had so many releases without
+    // an installer that everyone has ended up installing bits into their own locations.
+    if (szDefaultMailClient == "$ProductName$")
+    {
+      // check to see if the location of the default mail protocol handler matches the location we just wrote to...
+      // if it does not, then 
+      var szNewMailtoProtocolHandler = sfpMainExePath + " -compose \"%1\"";
+      var szOldMailtoProtocolHandler = winreg.getValueString("Software\\Classes\\mailto\\shell\\open\\command", "");
+
+      if ((szOldMailtoProtocolHandler != null) && (szNewMailtoProtocolHandler != szOldMailtoProtocolHandler))
+        oldVersionIsDefautClient = true;
+      logComment("oldVersionIsDefautClient: " + oldVersionIsDefautClient);
+    } 
+
+    // now that we have registred ourselves as a mail and news client, make some notations in our scratch pad
+    // so the client doesn't try to re-register the same keys all over again.
+    subkey  = "SOFTWARE\\$ProductName$";
+    winreg.createKey(subkey, "");
+    winreg.createKey(subkey + "\\Desktop", "");
+    winreg.setValueString(subkey + "\\Desktop", "registeredAsMailApp", "1");
+    winreg.setValueString(subkey + "\\Desktop", "registeredAsNewsApp", "1");
+
+    if (oldVersionIsDefautClient)
+    {
+      // ok here's a scenario where a different version of thunderbird is the default mail client in a different directory
+      // from where the installer is putting it. So clear out our scratchpad registry entries to make Thunderbird ask the user
+      // if it should be the default client again.
+      logComment("Resetting showMapiDialog and defaultMailHasBeenSet");
+      winreg.setValueString(subkey + "\\Desktop", "showMapiDialog", "1");
+      winreg.setValueString(subkey + "\\Desktop", "defaultMailHasBeenSet", "0");
+    }
   }
 }
 
