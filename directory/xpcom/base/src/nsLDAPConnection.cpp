@@ -222,8 +222,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt32 aPort, PRBool aSSL,
     if (spacePos != kNotFound)
       mDNSHost.Truncate(spacePos);
 
-    rv = pDNSService->AsyncResolve(mDNSHost,
-                                   PR_FALSE, this, curEventQ, 
+    rv = pDNSService->AsyncResolve(mDNSHost, 0, this, curEventQ, 
                                    getter_AddRefs(mDNSRequest));
 
     if (NS_FAILED(rv)) {

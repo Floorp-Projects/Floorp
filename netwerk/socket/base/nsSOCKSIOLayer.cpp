@@ -502,7 +502,7 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
         if (NS_FAILED(rv))
             return PR_FAILURE;
 
-        rv = dns->Resolve(proxyHost, PR_FALSE, getter_AddRefs(rec));
+        rv = dns->Resolve(proxyHost, 0, getter_AddRefs(rec));
         if (NS_FAILED(rv))
             return PR_FAILURE;
 

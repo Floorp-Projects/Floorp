@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -64,16 +65,23 @@ class nsResolveHostCallback;
         return n;                                         \
     }
 
+struct nsHostKey
+{
+    const char *host;
+    PRUint16    flags;
+    PRUint16    af;
+};
+
 /**
  * nsHostRecord - ref counted object type stored in host resolver cache.
  */
-class nsHostRecord : public PRCList
+class nsHostRecord : public PRCList, public nsHostKey
 {
 public:
     NS_DECL_REFCOUNTED_THREADSAFE
 
     /* instantiates a new host record */
-    static nsresult Create(const char *host, nsHostRecord **record);
+    static nsresult Create(const nsHostKey *key, nsHostRecord **record);
 
     /* a fully resolved host record has either a non-null |addr_info| or |addr|
      * field.  if |addr_info| is null, it implies that the |host| is an IP
@@ -83,11 +91,10 @@ public:
      * and |addr| are null, then the given host has not yet been fully resolved.
      * |af| is the address family of the record we are querying for.
      */
-    char       *host;
-    PRAddrInfo *addr_info;
-    PRNetAddr  *addr;
-    PRUint16    af;
-    PRUint32    expiration; /* measured in minutes since epoch */
+
+    PRAddrInfo  *addr_info;
+    PRNetAddr   *addr;
+    PRUint32     expiration; /* measured in minutes since epoch */
 
     PRBool HasResult() const { return (addr_info || addr) != nsnull; }
 
@@ -164,17 +171,33 @@ public:
      * by having the callback implementation return without doing anything).
      */
     nsresult ResolveHost(const char            *hostname,
-                         PRBool                 bypassCache,
-                         nsResolveHostCallback *callback,
-                         PRUint16               af);
+                         PRUint16               flags,
+                         PRUint16               af,
+                         nsResolveHostCallback *callback);
 
     /**
      * removes the specified callback from the nsHostRecord for the given
-     * hostname.  this function executes the callback if the callback is
-     * still pending with the status failure code NS_ERROR_ABORT.
+     * hostname, flags, and address family.  these parameters should correspond
+     * to the parameters passed to ResolveHost.  this function executes the
+     * callback if the callback is still pending with the status failure code
+     * NS_ERROR_ABORT.
      */
     void DetachCallback(const char            *hostname,
+                        PRUint16               flags,
+                        PRUint16               af,
                         nsResolveHostCallback *callback);
+
+    /**
+     * values for the flags parameter passed to ResolveHost and DetachCallback
+     * that may be bitwise OR'd together.
+     *
+     * NOTE: in this implementation, these flags correspond exactly in value
+     *       to the flags defined on nsIDNSService.
+     */
+    enum {
+        RES_BYPASS_CACHE = 1 << 0,
+        RES_CANON_NAME   = 1 << 1
+    };
 
 private:
     nsHostResolver(PRUint32 maxCacheEntries=50, PRUint32 maxCacheLifetime=1);

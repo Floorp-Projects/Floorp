@@ -250,7 +250,8 @@ nsWSAUtils::GetOfficialHostName(nsIURI* aServiceURI,
     return rv;
 
   nsCOMPtr<nsIDNSRequest> dummy;
-  rv = dns->AsyncResolve(host, PR_FALSE, listener, eventQ, getter_AddRefs(dummy));
+  rv = dns->AsyncResolve(host, nsIDNSService::RESOLVE_CANONICAL_NAME,
+                         listener, eventQ, getter_AddRefs(dummy));
   
   PLEvent *ev;
   while (NS_SUCCEEDED(rv) && !listener->mLookupFinished) {

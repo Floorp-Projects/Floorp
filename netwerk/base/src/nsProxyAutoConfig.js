@@ -149,7 +149,7 @@ function proxyAlert(msg) {
 // wrapper for getting local IP address called by PAC file
 function myIpAddress() {
     try {
-        return dns.resolve(dns.myHostName, false).getNextAddrAsString();
+        return dns.resolve(dns.myHostName, 0).getNextAddrAsString();
     } catch (e) {
         return '127.0.0.1';
     }
@@ -158,7 +158,7 @@ function myIpAddress() {
 // wrapper for resolving hostnames called by PAC file
 function dnsResolve(host) {
     try {
-        return dns.resolve(host, false).getNextAddrAsString();
+        return dns.resolve(host, 0).getNextAddrAsString();
     } catch (e) {
         return null;
     }

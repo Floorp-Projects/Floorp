@@ -866,7 +866,7 @@ nsSocketTransport::ResolveHost()
 
     mResolving = PR_TRUE;
 
-    rv = dns->AsyncResolve(SocketHost(), PR_FALSE, this, nsnull,
+    rv = dns->AsyncResolve(SocketHost(), 0, this, nsnull,
                            getter_AddRefs(mDNSRequest));
     if (NS_SUCCEEDED(rv)) {
         LOG(("  advancing to STATE_RESOLVING\n"));
