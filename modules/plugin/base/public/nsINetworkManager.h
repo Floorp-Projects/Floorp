@@ -103,6 +103,22 @@ public:
             PRBool forceJSEnabled = PR_FALSE,
             PRUint32 postHeadersLength = 0, const char* postHeaders = NULL) = 0;
 
+    /**
+     * Returns the proxy info for a given URL. The caller is required to
+     * free the resulting memory with nsIMalloc::Free. The result will be in the
+     * following format
+     * 
+     *   i)   "DIRECT"  -- no proxy
+     *   ii)  "PROXY xxx.xxx.xxx.xxx"   -- use proxy
+     *   iii) "SOCKS xxx.xxx.xxx.xxx"  -- use SOCKS
+     *   iv)  Mixed. e.g. "PROXY 111.111.111.111;PROXY 112.112.112.112",
+     *                    "PROXY 111.111.111.111;SOCKS 112.112.112.112"....
+     *
+     * Which proxy/SOCKS to use is determined by the plugin.
+     */
+    NS_IMETHOD
+    FindProxyForURL(const char* url, char* *result) = 0;
+
 };
 
 #define NS_INETWORKMANAGER_IID                       \

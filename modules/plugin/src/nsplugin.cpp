@@ -100,17 +100,25 @@ nsresult fromNPError[] = {
 nsPluginManager* thePluginManager = NULL;
 
 nsPluginManager::nsPluginManager(nsISupports* outer)
-    : fJVMMgr(NULL), fMalloc(NULL), fAllocatedMenuIDs(NULL)
+    : fJVMMgr(NULL), fMalloc(NULL), fFileUtils(NULL), fAllocatedMenuIDs(NULL)
 {
     NS_INIT_AGGREGATED(outer);
 }
 
 nsPluginManager::~nsPluginManager(void)
 {
-    fJVMMgr->Release();
-    fJVMMgr = NULL;
-    fMalloc->Release();
-    fMalloc = NULL;
+    if (fJVMMgr) {
+        fJVMMgr->Release();
+        fJVMMgr = NULL;
+    }
+    if (fMalloc) {
+        fMalloc->Release();
+        fMalloc = NULL;
+    }
+    if (fFileUtils) {
+        fFileUtils->Release();
+        fFileUtils = NULL;
+    }
 
 #ifdef XP_MAC
     if (fAllocatedMenuIDs != NULL) {
@@ -128,11 +136,11 @@ nsPluginManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanceP
     if (outer && !aIID.Equals(kISupportsIID))
         return NS_NOINTERFACE;   // XXX right error?
     nsPluginManager* mgr = new nsPluginManager(outer);
-    nsresult result = mgr->QueryInterface(aIID, aInstancePtr);
-    if (result != NS_OK) {
-        delete mgr;
-    }
-    return result;
+    if (mgr == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    mgr->AddRef();
+    *aInstancePtr = mgr->GetInner();
+    return NS_OK;
 }
 
 NS_METHOD
@@ -198,35 +206,28 @@ nsPluginManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
         return NS_OK; 
     }
 #endif
-    // Aggregates...
-    nsIJVMManager* jvmMgr = GetJVMMgr(aIID);
-    if (jvmMgr) {
-        *aInstancePtr = (void*) ((nsISupports*)jvmMgr);
-        return NS_OK; 
-    }
-    if (fMalloc == NULL) {
-        if (nsMalloc::Create((nsIPluginManager*)this, kISupportsIID,
-                             (void**)&fMalloc) != NS_OK)
-            return NS_NOINTERFACE;
-    }
-    return fMalloc->QueryInterface(aIID, aInstancePtr);
-}
 
-nsIJVMManager*
-nsPluginManager::GetJVMMgr(const nsIID& aIID)
-{
-    nsIJVMManager* result = NULL;
+    // Aggregates...
 #ifdef OJI
-    if (fJVMMgr == NULL) {
-        // The plugin manager is the outer of the JVM manager
-        if (nsJVMMgr::Create((nsIPluginManager*)this, kISupportsIID,
-                             (void**)&fJVMMgr) != NS_OK)
-            return NULL;
-    }
-    if (fJVMMgr->QueryInterface(aIID, (void**)&result) != NS_OK)
-        return NULL;
+    if (fJVMMgr == NULL)
+        nsJVMMgr::Create((nsIPluginManager*)this, kISupportsIID,
+                         (void**)&fJVMMgr);
+    if (fJVMMgr && fJVMMgr->QueryInterface(aIID, aInstancePtr) == NS_OK)
+        return NS_OK;
 #endif
-    return result;
+    if (fMalloc == NULL)
+        nsMalloc::Create((nsIPluginManager*)this, kISupportsIID,
+                         (void**)&fMalloc);
+    if (fMalloc && fMalloc->QueryInterface(aIID, aInstancePtr) == NS_OK)
+        return NS_OK;
+
+    if (fFileUtils == NULL)
+        nsFileUtilities::Create((nsIPluginManager*)this, kISupportsIID,
+                                (void**)&fFileUtils);
+    if (fFileUtils && fFileUtils->QueryInterface(aIID, aInstancePtr) == NS_OK)
+        return NS_OK;
+
+    return NS_NOINTERFACE;
 }
 
 NS_METHOD
@@ -630,6 +631,22 @@ nsPluginManager::PostURL(nsISupports* peer, const char* url, const char* target,
     return fromNPError[rslt];
 }
 
+extern "C" char *pacf_find_proxies_for_url(MWContext *context, 
+                                           URL_Struct *URL_s);
+
+NS_METHOD
+nsPluginManager::FindProxyForURL(const char* url, char* *result)
+{
+    // Warning: Looking at the code in mkautocf.c, the context can
+    // (fortunately) be NULL.
+    URL_Struct* urls = NET_CreateURLStruct(url, NET_DONT_RELOAD);
+    if (urls == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *result = pacf_find_proxies_for_url(NULL, urls);
+    NET_FreeURLStruct(urls);
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // File Utilities Interface
 
@@ -660,6 +677,18 @@ nsFileUtilities::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
     return NS_NOINTERFACE;
 }
 
+NS_METHOD
+nsFileUtilities::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+{
+    if (outer && !aIID.Equals(kISupportsIID))
+        return NS_NOINTERFACE;   // XXX right error?
+    nsFileUtilities* fu = new nsFileUtilities(outer);
+    if (fu == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    fu->AddRef();
+    *aInstancePtr = fu->GetInner();
+    return NS_OK;
+}    
 
 NS_METHOD
 nsFileUtilities::GetProgramPath(const char* *result)
@@ -933,14 +962,14 @@ nsPluginTagInfo::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
     } 
 #ifdef OJI
     // Aggregates...
-    if (fJVMPluginTagInfo == NULL) {
-        nsresult result =
-            nsJVMPluginTagInfo::Create((nsISupports*)this, kISupportsIID,
-                                       (void**)&fJVMPluginTagInfo, this);
-        if (result != NS_OK) return result;
-    }
+    if (fJVMPluginTagInfo == NULL)
+        nsJVMPluginTagInfo::Create((nsISupports*)this, kISupportsIID,
+                                   (void**)&fJVMPluginTagInfo, this);
+    if (fJVMPluginTagInfo &&
+        fJVMPluginTagInfo->QueryInterface(aIID, aInstancePtr) == NS_OK)
+        return NS_OK;
 #endif
-    return fJVMPluginTagInfo->QueryInterface(aIID, aInstancePtr);
+    return NS_NOINTERFACE;
 }
 
 static char* empty_list[] = { "", NULL };
