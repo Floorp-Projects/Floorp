@@ -86,7 +86,7 @@ function getReferrer(doc)
   }
 }
 
-function openNewWindowWith(url) 
+function openNewWindowWith(url, sendReferrer) 
 {
   urlSecurityCheck(url, document);
 
@@ -98,20 +98,25 @@ function openNewWindowWith(url)
   if (wintype == "navigator:browser")
     charsetArg = "charset=" + window._content.document.characterSet;
 
-  var referrer = getReferrer(document);
+  var referrer = sendReferrer ? getReferrer(document) : null;
   window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg, referrer);
 }
 
-function openNewTabWith(url) 
+function openNewTabWith(url, sendReferrer, reverseBackgroundPref) 
 {
   urlSecurityCheck(url, document);
   var browser = getBrowser();
 
-  var referrer = getReferrer(document);
+  var referrer = sendReferrer ? getReferrer(document) : null;
   var tab = browser.addTab(url, referrer); // open link in new tab
+  if (pref) {
+    var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+    if (reverseBackgroundPref)
+      loadInBackground = !loadInBackground;
 
-  if (pref && !pref.getBoolPref("browser.tabs.loadInBackground"))
-    browser.selectedTab = tab;
+    if (!loadInBackground)
+      browser.selectedTab = tab;
+  }
 }
 
 function findParentNode(node, parentNode)
