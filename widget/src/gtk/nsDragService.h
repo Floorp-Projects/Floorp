@@ -58,13 +58,13 @@ public:
 
 protected:
 
-  void SelectionReceivedCB (GtkWidget        *aWidget,
-                            GdkDragContext   *aContext,
-                            gint              aX,
-                            gint              aY,
-                            GtkSelectionData *aSelectionData,
-                            guint             aInfo,
-                            guint             aTime);
+  static void SelectionReceivedCB (GtkWidget        *aWidget,
+                                   GdkDragContext   *aContext,
+                                   gint              aX,
+                                   gint              aY,
+                                   GtkSelectionData *aSelectionData,
+                                   guint             aInfo,
+                                   guint             aTime);
   void SelectionReceiver (GtkWidget *aWidget, GtkSelectionData *aSD);
 
 
