@@ -131,6 +131,9 @@ class nsEditorAppCore : public nsBaseAppCore,
     // These next two will be replaced with the SetElementProperties
     NS_IMETHOD		InsertLink();
     NS_IMETHOD		InsertImage();
+    NS_IMETHOD		InsertList(const nsString& aListType);
+    NS_IMETHOD		Indent(const nsString& aIndent);
+    NS_IMETHOD		Align(const nsString& aAlign);
 
     NS_IMETHOD    StartSpellChecking(nsString& aFirstMisspelledWord);
     NS_IMETHOD    GetFirstMisspelledWord(nsString& aFirstMisspelledWord);

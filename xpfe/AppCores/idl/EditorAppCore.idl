@@ -7,58 +7,61 @@ interface EditorAppCore : BaseAppCore
   readonly attribute DOMString contentsAsText;
   readonly attribute DOMString contentsAsHTML;
 
-	readonly attribute Document    editorDocument;
-	readonly attribute Selection   editorSelection;
+  readonly attribute Document    editorDocument;
+  readonly attribute Selection   editorSelection;
   readonly attribute DOMString   ParagraphFormat;
-	
-	attribute int wrapColumn;
-	
-	void EditorAppCore();
-	
-	void setEditorType(in DOMString editorType);
-	void setTextProperty(in DOMString prop, in DOMString attr, in DOMString value);
-	void removeTextProperty(in DOMString prop, in DOMString attr);
-	void getTextProperty(in DOMString prop, in DOMString attr, in DOMString value, out DOMString firstHas, out DOMString anyHas, out DOMString allHas);
-	
+  
+  attribute int wrapColumn;
+  
+  void EditorAppCore();
+  
+  void setEditorType(in DOMString editorType);
+  void setTextProperty(in DOMString prop, in DOMString attr, in DOMString value);
+  void removeTextProperty(in DOMString prop, in DOMString attr);
+  void getTextProperty(in DOMString prop, in DOMString attr, in DOMString value, out DOMString firstHas, out DOMString anyHas, out DOMString allHas);
+  
   void setParagraphFormat(in DOMString value);
 
-	void loadUrl(in DOMString url);
-	
-	void newWindow();
-	void open();
-	void save();
-	void saveAs();
-	void closeWindow();
-	void print();
-	void exit();
-	
-	void undo();
-	void redo();
-	
-	void cut();
-	void copy();
-	void paste();
-	
-	void selectAll();
-	
-	void find(in DOMString searchTerm, in boolean matchCase, in boolean searchDown);
-	
-	void beginBatchChanges();
-	void endBatchChanges();
-	
-	void insertText(in DOMString textToInsert);
+  void loadUrl(in DOMString url);
+  
+  void newWindow();
+  void open();
+  void save();
+  void saveAs();
+  void closeWindow();
+  void print();
+  void exit();
+  
+  void undo();
+  void redo();
+  
+  void cut();
+  void copy();
+  void paste();
+  
+  void selectAll();
+  
+  void find(in DOMString searchTerm, in boolean matchCase, in boolean searchDown);
+  
+  void beginBatchChanges();
+  void endBatchChanges();
+  
+  void insertText(in DOMString textToInsert);
 
   void insertLink();
-	void insertImage();
-
+  void insertImage();
+  void insertList(in DOMString listType);
+  void indent(in DOMString indent);
+  void align(in DOMString align);
+  
   Element getSelectedElement(in DOMString tagName);
   Element createElementWithDefaults(in DOMString tagName);
   Element insertElement(in Element element, in boolean deleteSelection);
-	void    insertLinkAroundSelection(in Element anchorElement);
+  void    insertLinkAroundSelection(in Element anchorElement);
   
-	void setToolbarWindow(in Window win);
-	void setContentWindow(in Window win);
-	void setWebShellWindow(in Window win);
+  void setToolbarWindow(in Window win);
+  void setContentWindow(in Window win);
+  void setWebShellWindow(in Window win);
 
   DOMString startSpellChecking();
   DOMString getFirstMisspelledWord();
