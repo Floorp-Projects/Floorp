@@ -121,7 +121,7 @@ insert into components (value, program, initialowner) values ("Networking Librar
 insert into components (value, program, initialowner) values ("Parser", "NGLayout", "rickg@netscape.com");
 insert into components (value, program, initialowner) values ("Plug-ins", "NGLayout", "michaelp@netscape.com");
 insert into components (value, program, initialowner) values ("Rendering", "NGLayout", "michaelp@netscape.com");
-insert into components (value, program, initialowner) values ("Selection and Search", "NGLayout", "rods@netscape.com");
+insert into components (value, program, initialowner) values ("Selection and Search", "NGLayout", "kostello@netscape.com");
 insert into components (value, program, initialowner) values ("Style System", "NGLayout", "peterl@netscape.com");
 insert into components (value, program, initialowner) values ("Threading", "NGLayout", "rpotts@netscape.com");
 insert into components (value, program, initialowner) values ("Viewer App", "NGLayout", "scullin@netscape.com");
