@@ -27,6 +27,7 @@ parent.ondblclick = cancelEvent;
 
 var oneStepSemaphore = false;
 var selectedISP = null;
+var supportWindow = null;
 
 function getSelectedISPName()
 {

@@ -19,6 +19,7 @@
 
 var globals = parent.parent.globals;
 var controls = parent.controls;
+var plugin = globals.document.setupPlugin;
 
 function go( msg )
 {
@@ -29,34 +30,61 @@ function checkData()
 {
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
+	globals.debug( "checkData" );
 	// * skip if we're in edit mode
 	if ( globals.document.vars.editMode.value != "yes" )
 	{
+		globals.debug( "not editing" );
+		
+		if ( document.forms != null && document.forms[ 0 ] != null && document.forms[ 0 ].popList != null )
+		{
+			globals.debug( "top case" );
+			selectedIndex = document.forms[ 0 ].popList.selectedIndex;
+		}
+		else
+		{
+			selectedIndex = -1;
+		}
+		
+		globals.debug( "selectedISP: " + globals.selectedISP );
+		globals.debug( "selectedIndex: " + selectedIndex );		
+
 		// * check for toll calls when not in international mode
 		if ( globals.document.vars.intlMode.value != "yes" )
 		{
-			if ( document.forms && document.forms[ 0 ] && document.forms[ 0 ].popList )
-				selectedIndex = document.forms[ 0 ].popList.selectedIndex;
-			else
-				selectedIndex = -1;
-
-			ispPhoneNumber = new String( globals.document.setupPlugin.GetISPModemNumber( globals.selectedISP, selectedIndex ) );
+			ispPhoneNumber = new String( plugin.GetISPModemNumber( globals.selectedISP, selectedIndex ) );
 			areaCode = globals.getAreaCode( ispPhoneNumber );
 			if ( areaCode != "" )
 			{
+				globals.debug( "areaCode: " + areaCode );s
 				if ( areaCode != "800" && areaCode != "888" )
 					if ( confirm( "The area code to call this ISP is " + areaCode + ".  This might be a toll call from your area code.  Do you wish to continue?" ) == false )
 						return false;
 			}
 		}
-		
-		if ( document.forms && document.forms[ 0 ] && document.forms[ 0 ].popList )
-			selectedIndex = document.forms[ 0 ].popList.selectedIndex;
-		else
-			selectedIndex = -1;
 
-		globals.document.setupPlugin.CreateConfigIAS( globals.selectedISP, selectedIndex );
-				
+		globals.debug( "calling createConfigIAS" );
+		plugin.CreateConfigIAS( globals.selectedISP, selectedIndex );
+		
+		globals.debug( "opening support window" );
+	
+		if (	!globals.supportWindow || globals.supportWindow == null || 
+				!globals.supportWindow.document || globals.supportWindow.document == null ||
+				globals.supportWindow.closed )
+		{			
+			globals.supportWindow = top.open( "", "supportNumber",
+				"alwaysRaised,dependent=yes,innerHeight=13,innerWidth=550,titleBar=no" );
+			globals.supportWindow.moveBy( 2, -18 );
+			globals.supportWindow.opener.focus();
+		}
+		
+		ispSupportNumber = plugin.GetISPSupportPhoneNumber( globals.selectedISP );
+		ispSupportName = globals.getSelectedISPName();
+	
+		if ( ispSupportNumber != null && ispSupportNumber != "" )
+			globals.supportWindow.document.writeln( "<LAYER PAGEX='0' PAGEY='1'><P><CENTER><FONT FACE='PrimaSans BT' SIZE=-1>For problems, please call " +
+				ispSupportName + " at <B>" + ispSupportNumber + "</B></FONT></CENTER></P></LAYER>" );
+
 		return true;
 	}
 	else

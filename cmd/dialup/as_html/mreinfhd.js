@@ -25,24 +25,25 @@ function loadData()
 {
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 
-	globals.debug( "generating more info page" );
+	//globals.debug( "generating more info page" );
 	
 	result = plugin.GenerateMoreInfoPage( globals.selectedISP );
 
 	if ( result == true )
 		parent.moreinfo.location.replace( "ispplans.htm" );
-
-	//globals.debug( "opening support window" );
+	else
+	{
+		alert( "Internal error generating listing of ISP plans." );
+		return;
+	}
 	
-	//top.open( "about:blank", "supportNumber", "alwaysRaised,dependent=yes,innerHeight=20,innerWidth=100");
-	//top.document.writeln( "1-800-WAAAAAH!" );
 	if ( controls.generateControls )
 		controls.generateControls();
 }
 
 function generateHeader()
 {
-//	parent.parent.parent.globals.debug( "ispDisplayName" + ispDisplayName );
+//	globals.debug( "ispDisplayName" + ispDisplayName );
 
 	document.writeln( "More Information about " + globals.getSelectedISPName() );
 }
