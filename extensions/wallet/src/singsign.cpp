@@ -3323,7 +3323,7 @@ SINGSIGN_RememberSignonData
 {
 }
 
-PUBLIC void
+void
 SINGSIGN_SignonViewerReturn () {
 }
 
