@@ -1161,6 +1161,43 @@ refreshPanes(PRBool onlyUpdateBookmarks, PRBool onlyUpdatePersonalToolbar, RDF_R
 
 
 
+PR_PUBLIC_API(HT_Resource)
+HT_GetContainerItem(HT_Resource parent, uint32 childNum)
+{
+	HT_Resource	child = NULL;
+
+	XP_ASSERT(parent != NULL);
+
+	if (parent != NULL)
+	{
+		child = parent->child;
+		while ((childNum > 0) && (child != NULL))
+		{
+			--childNum;
+			child = child->next;
+		}
+	}
+	return(child);
+}
+
+
+
+PR_PUBLIC_API(uint32)
+HT_GetCountDirectChildren(HT_Resource node)
+{
+	uint32		count = 0;
+
+	XP_ASSERT(node != NULL);
+
+	if (HT_IsContainer(node) && HT_IsContainerOpen(node))
+	{
+		count = node->numChildren;
+	}
+	return(count);
+}
+
+
+
 PR_PUBLIC_API(uint32)
 HT_GetCountVisibleChildren(HT_Resource node)
 {

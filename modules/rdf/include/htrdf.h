@@ -433,6 +433,8 @@ PR_PUBLIC_API(PRBool) HT_IsSeparator (HT_Resource node);
  */
 PR_PUBLIC_API(PRBool)   HT_IsContainer (HT_Resource node);
 PR_PUBLIC_API(uint32)	HT_GetCountVisibleChildren(HT_Resource node);
+PR_PUBLIC_API(uint32)	HT_GetCountDirectChildren(HT_Resource node);
+PR_PUBLIC_API(HT_Resource)	HT_GetContainerItem(HT_Resource parent, uint32 childNum);
 
 /* 
  * HT_DataSource : obtain the origin of the data
