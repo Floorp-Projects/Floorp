@@ -26,7 +26,7 @@
       <spacer height="10px"/>
       <hbox flex="1">
         <spacer width="10px"/>
-        <browser id="logView" disablehistory="true" disablesecurity="true" src="about:blank" flex="1"/>
+        <browser id="logView" disablehistory="true" disablesecurity="true" src="about:blank" autofind="false" flex="1"/>
         <spacer width="10px"/>
       </hbox>
       <spacer height="10px"/>
