@@ -94,7 +94,7 @@ nsStreamXferOp::OpenDialog( nsIDOMWindowInternal *parent ) {
                                                 "sss%ip",
                                                 "chrome://global/content/downloadProgress.xul",
                                                 "_blank",
-                                                "chrome,titlebar",
+                                                "chrome,titlebar,minimizable",
                                                 (const nsIID*)(&NS_GET_IID(nsIStreamTransferOperation)),
                                                 (nsISupports*)(nsIStreamTransferOperation*)this );
                 if ( argv ) {

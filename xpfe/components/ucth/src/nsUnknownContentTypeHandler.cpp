@@ -211,7 +211,7 @@ nsUnknownContentTypeHandler::ShowProgressDialog(nsIHelperAppLauncher *aLauncher,
                                                     "sss%ip",
                                                     "chrome://global/content/helperAppDldProgress.xul",
                                                     "_blank",
-                                                    "chrome,titlebar",
+                                                    "chrome,titlebar,minimizable",
                                                     (const nsIID*)(&NS_GET_IID(nsIHelperAppLauncher)),
                                                     (nsISupports*)aLauncher );
                     if ( argv ) {

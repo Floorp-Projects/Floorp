@@ -73,6 +73,9 @@ interface nsIWebBrowserChrome : nsISupports
     const unsigned long CHROME_WITH_SIZE        = 0x00001000;
     const unsigned long CHROME_WITH_POSITION    = 0x00002000;
 
+    // special cases
+    const unsigned long CHROME_WINDOW_MIN       = 0x00004000;
+
     const unsigned long CHROME_WINDOW_RAISED    = 0x02000000;
     const unsigned long CHROME_WINDOW_LOWERED   = 0x04000000;
     const unsigned long CHROME_CENTER_SCREEN    = 0x08000000;

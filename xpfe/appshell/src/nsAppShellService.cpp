@@ -607,6 +607,10 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
         if (!(aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG))
           widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_minimize | eBorderStyle_maximize | eBorderStyle_menu);
       }
+      // Min button only?
+      if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_MIN) {
+        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_minimize );
+      }  
     }
 
     if (aChromeMask & nsIWebBrowserChrome::CHROME_SCROLLBARS)
