@@ -12,6 +12,7 @@ use Mac::Processes;
 use Mac::Events;
 use Mac::Files;
 use Cwd;
+use Mac::MoreFiles;
 use FileHandle;
 use File::Path;
 use File::Copy;
@@ -632,6 +633,11 @@ sub BuildResources()
     assertRightDirectory();
 
     StartBuildModule("resources");
+
+    #just  copy this plugin to this directory.. temporary solution until the plug in is part of the build
+    my($dist_dir) = GetBinDirectory();
+    my($essentials_dir) = "$dist_dir" . "Essential Files:";
+    FSpDirectoryCopy(":mozilla:gfx:src:mac:printerplugin:PrintDialogPDE.plugin:","$essentials_dir",0);  
 
     ActivateApplication('McPL');
     
