@@ -27,8 +27,7 @@ interface nsIMsgFolder;
 interface nsIMessage : nsIMsgHdr {
 
   readonly attribute nsMsgKey msgKey;
-	nsIMsgFolder GetMsgFolder();
-	void SetMsgFolder(in nsIMsgFolder folder);
+  attribute nsIMsgFolder msgFolder;
 
 	//I hate to do this, but I really don't want to use a string due to all of the
 	//copying around so I'm using these constants and making them part of the base interface.
@@ -41,7 +40,6 @@ interface nsIMessage : nsIMsgHdr {
 [scriptable, uuid(82702556-01A2-11d3-8A69-0060B0FC04D2)]
 interface nsIDBMessage : nsIMessage {
 
-	void SetMsgDBHdr(in nsIMsgDBHdr hdr);
-	nsIMsgDBHdr GetMsgDBHdr();
+  attribute nsIMsgDBHdr msgDBHdr;
 };
  

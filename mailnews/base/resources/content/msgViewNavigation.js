@@ -206,7 +206,7 @@ function ScrollToFirstNewMessage()
 function GetTopLevelMessageForMessage(message, folder)
 {
 	if(!folder)
-		folder = message.GetMsgFolder();
+		folder = message.msgFolder;
 
 	var thread = folder.getThreadForMessage(message);
     var outIndex = new Object();

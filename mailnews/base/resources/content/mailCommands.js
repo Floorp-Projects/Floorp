@@ -379,7 +379,7 @@ function MarkThreadAsRead(compositeDataSource, message)
 
 	if(message)
 	{
-		var folder = message.GetMsgFolder();
+		var folder = message.msgFolder
 		if(folder)
 		{
 			var thread = folder.getThreadForMessage(message);

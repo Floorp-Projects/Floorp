@@ -68,7 +68,7 @@ function LoadMessage(messageNode)
     var resource = RDF.GetResource(uri);
     var message = resource.QueryInterface(Components.interfaces.nsIMessage); 
     if (message)
-      setTitleFromFolder(message.GetMsgFolder(), message.mime2DecodedSubject);
+      setTitleFromFolder(message.msgFolder, message.mime2DecodedSubject);
 
 	  gCurrentDisplayedMessage = uri;
 	  gHaveLoadedMessage = true;

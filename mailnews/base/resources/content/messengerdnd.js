@@ -234,7 +234,7 @@ function DropOnFolderTree(event)
 	var targetServer = targetfolder.server;
 
 	var message = sourceNode.QueryInterface(Components.interfaces.nsIMessage);
-	var folder = message.GetMsgFolder();
+	var folder = message.msgFolder;
 	var sourceRescource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
   	var sourcefolder = sourceRescource.QueryInterface(Components.interfaces.nsIMsgFolder);
 	var sourceServer = sourcefolder.server;
