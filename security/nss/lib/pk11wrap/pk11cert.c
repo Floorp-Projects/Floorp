@@ -1172,68 +1172,58 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
     CERTCertificate *rvCert = NULL;
     NSSCertificate *cert = NULL;
     NSSUsage usage;
+    NSSToken *token;
+    PK11SlotInfo *slot = NULL;
     char *delimit = NULL;
     char *tokenName;
     NSSTrustDomain *defaultTD = STAN_GetDefaultTrustDomain();
     usage.anyUsage = PR_TRUE;
-    /* XXX login to slots ... */
     if ((delimit = PORT_Strchr(nickname,':')) != NULL) {
-	NSSToken *token;
 	tokenName = nickname;
 	nickname = delimit + 1;
 	*delimit = '\0';
 	/* find token by name */
 	token = NSSTrustDomain_FindTokenByName(defaultTD, (NSSUTF8 *)tokenName);
-	if (token) {
-	    nssTokenCertSearch search;
-	    nssList *certList;
+	*delimit = ':';
+    } else {
+	slot = PK11_GetInternalKeySlot();
+	token = PK11Slot_GetNSSToken(slot);
+    }
+    if (token) {
+	nssTokenCertSearch search;
+	nssList *certList;
+	certList = nssList_Create(NULL, PR_FALSE);
+	(void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD, 
+	                                                  nickname, 
+	                                                  certList);
+	/* set the search criteria */
+	search.callback = get_newest_cert;
+	search.cbarg = (void *)&cert;
+	search.cached = certList;
+	search.trustDomain = defaultTD;
+	search.cryptoContext = NULL;
+	/* find best cert on token */
+	nssToken_TraverseCertificatesByNickname(token, NULL, 
+	                                        (NSSUTF8 *)nickname,
+	                                        &search);
+	nssList_Destroy(certList);
+	if (!cert) {
 	    certList = nssList_Create(NULL, PR_FALSE);
-	    (void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD, 
-	                                                      nickname, 
-	                                                      certList);
-	    /* set the search criteria */
-	    search.callback = get_newest_cert;
-	    search.cbarg = (void *)&cert;
-	    search.cached = certList;
-	    search.trustDomain = defaultTD;
-	    search.cryptoContext = NULL;
-	    /* find best cert on token */
-	    nssToken_TraverseCertificatesByNickname(token, NULL, 
-	                                            (NSSUTF8 *)nickname,
-	                                            &search);
-	    nssList_Destroy(certList);
-	    if (!cert) {
-		certList = nssList_Create(NULL, PR_FALSE);
-		(void)nssTrustDomain_GetCertsForEmailAddressFromCache(
-		                                                  defaultTD, 
+	    (void)nssTrustDomain_GetCertsForEmailAddressFromCache(defaultTD, 
 	                                                          nickname, 
 	                                                          certList);
-		search.cached = certList;
-		nssToken_TraverseCertificatesByEmail(token, NULL, 
-		                                     (NSSASCII7 *)nickname,
-		                                     &search);
-		nssList_Destroy(certList);
-	    }
+	    search.cached = certList;
+	    nssToken_TraverseCertificatesByEmail(token, NULL, 
+	                                         (NSSASCII7 *)nickname,
+	                                         &search);
+	    nssList_Destroy(certList);
 	}
-    } else {
-	/* search the whole trust domain */
-	cert = NSSTrustDomain_FindBestCertificateByNickname(
-                                                  defaultTD,
-                                                  (NSSUTF8 *)nickname,
-                                                  NULL,
-                                                  &usage,
-                                                  NULL);
-	if (!cert) {
-	    cert = NSSTrustDomain_FindCertificateByEmail(defaultTD, 
-		                                         (NSSASCII7 *)nickname,
-		                                          NULL, &usage, NULL);
+	if (cert) {
+	    rvCert = STAN_GetCERTCertificate(cert);
 	}
     }
-    if (cert) {
-	rvCert = STAN_GetCERTCertificate(cert);
-    }
-    if (delimit) {
-	*delimit = ':';
+    if (slot) {
+	PK11_FreeSlot(slot);
     }
     return rvCert;
 #endif
