@@ -51,12 +51,12 @@
         <html:td colspan="2">
           <html:input type="text" id="height" size="4" maxlength="4"
               onkeyup="forceInteger('height')" />
-          <html:label> &pixelsPopup.value; </html:label>
+          <html:label for="height"> &pixelsPopup.value; </html:label>
         </html:td>
       </html:tr>
       <html:tr>              
         <html:td>
-          <html:label for="height">&widthEditField.label;</html:label>
+          <html:label for="width">&widthEditField.label;</html:label>
         </html:td>
         <html:td>
           <html:input type="text" id="width" size="4" maxlength="4"

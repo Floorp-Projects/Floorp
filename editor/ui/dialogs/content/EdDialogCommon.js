@@ -273,7 +273,7 @@ function GetAppropriatePercentString()
 {
   var selection = window.editorShell.editorSelection;
   if (selection) {
-    if (editorShell.GetElementOrParentByTagName("td",selection.focusNode));
+    if (editorShell.GetElementOrParentByTagName("td",selection.focusNode))
       return GetString("PercentOfCell");
   }
   return GetString("PercentOfWindow");
