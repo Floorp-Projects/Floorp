@@ -123,6 +123,7 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
 
   const nsASingleFragmentString& text = Substring(mText, mText+mTextLength);
   if (mState == eXBL_InHandlers) {
+    NS_ASSERTION(mBinding, "Must have binding here");
     // Get the text and add it to the event handler.
     if (mSecondaryState == eXBL_InHandler)
       mHandler->AppendHandlerText(text);
@@ -132,6 +133,7 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
     return NS_OK;
   }
   else if (mState == eXBL_InImplementation) {
+    NS_ASSERTION(mBinding, "Must have binding here");
     if (mSecondaryState == eXBL_InConstructor ||
         mSecondaryState == eXBL_InDestructor) {
       // Construct a method for the constructor/destructor.
@@ -277,12 +279,12 @@ nsXBLContentSink::HandleStartElement(const PRUnichar *aName,
     return rv;
 
   if (mState == eXBL_InBinding && !mBinding) {
-    // XXX need to return nsresult here.  Need error-handling in this
-    // file in general.
-    ConstructBinding();
-    if (!mBinding) {
-      return NS_ERROR_UNEXPECTED;
-    }
+    rv = ConstructBinding();
+    if (NS_FAILED(rv))
+      return rv;
+    
+    // mBinding may still be null, if the binding had no id.  If so,
+    // we'll deal with that later in the sink.
   }
 
   return rv;
@@ -351,8 +353,10 @@ nsXBLContentSink::HandleEndElement(const PRUnichar *aName)
 
       if (mState == eXBL_InBinding && tagAtom == nsXBLAtoms::binding) {
         mState = eXBL_InBindings;
-        mBinding->Initialize();
-        mBinding = nsnull; // Clear our current binding ref.
+        if (mBinding) {  // See comment in HandleStartElement()
+          mBinding->Initialize();
+          mBinding = nsnull; // Clear our current binding ref.
+        }
       }
 
       return NS_OK;
@@ -419,7 +423,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
       mState = eXBL_InBinding;
     }
     else if (aTagName == nsXBLAtoms::handlers) {
-      if (mState != eXBL_InBinding) {
+      if (mState != eXBL_InBinding || !mBinding) {
         ReportUnexpectedElement(aTagName, aLineNumber);
         return PR_TRUE;
       }
@@ -436,7 +440,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
       ret = PR_FALSE;
     }
     else if (aTagName == nsXBLAtoms::resources) {
-      if (mState != eXBL_InBinding) {
+      if (mState != eXBL_InBinding || !mBinding) {
         ReportUnexpectedElement(aTagName, aLineNumber);
         return PR_TRUE;
       }
@@ -444,12 +448,13 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
       ret = PR_FALSE; // The XML content sink should ignore all <resources>.
     }
     else if (mState == eXBL_InResources) {
+      NS_ASSERTION(mBinding, "Must have binding here");
       if (aTagName == nsXBLAtoms::stylesheet || aTagName == nsXBLAtoms::image)
         ConstructResource(aAtts, aTagName);
       ret = PR_FALSE; // The XML content sink should ignore everything within a <resources> block.
     }
     else if (aTagName == nsXBLAtoms::implementation) {
-      if (mState != eXBL_InBinding) {
+      if (mState != eXBL_InBinding || !mBinding) {
         ReportUnexpectedElement(aTagName, aLineNumber);
         return PR_TRUE;
       }
@@ -458,6 +463,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
       ret = PR_FALSE; // The XML content sink should ignore the <implementation>.
     }
     else if (mState == eXBL_InImplementation) {
+      NS_ASSERTION(mBinding, "Must have binding here");
       if (aTagName == nsXBLAtoms::constructor) {
         mSecondaryState = eXBL_InConstructor;
         nsXBLProtoImplAnonymousMethod* newMethod =
@@ -519,26 +525,32 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
   return ret;
 }
 
-void 
+nsresult
 nsXBLContentSink::ConstructBinding()
 {
   nsCOMPtr<nsIContent> binding = GetCurrentContent();
   nsAutoString id;
   binding->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
-  nsCAutoString cid; cid.AssignWithConversion(id);
+  NS_ConvertUTF16toUTF8 cid(id);
 
+  nsresult rv = NS_OK;
+  
   if (!cid.IsEmpty()) {
     mBinding = new nsXBLPrototypeBinding();
-    if (mBinding) {
-      if (NS_SUCCEEDED(mBinding->Init(cid, mDocInfo, binding))) {
-        mDocInfo->SetPrototypeBinding(cid, mBinding);
-        binding->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::id, PR_FALSE);
-      } else {
-        delete mBinding;
-        mBinding = nsnull;
-      }
+    if (!mBinding)
+      return NS_ERROR_OUT_OF_MEMORY;
+      
+    rv = mBinding->Init(cid, mDocInfo, binding);
+    if (NS_SUCCEEDED(rv)) {
+      mDocInfo->SetPrototypeBinding(cid, mBinding);
+      binding->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::id, PR_FALSE);
+    } else {
+      delete mBinding;
+      mBinding = nsnull;
     }
   }
+
+  return rv;
 }
 
 
