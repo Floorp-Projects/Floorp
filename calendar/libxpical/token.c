@@ -53,6 +53,9 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
+#ifdef XP_BEOS
+#include <be/net/netdb.h>
+#endif
 #endif
 
 /* set the following to the number of 100ns ticks of the actual resolution of
