@@ -30,6 +30,7 @@ use Moz;
 #-----------------------------------------------
 $DEBUG					= 0;
 $CARBON					= 0;	# turn on to build with TARGET_CARBON
+$NECKO					= 0;
 $MOZ_FULLCIRCLE			= 0;
 $PROFILE				= 0;
 
