@@ -21,19 +21,20 @@
 
 #include "nsWindow.h"
 
-// Events
-const int cDMImageLoaded = 0;
+class nsHierarchicalDataItem;
 
-class nsDataModelWidget : public ChildWindow
-                  
+
+class nsDataModelWidget : public ChildWindow           
 {
-protected:
-    nsDataModelWidget() {};
-
 public:
     virtual ~nsDataModelWidget() {};
 
 	virtual void HandleDataModelEvent(int event, nsHierarchicalDataItem* pItem) = 0;
+
+protected:
+	
+    nsDataModelWidget() {};
+
 };
 
 #endif
