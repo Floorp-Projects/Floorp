@@ -149,9 +149,9 @@ static nscoord OldCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
 		break;
 	default:
     if (aHTMLSize < 1) {
-      dFontSize = (7 * aBasePointSize / 10) / pow(1.1, 1 - aHTMLSize);
+      dFontSize = (7 * aBasePointSize / 10) * pow(1.1, aHTMLSize - 1);
     }
-    else {  // 7 < aHTMLSize
+    else {  // aHTMLSize > 7
       dFontSize = (3 * aBasePointSize) * pow(1.2, aHTMLSize - 7);
     }
 	}
