@@ -22,27 +22,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=nntp
-LIBRARY_NAME=nntpTest
+#MODULE=nntp
 
 DIRS = nntp newsParser
-
-EXPORTS = \
-	$(NULL)
-
-CPPSRCS = \
-	nsNNTPHostStub.cpp \
-	nsNNTPNewsgroupListStub.cpp \
-	nsNNTPNewsgroupStub.cpp \
-	nsNNTPCategoryContainerStub.cpp \
-	$(NULL)
-
-EXTRA_DSO_LDOPTS = 	\
-	$(NSPR_LIBS)	\
-	-L$(DIST)/bin	\
-	-L$(DIST)/lib	\
-	-lmsgbaseutil	\
-	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
