@@ -1209,10 +1209,10 @@ nsHttpHandler::CreateServicesFromCategory(const char *category)
  *  1.0 amongst the number of languages present.
  *
  *  Ex: passing: "en, ja"
- *      returns: "en, ja; q=0.500"
+ *      returns: "en, ja;q=0.50"
  *
  *      passing: "en, ja, fr_CA"
- *      returns: "en, ja; q=0.667, fr_CA; q=0.333"
+ *      returns: "en, ja;q=0.66, fr_CA;q=0.33"
  */
 static nsresult
 PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLanguages)
@@ -1257,7 +1257,7 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
         if (*token != '\0') {
             comma = n++ != 0 ? ", " : ""; // delimiter if not first item
             if (q < 0.9995)
-                wrote = PR_snprintf(p2, available, "%s%s; q=%1.3f", comma, token, q);
+                wrote = PR_snprintf(p2, available, "%s%s;q=0.%02u", comma, token, (unsigned) (q * 100.0));
             else
                 wrote = PR_snprintf(p2, available, "%s%s", comma, token);
             q -= dec;
@@ -1293,7 +1293,7 @@ nsHttpHandler::SetAcceptLanguages(const char *aAcceptLanguages)
  *  comma delimited and with q values set for each charset in decending order.
  *
  *  Ex: passing: "euc-jp"
- *      returns: "euc-jp, utf-8; q=0.667, *; q=0.667"
+ *      returns: "euc-jp, utf-8;q=0.667, *;q=0.667"
  *
  *      passing: "UTF-8"
  *      returns: "UTF-8, *"
@@ -1354,7 +1354,7 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
         if (*token != '\0') {
             comma = n++ != 0 ? ", " : ""; // delimiter if not first item
             if (q < 0.9995)
-                wrote = PR_snprintf(p2, available, "%s%s; q=%1.3f", comma, token, q);
+                wrote = PR_snprintf(p2, available, "%s%s;q=0.%02u", comma, token, (unsigned) (q * 100.0));
             else
                 wrote = PR_snprintf(p2, available, "%s%s", comma, token);
             q -= dec;
@@ -1366,7 +1366,7 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
     if (add_utf) {
         comma = n++ != 0 ? ", " : ""; // delimiter if not first item
         if (q < 0.9995)
-            wrote = PR_snprintf(p2, available, "%sutf-8; q=%1.3f", comma, q);
+            wrote = PR_snprintf(p2, available, "%sutf-8;q=0.%02u", comma, (unsigned) (q * 100.0));
         else
             wrote = PR_snprintf(p2, available, "%sutf-8", comma);
         q -= dec;
@@ -1383,7 +1383,7 @@ PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
 
         q += dec;
         if (q < 0.9995) {
-            wrote = PR_snprintf(p2, available, "%s*; q=%1.3f", comma, q);
+            wrote = PR_snprintf(p2, available, "%s*;q=0.%02u", comma, (unsigned) (q * 100.0));
         }
         else
             wrote = PR_snprintf(p2, available, "%s*", comma);
