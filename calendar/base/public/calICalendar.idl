@@ -89,8 +89,8 @@ interface calICalendar : nsISupports
   void removeObserver( in calIObserver observer );
 
   /**
-   * The following five "Item" functions are all asynchronous, and get 
-   * their results called back through an calIOperationListener object.
+   * The following five "Item" functions are all asynchronous, and return
+   * their results to a calIOperationListener object.
    *
    * @param aItem	      item to add or modify
    * @param aListener 	where to call back the results
@@ -101,8 +101,8 @@ interface calICalendar : nsISupports
   void deleteItem( in string aId, in calIOperationListener aListener );
 
   /**
-   * Get a single event.  The event will be typed as one of the child classes
-   * child of calIItemBase (which ever concrete one is most appropriate).
+   * Get a single event.  The event will be typed as one of the subclasses
+   * of calIItemBase (whichever concrete one is most appropriate).
    * 
    * @param aId        UID of the event
    * @param aListener  listener to which this event will be called back.

@@ -45,12 +45,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= calbase
 XPIDL_MODULE	= calbase
 
-XPIDLSRCS	= 	\
-			calIDateTime.idl \
-			calIItemBase.idl \
-			calITodo.idl \
-			calIEvent.idl \
-			calICalendar.idl \
-			$(NULL)
+XPIDLSRCS	= calIDateTime.idl   \
+		  calIItemBase.idl   \
+		  calITodo.idl       \
+		  calIEvent.idl      \
+		  calICalendar.idl   \
+		  calIICSService.idl \
+		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
