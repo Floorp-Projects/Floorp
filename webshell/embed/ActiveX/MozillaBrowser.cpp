@@ -32,6 +32,9 @@ static const std::string c_szPrefsHomePage = "browser.startup.homepage";
 static const std::string c_szDefaultPage   = "resource://res/MozillaControl.html";
 
 
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 
@@ -55,16 +58,29 @@ CMozillaBrowser::CMozillaBrowser()
 	// Controls starts off unbusy
 	m_bBusy = FALSE;
 
-	// Initialise the events library if it hasn't been already
-	PL_InitializeEventsLib("");
-
 	// Register components
 	NS_SetupRegistry();
+
+  // Create the Event Queue for the UI thread...
+  //
+  // If an event queue already exists for the thread, then 
+  // CreateThreadEventQueue(...) will fail...
+  nsresult rv;
+  nsIEventQueueService* eventQService = NULL;
+
+  rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&eventQService);
+  if (NS_SUCCEEDED(rv)) {
+    rv = eventQService->CreateThreadEventQueue();
+    nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
+  }
 }
 
 
 CMozillaBrowser::~CMozillaBrowser()
 {
+  // XXX: Do not call DestroyThreadEventQueue(...) for now...
 	NG_TRACE(_T("CMozillaBrowser::~CMozillaBrowser\n"));
 }
 
