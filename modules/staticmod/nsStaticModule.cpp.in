@@ -39,7 +39,7 @@ struct nsModuleComponentInfoContainer {
     PRUint32                    count;
 };
 
-@DECLARE_COMPONENT_LIST@
+%DECLARE_COMPONENT_LIST%
 
 static nsresult
 NS_RegisterStaticModules(nsIFile *aPath)
@@ -51,7 +51,7 @@ NS_RegisterStaticModules(nsIFile *aPath)
     
     NS_ASSERTION(NS_SUCCEEDED(rv), "Static mods cannot get global component manager.");
     
-    @COMPONENT_NS_GET_MODULE@
+    %COMPONENT_NS_GET_MODULE%
     
         {};
     
@@ -124,7 +124,7 @@ static nsModuleComponentInfo components[] =
 
 static nsModuleComponentInfoContainer componentsList[] = {
     { components, sizeof(components)/sizeof(components[0]) },
-    @COMPONENT_LIST@
+    %COMPONENT_LIST%
     { nsnull, 0 }
 };
 
