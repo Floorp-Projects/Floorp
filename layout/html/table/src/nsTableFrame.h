@@ -844,6 +844,28 @@ inline PRBool nsTableFrame::IsRowGroup(PRInt32 aDisplayType) const
                 (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplayType));
 }
 
+class nsTableIterator
+{
+public:
+  nsTableIterator(nsIFrame& aSource, 
+                  PRBool    aUseDirection);
+  nsTableIterator(nsFrameList& aSource, 
+                  PRBool       aUseDirection);
+  nsIFrame* First();
+  nsIFrame* Next();
+  PRBool    IsLeftToRight();
+  PRInt32   Count();
+
+protected:
+  void Init(nsIFrame* aFirstChild,
+            PRBool    aUseDirection);
+  PRBool    mLeftToRight;
+  nsIFrame* mFirstListChild;
+  nsIFrame* mFirstChild;
+  nsIFrame* mCurrentChild;
+  PRInt32   mCount;
+};
+
 #endif
 
 
