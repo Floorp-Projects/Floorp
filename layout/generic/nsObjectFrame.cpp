@@ -2533,11 +2533,107 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
   return rv;
 }
 
+static nsHashtable *gCharsetMap = nsnull;
+typedef struct {
+    char *mozName;
+    char *javaName;
+} moz2javaCharset;
+
+static const moz2javaCharset charsets[] = 
+{
+    {"windows-1252",    "Cp1252"},
+    {"IBM850",          "Cp850"},
+    {"IBM852",          "Cp852"},
+    {"IBM855",          "Cp855"},
+    {"IBM857",          "Cp857"},
+    {"IBM828",          "Cp862"},
+    {"IBM864",          "Cp864"},
+    {"IBM866",          "Cp866"},
+    {"windows-1250",    "Cp1250"},
+    {"windows-1251",    "Cp1251"},
+    {"windows-1253",    "Cp1253"},
+    {"windows-1254",    "Cp1254"},
+    {"windows-1255",    "Cp1255"},
+    {"windows-1256",    "Cp1256"},
+    {"windows-1257",    "Cp1257"},
+    {"windows-1258",    "Cp1258"},
+    {"EUC-JP",          "EUC_JP"},
+    {"EUC-KR",          "EUC_KR"},
+    {"x-euc-tw",        "EUC_TW"},
+    {"gb18030",         "GB18030"},
+    {"x-gbk",           "GBK"},
+    {"ISO-2022-JP",     "ISO2022JP"},
+    {"ISO-2022-KR",     "ISO2022KR"},
+    {"ISO-8859-2",      "ISO8859_2"},
+    {"ISO-8859-3",      "ISO8859_3"},
+    {"ISO-8859-4",      "ISO8859_4"},
+    {"ISO-8859-5",      "ISO8859_5"},
+    {"ISO-8859-6",      "ISO8859_6"},
+    {"ISO-8859-7",      "ISO8859_7"},
+    {"ISO-8859-8",      "ISO8859_8"},
+    {"ISO-8859-9",      "ISO8859_9"},
+    {"ISO-8859-13",     "ISO8859_13"},
+    {"x-johab",         "Johab"},
+    {"KOI8-R",          "KOI8_R"},
+    {"TIS-620",         "MS874"},
+    {"windows-936",     "MS936"},
+    {"x-windows-949",   "MS949"},
+    {"x-mac-arabic",    "MacArabic"},
+    {"x-mac-croatian",  "MacCroatia"},
+    {"x-mac-cyrillic",  "MacCyrillic"},
+    {"x-mac-greek",     "MacGreek"},
+    {"x-mac-hebrew",    "MacHebrew"},
+    {"x-mac-icelandic", "MacIceland"},
+    {"x-mac-roman",     "MacRoman"},
+    {"x-mac-romanian",  "MacRomania"},
+    {"x-mac-ukrainian", "MacUkraine"},
+    {"Shift_JIS",       "SJIS"},
+    {"TIS-620",         "TIS620"}
+};
+  
 NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
 {
-  return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(result);
+  *result = nsnull;
+
+  nsresult rv;
+  nsCOMPtr<nsIDocument> doc;
+  rv = GetDocument(getter_AddRefs(doc));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get document");
+  if (NS_FAILED(rv)) return rv;
+
+  nsString charset;
+  rv = doc->GetDocumentCharacterSet(charset);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "can't get charset");
+  if (NS_FAILED(rv)) return rv;
+
+  if (charset.IsEmpty()) return NS_OK;
+
+  // common charsets and those not requiring conversion first
+  if (charset == NS_LITERAL_STRING("us-acsii")) {
+    *result = PL_strdup("US_ASCII");
+  } else if (charset == NS_LITERAL_STRING("ISO-8859-1") ||
+      !nsCRT::strncmp(charset.get(), NS_LITERAL_STRING("UTF").get(), 3)) {
+    *result = ToNewUTF8String(charset);
+  } else {
+    if (!gCharsetMap) {
+      gCharsetMap = new nsHashtable(sizeof(charsets)/sizeof(moz2javaCharset));
+      if (!gCharsetMap) return NS_ERROR_OUT_OF_MEMORY;
+
+      for (PRUint16 i = 0; i < sizeof(charsets)/sizeof(moz2javaCharset); i++) {
+        nsCStringKey key(charsets[i].mozName);
+        gCharsetMap->Put(&key, (void *)(charsets[i].javaName));
+      }
+    }
+    nsCStringKey mozKey(NS_LossyConvertUCS2toASCII(charset).get());
+    // if found mapping, return it; otherwise return original charset
+    char *mapping = (char *)gCharsetMap->Get(&mozKey);
+    *result = mapping ? PL_strdup(mapping) : ToNewUTF8String(charset);
+  }
+
+  return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
-  
+
 NS_IMETHODIMP nsPluginInstanceOwner::GetAlignment(const char* *result)
 {
   return GetAttribute("ALIGN", result);
