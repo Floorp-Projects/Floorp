@@ -1047,11 +1047,12 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
 
                   // Construct a chrome URL and use it to look up a resource.
                   nsAutoString rootStr = protocolStr + "://" + hostStr + "/";
-
+                
+                  // XXX if we're no longer calling GetRootURL, these calls can go away
 #ifndef NECKO
-                  rv = NS_NewURL(&rootURL, rootStr);
+                  // rv = NS_NewURL(&rootURL, rootStr);
 #else
-                  rv = NS_NewURI(&rootURL, rootStr);
+                  // rv = NS_NewURI(&rootURL, rootStr);
 #endif // NECKO
                //   rv = GetRootURL(rootURL);
                 }

@@ -155,6 +155,7 @@ nsStreamXferOp::Start( void ) {
                 rv = NS_NewURI( &url, mSource.GetBuffer() );
                 if ( NS_SUCCEEDED( rv ) && url ) {
                     nsresult rv = NS_OpenURI( this, nsnull, url );
+                    NS_RELEASE(url);
                 
                     if ( NS_FAILED( rv ) ) {
                         DEBUG_PRINTF( PR_STDOUT, "%s %d: NS_OpenURI failed, rv=0x%08X\n",

@@ -212,6 +212,7 @@ nsresult nsXPInstallManager::DownloadNext()
                 if (NS_SUCCEEDED(rv)) {
 #ifdef NECKO
                     rv = NS_OpenURI( this, nsnull, pURL );
+                    NS_RELEASE(pURL);
 #else
                     rv = NS_OpenURL( pURL, this );
 #endif

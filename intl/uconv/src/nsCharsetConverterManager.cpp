@@ -271,7 +271,10 @@ nsresult nsCharsetConverterManager::CreateMapping()
       res = registry->GetString(key, "source", &src);
       if (NS_FAILED(res)) continue;
       res = registry->GetString(key, "destination", &dest);
-      if (NS_FAILED(res)) continue;
+      if (NS_FAILED(res)) {
+          nsCRT::free(src);
+          continue;
+      }
 
       nsAutoString str;
 
