@@ -47,7 +47,7 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
   <popupset id="aTooltipSet" />
-  <titledbox><title><text value="&size.label;"/></title>
+  <titledbox orient="vertical"><title><text value="&size.label;"/></title>
     <grid>
       <columns><column/><column/><column/></columns>
       <rows>
@@ -76,9 +76,9 @@
         </row>
       </rows>
     </grid>
-    <spring class="small-separator"/>
+    <spring class="spacer"/>
   </titledbox>
-  <spring class="small-separator"/>
+  <spring class="spacer"/>
   <box>
     <text class="label align-right" text-align="right" value="&borderEditField.label;"
         tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;" />
