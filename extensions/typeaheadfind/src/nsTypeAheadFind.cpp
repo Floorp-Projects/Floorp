@@ -736,6 +736,11 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsTypeAheadFind::BackOneChar(PRBool *aIsBackspaceUsed)
 {
+  if (!mFocusedDocSelection) {
+    *aIsBackspaceUsed = PR_FALSE;
+    return NS_OK;
+  }
+
   // In normal type ahead find, remove a printable char from 
   // mTypeAheadBuffer, then search for buffer contents
   // Or, in repeated char find, go backwards
