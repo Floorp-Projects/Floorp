@@ -34,6 +34,13 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+try {
+  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
+  if (chromeRegistry)
+    chromeRegistry = chromeRegistry.QueryInterface(Components.interfaces.nsIXULChromeRegistry);
+}
+catch(e) {}
+
 function Startup()
 {
   var extList = document.getElementById("extList");
