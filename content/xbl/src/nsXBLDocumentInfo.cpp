@@ -329,13 +329,11 @@ nsXBLDocGlobalObject::GetPrincipal()
   return document->GetPrincipal();
 }
 
-static PRBool IsChromeOrResourceURI(nsIURI* aURI)
+static PRBool IsChromeURI(nsIURI* aURI)
 {
   PRBool isChrome = PR_FALSE;
-  PRBool isResource = PR_FALSE;
-  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && 
-      NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)))
-      return (isChrome || isResource);
+  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)))
+      return isChrome;
   return PR_FALSE;
 }
 
@@ -348,7 +346,7 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
     mBindingTable(nsnull)
 {
   nsIURI* uri = aDocument->GetDocumentURI();
-  if (IsChromeOrResourceURI(uri)) {
+  if (IsChromeURI(uri)) {
     // Cache whether or not this chrome XBL can execute scripts.
     nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
     if (reg) {
