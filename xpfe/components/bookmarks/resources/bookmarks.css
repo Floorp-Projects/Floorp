@@ -28,6 +28,11 @@
 
 @import url(chrome://global/skin/);
 
+treecol[hidden="true"]
+{
+  display: none;
+}
+
 treecol[sortActive="true"]
 {
  background-color: lightgray;
