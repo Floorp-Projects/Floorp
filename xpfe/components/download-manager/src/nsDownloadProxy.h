@@ -55,12 +55,14 @@ public:
   NS_IMETHODIMP Init(nsIURI* aSource,
                      nsILocalFile* aTarget,
                      const PRUnichar* aDisplayName,
+                     const PRUnichar* aOpeningWith,
+                     PRInt64 aStartTime,
                      nsIWebBrowserPersist* aPersist) {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
     if (NS_FAILED(rv)) return rv;
     
-    rv = dm->AddDownload(aSource, aTarget, aDisplayName, aPersist, getter_AddRefs(mInner));
+    rv = dm->AddDownload(aSource, aTarget, aDisplayName, aOpeningWith, aStartTime, aPersist, getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
     
     char* persistentDescriptor;
@@ -84,11 +86,6 @@ public:
     return mInner->GetOpeningWith(aOpeningWith);
   }
   
-  NS_IMETHODIMP SetOpeningWith(const PRUnichar* aOpeningWith)
-  {
-    return mInner->SetOpeningWith(aOpeningWith);
-  }
-  
   NS_IMETHODIMP GetSource(nsIURI** aSource)
   {
     return mInner->GetSource(aSource);
@@ -102,11 +99,6 @@ public:
   NS_IMETHODIMP GetStartTime(PRInt64* aStartTime)
   {
     return mInner->GetStartTime(aStartTime);
-  }
-
-  NS_IMETHODIMP SetStartTime(PRInt64 aStartTime)
-  {
-    return mInner->SetStartTime(aStartTime);
   }
 
   NS_IMETHODIMP GetPercentComplete(PRInt32* aPercentComplete)

@@ -121,6 +121,8 @@ protected:
   nsresult GetTransferInformation(PRInt32* aCurr, PRInt32* aMax);
   nsresult GetDownloadState(DownloadState* aState);
   nsresult SetDownloadState(DownloadState aState);
+  nsresult SetOpeningWith(const PRUnichar* aOpeningWith);
+  nsresult SetStartTime(PRInt64 aStartTime);
 private:
   nsDownloadManager* mDownloadManager;
 
