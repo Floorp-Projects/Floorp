@@ -460,8 +460,8 @@ nsStorageTransport::nsReadRequest::Process()
     mWaitingForWrite = PR_FALSE;
 
     if (!mOnStartFired) {
-        // no need to proxy this callback
-        (void) mListener->OnStartRequest(this, mListenerContext);
+        // must proxy since called from AsyncRead - bug 136216
+        (void) mListenerProxy->OnStartRequest(this, mListenerContext);
         mOnStartFired = PR_TRUE;
     }
 
@@ -599,8 +599,8 @@ NS_IMETHODIMP
 nsStorageTransport::nsReadRequest::OnStartRequest(nsIRequest *aRequest,
                                                   nsISupports *aContext)
 {
-    NS_NOTREACHED("nsStorageTransport::nsReadRequest::OnStartRequest");
-    return NS_ERROR_FAILURE;
+    NS_ASSERTION(mListener, "no listener");
+    return mListener->OnStartRequest(aRequest, aContext);
 }
 
 NS_IMETHODIMP
