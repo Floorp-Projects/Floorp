@@ -55,7 +55,7 @@ function toOpenWindowByType( inType, uri )
 	if ( topWindow )
 		topWindow.focus();
 	else
-		window.open(uri, "", "chrome,menubar");
+		window.open(uri, "", "chrome,menubar,toolbar,resizable");
 }
 
 function CycleWindow( inType, inChromeURL )
@@ -75,7 +75,7 @@ function CycleWindow( inType, inChromeURL )
 	if ( topWindowOfType == null )
 	{
 		dump( " no windows of this type so create a new one \n");
-		window.open( inChromeURL, "","chrome,menubar,toolbar" );
+		window.open( inChromeURL, "","chrome,menubar,toolbar,resizable" );
 		return;
 	}
 	
@@ -118,7 +118,7 @@ function CycleWindow( inType, inChromeURL )
 	else
 	{
 		dump("open window \n");
-		window.open( inChromeURL, "","chrome,menubar" );
+		window.open( inChromeURL, "","chrome,menubar,toolbar,resizable" );
 	}
 }
 
