@@ -523,7 +523,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (void)openURL:(NSPasteboard *) pboard userData:(NSString *) userData error:(NSString **) error
 {
-  NSString *urlString = [[[NSMutableString alloc] init] autorelease];
+  NSMutableString *urlString = [[[NSMutableString alloc] init] autorelease];
   if ( !urlString )
     return;
 
