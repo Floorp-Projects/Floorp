@@ -7895,8 +7895,7 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
 
     if (disp->IsPositioned() && disp->mDisplay != NS_STYLE_DISPLAY_TABLE) {
       // Find the outermost wrapped block under this frame
-      for (nsIFrame* wrappedFrame = frame->GetContentInsertionFrame();
-           wrappedFrame != frame->GetParent();
+      for (nsIFrame* wrappedFrame = aFrame; wrappedFrame != frame->GetParent();
            wrappedFrame = wrappedFrame->GetParent()) {
         nsIAtom* frameType = wrappedFrame->GetType();
         if (nsLayoutAtoms::areaFrame == frameType ||
