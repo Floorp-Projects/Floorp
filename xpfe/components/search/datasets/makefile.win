@@ -44,6 +44,8 @@ FILES=\
 	NetscapeSearch.src		\
 	ShopNetscape.gif		\
 	ShopNetscape.src		\
+	google.gif			\
+	google.src			\
         $(NULL)
 
 install:: $(FILES:/=\)
