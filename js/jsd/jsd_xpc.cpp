@@ -897,8 +897,9 @@ jsdService::OnForRuntime (JSRuntime *rt)
     if (gLastGCProc == jsds_GCCallbackProc)
         /* condition indicates that the callback proc has not been set yet */
         gLastGCProc = JS_SetGCCallbackRT (rt, jsds_GCCallbackProc);
-        
-    mCx = JSD_DebuggerOnForUser (rt, NULL, NULL);
+
+    if (!mOn)
+        mCx = JSD_DebuggerOnForUser (rt, NULL, NULL);
     if (!mCx)
         return NS_ERROR_FAILURE;
     
@@ -911,8 +912,29 @@ NS_IMETHODIMP
 jsdService::Off (void)
 {
     JSD_DebuggerOff (mCx);
+    mCx = 0;
     mOn = PR_FALSE;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
+{
+    JSDScript *script;
+    JSDScript *iter = NULL;
+    PRBool cont_flag;
+    nsresult rv = NS_OK;
+    
+    JSD_LockScriptSubsystem(mCx);
+    while((script = JSD_IterateScripts(mCx, &iter)) != NULL) {
+        rv = enumerator->EnumerateScript (jsdScript::FromPtr(mCx, script),
+                                          &cont_flag);
+        if (NS_FAILED(rv) || !cont_flag)
+            break;
+    }
+    JSD_UnlockScriptSubsystem(mCx);
+
+    return rv;
 }
 
 NS_IMETHODIMP

@@ -243,6 +243,13 @@ interface jsdIExecutionHook : nsISupports
                              in unsigned long type, inout jsdIValue val);
 };
 
+/* script enumeration callback */
+[scriptable, uuid(4c2f706e-1dd2-11b2-9ebc-85a06e948830)]
+interface jsdIScriptEnumerator : nsISupports
+{
+    boolean enumerateScript (in jsdIScript script);
+};
+
 /* debugger service */
 [scriptable, uuid(01be7f9a-1dd2-11b2-9d55-aaf919b27c73)]
 interface jsdIDebuggerService : nsISupports
@@ -258,6 +265,7 @@ interface jsdIDebuggerService : nsISupports
     [noscript] void onForRuntime (in JSRuntime rt); /* native version of on() */
     void off ();
 
+    void enumerateScripts (in jsdIScriptEnumerator enumerator);
     void clearAllBreakpoints ();
     
     /* XXX temporary hacks */
