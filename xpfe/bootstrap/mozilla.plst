@@ -134,14 +134,14 @@
 	<key>CFBundleSignature</key>
 	<string>MOZZ</string>
 	<key>CFBundleVersion</key>
-	<string>0.9.7+</string>
+	<string>0.9.8+</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.9.7+</string>
+	<string>0.9.8+</string>
  	<key>CFBundleGetInfoString</key>
- 	<string>0.9.7+, © 1998-2001 The Mozilla Organization</string>
+ 	<string>0.9.8+, © 1998-2002 The Mozilla Organization</string>
 	<key>LSRequiresCarbon</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>©1998-2001 The Mozilla Organization</string>
+	<string>©1998-2002 The Mozilla Organization</string>
 </dict>
 </plist>
