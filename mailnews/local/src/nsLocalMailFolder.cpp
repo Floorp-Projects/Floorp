@@ -36,7 +36,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 ////////////////////////////////////////////////////////////////////////////////
 
 static nsString*
-nsGetNameFromPath(const nsNativeFileSpec* path)
+nsGetNameFromPath(const nsFileSpec* path)
 {
   const char* pathStr = (const char*)path;
   char* ptr = PL_strrchr(pathStr, '/');
@@ -50,7 +50,7 @@ static const char kRootPrefix[] = "mailbox:/";
 static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
 
 static nsresult
-nsURI2Path(char* uriStr, nsNativeFileSpec& pathResult)
+nsURI2Path(char* uriStr, nsFileSpec& pathResult)
 {
   nsAutoString path;
   nsAutoString uri = uriStr;
@@ -73,7 +73,7 @@ nsURI2Path(char* uriStr, nsNativeFileSpec& pathResult)
   if (NS_FAILED(rv))
     return rv; 
 #else
-  char rootPath[] = "c:\\program files\\netscape\\users\\putterman\\mail";
+  char rootPath[] = "c:\\program files\\netscape\\users\\mscott\\mail";
 #endif
   path.Append(rootPath);
   uri.Cut(0, nsCRT::strlen(kRootPrefix));
@@ -111,15 +111,15 @@ nsURI2Path(char* uriStr, nsNativeFileSpec& pathResult)
     uri.Cut(0, pos);
     uriLen = uri.Length();
   }
-  // XXX bogus, nsNativeFileSpec should take an nsString
+  // XXX bogus, nsFileSpec should take an nsString
   char* str = path.ToNewCString();
-  pathResult = *new nsNativeFileSpec(str, PR_FALSE);
+  pathResult = *new nsFileSpec(str, PR_FALSE);
   delete[] str;
   return NS_OK;
 }
 
 static nsresult
-nsPath2URI(nsNativeFileSpec& path, const char* *uri)
+nsPath2URI(nsFileSpec& path, const char* *uri)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -204,12 +204,11 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
 {
   nsresult rv = NS_OK;
   nsAutoString currentFolderName;
-  nsNativeFileSpec path;
+  nsFileSpec path;
   rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
-
-  for (nsDirectoryIterator dir(path); (const nsFileSpec&)dir; dir++) {
-    nsNativeFileSpec currentFolderPath = (nsNativeFileSpec&)dir;
+  for (nsDirectoryIterator dir(path); (const nsFileSpec&) dir; dir++) {
+    nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 #if 0
     if (currentFolderName)
       delete[] currentFolderName;
@@ -255,7 +254,7 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
 nsresult
 nsMsgLocalMailFolder::Initialize(void)
 {
-  nsNativeFileSpec path;
+  nsFileSpec path;
   nsresult rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
   nsFilePath aFilePath(path);
@@ -928,7 +927,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsNativeFileSpec& aPathName)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
 {
   if (mPath == nsnull) {
     nsresult rv = nsURI2Path(mURI, mPath);

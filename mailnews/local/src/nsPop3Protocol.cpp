@@ -164,11 +164,10 @@ net_pop3_load_state(const char* searchhost,
 	return NULL;
   }
 
-  nsNativeFileSpec fileSpec(mailDirectory);
+  nsFileSpec fileSpec(mailDirectory);
   fileSpec += "popstate.dat";
 
-  nsFilePath filePath(fileSpec);
-  nsInputFileStream fileStream(filePath);
+  nsInputFileStream fileStream(fileSpec);
 
   buf = (char*)PR_CALLOC(512);
   if (buf) {
@@ -224,8 +223,7 @@ net_pop3_load_state(const char* searchhost,
         }
 	  }
 	}
-  // new API - closes when it goes out of scope?
-  //	fileStream.close();
+
 	PR_Free(buf);
   }
   
@@ -271,12 +269,10 @@ net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
 {
   PRInt32 len = 0;
 
-  nsNativeFileSpec fileSpec(mailDirectory);
+  nsFileSpec fileSpec(mailDirectory);
   fileSpec += "popstate.dat";
 
-  nsFilePath filePath(fileSpec);
-
-  nsOutputFileStream outFileStream(filePath, PR_WRONLY | PR_CREATE_FILE |
+  nsOutputFileStream outFileStream(fileSpec, PR_WRONLY | PR_CREATE_FILE |
                                    PR_TRUNCATE);
 	char* tmpBuffer = PR_smprintf("%s", "# Netscape POP3 State File" LINEBREAK
 			   "# This is a generated file!  Do not edit." LINEBREAK LINEBREAK);
@@ -300,8 +296,6 @@ net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
                    net_pop3_write_mapper, &outFileStream);
     }
   }
-  // new API - closes when it goes out of scope?
-  //  outFileStream.close();
 }
 
 /*

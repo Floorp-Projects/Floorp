@@ -122,12 +122,12 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
 #ifdef DEBUG
     m_fileCounter++;
 #endif
-    nsFilePath filePath(path);
-    m_outFileStream = new nsOutputFileStream(filePath, 
+    nsFileSpec fileSpec(path);
+    m_outFileStream = new nsOutputFileStream(fileSpec, 
                                              PR_WRONLY | PR_CREATE_FILE | PR_APPEND);
 
 	// create a new mail parser
-	m_newMailParser = new nsParseNewMailState(NULL, filePath);
+	m_newMailParser = new nsParseNewMailState(NULL, nsFilePath(path));
     PR_FREEIF(path);
 
 #ifdef DEBUG
@@ -143,8 +143,6 @@ nsPop3Sink::EndMailDelivery()
 {
     if (m_outFileStream)
     {
-        // new API - closes when it gets deleted?
-        //        m_outFileStream->close();
         delete m_outFileStream;
         m_outFileStream = 0;
     }
@@ -165,8 +163,6 @@ nsPop3Sink::AbortMailDelivery()
 {
     if (m_outFileStream)
     {
-        // new API - closes when it gets deleted?
-        // m_outFileStream->close();
         delete m_outFileStream;
         m_outFileStream = 0;
     }
