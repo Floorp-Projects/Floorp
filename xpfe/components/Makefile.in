@@ -26,7 +26,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_THUNDERBIRD
+ifdef MOZ_THUNDERBIRD
+MOZ_STANDALONE_NONBROWSER_XULAPP=1
+endif
+ifdef MOZ_STANDALONE_COMPOSER
+define MOZ_STANDALONE_NONBROWSER_XULAPP
+1
+endef
+endif
+
+ifndef MOZ_STANDALONE_NONBROWSER_XULAPP
 DIRS	= \
 			directory \
 			filepicker \
@@ -88,14 +97,10 @@ ifdef MOZ_ENABLE_XREMOTE
 DIRS		+= xremote
 endif
 
-ifndef MOZ_THUNDERBIRD
-ifndef MOZ_STANDALONE_COMPOSER
+ifndef MOZ_STANDALONE_NONBROWSER_XULAPP
 DIRS		+= build
 else
 DIRS		+= build2
-endif
-else
-DIRS	        += build2
 endif
 
 include $(topsrcdir)/config/rules.mk
