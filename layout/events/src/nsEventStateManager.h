@@ -51,7 +51,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsresult Init();
+  NS_IMETHOD Init();
   nsresult Shutdown();
 
   /* The PreHandleEvent method is called before event dispatch to either
