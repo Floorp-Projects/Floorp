@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #include "nsICSSStyleSheet.h"
 #include "nsIArena.h"
 #include "nsCRT.h"
@@ -1010,23 +1011,23 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
     if ((PR_TRUE == result) &&
         ((nsnull != aSelector->mID) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
       result = PR_FALSE;
-      nsIHTMLContent* htmlContent;
-      if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+      nsIStyledContent* styledContent;
+      if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::IID(), (void**)&styledContent))) {
         nsIAtom* contentID;
-        htmlContent->GetID(contentID);
+        styledContent->GetID(contentID);
         if ((nsnull == aSelector->mID) || (aSelector->mID == contentID)) {
           result = PR_TRUE;
           nsAtomList* classList = aSelector->mClassList;
           while (nsnull != classList) {
-            if (NS_COMFALSE == htmlContent->HasClass(classList->mAtom)) {
+            if (NS_COMFALSE == styledContent->HasClass(classList->mAtom)) {
               result = PR_FALSE;
               break;
             }
             classList = classList->mNext;
           }
         }
-        NS_RELEASE(htmlContent);
         NS_IF_RELEASE(contentID);
+        NS_RELEASE(styledContent);
       }
     }
     if ((PR_TRUE == result) && 
@@ -1209,11 +1210,11 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     nsIAtom* idAtom = nsnull;
     nsVoidArray classArray; // XXX need to recycle this guy (or make nsAutoVoidArray?)
 
-    nsIHTMLContent* htmlContent;
-    if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-      htmlContent->GetID(idAtom);
-      htmlContent->GetClasses(classArray);
-      NS_RELEASE(htmlContent);
+    nsIStyledContent* styledContent;
+    if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::IID(), (void**)&styledContent))) {
+      styledContent->GetID(idAtom);
+      styledContent->GetClasses(classArray);
+      NS_RELEASE(styledContent);
     }
 
     mRuleHash->EnumerateAllRules(tagAtom, idAtom, classArray, ContentEnumFunc, &data);
