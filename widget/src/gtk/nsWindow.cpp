@@ -4172,13 +4172,13 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 
     if (uniCharSize) {
       mIMECompositionUniString[uniCharSize] = 0;
-
-      IMEComposeStart(nsnull);
-      IMEComposeText(nsnull,
-                     mIMECompositionUniString,
-                     uniCharSize,
-                     nsnull);
     }
+
+    IMEComposeStart(nsnull);
+    IMEComposeText(nsnull,
+                   uniCharSize ? mIMECompositionUniString : nsnull,
+                   uniCharSize,
+                   nsnull);
 
     // Call IMEComposeEnd() to reset the state of field
     IMEComposeEnd(nsnull);
