@@ -424,6 +424,7 @@ input {
 }
 input[type=hidden] {
   border: none;
+  visibility: hidden;
 }
 input[type=radio] {
   /* these margins are for NavQuirks, we need a Standard ua.css */  
