@@ -144,7 +144,7 @@ lo_FreeFormElementData(LO_FormElementData *element_data)
 				}
 			}
 			break;
-#ifdef MOZ_ENDER
+#ifdef ENDER
         case FORM_TYPE_HTMLAREA :
 #ifdef MOZ_ENDER_MIME
 			{
@@ -159,8 +159,8 @@ lo_FreeFormElementData(LO_FormElementData *element_data)
 				}
 			}
             /*drop into textarea to delete text portion of structure*/
-#endif /*MOZ_ENDER_MIME*/
-#endif /*MOZ_ENDER*/
+#endif /* MOZ_ENDER_MIME */
+#endif /* ENDER */
 		case FORM_TYPE_TEXTAREA:
 			{
 				lo_FormElementTextareaData *form_data;
@@ -342,7 +342,7 @@ lo_CleanFormElementData(LO_FormElementData *element_data)
 			break;
 #ifdef ENDER
         case FORM_TYPE_HTMLAREA :
-#endif /*ENDER*/
+#endif /* ENDER */
 		case FORM_TYPE_TEXTAREA:
 			{
 				lo_FormElementTextareaData *form_data;
