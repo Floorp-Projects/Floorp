@@ -1672,7 +1672,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
 
   // Count the number of frames on the line...
   mTotalPlacedFrames++;
-  if (psd->mX != psd->mLeftEdge) {
+  if (psd->mX != psd->mLeftEdge || pfd->mBounds.x != psd->mLeftEdge) {
     // As soon as a frame placed on the line advances an X coordinate
     // of any span we can no longer place a floater on the line.
     SetFlag(LL_CANPLACEFLOATER, PR_FALSE);
