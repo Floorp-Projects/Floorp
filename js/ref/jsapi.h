@@ -931,8 +931,8 @@ JS_ReportError(JSContext *cx, const char *format, ...);
  * As above, but use an errorNumber for the format string
  */
 extern JS_PUBLIC_API(void)
-JS_ReportErrorNumber(JSContext *cx, JSErrorCallBack errCallBack, void *userRef,
-					const uintN errorNumber, ...);
+JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
+		     void *userRef, const uintN errorNumber, ...);
 
 /*
  * As above, but report a warning instead (JSREPORT_IS_WARNING(report->flags)).

@@ -2499,15 +2499,15 @@ JS_ReportError(JSContext *cx, const char *format, ...)
 }
 
 JS_PUBLIC_API(void)
-JS_ReportErrorNumber(JSContext *cx, JSErrorCallBack errCallBack, void *userRef,
-				const uintN errorNumber, ...)
+JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
+		     void *userRef, const uintN errorNumber, ...)
 {
     va_list ap;
 
     CHECK_REQUEST(cx);
     va_start(ap, errorNumber);
-    js_ReportErrorNumberVA(cx, JSREPORT_ERROR, 
-			errCallBack, userRef, errorNumber, ap);
+    js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
+    			   errorNumber, ap);
     va_end(ap);
 }
 

@@ -159,9 +159,9 @@ struct JSContext {
     JSPackedBool        gcActive;
     jsrefcount          requestDepth;
 #endif
-    JSStackFrame        *dormantFrameChain;   /* dormant frame chains */
-    JSPackedBool    throwing;       /* is there a pending exception? */
-    jsval	    exception;      /* most-recently-thrown exceptin */
+    JSStackFrame        *dormantFrameChain; /* dormant frame chains */
+    JSPackedBool        throwing;           /* is there a pending exception? */
+    jsval               exception;          /* most-recently-thrown exceptin */
 };
 
 typedef struct JSInterpreterHooks {
@@ -203,14 +203,14 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 extern void
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
 extern void
-js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallBack callback,
-                         void *userRef, const uintN errorNumber, va_list ap);
+js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
+                       void *userRef, const uintN errorNumber, va_list ap);
 
 extern JSBool
-js_ExpandErrorArguments(JSContext *cx, JSErrorCallBack callback,
-				void *userRef, const uintN errorNumber, 
-                                char **message, JSErrorReport *reportp, 
-                                va_list ap);
+js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
+                        void *userRef, const uintN errorNumber, 
+                        char **message, JSErrorReport *reportp, 
+                        va_list ap);
 #endif
 
 /*

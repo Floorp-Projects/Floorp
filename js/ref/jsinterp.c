@@ -159,9 +159,8 @@ static JSClass prop_iterator_class = {
     PR_END_MACRO
 
 /*
- * This POP variant is called only for bitwise operators and for tableswitch,
- * so we don't bother to inline it.  The calls in Interpret must therefore
- * SAVE_SP first!
+ * This POP variant is called only for bitwise operators, so we don't bother
+ * to inline it.  The calls in Interpret must therefore SAVE_SP first!
  */
 static JSBool
 PopInt(JSContext *cx, jsint *ip)

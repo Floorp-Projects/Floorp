@@ -460,23 +460,23 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
 
 static JSBool
 FixupFinallyJumps(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t tryStart,
-              ptrdiff_t finallyIndex)
+		  ptrdiff_t finallyIndex)
 {
     jsbytecode *pc;
+
     pc = cg->base + tryStart;
-    BYTECODE_ITER(pc, cg->next, \
-    if (*pc == JSOP_GOSUB) {                                                  \
-        ptrdiff_t index = GET_JUMP_OFFSET(pc);                                \
-        if (index <= 0) {                                                     \
-            if (index == 0) {                                                 \
-                index = finallyIndex - (pc - cg->base);                       \
-            } else {                                                          \
-                index++;                                                      \
-            }                                                                 \
-            CHECK_AND_SET_JUMP_OFFSET(cx, cg, pc, index);                     \
-        }                                                                     \
-    }                                                                         \
-                  );
+    BYTECODE_ITER(pc, cg->next,
+	if (*pc == JSOP_GOSUB) {
+	    ptrdiff_t index = GET_JUMP_OFFSET(pc);
+	    if (index <= 0) {
+		if (index == 0)
+		    index = finallyIndex - (pc - cg->base);
+		else
+		    index++;
+		CHECK_AND_SET_JUMP_OFFSET(cx, cg, pc, index);
+	    }
+	}
+    );
     return JS_TRUE;
 }
 
@@ -485,11 +485,12 @@ FixupCatchJumps(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t tryStart,
                 ptrdiff_t postCatch)
 {
     jsbytecode *pc;
+
     pc = cg->base + tryStart;
-    BYTECODE_ITER(pc, cg->next, \
-    if (*pc == JSOP_GOTO && !GET_JUMP_OFFSET(pc)) {                           \
-        CHECK_AND_SET_JUMP_OFFSET(cx, cg, pc, postCatch - (pc - cg->base));   \
-    }                                                                         \
+    BYTECODE_ITER(pc, cg->next,
+	if (*pc == JSOP_GOTO && !GET_JUMP_OFFSET(pc)) {
+	    CHECK_AND_SET_JUMP_OFFSET(cx, cg, pc, postCatch - (pc - cg->base));
+	}
     );
     return JS_TRUE;
 }
@@ -827,7 +828,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!js_EmitTree(cx, cg, pn4))
                 return JS_FALSE;
             pn3->pn_offset = pn4->pn_offset;
-            if (pn3->pn_type == TOK_DEFAULT) 
+            if (pn3->pn_type == TOK_DEFAULT)
                 off = pn3->pn_offset - top;
         }
 
@@ -1180,6 +1181,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         return js_PopStatementCG(cx, cg);
 
 #if JS_HAS_EXCEPTIONS
+
       case TOK_TRY: {
         ptrdiff_t start, end, catchStart, finallyCatch, catchjmp = -1;
         JSParseNode *iter = pn;
@@ -1371,7 +1373,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (pn->pn_kid3 ||
             (catchjmp != -1 && iter->pn_kid1->pn_expr)) {
 
-            /* 
+            /*
              * Emit another stack fix, because the catch could itself
              * throw an exception in an unbalanced state, and the finally
              * may need to call functions etc.
@@ -2385,7 +2387,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
         ptrdiff_t nextOffset = cg->tryNext - cg->tryBase;
         size_t oldsize = (char *)cg->tryLimit - (char *)cg->tryBase;
         size = oldsize + cg->treeContext.tryCount * sizeof(JSTryNote);
-        
+
         PR_ARENA_GROW(cg->tryBase, &cx->tempPool, oldsize, size);
         if (!cg->tryBase)
             return JS_FALSE;
