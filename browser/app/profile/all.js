@@ -211,15 +211,8 @@ pref("print.print_footercenter", "");
 pref("print.print_footerright", "&D");
 pref("print.show_print_progress", true);
 
-// When this is set to false it means each window has its PrintSettings
-// and a change in one browser window does not effect the others
-pref("print.use_global_printsettings", true);
-
 // This indicates whether it should use the native dialog or the XP Dialog50
 pref("print.use_native_print_dialog", false);
-
-// Save the Printings after each print job
-pref("print.save_print_settings", true);
 
 pref("print.whileInPrintPreview", true);
 
