@@ -17,20 +17,12 @@
  */
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIContent.h"
 #include "nsILinkHandler.h"
-#include "nsIStyleContext.h"
 #include "nsIStyleSet.h"
-#include "nsIFontMetrics.h"
 #include "nsFrameImageLoader.h"
-#include "nsIImageManager.h"
 #include "nsIImageGroup.h"
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
-#include "nsTransform2D.h"
-#include "nsIDocument.h"
-#include "nsIURL.h"
-#include "nsString.h"
 
 #define NOISY_IMAGES
 
@@ -172,10 +164,10 @@ nsPresContext::GetDefaultFont(void)
   return mDefaultFont;
 }
 
-nsRect
-nsPresContext::GetVisibleArea()
+void
+nsPresContext::GetVisibleArea(nsRect& aResult)
 {
-  return mVisibleArea;
+  aResult = mVisibleArea;
 }
 
 void
