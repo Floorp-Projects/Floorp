@@ -2,8 +2,12 @@
 
 cd table
 call rtest.bat %1
+cd..
 
 cd images
 call rtest.bat %1
-cd ..
+cd..
 
+cd general
+call rtest.bat %1
+cd..
