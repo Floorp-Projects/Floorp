@@ -2143,7 +2143,8 @@ public class Interpreter
 
         Loop: for (;;) {
             try {
-                switch (iCode[pc] & 0xFF) {
+                int op = 0xFF & iCode[pc];
+                switch (op) {
     // Back indent to ease imlementation reading
 
     case Icode_CATCH: {
@@ -2665,38 +2666,23 @@ public class Interpreter
         do_setElem(cx, stack, sDbl, stackTop, scope);
         stackTop -= 2;
         break;
-    case Icode_PROPINC : {
-        String name = (String)stack[stackTop];
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, name, scope, true);
-        break;
-    }
+    case Icode_PROPINC :
     case Icode_PROPDEC : {
         String name = (String)stack[stackTop];
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, name, scope, false);
+        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, name, scope, op == Icode_PROPINC);
         break;
     }
-    case Icode_ELEMINC : {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope, true);
-        break;
-    }
+    case Icode_ELEMINC :
     case Icode_ELEMDEC : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope, false);
+        stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope, op == Icode_ELEMINC);
         break;
     }
     case Token.LOCAL_SAVE : {
@@ -2887,15 +2873,10 @@ public class Interpreter
         pc += 2;
         break;
     }
-    case Icode_NAMEINC : {
-        String name = strings[getIndex(iCode, pc + 1)];
-        stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, name, true);
-        pc += 2;
-        break;
-    }
+    case Icode_NAMEINC :
     case Icode_NAMEDEC : {
         String name = strings[getIndex(iCode, pc + 1)];
-        stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, name, false);
+        stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, name, op == Icode_NAMEINC);
         pc += 2;
         break;
     }
@@ -2922,34 +2903,27 @@ public class Interpreter
         }
         break;
     }
-    case Icode_VARINC : {
-        int slot = (iCode[++pc] & 0xFF);
-        ++stackTop;
-        if (!useActivationVars) {
-            stack[stackTop] = stack[VAR_SHFT + slot];
-            sDbl[stackTop] = sDbl[VAR_SHFT + slot];
-            stack[VAR_SHFT + slot] = DBL_MRK;
-            sDbl[VAR_SHFT + slot] = stack_double(stack, sDbl, stackTop) + 1.0;
-        } else {
-            Object val = activationGet(fnOrScript, scope, slot);
-            stack[stackTop] = val;
-            val = doubleWrap(ScriptRuntime.toNumber(val) + 1.0);
-            activationPut(fnOrScript, scope, slot, val);
-        }
-        break;
-    }
+    case Icode_VARINC :
     case Icode_VARDEC : {
         int slot = (iCode[++pc] & 0xFF);
         ++stackTop;
         if (!useActivationVars) {
-            stack[stackTop] = stack[VAR_SHFT + slot];
-            sDbl[stackTop] = sDbl[VAR_SHFT + slot];
+            Object val = stack[VAR_SHFT + slot];
+            stack[stackTop] = val;
+            double d;
+            if (val == DBL_MRK) {
+                d = sDbl[VAR_SHFT + slot];
+                sDbl[stackTop] = d;
+            } else {
+                d = ScriptRuntime.toNumber(val);
+            }
             stack[VAR_SHFT + slot] = DBL_MRK;
-            sDbl[VAR_SHFT + slot] = stack_double(stack, sDbl, stackTop) - 1.0;
+            sDbl[VAR_SHFT + slot] = (op == Icode_VARINC) ? d  + 1.0 : d - 1.0;
         } else {
             Object val = activationGet(fnOrScript, scope, slot);
             stack[stackTop] = val;
-            val = doubleWrap(ScriptRuntime.toNumber(val) - 1.0);
+            double d = ScriptRuntime.toNumber(val);
+            val = doubleWrap((op == Icode_VARINC) ? d  + 1.0 : d - 1.0);
             activationPut(fnOrScript, scope, slot, val);
         }
         break;
@@ -3013,15 +2987,9 @@ public class Interpreter
         int slot = (iCode[++pc] & 0xFF);
         Object val = stack[LOCAL_SHFT + slot];
         ++stackTop;
-        stack[stackTop] = ((iCode[pc - 1] & 0xFF) == Token.ENUM_NEXT)
+        stack[stackTop] = (op == Token.ENUM_NEXT)
                           ? (Object)ScriptRuntime.enumNext(val)
                           : (Object)ScriptRuntime.enumId(val);
-        break;
-    }
-    case Icode_GETPROTO : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.getProto(lhs, scope);
         break;
     }
     case Icode_PUSH_PARENT : {
@@ -3030,28 +2998,33 @@ public class Interpreter
         stack[++stackTop] = ScriptRuntime.getParent(lhs);
         break;
     }
+    case Icode_GETPROTO :
     case Icode_GETSCOPEPARENT : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.getParent(lhs, scope);
+        Object val;
+        if (op == Icode_GETPROTO) {
+            val = ScriptRuntime.getProto(lhs, scope);
+        } else {
+            val = ScriptRuntime.getParent(lhs, scope);
+        }
+        stack[stackTop] = val;
         break;
     }
-    case Icode_SETPROTO : {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.setProto(lhs, rhs, scope);
-        break;
-    }
+    case Icode_SETPROTO :
     case Icode_SETPARENT : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.setParent(lhs, rhs, scope);
+        Object val;
+        if (op == Icode_SETPROTO) {
+            val = ScriptRuntime.setProto(lhs, rhs, scope);
+        } else {
+            val = ScriptRuntime.setParent(lhs, rhs, scope);
+        }
+        stack[stackTop] = val;
         break;
     }
     case Icode_SCOPE :
@@ -3097,22 +3070,22 @@ public class Interpreter
         sDbl[stackTop] = i + 1;
         break;
     }
-    case Token.ARRAYLIT : {
-        int skipOffset = getInt(iCode, pc + 1);
-        int[] skipIndexces = null;
-        if (skipOffset >= 0) {
-            skipIndexces = (int[])idata.literalIds[skipOffset];
-        }
-        Object[] values = (Object[])stack[stackTop];
-        stack[stackTop] = ScriptRuntime.newArrayLiteral(values, skipIndexces, cx, scope);
-        pc += 4;
-        break;
-    }
+    case Token.ARRAYLIT :
     case Token.OBJECTLIT : {
-        int idsOffset = getInt(iCode, pc + 1);
-        Object[] propertyIds = (Object[])idata.literalIds[idsOffset];
-        Object[] propertyValues = (Object[])stack[stackTop];
-        stack[stackTop] = ScriptRuntime.newObjectLiteral(propertyIds, propertyValues, cx, scope);
+        int offset = getInt(iCode, pc + 1);
+        Object[] data = (Object[])stack[stackTop];
+        Object val;
+        if (op == Token.ARRAYLIT) {
+            int[] skipIndexces = null;
+            if (offset >= 0) {
+                skipIndexces = (int[])idata.literalIds[offset];
+            }
+            val = ScriptRuntime.newArrayLiteral(data, skipIndexces, cx, scope);
+        } else {
+            Object[] ids = (Object[])idata.literalIds[offset];
+            val = ScriptRuntime.newObjectLiteral(ids, data, cx, scope);
+        }
+        stack[stackTop] = val;
         pc += 4;
         break;
     }
@@ -3127,8 +3100,7 @@ public class Interpreter
     }
     default : {
         dumpICode(idata);
-        throw new RuntimeException
-            ("Unknown icode : "+(iCode[pc] & 0xFF)+" @ pc : "+pc);
+        throw new RuntimeException("Unknown icode : "+op+" @ pc : "+pc);
     }
     // end of interpreter switch
                 }
