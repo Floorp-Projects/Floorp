@@ -39,9 +39,13 @@
 #include "prlog.h"
 #include "netCore.h"
 #include "ftpCore.h"
-#include "nsIPrompt.h"
 #include "nsProxiedService.h"
-#include "nsINetSupportDialogService.h"
+
+#include "nsAppShellCIDs.h" // TODO remove later
+#include "nsIAppShellService.h" // TODO remove later
+#include "nsIWebShellWindow.h" // TODO remove later
+#include "nsINetPrompt.h"
+
 #include "nsFtpProtocolHandler.h"
 #include "nsIFTPChannel.h"
 
@@ -49,10 +53,12 @@ static NS_DEFINE_CID(kIOServiceCID,                 NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,         NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kFTPHandlerCID, NS_FTPPROTOCOLHANDLER_CID);
-static NS_DEFINE_IID(kProxyObjectManagerCID,        NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kIFTPContextIID, NS_IFTPCONTEXT_IID);
 
 #define FTP_CRLF "\r\n" 
@@ -762,20 +768,34 @@ nsFtpConnectionThread::S_user() {
         usernameStr.Append("anonymous");
     } else {
         if (!mUsername.Length()) {
-            NS_WITH_PROXIED_SERVICE(nsIPrompt, authdialog, kNetSupportDialogCID, nsnull, &rv);
-            if (NS_FAILED(rv)) return rv;
 
+          NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
+          if (NS_FAILED(rv)) return rv;
+
+          nsCOMPtr<nsIWebShellWindow> webshellwindow;
+          appshellservice->GetHiddenWindow(getter_AddRefs( webshellwindow ) );
+          nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( webshellwindow ) );
+
+          NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+          if(NS_FAILED(rv)) {
+            return rv;
+          }
+          nsINetPrompt* proxyprompter = NULL;
+          rv = pIProxyObjectManager->GetProxyObject
+            (nsnull, nsINetPrompt::GetIID(), prompter, PROXY_SYNC, (void**)&proxyprompter);
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
             static nsAutoString message;
+            nsXPIDLCString host;
+            rv = mURL->GetHost(getter_Copies(host));
+            if (NS_FAILED(rv)) return rv;
             if (message.Length() < 1) {
-                nsXPIDLCString host;
-                rv = mURL->GetHost(getter_Copies(host));
-                if (NS_FAILED(rv)) return rv;
                 message = "Enter username and password for "; //TODO localize it!
                 message += host;
             }
-		    rv = authdialog->PromptUsernameAndPassword(message.GetUnicode(), &user, &passwd, &retval);
+
+            rv = proxyprompter->PromptUsernameAndPassword(host, NULL, message.GetUnicode(), &user, &passwd, &retval);
+            proxyprompter->Release();  // Must be done as not managed for you.
             // if the user canceled or didn't supply a username we want to fail
             if (!retval || (user && !*user) )
                 return NS_ERROR_FAILURE;
@@ -826,12 +846,33 @@ nsFtpConnectionThread::S_pass() {
     } else {
         if (!mPassword.Length() || mRetryPass) {
             // ignore any password we have, it's not working
-            NS_WITH_PROXIED_SERVICE(nsIPrompt, authdialog, kNetSupportDialogCID, nsnull, &rv);
-            if (NS_FAILED(rv)) return rv;
+          NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
+          if (NS_FAILED(rv)) return rv;
 
+          nsCOMPtr<nsIWebShellWindow> webshellwindow;
+          appshellservice->GetHiddenWindow(getter_AddRefs( webshellwindow ) );
+          nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( webshellwindow ) );
+
+          NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+          if(NS_FAILED(rv)) {
+            return rv;
+          }
+          nsINetPrompt* proxyprompter = NULL;
+          rv = pIProxyObjectManager->GetProxyObject
+            (nsnull, nsINetPrompt::GetIID(), prompter, PROXY_SYNC, (void**)&proxyprompter);
             PRUnichar *passwd = nsnull;
             PRBool retval;
             static nsAutoString message;
+            nsXPIDLCString host2;
+            rv = mURL->GetHost(getter_Copies(host2));
+            if (NS_FAILED(rv)) {
+              return rv;
+            }
+            nsAutoString userAtHost;
+            userAtHost = mUsername;
+            userAtHost += "@";
+            userAtHost += host2;
+            char * userAtHostC = userAtHost.ToNewCString();
             if (message.Length() < 1) {
                 nsXPIDLCString host;
                 rv = mURL->GetHost(getter_Copies(host));
@@ -841,7 +882,10 @@ nsFtpConnectionThread::S_pass() {
                 message += " on ";
                 message += host;
             }
-		    rv = authdialog->PromptPassword(message.GetUnicode(), &passwd, &retval);
+            rv = proxyprompter->PromptPassword(userAtHostC, NULL, message.GetUnicode(), &passwd, &retval);
+            nsCRT::free(userAtHostC);
+            proxyprompter->Release();  // Must be done as not managed for you.
+
             // we want to fail if the user canceled or didn't enter a password.
             if (!retval || (passwd && !*passwd) )
                 return NS_ERROR_FAILURE;
