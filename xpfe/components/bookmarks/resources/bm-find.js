@@ -52,27 +52,6 @@ function doLoad()
 	findText.focus();
 }
 
-
-
-function doUnload()
-{
-    // Get the current window position/size.
-    var x = window.screenX;
-    var y = window.screenY;
-    var h = window.outerHeight;
-    var w = window.outerWidth;
-
-    // Store these into the window attributes (for persistence).
-    var win = document.getElementById( "bookmark-find-window" );
-    win.setAttribute( "x", x );
-    win.setAttribute( "y", y );
-    win.setAttribute( "height", h );
-    win.setAttribute( "width", w );
-}
-
-
-
-
 var	gDatasourceName = "";
 var	gMatchName = "";
 var	gMethodName = "";
