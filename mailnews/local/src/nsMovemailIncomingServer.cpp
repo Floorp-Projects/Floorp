@@ -80,6 +80,72 @@ nsMovemailIncomingServer::GetLocalStoreType(char **type)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsMovemailIncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
+{
+    nsresult rv;
+    nsCOMPtr<nsIMovemailService> movemailService(do_GetService(
+                                                 kCMovemailServiceCID, &rv));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIMsgFolder> inbox;
+    nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+    nsCOMPtr<nsIUrlListener> urlListener;
+    rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
+    if(NS_SUCCEEDED(rv) && rootMsgFolder)
+    {
+         PRUint32 numFolders;
+         rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1,
+                                                &numFolders,
+                                                getter_AddRefs(inbox));
+         if (NS_FAILED(rv) || numFolders != 1) return rv;
+    }
+
+    SetPerformingBiff(PR_TRUE);
+    urlListener = do_QueryInterface(inbox);
+
+    PRBool downloadOnBiff = PR_FALSE;
+    rv = GetDownloadOnBiff(&downloadOnBiff);
+    if (downloadOnBiff)
+    {
+       nsCOMPtr <nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox,
+                                                                       &rv);
+       if (localInbox && NS_SUCCEEDED(rv))
+       {
+           PRBool valid = PR_FALSE;
+           nsCOMPtr <nsIMsgDatabase> db;
+           rv = inbox->GetMsgDatabase(aMsgWindow, getter_AddRefs(db));
+           if (NS_SUCCEEDED(rv) && db)
+           {
+               rv = db->GetSummaryValid(&valid);
+           }
+           if (NS_SUCCEEDED(rv) && valid)
+           {
+               rv = movemailService->GetNewMail(aMsgWindow, urlListener, inbox,
+                                                this, nsnull);
+           }
+           else
+           {
+              PRBool isLocked;
+              inbox->GetLocked(&isLocked);
+              if (!isLocked)
+              {
+                 rv = localInbox->ParseFolder(aMsgWindow, urlListener);
+              }
+              if (NS_SUCCEEDED(rv))
+              {
+                 rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+              }
+           }
+       }
+    }
+    else
+    {
+        movemailService->CheckForNewMail(urlListener, inbox, this, nsnull); 
+    }
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMovemailIncomingServer::SetFlagsOnDefaultMailboxes()
 {
@@ -184,10 +250,26 @@ nsMovemailIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow,
 }        
 
 NS_IMETHODIMP
+nsMovemailIncomingServer::GetDownloadMessagesAtStartup(PRBool *getMessagesAtStartup)
+{
+    NS_ENSURE_ARG_POINTER(getMessagesAtStartup);
+    *getMessagesAtStartup = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMovemailIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
 {
     NS_ENSURE_ARG_POINTER(canSearchMessages);
     *canSearchMessages = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMovemailIncomingServer::GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff)
+{
+    NS_ENSURE_ARG_POINTER(aServerRequiresPasswordForBiff);
+    *aServerRequiresPasswordForBiff = PR_FALSE;
     return NS_OK;
 }
 
