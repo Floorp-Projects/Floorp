@@ -1010,7 +1010,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
     nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
     if (scrollframe) {
       nsIScrollableFrame::nsScrollPref pref;
-      scrollframe->GetScrollPreference(aState.GetPresContext(), &pref);
+      scrollframe->GetScrollPreference(aState.PresContext(), &pref);
 
       if (pref == nsIScrollableFrame::Auto)  
       {
@@ -1151,7 +1151,7 @@ static void ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& 
 void
 nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
 {  
-  nsIPresContext* presContext = aState.GetPresContext();
+  nsIPresContext* presContext = aState.PresContext();
 
   // Sync up the view.
   nsIFrame* frame = mPopupFrames.FirstChild();

@@ -116,8 +116,7 @@ nsContainerBox::GetChildCount()
 PRInt32 
 nsContainerBox::CreateBoxList(nsBoxLayoutState& aState, nsIFrame* aFrameList, nsIBox*& aFirst, nsIBox*& aLast)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aState.GetPresShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aState.PresShell();
 
   PRInt32 count = 0;
   if (aFrameList) {
@@ -287,9 +286,7 @@ nsContainerBox::RemoveAfter(nsBoxLayoutState& aState, nsIBox* aPrevious)
     nsIBoxToBlockAdaptor* adaptor = nsnull;
 
     if (NS_SUCCEEDED(toDelete->QueryInterface(NS_GET_IID(nsIBoxToBlockAdaptor), (void**)&adaptor)) && adaptor) {
-       nsCOMPtr<nsIPresShell> shell;
-       aState.GetPresShell(getter_AddRefs(shell));
-       adaptor->Recycle(shell);
+       adaptor->Recycle(aState.PresShell());
     }
 
     mChildCount--;
@@ -312,9 +309,7 @@ nsContainerBox::ClearChildren(nsBoxLayoutState& aState)
       nsIBoxToBlockAdaptor* adaptor = nsnull;
 
       if (NS_SUCCEEDED(it->QueryInterface(NS_GET_IID(nsIBoxToBlockAdaptor), (void**)&adaptor)) && adaptor) {
-         nsCOMPtr<nsIPresShell> shell;
-         aState.GetPresShell(getter_AddRefs(shell));
-         adaptor->Recycle(shell);
+         adaptor->Recycle(aState.PresShell());
       }
    }
 
@@ -603,8 +598,7 @@ nsContainerBox::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 NS_IMETHODIMP
 nsContainerBox::DoLayout(nsBoxLayoutState& aState)
 {
-  PRUint32 oldFlags = 0;
-  aState.GetLayoutFlags(oldFlags);
+  PRUint32 oldFlags = aState.LayoutFlags();
   aState.SetLayoutFlags(0);
 
   nsresult rv = NS_OK;
@@ -645,7 +639,7 @@ nsContainerBox::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRe
   aBox->HasDirtyChildren(dirtyChildren);
 
   PRBool layout = PR_TRUE;
-  if (!(dirty || dirtyChildren) && aState.GetLayoutReason() != nsBoxLayoutState::Initial) 
+  if (!(dirty || dirtyChildren) && aState.LayoutReason() != nsBoxLayoutState::Initial) 
      layout = PR_FALSE;
   
   if (layout || (oldRect.width != aRect.width || oldRect.height != aRect.height))  {

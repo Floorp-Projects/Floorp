@@ -67,54 +67,56 @@ public:
     Initial
   };
 
-  nsBoxLayoutState(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize);
-  nsBoxLayoutState(nsIPresContext* aPresContext);
-  nsBoxLayoutState(nsIPresShell* aShell);
-  nsBoxLayoutState(const nsBoxLayoutState& aState);
-  virtual ~nsBoxLayoutState() {}
+  nsBoxLayoutState(nsIPresContext* aPresContext,
+                   const nsHTMLReflowState& aReflowState,
+                   nsHTMLReflowMetrics& aDesiredSize) NS_HIDDEN;
+  nsBoxLayoutState(nsIPresContext* aPresContext) NS_HIDDEN;
+  nsBoxLayoutState(nsIPresShell* aShell) NS_HIDDEN;
+  nsBoxLayoutState(const nsBoxLayoutState& aState) NS_HIDDEN;
 
-  virtual void HandleReflow(nsIBox* aRootBox);
+  NS_HIDDEN_(void) HandleReflow(nsIBox* aRootBox);
 
-  virtual nsIPresContext* GetPresContext() { return mPresContext.get(); }
-  virtual nsresult GetPresShell(nsIPresShell** aShell);
-  virtual nscoord* GetMaxElementWidth();
+  nsIPresContext* PresContext() { return mPresContext; }
+  nsIPresShell*   PresShell() { return mPresContext->PresShell(); }
+  nscoord* GetMaxElementWidth() { return mReflowState ? mMaxElementWidth : nsnull; }
 
-  virtual void GetScrolledBlockSizeConstraint(nsSize& aSize);
-  virtual void SetScrolledBlockSizeConstraint(const nsSize& aSize);
-  virtual void GetIncludeOverFlow(PRBool& aOverFlow);
-  virtual void SetIncludeOverFlow(const PRBool& aOverFlow);
-  virtual void GetLayoutFlags(PRUint32& aFlags);
-  virtual void SetLayoutFlags(const PRUint32& aFlags);
+  nsSize ScrolledBlockSizeConstraint() const
+  { return mScrolledBlockSizeConstraint; }
+  void SetScrolledBlockSizeConstraint(const nsSize& aSize)
+  { mScrolledBlockSizeConstraint = aSize; }
+  PRUint32 LayoutFlags() const { return mLayoutFlags; }
+  void SetLayoutFlags(PRUint32 aFlags) { mLayoutFlags = aFlags; }
 
   // if true no one under us will paint during reflow.
-  virtual void SetDisablePainting(PRBool aDisable) { mDisablePainting = aDisable; }
-  virtual PRBool GetDisablePainting() { return mDisablePainting; }
+  void SetPaintingDisabled(PRBool aDisable) { mPaintingDisabled = aDisable; }
+  PRBool PaintingDisabled() const { return mPaintingDisabled; }
 
-  virtual eBoxLayoutReason GetLayoutReason() { return mType; }
-  virtual void SetLayoutReason(eBoxLayoutReason aReason) { mType = aReason; }
-  virtual const nsHTMLReflowState* GetReflowState() { return mReflowState; }
+  eBoxLayoutReason LayoutReason() { return mType; }
+  void SetLayoutReason(eBoxLayoutReason aReason) { mType = aReason; }
+  const nsHTMLReflowState* GetReflowState() { return mReflowState; }
 
-  static void* Allocate(size_t sz, nsIPresShell* aPresShell);
-  static void Free(void* aPtr, size_t sz);
-  static void RecycleFreedMemory(nsIPresShell* aPresShell, void* mem);
+  static NS_HIDDEN_(void*) Allocate(size_t sz, nsIPresShell* aPresShell);
+  static NS_HIDDEN_(void) Free(void* aPtr, size_t sz);
+  static NS_HIDDEN_(void) RecycleFreedMemory(nsIPresShell* aPresShell,
+                                             void* mem);
 
-  nsresult PushStackMemory();
-  nsresult PopStackMemory();
-  nsresult AllocateStackMemory(size_t aSize, void** aResult);
+  nsresult PushStackMemory() { return PresShell()->PushStackMemory(); }
+  nsresult PopStackMemory()  { return PresShell()->PopStackMemory(); }
+  nsresult AllocateStackMemory(size_t aSize, void** aResult)
+  { return PresShell()->AllocateStackMemory(aSize, aResult); }
 
 private:
   //void DirtyAllChildren(nsBoxLayoutState& aState, nsIBox* aBox);
-  void Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox);
-  nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
+  NS_HIDDEN_(void) Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox);
+  NS_HIDDEN_(nsIBox*) GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
 
   nsCOMPtr<nsIPresContext> mPresContext;
   const nsHTMLReflowState* mReflowState;
   eBoxLayoutReason mType;
   nscoord* mMaxElementWidth;
   nsSize mScrolledBlockSizeConstraint;
-  PRBool mIncludeOverFlow;
   PRUint32 mLayoutFlags;
-  PRBool mDisablePainting;
+  PRBool mPaintingDisabled;
 };
 
 #endif

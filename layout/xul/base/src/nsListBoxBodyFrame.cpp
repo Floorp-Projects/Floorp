@@ -355,12 +355,12 @@ NS_IMETHODIMP
 nsListBoxBodyFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 {
   if (mScrolling)
-    aBoxLayoutState.SetDisablePainting(PR_TRUE);
+    aBoxLayoutState.SetPaintingDisabled(PR_TRUE);
 
   nsresult rv = nsBoxFrame::DoLayout(aBoxLayoutState);
 
   if (mScrolling)
-    aBoxLayoutState.SetDisablePainting(PR_FALSE);
+    aBoxLayoutState.SetPaintingDisabled(PR_FALSE);
 
   // if we are scrolled and the row height changed
   // make sure we are scrolled to a correct index.
@@ -746,7 +746,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
 
   if (firstRowContent) {
     nsRefPtr<nsStyleContext> styleContext;
-    nsIPresContext *presContext = aBoxLayoutState.GetPresContext();
+    nsIPresContext *presContext = aBoxLayoutState.PresContext();
     styleContext = presContext->StyleSet()->
       ResolveStyleFor(firstRowContent, nsnull);
 
@@ -770,7 +770,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
       nsIContent *child = listbox->GetChildAt(i);
 
       if (child->Tag() == nsXULAtoms::listitem) {
-        nsIPresContext* presContext = aBoxLayoutState.GetPresContext();
+        nsIPresContext* presContext = aBoxLayoutState.PresContext();
         nsIRenderingContext* rendContext = aBoxLayoutState.GetReflowState()->rendContext;
         if (rendContext) {
           nsAutoString value;
@@ -1476,7 +1476,7 @@ nsListboxScrollPortFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& 
     nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(mParent));
     if (scrollFrame) {
       nsIScrollableFrame::nsScrollPref scrollPref;
-      scrollFrame->GetScrollPreference(aBoxLayoutState.GetPresContext(), &scrollPref);
+      scrollFrame->GetScrollPreference(aBoxLayoutState.PresContext(), &scrollPref);
 
       if (scrollPref == nsIScrollableFrame::Auto) {
         nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);
@@ -1513,7 +1513,7 @@ nsListboxScrollPortFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize&
   nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(mParent));
   if (scrollFrame) {
     nsIScrollableFrame::nsScrollPref scrollPref;
-    scrollFrame->GetScrollPreference(aBoxLayoutState.GetPresContext(), &scrollPref);
+    scrollFrame->GetScrollPreference(aBoxLayoutState.PresContext(), &scrollPref);
 
     if (scrollPref == nsIScrollableFrame::Auto) {
       nsMargin scrollbars = scrollFrame->GetDesiredScrollbarSizes(&aBoxLayoutState);

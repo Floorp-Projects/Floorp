@@ -790,7 +790,7 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
     if (mNeedsRecalc)
     {
         nsSize size;
-        nsIPresContext* presContext = aBoxLayoutState.GetPresContext();
+        nsIPresContext* presContext = aBoxLayoutState.PresContext();
         const nsHTMLReflowState* rstate = aBoxLayoutState.GetReflowState();
         if (!rstate)
             return;

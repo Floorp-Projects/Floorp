@@ -374,7 +374,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
      curpospx = maxpospx;
 
   float p2t;
-  aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
+  aState.PresContext()->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
   // get max pos in twips

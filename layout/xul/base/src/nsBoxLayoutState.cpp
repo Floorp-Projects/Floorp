@@ -55,9 +55,8 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aP
                                                                  mType(Dirty),
                                                                  mMaxElementWidth(nsnull),
                                                                  mScrolledBlockSizeConstraint(-1,-1),
-                                                                 mIncludeOverFlow(PR_TRUE),
                                                                  mLayoutFlags(0),
-                                                                 mDisablePainting(PR_FALSE)
+                                                                 mPaintingDisabled(PR_FALSE)
 {
   NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
@@ -70,7 +69,7 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mMaxElementWidth = aState.mMaxElementWidth;
   mScrolledBlockSizeConstraint = aState.mScrolledBlockSizeConstraint;
   mLayoutFlags = aState.mLayoutFlags;
-  mDisablePainting = aState.mDisablePainting;
+  mPaintingDisabled = aState.mPaintingDisabled;
 
   NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
@@ -79,9 +78,8 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull),
                                                          mType(Dirty),
                                                          mMaxElementWidth(nsnull),
                                                          mScrolledBlockSizeConstraint(-1,-1),
-                                                         mIncludeOverFlow(PR_TRUE),
                                                          mLayoutFlags(0),
-                                                         mDisablePainting(PR_FALSE)
+                                                         mPaintingDisabled(PR_FALSE)
 {
    aShell->GetPresContext(getter_AddRefs(mPresContext));
    NS_ASSERTION(mPresContext, "PresContext must be non-null");
@@ -93,57 +91,14 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext,
                                                                       mReflowState(&aReflowState),                                                                    
                                                                       mType(Dirty),
                                                                       mScrolledBlockSizeConstraint(-1,-1),
-                                                                      mIncludeOverFlow(PR_TRUE),
                                                                       mLayoutFlags(0),
-                                                                      mDisablePainting(PR_FALSE)
+                                                                      mPaintingDisabled(PR_FALSE)
 
                                                                                         
 
 {
   mMaxElementWidth = &aDesiredSize.mMaxElementWidth;
   NS_ASSERTION(mPresContext, "PresContext must be non-null");
-}
-
-nscoord*
-nsBoxLayoutState::GetMaxElementWidth()
-{
-  return mReflowState ? mMaxElementWidth : nsnull;
-}
-
-void 
-nsBoxLayoutState::GetScrolledBlockSizeConstraint(nsSize& aSize)
-{
-  aSize = mScrolledBlockSizeConstraint;
-}
-
-void 
-nsBoxLayoutState::SetScrolledBlockSizeConstraint(const nsSize& aSize)
-{
-  mScrolledBlockSizeConstraint = aSize;
-}
-
-void 
-nsBoxLayoutState::GetIncludeOverFlow(PRBool& aOverflow)
-{
-  aOverflow = mIncludeOverFlow;
-}
-
-void 
-nsBoxLayoutState::SetLayoutFlags(const PRUint32& aFlags)
-{
-  mLayoutFlags = aFlags;
-}
-
-void 
-nsBoxLayoutState::GetLayoutFlags(PRUint32& aFlags)
-{
-  aFlags = mLayoutFlags;
-}
-
-void 
-nsBoxLayoutState::SetIncludeOverFlow(const PRBool& aOverflow)
-{
-  mIncludeOverFlow = aOverflow;
 }
 
 void
@@ -372,29 +327,3 @@ nsBoxLayoutState::RecycleFreedMemory(nsIPresShell* aShell, void* aMem)
   size_t* sz = (size_t*)aMem;
   aShell->FreeFrame(*sz, aMem);
 }
-
-nsresult
-nsBoxLayoutState::GetPresShell(nsIPresShell** aShell)
-{
-  NS_IF_ADDREF(*aShell = mPresContext->GetPresShell());
-  return NS_OK;
-}
-
-nsresult
-nsBoxLayoutState::PushStackMemory()
-{
-  return mPresContext->PresShell()->PushStackMemory();
-}
-
-nsresult
-nsBoxLayoutState::PopStackMemory()
-{
-  return mPresContext->PresShell()->PopStackMemory();
-}
-
-nsresult
-nsBoxLayoutState::AllocateStackMemory(size_t aSize, void** aResult)
-{
-  return mPresContext->PresShell()->AllocateStackMemory(aSize, aResult);
-}
-

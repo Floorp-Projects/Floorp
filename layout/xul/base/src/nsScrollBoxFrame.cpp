@@ -290,8 +290,7 @@ nsScrollBoxFrame::GetBorder(nsMargin& aMargin)
 NS_IMETHODIMP
 nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
 {
-  PRUint32 oldflags = 0;
-  aState.GetLayoutFlags(oldflags);
+  PRUint32 oldflags = aState.LayoutFlags();
 
   nsRect clientRect(0,0,0,0);
   GetClientRect(clientRect);
@@ -302,7 +301,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   kid->GetMargin(margin);
   childRect.Deflate(margin);
 
-  nsIPresContext* presContext = aState.GetPresContext();
+  nsIPresContext* presContext = aState.PresContext();
 
   // see if our child is html. If it is then
   // never include the overflow. The child will be the size
@@ -407,8 +406,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
     horizChanged = PR_TRUE;
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  aState.GetPresShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIPresShell> shell = aState.PresShell();
 
   // if either changed
   if (vertChanged || horizChanged) 

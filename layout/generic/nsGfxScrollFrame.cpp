@@ -392,8 +392,7 @@ nsHTMLScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   // should not affect sizing...
 
   // Push current constraint. We'll restore it when we're done.
-  nsSize oldConstrainedSize;
-  aState.GetScrolledBlockSizeConstraint(oldConstrainedSize);
+  nsSize oldConstrainedSize = aState.ScrolledBlockSizeConstraint();
 
   const nsHTMLReflowState* HTMLState = aState.GetReflowState();
   // This stores the computed width and height, if available.
@@ -588,13 +587,12 @@ nsHTMLScrollFrame::CurPosAttributeChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLScrollFrame::DoLayout(nsBoxLayoutState& aState)
 {
-   PRUint32 flags = 0;
-   aState.GetLayoutFlags(flags);
-   nsresult rv =  mInner.Layout(aState);
-   aState.SetLayoutFlags(flags);
+  PRUint32 flags = aState.LayoutFlags();
+  nsresult rv = mInner.Layout(aState);
+  aState.SetLayoutFlags(flags);
 
-   nsBox::DoLayout(aState);
-   return rv;
+  nsBox::DoLayout(aState);
+  return rv;
 }
 
 
@@ -936,8 +934,7 @@ nsXULScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   // should not affect sizing...
 
   // Push current constraint. We'll restore it when we're done.
-  nsSize oldConstrainedSize;
-  aState.GetScrolledBlockSizeConstraint(oldConstrainedSize);
+  nsSize oldConstrainedSize = aState.ScrolledBlockSizeConstraint();
 
   const nsHTMLReflowState* HTMLState = aState.GetReflowState();
   // This stores the computed width and height, if available.
@@ -1132,13 +1129,12 @@ nsXULScrollFrame::CurPosAttributeChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsXULScrollFrame::DoLayout(nsBoxLayoutState& aState)
 {
-   PRUint32 flags = 0;
-   aState.GetLayoutFlags(flags);
-   nsresult rv =  mInner.Layout(aState);
-   aState.SetLayoutFlags(flags);
+  PRUint32 flags = aState.LayoutFlags();
+  nsresult rv = mInner.Layout(aState);
+  aState.SetLayoutFlags(flags);
 
-   nsBox::DoLayout(aState);
-   return rv;
+  nsBox::DoLayout(aState);
+  return rv;
 }
 
 
@@ -1843,7 +1839,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   // if we have 'auto' scrollbars look at the vertical case
   if (styles.mVertical != NS_STYLE_OVERFLOW_SCROLL) {
       // get the area frame is the scrollarea
-      GetScrolledSize(aState.GetPresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
+      GetScrolledSize(aState.PresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
 
     // There are two cases to consider
       if (scrolledContentSize.height <= scrollAreaRect.height
@@ -1881,7 +1877,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   if (styles.mHorizontal != NS_STYLE_OVERFLOW_SCROLL)
   {
     // get the area frame is the scrollarea
-      GetScrolledSize(aState.GetPresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
+      GetScrolledSize(aState.PresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
 
     // if the child is wider that the scroll area
     // and we don't have a scrollbar add one.
@@ -1939,9 +1935,9 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
 #endif // IBMBIDI
   }
     
-  GetScrolledSize(aState.GetPresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
+  GetScrolledSize(aState.PresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
 
-  nsIPresContext* presContext = aState.GetPresContext();
+  nsIPresContext* presContext = aState.PresContext();
   float p2t;
   presContext->GetScaledPixelsToTwips(&p2t);
   mOnePixel = NSIntPixelsToTwips(1, p2t);
@@ -2076,7 +2072,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   // be re-laid out anyway)
   if ((oldScrollAreaBounds.width != scrollAreaRect.width
       || oldScrollAreaBounds.height != scrollAreaRect.height)
-      && nsBoxLayoutState::Dirty == aState.GetLayoutReason()) {
+      && nsBoxLayoutState::Dirty == aState.LayoutReason()) {
     nsIFrame* parentFrame = mOuter->GetParent();
     if (parentFrame) {
       if (parentFrame->GetType() == nsLayoutAtoms::viewportFrame) {

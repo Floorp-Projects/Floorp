@@ -164,7 +164,7 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
       nsBoxAddIndents();
 
       nsAutoString reason;
-      switch(aState.GetLayoutReason())
+      switch(aState.LayoutReason())
       {
         case nsBoxLayoutState::Dirty:
            reason.AssignLiteral("Dirty");
@@ -306,9 +306,7 @@ nsBox::MarkDirty(nsBoxLayoutState& aState)
   if (parent)
      return parent->RelayoutDirtyChild(aState, this);
   else {
-    nsCOMPtr<nsIPresShell> shell;
-    aState.GetPresShell(getter_AddRefs(shell));
-    return frame->GetParent()->ReflowDirtyChild(shell, frame);
+    return frame->GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
   }
 }
 
@@ -340,19 +338,15 @@ nsBox::MarkStyleChange(nsBoxLayoutState& aState)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     /*
-    nsCOMPtr<nsIPresShell> shell;
-    aState.GetPresShell(getter_AddRefs(shell));
     nsIFrame* frame = nsnull;
     GetFrame(&frame);
-    nsFrame::CreateAndPostReflowCommand(shell, frame, 
+    nsFrame::CreateAndPostReflowCommand(aState.PresShell(), frame, 
       nsHTMLReflowCommand::StyleChange, nsnull, nsnull, nsnull);
     return NS_OK;
     */
     nsIFrame* frame = nsnull;
     GetFrame(&frame);
-    nsCOMPtr<nsIPresShell> shell;
-    aState.GetPresShell(getter_AddRefs(shell));
-    return frame->GetParent()->ReflowDirtyChild(shell, frame);
+    return frame->GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
   }
 
   return NS_OK;
@@ -424,11 +418,9 @@ nsBox::RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild)
       if (parent)
          return parent->RelayoutStyleChange(aState, this);
       else {
-        nsCOMPtr<nsIPresShell> shell;
-        aState.GetPresShell(getter_AddRefs(shell));
         nsIFrame* frame = nsnull;
         aChild->GetFrame(&frame);
-        nsFrame::CreateAndPostReflowCommand(shell, frame, 
+        nsFrame::CreateAndPostReflowCommand(aState.PresShell(), frame, 
           eReflowType_StyleChanged, nsnull, nsnull, nsnull);
         return NS_OK;
       }
@@ -461,9 +453,7 @@ nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
       frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 
       if (frame->GetStateBits() & NS_FRAME_REFLOW_ROOT) {
-        nsCOMPtr<nsIPresShell> shell;
-        aState.GetPresShell(getter_AddRefs(shell));
-        nsFrame::CreateAndPostReflowCommand(shell, frame, 
+        nsFrame::CreateAndPostReflowCommand(aState.PresShell(), frame, 
                                             eReflowType_ReflowDirty,
                                             nsnull, nsnull, nsnull);
         return NS_OK;
@@ -475,9 +465,7 @@ nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
       GetParentBox(&parentBox);
       if (parentBox)
          return parentBox->RelayoutDirtyChild(aState, this);
-      nsCOMPtr<nsIPresShell> shell;
-      aState.GetPresShell(getter_AddRefs(shell));
-      return frame->GetParent()->ReflowDirtyChild(shell, frame);
+      return frame->GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
     } else {
 #ifdef DEBUG_COELESCED
       Coelesced();
@@ -562,13 +550,12 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect)
     nsIFrame* frame = nsnull;
     GetFrame(&frame);
 
-    nsIPresContext* presContext = aState.GetPresContext();
+    nsIPresContext* presContext = aState.PresContext();
 
     PRUint32 flags = 0;
     GetLayoutFlags(flags);
 
-    PRUint32 stateFlags = 0;
-    aState.GetLayoutFlags(stateFlags);
+    PRUint32 stateFlags = aState.LayoutFlags();
 
     flags |= stateFlags;
 
@@ -794,7 +781,7 @@ nsBox::Collapse(nsBoxLayoutState& aState)
 nsresult 
 nsBox::CollapseChild(nsBoxLayoutState& aState, nsIFrame* aFrame, PRBool aHide)
 {
-      nsIPresContext* presContext = aState.GetPresContext();
+      nsIPresContext* presContext = aState.PresContext();
 
     // shrink the view
       nsIView* view = aFrame->GetView();
@@ -1029,7 +1016,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 
   PRBool dirty = PR_FALSE;
   IsDirty(dirty);
-  if (dirty || aState.GetLayoutReason() == nsBoxLayoutState::Initial)
+  if (dirty || aState.LayoutReason() == nsBoxLayoutState::Initial)
      Redraw(aState);
 
   nsIFrame* frame;
@@ -1037,15 +1024,14 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
   frame->RemoveStateBits(NS_FRAME_HAS_DIRTY_CHILDREN | NS_FRAME_IS_DIRTY
                          | NS_FRAME_FIRST_REFLOW | NS_FRAME_IN_REFLOW);
 
-  nsIPresContext* presContext = aState.GetPresContext();
+  nsIPresContext* presContext = aState.PresContext();
   nsRect rect(0,0,0,0);
   GetBounds(rect);
 
   PRUint32 flags = 0;
   GetLayoutFlags(flags);
 
-  PRUint32 stateFlags = 0;
-  aState.GetLayoutFlags(stateFlags);
+  PRUint32 stateFlags = aState.LayoutFlags();
 
   flags |= stateFlags;
 
@@ -1083,10 +1069,10 @@ nsBox::Redraw(nsBoxLayoutState& aState,
               const nsRect*   aDamageRect,
               PRBool          aImmediate)
 {
-  if (aState.GetDisablePainting())
+  if (aState.PaintingDisabled())
     return NS_OK;
 
-  nsIPresContext* presContext = aState.GetPresContext();
+  nsIPresContext* presContext = aState.PresContext();
   const nsHTMLReflowState* s = aState.GetReflowState();
   if (s) {
     if (s->reason != eReflowReason_Incremental)
@@ -1144,7 +1130,7 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     // For example, we might be magic XUL frames whose primary content is an HTML
     // <select>
     if (content && content->IsContentOfType(nsIContent::eXUL)) {
-        nsIPresContext* presContext = aState.GetPresContext();
+        nsIPresContext* presContext = aState.PresContext();
 
         nsAutoString value;
         PRInt32 error;
@@ -1191,15 +1177,15 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     const nsStyleDisplay* display = frame->GetStyleDisplay();
     if (display->mAppearance) {
       nsCOMPtr<nsITheme> theme;
-      aState.GetPresContext()->GetTheme(getter_AddRefs(theme));
-      if (theme && theme->ThemeSupportsWidget(aState.GetPresContext(), frame, display->mAppearance)) {
+      aState.PresContext()->GetTheme(getter_AddRefs(theme));
+      if (theme && theme->ThemeSupportsWidget(aState.PresContext(), frame, display->mAppearance)) {
         nsSize size;
         const nsHTMLReflowState* reflowState = aState.GetReflowState();
         if (reflowState) {
           theme->GetMinimumWidgetSize(reflowState->rendContext, frame, 
                                       display->mAppearance, &size, &canOverride);
           float p2t;
-          aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
+          aState.PresContext()->GetScaledPixelsToTwips(&p2t);
           if (size.width) {
             aSize.width = NSIntPixelsToTwips(size.width, p2t);
             widthSet = PR_TRUE;
@@ -1235,7 +1221,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     nsIContent* content = frame->GetContent();
     if (content) {
-        nsIPresContext* presContext = aState.GetPresContext();
+        nsIPresContext* presContext = aState.PresContext();
 
         nsAutoString value;
         PRInt32 error;
@@ -1299,7 +1285,7 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     nsIContent* content = frame->GetContent();
     if (content) {
-        nsIPresContext* presContext = aState.GetPresContext();
+        nsIPresContext* presContext = aState.PresContext();
 
         nsAutoString value;
         PRInt32 error;

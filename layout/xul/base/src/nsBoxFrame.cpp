@@ -752,10 +752,10 @@ nsBoxFrame::IsInitialReflowForPrintPreview(nsBoxLayoutState& aState,
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
   if (reflowState->reason == eReflowReason_Initial) {
     // See if we are doing Print Preview
-    nsCOMPtr<nsIPrintPreviewContext> ppContent(do_QueryInterface(aState.GetPresContext()));
+    nsCOMPtr<nsIPrintPreviewContext> ppContent(do_QueryInterface(aState.PresContext()));
     if (ppContent) {
       // Now, get the current URI to see if we doing chrome
-      nsIPresShell *presShell = aState.GetPresContext()->GetPresShell();
+      nsIPresShell *presShell = aState.PresShell();
       if (!presShell) return PR_FALSE;
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));
