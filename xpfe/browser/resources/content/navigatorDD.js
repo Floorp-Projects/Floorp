@@ -19,7 +19,7 @@
  *
  * Contributor(s):
  *  - Kevin Puetz (puetzk@iastate.edu)
- *  - Ben Goodger <ben@netscape.com>
+ *  - Ben Goodger <ben@netscape.com> 
  */
 
 var gRDFService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
