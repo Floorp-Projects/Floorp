@@ -43,8 +43,13 @@
 #define NS_IDISPATCH_SUPPORT_CID \
     { 0x40c4883d, 0x079f, 0x43db, \
       { 0x82, 0xa9, 0xdf, 0x0a, 0x59, 0xd3, 0x79, 0x98 } }
-
+#ifdef XPC_IDISPATCH_SUPPORT
 #define NS_IDISPATCH_SUPPORT_CONTRACTID "@mozilla.org/nsdispatchsupport;1"
+// Disable the warning concerning IDispatch being a struct but now defined
+// as a class
+#pragma warning(push)
+#pragma warning(disable : 4099)
+#endif
 %}
 
 native COMVARIANT(VARIANT);
@@ -76,3 +81,7 @@ interface nsIDispatchSupport : nsISupports
      */
     IDispatch CreateInstance(in string className, in PRBool testScriptability);
 };
+
+%{ C++
+#pragma warning(pop)
+%}

@@ -91,10 +91,11 @@ class xpcProperty;
 class xpcPropertyBagEnumerator;
 
 #ifdef XPC_IDISPATCH_SUPPORT
-// Forwards
 class XPCDispInterface;
 struct IDispatch;
 class XPCDispParams;
+class XPCDispJSPropertyInfo;
+class nsIXPConnectWrappedJS;
 #endif
 
 

@@ -2462,7 +2462,7 @@ public:
     static void ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx);
     static void ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx);
 #ifdef XPC_IDISPATCH_SUPPORT
-    static void ThrowCOMError(JSContext* cx, HRESULT COMErrorCode);
+    static void ThrowCOMError(JSContext* cx, HRESULT COMErrorCode, nsresult rv = NS_ERROR_XPC_COM_ERROR);
 #endif
     static JSBool SetVerbosity(JSBool state)
         {JSBool old = sVerbose; sVerbose = state; return old;}

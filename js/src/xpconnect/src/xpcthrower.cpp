@@ -246,15 +246,15 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
 #ifdef XPC_IDISPATCH_SUPPORT
 // static
 void
-XPCThrower::ThrowCOMError(JSContext* cx, HRESULT COMErrorCode)
+XPCThrower::ThrowCOMError(JSContext* cx, HRESULT COMErrorCode, nsresult rv)
 {
+    nsCAutoString msg;
     IErrorInfo * pError;
     // Get the current COM error object
     HRESULT result = GetErrorInfo(0, &pError);
     if(SUCCEEDED(result) && pError)
     {
         // Build an error message from the COM error object
-        nsCAutoString msg;
         BSTR bstrDesc = nsnull;
         BSTR bstrSource = nsnull;
         if(SUCCEEDED(pError->GetSource(&bstrSource)) && bstrSource)
@@ -270,15 +270,23 @@ XPCThrower::ThrowCOMError(JSContext* cx, HRESULT COMErrorCode)
             msg += " - ";
             msg += NS_STATIC_CAST(const char *,_bstr_t(bstrDesc, FALSE));
         }
-        XPCThrower::BuildAndThrowException(cx, NS_ERROR_XPC_COM_ERROR, msg.get());
     }
     else
     {
         // No error object, so just report the result
+        const char* format;
+        if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
+        format = "";
         char buffer[48];
         sprintf(buffer, "COM Error Result = %0X", COMErrorCode);
-        XPCThrower::BuildAndThrowException(cx, NS_ERROR_XPC_COM_UNKNOWN, buffer);
+        msg = buffer;
     }
+    const char * format;
+    if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
+        format = "";
+    char * finalMsg = JS_smprintf("%s - %s", format, PromiseFlatCString(msg).get());
+    XPCThrower::BuildAndThrowException(cx, rv, finalMsg);
+    JS_smprintf_free(finalMsg);
 }
 
 #endif

@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * \file XPCDispParams.cpp
+ * Implementation of the helper class XPCDispParams
+ */
+
 #include "xpcprivate.h"
 
 XPCDispParams::XPCDispParams(PRUint32 args) : 
@@ -50,13 +55,14 @@ XPCDispParams::XPCDispParams(PRUint32 args) :
     mDispParams.cNamedArgs = 0;
 }
 
-// This transfers the variants, it does not copy
 XPCDispParams::XPCDispParams(XPCDispParams & other) :
     mPropID(DISPID_PROPERTYPUT)
 {
+    // copy the simple values
     mDispParams.rgdispidNamedArgs = nsnull;
     mDispParams.cNamedArgs = 0;
     mDispParams.cArgs = other.mDispParams.cArgs;
+    // move the variant buffer, used for reference types
     if(other.mVarBuffer == other.mVarStackBuffer)
     {
         mVarBuffer = mVarStackBuffer;
@@ -68,6 +74,7 @@ XPCDispParams::XPCDispParams(XPCDispParams & other) :
         mVarBuffer = other.mVarBuffer;
         other.mVarBuffer = nsnull;
     }
+    // move the variants
     if(other.mDispParams.rgvarg == other.mStackArgs)
     {
         mDispParams.rgvarg = mStackArgs;
@@ -80,12 +87,14 @@ XPCDispParams::XPCDispParams(XPCDispParams & other) :
         mDispParams.rgvarg = other.mDispParams.rgvarg;
         other.mDispParams.rgvarg = 0;
     }
+    // The source no longer has arguments
     other.mDispParams.cArgs = 0;
 }
 
 
 XPCDispParams::~XPCDispParams()
 {
+    // Cleanup the variants
     for(PRUint32 index = 0; index < mDispParams.cArgs; ++index)
         VariantClear(mDispParams.rgvarg + index);
     // Cleanup if we allocated the variant array
@@ -97,8 +106,11 @@ XPCDispParams::~XPCDispParams()
 
 void XPCDispParams::InsertParam(_variant_t & var)
 {
+    // Save off the existing pointers
     VARIANT* oldArgs =  mDispParams.rgvarg;
     char * oldVarBuffer = mVarBuffer;
+    // If this will exceed our internal static buffers we need to create
+    // dynamic ones
     if(mDispParams.cNamedArgs >= DEFAULT_ARG_ARRAY_SIZE)
     {
         if(mDispParams.rgvarg == mStackArgs)
@@ -106,7 +118,7 @@ void XPCDispParams::InsertParam(_variant_t & var)
         if(mVarBuffer == mVarStackBuffer)
             mVarBuffer = new char [XPC_VARIANT_BUFFER_SIZE(mDispParams.cArgs + 1)];
     }
-    // Move the data up, using position save copy
+    // Move the data up, using position safe copy
     memmove(mDispParams.rgvarg + 1, oldArgs, sizeof(VARIANT) * mDispParams.cArgs);
     memmove(mVarBuffer + VARIANT_UNION_SIZE,oldVarBuffer, XPC_VARIANT_BUFFER_SIZE(mDispParams.cArgs));
     mDispParams.rgvarg[0] = var.Detach();

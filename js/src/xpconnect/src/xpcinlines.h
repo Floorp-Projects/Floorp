@@ -612,7 +612,7 @@ XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff()
 {
     NS_ASSERTION(!(GetInterface()||GetNative()||GetJSObject()), "tearoff not empty in dtor");
 #ifdef XPC_IDISPATCH_SUPPORT
-    if (IsIDispatch())
+    if(IsIDispatch())
         delete GetIDispatchInfo();
 #endif
 }
