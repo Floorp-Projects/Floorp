@@ -56,7 +56,6 @@
 
 #include "prio.h"
 #include "prproces.h"
-#include "prlock.h"
 #include "pratom.h"
 
 /* ------------------------------------------------------------------------- */
@@ -68,25 +67,36 @@
 class ipcTargetData
 {
 public:
-  static NS_HIDDEN_(ipcTargetData*) Create(ipcIMessageObserver *aObserver);
+  static NS_HIDDEN_(ipcTargetData*) Create();
 
   // threadsafe addref/release
   NS_HIDDEN_(nsrefcnt) AddRef()  { return PR_AtomicIncrement(&refcnt); }
   NS_HIDDEN_(nsrefcnt) Release() { PRInt32 r = PR_AtomicDecrement(&refcnt); if (r == 0) delete this; return r; }
+
+  NS_HIDDEN_(void) SetObserver(ipcIMessageObserver *aObserver, PRBool aOnCurrentThread);
 
   // protects access to the members of this class
   PRMonitor *monitor;
 
   // this may be null
   nsCOMPtr<ipcIMessageObserver> observer;
+
+  // the message observer is called via this event queue
+  nsCOMPtr<nsIEventQueue> eventQ;
   
   // incoming messages are added to this list
   ipcMessageQ pendingQ;
+
+  // non-zero if the observer has been disabled (this means that new messages
+  // should not be dispatched to the observer until the observer is re-enabled
+  // via IPC_EnableMessageObserver).
+  PRInt32 observerDisabled;
 
 private:
 
   ipcTargetData()
     : monitor(PR_NewMonitor())
+    , observerDisabled(0)
     , refcnt(0)
     {}
 
@@ -100,7 +110,7 @@ private:
 };
 
 ipcTargetData *
-ipcTargetData::Create(ipcIMessageObserver *aObserver)
+ipcTargetData::Create()
 {
   ipcTargetData *td = new ipcTargetData;
   if (!td)
@@ -111,9 +121,18 @@ ipcTargetData::Create(ipcIMessageObserver *aObserver)
     delete td;
     return NULL;
   }
-
-  td->observer = aObserver;
   return td;
+}
+
+void
+ipcTargetData::SetObserver(ipcIMessageObserver *aObserver, PRBool aOnCurrentThread)
+{
+  observer = aObserver;
+
+  if (aOnCurrentThread)
+    NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+  else
+    eventQ = nsnull;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -127,12 +146,19 @@ public:
 
   ~ipcClientState()
   {
-    if (lock)
-      PR_DestroyLock(lock);
+    if (monitor)
+      PR_DestroyMonitor(monitor);
   }
 
-  // this lock protects the targetMap and the connected flag.
-  PRLock       *lock;
+  //
+  // the monitor protects the targetMap and the connected flag.  
+  //
+  // NOTE: we use a PRMonitor for this instead of a PRLock because we need
+  //       the lock to be re-entrant.  since we don't ever need to wait on
+  //       this monitor, it might be worth it to implement a re-entrant
+  //       wrapper for PRLock.
+  //
+  PRMonitor    *monitor;
   ipcTargetMap  targetMap;
   PRBool        connected;
 
@@ -144,7 +170,7 @@ public:
 private:
 
   ipcClientState()
-    : lock(PR_NewLock())
+    : monitor(PR_NewMonitor())
     , connected(PR_FALSE)
     , selfID(0)
   {}
@@ -157,7 +183,7 @@ ipcClientState::Create()
   if (!cs)
     return NULL;
 
-  if (!cs->lock || !cs->targetMap.Init())
+  if (!cs->monitor || !cs->targetMap.Init())
   {
     delete cs;
     return NULL;
@@ -168,27 +194,26 @@ ipcClientState::Create()
 
 /* ------------------------------------------------------------------------- */
 
-static PRInt32         gInitCount;
 static ipcClientState *gClientState;
 
 static PRBool
 GetTarget(const nsID &aTarget, ipcTargetData **td)
 {
-  nsAutoLock lock(gClientState->lock);
+  nsAutoMonitor mon(gClientState->monitor);
   return gClientState->targetMap.Get(nsIDHashKey(&aTarget).GetKey(), td);
 }
 
 static PRBool
 PutTarget(const nsID &aTarget, ipcTargetData *td)
 {
-  nsAutoLock lock(gClientState->lock);
+  nsAutoMonitor mon(gClientState->monitor);
   return gClientState->targetMap.Put(nsIDHashKey(&aTarget).GetKey(), td);
 }
 
 static void
 DelTarget(const nsID &aTarget)
 {
-  nsAutoLock lock(gClientState->lock);
+  nsAutoMonitor mon(gClientState->monitor);
   gClientState->targetMap.Remove(nsIDHashKey(&aTarget).GetKey());
 }
 
@@ -222,7 +247,12 @@ ProcessPendingQ(const nsID &aTarget)
   if (GetTarget(aTarget, getter_AddRefs(td)))
   {
     nsAutoMonitor mon(td->monitor);
-    td->pendingQ.MoveTo(tempQ);
+
+    // if the observer for this target has been temporarily disabled, then
+    // we must not processing any pending messages at this time.
+
+    if (!td->observerDisabled)
+      td->pendingQ.MoveTo(tempQ);
   }
 
   // process pending queue outside monitor
@@ -249,14 +279,17 @@ ProcessPendingQ(const nsID &aTarget)
 /* ------------------------------------------------------------------------- */
 
 // WaitTarget enables support for multiple threads blocking on the same
-// message target.  This functionality does not need to be exposed in our
-// public API because targets are meant to be single threaded.  This
-// functionality only exists to support the IPCM protocol.
+// message target.  the selector is called while inside the target's monitor.
 
-typedef PRBool (* ipcMessageSelector)(void *aArg, ipcTargetData *aTD, const ipcMessage *aMsg);
+typedef PRBool (* ipcMessageSelector)(
+  void *arg,
+  ipcTargetData *td,
+  const ipcMessage *msg
+);
 
+// selects any
 static PRBool
-DefaultSelector(void *aArg, ipcTargetData *aTD, const ipcMessage *aMsg)
+DefaultSelector(void *arg, ipcTargetData *td, const ipcMessage *msg)
 {
   return PR_TRUE;
 }
@@ -299,65 +332,49 @@ WaitTarget(const nsID           &aTarget,
 
   while (gClientState->connected)
   {
-    if (!lastChecked)
+    NS_ASSERTION(!lastChecked, "oops");
+
+    if (beforeLastChecked)
     {
-      if (beforeLastChecked)
+      // verify that beforeLastChecked is still in the queue since it might
+      // have been removed while we were asleep on the monitor.  we must not
+      // dereference it until we have verified this.
+      PRBool isValid = PR_FALSE;
+      for (ipcMessage *iter = td->pendingQ.First(); iter; iter=iter->mNext)
+      {
+        if (iter == beforeLastChecked)
+        {
+          isValid = PR_TRUE;
+          break;
+        }
+      }
+
+      if (isValid)
         lastChecked = beforeLastChecked->mNext;
       else
+      {
         lastChecked = td->pendingQ.First();
+        beforeLastChecked = nsnull;
+      }
     }
-    else if (lastChecked->mNext)
-      lastChecked = lastChecked->mNext;
+    else
+      lastChecked = td->pendingQ.First();
 
+    // loop over pending queue until we find a message that our selector likes.
     while (lastChecked)
     {
-      // remove this message from the pending queue.  we'll put it back if
-      // it is not selected.  we need to do this to allow the selector
-      // function to make calls back into our code.  for example, it might
-      // try to undefine this message target!
-
-      if (beforeLastChecked)
-        td->pendingQ.RemoveAfter(beforeLastChecked);
-      else
-        td->pendingQ.RemoveFirst();
-      lastChecked->mNext = nsnull;
-
-      mon.Exit();
-      PRBool selected = (aSelector)(aArg, td, lastChecked);
-      mon.Enter();
-
-      if (selected)
+      if ((aSelector)(aArg, td, lastChecked))
       {
+        // remove from pending queue
+        if (beforeLastChecked)
+          td->pendingQ.RemoveAfter(beforeLastChecked);
+        else
+          td->pendingQ.RemoveFirst();
+        lastChecked->mNext = nsnull;
+
         *aMsg = lastChecked;
         break;
       }
-
-      // re-insert message into the pending queue.  the only possible change
-      // that could have happened to the pending queue while we were in the 
-      // callback is the addition of more messages (added to the end of the
-      // queue).  our beforeLastChecked "iterator" must still be valid.
-
-#ifdef DEBUG
-      // scan td->pendingQ to ensure that beforeLastChecked is still valid.
-      if (beforeLastChecked)
-      {
-        PRBool found = PR_FALSE;
-        for (ipcMessage *iter = td->pendingQ.First(); iter; iter = iter->mNext)
-        {
-          if (iter == beforeLastChecked)
-          {
-            found = PR_TRUE;
-            break;
-          }
-        }
-        NS_ASSERTION(found, "iterator is invalid");
-      }
-#endif
-
-      if (beforeLastChecked)
-        td->pendingQ.InsertAfter(beforeLastChecked, lastChecked);
-      else
-        td->pendingQ.Prepend(lastChecked);
 
       beforeLastChecked = lastChecked;
       lastChecked = lastChecked->mNext;
@@ -386,6 +403,144 @@ WaitTarget(const nsID           &aTarget,
   }
 
   return rv;
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void
+PostEvent(nsIEventTarget *eventTarget, PLEvent *ev)
+{
+  if (!ev)
+    return;
+
+  nsresult rv = eventTarget->PostEvent(ev);
+  if (NS_FAILED(rv))
+  {
+    NS_WARNING("PostEvent failed");
+    PL_DestroyEvent(ev);
+  }
+}
+
+static void
+PostEventToMainThread(PLEvent *ev)
+{
+  nsCOMPtr<nsIEventQueue> eventQ;
+  NS_GetMainEventQ(getter_AddRefs(eventQ));
+  if (!eventQ)
+  {
+    NS_WARNING("unable to get reference to main event queue");
+    PL_DestroyEvent(ev);
+    return;
+  }
+  PostEvent(eventQ, ev);
+}
+
+/* ------------------------------------------------------------------------- */
+
+class ipcEvent_ClientState : public PLEvent
+{
+public:
+  ipcEvent_ClientState(PRUint32 aClientID, PRUint32 aClientState)
+    : mClientID(aClientID)
+    , mClientState(aClientState)
+  {
+    PL_InitEvent(this, nsnull, HandleEvent, DestroyEvent);
+  }
+
+  PR_STATIC_CALLBACK(void *) HandleEvent(PLEvent *ev)
+  {
+    // maybe we've been shutdown!
+    if (!gClientState)
+      return nsnull;
+
+    ipcEvent_ClientState *self = (ipcEvent_ClientState *) ev;
+
+    for (PRInt32 i=0; i<gClientState->clientObservers.Count(); ++i)
+      gClientState->clientObservers[i]->OnClientStateChange(self->mClientID,
+                                                            self->mClientState);
+    return nsnull;
+  }
+
+  PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent *ev)
+  {
+    delete (ipcEvent_ClientState *) ev;
+  }
+
+private:
+  PRUint32 mClientID;
+  PRUint32 mClientState;
+};
+
+/* ------------------------------------------------------------------------- */
+
+class ipcEvent_ProcessPendingQ : public PLEvent
+{
+public:
+  ipcEvent_ProcessPendingQ(const nsID &aTarget)
+    : mTarget(aTarget)
+  {
+    PL_InitEvent(this, nsnull, HandleEvent, DestroyEvent);
+  }
+
+  PR_STATIC_CALLBACK(void *) HandleEvent(PLEvent *ev)
+  {
+    ProcessPendingQ(((ipcEvent_ProcessPendingQ *) ev)->mTarget);
+    return nsnull;
+  }
+
+  PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent *ev)
+  {
+    delete (ipcEvent_ProcessPendingQ *) ev;
+  }
+
+private:
+  const nsID mTarget;
+};
+
+static void
+CallProcessPendingQ(const nsID &target, ipcTargetData *td)
+{
+  // we assume that we are inside td's monitor 
+
+  PLEvent *ev = new ipcEvent_ProcessPendingQ(target);
+  if (!ev)
+    return;
+
+  nsresult rv;
+
+  if (td->eventQ)
+    rv = td->eventQ->PostEvent(ev);
+  else
+    rv = IPC_DoCallback((ipcCallbackFunc) PL_HandleEvent, ev);
+
+  if (NS_FAILED(rv))
+    PL_DestroyEvent(ev);
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void
+DisableMessageObserver(const nsID &aTarget)
+{
+  nsRefPtr<ipcTargetData> td;
+  if (GetTarget(aTarget, getter_AddRefs(td)))
+  {
+    nsAutoMonitor mon(td->monitor);
+    ++td->observerDisabled;
+  }
+}
+
+static void
+EnableMessageObserver(const nsID &aTarget)
+{
+  nsRefPtr<ipcTargetData> td;
+  if (GetTarget(aTarget, getter_AddRefs(td)))
+  {
+    nsAutoMonitor mon(td->monitor);
+    if (td->observerDisabled > 0 && --td->observerDisabled == 0)
+      if (!td->pendingQ.IsEmpty())
+        CallProcessPendingQ(aTarget, td);
+  }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -438,9 +593,18 @@ MakeIPCMRequest(ipcMessage *msg, ipcMessage **responseMsg = nsnull)
 
   PRUint32 requestIndex = IPCM_GetRequestIndex(msg);
 
+  // suppress 'ProcessPendingQ' for IPCM messages until we receive the
+  // response to this IPCM request.  if we did not do this then there
+  // would be a race condition leading to the possible removal of our
+  // response from the pendingQ between sending the request and waiting
+  // for the response.
+  DisableMessageObserver(IPCM_TARGET);
+
   nsresult rv = IPC_SendMsg(msg);
   if (NS_SUCCEEDED(rv))
     rv = WaitIPCMResponse(requestIndex, responseMsg);
+
+  EnableMessageObserver(IPCM_TARGET);
   return rv;
 }
 
@@ -462,15 +626,17 @@ RemoveTarget(const nsID &aTarget, PRBool aNotifyDaemon)
 static nsresult
 DefineTarget(const nsID           &aTarget,
              ipcIMessageObserver  *aObserver,
+             PRBool                aOnCurrentThread,
              PRBool                aNotifyDaemon,
              ipcTargetData       **aResult)
 {
   nsresult rv;
 
-  nsRefPtr<ipcTargetData> td( ipcTargetData::Create(aObserver) );
+  nsRefPtr<ipcTargetData> td( ipcTargetData::Create() );
   if (!td)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+  td->SetObserver(aObserver, aOnCurrentThread);
+
   if (!PutTarget(aTarget, td))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -506,7 +672,7 @@ TryConnect()
 
   gClientState->connected = PR_TRUE;
 
-  rv = DefineTarget(IPCM_TARGET, nsnull, PR_FALSE, nsnull);
+  rv = DefineTarget(IPCM_TARGET, nsnull, PR_FALSE, PR_FALSE, nsnull);
   if (NS_FAILED(rv))
     return rv;
 
@@ -533,17 +699,13 @@ TryConnect()
 nsresult
 IPC_Init()
 {
-  if (gInitCount > 0)
-    return NS_OK;
+  NS_ENSURE_TRUE(!gClientState, NS_ERROR_ALREADY_INITIALIZED);
 
   IPC_InitLog(">>>");
 
   gClientState = ipcClientState::Create();
   if (!gClientState)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  // IPC_Shutdown will decrement
-  gInitCount++;
 
   nsresult rv = TryConnect();
   if (NS_FAILED(rv))
@@ -555,16 +717,13 @@ IPC_Init()
 nsresult
 IPC_Shutdown()
 {
-  NS_ENSURE_TRUE(gInitCount, NS_ERROR_NOT_INITIALIZED);
-
-  if (--gInitCount > 0)
-    return NS_OK;
+  NS_ENSURE_TRUE(gClientState, NS_ERROR_NOT_INITIALIZED);
 
   if (gClientState->connected)
     IPC_Disconnect();
 
   delete gClientState;
-  gClientState = NULL;
+  gClientState = nsnull;
 
   return NS_OK;
 }
@@ -573,7 +732,8 @@ IPC_Shutdown()
 
 nsresult
 IPC_DefineTarget(const nsID          &aTarget,
-                 ipcIMessageObserver *aObserver)
+                 ipcIMessageObserver *aObserver,
+                 PRBool               aOnCurrentThread)
 {
   NS_ENSURE_TRUE(gClientState, NS_ERROR_NOT_INITIALIZED);
 
@@ -590,11 +750,11 @@ IPC_DefineTarget(const nsID          &aTarget,
     // the observer is released on the main thread.
     {
       nsAutoMonitor mon(td->monitor);
-      td->observer = aObserver;
+      td->SetObserver(aObserver, aOnCurrentThread);
     }
 
     // remove target outside of td's monitor to avoid holding the monitor
-    // while entering the client state's lock.
+    // while entering the client state's monitor.
     if (!aObserver)
       RemoveTarget(aTarget, PR_TRUE);
 
@@ -603,12 +763,38 @@ IPC_DefineTarget(const nsID          &aTarget,
   else
   {
     if (aObserver)
-      rv = DefineTarget(aTarget, aObserver, PR_TRUE, nsnull);
+      rv = DefineTarget(aTarget, aObserver, aOnCurrentThread, PR_TRUE, nsnull);
     else
       rv = NS_ERROR_INVALID_ARG; // unknown target
   }
 
   return rv;
+}
+
+nsresult
+IPC_DisableMessageObserver(const nsID &aTarget)
+{
+  NS_ENSURE_TRUE(gClientState, NS_ERROR_NOT_INITIALIZED);
+
+  // do not permit modifications to the IPCM protocol's target.
+  if (aTarget.Equals(IPCM_TARGET))
+    return NS_ERROR_INVALID_ARG;
+
+  DisableMessageObserver(aTarget);
+  return NS_OK;
+}
+
+nsresult
+IPC_EnableMessageObserver(const nsID &aTarget)
+{
+  NS_ENSURE_TRUE(gClientState, NS_ERROR_NOT_INITIALIZED);
+
+  // do not permit modifications to the IPCM protocol's target.
+  if (aTarget.Equals(IPCM_TARGET))
+    return NS_ERROR_INVALID_ARG;
+
+  EnableMessageObserver(aTarget);
+  return NS_OK;
 }
 
 nsresult
@@ -797,10 +983,10 @@ IPC_ClientExists(PRUint32 aClientID, PRBool *aResult)
 nsresult
 IPC_SpawnDaemon(const char *path)
 {
-  PRFileDesc *readable = NULL, *writable = NULL;
-  PRProcessAttr *attr = NULL;
+  PRFileDesc *readable = nsnull, *writable = nsnull;
+  PRProcessAttr *attr = nsnull;
   nsresult rv = NS_ERROR_FAILURE;
-  char *const argv[] = { (char *const) path, NULL };
+  char *const argv[] = { (char *const) path, nsnull };
   char c;
 
   // setup an anonymous pipe that we can use to determine when the daemon
@@ -819,7 +1005,7 @@ IPC_SpawnDaemon(const char *path)
   if (PR_ProcessAttrSetInheritableFD(attr, writable, IPC_STARTUP_PIPE_NAME) != PR_SUCCESS)
     goto end;
 
-  if (PR_CreateProcessDetached(path, argv, NULL, attr) != PR_SUCCESS)
+  if (PR_CreateProcessDetached(path, argv, nsnull, attr) != PR_SUCCESS)
     goto end;
 
   if ((PR_Read(readable, &c, 1) != 1) && (c != IPC_STARTUP_PIPE_MAGIC))
@@ -838,89 +1024,6 @@ end:
 
 /* ------------------------------------------------------------------------- */
 
-class ipcEvent_ClientState : public PLEvent
-{
-public:
-  ipcEvent_ClientState(PRUint32 aClientID, PRUint32 aClientState)
-    : mClientID(aClientID)
-    , mClientState(aClientState)
-  {
-    PL_InitEvent(this, nsnull, HandleEvent, DestroyEvent);
-  }
-
-  PR_STATIC_CALLBACK(void *) HandleEvent(PLEvent *ev)
-  {
-    // maybe we've been shutdown!
-    if (!gClientState)
-      return nsnull;
-
-    ipcEvent_ClientState *self = (ipcEvent_ClientState *) ev;
-
-    for (PRInt32 i=0; i<gClientState->clientObservers.Count(); ++i)
-      gClientState->clientObservers[i]->OnClientStateChange(self->mClientID,
-                                                            self->mClientState);
-    return nsnull;
-  }
-
-  PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent *ev)
-  {
-    delete (ipcEvent_ClientState *) ev;
-  }
-
-private:
-  PRUint32 mClientID;
-  PRUint32 mClientState;
-};
-
-/* ------------------------------------------------------------------------- */
-
-class ipcEvent_ProcessPendingQ : public PLEvent
-{
-public:
-  ipcEvent_ProcessPendingQ(const nsID &aTarget)
-    : mTarget(aTarget)
-  {
-    PL_InitEvent(this, nsnull, HandleEvent, DestroyEvent);
-  }
-
-  PR_STATIC_CALLBACK(void *) HandleEvent(PLEvent *ev)
-  {
-    ProcessPendingQ(((ipcEvent_ProcessPendingQ *) ev)->mTarget);
-    return nsnull;
-  }
-
-  PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent *ev)
-  {
-    delete (ipcEvent_ProcessPendingQ *) ev;
-  }
-
-private:
-  const nsID mTarget;
-};
-
-/* ------------------------------------------------------------------------- */
-
-static void
-PostEvent(PLEvent *ev)
-{
-  if (!ev)
-    return;
-
-  nsCOMPtr<nsIEventQueue> eventQ;
-  NS_GetMainEventQ(getter_AddRefs(eventQ));
-  if (!eventQ)
-    return;
-
-  nsresult rv = eventQ->PostEvent(ev);
-  if (NS_FAILED(rv))
-  {
-    NS_WARNING("PostEvent failed");
-    PL_DestroyEvent(ev);
-  }
-}
-
-/* ------------------------------------------------------------------------- */
-
 PR_STATIC_CALLBACK(PLDHashOperator)
 EnumerateTargetMapAndNotify(const nsID    &aKey,
                             ipcTargetData *aData,
@@ -928,12 +1031,8 @@ EnumerateTargetMapAndNotify(const nsID    &aKey,
 {
   nsAutoMonitor mon(aData->monitor);
 
-  // this flag needs to be set while we are inside the monitor, since it is one
-  // of the conditions under which WaitTarget may block waiting for messages.
-  gClientState->connected = PR_FALSE;
-
   // wake up anyone waiting on this target.
-  mon.Notify();
+  mon.NotifyAll();
 
   return PL_DHASH_NEXT;
 }
@@ -945,7 +1044,8 @@ IPC_OnConnectionEnd(nsresult error)
   // now, go through the target map, and tickle each monitor.  that should
   // unblock any calls to WaitTarget.
 
-  nsAutoLock lock(gClientState->lock);
+  nsAutoMonitor mon(gClientState->monitor);
+  gClientState->connected = PR_FALSE;
   gClientState->targetMap.EnumerateRead(EnumerateTargetMapAndNotify, nsnull);
 }
 
@@ -978,8 +1078,8 @@ IPC_OnMessageAvailable(ipcMessage *msg)
       case IPCM_MSG_PSH_CLIENT_STATE:
       {
         ipcMessageCast<ipcmMessageClientState> status(msg);
-        PostEvent(new ipcEvent_ClientState(status->ClientID(),
-                                           status->ClientState()));
+        PostEventToMainThread(new ipcEvent_ClientState(status->ClientID(),
+                                                       status->ClientState()));
         return;
       }
     }
@@ -990,17 +1090,23 @@ IPC_OnMessageAvailable(ipcMessage *msg)
   {
     nsAutoMonitor mon(td->monitor);
 
+    // we only want to dispatch a 'ProcessPendingQ' event if we have not
+    // already done so.
     PRBool dispatchEvent = td->pendingQ.IsEmpty();
 
     // put this message on our pending queue
     td->pendingQ.Append(msg);
+
+    // make copy of target since |msg| may end up pointing to free'd memory
+    // once we notify the monitor.
+    const nsID target = msg->Target();
 
     // wake up anyone waiting on this queue
     mon.Notify();
 
     // proxy call to target's message procedure
     if (dispatchEvent)
-      PostEvent(new ipcEvent_ProcessPendingQ(msg->Target()));
+      CallProcessPendingQ(target, td);
   }
   else
   {

@@ -169,6 +169,7 @@ myIpcClientQueryHandler::OnQueryComplete(PRUint32 aQueryID,
 
 //-----------------------------------------------------------------------------
 
+#if 0
 class myIpcLockNotify : public ipcILockNotify
 {
 public:
@@ -185,6 +186,7 @@ myIpcLockNotify::OnAcquireLockComplete(const char *lockName, nsresult status)
     gIpcLockServ->ReleaseLock(lockName);
     return NS_OK;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -306,10 +308,10 @@ int main(int argc, char **argv)
         RETURN_IF_FAILED(rv, "do_GetService(ipcLockServ)");
         NS_ADDREF(gIpcLockServ = lockService);
 
-        nsCOMPtr<ipcILockNotify> notify(new myIpcLockNotify());
-        gIpcLockServ->AcquireLock("blah", notify, PR_TRUE);
+        //nsCOMPtr<ipcILockNotify> notify(new myIpcLockNotify());
+        gIpcLockServ->AcquireLock("blah", PR_TRUE);
 
-        rv = gIpcLockServ->AcquireLock("foo", nsnull, PR_TRUE);
+        rv = gIpcLockServ->AcquireLock("foo", PR_TRUE);
         printf("*** sync AcquireLock returned [rv=%x]\n", rv);
 
         PLEvent *ev;

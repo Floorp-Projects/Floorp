@@ -40,6 +40,7 @@
 #include "ipcModuleUtil.h"
 #include "ipcLockProtocol.h"
 #include "plhash.h"
+#include "plstr.h"
 
 static const nsID kLockTargetID = IPC_LOCK_TARGETID;
 
@@ -74,6 +75,42 @@ struct ipcLockContext
         : mOwnerID(ownerID)
         , mNextPending(NULL) {}
 };
+
+//-----------------------------------------------------------------------------
+
+PR_STATIC_CALLBACK(void *)
+ipcLockModule_AllocTable(void *pool, PRSize size)
+{
+    return malloc(size);
+}
+
+PR_STATIC_CALLBACK(void)
+ipcLockModule_FreeTable(void *pool, void *item)
+{
+    free(item);
+}
+
+PR_STATIC_CALLBACK(PLHashEntry *)
+ipcLockModule_AllocEntry(void *pool, const void *key)
+{
+    return (PLHashEntry *) malloc(sizeof(PLHashEntry));
+}
+
+PR_STATIC_CALLBACK(void)
+ipcLockModule_FreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+    PL_strfree((char *) he->key);
+    free(he);
+}
+
+static const PLHashAllocOps ipcLockModule_AllocOps = {
+    ipcLockModule_AllocTable,
+    ipcLockModule_FreeTable,
+    ipcLockModule_AllocEntry,
+    ipcLockModule_FreeEntry
+};
+
+//-----------------------------------------------------------------------------
 
 static void
 ipcLockModule_AcquireLock(PRUint32 cid, PRUint8 flags, const char *key)
@@ -113,7 +150,7 @@ ipcLockModule_AcquireLock(PRUint32 cid, PRUint8 flags, const char *key)
         if (!ctx)
             return;
 
-        PL_HashTableAdd(gLockTable, key, ctx);
+        PL_HashTableAdd(gLockTable, PL_strdup(key), ctx);
 
         ipcLockModule_Send(cid, key, IPC_LOCK_OP_STATUS_ACQUIRED);
     }
@@ -187,8 +224,16 @@ PR_STATIC_CALLBACK(PRIntn)
 ipcLockModule_ReleaseByCID(PLHashEntry *he, PRIntn i, void *arg)
 {
     PRUint32 cid = *(PRUint32 *) arg;
-    ipcLockModule_ReleaseLockHelper(cid, (const char *) he->key,
-                                    (ipcLockContext *) he->value);
+
+    printf("$$$ ipcLockModule_ReleaseByCID [cid=%u key=%s he=%p]\n", cid, (char*)he->key, (void*)he);
+
+    ipcLockContext *ctx = (ipcLockContext *) he->value;
+    if (ctx->mOwnerID != cid)
+        return HT_ENUMERATE_NEXT;
+
+    if (ipcLockModule_ReleaseLockHelper(cid, (const char *) he->key, ctx))
+        return HT_ENUMERATE_REMOVE;
+
     return HT_ENUMERATE_NEXT;
 }
 
@@ -203,7 +248,7 @@ ipcLockModule_Init()
                                  PL_HashString,
                                  PL_CompareStrings,
                                  PL_CompareValues,
-                                 NULL,
+                                 &ipcLockModule_AllocOps,
                                  NULL);
 }
 

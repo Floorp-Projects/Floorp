@@ -66,7 +66,7 @@ IPC_FlattenLockMsg(const ipcLockMsg *msg, PRUint32 *bufLen)
                  + strlen(msg->key)  // key
                  + 1;                // null terminator
 
-    PRUint8 *buf = (PRUint8 *) malloc(len);
+    PRUint8 *buf = (PRUint8 *) ::operator new(len);
     if (!buf)
         return NULL;
 

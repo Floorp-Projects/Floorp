@@ -115,10 +115,21 @@ DoSecurityCheck(PRFileDesc *fd, const char *path)
 
 //-----------------------------------------------------------------------------
 
+struct ipcCallback : public ipcListNode<ipcCallback>
+{
+  ipcCallbackFunc  func;
+  void            *arg;
+};
+
+typedef ipcList<ipcCallback> ipcCallbackQ;
+
+//-----------------------------------------------------------------------------
+
 struct ipcConnectionState
 {
   PRLock      *lock;
   PRPollDesc   fds[2];
+  ipcCallbackQ callback_queue;
   ipcMessageQ  send_queue;
   PRUint32     send_offset; // amount of send_queue.First() already written.
   ipcMessage  *in_msg;
@@ -315,17 +326,38 @@ ConnThread(void *arg)
     num = PR_Poll(s->fds, 2, PR_INTERVAL_NO_TIMEOUT);
     if (num > 0)
     {
+      ipcCallbackQ cbs_to_run;
+
       // check if something has been added to the send queue.  if so, then
       // acknowledge pollable event (wait should not block), and configure
       // poll flags to find out when we can write.
+      //
+      // delay processing a shutdown request until after all queued up
+      // messages have been sent and until after all queued up callbacks
+      // have been run.
+
       if (s->fds[POLL].out_flags & PR_POLL_READ)
       {
         PR_WaitForPollableEvent(s->fds[POLL].fd);
         PR_Lock(s->lock);
+
+        PRBool delayShutdown = PR_FALSE;
+
         if (!s->send_queue.IsEmpty())
+        {
+          delayShutdown = PR_TRUE;
           s->fds[SOCK].in_flags |= PR_POLL_WRITE;
-        else if (s->shutdown)
+        }
+
+        if (!s->callback_queue.IsEmpty())
+        {
+          delayShutdown = PR_TRUE;
+          s->callback_queue.MoveTo(cbs_to_run);
+        }
+
+        if (!delayShutdown && s->shutdown)
           rv = NS_ERROR_ABORT;
+
         PR_Unlock(s->lock);
       }
 
@@ -336,6 +368,14 @@ ConnThread(void *arg)
       // check if we can write...
       if (s->fds[SOCK].out_flags & PR_POLL_WRITE)
         rv = ConnWrite(s);
+
+      // check if we have callbacks to run
+      while (!cbs_to_run.IsEmpty())
+      {
+        ipcCallback *cb = cbs_to_run.First();
+        (cb->func)(cb->arg);
+        cbs_to_run.DeleteFirst();
+      }
     }
     else
     {
@@ -507,6 +547,25 @@ IPC_SendMsg(ipcMessage *msg)
   PR_SetPollableEvent(gConnState->fds[POLL].fd);
   PR_Unlock(gConnState->lock);
 
+  return NS_OK;
+}
+
+nsresult
+IPC_DoCallback(ipcCallbackFunc func, void *arg)
+{
+  if (!gConnState || !gConnThread)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  ipcCallback *callback = new ipcCallback;
+  if (!callback)
+    return NS_ERROR_OUT_OF_MEMORY;
+  callback->func = func;
+  callback->arg = arg;
+
+  PR_Lock(gConnState->lock);
+  gConnState->callback_queue.Append(callback);
+  PR_SetPollableEvent(gConnState->fds[POLL].fd);
+  PR_Unlock(gConnState->lock);
   return NS_OK;
 }
 

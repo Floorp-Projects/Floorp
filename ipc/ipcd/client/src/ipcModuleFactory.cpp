@@ -38,17 +38,17 @@
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
+#include "ipcdclient.h"
 #include "ipcService.h"
 #include "ipcConfig.h"
 #include "ipcCID.h"
-#include "ipcLockCID.h"
 
 //-----------------------------------------------------------------------------
 // Define the contructor function for the objects
 //
 // NOTE: This creates an instance of objects by using the default constructor
 //-----------------------------------------------------------------------------
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ipcService)
 
 // enable this code to make the IPC service auto-start.
 #if 0
@@ -90,6 +90,7 @@ ipcServiceUnregisterProc(nsIComponentManager *aCompMgr,
 // extensions
 
 #include "ipcLockService.h"
+#include "ipcLockCID.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcLockService, Init)
 
 #include "tmTransactionService.h"
@@ -168,7 +169,23 @@ static const nsModuleComponentInfo components[] = {
 };
 
 //-----------------------------------------------------------------------------
+
+PR_STATIC_CALLBACK(nsresult)
+ipcdclient_init(nsIModule *module)
+{
+  return IPC_Init();
+}
+
+PR_STATIC_CALLBACK(void)
+ipcdclient_shutdown(nsIModule *module)
+{
+  IPC_Shutdown();
+}
+
+//-----------------------------------------------------------------------------
 // Implement the NSGetModule() exported function for your module
 // and the entire implementation of the module object.
 //-----------------------------------------------------------------------------
-NS_IMPL_NSGETMODULE(ipcd, components)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(ipcdclient, components,
+                                   ipcdclient_init,
+                                   ipcdclient_shutdown)

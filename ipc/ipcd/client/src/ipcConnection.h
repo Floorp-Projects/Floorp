@@ -49,6 +49,8 @@ class ipcMessage;
 /* Platform specific IPC connection API.
  */
 
+typedef void (* ipcCallbackFunc)(void *);
+
 /**
  * IPC_Connect
  *
@@ -87,6 +89,20 @@ IPC_METHOD_PRIVATE IPC_Disconnect();
  */
 IPC_METHOD_PRIVATE IPC_SendMsg(ipcMessage *msg);
 
+/**
+ * IPC_DoCallback
+ *
+ * This function executes a callback function on the same background thread
+ * that calls IPC_OnConnectionEnd and IPC_OnMessageAvailable.
+ *
+ * If this function succeeds, then the caller is guaranteed that |func| will
+ * be called.  This guarantee is important because it allows the caller to
+ * free any memory associated with |arg| once |func| has been called.
+ *
+ * NOTE: This function may be called on any thread.
+ */
+IPC_METHOD_PRIVATE IPC_DoCallback(ipcCallbackFunc func, void *arg);
+
 /* ------------------------------------------------------------------------- */
 /* Cross-platform IPC connection methods.
  */
@@ -95,9 +111,8 @@ IPC_METHOD_PRIVATE IPC_SendMsg(ipcMessage *msg);
  * IPC_SpawnDaemon
  *
  * This function launches the IPC daemon process.  It is called by the platform
- * specific IPC_Connect implementation.  This function may be called on any
- * thread.  It should not return until the daemon process is ready to receive
- * a client connection or an error occurs.
+ * specific IPC_Connect implementation.  It should not return until the daemon
+ * process is ready to receive a client connection or an error occurs.
  *
  * @param daemonPath
  *        Specifies the path to the IPC daemon executable.
