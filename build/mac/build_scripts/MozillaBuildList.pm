@@ -273,6 +273,9 @@ sub InstallComponentFiles()
     # sidebar
     InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",                      "$components_dir");
 
+    # embedding UI
+    InstallResources(":mozilla:embedding:components:ui:helperAppDlg:MANIFEST",             "$components_dir");
+
     print("--- Done Text Components copying ----\n");
 }
 
@@ -366,6 +369,7 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:xpfe:global:resources:content:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpinstall:res:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:embedding:components:ui:jar.mn", $chrome_dir, \%jars);
 
     if ($main::options{psm2}) {
     	CreateJarFromManifest(":mozilla:security:manager:ssl:resources:jar.mn", $chrome_dir, \%jars);
@@ -768,7 +772,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",            "$distdirectory:idl:");
 
     my $dir = '';
-    for $dir (qw(bookmarks find history related search shistory sidebar ucth urlbarhistory xfer))
+    for $dir (qw(bookmarks find history related search shistory sidebar urlbarhistory xfer))
     {
         InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",       "$distdirectory:idl:");
     }
@@ -1692,7 +1696,6 @@ sub BuildXPAppProjects()
 
     # Components
     BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp", "FindComponent$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:ucth:macbuild:ucth.mcp",  "ucth$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:xfer:macbuild:xfer.mcp",  "xfer$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.mcp", "RegViewer$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
