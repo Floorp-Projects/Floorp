@@ -161,6 +161,18 @@ pull_ldapcsdk:
 	cd $(MOZ_SRC)\.
 	$(CVSCO_LDAPCSDK) mozilla/directory/c-sdk
 
+pull_xpconnect:
+	cd $(MOZ_SRC)\.
+	$(CVSCO_NSPR) mozilla/nsprpub
+	$(CVSCO) mozilla/include
+	$(CVSCO) mozilla/config
+	$(CVSCO) -l mozilla/js
+	$(CVSCO) -l mozilla/js/src
+	$(CVSCO) mozilla/js/src/fdlibm
+	$(CVSCO) mozilla/js/src/xpconnect
+	$(CVSCO) mozilla/modules/libreg
+	$(CVSCO) mozilla/xpcom
+
 # pull either layout only or seamonkey the browser
 pull_layout:
 	cd $(MOZ_SRC)\.
@@ -191,6 +203,20 @@ clobber_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
 	nmake -f makefile.win clobber_all
 
+clobber_xpconnect:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
+	-rd /s /q dist
+	set DIST_DIRS=1
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+	nmake -f makefile.win clobber_all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\include
+	nmake -f makefile.win clobber_all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\modules\libreg
+	nmake -f makefile.win clobber_all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
+	nmake -f makefile.win clobber_all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\js
+	nmake -f makefile.win clobber_all
 
 clobber_seamonkey:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
@@ -214,6 +240,18 @@ build_nspr:
 build_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
 	nmake -f makefile.win export
+
+build_xpconnect:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+	nmake -f makefile.win all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\include
+	nmake -f makefile.win all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\modules\libreg
+	nmake -f makefile.win all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
+	nmake -f makefile.win all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src
+	nmake -f makefile.win all
 
 build_seamonkey:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.

@@ -37,16 +37,23 @@
 
 #include "xpctest_private.h"
 
-#ifndef XPCONNECT_STANDALONE
+#if defined(WIN32) && !defined(XPCONNECT_STANDALONE)
+#define IMPLEMENT_TIMER_STUFF 1
+#endif
 
-class xpctestEcho : public nsIEcho, public nsITimerCallback
+class xpctestEcho : public nsIEcho
+#ifdef IMPLEMENT_TIMER_STUFF
+, public nsITimerCallback
+#endif // IMPLEMENT_TIMER_STUFF
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIECHO
 
+#ifdef IMPLEMENT_TIMER_STUFF
     // not very xpcom compilant method from nsITimerCallback
     NS_IMETHOD_(void) Notify(nsITimer *timer);
+#endif // IMPLEMENT_TIMER_STUFF
 
     xpctestEcho();
     virtual ~xpctestEcho();
@@ -56,7 +63,11 @@ private:
 
 /***************************************************************************/
 
+#ifdef IMPLEMENT_TIMER_STUFF
 NS_IMPL_ISUPPORTS2(xpctestEcho, nsIEcho, nsITimerCallback);
+#else
+NS_IMPL_ISUPPORTS1(xpctestEcho, nsIEcho);
+#endif // IMPLEMENT_TIMER_STUFF
 
 xpctestEcho::xpctestEcho()
     : mReceiver(NULL)
@@ -416,7 +427,8 @@ xpctestEcho::CallReceiverSometimeLater(void)
     // have build order problems with linking to the static timer lib
     // as it is built today. This is only test code and we can stand to 
     // have it only work on Win32 for now.
-#ifdef WIN32
+
+#ifdef IMPLEMENT_TIMER_STUFF
     nsCOMPtr<nsITimer> timer;
     nsresult rv;
     timer = do_CreateInstance("component://netscape/timer", &rv);
@@ -426,9 +438,10 @@ xpctestEcho::CallReceiverSometimeLater(void)
     return NS_OK;
 #else
     return NS_ERROR_NOT_IMPLEMENTED;
-#endif
+#endif // IMPLEMENT_TIMER_STUFF
 }
 
+#ifdef IMPLEMENT_TIMER_STUFF
 NS_IMETHODIMP_(void)
 xpctestEcho::Notify(nsITimer *timer)
 {
@@ -436,6 +449,7 @@ xpctestEcho::Notify(nsITimer *timer)
         mReceiver->CallReceiverSometimeLater();
     NS_RELEASE(timer);
 }        
+#endif // IMPLEMENT_TIMER_STUFF
 
 /* readonly attribute short throwInGetter; */
 NS_IMETHODIMP
@@ -470,5 +484,3 @@ xpctest::ConstructEcho(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 
     return rv;
 }
-
-#endif // XPCONNECT_STANDALONE

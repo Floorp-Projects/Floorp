@@ -43,9 +43,7 @@
 
 // XXX progids need to be standardized!
 static nsModuleComponentInfo components[] = {
-#ifndef XPCONNECT_STANDALONE
   {nsnull, NS_ECHO_CID,                   "nsEcho",                 xpctest::ConstructEcho                  },
-#endif
   {nsnull, NS_CHILD_CID,                  "nsChild",                xpctest::ConstructChild                 },
   {nsnull, NS_NOISY_CID,                  "nsNoisy",                xpctest::ConstructNoisy                 },
   {nsnull, NS_STRING_TEST_CID,            "nsStringTest",           xpctest::ConstructStringTest            },

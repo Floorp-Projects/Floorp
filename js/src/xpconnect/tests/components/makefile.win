@@ -71,8 +71,13 @@ LLIBS=	$(LIBNSPR)	\
 		$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib	\
 		$(DIST)\lib\xpcom.lib	\
 		$(DIST)\lib\xpc$(MOZ_BITS)$(VERSION_NUMBER).lib	\
+		$(NULL)
+
+!ifndef XPCOM_STANDALONE
+LLIBS=	$(LLIBS)	\
 		$(DIST)\lib\timer_s.lib	\
 		$(NULL)
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -52,10 +52,14 @@
 #include "xpctest.h"
 #include "jsapi.h"
 
-#ifndef XPCONNECT_STANDALONE
+#if defined(WIN32) && !defined(XPCONNECT_STANDALONE)
+#define IMPLEMENT_TIMER_STUFF 1
+#endif
+
+#ifdef IMPLEMENT_TIMER_STUFF
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
-#endif
+#endif // IMPLEMENT_TIMER_STUFF
 
 // {ED132C20-EED1-11d2-BAA4-00805F8A5DD7}
 #define NS_ECHO_CID \

@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#ifndef XPCOM_STANDALONE
 #define NS_IMPL_IDS
 
 #include "nsIEventQueueService.h"
@@ -93,9 +94,11 @@ NS_SetupRegistry()
 }
 
 
+#endif
 int
 main(int argc, char* argv[])
 {
+#ifndef XPCOM_STANDALONE
   nsresult ret;
 
   NS_SetupRegistry(); 
@@ -203,6 +206,6 @@ main(int argc, char* argv[])
     delete[] pVal;
 	  ret = propEnum->Next();
   }
-
+#endif
   return 0;
 }
