@@ -357,6 +357,7 @@ if ($cloned_bug_id) {
     $vars->{'keywords'}       = $cloned_bug->{'keywords'};
     $vars->{'dependson'}      = $cloned_bug_id;
     $vars->{'blocked'}        = "";
+    $vars->{'deadline'}       = $cloned_bug->{'deadline'};
 
     if (exists $cloned_bug->{'cc'}) {
         $vars->{'cc'}         = join (" ", @{$cloned_bug->{'cc'}});
@@ -400,6 +401,7 @@ else {
     $vars->{'keywords'}       = formvalue('keywords');
     $vars->{'dependson'}      = formvalue('dependson');
     $vars->{'blocked'}        = formvalue('blocked');
+    $vars->{'deadline'}       = formvalue('deadline');
 
     $vars->{'cc'}             = formvalue('cc');
 
