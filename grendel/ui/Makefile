@@ -21,7 +21,7 @@ SRCS=						\
 	BiffIcon.java				\
 	BiffThread.java				\
 	DialogAuthenticator.java		\
-	# EditHostDialog.java			\
+	EditHostDialog.java			\
 	FolderCombo.java			\
 	FolderFrame.java			\
 	FolderListTransferable.java		\
