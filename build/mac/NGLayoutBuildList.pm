@@ -515,7 +515,6 @@ sub MakeResourceAliases()
 
 	my($xpinstall_content_chrome_dir) = "$communicator_content_chrome_dir" . "xpinstall:";
 	my($xpinstall_locale_chrome_dir) = "$communicator_locale_chrome_dir" . "xpinstall:";
-	my($xpinstall_skin_chrome_dir) = "$communicator_skin_chrome_dir" . "xpinstall:";
 
 	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_locale_chrome_dir", 0);
 	_InstallResources(":mozilla:xpinstall:res:content:MANIFEST",						"$xpinstall_content_chrome_dir", 0);
