@@ -54,7 +54,6 @@
     {0xab, 0xf4, 0x07, 0x98, 0x61, 0x51, 0x02, 0x2d}\
 }
 
-static NS_DEFINE_CID(kHTTPCompressConverterCID, NS_HTTPCOMPRESSCONVERTER_CID);
 
 #define	HTTP_DEFLATE_TYPE		"deflate"
 #define	HTTP_GZIP_TYPE	        "gzip"

@@ -72,7 +72,6 @@ static PRLogModuleInfo *gTestLog = nsnull;
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 PRBool gDone = PR_FALSE;
 nsIEventQueue* gEventQ = nsnull;

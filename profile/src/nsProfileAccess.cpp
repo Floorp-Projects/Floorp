@@ -76,7 +76,6 @@
 #endif
 
 // IID and CIDs of all the services needed
-static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 // Registry Keys

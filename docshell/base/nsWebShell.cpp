@@ -73,8 +73,6 @@ typedef unsigned long HMTX;
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsWidgetsCID.h"
-#include "nsGfxCIID.h"
 #include "plevent.h"
 #include "prprf.h"
 #include "nsIPluginHost.h"
@@ -91,7 +89,6 @@ typedef unsigned long HMTX;
 #include "prthread.h"
 #include "nsXPIDLString.h"
 #include "nsDOMError.h"
-#include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIURIContentListener.h"
 #include "nsIDOMDocument.h"
@@ -155,14 +152,6 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 #else
 #define WEB_TRACE(_bit,_args)
 #endif
-
-//----------------------------------------------------------------------
-
-//----------------------------------------------------------------------
-
-// Class IID's
-static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
 
 //----------------------------------------------------------------------
 

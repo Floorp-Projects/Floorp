@@ -44,7 +44,6 @@
 
 #include "nsPhGfxLog.h"
 
-static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 #define tulx t->rect.ul.x
 #define tuly t->rect.ul.y

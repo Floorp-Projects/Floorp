@@ -43,7 +43,6 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIURI.h"
-#include "nsNetCID.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
@@ -52,8 +51,6 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsIObserverService.h"
 #include "nsString.h"
-
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // Possible behavior pref values
 #define IMAGE_ACCEPT 0

@@ -69,7 +69,6 @@ static nsICacheEntryDescriptor *desc = nsnull;
  */
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static nsIEventQueue *gEventQ = nsnull;
 
 class TestListener : public nsIStreamListener

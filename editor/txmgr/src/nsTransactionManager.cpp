@@ -50,8 +50,6 @@
 #define LOCK_TX_MANAGER(mgr)    (mgr)->Lock()
 #define UNLOCK_TX_MANAGER(mgr)  (mgr)->Unlock()
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 
 nsTransactionManager::nsTransactionManager(PRInt32 aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount), mListeners(0)

@@ -178,7 +178,6 @@ printf( "MyPiResizeImage\n" );
 //#define ALLOW_PHIMAGE_CACHEING
 #define IsFlagSet(a,b) (a & b)
 
-// static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 NS_IMPL_ISUPPORTS1(nsImagePh, nsIImage)
 

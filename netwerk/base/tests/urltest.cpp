@@ -72,7 +72,6 @@
 #endif
 #endif
 
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 #ifdef XP_UNIX
 extern "C" char *fe_GetConfigDir(void) {

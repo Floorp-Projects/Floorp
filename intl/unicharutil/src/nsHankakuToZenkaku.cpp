@@ -39,10 +39,7 @@
 #include "nsITextTransform.h"
 #include "pratom.h"
 #include "nsUUDll.h"
-#include "nsHankakuToZenkakuCID.h"
 #include "nsTextTransformFactory.h"
-
-NS_DEFINE_CID(kHankakuToZenkakuCID, NS_HANKAKUTOZENKAKU_CID);
 
 // Basic mapping from Hankaku to Zenkaku
 // Nigori and Maru is take care out side this basic mapping

@@ -52,7 +52,6 @@
 #include "nsGfxCIID.h"
 #include "nsIRegion.h"
 
-static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 
 //mmptemp
 

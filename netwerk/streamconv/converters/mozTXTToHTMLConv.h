@@ -46,7 +46,6 @@
 #include "nsTimer.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
 class mozTXTToHTMLConv : public mozITXTToHTMLConv
 {

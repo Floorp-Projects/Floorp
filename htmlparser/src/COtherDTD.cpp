@@ -68,7 +68,6 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOTHERHTML_DTD_IID); 
-  static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static const char kVerificationDir[] = "c:/temp";
  
 

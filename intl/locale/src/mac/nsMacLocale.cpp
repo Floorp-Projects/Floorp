@@ -46,8 +46,6 @@
 #include "prprf.h"
 #include <Script.h>
 
-NS_DEFINE_IID(kMacLocaleCID, NS_MACLOCALE_CID);
-
 struct iso_lang_map
 {
 	char*	iso_code;

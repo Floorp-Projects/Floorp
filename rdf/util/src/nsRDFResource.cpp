@@ -45,7 +45,6 @@
 #include "nsXPIDLString.h"
 #include "prlog.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsIRDFService* nsRDFResource::gRDFService = nsnull;

@@ -58,7 +58,6 @@ nsDeviceContextSpecFactoryBeOS :: ~nsDeviceContextSpecFactoryBeOS()
 {
 }
 
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryBeOS, nsIDeviceContextSpecFactory)

@@ -84,7 +84,6 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static const char sPrintOptionsContractID[] = "@mozilla.org/gfx/printsettings-service;1";
 
 //
-static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 #include "prlog.h"
 #ifdef PR_LOGGING 

@@ -47,9 +47,7 @@
 #include "nsIHttpChannel.h"
 #include "nsXPIDLString.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsObserverBase::NotifyWebShell(nsISupports* aWebShell,

@@ -45,7 +45,6 @@
 
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLDocument.h"
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 
 //-------------------------------------------------------------------------

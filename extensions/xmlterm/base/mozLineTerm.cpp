@@ -48,13 +48,6 @@
 
 #define MAXCOL 4096            // Maximum columns in line buffer
 
-static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
-
-static NS_DEFINE_IID(kILineTermIID,     MOZILINETERM_IID);
-static NS_DEFINE_IID(kILineTermAuxIID,  MOZILINETERMAUX_IID);
-
-static NS_DEFINE_IID(kLineTermCID,      MOZLINETERM_CID);
-
 /////////////////////////////////////////////////////////////////////////
 // mozLineTerm implementaion
 /////////////////////////////////////////////////////////////////////////

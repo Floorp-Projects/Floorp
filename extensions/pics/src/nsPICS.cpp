@@ -81,13 +81,10 @@
 static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 
 static NS_DEFINE_IID(kDocLoaderServiceCID,        NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_IID(kIDocumentLoaderIID,         NS_IDOCUMENTLOADER_IID);
 
 static NS_DEFINE_IID(kIWebShellServicesIID,       NS_IWEB_SHELL_SERVICES_IID);
-//static NS_DEFINE_IID(kIWebShellIID,               NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kIStreamListenerIID,         NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
 
 #define PICS_DOMAIN  			"browser.PICS."
 #define PICS_ENABLED_PREF 		PICS_DOMAIN"ratings_enabled"

@@ -49,9 +49,6 @@
 
 #include "nsIPlatformCharset.h"
 
-static NS_DEFINE_CID(kIScriptableUnicodeConverterCID, NS_ISCRIPTABLEUNICODECONVERTER_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 static PRInt32          gInstanceCount = 0;
 
 /* Implementation file */

@@ -50,9 +50,6 @@
 #include <mem.h>
 #include "nsReadableUtils.h"
 
-static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
-static NS_DEFINE_IID(kDrawingSurfaceCID, NS_DRAWING_SURFACE_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 
@@ -903,7 +900,6 @@ void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 
 void nsRenderingContextPh::CreateClipRegion( )
 {
-	static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 	if( mClipRegion ) return;
 
 	PRUint32 w, h;

@@ -49,7 +49,6 @@ static int nRegions;
 
 Region nsRegionXlib::copyRegion = 0;
 
-static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 nsRegionXlib::nsRegionXlib()
 {

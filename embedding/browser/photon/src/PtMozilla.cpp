@@ -90,10 +90,7 @@ ph_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
         NS_EXTERN_IID(kHTMLEditorCID);
         NS_EXTERN_IID(kCookieServiceCID);
         NS_EXTERN_IID(kWindowCID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 
 #define NS_PROMPTSERVICE_CID \
  {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}

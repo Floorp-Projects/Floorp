@@ -84,7 +84,6 @@
 #include "prlog.h"
 #include "rdf.h"
 
-static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 
 #if defined(MOZ_THREADSAFE_RDF)
 #define NS_AUTOLOCK(_lock) nsAutoLock _autolock(_lock)

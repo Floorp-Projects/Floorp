@@ -52,7 +52,6 @@
     0x11d3,                                          \
     {0xa1, 0x75, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44}       \
 }
-static NS_DEFINE_CID(kMultiMixedConverterCID,          NS_MULTIMIXEDCONVERTER_CID);
 
 // The nsMultiMixedConv stream converter converts a stream of type "multipart/x-mixed-replace"
 // to it's subparts. There was some debate as to whether or not the functionality desired

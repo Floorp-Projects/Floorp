@@ -57,7 +57,6 @@
 
 static uint32 zero_methods_descriptor;
 
-static NS_DEFINE_IID(kProxyEventClassIID, NS_PROXYEVENT_CLASS_IID);
 
 /* ssc@netscape.com wishes he could get rid of this instance of
  * |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from

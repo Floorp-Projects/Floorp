@@ -74,7 +74,6 @@ static void ConvertCharStringToStr255(const char* inString, Str255& outString)
 }
 
 /* Define Class IDs */
-static NS_DEFINE_CID(kICServiceCID, NS_INTERNETCONFIGSERVICE_CID);
 
 nsInternetConfigService::nsInternetConfigService()
 {

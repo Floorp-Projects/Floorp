@@ -65,7 +65,6 @@ static PLHashTable *sCountHashTable = nsnull;
 //-------------------------------------------------------------------------
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //-------------------------------------------------------------------------
 //

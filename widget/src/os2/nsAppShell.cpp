@@ -28,7 +28,6 @@
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // Appshell manager.  Same threads must get the same appshell object,
 // or else the message queue will be taken over by the second (nested)

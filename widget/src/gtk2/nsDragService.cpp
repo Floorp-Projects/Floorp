@@ -41,7 +41,6 @@
 #include <gdk/gdkx.h>
 #include "nsCRT.h"
 
-static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 static PRLogModuleInfo *sDragLm = NULL;
 

@@ -56,13 +56,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "plstr.h"
 #include "prenv.h"
 
-//static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
-//static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
 static NS_DEFINE_IID(kIPICSElementObserverIID, NS_IPICSELEMENTOBSERVER_IID);
-static NS_DEFINE_IID(kIElementObserverIID,     NS_IELEMENTOBSERVER_IID);
-static NS_DEFINE_IID(kIObserverIID,            NS_IOBSERVER_IID);
-static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
-
 static NS_DEFINE_IID(kIPICSIID,                NS_IPICS_IID);
 static NS_DEFINE_IID(kPICSCID,                 NS_PICS_CID);
 

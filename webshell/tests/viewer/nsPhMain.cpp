@@ -94,13 +94,6 @@ nsNativeBrowserWindow::InitNativeWindow()
   return NS_OK;
 }
 
-static NS_DEFINE_IID( kMenuBarCID, 	NS_MENUBAR_CID );
-static NS_DEFINE_IID( kIMenuBarIID, NS_IMENUBAR_IID );
-static NS_DEFINE_IID( kMenuCID, 	NS_MENU_CID );
-static NS_DEFINE_IID( kIMenuIID, 	NS_IMENU_IID );
-static NS_DEFINE_IID( kMenuItemCID, NS_MENUITEM_CID );
-static NS_DEFINE_IID( kIMenuItemIID,NS_IMENUITEM_IID );
-
 extern void  CreateViewerMenus(PtWidget_t*, void *);
 
 nsresult

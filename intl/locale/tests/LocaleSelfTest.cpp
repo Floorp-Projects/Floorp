@@ -80,7 +80,6 @@
 // Collation
 //
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-static NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 // Date and Time
 //
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);

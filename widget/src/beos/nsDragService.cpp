@@ -42,7 +42,6 @@
 
 #include "nsWidgetsCID.h"
 
-static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
 static NS_DEFINE_CID(kCDragServiceCID,   NS_DRAGSERVICE_CID);
 
 // The class statics:
