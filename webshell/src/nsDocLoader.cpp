@@ -101,7 +101,7 @@ public:
     NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                        nsString &aPassword);
 
-    PRInt32 GetStatus(void) { return mStatus; }
+    nsresult GetStatus(void) { return mStatus; }
 
 protected:
     virtual ~nsDocumentBindInfo();
@@ -116,7 +116,7 @@ protected:
     nsIStreamListener*  m_NextStream;
     nsDocLoaderImpl*    m_DocLoader;
 
-    PRInt32             mStatus;
+    nsresult            mStatus;
 };
 
 
@@ -579,7 +579,7 @@ nsDocumentBindInfo::nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
 
     m_ExtraInfo = aExtraInfo;
     NS_IF_ADDREF(m_ExtraInfo);
-    mStatus = NS_BINDING_SUCCEEDED;
+    mStatus = NS_OK;
 }
 
 nsDocumentBindInfo::~nsDocumentBindInfo()
