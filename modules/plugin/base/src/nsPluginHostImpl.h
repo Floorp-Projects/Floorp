@@ -60,6 +60,7 @@ class nsIComponentManager;
 class nsIFile;
 class nsIChannel;
 class nsIRegistry;
+class nsPluginHostImpl;
 
 /**
  * A linked-list of plugin information that is used for
@@ -86,11 +87,13 @@ public:
 
   ~nsPluginTag();
 
+  void SetHost(nsPluginHostImpl * aHost);
   void TryUnloadPlugin(PRBool aForceShutdown = PR_FALSE);
   void Mark(PRUint32 mask) { mFlags |= mask; }
   PRBool Equals(nsPluginTag* aPluginTag);
 
   nsPluginTag   *mNext;
+  nsPluginHostImpl *mPluginHost;
   char          *mName;
   char          *mDescription;
   PRInt32       mVariants;
@@ -142,7 +145,7 @@ public:
 
   void shut();
   PRBool add(nsActivePlugin * plugin);
-  PRBool remove(nsActivePlugin * plugin, PRBool * aUnloadLibraryLater);
+  PRBool remove(nsActivePlugin * plugin);
   nsActivePlugin * find(nsIPluginInstance* instance);
   nsActivePlugin * find(const char * mimetype);
   nsActivePlugin * findStopped(const char * url);
@@ -151,22 +154,6 @@ public:
   void removeAllStopped();
   void stopRunning();
   PRBool IsLastInstance(nsActivePlugin * plugin);
-};
-
-// The purpose of this list is to keep track of unloaded plugin libs
-// we need to keep some libs in memory when we destroy mPlugins list
-// during refresh with reload if the plugin is currently running
-// on the page. They should be unloaded later, see bug #61388
-// There could also be other reasons to have this list. XPConnected
-// plugins e.g. may still be held at the time we normally unload the library
-class nsUnusedLibrary
-{
-public:
-  nsUnusedLibrary *mNext;
-  PRLibrary *mLibrary;
-
-  nsUnusedLibrary(PRLibrary * aLibrary);
-  ~nsUnusedLibrary();
 };
 
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
@@ -392,6 +379,9 @@ public:
   NS_IMETHOD
   StopPluginInstance(nsIPluginInstance* aInstance);
 
+  NS_IMETHOD
+  AddUnusedLibrary(PRLibrary * aLibrary);
+
 private:
   NS_IMETHOD
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
@@ -443,8 +433,6 @@ private:
                            PRBool checkForUnwantedPlugins = PR_FALSE);
 
   PRBool IsRunningPlugin(nsPluginTag * plugin);
-  void AddToUnusedLibraryList(PRLibrary * aLibrary);
-  void CleanUnusedLibraries();
 
   // Loads all cached plugins info into mCachedPlugins
   nsresult LoadCachedPluginsInfo(nsIRegistry* registry);
@@ -483,7 +471,7 @@ private:
   PRBool      mAllowAlienStarHandler;  // set by pref plugin.allow_alien_star_handler
 
   nsActivePluginList mActivePluginList;
-  nsUnusedLibrary *mUnusedLibraries;
+  nsVoidArray mUnusedLibraries;
 
   nsCOMPtr<nsIDirectoryServiceProvider> mPrivateDirServiceProvider;  
   nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only

@@ -468,11 +468,7 @@ void nsActivePluginList::shut()
   for(nsActivePlugin * plugin = mFirst; plugin != nsnull;)
   {
     nsActivePlugin * next = plugin->mNext;
-
-    PRBool unloadLibLater = PR_FALSE;
-    remove(plugin, &unloadLibLater);
-    NS_ASSERTION(!unloadLibLater, "Plugin doesn't want to be unloaded");
-    
+    remove(plugin);
     plugin = next;
   }
   mFirst = nsnull;
@@ -519,7 +515,7 @@ PRBool nsActivePluginList::IsLastInstance(nsActivePlugin * plugin)
 
 
 ////////////////////////////////////////////////////////////////////////
-PRBool nsActivePluginList::remove(nsActivePlugin * plugin, PRBool * aUnloadLibraryLater)
+PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
 {
   if(mFirst == nsnull)
     return PR_FALSE;
@@ -550,19 +546,7 @@ PRBool nsActivePluginList::remove(nsActivePlugin * plugin, PRBool * aUnloadLibra
         delete p; // plugin instance is destroyed here
         
         if(pluginTag)
-        {
-          // xpconnected plugins from the old world should postpone unloading library 
-          // to avoid crash check, if so add library to the list of unloaded libraries
-          if(pluginTag->mXPConnected && (pluginTag->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL))
-          {
-            pluginTag->mCanUnloadLibrary = PR_FALSE;
-
-            if(aUnloadLibraryLater)
-              *aUnloadLibraryLater = PR_TRUE;
-          }
-        
           pluginTag->TryUnloadPlugin();
-        }
         else
           NS_ASSERTION(pluginTag, "pluginTag was not set, plugin not shutdown");
 
@@ -625,12 +609,7 @@ void nsActivePluginList::removeAllStopped()
     next = p->mNext;
 
     if(p->mStopped)
-    {
-      // we don't care about unloading library problem for 
-      // plugins that are already in the 'stop' state
-      PRBool unloadLibLater = PR_FALSE;
-      remove(p, &unloadLibLater);
-    }
+      remove(p);
 
     p = next;
   }
@@ -752,25 +731,10 @@ nsActivePlugin * nsActivePluginList::findOldestStopped()
   return res;
 }
 
-
-////////////////////////////////////////////////////////////////////////
-nsUnusedLibrary::nsUnusedLibrary(PRLibrary * aLibrary)
-{
-  mLibrary = aLibrary;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-nsUnusedLibrary::~nsUnusedLibrary()
-{
-  if(mLibrary)
-    PostPluginUnloadEvent(mLibrary);
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 nsPluginTag::nsPluginTag()
 {
+  mPluginHost = nsnull;
   mNext = nsnull;
   mName = nsnull;
   mDescription = nsnull;
@@ -804,6 +768,7 @@ inline char* new_str(const char* str)
 ////////////////////////////////////////////////////////////////////////
 nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
 {
+  mPluginHost = nsnull;
   mNext = nsnull;
   mName = new_str(aPluginTag->mName);
   mDescription = new_str(aPluginTag->mDescription);
@@ -847,6 +812,7 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
 ////////////////////////////////////////////////////////////////////////
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
 {
+  mPluginHost = nsnull;
   mNext = nsnull;
   mName = new_str(aPluginInfo->fName);
   mDescription = new_str(aPluginInfo->fDescription);
@@ -916,6 +882,7 @@ nsPluginTag::nsPluginTag(const char* aName,
     mXPConnected(PR_FALSE),
     mLastModifiedTime(aLastModifiedTime)
 {
+  mPluginHost = nsnull;
   mName            = new_str(aName);
   mDescription     = new_str(aDescription);
   mFileName        = new_str(aFileName);
@@ -984,6 +951,11 @@ nsPluginTag::~nsPluginTag()
     mFullPath = nsnull;
   }
 
+}
+
+void nsPluginTag::SetHost(nsPluginHostImpl * aHost)
+{
+  mPluginHost = aHost;
 }
 
 //----------------------------------------------------------------------
@@ -1060,8 +1032,17 @@ void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
 
   // before we unload check if we are allowed to, see bug #61388
   // also, never unload an XPCOM plugin library
-  if (mLibrary && mCanUnloadLibrary && !isXPCOM)
-    PostPluginUnloadEvent(mLibrary); // unload the plugin asynchronously by posting a PLEvent 
+  if (mLibrary && mCanUnloadLibrary && !isXPCOM) {
+    // NPAPI plugins can be unloaded now if they don't use XPConnect
+    if (!mXPConnected)
+      // unload the plugin asynchronously by posting a PLEvent 
+      PostPluginUnloadEvent(mLibrary); 
+    else {
+      // add library to the unused library list to handle it later
+      if (mPluginHost)
+        mPluginHost->AddUnusedLibrary(mLibrary);
+    }
+  }
 
   // we should zero it anyway, it is going to be unloaded by 
   // CleanUnsedLibraries before we need to call the library 
@@ -1069,7 +1050,6 @@ void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
   // the library fresh
   mLibrary = nsnull;
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 PRBool nsPluginTag::Equals(nsPluginTag *aPluginTag)
@@ -2564,9 +2544,9 @@ nsPluginHostImpl::nsPluginHostImpl()
   mPluginsLoaded = PR_FALSE;
   mDontShowBadPluginMessage = PR_FALSE;
   mIsDestroyed = PR_FALSE;
-  mUnusedLibraries = nsnull;
   mOverrideInternalTypes = PR_FALSE;
   mAllowAlienStarHandler = PR_FALSE;
+  mUnusedLibraries.Clear();
   
   // check to see if pref is set at startup to let plugins take over in 
   // full page mode for certain image mime types that we handle internally
@@ -2685,38 +2665,6 @@ PRBool nsPluginHostImpl::IsRunningPlugin(nsPluginTag * plugin)
   return PR_FALSE;
 }
 
-
-////////////////////////////////////////////////////////////////////////
-void nsPluginHostImpl::AddToUnusedLibraryList(PRLibrary * aLibrary)
-{
-  NS_ASSERTION(aLibrary, "nsPluginHostImpl::AddToUnusedLibraryList: Nothing to add");
-  if(!aLibrary)
-    return;
-
-  nsUnusedLibrary * unusedLibrary = new nsUnusedLibrary(aLibrary);
-  if(unusedLibrary) {
-    unusedLibrary->mNext = mUnusedLibraries;
-    mUnusedLibraries = unusedLibrary;
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////
-// this will unload loaded but no longer needed libs which are
-// gathered in mUnusedLibraries list, see bug #61388
-void nsPluginHostImpl::CleanUnusedLibraries()
-{
-  if(!mUnusedLibraries)
-    return;
-
-  while (nsnull != mUnusedLibraries) {
-    nsUnusedLibrary *temp = mUnusedLibraries->mNext;
-    delete mUnusedLibraries;
-    mUnusedLibraries = temp;
-  }
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
 {
@@ -2746,17 +2694,7 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
     return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
 
   if(reloadPages) {
-    // if we have currently running plugins we should set a flag not to
-    // unload them from memory, see bug #61388
-    // and form a list of libs to be unloaded later
-    for(nsPluginTag * p = mPlugins; p != nsnull; p = p->mNext) {
-      if(IsRunningPlugin(p) && (p->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL)) {
-        p->mCanUnloadLibrary = PR_FALSE;
-        AddToUnusedLibraryList(p->mLibrary);
-      }
-    }
-
-    // then stop any running plugins
+    // stop any running plugins
     mActivePluginList.stopRunning();
   }
 
@@ -3348,8 +3286,6 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
     mCachedPlugins = next;
   }
 
-  CleanUnusedLibraries();
-
   // Lets remove any of the temporary files that we created.
   nsCOMPtr<nsIFile> pluginTmp;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));
@@ -3367,6 +3303,14 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
       dirService->UnregisterProvider(mPrivateDirServiceProvider);
     mPrivateDirServiceProvider = nsnull;
   }
+
+  // unload any remaining plugin libraries from memory
+  for (PRInt32 i = 0; i < mUnusedLibraries.Count(); i++) {
+    PRLibrary * library = (PRLibrary *)mUnusedLibraries[i];
+    if (library)
+      PostPluginUnloadEvent(library);
+  }
+  mUnusedLibraries.Clear();
 
   return NS_OK;
 }
@@ -4495,9 +4439,6 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
   if(!aMimeType)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  // unload any libs that can remain after plugins.refresh(1), see #61388
-  CleanUnusedLibraries();
-
   // If plugins haven't been scanned yet, do so now
   LoadPlugins();
 
@@ -4527,6 +4468,10 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
       if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == NULL)
         return NS_ERROR_FAILURE;
+
+      // remove from unused lib list, if it is there
+      if (mUnusedLibraries.IndexOf(pluginLibrary) > -1)
+        mUnusedLibraries.RemoveElement(pluginLibrary);
 
       pluginTag->mLibrary = pluginLibrary;
     }
@@ -4731,6 +4676,7 @@ static nsresult FixUpPluginInfo(nsPluginInfo &aInfo, nsPluginFile &aPluginFile)
       return NS_ERROR_FAILURE;
 
     NP_GETMIMEDESCRIPTION pf = (NP_GETMIMEDESCRIPTION)PR_FindSymbol(library, "NP_GetMIMEDescription");
+
     if (pf) {
       // if we found it, this is the default plugin, return
       char * mimedescription = pf();
@@ -4928,6 +4874,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
     // so if we still want it -- do it
     if(bAddIt) {
+      pluginTag->SetHost(this);
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;
 
@@ -5510,6 +5457,7 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFi
       continue;
     }
 
+    tag->SetHost(this);
     tag->mNext = mPlugins;
     mPlugins = tag;
 
@@ -5581,6 +5529,8 @@ nsPluginHostImpl::LoadCachedPluginsInfo(nsIRegistry* registry)
     rv = LoadXPCOMPlugin(registry, nsnull, key, &tag);
     if (NS_FAILED(rv))
       continue;
+
+    tag->SetHost(this);
 
     // Mark plugin as loaded from cache
     tag->Mark(NS_PLUGIN_FLAG_FROMCACHE);
@@ -5911,11 +5861,7 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
       if(plugin->mPluginTag)
         library = plugin->mPluginTag->mLibrary;
 
-      PRBool unloadLibLater = PR_FALSE;
-      mActivePluginList.remove(plugin, &unloadLibLater);
-
-      if(unloadLibLater)
-        AddToUnusedLibraryList(library);
+      mActivePluginList.remove(plugin);
     } 
     else {
       // if it is allowed to be cached simply stop it, but first we should check 
@@ -5932,12 +5878,7 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
         nsActivePlugin * oldest = mActivePluginList.findOldestStopped();
         if(oldest != nsnull) {
           PRLibrary * library = oldest->mPluginTag->mLibrary;
-
-          PRBool unloadLibLater = PR_FALSE;
-          mActivePluginList.remove(oldest, &unloadLibLater);
-
-          if(unloadLibLater)
-            AddToUnusedLibraryList(library);
+          mActivePluginList.remove(oldest);
         }
       }
     }
@@ -6590,6 +6531,7 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
   if (info.fMimeTypeArray) {
     nsPluginTag *pluginTag = new nsPluginTag(&info);
     if (pluginTag) {
+      pluginTag->SetHost(this);
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;
       
@@ -6605,6 +6547,14 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
 #endif
 
   return rv;
+}
+
+nsresult nsPluginHostImpl::AddUnusedLibrary(PRLibrary * aLibrary) 
+{
+  if (mUnusedLibraries.IndexOf(aLibrary) == -1) // don't add duplicates
+    mUnusedLibraries.AppendElement(aLibrary);
+
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
