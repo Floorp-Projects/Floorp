@@ -33,6 +33,11 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWebProgress.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInputStream.h"
+#include "nsILoadGroup.h"
+#include "nsIChannel.h"
+#include "nsIContentViewer.h"
+#include "nsIStreamListener.h"
 
 // utility classes
 #include "nsXPIDLString.h"
@@ -70,6 +75,9 @@ public:
   NS_IMETHOD GetJSStatus                  (char **retval);
   NS_IMETHOD GetLocation                  (char **retval);
   NS_IMETHOD GetTitleChar                 (char **retval);
+  NS_IMETHOD OpenStream                   (const char *aBaseURI, const char *aContentType);
+  NS_IMETHOD AppendToStream               (const char *aData, gint32 aLen);
+  NS_IMETHOD CloseStream                  (void);
 
   NS_DECL_ISUPPORTS
 
@@ -113,6 +121,13 @@ private:
   nsString                   mTitleUnicode;
   PRUint32                   mChromeMask;
   static nsVoidArray        *sBrowsers;
+  nsCOMPtr<nsIInputStream>   mStream;
+  nsCOMPtr<nsILoadGroup>     mLoadGroup;
+  nsCOMPtr<nsIChannel>       mChannel;
+  nsCOMPtr<nsIContentViewer> mContentViewer;
+  nsCOMPtr<nsIStreamListener> mStreamListener;
+  PRUint32                   mOffset;
+  PRBool                     mDoingStream;
 };
 
 #endif /* __GtkMozEmbedChrome_h */

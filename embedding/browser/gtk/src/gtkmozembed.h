@@ -69,6 +69,14 @@ extern gboolean     gtk_moz_embed_can_go_back      (GtkMozEmbed *embed);
 extern gboolean     gtk_moz_embed_can_go_forward   (GtkMozEmbed *embed);
 extern void         gtk_moz_embed_go_back          (GtkMozEmbed *embed);
 extern void         gtk_moz_embed_go_forward       (GtkMozEmbed *embed);
+extern void         gtk_moz_embed_render_data      (GtkMozEmbed *embed, 
+						    const char *data, guint32 len,
+						    const char *base_uri, const char *mime_type);
+extern void         gtk_moz_embed_open_stream      (GtkMozEmbed *embed,
+						    const char *base_uri, const char *mime_type);
+extern void         gtk_moz_embed_append_data      (GtkMozEmbed *embed,
+						    const char *data, guint32 len);
+extern void         gtk_moz_embed_close_stream     (GtkMozEmbed *embed);
 extern char        *gtk_moz_embed_get_link_message (GtkMozEmbed *embed);
 extern char        *gtk_moz_embed_get_js_status    (GtkMozEmbed *embed);
 extern char        *gtk_moz_embed_get_title        (GtkMozEmbed *embed);

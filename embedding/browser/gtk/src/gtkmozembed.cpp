@@ -448,6 +448,63 @@ gtk_moz_embed_go_forward       (GtkMozEmbed *embed)
 }
 
 void
+gtk_moz_embed_render_data      (GtkMozEmbed *embed, 
+				const char *data, guint32 len,
+				const char *base_uri, const char *mime_type)
+{
+  GtkMozEmbedPrivate *embed_private;
+  
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  embed_private->embed->OpenStream(base_uri, mime_type);
+  embed_private->embed->AppendToStream(data, len);
+  embed_private->embed->CloseStream();
+}
+
+void
+gtk_moz_embed_open_stream      (GtkMozEmbed *embed,
+				const char *base_uri, const char *mime_type)
+{
+  GtkMozEmbedPrivate *embed_private;
+  
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  
+  embed_private->embed->OpenStream(base_uri, mime_type);
+}
+
+void
+gtk_moz_embed_append_data      (GtkMozEmbed *embed, const char *data, guint32 len)
+{
+  GtkMozEmbedPrivate *embed_private;
+  
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  
+  embed_private->embed->AppendToStream(data, len);
+}
+
+void
+gtk_moz_embed_close_stream     (GtkMozEmbed *embed)
+{
+ GtkMozEmbedPrivate *embed_private;
+  
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+ 
+  embed_private->embed->CloseStream();
+}
+
+void
 gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 flags)
 {
   GtkMozEmbedPrivate *embed_private;
