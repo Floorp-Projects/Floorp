@@ -4,7 +4,7 @@
 #include "plstr.h"
 #include "prerror.h"
 
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) && !defined(XP_BEOS)
 #include "direct.h"
 #endif
 
@@ -236,7 +236,7 @@ void nsNetFile::GenerateGlobalRandomBytes(void *aDest, size_t aLen) {
 
 #define MAX_PATH_LEN 512
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 
 // Checked this in to fix the build. I have no idea where this lives
 // on Unix. I have no idea if this implementation does the right thing
