@@ -179,7 +179,10 @@ nsDocShellBase::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(dummyChannel), uri, nsnull), NS_ERROR_FAILURE);
 
   // (4) fire start document load notification
-  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, this, nsnull), NS_ERROR_FAILURE);
+  nsIStreamListener* outStreamListener=nsnull;  // a valid pointer is required for the returned stream listener
+  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, this, &outStreamListener), 
+                    NS_ERROR_FAILURE);
+  NS_IF_RELEASE(outStreamListener);
   NS_ENSURE_SUCCESS(FireStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
 
   // (5) hook up the document and its content
