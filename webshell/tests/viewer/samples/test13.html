@@ -1,5 +1,5 @@
 <HTML>
-<BODY Background="rock_gra.gif">
+<BODY Background="rock_gra.gif" onload="startit();">
 <DIV style="color:red; position:absolute; top:-40px; left:0px;">
 <!-- <DIV style="opacity:40%; color:red; position:absolute; top:-40px; left:0px;"> -->
 <font point-size=200 face="verdana">
@@ -118,7 +118,9 @@ function movedivs()
 	setTimeout(movedivs, 10);
 }
 
-setTimeout(movedivs, 10);
+function startit() {
+  setTimeout(movedivs, 10);
+}
 </script>
 </BODY>
 </HTML>
