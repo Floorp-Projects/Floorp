@@ -112,7 +112,7 @@ else
 ifeq ($(OS_ARCH),HP-UX)
 SHARED_LIBRARY		:= $(LIBRARY:.a=.sl)
 else
-ifneq (,$(filter FreeBSD NetBSD,$(OS_ARCH)))
+ifneq (,$(filter FreeBSD NetBSD OpenBSD,$(OS_ARCH)))
 SHARED_LIBRARY		:= $(LIBRARY:.a=.so.1.0)
 else
 ifeq ($(OS_ARCH)$(OS_RELEASE),SunOS4.1)

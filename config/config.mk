@@ -89,7 +89,7 @@ endif
 # but save the version to allow multiple versions of the same base
 # platform to be built in the same tree.
 #
-ifneq (,$(filter FreeBSD HP-UX IRIX Linux NetBSD OSF1 SunOS,$(OS_ARCH)))
+ifneq (,$(filter FreeBSD HP-UX IRIX Linux NetBSD OpenBSD OSF1 SunOS,$(OS_ARCH)))
 OS_VERS		:= $(suffix $(OS_RELEASE))
 OS_RELEASE	:= $(basename $(OS_RELEASE))
 
