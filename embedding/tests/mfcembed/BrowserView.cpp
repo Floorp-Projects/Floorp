@@ -67,6 +67,7 @@
 #include "BrowserImpl.h"
 #include "BrowserFrm.h"
 #include "Dialogs.h"
+#include "SecurityInfoDlg.h"
 
 // Print Includes
 #include "PrintProgressDialog.h"
@@ -1042,5 +1043,13 @@ void CBrowserView::ShowSecurityInfo()
         return;
     }
 
-    ::MessageBox(hParent, "To Be Done..........", "MfcEmbed", MB_OK);
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsISSLStatus> sslStatus = do_GetInterface(mWebBrowser, &rv);
+    if (NS_FAILED(rv)) {
+        ::MessageBox(hParent, "Unable to get nsISSLStatus", "MfcEmbed", MB_OK);
+        return;
+    }
+
+    SecurityInfoDlg dlg(sslStatus, this);
+    dlg.DoModal();
 }

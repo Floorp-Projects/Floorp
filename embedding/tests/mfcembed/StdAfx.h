@@ -102,11 +102,14 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserFocus.h"
-
+ 
 // Printer Includes
 #include "nsIPrintOptions.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIDOMWindow.h"
+
+// SSL Includes
+#include "nsISSLStatus.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

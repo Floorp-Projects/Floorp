@@ -25,6 +25,8 @@
 #define IDS_ENCRYPTION_HIGH_GRADE       147
 #define IDS_ENCRYPTION_LOW_GRADE        148
 #define IDS_ENCRYPTION_NONE             149
+#define IDD_SECURITY_INFO_DIALOG        150
+#define IDD_VIEWCERT_DIALOG             151
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
@@ -53,6 +55,15 @@
 #define IDC_RADIO_BLANK_PAGE            1153
 #define IDC_RADIO_HOME_PAGE             1154
 #define IDC_EDIT_HOMEPAGE               1155
+#define IDC_VIEW_CERT                   1156
+#define IDC_CERT_OWNER                  1157
+#define IDC_CERT_ISSUER                 1158
+#define IDC_CERT_SERIAL                 1159
+#define IDC_CERT_ISSUE_DATE             1160
+#define IDC_CERT_EXPIRY_DATE            1161
+#define IDC_CERT_SHA1_FINGERPRINT       1162
+#define IDC_CERT_MD5_FINGERPRINT        1163
+#define IDC_ENCRYPTION                  1164
 #define ID_NAV_BACK                     32773
 #define ID_NAV_FORWARD                  32774
 #define ID_NAV_HOME                     32775
