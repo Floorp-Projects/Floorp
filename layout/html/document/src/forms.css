@@ -161,7 +161,7 @@ select > option {
   padding: 0 5px 0 3px;
 }
 
-option[-moz-option-selected] {
+option[_moz-option-selected] {
   color: HighlightText ! important;
   background-color: Highlight ! important;
 }
