@@ -173,20 +173,11 @@ public:
   /** helper method to get the span attribute for this colgroup */
   PRInt32 GetSpan();
 
-  /** helper method returns PR_TRUE if this colgroup exists without any
-    * colgroup or col content in the table backing it.
-    */
-  //PRBool IsManufactured();
-
   void DeleteColFrame(nsIPresContext* aPresContext, nsTableColFrame* aColFrame);
 
-  static nsTableColGroupFrame* GetColGroupFrameContaining(nsIPresContext*  aPresContext,
-                                                          nsFrameList&     aColGroupList,
-                                                          nsTableColFrame& aColFrame);
   nsFrameList& GetChildList();
 
-  static void ResetColIndices(nsIPresContext* aPresContext,
-                              nsIFrame*       aFirstColGroup,
+  static void ResetColIndices(nsIFrame*       aFirstColGroup,
                               PRInt32         aFirstColIndex,
                               nsIFrame*       aStartColFrame = nsnull);
 protected:
