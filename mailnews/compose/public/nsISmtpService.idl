@@ -49,8 +49,37 @@ interface nsISmtpService : nsISupports {
 					   in nsIUrlListener aUrlListener, in nsISmtpServer aServer,
                        out nsIURI aURL);
 
+  /**
+   * A copy of the array of SMTP servers, as stored in the preferences
+   */
   readonly attribute nsISupportsArray smtpServers;
+
+  /**
+   * The default server, across sessions of the app
+   * (eventually there will be a session default which does not
+   * persist past shutdown)
+   */
   attribute nsISmtpServer defaultServer;
+
+  /**
+   * create a new SMTP server.
+   * Use this instead of createInstance(), so that the SMTP Service can
+   * be aware of this server
+   */
   nsISmtpServer createSmtpServer();
+
+  /**
+   * find the server with the given hostname.
+   * @param hostname the hostname of the server
+   * @returns null if no server is found
+   */
+  nsISmtpServer findServer(in string hostname);
+
+  /**
+   * delete the given server from the server list.
+   * does nothing if the server does not exist
+   * @param server the server to delete. Use findServer() if you only know
+   *   the hostname
+   */
   void deleteSmtpServer(in nsISmtpServer server);
 };

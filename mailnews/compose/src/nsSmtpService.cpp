@@ -35,6 +35,10 @@ typedef struct _findServerByKeyEntry {
     nsISmtpServer *server;
 } findServerByKeyEntry;
 
+typedef struct _findServerByHostnameEntry {
+    const char *hostname;
+    nsISmtpServer *server;
+} findServerByHostnameEntry;
 
 static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 
@@ -426,4 +430,45 @@ nsSmtpService::DeleteSmtpServer(nsISmtpServer *aServer)
 
     return rv;
 
+}
+
+PRBool
+nsSmtpService::findServerByHostname(nsISupports *element, void *aData)
+{
+    nsresult rv;
+    
+    nsCOMPtr<nsISmtpServer> server = do_QueryInterface(element, &rv);
+    if (NS_FAILED(rv)) return PR_TRUE;
+
+    findServerByHostnameEntry *entry = (findServerByHostnameEntry*)aData;
+
+    nsXPIDLCString hostname;
+    rv = server->GetHostname(getter_Copies(hostname));
+    if (NS_FAILED(rv)) return PR_TRUE;
+
+    if (((const char*)hostname) &&
+        nsCRT::strcmp(hostname, entry->hostname) == 0) {
+        entry->server = server;
+        return PR_FALSE;        // stop when found
+    }
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsSmtpService::FindServer(const char *hostname, nsISmtpServer ** aResult)
+{
+    if (!aResult) return NS_ERROR_NULL_POINTER;
+
+    findServerByHostnameEntry entry;
+    entry.server=nsnull;
+    entry.hostname = hostname;
+
+    mSmtpServers->EnumerateForwards(findServerByHostname, (void *)&entry);
+
+    // entry.server may be null, but that's ok.
+    // just return null if no server is found
+    *aResult = entry.server;
+    NS_IF_ADDREF(*aResult);
+    
+    return NS_OK;
 }
