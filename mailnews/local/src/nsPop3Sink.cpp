@@ -393,7 +393,7 @@ nsPop3Sink::IncorporateWrite(const char* block,
                              PRInt32 length)
 {
 	PRInt32 blockOffset = 0;
-	if (!PL_strncmp(block, "From ", 5))
+	if (!strncmp(block, "From ", 5))
 	{
 		length++;
 		blockOffset = 1;

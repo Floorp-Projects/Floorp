@@ -560,7 +560,7 @@ nsMsgSendLater::StartNextMailFileSend()
 {
   nsFileSpec    fileSpec;
   nsresult      rv = NS_OK;
-  nsXPIDLCString  aMessageURI;
+  nsXPIDLCString  messageURI;
 
   PRBool hasMore = PR_FALSE;
 
@@ -590,7 +590,7 @@ nsMsgSendLater::StartNextMailFileSend()
   if(NS_FAILED(rv) || (!myRDFNode))
     return NS_ERROR_NOT_AVAILABLE;
 
-  mMessageFolder->GetUriForMsg(mMessage, getter_Copies(aMessageURI));
+  mMessageFolder->GetUriForMsg(mMessage, getter_Copies(messageURI));
 
 #ifdef NS_DEBUG
   nsXPIDLCString      subject;
@@ -607,7 +607,7 @@ nsMsgSendLater::StartNextMailFileSend()
     return NS_ERROR_FAILURE;
 
   nsCOMPtr <nsIMsgMessageService> messageService;
-	rv = GetMessageServiceFromURI(aMessageURI, getter_AddRefs(messageService));
+	rv = GetMessageServiceFromURI(messageURI, getter_AddRefs(messageService));
   if (NS_FAILED(rv) && !messageService)
     return NS_ERROR_FACTORY_NOT_LOADED;
 
@@ -633,7 +633,7 @@ nsMsgSendLater::StartNextMailFileSend()
   if (convertedListener)
   {
     // Now, just plug the two together and get the hell out of the way!
-    rv = messageService->DisplayMessage(aMessageURI, convertedListener, nsnull, nsnull, nsnull, nsnull);
+    rv = messageService->DisplayMessage(messageURI, convertedListener, nsnull, nsnull, nsnull, nsnull);
   }
   else
     rv = NS_ERROR_FAILURE;

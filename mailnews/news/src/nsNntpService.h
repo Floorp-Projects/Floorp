@@ -102,7 +102,6 @@ protected:
 
   PRBool            mPrintingOperation; // Flag for printing operations
   PRBool			mOpenAttachmentOperation; // Flag for opening attachments
-  PRBool            mCopyingOperation;
 
   nsCOMPtr<nsICacheSession> mCacheSession; // the cache session used by news
 };

@@ -665,7 +665,7 @@ nsParseMailMessageState::IsEnvelopeLine(const char *buf, PRInt32 buf_size)
 
   if (buf_size < 29) return PR_FALSE;
   if (*buf != 'F') return PR_FALSE;
-  if (nsCRT::strncmp(buf, "From ", 5)) return PR_FALSE;
+  if (strncmp(buf, "From ", 5)) return PR_FALSE;
 
   end = buf + buf_size;
   date = buf + 5;
@@ -730,7 +730,7 @@ nsParseMailMessageState::IsEnvelopeLine(const char *buf, PRInt32 buf_size)
 
   if (buf_size < 5) return PR_FALSE;
   if (*buf != 'F') return PR_FALSE;
-  if (nsCRT::strncmp(buf, "From ", 5)) return PR_FALSE;
+  if (strncmp(buf, "From ", 5)) return PR_FALSE;
 
 #endif /* !STRICT_ENVELOPE */
 
@@ -2288,7 +2288,7 @@ PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLen
 		m_lastBodyLineEmpty = (m_state == nsIMsgParseMailMsgState::ParseBodyState && (EMPTY_MESSAGE_LINE(line)));
 
 		// make sure we mangle naked From lines
-		if (line[0] == 'F' && !nsCRT::strncmp(line, "From ", 5))
+		if (line[0] == 'F' && !strncmp(line, "From ", 5))
 		{
 			res = XP_FileWrite (">", 1, m_out_file);
 			if (res < 1)

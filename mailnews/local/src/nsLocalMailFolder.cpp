@@ -176,7 +176,7 @@ nsStringEndsWith(nsString& name, const char *ending)
   PRInt32 len = name.Length();
   if (len == 0) return PR_FALSE;
 
-  PRInt32 endingLen = PL_strlen(ending);
+  PRInt32 endingLen = strlen(ending);
   if (len > endingLen && name.RFind(ending, PR_TRUE) == len - endingLen) {
 	return PR_TRUE;
   }
@@ -1479,7 +1479,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::UserNeedsToAuthenticateForFolder(PRBool disp
   if (m_master->IsCachePasswordProtected() && !m_master->IsUserAuthenticated() && !m_master->AreLocalFoldersAuthenticated())
   {
     char *savedPassword = GetRememberedPassword();
-    if (savedPassword && nsCRT::strlen(savedPassword))
+    if (savedPassword && strlen(savedPassword))
       ret = PR_TRUE;
     FREEIF(savedPassword);
   }
@@ -2326,9 +2326,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
   mCopyState->m_leftOver += readCount;
   mCopyState->m_dataBuffer[mCopyState->m_leftOver] ='\0';
   start = mCopyState->m_dataBuffer;
-  end = PL_strchr(start, '\r');
+  end = strchr(start, '\r');
   if (!end)
-   	end = PL_strchr(start, '\n');
+   	end = strchr(start, '\n');
   else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
     linebreak_len = 2;
 
@@ -2342,7 +2342,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
   {
     if (mCopyState->m_fromLineSeen)
     {
-      if (nsCRT::strncmp(start, "From ", 5) == 0)
+      if (strncmp(start, "From ", 5) == 0)
       {
         line = ">";
      
@@ -2362,7 +2362,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     else
     {
       mCopyState->m_fromLineSeen = PR_TRUE;
-      NS_ASSERTION(nsCRT::strncmp(start, "From ", 5) == 0, 
+      NS_ASSERTION(strncmp(start, "From ", 5) == 0, 
                    "Fatal ... bad message format\n");
     }
         
@@ -2378,7 +2378,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
       mCopyState->m_leftOver = 0;
       break;
     }
-    end = PL_strchr(start, '\r');
+    end = strchr(start, '\r');
     if (end)
     {
       if (*(end+1) == nsCRT::LF)  //need to set the linebreak_len each time
@@ -2388,7 +2388,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     }
     if (!end)
     {
-      end = PL_strchr(start, '\n');
+      end = strchr(start, '\n');
       if (end)
         linebreak_len = 1;   //LF
       else
@@ -2959,7 +2959,7 @@ nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages
             len = 0;
           else {
             len -= size;
-            uidl = PL_strstr(header, X_UIDL);
+            uidl = strstr(header, X_UIDL);
           }
         } else
           len = 0;
@@ -3093,7 +3093,7 @@ nsMsgLocalMailFolder::OnStartRunningUrl(nsIURI * aUrl)
   {
     nsXPIDLCString aSpec;
     aUrl->GetSpec(getter_Copies(aSpec));
-    if (aSpec && PL_strstr((const char *) aSpec, "uidl="))
+    if (aSpec && strstr(aSpec.get(), "uidl="))
     {
       nsCOMPtr<nsIPop3Sink> popsink;
       rv = popurl->GetPop3Sink(getter_AddRefs(popsink));
@@ -3117,7 +3117,7 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
     nsXPIDLCString aSpec;
     aUrl->GetSpec(getter_Copies(aSpec));
     
-    if (PL_strstr(aSpec, "uidl="))
+    if (strstr(aSpec, "uidl="))
     {
       nsCOMPtr<nsIPop3URL> popurl = do_QueryInterface(aUrl, &rv);
       if (NS_SUCCEEDED(rv))

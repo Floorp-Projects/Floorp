@@ -98,10 +98,9 @@ static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
                     
 nsNntpService::nsNntpService()
 {
-    NS_INIT_REFCNT();
-    mPrintingOperation = PR_FALSE;
+  NS_INIT_REFCNT();
+  mPrintingOperation = PR_FALSE;
 	mOpenAttachmentOperation = PR_FALSE;
-    mCopyingOperation = PR_FALSE;
 }
 
 nsNntpService::~nsNntpService()
@@ -232,11 +231,7 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
   rv = DecomposeNewsMessageURI(aMessageURI, getter_AddRefs(folder), &key);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCAutoString uri;
-  //
-  // if we are copying, we need the uri to be a news://host/group#key uri
-  // so that we can get back to the nsIMsgDBHdr.
-  //
+  nsCAutoString urlStr;
   // if we are displaying (or printing), we want the news://host/message-id url
   // we keep the original uri around, for cancelling and so we can get to the
   // articles by doing GROUP and then ARTICLE <n>.
@@ -245,31 +240,23 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
   // we'll use that to look up in the cache, so if 
   // you are reading a message that you've already read, you
   // (from a cross post) it would be in your cache.
-  // 
-  // if we used news://host/group#key, we would not have that behaviour
-  //
-  // XXX fix it so copy operations check the memory cache
-  if (mCopyingOperation) {
-    uri = aMessageURI;
-  }
-  else {
-    nsXPIDLCString messageIdURL;
-    rv = CreateMessageIDURL(folder, key, getter_Copies(messageIdURL));
-    NS_ENSURE_SUCCESS(rv,rv);
-    uri = messageIdURL.get();
-  }
+  nsXPIDLCString messageIdURL;
+  rv = CreateMessageIDURL(folder, key, getter_Copies(messageIdURL));
+  NS_ENSURE_SUCCESS(rv,rv);
+ 
+  urlStr = messageIdURL.get();
 
   // rhp: If we are displaying this message for the purposes of printing, append
   // the magic operand.
   if (mPrintingOperation)
-    uri.Append("?header=print");
+    urlStr.Append("?header=print");
 
   nsNewsAction action = nsINntpUrl::ActionFetchArticle;
   if (mOpenAttachmentOperation)
     action = nsINntpUrl::ActionFetchPart;
 
   nsCOMPtr<nsIURI> url;
-  rv = ConstructNntpUrl(uri.get(), aUrlListener, aMsgWindow, aMessageURI, action, getter_AddRefs(url));
+  rv = ConstructNntpUrl(urlStr.get(), aUrlListener, aMsgWindow, aMessageURI, action, getter_AddRefs(url));
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (NS_SUCCEEDED(rv))
@@ -559,18 +546,17 @@ nsNntpService::GetFolderFromUri(const char *uri, nsIMsgFolder **folder)
 }
 
 NS_IMETHODIMP
-nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
+nsNntpService::CopyMessage(const char * aSrcMessageURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
 						   nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **aURL)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsISupports> streamSupport;
-    if (!aSrcMailboxURI || !aMailboxCopyHandler) return rv;
-    streamSupport = do_QueryInterface(aMailboxCopyHandler, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        mCopyingOperation = PR_TRUE;
-        rv = DisplayMessage(aSrcMailboxURI, streamSupport, aMsgWindow, aUrlListener, nsnull, aURL);
-        mCopyingOperation = PR_FALSE;
-    }
+  NS_ENSURE_ARG_POINTER(aSrcMessageURI);
+  NS_ENSURE_ARG_POINTER(aMailboxCopyHandler);
+
+  nsresult rv;
+  nsCOMPtr<nsISupports> streamSupport = do_QueryInterface(aMailboxCopyHandler, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = DisplayMessage(aSrcMessageURI, streamSupport, aMsgWindow, aUrlListener, nsnull, aURL);
 	return rv;
 }
 
@@ -1118,7 +1104,7 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
 
   if (NS_FAILED(rv) || !server) {
 	  PRBool isSecure = PR_FALSE;
-	  if (nsCRT::strcasecmp("snews",(const char *)scheme) == 0) {
+	  if (PL_strcasecmp("snews",scheme.get()) == 0) {
 		  isSecure = PR_TRUE;
           if ((port == 0) || (port == -1)) {
               port = SECURE_NEWS_PORT;
@@ -1604,7 +1590,7 @@ nsNntpService::HandleContent(const char * aContentType, const char * aCommand, n
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (nsCRT::strcasecmp(aContentType, "x-application-newsgroup") == 0)
+  if (PL_strcasecmp(aContentType, "x-application-newsgroup") == 0)
   {
     nsCOMPtr<nsIURI> uri;
     rv = aChannel->GetURI(getter_AddRefs(uri));
