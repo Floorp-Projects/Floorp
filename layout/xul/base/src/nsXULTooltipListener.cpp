@@ -686,11 +686,9 @@ nsXULTooltipListener::sAutoHideCallback(nsITimer *aTimer, void* aListener)
 int 
 nsXULTooltipListener::sTooltipPrefChanged(const char* aPref, void* aData)
 {
-  nsXULTooltipListener* self = NS_STATIC_CAST(nsXULTooltipListener*, aData);
-  if (self) {
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-    if (prefs)
-      prefs->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
-  }
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (prefs)
+    prefs->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
+
   return NS_OK;
 }
