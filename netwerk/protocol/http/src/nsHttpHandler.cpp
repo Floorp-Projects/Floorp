@@ -598,10 +598,14 @@ nsHttpHandler::OnExamineResponse(nsIHttpChannel *chan)
 const char *
 nsHttpHandler::UserAgent()
 {
+    if (mUserAgentOverride)
+        return mUserAgentOverride.get();
+
     if (mUserAgentIsDirty) {
         BuildUserAgent();
         mUserAgentIsDirty = PR_FALSE;
     }
+
     return mUserAgent.get();
 }
 
