@@ -179,11 +179,6 @@ pk11_getKeyFromList(PK11SlotInfo *slot) {
     if (symKey == NULL) {
 	return NULL;
     }
-    symKey->refLock = PZ_NewLock(nssILockRefLock);
-    if (symKey->refLock == NULL) {
-	PORT_Free(symKey);
-	return NULL;
-    }
     symKey->session = pk11_GetNewSession(slot,&symKey->sessionOwner);
     symKey->next = NULL;
     return symKey;
@@ -198,7 +193,6 @@ PK11_CleanKeyList(PK11SlotInfo *slot)
     	symKey = slot->freeSymKeysHead;
 	slot->freeSymKeysHead = symKey->next;
 	pk11_CloseSession(slot, symKey->session,symKey->sessionOwner);
-	PK11_USE_THREADS(PZ_DestroyLock(symKey->refLock);)
 	PORT_Free(symKey);
     };
     return;
@@ -242,14 +236,10 @@ PK11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, void *wincx)
 void
 PK11_FreeSymKey(PK11SymKey *symKey)
 {
-    PRBool destroy = PR_FALSE;
     PK11SlotInfo *slot;
     PRBool freeit = PR_TRUE;
 
     if (PR_AtomicDecrement(&symKey->refCount) == 0) {
-	destroy= PR_TRUE;
-    }
-    if (destroy) {
 	if ((symKey->owner) && symKey->objectID != CK_INVALID_HANDLE) {
 	    pk11_EnterKeyMonitor(symKey);
 	    (void) PK11_GETTAB(symKey->slot)->
@@ -273,7 +263,6 @@ PK11_FreeSymKey(PK11SymKey *symKey)
         if (freeit) {
 	    pk11_CloseSession(symKey->slot, symKey->session,
 							symKey->sessionOwner);
-	    PK11_USE_THREADS(PZ_DestroyLock(symKey->refLock);)
 	    PORT_Free(symKey);
 	}
 	PK11_FreeSlot(slot);

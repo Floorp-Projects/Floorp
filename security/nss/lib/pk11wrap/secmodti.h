@@ -145,8 +145,7 @@ struct PK11SymKeyStr {
     SECItem	data;		/* raw key data if available */
     CK_SESSION_HANDLE session;
     PRBool	sessionOwner;
-    int		refCount;	/* number of references to this key */
-    PZLock	*refLock;
+    PRInt32	refCount;	/* number of references to this key */
     int		size;		/* key size in bytes */
     PK11Origin	origin;		/* where this key came from 
 						(see def in secmodt.h) */
