@@ -428,12 +428,16 @@ if(verifyDiskSpace(fProgram, srDest))
       err = performInstall(); 
       logComment("performInstall() returned: " + err);
 
-      if(err == SUCCESS)
-      {
-        // Log the uninstall command to run PalmSyncInstall.exe to uninstall itself.
-        // This needs to be logged after all the files have been installed.
-        logComment("Uninstall Command: \"" + fProgram + "PalmSyncInstall.exe\" /us");
-      }
+      // Commenting this out for now until bug 182423 is fixed. This will at least prevent
+      // people who have not run PalmSyncInstall.exe to run into bug 182423.  However,
+      // if they run the PalmSync uninstall by hand via the Start menu, then they will
+      // still run into the bug.
+      //if(err == SUCCESS)
+      //{
+      //  // Log the uninstall command to run PalmSyncInstall.exe to uninstall itself.
+      //  // This needs to be logged after all the files have been installed.
+      //  logComment("Uninstall Command: \"" + fProgram + "PalmSyncInstall.exe\" /us");
+      //}
     }
     else
       cancelInstall(err);
