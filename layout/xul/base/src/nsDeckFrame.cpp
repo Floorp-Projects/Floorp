@@ -154,11 +154,11 @@ nsDeckFrame::Paint(nsIPresContext* aPresContext,
   // if a tab is hidden all its children are too.
  	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (!disp->mVisible)
+	if (!disp->IsVisibleOrCollapsed())
 		return NS_OK;
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (disp->mVisible && mRect.width && mRect.height) {
+    if (disp->IsVisibleOrCollapsed() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color = (const nsStyleColor*)

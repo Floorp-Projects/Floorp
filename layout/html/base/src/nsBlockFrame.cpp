@@ -5814,7 +5814,7 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   // Only paint the border and background if we're visible
-  if (disp->mVisible && (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
+  if (disp->IsVisible() && (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
       (0 != mRect.width) && (0 != mRect.height)) {
     PRIntn skipSides = GetSkipSides();
     const nsStyleColor* color = (const nsStyleColor*)

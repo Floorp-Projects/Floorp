@@ -204,6 +204,15 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRBool IsFloating() const {
     return NS_STYLE_FLOAT_NONE != mFloats;
   }
+
+	PRBool IsVisible() const {
+		return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);
+	}
+
+	PRBool IsVisibleOrCollapsed() const {
+		return ((mVisible == NS_STYLE_VISIBILITY_VISIBLE) ||
+						(mVisible == NS_STYLE_VISIBILITY_COLLAPSE));
+	}
 };
 
 struct nsStyleTable: public nsStyleStruct {

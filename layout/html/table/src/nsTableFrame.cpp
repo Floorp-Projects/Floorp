@@ -1228,7 +1228,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     const nsStyleDisplay* disp =
       (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->mVisible) {
+    if (disp->IsVisibleOrCollapsed()) {
       const nsStyleSpacing* spacing =
         (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
       const nsStyleColor* color =

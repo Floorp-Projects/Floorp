@@ -64,7 +64,7 @@ nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->mVisible && mRect.width && mRect.height) {
+    if (disp->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color = (const nsStyleColor*)

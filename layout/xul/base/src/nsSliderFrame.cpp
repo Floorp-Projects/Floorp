@@ -221,7 +221,7 @@ nsSliderFrame::Paint(nsIPresContext* aPresContext,
     if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->mVisible) {
+    if (disp->IsVisibleOrCollapsed()) {
       const nsStyleColor* myColor = (const nsStyleColor*)
       mStyleContext->GetStyleData(eStyleStruct_Color);
       const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)

@@ -229,7 +229,7 @@ nsXULTextFrame::Paint(nsIPresContext* aPresContext,
 {	
 	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (!disp->mVisible)
+	if (!disp->IsVisibleOrCollapsed())
 		return NS_OK;
 
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {

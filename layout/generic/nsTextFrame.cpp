@@ -817,7 +817,7 @@ nsTextFrame::Paint(nsIPresContext* aPresContext,
   nsIStyleContext* sc = mStyleContext;
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     sc->GetStyleData(eStyleStruct_Display);
-  if (disp->mVisible) {
+  if (disp->IsVisible()) {
     TextStyle ts(aPresContext, aRenderingContext, mStyleContext);
     if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)) {
       PaintTextSlowly(aPresContext, aRenderingContext, sc, ts, 0, 0);

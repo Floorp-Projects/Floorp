@@ -329,7 +329,7 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
     }
 
     // Initialize the scrolling view
-    view->Init(viewManager, mRect, parentView, nsnull, display->mVisible == NS_STYLE_VISIBILITY_VISIBLE?
+    view->Init(viewManager, mRect, parentView, nsnull, display->IsVisible()?
                nsViewVisibility_kShow : nsViewVisibility_kHide);
 
     // Insert the view into the view hierarchy
@@ -826,7 +826,7 @@ nsScrollFrame::Paint(nsIPresContext*      aPresContext,
     const nsStyleDisplay* display = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
 
-    if (display->mVisible == NS_STYLE_VISIBILITY_VISIBLE) {
+    if (display->IsVisible()) {
       // Paint our border only (no background)
       const nsStyleSpacing* spacing = (const nsStyleSpacing*)
         mStyleContext->GetStyleData(eStyleStruct_Spacing);
