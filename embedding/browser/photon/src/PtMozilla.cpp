@@ -229,31 +229,6 @@ static int child_getting_focus( PtWidget_t *widget, PtWidget_t *child, PhEvent_t
 	return Pt_CONTINUE;
 	}
 
-// realized
-static void 
-mozilla_realized( PtWidget_t *widget )
-{
-	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
-
-	PtSuperClassRealized(PtContainer, widget);
-
-	moz->EmbedRef->Show();
-
-	// If an initial url was stored, load it
-  	if (moz->url[0])
-		MozLoadURL(moz, moz->url);
-}
-
-
-// unrealized function
-static void 
-mozilla_unrealized( PtWidget_t *widget )
-{
-	PtMozillaWidget_t *moz = (PtMozillaWidget_t *)widget;
-
-	moz->EmbedRef->Hide();
-}
-
 static void 
 mozilla_extent(PtWidget_t *widget)
 {
@@ -1091,8 +1066,6 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 		{ Pt_SET_VERSION, 200},
 		{ Pt_SET_STATE_LEN, sizeof( PtMozillaWidget_t ) },
 		{ Pt_SET_DFLTS_F, (long)mozilla_defaults },
-		{ Pt_SET_REALIZED_F, (long)mozilla_realized },
-		{ Pt_SET_UNREALIZE_F, (long)mozilla_unrealized },
 		{ Pt_SET_EXTENT_F, (long)mozilla_extent },
 		{ Pt_SET_FLAGS, Pt_RECTANGULAR, Pt_RECTANGULAR },
 		{ Pt_SET_DESTROY_F, (long) mozilla_destroy },
