@@ -259,6 +259,10 @@ $ops{"WITHOUT"} =
    super  => "Instruction",
    rem    => "without this object",
   };
+$ops{"FUNCTION"} =
+  {
+   rem    => "Defines a function",
+  };
 
 #
 # nasty perl code, you probably don't need to muck around below this line
@@ -282,7 +286,7 @@ if (!$ARGV[0]) {
 
 sub collect {
     # grab the info from the $k record in $ops, and append it to
-    # $enum_decs, @name_aray, and $class_decs.
+    # $enum_decs, @name_array, and $class_decs.
     my ($k) = @_;
 
     if (length($k) > $opcode_maxlen) {
@@ -319,41 +323,43 @@ sub collect {
     
     push (@name_array, $opname);
     $enum_decs .= "$init_tab$tab$opname, /* $rem */\n";
-    $class_decs .= ($init_tab . "class $cname : public $super {\n" .
-                    $init_tab . "public:\n" .
-                    $init_tab . $tab . "/* $rem */\n" .
-                    $init_tab . $tab . "$cname ($dec_list) :\n" .
-                    $init_tab . $tab . $tab . "$super\n" .
-                    "$init_tab$tab$tab($constr_params) " .
-                    "{};\n");
+    if ($super) {
+        $class_decs .= ($init_tab . "class $cname : public $super {\n" .
+                        $init_tab . "public:\n" .
+                        $init_tab . $tab . "/* $rem */\n" .
+                        $init_tab . $tab . "$cname ($dec_list) :\n" .
+                        $init_tab . $tab . $tab . "$super\n" .
+                        "$init_tab$tab$tab($constr_params) " .
+                        "{};\n");
 
-    if (!$c->{"super_has_print"}) {
-        $class_decs .= ($init_tab . $tab . 
-                         "virtual Formatter& print(Formatter& f) {\n" .
-                         $init_tab . $tab . $tab . "f << opcodeNames[$opname]" .
-                         &get_print_body(@types) . ";\n" .
-                         $init_tab . $tab . $tab . "return f;\n" .
-                         $init_tab . $tab . "}\n");
+        if (!$c->{"super_has_print"}) {
+            $class_decs .= ($init_tab . $tab . 
+                             "virtual Formatter& print(Formatter& f) {\n" .
+                             $init_tab . $tab . $tab . "f << opcodeNames[$opname]" .
+                             &get_print_body(@types) . ";\n" .
+                             $init_tab . $tab . $tab . "return f;\n" .
+                             $init_tab . $tab . "}\n");
 
-        my $printops_body = &get_printops_body(@types);
-        my $printops_decl =  "virtual Formatter& printOperands(Formatter& f, ";
-        $printops_decl .= ($printops_body ne "" ?
-                           "const JSValues& registers" :
-                           "const JSValues& /*registers*/");
-        $printops_decl .= ") {\n";
+            my $printops_body = &get_printops_body(@types);
+            my $printops_decl =  "virtual Formatter& printOperands(Formatter& f, ";
+            $printops_decl .= ($printops_body ne "" ?
+                               "const JSValues& registers" :
+                               "const JSValues& /*registers*/");
+            $printops_decl .= ") {\n";
 
-        $class_decs .= ($init_tab . $tab . 
-                        $printops_decl .
-                        $printops_body .
-                        $init_tab . $tab . $tab . "return f;\n" .
-                        $init_tab . $tab . "}\n");
+            $class_decs .= ($init_tab . $tab . 
+                            $printops_decl .
+                            $printops_body .
+                            $init_tab . $tab . $tab . "return f;\n" .
+                            $init_tab . $tab . "}\n");
 
-    } else {
-        $class_decs .= $init_tab . $tab . 
-          "/* print() and printOperands() inherited from $super */\n";
+        } else {
+            $class_decs .= $init_tab . $tab . 
+              "/* print() and printOperands() inherited from $super */\n";
+        }
+
+        $class_decs .= $init_tab . "};\n\n";
     }
-
-    $class_decs .= $init_tab . "};\n\n";
 }
 
 sub spew {
