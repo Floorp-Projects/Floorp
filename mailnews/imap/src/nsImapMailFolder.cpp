@@ -2733,6 +2733,20 @@ nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopy
 }
 
 NS_IMETHODIMP
+nsImapMailFolder::PrepareToReleaseUrl(nsIMsgMailNewsUrl * aUrl)
+{
+  mUrlToRelease = aUrl;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::ReleaseUrl()
+{
+  mUrlToRelease = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImapMailFolder::BeginMessageUpload()
 {
     return NS_ERROR_FAILURE;

@@ -106,27 +106,27 @@ public:
     // nsICollection methods
 	NS_IMETHOD Enumerate(nsIEnumerator **result);
 
-    // nsIFolder methods:
-    NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
-    
-    // nsIMsgFolder methods:
-    NS_IMETHOD AddUnique(nsISupports* element);
-    NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
-    NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
+  // nsIFolder methods:
+  NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
+  
+  // nsIMsgFolder methods:
+  NS_IMETHOD AddUnique(nsISupports* element);
+  NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
+  NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
     
 	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
 	NS_IMETHOD AddSubfolder(nsAutoString *name, nsIMsgFolder **child);
     
-    NS_IMETHOD Compact();
-    NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);
+  NS_IMETHOD Compact();
+  NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const PRUnichar *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
 	NS_IMETHOD GetPrettyName(PRUnichar ** prettyName);	// Override of the base, for top-level mail folder
     
-    NS_IMETHOD GetFolderURL(char **url);
+  NS_IMETHOD GetFolderURL(char **url);
     
 	NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
     
@@ -136,7 +136,7 @@ public:
     
 	NS_IMETHOD GetSizeOnDisk(PRUint32 * size);
         
-        NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
+  NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
 
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
 	NS_IMETHOD RememberPassword(const char *password);
@@ -146,29 +146,29 @@ public:
 	NS_IMETHOD MarkAllMessagesRead(void);
 	NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
 
-    NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders);
+  NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders);
 	NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
 	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
     
-    virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
+  virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages,
                               nsIMsgWindow *msgWindow, PRBool
                               deleteStorage, PRBool isMove);
-    NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, 
+  NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, 
                             nsISupportsArray* messages,
                             PRBool isMove, nsIMsgWindow *msgWindow,
                             nsIMsgCopyServiceListener* listener);
-    NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, 
+  NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, 
                                nsIMessage* msgToReplace,
                                PRBool isDraftOrTemplate,
                                nsIMsgWindow *msgWindow,
                                nsIMsgCopyServiceListener* listener);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage
                                          **message);
-    NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
+  NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
-    NS_IMETHOD GetPath(nsIFileSpec** aPathName);
+  NS_IMETHOD GetPath(nsIFileSpec** aPathName);
 	NS_IMETHOD SetPath(nsIFileSpec * aPath);
 
     // nsIMsgImapMailFolder methods
@@ -187,25 +187,25 @@ public:
 	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
 	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
-    // nsIImapExtensionSink methods
-    NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
-                                 nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
+  // nsIImapExtensionSink methods
+  NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
                                nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                   nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                         nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
-                                  nsMsgKeyArray* keyArray,
-                                  const char* msgIdString,
-                                  nsISupports* copyState);
-    NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
-                               nsMsgKey aKey,
-                               nsISupports* copyState);
-    NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
-                            nsCString* messageId,
-                            nsISupports* copyState);
+  NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
+                             nsIMAPACLRightsInfo* aclRights);
+  NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
+                                 nsIMAPACLRightsInfo* aclRights);
+  NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
+                                       nsIMAPACLRightsInfo* aclRights);
+  NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
+                                nsMsgKeyArray* keyArray,
+                                const char* msgIdString,
+                                nsISupports* copyState);
+  NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
+                             nsMsgKey aKey,
+                             nsISupports* copyState);
+  NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
+                          nsCString* messageId,
+                          nsISupports* copyState);
     
     // nsIImapMiscellaneousSink methods
 	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
@@ -214,8 +214,8 @@ public:
                                    GenericInfo* aInfo);
 	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
                                                  GenericInfo* aInfo);
-    NS_IMETHOD GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
-                                        PRBool* aBool);
+  NS_IMETHOD GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
+                                      PRBool* aBool);
 	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
 	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
 	// ****
@@ -233,12 +233,12 @@ public:
                                msg_line_info* aInfo);
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
-    NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                     nsISupports* copyState);
-    NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
-                           nsIMsgMailNewsUrl* aUrl,
-                           PRBool isRunning,
-                           nsresult statusCode);
+  NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
+                                   nsISupports* copyState);
+  NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
+                         nsIMsgMailNewsUrl* aUrl,
+                         PRBool isRunning,
+                         nsresult statusCode);
 
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 	// nsIMsgFilterHitNotification method(s)
@@ -271,70 +271,72 @@ protected:
 	virtual PRBool ShowDeletedMessages();
 	virtual PRBool DeleteIsMoveToTrash();
 	void ParseUidString(char *uidString, nsMsgKeyArray &keys);
-    nsresult GetFolder(const char *name, nsIMsgFolder **pFolder);
+  nsresult GetFolder(const char *name, nsIMsgFolder **pFolder);
 	nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
-    PRBool InTrash(nsIMsgFolder* folder);
+  PRBool InTrash(nsIMsgFolder* folder);
 	nsresult GetServerKey(char **serverKey);
 
-    //nsresult RenameLocal(const char *newName);
-    nsresult AddDirectorySeparator(nsFileSpec &path);
-    nsresult CreateDirectoryForFolder(nsFileSpec &path);
+  //nsresult RenameLocal(const char *newName);
+  nsresult AddDirectorySeparator(nsFileSpec &path);
+  nsresult CreateDirectoryForFolder(nsFileSpec &path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
 	virtual const char *GetIncomingServerType() {return "imap";}
 
-    // Uber message copy service
-    nsresult CopyMessagesWithStream(nsIMsgFolder* srcFolder,
-                           nsISupportsArray* messages,
-                           PRBool isMove,
-                           nsIMsgWindow *msgWindow,
-                           nsIMsgCopyServiceListener* listener);
-    nsresult CopyStreamMessage(nsIMessage* message, nsIMsgFolder* dstFolder,
-                               PRBool isMove);
-    nsresult InitCopyState(nsISupports* srcSupport, 
-                           nsISupportsArray* messages,
-                           PRBool isMove,
-                           PRBool selectedState,
-                           nsIMsgCopyServiceListener* listener);
-    void ClearCopyState(nsresult exitCode);
-    nsresult SetTransactionManager(nsITransactionManager* txnMgr);
-    nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
-                                 nsCString& msgIds, nsMsgKeyArray& keyArray);
+  // Uber message copy service
+  nsresult CopyMessagesWithStream(nsIMsgFolder* srcFolder,
+                         nsISupportsArray* messages,
+                         PRBool isMove,
+                         nsIMsgWindow *msgWindow,
+                         nsIMsgCopyServiceListener* listener);
+  nsresult CopyStreamMessage(nsIMessage* message, nsIMsgFolder* dstFolder,
+                             PRBool isMove);
+  nsresult InitCopyState(nsISupports* srcSupport, 
+                         nsISupportsArray* messages,
+                         PRBool isMove,
+                         PRBool selectedState,
+                         nsIMsgCopyServiceListener* listener);
+  void ClearCopyState(nsresult exitCode);
+  nsresult SetTransactionManager(nsITransactionManager* txnMgr);
+  nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
+                               nsCString& msgIds, nsMsgKeyArray& keyArray);
 
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
 
 
-    PRBool m_initialized;
-    PRBool m_haveDiscoveredAllFolders;
-    PRBool m_haveReadNameFromDB;
+  PRBool m_initialized;
+  PRBool m_haveDiscoveredAllFolders;
+  PRBool m_haveReadNameFromDB;
 	nsCOMPtr<nsIMsgParseMailMsgState> m_msgParser;
 	nsCOMPtr<nsIMsgFilterList> m_filterList;
 	PRBool				m_msgMovedByFilter;
 	nsImapMoveCoalescer *m_moveCoalescer;
 	nsMsgKey			m_curMsgUid;
 	PRInt32			m_nextMessageByteLength;
-    nsCOMPtr<nsIEventQueue> m_eventQueue;
-    PRBool m_urlRunning;
+  nsCOMPtr<nsIEventQueue> m_eventQueue;
+  PRBool m_urlRunning;
 
 	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
 	// converter interface...
 	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
 
-    // *** jt - undo move/copy trasaction support
-    nsCOMPtr<nsITransactionManager> m_transactionManager;
-    nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
-    nsCOMPtr<nsImapMailCopyState> m_copyState;
-    PRMonitor *m_appendMsgMonitor;
-    PRBool	m_verifiedAsOnlineFolder;
+  // *** jt - undo move/copy trasaction support
+  nsCOMPtr<nsITransactionManager> m_transactionManager;
+  nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
+  nsCOMPtr<nsImapMailCopyState> m_copyState;
+  PRMonitor *m_appendMsgMonitor;
+  PRBool	m_verifiedAsOnlineFolder;
 	PRBool	m_explicitlyVerify; // whether or not we need to explicitly verify this through LIST
 	PRUnichar m_hierarchyDelimiter;
 	PRInt32 m_boxFlags;
 	nsCString m_onlineFolderName;
 	nsFileSpec *m_pathName;
 
-    PRBool m_folderNeedsSubscribing;
-    PRBool m_folderNeedsAdded;
-    PRBool m_folderNeedsACLListed;
+  PRBool m_folderNeedsSubscribing;
+  PRBool m_folderNeedsAdded;
+  PRBool m_folderNeedsACLListed;
+
+  nsCOMPtr<nsIMsgMailNewsUrl> mUrlToRelease;
 };
 
 #endif
