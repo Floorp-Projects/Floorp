@@ -809,6 +809,7 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
     rv = mHTMLElementFactory->CreateInstanceByTag(unicodeString,
                                                   getter_AddRefs(element));
 
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create HTML element");
     if (NS_FAILED(rv)) return rv;
 
     // XXX This is part of what will be an optimal solution.  To allow
@@ -1059,7 +1060,7 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
         }
 
         // We also need to pay special attention to the keyset tag to set up a listener
-        if(aTagName == kKeysetAtom) {
+        if((aNameSpaceID == kNameSpaceID_XUL) && (aTagName == kKeysetAtom)) {
             // Create our nsXULKeyListener and hook it up.
             nsCOMPtr<nsIXULKeyListener> keyListener;
             rv = nsComponentManager::CreateInstance(kXULKeyListenerCID,
