@@ -747,7 +747,8 @@ int main(int argc, char* argv[])
   }
 
 #ifdef DETECT_WEBSHELL_LEAKS
-  if ( unsigned long count = NS_TotalWebShellsInExistence() )  {
+  unsigned long count;
+  if ( count = NS_TotalWebShellsInExistence() )  {
     printf("XXX WARNING: Number of webshells being leaked: %d \n", count);
   }
 #endif
