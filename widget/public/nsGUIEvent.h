@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -84,6 +86,7 @@ class nsIContent;
 #define NS_FORM_EVENT         21
 #define NS_FOCUS_EVENT        22
 #define NS_POPUP_EVENT        23
+#define NS_APPCOMMAND_EVENT   24
 
 
 #define NS_EVENT_FLAG_NONE                0x0000
@@ -379,6 +382,15 @@ struct nsFocusEvent : public nsGUIEvent {
   PRBool isMozWindowTakingFocus;
 };
 
+/**
+ * App Command event
+ *
+ * Custom commands from the operating system.  eg. WM_APPCOMMAND on Windows
+ */
+
+struct nsAppCommandEvent : public nsInputEvent {
+    PRUint32     appCommand;
+};
 
 /**
  * Event status for D&D Event
@@ -557,6 +569,17 @@ enum nsDragDropEventStatus {
 
 #define NS_USER_DEFINED_EVENT         2000
 
+// custom OS events
+#define NS_APPCOMMAND_START           2100
+#define NS_APPCOMMAND                 (NS_APPCOMMAND_START)
+#define NS_APPCOMMAND_BACK            (NS_APPCOMMAND_START + 1)
+#define NS_APPCOMMAND_FORWARD         (NS_APPCOMMAND_START + 2)
+#define NS_APPCOMMAND_REFRESH         (NS_APPCOMMAND_START + 3)
+#define NS_APPCOMMAND_STOP            (NS_APPCOMMAND_START + 4)
+#define NS_APPCOMMAND_SEARCH          (NS_APPCOMMAND_START + 5)
+#define NS_APPCOMMAND_FAVORITES       (NS_APPCOMMAND_START + 6)
+#define NS_APPCOMMAND_HOME            (NS_APPCOMMAND_START + 7)
+ 
 #define NS_IS_MOUSE_EVENT(evnt) \
        (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \
         ((evnt)->message == NS_MOUSE_LEFT_BUTTON_UP) || \

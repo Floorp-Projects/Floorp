@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2110,14 +2111,71 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
     break;
 
   case NS_MOUSE_ENTER:
-    nsCOMPtr<nsIContent> targetContent;
     if (mCurrentTarget) {
+      nsCOMPtr<nsIContent> targetContent;
       mCurrentTarget->GetContentForEvent(aPresContext, aEvent,
                                          getter_AddRefs(targetContent));
       SetContentState(targetContent, NS_EVENT_STATE_HOVER);
     }
     break;
 
+  //
+  // OS custom application event, such as from MS IntelliMouse
+  //
+  case NS_APPCOMMAND:
+    // by default, tell the driver we're not handling the event
+    ret = PR_FALSE;
+
+    nsAppCommandEvent* appCommandEvent = (nsAppCommandEvent*) aEvent;
+
+    nsCOMPtr<nsISupports> pcContainer;
+    switch (appCommandEvent->appCommand) {
+      case NS_APPCOMMAND_BACK:
+      case NS_APPCOMMAND_FORWARD:
+      case NS_APPCOMMAND_REFRESH:
+      case NS_APPCOMMAND_STOP:
+        // handle these commands using nsIWebNavigation
+        mPresContext->GetContainer(getter_AddRefs(pcContainer));
+        if (pcContainer) {
+          nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
+          if (webNav) {
+            // tell the driver we're handling the event
+            ret = PR_TRUE;
+
+            switch (appCommandEvent->appCommand) {
+              case NS_APPCOMMAND_BACK:
+                webNav->GoBack();
+                break;
+
+              case NS_APPCOMMAND_FORWARD:
+                webNav->GoForward();
+                break;
+
+              case NS_APPCOMMAND_REFRESH:
+                webNav->Reload(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE);
+                break;
+      
+              case NS_APPCOMMAND_STOP:
+                webNav->Stop(nsIWebNavigation::STOP_ALL);
+                break;
+
+            }  // switch (appCommandEvent->appCommand)
+          }  // if (webNav)
+        }  // if (pcContainer)
+        break;
+
+      // XXX todo: handle these commands
+      // case NS_APPCOMMAND_SEARCH:
+      // case NS_APPCOMMAND_FAVORITES:
+      // case NS_APPCOMMAND_HOME:
+          
+        // tell the driver we're handling the event
+        // ret = PR_TRUE;
+        // break;
+
+    }  // switch (appCommandEvent->appCommand)
+
+    break;
   }
 
   //Reset target frame to null to avoid mistargeting after reentrant event
