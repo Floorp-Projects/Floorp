@@ -46,6 +46,8 @@ bin\firefox.exe
 bin\plugins\npnul32.dll
 bin\res\cmessage.txt
 bin\xpicleanup.exe
+bin\LICENSE
+bin\README.txt
 
 ; [Components]
 bin\components\alerts.xpt
