@@ -59,7 +59,6 @@ enum
 
 nsHTMLEditRules::nsHTMLEditRules()
 {
-  mPINSelection = PR_FALSE;
 }
 
 nsHTMLEditRules::~nsHTMLEditRules()
