@@ -40,6 +40,7 @@ $SIG{__WARN__} = sub {
     my $message = shift;
     $message =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /gose;
     $message =~ s/, <DATA> line [0-9]+//gos; # clean up irrelevant useless junk...
+    $message =~ s/, at EOF//gos;
     warn $message; # reraise the updated message
 };
 
@@ -96,6 +97,14 @@ sub evalString($$) {
     $EVALS{++$evalID} = $filename;
     # print STDERR "evaluating eval $evalID = $EVALS{$evalID}\n";
     eval $string;
+    if ($@ ne '') {
+        $@ =~ s/\n$//os; # lose the trailing newline for now
+        $@ =~ s/( at \(eval [0-9]+\) line [0-9]+, (?:at EOF|<DATA> line [0-9]+))\n/$1; also, /gos; # string multiple errors into one
+        $@ =~ s/"\n/"; also, /gos; # same
+        $@ =~ s/, <DATA> line [0-9]+//gos; # clean up irrelevant useless junk...
+        $@ =~ s/, at EOF//gos; # same
+        $@ =~ s/$/\n/os; # put the trailing newline back
+    }
 }
 
 # constants for stringifying exceptions
@@ -109,6 +118,7 @@ sub syntaxError($;$) {
     my($message, $offset) = @_;
     $offset = 0 unless defined($offset);
     my($package, $filename, $line) = caller(1 + $offset);
+    $filename =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /ose;
     die "$message at $filename line $line\n";
 }
 
@@ -117,7 +127,7 @@ sub getFrames() {
     my @frames;
     my $index = 0;
     while (my @data = caller($index++)) {
-        # expand knows eval numbers
+        # expand knows eval numbers (max one per frame, so /ose not /gose)
         $data[1] =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /ose;
         # push frame onto stack
         push(@frames, {
@@ -173,7 +183,8 @@ sub init {
         $exception->{'stacktrace'} = $stacktrace;
     }
     if (defined($exception->{'message'})) {
-        $exception->{'message'} =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /ose;
+        # expand knows eval numbers (could be several, so /gose not /ose)
+        $exception->{'message'} =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /gose;
         $exception->{'message'} =~ s/\.?\n$/, reraised/os;
     }
     return $exception;
@@ -426,8 +437,12 @@ sub wrap($) {
         if (not ref($exception) or
             not $exception->isa('PLIF::Exception')) {
             # an unexpected exception
+            # note: if you want pretty syntax errors back from eval
+            # "...", use evalString, not eval followed by raising $@.
+            # expand knows eval numberss (could be several, so /gose not /ose)
             $exception =~ s/\(eval ([0-9]+)\)/ exists $EVALS{$1} ? $EVALS{$1} : $1 /gose;
-            $exception =~ s/, <DATA> line [0-9]+//gos; # clean up irrelevant useless junk...
+            $exception =~ s/, <DATA> line [0-9]+//gos; # clean up irrelevant useless junk
+            $exception =~ s/, at EOF+//gos;
             $exception =~ s/\.?\n$/, reraised/os;
             $exception = PLIF::Exception->create('message' => $exception);
         }
