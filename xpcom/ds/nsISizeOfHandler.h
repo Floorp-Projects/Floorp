@@ -35,6 +35,8 @@
  */
 class nsISizeOfHandler : public nsISupports {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISIZEOF_HANDLER_IID)
+
   /**
    * Add in a simple size value to the running total.
    * Always returns NS_OK.

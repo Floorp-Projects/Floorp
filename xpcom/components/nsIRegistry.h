@@ -342,6 +342,8 @@ struct nsIRegistryNode : public nsISupports {
 |                    Int32).                                                   |
 ------------------------------------------------------------------------------*/
 struct nsIRegistryValue : public nsISupports {
+		static const nsIID& GetIID() { static nsIID iid = NS_IREGISTRYVALUE_IID; return iid; }
+
     NS_IMETHOD GetName( char **result ) = 0;
     NS_IMETHOD GetValueType( uint32 *result ) = 0;
     NS_IMETHOD GetValueLength( uint32 *result ) = 0;
