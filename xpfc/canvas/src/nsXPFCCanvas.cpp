@@ -61,6 +61,7 @@ static NS_DEFINE_IID(kXPFCCommandReceiverIID, NS_IXPFC_COMMANDRECEIVER_IID);
 static NS_DEFINE_IID(kXPFCCommandCID, NS_XPFC_COMMAND_CID);
 
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
+static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 
 nsXPFCCanvas :: nsXPFCCanvas(nsISupports* outer) :     
@@ -74,7 +75,6 @@ nsXPFCCanvas :: nsXPFCCanvas(nsISupports* outer) :
 {
   NS_INIT_AGGREGATED(outer);
 
-  mWidgetSupports = nsnull;
   mWidget = nsnull;
   mLayout = nsnull;
   mParent = nsnull;
@@ -117,9 +117,7 @@ nsXPFCCanvas :: ~nsXPFCCanvas()
 {
   DeleteChildren();
 
-  if (nsnull != mWidgetSupports) {
-	  NS_RELEASE(mWidgetSupports); 
-  }
+  NS_IF_RELEASE(mWidget);
 
   mParent = nsnull;
 
@@ -191,8 +189,8 @@ nsresult nsXPFCCanvas::AggregatedQueryInterface(const nsIID &aIID,
       return NS_OK;                                                        
     }                                                                      
 
-  if (nsnull != mWidgetSupports)
-    return mWidgetSupports->QueryInterface(aIID, aInstancePtr);
+  if (nsnull != mWidget)
+    return mWidget->QueryInterface(aIID, aInstancePtr);
 
     return NS_NOINTERFACE;
 }
@@ -581,20 +579,18 @@ nsresult nsXPFCCanvas :: LoadWidget(const nsCID &aClassIID)
     return rv;
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  rv = nsRepository::CreateInstance(aClassIID, supports, kISupportsIID, (void**)&mWidgetSupports);
 
-  if (NS_OK == rv) {
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-    rv = mWidgetSupports->QueryInterface(kIWidgetIID, (void**)&mWidget);
-    if (NS_OK != rv) {
-	    mWidgetSupports->Release();
-	    mWidgetSupports = NULL;
-    }
-    else {
-      mWidget->Release();
-    }
+  rv = nsRepository::CreateInstance(aClassIID, 
+                                    nsnull, //supports, 
+                                    kIWidgetIID, 
+                                    (void**)&mWidget);
+
+  NS_RELEASE(supports);
+
+  if (mWidget != nsnull)
+  {
+    gXPFCToolkit->GetCanvasManager()->RegisterWidget(this,mWidget);
   }
-
 
   return rv;
 }
@@ -754,7 +750,6 @@ PRBool nsXPFCCanvas::Create(char * lpszWindowName,
 {
 
   static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 #ifdef XP_UNIX
   nsRepository::RegisterFactory(kCChildCID, "libwidgetunix.so", PR_FALSE, PR_FALSE);

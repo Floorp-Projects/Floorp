@@ -40,10 +40,21 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init() ;
+
   NS_IMETHOD_(nsIXPFCCanvas *) CanvasFromView(nsIView * aView);
+
+  NS_IMETHOD_(nsIXPFCCanvas *) CanvasFromWidget(nsIWidget * aWidget);
+
   NS_IMETHOD GetRootCanvas(nsIXPFCCanvas ** aCanvas);
+
   NS_IMETHOD SetRootCanvas(nsIXPFCCanvas * aCanvas);
-  NS_IMETHOD Register(nsIXPFCCanvas * aCanvas, nsIView * aView);
+
+  NS_IMETHOD RegisterView(nsIXPFCCanvas * aCanvas, 
+                          nsIView * aView);
+
+  NS_IMETHOD RegisterWidget(nsIXPFCCanvas * aCanvas, 
+                            nsIWidget * aWidget);
+
   NS_IMETHOD Unregister(nsIXPFCCanvas * aCanvas);
 
   NS_IMETHOD_(nsIXPFCCanvas *) GetFocusedCanvas();
@@ -73,7 +84,8 @@ public:
   PRMonitor * monitor;
 
 public:
-  nsIVector * mList ;
+  nsIVector * mViewList ;
+  nsIVector * mWidgetList ;
 
 private:
   nsIXPFCCanvas * mRootCanvas;

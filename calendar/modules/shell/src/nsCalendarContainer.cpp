@@ -540,15 +540,14 @@ nsEventStatus nsCalendarContainer::HandleEvent(nsGUIEvent *aEvent)
   /*
    * find the canvas this event is associated with!
    */
-  res = aEvent->widget->QueryInterface(kIXPFCCanvasIID,(void**)&canvas);
 
-  if (res == NS_OK)
+  canvas = gXPFCToolkit->GetCanvasManager()->CanvasFromWidget(aEvent->widget);
+
+  if (canvas != nsnull)
   {
     es = canvas->HandleEvent(aEvent);
       
     //mViewManager->DispatchEvent(aEvent, es);
-
-    NS_RELEASE(canvas);
 
     return es;
   }

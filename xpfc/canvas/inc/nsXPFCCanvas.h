@@ -275,24 +275,14 @@ private:
   PRUint32        mTabID;
   PRUint32        mTabGroup;
 
-// nsIWidget Aggregation
 protected:
 
-  // a Canvas CAN aggregate an nsIWidget
-  // mWidgetSupports is the pointer to the widget's real nsISupports. QueryInterace
-  // should be called on mWidgetSupports if any of the widget interface wants to 
-  // be exposed, 
-  // mWidget is a convenience pointer to the widget functionalities.
-  // mWidget is not AddRef'ed or Released otherwise we'll create a circulare
-  // refcount and the canvas will never go away
-  nsISupports		*mWidgetSupports;
-  nsIWidget         *mWidget;
-
-
+  nsISupports		  *mWidgetSupports;
+  nsIWidget           *mWidget;
   nsIRenderingContext *mRenderingContext;
-  nsIXPFCCanvas * mParent;
-  nsIImageRequest* mImageRequest;
-  nsIImageGroup*  mImageGroup;
+  nsIXPFCCanvas       *mParent;
+  nsIImageRequest     *mImageRequest;
+  nsIImageGroup       *mImageGroup;
 
 public:
   nsIView           *mView;
