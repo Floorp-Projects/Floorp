@@ -275,7 +275,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   if (NS_FAILED(rv)) return rv;
 
   PRFileDesc* fd;
-  rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 0664, &fd);
+  rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0664, &fd);
   if (NS_FAILED(rv)) return NS_ERROR_FILE_ACCESS_DENIED;
 
   nsZipItem *item = 0;
