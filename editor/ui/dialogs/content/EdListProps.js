@@ -106,27 +106,32 @@ function InitDialog()
     if (type)
     {
       type = type.toLowerCase();
-      if (type == "circle")
+      if (type == "disc")
         index = 1;
-      else if (type == "square")
+      else if (type == "circle")
         index = 2;
+      else if (type == "square")
+        index = 3;
     }
   }
   else if (ListType == "ol")
   {
     switch (type)
     {
-      case "I":
+      case "1":
         index = 1;
         break;
-      case "i":
+      case "I":
         index = 2;
         break;
-      case "A":
+      case "i":
         index = 3;
         break;
-      case "a":
+      case "A":
         index = 4;
+        break;
+      case "a":
+        index = 5;
         break;
     }
     dialog.StartingNumberInput.value = globalElement.getAttribute("start");
@@ -148,6 +153,7 @@ function BuildBulletStyleList()
 
     label = GetString("BulletStyle");
 
+    AppendStringToMenulistById(dialog.BulletStyleList,"Automatic");
     AppendStringToMenulistById(dialog.BulletStyleList,"SolidCircle");
     AppendStringToMenulistById(dialog.BulletStyleList,"OpenCircle");
     AppendStringToMenulistById(dialog.BulletStyleList,"SolidSquare");
@@ -163,6 +169,7 @@ function BuildBulletStyleList()
     dialog.StartingNumberLabel.removeAttribute("disabled");
     label = GetString("NumberStyle");
 
+    AppendStringToMenulistById(dialog.BulletStyleList,"Automatic");
     AppendStringToMenulistById(dialog.BulletStyleList,"Style_1");
     AppendStringToMenulistById(dialog.BulletStyleList,"Style_I");
     AppendStringToMenulistById(dialog.BulletStyleList,"Style_i");
@@ -259,11 +266,14 @@ function ValidateData()
     {
       switch (dialog.BulletStyleList.selectedIndex)
       {
-        // Index 0 = "disc", the default, so we don't set it explicitly
+        // Index 0 = automatic, the default, so we don't set it explicitly
         case 1:
-          type = "circle";
+          type = "disc";
           break;
         case 2:
+          type = "circle";
+          break;
+        case 3:
           type = "square";
           break;
       }
@@ -277,17 +287,20 @@ function ValidateData()
     {
       switch (dialog.BulletStyleList.selectedIndex)
       {
-        // Index 0 = "1", the default, so we don't set it explicitly
+        // Index 0 = automatic, the default, so we don't set it explicitly
         case 1:
-          type = "I";
+          type = "1";
           break;
         case 2:
-          type = "i";
+          type = "I";
           break;
         case 3:
-          type = "A";
+          type = "i";
           break;
         case 4:
+          type = "A";
+          break;
+        case 5:
           type = "a";
           break;
       }
