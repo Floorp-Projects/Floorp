@@ -49,6 +49,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsPluginError.h"
 #include "nsIComponentRegistrar.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
@@ -226,13 +227,9 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
 NS_IMETHODIMP
 PluginArrayImpl::Refresh()
 {
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
-
-  rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  nsresult rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)

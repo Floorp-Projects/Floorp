@@ -2236,16 +2236,11 @@ nsHTMLDocument::Writeln(const nsAString& aText)
 nsresult
 nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
 {
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
 
-  nsresult rv = NS_OK;
-
-  if (xpc) {
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsresult rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
 

@@ -452,14 +452,11 @@ NotifyXPCIfExceptionPending(JSContext *cx)
     return;
   }
 
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-
-  if (xpc) {
-    nsCOMPtr<nsIXPCNativeCallContext> nccx;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(nccx));
-    if (nccx) {
-      nccx->SetExceptionWasThrown(PR_TRUE);
-    }
+  nsCOMPtr<nsIXPCNativeCallContext> nccx;
+  nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(nccx));
+  if (nccx) {
+    nccx->SetExceptionWasThrown(PR_TRUE);
   }
 }
 
@@ -623,10 +620,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   // Let xpconnect resync its JSContext tracker. We do this before creating
   // a new JSContext just in case the heap manager recycles the JSContext
   // struct.
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  if (NS_SUCCEEDED(rv))
-    xpc->SyncJSContexts();
+  nsContentUtils::XPConnect()->SyncJSContexts();
 
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
@@ -688,7 +682,7 @@ nsJSContext::~nsJSContext()
   mGlobalWrapperRef = nsnull;
 
   // Let xpconnect destroy the JSContext when it thinks the time is right.
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
   if (xpc) {
     PRBool do_gc = mGCOnDestruction && !sGCTimer && sReadyForGC;
 
@@ -1482,8 +1476,7 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
   mIsInitialized = PR_FALSE;
 
-  nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
   JSObject *global = ::JS_GetGlobalObject(mContext);
 
@@ -2056,13 +2049,9 @@ nsJSEnvironment::Init()
   gOldJSGCCallback = ::JS_SetGCCallbackRT(sRuntime, DOMGCCallback);
 
   // Set these global xpconnect options...
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  if (NS_SUCCEEDED(rv)) {
-    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
-    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
-  } else {
-    NS_WARNING("Failed to get XPConnect service!");
-  }
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
+  xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
+  xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
 
 #ifdef OJI
   // Initialize LiveConnect.  XXXbe use contractid rather than GetCID

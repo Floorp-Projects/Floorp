@@ -662,14 +662,27 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     }
   }
 
+  PRBool oldProcessingScriptTag = context->GetProcessingScriptTag();
   context->SetProcessingScriptTag(PR_TRUE);
 
   PRBool isUndefined;
   context->EvaluateString(aScript, nsnull, principal, url.get(),
                           aRequest->mLineNo, aRequest->mJSVersion, nsnull,
-                          &isUndefined);  
+                          &isUndefined);
 
-  context->SetProcessingScriptTag(PR_FALSE);
+  ::JS_ReportPendingException((JSContext *)context->GetNativeContext());
+
+  
+
+  context->SetProcessingScriptTag(oldProcessingScriptTag);
+
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
+
+  if (ncc) {
+    ncc->SetExceptionWasThrown(PR_FALSE);
+  }
 
   return rv;
 }

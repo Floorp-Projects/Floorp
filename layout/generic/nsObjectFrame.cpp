@@ -1885,15 +1885,11 @@ nsObjectFrame::NotifyContentObjectWrapper()
 
   JSContext *cx = (JSContext *)scx->GetNativeContext();
 
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  if (NS_FAILED(rv))
-    return;
-
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  xpc->GetWrappedNativeOfNativeObject(cx, ::JS_GetGlobalObject(cx), mContent,
-                                      NS_GET_IID(nsISupports),
-                                      getter_AddRefs(wrapper));
+  nsContentUtils::XPConnect()->
+    GetWrappedNativeOfNativeObject(cx, ::JS_GetGlobalObject(cx), mContent,
+                                   NS_GET_IID(nsISupports),
+                                   getter_AddRefs(wrapper));
 
   if (!wrapper) {
     // Nothing to do here if there's no wrapper for mContent
@@ -1916,7 +1912,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
   }
 
   JSObject *obj = nsnull;
-  rv = wrapper->GetJSObject(&obj);
+  nsresult rv = wrapper->GetJSObject(&obj);
   if (NS_FAILED(rv))
     return;
 

@@ -1169,14 +1169,13 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
   nsresult rv;
 
   if (!aDeferCompilation) {
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-
     JSContext *cx = (JSContext *)context->GetNativeContext();
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-
-    rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), aObject,
-                         NS_GET_IID(nsISupports), getter_AddRefs(holder));
+    rv = nsContentUtils::XPConnect()->WrapNative(cx, ::JS_GetGlobalObject(cx),
+                                                 aObject,
+                                                 NS_GET_IID(nsISupports),
+                                                 getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSObject *scriptObject = nsnull;
@@ -1296,10 +1295,9 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
   JSContext *current_cx = (JSContext *)aContext->GetNativeContext();
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-  rv = xpc->WrapNative(current_cx, ::JS_GetGlobalObject(current_cx), aObject,
-                       NS_GET_IID(nsISupports), getter_AddRefs(holder));
+  rv = nsContentUtils::XPConnect()->
+    WrapNative(current_cx, ::JS_GetGlobalObject(current_cx), aObject,
+               NS_GET_IID(nsISupports), getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject *jsobj = nsnull;
@@ -1373,14 +1371,14 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
 {
   nsresult result = NS_OK;
 
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-
   JSContext *cx = (JSContext *)aContext->GetNativeContext();
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-
-  result = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), aObject,
-                           NS_GET_IID(nsISupports), getter_AddRefs(holder));
+  result = nsContentUtils::XPConnect()->WrapNative(cx,
+                                                   ::JS_GetGlobalObject(cx),
+                                                   aObject,
+                                                   NS_GET_IID(nsISupports),
+                                                   getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(result, result);
 
   JSObject *jsobj = nsnull;

@@ -433,11 +433,10 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     JSObject *global = boundGlobal->GetGlobalJSObject();
     JSContext *cx = (JSContext *)boundContext->GetNativeContext();
 
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-
     // XXX: Don't use the global object!
-    rv = xpc->WrapNative(cx, global, aReceiver, NS_GET_IID(nsISupports),
-                         getter_AddRefs(wrapper));
+    rv = nsContentUtils::XPConnect()->WrapNative(cx, global, aReceiver,
+                                                 NS_GET_IID(nsISupports),
+                                                 getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = wrapper->GetJSObject(&scriptObject);

@@ -148,12 +148,7 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
-  if (NS_FAILED(rv)) {
-    // We could be a standalone DOM engine without JS, so no
-    // nsIXPConnect is actually ok...
-
-    sXPConnect = nsnull;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CallGetService(kJSStackContractID, &sThreadJSContextStack);
   if (NS_FAILED(rv) && sXPConnect) {

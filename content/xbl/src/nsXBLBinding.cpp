@@ -56,6 +56,7 @@
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsContentUtils.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #endif
@@ -958,16 +959,11 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
           if (context) {
             JSContext *jscontext = (JSContext *)context->GetNativeContext();
  
-            nsresult rv;
-            nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(),
-                                                     &rv));
-            NS_ENSURE_SUCCESS(rv, rv);
-
             nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-
-            rv = xpc->WrapNative(jscontext, ::JS_GetGlobalObject(jscontext),
-                                 mBoundElement, NS_GET_IID(nsISupports),
-                                 getter_AddRefs(wrapper));
+            nsresult rv = nsContentUtils::XPConnect()->
+              WrapNative(jscontext, ::JS_GetGlobalObject(jscontext),
+                         mBoundElement, NS_GET_IID(nsISupports),
+                         getter_AddRefs(wrapper));
             NS_ENSURE_SUCCESS(rv, rv);
 
             JSObject* scriptObject = nsnull;
@@ -1207,17 +1203,15 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
   nsresult rv;
 
   // Obtain the bound element's current script object.
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   JSContext* cx = (JSContext*)aContext->GetNativeContext();
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
 
   JSObject* global = ::JS_GetGlobalObject(cx);
 
-  rv = xpc->WrapNative(cx, global, mBoundElement, NS_GET_IID(nsISupports),
-                       getter_AddRefs(wrapper));
+  rv = nsContentUtils::XPConnect()->WrapNative(cx, global, mBoundElement,
+                                               NS_GET_IID(nsISupports),
+                                               getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject* object = nsnull;

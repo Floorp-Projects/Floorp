@@ -339,7 +339,6 @@ protected:
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
-  static nsIXPConnect *sXPConnect;
   static nsIScriptSecurityManager *sSecMan;
   static nsIFactory *sComputedDOMStyleFactory;
 };

@@ -45,6 +45,7 @@
 #include "nsIXPConnect.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsGUIEvent.h"
+#include "nsContentUtils.h"
 
 
 /*
@@ -114,7 +115,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
   // root
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
