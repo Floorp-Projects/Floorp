@@ -1438,7 +1438,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 
 
 NS_IMETHODIMP
-XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDataSource *cache, nsIContent *root,
+XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDataSource **cacheHandle, nsIContent *root,
 					nsIContent *trueParent, nsIContent *container, nsIContent *node, PRBool aNotify)
 {
 	nsresult	rv;
@@ -1449,7 +1449,6 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDat
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = db;
 	sortInfo.resCache = nsnull;
-	sortInfo.mInner = cache;			/* can be null */
 	sortInfo.colIndex = -1;
 	sortInfo.parentContainer = trueParent;
 	sortInfo.kTreeCellAtom = kTreeCellAtom;
@@ -1457,6 +1456,14 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDat
 	sortInfo.sortProperty = nsnull;
 	sortInfo.sortProperty2 = nsnull;
 	sortInfo.inbetweenSeparatorSort = PR_FALSE;
+	if (cacheHandle != nsnull)
+	{
+		sortInfo.mInner = *cacheHandle;		// Note: this can/might be null
+	}
+	else
+	{
+		sortInfo.mInner = nsnull;
+	}
 
 	PRBool			sortInfoAvailable = PR_FALSE;
 
@@ -1624,6 +1631,12 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDat
 	if (childAdded == PR_FALSE)
 	{
 		container->AppendChildTo(node, aNotify);
+	}
+
+	if ((cacheHandle) && (sortInfo.mInner) && ((*cacheHandle) != sortInfo.mInner))
+	{
+		*cacheHandle = sortInfo.mInner;
+		NS_ADDREF(*cacheHandle);
 	}
 	return(NS_OK);
 }

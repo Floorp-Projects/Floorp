@@ -25,7 +25,7 @@
 #include "nsIRDFResource.idl"
 
 
-[ptr] native nsIRDFResourceArray( nsIRDFResource *);
+[ptr] native nsIRDFDataSourceHandle( nsIRDFDataSource *);
 
 interface nsIContent;
 interface nsIDOMNode;
@@ -35,7 +35,7 @@ interface nsIDOMNode;
 interface nsIXULSortService : nsISupports
 {
 		void	Sort(in nsIDOMNode node, in string sortResource, in string sortDirection);
-[noscript]	void	InsertContainerNode(in nsIRDFCompositeDataSource db, in nsIRDFDataSource cache, in nsIContent root, in nsIContent trueParent,
+[noscript]	void	InsertContainerNode(in nsIRDFCompositeDataSource db, in nsIRDFDataSourceHandle cacheHandle, in nsIContent root, in nsIContent trueParent,
 				in nsIContent container, in nsIContent node, in boolean aNotify);
 };
 

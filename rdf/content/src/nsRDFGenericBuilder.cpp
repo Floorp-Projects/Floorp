@@ -597,9 +597,6 @@ RDFGenericBuilderImpl::Init()
                                           (nsISupports**) &gXULSortService);
         if (NS_FAILED(rv)) return rv;
 
-	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-		nsnull, nsIRDFDataSource::GetIID(), (void **)&mCache);
-
         rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
                                                 nsnull,
                                                 kIHTMLElementFactoryIID,
@@ -726,9 +723,6 @@ RDFGenericBuilderImpl::SetRootContent(nsIContent* aElement)
     {
     	// flush (delete) the cache when re-rerooting the generated content
     	mCache = nsnull;
-    	// and then re-create a new, empty cache
-	nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-		nsnull, nsIRDFDataSource::GetIID(), (void **)&mCache);
     }
     
     return NS_OK;
@@ -1212,7 +1206,16 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
 
 	if (mCache)
 	{
-		mCache->Change(aSource, aProperty, aOldTarget, aNewTarget);
+		if (aOldTarget)
+		{
+			// XXX fix this: in-memory DS doesn't like a null oldTarget
+			mCache->Change(aSource, aProperty, aOldTarget, aNewTarget);
+		}
+		else
+		{
+			// XXX should get tv via observer interface
+			mCache->Assert(aSource, aProperty, aNewTarget, PR_TRUE);
+		}
 	}
 
     nsCOMPtr<nsISupportsArray> elements;
@@ -2063,8 +2066,14 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = NS_ERROR_UNEXPECTED;
 
                 if (gXULSortService && isResourceElement) {
-                    rv = gXULSortService->InsertContainerNode(mDB, mCache,
+			nsCOMPtr<nsIRDFDataSource>		tempCache = nsnull;
+
+                    rv = gXULSortService->InsertContainerNode(mDB, getter_AddRefs(tempCache),
                     	mRoot, trueParent, aRealNode, realKid, aNotify);
+                    if (tempCache)
+                    {
+                    	mCache = tempCache;
+                    }
                 }
 
                 if (NS_FAILED(rv)) {
