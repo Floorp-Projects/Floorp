@@ -1794,6 +1794,8 @@ net_parse_http_mime_headers (ActiveEntry *ce)
             ce->URL_s->last_modified = 0;
             PR_FREEIF(ce->URL_s->content_encoding);
             ce->URL_s->content_encoding = NULL;
+            PR_FREEIF(ce->URL_s->transfer_encoding);
+            ce->URL_s->transfer_encoding=NULL;
             PR_FREEIF(ce->URL_s->content_name);
             ce->URL_s->content_name = NULL;
             cd->next_state = HTTP_DONE;
@@ -2093,6 +2095,8 @@ net_parse_first_http_line (ActiveEntry *ce) {
             ce->URL_s->real_content_length = 0;
             PR_FREEIF(ce->URL_s->content_encoding);
             ce->URL_s->content_encoding = NULL;
+            PR_FREEIF(ce->URL_s->transfer_encoding);
+            ce->URL_s->transfer_encoding=NULL;
             PR_FREEIF(ce->URL_s->content_name);
             ce->URL_s->content_name = NULL;
         }
@@ -2361,153 +2365,145 @@ net_revert_post_data(ActiveEntry * ce)
  * returns the tcp status code
  */
 PRIVATE int
-net_setup_http_stream(ActiveEntry * ce)
-{
+net_setup_http_stream(ActiveEntry * ce) {
     HTTPConData * cd = (HTTPConData *)ce->con_data;
-  XP_Bool need_to_do_again = FALSE;
-  MWContext * stream_context;
+    XP_Bool need_to_do_again = FALSE;
+    MWContext * stream_context;
 
     TRACEMSG(("NET_ProcessHTTP: setting up stream"));
 
-  /* save this since it can be changed in lots
-   * of places.  This will be used for graph progress
-   * and to terminate the tranfer
-   */
-  if(!ce->URL_s->high_range)
-    cd->original_content_length = ce->URL_s->content_length;
-  else
-    cd->original_content_length = ce->URL_s->high_range 
-                    - ce->URL_s->low_range 
-                    + 1;
-
-  if ((ce->URL_s->method == URL_HEAD_METHOD) && 
-    ( cd->authorization_required == FALSE))
-  {
-    /* We only wanted the head, so we should stop doing anything else. */
-    cd->next_state = HTTP_DONE;
-    return 0;
-  }
-
-  /* if this is set just return so that we can use
-   * the cached copy
-   */
-  if(cd->use_copy_from_cache)
-    {
-    /* if this is a partial cache file situation
-     * then we will keep going and switch later
-     * on in this file.
-     *
-     * If it's not a partial cache file then
-     * leave the HTTP module and go to the
-     * file module to display the file
+    /* save this since it can be changed in lots
+     * of places.  This will be used for graph progress
+     * and to terminate the tranfer
      */
-    if(!cd->partial_cache_file)
-      {
-      /* clear the URL content fields so that
-       * the 304 object doesn't effect the actual
-       * cache file
-       */
-      if(!ce->URL_s->preset_content_type)
-      {
-        PR_FREEIF(ce->URL_s->content_type);
-        ce->URL_s->content_type = NULL;
-      }
-      ce->URL_s->content_length = 0;
-      ce->URL_s->real_content_length = 0;
-      PR_FREEIF(ce->URL_s->content_encoding);
-      ce->URL_s->content_encoding = NULL;
-      PR_FREEIF(ce->URL_s->content_name);
-      ce->URL_s->content_name = NULL;
-      cd->next_state = HTTP_DONE;
-      cd->pause_for_read = FALSE;
-          return(MK_USE_COPY_FROM_CACHE);  
-      }
+    if(!ce->URL_s->high_range)
+        cd->original_content_length = ce->URL_s->content_length;
     else
-      {
-      /* set the correct content length so that
-       * the cache gets it right
-       */
-      ce->URL_s->content_length = ce->URL_s->real_content_length;
-      }
+        cd->original_content_length = ce->URL_s->high_range 
+            - ce->URL_s->low_range 
+            + 1;
+
+    if ((ce->URL_s->method == URL_HEAD_METHOD) && 
+        ( cd->authorization_required == FALSE))
+    {
+        /* We only wanted the head, so we should stop doing anything else. */
+        cd->next_state = HTTP_DONE;
+        return 0;
     }
+
+    /* if this is set just return so that we can use
+     * the cached copy
+     */
+    if(cd->use_copy_from_cache) {
+        /* if this is a partial cache file situation
+         * then we will keep going and switch later
+         * on in this file.
+         *
+         * If it's not a partial cache file then
+         * leave the HTTP module and go to the
+         * file module to display the file
+         */
+        if(!cd->partial_cache_file) {
+            /* clear the URL content fields so that
+             * the 304 object doesn't effect the actual
+             * cache file
+             */
+            if(!ce->URL_s->preset_content_type) {
+                PR_FREEIF(ce->URL_s->content_type);
+                ce->URL_s->content_type = NULL;
+            }
+            ce->URL_s->content_length = 0;
+            ce->URL_s->real_content_length = 0;
+            PR_FREEIF(ce->URL_s->content_encoding);
+            ce->URL_s->content_encoding = NULL;
+            PR_FREEIF(ce->URL_s->transfer_encoding);
+            ce->URL_s->transfer_encoding=NULL;
+            PR_FREEIF(ce->URL_s->content_name);
+            ce->URL_s->content_name = NULL;
+            cd->next_state = HTTP_DONE;
+            cd->pause_for_read = FALSE;
+            return(MK_USE_COPY_FROM_CACHE);  
+        } else {
+            /* set the correct content length so that
+             * the cache gets it right
+             */
+            ce->URL_s->content_length = ce->URL_s->real_content_length;
+        }
+    } /* end cd->use_copy_from_cache */
      
     /* do we need to start the tranfer over with authorization? 
      */
-    if(cd->authorization_required)
-    {
-    /* clear to prevent tight loop */
-    int status;
+    if(cd->authorization_required) {
+        /* clear to prevent tight loop */
+        int status;
         NET_ClearReadSelect(ce->window_id, cd->connection->sock);
-    status = NET_AskForAuthString(ce->window_id, 
-                ce->URL_s, 
-                ce->URL_s->authenticate,
-                                ce->URL_s->protection_template,
-                cd->sent_authorization);
+        status = NET_AskForAuthString(ce->window_id, 
+                    ce->URL_s, 
+                    ce->URL_s->authenticate,
+                    ce->URL_s->protection_template,
+                    cd->sent_authorization);
 
-    if(status == NET_RETRY_WITH_AUTH)
-        need_to_do_again = TRUE;
-    else
-        ce->URL_s->dont_cache = TRUE;
+        if(status == NET_RETRY_WITH_AUTH)
+            need_to_do_again = TRUE;
+        else
+            ce->URL_s->dont_cache = TRUE;
 
         NET_SetReadSelect(ce->window_id, cd->connection->sock);
     }
-#if  defined(XP_WIN) && defined(MOZILLA_CLIENT)
+#if defined(XP_WIN) && defined(MOZILLA_CLIENT)
 
 #define COMPUSERVE_HEADER_NAME "Remote-Passphrase"
 
-  else if(ce->URL_s->authenticate && !PL_strncasecmp(ce->URL_s->authenticate, 
+    else if(ce->URL_s->authenticate && !PL_strncasecmp(ce->URL_s->authenticate, 
                           COMPUSERVE_HEADER_NAME, 
                           sizeof(COMPUSERVE_HEADER_NAME) - 1))
     {
-    /* compuserve auth requires us to send all authenticate
-     * headers into their code to verify the authentication
-     */
-    int status = WFE_DoCompuserveAuthenticate(ce->window_id, 
-                          ce->URL_s, 
-                          ce->URL_s->authenticate);
+        /* compuserve auth requires us to send all authenticate
+         * headers into their code to verify the authentication
+         */
+        int status = WFE_DoCompuserveAuthenticate(ce->window_id, 
+                        ce->URL_s, 
+                        ce->URL_s->authenticate);
 
-    if(status == NET_AUTH_FAILED_DONT_DISPLAY)
-      {                        
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_COMPUSERVE_AUTH_FAILED);
-
-      return(MK_COMPUSERVE_AUTH_FAILED);      
-      }
+        if(status == NET_AUTH_FAILED_DONT_DISPLAY) {                        
+            ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_COMPUSERVE_AUTH_FAILED);
+            return(MK_COMPUSERVE_AUTH_FAILED);      
+        }
     }
 #endif /* XP_WIN and MOZILLA_CLIENT */
           
-    if(cd->proxy_auth_required)
-    {
-    /* This was hacked in because proxy auth can be required when the Auto-config url
-     * itself requires authorization. We used to ask for proxy auth only when the proxy was 
-     * input directly into the prefs. Now we check to see if there's a pacurl (if there
-     * is, there can't be a proxy url simultaneously) use it, otherwise we're using a
-     * proxy from the prefs.
-     */
-    const char *tempURL=NULL;
-    char *proxyServer=NULL;
+    if(cd->proxy_auth_required) {
+        /* This was hacked in because proxy auth can be required when the Auto-config url
+         * itself requires authorization. We used to ask for proxy auth only when the proxy was 
+         * input directly into the prefs. Now we check to see if there's a pacurl (if there
+         * is, there can't be a proxy url simultaneously) use it, otherwise we're using a
+         * proxy from the prefs.
+         */
+        const char *tempURL=NULL;
+        char *proxyServer=NULL;
 
-    /* Figure out which kind of proxy we're using: PAC or straight proxy. 
-     * DON'T FREE tempURL!!!
-     */
-    if ( (tempURL = net_GetPACUrl()) && (*tempURL) )
-      proxyServer = NET_ParseURL(tempURL, GET_HOST_PART | GET_PATH_PART | GET_USERNAME_PART | GET_PASSWORD_PART);
-    else
-      proxyServer = cd->proxy_server;
+        /* Figure out which kind of proxy we're using: PAC or straight proxy. 
+         * DON'T FREE tempURL!!!
+         */
+        if ( (tempURL = net_GetPACUrl()) && (*tempURL) )
+            proxyServer = NET_ParseURL(tempURL, GET_HOST_PART | GET_PATH_PART | GET_USERNAME_PART | GET_PASSWORD_PART);
+        else
+            proxyServer = cd->proxy_server;
 
-    if(NET_AskForProxyAuth(ce->window_id,
-                 proxyServer,
-                 ce->URL_s->proxy_authenticate,
-                 cd->sent_proxy_auth))
-      need_to_do_again = TRUE;
-    else
-        ce->URL_s->dont_cache = TRUE;
-    /* Only free the our temp proxy server if it's not pointing to cd->proxy_server. 
-     * We don't want to be freeing someone elses memory, we were just temporarily 
-     * pointing to it. 
-     */
-    if (tempURL)
-      PR_FREEIF(proxyServer);
-    }
+        if(NET_AskForProxyAuth(ce->window_id,
+            proxyServer,
+            ce->URL_s->proxy_authenticate,
+            cd->sent_proxy_auth))
+            need_to_do_again = TRUE;
+        else
+            ce->URL_s->dont_cache = TRUE;
+        /* Only free the our temp proxy server if it's not pointing to cd->proxy_server. 
+         * We don't want to be freeing someone elses memory, we were just temporarily 
+         * pointing to it. 
+         */
+        if (tempURL)
+            PR_FREEIF(proxyServer);
+    } /* end if cd->proxy_auth_required */
 
     if (need_to_do_again) {
         NET_ClearReadSelect(ce->window_id, cd->connection->sock);
@@ -2607,10 +2603,8 @@ net_setup_http_stream(ActiveEntry * ce)
         }
         PR_FREEIF(ce->URL_s->content_encoding);
         ce->URL_s->content_encoding = NULL;
-#ifdef MODULAR_NETLIB
         PR_FREEIF(ce->URL_s->transfer_encoding);
         ce->URL_s->transfer_encoding=NULL;
-#endif /* MODULAR_NETLIB */
         ce->URL_s->content_length = 0;       /* reset */
         ce->URL_s->real_content_length = 0;  /* reset */
         ce->URL_s->last_modified = 0;        /* reset */
@@ -2631,106 +2625,103 @@ net_setup_http_stream(ActiveEntry * ce)
     }
 
 #ifdef MOZILLA_CLIENT
-  /* check to see if we just now entered a secure space */ 
+    /* check to see if we just now entered a secure space */ 
     /* don't do if this is coming from history */ 
     /* don't do this if about to redirect */ 
     if( HG22087 && 
-    (ce->format_out == FO_CACHE_AND_PRESENT || ce->format_out == FO_PRESENT) 
+        (ce->format_out == FO_CACHE_AND_PRESENT || ce->format_out == FO_PRESENT) 
         && !ce->URL_s->history_num) 
-      { 
+    { 
         History_entry * h = SHIST_GetCurrent(&ce->window_id->hist);
-    XP_Bool warn = FALSE;
+        XP_Bool warn = FALSE;
   
-    if (h == NULL) {
-      /* Deal with frames.  If the window doesn't have history, */
-       /* then it is a new window or a new frame cell. */
-       if ( ce->window_id->grid_parent != NULL ) {
-        h = SHIST_GetCurrent(&ce->window_id->grid_parent->hist);
-        HG22088
-      } else {
-        /* no parent frame - this is a top level window */
-        warn = TRUE;
-      }
-    } else if (HG22089) {
-      warn = TRUE;
+        if (h == NULL) {
+            /* Deal with frames.  If the window doesn't have history, */
+            /* then it is a new window or a new frame cell. */
+            if ( ce->window_id->grid_parent != NULL ) {
+                h = SHIST_GetCurrent(&ce->window_id->grid_parent->hist);
+                HG22088
+            } else {
+                /* no parent frame - this is a top level window */
+                warn = TRUE;
+            }
+        } else if (HG22089) {
+            warn = TRUE;
+        }
+        if ( warn ) {
+            SECNAV_SecurityDialog(ce->window_id, SD_ENTERING_SECURE_SPACE);
+        }
     }
-    if ( warn ) {
-      SECNAV_SecurityDialog(ce->window_id, SD_ENTERING_SECURE_SPACE);
-    }
-      }
 #endif /* MOZILLA_CLIENT */
 
     /* set a default content type if one wasn't given 
      */
-    if(!ce->URL_s->content_type
-    || !*ce->URL_s->content_type)
+    if(!ce->URL_s->content_type || !*ce->URL_s->content_type)
         StrAllocCopy(ce->URL_s->content_type, TEXT_HTML);
 
-  /* If a stream previously exists from a partial cache
-   * situation, reuse it
-   */
-  if(!cd->stream)
-    {
-    /* clear to prevent tight loop */
-    NET_ClearReadSelect(ce->window_id, cd->connection->sock);
+    /* If a stream previously exists from a partial cache
+     * situation, reuse it
+     */
+    if(!cd->stream) {
+        /* clear to prevent tight loop */
+        NET_ClearReadSelect(ce->window_id, cd->connection->sock);
 
 #ifdef MOZILLA_CLIENT
-    /* if the context can't handle HTML then we
-     * need to generate an HTML dialog to handle
-     * the message
-     */
-    if(ce->URL_s->files_to_post && EDT_IS_EDITOR(ce->window_id))
-      {
-      Chrome chrome_struct;
+        /* if the context can't handle HTML then we
+         * need to generate an HTML dialog to handle
+         * the message
+         */
+        if(ce->URL_s->files_to_post && EDT_IS_EDITOR(ce->window_id))
+        {
+            Chrome chrome_struct;
 
-        memset(&chrome_struct, 0, sizeof(Chrome));
+            memset(&chrome_struct, 0, sizeof(Chrome));
 
-      
-        chrome_struct.is_modal = TRUE;
-        chrome_struct.allow_close = TRUE;
-        chrome_struct.allow_resize = TRUE;
-        chrome_struct.show_scrollbar = TRUE;
-        chrome_struct.w_hint = 400;
-        chrome_struct.h_hint = 300;
+
+            chrome_struct.is_modal = TRUE;
+            chrome_struct.allow_close = TRUE;
+            chrome_struct.allow_resize = TRUE;
+            chrome_struct.show_scrollbar = TRUE;
+            chrome_struct.w_hint = 400;
+            chrome_struct.h_hint = 300;
 #ifdef XP_MAC
-      /* on Mac, topmost windows are floating windows not dialogs */
-      chrome_struct.topmost = FALSE;
-      /* disable commands to change to minimal menu bar; */
-      /* avoids confusion about which commands are present */
-      chrome_struct.disable_commands = TRUE;
+            /* on Mac, topmost windows are floating windows not dialogs */
+            chrome_struct.topmost = FALSE;
+            /* disable commands to change to minimal menu bar; */
+            /* avoids confusion about which commands are present */
+            chrome_struct.disable_commands = TRUE;
 #else
-        chrome_struct.topmost = TRUE;
+            chrome_struct.topmost = TRUE;
 #endif
        
 
-      stream_context = FE_MakeNewWindow(ce->window_id, 
-                          NULL, 
-                          NULL, 
-                          &chrome_struct);
-      if(!stream_context)
-            return (MK_OUT_OF_MEMORY);
+            stream_context = FE_MakeNewWindow(ce->window_id, 
+                                  NULL, 
+                                  NULL, 
+                                  &chrome_struct);
+            if(!stream_context)
+                return (MK_OUT_OF_MEMORY);
 
-      /* zero out the post_data field so that it doesn't get
-       * pushed onto the history stack.  Otherwise it can
-       * get deleted when the history gets cleared
-       */
-      PR_FREEIF(ce->URL_s->post_data);
-      ce->URL_s->post_data = NULL;
-      ce->URL_s->post_data_is_file = FALSE;
-      }
-    else
+            /* zero out the post_data field so that it doesn't get
+             * pushed onto the history stack.  Otherwise it can
+             * get deleted when the history gets cleared
+             */
+            PR_FREEIF(ce->URL_s->post_data);
+            ce->URL_s->post_data = NULL;
+            ce->URL_s->post_data_is_file = FALSE;
+        } else
 #endif /* MOZILLA_CLIENT */
-      {
-      stream_context = ce->window_id;
-      }
+        {
+            stream_context = ce->window_id;
+        }
 
-    /* we can get here on server or proxy errors
-     * if we proceed to build the stream with post_data
-     * set then the file could get deleted by history
-     * cleanup code.  Make sure we zero the field
-     */
+        /* we can get here on server or proxy errors
+         * if we proceed to build the stream with post_data
+         * set then the file could get deleted by history
+         * cleanup code.  Make sure we zero the field
+         */
         if(ce->URL_s->files_to_post && ce->URL_s->post_data)
-          {
+        {
             /* we shoved the file to post into the post data.
              * remove it so the history doesn't get confused
              * and try and delete the file.
@@ -2738,98 +2729,91 @@ net_setup_http_stream(ActiveEntry * ce)
             PR_FREEIF(ce->URL_s->post_data);
             ce->URL_s->post_data = NULL;
             ce->URL_s->post_data_is_file = FALSE;
-          }
+        }
 
-      /* Set up the stream stack to handle the body of the message */
-      cd->stream = NET_StreamBuilder(ce->format_out, 
-                    ce->URL_s, 
-                    stream_context);
+        /* Set up the stream stack to handle the body of the message */
+        cd->stream = NET_StreamBuilder(ce->format_out, 
+                        ce->URL_s, 
+                        stream_context);
 
-      if (!cd->stream)
-          {
-          ce->status = MK_UNABLE_TO_CONVERT;
-      ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_CONVERT);
-          return STATUS(ce->status);
-          }
+        if (!cd->stream) {
+            ce->status = MK_UNABLE_TO_CONVERT;
+            ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_CONVERT);
+            return STATUS(ce->status);
+        }
 
-    NET_SetReadSelect(ce->window_id, cd->connection->sock);
+        NET_SetReadSelect(ce->window_id, cd->connection->sock);
 
-    if(ce->URL_s->files_to_post)
-      {
-        char * tmp_string = PL_strdup("<h2>Error uploading files</h2><b>The server responded:<b><hr><p>\n");
+        if(ce->URL_s->files_to_post) {
+            char * tmp_string = PL_strdup("<h2>Error uploading files</h2><b>The server responded:<b><hr><p>\n");
 
-      if(tmp_string)
-        PUTSTRING(tmp_string);
-      } 
-    }
-  else
-    {
-    /* check to see if it's a multipart respose.
-     * if it is then we need to do some magic to
-     * strip the multipart
-     */
+            if(tmp_string)
+                PUTSTRING(tmp_string);
+        } 
+    } else {
+        /* check to see if it's a multipart respose.
+         * if it is then we need to do some magic to
+         * strip the multipart
+         */
         if(!PL_strncasecmp(ce->URL_s->content_type, "multipart", 9))
         {
-        /* reset the state to parse_mime_headers to strip
-         * the multipart headers off
-         */
+            /* reset the state to parse_mime_headers to strip
+             * the multipart headers off
+             */
             cd->next_state = HTTP_PARSE_MIME_HEADERS;
-          return STATUS(ce->status);
+            return STATUS(ce->status);
         }
     }
 
-  if(cd->use_copy_from_cache)
-    {
-    /* we can only get here if it's a partial cache file */
-      cd->next_state = HTTP_BEGIN_PUSH_PARTIAL_CACHE_FILE;
-    cd->use_copy_from_cache = FALSE;
-    }
-  else
-    {
-    /* start the graph progress indicator
-     */
-      FE_GraphProgressInit(ce->window_id, 
-               ce->URL_s, 
-               cd->original_content_length);
-    cd->destroy_graph_progress = TRUE;  /* we will need to destroy it */
+    if(cd->use_copy_from_cache) {
+        /* we can only get here if it's a partial cache file */
+        cd->next_state = HTTP_BEGIN_PUSH_PARTIAL_CACHE_FILE;
+        cd->use_copy_from_cache = FALSE;
 
-      cd->next_state = HTTP_PULL_DATA;
+    } else {
+        /* start the graph progress indicator */
+        FE_GraphProgressInit(ce->window_id, 
+            ce->URL_s, 
+            cd->original_content_length);
+        cd->destroy_graph_progress = TRUE;  /* we will need to destroy it */
 
-      if(cd->acting_as_proxy && cd->server_headers)
+        cd->next_state = HTTP_PULL_DATA;
+
+        if(cd->acting_as_proxy && cd->server_headers)
         {
-      ce->status = PUTBLOCK(cd->server_headers, 
-                 PL_strlen(cd->server_headers));
-      cd->displayed_some_data = TRUE;
+            ce->status = PUTBLOCK(cd->server_headers, 
+                PL_strlen(cd->server_headers));
+            cd->displayed_some_data = TRUE;
         }
 
-    {
-      char * nonProxyHost = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-      if (nonProxyHost) {
-        char* msg = PR_smprintf(XP_GetString(XP_PROGRESS_TRANSFER_DATA),
-                    nonProxyHost);
-        if (msg) {
-          NET_Progress(ce->window_id, msg);
-          PR_Free(msg);
+        { /* open brace1 */
+        char * nonProxyHost = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
+        if (nonProxyHost) {
+            char* msg = PR_smprintf(XP_GetString(XP_PROGRESS_TRANSFER_DATA),
+                        nonProxyHost);
+            if (msg) {
+                NET_Progress(ce->window_id, msg);
+                PR_Free(msg);
+            }
+            PR_Free(nonProxyHost);
         }
-        PR_Free(nonProxyHost);
-      }
-    }
+        } /* close brace1 */
 
-      /* Push though buffered data */
-    if(cd->line_buffer_size)
+        /* Push though buffered data */
+        if(cd->line_buffer_size)
         {
-      /* @@@ bug, check return status and only send
-      * up to the return value
-      */
-        (*cd->stream->is_write_ready)(cd->stream);
-          ce->status = PUTBLOCK(cd->line_buffer, cd->line_buffer_size);
-      ce->bytes_received = cd->line_buffer_size;
-          FE_GraphProgress(ce->window_id, 
-              ce->URL_s, 
-              ce->bytes_received, 
-              cd->line_buffer_size, 
-              cd->original_content_length);
-      cd->displayed_some_data = TRUE;
+            /* @@@ bug, check return status and only send
+             * up to the return value
+             */
+            (*cd->stream->is_write_ready)(cd->stream);
+            ce->status = PUTBLOCK(cd->line_buffer, cd->line_buffer_size);
+            ce->bytes_received = cd->line_buffer_size;
+            FE_GraphProgress(ce->window_id, 
+                  ce->URL_s, 
+                  ce->bytes_received, 
+                  cd->line_buffer_size, 
+                  cd->original_content_length);
+            cd->displayed_some_data = TRUE;
         }
     }
 
@@ -2837,18 +2821,18 @@ net_setup_http_stream(ActiveEntry * ce)
     cd->line_buffer = NULL;
     cd->line_buffer_size=0;
 
-  /* check to see if we have read the whole object,
-   * and finish the transfer if so.
-   */
+    /* check to see if we have read the whole object,
+     * and finish the transfer if so.
+     */
     if(ce->status > -1
-     && cd->original_content_length
-       && ce->bytes_received >= cd->original_content_length)
-      {
+        && cd->original_content_length
+        && ce->bytes_received >= cd->original_content_length)
+    {
         /* normal end of transfer */
         ce->status = MK_DATA_LOADED;
         cd->next_state = HTTP_DONE;
         cd->pause_for_read = FALSE;
-      }
+    }
 
     return STATUS(ce->status);
 }
