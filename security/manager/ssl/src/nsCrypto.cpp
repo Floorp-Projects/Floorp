@@ -58,8 +58,10 @@
 #include "keyhi.h"
 #include "cryptohi.h"
 #include "seccomon.h"
+extern "C" {
 #include "crmf.h"
 #include "crmfi.h"
+}
 #include "cmmf.h"
 #include "nssb64.h"
 #include "base64.h"
