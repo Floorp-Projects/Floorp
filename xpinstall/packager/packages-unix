@@ -62,6 +62,7 @@ bin/components/libmozucth.so
 bin/components/libmozxfer.so
 bin/components/libnecko.so
 bin/components/libnecko_about.so
+bin/components/libnecko_cache.so
 bin/components/libnecko_data.so
 bin/components/libnecko_file.so
 bin/components/libnecko_ftp.so

@@ -91,6 +91,8 @@ viewer:Components:mozcomps.xpt
 viewer:Components:multiMixedConv.shlb 
 viewer:Components:netwerk.xpt 
 viewer:Components:Network.shlb 
+viewer:Components:nkcache.shlb 
+viewer:Components:nkcache.xpt
 viewer:Components:nsIStringBundle.xpt 
 viewer:Components:nslocale.shlb 
 viewer:Components:nsLocale.xpt 
