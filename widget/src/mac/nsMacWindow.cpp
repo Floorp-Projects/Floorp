@@ -337,9 +337,11 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			    //
 			    // ...fall through...
 			    mOffsetParent = aParent;
-			    theToolkit =  (nsIToolkit*)(aParent->GetToolkit());
+			    if(aParent != nsnull){
+			    	theToolkit =  (nsIToolkit*)(aParent->GetToolkit());
+			    }
 
-                mAcceptsActivation = PR_FALSE;
+          mAcceptsActivation = PR_FALSE;
 
 			case eWindowType_child:
 				wDefProcID = plainDBox;
@@ -569,11 +571,13 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		localRect.width = 100;
 		localRect.height = 100;	
 		
-		mOffsetParent->WidgetToScreen(localRect,globalRect);
+		if(mOffsetParent != nsnull){
+			mOffsetParent->WidgetToScreen(localRect,globalRect);
+			aX=globalRect.x;
+			aY=globalRect.y;
+			::MoveWindow(mWindowPtr, aX, aY, false);
+		}
 		
-		aX=globalRect.x;
-		aY=globalRect.y;
-		::MoveWindow(mWindowPtr, aX, aY, false);
 		return NS_OK;
 	} else if (mWindowMadeHere){
 		// make sure the window stays visible
