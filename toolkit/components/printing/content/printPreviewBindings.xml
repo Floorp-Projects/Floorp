@@ -48,7 +48,7 @@
   <binding id="printpreviewtoolbar" 
            extends="chrome://global/content/widgets/toolbar.xml#toolbar">
     <resources>
-      <stylesheet src="chrome://global/skin/printing.css"/>
+      <stylesheet src="chrome://global/skin/printpreview.css"/>
     </resources>
 
     <content>

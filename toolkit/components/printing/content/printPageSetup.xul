@@ -30,7 +30,7 @@ Contributor(s):
 -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/printing.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/printPageSetup.css" type="text/css"?>
 <!DOCTYPE dialog SYSTEM "chrome://global/locale/printPageSetup.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
