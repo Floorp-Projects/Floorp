@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.8 2002/06/21 20:25:49 relyea%netscape.com Exp $
+ * $Id: lowcert.c,v 1.9 2002/06/24 21:54:39 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -378,14 +378,21 @@ static SECStatus
 nsslowcert_KeyFromIssuerAndSN(PRArenaPool *arena, SECItem *issuer, SECItem *sn,
 			SECItem *key)
 {
+    unsigned int len = sn->len + issuer->len;
 
-    key->len = sn->len + issuer->len;
 
-    key->data = (unsigned char*)PORT_ArenaAlloc(arena, key->len);
+    if (arena) {
+	key->data = (unsigned char*)PORT_ArenaAlloc(arena, len);
+    } else {
+	if (len > key->len) {
+	    key->data = (unsigned char*)PORT_ArenaAlloc(arena, len);
+	}
+    }
     if ( !key->data ) {
 	goto loser;
     }
 
+    key->len = len;
     /* copy the serialNumber */
     PORT_Memcpy(key->data, sn->data, sn->len);
 
@@ -404,60 +411,39 @@ loser:
  * take a DER certificate and decode it into a certificate structure
  */
 NSSLOWCERTCertificate *
-nsslowcert_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
-			 char *nickname)
+nsslowcert_DecodeDERCertificate(SECItem *derSignedCert, char *nickname)
 {
     NSSLOWCERTCertificate *cert;
-    PRArenaPool *arena;
-    void *data;
     int rv;
-    int len;
-    
-    /* make a new arena */
-    arena = PORT_NewArena(SOFT_DEFAULT_CHUNKSIZE);
-    
-    if ( !arena ) {
-	return 0;
-    }
 
     /* allocate the certificate structure */
-    cert = (NSSLOWCERTCertificate *)PORT_ArenaZAlloc(arena, sizeof(NSSLOWCERTCertificate));
+    cert = nsslowcert_CreateCert();
     
     if ( !cert ) {
 	goto loser;
     }
     
-    cert->arena = arena;
-    
-    if ( copyDER ) {
-	/* copy the DER data for the cert into this arena */
-	data = (void *)PORT_ArenaAlloc(arena, derSignedCert->len);
-	if ( !data ) {
-	    goto loser;
-	}
-	cert->derCert.data = (unsigned char *)data;
-	cert->derCert.len = derSignedCert->len;
-	PORT_Memcpy(data, derSignedCert->data, derSignedCert->len);
-    } else {
 	/* point to passed in DER data */
-	cert->derCert = *derSignedCert;
-    }
+    cert->derCert = *derSignedCert;
+    cert->nickname = NULL;
+    cert->certKey.data = NULL;
+    cert->referenceCount = 1;
 
     /* decode the certificate info */
     rv = nsslowcert_GetCertFields(cert->derCert.data, cert->derCert.len,
 	&cert->derIssuer, &cert->serialNumber, &cert->derSN, &cert->derSubject,
 	&cert->validity, &cert->derSubjKeyInfo);
 
-    /*rv = SEC_ASN1DecodeItem(arena, cert, nsslowcert_SignedCertificateTemplate,
-                    &cert->derCert); */
-
     /* cert->subjectKeyID;	 x509v3 subject key identifier */
+    cert->subjectKeyID.data = NULL;
+    cert->subjectKeyID.len = 0;
     cert->dbEntry = NULL;
     cert ->trust = NULL;
 
     /* generate and save the database key for the cert */
-    /*rv = nsslowcert_KeyFromDERCert(arena, &cert->derCert, &cert->certKey); */
-    rv = nsslowcert_KeyFromIssuerAndSN(arena, &cert->derIssuer, 
+    cert->certKey.data = cert->certKeySpace;
+    cert->certKey.len = sizeof(cert->certKeySpace);
+    rv = nsslowcert_KeyFromIssuerAndSN(NULL, &cert->derIssuer, 
 					&cert->serialNumber, &cert->certKey);
     if ( rv ) {
 	goto loser;
@@ -468,13 +454,8 @@ nsslowcert_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
 	cert->nickname = NULL;
     } else {
 	/* copy and install the nickname */
-	len = PORT_Strlen(nickname) + 1;
-	cert->nickname = (char*)PORT_ArenaAlloc(arena, len);
-	if ( cert->nickname == NULL ) {
-	    goto loser;
-	}
-
-	PORT_Memcpy(cert->nickname, nickname, len);
+	cert->nickname = pkcs11_copyNickname(nickname,cert->nicknameSpace,
+				sizeof(cert->nicknameSpace));
     }
 
 #ifdef FIXME
@@ -494,9 +475,8 @@ nsslowcert_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
     return(cert);
     
 loser:
-
-    if ( arena ) {
-	PORT_FreeArena(arena, PR_FALSE);
+    if (cert) {
+	nsslowcert_DestroyCertificate(cert);
     }
     
     return(0);
@@ -538,10 +518,10 @@ nsslowcert_KeyFromDERCert(PRArenaPool *arena, SECItem *derCert, SECItem *key)
     int rv;
     NSSLOWCERTCertKey certkey;
 
-    PORT_Memset(&certkey, 0, sizeof(NSSLOWCERTCertKey));
+    PORT_Memset(&certkey, 0, sizeof(NSSLOWCERTCertKey));    
+
     rv = nsslowcert_GetCertFields(derCert->data, derCert->len,
 	&certkey.derIssuer, &certkey.serialNumber, NULL, NULL, NULL, NULL);
-    
 
     if ( rv ) {
 	goto loser;
@@ -556,7 +536,7 @@ loser:
 NSSLOWKEYPublicKey *
 nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
 {
-    NSSLOWCERTSubjectPublicKeyInfo *spki =  cert->subjectPublicKeyInfo;
+    NSSLOWCERTSubjectPublicKeyInfo spki;
     NSSLOWKEYPublicKey *pubk;
     SECItem os;
     SECStatus rv;
@@ -575,29 +555,21 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
     }
 
     pubk->arena = arena;
+    PORT_Memset(&spki,0,sizeof(spki));
 
     /* we haven't bothered decoding the spki struct yet, do it now */
-    if (spki == NULL) {
-	spki = (NSSLOWCERTSubjectPublicKeyInfo *) PORT_ArenaZAlloc(cert->arena,
-				 sizeof(NSSLOWCERTSubjectPublicKeyInfo));
-	if (spki == NULL) {
-            PORT_FreeArena (arena, PR_FALSE);
-            return NULL;
-	}
-        rv = SEC_ASN1DecodeItem(cert->arena, spki, 
+    rv = SEC_ASN1DecodeItem(arena, &spki, 
 		nsslowcert_SubjectPublicKeyInfoTemplate, &cert->derSubjKeyInfo);
-	if (rv != SECSuccess) {
-            PORT_FreeArena (arena, PR_FALSE);
-            return NULL;
-	}
-	cert->subjectPublicKeyInfo = spki;
+    if (rv != SECSuccess) {
+ 	PORT_FreeArena (arena, PR_FALSE);
+ 	return NULL;
     }
 
     /* Convert bit string length from bits to bytes */
-    os = spki->subjectPublicKey;
+    os = spki.subjectPublicKey;
     DER_ConvertBitString (&os);
 
-    tag = SECOID_GetAlgorithmTag(&spki->algorithm);
+    tag = SECOID_GetAlgorithmTag(&spki.algorithm);
     switch ( tag ) {
       case SEC_OID_X500_RSA_ENCRYPTION:
       case SEC_OID_PKCS1_RSA_ENCRYPTION:

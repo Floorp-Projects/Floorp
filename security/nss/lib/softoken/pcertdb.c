@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.22 2002/06/20 18:46:46 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.23 2002/06/24 21:54:39 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -61,6 +61,17 @@
 /* forward declaration */
 NSSLOWCERTCertificate *
 nsslowcert_FindCertByDERCertNoLocking(NSSLOWCERTCertDBHandle *handle, SECItem *derCert);
+
+
+static NSSLOWCERTCertificate *certListHead = NULL;
+static NSSLOWCERTTrust *trustListHead = NULL;
+static certDBEntryCert *entryListHead = NULL;
+static int certListCount = 0;
+static int trustListCount = 0;
+static int entryListCount = 0;
+#define MAX_CERT_LIST_COUNT 10
+#define MAX_TRUST_LIST_COUNT 10
+#define MAX_ENTRY_LIST_COUNT 10
 
 /*
  * the following functions are wrappers for the db library that implement
@@ -183,6 +194,43 @@ nsslowcert_UnlockCertTrust(NSSLOWCERTCertificate *cert)
     return;
 }
 
+static PZLock *freeListLock = NULL;
+
+/*
+ * Acquire the cert reference count lock
+ * There is currently one global lock for all certs, but I'm putting a cert
+ * arg here so that it will be easy to make it per-cert in the future if
+ * that turns out to be necessary.
+ */
+static void
+nsslowcert_LockFreeList(void)
+{
+    if ( freeListLock == NULL ) {
+	nss_InitLock(&freeListLock, nssILockRefLock);
+	PORT_Assert(freeListLock != NULL);
+    }
+    
+    PZ_Lock(freeListLock);
+    return;
+}
+
+/*
+ * Free the cert reference count lock
+ */
+static void
+nsslowcert_UnlockFreeList(void)
+{
+    PRStatus prstat;
+
+    PORT_Assert(freeListLock != NULL);
+    
+    prstat = PZ_Unlock(freeListLock);
+    
+    PORT_Assert(prstat == PR_SUCCESS);
+
+    return;
+}
+
 NSSLOWCERTCertificate *
 nsslowcert_DupCertificate(NSSLOWCERTCertificate *c)
 {
@@ -291,6 +339,98 @@ certdb_Close(DB *db)
     (* db->close)(db);
     
     prstat = PZ_Unlock(dbLock);
+
+    return;
+}
+
+void
+pkcs11_freeNickname(char *nickname, char *space)
+{
+    if (nickname && nickname != space) {
+	PORT_Free(nickname);
+    }
+}
+
+char *
+pkcs11_copyNickname(char *nickname,char *space, int spaceLen)
+{
+    int len;
+    char *copy = NULL;
+
+    len = PORT_Strlen(nickname)+1;
+    if (len <= spaceLen) {
+	copy = space;
+	PORT_Memcpy(copy,nickname,len);
+    } else {
+	copy = PORT_Strdup(nickname);
+    }
+
+    return copy;
+}
+
+void
+pkcs11_freeStaticData (unsigned char *data, unsigned char *space)
+{
+    if (data && data != space) {
+	PORT_Free(data);
+    }
+}
+
+unsigned char *
+pkcs11_copyStaticData(unsigned char *data, int len, 
+					unsigned char *space, int spaceLen)
+{
+    unsigned char *copy = NULL;
+
+    if (len <= spaceLen) {
+	copy = space;
+    } else {
+	copy = (unsigned char *) PORT_Alloc(len);
+    }
+    if (copy) {
+	PORT_Memcpy(copy,data,len);
+    }
+
+    return copy;
+}
+
+/*
+ * destroy a database entry
+ */
+static void
+DestroyDBEntry(certDBEntry *entry)
+{
+    PRArenaPool *arena = entry->common.arena;
+
+    /* must be one of our certDBEntry from the free list */
+    if (arena == NULL) {
+	certDBEntryCert *certEntry;
+	if ( entry->common.type != certDBEntryTypeCert) {
+	    return;
+	}
+	certEntry = (certDBEntryCert *)entry;
+
+	pkcs11_freeStaticData(certEntry->derCert.data, certEntry->derCertSpace);
+	pkcs11_freeNickname(certEntry->nickname, certEntry->nicknameSpace);
+
+	nsslowcert_LockFreeList();
+	if (entryListCount > MAX_ENTRY_LIST_COUNT) {
+	    PORT_Free(certEntry);
+	} else {
+	    entryListCount++;
+	    PORT_Memset(certEntry, 0, sizeof( *certEntry));
+	    certEntry->next = entryListHead;
+	    entryListHead = certEntry;
+	}
+	nsslowcert_UnlockFreeList();
+	return;
+    }
+
+
+    /* Zero out the entry struct, so that any further attempts to use it
+     * will cause an exception (e.g. null pointer reference). */
+    PORT_Memset(&entry->common, 0, sizeof entry->common);
+    PORT_FreeArena(arena, PR_FALSE);
 
     return;
 }
@@ -507,7 +647,7 @@ EncodeDBCertKey(SECItem *certKey, PRArenaPool *arena, SECItem *dbkey)
 	dbkey->data = (unsigned char *)PORT_ArenaAlloc(arena, len);
     } else {
 	if (dbkey->len < len) {
-	    dbkey->data = (unsigned char *)PORT_Alloc(dbkey->len);
+	    dbkey->data = (unsigned char *)PORT_Alloc(len);
 	}
     }
     dbkey->len = len;
@@ -603,26 +743,23 @@ DecodeDBCertEntry(certDBEntryCert *entry, SECItem *dbentry)
     }
     
     /* copy the dercert */
-    entry->derCert.data = (unsigned char *)PORT_ArenaAlloc(entry->common.arena,
-							   entry->derCert.len);
+
+    entry->derCert.data = pkcs11_copyStaticData(&dbentry->data[headerlen],
+	entry->derCert.len,entry->derCertSpace,sizeof(entry->derCertSpace));
     if ( entry->derCert.data == NULL ) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	goto loser;
     }
-    PORT_Memcpy(entry->derCert.data, &dbentry->data[headerlen],
-	      entry->derCert.len);
 
     /* copy the nickname */
     if ( nnlen > 1 ) {
-	entry->nickname = (char *)PORT_ArenaAlloc(entry->common.arena, nnlen);
+	entry->nickname = (char *)pkcs11_copyStaticData(
+			&dbentry->data[headerlen+entry->derCert.len], nnlen,
+			entry->nicknameSpace, sizeof(entry->nicknameSpace));
 	if ( entry->nickname == NULL ) {
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
 	}
-	PORT_Memcpy(entry->nickname,
-		    &dbentry->data[headerlen +
-				   entry->derCert.len],
-		    nnlen);
     } else {
 	entry->nickname = NULL;
     }
@@ -876,6 +1013,25 @@ loser:
     return(SECFailure);
 }
 
+static certDBEntryCert *
+CreateCertEntry(void)
+{
+    certDBEntryCert *entry;
+
+    nsslowcert_LockFreeList();
+    entry = entryListHead;
+    if (entry) {
+	entryListCount--;
+	entryListHead = entry->next;
+    }
+    nsslowcert_UnlockFreeList();
+    if (entry) {
+	return entry;
+    }
+
+    return PORT_ZAlloc(sizeof(certDBEntryCert));
+}
+
 /*
  * Read a certificate entry
  */
@@ -891,19 +1047,13 @@ ReadDBCertEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey)
 
     dbkey.data = buf;
     dbkey.len = sizeof(buf);
-    
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( arena == NULL ) {
-	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	goto loser;
-    }
 
-    entry = (certDBEntryCert *)PORT_ArenaAlloc(arena, sizeof(certDBEntryCert));
+    entry = CreateCertEntry();
     if ( entry == NULL ) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	goto loser;
     }
-    entry->common.arena = arena;
+    entry->common.arena = NULL;
     entry->common.type = certDBEntryTypeCert;
 
     rv = EncodeDBCertKey(certKey, NULL, &dbkey);
@@ -920,19 +1070,18 @@ ReadDBCertEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey)
     if ( rv != SECSuccess ) {
 	goto loser;
     }
-    
-    if (dbkey.data && dbkey.data != buf) {
-	PORT_Free(dbkey.data);
-    }
+
+    pkcs11_freeStaticData(dbkey.data,buf);    
+    dbkey.data = NULL;
     return(entry);
     
 loser:
-    if (dbkey.data && dbkey.data != buf) {
-	PORT_Free(dbkey.data);
+    pkcs11_freeStaticData(dbkey.data,buf);    
+    dbkey.data = NULL;
+    if ( entry ) {
+	
     }
-    if ( arena ) {
-	PORT_FreeArena(arena, PR_FALSE);
-    }
+    DestroyDBEntry((certDBEntry *)entry);
     
     return(NULL);
 }
@@ -1240,22 +1389,6 @@ loser:
     }
     
     return(NULL);
-}
-
-/*
- * destroy a database entry
- */
-static void
-DestroyDBEntry(certDBEntry *entry)
-{
-    PRArenaPool *arena = entry->common.arena;
-
-    /* Zero out the entry struct, so that any further attempts to use it
-     * will cause an exception (e.g. null pointer reference). */
-    PORT_Memset(&entry->common, 0, sizeof entry->common);
-    PORT_FreeArena(arena, PR_FALSE);
-
-    return;
 }
 
 void
@@ -2992,14 +3125,21 @@ AddNicknameToPermCert(NSSLOWCERTCertDBHandle *dbhandle,
 	goto loser;
     }
 
-    entry->nickname = PORT_ArenaStrdup(entry->common.arena, nickname);
+    pkcs11_freeNickname(entry->nickname,entry->nicknameSpace);
+    entry->nickname = NULL;
+    entry->nickname = pkcs11_copyNickname(nickname,entry->nicknameSpace,
+					sizeof(entry->nicknameSpace));
 
     rv = WriteDBCertEntry(dbhandle, entry);
     if ( rv ) {
 	goto loser;
     }
 
-    cert->nickname = PORT_ArenaStrdup(cert->arena, nickname);
+    pkcs11_freeNickname(cert->nickname,cert->nicknameSpace);
+    cert->nickname = NULL;
+    cert->nickname = pkcs11_copyNickname(nickname,cert->nicknameSpace,
+					sizeof(cert->nicknameSpace));
+
     return(SECSuccess);
     
 loser:
@@ -3458,7 +3598,7 @@ UpdateV4DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
 	    derSubject.data = NULL;
 	    
 	    if ( entry ) {
-		cert = nsslowcert_DecodeDERCertificate(&entry->derCert, PR_TRUE,
+		cert = nsslowcert_DecodeDERCertificate(&entry->derCert, 
 						 entry->nickname);
 
 		if ( cert != NULL ) {
@@ -3866,8 +4006,7 @@ DecodeACert(NSSLOWCERTCertDBHandle *handle, certDBEntryCert *entry)
 {
     NSSLOWCERTCertificate *cert = NULL;
     
-    cert = nsslowcert_DecodeDERCertificate(&entry->derCert, PR_TRUE,
-							 entry->nickname );
+    cert = nsslowcert_DecodeDERCertificate(&entry->derCert, entry->nickname );
     
     if ( cert == NULL ) {
 	goto loser;
@@ -3883,15 +4022,38 @@ loser:
     return(0);
 }
 
+static NSSLOWCERTTrust *
+CreateTrust(void)
+{
+    NSSLOWCERTTrust *trust = NULL;
+
+    nsslowcert_LockFreeList();
+    trust = trustListHead;
+    if (trust) {
+	trustListCount--;
+	trustListHead = trust->next;
+    }
+    nsslowcert_UnlockFreeList();
+    if (trust) {
+	return trust;
+    }
+
+    return PORT_ZAlloc(sizeof(NSSLOWCERTTrust));
+}
+
+
 static NSSLOWCERTTrust * 
 DecodeTrustEntry(NSSLOWCERTCertDBHandle *handle, certDBEntryCert *entry,				SECItem *dbKey)
 {
-    NSSLOWCERTTrust *trust = PORT_Alloc(sizeof(NSSLOWCERTTrust));
+    NSSLOWCERTTrust *trust = CreateTrust();
     if (trust == NULL) {
 	return trust;
     }
     trust->dbhandle = handle;
     trust->dbEntry = entry;
+    trust->dbKey.data = pkcs11_copyStaticData(dbKey->data,dbKey->len,
+				trust->dbKeySpace, sizeof(trust->dbKeySpace));
+    trust->dbKey.len = dbKey->len;
     SECITEM_CopyItem(NULL, &trust->dbKey , dbKey);
     trust->trust = &entry->trust;
     trust->derCert = &entry->derCert;
@@ -4120,8 +4282,11 @@ nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *dbhandle,
 	ret = SECFailure;
 	goto done;
     }
+
+    pkcs11_freeNickname(oldnn,cert->nicknameSpace);
     
-    cert->nickname = (entry->nickname) ? PORT_ArenaStrdup(cert->arena,entry->nickname) : NULL;
+    cert->nickname = (entry->nickname) ? pkcs11_copyNickname(entry->nickname,
+		cert->nicknameSpace, sizeof(cert->nicknameSpace)) : NULL;
     cert->trust = &entry->trust;
     cert->dbEntry = entry;
     
@@ -4169,7 +4334,6 @@ loser:
 static NSSLOWCERTCertificate *
 FindCertByKey(NSSLOWCERTCertDBHandle *handle, SECItem *certKey, PRBool lockdb)
 {
-    SECStatus rv;
     NSSLOWCERTCertificate *cert = NULL;
     PRArenaPool *arena = NULL;
     certDBEntryCert *entry;
@@ -4210,7 +4374,6 @@ loser:
 static NSSLOWCERTTrust *
 FindTrustByKey(NSSLOWCERTCertDBHandle *handle, SECItem *certKey, PRBool lockdb)
 {
-    SECStatus rv;
     NSSLOWCERTTrust *trust = NULL;
     PRArenaPool *arena = NULL;
     certDBEntryCert *entry;
@@ -4314,6 +4477,7 @@ nsslowcert_FindCertByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssue
 	}
     }
 
+    certKey.type = 0;
     certKey.data = (unsigned char*)PORT_Alloc(sn->len + issuer->len);
     certKey.len = data_len + issuer->len;
     
@@ -4397,6 +4561,7 @@ nsslowcert_FindTrustByIssuerAndSN(NSSLOWCERTCertDBHandle *handle,
 	}
     }
 
+    certKey.type = 0;
     certKey.data = (unsigned char*)PORT_Alloc(sn->len + issuer->len);
     certKey.len = data_len + issuer->len;
     
@@ -4493,20 +4658,32 @@ DestroyCertificate(NSSLOWCERTCertificate *cert, PRBool lockdb)
 
 	if ( ( refCount == 0 ) ) {
 	    certDBEntryCert *entry  = cert->dbEntry;
-	    PRArenaPool *    arena  = cert->arena;
 
 	    if ( entry ) {
 		DestroyDBEntry((certDBEntry *)entry);
             }
 
+	    pkcs11_freeNickname(cert->nickname,cert->nicknameSpace);
+	    pkcs11_freeStaticData(cert->certKey.data,cert->certKeySpace);
+	    cert->certKey.data = NULL;
+	    cert->nickname = NULL;
+
 	    /* zero cert before freeing. Any stale references to this cert
 	     * after this point will probably cause an exception.  */
 	    PORT_Memset(cert, 0, sizeof *cert);
 
+	    /* use reflock to protect the free list */
+	    nsslowcert_LockFreeList();
+	    if (certListCount > MAX_CERT_LIST_COUNT) {
+		PORT_Free(cert);
+	    } else {
+		certListCount++;
+		cert->next = certListHead;
+		certListHead = cert;
+	    }
+	    nsslowcert_UnlockFreeList();
+		
 	    cert = NULL;
-	    
-	    /* free the arena that contains the cert. */
-	    PORT_FreeArena(arena, PR_FALSE);
         }
 	if ( lockdb && handle ) {
 	    nsslowcert_UnlockDB(handle);
@@ -4514,6 +4691,24 @@ DestroyCertificate(NSSLOWCERTCertificate *cert, PRBool lockdb)
     }
 
     return;
+}
+
+NSSLOWCERTCertificate *
+nsslowcert_CreateCert(void)
+{
+    NSSLOWCERTCertificate *cert;
+    nsslowcert_LockFreeList();
+    cert = certListHead;
+    if (cert) {
+	certListHead = cert->next;
+	certListCount--;
+    }
+    nsslowcert_UnlockFreeList();
+
+    if (cert) {
+	return cert;
+    }
+    return (NSSLOWCERTCertificate *) PORT_ZAlloc(sizeof(NSSLOWCERTCertificate));
 }
 
 void
@@ -4524,10 +4719,18 @@ nsslowcert_DestroyTrust(NSSLOWCERTTrust *trust)
     if ( entry ) {
 	DestroyDBEntry((certDBEntry *)entry);
     }
-    if (trust->dbKey.data) {
-	PORT_Free(trust->dbKey.data);
+    pkcs11_freeStaticData(trust->dbKey.data,trust->dbKeySpace);
+    PORT_Memset(trust, 0, sizeof(*trust));
+
+    nsslowcert_LockFreeList();
+    if (trustListCount > MAX_TRUST_LIST_COUNT) {
+	PORT_Free(trust);
+    } else {
+	trustListCount++;
+	trust->next = trustListHead;
+	trustListHead = trust;
     }
-    PORT_Free(trust);
+    nsslowcert_UnlockFreeList();
 
     return;
 }
