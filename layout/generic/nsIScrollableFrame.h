@@ -134,6 +134,15 @@ public:
   NS_IMETHOD CurPosAttributeChanged(nsIPresContext* aPresContext,
                                     nsIContent* aChild,
                                     PRInt32 aModType) = 0;
+
+  /**
+   * This tells the scroll frame to try scrolling to the scroll
+   * position that was restored from the history. This must be called
+   * at least once after state has been restored. It is called by the
+   * scrolled frame itself during reflow, but sometimes state can be
+   * restored after reflows are done...
+   */
+  virtual void ScrollToRestoredPosition() = 0;
 };
 
 #endif

@@ -124,6 +124,8 @@ public:
 
   virtual nsIView* GetMouseCapturer() const;
 
+  void ScrollToRestoredPosition();
+
 protected:
   nsScrollBoxFrame(nsIPresShell* aShell);
 

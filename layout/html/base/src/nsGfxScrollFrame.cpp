@@ -49,6 +49,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxScrollFrame.h"
+#include "nsScrollBoxFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
@@ -1244,7 +1245,14 @@ nsGfxScrollFrameInner::GetScrollPreference() const
   }
 }
 
-void nsGfxScrollFrameInner::ReloadChildFrames()
+void
+nsGfxScrollFrameInner::ScrollToRestoredPosition()
+{
+  NS_STATIC_CAST(nsScrollBoxFrame*, mScrollAreaBox)->ScrollToRestoredPosition();
+}
+
+void
+nsGfxScrollFrameInner::ReloadChildFrames()
 {
   mScrollAreaBox = nsnull;
   mHScrollbarBox = nsnull;
