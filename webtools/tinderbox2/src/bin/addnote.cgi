@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.18 $ 
-# $Date: 2002/05/10 21:24:39 $ 
+# $Revision: 1.19 $ 
+# $Date: 2002/05/10 21:38:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -52,6 +52,7 @@ use TreeData;
 use Persistence;
 use HTMLPopUp;
 use Utils;
+use TinderDB;
 
 
 
@@ -160,9 +161,9 @@ sub get_params {
   $NOTE = extract_html_chars($NOTE);
 
   {
-    TinderDB::loadtree_db($tree);
+    TinderDB::loadtree_db($TREE);
       
-      @ASSOCIATIONS = TinderDB::notice_association($tree);
+      @ASSOCIATIONS = TinderDB::notice_association($TREE);
   }
 
   @CHOSEN_ASSOCIATIONS = param("associations");

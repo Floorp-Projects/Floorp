@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.14 $ 
-# $Date: 2002/05/10 21:20:30 $ 
+# $Revision: 1.15 $ 
+# $Date: 2002/05/10 21:38:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -392,7 +392,7 @@ sub notice_association {
   my (@outrow) = ();
 
   foreach $db (@{$DB}) {
-    push @outrow, $db->status_table_header(@_);
+    push @outrow, $db->notice_association(@_);
   }
 
   return (@outrow);
