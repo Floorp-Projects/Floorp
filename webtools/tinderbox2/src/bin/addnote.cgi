@@ -1,9 +1,9 @@
-#!#perl# --
+#!#perl# -T --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/24 14:47:09 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/09/18 19:27:42 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -46,22 +46,6 @@ use Persistence;
 use HTMLPopUp;
 use Utils;
 
-# Normally we filter user input for 'tainting' and to prevent this:
-
-# http://www.ciac.org/ciac/bulletins/k-021.shtml
-
-#   When a victim with scripts enabled in their browser reads this
-#   message, the malicious code may be executed
-#   unexpectedly. Scripting tags that can be embedded in this way
-#   include <SCRIPT>, <OBJECT>, <APPLET>, and <EMBED>.
-
-#    note that since we want some tags to be allowed (href) but not #
-#    others.  This requirement breaks the taint perl mechanisms for #
-#    checking as we can not escape every '<>'.
-
-# However we trust our administrators not do put bad things in the web
-# pages and we wish to allow them to embed scripts.
-
 
 
 sub get_params {
@@ -73,13 +57,29 @@ sub get_params {
   (TreeData::tree_exists($TREE)) ||
     die("tree: $TREE does not exist\n");    
 
+  # tree is safe, untaint it.
+  $TREE =~ m/(.*)/;
+  $TREE = $1;
+
   $MAILADDR = ( param("mailaddr") ||
                 cookie(-name=>"tinderbox_mailaddr"));
+
+  $MAILADDR = main::extract_user($MAILADDR);
+
   $USE_COOKIE = param("use_cookie");
+  ($USE_COOKIE) &&
+    ($USE_COOKIE = 1);
+
+  $REMOTE_HOST = remote_host();
 
   $NOTE=param("note");
 
-  return ;
+  # Remove any known "bad" tags.  Since any user can post notices we
+  # have to prevent bad scripts from being posted.
+
+  $NOTE = extract_html_chars($NOTE);
+
+  return 1;
 }
 
 
@@ -98,10 +98,12 @@ sub format_input_page {
               start_form,
              );
   
-  push @out, ("<A HREF=".
-              FileStructure::get_filename($tree, 'tree_URL').
-              "/index\.html>".
-              "Return to tree: $tree</A>",
+  push @out, (
+              HTMLPopUp::Link( 
+                              "linktxt"=>"Return to tree: $tree",
+                              "href"=> FileStructure::get_filename($tree, 'tree_URL').
+                              "/$FileStructure::DEFAULT_HTML_PAGE",
+                             ).
               p());
 
   push @out, (
@@ -150,23 +152,19 @@ sub save_note {
 
   my (@out);
 
-  # Remove any known "bad" tags.  Since any user can post notices we
-  # have to prevent bad scripts from being posted.  It is just too
-  # hard to follow proper security procedures ('tainting') and escape
-  # everything then put back the good tags.
-
-  $NOTE =~ s!</?(?:(?:SCRIPT)|(?:OBJECT)|(?:APPLET)|(?:EMBED))>!!ig;
-
-  # remove unprintable characters, for safety.
-
-  $NOTE =~ s![^a-zA-Z0-9\ \n\`\"\'\;\:\,\?\.\-\_\+\=\\\|\/\~\!\@\#\$\%\^\&\*\(\)\{\}\[\]\<\>]+!!g;
-
   my ($time) = time();
   my ($localtime) = localtime($time);
   
   my ($pretty_time) = HTMLPopUp::timeHTML($time);
+
+  # We embed the IP address of the host, just in case there is some bad
+  # html in the notice that gets through our defenses.  If we know that
+  # there is a problem with a page, then we know which machine it came
+  # from.
+
   my ($rendered_notice) = (
-                           "\t\t<p>\n".
+                           "<!-- posted from remote host: $REMOTE_HOST -->\n".
+                            "\t\t<p>\n".
                            "\t\t\t[<b>".
                            HTMLPopUp::Link(
                                            "linktxt"=>$MAILADDR,
@@ -185,28 +183,17 @@ sub save_note {
                   'rendered_notice' => $rendered_notice, 
                   'time' => $time,
                   'localtime' => $localtime,
+                  'remote_host' => $REMOTE_HOST,
                  };
 
-
-  my ($tmp_file) = (FileStructure::get_filename($TREE, 'TinderDB_Dir').
-                    "/Tmp.Notice\.Update\.$time\.$MAILADDR"); 
   my ($update_file) = (FileStructure::get_filename($TREE, 'TinderDB_Dir').
                        "/Notice\.Update\.$time\.$MAILADDR"); 
   
-  main::mkdir_R(dirname($tmp_file));
-  main::mkdir_R(dirname($update_file));
-  
   Persistence::save_structure( 
                              $record,
-                             $tmp_file,
+                             $update_file
                             );
   
-  # Rename is atomic on the same unix filesystem, so the server never
-  # sees partially processed updates.
-  
-  rename ($tmp_file, $update_file) || 
-    die("Could not rename: '$tmp_file' to '$update_file'. $!\n");
-
   push @out, "posted notice: \n",p().
     pre($NOTE);
 
@@ -214,6 +201,7 @@ sub save_note {
 }
 
 
+# save the note to disk and update the cookies
 
 sub make_all_changes {
   my (@results) = ();
