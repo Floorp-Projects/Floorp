@@ -1790,6 +1790,8 @@ nsComponentManagerImpl::SyncComponentsInDir(RegistrationTime when, nsIFileSpec *
             // the file isn't a component like initpref.js
             // So dont break on these errors.
         }
+
+        NS_RELEASE(dirEntry);
         
         rv = dirIterator->next();
         if (NS_FAILED(rv)) return rv;
