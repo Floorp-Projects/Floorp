@@ -45,6 +45,10 @@
 #include <direct.h>
 #endif
 
+#ifdef XP_MAC
+#define COMPONENT_REG "\pComponent Registry"
+#include "MoreFilesExtras.h"
+#endif
 
 
 //------------------------------------------------------------------------
@@ -80,7 +84,24 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     //--------------------------------------------------------------------
     // Initialize XPCOM and AutoRegister() its components
     //--------------------------------------------------------------------
+#ifdef XP_MAC
+    OSErr      err = noErr;
+    long       xpiStubDirID = 0;
+    Boolean    isDir = false;
+    FSSpec     fsRegFile;
+    nsFileSpec nsfsRegFile;
+    
+    FSpGetDirectoryID(&aXPIStubDir, &xpiStubDirID, &isDir);
+    err = FSMakeFSSpec(aXPIStubDir.vRefNum, xpiStubDirID, COMPONENT_REG, &fsRegFile);
+    if (err!=noErr)
+        return NS_ERROR_UNEXPECTED;
+    	
+    nsfsRegFile = fsRegFile;
+    nsfsDirectory = aXPIStubDir;
+    rv = NS_InitXPCOM(&gServiceMgr, &nsfsRegFile, &nsfsDirectory);
+#else
     rv = NS_InitXPCOM(&gServiceMgr, NULL, NULL);
+#endif
     if (!NS_SUCCEEDED(rv))
         return rv;
 
@@ -110,13 +131,8 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsIfsDirectory);
 #elif defined(XP_MAC)
-	
-    rv = NS_NewFileSpecWithSpec(aXPIStubDir, getter_AddRefs(nsIfsDirectory));
-    if (NS_FAILED(rv))
-        return rv;
-		
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsIfsDirectory);
-
+    // XXX Mac handling already taken care of in last XP_MAC ifdef so do nothing
+    // XXX Remove this ifdef when Win32 also points to pre-populated comp reg
 #else
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 0);
 #endif
