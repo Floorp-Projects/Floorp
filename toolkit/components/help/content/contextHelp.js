@@ -1,3 +1,4 @@
+# ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
@@ -18,8 +19,8 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#      brantgurganus2001@cherokeescouting.org
-#      Jswalden86@netzero.net
+#   brantgurganus2001@cherokeescouting.org
+#   Jswalden86@netzero.net
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,6 +34,7 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
+# ***** END LICENSE BLOCK *****
 
 #ifndef MOZ_THUNDERBIRD
 const MOZILLA_CONTENT_PACK = "chrome://help/locale/firebirdhelp.rdf";

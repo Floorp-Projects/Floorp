@@ -14,9 +14,8 @@
 #
 # The Original Code is libxul build automation.
 #
-# Initial Developer of the Original Code is
+# The Initial Developer of the Original Code is
 # Benjamin Smedberg <bsmedberg@covad.net>
-#
 # Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
