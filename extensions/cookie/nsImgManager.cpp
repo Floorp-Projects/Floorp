@@ -69,9 +69,12 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
 {
     *_retval = PR_TRUE;
     nsresult rv = NS_OK;
-    
+
+    // we can't do anything w/ out these.
+    if (!aContentLoc || !aContext) return rv;
+
     switch (aContentType) {
-        case nsIContentPolicy::IMAGE:
+        case nsIContentPolicy::IMAGE:   
         {
             nsCOMPtr<nsIURI> baseURI;
             nsCOMPtr<nsIDocument> doc;
@@ -79,18 +82,27 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
             NS_ASSERTION(content, "no content avail");
             if (content) {
                 rv = content->GetDocument(*getter_AddRefs(doc));
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv) || !doc) return rv;
 
                 rv = doc->GetBaseURL(*getter_AddRefs(baseURI));
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv) || !baseURI) return rv;
+
+                // we only care about HTTP images
+                PRBool httpType = PR_TRUE;
+                rv = baseURI->SchemeIs("http", &httpType);
+                if (NS_FAILED(rv) || !httpType) {
+                    // check HTTPS as well
+                    rv = baseURI->SchemeIs("https", &httpType);
+                    if (NS_FAILED(rv) || !httpType) return rv;                    
+                }
 
                 nsXPIDLCString baseHost;
                 rv = baseURI->GetHost(getter_Copies(baseHost));
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv) || !baseHost) return rv;
 
                 nsXPIDLCString host;
                 rv = aContentLoc->GetHost(getter_Copies(host));
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv) || !host) return rv;
 
                 return ::IMAGE_CheckForPermission(host, baseHost,
                                                   _retval);
