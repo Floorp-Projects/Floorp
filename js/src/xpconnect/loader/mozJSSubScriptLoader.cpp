@@ -58,7 +58,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 #define LOAD_ERROR_READUNDERFLOW "File Read Error (underflow.)"
 
 /* turn ALL JS Runtime errors into exceptions */
-static void
+JS_STATIC_DLL_CALLBACK(void)
 ExceptionalErrorReporter (JSContext *cx, const char *message,
                           JSErrorReport *report)
 {
