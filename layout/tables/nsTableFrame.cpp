@@ -2037,7 +2037,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_FAILED(rv)) return rv;
 
   PRBool haveDesiredHeight = PR_FALSE;
-  PRBool balanced = PR_FALSE;
+  PRBool balanced          = PR_FALSE;
+  PRBool reflowedChildren  = PR_FALSE;
 
   // Reflow the entire table (pass 2 and possibly pass 3). This phase is necessary during a 
   // constrained initial reflow and other reflows which require either a strategy init or balance. 
@@ -2067,6 +2068,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 
       ReflowTable(aPresContext, aDesiredSize, aReflowState, availHeight, nextReason, 
                   lastChildReflowed, doCollapse, balanced, aStatus);
+      reflowedChildren = PR_TRUE;
     }
     if (willInitiateSpecialReflow && NS_FRAME_IS_COMPLETE(aStatus)) {
       // distribute extra vertical space to rows
@@ -2092,6 +2094,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
         aDesiredSize.height = borderPadding.top + GetCellSpacingY() + childRect.height;
       }
       haveDesiredHeight = PR_TRUE;
+      reflowedChildren  = PR_TRUE;
     }
   }
   else if (aReflowState.mFlags.mSpecialHeightReflow) {
@@ -2157,6 +2160,13 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
 
+  // If we reflowed all the rows, then invalidate the largest possible area that either the
+  // table occupied before this reflow or will occupy after.
+  if (reflowedChildren) {
+    Invalidate(aPresContext, nsRect(0, 0, PR_MAX(mRect.width, aDesiredSize.width), 
+                                          PR_MAX(mRect.height, aDesiredSize.height)));
+  }
+
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
@@ -2199,12 +2209,6 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
   nsTableReflowState reflowState(*aPresContext, aReflowState, *this, aReason, 
                                  aDesiredSize.width, aAvailHeight);
   ReflowChildren(aPresContext, reflowState, haveReflowedColGroups, PR_FALSE, aStatus, aLastChildReflowed);
-
-  // If we're here that means we had to reflow all the rows, e.g., the column widths 
-  // changed. We need to make sure that any damaged areas are repainted
-  if (!mRect.IsEmpty()) {
-    Invalidate(aPresContext, mRect);
-  }
 
   if (eReflowReason_Resize == aReflowState.reason) {
     if (!DidResizeReflow()) {
