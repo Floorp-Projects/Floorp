@@ -1,3 +1,4 @@
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -12,63 +13,38 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../..
-
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+MODULE		= necko
+LIBRARY_NAME	= necko
+IS_COMPONENT	= 1
 
-LIBRARY_NAME = necko
-IS_COMPONENT = 1
+CPPSRCS		= nsNetFactory.cpp
 
-MODULE = necko
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libneckobase_s.a \
+		$(DIST)/lib/libneckodns_s.a \
+		$(NULL)
 
-CPPSRCS =                              \
-        nsNetFactory.cpp 	       \
-        $(NULL)
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../base/src \
+		-I$(srcdir)/../dns/src \
+		$(NULL)
 
-SHARED_LIBRARY_LIBS =                       \
-        $(DIST)/lib/libneckobase_s.a \
-        $(DIST)/lib/libneckodns_s.a \
-        $(NULL)
-
-LOCAL_INCLUDES  += \
-                -I$(srcdir)/../base/src \
-                -I$(srcdir)/../dns/src \
-                $(NULL)
-
-include $(topsrcdir)/config/config.mk
-
-# hack until necko lands
-ifndef NECKO
-PUBLIC = $(DEPTH)/netwerk/dist/include
-endif
-
-ifeq ($(OS_ARCH),HP-UX)
-EXTRA_DSO_LDOPTS = -c objs/objslist
-else
-EXTRA_DSO_LDOPTS =	       \
-	$(MKSHLIB_FORCE_ALL)   \
-	$(SHARED_LIBRARY_LIBS) \
-	$(MKSHLIB_UNFORCE_ALL) \
-	$(NULL)
-endif
+EXTRA_DSO_LDOPTS = \
+		$(MKSHLIB_FORCE_ALL) \
+		$(SHARED_LIBRARY_LIBS) \
+		$(MKSHLIB_UNFORCE_ALL) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),HP-UX)
-shared_library_objs: $(SHARED_LIBRARY_LIBS)
-	rm -rf objs
-	mkdir objs
-	(cd objs; for lib in $(SHARED_LIBRARY_LIBS); do ar xv ../$$lib; done) \
-	 | awk '{ print "objs/"$$3 }' > objs/objslist
-
-$(LIBRARY) $(SHARED_LIBRARY): shared_library_objs Makefile
-else
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
-endif
+

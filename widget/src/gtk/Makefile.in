@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,88 +13,70 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = widget_gtk
+LIBRARY_NAME	= widget_gtk
 
-REQUIRES=util img xpcom raptor netlib
+REQUIRES	= util img xpcom raptor netlib
 
-DEFINES += -D_IMPL_NS_WIDGET 
+CPPSRCS		= \
+		nsWidgetSupport.cpp \
+		nsAppShell.cpp \
+		nsButton.cpp \
+		nsCheckButton.cpp \
+		nsClipboard.cpp \
+		nsComboBox.cpp \
+		nsDragService.cpp \
+		nsFileWidget.cpp \
+		nsFontRetrieverService.cpp \
+		nsFontSizeIterator.cpp \
+		nsGtkEventHandler.cpp \
+		nsLabel.cpp \
+		nsListBox.cpp \
+		nsLookAndFeel.cpp \
+		nsMenu.cpp \
+		nsMenuBar.cpp \
+		nsMenuItem.cpp \
+		nsPopUpMenu.cpp \
+		nsRadioButton.cpp \
+		nsScrollbar.cpp \
+		nsSound.cpp \
+		nsTabWidget.cpp \
+		nsTextAreaWidget.cpp \
+		nsTextHelper.cpp \
+		nsTextWidget.cpp \
+		nsToolkit.cpp \
+		nsWidget.cpp \
+		nsWidgetFactory.cpp \
+		nsWindow.cpp \
+		$(NULL)
 
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
 
-DEFINES += \
-		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/.
-
-CPPSRCS = \
-	nsWidgetSupport.cpp \
-	nsAppShell.cpp \
-	nsButton.cpp \
-	nsCheckButton.cpp \
-	nsClipboard.cpp	\
-	nsComboBox.cpp \
-	nsDragService.cpp \
-	nsFileWidget.cpp \
-	nsFontRetrieverService.cpp \
-	nsFontSizeIterator.cpp \
-	nsGtkEventHandler.cpp \
-	nsLabel.cpp \
-	nsListBox.cpp \
-	nsLookAndFeel.cpp \
-	nsMenu.cpp \
-	nsMenuBar.cpp \
-	nsMenuItem.cpp \
-	nsPopUpMenu.cpp \
-	nsRadioButton.cpp \
-	nsScrollbar.cpp \
-	nsSound.cpp \
-	nsTabWidget.cpp \
-	nsTextAreaWidget.cpp \
-	nsTextHelper.cpp \
-	nsTextWidget.cpp \
-	nsToolkit.cpp \
-	nsWidget.cpp \
-	nsWidgetFactory.cpp \
-	nsWindow.cpp \
-	$(NULL)
-
-include $(topsrcdir)/config/config.mk
-
-CXXFLAGS += $(TK_CFLAGS)
-
-SHARED_LIBRARY_LIBS =			    \
-	$(DIST)/lib/libraptorbasewidget_s.a \
-	$(NULL)
-
-ifeq ($(OS_ARCH),HP-UX)
-EXTRA_DSO_LDOPTS += -c objs/objslist
-else
-EXTRA_DSO_LDOPTS+=	       \
-	$(TOOLKIT_DSO_LDOPTS) \
-	$(MKSHLIB_FORCE_ALL)   \
-	$(SHARED_LIBRARY_LIBS) \
-	$(MKSHLIB_UNFORCE_ALL) \
-	$(NULL)
-endif
-
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
+EXTRA_DSO_LDOPTS = \
+		$(MKSHLIB_FORCE_ALL) \
+		$(SHARED_LIBRARY_LIBS) \
+		$(MKSHLIB_UNFORCE_ALL) \
+		$(TK_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),HP-UX)
-shared_library_objs: $(SHARED_LIBRARY_LIBS)
-	rm -rf objs
-	mkdir objs
-	(cd objs; for lib in $(SHARED_LIBRARY_LIBS); do ar xv ../$$lib; done) \
-	| awk '{ print "objs/"$$3 }' > objs/objslist
+CXXFLAGS	+= $(TK_CFLAGS)
 
-$(LIBRARY) $(SHARED_LIBRARY): shared_library_objs Makefile
-else
+DEFINES		+= -D_IMPL_NS_WIDGET
+
+INCLUDES	+= \
+		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/. \
+		$(NULL)
+
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
-endif
+
