@@ -112,7 +112,6 @@ static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
 static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
-static NS_DEFINE_IID(kIURLListenerIID,           NS_IURL_LISTENER_IID);
 static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
 
 #define APP_DEBUG 0
@@ -201,12 +200,6 @@ nsBrowserAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIURLListenerIID)) {
-    *aInstancePtr = (void*) ((nsIURLListener*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
- 
 
   return nsBaseAppCore::QueryInterface(aIID, aInstancePtr);
 }
