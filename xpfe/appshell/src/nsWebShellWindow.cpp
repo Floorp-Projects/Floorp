@@ -1242,9 +1242,10 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   nsWidgetInitData widgetInitData;
   widgetInitData.mBorderStyle = eBorderStyle_BorderlessTopLevel;
 
+  window->SetIntrinsicallySized(PR_TRUE);
   rv = window->Initialize((nsIWebShellWindow *) nsnull, nsnull, nsnull,
                           nsnull, nsnull,
-                          200, 300, widgetInitData);
+                          1, 1, widgetInitData);
   
   if (NS_FAILED(rv)) 
     return rv;
@@ -2795,9 +2796,7 @@ nsWebShellWindow::IsMenuBarVisible(PRBool *aVisible)
 
 NS_IMETHODIMP
 nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSpec, nsIPostData * aPostData)
-{
-  nsresult rv;
-  
+{  
   /* Make the topic to observe. The topic will be of the format 
    * linkclick:<prototocol>. Note thet this is a totally made up thing.
    * Things are going to change later
