@@ -340,10 +340,12 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
 	if ( emailcert )
 	    CERT_SaveSMimeProfile(tempCert, NULL, NULL);
 #else
-	rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
-	if (rv != SECSuccess) {
-	    SECU_PrintError(progName, "could authenticate to token or database");
-	    GEN_BREAK(SECFailure);
+	if (!PK11_IsFriendly(slot)) {
+	    rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
+	    if (rv != SECSuccess) {
+		SECU_PrintError(progName, "could authenticate to token or database");
+		GEN_BREAK(SECFailure);
+	    }
 	}
 
 	rv =  PK11_ImportCert(slot, cert, CK_INVALID_HANDLE, name, PR_FALSE);
