@@ -66,7 +66,7 @@
     <menulist id="nicknames" observes="certSelected">
         <menupopup/>
     </menulist>
-    <label value="certPicker.detailsLabel;"/>
+    <label value="&certPicker.detailsLabel;"/>
     <textbox readonly="true" id="details" multiline="true"
       style="height: 11em; width=80em;"/>
     </groupbox>
