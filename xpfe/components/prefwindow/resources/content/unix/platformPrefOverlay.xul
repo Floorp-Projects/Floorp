@@ -28,14 +28,6 @@
 <overlay id="platformPreferencesOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <!-- Mousewheel support is only enabled on Windows and Unix -->
-  <treechildren id="advancedChildren">
-    <treeitem id="mousewheelItem">
-      <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-mousewheel.xul" value="&mousewheel.label;"/>
-      </treerow>
-    </treeitem>
-  </treechildren>
          
 </overlay>
 
