@@ -616,7 +616,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     result = shell->GetSelectionFlags(&displaySelection);
     if (NS_FAILED(result))
       return result;
-    if (!(displaySelection &= nsISelectionDisplay::DISPLAY_FRAMES))
+    if (!(displaySelection & nsISelectionDisplay::DISPLAY_FRAMES))
       return NS_OK;
   }
 
@@ -3436,7 +3436,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               while(frame) //ok time to drill down to find iterator
               {
                 result = frame->FirstChild(aPresContext, nsnull,&frame);
-                if (NS_SUCCEEDED(result))
+                if (frame && NS_SUCCEEDED(result))
                 {
                   result = frame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),
                                                             getter_AddRefs(iter));
