@@ -244,7 +244,8 @@ nsDocShell::nsDocShell():
     mParent(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull),
-    mIsPrintingOrPP(PR_FALSE)
+    mIsPrintingOrPP(PR_FALSE),
+    mIsExecutingOnLoadHandler(PR_FALSE)
 {
 #ifdef PR_LOGGING
     if (! gDocShellLog)
@@ -587,7 +588,6 @@ nsDocShell::LoadURI(nsIURI * aURI,
         // First verify if this is a subframe.
         nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
         GetSameTypeParent(getter_AddRefs(parentAsItem));
-
         nsCOMPtr<nsIDocShell> parentDS(do_QueryInterface(parentAsItem));
         PRUint32 parentLoadType;
 
@@ -616,14 +616,12 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     if (shEntry && (parentLoadType == LOAD_NORMAL || parentLoadType == LOAD_LINK)) {
                         // The parent was loaded normally. In this case, this *brand new* child really shouldn't
                         // have a SHEntry. If it does, it could be because the parent is replacing an
-                        // existing frame with a new frame, probably in the onLoadHandler. We don't want this
+                        // existing frame with a new frame, in the onLoadHandler. We don't want this
                         // url to get into session history. Clear off shEntry, and set laod type to
                         // LOAD_BYPASS_HISTORY. 
-                        PRUint32 parentBusy=BUSY_FLAGS_NONE;
-                        parentDS->GetBusyFlags(&parentBusy);
-                        if (parentBusy & BUSY_FLAGS_BUSY) {
-                            // The parent is still busy. We most likely got here
-                            // through onLoadHandler. 
+                        PRBool inOnLoadHandler=PR_FALSE;
+                        parentDS->GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+                        if (inOnLoadHandler) {
                             loadType = LOAD_NORMAL_REPLACE;
                             shEntry = nsnull;
                         }
@@ -649,31 +647,28 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     // This is a pre-existing subframe. If the load was not originally initiated
                     // by session history, (if (!shEntry) condition succeeded) and mCurrentURI is not null,
                     // it is possible that a parent's onLoadHandler or even self's onLoadHandler is loading 
-                    // a new page in this child. Check parent's and self's busy status and if it is, 
+                    // a new page in this child. Check parent's and self's onLoadHandler flag  and if it is set,
                     // we don't want this onLoadHandler load to get in to session history.
-                    PRUint32 parentBusy=BUSY_FLAGS_NONE, selfBusy = BUSY_FLAGS_NONE;
-                    parentDS->GetBusyFlags(&parentBusy);                    
-                    GetBusyFlags(&selfBusy);
-                    if (((parentBusy & BUSY_FLAGS_BUSY) || (selfBusy & BUSY_FLAGS_BUSY)) && shEntry) {
-                        // we don't want this additional load to get into history, since this
-                        // load will automatially happen everytime, no matter how the page is loaded.
+                    PRBool parentInOnLoadHandler=PR_FALSE, selfInOnLoadHandler = PR_FALSE;
+                    parentDS->GetIsExecutingOnLoadHandler(&parentInOnLoadHandler);                    
+                    GetIsExecutingOnLoadHandler(&selfInOnLoadHandler);
+                    if ((parentInOnLoadHandler || selfInOnLoadHandler) && shEntry) {
                         loadType = LOAD_NORMAL_REPLACE;
                         shEntry = nsnull; 
                     }
                 }
             } // parent
         } //parentDS
-        else {  // This is the root docshell
-            PRUint32 selfBusy = BUSY_FLAGS_NONE;
-            GetBusyFlags(&selfBusy);
-            // If we are still busy loading the previous page, then this load was
-            // probably initiated by a onLoadhandler. Let the new page replace 
-            // previous one. 
-            if (mLSHE && (selfBusy & BUSY_FLAGS_BUSY)) {
+        else {  
+            // This is the root docshell. If we got here while  
+            // executing an onLoad Handler,this load will not go 
+            // into session history.
+            PRBool inOnLoadHandler=PR_FALSE;
+            GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+            if (inOnLoadHandler) {
                 loadType = LOAD_NORMAL_REPLACE;
             }
-
-        }
+        } 
     } // !shEntry
 
     if (shEntry) {
@@ -4295,7 +4290,9 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     // document...
     //
     if (!mEODForCurrentDocument && mContentViewer) {
+        mIsExecutingOnLoadHandler = PR_TRUE;
         mContentViewer->LoadComplete(aStatus);
+        mIsExecutingOnLoadHandler = PR_FALSE;
 
         mEODForCurrentDocument = PR_TRUE;
 
@@ -6846,6 +6843,15 @@ nsDocShell::IsBeingDestroyed(PRBool *aDoomed)
 {
   NS_ENSURE_ARG(aDoomed);
   *aDoomed = mIsBeingDestroyed;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsDocShell::GetIsExecutingOnLoadHandler(PRBool *aResult)
+{
+  NS_ENSURE_ARG(aResult);
+  *aResult = mIsExecutingOnLoadHandler;
   return NS_OK;
 }
 
