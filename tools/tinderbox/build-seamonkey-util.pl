@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.61 $ ';
+$::UtilsVersion = '$Revision: 1.62 $ ';
 
 package TinderUtils;
 
@@ -573,6 +573,9 @@ sub BuildIt {
             sleep $sleep_time;
         }
         $start_time = time();
+
+		# Set this each time, since post-mozilla.pl can reset this.
+		$ENV{MOZILLA_FIVE_HOME} = "$build_dir/${Settings::ObjDir}/mozilla/dist/bin";
         
         my $cvsco = '';
         if ($Settings::UseTimeStamp) {
@@ -810,7 +813,7 @@ sub run_all_tests {
     #   http://bugzilla.mozilla.org/show_bug.cgi?id=75073
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
 	  # Settle OS.
-	  run_system_cmd("sync; sleep 30", 35);
+	  run_system_cmd("sync; sleep 10", 35);
 
 	  $test_result = AliveTest("LayoutPerformanceTest", $build_dir,
 							   $binary, 
@@ -820,9 +823,12 @@ sub run_all_tests {
 
 	# Startup performance test.  Time how fast it takes the browser
 	# to start up.  Some help from John Morrison to get this going.
+	#
+	# Needs user_pref("browser.dom.window.dump.enabled", 1);
+	#
     if ($Settings::StartupPerformanceTest and $test_result eq 'success') {
 	  # Settle OS.
-	  run_system_cmd("sync; sleep 30", 35);
+	  run_system_cmd("sync; sleep 10", 35);
 
 	  # Generate URL of form file:///<cwd>/startup-test.html?begin=986869495000
 	  # Where begin value is current time.
@@ -1151,6 +1157,11 @@ sub AliveTest {
 
 	# Print out testname
 	print_log "\n\nRunning $test_name test ...\n";
+
+	# Debug
+	#print_log "\n\nbuild_dir = $build_dir ...\n";
+	#print_log "\n\nbinary_dir = $binary_dir ...\n";
+	#print_log "\n\nbinary = $binary ...\n";
 
 	# Print out timeout.
 	print_log "Timeout = $timeout_secs seconds.\n";
