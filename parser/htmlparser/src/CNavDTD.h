@@ -402,7 +402,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult    HandleCommentToken(CToken* aToken);
     nsresult    HandleAttributeToken(CToken* aToken);
     nsresult    HandleScriptToken(const nsIParserNode *aNode);
-    nsresult    HandleStyleToken(CToken* aToken);
     nsresult    HandleProcessingInstructionToken(CToken* aToken);
     nsresult    HandleDocTypeDeclToken(CToken* aToken);
 

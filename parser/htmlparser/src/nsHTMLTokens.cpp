@@ -248,7 +248,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
     }
   }
   else {
-    mTextValue.AssignWithConversion(aChar);
+    mTextValue.Assign(aChar);
     result=aScanner.ReadIdentifier(mTextValue);
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
@@ -1477,7 +1477,7 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  mTextValue.AssignWithConversion(aChar);
+  mTextValue.Assign(aChar);
   nsresult result=aScanner.ReadWhitespace(mTextValue);
   if(NS_OK==result) {
     mTextValue.StripChar(kCR);
@@ -1522,7 +1522,7 @@ CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
  */
 nsresult CEntityToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
   if(aChar)
-    mTextValue.AssignWithConversion(aChar);
+    mTextValue.Assign(aChar);
   nsresult result=ConsumeEntity(aChar,mTextValue,aScanner);
   return result;
 }
@@ -1688,7 +1688,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
       value = nsHTMLEntities::EntityToUnicode(mTextValue);
       if(-1<value) {
         //we found a named entity...
-        aString.AssignWithConversion(PRUnichar(value));
+        aString.Assign(PRUnichar(value));
       }
     }//else
   }//if

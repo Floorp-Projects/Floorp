@@ -221,7 +221,7 @@ CViewSourceHTML::CViewSourceHTML()
   mSink=0;
   mLineNumber=0;
   mTokenizer=0;
-  mDocType=eHTMLText;
+  mDocType=eHTML3Text;
 
 #ifdef rickgdebug
   gDumpFile = new fstream("c:/temp/viewsource.xml",ios::trunc);
@@ -895,7 +895,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_start:
 
       result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
-      if(((eHTMLText==mDocType) || (eXMLText==mDocType)) && mParser && (NS_OK==result)) {
+      if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
         CObserverService* theService=mParser->GetObserverService();
         if(theService) {
           CParserContext*   pc=mParser->PeekContext(); 

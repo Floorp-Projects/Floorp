@@ -23,6 +23,8 @@
 //#define ENABLE_CRC
 //#define RICKG_DEBUG 
 #define ENABLE_RESIDUALSTYLE  
+//#define ALLOW_TR_AS_CHILD_OF_TABLE  //by setting this to true, TR is allowable directly in TABLE.
+
 #ifdef  RICKG_DEBUG
 #include  <fstream.h>  
 #endif
@@ -155,7 +157,7 @@ CNavDTD::CNavDTD() : nsIDTD(),
   mExpectedCRC32=0;
   mDTDState=NS_OK;
   mStyleHandlingEnabled=PR_TRUE;
-  mDocType=eHTMLText;
+  mDocType=eHTML3Text;
   mRequestedHead=PR_FALSE;
   mIsFormContainer=PR_FALSE;
 
@@ -369,7 +371,6 @@ PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
 eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
-
   if(eViewSource==aParserContext.mParserCommand) {
     if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
       result=ePrimaryDetect;
@@ -380,7 +381,7 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
   }
   else {
     if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
-      result=ePrimaryDetect;
+      result=(eParseMode_strict==aParserContext.mParseMode) ? eValidDetect : ePrimaryDetect;
     }
     else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
       result=ePrimaryDetect;
@@ -392,7 +393,10 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
         result = eValidDetect ;
         if(0==aParserContext.mMimeType.Length()) {
           aParserContext.SetMimeType(NS_ConvertToString(kHTMLTextContentType));
-          result = (theBufHasXML) ? eValidDetect : ePrimaryDetect;
+          if(!theBufHasXML) {
+            result=(eParseMode_strict==aParserContext.mParseMode) ? eValidDetect : ePrimaryDetect;
+          }
+          else result=eValidDetect;
         }
       }
     }
@@ -782,9 +786,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
           case eToken_attribute:
             result=HandleAttributeToken(theToken); break;
-
-          case eToken_style:
-            result=HandleStyleToken(theToken); break;
 
           case eToken_instruction:
             result=HandleProcessingInstructionToken(theToken); break;
@@ -1890,21 +1891,6 @@ nsresult CNavDTD::HandleScriptToken(const nsIParserNode *aNode) {
   return result;
 }
 
-/**
- *  This method gets called when a style token has been 
- *  encountered in the parse process. 
- *  
- *  @update  gess 3/25/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-nsresult CNavDTD::HandleStyleToken(CToken* aToken){
-  NS_PRECONDITION(0!=aToken,kNullToken);
-
-//  CStyleToken*  st = (CStyleToken*)(aToken);
-  return NS_OK;
-}
-
 
 /**
  *  This method gets called when an "instruction" token has been 
@@ -2114,7 +2100,18 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
  *  @return  PR_TRUE if parent can contain child
  */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
-  return gHTMLElements[aParent].CanContain((eHTMLTags)aChild);
+  PRBool result=gHTMLElements[aParent].CanContain((eHTMLTags)aChild);
+
+#ifdef ALLOW_TR_AS_CHILD_OF_TABLE
+  if(!result) {
+      //XXX This vile hack is here to support bug 30378, which allows
+      //table to contain tr directly in an html32 document.
+    if((eHTMLTag_tr==aChild) && (eHTMLTag_table==aParent)) {
+      result=PR_TRUE;
+    }
+  }
+#endif
+  return result;
 } 
 
 /**
@@ -3485,6 +3482,13 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   if(PR_TRUE==bResult){
     while(theLen) {
       theTag=(eHTMLTags)mScratch[--theLen];
+
+#ifdef ALLOW_TR_AS_CHILD_OF_TABLE
+      if((eHTML3Text==mDocType) && (eHTMLTag_tbody==theTag)) {
+        //the prev. condition prevents us from emitting tbody in html3.2 docs; fix bug 30378
+        continue;
+      }
+#endif
       CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,theTag);
       HandleStartToken(theToken);  //these should all wind up on contextstack, so don't recycle.
     }
