@@ -1,0 +1,16 @@
+comm.jar:
+	content/communicator/cookie/contents.rdf			(resources/content/contents.rdf)
+	content/communicator/cookie/cookieTasksOverlay.xul		(resources/content/cookieTasksOverlay.xul)
+	content/communicator/cookie/cookieContextOverlay.xul		(resources/content/cookieContextOverlay.xul)
+	content/communicator/cookie/cookiePrefsOverlay.xul		(resources/content/cookiePrefsOverlay.xul)
+	content/communicator/cookie/pref-cookies.xul			(resources/content/pref-cookies.xul)
+	content/communicator/cookie/pref-images.xul			(resources/content/pref-images.xul)
+	content/communicator/cookie/cookieOverlay.js			(resources/content/cookieOverlay.js)
+
+en-US.jar:
+	locale/en-US/communicator/cookie/contents.rdf			(resources/locale/en-US/contents.rdf)
+	locale/en-US/communicator/cookie/cookieTasksOverlay.dtd		(resources/locale/en-US/cookieTasksOverlay.dtd)
+	locale/en-US/communicator/cookie/cookieContextOverlay.dtd	(resources/locale/en-US/cookieContextOverlay.dtd)
+	locale/en-US/communicator/cookie/cookiePrefsOverlay.dtd		(resources/locale/en-US/cookiePrefsOverlay.dtd)
+	locale/en-US/communicator/cookie/pref-cookies.dtd		(resources/locale/en-US/pref-cookies.dtd)
+	locale/en-US/communicator/cookie/pref-images.dtd		(resources/locale/en-US/pref-images.dtd)

@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/cookie/cookieTasksOverlay.dtd">
+
+<overlay id="cookieTasksOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="javascript" src="chrome://communicator/content/cookie/cookieOverlay.js"/>
+
+  <script language="JavaScript">
+  <![CDATA[
+
+    // Remove the image entries from the task menu
+    function HideImage() {
+      var element;
+      element = document.getElementById("image");
+      element.setAttribute("style","display: none;" );
+      element.setAttribute("disabled","true" );
+    }
+
+    // determine if we need to remove the image entries from the task menu
+    function CheckForImage()
+    {
+      // remove image functions (unless overruled by the "imageblocker.enabled" pref)
+      try {
+        if (!this.pref.GetBoolPref("imageblocker.enabled")) {
+          HideImage();
+        }
+      } catch(e) {
+	HideImage();
+        dump("imageblocker.enabled pref is missing from all.js\n");
+      }
+    }
+
+    // perform a Cookie or Image action
+    function CookieImageAction(action) {
+
+      var cookieViewer =
+        Components.classes["@mozilla.org/cookieviewer/cookieviewer-world;1"]
+          .createInstance(Components.interfaces["nsICookieViewer"]);
+
+      var COOKIEPERMISSION = 0;
+      var IMAGEPERMISSION = 1;
+
+      switch (action) {
+        case "cookieAllow":
+          cookieViewer.AddPermission(window._content, true, COOKIEPERMISSION);
+          element = document.getElementById("AllowCookies");
+          alert(element.getAttribute("msg"));
+          break;
+        case "cookieBlock":
+          cookieViewer.AddPermission(window._content, false, COOKIEPERMISSION);
+          element = document.getElementById("BlockCookies");
+          alert(element.getAttribute("msg"));
+          break;
+        case "imageAllow":
+          cookieViewer.AddPermission(window._content, true, IMAGEPERMISSION);
+          element = document.getElementById("AllowImages");
+          alert(element.getAttribute("msg"));
+          break;
+        case "imageBlock":
+          cookieViewer.AddPermission(window._content, false, IMAGEPERMISSION);
+          element = document.getElementById("BlockImages");
+          alert(element.getAttribute("msg"));
+          break;
+        default:
+      }
+    }  
+
+  ]]>
+  </script>         
+
+  <!-- tasksOverlay menu items -->
+  <menupopup  id="personalManagers"> 
+    <menu value="&cookieCookieManager.label;"
+                accesskey="&cookieCookieManager.accesskey;"
+                position="1">
+      <menupopup>
+        <menuitem value="&cookieDisplayCookiesCmd.label;"
+                  accesskey="&cookieDisplayCookiesCmd.accesskey;" 
+                  oncommand="viewCookies();"/> 
+        <menuitem id="AllowCookies" value="&cookieAllowCookiesCmd.label;"
+                  accesskey="&cookieAllowCookiesCmd.accesskey;" 
+                  msg="&cookieAllowCookiesMsg.label;"
+                  oncommand="CookieImageAction('cookieAllow');"/> 
+        <menuitem id="BlockCookies" value="&cookieBlockCookiesCmd.label;"
+                  accesskey="&cookieBlockCookiesCmd.accesskey;" 
+                  msg="&cookieBlockCookiesMsg.label;"
+                  oncommand="CookieImageAction('cookieBlock');"/> 
+      </menupopup>
+    </menu>
+    <menu value="&cookieImageManager.label;"
+          accesskey="&cookieImageManager.accesskey;" id="image"
+          position="2">
+      <menupopup oncreate="CheckForImage()">
+        <menuitem value="&cookieDisplayImagesCmd.label;"
+                  accesskey="&cookieDisplayImagesCmd.accesskey;" 
+                  oncommand="viewImages();"/> 
+        <menuitem id="AllowImages" value="&cookieAllowImagesCmd.label;"
+                  accesskey="&cookieAllowImagesCmd.accesskey;" 
+                  msg="&cookieAllowImagesMsg.label;"
+                  oncommand="CookieImageAction('imageAllow');"/> 
+        <menuitem id="BlockImages" value="&cookieBlockImagesCmd.label;"
+                  accesskey="&cookieBlockImagesCmd.accesskey;" 
+                  msg="&cookieBlockImagesMsg.label;"
+                  oncommand="CookieImageAction('imageBlock');"/> 
+      </menupopup>
+    </menu>
+    <menuseparator insertbefore="lastInPersonalManagers"/>
+    <menuitem value="&cookieTutorialCmd.label;"
+              accesskey="&cookieTutorialCmd.accesskey;"
+              oncommand="viewTutorial();"
+              insertbefore="lastInPersonalManagers"/>
+  </menupopup>
+
+</overlay>
