@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.23 $ 
-# $Date: 2002/05/02 23:58:48 $ 
+# $Revision: 1.24 $ 
+# $Date: 2002/05/03 00:09:56 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.23 $ )[1];
+$VERSION = ( qw $Revision: 1.24 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -423,7 +423,7 @@ sub status_table_row {
            ($cell_color !~ m/white/) &&
            (!($text_browser_color_string)) &&
            (!($empty_cell_contents)) &&
-           ) {
+           1) {
                $empty_cell_contents = "&nbsp;";
            }
   }
@@ -561,6 +561,7 @@ sub status_table_row {
                              );
       }
 
+      @bug_numbers = main::uniq(@bug_numbers);
       foreach $bug_number (@bug_numbers) {
           my $href = BTData::bug_id2bug_url($bug_number);
           $query_link .= 
