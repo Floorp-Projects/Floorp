@@ -422,13 +422,9 @@ nscoord
 nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsInputFrame* aFrame,
                           const nsString& aString, nsSize& aSize)
 {
-  //printf("\n GetTextSize %s", aString.ToNewCString());
-  nsIStyleContext* styleContext;
-  aFrame->GetStyleContext(&aPresContext, styleContext);
-  nsFont font("foo", 0, 0, 0, 0, 0);
+  nsFont font = aPresContext.GetDefaultFixedFont();
   aFrame->GetFont(&aPresContext, font);
-  //const nsStyleFont* styleFont = (const nsStyleFont*)styleContext->GetStyleData(eStyleStruct_Font);
-  NS_RELEASE(styleContext);
+  //printf("\n GetTextSize %s", aString.ToNewCString());
   nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
   nsIFontCache* fontCache = deviceContext->GetFontCache();
 
@@ -584,18 +580,16 @@ const void
 nsInputFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
 {
   const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aFont = styleFont->mFont;
-  nscoord fontSize = styleFont->mFont.size;
-  nsAutoString fixedFont("Courier New");
-  nsAutoString varFont("Times New Roman");
+
   nsString type;
   ((nsInput*)mContent)->GetType(type);
 
+  // XXX shouldn't this be atom compares instead?
   if (type.EqualsIgnoreCase("text") || type.EqualsIgnoreCase("textarea") ||
                                        type.EqualsIgnoreCase("password")) {
-    aFont.name = fixedFont;
+    aFont = styleFont->mFixedFont;
   } else { 
-    aFont.name = varFont;
+    aFont = styleFont->mFont;
   }
 }
 

@@ -33,6 +33,7 @@
 #include "nsString.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLForms.h"
+#include "nsIStyleContext.h"
 #include "nsFont.h"
 
 class nsInputTextFrame : public nsInputFrame {
@@ -226,9 +227,8 @@ nsInputTextFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
   nsITextWidget* text;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&text)) {
-    nsFont font("foo", 0, 0, 0, 0, 0);
-    GetFont(aPresContext, font);
-	  text->SetFont(font);
+    const nsStyleFont* fontStyle = (const nsStyleFont*)(mStyleContext->GetStyleData(eStyleStruct_Font));
+	  text->SetFont(fontStyle->mFixedFont);
     nsInputText* content;
     GetContent((nsIContent *&) content);
     nsAutoString valAttr;
@@ -238,6 +238,7 @@ nsInputTextFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     if (ATTR_NOTSET != maxLength) {
       text->SetMaxTextLength(maxLength);
     }
+    text->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
     NS_RELEASE(text);
     NS_RELEASE(content);
   }

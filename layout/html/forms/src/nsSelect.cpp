@@ -38,6 +38,9 @@
 #include "nsIListBox.h"
 #include "nsInput.h"
 #include "nsHTMLForms.h"
+#include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
+#include "nsStyleUtil.h"
 #include "nsFont.h"
 
 static NS_DEFINE_IID(kListWidgetIID, NS_ILISTWIDGET_IID);
@@ -314,9 +317,30 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     return;
   }
 
-  nsFont font("foo", 0, 0, 0, 0, 0);
-  GetFont(aPresContext, font);
-  list->SetFont(font);
+  list->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+
+  const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+  if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
+      (styleFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
+    nsFont  widgetFont(styleFont->mFixedFont);
+    widgetFont.weight = NS_FONT_WEIGHT_NORMAL;  // always normal weight
+    widgetFont.size = styleFont->mFont.size;    // normal font size
+    if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
+      widgetFont.name = "Arial";  // XXX windows specific font
+    }
+    list->SetFont(widgetFont);
+  }
+  else {
+    // use arial, scaled down one HTML size
+    // italics, decoration & variant(?) get used
+    nsFont  widgetFont(styleFont->mFont);
+    widgetFont.name = "Arail";  // XXX windows specific font
+    widgetFont.weight = NS_FONT_WEIGHT_NORMAL; 
+    const nsFont& normal = aPresContext->GetDefaultFont();
+    PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(widgetFont.size, (PRInt32)normal.size);
+    widgetFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size);
+    list->SetFont(widgetFont);
+  }
 
   PRInt32 numChildren = select->ChildCount();
   for (int i = 0; i < numChildren; i++) {
