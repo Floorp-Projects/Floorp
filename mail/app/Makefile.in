@@ -82,6 +82,11 @@ LIBS = \
 	$(TK_LIBS) \
 	$(NULL)
 
+# Add explicit X11 dependency when building against X11 toolkits
+ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
+LIBS += $(XLDFLAGS) $(XLIBS)
+endif
+
 include $(topsrcdir)/config/config.mk
 
 ifeq ($(OS_ARCH),WINNT)
