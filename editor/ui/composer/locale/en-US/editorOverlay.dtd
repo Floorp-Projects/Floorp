@@ -32,6 +32,9 @@
 <!ENTITY openCmd.label "Open...">
 <!ENTITY fileopen.accesskey "o">
 <!ENTITY fileopen.keybinding "o">
+<!ENTITY openremoteCmd.label "Open Web Location...">
+<!ENTITY fileopenremote.accesskey "l">
+<!ENTITY fileopenremote.keybinding "l">
 <!ENTITY saveCmd.label "Save">
 <!ENTITY filesave.accesskey "s">
 <!ENTITY filesave.keybinding "s">
