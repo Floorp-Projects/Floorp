@@ -102,7 +102,7 @@ nsCertificatePrincipal::HashValue(PRUint32 *result)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsCertificatePrincipal::Init(const char* data)
 {
     // Parses preference strings of the form 
