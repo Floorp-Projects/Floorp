@@ -3040,7 +3040,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
                                    Object[] args)
     {
         if (args.length == 0) {
-            return createEmptyXML(lib);
+            return createFromJS(lib, "");
         } else {
             Object arg0 = args[0];
             if (!inNewExpr && arg0 instanceof XML) {
