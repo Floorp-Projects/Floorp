@@ -1007,7 +1007,7 @@ nsIContent *
 nsListControlFrame::GetOptionFromContent(nsIContent *aContent) 
 {
   nsIContent * content = aContent;
-  NS_ADDREF(content);
+  NS_IF_ADDREF(content);
   while (nsnull != content) {
     if (IsOptionElement(content)) {
       return content;
