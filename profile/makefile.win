@@ -31,10 +31,6 @@ DIRS= \
     resources \
     pref-migrator \
     defaults \
-!if "$(_MSC_VER)" != "" && "$(_MSC_VER)" != "1100"
-    acct \
-    acctidl \
-!endif
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
