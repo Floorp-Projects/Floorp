@@ -33,6 +33,40 @@
  *
  */
 
+function formatRecord (rec, indent)
+{
+    var str = "";
+    
+    for (var i in rec._colValues)
+        str += rec._colValues[i] + ", ";
+    
+    str += "[";
+    
+    str += rec.calculateVisualRow() + ", ";
+    str += rec.childIndex + ", ";
+    str += rec.level + ", ";
+    str += rec.visualFootprint + ", ";
+    str += rec.isContainerOpen + ", ";
+    str += rec.isHidden + "]";
+    
+    dd (indent + str);
+}
+
+function formatBranch (rec, indent)
+{
+    for (var i = 0; i < rec.childData.length; ++i)
+    {
+        formatRecord (rec.childData[i], indent);
+        if (rec.childData[i].childData)
+            formatBranch(rec.childData[i], indent + "  ");
+    }
+}
+
+function dw()
+{
+    formatBranch(console.stackView.childData, "");
+}
+
 function initOutliners()
 {
     const ATOM_CTRID = "@mozilla.org/atom-service;1";
@@ -41,116 +75,221 @@ function initOutliners()
     var atomsvc =
         Components.classes[ATOM_CTRID].getService(nsIAtomService);
 
-    console._sourceOutlinerView.atomCurrent = atomsvc.getAtom("current-line");
-    console._sourceOutlinerView.atomBreakpoint = atomsvc.getAtom("breakpoint");
-    console._sourceOutlinerView.atomFunctionStart =
-        atomsvc.getAtom("func-start");
-    console._sourceOutlinerView.atomFunctionLine = atomsvc.getAtom("func-line");
-    console._sourceOutlinerView.atomFunctionEnd = atomsvc.getAtom("func-end");
-    console._sourceOutlinerView.atomFunctionAfter = atomsvc.getAtom("func-after");
-    console._sourceOutliner = document.getElementById("source-outliner");
-    console._sourceOutliner.outlinerBoxObject.view = console._sourceOutlinerView;
+    console.sourceView.atomCurrent = atomsvc.getAtom("current-line");
+    console.sourceView.atomBreakpoint = atomsvc.getAtom("breakpoint");
+    console.sourceView.atomFunctionStart = atomsvc.getAtom("func-start");
+    console.sourceView.atomFunctionLine = atomsvc.getAtom("func-line");
+    console.sourceView.atomFunctionEnd = atomsvc.getAtom("func-end");
+    console.sourceView.atomFunctionAfter = atomsvc.getAtom("func-after");
 
-    console._stackOutlinerView.atomCurrent = 
-        atomsvc.getAtom("current-frame-flag");
-    console._stackOutliner = document.getElementById("call-stack-outliner");
-    console._stackOutliner.outlinerBoxObject.view = console._stackOutlinerView;
+    var outliner = document.getElementById("source-outliner");
+    outliner.outlinerBoxObject.view = console.sourceView;
 
-    console._scriptsOutliner = document.getElementById("script-list-outliner");
-    console._scriptsOutliner.outlinerBoxObject.view =
-        console._scriptsOutlinerView;
+    console.scriptsView.childData.setSortColumn("baseLineNumber");
+    console.scriptsView.atomUnknown = atomsvc.getAtom("ft-unk");
+    console.scriptsView.atomHTML    = atomsvc.getAtom("ft-html");
+    console.scriptsView.atomJS      = atomsvc.getAtom("ft-js");
+    console.scriptsView.atomXUL     = atomsvc.getAtom("ft-xul");
+    console.scriptsView.atomXML     = atomsvc.getAtom("ft-xml");
+    console.scriptsView.atomGuessed = atomsvc.getAtom("fn-guessed");
+    console.scriptsView.atomBreakpoint = atomsvc.getAtom("has-bp");
+
+    outliner = document.getElementById("script-list-outliner");
+    outliner.outlinerBoxObject.view = console.scriptsView;
+
+    outliner = document.getElementById("stack-outliner");
+    outliner.outlinerBoxObject.view = console.stackView;
+
+    console.stackView.atomStack    = atomsvc.getAtom("w-stack");
+    console.stackView.atomFrame    = atomsvc.getAtom("w-frame");
+    console.stackView.atomVoid     = atomsvc.getAtom("w-void");
+    console.stackView.atomNull     = atomsvc.getAtom("w-null");
+    console.stackView.atomBool     = atomsvc.getAtom("w-bool");
+    console.stackView.atomInt      = atomsvc.getAtom("w-int");
+    console.stackView.atomDouble   = atomsvc.getAtom("w-double");
+    console.stackView.atomString   = atomsvc.getAtom("w-string");
+    console.stackView.atomFunction = atomsvc.getAtom("w-function");
+    console.stackView.atomObject   = atomsvc.getAtom("w-object");
+
+    console.stackView.stack.property = console.stackView.atomStack;
+    console.stackView.stack.reserveChildren();
+    console.stackView.childData.appendChild (console.stackView.stack);
+    console.stackView.stack.hide();
+
+    outliner = document.getElementById("project-outliner");
+    outliner.outlinerBoxObject.view = console.projectView;
+    
+    console.projectView.atomBreakpoints = atomsvc.getAtom("pj-breakpoints");
+    console.projectView.atomBreakpoint  = atomsvc.getAtom("pj-breakpoint");
+    
+    console.breakpoints.property = console.projectView.atomBreakpoints;
+    console.breakpoints.reserveChildren();
+    console.projectView.childData.appendChild (console.breakpoints);
+
+    BPRecord.prototype.property = console.projectView.atomBreakpoint;
+    
 }
 
-console._sourceOutlinerView = new BasicOView();
-
-console._sourceOutlinerView.setCurrentLine =
-function sov_setcl (line)
+function destroyOutliners()
 {
-    if (this.currentLine)
+    console.sourceView.outliner.view = null;
+    console.scriptsView.outliner.view = null;
+    console.stackView.outliner.view = null;
+    console.projectView.outliner.view = null;
+}
+
+console.sourceView = new BasicOView();
+
+console.sourceView._scrollTo = BasicOView.prototype.scrollTo;
+
+console.sourceView.scrollTo =
+function sv_scrollto (line, align)
+{
+    if (!this.childData || !this.childData.isLoaded)
     {
-        if (line == this.currentLine)
-            return;
-        var lastLine = this.currentLine;
-        if (line)
-            this.currentLine = line;
-        else
-            delete this.currentLine;
-        this.outliner.invalidateRow(lastLine - 1);
+        /* the source hasn't been loaded yet, store line/align for processing
+         * when the load is done. */
+        this.pendingScroll = [line, align];
+        return;
     }
-    else
-        if (line)
-            this.currentLine = line;
+    this._scrollTo(line, align);
+}
 
-    if (!line)
+/*
+ * pass in a ScriptContainer to be displayed on this outliner
+ */
+console.sourceView.displaySource =
+function sov_dsource (source)
+{
+    if (source == this.childData)
         return;
     
-    var first = this.outliner.getFirstVisibleRow();
-    var last = this.outliner.getLastVisibleRow();
-
-    if (first == 0 && last == this.rowCount)
-        /* all rows are visible, nothing to scroll */
-        return;
-    
-    var total = last - first;
-    var one_qtr = total / 4;
-    
-    if (line < (first - one_qtr) || line > (last - one_qtr))
+    function tryAgain (result)
     {
-        /* current line lies outside the middle half of the screen,
-         * recenter around the line. */
-        var half = total / 2;
-        if (line < half)
-            this.outliner.scrollToRow(0);
+        if (result == Components.results.NS_OK)
+            console.sourceView.displaySource(source);
         else
         {
-            var newFirst = line;
-            if (newFirst != first)
-                this.outliner.scrollToRow(line - half);
+            dd ("source load failed: '" + source.fileName + "'");
         }
     }
 
-    this.outliner.invalidateRow(line - 1);
-}    
+    /* save the current position before we change to another source */
+    if (this.childData)
+        this.childData.lastTopRow = this.outliner.getFirstVisibleRow() + 1;
+    
+    /* if the source for his record isn't loaded yet, load it and call ourselves
+     * back after */
+    if (!source.isLoaded)
+    {
+        /* clear the view while we wait for the source */
+        delete this.childData;
+        this.rowCount = 0;
+        this.outliner.rowCountChanged(0, 0);
+        this.outliner.invalidate();
+        /* load the source, call the tryAgain function when it's done. */
+        source.loadSource(tryAgain);
+        return;
+    }
 
-console._sourceOutlinerView.getRowProperties =
-function sov_rowprops (row, properties)
-{
-    if (row == this.currentLine - 1)
-        properties.AppendElement(this.atomCurrent);
+    this.childData = source;    
+    this.rowCount = source.sourceText.length;
+    this.tabString = leftPadString ("", source.tabWidth, " ");
+    this.outliner.rowCountChanged(0, this.rowCount);
+    this.outliner.invalidate();
+
+    hdr = document.getElementById("source-line-text");
+    hdr.setAttribute ("label", source.fileName);
+
+    if (this.pendingScroll)
+    {
+        this.scrollTo (this.pendingScroll[0], this.pendingScroll[1]);
+        delete this.pendingScroll;
+    }
+    
+    if (typeof this.pendingSelect != "undefined")
+    {
+        console.sourceView.selection.timedSelect (this.pendingSelect, 500);
+        delete this.pendingSelect;
+    }
 }
 
-console._sourceOutlinerView.getCellProperties =
-function sov_cellprops (row, colID, properties)
+/*
+ * "soft" scroll to a line number in the current source.  soft, in this
+ * case, means that if the target line somewhere in the center of the
+ * source view already, then we can just exit.  otherwise, we'll center on the
+ * target line.  this is used when single stepping through source, when constant
+ * one-line scrolls would be distracting.
+ *
+ * the line parameter is one based.
+ */
+console.sourceView.softScrollTo =
+function sv_lscroll (line)
 {
-    if (!this.sourceArray || !this.sourceArray[row])
+    if (!this.childData || !this.childData.isLoaded)
+    {
+        /* the source hasn't been loaded yet, queue the scroll for later. */
+        this.pendingScroll = [line, 0];
+        return;
+    }
+
+    var first = this.outliner.getFirstVisibleRow();
+    var last = this.outliner.getLastVisibleRow();
+    var fuzz = 2;
+    if (line < (first + fuzz) || line > (last - fuzz))
+        this.scrollTo (line, 0);
+}    
+
+/* nsIOutlinerView */
+console.sourceView.getRowProperties =
+function sv_rowprops (row, properties)
+{
+    if (row == console.stopLine - 1 && 
+        console.stopFile == this.childData.fileName)
+    {
+        properties.AppendElement(this.atomCurrent);
+    }
+
+}
+
+/* nsIOutlinerView */
+console.sourceView.getCellProperties =
+function sv_cellprops (row, colID, properties)
+{
+    if (!this.childData.isLoaded)
+        return;
+
+    var line = this.childData.sourceText[row];
+    if (!line)
         return;
     
-    if (colID == "breakpoint-col" && this.sourceArray[row].isBreakpoint)
+    if (colID == "breakpoint-col" && 
+        this.childData.sourceText[row].bpRecord)
         properties.AppendElement(this.atomBreakpoint);
-    else if (colID == "source-line-number" && row == this.currentLine - 1)
-        properties.AppendElement(this.atomCurrent);
     
-    if (this.sourceArray[row].functionLine)
+    if (line.functionLine)
     {
         properties.AppendElement(this.atomFunctionLine);
-        if (this.sourceArray[row].functionStart)
+        if (line.functionStart)
             properties.AppendElement(this.atomFunctionStart);
-        if (this.sourceArray[row].functionEnd)
+        if (linefunctionEnd)
             properties.AppendElement(this.atomFunctionEnd);
-    } else if (row > 0 && this.sourceArray[row - 1].functionEnd)
+    } else if (row > 0 && this.childData.sourceText[row - 1].functionEnd)
         properties.AppendElement(this.atomFunctionAfter);
 }
 
-console._sourceOutlinerView.getCellText =
-function sov_getcelltext (row, colID)
+/* nsIOutlinerView */
+console.sourceView.getCellText =
+function sv_getcelltext (row, colID)
 {    
-    if (!(this.sourceArray instanceof Array))
+    if (!this.childData.isLoaded || 
+        row < 0 || row > this.childData.sourceText.length)
         return "";
     
     switch (colID)
     {
         case "source-line-text":
-            return this.sourceArray[row];
+            return this.childData.sourceText[row].replace(/\t/g, this.tabString);
 
         case "source-line-number":
             return row + 1;
@@ -160,196 +299,880 @@ function sov_getcelltext (row, colID)
     }
 }
 
-console._sourceOutlinerView.setSourceArray =
-function sov_setsrcary (sourceArray, url)
+var scriptShare = new Object();
+
+function SourceRecord(fileName)
 {
-    this.url = url;
-    
-    if (sourceArray != this.sourceArray)
+    this.setColumnPropertyName ("script-name", "displayName");
+    this.fileName = fileName;
+    this.tabWidth = console.prefs["sourcetext.tab.width"];
+    var sov = console.scriptsView;
+    this.fileType = sov.atomUnknown;
+    this.shortName = this.fileName;
+    this.group = 4;
+    this.bpcount = 0;
+
+    var ary = this.fileName.match(/\/([^\/?]+)(\?|$)/);
+    if (ary)
     {
-        this.sourceArray = sourceArray;
-        this.rowCount = sourceArray.length;
-        delete this.lastCurrentLine;
-        this.outliner.rowCountChanged(0, sourceArray.length);
-        this.outliner.invalidate();
-    }
-}
-
-/* stack outliner */
-
-console._stackOutlinerView = new BasicOView();
-
-console._stackOutlinerView.rowCount = 1;
-
-console._stackOutlinerView.getRowProperties =
-function sov_rowprops (row, properties)
-{
-    if (row == this.currentFrame)
-        properties.AppendElement(this.atomCurrent);
-}
-
-console._stackOutlinerView.getCellProperties =
-function sov_cellprops (row, colID, properties)
-{
-    if (row == this.currentFrame && colID == "current-frame")
-        properties.AppendElement(this.atomCurrent);
-    
-}
-
-console._stackOutlinerView.getCellText =
-function sov_getcelltext (row, colID)
-{    
-    if (!this.frames)
-        return (row == 0 && colID == "function-name") ? MSG_VAL_NA : "";
-
-    if (!this.frames[row])
-        return "??row out of bounds??";
-    
-    switch (colID)
-    {
-        case "function-name":
-            return this.frames[row].script.functionName + " (" +
-                formatArguments(this.frames[row].scope) + ")";
-
-        case "line-number":
-            return this.frames[row].line;
-            
-        case "file-name":
-            return this.frames[row].script.fileName;
-
-        default:
-            return "";
-    }
-}
-
-console._stackOutlinerView.setStack =
-function skov_setstack (frames)
-{
-    delete this.currentFrame;
-
-    if (frames)
-    {
-        this.frames = frames;
-        this.rowCount = frames.length;
-        this.outliner.rowCountChanged(0, frames.length);
-        this.outliner.invalidate();
-    }
-    else
-    {
-        delete this.frames;
-        this.rowCount = 1;
-        this.outliner.rowCountChanged(0, 0);
-        this.outliner.invalidate();
-    }
-}
-
-console._stackOutlinerView.setCurrentFrame =
-function skov_setcframe (index)
-{
-    if (typeof this.currentFrame != "undefined")
-    {
-        var oldIndex = this.currentFrame;
-        this.currentFrame = index;
-        this.outliner.invalidateRow (oldIndex);
-    }
-    else
-        this.currentFrame = index;
-    
-    this.outliner.invalidateRow (index);
-}
-
-console._scriptsOutlinerView = new BasicOView();
-
-console._scriptsOutlinerView.shortMode = true;
-console._scriptsOutlinerView.rowCount = 0;
-
-console._scriptsOutlinerView.getCellText =
-function scov_getcelltext (row, colID)
-{    
-    if (!this.scripts)
-        return;
-    
-    switch (colID)
-    {
-        case "script-file-name":
-            return (this.shortMode) ? this.scripts[row].shortName :
-                this.scripts[row].fileName;
-            
-        case "script-count":
-            return this.scripts[row].scriptCount;
-
-        default:
-            return "";
-    }
-}
-
-console._scriptsOutlinerView.refreshScripts =
-function scov_refresh (e)
-{
-    this.scripts = new Array();
-        
-    for (var p in this.scriptRecords)
-    {        
-        if (p)
+        this.shortName = ary[1];
+        ary = this.shortName.match (/\.(js|html|xul|xml)$/i);
+        if (ary)
         {
-            var shortname = p;
-            var ary = p.match (/\/([^\/]*)$/);
-            if (ary)
-                shortname = ary[1];
-            this.scripts.push ({fileName: p, shortName: shortname,
-                                scriptCount: this.scriptRecords[p].length});
+            switch (ary[1].toLowerCase())
+            {
+                case "js":
+                    this.fileType = sov.atomJS;
+                    this.group = 0;
+                    break;
+                    
+                case "html":
+                    this.group = 1;
+                    this.fileType = sov.atomHTML;
+                    break;
+                    
+                case "xul":
+                    this.group = 2;
+                    this.fileType = sov.atomXUL;
+                    break;
+                    
+                case "xml":
+                    this.group = 3;
+                    this.fileType = sov.atomXML;
+                    break;
+            }
         }
     }
     
-    function compareFile (a, b)
-    {
-        if (a.fileName > b.fileName)
-            return 1;
-        else if (a.fileName == b.fileName)
-            return 0;
-        return -1;
-    }
+    this.displayName = this.shortName;
+}
 
-    function compareShort (a, b)
-    {
-        if (a.shortName > b.shortName)
-            return 1;
-        else if (a.shortName == b.shortName)
-            return 0;
-        return -1;
-    }
+SourceRecord.prototype = new TreeOViewRecord(scriptShare);
 
-    this.scripts.sort((this.shortMode) ? compareShort : compareFile);
+SourceRecord.prototype.isLoaded = false;
+
+SourceRecord.prototype.sortCompare =
+function sr_compare (a, b)
+{
+    if (a.group < b.group)
+        return -1;
     
-    this.rowCount = this.scripts.length;
-    this.outliner.rowCountChanged(0, this.scripts.length);
+    if (a.group > b.group)
+        return 1;
+    
+    if (a.displayName < b.displayName)
+        return -1;
+
+    if (a.displayName > b.displayName)
+        return 1;
+    
+    return 0;
+}
+
+SourceRecord.prototype.locateChildByScript =
+function sr_locate (script)
+{
+    for (var i = 0; i < this.childData.length; ++i)
+        if (script == this.childData[i].script)
+            return this.childData[i];
+
+    return null;
+}
+
+SourceRecord.prototype.makeCurrent =
+function sr_makecur ()
+{
+    if (console.sourceView.childData != this)
+    {
+        console.sourceView.displaySource(this);
+        console.sourceView.scrollTo (this.lastTopRow, -1);
+    }
+}
+
+SourceRecord.prototype.loadSource =
+function sr_loadsrc (cb)
+{
+    if (this.isLoaded)
+    {
+        /* if we're loaded, callback right now, and return. */
+        cb (Components.results.NS_OK);
+        return;
+    }
+    if (this.isLoading)
+    {
+        /* if we're in the process of loading, make a note of the callback, and
+         * return. */
+        if (!this.extraCallbacks)
+            this.extraCallbacks = new Array();
+        this.extraCallbacks.push (cb);
+        return;
+    }
+    
+    var observer = {
+        onComplete: function oncomplete (data, url, status) {
+            function callall (status)
+            {
+                cb (status);
+                while (sourceRec.extraCallbacks)
+                {
+                    cb = sourceRec.extraCallbacks.pop();
+                    cb (status);
+                    if (sourceRec.extraCallbacks.length < 1)
+                        delete sourceRec.extraCallbacks;
+                }
+            }
+            
+            if (status != Components.results.NS_OK)
+            {
+                callall (status);
+                return;
+            }
+            
+            sourceRec.isLoaded = true;
+            var ary = data.split(/$/m);
+            for (var i = 0; i < ary.length; ++i)
+            {
+                /* We use "new String" here so we can decorate the source line
+                 * with attributes used while displaying the source, like
+                 * "breakpoint", "breakable", and "warning".
+                 * The replace() strips control characters, including whatever
+                 * line endings we just split() on.  we leave the tabs in
+                 * so we can expand them to a per-file width before actually
+                 * displaying them.
+                 */
+                ary[i] = new String(ary[i].replace(/[\x0-\x8]|[\xA-\x1A]/g, ""));
+            }
+            sourceRec.sourceText = ary;
+            ary = ary[0].match (/tab-?width*:\s*(\d+)/i);
+            if (ary)
+                sourceRec.tabWidth = ary[1];
+
+            for (i = 0; i < sourceRec.childData.length; ++i)
+            {
+                sourceRec.childData[i].guessFunctionName();
+            }
+
+            for (i = 0; i < console.breakpoints.childData.length; ++i)
+            {
+                var bpr = console.breakpoints.childData[i];
+                if (bpr.fileName == sourceRec.fileName &&
+                    sourceRec.sourceText[bpr.line - 1])
+                {
+                    sourceRec.sourceText[bpr.line - 1].bpRecord = bpr;
+                }
+            }
+            
+            console.scriptsView.outliner.invalidate();
+            callall(status);
+        }
+    };
+
+    var ex;
+    var sourceRec = this;
+    this.isLoading = true;
+    try
+    {
+        var src = loadURLNow(this.fileName);
+        observer.onComplete (src, url, Components.results.NS_OK);
+    }
+    catch (ex)
+    {
+        /* if we can't load it now, try to load it later */
+        loadURLAsync (this.fileName, observer);
+    }
+}
+
+SourceRecord.prototype.setFullNameMode =
+function scr_setmode (flag)
+{
+    if (flag)
+        this.displayName = this.fileName;
+    else
+        this.displayName = this.shortName;
+}
+
+function ScriptRecord(script) 
+{
+    if (!(script instanceof jsdIScript))
+        throw new BadMojo (ERR_INVALID_PARAM, "value");
+
+    this.setColumnPropertyName ("script-name", "functionName");
+    this.setColumnPropertyName ("script-line-start", "baseLineNumber");
+    this.setColumnPropertyName ("script-line-extent", "lineExtent");
+    this.functionName = (script.functionName) ? script.functionName :
+        MSG_VAL_TLSCRIPT;
+    this.baseLineNumber = script.baseLineNumber;
+    this.lineExtent = script.lineExtent;
+    this.script = script;
+}
+
+ScriptRecord.prototype = new TreeOViewRecord(scriptShare);
+
+ScriptRecord.prototype._cache = ScriptRecord.prototype._cache;
+
+ScriptRecord.prototype.makeCurrent =
+function sr_makecur ()
+{
+    console.sourceView.displaySource(this.parentRecord);
+    console.sourceView.scrollTo (this.baseLineNumber - 2, -1);
+    if (this.parentRecord.isLoaded)
+        console.sourceView.selection.timedSelect (this.baseLineNumber - 1, 500);
+    else
+        console.sourceView.pendingSelect = this.baseLineNumber - 1;
+}
+
+ScriptRecord.prototype.containsLine =
+function sr_containsl (line)
+{
+    if (this.script.baseLineNumber <= line && 
+        this.script.baseLineNumber + this.script.lineExtent > line)
+        return true;
+    
+    return false;
+}
+
+ScriptRecord.prototype.isLineExecutable =
+function sr_isexecutable (line)
+{
+    var pc = this.script.lineToPc (line);
+    return (line == this.script.pcToLine (pc));
+}
+
+ScriptRecord.prototype.__defineGetter__ ("bpcount", sr_getbpcount);
+function sr_getbpcount ()
+{
+    if (!this._bpcount)
+        return 0;
+
+    return this._bpcount;
+}
+
+ScriptRecord.prototype.__defineSetter__ ("bpcount", sr_setbpcount);
+function sr_setbpcount (value)
+{
+    if (value == this._bpcount)
+        return value;
+    
+    var delta = (this._bpcount) ? value - this._bpcount : value;
+    this._bpcount = value;
+    this.invalidate();
+    this.parentRecord.bpcount += delta;
+    this.parentRecord.invalidate();
+    return value;
+}
+
+ScriptRecord.prototype.guessFunctionName =
+function sr_guessname ()
+{
+    if (this.functionName != "anonymous")
+        return;
+    var scanText = "";
+    var targetLine = this.script.baseLineNumber;
+    
+    /* scan at most 3 lines before the function definition */
+    switch (targetLine - 3)
+    {
+        case -2: /* target line is the first line, nothing before it */
+            break;
+
+        case -1: /* target line is the second line, one line before it */ 
+            scanText = 
+                String(this.parentRecord.sourceText[targetLine - 2]);
+            break;
+        case 0:  /* target line is the third line, two before it */
+            scanText =
+                String(this.parentRecord.sourceText[targetLine - 3]) + 
+                String(this.parentRecord.sourceText[targetLine - 2]);
+            break;            
+        default: /* target line is the fourth or higher line, three before it */
+            scanText += 
+                String(this.parentRecord.sourceText[targetLine - 4]) + 
+                String(this.parentRecord.sourceText[targetLine - 3]) +
+                String(this.parentRecord.sourceText[targetLine - 2]);
+            break;
+    }
+
+    scanText += String(this.parentRecord.sourceText[targetLine - 1]);
+    
+    scanText = scanText.substring(0, scanText.lastIndexOf ("function"));
+    var ary = scanText.match (/(\w+)\s*[:=]\s*$/);
+    if (ary)
+    {
+        this.functionName = ary[1];
+        this.isGuessedName = true;
+        var wv = console.stackView;
+        if (wv.stack.childData)
+        {
+            /* if we've got a stack trace, search it to see if it any frames
+             * contain this script.  if so, update the function name */
+            for (var i = 0; i < wv.stack.childData.length; ++i)
+            {
+                var cd = wv.stack.childData[i];
+                if (cd.frame.script == this.script)
+                {
+                    cd.functionName = ary[1];
+                    wv.outliner.invalidateRow(cd.calculateVisualRow());
+                }
+            }
+        }
+    }
+    else
+        dd ("unable to guess function name based on text ``" + scanText + "''");
+}            
+    
+console.scriptsView = new TreeOView(scriptShare);
+
+console.scriptsView.fullNameMode = false;
+
+console.scriptsView.setFullNameMode =
+function scv_setmode (flag)
+{
+    this.fullNameMode = flag;
+    for (var i = 0; i < this.childData.length; ++i)
+        this.childData[i].setFullNameMode (flag);
+}
+
+console.scriptsView.getCellProperties =
+function scv_getcprops (index, colID, properties)
+{
+    var row;
+    if ((row = this.childData.locateChildByVisualRow (index, 0)))
+    {
+        if (row.fileType && colID == "script-name")
+            properties.AppendElement (row.fileType);
+        if (row.isGuessedName && colID == "script-name")
+            properties.AppendElement (this.atomGuessed);
+        if (row.bpcount > 0)
+            properties.AppendElement (this.atomBreakpoint);
+    }
+}
+
+var stackShare = new Object();
+
+function FrameRecord (frame)
+{
+    if (!(frame instanceof jsdIStackFrame))
+        throw new BadMojo (ERR_INVALID_PARAM, "value");
+
+    this.setColumnPropertyName ("stack-col-0", "functionName");
+    this.setColumnPropertyName ("stack-col-2", "location");
+
+    var fn = frame.script.functionName;
+    var sourceRec = console.scripts[frame.script.fileName];
+    if (sourceRec)
+    {
+        this.location = sourceRec.shortName + ":" + frame.line;
+        var scriptRec = sourceRec.locateChildByScript(frame.script);
+        if (!scriptRec)
+            dd ("no scriptrec");
+        else if (fn == "anonymous")
+            fn = scriptRec.functionName;
+    }
+    else
+        dd ("no sourcerec");
+    
+    this.functionName = fn;
+    this.frame = frame;
+    this.reserveChildren();
+    this.scopeRec = new ValueRecord (frame.scope, MSG_WORD_SCOPE, "");
+    this.appendChild (this.scopeRec);
+    this.thisRec = new ValueRecord (frame.thisValue, MSG_WORD_THIS, "");
+    this.property = console.stackView.atomFrame;
+    this.appendChild (this.thisRec);
+}
+
+FrameRecord.prototype = new TreeOViewRecord (stackShare);
+
+function ValueRecord (value, name, flags)
+{
+    if (!(value instanceof jsdIValue))
+        throw new BadMojo (ERR_INVALID_PARAM, "value", String(value));
+ 
+    this.setColumnPropertyName ("stack-col-0", "displayName");
+    this.setColumnPropertyName ("stack-col-1", "displayType");
+    this.setColumnPropertyName ("stack-col-2", "displayValue");
+    this.setColumnPropertyName ("stack-col-3", "displayFlags");    
+    this.displayName = name;
+    this.displayFlags = flags;
+    this.value = value;
+    this.refresh();
+}
+
+ValueRecord.prototype = new TreeOViewRecord (stackShare);
+
+ValueRecord.prototype.hiddenFunctionCount = 0;
+ValueRecord.prototype.showFunctions = false;
+
+ValueRecord.prototype.resort =
+function cr_resort()
+{
+    /*
+     * we want to override the prototype's resort() method with this empty one
+     * because we take care of the sorting business ourselves in onPreOpen()
+     */
+}
+
+ValueRecord.prototype.refresh =
+function vr_refresh ()
+{
+    var sizeDelta = 0;
+    var lastType = this.jsType;
+    this.jsType = this.value.jsType;
+    
+    if (0 && lastType != this.jsType && lastType == jsdIValue.TYPE_FUNCTION)
+    {
+        /* we changed from a non-function to a function */
+        --this.hiddenFunctionCount;
+        ++sizeDelta;
+    }
+    
+    if (this.jsType != jsdIValue.TYPE_OBJECT && this.childData)
+    {
+        /* if we're not an object but we have child data, then we must have just
+         * turned into something other than an object. */
+        dd ("we're not an object anymore!");
+        delete this.childData;
+        this.isContainerOpen = false;
+        sizeDelta = 1 - this.visualFootprint;
+    }
+    
+    var wv = console.stackView;
+    switch (this.jsType)
+    {
+        case jsdIValue.TYPE_VOID:
+            this.displayValue = MSG_TYPE_VOID
+            this.displayType  = MSG_TYPE_VOID;
+            this.property     = wv.atomVoid;
+            break;
+        case jsdIValue.TYPE_NULL:
+            this.displayValue = MSG_TYPE_NULL;
+            this.displayType  = MSG_TYPE_NULL;
+            this.property     = wv.atomNull;
+            break;
+        case jsdIValue.TYPE_BOOLEAN:
+            this.displayValue = this.value.stringValue;
+            this.displayType  = MSG_TYPE_BOOLEAN;
+            this.property     = wv.atomBool;
+            break;
+        case jsdIValue.TYPE_INT:
+            this.displayValue = this.value.intValue;
+            this.displayType  = MSG_TYPE_INT;
+            this.property     = wv.atomInt;
+            break;
+        case jsdIValue.TYPE_DOUBLE:
+            this.displayValue = this.value.doubleValue;
+            this.displayType  = MSG_TYPE_DOUBLE;
+            this.property     = wv.atomDouble;
+            break;
+        case jsdIValue.TYPE_STRING:
+            var strval = this.value.stringValue.quote();
+            if (strval.length > MAX_STR_LEN)
+                strval = getMsg(MSN_FMT_LONGSTR, strval.length);
+            this.displayValue = strval;
+            this.displayType  = MSG_TYPE_STRING;
+            this.property     = wv.atomString;
+            break;
+        case jsdIValue.TYPE_FUNCTION:
+            this.displayType  = MSG_TYPE_FUNCTION;
+            this.displayValue = (this.value.isNative) ? MSG_WORD_NATIVE :
+                MSG_WORD_SCRIPT;
+            this.property = wv.atomFunction;
+            break;
+        case jsdIValue.TYPE_OBJECT:
+            this.value.refresh();
+            var ctor = this.value.jsClassName;
+            if (ctor == "Object")
+            {
+                if (this.value.jsConstructor)
+                    ctor = this.value.jsConstructor.jsFunctionName;
+            }
+            /*
+            else if (ctor == "XPCWrappedNative_NoHelper")
+            {
+                ctor = MSG_CLASS_XPCOBJ;
+            }
+            */
+
+            this.displayValue = "{" + ctor + ":" + this.value.propertyCount +
+                "}";
+
+            this.displayType = MSG_TYPE_OBJECT;
+            this.property = wv.atomObject;
+            /* if we had children, and were open before, then we need to descend
+             * and refresh our children. */
+            if (this.childData && this.childData.length > 0)
+            {
+                var rc = 0;
+                rc = this.refreshChildren();
+                sizeDelta += rc;
+                //dd ("refreshChildren returned " + rc);
+                this.visualFootprint += rc;
+            }
+            else
+                this.childData = new Array();
+            break;
+            
+
+        default:
+            ASSERT (0, "invalid value");
+    }
+
+    //dd ("refresh returning " + sizeDelta);
+    return sizeDelta;
+
+}
+
+ValueRecord.prototype.refreshChildren =
+function vr_refreshkids ()
+{
+    /* XXX add identity check to see if we are a totally different object */
+    /* if we now have more properties than we used to, we're going to have
+     * to close any children we may have open, because we can't tell where the
+     * new property is in any efficient way. */
+    if (this.lastPropertyCount < this.value.propertyCount)
+    {
+        this.onPreOpen();
+        return (this.childData.length + 1) - this.visualFootprint;
+    }
+
+    /* otherwise, we had children before.  we've got to update each of them
+     * in turn. */
+    var sizeDelta    = 0; /* total change in size */
+    var idx          = 0; /* the new position of the child in childData */
+    var deleteCount  = 0; /* number of children we've lost */
+    var specialProps = 0; /* number of special properties in this object */
+
+    for (var i = 0; i < this.childData.length; ++i)
+    {
+        //dd ("refreshing child #" + i);
+        var name = this.childData[i]._colValues["stack-col-0"];
+        var value;
+        switch (name)
+        {
+            case MSG_VAL_PARENT:
+                /* "special" property, doesn't actually exist
+                 * on the object */
+                value = this.value.jsParent;
+                specialProps++;
+                break;
+            case MSG_VAL_PROTO:
+                /* "special" property, doesn't actually exist
+                 * on the object */
+                value = this.value.jsPrototype;
+                specialProps++;
+                break;
+            default:
+                var prop = this.value.getProperty(name);
+                if (prop)
+                    value = prop.value;
+                break;
+        }
+        
+        if (value)
+        {
+            if (this.showFunctions || value.jsType != jsdIValue.TYPE_FUNCTION)
+            {
+                /* if this property still has a value, sync it in its (possibly)
+                 * new position in the childData array, and refresh it */
+                this.childData[idx] = this.childData[i];
+                this.childData[idx].childIndex = idx;
+                this.childData[idx].value = value;
+                sizeDelta += this.childData[idx].refresh();
+                ++idx;
+                value = null;
+            }
+            else
+            {
+                /* if we changed from a non-function to a function, and we're in
+                 * "hide function" mode, we need to consider this child deleted
+                 */
+                ++this.hiddenFunctionCount;
+                ++deleteCount;
+                sizeDelta -= this.childData[i].visualFootprint;
+            }
+        }
+        else
+        {
+            /* if the property isn't here anymore, make a note of
+             * it */
+            ++deleteCount;
+            sizeDelta -= this.childData[i].visualFootprint;
+        }
+    }
+    
+    /* if we've deleted some kids, adjust the length of childData to
+     * match */
+    if (deleteCount != 0)
+        this.childData.length -= deleteCount;
+    
+    if ((this.childData.length + this.hiddenFunctionCount - specialProps) !=
+        this.value.propertyCount)
+    {
+        /* if the two lengths *don't* match, then we *must* be in
+         * a state where the user added and deleted the same
+         * number of properties.  if this is the case, then
+         * everything we just did was a totally
+         * useless waste of time.  throw it out and re-init
+         * whatever children we have.  see the "THESE COMMENTS"
+         * comments above for the description of what we're doing
+         * here. */
+        this.onPreOpen();
+        sizeDelta = (this.childData.length + 1) - this.visualFootprint;
+    }
+
+    return sizeDelta;
+}
+
+ValueRecord.prototype.onPreOpen =
+function vr_create()
+{
+    if (this.value.jsType != jsdIValue.TYPE_OBJECT)
+        return;
+    
+    function vr_compare (a, b)
+    {
+        aType = a.value.jsType;
+        bType = b.value.jsType;
+        
+        if (aType < bType)
+            return -1;
+        
+        if (aType > bType)
+            return 1;
+        
+        aVal = a.displayName;
+        bVal = b.displayName;
+        
+        if (aVal < bVal)
+            return -1;
+        
+        if (aVal > bVal)
+            return 1;
+        
+        return 0;
+    }
+    
+    this.childData = new Array();
+    
+    var p = new Object();
+    this.value.getProperties (p, {});
+    this.lastPropertyCount = p.value.length;
+    /* we'll end up with the 0 from the prototype */
+    delete this.hiddenFunctionCount;
+    for (var i = 0; i < p.value.length; ++i)
+    {
+        var prop = p.value[i];
+        if (this.showFunctions ||
+            prop.value.jsType != jsdIValue.TYPE_FUNCTION)
+        {
+            this.childData.push(new ValueRecord(prop.value,
+                                                prop.name.stringValue,
+                                                formatFlags(prop.flags)));
+        }
+        else
+        {
+            ++this.hiddenFunctionCount;
+        }
+    }
+
+    this.childData.sort (vr_compare);
+
+    if (this.value.jsPrototype)
+        this.childData.unshift (new ValueRecord(this.value.jsPrototype,
+                                                MSG_VAL_PROTO));
+
+    if (this.value.jsParent)
+        this.childData.unshift (new ValueRecord(this.value.jsParent,
+                                                MSG_VAL_PARENT));
+    
+    for (i = 0; i < this.childData.length; ++i)
+    {
+        var cd = this.childData[i];
+        cd.parentRecord = this;
+        cd.childIndex = i;
+        cd.isHidden = false;
+    }
+}
+
+ValueRecord.prototype.onPostClose =
+function vr_destroy()
+{
+    this.childData = new Array();
+}
+
+console.stackView = new TreeOView(stackShare);
+
+console.stackView.refresh =
+function wv_refresh()
+{
+    var sk = this.stack;
+    var delta = 0;
+    
+    for (var i = 0; i < sk.childData.length; ++i)
+    {
+        var frame = sk.childData[i];
+        var thisDelta = 0;
+        for (var j = 0; j < frame.childData.length; ++j)
+            thisDelta += frame.childData[j].refresh();
+        /* if the container isn't open, we still have to update the children,
+         * but we don't care about any visual footprint changes */
+        if (frame.isContainerOpen)
+        {
+            frame.visualFootprint += thisDelta;
+            delta += thisDelta;
+        }
+    }
+
+    sk.visualFootprint += delta;
+    this.childData.visualFootprint += delta;
+    this.childData.invalidateCache();
+    this.outliner.rowCountChanged (0, sk.visualFootprint);
     this.outliner.invalidate();
 }
 
-console._scriptsOutlinerView.toggleColumnMode =
-function scov_tcolmode (e)
+console.stackView.getCellProperties =
+function sv_cellprops (index, colID, properties)
 {
-    if (!this.shortMode)
-        this.shortMode = true;
-    else
-        delete this.shortMode;
+    if (colID != "stack-col-0")
+        return;
+    
+    var row = this.childData.locateChildByVisualRow(index);
+    if (row)
+    {
+        if (row.getProperties)
+            return row.getProperties (properties);
 
-    this.refreshScripts();
+        if (row.property)
+            return properties.AppendElement (row.property);
+    }
 }
 
-console._scriptsOutlinerView.setScripts =
-function scov_setstack (scripts)
-{    
-    if (scripts)
+console.stackView.stack = new TOLabelRecord ("stack-col-0", MSG_CALL_STACK);
+
+var projectShare = new Object();
+
+console.projectView = new TreeOView(projectShare);
+
+console.projectView.getCellProperties =
+function pv_cellprops (index, colID, properties)
+{
+    if (colID != "project-col-0")
+        return;
+    
+    var row = this.childData.locateChildByVisualRow(index);
+    if (row)
     {
-        this.scriptRecords = scripts;
-        this.refreshScripts();
+        if (row.getProperties)
+            return row.getProperties (properties);
+
+        if (row.property)
+            return properties.AppendElement (row.property);
     }
+}
+
+console.breakpoints = new TOLabelRecord ("project-col-0", MSG_BREAK_REC);
+
+console.breakpoints.locateChildByFileLine =
+function bpt_findfl (fileName, line)
+{
+    for (var i = 0; i < this.childData.length; ++i)
+    {
+        var child = this.childData[i];
+        if (child.line == line &&
+            child.fileName == fileName)
+            return child;
+    }
+
+    return null;
+}
+
+function BPRecord (fileName, line)
+{
+    var record = this;
+    function getMatchLength ()
+    {
+        return record.scriptRecords.length;
+    }
+        
+    this.scriptRecords = new Array();
+    this.fileName = fileName;
+    this._enabled = true;
+    this.stop = true;
+
+    this.setColumnPropertyName ("project-col-0", "shortName");
+    this.setColumnPropertyName ("project-col-1", "line");
+    this.setColumnPropertyName ("project-col-2", "functionName");
+    this.setColumnPropertyName ("project-col-3", getMatchLength);
+
+    var ary = fileName.match(/\/([^\/?]+)(\?|$)/);
+    if (ary)
+        this.shortName = ary[1];
     else
+        this.shortName = fileName;
+    this.line = line;
+    this.functionName = MSG_VAL_UNKNOWN;
+}
+
+BPRecord.prototype = new TreeOViewRecord(projectShare);
+
+BPRecord.prototype.__defineGetter__ ("scriptMatches", bpr_getmatches);
+function bpr_getmatches ()
+{
+    return this.scriptRecords.length;
+}
+
+BPRecord.prototype.__defineGetter__ ("enabled", bpr_getenabled);
+function bpr_getenabled ()
+{
+    return this._enabled;
+}
+
+BPRecord.prototype.__defineSetter__ ("enabled", bpr_setenabled);
+function bpr_setenabled (state)
+{
+    if (state == this._enabled)
+        return;
+    
+    var delta = (state) ? +1 : -1;
+    
+    for (var i = 0; i < this.scriptRecords.length; ++i)
     {
-        delete this.scripts;
-        this.rowCount = 0;
-        this.outliner.rowCountChanged(0, 0);
-        this.outliner.invalidate();
+        this.scriptRecords[i].bpcount += delta;
+        var script = this.scriptRecords[i].script;
+        var pc = script.lineToPc(this.line);
+        if (state)
+            script.setBreakpoint(pc);
+        else
+            script.clearBreakpoint(pc);
     }
+    this._enabled = state;
+}
+
+BPRecord.prototype.addScriptRecord =
+function bpr_addscript (scriptRec)
+{
+    for (var i = 0; i < this.scriptRecords.length; ++i)
+        if (this.scriptRecords[i] == scriptRec)
+            return;
+    var pc = scriptRec.script.lineToPc(this.line);
+    scriptRec.script.setBreakpoint(pc);
+    if (scriptRec.isGuessedName)
+        this.functionName = "(" + scriptRec.functionName + ")";
+    else
+        this.functionName = scriptRec.functionName;
+    ++(scriptRec.bpcount);
+    
+    this.scriptRecords.push(scriptRec);
+}
+
+BPRecord.prototype.removeScriptRecord =
+function bpr_remscript (scriptRec)
+{
+    for (var i = 0; i < this.scriptRecords.length; ++i)
+        if (this.scriptRecords[i] == scriptRec)
+        {
+            --(this.scriptRecords[i].bpcount);
+            arrayRemoveAt(this.scriptRecords, i);
+            return;
+        }
 }
