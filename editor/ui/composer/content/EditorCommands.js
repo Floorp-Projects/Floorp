@@ -25,11 +25,11 @@ var EditorDisplayStyle = true;
 var gTagToFormat = {
     "P"          : "Normal",	// these should really be entities. Not sure how to do that from JS
     "H1"         : "Heading 1",
-    "H2"         : "Header 2",
-    "H3"         : "Header 3",
-    "H4"         : "Header 4",
-    "H5"         : "Header 5",
-    "H6"         : "Header 6",
+    "H2"         : "Heading 2",
+    "H3"         : "Heading 3",
+    "H4"         : "Heading 4",
+    "H5"         : "Heading 5",
+    "H6"         : "Heading 6",
     "BLOCKQUOTE" : "Blockquote",
     "ADDRESS"    : "Address",
     "PRE"        : "Preformatted",
@@ -442,30 +442,6 @@ function EditorInsertImage()
   contentWindow.focus();
 }
 
-function EditorInsertOrEditTable()
-{
-  var selection = editorShell.editorSelection;
-  dump("Selection: Anchor: "+selection.anchorNode+selection.anchorOffset+" Focus: "+selection.focusNode+selection.focusOffset+"\n");
-
-  var table = editorShell.GetElementOrParentByTagName("table", null);
-  if (table) {
-    // Edit properties of existing table
-    dump("Existing table found ... Editing its properties\n");
-
-    window.openDialog("chrome://editor/content/EdTableProps.xul", "TableDlg", "chrome", "");
-    contentWindow.focus();
-  } else {
-    EditorInsertTable();
-  }
-}
-
-function EditorInsertTable()
-{
-  // Insert a new table
-  window.openDialog("chrome://editor/content/EdInsertTable.xul", "TableDlg", "chrome", "");
-  contentWindow.focus();
-}
-
 function EditorInsertHLine()
 {
   // Inserting an HLine is different in that we don't use properties dialog
@@ -497,6 +473,82 @@ function EditorIndent(indent)
 {
   dump("indenting\n");
   editorShell.Indent(indent);
+  contentWindow.focus();
+}
+
+// Call this with insertAllowed = true to allow inserting if not in existing table,
+//   else use false to do nothing if not in a table
+function EditorInsertOrEditTable(insertAllowed)
+{
+  var selection = editorShell.editorSelection;
+  dump("Selection: Anchor: "+selection.anchorNode+selection.anchorOffset+" Focus: "+selection.focusNode+selection.focusOffset+"\n");
+
+  var table = editorShell.GetElementOrParentByTagName("table", null);
+  if (table) {
+    // Edit properties of existing table
+    dump("Existing table found ... Editing its properties\n");
+
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "TableDlg", "chrome", "");
+    contentWindow.focus();
+  } else if(insertAllowed) {
+    EditorInsertTable();
+  }
+}
+
+function EditorInsertTable()
+{
+  // Insert a new table
+  window.openDialog("chrome://editor/content/EdInsertTable.xul", "TableDlg", "chrome", "");
+  contentWindow.focus();
+}
+
+function EditorInsertTableCell(after)
+{
+  editorShell.InsertTableCell(1,after);
+  contentWindow.focus();
+}
+
+// Just insert before current row or column for now
+function EditorInsertTableRow()
+{
+  editorShell.InsertTableRow(1,false);
+  contentWindow.focus();
+}
+
+function EditorInsertTableColumn()
+{
+  editorShell.InsertTableColumn(1,false);
+  contentWindow.focus();
+}
+
+function JoinTableCells()
+{
+  editorShell.JoinTableCells();
+  contentWindow.focus();
+}
+
+function EditorDeleteTable()
+{
+  editorShell.DeleteTable();
+  contentWindow.focus();
+}
+
+function EditorDeleteTableRow()
+{
+  editorShell.DeleteTableRow();
+  contentWindow.focus();
+}
+
+function EditorDeleteTableColumn()
+{
+  editorShell.DeleteTableColumn();
+  contentWindow.focus();
+}
+
+
+function EditorDeleteTableCell()
+{
+  editorShell.DeleteTableCell();
   contentWindow.focus();
 }
 

@@ -141,7 +141,7 @@ public:
   NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
-  NS_IMETHOD JoinTableCells(PRBool aCellToRight);
+  NS_IMETHOD JoinTableCells();
   NS_IMETHOD BeginComposition(void);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList);
   NS_IMETHOD EndComposition(void);

@@ -2122,6 +2122,179 @@ nsEditorShell::SetSelectionAfterElement(nsIDOMElement* aElement)
 
 /* Table Editing */
 
+NS_IMETHODIMP    
+nsEditorShell::InsertTableCell(PRInt32 aNumber, PRBool bAfter)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->InsertTableCell(aNumber, bAfter);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::InsertTableRow(PRInt32 aNumber, PRBool bAfter)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->InsertTableRow(aNumber,bAfter);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::InsertTableColumn(PRInt32 aNumber, PRBool bAfter)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->InsertTableColumn(aNumber,bAfter);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::DeleteTable()
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->DeleteTable();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::DeleteTableCell(PRInt32 aNumber)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->DeleteTableCell(aNumber);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+
+NS_IMETHODIMP    
+nsEditorShell::DeleteTableRow(PRInt32 aNumber)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->DeleteTableRow(aNumber);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+
+NS_IMETHODIMP    
+nsEditorShell::DeleteTableColumn(PRInt32 aNumber)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->DeleteTableColumn(aNumber);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::JoinTableCells()
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->JoinTableCells();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP 
+nsEditorShell::NormalizeTable(nsIDOMElement *aTable)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->NormalizeTable(aTable);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
 // The next four methods are factored to return single items 
 //  separately for row and column. 
 //  Underlying implementation gets both at the same time for efficiency.
@@ -2149,7 +2322,6 @@ nsEditorShell::GetRowIndex(nsIDOMElement *cellElement, PRInt32 *_retval)
     default:
       result = NS_ERROR_NOT_IMPLEMENTED;
   }
-
   return result;
 }
 

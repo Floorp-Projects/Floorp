@@ -773,7 +773,7 @@ nsJSEditorLog::DeleteTableRow(PRInt32 aNumber)
 }
 
 NS_IMETHODIMP
-nsJSEditorLog::JoinTableCells(PRBool aCellToRight)
+nsJSEditorLog::JoinTableCells()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

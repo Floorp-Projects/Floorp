@@ -177,6 +177,7 @@ public:
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                            PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected);
 
+
   NS_IMETHOD InsertTable();
   NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
   NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);
@@ -185,7 +186,25 @@ public:
   NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
-  NS_IMETHOD JoinTableCells(PRBool aCellToRight);
+  NS_IMETHOD JoinTableCells();
+
+  /** Make table "rectangular" -- fill in all missing cellmap locations
+    * If aTable is null, it uses table enclosing the selection anchor
+    */
+  NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
+
+  // Table utilities
+  
+  // All of the above need to get the same basic context data
+  NS_IMETHOD GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
+                            nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMElement> &aCell, 
+                            nsCOMPtr<nsIDOMNode> &aCellParent, PRInt32& aCellOffset, 
+                            PRInt32& aRow, PRInt32& aCol);
+
+  // Setting caret to a logical place can get tricky,
+  //  especially after deleting table stuff
+  typedef enum { ePreviousColumn=0, ePreviousRow } SetCaretSearchDirection;
+  NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aCol, PRInt32 aRow, SetCaretSearchDirection aDirection);
   
 protected:
   

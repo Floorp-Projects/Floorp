@@ -149,6 +149,21 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD SelectElement(nsIDOMElement *element);
 	  NS_IMETHOD SetSelectionAfterElement(nsIDOMElement *element);
 
+    /* Table insert and delete methods. Done relative to selected cell or
+       cell containing the selection anchor */
+    NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool bAfter);
+    NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool bAfter);
+    NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool bAfter);
+    NS_IMETHOD DeleteTable();
+    NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
+    NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
+    NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
+    NS_IMETHOD JoinTableCells();
+   /** Make table "rectangular" -- fill in all missing cellmap locations
+     * If aTable is null, it uses table enclosing the selection anchor
+     */
+   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
+
     /* Get the row and col indexes in layout's cellmap */
     NS_IMETHOD GetRowIndex(nsIDOMElement *aCell, PRInt32 *_retval);
     NS_IMETHOD GetColumnIndex(nsIDOMElement *aCell, PRInt32 *_retval);

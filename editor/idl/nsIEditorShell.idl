@@ -122,6 +122,25 @@ interface nsIEditorShell : nsISupports
   void SetSelectionAfterElement(in nsIDOMElement element);
 
   /***** Table editing *****/
+  /* These are done relative to selected cell
+     or cell contain the selection anchor */
+  void InsertTableCell(in PRInt32 number, in PRBool after);
+  void InsertTableRow(in PRInt32 number, in PRBool after);
+  void InsertTableColumn(in PRInt32 number, in PRBool after);
+  void DeleteTable();
+  void DeleteTableCell(in PRInt32 number);
+  void DeleteTableRow(in PRInt32 number);
+  void DeleteTableColumn(in PRInt32 number);
+  void JoinTableCells();
+
+  /** Scan through all rows and add cells as needed so 
+    *   all locations in the cellmap are occupied.
+    *   Used after inserting single cells or pasting
+    *   a collection of cells that extend past the
+    *   previous size of the table
+    * If aTable is null, it uses table enclosing the selection anchor
+    */
+  void NormalizeTable(in nsIDOMElement tableElement);
 
   /* Get the indexes from layout's cellmap */
   PRInt32 GetRowIndex(in nsIDOMElement cellElement);

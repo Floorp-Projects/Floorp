@@ -264,17 +264,53 @@ public:
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList)=0;
 
 // Table editing Methods
-  /** Not implemented yet
+  /** Insert table methods
+    * Insert relative to the selected cell or the 
+    *  cell enclosing the selection anchor
+    * The selection is collapsed and is left in the new cell
+    *  at the same row,col location as the original anchor cell
+    *
+    * @param aNumber    Number of items to insert
+    * @param aAfter     If TRUE, insert after the current cell,
+    *                     else insert before current cell
     */
   NS_IMETHOD InsertTable()=0;
   NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter)=0;
   NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter)=0;
   NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter)=0;
+
+  /** Delete table methods
+    * Delete starting at the selected cell or the 
+    *  cell (or table) enclosing the selection anchor
+    * The selection is collapsed and is left in the 
+    *  cell at the same row,col location as
+    *  the previous selection anchor, if possible,
+    *  else in the closest neigboring cell
+    *
+    * @param aNumber    Number of items to insert/delete
+    */
   NS_IMETHOD DeleteTable()=0;
   NS_IMETHOD DeleteTableCell(PRInt32 aNumber)=0;
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber)=0;
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber)=0;
-  NS_IMETHOD JoinTableCells(PRBool aCellToRight)=0;
+
+  /** Join the contents of the selected cells into one cell,
+    *   expanding that cells ROWSPAN and COLSPAN to take up
+    *   the same number of cellmap locations as before.
+    *   Cells whose contents were moved are deleted.
+    *   If there's one cell selected or caret is in one cell,
+    *     it is joined with the cell to the right, if it exists
+    */
+  NS_IMETHOD JoinTableCells()=0;
+
+  /** Scan through all rows and add cells as needed so 
+    *   all locations in the cellmap are occupied.
+    *   Used after inserting single cells or pasting
+    *   a collection of cells that extend past the
+    *   previous size of the table
+    * If aTable is null, it uses table enclosing the selection anchor
+    */
+  NS_IMETHOD NormalizeTable(nsIDOMElement *aTable)=0;
 
   /** Get the row an column index from the layout's cellmap
     * If aTable is null, it will try to find enclosing table of selection ancho
@@ -323,6 +359,7 @@ public:
   NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell,
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
                            PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected)=0;
+
 
 // IME editing Methods
   NS_IMETHOD BeginComposition(void)=0;
