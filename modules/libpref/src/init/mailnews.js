@@ -98,7 +98,7 @@ pref("mail.citation_color",                 ""); // quoted color
 pref("mail.quoted_style",                   0); // 0=plain, 1=bold, 2=italic, 3=bolditalic
 pref("mail.quoted_size",                    0); // 0=normal, 1=big, 2=small
 pref("mail.quoted_graphical",               true); // use HTML-style quoting for displaying plain text
-pref("mail.quoteasblock",                   false); // use HTML-style quoting for quoting plain text
+pref("mail.quoteasblock",                   true); // use HTML-style quoting for quoting plain text
 pref("mail.identity.organization",          "");
 pref("mail.identity.reply_to",              "");
 pref("mail.identity.username",              "");
