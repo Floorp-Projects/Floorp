@@ -191,8 +191,9 @@
 
     case eIs:
         {
-            a = pop();
-            b = pop();
+            a = pop();  // catch variable type
+            b = pop();  // exception object
+            push(JS2VAL_TRUE);
         }
         break;
 

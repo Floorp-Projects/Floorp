@@ -134,6 +134,13 @@
         }
         break;
 
+    case eThrow:
+        {
+            a = pop();
+            throw Exception(Exception::userException, "");
+        }
+        break;
+
     case eCallFinally:
         {
         }
