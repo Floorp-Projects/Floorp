@@ -33,6 +33,10 @@
 
 const char mozJSComponentLoaderProgID[] = "moz.jsloader.1";
 const char jsComponentTypeName[] = "text/javascript";
+/* XXX export properly from libxpcom, for now this will let Mac build */
+const char fileSizeValueName[] = "FileSize";
+const char lastModValueName[] = "LastModTimeStamp";
+const char xpcomKeyName[] = "Software/Mozilla/XPCOM";
 
 static JSBool
 Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
