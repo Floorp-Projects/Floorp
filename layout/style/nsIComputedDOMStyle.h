@@ -32,7 +32,7 @@ class nsIPresShell;
  { 0x5f0197a1, 0xa873, 0x44e5, \
     {0x96, 0x31, 0xac, 0xd6, 0xca, 0xb4, 0xf1, 0xe0 } }
 
-class nsIComputedDOMStyle : public nsIDOMCSS2Properties
+class nsIComputedDOMStyle : public nsIDOMCSSStyleDeclaration
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMPUTEDDOMSTYLE_IID)
