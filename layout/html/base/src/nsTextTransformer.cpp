@@ -241,7 +241,7 @@ nsTextTransformer::SimpleTransform(PRBool aIsWhitespace,
   PRUnichar* bp = mBuffer + 1;
   PRUnichar* bufEnd = mBuffer + mBufferLength;
   const nsTextFragment* frag = mCurrentFrag;
-  const nsTextFragment* lastFrag = frag + mNumFrags;
+  const nsTextFragment* lastFrag = mFrags + mNumFrags;
   PRInt32 offset = mCurrentFragOffset;
 
   // Now that we know what we are looking for, scan through the text
@@ -375,7 +375,7 @@ nsTextTransformer::ComplexTransform(PRBool aIsWhitespace,
   PRUnichar* bp = mBuffer + 1;
   PRUnichar* bufEnd = mBuffer + mBufferLength;
   const nsTextFragment* frag = mCurrentFrag;
-  const nsTextFragment* lastFrag = frag + mNumFrags;
+  const nsTextFragment* lastFrag = mFrags + mNumFrags;
   PRInt32 offset = mCurrentFragOffset;
 
   // Now that we know what we are looking for, scan through the text
