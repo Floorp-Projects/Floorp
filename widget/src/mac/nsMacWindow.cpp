@@ -512,24 +512,6 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   return NS_OK;
 }
 
-
-
-NS_METHOD nsWindow::Minimize(void)
-{
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::Maximize(void)
-{
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::Restore(void)
-{
-  return NS_OK;
-}
-
-
 //-------------------------------------------------------------------------
 //
 // Move this window
