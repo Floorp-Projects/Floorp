@@ -24,42 +24,42 @@
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 
-/*                                                                              
-* A preliminary document (written before implementation) explaining the ideas   
-* behind this interface can be can be found at:                                 
-* http://www.mozilla.org/scriptable/scriptable-proposal.html                    
-*                                                                               
-* nsIXPCScriptable is an interface that an object being wrapped by XPConnect    
-* can expose to support dynamic properites. XPConnect will QueryInterface       
-* wrapped xpcom objects to find out if they expose this interface. If an object 
-* does support this interface then XPConnect will pass through calls from JS    
-* to the methods of the nsIXPCScriptable under certain circumstances. Calls are 
-* passed through when JS code attempts to access properties on the wrapper      
-* which are not declared as attributes or methods in the xpidl that defines the 
-* interface. Calls will also be passed through for operation not normally       
-* supported on wrapped xpcom objects; e.g. 'call' and 'construct'.              
-*                                                                               
-* The methods of nsIXPCScriptable map directly onto the JSObjectOps 'interface'  
-* of the JavaScript api. In addition to the params passed by JavaScript the     
-* methods are also passed a pointer to the current wrapper and a pointer to     
-* the default implementation of the methods called the 'arbitrary' object.      
-*                                                                               
-* The methods of nsIXPCScriptable can be implemented to override default        
-* behavior or the calls can be forwarded to the 'arbitrary' object. Macros 
-* are declared below to make it easy to imlement objects which forward some or  
-* all of the method calls to the 'arbitrary' object.                            
-*                                                                               
-* nsIXPCScriptable is meant to be called by XPConnect only. All the             
-* methods of this interface take params which identify the wrapper and          
-* therefore from which the wrapped object can be found. The methods are in      
-* effect virtually 'static' methods. For simplicity's sake we've decided to     
-* break COM identiry rules for this interface and say that its QueryInterface   
-* need not follow the normal rules of returning the same object as the          
-* QueryInterface of the object which returns this interface. Thus, the same     
-* nsIXPCScriptable object could be used by multiple objects if that suits you.  
-* In fact the 'arbitrary' object passed to this interface by XPConnect in all   
-* the methods is a singleton in XPConnect.                                      
-*/                                                                              
+/*
+* A preliminary document (written before implementation) explaining the ideas
+* behind this interface can be can be found at:
+* http://www.mozilla.org/scriptable/scriptable-proposal.html
+*
+* nsIXPCScriptable is an interface that an object being wrapped by XPConnect
+* can expose to support dynamic properites. XPConnect will QueryInterface
+* wrapped xpcom objects to find out if they expose this interface. If an object
+* does support this interface then XPConnect will pass through calls from JS
+* to the methods of the nsIXPCScriptable under certain circumstances. Calls are
+* passed through when JS code attempts to access properties on the wrapper
+* which are not declared as attributes or methods in the xpidl that defines the
+* interface. Calls will also be passed through for operation not normally
+* supported on wrapped xpcom objects; e.g. 'call' and 'construct'.
+*
+* The methods of nsIXPCScriptable map directly onto the JSObjectOps 'interface'
+* of the JavaScript api. In addition to the params passed by JavaScript the
+* methods are also passed a pointer to the current wrapper and a pointer to
+* the default implementation of the methods called the 'arbitrary' object.
+*
+* The methods of nsIXPCScriptable can be implemented to override default
+* behavior or the calls can be forwarded to the 'arbitrary' object. Macros
+* are declared below to make it easy to imlement objects which forward some or
+* all of the method calls to the 'arbitrary' object.
+*
+* nsIXPCScriptable is meant to be called by XPConnect only. All the
+* methods of this interface take params which identify the wrapper and
+* therefore from which the wrapped object can be found. The methods are in
+* effect virtually 'static' methods. For simplicity's sake we've decided to
+* break COM identiry rules for this interface and say that its QueryInterface
+* need not follow the normal rules of returning the same object as the
+* QueryInterface of the object which returns this interface. Thus, the same
+* nsIXPCScriptable object could be used by multiple objects if that suits you.
+* In fact the 'arbitrary' object passed to this interface by XPConnect in all
+* the methods is a singleton in XPConnect.
+*/
 
 /***************************************************************************/
 

@@ -206,10 +206,10 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
     return JS_TRUE;
 }
 
-void 
+void
 nsXPCWrappedNativeClass::XPCContextBeingDestroyed()
 {
-    DestroyMemberDescriptors(); 
+    DestroyMemberDescriptors();
     mXPCContext = NULL;
 }
 
@@ -325,6 +325,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     if(!xpcc)
         goto done;
 
+    nsXPConnect::GetXPConnect()->SetPendingException(nsnull);
     xpcc->SetLastResult(NS_ERROR_UNEXPECTED);
 
     // make sure we have what we need...
@@ -336,11 +337,11 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         case CALL_METHOD:
             vtblIndex = desc->index;
 
-            if(securityManager && 
-               (xpcc->GetSecurityManagerFlags() & 
+            if(securityManager &&
+               (xpcc->GetSecurityManagerFlags() &
                 nsIXPCSecurityManager::HOOK_CALL_METHOD) &&
-               NS_OK != 
-                securityManager->CanCallMethod(cx, mIID, wrapper->GetNative(), 
+               NS_OK !=
+                securityManager->CanCallMethod(cx, mIID, wrapper->GetNative(),
                                                mInfo, vtblIndex, desc->id))
             {
                 // the security manager vetoed. It should have set an exception.
@@ -351,11 +352,11 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         case CALL_GETTER:
             vtblIndex = desc->index;
 
-            if(securityManager && 
-               (xpcc->GetSecurityManagerFlags() & 
+            if(securityManager &&
+               (xpcc->GetSecurityManagerFlags() &
                 nsIXPCSecurityManager::HOOK_GET_PROPERTY) &&
-               NS_OK != 
-                securityManager->CanGetProperty(cx, mIID, wrapper->GetNative(), 
+               NS_OK !=
+                securityManager->CanGetProperty(cx, mIID, wrapper->GetNative(),
                                                 mInfo, vtblIndex, desc->id))
             {
                 // the security manager vetoed. It should have set an exception.
@@ -369,11 +370,11 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 goto done;
             vtblIndex = desc->index2;
 
-            if(securityManager && 
-               (xpcc->GetSecurityManagerFlags() & 
+            if(securityManager &&
+               (xpcc->GetSecurityManagerFlags() &
                 nsIXPCSecurityManager::HOOK_SET_PROPERTY) &&
-               NS_OK != 
-                securityManager->CanSetProperty(cx, mIID, wrapper->GetNative(), 
+               NS_OK !=
+                securityManager->CanSetProperty(cx, mIID, wrapper->GetNative(),
                                                 mInfo, vtblIndex, desc->id))
             {
                 // the security manager vetoed. It should have set an exception.
@@ -387,7 +388,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
     if(NS_FAILED(mInfo->GetMethodInfo(vtblIndex, &info)))
     {
-        ThrowException(XPCJSError::CANT_GET_METHOD_INFO, cx, desc);
+        ThrowException(NS_ERROR_XPC_CANT_GET_METHOD_INFO, cx, desc);
         goto done;
     }
 
@@ -397,7 +398,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
     if(argc < requiredArgs)
     {
-        ThrowException(XPCJSError::NOT_ENOUGH_ARGS, cx, desc);
+        ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx, desc);
         goto done;
     }
 
@@ -444,11 +445,11 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                (JSVAL_IS_PRIMITIVE(argv[i]) ||
                 !JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &src)))
             {
-                ThrowBadParamException(XPCJSError::NEED_OUT_OBJECT,
+                ThrowBadParamException(NS_ERROR_XPC_NEED_OUT_OBJECT,
                                        cx, desc, i);
                 goto done;
             }
-            if(type.IsPointer() && 
+            if(type.IsPointer() &&
                !type.IsInterfacePointer() &&
                !param.IsShared())
             {
@@ -473,7 +474,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             if(NS_FAILED(GetInterfaceInfo()->
                           GetIIDForParam(vtblIndex, &param, &conditional_iid)))
             {
-                ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
+                ThrowBadParamException(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
                                        cx, desc, i);
                 goto done;
             }
@@ -487,7 +488,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                !XPCConvert::JSData2Native(cx, &conditional_iid, argv[arg_num],
                                           type, JS_TRUE, NULL, NULL))
             {
-                ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
+                ThrowBadParamException(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
                                        cx, desc, i);
                 goto done;
             }
@@ -532,7 +533,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 if(NS_FAILED(GetInterfaceInfo()->
                         GetIIDForParam(vtblIndex, &param, &conditional_iid)))
                 {
-                    ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
+                    ThrowBadParamException(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
                                            cx, desc, i);
                     goto done;
                 }
@@ -544,10 +545,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 const nsXPTType& type = param.GetType();
                 if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
                    !(conditional_iid = (nsID*)
-                         nsAllocator::Clone(dispatchParams[arg_num].val.p, 
+                         nsAllocator::Clone(dispatchParams[arg_num].val.p,
                                           sizeof(nsID))))
                 {
-                    ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
+                    ThrowBadParamException(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
                                            cx, desc, i);
                     goto done;
                 }
@@ -571,7 +572,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 NS_ASSERTION(JSVAL_IS_OBJECT(argv[i]), "out var is not object");
                 if(!JS_SetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &v))
                 {
-                    ThrowBadParamException(XPCJSError::CANT_SET_OUT_VAL,
+                    ThrowBadParamException(NS_ERROR_XPC_CANT_SET_OUT_VAL,
                                            cx, desc, i);
                     goto done;
                 }
@@ -633,7 +634,7 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
                 (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
         }
 
-        JSFunction *fun = JS_NewFunction(cx, WrappedNative_CallMethod, 
+        JSFunction *fun = JS_NewFunction(cx, WrappedNative_CallMethod,
                                          (uintN) requiredArgs,
                                          JSFUN_BOUND_METHOD, NULL, name);
         if(!fun)
@@ -643,7 +644,7 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
             NS_CONST_CAST(XPCNativeMemberDescriptor*,desc);
 
         if(NULL != (descRW->invokeFuncObj = JS_GetFunctionObject(fun)))
-            JS_AddNamedRoot(cx, &descRW->invokeFuncObj, 
+            JS_AddNamedRoot(cx, &descRW->invokeFuncObj,
                             "XPCNativeMemberDescriptor::invokeFuncObj");
     }
     return desc->invokeFuncObj;
@@ -707,10 +708,10 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
                                     as, &retval)) || !retval)
                     *idp = holder->dstate = JSVAL_NULL;
             }
-            
+
             if(holder->dstate == JSVAL_NULL && holder->sstate != JSVAL_NULL)
                 StaticEnumerate(wrapper, JSENUMERATE_NEXT, &holder->sstate, idp);
-            
+
             // are we done?
             if(holder->dstate != JSVAL_NULL || holder->sstate != JSVAL_NULL)
                 return JS_TRUE;
@@ -744,7 +745,7 @@ nsXPCWrappedNativeClass::StaticEnumerate(nsXPCWrappedNative* wrapper,
                                          JSIterateOp enum_op,
                                          jsval *statep, jsid *idp)
 {
-    int totalCount = (wrapper->GetDynamicScriptableFlags() & 
+    int totalCount = (wrapper->GetDynamicScriptableFlags() &
                       XPCSCRIPTABLE_DONT_ENUM_STATIC_PROPS) ?
                         0 : GetMemberCount();
 
@@ -799,7 +800,7 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(nsXPCWrappedNative* self)
     JSContext* cx = GetJSContext();
     if(!cx)
         return NULL;
-    JSClass* jsclazz = self->GetDynamicScriptable() ? 
+    JSClass* jsclazz = self->GetDynamicScriptable() ?
                             &WrappedNativeWithCall_class :
                             &WrappedNative_class;
     JSObject* jsobj = JS_NewObject(cx, jsclazz, NULL, JS_GetGlobalObject(cx));

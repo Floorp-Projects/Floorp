@@ -318,35 +318,13 @@ NS_IMETHODIMP XPCJSStackFrame::GetIsJSFrame(PRBool *aIsJSFrame)
 /* readonly attribute string filename; */
 NS_IMETHODIMP XPCJSStackFrame::GetFilename(char * *aFilename)
 {
-    if(!aFilename)
-        return NS_ERROR_NULL_POINTER;
-
-    if(!mFilename)
-    {
-        *aFilename = nsnull;
-        return NS_OK;
-    }
-
-    *aFilename = (char*) nsAllocator::Clone(mFilename,
-                                            sizeof(char)*(strlen(mFilename)+1));
-    return *aFilename ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    XPC_STRING_GETTER_BODY(aFilename, mFilename);
 }
 
 /* readonly attribute string function; */
 NS_IMETHODIMP XPCJSStackFrame::GetFunctionName(char * *aFunction)
 {
-    if(!aFunction)
-        return NS_ERROR_NULL_POINTER;
-
-    if(!mFunname)
-    {
-        *aFunction = nsnull;
-        return NS_OK;
-    }
-
-    *aFunction = (char*) nsAllocator::Clone(mFunname,
-                                            sizeof(char)*(strlen(mFunname)+1));
-    return *aFunction ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    XPC_STRING_GETTER_BODY(aFunction, mFunname);
 }
 
 /* readonly attribute PRInt32 lineNumber; */

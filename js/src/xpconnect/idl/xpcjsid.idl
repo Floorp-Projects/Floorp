@@ -27,7 +27,7 @@ interface nsIJSID : nsISupports
     readonly attribute boolean  valid;
 
     boolean equals(in nsIJSID other);
-    
+
     void initialize(in string idString);
 
     string toString();
@@ -59,7 +59,7 @@ interface nsIJSCID : nsIJSID
 // #define NS_JS_IID_CID  \
 // { 0x1d17bff0, 0xd58d, 0x11d2, \
 //  { 0x98, 0x43, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-// 
+//
 // // {8628BFA0-D652-11d2-9843-006008962422}
 // #define NS_JS_CID_CID  \
 // { 0x8628bfa0, 0xd652, 0x11d2, \

@@ -20,20 +20,12 @@
 
 #include "xpcprivate.h"
 
-XPCJSErrorFormatString XPCJSThrower::default_formats[] = {
-#define MSG_DEF(name, number, count, exception, format) \
-    { format/*, count*/ } ,
-#include "xpc.msg"
-#undef MSG_DEF
-    { NULL/*, 0*/ }
-};
-
 XPCJSThrower::XPCJSThrower(JSBool Verbose /*= JS_FALSE*/)
-    : mFormats(default_formats), mVerbose(Verbose) {}
+    : mVerbose(Verbose) {}
 
 XPCJSThrower::~XPCJSThrower() {}
 
-
+#if 0
 char*
 XPCJSThrower::BuildCallerString(JSContext* cx)
 {
@@ -55,6 +47,7 @@ XPCJSThrower::BuildCallerString(JSContext* cx)
     }
     return NULL;
 }
+#endif
 
 void
 XPCJSThrower::Verbosify(JSContext* cx,
@@ -63,16 +56,12 @@ XPCJSThrower::Verbosify(JSContext* cx,
                         char** psz, PRBool own)
 {
     char* sz = NULL;
-    char* caller_string = BuildCallerString(cx);
 
     if(clazz && desc)
-        sz = JS_smprintf("%s [%s.%s, %s]",
+        sz = JS_smprintf("%s [%s.%s]",
                          *psz,
                          clazz->GetInterfaceName(),
-                         clazz->GetMemberName(desc),
-                         caller_string ? caller_string : "");
-    if(caller_string)
-        JS_smprintf_free(caller_string);
+                         clazz->GetMemberName(desc));
     if(sz)
     {
         if(own)
@@ -82,7 +71,7 @@ XPCJSThrower::Verbosify(JSContext* cx,
 }
 
 void
-XPCJSThrower::ThrowBadResultException(uintN errNum,
+XPCJSThrower::ThrowBadResultException(nsresult rv,
                                       JSContext* cx,
                                       nsXPCWrappedNativeClass* clazz,
                                       const XPCNativeMemberDescriptor* desc,
@@ -90,29 +79,56 @@ XPCJSThrower::ThrowBadResultException(uintN errNum,
 {
     char* sz;
     const char* format;
+    const char* name;
     JSString* str = NULL;
 
-    format = mFormats[errNum].format;
+    /*
+    *  If there is a pending exception when the native call returns and
+    *  it has the same error result as returned by the native call, then
+    *  the native call may be passing through an error from a previous JS
+    *  call. So we'll just throw that exception into our JS.
+    */
 
-    sz = JS_smprintf("%s 0x%x", format, result);
+    nsIXPCException* e;
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if(xpc && NS_SUCCEEDED(xpc->GetPendingException(&e)) && e)
+    {
+        JSBool success = JS_FALSE;
+        xpc->SetPendingException(nsnull);
+        nsresult code;
+
+        if(NS_SUCCEEDED(e->GetCode(&code)) && code == result)
+        {
+            if(!ThrowExceptionObject(cx, e))
+                JS_ReportOutOfMemory(cx);
+            success = JS_TRUE;
+        }
+        NS_RELEASE(e);
+        if(success)
+            return;
+    }
+
+    // else...
+
+    if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format) || !format)
+        format = "";
+
+    if(nsXPCException::NameAndFormatForNSResult(result, &name, nsnull) && name)
+        sz = JS_smprintf("%s 0x%x (%s)", format, result, name);
+    else
+        sz = JS_smprintf("%s 0x%x", format, result);
 
     if(sz && mVerbose)
         Verbosify(cx, clazz, desc, &sz, PR_TRUE);
 
-    if(sz)
-    {
-        str = JS_NewStringCopyZ(cx, sz);
-        JS_smprintf_free(sz);
-    }
+    BuildAndThrowException(cx, result, sz);
 
-    if(str)
-        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
-    else
-        JS_ReportOutOfMemory(cx);
+    if(sz)
+        JS_smprintf_free(sz);
 }
 
 void
-XPCJSThrower::ThrowBadParamException(uintN errNum,
+XPCJSThrower::ThrowBadParamException(nsresult rv,
                             JSContext* cx,
                             nsXPCWrappedNativeClass* clazz,
                             const XPCNativeMemberDescriptor* desc,
@@ -122,27 +138,22 @@ XPCJSThrower::ThrowBadParamException(uintN errNum,
     const char* format;
     JSString* str = NULL;
 
-    format = mFormats[errNum].format;
+    if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
+        format = "";
 
     sz = JS_smprintf("%s arg %d", format, paramNum);
 
     if(sz && mVerbose)
         Verbosify(cx, clazz, desc, &sz, PR_TRUE);
 
-    if(sz)
-    {
-        str = JS_NewStringCopyZ(cx, sz);
-        JS_smprintf_free(sz);
-    }
+    BuildAndThrowException(cx, rv, sz);
 
-    if(str)
-        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
-    else
-        JS_ReportOutOfMemory(cx);
+    if(sz)
+        JS_smprintf_free(sz);
 }
 
 void
-XPCJSThrower::ThrowException(uintN errNum,
+XPCJSThrower::ThrowException(nsresult rv,
                     JSContext* cx,
                     nsXPCWrappedNativeClass* clazz /* = nsnull */,
                     const XPCNativeMemberDescriptor* desc /* = nsnull */)
@@ -151,21 +162,54 @@ XPCJSThrower::ThrowException(uintN errNum,
     const char* format;
     JSString* str = NULL;
 
-    format = mFormats[errNum].format;
+    if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
+        format = "";
+
     sz = (char*) format;
 
     if(sz && mVerbose)
         Verbosify(cx, clazz, desc, &sz, PR_FALSE);
 
-    if(sz)
-    {
-        str = JS_NewStringCopyZ(cx, sz);
-        if(sz != format)
-            JS_smprintf_free(sz);
-    }
+    BuildAndThrowException(cx, rv, sz);
 
-    if(str)
-        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
-    else
+    if(sz && sz != format)
+        JS_smprintf_free(sz);
+}
+
+void
+XPCJSThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
+{
+    JSBool success = JS_FALSE;
+    nsIXPCException* e = nsXPCException::NewException(sz,rv,nsnull,nsnull,1);
+
+    if(e)
+    {
+        success = ThrowExceptionObject(cx, e);
+        NS_RELEASE(e);
+    }
+    if(!success)
         JS_ReportOutOfMemory(cx);
 }
+
+JSBool
+XPCJSThrower::ThrowExceptionObject(JSContext* cx, nsIXPCException* e)
+{
+    JSBool success = JS_FALSE;
+    if(e)
+    {
+        nsIXPConnectWrappedNative* wrapper;
+        if(NS_SUCCEEDED(nsXPConnect::GetXPConnect()->
+                    WrapNative(cx, e, NS_GET_IID(nsIXPCException), &wrapper)))
+        {
+            JSObject* obj;
+            if(NS_SUCCEEDED(wrapper->GetJSObject(&obj)))
+            {
+                JS_SetPendingException(cx, OBJECT_TO_JSVAL(obj));
+                success = JS_TRUE;
+            }
+            NS_RELEASE(wrapper);
+        }
+    }
+    return success;
+}
+

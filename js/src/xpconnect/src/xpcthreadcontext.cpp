@@ -26,7 +26,7 @@ xpc_StackDtorCB(void* ptr)
     nsDeque* myStack = (nsDeque*) ptr;
     if(myStack)
         delete myStack;
-}        
+}
 
 static nsDeque*
 GetMyStack()
@@ -61,12 +61,12 @@ GetMyStack()
         }
     }
     return myStack;
-}        
+}
 
 
 /***************************************************************************/
 
-/* 
+/*
 * This object holds state that we don't want to lose!
 *
 * The plan is that once created this object never goes away. We do an
@@ -85,8 +85,8 @@ nsXPCThreadJSContextStackImpl::~nsXPCThreadJSContextStackImpl() {}
 static NS_DEFINE_IID(knsXPCThreadJSContextStackImplIID, NS_IJSCONTEXTSTACK_IID);
 NS_IMPL_ISUPPORTS(nsXPCThreadJSContextStackImpl, knsXPCThreadJSContextStackImplIID);
 
-//static 
-nsXPCThreadJSContextStackImpl* 
+//static
+nsXPCThreadJSContextStackImpl*
 nsXPCThreadJSContextStackImpl::GetSingleton()
 {
     static nsXPCThreadJSContextStackImpl* singleton = NULL;
@@ -95,7 +95,7 @@ nsXPCThreadJSContextStackImpl::GetSingleton()
     if(singleton)
         NS_ADDREF(singleton);
     return singleton;
-}        
+}
 
 /* readonly attribute PRInt32 Count; */
 NS_IMETHODIMP
@@ -114,7 +114,7 @@ nsXPCThreadJSContextStackImpl::GetCount(PRInt32 *aCount)
 
     *aCount = myStack->GetSize();
     return NS_OK;
-}        
+}
 
 /* JSContext Peek (); */
 NS_IMETHODIMP
@@ -136,7 +136,7 @@ nsXPCThreadJSContextStackImpl::Peek(JSContext * *_retval)
     else
         *_retval = nsnull;
     return NS_OK;
-}        
+}
 
 /* JSContext Pop (); */
 NS_IMETHODIMP
@@ -158,7 +158,7 @@ nsXPCThreadJSContextStackImpl::Pop(JSContext * *_retval)
     else
         myStack->Pop();
     return NS_OK;
-}        
+}
 
 /* void Push (in JSContext cx); */
 NS_IMETHODIMP
@@ -171,4 +171,4 @@ nsXPCThreadJSContextStackImpl::Push(JSContext * cx)
 
     myStack->Push(cx);
     return NS_OK;
-}        
+}

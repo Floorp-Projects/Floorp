@@ -21,60 +21,73 @@
 #include "xpcprivate.h"
 
 /***************************************************************************/
-/* Quick and dirty mapping of well known result codes to strings. We only 
+/* Quick and dirty mapping of well known result codes to strings. We only
 *  call this when building an exception object, so iterating the short array
 *  is not too bad.
-* 
+*
 *  It sure would be nice to have exceptions declared in idl and available
 *  in some more global way at runtime.
 */
 
-// static 
-const char* 
-nsXPCException::NameForNSResult(nsresult rv)
+struct ResultMap {nsresult rv; const char* name; const char* format;} map[] = {
+#define XPC_MSG_DEF(val, format) \
+    {(val), #val, format},
+#include "xpc.msg"
+#undef MSG_DEF
+    {0,0,0}   // sentinel to mark end of array
+};
+
+// static
+JSBool
+nsXPCException::NameAndFormatForNSResult(nsresult rv,
+                                         const char** name,
+                                         const char** format)
 {
-#ifdef MAP_ENTRY
-#undef MAP_ENTRY
-#endif
-#define MAP_ENTRY(r) {(r),#r},
-    struct ResultMap {nsresult rv; const char* name;} map[] = {
-        MAP_ENTRY(NS_OK)
-        MAP_ENTRY(NS_ERROR_BASE)
-        MAP_ENTRY(NS_ERROR_NOT_INITIALIZED)
-        MAP_ENTRY(NS_ERROR_ALREADY_INITIALIZED)
-        MAP_ENTRY(NS_ERROR_NOT_IMPLEMENTED)
-        MAP_ENTRY(NS_ERROR_NO_INTERFACE)
-        MAP_ENTRY(NS_ERROR_INVALID_POINTER)
-        MAP_ENTRY(NS_ERROR_ABORT)
-        MAP_ENTRY(NS_ERROR_FAILURE)
-        MAP_ENTRY(NS_ERROR_UNEXPECTED)
-        MAP_ENTRY(NS_ERROR_OUT_OF_MEMORY)
-        MAP_ENTRY(NS_ERROR_ILLEGAL_VALUE)
-        MAP_ENTRY(NS_ERROR_NO_AGGREGATION)
-        MAP_ENTRY(NS_ERROR_NOT_AVAILABLE)
-        MAP_ENTRY(NS_ERROR_FACTORY_NOT_REGISTERED)
-        MAP_ENTRY(NS_ERROR_FACTORY_NOT_LOADED)
-        MAP_ENTRY(NS_ERROR_FACTORY_NO_SIGNATURE_SUPPORT)
-        MAP_ENTRY(NS_ERROR_FACTORY_EXISTS)
-        MAP_ENTRY(NS_ERROR_PROXY_INVALID_IN_PARAMETER)
-        MAP_ENTRY(NS_ERROR_PROXY_INVALID_OUT_PARAMETER)
-        {0,0}   // sentinel to mark end of array
-    };
-#undef MAP_ENTRY
 
     for(ResultMap* p = map; p->name; p++)
+    {
         if(rv == p->rv)
-            return p->name;
-    return nsnull;    
-}        
+        {
+            if(name) *name = p->name;
+            if(format) *format = p->format;
+            return JS_TRUE;
+        }
+    }
+    return JS_FALSE;
+}
+
+// static
+void*
+nsXPCException::IterateNSResults(nsresult* rv,
+                                 const char** name,
+                                 const char** format,
+                                 void** iterp)
+{
+    ResultMap* p = (ResultMap*) *iterp;
+    if(!p)
+        p = map;
+    NS_ASSERTION(p->name, "iterated off the end of the array");
+    if(rv)
+        *rv = p->rv;
+    if(name)
+        *name = p->name;
+    if(format)
+        *format = p->format;
+    p++;
+    if(!p->name)
+        p = nsnull;
+    *iterp = p;
+    return p;
+}
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsXPCException, NS_GET_IID(nsIXPCException))
+NS_IMPL_ISUPPORTS1(nsXPCException, nsIXPCException)
 
 nsXPCException::nsXPCException()
     : mMessage(nsnull),
       mCode(0),
+      mName(nsnull),
       mLocation(nsnull),
       mData(nsnull),
       mInitialized(PR_FALSE)
@@ -95,7 +108,11 @@ nsXPCException::reset()
         nsAllocator::Free(mMessage);
         mMessage = nsnull;
     }
-
+    if(mName)
+    {
+        nsAllocator::Free(mName);
+        mName = nsnull;
+    }
     NS_IF_RELEASE(mLocation);
     NS_IF_RELEASE(mData);
 }
@@ -104,24 +121,14 @@ nsXPCException::reset()
 NS_IMETHODIMP
 nsXPCException::GetMessage(char * *aMessage)
 {
-    if(!aMessage)
-        return NS_ERROR_NULL_POINTER;
     if(!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
-    if(!mMessage)
-    {
-        *aMessage = nsnull;
-        return NS_OK;
-    }
-    char* retval = (char*) nsAllocator::Clone(mMessage,
-                                            sizeof(char)*(strlen(mMessage)+1));
-    *aMessage = retval;
-    return retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    XPC_STRING_GETTER_BODY(aMessage, mMessage);
 }
 
-/* readonly attribute PRInt32 code; */
+/* readonly attribute nsresult code; */
 NS_IMETHODIMP
-nsXPCException::GetCode(PRInt32 *aCode)
+nsXPCException::GetCode(nsresult *aCode)
 {
     if(!aCode)
         return NS_ERROR_NULL_POINTER;
@@ -129,6 +136,20 @@ nsXPCException::GetCode(PRInt32 *aCode)
         return NS_ERROR_NOT_INITIALIZED;
     *aCode = mCode;
     return NS_OK;
+}
+
+/* readonly attribute string name; */
+NS_IMETHODIMP
+nsXPCException::GetName(char * *aName)
+{
+    if(!mInitialized)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    const char* name = mName;
+    if(!name)
+        NameAndFormatForNSResult(mCode, &name, nsnull);
+
+    XPC_STRING_GETTER_BODY(aName, name);
 }
 
 /* readonly attribute nsIJSStackFrameLocation location; */
@@ -157,9 +178,9 @@ nsXPCException::GetData(nsISupports * *aData)
     return NS_OK;
 }
 
-/* void initialize (in string aMessage, in PRInt32 aCode, in nsIJSStackFrameLocation aLocation); */
+/* void initialize (in string aMessage, in nsresult aCode, in string aName, in nsIJSStackFrameLocation aLocation, in nsISupports aData); */
 NS_IMETHODIMP
-nsXPCException::initialize(const char *aMessage, PRInt32 aCode, nsIJSStackFrameLocation *aLocation, nsISupports *aData)
+nsXPCException::initialize(const char *aMessage, nsresult aCode, const char *aName, nsIJSStackFrameLocation *aLocation, nsISupports *aData)
 {
     if(mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
@@ -170,6 +191,13 @@ nsXPCException::initialize(const char *aMessage, PRInt32 aCode, nsIJSStackFrameL
     {
         if(!(mMessage = (char*) nsAllocator::Clone(aMessage,
                                            sizeof(char)*(strlen(aMessage)+1))))
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if(aName)
+    {
+        if(!(mName = (char*) nsAllocator::Clone(aName,
+                                           sizeof(char)*(strlen(aName)+1))))
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -207,12 +235,10 @@ nsXPCException::toString(char **_retval)
     if(!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
-    /* XXX we'd like to convert the error code into a string in the future */
-
     static const char defaultMsg[] = "<no message>";
     static const char defaultLocation[] = "<unknown>";
-    static const char format[] = 
-             "[Exception... \"%s\"  nsresult: %x (%s)  location: \"%s\"  data: %s]";
+    static const char format[] =
+ "[Exception... \"%s\"  nsresult: \"0x%x (%s)\"  location: \"%s\"  data: %s]";
 
     char* indicatedLocation = nsnull;
 
@@ -225,12 +251,11 @@ nsXPCException::toString(char **_retval)
     }
 
     const char* msg = mMessage ? mMessage : defaultMsg;
-    const char* location = indicatedLocation ? 
+    const char* location = indicatedLocation ?
                                 indicatedLocation : defaultLocation;
-    const char* resultName = nsXPCException::NameForNSResult(mCode);
-    if(!resultName)
-        resultName ="<unknown>";
-
+    const char* resultName = mName;
+    if(!resultName && !NameAndFormatForNSResult(mCode, &resultName, nsnull))
+        resultName = "<unknown>";
     const char* data = mData ? "yes" : "no";
 
     char* temp = JS_smprintf(format, msg, mCode, resultName, location, data);
@@ -240,9 +265,8 @@ nsXPCException::toString(char **_retval)
     char* final = nsnull;
     if(temp)
     {
-        final = (char*) nsAllocator::Clone(temp, 
-                                        sizeof(char)*(strlen(temp)+1));
-        JS_smprintf_free(temp);            
+        final = (char*) nsAllocator::Clone(temp, sizeof(char)*(strlen(temp)+1));
+        JS_smprintf_free(temp);
     }
 
     *_retval = final;
@@ -250,21 +274,21 @@ nsXPCException::toString(char **_retval)
 }
 
 
-// static 
-nsIXPCException* 
-nsXPCException::NewException(const char *aMessage, 
-                             PRInt32 aCode, 
+// static
+nsXPCException*
+nsXPCException::NewException(const char *aMessage,
+                             nsresult aCode,
                              nsIJSStackFrameLocation *aLocation,
                              nsISupports *aData,
                              PRInt32 aLeadingFramesToTrim)
 {
     nsresult rv;
-    nsIXPCException* e = new nsXPCException();
+    nsXPCException* e = new nsXPCException();
     if(e)
     {
         NS_ADDREF(e);
 
-        nsIJSStackFrameLocation* location;        
+        nsIJSStackFrameLocation* location;
         if(aLocation)
         {
             location = aLocation;
@@ -295,10 +319,208 @@ nsXPCException::NewException(const char *aMessage,
             location = caller;
         }
         // at this point we have non-null location with one extra addref
-        rv = e->initialize(aMessage, aCode, location, aData);
+        rv = e->initialize(aMessage, aCode, nsnull, location, aData);
         NS_RELEASE(location);
         if(NS_FAILED(rv))
             NS_RELEASE(e);
     }
-    return e;        
+    return e;
 }
+
+/***************************************************************************/
+// Code for converting JSErrorReports to nsIXPCException with (optionally)
+// attached nsIJSErrorReport.
+
+NS_IMPL_ISUPPORTS1(xpcJSErrorReport, nsIJSErrorReport)
+
+xpcJSErrorReport::xpcJSErrorReport()
+    :   mMessage(nsnull),
+        mFilename(nsnull),
+        mLineno(0),
+        mLinebuf(nsnull),
+        mTokenIndex(0),
+        mFlags(0),
+        mErrorNumber(0)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+xpcJSErrorReport::~xpcJSErrorReport()
+{
+    if(mMessage)  nsAllocator::Free(mMessage);
+    if(mFilename) nsAllocator::Free(mFilename);
+    if(mLinebuf)  nsAllocator::Free(mLinebuf);
+}
+
+// static
+xpcJSErrorReport*
+xpcJSErrorReport::NewReport(const char* aMessage,
+                            const JSErrorReport* aReport)
+{
+    if(!aMessage || !aReport)
+    {
+        NS_ASSERTION(0,"invalid params - you should know better!");
+        return nsnull;
+    }
+    xpcJSErrorReport* self = new xpcJSErrorReport();
+    if(!self)
+        return nsnull;
+    NS_ADDREF(self);
+
+    JSBool success = JS_TRUE;
+
+    if(!(self->mMessage = (char*) nsAllocator::Clone(aMessage,
+                                       sizeof(char)*(strlen(aMessage)+1))))
+        success = JS_FALSE;
+
+    if(success && aReport->filename)
+       if(!(self->mFilename = (char*) nsAllocator::Clone(aReport->filename,
+                                sizeof(char)*(strlen(aReport->filename)+1))))
+        success = JS_FALSE;
+
+    if(success && aReport->linebuf)
+    {
+       if(!(self->mLinebuf = (char*) nsAllocator::Clone(aReport->linebuf,
+                                sizeof(char)*(strlen(aReport->linebuf)+1))))
+        success = JS_FALSE;
+
+        if(aReport->tokenptr)
+            self->mTokenIndex = (PRUint32)(aReport->tokenptr - aReport->linebuf);
+    }
+
+    if(success)
+    {
+        self->mLineno       = (PRUint32) aReport->lineno;
+        self->mFlags        = (PRUint32) aReport->flags;
+        self->mErrorNumber  = (PRUint32) aReport->errorNumber;
+    }
+
+    if(!success)
+        NS_RELEASE(self);
+    return self;
+}
+
+/* readonly attribute string message; */
+NS_IMETHODIMP
+xpcJSErrorReport::GetMessage(char * *aMessage)
+{
+    XPC_STRING_GETTER_BODY(aMessage, mMessage);
+}
+
+/* readonly attribute string filename; */
+NS_IMETHODIMP
+xpcJSErrorReport::GetFilename(char * *aFilename)
+{
+    XPC_STRING_GETTER_BODY(aFilename, mFilename);
+}
+
+/* readonly attribute PRUint32 lineno; */
+NS_IMETHODIMP
+xpcJSErrorReport::GetLineno(PRUint32 *aLineno)
+{
+    NS_ENSURE_ARG_POINTER(aLineno);
+    *aLineno = mLineno;
+    return NS_OK;
+}
+
+/* readonly attribute string linebuf; */
+NS_IMETHODIMP
+xpcJSErrorReport::GetLinebuf(char * *aLinebuf)
+{
+    XPC_STRING_GETTER_BODY(aLinebuf, mLinebuf);
+}
+
+/* readonly attribute PRUint32 tokenIndex; */
+NS_IMETHODIMP
+xpcJSErrorReport::GetTokenIndex(PRUint32 *aTokenIndex)
+{
+    NS_ENSURE_ARG_POINTER(aTokenIndex);
+    *aTokenIndex = mTokenIndex;
+    return NS_OK;
+}
+
+/* readonly attribute PRUint32 flags; */
+NS_IMETHODIMP
+xpcJSErrorReport::GetFlags(PRUint32 *aFlags)
+{
+    NS_ENSURE_ARG_POINTER(aFlags);
+    *aFlags = mFlags;
+    return NS_OK;
+}
+
+/* readonly attribute PRUint32 errorNumber; */
+NS_IMETHODIMP
+xpcJSErrorReport::GetErrorNumber(PRUint32 *aErrorNumber)
+{
+    NS_ENSURE_ARG_POINTER(aErrorNumber);
+    *aErrorNumber = mErrorNumber;
+    return NS_OK;
+}
+
+/* readonly attribute PRBool warning; */
+NS_IMETHODIMP
+xpcJSErrorReport::GetWarning(PRBool *aWarning)
+{
+    NS_ENSURE_ARG_POINTER(aWarning);
+    *aWarning = mFlags & JSREPORT_WARNING;
+    return NS_OK;
+}
+
+/* readonly attribute PRBool error; */
+NS_IMETHODIMP
+xpcJSErrorReport::GetError(PRBool *aError)
+{
+    NS_ENSURE_ARG_POINTER(aError);
+    *aError = !(mFlags & JSREPORT_WARNING);
+    return NS_OK;
+}
+
+/* string toString (); */
+NS_IMETHODIMP
+xpcJSErrorReport::toString(char **_retval)
+{
+    static const char format0[] =
+        "[%s: \"%s\" {file: \"%s\" line: %d column: %d source: \"%s\"}]";
+    static const char format1[] =
+        "[%s: \"%s\" {file: \"%s\" line: %d}]";
+    static const char format2[] =
+        "[%s: \"%s\"]";
+
+    static const char error[]   = "JS Error";
+    static const char warning[] = "JS Warning";
+
+    const char * severity = !(mFlags & JSREPORT_WARNING) ? error : warning;
+
+    char* temp;
+
+    if(mFilename && mLinebuf)
+        temp = JS_smprintf(format0,
+                           severity,
+                           mMessage,
+                           mFilename,
+                           mLineno,
+                           mTokenIndex,
+                           mLinebuf);
+    else if(mFilename)
+        temp = JS_smprintf(format1,
+                           severity,
+                           mMessage,
+                           mFilename,
+                           mLineno);
+    else
+        temp = JS_smprintf(format2,
+                           severity,
+                           mMessage);
+
+    char* final = nsnull;
+    if(temp)
+    {
+        final = (char*) nsAllocator::Clone(temp,
+                                        sizeof(char)*(strlen(temp)+1));
+        JS_smprintf_free(temp);
+    }
+
+    *_retval = final;
+    return final ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+

@@ -34,7 +34,7 @@ nsXPCWrappedNative::AddRef(void)
     if(1 == ++mRefCnt && mRoot != this)
         NS_ADDREF(mRoot);
     else if(2 == mRefCnt && NULL != (xpcc = mClass->GetXPCContext()))
-        JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj, 
+        JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj,
                         "nsXPCWrappedNative::mJSObj");
     return mRefCnt;
 }
@@ -116,7 +116,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
         }
     }
 
-    // do a QI to make sure the object passed in really supports the 
+    // do a QI to make sure the object passed in really supports the
     // interface it is claiming to support.
 
     if(NS_FAILED(aObj->QueryInterface(aIID, (void**)&realObj)))
@@ -126,7 +126,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
 
     nsIXPCSecurityManager* sm;
     if(NULL != (sm = xpcc->GetSecurityManager()) &&
-       (xpcc->GetSecurityManagerFlags() & 
+       (xpcc->GetSecurityManagerFlags() &
         nsIXPCSecurityManager::HOOK_CREATE_WRAPPER) &&
        NS_OK != sm->CanCreateWrapper(xpcc->GetJSContext(), aIID, realObj))
     {
@@ -265,19 +265,19 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
         {
             ds->Create(xpcc->GetJSContext(), GetJSObject(), this, as);
             if(mRoot == this)
-                ds->GetFlags(xpcc->GetJSContext(), GetJSObject(), this, 
+                ds->GetFlags(xpcc->GetJSContext(), GetJSObject(), this,
                              &mDynamicScriptableFlags, as);
         }
     }
 }
 
-void 
+void
 nsXPCWrappedNative::XPCContextBeingDestroyed()
 {
     XPCContext* xpcc;
     if(mJSObj && mClass && NULL != (xpcc = mClass->GetXPCContext()))
         JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
-}        
+}
 
 nsXPCWrappedNative::~nsXPCWrappedNative()
 {
@@ -293,7 +293,7 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
             if(cur->mNext == this)
             {
                 cur->mNext = mNext;
-                break;   
+                break;
             }
             cur = cur->mNext;
             NS_ASSERTION(cur, "failed to find wrapper in its own chain");
@@ -301,7 +301,7 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
         // let the root go
         NS_RELEASE(mRoot);
     }
-    else 
+    else
     {
         // remove this root wrapper from the map
         NS_ASSERTION(!mNext, "root wrapper with non-empty chain being deleted");
@@ -315,18 +315,16 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
             map->Remove(this);
         }
     }
+    NS_IF_RELEASE(mDynamicScriptable);
+
     if(mFinalizeListener)
     {
         if(mObj)
             mFinalizeListener->AboutToRelease(mObj);
         NS_RELEASE(mFinalizeListener);
     }
-    if(mDynamicScriptable)
-        NS_RELEASE(mDynamicScriptable);
-    if(mClass)
-        NS_RELEASE(mClass);
-    if(mObj)
-        NS_RELEASE(mObj);
+    NS_IF_RELEASE(mObj);
+    NS_IF_RELEASE(mClass);
 }
 
 nsXPCWrappedNative*
@@ -435,7 +433,7 @@ nsXPCWrappedNative::SetFinalizeListener(nsIXPConnectFinalizeListener* aListener)
     if(mFinalizeListener)
         NS_ADDREF(mFinalizeListener);
     return NS_OK;
-}        
+}
 
 NS_IMETHODIMP
 nsXPCWrappedNative::GetJSObjectPrototype(JSObject** aJSObj)
@@ -443,7 +441,7 @@ nsXPCWrappedNative::GetJSObjectPrototype(JSObject** aJSObj)
     NS_PRECONDITION(aJSObj, "bad param");
     NS_PRECONDITION(mJSObj, "bad wrapper");
     return NS_ERROR_NOT_IMPLEMENTED;
-}        
+}
 
 NS_IMETHODIMP
 nsXPCWrappedNative::DebugDump(int depth)

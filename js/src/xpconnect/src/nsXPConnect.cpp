@@ -346,6 +346,7 @@ nsXPConnect::AddNewComponentsObject(JSContext* aJSContext,
 {
     AUTO_PUSH_JSCONTEXT2(aJSContext, this);
     JSBool success;
+    nsresult rv;
 
     if(!aJSContext)
     {
@@ -359,12 +360,9 @@ nsXPConnect::AddNewComponentsObject(JSContext* aJSContext,
         return NS_ERROR_FAILURE;
     }
 
-    nsIXPCComponents* comp = new nsXPCComponents();
-    if(!comp)
-    {
-        XPC_LOG_ERROR(("nsXPConnect::AddNewComponentsObject failed - could create component object"));
-        return NS_ERROR_FAILURE;
-    }
+    nsIXPCComponents* comp;
+    if(NS_FAILED(rv = CreateComponentsObject(&comp)))
+        return rv;
 
     nsIXPConnectWrappedNative* comp_wrapper;
     if(NS_FAILED(WrapNative(aJSContext, comp,
@@ -390,9 +388,14 @@ nsXPConnect::CreateComponentsObject(nsIXPCComponents** aComponentsObj)
     if(!aComponentsObj)
         return NS_ERROR_NULL_POINTER;
 
-    if(!(*aComponentsObj = new nsXPCComponents()))
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    nsIXPCComponents* obj;
+    if(nsnull != (obj = *aComponentsObj = new nsXPCComponents()))
+    {
+        NS_ADDREF(obj);
+        return NS_OK;
+    }
+    XPC_LOG_ERROR(("nsXPConnect::CreateComponentsObject failed"));
+    return NS_ERROR_OUT_OF_MEMORY;
 }
 
 XPCContext*

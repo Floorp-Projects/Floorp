@@ -75,13 +75,7 @@ class xpcoverloaded : public nsIXPCTestOverloaded, public nsIXPCScriptable
 {
 public:
     NS_DECL_ISUPPORTS
-
-    /* void Foo1 (in PRInt32 p1); */
-    NS_IMETHOD Foo1(PRInt32 p1);
-
-    /* void Foo2 (in PRInt32 p1, in PRInt32 p2); */
-    NS_IMETHOD Foo2(PRInt32 p1, PRInt32 p2);
-
+    NS_DECL_NSIXPCTESTOVERLOADED
     XPC_DECLARE_IXPCSCRIPTABLE
 
     xpcoverloaded();

@@ -21,13 +21,13 @@
 #include "xpcprivate.h"
 
 /*
-* This is a table driven scheme to determine if the types of the params of the 
+* This is a table driven scheme to determine if the types of the params of the
 * given method exclude that method from being reflected via XPConnect.
 *
 * The table can be appended and modified as requirements change. However...
 *
-* The table ASSUMES that all the type idenetifiers are contiguous starting 
-* at ZERO. And, it also ASSUMES that the additional criteria of whether or 
+* The table ASSUMES that all the type idenetifiers are contiguous starting
+* at ZERO. And, it also ASSUMES that the additional criteria of whether or
 * not a give type is reflectable are its use as a pointer and/or 'out' type.
 *
 * The table has a row for each type and columns for the combinations of
@@ -46,26 +46,26 @@
 static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
     /* 'p' stands for 'pointer' and 'o' stands for 'out'   */
     /*          !p&!o, p&!o, !p&o, p&o                     */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I8           */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I16          */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I32          */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I64          */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U8           */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U16          */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U32          */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U64          */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_FLOAT        */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_DOUBLE       */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_BOOL         */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_CHAR         */ 
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_WCHAR        */ 
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_VOID         */ 
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_IID          */ 
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_BSTR         */ 
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_CHAR_STR     */ 
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_WCHAR_STR    */ 
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE    */ 
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 )  /* T_INTERFACE_IS */ 
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I8           */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I16          */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I32          */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I64          */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U8           */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U16          */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U32          */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U64          */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_FLOAT        */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_DOUBLE       */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_BOOL         */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_CHAR         */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_WCHAR        */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_VOID         */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_IID          */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_BSTR         */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_CHAR_STR     */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_WCHAR_STR    */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE    */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 )  /* T_INTERFACE_IS */
     };
 /***********************************************************/
 
@@ -84,7 +84,7 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
         uint8 base_type = type.TagPart();
         NS_ASSERTION(base_type < XPC_FLAG_COUNT, "BAD TYPE");
 
-        if(!XPC_IS_REFLECTABLE(xpc_reflectable_flags[base_type], 
+        if(!XPC_IS_REFLECTABLE(xpc_reflectable_flags[base_type],
                                type.IsPointer(), param.IsOut()))
             return JS_FALSE;
     }
@@ -104,7 +104,7 @@ ObjectHasPrivate(JSContext* cx, JSObject* obj)
 #endif
     NS_ASSERTION(jsclass, "obj has no class");
     return jsclass && (jsclass->flags & JSCLASS_HAS_PRIVATE);
-}        
+}
 
 static JSBool
 GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
@@ -156,7 +156,7 @@ JAM_DOUBLE(JSContext *cx, double v, jsdouble *dbl)
    dbl = JS_NewDouble(cx, (jsdouble)v);
    return DOUBLE_TO_JSVAL(dbl);
 }
-   
+
 // if !HAVE_LONG_LONG, then uint64 is a typedef of int64
 #define JAM_DOUBLE_U64(cx,v,d) JAM_DOUBLE(cx,v,d)
 
@@ -176,7 +176,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
     jsdouble* dbl;
 
     if(pErr)
-        *pErr = XPCJSError::BAD_CONVERT_NATIVE;
+        *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
     switch(type.TagPart())
     {
@@ -302,7 +302,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                     JSObject* globalObject;
                     nsISupports* domObject;
                     NS_ASSERTION(owner,"QI succeeded but yielded NULL!");
-                    if(NULL != (globalObject = 
+                    if(NULL != (globalObject =
                                     JS_GetGlobalObject(cx)) &&
                        ObjectHasPrivate(cx, globalObject) &&
                        NULL != (domObject = (nsISupports*)
@@ -310,7 +310,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                     {
                         nsIScriptGlobalObject* scriptObject;
                         if(NS_SUCCEEDED(domObject->QueryInterface(
-                                            nsIScriptGlobalObject::GetIID(), 
+                                            nsIScriptGlobalObject::GetIID(),
                                             (void**)&scriptObject)))
                         {
                             NS_ASSERTION(scriptObject,"QI succeeded but yielded NULL!");
@@ -318,7 +318,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                             scriptObject->GetContext(&scriptContext);
                             if(scriptContext)
                             {
-                                rv = owner->GetScriptObject(scriptContext, 
+                                rv = owner->GetScriptObject(scriptContext,
                                                     (void **)&aJSObj);
                                 NS_RELEASE(scriptContext);
                                 if (NS_SUCCEEDED(rv))
@@ -336,9 +336,9 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                     // we need to build a wrapper
                     nsXPCWrappedNative* wrapper = NULL;
                     XPCContext* xpcc;
-                    if(!iid || 
+                    if(!iid ||
                        !(xpcc = nsXPConnect::GetContext(cx)) ||
-                       !(wrapper = 
+                       !(wrapper =
                             nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
                                                              iface, *iid)))
                     {
@@ -374,7 +374,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
     jsdouble td;
 
     if(pErr)
-        *pErr = XPCJSError::BAD_CONVERT_JS;
+        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
 
     switch(type.TagPart())
     {
@@ -504,7 +504,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                 if(type.IsReference())
                 {
                     if(pErr)
-                        *pErr = XPCJSError::BAD_CONVERT_JS_NULL_REF;
+                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
                     return JS_FALSE;
                 }
                 // else ...
@@ -537,7 +537,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                 if(type.IsReference())
                 {
                     if(pErr)
-                        *pErr = XPCJSError::BAD_CONVERT_JS_NULL_REF;
+                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
                     return JS_FALSE;
                 }
                 // else ...
@@ -575,7 +575,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                 if(type.IsReference())
                 {
                     if(pErr)
-                        *pErr = XPCJSError::BAD_CONVERT_JS_NULL_REF;
+                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
                     return JS_FALSE;
                 }
                 // else ...
@@ -616,7 +616,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                 if(type.IsReference())
                 {
                     if(pErr)
-                        *pErr = XPCJSError::BAD_CONVERT_JS_NULL_REF;
+                        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
                     return JS_FALSE;
                 }
                 // else ...
@@ -675,6 +675,173 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
     return JS_TRUE;
 }
 
+/***************************************************************************/
+
+static nsIXPCException*
+ConstructException(nsresult rv, const char* message,
+                   const char* ifaceName, const char* methodName,
+                   nsISupports* data)
+{
+    nsIXPCException* e;
+    const char format[] = "%s [%s::%s]";
+    const char * msg = message;
+    char* sz = nsnull;
+
+    if(!msg)
+        if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &msg) || ! msg)
+            msg = "<error>";
+
+    if(ifaceName && methodName)
+        sz = JS_smprintf(format, msg, ifaceName, methodName);
+    else
+        sz = (char*) msg; // I promise to play nice after casting away const
+
+    e = nsXPCException::NewException(sz, rv, nsnull, data, 0);
+
+    if(sz && sz != msg)
+        JS_smprintf_free(sz);
+    return e;
+}
+
+/********************************/
+
+// static
+nsIXPCException*
+XPCConvert::JSValToXPCException(JSContext* cx,
+                                jsval s,
+                                const char* ifaceName,
+                                const char* methodName)
+{
+    if(!JSVAL_IS_PRIMITIVE(s))
+    {
+        // we have a JSObject
+        JSObject* obj = JSVAL_TO_OBJECT(s);
+
+        if(!obj)
+        {
+            NS_ASSERTION(0, "when is an object not an object?");
+            return nsnull;
+        }
+
+        // is this really a native xpcom object with a wrapper?
+        nsXPCWrappedNative* wrapper;
+        if(NULL != (wrapper =
+           nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx,obj)))
+        {
+            nsIXPCException* iface;
+            nsISupports* supports = wrapper->GetNative();
+            if(NS_SUCCEEDED(supports->QueryInterface(
+                                NS_GET_IID(nsIXPCException), (void**)&iface)))
+            {
+                // just pass through the exception (with extra ref and all)
+                return iface;
+            }
+            else
+            {
+                // it is a wrapped native, but not an exception!
+                return ConstructException(NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT,
+                                          nsnull, ifaceName, methodName, supports);
+            }
+        }
+        else
+        {
+            // It is a JSObject, but not a wrapped native.
+
+            // XXX should be able to extract info from 'regular' JS Exceptions
+
+            jsval prop;
+
+            // heuristic to see if it might be usable as an xpcexception
+            if(JS_GetProperty(cx, obj, "message", &prop) &&
+               JS_GetProperty(cx, obj, "code", &prop))
+            {
+                // lets try to build a wrapper around the JSObject
+                XPCContext* xpcc;
+                if(NULL != (xpcc = nsXPConnect::GetContext(cx)))
+                {
+                    return (nsIXPCException*)
+                        nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, obj,
+                                                NS_GET_IID(nsIXPCException));
+                }
+            }
+
+            // otherwise we'll just try to convert it to a string
+
+            JSString* str = JS_ValueToString(cx, s);
+            if(!str)
+                return nsnull;
+
+            return ConstructException(NS_ERROR_XPC_JS_THREW_JS_OBJECT,
+                                      JS_GetStringBytes(str),
+                                      ifaceName, methodName, nsnull);
+        }
+    }
+
+    if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
+    {
+        return ConstructException(NS_ERROR_XPC_JS_THREW_NULL,
+                                  nsnull, ifaceName, methodName, nsnull);
+    }
+
+    // lets see if it looks like and nsresult
+
+    nsresult rv;
+    if(JSVAL_IS_NUMBER(s) && JS_ValueToECMAUint32(cx, s, (uint32*)&rv))
+        return ConstructException(rv, nsnull, ifaceName, methodName, nsnull);
+
+
+    // otherwise we'll just try to convert it to a string
+
+    JSString* str = JS_ValueToString(cx, s);
+    if(str)
+        return ConstructException(NS_ERROR_XPC_JS_THREW_STRING,
+                                  JS_GetStringBytes(str),
+                                  ifaceName, methodName, nsnull);
+    return nsnull;
+}
+
+/********************************/
+
+// static
+nsIXPCException*
+XPCConvert::JSErrorToXPCException(JSContext* cx,
+                                  const char* message,
+                                  const JSErrorReport* report)
+{
+    nsIXPCException* result;
+    xpcJSErrorReport* data;
+    if(report)
+    {
+        static const char defaultMsg[] = "JavaScript Error";
+        data = xpcJSErrorReport::NewReport(message ? message : defaultMsg,
+                                           report);
+    }
+    else
+        data = nsnull;
+
+    if(data)
+    {
+        char* formattedMsg;
+        if(NS_FAILED(data->toString(&formattedMsg)))
+            formattedMsg = nsnull;
+
+        result = ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS,
+                                  formattedMsg, nsnull, nsnull, data);
+
+        if(formattedMsg)
+            nsAllocator::Free(formattedMsg);
+        NS_RELEASE(data);
+    }
+    else
+    {
+        result = ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR,
+                                    nsnull, nsnull, nsnull, nsnull);
+    }
+    return result;
+}
+
+/***************************************************************************/
+
 const char XPC_ARG_FORMATTER_FORMAT_STR[] = "%ip";
 
 JSBool JS_DLL_CALLBACK
@@ -696,7 +863,7 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
                                       &(NS_GET_IID(nsISupports)), nsnull))
             return JS_FALSE;
         *va_arg(ap, nsISupports **) = iface;
-    } 
+    }
     else
     {
         const nsIID* iid;

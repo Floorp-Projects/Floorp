@@ -29,6 +29,7 @@ class nsXPCInterfaces : public nsIXPCInterfaces, public nsIXPCScriptable
 public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCINTERFACES
     XPC_DECLARE_IXPCSCRIPTABLE
 
 public:
@@ -52,7 +53,6 @@ private:
 nsXPCInterfaces::nsXPCInterfaces()
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsXPCInterfaces::~nsXPCInterfaces()
@@ -60,34 +60,30 @@ nsXPCInterfaces::~nsXPCInterfaces()
     // empty
 }
 
-NS_IMPL_ADDREF(nsXPCInterfaces)
-NS_IMPL_RELEASE(nsXPCInterfaces)
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(nsXPCInterfaces, \
-                                   NS_GET_IID(nsIXPCInterfaces), \
-                                   this)
+NS_IMPL_ISUPPORTS2(nsXPCInterfaces, nsIXPCInterfaces, nsIXPCScriptable)
 
-XPC_IMPLEMENT_IGNORE_CREATE(nsXPCInterfaces);
-// XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCInterfaces);
-// XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(nsXPCInterfaces);
-XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCInterfaces);
-// XPC_IMPLEMENT_FORWARD_GETPROPERTY(nsXPCInterfaces);
-XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCInterfaces);
-XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCInterfaces);
-XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCInterfaces);
-XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCInterfaces);
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCInterfaces);
-// XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCInterfaces);
-XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCInterfaces);
-XPC_IMPLEMENT_IGNORE_CALL(nsXPCInterfaces);
-XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsXPCInterfaces);
-XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsXPCInterfaces);
-XPC_IMPLEMENT_FORWARD_FINALIZE(nsXPCInterfaces);
+XPC_IMPLEMENT_IGNORE_CREATE(nsXPCInterfaces)
+// XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCInterfaces)
+// XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(nsXPCInterfaces)
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCInterfaces)
+// XPC_IMPLEMENT_FORWARD_GETPROPERTY(nsXPCInterfaces)
+XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCInterfaces)
+XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCInterfaces)
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCInterfaces)
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCInterfaces)
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCInterfaces)
+// XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCInterfaces)
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCInterfaces)
+XPC_IMPLEMENT_IGNORE_CALL(nsXPCInterfaces)
+XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsXPCInterfaces)
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsXPCInterfaces)
+XPC_IMPLEMENT_FORWARD_FINALIZE(nsXPCInterfaces)
 
 NS_IMETHODIMP
 nsXPCInterfaces::GetFlags(JSContext *cx, JSObject *obj,
-                               nsIXPConnectWrappedNative* wrapper,
-                               JSUint32* flagsp,
-                               nsIXPCScriptable* arbitrary)
+                          nsIXPConnectWrappedNative* wrapper,
+                          JSUint32* flagsp,
+                          nsIXPCScriptable* arbitrary)
 {
     NS_PRECONDITION(flagsp, "bad param");
     *flagsp = XPCSCRIPTABLE_DONT_ENUM_STATIC_PROPS;
@@ -96,11 +92,11 @@ nsXPCInterfaces::GetFlags(JSContext *cx, JSObject *obj,
 
 NS_IMETHODIMP
 nsXPCInterfaces::LookupProperty(JSContext *cx, JSObject *obj,
-                                     jsid id,
-                                     JSObject **objp, JSProperty **propp,
-                                     nsIXPConnectWrappedNative* wrapper,
-                                     nsIXPCScriptable* arbitrary,
-                                     JSBool* retval)
+                                jsid id,
+                                JSObject **objp, JSProperty **propp,
+                                nsIXPConnectWrappedNative* wrapper,
+                                nsIXPCScriptable* arbitrary,
+                                JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
                                               NULL, retval)) && *retval)
@@ -112,10 +108,10 @@ nsXPCInterfaces::LookupProperty(JSContext *cx, JSObject *obj,
 
 NS_IMETHODIMP
 nsXPCInterfaces::GetProperty(JSContext *cx, JSObject *obj,
-                                  jsid id, jsval *vp,
-                                  nsIXPConnectWrappedNative* wrapper,
-                                  nsIXPCScriptable* arbitrary,
-                                  JSBool* retval)
+                             jsid id, jsval *vp,
+                             nsIXPConnectWrappedNative* wrapper,
+                             nsIXPCScriptable* arbitrary,
+                             JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->GetProperty(cx, obj, id, vp, wrapper,
                                            NULL, retval)) && *retval &&
@@ -129,11 +125,11 @@ nsXPCInterfaces::GetProperty(JSContext *cx, JSObject *obj,
 
 NS_IMETHODIMP
 nsXPCInterfaces::Enumerate(JSContext *cx, JSObject *obj,
-                                JSIterateOp enum_op,
-                                jsval *statep, jsid *idp,
-                                nsIXPConnectWrappedNative *wrapper,
-                                nsIXPCScriptable *arbitrary,
-                                JSBool *retval)
+                           JSIterateOp enum_op,
+                           jsval *statep, jsid *idp,
+                           nsIXPConnectWrappedNative *wrapper,
+                           nsIXPCScriptable *arbitrary,
+                           JSBool *retval)
 {
     if(enum_op == JSENUMERATE_INIT)
         FillCache(cx, obj, wrapper, arbitrary);
@@ -145,8 +141,8 @@ nsXPCInterfaces::Enumerate(JSContext *cx, JSObject *obj,
 /* enumerate the known interfaces, adding a property for each new one */
 void
 nsXPCInterfaces::FillCache(JSContext *cx, JSObject *obj,
-                                nsIXPConnectWrappedNative *wrapper,
-                                nsIXPCScriptable *arbitrary)
+                           nsIXPConnectWrappedNative *wrapper,
+                           nsIXPCScriptable *arbitrary)
 {
     nsIInterfaceInfoManager*  iim = nsnull;
     nsIEnumerator*            Interfaces = nsnull;
@@ -205,17 +201,15 @@ nsXPCInterfaces::FillCache(JSContext *cx, JSObject *obj,
     } while (!NS_FAILED(Interfaces->IsDone()));
 
 done:
-    if(Interfaces)
-        NS_RELEASE(Interfaces);
-    if(iim)
-        NS_RELEASE(iim);
+    NS_IF_RELEASE(Interfaces);
+    NS_IF_RELEASE(iim);
 }
 
 void
 nsXPCInterfaces::RealizeInterface(JSContext *cx, JSObject *obj,
-                                       const char *iface_name,
-                                       nsIXPConnectWrappedNative* wrapper,
-                                       nsIXPCScriptable* arbitrary)
+                                  const char *iface_name,
+                                  nsIXPConnectWrappedNative* wrapper,
+                                  nsIXPCScriptable* arbitrary)
 {
     jsval prop;
 
@@ -235,8 +229,8 @@ nsXPCInterfaces::RealizeInterface(JSContext *cx, JSObject *obj,
 
 void
 nsXPCInterfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
-                                    nsIXPConnectWrappedNative* wrapper,
-                                    nsIXPCScriptable* arbitrary)
+                               nsIXPConnectWrappedNative* wrapper,
+                               nsIXPCScriptable* arbitrary)
 {
     jsval idval;
     const char* property_name = NULL;
@@ -276,7 +270,6 @@ nsXPCInterfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
     }
 }
 
-
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
@@ -286,6 +279,7 @@ class nsXPCClasses : public nsIXPCClasses, public nsIXPCScriptable
 public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCCLASSES
     XPC_DECLARE_IXPCSCRIPTABLE
 
 public:
@@ -310,7 +304,6 @@ private:
 nsXPCClasses::nsXPCClasses()
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsXPCClasses::~nsXPCClasses()
@@ -318,35 +311,31 @@ nsXPCClasses::~nsXPCClasses()
     // empty
 }
 
-NS_IMPL_ADDREF(nsXPCClasses)
-NS_IMPL_RELEASE(nsXPCClasses)
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(nsXPCClasses, \
-                                   NS_GET_IID(nsIXPCClasses), \
-                                   this)
+NS_IMPL_ISUPPORTS2(nsXPCClasses, nsIXPCClasses, nsIXPCScriptable)
 
-XPC_IMPLEMENT_FORWARD_CREATE(nsXPCClasses);
-// XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCClasses);
-// XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(nsXPCClasses);
-XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCClasses);
-// XPC_IMPLEMENT_FORWARD_GETPROPERTY(nsXPCClasses);
-XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCClasses);
-XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCClasses);
-XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCClasses);
-XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCClasses);
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCClasses);
-// XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCClasses);
-XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCClasses);
-XPC_IMPLEMENT_IGNORE_CALL(nsXPCClasses);
-XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsXPCClasses);
-XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsXPCClasses);
-XPC_IMPLEMENT_FORWARD_FINALIZE(nsXPCClasses);
+XPC_IMPLEMENT_FORWARD_CREATE(nsXPCClasses)
+// XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCClasses)
+// XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(nsXPCClasses)
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCClasses)
+// XPC_IMPLEMENT_FORWARD_GETPROPERTY(nsXPCClasses)
+XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCClasses)
+XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCClasses)
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCClasses)
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCClasses)
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCClasses)
+// XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCClasses)
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCClasses)
+XPC_IMPLEMENT_IGNORE_CALL(nsXPCClasses)
+XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsXPCClasses)
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsXPCClasses)
+XPC_IMPLEMENT_FORWARD_FINALIZE(nsXPCClasses)
 
 
 NS_IMETHODIMP
 nsXPCClasses::GetFlags(JSContext *cx, JSObject *obj,
-                            nsIXPConnectWrappedNative* wrapper,
-                            JSUint32* flagsp,
-                            nsIXPCScriptable* arbitrary)
+                       nsIXPConnectWrappedNative* wrapper,
+                       JSUint32* flagsp,
+                       nsIXPCScriptable* arbitrary)
 {
     NS_PRECONDITION(flagsp, "bad param");
     *flagsp = XPCSCRIPTABLE_DONT_ENUM_STATIC_PROPS;
@@ -356,11 +345,11 @@ nsXPCClasses::GetFlags(JSContext *cx, JSObject *obj,
 
 NS_IMETHODIMP
 nsXPCClasses::LookupProperty(JSContext *cx, JSObject *obj,
-                                  jsid id,
-                                  JSObject **objp, JSProperty **propp,
-                                  nsIXPConnectWrappedNative* wrapper,
-                                  nsIXPCScriptable* arbitrary,
-                                  JSBool* retval)
+                             jsid id,
+                             JSObject **objp, JSProperty **propp,
+                             nsIXPConnectWrappedNative* wrapper,
+                             nsIXPCScriptable* arbitrary,
+                             JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
                                               NULL, retval)) && *retval)
@@ -372,10 +361,10 @@ nsXPCClasses::LookupProperty(JSContext *cx, JSObject *obj,
 
 NS_IMETHODIMP
 nsXPCClasses::GetProperty(JSContext *cx, JSObject *obj,
-                               jsid id, jsval *vp,
-                               nsIXPConnectWrappedNative* wrapper,
-                               nsIXPCScriptable* arbitrary,
-                               JSBool* retval)
+                          jsid id, jsval *vp,
+                          nsIXPConnectWrappedNative* wrapper,
+                          nsIXPCScriptable* arbitrary,
+                          JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->GetProperty(cx, obj, id, vp, wrapper,
                                            NULL, retval)) && *retval &&
@@ -390,11 +379,11 @@ nsXPCClasses::GetProperty(JSContext *cx, JSObject *obj,
 
 NS_IMETHODIMP
 nsXPCClasses::Enumerate(JSContext *cx, JSObject *obj,
-                             JSIterateOp enum_op,
-                             jsval *statep, jsid *idp,
-                             nsIXPConnectWrappedNative *wrapper,
-                             nsIXPCScriptable *arbitrary,
-                             JSBool *retval)
+                        JSIterateOp enum_op,
+                        jsval *statep, jsid *idp,
+                        nsIXPConnectWrappedNative *wrapper,
+                        nsIXPCScriptable *arbitrary,
+                        JSBool *retval)
 {
     if(enum_op == JSENUMERATE_INIT)
         FillCache(cx, obj, wrapper, arbitrary);
@@ -406,8 +395,8 @@ nsXPCClasses::Enumerate(JSContext *cx, JSObject *obj,
 /* enumerate the known progids, adding a property for each new one */
 void
 nsXPCClasses::FillCache(JSContext *cx, JSObject *obj,
-                             nsIXPConnectWrappedNative *wrapper,
-                             nsIXPCScriptable *arbitrary)
+                        nsIXPConnectWrappedNative *wrapper,
+                        nsIXPCScriptable *arbitrary)
 {
 
     nsIEnumerator*      Classes;
@@ -457,9 +446,9 @@ nsXPCClasses::FillCache(JSContext *cx, JSObject *obj,
 
 void
 nsXPCClasses::RealizeClass(JSContext *cx, JSObject *obj,
-                                const char *class_name,
-                                nsIXPConnectWrappedNative* wrapper,
-                                nsIXPCScriptable* arbitrary)
+                           const char *class_name,
+                           nsIXPConnectWrappedNative* wrapper,
+                           nsIXPCScriptable* arbitrary)
 {
     jsval prop;
 
@@ -479,8 +468,8 @@ nsXPCClasses::RealizeClass(JSContext *cx, JSObject *obj,
 
 void
 nsXPCClasses::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
-                                 nsIXPConnectWrappedNative* wrapper,
-                                 nsIXPCScriptable* arbitrary)
+                            nsIXPConnectWrappedNative* wrapper,
+                            nsIXPCScriptable* arbitrary)
 {
     jsval idval;
     const char* property_name = NULL;
@@ -529,6 +518,7 @@ class nsXPCClassesByID : public nsIXPCClassesByID, public nsIXPCScriptable
 public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCCLASSESBYID
     XPC_DECLARE_IXPCSCRIPTABLE
 
 public:
@@ -540,11 +530,11 @@ private:
     void RealizeClass(JSContext *cx, JSObject *obj, const char *class_name,
                       nsIXPConnectWrappedNative* wrapper,
                       nsIXPCScriptable* arbitrary,
-                       JSBool knownToBeRegistered);
+                      JSBool knownToBeRegistered);
 
     void CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                        nsIXPConnectWrappedNative* wrapper,
-                       nsIXPCScriptable* arbitrary, 
+                       nsIXPCScriptable* arbitrary,
                        JSBool knownToBeRegistered);
 
     void FillCache(JSContext *cx, JSObject *obj,
@@ -555,7 +545,6 @@ private:
 nsXPCClassesByID::nsXPCClassesByID()
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsXPCClassesByID::~nsXPCClassesByID()
@@ -563,35 +552,31 @@ nsXPCClassesByID::~nsXPCClassesByID()
     // empty
 }
 
-NS_IMPL_ADDREF(nsXPCClassesByID)
-NS_IMPL_RELEASE(nsXPCClassesByID)
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(nsXPCClassesByID, \
-                                   NS_GET_IID(nsIXPCClassesByID), \
-                                   this)
+NS_IMPL_ISUPPORTS2(nsXPCClassesByID, nsIXPCClassesByID, nsIXPCScriptable)
 
-XPC_IMPLEMENT_FORWARD_CREATE(nsXPCClassesByID);
-// XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCClassesByID);
-// XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(nsXPCClassesByID);
-XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCClassesByID);
-// XPC_IMPLEMENT_FORWARD_GETPROPERTY(nsXPCClassesByID);
-XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCClassesByID);
-XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCClassesByID);
-XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCClassesByID);
-XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCClassesByID);
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCClassesByID);
-// XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCClassesByID);
-XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCClassesByID);
-XPC_IMPLEMENT_IGNORE_CALL(nsXPCClassesByID);
-XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsXPCClassesByID);
-XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsXPCClassesByID);
-XPC_IMPLEMENT_FORWARD_FINALIZE(nsXPCClassesByID);
+XPC_IMPLEMENT_FORWARD_CREATE(nsXPCClassesByID)
+// XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCClassesByID)
+// XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(nsXPCClassesByID)
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCClassesByID)
+// XPC_IMPLEMENT_FORWARD_GETPROPERTY(nsXPCClassesByID)
+XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCClassesByID)
+XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCClassesByID)
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCClassesByID)
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCClassesByID)
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCClassesByID)
+// XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCClassesByID)
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCClassesByID)
+XPC_IMPLEMENT_IGNORE_CALL(nsXPCClassesByID)
+XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsXPCClassesByID)
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsXPCClassesByID)
+XPC_IMPLEMENT_FORWARD_FINALIZE(nsXPCClassesByID)
 
 
 NS_IMETHODIMP
 nsXPCClassesByID::GetFlags(JSContext *cx, JSObject *obj,
-                            nsIXPConnectWrappedNative* wrapper,
-                            JSUint32* flagsp,
-                            nsIXPCScriptable* arbitrary)
+                           nsIXPConnectWrappedNative* wrapper,
+                           JSUint32* flagsp,
+                           nsIXPCScriptable* arbitrary)
 {
     NS_PRECONDITION(flagsp, "bad param");
     *flagsp = XPCSCRIPTABLE_DONT_ENUM_STATIC_PROPS;
@@ -600,11 +585,11 @@ nsXPCClassesByID::GetFlags(JSContext *cx, JSObject *obj,
 
 NS_IMETHODIMP
 nsXPCClassesByID::LookupProperty(JSContext *cx, JSObject *obj,
-                                  jsid id,
-                                  JSObject **objp, JSProperty **propp,
-                                  nsIXPConnectWrappedNative* wrapper,
-                                  nsIXPCScriptable* arbitrary,
-                                  JSBool* retval)
+                                 jsid id,
+                                 JSObject **objp, JSProperty **propp,
+                                 nsIXPConnectWrappedNative* wrapper,
+                                 nsIXPCScriptable* arbitrary,
+                                 JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
                                               NULL, retval)) && *retval)
@@ -616,10 +601,10 @@ nsXPCClassesByID::LookupProperty(JSContext *cx, JSObject *obj,
 
 NS_IMETHODIMP
 nsXPCClassesByID::GetProperty(JSContext *cx, JSObject *obj,
-                               jsid id, jsval *vp,
-                               nsIXPConnectWrappedNative* wrapper,
-                               nsIXPCScriptable* arbitrary,
-                               JSBool* retval)
+                              jsid id, jsval *vp,
+                              nsIXPConnectWrappedNative* wrapper,
+                              nsIXPCScriptable* arbitrary,
+                              JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->GetProperty(cx, obj, id, vp, wrapper,
                                            NULL, retval)) && *retval &&
@@ -634,11 +619,11 @@ nsXPCClassesByID::GetProperty(JSContext *cx, JSObject *obj,
 
 NS_IMETHODIMP
 nsXPCClassesByID::Enumerate(JSContext *cx, JSObject *obj,
-                             JSIterateOp enum_op,
-                             jsval *statep, jsid *idp,
-                             nsIXPConnectWrappedNative *wrapper,
-                             nsIXPCScriptable *arbitrary,
-                             JSBool *retval)
+                            JSIterateOp enum_op,
+                            jsval *statep, jsid *idp,
+                            nsIXPConnectWrappedNative *wrapper,
+                            nsIXPCScriptable *arbitrary,
+                            JSBool *retval)
 {
     if(enum_op == JSENUMERATE_INIT)
         FillCache(cx, obj, wrapper, arbitrary);
@@ -650,8 +635,8 @@ nsXPCClassesByID::Enumerate(JSContext *cx, JSObject *obj,
 /* enumerate the known progids, adding a property for each new one */
 void
 nsXPCClassesByID::FillCache(JSContext *cx, JSObject *obj,
-                             nsIXPConnectWrappedNative *wrapper,
-                             nsIXPCScriptable *arbitrary)
+                            nsIXPConnectWrappedNative *wrapper,
+                            nsIXPCScriptable *arbitrary)
 {
 
     nsIEnumerator*      Classes;
@@ -686,7 +671,7 @@ nsXPCClassesByID::FillCache(JSContext *cx, JSObject *obj,
                     char* class_name;
                     if(nsnull != (class_name = class_id->ToString()))
                     {
-                       RealizeClass(cx, obj, class_name, wrapper, 
+                       RealizeClass(cx, obj, class_name, wrapper,
                                     arbitrary, JS_TRUE);
                        delete [] class_name;
                     }
@@ -707,10 +692,10 @@ nsXPCClassesByID::FillCache(JSContext *cx, JSObject *obj,
 
 void
 nsXPCClassesByID::RealizeClass(JSContext *cx, JSObject *obj,
-                                const char *class_name,
-                                nsIXPConnectWrappedNative* wrapper,
-                                nsIXPCScriptable* arbitrary,
-                                JSBool knownToBeRegistered)
+                               const char *class_name,
+                               nsIXPConnectWrappedNative* wrapper,
+                               nsIXPCScriptable* arbitrary,
+                               JSBool knownToBeRegistered)
 {
     jsval prop;
 
@@ -750,13 +735,13 @@ IsCanonicalFormOfRegisteredCLSID(const char* str)
     if(NS_SUCCEEDED(compMgr->IsRegistered(id, &registered)))
         return registered;
     return PR_FALSE;
-}        
+}
 
 void
 nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
-                                 nsIXPConnectWrappedNative* wrapper,
-                                 nsIXPCScriptable* arbitrary,
-                                 JSBool knownToBeRegistered)
+                                nsIXPConnectWrappedNative* wrapper,
+                                nsIXPCScriptable* arbitrary,
+                                JSBool knownToBeRegistered)
 {
     jsval idval;
     const char* property_name = NULL;
@@ -803,98 +788,212 @@ nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
 }
 
 /***************************************************************************/
-/***************************************************************************/
-/***************************************************************************/
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(nsXPCComponents, \
-                                   NS_GET_IID(nsIXPCComponents), \
-                                   this)
-NS_IMPL_ADDREF(nsXPCComponents)
-NS_IMPL_RELEASE(nsXPCComponents)
 
-nsXPCComponents::nsXPCComponents() 
+class nsXPCResults : public nsIXPCResults, public nsIXPCScriptable
+{
+public:
+    // all the interface method declarations...
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCRESULTS
+    XPC_DECLARE_IXPCSCRIPTABLE
+
+public:
+    nsXPCResults();
+    virtual ~nsXPCResults();
+
+private:
+    void FillCache(JSContext *cx, JSObject *obj,
+                   nsIXPConnectWrappedNative *wrapper,
+                   nsIXPCScriptable *arbitrary);
+
+private:
+    JSBool mCacheFilled;
+};
+
+nsXPCResults::nsXPCResults()
+    :   mCacheFilled(JS_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsXPCResults::~nsXPCResults()
+{
+    // empty
+}
+
+void
+nsXPCResults::FillCache(JSContext *cx, JSObject *obj,
+                        nsIXPConnectWrappedNative *wrapper,
+                        nsIXPCScriptable *arbitrary)
+{
+    nsresult rv;
+    const char* name;
+    void* iterp = nsnull;
+
+    while(nsXPCException::IterateNSResults(&rv, &name, nsnull, &iterp))
+    {
+        jsid id;
+        JSString *jstrid;
+        jsval val;
+        JSBool retval;
+
+        if(!(jstrid = JS_InternString(cx, name)) ||
+           !JS_ValueToId(cx, STRING_TO_JSVAL(jstrid), &id) ||
+           !JS_NewNumberValue(cx, (jsdouble)rv, &val) ||
+           NS_FAILED(arbitrary->SetProperty(cx, obj, id, &val, wrapper, NULL, &retval)) ||
+           !retval)
+        {
+            JS_ReportOutOfMemory(cx);
+            return;
+        }
+    }
+
+    mCacheFilled = JS_TRUE;
+    return;
+}
+
+NS_IMPL_ISUPPORTS2(nsXPCResults, nsIXPCResults, nsIXPCScriptable)
+
+XPC_IMPLEMENT_IGNORE_CREATE(nsXPCResults)
+// XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCResults)
+// XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(nsXPCResults)
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCResults)
+// XPC_IMPLEMENT_FORWARD_GETPROPERTY(nsXPCResults)
+XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsXPCResults)
+XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsXPCResults)
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCResults)
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCResults)
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCResults)
+// XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCResults)
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCResults)
+XPC_IMPLEMENT_IGNORE_CALL(nsXPCResults)
+XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsXPCResults)
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsXPCResults)
+XPC_IMPLEMENT_FORWARD_FINALIZE(nsXPCResults)
+
+NS_IMETHODIMP
+nsXPCResults::GetFlags(JSContext *cx, JSObject *obj,
+                       nsIXPConnectWrappedNative* wrapper,
+                       JSUint32* flagsp,
+                       nsIXPCScriptable* arbitrary)
+{
+    NS_PRECONDITION(flagsp, "bad param");
+    *flagsp = XPCSCRIPTABLE_DONT_ENUM_STATIC_PROPS;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCResults::LookupProperty(JSContext *cx, JSObject *obj,
+                             jsid id,
+                             JSObject **objp, JSProperty **propp,
+                             nsIXPConnectWrappedNative* wrapper,
+                             nsIXPCScriptable* arbitrary,
+                             JSBool* retval)
+{
+    if(!mCacheFilled)
+        FillCache(cx, obj, wrapper, arbitrary);
+    return arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
+                                     NULL, retval);
+}
+
+NS_IMETHODIMP
+nsXPCResults::GetProperty(JSContext *cx, JSObject *obj,
+                          jsid id, jsval *vp,
+                          nsIXPConnectWrappedNative* wrapper,
+                          nsIXPCScriptable* arbitrary,
+                          JSBool* retval)
+{
+    if(!mCacheFilled)
+        FillCache(cx, obj, wrapper, arbitrary);
+    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, NULL, retval);
+}
+
+
+NS_IMETHODIMP
+nsXPCResults::Enumerate(JSContext *cx, JSObject *obj,
+                        JSIterateOp enum_op,
+                        jsval *statep, jsid *idp,
+                        nsIXPConnectWrappedNative *wrapper,
+                        nsIXPCScriptable *arbitrary,
+                        JSBool *retval)
+{
+    if(enum_op == JSENUMERATE_INIT && !mCacheFilled)
+        FillCache(cx, obj, wrapper, arbitrary);
+
+    return arbitrary->Enumerate(cx, obj, enum_op, statep, idp, wrapper,
+                                arbitrary, retval);
+}
+
+/***************************************************************************/
+/***************************************************************************/
+/***************************************************************************/
+
+NS_IMPL_ISUPPORTS2(nsXPCComponents, nsIXPCComponents, nsIXPCScriptable)
+
+nsXPCComponents::nsXPCComponents()
     :   mInterfaces(nsnull),
         mClasses(nsnull),
         mClassesByID(nsnull),
+        mResults(nsnull),
         mCreating(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
-    mInterfaces = new nsXPCInterfaces();
-    mClasses = new nsXPCClasses();
-    mClassesByID = new nsXPCClassesByID();
 }
 
 nsXPCComponents::~nsXPCComponents()
 {
-    if(mInterfaces)
-        NS_RELEASE(mInterfaces);
-    if(mClasses)
-        NS_RELEASE(mClasses);
-    if(mClassesByID)
-        NS_RELEASE(mClassesByID);
+    NS_IF_RELEASE(mInterfaces);
+    NS_IF_RELEASE(mClasses);
+    NS_IF_RELEASE(mClassesByID);
+    NS_IF_RELEASE(mResults);
 }
 
-NS_IMETHODIMP
-nsXPCComponents::GetInterfaces(nsIXPCInterfaces * *aInterfaces)
-{
-    if(mInterfaces)
-    {
-        NS_ADDREF(mInterfaces);
-        *aInterfaces = mInterfaces;
-        return NS_OK;
-    }
-    *aInterfaces = NULL;
-    return NS_ERROR_UNEXPECTED;
+#define XPC_IMPL_GET_OBJ_METHOD(_n) \
+NS_IMETHODIMP nsXPCComponents::Get##_n(nsIXPC##_n * *a##_n) { \
+    NS_ENSURE_ARG_POINTER(a##_n); \
+    if(!m##_n) { \
+        if(!(m##_n = new nsXPC##_n())) { \
+            *a##_n = nsnull; \
+            return NS_ERROR_OUT_OF_MEMORY; \
+        } \
+        NS_ADDREF(m##_n); \
+    } \
+    NS_ADDREF(m##_n); \
+    *a##_n = m##_n; \
+    return NS_OK; \
 }
 
-NS_IMETHODIMP
-nsXPCComponents::GetClasses(nsIXPCClasses * *aClasses)
-{
-    if(mClasses)
-    {
-        NS_ADDREF(mClasses);
-        *aClasses = mClasses;
-        return NS_OK;
-    }
-    *aClasses = NULL;
-    return NS_ERROR_UNEXPECTED;
-}
-NS_IMETHODIMP
-nsXPCComponents::GetClassesByID(nsIXPCClassesByID * *aClassesByID)
-{
-    if(mClassesByID)
-    {
-        NS_ADDREF(mClassesByID);
-        *aClassesByID = mClassesByID;
-        return NS_OK;
-    }
-    *aClassesByID = NULL;
-    return NS_ERROR_UNEXPECTED;
-}
+XPC_IMPL_GET_OBJ_METHOD(Interfaces);
+XPC_IMPL_GET_OBJ_METHOD(Classes);
+XPC_IMPL_GET_OBJ_METHOD(ClassesByID);
+XPC_IMPL_GET_OBJ_METHOD(Results);
+
+#undef XPC_IMPL_GET_OBJ_METHOD
 
 NS_IMETHODIMP
 nsXPCComponents::GetStack(nsIJSStackFrameLocation * *aStack)
 {
     return nsXPConnect::GetXPConnect()->GetCurrentJSStack(aStack);
 }
+
 /**********************************************/
 
-// XPC_IMPLEMENT_FORWARD_CREATE(nsXPCComponents);
-XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents);
-XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(nsXPCComponents);
-XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCComponents);
-// XPC_IMPLEMENT_FORWARD_GETPROPERTY(nsXPCComponents);
-// XPC_IMPLEMENT_FORWARD_SETPROPERTY(nsXPCComponents);
-XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(nsXPCComponents);
-XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCComponents);
-XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCComponents);
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCComponents);
-XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCComponents);
-XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCComponents);
-XPC_IMPLEMENT_IGNORE_CALL(nsXPCComponents);
-XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsXPCComponents);
-XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsXPCComponents);
-XPC_IMPLEMENT_FORWARD_FINALIZE(nsXPCComponents);
+// XPC_IMPLEMENT_FORWARD_CREATE(nsXPCComponents)
+XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents)
+XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(nsXPCComponents)
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsXPCComponents)
+// XPC_IMPLEMENT_FORWARD_GETPROPERTY(nsXPCComponents)
+// XPC_IMPLEMENT_FORWARD_SETPROPERTY(nsXPCComponents)
+XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(nsXPCComponents)
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsXPCComponents)
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsXPCComponents)
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsXPCComponents)
+XPC_IMPLEMENT_FORWARD_ENUMERATE(nsXPCComponents)
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(nsXPCComponents)
+XPC_IMPLEMENT_IGNORE_CALL(nsXPCComponents)
+XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsXPCComponents)
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsXPCComponents)
+XPC_IMPLEMENT_FORWARD_FINALIZE(nsXPCComponents)
 
 /*
 * Arbitrary properties are not generally Settable. However, during creation
@@ -907,7 +1006,7 @@ nsXPCComponents::Create(JSContext *cx, JSObject *obj,
                         nsIXPConnectWrappedNative* wrapper,
                         nsIXPCScriptable* arbitrary)
 {
-    // NOTE: this script is evaluated where the Components object is the 
+    // NOTE: this script is evaluated where the Components object is the
     // current 'this'.
 
     static const char source[] =
@@ -945,11 +1044,11 @@ nsXPCComponents::Create(JSContext *cx, JSObject *obj,
         "  /* all fall through */\n"
         "  switch(arguments.length){\n"
         "    case 0: str = 'exception';\n"
-        "    case 1: code = Components.RESULT_NS_ERROR_FAILURE;\n"
+        "    case 1: code = Components.results.NS_ERROR_FAILURE;\n"
         "    case 2: stack = Components.stack.caller;\n"
         "    case 3: data = null;\n"
         "  }\n"
-        "  exception.initialize(str, code, stack, data);\n"
+        "  exception.initialize(str, code, null, stack, data);\n"
         "  return exception;\n"
         "};\n"
         "\n"
@@ -960,7 +1059,7 @@ nsXPCComponents::Create(JSContext *cx, JSObject *obj,
 
     jsval ignored;
     mCreating = PR_TRUE;
-    JS_EvaluateScript(cx, obj, source, sizeof(source) - sizeof(char), 
+    JS_EvaluateScript(cx, obj, source, sizeof(source) - sizeof(char),
                       "Components_init_script", 1, &ignored);
     mCreating = PR_FALSE;
     return NS_OK;
@@ -977,22 +1076,22 @@ nsXPCComponents::GetProperty(JSContext *cx, JSObject *obj,
     if(xpcc && xpcc->GetStringID(XPCContext::IDX_LAST_RESULT) == id)
     {
         *retval = JS_TRUE;
-        if(JS_NewDoubleValue(cx, (jsdouble) (PRInt32)xpcc->GetLastResult(), vp))
+        if(JS_NewNumberValue(cx, (jsdouble) xpcc->GetLastResult(), vp))
             return NS_OK;
     }
     return arbitrary->GetProperty(cx, obj, id, vp, wrapper, NULL, retval);
 }
 
 NS_IMETHODIMP
-nsXPCComponents::SetProperty(JSContext *cx, JSObject *obj,         
-                           jsid id, jsval *vp,                              
-                           nsIXPConnectWrappedNative* wrapper,              
-                           nsIXPCScriptable* arbitrary,                     
-                           JSBool* retval)                                  
+nsXPCComponents::SetProperty(JSContext *cx, JSObject *obj,
+                             jsid id, jsval *vp,
+                             nsIXPConnectWrappedNative* wrapper,
+                             nsIXPCScriptable* arbitrary,
+                             JSBool* retval)
 {
-    if(mCreating)    
+    if(mCreating)
         return arbitrary->SetProperty(cx, obj, id, vp, wrapper, NULL, retval);
-    *retval = JS_TRUE; 
+    *retval = JS_TRUE;
     return NS_OK;
 }
 

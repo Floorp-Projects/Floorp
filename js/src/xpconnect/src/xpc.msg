@@ -18,39 +18,63 @@
 
 /* Error Message definitions. */
 
-/* 
-* The format here is the same as that in js/src/js.msg
-* However, arguments are not supported. And, the error->exception
-* mapping is not appropriate here. So, the arg count and exception id 
-* columns are left with zero values.
-*
-* Also, the idetifiers here are read in as members of an anonymous enum in
-* the class XPCJSError rather than at the top level as in JS.
-*/
 
-MSG_DEF(NOT_AN_ERROR,             0, 0, 0, "<Error #0 is reserved>")
-MSG_DEF(NOT_ENOUGH_ARGS,          1, 0, 0, "Not enough arguments")
-MSG_DEF(NEED_OUT_OBJECT,          2, 0, 0, "'Out' argument must be an object")
-MSG_DEF(CANT_SET_OUT_VAL,         3, 0, 0, "Can not set 'value' property of 'out' argument")
-MSG_DEF(NATIVE_RETURNED_FAILURE,  4, 0, 0, "Component returned failure code:")
-MSG_DEF(CANT_GET_INTERFACE_INFO,  5, 0, 0, "Can not find interface information")
-MSG_DEF(CANT_GET_PARAM_IFACE_INFO,6, 0, 0, "Can not find interface information for parameter")
-MSG_DEF(CANT_GET_METHOD_INFO,     7, 0, 0, "Can not find method information")
-MSG_DEF(UNEXPECTED,               8, 0, 0, "Unexpected error in XPConnect")
-MSG_DEF(BAD_CONVERT_JS,           9, 0, 0, "Could not convert JavaScript argument")
-MSG_DEF(BAD_CONVERT_NATIVE,      10, 0, 0, "Could not convert Native argument")
-MSG_DEF(BAD_CONVERT_JS_NULL_REF, 11, 0, 0, "Could not convert JavaScript argument (NULL value can not be used for a C++ reference type)")
-MSG_DEF(BAD_OP_ON_WN_PROTO,      12, 0, 0, "Illegal operation on WrappedNative prototype object")
-MSG_DEF(CANT_CONVERT_WN_TO_FUN,  13, 0, 0, "Cannot convert WrappedNative to function")
-MSG_DEF(CANT_DEFINE_PROP_ON_WN,  14, 0, 0, "Cannot define new property in a WrappedNative")
-MSG_DEF(CANT_WATCH_WN_STATIC,    15, 0, 0, "Cannot place watchpoints on WrappedNative object static properties")
-MSG_DEF(CANT_EXPORT_WN_STATIC,   16, 0, 0, "Cannot export a WrappedNative object's static properties")
-MSG_DEF(SCRIPTABLE_CALL_FAILED,  17, 0, 0, "nsIXPCScriptable::Call failed")
-MSG_DEF(SCRIPTABLE_CTOR_FAILED,  18, 0, 0, "nsIXPCScriptable::Construct failed")
-MSG_DEF(CANT_CALL_WO_SCRIPTABLE, 19, 0, 0, "Can not use wrapper as function unless it implements nsIXPCScriptable")
-MSG_DEF(CANT_CTOR_WO_SCRIPTABLE, 20, 0, 0, "Can not use wrapper as constuctor unless it implements nsIXPCScriptable")
-MSG_DEF(CI_RETURNED_FAILURE,     21, 0, 0, "ComponentManager::CreateInstance returned failure code:")
-MSG_DEF(GS_RETURNED_FAILURE,     22, 0, 0, "ServiceManager::GetService returned failure code:")
-MSG_DEF(BAD_CID,                 23, 0, 0, "Invalid ClassID or ProgID")
-MSG_DEF(BAD_IID,                 24, 0, 0, "Invalid InterfaceID")
-MSG_DEF(CANT_CREATE_WN,          25, 0, 0, "Can not create wrapper around native interface")
+/* xpconnect specific codes (from nsIXPConnect.h) */
+
+XPC_MSG_DEF(NS_ERROR_XPC_NOT_ENOUGH_ARGS              , "Not enough arguments")
+XPC_MSG_DEF(NS_ERROR_XPC_NEED_OUT_OBJECT              , "'Out' argument must be an object")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_SET_OUT_VAL             , "Can not set 'value' property of 'out' argument")
+XPC_MSG_DEF(NS_ERROR_XPC_NATIVE_RETURNED_FAILURE      , "Component returned failure code:")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_GET_INTERFACE_INFO      , "Can not find interface information")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO    , "Can not find interface information for parameter")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_GET_METHOD_INFO         , "Can not find method information")
+XPC_MSG_DEF(NS_ERROR_XPC_UNEXPECTED                   , "Unexpected error in XPConnect")
+XPC_MSG_DEF(NS_ERROR_XPC_BAD_CONVERT_JS               , "Could not convert JavaScript argument")
+XPC_MSG_DEF(NS_ERROR_XPC_BAD_CONVERT_NATIVE           , "Could not convert Native argument")
+XPC_MSG_DEF(NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF      , "Could not convert JavaScript argument (NULL value can not be used for a C++ reference type)")
+XPC_MSG_DEF(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO           , "Illegal operation on WrappedNative prototype object")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_CONVERT_WN_TO_FUN       , "Cannot convert WrappedNative to function")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_DEFINE_PROP_ON_WN       , "Cannot define new property in a WrappedNative")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_WATCH_WN_STATIC         , "Cannot place watchpoints on WrappedNative object static properties")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_EXPORT_WN_STATIC        , "Cannot export a WrappedNative object's static properties")
+XPC_MSG_DEF(NS_ERROR_XPC_SCRIPTABLE_CALL_FAILED       , "nsIXPCScriptable::Call failed")
+XPC_MSG_DEF(NS_ERROR_XPC_SCRIPTABLE_CTOR_FAILED       , "nsIXPCScriptable::Construct failed")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_CALL_WO_SCRIPTABLE      , "Can not use wrapper as function unless it implements nsIXPCScriptable")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_CTOR_WO_SCRIPTABLE      , "Can not use wrapper as constuctor unless it implements nsIXPCScriptable")
+XPC_MSG_DEF(NS_ERROR_XPC_CI_RETURNED_FAILURE          , "ComponentManager::CreateInstance returned failure code:")
+XPC_MSG_DEF(NS_ERROR_XPC_GS_RETURNED_FAILURE          , "ServiceManager::GetService returned failure code:")
+XPC_MSG_DEF(NS_ERROR_XPC_BAD_CID                      , "Invalid ClassID or ProgID")
+XPC_MSG_DEF(NS_ERROR_XPC_BAD_IID                      , "Invalid InterfaceID")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_CREATE_WN               , "Can not create wrapper around native interface")
+XPC_MSG_DEF(NS_ERROR_XPC_JS_THREW_EXCEPTION           , "JavaScript component threw exception")
+XPC_MSG_DEF(NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT       , "JavaScript component threw a native object that is not an exception")
+XPC_MSG_DEF(NS_ERROR_XPC_JS_THREW_NULL                , "JavaScript component threw a null value as an exception")
+XPC_MSG_DEF(NS_ERROR_XPC_JS_THREW_STRING              , "JavaScript component threw a string as an exception")
+XPC_MSG_DEF(NS_ERROR_XPC_JAVASCRIPT_ERROR             , "JavaScript component caused a JavaScript error")
+XPC_MSG_DEF(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS, "JavaScript component caused a JavaScript error (detailed report attached)")
+
+/* common global codes (from nsError.h) */
+
+XPC_MSG_DEF(NS_OK                                  , "Success")
+XPC_MSG_DEF(NS_ERROR_NOT_INITIALIZED               , "Component not initialized")
+XPC_MSG_DEF(NS_ERROR_ALREADY_INITIALIZED           , "Component already initialized")
+XPC_MSG_DEF(NS_ERROR_NOT_IMPLEMENTED               , "Method not implemented")
+XPC_MSG_DEF(NS_NOINTERFACE                         , "Component does not have requested interface")
+XPC_MSG_DEF(NS_ERROR_NO_INTERFACE                  , "Component does not have requested interface")
+XPC_MSG_DEF(NS_ERROR_INVALID_POINTER               , "Invalid pointer")
+XPC_MSG_DEF(NS_ERROR_NULL_POINTER                  , "Null pointer")
+XPC_MSG_DEF(NS_ERROR_ABORT                         , "Abort")
+XPC_MSG_DEF(NS_ERROR_FAILURE                       , "Failure")
+XPC_MSG_DEF(NS_ERROR_UNEXPECTED                    , "Unexpected error")
+XPC_MSG_DEF(NS_ERROR_OUT_OF_MEMORY                 , "Out of Memory")
+XPC_MSG_DEF(NS_ERROR_ILLEGAL_VALUE                 , "Illegal value")
+XPC_MSG_DEF(NS_ERROR_INVALID_ARG                   , "Invalid argument")
+XPC_MSG_DEF(NS_ERROR_NO_AGGREGATION                , "Component doe not support aggregation")
+XPC_MSG_DEF(NS_ERROR_NOT_AVAILABLE                 , "Component is not available")
+XPC_MSG_DEF(NS_ERROR_FACTORY_NOT_REGISTERED        , "Factory not registered")
+XPC_MSG_DEF(NS_ERROR_FACTORY_NOT_LOADED            , "Factory not loaded")
+XPC_MSG_DEF(NS_ERROR_FACTORY_NO_SIGNATURE_SUPPORT  , "Factory does not support signatures")
+XPC_MSG_DEF(NS_ERROR_FACTORY_EXISTS                , "Factory already exists")
+XPC_MSG_DEF(NS_ERROR_PROXY_INVALID_IN_PARAMETER    , "Invalid input parameter in call to proxy")
+XPC_MSG_DEF(NS_ERROR_PROXY_INVALID_OUT_PARAMETER   , "Invalid output parameter in call to proxy")
+

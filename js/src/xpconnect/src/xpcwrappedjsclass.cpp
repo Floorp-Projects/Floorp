@@ -71,6 +71,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
                                          nsIInterfaceInfo* aInfo)
     : mXPCContext(xpcc),
       mInfo(aInfo),
+      mName(nsnull),
       mIID(aIID),
       mDescriptors(NULL)
 {
@@ -121,6 +122,8 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
         delete [] mDescriptors;
     if(mXPCContext)
         mXPCContext->GetWrappedJSClassMap()->Remove(this);
+    if(mName)
+        nsAllocator::Free(mName);
     NS_RELEASE(mInfo);
 }
 
@@ -140,6 +143,8 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
 
     if(id)
     {
+        jsval e;
+        JSBool hadExpection = JS_GetPendingException(cx, &e);
         JSErrorReporter older = JS_SetErrorReporter(cx, NULL);
         jsval args[1] = {OBJECT_TO_JSVAL(id)};
         success = JS_CallFunctionName(cx, jsobj, XPC_QUERY_INTERFACE_STR,
@@ -147,6 +152,10 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
         if(success)
             success = JS_ValueToObject(cx, retval, &retObj);
         JS_SetErrorReporter(cx, older);
+        if(hadExpection)
+            JS_SetPendingException(cx, e);
+        else
+            JS_ClearPendingException(cx);
     }
 
     return success ? retObj : NULL;
@@ -260,7 +269,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
             return NS_OK;
         }
     }
-    
+
     // else...
     // no can do
     *aInstancePtr = NULL;
@@ -272,6 +281,17 @@ nsXPCWrappedJSClass::GetRootJSObject(JSObject* aJSObj)
 {
     JSObject* result = CallQueryInterfaceOnJSObject(aJSObj, nsCOMTypeInfo<nsISupports>::GetIID());
     return result ? result : aJSObj;
+}
+
+JS_STATIC_DLL_CALLBACK(void)
+xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
+                          JSErrorReport *report)
+{
+    nsIXPCException* e;
+    XPCContext* xpcc;
+    if(nsnull != (e = XPCConvert::JSErrorToXPCException(cx, message, report))&&
+       nsnull != (xpcc = nsXPConnect::GetContext(cx)))
+        xpcc->SetException(e);
 }
 
 NS_IMETHODIMP
@@ -286,7 +306,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     jsval result;
     uint8 paramCount=0;
     nsresult retval = NS_ERROR_FAILURE;
-    JSErrorReporter older = NULL;
+    JSErrorReporter older;
     JSBool success;
     JSContext* cx = GetJSContext();
     JSBool InConversionsDone = JS_FALSE;
@@ -294,17 +314,24 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     JSBool iidIsOwned = JS_FALSE;
     JSObject* obj = wrapper->GetJSObject();
     const char* name = info->GetName();
+    nsIXPCException* xpc_exception;
+    jsval js_exception;
     void* mark;
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
 
     // XXX ASSUMES that retval is last arg.
     paramCount = info->GetParamCount();
     argc = paramCount -
             (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
 
-    if(!mXPCContext || !cx || !IsReflectable(methodIndex))
+    if(cx)
+        older = JS_SetErrorReporter(cx, xpcWrappedJSErrorReporter);
+
+    if(!xpc || !mXPCContext || !cx || !IsReflectable(methodIndex))
         goto pre_call_clean_up;
 
-    older = JS_SetErrorReporter(cx, NULL);
+    mXPCContext->SetException(nsnull);
+    xpc->SetPendingException(nsnull);
 
     // We use js_AllocStack, js_Invoke, and js_FreeStack so that the gcthings
     // we use as args will be rooted by the engine as we do conversions and
@@ -330,7 +357,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     }
     else
     {
-        sp += 2;    
+        sp += 2;
     }
 
     // build the args
@@ -468,7 +495,7 @@ pre_call_clean_up:
         success = JS_SetProperty(cx, obj, name, sp-1);
     else
     {
-        // Lift current frame (or make new one) to include the args 
+        // Lift current frame (or make new one) to include the args
         // and do the call.
         JSStackFrame *fp, *oldfp, frame;
         jsval *oldsp;
@@ -488,13 +515,38 @@ pre_call_clean_up:
             cx->fp = oldfp;
     }
 
-    if(JS_IsExceptionPending(cx))
+    /* this one would be set by our error reporter */
+    xpc_exception = mXPCContext->GetException();
+
+    /* JS might throw an expection whether the reporter was called or not */
+    if(JS_GetPendingException(cx, &js_exception))
     {
+        if(!xpc_exception)
+            xpc_exception = XPCConvert::JSValToXPCException(cx, js_exception,
+                                                    GetInterfaceName(), name);
+
+        /* cleanup and set failed even if we can't build an exception */
+        if(!xpc_exception)
+        {
+            xpc->SetPendingException(nsnull);
+            success = JS_FALSE;
+        }
         JS_ClearPendingException(cx);
+    }
+
+    if(xpc_exception)
+    {
+        xpc->SetPendingException(xpc_exception);
+        xpc_exception->GetCode(&retval);
+        NS_RELEASE(xpc_exception);
+        mXPCContext->SetException(nsnull);
         success = JS_FALSE;
     }
+
     if(!success)
         goto done;
+
+    xpc->SetPendingException(nsnull);
 
     // convert out args and result
     // NOTE: this is the total number of native params, not just the args
@@ -573,12 +625,11 @@ done:
     if(conditional_iid && iidIsOwned)
         nsAllocator::Free((void*)conditional_iid);
 
-    if(older)
+    if(cx)
         JS_SetErrorReporter(cx, older);
 
     return retval;
 }
-
 
 static JSClass WrappedJSOutArg_class = {
     "XPCOutArg", 0,
@@ -598,13 +649,21 @@ nsXPCWrappedJSClass::InitForContext(XPCContext* xpcc)
     return JS_TRUE;
 }
 
+const char*
+nsXPCWrappedJSClass::GetInterfaceName()
+{
+    if(!mName)
+        mInfo->GetName(&mName);
+    return mName;
+}
+
 JSObject*
 nsXPCWrappedJSClass::NewOutObject()
 {
     return JS_NewObject(GetJSContext(), &WrappedJSOutArg_class, NULL, NULL);
 }
 
-void 
+void
 nsXPCWrappedJSClass::XPCContextBeingDestroyed()
 {
     mXPCContext = NULL;
