@@ -106,9 +106,6 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
 
-#define XUL_NAMESPACE_URI_PREFIX XUL_NAMESPACE_URI "#"
-DEFINE_RDF_VOCAB(XUL_NAMESPACE_URI_PREFIX, XUL, element);
-
 ////////////////////////////////////////////////////////////////////////
 // XPCOM IIDs
 
@@ -188,8 +185,8 @@ protected:
 
     static nsIRDFResource* kRDF_child; // XXX needs to be NC:child (or something else)
     static nsIRDFResource* kRDF_instanceOf;
-    static nsIRDFResource* kRDF_type;
     static nsIRDFResource* kXUL_element;
+    static nsIRDFResource* kXUL_tag;
 
     // Text management
     nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
@@ -279,8 +276,8 @@ nsIRDFService*       XULContentSinkImpl::gRDFService = nsnull;
 
 nsIRDFResource*      XULContentSinkImpl::kRDF_child;
 nsIRDFResource*      XULContentSinkImpl::kRDF_instanceOf;
-nsIRDFResource*      XULContentSinkImpl::kRDF_type;
 nsIRDFResource*      XULContentSinkImpl::kXUL_element;
+nsIRDFResource*      XULContentSinkImpl::kXUL_tag;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -319,10 +316,10 @@ XULContentSinkImpl::XULContentSinkImpl()
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_SUCCEEDED(rv)) {
-            gRDFService->GetResource(kURIRDF_child,      &kRDF_child);
-            gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_instanceOf);
-            gRDFService->GetResource(kURIRDF_type,       &kRDF_type);
-            gRDFService->GetResource(kURIXUL_element,    &kXUL_element);
+            gRDFService->GetResource(RDF_NAMESPACE_URI "child",      &kRDF_child);
+            gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
+            gRDFService->GetResource(XUL_NAMESPACE_URI "#element",   &kXUL_element);
+            gRDFService->GetResource(XUL_NAMESPACE_URI "#tag",       &kXUL_tag);
         }
     }
 
@@ -398,7 +395,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
 
                 // pull the namespace and tag out of the resource by
                 // walking the 'type' arc.
-                rv = mDataSource->GetTarget(resource, kRDF_type, PR_TRUE, getter_AddRefs(typeNode));
+                rv = mDataSource->GetTarget(resource, kXUL_tag, PR_TRUE, getter_AddRefs(typeNode));
                 if (NS_OK == rv) {
                     nsCOMPtr<nsIRDFResource> type( do_QueryInterface(typeNode) );
                     if (type) {
@@ -450,7 +447,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
         NS_IF_RELEASE(kRDF_child);
         NS_IF_RELEASE(kRDF_instanceOf);
-        NS_IF_RELEASE(kRDF_type);
+        NS_IF_RELEASE(kXUL_tag);
         NS_IF_RELEASE(kXUL_element);
     }
 
@@ -1355,27 +1352,8 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
 
         //if (nameSpaceID == kNameSpaceID_HTML)
         //    attr.ToLowerCase(); // Not our problem. You'd better be lowercase.
-
-        // Get the URI for the namespace, so we can construct a
-        // fully-qualified property name.
-        nsAutoString propertyStr;
-        mNameSpaceManager->GetNameSpaceURI(nameSpaceID, propertyStr);
-
-        // Insert a '#' if the namespace doesn't end with one, or the
-        // attribute doesn't start with one.
-        //
-        // XXX Is this the right thing to do? In general, what's the
-        // right way to construct a resource or property URI from a
-        // prefix:attribute pair?
-        if (! ((attr.First() == '#') &&
-               (propertyStr.Last() == '#' || propertyStr.Last() == '/'))) {
-            propertyStr.Append('#');
-        }
-        propertyStr.Append(attr);
-
-        // Add the attribute to RDF
         nsCOMPtr<nsIRDFResource> property;
-        rv = gRDFService->GetUnicodeResource(propertyStr.GetUnicode(), getter_AddRefs(property));
+        rv = nsRDFContentUtils::GetResource(nameSpaceID, attr, getter_AddRefs(property));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFLiteral> value;
@@ -1443,14 +1421,12 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
 
     // Convert the container's namespace/tag pair to a fully qualified
     // URI so that we can specify it as an RDF resource.
-    nsCOMPtr<nsIAtom> attr = dont_AddRef( NS_NewAtom(tag) );
-
     nsCOMPtr<nsIRDFResource> tagResource;
-    rv = nsRDFContentUtils::GetResource(nameSpaceID, attr, getter_AddRefs(tagResource));
+    rv = nsRDFContentUtils::GetResource(nameSpaceID, tag, getter_AddRefs(tagResource));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct resource from namespace/tag pair");
     if (NS_FAILED(rv)) return rv;
 
-    rv = mDataSource->Assert(rdfResource, kRDF_type, tagResource, PR_TRUE);
+    rv = mDataSource->Assert(rdfResource, kXUL_tag, tagResource, PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to assert tag type");
     if (NS_FAILED(rv)) return rv;
 

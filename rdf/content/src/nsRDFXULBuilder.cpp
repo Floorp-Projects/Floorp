@@ -200,9 +200,9 @@ private:
     
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_nextVal;
-    static nsIRDFResource* kRDF_type;
     static nsIRDFResource* kRDF_child; // XXX needs to become kNC_child
     static nsIRDFResource* kXUL_element;
+    static nsIRDFResource* kXUL_tag;
 
     RDFXULBuilderImpl();
     nsresult Init();
@@ -358,9 +358,9 @@ nsIAtom*        RDFXULBuilderImpl::kXULContentsGeneratedAtom;
 
 nsIRDFResource* RDFXULBuilderImpl::kRDF_instanceOf;
 nsIRDFResource* RDFXULBuilderImpl::kRDF_nextVal;
-nsIRDFResource* RDFXULBuilderImpl::kRDF_type;
 nsIRDFResource* RDFXULBuilderImpl::kRDF_child;
 nsIRDFResource* RDFXULBuilderImpl::kXUL_element;
+nsIRDFResource* RDFXULBuilderImpl::kXUL_tag;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -439,9 +439,9 @@ RDFXULBuilderImpl::Init()
 
         gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
         gRDFService->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
-        gRDFService->GetResource(RDF_NAMESPACE_URI "type",       &kRDF_type);
         gRDFService->GetResource(RDF_NAMESPACE_URI "child",      &kRDF_child);
         gRDFService->GetResource(XUL_NAMESPACE_URI "#element",   &kXUL_element);
+        gRDFService->GetResource(XUL_NAMESPACE_URI "#tag",       &kXUL_tag);
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
                                           nsIRDFContainerUtils::GetIID(),
@@ -484,9 +484,9 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
 
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_nextVal);
-        NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kRDF_child);
         NS_IF_RELEASE(kXUL_element);
+        NS_IF_RELEASE(kXUL_tag);
 
         NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kXULContentsGeneratedAtom);
@@ -931,7 +931,7 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
             NS_ASSERTION(NS_SUCCEEDED(rv), "problem inserting child into content model");
             if (NS_FAILED(rv)) return rv;
         }
-        else if (aProperty == kRDF_type) {
+        else if (aProperty == kXUL_tag) {
             // We shouldn't ever see this: if we do, there ain't much we
             // can do.
             PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -1039,7 +1039,7 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSource,
             NS_ASSERTION(NS_SUCCEEDED(rv), "problem removing child from content model");
             if (NS_FAILED(rv)) return rv;
         }
-        else if (aProperty == kRDF_type) {
+        else if (aProperty == kXUL_tag) {
             // We shouldn't ever see this: if we do, there ain't much we
             // can do.
             PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -1178,7 +1178,7 @@ RDFXULBuilderImpl::OnChange(nsIRDFResource* aSource,
             NS_ASSERTION(NS_SUCCEEDED(rv), "problem inserting new child into content model");
             if (NS_FAILED(rv)) return rv;
         }
-        else if (aProperty == kRDF_type) {
+        else if (aProperty == kXUL_tag) {
             // We shouldn't ever see this: if we do, there ain't much we
             // can do.
             PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -1522,7 +1522,7 @@ RDFXULBuilderImpl::CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
 
     // First, we get the node's type so we can create a tag.
     nsCOMPtr<nsIRDFNode> typeNode;
-    rv = mDB->GetTarget(aResource, kRDF_type, PR_TRUE, getter_AddRefs(typeNode));
+    rv = mDB->GetTarget(aResource, kXUL_tag, PR_TRUE, getter_AddRefs(typeNode));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get node's type");
     if (NS_FAILED(rv)) return rv;
 
@@ -1980,7 +1980,7 @@ RDFXULBuilderImpl::IsAttributeProperty(nsIRDFResource* aProperty)
     // These are special beacuse they're used to specify the tree
     // structure of the XUL: ignore them b/c they're not attributes
     if ((aProperty == kRDF_nextVal) ||
-        (aProperty == kRDF_type) ||
+        (aProperty == kXUL_tag) ||
         (aProperty == kRDF_instanceOf))
         return PR_FALSE;
 
