@@ -289,24 +289,21 @@ NS_NewHTTPCompressConv (nsHTTPCompressConv ** aHTTPCompressConv)
 nsresult
 nsHTTPCompressConv::do_OnDataAvailable (nsIChannel *aChannel, nsISupports *aContext, PRUint32 aSourceOffset, char *buffer, PRUint32 aCount)
 {
-    nsresult rv;
+	nsresult rv;
 
-    nsIInputStream * convertedStream = nsnull;
-	nsIByteArrayInputStream * convertedStreamSup = nsnull;
+	nsCOMPtr<nsIByteArrayInputStream> convertedStreamSup;
 
-	rv = NS_NewByteArrayInputStream (&convertedStreamSup, buffer, aCount);
+	rv = NS_NewByteArrayInputStream (getter_AddRefs(convertedStreamSup), buffer, aCount);
 	if (NS_FAILED (rv)) 
 	    return rv;
 
-    rv = convertedStreamSup -> QueryInterface (NS_GET_IID (nsIInputStream), (void**)&convertedStream);
-	NS_RELEASE (convertedStreamSup);
- 
+	nsCOMPtr<nsIInputStream> convertedStream = do_QueryInterface (convertedStreamSup, &rv);
 	if (NS_FAILED (rv))
 	    return rv;
 
 	rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, aCount);
 
-    return rv;
+	return rv;
 }
 
 #define ASCII_FLAG   0x01 /* bit 0 set: file probably ascii text */
