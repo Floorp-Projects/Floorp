@@ -43,9 +43,12 @@ CPPSRCS =				\
 	nsCP1252ToUnicode.cpp		\
 	nsCP1253ToUnicode.cpp		\
 	nsCP1254ToUnicode.cpp		\
+	nsCP1255ToUnicode.cpp		\
+	nsCP1256ToUnicode.cpp		\
 	nsCP1257ToUnicode.cpp		\
 	nsCP1258ToUnicode.cpp		\
 	nsCP874ToUnicode.cpp		\
+	nsCP866ToUnicode.cpp		\
 	nsKOI8UToUnicode.cpp		\
 	nsKOI8RToUnicode.cpp		\
 	nsMacRomanToUnicode.cpp		\
@@ -80,9 +83,12 @@ CPPSRCS =				\
 	nsUnicodeToCP1252.cpp		\
 	nsUnicodeToCP1253.cpp		\
 	nsUnicodeToCP1254.cpp		\
+	nsUnicodeToCP1255.cpp		\
+	nsUnicodeToCP1256.cpp		\
 	nsUnicodeToCP1257.cpp		\
 	nsUnicodeToCP1258.cpp		\
 	nsUnicodeToCP874.cpp		\
+	nsUnicodeToCP866.cpp		\
 	nsUnicodeToKOI8R.cpp		\
 	nsUnicodeToKOI8U.cpp		\
 	nsUnicodeToMacRoman.cpp		\
@@ -123,9 +129,12 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsCP1252ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1253ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1254ToUnicode.obj 		\
+	.\$(OBJDIR)\nsCP1255ToUnicode.obj 		\
+	.\$(OBJDIR)\nsCP1256ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1257ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1258ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP874ToUnicode.obj 		\
+	.\$(OBJDIR)\nsCP866ToUnicode.obj 		\
 	.\$(OBJDIR)\nsKOI8RToUnicode.obj 		\
 	.\$(OBJDIR)\nsKOI8UToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacRomanToUnicode.obj 		\
@@ -160,9 +169,12 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToCP1252.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1253.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1254.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP1255.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP1256.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1257.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1258.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP874.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP866.obj		\
 	.\$(OBJDIR)\nsUnicodeToKOI8R.obj		\
 	.\$(OBJDIR)\nsUnicodeToKOI8U.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacRoman.obj		\
