@@ -39,15 +39,6 @@
 #include "nsIPresContext.h"
 #include "nsIScriptGlobalObject.h"
 
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
-
-#ifdef NEW_XMLTERM_IMP    // Test C++ NewXMLTerm implementation
-#include "nsIWidget.h"
-#include "nsWidgetsCID.h"
-#include "nsIBaseWindow.h"
-#endif
-
 #include "nsIServiceManager.h"
 
 #include "nsIAppShellService.h"
@@ -66,11 +57,6 @@ static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 
 // Define Class IDs
 static NS_DEFINE_IID(kAppShellServiceCID,    NS_APPSHELL_SERVICE_CID);
-
-#ifdef NEW_XMLTERM_IMP    // Test C++ NewXMLTerm implementation
-static NS_DEFINE_IID(kWindowCID,             NS_WINDOW_CID);
-static NS_DEFINE_IID(kWebShellCID,           NS_WEB_SHELL_CID);
-#endif
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -134,9 +120,6 @@ mozXMLTermShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
   } else if ( aIID.Equals(NS_GET_IID(mozIXMLTermShell)) ) {
     *aInstancePtr = NS_STATIC_CAST(mozIXMLTermShell*,this);
-
-  } else if ( aIID.Equals(NS_GET_IID(nsIWebShellContainer)) ) {
-    *aInstancePtr = NS_STATIC_CAST(nsIWebShellContainer*,this);
 
   } else {
     return NS_ERROR_NO_INTERFACE;
@@ -354,89 +337,6 @@ NS_IMETHODIMP mozXMLTermShell::SendText(const PRUnichar* aString,
 }
 
 
-// Create new XMLTerm window with specified argument string
-NS_IMETHODIMP
-mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args,
-                                  nsIDOMWindow **_retval)
-{
-  nsresult result;
-
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,10,("\n"));
-
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER;
-  *_retval = nsnull;
-
-  if (!mContentAreaDocShell)
-    return NS_ERROR_FAILURE;
-
-  // Get top window
-  nsCOMPtr<nsIWebShell> contentAreaWebShell( do_QueryInterface(mContentAreaDocShell) );
-
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check0, contWebShell=0x%x\n",
-                                            (int) contentAreaWebShell.get()));
-
-  nsCOMPtr<nsIWebShellContainer> topContainer = nsnull;
-  result = contentAreaWebShell->GetTopLevelWindow(getter_AddRefs(topContainer));
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check0, topContainer=0x%x\n",
-                                                (int) topContainer.get()));
-
-  nsCOMPtr<nsIWebShellWindow> topWin( do_QueryInterface(topContainer) );
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check0, topWin=0x%x\n",
-                                                (int) topWin.get()));
-
-#ifdef NEW_XMLTERM_IMP    // Test C++ NewXMLTerm implementation
-  PRInt32 width = 760;
-  PRInt32 height = 400;
-
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check4\n"));
-
-  // Create the Application Shell instance...
-  nsIAppShellService* appShellSvc = nsnull;
-  result = nsServiceManager::GetService(kAppShellServiceCID,
-                                        NS_GET_IID(nsIAppShellService),
-                                        (nsISupports**)&appShellSvc);
-
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check5\n"));
-  if (NS_FAILED(result) || !appShellSvc)
-      return NS_ERROR_FAILURE;
-
-  // Create top level window
-  nsCOMPtr<nsIWebShellWindow> webShellWin;
-  nsCOMPtr<nsIURI> uri = nsnull;
-  //nsCAutoString urlCString("chrome://xmlterm/content/xmlterm.html");
-  //result = uri->SetSpec(urlCString.GetBuffer());
-
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check6\n"));
-  if (NS_FAILED(result))
-      return NS_ERROR_FAILURE;
-
-  appShellSvc->CreateTopLevelWindow((nsIWebShellWindow*) nsnull,
-                                    uri,
-                                    PR_TRUE,
-                                    PR_FALSE,
-                                    (PRUint32) 0,
-                                    width, height,
-                                    getter_AddRefs(webShellWin));
-
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check7, webShellWin=0x%x\n",
-                                                webShellWin.get()));
-  if (NS_FAILED(result))
-    return result;
-
-  // Return new DOM window
-  result = webShellWin->GetDOMWindow(_retval);
-  XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,0,("check8, *_retval=0x%x\n",
-                                                *_retval));
-  if (NS_FAILED(result) || !*_retval)
-    return NS_ERROR_FAILURE;
-
-#endif
-
-  return NS_OK;
-}
-
-
 // Exit XMLTerm window
 NS_IMETHODIMP    
 mozXMLTermShell::Exit()
@@ -453,36 +353,5 @@ mozXMLTermShell::Exit()
     appShell->Shutdown();
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   } 
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP mozXMLTermShell::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
-{
-  XMLT_LOG(mozXMLTermShell::WillLoadURL,0,("\n"));
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP mozXMLTermShell::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
-{
-  XMLT_LOG(mozXMLTermShell::BeginLoadURL,0,("\n"));
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP mozXMLTermShell::ProgressLoadURL(nsIWebShell* aShell,
-          const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
-{
-  XMLT_LOG(mozXMLTermShell::ProgressLoadURL,0,("\n"));
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP mozXMLTermShell::EndLoadURL(nsIWebShell* aShell,
-                                             const PRUnichar* aURL,
-                                             nsresult aStatus)
-{
-  XMLT_LOG(mozXMLTermShell::EndLoadURL,0,("\n"));
   return NS_OK;
 }

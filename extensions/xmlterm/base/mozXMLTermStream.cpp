@@ -314,10 +314,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
   if (NS_FAILED(result))
     return result;
 
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-  result = webShell->Embed(contentViewer, command, (nsISupports*) nsnull);
-  if (NS_FAILED(result))
-    return result;
+  // ****NOTE**** Need to embed contentViewer in docShell
 
   result = mStreamListener->OnStartRequest(mChannel, mContext);
   if (NS_FAILED(result))
