@@ -241,7 +241,7 @@ function Startup()
   // initialize observers and listeners
   window.XULBrowserWindow = new nsBrowserStatusHandler();
   window.browserContentListener =
-    new nsBrowserContentListener(window, getBrowser());
+    new nsBrowserContentListener(window, gBrowser);
 
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
@@ -256,6 +256,7 @@ function Startup()
         //we should "inherit" the charset menu setting in a new window
         getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
       }
+    }
   }
 
   //initConsoleListener();
@@ -266,7 +267,7 @@ function Startup()
   // detect the situation described in bug 113076.
   // The same problem caused bug 139522, also worked around below.
   try {
-    getBrowser().sessionHistory;
+    gBrowser.sessionHistory;
   } catch (e) {
     // sessionHistory wasn't set from the browser's constructor
     // so we'll just have to set it here.
@@ -281,13 +282,13 @@ function Startup()
                                   .getService(Components.interfaces.nsIGlobalHistory);
     getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;
 
-    const selectedBrowser = getBrowser().selectedBrowser;
+    const selectedBrowser = gBrowser.selectedBrowser;
     if (selectedBrowser.securityUI)
       selectedBrowser.securityUI.init(selectedBrowser.contentWindow);
   }
 
   // hook up UI through progress listener
-  getBrowser().addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
   // load appropriate initial page from commandline
   var isPageCycling = false;
@@ -313,15 +314,6 @@ function Startup()
       }
     }
 
-    // Focus the content area unless we're loading a blank page
-    if (uriToLoad == "about:blank" && !toolbar.hidden && window.locationbar.visible)
-      setTimeout(WindowFocusTimerCallback, 0, gURLBar);
-    else
-      setTimeout(WindowFocusTimerCallback, 0, _content);
-
-    // Perform default browser checking (after window opens).
-    setTimeout( checkForDefaultBrowser, 0 );
-
     // hook up remote support
     if (XREMOTESERVICE_CONTRACTID in Components.classes) {
       var remoteService;
@@ -341,6 +333,27 @@ function Startup()
   if (navigator.platform.indexOf("Win") == -1)
     gClickSelectsAll = false;
 
+  // Focus the content area unless we're loading a blank page
+  var elt;
+  if (uriToLoad == "about:blank" && !toolbar.hidden && window.locationbar.visible)
+    elt = gURLBar;
+  else
+    elt = _content;
+
+  setTimeout(delayedStartup, 0, elt);
+}
+
+function delayedStartup(aElt)
+{
+  // Perform default browser checking (after window opens).
+  checkForDefaultBrowser();
+  
+  // now load bookmarks after a delay
+  var bt = document.getElementById("bookmarks-toolbar");
+  bt.loadBookmarksCallback();
+
+  WindowFocusTimerCallback(aElt);
+
   // set home button tooltip text
   var homeButton = document.getElementById("home-button");
   if (homeButton) {
@@ -348,10 +361,6 @@ function Startup()
     if (homePage)
       homeButton.setAttribute("tooltiptext", homePage);
   }
-
-  // now load bookmarks after a delay
-  var bt = document.getElementById("bookmarks-toolbar");
-  setTimeout(function () {bt.loadBookmarksCallback()}, 0);
 }
 
 function WindowFocusTimerCallback(element)
