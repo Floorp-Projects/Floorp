@@ -10644,7 +10644,7 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
                 resizable_width += colp->grid.width;
         }
 
-    if (delta == 0 && resizable_width <= 0)
+    if (delta == 0 || resizable_width <= 0)
         return delta;
 
     if (g->grid.debugLevel)
