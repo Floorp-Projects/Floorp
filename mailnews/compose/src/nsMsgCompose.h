@@ -196,7 +196,7 @@ public:
 
   NS_IMETHOD SetComposeObj(nsMsgCompose *obj);
 	NS_IMETHOD SetDeliverMode(MSG_DeliverMode deliverMode);
-	nsIMsgSendListener **CreateListenerArray();
+	nsIMsgSendListener **CreateListenerArray(PRUint32 *aLength);
 
 private:
 

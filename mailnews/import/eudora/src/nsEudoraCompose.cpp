@@ -605,7 +605,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 										m_pMsgFields,	// message fields
 										PR_FALSE,		// digest = NO
 										PR_TRUE,		// dont_deliver = YES, make a file
-										nsMsgDeliverNow,	// mode
+										nsIMsgSend::nsMsgDeliverNow,	// mode
 										nsnull,			// no message to replace
 										pMimeType,		// body type
 										m_pBody,		// body pointer
@@ -613,7 +613,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 										nsnull,			// remote attachment data
 										pAttach,		// local attachments
 										nsnull,			// related part
-										nsnull);		// listener array
+										nsnull, 0);		// listener array
 
 	
 	// IMPORT_LOG0( "Returned from CreateAndSendMessage\n");

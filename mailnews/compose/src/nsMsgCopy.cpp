@@ -150,7 +150,7 @@ nsMsgCopy::nsMsgCopy()
 {
   mCopyListener = nsnull;
   mFileSpec = nsnull;
-  mMode = nsMsgDeliverNow;
+  mMode = nsIMsgSend::nsMsgDeliverNow;
   mSavePref = nsnull;
 
   NS_INIT_REFCNT(); 
@@ -183,7 +183,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   //
   // Vars for implementation...
   //
-  if (aMode == nsMsgQueueForLater)       // QueueForLater (Outbox)
+  if (aMode == nsIMsgSend::nsMsgQueueForLater)       // QueueForLater (Outbox)
   {
     rv = GetUnsentMessagesFolder(aUserIdentity, getter_AddRefs(dstFolder));
     isDraft = PR_FALSE;
@@ -191,7 +191,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
         return NS_MSG_UNABLE_TO_SEND_LATER;
     } 
   }
-  else if (aMode == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+  else if (aMode == nsIMsgSend::nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {
     rv = GetDraftsFolder(aUserIdentity, getter_AddRefs(dstFolder));
     isDraft = PR_TRUE;
@@ -199,7 +199,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
 	return NS_MSG_UNABLE_TO_SAVE_DRAFT;
     } 
   }
-  else if (aMode == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
+  else if (aMode == nsIMsgSend::nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
     rv = GetTemplatesFolder(aUserIdentity, getter_AddRefs(dstFolder));
     isDraft = PR_FALSE;
@@ -256,25 +256,25 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 nsresult
 nsMsgCopy::GetUnsentMessagesFolder(nsIMsgIdentity   *userIdentity, nsIMsgFolder **folder)
 {
-  return LocateMessageFolder(userIdentity, nsMsgQueueForLater, mSavePref, folder);
+  return LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgQueueForLater, mSavePref, folder);
 }
  
 nsresult 
 nsMsgCopy::GetDraftsFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
 {
-  return LocateMessageFolder(userIdentity, nsMsgSaveAsDraft, mSavePref, folder);
+  return LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgSaveAsDraft, mSavePref, folder);
 }
 
 nsresult 
 nsMsgCopy::GetTemplatesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
 {
-  return LocateMessageFolder(userIdentity, nsMsgSaveAsTemplate, mSavePref, folder);
+  return LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgSaveAsTemplate, mSavePref, folder);
 }
 
 nsresult 
 nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
 {
-  return LocateMessageFolder(userIdentity, nsMsgDeliverNow, mSavePref, folder);
+  return LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgDeliverNow, mSavePref, folder);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -387,15 +387,15 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
       PRUint32 numFolders = 0;
       
       // use the defaults by getting the folder by flags
-      if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
+      if (aFolderType == nsIMsgSend::nsMsgQueueForLater)       // QueueForLater (Outbox)
         {
           rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, 1, &numFolders, msgFolder);
         }
-      else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+      else if (aFolderType == nsIMsgSend::nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
         {
           rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, 1, &numFolders, msgFolder);
         }
-      else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
+      else if (aFolderType == nsIMsgSend::nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
         {
           rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, 1, &numFolders, msgFolder);
         }

@@ -220,9 +220,10 @@ mime_generate_headers (nsMsgCompFields *fields,
 
 	int size = 0;
 	char *buffer = 0, *buffer_tail = 0;
-	PRBool isDraft = deliver_mode == nsMsgSaveAsDraft ||
-					deliver_mode == nsMsgSaveAsTemplate ||
-					deliver_mode == nsMsgQueueForLater;
+	PRBool isDraft =
+    deliver_mode == nsIMsgSend::nsMsgSaveAsDraft ||
+    deliver_mode == nsIMsgSend::nsMsgSaveAsTemplate ||
+    deliver_mode == nsIMsgSend::nsMsgQueueForLater;
 
 	const char* pFrom;
 	const char* pTo;
@@ -278,8 +279,8 @@ mime_generate_headers (nsMsgCompFields *fields,
 		if (fields->GetReturnReceipt() && 
 			(fields->GetReturnReceiptType() == 2 ||
 			fields->GetReturnReceiptType() == 3) && 
-			(deliver_mode != nsMsgSaveAsDraft &&
-			deliver_mode != nsMsgSaveAsTemplate))
+			(deliver_mode != nsIMsgSend::nsMsgSaveAsDraft &&
+			deliver_mode != nsIMsgSend::nsMsgSaveAsTemplate))
 		{
 			PRInt32 receipt_header_type = 0;
 
@@ -545,7 +546,7 @@ mime_generate_headers (nsMsgCompFields *fields,
     // Send Later file, etc...). Because of that, we need to store what the user
     // typed in on the original composition window for use later when rebuilding
     // the headers
-    if (deliver_mode != nsMsgDeliverNow) 
+    if (deliver_mode != nsIMsgSend::nsMsgDeliverNow) 
     {
       // This is going to be saved for later, that means we should just store
       // what the user typed into the "Newsgroup" line in the HEADER_X_MOZILLA_NEWSHOST
@@ -1869,7 +1870,7 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
 
   if (!identity) return nsnull;
 
-  if (aMode == nsMsgQueueForLater)       // QueueForLater (Outbox)
+  if (aMode == nsIMsgSend::nsMsgQueueForLater)       // QueueForLater (Outbox)
   {
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
     if (NS_FAILED(rv) || !prefs) 
@@ -1881,11 +1882,11 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
 	rv = NS_OK;
     }
   }
-  else if (aMode == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+  else if (aMode == nsIMsgSend::nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {
     rv = identity->GetDraftFolder(&uri);
   }
-  else if (aMode == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
+  else if (aMode == nsIMsgSend::nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
     rv = identity->GetStationeryFolder(&uri);
   }

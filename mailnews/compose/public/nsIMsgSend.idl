@@ -47,19 +47,7 @@ interface nsIMessage;
 interface nsIMsgHdr;
 interface nsIWebShell;
 
-typedef PRInt32 nsMsgDeliverMode;
-
-%{ C++
-enum
-{
-  nsMsgDeliverNow = 0,
-  nsMsgQueueForLater = 1,
-  nsMsgSave = 2,
-  nsMsgSaveAs = 3,
-  nsMsgSaveAsDraft = 4,
-  nsMsgSaveAsTemplate = 5
-} /* nsMsgDeliverMode */;
-%}
+typedef long nsMsgDeliverMode;
 
 %{ C++
 //
@@ -141,7 +129,7 @@ typedef struct nsMsgAttachedFile
 } nsMsgAttachedFile;
 %}
 
-[ptr] native sendListenerPtr(nsIMsgSendListener *);
+
 [ptr] native nsMsgAttachmentData(nsMsgAttachmentData);
 [ptr] native nsMsgAttachedFile(nsMsgAttachedFile);
 
@@ -157,43 +145,55 @@ interface nsIMsgSend : nsISupports
   // NOTE: when aEditor is non-null, a multipart related MHTML message will 
   // be created
   //
-  [noscript]
-  void CreateAndSendMessage(in nsIEditorShell               aEditor,      
-                            in nsIMsgIdentity               aUserIdentity,
-   						              in nsIMsgCompFields             fields,
-  						              in PRBool                       digest_p,
-  						              in PRBool                       dont_deliver_p,
-  						              in nsMsgDeliverMode             mode, 
-                            in nsIMessage                   msgToReplace,
-        						        [const] in string               attachment1_type,
-  						              [const] in string               attachment1_body,
-  						              in PRUint32                     attachment1_body_length,
-  						              [const] in nsMsgAttachmentData  attachments,
-  						              [const] in nsMsgAttachedFile    preloaded_attachments,
-  						              in voidStar                     relatedPart,
-                            in sendListenerPtr              aListenerArray); /* nsIMsgSendListener Array */
+    
+    const nsMsgDeliverMode nsMsgDeliverNow = 0;
 
-  [noscript]
-  void SendMessageFile(
-                       in nsIMsgIdentity       aUserIdentity,
-   						         in nsIMsgCompFields     fields,
-                       in nsIFileSpec          sendIFileSpec,
-                       in PRBool               deleteSendFileOnCompletion,
-  						         in PRBool               digest_p,
-  						         in nsMsgDeliverMode     mode,
-                       in nsIMessage           msgToReplace,
-                       in sendListenerPtr      aListenerArray); /* nsIMsgSendListener Array */
+    const nsMsgDeliverMode nsMsgQueueForLater = 1;
+    const nsMsgDeliverMode nsMsgSave = 2;
+    const nsMsgDeliverMode nsMsgSaveAs = 3;
+    const nsMsgDeliverMode nsMsgSaveAsDraft = 4;
+    const nsMsgDeliverMode nsMsgSaveAsTemplate = 5;
 
-  [noscript]
-  void SendWebPage(
-                   in nsIMsgIdentity         aUserIdentity,
-   						     in nsIMsgCompFields       fields,
-                   in nsIURI                 url,
-                   in nsMsgDeliverMode       mode,
-                   in sendListenerPtr        aListenerArray); /* nsIMsgSendListener Array */
+    [noscript]
+    void CreateAndSendMessage(in nsIEditorShell               aEditor,      
+                              in nsIMsgIdentity               aUserIdentity,
+                              in nsIMsgCompFields             fields,
+                              in PRBool                       digest_p,
+                              in PRBool                       dont_deliver_p,
+                              in nsMsgDeliverMode             mode, 
+                              in nsIMessage                   msgToReplace,
+                              in string               attachment1_type,
+                              in string               attachment1_body,
+                              in PRUint32                     attachment1_body_length,
+                              [const] in nsMsgAttachmentData  attachments,
+                              [const] in nsMsgAttachedFile    preloaded_attachments,
+                              in voidStar                     relatedPart,
+                              [array, size_is(listeners)]
+                              in nsIMsgSendListener           aListenerArray,
+                              in unsigned long                listeners);
+                              
+    
+    void SendMessageFile(in nsIMsgIdentity       aUserIdentity,
+                         in nsIMsgCompFields     fields,
+                         in nsIFileSpec          sendIFileSpec,
+                         in PRBool               deleteSendFileOnCompletion,
+                         in PRBool               digest_p,
+                         in nsMsgDeliverMode     mode,
+                         in nsIMessage           msgToReplace,
+                         [array, size_is(listeners)]
+                         in nsIMsgSendListener   aListenerArray,
+                         in unsigned long listeners); 
 
-  void AddListener(in nsIMsgSendListener aListener);
-  void RemoveListener(in nsIMsgSendListener aListener);
-  void SetGUINotificationState(in PRBool aEnableFlag);
-  void SetWebShell(in nsIWebShell aWebShell);
+    void SendWebPage(in nsIMsgIdentity         aUserIdentity,
+                     in nsIMsgCompFields       fields,
+                     in nsIURI                 url,
+                     in nsMsgDeliverMode       mode,
+                     [array, size_is(listeners)]
+                     in nsIMsgSendListener     aListenerArray,
+                     in unsigned long          listeners);
+    
+    void AddListener(in nsIMsgSendListener aListener);
+    void RemoveListener(in nsIMsgSendListener aListener);
+    void SetGUINotificationState(in PRBool aEnableFlag);
+    void SetWebShell(in nsIWebShell aWebShell);
 };

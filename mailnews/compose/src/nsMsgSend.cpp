@@ -3069,20 +3069,14 @@ nsMsgComposeAndSend::DoFcc()
 }
 
 nsresult
-nsMsgComposeAndSend::SetListenerArray(nsIMsgSendListener **aListenerArray)
+nsMsgComposeAndSend::SetListenerArray(nsIMsgSendListener **aListenerArray,
+                                      PRUint32 aListeners)
 {
-  nsIMsgSendListener **ptr = aListenerArray;
-
   if ( (!aListenerArray) || (!*aListenerArray) )
     return NS_OK;
 
   // First, count the listeners passed in...
-  mListenerArrayCount = 0;
-  while (*ptr != nsnull)
-  {
-    mListenerArrayCount++;
-    ++ptr;
-  }
+  mListenerArrayCount = aListeners;
 
   // now allocate an array to hold the number of entries.
   mListenerArray = (nsIMsgSendListener **) PR_Malloc(sizeof(nsIMsgSendListener *) * mListenerArrayCount);
@@ -3400,11 +3394,12 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 						  const nsMsgAttachmentData         *attachments,
 						  const nsMsgAttachedFile           *preloaded_attachments,
 						  void                              *relatedPart,
-              nsIMsgSendListener                **aListenerArray)
+              nsIMsgSendListener                **aListenerArray,
+              PRUint32 aListeners)
 {
   nsresult      rv;
 
-  SetListenerArray(aListenerArray);
+  SetListenerArray(aListenerArray, aListeners);
 
   if (!attachment1_body || !*attachment1_body)
   {
@@ -3437,7 +3432,8 @@ nsMsgComposeAndSend::SendMessageFile(
 						  PRBool                            digest_p,
 						  nsMsgDeliverMode                  mode,
               nsIMessage                        *msgToReplace,
-              nsIMsgSendListener                **aListenerArray)
+              nsIMsgSendListener                **aListenerArray,
+              PRUint32 aListeners)
 {
   nsresult      rv;
 
@@ -3468,7 +3464,7 @@ nsMsgComposeAndSend::SendMessageFile(
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Setup the listeners...
-  SetListenerArray(aListenerArray);
+  SetListenerArray(aListenerArray, aListeners);
 
   // Should we delete the temp file when done?
   if (!deleteSendFileOnCompletion)
@@ -3526,11 +3522,12 @@ BuildURLAttachmentData(nsIURI *url)
 }
 
 nsresult
-nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity                    *aUserIndentity,
-                                 nsIMsgCompFields                  *fields,
-                                 nsIURI                            *url,
-                                 nsMsgDeliverMode                  mode,
-                                 nsIMsgSendListener                **aListenerArray)
+nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity               *aUserIndentity,
+                                 nsIMsgCompFields             *fields,
+                                 nsIURI                       *url,
+                                 nsMsgDeliverMode              mode,
+                                 nsIMsgSendListener           **aListenerArray,
+                                 PRUint32 aListeners)
 {
   nsresult            rv;
   nsMsgAttachmentData *tmpPageData = nsnull;
@@ -3544,7 +3541,7 @@ nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity                    *aUserIndenti
   tmpPageData = BuildURLAttachmentData(url);
 
   // Setup the listeners...
-  SetListenerArray(aListenerArray);
+  SetListenerArray(aListenerArray, aListeners);
 
   /* string GetBody(); */
   PRInt32       bodyLen;
@@ -3571,7 +3568,7 @@ nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity                    *aUserIndenti
 						  tmpPageData, // const nsMsgAttachmentData  *attachments,
 						  nsnull,  // const nsMsgAttachedFile    *preloaded_attachments,
 						  nsnull, // void                              *relatedPart,
-              aListenerArray);  
+              aListenerArray, aListeners);  
   return rv;
 }
 

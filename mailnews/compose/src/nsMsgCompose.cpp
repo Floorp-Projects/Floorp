@@ -564,7 +564,8 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
       // set this object for use on completion...
       m_sendListener->SetComposeObj(this);
       m_sendListener->SetDeliverMode(deliverMode);
-      nsIMsgSendListener **tArray = m_sendListener->CreateListenerArray();
+      PRUint32 listeners;
+      nsIMsgSendListener **tArray = m_sendListener->CreateListenerArray(&listeners);
       if (!tArray)
       {
 #ifdef DEBUG
@@ -600,7 +601,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
                     nsnull,             					// const struct nsMsgAttachmentData  *attachments,
                     nsnull,             					// const struct nsMsgAttachedFile    *preloaded_attachments,
                     nsnull,             					// nsMsgSendPart                     *relatedPart,
-                    tArray);                   			// listener array
+                    tArray, listeners);      			// listener array
       
       // Cleanup converted body...
       if (newBody)
@@ -630,7 +631,8 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
     // rhp:
     // We shouldn't close the window if we are just saving a draft or a template
     // so do this check
-    if ( (deliverMode != nsMsgSaveAsDraft) && (deliverMode != nsMsgSaveAsTemplate) )
+    if ( (deliverMode != nsIMsgSend::nsMsgSaveAsDraft) &&
+         (deliverMode != nsIMsgSend::nsMsgSaveAsTemplate) )
       ShowWindow(PR_FALSE);
   }
 		
@@ -1608,38 +1610,21 @@ void nsMsgCompose::CleanUpRecipients(nsString& recipients)
 NS_IMPL_ADDREF(nsMsgComposeSendListener)
 NS_IMPL_RELEASE(nsMsgComposeSendListener)
 
-nsIMsgSendListener ** nsMsgComposeSendListener::CreateListenerArray()
+nsIMsgSendListener **
+nsMsgComposeSendListener::CreateListenerArray(PRUint32 *aListeners)
 {
   nsIMsgSendListener **tArray = (nsIMsgSendListener **)PR_Malloc(sizeof(nsIMsgSendListener *) * 2);
   if (!tArray)
     return nsnull;
   nsCRT::memset(tArray, 0, sizeof(nsIMsgSendListener *) * 2);
   tArray[0] = this;
+  *aListeners = 2;
   return tArray;
 }
 
-NS_IMETHODIMP 
-nsMsgComposeSendListener::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-  *aInstancePtr = NULL;
-
-  if (aIID.Equals(NS_GET_IID(nsIMsgSendListener))) 
-  {
-	  *aInstancePtr = (nsIMsgSendListener *) this;                                                   
-	  NS_ADDREF_THIS();
-	  return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIMsgCopyServiceListener)))
-  {
-	  *aInstancePtr = (nsIMsgCopyServiceListener *) this;
-	  NS_ADDREF_THIS();
-	  return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE2(nsMsgComposeSendListener,
+                         nsIMsgSendListener,
+                         nsIMsgCopyServiceListener)
 
 nsMsgComposeSendListener::nsMsgComposeSendListener(void) 
 { 
@@ -1772,7 +1757,8 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 #endif
       // We should only close the window if we are done. Things like templates
       // and drafts aren't done so their windows should stay open
-      if ( (mDeliverMode != nsMsgSaveAsDraft) && (mDeliverMode != nsMsgSaveAsTemplate) )
+      if ( (mDeliverMode != nsIMsgSend::nsMsgSaveAsDraft) &&
+           (mDeliverMode != nsIMsgSend::nsMsgSaveAsTemplate) )
         mComposeObj->CloseWindow();
 		}
 		else

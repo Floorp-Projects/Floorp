@@ -248,9 +248,7 @@ public:
   NS_IMETHOD  GetBodyFromEditor();
 
   // methods for listener array processing...
-  NS_IMETHOD  SetListenerArray(nsIMsgSendListener **aListener);
-  NS_IMETHOD  AddListener(nsIMsgSendListener *aListener);
-  NS_IMETHOD  RemoveListener(nsIMsgSendListener *aListener);
+  NS_IMETHOD  SetListenerArray(nsIMsgSendListener **aListener, PRUint32 aListenrs);
   NS_IMETHOD  DeleteListeners();
   NS_IMETHOD  NotifyListenersOnStartSending(const char *aMsgID, PRUint32 aMsgSize);
   NS_IMETHOD  NotifyListenersOnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
@@ -265,9 +263,6 @@ public:
   NS_IMETHOD  NotifyListenersOnStopCopy(nsresult aStatus);
   NS_IMETHOD  SetMessageKey(PRUint32 aMessageKey);
   NS_IMETHOD  GetMessageId(nsCString* aMessageId);
-
-  // For GUI notification...
-  NS_IMETHOD SetGUINotificationState(PRBool aEnableFlag);
 
   //
   // Attachment processing...
@@ -292,46 +287,7 @@ public:
                              nsMsgSendPart           *toppart); // The very top most container of the message
                                                                 // For part processing
 
-  ////////////////////////////////////////////////////////////////////////////////
-  // The current nsIMsgSend Interfaces exposed to the world!
-  ////////////////////////////////////////////////////////////////////////////////
-  NS_IMETHOD  CreateAndSendMessage(
-                          nsIEditorShell                    *aEditor,
-                          nsIMsgIdentity                    *aUserIdentity,
- 						              nsIMsgCompFields                  *fields,
-						              PRBool                            digest_p,
-						              PRBool                            dont_deliver_p,
-						              nsMsgDeliverMode                  mode,
-                          nsIMessage                        *msgToReplace,
-						              const char                        *attachment1_type,
-						              const char                        *attachment1_body,
-						              PRUint32                          attachment1_body_length,
-						              const nsMsgAttachmentData  *attachments,
-						              const nsMsgAttachedFile    *preloaded_attachments,
-						              void                              *relatedPart,
-                          // This is an array of nsIMsgSendListener objects...there must
-                          // be N+1 entries in the array with the final entry set to nsnull
-                          nsIMsgSendListener                **aListenerArray);
-
-  NS_IMETHOD  SendMessageFile(
-                          nsIMsgIdentity                    *aUserIdentity,
- 						              nsIMsgCompFields                  *fields,
-                          nsIFileSpec                       *sendIFileSpec,
-                          PRBool                            deleteSendFileOnCompletion,
-						              PRBool                            digest_p,
-						              nsMsgDeliverMode                  mode,
-                          nsIMessage                        *msgToReplace,
-                          nsIMsgSendListener                **aListenerArray);
-
-  NS_IMETHOD  SendWebPage(
-                          nsIMsgIdentity                    *aUserIdentity,
- 						              nsIMsgCompFields                  *fields,
-                          nsIURI                            *url,
-                          nsMsgDeliverMode                  mode,
-                          nsIMsgSendListener                **aListenerArray);
-
-  NS_IMETHOD SetWebShell (nsIWebShell *aWebShell);
-
+  NS_DECL_NSIMSGSEND
   nsresult    SetStatusMessage(const PRUnichar *aMsgString);     // Status message method
 
   //

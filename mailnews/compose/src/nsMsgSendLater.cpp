@@ -417,7 +417,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
 }
 
 nsIMsgSendListener **
-CreateListenerArray(nsIMsgSendListener *listener)
+CreateListenerArray(nsIMsgSendListener *listener, PRUint32 *aListeners)
 {
   if (!listener)
     return nsnull;
@@ -427,6 +427,7 @@ CreateListenerArray(nsIMsgSendListener *listener)
     return nsnull;
   nsCRT::memset(tArray, 0, sizeof(nsIMsgSendListener *) * 2);
   tArray[0] = listener;
+  *aListeners = 2;
   return tArray;
 }
 
@@ -509,7 +510,8 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   NS_ADDREF(mSendListener);
   // set this object for use on completion...
   mSendListener->SetSendLaterObject(this);
-  nsIMsgSendListener **tArray = CreateListenerArray(mSendListener);
+  PRUint32 listeners;
+  nsIMsgSendListener **tArray = CreateListenerArray(mSendListener, &listeners);
   if (!tArray)
   {
     NS_RELEASE(mSendListener);
@@ -519,13 +521,13 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
 
   NS_ADDREF(this);  
   rv = pMsgSend->SendMessageFile(mIdentity,
-                            compFields, // nsIMsgCompFields                  *fields,
-                            mTempIFileSpec,   // nsIFileSpec                        *sendFileSpec,
-                            PR_TRUE,         // PRBool                            deleteSendFileOnCompletion,
-                            PR_FALSE,        // PRBool                            digest_p,
-                            nsMsgDeliverNow, // nsMsgDeliverMode                  mode,
-                            nsnull,          // nsIMessage *msgToReplace, 
-                            tArray); 
+                                 compFields, // nsIMsgCompFields *fields,
+                                 mTempIFileSpec, // nsIFileSpec *sendFileSpec,
+                                 PR_TRUE, // PRBool deleteSendFileOnCompletion,
+                                 PR_FALSE, // PRBool digest_p,
+                                 nsIMsgSend::nsMsgDeliverNow, // nsMsgDeliverMode mode,
+                                 nsnull, // nsIMessage *msgToReplace, 
+                                 tArray, listeners); 
   NS_RELEASE(mSendListener);
   mSendListener = nsnull;
   if (NS_FAILED(rv))
@@ -648,7 +650,7 @@ nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFold
   if (!uri)
     return NS_ERROR_FAILURE;
 
-  rv = LocateMessageFolder(userIdentity, nsMsgQueueForLater, uri, folder);
+  rv = LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgQueueForLater, uri, folder);
   PR_FREEIF(uri);
   return rv;
 }
