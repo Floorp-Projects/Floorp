@@ -218,6 +218,12 @@ NS_IMETHODIMP nsHTMLReflowCommand::GetChildFrame(nsIFrame*& aChildFrame) const
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLReflowCommand::GetChildListName(nsIAtom*& aListName) const
+{
+  aListName = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsHTMLReflowCommand::GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const
 {
   aSiblingFrame = mPrevSiblingFrame;
