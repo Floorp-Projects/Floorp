@@ -5,6 +5,22 @@
 #  First attempt at using module-graph.pl to generate
 #  a cvs checkout list, and building the resulting tree.
 #
+#  bootstrap.pl starts with an "all.dot" requires map file
+#  and nothing else, and does the following:
+#  * Figures out the module dependencies for the module
+#    you want to build, via module-graph.pl.
+#  * Creates a list of directories from the modules via
+#    modules2dir.pl.
+#  * Checks out core config files, nspr, and module directories.
+#  * Based on this resulting tree, allmakefiles.sh is generated
+#    on the fly with a module name "bootstrap".
+#  * A build is attemped with this configure option:
+#      --enable-standalone-modules=bootstrap
+#
+#  Bug: currently, the build descends into the nspr configure
+#  and never comes back, bailing with the error
+#  "configure: warning: Recreating autoconf.mk with updated nspr-config output"
+#
 
 use strict;
 use File::Find();
