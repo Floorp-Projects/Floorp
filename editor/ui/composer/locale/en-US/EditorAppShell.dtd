@@ -1,5 +1,6 @@
 <!-- Window title -->
 <!ENTITY editorWindow.title "Editor">
+<!ENTITY textEditorWindow.title "Text Editor">
 
 <!-- Menu items:  the . means that the menu item isn't implemented yet -->
 
@@ -194,6 +195,7 @@
 <!ENTITY insertTextCmd.label "Insert Text">
 <!ENTITY testSelectionCmd.label "Test Selection">
 <!ENTITY testTableLayoutCmd.label "Test Table Layout">
+<!ENTITY testDocumentCmd.label "Test Document">
 <!ENTITY showEmbeddedCmd.label "Show Embedded Objects">
 <!ENTITY dumpContentCmd.label "Dump Content Tree">
 <!ENTITY testDocumentCmd.label "Test Document">
