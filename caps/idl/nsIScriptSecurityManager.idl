@@ -199,6 +199,12 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                                in JSObjectPtr obj);
 
     /**
+     * Returns true if the principal of the currently running script is the
+     * system principal, false otherwise.
+     */
+    boolean subjectPrincipalIsSystem();
+
+    /**
      * Forget all currently stored security policies and reread from prefs.
      * This must be called after any capability.policy prefs have changed.
      */ 
