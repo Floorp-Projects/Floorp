@@ -242,7 +242,7 @@ static int PR_CALLBACK colorPrefChanged (const char *newpref, void *data)
       nscolor thecolor;
       if (NS_SUCCEEDED(NS_ColorNameToRGB(NS_ConvertASCIItoUCS2(colorStr),
                                          &thecolor))) {
-        PRInt32 id = (PRInt32) data;
+        PRInt32 id = NS_PTR_TO_INT32(data);
         CACHE_COLOR(id, thecolor);
 #ifdef DEBUG_akkana
         printf("====== Changed color pref %s to 0x%lx\n",
