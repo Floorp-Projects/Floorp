@@ -106,7 +106,7 @@ main(int argc, char **argv)
             return 1;
         }
         flen = file_stat.st_size;
-        in = fopen(argv[1], "r");
+        in = fopen(argv[1], "rb");
         break;
     case 3:
         verbose_mode = PR_TRUE;
@@ -119,7 +119,7 @@ main(int argc, char **argv)
             return 1;
         }
         flen = file_stat.st_size;
-        in = fopen(argv[2], "r");
+        in = fopen(argv[2], "rb");
         break;
     default:
         xpt_dump_usage(argv);

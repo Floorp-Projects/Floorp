@@ -131,7 +131,7 @@ main(int argc, char **argv)
     ok = XPT_DoHeader(cursor, &header);
     TRY("DoHeader", ok);
 
-    out = fopen(argv[1], "w");
+    out = fopen(argv[1], "wb");
     if (!out) {
         perror("FAILED: fopen");
         return 1;
