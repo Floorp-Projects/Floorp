@@ -449,6 +449,8 @@ const char * nsPop3Protocol::GetPassword()
 			
 				msgUrl->GetHost(getter_Copies(hostName));
 
+				// mscott - this is just a temporary hack using the raw string..this needs to be pushed into
+				// a string bundle!!!!!
 				if (hostName)
 					promptText = PR_smprintf("Enter your password for %s@%s.", (const char *) m_username, (const char *) hostName);
 				else
@@ -456,6 +458,10 @@ const char * nsPop3Protocol::GetPassword()
 
 				dialog->PromptPassword(nsAutoString(promptText).GetUnicode(), &uniPassword, &okayValue);
 				PR_FREEIF(promptText);
+				
+				if (!okayValue) // if the user pressed cancel, just return NULL;
+					return nsnull;
+
 				m_password = uniPassword;
 				// this ugly cast is ok...there is a bug in the idl compiler that is preventing 
 				// the char * argument to SetPassword from being const.
@@ -490,7 +496,10 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 	// -*-*-*- To Do:
 	// Call SetUsername(accntName);
 	// Call SetPassword(aPassword);
-	GetPassword();
+	const char * password = GetPassword();
+	// if we didn't get a password back, abort the entire operation!
+	if (!password)
+		return NS_ERROR_FAILURE;
 	
 	nsCOMPtr<nsIURL> url = do_QueryInterface(aURL, &rv);
 	if (NS_FAILED(rv)) return rv;
