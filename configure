@@ -5221,7 +5221,7 @@ EOF
 
         MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
-        MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom_compat.lib'
+        MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcomct.lib'
         XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
         MOZ_JS_LIBS='$(DIST)/lib/libmozjs.lib'
         MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
@@ -5289,7 +5289,7 @@ EOF
         MKCSHLIB='$(LD) $(DSO_LDOPTS)'
         MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
         MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
-        MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcom_compat.lib'
+        MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcomct.lib'
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
@@ -14281,10 +14281,8 @@ fi
 
 if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC"; then
     XPCOM_GLUE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX)'
-    MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcom_compat.$(LIB_SUFFIX)'
 else
     XPCOM_GLUE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcomglue -lstring_s -lstring_obsolete_s'
-    MOZ_XPCOM_OBSOLETE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcom_compat'
 fi
 
 if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"; then
@@ -14318,14 +14316,14 @@ ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$a
 cross_compiling=$ac_cv_prog_cc_cross
 
     cat > conftest.$ac_ext <<EOF
-#line 14322 "configure"
+#line 14320 "configure"
 #include "confdefs.h"
 #include <gmodule.h>
 int main() {
  int x = 1; x++; 
 ; return 0; }
 EOF
-if { (eval echo configure:14329: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:14327: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
