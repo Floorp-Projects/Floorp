@@ -574,7 +574,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>257j6un535eui~&#170;p&#211;&#191;H</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>265rj6cn65m5eci</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -839,7 +839,7 @@
                 <SETTING><NAME>MWPEF_olddefversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_oldimpversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_currentversion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>NSSCKBI</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->
@@ -1768,7 +1768,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>257j6un535eui~&#170;p&#211;&#191;H</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>265rj6cn65m5eci</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -2033,7 +2033,7 @@
                 <SETTING><NAME>MWPEF_olddefversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_oldimpversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_currentversion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>NSSCKBI</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->

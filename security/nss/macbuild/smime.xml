@@ -604,7 +604,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0SA@</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>2633qj7n6338i32</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -870,7 +870,7 @@
                 <SETTING><NAME>MWPEF_olddefversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_oldimpversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_currentversion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>SMIME3</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->
@@ -2055,7 +2055,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0SA@</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>2633qj7n6338i32</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -2321,7 +2321,7 @@
                 <SETTING><NAME>MWPEF_olddefversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_oldimpversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_currentversion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>SMIME3</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->
