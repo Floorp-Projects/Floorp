@@ -64,7 +64,7 @@ public:
     operator int() { return (mRef != NULL); }
 
 private:
-    cfref(const cfref& other) {}
+    // cfref(const cfref<RefType>& other) {}
 };
 
 #endif
@@ -75,11 +75,13 @@ private:
 #include "MRJPage.h"
 #include "MRJMonitor.h"
 #include "AsyncMessage.h"
-#include "TopLevelFrame.h"
-#include "EmbeddedFrame.h"
 #include "LocalPort.h"
 #include "StringUtils.h"
 #include "TimedMessage.h"
+#if !TARGET_CARBON
+#include "TopLevelFrame.h"
+#include "EmbeddedFrame.h"
+#endif
 
 #include "nsIPluginManager2.h"
 #include "nsIPluginInstancePeer.h"
@@ -93,9 +95,6 @@ using namespace std;
 extern nsIPluginManager* thePluginManager;
 extern nsIPluginManager2* thePluginManager2;
 
-static OSStatus JMTextToStr255(JMTextRef textRef, Str255 str);
-static char* JMTextToEncoding(JMTextRef textRef, JMTextEncoding encoding);
-
 static void blinkRgn(RgnHandle rgn);
 
 void LocalPort::Enter()
@@ -105,7 +104,7 @@ void LocalPort::Enter()
         ::SetPort(fPort);
     Rect portRect;
     GetPortBounds(fPort, &portRect);
-    fOldOrigin = topLeft(portRect);
+    fOldOrigin.h = portRect.left, fOldOrigin.v = portRect.top;
     if (fOldOrigin.h != fOrigin.h || fOldOrigin.v != fOrigin.v)
         ::SetOrigin(fOrigin.h, fOrigin.v);
 }
@@ -127,9 +126,11 @@ static RgnHandle NewEmptyRgn()
 
 MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
     :   mPluginInstance(instance), mSession(session), mPeer(NULL),
+#if !TARGET_CARBON
         mLocator(NULL), mContext(NULL), mViewer(NULL), mViewerFrame(NULL),
+#endif
         mIsActive(false), mIsFocused(false), mIsVisible(false),
-        mPluginWindow(NULL), mPluginClipping(NULL), mPluginPort(NULL),
+        mPluginClipping(NULL), mPluginWindow(NULL), mPluginPort(NULL),
         mDocumentBase(NULL), mAppletHTML(NULL), mPage(NULL), mSecurityContext(NULL)
 #if TARGET_CARBON
         , mAppletFrame(NULL), mAppletObject(NULL), mAppletControl(NULL), mScrollCounter(0)
@@ -211,6 +212,10 @@ MRJContext::~MRJContext()
             env->DeleteGlobalRef(mAppletObject);
             mAppletObject = NULL;
         }
+        if (mAppletControl != NULL) {
+            ::DisposeControl(mAppletControl);
+            mAppletControl = NULL;
+        }
         if (mAppletFrame != NULL) {
             OSStatus status;
             
@@ -228,6 +233,8 @@ MRJContext::~MRJContext()
 #endif
 }
 
+#if !TARGET_CARBON
+
 JMAWTContextRef MRJContext::getContextRef()
 {
     return mContext;
@@ -237,6 +244,8 @@ JMAppletViewerRef MRJContext::getViewerRef()
 {
     return mViewer;
 }
+
+#endif
 
 Boolean MRJContext::appletLoaded()
 {
@@ -413,7 +422,9 @@ static char* synthesizeAppletElement(nsIPluginTagInfo* tagInfo)
     return ::strdup(element.c_str());
 }
 
+#if !TARGET_CARBON
 static void fetchCompleted(JMAppletLocatorRef ref, JMLocatorErrors status) {}
+#endif
 
 #if TARGET_CARBON
 
@@ -564,17 +575,17 @@ void MRJContext::processAppletTag()
     }
 }
 
+#if !TARGET_CARBON
 static MRJFrame* getFrame(JMFrameRef ref)
 {
     MRJFrame* frame = NULL;
 
-#if !TARGET_CARBON
     if (ref != NULL)
         ::JMGetFrameData(ref, (JMClientData*)&frame);
-#endif
     
     return frame;
 }
+#endif
 
 Boolean MRJContext::createContext()
 {
@@ -652,6 +663,7 @@ void MRJContext::showURL(const char* url, const char* target)
     }
 }
 
+#if !TARGET_CARBON
 static SInt16 nextMenuId = 20000;
 static SInt16 nextMenuPopupId = 200;
 
@@ -666,8 +678,6 @@ SInt16 MRJContext::allocateMenuID(Boolean isSubmenu)
     } else
         return (isSubmenu ? nextMenuPopupId++ : nextMenuId++);
 }
-
-#if !TARGET_CARBON
 
 OSStatus MRJContext::createFrame(JMFrameRef frameRef, JMFrameKind kind, const Rect* initialBounds, Boolean resizeable)
 {
@@ -696,11 +706,8 @@ OSStatus MRJContext::createFrame(JMFrameRef frameRef, JMFrameKind kind, const Re
     return status;
 }
 
-#endif
-
 void MRJContext::setProxyInfoForURL(char * url, JMProxyType proxyType) 
 {
-#if !TARGET_CARBON
     /*
      * We then call 'nsIPluginManager2::FindProxyForURL' which will return
      * proxy information which we can parse and set via JMSetProxyInfo.
@@ -727,8 +734,9 @@ void MRJContext::setProxyInfoForURL(char * url, JMProxyType proxyType)
         
         delete[] proxy;
     }
-#endif
 }
+
+#endif /* !TARGET_CARBON */
 
 #if TARGET_CARBON
 

@@ -47,7 +47,6 @@
 #include "SupportsMixin.h"
 
 #include "jni.h"
-#include <JManager.h>
 
 class MRJPlugin;
 class MRJSession;
@@ -115,7 +114,10 @@ private:
 
 	jbooleanArray mResults;
 
+#if !TARGET_CARBON
 	JMAWTContextRef mContext;
+#endif
+    
 	TopLevelFrame* mFrame;
 
 	// support for SupportsMixin.

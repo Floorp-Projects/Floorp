@@ -44,10 +44,12 @@
 
 #pragma once
 
+#include <MacTypes.h>
+
 #include <jni.h>
 
 #include <vector>
-#include <stringfwd>
+#include <string>
 
 using std::vector;
 using std::string;

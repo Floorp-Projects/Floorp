@@ -45,7 +45,6 @@
 #pragma once
 
 #include "jni.h"
-#include "JManager.h"
 #include "nsIPluginTagInfo2.h"
 
 
@@ -78,9 +77,12 @@ public:
 
 	void processAppletTag();
 	Boolean createContext();
+
+#if !TARGET_CARBON
 	JMAWTContextRef getContextRef();
     JMAppletViewerRef getViewerRef();
-	
+#endif
+    
 	Boolean appletLoaded();
 	Boolean loadApplet();
 	Boolean isActive();
@@ -135,23 +137,27 @@ private:
 	void synchronizeClipping();
 	void synchronizeVisibility();
 
-	static OSStatus requestFrame(JMAWTContextRef context, JMFrameRef newFrame, JMFrameKind kind,
+#if !TARGET_CARBON
+    static OSStatus requestFrame(JMAWTContextRef context, JMFrameRef newFrame, JMFrameKind kind,
 								const Rect *initialBounds, Boolean resizeable, JMFrameCallbacks *callbacks);
 	static OSStatus releaseFrame(JMAWTContextRef context, JMFrameRef oldFrame);
 	static SInt16 getUniqueMenuID(JMAWTContextRef context, Boolean isSubmenu);
 	static void exceptionOccurred(JMAWTContextRef context, JMTextRef exceptionName, JMTextRef exceptionMsg, JMTextRef stackTrace);
-
+    
 	SInt16 allocateMenuID(Boolean isSubmenu);
 
 	OSStatus createFrame(JMFrameRef frameRef, JMFrameKind kind, const Rect* initialBounds, Boolean resizeable);
+#endif
 
 	// Finds a suitable MRJPage object for this document URL, or creates one.
 	MRJPage* findPage(const MRJPageAttributes& attributes);
 
 	static CGrafPtr getEmptyPort();
 
+#if !TARGET_CARBON
 	void setProxyInfoForURL(char * url, JMProxyType proxyType);
-	
+#endif
+    
 	OSStatus installEventHandlers(WindowRef window);
 	OSStatus removeEventHandlers(WindowRef window);
 	
@@ -159,11 +165,13 @@ private:
 	MRJPluginInstance*		    mPluginInstance;
 	MRJSession*				    mSession;
 	nsIPluginInstancePeer* 	    mPeer;
-	JMAppletLocatorRef		    mLocator;
+#if !TARGET_CARBON
+    JMAppletLocatorRef		    mLocator;
 	JMAWTContextRef			    mContext;
 	JMAppletViewerRef		    mViewer;
 	JMFrameRef				    mViewerFrame;
-	Boolean					    mIsActive;
+#endif
+    Boolean					    mIsActive;
 	Boolean                     mIsFocused;
 	Boolean                     mIsVisible;
 	nsPluginPoint               mCachedOrigin;
@@ -175,7 +183,7 @@ private:
 	char*					    mAppletHTML;
 	MRJPage*				    mPage;
 	MRJSecurityContext*         mSecurityContext;
-#ifdef TARGET_CARBON
+#if TARGET_CARBON
     jobject                     mAppletFrame;
     jobject                     mAppletObject;
     ControlRef                  mAppletControl;

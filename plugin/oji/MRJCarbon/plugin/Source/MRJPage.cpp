@@ -48,7 +48,7 @@
 #include "StringUtils.h"
 
 MRJPage::MRJPage(MRJSession* session, UInt32 documentID, const char* codeBase, const char* archive, Boolean mayScript)
-	:	mRefCount(0), mNextPage(NULL), mSession(session), mPageRef(NULL),
+	:	mRefCount(0), mNextPage(NULL), mSession(session),
 		mDocumentID(documentID), mCodeBase(strdup(codeBase)), mArchive(strdup(archive)), mMayScript(mayScript)
 {
 	pushPage();
@@ -62,7 +62,7 @@ MRJPage::MRJPage(MRJSession* session, UInt32 documentID, const char* codeBase, c
 }
 
 MRJPage::MRJPage(MRJSession* session, const MRJPageAttributes& attributes)
-	:	mRefCount(0), mNextPage(NULL), mSession(session), mPageRef(NULL),
+	:	mRefCount(0), mNextPage(NULL), mSession(session),
 		mDocumentID(attributes.documentID), mCodeBase(strdup(attributes.codeBase)),
 		mArchive(strdup(attributes.archive)), mMayScript(attributes.mayScript)
 {
@@ -112,9 +112,9 @@ UInt16 MRJPage::Release()
 	return result;
 }
 
+#if !TARGET_CARBON
 Boolean MRJPage::createContext(JMAWTContextRef* outContext, const JMAWTContextCallbacks * callbacks, JMClientData data)
 {
-#if !TARGET_CARBON
 	OSStatus status = noErr;
 	if (&::JMNewAWTContextInPage != NULL && mPageRef != NULL) {
 		status = ::JMNewAWTContextInPage(outContext, mSession->getSessionRef(), mPageRef, callbacks, data);
@@ -122,10 +122,8 @@ Boolean MRJPage::createContext(JMAWTContextRef* outContext, const JMAWTContextCa
 		status = ::JMNewAWTContext(outContext, mSession->getSessionRef(), callbacks, data);
 	}
 	return (status == noErr);
-#else
-    return false;
-#endif
 }
+#endif
 
 static MRJPage* thePageList = NULL;
 

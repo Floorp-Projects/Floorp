@@ -42,18 +42,7 @@
 	by Patrick C. Beard.
  */
 
-#ifndef __TYPES__
-#include <Types.h>
-#endif
-
-#ifndef CALL_NOT_IN_CARBON
-	#define CALL_NOT_IN_CARBON 1
-#endif
-
-#include "JManager.h"
-
-// For now.
-typedef struct OpaqueJMAppletPageRef* 	JMAppletPageRef;
+#include <MacTypes.h>
 
 class MRJSession;
 
@@ -74,17 +63,10 @@ public:
 	UInt16 AddRef(void);
 	UInt16 Release(void);
 	
-	JMAppletPageRef getPageRef() { return mPageRef; }
-	
 	UInt32 getDocumentID() { return mDocumentID; }
 	const char* getCodeBase() { return mCodeBase; }
 	const char* getArchive() { return mArchive; }
 	Boolean getMayScript() { return mMayScript; }
-
-	// Creating AWTContexts.
-	Boolean createContext(JMAWTContextRef* outContext,
-							const JMAWTContextCallbacks * callbacks,
-							JMClientData data);
 
     // Accessing the list of instances.
     static MRJPage* getFirstPage(void);
@@ -98,7 +80,6 @@ private:
 	UInt16 mRefCount;
 	MRJPage* mNextPage;
 	MRJSession* mSession;
-	JMAppletPageRef mPageRef;
 	UInt32 mDocumentID;
 	char* mCodeBase;
 	char* mArchive;

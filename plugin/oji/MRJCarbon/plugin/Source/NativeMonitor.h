@@ -49,7 +49,7 @@ class nsIThreadManager;
 
 class NativeMonitor : public Monitor {
 public:
-	NativeMonitor(MRJSession* session, nsIThreadManager* manager, void* address = NULL);
+	NativeMonitor(MRJSession* session, nsIThreadManager* manager, void* address = 0);
 	virtual ~NativeMonitor();
 
 	virtual void enter();
