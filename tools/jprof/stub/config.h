@@ -12,7 +12,7 @@
 #ifndef config_h___
 #define config_h___
 
-#define MAX_STACK_CRAWL 100
+#define MAX_STACK_CRAWL 500
 #define M_LOGFILE "jprof-log"
 #define M_MAPFILE "jprof-map"
 
