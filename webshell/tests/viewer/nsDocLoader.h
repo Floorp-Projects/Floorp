@@ -40,7 +40,7 @@ public:
               PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
 
   // nsISupports
-  NS_DECL_ISUPPORTS;
+  NS_DECL_ISUPPORTS
 
   // nsIStreamObserver
   NS_IMETHOD OnStartBinding(const char *aContentType);
