@@ -205,6 +205,7 @@ char *stub_Prompt(MWContext *context,
   return result;
 }
 
+#if 0
 #include "nsIComponentManager.h" 
 #include "nsIBlockingNotification.h" 
 #include "nsAppShellCIDs.h" 
@@ -287,7 +288,6 @@ nsresult NS_NewDefaultNotificationFactory(nsIFactory** aResult)
 /*--------------------------------------------------------------*/
 
 
-#if 0
 PRIVATE XP_Bool 
 stub_PromptUsernameAndPassword(MWContext *context, 
                                const char *msg, 
