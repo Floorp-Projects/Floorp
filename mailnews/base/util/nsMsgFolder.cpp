@@ -166,9 +166,36 @@ nsMsgFolder::GetSubFolders(nsIEnumerator* *result)
 }
 
 NS_IMETHODIMP 
-nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **folder)
+nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  
+	if(NS_FAILED(rv)) 
+		return rv;
+
+	nsString2 uri(eOneByte);
+	uri.Append(mURI);
+	uri.Append('/');
+
+	uri.Append(subFolderName);
+
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
+	if (NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIFolder> folder(do_QueryInterface(res, &rv));
+	if (NS_FAILED(rv))
+		return rv;
+	if (aFolder)
+	{
+		*aFolder = folder;
+		NS_ADDREF(*aFolder);
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP
