@@ -154,7 +154,10 @@ public:
   NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
 
+private:
+  PRBool mIsCheckbox;
 };
 
 /** ------------------------------------------------------ */
