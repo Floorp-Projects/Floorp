@@ -55,7 +55,6 @@ protected:
 
 
   // nsHTMLEditRules implementation methods
-  nsresult WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillInsertText(  PRInt32          aAction,
                             nsIDOMSelection *aSelection, 
                             PRBool          *aCancel,
@@ -92,18 +91,13 @@ protected:
   static PRBool IsList(nsIDOMNode *aNode);
   static PRBool IsUnorderedList(nsIDOMNode *aNode);
   static PRBool IsOrderedList(nsIDOMNode *aNode);
-  static PRBool IsBreak(nsIDOMNode *aNode);
-  static PRBool IsBody(nsIDOMNode *aNode);
   static PRBool IsBlockquote(nsIDOMNode *aNode);
   static PRBool IsAnchor(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);
   static PRBool IsNormalDiv(nsIDOMNode *aNode);
   static PRBool IsMozDiv(nsIDOMNode *aNode);
-  static PRBool IsMozBR(nsIDOMNode *aNode);
   static PRBool IsMailCite(nsIDOMNode *aNode);
-  static PRBool HasMozAttr(nsIDOMNode *aNode);
   
-  static PRBool InBody(nsIDOMNode *aNode);
   
   nsresult IsEmptyBlock(nsIDOMNode *aNode, 
                        PRBool *outIsEmptyBlock, 
@@ -118,15 +112,7 @@ protected:
   PRBool IsLastNode(nsIDOMNode *aNode);
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
   PRBool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
-  nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
   
-  nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
-
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
                             PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
   nsresult GetPromotedRanges(nsIDOMSelection *inSelection, 
@@ -147,11 +133,6 @@ protected:
   nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
   nsresult RemoveContainer(nsIDOMNode *inNode);
   nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
-
-  nsresult IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst);
-  nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
-  nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
-  nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
 
   nsresult JoinNodesSmart( nsIDOMNode *aNodeLeft, 
                            nsIDOMNode *aNodeRight, 

@@ -200,6 +200,28 @@ protected:
                            const nsString  *aInString,
                            TypeInState      aTypeInState);
   
+  nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
+
+  nsresult IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst);
+  nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
+  nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
+  nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
+
+  static PRBool IsBody(nsIDOMNode *aNode);
+  static PRBool IsBreak(nsIDOMNode *aNode);
+  static PRBool IsMozBR(nsIDOMNode *aNode);
+  static PRBool HasMozAttr(nsIDOMNode *aNode);
+
+  static PRBool InBody(nsIDOMNode *aNode);
+
+  nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
+
+
   // data
   nsHTMLEditor *mEditor;  // note that we do not refcount the editor
   nsString      mPasswordText;  // a buffer we use to store the real value of password editors

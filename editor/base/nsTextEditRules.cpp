@@ -242,7 +242,42 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
     mBogusNode = do_QueryInterface(nsnull);
   }
 
-  return NS_OK;
+  // this next only works for collapsed selections right now,
+  // because selection is a pain to work with when not collapsed.
+  // (no good way to extend start or end of selection)
+  PRBool bCollapsed;
+  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (!bCollapsed) return NS_OK;
+
+  // if we are after a mozBR in the same block, then move selection
+  // to be before it
+  nsCOMPtr<nsIDOMNode> selNode, priorNode;
+  PRInt32 selOffset;
+  // get the (collapsed) selection location
+  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
+  // get next node
+  res = GetPriorHTMLNode(selNode, selOffset, &priorNode);
+  if (NS_SUCCEEDED(res) && priorNode && IsMozBR(priorNode))    
+  {
+    nsCOMPtr<nsIDOMNode> block1, block2;
+    if (mEditor->IsBlockNode(selNode)) block1 = selNode;
+    else block1 = mEditor->GetBlockNodeParent(selNode);
+    block2 = mEditor->GetBlockNodeParent(priorNode);
+  
+    if (block1 != block2) return NS_OK; 
+  
+    // if we are here then the selection is right after a mozBR
+    // that is in the same block as the selection.  We need to move
+    // the selection start to be before the mozBR.
+    res = nsEditor::GetNodeLocation(priorNode, &selNode, &selOffset);
+    if (NS_FAILED(res)) return res;
+    res = aSelection->Collapse(selNode,selOffset);
+    if (NS_FAILED(res)) return res;
+  }
+
+  return res;
 }
 
 nsresult
@@ -291,7 +326,26 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
   if (mFlags & nsIHTMLEditor::eEditorSingleLineMask) {
     *aCancel = PR_TRUE;
   }
-  else {
+  else 
+  {
+    *aCancel = PR_FALSE;
+
+    // if the selection isn't collapsed, delete it.
+    PRBool bCollapsed;
+    nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
+    if (NS_FAILED(res)) return res;
+    if (!bCollapsed)
+    {
+      res = mEditor->DeleteSelection(nsIEditor::eDoNothing);
+      if (NS_FAILED(res)) return res;
+    }
+
+    res = WillInsert(aSelection, aCancel);
+    if (NS_FAILED(res)) return res;
+    // initialize out param
+    // we want to ignore result of WillInsert()
+    *aCancel = PR_FALSE;
+  
     // Mail rule: split any <pre> tags in the way,
     // since they're probably quoted text.
     // For now, do this for all plaintext since mail is our main customer
@@ -300,7 +354,6 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
     {
       nsCOMPtr<nsIDOMNode> preNode, selNode;
       PRInt32 selOffset, newOffset;
-      nsresult res;
       res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
       if (NS_FAILED(res)) return res;
 
@@ -317,9 +370,7 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
             res = aSelection->Collapse(selNode, newOffset);
         }
       }
-    }
-
-    *aCancel = PR_FALSE;
+    }  
   }
   return NS_OK;
 }
@@ -327,7 +378,53 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
 nsresult
 nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 {
-  return NS_OK;
+  // if we are at the end of the document, we need to insert 
+  // a special mozBR following the normal br, and then set the
+  // selection to after the mozBR.
+  PRInt32 selOffset;
+  nsCOMPtr<nsIDOMNode> nearNode, selNode;
+  nsresult res;
+  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
+  res = GetPriorHTMLNode(selNode, selOffset, &nearNode);
+  if (NS_FAILED(res)) return res;
+  if (nearNode && IsBreak(nearNode) && !IsMozBR(nearNode))
+  {
+    PRBool bIsLast;
+    res = IsLastEditableChild(nearNode, &bIsLast);
+    if (NS_FAILED(res)) return res;
+    if (bIsLast)
+    {
+      // need to insert special moz BR. Why?  Because if we don't
+      // the user will see no new line for the break.  Also, things
+      // like table cells won't grow in height.
+      nsCOMPtr<nsIDOMNode> brNode;
+      res = CreateMozBR(selNode, selOffset, &brNode);
+      if (NS_FAILED(res)) return res;
+      res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
+      if (NS_FAILED(res)) return res;
+      res = aSelection->Collapse(selNode,selOffset+1);
+      if (NS_FAILED(res)) return res;
+    }
+    else
+    {
+      // ok, the br inst the last child.  But it might be second-to-last
+      // with a mozBR already exiting after it.  In this case we have to
+      // move the selection to after the mozBR so it will show up on the
+      // empty line.
+	  nsCOMPtr<nsIDOMNode> nextNode;
+	  res = GetNextHTMLNode(nearNode, &nextNode);
+	  if (NS_FAILED(res)) return res;
+	  if (IsMozBR(nextNode))
+	  {
+		res = nsEditor::GetNodeLocation(nextNode, &selNode, &selOffset);
+		if (NS_FAILED(res)) return res;
+		res = aSelection->Collapse(selNode,selOffset+1);
+		if (NS_FAILED(res)) return res;
+	  }
+    }
+  }
+  return res;
 }
 
 nsresult
@@ -361,6 +458,23 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
     if (NS_FAILED(res)) return res;
   }
 
+
+  // if the selection isn't collapsed, delete it.
+  PRBool bCollapsed;
+  res = aSelection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (!bCollapsed)
+  {
+    res = mEditor->DeleteSelection(nsIEditor::eDoNothing);
+    if (NS_FAILED(res)) return res;
+  }
+
+  res = WillInsert(aSelection, aCancel);
+  if (NS_FAILED(res)) return res;
+  // initialize out param
+  // we want to ignore result of WillInsert()
+  *aCancel = PR_FALSE;
+  
   // do text insertion
   PRBool bCancel;
   res = DoTextInsertion(aSelection, &bCancel, aOutString, aTypeInState);
@@ -1246,3 +1360,354 @@ nsTextEditRules::DoTextInsertion(nsIDOMSelection *aSelection,
   }
   return res;
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetPriorHTMLSibling: returns the previous editable sibling, if there is
+//                   one within the parent
+//                       
+nsresult
+nsTextEditRules::GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
+  *outNode = nsnull;
+  nsCOMPtr<nsIDOMNode> temp, node = do_QueryInterface(inNode);
+  
+  while (1)
+  {
+    res = node->GetPreviousSibling(getter_AddRefs(temp));
+    if (NS_FAILED(res)) return res;
+    if (!temp) return NS_ERROR_FAILURE;
+    // if it's editable, we're done
+    if (mEditor->IsEditable(temp)) break;
+    // otherwise try again
+    node = temp;
+  }
+  *outNode = temp;
+  return res;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetNextHTMLSibling: returns the next editable sibling, if there is
+//                   one within the parent
+//                       
+nsresult
+nsTextEditRules::GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
+  *outNode = nsnull;
+  nsCOMPtr<nsIDOMNode> temp, node = do_QueryInterface(inNode);
+  
+  while (1)
+  {
+    res = node->GetNextSibling(getter_AddRefs(temp));
+    if (NS_FAILED(res)) return res;
+    if (!temp) return NS_ERROR_FAILURE;
+    // if it's editable, we're done
+    if (mEditor->IsEditable(temp)) break;
+    // otherwise try again
+    node = temp;
+  }
+  *outNode = temp;
+  return res;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetPriorHTMLNode: returns the previous editable leaf node, if there is
+//                   one within the <body>
+//                       
+nsresult
+nsTextEditRules::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = mEditor->GetPriorNode(inNode, PR_TRUE, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  
+  // if it's not in the body, then zero it out
+  if (*outNode && !InBody(*outNode))
+  {
+    *outNode = nsnull;
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetPriorHTMLNode: same as above but takes {parent,offset} instead of node
+//                       
+nsresult
+nsTextEditRules::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = mEditor->GetPriorNode(inParent, inOffset, PR_TRUE, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  
+  // if it's not in the body, then zero it out
+  if (*outNode && !InBody(*outNode))
+  {
+    *outNode = nsnull;
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetNextHTMLNode: returns the previous editable leaf node, if there is
+//                   one within the <body>
+//                       
+nsresult
+nsTextEditRules::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = mEditor->GetNextNode(inNode, PR_TRUE, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  
+  // if it's not in the body, then zero it out
+  if (*outNode && !InBody(*outNode))
+  {
+    *outNode = nsnull;
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetNHTMLextNode: same as above but takes {parent,offset} instead of node
+//                       
+nsresult
+nsTextEditRules::GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = mEditor->GetNextNode(inParent, inOffset, PR_TRUE, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  
+  // if it's not in the body, then zero it out
+  if (*outNode && !InBody(*outNode))
+  {
+    *outNode = nsnull;
+  }
+  return res;
+}
+
+
+nsresult 
+nsTextEditRules::IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst)
+{
+  // check parms
+  if (!aOutIsFirst || !aNode) return NS_ERROR_NULL_POINTER;
+  
+  // init out parms
+  *aOutIsFirst = PR_FALSE;
+  
+  // find first editable child and compare it to aNode
+  nsCOMPtr<nsIDOMNode> parent, firstChild;
+  nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
+  if (NS_FAILED(res)) return res;
+  if (!parent) return NS_ERROR_FAILURE;
+  res = GetFirstEditableChild(parent, &firstChild);
+  if (NS_FAILED(res)) return res;
+  
+  *aOutIsFirst = (firstChild.get() == aNode);
+  return res;
+}
+
+
+nsresult 
+nsTextEditRules::IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast)
+{
+  // check parms
+  if (!aOutIsLast || !aNode) return NS_ERROR_NULL_POINTER;
+  
+  // init out parms
+  *aOutIsLast = PR_FALSE;
+  
+  // find last editable child and compare it to aNode
+  nsCOMPtr<nsIDOMNode> parent, lastChild;
+  nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
+  if (NS_FAILED(res)) return res;
+  if (!parent) return NS_ERROR_FAILURE;
+  res = GetLastEditableChild(parent, &lastChild);
+  if (NS_FAILED(res)) return res;
+  
+  *aOutIsLast = (lastChild.get() == aNode);
+  return res;
+}
+
+
+nsresult 
+nsTextEditRules::GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild)
+{
+  // check parms
+  if (!aOutFirstChild || !aNode) return NS_ERROR_NULL_POINTER;
+  
+  // init out parms
+  *aOutFirstChild = nsnull;
+  
+  // find first editable child
+  nsCOMPtr<nsIDOMNode> child;
+  nsresult res = aNode->GetFirstChild(getter_AddRefs(child));
+  if (NS_FAILED(res)) return res;
+  
+  while (child && !mEditor->IsEditable(child))
+  {
+    nsCOMPtr<nsIDOMNode> tmp;
+    res = child->GetNextSibling(getter_AddRefs(tmp));
+    if (NS_FAILED(res)) return res;
+    if (!tmp) return NS_ERROR_FAILURE;
+    child = tmp;
+  }
+  
+  *aOutFirstChild = child;
+  return res;
+}
+
+
+nsresult 
+nsTextEditRules::GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild)
+{
+  // check parms
+  if (!aOutLastChild || !aNode) return NS_ERROR_NULL_POINTER;
+  
+  // init out parms
+  *aOutLastChild = nsnull;
+  
+  // find last editable child
+  nsCOMPtr<nsIDOMNode> child;
+  nsresult res = aNode->GetLastChild(getter_AddRefs(child));
+  if (NS_FAILED(res)) return res;
+  
+  while (child && !mEditor->IsEditable(child))
+  {
+    nsCOMPtr<nsIDOMNode> tmp;
+    res = child->GetPreviousSibling(getter_AddRefs(tmp));
+    if (NS_FAILED(res)) return res;
+    if (!tmp) return NS_ERROR_FAILURE;
+    child = tmp;
+  }
+  
+  *aOutLastChild = child;
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsBody: true if node an html body node
+//                  
+PRBool 
+nsTextEditRules::IsBody(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsTextEditRules::IsBody");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag == "body")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsBreak: true if node an html break node
+//                  
+PRBool 
+nsTextEditRules::IsBreak(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsTextEditRules::IsBreak");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag == "br")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsMozBR: true if node an html br node with type = _moz
+//                  
+PRBool 
+nsTextEditRules::IsMozBR(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsTextEditRules::IsMozBR");
+  if (IsBreak(node) && HasMozAttr(node)) return PR_TRUE;
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// HasMozAttr: true if node has type attribute = _moz
+//             (used to indicate the div's and br's we use in
+//              mail compose rules)
+//                  
+PRBool 
+nsTextEditRules::HasMozAttr(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsTextEditRules::HasMozAttr");
+  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
+  if (elem)
+  {
+    nsAutoString typeAttrName("type");
+    nsAutoString typeAttrVal;
+    nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
+    typeAttrVal.ToLowerCase();
+    if (NS_SUCCEEDED(res) && (typeAttrVal == "_moz"))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// InBody: true if node is a descendant of the body
+//                  
+PRBool 
+nsTextEditRules::InBody(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsTextEditRules::InBody");
+  nsCOMPtr<nsIDOMNode> tmp;
+  nsCOMPtr<nsIDOMNode> p = do_QueryInterface(node);
+
+  while (p && !IsBody(p))
+  {
+    if ( NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp) // no parent, ran off top of tree
+      return PR_FALSE;
+    p = tmp;
+  }
+  if (p) return PR_TRUE;
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// CreateMozBR: put a BR node with moz attribute at {aNode, aOffset}
+//                       
+nsresult 
+nsTextEditRules::CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode)
+{
+  if (!inParent || !outBRNode) return NS_ERROR_NULL_POINTER;
+
+  nsresult res = mEditor->CreateBR(inParent, inOffset, outBRNode);
+  if (NS_FAILED(res)) return res;
+
+  // give it special moz attr
+  nsCOMPtr<nsIDOMElement> brElem = do_QueryInterface(*outBRNode);
+  if (brElem)
+  {
+    res = mEditor->SetAttribute(brElem, "type", "_moz");
+    if (NS_FAILED(res)) return res;
+  }
+  return res;
+}
+
+
+
