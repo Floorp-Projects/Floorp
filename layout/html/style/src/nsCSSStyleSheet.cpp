@@ -2808,7 +2808,9 @@ static PRBool SelectorMatchesTree(nsIPresContext* aPresContext,
     nsIContent* lastContent = aLastContent;
     NS_ADDREF(lastContent);
     while (nsnull != selector) { // check compound selectors
-      if (PRUnichar('+') == selector->mOperator) { // fetch previous sibling
+      // for adjacent sibling combinators, the content to test against the
+      // selector is the previous sibling
+      if (PRUnichar('+') == selector->mOperator) {
         nsIContent* parent;
         PRInt32 index;
         lastContent->GetParent(parent);
@@ -2829,17 +2831,39 @@ static PRBool SelectorMatchesTree(nsIPresContext* aPresContext,
           NS_RELEASE(parent);
         }
       }
-      else {  // fetch parent
+      // for descendant combinators and child combinators, the content
+      // to test against is the parent
+      else {
         lastContent->GetParent(content);
       }
       if (! content) {
         break;
       }
       if (SelectorMatches(aPresContext, selector, content, PR_TRUE)) {
+        // to avoid greedy matching, we need to recurse if this is a
+        // descendant combinator and the next combinator is not
+        if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
+            (selector->mNext) &&
+            (!NS_IS_GREEDY_OPERATOR(selector->mNext->mOperator))) {
+
+          // pretend the selector didn't match, and step through content
+          // while testing the same selector
+
+          // This approach is slightly strange is that when it recurses
+          // it tests from the top of the content tree, down.  This
+          // doesn't matter much for performance since most selectors
+          // don't match.  (If most did, it might be faster...)
+          if (SelectorMatchesTree(aPresContext, content, selector)) {
+            selector = nsnull; // indicate success
+            break;
+          }
+        }
         selector = selector->mNext;
       }
       else {
-        if (PRUnichar(0) != selector->mOperator) {
+        // for adjacent sibling and child combinators, if we didn't find
+        // a match, we're done
+        if (!NS_IS_GREEDY_OPERATOR(selector->mOperator)) {
           NS_RELEASE(content);
           break;  // parent was required to match
         }

@@ -70,6 +70,11 @@ public:
   nsAttrSelector* mNext;
 };
 
+// Right now, there are three operators:
+//   PRUnichar(0), the descendent combinator, is greedy
+//   '+' and '>', the adjacent sibling and child combinators, are not
+#define NS_IS_GREEDY_OPERATOR(ch) ( ch == PRUnichar(0) )
+
 struct nsCSSSelector {
 public:
   nsCSSSelector(void);
