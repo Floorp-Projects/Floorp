@@ -1422,7 +1422,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
         PRUint32 i = element->GetChildCount();
 
         while (i-- > 0) {
-            nsIContent *child = element->GetChildAt(i);
+            nsCOMPtr<nsIContent> child = element->GetChildAt(i);
 
             // Optimize for the <template> element, because we *know*
             // it won't have any generated content: there's no reason
@@ -1446,7 +1446,6 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
 
             // If we get here, it's "generated". Bye bye!
             element->RemoveChildAt(i, PR_TRUE);
-            child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
             // Remove element from the conflict set.
             // XXXwaterson should this be moved into NoteGeneratedSubtreeRemoved?
