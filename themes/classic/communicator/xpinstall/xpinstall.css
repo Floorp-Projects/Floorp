@@ -34,6 +34,7 @@ div#tree-housing {
 
 box#mainBox{
   margin                    : 5px;
+  width                     : 40em;  
 }
 
 box#okcancelBox{
