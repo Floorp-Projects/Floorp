@@ -44,6 +44,11 @@ NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsg
 	PRBool			newFile = PR_FALSE;
 	nsLocalFolderSummarySpec	summarySpec(folderName);
 
+#ifdef DEBUG_alecf
+    printf("nsMailDatabase::Open(%s, %s, %p, %s) -> %s\n",
+           (const char*)folderName, create ? "TRUE":"FALSE",
+           pMessageDB, upgrading ? "TRUE":"FALSE", (const char*)folderName);
+#endif
 	nsIDBFolderInfo	*folderInfo = NULL;
 
 	*pMessageDB = NULL;
@@ -121,7 +126,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsg
 		if (err != NS_OK)
 		{
 			// this will make the db folder info release its ref to the mail db...
-			NS_RELEASE(mailDB->m_dbFolderInfo);
+			NS_IF_RELEASE(mailDB->m_dbFolderInfo);
 			mailDB->Close(PR_TRUE);
 			if (err == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
 				summarySpec.Delete(PR_FALSE);
