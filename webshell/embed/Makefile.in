@@ -26,18 +26,18 @@ ifdef MOZ_ENABLE_GTK_MOZILLA
 all:: export libs install
 
 export::
-	@cd gtk ; rm -f config.cache ; ./configure --prefix=$(MOZ_BUILD_ROOT)/dist --with-mozilla=$(MOZ_BUILD_ROOT) ; cd ..
+	@cd gtk && rm -f config.cache && ./configure --prefix=$(MOZ_BUILD_ROOT)/dist --with-mozilla=$(MOZ_BUILD_ROOT) && cd ..
 
 libs::
-	@cd gtk ; $(MAKE) ; cd ..
+	@cd gtk && $(MAKE) && cd ..
 
 depend::
 
 install::
-	@cd gtk ; $(MAKE) install ; cd ..
+	@cd gtk && $(MAKE) install && cd ..
 
 clobber::
-	@cd gtk ; $(MAKE) distclean ; cd ..
+	@cd gtk && $(MAKE) distclean && cd ..
 else
 all::
 export::
