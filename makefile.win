@@ -54,6 +54,7 @@ DIRS =                         \
   db                           \
   dbm                          \
   modules\libutil              \
+  security                     \
   netwerk                      \
   widget\timer                 \
   js                           \

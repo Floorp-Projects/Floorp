@@ -45,6 +45,7 @@ CPPSRCS		= \
 		nsBasicAuth.cpp \
 		nsAuth.cpp \
 		nsAuthEngine.cpp \
+		nsHTTPSHandler.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

@@ -27,17 +27,25 @@
 
 #include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPHandler.h"
+#include "nsHTTPSHandler.h"
 
 ////////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPHandler, Init);
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSHandler);
+
+#define NS_HTTPS_HANDLER_FACTORY_CID { 0xd2771480, 0xcac4, 0x11d3, { 0x8c, 0xaf, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
 static nsModuleComponentInfo components[] =
 {
   { "HTTP Handler",
     NS_IHTTPHANDLER_CID,
     NS_NETWORK_PROTOCOL_PROGID_PREFIX "http",
-    nsHTTPHandlerConstructor }
+    nsHTTPHandlerConstructor },
+  { "HTTPS Handler",
+    NS_HTTPS_HANDLER_FACTORY_CID,
+    NS_NETWORK_PROTOCOL_PROGID_PREFIX "https",
+    nsHTTPSHandler::Create }
 };
   
 NS_IMPL_NSGETMODULE("nsHTTPHandlerModule", components)

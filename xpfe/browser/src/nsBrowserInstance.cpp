@@ -120,7 +120,9 @@ PRBool isDoingHistory=PR_FALSE;
 #endif 
 
 #ifdef DEBUG
+#ifndef DEBUG_pavlov
 #define FORCE_CHECKIN_GUIDELINES
+#endif /* DEBUG_pavlov */
 #endif /* DEBUG */
 
 

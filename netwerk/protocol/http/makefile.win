@@ -28,7 +28,8 @@
 DEPTH=..\..\..
 DIRS= 	\
 	public		\
-	src			\
+	src		\
+	res		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 

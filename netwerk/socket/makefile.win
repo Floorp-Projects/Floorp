@@ -25,6 +25,7 @@ MODULE = necko
 
 DIRS=          \
 	base   \
+	ssl    \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -39,11 +39,12 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= $(LLIBS) \
 	$(LIBNSPR)				\
-    $(DIST)\lib\necko.lib       \
+	$(DIST)\lib\necko.lib       \
 	$(DIST)\lib\xpcom.lib	\
 	$(NULL)
 
 CPP_OBJS=		\
+	.\$(OBJDIR)\nsHTTPSHandler.obj		\
 	.\$(OBJDIR)\nsHTTPHandler.obj		\
 	.\$(OBJDIR)\nsHTTPHandlerModule.obj	\
 	.\$(OBJDIR)\nsHTTPChannel.obj		\
@@ -55,7 +56,7 @@ CPP_OBJS=		\
 	.\$(OBJDIR)\nsHTTPEncodeStream.obj	\
 	.\$(OBJDIR)\nsBasicAuth.obj		\
 	.\$(OBJDIR)\nsAuth.obj          	\
-    .\$(OBJDIR)\nsAuthEngine.obj    \
+	.\$(OBJDIR)\nsAuthEngine.obj		\
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	
