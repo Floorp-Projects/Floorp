@@ -29,10 +29,10 @@ function goQuitApplication()
 
   while ( enumerator.hasMoreElements()  )
   {
-    var  windowToClose = enumerator.getNext();
-    var domWindow = windowManagerInterface.convertISupportsToDOMWindow( windowToClose );
-    if (!("tryToClose" in domWindow) || domWindow.tryToClose())
-      domWindow.close();
+     var domWindow = enumerator.getNext();
+     if (("tryToClose" in domWindow) && !domWindow.tryToClose())
+       return false;
+     domWindow.close();
   };
   if (!nativeAppSupport || !nativeAppSupport.isServerMode)
     appShell.quit();

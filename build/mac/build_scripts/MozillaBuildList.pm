@@ -1761,6 +1761,7 @@ sub BuildXPAppProjects()
     BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.mcp", "RegViewer$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:macbuild:appcomps.mcp", "appcomps$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    InstallFromManifest(":mozilla:xpfe:appshell:src:MANIFEST_COMPONENTS", "${dist_dir}Components:");
 
     # Applications
     BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",             "AppShell$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
