@@ -2394,10 +2394,10 @@ nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
     rv = nsServiceManager::GetService(kGlobalHistoryCID,
                                       nsIGlobalHistory::GetIID(),
                                       (nsISupports**) &mHistoryService);
-  }
 
-  if (NS_FAILED(rv))
-    return NS_OK; // XXX Okay, we couldn't color the link. Big deal.
+    if (NS_FAILED(rv))
+      return NS_OK; // XXX Okay, we couldn't color the link. Big deal.
+  }
 
   // XXX aURLSpec should really be a char*, not a PRUnichar*.
   nsAutoString urlStr(aURLSpec);
