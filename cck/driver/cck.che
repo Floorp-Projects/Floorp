@@ -7,7 +7,6 @@ OrganizationName=
 AnimatedLogoURL=http://home.netscape.com
 LargeAnimPath=%Root%Configs\Default\Workspace\AnimLogo\animlogo32.gif
 LargeStillPath=%Root%Configs\Default\Workspace\AnimLogo\staticlogo32.gif
-SidebarPath=%Root%Configs\Default\Workspace\Sidebar\panels.rdf
 CompanyName=
 HomePageURL=http://home.netscape.com
 HelpMenuCommandName=

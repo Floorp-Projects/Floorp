@@ -1144,6 +1144,47 @@ BOOL MarkCFGVersion(CString HashedPrefsFile, CString versionTxt)
 	return TRUE;
 }
 
+void ModifySidebar(CString inputFile, CString outputFile)
+{
+	// Add a sidebar tab at the topmost location in 'My sidebar'
+
+	char tempbuf[MAX_SIZE];
+	CString searchstr = "<RDF:Seq>";
+	CString sidebartabTitle = GetGlobal("SidebartabTitle");
+	CString sidebartabURL = GetGlobal("SidebartabURL");
+
+	ifstream srcf(inputFile);
+	if (!srcf)
+	{
+		AfxMessageBox("Cannot open input file: " + CString(inputFile),MB_OK);
+		return;
+	}       
+	ofstream dstf(outputFile); 
+	if (!dstf)
+	{
+		AfxMessageBox("Cannot open output file: " + CString(outputFile), MB_OK);
+		return;
+	}
+
+	while (!srcf.eof()) 
+	{
+		srcf.getline(tempbuf,MAX_SIZE);
+		dstf << tempbuf << "\n";
+		if ((CString(tempbuf).Find(searchstr)) != -1)
+		{
+			dstf << "        <RDF:li>" << "\n";
+			dstf << "         <RDF:Description about=\"" << sidebartabTitle << "\">\n";
+			dstf << "          <NC:title>" << sidebartabTitle << "</NC:title>" << "\n";
+			dstf << "          <NC:content>" << sidebartabURL << "</NC:content>" << "\n";
+			dstf << "         </RDF:Description>" << "\n";
+			dstf << "        </RDF:li>" << "\n";
+		}
+	}
+	
+	srcf.close();
+	dstf.close();
+}
+
 int interpret(char *cmd)
 {
 	char *cmdname = strtok(cmd, "(");
@@ -1279,7 +1320,36 @@ int interpret(char *cmd)
 		}
 	}
 
+	else if (strcmp(cmdname, "modifySidebar") == 0)
+	{
+		// extract the file to be modified from the jar/xpi
+		// and process the file
+		
+		char *xpiname   = strtok(NULL, ",)"); // xpi file name
+		char *jarname   = strtok(NULL, ",)"); // jar name within xpi file
+		char *filename  = strtok(NULL, ",)"); // file name within jar file
 
+		CString inputFile = filename;
+		inputFile.Replace("/","\\");
+		inputFile = tempPath + "\\" + inputFile;
+		CString outputFile = inputFile + ".new";				
+
+		if (!xpiname || !filename)
+			return TRUE;
+               
+		//check to see if it is a jar and then do accordingly
+		if (stricmp(jarname,"no.jar")==0)
+			ExtractXPIFile(xpiname, filename);
+		else 
+			ExtractJARFile(xpiname, (CString)jarname, filename);
+
+		if (strcmp(cmdname, "modifySidebar") == 0)
+			ModifySidebar(inputFile, outputFile);
+			
+		remove(inputFile);
+		rename(outputFile, inputFile);
+	}
+               
 	else if ((strcmp(cmdname, "modifyDTD") == 0) ||
 			(strcmp(cmdname, "modifyJS") == 0) ||
 			(strcmp(cmdname, "modifyJS1") == 0) ||
