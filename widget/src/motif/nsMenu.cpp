@@ -29,7 +29,6 @@
 #include <Xm/PushB.h>
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kMenuIID, NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
 //NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
 
@@ -47,12 +46,12 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;                                                        
   }                                                                      
   if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)this;                        
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenu*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }
   if (aIID.Equals(kIMenuListenerIID)) {                                      
-    *aInstancePtr = (void*) ((nsIMenuListener*)this);                        
+    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                     
