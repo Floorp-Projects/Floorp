@@ -1,9 +1,9 @@
 /* zutil.c -- target dependent utility functions for the compression library
- * Copyright (C) 1995-1998 Jean-loup Gailly.
+ * Copyright (C) 1995-2002 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-/* @(#) $Id: zutil.c,v 3.7 2001/06/30 23:38:03 leaf%mozilla.org Exp $ */
+/* @(#) $Id: zutil.c,v 3.8 2002/03/14 22:18:39 seawood%netscape.com Exp $ */
 
 #include "zutil.h"
 
