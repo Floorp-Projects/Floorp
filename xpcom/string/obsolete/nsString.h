@@ -337,9 +337,10 @@ public:
   /**********************************************************************
     string conversion methods...
    *********************************************************************/
-
-      operator char*() {return mStr;}
-      operator const char*() const {return (const char*)mStr;}
+#ifndef STASTANDALONE_STRING_TESTS
+  operator char*() {return mStr;}
+  operator const char*() const {return (const char*)mStr;}
+#endif
 
   /**
    * This method constructs a new nsCString that is a clone
@@ -744,7 +745,9 @@ public:
 };
 
 #ifdef NEW_STRING_APIS
+#ifndef STASTANDALONE_STRING_TESTS
 NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCString&, const nsCString&);
+#endif
 NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCString&, const char*)
 NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const char*, const nsCString&)
 #endif

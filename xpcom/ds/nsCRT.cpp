@@ -126,13 +126,13 @@ static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
 extern nsICaseConversion * gCaseConv;
 
-#ifdef SCC_TESTS
+#ifdef STANDALONE_STRING_TESTS
 static nsICaseConversion* gCaseConv;
 #endif
 
 static void CheckCaseConversion()
 {
-#ifndef SCC_TESTS
+#ifndef STANDALONE_STRING_TESTS
     if (NULL == gCaseConv)
       (void) nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),
                                           (nsISupports**) &gCaseConv);
