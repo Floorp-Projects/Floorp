@@ -66,6 +66,8 @@ public:
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(const nsString &aText);
+  NS_IMETHOD GetAccessKey(nsString &aText);
+  NS_IMETHOD SetAccessKey(const nsString &aText);
   NS_IMETHOD AddItem(nsISupports* aText);
   NS_IMETHOD AddSeparator();
   NS_IMETHOD GetItemCount(PRUint32 &aCount);
