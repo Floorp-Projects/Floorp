@@ -70,7 +70,9 @@
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
+#ifdef	XP_WIN
 static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
+#endif
 
 static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
 
