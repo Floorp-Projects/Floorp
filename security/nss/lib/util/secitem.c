@@ -34,7 +34,7 @@
 /*
  * Support routines for SECItem data structure.
  *
- * $Id: secitem.c,v 1.1 2000/03/31 19:40:02 relyea%netscape.com Exp $
+ * $Id: secitem.c,v 1.2 2000/04/06 22:38:27 repka%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -237,10 +237,4 @@ SECITEM_ZfreeItem(SECItem *zap, PRBool freeit)
 	    PORT_ZFree(zap, sizeof(SECItem));
 	}
     }
-}
-
-char *
-BTOA_ConvertItemToAscii (SECItem *isrc)
-{
-    return BTOA_DataToAscii (isrc->data, isrc->len);
 }
