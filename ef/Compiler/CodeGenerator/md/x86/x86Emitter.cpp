@@ -16,7 +16,7 @@
  * Reserved.
  */
 //
-// File:	x86Win32Emitter.cpp
+// File:	x86Emitter.cpp
 //
 // Authors:	Peter DeSantis
 //			Simon Holmes a Court
@@ -32,8 +32,8 @@
 // -sys -html -log x86Emitter 4 -log FieldOrMethod 4 -ta -be java.lang.String startsWith (Ljava/lang/String;I)Z TinyClass
 // -sys -html -be suntest.quicktest.runtime.QuickTest assert (ZLjava/lang/String;)V javasoft/sqe/tests/api/java/lang/Integer/IntegerTests32
 
-#include "x86Win32Emitter.h"
-#include "x86Win32Instruction.h"
+#include "x86Emitter.h"
+#include "x86Instruction.h"
 #include "x86StdCall.h"
 #include "Primitives.h"
 #include "SysCalls.h"
@@ -43,7 +43,7 @@
 #include "x86-win32.nad.burg.h"
 #include "ControlNodes.h"
 
-#include "x86Win32Instruction.h"
+#include "x86Instruction.h"
 
 #include "x86Win32ExceptionHandler.h"
 
@@ -90,7 +90,7 @@ x86CondList condList[] =
 };
 
 //-----------------------------------------------------------------------------------------------------------
-void x86Win32Emitter::
+void x86Emitter::
 emitPrimitive(Primitive& inPrimitive, NamedRule inRule)
 {
 #ifdef DEBUG_LOG_VERBOSE	// very noisy
@@ -428,7 +428,7 @@ emitPrimitive(Primitive& inPrimitive, NamedRule inRule)
 	
 //-----------------------------------------------------------------------------------------------------------
 // Utility
-bool x86Win32Emitter::
+bool x86Emitter::
 emitCopyAfter(DataNode& inDataNode, InstructionList::iterator where, VirtualRegister& fromVr, VirtualRegister& toVr)
 {
 	InsnDoubleOpDir& newInsn = newCopyInstruction(inDataNode, mPool);
@@ -443,7 +443,7 @@ emitCopyAfter(DataNode& inDataNode, InstructionList::iterator where, VirtualRegi
 	return false;
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emitStoreAfter(DataNode& inDataNode, InstructionList::iterator where, VirtualRegister& storedReg, VirtualRegister& stackReg)
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inDataNode, mPool, raSaveReg, atRegDirect, atRegAllocStackSlot, 1, 1);
@@ -458,7 +458,7 @@ emitStoreAfter(DataNode& inDataNode, InstructionList::iterator where, VirtualReg
 #endif
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emitLoadAfter(DataNode& inDataNode, InstructionList::iterator where, VirtualRegister& loadedReg, VirtualRegister& stackReg)
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inDataNode, mPool, raLoadI, atRegAllocStackSlot, atRegDirect, 1, 1);
@@ -478,7 +478,7 @@ emitLoadAfter(DataNode& inDataNode, InstructionList::iterator where, VirtualRegi
 #endif
 }
 
-Instruction& x86Win32Emitter::
+Instruction& x86Emitter::
 emitAbsoluteBranch(DataNode& inDataNode, ControlNode& inTarget)
 {	
 	x86Instruction&	newInsn = *new(mPool) x86Instruction(&inDataNode, mPool, inTarget);
@@ -486,7 +486,7 @@ emitAbsoluteBranch(DataNode& inDataNode, ControlNode& inTarget)
 }
 
 // COMMENT ME
-VirtualRegister& x86Win32Emitter::
+VirtualRegister& x86Emitter::
 emit_CopyOfInput(x86ArgListInstruction& /*inInsn*/, DataNode& inPrimitive, Uint8 inWhichInput, VirtualRegisterID inID)
 {
 	// FIX-ME assumes fixed point registers
@@ -500,7 +500,7 @@ emit_CopyOfInput(x86ArgListInstruction& /*inInsn*/, DataNode& inPrimitive, Uint8
 // Arithmetic
 /*
 // Broken for now
-void x86Win32Emitter::
+void x86Emitter::
 emit_MulI_I(Primitive& inPrimitive)
 {
 	// FIX check for power of two
@@ -512,14 +512,14 @@ emit_MulI_I(Primitive& inPrimitive)
 }
 */
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Mul_I(Primitive& inPrimitive)
 {	
 	InsnDoubleOp&	newInsn = *new(mPool) InsnDoubleOp(&inPrimitive, mPool, opMul);
 	newInsn.x86StandardUseDefine(*this);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_AddI_I(Primitive& inPrimitive)
 {
 	x86Instruction*	newInsn;
@@ -537,14 +537,14 @@ emit_AddI_I(Primitive& inPrimitive)
 	}
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Add_I(Primitive& inPrimitive)
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raAdd);
 	newInsn.x86StandardUseDefine(*this);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Sub_I(Primitive& inPrimitive)
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raSub);
@@ -552,7 +552,7 @@ emit_Sub_I(Primitive& inPrimitive)
 }
 
 // a - b = (-b) + a
-void x86Win32Emitter::
+void x86Emitter::
 emit_SubR_I(Primitive& inPrimitive)
 {
 	Uint32 constant = nthInputConstantUint32(inPrimitive, 0);
@@ -574,15 +574,15 @@ emit_SubR_I(Primitive& inPrimitive)
 //-----------------------------------------------------------------------------------------------------------
 // Integer Logical Operations
 
-void x86Win32Emitter::emit_AndI_I(Primitive& inPrimitive)	{ genLogicI_I(inPrimitive, iaAndImm); }
-void x86Win32Emitter::emit_OrI_I(Primitive& inPrimitive)	{ genLogicI_I(inPrimitive, iaOrImm);  }
-void x86Win32Emitter::emit_XorI_I(Primitive& inPrimitive)	{ genLogicI_I(inPrimitive, iaXorImm); }
+void x86Emitter::emit_AndI_I(Primitive& inPrimitive)	{ genLogicI_I(inPrimitive, iaAndImm); }
+void x86Emitter::emit_OrI_I(Primitive& inPrimitive)	{ genLogicI_I(inPrimitive, iaOrImm);  }
+void x86Emitter::emit_XorI_I(Primitive& inPrimitive)	{ genLogicI_I(inPrimitive, iaXorImm); }
 
-void x86Win32Emitter::emit_And_I(Primitive& inPrimitive)	{ genLogic_I(inPrimitive, raAnd); }
-void x86Win32Emitter::emit_Or_I(Primitive& inPrimitive)		{ genLogic_I(inPrimitive, raOr);  }
-void x86Win32Emitter::emit_Xor_I(Primitive& inPrimitive)	{ genLogic_I(inPrimitive, raXor); }
+void x86Emitter::emit_And_I(Primitive& inPrimitive)	{ genLogic_I(inPrimitive, raAnd); }
+void x86Emitter::emit_Or_I(Primitive& inPrimitive)		{ genLogic_I(inPrimitive, raOr);  }
+void x86Emitter::emit_Xor_I(Primitive& inPrimitive)	{ genLogic_I(inPrimitive, raXor); }
 
-void x86Win32Emitter::
+void x86Emitter::
 genLogicI_I(Primitive& inPrimitive, x86ImmediateArithType iaType) 
 {
 	Uint32 constant = nthInputConstantUint32(inPrimitive, 1);
@@ -590,7 +590,7 @@ genLogicI_I(Primitive& inPrimitive, x86ImmediateArithType iaType)
 	newInsn.x86StandardUseDefine(*this);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 genLogic_I(Primitive& inPrimitive, x86DoubleOpDirCode raType)
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raType);
@@ -600,15 +600,15 @@ genLogic_I(Primitive& inPrimitive, x86DoubleOpDirCode raType)
 //-----------------------------------------------------------------------------------------------------------
 // Integer Shifts
 
-void x86Win32Emitter::emit_SarI_I(Primitive& inPrimitive)	{ genShiftI_I(inPrimitive, eSarImm, eSar1); }
-void x86Win32Emitter::emit_ShrI_I(Primitive& inPrimitive)	{ genShiftI_I(inPrimitive, eShrImm, eShr1); }
-void x86Win32Emitter::emit_ShlI_I(Primitive& inPrimitive)	{ genShiftI_I(inPrimitive, eShlImm, eShl1); }
+void x86Emitter::emit_SarI_I(Primitive& inPrimitive)	{ genShiftI_I(inPrimitive, eSarImm, eSar1); }
+void x86Emitter::emit_ShrI_I(Primitive& inPrimitive)	{ genShiftI_I(inPrimitive, eShrImm, eShr1); }
+void x86Emitter::emit_ShlI_I(Primitive& inPrimitive)	{ genShiftI_I(inPrimitive, eShlImm, eShl1); }
 
-void x86Win32Emitter::emit_Sar_I(Primitive& inPrimitive)	{ genShift_I(inPrimitive, eSarCl); }
-void x86Win32Emitter::emit_Shr_I(Primitive& inPrimitive)	{ genShift_I(inPrimitive, eShrCl); }
-void x86Win32Emitter::emit_Shl_I(Primitive& inPrimitive)	{ genShift_I(inPrimitive, eShlCl); }
+void x86Emitter::emit_Sar_I(Primitive& inPrimitive)	{ genShift_I(inPrimitive, eSarCl); }
+void x86Emitter::emit_Shr_I(Primitive& inPrimitive)	{ genShift_I(inPrimitive, eShrCl); }
+void x86Emitter::emit_Shl_I(Primitive& inPrimitive)	{ genShift_I(inPrimitive, eShlCl); }
 
-void x86Win32Emitter::genShiftI_I(Primitive& inPrimitive, x86ExtendedType eByImmediate, x86ExtendedType eBy1)
+void x86Emitter::genShiftI_I(Primitive& inPrimitive, x86ExtendedType eByImmediate, x86ExtendedType eBy1)
 {
 	Uint32 constant = nthInputConstantUint32(inPrimitive, 1);
 	if(constant == 1) 
@@ -623,7 +623,7 @@ void x86Win32Emitter::genShiftI_I(Primitive& inPrimitive, x86ExtendedType eByImm
 	}
 }
 
-void x86Win32Emitter::genShift_I(Primitive& inPrimitive, x86ExtendedType eByCl)
+void x86Emitter::genShift_I(Primitive& inPrimitive, x86ExtendedType eByCl)
 {
 	x86Instruction&	shiftInsn = *new(mPool) x86Instruction(&inPrimitive, mPool, eByCl, atRegDirect, 2, 1 );
 
@@ -647,10 +647,10 @@ void x86Win32Emitter::genShift_I(Primitive& inPrimitive, x86ExtendedType eByCl)
 
 //-----------------------------------------------------------------------------------------------------------
 // 64 bit support
-void x86Win32Emitter::emit_Add_L(Primitive& inPrimitive)	{ emit_Arithmetic_L(inPrimitive, raAdd, raAdc); }
-void x86Win32Emitter::emit_Sub_L(Primitive& inPrimitive)	{ emit_Arithmetic_L(inPrimitive, raSub, raSbb); }
+void x86Emitter::emit_Add_L(Primitive& inPrimitive)	{ emit_Arithmetic_L(inPrimitive, raAdd, raAdc); }
+void x86Emitter::emit_Sub_L(Primitive& inPrimitive)	{ emit_Arithmetic_L(inPrimitive, raSub, raSbb); }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Arithmetic_L(Primitive& inPrimitive, x86DoubleOpDirCode insnTypeLo, x86DoubleOpDirCode insnTypeHi)
 {
 	// low word arithmetic
@@ -672,11 +672,11 @@ emit_Arithmetic_L(Primitive& inPrimitive, x86DoubleOpDirCode insnTypeLo, x86Doub
 }
 
 
-void x86Win32Emitter::emit_And_L(Primitive& inPrimitive)	{ emit_Logic_L(inPrimitive, raAnd); }
-void x86Win32Emitter::emit_Or_L(Primitive& inPrimitive)		{ emit_Logic_L(inPrimitive, raOr);  }
-void x86Win32Emitter::emit_Xor_L(Primitive& inPrimitive)	{ emit_Logic_L(inPrimitive, raXor); }
+void x86Emitter::emit_And_L(Primitive& inPrimitive)	{ emit_Logic_L(inPrimitive, raAnd); }
+void x86Emitter::emit_Or_L(Primitive& inPrimitive)		{ emit_Logic_L(inPrimitive, raOr);  }
+void x86Emitter::emit_Xor_L(Primitive& inPrimitive)	{ emit_Logic_L(inPrimitive, raXor); }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Logic_L(Primitive& inPrimitive, x86DoubleOpDirCode insnType)
 {
 	// low word
@@ -695,15 +695,7 @@ emit_Logic_L(Primitive& inPrimitive, x86DoubleOpDirCode insnType)
 }
 
 #if defined(WIN32)
-extern int64 __stdcall x86Mul64Bit(int64 a, int64 b);
-extern int64 __stdcall x86Div64Bit(int64 a, int64 b);
-extern int64 __stdcall x86Mod64Bit(int64 a, int64 b);
-extern int64 __stdcall x86Shl64Bit(int64 a, int b);
-extern uint64 __stdcall x86Shr64Bit(uint64 a, int b);
-extern int64 __stdcall x86Sar64Bit(int64 a, int b);
-extern int64 __stdcall x86ThreeWayCMP_L(int64 a, int64 b);
-extern int64 __stdcall x86ThreeWayCMPC_L(int64 a, int64 b);
-extern int64 __stdcall x86Extract64Bit(int64 a, int b);
+#  include "x86Arith64.h"
 #elif defined(LINUX) || defined(FREEBSD)
 extern "C" {
 extern void x86Mul64Bit(void);
@@ -730,61 +722,61 @@ static void x86ThreeWayCMPC_L() {trespass("Not implemented");}
 static void x86Extract64Bit()	{trespass("Not implemented");}
 #endif
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Mul_L(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Mul64Bit);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Div_L(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Div64Bit);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Mod_L(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Mod64Bit);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpL_L(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86ThreeWayCMP_L, &(inPrimitive.nthInputVariable(0)));
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_3wayCmpCL_L(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86ThreeWayCMP_L, &(inPrimitive.nthInputVariable(0)));
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Shl_L(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Shl64Bit);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Shr_L(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Shr64Bit);
 }
  
-void x86Win32Emitter::
+void x86Emitter::
 emit_Sar_L(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Sar64Bit);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Ext_L(Primitive& inPrimitive)
 {
 	new(mPool) CallS_C(&inPrimitive, mPool, 2, true, *this, (void (*)())&x86Extract64Bit);
 }
 
-void x86Win32Emitter::			
+void x86Emitter::			
 emit_ConvL_I(Primitive& inPrimitive)
 {
 	// make a copy of the input and precolour it to EAX
@@ -813,7 +805,7 @@ emit_ConvL_I(Primitive& inPrimitive)
 	defineProducer(inPrimitive, copyLo, 0, vrcInteger, vidLow);
 }
 
-void x86Win32Emitter::			
+void x86Emitter::			
 emit_ConvI_L(Primitive& inPrimitive)
 {
 	// make a copy of the low register of the input
@@ -822,7 +814,7 @@ emit_ConvI_L(Primitive& inPrimitive)
 	defineProducer(inPrimitive, copyOfInput, 0);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Ld_L(Primitive& inPrimitive)
 {
 	InsnDoubleOpDir& insnLo = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raLoadI, atRegisterIndirect, atRegDirect, 2, 1);
@@ -836,7 +828,7 @@ emit_Ld_L(Primitive& inPrimitive)
 	defineProducer(inPrimitive, insnHi, 0, vrcInteger, vidHigh);	// -> hi
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_St_L(Primitive& inPrimitive)
 {
 	InsnDoubleOpDir& insnLo = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raStoreI, atRegisterIndirect, atRegDirect, 2, 1);
@@ -858,7 +850,7 @@ emit_St_L(Primitive& inPrimitive)
 }
 
 //-----------------------------------------------------------------------------------------------------------
-void x86Win32Emitter::
+void x86Emitter::
 emit_Break(Primitive& inPrimitive)
 {
 	new(mPool) InsnNoArgs(&inPrimitive, mPool, opBreak, 0, 0);
@@ -867,14 +859,14 @@ emit_Break(Primitive& inPrimitive)
 //-----------------------------------------------------------------------------------------------------------
 // Comparisons
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Cmp_I(Primitive& inPrimitive)
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raCmp);
 	newInsn.standardUseDefine(*this);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_CmpI_I(Primitive& inPrimitive)
 {
 	Uint32 constant = nthInputConstantUint32(inPrimitive, 1);
@@ -893,20 +885,20 @@ emit_CmpI_I(Primitive& inPrimitive)
 // Div and Mod are very similar in X86, so we try to factor out as much as we can
 
 // Normal Addressing Modes
-void x86Win32Emitter::emit_Div_I(Primitive& p)			{ genDivBackEnd(genDivMod_FrontEnd(p, eIDiv)); }
-void x86Win32Emitter::emit_DivU_I(Primitive& p)			{ genDivBackEnd(genDivMod_FrontEnd(p, eDiv )); }
-void x86Win32Emitter::emit_Mod_I(Primitive& p)			{ genModBackEnd(genDivMod_FrontEnd(p, eIDiv)); }
-void x86Win32Emitter::emit_ModU_I(Primitive& p)			{ genModBackEnd(genDivMod_FrontEnd(p, eDiv )); }
+void x86Emitter::emit_Div_I(Primitive& p)			{ genDivBackEnd(genDivMod_FrontEnd(p, eIDiv)); }
+void x86Emitter::emit_DivU_I(Primitive& p)			{ genDivBackEnd(genDivMod_FrontEnd(p, eDiv )); }
+void x86Emitter::emit_Mod_I(Primitive& p)			{ genModBackEnd(genDivMod_FrontEnd(p, eIDiv)); }
+void x86Emitter::emit_ModU_I(Primitive& p)			{ genModBackEnd(genDivMod_FrontEnd(p, eDiv )); }
 
 // Displaced, Scaled, Indexed Addressing Mode
-void x86Win32Emitter::emit_Div_I_MemDSI(Primitive& p)	{ genDivBackEnd(genDivMod_FrontEnd_MemDSI(p, eIDiv)); }
-void x86Win32Emitter::emit_DivU_I_MemDSI(Primitive& p)	{ genDivBackEnd(genDivMod_FrontEnd_MemDSI(p, eDiv )); }
-void x86Win32Emitter::emit_Mod_I_MemDSI(Primitive& p)	{ genModBackEnd(genDivMod_FrontEnd_MemDSI(p, eIDiv)); }
-void x86Win32Emitter::emit_ModU_I_MemDSI(Primitive& p)	{ genModBackEnd(genDivMod_FrontEnd_MemDSI(p, eDiv )); }
+void x86Emitter::emit_Div_I_MemDSI(Primitive& p)	{ genDivBackEnd(genDivMod_FrontEnd_MemDSI(p, eIDiv)); }
+void x86Emitter::emit_DivU_I_MemDSI(Primitive& p)	{ genDivBackEnd(genDivMod_FrontEnd_MemDSI(p, eDiv )); }
+void x86Emitter::emit_Mod_I_MemDSI(Primitive& p)	{ genModBackEnd(genDivMod_FrontEnd_MemDSI(p, eIDiv)); }
+void x86Emitter::emit_ModU_I_MemDSI(Primitive& p)	{ genModBackEnd(genDivMod_FrontEnd_MemDSI(p, eDiv )); }
 
 // does div, mod, divU, modU
 //  div divides dividend in EAX:EDX by divisor in reg/mem
-x86Instruction&  x86Win32Emitter::
+x86Instruction&  x86Emitter::
 genDivMod_FrontEnd(Primitive& inPrimitive, x86ExtendedType insnType)
 {
  	// make a copy of the dividend (since it will be eventually overwritten)
@@ -934,7 +926,7 @@ genDivMod_FrontEnd(Primitive& inPrimitive, x86ExtendedType insnType)
 
 // poDiv_I(Vint, MemDSI)
 //    dividend / divisor
-x86Instruction& x86Win32Emitter::
+x86Instruction& x86Emitter::
 genDivMod_FrontEnd_MemDSI(Primitive& inPrimitive, x86ExtendedType insnType)
 {
 	// get the DSI parameters
@@ -971,7 +963,7 @@ genDivMod_FrontEnd_MemDSI(Primitive& inPrimitive, x86ExtendedType insnType)
 }
 
 // backends for div and mod
-void x86Win32Emitter::
+void x86Emitter::
 genDivBackEnd(x86Instruction& inInsn)
 {
 	DataNode& primitive = *(inInsn.getPrimitive());
@@ -988,7 +980,7 @@ genDivBackEnd(x86Instruction& inInsn)
 	vrEDX->preColorRegister(x86GPRToColor[EDX]);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 genModBackEnd(x86Instruction& inInsn)
 {
 	DataNode& primitive = *(inInsn.getPrimitive());
@@ -1007,7 +999,7 @@ genModBackEnd(x86Instruction& inInsn)
 
 //-----------------------------------------------------------------------------------------------------------
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_LoadConstant_I(Primitive& inPrimitive)
 {
 	Uint32 constant = (*static_cast<const PrimConst *>(&inPrimitive)).value.i;
@@ -1022,7 +1014,7 @@ emit_LoadConstant_I(Primitive& inPrimitive)
 	defineProducer(inPrimitive, *newInsn, 0);	
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_LoadConstant_L(Primitive& inPrimitive)
 {
 	Int64 constant = (*static_cast<const PrimConst *>(&inPrimitive)).value.l;
@@ -1046,7 +1038,7 @@ emit_LoadConstant_L(Primitive& inPrimitive)
 	defineProducer(inPrimitive, *hiInsn, 0, vrcInteger, vidHigh);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Catch(Primitive& inPrimitive)
 {
 	// create a define instruction which tells the register allocator that the register
@@ -1064,7 +1056,7 @@ emit_Catch(Primitive& inPrimitive)
 	defineProducer(inPrimitive, copyInsn, 0);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_LoadAddress(Primitive& inPrimitive)
 {
 	addr a= (*static_cast<const PrimConst *>(&inPrimitive)).value.a;
@@ -1073,7 +1065,7 @@ emit_LoadAddress(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);	
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Ext_I(Primitive& inPrimitive)
 {
 	Uint32 shiftAmount = 32 - nthInputConstantUint32(inPrimitive, 1);
@@ -1090,7 +1082,7 @@ emit_Ext_I(Primitive& inPrimitive)
 
 // Method:	emit_Switch
 // Purpose:	emit a switch
-void x86Win32Emitter::
+void x86Emitter::
 emit_Switch(Primitive& inPrimitive)
 {
 	InsnSwitch& jmpInsn = *new InsnSwitch(&inPrimitive, mPool);
@@ -1113,7 +1105,7 @@ inline x86ConditionCode getConditionCode(Primitive& inPrimitive, RawConditionCod
 
 // Method:	emit_B
 // Purpose:	emit a conditional branch
-void x86Win32Emitter::
+void x86Emitter::
 emit_B(Primitive& inPrimitive, RawConditionCode rawCondType)
 {
 	// since the condition code depends on whether the comparison was signed or unsinged,
@@ -1137,7 +1129,7 @@ emit_B(Primitive& inPrimitive, RawConditionCode rawCondType)
 //
 // It is imperative that the instruction scheduler clears the destination before the comparison,
 // otherwise the compare flags will be clobbered by the xor eax, eax
-void x86Win32Emitter::
+void x86Emitter::
 emit_Cond(Primitive& inPrimitive, RawConditionCode rawCondType)
 {
 	// see comment in emit_B
@@ -1160,7 +1152,7 @@ emit_Cond(Primitive& inPrimitive, RawConditionCode rawCondType)
 	defineProducer(inPrimitive, copyInsn, 0);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 genLd_I(Primitive& inPrimitive)
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raLoadI, atRegisterIndirect, atRegDirect);
@@ -1169,7 +1161,7 @@ genLd_I(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);						// output
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_LdS_B(Primitive& inPrimitive)
 {
 	InsnDoubleOp& newInsn = *new(mPool) InsnDoubleOp(&inPrimitive, mPool, opMovSxB, atRegisterIndirect, atRegDirect);
@@ -1178,7 +1170,7 @@ emit_LdS_B(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);						// output
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_LdU_B(Primitive& inPrimitive)
 {
 	InsnDoubleOp& newInsn = *new(mPool) InsnDoubleOp(&inPrimitive, mPool, opMovZxB, atRegisterIndirect, atRegDirect);
@@ -1187,7 +1179,7 @@ emit_LdU_B(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);						// output
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_LdS_H(Primitive& inPrimitive)
 {
 	InsnDoubleOp& newInsn = *new(mPool) InsnDoubleOp(&inPrimitive, mPool, opMovSxH, atRegisterIndirect, atRegDirect);
@@ -1196,7 +1188,7 @@ emit_LdS_H(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);						// output
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_LdU_H(Primitive& inPrimitive)
 {
 	InsnDoubleOp& newInsn = *new(mPool) InsnDoubleOp(&inPrimitive, mPool, opMovZxH, atRegisterIndirect, atRegDirect);
@@ -1205,7 +1197,7 @@ emit_LdU_H(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);						// output
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 genLdC_I(Primitive& inPrimitive)
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raLoadI, atRegisterIndirect, atRegDirect, 1, 1);
@@ -1220,7 +1212,7 @@ genLdC_I(Primitive& inPrimitive)
 // poLimit(Vint, Vint)	throw if va >= vb  (ie ensure va < vb) OK
 // form cmp r1, r2		throw if r1 >= r2	 r1 nb r2
 // so skip if !nb ==> b
-void x86Win32Emitter::
+void x86Emitter::
 emit_Limit(Primitive& inPrimitive)
 {
 	// compare
@@ -1238,7 +1230,7 @@ emit_Limit(Primitive& inPrimitive)
 }
 
 // Common code for limCast, chkCast and chkNull primitives
-void x86Win32Emitter::
+void x86Emitter::
 emit_ExceptionCheck(Primitive& inPrimitive, x86ConditionCode condType, Uint32 constant, void (*throwExceptionFunction)())
 {
 	x86Instruction&	trap = *new(mPool) x86Instruction(&inPrimitive, mPool, iaCmpImm, constant, atRegDirect, 1, 1);
@@ -1253,7 +1245,7 @@ emit_ExceptionCheck(Primitive& inPrimitive, x86ConditionCode condType, Uint32 co
 }
 
 // poChkCast_I(vint, Vint) or poChkCast_A(Vptr, Vptr)
-void x86Win32Emitter::
+void x86Emitter::
 emit_ChkCast(Primitive& inPrimitive)
 {
 	InsnDoubleOpDir& trap = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raCmp);
@@ -1269,27 +1261,27 @@ emit_ChkCast(Primitive& inPrimitive)
 }
 
 // poChkCast_A(Vptr, Cptr)
-void x86Win32Emitter::
+void x86Emitter::
 emit_ChkCast_Const(Primitive& inPrimitive)
 {
     Uint32 classPtr = nthInputConstantUint32(inPrimitive, 1);
     emit_ExceptionCheck(inPrimitive, ccJE, classPtr, (void (*)())sysThrowClassCastException);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_LimCast(Primitive& inPrimitive)
 {
     Uint32 numVTableEntries = nthInputConstantUint32(inPrimitive, 1);
     emit_ExceptionCheck(inPrimitive, ccJNB, numVTableEntries, (void (*)())sysThrowClassCastException);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_ChkNull(Primitive& inPrimitive)
 {
     emit_ExceptionCheck(inPrimitive, ccJNE, 0, (void (*)())sysThrowNullPointerException);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Result_I(Primitive& inPrimitive)
 {
 	InsnDoubleOpDir& copyInsn = newCopyInstruction(inPrimitive, mPool);
@@ -1302,7 +1294,7 @@ emit_Result_I(Primitive& inPrimitive)
 	inPrimitive.setInstructionRoot(&extInsn);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Result_L(Primitive& inPrimitive)
 {
 	// Low
@@ -1332,7 +1324,7 @@ emit_Result_L(Primitive& inPrimitive)
 // poLimit(poConst_I, Vint)	throw if poConst_I >= Vint OK
 // form cmp reg, 10			throw if poConst_I <= Vint	jbe
 // so skip if !be ==> jnbe
-void x86Win32Emitter::
+void x86Emitter::
 emit_LimitR(Primitive& inPrimitive)
 {
 	Uint32 constant = nthInputConstantUint32(inPrimitive, 1);
@@ -1350,7 +1342,7 @@ emit_LimitR(Primitive& inPrimitive)
 	inPrimitive.setInstructionRoot(&branch);
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_St_I(Primitive& inPrimitive)	
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raStoreI, atRegisterIndirect, atRegDirect, 3, 1);
@@ -1360,7 +1352,7 @@ emit_St_I(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);						// memory edge out
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_St_B(Primitive& inPrimitive)	
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raStoreB, atRegisterIndirect, atRegDirect, 3, 1);
@@ -1379,7 +1371,7 @@ emit_St_B(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);						// memory edge out
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_St_H(Primitive& inPrimitive)	
 {
 	InsnDoubleOpDir& newInsn = *new(mPool) InsnDoubleOpDir(&inPrimitive, mPool, raStoreH, atRegisterIndirect, atRegDirect, 3, 1);
@@ -1389,7 +1381,7 @@ emit_St_H(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);						// memory edge out
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_StI_I(Primitive& inPrimitive)	
 {
 	Uint32 constant = nthInputConstantUint32(inPrimitive, 2);
@@ -1402,7 +1394,7 @@ emit_StI_I(Primitive& inPrimitive)
 
 //-----------------------------------------------------------------------------------------------------------
 // MemDisp
-void x86Win32Emitter::
+void x86Emitter::
 emit_St_I_MemDisp(Primitive& inPrimitive)
 {
 	DataNode& addSource = inPrimitive.nthInput(1).getVariable();
@@ -1417,7 +1409,7 @@ emit_St_I_MemDisp(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);					// memory edge out
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_StI_I_MemDisp(Primitive& inPrimitive)
 {
 	Uint32 constant = nthInputConstantUint32(inPrimitive, 2);
@@ -1432,7 +1424,7 @@ emit_StI_I_MemDisp(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);					// memory edge out
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Ld_I_MemDisp(Primitive& inPrimitive)
 {
 	DataNode& addSource = inPrimitive.nthInput(1).getVariable();
@@ -1448,7 +1440,7 @@ emit_Ld_I_MemDisp(Primitive& inPrimitive)
 // poLimit(poConst_I, MemDisp)	throw if poConst_I >= MemDisp OK
 // form cmp [eax + 4], 10		throw if MemDisp <= poConst_I	jbe
 // so skip if !be ==> jnbe
-void x86Win32Emitter::
+void x86Emitter::
 emit_LimitR_MemDisp(Primitive& inPrimitive)
 {
 	Uint32 constant = nthInputConstantUint32(inPrimitive, 0);
@@ -1471,7 +1463,7 @@ emit_LimitR_MemDisp(Primitive& inPrimitive)
 // poLimit(Vint, MemDisp)	throw if Vint >= MemDisp   OK
 // form  cmp eax, [reg + 4]	throw if Vint >= MemDisp jnb
 // so skip if !nb ==> jb
-void x86Win32Emitter::
+void x86Emitter::
 emit_Limit_MemDisp(Primitive& inPrimitive)
 {
 	DataNode& loadSource = inPrimitive.nthInput(1).getVariable();
@@ -1495,7 +1487,7 @@ emit_Limit_MemDisp(Primitive& inPrimitive)
 // MemDSI -- lots more factoring out to do
 
 // poCmp_I(MemDSI, Vint)
-void x86Win32Emitter::
+void x86Emitter::
 emit_Cmp_I_MemDSI(Primitive& inPrimitive)
 {
 	DataNode& loadPrimitive = inPrimitive.nthInput(0).getVariable();
@@ -1511,7 +1503,7 @@ emit_Cmp_I_MemDSI(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);								// -> compare result
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_CmpI_I_MemDSI(Primitive& inPrimitive)
 {
 	Uint32 constant = nthInputConstantUint32(inPrimitive, 1);
@@ -1527,7 +1519,7 @@ emit_CmpI_I_MemDSI(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);								// -> compare result
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_St_I_MemDSI(Primitive& inPrimitive)
 {
 	MemDSIParameters parms(inPrimitive);
@@ -1542,7 +1534,7 @@ emit_St_I_MemDSI(Primitive& inPrimitive)
 	defineProducer(inPrimitive, newInsn, 0);								// -> memory edge
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_Ld_I_MemDSI(Primitive& inPrimitive)
 {
 	MemDSIParameters parms(inPrimitive);
@@ -1560,7 +1552,7 @@ emit_Ld_I_MemDSI(Primitive& inPrimitive)
 //-----------------------------------------------------------------------------------------------------------
 // Monitors
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_MonitorEnter(Primitive& inPrimitive)
 {
 	// temporary, until we get syscall guard frames working on linux
@@ -1571,7 +1563,7 @@ emit_MonitorEnter(Primitive& inPrimitive)
 #endif
 }
 
-void x86Win32Emitter::
+void x86Emitter::
 emit_MonitorExit(Primitive& inPrimitive)
 {
 #ifdef _WIN32

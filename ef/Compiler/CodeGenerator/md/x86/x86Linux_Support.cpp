@@ -40,31 +40,6 @@ void* compileStubAddress = (void*)staticCompileStub;
 void* compileStubReEntryPoint = (Uint8*)compileStubAddress + 17;
 #endif // DEBUG
 
-void *
-generateNativeStub(NativeCodeCache& inCache, const CacheEntry& inCacheEntry, void *nativeFunction)
-{
-	Method* method = inCacheEntry.descriptor.method;
-	Uint32 nWords = method->getSignature().nArguments;
-
-	assert(method->getModifiers() & CR_METHOD_NATIVE);
-
-	extern Uint32 sysInvokeNativeStubs[];
-    Uint8 stubSize = 10;
-    void* stub;
-		
-	// Write out the native stub
-	stub = inCache.acquireMemory(stubSize);
-	Uint8* where = (Uint8*)stub;
-	*where++ = 0x68; // pushl
-	writeLittleWordUnaligned(where, (uint32)(nativeFunction));
-	where += 4;
-	*where++ = 0xe9; // jmp
-	writeLittleWordUnaligned(where, (Uint8 *) sysInvokeNativeStubs[nWords] - (where + 4));
-
-	// Return the address of the stub.
-	return ((void*)stub);
-}
-
 void * 
 generateJNIGlue(NativeCodeCache& inCache,
                 const CacheEntry& inCacheEntry,
@@ -88,21 +63,50 @@ generateJNIGlue(NativeCodeCache& inCache,
 	return stub;
 } 
     
+void *
+generateNativeStub(NativeCodeCache& inCache, const CacheEntry& inCacheEntry, void *nativeFunction)
+{
+	Method* method = inCacheEntry.descriptor.method;
+    Uint32 nWords = method->getArgsSize()/sizeof(Int32);
+
+	assert(method->getModifiers() & CR_METHOD_NATIVE);
+    assert(nWords <= 256);
+
+	extern Uint32 sysInvokeNativeStubs[];
+    Uint8 stubSize = 10;
+    void* stub;
+		
+	// Write out the native stub
+	stub = inCache.acquireMemory(stubSize);
+	Uint8* where = (Uint8*)stub;
+	*where++ = 0x68; // pushl
+	writeLittleWordUnaligned(where, (uint32)(nativeFunction));
+	where += 4;
+	*where++ = 0xe9; // jmp
+	writeLittleWordUnaligned(where, (Uint8 *) sysInvokeNativeStubs[nWords] - (where + 4));
+
+	// Return the address of the stub.
+	return ((void*)stub);
+}
+
 void * 
 generateCompileStub(NativeCodeCache& inCache, const CacheEntry& inCacheEntry)
 {
-    void*	stub;
-    uint8 stubSize = 10;
+    void* stub;
+    Uint8* where;
+
+    Uint8 stubSize = 10;
 		
 	// Write out the dynamic compile stub
 	stub = inCache.acquireMemory(stubSize);
-	Uint8* where = (Uint8*)stub;
+	where = (Uint8*)stub;
 
     // movl $inCacheEntry, %eax
     *where++ = 0xb8;
-
-	writeLittleWordUnaligned(where, (uint32)(&inCacheEntry));
+	writeLittleWordUnaligned(where, (uint32)&inCacheEntry);
 	where += 4;
+
+    // jmp compileStub
 	*where++ = 0xe9; // jmp
 	writeLittleWordUnaligned(where, (Uint8 *) staticCompileStub - (where + 4));
 

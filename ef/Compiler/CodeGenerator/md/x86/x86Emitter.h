@@ -16,7 +16,7 @@
  * Reserved.
  */
 // 
-//	x86Win32Emitter.h
+//	x86Emitter.h
 //
 //	Peter DeSantis
 //	Simon Holmes a Court
@@ -95,15 +95,15 @@ enum RawConditionCode
 };
 
 //-----------------------------------------------------------------------------------------------------------
-// x86Win32Emitter
-class x86Win32Emitter :
+// x86Emitter
+class x86Emitter :
 	public InstructionEmitter
 {
 	friend class x86Instruction;
 	friend class x86Formatter;
 
 public:
-					x86Win32Emitter(Pool& inPool, VirtualRegisterManager& vrMan) : 
+					x86Emitter(Pool& inPool, VirtualRegisterManager& vrMan) : 
 					  InstructionEmitter(inPool, vrMan)
 					  { }
 

@@ -20,11 +20,11 @@
 //
 
 #include "x86StdCall.h"
-#include "x86Win32Emitter.h"
+#include "x86Emitter.h"
 
 // Utility function to push one function-call argument on the stack
 void
-pushCallArg(DataConsumer& argument, DataNode* usesNode, InstructionDefine*& orderingDependency, Pool& inPool, x86Win32Emitter& inEmitter)
+pushCallArg(DataConsumer& argument, DataNode* usesNode, InstructionDefine*& orderingDependency, Pool& inPool, x86Emitter& inEmitter)
 {
     // Do the first argument specially because that sets up the chain of ordering dependencies
     int numOrderingUses = orderingDependency ? 1 : 0;
@@ -175,7 +175,7 @@ pushCallArg(DataConsumer& argument, DataNode* usesNode, InstructionDefine*& orde
 }
 
 
-void x86Win32Emitter::
+void x86Emitter::
 emitArguments(ControlNode::BeginExtra& inBeginNode)
 {
 	if (inBeginNode.nArguments == 0)

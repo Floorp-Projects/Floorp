@@ -23,7 +23,7 @@
 
 #include "x86ArgumentList.h"
 #include "x86Opcode.h"
-#include "x86Win32Instruction.h"
+#include "x86Instruction.h"
 #include "MemoryAccess.h"
 #include "x86Formatter.h"
 

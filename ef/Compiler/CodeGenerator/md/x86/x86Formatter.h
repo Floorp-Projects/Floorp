@@ -28,7 +28,7 @@
 
 #include "Fundamentals.h"
 #include "FormatStructures.h"	// for FCI, StackFrameInfo
-#include "x86Win32Emitter.h"	// temp?
+#include "x86Emitter.h"	// temp?
 
 const int kStackSlotSize = 8;
 

@@ -19,10 +19,10 @@
 //  x86StdCall.h - StdCall calling convention
 //
 
-#include "x86Win32Instruction.h"
+#include "x86Instruction.h"
 
 // Utility function to push one function-call argument on the stack
-void pushCallArg(DataConsumer &curArgument, DataNode* usesNode, InstructionDefine*& orderingDependency, Pool& inPool, x86Win32Emitter& inEmitter);
+void pushCallArg(DataConsumer &curArgument, DataNode* usesNode, InstructionDefine*& orderingDependency, Pool& inPool, x86Emitter& inEmitter);
 
 // -> mem regarg1 regarg2 regarg3 regarg3 
 // <- mem [returnval]
@@ -35,7 +35,7 @@ Call(	DataNode* inDataNode,
 		Pool& inPool, 
 		Uint8 inRegisterArguments, 
 		bool /*inHasReturnValue*/, 
-		x86Win32Emitter& inEmitter, 
+		x86Emitter& inEmitter, 
 		void (*inFunc)(),
 		DataNode* inUseDataNode) :
 	InsnUseXDefineYFromPool(inDataNode, inPool, ((inRegisterArguments != 0) ? 1 : 0) + tHasIncomingStore + tIsDynamic, 3)
