@@ -92,7 +92,7 @@ CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
     nsresult rv = NS_New##_new(&inst);                               \
     if (NS_FAILED(rv)) {                                             \
         *aResult = nsnull;                                           \
-        return NS_ERROR_OUT_OF_MEMORY;                               \
+        return rv;                                                   \
     }                                                                \
     rv = inst->QueryInterface(aIID, aResult);                        \
     if (NS_FAILED(rv)) {                                             \
