@@ -30,5 +30,4 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 MODULE = wallet
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
