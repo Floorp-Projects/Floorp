@@ -1006,21 +1006,24 @@ CCommentToken::CCommentToken(const nsAReadableString& aName) : CHTMLToken(eHTMLT
   mTextValue.Assign(aName);
 }
 
-// We must test if we have whitespace and >
-static PRBool IsGoodCommentEnd(
+static PRBool IsCommentEnd(
   const nsReadingIterator<PRUnichar>& aCurrent, 
   const nsReadingIterator<PRUnichar>& aEnd, 
   nsReadingIterator<PRUnichar>& aGt)
 {
   nsReadingIterator<PRUnichar> current = aCurrent;
+  PRInt32 dashes = 0;
 
-  while (current != aEnd) {
+  while ((current != aEnd) && (dashes != 2)) {
     if (*current == kGreaterThan) {
       aGt = current;
       return PR_TRUE;
     }
-    if (!nsString::IsSpace(*current))
-      break;
+    if (*current == PRUnichar('-')) {
+      dashes++;
+    } else {
+      dashes = 0;
+    }
     ++current;
   }
 
@@ -1053,7 +1056,7 @@ nsresult ConsumeStrictComment(nsScanner& aScanner, nsString& aString) {
     }
     balancedComment = !balancedComment; // We need to match '--' with '--'
     
-    if (balancedComment && IsGoodCommentEnd(current, end, gt)) {
+    if (balancedComment && IsCommentEnd(current, end, gt)) {
       // done
       current.advance(-2);
       if (beginData != current) { // protects from <!---->
