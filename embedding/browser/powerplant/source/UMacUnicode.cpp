@@ -21,19 +21,32 @@
  */
 
 #include "UMacUnicode.h"
+
+#include <TextCommon.h>
+#include <Script.h>
+
 #include "nsString.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeDecoder.h"
-#include "nsIServiceManager.h"
-#include "nsICharsetConverterManager.h"
+
+static TextEncoding getSystemEncoding()
+{
+    OSStatus err;
+    TextEncoding theEncoding;
+    
+    err = ::UpgradeScriptInfoToTextEncoding(smSystemScript, kTextLanguageDontCare,
+        kTextRegionDontCare, NULL, &theEncoding);
+    
+    if (err != noErr)
+        theEncoding = kTextEncodingMacRoman;
+    
+    return theEncoding;
+}
 
 CPlatformUCSConversion *CPlatformUCSConversion::mgInstance = nsnull; 
+UnicodeToTextInfo CPlatformUCSConversion::sEncoderInfo = nsnull;
+TextToUnicodeInfo CPlatformUCSConversion::sDecoderInfo = nsnull;
 
-CPlatformUCSConversion::CPlatformUCSConversion() :
-    mCharsetSel(kPlatformCharsetSel_FileName)
+CPlatformUCSConversion::CPlatformUCSConversion()
 {
-   mEncoder = nsnull;
-   mDecoder = nsnull;
 }
 
 
@@ -47,123 +60,78 @@ CPlatformUCSConversion::GetInstance()
 }
 
 
-NS_IMETHODIMP
-CPlatformUCSConversion::SetCharsetSelector(nsPlatformCharsetSel aSel)
-{
-    if (mCharsetSel != aSel) {
-        mCharsetSel = aSel;
-        mPlatformCharset.Truncate(0);
-        mEncoder = nsnull;
-        mDecoder = nsnull;
-    }
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP 
-CPlatformUCSConversion::PreparePlatformCharset()
-{
-   nsresult res = NS_OK;
-
-   if (mPlatformCharset.Length() == 0)
-   { 
-     nsCOMPtr<nsIPlatformCharset> pcharset = 
-              do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
-     if (!(NS_SUCCEEDED(res) && pcharset)) {
-       NS_WARNING("cannot get platform charset");
-     }
-     if(NS_SUCCEEDED(res) && pcharset) {
-        res = pcharset->GetCharset(mCharsetSel, mPlatformCharset);
-     } 
-   }
-   return res;
-}
-
-
 NS_IMETHODIMP 
 CPlatformUCSConversion::PrepareEncoder()
 {
-   nsresult res = NS_OK;
-
-   if(! mEncoder)
-   {
-       res = PreparePlatformCharset();
-       if(NS_SUCCEEDED(res)) {
-           nsCOMPtr<nsICharsetConverterManager> ucmgr = 
-                    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-           NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
-                   "cannot get charset converter manager ");
-           if(NS_SUCCEEDED(res) && ucmgr) 
-               res = ucmgr->GetUnicodeEncoder( &mPlatformCharset, getter_AddRefs(mEncoder));
-           NS_ASSERTION((NS_SUCCEEDED(res) && mEncoder), 
-                   "cannot find the unicode encoder");
-       }
-   }
-   return res;
+    nsresult rv = NS_OK;
+    if (!sEncoderInfo) {
+        OSStatus err;
+        err = ::CreateUnicodeToTextInfoByEncoding(getSystemEncoding(), &sEncoderInfo);
+        if (err)
+            rv = NS_ERROR_FAILURE;
+    }
+    return rv;
 }
 
 
 NS_IMETHODIMP 
 CPlatformUCSConversion::PrepareDecoder()
 {
-   nsresult res = NS_OK;
-
-   if(! mDecoder)
-   {
-       res = PreparePlatformCharset();
-       if(NS_SUCCEEDED(res)) {
-           nsCOMPtr<nsICharsetConverterManager> ucmgr = 
-                    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-           NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
-                   "cannot get charset converter manager ");
-           if(NS_SUCCEEDED(res) && ucmgr) 
-               res = ucmgr->GetUnicodeDecoder( &mPlatformCharset, getter_AddRefs(mDecoder));
-           NS_ASSERTION((NS_SUCCEEDED(res) && mDecoder), 
-                   "cannot find the unicode decoder");
-       }
-   }
-   return res;
+    nsresult rv = NS_OK;
+    if (!sDecoderInfo) {
+        OSStatus err;
+        err = ::CreateTextToUnicodeInfoByEncoding(getSystemEncoding(), &sDecoderInfo);
+        if (err)
+            rv = NS_ERROR_FAILURE;
+    }
+    return rv;
 }
 
 
 NS_IMETHODIMP 
 CPlatformUCSConversion::UCSToPlatform(const nsAString& aIn, nsACString& aOut)
 {
-    nsresult res;
+    nsresult rv = PrepareEncoder();
+    if (NS_FAILED(rv)) return rv;
+    
+    OSStatus err = noErr;
+    char stackBuffer[512];
 
     aOut.Truncate(0);
-    res = PrepareEncoder();
-    if(NS_SUCCEEDED(res)) 
-    {        
-        nsReadingIterator<PRUnichar> done_reading;
-        aIn.EndReading(done_reading);
+    nsReadingIterator<PRUnichar> done_reading;
+    aIn.EndReading(done_reading);
 
-        // for each chunk of |aIn|...
-        PRUint32 fragmentLength = 0;
-        nsReadingIterator<PRUnichar> iter;
-        for (aIn.BeginReading(iter); iter != done_reading && NS_SUCCEEDED(res); iter.advance(PRInt32(fragmentLength)))
-        {
-            fragmentLength = PRUint32(iter.size_forward());
-            PRInt32 inLength = fragmentLength;
-            PRInt32 outLength;
-
-            res = mEncoder->GetMaxLength(iter.get(), fragmentLength, &outLength);
-            if (NS_SUCCEEDED(res))
-            {
-                char *outBuf = (char*)nsMemory::Alloc(outLength);
-                if (outBuf)
-                {
-                    res = mEncoder->Convert(iter.get(), &inLength, outBuf,  &outLength);
-                    if (NS_SUCCEEDED(res))
-                        aOut.Append(outBuf, outLength);
-                    nsMemory::Free(outBuf);
-                }
-                else
-                    res = NS_ERROR_OUT_OF_MEMORY;
+    // for each chunk of |aIn|...
+    PRUint32 fragmentLength = 0;
+    nsReadingIterator<PRUnichar> iter;
+    for (aIn.BeginReading(iter); iter != done_reading && err == noErr; iter.advance(PRInt32(fragmentLength)))
+    {
+        fragmentLength = PRUint32(iter.size_forward());        
+        UInt32 bytesLeft = fragmentLength * sizeof(UniChar);
+        nsReadingIterator<PRUnichar> sub_iter(iter);
+        
+        do {
+            UInt32 bytesRead = 0, bytesWritten = 0;
+            err = ::ConvertFromUnicodeToText(sEncoderInfo,
+                                             bytesLeft,
+                                             (const UniChar*)sub_iter.get(),
+                                             kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask,
+                                             0, nsnull, nsnull, nsnull,
+                                             sizeof(stackBuffer),
+                                             &bytesRead,
+                                             &bytesWritten,
+                                             stackBuffer);
+            if (err == kTECUsedFallbacksStatus)
+                err = noErr;
+            else if (err == kTECOutputBufferFullStatus) {
+                bytesLeft -= bytesRead;
+                sub_iter.advance(bytesRead / sizeof(UniChar));
             }
+            aOut.Append(stackBuffer, bytesWritten);
         }
-   }
-   return res;
+        while (err == kTECOutputBufferFullStatus);
+    }
+    return (err == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -189,41 +157,47 @@ CPlatformUCSConversion::UCSToPlatform(const nsAString& aIn, Str255& aOut)
 NS_IMETHODIMP 
 CPlatformUCSConversion::PlatformToUCS(const nsACString& aIn, nsAString& aOut)
 {
-   nsresult res;
+    nsresult rv = PrepareDecoder();
+    if (NS_FAILED(rv)) return rv;
+    
+    OSStatus err = noErr;
+    UniChar stackBuffer[512];
 
     aOut.Truncate(0);
-    res = PrepareDecoder();
-    if (NS_SUCCEEDED(res)) 
+    nsReadingIterator<char> done_reading;
+    aIn.EndReading(done_reading);
+
+    // for each chunk of |aIn|...
+    PRUint32 fragmentLength = 0;
+    nsReadingIterator<char> iter;
+    for (aIn.BeginReading(iter); iter != done_reading && err == noErr; iter.advance(PRInt32(fragmentLength)))
     {
-        nsReadingIterator<char> done_reading;
-        aIn.EndReading(done_reading);
-
-        // for each chunk of |aIn|...
-        PRUint32 fragmentLength = 0;
-        nsReadingIterator<char> iter;
-        for (aIn.BeginReading(iter); iter != done_reading && NS_SUCCEEDED(res); iter.advance(PRInt32(fragmentLength)))
-        {
-            fragmentLength = PRUint32(iter.size_forward());
-            PRInt32 inLength = fragmentLength;
-            PRInt32 outLength;
-
-            res = mDecoder->GetMaxLength(iter.get(), inLength, &outLength);
-            if (NS_SUCCEEDED(res))
-            {
-               PRUnichar *outBuf = (PRUnichar*)nsMemory::Alloc(outLength * sizeof(PRUnichar));
-               if (outBuf)
-               {
-                  res = mDecoder->Convert(iter.get(), &inLength, outBuf,  &outLength);
-                  if(NS_SUCCEEDED(res))
-                     aOut.Append(outBuf, outLength);
-                  nsMemory::Free(outBuf);
-               }
-               else
-                  res = NS_ERROR_OUT_OF_MEMORY;
+        fragmentLength = PRUint32(iter.size_forward());        
+        UInt32 bytesLeft = fragmentLength;
+        nsReadingIterator<char> sub_iter(iter);
+        
+        do {
+            UInt32 bytesRead = 0, bytesWritten = 0;
+            err = ::ConvertFromTextToUnicode(sDecoderInfo,
+                                             bytesLeft,
+                                             sub_iter.get(),
+                                             kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask,
+                                             0, nsnull, nsnull, nsnull,
+                                             sizeof(stackBuffer),
+                                             &bytesRead,
+                                             &bytesWritten,
+                                             stackBuffer);
+            if (err == kTECUsedFallbacksStatus)
+                err = noErr;
+            else if (err == kTECOutputBufferFullStatus) {
+                bytesLeft -= bytesRead;
+                sub_iter.advance(bytesRead);
             }
+            aOut.Append((PRUnichar *)stackBuffer, bytesWritten / sizeof(PRUnichar));
         }
-   }
-   return res;
+        while (err == kTECOutputBufferFullStatus);
+    }
+    return (err == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP 

@@ -257,9 +257,9 @@ NS_IMETHODIMP CBrowserShellProgressListener::OnSecurityChange(nsIWebProgress *aW
 //*****************************************************************************
 
 CBrowserShell::CBrowserShell() :
+    LDropArea(GetMacWindow()),
     mChromeFlags(nsIWebBrowserChrome::CHROME_DEFAULT), mIsMainContent(true),
-    mContextMenuFlags(nsIContextMenuListener2::CONTEXT_NONE),
-    LDropArea(GetMacWindow())
+    mContextMenuFlags(nsIContextMenuListener2::CONTEXT_NONE)
 {
 	nsresult rv = CommonConstruct();
 	if (rv != NS_OK)
@@ -356,7 +356,7 @@ NS_IMETHODIMP CBrowserShell::EnsureTopLevelWidget(nsIWidget **aWidget)
     nsresult rv;
     nsIWidget *widget = nsnull;
 
-    err = ::GetWindowProperty(Compat_GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), nsnull, (void*)&widget);
+    err = ::GetWindowProperty(GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), nsnull, (void*)&widget);
     if (err == noErr && widget) {
         *aWidget = widget;
         NS_ADDREF(*aWidget);
@@ -377,11 +377,11 @@ NS_IMETHODIMP CBrowserShell::EnsureTopLevelWidget(nsIWidget **aWidget)
     Rect grayRect;
     ::GetRegionBounds(grayRgn, &grayRect);
     nsRect r(0, 0, grayRect.right - grayRect.left, grayRect.bottom - grayRect.top);
-    rv = newWidget->Create(Compat_GetMacWindow(), r, nsnull, nsnull, nsnull, nsnull, nsnull);
+    rv = newWidget->Create(GetMacWindow(), r, nsnull, nsnull, nsnull, nsnull, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
 	widget = newWidget;
-    err = ::SetWindowProperty(Compat_GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), (void*)&widget);
+    err = ::SetWindowProperty(GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), (void*)&widget);
     if (err == noErr) {
         *aWidget = newWidget;
         NS_ADDREF(*aWidget);
@@ -939,7 +939,7 @@ NS_METHOD CBrowserShell::SetWebBrowser(nsIWebBrowser* aBrowser)
     FocusDraw();
 
     /*
-    CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(Compat_GetMacWindow()));
+    CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(GetMacWindow()));
     NS_ENSURE_TRUE(ourWindow, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIWidget>  aWidget;
@@ -1678,7 +1678,9 @@ OSStatus CBrowserShell::HandleUpdateActiveInputArea(
                                                        &err);
   if (noErr != err)
     return err;
-  return NS_FAILED(res) ? eventNotHandledErr : noErr;
+  if (NS_FAILED(res))
+    return eventNotHandledErr;
+  return noErr;
 }
 
 OSStatus CBrowserShell::HandleUnicodeForKeyEvent(
@@ -1698,8 +1700,10 @@ OSStatus CBrowserShell::HandleUnicodeForKeyEvent(
                                                     (void*)keyboardEvent, 
                                                     &err);
   if (noErr != err)
-    return err;
-  return NS_FAILED(res) ? eventNotHandledErr : noErr;
+      return err;
+  if (NS_FAILED(res))
+      return eventNotHandledErr;
+  return noErr;
 }
 
 OSStatus CBrowserShell::HandleOffsetToPos(
@@ -1714,9 +1718,12 @@ OSStatus CBrowserShell::HandleOffsetToPos(
     
   OSStatus err = noErr;
   nsresult res = tieSink->HandleOffsetToPos( offset, pointX, pointY, &err);
+
   if (noErr != err)
-    return err;
-  return NS_FAILED(res) ? eventNotHandledErr : noErr;
+      return err;
+  if (NS_FAILED(res))
+      return eventNotHandledErr;
+  return noErr;
 }
 
 OSStatus CBrowserShell::HandlePosToOffset(
@@ -1735,8 +1742,10 @@ OSStatus CBrowserShell::HandlePosToOffset(
   nsresult res = tieSink->HandlePosToOffset( currentPointX, currentPointY, 
                                              offset, regionClass, &err);
   if (noErr != err)
-    return err;
-  return NS_FAILED(res) ? eventNotHandledErr : noErr;
+      return err;
+  if (NS_FAILED(res))
+      return eventNotHandledErr;
+  return noErr;
 }
 
 OSStatus CBrowserShell::HandleGetSelectedText(nsAString& selectedText)
@@ -1748,8 +1757,11 @@ OSStatus CBrowserShell::HandleGetSelectedText(nsAString& selectedText)
     
   OSStatus err = noErr;
   nsresult res = tieSink->HandleGetSelectedText( selectedText, &err);
+
   if (noErr != err)
-    return err;
-  return NS_FAILED(res) ? eventNotHandledErr : noErr;
+      return err;
+  if (NS_FAILED(res))
+      return eventNotHandledErr;
+  return noErr;
 }
 

@@ -23,9 +23,11 @@
 #include "EmbedEventHandling.h"
 #include "CTextInputEventHandler.h"
 
-#include "nsRepeater.h"
 #include "prthread.h"
+
+#if defined(__MWERKS__) && defined(DEBUG) && !TARGET_CARBON
 #include "SIOUX.h"
+#endif
 
 #include "nsIWidget.h"
 #include "nsIEventSink.h"
@@ -121,7 +123,7 @@ void CEmbedEventAttachment::ExecuteSelf(MessageT	inMessage,
 	} else if (inMessage == msg_Event) {
         inMacEvent = static_cast<EventRecord*>(ioParam);
 
-#ifdef DEBUG
+#if defined(__MWERKS__) && defined(DEBUG) && !TARGET_CARBON
         // 2. See if the event is for the console window.
         // Limit what types of events we send to it.
         if ((inMacEvent->what == mouseDown ||
@@ -237,31 +239,8 @@ CEmbedIdler::~CEmbedIdler()
   
 void CEmbedIdler::SpendTime(const EventRecord&	inMacEvent)
 {
-    Repeater::DoIdlers(inMacEvent);
     ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 }
-
-
-//*****************************************************************************
-//  CEmbedRepeater
-//
-//
-//*****************************************************************************
-
-CEmbedRepeater::CEmbedRepeater()
-{
-}
-
-
-CEmbedRepeater::~CEmbedRepeater()
-{
-}
-  
-void CEmbedRepeater::SpendTime(const EventRecord&	inMacEvent)
-{
-	Repeater::DoRepeaters(inMacEvent);
-}
-
 
 //*****************************************************************************
 // Initialization Function - Call at application startup. 
@@ -276,10 +255,6 @@ void InitializeEmbedEventHandling(LApplication* theApplication)
     CEmbedIdler *embedIdler = new CEmbedIdler;
     ThrowIfNil_(embedIdler);
     embedIdler->StartIdling();
-
-    CEmbedRepeater *embedRepeater = new CEmbedRepeater;
-    ThrowIfNil_(embedRepeater);
-    embedRepeater->StartRepeating();
     
 #if TARGET_CARBON
     InitializeTextInputEventHandling();

@@ -70,7 +70,7 @@ protected:
     bool                    mbIsPressed;
 
     static OSType           mgAppCreator;
-    static FSSpec           mgAppFileSpec;
+    static FSSpec           mgIconFileSpec;
 };
 
 #endif // __CIconServicesIcon_h__

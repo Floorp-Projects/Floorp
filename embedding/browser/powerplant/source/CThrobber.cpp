@@ -90,7 +90,7 @@ void CThrobber::HideSelf()
 void CThrobber::DrawSelf()
 {
     if (mMovieController)
-        ::MCDraw(mMovieController, Compat_GetMacWindow());
+        ::MCDraw(mMovieController, GetMacWindow());
 }
 
 

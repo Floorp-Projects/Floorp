@@ -299,13 +299,14 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
 
     {
         Str255          defaultName;
-        char            tempBuf1[256], tempBuf2[64];
         bool            result;
 
         CPlatformUCSConversion::GetInstance()->UCSToPlatform(defaultFileName, defaultName);
-        ::CopyPascalStringToC(defaultName, tempBuf1);
+#ifndef XP_MACOSX
+        char            tempBuf1[256], tempBuf2[64];
+        ::CopyPascalStringToC(defaultName, tempBuf1);        
         ::CopyCStringToPascal(NS_TruncNodeName(tempBuf1, tempBuf2), defaultName);
-
+#endif
         if (isHTML) {
             ESaveFormat saveFormat = SaveFormatFromPrefValue(filterIndex);
             UNavServicesDialogs::LCustomFileDesignator customDesignator;
