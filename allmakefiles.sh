@@ -410,6 +410,9 @@ caps/src/Makefile
 view/Makefile
 view/public/Makefile
 view/src/Makefile
+docshell/Makefile
+docshell/base/Makefile
+docshell/build/Makefile
 webshell/Makefile
 webshell/public/Makefile
 webshell/src/Makefile
