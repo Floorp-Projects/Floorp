@@ -78,6 +78,11 @@
 
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
 
+    <!-- remove the TREEHEAD when bug 9923 is fixed. -->
+    <treehead style="height: 0px;">
+      <treerow><treecell/></treerow>
+    </treehead>
+
     <treechildren>
       <treeitem id="NC:RelatedLinks">
         <treerow>
