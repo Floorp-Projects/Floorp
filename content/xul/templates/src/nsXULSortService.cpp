@@ -482,23 +482,27 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString& sortRes
 
 				if (NS_OK == child->GetAttribute(kNameSpaceID_RDF, kResourceAtom, colResource))
 				{
+					PRBool		setFlag = PR_FALSE;
 					if (colResource == sortResource)
+					{
+						*sortColIndex = colIndex;
+						found = PR_TRUE;
+						if (!sortDirection.EqualsIgnoreCase("natural"))
+						{
+							setFlag = PR_TRUE;
+						}
+					}
+					if (setFlag == PR_TRUE)
 					{
 						nsString	trueStr("true");
 						child->SetAttribute(kNameSpaceID_None, kSortAtom, trueStr, PR_TRUE);
 						child->SetAttribute(kNameSpaceID_None, kSortDirectionAtom, sortDirection, PR_TRUE);
-						*sortColIndex = colIndex;
-						found = PR_TRUE;
-						// Note: don't break, want to set/unset attribs on ALL sort columns
+
+						// Note: don't break out of loop; want to set/unset attribs on ALL sort columns
 						// break;
 					}
 					else
 					{
-/*
-						nsString	falseStr("false");
-						child->SetAttribute(kNameSpaceID_None, kSortAtom, falseStr, PR_TRUE);
-						child->SetAttribute(kNameSpaceID_None, kSortDirectionAtom, sortDirection, PR_TRUE);
-*/
 						child->UnsetAttribute(kNameSpaceID_None, kSortAtom, PR_TRUE);
 						child->UnsetAttribute(kNameSpaceID_None, kSortDirectionAtom, PR_TRUE);
 					}
