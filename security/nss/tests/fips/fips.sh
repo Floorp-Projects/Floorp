@@ -180,7 +180,7 @@ fips_140_1()
   mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
   echo "dbtest -r  -d ${P_R_FIPSDIR} "
 # suppress the expected failure message
-  dbtest -r  -d ${P_R_FIPSDIR}  > ${TMP}/dbtest 2>&1
+  dbtest -r  -d ${P_R_FIPSDIR}  > ${TMP}/dbtestoutput.txt 2>&1
   html_msg $? 46 "Init NSS with a corrupted library (dbtest -r)"
   echo "cp ${TMP}/softokn3.sav ${SOFTOKEN}"
   cp ${TMP}/softokn3.sav ${SOFTOKEN}
