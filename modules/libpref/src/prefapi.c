@@ -228,7 +228,7 @@ PrefResult pref_OpenFile(
     PRBool verifyHash,
     PRBool bGlobalContext,
     PRBool skipFirstLine);
-PR_EXTERN(PrefResult) PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc);
+PrefResult PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc);
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
 PRBool pref_VerifyLockFile(char* buf, long buflen);
@@ -352,7 +352,7 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 #ifdef MOZ_OLD_LI_STUFF
-PR_IMPLEMENT(PrefResult) PREF_ReadLIJSFile(const char *filename)
+PrefResult PREF_ReadLIJSFile(const char *filename)
 {
 	PrefResult ok;
 
@@ -370,7 +370,7 @@ PR_IMPLEMENT(PrefResult) PREF_ReadLIJSFile(const char *filename)
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-PR_IMPLEMENT(PrefResult) PREF_ReadUserJSFile(const char *filename)
+PrefResult PREF_ReadUserJSFile(const char *filename)
 {
 	PrefResult ok = pref_OpenFile(filename, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
 
@@ -378,7 +378,7 @@ PR_IMPLEMENT(PrefResult) PREF_ReadUserJSFile(const char *filename)
 }
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
-PR_IMPLEMENT(PRBool) PREF_Init(const char *filename)
+PRBool PREF_Init(const char *filename)
 {
     PRBool ok = PR_TRUE;
     extern JSRuntime* PREF_GetJSRuntime(void);
@@ -472,7 +472,7 @@ PR_IMPLEMENT(PRBool) PREF_Init(const char *filename)
     return ok;
 } /*PREF_Init*/
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_GetConfigContext(JSContext **js_context)
 {
 	if (!js_context) return PREF_ERROR;
@@ -487,7 +487,7 @@ PREF_GetConfigContext(JSContext **js_context)
 	return PREF_NOERROR;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_GetGlobalConfigObject(JSObject **js_object)
 {
 	if (!js_object) return PREF_ERROR;
@@ -499,7 +499,7 @@ PREF_GetGlobalConfigObject(JSObject **js_object)
 	return PREF_NOERROR;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_GetPrefConfigObject(JSObject **js_object)
 {
 	if (!js_object) return PREF_ERROR;
@@ -512,7 +512,7 @@ PREF_GetPrefConfigObject(JSObject **js_object)
 }
 
 /* Frees the callback list. */
-PR_IMPLEMENT(void) PREF_Cleanup()
+void PREF_Cleanup()
 {
 	struct CallbackNode* node = gCallbacks;
 	struct CallbackNode* next_node;
@@ -530,7 +530,7 @@ PR_IMPLEMENT(void) PREF_Cleanup()
 }
 
 /* Frees up all the objects except the callback list. */
-PR_IMPLEMENT(void) PREF_CleanupPrefs()
+void PREF_CleanupPrefs()
 {
     gMochaTaskState = NULL; /* We -don't- destroy this. */
 
@@ -561,7 +561,7 @@ PR_IMPLEMENT(void) PREF_CleanupPrefs()
 #endif
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_ReadLockFile(const char *filename)
 {
 /*
@@ -581,7 +581,7 @@ void PREF_SetCallbacksStatus( PRBool status )
 }
 
 /* This is more recent than the below 3 routines which should be obsoleted */
-PR_IMPLEMENT(JSBool)
+JSBool
 PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 	const char* filename, PRBool bGlobalContext, PRBool bCallbacks,
 	PRBool skipFirstLine)
@@ -643,7 +643,7 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 }
 
 #if 0 /* OBSOLETE */
-PR_IMPLEMENT(JSBool)
+JSBool
 PREF_EvaluateJSBuffer(const char * js_buffer, size_t length)
 {
 /* old routine that no longer triggers callbacks */
@@ -656,7 +656,7 @@ PREF_EvaluateJSBuffer(const char * js_buffer, size_t length)
 #endif /* OBSOLETE */
 
 #if 0 /* OBSOLETE */
-PR_IMPLEMENT(JSBool)
+JSBool
 PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length)
 {
 	JSBool ok = JS_FALSE;
@@ -676,7 +676,7 @@ PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length)
 #endif /* OBSOLETE */
 
 #if 0 /* OBSOLETE */
-PR_IMPLEMENT(JSBool)
+JSBool
 PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
 {
 	JSBool ok;
@@ -728,7 +728,7 @@ static char * str_escape(const char * original)
 /*
 ** External calls
 */
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetCharPref(const char *pref_name, const char *value)
 {
 	PrefValue pref;
@@ -737,7 +737,7 @@ PREF_SetCharPref(const char *pref_name, const char *value)
 	return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETUSER);
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetIntPref(const char *pref_name, PRInt32 value)
 {
 	PrefValue pref;
@@ -746,7 +746,7 @@ PREF_SetIntPref(const char *pref_name, PRInt32 value)
 	return pref_HashPref(pref_name, pref, PREF_INT, PREF_SETUSER);
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetBoolPref(const char *pref_name, PRBool value)
 {
 	PrefValue pref;
@@ -755,7 +755,7 @@ PREF_SetBoolPref(const char *pref_name, PRBool value)
 	return pref_HashPref(pref_name, pref, PREF_BOOL, PREF_SETUSER);
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetBinaryPref(const char *pref_name, void * value, long size)
 {
 	char* buf = PL_Base64Encode(value, (PRUint32)size, NULL);
@@ -769,7 +769,7 @@ PREF_SetBinaryPref(const char *pref_name, void * value, long size)
 		return PREF_ERROR;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue)
 {
 	char colstr[63];
@@ -784,7 +784,7 @@ PREF_SetColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blu
 #define MYGetGValue(rgb)   ((PRUint8) (((PRUint16) (rgb)) >> 8)) 
 #define MYGetRValue(rgb)   ((PRUint8) (rgb)) 
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetColorPrefDWord(const char *pref_name, PRUint32 colorref)
 {
 	int red,green,blue;
@@ -800,7 +800,7 @@ PREF_SetColorPrefDWord(const char *pref_name, PRUint32 colorref)
 	return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETUSER);
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom)
 {
 	char rectstr[63];
@@ -814,7 +814,7 @@ PREF_SetRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right
 /*
 ** DEFAULT VERSIONS:  Call internal with (set_default == PR_TRUE)
 */
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetDefaultCharPref(const char *pref_name,const char *value)
 {
 	PrefValue pref;
@@ -824,7 +824,7 @@ PREF_SetDefaultCharPref(const char *pref_name,const char *value)
 }
 
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetDefaultIntPref(const char *pref_name,PRInt32 value)
 {
 	PrefValue pref;
@@ -833,7 +833,7 @@ PREF_SetDefaultIntPref(const char *pref_name,PRInt32 value)
 	return pref_HashPref(pref_name, pref, PREF_INT, PREF_SETDEFAULT);
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetDefaultBoolPref(const char *pref_name,PRBool value)
 {
 	PrefValue pref;
@@ -842,7 +842,7 @@ PREF_SetDefaultBoolPref(const char *pref_name,PRBool value)
 	return pref_HashPref(pref_name, pref, PREF_BOOL, PREF_SETDEFAULT);
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetDefaultBinaryPref(const char *pref_name,void * value,long size)
 {
 	char* buf = PL_Base64Encode(value, (PRUint32)size, NULL);
@@ -855,7 +855,7 @@ PREF_SetDefaultBinaryPref(const char *pref_name,void * value,long size)
 		return PREF_ERROR;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetDefaultColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue)
 {
 	char colstr[63];
@@ -864,7 +864,7 @@ PREF_SetDefaultColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUi
 	return PREF_SetDefaultCharPref(pref_name, colstr);
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetDefaultRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom)
 {
 	char rectstr[63];
@@ -876,7 +876,7 @@ PREF_SetDefaultRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt1
 
 #ifdef MOZ_OLD_LI_STUFF
 /* LI_STUFF this does the same as savePref except it omits the lilocal prefs from the file. */
-PR_IMPLEMENT(PrefResult)
+PrefResult
 pref_saveLIPref(PLHashEntry *he, int i, void *arg)
 {
 	char **prefArray = (char**) arg;
@@ -941,7 +941,7 @@ pref_saveLIPref(PLHashEntry *he, int i, void *arg)
 }
 #endif
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 pref_savePref(PLHashEntry *he, int i, void *arg)
 {
 	char **prefArray = (char**) arg;
@@ -1012,7 +1012,7 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
 	return PREF_NOERROR;
 }
 
-PR_IMPLEMENT(int)
+int
 #ifdef XP_OS2_VACPP
 _Optlink
 #endif
@@ -1035,7 +1035,7 @@ pref_CompareStrings(const void *v1, const void *v2, void *unused)
 }
 
 
-PR_IMPLEMENT(PRBool)
+PRBool
 pref_useDefaultPrefFile(void)
 {
 #ifdef PREF_BACKOUT
@@ -1067,7 +1067,7 @@ This is called by them and does the right thing.
 #define PREF_FILE_BANNER "/* Netscape User Preferences */" LINEBREAK \
 			 "/* This is a generated file!  Do not edit. */" LINEBREAK LINEBREAK
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc)
 {
 	PrefResult success = PREF_ERROR;
@@ -1124,7 +1124,7 @@ PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc)
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-PR_IMPLEMENT(PrefResult) PREF_SavePrefFile()
+PrefResult PREF_SavePrefFile()
 {
 #if 0 /* defined(XP_MAC) || defined(XP_PC) */
     return (PrefResult)pref_SaveProfile();
@@ -1143,7 +1143,7 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFile()
  *  We need to flag a bunch of prefs as local that aren't initialized via all.js.
  *  This seems the safest way to do this.
  */
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetSpecialPrefsLocal(void)
 {
 	static char *prefName[] = {
@@ -1193,7 +1193,7 @@ PREF_SetSpecialPrefsLocal(void)
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
 #ifdef MOZ_OLD_LI_STUFF
-PR_IMPLEMENT(PrefResult) PREF_SaveLIPrefFile(const char *filename)
+PrefResult PREF_SaveLIPrefFile(const char *filename)
 {
 
 	if (!gHashTable)
@@ -1206,7 +1206,7 @@ PR_IMPLEMENT(PrefResult) PREF_SaveLIPrefFile(const char *filename)
 #endif /* MOZ_OLD_LI_STUFF */
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-PR_IMPLEMENT(PrefResult) PREF_SavePrefFileAs(const char *filename) 
+PrefResult PREF_SavePrefFileAs(const char *filename) 
 {
 	return (PrefResult)PREF_SavePrefFileWith(filename, (PLHashEnumerator)pref_savePref);
 }
@@ -1436,13 +1436,13 @@ PREF_CopyBinaryPref(const char *pref_name, void  ** return_value, int *size, PRB
 }
 
 #ifndef XP_MAC
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_CopyPathPref(const char *pref_name, char ** return_buffer, PRBool isDefault)
 {
 	return PREF_CopyCharPref(pref_name, return_buffer, isDefault);
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 {
 	PrefAction action = set_default ? PREF_SETDEFAULT : PREF_SETUSER;
@@ -1455,7 +1455,7 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 
 
 #if 0
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_GetDefaultColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue)
 {
 	char colstr[8];
@@ -1477,7 +1477,7 @@ PREF_GetDefaultColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PR
 #endif
 
 /* Delete a branch. Used for deleting mime types */
-PR_IMPLEMENT(int)
+int
 pref_DeleteItem(PLHashEntry *he, int i, void *arg)
 {
 	const char *to_delete = (const char *) arg;
@@ -1492,7 +1492,7 @@ pref_DeleteItem(PLHashEntry *he, int i, void *arg)
 		return HT_ENUMERATE_NEXT;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_DeleteBranch(const char *branch_name)
 {
 	char* branch_dot = PR_smprintf("%s.", branch_name);
@@ -1511,7 +1511,7 @@ PREF_DeleteBranch(const char *branch_name)
 /* LI_STUFF  add a function to clear the li pref 
    does anyone use this??
 */
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_ClearLIPref(const char *pref_name)
 {
 	PrefResult success = PREF_ERROR;
@@ -1533,7 +1533,7 @@ PREF_ClearLIPref(const char *pref_name)
 #endif
 
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_ClearUserPref(const char *pref_name)
 {
 	PrefResult success = PREF_ERROR;
@@ -1554,7 +1554,7 @@ PREF_ClearUserPref(const char *pref_name)
 }
 
 /* Prototype Admin Kit support */
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
 	int indx, const char *field)
 {
@@ -1565,7 +1565,7 @@ PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
 /*
  * Administration Kit support 
  */
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_CopyConfigString(const char *obj_name, char **return_buffer)
 {
 	PrefResult success = PREF_ERROR;
@@ -1580,7 +1580,7 @@ PREF_CopyConfigString(const char *obj_name, char **return_buffer)
     return success;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_CopyIndexConfigString(const char *obj_name,
 	int indx, const char *field, char **return_buffer)
 {
@@ -1600,7 +1600,7 @@ PREF_CopyIndexConfigString(const char *obj_name,
     return success;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
 {
 	PrefResult success = PREF_ERROR;
@@ -1614,7 +1614,7 @@ PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
 	return success;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_GetConfigBool(const char *obj_name, PRBool *return_bool)
 {
 	PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, obj_name);	
@@ -1658,7 +1658,7 @@ PrefResult pref_LockPref(const char *key)
     return pref_HashPref(key, pref->defaultPref, (PrefType)pref->flags, PREF_LOCK);
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_LockPref(const char *key)
 {
 	return pref_LockPref(key);
@@ -1803,7 +1803,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
     return result;
 }
 
-PR_IMPLEMENT(PrefType)
+PrefType
 PREF_GetPrefType(const char *pref_name)
 {
 	if (gHashTable)
@@ -1932,7 +1932,7 @@ JSBool PR_CALLBACK pref_NativeGetPref
 }
 /* -- */
 
-PR_IMPLEMENT(PRBool)
+PRBool
 PREF_PrefIsLocked(const char *pref_name)
 {
 	PRBool result = PR_FALSE;
@@ -1960,7 +1960,7 @@ typedef struct
   and entry is
   "a.b.c" or "a.b"
   then add "a.b" to the list. */
-PR_IMPLEMENT(int)
+int
 pref_addChild(PLHashEntry *he, int i, void *arg)
 {
 	PrefChildIter* pcs = (PrefChildIter*) arg;
@@ -2005,7 +2005,7 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 	return 0;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_CreateChildList(const char* parent_node, char **child_list)
 {
 	PrefChildIter pcs;
@@ -2033,7 +2033,7 @@ PREF_CreateChildList(const char* parent_node, char **child_list)
 	return (pcs.childList == NULL) ? PREF_OUT_OF_MEMORY : PREF_OK;
 }
 
-PR_IMPLEMENT(char*)
+char*
 PREF_NextChild(char *child_list, int *indx)
 {
 	char* child = strtok(&child_list[*indx], ";");
@@ -2156,7 +2156,7 @@ PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const ch
 	return result;
 }
 
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot)
 {
 	PR_ASSERT(srcRoot != NULL);
@@ -2166,7 +2166,7 @@ PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot)
 }
 
 /* Adds a node to the beginning of the callback list. */
-PR_IMPLEMENT(void)
+void
 PREF_RegisterCallback(const char *pref_node,
 					   PrefChangedFunc callback,
 					   void * instance_data)
@@ -2184,7 +2184,7 @@ PREF_RegisterCallback(const char *pref_node,
 }
 
 /* Deletes a node from the callback list. */
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_UnregisterCallback(const char *pref_node,
 						 PrefChangedFunc callback,
 						 void * instance_data)
@@ -2236,7 +2236,7 @@ PrefResult pref_DoCallback(const char* changed_pref)
 
 /* !! Front ends need to implement */
 #ifndef XP_MAC /* see macpref.cp */
-PR_IMPLEMENT(PRBool)
+PRBool
 PREF_IsAutoAdminEnabled()
 {
 	return PR_TRUE;
@@ -2311,7 +2311,7 @@ JSBool PR_CALLBACK pref_NativeGetLDAPAttr
 
 /* Dump debugging info in response to about:config.
  */
-PR_IMPLEMENT(int)
+int
 pref_printDebugInfo(PLHashEntry *he, int i, void *arg)
 {
 	char *buf1=NULL, *buf2=NULL;
@@ -2360,7 +2360,7 @@ pref_printDebugInfo(PLHashEntry *he, int i, void *arg)
 	return 0;
 }
 
-PR_IMPLEMENT(char *)
+char *
 PREF_AboutConfig()
 {
 	PrefChildIter pcs;
@@ -2633,7 +2633,7 @@ static int pref_CountListMembers(char* list)
 
 
 /*--------------------------------------------------------------------------------------*/
-PR_IMPLEMENT(PrefResult) PREF_GetListPref(const char* pref, char*** list, PRBool isDefault)
+PrefResult PREF_GetListPref(const char* pref, char*** list, PRBool isDefault)
 /* Splits a comma separated string into an array of strings.
  * The array of strings is actually just an array of pointers into a copy
  * of the value returned by PREF_CopyCharPref().  So, we don't have to
@@ -2669,7 +2669,7 @@ PR_IMPLEMENT(PrefResult) PREF_GetListPref(const char* pref, char*** list, PRBool
 
 
 /*--------------------------------------------------------------------------------------*/
-PR_IMPLEMENT(PrefResult) PREF_SetListPref(const char* pref, char** list)
+PrefResult PREF_SetListPref(const char* pref, char** list)
 /* TODO: Call Javascript callback to make sure user is allowed to make this
  * change.
 ----------------------------------------------------------------------------------------*/
@@ -2703,7 +2703,7 @@ PR_IMPLEMENT(PrefResult) PREF_SetListPref(const char* pref, char** list)
 
 
 /*--------------------------------------------------------------------------------------*/
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_AppendListPref(const char* pref, const char* value)
 /*--------------------------------------------------------------------------------------*/
 {
@@ -2739,7 +2739,7 @@ PREF_AppendListPref(const char* pref, const char* value)
 }
 
 /*--------------------------------------------------------------------------------------*/
-PR_IMPLEMENT(PrefResult)
+PrefResult
 PREF_FreeListPref(char*** list)
 /* Free each element in the list, then free the list, then NULL the
  * list out.
