@@ -1,5 +1,7 @@
 var XPInstallConfirm = 
 { 
+  _installCountdown: 2,
+  _installCountdownInterval: -1,
   _param: null
 };
 
@@ -37,9 +39,25 @@ XPInstallConfirm.init = function ()
   document.getElementById("itemWarningIntro").setAttribute("value", introString);  
   
   var okButton = document.documentElement.getButton("accept");
-  okButton.label = bundle.getString("installButtonLabel");
+  okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [this._installCountdown]);
+  okButton.disabled = true;
   okButton.focus();
-}   
+  
+  this._installCountdownInterval = setInterval("XPInstallConfirm.okButtonCountdown()", 1000);
+}
+
+XPInstallConfirm.okButtonCountdown = function ()
+{
+  var okButton = document.documentElement.getButton("accept");
+  var bundle = document.getElementById("xpinstallConfirmStrings");
+  if (this._installCountdown-- <= 1) {
+    okButton.label = bundle.getString("installButtonLabel");
+    okButton.disabled = false;
+    clearInterval(this._installCountdownInterval);
+  }
+  else
+    okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [this._installCountdown]);
+}
     
 XPInstallConfirm.onOK = function ()
 {
