@@ -653,6 +653,16 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 		d = *cx->runtime->jsPositiveInfinity;
 	    else if (d == -HUGE_VAL)
 		d = *cx->runtime->jsNegativeInfinity;
+#ifdef HPUX
+        if (d == 0.0 && negative) {
+            /* 
+             * "-0", "-1e-2000" come out as positive zero
+    		 * here on HPUX. Force a negative zero instead.
+             */
+            JSDOUBLE_HI32(d) = JSDOUBLE_HI32_SIGNBIT;
+            JSDOUBLE_LO32(d) = 0;
+        }
+#endif
     }
 
     free(cstr);

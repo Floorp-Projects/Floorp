@@ -2704,7 +2704,16 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
 		break;
 
 	      case JSOP_NEG:
-		d = -d;
+#ifdef HPUX
+                /* 
+                 * Negation of a zero doesn't produce a negative
+                 * zero on HPUX. Perform the operation by bit
+                 * twiddling.
+                 */
+                JSDOUBLE_HI32(d) ^= JSDOUBLE_HI32_SIGNBIT;
+#else
+                d = -d;
+#endif
 		break;
 
 	      case JSOP_POS:

@@ -1118,7 +1118,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
 #if JS_HAS_SWITCH_STATEMENT
 	  case JSOP_DEFAULT:
-	    POP();
+	    (void) POP();
 	    /* fall through */
 #endif
 	  case JSOP_GOTO:
@@ -1661,7 +1661,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #if JS_HAS_SWITCH_STATEMENT
 	  case JSOP_CASE:
 	    NEW_EQUALITY_OP(==, JS_FALSE);
-	    POP();
+	    (void) POP();
 	    if (cond) {
 		len = GET_JUMP_OFFSET(pc);
 		CHECK_BRANCH(len);
@@ -1848,7 +1848,16 @@ js_Interpret(JSContext *cx, jsval *result)
 
 	  case JSOP_NEG:
 	    POP_NUMBER(cx, d);
+#ifdef HPUX
+            /* 
+             * Negation of a zero doesn't produce a negative
+             * zero on HPUX. Perform the operation by bit
+             * twiddling.
+             */
+            JSDOUBLE_HI32(d) ^= JSDOUBLE_HI32_SIGNBIT;
+#else
 	    d = -d;
+#endif
 	    PUSH_NUMBER(cx, d);
 	    break;
 
