@@ -725,24 +725,26 @@ jsj_GetJavaMemberDescriptor(JSContext *cx,
 JSBool
 jsj_InitJavaClassReflectionsTable()
 {
-    java_class_reflections =
-        JSJ_NewHashTable(64, jsj_HashJavaObject, jsj_JavaObjectComparator,
-                         NULL, NULL, NULL);
+    if (!java_class_reflections) {
+        java_class_reflections =
+            JSJ_NewHashTable(64, jsj_HashJavaObject, jsj_JavaObjectComparator,
+                            NULL, NULL, NULL);
 
-    if (!java_class_reflections)
-        return JS_FALSE;
+        if (!java_class_reflections)
+            return JS_FALSE;
 
 #ifdef JSJ_THREADSAFE
-    java_class_reflections_monitor =
-            (struct PRMonitor *) PR_NewMonitor();
-    if (!java_class_reflections_monitor)
-        return JS_FALSE;
+        java_class_reflections_monitor =
+                (struct PRMonitor *) PR_NewMonitor();
+        if (!java_class_reflections_monitor)
+            return JS_FALSE;
 
-    java_reflect_monitor =
-            (struct PRMonitor *) PR_NewMonitor();
-    if (!java_reflect_monitor)
-        return JS_FALSE;
+        java_reflect_monitor =
+                (struct PRMonitor *) PR_NewMonitor();
+        if (!java_reflect_monitor)
+            return JS_FALSE;
 #endif
+    }
     
     return JS_TRUE;
 }
