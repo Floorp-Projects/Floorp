@@ -1,0 +1,3 @@
+content lightning	jar:chrome/lightning.jar!/content/lightning/
+locale  lightning en-US jar:chrome/en-US.jar!/locale/en-US/lightning/
+overlay chrome://messenger/content/messenger.xul chrome://lightning/content/messenger-overlay-sidebar.xul

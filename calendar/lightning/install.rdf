@@ -21,14 +21,5 @@
 
     <em:description>An experimental calendar extension for Thunderbird</em:description>
     <em:creator>Mozilla Foundation Calendar Squad</em:creator>
-
-    <em:file>
-      <Description about="urn:mozilla:extension:file:lightning.jar">
-        <em:package>content/lightning/</em:package>
-      </Description>
-      <Description about="urn:mozilla:extension:file:en-US.jar">
-        <em:locale>locale/en-US/lightning/</em:locale>
-      </Description>
-    </em:file>
   </Description>
 </RDF>

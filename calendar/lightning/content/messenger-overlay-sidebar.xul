@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<!-- DOCTYPE overlay SYSTEM "chrome://lightning/locale/lightning.dtd" -->
+
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
+
+<vbox id="folderPaneBox">
+  <splitter id="folderpaneCalendarSplitter" collapse="after" persist="state"/>
+
+  <popupset>
+    <popup id="ltnCalendarTreeContext" onpopupshowing="return true;">
+      <menuitem id="ltnCalendarTreeContext-newCalendar"
+       label="New Calendar"
+       oncommand="ltnNewCalendar();"/>
+    </popup>
+  </popupset>
+
+  <tree id="calendarTree" flex="1" context="ltnCalendarTreeContext">
+    <treecols>
+      <treecol label="Calendar" id="col-calendar-Calendar" flex="1"/>
+    </treecols>
+    <treechildren>
+    </treechildren>
+  </tree>
+</vbox>
+
+</overlay>

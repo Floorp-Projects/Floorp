@@ -1,8 +1,6 @@
 lightning.jar:
-* content/lightning/contents.rdf				(content/contents.rdf)
-  content/lightning/messenger-overlay.xul				(content/messenger-overlay.xul)
-  content/lightning/fake-account.js				(content/fake-account.js)
+  content/lightning/messenger-overlay-sidebar.xul	(content/messenger-overlay-sidebar.xul)
+  content/lightning/calendar-management.js		(content/calendar-management.js)
 
 en-US.jar:
   locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)
-* locale/en-US/lightning/contents.rdf				(locale/contents.rdf)

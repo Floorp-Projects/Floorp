@@ -44,10 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= lightning
 
-ifndef LIGHTNING_IN_TREE
 export XPI_NAME	= lightning
+XPI_INSTALL_EXTRAS = $(srcdir)/chrome.manifest
 XPI_PKGNAME	= lightning
 DIRS		= ../../db/sqlite3/src ../../storage ../libical ../base
-endif
 
 include $(topsrcdir)/config/rules.mk
