@@ -3544,7 +3544,7 @@ xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         if (!ok)
             return JS_FALSE;
         if (propp)
-            *propp = (JSProperty *) JS_TRUE;
+            *propp = (JSProperty *) &dummy_sprop;
     }
     return ok;
 }
@@ -3578,7 +3578,7 @@ FoundProperty(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
 {
     JSBool ok;
 
-    if (prop == (JSProperty *) JS_TRUE) {
+    if (prop == (JSProperty *) &dummy_sprop) {
         ok = *foundp = JS_TRUE;
     } else {
         JS_LOCK_OBJ_VOID(cx, obj,
