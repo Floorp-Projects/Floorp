@@ -165,7 +165,7 @@ DefCol("resolution", "substring(bugs.resolution,1,4)", "Result",
        "bugs.resolution");
 DefCol("summary", "substring(bugs.short_desc, 1, 60)", "Summary", "", 1);
 DefCol("summaryfull", "bugs.short_desc", "Summary", "", 1);
-DefCol("status_whiteboard", "bugs.status_whiteboard", "StatusSummary", "", 1);
+DefCol("status_whiteboard", "bugs.status_whiteboard", "StatusSummary", "bugs.status_whiteboard", 1);
 DefCol("component", "substring(bugs.component, 1, 8)", "Comp",
        "bugs.component");
 DefCol("product", "substring(bugs.product, 1, 8)", "Product", "bugs.product");
