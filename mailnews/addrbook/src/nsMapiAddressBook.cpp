@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsMapiAddressBook.h"
-#include "nsAbUtils.h"
 #include "nsAutoLock.h"
 
 #include "prlog.h"

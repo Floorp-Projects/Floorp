@@ -995,14 +995,9 @@ NS_IMETHODIMP nsAbOutlookDirectory::StartSearch(void)
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     retCode = arguments->SetExpression(expression) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    nsCStringArray properties ;
-    CharPtrArrayGuard returnProperties(PR_FALSE) ;
     
-    properties.AppendCString(nsCAutoString("card:nsIAbCard")) ;
-    retCode = CStringArrayToCharPtrArray::Convert(properties, returnProperties.GetSizeAddr(),
-        returnProperties.GetArrayAddr(), PR_FALSE) ;
-    NS_ENSURE_SUCCESS(retCode, retCode) ;
-    retCode = arguments->SetReturnProperties(returnProperties.GetSize(), returnProperties.GetArray()) ;
+    const char *arr = "card:nsIAbCard";
+    retCode = arguments->SetReturnProperties(1, &arr);
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     retCode = arguments->SetQuerySubDirectories(PR_TRUE) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsWabAddressBook.h"
-#include "nsAbUtils.h"
 #include "nsAutoLock.h"
 #include "prlog.h"
 

@@ -44,7 +44,6 @@
 #define USES_IID_IDistList
 
 #include "nsAbWinHelper.h"
-#include "nsAbUtils.h"
 #include "nsMapiAddressBook.h"
 #include "nsWabAddressBook.h"
 #include "nsCRT.h"

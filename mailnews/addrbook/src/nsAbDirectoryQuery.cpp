@@ -176,12 +176,14 @@ NS_IMETHODIMP nsAbDirectoryQueryArguments::SetQuerySubDirectories(PRBool aQueryS
 NS_IMETHODIMP nsAbDirectoryQueryArguments::SetReturnProperties(PRUint32 returnPropertiesSize,
         const char** returnPropertiesArray)
 {
-    nsresult rv;
-    rv = CharPtrArrayToCStringArray::Convert(mReturnProperties,
-        returnPropertiesSize,
-        returnPropertiesArray);
+    NS_ENSURE_ARG_POINTER(returnPropertiesArray);
 
-    return rv;
+    mReturnProperties.Clear();
+
+    for (PRUint32 i = 0; i < returnPropertiesSize; i++)
+        mReturnProperties.AppendCString(nsDependentCString(returnPropertiesArray[i]));
+
+    return NS_OK;
 }
 
 /* void getReturnProperties (out unsigned long returnPropertiesSize,
@@ -189,11 +191,19 @@ NS_IMETHODIMP nsAbDirectoryQueryArguments::SetReturnProperties(PRUint32 returnPr
 NS_IMETHODIMP nsAbDirectoryQueryArguments::GetReturnProperties(PRUint32* returnPropertiesSize,
         char*** returnPropertiesArray)
 {
-    nsresult rv;
-    rv = CStringArrayToCharPtrArray::Convert (mReturnProperties,
-        returnPropertiesSize, returnPropertiesArray);    
+    NS_ENSURE_ARG_POINTER(returnPropertiesSize);
+    NS_ENSURE_ARG_POINTER(returnPropertiesArray);
 
-    return rv;
+    PRUint32 size = mReturnProperties.Count();
+    *returnPropertiesSize = size;
+    *returnPropertiesArray = NS_STATIC_CAST(char**, nsMemory::Alloc (sizeof (char* ) * size));
+    if (!(*returnPropertiesArray))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    for (PRUint32 i = 0; i < size; i++)
+        (*returnPropertiesArray)[i] = ToNewCString(*mReturnProperties[i]);
+
+    return NS_OK;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQueryPropertyValue, nsIAbDirectoryQueryPropertyValue)

@@ -54,7 +54,6 @@
 #include "nsAbDirectoryQuery.h"
 #include "nsIAbDirectoryQueryProxy.h"
 #include "nsAbQueryStringToExpression.h"
-#include "nsAbUtils.h"
 #include "nsArrayEnumerator.h"
 #include "nsAbMDBCardProperty.h"
 
@@ -909,13 +908,8 @@ NS_IMETHODIMP nsAbMDBDirectory::StartSearch()
 
   // Set the return properties to
   // return nsIAbCard interfaces
-  nsCStringArray properties;
-  properties.AppendCString(nsCAutoString("card:nsIAbCard"));
-  CharPtrArrayGuard returnProperties(PR_FALSE);
-  rv = CStringArrayToCharPtrArray::Convert(properties,returnProperties.GetSizeAddr(),
-          returnProperties.GetArrayAddr(), PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = arguments->SetReturnProperties(returnProperties.GetSize(), returnProperties.GetArray());
+  const char *arr = "card:nsIAbCard";
+  rv = arguments->SetReturnProperties(1, &arr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // don't search the subdirectories 

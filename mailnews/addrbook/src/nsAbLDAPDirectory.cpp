@@ -40,7 +40,6 @@
 
 #include "nsAbLDAPDirectory.h"
 #include "nsAbLDAPProperties.h"
-#include "nsAbUtils.h"
 
 #include "nsAbQueryStringToExpression.h"
 
@@ -362,13 +361,8 @@ NS_IMETHODIMP nsAbLDAPDirectory::StartSearch ()
 
     // Set the return properties to
     // return nsIAbCard interfaces
-    nsCStringArray properties;
-    properties.AppendCString (nsCAutoString ("card:nsIAbCard"));
-    CharPtrArrayGuard returnProperties (PR_FALSE);
-    rv = CStringArrayToCharPtrArray::Convert (properties,returnProperties.GetSizeAddr(),
-                    returnProperties.GetArrayAddr(), PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = arguments->SetReturnProperties (returnProperties.GetSize(), returnProperties.GetArray());
+    const char *arr = "card:nsIAbCard";
+    rv = arguments->SetReturnProperties (1, &arr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = arguments->SetQuerySubDirectories (PR_TRUE);

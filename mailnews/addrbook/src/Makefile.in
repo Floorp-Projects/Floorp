@@ -92,7 +92,6 @@ CPPSRCS		= \
 		nsAddbookUrl.cpp    \
 		nsAbDirFactoryService.cpp	\
 		nsAbMDBDirFactory.cpp	\
-		nsAbUtils.cpp	\
                 nsAbDirectoryQuery.cpp    \
                 nsAbDirectoryQueryProxy.cpp    \
                 nsAbDirSearchListener.cpp \

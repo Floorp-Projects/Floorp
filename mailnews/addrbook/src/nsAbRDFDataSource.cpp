@@ -41,7 +41,6 @@
 #include "nsIAbDirectory.h"
 #include "nsIAddrBookSession.h"
 #include "nsIAbCard.h"
-#include "nsAbUtils.h"
 
 #include "rdf.h"
 #include "nsIRDFService.h"

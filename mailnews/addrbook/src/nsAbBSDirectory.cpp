@@ -40,7 +40,6 @@
 
 #include "nsIPrefService.h"
 #include "nsAbBSDirectory.h"
-#include "nsAbUtils.h"
 
 #include "nsRDFCID.h"
 #include "nsIRDFService.h"

@@ -105,39 +105,9 @@ private:
         else
         {
           nsMemory::Free(mArray);
-          mArray=nsnull;
         }
     }
 };
-
-
-/*
- * Helper class to convert an nsCStringArray
- * to an array of char*
- * By default strings will be copied, unless
- * the copyElements parameter is set to PR_FALSE.
- */
-class CStringArrayToCharPtrArray
-{
-public:
-    static nsresult Convert (nsCStringArray& array,
-        PRUint32* returnPropertiesSize,
-        char*** returnPropertiesArray,
-        PRBool copyElements = PR_TRUE);
-};
-
-/*
- * Helper class to convert an array of char*
- * to an nsCStringArray
- */
-class CharPtrArrayToCStringArray
-{
-public:
-    static nsresult Convert (nsCStringArray& array,
-        PRUint32 returnPropertiesSize,
-        const char** returnPropertiesArray);
-};
-
 
 /*
  * Wrapper class to automatically free an array of
@@ -199,36 +169,8 @@ private:
         else
         {
           nsMemory::Free(mArray);
-          mArray=nsnull;
         }
     }
-};
-
-/*
- * Helper class to convert an nsStringArray
- * to an array of PRUnichar*
- * By default strings will be copied, unless
- * the copyElements parameter is set to PR_FALSE.
- */
-class StringArrayToPRUnicharPtrArray
-{
-public:
-    static nsresult Convert (nsStringArray& array,
-        PRUint32* returnPropertiesSize,
-        PRUnichar*** returnPropertiesArray,
-        PRBool copyElements = PR_TRUE);
-};
-
-/*
- * Helper class to convert an array of PRUnichar*
- * to an nsStringArray
- */
-class PRUnicharPtrArrayToStringArray
-{
-public:
-    static nsresult Convert (nsStringArray& returnPropertiesArray,
-        PRUint32 returnPropertiesSize,
-        const PRUnichar** array);
 };
 
 #endif  /* nsAbUtils_h__ */
