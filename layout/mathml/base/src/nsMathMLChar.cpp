@@ -434,10 +434,10 @@ public:
   // Find the subset of glyph tables that are applicable to the given char,
   // knowing that the stretchy style context of the char has the given font
   nsresult
-  nsGlyphTableList::GetListFor(nsIPresContext* aPresContext,
-                               nsMathMLChar*   aChar,
-                               nsFont*         aFont,
-                               nsVoidArray*    aGlyphTableList);
+  GetListFor(nsIPresContext* aPresContext,
+             nsMathMLChar*   aChar,
+             nsFont*         aFont,
+             nsVoidArray*    aGlyphTableList);
 private:
   nsVoidArray mTableList; // our ordered list of glyph tables
 };
