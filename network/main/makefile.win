@@ -115,14 +115,6 @@ EXPORTS= mkstream.h \
 	 mkutils.h \
 	 mktrace.h \
 #ifdef MOZ_MAIL_NEWS
-#ifdef MOZ_SECURITY
-	 mkcertld.h \
-#endif /* MOZ_SECURITY */
-	 mkmailbx.h \
-	 mknews.h \
-	 mknewsgr.h \
-	 mkpop3.h \
-	 mkimap4.h \
 	 mkldap.h \
 #endif /* MOZ_MAIL_NEWS */
 	 mkhelp.h
@@ -157,7 +149,11 @@ LINCS=-I$(PUBLIC)\jtools	\
     -I$(PUBLIC)\progress		\
     -I$(PUBLIC)\ldapurl		\
     -I$(PUBLIC)\imap4url		\
-    -I$(PUBLIC)\security 
+    -I$(PUBLIC)\security        \
+    -I$(PUBLIC)\nntpurl         \
+    -I$(PUBLIC)\certurl         \
+    -I$(PUBLIC)\pop3url         \
+    -I$(PUBLIC)\mailbxurl
 #!endif
 
 include <$(DEPTH)\config\rules.mak> 
