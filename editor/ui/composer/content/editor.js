@@ -1360,8 +1360,6 @@ var gSoughtSpellChecker = false;
 //-----------------------------------------------------------------------------------
 function IsSpellCheckerInstalled()
 {
-  return true;      // fix me when kin checks in
-
   if (gSoughtSpellChecker)
     return gHaveSpellChecker;
 
