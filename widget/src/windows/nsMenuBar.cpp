@@ -90,7 +90,7 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mMenu     = nsnull;
   mParent   = nsnull;
   mIsMenuBarAdded = PR_FALSE;
-  mItems = new nsVoidArray;
+  mItems = new nsVoidArray();
 }
 
 //-------------------------------------------------------------------------
@@ -101,6 +101,9 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 nsMenuBar::~nsMenuBar()
 {
   NS_IF_RELEASE(mParent);
+
+  // Remove all references to the menus
+  mItems->Clear();
 }
 
 //-------------------------------------------------------------------------
@@ -121,6 +124,7 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
   aParent = mParent;
+  NS_ADDREF(mParent);
   return NS_OK;
 }
 
@@ -142,6 +146,7 @@ NS_METHOD nsMenuBar::GetMenuCount(PRUint32 &aCount)
 NS_METHOD nsMenuBar::GetMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 {
   aMenu = (nsIMenu *)mItems->ElementAt(aPos);
+  NS_ADDREF(aMenu);
   return NS_OK;
 }
 
