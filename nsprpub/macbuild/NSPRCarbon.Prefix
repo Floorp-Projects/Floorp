@@ -1,0 +1,11 @@
+//
+//	NSPR.Prefix
+//
+// Global prefix file for the non-debug NSPR project.
+//
+//
+
+
+#include "NSPRConfig.h"
+
+#define TARGET_CARBON 1
