@@ -234,9 +234,9 @@ retry:
 	if (rt->gcBytes < rt->gcMaxBytes &&
             (tried_gc || rt->gcMallocBytes < rt->gcMaxBytes))
         {
-	    JS_ARENA_ALLOCATE(thing, &rt->gcArenaPool, sizeof(JSGCThing));
+	    JS_ARENA_ALLOCATE_TYPE(thing, JSGCThing, &rt->gcArenaPool);
             if (thing)
-                JS_ARENA_ALLOCATE(flagp, &rt->gcFlagsPool, sizeof(uint8));
+                JS_ARENA_ALLOCATE_TYPE(flagp, uint8, &rt->gcFlagsPool);
 	}
 	if (!thing || !flagp) {
 	    if (thing)
@@ -969,7 +969,7 @@ restart:
 	    if (flags & GCF_MARK) {
 		*flagp &= ~GCF_MARK;
 	    } else if (!(flags & (GCF_LOCKMASK | GCF_FINAL))) {
-		JS_ARENA_ALLOCATE(final, &cx->tempPool, sizeof(JSGCThing));
+		JS_ARENA_ALLOCATE_TYPE(final, JSGCThing, &cx->tempPool);
 		if (!final)
 		    goto finalize_phase;
 		final->next = thing;

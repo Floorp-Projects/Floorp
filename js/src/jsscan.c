@@ -223,7 +223,7 @@ js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length)
     }
 
     nb = sizeof(JSTokenStream) + JS_LINE_LIMIT * sizeof(jschar);
-    JS_ARENA_ALLOCATE(ts, &cx->tempPool, nb);
+    JS_ARENA_ALLOCATE_CAST(ts, JSTokenStream *, &cx->tempPool, nb);
     if (!ts) {
 	JS_ReportOutOfMemory(cx);
 	return NULL;
@@ -246,7 +246,8 @@ js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
     JSTokenStream *ts;
     FILE *file;
 
-    JS_ARENA_ALLOCATE(base, &cx->tempPool, JS_LINE_LIMIT * sizeof(jschar));
+    JS_ARENA_ALLOCATE_CAST(base, jschar *, &cx->tempPool,
+                           JS_LINE_LIMIT * sizeof(jschar));
     if (!base)
 	return NULL;
     ts = js_NewBufferTokenStream(cx, base, JS_LINE_LIMIT);
@@ -643,10 +644,10 @@ GrowTokenBuf(JSContext *cx, JSTokenBuf *tb)
     tbincr = (length + TBINCR) * sizeof(jschar);
     pool = &cx->tempPool;
     if (!base) {
-	JS_ARENA_ALLOCATE(base, pool, tbincr);
+	JS_ARENA_ALLOCATE_CAST(base, jschar *, pool, tbincr);
     } else {
 	tbsize = (size_t)(length * sizeof(jschar));
-	JS_ARENA_GROW(base, pool, tbsize, tbincr);
+	JS_ARENA_GROW_CAST(base, jschar *, pool, tbsize, tbincr);
     }
     if (!base) {
 	JS_ReportOutOfMemory(cx);

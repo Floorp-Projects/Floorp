@@ -131,7 +131,7 @@ NewParseNode(JSContext *cx, JSToken *tok, JSParseNodeArity arity)
 {
     JSParseNode *pn;
 
-    JS_ARENA_ALLOCATE(pn, &cx->tempPool, sizeof(JSParseNode));
+    JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
     if (!pn)
         return NULL;
     pn->pn_type = tok->type;
@@ -150,7 +150,7 @@ NewBinary(JSContext *cx, JSTokenType tt,
 
     if (!left || !right)
         return NULL;
-    JS_ARENA_ALLOCATE(pn, &cx->tempPool, sizeof(JSParseNode));
+    JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
     if (!pn)
         return NULL;
     pn->pn_type = tt;
@@ -2812,7 +2812,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
             length = length1 + length2;
             nbytes = (length + 1) * sizeof(jschar);
             mark = JS_ARENA_MARK(&cx->tempPool);
-            JS_ARENA_ALLOCATE(chars, &cx->tempPool, nbytes);
+            JS_ARENA_ALLOCATE_CAST(chars, jschar *, &cx->tempPool, nbytes);
             if (!chars) {
                 JS_ReportOutOfMemory(cx);
                 return JS_FALSE;

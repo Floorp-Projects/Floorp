@@ -283,9 +283,9 @@ static JSBool
 SprintAlloc(Sprinter *sp, size_t nb)
 {
     if (!sp->base) {
-	JS_ARENA_ALLOCATE(sp->base, sp->pool, nb);
+	JS_ARENA_ALLOCATE_CAST(sp->base, char *, sp->pool, nb);
     } else {
-	JS_ARENA_GROW(sp->base, sp->pool, sp->size, nb);
+	JS_ARENA_GROW_CAST(sp->base, char *, sp->pool, sp->size, nb);
     }
     if (!sp->base) {
 	JS_ReportOutOfMemory(sp->context);

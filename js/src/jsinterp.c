@@ -339,7 +339,7 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp)
 
     if (markp)
         *markp = JS_ARENA_MARK(&cx->stackPool);
-    JS_ARENA_ALLOCATE(sp, &cx->stackPool, nslots * sizeof(jsval));
+    JS_ARENA_ALLOCATE_CAST(sp, jsval *, &cx->stackPool, nslots * sizeof(jsval));
     if (!sp) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_STACK_OVERFLOW,
                              (cx->fp && cx->fp->fun)

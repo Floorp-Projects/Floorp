@@ -662,7 +662,7 @@ js_alloc_temp_entry(void *priv, const void *key)
     JSContext *cx = priv;
     JSAtomListElement *ale;
 
-    JS_ARENA_ALLOCATE(ale, &cx->tempPool, sizeof(JSAtomListElement));
+    JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &cx->tempPool);
     if (!ale) {
         JS_ReportOutOfMemory(cx);
         return NULL;
