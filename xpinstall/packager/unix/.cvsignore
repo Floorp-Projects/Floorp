@@ -1,6 +1,4 @@
 config.ini
-core.js
-editor.js
+xpcom.js
+browser.js
 mail.js
-core.xpi
-
