@@ -46,6 +46,8 @@ namespace VM {
 
     enum ICodeOp {
         ADD, /* dest, source1, source2 */
+        AND, /* dest, source1, source2 */
+        BITNOT, /* dest, source */
         BRANCH, /* target label */
         BRANCH_EQ, /* target label, condition */
         BRANCH_GE, /* target label, condition */
@@ -57,39 +59,54 @@ namespace VM {
         COMPARE_EQ, /* dest, source */
         COMPARE_GE, /* dest, source */
         COMPARE_GT, /* dest, source */
+        COMPARE_IN, /* dest, source */
         COMPARE_LE, /* dest, source */
         COMPARE_LT, /* dest, source */
         COMPARE_NE, /* dest, source */
         DIVIDE, /* dest, source1, source2 */
-        ENDTRY, /* mmm, there is no try, only do */
         GET_ELEMENT, /* dest, array, index */
         GET_PROP, /* dest, object, prop name */
+        INSTANCEOF, /* dest, source */
         JSR, /* target */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
+        NEGATE, /* dest, source */
         NEW_ARRAY, /* dest */
         NEW_OBJECT, /* dest */
         NOP, /* do nothing and like it */
         NOT, /* dest, source */
+        OR, /* dest, source1, source2 */
+        POSATE, /* dest, source */
+        REMAINDER, /* dest, source1, source2 */
         RETURN, /* return value */
         RETURN_VOID, /* Return without a value */
         RTS, /* Return to sender */
         SAVE_NAME, /* name, source */
         SET_ELEMENT, /* base, source1, source2 */
         SET_PROP, /* object, name, source */
+        SHIFTLEFT, /* dest, source1, source2 */
+        SHIFTRIGHT, /* dest, source1, source2 */
+        STRICT_EQ, /* dest, source */
+        STRICT_NE, /* dest, source */
         SUBTRACT, /* dest, source1, source2 */
         THROW, /* exception value */
-        TRY, /* catch target, finally target */
+        TRYIN, /* catch target, finally target */
+        TRYOUT, /* mmm, there is no try, only do */
+        USHIFTRIGHT, /* dest, source1, source2 */
         WITHIN, /* within this object */
-        WITHOUT /* without this object */
+        WITHOUT, /* without this object */
+        XOR, /* dest, source1, source2 */
     };
+
     
     /********************************************************************/
    
     static char *opcodeNames[] = {
         "ADD           ",
+        "AND           ",
+        "BITNOT        ",
         "BRANCH        ",
         "BRANCH_EQ     ",
         "BRANCH_GE     ",
@@ -101,33 +118,45 @@ namespace VM {
         "COMPARE_EQ    ",
         "COMPARE_GE    ",
         "COMPARE_GT    ",
+        "COMPARE_IN    ",
         "COMPARE_LE    ",
         "COMPARE_LT    ",
         "COMPARE_NE    ",
         "DIVIDE        ",
-        "ENDTRY        ",
         "GET_ELEMENT   ",
         "GET_PROP      ",
+        "INSTANCEOF    ",
         "JSR           ",
         "LOAD_IMMEDIATE",
         "LOAD_NAME     ",
         "MOVE          ",
         "MULTIPLY      ",
+        "NEGATE        ",
         "NEW_ARRAY     ",
         "NEW_OBJECT    ",
         "NOP           ",
         "NOT           ",
+        "OR            ",
+        "POSATE        ",
+        "REMAINDER     ",
         "RETURN        ",
         "RETURN_VOID   ",
         "RTS           ",
         "SAVE_NAME     ",
         "SET_ELEMENT   ",
         "SET_PROP      ",
+        "SHIFTLEFT     ",
+        "SHIFTRIGHT    ",
+        "STRICT_EQ     ",
+        "STRICT_NE     ",
         "SUBTRACT      ",
         "THROW         ",
-        "TRY           ",
+        "TRYIN         ",
+        "TRYOUT        ",
+        "USHIFTRIGHT   ",
         "WITHIN        ",
         "WITHOUT       ",
+        "XOR           ",
     };
 
     /********************************************************************/
@@ -336,6 +365,31 @@ namespace VM {
         /* print() and printOperands() inherited from Arithmetic */
     };
 
+    class And : public Arithmetic {
+    public:
+        /* dest, source1, source2 */
+        And (Register aOp1, Register aOp2, Register aOp3) :
+            Arithmetic
+            (AND, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Arithmetic */
+    };
+
+    class Bitnot : public Instruction_2<Register, Register> {
+    public:
+        /* dest, source */
+        Bitnot (Register aOp1, Register aOp2) :
+            Instruction_2<Register, Register>
+            (BITNOT, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[BITNOT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            return f;
+        }
+    };
+
     class Branch : public GenericBranch {
     public:
         /* target label */
@@ -448,6 +502,15 @@ namespace VM {
         /* print() and printOperands() inherited from Compare */
     };
 
+    class CompareIN : public Compare {
+    public:
+        /* dest, source */
+        CompareIN (Register aOp1, Register aOp2) :
+            Compare
+            (COMPARE_IN, aOp1, aOp2) {};
+        /* print() and printOperands() inherited from Compare */
+    };
+
     class CompareLE : public Compare {
     public:
         /* dest, source */
@@ -484,21 +547,6 @@ namespace VM {
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class Endtry : public Instruction {
-    public:
-        /* mmm, there is no try, only do */
-        Endtry () :
-            Instruction
-            (ENDTRY) {};
-        virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[ENDTRY];
-            return f;
-        }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
-            return f;
-        }
-    };
-
     class GetElement : public Instruction_3<Register, Register, Register> {
     public:
         /* dest, array, index */
@@ -529,6 +577,15 @@ namespace VM {
             f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
             return f;
         }
+    };
+
+    class Instanceof : public Compare {
+    public:
+        /* dest, source */
+        Instanceof (Register aOp1, Register aOp2) :
+            Compare
+            (INSTANCEOF, aOp1, aOp2) {};
+        /* print() and printOperands() inherited from Compare */
     };
 
     class Jsr : public GenericBranch {
@@ -603,6 +660,22 @@ namespace VM {
         /* print() and printOperands() inherited from Arithmetic */
     };
 
+    class Negate : public Instruction_2<Register, Register> {
+    public:
+        /* dest, source */
+        Negate (Register aOp1, Register aOp2) :
+            Instruction_2<Register, Register>
+            (NEGATE, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[NEGATE] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            return f;
+        }
+    };
+
     class NewArray : public Instruction_1<Register> {
     public:
         /* dest */
@@ -664,6 +737,40 @@ namespace VM {
             f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
             return f;
         }
+    };
+
+    class Or : public Arithmetic {
+    public:
+        /* dest, source1, source2 */
+        Or (Register aOp1, Register aOp2, Register aOp3) :
+            Arithmetic
+            (OR, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Arithmetic */
+    };
+
+    class Posate : public Instruction_2<Register, Register> {
+    public:
+        /* dest, source */
+        Posate (Register aOp1, Register aOp2) :
+            Instruction_2<Register, Register>
+            (POSATE, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[POSATE] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            return f;
+        }
+    };
+
+    class Remainder : public Arithmetic {
+    public:
+        /* dest, source1, source2 */
+        Remainder (Register aOp1, Register aOp2, Register aOp3) :
+            Arithmetic
+            (REMAINDER, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Arithmetic */
     };
 
     class Return : public Instruction_1<Register> {
@@ -760,6 +867,42 @@ namespace VM {
         }
     };
 
+    class Shiftleft : public Arithmetic {
+    public:
+        /* dest, source1, source2 */
+        Shiftleft (Register aOp1, Register aOp2, Register aOp3) :
+            Arithmetic
+            (SHIFTLEFT, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Arithmetic */
+    };
+
+    class Shiftright : public Arithmetic {
+    public:
+        /* dest, source1, source2 */
+        Shiftright (Register aOp1, Register aOp2, Register aOp3) :
+            Arithmetic
+            (SHIFTRIGHT, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Arithmetic */
+    };
+
+    class StrictEQ : public Compare {
+    public:
+        /* dest, source */
+        StrictEQ (Register aOp1, Register aOp2) :
+            Compare
+            (STRICT_EQ, aOp1, aOp2) {};
+        /* print() and printOperands() inherited from Compare */
+    };
+
+    class StrictNE : public Compare {
+    public:
+        /* dest, source */
+        StrictNE (Register aOp1, Register aOp2) :
+            Compare
+            (STRICT_NE, aOp1, aOp2) {};
+        /* print() and printOperands() inherited from Compare */
+    };
+
     class Subtract : public Arithmetic {
     public:
         /* dest, source1, source2 */
@@ -785,19 +928,43 @@ namespace VM {
         }
     };
 
-    class Try : public Instruction_2<Label*, Label*> {
+    class Tryin : public Instruction_2<Label*, Label*> {
     public:
         /* catch target, finally target */
-        Try (Label* aOp1, Label* aOp2) :
+        Tryin (Label* aOp1, Label* aOp2) :
             Instruction_2<Label*, Label*>
-            (TRY, aOp1, aOp2) {};
+            (TRYIN, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[TRY] << "\t" << "Offset " << mOp1->mOffset << ", " << "Offset " << mOp2->mOffset;
+            f << opcodeNames[TRYIN] << "\t" << "Offset " << mOp1->mOffset << ", " << "Offset " << mOp2->mOffset;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
+    };
+
+    class Tryout : public Instruction {
+    public:
+        /* mmm, there is no try, only do */
+        Tryout () :
+            Instruction
+            (TRYOUT) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[TRYOUT];
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
+            return f;
+        }
+    };
+
+    class Ushiftright : public Arithmetic {
+    public:
+        /* dest, source1, source2 */
+        Ushiftright (Register aOp1, Register aOp2, Register aOp3) :
+            Arithmetic
+            (USHIFTRIGHT, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Arithmetic */
     };
 
     class Within : public Instruction_1<Register> {
@@ -830,6 +997,16 @@ namespace VM {
             return f;
         }
     };
+
+    class Xor : public Arithmetic {
+    public:
+        /* dest, source1, source2 */
+        Xor (Register aOp1, Register aOp2, Register aOp3) :
+            Arithmetic
+            (XOR, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Arithmetic */
+    };
+
 
 } /* namespace VM */
 

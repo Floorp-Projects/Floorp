@@ -154,9 +154,9 @@ namespace ICG {
         void branchNotConditional(Label *label, Register condition);
         
         void beginTry(Label *catchLabel, Label *finallyLabel)
-            { iCode->push_back(new Try(catchLabel, finallyLabel)); }
+            { iCode->push_back(new Tryin(catchLabel, finallyLabel)); }
         void endTry()
-            { iCode->push_back(new Endtry()); }
+            { iCode->push_back(new Tryout()); }
         
         void resetStatement()
         { if (labelSet) { delete labelSet; labelSet = NULL; } resetTopRegister(); }
@@ -176,6 +176,11 @@ namespace ICG {
         { Register result = getRegister(); (*variableList)[name] = result; 
             registerBase = topRegister; return result; }
 
+        Register findVariable(const StringAtom& name)
+        { VariableList::iterator i = variableList->find(name);
+        ASSERT(i != map.end()); 
+        return (*i).second; }
+        
         Register allocateParameter(const StringAtom& name) 
         { parameterCount++; return allocateVariable(name); }
         
