@@ -273,12 +273,13 @@ public class Interpreter
         Object result;
         double resultDbl;
 
-        private CallFrame cachedBranchFrame;
-
         ContinuationJump(Continuation c, CallFrame current)
         {
             this.capturedFrame = (CallFrame)c.data;
-            if (this.capturedFrame == null) {
+            if (this.capturedFrame == null || current == null) {
+                // Continuation and current execution does not share
+                // any frames if there is nothing to capture or
+                // if there is no currently executed frames
                 this.branchFrame = null;
             } else {
                 // Search for branch frame where parent frame chains starting
@@ -287,7 +288,7 @@ public class Interpreter
                 CallFrame chain2 = current;
 
                 // First work parents of chain1 or chain2 until the same
-                // to make frame depth equal
+                // frame depth.
                 int diff = chain1.frameIndex - chain2.frameIndex;
                 if (diff != 0) {
                     if (diff < 0) {
@@ -303,7 +304,8 @@ public class Interpreter
                     if (chain1.frameIndex != chain2.frameIndex) Kit.codeBug();
                 }
 
-                // Now work parents in paralel
+                // Now walk parents in parallel until a shared frame is found
+                // or until the root is reached.
                 while (chain1 != chain2 && chain1 != null) {
                     chain1 = chain1.parentFrame;
                     chain2 = chain2.parentFrame;
