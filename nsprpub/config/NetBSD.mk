@@ -41,6 +41,10 @@ CC			= gcc
 CCC			= g++
 RANLIB			= ranlib
 
+ifndef OBJECT_FMT
+OBJECT_FMT		:= $(shell if echo __ELF__ | $${CC:-cc} -E - | grep -q __ELF__ ; then echo a.out ; else echo ELF ; fi)
+endif
+
 OS_REL_CFLAGS		=
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPU_ARCH		= x86
@@ -60,19 +64,14 @@ endif
 
 ARCH			= netbsd
 
+ifeq ($(OBJECT_FMT),ELF)
+DLL_SUFFIX		= so
+else
 DLL_SUFFIX		= so.1.0
+endif
 
-DSO_CFLAGS		= -fPIC
-DSO_LDOPTS		= -Bshareable
-ifeq ($(OS_TEST),alpha)
-DSO_LDOPTS		= -shared
-endif
-ifeq ($(OS_TEST),mips)
-DSO_LDOPTS		= -shared
-endif
-ifeq ($(OS_TEST),pmax)  
-DSO_LDOPTS		= -shared
-endif
+DSO_CFLAGS		= -fPIC -DPIC
+DSO_LDOPTS		= -x -shared
 
 ifdef LIBRUNPATH
 DSO_LDOPTS		+= -R$(LIBRUNPATH)
