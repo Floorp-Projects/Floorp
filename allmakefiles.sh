@@ -755,6 +755,12 @@ fi
 #
 # l10n/
 #
+if [ "$MOZ_LANGPACKS" ]; then
+	MAKEFILES_langpacks=`cat ${srcdir}/l10n/makefiles.all`
+else
+	MAKEFILES_langpacks=`cat ${srcdir}/l10n/makefiles`
+fi
+
 if [ "$MOZ_L10N" ]; then
     MAKEFILES_l10n="l10n/Makefile"
 
@@ -921,6 +927,7 @@ $MAKEFILES_jprof
 $MAKEFILES_js
 $MAKEFILES_l10n
 $MAKEFILES_l10n_lang
+$MAKEFILES_langpacks
 $MAKEFILES_layout
 $MAKEFILES_libreg
 $MAKEFILES_libimg

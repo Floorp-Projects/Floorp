@@ -101,6 +101,7 @@ DIRS		+= \
 		editor \
 		sun-java \
 		profile \
+	        l10n \
 	        themes \
 		$(NULL)
 
