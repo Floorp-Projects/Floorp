@@ -166,7 +166,10 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_Dashmatch:
       aBuffer.AppendLiteral("|=");
       break;
-
+    case eCSSToken_Error:
+      aBuffer.Append(mSymbol);
+      aBuffer.Append(mIdent);
+      break;
     default:
       NS_ERROR("invalid token type");
       break;
@@ -1073,12 +1076,19 @@ PRBool nsCSSScanner::ParseEOLComment(nsresult& aErrorCode, nsCSSToken& aToken)
 }
 #endif // 0
 
-PRBool nsCSSScanner::GatherString(nsresult& aErrorCode, PRInt32 aStop,
-                                  nsString& aBuffer)
+PRBool nsCSSScanner::ParseString(nsresult& aErrorCode, PRInt32 aStop,
+                                 nsCSSToken& aToken)
 {
+  aToken.mIdent.SetLength(0);
+  aToken.mType = eCSSToken_String;
+  aToken.mSymbol = PRUnichar(aStop); // remember how it's quoted
   for (;;) {
     if (EatNewline(aErrorCode)) {
-      return PR_FALSE;
+      aToken.mType = eCSSToken_Error;
+#ifdef CSS_REPORT_PARSE_ERRORS
+      ReportUnexpectedToken(aToken, "SEUnterminatedString");
+#endif
+      return PR_TRUE;
     }
     PRInt32 ch = Read(aErrorCode);
     if (ch < 0) {
@@ -1094,17 +1104,8 @@ PRBool nsCSSScanner::GatherString(nsresult& aErrorCode, PRInt32 aStop,
       }
     }
     if (0 < ch) {
-      aBuffer.Append(PRUnichar(ch));
+      aToken.mIdent.Append(PRUnichar(ch));
     }
   }
   return PR_TRUE;
-}
-
-PRBool nsCSSScanner::ParseString(nsresult& aErrorCode, PRInt32 aStop,
-                                 nsCSSToken& aToken)
-{
-  aToken.mIdent.SetLength(0);
-  aToken.mType = eCSSToken_String;
-  aToken.mSymbol = PRUnichar(aStop); // remember how it's quoted
-  return GatherString(aErrorCode, aStop, aToken.mIdent);
 }

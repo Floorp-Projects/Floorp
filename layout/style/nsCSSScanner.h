@@ -53,42 +53,45 @@ class nsIURI;
 // Token types
 enum nsCSSTokenType {
   // A css identifier (e.g. foo)
-  eCSSToken_Ident = 0,          // mIdent
+  eCSSToken_Ident,          // mIdent
 
   // A css at keyword (e.g. @foo)
-  eCSSToken_AtKeyword = 1,      // mIdent
+  eCSSToken_AtKeyword,      // mIdent
 
   // A css number without a percentage or dimension; with percentage;
   // without percentage but with a dimension
-  eCSSToken_Number = 2,         // mNumber
-  eCSSToken_Percentage = 3,     // mNumber
-  eCSSToken_Dimension = 4,      // mNumber + mIdent
+  eCSSToken_Number,         // mNumber
+  eCSSToken_Percentage,     // mNumber
+  eCSSToken_Dimension,      // mNumber + mIdent
 
   // A css string (e.g. "foo" or 'foo')
-  eCSSToken_String = 5,         // mSymbol + mIdent + mSymbol
+  eCSSToken_String,         // mSymbol + mIdent + mSymbol
 
   // Whitespace (e.g. " " or "/* abc */")
-  eCSSToken_WhiteSpace = 6,     // mIdent
+  eCSSToken_WhiteSpace,     // mIdent
 
   // A css symbol (e.g. ':', ';', '+', etc.)
-  eCSSToken_Symbol = 7,         // mSymbol
+  eCSSToken_Symbol,         // mSymbol
 
   // A css1 id (e.g. #foo3)
-  eCSSToken_ID = 8,             // mIdent
+  eCSSToken_ID,             // mIdent
 
-  eCSSToken_Function = 9,       // mIdent
+  eCSSToken_Function,       // mIdent
 
-  eCSSToken_URL = 10,           // mIdent
-  eCSSToken_InvalidURL = 11,    // doesn't matter
+  eCSSToken_URL,            // mIdent
+  eCSSToken_InvalidURL,     // doesn't matter
 
-  eCSSToken_HTMLComment = 12,    // "<!--" or "-->"
+  eCSSToken_HTMLComment,    // "<!--" or "-->"
 
-  eCSSToken_Includes = 13,      // "~="
-  eCSSToken_Dashmatch = 14,     // "|="
-  eCSSToken_Beginsmatch = 15,   // "^="
-  eCSSToken_Endsmatch = 16,     // "$="
-  eCSSToken_Containsmatch = 17  // "*="
+  eCSSToken_Includes,       // "~="
+  eCSSToken_Dashmatch,      // "|="
+  eCSSToken_Beginsmatch,    // "^="
+  eCSSToken_Endsmatch,      // "$="
+  eCSSToken_Containsmatch,  // "*="
 
+  // A special token indicating that there was an error in tokenization.
+  // It's always an unterminated string.
+  eCSSToken_Error           // mSymbol + mIdent
 };
 
 struct nsCSSToken {
@@ -156,7 +159,7 @@ class nsCSSScanner {
 
   PRUint32 GetLineNumber() { return mLineNumber; }
 
-  // Get the next token. Return nsfalse on EOF or ERROR. aTokenResult
+  // Get the next token. Return PR_FALSE on EOF. aTokenResult
   // is filled in with the data for the token.
   PRBool Next(nsresult& aErrorCode, nsCSSToken& aTokenResult);
 
@@ -204,8 +207,6 @@ protected:
 #endif
   PRBool SkipCComment(nsresult& aErrorCode);
 
-  PRBool GatherString(nsresult& aErrorCode, PRInt32 aStop,
-                      nsString& aString);
   PRBool GatherIdent(nsresult& aErrorCode, PRInt32 aChar, nsString& aIdent);
 
   nsCOMPtr<nsIUnicharInputStream> mInput;
