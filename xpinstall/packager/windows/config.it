@@ -214,7 +214,7 @@ Description Short=Mozilla Seamonkey
 Description Long=Browser software for the internet
 Archive=core.xpi
 $InstallSize$:core
-$InstallSizeSystem$:system
+$InstallSizeSystem$
 $InstallSizeArchive$:core.xpi
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
