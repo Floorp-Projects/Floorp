@@ -101,18 +101,13 @@
 static void PR_CALLBACK
 HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
 {
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
-
-  if (!node) {
-    NS_ERROR("null or non-DOM node passed to HandleImagePLEvent!");
+  if (!aContent) {
+    NS_ERROR("null node passed to HandleImagePLEvent!");
 
     return;
   }
 
-  nsCOMPtr<nsIDOMDocument> dom_doc;
-  node->GetOwnerDocument(getter_AddRefs(dom_doc));
-
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
+  nsIDocument* doc = aContent->GetOwnerDoc();
 
   if (!doc) {
     return;

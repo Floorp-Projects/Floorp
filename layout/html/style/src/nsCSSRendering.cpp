@@ -2573,13 +2573,10 @@ FindCanvasBackground(nsPresContext* aPresContext,
     if (result->IsTransparent()) {
       nsIContent* content = aForFrame->GetContent();
       if (content) {
-        nsCOMPtr<nsIDOMNode> node( do_QueryInterface(content) );
-        // Use |GetOwnerDocument| so it works during destruction.
-        nsCOMPtr<nsIDOMDocument> doc;
-        node->GetOwnerDocument(getter_AddRefs(doc));
-        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
+        // Use |GetOwnerDoc| so it works during destruction.
+        nsIDocument* document = content->GetOwnerDoc();
+        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(document);
         if (htmlDoc) {
-          nsCOMPtr<nsIDocument> document = do_QueryInterface(doc);
           if (!document->IsCaseSensitive()) { // HTML, not XHTML
             nsCOMPtr<nsIDOMHTMLElement> body;
             htmlDoc->GetBody(getter_AddRefs(body));
@@ -2643,14 +2640,11 @@ FindElementBackground(nsPresContext* aPresContext,
     return PR_TRUE; // not frame for <BODY> element
 
   // We should only look at the <html> background if we're in an HTML document
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-  nsCOMPtr<nsIDOMDocument> doc;
-  node->GetOwnerDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(doc));
+  nsIDocument* document = content->GetOwnerDoc();
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(document);
   if (!htmlDoc)
     return PR_TRUE;
 
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
   if (document->IsCaseSensitive()) // XHTML, not HTML
     return PR_TRUE;
   

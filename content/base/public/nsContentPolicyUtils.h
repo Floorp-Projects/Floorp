@@ -51,7 +51,7 @@
 #include "nsIContentPolicy.h"
 #include "nsIMemory.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMDocument.h"
+#include "nsIContent.h"
 
 //XXXtw sadly, this makes consumers of nsContentPolicyUtils depend on widget
 #include "nsIDocument.h"
@@ -210,12 +210,9 @@ NS_CP_GetDocShellFromContext(nsISupports *aContext)
         if (!doc) {
             // we were not a document after all, get our ownerDocument,
             // hopefully
-            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContext);
-            if (node) {
-                nsCOMPtr<nsIDOMDocument> ownerDoc;
-                node->GetOwnerDocument(getter_AddRefs(ownerDoc));
-                // and turn it into an nsIDocument
-                doc = do_QueryInterface(ownerDoc);
+            nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
+            if (content) {
+                doc = content->GetOwnerDoc();
             }
         }
 

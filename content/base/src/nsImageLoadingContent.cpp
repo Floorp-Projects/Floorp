@@ -556,17 +556,7 @@ nsImageLoadingContent::GetOurDocument()
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   NS_ENSURE_TRUE(thisContent, nsnull);
 
-  nsIDocument* doc = thisContent->GetDocument();
-  
-  if (!doc) {  // nodeinfo time
-    // XXXbz GetOwnerDocument
-    nsINodeInfo *nodeInfo = thisContent->GetNodeInfo();
-    if (nodeInfo) {
-      doc = nsContentUtils::GetDocument(nodeInfo);
-    }
-  }
-
-  return doc;
+  return thisContent->GetOwnerDoc();
 }
 
 nsresult
