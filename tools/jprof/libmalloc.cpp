@@ -238,7 +238,7 @@ void setupProfilingStuff(void)
 	 *               is set) from userland before starting
 	 *               to generate them internally
 	 *   JP_START  -> Install the signal handler
-	 *   JP_PERIOD -> Time between prifiler ticks
+	 *   JP_PERIOD -> Time between profiler ticks
 	 *   JP_FIRST  -> Extra delay before starting
 	 *   JP_REALTIME -> Take stack traces in intervals of real time
 	 *               rather than time used by the process (and the
