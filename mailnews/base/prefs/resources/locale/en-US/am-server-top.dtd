@@ -23,7 +23,7 @@
 <!ENTITY isSecure.label "Use secure connection (SSL)">
 <!ENTITY leaveOnServer.label "Leave messages on server">
 <!ENTITY deleteOnServer.label "Delete messages on server when they are deleted or moved from Inbox">
-<!ENTITY downloadOnBiff.label "Automatically download any new messages">
+<!ENTITY downloadOnBiff.label "Automatically download new messages">
 <!ENTITY hostname.label "Server Hostname">
 <!ENTITY username.label "Your Login Name">
 <!-- LOCALIZATION NOTE (popServerTitle.label) : do not translate "POP" in below line -->
@@ -35,7 +35,7 @@
 <!-- LOCALIZATION NOTE (expungeOnExit.label) : do not translate two of "&quot;" in below line -->
 <!ENTITY expungeOnExit.label "Clean up (&quot;Expunge&quot;) Inbox on Exit">
 <!ENTITY emptyTrashOnExit.label "Empty Trash on Exit">
-<!ENTITY loginAtStartup.label "Check for new mail at startup"> 
+<!ENTITY loginAtStartup.label "Check for new messages at startup"> 
 <!-- LOCALIZATION NOTE (maxMessagesStart.label) : translate below 2 lines with grammar dependency 
     maxMessengerStart.label will be followed by maxMessagesEnd.label with the number
 	 of messages between them

@@ -121,7 +121,7 @@ Contributors:
   </hbox>
   <!-- POP3 -->
   <vbox iscontrolcontainer="true" align="start">
-    <checkbox hidable="true" class="indent" hidefor="imap,nntp"
+    <checkbox hidable="true" hidefor="imap,nntp"
               wsm_persist="true" id="server.downloadOnBiff"
               label="&downloadOnBiff.label;" observes="broadcaster_doBiff"
               prefattribute="value"

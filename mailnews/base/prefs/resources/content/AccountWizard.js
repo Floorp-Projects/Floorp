@@ -900,6 +900,7 @@ function EnableCheckMailAtStartUpIfNeeded(newAccount)
     if (!(gDefaultAccount && gDefaultAccount.incomingServer.canBeDefaultServer)) { 
         am.defaultAccount = newAccount;
         newAccount.incomingServer.loginAtStartUp = true;
+        newAccount.incomingServer.downloadOnBiff = true;
     }
 }
 
