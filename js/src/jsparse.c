@@ -840,7 +840,7 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                  */
                 tc->flags &= ~TCF_RETURN_EXPR;
             }
-            if (!js_FoldConstants(cx, pn, tc) ||
+            if (!js_FoldConstants(cx, pn2, tc) ||
                 !js_AllocTryNotes(cx, (JSCodeGenerator *)tc) ||
                 !js_EmitTree(cx, (JSCodeGenerator *)tc, pn2)) {
                 tt = TOK_ERROR;
