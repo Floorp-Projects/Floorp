@@ -2931,7 +2931,6 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
 /* The following are the interface routines seen by other dlls */
 /***************************************************************/
 
-#define BUFLEN2 5000
 #define BREAK '\001'
 
 PUBLIC void
