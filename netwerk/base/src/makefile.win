@@ -47,7 +47,8 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsLoadGroup.obj                \
         .\$(OBJDIR)\nsInputStreamChannel.obj       \
         .\$(OBJDIR)\nsDirectoryIndexStream.obj     \
-        .\$(OBJDIR)\nsStreamLoader.obj      \
+        .\$(OBJDIR)\nsStreamLoader.obj             \
+        .\$(OBJDIR)\nsProtocolProxyService.obj     \
         $(NULL)
 
 INCS = $(INCS)                  \
