@@ -497,6 +497,7 @@ PRInt32 nsParser::Parse(fstream& aStream){
 
   pc=PopContext();
   delete pc;
+  mParseLevel--;
 
   return status;
 }
@@ -528,6 +529,7 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString){
   }
   pc=PopContext();
   delete pc;
+  mParseLevel--;
   return result;
 }
 
