@@ -899,7 +899,11 @@ sub RemoveVotes {
     if (0 < @list) {
         foreach my $ref (@list) {
             my ($name, $count) = (@$ref);
-            if (open(SENDMAIL, "|/usr/lib/sendmail -t")) {
+            my $sendmailparm = '-ODeliveryMode=deferred';
+            if (Param('sendmailnow')) {
+               $sendmailparm = '';
+            }
+            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -t")) {
                 my %substs;
                 $substs{"to"} = $name;
                 $substs{"bugid"} = $id;
