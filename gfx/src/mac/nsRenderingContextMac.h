@@ -124,30 +124,33 @@ public:
   nsresult   Init(nsIDeviceContext* aContext, GrafPtr aPort);
 
 protected:
-	void		SelectDrawingSurface(nsDrawingSurfaceMac* aSurface);
+  enum GraphicStateChanges {
+		kFontChanged	= (1 << 0),
+		kColorChanged	= (1 << 1),
+		kClippingChanged = (1 << 2),
+		
+		kEverythingChanged = 0xFFFFFFFF
+	};
 
+	void 			SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, PRUint32 aChanges = kEverythingChanged);
+
+	// NOTE:  StartDraw()/EndDraw() don't nest properly. This could be a problem.
 	GrafPtr		mOldPort;
 
 	inline void	StartDraw()
-  				{
-					::GetPort(&mOldPort);
-					NS_ASSERTION((mPort != nsnull), "mPort is null");
-					::SetPort(mPort);
-  				}
+	{
+			::GetPort(&mOldPort);
+			NS_ASSERTION((mPort != nsnull), "mPort is null");
+			::SetPort(mPort);
+	}
 
 	inline void	EndDraw()
-  				{
-					::SetPort(mOldPort);
-  				}
-  	typedef enum {
-		kFontChanged	= (1 << 0),
-		kColorChanged	= (1 << 1)
-	} styleChanges;
-
-
+	{
+		::SetPort(mOldPort);
+	}
 
 protected:
-	float             		mP2T; 				// Pixel to Twip conversion factor
+	float             		mP2T; 								// Pixel to Twip conversion factor
 	nsIDeviceContext *		mContext;
 
 	GrafPtr						mSavePort;
@@ -160,7 +163,7 @@ protected:
 	nsGraphicState *	mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
 	nsUnicodeRenderingToolkit mUnicodeRenderingToolkit;
 	nsVoidArray *			mGSStack;		// GraphicStates stack, used for PushState/PopState
-	PRInt8						mChanges;
+	PRUint32					mChanges;		// bit mask of attributes that have changed since last Push().
 };
 
 
