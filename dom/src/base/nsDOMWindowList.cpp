@@ -146,7 +146,7 @@ nsDOMWindowList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
       }
     }
 
-    mDocShellNode->FindChildWithName(aName.GetUnicode(), PR_FALSE,
+    mDocShellNode->FindChildWithName(aName.GetUnicode(), PR_FALSE, PR_FALSE,
                                      nsnull, getter_AddRefs(item));
     
     nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
