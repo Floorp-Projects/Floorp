@@ -49,16 +49,10 @@ DEFINES += -DSTANDALONE_REGISTRY
 # Make sure that these custom rules stay in sync with rules.mk
 S_%.$(OBJ_SUFFIX): $(srcdir)/../src/%.c
 	$(REPORT_BUILD)
-ifdef STRICT_CPLUSPLUS_SUFFIX
-	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
-	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
-	rm -f t_$*.cc
-else
 ifeq ($(MOZ_OS2_TOOLS), VACPP)
-	$(ELOG) $(CCC) -Fo$@ -c $(COMPILE_CXXFLAGS) $<
+	$(ELOG) $(CC) -Fo$@ -c $(COMPILE_CFLAGS) $<
 else
-	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
+	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $<
 endif
-endif #STRICT_CPLUSPLUS_SUFFIX
 
 
