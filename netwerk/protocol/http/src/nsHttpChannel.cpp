@@ -2326,8 +2326,14 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
         mCacheAccess = access;
     }
 
-    // advance to the next state...
-    nsresult rv = Connect(PR_FALSE);
+    nsresult rv;
+
+    if (NS_FAILED(mStatus)) {
+        LOG(("channel was canceled [this=%x status=%x]\n", this, mStatus));
+        rv = mStatus;
+    }
+    else // advance to the next state...
+        rv = Connect(PR_FALSE);
 
     // a failure from Connect means that we have to abort the channel.
     if (NS_FAILED(rv)) {
