@@ -273,8 +273,6 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     XfeBmButtonPart *		bmp = _XfeBmButtonPart(nw);
 	XmLabelPart *			lp = _XfeXmLabelPart(nw);
 
-	assert( XmIsRowColumn(XtParent(nw)) );
-
 	/* Force the type to be string always */
 	lp->label_type = XmSTRING;
 
