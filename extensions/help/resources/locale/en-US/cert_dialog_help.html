@@ -33,7 +33,7 @@
 <h2>Certificate Details</h2>
 
 
-<p>The Certificate Details window displays information about a certificate you selected in one of the Certificate Manager tabs. For most people, the General tab provides suficient information. The Details tab provides complete details on the certificate's contents&#151;information normally of interest to IS professionals only.
+<p>The Certificate Details window displays information about a certificate you selected in one of the Certificate Manager tabs. For most people, the General tab provides sufficient information. The Details tab provides complete details on the certificate's contents&#151;information normally of interest to IS professionals only.
 
 <p>&nbsp;</p>
 <a NAME="General_Tab"></a>
@@ -52,7 +52,7 @@
 
 <LI><B>Email Recipient Certificate.</B> Certificate used to identify someone else, for example so you can send that person encrypted email.</LI>
 
-<LI><B>Status Responder Certificate.</B> Certificate used to identify an on-line status responder that uses the Online Certificate Status Protocol (OCSP) to check the validity of certificates. For more information about OCSP, see <a href="validation_help.html">Validation Settings</a>.</LI>
+<LI><B>Status Responder Certificate.</B> Certificate used to identify an online status responder that uses the Online Certificate Status Protocol (OCSP) to check the validity of certificates. For more information about OCSP, see <a href="validation_help.html">Validation Settings</a>.</LI>
 
 <LI><B>Certificate Authority.</B> Certificate used to identify a certificate authority&#151;that is, a service that issues certificates for use as identification over computer networks.</LI>
 
@@ -67,7 +67,7 @@
 	<LI><B>Serial Number.</B> The certificate's serial number.</LI>
 	</UL>
 
-	<li><b>Issued By:</b> Summarizes similar information about the certificate authority (CA) that issued the  certificate.
+	<li><b>Issued By:</b> Summarizes information (similar to that provided under "Issued To"; see above) about the certificate authority (CA) that issued the  certificate.
 	<li><b>Validity:</b> Indicates the period during which the certificate is valid.
 	<li><b>Fingerprints:</b> Lists the certificate's fingerprints. A fingerprint is a unique number produced by applying a mathematical function to the certificate contents. A certificate's fingerprint can be used to verify that the certificate has not been tampered with.
 </ul>
@@ -85,8 +85,6 @@
 	<li><b>Certificate Fields.</b> Displays the fields of the certificate selected under Certificate Hierarchy.	
 	<li><b>Field Value.</b> Displays the value of the field selected under Certificate Fields.
 </ul>
-
-<p>The top panel of the Certificate Details window  
 
 <p>The Certificate Details tab displays basic ANSI types in human-readable form wherever possible. For fields whose contents the Certificate Manager cannot interpret, it displays the actual values contained in the certificate.</P>
 
@@ -139,11 +137,11 @@
 <a NAME="New_Certificate_Authority"></a>
 <h2>New Certificate Authority</h2>
 
-<p>The certificates the Certificate Manager has on file, whether stored on your computer or on an external security device such as a smart card, include certificates that identify <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. To be able to recognize any other certificates it has on file, Certificate Manager must have certificates for the CAs that issued or authorized issuance of those certificates. When you decide to trust a CA, Certificate Manager files that CA's certificate and can then recognize the kinds of certificates you trust that CA to issue.</P>
+<p>The certificates that the Certificate Manager has on file, whether stored on your computer or on an external security device such as a smart card, include certificates that identify <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. To be able to recognize any other certificates it has on file, Certificate Manager must have certificates for the CAs that issued or authorized issuance of those certificates. When you decide to trust a CA, Certificate Manager files that CA's certificate and can then recognize the kinds of certificates you trust that CA to issue.</P>
 
-<p>Before accepting a new CA certificate, Certificate Manager displays a window that allows you to specify how you want to trust the certificate, if at all. You can click View to see the CA certificate, or Policy to see information about the CA's policies. The 
+<p>Before accepting a new CA certificate, Certificate Manager displays a window that allows you to specify how you want to trust the certificate, if at all. You can click View to see the CA certificate, or Policy to see information about the CA's policies. 
 
-<p>Before you decide to trust a new CA, make sure that you know who is operating it. Make sure the CA's policies and procedures and are appropriate for the kinds of certificates it issues. For example, if the CA issues certificates identifying web sites you use for financial transactions, make sure you are comfortable with the level of assurance the CA provides. 
+<p>Before you decide to trust a new CA, make sure that you know who is operating it. Make sure the CA's policies and procedures are appropriate for the kinds of certificates it issues. For example, if the CA issues certificates identifying web sites you use for financial transactions, make sure you are comfortable with the level of assurance the CA provides. 
 
 <p>You also need to decide what kinds of certificates issued by this CA you want to trust. You can select any of the following options:
 
@@ -184,9 +182,9 @@
 <p>To examine the certificate, click View Certificate. If you suspect that the web site is not what it claims to be, you can close the Certificate Details window and click Cancel (in which case you will not connect to the web site).
 	<p>If you decide not to cancel, you need to decide how long you are willing to trust this certificate, if at all:
 	<ul>
-	<LI><B>Accept this certificate permanently</B> means that Certificate Manager will recognize this certificate as legitimate identification until it expires. You should not select this option unless you are absolutely sure that you trust the web site identified by the certificate.</LI><P>
-	<LI><B>Accept this certificate temporarily for this session</B> means that Certificate Manager will recognize this certificate as legitimate identification for this session only. If you select this option, Certificate Manager will connect with the web site this time, but will display the New Web Site Certificate window again the next time you visit the web site.</LI>
-	<LI><B>Do not accept this certificate and do not connect to the web site</B> means that Certificate Manager will not accept this certificate. If you select this option, Certificate Manager will not connect with this web site this time and will display the same window again the next time you visit the web site.</LI>
+	<LI><B>Accept this certificate permanently.</B> This means that Certificate Manager will recognize this certificate as legitimate identification until it expires. You should not select this option unless you are absolutely sure that you trust the web site identified by the certificate.</LI><P>
+	<LI><B>Accept this certificate temporarily for this session.</B> This means that Certificate Manager will recognize this certificate as legitimate identification for this session only. If you select this option, Certificate Manager will connect with the web site this time, but will display the New Web Site Certificate window again the next time you visit the web site.</LI>
+	<LI><B>Do not accept this certificate and do not connect to the web site. </B> This means that Certificate Manager will not accept this certificate. If you select this option, Certificate Manager will not connect with this web site this time and will display the same window again the next time you visit the web site.</LI>
 </ul>
 
 <p>&nbsp;</p>
@@ -238,7 +236,7 @@
 
 
 <hr>
-<p><i>7/5/2001</i></p>
+<p><i>7/11/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
