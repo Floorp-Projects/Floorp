@@ -390,8 +390,24 @@
     nsCOMPtr<nsIAtom> tagName;
     nsIContent* content = [item contentNode];
     content->GetTag(*getter_AddRefs(tagName));
+
+    BOOL isExpandable = (tagName == BookmarksService::gFolderAtom);
+
+// XXXben - persistence of folder open state
+// I'm adding this code, turned off, until I can figure out how to refresh the NSOutlineView's
+// row count. Currently the items are expanded, but the outline view continues to believe it had
+// the number of rows it had before the item was opened visible, until the view is resized. 
+#if 0
+    if (isExpandable) {
+      PRBool isOpen = content->HasAttr(kNameSpaceID_None, BookmarksService::gOpenAtom);
+      if (isOpen)
+        [mOutlineView expandItem: item]; 
+      else                                                                                                                                                                                                                                                                                                                                                                                                                                              
+        [mOutlineView collapseItem: item];
+    }
+#endif
     
-    return (tagName == BookmarksService::gFolderAtom);
+    return isExpandable;
 }
 
 - (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item
@@ -715,6 +731,18 @@
   return YES;
 }
 
+- (void)outlineViewItemWillExpand:(NSNotification *)notification
+{
+  BookmarkItem* item = [[notification userInfo] objectForKey:[[[notification userInfo] allKeys] objectAtIndex: 0]];
+  [item contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gOpenAtom, NS_LITERAL_STRING("true"), PR_FALSE);
+}
+
+- (void)outlineViewItemWillCollapse:(NSNotification *)notification
+{
+  BookmarkItem* item = [[notification userInfo] objectForKey:[[[notification userInfo] allKeys] objectAtIndex: 0]];
+  [item contentNode]->UnsetAttr(kNameSpaceID_None, BookmarksService::gOpenAtom, PR_FALSE);
+}
+
 @end
 
 @implementation BookmarkItem
@@ -772,6 +800,7 @@ nsIAtom* BookmarksService::gFolderAtom = nsnull;
 nsIAtom* BookmarksService::gBookmarkAtom = nsnull;
 nsIAtom* BookmarksService::gHrefAtom = nsnull;
 nsIAtom* BookmarksService::gNameAtom = nsnull;
+nsIAtom* BookmarksService::gOpenAtom = nsnull;
 nsVoidArray* BookmarksService::gInstances = nsnull;
 int BookmarksService::CHInsertNone = 0;
 int BookmarksService::CHInsertInto = 1;
@@ -964,6 +993,7 @@ BookmarksService::AddObserver()
         gFolderAtom = NS_NewAtom("folder");
         gNameAtom = NS_NewAtom("name");
         gHrefAtom = NS_NewAtom("href");
+        gOpenAtom = NS_NewAtom("open");
         gInstances = new nsVoidArray();
                 
         nsCOMPtr<nsIFile> profileDir;
@@ -997,11 +1027,17 @@ BookmarksService::RemoveObserver()
      
     gRefCnt--;
     if (gRefCnt == 0) {
+        // Flush Bookmarks before shutting down as some changes are not flushed when
+        // they are performed (folder open/closed) as writing a whole bookmark file for
+        // that type of operation seems excessive. 
+        FlushBookmarks();
+          
         NS_IF_RELEASE(gBookmarks);
         NS_RELEASE(gBookmarkAtom);
         NS_RELEASE(gFolderAtom);
         NS_RELEASE(gNameAtom);
         NS_RELEASE(gHrefAtom);
+        NS_RELEASE(gOpenAtom);
         [gDictionary release];
     }
 }
