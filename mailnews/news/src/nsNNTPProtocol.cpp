@@ -4954,10 +4954,9 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				// cache so we aren't creating new connections to process each request...
 				// but until that time, we always want to properly shutdown the connection
 
-				// SendData(m_runningURL, "quit"CRLF); // this will cause OnStopBinding to get called
-				CloseSocket();
+        			if (mailnewsurl)
+					SendData(mailnewsurl, "quit"CRLF); // this will cause OnStopRequest get called, which will call CloseSocket()
 				return NS_OK;
-				//SetFlag(NNTP_PAUSE_FOR_READ);
 				break;
 
             default:
