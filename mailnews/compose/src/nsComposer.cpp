@@ -100,19 +100,16 @@ nsComposerBootstrap::Initialize()
   nsresult rv;
 
   printf("Composer has been bootstrapped!\n");
-  nsIScriptNameSetRegistry* registry;
-  rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID, 
-                                    nsIScriptNameSetRegistry::GetIID(),
-                                    (nsISupports**)&registry);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, kCScriptNameSetRegistryCID, &rv); 
+
+  if (NS_FAILED(rv)) return rv;
+
   nsComposerNameSet* nameSet = new nsComposerNameSet();
   if (nameSet == nsnull)
     rv = NS_ERROR_OUT_OF_MEMORY;
   else
     rv = registry->AddExternalNameSet(nameSet);
-  (void)nsServiceManager::ReleaseService(kCScriptNameSetRegistryCID, 
-                                         registry);
+
   return rv;
 }
 

@@ -1182,17 +1182,13 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
 {
   char *dstPtr = nsnull;
   PRInt32 dstLength = 0;
-  nsICharsetConverterManager * ccm = nsnull;
   nsresult res;
 
   if (nsnull == from_charset || nsnull == to_charset || 
-      '\0' == *from_charset || '\0' == *to_charset || nsnull == inBuffer) {
+      '\0' == *from_charset || '\0' == *to_charset || nsnull == inBuffer) 
     return -1;
-  }
 
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                     kICharsetConverterManagerIID, 
-                                     (nsISupports**)&ccm);
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsString aCharset(from_charset);
@@ -1243,7 +1239,6 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
       }
       NS_IF_RELEASE(decoder);
     }
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
   }
 
   // set the results
@@ -1255,16 +1250,13 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
 static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
                                       void** uniBuffer, PRInt32* uniLength)
 {
-  nsICharsetConverterManager * ccm = nsnull;
   nsresult res;
 
   if (nsnull == from_charset || '\0' == *from_charset|| nsnull == aBuffer) {
     return -1;
   }
-
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                     kICharsetConverterManagerIID, 
-                                     (nsISupports**)&ccm);
+	
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsString aCharset(from_charset);
     nsIUnicodeDecoder* decoder = nsnull;
@@ -1287,8 +1279,7 @@ static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuff
         res = NS_ERROR_OUT_OF_MEMORY;
       }
       NS_IF_RELEASE(decoder);
-    }    
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+    }
   }  
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
@@ -1296,16 +1287,13 @@ static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuff
 static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
                                         char** aBuffer)
 {
-  nsICharsetConverterManager * ccm = nsnull;
   nsresult res;
 
   if (nsnull == to_charset || '\0' == *to_charset|| nsnull == uniBuffer) {
     return -1;
   }
 
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                     kICharsetConverterManagerIID, 
-                                     (nsISupports**)&ccm);
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsString aCharset(to_charset);
     nsIUnicodeEncoder* encoder = nsnull;
@@ -1327,8 +1315,7 @@ static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBu
         res = NS_ERROR_OUT_OF_MEMORY;
       }
       NS_IF_RELEASE(encoder);
-    }    
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+    }
   }
   return NS_SUCCEEDED(res) ? 0 : -1;
 }

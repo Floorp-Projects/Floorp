@@ -49,11 +49,8 @@ static nsresult GetMessage(nsIURL *aURL, nsIMessage **message)
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsIRDFService *rdfService;
-
-	if(NS_SUCCEEDED(rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      nsIRDFService::GetIID(),
-                                      (nsISupports**) &rdfService)))
+	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+	if(NS_SUCCEEDED(rv))
 	{
 		nsIRDFResource *messageResource;
 		if(NS_SUCCEEDED(rdfService->GetResource(uri, &messageResource)))
@@ -61,7 +58,6 @@ static nsresult GetMessage(nsIURL *aURL, nsIMessage **message)
 			messageResource->QueryInterface(nsIMessage::GetIID(), (void**)message);
 			NS_RELEASE(messageResource);
 		}
-		nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
 	}
 	delete[] uri;
 

@@ -32,15 +32,11 @@ nsMsgCompPrefs::nsMsgCompPrefs(void * identiy /*= nsnull*/)
 	m_userEmail = nsnull;
 
 	// get the current identity from the mail session....
-	nsIMsgMailSession * mailSession = nsnull;
-	res = nsServiceManager::GetService(kCMsgMailSessionCID,
-	    							  nsIMsgMailSession::GetIID(),
-                                      (nsISupports **) &mailSession);
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &res); 
 	if (NS_SUCCEEDED(res) && mailSession) {
 		nsIMsgIdentity * identity = nsnull;
 		res = mailSession->GetCurrentIdentity(&identity);
 		// now release the mail service because we are done with it
-		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
 		if (NS_SUCCEEDED(res) && identity) {
 			char * aString = nsnull;
 

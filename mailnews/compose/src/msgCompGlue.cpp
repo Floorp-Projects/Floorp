@@ -103,12 +103,10 @@ nsresult ConvertFromUnicode(const nsString aCharset,
                             const nsString inString,
                             char** outCString)
 {
-  nsICharsetConverterManager * ccm = nsnull;
   nsresult res;
 
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                     kICharsetConverterManagerIID, 
-                                     (nsISupports**)&ccm);
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsIUnicodeEncoder* encoder = nsnull;
     nsString convCharset;
@@ -155,7 +153,6 @@ nsresult ConvertFromUnicode(const nsString aCharset,
       }
       NS_IF_RELEASE(encoder);
     }    
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
   }
   return res;
 }
@@ -165,12 +162,9 @@ nsresult ConvertToUnicode(const nsString aCharset,
                           const char *inCString, 
                           nsString &outString)
 {
-  nsICharsetConverterManager * ccm = nsnull;
   nsresult res;
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                     kICharsetConverterManagerIID, 
-                                     (nsISupports**)&ccm);
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsIUnicodeDecoder* decoder = nsnull;
     PRUnichar *unichars;
@@ -201,7 +195,6 @@ nsresult ConvertToUnicode(const nsString aCharset,
       }
       NS_IF_RELEASE(decoder);
     }    
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
   }  
   return res;
 }
