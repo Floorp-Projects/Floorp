@@ -73,7 +73,7 @@ nsIAtom* nsHTMLAtoms::hspace;
 nsIAtom* nsHTMLAtoms::httpEquiv;
 nsIAtom* nsHTMLAtoms::id;
 nsIAtom* nsHTMLAtoms::ismap;
-nsIAtom* nsHTMLAtoms::language;
+nsIAtom* nsHTMLAtoms::lang;
 nsIAtom* nsHTMLAtoms::li;
 nsIAtom* nsHTMLAtoms::link;
 nsIAtom* nsHTMLAtoms::left;
@@ -201,7 +201,7 @@ void nsHTMLAtoms::AddrefAtoms()
     httpEquiv = NS_NewAtom("HTTP-EQUIV");
     id = NS_NewAtom("ID");
     ismap = NS_NewAtom("ISMAP");
-    language = NS_NewAtom("LANGUAGE");
+    lang = NS_NewAtom("LANG");
     li = NS_NewAtom("LI");
     link = NS_NewAtom("LINK");
     left = NS_NewAtom("LEFT");
@@ -330,7 +330,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(httpEquiv);
     NS_RELEASE(id);
     NS_RELEASE(ismap);
-    NS_RELEASE(language);
+    NS_RELEASE(lang);
     NS_RELEASE(li);
     NS_RELEASE(link);
     NS_RELEASE(left);

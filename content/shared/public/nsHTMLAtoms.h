@@ -98,7 +98,7 @@ public:
   static nsIAtom* id;
   static nsIAtom* ismap;
 
-  static nsIAtom* language;
+  static nsIAtom* lang;
   static nsIAtom* li;
   static nsIAtom* link;
   static nsIAtom* left;
