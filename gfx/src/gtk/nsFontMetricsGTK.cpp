@@ -87,6 +87,12 @@ static PRLogModuleInfo * FontMetricsGTKLM = PR_NewLogModule("FontMetricsGTK");
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
 
+// This is the scaling factor that we keep fonts limited to against
+// the display size.  If a pixel size is requested that is more than
+// this factor larger than the height of the display, it's clamped to
+// that value instead of the requested size.
+#define FONT_MAX_FONT_SCALE 2
+
 #undef NOISY_FONTS
 #undef REALLY_NOISY_FONTS
 
@@ -1276,7 +1282,12 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+
   mPixelSize = NSToIntRound(app2dev * mFont->size);
+  // Make sure to clamp the pixel size to something reasonable so we
+  // don't make the X server blow up.
+  mPixelSize = PR_MIN(gdk_screen_height() * FONT_MAX_FONT_SCALE, mPixelSize);
+
   mStretchIndex = 4; // normal
   mStyleIndex = mFont->style;
 
