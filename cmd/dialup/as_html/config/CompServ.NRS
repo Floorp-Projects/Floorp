@@ -17,14 +17,14 @@
 ;
 [Dial-In Configuration]
 ScriptFileName=
-Phone=+1 (888) 643-5432
+Phone=+1 (800) 638-8290
 Password=YWg0ZrhvamYLZix1ADRvdWpttnp3
 Name=mozillarama
 Description=Netscape Internet Account Server
 SiteName=Netscape Internet Account Server
 
 [IP]
-RegCGI=http://207.12.241.15/IAS5/docs/reg.cgi
+RegCGI=http://205.217.225.21/IAS5/docs/reg.cgi
 DNSAddress2=0.0.0.0
 DNSAddress=0.0.0.0
 DomainName=netscape.com
@@ -33,7 +33,7 @@ Enabled=Yes
 
 [Configuration]
 REG_SCRIPTING=
-RegRoot=http://207.12.241.15/IAS5/docs/
+RegRoot=http://205.217.225.21/IAS5/docs/
 
 [Security]
 SecurityDevice=No
