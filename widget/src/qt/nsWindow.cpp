@@ -365,7 +365,8 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Scroll()\n"));
+    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Scroll: (%d,%d)\n",
+                                       aDx, aDy));
     if (mWidget)
     {
         mWidget->scroll(aDx, aDy);
@@ -447,31 +448,35 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
                 event.renderingContext->Init(mContext, this);
                 result = DispatchWindowEvent(&event);
                 NS_RELEASE(event.renderingContext);
-                PR_LOG(QtWidgetsLM, 
-                       PR_LOG_DEBUG, 
-                       ("nsWindow::OnPaint: bitBlt: {%d,%d,%d,%d}\n",
-                       //mWidget->width(),
-                       //mWidget->height());
-                       x,
-                       y,
-                       width,
-                       height));
+                if (mPixmap)
+                {
+                    PR_LOG(QtWidgetsLM, 
+                           PR_LOG_DEBUG, 
+                           ("nsWindow::OnPaint: bitBlt: {%d,%d,%d,%d}\n",
+                            //mWidget->width(),
+                            //mWidget->height());
+                            x,
+                            y,
+                            width,
+                            height));
 #if 1
-                bitBlt(mWidget, 
-                       x, 
-                       y, 
-                       mPixmap, 
-                       x, 
-                       y, 
-                       //mPixmap->width(), 
-                       //mPixmap->height(), 
-                       //mWidget->width(),
-                       //mWidget->height(),
-                       width,
-                       height,
-                       Qt::CopyROP);
+                    bitBlt(mWidget, 
+                           x, 
+                           y, 
+                           mPixmap, 
+                           x, 
+                           y, 
+                           //mPixmap->width(), 
+                           //mPixmap->height(), 
+                           //mWidget->width(),
+                           //mWidget->height(),
+                           width,
+                           height,
+                           Qt::CopyROP);
 #endif
-                //mPixmap->fill(mWidget, 0, 0);
+                    //mPixmap->fill(mWidget, 0, 0);
+                    mPixmap->fill();
+                }
             }
         }
         else
