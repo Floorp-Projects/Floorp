@@ -611,13 +611,18 @@ var BookmarksCommand = {
 
   openGroupBookmark: function (aURI, aTargetBrowser)
   {
+    var w = getTopWin();
+    if (!w)
+      // no browser window is open, we have to open the group into a new window
+      aTargetBrowser = "window";
+
+    var resource = RDF.GetResource(aURI);
+    var urlArc   = RDF.GetResource(NC_NS+"URL");
+    RDFC.Init(BMDS, resource);
+    var containerChildren = RDFC.GetElements();
+
     if (aTargetBrowser == "current" || aTargetBrowser == "tab") {
-      var w        = getTopWin();
       var browser  = w.document.getElementById("content");
-      var resource = RDF.GetResource(aURI);
-      var urlArc   = RDF.GetResource(NC_NS+"URL");
-      RDFC.Init(BMDS, resource);
-      var containerChildren = RDFC.GetElements();
       var tabPanels = browser.browsers;
       var tabCount  = tabPanels.length;
       var doReplace = PREF.getBoolPref("browser.tabs.loadFolderAndReplace");
@@ -665,8 +670,17 @@ var BookmarksCommand = {
       // and focus the content
       w.content.focus();
 
-    } else {
-      dump("Open Group in new window: not implemented...\n");
+    } else if (aTargetBrowser == "window") {
+      var URIs = [];
+
+      while (containerChildren.hasMoreElements()) {
+        var res = containerChildren.getNext().QueryInterface(kRDFRSCIID);
+        var target = BMDS.GetTarget(res, urlArc, true);
+        if (target)
+          URIs.push(target.QueryInterface(kRDFLITIID).Value);
+      }
+
+      openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", URIs.join("|"));
     }
   },
 
