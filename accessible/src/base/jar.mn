@@ -1,3 +1,9 @@
 en-win.jar:
 	locale/en-US/global-platform/accessible.properties
 
+en-unix.jar:
+	locale/en-US/global-platform/accessible.properties
+
+en-mac.jar:
+	locale/en-US/global-platform/accessible.properties
+
