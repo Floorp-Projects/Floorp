@@ -203,6 +203,7 @@ public:
   virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex) = 0;
   virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual void AddStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual void RemoveStyleSheet(nsIStyleSheet* aSheet) = 0;
   NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify) = 0;
   virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                           PRBool mDisabled) = 0;
