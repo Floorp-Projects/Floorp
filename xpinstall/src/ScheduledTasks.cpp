@@ -187,7 +187,10 @@ REGERR DeleteFileNowOrSchedule(const nsFileSpec& filename)
 {
 
     REGERR result = 0;
+    char   szValue[512];
     
+    PL_strcpy(szValue, "Fix for bug #8818");
+
     filename.Delete(PR_FALSE);
     
     if (filename.Exists())
@@ -200,7 +203,7 @@ REGERR DeleteFileNowOrSchedule(const nsFileSpec& filename)
             {
                 // FIX should be using nsPersistentFileDescriptor!!!
 
-                result = NR_RegSetEntry( reg, newkey, (char*)(const char*)filename.GetNativePathCString(), REGTYPE_ENTRY_FILE, nsnull, 0);
+                result = NR_RegSetEntry( reg, newkey, (char*)(const char*)filename.GetNativePathCString(), REGTYPE_ENTRY_FILE, szValue, strlen(szValue));
                 if (result == REGERR_OK)
                     result = nsInstall::REBOOT_NEEDED;
             }
@@ -284,7 +287,7 @@ void DeleteScheduledFiles(void)
     if (REGERR_OK == NR_RegOpen("", &reg))
     {
         RKEY    key;
-	    REGENUM state;
+	      REGENUM state = 0;
 
         /* perform scheduled file deletions and replacements (PC only) */
         if (REGERR_OK ==  NR_RegGetKey(reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY,&key))
@@ -304,7 +307,7 @@ void DeleteScheduledFiles(void)
             }
 
             /* delete list node if empty */
-			if (REGERR_NOMORE == NR_RegEnumEntries( reg, key, &state, buf, sizeof(buf), NULL ))
+			      if (REGERR_NOMORE == NR_RegEnumEntries( reg, key, &state, buf, sizeof(buf), NULL ))
             {
                 NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY);
             }
