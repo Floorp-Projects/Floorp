@@ -56,7 +56,7 @@ static const char* kDTDDirectory = "dtd/";
 /***************************** EXPAT CALL BACKS *******************************/
 
  // The callback handlers that get called from the expat parser 
-static int 
+PR_STATIC_CALLBACK(int)
 Driver_HandleStartElement(void *aUserData, 
                           const XML_Char *aName, 
                           const XML_Char **aAtts) 
@@ -69,7 +69,7 @@ Driver_HandleStartElement(void *aUserData,
   return XML_ERROR_NONE;
 }
 
-static int 
+PR_STATIC_CALLBACK(int)
 Driver_HandleEndElement(void *aUserData, 
                         const XML_Char *aName) 
 {
@@ -80,7 +80,7 @@ Driver_HandleEndElement(void *aUserData,
   return XML_ERROR_NONE;
 }
 
-static void 
+PR_STATIC_CALLBACK(void)
 Driver_HandleCharacterData(void *aUserData,
                            const XML_Char *aData, 
                            int aLength)
@@ -92,7 +92,7 @@ Driver_HandleCharacterData(void *aUserData,
   }
 }
 
-static void 
+PR_STATIC_CALLBACK(void)
 Driver_HandleComment(void *aUserData,
                      const XML_Char *aName) 
 {
@@ -102,7 +102,7 @@ Driver_HandleComment(void *aUserData,
   }
 }
 
-static int 
+PR_STATIC_CALLBACK(int)
 Driver_HandleProcessingInstruction(void *aUserData, 
                                    const XML_Char *aTarget, 
                                    const XML_Char *aData)
@@ -115,7 +115,7 @@ Driver_HandleProcessingInstruction(void *aUserData,
   return XML_ERROR_NONE;
 }
 
-static void 
+PR_STATIC_CALLBACK(void)
 Driver_HandleDefault(void *aUserData, 
                      const XML_Char *aData, 
                      int aLength) 
@@ -127,7 +127,7 @@ Driver_HandleDefault(void *aUserData,
   }
 }
 
-static void 
+PR_STATIC_CALLBACK(void)
 Driver_HandleStartCdataSection(void *aUserData)
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
@@ -136,7 +136,7 @@ Driver_HandleStartCdataSection(void *aUserData)
   }
 }
 
-static void 
+PR_STATIC_CALLBACK(void)
 Driver_HandleEndCdataSection(void *aUserData)
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
@@ -145,7 +145,7 @@ Driver_HandleEndCdataSection(void *aUserData)
   }
 }
 
-static void 
+PR_STATIC_CALLBACK(void)
 Driver_HandleStartDoctypeDecl(void *aUserData, 
                                    const XML_Char *aDoctypeName)
 {
@@ -155,7 +155,7 @@ Driver_HandleStartDoctypeDecl(void *aUserData,
   }
 }
 
-static void 
+PR_STATIC_CALLBACK(void)
 Driver_HandleEndDoctypeDecl(void *aUserData) 
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
@@ -165,7 +165,7 @@ Driver_HandleEndDoctypeDecl(void *aUserData)
 }
 
 
-static int
+PR_STATIC_CALLBACK(int)
 Driver_HandleExternalEntityRef(XML_Parser parser,
                                const XML_Char *openEntityNames,
                                const XML_Char *base,
