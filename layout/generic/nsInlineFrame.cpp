@@ -140,6 +140,13 @@ public:
   friend nsresult NS_NewInlineFrame(nsIContent* aContent,
                                     nsIFrame* aParentFrame,
                                     nsIFrame*& aNewFrame);
+
+  struct AdjustData {
+    nsIFrame* frame;
+    PRBool splittable;
+    nsRect bounds;
+  };
+
 };
 
 //----------------------------------------------------------------------
@@ -297,11 +304,6 @@ nsInlineFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
     return NS_OK;
   }
 
-  struct AdjustData {
-    nsIFrame* frame;
-    PRBool splittable;
-    nsRect bounds;
-  };
   const int NUM_AD = 50;
   AdjustData adjustMem[NUM_AD];
   AdjustData* ad0 = adjustMem;
