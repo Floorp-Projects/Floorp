@@ -71,11 +71,11 @@ var gInsertIndex = -1;
 // * dialog initialization code
 function Startup()
 {
-  if (InitEditorShell) {
+  if (typeof window.InitEditorShell == "function") {
     if (!InitEditorShell())
       return;
   }
-  else if (GetCurrentEditor && !GetCurrentEditor()) {
+  else if (typeof window.GetCurrentEditor != "function" || !GetCurrentEditor()) {
     window.close();
     return;
   }
@@ -1687,7 +1687,7 @@ function onExportStylesheet() {
 }
 
 function getCurrentEditor() {
-  if (InitEditorShell)
+  if (typeof window.InitEditorShell == "function")
     return editorShell.editor;
   else
     return GetCurrentEditor();
