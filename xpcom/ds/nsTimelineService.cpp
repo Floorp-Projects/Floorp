@@ -235,7 +235,12 @@ done:
     return data;
 }
 
-static void ThreadDestruct( void *data )
+extern "C" {
+  static void ThreadDestruct (void *data);
+  static PRStatus TimelineInit(void);
+};
+
+void ThreadDestruct( void *data )
 {
     if (data)
         delete (TimelineThreadData *)data;
@@ -246,7 +251,7 @@ static void ThreadDestruct( void *data )
 */
 static PRCallOnceType initonce;
 
-static PRStatus TimelineInit(void)
+PRStatus TimelineInit(void)
 {
     char *timeStr;
     char *fileName;
