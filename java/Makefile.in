@@ -26,6 +26,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS=   util		\
+	dom		\
 	webclient	\
 	$(NULL)
 
