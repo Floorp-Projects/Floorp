@@ -117,22 +117,22 @@ IDI_MOZILLABROWSER      ICON    DISCARDABLE     "MozillaBrowser.ico"
 // Menu
 //
 
-IDR_POPUP_PAGE MENU DISCARDABLE 
+IDR_POPUP_DOCUMENT MENU DISCARDABLE 
 BEGIN
     POPUP "Page Popup"
     BEGIN
-        MENUITEM "&Back",                       ID_BROWSE_BACK
-        MENUITEM "&Forward",                    ID_BROWSE_FORWARD
+        MENUITEM "&Back",                       ID_DOCUMENT_BACK
+        MENUITEM "&Forward",                    ID_DOCUMENT_FORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Select &All",                 ID_EDIT_SELECTALL
-        MENUITEM "&Paste",                      ID_EDIT_PASTE
+        MENUITEM "Select &All",                 ID_DOCUMENT_SELECTALL
+        MENUITEM "&Paste",                      ID_DOCUMENT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&View Source",                ID_FILE_VIEWSOURCE
+        MENUITEM "&View Source",                ID_DOCUMENT_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "Pr&int",                      ID_FILE_PRINT
-        MENUITEM "&Refresh",                    ID_FILE_REFRESH
+        MENUITEM "Pr&int",                      ID_DOCUMENT_PRINT
+        MENUITEM "&Refresh",                    ID_DOCUMENT_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Properties",                 ID_PAGE_PROPERTIES
+        MENUITEM "&Properties",                 ID_DOCUMENT_PROPERTIES
     END
 END
 
@@ -140,18 +140,30 @@ IDR_POPUP_LINK MENU DISCARDABLE
 BEGIN
     POPUP "Link Popup"
     BEGIN
-        MENUITEM "&Open",                       ID_FILE_OPEN
-        MENUITEM "Open in &New Window",         ID_FILE_OPENINNEWWINDOW
+        MENUITEM "&Open",                       ID_LINK_OPEN
+        MENUITEM "Open in &New Window",         ID_LINK_OPENINNEWWINDOW
         MENUITEM SEPARATOR
-        MENUITEM "Copy Shor&tcut",              ID_EDIT_COPYSHORTCUT
+        MENUITEM "Copy Shor&tcut",              ID_LINK_COPYSHORTCUT
         MENUITEM SEPARATOR
         MENUITEM "&Properties",                 ID_LINK_PROPERTIES
     END
 END
 
-IDR_POPUP_CLIPBOARD MENU DISCARDABLE 
+IDR_POPUP_TEXT MENU DISCARDABLE 
 BEGIN
     POPUP "Selection Popup"
+    BEGIN
+        MENUITEM "Cu&t",                        ID_TEXT_CUT, GRAYED
+        MENUITEM "&Copy",                       ID_TEXT_COPY
+        MENUITEM "&Paste",                      ID_TEXT_PASTE, GRAYED
+        MENUITEM "Select &All",                 ID_TEXT_SELECTALL
+        MENUITEM "Print",                       ID_TEXT_PRINT
+    END
+END
+
+IDR_POPUP_IMAGE MENU DISCARDABLE 
+BEGIN
+    POPUP "Image Popup"
     BEGIN
         MENUITEM "Cu&t",                        ID_EDIT_CUT, GRAYED
         MENUITEM "&Copy",                       ID_EDIT_COPY
@@ -160,6 +172,107 @@ BEGIN
         MENUITEM "Print",                       ID_SELECTIONPOPUP_PRINT
     END
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_CONFIRMCHECK DIALOG DISCARDABLE  0, 0, 263, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Static",IDC_MESSAGE,36,7,220,41
+    CONTROL         "Check1",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,52,249,19
+    PUSHBUTTON      "&Yes",IDC_BUTTON1,75,74,50,14
+    PUSHBUTTON      "&No",IDC_BUTTON2,128,74,50,14
+    ICON            "",IDC_QUESTION,7,7,20,20
+END
+
+IDD_PROMPT DIALOG DISCARDABLE  0, 0, 263, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Static",IDC_MESSAGE,36,7,220,41
+    CONTROL         "Check1",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,52,249,19
+    PUSHBUTTON      "&Yes",IDC_BUTTON1,75,74,50,14
+    PUSHBUTTON      "&No",IDC_BUTTON2,128,74,50,14
+    ICON            "",IDC_QUESTION,7,7,20,20
+END
+
+IDD_PROMPTUSERNAMEANDPASSWORD DIALOG DISCARDABLE  0, 0, 263, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Static",IDC_MESSAGE,36,7,220,41
+    CONTROL         "Check1",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,52,249,19
+    PUSHBUTTON      "&Yes",IDC_BUTTON1,75,74,50,14
+    PUSHBUTTON      "&No",IDC_BUTTON2,128,74,50,14
+    ICON            "",IDC_QUESTION,7,7,20,20
+END
+
+IDD_PROMPTPASSWORD DIALOG DISCARDABLE  0, 0, 263, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Static",IDC_MESSAGE,36,7,220,41
+    CONTROL         "Check1",IDC_CHECKMSG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,52,249,19
+    PUSHBUTTON      "&Yes",IDC_BUTTON1,75,74,50,14
+    PUSHBUTTON      "&No",IDC_BUTTON2,128,74,50,14
+    ICON            "",IDC_QUESTION,7,7,20,20
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_CONFIRMCHECK, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 256
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+
+    IDD_PROMPT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 256
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+
+    IDD_PROMPTUSERNAMEANDPASSWORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 256
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+
+    IDD_PROMPTPASSWORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 256
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+END
+#endif    // APSTUDIO_INVOKED
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -180,6 +293,67 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PROPERTIES DIALOG DISCARDABLE  0, 0, 199, 204
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,88,183,50,14
+    PUSHBUTTON      "Close",IDCLOSE,142,183,50,14
+    CONTROL         "",IDC_PPAGE_MARKER,"Static",SS_BLACKFRAME,7,7,185,170
+END
+
+IDD_PPAGE_LINK DIALOG DISCARDABLE  0, 0, 185, 170
+STYLE WS_CHILD | WS_VISIBLE
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Address: (URL)",IDC_STATIC,0,68,27,20
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,32,185,1
+    LTEXT           "Type:",IDC_STATIC,0,53,19,8
+    LTEXT           "type",IDC_TYPE,35,53,14,8
+    LTEXT           "Protocol:",IDC_STATIC,0,38,28,8
+    LTEXT           "protocol",IDC_PROTOCOL,35,38,26,8
+    EDITTEXT        IDC_ADDRESS,35,68,149,61,ES_AUTOHSCROLL | ES_READONLY
+    ICON            IDI_MOZILLABROWSER,IDC_STATIC,5,6,20,20
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 192
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 197
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
