@@ -287,6 +287,7 @@ sub init {
     }
 
     my $chartid;
+    my $sequence = 0;
     # $type_id is used by the code that queries for attachment flags.
     my $type_id = 0;
     my $f;
@@ -312,23 +313,35 @@ sub init {
          "^cc,(anyexact|substring)" => sub {
              my $list;
              $list = $self->ListIDsForEmail($t, $v);
+             my $chartseq;
+             $chartseq = $chartid;
+             if ($chartid eq "") {
+                 $chartseq = "CC$sequence";
+                 $sequence++;
+             }
              if ($list) {
-                 push(@supptables, "LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id AND cc_$chartid.who IN($list)");
-                 $term = "cc_$chartid.who IS NOT NULL";
+                 push(@supptables, "LEFT JOIN cc cc_$chartseq ON bugs.bug_id = cc_$chartseq.bug_id AND cc_$chartseq.who IN($list)");
+                 $term = "cc_$chartseq.who IS NOT NULL";
              } else {
-                 push(@supptables, "LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id");
+                 push(@supptables, "LEFT JOIN cc cc_$chartseq ON bugs.bug_id = cc_$chartseq.bug_id");
 
-                 push(@supptables, "LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid");
-                 $ff = $f = "map_cc_$chartid.login_name";
+                 push(@supptables, "LEFT JOIN profiles map_cc_$chartseq ON cc_$chartseq.who = map_cc_$chartseq.userid");
+                 $ff = $f = "map_cc_$chartseq.login_name";
                  my $ref = $funcsbykey{",anyexact"};
                  &$ref;
              }
          },
          "^cc," => sub {
-            push(@supptables, "LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id");
+             my $chartseq;
+             $chartseq = $chartid;
+             if ($chartid eq "") {
+                 $chartseq = "CC$sequence";
+                 $sequence++;
+             }
+            push(@supptables, "LEFT JOIN cc cc_$chartseq ON bugs.bug_id = cc_$chartseq.bug_id");
 
-            push(@supptables, "LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid");
-            $f = "map_cc_$chartid.login_name";
+            push(@supptables, "LEFT JOIN profiles map_cc_$chartseq ON cc_$chartseq.who = map_cc_$chartseq.userid");
+            $f = "map_cc_$chartseq.login_name";
          },
 
          "^long_?desc,changedby" => sub {
