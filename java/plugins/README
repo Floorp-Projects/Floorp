@@ -41,7 +41,7 @@ How to Run:
 
 * Add following directories to to your path:
   %MOZILLA_FIVE_HOME%
-  In case OJI_DISABLE add %JDKHOME%\jre\bin\classic to your path
+  In case OJI_DISABLE add %JDKHOME%\jre\bin\client to your path
 
 * Copy class files from mozilla/dist/classes to your JRE/lib/ext directory and
 add JRE/lib/ext to your classpath
@@ -74,7 +74,7 @@ How To Build:
 
 * Add following directories to to your LD_LIBRARY_PATH:
 
-$MOZILLA_FIVE_HOME:$JDKHOME/jre/lib/$HOSTTYPE/native_threads:$JDKHOME/jre/lib/$HOSTTYPE/classic:
+$MOZILLA_FIVE_HOME:$JDKHOME/jre/lib/$HOSTTYPE/native_threads:$JDKHOME/jre/lib/$HOSTTYPE/client:
 $JDKHOME/jre/lib/$HOSTTYPE/:
 
 * type "gmake"
@@ -88,7 +88,7 @@ How to build and run test
 * go to the test directory and type "gmake"
   test.jar will be placed  in mozilla/dist/bin/plugins directory
 
-* set LD_PRELOAD to libXm.so
+* set LD_PRELOAD to libXm.so (to libawt.so on linux platform)
 
 * Run mozilla and load page resource:///res/javadev/pluglets/test.html and if everething is ok you will see  some awt demo.
   
