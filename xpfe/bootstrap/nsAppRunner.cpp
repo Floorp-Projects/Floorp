@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIServiceManager.h"
@@ -1037,6 +1036,32 @@ static void DumpHelp(char *appname)
   printf("Usage: %s [ options ... ] [URL]\n", appname);
   printf("       where options include:\n");
   printf("\n");
+
+#ifdef XP_UNIX
+  /* insert gtk options above moz options, like any other gtk app
+   *
+   * note: this isn't a very cool way to do things -- i'd rather get
+   * these straight from a user's gtk version -- but it seems to be
+   * what most gtk apps do. -dr
+   */
+
+  printf("GTK options\n");
+  printf("%s--gdk-debug=FLAGS%sGdk debugging flags to set\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gdk-no-debug=FLAGS%sGdk debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--display=DISPLAY%sX display to use\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--sync%sMake X calls synchronous\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--no-xshm%sDon't use X shared memory extension\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--xim-preedit=STYLE\n", HELP_SPACER_1);
+  printf("%s--xim-status=STYLE\n", HELP_SPACER_1);
+  printf("%s--gtk-debug=FLAGS%sGtk+ debugging flags to set\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gtk-no-debug=FLAGS%sGtk+ debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--g-fatal-warnings%sMake all warnings fatal\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s--gtk-module=MODULE%sLoad an additional Gtk module\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("\nMozilla options\n");
+  
+  /* end gtk options */
+#endif
+
   printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-h or -help%sPrint this message.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-installer%sStart with 4.x migration window.\n",HELP_SPACER_1,HELP_SPACER_2);
