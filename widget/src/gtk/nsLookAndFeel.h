@@ -45,6 +45,7 @@ public:
 
 protected:
   GtkStyle *mStyle;
+  GdkWindow *mWindow;
 };
 
 #endif

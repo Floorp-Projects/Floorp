@@ -210,6 +210,7 @@ gint nsWindow::ConvertBorderStyles(nsBorderStyle bs)
   return w;
 }
 
+
 //-------------------------------------------------------------------------
 //
 // Create the native widget
@@ -246,7 +247,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
     mShell = gtk_window_new(GTK_WINDOW_DIALOG);
     gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
-    gtk_widget_set_app_paintable(mShell, PR_TRUE);
+    //    gtk_widget_set_app_paintable(mShell, PR_TRUE);
     InstallRealizeSignal(mShell);
 
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
@@ -260,14 +261,14 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   case eWindowType_popup:
     mIsToplevel = PR_TRUE;
     mShell = gtk_window_new(GTK_WINDOW_POPUP);
-    gtk_widget_set_app_paintable(mShell, PR_TRUE);
+    //    gtk_widget_set_app_paintable(mShell, PR_TRUE);
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
     break;
 
   case eWindowType_toplevel:
     mIsToplevel = PR_TRUE;
     mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_widget_set_app_paintable(mShell, PR_TRUE);
+    //    gtk_widget_set_app_paintable(mShell, PR_TRUE);
     gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
     InstallRealizeSignal(mShell);
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
@@ -356,6 +357,15 @@ void * nsWindow::GetNativeData(PRUint32 aDataType)
 
 #ifdef DEBUG_pavlov
 #define OH_I_LOVE_SCROLLING_SMOOTHLY
+struct GtkLayoutChild {
+  GtkWidget *widget;
+  gint x;
+  gint y;
+};
+
+#define IS_ONSCREEN(x,y) ((x >= G_MINSHORT) && (x <= G_MAXSHORT) && \
+                          (y >= G_MINSHORT) && (y <= G_MAXSHORT))
+
 #endif
 
 //-------------------------------------------------------------------------
@@ -378,7 +388,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
   gc = gdk_gc_new(window);
 
-  printf("nsWindow::Scroll(%i, %i\n", aDx, aDy);
+  //  printf("nsWindow::Scroll(%i, %i)\n", aDx, aDy);
 
   if (aDx > 0) {                        /* moving left */
     if (abs(aDx) < mBounds.width) { /* only copy if we arn't moving further than our width */
@@ -435,6 +445,63 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       Invalidate(PR_TRUE); /* redraw the widget if we are jumping more than our height */
     }
   }
+
+  GtkLayout *layout = GTK_LAYOUT(mWidget);
+  (gint)layout->hadjustment->value -= (gint)aDx;
+  (gint)layout->vadjustment->value -= (gint)aDy;
+  layout->xoffset = (gint)layout->hadjustment->value;
+  layout->yoffset = (gint)layout->vadjustment->value;
+
+  GList *tmp_list = layout->children;
+  while (tmp_list)
+  {
+    GtkLayoutChild *child = (GtkLayoutChild*)tmp_list->data;
+    tmp_list = tmp_list->next;
+
+    gint x;
+    gint y;
+
+    x = child->x - layout->xoffset;
+    y = child->y - layout->yoffset;
+
+    if (IS_ONSCREEN (x,y))
+    {
+      if (GTK_WIDGET_MAPPED (layout) &&
+          GTK_WIDGET_VISIBLE (child->widget))
+      {
+        if (!GTK_WIDGET_MAPPED (child->widget))
+          gtk_widget_map (child->widget);
+      }
+
+      if (GTK_WIDGET_IS_OFFSCREEN (child->widget))
+        GTK_PRIVATE_UNSET_FLAG (child->widget, GTK_IS_OFFSCREEN);
+    }
+    else
+    {
+      if (!GTK_WIDGET_IS_OFFSCREEN (child->widget))
+        GTK_PRIVATE_SET_FLAG (child->widget, GTK_IS_OFFSCREEN);
+
+      if (GTK_WIDGET_MAPPED (child->widget))
+        gtk_widget_unmap (child->widget);
+    }
+
+    GtkAllocation allocation;
+    GtkRequisition requisition;
+
+    allocation.x = child->x - layout->xoffset;
+    allocation.y = child->y - layout->yoffset;
+    gtk_widget_get_child_requisition (child->widget, &requisition);
+    allocation.width = requisition.width;
+    allocation.height = requisition.height;
+  
+    gtk_widget_size_allocate (child->widget, &allocation);
+
+  }
+
+  //  gdk_flush();
+
+
+  // XXX we need to move child windows with less flashing.
 
   gdk_gc_destroy(gc);
 
@@ -629,7 +696,7 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
 
     if (event.rect->width == 0 || event.rect->height == 0)
     {
-      //      printf("ignoring paint for 0x0\n");
+      //      printf("********\n****** got an expose for 0x0 window?? - ignoring paint for 0x0\n");
       return NS_OK;
     }
 
@@ -702,6 +769,9 @@ PRBool nsWindow::OnDraw(nsPaintEvent &event)
   if (mEventCallback) 
   {
     event.renderingContext = nsnull;
+
+    // XXX we SHOULD get an expose and not a draw for things, but we don't always with gtk <= 1.2.5
+    //    mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
 #ifdef NS_DEBUG
     if (CAPS_LOCK_IS_ON)
@@ -913,12 +983,13 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
          this,
          aX, aY);
 #endif
-  // not implimented for toplevel windows
   if (mIsToplevel && mShell)
   {
     // do it the way it should be done period.
     if (!mParent)
     {
+      // XXX don't move the window if it is toplevel window.. this keeps us from moving the
+      // window's title bar off the screen in some Window managers
       if (mWindowType != eWindowType_toplevel)
         gtk_widget_set_uposition(mShell, aX, aY);
     }

@@ -377,7 +377,7 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
     gRollupListener = aListener;
     NS_ADDREF(aListener);
     gRollupWidget = this;
-    NS_ADDREF(this);
+    NS_ADDREF(gRollupWidget);
   } else {
     //    gtk_grab_remove(mWidget);
     NS_IF_RELEASE(gRollupListener);
