@@ -778,7 +778,7 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
         err = mItem->mOutStream->Write( buffer, amt, &writeCount);
         //err = mItem->mFile->Write( buffer, amt, &result);
         //printf("mItem->mFile->Write err:%d   amt:%d    result:%d\n", err, amt, result);
-        if (NS_FAILED(err) || writeCount != (PRInt32)amt) 
+        if (NS_FAILED(err) || writeCount != amt) 
         {
             //printf("mItem->mFile->Write Failed!  err:%d   amt:%d    result:%d\n", err, amt, result);
             return NS_ERROR_FAILURE;

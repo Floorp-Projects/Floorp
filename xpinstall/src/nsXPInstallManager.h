@@ -43,8 +43,6 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsPIXPIManagerCallbacks.h"
