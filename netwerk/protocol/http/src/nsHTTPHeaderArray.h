@@ -45,7 +45,7 @@ public:
   virtual ~nsHeaderEntry();
 
   nsCOMPtr<nsIAtom> mAtom;
-  nsString          mValue;
+  nsCString         mValue;
 };
 
 
