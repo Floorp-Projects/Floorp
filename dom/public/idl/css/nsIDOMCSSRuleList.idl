@@ -24,7 +24,6 @@
 [scriptable, uuid(a6cf90c0-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSSRuleList : nsISupports
 {
-
   readonly attribute unsigned long    length;
   nsIDOMCSSRule      item(in unsigned long index);
 };
