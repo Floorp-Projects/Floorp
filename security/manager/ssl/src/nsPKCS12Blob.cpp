@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.7 2001/04/04 21:06:22 mcgreer%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.8 2001/05/01 23:23:22 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -40,7 +40,11 @@
 #include "nsIFileSpec.h"
 #include "nsINSSDialogs.h"
 #include "nsIDirectoryService.h"
+#include "nsIWindowWatcher.h"
+#include "nsIPrompt.h"
+#include "nsProxiedService.h"
 
+#include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
 #include "nsPKCS12Blob.h"
 #include "nsString.h"
@@ -57,8 +61,13 @@
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
-#define PIP_PKCS12_TMPFILENAME ".pip_p12tmp"
-#define PIP_PKCS12_BUFFER_SIZE 2048
+static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
+#define PIP_PKCS12_TMPFILENAME   ".pip_p12tmp"
+#define PIP_PKCS12_BUFFER_SIZE   2048
+#define PIP_PKCS12_RESTORE_OK    1
+#define PIP_PKCS12_BACKUP_OK     2
+#define PIP_PKCS12_USER_CANCELED 3
 
 // constructor
 nsPKCS12Blob::nsPKCS12Blob() 
@@ -100,7 +109,7 @@ nsresult
 nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
 {
   nsresult rv;
-  SECStatus srv;
+  SECStatus srv = SECSuccess;
   SEC_PKCS12DecoderContext *dcx = NULL;
   PK11SlotInfo *slot = PK11_GetInternalKeySlot(); /* XXX fix me! */
   SECItem unicodePw;
@@ -112,18 +121,23 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   // get file password (unicode)
   unicodePw.data = NULL;
   rv = getPKCS12FilePassword(&unicodePw);
-  if (NS_FAILED(rv) || unicodePw.data == NULL) goto finish;
-  rv = NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) goto finish;
+  if (unicodePw.data == NULL) {
+    handleError(PIP_PKCS12_USER_CANCELED);
+    return NS_OK;
+  }
   // initialize the decoder
   dcx = SEC_PKCS12DecoderStart(&unicodePw, slot, NULL,
                                digest_open, digest_close,
                                digest_read, digest_write,
                                this);
-  if (!dcx) goto finish;
+  if (!dcx) {
+    srv = SECFailure;
+    goto finish;
+  }
   // read input file and feed it to the decoder
   rv = inputToDecoder(dcx, file);
   if (NS_FAILED(rv)) goto finish;
-  rv = NS_ERROR_FAILURE;
   // verify the blob
   srv = SEC_PKCS12DecoderVerify(dcx);
   if (srv) goto finish;
@@ -134,15 +148,15 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   srv = SEC_PKCS12DecoderImportBags(dcx);
   if (srv) goto finish;
   // Later - check to see if this should become default email cert
-  rv = NS_OK;
+  handleError(PIP_PKCS12_RESTORE_OK);
 finish:
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) || srv != SECSuccess) {
     handleError();
   }
   // finish the decoder
   if (dcx)
     SEC_PKCS12DecoderFinish(dcx);
-  return rv;
+  return NS_OK;
 }
 
 #if 0
@@ -201,7 +215,7 @@ nsresult
 nsPKCS12Blob::ExportToFile(nsILocalFile *file, 
                            nsIX509Cert **certs, int numCerts)
 {
-  nsresult rv, nrv;
+  nsresult rv;
   SECStatus srv;
   SEC_PKCS12ExportContext *ecx = NULL;
   SEC_PKCS12SafeInfo *certSafe = NULL, *keySafe = NULL;
@@ -215,12 +229,18 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   // get file password (unicode)
   unicodePw.data = NULL;
   rv = newPKCS12FilePassword(&unicodePw);
-  if (NS_FAILED(rv) || unicodePw.data == NULL) goto finish;
+  if (NS_FAILED(rv)) goto finish;
+  if (unicodePw.data == NULL) {
+    handleError(PIP_PKCS12_USER_CANCELED);
+    return NS_OK;
+  }
   // what about slotToUse in psm 1.x ???
-  rv = NS_ERROR_FAILURE;
   // create export context
   ecx = SEC_PKCS12CreateExportContext(NULL, NULL, NULL /*slot*/, NULL);
-  if (!ecx) goto finish;
+  if (!ecx) {
+    srv = SECFailure;
+    goto finish;
+  }
   // add password integrity
   srv = SEC_PKCS12AddPasswordIntegrity(ecx, &unicodePw, SEC_OID_SHA1);
   if (srv) goto finish;
@@ -240,9 +260,11 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
     nsNSSCertificate *cert = (nsNSSCertificate *)certs[i];
     // get it as a CERTCertificate XXX
     CERTCertificate *nssCert = NULL;
-    //nrv = cert->GetCert(&nssCert);
     nssCert = cert->GetCert();
-    if (NS_FAILED(nrv)) goto finish;
+    if (!nssCert) {
+      rv = NS_ERROR_FAILURE;
+      goto finish;
+    }
     // XXX this is why, to verify the slot is the same
     // PK11_FindObjectForCert(nssCert, NULL, slot);
     // create the cert and key safes
@@ -253,7 +275,10 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
       certSafe = SEC_PKCS12CreatePasswordPrivSafe(ecx, &unicodePw,
                            SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC);
     }
-    if (!certSafe || !keySafe) goto finish;
+    if (!certSafe || !keySafe) {
+      rv = NS_ERROR_FAILURE;
+      goto finish;
+    }
     // add the cert and key to the blob
     srv = SEC_PKCS12AddCertAndKey(ecx, certSafe, NULL, nssCert,
                                   CERT_GetDefaultCertDB(), // XXX
@@ -271,9 +296,9 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   // encode and write
   srv = SEC_PKCS12Encode(ecx, write_export_file, this);
   if (srv) goto finish;
-  rv = NS_OK;
+  handleError(PIP_PKCS12_BACKUP_OK);
 finish:
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) || srv != SECSuccess) {
     handleError();
   }
   if (ecx)
@@ -503,24 +528,104 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
   return PR_TRUE;
 }
 
+#define kWindowWatcherCID "@mozilla.org/embedcomp/window-watcher;1"
+
 PRBool
-nsPKCS12Blob::handleError()
+nsPKCS12Blob::handleError(int myerr)
 {
+  nsresult rv;
+  PRBool keepGoing = PR_FALSE;
   int prerr = PORT_GetError();
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PKCS12: NSS/NSPR error(%d)", prerr));
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PKCS12: I called(%d)", myerr));
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv)) return PR_FALSE;
+  nsCOMPtr<nsIProxyObjectManager> proxyman(
+                                      do_GetService(NS_XPCOMPROXY_CONTRACTID));
+  if (!proxyman) return PR_FALSE;
+  nsCOMPtr<nsIPrompt> errPrompt;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(kWindowWatcherCID));
+  if (wwatch) {
+    wwatch->GetNewPrompter(0, getter_AddRefs(errPrompt));
+    if (errPrompt) {
+      nsCOMPtr<nsIPrompt> proxyPrompt;
+      proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
+                                  errPrompt, PROXY_SYNC, 
+                                  getter_AddRefs(proxyPrompt));
+      if (!proxyPrompt) return PR_FALSE;
+    } else {
+      return PR_FALSE;
+    }
+  } else {
+    return PR_FALSE;
+  }
+  nsAutoString errorMsg;
+  switch (myerr) {
+  case PIP_PKCS12_RESTORE_OK:
+    rv = nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("SuccessfulP12Restore").get(), 
+                              errorMsg);
+    if (NS_FAILED(rv)) return rv;
+    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    return PR_TRUE;
+  case PIP_PKCS12_BACKUP_OK:
+    rv = nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("SuccessfulP12Backup").get(), 
+                              errorMsg);
+    if (NS_FAILED(rv)) return rv;
+    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    return PR_TRUE;
+  case PIP_PKCS12_USER_CANCELED:
+    return PR_TRUE;  /* Just ignore it for now */
+  case 0: 
+  default:
+    break;
+  }
   switch (prerr) {
+  // The following errors have the potential to be "handled", by asking
+  // the user (via a dialog) whether s/he wishes to continue
   case 0: break;
-  case SEC_ERROR_BAD_DER: /* sigh - this is thrown when password is wrong */
   case SEC_ERROR_PKCS12_CERT_COLLISION:
     /* pop a dialog saying the cert is already in the database */
     /* ask to keep going?  what happens if one collision but others ok? */
+  // The following errors cannot be "handled", notify the user (via an alert)
+  // that the operation failed.
+#if 0
+// XXX a boy can dream...
+//     but the PKCS12 lib never throws this error
+//     but then again, how would it?  anyway, convey the info below
+  case SEC_ERROR_PKCS12_PRIVACY_PASSWORD_INCORRECT:
+    rv = nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("PKCS12PasswordInvalid").get(), 
+                              errorMsg);
+    if (NS_FAILED(rv)) return rv;
+    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    break;
+#endif
+  case SEC_ERROR_BAD_PASSWORD:
+    rv = nssComponent->GetPIPNSSBundleString(
+                            NS_LITERAL_STRING("PK11BadPassword").get(), 
+                            errorMsg);
+    if (NS_FAILED(rv)) return rv;
+    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    break;
+  case SEC_ERROR_BAD_DER:
   case SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE:
   case SEC_ERROR_PKCS12_INVALID_MAC:
+    rv = nssComponent->GetPIPNSSBundleString(
+                            NS_LITERAL_STRING("PKCS12DecodeErr").get(), 
+                            errorMsg);
+    if (NS_FAILED(rv)) return rv;
+    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    break;
   default:
-    /* open the "Unknown failure" alert */
-    /* always exit with failure */
-    return PR_FALSE;
+    rv = nssComponent->GetPIPNSSBundleString(
+                            NS_LITERAL_STRING("PKCS12UnknownErrRestore").get(), 
+                            errorMsg);
+    if (NS_FAILED(rv)) return rv;
+    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
   }
-  return PR_FALSE;
+  if (NS_FAILED(rv)) return rv;
+  return keepGoing;
 }
 

@@ -18,7 +18,6 @@
    - Rights Reserved.
    - 
    - Contributor(s):
-   -   Bob Lord <lord@netscape.com>
    -   Ian McGreer <mcgreer@netscape.com>
   -->
 
@@ -26,30 +25,23 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<window id="editCert" 
-        title="&certmgr.editcert.title;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="setWindowName();"
-        persist="height width screenX screenY"
-        debug="false">
+<window
+  id="deleteCert" 
+  title="&certmgr.deletecert.title;"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="setWindowName();"
+  persist="height width screenX screenY"
+  debug="false"
+>
 
-  <script src="editcerts.js"/>
+  <script src="deletecert.js"/>
 
   <box orient="vertical" flex="1">
-    <html>&certmgr.editcert.beforename;</html>
+    <html>&certmgr.deletecert.beforename;</html>
     <text id="certname"/>
-    <html>&certmgr.editcert.aftername;</html>
+    <html>&certmgr.deletecert.aftername;</html>
     <separator />
-    <html>&certmgr.editcert.edittrust;</html>
-    <box orient = "vertical">
-      <checkbox label="&certmgr.editcert.trustssl;" checked="false" 
-       id="trustSSL"/>
-      <checkbox label="&certmgr.editcert.trustemail;" checked="false" 
-       id="trustEmail"/>
-      <checkbox label="&certmgr.editcert.trustobjsign;" checked="false" 
-       id="trustObjSign"/>
-    </box>
     <box orient="horizontal" align="center">
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
            style="width: 8ex" oncommand="doOK();"/> 

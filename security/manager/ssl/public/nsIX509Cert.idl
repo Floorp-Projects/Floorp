@@ -59,6 +59,9 @@ interface nsIX509Cert : nsISupports {
   readonly attribute wstring rsaPubModulus;
   readonly attribute wstring sha1Fingerprint;
   readonly attribute wstring md5Fingerprint;
+  readonly attribute wstring issuedDate;
+  readonly attribute wstring expiresDate;
+  readonly attribute wstring tokenName;
 
   readonly attribute nsIX509CertValidity validity;
   readonly attribute string dbKey;
@@ -91,6 +94,8 @@ interface nsIX509Cert : nsISupports {
   void getUsages(out PRUint32 verified,
                  out PRUint32 count, 
                  [array, size_is(count)] out wstring usages);
+
+  void getPurposes(out PRUint32 verified, out wstring purposes);
 
   /*
    * This method is here to make it easier to view a cert.

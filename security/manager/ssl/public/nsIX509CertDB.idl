@@ -39,10 +39,27 @@
 #include "nsString.h"
 %}
 
+interface nsISupportsArray;
 interface nsIX509Cert;
 interface nsIPK11Token;
 interface nsILocalFile;
 
+%{C++
+
+#define NS_X509CERTDB_CID { /* da48b3c0-1284-11d5-ac67-000064657374 */ \
+    0xda48b3c0,                                                        \
+    0x1284,                                                            \
+    0x11d5,                                                            \
+    {0xac, 0x67, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}                   \
+  }
+
+#define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
+
+typedef int (*nsCertCompareFunc)(nsIX509Cert *a, nsIX509Cert *b);
+
+%}
+
+native nsCertCompareFunc(nsCertCompareFunc);
 native nsAutoString(nsAutoString);
 [ref] native nsAutoStringRef(nsAutoString);
 
@@ -83,6 +100,16 @@ interface nsIX509CertDB : nsISupports {
                         in unsigned long aType,
                         out unsigned long count,
                         [array, size_is(count)] out wstring certNameList);
+
+  /*
+   * getCertsByType
+   *
+   * Obtain a list of certs from the database.
+   *
+   */
+  [notxpcom, noscript] boolean getCertsByType(in unsigned long aType,
+                                              in nsCertCompareFunc aCertCmpFn,
+                                              out nsISupportsArray certs);
 
   /*
    * importCertificate
@@ -148,19 +175,3 @@ interface nsIX509CertDB : nsISupports {
 
 };
 
-%{C++
-
-#define NS_X509CERTDB_CID { /* da48b3c0-1284-11d5-ac67-000064657374 */ \
-    0xda48b3c0,                                                        \
-    0x1284,                                                            \
-    0x11d5,                                                            \
-    {0xac, 0x67, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}                   \
-  }
-
-#define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
-
-
-#define NS_CERTIFICATEMGR_DATASOURCE_CONTRACTID \
-    "@mozilla.org/rdf/datasource;1?name=certificatemgr"
-
-%}

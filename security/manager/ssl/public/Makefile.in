@@ -51,6 +51,7 @@ XPIDLSRCS = \
     nsIPKCS11Slot.idl \
     nsIPK11TokenDB.idl \
     nsINSSDialogs.idl \
+    nsICertOutliner.idl \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

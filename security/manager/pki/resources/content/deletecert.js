@@ -17,7 +17,6 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *  Bob Lord <lord@netscape.com>
  *  Ian McGreer <mcgreer@netscape.com>
  */
 
@@ -40,44 +39,16 @@ function setWindowName()
   //cert = isupport.QueryInterface(nsIX509Cert);
   cert = certdb.getCertByDBKey(dbkey, null);
 
-  var windowReference = document.getElementById('editCert');
+  var windowReference = document.getElementById('deleteCert');
   windowReference.setAttribute("title", cert.commonName);
 
   var certname = document.getElementById("certname");
   certname.setAttribute("value", cert.commonName);
 
-  var ssl = document.getElementById("trustSSL");
-  if (certdb.getCertTrust(cert, 1)) {
-    ssl.setAttribute("checked", "true");
-  } else {
-    ssl.setAttribute("checked", "false");
-  }
-  var email = document.getElementById("trustEmail");
-  if (certdb.getCertTrust(cert, 2)) {
-    email.setAttribute("checked", "true");
-  } else {
-    email.setAttribute("checked", "false");
-  }
-  var objsign = document.getElementById("trustObjSign");
-  if (certdb.getCertTrust(cert, 4)) {
-    objsign.setAttribute("checked", "true");
-  } else {
-    objsign.setAttribute("checked", "false");
-  }
 }
 
 function doOK()
 {
-  var ssl = document.getElementById("trustSSL");
-  var email = document.getElementById("trustEmail");
-  var objsign = document.getElementById("trustObjSign");
-  // clean this up
-  var trustssl = (ssl.checked) ? 1 : 0;
-  var trustemail = (email.checked) ? 2 : 0;
-  var trustobjsign = (objsign.checked) ? 4 : 0;
-  //
-  //  Set the cert trust
-  //
-  certdb.setCertTrust(cert, 1, trustssl | trustemail | trustobjsign);
+  certdb.deleteCertificate(cert);
   window.close();
 }
