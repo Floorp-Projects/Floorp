@@ -54,7 +54,7 @@ public:
   NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty)=0;
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir)=0;
   NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
-  NS_IMETHOD InsertBreak(PRBool aCtrlKey)=0;
+  NS_IMETHOD InsertBreak()=0;
   NS_IMETHOD EnableUndo(PRBool aEnable)=0;
   NS_IMETHOD Undo(PRUint32 aCount)=0;
   NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)=0;
