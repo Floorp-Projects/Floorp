@@ -174,7 +174,7 @@ interface nsIFile : nsISupports
     attribute unsigned long permissionsOfLink;
 
     /**
-     *  File Times are to be in Milliseconds (usecs) from
+     *  File Times are to be in milliseconds from
      *  midnight (00:00:00), January 1, 1970 Greenwich Mean
      *  Time (GMT).
      */
