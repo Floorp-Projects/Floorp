@@ -182,23 +182,20 @@ if ($milestone) {
 unless ($product) {
     PutHeader("Select product");
 
-    SendSQL("SELECT products.name,products.description,'xyzzy'
+    SendSQL("SELECT products.name,products.description
              FROM products 
              GROUP BY products.name
              ORDER BY products.name");
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit milestones of ...</TH>\n";
     print "  <TH ALIGN=\"left\">Description</TH>\n";
-    print "  <TH ALIGN=\"left\">Bugs</TH>\n";
     print "</TR>";
     while ( MoreSQLData() ) {
-        my ($product, $description, $bugs) = FetchSQLData();
+        my ($product, $description) = FetchSQLData();
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
-        $bugs ||= "none";
         print "<TR>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), "\"><B>$product</B></A></TD>\n";
         print "  <TD VALIGN=\"top\">$description</TD>\n";
-        print "  <TD VALIGN=\"top\">$bugs</TD>\n";
     }
     print "</TR></TABLE>\n";
 
