@@ -46,6 +46,7 @@ toolkit.jar:
         content/global/printdialog.js               (resources/content/printdialog.js)
         content/global/printProgress.xul            (resources/content/printProgress.xul)
         content/global/printProgress.js             (resources/content/printProgress.js)
+        content/global/fullScreen.js                (resources/content/fullScreen.js)
         content/global/build.dtd                    (build.dtd)
         content/global/MPL-1.1.html                 (resources/content/MPL-1.1.html)
         content/global/NPL-1.1.html                 (resources/content/NPL-1.1.html)
