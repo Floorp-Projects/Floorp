@@ -3113,14 +3113,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
       y1 = y0 + tileHeight;
     }
 
-    // Take the intersection again to paint only the required area
-    nsRect tileRect(x0,y0,(x1-x0),(y1-y0));
 #ifdef XP_WIN
-    PRInt32 xOffset = tileRect.x - x0,
-            yOffset = tileRect.y - y0;
-    aRenderingContext.DrawTile(image,xOffset,yOffset,&tileRect);
+    PRInt32 xOffset = dirtyRect.x - x0,
+            yOffset = dirtyRect.y - y0;
+    aRenderingContext.DrawTile(image,xOffset,yOffset,&dirtyRect);
 #else
     nsRect drawRect;
+    nsRect tileRect(x0,y0,(x1-x0),(y1-y0));
 
     if (drawRect.IntersectRect(tileRect, dirtyRect)) {
       PRInt32 xOffset = drawRect.x - x0,
