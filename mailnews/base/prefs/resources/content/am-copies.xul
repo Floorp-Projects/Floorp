@@ -8,6 +8,11 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.onPanelLoaded('am-copies.xul');">
 
+  <!-- stringbundle is used by msgFolderPickerOverlay.js-->     
+  <stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  </stringbundleset>                                                            
+
   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-copies.js"/>
