@@ -584,7 +584,7 @@ PRInt32 nsRange::FillArrayWithAncestors(nsVoidArray* aArray, nsCOMPtr<nsIDOMNode
 {
   PRInt32    i=0;
   nsCOMPtr<nsIDOMNode> node(aNode);
-  
+  nsCOMPtr<nsIDOMNode> parent;
   // callers responsibility to make sure args are non-null and proper type
   
   // insert node itself
@@ -592,12 +592,13 @@ PRInt32 nsRange::FillArrayWithAncestors(nsVoidArray* aArray, nsCOMPtr<nsIDOMNode
   
   // insert all the ancestors
   // not doing all the inserts at location 0, that would make for lots of memcopys in the voidArray::InsertElementAt implementation
-  node->GetParentNode(getter_AddRefs(node));  
-  while(node)
+  node->GetParentNode(getter_AddRefs(parent));  
+  while(parent)
   {
+    node = parent;
     ++i;
     aArray->InsertElementAt(NS_STATIC_CAST(void*,node),i);
-    node->GetParentNode(getter_AddRefs(node));
+    node->GetParentNode(getter_AddRefs(parent));
   }
   
   return i;
