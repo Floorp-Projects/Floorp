@@ -156,7 +156,9 @@ JSClass CommentClass = {
   EnumerateComment,
   ResolveComment,
   JS_ConvertStub,
-  FinalizeComment
+  FinalizeComment,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

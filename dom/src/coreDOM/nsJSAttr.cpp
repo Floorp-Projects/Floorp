@@ -75,10 +75,9 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case ATTR_NAME:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ATTR_NAME, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ATTR_NAME, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -93,10 +92,9 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case ATTR_SPECIFIED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ATTR_SPECIFIED, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ATTR_SPECIFIED, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -111,10 +109,9 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case ATTR_VALUE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ATTR_VALUE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ATTR_VALUE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -162,10 +159,9 @@ SetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case ATTR_VALUE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ATTR_VALUE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ATTR_VALUE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -230,7 +226,9 @@ JSClass AttrClass = {
   EnumerateAttr,
   ResolveAttr,
   JS_ConvertStub,
-  FinalizeAttr
+  FinalizeAttr,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

@@ -84,10 +84,9 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case RANGE_STARTPARENT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_STARTPARENT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_STARTPARENT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMNode* prop;
         nsresult result = NS_OK;
@@ -103,10 +102,9 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case RANGE_STARTOFFSET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_STARTOFFSET, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_STARTOFFSET, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -121,10 +119,9 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case RANGE_ENDPARENT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_ENDPARENT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_ENDPARENT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMNode* prop;
         nsresult result = NS_OK;
@@ -140,10 +137,9 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case RANGE_ENDOFFSET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_ENDOFFSET, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_ENDOFFSET, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -158,10 +154,9 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case RANGE_ISCOLLAPSED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_ISCOLLAPSED, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_ISCOLLAPSED, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -176,10 +171,9 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case RANGE_COMMONPARENT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COMMONPARENT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COMMONPARENT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMNode* prop;
         nsresult result = NS_OK;
@@ -289,16 +283,14 @@ RangeSetStart(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETSTART, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETSTART, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -348,16 +340,14 @@ RangeSetStartBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETSTARTBEFORE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETSTARTBEFORE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -404,16 +394,14 @@ RangeSetStartAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETSTARTAFTER, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETSTARTAFTER, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -461,16 +449,14 @@ RangeSetEnd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETEND, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETEND, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -520,16 +506,14 @@ RangeSetEndBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETENDBEFORE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETENDBEFORE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -576,16 +560,14 @@ RangeSetEndAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETENDAFTER, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SETENDAFTER, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -632,16 +614,14 @@ RangeCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COLLAPSE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COLLAPSE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -684,16 +664,14 @@ RangeSelectNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SELECTNODE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SELECTNODE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -740,16 +718,14 @@ RangeSelectNodeContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SELECTNODECONTENTS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SELECTNODECONTENTS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -798,16 +774,14 @@ RangeCompareEndPoints(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COMPAREENDPOINTS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COMPAREENDPOINTS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -856,16 +830,14 @@ RangeDeleteContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_DELETECONTENTS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_DELETECONTENTS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -901,16 +873,14 @@ RangeExtractContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_EXTRACTCONTENTS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_EXTRACTCONTENTS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -946,16 +916,14 @@ RangeCloneContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_CLONECONTENTS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_CLONECONTENTS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -991,16 +959,14 @@ RangeInsertNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_INSERTNODE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_INSERTNODE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1047,16 +1013,14 @@ RangeSurroundContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SURROUNDCONTENTS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_SURROUNDCONTENTS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1103,16 +1067,14 @@ RangeClone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_CLONE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_CLONE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1148,16 +1110,14 @@ RangeToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_TOSTRING, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_TOSTRING, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1199,16 +1159,14 @@ NSRangeCreateContextualFragment(JSContext *cx, JSObject *obj, uintN argc, jsval 
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_CREATECONTEXTUALFRAGMENT, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_CREATECONTEXTUALFRAGMENT, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1255,16 +1213,14 @@ NSRangeIsValidFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_ISVALIDFRAGMENT, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_ISVALIDFRAGMENT, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1300,7 +1256,9 @@ JSClass RangeClass = {
   EnumerateRange,
   ResolveRange,
   JS_ConvertStub,
-  FinalizeRange
+  FinalizeRange,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

@@ -73,10 +73,9 @@ GetHTMLHtmlElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLHTMLELEMENT_VERSION:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLHTMLELEMENT_VERSION, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLHTMLELEMENT_VERSION, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -124,10 +123,9 @@ SetHTMLHtmlElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLHTMLELEMENT_VERSION:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLHTMLELEMENT_VERSION, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLHTMLELEMENT_VERSION, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -192,7 +190,9 @@ JSClass HTMLHtmlElementClass = {
   EnumerateHTMLHtmlElement,
   ResolveHTMLHtmlElement,
   JS_ConvertStub,
-  FinalizeHTMLHtmlElement
+  FinalizeHTMLHtmlElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

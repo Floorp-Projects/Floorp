@@ -105,10 +105,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLDOCUMENT_TITLE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_TITLE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_TITLE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -123,10 +122,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_REFERRER:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_REFERRER, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_REFERRER, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -141,10 +139,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_DOMAIN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_DOMAIN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_DOMAIN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -159,10 +156,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_URL:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_URL, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_URL, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -177,10 +173,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_BODY:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_BODY, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_BODY, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLElement* prop;
         nsresult result = NS_OK;
@@ -196,10 +191,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_IMAGES:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_IMAGES, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_IMAGES, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLCollection* prop;
         nsresult result = NS_OK;
@@ -215,10 +209,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_APPLETS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_APPLETS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_APPLETS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLCollection* prop;
         nsresult result = NS_OK;
@@ -234,10 +227,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_LINKS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_LINKS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_LINKS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLCollection* prop;
         nsresult result = NS_OK;
@@ -253,10 +245,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_FORMS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_FORMS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_FORMS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLCollection* prop;
         nsresult result = NS_OK;
@@ -272,10 +263,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_ANCHORS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_ANCHORS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_ANCHORS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLCollection* prop;
         nsresult result = NS_OK;
@@ -291,10 +281,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_COOKIE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_COOKIE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_COOKIE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -309,10 +298,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ALINKCOLOR, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ALINKCOLOR, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
@@ -335,10 +323,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LINKCOLOR, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LINKCOLOR, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
@@ -361,10 +348,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_VLINKCOLOR, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_VLINKCOLOR, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
@@ -387,10 +373,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_BGCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_BGCOLOR, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_BGCOLOR, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
@@ -413,10 +398,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_FGCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_FGCOLOR, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_FGCOLOR, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
@@ -439,10 +423,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_LASTMODIFIED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LASTMODIFIED, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LASTMODIFIED, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
@@ -465,10 +448,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_EMBEDS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_EMBEDS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_EMBEDS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
@@ -492,10 +474,9 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_PLUGINS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_PLUGINS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_PLUGINS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
@@ -590,10 +571,9 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLDOCUMENT_TITLE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_TITLE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_TITLE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -604,10 +584,9 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_DOMAIN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_DOMAIN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_DOMAIN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -618,10 +597,9 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_BODY:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_BODY, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_BODY, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLElement* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
@@ -636,10 +614,9 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_COOKIE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_COOKIE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_COOKIE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -650,10 +627,9 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ALINKCOLOR, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ALINKCOLOR, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -672,10 +648,9 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LINKCOLOR, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LINKCOLOR, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -694,10 +669,9 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_VLINKCOLOR, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_VLINKCOLOR, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -716,10 +690,9 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_BGCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_BGCOLOR, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_BGCOLOR, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -738,10 +711,9 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_FGCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_FGCOLOR, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_FGCOLOR, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -818,16 +790,14 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_CLOSE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_CLOSE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -864,16 +834,14 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTBYID, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTBYID, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -915,16 +883,14 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTSBYNAME, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTSBYNAME, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -970,16 +936,14 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_GETSELECTION, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_GETSELECTION, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1021,16 +985,14 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_NAMEDITEM, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_NAMEDITEM, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1075,16 +1037,14 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_OPEN, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_OPEN, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1124,16 +1084,14 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1173,16 +1131,14 @@ NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITELN, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITELN, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1222,16 +1178,14 @@ NSHTMLDocumentClear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_CLEAR, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_CLEAR, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1272,16 +1226,14 @@ NSHTMLDocumentCaptureEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_CAPTUREEVENTS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_CAPTUREEVENTS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1329,16 +1281,14 @@ NSHTMLDocumentReleaseEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_RELEASEEVENTS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_RELEASEEVENTS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1386,16 +1336,14 @@ NSHTMLDocumentRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ROUTEEVENT, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ROUTEEVENT, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -1437,7 +1385,9 @@ JSClass HTMLDocumentClass = {
   EnumerateHTMLDocument,
   ResolveHTMLDocument,
   JS_ConvertStub,
-  FinalizeHTMLDocument
+  FinalizeHTMLDocument,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

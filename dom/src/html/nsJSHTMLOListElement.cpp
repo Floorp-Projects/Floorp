@@ -75,10 +75,9 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLOLISTELEMENT_COMPACT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_COMPACT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_COMPACT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -93,10 +92,9 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOLISTELEMENT_START:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_START, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_START, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -111,10 +109,9 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOLISTELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_TYPE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_TYPE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -162,10 +159,9 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLOLISTELEMENT_COMPACT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_COMPACT, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_COMPACT, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
@@ -178,10 +174,9 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOLISTELEMENT_START:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_START, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_START, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         int32 temp;
@@ -198,10 +193,9 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOLISTELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_TYPE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOLISTELEMENT_TYPE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -266,7 +260,9 @@ JSClass HTMLOListElementClass = {
   EnumerateHTMLOListElement,
   ResolveHTMLOListElement,
   JS_ConvertStub,
-  FinalizeHTMLOListElement
+  FinalizeHTMLOListElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

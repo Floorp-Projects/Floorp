@@ -81,10 +81,9 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLLINKELEMENT_DISABLED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_DISABLED, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_DISABLED, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -99,10 +98,9 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_CHARSET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_CHARSET, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_CHARSET, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -117,10 +115,9 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_HREF:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_HREF, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_HREF, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -135,10 +132,9 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_HREFLANG:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_HREFLANG, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_HREFLANG, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -153,10 +149,9 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_MEDIA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_MEDIA, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_MEDIA, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -171,10 +166,9 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_REL:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_REL, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_REL, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -189,10 +183,9 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_REV:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_REV, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_REV, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -207,10 +200,9 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_TARGET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_TARGET, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_TARGET, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -225,10 +217,9 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_TYPE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_TYPE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -276,10 +267,9 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLLINKELEMENT_DISABLED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_DISABLED, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_DISABLED, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
@@ -292,10 +282,9 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_CHARSET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_CHARSET, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_CHARSET, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -306,10 +295,9 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_HREF:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_HREF, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_HREF, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -320,10 +308,9 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_HREFLANG:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_HREFLANG, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_HREFLANG, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -334,10 +321,9 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_MEDIA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_MEDIA, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_MEDIA, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -348,10 +334,9 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_REL:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_REL, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_REL, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -362,10 +347,9 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_REV:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_REV, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_REV, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -376,10 +360,9 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_TARGET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_TARGET, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_TARGET, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -390,10 +373,9 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLINKELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_TYPE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLINKELEMENT_TYPE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -458,7 +440,9 @@ JSClass HTMLLinkElementClass = {
   EnumerateHTMLLinkElement,
   ResolveHTMLLinkElement,
   JS_ConvertStub,
-  FinalizeHTMLLinkElement
+  FinalizeHTMLLinkElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

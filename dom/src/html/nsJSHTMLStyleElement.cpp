@@ -75,10 +75,9 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLSTYLEELEMENT_DISABLED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_DISABLED, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_DISABLED, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -93,10 +92,9 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSTYLEELEMENT_MEDIA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_MEDIA, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_MEDIA, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -111,10 +109,9 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSTYLEELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_TYPE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_TYPE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -162,10 +159,9 @@ SetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLSTYLEELEMENT_DISABLED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_DISABLED, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_DISABLED, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
@@ -178,10 +174,9 @@ SetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSTYLEELEMENT_MEDIA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_MEDIA, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_MEDIA, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -192,10 +187,9 @@ SetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSTYLEELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_TYPE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSTYLEELEMENT_TYPE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -260,7 +254,9 @@ JSClass HTMLStyleElementClass = {
   EnumerateHTMLStyleElement,
   ResolveHTMLStyleElement,
   JS_ConvertStub,
-  FinalizeHTMLStyleElement
+  FinalizeHTMLStyleElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

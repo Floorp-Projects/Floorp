@@ -107,10 +107,9 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case DOCUMENT_DOCTYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_DOCTYPE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_DOCTYPE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMDocumentType* prop;
         nsresult result = NS_OK;
@@ -126,10 +125,9 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case DOCUMENT_IMPLEMENTATION:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_IMPLEMENTATION, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_IMPLEMENTATION, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMDOMImplementation* prop;
         nsresult result = NS_OK;
@@ -145,10 +143,9 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case DOCUMENT_DOCUMENTELEMENT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_DOCUMENTELEMENT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_DOCUMENTELEMENT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMElement* prop;
         nsresult result = NS_OK;
@@ -164,10 +161,9 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSDOCUMENT_WIDTH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_WIDTH, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_WIDTH, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsIDOMNSDocument* b;
@@ -190,10 +186,9 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSDOCUMENT_HEIGHT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_HEIGHT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_HEIGHT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsIDOMNSDocument* b;
@@ -216,10 +211,9 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSDOCUMENT_STYLESHEETS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_STYLESHEETS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_STYLESHEETS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMStyleSheetCollection* prop;
         nsIDOMNSDocument* b;
@@ -243,10 +237,9 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSDOCUMENT_CHARACTERSET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_CHARACTERSET, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_CHARACTERSET, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsIDOMNSDocument* b;
@@ -363,16 +356,14 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEELEMENT, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEELEMENT, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -413,16 +404,14 @@ DocumentCreateDocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEDOCUMENTFRAGMENT, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEDOCUMENTFRAGMENT, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -459,16 +448,14 @@ DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATETEXTNODE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATETEXTNODE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -510,16 +497,14 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATECOMMENT, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATECOMMENT, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -561,16 +546,14 @@ DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATECDATASECTION, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATECDATASECTION, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -613,16 +596,14 @@ DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, js
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEPROCESSINGINSTRUCTION, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEPROCESSINGINSTRUCTION, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -665,16 +646,14 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEATTRIBUTE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEATTRIBUTE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -716,16 +695,14 @@ DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEENTITYREFERENCE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEENTITYREFERENCE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -767,16 +744,14 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_GETELEMENTSBYTAGNAME, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_GETELEMENTSBYTAGNAME, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -824,16 +799,14 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_CREATEELEMENTWITHNAMESPACE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_CREATEELEMENTWITHNAMESPACE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -880,16 +853,14 @@ NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_CREATERANGE, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_CREATERANGE, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -920,7 +891,9 @@ JSClass DocumentClass = {
   EnumerateDocument,
   ResolveDocument,
   JS_ConvertStub,
-  FinalizeDocument
+  FinalizeDocument,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

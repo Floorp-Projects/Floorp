@@ -74,10 +74,9 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CHARACTERDATA_DATA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_DATA, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_DATA, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -92,10 +91,9 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CHARACTERDATA_LENGTH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_LENGTH, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_LENGTH, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRUint32 prop;
         nsresult result = NS_OK;
@@ -143,10 +141,9 @@ SetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CHARACTERDATA_DATA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_DATA, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_DATA, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -218,16 +215,14 @@ CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_SUBSTRINGDATA, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_SUBSTRINGDATA, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -273,16 +268,14 @@ CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_APPENDDATA, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_APPENDDATA, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -324,16 +317,14 @@ CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_INSERTDATA, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_INSERTDATA, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -378,16 +369,14 @@ CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_DELETEDATA, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_DELETEDATA, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -435,16 +424,14 @@ CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_REPLACEDATA, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CHARACTERDATA_REPLACEDATA, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -486,7 +473,9 @@ JSClass CharacterDataClass = {
   EnumerateCharacterData,
   ResolveCharacterData,
   JS_ConvertStub,
-  FinalizeCharacterData
+  FinalizeCharacterData,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

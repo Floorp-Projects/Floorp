@@ -168,16 +168,14 @@ ToolkitCoreShowDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_SHOWDIALOG, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_SHOWDIALOG, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -226,16 +224,14 @@ ToolkitCoreShowWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_SHOWWINDOW, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_SHOWWINDOW, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -285,16 +281,14 @@ ToolkitCoreShowWindowWithArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_SHOWWINDOWWITHARGS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_SHOWWINDOWWITHARGS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -344,16 +338,14 @@ ToolkitCoreShowModalDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_SHOWMODALDIALOG, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_SHOWMODALDIALOG, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -401,16 +393,14 @@ ToolkitCoreCloseWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_CLOSEWINDOW, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_TOOLKITCORE_CLOSEWINDOW, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -452,7 +442,9 @@ JSClass ToolkitCoreClass = {
   EnumerateToolkitCore,
   ResolveToolkitCore,
   JS_ConvertStub,
-  FinalizeToolkitCore
+  FinalizeToolkitCore,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

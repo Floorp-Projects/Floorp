@@ -74,10 +74,9 @@ GetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLLIELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLIELEMENT_TYPE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLIELEMENT_TYPE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -92,10 +91,9 @@ GetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLIELEMENT_VALUE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLIELEMENT_VALUE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLIELEMENT_VALUE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -143,10 +141,9 @@ SetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLLIELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLIELEMENT_TYPE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLIELEMENT_TYPE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -157,10 +154,9 @@ SetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLIELEMENT_VALUE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLIELEMENT_VALUE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLIELEMENT_VALUE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         int32 temp;
@@ -231,7 +227,9 @@ JSClass HTMLLIElementClass = {
   EnumerateHTMLLIElement,
   ResolveHTMLLIElement,
   JS_ConvertStub,
-  FinalizeHTMLLIElement
+  FinalizeHTMLLIElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

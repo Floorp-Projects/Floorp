@@ -74,10 +74,9 @@ GetHTMLUListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLULISTELEMENT_COMPACT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLULISTELEMENT_COMPACT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLULISTELEMENT_COMPACT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -92,10 +91,9 @@ GetHTMLUListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLULISTELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLULISTELEMENT_TYPE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLULISTELEMENT_TYPE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -143,10 +141,9 @@ SetHTMLUListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLULISTELEMENT_COMPACT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLULISTELEMENT_COMPACT, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLULISTELEMENT_COMPACT, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
@@ -159,10 +156,9 @@ SetHTMLUListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLULISTELEMENT_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLULISTELEMENT_TYPE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLULISTELEMENT_TYPE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -227,7 +223,9 @@ JSClass HTMLUListElementClass = {
   EnumerateHTMLUListElement,
   ResolveHTMLUListElement,
   JS_ConvertStub,
-  FinalizeHTMLUListElement
+  FinalizeHTMLUListElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

@@ -73,10 +73,9 @@ GetHTMLMenuElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLMENUELEMENT_COMPACT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMENUELEMENT_COMPACT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMENUELEMENT_COMPACT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -124,10 +123,9 @@ SetHTMLMenuElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLMENUELEMENT_COMPACT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMENUELEMENT_COMPACT, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMENUELEMENT_COMPACT, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
@@ -194,7 +192,9 @@ JSClass HTMLMenuElementClass = {
   EnumerateHTMLMenuElement,
   ResolveHTMLMenuElement,
   JS_ConvertStub,
-  FinalizeHTMLMenuElement
+  FinalizeHTMLMenuElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

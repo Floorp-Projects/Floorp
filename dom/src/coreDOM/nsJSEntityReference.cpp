@@ -156,7 +156,9 @@ JSClass EntityReferenceClass = {
   EnumerateEntityReference,
   ResolveEntityReference,
   JS_ConvertStub,
-  FinalizeEntityReference
+  FinalizeEntityReference,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

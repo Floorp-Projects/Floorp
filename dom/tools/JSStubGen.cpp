@@ -537,10 +537,9 @@ static const char kPropFuncNamedItemEllipsisNonPrimaryStr[] =
 static const char kPropCaseBeginStr[] = 
 "      case %s_%s:\n"
 "      {\n"
-"        PRBool ok = PR_FALSE;\n"
-"        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, %s, &ok);\n"
-"        if (!ok) {\n"
-"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);\n"
+"        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, %s);\n"
+"        if (NS_FAILED(rv)) {\n"
+"          return nsJSUtils::nsReportError(cx, obj, rv);\n"
 "        }\n";
 
 static const char kPropCaseEndStr[] = 
@@ -1104,16 +1103,14 @@ static const char kMethodBodyBeginStr[] = "\n"
 "  *rval = JSVAL_NULL;\n"
 "\n"
 "  {\n"
-"    PRBool ok;\n"
 "    nsresult rv;\n"
 "    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,\n"
 "                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);\n"
-"    if (NS_FAILED(rv)) {\n"
-"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);\n"
+"    if (NS_SUCCEEDED(rv)) {\n"
+"      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, PR_FALSE);\n"
 "    }\n"
-"    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_%s_%s, PR_FALSE, &ok);\n"
-"    if (!ok) {\n"
-"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);\n"
+"    if (NS_FAILED(rv)) {\n"
+"      return nsJSUtils::nsReportError(cx, obj, rv);\n"
 "    }\n"
 "  }\n"
 "\n";
@@ -1477,7 +1474,9 @@ static const char kJSClassStr[] =
 "  Enumerate%s,\n"
 "  Resolve%s,\n"
 "  JS_ConvertStub,\n"
-"  Finalize%s\n"
+"  Finalize%s,\n"
+"  nsnull,\n"
+"  nsJSUtils::nsCheckAccess\n"
 "};\n";
 
 #define JSGEN_GENERATE_JSCLASS(buf, className)                              \
@@ -1487,7 +1486,7 @@ static const char kJSClassStr[] =
 void     
 JSStubGen::GenerateJSClass(IdlSpecification &aSpec)
 {
-  char buf[512];
+  char buf[1024];
   ofstream *file = GetFile();
   IdlInterface *iface = aSpec.GetInterfaceAt(0);
   char *name = iface->GetName();

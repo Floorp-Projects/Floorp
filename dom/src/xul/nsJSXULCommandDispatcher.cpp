@@ -82,10 +82,9 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     switch(JSVAL_TO_INT(id)) {
       case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDELEMENT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDELEMENT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMElement* prop;
         nsresult result = NS_OK;
@@ -101,10 +100,9 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case XULCOMMANDDISPATCHER_FOCUSEDWINDOW:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDWINDOW, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDWINDOW, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMWindow* prop;
         nsresult result = NS_OK;
@@ -153,10 +151,9 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     switch(JSVAL_TO_INT(id)) {
       case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDELEMENT, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDELEMENT, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMElement* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
@@ -171,10 +168,9 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case XULCOMMANDDISPATCHER_FOCUSEDWINDOW:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDWINDOW, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDWINDOW, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMWindow* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
@@ -250,16 +246,14 @@ XULCommandDispatcherAddCommandUpdater(JSContext *cx, JSObject *obj, uintN argc, 
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_ADDCOMMANDUPDATER, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_ADDCOMMANDUPDATER, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -308,16 +302,14 @@ XULCommandDispatcherRemoveCommandUpdater(JSContext *cx, JSObject *obj, uintN arg
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_REMOVECOMMANDUPDATER, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_REMOVECOMMANDUPDATER, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -364,16 +356,14 @@ XULCommandDispatcherUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_UPDATECOMMANDS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_UPDATECOMMANDS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -415,16 +405,14 @@ XULCommandDispatcherGetControllerForCommand(JSContext *cx, JSObject *obj, uintN 
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_GETCONTROLLERFORCOMMAND, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_GETCONTROLLERFORCOMMAND, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -466,16 +454,14 @@ XULCommandDispatcherGetControllers(JSContext *cx, JSObject *obj, uintN argc, jsv
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_GETCONTROLLERS, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_GETCONTROLLERS, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -507,7 +493,9 @@ JSClass XULCommandDispatcherClass = {
   EnumerateXULCommandDispatcher,
   ResolveXULCommandDispatcher,
   JS_ConvertStub,
-  FinalizeXULCommandDispatcher
+  FinalizeXULCommandDispatcher,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

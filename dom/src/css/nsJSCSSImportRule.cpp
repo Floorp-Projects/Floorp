@@ -77,10 +77,9 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CSSIMPORTRULE_HREF:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_HREF, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_HREF, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -95,10 +94,9 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSSIMPORTRULE_MEDIA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_MEDIA, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_MEDIA, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -113,10 +111,9 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSSIMPORTRULE_STYLESHEET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_STYLESHEET, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_STYLESHEET, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMCSSStyleSheet* prop;
         nsresult result = NS_OK;
@@ -165,10 +162,9 @@ SetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CSSIMPORTRULE_HREF:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_HREF, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_HREF, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -179,10 +175,9 @@ SetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSSIMPORTRULE_MEDIA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_MEDIA, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_MEDIA, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -247,7 +242,9 @@ JSClass CSSImportRuleClass = {
   EnumerateCSSImportRule,
   ResolveCSSImportRule,
   JS_ConvertStub,
-  FinalizeCSSImportRule
+  FinalizeCSSImportRule,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

@@ -87,10 +87,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLECELLELEMENT_CELLINDEX:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CELLINDEX, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CELLINDEX, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -105,10 +104,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ABBR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ABBR, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ABBR, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -123,10 +121,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ALIGN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ALIGN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -141,10 +138,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_AXIS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_AXIS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_AXIS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -159,10 +155,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_BGCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_BGCOLOR, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_BGCOLOR, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -177,10 +172,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_CH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CH, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CH, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -195,10 +189,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_CHOFF:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CHOFF, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CHOFF, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -213,10 +206,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_COLSPAN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_COLSPAN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_COLSPAN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -231,10 +223,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_HEADERS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_HEADERS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_HEADERS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -249,10 +240,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_HEIGHT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_HEIGHT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_HEIGHT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -267,10 +257,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_NOWRAP:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_NOWRAP, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_NOWRAP, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -285,10 +274,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ROWSPAN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ROWSPAN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ROWSPAN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -303,10 +291,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_SCOPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_SCOPE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_SCOPE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -321,10 +308,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_VALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_VALIGN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_VALIGN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -339,10 +325,9 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_WIDTH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_WIDTH, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_WIDTH, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -390,10 +375,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLECELLELEMENT_CELLINDEX:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CELLINDEX, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CELLINDEX, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         int32 temp;
@@ -410,10 +394,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ABBR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ABBR, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ABBR, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -424,10 +407,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ALIGN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ALIGN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -438,10 +420,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_AXIS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_AXIS, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_AXIS, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -452,10 +433,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_BGCOLOR:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_BGCOLOR, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_BGCOLOR, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -466,10 +446,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_CH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CH, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CH, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -480,10 +459,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_CHOFF:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CHOFF, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_CHOFF, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -494,10 +472,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_COLSPAN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_COLSPAN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_COLSPAN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         int32 temp;
@@ -514,10 +491,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_HEADERS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_HEADERS, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_HEADERS, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -528,10 +504,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_HEIGHT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_HEIGHT, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_HEIGHT, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -542,10 +517,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_NOWRAP:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_NOWRAP, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_NOWRAP, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
@@ -558,10 +532,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ROWSPAN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ROWSPAN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_ROWSPAN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         int32 temp;
@@ -578,10 +551,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_SCOPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_SCOPE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_SCOPE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -592,10 +564,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_VALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_VALIGN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_VALIGN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -606,10 +577,9 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_WIDTH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_WIDTH, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECELLELEMENT_WIDTH, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -674,7 +644,9 @@ JSClass HTMLTableCellElementClass = {
   EnumerateHTMLTableCellElement,
   ResolveHTMLTableCellElement,
   JS_ConvertStub,
-  FinalizeHTMLTableCellElement
+  FinalizeHTMLTableCellElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

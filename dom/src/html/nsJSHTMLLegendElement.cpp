@@ -77,10 +77,9 @@ GetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLLEGENDELEMENT_FORM:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_FORM, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_FORM, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLFormElement* prop;
         nsresult result = NS_OK;
@@ -96,10 +95,9 @@ GetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLEGENDELEMENT_ACCESSKEY:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_ACCESSKEY, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_ACCESSKEY, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -114,10 +112,9 @@ GetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLEGENDELEMENT_ALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_ALIGN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_ALIGN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -165,10 +162,9 @@ SetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLLEGENDELEMENT_ACCESSKEY:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_ACCESSKEY, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_ACCESSKEY, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -179,10 +175,9 @@ SetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLEGENDELEMENT_ALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_ALIGN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLLEGENDELEMENT_ALIGN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -247,7 +242,9 @@ JSClass HTMLLegendElementClass = {
   EnumerateHTMLLegendElement,
   ResolveHTMLLegendElement,
   JS_ConvertStub,
-  FinalizeHTMLLegendElement
+  FinalizeHTMLLegendElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

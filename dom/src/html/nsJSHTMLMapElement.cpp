@@ -76,10 +76,9 @@ GetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLMAPELEMENT_AREAS:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMAPELEMENT_AREAS, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMAPELEMENT_AREAS, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLCollection* prop;
         nsresult result = NS_OK;
@@ -95,10 +94,9 @@ GetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLMAPELEMENT_NAME:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMAPELEMENT_NAME, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMAPELEMENT_NAME, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -146,10 +144,9 @@ SetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLMAPELEMENT_NAME:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMAPELEMENT_NAME, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLMAPELEMENT_NAME, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -214,7 +211,9 @@ JSClass HTMLMapElementClass = {
   EnumerateHTMLMapElement,
   ResolveHTMLMapElement,
   JS_ConvertStub,
-  FinalizeHTMLMapElement
+  FinalizeHTMLMapElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

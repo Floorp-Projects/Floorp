@@ -75,10 +75,9 @@ GetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CSSFONTFACERULE_STYLE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSFONTFACERULE_STYLE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSFONTFACERULE_STYLE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMCSSStyleDeclaration* prop;
         nsresult result = NS_OK;
@@ -127,10 +126,9 @@ SetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CSSFONTFACERULE_STYLE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSFONTFACERULE_STYLE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSFONTFACERULE_STYLE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMCSSStyleDeclaration* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
@@ -199,7 +197,9 @@ JSClass CSSFontFaceRuleClass = {
   EnumerateCSSFontFaceRule,
   ResolveCSSFontFaceRule,
   JS_ConvertStub,
-  FinalizeCSSFontFaceRule
+  FinalizeCSSFontFaceRule,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

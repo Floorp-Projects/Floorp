@@ -77,10 +77,9 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CSSRULE_TYPE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_TYPE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_TYPE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRUint16 prop;
         nsresult result = NS_OK;
@@ -95,10 +94,9 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSSRULE_CSSTEXT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_CSSTEXT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_CSSTEXT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -113,10 +111,9 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSSRULE_SHEET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_SHEET, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_SHEET, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMCSSStyleSheet* prop;
         nsresult result = NS_OK;
@@ -165,10 +162,9 @@ SetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CSSRULE_CSSTEXT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_CSSTEXT, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_CSSTEXT, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -233,7 +229,9 @@ JSClass CSSRuleClass = {
   EnumerateCSSRule,
   ResolveCSSRule,
   JS_ConvertStub,
-  FinalizeCSSRule
+  FinalizeCSSRule,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

@@ -73,10 +73,9 @@ GetHTMLPreElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLPREELEMENT_WIDTH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLPREELEMENT_WIDTH, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLPREELEMENT_WIDTH, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -124,10 +123,9 @@ SetHTMLPreElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLPREELEMENT_WIDTH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLPREELEMENT_WIDTH, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLPREELEMENT_WIDTH, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         int32 temp;
@@ -198,7 +196,9 @@ JSClass HTMLPreElementClass = {
   EnumerateHTMLPreElement,
   ResolveHTMLPreElement,
   JS_ConvertStub,
-  FinalizeHTMLPreElement
+  FinalizeHTMLPreElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

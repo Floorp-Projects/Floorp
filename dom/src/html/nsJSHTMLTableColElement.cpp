@@ -78,10 +78,9 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLECOLELEMENT_ALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_ALIGN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_ALIGN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -96,10 +95,9 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_CH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_CH, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_CH, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -114,10 +112,9 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_CHOFF:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_CHOFF, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_CHOFF, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -132,10 +129,9 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_SPAN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_SPAN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_SPAN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -150,10 +146,9 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_VALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_VALIGN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_VALIGN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -168,10 +163,9 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_WIDTH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_WIDTH, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_WIDTH, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -219,10 +213,9 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLECOLELEMENT_ALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_ALIGN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_ALIGN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -233,10 +226,9 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_CH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_CH, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_CH, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -247,10 +239,9 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_CHOFF:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_CHOFF, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_CHOFF, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -261,10 +252,9 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_SPAN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_SPAN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_SPAN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         int32 temp;
@@ -281,10 +271,9 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_VALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_VALIGN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_VALIGN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -295,10 +284,9 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLECOLELEMENT_WIDTH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_WIDTH, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLTABLECOLELEMENT_WIDTH, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -363,7 +351,9 @@ JSClass HTMLTableColElementClass = {
   EnumerateHTMLTableColElement,
   ResolveHTMLTableColElement,
   JS_ConvertStub,
-  FinalizeHTMLTableColElement
+  FinalizeHTMLTableColElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

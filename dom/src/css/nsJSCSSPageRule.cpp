@@ -76,10 +76,9 @@ GetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CSSPAGERULE_NAME:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_NAME, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_NAME, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -94,10 +93,9 @@ GetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSSPAGERULE_STYLE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_STYLE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_STYLE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMCSSStyleDeclaration* prop;
         nsresult result = NS_OK;
@@ -146,10 +144,9 @@ SetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case CSSPAGERULE_NAME:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_NAME, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_NAME, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -160,10 +157,9 @@ SetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSSPAGERULE_STYLE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_STYLE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_STYLE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMCSSStyleDeclaration* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
@@ -232,7 +228,9 @@ JSClass CSSPageRuleClass = {
   EnumerateCSSPageRule,
   ResolveCSSPageRule,
   JS_ConvertStub,
-  FinalizeCSSPageRule
+  FinalizeCSSPageRule,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

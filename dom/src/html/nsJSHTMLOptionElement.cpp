@@ -88,10 +88,9 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLOPTIONELEMENT_FORM:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_FORM, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_FORM, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLFormElement* prop;
         nsresult result = NS_OK;
@@ -107,10 +106,9 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_DEFAULTSELECTED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_DEFAULTSELECTED, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_DEFAULTSELECTED, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -125,10 +123,9 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_TEXT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_TEXT, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_TEXT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -143,10 +140,9 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_INDEX:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_INDEX, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_INDEX, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
@@ -161,10 +157,9 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_DISABLED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_DISABLED, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_DISABLED, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -179,10 +174,9 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_LABEL:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_LABEL, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_LABEL, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -197,10 +191,9 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_SELECTED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_SELECTED, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_SELECTED, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         nsresult result = NS_OK;
@@ -215,10 +208,9 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_VALUE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_VALUE, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_VALUE, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -266,10 +258,9 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLOPTIONELEMENT_DEFAULTSELECTED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_DEFAULTSELECTED, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_DEFAULTSELECTED, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
@@ -282,10 +273,9 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_TEXT:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_TEXT, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_TEXT, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -296,10 +286,9 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_INDEX:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_INDEX, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_INDEX, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRInt32 prop;
         int32 temp;
@@ -316,10 +305,9 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_DISABLED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_DISABLED, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_DISABLED, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
@@ -332,10 +320,9 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_LABEL:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_LABEL, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_LABEL, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -346,10 +333,9 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_SELECTED:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_SELECTED, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_SELECTED, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
@@ -362,10 +348,9 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOPTIONELEMENT_VALUE:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_VALUE, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_VALUE, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -430,7 +415,9 @@ JSClass HTMLOptionElementClass = {
   EnumerateHTMLOptionElement,
   ResolveHTMLOptionElement,
   JS_ConvertStub,
-  FinalizeHTMLOptionElement
+  FinalizeHTMLOptionElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

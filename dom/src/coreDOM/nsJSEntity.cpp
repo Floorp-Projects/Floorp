@@ -75,10 +75,9 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case ENTITY_PUBLICID:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ENTITY_PUBLICID, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ENTITY_PUBLICID, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -93,10 +92,9 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case ENTITY_SYSTEMID:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ENTITY_SYSTEMID, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ENTITY_SYSTEMID, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -111,10 +109,9 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case ENTITY_NOTATIONNAME:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ENTITY_NOTATIONNAME, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ENTITY_NOTATIONNAME, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -217,7 +214,9 @@ JSClass EntityClass = {
   EnumerateEntity,
   ResolveEntity,
   JS_ConvertStub,
-  FinalizeEntity
+  FinalizeEntity,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

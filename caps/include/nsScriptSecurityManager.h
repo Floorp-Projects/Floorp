@@ -63,8 +63,8 @@ private:
     GetObjectPrincipal(JSContext *aCx, JSObject *aObj, nsIPrincipal **result);
 
     NS_IMETHOD
-    CheckPermissions(JSContext *aCx, JSObject *aObj, const char *aCapability, 
-                     PRBool* result);
+    CheckPermissions(JSContext *aCx, JSObject *aObj, const char *aCapability);
+    
     PRInt32 
     GetSecurityLevel(nsIPrincipal *principal, nsDOMProp domProp, 
                      PRBool isWrite, nsCString &capability);

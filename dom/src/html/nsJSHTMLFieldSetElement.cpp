@@ -75,10 +75,9 @@ GetHTMLFieldSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     switch(JSVAL_TO_INT(id)) {
       case HTMLFIELDSETELEMENT_FORM:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLFIELDSETELEMENT_FORM, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLFIELDSETELEMENT_FORM, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIDOMHTMLFormElement* prop;
         nsresult result = NS_OK;
@@ -182,7 +181,9 @@ JSClass HTMLFieldSetElementClass = {
   EnumerateHTMLFieldSetElement,
   ResolveHTMLFieldSetElement,
   JS_ConvertStub,
-  FinalizeHTMLFieldSetElement
+  FinalizeHTMLFieldSetElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

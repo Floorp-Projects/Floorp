@@ -74,10 +74,9 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
     switch(JSVAL_TO_INT(id)) {
       case PROCESSINGINSTRUCTION_TARGET:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_PROCESSINGINSTRUCTION_TARGET, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_PROCESSINGINSTRUCTION_TARGET, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -92,10 +91,9 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
       }
       case PROCESSINGINSTRUCTION_DATA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_PROCESSINGINSTRUCTION_DATA, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_PROCESSINGINSTRUCTION_DATA, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -143,10 +141,9 @@ SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
     switch(JSVAL_TO_INT(id)) {
       case PROCESSINGINSTRUCTION_DATA:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_PROCESSINGINSTRUCTION_DATA, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_PROCESSINGINSTRUCTION_DATA, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -211,7 +208,9 @@ JSClass ProcessingInstructionClass = {
   EnumerateProcessingInstruction,
   ResolveProcessingInstruction,
   JS_ConvertStub,
-  FinalizeProcessingInstruction
+  FinalizeProcessingInstruction,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

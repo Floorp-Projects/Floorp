@@ -351,6 +351,11 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     if (NS_FAILED(rv))
         return rv;
 
+    nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+    rv = channel->SetOwner(owner);
+    if (NS_FAILED(rv))
+        return rv;
+
     *result = channel;
     return rv;
 }

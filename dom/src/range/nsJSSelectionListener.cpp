@@ -160,16 +160,14 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SELECTIONLISTENER_NOTIFYSELECTIONCHANGED, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SELECTIONLISTENER_NOTIFYSELECTIONCHANGED, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -200,7 +198,9 @@ JSClass SelectionListenerClass = {
   EnumerateSelectionListener,
   ResolveSelectionListener,
   JS_ConvertStub,
-  FinalizeSelectionListener
+  FinalizeSelectionListener,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

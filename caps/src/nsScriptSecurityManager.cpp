@@ -352,13 +352,11 @@ SetBit(unsigned char *bitVector, PRInt32 index)
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckScriptAccess(JSContext *cx, 
                                            void *aObj, PRInt32 domPropInt, 
-                                           PRBool isWrite, PRBool *aResult)
+                                           PRBool isWrite)
 {
     nsDOMProp domProp = (nsDOMProp) domPropInt;
-    *aResult = PR_FALSE;
     if (!GetBit(hasPolicyVector, domPropInt)) {
         // No policy for this DOM property, so just allow access.
-        *aResult = PR_TRUE;
         return NS_OK;
     }
     nsCOMPtr<nsIPrincipal> principal;
@@ -370,7 +368,6 @@ nsScriptSecurityManager::CheckScriptAccess(JSContext *cx,
         NS_SUCCEEDED(principal->Equals(mSystemPrincipal, &equals)) && equals) 
     {
         // We have native code or the system principal: just allow access
-        *aResult = PR_TRUE;
         return NS_OK;
     }
     nsCAutoString capability;
@@ -383,20 +380,22 @@ nsScriptSecurityManager::CheckScriptAccess(JSContext *cx,
         // to specify the large majority of unchecked properties, only the
         // minority of checked ones.
       case SCRIPT_SECURITY_ALL_ACCESS:
-        *aResult = PR_TRUE;
         return NS_OK;
       case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS: {
         const char *cap = isWrite  
                           ? "UniversalBrowserWrite" 
                           : "UniversalBrowserRead";
-        return CheckPermissions(cx, (JSObject *) aObj, cap, aResult);
+        return CheckPermissions(cx, (JSObject *) aObj, cap);
       }
-      case SCRIPT_SECURITY_CAPABILITY_ONLY: 
-        return IsCapabilityEnabled(capability, aResult);
+      case SCRIPT_SECURITY_CAPABILITY_ONLY: {
+        PRBool capabilityEnabled = PR_FALSE;
+        nsresult rv = IsCapabilityEnabled(capability, &capabilityEnabled);
+        if (NS_FAILED(rv) || !capabilityEnabled)
+            return NS_ERROR_DOM_SECURITY_ERR;
+      }
       default:
         // Default is no access
-        *aResult = PR_FALSE;
-        return NS_OK;
+        return NS_ERROR_DOM_SECURITY_ERR;
     }
 }
 
@@ -972,8 +971,7 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, 
-                                          const char *aCapability,
-                                          PRBool* aResult)
+                                          const char *aCapability)
 {
     /*
     ** Get origin of subject and object and compare.
@@ -987,7 +985,6 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     if (!subject || 
         (NS_SUCCEEDED(subject->Equals(mSystemPrincipal, &equals)) && equals))
     {
-        *aResult = PR_TRUE;
         return NS_OK;
     }
 
@@ -995,15 +992,15 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     if (NS_FAILED(GetObjectPrincipal(aCx, aObj, getter_AddRefs(object))))
         return NS_ERROR_FAILURE;
     if (subject == object) {
-        *aResult = PR_TRUE;
         return NS_OK;
     }
     nsCOMPtr<nsICodebasePrincipal> subjectCodebase = do_QueryInterface(subject);
     if (subjectCodebase) {
-        if (NS_FAILED(subjectCodebase->SameOrigin(object, aResult)))
+        PRBool isSameOrigin = PR_FALSE;
+        if (NS_FAILED(subjectCodebase->SameOrigin(object, &isSameOrigin)))
             return NS_ERROR_FAILURE;
 
-        if (*aResult)
+        if (isSameOrigin)
             return NS_OK;
     }
 
@@ -1014,7 +1011,6 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
         if (NS_FAILED(objectCodebase->GetOrigin(getter_Copies(origin))))
             return NS_ERROR_FAILURE;
         if (nsCRT::strcmp(origin, "about:blank") == 0) {
-            *aResult = PR_TRUE;
             return NS_OK;
         }
     }
@@ -1024,9 +1020,10 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     ** are a signed script and have permissions to do this operation.
     ** Check for that here
     */
-    if (NS_FAILED(IsCapabilityEnabled(aCapability, aResult)))
+    PRBool capabilityEnabled = PR_FALSE;
+    if (NS_FAILED(IsCapabilityEnabled(aCapability, &capabilityEnabled)))
         return NS_ERROR_FAILURE;
-    if (*aResult)
+    if (capabilityEnabled)
         return NS_OK;
     
     /*
@@ -1038,7 +1035,6 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     JS_ReportError(aCx, "access disallowed from scripts at %s to documents "
                         "at another domain", str);
     nsCRT::free(str);
-    *aResult = PR_FALSE;
     return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 }
 

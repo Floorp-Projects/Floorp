@@ -137,6 +137,10 @@ public:
   static NS_EXPORT nsresult nsGetDynamicScriptContext(JSContext *aContext,
                                     nsIScriptContext** aScriptContext);
 
+  static NS_EXPORT JSBool nsCheckAccess(JSContext *cx, JSObject *obj, 
+                                        jsid id, JSAccessMode mode,
+	                                    jsval *vp);
+
 protected:
   static PRBool NameAndFormatForNSResult(nsresult rv,
                                          const char** name,

@@ -75,10 +75,9 @@ GetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     switch(JSVAL_TO_INT(id)) {
       case STYLESHEETCOLLECTION_LENGTH:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEETCOLLECTION_LENGTH, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEETCOLLECTION_LENGTH, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         PRUint32 prop;
         nsresult result = NS_OK;
@@ -198,16 +197,14 @@ StyleSheetCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   *rval = JSVAL_NULL;
 
   {
-    PRBool ok;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEETCOLLECTION_ITEM, PR_FALSE);
     }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEETCOLLECTION_ITEM, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
     }
   }
 
@@ -245,7 +242,9 @@ JSClass StyleSheetCollectionClass = {
   EnumerateStyleSheetCollection,
   ResolveStyleSheetCollection,
   JS_ConvertStub,
-  FinalizeStyleSheetCollection
+  FinalizeStyleSheetCollection,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

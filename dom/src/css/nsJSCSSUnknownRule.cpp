@@ -156,7 +156,9 @@ JSClass CSSUnknownRuleClass = {
   EnumerateCSSUnknownRule,
   ResolveCSSUnknownRule,
   JS_ConvertStub,
-  FinalizeCSSUnknownRule
+  FinalizeCSSUnknownRule,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 
