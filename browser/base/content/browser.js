@@ -205,15 +205,8 @@ function RegisterTabOpenObserver()
   service.addObserver(observer, "open-new-tab-request", false);
 }
 
-function PopupBlocked(event)
-{
-  alert("A popup was blocked.");
-}
-
 function Startup()
 {
-  addEventListener("DOMPopupBlocked", PopupBlocked, false);
-
   // init globals
   gNavigatorBundle = document.getElementById("bundle_browser");
   gBrandBundle = document.getElementById("bundle_brand");
