@@ -87,13 +87,7 @@ void  nsSingleByteCharSetProber::Reset(void)
 float nsSingleByteCharSetProber::GetConfidence(void)
 {
   if (mTotalSeqs > 0)
-    if (mModel->keepEnglishLetter)
-    {
-      if (mTotalSeqs > mNegativeSeqs*200 )
-        return ((float)(mTotalSeqs - mNegativeSeqs*200))/mTotalSeqs * mFreqChar / mTotalChar;
-    }
-    else
-      if (mTotalSeqs > mNegativeSeqs*10 )
-        return ((float)(mTotalSeqs - mNegativeSeqs*10))/mTotalSeqs * mFreqChar / mTotalChar;
+    if (mTotalSeqs > mNegativeSeqs*10 )
+      return ((float)(mTotalSeqs - mNegativeSeqs*10))/mTotalSeqs * mFreqChar / mTotalChar;
   return (float)0.01;
 }
