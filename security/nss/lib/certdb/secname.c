@@ -317,12 +317,15 @@ CERT_CreateRDN(PRArenaPool *arena, CERTAVA *ava0, ...)
     rdn = (CERTRDN*) PORT_ArenaAlloc(arena, sizeof(CERTRDN));
     if (rdn) {
 	/* Count number of avas going into the rdn */
-	count = 1;
-	va_start(ap, ava0);
-	while ((ava = va_arg(ap, CERTAVA*)) != 0) {
+	count = 0;
+	if (ava0) {
 	    count++;
+	    va_start(ap, ava0);
+	    while ((ava = va_arg(ap, CERTAVA*)) != 0) {
+		count++;
+	    }
+	    va_end(ap);
 	}
-	va_end(ap);
 
 	/* Now fill in the pointers */
 	rdn->avas = avap =
@@ -330,12 +333,14 @@ CERT_CreateRDN(PRArenaPool *arena, CERTAVA *ava0, ...)
 	if (!avap) {
 	    return 0;
 	}
-	*avap++ = ava0;
-	va_start(ap, ava0);
-	while ((ava = va_arg(ap, CERTAVA*)) != 0) {
-	    *avap++ = ava;
+	if (ava0) {
+	    *avap++ = ava0;
+	    va_start(ap, ava0);
+	    while ((ava = va_arg(ap, CERTAVA*)) != 0) {
+		*avap++ = ava;
+	    }
+	    va_end(ap);
 	}
-	va_end(ap);
 	*avap++ = 0;
     }
     return rdn;
