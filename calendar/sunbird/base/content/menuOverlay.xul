@@ -37,20 +37,15 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
 <!DOCTYPE overlay 
 [
-    <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" > %navigatorDTD;
     <!ENTITY % calendarDTD SYSTEM "chrome://calendar/locale/calendar.dtd" > %calendarDTD;
     <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
     <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" > %brandDTD;
     <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" > %browserDTD;
     <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd"> %globalRegionDTD;
-    <!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charset.dtd" > %charsetDTD;
 ]>
 
 <overlay id="calendarOverlay"
