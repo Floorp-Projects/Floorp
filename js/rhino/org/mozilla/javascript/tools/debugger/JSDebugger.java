@@ -2692,10 +2692,14 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	String cmd = e.getActionCommand();
 	int returnValue = -1;
 	if(cmd.equals("Cut") || cmd.equals("Copy") || cmd.equals("Paste")) {
-	    JInternalFrame f = desk.getSelectedFrame();
-	    if(f != null && f instanceof ActionListener) {
-		((ActionListener)f).actionPerformed(e);
-	    }
+            JInternalFrame[] frames = desk.getAllFrames();
+            for( int i = 0 ; i < frames.length ; ++i )
+                if( frames[i].isShowing() && 
+                    frames[i] instanceof ActionListener ) 
+                {
+                    ((ActionListener)frames[i]).actionPerformed(e);
+                    break;
+                }
 	} else if(cmd.equals("Step Over")) {
 	    returnValue = STEP_OVER;
 	} else if(cmd.equals("Step Into")) {
