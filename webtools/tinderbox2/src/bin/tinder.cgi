@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.14 $ 
-# $Date: 2001/07/27 20:41:31 $ 
+# $Revision: 1.15 $ 
+# $Date: 2001/08/13 19:55:25 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -202,8 +202,9 @@ sub construct_times_vec {
 
 sub parse_args {
 
-  my (%form) = HTMLPopUp::split_cgi_args();
-
+  my (%form) = HTMLPopUp::split_cgi_args(
+                                         'cgi_remove_args' => ['daemon-mode'],
+                                         );
 
   my ($tree) = $form{'tree'};
   my ($daemon_mode) = (grep /daemon-mode/, keys %form);
