@@ -55,25 +55,6 @@ static PRThread  * signon_lock_owner = NULL;
 static int signon_lock_count = 0;
 static Bool si_anonymous = FALSE;
 
-#ifndef XP_WIN /* privacy ifdef - last person to get here please remove */
-/*
- * temporary UI until FE implements this function as a single dialog box
- */
-PRIVATE XP_Bool FE_CheckConfirm (
-	MWContext *pContext,
-	char* pConfirmMessage,
-	char* pCheckMessage,
-	char* pOkMessage,
-	char* pCancelMsg,
-	XP_Bool* pChecked) {
-
-    Bool userHasAccepted = FE_Confirm(pContext, pConfirmMessage);
-    *pChecked = FE_Confirm (pContext, pCheckMessage);
-    return userHasAccepted;
-}
-/* end of temporary UI */
-#endif
-
 PRIVATE void
 si_lock_signon_list(void)
 {
@@ -458,35 +439,6 @@ si_CheckForUser(char *URLName, char *userName) {
     return FALSE; /* user not found */
 }
 
-#ifndef XP_WIN /* privacy ifdef - last person to get here please remove */
-/*
- * temporary UI until FE implements this function as a single dialog box
- */
-XP_Bool FE_SelectDialog(
-	MWContext* pContext,
-	char* pMessage,
-	char** pList,
-	int* pCount) {
-    int i;
-    char *message = 0;
-    for (i = 0; i < *pCount; i++) {
-	StrAllocCopy(message, pMessage);
-        StrAllocCat(message, " = ");
-	StrAllocCat(message, pList[i]);
-	if (FE_Confirm(pContext, message)) {
-	    /* user selected this one */
-	    XP_FREE(message);
-	    *pCount = i;
-	    return TRUE;
-	}
-    }
-
-    /* user rejected all */
-    XP_FREE(message);
-    return FALSE;
-}
-#endif
-
 /*
  * Get the user node for a given URL
  *
@@ -508,7 +460,7 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
     if (URL != NULL) {
 
 	/* node for this URL was found */
-	int user_count;
+	int16 user_count;
 	user_ptr = URL->signonUser_list;
 	if ((user_count = XP_ListCount(user_ptr)) == 1) {
 
