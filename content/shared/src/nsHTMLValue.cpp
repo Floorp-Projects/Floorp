@@ -143,7 +143,7 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
         }
       }
       else if (nsnull != aOther.mValue.mString) {
-        return mValue.mString->Equals(*(aOther.mValue.mString));
+        return mValue.mString->EqualsIgnoreCase(*(aOther.mValue.mString));
       }
     }
     else if (eHTMLUnit_ISupports == mUnit) {
