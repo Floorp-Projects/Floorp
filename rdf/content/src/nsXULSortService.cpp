@@ -157,7 +157,7 @@ private:
 
 nsresult	FindTreeElement(nsIContent* aElement,nsIContent** aTreeElement);
 nsresult	FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody);
-nsresult	GetSortColumnIndex(nsIContent *tree, nsString sortResource, nsString sortDirection, PRInt32 *colIndex);
+nsresult	GetSortColumnIndex(nsIContent *tree, const nsString&sortResource, const nsString& sortDirection, PRInt32 *colIndex);
 nsresult	GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection);
 nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
 nsresult	GetTreeCellValue(nsIContent *node, nsString & value);
@@ -378,7 +378,7 @@ XULSortServiceImpl::FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody)
 }
 
 nsresult
-XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, nsString sortResource, nsString sortDirection, PRInt32 *sortColIndex)
+XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString& sortResource, const nsString& sortDirection, PRInt32 *sortColIndex)
 {
 	PRBool			found = PR_FALSE;
 	PRInt32			childIndex, colIndex = 0, numChildren, nameSpaceID;
@@ -924,11 +924,12 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_FAILED(rv = node->QueryInterface(kIContentIID, (void**)&contentNode)))	return(rv);
 	if (NS_FAILED(rv = FindTreeElement(contentNode, &treeNode)))	return(rv);
 
-	nsString	currentSortDirection;
+	nsAutoString currentSortDirection;
+    nsAutoString currentSortResource;
 
 	sortInfo.db = nsnull;
 	sortInfo.sortProperty = nsnull;
-	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, sortResource, currentSortDirection)))
+	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, currentSortResource, currentSortDirection)))
 	{
 		char *uri = sortResource.ToNewCString();
 		if (NS_FAILED(rv = gRDFService->GetResource(uri, &sortInfo.sortProperty)))	return(rv);
