@@ -410,7 +410,11 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
     nsCOMPtr<nsIViewManager> vm;
     view->GetViewManager(*getter_AddRefs(vm));
 
-    if (containingView != parentView) {
+    // it's possible for the parentView to be nonnull but containingView to be
+    // null, when the parent view doesn't belong to this frame tree but to
+    // the frame tree of some enclosing document. We do nothing in that case,
+    // but we have to check that containingView is nonnull or we will crash.
+    if (nsnull != containingView && containingView != parentView) {
       // it is possible for parent view not to have a frame attached to it
       // kind of an anonymous view. This happens with native scrollbars and
       // the clip view. To fix this we need to go up and parentView chain
@@ -546,9 +550,17 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     // See if the view should be hidden or visible
     PRBool  viewIsVisible = PR_TRUE;
     PRBool  viewHasTransparentContent =
-        !isCanvas &&
         (!hasBG ||
          (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
+    if (isCanvas && viewHasTransparentContent) {
+      nsIView* rootView;
+      vm->GetRootView(rootView);
+      nsIView* rootParent;
+      rootView->GetParent(rootParent);
+      if (nsnull == rootParent) {
+        viewHasTransparentContent = PR_FALSE;
+      }
+    }
 
     if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
       viewIsVisible = PR_FALSE;

@@ -64,17 +64,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
    XXX TODO XXX
 
    DeCOMify newly private methods
-   Move event handling into nsViewManager
-   Make event handling use CreateDisplayList
-   Reverse storage order of views so that LAST view in document order is the LAST child
-     of its parent view
-   Audit users of nsIView::GetPosition and nsIView::GetBounds, then 
-     fix nsContainerFrame::SyncFrameViewAfterReflow to size views to contain
-     left-or-above content
-   Remove nsIClipView stuff and just use the CLIPCHILDREN flag
-   Put in support for hierarchy of viewmanagers (handle nsViewManager::SetRootView
-     case where aWidget == null and aView has a non-null parent with a different view
-     manager)
    Fix opacity model to conform to SVG (requires backbuffer stack)
    Optimize view storage
 */
@@ -270,7 +259,7 @@ nsViewManager::PostInvalidateEvent()
     NS_ASSERTION(nsnull != ev,"InvalidateEvent is null");
     NS_ASSERTION(nsnull != mEventQueue,"Event queue is null");
     mEventQueue->PostEvent(ev);
-    mPendingInvalidateEvent = PR_TRUE;  
+    mPendingInvalidateEvent = PR_TRUE;
   }
 }
 
@@ -530,6 +519,13 @@ NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView, nsIWidget* aWidget)
 
   // case b) The aView has a nsIWidget instance
   if (nsnull != mRootView) {
+    nsView* parent = mRootView->GetParent();
+    if (nsnull != parent) {
+      parent->InsertChild(mRootView, nsnull);
+    }
+
+    mRootView->SetZIndex(PR_FALSE, 0);
+
     mRootView->GetWidget(mRootWindow);
     if (nsnull != mRootWindow) {
       return NS_OK;
@@ -1045,6 +1041,7 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceC
 void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
   BuildDisplayList(aRootView, aRect, PR_FALSE, PR_FALSE);
+
   nsRect fakeClipRect;
   PRInt32 index = 0;
   PRBool anyRendered;
@@ -1053,6 +1050,8 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
   ReapplyClipInstructions(PR_FALSE, fakeClipRect, index);
     
   OptimizeDisplayList(aRect, finalTransparentRect);
+
+  // ShowDisplayList(mDisplayListCount);
 
   if (!finalTransparentRect.IsEmpty()) {
     // There are some bits here that aren't going to be completely painted unless we do it now.
@@ -1393,7 +1392,9 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView)
   // process pending updates in child view.
   nsView* childView = aView->GetFirstChild();
   while (nsnull != childView)  {
-    ProcessPendingUpdates(childView);
+    if (childView->GetViewManager() == this) {
+      ProcessPendingUpdates(childView);
+    }
     childView = childView->GetNextSibling();
   }
 
@@ -1446,7 +1447,12 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
     return NS_OK;
   }
 
-  UpdateAllCoveringWidgets(mRootView, view, damageRect, PR_FALSE);
+  nsView* realRoot = mRootView;
+  while (realRoot->GetParent() != nsnull) {
+    realRoot = realRoot->GetParent();
+  }
+
+  UpdateAllCoveringWidgets(realRoot, view, damageRect, PR_FALSE);
   Composite();
   return NS_OK;
 }
@@ -1499,19 +1505,20 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsView *aView, nsView *aTarget,
   }
 
   if (!childCovers && (!isBlittable || (hasWidget && !aRepaintOnlyUnblittableViews))) {
-    ++mUpdateCnt;
+    nsViewManager* vm = aView->GetViewManager();
+    ++vm->mUpdateCnt;
 
-    if (!mRefreshEnabled) {
+    if (!vm->mRefreshEnabled) {
       // accumulate this rectangle in the view's dirty region, so we can process it later.
-      AddRectToDirtyRegion(aView, bounds);
-      mHasPendingInvalidates = PR_TRUE;
+      vm->AddRectToDirtyRegion(aView, bounds);
+      vm->mHasPendingInvalidates = PR_TRUE;
     } else {
       nsView* widgetView = GetWidgetView(aView);
       if (widgetView != nsnull) {
         ViewToWidget(aView, widgetView, bounds);
 
         nsCOMPtr<nsIWidget> widget;
-        GetWidgetForView(widgetView, getter_AddRefs(widget));
+        vm->GetWidgetForView(widgetView, getter_AddRefs(widget));
         widget->Invalidate(bounds, PR_FALSE);
       }
     }
@@ -1589,7 +1596,12 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
     damagedRect.x = origin.x;
     damagedRect.y = origin.y;
 
-    UpdateAllCoveringWidgets(mRootView, nsnull, damagedRect, PR_FALSE);
+    nsView* realRoot = mRootView;
+    while (realRoot->GetParent() != nsnull) {
+      realRoot = realRoot->GetParent();
+    }
+
+    UpdateAllCoveringWidgets(realRoot, nsnull, damagedRect, PR_FALSE);
   }
 
   ++mUpdateCnt;
@@ -1620,7 +1632,9 @@ void nsViewManager::UpdateViews(nsView *aView, PRUint32 aUpdateFlags)
   // update all children as well.
   nsView* childView = aView->GetFirstChild();
   while (nsnull != childView)  {
-    UpdateViews(childView, aUpdateFlags);
+    if (childView->GetViewManager() == this) {
+      UpdateViews(childView, aUpdateFlags);
+    }
     childView = childView->GetNextSibling();
   }
 }
@@ -1805,14 +1819,14 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             nsView *parent;
 
             parent = baseView;
-            while (nsnull != parent) {
+            while (mRootView != parent) {
               parent->ConvertToParentCoords(&offset.x, &offset.y);
               parent = parent->GetParent();
             }
 
             //Subtract back offset from root of view
             parent = view;
-            while (nsnull != parent) {
+            while (mRootView != parent) {
               parent->ConvertFromParentCoords(&offset.x, &offset.y);
               parent = parent->GetParent();
             }
@@ -1947,7 +1961,7 @@ void nsViewManager::BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aVie
 
   BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured);
 
-  // ShowDisplayList(mDisplayListCount);
+  ShowDisplayList(mDisplayListCount);
 
   // The display list is in order from back to front. We return the target list in order from
   // front to back.
@@ -1984,17 +1998,33 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
   }
 
   nsAutoVoidArray targetViews;
+  nsAutoVoidArray heldRefCountsToOtherVMs;
 
   // In fact, we only need to take this expensive path when the event is a mouse event ... riiiight?
   BuildEventTargetList(targetViews, aView, aEvent, aCaptured);
 
   nsEventStatus status = nsEventStatus_eIgnore;
 
-  for (PRInt32 i = 0; i < targetViews.Count(); i++) {
+  // get a death grip on any view managers' view observers (other than this one)
+  PRInt32 i;
+  for (i = 0; i < targetViews.Count(); i++) {
+    DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, targetViews.ElementAt(i));
+    nsView* v = element->mView;
+    nsViewManager* vVM = v->GetViewManager();
+    if (vVM != this) {
+      nsIViewObserver* vobs = nsnull;
+      vVM->GetViewObserver(vobs);
+      if (nsnull != vobs) {
+        heldRefCountsToOtherVMs.AppendElement(vobs);
+      }
+    }
+  }
+
+  for (i = 0; i < targetViews.Count(); i++) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, targetViews.ElementAt(i));
     nsView* v = element->mView;
 
-    if (nsnull != v->GetClientData() && nsnull != obs) {
+    if (nsnull != v->GetClientData()) {
       PRBool handled = PR_FALSE;
       nsRect r;
       v->GetDimensions(r);
@@ -2005,7 +2035,18 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
       aEvent->point.x -= x;
       aEvent->point.y -= y;
 
-      obs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
+      nsViewManager* vVM = v->GetViewManager();
+      if (vVM == this) {
+        if (nsnull != obs) {
+          obs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
+        }
+      } else {
+        nsIViewObserver* vobs = nsnull;
+        vVM->GetViewObserver(vobs);
+        if (nsnull != vobs) {
+          vobs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
+        }
+      }
 
       aEvent->point.x += x;
       aEvent->point.y += y;
@@ -2024,6 +2065,12 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
 
     delete element;
   }
+
+  // release death grips
+  for (i = 0; i < heldRefCountsToOtherVMs.Count(); i++) {
+    nsIViewObserver* element = NS_STATIC_CAST(nsIViewObserver*, heldRefCountsToOtherVMs.ElementAt(i));
+    NS_RELEASE(element);
+  }  
 
   return status;
 }
@@ -2455,6 +2502,12 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
 
   NS_ASSERTION((view != nsnull), "no view");
 
+  // don't allow the root view's z-index to be changed. It should always be zero.
+  // This could be removed and replaced with a style rule, or just removed altogether, with interesting consequences
+  if (aView == mRootView) {
+    return rv;
+  }
+
   if (aAutoZIndex) {
     aZIndex = 0;
   }
@@ -2763,7 +2816,9 @@ NS_IMETHODIMP nsViewManager::SetRootScrollableView(nsIScrollableView *aScrollabl
   mRootScrollable = aScrollable;
 
   //XXX this needs to go away when layout start setting this bit on it's own. MMP
-  if (mRootScrollable)
+  // We don't set ALWAYS_BLIT if this isn't the root of the view manager tree,
+  // because non-roots may not, in fact, always be able to blit
+  if (mRootScrollable && mRootView->GetParent() == nsnull)
     mRootScrollable->SetScrollProperties(NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 
   return NS_OK;
@@ -3373,11 +3428,11 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
 
     nest[nestcnt << 1] = 0;
 
-    printf("%snsIView@%p{%d,%d,%d,%d @ %d,%d; p=%p, z=%d} [x=%d, y=%d, w=%d, h=%d, absX=%d, absY=%d]\n",
+    printf("%snsIView@%p{%d,%d,%d,%d @ %d,%d; p=%p,m=%p z=%d} [x=%d, y=%d, w=%d, h=%d, absX=%d, absY=%d]\n",
            nest, (void*)view,
            dim.x, dim.y, dim.width, dim.height,
            vx, vy,
-           (void*)parent, zindex,
+           (void*)parent, (void*)view->GetViewManager(), zindex,
            rect.x, rect.y, rect.width, rect.height,
            element->mAbsX, element->mAbsY);
 
@@ -3438,7 +3493,7 @@ PRBool nsViewManager::IsClipView(nsView* aView)
 }
 
 
-nsView* nsViewManager::GetWidgetView(nsView *aView) const
+nsView* nsViewManager::GetWidgetView(nsView *aView)
 {
   while (aView != nsnull) {
     PRBool hasWidget;
@@ -3479,7 +3534,7 @@ nsresult nsViewManager::GetVisibleRect(nsRect& aVisibleRect)
   nsIScrollableView* scrollingView;
   GetRootScrollableView(&scrollingView);
 
-  if (scrollingView) {     
+  if (scrollingView) {   
     // Determine the visible rect in the scrolled view's coordinate space.
     // The size of the visible area is the clip view size
     const nsIView*  clipViewI;
@@ -3651,9 +3706,11 @@ nsViewManager::ProcessWidgetChanges(nsView* aView)
 
   nsView *child = aView->GetFirstChild();
   while (nsnull != child) {
-    rv = ProcessWidgetChanges(child);
-    if (NS_FAILED(rv))
-      return rv;
+    if (child->GetViewManager() == this) {
+      rv = ProcessWidgetChanges(child);
+      if (NS_FAILED(rv))
+        return rv;
+    }
 
     child = child->GetNextSibling();
   }

@@ -2275,6 +2275,12 @@ nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
 
   parent = aView;
   while (nsnull != parent) {
+    nsCOMPtr<nsIViewManager> vm;
+    parent->GetViewManager(*getter_AddRefs(vm));
+    if (vm != aManager) {
+      break;
+    }
+
     nscoord x, y;
     parent->GetPosition(&x, &y);
     aPoint.x += x;
