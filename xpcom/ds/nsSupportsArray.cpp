@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -24,7 +24,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -38,12 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <string.h>
+#include "prbit.h"
 #include "nsSupportsArray.h"
 #include "nsSupportsArrayEnumerator.h"
 #include "nsAString.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include <string.h>
 
 #if DEBUG_SUPPORTSARRAY
 #define MAXSUPPORTS 20
@@ -61,7 +61,7 @@ static int NumberOfSize[MAXSUPPORTS]; // number of this allocation size (1 per a
 static int AllocedOfSize[MAXSUPPORTS]; // number of this allocation size (each size for array used)
 static int GrowInPlace[MAXSUPPORTS];
 
-// these are per-allocation  
+// these are per-allocation
 static int MaxElements[3000];
 
 // very evil
@@ -161,36 +161,17 @@ PRBool nsSupportsArray::GrowArrayBy(PRInt32 aGrowBy)
   if (newSize >= (PRUint32) kLinearThreshold)
   {
     // newCount includes enough space for at least kGrowArrayBy new slots.
-    // Select the next power-of-two size in bytes above that.
-    // It's painful to find the biggest 1 bit.  We check for a
-    // power-of-two here, and then double if it is one.
-    PRUint32 oldSize = sizeof(mArray[0]) * mArraySize;
-    
-    if ((oldSize & (oldSize-1)) == 0) // oldSize = 2^n for some n
-    {
-      newSize = oldSize << 1; // easy 2^(n+1)
-    }
-    else // count bits and stuff.
-    {
-      PRUint32 bits = 0;
-      while (newSize >>= 1)
-      {
-        bits++;
-      }
-      bits++; // bump to the next power of two;
-      newSize = 1 << bits;
-    }
-    // Make sure we have enough space -- the array can grow by a lot
-    while (newSize/sizeof(mArray[0]) < newCount)
-      newSize <<= 1;
+    // Select the next power-of-two size in bytes above that if newSize is
+    // not a power of two.
+    if (newSize & (newSize - 1))
+      newSize = PR_BIT(PR_CeilingLog2(newSize));
 
-    // inverse of equation above.
-    newCount = newSize/sizeof(mArray[0]);
+    newCount = newSize / sizeof(mArray[0]);
   }
   // XXX This would be far more efficient in many allocators if we used
   // XXX PR_Realloc(), etc
   nsISupports** oldArray = mArray;
-  
+
   mArray = new nsISupports*[newCount];
   if (!mArray) {                    // ran out of memory
     mArray = oldArray;
@@ -249,8 +230,8 @@ nsSupportsArray::Read(nsIObjectInputStream *aStream)
     if (mArray != mAutoArray) {
       delete[] mArray;
       mArray = mAutoArray;
-      newArraySize = kAutoArraySize;
     }
+    newArraySize = kAutoArraySize;
   }
   else {
     if (newArraySize <= mArraySize) {
@@ -258,7 +239,7 @@ nsSupportsArray::Read(nsIObjectInputStream *aStream)
       newArraySize = mArraySize;
     }
     else {
-      nsISupports** array = new nsISupports*[mArraySize];
+      nsISupports** array = new nsISupports*[newArraySize];
       if (!array)
         return NS_ERROR_OUT_OF_MEMORY;
       if (mArray != mAutoArray)
@@ -270,6 +251,10 @@ nsSupportsArray::Read(nsIObjectInputStream *aStream)
 
   rv = aStream->Read32(&mCount);
   if (NS_FAILED(rv)) return rv;
+
+  NS_ASSERTION(mCount <= mArraySize, "overlarge mCount!");
+  if (mCount > mArraySize)
+    mCount = mArraySize;
 
   for (PRUint32 i = 0; i < mCount; i++) {
     rv = aStream->ReadObject(PR_TRUE, &mArray[i]);
@@ -314,19 +299,19 @@ nsSupportsArray::Equals(const nsISupportsArray* aOther)
 {
   if (aOther) {
     PRUint32 countOther;
-    nsresult rv = NS_CONST_CAST(nsISupportsArray*, aOther)->Count( &countOther );
+    nsISupportsArray* other = NS_CONST_CAST(nsISupportsArray*, aOther);
+    nsresult rv = other->Count(&countOther);
     if (NS_FAILED( rv ))
       return PR_FALSE;
 
     if (mCount == countOther) {
-      PRUint32 aIndex = mCount;
-      nsCOMPtr<nsISupports> other;
-      while (0 < aIndex--) {
-        if (NS_FAILED( GetElementAt( aIndex, getter_AddRefs( other ) ) ))
+      PRUint32 index = mCount;
+      nsCOMPtr<nsISupports> otherElem;
+      while (index--) {
+        if (NS_FAILED(other->GetElementAt(index, getter_AddRefs(otherElem))))
           return PR_FALSE;
-        if (mArray[aIndex] != other) {
+        if (mArray[index] != otherElem)
           return PR_FALSE;
-        }
       }
       return PR_TRUE;
     }
@@ -350,7 +335,6 @@ nsSupportsArray::IndexOf(const nsISupports* aPossibleElement)
 {
   return IndexOfStartingAt(aPossibleElement, 0);
 }
-  
 
 NS_IMETHODIMP_(PRInt32)
 nsSupportsArray::IndexOfStartingAt(const nsISupports* aPossibleElement,
@@ -445,7 +429,7 @@ nsSupportsArray::InsertElementsAt(nsISupportsArray* aElements, PRUint32 aIndex)
                 slide * sizeof(nsISupports*));
     }
 
-    for (PRUint32 i = 0; i < countElements; ++i, ++mCount) { 
+    for (PRUint32 i = 0; i < countElements; ++i, ++mCount) {
       // use GetElementAt to copy and do AddRef for us
       if (NS_FAILED( aElements->GetElementAt( i, mArray + aIndex + i) ))
         return PR_FALSE;
@@ -480,11 +464,9 @@ nsSupportsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::RemoveElementsAt(PRUint32 aIndex, PRUint32 aCount)
 {
-  if (aIndex < mCount) {
+  if (aIndex + aCount <= mCount) {
     for (PRUint32 i = 0; i < aCount; i++)
-    {
       NS_IF_RELEASE(mArray[aIndex+i]);
-    }
     mCount -= aCount;
     PRInt32 slide = (mCount - aIndex);
     if (0 < slide) {
@@ -601,13 +583,15 @@ nsSupportsArray::SizeTo(PRInt32 aSize)
 #if DEBUG_SUPPORTSARRAY
   PRUint32 oldArraySize = mArraySize;
 #endif
+  NS_ASSERTION(aSize >= 0, "negative aSize!");
+
   // XXX for aSize < mCount we could resize to mCount
-  if (mArraySize == aSize || aSize < mCount)  // nothing to do
-    return PR_TRUE;
+  if (mArraySize == (PRUint32) aSize || (PRUint32) aSize < mCount)
+    return PR_TRUE;     // nothing to do
 
   // switch back to autoarray if possible
   nsISupports** oldArray = mArray;
-  if (kAutoArraySize <= aSize) {
+  if ((PRUint32) aSize <= kAutoArraySize) {
     mArray = mAutoArray;
     mArraySize = kAutoArraySize;
   }
