@@ -208,6 +208,6 @@ public:
 
 };
 
-extern nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);
+extern NS_HTMLPARS nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);
 
 #endif /* nsIHTMLContentSink_h___ */

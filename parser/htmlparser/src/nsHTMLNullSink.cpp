@@ -86,7 +86,7 @@ protected:
  *  @param   
  *  @return  
  */
-nsresult
+NS_HTMLPARS nsresult
 NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult)
 {
   nsHTMLNullSink *it = new nsHTMLNullSink();
@@ -105,6 +105,7 @@ NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult)
  *  @return  
  */
 nsHTMLNullSink::nsHTMLNullSink() : nsIHTMLContentSink(), mTitle("") {
+  NS_INIT_REFCNT();
   mNodeStackPos=0;
   memset(mNodeStack,0,sizeof(mNodeStack));
 }
