@@ -652,9 +652,9 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 {
   nsresult res = NS_ERROR_FAILURE;
-  const char * title = nsAutoCString(aTitle);
+  char * title = aTitle.ToNewUTF8String();
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetTitle to <%s> mWidget=<%p>\n", title, mWidget));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetTitle this=<%p> mWidget=<%p> title=<%s>\n", this, mWidget, title));
 
   if( mWidget )
   {
@@ -669,6 +669,9 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
   else
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetTitle - mWidget is NULL!\n"));
 
+  if (title)
+    nsCRT::free(title);
+	
   return res;
 }
 
