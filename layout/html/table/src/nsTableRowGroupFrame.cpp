@@ -207,20 +207,17 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
       //direct (not table-called) background paint
       !(aFlags & (NS_PAINT_FLAG_TABLE_BG_PAINT | NS_PAINT_FLAG_TABLE_CELL_BG_PASS))) {
-    //Quirks inherits bg into cells & paints them there
-    if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode()) {
-      nsTableFrame* tableFrame;
-      nsTableFrame::GetTableFrame(this, tableFrame);
-      NS_ASSERTION(tableFrame, "null table frame");
+    nsTableFrame* tableFrame;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    NS_ASSERTION(tableFrame, "null table frame");
 
-      TableBackgroundPainter painter(tableFrame,
-                                     TableBackgroundPainter::eOrigin_TableRowGroup,
-                                     aPresContext, aRenderingContext,
-                                     aDirtyRect);
-      nsresult rv = painter.PaintRowGroup(this);
-      if (NS_FAILED(rv)) return rv;
-      aFlags |= NS_PAINT_FLAG_TABLE_BG_PAINT;
-    }
+    TableBackgroundPainter painter(tableFrame,
+                                   TableBackgroundPainter::eOrigin_TableRowGroup,
+                                   aPresContext, aRenderingContext,
+                                   aDirtyRect);
+    nsresult rv = painter.PaintRowGroup(this);
+    if (NS_FAILED(rv)) return rv;
+    aFlags |= NS_PAINT_FLAG_TABLE_BG_PAINT;
   }
 
   PRUint8 overflow = GetStyleDisplay()->mOverflow;

@@ -1420,11 +1420,11 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
           deflate.left   = BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftBorderWidth);
         }
       }
-      rv = painter.QuirksPaintTable(this, deflate);
+      rv = painter.PaintTable(this, &deflate);
       if (NS_FAILED(rv)) return rv;
     }
     else {
-      rv = painter.PaintTable(this);
+      rv = painter.PaintTable(this, nsnull);
       if (NS_FAILED(rv)) return rv;
     }
 
