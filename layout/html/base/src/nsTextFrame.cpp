@@ -614,19 +614,38 @@ nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent)
 {
-  // Mark this frame and all the next-in-flow frames as dirty
-  // XXX Unfortunately we don't know what actually changed...
-  nsTextFrame*  textFrame = this;
-  while (textFrame) {
-    textFrame->mState |= NS_FRAME_IS_DIRTY;
-    textFrame = (nsTextFrame*)textFrame->mNextInFlow;
+  nsIFrame* targetTextFrame = this;
+
+  PRBool markAllDirty = PR_TRUE;
+  if (aSubContent) {
+    nsCOMPtr<nsITextContentChangeData> tccd = do_QueryInterface(aSubContent);
+    if (tccd) {
+      nsITextContentChangeData::ChangeType type;
+      tccd->GetChangeType(&type);
+      if (nsITextContentChangeData::Append == type) {
+        markAllDirty = PR_FALSE;
+        nsTextFrame* frame = (nsTextFrame*) GetLastInFlow();
+        frame->mState |= NS_FRAME_IS_DIRTY;
+        targetTextFrame = frame;
+      }
+    }
+  }
+
+  if (markAllDirty) {
+    // Mark this frame and all the next-in-flow frames as dirty
+    nsTextFrame*  textFrame = this;
+    while (textFrame) {
+      textFrame->mState |= NS_FRAME_IS_DIRTY;
+      textFrame = (nsTextFrame*)textFrame->mNextInFlow;
+    }
   }
 
   // Generate a reflow command with this frame as the target frame
   nsIReflowCommand* cmd;
   nsresult          rv;
                                                 
-  rv = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
+  rv = NS_NewHTMLReflowCommand(&cmd, targetTextFrame,
+                               nsIReflowCommand::ContentChanged);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIPresShell> shell;
     rv = aPresContext->GetShell(getter_AddRefs(shell));
