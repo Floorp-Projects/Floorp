@@ -35,7 +35,8 @@ EXPORTS	=			  \
 	nsISymantecDebugger.h  \
 	nsISecureEnv.h \
 	ProxyJNI.h \
-	nsIThreadManager.h
+	nsIThreadManager.h \
+	nsILiveConnectManager.h
 
 include <$(DEPTH)/config/rules.mak>
 
