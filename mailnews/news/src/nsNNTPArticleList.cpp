@@ -137,9 +137,9 @@ nsNNTPArticleList::AddArticleKey(PRInt32 key)
 		{
 #ifdef HAVE_NEWSDB
 			m_newsDB->DeleteMessage(idInDBToCheck, NULL, PR_FALSE);
-#endif
 #ifdef DEBUG_bienvenu
 			m_idsDeleted.Add(idInDBToCheck);
+#endif
 #endif
 			if (m_dbIndex >= m_idsInDB.GetSize())
 				break;
@@ -156,9 +156,11 @@ nsresult
 nsNNTPArticleList::FinishAddingArticleKeys()
 {
 	// make sure none of the deleted turned up on the idsOnServer list
+#ifdef HAVE_NEWSDB
 #ifdef DEBUG_bienvenu
 	for (PRInt32 i = 0; i < m_idsDeleted.GetSize(); i++)
 		PR_ASSERT (!m_idsOnServer.set->IsMember(m_idsDeleted.GetAt(i)));
+#endif
 #endif
 	return 0;
 }
