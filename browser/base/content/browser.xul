@@ -292,7 +292,7 @@
 
 #ifdef XP_WIN
         <toolbarbutton id="mail-button" type="menu" class="toolbarbutton-1"
-                       label="&mailButton.label;" orient="horizontal"
+                       label="&mailButton.label;" orient="vertical"
                        onmouseover="MailIntegration.updateUnreadCount();"
                        tooltiptext="&mailButton.tooltip;">
           <menupopup tooltiptext="">
