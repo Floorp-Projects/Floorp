@@ -21,11 +21,13 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.limit_message_size"/>&storeMsgLimit.label;
+			<html:input type="checkbox" id="pref:0:bool:mail.limit_message_size"/>
+			<html:label>&storeMsgLimit.label;</html:label>
 			<html:input name="maxsize" id="pref:string:mail.max_size" size="4"/>&kb.label;
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.prompt_purge_threshhold"/>&autoCompact.label;
+			<html:input type="checkbox" id="pref:0:bool:mail.prompt_purge_threshhold"/>
+			<html:label>&autoCompact.label;</html:label>
 			<html:input name="purgesize" id="pref:string:mail.purge_threshhold" size="4"/>&kb.label;
 		</html:td></html:tr>
 	</html:table>
@@ -36,23 +38,28 @@
 <html:table>
 		<html:tr><html:td><html:label>&whenToClean.label;</html:label></html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="keepmsg" type="radio" id="pref:1:int:news.keep.method"/>&keepMsgs.label;
+			<html:input name="keepmsg" type="radio" id="pref:1:int:news.keep.method"/>
+			<html:label>&keepMsgs.label;</html:label>
 			<html:input name="keepdays" id="pref:string:news.keep.days" size="4"/>&days.label;
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="keepmsg" type="radio" id="pref:0:int:news.keep.method" checked="true"/>&keepAllMsg.label;
+			<html:input name="keepmsg" type="radio" id="pref:0:int:news.keep.method" checked="true"/>
+			<html:label>&keepAllMsg.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="keepmsg" type="radio" id="pref:2:int:news.keep.method"/>&keepTheNewest.label;
+			<html:input name="keepmsg" type="radio" id="pref:2:int:news.keep.method"/>
+			<html:label>&keepTheNewest.label;</html:label>
 			<html:input name="keepmsgcount" id="pref:string:news.keep.count" size="4"/>&messages.label;
 		</html:td></html:tr>
 		<html:tr><html:td> </html:td></html:tr>
 		<html:tr><html:td> </html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:news.keep.only_unread"/>&keepUnread.label;
+			<html:input type="checkbox" id="pref:0:bool:news.keep.only_unread"/>
+			<html:label>&keepUnread.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:news.remove_bodies.by_age"/>&removeMsg.label;
+			<html:input type="checkbox" id="pref:0:bool:news.remove_bodies.by_age"/>
+			<html:label>&removeMsg.label;</html:label>
 			<html:input name="removedays" id="pref:string:news.remove_bodies.days" size="4"/>&days.label;
 		</html:td></html:tr>
 </html:table>

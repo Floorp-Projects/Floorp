@@ -32,10 +32,12 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:1:int:mailnews.reuse_thread_window2"/>&reuseThread.label;
+			<html:input type="checkbox" id="pref:1:int:mailnews.reuse_thread_window2"/>
+			<html:label>&reuseThread.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:1:int:mailnews.reuse_message_window"/>&reuseMessage.label;
+			<html:input type="checkbox" id="pref:1:int:mailnews.reuse_message_window"/>
+			<html:label>&reuseMessage.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>&reuseExp.label;</html:td></html:tr>
 	</html:table>
@@ -45,10 +47,12 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input name="opennews" type="radio" id="pref:0:int:news.use_message_center" checked="true"/>&openMessenger.label;
+			<html:input name="opennews" type="radio" id="pref:0:int:news.use_message_center" checked="true"/>
+			<html:label>&openMessenger.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="opennews" type="radio" id="pref:1:int:news.use_message_center"/>&openCenter.label;
+			<html:input name="opennews" type="radio" id="pref:1:int:news.use_message_center"/>
+			<html:label>&openCenter.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
 </html:form>

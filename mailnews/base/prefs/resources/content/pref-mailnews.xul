@@ -46,10 +46,12 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td><html:input name="fontwidth" type="radio"
-			id="pref:1:int:mail.fixed_width_messages" checked="true"/>&fixedWidth.label;
+			id="pref:1:int:mail.fixed_width_messages" checked="true"/>
+			<html:label>&fixedWidth.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td><html:input name="fontwidth" type="radio"
-			id="pref:0:int:mail.fixed_width_messages"/>&variableWidth.label;
+			id="pref:0:int:mail.fixed_width_messages"/>
+			<html:label>&variableWidth.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
 </html:form>
@@ -57,10 +59,14 @@
 <html:br/>
 <html:form>
 	<html:table>
-		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mail.play_sound"/>&playSound.label;</html:td></html:tr>
-		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.remember_selected_message"/>&rememberLastMsg.label;</html:td></html:tr>
-		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.confirm.moveFoldersToTrash"/>&confirmMove.label;</html:td></html:tr>
-		<html:tr><html:td><html:input type="checkbox" id="pref:0:bool:mail.use_mapi_server"/>&useMessenger.label;</html:td></html:tr>
+		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mail.play_sound"/>
+		<html:label>&playSound.label;</html:label></html:td></html:tr>
+		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.remember_selected_message"/>
+		<html:label>&rememberLastMsg.label;</html:label></html:td></html:tr>
+		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.confirm.moveFoldersToTrash"/>
+		<html:label>&confirmMove.label;</html:label></html:td></html:tr>
+		<html:tr><html:td><html:input type="checkbox" id="pref:0:bool:mail.use_mapi_server"/>
+		<html:label>&useMessenger.label;</html:label></html:td></html:tr>
 	</html:table>
 </html:form>
 

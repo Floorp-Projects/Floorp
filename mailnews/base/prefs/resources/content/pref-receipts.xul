@@ -33,13 +33,16 @@ function DoCustomize()
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input name="msgreceipt" type="radio" id="pref:1:int:mail.request.return_receipt"/>&dsn.label; 
+			<html:input name="msgreceipt" type="radio" id="pref:1:int:mail.request.return_receipt"/>
+			<html:label>&dsn.label;</html:label> 
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="msgreceipt" type="radio" id="pref:2:int:mail.request.return_receipt" checked="true"/>&mdn.label;
+			<html:input name="msgreceipt" type="radio" id="pref:2:int:mail.request.return_receipt" checked="true"/>
+			<html:label>&mdn.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="msgreceipt" type="radio" id="pref:3:int:mail.request.return_receipt"/>&both.label;
+			<html:input name="msgreceipt" type="radio" id="pref:3:int:mail.request.return_receipt"/>
+			<html:label>&both.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
 </html:form>
@@ -48,10 +51,12 @@ function DoCustomize()
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input name="getreceipt" type="radio" id="pref:0:int:mail.incorporate.return_receipt" checked="true"/>&leaveIt.label;
+			<html:input name="getreceipt" type="radio" id="pref:0:int:mail.incorporate.return_receipt" checked="true"/>
+			<html:label>&leaveIt.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="getreceipt" type="radio" id="pref:1:int:mail.incorporate.return_receipt"/>&moveToSent.label;
+			<html:input name="getreceipt" type="radio" id="pref:1:int:mail.incorporate.return_receipt"/>
+			<html:label>&moveToSent.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
 </html:form>
@@ -60,10 +65,12 @@ function DoCustomize()
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input name="returnreceipt" type="radio" id="pref:0:int:mail.mdn.report.enabled"/>&never.label;
+			<html:input name="returnreceipt" type="radio" id="pref:0:int:mail.mdn.report.enabled"/>
+			<html:label>&never.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="returnreceipt" type="radio" id="pref:1:int:mail.mdn.report.enabled" checked="true"/>&returnSome.label;
+			<html:input name="returnreceipt" type="radio" id="pref:1:int:mail.mdn.report.enabled" checked="true"/>
+			<html:label>&returnSome.label;</html:label>
 			<html:input name="custom" type="button" value="&custom.label;"/>
 		</html:td></html:tr>
 	</html:table>

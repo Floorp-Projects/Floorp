@@ -27,7 +27,8 @@
 			</html:select>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.auto_quote" checked="true"/>&autoQuote.label;
+			<html:input type="checkbox" id="pref:0:bool:mail.auto_quote" checked="true"/>
+			<html:label>&autoQuote.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>&then.label;
 			<html:select>
@@ -42,7 +43,8 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.SpellCheckBeforeSend"/>&spellCheck.label;
+			<html:input type="checkbox" id="pref:0:bool:mail.SpellCheckBeforeSend"/>
+			<html:label>&spellCheck.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
 </html:form>
@@ -51,7 +53,8 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.wrap_long_lines"/>&wrapInMsg.label;
+			<html:input type="checkbox" id="pref:0:bool:mail.wrap_long_lines"/>
+			<html:label>&wrapInMsg.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>&wrapOutMsg.label;
 			<html:input name="wraplength" type="text" value=""
@@ -65,10 +68,12 @@
 	<html:tr><html:td>&cleanupMsg.label;</html:td></html:tr>
 	<html:form>
 		<html:tr><html:td>
-			<html:input name="msgcleanup" type="radio" id="pref:0:int:mail.strictly_mime" checked="true"/>&asIs.label;
+			<html:input name="msgcleanup" type="radio" id="pref:0:int:mail.strictly_mime" checked="true"/>
+			<html:label>&asIs.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="msgcleanup" type="radio" id="pref:1:int:mail.strictly_mime"/>&useMIME.label;
+			<html:input name="msgcleanup" type="radio" id="pref:1:int:mail.strictly_mime"/>
+			<html:label>&useMIME.label;</html:label>
 		</html:td></html:tr>
 	</html:form>
 </html:table>

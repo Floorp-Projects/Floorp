@@ -21,10 +21,12 @@
 	<html:table>
 	<html:tr><html:td>&lookFor.label;</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="checkbox"/>&padCheck.label;
+			<html:input type="checkbox"/>
+			<html:label>&padCheck.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="checkbox"/>&dirCheck.label;
+			<html:input type="checkbox"/>
+			<html:label>&dirCheck.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
 			<html:select>
@@ -33,14 +35,17 @@
 		</html:td></html:tr>
 	<html:tr><html:td>&mulFound.label;</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="multilist" type="radio"/>&showList.label;
+			<html:input name="multilist" type="radio"/>
+			<html:label>&showList.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="multilist" type="radio"/>&acceptList.label;
+			<html:input name="multilist" type="radio"/>
+			<html:label>&acceptList.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>&oneMatch.label;</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input type="checkbox"/>&useAddress.label;
+			<html:input type="checkbox"/>
+			<html:label>&useAddress.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
 </html:form>
@@ -49,10 +54,12 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td>
-			<html:input name="displayname" type="radio" id="pref:0:int:mail.addr_book.lastnamefirst" checked="true"/>&useDisplayName.label;
+			<html:input name="displayname" type="radio" id="pref:0:int:mail.addr_book.lastnamefirst" checked="true"/>
+			<html:label>&useDisplayName.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td>
-			<html:input name="displayname" type="radio" id="pref:1:int:mail.addr_book.lastnamefirst"/>&useLastFirst.label;
+			<html:input name="displayname" type="radio" id="pref:1:int:mail.addr_book.lastnamefirst"/>
+			<html:label>&useLastFirst.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
 </html:form>
