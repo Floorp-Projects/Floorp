@@ -24,6 +24,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES +=-D_IMPL_NS_BASE
 
+LOCAL_INCLUDES += -I$(topsrcdir)/base/public
+
 DIRS = $(MOZ_TOOLKIT)
 
 LIBRARY_NAME = raptorbase
