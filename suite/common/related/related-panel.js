@@ -96,14 +96,3 @@ function OnDblClick(treeitem)
 }
 
 
-function Boot() {
-    // Kludge to deal with no onload in XUL.
-    if (document.getElementById("Tree")) {
-        Init();
-    }
-    else {
-        setTimeout("Boot();", 0);
-    }
-}
-
-Boot();
