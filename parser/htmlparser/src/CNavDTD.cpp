@@ -1660,6 +1660,10 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsDTDContext& aCont
             }
             //otherwise its in the close list so skip to next tag...
           } 
+          eHTMLTags theTarget=aContext.TagAt(theChildIndex);
+          if(aCurrentTag!=theTarget) {
+            aCurrentTag=theTarget; //use the synonym.
+          }
           return aCurrentTag; //if you make it here, we're ungated and found a target!
         }//if
         else if(theRootTags) {
@@ -1786,6 +1790,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
         }
         else {
           eHTMLTags theParentTag=mBodyContext->Last();
+
           if(kNotFound==GetIndexOfChildOrSynonym(*mBodyContext,theChildTag)) {
 
             // Ref: bug 30487
