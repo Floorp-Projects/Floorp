@@ -289,7 +289,7 @@ nsHttpGssapiAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsHttpGssapiAuth, nsIHttpAuthenticator);
+NS_IMPL_ISUPPORTS1(nsHttpGssapiAuth, nsIHttpAuthenticator)
    
 //
 // GenerateCredentials
