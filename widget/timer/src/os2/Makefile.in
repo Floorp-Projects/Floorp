@@ -16,6 +16,17 @@
 # Copyright (C) 1999 John Fairhurst. All Rights Reserved.
 #
 # Contributor(s):
+# This Original Code has been modified by IBM Corporation.
+# Modifications made by IBM described herein are
+# Copyright (c) International Business Machines
+# Corporation, 2000
+#
+# Modifications to Mozilla code or documentation
+# identified per MPL Section 3.3
+#
+# Date             Modified by     Description of modification
+# 05/31/2000       IBM Corp.       Changed source files to be the same as
+#                                  Windows has.  Got rid of nsTimerOS2.*
 #
 
 DEPTH		= ../../../..
@@ -31,7 +42,15 @@ LIBRARY_NAME	= timer
 
 REQUIRES	= xpcom
 
-CPPSRCS		= nsTimerOS2.cpp
+EXPORTS=nsTimerManager.h nsWindowsTimer.h nsIWindowsTimerMap.h os2TimerGlue.h
+
+CPPSRCS =			\
+	nsTimer.cpp		\
+	nsNewTimer.cpp		\
+	nsTimerManager.cpp		\
+	os2TimerGlue.cpp		\
+	$(NULL)
+
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
