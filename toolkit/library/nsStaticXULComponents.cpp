@@ -181,6 +181,7 @@
     MODULE(CommandLineModule)                \
     MODULE(nsToolkitCompsModule)             \
     MODULE(nsSoftwareUpdate)                 \
+    MODULE(JavaScript_Debugger)              \
     /* end of list */
 
 #define MODULE(_name)                                           \
