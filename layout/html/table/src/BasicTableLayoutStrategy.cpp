@@ -1320,7 +1320,7 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
   }
   // If there is only one col and it is % based, it won't affect anything
   if ((1 == numCols) && (numCols == numPerCols)) {
-    return basis; 
+    return basis + borderPadding.left + borderPadding.right + mCellSpacingTotal;
   }
 
   // compute a basis considering total percentages and the desired width of everything else
