@@ -74,6 +74,7 @@ LIBS := \
 	-lnetcache \
 	-lnetcnvts \
 	-lnetlib \
+	-lsockstuburl \
 	-lnetutil \
 	-lnetwork \
 	-lpwcac \
