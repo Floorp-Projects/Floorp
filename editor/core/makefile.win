@@ -27,6 +27,7 @@ CPPSRCS =				\
       EditTxn.cpp \
       ChangeAttributeTxn.cpp \
       InsertTextTxn.cpp \
+      DeleteTextTxn.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
@@ -36,6 +37,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\EditTxn.obj \
   .\$(OBJDIR)\ChangeAttributeTxn.obj \
   .\$(OBJDIR)\InsertTextTxn.obj \
+  .\$(OBJDIR)\DeleteTextTxn.obj \
 	$(NULL)
 
 MODULE=editor 
