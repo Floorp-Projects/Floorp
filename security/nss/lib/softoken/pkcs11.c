@@ -3303,6 +3303,18 @@ pk11_key_collect(DBT *key, DBT *data, void *arg)
 	} else {
 	    SHA1_HashBuf( hashKey, key->data, key->size ); /* match id */
 	    haveMatch = SECITEM_ItemsAreEqual(keyData->id,&result);
+	    if (!haveMatch && ((unsigned char *)key->data)[0] == 0) {
+		/* This is a fix for backwards compatibility.  The key
+		 * database indexes private keys by the public key, and
+		 * versions of NSS prior to 3.4 stored the public key as
+		 * a signed integer.  The public key is now treated as an
+		 * unsigned integer, with no leading zero.  In order to
+		 * correctly compute the hash of an old key, it is necessary
+		 * to fallback and detect the leading zero.
+		 */
+		SHA1_HashBuf( hashKey, key->data + 1, key->size - 1);
+		haveMatch = SECITEM_ItemsAreEqual(keyData->id,&result);
+	    }
 	}
 	if (haveMatch) {
 	    if (keyData->classFlags & NSC_PRIVATE)  {
