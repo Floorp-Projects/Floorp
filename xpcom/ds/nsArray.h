@@ -41,6 +41,7 @@
 
 #include "nsIArray.h"
 #include "nsCOMArray.h"
+#include "nsCOMPtr.h"
 
 #define NS_ARRAY_CLASSNAME \
   "nsIArray implementation"
@@ -53,7 +54,7 @@
 
 // create a new, empty array
 nsresult NS_COM
-NS_NewArray(nsIArray** aResult);
+NS_NewArray(nsIMutableArray** aResult);
 
 // The resulting array will hold an owning reference to every element
 // in the original nsCOMArray<T>. This also means that any further
@@ -61,7 +62,7 @@ NS_NewArray(nsIArray** aResult);
 // array, and that the original array can go away and the new array
 // will still hold valid elements.
 nsresult NS_COM
-NS_NewArray(nsIArray** aResult, const nsCOMArray_base& base);
+NS_NewArray(nsIMutableArray** aResult, const nsCOMArray_base& base);
 
 // adapter class to map nsIArray->nsCOMArray
 // do NOT declare this as a stack or member variable, use
@@ -83,6 +84,35 @@ public:
 private:
     nsCOMArray_base mArray;
 };
+
+
+// helper class for do_QueryElementAt
+class NS_COM nsQueryArrayElementAt : public nsCOMPtr_helper
+  {
+    public:
+      nsQueryArrayElementAt(nsIArray* aArray, PRUint32 aIndex,
+                            nsresult* aErrorPtr)
+          : mArray(aArray),
+            mIndex(aIndex),
+            mErrorPtr(aErrorPtr)
+        {
+          // nothing else to do here
+        }
+
+      virtual nsresult operator()(const nsIID& aIID, void**) const;
+
+    private:
+      nsIArray*  mArray;
+      PRUint32   mIndex;
+      nsresult*  mErrorPtr;
+  };
+
+inline
+const nsQueryArrayElementAt
+do_QueryElementAt(nsIArray* aArray, PRUint32 aIndex, nsresult* aErrorPtr = 0)
+  {
+    return nsQueryArrayElementAt(aArray, aIndex, aErrorPtr);
+  }
 
 
 #endif

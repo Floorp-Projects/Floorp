@@ -73,6 +73,8 @@ nsArray::QueryElementAt(PRUint32 aIndex,
     nsISupports * obj = mArray.ObjectAt(aIndex);
     if (!obj) return NS_ERROR_UNEXPECTED;
 
+    // no need to worry about a leak here, because ObjectAt() doesn't
+    // addref its result
     return obj->QueryInterface(aIID, aResult);
 }
 
@@ -156,6 +158,9 @@ nsArray::Clear()
     return NS_OK;
 }
 
+//
+// static helper routines
+//
 PRBool
 FindElementCallback(void *aElement, void* aClosure)
 {
@@ -175,25 +180,44 @@ FindElementCallback(void *aElement, void* aClosure)
     return PR_TRUE;
 }
 
+//
+// do_QueryElementAt helper stuff
+//
 nsresult
-NS_NewArray(nsIArray** aResult)
+nsQueryArrayElementAt::operator()(const nsIID& aIID, void** aResult) const
+  {
+    nsresult status = mArray
+        ? mArray->QueryElementAt(mIndex, aIID, aResult)
+        : NS_ERROR_NULL_POINTER;
+
+    if (mErrorPtr)
+      *mErrorPtr = status;
+
+    return status;
+  }
+
+//
+// exported constructor routines
+//
+nsresult
+NS_NewArray(nsIMutableArray** aResult)
 {
     nsArray* arr = new nsArray;
     if (!arr) return NS_ERROR_OUT_OF_MEMORY;
 
-    *aResult = NS_STATIC_CAST(nsIArray*,arr);
+    *aResult = NS_STATIC_CAST(nsIMutableArray*,arr);
     NS_ADDREF(*aResult);
     
     return NS_OK;
 }
 
 nsresult
-NS_NewArray(nsIArray** aResult, const nsCOMArray_base& aBaseArray)
+NS_NewArray(nsIMutableArray** aResult, const nsCOMArray_base& aBaseArray)
 {
     nsArray* arr = new nsArray(aBaseArray);
     if (!arr) return NS_ERROR_OUT_OF_MEMORY;
     
-    *aResult = NS_STATIC_CAST(nsIArray*, arr);
+    *aResult = NS_STATIC_CAST(nsIMutableArray*, arr);
     NS_ADDREF(*aResult);
 
     return NS_OK;
