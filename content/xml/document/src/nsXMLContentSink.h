@@ -56,11 +56,11 @@
 #include "nsSupportsArray.h"
 #include "nsIExpatSink.h"
 #include "nsIDocumentTransformer.h"
+#include "nsIDocShell.h"
 
 class nsICSSStyleSheet;
 class nsIDocument;
 class nsIURI;
-class nsIWebShell;
 class nsIContent;
 class nsAutoVoidArray;
 class nsIXMLDocument;
@@ -91,7 +91,7 @@ public:
 
   nsresult Init(nsIDocument* aDoc,
                 nsIURI* aURL,
-                nsIWebShell* aContainer,
+                nsISupports* aContainer,
                 nsIChannel* aChannel);
 
   // nsISupports
@@ -176,7 +176,7 @@ protected:
   nsIDocument*     mDocument;
   nsIURI*          mDocumentURL;
   nsIURI*          mDocumentBaseURL; // can be set via HTTP headers
-  nsIWebShell*     mWebShell;
+  nsCOMPtr<nsIDocShell> mDocShell;
   nsIParser*       mParser;
   nsIContent*      mDocElement;
   nsAutoVoidArray* mNameSpaceStack;

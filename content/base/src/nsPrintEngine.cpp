@@ -147,7 +147,6 @@ static const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprom
 #include "nsIPrefBranch.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
-#include "nsIWebShell.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIContentViewerFile.h"
 #include "nsIMarkupDocumentViewer.h"

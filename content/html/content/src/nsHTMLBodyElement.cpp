@@ -51,7 +51,6 @@
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsICSSStyleRule.h"
-#include "nsIWebShell.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsHTMLAttributes.h"

@@ -48,7 +48,6 @@
 #include "nsIContent.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocumentLoader.h"
@@ -633,13 +632,12 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     sink = do_QueryInterface(aSink);
   }
   else {
-    // This is silly, aContainer should be an nsIWebShell
-    nsCOMPtr<nsIWebShell> webShell;
+    nsCOMPtr<nsIDocShell> docShell;
     if (aContainer) {
-      webShell = do_QueryInterface(aContainer);
-      NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
+      docShell = do_QueryInterface(aContainer);
+      NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
     }
-    rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, webShell,
+    rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, docShell,
                               aChannel);
     NS_ENSURE_SUCCESS(rv, rv);
   }

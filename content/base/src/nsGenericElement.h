@@ -421,7 +421,7 @@ public:
                                       PRInt32 aModType, nsChangeHint& aHint) const;
 
   // nsIXMLContent interface methods
-  NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
+  NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
   NS_IMETHOD GetXMLBaseURI(nsIURI **aURI);
 
   // nsIHTMLContent interface methods

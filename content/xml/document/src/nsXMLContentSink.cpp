@@ -52,8 +52,6 @@
 #include "nsIURL.h"
 #include "nsIRefreshURI.h"
 #include "nsNetUtil.h"
-#include "nsIWebShell.h"
-#include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"
@@ -187,7 +185,7 @@ nsresult
 NS_NewXMLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
                      nsIURI* aURL,
-                     nsIWebShell* aWebShell,
+                     nsISupports* aContainer,
                      nsIChannel* aChannel)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
@@ -201,7 +199,7 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
   }
   
   nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
-  nsresult rv = it->Init(aDoc, aURL, aWebShell, aChannel);
+  nsresult rv = it->Init(aDoc, aURL, aContainer, aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
   
   return CallQueryInterface(it, aResult);
@@ -213,7 +211,6 @@ nsXMLContentSink::nsXMLContentSink()
   mDocument = nsnull;
   mDocumentURL = nsnull;
   mDocumentBaseURL = nsnull;
-  mWebShell = nsnull;
   mParser = nsnull;
   mDocElement = nsnull;
   mContentStack = nsnull;
@@ -236,7 +233,6 @@ nsXMLContentSink::~nsXMLContentSink()
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mDocumentBaseURL);
-  NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mDocElement);
   if (nsnull != mNameSpaceStack) {
@@ -257,7 +253,7 @@ nsXMLContentSink::~nsXMLContentSink()
 nsresult
 nsXMLContentSink::Init(nsIDocument* aDoc,
                        nsIURI* aURL,
-                       nsIWebShell* aContainer,
+                       nsISupports* aContainer,
                        nsIChannel* aChannel)
 {
   NS_PRECONDITION(nsnull != aDoc, "null ptr");
@@ -272,9 +268,8 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   NS_ADDREF(aURL);
   mDocumentBaseURL = aURL;
   NS_ADDREF(aURL);
-  mWebShell = aContainer;
-  NS_IF_ADDREF(mWebShell);
-  if (!mWebShell) {
+  mDocShell = do_QueryInterface(aContainer);
+  if (!mDocShell) {
     mPrettyPrintXML = PR_FALSE;
   }
   
@@ -456,10 +451,9 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
 #if 0 /* Disable until this works for XML */
     //  Scroll to Anchor only if the document was *not* loaded through history means. 
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-    if (docShell) {
+    if (mDocShell) {
       PRUint32 documentLoadType = 0;
-      docShell->GetLoadType(&documentLoadType);
+      mDocShell->GetLoadType(&documentLoadType);
       ScrollToRef(!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY));
     }
 #else
@@ -488,9 +482,8 @@ nsXMLContentSink::OnDocumentCreated(nsIDOMDocument* aResultDocument)
 {
   NS_ENSURE_ARG(aResultDocument);
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   nsCOMPtr<nsIContentViewer> contentViewer;
-  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   if (contentViewer) {
     contentViewer->SetDOMDocument(aResultDocument);
   }
@@ -504,9 +497,8 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   NS_ASSERTION(NS_FAILED(aResult) || aResultDocument,
                "Don't notify about transform success without a document.");
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   nsCOMPtr<nsIContentViewer> contentViewer;
-  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
 
   if (NS_FAILED(aResult) && contentViewer) {
     // Transform failed.
@@ -825,8 +817,8 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
       // don't load alternate XSLT
       return NS_OK;
     }
-    // LoadXSLStyleSheet needs a mWebShell.
-    if (!mWebShell)
+    // LoadXSLStyleSheet needs a mDocShell.
+    if (!mDocShell)
       return NS_OK;
 
     nsCOMPtr<nsIURI> url;
@@ -1092,26 +1084,24 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
 
   mDocument->SetHeaderData(aHeader, aValue);
   
+  if (!mDocShell) return NS_ERROR_FAILURE;
+
   // see if we have a refresh "header".
   if (aHeader == nsHTMLAtoms::refresh) {
     // first get our baseURI
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
-    if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIURI> baseURI;
-    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);
     rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mWebShell);
+    nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mDocShell);
     if (reefer) {
       rv = reefer->SetupRefreshURIFromHeader(baseURI, NS_ConvertUCS2toUTF8(aValue));
       if (NS_FAILED(rv)) return rv;
     }
   } // END refresh
   else if (aHeader == nsHTMLAtoms::setcookie) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
-    if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     
@@ -1367,7 +1357,7 @@ nsXMLContentSink::StartLayout()
 {
   // Reset scrolling to default settings for this shell.
   // This must happen before the initial reflow, when we create the root frame
-  nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(mWebShell));
+  nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(mDocShell));
   if (scrollableContainer) {
     scrollableContainer->ResetScrollbarPreferences();
   }
@@ -1411,7 +1401,7 @@ nsXMLContentSink::StartLayout()
   }
 
   PRBool topLevelFrameset = PR_FALSE;
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   if (docShellAsItem) {
     nsCOMPtr<nsIDocShellTreeItem> root;
     docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
@@ -1520,9 +1510,8 @@ nsresult
 nsXMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
 {
   if (vm) {
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
     nsCOMPtr<nsIContentViewer> contentViewer;
-    nsresult rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+    nsresult rv = mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
     if (NS_SUCCEEDED(rv) && contentViewer) {
       PRBool enabled;
       contentViewer->GetEnableRendering(&enabled);
@@ -2216,10 +2205,10 @@ nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
   }
 
   // Give autoloading links a chance to fire
-  if (mWebShell) {
+  if (mDocShell) {
     nsCOMPtr<nsIXMLContent> xmlcontent(do_QueryInterface(aContent));
     if (xmlcontent) {
-      nsresult rv = xmlcontent->MaybeTriggerAutoLink(mWebShell);
+      nsresult rv = xmlcontent->MaybeTriggerAutoLink(mDocShell);
       if (rv == NS_XML_AUTOLINK_REPLACE ||
           rv == NS_XML_AUTOLINK_UNDEFINED) {
         // If we do not terminate the parse, we just keep generating link trigger

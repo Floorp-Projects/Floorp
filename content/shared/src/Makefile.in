@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  locale \
 		  dom \
-		  webshell \
 		  necko \
 		  htmlparser \
 		  unicharutil \

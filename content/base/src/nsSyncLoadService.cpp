@@ -76,7 +76,7 @@ nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
                      nsIURI* aURL,
-                     nsIWebShell* aWebShell);
+                     nsISupports* aContainer);
 
 class nsSyncLoadService : public nsISyncLoadDOMService
 {

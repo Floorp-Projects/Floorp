@@ -2041,7 +2041,7 @@ nsGenericElement::SetContentID(PRUint32 aID)
 }
 
 NS_IMETHODIMP
-nsGenericElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
+nsGenericElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 {
   return NS_OK;
 }

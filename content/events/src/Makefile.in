@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  caps \
 		  xpconnect \
 		  docshell \
-		  webshell \
 		  pref \
 		  htmlparser \
 		  view \

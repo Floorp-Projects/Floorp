@@ -45,7 +45,7 @@
 
 class nsINameSpace;
 class nsINodeInfo;
-class nsIWebShell;
+class nsIDocShell;
 class nsIURI;
 
 #define NS_IXMLCONTENT_IID \
@@ -64,7 +64,7 @@ public:
    * automatically when loaded. If the element was an autoloading link
    * and it was succesfully handled, we will throw special nsresult values.
    *
-   * @param aShell the current web shell (to possibly load the link on)
+   * @param aShell the current doc shell (to possibly load the link on)
    * @throws NS_OK if nothing happened
    * @throws NS_XML_AUTOLINK_EMBED if the caller is loading the link embedded
    * @throws NS_XML_AUTOLINK_NEW if the caller is loading the link in a new
@@ -74,7 +74,7 @@ public:
    * @throws NS_XML_AUTOLINK_UNDEFINED if it is loading in any other way--in
    *         which case, the caller should stop parsing as well.
    */
-  NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell) = 0;
+  NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell) = 0;
 
   /**
    * Get the XML Base URI for this element (http://www.w3.org/TR/xmlbase/)
