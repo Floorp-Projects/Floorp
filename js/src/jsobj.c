@@ -2156,7 +2156,7 @@ resolving_MatchEntry(JSDHashTable *table,
     return entry->key.obj == key->obj && entry->key.id == key->id;
 }
 
-static JSDHashTableOps resolving_dhash_ops = {
+static const JSDHashTableOps resolving_dhash_ops = {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
     resolving_GetKey,

@@ -184,7 +184,7 @@ struct PLDHashEntryHdr {
  * required, double hashing wins.
  */
 struct PLDHashTable {
-    PLDHashTableOps     *ops;           /* virtual operations, see below */
+    const PLDHashTableOps *ops;         /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
     PRInt16             hashShift;      /* multiplicative hash shift */
     uint8               maxAlphaFrac;   /* 8-bit fixed point max alpha */
@@ -387,7 +387,7 @@ PL_DHashFinalizeStub(PLDHashTable *table);
  * if your entries move via memcpy and clear via memset(0), you can use these
  * stub operations.
  */
-PR_EXTERN(PLDHashTableOps *)
+PR_EXTERN(const PLDHashTableOps *)
 PL_DHashGetStubOps(void);
 
 /*
@@ -397,7 +397,7 @@ PL_DHashGetStubOps(void);
  * the ops->allocTable callback.
  */
 PR_EXTERN(PLDHashTable *)
-PL_NewDHashTable(PLDHashTableOps *ops, void *data, PRUint32 entrySize,
+PL_NewDHashTable(const PLDHashTableOps *ops, void *data, PRUint32 entrySize,
                  PRUint32 capacity);
 
 /*
@@ -414,7 +414,7 @@ PL_DHashTableDestroy(PLDHashTable *table);
  * only to avoid inevitable early growth from PL_DHASH_MIN_SIZE).
  */
 PR_EXTERN(PRBool)
-PL_DHashTableInit(PLDHashTable *table, PLDHashTableOps *ops, void *data,
+PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
                   PRUint32 entrySize, PRUint32 capacity);
 
 /*

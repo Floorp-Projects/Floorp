@@ -123,7 +123,7 @@ JS_DHashFinalizeStub(JSDHashTable *table)
 {
 }
 
-static JSDHashTableOps stub_ops = {
+const static JSDHashTableOps stub_ops = {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
     JS_DHashGetKeyStub,
@@ -135,14 +135,14 @@ static JSDHashTableOps stub_ops = {
     NULL
 };
 
-JS_PUBLIC_API(JSDHashTableOps *)
+JS_PUBLIC_API(const JSDHashTableOps *)
 JS_DHashGetStubOps(void)
 {
     return &stub_ops;
 }
 
 JS_PUBLIC_API(JSDHashTable *)
-JS_NewDHashTable(JSDHashTableOps *ops, void *data, uint32 entrySize,
+JS_NewDHashTable(const JSDHashTableOps *ops, void *data, uint32 entrySize,
                  uint32 capacity)
 {
     JSDHashTable *table;
@@ -165,7 +165,7 @@ JS_DHashTableDestroy(JSDHashTable *table)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
+JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
                   uint32 entrySize, uint32 capacity)
 {
     int log2;

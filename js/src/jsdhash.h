@@ -183,7 +183,7 @@ struct JSDHashEntryHdr {
  * required, double hashing wins.
  */
 struct JSDHashTable {
-    JSDHashTableOps     *ops;           /* virtual operations, see below */
+    const JSDHashTableOps *ops;         /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
     int16               hashShift;      /* multiplicative hash shift */
     uint8               maxAlphaFrac;   /* 8-bit fixed point max alpha */
@@ -386,7 +386,7 @@ JS_DHashFinalizeStub(JSDHashTable *table);
  * if your entries move via memcpy and clear via memset(0), you can use these
  * stub operations.
  */
-extern JS_PUBLIC_API(JSDHashTableOps *)
+extern JS_PUBLIC_API(const JSDHashTableOps *)
 JS_DHashGetStubOps(void);
 
 /*
@@ -396,7 +396,7 @@ JS_DHashGetStubOps(void);
  * the ops->allocTable callback.
  */
 extern JS_PUBLIC_API(JSDHashTable *)
-JS_NewDHashTable(JSDHashTableOps *ops, void *data, uint32 entrySize,
+JS_NewDHashTable(const JSDHashTableOps *ops, void *data, uint32 entrySize,
                  uint32 capacity);
 
 /*
@@ -413,7 +413,7 @@ JS_DHashTableDestroy(JSDHashTable *table);
  * only to avoid inevitable early growth from JS_DHASH_MIN_SIZE).
  */
 extern JS_PUBLIC_API(JSBool)
-JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
+JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
                   uint32 entrySize, uint32 capacity);
 
 /*
