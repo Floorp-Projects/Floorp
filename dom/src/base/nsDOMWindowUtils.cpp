@@ -52,10 +52,10 @@ NS_IMPL_RELEASE(nsDOMWindowUtils)
 
 nsDOMWindowUtils::nsDOMWindowUtils(GlobalWindowImpl *aWindow) :
                     mWindow(aWindow) {
-};
+}
 
 nsDOMWindowUtils::~nsDOMWindowUtils() {
-};
+}
 
 NS_IMETHODIMP
 nsDOMWindowUtils::GetImageAnimationMode(PRUint16 *aMode) {
