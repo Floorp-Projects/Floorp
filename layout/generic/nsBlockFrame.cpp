@@ -1058,17 +1058,22 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   else {
     // Compute final width
     nscoord maxWidth = 0, maxHeight = 0;
+    nscoord minWidth = aState.mKidXMost + borderPadding.right;
     if (!aState.mUnconstrainedWidth && aReflowState.HaveFixedContentWidth()) {
       // Use style defined width
       aMetrics.width = borderPadding.left + aReflowState.computedWidth +
         borderPadding.right;
+      // XXX quote css1 section here
+      if (aMetrics.width < minWidth) {
+        aMetrics.width = minWidth;
+      }
 
       // When style defines the width use it for the max-element-size
       // because we can't shrink any smaller.
       maxWidth = aMetrics.width;
     }
     else {
-      nscoord computedWidth = aState.mKidXMost + borderPadding.right;
+      nscoord computedWidth = minWidth;
       PRBool compact = PR_FALSE;
 #if 0
       if (NS_STYLE_DISPLAY_COMPACT == aReflowState.mStyleDisplay->mDisplay) {
@@ -2788,6 +2793,37 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     if (!reflowingFirstLetter) {
       needSplit = PR_TRUE;
     }
+    else {
+#if 0
+      // We need to repair the style-contexts of the continuation
+      // frame for the frame we just reflowed so that it not longer
+      // has first-letter style..
+      nsIFrame* nextInFlow;
+      aFrame->GetNextInFlow(&nextInFlow);
+      if (nsnull != nextInFlow) {
+        nsIStyleContext* kidSC;
+        nextInFlow->GetStyleContext(&kidSC);
+        if (nsnull != kidSC) {
+          nsIStyleContext* kidParentSC;
+          kidParentSC = kidSC->GetParent();
+          if (nsnull != kidParentSC) {
+            if (kidParentSC == mFirstLetterStyle) {
+nsFrame::ListTag(stdout, nextInFlow);
+printf(": changing style contexts\n");
+              nextInFlow->ReResolveStyleContext(&aState.mPresContext,
+                                                (mFirstLineStyle
+                                                 ? mFirstLineStyle
+                                                 : mStyleContext),
+                                                NS_STYLE_HINT_REFLOW, nsnull,
+                                                nsnull);
+            }
+            NS_RELEASE(kidParentSC);
+          }
+          NS_RELEASE(kidSC);
+        }
+      }
+#endif
+    }
 
     if (needSplit) {
       // Split line after the current frame
@@ -4067,13 +4103,25 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
       // CSS 10.3.5: If 'left', 'right', 'width', 'margin-left', or
       // 'margin-right' are specified as 'auto', their computed value
       // is '0'.
+      //
+      // However, CSS1 says: "The 'width' has a non-negative
+      // UA-defined minimum value (which may vary from element to
+      // element and even depend on other properties). If 'width' goes
+      // below this limit, either because it was set explicitly, or
+      // because it was 'auto' and the rules below would make it too
+      // small, the value will be replaced with the minimum value
+      // instead."
+      //
+      // CSS1's definition is better than CSS2's in this regard
+      // because its compatible with existing content (e.g. a floating
+      // table that has no specified width).
+#if 0
       if (0 == reflowState.computedWidth) {
-#ifdef DEBUG
         nsFrame::ListTag(stdout, floater);
         printf(": auto sized floating element forced to zero width\n");
-#endif
         aMetrics.width = 0;
       }
+#endif
     }
     nsFrameState state;
     floater->GetFrameState(&state);
@@ -4475,12 +4523,12 @@ static void ComputeCombinedArea(nsLineBox* aLine,
 
 NS_IMETHODIMP
 nsBlockFrame::Paint(nsIPresContext&      aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer)
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect&        aDirtyRect,
+                    nsFramePaintLayer    aWhichLayer)
 {
 #ifdef NOISY_DAMAGE_REPAIR
-  if (eFramePaintLayer_Underlay == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     PRInt32 depth = GetDepth();
     nsRect ca;
     ComputeCombinedArea(mLines, mRect.width, mRect.height, ca);
@@ -4497,7 +4545,7 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
   // Only paint the border and background if we're visible
-  if (disp->mVisible && (eFramePaintLayer_Underlay == aWhichLayer) &&
+  if (disp->mVisible && (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
       (0 != mRect.width) && (0 != mRect.height)) {
     PRIntn skipSides = GetSkipSides();
     const nsStyleColor* color = (const nsStyleColor*)
@@ -4525,7 +4573,9 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
 
   // Child elements have the opportunity to override the visibility
   // property and display even if the parent is hidden
-  PaintFloaters(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  if (NS_FRAME_PAINT_LAYER_FLOATERS == aWhichLayer) {
+    PaintFloaters(aPresContext, aRenderingContext, aDirtyRect);
+  }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
@@ -4533,18 +4583,13 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
     aRenderingContext.PopState(clipState);
   }
 
-  if (eFramePaintLayer_Overlay == aWhichLayer) {
-    // XXX CSS2's outline handling goes here
-  }
-
   return NS_OK;
 }
 
 void
 nsBlockFrame::PaintFloaters(nsIPresContext& aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect,
-                             nsFramePaintLayer aWhichLayer)
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect)
 {
   for (nsLineBox* line = mLines; nsnull != line; line = line->mNext) {
     nsVoidArray* floaters = line->mFloaters;
@@ -4555,7 +4600,11 @@ nsBlockFrame::PaintFloaters(nsIPresContext& aPresContext,
     for (i = 0; i < n; i++) {
       nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 ph->GetAnchoredItem(), aWhichLayer);
+                 ph->GetAnchoredItem(), NS_FRAME_PAINT_LAYER_BACKGROUND);
+      PaintChild(aPresContext, aRenderingContext, aDirtyRect,
+                 ph->GetAnchoredItem(), NS_FRAME_PAINT_LAYER_FLOATERS);
+      PaintChild(aPresContext, aRenderingContext, aDirtyRect,
+                 ph->GetAnchoredItem(), NS_FRAME_PAINT_LAYER_FOREGROUND);
     }
   }
 }
@@ -4568,7 +4617,7 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
 {
 #ifdef NOISY_DAMAGE_REPAIR
   PRInt32 depth = 0;
-  if (eFramePaintLayer_Underlay == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     depth = GetDepth();
   }
 #endif
@@ -4579,7 +4628,7 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
         !((line->mCombinedArea.YMost() <= aDirtyRect.y) ||
           (line->mCombinedArea.y >= aDirtyRect.YMost()))) {
 #ifdef NOISY_DAMAGE_REPAIR
-      if (eFramePaintLayer_Underlay == aWhichLayer) {
+      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
         nsFrame::IndentBy(stdout, depth+1);
         printf("draw line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
                line, line->mBounds.x, line->mBounds.y,
@@ -4598,7 +4647,7 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
     }
 #ifdef NOISY_DAMAGE_REPAIR
     else {
-      if (eFramePaintLayer_Underlay == aWhichLayer) {
+      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
         nsFrame::IndentBy(stdout, depth+1);
         printf("skip line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
                line, line->mBounds.x, line->mBounds.y,
@@ -4610,7 +4659,7 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
 #endif  
   }
 
-  if (eFramePaintLayer_Content == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     if ((nsnull != mBullet) && HaveOutsideBullet()) {
       // Paint outside bullets manually
       PaintChild(aPresContext, aRenderingContext, aDirtyRect, mBullet,
