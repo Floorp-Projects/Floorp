@@ -35,6 +35,7 @@
 #include "world.h"
 #include "vmtypes.h"
 #include "jstypes.h"
+#include "jsclasses.h"
 #include "icodegenerator.h"
 
 #include <stdexcept>
@@ -1193,6 +1194,17 @@ void ICodeGenerator::preprocess(StmtNode *p)
             }
             if (t->finally)
                 genStmt(t->finally);
+        }
+        break;
+   case StmtNode::Class:
+        {
+            ClassStmtNode *classStmt = static_cast<ClassStmtNode *>(p);
+            ASSERT(classStmt->name->getKind() == ExprNode::identifier);
+            IdentifierExprNode* nameExpr = static_cast<IdentifierExprNode*>(classStmt->name);
+            using JSClasses::JSClass;
+            JSClass* jsclass = new JSClass(nameExpr->name);
+            // put this class into the current defining scope, and as a side-effect(?) make it
+            // the current defining scope, for later compilation into?
         }
         break;
    }
