@@ -21,7 +21,8 @@
 // Mike Pinkerton
 // Netscape Communications
 //
-// The MacOS native implementation of  nsIDragService.
+// The MacOS native implementation of nsIDragService, nsIDragSession, and
+// nsIDragSessionMac.
 //
 
 
@@ -30,24 +31,22 @@
 
 
 #include "nsBaseDragService.h"
+#include "nsIDragSessionMac.h"
 #include <Drag.h>
 
 
 class  nsNativeDragTarget;
 
 
-//
-// Native MacOS DragService/DragSession implementation
-//
-class nsDragService : public nsBaseDragService
+class nsDragService : public nsBaseDragService, public nsIDragSessionMac
 {
 public:
   nsDragService();
   virtual ~nsDragService();
 
   //nsISupports
-  //NS_DECL_ISUPPORTS_INHERITED
-  
+  NS_DECL_ISUPPORTS_INHERITED
+
   //nsIDragService
   NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType);
   //NS_IMETHOD InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType);
@@ -55,6 +54,9 @@ public:
   //nsIDragSession
   NS_IMETHOD GetData (nsITransferable * aTransferable);
   NS_IMETHOD IsDataFlavorSupported(nsString * aDataFlavor);
+
+  //nsIDragSessionMac
+  NS_IMETHOD SetDragReference ( DragReference aDragRef ) ;  
 
 private:
 
