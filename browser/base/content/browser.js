@@ -1356,7 +1356,7 @@ function toHistory()
     }
     gDisableHistory = true;
 
-    window.open( "chrome://communicator/content/history/history.xul", "_blank",
+    window.open( "chrome://browser/content/history/history.xul", "_blank",
         "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar" );
     setTimeout(enableHistory, 2000);
   }
