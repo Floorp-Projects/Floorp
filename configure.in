@@ -266,6 +266,11 @@ case "$target" in
     AS='$(CC)'
     ;;
 
+*-beos*)
+    MKSHLIB='$(CXX) $(DSO_LDOPTS)'
+    DSO_LDOPTS='-nostart -Xlinker --ignore-undefined'
+    ;;
+
 *-bsdi*)
     case `uname -r` in
 	4.*) ;;
@@ -504,12 +509,14 @@ LDFLAGS="$_SAVE_LDFLAGS"
 dnl Check for toolkit libs
 dnl ========================================================
 useRhapsody=`echo $target_os | egrep "^Rhapsody"`
+useBeOS=`echo $target_os | egrep "^BeOS"`
 AC_ARG_ENABLE(toolkit,
 [  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
   [if test "$enableval" = "motif" \
         -o "$enableval" = "gtk" \
         -o "$enableval" = "xlib" \
-        -o "$useRhapsody" ; then
+        -o "$useRhapsody" \
+	-o "$useBeOS"; then
      dnl nglayout only supports building with one toolkit,
      dnl so ignore everything after the first comma (",").
      MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
@@ -519,7 +526,11 @@ AC_ARG_ENABLE(toolkit,
   [if test "$useRhapsody" ; then
      MOZ_TOOLKIT="rhapsody"
    else
-     MOZ_TOOLKIT="gtk"
+     if test "$useBeOS" ; then
+       MOZ_TOOLKIT="beos"
+     else
+       MOZ_TOOLKIT="gtk"
+     fi
    fi])
 
 if echo ":$MOZ_TOOLKIT" | grep "motif" >/dev/null; then
@@ -1087,7 +1098,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_UTIME_NULL
 AC_FUNC_VFORK
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(fork1 ftime getcwd getwd gethostname lchown localtime_r)
+AC_CHECK_FUNCS(fchmod fork1 ftime getcwd getwd gethostname lchown localtime_r)
 AC_CHECK_FUNCS(mkdir mktime putenv qsort random remainder rmdir select)
 AC_CHECK_FUNCS(setvbuf snprintf socket statvfs strcspn strdup strerror)
 AC_CHECK_FUNCS(strspn strstr strtol strtoul uname waitid)
