@@ -82,6 +82,8 @@ public:
   PRInt32 GetWidthSource();
   void SetWidthSource(PRInt32 aMinColWidth);
 
+  nscoord GetColWidthForComputation();
+
   /** convenience method, calls into cellmap */
   PRInt32 Count() const;
 

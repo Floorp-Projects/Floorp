@@ -82,6 +82,15 @@ PRInt32 nsTableColFrame::GetSpan()
   return tableStyle->mSpan;
 }
 
+nscoord nsTableColFrame::GetColWidthForComputation()
+{
+  const nsStylePosition* position;
+  GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)position));
+  if (eStyleUnit_Coord==position->mWidth.GetUnit())
+    return position->mWidth.GetCoordValue();
+  else
+    return GetEffectiveMaxColWidth();
+}
 
 /* ----- global methods ----- */
 
