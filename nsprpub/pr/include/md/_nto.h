@@ -62,6 +62,7 @@
 #define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
 #define _PR_HAVE_POSIX_SEMAPHORES
 
+#undef FD_SETSIZE
 #define FD_SETSIZE	4096
 #include <sys/time.h>
 #include <sys/types.h>
