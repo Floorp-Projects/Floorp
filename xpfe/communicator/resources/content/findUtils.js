@@ -21,6 +21,9 @@
  *   Simon Fraser <sfraser@netscape.com>
  */
 
+var gPromptService;
+var gFindBundle;
+
 // browser is the <browser> element
 // rootSearchWindow is the window to constrain the search to (normally window._content)
 // startSearchWindow is the frame to start searching (can be, and normally, rootSearchWindow)
@@ -70,7 +73,16 @@ function findAgainInPage(browser, rootSearchWindow, startSearchWindow)
 
     var found = false;
     if (findInst.searchString.length > 0)   // should never happen if command updating works
-        found = findInst.findNext();
+      found = findInst.findNext();
+    if (!found) {
+      if (!gPromptService)
+        gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService()
+                                   .QueryInterface(Components.interfaces.nsIPromptService);                                     
+      if (!gFindBundle)
+        gFindBundle = document.getElementById("findBundle");
+          
+      gPromptService.alert(window, gFindBundle.getString("notFoundTitle"), gFindBundle.getString("notFoundWarning"));
+    }      
   }
 }
 
