@@ -47,7 +47,7 @@ public:
 
 protected:
     PRLock*             mLock;
-    nsHashtable*        mSubstitutions;
+    nsHashtable         mSubstitutions;
 };
 
 #endif /* nsResProtocolHandler_h___ */
