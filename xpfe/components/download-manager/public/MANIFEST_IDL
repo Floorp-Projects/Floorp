@@ -1,0 +1,2 @@
+nsIDownloadManager.idl
+nsIDownloadProgressListener.idl
