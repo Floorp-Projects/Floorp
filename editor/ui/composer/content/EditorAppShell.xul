@@ -21,6 +21,7 @@
    - 
    - Contributor(s):
    -    Ben Goodger
+   -    Michael Lowe
   -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
@@ -668,14 +669,26 @@
         <titledbutton id="SaveButton" src="&saveIcon.url;" class="popup" observes="Editor:Save"/>
 <!-- Not supporting publishing (yet?) -->
 <!--      <titledbutton src="&publishIcon.url;" value="&publishToolbarCmd.label;" class="popup"/> -->
+
+        <html:div class="separator" align="vertical" />
+
         <titledbutton src="&printIcon.url;" value="&printToolbarCmd.label;" class="popup"/>
         <titledbutton src="&findIcon.url;" observes="Editor:Find"/>
-        <titledbutton src="&linkIcon.url;" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
+        <titledbutton src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+
+        <html:div class="separator" align="vertical" />
+
         <titledbutton src="&imageIcon.url;" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
-        <titledbutton src="&targetIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
         <titledbutton src="&hlineIcon.url;" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
         <titledbutton src="&tableIcon.url;" value="&tableToolbarCmd.label;" onclick="EditorInsertOrEditTable(true)"/>
-        <titledbutton src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+
+        <html:div class="separator" align="vertical" />
+
+        <titledbutton src="&linkIcon.url;" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
+        <titledbutton src="&targetIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
+
+        <html:div class="separator" align="vertical" />
+
         <spring flex="100%"/>
         <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" value="&previewToolbarCmd.label;" class="popup" onclick="EditorToggleDisplayStyle()"/>
     </toolbar>
@@ -683,10 +696,15 @@
         <titledbutton style="width:68pt" id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft">
           <observes element="Editor:Paragraph:Format" attribute="format" onchange="onParagraphFormatChange()"/>
         </titledbutton>
+
+        <html:div class="separator" align="vertical" />
+
         <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="right" popup="FontFaceMenu" popupanchor="bottomleft"/>
         <titledbutton id="FontSizePopup" value="&sizeToolbarMenu.label;" class="popup" align="right" popup="FontSizeMenu" popupanchor="bottomleft"/>
         <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu" popupanchor="bottomleft"/>
         <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu" popupanchor="bottomleft"/>
+
+        <html:div class="separator" align="vertical" />
 
         <!-- can't just use observes here because we don't want the value from the broadcaster -->
         <titledbutton id="boldButton" value="&formatToolbar.boldChar;" onclick="EditorToggleStyle('bold')">
@@ -698,13 +716,9 @@
         <titledbutton id="underlineButton" value="&formatToolbar.underlineChar;" onclick="EditorToggleStyle('underline')">
           <observes element="Editor:Underline" attribute="underline" onchange="onStyleChange('underline')"/>
         </titledbutton>
-<!--
-        <titledbutton id="BoldButton" src="chrome://editor/skin/images/ED_Bold.gif" align="bottom" onclick="EditorApplyStyle('b')">
-          <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
-        </titledbutton>
-        <titledbutton id="ItalicButton" src="chrome://editor/skin/images/ED_Italic.gif" align="bottom" onclick="EditorApplyStyle('i')"/>
-        <titledbutton id="UnderlineButton" src="chrome://editor/skin/images/ED_Underline.gif" align="bottom" onclick="EditorApplyStyle('u')"/>
--->
+
+        <html:div class="separator" align="vertical" />
+
         <titledbutton id="ulButton" src="&bulletListIcon.url;" align="bottom" onclick="EditorInsertList('ul')">
             <observes element="Editor:Paragraph:ListType" attribute="format" onchange="onListFormatChange('ul')"/>
         </titledbutton>
@@ -715,6 +729,9 @@
 
         <titledbutton src="&outdentIcon.url;" align="bottom" onclick="EditorIndent('outdent')"/>
         <titledbutton src="&indentIcon.url;" align="bottom" onclick="EditorIndent('indent')"/>
+
+        <html:div class="separator" align="vertical" />
+
         <titledbutton src="&alignpopupIcon.url;" align="bottom" class="popup" popup="AlignmentWindow" popupanchor="bottomleft"/>
       <spring flex="100%"/>
     </toolbar>
