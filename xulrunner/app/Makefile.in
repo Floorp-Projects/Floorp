@@ -1,0 +1,314 @@
+# vim:set ts=8 sw=8 sts=8 et:
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Brian Ryner <bryner@brianryner.com>
+#  Jonathan Wilson <jonwil@tpgi.com.au>
+#  Dan Mosedale <dmose@mozilla.org>
+#  Darin Fisher <darin@meer.net>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+DIRS		= profile
+
+#PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js
+
+ifeq ($(USE_SHORT_LIBNAME), 1)
+PROGRAM = xulrun$(BIN_SUFFIX)
+else
+PROGRAM = xulrunner-bin$(BIN_SUFFIX)
+endif
+
+REQUIRES = \
+        xulapp \
+	$(NULL)
+
+CPPSRCS = nsXulRunnerApp.cpp
+
+ifdef BUILD_STATIC_LIBS
+STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+TK_LIBS := -framework Cocoa $(TK_LIBS)
+endif
+
+LIBS = \
+	$(STATIC_COMPONENTS_LINKER_PATH) \
+	$(EXTRA_DSO_LIBS) \
+	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
+	$(MOZ_JS_LIBS) \
+	$(XPCOM_LIBS) \
+	$(NSPR_LIBS) \
+	$(TK_LIBS) \
+	$(NULL)
+
+# Add explicit X11 dependency when building against X11 toolkits
+ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
+LIBS += $(XLDFLAGS) $(XLIBS)
+endif
+
+ifdef MOZ_JPROF
+LIBS += -ljprof
+endif
+
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE = 1
+else
+MOZ_WINCONSOLE = 0
+endif
+endif
+
+NSDISTMODE = copy
+
+include $(topsrcdir)/config/config.mk
+ifndef BUILD_STATIC_LIBS
+
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS += tracemalloc
+endif
+
+else
+include $(topsrcdir)/config/static-config.mk
+
+EXTRA_DEPS	+= \
+	$(STATIC_EXTRA_DEPS) \
+	$(NULL)
+DEFINES		+= $(STATIC_DEFINES)
+CPPSRCS		+= $(STATIC_CPPSRCS)
+EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
+REQUIRES	+= $(STATIC_REQUIRES)
+EXTRA_LIBS	+= $(STATIC_EXTRA_LIBS)
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)
+#RCINCLUDE = splash.rc
+ifndef GNU_CC
+RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
+else
+RCFLAGS += -DMOZ_PHOENIX --include-dir $(srcdir)
+endif
+ifdef BUILD_STATIC_LIBS
+RCFLAGS += -DMOZ_STATIC_BUILD
+endif
+ifdef DEBUG
+RCFLAGS += -DDEBUG
+endif
+endif
+
+ifeq ($(OS_ARCH),BeOS)
+OS_LIBS += -ltracker
+endif
+
+#ifeq ($(OS_ARCH),OS2)
+#RESFILE=splashos2.res
+#RCFLAGS += -DMOZ_PHOENIX
+#ifdef BUILD_STATIC_LIBS
+#OS_LIBS += -lpmwinx
+#EXE_DEF_FILE = browser.def
+#RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include/widget
+#endif
+#ifdef DEBUG
+#RCFLAGS += -DDEBUG
+#endif
+#RCFLAGS += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
+#endif
+
+include $(topsrcdir)/config/rules.mk
+
+#DEFINES += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
+
+ifdef BUILD_STATIC_LIBS
+include $(topsrcdir)/config/static-rules.mk
+endif
+
+APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
+DEFINES += -DAPP_VERSION=\"$(APP_VERSION)\"
+
+BUILD_ID = $(shell cat $(DEPTH)/config/build_number)
+DEFINES += -DBUILD_ID=\"$(BUILD_ID)\"
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifdef BUILD_STATIC_LIBS
+LIBS	+= -framework QuickTime -framework IOKit
+ifdef USE_PREBINDING
+BIN_FLAGS += -Wl,-headerpad -Wl,5a0c
+endif
+endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
+LIBS += -lphexlib
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+#
+# Control the default heap size.
+# This is the heap returned by GetProcessHeap().
+# As we use the CRT heap, the default size is too large and wastes VM.
+#
+# The default heap size is 1MB on Win32.
+# The heap will grow if need be.
+#
+# Set it to 256k.  See bug 127069.
+#
+ifndef GNU_CC
+LDFLAGS += /HEAP:0x40000
+endif
+endif
+
+$(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+
+ifeq ($(OS_ARCH),OS2)
+ifdef BUILD_STATIC_LIBS
+$(EXE_DEF_FILE):
+	rm -f $@
+	@echo NAME mozilla >$(EXE_DEF_FILE)
+	@echo IMPORTS >>$(EXE_DEF_FILE)
+	@echo 	WinQueryProperty		= PMMERGE.5450 >>$(EXE_DEF_FILE)
+	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
+	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
+
+LDFLAGS += -Zlinker /NOE
+endif
+endif
+
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+
+xulrunner:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
+                -e "s|%MOZ_USER_DIR%|.mozilla/xulrunner|" \
+		-e "s|%MREDIR%|$(mredir)|" > $@
+	chmod +x $@
+
+libs:: xulrunner
+	$(INSTALL) $< $(DIST)/bin
+
+install:: xulrunner
+	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
+
+GARBAGE += xulrunner
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firefox.js)
+
+endif
+
+ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+
+#ICON_FILES	= \
+#		$(DIST)/branding/mozicon50.xpm \
+#		$(DIST)/branding/mozicon16.xpm \
+#		$(DIST)/branding/document.png \
+#		$(NULL)
+#
+#libs:: $(ICON_FILES)
+#	$(INSTALL) $^ $(DIST)/bin/icons
+
+#install::
+#	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+#libs::
+#	$(INSTALL) $(DIST)/branding/default.xpm $(DIST)/bin/chrome/icons/default
+
+#install::
+#	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/icons
+endif
+
+#export:: brand.dtd.in
+#	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
+
+#export::
+#ifndef MOZ_USE_OFFICIAL_BRANDING
+#	$(NSINSTALL) -D $(DIST)/branding
+#ifeq ($(OS_ARCH),WINNT)
+#	cp $(srcdir)/firefox.ico   $(DIST)/branding/firefox.ico
+#	cp $(srcdir)/firefox.ico   $(DIST)/branding/app.ico
+#	cp $(srcdir)/document.ico  $(DIST)/branding/document.ico
+#endif
+#ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+#	cp $(srcdir)/macbuild/firefox.icns  $(DIST)/branding/firefox.icns
+#endif
+#ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+#	cp $(srcdir)/mozicon16.xpm $(DIST)/branding/mozicon16.xpm
+#	cp $(srcdir)/mozicon50.xpm $(DIST)/branding/mozicon50.xpm
+#	cp $(srcdir)/document.png $(DIST)/branding/document.png
+#endif
+#ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+#	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	
+#endif
+#ifeq ($(OS_ARCH),OS2)
+#	cp $(srcdir)/firefox-os2.ico   $(DIST)/branding/firefox.ico
+#	cp $(srcdir)/firefox-os2.ico   $(DIST)/branding/app.ico
+#	cp $(srcdir)/document-os2.ico  $(DIST)/branding/document.ico
+#endif
+#endif
+
+libs::
+	touch $(DIST)/bin/.autoreg
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+
+APP_NAME = XulRunner
+
+libs:: $(PROGRAM)
+	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
+	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS/mangle $(DIST)/$(APP_NAME).app/Contents/MacOS/shlibsign
+	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
+	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(APP_NAME).app/Contents/MacOS
+	cp -RL $(DIST)/branding/firefox.icns $(DIST)/$(APP_NAME).app/Contents/Resources/firefox.icns
+	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+#       remove CVS dirs from packaged app
+	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
+
+clean clobber::
+	rm -rf $(DIST)/$(APP_NAME).app
+endif
+
+README_FILE = $(topsrcdir)/README.txt
+
+libs::
+	$(INSTALL) $(README_FILE) $(DIST)/bin
+	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
