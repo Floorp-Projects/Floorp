@@ -25,8 +25,9 @@
 var kObserverService;
 
 // interface variables
-var cookiemanager         = null;          // cookiemanager interfa
+var cookiemanager         = null;          // cookiemanager interface
 var permissionmanager     = null;          // permissionmanager interface
+var popupmanager          = null;          // popup manager
 var gDateService = null;
 
 // cookies and permissions list
@@ -35,10 +36,16 @@ var permissions           = [];
 var deletedCookies       = [];
 var deletedPermissions   = [];
 
-// differentiate between cookies and images
-var isImages = (window.arguments[0] == "imageManager");
+// differentiate between cookies, images, and popups
 const cookieType = 0;
 const imageType = 1;
+const popupType = 2;
+
+var dialogType = cookieType;
+if (window.arguments[0] == "imageManager")
+  dialogType = imageType;
+else if (window.arguments[0] == "popupManager")
+  dialogType = popupType;
 
 var cookieBundle;
 
@@ -49,11 +56,13 @@ function Startup() {
   //   cookieManagerFromIcon
   //   imageManager
  
-  // xpconnect to cookiemanager/permissionmanager interfaces
+  // xpconnect to cookiemanager/permissionmanager/popupmanager interfaces
   cookiemanager = Components.classes["@mozilla.org/cookiemanager;1"].getService();
   cookiemanager = cookiemanager.QueryInterface(Components.interfaces.nsICookieManager);
   permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
   permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+  popupmanager = Components.classes["@mozilla.org/PopupWindowManager;1"].getService();
+  popupmanager = popupmanager.QueryInterface(Components.interfaces.nsIPopupWindowManager);
 
   // intialize gDateService
   if (!gDateService) {
@@ -73,10 +82,10 @@ function Startup() {
   try {
     var tabBox = document.getElementById("tabbox");
     var element;
-    if (!isImages) {
+    if (dialogType == cookieType) {
       element = document.getElementById("cookiesTab");
       tabBox.selectedTab = element;
-    } else {
+    } else if (dialogType == imageType) {
       element = document.getElementById("cookieviewer");
       element.setAttribute("title", cookieBundle.getString("imageTitle"));
       element = document.getElementById("permissionsTab");
@@ -86,6 +95,16 @@ function Startup() {
       element.value = cookieBundle.getString("textBannedImages");
       element = document.getElementById("cookiesTab");
       element.hidden = "true";
+    } else {
+      element = document.getElementById("cookieviewer");
+      element.setAttribute("title", cookieBundle.getString("imageTitle"));
+      element = document.getElementById("permissionsTab");
+      element.label = cookieBundle.getString("tabBannedPopups");
+      tabBox.selectedTab = element;
+      element = document.getElementById("permissionsText");
+      element.value = cookieBundle.getString("textBannedPopups");
+      element = document.getElementById("cookiesTab");
+      element.hidden = "true";
     }
   } catch(e) {
   }
@@ -93,7 +112,7 @@ function Startup() {
   // load in the cookies and permissions
   cookiesTree = document.getElementById("cookiesTree");
   permissionsTree = document.getElementById("permissionsTree");
-  if (!isImages) {
+  if (dialogType == cookieType) {
     loadCookies();
   }
   loadPermissions();
@@ -406,17 +425,20 @@ function loadPermissions() {
   var count = 0;
   var contentStr;
   var canStr, cannotStr;
-  if (isImages) {
+  if (dialogType == cookieType) {
+    canStr="can";
+    cannotStr="cannot";
+  } else if (dialogType == imageType) {
     canStr="canImages";
     cannotStr="cannotImages";
   } else {
-    canStr="can";
-    cannotStr="cannot";
+    canStr="canPopups";
+    cannotStr="cannotPopups";
   }
   while (enumerator.hasMoreElements()) {
     var nextPermission = enumerator.getNext();
     nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
-    if (nextPermission.type == (isImages ? imageType : cookieType)) {
+    if (nextPermission.type == dialogType) {
       var host = nextPermission.host;
       permissions[count] = 
         new Permission(count++, host,
@@ -462,8 +484,18 @@ function DeleteAllPermissions() {
 }
 
 function FinalizePermissionDeletions() {
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                    .getService(Components.interfaces.nsIIOService);
+
   for (var p=0; p<deletedPermissions.length; p++) {
-    permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
+    if (deletedPermissions[p].type == popupType) {
+      // we lost the URI's original scheme, but this will do because the scheme
+      // is stripped later anyway.
+      var uri = ioService.newURI("http://"+deletedPermissions[p].host, null, null);
+dump("********* uri "+uri.spec+"\n");
+      popupmanager.remove(uri);
+    } else
+      permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
   }
   deletedPermissions.length = 0;
 }
@@ -499,10 +531,11 @@ function getSelectedTab()
 }
 
 function doHelpButton() {
-  if (isImages) {
+  if (dialogType == imageType) {
     openHelp("image_mgr");
   } else {
     var uri = getSelectedTab();
     openHelp(uri);
   }
+  // XXX missing popup help
 }
