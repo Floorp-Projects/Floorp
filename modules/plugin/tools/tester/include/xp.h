@@ -58,6 +58,31 @@
 
 /**************************************************/
 /*                                                */
+/*                     OS/2                       */
+/*                                                */
+/**************************************************/
+#ifdef XP_OS2
+
+#define INCL_PM
+#define INCL_WIN
+
+#include <os2.h>
+#include <io.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <sys/types.h>    /* stat() */
+#include <sys/stat.h>
+
+#include "npapi.h"
+#include "npupp.h"
+
+#define XP_HFILE FILE*
+
+#endif //XP_OS2
+
+/**************************************************/
+/*                                                */
 /*                    Unix                        */
 /*                                                */
 /**************************************************/
@@ -178,8 +203,18 @@ NPError Private_SetValue(NPP instance, NPNVariable variable, void *value);
 /*                     Misc                       */
 /*                                                */
 /**************************************************/
+#if defined(XP_OS2)
+typedef unsigned short WORD;
+typedef char* LPSTR;
+typedef unsigned long DWORD;
+typedef void *LPVOID;
 
-#ifndef XP_WIN
+#define wsprintf sprintf
+#define IDYES MBID_YES
+#define MB_ICONERROR MB_ERROR
+#endif
+
+#if !defined(XP_WIN) && !defined(XP_OS2)
 
 #ifndef FALSE
 #define FALSE false
@@ -215,7 +250,7 @@ NPError Private_SetValue(NPP instance, NPNVariable variable, void *value);
 #endif
 #endif
 
-#endif //!XP_WIN
+#endif //!XP_WIN && !XP_OS2
 
 // File utilities
 BOOL XP_IsFile(LPSTR szFileName);

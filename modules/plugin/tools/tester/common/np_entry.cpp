@@ -147,9 +147,9 @@ static NPError fillNetscapeFunctionTable(NPNetscapeFuncs* aNPNFuncs)
 /**************************************************/
 /*                                                */
 /*                   Windows                      */
-/*                                                */
+/*                    OS/2                        */
 /**************************************************/
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2)
 
 NPError OSCALL NP_Initialize(NPNetscapeFuncs* aNPNFuncs)
 {
@@ -170,7 +170,7 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* aNPPFuncs)
   return fillPluginFunctionTable(aNPPFuncs);
 }
 
-#endif //XP_WIN
+#endif //XP_WIN || XP_OS2
 
 /**************************************************/
 /*                                                */

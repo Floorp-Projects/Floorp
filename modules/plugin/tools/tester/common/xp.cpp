@@ -54,7 +54,7 @@ BOOL XP_IsFile(LPSTR szFileName)
   OFSTRUCT of;
   return (HFILE_ERROR != OpenFile(szFileName, &of, OF_EXIST));
 #endif
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_OS2)
   struct stat s;
   return (stat(szFileName, &s) != -1);
 #endif
@@ -70,10 +70,10 @@ void XP_DeleteFile(LPSTR szFileName)
   return;
 #endif // XP_WIN
 
-#if (defined XP_UNIX || defined XP_MAC)
+#if (defined XP_UNIX || defined XP_MAC || defined XP_OS2)
   remove(szFileName);
   return;
-#endif // XP_UNIX || XP_MAC
+#endif // XP_UNIX || XP_MAC || XP_OS2
 }
 
 XP_HFILE XP_CreateFile(LPSTR szFileName)
@@ -107,10 +107,10 @@ void XP_CloseFile(XP_HFILE hFile)
     return;
 #endif // XP_WIN
 
-#if (defined UNIX || defined XP_MAC)
+#if (defined UNIX || defined XP_MAC || defined XP_OS2)
     fclose(hFile);
     return;
-#endif // UNIX || XP_MAC
+#endif // UNIX || XP_MAC || XP_OS2
   }
 }
 
@@ -122,9 +122,9 @@ DWORD XP_WriteFile(XP_HFILE hFile, void * pBuf, int iSize)
   return dwRet;
 #endif // XP_WIN
 
-#if (defined XP_UNIX || defined XP_MAC)
+#if (defined XP_UNIX || defined XP_MAC || defined XP_OS2)
   return (DWORD)fwrite(pBuf, iSize, 1, hFile);
-#endif // XP_UNIX || XP_MAC
+#endif // XP_UNIX || XP_MAC || XP_OS2
 }
 
 void XP_FlushFileBuffers(XP_HFILE hFile)
@@ -134,9 +134,9 @@ void XP_FlushFileBuffers(XP_HFILE hFile)
   return;
 #endif // XP_WIN
 
-#if (defined XP_UNIX || defined XP_MAC)
+#if (defined XP_UNIX || defined XP_MAC || defined XP_OS2)
   fflush(hFile);
-#endif // XP_UNIX || XP_MAC
+#endif // XP_UNIX || XP_MAC || XP_OS2
 }
 
 /****************************************/
