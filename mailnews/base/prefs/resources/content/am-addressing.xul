@@ -46,9 +46,9 @@ Contributors:
   <dialogheader title="&addressing.label;"/>
   
   <separator class="thin"/>
-  <vbox flex="1">
+  <groupbox>
     <description>&addressingText.label;</description>
-	<radiogroup class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
+	  <radiogroup class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
       <observes element="identity.overrideGlobalPref" attribute="disabled"/>
       <radio id="useGlobalPref" value="0" label="&useGlobal.label;"/>
       <hbox align="center">
@@ -58,7 +58,7 @@ Contributors:
         </menulist>
         <button id="editButton" label="&editDirectories.label;" oncommand="onEditDirectories();"/>
       </hbox>
-    </radiogroup>
-      
-  </vbox>
+    </radiogroup>      
+  </groupbox>
+
 </page>

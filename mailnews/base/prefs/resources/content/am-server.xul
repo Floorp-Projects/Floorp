@@ -235,12 +235,13 @@ Contributors:
   </vbox>
   </vbox>
   </groupbox>
-  <spacer flex="100%"/>
-    <vbox>
+
+  <separator class="thin"/>
+  <vbox>
     <label value="&localPath.label;" control="server.localPath"/>
     <textbox wsm_persist="true" id="server.localPath"
-            datatype="nsIFileSpec"
-            class="uri-element"
-            prefstring="mail.server.%serverkey%.directory"/>
-    </vbox>
+             datatype="nsIFileSpec"
+             class="uri-element"
+             prefstring="mail.server.%serverkey%.directory"/>
+  </vbox>
 </page>

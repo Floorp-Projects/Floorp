@@ -24,7 +24,7 @@
     
     <separator class="thin"/>
     
-    <groupbox flex="1" style="width: 20em !important;">
+    <groupbox style="width: 20em !important;">
       <caption label="&identityTitle.label;"/>
       <description>&identityDesc.label;</description>
       <separator class="thin"/>
@@ -56,6 +56,8 @@
           </row>
         </rows>
       </grid>
+      
+      <separator class="thin"/>
 
       <hbox align="center">
         <checkbox wsm_persist="true" id="identity.attachSignature" label="&signature.label;" flex="1"
@@ -63,6 +65,7 @@
                   prefattribute="value"
                   prefstring="mail.identity.%identitykey%.attach_signature"/>
       </hbox>
+
       <hbox align="center" class="indent">
         <textbox wsm_persist="true" id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"
                  observes="broadcaster_attachSignature"
@@ -82,7 +85,7 @@
                   prefstring="mail.identity.%identitykey%.compose_html"/>
       </hbox>
 
-      <spacer flex="1"/>
+      <separator class="thin"/>
 
       <hbox>
         <spacer flex="1"/>
