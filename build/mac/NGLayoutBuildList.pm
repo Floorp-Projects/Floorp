@@ -945,7 +945,6 @@ sub MakeResourceAliases()
 	MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
 	MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
 
-	MakeAlias(":mozilla:extensions:wallet:editor:xpconnect-walleteditor.html",			"$samples_dir");
 	MakeAlias(":mozilla:extensions:wallet:src:cookie.properties",						"$resource_dir");
 	MakeAlias(":mozilla:extensions:wallet:src:wallet.properties",						"$resource_dir");
 	MakeAlias(":mozilla:extensions:wallet:src:CookieViewer.html",						"$samples_dir");
