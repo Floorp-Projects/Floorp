@@ -1441,18 +1441,20 @@ void nsWebShellWindow::LoadContentAreas() {
       // see if we have a webshell with a matching contentAreaID
       nsCOMPtr<nsIDocShellTreeItem> content;
       rv = GetContentShellById(contentAreaID.get(), getter_AddRefs(content));
-      if (NS_SUCCEEDED(rv)) {
-        urlChar = ToNewCString(contentURL);
-        if (urlChar) {
-          nsUnescape(urlChar);
-          contentURL.AssignWithConversion(urlChar);
-          nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(content));
-          webNav->LoadURI(contentURL.get(),
+      if (NS_SUCCEEDED(rv) && content) {
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(content));
+        if (webNav) {
+          urlChar = ToNewCString(contentURL);
+          if (urlChar) {
+            nsUnescape(urlChar);
+            contentURL.AssignWithConversion(urlChar);
+            webNav->LoadURI(contentURL.get(),
                           nsIWebNavigation::LOAD_FLAGS_NONE,
                           nsnull,
                           nsnull,
                           nsnull);
-          nsMemory::Free(urlChar);
+            nsMemory::Free(urlChar);
+          }
         }
       }
     }

@@ -231,7 +231,7 @@ NS_IMETHODIMP nsXULWindow::GetContentShellById(const PRUnichar* aID,
       return NS_OK;
     }
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULWindow::AddChildWindow(nsIXULWindow *aChild)
