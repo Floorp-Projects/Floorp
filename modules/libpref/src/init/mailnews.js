@@ -120,7 +120,7 @@ pref("mailnews.force_ascii_search",         false);
 pref("mailnews.autolookup_unknown_mime_types",  true);
 
 pref("mailnews.send_default_charset",       "chrome://messenger/locale/messenger.properties");
-pref("mailnews.view_default_charset",       "chrome://messenger-region/locale/region.properties");
+pref("mailnews.view_default_charset",       "chrome://messenger/locale/messenger.properties");
 pref("mailnews.force_charset_override",     false);
 
 pref("mailnews.language_sensitive_font",    true);
