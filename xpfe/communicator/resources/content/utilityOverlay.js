@@ -126,14 +126,8 @@ function goEditCardDialog(abURI, card, okCallback, abCardURI)
 
 function goPreferences(containerID, paneURL, itemID)
 {
-  var modal, resizable;
+  var resizable;
   var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-  try {
-    modal = pref.GetBoolPref( "browser.prefWindowModal");
-  }
-  catch (e) {
-    modal = true;
-  }
   try {
     // We are resizable ONLY if in box debugging mode, because in
     // this special debug mode it is often impossible to see the 
@@ -152,9 +146,8 @@ function goPreferences(containerID, paneURL, itemID)
   if (lastPrefWindow)
     lastPrefWindow.focus();
   else {
-    var modality = modal ? "yes" : "no";
     var resizability = resizable ? "yes" : "no";
-    var features = "chrome,titlebar,modal=" + modality + ",resizable=" + resizability;
+    var features = "chrome,titlebar,resizable=" + resizability;
     openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", 
                features, paneURL, containerID, itemID);
   }
