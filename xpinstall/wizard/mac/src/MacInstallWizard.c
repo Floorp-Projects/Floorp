@@ -136,6 +136,7 @@ InitOptObject(void)
 {
 	FSSpec 	tmp;
 	OSErr	err=noErr;
+	Boolean isDir;
 	
 	gControls->opt = (Options*)NewPtrClear(sizeof(Options));
 
@@ -154,11 +155,10 @@ InitOptObject(void)
 		return;
 	}
 	
-	err = HGetVol( (unsigned char *)&tmp.name, &tmp.vRefNum, &tmp.parID );
-	gControls->opt->vRefNum = tmp.vRefNum;
-	gControls->opt->dirID = tmp.parID;
-
+	gControls->opt->vRefNum = -1;
+	err = FSMakeFSSpec(gControls->opt->vRefNum, 0, "\p", &tmp);
 	pstrcpy( gControls->opt->folder, tmp.name );
+	err = FSpGetDirectoryID( &tmp, &gControls->opt->dirID, &isDir );
 }
 
 void
