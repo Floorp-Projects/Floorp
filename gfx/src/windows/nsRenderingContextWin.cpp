@@ -26,13 +26,15 @@ public:
   GraphicsState(GraphicsState &aState);
   ~GraphicsState();
 
-  GraphicsState *mNext;
-  nsTransform2D mMatrix;
-  nsRect        mLocalClip;
-  nsRect        mGlobalClip;
-  HRGN          mClipRegion;
-  nscolor       mSolidColor;
-  HBRUSH        mSolidBrush;
+  GraphicsState   *mNext;
+  nsTransform2D   mMatrix;
+  nsRect          mLocalClip;
+  nsRect          mGlobalClip;
+  HRGN            mClipRegion;
+  nscolor         mSolidColor;
+  HBRUSH          mSolidBrush;
+  nsIFontMetrics  *mFontMetrics;
+  HFONT           mFont;
 };
 
 GraphicsState :: GraphicsState()
@@ -42,8 +44,10 @@ GraphicsState :: GraphicsState()
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mGlobalClip = mLocalClip;
   mClipRegion = NULL;
-  mSolidColor = 0;
+  mSolidColor = RGB(0, 0, 0);
   mSolidBrush = NULL;
+  mFontMetrics = nsnull;
+  mFont = NULL;
 }
 
 GraphicsState :: GraphicsState(GraphicsState &aState) :
@@ -55,6 +59,8 @@ GraphicsState :: GraphicsState(GraphicsState &aState) :
   mClipRegion = NULL;
   mSolidColor = aState.mSolidColor;
   mSolidBrush = NULL;
+  mFontMetrics = nsnull;
+  mFont = NULL;
 }
 
 GraphicsState :: ~GraphicsState()
@@ -70,11 +76,12 @@ GraphicsState :: ~GraphicsState()
     ::DeleteObject(mSolidBrush);
     mSolidBrush = NULL;
   }
+
+  //don't delete this because it lives in the font metrics
+  mFont = NULL;
 }
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-// XXX add in code to setup a default font in the rendering context!
 
 nsRenderingContextWin :: nsRenderingContextWin()
 {
@@ -88,6 +95,8 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mFontCache = nsnull;
   mOrigSolidBrush = NULL;
   mBlackBrush = NULL;
+  mOrigFont = NULL;
+  mDefFont = NULL;
 #ifdef NS_DEBUG
   mInitialized = PR_FALSE;
 #endif
@@ -127,6 +136,18 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
     {
       ::DeleteObject(mBlackBrush);
       mBlackBrush = NULL;
+    }
+
+    if (NULL != mOrigFont)
+    {
+      ::SelectObject(mDC, mOrigFont);
+      mOrigFont = NULL;
+    }
+
+    if (NULL != mDefFont)
+    {
+      ::DeleteObject(mDefFont);
+      mDefFont = NULL;
     }
   }
 
@@ -184,19 +205,7 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
   if (mDCOwner)
     NS_ADDREF(mDCOwner);
 
-	mTMatrix->AddScale(aContext->GetAppUnitsToDevUnits(),
-                     aContext->GetAppUnitsToDevUnits());
-  mP2T = aContext->GetDevUnitsToAppUnits();
-  mFontCache = aContext->GetFontCache();
-
-#ifdef NS_DEBUG
-  mInitialized = PR_TRUE;
-#endif
-
-  mBlackBrush = ::CreateSolidBrush(RGB(0, 0, 0));
-  mOrigSolidBrush = ::SelectObject(mDC, mBlackBrush);
-
-  return NS_OK;
+  return CommonInit();
 }
 
 nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
@@ -210,10 +219,15 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
   mDC = (HDC)aSurface;
   mDCOwner = nsnull;
 
-	mTMatrix->AddScale(aContext->GetAppUnitsToDevUnits(),
-                     aContext->GetAppUnitsToDevUnits());
-  mP2T = aContext->GetDevUnitsToAppUnits();
-  mFontCache = aContext->GetFontCache();
+  return CommonInit();
+}
+
+nsresult nsRenderingContextWin :: CommonInit(void)
+{
+	mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
+                     mContext->GetAppUnitsToDevUnits());
+  mP2T = mContext->GetDevUnitsToAppUnits();
+  mFontCache = mContext->GetFontCache();
 
 #ifdef NS_DEBUG
   mInitialized = PR_TRUE;
@@ -221,6 +235,11 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
 
   mBlackBrush = ::CreateSolidBrush(RGB(0, 0, 0));
   mOrigSolidBrush = ::SelectObject(mDC, mBlackBrush);
+
+  mDefFont = ::CreateFont(12, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+                          ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
+                          DEFAULT_QUALITY, FF_ROMAN | VARIABLE_PITCH, "Times New Roman");
+  mOrigFont = ::SelectObject(mDC, mDefFont);
 
   return NS_OK;
 }
@@ -269,6 +288,8 @@ void nsRenderingContextWin :: PushState()
     state->mClipRegion = nsnull;
     state->mSolidColor = mStates->mSolidColor;
     state->mSolidBrush = nsnull;
+    state->mFontMetrics = mStates->mFontMetrics;
+    state->mFont = nsnull;
 
     mStates = state;
   }
@@ -290,50 +311,83 @@ void nsRenderingContextWin :: PopState()
 
     mStateCache->AppendElement(oldstate);
 
-    //kill the clip region we are popping off the stack
-
-    if (NULL != oldstate->mClipRegion)
-    {
-      ::DeleteObject(oldstate->mClipRegion);
-      oldstate->mClipRegion = NULL;
-    }
-
     if (nsnull != mStates)
     {
       mTMatrix = &mStates->mMatrix;
 
-      GraphicsState *pstate = mStates;
+      GraphicsState *pstate;
 
-      //the clip rect has changed from state to state, so
-      //install the previous clip rect
+      if (NULL != oldstate->mClipRegion)
+      {
+        pstate = mStates;
 
-      while ((nsnull != pstate) && (NULL == pstate->mClipRegion))
-        pstate = pstate->mNext;
+        //the clip rect has changed from state to state, so
+        //install the previous clip rect
 
-      if ((nsnull != pstate) && (pstate->mGlobalClip != oldstate->mGlobalClip))
-        ::SelectClipRgn(mDC, pstate->mClipRegion);
-      else
-        ::SelectClipRgn(mDC, NULL);
+        while ((nsnull != pstate) && (NULL == pstate->mClipRegion))
+          pstate = pstate->mNext;
 
-      pstate = mStates;
+        if ((nsnull != pstate) && (pstate->mGlobalClip != oldstate->mGlobalClip))
+          ::SelectClipRgn(mDC, pstate->mClipRegion);
+        else
+          ::SelectClipRgn(mDC, NULL);
 
-      //if the solid brushes are different between the states,
-      //select the previous solid brush
+        //kill the clip region we are popping off the stack
 
-      while ((nsnull != pstate) && (NULL == pstate->mSolidBrush))
-        pstate = pstate->mNext;
-
-      if (nsnull != pstate)
-        ::SelectObject(mDC, pstate->mSolidBrush);
-      else
-        ::SelectObject(mDC, mBlackBrush);
-
-      //kill the solid brush we are popping off the stack
+        ::DeleteObject(oldstate->mClipRegion);
+        oldstate->mClipRegion = NULL;
+      }
 
       if (NULL != oldstate->mSolidBrush)
       {
-        ::DeleteObject(oldstate->mSolidBrush);
+        pstate = mStates;
+
+        //if the solid brushes are different between the states,
+        //select the previous solid brush
+
+        while ((nsnull != pstate) && (NULL == pstate->mSolidBrush))
+          pstate = pstate->mNext;
+
+        if (nsnull != pstate)
+        {
+          if (oldstate->mSolidBrush != pstate->mSolidBrush)
+            ::SelectObject(mDC, pstate->mSolidBrush);
+        }
+        else
+          ::SelectObject(mDC, mBlackBrush);
+
+        //kill the solid brush we are popping off the stack
+
+        if (oldstate->mSolidBrush != mBlackBrush)
+        {
+          if (((nsnull != pstate) && (oldstate->mSolidBrush != pstate->mSolidBrush)) ||
+              (nsnull == pstate))
+            ::DeleteObject(oldstate->mSolidBrush);
+        }
+
         oldstate->mSolidBrush = NULL;
+      }
+
+      if (NULL != oldstate->mFont)
+      {
+        pstate = mStates;
+
+        //if the fonts are different between the states,
+        //select the previous font
+
+        while ((nsnull != pstate) && (NULL == pstate->mFont))
+          pstate = pstate->mNext;
+
+        if (nsnull != pstate)
+        {
+          if (oldstate->mFont != pstate->mFont)
+            ::SelectObject(mDC, pstate->mFont);
+        }
+        else
+          ::SelectObject(mDC, mDefFont);
+
+        //don't delete the font because it lives in the font metrics
+        oldstate->mFont = NULL;
       }
     }
     else
@@ -739,9 +793,10 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth)
 {
-  HFONT oldfnt = ::SelectObject(mDC, (HGDIOBJ) mFontMetrics->GetFontHandle());
   int oldBkMode = ::SetBkMode(mDC, TRANSPARENT);
 	int	x,y;
+
+  SetupFont();
 
   COLORREF oldColor = ::SetTextColor(mDC, mColor);
 	x = aX;
@@ -754,15 +809,15 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
 
   ::SetBkMode(mDC, oldBkMode);
   ::SetTextColor(mDC, oldColor);
-  ::SelectObject(mDC, oldfnt);
 }
 
 void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
 	int		x,y;
-  HFONT oldfnt = ::SelectObject(mDC, (HGDIOBJ) mFontMetrics->GetFontHandle()); 
   int oldBkMode = ::SetBkMode(mDC, TRANSPARENT);
+
+  SetupFont();
 
 	COLORREF oldColor = ::SetTextColor(mDC, mColor);
 	x = aX;
@@ -775,7 +830,6 @@ void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLen
 
   ::SetBkMode(mDC, oldBkMode);
   ::SetTextColor(mDC, oldColor);
-  ::SelectObject(mDC, oldfnt);
 }
 
 void nsRenderingContextWin :: DrawString(const nsString& aString,
@@ -883,4 +937,15 @@ HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
   }
   else
     return mStates->mSolidBrush;
+}
+
+void nsRenderingContextWin :: SetupFont(void)
+{
+  if (mFontMetrics != mStates->mFontMetrics)
+  {
+    HFONT   tfont = (HFONT)mFontMetrics->GetFontHandle();
+    
+    ::SelectObject(mDC, tfont);
+    mStates->mFont = tfont;
+  }
 }
