@@ -17,6 +17,7 @@
  */
 
 #include "nsFileWidget.h"
+#include "nsIToolkit.h"
 
 NS_IMPL_ISUPPORTS(nsFileWidget, nsIFileWidget::GetIID());
 

@@ -19,11 +19,12 @@
 #ifndef nsFileWidget_h__
 #define nsFileWidget_h__
 
-#include "nsIToolkit.h"
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
 
 #include <gtk/gtk.h>
+
+class nsIToolkit;
 
 /**
  * Native GTK FileSelector wrapper

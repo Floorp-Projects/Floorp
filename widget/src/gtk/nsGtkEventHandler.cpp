@@ -22,7 +22,7 @@
 #include "nsWidget.h"
 #include "nsWindow.h"
 #include "nsScrollbar.h"
-#include "nsFileWidget.h"
+#include "nsIFileWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
