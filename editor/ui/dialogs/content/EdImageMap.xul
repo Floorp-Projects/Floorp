@@ -140,7 +140,7 @@
     </menupopup>
   </menu>
 
-  <spring flex="100%"/>
+  <spring flex="1"/>
 </menubar>
 
 
@@ -151,7 +151,7 @@
   <titledbutton id="zoomInButton" class="button28" observes="Map:ZoomIn"/>
   <titledbutton id="zoomOutButton" class="button28" observes="Map:ZoomOut"/>
   <titledbutton id="contrastButton" class="button28" observes="Map:Contrast"/>
-  <spring flex="100%"/>
+  <spring flex="1"/>
 </toolbar> 
 
 
@@ -162,11 +162,11 @@
     <titledbutton id="rectButton" class="tool" onclick="changeTool(event, 'rect')"/>
     <titledbutton id="cirButton" class="tool" onclick="changeTool(event, 'cir')"/>
     <titledbutton id="polyButton" class="tool" onclick="changeTool(event, 'poly')"/>
-    <spring flex="100%"/>
+    <spring flex="1"/>
   </toolbar>
 
   <!-- Content Area -->
-  <html:iframe id="content" src="EdImageMapPage.html" flex="1"/>
+  <iframe id="content" src="EdImageMapPage.html" flex="1"/>
 
 </box>
 
@@ -183,7 +183,7 @@
     value="&delSpotCmd.label;" 
     onclick="deleteElement(currentElement)"/> -->
     
-    <spring flex="100%"/>
+    <spring flex="1"/>
 
     <!-- from global dialogOverlay -->
     <box id="okCancelButtons"/>
