@@ -78,6 +78,7 @@ dom/src/build/Makefile
 dom/src/coreDOM/Makefile
 dom/src/css/Makefile
 dom/src/events/Makefile
+dom/src/range/Makefile
 dom/src/html/Makefile
 dom/src/jsurl/Makefile
 dom/tools/Makefile
