@@ -419,6 +419,9 @@ $InstallSizeArchive$:xpcom.xpi
 ;
 ; Attributes can be the following values:
 ;
+;   The following Attributes can be overridden:
+;   ------------------------------------------
+;
 ;   SELECTED      - Component is selected to be installed by default.
 ;
 ;   UNSELECTED    - Component is to be displayed unselected in the Options
@@ -426,7 +429,29 @@ $InstallSizeArchive$:xpcom.xpi
 ;                   Setup Type section, it will be assumed to be selected
 ;                   by default.
 ;
-;   INVISIBLE     - Component is not shown in the Select Components dialog.
+;   ADDITIONAL    - Component is to be shown in the Additional Options
+;                   dialog (2nd Options dialog) instead of the 1st Options
+;                   dialog.
+;
+;   NOTADDITIONAL - Component will be shown (if visible) in the 1st
+;                   1st Options dialog rather than the Additional Options
+;                   dialog (default).
+;
+;   VISIBLE       - Component is shown in one of the two Options dialogs
+;                   (default).
+;
+;   INVISIBLE     - Component is not shown in either of the two Options dialogs.
+;
+;   ENABLED       - Component is to be shown as enabled (not greyed out) in
+;                   either of the two Options dialogs.
+;                   (default).
+;
+;   DISABLED      - Component is to be shown as disabled (greyed out) in
+;                   either of two Options dialog.
+;
+;
+;   The following attributes cannot be overridden:
+;   ---------------------------------------------
 ;
 ;   LAUNCHAPP     - Component is downloaded and simply run (like a .exe file)
 ;                   after all the components have been downloaded and
@@ -434,13 +459,6 @@ $InstallSizeArchive$:xpcom.xpi
 ;
 ;   DOWNLOAD_ONLY - Component is to be only downloaded to the ns_temp folder,
 ;                   then deleted as Setup is quitting.
-;
-;   ADDITIONAL    - Component will is to be shown in the Additional Options
-;                   dialog (2nd Options dialog) instead of the 1st Options
-;                   dialog.
-;
-;   DISABLED      - Component is to be shown as disabled (greyed out) in
-;                   either of two Options dialog.
 ;
 ;   FORCE_UPGRADE - Force Upgrade checks for a particular file or directory
 ;                   provided in the Force Upgrade FileX= key(s).  If any of
