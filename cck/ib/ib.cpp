@@ -448,7 +448,10 @@ int interpret(char *cmd)
 			DWORD e = GetLastError();
 		if (strcmp(key, "Program Folder Name") == 0)
 		{
-			strcpy(temp, "Netscape 6 by ");
+			if (strcmp(newvalue, "") == 0)
+				strcpy(temp, "Netscape 6");
+			else
+				strcpy(temp, "Netscape 6 by ");
 			strcat(temp, newvalue);
 			newvalue = temp;
 		}
