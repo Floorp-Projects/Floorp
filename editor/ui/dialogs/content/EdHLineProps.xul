@@ -27,6 +27,7 @@
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorHLineProperties.dtd">
 
@@ -43,29 +44,38 @@
   <script language="JavaScript" src="chrome://editor/content/EdHLineProps.js"/>
 
   <keyset id="keyset"/>
+  <popupset id="aTooltipSet" />
+  
   <titledbox><title><text value="&dimensionsBox.label;"/></title>
     <grid>
       <columns><column/><column/><column /></columns>
       <rows>
         <row valign="middle" autostretch="never">
-          <text class="label" value="&widthEditField.label;"/>
+          <text class="label" value="&widthEditField.label;"
+              tooltip="aTooltip"    tooltiptext="&widthEditField.tooltip;" />
           <textfield class="narrow" id="width" flex="1" onkeyup="forceInteger('width')"/>
-          <menulist id="pixelOrPercentMenulist"/>
+          <menulist id="pixelOrPercentMenulist"
+              tooltip="aTooltip"    tooltiptext="&pixelsPercentPopup.tooltip;" />
           <!-- menupopup and menuitems added by JS -->
         </row>
         <row valign="middle" autostretch="never">
-          <text class="label" value="&heightEditField.label;"/>
+          <text class="label" value="&heightEditField.label;"
+              tooltip="aTooltip"    tooltiptext="&heightEditField.tooltip;" />
           <textfield class="narrow" id="height" onkeyup="forceInteger('height')"/>
-          <text class="label" value="&pixelsPopup.value;"/>
+          <text class="label" value="&pixelsPopup.value;"
+              tooltip="aTooltip"    tooltiptext="&pixels.tooltip;" />
         </row>
       </rows>
     </grid>        
   </titledbox>
   <titledbox><title><text align="left" value="&alignmentBox.label;"/></title>
     <radiogroup orient="horizontal">
-      <radio id="leftAlign" value="&leftPopup.value;"/>
-      <radio id="centerAlign" value="&centerPopup.value;"/>
-      <radio id="rightAlign" value="&rightPopup.value;"/>
+      <radio id="leftAlign" value="&leftRadio.value;"
+               tooltip="aTooltip"  tooltiptext="&leftRadio.tooltip;" />
+      <radio id="centerAlign" value="&centerRadio.value;"
+               tooltip="aTooltip"  tooltiptext="&centerRadio.tooltip;" />
+      <radio id="rightAlign" value="&rightRadio.value;"
+               tooltip="aTooltip"  tooltiptext="&rightRadio.tooltip;" />
     </radiogroup>
   </titledbox>
   <box>
@@ -73,14 +83,17 @@
       <columns><column/><column flex="1"/><column/></columns>
       <rows>
         <row>
-          <checkbox id="3dShading" value="&threeDShading.label;"/>
+          <checkbox id="3dShading" value="&threeDShading.label;"
+               tooltip="aTooltip"  tooltiptext="&threeDShading.tooltip;" />
           <spring/>
-          <button class="dialog" id="SaveDefault" value="&saveSettings.label;" oncommand="onSaveDefault()"/>
+          <button class="dialog"  id="SaveDefault" value="&saveSettings.label;" 
+               oncommand="onSaveDefault()"
+               tooltip="aTooltip" tooltiptext="&saveSettings.tooltip;" />
         </row>
         <row>
           <spring/>
           <spring/>
-          <button id="AdvancedEditButton"/>
+          <button id="AdvancedEditButton" tooltip="aTooltip" tooltiptext="&advancedButton.tooltip;" />
         </row>
       </rows>
     </grid>
