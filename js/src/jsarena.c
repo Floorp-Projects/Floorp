@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -145,17 +145,17 @@ JS_PUBLIC_API(void *)
 JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
 {
     JSArena **ap, *a;
-    jsuword aoff;
+    jsuword boff, aoff, newsize;
 
     ap = &pool->first.next;
     while ((a = *ap) != pool->current)
         ap = &a->next;
     JS_ASSERT(a->base == (jsuword)p);
-    size += incr;
-    aoff = size;
-    JS_ASSERT(size > pool->arenasize);
-    size += sizeof *a + pool->mask;     /* header and alignment slop */
-    a = (JSArena *) realloc(a, size);
+    boff = JS_UPTRDIFF(a->base, a);
+    aoff = newsize = size + incr;
+    JS_ASSERT(newsize > pool->arenasize);
+    newsize += sizeof *a + pool->mask;          /* header and alignment slop */
+    a = (JSArena *) realloc(a, newsize);
     if (!a)
         return NULL;
     *ap = a;
@@ -164,8 +164,12 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
     pool->stats.nreallocs++;
 #endif
     a->base = JS_ARENA_ALIGN(pool, a + 1);
-    a->limit = (jsuword)a + size;
+    a->limit = (jsuword)a + newsize;
     a->avail = JS_ARENA_ALIGN(pool, a->base + aoff);
+
+    /* Check whether realloc aligned differently, and copy if necessary. */
+    if (boff != JS_UPTRDIFF(a->base, a))
+        memmove((void *)a->base, (char *)a + boff, size);
     return (void *)a->base;
 }
 
