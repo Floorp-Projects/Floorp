@@ -62,7 +62,7 @@
   <broadcaster id="cmd_newNavigator"/>
   <broadcaster id="cmd_newMessage"/>
   <broadcaster id="cmd_newEditor"/>
-  <broadcaster id="cmd_close"/>
+  <broadcaster id="cmd_close" oncommand="window.close()"/>
   <broadcaster id="cmd_quit"/>
   <broadcaster id="bm_cmd_saveas"/>
   <!-- Edit Menu -->
