@@ -1656,10 +1656,6 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
     }
   }
 
-  // Stop the throbber and set the urlbar string
-  if (aStatus == NS_OK)
-    setAttribute( mWebShell, "urlbar", "value", (const char*)url);  
-
   /* To satisfy a request from the QA group */
   if (aStatus == NS_OK) {
     fprintf(stdout, "Document %s loaded successfully\n", (const char*)url);
