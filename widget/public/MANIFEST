@@ -29,3 +29,4 @@ nsIDialog.h
 nsILabel.h
 nsILookAndFeel.h
 nsWidgetSupport.h
+nsIToolbarItem.h
