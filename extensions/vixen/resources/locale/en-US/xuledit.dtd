@@ -22,7 +22,7 @@
    - Contributor(s): 
   -->
 
-<!ENTITY  appWindow.title           "Netscape Visual XULEdit">
+<!ENTITY  appWindow.title           "ViXEn">
 
 
 <!ENTITY  fileMenu.label            "File">
