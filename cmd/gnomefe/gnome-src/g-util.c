@@ -49,6 +49,7 @@ find_editor_view(MWContext *context)
 
   view = (MozEditorView*)moz_get_view_of_type(root,
 					      MOZ_TAG_EDITOR_VIEW);
+  return view;
 }
 
 MozHTMLView *
@@ -65,6 +66,7 @@ find_html_view(MWContext *context)
 
   view = (MozHTMLView*)moz_get_view_of_type(root,
                                             MOZ_TAG_HTML_VIEW);
+  return view;
 }
 
 MozBookmarkView *
@@ -82,6 +84,7 @@ find_bookmark_view(MWContext *context)
 
   view = (MozBookmarkView*)moz_get_view_of_type(root,
 						MOZ_TAG_BOOKMARK_VIEW);
+  return view;
 }
 
 MozFrame*

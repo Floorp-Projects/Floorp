@@ -215,4 +215,5 @@ moz_navcenter_view_create(MozFrame *parent_frame,
   if (view == NULL) return NULL;
 
   moz_navcenter_view_init(view, parent_frame, context);
+  return view;
 }
