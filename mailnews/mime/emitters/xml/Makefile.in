@@ -20,10 +20,6 @@ topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
-CSSFILES	= 	$(srcdir)/mailheader-micro.css \
-			$(srcdir)/mailheader-normal.css \
-			$(srcdir)/mailheader-all.css \
-			$(NULL)
 IS_COMPONENT=1
 
 include $(DEPTH)/config/autoconf.mk
@@ -52,4 +48,3 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(CSSFILES) $(DIST)/bin/res/mailnews/messenger
