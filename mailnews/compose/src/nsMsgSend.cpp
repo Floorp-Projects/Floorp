@@ -2770,7 +2770,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	{
 		m_imapOutgoingParser->FinishHeader();
 		NS_ASSERTION(m_imapOutgoingParser->m_newMsgHdr, "no new message header");
-		m_imapOutgoingParser->m_newMsgHdr->OrFlags(kIsRead);
+		m_imapOutgoingParser->m_newMsgHdr->OrFlags(MSG_FLAG_READ);
 		m_imapOutgoingParser->m_newMsgHdr->SetMessageSize (m_imapOutgoingParser->m_bytes_written);
 		m_imapOutgoingParser->m_newMsgHdr->SetMessageKey(0);
 		m_imapLocalMailDB->AddHdrToDB(m_imapOutgoingParser->m_newMsgHdr, NULL, PR_TRUE);

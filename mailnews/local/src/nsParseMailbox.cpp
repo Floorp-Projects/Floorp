@@ -1582,7 +1582,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 						XP_Trace("got a rule hit!\n");
 						if (rule->GetAction(&actionType, &value) == FilterError_Success)
 						{
-							PRBool isRead = msgHdr->GetFlags() & kIsRead;
+							PRBool isRead = msgHdr->GetFlags() & MSG_FLAG_READ;
 							switch (actionType)
 							{
 							case acDelete:
@@ -1598,11 +1598,11 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 									if (mailTrash)
 										value = (void *) mailTrash->GetPathname();
 
-									msgHdr->OrFlags(kIsRead);	// mark read in trash.
+									msgHdr->OrFlags(MSG_FLAG_READ);	// mark read in trash.
 								}
 								else	// (!deleteToTrash && serverIsImap)
 								{
-									msgHdr->OrFlags(kIsRead | kIMAPdeleted);
+									msgHdr->OrFlags(MSG_FLAG_READ | kIMAPdeleted);
 									nsMsgKeyArray	keysToFlag;
 
 									keysToFlag.Add(msgHdr->GetMessageKey());
@@ -1701,7 +1701,7 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 	if (m_mailDB)
 		m_mailDB->MarkHdrRead(msgHdr, TRUE, NULL);
 	else
-		msgHdr->OrFlags(kIsRead);
+		msgHdr->OrFlags(MSG_FLAG_READ);
 	return 0;
 }
 
@@ -1932,7 +1932,7 @@ void ParseIMAPMailboxState::DoneParsingFolder()
 
 int ParseIMAPMailboxState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 {
-	msgHdr->OrFlags(kIsRead);
+	msgHdr->OrFlags(MSG_FLAG_READ);
 	nsMsgKeyArray	keysToFlag;
 
 	keysToFlag.Add(msgHdr->GetMessageKey());
@@ -2020,7 +2020,7 @@ MSG_FolderInfoMail *ParseIMAPMailboxState::GetTrashFolder()
 // only apply filters for new unread messages in the imap inbox
 void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved)
 {
- 	if (fParsingInbox && !(GetCurrentMsg()->GetFlags() & kIsRead) )
+ 	if (fParsingInbox && !(GetCurrentMsg()->GetFlags() & MSG_FLAG_READ) )
  		nsParseNewMailState::ApplyFilters(pMoved);
  	else
  		*pMoved = FALSE;
@@ -2112,7 +2112,7 @@ PRInt32	ParseIMAPMailboxState::PublishMsgHeader()
 		}
 		if (!moved)
 		{
-			PRBool thisMessageUnRead = !(m_parseMsgState->m_newMsgHdr->GetFlags() & kIsRead);
+			PRBool thisMessageUnRead = !(m_parseMsgState->m_newMsgHdr->GetFlags() & MSG_FLAG_READ);
 			if (m_mailDB)
 			{
 				if (thisMessageUnRead)
