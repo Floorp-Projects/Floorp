@@ -157,6 +157,8 @@ void InitConfigureEvent(GdkEventConfigure *aConf,
   anEvent.eventStructType = NS_SIZE_EVENT;
 
   if (aConf != NULL) {
+  /* do we accually need to alloc a new rect, or can we just set the
+     current one */
     nsRect *foo = new nsRect(aConf->x, aConf->y, aConf->width, aConf->height);
     anEvent.windowSize = foo;
     anEvent.point.x = aConf->x;
