@@ -23,6 +23,16 @@ var rdf;
 var editButton;
 var deleteButton;
 
+var nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
+
+var gBundle;
+
+function getBundle()
+{
+    if (!gBundle) gBundle = srGetStrBundle("chrome://messenger/locale/search.properties");
+    return gBundle;
+}
+
 function onLoad()
 {
     rdf = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
@@ -105,7 +115,7 @@ function onFilterSelect(event)
     updateButtons();
 }
 
-function EditFilter() {
+function onEditFilter() {
 
     var selectedFilter = currentFilter();
 
@@ -117,7 +127,7 @@ function EditFilter() {
         refreshFilterList();
 }
 
-function NewFilter()
+function onNewFilter()
 {
     var curFilterList = currentFilterList();
     var args = {filterList: curFilterList };
@@ -126,6 +136,42 @@ function NewFilter()
 
   if (args.refresh) refreshFilterList();
   
+}
+
+function onDeleteFilter()
+{
+    var filter = currentFilter();
+    if (!filter) return;
+    var filterList = currentFilterList();
+    if (!filterList) return;
+
+    var confirmStr = getBundle().GetStringFromName("deleteFilterConfirmation");
+    
+    if (!window.confirm(confirmStr)) return;
+
+    filterList.removeFilter(filter);
+    refreshFilterList();
+}
+
+function onUp(event)
+{
+    moveCurrentFilter(nsMsgFilterMotion.up);
+}
+
+function onDown(event)
+{
+    moveCurrentFilter(nsMsgFilterMotion.down);
+}
+
+function moveCurrentFilter(motion)
+{
+    var filterList = currentFilterList();
+    var filter = currentFilter();
+    if (!filterList) return;
+    if (!filter) return;
+
+    filterList.moveFilter(filter, motion);
+    refreshFilterList();
 }
 
 function refreshFilterList() {
@@ -144,8 +190,12 @@ function refreshFilterList() {
 
     if (selection) {
         var newItem = document.getElementById(selection);
-        tree.selectItem(newItem);
-        tree.ensureElementIsVisible(newItem);
+
+        // sometimes the selected element is gone.
+        if (newItem) {
+            tree.selectItem(newItem);
+            tree.ensureElementIsVisible(newItem);
+        }
     }
 }
 
@@ -160,3 +210,4 @@ function updateButtons()
         deleteButton.setAttribute("disabled", "true");
     }                      
 }
+

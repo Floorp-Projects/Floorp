@@ -438,7 +438,7 @@ nsresult nsMsgFilterList::LoadTextFilters()
 			filter->SetFilterName(unicodeString);
             nsTextFormatter::smprintf_free(unicodeString);
 			m_curFilter = filter;
-			m_filters->AppendElement(filter);
+			m_filters->AppendElement(NS_STATIC_CAST(nsISupports*,filter));
 		}
 			break;
 		case nsIMsgFilterList::attribEnabled:
@@ -719,14 +719,14 @@ nsresult nsMsgFilterList::GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **fil
 
 nsresult nsMsgFilterList::GetFilterAt(PRUint32 filterIndex, nsIMsgFilter **filter)
 {
+    NS_ENSURE_ARG_POINTER(filter);
+    
 	PRUint32			filterCount;
 	m_filters->Count(&filterCount);
-	if (! (filterCount >= filterIndex))
-		return NS_ERROR_INVALID_ARG;
-	if (filter == nsnull)
-		return NS_ERROR_NULL_POINTER;
-	*filter = (nsIMsgFilter *) m_filters->ElementAt(filterIndex);
-	return NS_OK;
+    NS_ENSURE_ARG(filterCount >= filterIndex);
+
+	return m_filters->QueryElementAt(filterIndex, NS_GET_IID(nsIMsgFilter),
+                                     (void **)filter);
 }
 
 nsresult
@@ -772,6 +772,12 @@ nsresult nsMsgFilterList::RemoveFilterAt(PRUint32 filterIndex)
 	return NS_OK;
 }
 
+nsresult
+nsMsgFilterList::RemoveFilter(nsIMsgFilter *aFilter)
+{
+    return m_filters->RemoveElement(NS_STATIC_CAST(nsISupports*, aFilter));
+}
+
 nsresult nsMsgFilterList::InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter)
 {
 	m_filters->InsertElementAt(filter, filterIndex);
@@ -782,35 +788,61 @@ nsresult nsMsgFilterList::InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *fil
 // If motion not possible in that direction, we still return success.
 // We could return an error if the FE's want to beep or something.
 nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex, 
-										 nsMsgFilterMotionValue motion)
+                                       nsMsgFilterMotionValue motion)
 {
-	nsIMsgFilter	*tempFilter;
+    NS_ENSURE_ARG((motion == nsMsgFilterMotion::up) ||
+                  (motion == nsMsgFilterMotion::down));
+
+    nsresult rv;
 
 	PRUint32			filterCount;
 	m_filters->Count(&filterCount);
-	if (! (filterCount >= filterIndex))
-		return NS_ERROR_INVALID_ARG;
+    
+    NS_ENSURE_ARG(filterCount >= filterIndex);
 
-	tempFilter = (nsIMsgFilter *) m_filters->ElementAt(filterIndex);
-	if (motion == nsMsgFilterMotion::Up)
+    nsCOMPtr<nsIMsgFilter> tempFilter;
+	rv = m_filters->GetElementAt(filterIndex, getter_AddRefs(tempFilter));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIMsgFilter> oldElement;
+    PRUint32 newIndex = filterIndex;
+    
+	if (motion == nsMsgFilterMotion::up)
 	{
-		if (filterIndex == 0)
-			return NS_OK;
-		m_filters->ReplaceElementAt(m_filters->ElementAt(filterIndex - 1), filterIndex);
-		m_filters->ReplaceElementAt(tempFilter, filterIndex - 1);
+        newIndex = filterIndex - 1;
+
+        // are we already at the top?
+		if (filterIndex == 0) return NS_OK;
 	}
-	else if (motion == nsMsgFilterMotion::Down)
+	else if (motion == nsMsgFilterMotion::down)
 	{
-		if (filterIndex + 1 > filterCount - 1)
-			return NS_OK;
-		m_filters->ReplaceElementAt(m_filters->ElementAt(filterIndex + 1), filterIndex);
-		m_filters->ReplaceElementAt(tempFilter, filterIndex + 1);
+        newIndex = filterIndex + 1;
+        
+        // are we already at the bottom?
+		if (newIndex > filterCount - 1) return NS_OK;
 	}
-	else
-	{
-		return NS_ERROR_INVALID_ARG;
-	}
+    
+    m_filters->GetElementAt(newIndex, getter_AddRefs(oldElement));
+    m_filters->ReplaceElementAt(NS_STATIC_CAST(nsISupports*,oldElement),
+                                filterIndex);
+    m_filters->ReplaceElementAt(NS_STATIC_CAST(nsISupports*,tempFilter),
+                                newIndex);
 	return NS_OK;
+}
+
+nsresult nsMsgFilterList::MoveFilter(nsIMsgFilter *aFilter,
+                                     nsMsgFilterMotionValue motion)
+{
+    nsresult rv;
+
+    PRInt32 filterIndex;
+    rv = m_filters->GetIndexOf(NS_STATIC_CAST(nsISupports*,aFilter),
+                               &filterIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_ARG(filterIndex > 0);
+        
+
+    return MoveFilterAt(filterIndex, motion);
 }
 
 nsresult

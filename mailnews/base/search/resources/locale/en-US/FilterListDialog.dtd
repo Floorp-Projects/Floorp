@@ -10,3 +10,5 @@
 <!ENTITY description.label "Description">
 <!ENTITY filterHeader.label "Filters which are Enabled will be run in the order shown below.">
 <!ENTITY runFiltersNow.label "Run Filter(s) Now">
+<!ENTITY filtersForPrefix.label "Filters for:">
+<!ENTITY filtersForPostfix.label "">

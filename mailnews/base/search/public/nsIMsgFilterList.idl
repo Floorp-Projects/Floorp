@@ -55,17 +55,18 @@ interface nsIMsgFilterList : nsISupports {
     readonly attribute short version;
     
     readonly attribute unsigned long filterCount;
-    nsIMsgFilter GetFilterAt(in unsigned long filterIndex);
+    nsIMsgFilter getFilterAt(in unsigned long filterIndex);
     nsIMsgFilter getFilterNamed(in wstring filterName);
-	/* these methods don't delete filters - they just change the list.
-     * FE still must
-     * call MSG_DestroyFilter to delete a filter.
-     */
 
     void setFilterAt(in unsigned long filterIndex, in nsIMsgFilter filter);
+    void removeFilter(in nsIMsgFilter filter);
     void removeFilterAt(in unsigned long filterIndex);
+    
     void moveFilterAt(in unsigned long filterIndex,
                       in nsMsgFilterMotionValue motion);
+    void moveFilter(in nsIMsgFilter filter,
+                    in nsMsgFilterMotionValue motion);
+    
     void insertFilterAt(in unsigned long filterIndex, in nsIMsgFilter filter);
 
     attribute boolean loggingEnabled;
@@ -97,6 +98,6 @@ interface nsIMsgFilterList : nsISupports {
 /* these longs are all actually of type nsMsgFilterMotionValue */
 [scriptable, uuid(d067b528-304e-11d3-a0e1-00a0c900d445)]
 interface nsMsgFilterMotion {
-    const long Up = 0;
-    const long Down = 1;
+    const long up = 0;
+    const long down = 1;
 };

@@ -35,7 +35,7 @@ Rights Reserved.
 <keyset id="keyset"/>
 
   <box orient="horizontal">
-    <text value="Filters for:"/>
+    <text class="label" value="&filtersForPrefix.label;"/>
     <menulist oncommand="onServerClick(event);" id="serverMenu">
       <menupopup rdf:datasources="rdf:msgaccountmanager"
                  rdf:containment="http://home.netscape.com/NC-rdf#child"
@@ -45,6 +45,7 @@ Rights Reserved.
         </template>
       </menupopup>
     </menulist>
+    <text class="label" value="&filtersForPostfix.label;"/>
   </box>
   <box orient="horizontal" >
     <box orient="vertical" style="width:100%;" >
@@ -81,24 +82,26 @@ Rights Reserved.
 
 >
     <box orient="vertical">
-      <scrollbarbutton type="increment">
+      <spring flex="3"/>
+      <scrollbarbutton type="increment" oncommand="onUp(event)">
         <image src="chrome://global/skin/scroll-up.gif"/>
       </scrollbarbutton>
-      <scrollbarbutton type="decrement">
+      <spring flex="1"/>
+      <scrollbarbutton type="decrement" oncommand="onDown(event)">
         <image src="chrome://global/skin/scroll-down.gif"/>
       </scrollbarbutton>
+      <spring flex="3"/>
     </box>
     </box>
     </box>
     <box orient="vertical">
-      <button id="newButton" value="&newButton.label;" onclick="NewFilter();"/>
-      <button id="editButton" value="&editButton.label;" onclick="EditFilter();"/>
-      <button id="deleteButton" value="&deleteButton.label;" onclick="DeleteFilter();"/>
+      <button id="newButton" value="&newButton.label;" onclick="onNewFilter();"/>
+      <button id="editButton" value="&editButton.label;" onclick="onEditFilter();"/>
+      <button id="deleteButton" value="&deleteButton.label;" onclick="onDeleteFilter();"/>
     </box>
   </box>
   <box orient="horizontal">
     <button value="&runFiltersNow.label;" width="0em"/>
-    <html style="font: bold">Do NOT file bugs against this dialog. It is not complete.</html>
   </box>
 <!--  <button onclick="DumpDOM(document.getElementById('filterTree'));" value="dump"/> -->
   <separator class="groove"/>
