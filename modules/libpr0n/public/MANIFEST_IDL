@@ -3,5 +3,6 @@ imgIContainer.idl
 imgIContainerObserver.idl
 imgIDecoder.idl
 imgIDecoderObserver.idl
+imgILoad.idl
 imgILoader.idl
 imgIRequest.idl

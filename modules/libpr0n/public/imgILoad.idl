@@ -22,28 +22,23 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIOutputStream.idl"
 
-interface imgILoad;
+interface imgIContainer;
 
 /**
- * imgIDecoder interface
+ * imgILoad interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(9eebf43a-1dd1-11b2-953e-f1782f4cbad3)]
-interface imgIDecoder : nsIOutputStream
+[scriptable, uuid(e6273acc-1dd1-11b2-a08b-824ad1b1628d)]
+interface imgILoad : nsISupports
 {
   /**
-   * Initalize an image decoder.
-   * @param aRequest the request that owns the decoder.
-   *
-   * @note The decode should QI \a aLoad to an imgIDecoderObserver
-   * and should send decoder notifications to the request.
-   * The decoder should always pass NULL as the first two parameters to
-   * all of the imgIDecoderObserver APIs.
+   * the image container...
+   * @return the image object associated with the request.
+   * @attention NEED DOCS
    */
-  void init(in imgILoad aLoad);
+  attribute imgIContainer image;
 };

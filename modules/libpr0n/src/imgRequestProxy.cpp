@@ -23,28 +23,20 @@
 
 #include "imgRequestProxy.h"
 
-#include "nsXPIDLString.h"
-
 #include "nsIInputStream.h"
-#include "imgILoader.h"
-#include "nsIComponentManager.h"
-
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-#include "imgRequest.h"
-
+#include "nsAutoLock.h"
 #include "nsString.h"
-
-#include "nspr.h"
+#include "nsXPIDLString.h"
 
 #include "ImageLogging.h"
 
-#include "nsAutoLock.h"
+#include "nspr.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(imgRequestProxy, imgIRequest, nsIRequest,
-                              imgIDecoderObserver, imgIContainerObserver,
-                              nsIRequestObserver)
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(imgRequestProxy, imgIRequest, nsIRequest)
 
 imgRequestProxy::imgRequestProxy() :
   mLoadFlags(nsIRequest::LOAD_NORMAL),
@@ -61,21 +53,28 @@ imgRequestProxy::~imgRequestProxy()
 {
   /* destructor code */
 
-  if (!mCanceled && mOwner) {
-    PR_Lock(mLock);
+  if (mOwner) {
+    if (!mCanceled) {
+      PR_Lock(mLock);
 
-    mCanceled = PR_TRUE;
+      mCanceled = PR_TRUE;
 
-    /* set mListener to null so that we don't forward any callbacks that RemoveObserver might generate */
-    mListener = nsnull;
+      /* set mListener to null so that we don't forward any callbacks that
+         RemoveProxy might generate
+       */
+      mListener = nsnull;
 
-    PR_Unlock(mLock);
+      PR_Unlock(mLock);
 
-    /* Call RemoveObserver with a successful status.  This will keep the channel, if still downloading data,
-       from being canceled if 'this' is the last observer.  This allows the image to continue to download and
-       be cached even if no one is using it currently.
-     */
-    NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveProxy(this, NS_OK);
+      /* Call RemoveProxy with a successful status.  This will keep the
+         channel, if still downloading data, from being canceled if 'this' is
+         the last observer.  This allows the image to continue to download and
+         be cached even if no one is using it currently.
+       */
+      mOwner->RemoveProxy(this, NS_OK);
+    }
+
+    NS_RELEASE(mOwner);
   }
 
   PR_DestroyLock(mLock);
@@ -93,15 +92,16 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 
   PR_Lock(mLock);
 
-  mOwner = NS_STATIC_CAST(imgIRequest*, request);
+  mOwner = request;
+  NS_ADDREF(mOwner);
+
   mListener = aObserver;
   mContext = cx;
 
   if (aLoadGroup) {
-    PRUint32 imageStatus;
-    nsresult rv = mOwner->GetImageStatus(&imageStatus);
-    if (NS_FAILED(rv)) return rv;
-    if (!(imageStatus & STATUS_LOAD_COMPLETE)) {
+    PRUint32 imageStatus = mOwner->GetImageStatus();
+    if (!(imageStatus & imgIRequest::STATUS_LOAD_COMPLETE) &&
+        !(imageStatus & imgIRequest::STATUS_ERROR)) {
       aLoadGroup->AddRequest(this, cx);
       mLoadGroup = aLoadGroup;
     }
@@ -163,7 +163,7 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
 
   PR_Unlock(mLock);
 
-  NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveProxy(this, status);
+  mOwner->RemoveProxy(this, status);
 
   return NS_OK;
 }
@@ -215,7 +215,8 @@ NS_IMETHODIMP imgRequestProxy::GetImage(imgIContainer * *aImage)
     return NS_ERROR_FAILURE;
 
   nsAutoLock lock(mLock);
-  return mOwner->GetImage(aImage);
+  mOwner->GetImage(aImage);
+  return NS_OK;
 }
 NS_IMETHODIMP imgRequestProxy::SetImage(imgIContainer *aImage)
 {
@@ -231,7 +232,8 @@ NS_IMETHODIMP imgRequestProxy::GetImageStatus(PRUint32 *aStatus)
   }
 
   nsAutoLock lock(mLock);
-  return mOwner->GetImageStatus(aStatus);
+  *aStatus = mOwner->GetImageStatus();
+  return NS_OK;
 }
 
 /* readonly attribute nsIURI URI; */
@@ -255,118 +257,88 @@ NS_IMETHODIMP imgRequestProxy::GetDecoderObserver(imgIDecoderObserver **aDecoder
 
 /** imgIContainerObserver methods **/
 
-/* [noscript] void frameChanged (in imgIContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
-NS_IMETHODIMP imgRequestProxy::FrameChanged(imgIContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
+void imgRequestProxy::FrameChanged(imgIContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::FrameChanged");
 
   if (mListener)
     mListener->FrameChanged(container, mContext, newframe, dirtyRect);
-
-  return NS_OK;
 }
 
 /** imgIDecoderObserver methods **/
 
-/* void onStartDecode (in imgIRequest request, in nsISupports cx); */
-NS_IMETHODIMP imgRequestProxy::OnStartDecode(imgIRequest *request, nsISupports *cx)
+void imgRequestProxy::OnStartDecode(nsISupports *cx)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartDecode");
 
   if (mListener)
     mListener->OnStartDecode(this, mContext);
-
-  return NS_OK;
 }
 
-/* void onStartContainer (in imgIRequest request, in nsISupports cx, in imgIContainer image); */
-NS_IMETHODIMP imgRequestProxy::OnStartContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
+void imgRequestProxy::OnStartContainer(nsISupports *cx, imgIContainer *image)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartContainer");
 
   if (mListener)
     mListener->OnStartContainer(this, mContext, image);
-
-  return NS_OK;
 }
 
-/* void onStartFrame (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame); */
-NS_IMETHODIMP imgRequestProxy::OnStartFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
+void imgRequestProxy::OnStartFrame(nsISupports *cx, gfxIImageFrame *frame)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartFrame");
 
   if (mListener)
     mListener->OnStartFrame(this, mContext, frame);
-
-  return NS_OK;
 }
 
-/* [noscript] void onDataAvailable (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame, [const] in nsRect rect); */
-NS_IMETHODIMP imgRequestProxy::OnDataAvailable(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame, const nsRect * rect)
+void imgRequestProxy::OnDataAvailable(nsISupports *cx, gfxIImageFrame *frame, const nsRect * rect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnDataAvailable");
 
   if (mListener)
     mListener->OnDataAvailable(this, mContext, frame, rect);
-
-  return NS_OK;
 }
 
-/* void onStopFrame (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame); */
-NS_IMETHODIMP imgRequestProxy::OnStopFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
+void imgRequestProxy::OnStopFrame(nsISupports *cx, gfxIImageFrame *frame)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopFrame");
 
   if (mListener)
     mListener->OnStopFrame(this, mContext, frame);
-
-  return NS_OK;
 }
 
-/* void onStopContainer (in imgIRequest request, in nsISupports cx, in imgIContainer image); */
-NS_IMETHODIMP imgRequestProxy::OnStopContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
+void imgRequestProxy::OnStopContainer(nsISupports *cx, imgIContainer *image)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopContainer");
 
   if (mListener)
     mListener->OnStopContainer(this, mContext, image);
-
-  return NS_OK;
 }
 
-/* void onStopDecode (in imgIRequest request, in nsISupports cx, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP imgRequestProxy::OnStopDecode(imgIRequest *request, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
+void imgRequestProxy::OnStopDecode(nsISupports *cx, nsresult status, const PRUnichar *statusArg)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopDecode");
 
   if (mListener)
     mListener->OnStopDecode(this, mContext, status, statusArg);
-
-  return NS_OK;
 }
 
 
 
-
-
-/* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
-NS_IMETHODIMP imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+void imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
 #ifdef PR_LOGGING
   nsXPIDLString name;
   GetName(getter_Copies(name));
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStartRequest", "name", NS_ConvertUCS2toUTF8(name).get());
 #endif
-
-  return NS_OK;
 }
 
-/* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult statusCode, in wstring statusText); */
-NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
+void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
 {
   /* it is ok to get multiple OnStopRequest messages */
   if (!mLoadGroup)
-    return NS_OK;
+    return;
 
 #ifdef PR_LOGGING
   nsXPIDLString name;
@@ -383,6 +355,5 @@ NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *c
 
   mLoadGroup->RemoveRequest(this, mContext, statusCode);
   mLoadGroup = nsnull;
-  return NS_OK;
 }
 

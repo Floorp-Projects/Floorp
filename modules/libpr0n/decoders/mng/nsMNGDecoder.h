@@ -53,7 +53,6 @@ public:
 
   nsCOMPtr<imgIContainer> mImageContainer;
   nsCOMPtr<gfxIImageFrame> mImageFrame;
-  nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
 };
   

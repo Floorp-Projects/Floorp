@@ -43,21 +43,20 @@ nsMNGDecoder::~nsMNGDecoder()
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// void init (in imgIRequest aRequest); */
+// void init (in imgILoad aLoad); */
 NS_IMETHODIMP
-nsMNGDecoder::Init(imgIRequest *aRequest)
+nsMNGDecoder::Init(imgILoad *aLoad)
 {
-  if(!aRequest) return NS_ERROR_FAILURE;
+  if(!aLoad) return NS_ERROR_FAILURE;
   
-  mImageRequest = aRequest;
   mObserver = 
-    do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request
+    do_QueryInterface(aLoad);  // we're holding 2 strong refs to the request
   if(!mObserver) return NS_ERROR_FAILURE;
 
   mImageContainer = 
     do_CreateInstance("@mozilla.org/image/container;1?type=image/x-mng");
   if(!mImageContainer) return NS_ERROR_OUT_OF_MEMORY;
-  aRequest->SetImage(mImageContainer);
+  aLoad->SetImage(mImageContainer);
   
   /* do MNG init stuff */
   NS_REINTERPRET_CAST(imgContainerMNG*, mImageContainer.get())->InitMNG(this);

@@ -26,6 +26,7 @@
 #include "nsIInputStream.h"
 #include "imgIContainer.h"
 #include "imgIContainerObserver.h"
+#include "imgILoad.h"
 #include "nspr.h"
 #include "nsIComponentManager.h"
 #include "nsRect.h"
@@ -50,17 +51,17 @@ nsIconDecoder::~nsIconDecoder()
 
 /** imgIDecoder methods **/
 
-NS_IMETHODIMP nsIconDecoder::Init(imgIRequest *aRequest)
+NS_IMETHODIMP nsIconDecoder::Init(imgILoad *aLoad)
 {
-  mRequest = aRequest;
+  mObserver = do_QueryInterface(aLoad);  // we're holding 2 strong refs to the request.
 
-  mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
+  mImage = do_CreateInstance("@mozilla.org/image/container;1");
+  if (!mImage) return NS_ERROR_OUT_OF_MEMORY;
 
-  mImage = do_CreateInstance("@mozilla.org/image/container;1"); 
-  aRequest->SetImage(mImage);                                                   
+  aLoad->SetImage(mImage);                                                   
 
   mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-  if (!mFrame) return NS_ERROR_FAILURE;
+  if (!mFrame) return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
