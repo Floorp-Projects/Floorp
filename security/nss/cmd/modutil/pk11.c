@@ -60,6 +60,10 @@ FipsMode(char *arg)
 				return FIPS_SWITCH_FAILED_ERR;
 			}
 			PR_smprintf_free(internal_name);
+			if (!PK11_IsFIPS()) {
+				PR_fprintf(PR_STDERR, errStrings[FIPS_SWITCH_FAILED_ERR]);
+				return FIPS_SWITCH_FAILED_ERR;
+			}
 			PR_fprintf(PR_STDOUT, msgStrings[FIPS_ENABLED_MSG]);
 		} else {
 			PR_fprintf(PR_STDERR, errStrings[FIPS_ALREADY_ON_ERR]);
@@ -75,10 +79,49 @@ FipsMode(char *arg)
 				return FIPS_SWITCH_FAILED_ERR;
 			}
 			PR_smprintf_free(internal_name);
+			if (PK11_IsFIPS()) {
+				PR_fprintf(PR_STDERR, errStrings[FIPS_SWITCH_FAILED_ERR]);
+				return FIPS_SWITCH_FAILED_ERR;
+			}
 			PR_fprintf(PR_STDOUT, msgStrings[FIPS_DISABLED_MSG]);
 		} else {
 			PR_fprintf(PR_STDERR, errStrings[FIPS_ALREADY_OFF_ERR]);
 			return FIPS_ALREADY_OFF_ERR;
+		}
+	} else {
+		PR_fprintf(PR_STDERR, errStrings[INVALID_FIPS_ARG]);
+		return INVALID_FIPS_ARG;
+	}
+
+	return SUCCESS;
+}
+
+/*************************************************************************
+ *
+ * C h k F i p s M o d e
+ * If arg=="true", verify FIPS mode is enabled on the internal module.  
+ * If arg=="false", verify FIPS mode is disabled on the internal module.
+ */
+Error
+ChkFipsMode(char *arg)
+{
+
+	char *internal_name;
+
+	if(!PORT_Strcasecmp(arg, "true")) {
+		if (PK11_IsFIPS()) {
+			PR_fprintf(PR_STDOUT, msgStrings[FIPS_ENABLED_MSG]);
+		} else {
+			PR_fprintf(PR_STDOUT, msgStrings[FIPS_DISABLED_MSG]);
+			return FIPS_SWITCH_FAILED_ERR;
+		}
+
+	} else if(!PORT_Strcasecmp(arg, "false")) {
+		if(!PK11_IsFIPS()) {
+			PR_fprintf(PR_STDOUT, msgStrings[FIPS_DISABLED_MSG]);
+		} else {
+			PR_fprintf(PR_STDOUT, msgStrings[FIPS_ENABLED_MSG]);
+			return FIPS_SWITCH_FAILED_ERR;
 		}
 	} else {
 		PR_fprintf(PR_STDERR, errStrings[INVALID_FIPS_ARG]);

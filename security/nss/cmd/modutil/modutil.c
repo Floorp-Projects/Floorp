@@ -58,6 +58,7 @@ typedef enum {
 	LIST_COMMAND,
 	RAW_LIST_COMMAND,
 	RAW_ADD_COMMAND,
+	CHKFIPS_COMMAND,
 	UNDEFAULT_COMMAND
 } Command;
 
@@ -76,6 +77,7 @@ static char *commandNames[] = {
 	"-list",
 	"-rawlist",
 	"-rawadd",
+	"-chkfips",
 	"-undefault"
 };
 
@@ -109,6 +111,7 @@ typedef enum {
 	SECMOD_ARG,
 	NOCERTDB_ARG,
 	STRING_ARG,
+	CHKFIPS_ARG,
 
 	NUM_ARGS	/* must be last */
 } Arg;
@@ -142,6 +145,7 @@ static char *optionStrings[] = {
 	"-secmod",
 	"-nocertdb",
 	"-string",
+	"-chkfips",
 };
 
 /* Increment i if doing so would have i still be less than j.  If you
@@ -333,6 +337,18 @@ parse_args(int argc, char *argv[])
 			}
 			fipsArg = argv[i];
 			break;
+		case CHKFIPS_ARG:
+			if(command != NO_COMMAND) {
+				PR_fprintf(PR_STDERR, errStrings[MULTIPLE_COMMAND_ERR], arg);
+				return MULTIPLE_COMMAND_ERR;
+			}
+			command = CHKFIPS_COMMAND;
+			if(TRY_INC(i, argc)) {
+				PR_fprintf(PR_STDERR, errStrings[OPTION_NEEDS_ARG_ERR], arg);
+				return OPTION_NEEDS_ARG_ERR;
+			}
+			fipsArg = argv[i];
+			break;
 		case FORCE_ARG:
 			force = 1;
 			break;
@@ -515,6 +531,7 @@ verify_params()
 	case ENABLE_COMMAND:
 		break;
 	case FIPS_COMMAND:
+	case CHKFIPS_COMMAND:
 		if(PL_strcasecmp(fipsArg, "true") &&
 			PL_strcasecmp(fipsArg, "false")) {
 			PR_fprintf(PR_STDERR, errStrings[INVALID_FIPS_ARG]);
@@ -749,6 +766,8 @@ usage()
 "                                 directory is used\n"
 "-list [MODULE]                   Lists information about the specified module\n"
 "                                 or about all modules if none is specified\n"
+"-chkfips [ true | false ]        If true, verify  FIPS mode.  If false,\n"
+"                                 verify not FIPS mode\n"
 "-undefault MODULE                The given module is NOT a default provider\n"
 "   -mechanisms MECHANISM_LIST    of the listed mechanisms\n"
 "   [-slot SLOT]                  limit change to only the given slot\n"
@@ -836,7 +855,7 @@ main(int argc, char *argv[])
 
 	/* Set up crypto stuff */
 	createdb = command==CREATE_COMMAND;
-	readOnly = command==LIST_COMMAND;
+	readOnly = ((command==LIST_COMMAND) || (command==CHKFIPS_COMMAND));
 
 	/* Make sure browser is not running if we're writing to a database */
 	/* Do this before initializing crypto */
@@ -890,6 +909,9 @@ main(int argc, char *argv[])
 		break;
 	case FIPS_COMMAND:
 		errcode = FipsMode(fipsArg);
+		break;
+	case CHKFIPS_COMMAND:
+		errcode = ChkFipsMode(fipsArg);
 		break;
 	case JAR_COMMAND:
 		Pk11Install_SetErrorHandler(install_error);
