@@ -1483,6 +1483,7 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
       break;
     }
     case nsISupportsPrimitive::TYPE_WSTRING : {
+#if 0
       nsCOMPtr<nsISupportsWString> p(do_QueryInterface(argPrimitive));
       NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
 
@@ -1494,7 +1495,9 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
       *aArgv = STRING_TO_JSVAL(str);
-
+#else
+*aArgv = JSVAL_NULL;
+#endif
       break;
     }
     case nsISupportsPrimitive::TYPE_PRBOOL : {
