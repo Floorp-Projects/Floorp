@@ -47,6 +47,9 @@
 #include "nsIXULPopupListener.h"
 #include "nsIXULKeyListener.h"
 #include "nsIServiceManager.h"
+#include "nsIElementFactory.h"
+
+extern nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 
 //----------------------------------------------------------------------
 
@@ -89,7 +92,7 @@ MAKE_CTOR(RDFService,RDFService,RDFService)
 MAKE_CTOR(XULSortService,XULSortService,XULSortService)
 MAKE_CTOR(XULPopupListener,XULPopupListener,XULPopupListener)
 MAKE_CTOR(XULKeyListener,XULKeyListener,XULKeyListener)
-
+MAKE_CTOR(XULElementFactory, XULElementFactory, ElementFactory)
 MAKE_CTOR(RDFXMLDataSource,RDFXMLDataSource,RDFDataSource)
 MAKE_CTOR(RDFFileSystemDataSource,RDFFileSystemDataSource,RDFDataSource)
 MAKE_CTOR(RDFCompositeDataSource,RDFCompositeDataSource,RDFCompositeDataSource)
@@ -225,6 +228,12 @@ static nsModuleComponentInfo components[] =
       NS_XULPROTOTYPECACHE_CID,
       NS_RDF_PROGID "/xul-prototype-cache", 
       NS_NewXULPrototypeCache
+    },
+
+    { "XUL Element Factory",
+      NS_XULELEMENTFACTORY_CID,
+      NS_RDF_PROGID "/xul-element-factory",
+      CreateNewXULElementFactory
     },
 };
 
