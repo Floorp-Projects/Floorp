@@ -70,8 +70,11 @@ ifeq ($(OS_RELEASE),4.1.3_U1)
 OS_LIBS			= -lm
 else	# 4.1.3_U1
 MAPFILE = $(OBJDIR)/nsprmap.sun
-ALL_TRASH += $(MAPFILE)
+GARBAGE += $(MAPFILE)
 MKSHLIB += -M $(MAPFILE)
+ifneq ($(NSDISTMODE),copy)
+GARBAGE += cpu
+endif
 #
 # In Solaris 2.6 or earlier, -lrt is called -lposix4.
 # 

@@ -80,7 +80,7 @@ endif
 ifeq ($(OS_ARCH),SunOS)
 OS_LIBS = -lc
 MAPFILE = $(OBJDIR)/pldsmap.sun
-ALL_TRASH += $(MAPFILE)
+GARBAGE += $(MAPFILE)
 MKSHLIB += -M $(MAPFILE)
 endif
 
