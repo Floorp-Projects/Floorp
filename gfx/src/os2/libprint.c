@@ -202,18 +202,30 @@ HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName)
    if( pInfo && pszApplicationName)
    {
       char *pszDriverName = strdup( pInfo->q.pszDriverName), *c;
-      DEVOPENSTRUC dop = { pInfo->q.pszName,
+/*      DEVOPENSTRUC dop = { pInfo->q.pszName,
                            pszDriverName,
                            pInfo->q.pDriverData,
                            "PM_Q_STD",
                            pszApplicationName,
                            pInfo->q.pszPrProc,
-                           0, 0, 0 };
-   
+                           0, 0, 0 }; */
+
+      DEVOPENSTRUC dop;
+
+      dop.pszLogAddress = pInfo->q.pszName;
+      dop.pszDriverName = pszDriverName;
+      dop.pdriv = pInfo->q.pDriverData;
+      dop.pszDataType = "PM_Q_STD"; 
+      dop.pszComment = pszApplicationName;
+      dop.pszQueueProcName = pInfo->q.pszPrProc;;     
+      dop.pszQueueProcParams = 0;   
+      dop.pszSpoolerParams = 0;     
+      dop.pszNetworkParams = 0;     
+
       if( 0 != (c = strchr( pszDriverName, '.')))
          *c = '\0';
    
-      hdc = DevOpenDC( 0 /*hab*/,
+      hdc = DevOpenDC( 0,
                        OD_QUEUED,
                        "*",
                        6,

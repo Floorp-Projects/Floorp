@@ -50,9 +50,9 @@ nsresult nsContextMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
       NS_ADDREF_THIS();
       return NS_OK;
    }
-   if( aIID.Equals(((nsISupports*)(nsIContextMenu*)this)->GetIID()))
+   if( aIID.Equals(((nsIContextMenu*)this)->GetIID()))
    {
-      *aInstancePtr = (void*) ((nsISupports*) ((nsIContextMenu*)this));
+      *aInstancePtr = (void*) ((nsIContextMenu*)this);
       NS_ADDREF_THIS();
       return NS_OK;
    }
@@ -203,6 +203,9 @@ nsEventStatus nsContextMenu::MenuDeselected( const nsMenuEvent &aMenuEvent)
 // Can't WinQueryWindowRect() on menu before popping up...
 void CalcMenuSize( HWND hwnd, PSIZEL szl)
 {
+
+#ifndef XP_OS2_VACPP     // XXXXX "SHORT too small for MRESULT"
+
    SHORT sItems = (SHORT) WinSendMsg( hwnd, MM_QUERYITEMCOUNT, 0, 0);
 
    memset( szl, 0, sizeof(SIZEL));
@@ -221,4 +224,5 @@ void CalcMenuSize( HWND hwnd, PSIZEL szl)
 
    // Fudge-factor
    szl->cy += WinQuerySysValue( HWND_DESKTOP, SV_CYSIZEBORDER);
+#endif
 }

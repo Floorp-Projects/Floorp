@@ -54,9 +54,9 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
      NS_ADDREF_THIS();
      return NS_OK;
   }
-  if( aIID.Equals(((nsISupports*)(nsIMenu*)this)->GetIID()))
+  if( aIID.Equals(((nsIMenu*)this)->GetIID()))
   {
-     *aInstancePtr = (void*) ((nsISupports*) ((nsIMenu*)this));
+     *aInstancePtr = (void*) ((nsIMenu*)this);
      NS_ADDREF_THIS();
      return NS_OK;
   }
@@ -141,6 +141,34 @@ nsresult nsMenu::SetLabel( const nsString &aText)
 }
 
 NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::GetEnabled(PRBool* aIsEnabled)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::GetAccessKey(nsString &aText)
+{
+  aText = mAccessKey;
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
+{
+  mAccessKey = aText;
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::IsHelpMenu(PRBool* aIsHelpMenu)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::SetNativeData(void * aData)
+
 {
   return NS_OK;
 }

@@ -52,6 +52,8 @@ class nsMenuItem : public nsIMenuItem, public nsIMenuListener
    NS_IMETHOD GetEnabled( PRBool *aIsEnabled);
    NS_IMETHOD SetChecked( PRBool aIsEnabled);
    NS_IMETHOD GetChecked( PRBool *aIsEnabled);
+   NS_IMETHOD SetCheckboxType(PRBool aIsCheckbox);
+   NS_IMETHOD GetCheckboxType(PRBool *aIsCheckbox);
    NS_IMETHOD GetCommand( PRUint32 &aCommand);
    NS_IMETHOD GetTarget( nsIWidget *&aTarget);
    NS_IMETHOD GetNativeData( void *&aData);
@@ -60,9 +62,15 @@ class nsMenuItem : public nsIMenuItem, public nsIMenuListener
    NS_IMETHOD IsSeparator( PRBool &aIsSep);
    NS_IMETHOD SetCommand( const nsString &aStrCmd);
    NS_IMETHOD DoCommand();
+   NS_IMETHOD SetDOMNode(nsIDOMNode * aDOMNode);
+   NS_IMETHOD GetDOMNode(nsIDOMNode ** aDOMNode);
    NS_IMETHOD SetDOMElement( nsIDOMElement *aDOMElement);
    NS_IMETHOD GetDOMElement( nsIDOMElement **aDOMElement);
    NS_IMETHOD SetWebShell( nsIWebShell *aWebShell);
+   NS_IMETHOD SetShortcutChar(const nsString &aText);
+   NS_IMETHOD GetShortcutChar(nsString &aText);
+   NS_IMETHOD SetModifiers(PRUint8 aModifiers);
+   NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
 
    // nsIMenuListener interface
    nsEventStatus MenuSelected( const nsMenuEvent &aMenuEvent);
@@ -81,6 +89,8 @@ class nsMenuItem : public nsIMenuItem, public nsIMenuListener
    nsMenuBase      *mMenuBase;     // Menu we are attached to
    nsString         mLabel;
    PRBool           mIsSeparator;
+   nsString         mKeyEquivalent;
+   PRUint8          mModifiers;
    nsIWidget       *mTarget;       // window we dispatch to
    USHORT           mPMID;         // PM command ID
    nsIMenuListener *mMenuListener;

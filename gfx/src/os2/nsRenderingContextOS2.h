@@ -15,7 +15,7 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Henry Sobotka <sobotka@axess.com>
  *
  */
 
@@ -81,6 +81,7 @@ class nsRenderingContextOS2 : public nsIRenderingContext
    NS_IMETHOD GetClipRect( nsRect &aRect, PRBool &aHasLocalClip);
    NS_IMETHOD SetClipRegion( const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty);
    NS_IMETHOD GetClipRegion( nsIRegion **aRegion);
+   NS_IMETHOD CopyClipRegion(nsIRegion &aRegion);
 
    NS_IMETHOD SetColor( nscolor aColor);
    NS_IMETHOD GetColor( nscolor &aColor) const;
@@ -164,6 +165,8 @@ class nsRenderingContextOS2 : public nsIRenderingContext
 
    NS_IMETHOD GetHints( PRUint32 &aResult);
 
+   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
+
    // Convert XP-rects to OS/2 space.
    // World coordinates given & required, double inclusive rcl wanted.
    void NS2PM_ININ( const nsRect &in, RECTL &rcl);
@@ -191,6 +194,11 @@ class nsRenderingContextOS2 : public nsIRenderingContext
    void PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoints, PRBool bFilled);
    void PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFull, PRInt32 start=0, PRInt32 end=0);
 
+private:
+   // ConditionRect is used to fix coordinate overflow problems for
+   // rectangles after they are transformed to screen coordinates
+   NS_IMETHOD ConditionRect( nscoord &x, nscoord &y, nscoord &w, nscoord &h );
+
  protected:
    nsIDeviceContext    *mContext;         // device context
    nsIPaletteOS2       *mPalette;         // palette from the dc
@@ -206,6 +214,7 @@ class nsRenderingContextOS2 : public nsIRenderingContext
    nscolor              mCurrDrawingColor;// currently selected drawing color
    nscolor              mCurrTextColor;   // currently selected text color
    nsLineStyle          mCurrLineStyle;   // currently selected line style
+   HDC                  mDC;  
 };
 
 inline void nsRenderingContextOS2::GetTargetHeight( PRUint32 &ht)

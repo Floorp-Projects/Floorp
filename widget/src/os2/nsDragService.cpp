@@ -24,7 +24,6 @@
 #include "nsWidgetDefs.h"
 #include "nsDragService.h"
 #include "nsITransferable.h"
-#include "nsIFileListTransferable.h"
 #include "nsVoidArray.h"
 
 #include "nsFileSpec.h"

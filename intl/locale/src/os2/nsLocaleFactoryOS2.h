@@ -22,7 +22,12 @@
 #ifndef _nslocalefactoryos2_h_
 #define _nslocalefactoryos2_h_
 
-#include "nsLocaleFactory.h"
+#include "nscore.h"
+#include "nsString.h"
+#include "nsISupports.h"
+#include "nsIFactory.h"
+#include "nsILocale.h"
+#include "nsIOS2Locale.h"
 #include "nsLocaleOS2.h" // for sys/app typedef (sorry!)
 
 // Although we pretty-much do our own thing for locale on OS/2 due to the
@@ -30,11 +35,16 @@
 // the XP nsLocaleFactory to take advantage of the GetLocaleFromAcceptLanguage()
 // method.  Doing this probably drags in a load of unused XP locale code :-(
 //
-class nsLocaleFactoryOS2 : public nsLocaleFactory
+class nsLocaleFactoryOS2 : public nsIFactory
 {
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFACTORY
+
  public:
+
    nsLocaleFactoryOS2();
    virtual ~nsLocaleFactoryOS2();
+   nsLocaleFactoryOS2(const nsCID &aClass);   
 
    // nsILocaleFactory
    NS_IMETHOD NewLocale( nsString **aCatList, nsString **aValList,
@@ -46,6 +56,9 @@ class nsLocaleFactoryOS2 : public nsLocaleFactory
  protected:
    nsSystemLocale      *mSysLocale;
    nsApplicationLocale *mAppLocale;
+
+  private:   
+    nsCID     mClassID;
 };
 
 #endif

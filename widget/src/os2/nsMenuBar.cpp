@@ -52,9 +52,9 @@ nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
       NS_ADDREF_THIS();
       return NS_OK;
    }
-   if( aIID.Equals(((nsISupports*)(nsIMenuBar*)this)->GetIID()))
+   if( aIID.Equals(((nsIMenuBar*)this)->GetIID()))
    {
-      *aInstancePtr = (void*) ((nsISupports*)((nsIMenuBar*)this));
+      *aInstancePtr = (void*) ((nsIMenuBar*)this);
       NS_ADDREF_THIS();
       return NS_OK;
    }
