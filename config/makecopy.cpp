@@ -1,0 +1,534 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ *
+ * Modified by David.Gardiner@unisa.edu.au
+ *	added -i option, which prepends a #line with the absolute path of the file. Useful
+ *		for debugging Mozilla on Windows.
+ *	added hard symbolic link instead of copy for NTFS partitions
+ *	added multi-copy, so a number of files can be copied to the same destination at once.
+ *
+ */
+
+/*
+test cases:
+
+  cd d:\mozilla_src\mozilla\nsprpub
+   -i ..\dist\WIN954.0_DBG.OBJD\include\*.h ..\dist\WIN32_D.OBJ\include
+
+  cd d:\mozilla_src\mozilla\webshell
+  -i nsIBrowserWindow.h nsIContentViewer.h nsIContentViewerContainer.h nsIDocumentLoader.h nsIDocumentLoaderObserver.h nsIDocStreamLoaderFactory.h nsIDocumentViewer.h nsILinkHandler.h nsIThrobber.h nsIWebShell.h nsIWebShellServices.h nsIClipboardCommands.h nsweb.h ..\..\dist\public\raptor
+ */
+
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <direct.h>
+#include <sys/stat.h>
+#include <sys/utime.h>
+#include <io.h>
+#include <fcntl.h>
+
+/*
+	Unicode calls are linked at run-time, so that the application can run under
+	Windows NT and 95 (which doesn't support the Unicode calls)
+
+	The following APIs are linked:
+		BackupWrite
+		CreateFileW
+		GetFullPathNameW
+*/
+
+//static const char *prog;
+
+BOOL insertHashLine = FALSE;
+BOOL isWindowsNT = FALSE;
+
+typedef WINBASEAPI BOOL (WINAPI* LPFNBackupWrite)(HANDLE, LPBYTE, DWORD, LPDWORD, BOOL, BOOL, LPVOID *);
+typedef WINBASEAPI HANDLE (WINAPI* LPFNCreateFileW)(LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
+typedef WINBASEAPI DWORD (WINAPI* LPFNGetFullPathNameW)(LPCWSTR, DWORD, LPWSTR, LPWSTR *);
+
+// Function pointers (used for NTFS hard links)
+LPFNBackupWrite lpfnDllBackupWrite = NULL;    
+LPFNCreateFileW lpfnDllCreateFileW = NULL;
+LPFNGetFullPathNameW lpfnDllGetFullPathNameW = NULL;
+
+// Handle to DLL
+HINSTANCE hDLL = NULL;               
+
+/*
+** Flip any "unix style slashes" into "dos style backslashes" 
+*/
+void FlipSlashes(char *name)
+{
+    int i;
+
+    for( i=0; name[i]; i++ ) {
+        if( name[i] == '/' ) name[i] = '\\';
+    }
+}
+
+/*
+ * Flip any "dos style backslashes" into "unix style slashes"
+ */
+void UnflipSlashes(char *name)
+{
+    int i;
+
+    for( i=0; name[i]; i++ ) {
+        if( name[i] == '\\' ) name[i] = '/';
+    }
+}
+
+int MakeDir( char *path )
+{
+    char *cp, *pstr;
+    struct stat sb;
+
+    pstr = path;
+    while( cp = strchr(pstr, '\\') ) {
+        *cp = '\0';
+        
+        if( !(stat(path, &sb) == 0 && (sb.st_mode & _S_IFDIR) )) {
+            /* create the new sub-directory */
+            printf("+++ makecopy: creating directory %s\n", path);
+            if( mkdir(path) < 0 ) {
+                return -1;
+            }
+        } /* else sub-directory already exists.... */
+
+        *cp = '\\';
+        pstr = cp+1;
+    }
+
+	return 0;
+}
+
+/*
+ * Display error code and message for last error
+ */
+int ReportError()
+{        
+	LPVOID lpMsgBuf = NULL;
+
+	DWORD err = GetLastError();
+		
+	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, 
+		NULL,
+		err,
+		0,
+		(LPTSTR) &lpMsgBuf,
+		0,
+		NULL);
+
+	fprintf(stderr, "%u, %s\n", err, (LPCTSTR) lpMsgBuf ) ;
+
+	LocalFree( lpMsgBuf );
+
+	return -1;
+}
+
+int ReportError(const char* msg)
+{
+	fprintf(stderr, "%Error: s\n", msg);
+	return ReportError();
+}
+
+
+/*
+	Creates an NTFS hard link of src at dest.
+	NT5 will have a CreateHardLink API which will do the same thing, but a lot simpler
+	This is based on the MSDN code sample Q153181
+
+ */
+BOOL hardSymLink(LPCSTR src, LPCSTR dest)
+{ 
+    WCHAR FileLink[ MAX_PATH + 1 ];
+    LPWSTR FilePart;
+
+    WIN32_STREAM_ID StreamId;
+    DWORD dwBytesWritten;
+
+    BOOL bSuccess;
+
+	// Convert src and dest to Unicode
+	DWORD cbPathLen = MultiByteToWideChar(CP_ACP, 0, src, -1, NULL, 0);
+	LPWSTR FileSource = new WCHAR[cbPathLen+1];
+	MultiByteToWideChar(CP_ACP, 0, src, -1, FileSource, cbPathLen);
+
+	cbPathLen = MultiByteToWideChar(CP_ACP, 0, dest, -1, NULL, 0);
+	LPWSTR FileDest = new WCHAR[cbPathLen+1];
+	MultiByteToWideChar(CP_ACP, 0, dest, -1, FileDest, cbPathLen);
+
+    //
+    // open existing file that we link to
+    //
+
+    HANDLE hFileSource = lpfnDllCreateFileW(
+        FileSource,
+        FILE_WRITE_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL, // sa
+        OPEN_EXISTING,
+        0,
+        NULL
+        );
+
+    if(hFileSource == INVALID_HANDLE_VALUE) {
+        ReportError("CreateFile (source)");
+        return FALSE;
+    }
+
+    //
+    // validate and sanitize supplied link path and use the result
+    // the full path MUST be Unicode for BackupWrite
+    //
+
+    cbPathLen = lpfnDllGetFullPathNameW( FileDest, MAX_PATH, FileLink, &FilePart); 
+
+    if(cbPathLen == 0) {
+        ReportError("GetFullPathName");
+        return FALSE;
+    }
+
+    cbPathLen = (cbPathLen + 1) * sizeof(WCHAR); // adjust for byte count 
+
+    //
+    // it might also be a good idea to verify the existence of the link,
+    // (and possibly bail), as the file specified in FileLink will be
+    // overwritten if it already exists
+    //
+
+    //
+    // prepare and write the WIN32_STREAM_ID out
+    //
+
+    LPVOID lpContext = NULL;
+
+    StreamId.dwStreamId = BACKUP_LINK;
+    StreamId.dwStreamAttributes = 0;
+    StreamId.dwStreamNameSize = 0;
+    StreamId.Size.HighPart = 0;
+    StreamId.Size.LowPart = cbPathLen;
+
+    //
+    // compute length of variable size WIN32_STREAM_ID
+    //
+
+    DWORD StreamHeaderSize = (LPBYTE)&StreamId.cStreamName - (LPBYTE)&
+        StreamId+ StreamId.dwStreamNameSize ;
+
+    bSuccess = lpfnDllBackupWrite(
+        hFileSource,
+        (LPBYTE)&StreamId,  // buffer to write
+        StreamHeaderSize,   // number of bytes to write
+        &dwBytesWritten,
+        FALSE,              // don't abort yet
+        FALSE,              // don't process security
+        &lpContext
+        );
+
+    if(bSuccess) {
+
+        //
+        // write out the buffer containing the path
+        //
+
+        bSuccess = lpfnDllBackupWrite(
+            hFileSource,
+            (LPBYTE)FileLink,   // buffer to write
+            cbPathLen,          // number of bytes to write
+            &dwBytesWritten,
+            FALSE,              // don't abort yet
+            FALSE,              // don't process security
+            &lpContext
+            );
+
+        //
+        // free context
+        //
+
+        lpfnDllBackupWrite(
+            hFileSource,
+            NULL,               // buffer to write
+            0,                  // number of bytes to write
+            &dwBytesWritten,
+            TRUE,               // abort
+            FALSE,              // don't process security
+            &lpContext
+            );
+    }
+
+    CloseHandle( hFileSource );
+
+    if(!bSuccess) {
+        ReportError("BackupWrite");
+        return FALSE;
+    }
+
+	delete FileSource; 
+	delete FileDest;
+
+    return TRUE;
+} 
+
+int CopyIfNecessary(const char *oldFile, const char *newFile)
+{
+	LPTSTR fullPathName = NULL;
+	LPTSTR filenamePart = NULL;
+
+	char buffer[8192];
+	DWORD bytesRead = 0;
+	DWORD bytesWritten = 0;
+
+    struct stat newsb;
+	struct stat oldsb;	
+
+	// Use stat to find file details
+	if (stat(oldFile, &oldsb)) {
+		return -1;
+	}
+
+	if (!stat(newFile, &newsb)) {
+		// If file times are equal, don't copy
+		if (newsb.st_mtime == oldsb.st_mtime) {
+#if 0
+			printf("+++ makecopy: %s is up to date\n", newFile);
+#endif
+			return 0;
+		}
+	}
+
+
+	// find out required size
+	DWORD bufSize = GetFullPathName(oldFile, 0, fullPathName, &filenamePart);
+
+	fullPathName = new char[bufSize];
+	GetFullPathName(oldFile, bufSize, fullPathName, &filenamePart);
+
+	// If we need to insert #line, the copying is a bit involved.
+	if (insertHashLine == TRUE) {
+		struct _utimbuf utim;
+
+	    printf("    #Installing %s into %s\n", oldFile, newFile);
+
+		utim.actime = oldsb.st_atime;
+		utim.modtime = oldsb.st_mtime;	// modification time 
+
+		HANDLE hNewFile = CreateFile(newFile, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, 
+						CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+						NULL);
+		if (hNewFile == INVALID_HANDLE_VALUE) {
+			return ReportError("CreateFile");
+		}
+
+		HANDLE hOldFile = CreateFile(oldFile, GENERIC_READ, FILE_SHARE_READ, NULL, 
+							OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+							NULL);
+		if (hOldFile == INVALID_HANDLE_VALUE) {
+			return ReportError("CreateFile");
+		}
+
+		// Insert first line.
+		sprintf(buffer, "#line 1 \"%s\"\r\n", fullPathName);
+
+		// convert to unix.
+		UnflipSlashes(buffer);
+
+		WriteFile(hNewFile, buffer, strlen(buffer), &bytesWritten, NULL);
+
+		// Copy file.
+		do {
+			if (!ReadFile(hOldFile, buffer, sizeof(buffer), &bytesRead, NULL)) {
+				return ReportError("ReadFile");
+			}
+
+			if (!WriteFile(hNewFile, buffer, bytesRead, &bytesWritten, NULL)) {
+				return ReportError("WriteFile");
+			}
+
+		} while (bytesRead > 0);
+
+		CloseHandle(hNewFile);
+		CloseHandle(hOldFile);
+
+		// make copy have same time
+		_utime(newFile, &utim);
+
+	// If we don't need to do a #line, use an API to copy the file..
+	} else {
+
+		BOOL isNTFS = FALSE;
+		
+		// Find out what kind of volume this is.
+		if (isWindowsNT) {
+			char rootPathName[MAX_PATH];
+			char *c = strchr(fullPathName, '\\');
+
+			if (c != NULL) {
+				LPTSTR fileSystemName;
+
+				strncpy(rootPathName, fullPathName, (c - fullPathName) + 1);
+
+				fileSystemName = new TCHAR[50]; 
+				if (!GetVolumeInformation(rootPathName, NULL, 0, NULL, NULL, NULL, fileSystemName, sizeof(rootPathName))) {
+					return ReportError("GetVolumeInformation");
+				}
+
+				isNTFS = (strcmp(fileSystemName, "NTFS") == 0);
+				delete fileSystemName;
+			}
+		}
+
+		if (isNTFS) {
+		    printf("+++ makecopy: Symlinking %s into %s\n", oldFile, newFile);
+
+			if (! hardSymLink(oldFile, newFile) ) {
+				return 1;
+			}
+		} else {
+		    printf("    Installing %s into %s\n", oldFile, newFile);
+
+			if( ! CopyFile(oldFile, newFile, FALSE) ) {
+				ReportError("CopyFile");
+				return 1;
+			}
+		}
+	}
+
+	delete fullPathName;
+
+    return 0;
+}
+
+void Usage(void)
+{
+    fprintf(stderr, "makecopy: [-i|-c] <file1> [file2] [filen] <dir-path>\n");
+}
+
+
+int main( int argc, char *argv[] ) 
+{
+    char old_path[4096];
+    char new_path[4096];
+    char *oldFileName; // points to where file name starts in old_path
+    char *newFileName; // points to where file name starts in new_path
+    WIN32_FIND_DATA findFileData;
+    int rv = 0;
+	int i = 1;
+
+    if (argc < 3) {
+        Usage();
+        return 2;
+    }
+
+	if (stricmp(argv[i], "-i") == 0) {
+		insertHashLine = TRUE;
+		i++;
+	}
+
+	// -c option forces copy instead of symlink
+	if (stricmp(argv[i], "-c") == 0) {
+		isWindowsNT = FALSE;
+		i++;
+	} else {
+		OSVERSIONINFO osvi;
+
+		// Is this Windows NT?
+		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+		if (!GetVersionEx(&osvi)) {
+			return ReportError();
+		}
+
+		isWindowsNT = (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT);
+
+		if (isWindowsNT) {
+
+			hDLL = LoadLibrary("Kernel32");
+			if (hDLL != NULL)
+			{
+				lpfnDllBackupWrite = (LPFNBackupWrite)GetProcAddress(hDLL, "BackupWrite");
+				lpfnDllCreateFileW = (LPFNCreateFileW)GetProcAddress(hDLL, "CreateFileW");
+				lpfnDllGetFullPathNameW = (LPFNGetFullPathNameW) GetProcAddress(hDLL, "GetFullPathNameW");
+
+				if ((!lpfnDllBackupWrite) || (!lpfnDllCreateFileW) || (!lpfnDllGetFullPathNameW))
+				{
+					// handle the error
+					int r = ReportError("GetProcAddress");
+
+					FreeLibrary(hDLL);       
+					return r;
+				}
+			} else {
+				return ReportError();
+			}
+		}
+	}
+
+	// destination path is last argument
+	strcpy(new_path, argv[argc-1]);
+
+	// append backslash to path if not already there
+	if (new_path[strlen(new_path)] != '\\') {
+		strcat(new_path, "\\");
+	}
+
+    //sprintf(new_path, "%s\\", argv[i+1]);
+    FlipSlashes(new_path);
+    newFileName = new_path + strlen(new_path);
+
+    if( MakeDir(new_path) < 0 ) {
+        fprintf(stderr, "\n+++ makecopy: unable to create directory %s\n", new_path);
+        return 1;
+    }
+
+	//i++;
+
+	// copy all named source files
+	while (i < (argc - 1)) {
+		strcpy(old_path, argv[i]);
+
+		FlipSlashes(old_path);
+		oldFileName = strrchr(old_path, '\\');
+		if (oldFileName) {
+			oldFileName++;
+		} else {
+			oldFileName = old_path;
+		}
+
+		HANDLE hFindFile = FindFirstFile(old_path, &findFileData);
+
+		if (hFindFile != INVALID_HANDLE_VALUE) {
+			do {
+				strcpy(oldFileName, findFileData.cFileName);
+				strcpy(newFileName, findFileData.cFileName);
+				rv = CopyIfNecessary(old_path, new_path);
+
+			} while (FindNextFile(hFindFile, &findFileData) != 0);
+		} else {
+			fprintf(stderr, "\n+++ makecopy: no such file: %s\n", old_path);
+		}
+
+		FindClose(hFindFile);
+		i++;
+	}
+	if (isWindowsNT) {
+		FreeLibrary(hDLL);
+	}
+    return 0;
+}

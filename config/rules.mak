@@ -59,23 +59,6 @@ JNI_GEN_DIR=_jni
 !endif
 
 
-MANIFEST_LEVEL=MACROS
-!IF EXIST(manifest.mn) && !defined(IGNORE_MANIFEST)
-!IF "$(WINOS)" == "WIN95"
-!IF [$(DEPTH)\config\mantomak.exe manifest.mn manifest.mnw] == 0 
-!INCLUDE <manifest.mnw>
-!ELSE
-!ERROR ERROR:  Unable to generate manifest.mnw from manifest.mn
-!ENDIF
-!ELSE
-!IF ["$(DEPTH)\config\mantomak.exe manifest.mn manifest.mnw"] == 0 
-!INCLUDE <manifest.mnw>
-!ELSE
-!ERROR ERROR:  Unable to generate manifest.mnw from manifest.mn
-!ENDIF
-!ENDIF
-!ENDIF
-
 #//------------------------------------------------------------------------
 #//  Make sure that JDIRS is set after the manifest file is included
 #//  and before the rules for JDIRS get generated. We cannot put this line
@@ -355,14 +338,11 @@ clobber::
 !ifdef DIRS
      @$(W95MAKE) clobber $(MAKEDIR) $(DIRS)
 !endif
-    -$(RM_R) $(GARBAGE) $(OBJDIR) 2> NUL
 
 clobber_all::
 !ifdef DIRS
      @$(W95MAKE) clobber_all $(MAKEDIR) $(DIRS)
 !endif
-    -$(RM_R) *.OBJ $(TARGETS) $(GARBAGE) $(OBJDIR) 2> NUL
-
   
 export::
 !ifdef DIRS
@@ -601,25 +581,33 @@ export:: $(JMC_STUBS) $(OBJDIR) $(JMC_OBJS)
 
 #//------------------------------------------------------------------------
 #//
-#// JMC
+#// EXPORTS
 #//
-#// EXPORTS Names of headers to be copied to MODULE
+#// Names of headers to be copied to common include directory
 #//
 #//------------------------------------------------------------------------
 !if "$(EXPORTS)" != "$(NULL)"
-export:: $(PUBLIC)
-    for %f in ($(EXPORTS)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\include
+
+export::
+    @echo +++ make: exporting headers
+ 	$(MAKE_INSTALL:/=\) -i $(EXPORTS) $(PUBLIC)
 
 clobber::
-    -for %g in ($(EXPORTS)) do $(RM) $(XPDIST:/=\)\include\%g
+!if exist($(PUBLIC))
+    @cd $(PUBLIC)
+    -$(RM) $(EXPORTS)
+    @cd $(MAKEDIR)
+!endif # $(PUBLIC) exists
+
 clobber_all:: clobber
+
 !endif # EXPORTS
 
 #//------------------------------------------------------------------------
 #//  These rules must follow all lines that define the macros they use
 #//------------------------------------------------------------------------
 !if defined(JAVA_OR_NSJVM)
-GARBAGE	= $(JMC_GEN_DIR) $(JMC_HEADERS) $(JMC_STUBS) \
+GARBAGE	= $(GARBAGE) $(JMC_GEN_DIR) $(JMC_HEADERS) $(JMC_STUBS) \
 	  $(JDK_STUB_DIR) $(JRI_GEN_DIR) $(JDK_GEN_DIR) $(JNI_GEN_DIR) 
 !endif
 
@@ -633,15 +621,14 @@ clobber:: $(DIRS)
 clobber_all:: $(DIRS)
     -$(RM_R) *.OBJ $(TARGETS) $(GARBAGE) $(OBJDIR) 2> NUL
 
-MANIFEST_LEVEL=RULES
-!IF EXIST(manifest.mnw) && !defined(IGNORE_MANIFEST)
-!INCLUDE <manifest.mnw>
-!ENDIF
-
 !if "$(MOZ_BITS)"=="32"
 CFLAGS = $(CFLAGS) -DNO_JNI_STUBS
 !endif
 
+
+#//------------------------------------------------------------------------
+#//  XPIDL rules
+#//------------------------------------------------------------------------
 !if "$(XPIDLSRCS)" != "$(NULL)"
 !if "$(MODULE)" != "$(NULL)"
 
@@ -698,13 +685,11 @@ $(XPDIST)\idl:
 
 export:: $(XPDIST)\idl
         @echo +++ make: exporting IDL files
-        @echo.
-        -for %i in ($(XPIDLSRCS:/=\)) do $(MAKE_INSTALL) %i $(XPDIST)\idl
+        $(MAKE_INSTALL) $(XPIDLSRCS:/=\) $(XPDIST)\idl
 
 export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(PUBLIC)
         @echo +++ make: exporting generated XPIDL header files
-        @echo.
-        -for %i in ($(XPIDL_HEADERS:/=\)) do $(MAKE_INSTALL) %i $(PUBLIC)
+        $(MAKE_INSTALL) $(XPIDL_HEADERS:/=\) $(PUBLIC)
 
 !ifndef NO_GEN_XPT
 install:: $(XPIDL_GEN_DIR) $(TYPELIB)
@@ -713,20 +698,25 @@ install:: $(XPIDL_GEN_DIR) $(TYPELIB)
         $(MAKE_INSTALL) $(TYPELIB) $(DIST)\bin\components
 !endif
 
-GARBAGE=$(GARBAGE) $(XPIDL_GEN_DIR) $(DIST)\bin\components\$(MODULE).xpt
-
 clobber::
-        -for %g in ($(XPIDLSRCS:.idl=.h)) do $(RM) $(XPDIST:/=\)\include\%g
-        -$(RM_R) $(GARBAGE) 2> NUL
-
-clobber_all::
-        -for %g in ($(XPIDLSRCS:.idl=.h)) do $(RM) $(XPDIST:/=\)\include\%g
-        -$(RM_R) $(GARBAGE) 2> NUL
-
-GARBAGE=$(GARBAGE) $(XPIDL_GEN_DIR) $(DIST)\bin\components\$(XPIDL_MODULE).xpt
+!if exist($(PUBLIC))
+        @cd $(PUBLIC)
+        -$(RM) $(XPIDLSRCS:.idl=.h)
+        @cd $(MAKEDIR)
+!endif
+!if exist($(XPDIST:/=\)\idl)
+        @cd $(XPDIST:/=\)\idl
+        -$(RM) $(XPIDLSRCS)
+        @cd $(MAKEDIR)
+!endif
+        -$(RM_R) $(XPIDL_GEN_DIR) 2> NUL
+        
+clobber_all:: clobber
+        -$(RM) $(DIST)\bin\components\$(XPIDL_MODULE).xpt
 
 !endif
 !endif
+
 
 # Generate chrome building rules.
 #
