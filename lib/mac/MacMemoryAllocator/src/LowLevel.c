@@ -233,7 +233,11 @@ void MacintoshInitializeMemory(void)
 #ifndef powerc
 	SetApplLimit(GetApplLimit() - 16384);	
 #endif
+
+#if !TARGET_CARBON 
 	MaxApplZone();
+#endif
+
 	for (i = 1; i <= 30; i++)
 		MoreMasters();
 
