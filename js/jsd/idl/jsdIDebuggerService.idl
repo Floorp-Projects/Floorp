@@ -63,6 +63,17 @@ interface jsdIContext : nsISupports
 };
 */
 
+/* Objects which inherit this interface may go away, with (jsdIScript) or
+ * without (all others) notification.  These objects are generally wrappers
+ * around JSD structures that go away when you call jsdService::Off().
+ */
+[scriptable, uuid(46f1e23e-1dd2-11b2-9ceb-8285f2e95e69)]
+interface jsdIEphemeral : nsISupports
+{
+    readonly attribute boolean isValid;
+    [noscript] void invalidate(); 
+};
+    
 [scriptable, uuid(d500e8b8-1dd1-11b2-89a1-cdf55d91cbbd)]
 interface jsdIObject : nsISupports
 {
@@ -83,7 +94,7 @@ interface jsdIPC : nsISupports
 };
 
 [scriptable, uuid(b8816e56-1dd1-11b2-81dc-8ba99a833d9e)]
-interface jsdIProperty : nsISupports
+interface jsdIProperty : jsdIEphemeral
 {
     [noscript] readonly attribute JSDContext  JSDContext;
     [noscript] readonly attribute JSDProperty JSDProperty;
@@ -101,23 +112,15 @@ interface jsdIProperty : nsISupports
     readonly attribute jsdIValue     name;
     readonly attribute jsdIValue     value;
     readonly attribute unsigned long varArgSlot;
+
 };
 
 [scriptable, uuid(a38f65ca-1dd1-11b2-95d5-ff2947e9c920)]
-interface jsdIScript : nsISupports
+interface jsdIScript : jsdIEphemeral
 {
     [noscript] readonly attribute JSDContext JSDContext;
     [noscript] readonly attribute JSDScript  JSDScript;
 
-    /* Releases the private data held by the wrapped JSDScript, and clears the
-     * wrapped JSDScript.
-     * This jsdIScript instance will no longer be useful.
-     * This should ONLY be called internally, in response to a JSDScript's 
-     * destruction by the jsd library.
-     */
-    [noscript] void invalidate(); 
-
-    readonly attribute boolean       isValid;
     readonly attribute boolean       isActive;
     readonly attribute string        fileName;
     readonly attribute string        functionName;
@@ -136,7 +139,7 @@ interface jsdISourceText : nsISupports
 {};
 
 [scriptable, uuid(b6d50784-1dd1-11b2-a932-882246c6fe45)]
-interface jsdIStackFrame : nsISupports
+interface jsdIStackFrame : jsdIEphemeral
 {
     [noscript] readonly attribute JSDContext        JSDContext;
     [noscript] readonly attribute JSDThreadState    JSDThreadState;
@@ -173,7 +176,7 @@ interface jsdIThreadState : nsISupports
 */
 
 [scriptable, uuid(b7964304-1dd1-11b2-ba20-cf4205772e9d)]
-interface jsdIValue : nsISupports
+interface jsdIValue : jsdIEphemeral
 {
     [noscript] readonly attribute JSDContext JSDContext;
     [noscript] readonly attribute JSDValue   JSDValue;
@@ -181,7 +184,7 @@ interface jsdIValue : nsISupports
     readonly attribute boolean isNative;
     readonly attribute boolean isNumber;
     readonly attribute boolean isPrimitive;
-
+    
     const unsigned long TYPE_BOOLEAN  = 0;
     const unsigned long TYPE_DOUBLE   = 1;
     const unsigned long TYPE_INT      = 2;
