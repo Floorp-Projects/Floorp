@@ -80,6 +80,7 @@
 #include "nsHashtable.h"
 #include "nsIAtom.h"
 #include "nsProfileDirServiceProvider.h"
+#include "nsISessionRoaming.h"
 
 // Interfaces Needed
 #include "nsIDocShell.h"
@@ -156,6 +157,7 @@ static nsProfileDirServiceProvider *gDirServiceProvider = nsnull;
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefConverterCID, NS_PREFCONVERTER_CID);
 
+#define NS_SESSIONROAMING_CONTRACTID "@mozilla.org/profile/session-roaming;1"
 
 
 /*
@@ -1258,6 +1260,13 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
           return NS_ERROR_ABORT;
     }
 
+    // Roaming download
+    // Tolerate errors. Maybe the roaming extension isn't installed.
+    nsCOMPtr <nsISessionRoaming> roam =
+      do_GetService(NS_SESSIONROAMING_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+      roam->BeginSession();
+
     // Phase 4: Notify observers that the profile has changed - Here they respond to new profile
     observerService->NotifyObservers(subject, "profile-do-change", context.get());
     if (mProfileChangeFailed)
@@ -1343,6 +1352,13 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
       // Phase 3: Notify observers of a profile change
       observerService->NotifyObservers(subject, "profile-before-change", context.get());        
     }
+
+    // Roaming upload
+    // Tolerate errors. Maybe the roaming extension isn't installed.
+    nsCOMPtr <nsISessionRoaming> roam =
+      do_GetService(NS_SESSIONROAMING_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+      roam->EndSession();
 
     gDirServiceProvider->SetProfileDir(nsnull);
     UpdateCurrentProfileModTime(PR_TRUE);
