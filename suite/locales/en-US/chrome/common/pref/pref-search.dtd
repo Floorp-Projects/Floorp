@@ -1,0 +1,12 @@
+<!-- extracted from content/pref-search.xul -->
+
+<!--LOCALIZATION NOTE : FILE The Search prefs dialog -->
+<!--LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
+<!ENTITY  title.label "Search">
+
+<!--LOCALIZATION NOTE (lHeader): Translate "Search" according to Netscape glossary -->
+<!ENTITY  lHeader "Search">
+<!ENTITY  rHeader "Configure Search">
+<!ENTITY  legendHeader "When clicking the 'Search' button:">
+<!ENTITY  browserSearchButtonText.label "use a single search engine:">
+<!ENTITY  enablePowerSearch.label "open the Smart Search window">

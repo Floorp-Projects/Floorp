@@ -119,6 +119,12 @@
 
         <treeitem open="true">
           <treerow>
+            <treecell indent="true" name="chrome://pref/content/pref-search.xul" value="&search.label;"/> 
+          </treerow>
+        </treeitem>
+
+        <treeitem open="true">
+          <treerow>
             <treecell indent="true" name="chrome://pref/content/pref-smart_browsing.xul" value="&smartBrowse.label;"/> 
           </treerow>
         </treeitem>
