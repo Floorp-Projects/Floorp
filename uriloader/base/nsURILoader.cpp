@@ -334,7 +334,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIURI *aURI,
                                       nsIURI *aReferringURI,
                                       nsISupports *aOpenContext, 
                                       nsISupports **aCurrentOpenContext,
-                                      const PRUint32 aLocalIP)
+                                      PRUint32 aLocalIP)
 {
   // we need to create a DocumentOpenInfo object which will go ahead and open the url
   // and discover the content type....
