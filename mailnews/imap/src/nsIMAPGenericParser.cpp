@@ -93,6 +93,7 @@ char *strtoken_r(char ** stringp, const char *delim, int skip)
 		} while (sc != 0);
 	}
 	/* NOTREACHED */
+	return (NULL);
 }
 
 

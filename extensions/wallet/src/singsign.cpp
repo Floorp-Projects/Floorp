@@ -2414,6 +2414,8 @@ SI_InSequence(const nsString& sequence, PRInt32 number)
       return PR_TRUE;
     }
   }
+  /* NOTREACHED */
+  return PR_FALSE;
 }
 
 PUBLIC PRUnichar*
