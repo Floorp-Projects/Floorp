@@ -300,6 +300,7 @@ libs:: $(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(DIST)/branding/firefox.icns $(DIST)/$(APP_NAME).app/Contents/Resources/firefox.icns
+	cp -RL $(DIST)/package/mozillaSuite.rsrc $(DIST)/$(APP_NAME).app/Contents/Resources/$(PROGRAM).rsrc
 	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 #       remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
