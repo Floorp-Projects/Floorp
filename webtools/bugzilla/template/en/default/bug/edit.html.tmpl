@@ -39,7 +39,7 @@
   <input type="hidden" name="longdesclength" value="[% bug.longdesclength %]">
   <input type="hidden" name="id" value="[% bug.bug_id %]">
 
-[%# *** Platform Reporter Product OS AddCC *** %]
+[%# *** Hardware Reporter Product OS AddCC *** %]
 
   <table cellspacing="1" cellpadding="1" border="0">
     <tr>      
@@ -60,9 +60,9 @@
       <td>&nbsp;</td>
 
       <td align="right">
-        <b><u>P</u>latform:</b>
+        <b><u>H</u>ardware:</b>
       </td>
-      [% PROCESS select selname => "rep_platform" accesskey => "p" %]
+      [% PROCESS select selname => "rep_platform" accesskey => "h" %]
       
       <td align="right">
         <b>Reporter:</b>
@@ -74,9 +74,9 @@
     
     <tr>
       <td align="right">
-        <b>P<u>r</u>oduct:</b>
+        <b><u>P</u>roduct:</b>
       </td>
-      [% PROCESS select selname => "product" accesskey => "r" %]
+      [% PROCESS select selname => "product" accesskey => "p" %]
       
       <td align="right">
         <b><u>O</u>S:</b>
