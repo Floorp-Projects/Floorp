@@ -2254,6 +2254,40 @@ InstallFileOpFileUnixLinkCreate(JSContext *cx, JSObject *obj, uintN argc, jsval 
   return JS_TRUE;
 }
 
+//
+// Native method LogComment
+//
+PR_STATIC_CALLBACK(JSBool)
+InstallLogComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc >= 1)
+  {
+    //  public int LogComment (String aComment);
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+
+    nativeThis->LogComment(b0);
+  }
+  else
+  {
+    JS_ReportError(cx, "Function LogComment requires 1 parameter");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 /***********************************************************************/
 //
 // class for Install
@@ -2369,6 +2403,7 @@ static JSFunctionSpec InstallMethods[] =
   {"FileWinShortcutCreate",     InstallFileOpFileWinShortcutCreate,    2},
   {"FileMacAliasCreate",        InstallFileOpFileMacAliasCreate,       2},
   {"FileUnixLinkCreate",        InstallFileOpFileUnixLinkCreate,       2},
+  {"LogComment",                InstallLogComment,                     1},
   {0}
 };
 

@@ -57,6 +57,7 @@ class nsInstallProgressDialog : public nsIXPINotifier,
         NS_IMETHOD ItemScheduled(const char *message);
         NS_IMETHOD InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum);
         NS_IMETHOD InstallAborted();
+        NS_IMETHOD LogComment(const char* comment);
 
         // implement nsIXPIProgressDlg
         NS_IMETHOD Open();

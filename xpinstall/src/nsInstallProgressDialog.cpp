@@ -151,7 +151,11 @@ nsInstallProgressDialog::InstallAborted()
     return NS_OK;
 }
 
-
+NS_IMETHODIMP 
+nsInstallProgressDialog::LogComment(const char* comment)
+{
+    return NS_OK;
+}
 
 
 // Do startup stuff from C++ side.

@@ -201,6 +201,8 @@ class nsInstall
         PRInt32    FileOpFileMacAliasCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
         PRInt32    FileOpFileUnixLinkCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
 
+        void       LogComment(nsString& aComment);
+
         PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName);
         void       AddPatch(nsHashKey *aKey, nsFileSpec* fileName);
         void       GetPatch(nsHashKey *aKey, nsFileSpec** fileName);

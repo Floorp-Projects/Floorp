@@ -131,4 +131,13 @@ nsLoggingProgressNotifier::GetTime(char** aString)
     PR_FormatTimeUSEnglish(line, sizeof(line), "%m/%d/%Y %H:%M:%S", &et);
     *aString = PL_strdup(line);
 }
-    
+
+NS_IMETHODIMP
+nsLoggingProgressNotifier::LogComment(const char* comment)
+{
+    if (mLogStream == nsnull) return -1;
+
+    *mLogStream << "     Comment: " << comment << nsEndl;    
+    return NS_OK;
+}
+
