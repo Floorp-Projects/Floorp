@@ -36,6 +36,28 @@
 #define MAX_BUFFER_WIDTH        128
 #define MAX_BUFFER_HEIGHT       128
 
+#ifdef XP_OS2_VACPP
+// Needed to zero the stack since there is an uninitialized var in the engine
+// If you find that printing bitmaps with transparency results in black images then
+// take off the # define and use for all OS2 compilers
+// This was discovered when the temp bitmap bit depth used in images2::Draw was changed
+// from 8 to 24.  It worked in debug but failed in retail.  Investigation revealed GpiErase
+// was failing due to a function receiving an uninitialized variable and the stack had invalid
+// values (for retail). This function will zero the stack and return leaving a clean stack.
+// A parameter is used to ensure the optimizer will compile the code.  Make sure the parameter
+// is not larger than the buff size
+// The OS2 defect 272592 will fix this in future releases of the engine
+extern "C" int zeroStack(int index)
+{
+  #define CLEAR_BUF_SIZE 1024
+  BYTE buf[CLEAR_BUF_SIZE];
+  memset(buf, 0, CLEAR_BUF_SIZE * sizeof(BYTE));
+  return buf[index];
+}
+#else
+#define zeroStack(x)
+#endif
+
 struct MONOBITMAPINFO
 {
    BITMAPINFOHEADER2 bmpInfo;
@@ -289,6 +311,13 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                        { rcl.xRight, rcl.yTop },                // TUR
                        { aSX, mInfo->cy - (aSY + aSHeight) },   // SLL
                        { aSX + aSWidth, mInfo->cy - aSY } };    // SUR
+                       
+   PRBool fPrinting = PR_FALSE;
+   nsIDeviceContext*  context;
+   aContext.GetDeviceContext(context);
+   if (((nsDeviceContextOS2 *)context)->mPrintDC) {
+      fPrinting = PR_TRUE;
+   }
 
    if( mAlphaDepth == 0)
    {
@@ -297,12 +326,6 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    }
    else if( mAlphaDepth == 1)
    {
-      PRBool fPrinting = PR_FALSE;
-      nsIDeviceContext*  context;
-      aContext.GetDeviceContext(context);
-      if (((nsDeviceContextOS2 *)context)->mPrintDC) {
-         fPrinting = PR_TRUE;
-      }
       if (!fPrinting) {
          // > The transparent areas of the mask are coloured black (0).
          // > the transparent areas of the pixmap are coloured black (0).
@@ -357,14 +380,15 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
              bihMem.cPlanes = 1;
              LONG lBitCount = 0;
              GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
-             bihMem.cBitCount = (USHORT) lBitCount;
-   
+             lBitCount = 24; // For printing
+             bihMem.cBitCount = lBitCount;
+             
              hMemBmp = GFX (::GpiCreateBitmap (MemPS, &bihMem, 0, 0, 0), GPI_ERROR);
    
              if( hMemBmp != GPI_ERROR )
              {
                GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
-
+               zeroStack(10);
                GpiErase(MemPS);
    
                // Now combine image with target
@@ -435,7 +459,15 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
           bihMem.cPlanes = 1;
           LONG lBitCount = 0;
           GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
-          bihMem.cBitCount = (USHORT) lBitCount;
+          if (!fPrinting)
+          {
+            bihMem.cBitCount = (USHORT) lBitCount;
+          }
+          else  // Printing
+          {
+            // bihMem.cBitCount = (USHORT) lBitCount;
+            bihMem.cBitCount = 24;
+          }
 
           hMemBmp = GFX (::GpiCreateBitmap (MemPS, &bihMem, 0, 0, 0), GPI_ERROR);
 
