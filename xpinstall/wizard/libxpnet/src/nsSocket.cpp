@@ -28,9 +28,12 @@
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
+#ifdef _AIX
+#include <strings.h>
+#endif
 
 /* Platform-specific headers for socket functionality */
-#if defined(__unix) || defined(__unix__) || defined(macintosh)
+#if defined(__unix) || defined(__unix__) || defined(macintosh) || defined(_AIX)
 #include <unistd.h>
 #include <netdb.h>
 #include <sys/socket.h>

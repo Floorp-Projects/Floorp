@@ -28,7 +28,7 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-#if defined(__unix) || defined(__unix__)
+#if defined(__unix) || defined(__unix__) || defined(_AIX)
 #include <sys/param.h>
 #elif defined(_WINDOWS)
 #include <windows.h>
