@@ -77,6 +77,15 @@ public:
                             nsString& aRetValue,
                             PRBool* aIsUndefined) = 0;
 
+  NS_IMETHOD EvaluateStringWithValue(const nsString& aScript,
+                                     void *aScopeObject,
+                                     nsIPrincipal *aPrincipal,
+                                     const char *aURL,
+                                     PRUint32 aLineNo,
+                                     const char* aVersion,
+                                     void* aRetValue,
+                                     PRBool* aIsUndefined) = 0;
+
   /**
    * Compile a script.
    *
@@ -186,6 +195,17 @@ public:
   NS_IMETHOD BindCompiledEventHandler(void* aTarget,
                                       nsIAtom* aName,
                                       void* aHandler) = 0;
+
+  NS_IMETHOD CompileFunction(void* aTarget,
+                             const nsCString& aName,
+                             PRUint32 aArgCount,
+                             const char** aArgArray,
+                             const nsString& aBody,
+                             const char* aURL,
+                             PRUint32 aLineNo,
+                             PRBool aShared,
+                             void** aFunctionObject) = 0;
+
 
   /**
    * Set the default scripting language version for this context, which must

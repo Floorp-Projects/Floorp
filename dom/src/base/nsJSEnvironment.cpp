@@ -195,6 +195,123 @@ nsJSContext::~nsJSContext()
 NS_IMPL_ISUPPORTS(nsJSContext, NS_GET_IID(nsIScriptContext));
 
 NS_IMETHODIMP
+nsJSContext::EvaluateStringWithValue(const nsString& aScript,
+                                     void *aScopeObject,
+                                     nsIPrincipal *aPrincipal,
+                                     const char *aURL,
+                                     PRUint32 aLineNo,
+                                     const char* aVersion,
+                                     void* aRetValue,
+                                     PRBool* aIsUndefined)
+{
+  if (!mScriptsEnabled) {
+    *aIsUndefined = PR_TRUE;
+    return NS_OK;
+  }
+
+  nsresult rv;
+  if (!aScopeObject)
+    aScopeObject = ::JS_GetGlobalObject(mContext);
+
+  // Safety first: get an object representing the script's principals, i.e.,
+  // the entities who signed this script, or the fully-qualified-domain-name
+  // or "codebase" from which it was loaded.
+  JSPrincipals *jsprin;
+  nsCOMPtr<nsIPrincipal> principal = aPrincipal;
+  if (aPrincipal) {
+    aPrincipal->GetJSPrincipals(&jsprin);
+  }
+  else {
+    nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
+    if (!global)
+      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal = do_QueryInterface(global, &rv);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+    rv = objPrincipal->GetPrincipal(getter_AddRefs(principal));
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+    principal->GetJSPrincipals(&jsprin);
+  }
+  // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
+
+  PRBool ok = PR_FALSE;
+  nsCOMPtr<nsIScriptSecurityManager> securityManager;
+  rv = GetSecurityManager(getter_AddRefs(securityManager));
+  if (NS_SUCCEEDED(rv))
+    rv = securityManager->CanExecuteScripts(principal, &ok);
+  if (NS_FAILED(rv)) {
+    JSPRINCIPALS_DROP(mContext, jsprin);
+    return NS_ERROR_FAILURE;
+  }
+
+  // Push our JSContext on the current thread's context stack so JS called
+  // from native code via XPConnect uses the right context.  Do this whether
+  // or not the SecurityManager said "ok", in order to simplify control flow
+  // below where we pop before returning.
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
+    JSPRINCIPALS_DROP(mContext, jsprin);
+    return NS_ERROR_FAILURE;
+  }
+
+  // The result of evaluation, used only if there were no errors.  This need
+  // not be a GC root currently, provided we run the GC only from the branch
+  // callback or from ScriptEvaluated.  TODO: use JS_Begin/EndRequest to keep
+  // the GC from racing with JS execution on any thread.
+  jsval val;
+
+  if (ok) {
+    JSVersion newVersion;
+
+    // SecurityManager said "ok", but don't execute if aVersion is specified
+    // and unknown.  Do execute with the default version (and avoid thrashing
+    // the context's version) if aVersion is not specified.
+    ok = (!aVersion ||
+          (newVersion = ::JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN);
+    if (ok) {
+      JSVersion oldVersion;
+
+      if (aVersion)
+        oldVersion = ::JS_SetVersion(mContext, newVersion);
+      mRef = nsnull;
+      mTerminationFunc = nsnull;
+      ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
+                                              (JSObject *)aScopeObject,
+                                              jsprin,
+                                              (jschar*)aScript.GetUnicode(),
+                                              aScript.Length(),
+                                              aURL,
+                                              aLineNo,
+                                              &val);
+      if (aVersion)
+        ::JS_SetVersion(mContext, oldVersion);
+    }
+  }
+
+  // Whew!  Finally done with these manually ref-counted things.
+  JSPRINCIPALS_DROP(mContext, jsprin);
+
+  // If all went well, convert val to a string (XXXbe unless undefined?).
+  if (ok) {
+    if (aIsUndefined) *aIsUndefined = JSVAL_IS_VOID(val);
+    *NS_STATIC_CAST(jsval*, aRetValue) = val;
+  }
+  else {
+    if (aIsUndefined) *aIsUndefined = PR_TRUE;
+  }
+
+  ScriptEvaluated();
+
+  // Pop here, after JS_ValueToString and any other possible evaluation.
+  if (NS_FAILED(stack->Pop(nsnull)))
+    rv = NS_ERROR_FAILURE;
+
+  return rv;
+
+}
+
+NS_IMETHODIMP
 nsJSContext::EvaluateString(const nsString& aScript,
                             void *aScopeObject,
                             nsIPrincipal *aPrincipal,
@@ -517,6 +634,56 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName, const nsString& 
   if (aHandler)
     *aHandler = (void*) handler;
 
+  if (aShared) {
+    /* Break scope link to avoid entraining shared compilation scope. */
+    ::JS_SetParent(mContext, handler, nsnull);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::CompileFunction(void* aTarget,
+                             const nsCString& aName,
+                             PRUint32 aArgCount,
+                             const char** aArgArray,
+                             const nsString& aBody,
+                             const char* aURL,
+                             PRUint32 aLineNo,
+                             PRBool aShared,
+                             void** aFunctionObject)
+{
+  JSPrincipals *jsprin = nsnull;
+
+  nsCOMPtr<nsIScriptGlobalObject> global = getter_AddRefs(GetGlobalObject());
+  if (global) {
+    // XXXbe why the two-step QI? speed up via a new GetGlobalObjectData func?
+    nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
+    if (globalData) {
+      nsCOMPtr<nsIPrincipal> prin;
+      if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(prin))))
+        return NS_ERROR_FAILURE;
+      prin->GetJSPrincipals(&jsprin);
+    }
+  }
+
+  JSObject *target = (JSObject*)aTarget;
+  JSFunction* fun =
+      ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
+                                          aName, aArgCount, aArgArray,
+                                          (jschar*)aBody.GetUnicode(),
+                                          aBody.Length(),
+                                          aURL, aLineNo);
+
+  if (jsprin)
+    JSPRINCIPALS_DROP(mContext, jsprin);
+  if (!fun)
+    return NS_ERROR_FAILURE;
+
+  JSObject *handler = ::JS_GetFunctionObject(fun);
+  if (aFunctionObject)
+    *aFunctionObject = (void*) handler;
+
+  // Prevent entraining just like CompileEventHandler does?
   if (aShared) {
     /* Break scope link to avoid entraining shared compilation scope. */
     ::JS_SetParent(mContext, handler, nsnull);

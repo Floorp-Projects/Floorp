@@ -62,6 +62,15 @@ public:
                                   const char* aVersion,
                                   nsString& aRetValue,
                                   PRBool* aIsUndefined);
+  NS_IMETHOD       EvaluateStringWithValue(const nsString& aScript,
+                                     void *aScopeObject,
+                                     nsIPrincipal *aPrincipal,
+                                     const char *aURL,
+                                     PRUint32 aLineNo,
+                                     const char* aVersion,
+                                     void* aRetValue,
+                                     PRBool* aIsUndefined);
+
   NS_IMETHOD       CompileScript(const PRUnichar* aText,
                                  PRInt32 aTextLength,
                                  void *aScopeObject,
@@ -85,6 +94,16 @@ public:
   NS_IMETHOD       BindCompiledEventHandler(void *aTarget,
                                             nsIAtom *aName,
                                             void *aHandler);
+  NS_IMETHOD       CompileFunction(void* aTarget,
+                             const nsCString& aName,
+                             PRUint32 aArgCount,
+                             const char** aArgArray,
+                             const nsString& aBody,
+                             const char* aURL,
+                             PRUint32 aLineNo,
+                             PRBool aShared,
+                             void** aFunctionObject);
+
 
   NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion);
   NS_IMETHOD_(nsIScriptGlobalObject*)    GetGlobalObject();
