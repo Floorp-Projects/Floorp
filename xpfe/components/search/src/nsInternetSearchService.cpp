@@ -5347,10 +5347,10 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 				resultItemEnd += resultItemEndStr.Length();
 			}
 
-			// use a CBufDescriptor so that "htmlResults" data isn't copied
-			CBufDescriptor	htmlResultDecriptor( &htmlPage[resultItemStart], PR_TRUE,
-						resultItemEnd - resultItemStart - 1);
-			nsAutoString		resultItem(htmlResultDecriptor);
+			// forced to use an nsAutoString (which copies)
+			// as CBufDescriptor doesn't guarantee null terminator
+			nsAutoString resultItem(&htmlPage[resultItemStart],
+				resultItemEnd - resultItemStart - 1);
 
 			if (resultItem.IsEmpty())	break;
 
