@@ -4298,7 +4298,7 @@ js_Interpret(JSContext *cx, jsval *result)
              * and has stub getter and setter, into a "fast global" accessed
              * by the JSOP_*GVAR opcodes.
              */
-            if (script->numGlobalVars &&
+            if (atomIndex < script->numGlobalVars &&
                 (attrs & JSPROP_PERMANENT) &&
                 obj2 == obj &&
                 OBJ_IS_NATIVE(obj)) {
