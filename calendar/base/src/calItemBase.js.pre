@@ -82,6 +82,9 @@ calItemBase.prototype = {
         this.mAlarmTime = new CalDateTime();
         this.mLastModifiedTime = new CalDateTime();
 
+        this.mCreationDate.jsDate = new Date();
+        this.mLastModifiedTime.jsDate = new Date();
+
         this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                            createInstance(Components.interfaces.nsIWritablePropertyBag);
 
