@@ -52,7 +52,8 @@ pref("browser.cache.enable",                true);
 pref("browser.cache.disk.enable",           true);
 pref("browser.cache.memory_cache_size",     4096);
 pref("browser.cache.disk_cache_ssl",        false);
-pref("browser.cache.check_doc_frequency",   0);
+// 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
+pref("browser.cache.check_doc_frequency",   3);
 
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
