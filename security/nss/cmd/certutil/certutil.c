@@ -2719,7 +2719,7 @@ main(int argc, char **argv)
     if (certutil.commands[cmd_CheckCertValidity].activated) {
 	/* XXX temporary hack for fips - must log in to get priv key */
 	if (certutil.options[opt_VerifySig].activated) {
-	    if (PK11_NeedLogin(slot))
+	    if (slot && PK11_NeedLogin(slot))
 		PK11_Authenticate(slot, PR_TRUE, &pwdata);
 	}
 	rv = ValidateCert(certHandle, name, 
