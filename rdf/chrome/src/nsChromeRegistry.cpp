@@ -487,7 +487,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
       if (NS_FAILED(rv)) return rv;
 
       rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
-      if (NS_FAILED(rv)) return rv;
       // This must always be the last line of profile initialization!
 
       nsCAutoString sheetURL;
@@ -1626,10 +1625,9 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
     if (NS_FAILED(rv)) return rv;
   }
 
-  if(aProvider.Equals("skin") && mScrollbarSheet){
-    rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
-    if (NS_FAILED(rv)) return rv;
-  }
+  if(aProvider.Equals("skin") && mScrollbarSheet)
+    LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
+  
   return NS_OK;
 }
 
@@ -2379,15 +2377,13 @@ NS_IMETHODIMP
 nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
 {
   nsresult rv;
-  if (!mScrollbarSheet) {
-    rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
-    if (NS_FAILED(rv)) return rv;
-  }
+  if (!mScrollbarSheet)
+    LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
+  
   if (!mFormSheet) {
     nsCAutoString sheetURL;
     GetFormSheetURL(sheetURL);
-    rv = LoadStyleSheet(getter_AddRefs(mFormSheet), sheetURL); 
-    if (NS_FAILED(rv)) return rv;
+    LoadStyleSheet(getter_AddRefs(mFormSheet), sheetURL); 
   }
 
   if(mScrollbarSheet || mFormSheet)
