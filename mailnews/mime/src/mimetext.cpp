@@ -355,7 +355,7 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
                          obj->options->m_unicodeToUTF8Encoder);
     else
 	    status = obj->options->charset_conversion_fn(input_autodetect, line, length,
-                           inputCharset,
+                           input_charset,
 												   "UTF-8",
 												   &converted,
 												   &converted_len,
