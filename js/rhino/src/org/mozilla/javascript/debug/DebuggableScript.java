@@ -65,25 +65,10 @@ public interface DebuggableScript {
     public String getSourceName();
 
     /**
-     * Get number of the first source line in the function or script
-     */
-    public int getFirstLine();
-
-    /**
-     * Get number of the ending source line in the function or script
-     */
-    public int getEndLine();
-
-    /**
-     * Set elements of <code>array</code> that corresponds to line numbers
+     * Get array containing the line numbers that
      * that can be passed to <code>DebugFrame.onLineChange()<code>.
-     * If <code>array[i - offset]</code> is true, then line
-     * <code>getFirstLine() + i</code> has instruction code and
-     * DebugFrame.onLineChange can be called with such line.
-     * This function can be expensive to call, so caching its results is
-     * advisable.
-     * <code>array</code> length should be at least
-     * <code>offset + getEndLine() - getFirstLine()</code>
+     * Note that line order in the resulting array is arbitrary
      */
-    public void getInstructionLines(boolean[] array, int offset);
+    public int[] getLineNumbers();
+
 }

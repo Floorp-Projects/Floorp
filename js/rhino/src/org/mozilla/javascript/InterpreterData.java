@@ -83,8 +83,5 @@ class InterpreterData implements Serializable {
 
     int itsMaxCalleeArgs;
 
-    int itsFirstLine;
-    int itsEndLine;
-
     Object securityDomain;
 }

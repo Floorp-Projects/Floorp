@@ -74,16 +74,8 @@ public class InterpretedScript extends NativeScript implements DebuggableScript 
         return itsData.itsSourceFile;
     }
 
-    public int getFirstLine() {
-        return itsData.itsFirstLine;
-    }
-
-    public int getEndLine() {
-        return itsData.itsEndLine;
-    }
-
-    public void getInstructionLines(boolean[] array, int offset) {
-        Interpreter.getInstructionLines(itsData, array, offset);
+    public int[] getLineNumbers() {
+        return Interpreter.getLineNumbers(itsData);
     }
 
     InterpreterData itsData;

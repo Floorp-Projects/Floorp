@@ -250,14 +250,7 @@ public class Interpreter {
             itsLineNumber = lineno;
             iCodeTop = addByte(LINE_ICODE, iCodeTop);
             iCodeTop = addShort(lineno, iCodeTop);
-            if (lineno < itsData.itsFirstLine) {
-                itsData.itsFirstLine = lineno;
-            }
-            if (lineno >= itsData.itsEndLine) {
-                itsData.itsEndLine = lineno + 1;
-            }
         }
-
         return iCodeTop;
     }
 
@@ -1472,27 +1465,23 @@ public class Interpreter {
         }
     }
 
-    static void getInstructionLines(InterpreterData theData,
-                                    boolean[] array, int offset)
-    {
-        int first = theData.itsFirstLine;
-        int end = theData.itsEndLine;
-        if (offset < 0 || array.length - offset < end - first)
-            Context.codeBug();
+    static int[] getLineNumbers(InterpreterData data) {
+        UintMap presentLines = new UintMap();
 
-        int iCodeLength = theData.itsICodeTop;
-        byte[] iCode = theData.itsICode;
+        int iCodeLength = data.itsICodeTop;
+        byte[] iCode = data.itsICode;
         for (int pc = 0; pc != iCodeLength;) {
             int icodeToken = iCode[pc] & 0xff;
             int icodeLength = icodeTokenLength(icodeToken);
             if (icodeToken == LINE_ICODE) {
-                int line = getShort(iCode, pc + 1);
-                if (!(first <= line && line < end)) Context.codeBug();
                 if (icodeLength != 3) Context.codeBug();
-                array[offset + line - first] = true;
+                int line = getShort(iCode, pc + 1);
+                presentLines.put(line, 0);
             }
             pc += icodeLength;
         }
+
+        return presentLines.getKeys();
     }
 
     private static void createFunctionObject(InterpretedFunction fn,
