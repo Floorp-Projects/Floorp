@@ -70,6 +70,24 @@ nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribValue attrib,
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgSearchSession::AddSearchTermArray(nsISupportsArray *searchTerms)
+{
+  m_termList = searchTerms;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchSession::CreateSearchTerm(nsIMsgSearchTerm **aResult)
+{
+    nsMsgSearchTerm *term = new nsMsgSearchTerm;
+    NS_ENSURE_TRUE(term, NS_ERROR_OUT_OF_MEMORY);
+    
+    *aResult = NS_STATIC_CAST(nsIMsgSearchTerm*,term);
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
 /* readonly attribute long numSearchTerms; */
 NS_IMETHODIMP nsMsgSearchSession::GetNumSearchTerms(PRUint32 *aNumSearchTerms)
 {
@@ -498,7 +516,7 @@ void nsMsgSearchSession::DestroyScopeList()
 
 void nsMsgSearchSession::DestroyTermList ()
 {
-  m_termList->Clear();
+  m_termList = nsnull; // don't really need this now that caller owns term list.
 }
 
 nsMsgSearchScopeTerm *nsMsgSearchSession::GetRunningScope()

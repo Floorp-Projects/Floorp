@@ -424,6 +424,7 @@ void nsMsgSearchNews::ReportHits ()
 }
 #endif // OLDWAY
 
+// ### this should take an nsIMsgFolder instead of a string location.
 void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, const char *location)
 {
     // this is totally filched from msg_SearchOfflineMail until I decide whether the 

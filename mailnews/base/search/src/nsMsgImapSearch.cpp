@@ -135,6 +135,8 @@ NS_IMETHODIMP nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
             err = m_scope->GetFolder(getter_AddRefs(folder));
             if (NS_SUCCEEDED(err) && folder)
               folder->GetName(getter_Copies(folderName));
+            pValue->u.folder = folder;
+            NS_ADDREF(pValue->u.folder);
            // pValue->u.wString = nsCRT::strdup((const PRUnichar *) folderName);
             newResult->AddValue (pValue);
         }
@@ -265,7 +267,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
       pTerm->GetAttrib(&attribute);
 			if (IsStringAttribute(attribute))
 			{
-              PRUnichar *pchar;
+        PRUnichar *pchar, *savepChar;
         nsCOMPtr <nsIMsgSearchValue> searchValue;
 
         nsresult rv = pTerm->GetValue(getter_AddRefs(searchValue));
@@ -276,6 +278,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
         rv = searchValue->GetStr(&pchar);
       	if (!NS_SUCCEEDED(rv) || !pchar)
       		continue;
+        savepChar = pchar;
 				for (; *pchar ; pchar++)
 				{
 					if (*pchar & 0xFF80)
@@ -284,7 +287,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
 						break;
 					}
 				}
-        nsCRT::free(pchar);
+        nsCRT::free(savepChar);
 			}
 		}
 	}

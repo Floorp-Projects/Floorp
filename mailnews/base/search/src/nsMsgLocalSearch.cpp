@@ -785,6 +785,9 @@ NS_IMETHODIMP nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         if (pValue)
         {
             pValue->attribute = nsMsgSearchAttrib::Location;
+            m_scope->GetFolder(&pValue->u.folder);
+//            pValue->u.folder = m_scope->m_folder;
+//            NS_IF_ADDREF(pValue->u.folder); // use nsIMsgFolder, not string
 #ifdef HAVE_SEARCH_PORT
             pValue->u.string = PL_strdup(m_scope->m_folder->GetName());
 #endif

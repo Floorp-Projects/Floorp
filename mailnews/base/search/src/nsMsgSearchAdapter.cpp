@@ -395,6 +395,9 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
   nsCOMPtr <nsIMsgSearchValue> searchValue;
   nsresult rv = term->GetValue(getter_AddRefs(searchValue));
 
+  if (!NS_SUCCEEDED(rv))
+    return rv;
+
   nsMsgSearchOpValue op;
   term->GetOp(&op);
 
@@ -536,7 +539,13 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 			// we need to adjust the date so we get greater than and not greater than or equal to which
 			// is what the IMAP server wants to search on
       // won't work on Mac.
-//			adjustedDate += 60 * 60 * 24; // bump up to the day after this one...
+      // ack, is this right? is PRTime seconds or microseconds?
+	    PRInt64 microSecondsPerSecond, secondsInDay, microSecondsInDay;
+	    
+	    LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+      LL_UI2L(secondsInDay, 60 * 60 * 24);
+	    LL_MUL(microSecondsInDay, secondsInDay, microSecondsPerSecond);
+			LL_ADD(adjustedDate, adjustedDate, microSecondsInDay); // bump up to the day after this one...
 		}
 
    	PRExplodedTime exploded;
@@ -551,9 +560,20 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 		{
 			// okay, take the current date, subtract off the age in days, then do an appropriate Date search on 
 			// the resulting day.
+      PRUint32 ageInDays;
+
+      searchValue->GetAge(&ageInDays);
+
 			PRTime now = PR_Now();
 			PRTime matchDay;
-			LL_I2L(matchDay, 0); // = now ;  - term->m_value.u.age * 60 * 60 * 24; won't work on the mac
+
+	    PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDay;
+	    
+	    LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+      LL_UI2L(secondsInDays, 60 * 60 * 24 * ageInDays);
+	    LL_MUL(microSecondsInDay, secondsInDays, microSecondsPerSecond);
+
+			LL_SUB(matchDay, now, microSecondsInDay); // = now - term->m_value.u.age * 60 * 60 * 24; 
    	PRExplodedTime exploded;
     PR_ExplodeTime(matchDay, PR_LocalTimeParameters, &exploded);
     PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%d-%b-%Y", &exploded);
@@ -853,13 +873,22 @@ nsMsgSearchValidityTable::GetNumAvailAttribs(PRInt32 *aResult)
 }
 
 nsresult
-nsMsgSearchValidityTable::ValidateTerms (nsMsgSearchTermArray &termList)
+nsMsgSearchValidityTable::ValidateTerms (nsISupportsArray *searchTerms)
 {
 	nsresult err = NS_OK;
+  PRUint32 count;
 
-	for (int i = 0; i < termList.Count(); i++)
+  NS_ENSURE_ARG(searchTerms);
+
+  searchTerms->Count(&count);
+	for (PRUint32 i = 0; i < count; i++)
 	{
-		nsMsgSearchTerm *term = termList.ElementAt(i);
+    nsCOMPtr<nsIMsgSearchTerm> pTerm;
+    searchTerms->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
+                             (void **)getter_AddRefs(pTerm));
+
+		nsIMsgSearchTerm *iTerm = pTerm;
+		nsMsgSearchTerm *term = NS_STATIC_CAST(nsMsgSearchTerm *, iTerm);
 //		XP_ASSERT(term->IsValid());
         PRBool enabled;
         PRBool available;

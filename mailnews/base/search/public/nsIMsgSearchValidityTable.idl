@@ -23,12 +23,7 @@
 
 #include "nsISupports.idl"
 #include "nsMsgSearchCore.idl"
-
-[byref] native nsMsgSearchTermArray(nsMsgSearchTermArray&);
-
-%{C++
-#include "nsMsgSearchArray.h"
-%}
+interface nsISupportsArray;
 
 [scriptable, uuid(b07f1cb6-fae9-4d92-9edb-03f9ad249c66)]
 interface nsIMsgSearchValidityTable : nsISupports {
@@ -47,7 +42,7 @@ interface nsIMsgSearchValidityTable : nsISupports {
     boolean getValidButNotShown(in nsMsgSearchAttribValue attrib,
                                 in nsMsgSearchOpValue op);
 
-    [noscript] void validateTerms(in nsMsgSearchTermArray terms);
+    [noscript] void validateTerms(in nsISupportsArray terms);
 
     readonly attribute long numAvailAttribs;
 

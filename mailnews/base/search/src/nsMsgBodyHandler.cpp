@@ -126,7 +126,7 @@ void nsMsgBodyHandler::OpenLocalFolder()
 	if (NS_FAILED(rv) || !scopeFileStream)
 	{
 		nsCOMPtr <nsIFileSpec> fileSpec;
-		nsresult rv = m_scope->GetMailPath(getter_AddRefs(fileSpec));
+		rv = m_scope->GetMailPath(getter_AddRefs(fileSpec));
 		if (NS_SUCCEEDED(rv) && fileSpec)
 		{
 			nsFileSpec path;

@@ -26,6 +26,7 @@
 
 interface nsMsgResultElement;
 interface nsIMsgSearchAdapter;
+interface nsIMsgSearchTerm;
 
 //////////////////////////////////////////////////////////////////////////////
 // The Msg Search Session is an interface designed to make constructing
@@ -41,6 +42,10 @@ interface nsIMsgSearchSession :  nsISupports {
                        in nsIMsgSearchValue value, /* value e.g. "Dogbert" */
                        in boolean BooleanAND, /* set to true if associated boolean operator is AND */
                        in string arbitraryHeader); /* user defined arbitrary header. ignored unless attrib = attribOtherHeader */
+
+	void AddSearchTermArray (in nsISupportsArray searchTerms);
+
+	void CreateSearchTerm (out nsIMsgSearchTerm searchTerm);
 
     readonly attribute unsigned long numSearchTerms;
 

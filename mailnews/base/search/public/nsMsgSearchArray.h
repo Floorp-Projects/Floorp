@@ -30,12 +30,6 @@ class nsMsgSearchTerm;
 class nsMsgSearchScopeTerm;
 struct nsMsgSearchValue;
 
-class nsMsgSearchTermArray : public nsVoidArray
-{
-public:
-	nsMsgSearchTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchTerm*) nsVoidArray::ElementAt(i); }
-};
-
 class nsMsgSearchValueArray : public nsVoidArray
 {
 public:
