@@ -44,6 +44,7 @@
 #include "nsXPIDLString.h"
 #include "nsSpecialSystemDirectory.h"
 #include "plbase64.h"
+#include "nsIMimeStreamConverter.h"
 
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
@@ -68,6 +69,8 @@ nsMimeXULEmitter::nsMimeXULEmitter()
   // Vars to handle the body...
   mBody = "";
   mBodyStarted = PR_FALSE;
+
+  mFormat = nsMimeOutput::nsMimeMessageXULDisplay;
 
   if (mPrefs)
     mPrefs->GetIntPref("mailnews.max_header_display_length", &mCutoffValue);
@@ -949,7 +952,8 @@ nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, 
     PR_FREEIF(htmlString);
   }
 
-  workAddr.Trim("\"");
+  // Deal with extra quotes...
+  workAddr.CompressSet("\"", nsnull);
 
   // tLink = PR_smprintf("addbook:add?vcard=begin%%3Avcard%%0Afn%%3A%s%%0Aemail%%3Binternet%%3A%s%%0Aend%%3Avcard%%0A", 
   //                    (workName ? workName : workAddr), workAddr);

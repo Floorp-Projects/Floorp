@@ -141,6 +141,9 @@ protected:
   // For body caching...
   PRBool              mBodyStarted;
   nsCString           mBody;
+
+  // For the format being used...
+  PRInt32             mFormat;
 };
 
 #endif /* _nsMimeBaseEmitter_h_ */

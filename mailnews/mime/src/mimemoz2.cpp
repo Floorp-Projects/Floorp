@@ -833,7 +833,7 @@ mime_image_make_image_html(void *image_closure)
 
   
   const char *prefix = "<P><CENTER><IMG SRC=\"";
-  const char *suffix = "\"></CENTER><P>";
+  const char *suffix = "\"></CENTER><P><BR>";
   const char *url;
   char *buf;
 

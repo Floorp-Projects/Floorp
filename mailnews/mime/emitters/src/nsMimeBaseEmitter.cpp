@@ -38,6 +38,7 @@
 #include "nsEmitterUtils.h"
 #include "nsFileSpec.h"
 #include "nsIRegistry.h"
+#include "nsIMimeStreamConverter.h"
 
 #define   MIME_URL      "chrome://messenger/locale/mimeheader.properties"
 static    NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -80,6 +81,9 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
   // Init the body...
   mBodyStarted = PR_FALSE;
   mBody = "";
+
+  // Setup format for output...
+  mFormat = nsMimeOutput::nsMimeMessageXULDisplay;
 
   // Do prefs last since we can live without this if it fails...
   nsresult rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&(mPrefs));
@@ -565,10 +569,12 @@ nsMimeBaseEmitter::WriteHTMLHeaders()
 
   // Now, we need to either append the headers we built up to the 
   // overall body or output to the stream.
-  if (mDocHeader)
-    UtilityWriteCRLF(mHTMLHeaders);
-  else
+  if ( (!mDocHeader) && (mFormat == nsMimeOutput::nsMimeMessageXULDisplay) )
     mBody.Append(mHTMLHeaders);
+  else
+    UtilityWriteCRLF(mHTMLHeaders);
+
+  mHTMLHeaders = "";
 
   return NS_OK;
 }

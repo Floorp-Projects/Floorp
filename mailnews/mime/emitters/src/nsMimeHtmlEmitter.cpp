@@ -28,6 +28,7 @@
 #include "nscore.h"
 #include "nsEmitterUtils.h"
 #include "nsEscape.h"
+#include "nsIMimeStreamConverter.h"
 
 nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result)
 {
@@ -43,6 +44,7 @@ nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result)
  */
 nsMimeHtmlEmitter::nsMimeHtmlEmitter()
 {
+  mFormat = nsMimeOutput::nsMimeMessageBodyQuoting;
   mFirst = PR_TRUE;
 }
 
