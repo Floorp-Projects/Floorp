@@ -406,6 +406,7 @@ nsresult nsFileSpec::Rename(const char* inNewName)
     {
         // Could not rename, set back to the original.
         mPath = oldPath;
+        nsCRT::free(oldPath);
         return NS_FILE_FAILURE;
     }
     
