@@ -100,4 +100,6 @@ private:
 #define NS_MSG_POSTING_MESSAGE                      NS_MSG_GENERATE_SUCCESS(12551)
 #define NS_MSG_ATTACHMENT_TYPE_MISMATCH             NS_MSG_GENERATE_FAILURE(12552)
 
+#define NS_MSG_MULTILINGUAL_SEND                    NS_MSG_GENERATE_SUCCESS(12553)
+
 #endif /* _nsMsgComposeStringBundle_H_ */
