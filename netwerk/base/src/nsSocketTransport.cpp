@@ -29,7 +29,6 @@
 #include "nsILoadGroup.h"
 #include "nsSocketTransport.h"
 #include "nsSocketTransportService.h"
-#include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
 #include "nsIDNSService.h"
 #include "nsString2.h"
