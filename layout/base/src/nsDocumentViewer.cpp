@@ -248,7 +248,6 @@ protected:
   //   these items are specific to markup documents (html and xml)
   //   may consider splitting these out into a subclass
   PRBool   mAllowPlugins;
-  PRPackedBool mIsFrame;
   /* character set member data */
   nsString mDefaultCharacterSet;
   nsString mHintCharset;
@@ -295,7 +294,6 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   mHintCharsetSource = kCharsetUninitialized;
   mForceCharacterSet = "";
   mAllowPlugins = PR_TRUE;
-  mIsFrame = PR_FALSE;
   mEnableRendering = PR_TRUE;
   mFilePointer = nsnull;
 
@@ -1384,20 +1382,6 @@ NS_IMETHODIMP DocumentViewerImpl::SetAllowPlugins(PRBool aAllowPlugins)
 {
    mAllowPlugins = aAllowPlugins;
    return NS_OK;
-}
-
-NS_IMETHODIMP DocumentViewerImpl::GetIsFrame(PRBool* aIsFrame)
-{
-  NS_ENSURE_ARG_POINTER(aIsFrame);
-
-  *aIsFrame = mIsFrame;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DocumentViewerImpl::SetIsFrame(PRBool aIsFrame)
-{
-  mIsFrame = aIsFrame;
-  return NS_OK;
 }
 
 // XXX: SEMANTIC CHANGE! 
