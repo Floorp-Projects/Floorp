@@ -434,7 +434,7 @@ nsTableCellFrame::Paint(nsPresContext*      aPresContext,
       // XXXldb HIDDEN should really create a scrollframe,
       // but use |IsTableClip| here since it doesn't.
       if (disp->IsTableClip() ||
-          HasPctOverHeight()) {
+          (HasPctOverHeight() && eCompatibility_NavQuirks == aPresContext->CompatibilityMode())) {
         aRenderingContext.PushState();
         pushed = PR_TRUE;
         SetOverflowClipRect(aRenderingContext);
