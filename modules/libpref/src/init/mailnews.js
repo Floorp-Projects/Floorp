@@ -330,6 +330,7 @@ pref("mail.server.default.retainBy", 1);
 // for manual upgrades of certain UI features.
 // 1 -> 2 is for the folder pane outliner landing, to hide the
 // unread and total columns, see msgMail3PaneWindow.js
+pref("mail.ui.folderpane.version", 1);                                          
 
 //If set to a number greater than 0, msg compose windows will be recycled in order to open them quickly
 pref("mail.compose.max_recycled_windows", 0); 
