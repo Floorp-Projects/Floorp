@@ -4301,6 +4301,18 @@ if test -n "$XPCOM_USE_LEA"; then
 fi
 
 dnl ========================================================
+dnl = Enable mozStorage
+dnl = XXX need to implement --with-system-sqlite3 (see bug 263381)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(storage,
+[  --enable-storage        Enable mozStorage module and related components],
+    MOZ_STORAGE=1,
+    MOZ_STORAGE= )
+if test -n "$MOZ_STORAGE"; then
+    AC_DEFINE(MOZ_STORAGE)
+fi
+
+dnl ========================================================
 dnl = Enable Ultrasparc specific optimizations for JS
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(js-ultrasparc,
@@ -5620,6 +5632,7 @@ AC_SUBST(MOZ_LDAP_XPCOM_EXPERIMENTAL)
 AC_SUBST(LDAP_CFLAGS)
 AC_SUBST(LDAP_LIBS)
 AC_SUBST(LIBICONV)
+AC_SUBST(MOZ_STORAGE)
 
 AC_SUBST(MOZ_PROFILESHARING)
 AC_SUBST(MOZ_PROFILELOCKING)
