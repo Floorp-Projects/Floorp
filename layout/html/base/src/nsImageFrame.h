@@ -194,6 +194,8 @@ protected:
   PRPackedBool        mInitialLoadCompleted;
   PRPackedBool        mCanSendLoadEvent;
 
+  PRBool              mFailureReplace;
+
   nsMargin            mBorderPadding;
   PRUint32            mNaturalImageWidth, 
                       mNaturalImageHeight;
