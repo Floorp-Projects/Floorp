@@ -655,7 +655,6 @@ function MessagePaneHasFocus()
 	if ( focusedWindow && messagePaneWindow && (focusedWindow != top) )
 	{
 		var hasFocus = IsSubWindowOf(focusedWindow, messagePaneWindow, false);
-		dump("...........Focus on MessagePane = " + hasFocus + "\n");
 		return hasFocus;
 	}
 	
