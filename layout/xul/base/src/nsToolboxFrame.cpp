@@ -192,6 +192,13 @@ nsToolboxFrame :: Paint ( nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
 {
+  // if we aren't visible then we are done.
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+  mStyleContext->GetStyleData(eStyleStruct_Display);
+
+  if (!disp->mVisible) 
+	   return NS_OK;  
+
   // take care of bg painting, borders and children
   nsresult retVal = nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
 

@@ -194,15 +194,24 @@ nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
 {
   nsresult rv = nsLeafFrame::DidReflow(aPresContext, aStatus);
 
+
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
     GetView(&view);
-    if (nsnull != view) {
-      view->SetVisibility(nsViewVisibility_kShow);
+    if (view) {
+      const nsStyleDisplay* display;
+      GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+      nsViewVisibility newVis = NS_STYLE_VISIBILITY_HIDDEN == display->mVisible ? nsViewVisibility_kHide : nsViewVisibility_kShow;
+      nsViewVisibility oldVis;
+      // only change if different.
+      view->GetVisibility(oldVis);
+      if (newVis != oldVis) 
+        view->SetVisibility(newVis);
     }
   }
+  
   return rv;
 }
 

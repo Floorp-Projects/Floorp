@@ -771,7 +771,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region,
 }
 
 NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
-                                    nsEventStatus &aStatus)
+                                    nsEventStatus &aStatus, PRBool& aHandled)
 {
 //printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
 //       event->message, event->point.x, event->point.y);
@@ -784,7 +784,6 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
     obs = nsnull;
 
   aStatus = nsEventStatus_eIgnore;
-  PRBool handledByChild = PR_FALSE;
 
   //see if any of this view's children can process the event
   if (aStatus == nsEventStatus_eIgnore && !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN)) {
@@ -796,7 +795,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
     x = event->point.x;
     y = event->point.y;
 
-    for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+    for (PRInt32 cnt = 0; cnt < numkids && !aHandled; cnt++)
     {
       nsIView *pKid;
 
@@ -807,7 +806,6 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 
       if (trect.Contains(x, y))
       {
-        handledByChild = PR_TRUE;
         //the x, y position of the event in question
         //is inside this child view, so give it the
         //opportunity to handle the event
@@ -815,25 +813,41 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
         event->point.x -= trect.x;
         event->point.y -= trect.y;
 
-        pKid->HandleEvent(event, NS_VIEW_FLAG_CHECK_CHILDREN, aStatus);
+        pKid->HandleEvent(event, NS_VIEW_FLAG_CHECK_CHILDREN, aStatus, aHandled);
 
         event->point.x += trect.x;
         event->point.y += trect.y;
-
-        if (aStatus != nsEventStatus_eIgnore)
-          break;
       }
     }
   }
 
-  //if no child's bounds matched the event, check the view itself.
-  if (!handledByChild && nsnull != mClientData && nsnull != obs)
-    obs->HandleEvent((nsIView *)this, event, aStatus);
+  // if the child handled the event(Ignore) or it handled the event but still wants
+  // default behavor(ConsumeDoDefault) and we are visible then pass the event down the view's
+  // frame hierarchy. -EDV
+  if (!aHandled && mVis == nsViewVisibility_kShow)
+  {
+    //if no child's bounds matched the event or we consumed but still want
+    //default behavior check the view itself. -EDV
+    if (nsnull != mClientData && nsnull != obs) {
+      obs->HandleEvent((nsIView *)this, event, aStatus);
+      aHandled = PR_TRUE;
+    }
+  } 
+  /* XXX Just some debug code to see what event are being thrown away because
+     we are not visible. -EDV
+  else if (mVis == nsViewVisibility_kHide) {
+      nsIFrame* frame = (nsIFrame*)mClientData;
+      printf("Throwing away=%d %d %d (%d,%d) \n", this, event->widget, 
+              event->message, event->point.x, event->point.y);
+
+  }
+  */
 
   NS_IF_RELEASE(obs);
 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP nsView :: SetPosition(nscoord x, nscoord y)
 {
