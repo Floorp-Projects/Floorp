@@ -155,7 +155,7 @@ var PrintUtils = {
   },
 
   _chromeState: {},
-  _commandsPP: {},
+  _closeHandlerPP: null,
   _webProgressPP: null,
   _onEnterPP: null,
   _onExitPP: null,
@@ -209,19 +209,32 @@ var PrintUtils = {
       getBrowser().setStripVisibilityTo(false);
     }
 
+    // copy the window close handler
+    if (document.documentElement.hasAttribute("onclose"))
+      this._closeHandlerPP = document.documentElement.getAttribute("onclose");
+    else
+      this._closeHandlerPP = null;
+    document.documentElement.setAttribute("onclose", "PrintUtils.exitPrintPreview(); return false;");
+
     // disable chrome shortcuts...
     window.addEventListener("keypress", this.onKeyPressPP, true);
  
     _content.focus();
     
     // on Enter PP Call back
-    if (this._onEnterPP)
+    if (this._onEnterPP) {
       this._onEnterPP();
+      this._onEnterPP = null;
+    }
   },
 
   exitPrintPreview: function ()
   {
     window.removeEventListener("keypress", this.onKeyPressPP, true);
+
+    // restore the old close handler
+    document.documentElement.setAttribute("onclose", this._closeHandlerPP);
+    this._closeHandlerPP = null;
 
     if ("getStripVisibility" in getBrowser())
       getBrowser().setStripVisibilityTo(this._chromeState.hadTabStrip);
@@ -235,8 +248,10 @@ var PrintUtils = {
     _content.focus();
 
     // on Exit PP Call back
-    if (this._onExitPP)
+    if (this._onExitPP) {
       this._onExitPP();
+      this._onExitPP = null;
+    }
   },
 
   onKeyPressPP: function (aEvent)
