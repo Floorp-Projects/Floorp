@@ -213,7 +213,7 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
              * a 4.x address book file e.g. pab.na2
       * check if the URI ends with ".na2"
             */
-      if (Substring(URI, URI.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffixLen).Equals(kABFileName_PreviousSuffix)) {
+      if (StringEndsWith(URI, NS_LITERAL_CSTRING(kABFileName_PreviousSuffix))) {
         URI.ReplaceSubstring(URI.get() + kMDBDirectoryRootLen, server->fileName);
             }
 
@@ -315,9 +315,7 @@ NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *aDisplayNam
 	nsresult rv = NS_OK;
 
 	const char* fileName = nsnull;
-  nsCAutoString uriStr(aURI);
-
-  if (Substring(uriStr, 0, kMDBDirectoryRootLen).Equals(kMDBDirectoryRoot)) 
+  if (StringBeginsWith(nsDependentCString(aURI), NS_LITERAL_CSTRING(kMDBDirectoryRoot)))
     fileName = aURI + kMDBDirectoryRootLen;
 
 	DIR_Server * server = nsnull;

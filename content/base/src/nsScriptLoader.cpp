@@ -275,8 +275,8 @@ nsScriptLoader::IsScriptEventHandler(nsIDOMHTMLScriptElement *aScriptElement)
     return PR_TRUE;
   }
 
-  if (!Substring(event_str, 0, 6).Equals(NS_LITERAL_STRING("onload"),
-                                         nsCaseInsensitiveStringComparator())) {
+  if (!StringBeginsWith(event_str, NS_LITERAL_STRING("onload"),
+                        nsCaseInsensitiveStringComparator())) {
     // It ain't "onload.*".
 
     return PR_TRUE;

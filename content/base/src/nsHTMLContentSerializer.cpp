@@ -570,8 +570,8 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
   aContent->GetAttrCount(count);
 
-  NS_NAMED_LITERAL_STRING(mozStr1, "_moz");
-  
+  NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
+
   for (index = 0; index < count; index++) {
     aContent->GetAttrNameAt(index, 
                             &namespaceID,
@@ -591,9 +591,8 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     // Filter out special case of <br type="_moz"> or <br _moz*>,
     // used by the editor.  Bug 16988.  Yuck.
     //
-    if ((aTagName == nsHTMLAtoms::br) &&
-        (attrName.get() == nsHTMLAtoms::type) &&
-        (mozStr1.Equals(Substring(valueStr, 0, mozStr1.Length())))) {
+    if (aTagName == nsHTMLAtoms::br && attrName == nsHTMLAtoms::type &&
+        StringBeginsWith(valueStr, _mozStr)) {
       continue;
     }
     

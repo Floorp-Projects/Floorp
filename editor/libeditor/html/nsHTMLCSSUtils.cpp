@@ -52,6 +52,7 @@
 #include "nsIDOMDocumentView.h"
 #include "nsIContent.h"
 #include "nsTextEditUtils.h"
+#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsHTMLCSSUtils.h"
 #include "nsColor.h"
@@ -1234,7 +1235,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
     }
 
     else if (nsEditProperty::tt == aHTMLProperty) {
-      aIsSet = Substring(valueString, 0, 9).Equals(NS_LITERAL_STRING("monospace"));
+      aIsSet = StringBeginsWith(valueString, NS_LITERAL_STRING("monospace"));
     }
     
     else if ((nsEditProperty::font == aHTMLProperty) && aHTMLAttribute

@@ -78,7 +78,7 @@ static void PrintImageDecoders()
 
       NS_NAMED_LITERAL_CSTRING(decoderContract, "@mozilla.org/image/decoder;2?type=");
 
-      if (Substring(xcs, 0, decoderContract.Length()).Equals(decoderContract)) {
+      if (StringBeginsWith(xcs, decoderContract)) {
         printf("Have decoder for mime type: %s\n", xcs.get()+decoderContract.Length());
       }
     }

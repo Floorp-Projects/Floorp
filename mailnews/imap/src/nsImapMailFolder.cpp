@@ -4081,8 +4081,7 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
         {
           nsXPIDLString folderName;
           GetName(getter_Copies(folderName));
-          if (Substring(folderName,0,convertedName.Length()).Equals(convertedName,
-                                                                    nsCaseInsensitiveStringComparator()))
+          if (StringBeginsWith(folderName, convertedName, nsCaseInsensitiveStringComparator()))
             showDeleted = PR_TRUE;
         }
       }

@@ -76,7 +76,7 @@ rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI)
     // relative paths, or anything fancy like that. If the context URI
     // is not a prefix of the URI in question, we'll just bail.
     PRUint32 prefixLen = aBaseURI.Length();
-    if (prefixLen && Substring(aURI, 0, prefixLen) == aBaseURI) {
+    if (prefixLen != 0 && StringBeginsWith(aURI, aBaseURI)) {
         if (prefixLen < aURI.Length() && aURI.CharAt(prefixLen) == '/')
             ++prefixLen; // chop the leading slash so it's not `absolute'
 
@@ -90,13 +90,10 @@ static PRBool
 rdf_RequiresAbsoluteURI(const nsString& uri)
 {
     // cheap shot at figuring out if this requires an absolute url translation
-    if (Substring(uri, 0, 4).Equals(NS_LITERAL_STRING("urn:")) ||
-        Substring(uri, 0, 9).Equals(NS_LITERAL_STRING("chrome:")) ||
-        Substring(uri, 0, 3).Equals(NS_LITERAL_STRING("nc:"),
-                                    nsCaseInsensitiveStringComparator())) {
-        return PR_FALSE;
-     }
-     return PR_TRUE;
+    return !(StringBeginsWith(uri, NS_LITERAL_STRING("urn:")) ||
+             StringBeginsWith(uri, NS_LITERAL_STRING("chrome:")) ||
+             StringBeginsWith(uri, NS_LITERAL_STRING("nc:"),
+                              nsCaseInsensitiveStringComparator()));
 }
 
 nsresult

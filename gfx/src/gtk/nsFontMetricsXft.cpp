@@ -2856,8 +2856,7 @@ GetEncoding(const char *aFontName, char **aEncoding, nsXftFontType &aType,
 
         // '.wide' at the end indicates 'wide' font.
         if (encoding.Length() > 5 && 
-            Substring(encoding, encoding.Length() - 5, 5) == 
-            NS_LITERAL_STRING(".wide")) {  
+            StringEndsWith(encoding, NS_LITERAL_STRING(".wide"))) {
             aType = eFontTypeCustomWide;
             encoding.Truncate(encoding.Length() - 5);
         }

@@ -42,6 +42,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIContent.h"
 #include "nsHTMLEditUtils.h"
+#include "nsReadableUtils.h"
 
 // Uncomment the following line if you want to disable
 // table deletion when the only column/row is removed
@@ -167,7 +168,7 @@ nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
     nsresult res = aElement->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
     if (NS_FAILED(res)) return res;
 
-    if (!Substring(anonclass, 0, 8).Equals(NS_LITERAL_STRING("mozTable")))
+    if (!StringBeginsWith(anonclass, NS_LITERAL_STRING("mozTable")))
       return NS_OK;
 
     nsCOMPtr<nsIDOMNode> cellNode = do_QueryInterface(mInlineEditedCell);

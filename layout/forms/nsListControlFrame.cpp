@@ -3466,8 +3466,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         if (optionElement) {
           nsAutoString text;
           if (NS_OK == optionElement->GetText(text)) {
-            if (Substring(text, 0, stringLength).Equals(incrementalString, 
-              nsCaseInsensitiveStringComparator())) {
+            if (StringBeginsWith(text, incrementalString,
+                                 nsCaseInsensitiveStringComparator())) {
               PRBool wasChanged = PerformSelection(index, isShift, isControl);
               if (wasChanged) {
                 UpdateSelection(); // dispatch event, update combobox, etc.

@@ -1309,7 +1309,7 @@ GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter, PRBool* aIsW
   // The encoding name of a wide NonUnicode font in fontEncoding.properties
   // has '.wide' suffix which has to be removed to get the converter
   // for the encoding.
-  if (Substring(value, value.Length() - 5, 5) == (NS_LITERAL_CSTRING(".wide"))) {
+  if (StringEndsWith(value, NS_LITERAL_CSTRING(".wide"))) {
     value.Truncate(value.Length()-5);
     if (aIsWide)
       *aIsWide = PR_TRUE;

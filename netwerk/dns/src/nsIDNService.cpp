@@ -226,8 +226,8 @@ NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACStrin
 NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, PRBool *_retval)
 {
   nsDependentCString prefix(mACEPrefix, kACEPrefixLen);
-  *_retval = Substring(input, 0, kACEPrefixLen).Equals(prefix,
-                                           nsCaseInsensitiveCStringComparator());
+  *_retval = StringBeginsWith(input, prefix,
+                              nsCaseInsensitiveCStringComparator());
   // also check for the case like "www.xn--ENCODED.com"
   // in case for this is called for an entire domain name
   if (!*_retval) {

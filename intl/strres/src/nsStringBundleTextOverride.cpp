@@ -294,7 +294,7 @@ nsPropertyEnumeratorByURL::HasMoreElements(PRBool * aResult)
             nsCAutoString curKey;
             mCurrent->GetKey(curKey);
         
-            if (mURL.Equals(Substring(curKey, 0, mURL.Length())))
+            if (StringBeginsWith(curKey, mURL))
                 break;
         }
         

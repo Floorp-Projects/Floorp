@@ -109,7 +109,6 @@
 #include "nsHTMLAtoms.h"
 
 static const char kNameSpaceSeparator = ':';
-static const char kNameSpaceDef[] = "xmlns";
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
@@ -1132,26 +1131,21 @@ XULContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
     }
 
     static const NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
-    static const PRUint32 xmlns_len = 5; // kNameSpaceDef.Length();
-    NS_ASSERTION(kNameSpaceDef.Length() == xmlns_len,
-                 "xmlns_len incorrectly set!");
+    static const PRUint32 xmlns_len = kNameSpaceDef.Length();
 
     for (; *aAttributes; aAttributes += 2) {
         nsDependentString key(aAttributes[0]);
 
         // Look for "xmlns" at the start of the attribute name
 
-        PRUint32 key_len = key.Length();
-
-        if (key_len >= xmlns_len &&
-            Substring(key, 0, xmlns_len).Equals(kNameSpaceDef)) {
+        if (StringBeginsWith(key, kNameSpaceDef)) {
             nsCOMPtr<nsIAtom> prefixAtom;
 
-            // If key_len > xmlns_len we have a xmlns:foo type attribute,
+            // If key.Length() > xmlns_len we have a xmlns:foo type attribute,
             // extract the prefix. If not, we have a xmlns attribute in
             // which case there is no prefix.
 
-            if (key_len > xmlns_len) {
+            if (key.Length() > xmlns_len) {
                 nsDependentString::const_iterator start, end;
 
                 key.BeginReading(start);

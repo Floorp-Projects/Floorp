@@ -387,9 +387,7 @@ nsFrameLoader::EnsureDocShell()
     parentAsItem->GetItemType(&parentType);
 
     nsAutoString value;
-    PRBool isContent;
-
-    isContent = PR_FALSE;
+    PRBool isContent = PR_FALSE;
 
     if (mOwnerContent->IsContentOfType(nsIContent::eXUL)) {
       mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
@@ -404,19 +402,14 @@ nsFrameLoader::EnsureDocShell()
       // on it being lowercased.
       ToLowerCase(value);
 
-      nsAutoString::const_iterator start, end;
+      nsAutoString::const_char_iterator start, end;
       value.BeginReading(start);
       value.EndReading(end);
 
-      nsAutoString::const_iterator iter(start);
-      iter.advance(7);
+      nsAutoString::const_char_iterator iter(start + 7);
 
-      const nsAString& valuePiece = Substring(start, iter);
-
-      if (valuePiece.Equals(NS_LITERAL_STRING("content")) &&
-          (iter == end || *iter == '-')) {
-        isContent = PR_TRUE;
-      }
+      isContent = Substring(start, iter) == NS_LITERAL_STRING("content") &&
+                  (iter == end || *iter == '-');
     }
 
     if (isContent) {
@@ -439,7 +432,7 @@ nsFrameLoader::EnsureDocShell()
 
       if(parentTreeOwner) {
         PRBool is_primary = parentType == nsIDocShellTreeItem::typeChrome &&
-                            value.Equals(NS_LITERAL_STRING("content-primary"));
+                            value == NS_LITERAL_STRING("content-primary");
 
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
                                            value.get());

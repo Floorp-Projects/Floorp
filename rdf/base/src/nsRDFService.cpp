@@ -1498,9 +1498,9 @@ RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource*
     // useless (and expensive) protocol handler lookups.
     nsCAutoString spec(aURI);
 
-    if (Substring(spec, 0, 4) != NS_LITERAL_CSTRING("rdf:")) {
+    if (!StringBeginsWith(spec, NS_LITERAL_CSTRING("rdf:"))) {
         nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURI));
+        NS_NewURI(getter_AddRefs(uri), spec);
         if (uri)
             uri->GetSpec(spec);
     }
@@ -1520,7 +1520,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource*
 
     // Nope. So go to the repository to try to create it.
     nsCOMPtr<nsIRDFDataSource> ds;
-    if (Substring(spec, 0, 4) == NS_LITERAL_CSTRING("rdf:")) {
+    if (StringBeginsWith(spec, NS_LITERAL_CSTRING("rdf:"))) {
         // It's a built-in data source. Convert it to a contract ID.
         nsCAutoString contractID(
                 NS_LITERAL_CSTRING(NS_RDF_DATASOURCE_CONTRACTID_PREFIX) +

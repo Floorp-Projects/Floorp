@@ -756,7 +756,7 @@ JSBool pref_InitInitialObjects()
     rv = aFile->GetNativeLeafName(leafName);
     if (NS_SUCCEEDED(rv)) {
       // Skip non-js files
-      if ((leafName.Length() < 3) || !Substring(leafName, leafName.Length() - 3, 3).Equals(NS_LITERAL_CSTRING(".js")))
+      if (!StringEndsWith(leafName, NS_LITERAL_CSTRING(".js")))
         shouldParse = PR_FALSE;
       // Skip files in the special list.
       if (shouldParse) {

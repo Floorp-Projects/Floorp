@@ -609,22 +609,13 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
             *matchFound = !FindInReadable(matchValue, value, nsCaseInsensitiveStringComparator());
             break;
         case nsIAbBooleanConditionTypes::Is:
-            *matchFound = value.Equals (matchValue, nsCaseInsensitiveStringComparator());
+            *matchFound = value.Equals(matchValue, nsCaseInsensitiveStringComparator());
             break;
         case nsIAbBooleanConditionTypes::IsNot:
-            *matchFound = !value.Equals (matchValue, nsCaseInsensitiveStringComparator());
+            *matchFound = !value.Equals(matchValue, nsCaseInsensitiveStringComparator());
             break;
         case nsIAbBooleanConditionTypes::BeginsWith:
-            {
-                if (value.Length() < matchValue.Length()) {
-                    *matchFound = PR_FALSE;
-                    break;
-                }
-                *matchFound =
-                    matchValue.Equals(Substring(value, 0,
-                                                matchValue.Length()),
-                                      nsCaseInsensitiveStringComparator());
-            }
+            *matchFound = StringBeginsWith(value, matchValue, nsCaseInsensitiveStringComparator());
             break;
         case nsIAbBooleanConditionTypes::LessThan:
             *matchFound = Compare(value, matchValue, nsCaseInsensitiveStringComparator()) < 0;
@@ -633,21 +624,8 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
             *matchFound = Compare(value, matchValue, nsCaseInsensitiveStringComparator()) > 0;
             break;
         case nsIAbBooleanConditionTypes::EndsWith:
-        {
-            
-            PRInt32 vl = value.Length ();
-            PRInt32 mvl = matchValue.Length ();
-
-            if (mvl > vl)
-            {
-                *matchFound = PR_FALSE;
-                break;
-            }
-
-            *matchFound = matchValue.Equals(Substring(value, vl - mvl, mvl),
-                                            nsCaseInsensitiveStringComparator());
+            *matchFound = StringEndsWith(value, matchValue, nsCaseInsensitiveStringComparator());
             break;
-        }
         case nsIAbBooleanConditionTypes::SoundsLike:
         case nsIAbBooleanConditionTypes::RegExp:
             *matchFound = PR_FALSE;

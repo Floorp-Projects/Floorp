@@ -254,16 +254,15 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
     if (NS_FAILED(file->GetNativeLeafName(filename)))
         return PR_FALSE;
 
-    int len = filename.Length();
-    nsCAutoString suffix (LOCAL_PLUGIN_DLL_SUFFIX);
-    int slen = suffix.Length();
-    if (len > slen && suffix.Equals(Substring(filename,len-slen,slen)))
+    NS_NAMED_LITERAL_CSTRING(dllSuffix, LOCAL_PLUGIN_DLL_SUFFIX);
+    if (filename.Length() > dllSuffix.Length() &&
+        StringEndsWith(filename, dllSuffix))
         return PR_TRUE;
     
 #ifdef LOCAL_PLUGIN_DLL_ALT_SUFFIX
-    suffix.Assign(LOCAL_PLUGIN_DLL_ALT_SUFFIX);
-    slen = suffix.Length();
-    if (len > slen && suffix.Equals(Substring(filename,len-slen,slen)))
+    NS_NAMED_LITERAL_CSTRING(dllAltSuffix, LOCAL_PLUGIN_DLL_ALT_SUFFIX);
+    if (filename.Length() > dllAltSuffix.Length() &&
+        StringEndsWith(filename, dllAltSuffix))
         return PR_TRUE;
 #endif
     return PR_FALSE;

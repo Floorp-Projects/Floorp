@@ -2693,7 +2693,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
             linkRel.EndReading(end);
 
             // Walk through space delimited string looking for "stylesheet"
-            for (current = start; current != end; current++)
+            for (current = start; current != end; ++current)
             {
                 // Ignore whitespace
                 if (nsCRT::IsAsciiSpace(*current))
@@ -2702,13 +2702,13 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
                 // Grab the next space delimited word
                 nsReadingIterator<PRUnichar> startWord = current;
                 do {
-                    current++;
-                } while (!nsCRT::IsAsciiSpace(*current) && current != end);
+                    ++current;
+                } while (current != end && !nsCRT::IsAsciiSpace(*current));
 
                 // Store the link for fix up if it says "stylesheet"
-                nsAutoString subString; subString = Substring(startWord, current);
-                ToLowerCase(subString);
-                if (subString.Equals(NS_LITERAL_STRING("stylesheet")))
+                if (Substring(startWord, current)
+                        .Equals(NS_LITERAL_STRING("stylesheet"),
+                                nsCaseInsensitiveStringComparator()))
                 {
                     StoreURIAttribute(aNode, "href");
                     return NS_OK;

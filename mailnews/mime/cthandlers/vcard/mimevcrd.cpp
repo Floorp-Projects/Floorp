@@ -97,11 +97,6 @@ typedef struct
 
 #define kNumAttributes 12
 
-// Define CIDs...
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 #define     VCARD_URL     "chrome://messenger/locale/vcard.properties"
 
 /* This is the object definition. Note: we will set the superclass 
