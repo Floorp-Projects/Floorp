@@ -63,11 +63,6 @@ install::
 	$(MAKE_INSTALL) moreCols.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) moreCols_dis.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) moreCols_mo.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) n-box-navbar.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) n-box.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) navbar-bg-begincap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) navbar-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) navbar-endcap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) print-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) print-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) print-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
