@@ -110,8 +110,8 @@
 #include "nsIXBLService.h"
 
 
-nsIEntropyCollector* gEntropyCollector = nsnull;
-PRInt32              gRefCnt           = 0;
+static nsIEntropyCollector* gEntropyCollector = nsnull;
+static PRInt32              gRefCnt           = 0;
 
 // CIDs
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
