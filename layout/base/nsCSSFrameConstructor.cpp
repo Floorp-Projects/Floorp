@@ -3975,11 +3975,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   aPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, aContainer);
 
-#ifdef NS_DEBUG
-  if (nsnull == parentFrame) {
-    NS_WARNING("Ignoring content-appended notification with no matching frame...");
-  }
-#endif
   if (nsnull != parentFrame) {
     // Get the parent frame's last-in-flow
     nsIFrame* nextInFlow = parentFrame;
