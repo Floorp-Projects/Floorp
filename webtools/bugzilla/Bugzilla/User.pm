@@ -352,7 +352,10 @@ sub can_see_bug {
                                ON bugs.bug_id = bug_group_map.bug_id
                                AND bug_group_map.group_ID NOT IN(" .
                                join(',',(-1, values(%{$self->groups}))) .
-                               ") WHERE bugs.bug_id = ? GROUP BY bugs.bug_id");
+                               ") WHERE bugs.bug_id = ? " .
+                             $dbh->sql_group_by('bugs.bug_id', 'reporter, ' .
+                             'assigned_to, qa_contact, reporter_accessible, ' .
+                             'cclist_accessible'));
     }
     $sth->execute($bugid);
     my ($reporter, $owner, $qacontact, $reporter_access, $cclist_access,
@@ -948,13 +951,14 @@ sub get_userlist {
 
     return $self->{'userlist'} if defined $self->{'userlist'};
 
+    my $dbh = Bugzilla->dbh;
     my $query  = "SELECT DISTINCT login_name, realname,";
     if (&::Param('usevisibilitygroups')) {
         $query .= " COUNT(group_id) ";
     } else {
         $query .= " 1 ";
     }
-        $query .= "FROM profiles ";
+    $query     .= "FROM profiles ";
     if (&::Param('usevisibilitygroups')) {
         $query .= "LEFT JOIN user_group_map " .
                   "ON user_group_map.user_id = userid AND isbless = 0 " .
@@ -962,9 +966,9 @@ sub get_userlist {
                   join(', ', (-1, @{$self->visible_groups_inherited})) . ") " .
                   "AND grant_type <> " . GRANT_DERIVED;
     }
-    $query    .= " WHERE disabledtext = '' GROUP BY userid";
+    $query    .= " WHERE disabledtext = '' ";
+    $query    .= $dbh->sql_group_by('userid', 'login_name, realname');
 
-    my $dbh = Bugzilla->dbh;
     my $sth = $dbh->prepare($query);
     $sth->execute;
 
