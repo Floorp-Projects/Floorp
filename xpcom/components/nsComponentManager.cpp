@@ -1866,6 +1866,32 @@ nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
     return res;
 }
 
+struct CanUnload_closure {
+    int when;
+    nsresult status;   // this is a hack around Enumerate's void return
+    nsIComponentLoader *native;
+};
+
+static PRBool
+CanUnload_enumerate(nsHashKey *key, void *aData, void *aClosure)
+{
+    nsIComponentLoader *loader = (nsIComponentLoader *)aData;
+    struct CanUnload_closure *closure =
+	(struct CanUnload_closure *)aClosure;
+
+    if (loader == closure->native) {
+#ifdef DEBUG
+	fprintf(stderr, "CanUnload_enumerate: skipping native\n");
+#endif
+	return PR_TRUE;
+    }
+
+    closure->status = loader->UnloadAll(closure->when);
+    if (NS_FAILED(closure->status))
+	return PR_FALSE;
+    return PR_TRUE;
+}
+
 nsresult
 nsComponentManagerImpl::FreeLibraries(void) 
 {
@@ -1887,7 +1913,13 @@ nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr)
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
            ("nsComponentManager: Unloading Libraries."));
 
-    // XXX UnloadAll the loaders
+    // UnloadAll the loaders
+    /* iterate over all known loaders and ask them to autoregister. */
+    struct CanUnload_closure closure;
+    closure.when = NS_Timer;
+    closure.status = NS_OK;
+    closure.native = mNativeComponentLoader;
+    mLoaders->Enumerate(CanUnload_enumerate, &closure);
 
     // UnloadAll the native loader
     rv = mNativeComponentLoader->UnloadAll(NS_Timer);
