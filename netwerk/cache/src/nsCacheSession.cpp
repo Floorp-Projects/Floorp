@@ -38,6 +38,7 @@ nsCacheSession::nsCacheSession(const char *         clientID,
       mStreamBased(streamBased)
 {
   NS_INIT_ISUPPORTS();
+  if (!streamBased) mStoragePolicy = nsICache::STORE_IN_MEMORY;
 }
 
 nsCacheSession::~nsCacheSession()

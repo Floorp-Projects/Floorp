@@ -282,6 +282,7 @@ nsCacheService::ProcessRequest(nsCacheRequest * request,
             if (request->mListener) // async exits - validate, doom, or close will resume
                 return rv; 
             
+            // XXX allocate condvar for request if necessary
             PR_Unlock(mCacheServiceLock);
             rv = request->WaitForValidation();
             PR_Lock(mCacheServiceLock);
@@ -300,8 +301,9 @@ nsCacheService::ProcessRequest(nsCacheRequest * request,
     }
 
     nsCOMPtr<nsICacheEntryDescriptor> descriptor;
-
-    rv = entry->CreateDescriptor(request, accessGranted, getter_AddRefs(descriptor));
+    
+    if (NS_SUCCEEDED(rv))
+        rv = entry->CreateDescriptor(request, accessGranted, getter_AddRefs(descriptor));
 
     if (request->mListener) {  // Asynchronous
         // call listener to report error or descriptor

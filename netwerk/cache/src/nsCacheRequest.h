@@ -54,6 +54,7 @@ private:
         SetAccessRequested(accessRequested);
         if (streamBased)  MarkStreamBased();
         SetStoragePolicy(storagePolicy);
+        MarkWaitingForValidation();
     }
     
     ~nsCacheRequest()
@@ -111,6 +112,11 @@ private:
     nsresult
     WaitForValidation(void)
     {
+        if (!WaitingForValidation()) {   // flag already cleared
+            MarkWaitingForValidation();  // set up for next time
+            return NS_OK;                // early exit;
+        }
+
         if (!mLock) {
             mLock = PR_NewLock();
             if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
@@ -122,14 +128,14 @@ private:
                 return NS_ERROR_OUT_OF_MEMORY;
             }
         }
-        
         PRStatus status;
         PR_Lock(mLock);
         while (WaitingForValidation() && (status == PR_SUCCESS) ) {
             status = PR_WaitCondVar(mCondVar, PR_INTERVAL_NO_TIMEOUT);
         }
+        MarkWaitingForValidation();  // set up for next time
         PR_Unlock(mLock);
-
+        
         NS_ASSERTION(status == PR_SUCCESS, "PR_WaitCondVar() returned PR_FAILURE?");
         if (status == PR_FAILURE)
             return NS_ERROR_UNEXPECTED;
@@ -138,10 +144,12 @@ private:
     }
 
     void WakeUp(void) {
-        PR_Lock(mLock);
         DoneWaitingForValidation();
+        if (mLock) {
+        PR_Lock(mLock);
         PR_NotifyCondVar(mCondVar);
         PR_Unlock(mLock);
+        }
     }
 
     /**
