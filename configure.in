@@ -3536,11 +3536,11 @@ then
         ])
     fi
 
-    AC_SUBST(MOZ_ENABLE_GNOMEUI)
-    AC_SUBST(MOZ_GNOMEUI_CFLAGS)
-    AC_SUBST(MOZ_GNOMEUI_LIBS)
 
 fi
+AC_SUBST(MOZ_ENABLE_GNOMEUI)
+AC_SUBST(MOZ_GNOMEUI_CFLAGS)
+AC_SUBST(MOZ_GNOMEUI_LIBS)
 
 dnl ========================================================
 dnl = Setting MOZ_EXTRA_X11CONVERTERS turns on additional 
