@@ -392,14 +392,15 @@ nsRefData			*theRefData;
 						theRefData = (nsRefData*)GetWRefCon (whichwindow);
 						thewindow = (nsWindow*)theRefData->GetTopWidget();
 
-						if (thewindow != nsnull)
-						{
+						if (thewindow != nsnull){
 							therect = whichwindow->portRect;
 							
 							LocalToGlobal(&topLeft(therect));
 							LocalToGlobal(&botRight(therect));
-							thewindow->SetBounds(therect);			// set the bounds in mac
-							thewindow->GetBounds(sizerect);			// tricky-- get it back in nsRect
+							sizerect.x = therect.left;
+							sizerect.y = therect.top;
+							sizerect.width = therect.right-therect.left;
+							sizerect.height = therect.bottom-therect.top;
 
 			        event.message = NS_SIZE;
 			        event.point.x = 0;
@@ -407,11 +408,7 @@ nsRefData			*theRefData;
 			        event.windowSize = &sizerect;
 			        event.eventStructType = NS_SIZE_EVENT;
 			        event.widget = thewindow;
-			       	thewindow->DispatchEvent(&event, eventStatus);
-
-							//thewindow->DoResizeWidgets(event);
-							//result = thewindow->OnResize(event);
-							//::InvalRect(&therect);
+							thewindow->OnResize(event);
 						}
 #ifdef DRAW_ON_RESIZE
 					}
