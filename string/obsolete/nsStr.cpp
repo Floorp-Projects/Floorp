@@ -173,6 +173,9 @@ void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
 
         aDest.mLength+=theLength;
         AddNullTerminator(aDest);
+#ifdef DEBUG
+        nsStringInfo::Seen(aDest);
+#endif
       }
     }
   }
@@ -241,7 +244,9 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
             //finally, make sure to update the string length...
           aDest.mLength+=theLength;
           AddNullTerminator(aDest);
-
+#ifdef DEBUG
+          nsStringInfo::Seen(aDest);
+#endif
         }//if
         //else nothing to do!
       }
@@ -272,6 +277,9 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
       (*gShiftChars[aDest.mCharSize][KSHIFTLEFT])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
       aDest.mLength-=theLength;
       AddNullTerminator(aDest);
+#ifdef DEBUG
+      nsStringInfo::Seen(aDest);
+#endif
     }
     else Truncate(aDest,aDestOffset);
   }//if
@@ -287,6 +295,9 @@ void nsStr::Truncate(nsStr& aDest,PRUint32 aDestOffset){
   if(aDestOffset<aDest.mLength){
     aDest.mLength=aDestOffset;
     AddNullTerminator(aDest);
+#ifdef DEBUG
+    nsStringInfo::Seen(aDest);
+#endif
   }
 }
 
@@ -364,6 +375,9 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
   Trim(aDest,aSet,aEliminateLeading,aEliminateTrailing);
   PRUint32 aNewLen=gCompressChars[aDest.mCharSize](aDest.mStr,aDest.mLength,aSet);
   aDest.mLength=aNewLen;
+#ifdef DEBUG
+  nsStringInfo::Seen(aDest);
+#endif
 }
 
 
@@ -377,6 +391,9 @@ void nsStr::StripChars(nsStr& aDest,const char* aSet){
   if((0<aDest.mLength) && (aSet)) {
     PRUint32 aNewLen=gStripChars[aDest.mCharSize](aDest.mStr,aDest.mLength,aSet);
     aDest.mLength=aNewLen;
+#ifdef DEBUG
+    nsStringInfo::Seen(aDest);
+#endif
   }
 }
 
@@ -734,4 +751,147 @@ CBufDescriptor::CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUin
 
 //----------------------------------------------------------------------------------------
 
+PRUint32
+nsStr::HashCode(const nsStr& aDest)
+{
+	if (aDest.mCharSize == eTwoByte) {
+    PRUint32 h;
+    PRUint32 n = aDest.mLength;
+    PRUint32 m;
+    const PRUnichar* c;
+    h = 0;
+    
+    c = aDest.mUStr;
+    if (n < 16) {	/* Hash every char in a short string. */
+      for(; n; c++, n--)
+        h = (h >> 28) ^ (h << 4) ^ *c;
+    }
+    else {	/* Sample a la java.lang.String.hash(). */
+      for(m = n / 8; n >= m; c += m, n -= m)
+        h = (h >> 28) ^ (h << 4) ^ *c;
+    }
+    return h; 
+  }
+  return (PRUint32)PL_HashString((const void*) aDest.mStr);
+}
 
+#ifdef DEBUG
+
+#include <ctype.h>
+
+void
+nsStr::Print(const nsStr& aDest, FILE* out, PRBool truncate)
+{
+  PRInt32 printLen = (PRInt32)aDest.mLength;
+
+  if (aDest.mCharSize == eOneByte) {
+    const char* chars = aDest.mStr;
+    while (printLen-- && (!truncate || *chars != '\n')) {
+      fputc(*chars++, out);
+    }
+  }
+  else {
+    const PRUnichar* chars = aDest.mUStr;
+    while (printLen-- && (!truncate || *chars != '\n')) {
+      if (isascii(*chars))
+        fputc((char)(*chars++), out);
+      else
+        fputc('-', out);
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// String Usage Statistics Routines
+
+static PLHashTable* gStringInfo = nsnull;
+PRLock* gStringInfoLock = nsnull;
+PRBool gNoStringInfo = PR_FALSE;
+
+nsStringInfo::nsStringInfo(nsStr& str)
+  : mCount(0)
+{
+  nsStr::Initialize(mStr, str.mCharSize);
+  nsStr::Assign(mStr, str, 0, -1);
+//  nsStr::Print(mStr, stdout);
+//  fputc('\n', stdout);
+}
+
+PR_EXTERN(PRHashNumber)
+nsStr_Hash(const void* key)
+{
+  nsStr* str = (nsStr*)key;
+  return nsStr::HashCode(*str);
+}
+
+PR_EXTERN(PRIntn)
+nsStr_Compare(const void *v1, const void *v2)
+{
+  nsStr* str1 = (nsStr*)v1;
+  nsStr* str2 = (nsStr*)v2;
+  return nsStr::Compare(*str1, *str2, -1, PR_FALSE) == 0;
+}
+
+nsStringInfo*
+nsStringInfo::GetInfo(nsStr& str)
+{
+  if (gStringInfo == nsnull) {
+    gStringInfo = PL_NewHashTable(1024,
+                                  nsStr_Hash,
+                                  nsStr_Compare,
+                                  PL_CompareValues,
+                                  NULL, NULL);
+    gStringInfoLock = PR_NewLock();
+  }
+  PR_Lock(gStringInfoLock);
+  nsStringInfo* info =
+    (nsStringInfo*)PL_HashTableLookup(gStringInfo, &str);
+  if (info == NULL) {
+    gNoStringInfo = PR_TRUE;
+    info = new nsStringInfo(str);
+    if (info) {
+      PLHashEntry* e = PL_HashTableAdd(gStringInfo, &info->mStr, info);
+      if (e == NULL) {
+        delete info;
+        info = NULL;
+      }
+    }
+    gNoStringInfo = PR_FALSE;
+  }
+  PR_Unlock(gStringInfoLock);
+  return info;
+}
+
+void
+nsStringInfo::Seen(nsStr& str)
+{
+  if (!gNoStringInfo) {
+    nsStringInfo* info = GetInfo(str);
+    info->mCount++;
+  }
+}
+
+void
+nsStringInfo::Report(FILE* out)
+{
+  if (gStringInfo) {
+    fprintf(out, "\n== String Stats\n");
+    PL_HashTableEnumerateEntries(gStringInfo, nsStringInfo::ReportEntry, out);
+  }
+}
+
+PRIntn
+nsStringInfo::ReportEntry(PLHashEntry *he, PRIntn i, void *arg)
+{
+  nsStringInfo* entry = (nsStringInfo*)he->value;
+  FILE* out = (FILE*)arg;
+  
+  fprintf(out, "%d ==> (%d) ", entry->mCount, entry->mStr.mLength);
+  nsStr::Print(entry->mStr, out, PR_TRUE);
+  fputc('\n', out);
+  return HT_ENUMERATE_NEXT;
+}
+
+#endif // DEBUG
+
+////////////////////////////////////////////////////////////////////////////////
