@@ -58,7 +58,7 @@ nsImageXlib::~nsImageXlib()
       XFreePixmap(gDisplay, mAlphaPixmap);
     }
   }
-  if (nsnull != mImagePixmap) {
+  if (mImagePixmap != 0) {
     XFreePixmap(gDisplay, mImagePixmap);
   }
 }
@@ -238,12 +238,12 @@ nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
   if (nsnull != mAlphaBits) {
     delete[] mAlphaBits;
     mAlphaBits = nsnull;
-    if (nsnull != mAlphaPixmap) {
+    if (mAlphaPixmap != 0) {
       XFreePixmap(gDisplay, mAlphaPixmap);
       mAlphaPixmap = 0;
     }
   }
-  if (nsnull != mImagePixmap) {
+  if (mImagePixmap != 0) {
     XFreePixmap(gDisplay, mImagePixmap);
     mImagePixmap = 0;
   }

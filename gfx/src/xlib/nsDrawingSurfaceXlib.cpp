@@ -80,7 +80,7 @@ nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
 nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
 {
   printf("nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()\n");
-  if (mPixmap) {
+  if (mPixmap && (mIsOffscreen == PR_TRUE)) {
     XFreePixmap(gDisplay, mPixmap);
   }
   if (mImage) {
