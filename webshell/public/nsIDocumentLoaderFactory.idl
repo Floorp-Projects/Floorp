@@ -1,0 +1,60 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+interface nsIURI;
+interface nsIFactory;
+interface nsIContentViewer;
+interface nsIStreamListener;
+interface nsIDocument;
+interface nsILoadGroup;
+
+%{C++
+// Registered components that can instantiate a
+// nsIDocumentLoaderFactory for a given mimetype must be prefixed with
+// this prefix to be found. The format is <prefix>/%s/%s where the
+// first %s is replaced with the command and the second %s is replaced
+// with the mimetype. For example, to view a image/gif file you would
+// create this progid:
+//
+//  "component://netscape/content-viewer-factory/view/image/gif"
+//
+#define NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX \
+  "component://netscape/content-viewer-factory/"
+%}
+
+
+[scriptable, uuid(f43ba260-0737-11d2-beb9-00805f8a66dc)]
+interface nsIDocumentLoaderFactory : nsISupports {
+    nsIContentViewer createInstance(in string aCommand,
+                              in nsIChannel aChannel,
+                              in nsILoadGroup aLoadGroup,
+                              in string aContentType, 
+                              in nsISupports aContainer,
+                              in nsISupports aExtraInfo,
+                              out nsIStreamListener aDocListenerResult);
+
+    nsIContentViewer createInstanceForDocument(in nsISupports aContainer,
+                                         in nsIDocument aDocument,
+                                         in string aCommand);
+};
