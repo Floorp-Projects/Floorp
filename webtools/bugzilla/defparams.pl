@@ -292,10 +292,10 @@ sub check_netmask {
            'assume it\'s on the main database host (as defined in ' .
            'localconfig) and ingore the <tt>shadowdbport</tt> and ' .
            '<tt>shadowdbsock</tt> parameters below, which means that this ' .
-           'parameter <em>must be filled in<em> if your shadow database is ' .
+           'parameter <em>must be filled in</em> if your shadow database is ' .
            'on a different instance of the mysql server, even if that ' .
            'instance runs on the same machine as the main database. Note ' .
-           'that <tt>updateshadowdb<tt> must be off if the shadow database ' .
+           'that <tt>updateshadowdb</tt> must be off if the shadow database ' .
            'is on a difference mysql instance, since Bugzilla can\'t ' .
            'propogate changes between instances itself, and this should be ' .
            'left blank if the shadow database is on the same instance, ' .
