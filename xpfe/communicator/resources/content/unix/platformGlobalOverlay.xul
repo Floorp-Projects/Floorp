@@ -20,9 +20,5 @@
 	
     <!-- Edit Menu -->
     <menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
-    <key id="key_redo"   key="&redoCmd.key;" observes="cmd_redo" modifiers="accel, shift"/>
-	
-	<!-- Delete Key -->
-	<key id="key_delete" keycode="VK_DELETE"     observes="cmd_delete"/>
 
 </overlay>		

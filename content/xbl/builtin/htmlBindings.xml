@@ -119,7 +119,6 @@ Can't yet put script tags in XBL (hyatt has the bug)
 
   <binding id="inputFieldsBase">
     <handlers>
-
     <handler event="keypress" id="key_home" keycode="VK_HOME"
         command="cmd_beginLine"/>
     <handler event="keypress" id="key_end" keycode="VK_END"

@@ -6,7 +6,6 @@
  
   <binding id="inputFields" extends="resource:///res/builtin/htmlBindings.xml#inputFieldsBase">
     <handlers>
-
     <!-- Emacsish single-line motion and delete keys -->
     <handler event="keypress" id="key_home" key="a" modifiers="control"
         command="cmd_beginLine"/>

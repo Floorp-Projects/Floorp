@@ -1,44 +1,14 @@
 <?xml version="1.0"?> 
 <!-- unix version of platformBrowserBindings.xul -->
-
+<!-- This file is ONLY here to show bindings in the menus.        -->
+<!-- The real bindings come from XBL, in platformHTMLBindings.xml -->
+<!-- See bugs 57078 and 71779.                                    -->
+ 
 <keybinding id="platformBrowserBindings"
 	 xmlns:html="http://www.w3.org/1999/xhtml"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <keyset id="globalKeySet">
-
-<!-- other keybindings for cut/copy/paste -->
-<key id="winAlternativeCutKey" keycode="VK_DELETE"    
-  oncommand="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');" modifiers="shift"/>
-
-<key id="winAlternativeCopy2Key" keycode="VK_DELETE"    
-  oncommand="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');" modifiers="control"/>
-
-<key id="winAlternativeCopyKey" keycode="VK_INSERT"    
-  oncommand="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');" modifiers="control"/>
-
-<key id="winAlternativePasteKey" keycode="VK_INSERT"    
-  oncommand="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-    controller.doCommand('cmd_paste');" modifiers="shift"/>
-
-
-<key id="key_homectrlshift" keycode="VK_HOME"   
-    oncommand="
-        var controller =
-        document.commandDispatcher.getControllerForCommand('cmd_selectTop');
-        controller.doCommand('cmd_selectTop');" modifiers="shift, control"/>
-<key id="key_endctrlshift" keycode="VK_END"   
-    oncommand="
-        var controller =
-        document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
-        controller.doCommand('cmd_selectBottom');" modifiers="shift, control"/>
 
 <key id="sparcCutKey" keycode="VK_F20"
     oncommand="
