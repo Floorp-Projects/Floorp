@@ -3044,13 +3044,16 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (uriToLoad) {
     // Get security manager, check to see if URI is allowed.
+    // Don't call CheckLoadURI for dialogs - see bug 56851
+    // The security of this function depends on window.openDialog being 
+    // inaccessible from web scripts
     nsCOMPtr<nsIURI> newUrl;
     nsCOMPtr<nsIScriptContext> scriptCX;
     nsJSUtils::nsGetStaticScriptContext(cx, (JSObject *) mScriptObject,
                                         getter_AddRefs(scriptCX));
     if (!scriptCX ||
         NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
-        NS_FAILED(secMan->CheckLoadURIFromScript(cx, uriToLoad)))
+        ((!aDialog && NS_FAILED(secMan->CheckLoadURIFromScript(cx, uriToLoad)))))
       return NS_ERROR_FAILURE;
   }
 
