@@ -302,6 +302,11 @@ nsBrowserStatusHandler.prototype =
 
     if (aWebProgress.DOMWindow == content) {
       if (!this.userTyped.value) {
+        // If the url has "wyciwyg://" as the protocol, strip it off.
+        // Nobody wants to see it on the urlbar for dynamically generated
+        // pages. 
+        if (/^\s*wyciwyg:\/\/\d+\//.test(location))
+          location = RegExp.rightContext;
         this.urlBar.value = location;
         // the above causes userTyped.value to become true, reset it
         this.userTyped.value = false;
