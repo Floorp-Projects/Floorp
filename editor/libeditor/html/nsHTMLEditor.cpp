@@ -3111,7 +3111,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
           {
             if (data && len > 0) // stuffToPaste is ready for insertion into the content
             {
-              stuffToPaste.SetString(data, len);
+              stuffToPaste.SetString((PRUnichar *)data, len/2);
               rv = InsertHTML(stuffToPaste);
             }
           }
