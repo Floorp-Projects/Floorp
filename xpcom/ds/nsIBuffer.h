@@ -43,6 +43,9 @@ class nsIOutputStream;
     {0x93, 0x24, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
+#define NS_BUFFER_PROGID "component://netscape/buffer"
+#define NS_BUFFER_CLASSNAME "Buffer"
+
 class nsIBuffer : public nsISupports {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBUFFER_IID);

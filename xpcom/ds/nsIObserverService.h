@@ -33,6 +33,8 @@
 #define NS_OBSERVERSERVICE_CID \
 { 0xd07f5195, 0xe3d1, 0x11d2, { 0x8a, 0xcd, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
 
+#define NS_OBSERVERSERVICE_PROGID "component://netscape/observer-service"
+#define NS_OBSERVERSERVICE_CLASSNAME "Observer Service"
 
 class nsIObserverService : public nsISupports {
 public:
@@ -44,8 +46,5 @@ public:
 };
 
 extern NS_COM nsresult NS_NewObserverService(nsIObserverService** anObserverService);
-
-#define NS_OBSERVERSERVICE_PROGID             "component:||netscape|ObserverService"
-
 
 #endif /* nsIObserverService_h__ */

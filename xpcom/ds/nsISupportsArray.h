@@ -36,6 +36,8 @@ class nsIBidirectionalEnumerator;
     0x11d3,                                          \
     {0x93, 0x31, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
+#define NS_SUPPORTSARRAY_PROGID "component://netscape/supports-array"
+#define NS_SUPPORTSARRAY_CLASSNAME "Supports Array"
 
 // Enumerator callback function. Return PR_FALSE to stop
 typedef PRBool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);

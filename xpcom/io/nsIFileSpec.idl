@@ -38,6 +38,15 @@ native StandardFilterMask(nsIFileSpec::StandardFilterMask);
 interface nsIFileURL;
 interface nsIFilePath;
 
+// Define Progid and CID
+%{C++
+// {A5740FA2-146E-11d3-B00D-00C04FC2E79B} 
+#define NS_FILESPEC_CID \
+{ 0xa5740fa2, 0x146e, 0x11d3, { 0xb0, 0xd, 0x0, 0xc0, 0x4f, 0xc2, 0xe7, 0x9b } }
+
+#define NS_FILESPEC_PROGID "component://netscape/filespec"
+#define NS_FILESPEC_CLASSNAME "File Spec"
+%}
 [scriptable, uuid(d8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFileSpec : nsISupports
 {
