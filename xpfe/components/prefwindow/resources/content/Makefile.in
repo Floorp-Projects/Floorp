@@ -48,6 +48,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-mousewheel.xul \
 		$(srcdir)/pref-smart_browsing.xul \
 		$(srcdir)/pref-smartupdate.xul \
+		$(srcdir)/fontScalingOverlay.xul \
 		$(srcdir)/preftree.xul \
 		$(NULL)
 
