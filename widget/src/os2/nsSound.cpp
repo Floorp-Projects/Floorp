@@ -42,6 +42,7 @@
 #include "nscore.h"
 #include "plstr.h"
 #include <stdio.h>
+#include <string.h>
 
 #define INCL_DOS
 #define INCL_DOSERRORS
@@ -114,7 +115,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     return NS_ERROR_FAILURE;
   }
 
-  if (PL_strncmp(data, "RIFF", 4) || (!gMMPMInstalled)) {
+  if (memcmp(data, "RIFF", 4) || (!gMMPMInstalled)) {
 #ifdef DEBUG
     printf("We only support WAV files currently.\n");
 #endif
