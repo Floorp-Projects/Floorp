@@ -536,8 +536,6 @@ PresShell::Init(nsIDocument* aDocument,
  
 #endif
 
-  mSelection = selection;
-
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
   nsCaretProperties  *caretProperties = NewCaretProperties();
