@@ -41,6 +41,10 @@
 #include "jspubtd.h"
 #include "jsstr.h"
 
+#ifdef JS_THREADSAFE
+#include "jsdhash.h"
+#endif
+
 struct JSRegExpStatics {
     JSString    *input;         /* input string to match (perl $_, GC root) */
     JSBool      multiline;      /* whether input contains newlines (perl $*) */
@@ -53,6 +57,27 @@ struct JSRegExpStatics {
     JSSubString leftContext;    /* input to left of last match (perl $`) */
     JSSubString rightContext;   /* input to right of last match (perl $') */
 };
+
+/*
+ * This struct holds a bitmap representation of a class from a regexp.
+ * There's a list of these referenced by the classList field in the JSRegExp 
+ * struct below. The initial state has startIndex set to the offset in the
+ * original regexp source of the beginning of the class contents. The first 
+ * use of the class converts the source representation into a bitmap.
+ *
+ */
+typedef struct RECharSet {
+    JSBool converted;
+    JSBool sense;
+    uint16 length;
+    union {
+        uint8 *bits;
+        struct {
+            uint16 startIndex;
+            uint16 length;
+        } src;
+    } u;
+} RECharSet;
 
 /*
  * This macro is safe because moreParens is guaranteed to be allocated and big
@@ -71,8 +96,10 @@ struct JSRegExp {
     jsrefcount   nrefs;         /* reference count */
     uint32       parenCount:24, /* number of parenthesized submatches */
                  flags:8;       /* flags, see jsapi.h's JSREG_* defines */
-    RENode       *ren;          /* regular expression tree root */
+    uint32       classCount;    /* count [...] bitmaps */
+    RECharSet    *classList;    /* list of [...] bitmaps */
     JSString     *source;       /* locked source string, sans // */
+    jsbytecode  program[1];     /* regular expression bytecode */
 };
 
 extern JSRegExp *
@@ -120,6 +147,9 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj);
 extern JSObject *
 js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
                    jschar *chars, size_t length, uintN flags);
+
+extern JSBool
+js_XDRRegExp(JSXDRState *xdr, JSObject **objp);
 
 extern JSObject *
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent);
