@@ -479,7 +479,7 @@ gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
     break;
 
   case GDK_3BUTTON_PRESS:   /* Triple click. */
-    printf("handle_button_press_event(): Unhandled triple click.\n");
+    /* Unhandled triple click. */
     break;
 
   default:
