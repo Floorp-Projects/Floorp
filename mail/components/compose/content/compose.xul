@@ -31,7 +31,6 @@
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <?xul-overlay href="chrome://mail/content/messengercompose/addressingWidgetOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>

@@ -32,10 +32,10 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/content/customizeToolbar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/customizeToolbar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/primaryToolbar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/messengersmime/msgCompSMIMEOverlay.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/primaryToolbar.css" type="text/css"?>
 
 <window id="CustomizeToolbarWindow"
         title="&dialog.title;"

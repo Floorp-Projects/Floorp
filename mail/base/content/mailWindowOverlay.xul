@@ -962,8 +962,7 @@ Rights Reserved.
 </popup>
 
 <popup id="toolbar-context-menu">
-  <menuitem command="cmd_CustomizeToolbars"
-     label="Customize Toolbar"/>
+  <menuitem oncommand="CustomizeMailToolbar('mail-toolbox');" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
 </popup>
 
 <toolbox id="mail-toolbox" class="toolbox-top" mode="icons">  
@@ -1486,10 +1485,13 @@ Rights Reserved.
         <menupopup id="menu_HelpPopup">
           <menuitem accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
           <menuitem accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
+          <menuseparator/>
+            <menuitem accesskey="&aboutCmd.accesskey;"
+                      label="&aboutCmd.label;"
+                      oncommand="window.openDialog('chrome://messenger/content/aboutDialog.xul', 'About', 'modal,centerscreen,chrome,resizable=no');"/>
         </menupopup>
       </menu>
-
-        <spacer flex="100%"/>
+      <spacer flex="100%"/>
       </menubar>
     </toolbaritem>
   </toolbar>
@@ -1618,9 +1620,9 @@ Rights Reserved.
            toolbarname="Mail" 
            fullscreentoolbar="true" mode="full"
            customizable="true"
+           context="toolbar-context-menu"
            defaultset="button-getmsg,button-newmsg,button-address,spacer,spacer,spacer,button-reply,button-replyall,button-forward,spacer,spacer,spacer,button-delete,button-junk,button-print,button-stop,spring,throbber-box">
   </toolbar>
-  <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 </toolbox>
 
 <hbox id="searchBox" persist="collapsed" align="center">

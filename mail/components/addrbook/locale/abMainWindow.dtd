@@ -19,11 +19,15 @@ Rights Reserved.
 --> 
 
 <!-- Title -->
-<!ENTITY addressbookWindow.title "Address Book">
+<!ENTITY addressbookWindow.title                        "Address Book">
 
 <!-- Menus:  the . means that the menu item isn't implemented yet -->
 
 <!-- File Menu -->
+<!ENTITY fileMenu.label                                 "File"> 
+<!ENTITY fileMenu.accesskey                             "f">
+<!ENTITY newMenu.label                                  "New">
+<!ENTITY newMenu.accesskey                              "N">
 <!ENTITY newCard.label                                  "Address Book Card...">
 <!-- LOCALIZATION NOTE (newCard.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY newCard.accesskey                              "C">  
@@ -38,6 +42,9 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (newLDAPDirectoryCmd.accesskey) : DONT_TRANSLATE -->
 <!ENTITY newLDAPDirectoryCmd.accesskey                  "D">
 <!ENTITY newIM.label                                    "IM">
+<!ENTITY closeCmd.label                                 "Close">  
+<!ENTITY closeCmd.key                                   "W">  
+<!ENTITY closeCmd.accesskey                             "c">
 <!ENTITY importCmd.label                                "Import..."> 
 <!ENTITY importCmd.accesskey				"I"> 
 <!ENTITY exportCmd.label                                "Export...">  
@@ -54,8 +61,34 @@ Rights Reserved.
 <!ENTITY printPreviewAddressBook.accesskey              "B">
 <!ENTITY printSetupCmd.label                            "Page Setup...">
 <!ENTITY printSetupCmd.accesskey                        "u">
+<!ENTITY quitApplicationCmd.label                       "Exit"> 
+<!ENTITY quitApplicationCmd.key                         "Q"> 
+<!ENTITY quitApplicationCmd.accesskey                   "x">
 
 <!-- Edit Menu -->
+<!ENTITY editMenu.label                                 "Edit"> 
+<!ENTITY editMenu.accesskey                             "e"> 
+<!ENTITY undoCmd.label                                  "Undo">  
+<!ENTITY undoCmd.key                                    "Z">  
+<!ENTITY undoCmd.accesskey                              "u"> 
+<!ENTITY redoCmd.label                                  "Redo">  
+<!ENTITY redoCmd.key                                    "Y">  
+<!ENTITY redoCmd.accesskey                              "r"> 
+<!ENTITY cutCmd.label                                   "Cut">  
+<!ENTITY cutCmd.key                                     "X">  
+<!ENTITY cutCmd.accesskey                               "t"> 
+<!ENTITY copyCmd.label                                  "Copy">  
+<!ENTITY copyCmd.key                                    "C">  
+<!ENTITY copyCmd.accesskey                              "c"> 
+<!ENTITY pasteCmd.label                                 "Paste">  
+<!ENTITY pasteCmd.key                                   "V">  
+<!ENTITY pasteCmd.accesskey                             "p"> 
+<!ENTITY deleteCmd.label                                "Delete">  
+<!ENTITY deleteCmd.key                                  "D">  
+<!ENTITY deleteCmd.accesskey                            "d"> 
+<!ENTITY selectAllCmd.label                             "Select All">  
+<!ENTITY selectAllCmd.key                               "A">  
+<!ENTITY selectAllCmd.accesskey                         "a"> 
 <!ENTITY deleteAbCmd.label                              "Delete Address Book">  
 <!ENTITY deleteCardCmd.label                            "Delete Card">  
 <!ENTITY deleteCardsCmd.label                           "Delete Selected Cards">  
@@ -67,12 +100,20 @@ Rights Reserved.
 <!ENTITY propertiesCmd.key                              "i">  
 
 <!-- View Menu -->
+<!ENTITY viewMenu.label                                 "View"> 
+<!ENTITY viewMenu.accesskey                             "v">
+<!ENTITY viewToolbarsMenu.label                         "Toolbars"> 
+<!ENTITY viewToolbarsMenu.accesskey                     "T"> 
 <!ENTITY showAbToolbarCmd.label                         "Address Book Toolbar"> 
-<!ENTITY showAbToolbarCmd.accesskey                     "o">  
-
+<!ENTITY showAbToolbarCmd.accesskey                     "o">
+<!ENTITY showSearchToolbarCmd.label                     "Search Bar">
+<!ENTITY showSearchToolbarCmd.accesskey                 "e">
+<!ENTITY showTaskbarCmd.label                           "Status Bar">  
+<!ENTITY showTaskbarCmd.accesskey                       "S"> 
 <!ENTITY showCardPane.label                             "Card Summary Pane">
 <!ENTITY showCardPane.accesskey                         "a">
-  
+<!ENTITY customizeToolbar.label                         "Customize...">
+<!ENTITY customizeToolbar.accesskey                     "C">
 <!ENTITY menu_ShowNameAs.label                          "Show Name As"> 
 <!ENTITY menu_ShowNameAs.accesskey                      "n"> 
 <!ENTITY firstLastCmd.label                             "First Last">  
@@ -80,9 +121,33 @@ Rights Reserved.
 <!ENTITY lastFirstCmd.label                             "Last, First">  
 <!ENTITY lastFirstCmd.accesskey				"l"> 
 <!ENTITY displayNameCmd.label				"Display Name">  
-<!ENTITY displayNameCmd.accesskey			"d"> 
+<!ENTITY displayNameCmd.accesskey			"d">
+<!ENTITY sortMenu.label                                 "Sort by">
+<!ENTITY sortMenu.accesskey                             "S">
 
 <!ENTITY stopSearchingCmd.label                         ".Stop Searching"> 
+
+<!-- Tools Menu -->
+<!ENTITY tasksMenu.label                                "Tools">
+<!ENTITY tasksMenu.accesskey                            "T"> 
+<!ENTITY messengerCmd.label                             "Mail &amp; Newsgroups">
+<!ENTITY messengerCmd.accesskey                         "m">
+<!ENTITY messengerCmd.commandkey                        "1">
+<!ENTITY searchAddressesCmd.label                       "Search Addresses...">
+<!ENTITY searchAddressesCmd.accesskey                   "S">
+<!ENTITY preferencesCmd.label                           "Options...">
+<!ENTITY preferencesCmd.key                             "O">  
+<!ENTITY preferencesCmd.accesskey                       "O">
+
+<!-- Help Menu -->
+<!ENTITY helpMenu.label                                 "Help">
+<!ENTITY helpMenu.accesskey                             "H">
+<!ENTITY releaseCmd.label                               "Release Notes">
+<!ENTITY releaseCmd.accesskey                           "R"> 
+<!ENTITY hintsAndTips.label                             "&brandShortName; Help">
+<!ENTITY hintsAndTips.accesskey                         "h">
+<!ENTITY aboutCmd.label                                 "About &brandShortName;">
+<!ENTITY aboutCmd.accesskey                             "A"> 
 
 <!-- Toolbar items -->  
 <!ENTITY newcardButton.label                            "New Card">  
@@ -93,6 +158,78 @@ Rights Reserved.
 <!ENTITY stopButton.label                               ".Stop">  
 <!ENTITY searchButton.label                             ".Search">  
 <!ENTITY showNames.label                                "Show names containing:">  
+
+<!-- Dir Tree header -->
+<!ENTITY dirTreeHeader.label                            "Address Books">
+
+<!-- Search Bar -->
+<!ENTITY SearchNameOrEmail.label                        "Name or Email contains:">
+<!ENTITY SearchNameOrEmail.accesskey                    "N">
+<!ENTITY advancedButton.label                           "Advanced...">
+<!ENTITY advancedButton.accesskey                       "A">
+<!ENTITY clearButton.label                              "Clear">
+<!ENTITY clearButton.accesskey                          "C">
+
+<!-- Results pane -->
+<!ENTITY GeneratedName.label                            "Name">
+<!ENTITY GeneratedName.accesskey                        "N">
+<!ENTITY PrimaryEmail.label                             "Email">
+<!ENTITY PrimaryEmail.accesskey                         "E">
+<!ENTITY Company.label                                  "Company">
+<!ENTITY Company.accesskey                              "C">
+<!ENTITY _PhoneticName.label                            "Phonetic Name">
+<!ENTITY _PhoneticName.accesskey                        "O">
+<!ENTITY NickName.label                                 "Nickname">
+<!ENTITY NickName.accesskey                             "i">
+<!ENTITY SecondEmail.label                              "Additional Email">
+<!ENTITY SecondEmail.accesskey                          "l">
+<!ENTITY Department.label                               "Department">
+<!ENTITY Department.accesskey                           "r">
+<!ENTITY JobTitle.label                                 "Title">
+<!ENTITY JobTitle.accesskey                             "T">
+<!ENTITY CellularNumber.label                           "Mobile">
+<!ENTITY CellularNumber.accesskey                       "M">
+<!ENTITY PagerNumber.label                              "Pager">
+<!ENTITY PagerNumber.accesskey                          "P">
+<!ENTITY FaxNumber.label                                "Fax">
+<!ENTITY FaxNumber.accesskey                            "F">
+<!ENTITY HomePhone.label                                "Home Phone">
+<!ENTITY HomePhone.accesskey                            "H">
+<!ENTITY WorkPhone.label                                "Work Phone">
+<!ENTITY WorkPhone.accesskey                            "W">
+<!ENTITY ScreenName.label                               "Screen Name">
+<!ENTITY ScreenName.accesskey                           "S">
+<!ENTITY sortAscending.label                            "Ascending">
+<!ENTITY sortAscending.accesskey                        "A">
+<!ENTITY sortDescending.label                           "Descending">
+<!ENTITY sortDescending.accesskey                       "D">
+
+<!-- Results pane context menu -->
+<!ENTITY composeEmail.label                             "Compose Email To">
+<!ENTITY composeEmail.accesskey                         "C">
+<!ENTITY deleteAddrBookCard.label                       "Delete">
+<!ENTITY deleteAddrBookCard.accesskey                   "D">
+<!ENTITY newAddrBookCard.label                          "New Card...">
+<!ENTITY newAddrBookCard.accesskey                      "N">
+<!ENTITY newAddrBookMailingList.label                   "New Mailing List...">
+<!ENTITY newAddrBookMailingList.accesskey               "M">
+<!ENTITY addrBookCardProperties.label                   "Properties">
+<!ENTITY addrBookCardProperties.accesskey               "P">
+
+<!-- Card view -->
+<!-- Box Headings -->
+<!ENTITY contact.heading                                "Contact">
+<!ENTITY home.heading                                   "Home">
+<!ENTITY other.heading                                  "Other">
+<!ENTITY phone.heading                                  "Phone">
+<!ENTITY work.heading                                   "Work">
+<!-- Special Box Headings, for mailing lists -->
+<!ENTITY description.heading                            "Description">
+<!ENTITY addresses.heading                              "Addresses">
+<!-- For Map It! -->
+<!ENTITY mapItButton.label                              "Get Map">
+<!ENTITY mapIt.tooltip                                  "Display a map of this address from the Web">
+
 
 <!-- Tooltips -->
 <!ENTITY addressbookToolbar.tooltip                     "Address Book Toolbar">
@@ -114,5 +251,3 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (hideSwapFnLnUI) : DONT_TRANSLATE -->
 <!-- Swap FN/LN UI  Set to "false" to show swap fn/ln UI -->
 <!ENTITY  hideSwapFnLnUI "true">
-
-<!ENTITY dirTreeHeader.label               "Address Books"> 

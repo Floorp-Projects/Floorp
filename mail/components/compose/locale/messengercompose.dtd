@@ -98,8 +98,8 @@
 <!-- View menu items -->
 <!ENTITY viewMenu.label "View"> 
 <!ENTITY viewMenu.accesskey "v">
-<!ENTITY viewToolbarsMenu.label "Toolbars"> 
-<!ENTITY viewToolbarsMenu.accesskey "T"> 
+<!ENTITY viewToolbarsMenuNew.label "Toolbars"> 
+<!ENTITY viewToolbarsMenuNew.accesskey "T"> 
 <!ENTITY showComposeToolbarCmd.label "Mail Toolbar">
 <!ENTITY showComposeToolbarCmd.accesskey "o">
 <!ENTITY showFormatToolbarCmd.label "Formatting Toolbar">
