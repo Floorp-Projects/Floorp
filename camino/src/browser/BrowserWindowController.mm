@@ -100,15 +100,32 @@ static NSArray* sToolbarDefaults = nil;
     mModalSession = nil;
 }
 
--(void)windowDidBecomeKey: (NSNotification*)aNotification
+- (void)windowDidBecomeKey:(NSNotification *)notification
 {
-  // May become necessary later.
+  BOOL windowWithMultipleTabs = ([mTabBrowser numberOfTabViewItems] > 1);
+  // When this window gets focus, fix the Close Window modifiers depending
+  // on whether we have multiple tabs
+  [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
+  [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
 }
 
--(void)windowDidResignKey: (NSNotification*)aNotification
+- (void)windowDidResignKey:(NSNotification *)notification
 {
-  // May be needed later.
+  // when we are no longer the key window, set the Close shortcut back
+  // to Command-W, for other windows.
+  [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:NO];
+  [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:NO];
 }
+
+/*
+- (void)windowDidBecomeMain:(NSNotification *)notification
+{
+}
+
+- (void)windowDidResignMain:(NSNotification *)notification
+{
+}
+*/
 
 -(void)mouseMoved:(NSEvent*)aEvent
 {
@@ -500,6 +517,7 @@ static NSArray* sToolbarDefaults = nil;
         [menuFormRep setTitle:[toolbarItem label]];
         
         [toolbarItem setMenuFormRepresentation:menuFormRep];
+
         mLocationToolbarItem = toolbarItem;
 
     } else if ( [itemIdent isEqual:PrintToolbarItemIdentifier] ) {
@@ -521,6 +539,7 @@ static NSArray* sToolbarDefaults = nil;
 {
   // Check the action and see if it matches.
   SEL action = [theItem action];
+  //NSLog(@"Validating toolbar item %@ with selector %s", [theItem label], action);
   if (action == @selector(back:))
     return [[mBrowserView getBrowserView] canGoBack];
   else if (action == @selector(forward:))
@@ -931,6 +950,11 @@ static NSArray* sToolbarDefaults = nil;
     // Make the new view the primary content area.
     [mBrowserView makePrimaryBrowserView: mURLBar status: mStatus
         progress: mProgress windowController: self];
+}
+
+- (void)tabViewDidChangeNumberOfTabViewItems:(NSTabView *)aTabView
+{
+  [[NSApp delegate] fixCloseMenuItemKeyEquivalents];
 }
 
 -(id)getTabBrowser
