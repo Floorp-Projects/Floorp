@@ -1605,6 +1605,13 @@ dnl Check for GLib and libIDL.
 dnl ========================================================
 SKIP_IDL_CHECK="no"
 
+dnl = Allow users to disable libIDL checking for standalone modules
+AC_ARG_WITH(libIDL,
+[  --disable-libIDL        Disable checking of libIDL],
+[  if test "$withval" = "no"; then
+	SKIP_IDL_CHECK="yes"
+   fi ])
+
 dnl RedHat 6.0 (Hedwig) ships with orbit which includes libIDL
 if test -f /etc/redhat-release
 then
