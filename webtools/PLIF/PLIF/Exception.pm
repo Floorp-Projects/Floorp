@@ -40,7 +40,7 @@ require Exporter;
 #     package MemoryException; @ISA = qw(PLIF::Exception);
 #     package IOException; @ISA = qw(PLIF::Exception);
 #
-# You can then use them as follows:
+# You can then use them as follows (the order must be as follows):
 #
 #     try {
 #         # some code that might raise an exception:
@@ -57,8 +57,10 @@ require Exporter;
 #     } except {
 #         my($exception) = @_;
 #         # catch all, called if the exception wasn't handled
+#     } otherwise {
+#         # only executed if no exception was raised
 #     } finally {
-#         # always called after try block
+#         # always called after try block and any handlers
 #     };
 
 
@@ -173,6 +175,23 @@ sub except(&;$) {
     return $continuation;
 }
 
+sub otherwise(&;$) {
+    my($handler, $continuation) = @_;
+    if (defined($continuation) and
+        (not ref($continuation) or
+         not $continuation->isa('PLIF::Exception::Internal::Continuation') or
+         defined($continuation->{'otherwise'}) or
+         defined($continuation->{'except'}) or
+         scalar(@{$continuation->{'handlers'}}))) {
+        syntax 'Syntax error after "otherwise" clause', caller;
+    }
+    if (not defined($continuation)) {
+        $continuation = PLIF::Exception::Internal::Continuation->create(caller);
+    }
+    $continuation->{'otherwise'} = $handler;
+    return $continuation;
+}
+
 sub finally(&;@) {
     my($handler, @continuation) = @_;
     syntax 'Missing semicolon after "finally" clause', caller if (scalar(@continuation));
@@ -197,10 +216,25 @@ sub stringify {
 
 package PLIF::Exception::Internal::Continuation;
 
+sub wrap($) {
+    my($exception) = @_;
+    if ($exception ne '') {
+        if (not ref($exception) or
+            not $exception->isa('PLIF::Exception')) {
+            # an unexpected exception
+            $exception = PLIF::Exception->create('message' => $exception);
+        }
+    } else {
+        $exception = undef;
+    }
+    return $exception;
+}
+
 sub create {
     return bless {
         'handlers' => [],
         'except' => undef,
+        'otherwise' => undef,
         'finally' => undef,
         'filename' => $_[2],
         'line' => $_[3],
@@ -212,30 +246,15 @@ sub handle {
     my $self = shift;
     my($exception) = @_;
     $self->{'resolved'} = 1;
-    if ($exception ne '') {
-        if (not ref($exception) or
-            not $exception->isa('PLIF::Exception')) {
-            # an unexpected exception
-            $exception = PLIF::Exception->create('message' => $exception);
-        }
-    } else {
-        $exception = undef;
-    }
+    $exception = wrap($exception);
     my $reraise = undef;
     handler: while (1) {
         if (defined($exception)) {
             foreach my $handler (@{$self->{'handlers'}}) {
                 if ($exception->isa($handler->[0])) {
                     my $result = eval { &{$handler->[1]}($exception) };
-                    if ($@) {
-                        if (not ref($@) or
-                            not $@->isa('PLIF::Exception')) {
-                            # an unexpected exception
-                            $@ = PLIF::Exception->create('message' => $@);
-                        }
-                        $reraise = $@;
-                        last handler;
-                    } elsif (not defined($result) or
+                    $reraise = wrap($@);
+                    if (not defined($result) or # $result is not defined if $reraise is now defined
                         not ref($result) or
                         not $result->isa('PLIF::Exception::Internal::Unhandled')) {
                         last handler;
@@ -246,17 +265,15 @@ sub handle {
             }
             if (defined($self->{'except'})) {
                 my $result = eval { &{$self->{'except'}}($exception) };
-                if ($@) {
-                    if (not ref($@) or
-                        not $@->isa('PLIF::Exception')) {
-                        # an unexpected exception
-                        $@ = PLIF::Exception->create('message' => $@);
-                    }
-                    $reraise = $@;
-                }
+                $reraise = wrap($@);
             } else {
                 # unhandled exception
                 $reraise = $exception;
+            }
+        } else {
+            if (defined($self->{'otherwise'})) {
+                my $result = eval { &{$self->{'otherwise'}}($exception) };
+                $reraise = wrap($@);
             }
         }
         last;
