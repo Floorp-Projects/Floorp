@@ -88,23 +88,64 @@ nsXPCWrappedNativeScope::~nsXPCWrappedNativeScope()
     NS_IF_RELEASE(mComponents);
 }        
 
+
+static 
+nsXPCWrappedNativeScope* 
+GetScopeOfObject(JSContext* cx, JSObject* obj)
+{
+    JSClass* clazz;
+    nsISupports* supports;
+
+#ifdef JS_THREADSAFE
+    clazz = JS_GetClass(cx, obj);
+#else
+    clazz = JS_GetClass(obj);
+#endif
+
+    if(!clazz ||
+       !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
+       !(clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) ||
+       !(supports = (nsISupports*) JS_GetPrivate(cx, obj)))
+        return nsnull;
+
+    nsCOMPtr<nsIXPConnectWrappedNative> iface = do_QueryInterface(supports);
+    if(iface)
+    {
+        // We can fairly safely assume that this is really one of our
+        // nsXPConnectWrappedNative objects. No other component in our
+        // universe should be creating objects that implement the
+        // nsIXPConnectWrappedNative interface!
+        return ((nsXPCWrappedNative*)supports)->GetScope();
+    }
+    return nsnull;
+}
+
+
 // static 
 nsXPCWrappedNativeScope* 
 nsXPCWrappedNativeScope::FindInJSObjectScope(XPCContext* xpcc, JSObject* obj)
 {
-    jsval prop;
-    JSObject* compobj;
-    JSClass* clazz;
     JSContext* cx = xpcc->GetJSContext();
-    const char* name = xpcc->GetRuntime()->GetStringName(XPCJSRuntime::IDX_COMPONENTS);
-    nsISupports* supports;
-    nsresult rv;
- 
+    nsXPCWrappedNativeScope* scope;
+
     if(!obj)
         return nsnull;
     
-    // XXX this parent walk is probably unnecessary
+    // If this object is itself a wrapped native then we can get the 
+    // scope directly. 
+    
+    scope = GetScopeOfObject(cx, obj);
+    if(scope)
+        return scope;
+    
+    // Else, we will have to lookup the 'Components' object and ask it for
+    // the scope. 
+
+    jsval prop;
+    JSObject* compobj;
     JSObject* parent;
+    const char* name = xpcc->GetRuntime()->GetStringName(XPCJSRuntime::IDX_COMPONENTS);
+
     while(nsnull != (parent = JS_GetParent(cx, obj)))
         obj = parent;
 
@@ -116,30 +157,7 @@ nsXPCWrappedNativeScope::FindInJSObjectScope(XPCContext* xpcc, JSObject* obj)
         return nsnull;
     }
 
-#ifdef JS_THREADSAFE
-    clazz = JS_GetClass(cx, compobj);
-#else
-    clazz = JS_GetClass(compobj);
-#endif
-
-    if(!clazz ||
-       !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
-       !(clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) ||
-       !(supports = (nsISupports*) JS_GetPrivate(cx, compobj)))
-        return nsnull;
-
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper_iface;
-    rv = supports->QueryInterface(NS_GET_IID(nsIXPConnectWrappedNative),
-                                  getter_AddRefs(wrapper_iface));
-    if(NS_FAILED(rv))
-        return nsnull;
-
-    // We can fairly safely assume that this is really one of our
-    // nsXPConnectWrappedNative objects. No other component in our
-    // universe should be creating objects that implement the
-    // nsIXPConnectWrappedNative interface!
-
-    return ((nsXPCWrappedNative*)supports)->GetScope();
+    return GetScopeOfObject(cx, compobj);
 }        
 
 JS_STATIC_DLL_CALLBACK(intN)
@@ -166,10 +184,10 @@ nsXPCWrappedNativeScope::SystemIsBeingShutDown()
     }
 
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        if(liveWrapperCount)
-            printf("deleting nsXPConnect  with %d live nsXPCWrappedNatives\n", liveWrapperCount);
-        if(count)
-            printf("deleting nsXPConnect  with %d live nsXPCWrappedNativeScopes\n", count);
+    if(liveWrapperCount)
+        printf("deleting nsXPConnect  with %d live nsXPCWrappedNatives\n", liveWrapperCount);
+    if(count)
+        printf("deleting nsXPConnect  with %d live nsXPCWrappedNativeScopes\n", count);
 #endif
 }
 

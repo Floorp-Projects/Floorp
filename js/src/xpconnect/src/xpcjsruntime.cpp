@@ -51,6 +51,22 @@ const char* XPCJSRuntime::mStrings[] = {
 
 /***************************************************************************/
 
+#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
+JS_STATIC_DLL_CALLBACK(JSHashNumber)
+hash_root(const void *key)
+{
+    return ((JSHashNumber) key) >> 2; /* help lame MSVC1.5 on Win16 */
+}
+
+JS_STATIC_DLL_CALLBACK(intN)
+DEBUG_WrapperChecker(JSHashEntry *he, intN i, void *arg)
+{
+    NS_ASSERTION(!((nsXPCWrappedNative*)he->value)->IsValid(), "found a 'valid' wrappper!");
+    ++ *((int*)arg);
+    return HT_ENUMERATE_NEXT;
+}
+#endif
+
 XPCJSRuntime::~XPCJSRuntime()
 {
 #ifdef XPC_DUMP_AT_SHUTDOWN
@@ -106,6 +122,15 @@ XPCJSRuntime::~XPCJSRuntime()
     if(mMapLock)
         PR_DestroyLock(mMapLock);
     NS_IF_RELEASE(mJSRuntimeService);
+
+#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
+    int LiveWrapperCount = 0;
+    JS_HashTableEnumerateEntries(DEBUG_WrappedNativeHashtable, 
+                                 DEBUG_WrapperChecker, &LiveWrapperCount);
+    if(LiveWrapperCount)
+        printf("deleting XPCJSRuntime with %d live nsXPCWrappedNative (found in wrapper check)\n", (int)LiveWrapperCount);        
+    JS_HashTableDestroy(DEBUG_WrappedNativeHashtable);
+#endif
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
@@ -119,6 +144,14 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
    mWrappedNativeClassMap(IID2WrappedNativeClassMap::newMap(XPC_NATIVE_CLASS_MAP_SIZE)),
    mMapLock(PR_NewLock())
 {
+
+#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
+   DEBUG_WrappedNativeHashtable = JS_NewHashTable(128, hash_root,
+                                                  JS_CompareValues, 
+                                                  JS_CompareValues,
+                                                  nsnull, nsnull);
+#endif
+
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = 0;
 

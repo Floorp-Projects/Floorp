@@ -99,6 +99,7 @@
 
 #ifdef DEBUG_jband
 #define XPC_DUMP_AT_SHUTDOWN 1
+#define XPC_CHECK_WRAPPERS_AT_SHUTDOWN 1
 #endif
 
 /***************************************************************************/
@@ -240,6 +241,18 @@ public:
     void DebugDump(PRInt16 depth);
 
     ~XPCJSRuntime();
+
+#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
+   void DEBUG_AddWrappedNative(nsIXPConnectWrappedNative* wrapper)
+        {JS_HashTableAdd(DEBUG_WrappedNativeHashtable, wrapper, wrapper);}
+
+   void DEBUG_RemoveWrappedNative(nsIXPConnectWrappedNative* wrapper)
+        {JS_HashTableRemove(DEBUG_WrappedNativeHashtable, wrapper);}
+
+   private:                            
+   JSHashTable *DEBUG_WrappedNativeHashtable;
+   public:
+#endif
 
 private:
     XPCJSRuntime(); // no implementation

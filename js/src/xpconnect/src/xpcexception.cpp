@@ -518,8 +518,8 @@ xpcJSErrorReport::ToString(char **_retval)
     static const char format2[] =
         "[%s: \"%s\"]";
 
-    static const char error[]   = "JS Error";
-    static const char warning[] = "JS Warning";
+    static const char error[]   = "JavaScript Error";
+    static const char warning[] = "JavaScript Warning";
 
     const char * severity = !(mFlags & JSREPORT_WARNING) ? error : warning;
 
