@@ -1,6 +1,7 @@
 browser.jar:
 *   content/browser/pref/nsPrefWindow.js                   (content/nsPrefWindow.js)
 *   content/browser/pref/pref.xul                          (content/pref.xul)
+*   content/browser/pref/pref-advanced.js                  (content/pref-advanced.js)
 *   content/browser/pref/pref-advanced.xul                 (content/pref-advanced.xul)
 *   content/browser/pref/pref-advancedscripts.xul          (content/pref-advancedscripts.xul)
 *   content/browser/pref/pref-connection.js                (content/pref-connection.js)

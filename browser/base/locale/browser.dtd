@@ -115,7 +115,7 @@
 <!ENTITY downloads.tooltip            "Display the progress of ongoing downloads">
 <!ENTITY downloads.accesskey          "D">
 <!ENTITY downloads.commandkey         "y">
-<!ENTITY extensions.label             "Extensions">
+<!ENTITY extensions.label             "Extensions - TESTING ONLY">
 <!ENTITY extensions.tooltip           "Show and Manage installed Extensions">
 <!ENTITY extensions.accesskey         "E">
 <!ENTITY themes.label                 "Themes">

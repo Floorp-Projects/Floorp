@@ -17,146 +17,14 @@
       onload="parent.initPanel('chrome://browser/content/pref/pref-advanced.xul');"
       headertitle="&lHeader;">
 
-  <script type="application/x-javascript">
-    <![CDATA[
-      var _elementIDs = ["moveSystemCaret", "hideTabBar",
-                         "loadInBackground", "useAutoScrolling",
-                         "useSmoothScrolling", "enableAutoImageResizing",
-                         "useSSL2", "useSSL3", "useTLS1", "useTypeAheadFind",
-                         "linksOnlyTypeAheadFind"
-#ifdef PROVISIONAL_SECURITY_UI
-                         , "certSelection", "securityOCSPEnabled", "serviceURL", "signingCA"
-#endif
-                         ];
-
-#ifdef PROVISIONAL_SECURITY_UI
-      const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
-      const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
-      const nsIOCSPResponder = Components.interfaces.nsIOCSPResponder;
-      const nsISupportsArray = Components.interfaces.nsISupportsArray;
-
-      var certdb;
-      var ocspResponders;
-#endif
-      function Startup() {
-        updatePrefs();
-#ifdef PROVISIONAL_SECURITY_UI
-        var ocspEntry;
-        var i;
-
-        certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-        ocspResponders = certdb.getOCSPResponders();
-
-        var signersMenu = document.getElementById("signingCA");
-        var signersURL = document.getElementById("serviceURL");
-        for (i=0; i<ocspResponders.length; i++) {
-          ocspEntry = ocspResponders.queryElementAt(i, nsIOCSPResponder);
-          var menuItemNode = document.createElement("menuitem");
-          menuItemNode.setAttribute("value", ocspEntry.responseSigner);
-          menuItemNode.setAttribute("label", ocspEntry.responseSigner);
-          signersMenu.firstChild.appendChild(menuItemNode);
-        }
-
-        doSecurityEnabling();
-        
-        // XXXben menulists suck, see explanation in pref-privacy.js
-        // style resolution problem inside scrollable areas. 
-        var scb = document.getElementById("signingCABox");
-        var sca = document.getElementById("signingCA");
-        sca.removeAttribute("hidden");
-        sca.parentNode.removeChild(sca);
-        scb.appendChild(sca);
-#endif
-      }
-
-      function updatePrefs() {
-        var enabled = document.getElementById("useTypeAheadFind").checked;
-        var linksOnly = document.getElementById("linksOnlyTypeAheadFind");
-        linksOnly.disabled = !enabled;
-      }
-
-#ifdef PROVISIONAL_SECURITY_UI
-      function doSecurityEnabling()
-      {
-        var signersMenu = document.getElementById("signingCA");
-        var signersURL = document.getElementById("serviceURL");
-        var radiogroup = document.getElementById("securityOCSPEnabled");
-        
-        switch ( radiogroup.value ) {
-        case "0":
-        case "1":
-          signersMenu.setAttribute("disabled", true);
-          signersURL.setAttribute("disabled", true);
-          break;
-        case "2":
-        default:
-          signersMenu.removeAttribute("disabled");
-          signersURL.removeAttribute("disabled");
-        }
-      }
-
-      function changeURL()
-      {
-        var signersMenu = document.getElementById("signingCA");
-        var signersURL = document.getElementById("serviceURL");
-        var CA = signersMenu.getAttribute("value");
-        var i;
-        var ocspEntry;
-
-        for (i=0; i < ocspResponders.length; i++) {
-          ocspEntry = ocspResponders.queryElementAt(i, nsIOCSPResponder);
-          if (CA == ocspEntry.responseSigner) {
-            signersURL.setAttribute("value", ocspEntry.serviceURL);
-            break;
-          }
-        }
-      }
-
-      function openCrlManager()
-      {
-          window.open('chrome://pippki/content/crlManager.xul',  "",
-                      'chrome,width=500,height=400,resizable=1');
-      }
-
-      function openCertManager()
-      {
-        //check for an existing certManager window and focus it; it's not application modal
-        const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
-        const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
-        const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
-        var lastCertManager = kWindowMediator.getMostRecentWindow("mozilla:certmanager");
-        if (lastCertManager)
-          lastCertManager.focus();
-        else {
-          window.open('chrome://pippki/content/certManager.xul',  "",
-                      'chrome,height=400,centerscreen,resizable=yes,dialog=no');
-        }
-      }
-
-      function openDeviceManager()
-      {
-        //check for an existing deviceManger window and focus it; it's not application modal
-        const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
-        const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
-        const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
-        var lastCertManager = kWindowMediator.getMostRecentWindow("mozilla:devicemanager");
-        if (lastCertManager)
-          lastCertManager.focus();
-        else {
-          window.open('chrome://pippki/content/device_manager.xul',  "devmgr",
-                      'chrome,height=400,centerscreen,resizable=yes,dialog=no');
-        }
-      }
-#endif
-    ]]>
-  </script>
+  <script type="application/x-javascript" src="chrome://browser/content/pref/pref-advanced.js"/>
 
   <vbox class="listBox settingsBox" flex="1" style="overflow: auto;">
     <expander id="accessibility" label="&accessibility.label;" open="true" persist="open" clearhidden="true">
       <checkbox id="moveSystemCaret" label="&moveSystemCaret.label;"
                 prefstring="accessibility.browsewithcaret"/>
       <checkbox id="useTypeAheadFind" label="&useTypeAheadFind.label;"
-		prefstring="accessibility.typeaheadfind" oncommand="updatePrefs()"/>
+                prefstring="accessibility.typeaheadfind" oncommand="updatePrefs()"/>
       <checkbox class="indent" id="linksOnlyTypeAheadFind" label="&linksOnlyTypeAheadFind.label;"
                 prefstring="accessibility.typeaheadfind.linksonly"/>
     </expander>
@@ -174,6 +42,31 @@
       <checkbox id="enableAutoImageResizing" label="&enableAutoImageResizing.label;"
                 prefstring="browser.enable_automatic_image_resizing"/>
     </expander>
+
+    <expander id="softwareupdate" label="&softwareupdate.label;" 
+              open="true" persist="open" clearhidden="true" align="left">
+      <label>&softwareupdateinfo.label;</label>
+      <vbox class="indent" align="left">
+        <checkbox id="enableSmartUpdate"
+                  label="&enableSmartUpdate.label;" accesskey="&enableSmartUpdate.accesskey;"
+                  prefstring="update.app.enabled"/>
+        <checkbox id="enableExtensionUpdate"
+                  label="&enableExtensionUpdate.label;" accesskey="&enableExtensionUpdate.accesskey;"
+                  prefstring="update.extensions.enabled"/>      
+        <checkbox id="enableAutoInstall" class="indent"
+                  label="&enableAutoInstall.label;" accesskey="&enableAutoInstall.accesskey;"
+                  prefstring="update.extensions.autoUpdate"/>
+        <separator class="thin"/>
+        <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                oncommand="checkForUpdates();"/>
+      </vbox>
+      <separator class="thin"/>
+      <!-- XXXben - this will move to "Web Features" once I reorg Options again -->
+      <checkbox id="enableSoftwareInstall" label="&enableSoftwareUpdate.label;"
+                accesskey="&enableSoftwareUpdate.accesskey;"
+                prefstring="xpinstall.enabled"/>
+    </expander>
+
     <expander id="security" label="&security.label;" open="true" persist="open" clearhidden="true">
       <checkbox id="useSSL2" label="&useSSL2.label;"
                 prefstring="security.enable_ssl2"/>
@@ -276,6 +169,5 @@
 
 #endif
   </vbox>
-
 </page>
 
