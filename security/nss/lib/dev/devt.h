@@ -35,7 +35,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.13 $ $Date: 2002/03/07 23:21:33 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.14 $ $Date: 2002/04/04 20:00:22 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -72,60 +72,21 @@ PR_BEGIN_EXTERN_C
 
 typedef struct nssSessionStr nssSession;
 
-/* The list of boolean flags used to describe properties of a
- * module.
- */
-#define NSSMODULE_FLAGS_NOT_THREADSAFE 0x0001 /* isThreadSafe */
-
-struct NSSModuleStr {
-    NSSArena    *arena;
-    PRInt32      refCount;
-    NSSUTF8     *name;
-    NSSUTF8     *libraryPath;
-    PRLibrary   *library;
-    void        *epv;
-    NSSSlot    **slots;
-    PRUint32     numSlots;
-    PRUint32     flags;
-};
-
-/* The list of boolean flags used to describe properties of a
- * slot.
- */
-#define NSSSLOT_FLAGS_LOGIN_REQUIRED  0x0001 /* needLogin */
-/*#define NSSSLOT_FLAGS_READONLY        0x0002*/ /* readOnly */
-
-/* this should track global and per-transaction login information */
-struct nssSlotAuthInfoStr
+/* XXX until NSSTokenStr is moved */
+struct nssDeviceBaseStr
 {
-    PRTime  lastLogin;
-    PRInt32 askPasswordTimeout;
+  NSSArena *arena;
+  PZLock *lock;
+  PRInt32 refCount;
+  NSSUTF8 *name;
+  PRUint32 flags;
 };
 
-struct NSSSlotStr
-{
-    NSSArena *arena;
-    PRInt32 refCount;
-    NSSModule *module; /* Parent */
-    NSSToken *token;  /* Child (or peer, if you will) */
-    NSSUTF8 *name;
-    CK_SLOT_ID slotID;
-    void *epv;
-    CK_FLAGS ckFlags; /* from CK_SLOT_INFO.flags */
-    PRUint32 flags;
-    struct nssSlotAuthInfoStr authInfo;
-    NSSTrustDomain *trustDomain;
-#ifdef NSS_3_4_CODE
-    PK11SlotInfo *pk11slot;
-#endif
-};
-
+/* XXX until devobject.c goes away */
 struct NSSTokenStr
 {
-    NSSArena *arena;
-    PRInt32 refCount;
+    struct nssDeviceBaseStr base;
     NSSSlot *slot;  /* Parent (or peer, if you will) */
-    NSSUTF8 *name;
     CK_FLAGS ckFlags; /* from CK_TOKEN_INFO.flags */
     PRUint32 flags;
     void *epv;
@@ -141,12 +102,41 @@ struct NSSTokenStr
 #endif
 };
 
+typedef enum {
+  nssSlotAskPasswordTimes_FirstTime = 0,
+  nssSlotAskPasswordTimes_EveryTime = 1,
+  nssSlotAskPasswordTimes_Timeout = 2
+} 
+nssSlotAskPasswordTimes;
+
+struct nssSlotAuthInfoStr
+{
+  PRTime lastLogin;
+  nssSlotAskPasswordTimes askTimes;
+  PRIntervalTime askPasswordTimeout;
+};
+
+struct NSSSlotStr
+{
+  struct nssDeviceBaseStr base;
+  NSSModule *module; /* Parent */
+  NSSToken *token;  /* Peer */
+  CK_SLOT_ID slotID;
+  CK_FLAGS ckFlags; /* from CK_SLOT_INFO.flags */
+  struct nssSlotAuthInfoStr authInfo;
+  PRIntervalTime lastTokenPing;
+#ifdef NSS_3_4_CODE
+  void *epv;
+  PK11SlotInfo *pk11slot;
+#endif
+};
+
 struct nssSessionStr
 {
-    PZLock *lock;
-    CK_SESSION_HANDLE handle;
-    NSSSlot *slot;
-    PRBool isRW;
+  PZLock *lock;
+  CK_SESSION_HANDLE handle;
+  NSSSlot *slot;
+  PRBool isRW;
 };
 
 typedef enum {
@@ -154,17 +144,14 @@ typedef enum {
     NSSCertificateType_PKIX = 1
 } NSSCertificateType;
 
-#ifdef nodef
 typedef enum {
     nssTrustLevel_Unknown = 0,
     nssTrustLevel_NotTrusted = 1,
     nssTrustLevel_Trusted = 2,
     nssTrustLevel_TrustedDelegator = 3,
-    nssTrustLevel_Valid = 4
+    nssTrustLevel_Valid = 4,
+    nssTrustLevel_ValidDelegator = 5
 } nssTrustLevel;
-#else
-typedef CK_ULONG nssTrustLevel; /* for now */
-#endif
 
 typedef struct nssCryptokiInstanceStr nssCryptokiInstance;
 
@@ -175,6 +162,8 @@ struct nssCryptokiInstanceStr
     PRBool isTokenObject;
     NSSUTF8 *label;
 };
+
+typedef struct nssCryptokiInstanceStr nssCryptokiObject;
 
 typedef struct nssTokenCertSearchStr nssTokenCertSearch;
 
@@ -194,6 +183,9 @@ struct nssTokenCertSearchStr
      *       (traversal) 
      */
 };
+
+struct nssSlotListStr;
+typedef struct nssSlotListStr nssSlotList;
 
 struct NSSAlgorithmAndParametersStr
 {

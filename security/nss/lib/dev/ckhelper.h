@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.13 $ $Date: 2002/01/23 01:20:32 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.14 $ $Date: 2002/04/04 20:00:21 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -49,10 +49,6 @@ static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 
 #endif /* NSSCKT_H */
 
 PR_BEGIN_EXTERN_C
-
-/* Shortcut to cryptoki API functions. */
-#define CKAPI(x) \
-    ((CK_FUNCTION_LIST_PTR)((x)->epv))
 
 /* Some globals to keep from constantly redeclaring common cryptoki
  * attribute types on the stack.

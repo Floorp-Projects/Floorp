@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.46 $ $Date: 2002/04/03 19:22:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.47 $ $Date: 2002/04/04 20:00:28 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -254,7 +254,7 @@ nssToken_LoadCerts(NSSToken *token)
 	search.cached = NULL;
 	search.searchType = nssTokenSearchType_TokenOnly;
 	if (!token->certList) {
-	    token->certList = nssList_Create(token->arena, PR_FALSE);
+	    token->certList = nssList_Create(token->base.arena, PR_FALSE);
 	    if (!token->certList) {
 		return PR_FAILURE;
 	    }

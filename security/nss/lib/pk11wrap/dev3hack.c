@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.9 $ $Date: 2002/03/14 04:12:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.10 $ $Date: 2002/04/04 20:00:26 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -121,13 +121,12 @@ nssSlot_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     if (!rvSlot) {
 	return NULL;
     }
-    rvSlot->refCount = 1;
+    rvSlot->base.refCount = 1;
     rvSlot->pk11slot = nss3slot;
     rvSlot->epv = nss3slot->functionList;
     rvSlot->slotID = nss3slot->slotID;
-    rvSlot->trustDomain = td;
     /* Grab the slot name from the PKCS#11 fixed-length buffer */
-    rvSlot->name = nssUTF8_Duplicate(nss3slot->slot_name,td->arena);
+    rvSlot->base.name = nssUTF8_Duplicate(nss3slot->slot_name,td->arena);
     return rvSlot;
 }
 
@@ -139,7 +138,7 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     if (!rvToken) {
 	return NULL;
     }
-    rvToken->refCount = 1;
+    rvToken->base.refCount = 1;
     rvToken->pk11slot = nss3slot;
     rvToken->epv = nss3slot->functionList;
     rvToken->defaultSession = nssSession_ImportNSS3Session(td->arena,
@@ -148,11 +147,11 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
                                                        nss3slot->defRWSession);
     rvToken->trustDomain = td;
     /* Grab the token name from the PKCS#11 fixed-length buffer */
-    rvToken->name = nssUTF8_Duplicate(nss3slot->token_name,td->arena);
+    rvToken->base.name = nssUTF8_Duplicate(nss3slot->token_name,td->arena);
     rvToken->slot = nssSlot_CreateFromPK11SlotInfo(td, nss3slot);
     rvToken->slot->token = rvToken;
     rvToken->defaultSession->slot = rvToken->slot;
-    rvToken->arena = td->arena;
+    rvToken->base.arena = td->arena;
     return rvToken;
 }
 
@@ -162,7 +161,7 @@ nssToken_UpdateName(NSSToken *token)
     if (!token) {
 	return;
     }
-    token->name = nssUTF8_Duplicate(token->pk11slot->token_name,token->arena);
+    token->base.name = nssUTF8_Duplicate(token->pk11slot->token_name,token->base.arena);
 }
 
 NSS_IMPLEMENT PRBool
@@ -183,7 +182,7 @@ nssToken_Refresh(NSSToken *token)
 	return PR_SUCCESS;
     }
     nss3slot = token->pk11slot;
-    token->defaultSession = nssSession_ImportNSS3Session(token->slot->arena,
+    token->defaultSession = nssSession_ImportNSS3Session(token->slot->base.arena,
                                                        nss3slot->session,
                                                        nss3slot->sessionLock,
                                                        nss3slot->defRWSession);
