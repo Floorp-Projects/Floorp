@@ -40,7 +40,7 @@ CPPSRCS		= \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-CPPSRCS		+= convperf.cpp TestUConv.cpp
+CPPSRCS		+= convperf.cpp
 endif
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
