@@ -2178,7 +2178,7 @@ XULDocumentImpl::AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder)
         return rv;
     }
 
-    return mBuilders->AppendElement(aBuilder) ? NS_OK : NS_ERROR_FAILURE;
+    return mBuilders->AppendElement(aBuilder);
 }
 
 NS_IMETHODIMP
