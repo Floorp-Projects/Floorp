@@ -1385,7 +1385,7 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   if (pos != kNotFound) {
     parameters.Replace(pos, port.Length(), uPort);
   }
-  pos = parameters.Find(username);
+  pos = parameters.Find(username.get());
   if (pos != kNotFound) {
     parameters.Replace(pos, username.Length(), uUsername);
   }
