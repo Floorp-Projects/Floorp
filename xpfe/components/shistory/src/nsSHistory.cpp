@@ -57,37 +57,41 @@ nsSHistory::~nsSHistory()
  * increment the index to point to the new entry
  */
 NS_IMETHODIMP
-nsSHistory::AddEntry(nsISHEntry * aSHEntry)
+nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
 {
-	nsresult rv;
+   NS_ENSURE_ARG(aSHEntry);
 
-	NS_PRECONDITION(aSHEntry != nsnull, "null ptr");
-    if (! aSHEntry)
-      return NS_ERROR_NULL_POINTER;
+   nsCOMPtr<nsISHTransaction> currentTxn;
 
-	nsCOMPtr<nsISHTransaction>  txn;
-    rv = nsComponentManager::CreateInstance(NS_SHTRANSACTION_PROGID,
-	                                      nsnull,
-										  NS_GET_IID(nsISHTransaction),
-										  getter_AddRefs(txn));
-	nsCOMPtr<nsISHTransaction> parent;
+   if(mListRoot)
+      GetTransactionAtIndex(mIndex, getter_AddRefs(currentTxn));
 
-    if (NS_SUCCEEDED(rv) && txn) {		
-		if (mListRoot) {
-           GetTransactionAtIndex(mIndex, getter_AddRefs(parent));
-		}
-		// Set the ShEntry and parent for the transaction. setting the 
-		// parent will properly set the parent child relationship
-		rv = txn->Create(aSHEntry, parent);
-		if (NS_SUCCEEDED(rv)) {
-            mLength++;
-			mIndex++;
-		    // If this is the very first transaction, initialize the list
-		    if (!mListRoot)
-			   mListRoot = txn;
-                      PrintHistory();
-		}
-	}
+   PRBool currentPersist = PR_TRUE;
+   if(currentTxn)
+      currentTxn->GetPersist(&currentPersist);
+
+   if(!currentPersist)
+      {
+      NS_ENSURE_SUCCESS(currentTxn->SetSHEntry(aSHEntry),
+         NS_ERROR_FAILURE);
+      return NS_OK;
+      }
+
+	nsCOMPtr<nsISHTransaction> txn(do_CreateInstance(NS_SHTRANSACTION_PROGID));
+   NS_ENSURE_TRUE(txn, NS_ERROR_FAILURE);
+
+   // Set the ShEntry and parent for the transaction. setting the 
+	// parent will properly set the parent child relationship
+   txn->SetPersist(aPersist);
+	NS_ENSURE_SUCCESS(txn->Create(aSHEntry, currentTxn), NS_ERROR_FAILURE);
+   
+   mLength++;
+   mIndex++;
+   // If this is the very first transaction, initialize the list
+   if(!mListRoot)
+      mListRoot = txn;
+   PrintHistory();
+
    return NS_OK;
 }
 

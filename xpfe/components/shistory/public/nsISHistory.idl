@@ -38,8 +38,12 @@ interface nsISHistory: nsISupports
 {
   /**
    * Add a new Entry to the History List
+	* @param aEntry - The entry to add
+	* @param aPersist - If true this specifies that the entry should persist
+	* in the list.  If false, this means that when new entries are added
+	* this element will not appear in the session history list.
    */
-   void  addEntry(in nsISHEntry aEntry);
+   void  addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
   /**
    * Get the size of the History list
