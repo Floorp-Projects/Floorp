@@ -70,7 +70,7 @@ nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
 
   // Java object has not been garbage collected.  Do we have an
   // associated nsJavaXPTCStub?
-  void* inst = GetMatchingXPCOMObject(mJavaEnv, javaObject);
+  void* inst = gBindings->GetXPCOMObject(mJavaEnv, javaObject);
 
   if (!inst) {
     // No XPTCStub exists, so create one
@@ -87,7 +87,7 @@ nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
     if (!xpcomStub)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(xpcomStub);
-    AddJavaXPCOMBinding(mJavaEnv, javaObject, SetAsXPTCStub(xpcomStub));
+    gBindings->AddBinding(mJavaEnv, javaObject, SetAsXPTCStub(xpcomStub));
 
     // return created stub
     *aInstancePtr = (void*) xpcomStub;
