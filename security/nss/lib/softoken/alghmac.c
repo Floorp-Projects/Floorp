@@ -61,7 +61,7 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
             unsigned int secret_len, PRBool isFIPS)
 {
     HMACContext *cx;
-    int i;
+    unsigned int i;
     unsigned char hashed_secret[SHA1_LENGTH];
 
     /* required by FIPS 198 Section 3 */

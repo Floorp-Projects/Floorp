@@ -2162,7 +2162,7 @@ PK11Slot * pk11_NewSlotFromID(CK_SLOT_ID slotID, int moduleIndex)
 CK_RV
 PK11_SlotInit(char *configdir,pk11_token_parameters *params, int moduleIndex)
 {
-    int i;
+    unsigned int i;
     CK_SLOT_ID slotID = params->slotID;
     PK11Slot *slot = pk11_NewSlotFromID(slotID, moduleIndex);
     PRBool needLogin = !params->noKeyDB;
@@ -2290,7 +2290,7 @@ pk11_freeHashItem(PLHashEntry* entry, PRIntn index, void *arg)
 static CK_RV
 pk11_DestroySlotData(PK11Slot *slot)
 {
-    int i;
+    unsigned int i;
 
 #ifdef PKCS11_USE_THREADS
     if (slot->slotLock) {
@@ -2778,7 +2778,7 @@ CK_RV NSC_InitToken(CK_SLOT_ID slotID,CK_CHAR_PTR pPin,
     NSSLOWKEYDBHandle *handle;
     NSSLOWCERTCertDBHandle *certHandle;
     SECStatus rv;
-    int i;
+    unsigned int i;
     PK11Object *object;
 
     if (slot == NULL) return CKR_SLOT_ID_INVALID;
@@ -3080,7 +3080,7 @@ CK_RV NSC_CloseAllSessions (CK_SLOT_ID slotID)
     PK11Slot *slot;
     SECItem *pw = NULL;
     PK11Session *session;
-    int i;
+    unsigned int i;
 
     slot = pk11_SlotFromID(slotID);
     if (slot == NULL) return CKR_SLOT_ID_INVALID;

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.6 $ $Date: 2001/12/12 20:23:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.7 $ $Date: 2002/09/07 01:22:27 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -93,7 +93,7 @@ nss_item_hash
   const void *key
 )
 {
-  int i;
+  unsigned int i;
   PLHashNumber h;
   NSSItem *it = (NSSItem *)key;
   h = 0;

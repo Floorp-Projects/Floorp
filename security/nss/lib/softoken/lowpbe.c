@@ -432,7 +432,8 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
     SECItem *A = NULL, B, D, I;
     SECItem *salt = &pbe_param->salt;
     unsigned int c,i = 0;
-    unsigned int hashLen, iter;
+    unsigned int hashLen;
+    int iter;
     unsigned char *iterBuf;
     void *hash = NULL;
 
