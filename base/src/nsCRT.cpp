@@ -287,8 +287,8 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2)
 PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
 {
   if(s1 && s2) { 
-    if(0<n) {
-      while (--n >= 0) {
+    if(n != 0) {
+      do {
         PRUnichar c1 = *s1++;
         PRUnichar c2 = *s2++;
         if (c1 != c2) {
@@ -296,7 +296,7 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
           return 1;
         }
         if ((0==c1) || (0==c2)) break;
-      }
+      } while (--n != 0);
     }
   }
   return 0;
@@ -397,8 +397,8 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2)
 PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRUint32 n)
 {
   if(s1 && s2) {
-    if(0<n){
-      while (--n >= 0) {
+    if(n != 0){
+      do {
         PRUnichar c1 = *s1++;
         PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
         if (c1 != c2) {
@@ -406,7 +406,7 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRUint32 n)
           return 1;
         }
         if ((0==c1) || (0==c2)) break;
-      }
+      } while (--n != 0);
     }
   }
   return 0;
@@ -451,8 +451,8 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const char* s2)
 PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRUint32 n)
 {
   if(s1 && s2){
-    if(0<n){
-      while (--n >= 0) {
+    if(n != 0){
+      do {
         PRUnichar c1 = *s1++;
         PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
         if (c1 != c2) {
@@ -464,7 +464,7 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRUint32 n)
           }
         }
         if (c1 == 0) break;
-      }
+      } while (--n != 0);
     }
   }
   return 0;
