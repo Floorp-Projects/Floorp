@@ -844,11 +844,18 @@ public class ClassFileWriter {
      */
     public void addPush(double k)
     {
-        if (k == 0.0 && 1.0 / k >= 0.0) {
-            // Positive zero
+        if (k == 0.0) {
+            // zero
             add(ByteCode.DCONST_0);
-        } else if (k == 1.0) {
+            if (1.0 / k < 0) {
+                // Negative zero
+                add(ByteCode.DNEG);
+            }
+        } else if (k == 1.0 || k == -1.0) {
             add(ByteCode.DCONST_1);
+            if (k < 0) {
+                add(ByteCode.DNEG);
+            }
         } else {
             addLoadConstant(k);
         }
