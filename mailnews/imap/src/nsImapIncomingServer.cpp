@@ -1342,6 +1342,9 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
           //we know that we don't allowConversion for netscape webmail so just use the onlineName
           child->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
 
+        else if (redirectorType.Equals(NS_LITERAL_CSTRING("netscape")) && onlineName.Equals(NS_LITERAL_CSTRING("Draft")))
+          child->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+
         if (NS_SUCCEEDED(rv))
           child->SetPrettyName(convertedName);
       }
