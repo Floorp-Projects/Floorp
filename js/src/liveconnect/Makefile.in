@@ -40,6 +40,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= java
 LIBRARY_NAME	= jsj
+EXPORT_LIBRARY = 1
 REQUIRES	= js xpcom xpconnect
 
 CSRCS		= \

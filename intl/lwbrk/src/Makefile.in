@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= lwbrk
 LIBRARY_NAME	= lwbrk
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string
 

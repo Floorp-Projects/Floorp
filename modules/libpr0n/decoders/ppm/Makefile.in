@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imgppm
 LIBRARY_NAME	= imgppm
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 
 REQUIRES	= xpcom layout necko gfx2 imglib2

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= addrbook
 LIBRARY_NAME	= addrbook
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string addrbook necko msgcompose mime msgbase rdf rdfutil docshell appshell dom widget uriloader layout locale mork xuldoc gfx2 appcomps
 

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 LIBRARY_NAME	= jsdom
+EXPORT_LIBRARY = 1
 REQUIRES	= xpcom string js xpconnect widget layout pref
 
 CPPSRCS		= \

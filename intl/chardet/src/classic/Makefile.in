@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= chardetc
 LIBRARY_NAME	= chardetc
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 REQUIRES	= xpcom
 

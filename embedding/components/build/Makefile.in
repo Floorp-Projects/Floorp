@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= embedcomponents
 LIBRARY_NAME	= embedcomponents
+EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= embedcmp
 IS_COMPONENT	= 1
 REQUIRES	= js xpcom string windowwatcher find embed_base dom txtsvc

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE       = p3p
 LIBRARY_NAME = p3p
+EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 
 REQUIRES     = p3p xpcom windowwatcher

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = import
 LIBRARY_NAME = import
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string mailnews addrbook uconv mork msgbase msgbaseutil intl locale necko rdf msgdb
 

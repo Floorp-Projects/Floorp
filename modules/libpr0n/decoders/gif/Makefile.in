@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imggif
 LIBRARY_NAME	= imggif
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 
 REQUIRES	= xpcom necko layout gfx2 imglib2

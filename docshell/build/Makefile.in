@@ -29,6 +29,7 @@ IS_COMPONENT = 1
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= docshell
+EXPORT_LIBRARY = 1
 EXTRA_DSO_LIBS	= jsdom
 REQUIRES	= xpcom string dom shistory necko layout uriloader timer webshell widget pref locale view intl htmlparser chardet appcomps gfx2 find
 

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
+EXPORT_LIBRARY = 1
 
 
 CPPSRCS		= nsTimerBeOS.cpp

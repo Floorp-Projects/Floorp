@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= locale
 LIBRARY_NAME	= nslocale
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= nslocale_s
 

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= motif_app_context
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 
 

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mozxfer
 LIBRARY_NAME	= mozxfer
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string necko appshell dom js widget pref intl locale layout mozcomps
 

@@ -35,6 +35,7 @@ endif
 
 MODULE		= jar
 LIBRARY_NAME	= jar$(VERSION_NUMBER)
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string caps
 

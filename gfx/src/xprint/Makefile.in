@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gfxxprt
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= gkgfx
 REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil gfx2 necko

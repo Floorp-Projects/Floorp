@@ -24,6 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = SanePlugin
 LIBRARY_NAME = Sane
+EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 
 
