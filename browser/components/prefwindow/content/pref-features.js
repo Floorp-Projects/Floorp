@@ -41,6 +41,7 @@ var _elementIDs = ["advancedJavaAllow", "enableJavaScript", "enableImagePref",
 var gImagesPref, gImagesEnabled, gImagesRestricted;
 var policyButton = null;
 var manageTree = null;
+var persissionsExist = null;
 
 const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
 
@@ -48,7 +49,6 @@ function Startup()
 {
   policyButton = document.getElementById("popupPolicy");
   manageTree = document.getElementById("permissionsTree");
-  togglePermissionEnabling();
   loadPermissions();
   javascriptEnabledChange()
   
@@ -104,8 +104,13 @@ function togglePermissionEnabling()
   var remove2 = document.getElementById("removeAllPermissions");
   var description = document.getElementById("popupDescription");
   add.disabled = !enabled;
-  remove1.disabled = !enabled;
-  remove2.disabled = !enabled;
+  if (enabled && persissionsExist) {
+    remove1.disabled = false;
+    remove2.disabled = false;
+  } else {
+    remove1.disabled = true;
+    remove2.disabled = true;
+  }
   description.disabled = !enabled;
   manageTree.disabled = !enabled;
 }
@@ -171,8 +176,8 @@ function DeleteAllFromTree
 
 
   // disable buttons
-  document.getElementById(removeButton).setAttribute("disabled", "true")
-  document.getElementById(removeAllButton).setAttribute("disabled","true");
+  permissionsExist = false;
+  togglePermissionEnabling();
 }
 
 function DeleteSelectedItemFromTree
@@ -215,7 +220,7 @@ function DeleteSelectedItemFromTree
     var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
     tree.treeBoxObject.view.selection.select(-1); 
     tree.treeBoxObject.view.selection.select(nextSelection);
-
+    
   } else {
 
     // disable buttons
@@ -224,6 +229,8 @@ function DeleteSelectedItemFromTree
 
     // clear out selections
     tree.treeBoxObject.view.selection.select(-1); 
+    persissionsExist = false;
+    togglePermissionEnabling();
   }
 }
 
@@ -273,12 +280,12 @@ function loadPermissions() {
   // sort and display the table
   permissionsTree.treeBoxObject.view = permissionsTreeView;
   
-  // disable "remove all" button if there are no popups
-  if (permissions.length == 0) {
-    document.getElementById("removeAllPermissions").setAttribute("disabled","true");
-  } else {
-    document.getElementById("removeAllPermissions").removeAttribute("disabled");
-  }
+  if (permissions.length == 0)
+    persissionsExist = false;
+  else
+    persissionsExist = true;
+    
+  togglePermissionEnabling();
 }
 
 function PermissionSelected() {
