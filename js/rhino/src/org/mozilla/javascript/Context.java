@@ -69,10 +69,6 @@ import org.mozilla.javascript.xml.XMLLib;
  * the current thread  using the {@link #call(ContextAction)}
  * or {@link #enter()} methods.<p>
  *
- * The behavior of the execution engine may be altered through methods
- * such as <a href="#setLanguageVersion>setLanguageVersion</a> and
- * <a href="#setErrorReporter>setErrorReporter</a>.<p>
- *
  * Different forms of script execution are supported. Scripts may be
  * evaluated from the source directly, or first compiled and then later
  * executed. Interactive execution is also supported.<p>
@@ -579,11 +575,9 @@ public class Context
     }
 
     /**
-     * @deprecated Use
-     * {@link ContextFactory#addListener(ContextFactory.Listener)}.
-     * A simple way to upgrate the current code to new API is to replace
-     * <tt>Context.addContextListener(listener)</tt> with
-     * <tt>ContextFactory.getGlobal().addListener(listener)</tt>.
+     * @deprecated
+     * @see ContextFactory#addListener(ContextFactory.Listener)
+     * @see ContextFactory#getGlobal()
      */
     public static void addContextListener(ContextListener listener)
     {
@@ -610,11 +604,9 @@ public class Context
     }
 
     /**
-     * @deprecated Use
-     * {@link ContextFactory#removeListener(ContextFactory.Listener)}.
-     * A simple way to upgrate the current code to new API is to replace
-     * <tt>Context.removeContextListener(listener)</tt> with
-     * <tt>ContextFactory.getGlobal().removeListener(listener)</tt>.
+     * @deprecated
+     * @see ContextFactory#removeListener(ContextFactory.Listener)
+     * @see ContextFactory#getGlobal()
      */
     public static void removeContextListener(ContextListener listener)
     {
@@ -622,8 +614,9 @@ public class Context
     }
 
     /**
-     * @deprecated Use {@link ContextFactory#seal()} to seal
-     * appropriate <tt>ContextFactory()</tt>.
+     * @deprecated
+     * @see ContextFactory#seal()
+     * @see ContextFactory#getGlobal()
      */
     public static void disableStaticContextListening()
     {
@@ -1294,9 +1287,9 @@ public class Context
     }
 
     /**
-     * @deprecated Use
-     * {@link #compileReader(Reader in, String sourceName, int lineno,
-     *                       Object securityDomain)}.
+     * @deprecated
+     * @see #compileReader(Reader in, String sourceName, int lineno,
+     *                     Object securityDomain)
      */
     public final Script compileReader(Scriptable scope, Reader in,
                                       String sourceName, int lineno,
@@ -1422,11 +1415,8 @@ public class Context
     }
 
     /**
-     * @deprecated Use {@link #decompileScript(Script script, int indent)}
-     *             instead.
-     * <p>
-     * The implementation simply calls <tt>decompileScript(script, indent)</tt>
-     * ignoring the scope argument.
+     * @deprecated
+     * @see #decompileScript(Script script, int indent)
      */
     public final String decompileScript(Script script, Scriptable scope,
                                         int indent)
@@ -1674,7 +1664,8 @@ public class Context
     }
 
     /**
-     * @deprecated Use {@link #toObject(Object, Scriptable)}.
+     * @deprecated
+     * @see #toObject(Object, Scriptable)
      */
     public static Scriptable toObject(Object value, Scriptable scope,
                                       Class staticType)
@@ -1742,11 +1733,11 @@ public class Context
     }
 
     /**
-     * @deprecated.
-     * Use {@link #jsToJava(Object, Class)} instead which throws
-     * {@link EvaluatorException} and not
-     * {@link java.lang.IllegalArgumentException} which allows to properly
-     * process exceptions in the script code.
+     * @deprecated
+     * @see #jsToJava(Object, Class)
+     * @throws IllegalArgumentException if the conversion cannot be performed.
+     *         Note that {@link #jsToJava(Object, Class)} throws
+     *         {@link EvaluatorException} instead.
      */
     public static Object toType(Object value, Class desiredType)
         throws IllegalArgumentException
@@ -2001,9 +1992,9 @@ public class Context
     }
 
     /**
-     * @deprecated Use {@link #hasFeature(int)} and
-     * {@link #FEATURE_DYNAMIC_SCOPE} to control dynamic scoping that also works
-     * with nested functions defined by functions in the shared scope.
+     * @deprecated
+     * @see #FEATURE_DYNAMIC_SCOPE
+     * @see #hasFeature(int)
      */
     public final boolean hasCompileFunctionsWithDynamicScope()
     {
@@ -2011,9 +2002,9 @@ public class Context
     }
 
     /**
-     * @deprecated Use {@link #hasFeature(int)} and
-     * {@link #FEATURE_DYNAMIC_SCOPE} to control dynamic scoping that also works
-     * with nested functions defined by functions in the shared scope.
+     * @deprecated
+     * @see #FEATURE_DYNAMIC_SCOPE
+     * @see #hasFeature(int)
      */
     public final void setCompileFunctionsWithDynamicScope(boolean flag)
     {
@@ -2022,15 +2013,17 @@ public class Context
     }
 
     /**
-     * @deprecated Use {@link ClassCache#get(Scriptable)} and
-     * {@link ClassCache#setCachingEnabled(boolean)}.
+     * @deprecated
+     * @see ClassCache#get(Scriptable)
+     * @see ClassCache#setCachingEnabled(boolean)
      */
     public static void setCachingEnabled(boolean cachingEnabled)
     {
     }
 
     /**
-     * @deprecated Proxy to allow to use deprecated WrapHandler in place
+     * @deprecated
+     * Proxy to allow to use deprecated WrapHandler in place
      * of WrapFactory.
      */
     private static class WrapHandlerProxy extends WrapFactory
@@ -2072,7 +2065,9 @@ public class Context
     }
 
     /**
-     * @deprecated  Use {@link WrapFactory} and {@link #setWrapFactory(WrapFactory)}.
+     * @deprecated
+     * @see #setWrapFactory(WrapFactory)
+     * @see WrapFactory
      */
     public final void setWrapHandler(WrapHandler wrapHandler)
     {
@@ -2085,7 +2080,9 @@ public class Context
     }
 
     /**
-     * @deprecated  Use {@link WrapFactory} and {@link #getWrapFactory()}.
+     * @deprecated
+     * @see #getWrapFactory()
+     * @see WrapFactory
      */
     public final WrapHandler getWrapHandler()
     {
