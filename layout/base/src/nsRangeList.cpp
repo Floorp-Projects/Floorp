@@ -20,7 +20,6 @@
  * nsIRangeList: the implementation of selection.
  */
 
-#include "nsICollection.h"
 #include "nsIFactory.h"
 #include "nsIEnumerator.h"
 #include "nsIDOMRange.h"
@@ -38,7 +37,6 @@
 
 
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
-static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
@@ -64,22 +62,13 @@ enum {FORWARD  =1, BACKWARD = 0};
 
 class nsRangeListIterator;
 
-class nsRangeList : public nsICollection , public nsISelection,
+class nsRangeList : public nsISelection,
                     public nsIDOMSelection
 {
 public:
-/*BEGIN nsICollection interfaces
-see the nsICollection for more details*/
-
   /*interfaces for addref and release and queryinterface*/
   
   NS_DECL_ISUPPORTS
-  virtual nsresult AddItem(nsISupports *aRange);
-
-  virtual nsresult RemoveItem(nsISupports *aRange);
-
-  virtual nsresult Clear();
-/*END nsICollection interfaces*/
 
 /*BEGIN nsISelection interfaces*/
   NS_IMETHOD HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, nsIFrame *aFrame);
@@ -102,6 +91,11 @@ see the nsICollection for more details*/
   virtual ~nsRangeList();
 
 private:
+  nsresult AddItem(nsISupports *aRange);
+
+  nsresult RemoveItem(nsISupports *aRange);
+
+  nsresult Clear();
   friend class nsRangeListIterator;
 
 #ifdef DEBUG
@@ -159,13 +153,13 @@ private:
 
 
 
-nsresult NS_NewRangeList(nsICollection **);
-nsresult NS_NewRangeList(nsICollection **aRangeList)
+nsresult NS_NewRangeList(nsISelection **);
+nsresult NS_NewRangeList(nsISelection **aRangeList)
 {
   nsRangeList *rlist = new nsRangeList;
   if (!rlist)
     return NS_ERROR_OUT_OF_MEMORY;
-  nsresult result = rlist->QueryInterface(kICollectionIID , (void **)aRangeList);
+  nsresult result = rlist->QueryInterface(kISelectionIID , (void **)aRangeList);
   if (!NS_SUCCEEDED(result))
   {
     delete rlist;
@@ -300,14 +294,12 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
-    nsICollection* tmp = mRangeList;
-    nsISupports* tmp2 = tmp;
-
-    *aInstancePtr = (void*)tmp2;
+    nsISelection* tmp = mRangeList;
+    *aInstancePtr = (void*)tmp;
     NS_ADDREF(mRangeList);
     return NS_OK;
   }
-  if (aIID.Equals(kICollectionIID)) {
+  if (aIID.Equals(kISelectionIID)) {
     *aInstancePtr = (void *)mRangeList;
     NS_ADDREF(mRangeList);
     return NS_OK;
@@ -348,7 +340,6 @@ nsRangeList::~nsRangeList()
 
 //END nsRangeList methods
 
-//BEGIN nsICollection interface implementations
 
 
 NS_IMPL_ADDREF(nsRangeList)
@@ -363,14 +354,8 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
-    nsICollection* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kICollectionIID)) {
-    *aInstancePtr = (void*)(nsICollection *)this;
+    nsISupports* tmp = (nsISupports *)(nsISelection *)this;
+    *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -475,7 +460,6 @@ nsRangeList::Clear()
 
 
 
-//END nsICollection methods
 
 //BEGIN nsISelection methods
 
@@ -535,14 +519,14 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, ns
       case nsIDOMEvent::VK_LEFT  : 
         //we need to look for the previous PAINTED location to move the cursor to.
         printf("debug vk left\n");
-        if (NS_SUCCEEDED(aFrame->PeekOffset(eCharacter, ePrevious, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+        if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirPrevious, endoffset, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
           return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, PR_FALSE);
         }
         break;
       case nsIDOMEvent::VK_RIGHT : 
         //we need to look for the next PAINTED location to move the cursor to.
         printf("debug vk right\n");
-        if (NS_SUCCEEDED(aFrame->PeekOffset(eCharacter, eNext, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+        if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirNext, endoffset, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
           return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, PR_FALSE);
         }
     default :break;
@@ -586,6 +570,7 @@ void nsRangeList::printSelection()
 #endif /* DEBUG */
 
 
+
 //recursive-oid method to get next frame
 nsIFrame *
 getNextFrame(nsIFrame *aStart)
@@ -608,6 +593,8 @@ getNextFrame(nsIFrame *aStart)
   }
   return nsnull;
 }
+
+
 
 //compare the 2 passed in frames -1 first is smaller 1 second is smaller 0 they are the same
 PRInt32
@@ -870,6 +857,8 @@ findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff)
   while (child && NS_SUCCEEDED(child->GetNextSibling(&child))); //this is ok. no addrefs or releases
   return result;
 }
+
+
 
 //the start frame is the "root" of the tree. we need to traverse the tree to look for the content we want
 NS_IMETHODIMP 

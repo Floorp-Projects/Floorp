@@ -208,7 +208,8 @@ public:
                                         nsIFocusTracker *aTracker,
                                         nsIFrame **aActualSelected);
   NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
-  NS_IMETHODIMP PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset);
+  NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset, 
+                           nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset);
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
   // nsIHTMLReflow

@@ -129,8 +129,8 @@ public:
                                         nsIFocusTracker *aTracker,
                                         nsIFrame **aActualSelected);
   NS_IMETHOD GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
-  NS_IMETHOD PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFrame **aResultFrame, 
-                        PRInt32 *aFrameOffset, PRInt32 *aContentOffset);
+  NS_IMETHOD PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
+                        nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset);
 
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
 
@@ -231,8 +231,7 @@ public:
     }
   };
 
-  PRIntn PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
-                            nsTextTransformer& aTransformer,
+  PRIntn PrepareUnicodeText(nsTextTransformer& aTransformer,
                             PRInt32* aIndicies,
                             PRUnichar* aBuffer,
                             PRInt32& aTextLen,
@@ -559,8 +558,7 @@ TextFrame::Paint(nsIPresContext& aPresContext,
  * the prepared output.
  */
 PRIntn
-TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
-                              nsTextTransformer& aTX,
+TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
                               PRInt32* aIndexes,
                               PRUnichar* aBuffer,
                               PRInt32& aTextLen,
@@ -799,7 +797,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
 
   // Transform text from content into renderable form
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
-  PrepareUnicodeText(aRenderingContext, tx,
+  PrepareUnicodeText(tx,
                      displaySelection ? ip : nsnull,
                      paintBuf, textLength, width);
   ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
@@ -1131,7 +1129,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
 
   // Transform text from content into renderable form
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
-  aTextStyle.mNumSpaces = PrepareUnicodeText(aRenderingContext, tx,
+  aTextStyle.mNumSpaces = PrepareUnicodeText(tx,
                                              displaySelection ? ip : nsnull,
                                              paintBuf, textLength, width);
   if (mRect.width > mComputedWidth) {
@@ -1258,7 +1256,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
 
   // Transform text from content into renderable form
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
-  PrepareUnicodeText(aRenderingContext, tx,
+  PrepareUnicodeText(tx,
                      displaySelection ? ip : nsnull,
                      rawPaintBuf, textLength, width);
   ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
@@ -1469,7 +1467,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
 
   // Get the renderable form of the text
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
-  PrepareUnicodeText(*aRendContext, tx,
+  PrepareUnicodeText(tx,
                      ip, paintBuf, textLength, width);
   ip[mContentLength] = ip[mContentLength-1]+1;
 
@@ -1533,7 +1531,6 @@ NS_IMETHODIMP
 TextFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw)
 {
   if (aSelected){
-printf("SetSelected selection = %d,  /t %x /t begin:  %d  end:  %d\n",aSelected, this,aBeginOffset, aEndOffset);
     aEndOffset = PR_MIN(aEndOffset,mContentLength);
     aBeginOffset = PR_MIN(aBeginOffset,mContentLength);
 
@@ -1632,12 +1629,14 @@ TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOf
 
 
 NS_IMETHODIMP
-TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFrame **aResultFrame, 
+TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, nsIFrame **aResultFrame, 
                       PRInt32 *aFrameOffset, PRInt32 *aContentOffset)
 {
   //default, no matter what grab next/ previous sibling. 
   if (!aResultFrame || !aFrameOffset || !aContentOffset)
     return NS_ERROR_NULL_POINTER;
+  if (aStartOffset < 0)
+    aStartOffset = mContentLength;
   PRUnichar wordBufMem[WORD_BUF_SIZE];
   PRUnichar paintBufMem[TEXT_BUF_SIZE];
   PRInt32 indicies[TEXT_BUF_SIZE];
@@ -1651,46 +1650,72 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFra
   PRInt32 textLength;
 
   // Transform text from content into renderable form
-  int a; //EVIL EVIL EVIL //CHANGE API!
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
-  PrepareUnicodeText((nsIRenderingContext &)a, tx,
+  PrepareUnicodeText(tx,
                      ip, paintBuf, textLength, width);
 
   ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
   nsresult result(NS_OK);
-  PRInt32 oldPaintPos(ip[mSelectionOffset]);
+  PRInt32 oldPaintPos(ip[aStartOffset]);
   switch (aAmount){
-  case eCharacter : {
-    if (aDirection == ePrevious){
+  case eSelectNoAmount : {
+          *aResultFrame = this;
+          if (aStartOffset > mContentLength)
+            aStartOffset = mContentLength; //not ok normaly, but eNone means dont leave this frame
+          *aFrameOffset = aStartOffset;
+               }
+    break;
+  case eSelectCharacter : {
+    if (aDirection == eDirPrevious){
       PRInt32 i;
-      for (i = mSelectionOffset -1; i >=0;  i--){
-        if (ip[i] < ip [mSelectionOffset]){
+      for (i = aStartOffset -1; i >=0;  i--){
+        if (ip[i] < ip [aStartOffset]){
           *aResultFrame = this;
           *aFrameOffset = i;
           break;
         }
       }
-      if (i <0)
-        result = NS_ERROR_FAILURE;  //actually need to go to previous frame
+      if (i <0){
+        nsIFrame *prev = GetPrevInFlow();
+        if (prev){
+          return prev->PeekOffset(eSelectNoAmount, aDirection,  -1, aResultFrame, 
+                  aFrameOffset, aContentOffset);
+        }
+        else {//reached end ask the frame for help
+          return nsFrame::PeekOffset(eSelectNoAmount, aDirection, -1, aResultFrame,
+                      aFrameOffset, aContentOffset);
+        }
+      }
     }
     else 
-      if (aDirection == eNext){
+      if (aDirection == eDirNext){
         PRInt32 i;
-        for (i = mSelectionOffset +1; i <= mContentLength;  i++){
-          if (ip[i] > ip [mSelectionOffset]){
+        for (i = aStartOffset +1; i <= mContentLength;  i++){
+          if (ip[i] > ip [aStartOffset]){
             *aResultFrame = this;
             *aFrameOffset = i;
             break;
           }
         }
-        if (i > mContentLength)
-          result = NS_ERROR_FAILURE;  //actually need to go to previous frame
+        if (aStartOffset == 0 && (mFlags & TEXT_SKIP_LEADING_WS))
+          i--; //back up because we just skipped over some white space. why skip over the char also?
+        if (i > mContentLength){
+          nsIFrame *next = GetNextInFlow();
+          if (next){
+            return next->PeekOffset(eSelectNoAmount, aDirection,  0, aResultFrame, 
+                        aFrameOffset, aContentOffset);
+          }
+          else {//reached end ask the frame for help
+            return nsFrame::PeekOffset(eSelectNoAmount, aDirection, 0, aResultFrame,
+                        aFrameOffset, aContentOffset);
+          }
+        }
       }
       *aContentOffset = mContentOffset;
     }
   break;
-  case eWord : 
-  case eLine : 
+  case eSelectWord : 
+  case eSelectLine : 
   default: result = NS_ERROR_FAILURE; break;
   }
   // Cleanup
