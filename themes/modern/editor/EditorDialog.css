@@ -89,13 +89,12 @@ titledbox {
 .color-well {
   width: 20px;
   height: 12px; 
-/*  border: 1px inset #B4C3D4; */
-  border: blue;
+  border: 1px inset #B4C3D4;
   margin: 4px; 10px 4px 10px;
 }
 
 .color-well[default="true"] {
-  border: 1px solid blue;
+  border: 1px solid transparent;
   background-color: inherit;
 }
 
