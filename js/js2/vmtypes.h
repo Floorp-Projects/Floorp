@@ -62,24 +62,23 @@ namespace VM {
         GET_PROP, /* dest, object, prop name */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
-        LOAD_VAR, /* dest, index of frame slot */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
         NEW_ARRAY, /* dest */
         NEW_OBJECT, /* dest */
         NOP, /* do nothing and like it */
         NOT, /* dest, source */
-        RETURN, /* return value or NotARegister */
+        RETURN, /* return value */
+        RETURN_VOID, /* Return without a value */
         SAVE_NAME, /* name, source */
-        SAVE_VAR, /* index of frame slot, source */
         SET_ELEMENT, /* base, source1, source2 */
         SET_PROP, /* object, name, source */
-        SUBTRACT /* dest, source1, source2 */
+        SUBTRACT, /* dest, source1, source2 */
     };
+
     
     /********************************************************************/
-    
-    
+   
     static char *opcodeNames[] = {
         "ADD           ",
         "BRANCH        ",
@@ -101,7 +100,6 @@ namespace VM {
         "GET_PROP      ",
         "LOAD_IMMEDIATE",
         "LOAD_NAME     ",
-        "LOAD_VAR      ",
         "MOVE          ",
         "MULTIPLY      ",
         "NEW_ARRAY     ",
@@ -109,11 +107,11 @@ namespace VM {
         "NOP           ",
         "NOT           ",
         "RETURN        ",
+        "RETURN_VOID   ",
         "SAVE_NAME     ",
-        "SAVE_VAR      ",
         "SET_ELEMENT   ",
         "SET_PROP      ",
-        "SUBTRACT      "
+        "SUBTRACT      ",
     };
 
     /********************************************************************/
@@ -122,20 +120,20 @@ namespace VM {
     class Instruction
     {
     public:
-        Instruction(ICodeOp opcodeA) : opcode(opcodeA) { }
+        Instruction(ICodeOp aOpcode) : mOpcode(aOpcode) { }
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[opcode] << "\t<unk>";
+            f << opcodeNames[mOpcode] << "\t<unk>";
             return f;
         }                
         
         ICodeOp getBranchOp() \
-        { return ((opcode >= COMPARE_EQ) && (opcode <= COMPARE_NE)) ? \
-              (ICodeOp)(BRANCH_EQ + (opcode - COMPARE_EQ)) : NOP;  }
+        { return ((mOpcode >= COMPARE_EQ) && (mOpcode <= COMPARE_NE)) ? \
+              (ICodeOp)(BRANCH_EQ + (mOpcode - COMPARE_EQ)) : NOP;  }
         
-        ICodeOp op() { return opcode; }
+        ICodeOp op() { return mOpcode; }
         
     protected:
-        ICodeOp opcode;
+        ICodeOp mOpcode;
         
     };
 
@@ -161,11 +159,11 @@ namespace VM {
     
     class Label {
     public:
-        Label(InstructionStream* baseA) :
-            base(baseA), offset(NotALabel) {}
+        Label(InstructionStream* aBase) :
+            mBase(aBase), mOffset(NotALabel) {}
         
-        InstructionStream *base;
-        uint32 offset;
+        InstructionStream *mBase;
+        uint32 mOffset;
     };
     
     typedef std::vector<Label *> LabelList;
@@ -178,41 +176,41 @@ namespace VM {
     template <typename Operand1>
     class Instruction_1 : public Instruction {
     public:
-        Instruction_1(ICodeOp opcodeA, Operand1 op1A) : 
-            Instruction(opcodeA), op1(op1A) { }            
-        Operand1& o1() { return op1; }
+        Instruction_1(ICodeOp aOpcode, Operand1 aOp1) : 
+            Instruction(aOpcode), mOp1(aOp1) { }            
+        Operand1& o1() { return mOp1; }
         
     protected:
-        Operand1 op1;
+        Operand1 mOp1;
     };
     
     template <typename Operand1, typename Operand2>
     class Instruction_2 : public Instruction {
     public:
-        Instruction_2(ICodeOp opcodeA, Operand1 op1A, Operand2 op2A) :
-            Instruction(opcodeA), op1(op1A), op2(op2A) {}
-        Operand1& o1() { return op1; }
-        Operand2& o2() { return op2; }
+        Instruction_2(ICodeOp aOpcode, Operand1 aOp1, Operand2 aOp2) :
+            Instruction(aOpcode), mOp1(aOp1), mOp2(aOp2) {}
+        Operand1& o1() { return mOp1; }
+        Operand2& o2() { return mOp2; }
         
     protected:
-        Operand1 op1;
-        Operand2 op2;
+        Operand1 mOp1;
+        Operand2 mOp2;
     };
     
     template <typename Operand1, typename Operand2, typename Operand3>
     class Instruction_3 : public Instruction {
     public:
-        Instruction_3(ICodeOp opcodeA, Operand1 op1A, Operand2 op2A, 
-                      Operand3 op3A) :
-            Instruction(opcodeA), op1(op1A), op2(op2A), op3(op3A) { }
-        Operand1& o1() { return op1; }
-        Operand2& o2() { return op2; }
-        Operand3& o3() { return op3; }
+        Instruction_3(ICodeOp aOpcode, Operand1 aOp1, Operand2 aOp2,
+                      Operand3 aOp3) :
+            Instruction(aOpcode), mOp1(aOp1), mOp2(aOp2), mOp3(aOp3) { }
+        Operand1& o1() { return mOp1; }
+        Operand2& o2() { return mOp2; }
+        Operand3& o3() { return mOp3; }
         
     protected:
-        Operand1 op1;
-        Operand2 op2;
-        Operand3 op3;
+        Operand1 mOp1;
+        Operand2 mOp2;
+        Operand3 mOp3;
     };
     
     /********************************************************************/
@@ -221,116 +219,62 @@ namespace VM {
     
     class Arithmetic : public Instruction_3<Register, Register, Register> {
     public:
-        Arithmetic (ICodeOp opcodeA, Register dest, Register src1,
-                    Register src2) :
-            Instruction_3<Register, Register, Register>(opcodeA,
-                                                        dest, src1, src2) {}
+        Arithmetic (ICodeOp aOpcode, Register aDest, Register aSrc1,
+                    Register aSrc2) :
+            Instruction_3<Register, Register, Register>(aOpcode, aDest, aSrc1,
+                                                        aSrc2) {}
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[opcode] << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            if (op3 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op3;
-            }
+            f << opcodeNames[mOpcode] << "\tR" << mOp1 << ", R" << mOp2 <<
+                ", R" << mOp3;
             return f;
         }
     };
     
     class Compare : public Instruction_2<Register, Register> {
     public:
-        Compare(ICodeOp opcodeA, Register dest, Register src) :
-            Instruction_2<Register, Register>(opcodeA, dest, src) {}
+        Compare(ICodeOp aOpcode, Register aDest, Register aSrc) :
+            Instruction_2<Register, Register>(aOpcode, aDest, aSrc) {}
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[opcode] << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
+            f << opcodeNames[mOpcode] << "\tR" << mOp1 << ", R" << mOp2;
             return f;
         }
     };
     
     class GenericBranch : public Instruction_2<Label*, Register> {
     public:
-        GenericBranch (ICodeOp opcodeA, Label* label, 
-                       Register r = NotARegister) :
-            Instruction_2<Label*, Register>(opcodeA, label, r) {}
+        GenericBranch (ICodeOp aOpcode, Label* aLabel, 
+                       Register aR = NotARegister) :
+            Instruction_2<Label*, Register>(aOpcode, aLabel, aR) {}
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[opcode] << "\t" << "Offset " << op1->offset;
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
+            f << opcodeNames[mOpcode] << "\tOffset " << mOp1->mOffset <<
+                ", R" << mOp2;
             return f;
         }
-        void resolveTo (uint32 offsetA) { op1->offset = offsetA; }
-        uint32 getOffset() { return op1->offset; }
-        
+        void resolveTo (uint32 aOffset) { mOp1->mOffset = aOffset; }
+        uint32 getOffset() { return mOp1->mOffset; }
     };
 
-        /********************************************************************/
-            
-        /* Specific opcodes */
+    /********************************************************************/
+    
+    /* Specific opcodes */
 
     class Add : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Add (Register op1A, Register op2A, Register op3A) :
+        Add (Register aOp1, Register aOp2, Register aOp3) :
             Arithmetic
-            (ADD, op1A, op2A, op3A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[ADD];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            f << ", ";
-            if (op3 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op3;
-            }
-            return f;
-        }
+            (ADD, aOp1, aOp2, aOp3) {};
+        /* print() inherited from Arithmetic */
     };
 
     class Branch : public GenericBranch {
     public:
         /* target label */
-        Branch (Label* op1A) :
+        Branch (Label* aOp1) :
             GenericBranch
-            (BRANCH, op1A) {};
+            (BRANCH, aOp1) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[BRANCH];
-            f << "\t";
-            f << "Offset " << op1->offset;
+            f << opcodeNames[BRANCH] << "\t" << "Offset " << mOp1->mOffset;
             return f;
         }
     };
@@ -338,145 +282,65 @@ namespace VM {
     class BranchEQ : public GenericBranch {
     public:
         /* target label, condition */
-        BranchEQ (Label* op1A, Register op2A) :
+        BranchEQ (Label* aOp1, Register aOp2) :
             GenericBranch
-            (BRANCH_EQ, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[BRANCH_EQ];
-            f << "\t";
-            f << "Offset " << op1->offset;
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (BRANCH_EQ, aOp1, aOp2) {};
+        /* print() inherited from GenericBranch */
     };
 
     class BranchGE : public GenericBranch {
     public:
         /* target label, condition */
-        BranchGE (Label* op1A, Register op2A) :
+        BranchGE (Label* aOp1, Register aOp2) :
             GenericBranch
-            (BRANCH_GE, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[BRANCH_GE];
-            f << "\t";
-            f << "Offset " << op1->offset;
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (BRANCH_GE, aOp1, aOp2) {};
+        /* print() inherited from GenericBranch */
     };
 
     class BranchGT : public GenericBranch {
     public:
         /* target label, condition */
-        BranchGT (Label* op1A, Register op2A) :
+        BranchGT (Label* aOp1, Register aOp2) :
             GenericBranch
-            (BRANCH_GT, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[BRANCH_GT];
-            f << "\t";
-            f << "Offset " << op1->offset;
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (BRANCH_GT, aOp1, aOp2) {};
+        /* print() inherited from GenericBranch */
     };
 
     class BranchLE : public GenericBranch {
     public:
         /* target label, condition */
-        BranchLE (Label* op1A, Register op2A) :
+        BranchLE (Label* aOp1, Register aOp2) :
             GenericBranch
-            (BRANCH_LE, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[BRANCH_LE];
-            f << "\t";
-            f << "Offset " << op1->offset;
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (BRANCH_LE, aOp1, aOp2) {};
+        /* print() inherited from GenericBranch */
     };
 
     class BranchLT : public GenericBranch {
     public:
         /* target label, condition */
-        BranchLT (Label* op1A, Register op2A) :
+        BranchLT (Label* aOp1, Register aOp2) :
             GenericBranch
-            (BRANCH_LT, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[BRANCH_LT];
-            f << "\t";
-            f << "Offset " << op1->offset;
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (BRANCH_LT, aOp1, aOp2) {};
+        /* print() inherited from GenericBranch */
     };
 
     class BranchNE : public GenericBranch {
     public:
         /* target label, condition */
-        BranchNE (Label* op1A, Register op2A) :
+        BranchNE (Label* aOp1, Register aOp2) :
             GenericBranch
-            (BRANCH_NE, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[BRANCH_NE];
-            f << "\t";
-            f << "Offset " << op1->offset;
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (BRANCH_NE, aOp1, aOp2) {};
+        /* print() inherited from GenericBranch */
     };
 
     class Call : public Instruction_3<Register, Register, RegisterList> {
     public:
         /* result, target, args */
-        Call (Register op1A, Register op2A, RegisterList op3A) :
+        Call (Register aOp1, Register aOp2, RegisterList aOp3) :
             Instruction_3<Register, Register, RegisterList>
-            (CALL, op1A, op2A, op3A) {};
+            (CALL, aOp1, aOp2, aOp3) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[CALL];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            f << ", ";
-            f << op3;
+            f << opcodeNames[CALL] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << mOp3;
             return f;
         }
     };
@@ -484,203 +348,74 @@ namespace VM {
     class CompareEQ : public Compare {
     public:
         /* dest, source */
-        CompareEQ (Register op1A, Register op2A) :
+        CompareEQ (Register aOp1, Register aOp2) :
             Compare
-            (COMPARE_EQ, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[COMPARE_EQ];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (COMPARE_EQ, aOp1, aOp2) {};
+        /* print() inherited from Compare */
     };
 
     class CompareGE : public Compare {
     public:
         /* dest, source */
-        CompareGE (Register op1A, Register op2A) :
+        CompareGE (Register aOp1, Register aOp2) :
             Compare
-            (COMPARE_GE, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[COMPARE_GE];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (COMPARE_GE, aOp1, aOp2) {};
+        /* print() inherited from Compare */
     };
 
     class CompareGT : public Compare {
     public:
         /* dest, source */
-        CompareGT (Register op1A, Register op2A) :
+        CompareGT (Register aOp1, Register aOp2) :
             Compare
-            (COMPARE_GT, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[COMPARE_GT];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (COMPARE_GT, aOp1, aOp2) {};
+        /* print() inherited from Compare */
     };
 
     class CompareLE : public Compare {
     public:
         /* dest, source */
-        CompareLE (Register op1A, Register op2A) :
+        CompareLE (Register aOp1, Register aOp2) :
             Compare
-            (COMPARE_LE, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[COMPARE_LE];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (COMPARE_LE, aOp1, aOp2) {};
+        /* print() inherited from Compare */
     };
 
     class CompareLT : public Compare {
     public:
         /* dest, source */
-        CompareLT (Register op1A, Register op2A) :
+        CompareLT (Register aOp1, Register aOp2) :
             Compare
-            (COMPARE_LT, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[COMPARE_LT];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (COMPARE_LT, aOp1, aOp2) {};
+        /* print() inherited from Compare */
     };
 
     class CompareNE : public Compare {
     public:
         /* dest, source */
-        CompareNE (Register op1A, Register op2A) :
+        CompareNE (Register aOp1, Register aOp2) :
             Compare
-            (COMPARE_NE, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[COMPARE_NE];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
+            (COMPARE_NE, aOp1, aOp2) {};
+        /* print() inherited from Compare */
     };
 
     class Divide : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Divide (Register op1A, Register op2A, Register op3A) :
+        Divide (Register aOp1, Register aOp2, Register aOp3) :
             Arithmetic
-            (DIVIDE, op1A, op2A, op3A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[DIVIDE];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            f << ", ";
-            if (op3 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op3;
-            }
-            return f;
-        }
+            (DIVIDE, aOp1, aOp2, aOp3) {};
+        /* print() inherited from Arithmetic */
     };
 
     class GetElement : public Instruction_3<Register, Register, Register> {
     public:
         /* dest, array, index */
-        GetElement (Register op1A, Register op2A, Register op3A) :
+        GetElement (Register aOp1, Register aOp2, Register aOp3) :
             Instruction_3<Register, Register, Register>
-            (GET_ELEMENT, op1A, op2A, op3A) {};
+            (GET_ELEMENT, aOp1, aOp2, aOp3) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[GET_ELEMENT];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            f << ", ";
-            if (op3 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op3;
-            }
+            f << opcodeNames[GET_ELEMENT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "R" << mOp3;
             return f;
         }
     };
@@ -688,25 +423,11 @@ namespace VM {
     class GetProp : public Instruction_3<Register, Register, StringAtom*> {
     public:
         /* dest, object, prop name */
-        GetProp (Register op1A, Register op2A, StringAtom* op3A) :
+        GetProp (Register aOp1, Register aOp2, StringAtom* aOp3) :
             Instruction_3<Register, Register, StringAtom*>
-            (GET_PROP, op1A, op2A, op3A) {};
+            (GET_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[GET_PROP];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            f << ", ";
-            f << "'" << *op3 << "'";
+            f << opcodeNames[GET_PROP] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "'" << *mOp3 << "'";
             return f;
         }
     };
@@ -714,19 +435,11 @@ namespace VM {
     class LoadImmediate : public Instruction_2<Register, double> {
     public:
         /* dest, immediate value (double) */
-        LoadImmediate (Register op1A, double op2A) :
+        LoadImmediate (Register aOp1, double aOp2) :
             Instruction_2<Register, double>
-            (LOAD_IMMEDIATE, op1A, op2A) {};
+            (LOAD_IMMEDIATE, aOp1, aOp2) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[LOAD_IMMEDIATE];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            f << op2;
+            f << opcodeNames[LOAD_IMMEDIATE] << "\t" << "R" << mOp1 << ", " << mOp2;
             return f;
         }
     };
@@ -734,39 +447,11 @@ namespace VM {
     class LoadName : public Instruction_2<Register, StringAtom*> {
     public:
         /* dest, name */
-        LoadName (Register op1A, StringAtom* op2A) :
+        LoadName (Register aOp1, StringAtom* aOp2) :
             Instruction_2<Register, StringAtom*>
-            (LOAD_NAME, op1A, op2A) {};
+            (LOAD_NAME, aOp1, aOp2) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[LOAD_NAME];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            f << "'" << *op2 << "'";
-            return f;
-        }
-    };
-
-    class LoadVar : public Instruction_2<Register, uint32> {
-    public:
-        /* dest, index of frame slot */
-        LoadVar (Register op1A, uint32 op2A) :
-            Instruction_2<Register, uint32>
-            (LOAD_VAR, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[LOAD_VAR];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            f << op2;
+            f << opcodeNames[LOAD_NAME] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'";
             return f;
         }
     };
@@ -774,23 +459,11 @@ namespace VM {
     class Move : public Instruction_2<Register, Register> {
     public:
         /* dest, source */
-        Move (Register op1A, Register op2A) :
+        Move (Register aOp1, Register aOp2) :
             Instruction_2<Register, Register>
-            (MOVE, op1A, op2A) {};
+            (MOVE, aOp1, aOp2) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[MOVE];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
+            f << opcodeNames[MOVE] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
             return f;
         }
     };
@@ -798,47 +471,20 @@ namespace VM {
     class Multiply : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Multiply (Register op1A, Register op2A, Register op3A) :
+        Multiply (Register aOp1, Register aOp2, Register aOp3) :
             Arithmetic
-            (MULTIPLY, op1A, op2A, op3A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[MULTIPLY];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            f << ", ";
-            if (op3 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op3;
-            }
-            return f;
-        }
+            (MULTIPLY, aOp1, aOp2, aOp3) {};
+        /* print() inherited from Arithmetic */
     };
 
     class NewArray : public Instruction_1<Register> {
     public:
         /* dest */
-        NewArray (Register op1A) :
+        NewArray (Register aOp1) :
             Instruction_1<Register>
-            (NEW_ARRAY, op1A) {};
+            (NEW_ARRAY, aOp1) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[NEW_ARRAY];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
+            f << opcodeNames[NEW_ARRAY] << "\t" << "R" << mOp1;
             return f;
         }
     };
@@ -846,17 +492,11 @@ namespace VM {
     class NewObject : public Instruction_1<Register> {
     public:
         /* dest */
-        NewObject (Register op1A) :
+        NewObject (Register aOp1) :
             Instruction_1<Register>
-            (NEW_OBJECT, op1A) {};
+            (NEW_OBJECT, aOp1) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[NEW_OBJECT];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
+            f << opcodeNames[NEW_OBJECT] << "\t" << "R" << mOp1;
             return f;
         }
     };
@@ -876,41 +516,35 @@ namespace VM {
     class Not : public Instruction_2<Register, Register> {
     public:
         /* dest, source */
-        Not (Register op1A, Register op2A) :
+        Not (Register aOp1, Register aOp2) :
             Instruction_2<Register, Register>
-            (NOT, op1A, op2A) {};
+            (NOT, aOp1, aOp2) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[NOT];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
+            f << opcodeNames[NOT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
             return f;
         }
     };
 
     class Return : public Instruction_1<Register> {
     public:
-        /* return value or NotARegister */
-        Return (Register op1A = NotARegister) :
+        /* return value */
+        Return (Register aOp1) :
             Instruction_1<Register>
-            (RETURN, op1A) {};
+            (RETURN, aOp1) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[RETURN];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
+            f << opcodeNames[RETURN] << "\t" << "R" << mOp1;
+            return f;
+        }
+    };
+
+    class ReturnVoid : public Instruction {
+    public:
+        /* Return without a value */
+        ReturnVoid () :
+            Instruction
+            (RETURN_VOID) {};
+        virtual Formatter& print (Formatter& f) {
+            f << opcodeNames[RETURN_VOID];
             return f;
         }
     };
@@ -918,39 +552,11 @@ namespace VM {
     class SaveName : public Instruction_2<StringAtom*, Register> {
     public:
         /* name, source */
-        SaveName (StringAtom* op1A, Register op2A) :
+        SaveName (StringAtom* aOp1, Register aOp2) :
             Instruction_2<StringAtom*, Register>
-            (SAVE_NAME, op1A, op2A) {};
+            (SAVE_NAME, aOp1, aOp2) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[SAVE_NAME];
-            f << "\t";
-            f << "'" << *op1 << "'";
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            return f;
-        }
-    };
-
-    class SaveVar : public Instruction_2<uint32, Register> {
-    public:
-        /* index of frame slot, source */
-        SaveVar (uint32 op1A, Register op2A) :
-            Instruction_2<uint32, Register>
-            (SAVE_VAR, op1A, op2A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[SAVE_VAR];
-            f << "\t";
-            f << op1;
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
+            f << opcodeNames[SAVE_NAME] << "\t" << "'" << *mOp1 << "'" << ", " << "R" << mOp2;
             return f;
         }
     };
@@ -958,29 +564,11 @@ namespace VM {
     class SetElement : public Instruction_3<Register, Register, Register> {
     public:
         /* base, source1, source2 */
-        SetElement (Register op1A, Register op2A, Register op3A) :
+        SetElement (Register aOp1, Register aOp2, Register aOp3) :
             Instruction_3<Register, Register, Register>
-            (SET_ELEMENT, op1A, op2A, op3A) {};
+            (SET_ELEMENT, aOp1, aOp2, aOp3) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[SET_ELEMENT];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            f << ", ";
-            if (op3 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op3;
-            }
+            f << opcodeNames[SET_ELEMENT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "R" << mOp3;
             return f;
         }
     };
@@ -988,25 +576,11 @@ namespace VM {
     class SetProp : public Instruction_3<Register, StringAtom*, Register> {
     public:
         /* object, name, source */
-        SetProp (Register op1A, StringAtom* op2A, Register op3A) :
+        SetProp (Register aOp1, StringAtom* aOp2, Register aOp3) :
             Instruction_3<Register, StringAtom*, Register>
-            (SET_PROP, op1A, op2A, op3A) {};
+            (SET_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[SET_PROP];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            f << "'" << *op2 << "'";
-            f << ", ";
-            if (op3 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op3;
-            }
+            f << opcodeNames[SET_PROP] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'" << ", " << "R" << mOp3;
             return f;
         }
     };
@@ -1014,31 +588,10 @@ namespace VM {
     class Subtract : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Subtract (Register op1A, Register op2A, Register op3A) :
+        Subtract (Register aOp1, Register aOp2, Register aOp3) :
             Arithmetic
-            (SUBTRACT, op1A, op2A, op3A) {};
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[SUBTRACT];
-            f << "\t";
-            if (op1 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op1;
-            }
-            f << ", ";
-            if (op2 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op2;
-            }
-            f << ", ";
-            if (op3 == NotARegister) {
-                f << "R~";
-            } else {
-                f << "R" << op3;
-            }
-            return f;
-        }
+            (SUBTRACT, aOp1, aOp2, aOp3) {};
+        /* print() inherited from Arithmetic */
     };
 
 } /* namespace VM */

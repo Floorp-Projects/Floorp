@@ -173,7 +173,7 @@ namespace ICG {
         // expression statements
         void beginStatement(uint32 /*pos*/) { resetTopRegister(); }
         
-        void returnStatement() { iCode->push_back(new Return()); }
+        void returnStatement() { iCode->push_back(new ReturnVoid()); }
         void returnStatement(Register result) \
         { iCode->push_back(new Return(result)); }
         

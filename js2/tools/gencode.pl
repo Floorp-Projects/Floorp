@@ -10,6 +10,7 @@ my $opcode_maxlen = 0;
 my $compare_op =
   {
    super  => "Compare",
+   super_has_print => 1,
    rem    => "dest, source",
    params => [ ("Register", "Register") ]
   };
@@ -17,6 +18,7 @@ my $compare_op =
 my $math_op =
   {
    super  => "Arithmetic",
+   super_has_print => 1,
    rem    => "dest, source1, source2",
    params => [ ("Register", "Register", "Register") ]
   };
@@ -24,6 +26,7 @@ my $math_op =
 my $cbranch_op =
   {
    super  => "GenericBranch",
+   super_has_print => 1,
    rem    => "target label, condition",
    params => [ ("Label*", "Register") ]
   };
@@ -40,18 +43,6 @@ $ops{"MOVE"} =
    super  => "Instruction_2",
    rem    => "dest, source",
    params => [ ("Register", "Register") ]
-  };
-$ops{"LOAD_VAR"} =
-  {
-   super  => "Instruction_2",
-   rem    => "dest, index of frame slot",
-   params => [ ("Register", "uint32" ) ]
-  };
-$ops{"SAVE_VAR"} =
-  {
-   super  => "Instruction_2",
-   rem    => "index of frame slot, source",
-   params => [ ("uint32", "Register") ]
   };
 $ops{"LOAD_IMMEDIATE"} =
   {
@@ -138,8 +129,13 @@ $ops{"BRANCH_GT"} = $cbranch_op;
 $ops{"RETURN"} =
   {
    super    => "Instruction_1",
-   rem      => "return value or NotARegister",
-   params   => [ ("Register = NotARegister") ]
+   rem      => "return value",
+   params   => [ ("Register") ]
+  };
+$ops{"RETURN_VOID"} =
+  {
+   super => "Instruction",
+   rem   => "Return without a value"
   };
 $ops{"CALL"} =
   {
@@ -179,7 +175,6 @@ sub collect {
     my ($dec_list, $call_list, $template_list) =
       &get_paramlists(@{$c->{"params"}});
     my $params = $call_list ? $opname . ", " . $call_list : $opname;
-    my $printbody = &get_printbody(split (", ", $template_list));
 
     if ($super =~ /Instruction_\d/) {
         $super .= "<" . $template_list . ">";
@@ -193,14 +188,22 @@ sub collect {
                     $init_tab . $tab . "$cname ($dec_list) :\n" .
                     $init_tab . $tab . $tab . "$super\n" .
                     "$init_tab$tab$tab($params) " .
-                    "{};\n" .
-                    $init_tab . $tab . 
-                    "virtual Formatter& print (Formatter& f) {\n" .
-                    $init_tab . $tab . $tab . "f << opcodeNames[$opname];\n" .
-                    $printbody .
-                    $init_tab . $tab . $tab . "return f;\n" .
-                    $init_tab . $tab . "}\n" .
-                    $init_tab . "};\n\n");
+                    "{};\n");
+    if (!$c->{"super_has_print"}) {
+        my $printbody = &get_printbody(split (", ", $template_list));
+
+        $class_decs .= ($init_tab . $tab . 
+                         "virtual Formatter& print (Formatter& f) {\n" .
+                         $init_tab . $tab . $tab . "f << opcodeNames[$opname]" .
+                         $printbody . ";\n" .
+                         $init_tab . $tab . $tab . "return f;\n" .
+                         $init_tab . $tab . "}\n");
+    } else {
+        $class_decs .= $init_tab . $tab . 
+          "/* print() inherited from $super */\n";
+    }
+
+    $class_decs .= $init_tab . "};\n\n";
 }
 
 sub spew {
@@ -259,10 +262,10 @@ sub get_paramlists {
         }
 
         $pfx = $deref = "";
-        $member = "op$op";
+        $member = "mOp$op";
 
-        push (@dec, "$type op$op" . "A$default");
-        push (@call, "op$op" . "A");
+        push (@dec, "$type aOp$op" . "$default");
+        push (@call, "aOp$op");
         push (@template, $type);
         $op++;
     }
@@ -281,25 +284,21 @@ sub get_printbody {
         print "type $type\n";
 
         if ($type eq "Register") {
-            push (@oplist, $in . "if (op$op == NotARegister) {\n" .
-                  $in . $tab . "f << \"R~\";\n" .
-                  $in . "} else {\n" .
-                  $in . $tab . "f << \"R\" << op$op;\n" .
-                  $in . "}\n");
+            push (@oplist, "\"R\" << mOp$op");
         } elsif ($type eq "Label*") {
-            push (@oplist, $in . "f << \"Offset \" << op$op->offset;\n");
+            push (@oplist, "\"Offset \" << mOp$op->mOffset");
         } elsif ($type eq "StringAtom*") {
-            push (@oplist, $in . "f << \"'\" << *op$op << \"'\";\n");
+            push (@oplist, "\"'\" << *mOp$op << \"'\"");
         } else {
-            push (@oplist, $in . "f << op$op;\n");
+            push (@oplist, "mOp$op");
         }
 
         $op++;
     }
 
-    my $rv = join ($in . "f << \", \";\n", @oplist);
+    my $rv = join (" << \", \" << ", @oplist);
     if ($rv ne "") {
-        $rv = $in . "f << \"\\t\";\n" . $rv;
+        $rv = " << \"\\t\" << " . $rv;
     }
             
 }

@@ -61,8 +61,8 @@ namespace ICG {
         ASSERT(stitcher.empty());
         for (LabelList::iterator i = labels.begin();
              i != labels.end(); i++) {
-            ASSERT((*i)->base == iCode);
-            ASSERT((*i)->offset <= iCode->size());
+            ASSERT((*i)->mBase == iCode);
+            ASSERT((*i)->mOffset <= iCode->size());
         }
 #endif
         
@@ -217,14 +217,14 @@ namespace ICG {
 
     void ICodeGenerator::setLabel(Label *l)
     {
-        l->base = iCode;
-        l->offset = static_cast<int32>(iCode->size());
+        l->mBase = iCode;
+        l->mOffset = static_cast<int32>(iCode->size());
     }
 
     void ICodeGenerator::setLabel(InstructionStream *stream, Label *l)
     {
-        l->base = stream;
-        l->offset = static_cast<int32>(stream->size());
+        l->mBase = stream;
+        l->mOffset = static_cast<int32>(stream->size());
     }
 
     /********************************************************************/
@@ -236,9 +236,9 @@ namespace ICG {
         // themselves?) in order to avoid running this loop unnecessarily.
         for (LabelList::iterator i = labels.begin();
              i != labels.end(); i++) {
-            if ((*i)->base == sideStream) {
-                (*i)->base = iCode;
-                (*i)->offset += iCode->size();
+            if ((*i)->mBase == sideStream) {
+                (*i)->mBase = iCode;
+                (*i)->mOffset += iCode->size();
             }
         }
 
@@ -611,7 +611,7 @@ namespace ICG {
 
             for (LabelList::iterator k = labels.begin(); 
                  k != labels.end(); k++)
-                if ((ptrdiff_t)(*k)->offset == (i - iCode->begin())) {
+                if ((ptrdiff_t)(*k)->mOffset == (i - iCode->begin())) {
                     f << "#" << (uint32)(i - iCode->begin()) << "\t";
                     isLabel = true;
                     break;

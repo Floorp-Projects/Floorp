@@ -23,20 +23,36 @@
 #include "utilities.h"
 #include "jstypes.h"
 #include "icodegenerator.h"
+#include "gc_allocator.h"
 
 namespace JavaScript {    
-namespace Interpreter {
-
     using namespace ICG;
     using namespace JSTypes;
-    
-    JSValue interpret(ICodeModule* iCode, const JSValues& args);
-    
-    JSValue& defineGlobalProperty(const String& name,
-                                  const JSValue& value);
-    JSValue& defineFunction(const String& name, ICodeModule* iCode);
 
-} /* namespace Interpreter */
+    class Context : public gc_base {
+    public:
+        explicit Context(World& /*world */, JSObject& aGlobal) :
+            mGlobal(aGlobal) {};
+
+        JSValue interpret(ICodeModule* iCode, const JSValues& args);
+
+        JSObject& setGlobalObject(JSObject& aGlobal)
+        {
+            JSObject &t = mGlobal;
+            mGlobal = aGlobal;
+            return t;
+        }
+
+        JSObject& getGlobalObject() 
+        {
+            return mGlobal;
+        }
+
+    private:
+        /* World mWorld; */
+        JSObject& mGlobal;
+        
+    }; /* class Interpreter */
 } /* namespace JavaScript */
 
 #endif /* interpreter_h */

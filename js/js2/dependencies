@@ -1,3 +1,6 @@
+debugger.o: debugger.cpp world.h utilities.h systemtypes.h hash.h \
+ parser.h interpreter.h jstypes.h gc_allocator.h vmtypes.h numerics.h \
+ icodegenerator.h
 gc_allocator.o: gc_allocator.cpp gc_allocator.h gc_container.h
 hash.o: hash.cpp hash.h utilities.h systemtypes.h
 icodegenerator.o: icodegenerator.cpp numerics.h utilities.h \
