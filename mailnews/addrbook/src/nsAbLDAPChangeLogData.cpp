@@ -244,7 +244,7 @@ nsresult nsAbLDAPProcessChangeLogData::GetAuthData()
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (!wwatch)
         return NS_ERROR_FAILURE;
     

@@ -82,7 +82,7 @@ permission_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar
   if (aPrompter)
     dialog = aPrompter;
   else {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (wwatch)
       wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
   }

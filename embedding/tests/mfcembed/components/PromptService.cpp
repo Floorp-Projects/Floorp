@@ -91,7 +91,7 @@ private:
 NS_IMPL_ISUPPORTS1(CPromptService, nsIPromptService)
 
 CPromptService::CPromptService() :
-  mWWatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"))
+  mWWatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID))
 {
   NS_INIT_REFCNT();
 }

@@ -524,7 +524,7 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                                 if (interfaces)
                                   interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
                                 if (!prompter) {
-                                  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+                                  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
                                   if (wwatch)
                                     wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
                                 }

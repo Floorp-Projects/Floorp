@@ -329,7 +329,7 @@ nsAbSync::DisplayErrorMessage(const PRUnichar * msg)
   if (NS_FAILED(rv))
   {
     nsCOMPtr<nsIPrompt> dialog;
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (wwatch)
       wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
 

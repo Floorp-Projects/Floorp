@@ -110,7 +110,7 @@ nsresult
 nsPrintingPromptService::Init()
 {
     nsresult rv;
-    mWatcher = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+    mWatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
     return rv;
 }
 

@@ -342,7 +342,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsresult aStatus)
         // get the window watcher service, so we can get an auth prompter
         //
         nsCOMPtr<nsIWindowWatcher> windowWatcherSvc = 
-            do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) {
             NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
                      " couldn't get window watcher service.");
