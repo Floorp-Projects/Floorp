@@ -19,19 +19,27 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH		  = ../../..
+topsrcdir	= y:/mozilla
+srcdir		= y:/mozilla/htmlparser/tests/logparse
+VPATH		  = y:/mozilla/htmlparser/tests/logparse
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= logparse
+PROGRAM		= TestParser.exe
 
-CPPSRCS		= logparse.cpp
+REQUIRES	= \
+   xpcom \
+	 string \
+	 necko \
+   htmlparser \
+	 $(NULL)
+
+CPPSRCS		= \
+  TestParser.cpp\
+  $(NULL)
 
 LIBS		= \
-		-lhtmlpars \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
