@@ -298,15 +298,15 @@ int nsPlatformToDOMKeyCode(GdkEventKey *aGEK)
 
 PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
 {
-  // For control chars, GDK sets string to be the actual ascii value.
-  // Map that to what nsKeyEvent wants, which currently --
-  // TEMPORARILY (the spec has changed and will be switched over
-  // when the tree opens for M11) --
-  // is the ascii for the actual event (e.g. 1 for control-a).
-  // This is only true for control chars; for alt chars, send the
-  // ascii for the key, i.e. a for alt-a.
   if (aGEK->state & GDK_CONTROL_MASK)
   {
+    if (isprint(aGEK->string[0]) && !isalpha(aGEK->string[0]))
+      return aGEK->string[0];
+
+    // For alphabetic control chars, GDK sets string to be the
+    // actual ascii value; it doesn't do this for numeric or
+    // other printable characters.
+    // So we have to map back to the actual character.
     if (aGEK->state & GDK_SHIFT_MASK)
       return aGEK->string[0] + 'A' - 1;
     else
@@ -404,8 +404,8 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
 
 #if defined(DEBUG_akkana_not) || defined (DEBUG_ftang)
-    printf("Key Press event: keyCode = 0x%x, char code = '%c'",
-           anEvent.keyCode, anEvent.charCode);
+    printf("Key Press event: gtk string = '%s', keyCode = 0x%x, char code = '%c'",
+           aGEK->string, anEvent.keyCode, anEvent.charCode);
     if (anEvent.isShift)
       printf(" [shift]");
     if (anEvent.isControl)
