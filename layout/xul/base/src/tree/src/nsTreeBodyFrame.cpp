@@ -308,6 +308,7 @@ NS_INTERFACE_MAP_BEGIN(nsTreeBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIReflowCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 
 
@@ -317,7 +318,8 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mTreeBoxObject(nsnull), mImageCache(nsnull),
  mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
  mFocused(PR_FALSE), mColumnsDirty(PR_TRUE), mDropAllowed(PR_FALSE), mHasFixedRowCount(PR_FALSE),
- mVerticalOverflow(PR_FALSE), mImageGuard(PR_FALSE), mDropRow(-1), mDropOrient(-1), mOpenTimer(nsnull)
+ mVerticalOverflow(PR_FALSE), mImageGuard(PR_FALSE), mReflowCallbackPosted(PR_FALSE),
+ mDropRow(-1), mDropOrient(-1), mOpenTimer(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -470,6 +472,14 @@ nsTreeBodyFrame::CalcMaxRowWidth(nsBoxLayoutState& aState)
 NS_IMETHODIMP
 nsTreeBodyFrame::Destroy(nsIPresContext* aPresContext)
 {
+  // Make sure we cancel any posted callbacks. 
+  if (mReflowCallbackPosted) {
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    shell->CancelReflowCallback(this);
+    mReflowCallbackPosted = PR_FALSE;
+  }
+
   // Delete our column structures.
   delete mColumns;
   mColumns = nsnull;
@@ -590,10 +600,21 @@ nsTreeBodyFrame::EnsureView()
 NS_IMETHODIMP
 nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect)
 {
-  PRBool recompute = (aRect != mRect);
-  nsresult rv = nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect);
+  if (aRect != mRect && !mReflowCallbackPosted) {
+    mReflowCallbackPosted = PR_TRUE;
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    shell->PostReflowCallback(this);
+  }
 
-  if (mView && recompute) {
+  return nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect);
+}
+
+
+NS_IMETHODIMP
+nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
+{
+  if (mView) {
     mInnerBox = GetInnerBox();
     if (!mHasFixedRowCount)
       mPageCount = mInnerBox.height / mRowHeight;
@@ -605,10 +626,13 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
       ScrollToRow(lastPageTopRow);
 
     InvalidateScrollbar();
-    CheckVerticalOverflow(aBoxLayoutState.GetReflowState() != nsnull);
+    CheckVerticalOverflow();
   }
 
-  return rv;
+  mReflowCallbackPosted = PR_FALSE;
+  *aFlushFlag = PR_FALSE;
+
+  return NS_OK;
 }
 
 
@@ -677,7 +701,7 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
     // Reset scrollbar position.
     UpdateScrollbar();
 
-    CheckVerticalOverflow(PR_FALSE);
+    CheckVerticalOverflow();
   }
  
   return NS_OK;
@@ -960,7 +984,7 @@ nsTreeBodyFrame::UpdateScrollbar()
   scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
 }
 
-nsresult nsTreeBodyFrame::CheckVerticalOverflow(PRBool aInReflow)
+nsresult nsTreeBodyFrame::CheckVerticalOverflow()
 {
   PRBool verticalOverflowChanged = PR_FALSE;
 
@@ -976,23 +1000,15 @@ nsresult nsTreeBodyFrame::CheckVerticalOverflow(PRBool aInReflow)
   }
  
   if (verticalOverflowChanged) {
-    nsScrollPortEvent* event = new nsScrollPortEvent();
-    event->eventStructType = NS_SCROLLPORT_EVENT;  
-    event->widget = nsnull;
-    event->orient = nsScrollPortEvent::vertical;
-    event->nativeMsg = nsnull;
-    event->message = mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW;
+    nsScrollPortEvent event;
+    event.eventStructType = NS_SCROLLPORT_EVENT;  
+    event.widget = nsnull;
+    event.orient = nsScrollPortEvent::vertical;
+    event.nativeMsg = nsnull;
+    event.message = mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW;
 
-    if (aInReflow) {
-      nsCOMPtr<nsIPresShell> shell;
-      mPresContext->GetShell(getter_AddRefs(shell));
-      shell->PostDOMEvent(mContent, event);
-    }
-    else {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      mContent->HandleDOMEvent(mPresContext, event, nsnull, NS_EVENT_FLAG_INIT, &status);
-      delete event;
-    }
+    nsEventStatus status = nsEventStatus_eIgnore;
+    mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
 
   return NS_OK;
@@ -1602,7 +1618,7 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
   if (mTopRowIndex == 0) {    
     // Just update the scrollbar and return.
     InvalidateScrollbar();
-    CheckVerticalOverflow(PR_FALSE);
+    CheckVerticalOverflow();
     MarkDirtyIfSelect();
     return NS_OK;
   }
@@ -1632,7 +1648,7 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
   }
 
   InvalidateScrollbar();
-  CheckVerticalOverflow(PR_FALSE);
+  CheckVerticalOverflow();
   MarkDirtyIfSelect();
 
   return NS_OK;
