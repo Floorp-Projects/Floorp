@@ -1922,10 +1922,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // aState.mY.
       nscoord oldHeight = line->mBounds.height;
 
-      // Reflow the dirty line
-      nsRect  damageRect;
-      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow ?
-                      &damageRect : 0);
+      // Reflow the dirty line. If it's an incremental reflow, then have
+      // it invalidate the dirty area
+      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow ? PR_TRUE :
+                      PR_FALSE);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1937,12 +1937,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         break;
       }
       nscoord newHeight = line->mBounds.height;
-
-      // If it's an incremental reflow, then invalidate the damaged
-      // line
-      if (incrementalReflow && !damageRect.IsEmpty()) {
-        Invalidate(damageRect);
-      }
       deltaY += newHeight - oldHeight;
 
       // If the next line is clean then check and see if reflowing the
@@ -2035,10 +2029,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     while (nsnull != line) {
       nsRect  damageRect;
       rv = ReflowLine(aState, line, &keepGoing, incrementalReflow ?
-                      &damageRect : 0);
-      if (incrementalReflow && !damageRect.IsEmpty()) {
-        Invalidate(damageRect);
-      }
+                      PR_TRUE : PR_FALSE);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -2102,7 +2093,7 @@ nsresult
 nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                          nsLineBox* aLine,
                          PRBool* aKeepReflowGoing,
-                         nsRect* aDamageRect)
+                         PRBool aDamageDirtyArea)
 {
   nsresult rv = NS_OK;
 
@@ -2144,38 +2135,45 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // We expect blocks to damage any area inside their bounds that is
     // dirty; however, if the frame changes size or position then we
     // need to do some repainting
-    if (aDamageRect) {
+    if (aDamageDirtyArea) {
       if ((oldCombinedArea.x != aLine->mCombinedArea.x) ||
           (oldCombinedArea.y != aLine->mCombinedArea.y)) {
         // The block has moved, and so do be safe we need to repaint
         // XXX We need to improve on this...
-        aDamageRect->UnionRect(oldCombinedArea, aLine->mCombinedArea);
+        nsRect  dirtyRect;
+        dirtyRect.UnionRect(oldCombinedArea, aLine->mCombinedArea);
+        Invalidate(dirtyRect);
 
       } else {
-        aDamageRect->Empty();
         if (oldCombinedArea.width != aLine->mCombinedArea.width) {
+          nsRect  dirtyRect;
+
           // Just damage the vertical strip that was either added or went
           // away
-          aDamageRect->x = PR_MIN(oldCombinedArea.XMost(),
-                                  aLine->mCombinedArea.XMost());
-          aDamageRect->y = aLine->mCombinedArea.y;
-          aDamageRect->width = PR_MAX(oldCombinedArea.XMost(),
-                                      aLine->mCombinedArea.XMost()) -
-                               aDamageRect->x;
-          aDamageRect->height = PR_MAX(oldCombinedArea.height,
-                                       aLine->mCombinedArea.height);
+          dirtyRect.x = PR_MIN(oldCombinedArea.XMost(),
+                               aLine->mCombinedArea.XMost());
+          dirtyRect.y = aLine->mCombinedArea.y;
+          dirtyRect.width = PR_MAX(oldCombinedArea.XMost(),
+                                   aLine->mCombinedArea.XMost()) -
+                            dirtyRect.x;
+          dirtyRect.height = PR_MAX(oldCombinedArea.height,
+                                    aLine->mCombinedArea.height);
+          Invalidate(dirtyRect);
         }
         if (oldCombinedArea.height != aLine->mCombinedArea.height) {
+          nsRect  dirtyRect;
+          
           // Just damage the horizontal strip that was either added or went
           // away
-          aDamageRect->x = aLine->mCombinedArea.x;
-          aDamageRect->y = PR_MIN(oldCombinedArea.YMost(),
-                                  aLine->mCombinedArea.YMost());
-          aDamageRect->width = PR_MAX(oldCombinedArea.width,
-                                      aLine->mCombinedArea.width);
-          aDamageRect->height = PR_MAX(oldCombinedArea.YMost(),
-                                       aLine->mCombinedArea.YMost()) -
-                                aDamageRect->y;
+          dirtyRect.x = aLine->mCombinedArea.x;
+          dirtyRect.y = PR_MIN(oldCombinedArea.YMost(),
+                               aLine->mCombinedArea.YMost());
+          dirtyRect.width = PR_MAX(oldCombinedArea.width,
+                                   aLine->mCombinedArea.width);
+          dirtyRect.height = PR_MAX(oldCombinedArea.YMost(),
+                                    aLine->mCombinedArea.YMost()) -
+                             dirtyRect.y;
+          Invalidate(dirtyRect);
         }
       }
     }
@@ -2185,8 +2183,11 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 
     // We don't really know what changed in the line, so use the union
     // of the old and new combined areas
-    if (aDamageRect) {
-      aDamageRect->UnionRect(oldCombinedArea, aLine->mCombinedArea);
+    if (aDamageDirtyArea) {
+      nsRect  dirtyRect;
+
+      dirtyRect.UnionRect(oldCombinedArea, aLine->mCombinedArea);
+      Invalidate(dirtyRect);
     }
   }
 

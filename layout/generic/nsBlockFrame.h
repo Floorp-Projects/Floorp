@@ -218,7 +218,7 @@ protected:
   nsresult ReflowLine(nsBlockReflowState& aState,
                       nsLineBox* aLine,
                       PRBool* aKeepReflowGoing,
-                      nsRect* aDamageRect);
+                      PRBool aDamageDirtyArea = PR_FALSE);
 
   virtual void DidReflowLine(nsBlockReflowState& aState,
                              nsLineBox* aLine,
