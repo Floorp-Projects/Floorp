@@ -55,13 +55,13 @@ class UintMap {
     }
 
     public UintMap(int initialCapacity) {
-        if (checkWorld) check(initialCapacity >= 0);
+        if (Context.check && initialCapacity < 0) Context.codeBug();
         // Table grow when number of stored keys >= 3/4 of max capacity
         int minimalCapacity = initialCapacity * 4 / 3;
         int i;
         for (i = 2; (1 << i) < minimalCapacity; ++i) { }
         minimalPower = i;
-        if (checkSelf) check(minimalPower >= 2);
+        if (checkSelf && minimalPower < 2) Context.codeBug();
     }
 
     public boolean isEmpty() {
@@ -73,18 +73,18 @@ class UintMap {
     }
 
     public boolean has(int key) {
-        if (checkWorld) check(key >= 0);
+        if (Context.check && key < 0) Context.codeBug();
         return 0 <= findIndex(key);
     }
 
     public boolean isObjectType(int key) {
-        if (checkWorld) check(key >= 0);
+        if (Context.check && key < 0) Context.codeBug();
         int index = findIndex(key);
         return index >= 0 && isObjectTypeValue(index);
     }
 
     public boolean isIntType(int key) {
-        if (checkWorld) check(key >= 0);
+        if (Context.check && key < 0) Context.codeBug();
         int index = findIndex(key);
         return index >= 0 && !isObjectTypeValue(index);
     }
@@ -95,7 +95,7 @@ class UintMap {
      * not have object value
      */
     public Object getObject(int key) {
-        if (checkWorld) check(key >= 0);
+        if (Context.check && key < 0) Context.codeBug();
         if (values != null) {
             int index = findIndex(key);
             if (0 <= index) {
@@ -111,7 +111,7 @@ class UintMap {
      * not have int value
      */
     public int getInt(int key, int defaultValue) {
-        if (checkWorld) check(key >= 0);
+        if (Context.check && key < 0) Context.codeBug();
         if (ivaluesShift != 0) {
             int index = findIndex(key);
             if (0 <= index) {
@@ -131,7 +131,7 @@ class UintMap {
      * not have int value
      */
     public int getExistingInt(int key) {
-        if (checkWorld) check(key >= 0);
+        if (Context.check && key < 0) Context.codeBug();
         if (ivaluesShift != 0) {
             int index = findIndex(key);
             if (0 <= index) {
@@ -141,12 +141,12 @@ class UintMap {
             }
         }
         // Key must exist
-        if (checkWorld) check(false);
+        if (Context.check) Context.codeBug();
         return 0;
     }
 
     public void put(int key, Object value) {
-        if (checkWorld) check(key >= 0 && value != null);
+        if (Context.check && !(key >= 0 && value != null)) Context.codeBug();
         int index = ensureIndex(key, false);
         if (values == null) {
             values = new Object[1 << power];
@@ -155,7 +155,7 @@ class UintMap {
     }
 
     public void put(int key, int value) {
-        if (checkWorld) check(key >= 0);
+        if (Context.check && key < 0) Context.codeBug();
         int index = ensureIndex(key, true);
         if (ivaluesShift == 0) {
             int N = 1 << power;
@@ -169,7 +169,7 @@ class UintMap {
     }
 
     public void remove(int key) {
-        if (checkWorld) check(key >= 0);
+        if (Context.check && key < 0) Context.codeBug();
         int index = findIndex(key);
         if (0 <= index) {
             keys[index] = DELETED;
@@ -224,7 +224,10 @@ class UintMap {
                 int step = tableLookupStep(fraction, mask, power);
                 int n = 0;
                 do {
-                    if (checkSelf) check(n++ < occupiedCount);
+                    if (checkSelf) {
+                        if (n >= occupiedCount) Context.codeBug();
+                        ++n;
+                    }
                     index = (index + step) & mask;
                     entry = keys[index];
                     if (entry == key) { return index; }
@@ -243,9 +246,9 @@ class UintMap {
             int step = tableLookupStep(fraction, mask, power);
             int firstIndex = index;
             do {
-                if (checkSelf) check(keys[index] != DELETED);
+                if (checkSelf && keys[index] == DELETED) Context.codeBug();
                 index = (index + step) & mask;
-                if (checkSelf) check(firstIndex != index);
+                if (checkSelf && firstIndex == index) Context.codeBug();
             } while (keys[index] != EMPTY);
         }
         return index;
@@ -310,7 +313,10 @@ class UintMap {
                 int step = tableLookupStep(fraction, mask, power);
                 int n = 0;
                 do {
-                    if (checkSelf) check(n++ < occupiedCount);
+                    if (checkSelf) {
+                        if (n >= occupiedCount) Context.codeBug();
+                        ++n;
+                    }
                     index = (index + step) & mask;
                     entry = keys[index];
                     if (entry == key) { return index; }
@@ -321,7 +327,8 @@ class UintMap {
             }
         }
         // Inserting of new key
-        if (checkSelf) check(keys == null || keys[index] == EMPTY);
+        if (checkSelf && keys != null && keys[index] != EMPTY)
+            Context.codeBug();
         if (firstDeleted >= 0) {
             index = firstDeleted;
         }
@@ -341,17 +348,10 @@ class UintMap {
     }
 
     private boolean isObjectTypeValue(int index) {
-        if (checkSelf) check(index >= 0 && index < (1 << power));
+        if (checkSelf && !(index >= 0 && index < (1 << power)))
+            Context.codeBug();
         return values != null && values[index] != null;
     }
-
-    private static void check(boolean condition) {
-        if (!condition) { throw new RuntimeException(); }
-    }
-
-// Rudimentary support for Design-by-Contract
-    private static final boolean checkWorld = true;
-    private static final boolean checkSelf = checkWorld && false;
 
 // A == golden_ratio * (1 << 32) = ((sqrt(5) - 1) / 2) * (1 << 32)
 // See Knuth etc.
@@ -376,6 +376,9 @@ class UintMap {
     // If ivaluesShift != 0, keys[ivaluesShift + index] contains integer
     // values associated with keys
     private int ivaluesShift;
+
+// Rudimentary support for Design-by-Contract
+    private static final boolean checkSelf = Context.check && false;
 
 /*
     public static void main(String[] args) {
@@ -464,5 +467,10 @@ class UintMap {
 
         System.out.println(); System.out.flush();
     }
+
+    static void check(boolean condition) {
+        if (!condition) Context.codeBug();
+    }
+
 //*/
 }

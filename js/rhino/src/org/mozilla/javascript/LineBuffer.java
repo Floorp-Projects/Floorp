@@ -67,100 +67,134 @@ final class LineBuffer {
         this.in = in;
         this.lineno = lineno;
     }
-
+    
     int read() throws IOException {
-		for(;;) {
-			if (end == offset && !fill())
-			    return -1;
+        for(;;) {
+            if (end == offset && !fill())
+                return -1;
+            
+            int c = buffer[offset];
+            ++offset;
 
-			// Do only a bitmask + branch per character, at the cost of
-			// three branches per low-bits-only (or 2028/9) character.
-            if ((buffer[offset] & '\udfd0') == 0) {
-			    if (buffer[offset] == '\r') {
-			        // if the next character is a newline, skip past it.
-			        if ((offset + 1) < end) {
-			            if (buffer[offset + 1] == '\n')
-			                offset++;
-			        } else {
-			            // set a flag for fill(), in case the first char of the
-			            // next fill is a newline.
-			            lastWasCR = true;
-			        }
-			    }
-                else 
-                    if ((buffer[offset] != '\n') 
-                        && (buffer[offset] != '\u2028')
-                        && (buffer[offset] != '\u2029'))
-                    { 
-                        if (Character.getType(buffer[offset])
-                                                    == Character.FORMAT) {
-				            hadCFSinceStringStart = true;
-				            offset++;
-                            continue;
+            if ((c & EOL_HINT_MASK) == 0) {
+                switch (c) {
+                    case '\r':
+                        // if the next character is a newline, skip past it.
+                        if (offset != end) {
+                            if (buffer[offset] == '\n')
+                                ++offset;
+                        } else {
+                            // set a flag for fill(), in case the first char
+                            // of the next fill is a newline.
+                            lastWasCR = true;
                         }
-                        return (int) buffer[offset++];
-			        }
-			    offset++;
-			    prevStart = lineStart;
-			    lineStart = offset;
-			    lineno++;
-			    return '\n';
-			}
-			if ((buffer[offset] >= 128) 
-				  && (Character.getType(buffer[offset]) == Character.FORMAT)) {
-				hadCFSinceStringStart = true;
-				offset++;
-			}
-			else
-				break;
-		}
-		
-        return (int) buffer[offset++];
+                        // NO break here!
+                    case '\n': case '\u2028': case '\u2029':
+                        prevStart = lineStart;
+                        lineStart = offset;
+                        lineno++;
+                        return '\n';
+                }
+            }
+
+            if (c < 128 || !formatChar(c)) {
+                return c;
+            }
+            hadCFSinceStringStart = true;
+        }
     }
 
     void unread() {
-        if (offset == 0)
-            // We can get here when we're asked to unread() an
-            // implicit EOF_CHAR.
-            
-            // This would also be wrong behavior in the general case,
-            // because a peek() could map a buffer.length offset to 0
-            // in the process of a fill(), and leave it there.  But
-            // the scanner never calls peek() or a failed match()
-            // followed by unread()... this would violate 1-character
-            // lookahead.  So we're OK.
+        // offset can only be 0 when we're asked to unread() an implicit
+        // EOF_CHAR.
+
+        // This would be wrong behavior in the general case,
+        // because a peek() could map a buffer.length offset to 0
+        // in the process of a fill(), and leave it there.  But
+        // the scanner never calls peek() or a failed match()
+        // followed by unread()... this would violate 1-character
+        // lookahead.  
+        if (Context.check && offset == 0 && !hitEOF) Context.codeBug();
+        
+        if (offset == 0) // Same as if (hitEOF)
             return;
         offset--;
-        if ((buffer[offset] & '\ufff0') == 0
-            && (buffer[offset] == '\r' || buffer[offset] == '\n')) {
-            // back off from the line start we presumably just registered...
+        int c = buffer[offset];
+        if ((c & EOL_HINT_MASK) == 0 && eolChar(c)) {
             lineStart = prevStart;
             lineno--;
         }
     }
 
+    private void skipFormatChar() {
+        if (checkSelf && !formatChar(buffer[offset])) Context.codeBug();
+
+        if (stringStart >= 0 || stringSoFar != null) {
+            hadCFSinceStringStart = true;
+        }
+        else {
+            // swap prev character with format one so possible call to
+            // startString can assume that previous non-format char is at 
+            // offset - 1. Note it causes getLine to return not exactly the
+            // source LineBuffer read, but it is used only in error reporting 
+            // and should not be a problem.
+            if (offset != 0) {
+                char tmp = buffer[offset];
+                buffer[offset] = buffer[offset - 1];
+                buffer[offset - 1] = tmp;
+            }
+            else if (otherEnd != 0) {
+                char tmp = buffer[offset];
+                buffer[offset] = otherBuffer[otherEnd - 1];
+                otherBuffer[otherEnd - 1] = tmp;
+            }
+        }
+
+        ++offset;
+    }
+    
     int peek() throws IOException {
-        if (end == offset && !fill())
-            return -1;
+        for (;;) {
+            if (end == offset && !fill()) {
+                return -1;
+            }
 
-        if (buffer[offset] == '\r')
-            return '\n';
-
-        return buffer[offset];
+            int c = buffer[offset];
+            if ((c & EOL_HINT_MASK) == 0 && eolChar(c)) {
+                return '\n';
+            }
+            if (c < 128 || !formatChar(c)) {
+                return c;
+            }
+            
+            skipFormatChar();
+        }
     }
 
-    boolean match(char c) throws IOException {
-        if (end == offset && !fill())
-            return false;
-
-        // This'd be a place where we'd need to map '\r' to '\n' and
-        // do other updates, but TokenStream never looks ahead for
-        // '\n', so we don't bother.
-        if (buffer[offset] == c) {
-            offset++;
-            return true;
+    boolean match(int test) throws IOException {
+        if (Context.check) {
+            // TokenStream never looks ahead for '\n', which allows simple code
+            if ((test & EOL_HINT_MASK) == 0 && eolChar(test))
+                Context.codeBug();
+            // Format chars are not allowed either
+            if (test >= 128 && formatChar(test))
+                Context.codeBug();
         }
-        return false;
+
+        for (;;) {
+            if (end == offset && !fill())
+                return false;
+
+            int c = buffer[offset];
+            if (test == c) {
+                ++offset;
+                return true;
+            }
+            if (c < 128 || !formatChar(c)) {
+                return false;
+            }
+            skipFormatChar();
+        }
     }
 
     // Reconstruct a source line from the buffers.  This can be slow...
@@ -201,7 +235,8 @@ final class LineBuffer {
                     break;
                 end += charsRead;
             }
-            if (buffer[i] == '\r' || buffer[i] == '\n')
+            int c = buffer[i];
+            if ((c & EOL_HINT_MASK) == 0 && eolChar(c))
                 break;
             i++;
         }
@@ -224,6 +259,7 @@ final class LineBuffer {
     // accumulating characters for getString().  The string begins
     // with the last character read.
     void startString() {
+        char c;
         if (offset == 0) {
             // We can get here if startString is called after a peek()
             // or failed match() with offset past the end of the
@@ -233,26 +269,25 @@ final class LineBuffer {
             // (which we want to include) is at the end of the last one, so
             // we just go to StringBuffer mode.
             stringSoFar = new StringBuffer();
-			
-            stringSoFar.append(otherBuffer, otherEnd - 1, 1);
-
+            
             stringStart = -1; // Set sentinel value.
-			hadCFSinceStringStart = ((otherBuffer[otherEnd - 1] >= 128) 
-					&& Character.getType(otherBuffer[otherEnd - 1])
-													== Character.FORMAT);
+            c = otherBuffer[otherEnd - 1];
+            stringSoFar.append(c);
         } else {
             // Support restarting strings
             stringSoFar = null;
             stringStart = offset - 1;
-			hadCFSinceStringStart = ((buffer[stringStart] >= 128) 
-					&& Character.getType(buffer[stringStart]) == Character.FORMAT);
+            c = buffer[stringStart];
         }
-		
+        hadCFSinceStringStart = (c >= 128 && formatChar(c));
     }
 
     // Get a string consisting of the characters seen since the last
     // startString.
     String getString() {
+        // No calls to getString without previous startString
+        if (Context.check && !(stringStart >= 0 || stringSoFar != null))
+            Context.codeBug();
         String result;
 
         /*
@@ -266,14 +301,12 @@ final class LineBuffer {
                       buffer[offset] == '\n' && buffer[offset - 1] == '\r') ?
             1 : 0;
 
-        if (stringStart != -1) {
+        if (stringStart >= 0) {
             // String mark is valid, and in this buffer.
 
             result = new String(buffer, stringStart, 
                                 offset - stringStart - loseCR);
         } else {
-            if (stringSoFar == null) 
-                stringSoFar = new StringBuffer();
             // Exclude cr as well as nl of newline.  If offset is 0, then
             // hopefully fill() did the right thing.
             result = (stringSoFar.append(buffer, 0, offset - loseCR)).toString();
@@ -281,30 +314,29 @@ final class LineBuffer {
         
         stringStart = -1;
         stringSoFar = null;
-		
-		if (hadCFSinceStringStart) {
-			char c[] = result.toCharArray();
-			StringBuffer x = null;
-			for (int i = 0; i < c.length; i++) {
-				if (Character.getType(c[i]) == Character.FORMAT) {
-					if (x == null) {
-						x = new StringBuffer();
-						x.append(c, 0, i);
-					}
-				}
-				else
-					if (x != null) x.append(c[i]);
-			}
-			if (x != null) result = x.toString();	
-		}
-		
+        
+        if (hadCFSinceStringStart) {
+            char c[] = result.toCharArray();
+            StringBuffer x = null;
+            for (int i = 0; i < c.length; i++) {
+                if (formatChar(c[i])) {
+                    if (x == null) {
+                        x = new StringBuffer();
+                        x.append(c, 0, i);
+                    }
+                }
+                else
+                    if (x != null) x.append(c[i]);
+            }
+            if (x != null) result = x.toString();    
+        }
+        
         return result;
     }            
 
-    boolean fill() throws IOException {
-        // not sure I care...
-        if (end - offset != 0) 
-            throw new IOException("fill of non-empty buffer");
+    private boolean fill() throws IOException {
+        // fill should be caled only for emty buffer
+        if (checkSelf && !(end == offset)) Context.codeBug();
 
         // If there's a string currently being accumulated, save
         // off the progress.
@@ -386,6 +418,18 @@ final class LineBuffer {
     int getLineno() { return lineno; }
     boolean eof() { return hitEOF; }
     
+    private static boolean formatChar(int c) {
+        return Character.getType((char)c) == Character.FORMAT;
+    }
+
+    private static boolean eolChar(int c) {
+        return c == '\r' || c == '\n' || c == '\u2028' || c == '\u2029';
+    }
+
+    // Optimization for faster check for eol character: eolChar(c) returns
+    // true only when (c & EOL_HINT_MASK) == 0
+    private static final int EOL_HINT_MASK = 0xdfd0;
+
     private Reader in;
     private char[] otherBuffer = null;
     private char[] buffer = null;
@@ -405,8 +449,8 @@ final class LineBuffer {
 
     private int stringStart = -1;
     private StringBuffer stringSoFar = null;
-	private boolean hadCFSinceStringStart = false;
+    private boolean hadCFSinceStringStart = false;
 
+// Rudimentary support for Design-by-Contract
+    private static final boolean checkSelf = Context.check && true;
 }
-
-

@@ -2001,6 +2001,12 @@ public class Context {
             activationNames.remove(name);
     }
 
+// Rudimentary support for Design-by-Contract
+    static void codeBug() {
+        throw new RuntimeException("FAILED ASSERTION");
+    }
+
+    static final boolean check = true;
 
     static final boolean useJSObject = false;
 
