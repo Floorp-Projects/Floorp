@@ -111,6 +111,10 @@ RESFILE		= viewer.res
 XP_DIST_LIBS    += -lxpwidgets_s -ldbgrobot -lwidget_windows
 endif
 
+ifeq ($(OS_ARCH),OS2)
+RESFILE		= vieweros2.res
+endif
+
 ifdef MOZ_OJI
 ifeq ($(OS_ARCH),WINNT)
 XP_DIST_LIBS		+= -ljsj$(MOZ_BITS)$(VERSION_NUMBER)

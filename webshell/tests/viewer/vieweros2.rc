@@ -37,7 +37,7 @@
 #include "resources.h"
 #include <os2.h>
 
-
+#define IDM_VIEWERBAR  40990
 
 MENU IDM_VIEWERBAR
 {
