@@ -421,7 +421,11 @@ bool GetMozillaRegistryInfo(eAppVersion &aVersion) {
 
   bool found=false;
   LONG theOpenResult = 1; //any non-zero will do to initialize this...
-  
+
+  if ( aVersion == eUserPath) {
+    found=true;
+  }  
+
   while((ERROR_SUCCESS!=theOpenResult) && (aVersion<eUnknownVersion)) {
      
     GetPathFromRegistry(aVersion,gRegKey,gRegSubKey,gModuleCP,gModuleCount);
