@@ -1889,7 +1889,7 @@ wallet_GetHeader(nsInputFileStream strm, nsKeyType& saveCount, nsKeyType& readCo
   if (NS_FAILED(wallet_GetLine(strm, format, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
-  if (format != HEADER_VERSION_1) {
+  if (!format.Equals(HEADER_VERSION_1)) {
     /* something's wrong */
     return;
   }
@@ -2003,7 +2003,7 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list, PRBool obscure) {
   for (PRInt32 i=0; i<count; i++) {
     ptr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
     wallet_PutLine(strm, (*ptr).item1, obscure, saveCountW, &writeCount);
-    if ((*ptr).item2 != "") {
+    if (!(*ptr).item2.IsEmpty()) {
       wallet_PutLine(strm, (*ptr).item2, obscure, saveCountW, &writeCount);
     } else {
       wallet_Sublist * ptr1;
@@ -2224,20 +2224,20 @@ wallet_ReadFromURLFieldToSchemaFile
  
 nsAutoString
 wallet_GetHostFile(nsIURI * url) {
-  nsAutoString urlName = nsAutoString("");
+  nsAutoString urlName("");
   char* host;
   nsresult rv = url->GetHost(&host);
   if (NS_FAILED(rv)) {
     return nsAutoString("");
   }
-  urlName = urlName + host;
+  urlName.Append(host);
   nsCRT::free(host);
   char* file;
   rv = url->GetPath(&file);
   if (NS_FAILED(rv)) {
     return nsAutoString("");
   }
-  urlName = urlName + file;
+  urlName.Append(file);
   nsCRT::free(file);
   return urlName;
 }
@@ -2301,7 +2301,12 @@ PRInt32 FieldToValue(
   } else {
     /* schema name not found, use field name as schema name and fetch value */
     PRInt32 index2 = index;
-    if (wallet_ReadFromList(wallet_GetHostFile(wallet_lastUrl)+":"+field, value, itemList, wallet_SchemaToValue_list, index2)) {
+
+    nsAutoString temp = wallet_GetHostFile(wallet_lastUrl);
+    temp.Append(":");
+    temp.Append(field);
+
+    if (wallet_ReadFromList(temp, value, itemList, wallet_SchemaToValue_list, index2)) {
       /* value found, prefill it into form */
       schema = nsAutoString(field);
       index = index2;
@@ -2368,7 +2373,7 @@ wallet_GetPrefills(
   if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
     nsAutoString type;
     result = inputElement->GetType(type);
-    if ((NS_SUCCEEDED(result)) && ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
+    if ((NS_SUCCEEDED(result)) && ((type.IsEmpty()) || (type.Compare("text", PR_TRUE) == 0))) {
       nsAutoString field;
       result = inputElement->GetName(field);
       if (NS_SUCCEEDED(result)) {
@@ -2390,7 +2395,7 @@ wallet_GetPrefills(
          * otherwise get value from field name by using mapping tables to get schema name
          */
         if (FieldToValue(field, schema, value, itemList, index) == 0) {
-          if (value == "" && nsnull != itemList) {
+          if (value.IsEmpty() && nsnull != itemList) {
             /* pick first of a set of synonymous values */
             value = ((wallet_Sublist *)itemList->ElementAt(0))->item;
           }
@@ -2425,7 +2430,7 @@ wallet_GetPrefills(
       nsAutoString value;
       nsVoidArray* itemList;
       if (FieldToValue(field, schema, value, itemList, index) == 0) {
-        if (value != "") {
+        if (!value.IsEmpty()) {
           /* no synonym list, just one value to try */
           result = wallet_GetSelectIndex(selectElement, value, selectIndex);
           if (NS_SUCCEEDED(result)) {
@@ -2623,7 +2628,10 @@ wallet_FetchFromNetCenter() {
   if (fetchPatches) {
 
     /* obtain composite patch file */
-    url = (nsAutoString(wallet_Server) + "patchfile." + version).ToNewCString();
+    url = wallet_Server;
+    url.Append("patchfile.");
+    url.Append(version);
+
     Recycle(version);
     rv = NS_NewURItoFile(url, dirSpec, "patchfile");
     if (NS_FAILED(rv)) {
@@ -2700,7 +2708,7 @@ wallet_FetchFromNetCenter() {
   }
 #else
   /* first fetch the composite of all files and put it into a local composite file */
-  url = nsCAutoString(wallet_Server) + allFileName;
+  url = nsCAutoString(wallet_Server); url.Append(allFileName);
   rv = NS_NewURItoFile(url, dirSpec, allFileName);
 
   /* fetch version number from first line of local composite file */
@@ -2710,7 +2718,7 @@ wallet_FetchFromNetCenter() {
     return;
   }
   buffer.StripWhitespace();
-  if (buffer == version) {
+  if (buffer.Equals(version)) {
     /* This is an optimization but we are skipping it for now.  If the user's tables
      * become corrupt but his version number indicates that he is up to date, there
      * would be no obvious way for him to restore the tables.  If we did the optimization
@@ -3180,7 +3188,12 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
     /* is this a new value for the schema */
     PRInt32 index = 0;
     PRInt32 lastIndex = index;
-    while(wallet_ReadFromList(wallet_GetHostFile(wallet_lastUrl)+":"+field, oldValue, dummy, wallet_SchemaToValue_list, index)) {
+
+    nsAutoString concat_param = wallet_GetHostFile(wallet_lastUrl);
+    concat_param.Append(":");
+    concat_param.Append(field);
+
+    while(wallet_ReadFromList(concat_param, oldValue, dummy, wallet_SchemaToValue_list, index)) {
       if (oldValue == value) {
         /*
          * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
@@ -3200,11 +3213,18 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
         return;
       }
       lastIndex = index;
+
+      concat_param = wallet_GetHostFile(wallet_lastUrl);
+      concat_param.Append(":");
+      concat_param.Append(field);
     }
 
     /* this is a new value so store it */
     dummy = 0;
-    nsAutoString hostFileField = wallet_GetHostFile(wallet_lastUrl)+":"+field;
+    nsAutoString hostFileField = wallet_GetHostFile(wallet_lastUrl);
+    hostFileField.Append(":");
+    hostFileField.Append(field);
+
     wallet_WriteToList(hostFileField, value, dummy, wallet_SchemaToValue_list);
     wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE);
   }
@@ -3291,7 +3311,7 @@ WLLT_PostEdit(nsAutoString walletList) {
   tail = temp;
 
   /* return if OK button was not pressed */
-  if (head != "OK") {
+  if (!head.Equals("OK")) {
     return;
   }
 
@@ -3336,15 +3356,15 @@ WLLT_PreEdit(nsAutoString& walletList) {
   for (PRInt32 i=0; i<count; i++) {
     ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
 
-    walletList += ptr->item1 + BREAK;
-    if (ptr->item2 != "") {
-      walletList += ptr->item2 + BREAK;
+    walletList += ptr->item1; walletList.Append(BREAK);
+    if (!ptr->item2.IsEmpty()) {
+      walletList += ptr->item2; walletList.Append(BREAK);
     } else {
       wallet_Sublist * ptr1;
       PRInt32 count2 = LIST_COUNT(ptr->itemList);
       for (PRInt32 i2=0; i2<count2; i2++) {
         ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
-        walletList += ptr1->item + BREAK;
+        walletList += ptr1->item; walletList.Append(BREAK);
 
       }
     }
@@ -3370,7 +3390,7 @@ WLLT_PrefillReturn(nsAutoString results) {
   urlName = SI_FindValueInArgs(results, nsAutoString("|url|"));
 
   /* add url to url list if user doesn't want to preview this page in the future */
-  if (nsAutoString(skip) == "true") {
+  if (nsAutoString(skip).Equals("true")) {
     nsAutoString url = nsAutoString(urlName);
     nsVoidArray* dummy;
     nsAutoString value = nsAutoString("nn");
@@ -3457,8 +3477,8 @@ WLLT_PrefillReturn(nsAutoString results) {
     }
 
     /* Change the value */
-     if ((next == *ptr->value) || ((ptr->count>0) && (next == ""))) {
-       if (((next == *ptr->value) || (next == "")) && ptr->inputElement) {
+     if ((next == *ptr->value) || ((ptr->count>0) && next.IsEmpty())) {
+       if (((next == *ptr->value) || next.IsEmpty()) && ptr->inputElement) {
          ptr->inputElement->SetValue(next);
        } else {
          nsresult result;
@@ -3698,7 +3718,7 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
                         nsAutoString type;
                         result = inputElement->GetType(type);
                         if ((NS_SUCCEEDED(result)) &&
-                            ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
+                            (type.IsEmpty() || (type.Compare("text", PR_TRUE) == 0))) {
                           nsAutoString field;
                           result = inputElement->GetName(field);
                           if (NS_SUCCEEDED(result)) {
@@ -3814,7 +3834,7 @@ WLLT_OnSubmit(nsIContent* currentForm) {
                 rv = inputElement->GetType(type);
                 if (NS_SUCCEEDED(rv)) {
 
-                  PRBool isText = ((type == "") || (type.Compare("text", PR_TRUE)==0));
+                  PRBool isText = (type.IsEmpty() || (type.Compare("text", PR_TRUE)==0));
                   PRBool isPassword = (type.Compare("password", PR_TRUE)==0);
 #ifndef AutoCapture
                   if (isText) {
@@ -3841,7 +3861,9 @@ WLLT_OnSubmit(nsIContent* currentForm) {
                            * do that by doubling up a backslash if it appears in the first
                            * character position
                            */
-                          data->name = nsAutoString('\\') + field;
+                          data->name = nsAutoString('\\');
+                          data->name.Append(field);
+                          
                         } else {
                           data->name = field;
                         }
@@ -3917,7 +3939,7 @@ WLLT_OnSubmit(nsIContent* currentForm) {
                   nsAutoString type;
                   rv = inputElement->GetType(type);
                   if ((NS_SUCCEEDED(rv)) &&
-                      ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
+                      (type.IsEmpty() || (type.Compare("text", PR_TRUE) == 0))) {
                     nsAutoString field;
                     rv = inputElement->GetName(field);
                     if (NS_SUCCEEDED(rv)) {
