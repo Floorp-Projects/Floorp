@@ -41,8 +41,11 @@ public class Animation extends Component implements Runnable
     {
       try
       {
+        Graphics g;
         fThread.sleep(100);
-        paint(getGraphics());
+        g = getGraphics();
+        if (g != null)
+          paint(getGraphics());
         fCurrent++;
         fCurrent %= fGlyphs.length;
         if (fCurrent == 0)
