@@ -55,10 +55,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsSafariProfileMigrator.h"
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CFNumber.h>
-#include <CFString.h>
-#include <CFBase.h>
 #include <InternetConfig.h>
 
 #define SAFARI_PREFERENCES_FILE_NAME NS_LITERAL_STRING("com.apple.Safari.plist")
