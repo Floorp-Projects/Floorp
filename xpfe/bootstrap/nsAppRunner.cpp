@@ -36,7 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef XP_MAC
 #include "nsXPCOMGlue.h"
+#endif
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -1853,7 +1855,11 @@ int main(int argc, char* argv[])
 #endif
     
   NS_TIMELINE_MARK("GRE_Startup...");
+#ifndef XP_MAC
   nsresult rv = GRE_Startup();
+#else
+  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+#endif
   NS_TIMELINE_MARK("...GRE_Startup done");
 
   if (NS_FAILED(rv)) {
@@ -1909,7 +1915,11 @@ int main(int argc, char* argv[])
   remoterv = HandleRemoteArguments(argc, argv, &argused);
 
   if (argused) {
+#ifndef XP_MAC
     GRE_Shutdown();
+#else
+    NS_ShutdownXPCOM(nsnull);
+#endif
   }
 #endif
 
@@ -1920,8 +1930,11 @@ int main(int argc, char* argv[])
     rv = DoOnShutdown();
     NS_ASSERTION(NS_SUCCEEDED(rv), "DoOnShutdown failed");
   }
-
+#ifndef XP_MAC
   rv = GRE_Shutdown();
+#else
+  rv = NS_ShutdownXPCOM(nsnull);
+#endif
   NS_ASSERTION(NS_SUCCEEDED(rv), "GRE_Shutdown failed");
 
   return TranslateReturnValue(mainResult);
