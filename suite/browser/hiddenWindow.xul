@@ -20,6 +20,8 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
 <!-- hiddenwindow is a "minimal" XUL window intended for creating the,
      er, hidden window.  This window is never shown, but on platforms
      which leave the app running after the last (visible) window is shut
@@ -32,11 +34,7 @@ Contributor(s): ______________________________________. -->
      the full one was included for now in anticipation of the whole thing
      becoming an included file someday. -->
 
-<!-- Localizable string definitions from navigator.xul.  Note the window's
-     title is not defined as a localizable entity.  This is not incorrect:
-     the string will never be displayed, and serves as a programmatic
-     reference to the window.  It is also convenient: we want to share
-     the main window's DTD. -->
+<!-- Localizable string definitions from navigator.xul. -->
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/navigator.dtd"> 
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
