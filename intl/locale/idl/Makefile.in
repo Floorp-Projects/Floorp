@@ -31,6 +31,9 @@ MODULE		= locale
 XPIDLSRCS	= \
 		nsILanguageAtom.idl \
 		nsILanguageAtomService.idl \
+		nsIFontPackageService.idl \
+		nsIFontPackageProxy.idl \
+		nsIFontPackageHandler.idl \
 		nsILocale.idl \
 		nsILocaleService.idl \
 		nsIScriptableDateFormat.idl \

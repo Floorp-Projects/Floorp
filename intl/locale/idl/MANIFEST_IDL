@@ -3,3 +3,6 @@ nsILanguageAtomService.idl
 nsILocale.idl
 nsILocaleService.idl
 nsIScriptableDateFormat.idl
+nsIFontPackageService.idl
+nsIFontPackageProxy.idl
+nsIFontPackageHandler.idl
