@@ -32,10 +32,10 @@ NS_IMPL_RELEASE(nsMacWindow);
 //
 //-------------------------------------------------------------------------
 nsMacWindow::nsMacWindow() : nsWindow()
+	, mWindowMadeHere(PR_FALSE), mMacEventHandler(new nsMacEventHandler(this))
 {
 	NS_INIT_REFCNT();
 	strcpy(gInstanceClassName, "nsMacWindow");
-	mMacEventHandler = new nsMacEventHandler(this);
 }
 
 
@@ -46,12 +46,6 @@ nsMacWindow::nsMacWindow() : nsWindow()
 //-------------------------------------------------------------------------
 nsMacWindow::~nsMacWindow()
 {
-	if (mMacEventHandler)
-	{
-		delete mMacEventHandler;
-		mMacEventHandler = nsnull;
-	}
-
 	if (mWindowPtr)
 	{
 		nsRefData* theRefData = (nsRefData*)::GetWRefCon(mWindowPtr);
@@ -62,8 +56,7 @@ nsMacWindow::~nsMacWindow()
 			::SetWRefCon(mWindowPtr, theRefData->GetUserData());	// restore the refCon if we did not create the window
 		mWindowPtr = nsnull;
 
-		if (theRefData)
-			delete theRefData;
+		delete theRefData;
 	}
 }
 
@@ -201,7 +194,7 @@ PRBool nsMacWindow::HandleOSEvent(
 												EventRecord&		aOSEvent)
 {
 	PRBool retVal;
-	if (mMacEventHandler)
+	if (mMacEventHandler.get())
 		retVal = mMacEventHandler->HandleOSEvent(aOSEvent);
 	else
 		retVal = PR_FALSE;
@@ -218,7 +211,7 @@ PRBool nsMacWindow::HandleMenuCommand(
 												long						aMenuResult)
 {
 	PRBool retVal;
-	if (mMacEventHandler)
+	if (mMacEventHandler.get())
 		retVal = mMacEventHandler->HandleMenuCommand(aOSEvent, aMenuResult);
 	else
 		retVal = PR_FALSE;
