@@ -764,6 +764,10 @@ _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
 {
     BOOL rv;
 
+    /*
+     * The SetHandleInformation function fails with the
+     * ERROR_CALL_NOT_IMPLEMENTED error on Win95.
+     */
     rv = SetHandleInformation(
             (HANDLE)fd->secret->md.osfd,
             HANDLE_FLAG_INHERIT,
