@@ -83,10 +83,9 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType, nsURIL
    if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
       mDocShell->StopCurrentLoads();
 
-   nsCOMPtr<nsIURI> aUri;
-   aOpenedChannel->GetURI(getter_AddRefs(aUri));
-   mDocShell->AddCurrentSiteToHistories();
-   mDocShell->SetCurrentURI(aUri);
+   nsCOMPtr<nsIURI> aURI;
+   aOpenedChannel->GetURI(getter_AddRefs(aURI));
+   mDocShell->OnLoadingSite(aURI);
 
    // XX mDocShell->CreateContentViewer();
 
@@ -189,7 +188,7 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
 NS_IMETHODIMP 
 nsDSURIContentListener::GetLoadCookie(nsISupports ** aLoadCookie)
 {
-  *aLoadCookie = mLoadCookie;
+  *aLoadCookie = mDocShell->mLoadCookie;
   NS_IF_ADDREF(*aLoadCookie);
   return NS_OK;
 }
@@ -197,7 +196,7 @@ nsDSURIContentListener::GetLoadCookie(nsISupports ** aLoadCookie)
 NS_IMETHODIMP 
 nsDSURIContentListener::SetLoadCookie(nsISupports * aLoadCookie)
 {
-  mLoadCookie = aLoadCookie;
+  mDocShell->mLoadCookie = aLoadCookie;
   return NS_OK;
 }
 
