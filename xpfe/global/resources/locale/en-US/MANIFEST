@@ -20,3 +20,4 @@ printdialog.dtd
 printPageSetup.dtd
 printPageSetup.properties
 printProgress.dtd
+printPreviewProgress.dtd

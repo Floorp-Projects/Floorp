@@ -71,6 +71,7 @@ private:
   PRInt32                           m_pendingStateValue;
   nsCOMPtr<nsIDOMWindowInternal>    m_dialog;
   nsCOMPtr<nsISupportsArray>        m_listenerList;
+  nsCOMPtr<nsIObserver>             m_observer;
 };
 
 #endif

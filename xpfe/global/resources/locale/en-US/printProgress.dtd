@@ -1,9 +1,9 @@
-<!--LOCALIZATION NOTE sendprogress.dtd Main UI for Send Message Progress Dialog -->
+<!--LOCALIZATION NOTE printProgress.dtd Main UI for Print Progress Dialog -->
 <!ENTITY printWindow.title "Printing"> 
-<!ENTITY status   "Title:"> 
+<!ENTITY title    "Title:"> 
 <!ENTITY progress "Progress:">
-
-<!ENTITY keepProgressDialogUpMsg.label "Keep this window open after the message is successfully sent."> 
+<!ENTITY preparing "Preparing...">
+<!ENTITY printComplete "Printing is Completed.">
 
 <!ENTITY dialogCancel.label "Cancel"> 
 <!ENTITY dialogClose.label "Close">
@@ -16,4 +16,3 @@
     #1 will be replaced by the percentage of the file that has been saved -->
 <!ENTITY percentPrint "#1&#037;">
 
-<!ENTITY printComplete "Print is complete.">

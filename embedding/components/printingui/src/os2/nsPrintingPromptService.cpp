@@ -59,6 +59,7 @@ static const char sPrintOptionsContractID[] = "@mozilla.org/gfx/printsettings-se
 
 static const char *kPrintDialogURL         = "chrome://global/content/printdialog.xul";
 static const char *kPrintProgressDialogURL = "chrome://global/content/printProgress.xul";
+static const char *kPrtPrvProgressDialogURL = "chrome://global/content/printPreviewProgress.xul";
 static const char *kPageSetupDialogURL     = "chrome://communicator/content/printPageSetup.xul";
 
 #define NS_DIALOGPARAMBLOCK_CONTRACTID \
@@ -170,7 +171,9 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*           parent,
 
         if (parentDOMIntl) 
         {
-            mPrintProgress->OpenProgressDialog(parentDOMIntl, kPrintProgressDialogURL, *printProgressParams, openDialogObserver, notifyOnOpen);
+            mPrintProgress->OpenProgressDialog(parentDOMIntl, 
+                                               isForPrinting?kPrintProgressDialogURL:kPrtPrvProgressDialogURL, 
+                                               *printProgressParams, openDialogObserver, notifyOnOpen);
         }
     }
 

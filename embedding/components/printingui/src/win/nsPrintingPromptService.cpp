@@ -56,8 +56,9 @@
 
 #define NS_DIALOGPARAMBLOCK_CONTRACTID "@mozilla.org/embedcomp/dialogparam;1"
 
-static const char *kPrintProgressDialogURL = "chrome://global/content/printProgress.xul";
-static const char *kPageSetupDialogURL     = "chrome://communicator/content/printPageSetup.xul";
+static const char *kPrintProgressDialogURL  = "chrome://global/content/printProgress.xul";
+static const char *kPrtPrvProgressDialogURL = "chrome://global/content/printPreviewProgress.xul";
+static const char *kPageSetupDialogURL      = "chrome://communicator/content/printPageSetup.xul";
 
 // Static Data 
 static HINSTANCE gInstance;
@@ -186,7 +187,7 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
 }
 
 
-//-----------------------------------------------------------
+/* void showProgress (in nsIDOMWindow parent, in nsIWebBrowserPrint webBrowserPrint, in nsIPrintSettings printSettings, in nsIObserver openDialogObserver, in boolean isForPrinting, out nsIWebProgressListener webProgressListener, out nsIPrintProgressParams printProgressParams, out boolean notifyOnOpen); */
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent, 
                                       nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
@@ -200,6 +201,14 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
     NS_ENSURE_ARG(webProgressListener);
     NS_ENSURE_ARG(printProgressParams);
     NS_ENSURE_ARG(notifyOnOpen);
+
+    if (mPrintProgress) 
+    {
+        *webProgressListener = nsnull;
+        *printProgressParams = nsnull;
+        *notifyOnOpen        = PR_FALSE;
+        return NS_ERROR_FAILURE;
+    }
 
     nsPrintProgress* prtProgress = new nsPrintProgress();
     nsresult rv = prtProgress->QueryInterface(NS_GET_IID(nsIPrintProgress), (void**)getter_AddRefs(mPrintProgress));
@@ -226,7 +235,9 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
 
         if (parentDOMIntl) 
         {
-            mPrintProgress->OpenProgressDialog(parentDOMIntl, kPrintProgressDialogURL, *printProgressParams, openDialogObserver, notifyOnOpen);
+            mPrintProgress->OpenProgressDialog(parentDOMIntl, 
+                                               isForPrinting?kPrintProgressDialogURL:kPrtPrvProgressDialogURL, 
+                                               *printProgressParams, openDialogObserver, notifyOnOpen);
         }
     }
 
@@ -249,6 +260,15 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
 
     block->SetInt(0, 0);
     rv = DoDialog(parent, block, printSettings, kPageSetupDialogURL);
+
+    // if aWebBrowserPrint is not null then we are printing
+    // so we want to pass back NS_ERROR_ABORT on cancel
+    if (NS_SUCCEEDED(rv)) 
+    {
+      PRInt32 status;
+      block->GetInt(0, &status);
+      return status == 0?NS_ERROR_ABORT:NS_OK;
+    }
 
     return rv;
 }
@@ -321,11 +341,15 @@ nsPrintingPromptService::DoDialog(nsIDOMWindow *aParent,
 NS_IMETHODIMP 
 nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
-    if (aStateFlags & STATE_STOP) 
+    if ((aStateFlags & STATE_STOP) && mWebProgressListener) 
     {
         mWebProgressListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
-        mPrintProgress->CloseProgressDialog(PR_TRUE);
-        mPrintProgress = nsnull;
+        if (mPrintProgress) 
+        {
+            mPrintProgress->CloseProgressDialog(PR_TRUE);
+        }
+        mPrintProgress       = nsnull;
+        mWebProgressListener = nsnull;
     }
     return NS_OK;
 }
@@ -334,28 +358,44 @@ nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest 
 NS_IMETHODIMP 
 nsPrintingPromptService::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
-    return mWebProgressListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+  if (mWebProgressListener) 
+  {
+      return mWebProgressListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
 {
-    return mWebProgressListener->OnLocationChange(aWebProgress, aRequest, location);
+  if (mWebProgressListener) 
+  {
+      return mWebProgressListener->OnLocationChange(aWebProgress, aRequest, location);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
 {
-    return mWebProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+  if (mWebProgressListener) 
+  {
+      return mWebProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
-    return mWebProgressListener->OnSecurityChange(aWebProgress, aRequest, state);
+  if (mWebProgressListener) 
+  {
+      return mWebProgressListener->OnSecurityChange(aWebProgress, aRequest, state);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 

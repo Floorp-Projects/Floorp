@@ -43,6 +43,8 @@ toolkit.jar:
         content/global/printdialog.js               (resources/content/printdialog.js)
         content/global/printProgress.xul            (resources/content/printProgress.xul)
         content/global/printProgress.js             (resources/content/printProgress.js)
+        content/global/printPreviewProgress.xul     (resources/content/printPreviewProgress.xul)
+        content/global/printPreviewProgress.js      (resources/content/printPreviewProgress.js)
         content/global/fullScreen.js                (resources/content/fullScreen.js)
         content/global/build.dtd                    (build.dtd)
         content/global/MPL-1.1.html                 (resources/content/MPL-1.1.html)
@@ -102,6 +104,7 @@ en-US.jar:
     locale/en-US/global/dialog.properties           (resources/locale/en-US/dialog.properties)
     locale/en-US/global/printdialog.dtd             (resources/locale/en-US/printdialog.dtd)
     locale/en-US/global/printProgress.dtd           (resources/locale/en-US/printProgress.dtd)
+    locale/en-US/global/printPreviewProgress.dtd    (resources/locale/en-US/printPreviewProgress.dtd)
 
 US.jar:
     locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 

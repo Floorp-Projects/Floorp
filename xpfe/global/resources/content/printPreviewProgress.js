@@ -19,9 +19,6 @@
  * Reserved.
  *
  * Contributors:
- *     William A. ("PowerGUI") Law <law@netscape.com>
- *     Scott MacGregor <mscott@netscape.com>
- *     jean-Francois Ducarroz <ducarroz@netscape.com>
  *     Rod Spears <rods@netscape.com>
  */
 
@@ -63,27 +60,9 @@ function elipseString(aStr, doFront)
 var progressListener = {
     onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus)
     {
-      if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_START)
-      {
-        // Put progress meter in undetermined mode.
-        // dialog.progress.setAttribute( "value", 0 );
-        dialog.progress.setAttribute( "mode", "undetermined" );
-      }
       
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       {
-        // we are done printing 
-        // Indicate completion in title area.
-        var msg = getString( "printComplete" );
-        dialog.title.setAttribute("value", msg);
-
-        // Put progress meter at 100%.
-        dialog.progress.setAttribute( "value", 100 );
-        dialog.progress.setAttribute( "mode", "normal" );
-        var percentPrint = getString( "progressText" );
-        percentPrint = replaceInsert( percentPrint, 1, 100 );
-        dialog.progressText.setAttribute("value", percentPrint);
-
         window.close();
       }
     },
@@ -97,39 +76,13 @@ var progressListener = {
           docTitle = docTitleStr;
           dialog.title.value = docTitle;
         }
-        var docURLStr = progressParams.docURL;
+        var docURLStr = elipseString(rogressParams.docURL, true);
         if (docURLStr != docURL && dialog.title != null) {
           docURL = docURLStr;
           if (docTitle == "") {
-            dialog.title.value = elipseString(docURLStr, true);
+            dialog.title.value = docURLStr;
           }
         }
-      }
-
-      // Calculate percentage.
-      var percent;
-      if ( aMaxTotalProgress > 0 ) 
-      {
-        percent = parseInt( (aCurTotalProgress*100)/aMaxTotalProgress + .5 );
-        if ( percent > 100 )
-          percent = 100;
-        
-        dialog.progress.removeAttribute( "mode");
-        
-        // Advance progress meter.
-        dialog.progress.setAttribute( "value", percent );
-
-        // Update percentage label on progress meter.
-        var percentPrint = getString( "progressText" );
-        percentPrint = replaceInsert( percentPrint, 1, percent );
-        dialog.progressText.setAttribute("value", percentPrint);
-      } 
-      else 
-      {
-        // Progress meter should be barber-pole in this case.
-        dialog.progress.setAttribute( "mode", "undetermined" );
-        // Update percentage label on progress meter.
-        dialog.progressText.setAttribute("value", "");
       }
     },
 
@@ -158,6 +111,54 @@ var progressListener = {
     }
 };
 
+function onLoad() {
+    // Set global variables.
+    printProgress = window.arguments[0];
+    if (window.arguments[1])
+    {
+      progressParams = window.arguments[1].QueryInterface(Components.interfaces.nsIPrintProgressParams)
+      if (progressParams)
+      {
+        docTitle = elipseString(progressParams.docTitle, false);
+        docURL   = elipseString(progressParams.docURL, true);
+      }
+    }
+
+    if ( !printProgress ) {
+        dump( "Invalid argument to printPreviewProgress.xul\n" );
+        window.close()
+        return;
+    }
+
+    dialog          = new Object;
+    dialog.strings  = new Array;
+    dialog.title      = document.getElementById("dialog.title");
+    dialog.titleLabel = document.getElementById("dialog.titleLabel");
+
+    dialog.title.value = docTitle;
+
+    // set our web progress listener on the helper app launcher
+    printProgress.registerListener(progressListener);
+    moveToAlertPosition();
+
+    //We need to delay the set title else dom will overwrite it
+    window.setTimeout(doneIniting, 100);
+}
+
+function onUnload() 
+{
+  if (printProgress)
+  {
+   try 
+   {
+     printProgress.unregisterListener(progressListener);
+     printProgress = null;
+   }
+    
+   catch( exception ) {}
+  }
+}
+
 function getString( stringId ) {
    // Check if we've fetched this string already.
    if (!(stringId in dialog.strings)) {
@@ -181,87 +182,6 @@ function getString( stringId ) {
    return dialog.strings[ stringId ];
 }
 
-function loadDialog() 
-{
-}
-
-function replaceInsert( text, index, value ) {
-   var result = text;
-   var regExp = new RegExp( "#"+index );
-   result = result.replace( regExp, value );
-   return result;
-}
-
-function onLoad() {
-
-    // Set global variables.
-    printProgress = window.arguments[0];
-    if (window.arguments[1])
-    {
-      progressParams = window.arguments[1].QueryInterface(Components.interfaces.nsIPrintProgressParams)
-      if (progressParams)
-      {
-        docTitle = elipseString(progressParams.docTitle, false);
-        docURL   = elipseString(progressParams.docURL, true);
-      }
-    }
-
-    if ( !printProgress ) {
-        dump( "Invalid argument to printProgress.xul\n" );
-        window.close()
-        return;
-    }
-
-    dialog = new Object;
-    dialog.strings = new Array;
-    dialog.title        = document.getElementById("dialog.title");
-    dialog.titleLabel   = document.getElementById("dialog.titleLabel");
-    dialog.progress     = document.getElementById("dialog.progress");
-    dialog.progressText = document.getElementById("dialog.progressText");
-    dialog.progressLabel = document.getElementById("dialog.progressLabel");
-    dialog.tempLabel    = document.getElementById("dialog.tempLabel");
-    dialog.cancel       = document.getElementById("cancel");
-
-    dialog.progress.setAttribute("hidden", "true");
-    dialog.cancel.setAttribute("disabled", "true");
-
-    var progressLabel = getString("preparing");
-    if (progressLabel == "") {
-      progressLabel = "Preparing..."; // better than nothing
-    }
-    dialog.tempLabel.value = progressLabel;
-
-    dialog.title.value = docTitle;
-
-    // Set up dialog button callbacks.
-    var object = this;
-    doSetOKCancel("", function () { return object.onCancel();});
-
-    // Fill dialog.
-    loadDialog();
-
-    // set our web progress listener on the helper app launcher
-    printProgress.registerListener(progressListener);
-    moveToAlertPosition();
-
-    //We need to delay the set title else dom will overwrite it
-    window.setTimeout(doneIniting, 500);
-}
-
-function onUnload() 
-{
-  if (printProgress)
-  {
-   try 
-   {
-     printProgress.unregisterListener(progressListener);
-     printProgress = null;
-   }
-    
-   catch( exception ) {}
-  }
-}
-
 // If the user presses cancel, tell the app launcher and close the dialog...
 function onCancel () 
 {
@@ -278,15 +198,6 @@ function onCancel ()
 
 function doneIniting() 
 {
-  dialog.tempLabel.setAttribute("hidden", "true");
-  dialog.progress.setAttribute("hidden", "false");
-  dialog.cancel.setAttribute("disabled", "false");
-
-  var progressLabel = getString("progress");
-  if (progressLabel == "") {
-    progressLabel = "Progress:"; // better than nothing
-  }
-  //dialog.progressLabel.value = progressLabel;
-
+  // called by function timeout in onLoad
   printProgress.doneIniting();
 }

@@ -46,6 +46,7 @@
 #include "nsISupportsArray.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrintStatusFeedback.h"
+#include "nsIObserver.h"
 #include "nsString.h"
 
 class nsPrintProgress : public nsIPrintProgress, public nsIPrintStatusFeedback
@@ -69,6 +70,7 @@ private:
   PRInt32                           m_pendingStateValue;
   nsCOMPtr<nsIDOMWindowInternal>    m_dialog;
   nsCOMPtr<nsISupportsArray>        m_listenerList;
+  nsCOMPtr<nsIObserver>             m_observer;
 };
 
 #endif
