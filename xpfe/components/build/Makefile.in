@@ -77,7 +77,6 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)search_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)timebomb_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
 	$(NULL)
@@ -96,7 +95,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../directory         \
 	-I$(srcdir)/../related/src       \
 	-I$(srcdir)/../search/src        \
-	-I$(srcdir)/../timebomb          \
 	-I$(srcdir)/../windowds \
 	-I$(srcdir)/../../browser/src \
 	$(NULL)

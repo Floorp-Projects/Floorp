@@ -1,5 +1,0 @@
-<!ENTITY     title.label             "Time Bomb Version">
-<!ENTITY     okButton.label          "OK">
-<!ENTITY     warnText.label          "This is a warning that this product will expire.  Please visit &timeBombURL.label; for newer versions.">
-<!ENTITY     expireText.label        "This version has expired.  You must download a newer version at &timeBombURL.label;.">
-

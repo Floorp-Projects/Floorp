@@ -113,8 +113,6 @@
 #define ENABLE_PAGE_CYCLER
 #endif
 
-#include "nsITimeBomb.h"
-
 /* Define Class IDs */
 static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID,    NS_PROXYEVENT_MANAGER_CID);
@@ -752,73 +750,47 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv;
-  static PRBool timebombChecked = PR_FALSE;
   nsAutoString args;
 
-  if (!timebombChecked) {
-    // timebomb check
-    timebombChecked = PR_TRUE;
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (!prefs) return NS_ERROR_FAILURE;
 
-    PRBool expired;
-    nsCOMPtr<nsITimeBomb> timeBomb(do_GetService(NS_TIMEBOMB_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = timeBomb->Init();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = timeBomb->CheckWithUI(&expired);
-    if (NS_FAILED(rv)) return rv;
-
-    if (expired) {
-      nsXPIDLCString urlString;
-      rv = timeBomb->GetTimebombURL(getter_Copies(urlString));
-      if (NS_FAILED(rv)) return rv;
-
-      args.AssignWithConversion(urlString);
+  if (NeedHomepageOverride(prefs)) {
+    nsXPIDLString url;
+    rv = prefs->GetLocalizedUnicharPref(PREF_HOMEPAGE_OVERRIDE_URL, getter_Copies(url));
+    if (NS_SUCCEEDED(rv) && (const PRUnichar *)url) {
+      args = url;
     }
   }
 
   if (args.IsEmpty()) {
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-    if (!prefs) return NS_ERROR_FAILURE;
-
-    if (NeedHomepageOverride(prefs)) {
-      nsXPIDLString url;
-      rv = prefs->GetLocalizedUnicharPref(PREF_HOMEPAGE_OVERRIDE_URL, getter_Copies(url));
-      if (NS_SUCCEEDED(rv) && (const PRUnichar *)url) {
-        args = url;
-      }
-    }
-
-    if (args.IsEmpty()) {
-      PRInt32 choice = 0;
-      rv = prefs->GetIntPref(PREF_BROWSER_STARTUP_PAGE, &choice);
-      if (NS_SUCCEEDED(rv)) {
-        switch (choice) {
-          case 1: {
-            // skip the code below
-            return GetHomePageGroup(prefs, aDefaultArgs);
-          }
-          case 2: {
-            nsCOMPtr<nsIBrowserHistory> history(do_GetService(kCGlobalHistoryCID));
-            if (history) {
-              nsXPIDLCString curl;
-              rv = history->GetLastPageVisited(getter_Copies(curl));
-              args.AssignWithConversion(curl);
-            }
-            break;
-          }
-          case 0:
-          default:
-            // fall through to about:blank below
-            break;
+    PRInt32 choice = 0;
+    rv = prefs->GetIntPref(PREF_BROWSER_STARTUP_PAGE, &choice);
+    if (NS_SUCCEEDED(rv)) {
+      switch (choice) {
+        case 1: {
+          // skip the code below
+          return GetHomePageGroup(prefs, aDefaultArgs);
         }
+        case 2: {
+          nsCOMPtr<nsIBrowserHistory> history(do_GetService(kCGlobalHistoryCID));
+          if (history) {
+            nsXPIDLCString curl;
+            rv = history->GetLastPageVisited(getter_Copies(curl));
+            args.AssignWithConversion(curl);
+          }
+          break;
+        }
+        case 0:
+        default:
+          // fall through to about:blank below
+          break;
       }
-
-      // the default, in case we fail somewhere
-      if (args.IsEmpty())
-        args.Assign(NS_LITERAL_STRING("about:blank"));
     }
+
+    // the default, in case we fail somewhere
+    if (args.IsEmpty())
+      args.Assign(NS_LITERAL_STRING("about:blank"));
   }
 
   *aDefaultArgs = ToNewUnicode(args);
