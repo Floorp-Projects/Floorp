@@ -2,4 +2,5 @@
 <!ENTITY lHeader                        "Content Packs">
 <!ENTITY contentIntro.label             "Selecting a new content pack changes items in My Sidebar and the Search menu, and changes the home page, certain bookmarks, and other items. You will not lose bookmarks and other items that you have customized when you switch content packs. You must restart for a new content pack to take effect.">
 <!ENTITY installedContentPacks.label    "Installed content packs:">
-
+<!ENTITY downloadContentPacks.accesskey "d">
+<!ENTITY downloadContentPacks.label     "Download More...">
