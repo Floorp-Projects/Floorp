@@ -53,13 +53,14 @@ nsFtpConnectionThread::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     return NS_NOINTERFACE; 
 }
 
-nsFtpConnectionThread::nsFtpConnectionThread(PLEventQueue* aEventQ) {
+nsFtpConnectionThread::nsFtpConnectionThread(PLEventQueue* aEventQ, nsIStreamListener* aListener) {
 	mEventQueue = aEventQ; // whoever creates us must provide an event queue
                            // so we can post events back to them.
+    mListener = aListener;
+    NS_ADDREF(mListener);
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
-    NS_IF_RELEASE(mThread);
     NS_IF_RELEASE(mListener);
 }
 
@@ -400,11 +401,9 @@ nsFtpConnectionThread::Run() {
     //lCPipe->CloseConnection();
 }
 
-nsresult nsFtpConnectionThread::Init(nsIThread* aThread, nsIStreamListener* aListener) {
-    mThread = aThread;
+nsresult nsFtpConnectionThread::Init(nsIThread* aThread) {
+/*    mThread = aThread;
     NS_ADDREF(mThread);
-    mListener = aListener;
-    NS_ADDREF(mListener);
 
     PRThread* prthread;
     aThread->GetPRThread(&prthread);
@@ -413,7 +412,7 @@ nsresult nsFtpConnectionThread::Init(nsIThread* aThread, nsIStreamListener* aLis
     // wake up event loop
     PR_CNotify(this);
     PR_CExitMonitor(this);
-
+*/
     return NS_OK;
 }
 

@@ -80,13 +80,13 @@ class nsFtpConnectionThread : public nsIRunnable {
 public:
     NS_DECL_ISUPPORTS
 
-	nsFtpConnectionThread(PLEventQueue* aEventQ);
+	nsFtpConnectionThread(PLEventQueue* aEventQ, nsIStreamListener *aListener);
 	~nsFtpConnectionThread();
 	
 	// nsIRunnable method
 	NS_IMETHOD Run();
 
-    nsresult Init(nsIThread* aThread, nsIStreamListener* aListener);
+    nsresult Init(nsIThread* aThread);
 
 	// user level setup
 
@@ -95,7 +95,7 @@ private:
     void SetSystInternals(void);
 
 	PLEventQueue*		mEventQueue;            // used to communicate outside this thread
-    nsIThread*          mThread;                // the worker thread
+//    nsIThread*          mThread;                // the worker thread
 
 	FTP_STATE			mState;                 // the current state
     FTP_STATE           mNextState;             // the next state
