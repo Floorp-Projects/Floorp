@@ -577,6 +577,10 @@ protected:
 
   nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 
+  //XXX Kludge: Used to suppress spurious drag/drop events (bug 50703)
+  PRBool   mIgnoreSpuriousDragEvent;
+  NS_IMETHOD IgnoreSpuriousDragEvent(PRBool aIgnoreSpuriousDragEvent) {mIgnoreSpuriousDragEvent = aIgnoreSpuriousDragEvent; return NS_OK;}
+
 // Data members
 protected:
 

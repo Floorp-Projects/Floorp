@@ -239,6 +239,7 @@ nsHTMLEditor::nsHTMLEditor()
 , mIsComposing(PR_FALSE)
 , mMaxTextLength(-1)
 , mSelectedCellIndex(0)
+, mIgnoreSpuriousDragEvent(PR_FALSE)
 {
 // Done in nsEditor
 // NS_INIT_REFCNT();
@@ -2620,7 +2621,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert)
   res = nsrange->CreateContextualFragment(inputString,
                                           getter_AddRefs(docfrag));
 
-  //XXXX BUG: This is not returning the text between <title> ... </title>
+  //XXXX BUG 50965: This is not returning the text between <title> ... </title>
   // Special code is needed in JS to handle title anyway, so it really doesn't matter!
 
   if (NS_FAILED(res))
@@ -5000,7 +5001,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
   return rv;
 }
 
-
 NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 {
   ForceCompositionEnd();
@@ -5011,74 +5011,150 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
   nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
   
-  if (dragSession)
+  if (!dragSession) return NS_OK;
+
+  // Get the nsITransferable interface for getting the data from the drop
+  nsCOMPtr<nsITransferable> trans;
+  rv = PrepareTransferable(getter_AddRefs(trans));
+  if (NS_FAILED(rv)) return rv;
+  if (!trans) return NS_OK;  // NS_ERROR_FAILURE; SHOULD WE FAIL?
+
+  PRUint32 numItems = 0; 
+  rv = dragSession->GetNumDropItems(&numItems);
+  if (NS_FAILED(rv)) return rv;
+
+  // Combine any deletion and drop insertion into one transaction
+  nsAutoEditBatch beginBatching(this);
+
+  PRUint32 i; 
+  PRBool doPlaceCaret = PR_TRUE;
+  for (i = 0; i < numItems; ++i)
   {
-    // Get the nsITransferable interface for getting the data from the drop
-    nsCOMPtr<nsITransferable> trans;
-    rv = PrepareTransferable(getter_AddRefs(trans));
-    if (NS_SUCCEEDED(rv) && trans)
+    rv = dragSession->GetData(trans, i);
+    if (NS_FAILED(rv)) return rv;
+    if (!trans) return NS_OK; // NS_ERROR_FAILURE; Should we fail?
+
+    if ( doPlaceCaret )
     {
-      PRUint32 numItems = 0; 
-      if (NS_SUCCEEDED(dragSession->GetNumDropItems(&numItems)))
-      {
-        PRUint32 i; 
-        PRBool doPlaceCaret = PR_TRUE;
-        for (i = 0; i < numItems; ++i)
-        {
-          if (NS_SUCCEEDED(dragSession->GetData(trans, i)))
-          {
-            if ( doPlaceCaret )
-            {
-              // check if the user pressed the key to force a copy rather than a move
-              // if we run into problems here, we'll just assume the user doesn't want a copy
-              PRBool userWantsCopy = PR_FALSE;
-              nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aDropEvent) );
-              if (mouseEvent)
+      // check if the user pressed the key to force a copy rather than a move
+      // if we run into problems here, we'll just assume the user doesn't want a copy
+      PRBool userWantsCopy = PR_FALSE;
+
+      nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDropEvent));
+      if (!nsuiEvent) return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aDropEvent) );
+      if (mouseEvent)
+
 #ifdef XP_MAC
-                mouseEvent->GetAltKey(&userWantsCopy); // check modifiers here
+        mouseEvent->GetAltKey(&userWantsCopy);
 #else
-                mouseEvent->GetCtrlKey(&userWantsCopy); // check modifiers here
+        mouseEvent->GetCtrlKey(&userWantsCopy);
 #endif
-              
-              nsCOMPtr<nsIDOMDocument> srcdomdoc;
-              dragSession->GetSourceDocument(getter_AddRefs(srcdomdoc));
-              if (srcdomdoc)
-              {
-                // do deletion of selection if sourcedocument is current document && appropriate modifier isn't pressed
-                nsCOMPtr<nsIDOMDocument>destdomdoc; 
-                rv = GetDocument(getter_AddRefs(destdomdoc)); 
-                if ( NS_SUCCEEDED(rv) && !userWantsCopy && (srcdomdoc == destdomdoc) )
-                {
-                  rv = DeleteSelection(eNone);
-                  if (NS_FAILED(rv))
-                    return rv;
-                }
-              }
+      // Source doc is null if source is *not* the current editor document
+      nsCOMPtr<nsIDOMDocument> srcdomdoc;
+      rv = dragSession->GetSourceDocument(getter_AddRefs(srcdomdoc));
+      if (NS_FAILED(rv)) return rv;
 
-              // Set the selection to the point under the mouse cursor:
-              nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDropEvent));
+      // Current doc is destination
+      nsCOMPtr<nsIDOMDocument>destdomdoc; 
+      rv = GetDocument(getter_AddRefs(destdomdoc)); 
+      if (NS_FAILED(rv)) return rv;
 
-              if (!nsuiEvent)
-                return NS_ERROR_NULL_POINTER;
-              nsCOMPtr<nsIDOMNode> parent;
-              if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
-                return NS_ERROR_NULL_POINTER;
-              PRInt32 offset = 0;
-              if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
-                return NS_ERROR_NULL_POINTER;
+      nsCOMPtr<nsIDOMSelection> selection;
+      rv = GetSelection(getter_AddRefs(selection));
+      if (NS_FAILED(rv)) return rv;
+      if (!selection) return NS_ERROR_FAILURE;
 
-              nsCOMPtr<nsIDOMSelection> selection;
-              if (NS_SUCCEEDED(GetSelection(getter_AddRefs(selection))))
-                (void)selection->Collapse(parent, offset);
+      PRBool isCollapsed;
+      rv = selection->GetIsCollapsed(&isCollapsed);
+      if (NS_FAILED(rv)) return rv;
+      
+      // Parent and offset under the mouse cursor
+      nsCOMPtr<nsIDOMNode> newSelectionParent;
+      PRInt32 newSelectionOffset = 0;
+      rv = nsuiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
+      if (NS_FAILED(rv)) return rv;
+      if (!newSelectionParent) return NS_ERROR_FAILURE;
 
-              doPlaceCaret = PR_FALSE;
-            }
-            
-            rv = InsertFromTransferable(trans);
+      rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
+      if (NS_FAILED(rv)) return rv;
+
+      // We never have to delete if selection is already collapsed
+      PRBool deleteSelection = PR_FALSE;
+      PRBool cursorIsInSelection = PR_FALSE;
+
+      // Check if mouse is in the selection
+      if (!isCollapsed)
+      {
+        PRInt32 rangeCount;
+        rv = selection->GetRangeCount(&rangeCount);
+        if (NS_FAILED(rv)) 
+          return rv?rv:NS_ERROR_FAILURE;
+
+        for (PRInt32 j = 0; j < rangeCount; j++)
+        {
+          nsCOMPtr<nsIDOMRange> range;
+
+          rv = selection->GetRangeAt(j, getter_AddRefs(range));
+          if (NS_FAILED(rv) || !range) 
+            continue;//dont bail yet, iterate through them all
+
+          nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
+          if (NS_FAILED(rv) || !nsrange) 
+            continue;//dont bail yet, iterate through them all
+
+          rv = nsrange->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
+          if(cursorIsInSelection)
+            break;
+        }
+        if (cursorIsInSelection)
+        {
+          // Dragging within same doc can't drop on itself -- leave!
+          // (We shouldn't get here - drag event shouldn't have started if over selection)
+          if (srcdomdoc == destdomdoc)
+            return NS_OK;
+          
+          // Dragging from another window onto a selection
+          // XXX Decision made to NOT do this,
+          //     note that 4.x does replace if dropped on
+          //deleteSelection = PR_TRUE;
+        }
+        else 
+        {
+          // We are NOT over the selection
+          if (srcdomdoc == destdomdoc)
+          {
+            // Within the same doc: delete if user doesn't want to copy
+            deleteSelection = !userWantsCopy;
+          }
+          else
+          {
+            // Different source doc: Don't delete
+            deleteSelection = PR_FALSE;
           }
         }
       }
+
+      if (deleteSelection)
+      {
+        rv = DeleteSelection(eNone);
+        if (NS_FAILED(rv)) return rv;
+      }
+
+      // If we deleted the selection because we dropped from another doc,
+      //  then we don't have to relocate the caret (insert at the deletion point)
+      if (!(deleteSelection && srcdomdoc != destdomdoc))
+      {
+        // Move the selection to the point under the mouse cursor
+        selection->Collapse(newSelectionParent, newSelectionOffset);
+      }
+      
+      // We have to figure out whether to delete and relocate caret only once
+      doPlaceCaret = PR_FALSE;
     }
+    
+    rv = InsertFromTransferable(trans);
   }
 
   return rv;
@@ -5090,7 +5166,19 @@ NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag)
    * that particular point is actually within the selection (not just that there is a selection)
    */
   aCanDrag = PR_FALSE;
-  
+ 
+  // KLUDGE to work around bug 50703
+  // After double click and object property editing, 
+  //  we get a spurious drag event
+  if (mIgnoreSpuriousDragEvent)
+  {
+#ifdef DEBUG_cmanske
+    printf(" *** IGNORING SPURIOUS DRAG EVENT!\n");
+#endif
+    mIgnoreSpuriousDragEvent = PR_FALSE;
+    return NS_OK;
+  }
+   
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;

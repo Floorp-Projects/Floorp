@@ -466,19 +466,26 @@ public:
     */
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)=0;
 
-  /**
-   * Document me!
-   * 
-   */
+  /** Set the value of the "bgcolor" attribute on the document's <body> element
+    *
+    * @param aColor  The HTML color string, such as "#ffccff" or "yellow"
+    */
   NS_IMETHOD SetBackgroundColor(const nsString& aColor)=0;
 
 
-  /**
-   * Document me!
-   * 
-   */
+  /** Set an attribute on the document's <body> element
+    *    such as text, link, background colors
+    *
+    * 8/31/00 THIS ISN'T BEING USED? SHOULD WE DROP IT?
+    *
+    * @param aAttr   The attribute to be set
+    * @param aValue  The value of the attribute
+    */
   NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue)=0;
   
+  //XXX Used to suppress spurious drag/drop events to workaround bug 50703
+  // Don't use this method! It will go away after first release!
+  NS_IMETHOD IgnoreSpuriousDragEvent(PRBool aIgnoreSpuriousDragEvent)=0;
 
 };
 
