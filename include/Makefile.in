@@ -27,7 +27,6 @@ VPATH		= @srcdir@
 EXPORTS         = \
                 platform.h \
                 xp_core.h \
-                xp_file.h \
 		xp_mem.h \
 		xp_path.h \
 		xp_str.h \
