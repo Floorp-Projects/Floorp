@@ -32,6 +32,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/dexparamdialog.xul \
 	$(srcdir)/dexsimplemaster.xul \
 	$(srcdir)/dexsimpledialog.xul \
+	$(srcdir)/tab.xul \
 	$(NULL)
 
 install:: 
