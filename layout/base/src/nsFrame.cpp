@@ -1329,6 +1329,14 @@ NS_METHOD nsFrame::SetNextSibling(nsIFrame* aNextSibling)
   return NS_OK;
 }
 
+// Transparency query
+NS_METHOD nsFrame::IsTransparent(PRBool& aTransparent) const
+{
+  //XXX this needs to be overridden in just about every leaf class? MMP
+  aTransparent = PR_TRUE;
+  return NS_OK;
+}
+
 // Debugging
 NS_METHOD nsFrame::List(FILE* out, PRInt32 aIndent) const
 {

@@ -146,12 +146,12 @@ nsView :: nsView()
 {
   mVis = nsViewVisibility_kShow;
   mXForm = nsnull;
-  mDying = PR_FALSE;
+  mVFlags = ~ALL_VIEW_FLAGS;
 }
 
 nsView :: ~nsView()
 {
-  mDying = PR_TRUE;
+  mVFlags |= VIEW_FLAG_DYING;
 
   if (GetChildCount() > 0)
   {
@@ -254,7 +254,7 @@ nsrefcnt nsView::Release()
 {
   mRefCnt--;
 
-  if (mDying == PR_FALSE)
+  if (!(mVFlags & VIEW_FLAG_DYING))
   {
     if ((mRefCnt == 1) && (nsnull != mViewManager))
     {
@@ -853,7 +853,15 @@ float nsView :: GetOpacity()
 
 PRBool nsView :: HasTransparency()
 {
-  return PR_FALSE;
+  return (mVFlags & VIEW_FLAG_TRANSPARENT) ? PR_TRUE : PR_FALSE;
+}
+
+void nsView :: SetContentTransparency(PRBool aTransparent)
+{
+  if (aTransparent == PR_TRUE)
+    mVFlags |= VIEW_FLAG_TRANSPARENT;
+  else
+    mVFlags &= ~VIEW_FLAG_TRANSPARENT;
 }
 
 // Frames have a pointer to the view, so don't AddRef the frame.

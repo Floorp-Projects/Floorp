@@ -86,6 +86,7 @@ public:
   virtual void SetOpacity(float opacity);
   virtual float GetOpacity();
   virtual PRBool HasTransparency();
+  virtual void SetContentTransparency(PRBool aTransparent);
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   virtual void SetFrame(nsIFrame *aFrame);
   virtual nsIFrame * GetFrame();
@@ -120,7 +121,12 @@ protected:
   nsViewClip        mClip;
   nsTransform2D     *mXForm;
   float             mOpacity;
-  PRBool            mDying;
+  PRInt32           mVFlags;
 };
+
+#define VIEW_FLAG_DYING       0x0001
+#define VIEW_FLAG_TRANSPARENT 0x0002
+
+#define ALL_VIEW_FLAGS        (VIEW_FLAG_DYING | VIEW_FLAG_TRANSPARENT)
 
 #endif

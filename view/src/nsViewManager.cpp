@@ -132,6 +132,7 @@ nsresult nsViewManager::Init(nsIPresContext* aPresContext)
   mDrawingSurface = nsnull;
   mTimer = nsnull;
   mFrameRate = 0;
+  mTransCnt = 0;
 
   rv = SetFrameRate(UPDATE_QUANTUM);
 
@@ -161,6 +162,7 @@ nsIView * nsViewManager :: GetRootView()
 
 void nsViewManager :: SetRootView(nsIView *aView)
 {
+  UpdateTransCnt(mRootView, aView);
   NS_IF_RELEASE(mRootView);
   mRootView = aView;
   NS_IF_ADDREF(mRootView);
@@ -283,6 +285,11 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   nscoord             xoff, yoff;
   float               scale;
 
+  //force double buffering because of non-opaque views?
+
+  if (mTransCnt > 0)
+    aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+
   if (nsnull == aContext)
   {
     localcx = CreateRenderingContext(*aView);
@@ -346,6 +353,11 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
   nscoord             xoff, yoff;
+
+  //force double buffering because of non-opaque views?
+
+  if (mTransCnt > 0)
+    aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
   if (nsnull == aContext)
   {
@@ -574,6 +586,8 @@ void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIView *sibl
         parent->InsertChild(child, sibling);
     }
 
+    UpdateTransCnt(nsnull, child);
+
     //and mark this area as dirty if the view is visible...
 
     if (child->GetVisibility() != nsViewVisibility_kHide)
@@ -612,6 +626,8 @@ void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRInt32 zinde
     child->SetZIndex(zindex);
     parent->InsertChild(child, prev);
 
+    UpdateTransCnt(nsnull, child);
+
     //and mark this area as dirty if the view is visible...
 
     if (child->GetVisibility() != nsViewVisibility_kHide)
@@ -626,6 +642,7 @@ void nsViewManager :: RemoveChild(nsIView *parent, nsIView *child)
 
   if ((nsnull != parent) && (nsnull != child))
   {
+    UpdateTransCnt(child, nsnull);
     UpdateView(child, nsnull, NS_VMREFRESH_NO_SYNC);
     parent->RemoveChild(child);
   }
@@ -754,6 +771,59 @@ PRBool nsViewManager :: GetViewClipAbsolute(nsIView *aView, nsRect *rect)
   return PR_TRUE;
 }
 
+void nsViewManager :: SetViewContentTransparency(nsIView *aView, PRBool aTransparent)
+{
+  if (aTransparent != aView->HasTransparency())
+  {
+    if (aTransparent == PR_FALSE)
+    {
+      //going opaque
+      mTransCnt--;
+    }
+    else
+    {
+      //going transparent
+      mTransCnt++;
+    }
+
+    aView->SetContentTransparency(aTransparent);
+  }
+}
+
+void nsViewManager :: SetViewOpacity(nsIView *aView, float aOpacity)
+{
+  PRBool  newopaque, oldopaque;
+  float   oldopacity;
+
+  if ((aOpacity == 1.0f) || (aOpacity == 0.0f))
+    newopaque = PR_TRUE;
+  else
+    newopaque = PR_FALSE;
+
+  oldopacity = aView->GetOpacity();
+
+  if ((oldopacity == 1.0f) || (oldopacity == 0.0f))
+    oldopaque = PR_TRUE;
+  else
+    oldopaque = PR_FALSE;
+
+  if (newopaque != oldopaque)
+  {
+    if (newopaque == PR_FALSE)
+    {
+      //going transparent
+      mTransCnt++;
+    }
+    else
+    {
+      //going opaque
+      mTransCnt--;
+    }
+  }
+
+  aView->SetOpacity(aOpacity);
+}
+
 nsIPresContext * nsViewManager :: GetPresContext()
 {
   NS_IF_ADDREF(mContext);
@@ -861,4 +931,15 @@ void nsViewManager :: AddRectToDirtyRegion(nsRect &aRect)
 
   trect *= mContext->GetTwipsToPixels();
   mDirtyRegion->Union(trect.x, trect.y, trect.width, trect.height);
+}
+
+void nsViewManager :: UpdateTransCnt(nsIView *oldview, nsIView *newview)
+{
+  if ((nsnull != oldview) && (oldview->HasTransparency() ||
+      (oldview->GetOpacity() != 1.0f)))
+    mTransCnt--;
+
+  if ((nsnull != newview) && (newview->HasTransparency() ||
+      (newview->GetOpacity() != 1.0f)))
+    mTransCnt++;
 }
