@@ -48,11 +48,9 @@ static PRFileDesc *t1;
 PRIntn error_code;
 
 /*
- * should exceed any system's maximum file name length
- * Note: was set at 4096. This is legal on some unix (Linux 2.1+) platforms.
- * 
+ * 4096 should exceed any system's maximum file name length
  */
-#define TOO_LONG 5000
+#define TOO_LONG 4096
 
 int main(int argc, char **argv)
 {
