@@ -999,8 +999,6 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous
   if ( !mView || !mVisible)
     return NS_OK;
  
-  NSLog(@"This view: %@ got invalidated.", mView);
- 
   NSRect r;
   ConvertGeckoToCocoaRect ( aRect, r );
   
