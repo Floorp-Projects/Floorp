@@ -40,6 +40,7 @@ public:
   NS_IMETHOD WALLET_ChangePassword();
   NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, nsString url, PRBool quick);
   NS_IMETHOD WALLET_PrefillReturn(nsAutoString results);
+  NS_IMETHOD WALLET_FetchFromNetCenter();
 
   NS_IMETHOD SI_PromptUsernameAndPassword
       (char *prompt, char **username, char **password, char *URLName, PRBool &status);

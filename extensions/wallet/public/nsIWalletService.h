@@ -50,21 +50,22 @@ struct nsIWalletService : public nsISupports
   NS_IMETHOD WALLET_PostEdit(nsAutoString walletList) = 0;
   NS_IMETHOD WALLET_ChangePassword() = 0;
   NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, nsString url, PRBool quick) = 0;
-  NS_IMETHOD WALLET_PrefillReturn(nsAutoString results)=0;
+  NS_IMETHOD WALLET_PrefillReturn(nsAutoString results) = 0;
+  NS_IMETHOD WALLET_FetchFromNetCenter() = 0;
 
   NS_IMETHOD SI_PromptUsernameAndPassword
-    (char *prompt, char **username, char **password, char *URLName, PRBool &status)=0;
+    (char *prompt, char **username, char **password, char *URLName, PRBool &status) = 0;
   NS_IMETHOD SI_PromptPassword
-    (char *prompt, char **password, char *URLName, PRBool pickFirstUser)=0;
+    (char *prompt, char **password, char *URLName, PRBool pickFirstUser) = 0;
   NS_IMETHOD SI_Prompt
-    (char *prompt, char **username, char *URLName)=0;
+    (char *prompt, char **username, char *URLName) = 0;
 
-  NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList)=0;
-  NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList)=0;
-  NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList)=0;
-  NS_IMETHOD SI_GetSignonListForViewer(nsString& aSignonList)=0;
-  NS_IMETHOD SI_GetRejectListForViewer(nsString& aRejectList)=0;
-  NS_IMETHOD SI_SignonViewerReturn(nsAutoString results)=0;
+  NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList) = 0;
+  NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList) = 0;
+  NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList) = 0;
+  NS_IMETHOD SI_GetSignonListForViewer(nsString& aSignonList) = 0;
+  NS_IMETHOD SI_GetRejectListForViewer(nsString& aRejectList) = 0;
+  NS_IMETHOD SI_SignonViewerReturn(nsAutoString results) = 0;
 };
 
 #endif /* nsIWalletService_h___ */

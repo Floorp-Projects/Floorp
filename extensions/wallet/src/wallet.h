@@ -60,6 +60,9 @@ WLLT_GetPrefillListForViewer (nsString& aPrefillList);
 extern void
 WLLT_OnSubmit (nsIContent* formNode);
 
+extern void
+WLLT_FetchFromNetCenter();
+
 XP_END_PROTOS
 
 #endif /* !_WALLET_H */

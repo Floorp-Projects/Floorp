@@ -21,12 +21,6 @@
    wallet.cpp
 */
 
-/* NEWFETCH is a temporary symbol defined so that we can overcome bug 10456.  It does
- * not fix the problem for the mac, however.  This symbol (and all the code that is
- * if-defed on it) must get removed after bug 10456 is fixed.
- */
-#define NEWFETCH
-
 #include "wallet.h"
 #ifndef NECKO
 #include "nsINetService.h"
@@ -34,6 +28,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
+//#include "nsNeckoUtil2.h"
 #endif // NECKO
 
 #include "nsIServiceManager.h"
@@ -62,19 +57,6 @@
 #include "nsIProfile.h"
 #include "nsIContent.h"
 
-#ifdef NEWFETCH
-#ifdef WIN32 
-#include <windows.h>
-#endif
-#include "nsIStreamObserver.h"
-#include "nsIStreamListener.h"
-#include "nsIInputStream.h"
-#include "nsIBufferInputStream.h"
-#include "nsFileStream.h"
-#include "nsIFileSpec.h"
-#include "nsIEventQueueService.h"
-#endif
-
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -102,14 +84,36 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #include "prlong.h"
 #include "prinrval.h"
 
-#ifdef NEWFETCH
+/*************************************
+ * Code that really belings in necko *
+ *************************************/
+
+#ifdef WIN32 
+#include <windows.h>
+#endif
+#ifdef XP_MAC
+#include "nsMacMessagePump.h"
+#endif
+//#include "nsNeckoUtil2.h"
+#include "nsFileStream.h"
+#include "nsIFileSpec.h"
+#include "nsIEventQueueService.h"
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
+#include "nsIStreamObserver.h"
+#include "nsIStreamListener.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsIChannel.h"
+#include "nsCOMPtr.h"
+#include "nsIURI.h"
+
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
+//static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+
 static int gKeepRunning = 0;
 static nsIEventQueue* gEventQ = nsnull;
-static nsOutputFileStream      *outFile;
-#endif
 
-#ifdef NEWFETCH
 class InputConsumer : public nsIStreamListener
 {
 public:
@@ -132,25 +136,36 @@ public:
                            nsresult aStatus,
                            const PRUnichar* aMsg);
 
+  NS_IMETHOD Init(nsFileSpec dirSpec, const char *out);
+
+  nsOutputFileStream   *mOutFile;
+
 };
 
-InputConsumer::InputConsumer()
+
+InputConsumer::InputConsumer():
+mOutFile(nsnull)
 {
   NS_INIT_REFCNT();
 }
-
 InputConsumer::~InputConsumer()
 {
 }
 
+
 NS_IMPL_ISUPPORTS(InputConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
+
 
 NS_IMETHODIMP
 InputConsumer::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
-fprintf(stdout,"<<OnStartRequest>>");
+    if (! mOutFile->is_open()) 
+    {
+       return NS_ERROR_FAILURE;
+    }
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 InputConsumer::OnDataAvailable(nsIChannel* channel, 
@@ -159,7 +174,6 @@ InputConsumer::OnDataAvailable(nsIChannel* channel,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
-fprintf(stdout,"<<OnDataAvailable>>");
   char buf[1001];
   PRUint32 amt;
   nsresult rv;
@@ -168,7 +182,7 @@ fprintf(stdout,"<<OnDataAvailable>>");
     if (rv == NS_BASE_STREAM_EOF) break;
     if (NS_FAILED(rv)) return rv;
     buf[amt] = '\0';
-    outFile->write(buf,amt);
+    mOutFile->write(buf,amt);
   } while (amt);
 
   return NS_OK;
@@ -180,14 +194,98 @@ InputConsumer::OnStopRequest(nsIChannel* channel,
                              nsresult aStatus,
                              const PRUnichar* aMsg)
 {
-fprintf(stdout,"<<OnStopAvailable>>");
-  outFile->flush();
-  outFile->close();
-  gKeepRunning -= 1;
+  if (mOutFile) {
+      mOutFile->flush();
+      mOutFile->close();
+  }
+  gKeepRunning = 0;
   return NS_OK;
 }
 
-#endif
+NS_IMETHODIMP
+InputConsumer::Init(nsFileSpec dirSpec, const char *out)
+
+{
+  mOutFile = new nsOutputFileStream(dirSpec+out);
+  return NS_OK;
+}
+
+nsresult //NECKO_EXPORT(nsresult)
+NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
+{
+    nsresult rv;
+
+    // Create the Event Queue for this thread...
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
+                    kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = eventQService->CreateThreadEventQueue();
+    if (NS_FAILED(rv)) return rv;
+
+    eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURI> pURL;
+    rv = serv->NewURI(in, nsnull, getter_AddRefs(pURL));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIChannel> pChannel;
+
+    // Async reading thru the calls of the event sink interface
+    rv = serv->NewChannelFromURI("load", pURL, nsnull, 
+                                 getter_AddRefs(pChannel));
+    if (NS_FAILED(rv)) {
+        printf("ERROR: NewChannelFromURI failed for %s\n", in);
+        return rv;
+    }
+            
+    InputConsumer* listener;
+    listener = new InputConsumer;
+    NS_IF_ADDREF(listener);
+    if (!listener) {
+        NS_ERROR("Failed to create a new stream listener!");
+        return NS_ERROR_OUT_OF_MEMORY;;
+    }
+    rv = listener->Init(dirSpec, out);
+    rv = pChannel->AsyncRead(0,         // staring position
+                             -1,        // number of bytes to read
+                             nsnull,    // ISupports context
+                             listener); // IStreamListener consumer
+    if (NS_SUCCEEDED(rv)) {
+         gKeepRunning = 1;
+    }
+    NS_RELEASE(listener);
+    if (NS_FAILED(rv)) return rv;
+
+    // Enter the message pump to allow the URL load to proceed.
+    while ( gKeepRunning ) {
+#ifdef WIN32
+        MSG msg;
+
+        if (GetMessage(&msg, NULL, 0, 0)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        } else {
+            gKeepRunning = 0;
+        }
+#else
+#ifdef XP_MAC
+     	  PRBool				haveEvent;
+	      EventRecord			theEvent;
+		    haveEvent = GetEvent(theEvent);
+   		  DispatchEvent(haveEvent, &theEvent);
+#else
+        PLEvent *gEvent;
+        rv = gEventQ->GetEvent(&gEvent);
+        rv = gEventQ->HandleEvent(gEvent);
+#endif /* XP_UNIX */
+#endif /* !WIN32 */
+    }
+    return rv;
+}
 
 /***************************************************/
 /* The following declarations define the data base */
@@ -1447,180 +1545,6 @@ wallet_ReadFromURLFieldToSchemaFile
   }
 }
 
-/***************************************************************/
-/* The following routines are for fetching data from NetCenter */
-/***************************************************************/
-
-#ifdef NEWFETCH
-void
-wallet_FetchFromNetCenter(char* from, char* to) {
-
-    nsresult rv;
-
-    // Create the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
-                    kEventQueueServiceCID, &rv);
-
-    rv = eventQService->CreateThreadEventQueue();
-
-    eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
-
-    nsFileSpec *aFile = new nsFileSpec(to);
-
-    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &rv);
-    if (pService) {
-        nsCOMPtr<nsIURI> pURL;
-
-        rv = pService->NewURI(from, nsnull, getter_AddRefs(pURL));
-        if (NS_FAILED(rv)) {
-            printf("ERROR: NewURI failed for %s\n", from);
-            return /* rv */;
-        }
-        nsCOMPtr<nsIChannel> pChannel;
-
-        // Async reading thru the calls of the event sink interface
-        rv = pService->NewChannelFromURI("load", pURL, nsnull, 
-                                         getter_AddRefs(pChannel));
-
-        if (NS_FAILED(rv)) {
-            printf("ERROR: NewChannelFromURI failed for %s\n", from);
-        }
-            
-        InputConsumer* listener;
-
-        listener = new InputConsumer;
-        NS_IF_ADDREF(listener);
-        if (!listener) {
-            NS_ERROR("Failed to create a new stream listener!");
-         }
-
-        outFile = new nsOutputFileStream(*aFile);
-              if (! outFile->is_open()) 
-        {
-        }
-        rv = pChannel->AsyncRead(0,         // staring position
-                                 -1,        // number of bytes to read
-                                 nsnull,    // ISupports context
-                                 listener); // IStreamListener consumer
-        if (NS_SUCCEEDED(rv)) {
-            gKeepRunning += 1;
-        }
-        NS_RELEASE(listener);
-
-        // Enter the message pump to allow the URL load to proceed.
-        while ( gKeepRunning ) {
-#ifdef WIN32
-            MSG msg;
-
-            if (GetMessage(&msg, NULL, 0, 0)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            } else {
-                gKeepRunning = 0;
-            }
-#else
-#ifdef XP_MAC
-        /* Mac stuff is missing here! */
-#else
-        PLEvent *gEvent;
-            rv = gEventQ->GetEvent(&gEvent);
-            rv = gEventQ->HandleEvent(gEvent);
-#endif /* XP_UNIX */
-#endif /* !WIN32 */
-       }
-    }
-}
-#else
-
-void
-wallet_FetchFromNetCenter(char* from, char* to) {
-
-//return; // !!!!! temporary until bug 10456 is fixed !!!!!!!!!!!!
-
-    nsIInputStream* newStream;
-    nsIInputStream* *aNewStream = &newStream;
-    nsresult rv;
-#ifndef NECKO
-    nsIURI * url;
-    if (!NS_FAILED(NS_NewURL(&url, from))) {
-        NS_WITH_SERVICE(nsINetService, inet, kNetServiceCID, &rv);
-        if (NS_FAILED(rv)) return;
-
-        rv = inet->OpenBlockingStream(url, nsnull, aNewStream);
-#else
-    NS_WITH_SERVICE(nsIIOService, inet, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return;
-
-
-    nsIChannel *channel = nsnull;
-    // XXX NECKO what verb do we want here?
-    rv = inet->NewChannel("load", from, nsnull, nsnull, &channel);
-    if (NS_FAILED(rv)) return;
-
-    rv = channel->OpenInputStream(0, -1, aNewStream);
-#endif // NECKO
-
-        /* open network stream */
-        if (NS_SUCCEEDED(rv)) {
-
-          /* open output file */
-          nsFileSpec dirSpec;
-          rv = Wallet_ProfileDirectory(dirSpec);
-          if (NS_FAILED(rv)) {
-            return;
-          }
-          nsOutputFileStream strm(dirSpec + to);
-          if (!strm.is_open()) {
-            NS_ERROR("unable to open file");
-          } else {
-
-            /* place contents of network stream in output file */
-            char buff[1001];
-            PRUint32 count;
-            while (NS_SUCCEEDED((*aNewStream)->Read(buff,1000,&count))) {
-              buff[count] = '\0';
-              strm.write(buff, count);
-            }
-            strm.flush();
-            strm.close();
-          }
-        }
-#ifndef NECKO
-    }
-#endif // NECKO
-}
-#endif
-
-/*
- * fetch URL-specific field/schema mapping from netcenter and put into local copy of file
- * at URLFieldSchema.tbl
- */
-void
-wallet_FetchURLFieldSchemaFromNetCenter() {
-  wallet_FetchFromNetCenter
-    ("http://people.netscape.com/morse/wallet/URLFieldSchema.tbl","URLFieldSchema.tbl");
-}
-
-/*
- * fetch generic field/schema mapping from netcenter and put into
- * local copy of file at FieldSchema.tbl
- */
-void
-wallet_FetchFieldSchemaFromNetCenter() {
-  wallet_FetchFromNetCenter
-    ("http://people.netscape.com/morse/wallet/FieldSchema.tbl","FieldSchema.tbl");
-}
-
-/*
- * fetch generic schema-concatenation rules from netcenter and put into
- * local copy of file at SchemaConcat.tbl
- */
-void
-wallet_FetchSchemaConcatFromNetCenter() {
-  wallet_FetchFromNetCenter
-    ("http://people.netscape.com/morse/wallet/SchemaConcat.tbl","SchemaConcat.tbl");
-}
-
 /*********************************************************************/
 /* The following are utility routines for the main wallet processing */
 /*********************************************************************/
@@ -1842,14 +1766,9 @@ wallet_Initialize() {
   static PRBool wallet_Initialized = PR_FALSE;
   static PRBool wallet_keyInitialized = PR_FALSE;
   if (!wallet_Initialized) {
-    wallet_FetchFieldSchemaFromNetCenter();
-    wallet_FetchURLFieldSchemaFromNetCenter();
-    wallet_FetchSchemaConcatFromNetCenter();
-
     wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list, PR_FALSE);
     wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
     wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, PR_FALSE);
-
     wallet_Initialized = PR_TRUE;
   }
 
@@ -2849,5 +2768,32 @@ WLLT_OnSubmit(nsIContent* formNode) {
       NS_RELEASE(elements);
     }
     NS_RELEASE(formElement);
+  }
+}
+
+PUBLIC void
+WLLT_FetchFromNetCenter() {
+
+  nsresult rv;
+
+  nsFileSpec dirSpec;
+  rv = Wallet_ProfileDirectory(dirSpec);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/URLFieldSchema.tbl",
+                       dirSpec, "URLFieldSchema.tbl");
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/URLFieldSchema.tbl",
+                       dirSpec, "SchemaConcat.tbl");
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/URLFieldSchema.tbl",
+                       dirSpec, "FieldSchema.tbl");
+  if (NS_FAILED(rv)) {
+    return;
   }
 }

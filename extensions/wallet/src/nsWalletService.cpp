@@ -113,6 +113,11 @@ NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(nsAutoString results){
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWalletlibService::WALLET_FetchFromNetCenter(){
+  ::WLLT_FetchFromNetCenter();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWalletlibService::SI_PromptUsernameAndPassword
     (char *prompt, char **username, char **password, char *URLName, PRBool &status) {
   status = ::SINGSIGN_PromptUsernameAndPassword(prompt, username, password, URLName);
