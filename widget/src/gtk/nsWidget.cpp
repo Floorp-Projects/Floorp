@@ -3147,6 +3147,13 @@ nsWidget::IMEDestroyIC()
   if (!mXIC) return;
   if (mIsToplevel == PR_TRUE) {
     delete mXIC;
+  } else {
+    // see discussion in bug 53989
+    nsWidget *widget = mXIC->GetFocusWidget();
+    if (widget && widget == this && mIMEShellWidget) {
+      mXIC->SetFocusWidget(mIMEShellWidget);
+      mXIC->UnsetFocusWidget();
+    }
   }
   mXIC = 0;
 }
