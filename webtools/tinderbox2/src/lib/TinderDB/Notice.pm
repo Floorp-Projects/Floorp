@@ -30,8 +30,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.20 $ 
-# $Date: 2002/05/02 23:54:26 $ 
+# $Revision: 1.21 $ 
+# $Date: 2002/05/06 19:04:58 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Notice.pm,v $ 
 # $Name:  $ 
@@ -84,7 +84,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.20 $ )[1];
+$VERSION = ( qw $Revision: 1.21 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -376,7 +376,8 @@ sub status_table_row {
 
 
     @outrow =  (
-                "\t<td>".
+                "\t<td>\n".
+                "\t\t".
                 HTMLPopUp::Link(
 
                                 # if notice available is an image then
@@ -389,10 +390,13 @@ sub status_table_row {
                                 "windowtitle" => "Notice Board",
                                 "windowheight" => (175 * $num_notices)+100,
                                ).
-                "</td>\n");
+                "\n".
+                "\t</td>\n");
   } else {
-    @outrow = ("\t<!-- skipping: Notice: tree: $tree -->".
-               "<td>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+    @outrow = ("\t<!-- skipping: Notice: tree: $tree -->\n".
+               "\t\t<td>\n".
+               "\t\t\t$HTMLPopUp::EMPTY_TABLE_CELL\n".
+               "\t\t</td>\n");
 
   }
 
