@@ -2151,6 +2151,11 @@ RDFElementImpl::GetElementsByTagName(nsIDOMNode* aNode,
             return rv;
         }
 
+        nsCOMPtr<nsIDOMElement> element;
+        element = do_QueryInterface(child);
+        if (!element)
+          continue;
+
         if (aTagName.Equals("*")) {
             if (NS_FAILED(rv = aElements->AppendNode(child))) {
                 NS_ERROR("unable to append element to node list");
@@ -2212,6 +2217,11 @@ RDFElementImpl::GetElementsByAttribute(nsIDOMNode* aNode,
             NS_ERROR("unable to get child from list");
             return rv;
         }
+
+        nsCOMPtr<nsIDOMElement> element;
+        element = do_QueryInterface(child);
+        if (!element)
+          continue;
 
         nsAutoString name;
         nsCOMPtr<nsIContent> pContent;

@@ -2907,6 +2907,11 @@ XULDocumentImpl::GetElementsByTagName(nsIDOMNode* aNode,
 {
     nsresult rv;
 
+    nsCOMPtr<nsIDOMElement> element;
+    element = do_QueryInterface(aNode);
+    if (!element)
+      return NS_OK;
+
     if (aTagName.Equals("*")) {
         if (NS_FAILED(rv = aElements->AppendNode(aNode))) {
             NS_ERROR("unable to append element to node list");
@@ -2967,6 +2972,11 @@ XULDocumentImpl::GetElementsByAttribute(nsIDOMNode* aNode,
                                       nsRDFDOMNodeList* aElements)
 {
     nsresult rv;
+
+    nsCOMPtr<nsIDOMElement> element;
+    element = do_QueryInterface(aNode);
+    if (!element)
+      return NS_OK;
 
     nsAutoString name;
     nsCOMPtr<nsIContent> pContent;
