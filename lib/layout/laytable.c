@@ -7680,17 +7680,14 @@ fprintf(stderr, "lo_EndTable called\n");
 			last->lo_any.next = state->float_list;
 			state->float_list = state->line_list;
 			state->line_list = NULL;
-		}
+		}        
+
+        state->line_list = save_line_list;
 
 		if (relayout == FALSE)
 		{
-		    lo_AppendFloatInLineList(context, state, (LO_Element *)table->table_ele, save_line_list );
-		}
-		else
-		{
-		    state->line_list = save_line_list;
-		}
-		
+		    lo_AppendFloatInLineList(context, state, (LO_Element *)table->table_ele, NULL);
+		}		
 
 		table->table_ele->line_height = line_height;
 		table->table_ele->expected_y = table->table_ele->y;
