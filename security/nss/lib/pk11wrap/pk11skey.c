@@ -305,6 +305,17 @@ PK11_SymKeyFromHandle(PK11SlotInfo *slot, PK11SymKey *parent, PK11Origin origin,
     symKey->origin = origin;
     symKey->owner = owner;
 
+    /* adopt the parent's session */
+    /* This is only used by SSL. What we really want here is a session
+     * structure with a ref count so  the session goes away only after all the
+     * keys do. */
+    if (owner && parent) {
+	pk11_CloseSession(symKey->slot, symKey->session,symKey->sessionOwner);
+	symKey->sessionOwner = parent->sessionOwner;
+	symKey->session = parent->session;
+	parent->sessionOwner = PR_FALSE;
+    }
+
     return symKey;
 }
 
