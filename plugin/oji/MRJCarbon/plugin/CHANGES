@@ -1,0 +1,108 @@
+Changes since 1.0:
+
+1. Fixed a crash caused by leaving pending Java exceptions in a JNIEnv, when loading
+LiveConnect classes that were incompatible with ours. Thanks Apple!
+
+2. Worked around a change to com.apple.mrj.JavaEmbedding.JE_AppletViewer in Jaguar's JVM
+that was no longer implementing the java.applet.AppletContext. Now reading the panel field,
+which is an instance of a sun.applet.AppletPanel, which has a getApplet() method.
+
+3. Worked around Apple's shipped netscape.* classes by prepending MRJPlugin.jar to the
+boot classpath, instead of adding it to the regular application class path.
+
+Changes since 1.0fc2:
+
+1. Return correct value when mouse clicks occur within the applet. The browser is still
+initiating drags when it shouldn't. This should be fixed in Mozilla 1.0.1.
+
+2. Built the plugin as a Mac OS X bundle to simplify installation.
+
+Changes since 1.0fc1:
+
+1. Fixed crash resulting from stale reference to an nsIPluginInstancePeer held by the Carbon
+event loop timer used for both status messages and opening new browser documents from Java.
+
+2. Made all SupportsMixin::addRef/release thread-safe, since a Java thread is calling
+AddRef on an MRJPluginInstance in the event loop timer.
+
+Changes since 1.0b2:
+
+1. Added call to SizeJavaControl() when processing window size changes. This causes the applet
+to be correctly resized before calling MoveAndClipJavaControl().
+
+2. Fixed LiveConnect method that was causing stale plugin instance references to be retained
+in the active plugin list.
+
+3. Changed TimedMessage handling so it uses the system memory allocators. This fixes some issues
+that we were seeing when Carbon event handlers were being fired during event processing.
+
+4. Added versioning strings to the mimetype list to improve compatibility with websites that
+insist on declaring their applets using the "x-java-applet;version=x.x.x" format.
+
+Changes since 1.0b1:
+
+1. Repaired Security Context code that was broken by the checkin for bug 124042. This code now
+uses standard character strings instead of Mozilla string classes.
+
+2. Fixed code that was causing recursive painting calls.
+
+Changes since 1.0d8:
+
+1. Unescape file:// URLs when processing them. This allows us to launch local applets when there
+is a space in the pathname leading to the applet (i.e. "/Volume/Applet Folder/applet").
+
+Changes since 1.0d7:
+
+1. Added support for relative height and width. This fixes problems with apples failing to load
+because their height or width was specified as a percentage value.
+
+2. Removed checks for zero height and width when instantiating the applet. This was keeping
+some applets from being created.
+
+3. Fixed Unicode to UTF-8 conversion on strings that were being passed to the status bar.
+
+Changes since 1.0d6:
+
+1. Using cfref template class to simplify and guard releases of CFTypeRef objects. This fixes
+several crashing bugs.
+
+Changes since 1.0d5:
+
+1. Converting between HFS+ paths POSIX paths when processing URLs. This fixes bugzilla bug #108519
+and addresses a mismatch between the way Mozilla (FizzillaCFM) and Java represent paths. Mozilla
+uses HFS+ file paths, and simply converts them to URLs with the same path elements. Java uses the
+POSIX representation, where the boot volume is simply "/" and all other volumes appear under
+"/Volumes". The workaround code is a little messy, and is only necessary for file: URLs.
+
+2. Added NULL check to showDocumentCallback as a workaround for bug #108054. For some strange reason,
+url is NULL when that applet calls getAppletContext().showDocument(url, "_blank").
+
+Changes since 1.0d4:
+
+1. Need an applet object for LiveConnect. Is it available? Doing a little digging,
+I find that the applet's frame is an instance of com.apple.mrj.JavaEmbedding.JE_AppletViewer.
+This class has a getApplet(String) method, which should do the trick. I need to tell Apple that
+I am calling its methods. Actually, getApplet()/getApplets() is part of the interface
+java.applet.AppletContext, which the applet frame's class implements. For applets that have
+a name attribute in their HTML element, then getApplet(String) can be used. If a name attribute
+isn't specified, then AppletContext.getApplets() can be used, which returns a java.util.Enumeration,
+and presumably the first applet it returns is the one we want.
+
+2. Created JNIRunnable, LiveConnectProxy classes to implement a rudimentary security architecture.
+Slowly removing cross thread calls, which are terribly slow and didn't actually do anything for
+security.
+
+Changes since 1.0d3:
+
+1. Added system version check to make sure only runs on 10.1 or later.
+
+2. Talked to Scott Kovatch, he told me how to interact with applet
+security. Added code to netscape.oji.JNIThread's constructor to start the thread
+using a privileged action. ** Doesn't work, since code isn't in boot class path. **
+
+3. Added code to netscape.oji.MRJSession to install com.apple.mrj.JavaEmbedding.JE_AppletSecurity
+as the system security manager, so that it is always there, not just after applets run.
+
+4. Added MRJPlugin.properties to configure the plugin.
+
+5. Added MRJPlugin.policy so that classes in MRJPlugin.jar can execute with all privileges.

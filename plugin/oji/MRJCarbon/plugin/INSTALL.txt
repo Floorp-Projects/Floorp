@@ -1,0 +1,7 @@
+MRJPluginCarbon v1.0.1 Install Notes
+
+This short document explains how to install the MRJ Plugin for Mac OS X. The process for installing the plugin has been greatly simplified from previous releases. Simply drag the file MRJPluginCarbon into the folder
+
+/Library/Internet Plug-Ins
+
+This will make the MRJ Plugin for Mac OS X available to all installations of Netscape Gecko based browsers.
