@@ -1705,6 +1705,19 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
+
+        /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
+        ts->flags |= TSF_OPERAND;
+        tt = js_PeekTokenSameLine(cx, ts);
+        ts->flags &= ~TSF_OPERAND;
+        if (tt == TOK_ERROR)
+            return NULL;
+        if (tt == TOK_EOF || tt == TOK_EOL || tt == TOK_SEMI || tt == TOK_RC) {
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                        JSMSG_SYNTAX_ERROR);
+            return NULL;
+        }
+
         pn2 = Expr(cx, ts, tc);
         if (!pn2)
             return NULL;
