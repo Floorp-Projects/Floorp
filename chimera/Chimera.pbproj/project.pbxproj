@@ -1060,31 +1060,31 @@
 		F5247C320228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libnss3.dylib;
-			path = ../security/nss/lib/nss/Darwin5.3_OPT.OBJ/libnss3.dylib;
+			path = ../security/nss/lib/nss/Darwin5.4_OPT.OBJ/libnss3.dylib;
 			refType = 2;
 		};
 		F5247C330228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libnssckbi.dylib;
-			path = ../security/nss/lib/ckfw/builtins/Darwin5.3_OPT.OBJ/libnssckbi.dylib;
+			path = ../security/nss/lib/ckfw/builtins/Darwin5.4_OPT.OBJ/libnssckbi.dylib;
 			refType = 2;
 		};
 		F5247C340228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libsmime3.dylib;
-			path = ../security/nss/lib/smime/Darwin5.3_OPT.OBJ/libsmime3.dylib;
+			path = ../security/nss/lib/smime/Darwin5.4_OPT.OBJ/libsmime3.dylib;
 			refType = 2;
 		};
 		F5247C350228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libsoftokn3.dylib;
-			path = ../security/nss/lib/softoken/Darwin5.3_OPT.OBJ/libsoftokn3.dylib;
+			path = ../security/nss/lib/softoken/Darwin5.4_OPT.OBJ/libsoftokn3.dylib;
 			refType = 2;
 		};
 		F5247C360228B91F013DD99A = {
 			isa = PBXFileReference;
 			name = libssl3.dylib;
-			path = ../security/nss/lib/ssl/Darwin5.3_OPT.OBJ/libssl3.dylib;
+			path = ../security/nss/lib/ssl/Darwin5.4_OPT.OBJ/libssl3.dylib;
 			refType = 2;
 		};
 		F5247C3C0228B990013DD99A = {
