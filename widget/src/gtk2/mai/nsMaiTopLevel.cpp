@@ -46,36 +46,30 @@
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(MaiTopLevel, nsIAccessibleEventListener)
 
-    MaiTopLevel::MaiTopLevel(nsIAccessible *aAcc): MaiWidget(aAcc)
+MaiTopLevel::MaiTopLevel(nsIAccessible *aAcc):MaiWidget(aAcc)
 {
     NS_INIT_ISUPPORTS();
 
-    nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
-    if (r)
-        r->AddAccessibleEventListener(this);
-#ifdef  DEBUG_MAI
-    g_print("object=%u of type created: MaiTopLevel created \n", this);
-#endif
+    nsCOMPtr<nsIAccessibleEventReceiver>
+        receiver(do_QueryInterface(mAccessible));
+    if (receiver)
+        receiver->AddAccessibleEventListener(this);
 }
 
 MaiTopLevel::~MaiTopLevel()
 {
-    nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
-    if (r)
-        r->RemoveAccessibleEventListener();
-#ifdef  DEBUG_MAI
-    g_print("object =%u of type MaiTopLevel deleted \n", this);
-#endif
+    nsCOMPtr<nsIAccessibleEventReceiver>
+        receiver(do_QueryInterface(mAccessible));
+    if (receiver)
+        receiver->RemoveAccessibleEventListener();
 }
 
-NS_IMETHODIMP MaiTopLevel::HandleEvent(PRUint32 aEvent,
-                                       nsIAccessible* aAccessible)
+NS_IMETHODIMP
+MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible)
 {
-    MaiObject * maiObject;
+    MaiObject *maiObject;
 
-#ifdef  DEBUG_MAI
-    g_print("MaiTopLevel::HandleEvent, aEvent=%d\n",aEvent);
-#endif
+    MAI_LOG_DEBUG(("MaiTopLevel::HandleEvent, aEvent=%d\n", aEvent));
 
     if (mAccessible == aAccessible)
         maiObject = this;
@@ -96,9 +90,6 @@ NS_IMETHODIMP MaiTopLevel::HandleEvent(PRUint32 aEvent,
         aEvent == nsIAccessibleEventListener::EVENT_MENUPOPUPSTART ||
         aEvent == nsIAccessibleEventListener::EVENT_MENUPOPUPEND) {
         atk_focus_tracker_notify(ATK_OBJECT((maiObject)->GetAtkObject()));
-#ifdef  DEBUG_MAI
-        g_print("MaiTopLevel, notif focus tracker\n");
-#endif
     }
     else
         maiObject->EmitAccessibilitySignal(aEvent);
@@ -107,10 +98,7 @@ NS_IMETHODIMP MaiTopLevel::HandleEvent(PRUint32 aEvent,
     /* maiObject is deleted when its atkobject is unrefed to zero! */
 
     if (mAccessible != aAccessible) {
-        GObject * obj = G_OBJECT(maiObject->GetAtkObject());
-#ifdef  DEBUG_MAI
-        g_print("MaiTopLevel, Event AtkObject->ref=%d\n", obj->ref_count);
-#endif
+        GObject *obj = G_OBJECT(maiObject->GetAtkObject());
         g_object_unref(obj);
     }
     return NS_OK;
@@ -122,10 +110,10 @@ NS_IMETHODIMP MaiTopLevel::HandleEvent(PRUint32 aEvent,
  *
  ******************************************************************/
 MaiObject *
-MaiTopLevel::CreateMaiObjectFor(nsIAccessible* aAccessible)
+MaiTopLevel::CreateMaiObjectFor(nsIAccessible *aAccessible)
 {
-    MaiObject * newMaiObject = NULL;
-   
+    MaiObject *newMaiObject = NULL;
+
     newMaiObject = new MaiWidget(aAccessible);
 
     return newMaiObject;

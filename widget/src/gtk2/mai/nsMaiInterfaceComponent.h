@@ -39,32 +39,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __MAI_TOP_LEVEL_H__
-#define __MAI_TOP_LEVEL_H__
+#ifndef __MAI_INTERFACE_COMPONENT_H__
+#define __MAI_INTERFACE_COMPONENT_H__
 
-#include "nsIAccessibleEventListener.h"
 #include "nsMaiWidget.h"
 
-/* MaiTopLevel is the MaiObject class for toplevel Window. The instance of
- * MaiTopLevel will be child of MaiRoot instance. It is added into root when
- * the toplevel window is created, and remove from root when the toplevel
- * window is destroyed.
- */
-
-class MaiTopLevel: public MaiWidget, public nsIAccessibleEventListener
+class MaiInterfaceComponent: public MaiInterface
 {
 public:
-    MaiTopLevel(nsIAccessible *aAcc);
-    virtual ~MaiTopLevel();
+    MaiInterfaceComponent(MaiWidget*);
+    virtual ~MaiInterfaceComponent();
 
-    NS_DECL_ISUPPORTS
-    // nsIAccessibleEventListener
-    NS_DECL_NSIACCESSIBLEEVENTLISTENER
+    virtual MaiInterfaceType GetType();
+    virtual const GInterfaceInfo *GetInterfaceInfo();
 
-    /* virtual functions called by callbacks */
+public:
 
-private:
-    MaiObject *CreateMaiObjectFor(nsIAccessible* aAccessible);
+    /* interface virtual functions */
+    virtual MaiObject *RefAccessibleAtPoint(gint aAccX, gint aAccY,
+                                            AtkCoordType aCoordType);
+    virtual void GetExtents(gint *aAccX, gint *aAccY,
+                            gint *aAccWidth, gint *accHeight,
+                            AtkCoordType aCoordType);
+    virtual gboolean GrabFocus();
 };
 
-#endif   /* __MAI_TOP_LEVEL_H__ */
+#endif /* __MAI_INTERFACE_COMPONENT_H__ */

@@ -40,7 +40,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
+#include "nsIAccessibleAction.h"
+
 #include "nsMaiWidget.h"
+#include "nsMaiAppRoot.h"
+#include "nsMaiInterfaceComponent.h"
+#include "nsMaiUtil.h"
 
 GType
 mai_atk_widget_get_type(void)
@@ -61,16 +66,8 @@ mai_atk_widget_get_type(void)
             NULL /* value table */
         };
 
-        static const GInterfaceInfo atk_component_info = {
-            (GInterfaceInitFunc) MaiWidget::atkComponentInterfaceInitCB,
-            (GInterfaceFinalizeFunc) NULL,
-            NULL
-        };
-
         type = g_type_register_static(MAI_TYPE_ATK_OBJECT,
                                       "MaiAtkWidget", &tinfo, GTypeFlags(0));
-        g_type_add_interface_static(type, ATK_TYPE_COMPONENT,
-                                    &atk_component_info);
     }
     return type;
 }
@@ -80,25 +77,67 @@ gulong MaiWidget::mAtkTypeNameIndex = 0;
 MaiWidget::MaiWidget(nsIAccessible *aAcc): MaiObject(aAcc)
 {
     mMaiInterfaceCount = 0;
-    for (int i=0; i < MAI_INTERFACE_NUM; i++) {
-        mMaiInterface[i] = NULL;
+    for (int index = 0; index < MAI_INTERFACE_NUM; index++) {
+        mMaiInterface[index] = NULL;
     }
-
-#ifdef  DEBUG_MAI
-    g_print("object =%u of type MaiWidget created\n", this);
-#endif
+    mChildren = g_hash_table_new(g_direct_hash, NULL);
 }
 
 MaiWidget::~MaiWidget()
 {
-    for (int i=0; i < MAI_INTERFACE_NUM; i++) {
-        if (mMaiInterface[i])
-            delete mMaiInterface[i];
+    for (int index = 0; index < MAI_INTERFACE_NUM; index++) {
+        if (mMaiInterface[index])
+            delete mMaiInterface[index];
     }
+    g_hash_table_destroy(mChildren);
+}
 
-#ifdef  DEBUG_MAI
-    g_print("object=%u of type MaiWidget deleted\n", this);
+#ifdef MAI_LOGGING
+void
+MaiWidget::DumpMaiObjectInfo(gint aDepth)
+{
+    --aDepth;
+    if (aDepth < 0)
+        return;
+    g_print("<<<<<Begin of MaiObject: this=0x%x, aDepth=%d, type=%s\n",
+            (unsigned int)this, aDepth, "MaiWidget");
+
+    g_print("NSAccessible UniqueID=%x\n", GetNSAccessibleUniqueID());
+    g_print("Interfaces Supported:");
+    for (int ifaces = 0; ifaces < MAI_INTERFACE_NUM; ifaces++) {
+        if (mMaiInterface[ifaces])
+            g_print(" : %d", ifaces);
+    }
+    g_print("\n");
+    gint nChild = GetChildCount();
+    gint nIndexInParent = GetIndexInParent();
+    g_print("== Name: %s, IndexInParent=%d, ChildNum=%d \n",
+            GetName(),nIndexInParent, nChild);
+
+    MaiObject *maiChild;
+    for (int index = 0; index < nChild; index++) {
+        maiChild = RefChild(index);
+        if (maiChild) {
+            maiChild->DumpMaiObjectInfo(aDepth);
+        }
+    }
+    g_print(">>>>>End of MaiObject: this=0x%x, type=%s\n",
+            (unsigned int)this, "MaiWidget");
+
+    //the interface info
+}
 #endif
+
+guint
+MaiWidget::GetNSAccessibleUniqueID()
+{
+    return ::GetNSAccessibleUniqueID(mAccessible);
+}
+
+MaiInterface *
+MaiWidget::GetMaiInterface(MaiInterfaceType aIfaceType)
+{
+    return mMaiInterface[aIfaceType];
 }
 
 GType
@@ -122,153 +161,240 @@ MaiWidget::GetMaiAtkType(void)
                                   MaiWidget::GetUniqueMaiAtkTypeName(),
                                   &tinfo, GTypeFlags(0));
 
-    if ( mMaiInterfaceCount == 0)
+    if (mMaiInterfaceCount == 0)
         return MAI_TYPE_ATK_WIDGET;
 
-    for (int i=0; i < MAI_INTERFACE_NUM; i++) {
-        if (mMaiInterface[i]) {
-            g_type_add_interface_static(type, mMaiInterface[i]->GetAtkType(),
-                                        mMaiInterface[i]->GetInterfaceInfo());
-        }
+    for (int index = 0; index < MAI_INTERFACE_NUM; index++) {
+        if (!mMaiInterface[index])
+            continue;
+        g_type_add_interface_static(type,
+                                    mMaiInterface[index]->GetAtkType(),
+                                    mMaiInterface[index]->GetInterfaceInfo());
     }
     return type;
 }
+
+void
+MaiWidget::AddMaiInterface(MaiInterface *aMaiIface)
+{
+    g_return_if_fail(aMaiIface != NULL);
+    MaiInterfaceType aMaiIfaceType = aMaiIface->GetType();
+
+    // if same type of If has been added, release previous one
+    if (mMaiInterface[aMaiIfaceType]) {
+        delete mMaiInterface[aMaiIfaceType];
+    }
+    mMaiInterface[aMaiIfaceType] = aMaiIface;
+    mMaiInterfaceCount++;
+}
+
+void
+MaiWidget::CreateMaiInterfaces(void)
+{
+    g_return_if_fail(mAccessible != NULL);
+
+    // the Component interface are supported by all nsIAccessible
+
+    // Add Interfaces for each nsIAccessible.ext interfaces
+    MaiInterfaceComponent *maiInterfaceComponent =
+        new MaiInterfaceComponent(this);
+    AddMaiInterface(maiInterfaceComponent);
+
+    /*
+    nsCOMPtr<nsIAccessibleAction>
+        accessInterfaceAction(do_QueryInterface(mAccessible));
+    if (accessInterfaceAction) {
+        MaiInterfaceAction *maiInterfaceAction = new MaiInterfaceAction(this);
+        AddMaiInterface(maiInterfaceAction);
+    }
+    */
+
+    /*
+    // all the other interfaces follow here
+    nsIAccessibleAction.idl
+    nsIAccessibleEditableText.idl
+    nsIAccessibleHyperLink.idl
+    nsIAccessibleHyperText.idl
+    nsIAccessibleSelection.idl
+    nsIAccessibleTable.idl
+    nsIAccessibleText.idl
+    nsIAccessibleValue.idl
+
+    */
+}
+
+/* virtual functions */
 
 AtkObject *
 MaiWidget::GetAtkObject(void)
 {
     g_return_val_if_fail(mAccessible != NULL, NULL);
- 
+
     if (mMaiAtkObject)
         return ATK_OBJECT(mMaiAtkObject);
 
     nsCOMPtr<nsIAccessible> accessIf(do_QueryInterface(mAccessible));
     if (!accessIf) {
-#ifdef DEBUG_MAI
-        g_print("MaiWidget::GetAtkObject: NOT nsIAccessible!\n");
-#endif
         return NULL;
     }
 
     CreateMaiInterfaces();
-    mMaiAtkObject =  (MaiAtkObject*) g_object_new(GetMaiAtkType(), NULL);
+    mMaiAtkObject = (MaiAtkObject*) g_object_new(GetMaiAtkType(), NULL);
     g_return_val_if_fail(mMaiAtkObject != NULL, NULL);
 
     atk_object_initialize(ATK_OBJECT(mMaiAtkObject), this);
     ATK_OBJECT(mMaiAtkObject)->role = ATK_ROLE_INVALID;
     ATK_OBJECT(mMaiAtkObject)->layer = ATK_LAYER_INVALID;
 
-#ifdef DEBUG_MAI
-    g_print("MaiWidget=%u, GetAtkObject obj=%u, ref=%d\n",
-            this, mMaiAtkObject, G_OBJECT(mMaiAtkObject)->ref_count);
-#endif
     return ATK_OBJECT(mMaiAtkObject);
 }
 
-void
-MaiWidget::AddMaiInterface(MaiInterface *maiIf)
+MaiObject *
+MaiWidget::GetParent(void)
 {
-    g_return_if_fail(maiIf != NULL);
-    MaiInterfaceType maiIfType = maiIf->GetType();
- 
-    // if same type of If has been added, release previous one
-    if (mMaiInterface[maiIfType]) {
-        delete mMaiInterface[maiIfType];
+    g_return_val_if_fail(mAccessible != NULL, NULL);
+
+    AtkObject *atkObj = GetAtkObject();
+
+    /* MaiTopLevel should always has accessible_parent set to root */
+    if (atkObj->accessible_parent) {
+        MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(atkObj->accessible_parent,
+                                                NULL);
+        return MAI_ATK_OBJECT(atkObj->accessible_parent)->maiObject;
     }
-    mMaiInterface[maiIfType] = maiIf;
-    mMaiInterfaceCount++;
+
+    /* try to get parent for it */
+    nsCOMPtr<nsIAccessible> accParent(nsnull);
+    nsresult rv = mAccessible->GetAccParent(getter_AddRefs(accParent));
+    if (NS_FAILED(rv) || !accParent)
+        return NULL;
+
+    /* create a new mai parent */
+    /* ??? when the new one get freed? */
+    MaiWidget *maiParent = new MaiWidget(accParent);
+    return maiParent;
 }
 
-void
-MaiWidget::CreateMaiInterfaces()
+gint
+MaiWidget::GetChildCount(void)
 {
-    g_return_if_fail(mAccessible != NULL);
+    g_return_val_if_fail(mAccessible != NULL, 0);
 
-    // Add Interfaces for each nsIAccessible.ext interfaces
-
-    /*
-      nsCOMPtr<nsIAccessibleAction> accessIfAction(do_QueryInterface(mAccessible));
-      if (accessIfAction) {
-      MaiInterfaceAction maiIfAction = new MaiInterfaceAction(this);
-      AddMaiInterface(maiIfAction);
-      }
-
-      // all the interfaces follow here
-      nsIAccessibleAction.idl
-      nsIAccessibleEditableText.idl
-      nsIAccessibleHyperLink.idl
-      nsIAccessibleHyperText.idl
-      nsIAccessibleSelection.idl
-      nsIAccessibleTable.idl
-      nsIAccessibleText.idl
-      nsIAccessibleValue.idl
-
-    */
+    gint count = 0;
+    mAccessible->GetAccChildCount(&count);
+    return count;
 }
 
-/* virtual functions */
-void
-MaiWidget::GetExtents(gint           *x,
-                      gint           *y,
-                      gint           *width,
-                      gint           *height,
-                      AtkCoordType   coord_type)
+MaiObject *
+MaiWidget::RefChild(gint aChildIndex)
 {
-    g_return_if_fail(mAccessible != NULL);
+    g_return_val_if_fail(mAccessible != NULL, NULL);
+    gint count = GetChildCount();
+    if ((aChildIndex < 0) || (aChildIndex >= count))
+        return NULL;
 
-    nsresult rv = mAccessible->AccGetBounds(x, y, width, height);
-    if (NS_FAILED(rv))
-        return;
-
-    // or ATK_XY_SCREEN  what is definition this in nsIAccessible?
-    if (coord_type == ATK_XY_WINDOW) {
-        /* deal with the coord type */
+    MaiObject *maiChild = NULL;
+    guint uid;
+    // look in cache first
+    MaiCache *maiCache = mai_get_cache();
+    if (maiCache) {
+        uid = GetChildUniqueID(aChildIndex);
+        if (uid > 0 && (maiChild = maiCache->Fetch(uid))) {
+            g_print("got child 0x%x from cache\n", (guint)maiChild);
+            return maiChild;
+        }
     }
+    // :( not cached yet, get and cache it is possible
+    // nsIAccessible child index starts with 1
+    gint accChildIndex = 1;
+    nsCOMPtr<nsIAccessible> accChild = NULL;
+    nsCOMPtr<nsIAccessible> accTmpChild = NULL;
+    mAccessible->GetAccFirstChild(getter_AddRefs(accChild));
+
+    while (accChildIndex++ <= aChildIndex && accChild) {
+        accChild->GetAccNextSibling(getter_AddRefs(accTmpChild));
+        accChild = accTmpChild;
+    }
+    if (!accChild)
+        return NULL;
+
+    // children with different index may have same uid,
+    // although they are different nsIAccessilbe objects for
+    // different frames, they are deemed equal for accessible
+    // user, since they point to the same dom node.
+    // So, maybe the it has been cached.
+    uid = ::GetNSAccessibleUniqueID(accChild);
+    g_return_val_if_fail(uid != 0, NULL);
+    if (maiCache)
+        maiChild = maiCache->Fetch(uid);
+
+    // not cached, create a new one
+    if (!maiChild) {
+        maiChild = new MaiWidget(accChild);
+        g_return_val_if_fail(maiChild != NULL, NULL);
+        if (maiCache) {
+            maiCache->Add(maiChild);
+            //cache should have add ref, release ours
+            g_object_unref(maiChild->GetAtkObject());
+        }
+    }
+    // update children uid list
+    SetChildUniqueID(aChildIndex, uid);
+    return maiChild;
+}
+
+gint
+MaiWidget::GetIndexInParent()
+{
+    g_return_val_if_fail(mAccessible != NULL, -1);
+
+    MaiObject *maiParent = GetParent();
+    g_return_val_if_fail(maiParent != NULL, -1);
+
+    gint childCountInParent = maiParent->GetChildCount();
+    MaiWidget *maiSibling = NULL;
+    for (int index = 0; index < childCountInParent; index++) {
+        maiSibling = (MaiWidget*)maiParent->RefChild(index);
+        if (maiSibling->GetNSAccessibleUniqueID() ==
+            GetNSAccessibleUniqueID())
+            return index;
+    }
+    return -1;
 }
 
 /* static functions */
 
-void
-MaiWidget::atkComponentInterfaceInitCB(AtkComponentIface *iface)
-{
-    g_return_if_fail(iface != NULL);
-
-    /*
-     * Use default implementation for contains and get_position
-     */
-    iface->get_extents = MaiWidget::getExtentsCB;
-}
-
-void
-MaiWidget::getExtentsCB(AtkComponent   *component,
-                        gint           *x,
-                        gint           *y,
-                        gint           *width,
-                        gint           *height,
-                        AtkCoordType   coord_type)
-{
-    g_return_if_fail(MAI_IS_ATK_WIDGET(component));
-
-    MaiWidget * maiWidget = (MaiWidget*)MAI_ATK_OBJECT(component)->maiObject;
-    g_return_if_fail(maiWidget!=NULL);
-
-    maiWidget->GetExtents(x, y, width, height, coord_type);
-}
-
-/* static */
-gchar*
+gchar *
 MaiWidget::GetUniqueMaiAtkTypeName(void)
 {
-#define MAI_ATK_TYPE_NAME_LEN (30)     /* 10+sizeof(gulong)/4+1 < 30 */
+#define MAI_ATK_TYPE_NAME_LEN (30)     /* 10+sizeof(gulong)*8/4+1 < 30 */
 
-    static gchar namePrefix[] = "MaiAtkType";  /* size = 10 */
-    static gchar name[MAI_ATK_TYPE_NAME_LEN+1];
+    static gchar namePrefix[] = "MaiAtkType";   /* size = 10 */
+    static gchar name[MAI_ATK_TYPE_NAME_LEN + 1];
 
-    sprintf(name, "%s%x", namePrefix, mAtkTypeNameIndex++);
+    sprintf(name, "%s%lx", namePrefix, mAtkTypeNameIndex++);
     name[MAI_ATK_TYPE_NAME_LEN] = '\0';
 
-#ifdef DEBUG_MAI
-    g_print("MaiWidget::LastedTypeName=%s\n", name);
-#endif
+    MAI_LOG_DEBUG(("MaiWidget::LastedTypeName=%s\n", name));
+
     return name;
+}
+
+/* private */
+guint
+MaiWidget::GetChildUniqueID(gint aChildIndex)
+{
+    gpointer pValue= g_hash_table_lookup(mChildren, (const void *)aChildIndex);
+    if (pValue)
+        return guint(pValue);
+    else
+        return 0;
+}
+
+void
+MaiWidget::SetChildUniqueID(gint aChildIndex, guint aChildUid)
+{
+    //If the key already exists in the GHashTable its current value is
+    //replaced with the new value.
+    g_hash_table_insert(mChildren, (void*)aChildIndex, (void*)aChildUid);
 }

@@ -39,32 +39,66 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __MAI_TOP_LEVEL_H__
-#define __MAI_TOP_LEVEL_H__
+#ifndef __MAI_APP_ROOT_H__
+#define __MAI_APP_ROOT_H__
 
-#include "nsIAccessibleEventListener.h"
-#include "nsMaiWidget.h"
+#include "nsIAccessibleEventReceiver.h"
+#include "nsMaiCache.h"
+#include "nsMaiTopLevel.h"
 
-/* MaiTopLevel is the MaiObject class for toplevel Window. The instance of
- * MaiTopLevel will be child of MaiRoot instance. It is added into root when
- * the toplevel window is created, and remove from root when the toplevel
- * window is destroyed.
- */
+#define MAI_TYPE_APP_ROOT (MAI_TYPE_ATK_OBJECT)
 
-class MaiTopLevel: public MaiWidget, public nsIAccessibleEventListener
+struct TopLevelItem
 {
-public:
-    MaiTopLevel(nsIAccessible *aAcc);
-    virtual ~MaiTopLevel();
-
-    NS_DECL_ISUPPORTS
-    // nsIAccessibleEventListener
-    NS_DECL_NSIACCESSIBLEEVENTLISTENER
-
-    /* virtual functions called by callbacks */
-
-private:
-    MaiObject *CreateMaiObjectFor(nsIAccessible* aAccessible);
+    /* nsIAccessibles for Different toplevel Windows may have same
+     * Unique ID (why so?), we need to expose only one of them
+     * "ref" here is used to trace that.
+     */
+    gint ref;
+    MaiTopLevel *maiTopLevel;
 };
 
-#endif   /* __MAI_TOP_LEVEL_H__ */
+/* MaiAppRoot is the MaiObject class for Mozilla, the whole application. Only
+ * one instance of MaiAppRoot exists for one Mozilla instance. And the one
+ * should be created when Mozilla Startup (with accessibility feature
+ * enabled) and destroyed when Mozilla Shutdown.
+ *
+ * All the accessibility objects of toplevel window should be children of
+ * the MaiAppRoot instance.
+ */
+class MaiAppRoot: public MaiObject
+{
+public:
+    MaiAppRoot();
+    virtual ~MaiAppRoot();
+#ifdef MAI_LOGGING
+    virtual void DumpMaiObjectInfo(int aDepth);
+#endif
+
+    virtual guint GetNSAccessibleUniqueID();
+
+    gboolean AddMaiTopLevel(MaiTopLevel *aToplevel);
+    gboolean RemoveMaiTopLevel(MaiTopLevel *aToplevel);
+    MaiTopLevel *FindMaiTopLevel(MaiTopLevel *aToplevel);
+    MaiTopLevel *FindMaiTopLevel(nsIAccessible *aToplevel);
+
+    MaiCache *GetCache(void);
+public:
+    virtual AtkObject *GetAtkObject(void);
+    virtual void Initialize(void);
+    virtual void Finalize(void);
+
+    /* virtual functions for MaiObject */
+    virtual gchar *GetName(void);
+    virtual gchar *GetDescription(void);
+    virtual MaiObject *GetParent(void);
+    virtual gint GetChildCount(void);
+    virtual MaiObject *RefChild(gint aChildIndex);
+private:
+    GList *mTopLevelList;
+    TopLevelItem *FindTopLevelItem(nsIAccessible *aAccess);
+
+    MaiCache *mMaiCache;
+};
+
+#endif   /* __MAI_APP_ROOT_H__ */

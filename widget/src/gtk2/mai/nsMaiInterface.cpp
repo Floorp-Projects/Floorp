@@ -43,15 +43,14 @@
 #include "nsMaiInterface.h"
 #include "nsMaiWidget.h"
 
-MaiInterface::MaiInterface(MaiWidget* maiWidget)
+MaiInterface::MaiInterface(MaiWidget *aMaiWidget)
 {
-    mMaiWidget = maiWidget;
+    mMaiWidget = aMaiWidget;
 }
 
-MaiInterface:: ~MaiInterface()
+MaiInterface::~MaiInterface()
 {
-    if (mMaiWidget)
-        delete mMaiWidget;
+    mMaiWidget = NULL;
 }
 
 GType
@@ -91,4 +90,13 @@ MaiInterface::GetAtkType()
         atkType = G_TYPE_INVALID;
     }
     return atkType;
+}
+
+nsIAccessible *
+MaiInterface::GetNSAccessible(void)
+{
+    if (mMaiWidget)
+        return mMaiWidget->GetNSAccessible();
+    else
+        return NULL;
 }
