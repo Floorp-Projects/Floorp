@@ -1849,45 +1849,19 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
   if (!mIsSpacer || !mAlphaDepth)
     dest->mIsSpacer = PR_FALSE;
 
-  // need to copy the mImageBits in case we're rendered scaled
-  PRUint8 *scaledImage = 0, *scaledAlpha = 0;
+  // Ripped out scaling code from here.  So, just to be safe, putting in an
+  // assertion that will fire in case we get an image that
+  // needs to be scaled.
+  NS_ASSERTION((aDWidth == mWidth) && (aDHeight == mHeight), 
+               "nsImageGTK::DrawToImage called for an image that needs to be scaled.");
+
   PRUint8 *rgbPtr=0, *alphaPtr=0;
   PRUint32 rgbStride, alphaStride;
 
-  if ((aDWidth != mWidth) || (aDHeight != mHeight)) {
-    // scale factor in DrawTo... start scaling
-    scaledImage = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
-    if (!scaledImage)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    RectStretch(0, 0, mWidth-1, mHeight-1, 0, 0, aDWidth-1, aDHeight-1,
-                mImageBits, mRowBytes, scaledImage, 3*aDWidth, 24);
-
-    if (mAlphaDepth) {
-      if (mAlphaDepth==1)
-        alphaStride = (aDWidth+7)>>3;    // round to next byte
-      else
-        alphaStride = aDWidth;
-
-      scaledAlpha = (PRUint8 *)nsMemory::Alloc(alphaStride*aDHeight);
-      if (!scaledAlpha) {
-        nsMemory::Free(scaledImage);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      RectStretch(0, 0, mWidth-1, mHeight-1, 0, 0, aDWidth-1, aDHeight-1,
-                  mAlphaBits, mAlphaRowBytes, scaledAlpha, alphaStride,
-                  mAlphaDepth);
-    }
-    rgbPtr = scaledImage;
-    rgbStride = 3*aDWidth;
-    alphaPtr = scaledAlpha;
-  } else {
-    rgbPtr = mImageBits;
-    rgbStride = mRowBytes;
-    alphaPtr = mAlphaBits;
-    alphaStride = mAlphaRowBytes;
-  }
+  rgbPtr = mImageBits;
+  rgbStride = mRowBytes;
+  alphaPtr = mAlphaBits;
+  alphaStride = mAlphaRowBytes;
 
   PRInt32 y;
   // now composite the two images together
@@ -1910,22 +1884,10 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
     }
     break;
   case 8:
-    for (y=0; y<aDHeight; y++) {
-      PRUint8 *dst = dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX;
-      PRUint8 *dstAlpha = 
-        dest->mAlphaBits + (y+aDY)*dest->mAlphaRowBytes + aDX;
-      PRUint8 *src = rgbPtr + y*rgbStride; 
-      PRUint8 *alpha = alphaPtr + y*alphaStride;
-      for (int x=0; x<aDWidth; x++, dst+=3, dstAlpha++, src+=3, alpha++) {
+    // Ripped out 8 bit alpha blending code but leaving an assert in here
+    // to catch an errant use of this function
+    NS_ASSERTION(0, "nsImageGTK::DrawToImage(): Unexpected 8 bit alpha image");
 
-        // blend this pixel over the destination image
-        unsigned val = *alpha;
-        MOZ_BLEND(dst[0], dst[0], src[0], val);
-        MOZ_BLEND(dst[1], dst[1], src[1], val);
-        MOZ_BLEND(dst[2], dst[2], src[2], val);
-        MOZ_BLEND(*dstAlpha, *dstAlpha, val, val);
-      }
-    }
     break;
   case 0:
   default:
@@ -1934,10 +1896,6 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
              rgbPtr + y*rgbStride,
              3*aDWidth);
   }
-  if (scaledAlpha)
-    nsMemory::Free(scaledAlpha);
-  if (scaledImage)
-    nsMemory::Free(scaledImage);
 
   return NS_OK;
 }
