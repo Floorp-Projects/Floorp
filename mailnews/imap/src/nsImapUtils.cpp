@@ -27,14 +27,12 @@
 #include "prsystem.h"
 
 // stuff for temporary root folder hack
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapIncomingServer.h"
 #include "nsMsgBaseCID.h"
 
 #include "nsMsgUtils.h"
-
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsresult
 nsGetImapServer(const char* username, const char* hostname,
