@@ -17,34 +17,33 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= mozdbm_s
-
 LIB_IS_C_ONLY	= 1
 
-CSRCS		= db.c \
-		  h_bigkey.c \
-		  h_func.c \
-		  h_log2.c \
-		  h_page.c \
-		  hash.c \
-		  hash_buf.c \
-		  hsearch.c \
-		  memmove.c \
-		  mktemp.c \
-		  ndbm.c \
-		  snprintf.c \
-		  strerror.c \
-		  nsres.c \
-		  $(NULL)
+CSRCS		= \
+		db.c \
+		h_bigkey.c \
+		h_func.c \
+		h_log2.c \
+		h_page.c \
+		hash.c \
+		hash_buf.c \
+		hsearch.c \
+		memmove.c \
+		mktemp.c \
+		ndbm.c \
+		snprintf.c \
+		strerror.c \
+		nsres.c \
+		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../include
 
-MKSHLIB :=
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
@@ -55,3 +54,4 @@ DEFINES		+= -DMEMMOVE -D__DBINTERFACE_PRIVATE $(SECURITY_FLAG)
 ifeq ($(OS_ARCH),AIX)
 OS_LIBS		+= -lc_r
 endif
+
