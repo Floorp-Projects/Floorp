@@ -20,20 +20,25 @@ DEPTH=../../..
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
-main.cpp		\
-$(NULL)
+	main.cpp		\
+	nsBrowserWindow.cpp	\
+	nsDocLoader.cpp		\
+	nsViewer.cpp		\
+	nsMotifMenu.cpp		\
+	nsEditorMode.cpp	\
+	nsEditorInterfaces.cpp	\
+	nsSetupRegistry.cpp	\
+	$(NULL)
 
-
-INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom -I$(PUBLIC)/netlib -I$(PUBLIC)/js -I$(PUBLIC)/pref
-
-DIRS	=
+INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom \
+	-I$(PUBLIC)/netlib -I$(PUBLIC)/js -I$(PUBLIC)/pref
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
-$(DIST)/bin/libraptorbase.so	\
-$(DIST)/bin/libpng.so \
-$(DIST)/bin/libpref.so \
+	$(DIST)/bin/libraptorbase.so	\
+	$(DIST)/bin/libpng.so \
+	$(DIST)/bin/libpref.so \
 	$(DIST)/bin/libraptorbase.so \
 	$(DIST)/bin/libwidgetunix.so \
 	$(DIST)/bin/libraptorgfx.so \
@@ -87,36 +92,13 @@ EX_LIBS += \
 	$(NULL)
 endif
 
-PROGS   = $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+PROGRAM   = main
 
-TARGETS = $(PROGS)
+TARGETS = $(PROGRAM)
 
 include $(DEPTH)/config/rules.mk
 
-$(OBJDIR)/nsSetupRegistry.o::	nsSetupRegistry.cpp
-	$(CCC) -o $@ -c $(CFLAGS) nsSetupRegistry.cpp $(LDFLAGS) 
-
-$(OBJDIR)/nsDocLoader.o::	nsDocLoader.cpp
-	$(CCC) -o $@ -c $(CFLAGS) nsDocLoader.cpp $(LDFLAGS) 
-
-$(OBJDIR)/nsViewer.o::	nsViewer.cpp
-	$(CCC) -o $@ -c $(CFLAGS) nsViewer.cpp $(LDFLAGS) 
-
-$(OBJDIR)/nsMotifMenu.o::	nsMotifMenu.cpp
-	$(CCC) -o $@ -c $(CFLAGS) nsMotifMenu.cpp $(LDFLAGS) 
-
-$(OBJDIR)/nsEditorMode.o::	nsEditorMode.cpp
-	$(CCC) -o $@ -c $(CFLAGS) nsEditorMode.cpp $(LDFLAGS) 
-
-$(OBJDIR)/nsEditorInterfaces.o::	nsEditorInterfaces.cpp
-	$(CCC) -o $@ -c $(CFLAGS) nsEditorInterfaces.cpp $(LDFLAGS) 
-
-
-$(OBJDIR)/%.o: %.cpp
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
-
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(OBJDIR)/nsSetupRegistry.o $(EX_LIBS)
+fish:$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(OBJDIR)/nsSetupRegistry.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
 	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(OBJDIR)/nsSetupRegistry.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
@@ -125,8 +107,6 @@ else
 endif
 
 export::
-
-
 
 install:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin

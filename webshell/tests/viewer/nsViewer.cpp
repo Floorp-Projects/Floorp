@@ -88,7 +88,11 @@
 #include "nsIPluginHost.h"
 #endif
 
+
+extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
+
 // Class ID's
+static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
@@ -116,7 +120,7 @@ static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
-static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
+//static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 
 #ifdef VIEWER_PLUGINS
@@ -1325,6 +1329,10 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
     return(nsnull);
   }
 #endif
+
+  nsIFactory* bwf;
+  NS_NewBrowserWindowFactory(&bwf);
+  NSRepository::RegisterFactory(kBrowserWindowCID, bwf, PR_FALSE);
 
   // Create a browser window and have it load the default url
   nsIBrowserWindow* bw = nsnull;
