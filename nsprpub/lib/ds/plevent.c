@@ -124,7 +124,7 @@ static PLEventQueue *
     PRMonitor* mon = NULL;
 
     if (event_lm == NULL)
-        event_lm = PR_LOG_DEFINE("event");
+        event_lm = PR_NewLogModule("event");
 
     self = PR_NEWZAP(PLEventQueue);
     if (self == NULL) return NULL;
@@ -386,7 +386,7 @@ PL_RevokeEvents(PLEventQueue* self, void* owner)
     if (self == NULL)
     return;
 
-    PR_LOG_BEGIN(event_lm, PR_LOG_DEBUG,
+    PR_LOG(event_lm, PR_LOG_DEBUG,
          ("$$$ revoking events for owner %0x", owner));
 
     /*
@@ -414,7 +414,7 @@ PL_RevokeEvents(PLEventQueue* self, void* owner)
 
     PR_ExitMonitor(self->monitor);
 
-    PR_LOG_END(event_lm, PR_LOG_DEBUG,
+    PR_LOG(event_lm, PR_LOG_DEBUG,
            ("$$$ revoking events for owner %0x", owner));
 }
 
@@ -431,9 +431,9 @@ PL_ProcessPendingEvents(PLEventQueue* self)
     PLEvent* event = PL_GetEvent(self);
         if (event == NULL) break;
 
-    PR_LOG_BEGIN(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
+    PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
     PL_HandleEvent(event);
-    PR_LOG_END(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
+    PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
     }
     self->processingEvents = PR_FALSE;
 }
@@ -540,7 +540,7 @@ PL_WaitForEvent(PLEventQueue* self)
 
     while ((event = PL_GetEvent(self)) == NULL) {
         PRStatus err;
-        PR_LOG_END(event_lm, PR_LOG_DEBUG, ("$$$ waiting for event"));
+        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ waiting for event"));
         err = PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT);
         if ((err == PR_FAILURE)
             && (PR_PENDING_INTERRUPT_ERROR == PR_GetError())) break;
@@ -563,9 +563,9 @@ PL_EventLoop(PLEventQueue* self)
         return;
     }
 
-        PR_LOG_BEGIN(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
+        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
     PL_HandleEvent(event);
-    PR_LOG_END(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
+    PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
     }
 }
 
