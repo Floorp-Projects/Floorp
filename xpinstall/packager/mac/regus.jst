@@ -19,23 +19,36 @@ logComment("fProgram: " + fProgram);
 
 if (verifyDiskSpace(fProgram, srDest))
 {
+    var chromeType = LOCALE;
     err = addDirectory("",
-                   "$Version$",
                    "viewer",
                    fProgram,
-                   "",
-                   true);
+                   "");
     logComment("addDirectory() returned: " + err);
 
-    var cf = getFolder("Chrome");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "global-region/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "communicator-region/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "editor-region/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "messenger-region/");
-    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "navigator-region/");
-
-    if(err == SUCCESS)
+    if (err != SUCCESS)
     {
+        logComment("addDirectory() to " + fProgram + "failed!");
+        // couldn't install globally, try installing to the profile
+        resetError();
+        chromeType |= PROFILE_CHROME;
+        fProgram = getFolder("Profile");
+        logComment("try installing to the profile: " + fProgram);
+        err = addDirectory("","viewer/chrome",fProgram,"chrome");
+    }
+ 
+    setPackageFolder(fProgram);
+
+    if (err == SUCCESS)
+    {
+        // register chrome
+        var cf = getFolder(fProgram, "chrome/"+ chromeName);
+        registerChrome(chromeType, cf, localeName + "global-region/");
+        registerChrome(chromeType, cf, localeName + "communicator-region/");
+        registerChrome(chromeType, cf, localeName + "editor-region/");
+        registerChrome(chromeType, cf, localeName + "messenger-region/");
+        registerChrome(chromeType, cf, localeName + "navigator-region/");
+
         err = performInstall(); 
         logComment("performInstall() returned: " + err);
     }
