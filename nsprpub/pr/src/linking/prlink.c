@@ -262,6 +262,10 @@ void _PR_InitLinker(void)
 }
 
 #if defined(WIN16)
+/*
+ * _PR_ShutdownLinker unloads all dlls loaded by the application via
+ * calls to PR_LoadLibrary
+ */
 void _PR_ShutdownLinker(void)
 {
     PR_EnterMonitor(pr_linker_lock);
@@ -282,6 +286,32 @@ void _PR_ShutdownLinker(void)
     PR_DestroyMonitor(pr_linker_lock);
     pr_linker_lock = NULL;
 }
+#else
+/*
+ * _PR_ShutdownLinker was originally only used on WIN16 (see above),
+ * but I think it should also be used on other platforms.  However,
+ * I disagree with the original implementation's unloading the dlls
+ * for the application.  Any dlls that still remain on the pr_loadmap
+ * list when NSPR shuts down are application programming errors.  The
+ * only exception is pr_exe_loadmap, which was added to the list by
+ * NSPR and hence should be cleaned up by NSPR.
+ */
+void _PR_ShutdownLinker(void)
+{
+    /* FIXME: pr_exe_loadmap should be destroyed. */
+    
+    PR_DestroyMonitor(pr_linker_lock);
+    pr_linker_lock = NULL;
+
+    if (_pr_currentLibPath) {
+        free(_pr_currentLibPath);
+        _pr_currentLibPath = NULL;
+    }
+
+#if !defined(USE_DLFCN) && !defined(HAVE_STRERROR)
+    PR_DELETE(errStrBuf);
+#endif
+}
 #endif
 
 /******************************************************************************/
@@ -292,7 +322,9 @@ PR_IMPLEMENT(PRStatus) PR_SetLibraryPath(const char *path)
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
     PR_EnterMonitor(pr_linker_lock);
-    PR_FREEIF(_pr_currentLibPath);
+    if (_pr_currentLibPath) {
+        free(_pr_currentLibPath);
+    }
     if (path) {
         _pr_currentLibPath = strdup(path);
         if (!_pr_currentLibPath) {
@@ -342,7 +374,7 @@ PR_GetLibraryPath()
         ev = "";
     
     len = strlen(ev) + 1;        /* +1 for the null */
-    p = (char*) PR_MALLOC(len);
+    p = (char*) malloc(len);
     if (p) {
         strcpy(p, ev);
     }
@@ -369,7 +401,7 @@ PR_GetLibraryPath()
 #endif
     len = strlen(ev) + 1;        /* +1 for the null */
 
-    p = (char*) PR_MALLOC(len);
+    p = (char*) malloc(len);
     if (p) {
         strcpy(p, ev);
     }   /* if (p)  */
@@ -1148,7 +1180,8 @@ PR_UnloadLibrary(PRLibrary *lib)
 
   freeLib:
     PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Unloaded library %s", lib->name));
-    PR_DELETE(lib->name);
+    free(lib->name);
+    lib->name = NULL;
     PR_DELETE(lib);
     if (result == -1) {
         PR_SetError(PR_UNLOAD_LIBRARY_ERROR, _MD_ERRNO());

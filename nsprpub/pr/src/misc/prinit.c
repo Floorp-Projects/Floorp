@@ -417,9 +417,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
     	PR_ASSERT((_PR_IS_NATIVE_THREAD(me)) || (me->cpu->id == 0));
 #endif
 
-#if defined(WIN16)
 		_PR_ShutdownLinker();
-#endif
         /* Release the primordial thread's private data, etc. */
         _PR_CleanupThread(me);
 
