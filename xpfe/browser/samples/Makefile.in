@@ -30,13 +30,8 @@ DIRS		= sampleimages
 
 EXPORT_RESOURCE_SAMPLES = \
 		$(srcdir)/colorpicker.xul \
-		$(srcdir)/dexanimmaster.xul \
-		$(srcdir)/dexanimdialog.xul \
-		$(srcdir)/dexparammaster.xul \
 		$(srcdir)/dexparamdialog.xul \
 		$(srcdir)/dexparamdialog.html \
-		$(srcdir)/dexsimplemaster.xul \
-		$(srcdir)/dexsimpledialog.xul \
 		$(srcdir)/dexopenchrome.xul \
 		$(srcdir)/hidetoolicon.xul \
 		$(srcdir)/hidetoolicon.css \
