@@ -4020,31 +4020,34 @@ pk11_Finalize(PK11Context *context)
 {
     CK_ULONG count = 0;
     CK_RV crv;
+    unsigned char stackBuf[256];
+    unsigned char *buffer = NULL;
 
     if (!context->ownSession) {
 	return SECSuccess;
     }
 
+finalize:
     switch (context->operation) {
     case CKA_ENCRYPT:
 	crv=PK11_GETTAB(context->slot)->C_EncryptFinal(context->session,
-				NULL,&count);
+	                                               buffer, &count);
 	break;
     case CKA_DECRYPT:
 	crv = PK11_GETTAB(context->slot)->C_DecryptFinal(context->session,
-				NULL,&count);
+	                                                 buffer, &count);
 	break;
     case CKA_SIGN:
 	crv=PK11_GETTAB(context->slot)->C_SignFinal(context->session,
-				NULL,&count);
+	                                            buffer, &count);
 	break;
     case CKA_VERIFY:
 	crv=PK11_GETTAB(context->slot)->C_VerifyFinal(context->session,
-				NULL,count);
+	                                              buffer, count);
 	break;
     case CKA_DIGEST:
 	crv=PK11_GETTAB(context->slot)->C_DigestFinal(context->session,
-				NULL,&count);
+	                                              buffer, &count);
 	break;
     default:
 	crv = CKR_OPERATION_NOT_INITIALIZED;
@@ -4052,8 +4055,22 @@ pk11_Finalize(PK11Context *context)
     }
 
     if (crv != CKR_OK) {
+	if (crv == CKR_OPERATION_NOT_INITIALIZED) {
+	    /* if there's no operation, it is finalized */
+	    return SECSuccess;
+	}
         PORT_SetError( PK11_MapError(crv) );
         return SECFailure;
+    }
+
+    /* try to finalize the session with a buffer */
+    if (buffer == NULL && count > 0) { 
+	if (count < sizeof stackBuf) {
+	    buffer = stackBuf;
+	    goto finalize;
+	} else {
+	    return SECFailure;
+	}
     }
     return SECSuccess;
 }
