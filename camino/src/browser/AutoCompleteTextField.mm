@@ -88,7 +88,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   mPopupWin = [[[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,0,0)
                       styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO] retain];
   [mPopupWin setReleasedWhenClosed:NO];
-  [mPopupWin setLevel:NSPopUpMenuWindowLevel];
+  [mPopupWin setLevel:NSFloatingWindowLevel];
   [mPopupWin setHasShadow:YES];
   [mPopupWin setAlphaValue:0.9];
 
