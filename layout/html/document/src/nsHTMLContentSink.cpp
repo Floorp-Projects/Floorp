@@ -2885,22 +2885,24 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
           //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
           
           // parse out the content
-          nsIRefreshURI *reefer = nsnull;
-          rv = mWebShell->QueryInterface(nsCOMTypeInfo<nsIRefreshURI>::GetIID(), (void**)&reefer);
-          if (NS_FAILED(rv)) return rv;
+          if (!header.Compare("refresh", PR_TRUE)) {
+              nsIRefreshURI *reefer = nsnull;
+              rv = mWebShell->QueryInterface(nsCOMTypeInfo<nsIRefreshURI>::GetIID(), (void**)&reefer);
+              if (NS_FAILED(rv)) return rv;
           
-          const PRUnichar *uriStr = nsnull;
-          rv = mWebShell->GetURL(&uriStr);
-          if (NS_FAILED(rv)) return rv;
+              const PRUnichar *uriStr = nsnull;
+              rv = mWebShell->GetURL(&uriStr);
+              if (NS_FAILED(rv)) return rv;
 
-          nsIURI *uri = nsnull;
-          rv = NS_NewURI(&uri, uriStr, nsnull);
-          if (NS_FAILED(rv)) return rv;
+              nsIURI *uri = nsnull;
+              rv = NS_NewURI(&uri, uriStr, nsnull);
+              if (NS_FAILED(rv)) return rv;
 
-          PRInt32 error;
-          PRInt32 millis = result.ToInteger(&error) * 1000;
-          rv = reefer->RefreshURI(uri, millis, PR_FALSE);
-          if (NS_FAILED(rv)) return rv;
+              PRInt32 error;
+              PRInt32 millis = result.ToInteger(&error) * 1000;
+              rv = reefer->RefreshURI(uri, millis, PR_FALSE);
+              if (NS_FAILED(rv)) return rv;
+          }
 #else
           if (nsnull != httpUrl) {
             char* value = result.ToNewCString(), *csHeader;
