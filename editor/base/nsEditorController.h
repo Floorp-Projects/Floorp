@@ -20,11 +20,11 @@
  * Contributor(s): 
  */
 
+#ifndef nsEditorController_h__
+#define nsEditorController_h__
+
 #define NS_EDITORCONTROLLER_CID \
 { 0x26fb965c, 0x9de6, 0x11d3, { 0xbc, 0xcc, 0x0, 0x60, 0xb0, 0xfc, 0x76, 0xbd } }
-
-#define NS_COMPOSERCONTROLLER_CID \
-{ 0x50e95301, 0x17a8, 0x11d4, { 0x9f, 0x7e, 0xdd, 0x53, 0x0d, 0x5f, 0x05, 0x7c } }
 
 
 #include "nsIController.h"
@@ -37,7 +37,6 @@
 #include "nsWeakPtr.h"
 
 class nsIEditor;
-class nsIEditorShell;
 
 
 // the editor controller is used for both text widgets, and basic text editing
@@ -91,23 +90,5 @@ private:
    
 };
 
+#endif /* nsEditorController_h__ */
 
-
-// the editor controller is used for composer only (and other HTML compose
-// areas). The refCon that gets passed to its commands is an nsIEditorShell.
-
-class nsComposerController : public nsEditorController
-{
-public:
-
-          nsComposerController();
-  virtual ~nsComposerController();
-
-  /** init the controller */
-  NS_IMETHOD Init(nsISupports *aCommandRefCon);
-
-private:
-
-  static nsresult RegisterComposerCommands(nsIControllerCommandManager* inCommandManager);
-
-};

@@ -40,7 +40,6 @@
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
-#include "nsHTMLEditUtils.h"
 
 /*
  * nsEditorShellMouseListener implementation
@@ -270,17 +269,19 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
       }
     }
 
+#ifdef CMANSKE_PLEASE_FIX_THIS
     if (isContextClick)
     {
       // Set selection to node clicked on if NOT within an existing selection
       //   and not the entire body or table element
       if (element && !NodeIsInSelection && 
-          !nsHTMLEditUtils::IsBody(element) &&
+          !nsTextEditUtils::IsBody(element) &&
           !nsHTMLEditUtils::IsTableElement(element))
       {
         mEditorShell->SelectElement(element);
       }
     }
+#endif /* CMANSKE_PLEASE_FIX_THIS */
     else if (buttonNumber == 0)
     {
       if (tableMode && clickCount == 2)

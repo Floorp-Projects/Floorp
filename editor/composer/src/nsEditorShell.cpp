@@ -83,7 +83,7 @@
 #include "nsICommonDialogs.h"
 
 #include "nsIEditorController.h"
-#include "nsEditorController.h"
+//#include "nsEditorController.h"
 #include "nsIControllers.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -124,8 +124,6 @@
 #include "nsISpellChecker.h"
 #include "nsInterfaceState.h"
 
-#include "nsAOLCiter.h"
-#include "nsInternetCiter.h"
 #include "nsEditorShellMouseListener.h"
 
 ///////////////////////////////////////
@@ -2285,9 +2283,7 @@ nsEditorShell::NodeIsBlock(nsIDOMNode *node, PRBool *_retval)
     case ePlainTextEditorType:
     case eHTMLTextEditorType:
       {
-        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-        if (editor)
-          rv = editor->NodeIsBlock(node, *_retval);
+        rv = mEditor->NodeIsBlock(node, *_retval);
       }
       break;
 
@@ -2534,174 +2530,22 @@ nsEditorShell::InsertAsCitedQuotation(const PRUnichar *quotedText,
   return err;
 }
 
-// Utility routine to make a new citer.  This addrefs, of course.
-static nsICiter* MakeACiter()
-{
-  // Make a citer of an appropriate type
-  nsICiter* citer = 0;
-  nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_FAILED(rv)) return 0;
-
-  char *citationType = 0;
-  rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
-                          
-  if (NS_SUCCEEDED(rv) && citationType[0])
-  {
-    if (!strncmp(citationType, "aol", 3))
-      citer = new nsAOLCiter;
-    else
-      citer = new nsInternetCiter;
-    PL_strfree(citationType);
-  }
-  else
-    citer = new nsInternetCiter;
-
-  if (citer)
-    NS_ADDREF(citer);
-  return citer;
-}
-
 NS_IMETHODIMP    
 nsEditorShell::Rewrap(PRBool aRespectNewlines)
 {
-  PRInt32 wrapCol;
-  nsresult rv = GetWrapColumn(&wrapCol);
-  if (NS_FAILED(rv))
-    return NS_OK;
-#ifdef DEBUG_akkana
-  printf("nsEditorShell::Rewrap to %ld columns\n", (long)wrapCol);
-#endif
-
-  nsCOMPtr<nsISelection> selection;
-  rv = GetEditorSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv)) return rv;
-
-  if (!selection)
-    return NS_ERROR_NOT_INITIALIZED;
-  PRBool isCollapsed;
-  rv = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(rv)) return rv;
-
-  // Variables we'll need either way
-  nsAutoString format; format.AssignWithConversion("text/plain");
-  nsAutoString current;
-  nsString wrapped;
-  nsCOMPtr<nsIEditor> nsied (do_QueryInterface(mEditor));
-  if (!nsied)
-    return NS_ERROR_UNEXPECTED;
-
-  if (isCollapsed)    // rewrap the whole document
-  {
-    rv = nsied->OutputToString(current, format,
-                               nsIDocumentEncoder::OutputFormatted);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
-    if (NS_FAILED(rv)) return rv;
-    if (!citer) return NS_ERROR_UNEXPECTED;
-
-    rv = citer->Rewrap(current, wrapCol, 0, aRespectNewlines, wrapped);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SelectAll();
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
-    if (!textEditor)
-      return NS_NOINTERFACE;
-    return textEditor->InsertText(wrapped.GetUnicode());
-  }
-  else                // rewrap only the selection
-  {
-    rv = nsied->OutputToString(current, format,
-                               nsIDocumentEncoder::OutputFormatted
-                                | nsIDocumentEncoder::OutputSelectionOnly);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
-    if (NS_FAILED(rv)) return rv;
-    if (!citer) return NS_ERROR_UNEXPECTED;
-
-    PRUint32 firstLineOffset = 0;   // XXX need to get this
-    rv = citer->Rewrap(current, wrapCol, firstLineOffset, aRespectNewlines,
-                       wrapped);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
-    if (!textEditor)
-      return NS_NOINTERFACE;
-    return textEditor->InsertText(wrapped.GetUnicode());
-  }
-  return NS_OK;
+  nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
+  if (!mailEditor)
+    return NS_NOINTERFACE;
+  return mailEditor->Rewrap(aRespectNewlines);
 }
 
 NS_IMETHODIMP    
 nsEditorShell::StripCites()
 {
-#ifdef DEBUG_akkana
-  printf("nsEditorShell::StripCites()\n");
-#endif
-
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetEditorSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv)) return rv;
-
-  if (!selection)
-    return NS_ERROR_NOT_INITIALIZED;
-  PRBool isCollapsed;
-  rv = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(rv)) return rv;
-
-  // Variables we'll need either way
-  nsAutoString format; format.AssignWithConversion("text/plain");
-  nsAutoString current;
-  nsString stripped;
-  nsCOMPtr<nsIEditor> nsied (do_QueryInterface(mEditor));
-  if (!nsied)
-    return NS_ERROR_UNEXPECTED;
-
-  if (isCollapsed)    // rewrap the whole document
-  {
-    rv = nsied->OutputToString(current, format,
-                               nsIDocumentEncoder::OutputFormatted);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
-    if (NS_FAILED(rv)) return rv;
-    if (!citer) return NS_ERROR_UNEXPECTED;
-
-    rv = citer->StripCites(current, stripped);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SelectAll();
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
-    if (!textEditor)
-      return NS_NOINTERFACE;
-    return textEditor->InsertText(stripped.GetUnicode());
-  }
-  else                // rewrap only the selection
-  {
-    rv = nsied->OutputToString(current, format,
-                               nsIDocumentEncoder::OutputFormatted
-                                | nsIDocumentEncoder::OutputSelectionOnly);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
-    if (NS_FAILED(rv)) return rv;
-    if (!citer) return NS_ERROR_UNEXPECTED;
-
-    rv = citer->StripCites(current, stripped);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
-    if (!textEditor)
-      return NS_NOINTERFACE;
-    return textEditor->InsertText(stripped.GetUnicode());
-  }
-  return NS_OK;
+  nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
+  if (!mailEditor)
+    return NS_NOINTERFACE;
+  return mailEditor->StripCites();
 }
 
 NS_IMETHODIMP    

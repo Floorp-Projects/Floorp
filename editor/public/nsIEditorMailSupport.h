@@ -31,7 +31,7 @@
 
 class nsString;
 class nsISupportsArray;
-
+class nsIDOMNode;
 
 class nsIEditorMailSupport : public nsISupports
 {
@@ -39,33 +39,39 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEDITORMAILSUPPORT_IID; return iid; }
 
 
-  /** paste the text in the OS clipboard at the cursor position
+  /** Paste the text in the OS clipboard at the cursor position,
     * as a quotation (whose representation is dependant on the editor type),
-    * replacing the selected text (if any)
-    * @param aCitation  The "mid" URL of the source message
+    * replacing the selected text (if any).
+    * @param aSelectionType Text or html?
     */
   NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType)=0;
 
-  /** insert a string as quoted text,
-    * as a quotation (whose representation is dependant on the editor type),
-    * replacing the selected text (if any)
+  /** Insert a string as quoted text
+    * (whose representation is dependant on the editor type),
+    * replacing the selected text (if any).
     * @param aQuotedText  The actual text to be quoted
-    * @param aCitation    The "mid" URL of the source message
     */
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText,
                                nsIDOMNode** aNodeInserted)=0;
 
-  /**
-   * Document me!
-   * 
-   */
+  /** Paste a string as quoted text,
+    * as a quotation (whose representation is dependant on the editor type),
+    * replacing the selected text (if any)
+    * @param aCitation    The "mid" URL of the source message
+    * @param aSelectionType Text or html?
+    */
   NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation,
                                    PRInt32 aSelectionType)=0;
 
-  /**
-   * Document me!
-   * 
-   */
+  /** Insert a string as quoted text
+    * (whose representation is dependant on the editor type),
+    * replacing the selected text (if any),
+    * including, if possible, a "cite" attribute.
+    * @param aQuotedText  The actual text to be quoted
+    * @param aCitation    The "mid" URL of the source message
+    * @param aInsertHTML  Insert as html?  (vs plaintext)
+    * @param aCharset     The charset of the text to be inserted
+    */
   NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText,
                                     const nsString& aCitation,
                                     PRBool aInsertHTML,
@@ -73,11 +79,21 @@ public:
                                     nsIDOMNode** aNodeInserted)=0;
 
   /**
-   * Document me!
-   * 
+   * Rewrap the selected part of the document, re-quoting if necessary.
+   * @param aRespectNewlines  Try to maintain newlines in the original?
+   */
+  NS_IMETHOD Rewrap(PRBool aRespectNewlines)=0;
+
+  /**
+   * Strip any citations in the selected part of the document.
+   */
+  NS_IMETHOD StripCites()=0;
+
+
+  /**
+   * Get a list of IMG and OBJECT tags in the current document.
    */
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList)=0;
-
 };
 
 

@@ -23,7 +23,7 @@
 
 #include "PlaceholderTxn.h"
 #include "nsVoidArray.h"
-#include "nsHTMLEditor.h"
+#include "nsEditor.h"
 #include "nsIPresShell.h"
 #include "IMETextTxn.h"
 
@@ -178,9 +178,9 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
   }
   else
   { // merge typing or IME or deletion transactions if the selection matches
-    if (((mName.get() == nsHTMLEditor::gTypingTxnName) ||
-         (mName.get() == nsHTMLEditor::gIMETxnName)    ||
-         (mName.get() == nsHTMLEditor::gDeleteTxnName)) 
+    if (((mName.get() == nsEditor::gTypingTxnName) ||
+         (mName.get() == nsEditor::gIMETxnName)    ||
+         (mName.get() == nsEditor::gDeleteTxnName)) 
          && !mCommitted ) 
     {
       // but only if this placeholder started with a collapsed selection

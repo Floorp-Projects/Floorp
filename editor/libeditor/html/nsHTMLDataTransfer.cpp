@@ -23,6 +23,7 @@
 
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
+#include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
 
 #include "nsEditorEventListeners.h"
@@ -81,7 +82,6 @@
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
 #include "nsISupportsPrimitives.h"
-#include "InsertTextTxn.h"
 
 // netwerk
 #include "nsIURI.h"
@@ -93,10 +93,6 @@
 #include "nsITransferable.h"
 #include "nsIDragService.h"
 #include "nsIDOMNSUIEvent.h"
-
-// Transactionas
-#include "PlaceholderTxn.h"
-#include "nsStyleSheetTxns.h"
 
 // Misc
 #include "TextEditorTest.h"
@@ -466,7 +462,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
 
       NS_ENSURE_TRUE(curNode, NS_ERROR_FAILURE);
       NS_ENSURE_TRUE(curNode != fragmentAsNode, NS_ERROR_FAILURE);
-      NS_ENSURE_TRUE(!nsHTMLEditUtils::IsBody(curNode), NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(!nsTextEditUtils::IsBody(curNode), NS_ERROR_FAILURE);
       
       if (insertedContextParent)
       {
@@ -512,7 +508,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
         while (NS_FAILED(res) && curNode)
         {
           curNode->GetParentNode(getter_AddRefs(parent));
-          if (parent && !nsHTMLEditUtils::IsBody(parent))
+          if (parent && !nsTextEditUtils::IsBody(parent))
           {
             res = InsertNodeAtPoint(parent, parentNode, offsetOfNewNode, PR_TRUE);
             if (NS_SUCCEEDED(res)) 
@@ -1326,41 +1322,15 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText,
                                 charset, aNodeInserted);
 }
 
-// text insert.
+// Insert plaintext as a quotation, with cite marks (e.g. "> ").
+// This differs from its corresponding method in nsPlaintextEditor
+// in that here, quoted material is enclosed in a <pre> tag
+// in order to preserve the original line wrapping.
 NS_IMETHODIMP
 nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
                                          nsIDOMNode **aNodeInserted)
 {
-  // We have the text.  Cite it appropriately:
-  nsCOMPtr<nsICiter> citer;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  char *citationType = 0;
-  rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
-                          
-  if (NS_SUCCEEDED(rv) && citationType[0])
-  {
-    if (!strncmp(citationType, "aol", 3))
-      citer = new nsAOLCiter;
-    else
-      citer = new nsInternetCiter;
-    PL_strfree(citationType);
-  }
-  else
-    citer = new nsInternetCiter;
-  
-  // Let the citer quote it for us:
-  nsString quotedStuff;
-  rv = citer->GetCiteString(aQuotedText, quotedStuff);
-  if (!NS_SUCCEEDED(rv))
-    return rv;
-
-  // It's best to put a blank line after the quoted text so that mails
-  // written without thinking won't be so ugly.
-  quotedStuff.Append(PRUnichar('\n'));
-
   nsCOMPtr<nsIDOMNode> preNode;
   // get selection
   nsCOMPtr<nsISelection> selection;
@@ -1406,7 +1376,8 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
         selection->Collapse(preNode, 0);
       }
 
-      rv = InsertText(quotedStuff.GetUnicode());
+      //rv = InsertText(quotedStuff.GetUnicode());
+      rv = nsPlaintextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
 
       if (aNodeInserted && NS_SUCCEEDED(rv))
       {
@@ -1570,7 +1541,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
     PRInt32 err, sep;
     sep = aInfoStr.FindChar((PRUnichar)',');
     aInfoStr.Left(numstr1, sep);
-    aInfoStr.Mid(numstr2, sep+1, -1);
+    aInfoStr.Right(numstr2, sep+1);
     *outRangeStartHint = numstr1.ToInteger(&err) + contextDepth;
     *outRangeEndHint   = numstr2.ToInteger(&err) + contextDepth;
   }

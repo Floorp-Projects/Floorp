@@ -43,13 +43,15 @@ CPPSRCS		=                           \
 		InsertElementTxn.cpp        \
 		InsertTextTxn.cpp           \
 		JoinElementTxn.cpp          \
-		nsComposerCommands.cpp      \
 		nsEditorCommands.cpp        \
+		nsComposerCommands.cpp      \
 		nsEditorController.cpp      \
+		nsComposerController.cpp    \
 		nsEditor.cpp                \
 		nsEditorEventListeners.cpp  \
 		nsEditorUtils.cpp           \
 		nsEditProperty.cpp          \
+		nsTextEditUtils.cpp         \
 		nsHTMLEditUtils.cpp         \
 		nsPlaintextDataTransfer.cpp \
 		nsPlaintextEditor.cpp       \

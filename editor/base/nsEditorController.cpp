@@ -26,20 +26,8 @@
 #include "nsIComponentManager.h"
 #include "nsEditorController.h"
 #include "nsIEditor.h"
-#include "nsIEditorShell.h"
-#include "nsIEditorMailSupport.h"
-#include "nsIFormControlFrame.h"
-#include "nsISelection.h"
-#include "nsIHTMLEditor.h"
-#include "nsISupportsPrimitives.h"
-#include "nsXPIDLString.h"
-
-#include "nsISelectionController.h"
-#include "nsIDocument.h"
-#include "nsIPresShell.h"
 
 #include "nsEditorCommands.h"
-#include "nsComposerCommands.h"
 
 
 NS_IMPL_ADDREF(nsEditorController)
@@ -243,105 +231,6 @@ nsresult nsEditorController::GetEditorCommandManager(nsIControllerCommandManager
   }
 
   NS_ADDREF(*outCommandManager = cmdManager);
-  return NS_OK;
-}
-
-
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
-nsComposerController::nsComposerController()
-{
-}
-
-nsComposerController::~nsComposerController()
-{
-}
-
-NS_IMETHODIMP nsComposerController::Init(nsISupports *aCommandRefCon)
-{
-  nsresult  rv;
- 
-  rv = nsEditorController::Init(aCommandRefCon);
-  if (NS_FAILED(rv)) return rv;  
-  
-  mCommandManager = do_CreateInstance("@mozilla.org/content/controller-command-manager;1", &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // register the commands.
-  rv = nsComposerController::RegisterComposerCommands(mCommandManager);
-  if (NS_FAILED(rv)) return rv;
-
-  return NS_OK;
-}
-
-#define NS_REGISTER_STYLE_COMMAND(_cmdClass, _cmdName, _styleTag)                         \
-  {                                                                                       \
-    _cmdClass* theCmd = new _cmdClass(_styleTag);                                         \
-    if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
-    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
-                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
-  }
-  
-
-// static
-nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandManager *inCommandManager)
-{
-  nsresult rv;
-  
-  // File menu
-  NS_REGISTER_FIRST_COMMAND(nsPrintingCommands, "cmd_print");
-  NS_REGISTER_NEXT_COMMAND(nsPrintingCommands, "cmd_printSetup");
-  NS_REGISTER_NEXT_COMMAND(nsPrintingCommands,"cmd_print_button");
-  NS_REGISTER_LAST_COMMAND(nsPrintingCommands, "cmd_printPreview");
-  
-  // Edit menu
-  NS_REGISTER_ONE_COMMAND(nsPasteQuotationCommand, "cmd_pasteQuote");
-
-  // indent/outdent
-  NS_REGISTER_ONE_COMMAND(nsIndentCommand, "cmd_indent");
-  NS_REGISTER_ONE_COMMAND(nsOutdentCommand, "cmd_outdent");
-
-  // Styles
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_bold", "b");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_italic", "i");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_underline", "u");
-
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strikethrough", "strike");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_superscript", "sup");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_subscript", "sub");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_nobreak", "nobr");
-
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_em", "em");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strong", "strong");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_cite", "cite");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_abbr", "abbr");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_acronym", "acronym");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_code", "code");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_samp", "samp");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_var", "var");
-  
-  // lists
-  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ol", "ol");
-  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ul", "ul");
-  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dt", "dt");
-  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dd", "dd");
-  NS_REGISTER_ONE_COMMAND(nsRemoveListCommand, "cmd_removeList");
-
-  // format stuff
-  NS_REGISTER_ONE_COMMAND(nsParagraphStateCommand,       "cmd_paragraphState");
-  NS_REGISTER_ONE_COMMAND(nsFontFaceStateCommand,        "cmd_fontFace");
-  NS_REGISTER_ONE_COMMAND(nsFontColorStateCommand,       "cmd_fontColor");
-  NS_REGISTER_ONE_COMMAND(nsBackgroundColorStateCommand, "cmd_backgroundColor");
-
-  NS_REGISTER_ONE_COMMAND(nsAlignCommand, "cmd_align");
-  NS_REGISTER_ONE_COMMAND(nsRemoveStylesCommand, "cmd_removeStyles");
-
-  NS_REGISTER_ONE_COMMAND(nsIncreaseFontSizeCommand, "cmd_increaseFont");
-  NS_REGISTER_ONE_COMMAND(nsDecreaseFontSizeCommand, "cmd_decreaseFont");
-
   return NS_OK;
 }
 

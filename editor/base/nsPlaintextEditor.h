@@ -26,12 +26,12 @@
 #include "nsCOMPtr.h"
 
 #include "nsIPlaintextEditor.h"
+#include "nsIEditorMailSupport.h"
 
 #include "nsEditor.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 
-#include "TypeInState.h"
 #include "nsEditRules.h"
  
 class nsIDOMKeyEvent;
@@ -44,7 +44,8 @@ class nsIDocumentEncoder;
  * Use to edit text document represented as a DOM tree. 
  */
 class nsPlaintextEditor : public nsEditor,
-                          public nsIPlaintextEditor
+                          public nsIPlaintextEditor,
+                          public nsIEditorMailSupport
 {
 
 public:
@@ -66,6 +67,21 @@ public:
 
   /* ------------ nsIPlaintextEditor methods -------------- */
   NS_DECL_NSIPLAINTEXTEDITOR
+
+  /* ------------ nsIEditorMailSupport overrides -------------- */
+  NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
+  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText,
+                               nsIDOMNode** aNodeInserted);
+  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation,
+                                   PRInt32 aSelectionType);
+  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText,
+                                    const nsString& aCitation,
+                                    PRBool aInsertHTML,
+                                    const nsString& aCharset,
+                                    nsIDOMNode** aNodeInserted);
+  NS_IMETHOD Rewrap(PRBool aRespectNewlines);
+  NS_IMETHOD StripCites();
+  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
@@ -211,11 +227,6 @@ protected:
   PRBool 	mIsComposing;
   PRInt32 mMaxTextLength;
   PRInt32 mInitTriggerCounter;
-
-public:
-  static nsIAtom *gTypingTxnName;
-  static nsIAtom *gIMETxnName;
-  static nsIAtom *gDeleteTxnName;
 
 // friends
 friend class nsHTMLEditRules;

@@ -22,7 +22,7 @@
 
 #include "nsPlaintextEditor.h"
 #include "nsICaret.h"
-#include "nsHTMLEditUtils.h"
+#include "nsTextEditUtils.h"
 #include "nsTextEditRules.h"
 #include "nsEditorEventListeners.h"
 #include "nsIEditActionListener.h"
@@ -70,21 +70,26 @@
 #include "nsParserCIID.h"
 #include "nsIImage.h"
 #include "nsISupportsPrimitives.h"
-#include "InsertTextTxn.h"
 
 // netwerk
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
-// Transactionas
-#include "PlaceholderTxn.h"
-
 // Misc
-#include "TextEditorTest.h"
 #include "nsEditorUtils.h"
 #include "nsIPref.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
+
+#include "nsAOLCiter.h"
+#include "nsInternetCiter.h"
+
+// Drag & Drop, Clipboard
+//#include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+//#include "nsIDragService.h"
+//#include "nsIDOMNSUIEvent.h"
 
 const PRUnichar nbsp = 160;
 
@@ -103,16 +108,17 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID); 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID); 
 static NS_DEFINE_CID(kCTransitionalDTDCID,  NS_CTRANSITIONAL_DTD_CID);
+// Drag & Drop, Clipboard Support
+static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
+//static NS_DEFINE_CID(kCDragServiceCID, NS_DRAGSERVICE_CID);
+//static NS_DEFINE_CID(kCHTMLFormatConverterCID, NS_HTMLFORMATCONVERTER_CID);
 
 #if defined(NS_DEBUG) && defined(DEBUG_buster)
 static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
-
-nsIAtom *nsPlaintextEditor::gTypingTxnName;
-nsIAtom *nsPlaintextEditor::gIMETxnName;
-nsIAtom *nsPlaintextEditor::gDeleteTxnName;
 
 // prototype for rules creation shortcut
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
@@ -127,57 +133,10 @@ nsPlaintextEditor::nsPlaintextEditor()
 {
 // Done in nsEditor
 // NS_INIT_REFCNT();
-  if (!gTypingTxnName)
-    gTypingTxnName = NS_NewAtom("Typing");
-  else
-    NS_ADDREF(gTypingTxnName);
-  if (!gIMETxnName)
-    gIMETxnName = NS_NewAtom("IME");
-  else
-    NS_ADDREF(gIMETxnName);
-  if (!gDeleteTxnName)
-    gDeleteTxnName = NS_NewAtom("Deleting");
-  else
-    NS_ADDREF(gDeleteTxnName);
 } 
 
 nsPlaintextEditor::~nsPlaintextEditor()
 {
-  /* first, delete the transaction manager if there is one.
-     this will release any remaining transactions.
-     this is important because transactions can hold onto the atoms (gTypingTxnName, ...)
-     and to make the optimization (holding refcounted statics) work correctly, 
-     the editor instance needs to hold the last refcount.
-     If you get this wrong, expect to deref a garbage gTypingTxnName pointer if you bring up a second editor.
-  */
-  if (mTxnMgr) { 
-    mTxnMgr = 0;
-  }
-  nsrefcnt refCount=0;
-  if (gTypingTxnName)  // we addref'd in the constructor
-  { // want to release it without nulling out the pointer.
-    refCount = gTypingTxnName->Release();
-    if (0==refCount) {
-      gTypingTxnName = nsnull; 
-    }
-  }
-
-  if (gIMETxnName)  // we addref'd in the constructor
-  { // want to release it without nulling out the pointer.
-    refCount = gIMETxnName->Release();
-    if (0==refCount) {
-      gIMETxnName = nsnull;
-    }
-  }
-
-  if (gDeleteTxnName)  // we addref'd in the constructor
-  { // want to release it without nulling out the pointer.
-    refCount = gDeleteTxnName->Release();
-    if (0==refCount) {
-      gDeleteTxnName = nsnull;
-    }
-  }
-  
   // remove the rules as an action listener.  Else we get a bad ownership loop later on.
   // it's ok if the rules aren't a listener; we ignore the error.
   nsCOMPtr<nsIEditActionListener> mListener = do_QueryInterface(mRules);
@@ -224,6 +183,16 @@ NS_IMETHODIMP nsPlaintextEditor::QueryInterface(REFNSIID aIID, void** aInstanceP
   
   if (aIID.Equals(NS_GET_IID(nsIPlaintextEditor))) {
     *aInstancePtr = NS_STATIC_CAST(nsIPlaintextEditor*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIEditor))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIEditor*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIEditorMailSupport))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIEditorMailSupport*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -1436,9 +1405,9 @@ NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool &aCanCopy)
 // Shared between OutputToString and OutputToStream
 NS_IMETHODIMP
 nsPlaintextEditor::GetAndInitDocEncoder(const nsAReadableString& aFormatType,
-                                   PRUint32 aFlags,
-                                   const nsAReadableString* aCharset,
-                                   nsIDocumentEncoder** encoder)
+                                        PRUint32 aFlags,
+                                        const nsAReadableString* aCharset,
+                                        nsIDocumentEncoder** encoder)
 {
   nsCOMPtr<nsIPresShell> presShell;
   nsresult rv = GetPresShell(getter_AddRefs(presShell));
@@ -1484,7 +1453,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAReadableString& aFormatType,
     nsCOMPtr<nsIDOMElement> rootElement;
     GetRootElement(getter_AddRefs(rootElement));
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
-    if (!nsHTMLEditUtils::IsBody(rootElement))
+    if (!nsTextEditUtils::IsBody(rootElement))
     {
       // XXX Why does this use range rather than selection collapse/extend?
       nsCOMPtr<nsIDOMRange> range (do_CreateInstance(kCRangeCID, &rv));
@@ -1579,6 +1548,297 @@ nsPlaintextEditor::OutputToStream(nsIOutputStream* aOutputStream,
     return rv;
 
   return encoder->EncodeToStream(aOutputStream);
+}
+
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  nsIEditorMailSupport overrides 
+#pragma mark -
+#endif
+
+NS_IMETHODIMP
+nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
+{
+  // Get Clipboard Service
+  nsresult rv;
+  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // Create generic Transferable for getting the data
+  nsCOMPtr<nsITransferable> trans;
+  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                          NS_GET_IID(nsITransferable), 
+                                          (void**) getter_AddRefs(trans));
+  if (NS_SUCCEEDED(rv) && trans)
+  {
+    // We only handle plaintext pastes here
+    trans->AddDataFlavor(kUnicodeMime);
+
+    // Get the Data from the clipboard
+    clipboard->GetData(trans, aSelectionType);
+
+    // Now we ask the transferable for the data
+    // it still owns the data, we just have a pointer to it.
+    // If it can't support a "text" output of the data the call will fail
+    nsCOMPtr<nsISupports> genericDataObj;
+    PRUint32 len = 0;
+    char* flav = 0;
+    rv = trans->GetAnyTransferData(&flav, getter_AddRefs(genericDataObj),
+                                   &len);
+    if (NS_FAILED(rv))
+    {
+#ifdef DEBUG_akkana
+      printf("PasteAsPlaintextQuotation: GetAnyTransferData failed, %d\n", rv);
+#endif
+      return rv;
+    }
+#ifdef DEBUG_clipboard
+    printf("Got flavor [%s]\n", flav);
+#endif
+    nsAutoString flavor; flavor.AssignWithConversion(flav);
+    nsAutoString stuffToPaste;
+    if (flavor.EqualsWithConversion(kUnicodeMime))
+    {
+      nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+      if (textDataObj && len > 0)
+      {
+        PRUnichar* text = nsnull;
+        textDataObj->ToString ( &text );
+        stuffToPaste.Assign ( text, len / 2 );
+        nsAutoEditBatch beginBatching(this);
+        rv = InsertAsQuotation(stuffToPaste, 0);
+        if (text)
+          nsMemory::Free(text);
+      }
+    }
+    nsCRT::free(flav);
+  }
+
+  return rv;
+}
+
+// Utility routine to make a new citer.  This addrefs, of course.
+static nsICiter* MakeACiter()
+{
+  // Make a citer of an appropriate type
+  nsICiter* citer = 0;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_FAILED(rv)) return 0;
+
+  char *citationType = 0;
+  rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
+                          
+  if (NS_SUCCEEDED(rv) && citationType[0])
+  {
+    if (!strncmp(citationType, "aol", 3))
+      citer = new nsAOLCiter;
+    else
+      citer = new nsInternetCiter;
+    PL_strfree(citationType);
+  }
+  else
+    citer = new nsInternetCiter;
+
+  if (citer)
+    NS_ADDREF(citer);
+  return citer;
+}
+
+NS_IMETHODIMP
+nsPlaintextEditor::InsertAsQuotation(const nsString& aQuotedText,
+                                     nsIDOMNode **aNodeInserted)
+{
+  // We have the text.  Cite it appropriately:
+  nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
+
+  // Let the citer quote it for us:
+  nsString quotedStuff;
+  nsresult rv = citer->GetCiteString(aQuotedText, quotedStuff);
+  if (!NS_SUCCEEDED(rv))
+    return rv;
+
+  // It's best to put a blank line after the quoted text so that mails
+  // written without thinking won't be so ugly.
+  quotedStuff.Append(PRUnichar('\n'));
+
+  nsCOMPtr<nsIDOMNode> preNode;
+  // get selection
+  nsCOMPtr<nsISelection> selection;
+  rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpInsertText, nsIEditor::eNext);
+
+  // give rules a chance to handle or cancel
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
+  PRBool cancel, handled;
+  rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (NS_FAILED(rv)) return rv;
+  if (cancel) return NS_OK; // rules canceled the operation
+  if (!handled)
+  {
+    rv = InsertText(quotedStuff.GetUnicode());
+
+    // XXX Should set *aNodeInserted to the first node inserted
+    if (aNodeInserted && NS_SUCCEEDED(rv))
+    {
+      *aNodeInserted = 0;
+      //NS_IF_ADDREF(*aNodeInserted);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsPlaintextEditor::PasteAsCitedQuotation(const nsString& aCitation,
+                                         PRInt32 aSelectionType)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPlaintextEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
+                                          const nsString& aCitation,
+                                          PRBool aInsertHTML,
+                                          const nsString& aCharset,
+                                          nsIDOMNode **aNodeInserted)
+{
+  return InsertAsQuotation(aQuotedText, aNodeInserted);
+}
+
+NS_IMETHODIMP
+nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
+{
+  PRInt32 wrapCol;
+  nsresult rv = GetWrapWidth(&wrapCol);
+  if (NS_FAILED(rv))
+    return NS_OK;
+#ifdef DEBUG_akkana
+  printf("nsPlaintextEditor::Rewrap to %ld columns\n", (long)wrapCol);
+#endif
+
+  nsCOMPtr<nsISelection> selection;
+  rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
+  if (!selection)
+    return NS_ERROR_NOT_INITIALIZED;
+  PRBool isCollapsed;
+  rv = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(rv)) return rv;
+
+  // Variables we'll need either way
+  nsAutoString format; format.AssignWithConversion("text/plain");
+  nsAutoString current;
+  nsString wrapped;
+
+  if (isCollapsed)    // rewrap the whole document
+  {
+    rv = OutputToString(current, format,
+                               nsIDocumentEncoder::OutputFormatted);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
+    if (NS_FAILED(rv)) return rv;
+    if (!citer) return NS_ERROR_UNEXPECTED;
+
+    rv = citer->Rewrap(current, wrapCol, 0, aRespectNewlines, wrapped);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SelectAll();
+    if (NS_FAILED(rv)) return rv;
+
+    return InsertText(wrapped.GetUnicode());
+  }
+  else                // rewrap only the selection
+  {
+    rv = OutputToString(current, format,
+                        nsIDocumentEncoder::OutputFormatted
+                        | nsIDocumentEncoder::OutputSelectionOnly);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
+    if (NS_FAILED(rv)) return rv;
+    if (!citer) return NS_ERROR_UNEXPECTED;
+
+    PRUint32 firstLineOffset = 0;   // XXX need to get this
+    rv = citer->Rewrap(current, wrapCol, firstLineOffset, aRespectNewlines,
+                       wrapped);
+    if (NS_FAILED(rv)) return rv;
+
+    return InsertText(wrapped.GetUnicode());
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsPlaintextEditor::StripCites()
+{
+#ifdef DEBUG_akkana
+  printf("nsPlaintextEditor::StripCites()\n");
+#endif
+
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
+  if (!selection)
+    return NS_ERROR_NOT_INITIALIZED;
+  PRBool isCollapsed;
+  rv = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(rv)) return rv;
+
+  // Variables we'll need either way
+  nsAutoString format; format.AssignWithConversion("text/plain");
+  nsAutoString current;
+  nsString stripped;
+
+  if (isCollapsed)    // rewrap the whole document
+  {
+    rv = OutputToString(current, format,
+                               nsIDocumentEncoder::OutputFormatted);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
+    if (NS_FAILED(rv)) return rv;
+    if (!citer) return NS_ERROR_UNEXPECTED;
+
+    rv = citer->StripCites(current, stripped);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SelectAll();
+    if (NS_FAILED(rv)) return rv;
+
+    return InsertText(stripped.GetUnicode());
+  }
+  else                // rewrap only the selection
+  {
+    rv = OutputToString(current, format,
+                               nsIDocumentEncoder::OutputFormatted
+                                | nsIDocumentEncoder::OutputSelectionOnly);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
+    if (NS_FAILED(rv)) return rv;
+    if (!citer) return NS_ERROR_UNEXPECTED;
+
+    rv = citer->StripCites(current, stripped);
+    if (NS_FAILED(rv)) return rv;
+
+    return InsertText(stripped.GetUnicode());
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPlaintextEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
+{
+  *aNodeList = 0;
+  return NS_OK;
 }
 
 
