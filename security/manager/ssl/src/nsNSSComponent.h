@@ -129,6 +129,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 };
 
 struct PRLock;
+class nsPSMTracker;
 
 // Implementation of the PSM component interface.
 class nsNSSComponent : public nsISignatureVerifier,
@@ -173,6 +174,15 @@ private:
 
   nsresult InitializeNSS();
   nsresult ShutdownNSS();
+  
+  enum AlertIdentifier {
+    ai_nss_init_problem, 
+    ai_sockets_still_active, 
+    ai_crypto_ui_active,
+    ai_incomplete_logout
+  };
+  
+  void ShowAlert(AlertIdentifier ai);
   void InstallLoadableRoots();
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
@@ -200,6 +210,7 @@ private:
   PRBool crlDownloadTimerOn;
   PRBool mUpdateTimerInitialized;
   static int mInstanceCount;
+  nsPSMTracker *mPSMTracker;
 };
 
 class PSMContentListener : public nsIURIContentListener,

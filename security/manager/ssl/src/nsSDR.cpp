@@ -40,9 +40,13 @@
 #include "nsISecretDecoderRing.h"
 #include "nsSDR.h"
 #include "nsNSSComponent.h"
+#include "nsPSMTracker.h"
 
 #include "pk11func.h"
 #include "pk11sdr.h" // For PK11SDR_Encrypt, PK11SDR_Decrypt
+
+#include "nsNSSCleaner.h"
+NSSCleanupAutoPtrClass(PK11SlotInfo, PK11_FreeSlot)
 
 //
 // Implementation of an nsIInterfaceRequestor for use
@@ -119,6 +123,7 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
 {
   nsresult rv = NS_OK;
   PK11SlotInfo *slot = 0;
+  PK11SlotInfoCleaner tmpSlotCleaner(slot);
   SECItem keyid;
   SECItem request;
   SECItem reply;
@@ -150,7 +155,6 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   *_retval = reply.len;
 
 loser:
-  if (slot) PK11_FreeSlot(slot);
   return rv;
 }
 
@@ -160,6 +164,7 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
 {
   nsresult rv = NS_OK;
   PK11SlotInfo *slot = 0;
+  PK11SlotInfoCleaner tmpSlotCleaner(slot);
   SECStatus s;
   SECItem request;
   SECItem reply;
@@ -190,7 +195,6 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   *_retval = reply.len;
 
 loser:
-  if (slot) PK11_FreeSlot(slot);
   return rv;
 }
 
@@ -284,7 +288,15 @@ ChangePassword()
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsSDRContext();
   PRBool canceled;
 
-  rv = dialogs->SetPassword(ctx, tokenName.get(), &canceled);
+  {
+    nsPSMUITracker tracker;
+    if (tracker.isUIForbidden()) {
+      rv = NS_ERROR_NOT_AVAILABLE;
+    }
+    else {
+      rv = dialogs->SetPassword(ctx, tokenName.get(), &canceled);
+    }
+  }
 
   /* canceled is ignored */
 

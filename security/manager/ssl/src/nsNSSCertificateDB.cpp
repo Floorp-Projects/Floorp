@@ -49,9 +49,8 @@
 #include "nsPK11TokenDB.h"
 #include "nsOCSPResponder.h"
 #include "nsReadableUtils.h"
-#include "nsIWindowWatcher.h"
-#include "nsIPrompt.h"
 #include "nsArray.h"
+#include "nsPSMTracker.h"
 
 #include "nspr.h"
 extern "C" {
@@ -114,6 +113,7 @@ nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
   if (cert) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("got it\n"));
     nsCOMPtr<nsIX509Cert> pCert = new nsNSSCertificate(cert);
+    CERT_DestroyCertificate(cert);
     *_rvCert = pCert;
     NS_ADDREF(*_rvCert);
     return NS_OK;
@@ -151,6 +151,7 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
   PR_FREEIF(keyItem.data);
   if (cert) {
     nsNSSCertificate *nssCert = new nsNSSCertificate(cert);
+    CERT_DestroyCertificate(cert);
     if (nssCert == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(nssCert);
@@ -345,7 +346,10 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
   CERTCertificateCleaner tmpCertCleaner(tmpCert);
 
   if (tmpCert->isperm) {
-    dialogs->NotifyCACertExists(ctx);
+    nsPSMUITracker tracker;
+    if (!tracker.isUIForbidden()) {
+      dialogs->NotifyCACertExists(ctx);
+    }
     return NS_ERROR_FAILURE;
   }
 
@@ -513,6 +517,8 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
   srv = CERT_SaveSMimeProfile(cert, NULL, NULL);
   PORT_Free(rawCerts);
 loser:
+  if (cert)
+    CERT_DestroyCertificate(cert);
   if (arena) 
     PORT_FreeArena(arena, PR_TRUE);
   return nsrv;
@@ -576,6 +582,8 @@ nsNSSCertificateDB::ImportServerCertificate(PRUint8 * data, PRUint32 length,
   }
 loser:
   PORT_Free(rawCerts);
+  if (cert)
+    CERT_DestroyCertificate(cert);
   if (arena) 
     PORT_FreeArena(arena, PR_TRUE);
   return nsrv;
@@ -660,6 +668,7 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
   nsNSSCertificate *nssCert = NS_STATIC_CAST(nsNSSCertificate*, aCert);
   CERTCertificate *cert = nssCert->GetCert();
   if (!cert) return NS_ERROR_FAILURE;
+  CERTCertificateCleaner certCleaner(cert);
   SECStatus srv = SECSuccess;
 
   PRUint32 certType = getCertType(cert);
@@ -699,6 +708,7 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   nsNSSCertTrust trust;
   nsNSSCertificate *pipCert = NS_STATIC_CAST(nsNSSCertificate *, cert);
   CERTCertificate *nsscert = pipCert->GetCert();
+  CERTCertificateCleaner certCleaner(nsscert);
   if (type == nsIX509Cert::CA_CERT) {
     // always start with untrusted and move up
     trust.SetValidCA();
@@ -741,6 +751,7 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
   CERTCertTrust nsstrust;
   srv = CERT_GetCertTrust(nsscert, &nsstrust);
   nsNSSCertTrust trust(&nsstrust);
+  CERT_DestroyCertificate(nsscert);
   if (certType == nsIX509Cert::CA_CERT) {
     if (trustType & nsIX509CertDB::TRUSTED_SSL) {
       *_isTrusted = trust.HasTrustedCA(PR_TRUE, PR_FALSE, PR_FALSE);
@@ -903,13 +914,16 @@ GetOCSPResponders (CERTCertificate *aCert,
   // Get the AIA and nickname //
   serviceURL = CERT_GetOCSPAuthorityInfoAccessLocation(aCert);
   if (serviceURL) {
-	url = ToNewUnicode(NS_ConvertUTF8toUCS2(serviceURL));
+    url = ToNewUnicode(NS_ConvertUTF8toUCS2(serviceURL));
+    PORT_Free(serviceURL);
   }
 
   nickname = aCert->nickname;
   nn = ToNewUnicode(NS_ConvertUTF8toUCS2(nickname));
 
   nsCOMPtr<nsIOCSPResponder> new_entry = new nsOCSPResponder(nn, url);
+  nsMemory::Free(nn);
+  nsMemory::Free(url);
 
   // Sort the items according to nickname //
   rv = array->GetLength(&count);

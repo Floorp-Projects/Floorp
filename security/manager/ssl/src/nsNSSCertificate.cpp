@@ -107,22 +107,13 @@ nsNSSCertificate::ConstructFromDER(char *certDER, int derLen)
     aCert->dbhandle = CERT_GetDefaultCertDB();
   }
 
-  // We don't want the new NSS cert to be dupped, therefore we create our instance
-  // with a NULL pointer first, and set the contained cert later.
-
-  nsNSSCertificate *newObject = new nsNSSCertificate(nsnull);
-  
-  if (!newObject)
-  {
-    CERT_DestroyCertificate(aCert);
-    return nsnull;
-  }
-  
-  newObject->mCert = aCert;
+  nsNSSCertificate *newObject = new nsNSSCertificate(aCert);
+  CERT_DestroyCertificate(aCert);
   return newObject;
 }
 
 nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
+                                           mCert(nsnull),
                                            mPermDelete(PR_FALSE),
                                            mCertType(nsIX509Cert::UNKNOWN_CERT)
 {
@@ -140,16 +131,16 @@ nsNSSCertificate::~nsNSSCertificate()
     if (mCertType == nsNSSCertificate::USER_CERT) {
       nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
       PK11_DeleteTokenCertAndKey(mCert, cxt);
-      CERT_DestroyCertificate(mCert);
     } else if (!PK11_IsReadOnly(mCert->slot)) {
       // If the cert isn't a user cert and it is on an external token, 
       // then we'll just leave it as untrusted, but won't delete it 
       // from the cert db.
       SEC_DeletePermCertificate(mCert);
     }
-  } else {
-    if (mCert)
-      CERT_DestroyCertificate(mCert);
+  }
+
+  if (mCert) {
+    CERT_DestroyCertificate(mCert);
   }
 }
 

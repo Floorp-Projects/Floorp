@@ -37,6 +37,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCRT.h"
+#include "nsPSMTracker.h"
 
 #include "ssl.h"
 #include "cert.h"
@@ -177,8 +178,17 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   if (NS_FAILED(rv))
     return nsnull;
 
-  rv = proxyPrompt->PromptPassword(nsnull, promptString.get(),
-                                   &password, nsnull, nsnull, &value);
+  {
+    nsPSMUITracker tracker;
+    if (tracker.isUIForbidden()) {
+      rv = NS_ERROR_NOT_AVAILABLE;
+    }
+    else {
+      rv = proxyPrompt->PromptPassword(nsnull, promptString.get(),
+                                       &password, nsnull, nsnull, &value);
+    }
+  }
+  
   if (NS_SUCCEEDED(rv) && value) {
     char* str = ToNewCString(nsDependentString(password));
     Recycle(password);
@@ -248,7 +258,10 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
     nsCOMPtr<nsSSLStatus> status = new nsSSLStatus();
 
     CERTCertificate *serverCert = SSL_PeerCertificate(fd);
-    if (serverCert) status->mServerCert = new nsNSSCertificate(serverCert);
+    if (serverCert) {
+      status->mServerCert = new nsNSSCertificate(serverCert);
+      CERT_DestroyCertificate(serverCert);
+    }
 
     status->mKeyLength = keyLength;
     status->mSecretKeyLength = encryptBits;

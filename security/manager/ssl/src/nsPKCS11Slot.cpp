@@ -233,6 +233,7 @@ nsPKCS11Module::FindSlotByName(const PRUnichar *aName,
     for (int i=0; i<mModule->slotCount; i++) {
       if (nsCRT::strcmp(asciiname, PK11_GetSlotName(mModule->slots[i])) == 0) {
         slotinfo = PK11_ReferenceSlot(mModule->slots[i]);
+        break;
       }
     }
     if (!slotinfo) {
@@ -248,6 +249,7 @@ nsPKCS11Module::FindSlotByName(const PRUnichar *aName,
   }
   nsMemory::Free(asciiname);
   nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotinfo);
+  PK11_FreeSlot(slotinfo);
   if (!slot)
     return NS_ERROR_OUT_OF_MEMORY;
   *_retval = slot;
@@ -290,9 +292,10 @@ nsPKCS11ModuleDB::~nsPKCS11ModuleDB()
 NS_IMETHODIMP 
 nsPKCS11ModuleDB::GetInternal(nsIPKCS11Module **_retval)
 {
-  nsCOMPtr<nsIPKCS11Module> module = 
-     new nsPKCS11Module(SECMOD_CreateModule(NULL,SECMOD_INT_NAME,
-						NULL,SECMOD_INT_FLAGS));
+  SECMODModule *nssMod = 
+    SECMOD_CreateModule(NULL,SECMOD_INT_NAME, NULL,SECMOD_INT_FLAGS);
+  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod);
+  SECMOD_DestroyModule(nssMod);
   if (!module)
     return NS_ERROR_OUT_OF_MEMORY;
   *_retval = module;
@@ -304,9 +307,10 @@ nsPKCS11ModuleDB::GetInternal(nsIPKCS11Module **_retval)
 NS_IMETHODIMP 
 nsPKCS11ModuleDB::GetInternalFIPS(nsIPKCS11Module **_retval)
 {
-  nsCOMPtr<nsIPKCS11Module> module = 
-     new nsPKCS11Module(SECMOD_CreateModule(NULL, SECMOD_FIPS_NAME, NULL,
-							SECMOD_FIPS_FLAGS));
+  SECMODModule *nssMod = 
+    SECMOD_CreateModule(NULL, SECMOD_FIPS_NAME, NULL, SECMOD_FIPS_FLAGS);
+  nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod);
+  SECMOD_DestroyModule(nssMod);
   if (!module)
     return NS_ERROR_OUT_OF_MEMORY;
   *_retval = module;
@@ -325,6 +329,7 @@ nsPKCS11ModuleDB::FindModuleByName(const PRUnichar *aName,
   if (!mod)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(mod);
+  SECMOD_DestroyModule(mod);
   if (!module)
     return NS_ERROR_OUT_OF_MEMORY;
   *_retval = module;
@@ -346,6 +351,7 @@ nsPKCS11ModuleDB::FindSlotByName(const PRUnichar *aName,
   if (!slotinfo)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotinfo);
+  PK11_FreeSlot(slotinfo);
   if (!slot)
     return NS_ERROR_OUT_OF_MEMORY;
   *_retval = slot;
