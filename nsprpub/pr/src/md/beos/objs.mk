@@ -13,6 +13,6 @@
 # This makefile appends to the variable OBJS the platform-dependent
 # object modules that will be part of the nspr20 library.
 
-include md/beos/bsrcs.mk
+include $(srcdir)/md/beos/bsrcs.mk
 
 OBJS += $(MDCSRCS:%.c=md/beos/$(OBJDIR)/%.$(OBJ_SUFFIX))

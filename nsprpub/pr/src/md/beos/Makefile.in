@@ -19,7 +19,7 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-include bsrcs.mk
+include $(srcdir)/bsrcs.mk
 CSRCS += $(MDCSRCS)
 
 TARGETS		= $(OBJS)

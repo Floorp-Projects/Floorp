@@ -32,6 +32,14 @@ NSPR_CONFIG_MK	= 1
 # USE_PTHREADS=1
 # NS_USE_GCC=
 #
+ifndef topsrcdir
+topsrcdir=$(MOD_DEPTH)
+endif
+
+ifndef srcdir
+srcdir=.
+endif
+
 ifdef USE_AUTOCONF
 
 NFSPWD		= $(MOD_DEPTH)/config/nfspwd
