@@ -428,6 +428,7 @@ public:
   NS_IMETHOD SetCaretWidth(PRInt16 twips);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *_retval);
+  NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
@@ -676,6 +677,27 @@ nsTextInputSelectionImpl::GetCaretEnabled(PRBool *_retval)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsTextInputSelectionImpl::SetCaretVisibilityDuringSelection(PRBool aVisibility)
+{
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result;
+  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
+  if (shell)
+  {
+    nsCOMPtr<nsICaret> caret;
+    if (NS_SUCCEEDED(result = shell->GetCaret(getter_AddRefs(caret))))
+    {
+      nsCOMPtr<nsISelection> domSel;
+      if (NS_SUCCEEDED(result = mFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))))
+      {
+        return caret->SetVisibilityDuringSelection(aVisibility);
+      }
+    }
+
+  }
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 nsTextInputSelectionImpl::CharacterMove(PRBool aForward, PRBool aExtend)
