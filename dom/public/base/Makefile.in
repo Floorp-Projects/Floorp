@@ -31,6 +31,10 @@ EXPORTS =			 \
 	nsIDOMWindowCollection.h \
 	nsIDOMScreen.h \
 	nsIDOMHistory.h \
+	nsIDOMMimeType.h \
+	nsIDOMMimeTypeArray.h \
+	nsIDOMPlugin.h \
+	nsIDOMPluginArray.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
