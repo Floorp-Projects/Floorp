@@ -2247,10 +2247,6 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       
       NS_IF_RELEASE(mDocURL);
 
-      if (PR_FALSE == result) {
-        rv = NS_ERROR_FAILURE;
-      }
-
       NS_RELEASE(context);
       NS_RELEASE(owner);
     }
