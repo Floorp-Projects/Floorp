@@ -53,7 +53,7 @@ MakeFileDB (char* url)
   if (strchr(url, ':')) {
     RDFT ntr = NewRemoteStore(url);
     ntr->possiblyAccessFile = RDFFilePossiblyAccessFile ;
-    if (endsWith("navcntr.rdf", url)) 
+    if (strcmp(gNavCntrUrl, url) == 0) 
       readRDFFile(url, RDF_GetResource(NULL, url, 1), 0, ntr); 
     return ntr;
   } else return NULL;

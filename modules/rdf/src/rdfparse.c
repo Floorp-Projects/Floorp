@@ -91,18 +91,10 @@ getHref(char** attlist)
 }
  
 
-int
-parseNextRDFXMLBlob (NET_StreamClass *stream, char* blob, int32 size)
-{
-  RDFFile f;
+int parseNextRDFXMLBlobInt(RDFFile f, char* blob, int32 size) {
   int32 n, last, m;
   PRBool somethingseenp = 0;
   n = last = 0;
-
-  f = (RDFFile)stream->data_object;
-  if ((f == NULL) || (size < 0)) {
-    return MK_INTERRUPTED;
-  }
 
   while (n < size) {
     char c = blob[n];
@@ -141,6 +133,17 @@ parseNextRDFXMLBlob (NET_StreamClass *stream, char* blob, int32 size)
   return(size);
 }
 
+int
+parseNextRDFXMLBlob (NET_StreamClass *stream, char* blob, int32 size)
+{
+  RDFFile f;
+
+  f = (RDFFile)stream->data_object;
+  if ((f == NULL) || (size < 0)) {
+    return MK_INTERRUPTED;
+  }
+  return parseNextRDFXMLBlobInt(f, blob, size);
+}
 
 
 void

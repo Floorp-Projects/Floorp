@@ -22,20 +22,12 @@
 #include "rdf.h"
 #include "rdf-int.h"
 #include "utils.h"
-
+#include <stdio.h>
 
 
 /* pm2rdf.c data structures and defines */
 
 #define pmUnitp(u) ((resourceType(u) == PM_RT) || (resourceType(u) == IM_RT))
-
-#ifdef	XP_WIN
-#define	POPMAIL_URL_OFFSET	9
-#define	IMAPMAIL_URL_OFFSET	6
-#else
-#define	POPMAIL_URL_OFFSET	8
-#define	IMAPMAIL_URL_OFFSET	5
-#endif
 
 
 
@@ -43,19 +35,8 @@
 
 XP_BEGIN_PROTOS
 
-char *		popmailboxesurl(void);
-char *		imapmailboxesurl(void);
-void		buildMailList(RDF_Resource ms);
-PRDir *		OpenMailDir(char *name);
-RDFT		MakeMailStore (char* url);
-RDF_Error	PMInit (RDFT ntr);
-PRBool		pmHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
-void *		pmGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PRBool inversep,  PRBool tv);
-RDF_Cursor	pmGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv);
-void *		pmNextValue (RDFT rdf, RDF_Cursor c);
-RDF_Error	pmDisposeCursor (RDFT rdf, RDF_Cursor c);
-RDF_Resource	CreatePMUnit (char* nname, RDF_BT rdfType, PRBool isDirectoryFlag);
 
 XP_END_PROTOS
 
 #endif
+

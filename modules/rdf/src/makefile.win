@@ -57,6 +57,9 @@ C_OBJS=.\$(OBJDIR)\vocab.obj \
        .\$(OBJDIR)\bmk2mcf.obj \
        .\$(OBJDIR)\glue.obj \
        .\$(OBJDIR)\rdfht.obj \
+!ifdef SMART_MAIL
+       .\$(OBJDIR)\pm2rdf.obj \
+!endif
        .\$(OBJDIR)\jsec2rdf.obj \
        $(NULL)
 
@@ -133,3 +136,9 @@ display_jni_header_msg:
 	echo +++ make: Generating JNI header files...
 	
 !endif
+
+
+
+
+
+

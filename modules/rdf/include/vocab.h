@@ -181,6 +181,10 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource urlBar; /* Whether or not the button is a URL bar. */
   RDF_Resource urlBarWidth; /* The width of the URL bar. */
   RDF_Resource pos;
+  RDF_Resource from;
+  RDF_Resource to;
+  RDF_Resource subject;
+  RDF_Resource date;
 } RDF_NCVocabStruct;
 
 typedef RDF_NCVocabStruct* RDF_NCVocab;

@@ -99,6 +99,7 @@ struct RDF_ResourceStruct {
   struct RDF_AssertionStruct* rarg1;
   struct RDF_AssertionStruct* rarg2;
   struct RDF_ListStruct*          rdf;
+  void*  pdata;
 } ;
 
 #define RDF_GET_SLOT_VALUES_QUERY 0x01
@@ -192,8 +193,8 @@ extern     PLHashTable*  resourceHash;
 extern     PLHashTable*  dataSourceHash;  
 extern     char*  gNavCntrUrl;
 struct RDF_DBStruct {
-  int16 numTranslators;
-  int16 translatorArraySize;
+  int32 numTranslators;
+  int32 translatorArraySize;
   RDFT*  translators;
   struct RDF_FileStruct* files;
   struct RDF_NotificationStruct* notifs;
@@ -337,7 +338,7 @@ DB *CallDBOpenUsingFileURL(char *fileURL, int flags,int mode, DBTYPE type, const
 
 PRBool nlocalStoreAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, 
 			 RDF_ValueType type, PRBool tv) ;
-
+char* MCDepFileURL (char* url) ;
 void initLocalStore(RDFT rdf);
 void freeAssertion(Assertion as);
 Assertion localStoreAdd (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv)  ;
@@ -360,7 +361,7 @@ char* makeDBURL (char* name);
 
 int rdf_GetURL (MWContext *cx, int method, Net_GetUrlExitFunc *exit_routine, RDFFile rdfFile);
 
-
+RDFT MakePopDB (char* url) ;
 PRBool nlocalStoreAssert (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, 
 		     RDF_ValueType type, PRBool tv) ;
 PRBool nlocalStoreUnassert (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, 
@@ -371,7 +372,7 @@ RDF_Cursor nlocalStoreGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s, R
 void* nlocalStoreNextValue (RDFT mcf, RDF_Cursor c) ;
 RDF_Error nlocalStoreDisposeCursor (RDFT mcf, RDF_Cursor c) ;
 void createCoreVocab () ;
-
+int parseNextRDFXMLBlobInt(RDFFile f, char* blob, int32 size) ;
 
 PRBool remoteAssert (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, 
 		     RDF_ValueType type, PRBool tv) ;

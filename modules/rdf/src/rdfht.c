@@ -105,10 +105,10 @@ RDF_Init(RDF_InitParams params)
   gGlobalHistoryURL = copyString(params->globalHistoryURL);
 #endif
 
-  resourceHash = PL_NewHashTable(500, PL_HashString, PL_CompareStrings, PL_CompareValues,  
-				 NULL, NULL);
-  dataSourceHash = PL_NewHashTable(100, PL_HashString, PL_CompareStrings, PL_CompareValues,  
-				 NULL, NULL);
+  resourceHash = PL_NewHashTable(500, PL_HashString, PL_CompareStrings, 
+                                 PL_CompareValues,   NULL, NULL);
+  dataSourceHash = PL_NewHashTable(100, PL_HashString, PL_CompareStrings, 
+                                   PL_CompareValues,  NULL, NULL);
   RDFglueInitialize();
   MakeRemoteStore("rdf:remoteStore");
   createVocabs();

@@ -87,7 +87,13 @@ getTranslator (char* url)
 
     else if (startsWith("http://", url)) {
 	  ans = MakeFileDB(url); 
-  } else {
+    } else if (startsWith("mailbox://", url)){
+#ifdef SMART_MAIL
+      ans = MakePopDB(url);
+#else
+      ans = NULL;
+#endif
+    } else {
 	  ans = NULL;
   }
 #ifdef MOZILLA_CLIENT
@@ -127,7 +133,11 @@ RDF_GetDB (const char** dataSources)
 		r->translators[m]->rdf = rl;
 		m++;
 	} else {
-		freeMem(rl);
+      freeMem(rl);
+      /*      r->numTranslators = m;
+      r->translatorArraySize = n;
+      RDF_ReleaseDB(r);
+      return NULL; */
 	}
     n++;
   }
@@ -261,6 +271,7 @@ RDF_ReleaseDB(RDF rdf)
     }
     gAllDBs = deleteFromRDFList(gAllDBs, rdf);
   }
+  freeMem(rdf->translators);
   freeMem(rdf);
   return noRDFErr;
 }
@@ -960,7 +971,7 @@ nextFindValue (RDF_Cursor c)
 void
 possiblyGCResource (RDF_Resource u)
 {
-  if ((nullp(u->rarg1)) && (nullp(u->rarg2))) {
+  if ((nullp(u->pdata)) && (nullp(u->rarg1)) && (nullp(u->rarg2))) {
     PL_HashTableRemove(resourceHash,  resourceID(u));
     freeMem(u->url);
     freeMem(u);  

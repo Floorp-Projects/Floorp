@@ -22,398 +22,362 @@
    For more information on RDF, look at the RDF section of www.mozilla.org
 */
 
-#include "pm2rdf.h"
-#include "glue.h"
 
+#include "net.h"
+#include "rdf-int.h"
+#include <stdio.h>
 
+extern	MWContext	*FE_GetRDFContext(void);
+extern char*  profileDirURL;
 
-char *
-popmailboxesurl(void)
-{
-	char		*ans = NULL, *mboxFileURL;
+struct MailFolder {
+  FILE *sfile;
+  FILE *mfile;
+  struct MailMessage* msg;
+  struct MailMessage* tail;
+  struct MailMessage* add;
+  RDF_Resource top;
+  int32 status;
+};
 
-	if ((mboxFileURL = makeDBURL("Mail")) != NULL)
-	{
-		if ((ans = getMem(strlen(mboxFileURL) + 8)) != NULL)
-		{
-			sprintf(ans, "mailbox:%s", &mboxFileURL[7]);
-#ifdef	XP_WIN
-			if (ans[10] == ':') ans[10] = '|';
-#endif
-		}
-	}
-	return(ans);
-}
+typedef struct MailFolder* MF;
 
+struct MailMessage {
+  char* subject;
+  char* from;
+  char* date;
+  int32 offset;
+  char* flags;
+  int32 summOffset;
+  RDF_Resource r;
+  struct MailMessage *next;
+};
 
-
-char *
-imapmailboxesurl(void)
-{
-	char		*ans = NULL, *mboxFileURL;
-
-	if ((mboxFileURL = makeDBURL("IMAPMail")) != NULL)
-	{
-		if ((ans = getMem(strlen(mboxFileURL) + 5)) != NULL)
-		{
-			sprintf(ans, "imap:%s", &mboxFileURL[7]);
-#ifdef	XP_WIN
-			if (ans[7] == ':') ans[7] = '|';
-#endif
-		}
-	}
-	return(ans);
-}
-
-
+typedef struct MailMessage* MM;
 
 void
-buildMailList(RDF_Resource ms)
-{
-	RDF_Resource		imapmail, popmail;
-
-	if ((imapmail = RDF_GetResource(NULL, imapmailboxesurl(), 1)) != NULL)
-	{
-		setContainerp(imapmail, 1);
-		setResourceType(imapmail, IM_RT);
-		remoteStoreAdd(gRemoteStore, imapmail, gCoreVocab->RDF_name,
-				"Remote Mail", RDF_STRING_TYPE, 1);
-		remoteStoreAdd(gRemoteStore, imapmail, gCoreVocab->RDF_parent,
-				ms, RDF_RESOURCE_TYPE, 1);
-	}
-	if ((popmail = RDF_GetResource(NULL, popmailboxesurl(), 1)) != NULL)
-	{
-		setContainerp(popmail, 1);
-		setResourceType(popmail, PM_RT);
-		remoteStoreAdd(gRemoteStore, popmail, gCoreVocab->RDF_name,
-				"Local Mail", RDF_STRING_TYPE, 1);
-		remoteStoreAdd(gRemoteStore, popmail, gCoreVocab->RDF_parent,
-				ms, RDF_RESOURCE_TYPE, 1);
-	}
+Pop_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx) {
 }
 
-
-
-PRDir *
-OpenMailDir(char *name)
-{
-	PRBool		nameHacked = false;
-	PRDir		*dir = NULL;
-	int			pathnameStart=0;
-
-	if (startsWith("mailbox:",name))	pathnameStart=POPMAIL_URL_OFFSET;
-	else if (startsWith("imap:",name))	pathnameStart=IMAPMAIL_URL_OFFSET;
-	if (pathnameStart > 0)
-	{
-#ifdef	XP_WIN
-		if (name[pathnameStart+1] == '|')
-		{
-			nameHacked = true;
-			name[pathnameStart+1] = ':';
-		}
-#endif
-	dir = CallPROpenDirUsingFileURL(name);
-
-#ifdef	XP_WIN
-		if (nameHacked == true)
-		{
-			name[pathnameStart+1] = '|';
-		}
-#endif
-	}
-/*
-	else
-	{
-		dir = CallPROpenDirUsingFileURL(name);
-	}
-*/
-	return(dir);
-}
-
-
-
-RDFT
-MakeMailStore (char* url)
-{
-  RDFT ntr = (RDFT)getMem(sizeof(RDFT));
-  ntr->assert = NULL;
-  ntr->unassert = NULL;
-  ntr->getSlotValue = pmGetSlotValue;
-  ntr->getSlotValues = pmGetSlotValues;
-  ntr->hasAssertion = pmHasAssertion;
-  ntr->nextValue = pmNextValue;
-  ntr->disposeCursor = pmDisposeCursor;
-  buildMailList(gNavCenter->RDF_Mail);
-  ntr->url = copyString(url);
-  return ntr;
-}
-
-
-
-
-PRBool
-pmHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, 
-		       RDF_ValueType type, PRBool tv)
-{
-  if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE) &&
-      (resourceType(u) == PM_RT) && (containerp(u)) && 
-      (resourceType((RDF_Resource)v) == PM_RT) &&
-      (startsWith( resourceID(u), resourceID((RDF_Resource)v)))) {
-    PRDir* d = OpenMailDir( resourceID(u));
-    char* filePathname =  resourceID((RDF_Resource)v);
-    char* name = &filePathname[revCharSearch('/', filePathname)];
-    PRDirEntry* de;
-    int n = 0;
-    PRBool ans = 0;
-
-    while ((de = PR_ReadDir(d, (PRDirFlags)(n++))) != NULL) {
-      if (strcmp(name, de->name) == 0) {
-	ans = 1;
-	break;
-      }
+void 
+GetPopToRDF (RDFT rdf) {
+  MF folder = (MF) rdf->pdata;
+  if (endsWith("/inbox", rdf->url)) {
+    char* popurl = getMem(100);
+    int n = 10;
+    int l = strlen(rdf->url);
+    URL_Struct *urls ;
+    memcpy(popurl, "pop3://", 7);
+    while (n < l) {
+      if (rdf->url[n] == '/') break;
+      popurl[n-3] = rdf->url[n];
+      n++;
     }
-    PR_CloseDir(d);
-    return ans;
-  } else {
-    return 0;
+    
+    urls = NET_CreateURLStruct(popurl, NET_DONT_RELOAD);
+    if (urls != NULL)  {
+      urls->fe_data = rdf;
+      NET_GetURL(urls, FO_PRESENT, FE_GetRDFContext(), Pop_GetUrlExitFunc);
+    }
   }
 }
 
+char* stripCopy (char* str) {
+  return copyString(XP_StripLine(str)); 
+}
 
+FILE *openPMFile (char* path) {
+	FILE* ans = fopen(path, "r+");
+	if (!ans) {
+		ans = fopen(path, "w");
+		fclose(ans);
+		ans = fopen(path, "r+");
+	}
+	return ans;
+}
+
+
+void addMsgToFolder (MF folder, MM msg) {
+	if (!folder->tail) {
+		folder->msg = folder->tail = msg;
+	} else {
+		folder->tail->next = msg;
+		folder->tail = msg;
+	}
+}
+
+void 
+RDF_StartMessageDelivery (RDFT rdf) {
+  MF folder = (MF) rdf->pdata;
+  MM msg    = (MM) getMem(sizeof(struct MailMessage));
+  char* nurl = getMem(100);
+  fseek(folder->mfile, 0L, SEEK_END);
+  fprintf(folder->mfile, "From - \n");
+  msg->offset = ftell(folder->mfile);
+  sprintf(nurl, "%s?%i", rdf->url, msg->offset);
+  msg->r = RDF_GetResource(NULL, nurl, 1);
+  msg->r->pdata = msg;
+  msg->flags = getMem(4);
+  folder->add = msg;
+  setResourceType(msg->r, PM_RT); 
+  fseek(folder->mfile, 0L, SEEK_END);
+  fputs("X-Mozilla-Status: 0000", folder->mfile);
+}
+
+
+char* MIW1 (const char* block, int32 len) {
+  char* blk = XP_ALLOC(len +1);
+  int32 n = 0;
+  int32 m = 0;
+  PRBool seenp = 0;
+  PRBool wsendp = 0;
+  memset(blk, '\0', len);
+  while (n++ < len) {
+    char c = block[n];
+	if ((c == '\r') || (c == '\n')) break;
+    if (!seenp) {
+      seenp = (c == ':');
+    } else {
+      if (c != ' ') wsendp = 1;
+      if (wsendp) {
+        blk[m++] = c;
+      }
+    }
+  }
+  return blk;
+}
+
+void 
+RDF_AddMessageLine (RDFT rdf, char* block, int32 length) {
+  MF folder = (MF) rdf->pdata;
+  MM msg    = folder->add;
+  char* temp = getMem(length+1);
+  memcpy(temp, block, length);
+  if (!msg->from && (startsWith("From:", block))) {
+    msg->from = MIW1(block, length);
+  } else if (!msg->subject && (startsWith("Subject:", block))) {
+    msg->subject = MIW1(block, length);
+  } else if (!msg->date && (startsWith("Date:", block))) {
+    msg->date = MIW1(block, length);
+  }
+   
+  fseek(folder->mfile, 0L, SEEK_END);
+  fputs(temp, folder->mfile);
+  freeMem(temp);
+}
+
+void 
+RDF_FinishMessageDelivery (RDFT rdf) {
+  MF folder = (MF) rdf->pdata;
+  MM msg    = folder->add;
+  folder->add = NULL;
+  addMsgToFolder(folder, msg);
+  setResourceType(msg->r, PM_RT);
+  fseek(folder->sfile, 0L, SEEK_END);
+  fprintf(folder->sfile, "From: %s\nSubject: %s\nDate: %s\n%d\n", 
+          msg->from, msg->subject, msg->date, msg->offset);
+   fseek(folder->mfile, 0L, SEEK_END);
+  fputs("\n", folder->mfile);
+  sendNotifications2(rdf, RDF_ASSERT_NOTIFY, msg->r, gCoreVocab->RDF_parent, folder->top, 
+                     RDF_RESOURCE_TYPE, 1);       
+}
+
+void 
+setMessageFlag (RDFT rdf, RDF_Resource r, char* newFlag) {
+  MF folder = (MF) rdf->pdata;
+  MM msg    = (MM)r->pdata;
+  int32 offset = msg->summOffset+8;
+  fseek(folder->sfile, summOffset, SEE_SET);
+  fputs(newFlag, folder->sfile);
+  offset = msg->offset + 17;
+  fputs(newFlag, folder->mfile);
+}
+
+void 
+MoveMessageToFolder (char* from, char* to, char* url) {
+  int32  messageOffset;
+  
+        
+void saveSummaryFile (RDFT rdf) {
+  MF folder = (MF) rdf->pdata;
+  MM msg    = folder->msg;
+  fseek(folder->sfile, 0L, SEEK_SET);
+  while (msg) {
+    msg->summOffset = ftell(folder->sfile);
+    fprintf(folder->sfile, "Status: %s\nOffset: %d\nFrom: %s\nSubject: %s\nDate: %s\n%d\n", 
+            msg->summOffset, msg->from, msg->subject, msg->date, msg->offset, msg->flags);
+    msg = msg->next;
+  }
+  fflush(folder->sfile);
+}
+
+ 
+#define BUFF_SIZE 100000 
+          
+void readSummaryFile (RDFT rdf) {
+  if (startsWith("mailbox://", rdf->url)) {
+    char* url = rdf->url;
+    char* folderURL = &url[10];
+    char* fileurl = getMem(strlen(profileDirURL) + strlen(folderURL) + 4);
+    char* nurl = getMem(strlen(url) + 20);
+    FILE *f; 
+    char* buff = getMem(BUFF_SIZE);
+    MF folder = (MF) getMem(sizeof(struct MailFolder));
+    MM msg = NULL;
+    FILE *mf;
+     
+	rdf->pdata = folder;
+    sprintf(fileurl, "%s%s.ssf",  profileDirURL, folderURL);
+    fileurl = MCDepFileURL(fileurl);
+    f = openPMFile(fileurl);
+    sprintf(fileurl, "%s%s",  profileDirURL, folderURL);
+	fileurl = MCDepFileURL(fileurl);
+    mf = openPMFile(fileurl);
+    folder->top = RDF_GetResource(NULL, rdf->url, 1);
+	setResourceType(folder->top, PM_RT);    
+    setContainerp(folder->top, 1);
+    folder->sfile = f;
+    folder->mfile = mf;
+
+    while (f && fgets(buff, BUFF_SIZE, f)) {
+      if (startsWith("Status:", buff)) {
+        msg = (MM) getMem(sizeof(struct MailMessage));
+        msg->flags = stripCopy(&buff[8]);
+        fgets(buff, BUFF_SIZE, f);
+        sscanf(buff, "%i", &msg->summOffset);
+        fgets(buff, BUFF_SIZE, f);
+        msg->from = stripCopy(&buff[6]);
+        fgets(buff, BUFF_SIZE, f);
+        msg->subject = stripCopy(&buff[8]);
+        fgets(buff, BUFF_SIZE, f);
+        msg->date = stripCopy(&buff[6]);
+        fgets(buff, BUFF_SIZE, f);
+        msg->date = stripCopy(&buff[6]);
+        fgets(buff, BUFF_SIZE, f);
+        sscanf(buff, "%i", &msg->offset);
+        sprintf(nurl, "%s?%i", url, msg->offset);
+        msg->r = RDF_GetResource(NULL, nurl, 1);
+        msg->r->pdata = msg;
+        addMsgToFolder (folder, msg) ; 
+        setResourceType(msg->r, PM_RT);        
+      }
+    }
+
+    if (msg == NULL) {
+      /* either a new mailbox or need to read BMF to recreate */
+      while (mf && fgets(buff, BUFF_SIZE, mf)) {
+        if (startsWith("From ", buff))  { 
+          msg = (MM) getMem(sizeof(struct MailMessage));
+          msg->offset = ftell(mf);
+          sprintf(nurl, "%s?%i", url, msg->offset);
+          msg->r = RDF_GetResource(NULL, nurl, 1); 
+          msg->r->pdata = msg;
+          setResourceType(msg->r, PM_RT);
+		  addMsgToFolder (folder, msg) ;
+        }
+        if ((!msg->from) && (startsWith("From:", buff))) {
+          msg->from = stripCopy(&buff[6]);
+        } else if ((!msg->date) && (startsWith("Date:", buff))) {
+          msg->date = stripCopy(&buff[6]);
+        } else if ((!msg->subject) && (startsWith("Subject:", buff))) {
+          msg->subject = stripCopy(&buff[8]);
+        } else if ((!msg->flags) && (startsWith("X-Mozilla-Status:", buff))) {
+          msg->flags = stripCopy(&buff[17]);
+        }
+      }
+      saveSummaryFile(rdf);
+    }
+    freeMem(buff);
+    freeMem(nurl);
+    GetPopToRDF(rdf);
+  }
+}
 
 void *
-pmGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PRBool inversep,  PRBool tv)
-{
-  if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE) && (pmUnitp(u)) && tv) {
-    if (inversep) {
-      char* filePathname =  resourceID(u);
-      size_t n = revCharSearch('/', filePathname);
-      char nname[512];
-      PRDir *d;
-      PRBool ans = 0;
-      memcpy((char*)nname, filePathname, n);
-      d = OpenMailDir(nname);
-      ans = (d != NULL);
-      PR_CloseDir(d);
-      if (ans) {
-	RDF_Resource r = RDF_GetResource(NULL, nname, 1);
-	setResourceType(r, PM_RT);
-	setContainerp(r, 1);
-	return r;
-      } else return NULL;
-    } else {
-      PRDir* d = OpenMailDir( resourceID(u));
-      PRDirEntry* de = PR_ReadDir(d, PR_SKIP_BOTH);
-      if (de != NULL) {
-	char nname[100];
-	sprintf(nname, "%s/%s",  resourceID(u), de->name);
-	PR_CloseDir(d);
-	return CreatePMUnit(nname, resourceType(u), false);
-      } else {
-	PR_CloseDir(d);
-	return NULL;
-      }
-    }
-  } else if ((s == gCoreVocab->RDF_name) && (type == RDF_STRING_TYPE) && (tv) && (pmUnitp(u))) {
-  	char *pathname, *name = NULL;
-  	int len,n;
-  	
-  	if ((pathname = copyString( resourceID(u))) != NULL) {
-  	  len = strlen(pathname);
-  	  if (pathname[len-1] == '/')  pathname[--len] = '\0';
-  	  if (endsWith(".sbd", pathname))	pathname[len-4] = '\0';
-  	  n = revCharSearch('/', pathname);
-  	  name = unescapeURL(&pathname[n+1]);
-  	  freeMem(pathname);
-  	}
-    return(name);
-  }
-  else if ((s == gWebData->RDF_URL) && (type == RDF_STRING_TYPE) && (tv) && (pmUnitp(u))) {
-	int		len;
-	char		*pos, *name;
-
-        if (resourceType(u) == PM_RT) return( copyString(resourceID(u)));
-	if (resourceType(u) == IM_RT)
-	{
-		len = strlen( resourceID(u));
-		if (resourceID(u)[len-1] == '/')	return(copyString(resourceID(u)));
-		if ((pos=strstr(resourceID(u),"IMAPMail/")) != NULL)
-		{
-			if ((name = PR_smprintf("imap://%s",pos+9)) != NULL)
-			{
-
-				/* IMAP RFC specifies INBOX (all uppercase) ??? */
-
-				if (endsWith ("/Inbox", name))
-				{
-					strcpy(&name[strlen(name)-5],"INBOX");
-				}
-			}
-			return(name);
-		}
-	}
-  }
-
-  return NULL;
-}
-
-
-
-RDF_Cursor
-pmGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s, 
-		     RDF_ValueType type,  PRBool inversep, PRBool tv)
-{
-  if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE) && (pmUnitp(u))
-      && (inversep) && (tv)) {
-    PRDir *d = OpenMailDir(resourceID(u));
-    RDF_Cursor c;
-    if (d == NULL) return NULL;
-    c = (RDF_Cursor) getMem(sizeof(struct RDF_CursorStruct));
-    c->u = u;
-    c->count = PR_SKIP_BOTH;
-    c->pdata = d;
-    c->type = type;
-    return c;
+pmGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, 
+                PRBool inversep,  PRBool tv) {
+  if ((resourceType(u) == PM_RT) && tv && (!inversep) && (type == RDF_STRING_TYPE) && (u->pdata)) {
+    MM msg = (MM) u->pdata;
+    if (s == gNavCenter->from) {
+      return copyString(msg->from);
+    } else if (s == gNavCenter->subject) {
+      return copyString(msg->subject);
+    } else if (s == gNavCenter->date) {
+      return copyString(msg->date);
+    } else return NULL;
   } else return NULL;
 }
 
+        
+RDF_Cursor
+pmGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, 
+                 PRBool inversep,  PRBool tv) {
+  if ((resourceType(u) == PM_RT) && tv && (inversep) && (type == RDF_RESOURCE_TYPE)
+      && (s == gCoreVocab->RDF_parent)) {
+    MF folder = (MF)rdf->pdata;
+    if (folder->top == u) {
+      RDF_Cursor c = (RDF_Cursor)getMem(sizeof(struct RDF_CursorStruct));
+      c->u = u;
+      c->s = s;
+      c->type = type;
+      c->inversep = inversep;
+      c->tv = tv;
+      c->count = 0;
+      c->pdata = folder->msg;
+      return c;
+    } else return NULL;
+  } else return NULL;
+}
 
 
 void *
 pmNextValue (RDFT rdf, RDF_Cursor c)
 {
-    PRFileInfo fn;
-    int len, pathnameStart=0;
-    char *encoded = NULL, *pos;
-
-  if (c == NULL) {
-    return NULL;
-  } else {
-
-    PRDirEntry* de = PR_ReadDir((PRDir*)c->pdata, (PRDirFlags)(c->count++));
-    if (de == NULL) {
-
-      PR_CloseDir((PRDir*)c->pdata);
-	  c->pdata = NULL;
-      return NULL;
-	} else if ((resourceType((RDF_Resource)(c->u)) == IM_RT) || (endsWith(".snm", (char *)de->name)) || (endsWith(".sbd", (char *)de->name)))	{
-
-/*
-    } else if (endsWith(".snm", (char*)de->name) || (endsWith(".dat", (char*)de->name))){
-*/
-      char nname[512], *base;
-      PRBool isDir = false, sep = (( resourceID(c->u))[strlen( resourceID(c->u))-1] == '/');
-	
-
-      base = NET_Escape(de->name, URL_PATH);
-      if (base != NULL)	{
-        if (sep) {
-        sprintf(nname, "%s%s",  resourceID(c->u), base);
-        } else
-        sprintf(nname, "%s/%s",  resourceID(c->u), base);
-        XP_FREE(base);
-      }
-
-       if (resourceType(c->u) == PM_RT)  {
-           pathnameStart = POPMAIL_URL_OFFSET;
-           encoded = unescapeURL(&nname[pathnameStart]);
-         }
-       else if (resourceType(c->u) == IM_RT)  {
-           pathnameStart = IMAPMAIL_URL_OFFSET;
-         }
-
-        encoded = unescapeURL(&nname[pathnameStart]);
-	if (encoded != NULL)	{
-
-#ifdef  XP_WIN
-            if (encoded[1] == '|') encoded[1] = ':';
-#endif
-
-	    PR_GetFileInfo(encoded, &fn);
-		if (fn.type == PR_FILE_DIRECTORY)	{
-			isDir = true;
- 			len=strlen(nname);
-			nname[len] = '/';
-			nname[len+1] = '\0';
-			}
-		else if (resourceType(c->u) == IM_RT)	{
-			if ((pos=strstr(encoded,"IMAPMail/")) != NULL)	{
-				sprintf(nname,"imap://%s",pos+9);
-				}
-			}
-		freeMem(encoded);
-		}
-
-      return CreatePMUnit(nname, resourceType(c->u), isDir);
-    } else {
-	return pmNextValue(rdf, c);
-}
+  MM msg = (MM) c->pdata;
+  RDF_Resource ans = NULL;
+  if (msg) {
+	ans = msg->r;
+	c->pdata = msg->next;
   }
+  return ans;
 }
-
 
 
 RDF_Error
-pmDisposeCursor (RDFT rdf, RDF_Cursor c)
+pmDisposeCursor (RDFT mcf, RDF_Cursor c)
 {
-  if (c != NULL) {
-
-    if (c->pdata) PR_CloseDir((PRDir*)c->pdata);
-    freeMem(c);
-  }
-  return 0;
+  freeMem(c);
+  return noRDFErr;
 }
 
-
-
-RDF_Resource
-CreatePMUnit (char* nname, RDF_BT rdfType, PRBool isDirectoryFlag)
-{
-  char *name;
-  PRBool newName = 0;
-  RDF_Resource existing;
-
-  if (startsWith("mailbox:/", nname) || startsWith("imap:/", nname)) {
-	if (endsWith(".snm", nname)) {
-	  name = (char*) getMem(strlen(nname)+1);
-	  memcpy(name, nname, strlen(nname));
-	  name[strlen(name)-4] = '\0';
-	  newName = 1;
-
-      /* IMAP RFC specifies INBOX (all uppercase) ??? */
-      if ((rdfType == IM_RT) && (endsWith ("/Inbox", name))) {
-        strcpy(&name[strlen(name)-5],"INBOX");
-        }
-
-	} else  name = nname;
-  } 
-  else {
-    if (rdfType == PM_RT)	{
-      name = (char*) getMem(strlen(nname) + 9);
-      memcpy(name,  "mailbox:/", 9);
-      memcpy(&name[9], nname, strlen(nname));
-      }
-    else if (rdfType == IM_RT)	{
-      name = (char*) getMem(strlen(nname) + 6);
-      memcpy(name,  "imap:/", 6);
-      memcpy(&name[6], nname, strlen(nname));
-      }
-    newName = 1;
-    if (endsWith(".snm", nname)) {
-      name[strlen(name)-3] = '\0';
-    }
-  }
-
-  existing = RDF_GetResource(NULL, name, 0);
-  if (existing != NULL) {
-    if (newName) freeMem(name);
-    if (isDirectoryFlag) setContainerp(existing, 1);
-    return existing;
-  } else {
-    existing = RDF_GetResource(NULL, name, 1);
-    if (isDirectoryFlag) setContainerp(existing, 1);
-    setResourceType(existing, rdfType);
-    if (newName) freeMem(name);
-    return existing;
-  }
+FILE *getPopMBox (RDFT db) {
+  MF folder = (MF)db->pdata;
+  return folder->mfile;
 }
+
+RDFT
+MakePopDB (char* url)
+{
+  if (startsWith("mailbox://", url)) {
+    RDFT		ntr;
+	if ((ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct))) != NULL) {
+		ntr->assert = NULL;
+		ntr->unassert = NULL;
+		ntr->getSlotValue = pmGetSlotValue;
+		ntr->getSlotValues = pmGetSlotValues;
+		ntr->hasAssertion = NULL;
+		ntr->nextValue = pmNextValue;
+		ntr->disposeCursor = pmDisposeCursor;
+		ntr->url = copyString(url);
+        readSummaryFile(ntr);
+	}
+	return(ntr);
+  } else return NULL;
+}
+    
+  
+    
+    
+    
+    
+

@@ -597,14 +597,17 @@ HistPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inverse
       ((u == gNavCenter->RDF_HistoryByDate) ||  (u == gNavCenter->RDF_HistoryBySite))) {
     if (histInFlatFilep) {
       readRDFFile(gGlobalHistoryURL, NULL, 0, gHistoryStore);
+      historyInitialized = 1;
     } else {
       collateHistory(rdf, u, (u == gNavCenter->RDF_HistoryByDate)); 
+      historyInitialized = 1;
     }
   } else if ((s ==  gCoreVocab->RDF_parent) && inversep && (rdf == gHistoryStore) &&
              (u == gNavCenter->RDF_HistoryMostVisited)) {
       collateHistory(rdf, gNavCenter->RDF_HistoryBySite, 0); 
+      historyInitialized = 1;
   }
-  historyInitialized = 1;
+
 }
 
 RDFT

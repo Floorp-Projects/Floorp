@@ -835,11 +835,11 @@ sortNodes(HT_View view, HT_Resource parent, HT_Resource *children, uint32 numChi
 	XP_ASSERT(parent != NULL);
 
 	containerType = resourceType(parent->node);
-	if ((view->sortToken == NULL) && (containerType != RDF_RT))
+	if ((view->sortToken == NULL) && (containerType != RDF_RT) && 0)
 	{
 		/* default: sort on name column */
 
-		sortChanged = true;
+		sortChanged = true; 
 
 		sortToken = view->sortToken;
 		view->sortToken = gCoreVocab->RDF_name;
@@ -1238,6 +1238,7 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
               view = pane->viewList;
             }
 	}
+	if (!db) return NULL;
         columnList = &view->columns;
         pn = 0;
         while (pn < param_count) {

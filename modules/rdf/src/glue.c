@@ -63,6 +63,9 @@ void
 rdf_complete(NET_StreamClass *stream)
 {
   RDFFile f = (RDFFile)stream->data_object;
+  if ((f->resourceCount == 0) && (strcmp(f->url, gNavCntrUrl) == 0)) {
+    parseNextRDFXMLBlob(stream, gDefaultNavcntr, strlen(gDefaultNavcntr));
+  }
   if (f) {
     freeMem(f->line);
     freeMem(f->currentSlot);
@@ -147,32 +150,17 @@ rdf_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx)
 
 	if ((status < 0) && (urls != NULL))
 	{
+          RDFFile f = (RDFFile) urls->fe_data;
 		if ((cx != NULL) && (urls->error_msg != NULL))
 		{
 			FE_Alert(cx, urls->error_msg);
 		}
 
 		/* if unable to read in navcntr.rdf file, create some default views */
-		
-		PREF_CopyCharPref("browser.NavCenter", &navCenterURL);
-		if (navCenterURL != NULL)
-		{
-			if (urls->address != NULL)
-			{
-				if (!strcmp(urls->address, navCenterURL))
-				{
-					remoteStoreAdd(gRemoteStore, gNavCenter->RDF_BookmarkFolderCategory,
-						gCoreVocab->RDF_parent, gNavCenter->RDF_Top, RDF_RESOURCE_TYPE, 1);
-					remoteStoreAdd(gRemoteStore, gNavCenter->RDF_History, gCoreVocab->RDF_parent,
-						gNavCenter->RDF_Top, RDF_RESOURCE_TYPE, 1);
-					remoteStoreAdd(gRemoteStore, gNavCenter->RDF_LocalFiles, gCoreVocab->RDF_parent,
-						gNavCenter->RDF_Top, RDF_RESOURCE_TYPE, 1);
-					remoteStoreAdd(gRemoteStore, gNavCenter->RDF_Search, gCoreVocab->RDF_parent,
-						gNavCenter->RDF_Top, RDF_RESOURCE_TYPE, 1);
-				}
-			}
-			freeMem(navCenterURL);
-		}
+		if (strcmp(f->url, gNavCntrUrl) == 0) {
+             parseNextRDFXMLBlobInt(f, gDefaultNavcntr, strlen(gDefaultNavcntr));
+          }
+	 
 	}
 	NET_FreeURLStruct (urls);
 }
@@ -317,7 +305,7 @@ beginReadingRDFFile (RDFFile file)
 
 #ifndef MOZILLA_CLIENT
 
-   /* If standalone, we just use NSPR to open the file */
+   /* If standalone, we just use  to open the file */
    NET_StreamClass stream;
    PRFileDesc *fd;
    PRFileInfo fi;
@@ -377,6 +365,8 @@ unescapeURL(char *inURL)
 /* Given a file URL of form "file:///", return substring */
 /* that can be used as a path for PR_Open. */
 /* NOTE: This routine DOESN'T allocate a new string */
+
+
 char *
 convertFileURLToNSPRCopaceticPath(char* inURL)
 {
@@ -395,7 +385,21 @@ convertFileURLToNSPRCopaceticPath(char* inURL)
 #endif
 }
 
-
+char* MCDepFileURL (char* url) {
+	char* furl;  
+	int32 len;   
+	char* baz = "\\";
+	int32 n = 0; 
+	furl = convertFileURLToNSPRCopaceticPath(unescapeURL(url));
+	len = strlen(furl);
+#ifdef XP_WIN
+	while (n < len) {
+		if (furl[n] == '/') furl[n] = baz[0];
+		n++;
+	}
+#endif
+	return furl;
+}
 
 PRFileDesc *
 CallPROpenUsingFileURL(char *fileURL, PRIntn flags, PRIntn mode)
