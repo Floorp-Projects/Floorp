@@ -135,13 +135,16 @@ public:
 	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
 	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
 	NS_IMETHOD	Flush();
-    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aTargets,
-                                  nsISupportsArray* aArguments,
-                                  nsIEnumerator**   aResult);
+    NS_IMETHOD GetAllCommands(nsIRDFResource* source,
+                              nsIEnumerator/*<nsIRDFResource>*/** commands);
 
-    NS_IMETHOD DoCommand(nsISupportsArray* aTargets,
+    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                nsIRDFResource*   aCommand,
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+
+    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
-                         nsISupportsArray* aArguments);
+                         nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 };
 
 

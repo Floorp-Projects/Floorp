@@ -260,15 +260,20 @@ public:
 
     NS_IMETHOD Flush(void);
 
-    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
-                                  nsISupportsArray* aArguments,
-                                  nsIEnumerator**   aResult) {
-        return mInner->GetEnabledCommands(aSources, aArguments, aResult);
+    NS_IMETHOD GetAllCommands(nsIRDFResource* source,
+                              nsIEnumerator/*<nsIRDFResource>*/** commands) {
+        return mInner->GetAllCommands(source, commands);
     }
 
-    NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                nsIRDFResource*   aCommand,
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments) {
+        return mInner->IsCommandEnabled(aSources, aCommand, aArguments);
+    }
+
+    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
-                         nsISupportsArray* aArguments) {
+                         nsISupportsArray/*<nsIRDFResource>*/* aArguments) {
         // XXX Uh oh, this could cause problems wrt. the "dirty" flag
         // if it changes the in-memory store's internal state.
         return mInner->DoCommand(aSources, aCommand, aArguments);

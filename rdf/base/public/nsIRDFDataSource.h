@@ -189,22 +189,31 @@ public:
     NS_IMETHOD Flush(void) = 0;
 
     /**
-     * Returns the intersection of enabled commands for the set of targets
-     * specified. 
+     * Returns the set of all commands defined for a given source.
+     *
+     * @return NS_OK unless a catastrophic error occurs. If the method
+     * returns NS_OK, you may assume that labels points to a valid (but
+     * possible empty) nsIRDFCursor object.
      */
-    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
-                                  nsISupportsArray* aArguments,
-                                  nsIEnumerator**   aResult) = 0;
+    NS_IMETHOD GetAllCommands(nsIRDFResource* source,
+                              nsIEnumerator/*<nsIRDFResource>*/** commands) = 0;
 
     /**
-     * Perform the specified command on the resource.
+     * Returns whether a given command is enabled for a set of sources. 
      *
-     * XXX We will probably need to make this interface much more intricate
-     * to handle arbitrary arguments and selection sets.
+     * @return NS_OK if command is enabled for all sources 
+     * @return NS_COMFALSE if command is not enabled for any source 
      */
-    NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                nsIRDFResource*   aCommand,
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments) = 0;
+
+    /**
+     * Perform the specified command on set of sources.
+     */
+    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
-                         nsISupportsArray* aArguments) = 0;
+                         nsISupportsArray/*<nsIRDFResource>*/* aArguments) = 0;
 };
 
 #endif /* nsIRDFDataSource_h__ */

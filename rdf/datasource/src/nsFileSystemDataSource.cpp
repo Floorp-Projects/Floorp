@@ -519,23 +519,27 @@ FileSystemDataSource::Flush()
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-
 NS_IMETHODIMP
-FileSystemDataSource::GetEnabledCommands(nsISupportsArray* aSources,
-                                         nsISupportsArray* aArguments,
-                                         nsIEnumerator**   aResult)
+FileSystemDataSource::GetAllCommands(nsIRDFResource* source,
+                                     nsIEnumerator/*<nsIRDFResource>*/** commands)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
+NS_IMETHODIMP
+FileSystemDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                       nsIRDFResource*   aCommand,
+                                       nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
-FileSystemDataSource::DoCommand(nsISupportsArray* aSources,
+FileSystemDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
-                                nsISupportsArray* aArguments)
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;

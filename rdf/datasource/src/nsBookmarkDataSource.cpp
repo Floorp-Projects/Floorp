@@ -665,13 +665,16 @@ public:
 
     NS_IMETHOD Flush(void);
 
-    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
-                                  nsISupportsArray* aArguments,
-                                  nsIEnumerator**   aResult);
+    NS_IMETHOD GetAllCommands(nsIRDFResource* source,
+                              nsIEnumerator/*<nsIRDFResource>*/** commands);
 
-    NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                nsIRDFResource*   aCommand,
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+
+    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
-                         nsISupportsArray* aArguments);
+                         nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
 };
 
@@ -799,9 +802,17 @@ BookmarkDataSourceImpl::Flush(void)
 
 
 NS_IMETHODIMP
-BookmarkDataSourceImpl::GetEnabledCommands(nsISupportsArray* aSources,
-                                           nsISupportsArray* aArguments,
-                                           nsIEnumerator**   aResult)
+BookmarkDataSourceImpl::GetAllCommands(nsIRDFResource* source,
+                                       nsIEnumerator/*<nsIRDFResource>*/** commands)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+BookmarkDataSourceImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                         nsIRDFResource*   aCommand,
+                                         nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
