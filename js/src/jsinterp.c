@@ -1311,6 +1311,7 @@ js_Interpret(JSContext *cx, jsval *result)
         {
             JSTrapHandler handler = rt->interruptHandler;
             if (handler) {
+                SAVE_SP(fp);
                 switch (handler(cx, script, pc, &rval,
                                 rt->interruptHandlerData)) {
                   case JSTRAP_ERROR:
@@ -2679,6 +2680,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 /* Call the debugger hook if present. */
                 hook = cx->runtime->callHook;
                 if (hook) {
+                    SAVE_SP(fp);
                     newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
                                             cx->runtime->callHookData);
                 }
@@ -3661,6 +3663,7 @@ js_Interpret(JSContext *cx, jsval *result)
           {
             JSTrapHandler handler = rt->debuggerHandler;
             if (handler) {
+                SAVE_SP(fp);
                 switch (handler(cx, script, pc, &rval,
                                 rt->debuggerHandlerData)) {
                   case JSTRAP_ERROR:
@@ -3730,6 +3733,7 @@ out:
          */
         JSTrapHandler handler = rt->throwHook;
         if (handler) {
+            SAVE_SP(fp);
             switch (handler(cx, script, pc, &rval, rt->throwHookData)) {
               case JSTRAP_ERROR:
                 cx->throwing = JS_FALSE;
