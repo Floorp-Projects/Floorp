@@ -120,6 +120,7 @@ protected:
   PRPackedBool mDisableAutoComplete; 
   PRPackedBool mCompleteDefaultIndex;
   PRPackedBool mForceComplete;
+  PRPackedBool mSuppressOnInput;
 };
 
 #endif // __nsFormFillController__
