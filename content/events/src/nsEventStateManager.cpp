@@ -2655,8 +2655,15 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       nsCOMPtr<nsIDocument> doc;
       gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
       if (doc) {
+        // The order of the nsIViewManager and nsIPresShell COM pointers is
+        // important below.  We want the pres shell to get released before the
+        // associated view manager on exit from this function.
+        // See bug 53763.
+        nsCOMPtr<nsIViewManager> kungFuDeathGrip;
         nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
         if (shell) {
+          shell->GetViewManager(getter_AddRefs(kungFuDeathGrip));
+
           nsCOMPtr<nsIPresContext> oldPresContext;
           shell->GetPresContext(getter_AddRefs(oldPresContext));
 
