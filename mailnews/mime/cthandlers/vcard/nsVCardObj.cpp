@@ -1608,7 +1608,7 @@ DumpProperties(VObject *o)
   while (moreIteration(&i)) 
   {
     VObject *each = nextVObject(&i);
-    // printf("ID = %s Value = [%s]\n", each->id, fakeCString(vObjectUStringZValue(each)));
+    printf("ID = %s Value = [%s]\n", each->id, fakeCString(vObjectUStringZValue(each)));
   }
 }
 

@@ -352,7 +352,6 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
 {
   unsigned int        written = 0;
   nsresult rv = NS_OK;
-  PRUint32            rc = 0;
   PRUint32            needToWrite;
 
   //
@@ -690,8 +689,6 @@ nsMimeBaseEmitter::Complete()
   // to flush it...if we try and fail, we should probably return
   // an error!
   PRUint32      written;
-  char          *spec = nsnull;
-  char          *part = nsnull;
 
   nsresult rv = NS_OK;
   while ( NS_SUCCEEDED(rv) && (mBufferMgr) && (mBufferMgr->GetSize() > 0))
