@@ -27,12 +27,12 @@
         command="Tasks:IRC"
         id="tasksMenuIRC"
         class="menuitem-iconic"
-        insertafter="tasksMenuAddressBook"/>
+        insertafter="tasksMenuAddressBook,tasksMenuEditor,IMMenuItem,tasksMenuNavigator"/>
 </menupopup>
 
 <statusbarpanel id="component-bar">
   <toolbarbutton class="taskbutton" id="mini-irc" oncommand="toIRC()"
-    position="5" tooltiptext="&ircCmd.label;"/>
+    insertafter="mini-addr,mini-comp,mini-aim,mini-nav" tooltiptext="&ircCmd.label;"/>
 </statusbarpanel>
 
 </overlay>
