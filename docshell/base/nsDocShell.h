@@ -199,6 +199,11 @@ protected:
    nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
    PRBool                     mUpdateHistoryOnLoad;
    PRBool                     mInitialPageLoad;
+   // this flag is for bug #21358. a docshell may load many urls
+   // which don't result in new documents being created (i.e. a new content viewer)
+   // we want to make sure we don't call a on load event more than once for a given
+   // content viewer. 
+   PRBool                     mEODForCurrentDocument; 
 
    /* WEAK REFERENCES BELOW HERE.
    Note these are intentionally not addrefd.  Doing so will create a cycle.
