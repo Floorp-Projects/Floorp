@@ -391,14 +391,14 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative2
     PR_ASSERT( strlen(keySlotChars) == 65 );
     PR_ASSERT( strlen(fipsChars) == 65 );
     PR_ASSERT( strlen(fipsKeyChars) == 65 );
-    PK11_ConfigurePKCS11(   PL_strdup(manuChars),
-                            PL_strdup(libraryChars),
-                            PL_strdup(tokChars),
-                            PL_strdup(keyTokChars),
-                            PL_strdup(slotChars),
-                            PL_strdup(keySlotChars),
-                            PL_strdup(fipsChars),
-                            PL_strdup(fipsKeyChars),
+    PK11_ConfigurePKCS11(   manuChars,
+                            libraryChars,
+                            tokChars,
+                            keyTokChars,
+                            slotChars,
+                            keySlotChars,
+                            fipsChars,
+                            fipsKeyChars,
                             0, /* minimum pin length */
                             PR_FALSE /* password required */
                         );
