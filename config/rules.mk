@@ -606,8 +606,8 @@ endif
 endif # BeOS
 ifeq ($(OS_ARCH),OS2)
 ifdef OS2_PROGRAM_RESOURCE
-	rc -n -x2 -r $(OS2_PROGRAM_RESOURCE)
-	rc -n -x2 $(patsubst %.rc,%.res,$(OS2_PROGRAM_RESOURCE)) $@
+	rc -n -x2 -i $(subst /,\,$(srcdir)) -r $(subst /,\,$(OS2_PROGRAM_RESOURCE)) $(patsubst %.rc, %.res, $(notdir $(OS2_PROGRAM_RESOURCE)))
+	rc -n -x2 -i $(subst /,\,$(srcdir)) $(patsubst %.rc, %.res, $(notdir $(OS2_PROGRAM_RESOURCE))) $@
 endif # os2_prog_rsrc
 endif
 

@@ -208,7 +208,7 @@ sub update_makefiles {
         $top_srcdir = $ac_dots;
         $top_srcdir =~ s%/$%%;
       }
-    } elsif ($ac_given_srcdir =~ m%^/%) {
+    } elsif ($ac_given_srcdir =~ m%^/% or $ac_given_srcdir =~ m%^.:/%) {
       $srcdir     = "$ac_given_srcdir$ac_dir_suffix";
       $top_srcdir = "$ac_given_srcdir";
     } else {
@@ -246,14 +246,14 @@ sub update_makefiles {
     };
 
     while (<INFILE>) {
-      if (/\@[_a-zA-Z]*\@.*\@[_a-zA-Z]*\@/) {
-        #warn "Two defines on a line:$ac_file:$.:$_";
-        push @unhandled, $ac_file;
-        last;
-      }
+      #if (/\@[_a-zA-Z]*\@.*\@[_a-zA-Z]*\@/) {
+      #  #warn "Two defines on a line:$ac_file:$.:$_";
+      #  push @unhandled, $ac_file;
+      #  last;
+      #}
 
-      s/\@srcdir\@/$srcdir/;
-      s/\@top_srcdir\@/$top_srcdir/;
+      s/\@srcdir\@/$srcdir/g;
+      s/\@top_srcdir\@/$top_srcdir/g;
 
       if (/\@[_a-zA-Z]*\@/) {
         #warn "Unknown variable:$ac_file:$.:$_";

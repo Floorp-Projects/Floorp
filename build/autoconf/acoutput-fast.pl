@@ -132,7 +132,7 @@ foreach $ac_file (@makefiles) {
       $top_srcdir = $ac_dots;
       $top_srcdir =~ s%/$%%;
     }
-  } elsif ($ac_given_srcdir =~ m%^/%) {
+  } elsif ($ac_given_srcdir =~ m%^/% or $ac_given_srcdir =~ m%^.:/%) {
     $srcdir     = "$ac_given_srcdir$ac_dir_suffix";
     $top_srcdir = "$ac_given_srcdir";
   } else {

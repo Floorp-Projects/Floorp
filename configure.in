@@ -4347,11 +4347,9 @@ dnl Where the NSPR stuff gets installed: $DIST/{bin,lib,include}
 dnl 
 MOZ_NSPRENV_DIST=`pwd`/dist
 case "$target" in
-*-*-os2_emx)
-    MOZ_NSPRENV_DIST=`pwd -D`'/dist'
-    ;;
-*-*-os2_vacpp)
-    MOZ_NSPRENV_DIST="$ROOT"`pwd -D`'/dist'
+*-*-os2*)
+    MOZ_NSPRENV_DIST=`pwd -D | sed s/^.://`
+    MOZ_NSPRENV_DIST="$ROOT""$MOZ_NSPRENV_DIST/dist"
     ;;
 esac
 
