@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.4 2000/08/23 06:11:45 kvisco%ziplink.net Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.5 2000/08/26 04:41:12 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/08/23 06:11:45 $
+ * @version $Revision: 1.5 $ $Date: 2000/08/26 04:41:12 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -36,7 +36,7 @@
  *  Copies the given Node, using the owner Document to create all
  *  necessary new Node(s)
 **/
-Node* XMLDOMUtils::copyNode(Node* node, Document* owner) {
+Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* resolver) {
 
     if ( !node ) return 0;
 
@@ -61,9 +61,12 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner) {
         {
             Document* doc = (Document*)node;
             Document* newDoc = new Document();
+#ifdef MOZ_XSL
+            owner->addWrapper(newDoc, newDoc->getKey());
+#endif
             NodeList* nl = doc->getChildNodes();
             for (i = 0; i < nl->getLength(); i++) {
-                newDoc->appendChild(copyNode(nl->item(i), newDoc));
+                newDoc->appendChild(copyNode(nl->item(i), newDoc, resolver));
             }
             newNode = newDoc;
             break;
@@ -73,27 +76,39 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner) {
             newNode = owner->createDocumentFragment();
             NodeList* nl = node->getChildNodes();
             for (i = 0; i < nl->getLength(); i++) {
-                newNode->appendChild(copyNode(nl->item(i), owner));
+                newNode->appendChild(copyNode(nl->item(i), owner, resolver));
             }
             break;
         }
         case Node::ELEMENT_NODE :
         {
             Element* element = (Element*)node;
+#ifdef MOZ_XSL
+            String name, nameSpaceURI;
+            name = element->getNodeName();
+            resolver->getNameSpaceURI(name, nameSpaceURI);
+            Element* newElement = owner->createElementNS(nameSpaceURI, name);
+#else
             Element* newElement = owner->createElement(element->getNodeName());
+#endif
 
             //-- copy atts
             NamedNodeMap* attList = element->getAttributes();
             if ( attList ) {
                 for ( i = 0; i < attList->getLength(); i++ ) {
                     Attr* attr = (Attr*) attList->item(i);
+#ifdef MOZ_XSL
+                    resolver->getNameSpaceURI(attr->getName(), nameSpaceURI);
+                    newElement->setAttributeNS(nameSpaceURI, attr->getName(), attr->getValue());
+#else
                     newElement->setAttribute(attr->getName(), attr->getValue());
+#endif
                 }
             }
             //-- copy children
             NodeList* nl = element->getChildNodes();
             for (i = 0; i < nl->getLength(); i++) {
-                newElement->appendChild(copyNode(nl->item(i), owner));
+                newElement->appendChild(copyNode(nl->item(i), owner, resolver));
             }
             newNode = newElement;
             break;

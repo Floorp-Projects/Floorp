@@ -21,13 +21,14 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.h,v 1.5 2000/06/11 12:28:14 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XMLDOMUtils.h,v 1.6 2000/08/26 04:41:16 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * A utility class for use with XML DOM implementations
 **/
 #include "dom.h"
+#include "Expr.h"
 
 #ifndef TRANSFRMX_XMLDOMUTILS_H
 #define TRANSFRMX_XMLDOMUTILS_H
@@ -40,7 +41,7 @@ public:
      *  Copies the given Node, using the owner Document to create all
      *  necessary new Node(s)
     **/
-   static Node* copyNode(Node* node, Document* owner);
+   static Node* copyNode(Node* node, Document* owner, NamespaceResolver* resolver);
 
     /**
      *  Appends the value of the given Node to the target String
