@@ -1251,14 +1251,17 @@ BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* 
     }
     
     //  remove it from the tree
-    if (draggedParent)
-      draggedParent->RemoveChildAt(existingIndex, PR_TRUE);
-    BookmarkRemoved(draggedParent, draggedNode, false);
-    
-    //  insert into new position
-    if (proposedParent)
-      proposedParent->InsertChildAt(draggedNode, index, PR_TRUE, PR_TRUE);
-    BookmarkAdded(proposedParent, draggedNode, false);
+    if (draggedNode != proposedParent)		// paranoia. This should never happen
+    {
+      if (draggedParent)
+        draggedParent->RemoveChildAt(existingIndex, PR_TRUE);
+      BookmarkRemoved(draggedParent, draggedNode, false);
+      
+      //  insert into new position
+      if (proposedParent)
+        proposedParent->InsertChildAt(draggedNode, index, PR_TRUE, PR_TRUE);
+      BookmarkAdded(proposedParent, draggedNode, false);
+    }
   }
 
   FlushBookmarks();
