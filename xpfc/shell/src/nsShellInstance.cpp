@@ -36,7 +36,6 @@
 #include "nsIAppShell.h"
 #include "nsIWebViewerContainer.h"
 
-#include "nsIPref.h"
 #include "nsStreamManager.h"
 #include "nsXPFCToolbarManager.h"
 
@@ -58,6 +57,30 @@
 #elif NS_UNIX
 #include <Xm/Xm.h>
 #endif
+
+#ifdef XP_MAC
+#include "nsIPref.h"
+#define NS_IMPL_IDS
+#else
+#define NS_IMPL_IDS
+#include "nsIPref.h"
+#endif
+
+#include "nsRepository.h"
+#include "nsWidgetsCID.h"
+#include "nsGfxCIID.h"
+#include "nsViewsCID.h"
+#include "nsPluginsCID.h"
+
+#include "nsIBrowserWindow.h"
+#include "nsIWebShell.h"
+#include "nsIDocumentLoader.h"
+#include "nsIThrobber.h"
+
+#include "nsParserCIID.h"
+#include "nsDOMCID.h"
+#include "nsLayoutCID.h"
+#include "nsINetService.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -237,126 +260,135 @@ void nsShellInstance::SetApplicationShell(nsIApplicationShell * aApplicationShel
 //     XP of course.
 nsresult nsShellInstance::RegisterFactories()
 {
-  // hardcode names of dll's
-#ifdef NS_WIN32
-  #define GFXWIN_DLL "raptorgfxwin.dll"
+#ifdef XP_PC
   #define WIDGET_DLL "raptorwidget.dll"
+  #define GFXWIN_DLL "raptorgfxwin.dll"
   #define VIEW_DLL   "raptorview.dll"
-  #define PARSER_DLL "raptorhtmlpars.dll"
-  #define PREF_DLL   "xppref32.dll"
   #define WEB_DLL    "raptorweb.dll"
   #define PLUGIN_DLL "raptorplugin.dll"
-  #define NETLIB_DLL "netlib.dll"  
+  #define PREF_DLL   "xppref32.dll"
+  #define PARSER_DLL "raptorhtmlpars.dll"
   #define DOM_DLL    "jsdom.dll"
   #define LAYOUT_DLL "raptorhtml.dll"
+  #define NETLIB_DLL "netlib.dll"
 #else
-  #define GFXWIN_DLL "libgfxunix.so"
+#ifdef XP_MAC
+  #include "nsMacRepository.h"
+#else
   #define WIDGET_DLL "libwidgetunix.so"
+  #define GFXWIN_DLL "libgfxunix.so"
   #define VIEW_DLL   "libraptorview.so"
-  #define PARSER_DLL "libraptorhtmlpars.so"
-  #define PREF_DLL   "libpref.so"
-  #define WEB_DLL    "libraptorweb.so"
+  #define WEB_DLL    "libraptorwebwidget.so"
   #define PLUGIN_DLL "raptorplugin.so"
-  #define NETLIB_DLL "libnetlib.so"
+  #define PREF_DLL   "libpref.so"
+  #define PARSER_DLL "libraptorhtmlpars.so"
   #define DOM_DLL    "libjsdom.so"
   #define LAYOUT_DLL "libraptorhtml.so"
+  #define NETLIB_DLL "netlib.so"
+#endif
 #endif
 
+// Class ID's
+static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
+static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
+static NS_DEFINE_IID(kCLabelCID, NS_LABEL_CID);
+static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
+static NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
+static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
+static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
+static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
+static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
+static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
+static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
+static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
+static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kCCheckButtonIID, NS_CHECKBUTTON_CID);
+static NS_DEFINE_IID(kCChildIID, NS_CHILD_CID);
+static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
+static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
+static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
+static NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
+static NS_DEFINE_IID(kCBlenderIID, NS_BLENDER_CID);
+static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
+static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
+static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
+static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
+static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
+static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
+static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+static NS_DEFINE_IID(kCDOMNativeObjectRegistry, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
+static NS_DEFINE_IID(kCHTMLDocument, NS_HTMLDOCUMENT_CID);
+static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
+static NS_DEFINE_IID(kCHTMLImageElementFactory, NS_HTMLIMAGEELEMENTFACTORY_CID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
-  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-  nsRepository::RegisterFactory(kIWidgetIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+static NS_DEFINE_IID(kCImageButtonCID, NS_IMAGEBUTTON_CID);
+static NS_DEFINE_IID(kCToolbarCID, NS_TOOLBAR_CID);
+static NS_DEFINE_IID(kCToolbarManagerCID, NS_TOOLBARMANAGER_CID);
+static NS_DEFINE_IID(kCToolbarItemHolderCID, NS_TOOLBARITEMHOLDER_CID);
+static NS_DEFINE_IID(kCPopUpMenuCID, NS_POPUPMENU_CID);
+static NS_DEFINE_IID(kCMenuButtonCID, NS_MENUBUTTON_CID);
+static NS_DEFINE_IID(kCMenuBarCID, NS_MENUBAR_CID);
+static NS_DEFINE_IID(kCMenuCID, NS_MENU_CID);
+static NS_DEFINE_IID(kCMenuItemCID, NS_MENUITEM_CID);
 
-  // register graphics classes
-  static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
-  static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
-  static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
-  static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
-  static NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
-  static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+nsRepository::RegisterFactory(kLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCHScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCDialogCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCLabelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCCheckButtonIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCChildIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCToolkitCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCRegionIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCBlenderIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCViewManagerCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kWebShellCID, WEB_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCDOMScriptObjectFactory, DOM_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCDOMNativeObjectRegistry, DOM_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCHTMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCImageDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCHTMLImageElementFactory, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
-  nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCRegionIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCImageButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCToolbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCToolbarManagerCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCToolbarItemHolderCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCPopUpMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCMenuButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCMenuBarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+nsRepository::RegisterFactory(kCMenuItemCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
-  // register widget classes
-  static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
-  static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
-  static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
-  static NS_DEFINE_IID(kCLabelCID, NS_LABEL_CID);
-  static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
-  static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-  static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
-  static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
-  static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
-  static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
-  static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
-  static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
-  static NS_DEFINE_IID(kCRadioGroupCID, NS_RADIOGROUP_CID);
-  static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-  static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
-  static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
-  static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
-  static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-  static NS_DEFINE_IID(kCParserNodeCID, NS_PARSER_NODE_IID);
-  static NS_DEFINE_IID(kCTabWidgetCID, NS_TABWIDGET_CID);
-  static NS_DEFINE_IID(kDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
-  static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
-  static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-  static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
-  static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
-  static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
-  static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
-  static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-  static NS_DEFINE_IID(kCDOMNativeObjectRegistry, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
-  static NS_DEFINE_IID(kCHTMLDocument, NS_HTMLDOCUMENT_CID);
-  static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
-  static NS_DEFINE_IID(kCHTMLImageElementFactory, NS_HTMLIMAGEELEMENTFACTORY_CID);
-
-  nsRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCRadioGroupCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCTabWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCParserNodeCID, PARSER_DLL, PR_FALSE, PR_FALSE);
-
-  nsRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
-
-  nsRepository::RegisterFactory(kDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kWebShellCID, WEB_DLL, PR_FALSE, PR_FALSE);
-  
-  nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
-
-  nsRepository::RegisterFactory(kCViewManagerCID, VIEW_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
-
-  nsRepository::RegisterFactory(kCDOMScriptObjectFactory, DOM_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCDOMNativeObjectRegistry, DOM_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCHTMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCImageDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCHTMLImageElementFactory, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-
-  nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
-  nsRepository::RegisterFactory(kLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCDialogCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCLabelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCToolkitCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+static NS_DEFINE_IID(kCParserNodeCID, NS_PARSER_NODE_IID);
+nsRepository::RegisterFactory(kCParserNodeCID, PARSER_DLL, PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }
