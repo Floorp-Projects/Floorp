@@ -48,12 +48,12 @@ class newsTestDriver
 public:
 	newsTestDriver();
 	virtual ~newsTestDriver();
-	nsresult RunDriver(nsFileSpec &folder); 
+	nsresult RunDriver();
+    nsresult GetDatabase();
+    nsresult GetPath(nsFileSpec& aPathName);
 
 protected:
-        nsIMessage      *m_newMsgHdr;		
-        nsNewsDatabase  *m_newsDB;
-        char            *m_newsgroupName;
+    nsIMsgDatabase   *m_newsDB;
 };
 
 newsTestDriver::newsTestDriver()
@@ -71,29 +71,89 @@ newsTestDriver::~newsTestDriver()
 #endif
 }
 
-nsresult newsTestDriver::RunDriver(nsFileSpec &folder)
+nsresult newsTestDriver::RunDriver()
 {
-	nsresult status = NS_OK;
-
-	m_newsgroupName = nsCRT::strdup(folder);
-
-#ifdef DEBUG
-    printf("m_newsgroupName == %s\n", m_newsgroupName);
-#endif
-    
     nsresult rv = NS_OK;
-    nsIMsgDatabase *newsDB = nsnull;
-    rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDB);
-    if (NS_SUCCEEDED(rv) && newsDB)
-    {
-        rv = newsDB->Open(folder, PR_TRUE, (nsIMsgDatabase **) &m_newsDB, PR_FALSE);
-        newsDB->Release();
+
+    rv = GetDatabase();
+
+    if (NS_SUCCEEDED(rv) && m_newsDB) {
+        nsIMessage		*newMsgHdr = nsnull;
+
+        m_newsDB->CreateNewHdr(1, &newMsgHdr);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("m_newsDB->CreateNewHdr() failed\n");
+#endif
+            return rv;
+        }
+
+        newMsgHdr->SetSubject("hello, world");
+        newMsgHdr->SetFlags(MSG_FLAG_READ);
+        newMsgHdr->SetAuthor("zelig@allen.com");
+
+        rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("m_newsDB->AddNewHdrToDB() failed\n");
+#endif
+            return rv;           
+        }
+        
+        newMsgHdr->Release();
+        newMsgHdr = nsnull;
+
+        m_newsDB->Close(PR_TRUE);
     }
-    else {
-	printf("CreateInstance failed.  %d\n", rv);
+
+    NS_RELEASE(m_newsDB);
+    m_newsDB = nsnull;
+    
+    return rv;
+}
+
+nsresult newsTestDriver::GetPath(nsFileSpec& aPathName)
+{
+    /* turn news://news.mozilla.org/netscape.public.mozilla.unix 
+       into /tmp/mozillanews/news.mozilla.org/netscape.public.mozilla.unix 
+    */
+  aPathName = "/tmp/mozillanews/nnn";
+  return NS_OK;
+}
+
+nsresult newsTestDriver::GetDatabase()
+{
+    if (m_newsDB == nsnull) {
+        nsNativeFileSpec path;
+		nsresult rv = GetPath(path);
+		if (NS_FAILED(rv)) return rv;
+
+        nsresult newsDBOpen = NS_OK;
+        nsIMsgDatabase *newsDBFactory = nsnull;
+
+        rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
+        if (NS_SUCCEEDED(rv) && newsDBFactory) {
+                newsDBOpen = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &m_newsDB, PR_FALSE);
+#ifdef DEBUG
+                if (NS_SUCCEEDED(newsDBOpen)) {
+                    printf ("newsDBFactory->Open() succeeded\n");
+                }
+                else {
+                    printf ("newsDBFactory->Open() failed\n");
+                }
+#endif
+                NS_RELEASE(newsDBFactory);
+                newsDBFactory = nsnull;
+                return rv;
+        }
+#ifdef DEBUG
+        else {
+            printf("nsComponentManager::CreateInstance(kCNewsDB,...) failed\n");
+        }
+#endif
     }
     
-    return status;
+    return NS_OK;
 }
 
 int main()
@@ -101,10 +161,10 @@ int main()
     newsTestDriver * driver = new newsTestDriver();
 	if (driver)
 	{
-        nsFileSpec foo("/tmp/mozillanews/foo");
-		driver->RunDriver(foo);
+		driver->RunDriver();
 		// when it kicks out...it is done....so delete it...
 		delete driver;
+        driver = nsnull;
 	}
 	// shut down:
     return 0;
