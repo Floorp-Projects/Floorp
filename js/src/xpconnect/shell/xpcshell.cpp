@@ -199,7 +199,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (*c == '\r')
             *c = '\n';
 #endif
-    fputs(bytes, stderr);
+    fputs(bytes, gOutFile);
     nsAllocator::Free(bytes);
     return JS_TRUE;
 }
