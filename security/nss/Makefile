@@ -54,6 +54,10 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
+ifeq ($(OS_TARGET),WINCE)
+DIRS	= lib	# omit cmd since wince has no command line shell
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
