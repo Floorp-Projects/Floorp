@@ -15,31 +15,39 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#######################################################################
-# (1) Include manifest file                                           #
-#######################################################################
+DEPTH = ../../../../..
 
-include manifest.mn
+MODULE_NAME = Package
 
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
+CPPSRCS =	Array.cpp		\
+		Constructor.cpp		\
+		Field.cpp		\
+		Method.cpp		\
+		$(NULL)
+
+
+HEADER_GEN = 	java.lang.String			\
+		java.lang.Class				\
+		java.lang.ClassLoader			\
+		java.lang.Compiler			\
+		java.lang.Character			\
+		java.lang.Double			\
+		java.lang.Float				\
+		java.lang.Math				\
+		java.lang.Runtime			\
+		java.lang.SecurityManager		\
+		java.lang.System			\
+		java.util.Properties			\
+		java.io.InputStream			\
+		java.io.PrintStream			\
+		java.lang.Thread			\
+		java.lang.Throwable			\
+		java.lang.reflect.Field			\
+		java.lang.reflect.Method		\
+		java.lang.reflect.Constructor		\
+		java.lang.reflect.Array			\
+		$(NULL)
 
 include $(DEPTH)/config/config.mk
 
-#######################################################################
-# (3) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
-
-
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
-
 include $(DEPTH)/config/rules.mk
-
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
-
-

@@ -15,33 +15,20 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#######################################################################
-# (1) Include manifest file                                           #
-#######################################################################
+DEPTH = ..
 
-include manifest.mn
+LIBRARY_NAME = Package
 
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
+DIRS = java
 
 include $(DEPTH)/config/config.mk
 
-#######################################################################
-# (3) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
-
-include config.mk
-
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
+OBJS = $(wildcard $(DEPTH)/$(OBJDIR)/Package/*$(OBJ_SUFFIX))
+LDFLAGS += $(EF_LIBS) $(NSPR_LIBS)
 
 include $(DEPTH)/config/rules.mk
 
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
+program:: $(SHARED_LIBRARY)
 
-include rules.mk
-
+clobber::
+	rm -r -f $(HEADER_GEN_DIR)

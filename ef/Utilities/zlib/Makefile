@@ -15,33 +15,38 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#######################################################################
-# (1) Include manifest file                                           #
-#######################################################################
+DEPTH = ../..
 
-include manifest.mn
+MODULE_NAME = EF
 
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
+CSRCS = 	adler32.c			\
+		compress.c			\
+		crc32.c				\
+		deflate.c			\
+		gzio.c				\
+		infblock.c			\
+		infcodes.c			\
+		inffast.c			\
+		inflate.c			\
+		inftrees.c			\
+		infutil.c			\
+		trees.c				\
+		uncompr.c			\
+		zutil.c				\
+		$(NULL)
+
+LOCAL_EXPORTS = deflate.h			\
+		infblock.h			\
+		infcodes.h			\
+		inffast.h			\
+		inftrees.h			\
+		infutil.h			\
+		zconf.h				\
+		zlib.h				\
+		zutil.h				\
+		$(NULL)
+
 
 include $(DEPTH)/config/config.mk
 
-#######################################################################
-# (3) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
-
-
-
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
-
 include $(DEPTH)/config/rules.mk
-
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
-
-
-

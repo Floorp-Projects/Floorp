@@ -15,33 +15,36 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#######################################################################
-# (1) Include manifest file                                           #
-#######################################################################
+DEPTH = ../..
 
-include manifest.mn
+CPPSRCS = 		Breakpoints.cpp			\
+				CommandLine.cpp			\
+				Commands.cpp			\
+				DataOutput.cpp			\
+				Debugee.cpp				\
+				main.cpp				\
+				MonitorExpression.cpp	\
+				Symbols.cpp				\
+				Win32Util.cpp			\
+				CatchAssert.cpp			\
+				$(NULL)
 
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
+LIBRARIES    =	Readline 				\
+				DebuggerChannel 		\
+				DisassembleX86			\
+				libnspr21				\
+				$(NULL)
+
+PROGRAM = furmon
 
 include $(DEPTH)/config/config.mk
 
-#######################################################################
-# (3) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
-
-include config.mk
-
-
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
+ifeq ($(OS_ARCH), WINNT)
+LDFLAGS += user32.lib kernel32.lib imagehlp.lib 
+#$(DIST)/lib/Readline.lib $(DIST)/lib/DebuggerChannel.lib $(DIST)/lib/DisassembleX86.lib $(NSPR_LIBS) 
+endif
 
 include $(DEPTH)/config/rules.mk
 
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
+libs:: $(PROGRAM)
 
-include rules.mk

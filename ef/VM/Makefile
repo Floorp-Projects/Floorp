@@ -15,33 +15,24 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#######################################################################
-# (1) Include manifest file                                           #
-#######################################################################
+DEPTH = ..
 
-include manifest.mn
+IMPORTS =	nspr20/19971028 \
+		$(NULL)
 
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
+LIBRARY_NAME = EF
+
+LIBRARIES = DisassembleX86 DebuggerChannel $(NULL)
 
 include $(DEPTH)/config/config.mk
 
-#######################################################################
-# (3) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
-
-include config.mk
-
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
+OBJS = $(wildcard $(DEPTH)/$(OBJDIR)/EF/*$(OBJ_SUFFIX))
+LDFLAGS += $(NSPR_LIBS)
 
 include $(DEPTH)/config/rules.mk
 
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
-
-include rules.mk
-
+ifeq ($(OS_ARCH),WINNT)
+libs:: $(SHARED_LIBRARY)
+else
+libs:: $(LIBRARY)
+endif

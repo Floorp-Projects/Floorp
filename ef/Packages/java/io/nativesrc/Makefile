@@ -15,31 +15,24 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#######################################################################
-# (1) Include manifest file                                           #
-#######################################################################
+DEPTH = ../../../..
 
-include manifest.mn
+MODULE_NAME = Package
 
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
+
+CPPSRCS =	File.cpp			\
+		FileDescriptor.cpp		\
+		FileInputStream.cpp		\
+		FileOutputStream.cpp		\
+		$(NULL)
+
+
+HEADER_GEN = 	java.io.File			\
+		java.io.FileDescriptor		\
+		java.io.FileInputStream 	\
+		java.io.FileOutputStream	\
+		$(NULL)
 
 include $(DEPTH)/config/config.mk
 
-#######################################################################
-# (3) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
-
-
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
-
 include $(DEPTH)/config/rules.mk
-
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
-
-
