@@ -43,7 +43,7 @@ if (@ARGV) {
 }
 
 my $cookie = $ENV{LTERM_COOKIE};           # XMLTerm cookie
-print "\e{S$cookie\a";                     # HTML stream escape sequence
+print "\e{S$cookie\012";                     # HTML stream escape sequence
 print "<TABLE FRAME=none BORDER=0>";
 print "<COLGROUP COLSPAN=$ncols WIDTH=1*>";
 

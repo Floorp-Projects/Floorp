@@ -1017,11 +1017,13 @@ static int ltermProcessXTERMSequence(struct lterms *lts, const UNICHAR *buf,
 
 /** Processes XMLTerm sequence (a special case of Escape sequence processing)
  * XMLterm escape sequences are of the form
- *   ESC { Pm C Pt BEL
+ *   ESC { Pm C Pt LF
  *  where Pm denotes multiple numeric arguments separated by semicolons,
- *  character C is a not a digit and not a semicolon, and
- *  text parameter Pt may be a null string.
+ *  character C is a not a digit and not a semicolon,
+ *  text parameter Pt may be a null string, and
+ *  LF is the linefeed character.
  *  Omitted numeric parameters are assumed to be zero.
+ *  Any carriage return character preceding the terminating LF is discarded.
  * @return 0 on success and -1 on error.
  */
 static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
@@ -1104,7 +1106,7 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
 
   /* Process string parameter */
   strLength = 0;
-  while ((offset < count) && (buf[offset] != U_BEL)) {
+  while ((offset < count) && (buf[offset] != U_LINEFEED)) {
     if (strLength < MAXSTRINGPARAM) {
       paramCString[strLength] = buf[offset];
       paramString[strLength++] = buf[offset];
@@ -1122,6 +1124,10 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
     return 1;
   }
 
+  /* Discard any CR character preceding the terminating LF character */
+  if ((strLength > 0) && (paramString[strLength-1] == U_CRETURN))
+    strLength--;
+
   /* Insert terminating NULL character in string */
   paramCString[strLength] = U_NUL;
   paramString[strLength] = U_NUL;
@@ -1138,6 +1144,20 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
 
   switch (termChar) {
   int streamOpcodes;
+
+  case U_A_CHAR:    /* Send XMLterm device attributes */
+    LTERM_LOG(ltermProcessXMLTermSequence,52,("Sending device attributes\n"));
+    if (ltermSendChar(lts, "\033{?", 3) != 0)
+      return -1;
+
+    if (strlen(lts->cookie) > 0) {
+      if (ltermSendChar(lts, lts->cookie, strlen(lts->cookie)) != 0)
+        return -1;
+    }
+
+    if (ltermSendChar(lts, "\n", 1) != 0)
+      return -1;
+    return 0;
 
   case U_D_CHAR:    /* Set debugging messageLevel/search-string */
     LTERM_LOG(ltermProcessXMLTermSequence,52,("Setting message level etc.\n"));

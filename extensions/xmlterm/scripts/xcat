@@ -88,7 +88,7 @@ foreach my $url (@ARGV) {                 # for each argument
         ($extension eq ".jpg")) {
 ##        print STDERR "Image file\n";
             
-        print "\e{S$cookie\a";             # HTML stream escape sequence
+        print "\e{S$cookie\n";             # HTML stream escape sequence
         print "<IMG SRC='$scheme://${host}$pathname'>";
         print "\000";                      # Terminate HTML stream
 
@@ -130,7 +130,7 @@ foreach my $url (@ARGV) {                 # for each argument
             my $clickcmd =
                  qq%onClick="return HandleEvent(event,'click','textlink',-\#,'$urlstr')"%;
 
-            print "\e{S$cookie\a";             # HTML stream escape sequence
+            print "\e{S$cookie\n";             # HTML stream escape sequence
             if ($nurl >= 2) {
                 print "<img src='$urlvals[1]' $clickcmd><br>";
             }
@@ -142,7 +142,7 @@ foreach my $url (@ARGV) {                 # for each argument
               (($scheme eq "file") && (($extension eq ".htm") ||
                                        ($extension eq ".html")) ) ) {
 ##        print STDERR "IFRAME\n";
-        print "\e{S$cookie\a";             # HTML stream escape sequence
+        print "\e{S$cookie\n";             # HTML stream escape sequence
         print "<iframe frameborder=0 width='100%' height='$height' src='$scheme://${host}$pathname'></iframe>";
         print "<div class='beginner'>";
         print "Use shift-key + Home/End/PageUp/PageDown to scroll nested IFrame.";
@@ -153,7 +153,7 @@ foreach my $url (@ARGV) {                 # for each argument
 ##        print STDERR "Text file\n";
 
         open INFILE, $pathname or next;
-        print "\e{S$cookie\a";             # HTML stream escape sequence
+        print "\e{S$cookie\n";             # HTML stream escape sequence
         print "<pre>";
 
         while (<INFILE>) {
