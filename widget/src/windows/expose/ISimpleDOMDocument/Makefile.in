@@ -49,6 +49,7 @@ OS_LIBS		+= \
 MIDL_GENERATED_FILES = \
 		../../ISimpleDOMDocument.h \
 		../../ISimpleDOMDocument_iid.h \
+		ISimpleDOMDocument.h \
 		ISimpleDOMDocument_p.c \
 		ISimpleDOMDocument_i.c \
 		dlldata.c \
@@ -59,6 +60,8 @@ SRCDIR_CSRCS	= $(addprefix $(srcdir)/,$(CSRCS))
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen $(CSRCS) $(SRCDIR_CSRCS)
 
 FORCE_SHARED_LIB = 1
+
+LOCAL_INCLUDES	= -I.
 
 include $(topsrcdir)/config/rules.mk
 
