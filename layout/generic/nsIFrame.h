@@ -360,32 +360,14 @@ public:
                            const nsStyleStruct*& aStyleStruct) const = 0;
 
   /**
-   * Re-resolve style context and either reset or re-resolve children.
-   * This is called in response to style changes that require context
-   * re-resolution.
-   * This is also used when style context parentage has to change for 
-   * reflow purposes. 
-   * When used for reflow, changelist and return change may be nsnull
-   * aLocalChange is provided only for subclasses that override this
-   * method to capture local change information
-   *
-   * When local style context changes, call CaptureStyleChageFor
-   * to capture change data into change list. Pass local change
-   * to children as parent change
-   */
-  NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
-                                    nsIStyleContext* aParentContext,
-                                    PRInt32 aParentChange,
-                                    nsStyleChangeList* aChangeList,
-                                    PRInt32* aLocalChange) = 0;
-
-  /**
    * These methods are to access any additional style contexts that
    * the frame may be holding. These are contexts that are children
    * of the frame's primary context and are NOT used as style contexts
    * for any child frames. These contexts also MUST NOT have any child 
    * contexts whatsoever. If you need to insert style contexts into the
    * style tree, then you should create pseudo element frames to own them
+   * The indicies must be consecutive and implementations MUST return an 
+   * NS_ERROR_INVALID_ARG if asked for an index that is out of range.
    */
   NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext** aStyleContext) const = 0;
@@ -699,6 +681,19 @@ public:
    * Set the verify-tree enable flag.
    */
   static NS_LAYOUT void SetVerifyTreeEnable(PRBool aEnabled);
+
+  /**
+   * See if style tree verification is enabled. To enable style tree 
+   * verification add "styleverifytree:1" to your NSPR_LOG_MODULES 
+   * environment variable (any non-zero debug level will work). Or, 
+   * call SetVerifyStyleTreeEnable with PR_TRUE.
+   */
+  static NS_LAYOUT PRBool GetVerifyStyleTreeEnable();
+
+  /**
+   * Set the verify-style-tree enable flag.
+   */
+  static NS_LAYOUT void SetVerifyStyleTreeEnable(PRBool aEnabled);
 
   /**
    * The frame class and related classes share an nspr log module
