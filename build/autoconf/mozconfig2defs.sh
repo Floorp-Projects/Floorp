@@ -38,8 +38,8 @@ mk_add_options() {
   for _opt
   do
     # Escape shell characters, space, tab, dollar, quote, backslash,
-    # and substitute '@<word>@' with '$(<word)'.
-    echo $_opt | sed -e 's/\([\ \	\$\"\\]\)/\\\\\1/g; s/@\([^@]*\)@/\$(\1)/g;'
+    # and substitute '@<word>@' with '$(<word>)'.
+    echo $_opt | sed -e 's/\([\"\\]\)/\\\1/g; s/@\([^@]*\)@/\$(\1)/g;'
   done
 }
 
