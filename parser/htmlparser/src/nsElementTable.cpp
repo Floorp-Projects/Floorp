@@ -492,7 +492,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
       /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-      /*parent,incl,exclgroups*/          kDLChild, kFlowEntity-kHeading, kNone,	
+      /*parent,incl,exclgroups*/          kDLChild|kInlineEntity, kFlowEntity-kHeading, kNone,	// dt's parent group is inline - bug 65467
       /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
 
@@ -883,7 +883,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          (kHeadMisc|kSpecial), (kFlowEntity|kInlineEntity|kSelf), kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNoStyleLeaksOut,kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown);
 
     Initialize( 
@@ -1592,16 +1592,18 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
             gHTMLElements[aTag].IsBlockEntity() ||
             (kHeading==gHTMLElements[aTag].mParentBits));
     if(!result) {
-      // NOBR is a block closure - Ref. Bug# 24462
-      // DIR is a block closure -- Ref. Bug# 25845
-      // TD is a block closure   - Ref. Bug# 27490
-      // TR is a block closure   - Ref. Bug# 26488
+      // NOBR is a block closure   - Ref. Bug# 24462
+      // DIR is a block closure    - Ref. Bug# 25845
+      // TD is a block closure     - Ref. Bug# 27490
+      // TR is a block closure     - Ref. Bug# 26488
+      // OBJECT is a block closure - Ref. Bug# 88992
 
-      static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,
-                                    //eHTMLTag_dd,eHTMLTag_dt, TESTING!!!! DONT SHIP THIS! WHY ARE THESE HERE?
-                                    eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr,
-                                    /* eHTMLTag_tfoot, eHTMLTag_thead,*/
-                                    eHTMLTag_nobr,eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul,eHTMLTag_dir};
+      static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,
+                                    eHTMLTag_td,eHTMLTag_th,
+                                    eHTMLTag_tr,eHTMLTag_caption,
+                                    eHTMLTag_object,eHTMLTag_ol,
+                                    eHTMLTag_ul,eHTMLTag_optgroup,
+                                    eHTMLTag_nobr,eHTMLTag_dir};
 
       result=FindTagInSet(aTag,gClosers,sizeof(gClosers)/sizeof(eHTMLTag_body));
     }
@@ -2065,7 +2067,7 @@ PRBool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,eHTMLTags aChildTag
  * 
  * @update	gess 10.17.2000
  * @param 
- * @return
+ * @return  
  */
 eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex) const{
   eHTMLTags result=eHTMLTag_unknown;

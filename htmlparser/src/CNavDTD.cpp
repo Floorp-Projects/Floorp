@@ -3149,12 +3149,15 @@ nsresult CNavDTD::CloseBody(const nsIParserNode *aNode){
  */
 nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
   static eHTMLTags gTableElements[]={eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,
-                                     eHTMLTag_td,eHTMLTag_th,eHTMLTag_col,
-                                     eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_colgroup};
+                                     eHTMLTag_tfoot,eHTMLTag_thead,
+                                     eHTMLTag_col,eHTMLTag_colgroup};
   nsresult result=NS_OK;
   if(!(mFlags & NS_PARSER_FLAG_HAS_OPEN_FORM)) { // discard nested forms - bug 72639
-    
-    if(!FindTagInSet(mBodyContext->Last(),gTableElements,sizeof(gTableElements)/sizeof(eHTMLTag_unknown))) {
+       
+    // Check if the parent is a table, tbody, thead, tfoot, tr, col or
+    // colgroup. If so, treat form as a leaf content. [ Ex. bug 92530 ]
+    if(!FindTagInSet(mBodyContext->Last(),gTableElements,
+                     sizeof(gTableElements)/sizeof(eHTMLTag_unknown))) {
       mFlags |= NS_PARSER_FLAG_IS_FORM_CONTAINER;
     }
 
@@ -3413,6 +3416,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
       }
       break;
        
+    case eHTMLTag_iframe: // Bug 84491 
     case eHTMLTag_noframes:
       done=PR_FALSE;
       if(mFlags & NS_PARSER_FLAG_FRAMES_ENABLED) {
@@ -3491,6 +3495,7 @@ CNavDTD::CloseContainer(const nsCParserNode *aNode,eHTMLTags aTarget,PRBool aClo
       result=CloseFrameset(aNode); 
       break;
     
+    case eHTMLTag_iframe:
     case eHTMLTag_noscript:
     case eHTMLTag_noframes:
       // switch from alternate content state to regular state

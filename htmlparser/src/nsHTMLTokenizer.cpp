@@ -743,7 +743,12 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         
         //XXX - Find a better soution to record content
         //Added _plaintext to fix bug 46054.
-        if((eHTMLTag_textarea==theTag || eHTMLTag_xmp==theTag || eHTMLTag_plaintext==theTag || eHTMLTag_noscript==theTag) && !mRecordTrailingContent) {
+        if((theTag == eHTMLTag_textarea  ||
+            theTag == eHTMLTag_xmp       || 
+            theTag == eHTMLTag_plaintext || 
+            theTag == eHTMLTag_noscript  ||
+            theTag == eHTMLTag_noframes) && 
+            !mRecordTrailingContent) {
           mRecordTrailingContent=PR_TRUE;
         }
           
@@ -813,10 +818,12 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
     
     if(NS_SUCCEEDED(result)) {
       eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
-      if(((theTag==eHTMLTag_textarea)   || 
-          (theTag==eHTMLTag_xmp)        || 
-          (theTag==eHTMLTag_plaintext)  || 
-          (theTag==eHTMLTag_noscript))  && mRecordTrailingContent) {
+      if((theTag == eHTMLTag_textarea  || 
+          theTag == eHTMLTag_xmp       || 
+          theTag == eHTMLTag_plaintext || 
+          theTag == eHTMLTag_noscript  ||
+          theTag == eHTMLTag_noframes) && 
+          mRecordTrailingContent) {
         mRecordTrailingContent=PR_FALSE;
       }
     }
