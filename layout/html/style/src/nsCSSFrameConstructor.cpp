@@ -4859,13 +4859,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     isReplaced = PR_TRUE;
     processChildren = PR_TRUE;
   }
-  else if (nsHTMLAtoms::label == aTag) {
-    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-    }
-    rv = NS_NewLabelFrame(aPresShell, &newFrame, isAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0);
-    processChildren = PR_TRUE;
-  }
   else if (nsHTMLAtoms::isindex == aTag) {
     if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);

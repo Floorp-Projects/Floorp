@@ -2556,7 +2556,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
                 presContext->GetEventStateManager(getter_AddRefs(esm));
 
                 nsIContent* content = NS_STATIC_CAST(nsIContent*, this);
-                esm->UnregisterAccessKey(nsnull, content, aOldValue.First());
+                esm->UnregisterAccessKey(content, aOldValue.First());
             }
         }
     }

@@ -3953,7 +3953,7 @@ nsEventStateManager::EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK)
 // Access Key Registration
 //-------------------------------------------
 NS_IMETHODIMP
-nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, PRUint32 aKey)
+nsEventStateManager::RegisterAccessKey(nsIContent* aContent, PRUint32 aKey)
 {
   if (!mAccessKeys) {
     mAccessKeys = new nsSupportsHashtable();
@@ -3962,15 +3962,7 @@ nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, 
     }
   }
 
-  nsCOMPtr<nsIContent> content;
-  if (!aContent) {
-    aFrame->GetContent(getter_AddRefs(content));
-  }
-  else {
-    content = aContent;
-  }
-
-  if (content) {
+  if (aContent) {
     PRUnichar accKey = nsCRT::ToLower((char)aKey);
 
     nsVoidKey key(NS_INT32_TO_PTR(accKey));
@@ -3979,36 +3971,29 @@ nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, 
     nsCOMPtr<nsIContent> oldContent = dont_AddRef(NS_STATIC_CAST(nsIContent*,  mAccessKeys->Get(&key)));
     NS_ASSERTION(!oldContent, "Overwriting accesskey registration");
 #endif
-    mAccessKeys->Put(&key, content);
+    mAccessKeys->Put(&key, aContent);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, PRUint32 aKey)
+nsEventStateManager::UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey)
 {
   if (!mAccessKeys) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContent> content;
-  if (!aContent) {
-    aFrame->GetContent(getter_AddRefs(content));
-  }
-  else {
-    content = aContent;
-  }
-  if (content) {
+  if (aContent) {
     PRUnichar accKey = nsCRT::ToLower((char)aKey);
 
     nsVoidKey key(NS_INT32_TO_PTR(accKey));
 
     nsCOMPtr<nsIContent> oldContent = dont_AddRef(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
 #ifdef DEBUG_jag
-    NS_ASSERTION(oldContent == content, "Trying to unregister wrong content");
+    NS_ASSERTION(oldContent == aContent, "Trying to unregister wrong content");
 #endif
-    if (oldContent != content)
+    if (oldContent != aContent)
       return NS_OK;
 
     mAccessKeys->Remove(&key);

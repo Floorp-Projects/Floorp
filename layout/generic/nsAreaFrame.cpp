@@ -127,9 +127,9 @@ nsAreaFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
   if (esm) {
     PRUint32 key = accessKey.First();
     if (aDoReg)
-      rv = esm->RegisterAccessKey(nsnull, mContent, key);
+      rv = esm->RegisterAccessKey(mContent, key);
     else
-      rv = esm->UnregisterAccessKey(nsnull, mContent, key);
+      rv = esm->UnregisterAccessKey(mContent, key);
   }
 
   return rv;
