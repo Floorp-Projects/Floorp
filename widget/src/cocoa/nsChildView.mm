@@ -241,9 +241,6 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
       [mView setNativeWindow: [mParentView getNativeWindow]];
   }
   
-  NSWindow* window = [mView getNativeWindow];
-  if (!window)
-    printf("MOTHER FUCK!\n");
   return NS_OK;
 }
 
