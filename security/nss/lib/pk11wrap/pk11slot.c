@@ -1667,7 +1667,7 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 
     /* initialize the maxKeyCount value */
     if (tokenInfo.ulMaxSessionCount == 0) {
-	slot->maxKeyCount = 300; /* should be #define or a config param */
+	slot->maxKeyCount = 800; /* should be #define or a config param */
     } else if (tokenInfo.ulMaxSessionCount < 20) {
 	/* don't have enough sessions to keep that many keys around */
 	slot->maxKeyCount = 0;
