@@ -388,11 +388,9 @@
   <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
   <key id="key_addressbook"  key="&addressBookCmd.commandkey;" oncommand="toAddressBook();" modifiers="accel"/>
 #ifdef XP_MACOSX
-
   <!-- Mac Window keys -->
   <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
-
-<key id="key_macHelp" key="&hintsAndTips.commandkey;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');" modifiers="accel"/>
+  <key id="key_macHelp" key="&hintsAndTipsMac.commandkey;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');" modifiers="accel"/>
 #endif
 </keyset>
 
@@ -1630,6 +1628,10 @@
         <menupopup id="menu_HelpPopup">
           <menuitem id="hintsAndTips" label="&hintsAndTips.label;" key="key_macHelp" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
           <menuitem id="releaseNotes" accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
+          <menuseparator id="menu_HelpAboutSeparator"/>
+          <menuitem id="aboutName" accesskey="&aboutCmd.accesskey;"
+                    label="&aboutCmd.label;"
+                    oncommand="window.openDialog('chrome://messenger/content/aboutDialog.xul', 'About', 'modal,centerscreen,chrome,resizable=no');"/>
         </menupopup>
       </menu>
 #else

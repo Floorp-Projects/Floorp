@@ -400,11 +400,8 @@
 <!ENTITY releaseCmd.label "Release Notes">
 <!ENTITY releaseCmd.accesskey "R"> 
 <!ENTITY hintsAndTips.label "&brandFullName; Help">
-#ifdef XP_MACOSX
-<!ENTITY hintsAndTips.commandkey "?">
-#else
+<!ENTITY hintsAndTipsMac.commandkey "?">
 <!ENTITY hintsAndTips.accesskey "h"> 
-#endif
 <!ENTITY aboutCmd.label "About &brandFullName;">
 <!ENTITY aboutCmd.accesskey "A">
 
