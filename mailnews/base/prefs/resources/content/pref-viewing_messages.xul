@@ -113,7 +113,7 @@
 	<html>&coding.label;</html>
 	<box autostretch="never" class="indent">
     <text class="label" value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" for="sendDefaultCharsetList"/>
-    <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+    <menulist id="sendDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
               pref="true" preftype="string" prefstring="mailnews.view_default_charset"
               prefattribute="data">
       <template>
