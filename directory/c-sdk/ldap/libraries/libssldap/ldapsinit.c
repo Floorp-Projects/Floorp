@@ -425,6 +425,7 @@ ldapssl_install_routines( LDAP *ld )
     sei.seinfo_size = PRLDAP_SESSIONINFO_SIZE;
     sei.seinfo_appdata = (void *)ssip;
     if ( prldap_set_session_info( ld, NULL, &sei ) != LDAP_SUCCESS ) {
+	ldapssl_free_session_info( &ssip );
 	return( -1 );
     }
 

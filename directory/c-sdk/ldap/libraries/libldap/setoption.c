@@ -197,7 +197,9 @@ ldap_set_option( LDAP *ld, int option, const void *optdata )
 	    ld->ld_extwritev_fn = NULL;
 	    if ( ber_sockbuf_set_option( ld->ld_sbp, LBER_SOCKBUF_OPT_EXT_IO_FNS,
 					 &(ld->ld_ext_io_fns) ) != 0 ) {
-	      return( LDAP_LOCAL_ERROR );
+	      LDAP_SET_LDERRNO( ld, LDAP_LOCAL_ERROR, NULL, NULL );
+	      rc = -1;
+	      break;
 	    }
 	  }
 	  else {
