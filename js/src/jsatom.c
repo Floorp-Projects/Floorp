@@ -188,8 +188,8 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
 {
     uintN i;
 
+    memset(state, 0, sizeof *state);
     state->runtime = cx->runtime;
-    state->number = 0;
     state->table = JS_NewHashTable(JS_ATOM_HASH_SIZE, js_hash_atom_key,
 				   js_compare_atom_keys, js_compare_stub,
 				   &atom_alloc_ops, state);
@@ -202,12 +202,11 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
     state->tablegen = 0;
 #endif
 
-#define FROB(lval,str) {                                                      \
-    if (!(state->lval = js_Atomize(cx, str, strlen(str), ATOM_PINNED))) {     \
-	js_FreeAtomState(cx, state);                                          \
-	return JS_FALSE;                                                      \
-    }                                                                         \
-}
+#define FROB(lval,str)                                                        \
+    JS_BEGIN_MACRO                                                            \
+	if (!(state->lval = js_Atomize(cx, str, strlen(str), ATOM_PINNED)))   \
+	    goto bad;                                                         \
+    JS_END_MACRO
 
     JS_ASSERT(sizeof js_type_str / sizeof js_type_str[0] == JSTYPE_LIMIT);
     for (i = 0; i < JSTYPE_LIMIT; i++)
@@ -243,6 +242,10 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
 #undef FROB
 
     return JS_TRUE;
+
+bad:
+    js_FreeAtomState(cx, state);
+    return JS_FALSE;
 }
 
 void
@@ -391,6 +394,10 @@ js_AtomizeInt(JSContext *cx, jsint i, uintN flags)
     return js_AtomizeHashedKey(cx, key, keyHash, flags);
 }
 
+/* Worst-case alignment grain and aligning macro for 2x-sized buffer. */
+#define ALIGNMENT(t)    JS_MAX(JSVAL_ALIGN, sizeof(t))
+#define ALIGN(b,t)      ((t*) &(b)[ALIGNMENT(t) - (jsuword)(b) % ALIGNMENT(t)])
+
 JSAtom *
 js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
 {
@@ -401,12 +408,9 @@ js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
     JSHashTable *table;
     JSHashEntry *he, **hep;
     JSAtom *atom;
-#define ALIGNNUM ((1<<JSVAL_TAGBITS) < sizeof(double) ? sizeof(double) : (1<<JSVAL_TAGBITS))
-    char alignbuf[2*ALIGNNUM];
-    jsuword alignint = (jsuword)alignbuf;
-    jsuword xtra = ALIGNNUM-(alignint%ALIGNNUM);
-#undef ALIGNNUM
-    dp = (jsdouble *)&alignbuf[xtra];
+    char buf[2 * ALIGNMENT(double)];
+
+    dp = ALIGN(buf, double);
     *dp = d;
     keyHash = HASH_DOUBLE(dp);
     key = DOUBLE_TO_JSVAL(dp);
@@ -468,7 +472,6 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 	    uint32 gen = state->tablegen;
 #endif
 	    JS_UNLOCK(&state->lock,cx);
-	    flags &= ~ATOM_TMPSTR;
 	    if (flags & ATOM_NOCOPY) {
 		str = js_NewString(cx, str->chars, str->length, 0);
 	    } else {
@@ -499,7 +502,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     }
 
     atom = (JSAtom *)he;
-    atom->flags |= (flags & ~ATOM_NOCOPY);
+    atom->flags |= flags & ATOM_PINNED;
 out:
     JS_UNLOCK(&state->lock,cx);
     return atom;
@@ -511,12 +514,9 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
     jschar *chars;
     JSString *str;
     JSAtom *atom;
-#define ALIGNNUM ((1<<JSVAL_TAGBITS) < sizeof(JSString) ? sizeof(JSString) : (1<<JSVAL_TAGBITS))
-    char alignbuf[2*ALIGNNUM];
-    jsuword alignint = (jsuword)alignbuf;
-    jsuword xtra = ALIGNNUM-(alignint%ALIGNNUM);
-#undef ALIGNNUM
-    str = (JSString *)&alignbuf[xtra];
+    char buf[2 * ALIGNMENT(JSString)];
+
+    str = ALIGN(buf, JSString);
     chars = js_InflateString(cx, bytes, length);
     if (!chars)
 	return NULL;
@@ -532,12 +532,9 @@ JS_FRIEND_API(JSAtom *)
 js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags)
 {
     JSString *str;
-#define ALIGNNUM ((1<<JSVAL_TAGBITS) < sizeof(JSString) ? sizeof(JSString) : (1<<JSVAL_TAGBITS))
-    char alignbuf[2*ALIGNNUM];
-    jsuword alignint = (jsuword)alignbuf;
-    jsuword xtra = ALIGNNUM-(alignint%ALIGNNUM);
-#undef ALIGNNUM
-    str = (JSString *)&alignbuf[xtra];
+    char buf[2 * ALIGNMENT(JSString)];
+
+    str = ALIGN(buf, JSString);
     str->chars = (jschar *)chars;
     str->length = length;
     return js_AtomizeString(cx, str, ATOM_TMPSTR | flags);
@@ -594,6 +591,7 @@ JS_FRIEND_API(JSAtom *)
 js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i)
 {
     JSAtom *atom;
+    static JSAtom dummy;
 
     JS_ASSERT(map->vector && i < map->length);
     if (!map->vector || i >= map->length) {
@@ -601,7 +599,7 @@ js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i)
 	JS_snprintf(numBuf, sizeof numBuf, "%lu", (unsigned long)i);
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 			     JSMSG_BAD_ATOMIC_NUMBER, numBuf);
-	return NULL;
+	return &dummy;
     }
     atom = map->vector[i];
     JS_ASSERT(atom);
@@ -612,7 +610,7 @@ JS_FRIEND_API(JSBool)
 js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 {
     JSAtom **vector;
-    JSAtomListElement *ale, *next;
+    JSAtomListElement *ale;
     uint32 count;
 
     ale = al->list;
@@ -634,9 +632,7 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 
     do {
 	vector[ale->index] = ale->atom;
-	next = ale->next;
-	ale->next = NULL;
-    } while ((ale = next) != NULL);
+    } while ((ale = ale->next) != NULL);
     al->list = NULL;
     al->count = 0;
 

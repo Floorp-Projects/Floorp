@@ -78,7 +78,7 @@ typedef enum JSOp {
 #define ATOM_INDEX_LEN          2
 #define ATOM_INDEX_HI(index)    ((jsbytecode)((index) >> 8))
 #define ATOM_INDEX_LO(index)    ((jsbytecode)(index))
-#define GET_ATOM_INDEX(pc)      (((pc)[1] << 8) | (pc)[2])
+#define GET_ATOM_INDEX(pc)      ((jsatomid)(((pc)[1] << 8) | (pc)[2]))
 #define SET_ATOM_INDEX(pc,index)((pc)[1] = ATOM_INDEX_HI(index),              \
 				 (pc)[2] = ATOM_INDEX_LO(index))
 #define GET_ATOM(cx,script,pc)  js_GetAtom((cx), &(script)->atomMap,          \
