@@ -606,11 +606,7 @@ sub get_xpc_engine_command {
         $m5_home .= "/";
     }
 
-    if ($os_type eq "WIN") {
-        $m5_home = &get_win_path ($m5_home);
-    }
-
-    return $m5_home . "xpcshell";
+    return &xp_path($m5_home . "xpcshell");
 
 }
 
@@ -692,11 +688,7 @@ sub get_sm_engine_command {
         die (&xp_path($retval) . " is not a valid executable on this system.\n");
     }
 
-    if ($os_type eq "WIN") {
-        $retval = &get_win_path ($retval);
-    }
-
-    return $retval;
+    return &xp_path($retval);
 
 }
 
@@ -753,11 +745,7 @@ sub get_dd_engine_command {
         }
     }
 
-    if ($os_type eq "WIN") {
-        $retval = &get_win_path ($retval);
-    }
-
-    return $retval;
+    return &xp_path($retval);
 }
 
 #
@@ -808,11 +796,7 @@ sub get_lc_engine_command {
         die ("$retval is not a valid executable on this system.\n");
     }
 
-    if ($os_type eq "WIN") {
-        $retval = &get_win_path ($retval);
-    }
-
-    return $retval;
+    return &xp_path($retval);
 
 }
 
@@ -833,27 +817,6 @@ sub get_os_type {
     &dd ("get_os_type returning '$uname'.");
     return $uname;
 
-}
-
-#
-# Windows shells require "/" or "\" as path separator.
-# Use the one required for the shell we're in.
-#
-sub get_win_path {
-  my ($path) = @_;
-  my $win_sep = &get_win_sep;
-  $path =~ s/$path_sep/$win_sep/g;
-  return $path;
-}
-
-#
-# Windows shells require "/" or "\" as path separator.
-# Find out the one used in our Windows shell.
-#
-sub get_win_sep {
-  my $path = $ENV{"PATH"} || $ENV{"Path"} || $ENV{"path"};
-  $path =~ /\\|\//;
-  return $&;
 }
 
 sub get_test_list {
@@ -1124,6 +1087,26 @@ sub unix_to_mac {
 }
 
 #
+# Convert unix path to win style.
+#
+sub unix_to_win {
+  my ($path) = @_;
+  my $win_sep = &get_win_sep;
+  $path =~ s/$path_sep/$win_sep/g;
+  return $path;
+}
+
+#
+# Windows shells require "/" or "\" as path separator.
+# Find out the one used in the current Windows shell.
+#
+sub get_win_sep {
+  my $path = $ENV{"PATH"} || $ENV{"Path"} || $ENV{"path"};
+  $path =~ /\\|\//;
+  return $&;
+}
+
+#
 # Convert unix path to correct style based on platform.
 #
 sub xp_path {
@@ -1131,6 +1114,8 @@ sub xp_path {
 
     if ($os_type eq "MAC") {
         return &unix_to_mac($path);
+    } elsif($os_type eq "WIN") {
+        return &unix_to_win($path);
     } else {
         return $path;
     }
