@@ -43,6 +43,7 @@ SINGSIGN_SignonViewerReturn(nsAutoString results);
 extern void
 SINGSIGN_RestoreSignonData(char* URLName, char* name, char** value);
 
+#ifdef xxx
 extern PRBool
 SINGSIGN_PromptUsernameAndPassword2 
     (char *prompt, char **username, char **password, char *URLName);
@@ -52,6 +53,7 @@ SINGSIGN_PromptPassword2 (char *prompt, char *URLName, PRBool pickFirstUser);
 
 extern char *
 SINGSIGN_Prompt2 (char *prompt, char* defaultUsername, char *URLName);
+#endif
 
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword

@@ -43,12 +43,14 @@ public:
   NS_IMETHOD WALLET_PrefillReturn(nsAutoString results);
   NS_IMETHOD WALLET_FetchFromNetCenter();
 
+#ifdef xxx
   NS_IMETHOD SI_PromptUsernameAndPassword
       (char *prompt, char **username, char **password, char *URLName, PRBool &status);
   NS_IMETHOD SI_PromptPassword
       (char *prompt, char **password, char *URLName, PRBool pickFirstUser);
   NS_IMETHOD SI_Prompt
       (char *prompt, char **username, char *URLName);
+#endif
 
   NS_IMETHOD PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,

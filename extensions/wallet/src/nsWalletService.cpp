@@ -124,6 +124,7 @@ NS_IMETHODIMP nsWalletlibService::WALLET_FetchFromNetCenter(){
   return NS_OK;
 }
 
+#ifdef xxx
 NS_IMETHODIMP nsWalletlibService::SI_PromptUsernameAndPassword
     (char *prompt, char **username, char **password, char *URLName, PRBool &status) {
   status = ::SINGSIGN_PromptUsernameAndPassword2(prompt, username, password, URLName);
@@ -141,6 +142,7 @@ NS_IMETHODIMP nsWalletlibService::SI_Prompt
   *username = ::SINGSIGN_Prompt2(prompt, *username, URLName);
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP nsWalletlibService::PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,

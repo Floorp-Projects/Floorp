@@ -54,12 +54,14 @@ struct nsIWalletService : public nsISupports
   NS_IMETHOD WALLET_PrefillReturn(nsAutoString results) = 0;
   NS_IMETHOD WALLET_FetchFromNetCenter() = 0;
 
+#ifdef xxx
   NS_IMETHOD SI_PromptUsernameAndPassword
     (char *prompt, char **username, char **password, char *URLName, PRBool &status) = 0;
   NS_IMETHOD SI_PromptPassword
     (char *prompt, char **password, char *URLName, PRBool pickFirstUser) = 0;
   NS_IMETHOD SI_Prompt
     (char *prompt, char **username, char *URLName) = 0;
+#endif
 
   NS_IMETHOD PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
