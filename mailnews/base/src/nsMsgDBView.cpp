@@ -4908,6 +4908,13 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
 
 }
 
+NS_IMETHODIMP nsMsgDBView::GetDb(nsIMsgDatabase **aDB)
+{
+  NS_ENSURE_ARG_POINTER(aDB);
+  NS_IF_ADDREF(*aDB = m_db);
+  return NS_OK;
+}
+
 PRBool nsMsgDBView::OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices)
 {
   nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(m_folder);

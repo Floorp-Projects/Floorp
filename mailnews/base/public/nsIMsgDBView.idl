@@ -43,6 +43,7 @@ interface nsIMsgWindow;
 interface nsIMessenger;
 interface nsIMsgDBHdr;
 interface nsIMsgDBViewCommandUpdater;
+interface nsIMsgDatabase;
 
 typedef long nsMsgViewNotificationCodeValue;
 typedef long nsMsgViewCommandCheckStateValue;
@@ -296,6 +297,8 @@ interface nsIMsgDBView : nsISupports
 
 	//to notify outliner that rows are going away
     void onDeleteCompleted(in boolean succeeded);
+
+    readonly attribute nsIMsgDatabase db;
 };
 
 /* this interface is rapidly morphing from a command updater interface into a more generic

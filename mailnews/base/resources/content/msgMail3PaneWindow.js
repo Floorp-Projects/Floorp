@@ -108,6 +108,10 @@ var folderListener = {
                  // which will cause us to update commands.
                  if (gDBView) {
                    gDBView.suppressCommandUpdating = true;
+                   // if the db's view isn't set, something went wrong and we should reroot
+                   // the folder, which will re-open the view.
+                   if (!gDBView.db)
+                    gRerootOnFolderLoad = true;
                  }
                  if (gRerootOnFolderLoad)
                    RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
