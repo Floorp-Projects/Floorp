@@ -830,3 +830,11 @@ if [ `echo "$MOZ_EXTENSIONS" | grep -c xmlterm` != 0 ]; then
   extensions/xmlterm/ui/Makefile
 END_EXTENSIONS_XMLTERM_MAKEFILES
 fi
+
+if [ `echo "$MOZ_EXTENSIONS" | grep -c xml-rpc` != 0 ]; then
+  add_makefiles <<END_EXTENSIONS_XML_RPC_MAKEFILES
+  extensions/xml-rpc/Makefile
+  extensions/xml-rpc/idl/Makefile
+  extensions/xml-rpc/src/Makefile
+END_EXTENSIONS_XML_RPC_MAKEFILES
+fi
