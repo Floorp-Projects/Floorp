@@ -23,5 +23,6 @@
 <!ENTITY windowTitle.label "Named Anchor Properties">
 <!ENTITY anchorNameEditField.label "Anchor Name:">
 <!ENTITY noSpacesMsg.label "(Spaces are not allowed.)">
+<!ENTITY nameInput.tooltip "tooltip for anchor name edit field">
 
 
