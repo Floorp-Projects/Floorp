@@ -641,11 +641,15 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           }
           break;
 
-        case eHTMLTag_nobr:
-          result=PR_TRUE;
+        case eHTMLTag_area:
+          if (mHasOpenMap) {
+            result = mSink->AddLeaf(attrNode);
+          }
+          break;
 
         case eHTMLTag_map:
-          result=PR_TRUE;
+          result = OpenMap(attrNode);
+          break;
 
         default:
           result=HandleDefaultStartToken(aToken,tokenTagType,attrNode);
@@ -706,7 +710,10 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       break;
 
     case eHTMLTag_map:
-      result=CloseContainer(theNode,tokenTagType,PR_TRUE);
+      {
+        nsCParserNode aNode((CHTMLToken*)aToken);
+        result=CloseMap(aNode);
+      }
       break;
 
     case eHTMLTag_form:
@@ -1248,7 +1255,14 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       result = PR_TRUE; break;
 
     case eHTMLTag_map:
-      result=PRBool(eHTMLTag_area==aChild); break;
+      {
+        static char okTags[] = {eHTMLTag_area,
+                                eHTMLTag_newline,
+                                eHTMLTag_whitespace,
+                                0};
+        result = PRBool(0 != strchr(okTags, aChild));
+      }
+      break;
 
     case eHTMLTag_menu:
     case eHTMLTag_dir:
