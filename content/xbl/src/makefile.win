@@ -73,6 +73,7 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLFormHandler.obj \
   .\$(OBJDIR)\nsXBLLoadHandler.obj \
   .\$(OBJDIR)\nsXBLContextMenuHandler.obj \
+  .\$(OBJDIR)\nsXBLCustomHandler.obj \
   .\$(OBJDIR)\nsXBLPrototypeHandler.obj \
   .\$(OBJDIR)\nsXBLService.obj \
   .\$(OBJDIR)\nsBindingManager.obj \

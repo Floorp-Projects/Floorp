@@ -16,12 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- *
+ * Original Author: Brian Ryner <bryner@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,54 +36,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXBLEventHandler_h__
-#define nsXBLEventHandler_h__
+#include "nsXBLCustomHandler.h"
 
-#include "nsIDOMEventReceiver.h"
-#include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
-#include "nsIDOMEventReceiver.h"
-
-class nsIXBLBinding;
-class nsIDOMEvent;
-class nsIContent;
-class nsIDOMUIEvent;
-class nsIDOMKeyEvent;
-class nsIDOMMouseEvent;
-class nsIAtom;
-class nsIController;
-
-// XXX This should be broken up into subclasses for each listener IID type, so we
-// can cut down on the bloat of the handlers.
-class nsXBLEventHandler : public nsISupports
+nsXBLCustomHandler::nsXBLCustomHandler(nsIDOMEventReceiver* aReceiver,
+                                       nsIXBLPrototypeHandler* aHandler)
+  :nsXBLEventHandler(aReceiver,aHandler)
 {
-public:
-  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
-  virtual ~nsXBLEventHandler();
-  
-  NS_DECL_ISUPPORTS
+}
 
-public:
-  void SetNextHandler(nsXBLEventHandler* aHandler) {
-    mNextHandler = aHandler;
-  }
+nsXBLCustomHandler::~nsXBLCustomHandler()
+{
+}
 
-  void RemoveEventHandlers();
+NS_IMPL_ISUPPORTS_INHERITED1(nsXBLCustomHandler, nsXBLEventHandler, nsIDOMEventListener)
 
-  void MarkForDeath() {
-    if (mNextHandler) mNextHandler->MarkForDeath(); mProtoHandler = nsnull; mEventReceiver = nsnull;
-  }
+nsresult nsXBLCustomHandler::HandleEvent(nsIDOMEvent* aEvent)
+{
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
 
-  static nsresult GetTextData(nsIContent *aParent, nsAWritableString& aResult);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
+  return NS_OK;
+}
 
-protected:
-  nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
-  nsCOMPtr<nsIXBLPrototypeHandler> mProtoHandler;
+///////////////////////////////////////////////////////////////////////////////////
 
-  nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
-};
-
-extern nsresult
-NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsXBLEventHandler** aResult);
-#endif
+nsresult
+NS_NewXBLCustomHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler,
+                       nsXBLCustomHandler** aResult)
+{
+  *aResult = new nsXBLCustomHandler(aRec, aHandler);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}

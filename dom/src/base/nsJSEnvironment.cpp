@@ -869,7 +869,7 @@ AtomToEventHandlerName(nsIAtom *aName, char *charName, PRUint32 charNameSize)
     c = char(name[i]);
 
     // The HTML content sink must have folded to lowercase already.
-    NS_ASSERTION(c == '\0' || ('a' <= c && c <= 'z'), "non-alphabetic event handler name");
+    NS_ASSERTION(c == '\0' || isalpha(c), "non-alphabetic event handler name");
 
     NS_ASSERTION(i < charNameSize, "overlong event handler name");
     charName[i++] = c;
