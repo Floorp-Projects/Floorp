@@ -337,12 +337,6 @@ AddTestDocsFromFile(nsWebCrawler* aCrawler, const nsString& aFileName)
   fclose(fp);
 }
 
-#ifdef NS_DEBUG
-int _CrtSetDbgFlag(int arg){
-  return arg;
-}
-#endif
-
 NS_IMETHODIMP
 nsViewerApp::ProcessArguments(int argc, char** argv)
 {
@@ -352,17 +346,13 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
   int i;
   for (i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
-#ifdef NS_DEBUG
-#ifdef XP_WIN
+#if defined(NS_DEBUG) && defined(XP_WIN)
       if (PL_strcmp(argv[i], "-md") == 0) {
         int old = _CrtSetDbgFlag(0);
-#ifdef NS_DEBUG
         old |= _CRTDBG_CHECK_ALWAYS_DF;
-#endif
         _CrtSetDbgFlag(old);
       }
       else
-#endif
 #endif
       if (PL_strncmp(argv[i], "-p", 2) == 0) {
         char *optionalSampleStopIndex = &(argv[i][2]);
@@ -394,6 +384,15 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
         mInputFileName = argv[i];
         mCrawler->SetExitOnDone(PR_TRUE);
         mCrawl = PR_TRUE;
+      }
+      else if (PL_strcmp(argv[i], "-rd") == 0) {
+        i++;
+        if (i>=argc || nsnull==argv[i] || nsnull==*(argv[i])) {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        mCrawler->SetEnableRegression(PR_TRUE);
+        mCrawler->SetRegressionDir(argv[i]);
       }
       else if (PL_strcmp(argv[i], "-o") == 0) {
         i++;
