@@ -34,6 +34,7 @@
 #include "nsGfxCIID.h"
 #include "nsMenuItem.h"
 #include "nsCOMPtr.h"
+#include "nsIMenuListener.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
@@ -79,6 +80,8 @@ nsMenu::nsMenu() : nsIMenu()
   mMenu          = nsnull;
   mMenuBarParent = nsnull;
   mMenuParent    = nsnull;
+  mListener      = nsnull;
+  mItems         = new nsVoidArray(8);
 }
 
 //-------------------------------------------------------------------------
@@ -90,6 +93,7 @@ nsMenu::~nsMenu()
 {
   NS_IF_RELEASE(mMenuBarParent);
   NS_IF_RELEASE(mMenuParent);
+  NS_IF_RELEASE(mListener);
 }
 
 
@@ -197,7 +201,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 
   aMenuItem->GetCommand(command);
   aMenuItem->GetLabel(name);
-  mItems.AppendElement((nsISupports *)aMenuItem);
+  mItems->AppendElement((nsISupports *)aMenuItem);
   nsIWidget * win = GetParentWidget();
   PRInt32 id = ((nsWindow *)win)->GetNewCmdMenuId();
   ((nsMenuItem *)aMenuItem)->SetCmdId(id);
@@ -212,11 +216,11 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
   menuInfo.wID        = (DWORD)id;
   menuInfo.cch        = strlen(nameStr);
 
-  BOOL status = ::InsertMenuItem(mMenu, mItems.Count(), TRUE, &menuInfo);
+  BOOL status = ::InsertMenuItem(mMenu, mItems->Count(), TRUE, &menuInfo);
 
   delete[] nameStr;
 */
-  InsertItemAt(mItems.Count(), (nsISupports *)aMenuItem);
+  InsertItemAt(mItems->Count(), (nsISupports *)aMenuItem);
   return NS_OK;
 }
 
@@ -224,7 +228,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
 
-  InsertItemAt(mItems.Count(), (nsISupports *)aMenu);
+  InsertItemAt(mItems->Count(), (nsISupports *)aMenu);
   return NS_OK;
 
 }
@@ -232,7 +236,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
-  InsertSeparator(mItems.Count());
+  InsertSeparator(mItems->Count());
 
   return NS_OK;
 }
@@ -240,14 +244,14 @@ NS_METHOD nsMenu::AddSeparator()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::GetItemCount(PRUint32 &aCount)
 {
-  aCount = mItems.Count();
+  aCount = mItems->Count();
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::GetItemAt(const PRUint32 aCount, nsISupports *& aMenuItem)
 {
-  aMenuItem = (nsISupports *)mItems[aCount];
+  aMenuItem = (nsISupports *)mItems->ElementAt(aCount);
 
   return NS_OK;
 }
@@ -260,7 +264,7 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
 
   NS_ADDREF(aMenuItem);
 
-  mItems.InsertElementAt(aMenuItem, (PRInt32)aCount);
+  mItems->InsertElementAt(aMenuItem, (PRInt32)aCount);
 
   nsCOMPtr<nsIMenuItem> menuItem(do_QueryInterface(aMenuItem));
   if (menuItem) {
@@ -287,7 +291,7 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
     if (menu) {
       nsString name;
       menu->GetLabel(name);
-      mItems.AppendElement((nsISupports *)(nsIMenu *)menu);
+      mItems->AppendElement((nsISupports *)(nsIMenu *)menu);
 
       char * nameStr = name.ToNewCString();
 
@@ -319,7 +323,7 @@ NS_METHOD nsMenu::InsertSeparator(const PRUint32 aCount)
 {
   nsMenuItem * item = new nsMenuItem();
   item->Create(this);
-  mItems.InsertElementAt((nsISupports *)(nsIMenuItem *)item, (PRInt32)aCount);
+  mItems->InsertElementAt((nsISupports *)(nsIMenuItem *)item, (PRInt32)aCount);
   NS_ADDREF((nsIMenuItem *)item);
 
   MENUITEMINFO menuInfo;
@@ -337,9 +341,9 @@ NS_METHOD nsMenu::InsertSeparator(const PRUint32 aCount)
 NS_METHOD nsMenu::RemoveItem(const PRUint32 aCount)
 {
 
-  nsISupports * supports = (nsISupports *)mItems.ElementAt(aCount);
+  nsISupports * supports = (nsISupports *)mItems->ElementAt(aCount);
   NS_RELEASE(supports);
-  mItems.RemoveElementAt(aCount);
+  mItems->RemoveElementAt(aCount);
 
   return (::RemoveMenu(mMenu, aCount, MF_BYPOSITION) ? NS_OK:NS_ERROR_FAILURE);
 }
@@ -347,10 +351,10 @@ NS_METHOD nsMenu::RemoveItem(const PRUint32 aCount)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveAll()
 {
-  while (mItems.Count()) {
-    nsISupports * supports = (nsISupports *)mItems.ElementAt(0);
+  while (mItems->Count()) {
+    nsISupports * supports = (nsISupports *)mItems->ElementAt(0);
     NS_RELEASE(supports);
-    mItems.RemoveElementAt(0);
+    mItems->RemoveElementAt(0);
 
     ::RemoveMenu(mMenu, 0, MF_BYPOSITION);
   }
@@ -365,7 +369,41 @@ NS_METHOD nsMenu::GetNativeData(void *& aData)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::AddMenuListener(nsIMenuListener * aMenuListener)
+{
+  mListener = aMenuListener;
+  NS_ADDREF(mListener);
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
+{
+  if (aMenuListener == mListener) {
+    NS_IF_RELEASE(mListener);
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+// nsIMenuListener interface
+//-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+  printf("Menu Selected %s\n", mLabel.ToNewCString());
+  if (nsnull != mListener) {
+    mListener->MenuSelected(aMenuEvent);
+  }
   return nsEventStatus_eIgnore;
 }
+
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+  printf("Menu Deselected %s\n", mLabel.ToNewCString());
+  if (nsnull != mListener) {
+    mListener->MenuDeselected(aMenuEvent);
+  }
+  return nsEventStatus_eIgnore;
+}
+

@@ -25,8 +25,9 @@
 
 #include "nsIMenu.h"
 #include "nsVoidArray.h"
-#include "nsIMenuListener.h"
 #include "nsVoidArray.h"
+
+class nsIMenuListener;
 
 /**
  * Native Win32 button wrapper
@@ -43,6 +44,7 @@ public:
   
   //nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
   
   NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
   NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel);
@@ -62,6 +64,8 @@ public:
   NS_IMETHOD RemoveItem(const PRUint32 aPos);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void*& aData);
+  NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
 
   // Native Impl Methods
   nsIMenu    * GetMenuParent()    { return mMenuParent;    }
@@ -78,7 +82,8 @@ protected:
   nsIMenuBar * mMenuBarParent;
   nsIMenu    * mMenuParent;
 
-  nsVoidArray mItems;
+  nsVoidArray * mItems;
+  nsIMenuListener * mListener;
 
 };
 

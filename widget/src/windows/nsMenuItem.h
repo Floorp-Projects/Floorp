@@ -66,7 +66,8 @@ public:
 
   // nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
-  
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
+
   // Need for Native Impl
   void SetCmdId(PRInt32 aId);
   PRInt32 GetCmdId();

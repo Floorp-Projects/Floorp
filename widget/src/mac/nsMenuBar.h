@@ -37,6 +37,7 @@ public:
   
   // nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
   
   nsMenuBar();
   virtual ~nsMenuBar();

@@ -90,6 +90,12 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 }
 
 //-------------------------------------------------------------------------
+nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
 //
 // nsMenuBar constructor
 //

@@ -23,6 +23,7 @@
 
 #include "nsString.h"
 #include "nsStringUtil.h"
+#include "nsIMenuListener.h"
 
 #if defined(XP_MAC)
 #include <TextUtils.h>
@@ -78,6 +79,7 @@ nsMenu::nsMenu() : nsIMenu()
   
   mMacMenuID = 0;
   mMacMenuHandle = nsnull;
+  mListener      = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -89,6 +91,7 @@ nsMenu::~nsMenu()
 {
   NS_IF_RELEASE(mMenuBarParent);
   NS_IF_RELEASE(mMenuParent);
+  NS_IF_RELEASE(mListener);
 }
 
 //-------------------------------------------------------------------------
@@ -242,6 +245,24 @@ NS_METHOD nsMenu::GetNativeData(void *& aData)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::AddMenuListener(nsIMenuListener * aMenuListener)
+{
+  mListener = aMenuListener;
+  NS_ADDREF(mListener);
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
+{
+  if (aMenuListener == mListener) {
+    NS_IF_RELEASE(mListener);
+  }
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
 //
 // nsIMenuListener interface
 //
@@ -265,3 +286,10 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   }
   return eventStatus;
 }
+
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+

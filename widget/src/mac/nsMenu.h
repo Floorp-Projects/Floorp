@@ -26,6 +26,7 @@
 #include <Menus.h>
 
 class nsIMenuBar;
+class nsIMenuListener;
 
 /**
  * Native Motif Menu wrapper
@@ -42,6 +43,7 @@ public:
   
   // nsIMenuListener methods
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
   
   NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
   NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel);
@@ -61,6 +63,9 @@ public:
   NS_IMETHOD RemoveItem(const PRUint32 aPos);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void*& aData);
+  NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
+
 
   // MacSpecific
   static PRInt16	GetUniqueMenuID() {
@@ -83,6 +88,7 @@ protected:
   // MacSpecific
   PRInt16			  mMacMenuID;
   MenuHandle          mMacMenuHandle;
+  nsIMenuListener * mListener;
 
 private:
   static PRInt16      mMacMenuIDCount;		// use GetUniqueMenuID()
