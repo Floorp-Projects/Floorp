@@ -936,8 +936,6 @@ function ValidateCellData()
     }
   }
 
-  SetAlign("CellVAlignList", defVAlign, globalCellElement, "valign");
-
   if (dialog.CellVAlignCheckbox.checked)
     SetAlign("CellVAlignList", defVAlign, globalCellElement, "valign");
 
