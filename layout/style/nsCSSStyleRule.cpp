@@ -47,6 +47,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
+static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 static NS_DEFINE_IID(kIDOMCSSRuleIID, NS_IDOMCSSRULE_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
@@ -571,9 +572,14 @@ DOMCSSDeclarationImpl::StylePropertyChanged(const nsString& aPropertyName,
                                             PRInt32 aHint)
 {
   nsIStyleSheet* sheet = nsnull;
-  if (nsnull != mRule) {
+  if (mRule) {
     mRule->GetStyleSheet(sheet);
-    if (nsnull != sheet) {
+    if (sheet) {
+      nsICSSStyleSheet* cssSheet = nsnull;
+      if (NS_SUCCEEDED(sheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssSheet))) {
+        cssSheet->SetModified(PR_TRUE);
+        NS_RELEASE(cssSheet);
+      }
       nsIDocument*  doc = nsnull;
       sheet->GetOwningDocument(doc);
       if (nsnull != doc) {
@@ -626,6 +632,7 @@ public:
   void operator delete(void* ptr);
 
   CSSStyleRuleImpl(const nsCSSSelector& aSelector);
+  CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy); 
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef();
@@ -653,6 +660,8 @@ public:
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
 
+  NS_IMETHOD Clone(nsICSSStyleRule*& aClone) const;
+
   NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
@@ -676,7 +685,6 @@ public:
 
 private: 
   // These are not supported and are not implemented! 
-  CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy); 
   CSSStyleRuleImpl& operator=(const CSSStyleRuleImpl& aCopy); 
 
 protected:
@@ -752,6 +760,39 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
   fprintf(stdout, "%d of %d + CSSStyleRule\n", mInstance, gInstanceCount);
 #endif
 }
+
+CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
+  : mSelector(aCopy.mSelector),
+    mSelectorText(aCopy.mSelectorText),
+    mDeclaration(nsnull),
+    mWeight(aCopy.mWeight),
+    mImportantRule(nsnull),
+    mSheet(aCopy.mSheet),
+    mDOMDeclaration(nsnull),
+    mScriptObject(nsnull)
+{
+  NS_INIT_REFCNT();
+
+  nsCSSSelector* copySel = aCopy.mSelector.mNext;
+  nsCSSSelector* ourSel = &mSelector;
+
+  while (copySel && ourSel) {
+    ourSel->mNext = new nsCSSSelector(*copySel);
+    ourSel = ourSel->mNext;
+    copySel = copySel->mNext;
+  }
+
+  if (aCopy.mDeclaration) {
+    aCopy.mDeclaration->Clone(mDeclaration);
+  }
+  // rest is constructed lazily on existing data
+
+#ifdef DEBUG_REFS
+  mInstance = gInstanceCount++;
+  fprintf(stdout, "%d of %d + CSSStyleRule\n", mInstance, gInstanceCount);
+#endif
+}
+
 
 CSSStyleRuleImpl::~CSSStyleRuleImpl()
 {
@@ -1156,6 +1197,18 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor, nsc
   }
   return result;
 }
+
+NS_IMETHODIMP
+CSSStyleRuleImpl::Clone(nsICSSStyleRule*& aClone) const
+{
+  CSSStyleRuleImpl* clone = new CSSStyleRuleImpl(*this);
+  if (clone) {
+    return clone->QueryInterface(kICSSStyleRuleIID, (void **)&aClone);
+  }
+  aClone = nsnull;
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
 
 NS_IMETHODIMP
 CSSStyleRuleImpl::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
@@ -2449,6 +2502,7 @@ CSSStyleRuleImpl::SetSelectorText(const nsString& aSelectorText)
 {
   // XXX TBI - get a parser and re-parse the selectors, 
   // XXX then need to re-compute the cascade
+  // XXX and dirty sheet
   mSelectorText = aSelectorText;
   return NS_OK;
 }
