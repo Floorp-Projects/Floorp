@@ -50,6 +50,175 @@
 //082
 //083
 //084
+//0F0
+//0F1
+//0F2
+//0F3
+//0F4
+		0FA8EF970423B1A500A80166 = {
+			isa = PBXFileReference;
+			name = libxpcom_compat.dylib;
+			path = ../dist/Embed/libxpcom_compat.dylib;
+			refType = 2;
+		};
+		0FA8EF990423B1A500A80166 = {
+			fileRef = 0FA8EF970423B1A500A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FA8EF9A0423B1F500A80166 = {
+			isa = PBXFileReference;
+			name = libxpcom_compat_c.dylib;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libxpcom_compat_c.dylib;
+			refType = 0;
+		};
+		0FA8EF9C0423B21100A80166 = {
+			isa = PBXFileReference;
+			name = xpcom_obsolete.xpt;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/xpcom_obsolete.xpt;
+			refType = 0;
+		};
+		0FA8EF9D0423B21100A80166 = {
+			fileRef = 0FA8EF9C0423B21100A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FA8EF9E0423B21100A80166 = {
+			fileRef = 0FA8EF9C0423B21100A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FA8EF9F0423B29400A80166 = {
+			fileRef = 0FA8EF970423B1A500A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FA8EFA00423B2BB00A80166 = {
+			fileRef = 0FA8EF9A0423B1F500A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FA8EFA10423B30600A80166 = {
+			fileRef = 0FA8EF9C0423B21100A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FA8EFA20423B36300A80166 = {
+			children = (
+				F507BA4E0213BAC401D93544,
+				F5F181C90208006F0124611D,
+				F6BD63A601B3131201A962F7,
+				F6BD63A701B3131201A962F7,
+				F6BD63A801B3131201A962F7,
+				F6BD63A901B3131201A962F7,
+				F6BD63AA01B3131201A962F7,
+				F6BD63AB01B3131201A962F7,
+				F6BD63AC01B3131201A962F7,
+				F6BD63B101B3131201A962F7,
+				F6BD63DF01B313EE01A962F7,
+				F6BD63E101B313EE01A962F7,
+				F6BD63E201B313EE01A962F7,
+				F6BD63E401B313EE01A962F7,
+				F6BD63E501B313EE01A962F7,
+				F6BD640E01B3156701A962F7,
+				F5D3F1CE0209235A014E447F,
+				F6BD641201B3156701A962F7,
+				F6BD641301B3156701A962F7,
+				F6BD641401B3156701A962F7,
+				F5F59320020F4CD201ACA690,
+				F6BD641701B3156701A962F7,
+				F507A82C030BFB7901026D5D,
+				F6BD641B01B3156701A962F7,
+				F6BD641C01B3156701A962F7,
+				0FA8EF9A0423B1F500A80166,
+				F6BD644F01B315FA01A962F7,
+				F6BD645001B315FA01A962F7,
+				F53A902202C1127A01A967F3,
+				A708E74103FB9041003C038B,
+				A708E74303FB90AB003C038B,
+			);
+			isa = PBXGroup;
+			name = Components;
+			refType = 4;
+		};
+		0FA8EFA30423B37000A80166 = {
+			children = (
+				F56DEF11020802A501FF5ADC,
+				F5F181C50208006F0124611D,
+				F5F181C60208006F0124611D,
+				F5F181C80208006F0124611D,
+				F6BD639401B3131201A962F7,
+				F6BD639501B3131201A962F7,
+				F6BD639601B3131201A962F7,
+				F6BD639701B3131201A962F7,
+				F6BD639801B3131201A962F7,
+				F6BD639901B3131201A962F7,
+				F6BD639A01B3131201A962F7,
+				F6BD639B01B3131201A962F7,
+				F6BD639C01B3131201A962F7,
+				F6BD639D01B3131201A962F7,
+				F6BD639E01B3131201A962F7,
+				F6BD639F01B3131201A962F7,
+				F6BD63A001B3131201A962F7,
+				F6BD63A101B3131201A962F7,
+				F6BD63A201B3131201A962F7,
+				F6BD63A401B3131201A962F7,
+				F6BD63B201B3131201A962F7,
+				F6BD63B301B3131201A962F7,
+				F6BD63B401B3131201A962F7,
+				F6BD63B501B3131201A962F7,
+				F6BD63D901B313EE01A962F7,
+				F6BD63DA01B313EE01A962F7,
+				F6BD63DB01B313EE01A962F7,
+				F6BD63DC01B313EE01A962F7,
+				F6BD63DD01B313EE01A962F7,
+				F6BD63E601B313EE01A962F7,
+				F6BD63E701B313EE01A962F7,
+				F6BD63E801B313EE01A962F7,
+				F6BD63E901B313EE01A962F7,
+				F6BD63EA01B313EE01A962F7,
+				F6BD63EB01B313EE01A962F7,
+				F6BD63EC01B313EE01A962F7,
+				F6BD63ED01B313EE01A962F7,
+				F6BD63EE01B313EE01A962F7,
+				F6BD63EF01B313EE01A962F7,
+				F6BD63F001B313EE01A962F7,
+				F6BD63F101B313EE01A962F7,
+				F6BD641D01B3156701A962F7,
+				F6BD641E01B3156701A962F7,
+				F6BD641F01B3156701A962F7,
+				F6BD642001B3156701A962F7,
+				F6BD642101B3156701A962F7,
+				F6BD642201B3156701A962F7,
+				F6BD642301B3156701A962F7,
+				F6BD642501B3156701A962F7,
+				F6BD642601B3156701A962F7,
+				0FA8EF9C0423B21100A80166,
+				F6BD642701B3156701A962F7,
+				F6BD642801B3156701A962F7,
+				F6BD642901B3156701A962F7,
+				F6BD642A01B3156701A962F7,
+				F6BD642B01B3156701A962F7,
+				F6BD644D01B315FA01A962F7,
+				F6BD644E01B315FA01A962F7,
+				F517941F027F3F2901A967DF,
+				A7DF2C6003C3C83E00A80196,
+			);
+			isa = PBXGroup;
+			name = "XPT files";
+			refType = 4;
+		};
+//0F0
+//0F1
+//0F2
+//0F3
+//0F4
 //100
 //101
 //102
@@ -288,7 +457,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ ../ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers\"";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util ../modules/zlib/src ../dist/Embed/components";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util ../modules/zlib/src ../dist/Embed/components /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components";
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "-fno-rtti -fno-exceptions -fpascal-strings -fshort-wchar -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -DIBMBIDI";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
@@ -653,6 +822,7 @@
 				F5F415E403B97C6101A80166,
 				F5F7EF0F03C1F29C01BDD337,
 				3F22CC1503DF42A200026DCE,
+				0FA8EF9D0423B21100A80166,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -913,8 +1083,8 @@
 		A708E74103FB9041003C038B = {
 			isa = PBXFileReference;
 			name = libi18n.dylib;
-			path = ../dist/Embed/components/libi18n.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libi18n.dylib;
+			refType = 0;
 		};
 		A708E74203FB9077003C038B = {
 			fileRef = A708E74103FB9041003C038B;
@@ -925,11 +1095,23 @@
 		A708E74303FB90AB003C038B = {
 			isa = PBXFileReference;
 			name = libxmlextras.dylib;
-			path = ../dist/Embed/components/libxmlextras.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libxmlextras.dylib;
+			refType = 0;
 		};
 		A708E74403FB90B4003C038B = {
 			fileRef = A708E74303FB90AB003C038B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A72CB3D8041A0BA100A967F8 = {
+			isa = PBXFileReference;
+			name = libgfxshared_s.a;
+			path = ../gfx/src/shared/libgfxshared_s.a;
+			refType = 2;
+		};
+		A72CB3DA041A0BEB00A967F8 = {
+			fileRef = A72CB3D8041A0BA100A967F8;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -952,29 +1134,11 @@
 			settings = {
 			};
 		};
-		A72CB3D8041A0BA100A967F8 = {
-			isa = PBXFileReference;
-			name = libgfxshared_s.a;
-			path = ../gfx/src/shared/libgfxshared_s.a;
-			refType = 2;
-		};
-		A72CB3DA041A0BEB00A967F8 = {
-			fileRef = A72CB3D8041A0BA100A967F8;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		A7AC092704161E7200A967F8 = {
-			isa = PBXFileReference;
-			name = libmozz.dylib;
-			path = ../dist/Embed/libmozz.dylib;
-			refType = 2;
-		};
 		A7DF2C6003C3C83E00A80196 = {
 			isa = PBXFileReference;
 			name = xmlextras.xpt;
-			path = ../extensions/xmlextras/base/public/_xpidlgen/xmlextras.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/extensions/xmlextras/base/public/_xpidlgen/xmlextras.xpt;
+			refType = 0;
 		};
 		A7DF2C6303C3C8FD00A80196 = {
 			fileRef = A7DF2C6003C3C83E00A80196;
@@ -1025,8 +1189,8 @@
 		F507A82C030BFB7901026D5D = {
 			isa = PBXFileReference;
 			name = libuniversalchardet.dylib;
-			path = ../extensions/universalchardet/src/libuniversalchardet.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/extensions/universalchardet/src/libuniversalchardet.dylib;
+			refType = 0;
 		};
 		F507A82E030BFBB201026D5D = {
 			fileRef = F507A82C030BFB7901026D5D;
@@ -1289,8 +1453,8 @@
 		F507BA4E0213BAC401D93544 = {
 			isa = PBXFileReference;
 			name = libxmlextras.dylib;
-			path = ../extensions/xmlextras/build/src/libxmlextras.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/extensions/xmlextras/build/src/libxmlextras.dylib;
+			refType = 0;
 		};
 		F507BA500213BB0B01D93544 = {
 			fileRef = F507BA4E0213BAC401D93544;
@@ -2325,8 +2489,8 @@
 		F517941F027F3F2901A967DF = {
 			isa = PBXFileReference;
 			name = xuldoc.xpt;
-			path = ../content/xul/document/public/_xpidlgen/xuldoc.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/content/xul/document/public/_xpidlgen/xuldoc.xpt;
+			refType = 0;
 		};
 		F5179421027F3FD301A967DF = {
 			fileRef = F517941F027F3F2901A967DF;
@@ -3395,8 +3559,8 @@
 		F53A902202C1127A01A967F3 = {
 			isa = PBXFileReference;
 			name = liboji.dylib;
-			path = ../modules/oji/src/liboji.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/modules/oji/src/liboji.dylib;
+			refType = 0;
 		};
 		F53A902402C1137901A967F3 = {
 			fileRef = F53A902202C1127A01A967F3;
@@ -4748,8 +4912,8 @@
 		F56DEF11020802A501FF5ADC = {
 			isa = PBXFileReference;
 			name = urlbarhistory.xpt;
-			path = ../xpfe/components/urlbarhistory/public/_xpidlgen/urlbarhistory.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/xpfe/components/urlbarhistory/public/_xpidlgen/urlbarhistory.xpt;
+			refType = 0;
 		};
 		F56DEF130208030601FF5ADC = {
 			fileRef = F56DEF11020802A501FF5ADC;
@@ -4775,7 +4939,6 @@
 				F56F242602AC706801A967F3,
 				F56F242702AC706801A967F3,
 				F56F242B02AC706801A967F3,
-				F56F243202AC706801A967F3,
 				F56F243302AC706801A967F3,
 				F56F244502AC714601A967F3,
 				F56F244602AC714601A967F3,
@@ -4789,9 +4952,7 @@
 				F56F246202AC723001A967F3,
 				F56F246402AC723001A967F3,
 				F56F246502AC723001A967F3,
-				F56F246602AC723001A967F3,
 				F56F246902AC723001A967F3,
-				F56F246A02AC723001A967F3,
 				F56F246B02AC723001A967F3,
 				F56F246F02AC723001A967F3,
 				F56F247002AC723001A967F3,
@@ -4832,12 +4993,6 @@
 			path = ../intl/uconv/src/libuconv.a;
 			refType = 2;
 		};
-		F56F243202AC706801A967F3 = {
-			isa = PBXFileReference;
-			name = liburiloader.a;
-			path = ../uriloader/build/liburiloader.a;
-			refType = 2;
-		};
 		F56F243302AC706801A967F3 = {
 			isa = PBXFileReference;
 			name = libxpconnect.a;
@@ -4858,12 +5013,6 @@
 		};
 		F56F243C02AC706801A967F3 = {
 			fileRef = F56F242B02AC706801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F244302AC706801A967F3 = {
-			fileRef = F56F243202AC706801A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -4988,22 +5137,10 @@
 			path = ../modules/plugin/base/src/libgkplugin.a;
 			refType = 2;
 		};
-		F56F246602AC723001A967F3 = {
-			isa = PBXFileReference;
-			name = libgkview.a;
-			path = ../view/src/libgkview.a;
-			refType = 2;
-		};
 		F56F246902AC723001A967F3 = {
 			isa = PBXFileReference;
 			name = libjsdom.a;
 			path = ../dom/src/build/libjsdom.a;
-			refType = 2;
-		};
-		F56F246A02AC723001A967F3 = {
-			isa = PBXFileReference;
-			name = libjsurl.a;
-			path = ../dom/src/jsurl/libjsurl.a;
 			refType = 2;
 		};
 		F56F246B02AC723001A967F3 = {
@@ -5066,20 +5203,8 @@
 			settings = {
 			};
 		};
-		F56F247C02AC723101A967F3 = {
-			fileRef = F56F246602AC723001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F56F247F02AC723101A967F3 = {
 			fileRef = F56F246902AC723001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F248002AC723101A967F3 = {
-			fileRef = F56F246A02AC723001A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -6999,7 +7124,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers\"";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed";
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "-fno-rtti -fno-exceptions -fpascal-strings -fshort-wchar -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -D_BUILD_STATIC_BIN -DIBMBIDI";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lmozjs -lmozjpeg -ljsj -lmozpng -lmozmng -lpthread -lz -lm";
@@ -7363,6 +7488,7 @@
 				F5F415E503B97C6101A80166,
 				F5F7EF1003C1F29C01BDD337,
 				3F22CC1403DF42A200026DCE,
+				0FA8EF9E0423B21100A80166,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7447,7 +7573,6 @@
 				F56F243702AC706801A967F3,
 				F56F243802AC706801A967F3,
 				F56F243C02AC706801A967F3,
-				F56F244302AC706801A967F3,
 				F56F244402AC706801A967F3,
 				F56F245202AC714701A967F3,
 				F56F245302AC714701A967F3,
@@ -7461,9 +7586,7 @@
 				F56F247802AC723101A967F3,
 				F56F247A02AC723101A967F3,
 				F56F247B02AC723101A967F3,
-				F56F247C02AC723101A967F3,
 				F56F247F02AC723101A967F3,
-				F56F248002AC723101A967F3,
 				F56F248102AC723101A967F3,
 				F56F248502AC723101A967F3,
 				F56F248602AC723101A967F3,
@@ -7489,6 +7612,7 @@
 				F5BAABA102AC4AA701A967F3,
 				F5BAABA202AC4AA701A967F3,
 				F55A4DF50380705A01A80166,
+				0FA8EF990423B1A500A80166,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -9231,8 +9355,8 @@
 		F5D3F1CE0209235A014E447F = {
 			isa = PBXFileReference;
 			name = libmork.dylib;
-			path = ../db/mork/build/libmork.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/db/mork/build/libmork.dylib;
+			refType = 0;
 		};
 		F5D3F1D002092373014E447F = {
 			fileRef = F5D3F1CE0209235A014E447F;
@@ -9516,26 +9640,26 @@
 		F5F181C50208006F0124611D = {
 			isa = PBXFileReference;
 			name = history.xpt;
-			path = ../xpfe/components/history/public/_xpidlgen/history.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/xpfe/components/history/public/_xpidlgen/history.xpt;
+			refType = 0;
 		};
 		F5F181C60208006F0124611D = {
 			isa = PBXFileReference;
 			name = search.xpt;
-			path = ../xpfe/components/search/public/_xpidlgen/search.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/xpfe/components/search/public/_xpidlgen/search.xpt;
+			refType = 0;
 		};
 		F5F181C80208006F0124611D = {
 			isa = PBXFileReference;
 			name = autocomplete.xpt;
-			path = ../xpfe/components/autocomplete/public/_xpidlgen/autocomplete.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/xpfe/components/autocomplete/public/_xpidlgen/autocomplete.xpt;
+			refType = 0;
 		};
 		F5F181C90208006F0124611D = {
 			isa = PBXFileReference;
 			name = libappcomps.dylib;
-			path = ../xpfe/components/build/libappcomps.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/xpfe/components/build/libappcomps.dylib;
+			refType = 0;
 		};
 		F5F190BB02D1F81A01026D5D = {
 			fileEncoding = 30;
@@ -9649,8 +9773,8 @@
 		F5F59320020F4CD201ACA690 = {
 			isa = PBXFileReference;
 			name = libtxmgr.dylib;
-			path = ../editor/txmgr/src/libtxmgr.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/editor/txmgr/src/libtxmgr.dylib;
+			refType = 0;
 		};
 		F5F59322020F4D0201ACA690 = {
 			fileRef = F5F59320020F4CD201ACA690;
@@ -9910,22 +10034,22 @@
 		};
 		F6BD637A01B30E0F01A962F7 = {
 			children = (
-				F56F242202AC6F7101A967F3,
 				F51D9B1402094BB501A80166,
 				F57F0F470209DF5301A967DF,
+				0FA8EF970423B1A500A80166,
 				F6BD637F01B30EA301A962F7,
 				F50DCB4302C2856001A967F3,
 				F6BD638001B30EA301A962F7,
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
 				F6BD638701B30F5301A962F7,
-				A7AC092704161E7200A967F8,
 				F5F14E9602A5A43A01A967F3,
 				F5461CBB03AAC25C01A96660,
 				F5247C2F0228B5E7013DD99A,
 				F6BD645501B3167601A962F7,
 				F6BD64FB01B3184301A962F7,
 				F507BA530213C26501D93544,
+				F56F242202AC6F7101A967F3,
 				F6BD638901B30F5301A962F7,
 				F6BD64FF01B3184301A962F7,
 			);
@@ -9939,6 +10063,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F57F0F480209DF5301A967DF,
+				0FA8EF9F0423B29400A80166,
 				F6BD638A01B30F5301A962F7,
 				F6BD638B01B30F5301A962F7,
 				F6BD638C01B30F5301A962F7,
@@ -9982,99 +10107,8 @@
 		};
 		F6BD638901B30F5301A962F7 = {
 			children = (
-				F507BA4E0213BAC401D93544,
-				F56DEF11020802A501FF5ADC,
-				F5F181C50208006F0124611D,
-				F5F181C60208006F0124611D,
-				F5F181C80208006F0124611D,
-				F5F181C90208006F0124611D,
-				F6BD639401B3131201A962F7,
-				F6BD639501B3131201A962F7,
-				F6BD639601B3131201A962F7,
-				F6BD639701B3131201A962F7,
-				F6BD639801B3131201A962F7,
-				F6BD639901B3131201A962F7,
-				F6BD639A01B3131201A962F7,
-				F6BD639B01B3131201A962F7,
-				F6BD639C01B3131201A962F7,
-				F6BD639D01B3131201A962F7,
-				F6BD639E01B3131201A962F7,
-				F6BD639F01B3131201A962F7,
-				F6BD63A001B3131201A962F7,
-				F6BD63A101B3131201A962F7,
-				F6BD63A201B3131201A962F7,
-				F6BD63A401B3131201A962F7,
-				F6BD63A601B3131201A962F7,
-				F6BD63A701B3131201A962F7,
-				F6BD63A801B3131201A962F7,
-				F6BD63A901B3131201A962F7,
-				F6BD63AA01B3131201A962F7,
-				F6BD63AB01B3131201A962F7,
-				F6BD63AC01B3131201A962F7,
-				F6BD63B101B3131201A962F7,
-				F6BD63B201B3131201A962F7,
-				F6BD63B301B3131201A962F7,
-				F6BD63B401B3131201A962F7,
-				F6BD63B501B3131201A962F7,
-				F6BD63D901B313EE01A962F7,
-				F6BD63DA01B313EE01A962F7,
-				F6BD63DB01B313EE01A962F7,
-				F6BD63DC01B313EE01A962F7,
-				F6BD63DD01B313EE01A962F7,
-				F6BD63DF01B313EE01A962F7,
-				F6BD63E001B313EE01A962F7,
-				F6BD63E101B313EE01A962F7,
-				F6BD63E201B313EE01A962F7,
-				F6BD63E301B313EE01A962F7,
-				F6BD63E401B313EE01A962F7,
-				F6BD63E501B313EE01A962F7,
-				F6BD63E601B313EE01A962F7,
-				F6BD63E701B313EE01A962F7,
-				F6BD63E801B313EE01A962F7,
-				F6BD63E901B313EE01A962F7,
-				F6BD63EA01B313EE01A962F7,
-				F6BD63EB01B313EE01A962F7,
-				F6BD63EC01B313EE01A962F7,
-				F6BD63ED01B313EE01A962F7,
-				F6BD63EE01B313EE01A962F7,
-				F6BD63EF01B313EE01A962F7,
-				F6BD63F001B313EE01A962F7,
-				F6BD63F101B313EE01A962F7,
-				F6BD640E01B3156701A962F7,
-				F5D3F1CE0209235A014E447F,
-				F6BD641201B3156701A962F7,
-				F6BD641301B3156701A962F7,
-				F6BD641401B3156701A962F7,
-				F6BD641501B3156701A962F7,
-				F5F59320020F4CD201ACA690,
-				F6BD641701B3156701A962F7,
-				F6BD641A01B3156701A962F7,
-				F507A82C030BFB7901026D5D,
-				F6BD641B01B3156701A962F7,
-				F6BD641C01B3156701A962F7,
-				F6BD641D01B3156701A962F7,
-				F6BD641E01B3156701A962F7,
-				F6BD641F01B3156701A962F7,
-				F6BD642001B3156701A962F7,
-				F6BD642101B3156701A962F7,
-				F6BD642201B3156701A962F7,
-				F6BD642301B3156701A962F7,
-				F6BD642501B3156701A962F7,
-				F6BD642601B3156701A962F7,
-				F6BD642701B3156701A962F7,
-				F6BD642801B3156701A962F7,
-				F6BD642901B3156701A962F7,
-				F6BD642A01B3156701A962F7,
-				F6BD642B01B3156701A962F7,
-				F6BD644D01B315FA01A962F7,
-				F6BD644E01B315FA01A962F7,
-				F6BD644F01B315FA01A962F7,
-				F6BD645001B315FA01A962F7,
-				F517941F027F3F2901A967DF,
-				F53A902202C1127A01A967F3,
-				A7DF2C6003C3C83E00A80196,
-				A708E74103FB9041003C038B,
-				A708E74303FB90AB003C038B,
+				0FA8EFA20423B36300A80166,
+				0FA8EFA30423B37000A80166,
 			);
 			isa = PBXGroup;
 			name = "Gecko Components";
@@ -10116,6 +10150,8 @@
 			dstPath = components;
 			dstSubfolderSpec = 6;
 			files = (
+				0FA8EFA00423B2BB00A80166,
+				0FA8EFA10423B30600A80166,
 				F56DEF130208030601FF5ADC,
 				F5FB36780208010801236FF3,
 				F5FB36790208010801236FF3,
@@ -10157,10 +10193,8 @@
 				F6BD647C01B3167601A962F7,
 				F6BD647D01B3167601A962F7,
 				F6BD647F01B3167601A962F7,
-				F6BD648001B3167601A962F7,
 				F6BD648101B3167601A962F7,
 				F6BD648201B3167601A962F7,
-				F6BD648301B3167601A962F7,
 				F6BD648401B3167601A962F7,
 				F6BD648501B3167601A962F7,
 				F6BD648601B3167601A962F7,
@@ -10179,10 +10213,8 @@
 				F6BD649901B3167601A962F7,
 				F6BD649A01B3167601A962F7,
 				F6BD649B01B3167601A962F7,
-				F6BD649C01B3167601A962F7,
 				F6BD649E01B3167601A962F7,
 				F507A82E030BFBB201026D5D,
-				F6BD64A101B3167601A962F7,
 				F6BD64A201B3167601A962F7,
 				F6BD64A301B3167601A962F7,
 				F6BD64A401B3167601A962F7,
@@ -10217,476 +10249,452 @@
 		F6BD639401B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = caps.xpt;
-			path = ../dist/Embed/components/caps.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/caps.xpt;
+			refType = 0;
 		};
 		F6BD639501B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = chrome.xpt;
-			path = ../dist/Embed/components/chrome.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/chrome.xpt;
+			refType = 0;
 		};
 		F6BD639601B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = docshell.xpt;
-			path = ../dist/Embed/components/docshell.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/docshell.xpt;
+			refType = 0;
 		};
 		F6BD639701B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_base.xpt;
-			path = ../dist/Embed/components/dom_base.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_base.xpt;
+			refType = 0;
 		};
 		F6BD639801B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_core.xpt;
-			path = ../dist/Embed/components/dom_core.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_core.xpt;
+			refType = 0;
 		};
 		F6BD639901B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_css.xpt;
-			path = ../dist/Embed/components/dom_css.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_css.xpt;
+			refType = 0;
 		};
 		F6BD639A01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_events.xpt;
-			path = ../dist/Embed/components/dom_events.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_events.xpt;
+			refType = 0;
 		};
 		F6BD639B01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_html.xpt;
-			path = ../dist/Embed/components/dom_html.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_html.xpt;
+			refType = 0;
 		};
 		F6BD639C01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_range.xpt;
-			path = ../dist/Embed/components/dom_range.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_range.xpt;
+			refType = 0;
 		};
 		F6BD639D01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_stylesheets.xpt;
-			path = ../dist/Embed/components/dom_stylesheets.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_stylesheets.xpt;
+			refType = 0;
 		};
 		F6BD639E01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_traversal.xpt;
-			path = ../dist/Embed/components/dom_traversal.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_traversal.xpt;
+			refType = 0;
 		};
 		F6BD639F01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_views.xpt;
-			path = ../dist/Embed/components/dom_views.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_views.xpt;
+			refType = 0;
 		};
 		F6BD63A001B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_xbl.xpt;
-			path = ../dist/Embed/components/dom_xbl.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_xbl.xpt;
+			refType = 0;
 		};
 		F6BD63A101B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom_xul.xpt;
-			path = ../dist/Embed/components/dom_xul.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom_xul.xpt;
+			refType = 0;
 		};
 		F6BD63A201B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = dom.xpt;
-			path = ../dist/Embed/components/dom.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/dom.xpt;
+			refType = 0;
 		};
 		F6BD63A401B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = gfx.xpt;
-			path = ../dist/Embed/components/gfx.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/gfx.xpt;
+			refType = 0;
 		};
 		F6BD63A601B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libcaps.dylib;
-			path = ../dist/Embed/components/libcaps.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libcaps.dylib;
+			refType = 0;
 		};
 		F6BD63A701B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libchrome.dylib;
-			path = ../dist/Embed/components/libchrome.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libchrome.dylib;
+			refType = 0;
 		};
 		F6BD63A801B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libcookie.dylib;
-			path = ../dist/Embed/components/libcookie.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libcookie.dylib;
+			refType = 0;
 		};
 		F6BD63A901B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libdocshell.dylib;
-			path = ../dist/Embed/components/libdocshell.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libdocshell.dylib;
+			refType = 0;
 		};
 		F6BD63AA01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libeditor.dylib;
-			path = ../dist/Embed/components/libeditor.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libeditor.dylib;
+			refType = 0;
 		};
 		F6BD63AB01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libembedcomponents.dylib;
-			path = ../dist/Embed/components/libembedcomponents.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libembedcomponents.dylib;
+			refType = 0;
 		};
 		F6BD63AC01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libgfx_mac.dylib;
-			path = ../dist/Embed/components/libgfx_mac.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libgfx_mac.dylib;
+			refType = 0;
 		};
 		F6BD63B101B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libwebbrwsr.dylib;
-			path = ../dist/Embed/components/libwebbrwsr.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libwebbrwsr.dylib;
+			refType = 0;
 		};
 		F6BD63B201B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = mimetype.xpt;
-			path = ../netwerk/mime/public/_xpidlgen/mimetype.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/netwerk/mime/public/_xpidlgen/mimetype.xpt;
+			refType = 0;
 		};
 		F6BD63B301B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = txtsvc.xpt;
-			path = ../dist/Embed/components/txtsvc.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/txtsvc.xpt;
+			refType = 0;
 		};
 		F6BD63B401B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = webBrowser_core.xpt;
-			path = ../dist/Embed/components/webBrowser_core.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/webBrowser_core.xpt;
+			refType = 0;
 		};
 		F6BD63B501B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = windowwatcher.xpt;
-			path = ../dist/Embed/components/windowwatcher.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/windowwatcher.xpt;
+			refType = 0;
 		};
 		F6BD63D901B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = content_base.xpt;
-			path = ../dist/Embed/components/content_base.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/content_base.xpt;
+			refType = 0;
 		};
 		F6BD63DA01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = jar.xpt;
-			path = ../dist/Embed/components/jar.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/jar.xpt;
+			refType = 0;
 		};
 		F6BD63DB01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = jsurl.xpt;
-			path = ../dist/Embed/components/jsurl.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/jsurl.xpt;
+			refType = 0;
 		};
 		F6BD63DC01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = layout_base.xpt;
-			path = ../dist/Embed/components/layout_base.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/layout_base.xpt;
+			refType = 0;
 		};
 		F6BD63DD01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = layout_xul.xpt;
-			path = ../dist/Embed/components/layout_xul.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/layout_xul.xpt;
+			refType = 0;
 		};
 		F6BD63DF01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libgklayout.dylib;
-			path = ../dist/Embed/components/libgklayout.dylib;
-			refType = 2;
-		};
-		F6BD63E001B313EE01A962F7 = {
-			isa = PBXFileReference;
-			name = libgkview.dylib;
-			path = ../dist/Embed/components/libgkview.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libgklayout.dylib;
+			refType = 0;
 		};
 		F6BD63E101B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libhtmlpars.dylib;
-			path = ../dist/Embed/components/libhtmlpars.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libhtmlpars.dylib;
+			refType = 0;
 		};
 		F6BD63E201B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libjar50.dylib;
-			path = ../dist/Embed/components/libjar50.dylib;
-			refType = 2;
-		};
-		F6BD63E301B313EE01A962F7 = {
-			isa = PBXFileReference;
-			name = libjsurl.dylib;
-			path = ../dist/Embed/components/libjsurl.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libjar50.dylib;
+			refType = 0;
 		};
 		F6BD63E401B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libnecko.dylib;
-			path = ../dist/Embed/components/libnecko.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libnecko.dylib;
+			refType = 0;
 		};
 		F6BD63E501B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libnecko2.dylib;
-			path = ../dist/Embed/components/libnecko2.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libnecko2.dylib;
+			refType = 0;
 		};
 		F6BD63E601B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_about.xpt;
-			path = ../dist/Embed/components/necko_about.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko_about.xpt;
+			refType = 0;
 		};
 		F6BD63E701B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_cache.xpt;
-			path = ../dist/Embed/components/necko_cache.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko_cache.xpt;
+			refType = 0;
 		};
 		F6BD63E801B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_data.xpt;
-			path = ../dist/Embed/components/necko_data.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko_data.xpt;
+			refType = 0;
 		};
 		F6BD63E901B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_dns.xpt;
-			path = ../dist/Embed/components/necko_dns.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko_dns.xpt;
+			refType = 0;
 		};
 		F6BD63EA01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_ftp.xpt;
-			path = ../dist/Embed/components/necko_ftp.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko_ftp.xpt;
+			refType = 0;
 		};
 		F6BD63EB01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_http.xpt;
-			path = ../dist/Embed/components/necko_http.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko_http.xpt;
+			refType = 0;
 		};
 		F6BD63EC01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_jar.xpt;
-			path = ../dist/Embed/components/necko_jar.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko_jar.xpt;
+			refType = 0;
 		};
 		F6BD63ED01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_res.xpt;
-			path = ../dist/Embed/components/necko_res.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko_res.xpt;
+			refType = 0;
 		};
 		F6BD63EE01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_socket.xpt;
-			path = ../netwerk/socket/base/_xpidlgen/necko_socket.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/netwerk/socket/base/_xpidlgen/necko_socket.xpt;
+			refType = 0;
 		};
 		F6BD63EF01B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_strconv.xpt;
-			path = ../dist/Embed/components/necko_strconv.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko_strconv.xpt;
+			refType = 0;
 		};
 		F6BD63F001B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko_viewsource.xpt;
-			path = ../netwerk/protocol/viewsource/public/_xpidlgen/necko_viewsource.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/netwerk/protocol/viewsource/public/_xpidlgen/necko_viewsource.xpt;
+			refType = 0;
 		};
 		F6BD63F101B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = necko.xpt;
-			path = ../dist/Embed/components/necko.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/necko.xpt;
+			refType = 0;
 		};
 		F6BD640E01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libimglib2.dylib;
-			path = ../dist/Embed/components/libimglib2.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libimglib2.dylib;
+			refType = 0;
 		};
 		F6BD641201B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libpref.dylib;
-			path = ../dist/Embed/components/libpref.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libpref.dylib;
+			refType = 0;
 		};
 		F6BD641301B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libprofile.dylib;
-			path = ../dist/Embed/components/libprofile.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libprofile.dylib;
+			refType = 0;
 		};
 		F6BD641401B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = librdf.dylib;
-			path = ../dist/Embed/components/librdf.dylib;
-			refType = 2;
-		};
-		F6BD641501B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libshistory.dylib;
-			path = ../dist/Embed/components/libshistory.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/librdf.dylib;
+			refType = 0;
 		};
 		F6BD641701B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libuconv.dylib;
-			path = ../dist/Embed/components/libuconv.dylib;
-			refType = 2;
-		};
-		F6BD641A01B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = liburiloader.dylib;
-			path = ../dist/Embed/components/liburiloader.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libuconv.dylib;
+			refType = 0;
 		};
 		F6BD641B01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libwidget_mac.dylib;
-			path = ../dist/Embed/components/libwidget_mac.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libwidget_mac.dylib;
+			refType = 0;
 		};
 		F6BD641C01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libxpconnect.dylib;
-			path = ../dist/Embed/components/libxpconnect.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libxpconnect.dylib;
+			refType = 0;
 		};
 		F6BD641D01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = pref.xpt;
-			path = ../dist/Embed/components/pref.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/pref.xpt;
+			refType = 0;
 		};
 		F6BD641E01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = profile.xpt;
-			path = ../dist/Embed/components/profile.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/profile.xpt;
+			refType = 0;
 		};
 		F6BD641F01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = rdf.xpt;
-			path = ../dist/Embed/components/rdf.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/rdf.xpt;
+			refType = 0;
 		};
 		F6BD642001B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = shistory.xpt;
-			path = ../dist/Embed/components/shistory.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/shistory.xpt;
+			refType = 0;
 		};
 		F6BD642101B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = uconv.xpt;
-			path = ../dist/Embed/components/uconv.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/uconv.xpt;
+			refType = 0;
 		};
 		F6BD642201B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = unicharutil.xpt;
-			path = ../dist/Embed/components/unicharutil.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/unicharutil.xpt;
+			refType = 0;
 		};
 		F6BD642301B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = uriloader.xpt;
-			path = ../dist/Embed/components/uriloader.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/uriloader.xpt;
+			refType = 0;
 		};
 		F6BD642501B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_base.xpt;
-			path = ../dist/Embed/components/xpcom_base.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/xpcom_base.xpt;
+			refType = 0;
 		};
 		F6BD642601B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_components.xpt;
-			path = ../dist/Embed/components/xpcom_components.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/xpcom_components.xpt;
+			refType = 0;
 		};
 		F6BD642701B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_ds.xpt;
-			path = ../dist/Embed/components/xpcom_ds.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/xpcom_ds.xpt;
+			refType = 0;
 		};
 		F6BD642801B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_io.xpt;
-			path = ../dist/Embed/components/xpcom_io.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/xpcom_io.xpt;
+			refType = 0;
 		};
 		F6BD642901B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_threads.xpt;
-			path = ../dist/Embed/components/xpcom_threads.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/xpcom_threads.xpt;
+			refType = 0;
 		};
 		F6BD642A01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpcom_xpti.xpt;
-			path = ../dist/Embed/components/xpcom_xpti.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/xpcom_xpti.xpt;
+			refType = 0;
 		};
 		F6BD642B01B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = xpconnect.xpt;
-			path = ../dist/Embed/components/xpconnect.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/xpconnect.xpt;
+			refType = 0;
 		};
 		F6BD644D01B315FA01A962F7 = {
 			isa = PBXFileReference;
 			name = embed_base.xpt;
-			path = ../embedding/base/_xpidlgen/embed_base.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/embedding/base/_xpidlgen/embed_base.xpt;
+			refType = 0;
 		};
 		F6BD644E01B315FA01A962F7 = {
 			isa = PBXFileReference;
 			name = imglib2.xpt;
-			path = ../dist/Embed/components/imglib2.xpt;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/imglib2.xpt;
+			refType = 0;
 		};
 		F6BD644F01B315FA01A962F7 = {
 			isa = PBXFileReference;
 			name = libgkplugin.dylib;
-			path = ../modules/plugin/base/src/libgkplugin.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/modules/plugin/base/src/libgkplugin.dylib;
+			refType = 0;
 		};
 		F6BD645001B315FA01A962F7 = {
 			isa = PBXFileReference;
 			name = libjsdom.dylib;
-			path = ../dist/Embed/components/libjsdom.dylib;
-			refType = 2;
+			path = /Volumes/Ocelot/projects/mozilla/camino/src/mozilla/dist/Embed/components/libjsdom.dylib;
+			refType = 0;
 		};
 		F6BD645501B3167601A962F7 = {
 			children = (
@@ -10915,12 +10923,6 @@
 			settings = {
 			};
 		};
-		F6BD648001B3167601A962F7 = {
-			fileRef = F6BD63E001B313EE01A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD648101B3167601A962F7 = {
 			fileRef = F6BD63E101B313EE01A962F7;
 			isa = PBXBuildFile;
@@ -10929,12 +10931,6 @@
 		};
 		F6BD648201B3167601A962F7 = {
 			fileRef = F6BD63E201B313EE01A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD648301B3167601A962F7 = {
-			fileRef = F6BD63E301B313EE01A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -11047,20 +11043,8 @@
 			settings = {
 			};
 		};
-		F6BD649C01B3167601A962F7 = {
-			fileRef = F6BD641501B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD649E01B3167601A962F7 = {
 			fileRef = F6BD641701B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD64A101B3167601A962F7 = {
-			fileRef = F6BD641A01B3156701A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
