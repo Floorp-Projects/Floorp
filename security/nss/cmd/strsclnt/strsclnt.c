@@ -263,7 +263,7 @@ printSecurityInfo(PRFileDesc *fd)
     result = SSL_GetChannelInfo(fd, &info, sizeof info);
     if (result != SECSuccess)
     	return;
-    if (info.length >= sizeof info - sizeof info.reserved) {
+    if (info.length >= offsetof(SSLChannelInfo, reserved)) {
 	fprintf(stderr, 
 	   "strsclnt: SSL version %d.%d using %d-bit %s with %d-bit %s MAC\n",
 	       info.protocolVersion >> 8, info.protocolVersion & 0xff,
