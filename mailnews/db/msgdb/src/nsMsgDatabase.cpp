@@ -43,6 +43,9 @@
 #include "nsMsgMimeCID.h"
 #include "nsILocaleService.h"
 
+#include "nsIMsgAccountManager.h"
+#include "nsIMsgFolderCache.h"
+#include "nsIMsgFolderCacheElement.h"
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 
 #if defined(XP_MAC) && defined(CompareString)
@@ -899,6 +902,36 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 	// ### do something with error, but clear it now because mork errors out on commits.
 	if (GetEnv())
 		GetEnv()->ClearErrors();
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv) && accountManager)
+  {
+    nsCOMPtr<nsIMsgFolderCache> folderCache;
+
+    rv = accountManager->GetFolderCache(getter_AddRefs(folderCache));
+    if (NS_SUCCEEDED(rv) && folderCache)
+    {
+      nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+      rv = folderCache->GetCacheElement(m_dbName, PR_FALSE, getter_AddRefs(cacheElement));
+      if (NS_SUCCEEDED(rv) && cacheElement && m_dbFolderInfo)
+      {
+        PRInt32 totalMessages, unreadMessages, pendingMessages, pendingUnreadMessages;
+
+        m_dbFolderInfo->GetNumMessages(&totalMessages);
+        m_dbFolderInfo->GetNumNewMessages(&unreadMessages);
+        m_dbFolderInfo->GetImapUnreadPendingMessages(&pendingUnreadMessages);
+        m_dbFolderInfo->GetImapTotalPendingMessages(&pendingMessages);
+	      cacheElement->SetInt32Property("totalMsgs", totalMessages);
+	      cacheElement->SetInt32Property("totalUnreadMsgs", unreadMessages);
+        cacheElement->SetInt32Property("pendingMsgs", pendingMessages);
+        cacheElement->SetInt32Property("pendingUnreadMsgs", pendingUnreadMessages);
+        folderCache->Commit(PR_FALSE);
+      }
+    }
+  }
+  
 	return err;
 }
 
