@@ -236,9 +236,9 @@ sub GenerateVersionTable {
     my $dotargetmilestone = Param("usetargetmilestone");
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
-    SendSQL("select product, description, disallownew$mpart from products");
+    SendSQL("select product, description, votesperuser, disallownew$mpart from products");
     while (@line = FetchSQLData()) {
-        my ($p, $d, $dis, $u) = (@line);
+        my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
         if ($dis) {
             # Special hack.  Stomp on the description and make it "0" if we're
@@ -249,6 +249,7 @@ sub GenerateVersionTable {
         if ($dotargetmilestone) {
             $::milestoneurl{$p} = $u;
         }
+        $::prodmaxvotes{$p} = $votesperuser;
     }
             
 
@@ -300,6 +301,7 @@ sub GenerateVersionTable {
         print FID GenerateCode('@::legal_' . $i);
     }
     print FID GenerateCode('%::proddesc');
+    print FID GenerateCode('%::prodmaxvotes');
 
     if ($dotargetmilestone) {
         my $last = Param("nummilestones");
@@ -513,6 +515,29 @@ sub UserInGroup {
     }
     return 0;
 }
+
+
+sub RemoveVotes {
+    my ($id, $reason) = (@_);
+    ConnectToDatabase();
+    SendSQL("select profiles.login_name from votes, profiles where votes.bug_id = $id and profiles.userid = votes.who");
+    my @list;
+    while (MoreSQLData()) {
+        push(@list, FetchOneColumn());
+    }
+    if (0 < @list) {
+        if (open(SENDMAIL, "|/usr/lib/sendmail -t")) {
+            my %substs;
+            $substs{"to"} = join(',', @list);
+            $substs{"bugid"} = $id;
+            $substs{"reason"} = $reason;
+            print SENDMAIL PerformSubsts(Param("voteremovedmail"), \%substs);
+            close SENDMAIL;
+        }
+        SendSQL("delete from votes where bug_id = $id");
+    }
+}
+
 
 
 sub Param {

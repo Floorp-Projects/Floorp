@@ -22,22 +22,17 @@ mysql > /dev/null 2>/dev/null << OK_ALL_DONE
 
 use bugs;
 
-drop table products;
+drop table votes;
 OK_ALL_DONE
 
 mysql << OK_ALL_DONE
 use bugs;
-create table products (
-product tinytext,
-description mediumtext,
-milestoneurl tinytext not null,
-disallownew tinyint not null,
-votesperuser smallint not null
+create table votes (
+who mediumint not null,
+bug_id mediumint not null,
+count smallint not null,
+
+index(who),
+index(bug_id)
 );
 
-
-
-insert into products(product, description) values ("TestProduct", "This is a test product.  This ought to be blown away and replaced with real stuff in a finished installation of bugzilla.");
-
-
-OK_ALL_DONE

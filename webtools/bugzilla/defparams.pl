@@ -339,5 +339,20 @@ DefParam("emailsuffix",
          "");
 
 
+DefParam("voteremovedmail",
+q{This is a mail message to send to anyone who gets a vote removed from a bug for any reason.  %to% gets replaced by a comma-separated list of people who used to be voting for this bug.  %bugid% gets replaced by the bug number.  %reason% gets replaced by a short reason describing why the vote was removed.  %<i>anythingelse</i>% gets replaced by the definition of thatparameter (as defined on this page).},
+         "l",
+"From: bugzilla-daemon
+To: %to%
+Subject: [Bug %bugid%] Your vote has been removed from this bug
+
+You used to have a vote on bug %bugid%, but it has been removed.
+
+Reason: %reason%
+
+%urlbase%show_bug.cgi?id=%bugid%
+");
+         
+
 1;
 

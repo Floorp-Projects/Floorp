@@ -190,6 +190,10 @@ sub GetBugText {
 
     my @cclist;
     @cclist = split(/,/, ShowCcList($id));
+    SendSQL("select profiles.login_name from votes, profiles where votes.bug_id = $id and profiles.userid = votes.who");
+    while (MoreSQLData()) {
+        push(@cclist, FetchOneColumn());
+    }
     $::bug{'cclist'} = \@cclist;
 
 

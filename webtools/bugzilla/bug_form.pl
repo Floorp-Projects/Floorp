@@ -111,7 +111,7 @@ my $id = $::FORM{'id'};
 
 my $query = "
 select
-        bug_id,
+        bugs.bug_id,
         product,
         version,
         rep_platform,
@@ -130,10 +130,12 @@ select
 	status_whiteboard,
         date_format(creation_ts,'Y-m-d'),
         groupset,
-	delta_ts
-from bugs
-where bug_id = $id
-and bugs.groupset & $::usergroupset = bugs.groupset";
+	delta_ts,
+	sum(votes.count)
+from bugs left join votes using(bug_id)
+where bugs.bug_id = $id
+and bugs.groupset & $::usergroupset = bugs.groupset
+group by bugs.bug_id";
 
 SendSQL($query);
 my %bug;
@@ -145,7 +147,7 @@ if (@row = FetchSQLData()) {
 		       "bug_severity", "component", "assigned_to", "reporter",
 		       "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
-                       "groupset", "delta_ts") {
+                       "groupset", "delta_ts", "votes") {
 	$bug{$field} = shift @row;
 	if (!defined $bug{$field}) {
 	    $bug{$field} = "";
@@ -366,6 +368,16 @@ if (Param("usedependencies")) {
     print "</td></tr><tr>";
     EmitDependList("Bugs depending on bug $id", "dependson", "blocked");
     print "</tr></table>\n";
+}
+
+if ($::prodmaxvotes{$bug{'product'}}) {
+    print qq{
+<table><tr>
+<th><a href="votehelp.html">Votes</a> for bug $id:</th><td>
+<a href="showvotes.cgi?bug_id=$id">$bug{'votes'}</a>
+&nbsp;&nbsp;&nbsp;<a href="showvotes.cgi?voteon=$id">Vote for this bug</a>
+</td></tr></table>
+};
 }
 
 print "

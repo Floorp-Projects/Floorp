@@ -83,6 +83,8 @@ On which of these bugs would you like email notification of changes?</td>
 <input type=submit value=Submit>
 </form>
 <hr>
+<a href=\"showvotes.cgi\">Review your votes</a>
+<hr>
 ";
     navigation_header();
     exit;

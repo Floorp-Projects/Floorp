@@ -303,7 +303,7 @@ sub LogDependencyActivity {
 
 foreach my $id (@idlist) {
     my %dependencychanged;
-    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write");
+    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write");
     my @oldvalues = SnapShotBug($id);
 
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
@@ -489,6 +489,10 @@ The changes made were:
             if ($col eq 'assigned_to' || $col eq 'qa_contact') {
                 $old = DBID_to_name($old) if $old != 0;
                 $new = DBID_to_name($new) if $new != 0;
+            }
+            if ($col eq 'product') {
+                RemoveVotes($id,
+                            "This bug has been moved to a different product");
             }
             $col = SqlQuote($col);
             $old = SqlQuote($old);

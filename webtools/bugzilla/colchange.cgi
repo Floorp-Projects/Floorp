@@ -31,7 +31,7 @@ print "Content-type: text/html\n";
 
 my @masterlist = ("opendate", "changeddate", "severity", "priority",
                   "platform", "owner", "reporter", "status", "resolution",
-                  "component", "product", "version", "project", "os");
+                  "component", "product", "version", "project", "os", "votes");
 
 if (Param("usetargetmilestone")) {
     push(@masterlist, "target_milestone");

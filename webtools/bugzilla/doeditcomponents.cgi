@@ -96,12 +96,12 @@ GetVersionTable();
 my $prodcode = "P000";
 
 foreach my $product (@::legal_product) {
-    SendSQL("select description, milestoneurl, disallownew from products where product='$product'");
+    SendSQL("select description, milestoneurl, disallownew, votesperuser from products where product='$product'");
     my @row = FetchSQLData();
     if (!@row) {
         next;
     }
-    my ($description, $milestoneurl, $disallownew) = (@row);
+    my ($description, $milestoneurl, $disallownew, $votesperuser) = (@row);
     $prodcode++;
     Check($product, $::FORM{"prodcode-$prodcode"});
 
@@ -111,6 +111,7 @@ foreach my $product (@::legal_product) {
         DoOne($milestoneurl, "$prodcode-milestoneurl", $where);
     }
     DoOne($disallownew, "$prodcode-disallownew", $where);
+    DoOne($votesperuser, "$prodcode-votesperuser", $where);
 
     SendSQL("select value, initialowner, initialqacontact, description from components where program=" . SqlQuote($product) . " order by value");
     my $c = 0;

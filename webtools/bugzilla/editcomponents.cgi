@@ -59,12 +59,12 @@ GetVersionTable();
 my $prodcode = "P000";
 
 foreach my $product (@::legal_product) {
-    SendSQL("select description, milestoneurl, disallownew from products where product='$product'");
+    SendSQL("select description, milestoneurl, disallownew, votesperuser from products where product='$product'");
     my @row = FetchSQLData();
     if (!@row) {
         next;
     }
-    my ($description, $milestoneurl, $disallownew) = (@row);
+    my ($description, $milestoneurl, $disallownew, $votesperuser) = (@row);
     $prodcode++;
     print "<input type=hidden name=prodcode-$prodcode value=\"" .
         value_quote($product) . "\">\n";
@@ -77,6 +77,9 @@ foreach my $product (@::legal_product) {
         print "<td><input size=80 name=$prodcode-milestoneurl value=\"" .
             value_quote($milestoneurl) . "\"></td></tr>\n";
     }
+    print qq{<tr><th align=right>Maximum votes per user:</th><td>\n};
+    print qq{<input size=10 name=$prodcode-votesperuser value=$votesperuser>};
+    print qq{</td></tr>\n};
     my $check0 = !$disallownew ? " SELECTED" : "";
     my $check1 = $disallownew ? " SELECTED" : "";
     print "<tr><td colspan=2><select name=$prodcode-disallownew>\n";

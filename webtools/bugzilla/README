@@ -282,6 +282,7 @@ command.  Order does not matter, but this one is fine:
 	./makeproducttable.sh
 	./makeprofilestable.sh
 	./makeversiontable.sh
+	./makevotestable.sh
 
 You may want to edit the scripts; once bugs are entered it gets very hard to
 make changes. Think carefully about how you want database users to describe bugs.  Here's one

@@ -173,6 +173,7 @@ DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
        "bugs.target_milestone");
+DefCol("votes", "sum(votes.count)", "Votes", "sum(votes.count)");
 
 my @collist;
 if (defined $::COOKIE{'COLUMNLIST'}) {
@@ -208,11 +209,12 @@ bugs.bug_status";
 
 
 $query .= "
-from   bugs,
+from   bugs left join votes using(bug_id),
        profiles assign,
        profiles report
        left join profiles qacont on bugs.qa_contact = qacont.userid,
        versions projector
+
 where  bugs.assigned_to = assign.userid 
 and    bugs.reporter = report.userid
 and    bugs.product = projector.program
@@ -226,7 +228,7 @@ if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
     # We need to poke into the CC table.  Do weird SQL left join stuff so that
     # we can look in the CC table, but won't reject any bugs that don't have
     # any CC fields.
-    $query =~ s/bugs,/bugs left join cc using (bug_id) left join profiles ccname on cc.who = ccname.userid,/;
+    $query =~ s/bugs left join,/bugs left join cc using (bug_id) left join profiles ccname on cc.who = ccname.userid left join,/;
 }
 
 if (defined $::FORM{'sql'}) {
@@ -430,6 +432,8 @@ foreach my $f ("short_desc", "long_desc", "bug_file_loc",
     }
 }
 
+
+$query .= "group by bugs.bug_id\n";
 
 if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
     $query .= "order by ";
