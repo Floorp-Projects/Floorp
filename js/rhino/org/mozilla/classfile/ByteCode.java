@@ -19,10 +19,17 @@
 package org.mozilla.classfile;
 
 /**
- * Operand values expected by the JVM in Java class files.
+ * This class provides opcode values expected by the JVM in Java class files.
+ * 
+ * It also provides tables for internal use by the ClassFileWriter.
+ * 
+ * @author Roger Lawrence
  */
 public class ByteCode {
 
+    /**
+     * The byte opcodes defined by the Java Virtual Machine.
+     */
     public static final byte
         NOP = 0x00,
         ACONST_NULL = 0x01,
@@ -257,7 +264,9 @@ public class ByteCode {
         IMPDEP2 = (byte)0xFF;
     
     
-        // Types for NEWARRAY
+        /** 
+         * Types for the NEWARRAY opcode.
+         */
         public static final byte
             T_BOOLEAN = 4,
             T_CHAR = 5,
@@ -268,7 +277,10 @@ public class ByteCode {
             T_INT = 10,
             T_LONG = 11;
 
-        static final byte[] extra = {   // # bytes of operands generated after the opcode
+        /**
+         *  Number of bytes of operands generated after the opcode.
+         */
+        static final byte[] extra = {   
         /* NOP */ 0,
         /* ACONST_NULL */ 0,
         /* ICONST_M1 */ 0,
@@ -527,7 +539,10 @@ public class ByteCode {
         /* IMPDEP2 */ 0
         };
 
-        static final byte[] opcodeCount = {   // # of operands accompanying the opcode
+        /**
+         * Number of operands accompanying the opcode.
+         */
+        static final byte[] opcodeCount = {   
         /* NOP */ 0,
         /* ACONST_NULL */ 0,
         /* ICONST_M1 */ 0,
@@ -786,7 +801,10 @@ public class ByteCode {
         /* IMPDEP2 */ 0
         };
 
-        static final byte[] stackChange = {     // the effect on the operand stack
+        /**
+         *  The effect on the operand stack of a given opcode.
+         */
+        static final byte[] stackChange = {    
         /* NOP */ 0,
         /* ACONST_NULL */ 1,
         /* ICONST_M1 */ 1,
