@@ -159,8 +159,9 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   MenuHandle menuHandle = nsnull;
   aMenu->GetNativeData(menuHandle);
   
-  ::InsertMenu(menuHandle, mNumMenus);
   mNumMenus++;
+  ::InsertMenu(menuHandle, 0);
+  
   return NS_OK;
 }
 
