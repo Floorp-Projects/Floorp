@@ -32,6 +32,8 @@
 #include "nsIForm.h"
 #include "nsIWidget.h"
 #include "nsITextWidget.h"
+#include "nsICheckButton.h"
+#include "nsIRadioButton.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -40,6 +42,8 @@ static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
+static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 
 class nsHTMLInputElement : public nsIDOMHTMLInputElement,
                            public nsIScriptObjectOwner,
@@ -244,7 +248,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Accept, accept, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, AccessKey, accesskey, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Align, align, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Alt, alt, eSetAttrNotify_None)
-NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked, eSetAttrNotify_Render)
+//NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked, eSetAttrNotify_Render)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled, eSetAttrNotify_Render)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name, eSetAttrNotify_Restart)
@@ -253,13 +257,120 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Size, size, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Src, src, eSetAttrNotify_Render)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value, eSetAttrNotify_Render)
+//NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value, eSetAttrNotify_Render)
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetType(nsString& aValue)
 {
   mInner.GetAttribute(nsHTMLAtoms::type, aValue);
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLInputElement::GetValue(nsString& aValue)
+{
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_INPUT_TEXT == type) {
+    if (nsnull != mWidget) {
+      nsITextWidget* text = nsnull;
+      if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
+        PRUint32 size;
+        text->GetText(aValue,0,size); 
+        NS_RELEASE(text);
+        return NS_OK;
+      }
+    }
+  } 
+
+  return mInner.GetAttribute(nsHTMLAtoms::value, aValue);
+}
+
+
+NS_IMETHODIMP 
+nsHTMLInputElement::SetValue(const nsString& aValue)
+{
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_INPUT_TEXT == type) {
+    if (nsnull != mWidget) {
+      nsITextWidget* text = nsnull;
+      if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
+        PRUint32 size;
+        text->SetText(aValue,size); 
+        NS_RELEASE(text);
+        return NS_OK;
+      }
+    }
+  }
+
+  return mInner.SetAttribute(nsHTMLAtoms::value, aValue, PR_TRUE); 
+}
+
+NS_IMETHODIMP 
+nsHTMLInputElement::GetChecked(PRBool* aValue)
+{
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_INPUT_CHECKBOX == type) {
+    if (nsnull != mWidget) {
+      nsICheckButton* checkbox = nsnull;
+      if (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkbox)) {
+        checkbox->GetState(*aValue); 
+        NS_RELEASE(checkbox);
+        return NS_OK;
+      }
+    }
+  } else if (NS_FORM_INPUT_RADIO == type) {
+    if (nsnull != mWidget) {
+      nsIRadioButton* radio = nsnull;
+      if (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio)) {
+        radio->GetState(*aValue); 
+        NS_RELEASE(radio);
+        return NS_OK;
+      }
+    }
+  } 
+  
+  nsHTMLValue val;                                                 
+  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::checked, val);       
+  *aValue = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
+  return NS_OK;                                                     
+}
+
+
+NS_IMETHODIMP 
+nsHTMLInputElement::SetChecked(PRBool aValue)
+{
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_INPUT_CHECKBOX == type) {
+    if (nsnull != mWidget) {
+      nsICheckButton* checkbox = nsnull;
+      if (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkbox)) {
+        checkbox->SetState(aValue); 
+        NS_RELEASE(checkbox);
+        return NS_OK;
+      }
+    }
+  } else if (NS_FORM_INPUT_RADIO == type) {
+    if (nsnull != mWidget) {
+      nsIRadioButton* radio = nsnull;
+      if (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio)) {
+        radio->SetState(aValue); 
+        NS_RELEASE(radio);
+        return NS_OK;
+      }
+    }
+  } 
+  
+  nsAutoString empty;                                               
+  if (aValue) {                                                     
+    return mInner.SetAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
+  } else {                                                            
+    mInner.UnsetAttribute(nsHTMLAtoms::checked, PR_TRUE);             
+    return NS_OK;                                                   
+  }                                                                 
 }
 
 NS_IMETHODIMP
