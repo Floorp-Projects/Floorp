@@ -816,6 +816,7 @@ function ComposeFieldsReady(msgType)
     }
   }
   CompFields2Recipients(msgCompose.compFields, msgCompose.type);
+  SetComposeWindowTitle(13);
   AdjustFocus();
 }
 
