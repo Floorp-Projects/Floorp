@@ -4,7 +4,7 @@ dist=forwardtoback(dist);
 objdir=forwardtoback(objdir);
 'echo 'dist
 'echo 'objdir
-'set BEGINLIBPATH='dist'\lib'
+'set BEGINLIBPATH='dist'\lib;%BEGINLIBPATH%'
 objdir'\shlibsign -v -i 'therest
 exit
 
