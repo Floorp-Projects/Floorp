@@ -1994,6 +1994,34 @@ private:  // all data and methods private: only friends have access
 #endif
 };
 
+#ifndef DEBUG
+inline
+#endif
+PRUint32 nsStyleContextData::AddRef(void)
+{
+  ++mRefCnt;
+  NS_LOG_ADDREF(this,mRefCnt,"nsStyleContextData",sizeof(*this));
+  return mRefCnt;
+}
+
+#ifndef DEBUG
+inline
+#endif
+PRUint32 nsStyleContextData::Release(void)
+{
+  NS_ASSERTION(mRefCnt > 0, "RefCount error in nsStyleContextData");
+  --mRefCnt;
+  NS_LOG_RELEASE(this,mRefCnt,"nsStyleContextData");
+  if (0 == mRefCnt) {
+#ifdef NOISY_DEBUG
+    printf("deleting nsStyleContextData instance: (%ld)\n", (long)(--gInstanceCount));
+#endif
+    delete this;
+    return 0;
+  }
+  return mRefCnt;
+}
+
 #ifdef DEBUG
 /*static*/ PRUint32 nsStyleContextData::gInstanceCount;
 #endif  // DEBUG
@@ -2026,34 +2054,6 @@ nsStyleContextData::~nsStyleContextData(void)
 {
   NS_ASSERTION(0 == mRefCnt, "RefCount error in ~nsStyleContextData");
   // debug here...
-}
-
-#ifndef DEBUG
-inline
-#endif
-PRUint32 nsStyleContextData::AddRef(void)
-{
-  ++mRefCnt;
-  NS_LOG_ADDREF(this,mRefCnt,"nsStyleContextData",sizeof(*this));
-  return mRefCnt;
-}
-
-#ifndef DEBUG
-inline
-#endif
-PRUint32 nsStyleContextData::Release(void)
-{
-  NS_ASSERTION(mRefCnt > 0, "RefCount error in nsStyleContextData");
-  --mRefCnt;
-  NS_LOG_RELEASE(this,mRefCnt,"nsStyleContextData");
-  if (0 == mRefCnt) {
-#ifdef NOISY_DEBUG
-    printf("deleting nsStyleContextData instance: (%ld)\n", (long)(--gInstanceCount));
-#endif
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
 }
 
 PRUint32 nsStyleContextData::ComputeCRC32(PRUint32 aCrc) const
