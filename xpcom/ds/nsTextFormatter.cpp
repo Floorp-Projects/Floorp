@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.1 (the "NPL"); you may not use this file except in
@@ -101,6 +101,8 @@ static PRBool  l10n_debug = PR_FALSE;
 #define _SPACED		0x4
 #define _ZEROS		0x8
 #define _NEG		0x10
+
+#define ELEMENTS_OF(array_) (sizeof(array_) / sizeof(array_[0]))
 
 /*
 ** Fill into the buffer using the data in src
@@ -254,7 +256,7 @@ static int cvt_l(SprintfState *ss, long num, int width, int prec, int radix,
     ** need to stop when we hit 10 digits. In the signed case, we can
     ** stop when the number is zero.
     */
-    cvt = &cvtbuf[0] + sizeof(cvtbuf);
+    cvt = &cvtbuf[0] + ELEMENTS_OF(cvtbuf);
     digits = 0;
     while (num) {
 	int digit = (((unsigned long)num) % radix) & 0xF;
@@ -296,7 +298,7 @@ static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec, int radix,
     ** stop when the number is zero.
     */
     LL_I2L(rad, radix);
-    cvt = &cvtbuf[0] + sizeof(cvtbuf);
+    cvt = &cvtbuf[0] + ELEMENTS_OF(cvtbuf);
     digits = 0;
     while (!LL_IS_ZERO(num)) {
 	PRInt32 digit;
@@ -1061,7 +1063,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    u.d = va_arg(ap, double);
 	    if( nas != NULL ){
 		i = fmt - dolPt;
-		if( i < (int)sizeof( pattern ) ){
+		if( i < (int)ELEMENTS_OF(pattern) ){
 		    pattern[0] = '%';
 		    memcpy( &pattern[1], dolPt, i*sizeof(PRUnichar) );
 		    rv = cvt_f(ss, u.d, pattern, &pattern[i+1] );
