@@ -182,7 +182,7 @@ MakeConversionTable()
 /**
  *  default constructor
  *  
- *  @update  gess 3/25/98
+ *  @update  vidur 12/11/98
  *  @param   
  *  @return  
  */
@@ -569,20 +569,42 @@ CParserContext* nsParser::PopContext() {
  *  and tokenize input (TRUE), or whether it just caches input to be 
  *  parsed later (FALSE).
  *  
- *  @update  gess 9/1/98
+ *  @update  vidur 12/11/98
  *  @param   aState determines whether we parse/tokenize or just cache.
  *  @return  current state
  */
 PRBool nsParser::EnableParser(PRBool aState){
+  nsIParser* me = nsnull;
+
+  // If the stream has already finished, there's a good chance
+  // that we might start closing things down when the parser
+  // is reenabled. To make sure that we're not deleted across
+  // the reenabling process, hold a reference to ourselves.
+  if (eOnStop == mStreamListenerState) {
+    me = this;
+    NS_ADDREF(me);
+  }    
+
   // If we're reenabling the parser
   if ((PR_FALSE == mParserEnabled) && aState) {
+    mParserEnabled = PR_TRUE;
     ResumeParse();
-    if (eOnStop == mStreamListenerState) {
+    // If the stream has already closed, finish out the parsing
+    // process. Note if the parser was disabled when we resumed
+    // parsing, then we have to wait till its reenabled before
+    // finishing.
+    if ((eOnStop == mStreamListenerState) && mParserEnabled) {
       DidBuildModel(mStreamStatus);
     }
   }
-  mParserEnabled=aState;
-  return mParserEnabled;
+  else {
+    mParserEnabled=aState;
+  }
+
+  // Release reference if we added one at the top of this routine
+  NS_IF_RELEASE(me);
+
+  return aState;
 }
 
 
@@ -615,7 +637,7 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerify
 
 /**
  * Cause parser to parse input from given stream 
- * @update	gess5/11/98
+ * @update	vidur 12/11/98
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
@@ -698,12 +720,12 @@ PRInt32 nsParser::ResumeParse() {
     buildResult=BuildModel();
     if(kInterrupted==result)
       mParserContext->mDTD->WillInterruptParse();
-     // If we're told to block the parser, we disable
-     // all further parsing (and cache any data coming
-     // in) until the parser is enabled.
-     if(NS_ERROR_HTMLPARSER_BLOCK==buildResult) {
-       mParserEnabled=PR_FALSE;
-     }
+    // If we're told to block the parser, we disable
+    // all further parsing (and cache any data coming
+    // in) until the parser is enabled.
+    if(NS_ERROR_HTMLPARSER_BLOCK==buildResult) {
+      EnableParser(PR_FALSE);
+    }
   }
   return result;
 }
@@ -881,7 +903,7 @@ nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
 /**
  *  
  *  
- *  @update  gess 5/12/98
+ *  @update  vidur 12/11/98
  *  @param   pIStream contains the input chars
  *  @param   length is the number of bytes waiting input
  *  @return  error code (usually 0)
@@ -953,7 +975,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
 /**
  *  
  *  
- *  @update  gess 5/12/98
+ *  @update  vidur 12/11/98
  *  @param   
  *  @return  
  */

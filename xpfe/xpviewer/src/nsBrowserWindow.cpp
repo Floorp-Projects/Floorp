@@ -417,7 +417,8 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
 
 void nsBrowserWindow::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript)
 {
-  jsval retval;
+  nsAutoString retval;
+  PRBool isUndefined;
 
   NS_ASSERTION(nsnull != aWebShell, "null webshell passed to EvaluateJavaScriptString");
 //  NS_ASSERTION(nsnull != aJavaScript, "null javascript string passed to EvaluateJavaScriptString");
@@ -433,7 +434,7 @@ void nsBrowserWindow::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& 
     if (NS_OK == res) {
       // Ask the script context to evalute the javascript string
       scriptContext->EvaluateString(aJavaScript, 
-      url, 0, &retval);
+      url, 0, retval, &isUndefined);
 
       NS_RELEASE(scriptContext);
     }

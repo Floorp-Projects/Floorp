@@ -156,18 +156,19 @@ evaluate_script(URL_Struct* urls, const char *what, JSConData *con_data)
       if (context_owner) {
         context_owner->GetScriptContext(&script_context);
         if (script_context) {
-          jsval ret;
-          
+          nsAutoString ret;
+          PRBool isUndefined;
+
           if (script_context->EvaluateString(nsString(what),
                                              nsnull, 0,
-                                             &ret)) {
+                                             ret,
+                                             &isUndefined)) {
             JSContext *cx = (JSContext *)script_context->GetNativeContext();
             // Find out if it can be converted into a string
-            if ((ret != JSVAL_VOID) && 
-                JS_ConvertValue(cx, ret, JSTYPE_STRING, &ret)) {
-              con_data->len = JS_GetStringLength(JSVAL_TO_STRING(ret));
+            if (!isUndefined) {
+              con_data->len = ret.Length();
               con_data->str = (char *)PR_MALLOC(con_data->len + 1);
-              PL_strcpy(con_data->str, JS_GetStringBytes(JSVAL_TO_STRING(ret)));
+              ret.ToCString(con_data->str, con_data->len);
             }
             else {
               con_data->str = nsnull;

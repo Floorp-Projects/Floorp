@@ -63,19 +63,33 @@ nsJSContext::~nsJSContext()
 
 NS_IMPL_ISUPPORTS(nsJSContext, kIScriptContextIID);
 
-PRBool nsJSContext::EvaluateString(nsString& aScript, 
-                                  const char *aURL,
-                                  PRUint32 aLineNo,
-                                  jsval *aRetValue)
+PRBool nsJSContext::EvaluateString(const nsString& aScript, 
+                                   const char *aURL,
+                                   PRUint32 aLineNo,
+                                   nsString& aRetValue,
+                                   PRBool* aIsUndefined)
 {
-  return ::JS_EvaluateUCScriptForPrincipals(mContext, 
-                              JS_GetGlobalObject(mContext),
-                              nsnull,
-                              (jschar*)aScript.GetUnicode(), 
-                              aScript.Length(),
-                              aURL, 
-                              aLineNo,
-                              aRetValue);
+  jsval val;
+
+  PRBool ret = ::JS_EvaluateUCScriptForPrincipals(mContext, 
+                                                  JS_GetGlobalObject(mContext),
+                                                  nsnull,
+                                                  (jschar*)aScript.GetUnicode(), 
+                                                  aScript.Length(),
+                                                  aURL, 
+                                                  aLineNo,
+                                                  &val);
+  
+  if (ret) {
+    *aIsUndefined = JSVAL_IS_VOID(val);
+    JSString* jsstring = JS_ValueToString(mContext, val);   
+    aRetValue.SetString(JS_GetStringChars(jsstring));
+  }
+  else {
+    aRetValue.Truncate();
+  }
+
+  return ret;
 }
 
 nsIScriptGlobalObject* nsJSContext::GetGlobalObject()
