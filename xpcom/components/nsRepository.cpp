@@ -1473,6 +1473,7 @@ nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
 	ProcessSerialNumber	psn;
 	ProcessInfoRec		pInfo;
 	FSSpec			appFSSpec;
+	FSSpec			tempSpec;
 	long			theDirID;
 	Str255			name;
 #endif
@@ -1486,6 +1487,9 @@ nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
 	// get info for the the current process to determine the directory its located in
 	if (!(err = GetCurrentProcess(&psn)))
 	{
+	    // initialize ProcessInfoRec before calling GetProcessInformation() or die horribly.
+		pInfo.processName = nil;
+		pInfo.processAppSpec = &tempSpec;
 		if (!(err = GetProcessInformation(&psn, &pInfo)))
 		{
 			appFSSpec = *(pInfo.processAppSpec);
