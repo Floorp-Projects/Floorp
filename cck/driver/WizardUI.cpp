@@ -1081,7 +1081,7 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 
 		rv = CString(temp);
 	}
-	else if (widgetType == "EditBox" 
+	else if (widgetType == "EditBox")
   {
 		char myLine[MAX_SIZE];
 		curWidget->control->GetWindowText(myLine, 250);
