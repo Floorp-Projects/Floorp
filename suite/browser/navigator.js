@@ -1042,11 +1042,7 @@ function OpenSearch(tabName, searchStr)
   
   function BrowserViewSource()
   {
-<<<<<<< navigator.js
-  	 window.openDialog( "chrome://navigator/content/viewSource.xul", "_new", "chrome,all,dialog=no", window.content.location );
-=======
     window.openDialog( "chrome://navigator/content/viewSource.xul", "_blank", "chrome,all,dialog=no", window.content.location );
->>>>>>> 1.42
   }
 
 
