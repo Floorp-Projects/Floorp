@@ -531,7 +531,7 @@ sub print_javascript {
 
       var version = parseInt(navigator.appVersion);
       if (version < 4 || version >= 5) {
-        document.location = who_link;
+        document.location = d.target.href;
         return false;
       }
 
