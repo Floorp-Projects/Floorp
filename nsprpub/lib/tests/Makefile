@@ -38,7 +38,7 @@ MOD_DEPTH = ../..
 include $(MOD_DEPTH)/config/config.mk
 
 ifeq ($(OS_ARCH), WINNT)
-DIRS = windows
+# DIRS = windows
 endif
 
 ifeq ($(OS_TARGET), WIN16)
@@ -46,6 +46,7 @@ OS_CFLAGS = $(OS_EXE_CFLAGS)
 endif
 
 CSRCS = \
+	arena.c \
 	string.c \
 	base64t.c
 
