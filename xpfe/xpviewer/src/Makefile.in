@@ -116,6 +116,7 @@ EX_LIBS = \
 	-lnetlib \
 	-lnetutil \
 	-lnetwork \
+	-lpwcac \
 	-lraptorwebwidget \
 	-lreg \
 	-lremoturl \
@@ -131,14 +132,8 @@ EX_LIBS = \
 	-lxpcom \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
-	$(NULL)
-
-ifneq (,$(filter FreeBSD Linux SunOS,$(OS_ARCH)))
-EX_LIBS += \
-	-lpwcac \
 	-ldbm \
 	$(NULL)
-endif
 
 PROGS = $(OBJDIR)/xpviewer
 
