@@ -60,62 +60,6 @@ export LD_LIBRARY_PATH
 MOZ_PLUGIN_PATH=LIBDIR/mozilla/plugins
 export MOZ_PLUGIN_PATH
 
-# Figure out if we need to ser LD_ASSUME_KERNEL for older versions of the JVM.
-
-function set_jvm_vars() {
-
-    # see if the jvm exists in either of the locations
-    if [ -L LIBDIR/mozilla-MOZILLA_VERSION/plugins/libjavaplugin_oji.so ]; then
-        JVM_ORIG_LINK=LIBDIR/mozilla-MOZILLA_VERSION/plugins/libjavaplugin_oji.so
-    fi
-
-    if [ -L LIBDIR/mozilla/plugins/libjavaplugin_oji.so ]; then
-        JVM_ORIG_LINK=LIBDIR/mozilla/plugins/libjavaplugin_oji.so
-    fi
-
-    if [ -z "$JVM_ORIG_LINK" ]; then
-        return;
-    fi
-
-    JVM_LINK=`perl -e "print readlink('$JVM_ORIG_LINK')"`
-
-    # is it relative?  if so append the full path
-
-    echo "${JVM_LINK}" | grep -e "^/" 2>&1 > /dev/null
-
-    if [ "$?" -ne "0" ]; then
-	JVM_LINK=LIBDIR/mozilla-MOZILLA_VERSION/plugins/${JVM_LINK}
-    fi
-
-    JVM_BASE=`basename $JVM_LINK`
-    JVM_DIR=`echo $JVM_LINK | sed -e s/$JVM_BASE//g`
-    JVM_COMMAND=$JVM_DIR/java
-    if [ ! -r $JVM_COMMAND ]; then
-       JVM_DIR=${JVM_DIR}../../../bin/
-       JVM_COMMAND=$JVM_DIR/java
-       # does the command exist?
-       if [ ! -r "$JVM_COMMAND" ]; then
-           return
-       fi
-    fi
-
-    # export this temporarily - it seems to work with old and new
-    # versions of the JVM.
-    export LD_ASSUME_KERNEL=2.2.5
-
-    # get the version
-    JVM_VERSION=`$JVM_COMMAND -version 2>&1 | grep version | cut -f 3 -d " " | sed -e 's/\"//g'`
-
-    unset LD_ASSUME_KERNEL
-
-    case "$JVM_VERSION" in
-	(1.3.0*)
-	# bad JVM
-	export LD_ASSUME_KERNEL=2.2.5
-	;;
-    esac
-}
-
 function check_running() {
     $MOZ_CLIENT_PROGRAM 'ping()' 2>/dev/null >/dev/null
     RETURN_VAL=$?
@@ -145,11 +89,6 @@ function open_compose() {
       exec $MOZ_PROGRAM $*
     fi
 }
-
-# OK, here's where all the real work gets done
-
-# set our JVM vars
-set_jvm_vars
 
 # check to see if there's an already running instance or not
 ALREADY_RUNNING=`check_running`

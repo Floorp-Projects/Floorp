@@ -1,7 +1,6 @@
 %define _unpackaged_files_terminate_build 0
-%define toolkit_options --enable-default-toolkit=gtk2 --disable-freetype2 --enable-xft --enable-xft
+%define toolkit_options --disable-freetype2
 %define builddir %{_builddir}/mozilla
-%define gcc_32_libs no
 
 Name:        mozilla
 Summary:     Web browser and mail reader
@@ -30,7 +29,6 @@ Patch1:      mozilla-editor-overlay-menu.patch
 Patch6:      mozilla-prefs-debug.patch
 Patch7:      mozilla-redhat-home-page.patch
 Patch8:      mozilla-redhat-mail-home-page.patch
-Patch11:     mozilla-taskbar-nomozilla.patch
 Patch12:     mozilla-psfonts-7.2.patch
 Patch13:     mozilla-nspr-packages.patch
 Patch14:     mozilla-default-plugin-less-annoying.patch
@@ -164,9 +162,6 @@ development or web page development.
 %patch8 -p1
 %patch8 -p1 -R
 
-%patch11 -p1
-%patch11 -p1 -R
-
 # Can't hurt to leave this in since the defaults are empty.
 %patch12 -p1
 
@@ -200,11 +195,9 @@ if test "x$CPUS" = "x" -o "x$CPUS" = "x0"; then
 fi
 
 # build mozilla
-%ifarch i386
-CC=gcc296 CXX=g++296 \
-%endif
 BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
-	./configure --prefix=%{_prefix} --libdir=%{_libdir} --enable-optimize \
+	./configure --prefix=%{_prefix} --libdir=%{_libdir} \
+	--enable-optimize=-O2 \
 	--disable-debug \
 	--with-default-mozilla-five-home=%{_libdir}/mozilla-%{version} \
 	--enable-strip-libs \
@@ -240,6 +233,13 @@ BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
 /bin/rm -f %{builddir}/mozilla-chat.list
 /bin/rm -f %{builddir}/mozilla-js-debugger.list
 /bin/rm -f %{builddir}/mozilla-dom-inspector.list
+
+echo %defattr\(-,root,root\) > %{builddir}/mozilla.list
+echo %defattr\(-,root,root\) > %{builddir}/mozilla-mail.list
+echo %defattr\(-,root,root\) > %{builddir}/mozilla-psm.list
+echo %defattr\(-,root,root\) > %{builddir}/mozilla-chat.list
+echo %defattr\(-,root,root\) > %{builddir}/mozilla-js-debugger.list
+echo %defattr\(-,root,root\) > %{builddir}/mozilla-dom-inspector.list
 
 # NSS and NSPR are both installed into /usr/lib instead of
 # /usr/lib/mozilla-VERSION
@@ -385,13 +385,6 @@ find $RPM_BUILD_ROOT/%{prefix}/include/mozilla-%{version}/ -type f | \
   grep -v "/%{prefix}/include/mozilla-%{version}/nspr" > \
   %{builddir}/mozilla-devel.list
 
-# we only include the libs file if we need the gcc_32_libs is set to
-# true
-if [ "%gcc_32_libs" == "yes" ]; then
-  echo %{_libdir}/mozilla-%{version}/mozilla-gcc-3.2-libs.tar.bz2 >> \
-      %{builddir}/mozilla-devel.list
-fi
-
 find $RPM_BUILD_ROOT/%{prefix}/include/mozilla-%{version}/ -type f | \
   sed -e "s,$RPM_BUILD_ROOT,," | \
   grep "/%{prefix}/include/mozilla-%{version}/nspr" > \
@@ -455,6 +448,10 @@ chmod 755 \
 # install the defaults fonts for xft
 cp %{SOURCE20} $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/defaults/pref/xft.js
 
+# we own /usr/lib/mozilla/plugins which is the version-independent
+# place that our plugins can be installed
+mkdir -p $RPM_BUILD_ROOT/%{_libdir}/mozilla/plugins
+
 # install the gre.conf file
 #echo [%{version}] > \
 #  $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/gre.conf
@@ -465,62 +462,8 @@ echo [%{version}] > \
 echo GRE_PATH=%{_libdir}/mozilla-%{version} >> \
   $RPM_BUILD_ROOT/etc/gre.conf
 
-if [ "%gcc_32_libs" == "yes" ]; then
-  make distclean
-
-  if [ -x /usr/bin/getconf ]; then
-    CPUS=`getconf _NPROCESSORS_ONLN`
-  fi
-  if test "x$CPUS" = "x" -o "x$CPUS" = "x0"; then
-    CPUS=1
-  fi
-
-  # build mozilla with the default compiler
-  CC=gcc CXX=g++ \
-  BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
-    ./configure --prefix=%{_prefix} --libdir=%{_libdir} --enable-optimize \
-      --disable-debug \
-      --with-default-mozilla-five-home=/%{_libdir}/mozilla-%{version}/gcc-3.2 \
-      --enable-strip-libs \
-      --disable-tests \
-      --disable-short-wchar \
-      --enable-nspr-autoconf \
-      --enable-extensions=default,irc \
-      --without-mng \
-      --enable-crypto \
-      --disable-xprint \
-      --without-system-nspr \
-      --with-system-zlib \
-      %{toolkit_options} \
-      --enable-old-abi-compat-wrappers \
-      --mandir=%{_mandir}
-
-  BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make export
-  BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -j$CPUS libs
-
-  mkdir -p gcc-3.2/components
-  for i in libembed_base_s.a libmozreg_s.a libmozjs.so libmsgbaseutil.so \
-    libnspr4.so libplc4.so libplds4.so libxpcom.so \
-    libldap50.so libprldap50.so components/libabsyncsvc.so \
-    components/libaddrbook.so components/libmork.so \
-    components/libnecko.so components/libpref.so \
-    components/libprofile.so components/librdf.so \
-    components/liburiloader.so \
-    components/libxpconnect.so components/libmozldap.so \
-    components/libuconv.so \
-    components/libvcard.so; do
-      cp -aL dist/lib/$i gcc-3.2/$i
-  done
-
-  find gcc-3.2 -name \*.so -exec strip {} \;
-  cd gcc-3.2
-  tar cf - * | bzip2 -9 > $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/mozilla-gcc-3.2-libs.tar.bz2
-  cd ..
-
-fi
-
 %clean
-#/bin/rm -rf $RPM_BUILD_ROOT
+/bin/rm -rf $RPM_BUILD_ROOT
 
 %post
 # run ldconfig before regxpcom
@@ -659,6 +602,8 @@ fi
 
 %verify (not md5 mtime size) %{_libdir}/mozilla-%{version}/components/compreg.dat
 %verify (not md5 mtime size) %{_libdir}/mozilla-%{version}/components/xpti.dat
+
+%dir %{_libdir}/mozilla/plugins
 
 %dir %{_libdir}/mozilla-%{version}/defaults/pref
 %dir %{_libdir}/mozilla-%{version}/defaults/profile/US
