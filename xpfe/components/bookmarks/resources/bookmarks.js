@@ -26,8 +26,14 @@ function BookmarkProperties()
   var select_list = tree.getElementsByAttribute("selected", "true");
 
   if (select_list.length >= 1) {
-    var props = window.open("resource://res/samples/bm-props.xul", "BookmarkProperties", "chrome");
-    props.BookmarkURL = select_list[0].getAttribute("id");
+
+	// don't bother showing properties on bookmark separators
+	var type = select_list[0].getAttribute('type');
+        if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+        {
+		var props = window.open("resource://res/samples/bm-props.xul", "BookmarkProperties", "chrome");
+		props.BookmarkURL = select_list[0].getAttribute("id");
+	}
   } else {
     dump("nothing selected!\n"); 
   }
