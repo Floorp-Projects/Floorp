@@ -4,8 +4,8 @@
 # installed bonsai and are using cvsblame cvsguess and cvsquery to let
 # your webserver render html pages of your CVS repository.
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:19:08 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/25 16:41:10 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Bonsai.pm,v $ 
 # $Name:  $ 
@@ -91,20 +91,27 @@ sub source {
 
   my ($goto_line) = ($line > 10 ? $line - 10 : 1 );
   
-  my ($href) = ("$CVSBLAME?".
-		"cvsroot=$TreeData::VC_TREE{$args{'tree'}}{'root'}&".
-		# do we need to specify the 
-		#     $TreeData::VC_TREE{$args{'tree'}}{'module'} ?
-		"rev=$TreeData::VC_TREE{$args{'tree'}}{'branch'}&".
-		"file=$args{'file'}&".
-		"mark=$args{'line'}\#$goto_line");
-  
-  $args{'href'} = $href;
+  my @url_args = ();
+  my %tree = %{$TreeData::VC_TREE{$args{'tree'}}};
+
+  push @url_args, (
+                   "cvsroot=".HTMLPopUp::escapeURL($tree{'root'}),
+                   # do we need to specify the 
+                   # "module=".HTMLPopUp::escapeURL($tree{'module'}),
+                   "branch=".HTMLPopUp::escapeURL($tree{'branch'}),
+
+                   "rev=".HTMLPopUp::escapeURL($tree{'branch'}),
+                   "file=".HTMLPopUp::escapeURL($args{'file'}),
+                   "mark=".HTMLPopUp::escapeURL($args{'line'}."\#$goto_line"),
+                  );
+
+  $args{'href'} = ("$CVSBLAME?".join('&', @url_args));
 
   my $output = HTMLPopUp::Link(%args);
   
   return $output;
-};
+}
+
 
 # Create a Link to a VC file and its line number.
 
@@ -127,20 +134,26 @@ sub guess {
 
   my ($goto_line) = ($error_line > 10 ? $error_line : 1 );
   
-  my ($href) = ("$CVSGUESS?".
-		"cvsroot=$TreeData::VC_TREE{$args{'tree'}}{'root'}&".
-		# do we need to specify the 
-		# module=$TreeData::VC_TREE{$args{'tree'}}{'module'} ?
-		"rev=$TreeData::VC_TREE{$args{'tree'}}{'branch'}&".
-		"file=$args{'file'}&".
-		"mark=$args{'line'}\#$goto_line");
-  
-  $args{'href'} = $href;
+  my @url_args = ();
+  my %tree = %{$TreeData::VC_TREE{$args{'tree'}}};
+
+  push @url_args, (
+                   "cvsroot=".HTMLPopUp::escapeURL($tree{'root'}),
+                   # do we need to specify the 
+                   # "module=".HTMLPopUp::escapeURL($tree{'module'}),
+                   "branch=".HTMLPopUp::escapeURL($tree{'branch'}),
+
+                   "rev=".HTMLPopUp::escapeURL($tree{'branch'}),
+                   "file=".HTMLPopUp::escapeURL($args{'file'}),
+                   "mark=".HTMLPopUp::escapeURL($args{'line'}."\#$goto_line"),
+                  );
+
+  $args{'href'} = ("$CVSGUESS?".join('&', @url_args));
 
   my $output = HTMLPopUp::Link(%args);
   
   return $output;
-};
+}
 
 
 # Query VC about checkins by a user or during a particular time or
@@ -161,28 +174,34 @@ sub query {
       die("function VCDisplay::query, tree: $args{'tree'} does not exist\n");
   }
 
-  my $url_args = '';
+  my @url_args = ();
+  my %tree = %{$TreeData::VC_TREE{$args{'tree'}}};
+
+  push @url_args, (
+                   "cvsroot=".HTMLPopUp::escapeURL($tree{'root'}),
+                   "module=".HTMLPopUp::escapeURL($tree{'module'}),
+                   "branch=".HTMLPopUp::escapeURL($tree{'branch'}),
+                  );
 
   ($args{'who'}) &&
-    ($url_args .= "&who=$args{'who'}");
+    (push @url_args, "who=".HTMLPopUp::escapeURL($args{'who'}));
 
   ($args{'mindate'}) &&
-    ($url_args .= "&date=explicit&mindate=$args{'mindate'}");
+    (push @url_args, (
+                      "date=explicit",
+                      "mindate=".HTMLPopUp::escapeURL($args{'mindate'}),
+                     )
+    );
 
   ($args{'maxdate'}) && 
-    ($url_args .= "&maxdate=$args{'maxdate'}");
+    (push @url_args, "maxdate=".HTMLPopUp::escapeURL($args{'maxdate'}));
 
-  $args{'href'} =
-    ("$CVSQUERY?".
-     "cvsroot=$TreeData::VC_TREE{$args{'tree'}}{'root'}&".
-     "module=$TreeData::VC_TREE{$args{'tree'}}{'module'}&".
-     "branch=$TreeData::VC_TREE{$args{'tree'}}{'branch'}&".
-     $url_args);
+  $args{'href'} = ("$CVSQUERY?".join('&', @url_args));
 
   my $output = HTMLPopUp::Link(%args);
-  
+
   return $output;
-};
+}
 
 
 1;
