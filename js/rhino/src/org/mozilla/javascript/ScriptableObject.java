@@ -144,38 +144,19 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
     public Object get(String name, Scriptable start) {
         Slot slot = lastAccess; // Get local copy
         if (name == slot.stringKey) {
+            // Cache match, check if it was not deleted
             if (slot.wasDeleted == 0) { return slot.value; }
         } 
+        
         int hashCode = name.hashCode();
         slot = getSlot(name, hashCode, false);
-        if (slot == null)
+        if (slot == null) {
             return Scriptable.NOT_FOUND;
-        if ((slot.flags & Slot.HAS_GETTER) != 0) {
-            GetterSlot getterSlot = (GetterSlot) slot;
-            try {
-                if (getterSlot.delegateTo == null) {
-                    // Walk the prototype chain to find an appropriate
-                    // object to invoke the getter on.
-                    Class clazz = getterSlot.getter.getDeclaringClass();
-                    while (!clazz.isInstance(start)) {
-                        start = start.getPrototype();
-                        if (start == null) {
-                            start = this;
-                            break;
-                        }
-                    }
-                    return getterSlot.getter.invoke(start, ScriptRuntime.emptyArgs);
-                }
-                Object[] args = { this };
-                return getterSlot.getter.invoke(getterSlot.delegateTo, args);
-            }
-            catch (InvocationTargetException e) {
-                throw WrappedException.wrapException(e);
-            }
-            catch (IllegalAccessException e) {
-                throw WrappedException.wrapException(e);
-            }
         }
+        else if ((slot.flags & Slot.HAS_GETTER) != 0) {
+            return getByGetter((GetterSlot) slot, name, start);
+        }
+
         // Here stringKey.equals(name) holds, but it can be that 
         // slot.stringKey != name. To make last name cache work, need
         // to change the key
@@ -186,6 +167,35 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
         return slot.value;
     }
 
+    private Object getByGetter(GetterSlot slot, 
+                               String name, Scriptable start)
+    {
+        try {
+            if (slot.delegateTo == null) {
+                // Walk the prototype chain to find an appropriate
+                // object to invoke the getter on.
+                Class clazz = slot.getter.getDeclaringClass();
+                while (!clazz.isInstance(start)) {
+                    start = start.getPrototype();
+                    if (start == null) {
+                        start = this;
+                        break;
+                    }
+                }
+                return slot.getter.invoke(start, ScriptRuntime.emptyArgs);
+            }
+            Object[] args = { this };
+            return slot.getter.invoke(slot.delegateTo, args);
+        }
+        catch (InvocationTargetException e) {
+            throw WrappedException.wrapException(e);
+        }
+        catch (IllegalAccessException e) {
+            throw WrappedException.wrapException(e);
+        }
+    
+    }
+    
     /**
      * Returns the value of the indexed property or NOT_FOUND.
      *
@@ -228,50 +238,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
                 slot = getSlotToSet(name, hash);
             }
         }
-        if ((slot.attributes & ScriptableObject.READONLY) != 0)
+        if ((slot.attributes & ScriptableObject.READONLY) != 0) {
             return;
-        if ((slot.flags & Slot.HAS_SETTER) != 0) {
-            GetterSlot getterSlot = (GetterSlot) slot;
-            try {
-                Class pTypes[] = getterSlot.setter.getParameterTypes();
-                Class desired = pTypes[pTypes.length - 1];
-                Object actualArg
-                        = FunctionObject.convertArg(start, value, desired);
-                if (getterSlot.delegateTo == null) {
-                    // Walk the prototype chain to find an appropriate
-                    // object to invoke the setter on.
-                    Object[] arg = { actualArg };
-                    Class clazz = getterSlot.setter.getDeclaringClass();
-                    while (!clazz.isInstance(start)) {
-                        start = start.getPrototype();
-                        if (start == null) {
-                            start = this;
-                            break;
-                        }
-                    }
-                    Object v = getterSlot.setter.invoke(start, arg);
-                    if (getterSlot.setterReturnsValue) {
-                        slot.value = v;
-                        if (!(v instanceof Method))
-                            slot.flags = 0;
-                    }
-                    return;
-                }
-                Object[] args = { this, actualArg };
-                Object v = getterSlot.setter.invoke(getterSlot.delegateTo, args);
-                if (getterSlot.setterReturnsValue) {
-                    slot.value = v;
-                    if (!(v instanceof Method))
-                        slot.flags = 0;
-                }
-                return;
-            }
-            catch (InvocationTargetException e) {
-                throw WrappedException.wrapException(e);
-            }
-            catch (IllegalAccessException e) {
-                throw WrappedException.wrapException(e);
-            }
+        }
+        else if ((slot.flags & Slot.HAS_SETTER) != 0) {
+            setBySetter((GetterSlot)slot, name, start, value);
+            return;
         }
         if (this == start) {
             slot.value = value;
@@ -282,6 +254,50 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
             start.put(name, start, value);
         }
     }
+
+    private void setBySetter(GetterSlot slot,
+                             String name, Scriptable start, Object value)
+    {
+        Object setterResult;
+        try {
+            Class pTypes[] = slot.setter.getParameterTypes();
+            Class desired = pTypes[pTypes.length - 1];
+            Object actualArg
+                    = FunctionObject.convertArg(start, value, desired);
+            if (slot.delegateTo == null) {
+                // Walk the prototype chain to find an appropriate
+                // object to invoke the setter on.
+                Object[] arg = { actualArg };
+                Class clazz = slot.setter.getDeclaringClass();
+                while (!clazz.isInstance(start)) {
+                    start = start.getPrototype();
+                    if (start == null) {
+                        start = this;
+                        break;
+                    }
+                }
+                setterResult = slot.setter.invoke(start, arg);
+            }
+            else {
+                Object[] args = { this, actualArg };
+                setterResult = slot.setter.invoke(slot.delegateTo, args);
+            }
+        }
+        catch (InvocationTargetException e) {
+            throw WrappedException.wrapException(e);
+        }
+        catch (IllegalAccessException e) {
+            throw WrappedException.wrapException(e);
+        }
+        
+        if (slot.setterReturnsValue) {
+            slot.value = setterResult;
+            if (!(setterResult instanceof Method)) {
+                slot.flags = 0;
+            }
+        }
+    }
+
 
     /**
      * Sets the value of the indexed property, creating it if need be.
