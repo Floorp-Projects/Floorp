@@ -54,8 +54,7 @@
 #include <Drag.h>
 #include <MacWindows.h>
 
-class  nsNativeDragTarget;
-
+class nsILocalFile;
 
 class nsDragService : public nsBaseDragService, public nsIDragSessionMac
 {
@@ -85,7 +84,7 @@ private:
   
   char* LookupMimeMappingsForItem ( DragReference inDragRef, ItemReference itemRef ) ;
 
-  void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray ) ;
+  void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray, RgnHandle inDragRgn ) ;
   PRBool BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNode, RgnHandle ioDragRgn ) ;
   OSErr GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference inDragRef, unsigned int inItemIndex, 
                              FlavorType inFlavor, void** outData, unsigned int * outSize ) ;
@@ -95,16 +94,22 @@ private:
     // compute a screen rect from the frame associated with the given dom node
   PRBool ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScreenRect ) ;
 
+  OSErr GetHFSPromiseDropDirectory(DragReference inDragRef, unsigned int inItemIndex,
+                                  FlavorType inFlavor, nsILocalFile** outDir);
+
+  OSErr SetDropFileInDrag(DragReference inDragRef, unsigned int inItemIndex,
+                                  FlavorType inFlavor, nsILocalFile* inFile);
+
     // callback for the MacOS DragManager when a drop site asks for data
   static pascal OSErr DragSendDataProc ( FlavorType inFlavor, void* inRefCon,
   										 ItemReference theItemRef, DragReference inDragRef ) ;
 
-  PRBool mImageDraggingSupported;
   DragSendDataUPP mDragSendDataUPP;
   DragReference mDragRef;        // reference to _the_ drag. There can be only one.
   nsISupportsArray* mDataItems;  // cached here for when we start the drag so the 
                                  // DragSendDataProc has access to them. 
                                  // ONLY VALID DURING A DRAG STARTED WITHIN THIS APP.
+  PRBool mImageDraggingSupported;
 
 }; // class nsDragService
 
