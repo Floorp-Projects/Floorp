@@ -3242,9 +3242,12 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
                 aEvent->message == NS_XUL_POPUP_SHOWN || aEvent->message == NS_XUL_POPUP_HIDING ||
                 aEvent->message == NS_XUL_POPUP_HIDDEN || aEvent->message == NS_FORM_SELECTED ||
                 aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
-                aEvent->message == NS_DRAGDROP_GESTURE ||
-                tagName == NS_LITERAL_STRING("menu") || tagName == NS_LITERAL_STRING("menuitem") || tagName == NS_LITERAL_STRING("menulist") ||
-                tagName == NS_LITERAL_STRING("menubar") || tagName == NS_LITERAL_STRING("menupopup") || tagName == NS_LITERAL_STRING("key") || tagName == NS_LITERAL_STRING("keyset")) {
+                aEvent->message == NS_XUL_CLICK || aEvent->message == NS_DRAGDROP_GESTURE ||
+                tagName == NS_LITERAL_STRING("menu") || tagName == NS_LITERAL_STRING("menuitem") ||
+                tagName == NS_LITERAL_STRING("menulist") || tagName == NS_LITERAL_STRING("menubar") ||
+                tagName == NS_LITERAL_STRING("menupopup") || tagName == NS_LITERAL_STRING("key") ||
+                tagName == NS_LITERAL_STRING("keyset")) {
+
                 nsCOMPtr<nsIEventListenerManager> listenerManager;
                 if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
                     NS_ERROR("Unable to instantiate a listener manager on this event.");
@@ -3261,10 +3264,15 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
                 // the frame. If we don't have a frame (e.g., we're a
                 // menu), then that breaks.
                 nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
-                if (privateEvent) {
+                if (privateEvent)
                   privateEvent->SetTarget(this);
-                }
-                else return NS_ERROR_FAILURE;
+                else
+                  return NS_ERROR_FAILURE;
+
+                // if we are a XUL click, we have the private event set.
+                // now switch to a left mouse click for the duration of the event
+                if (aEvent->message == NS_XUL_CLICK)
+                  aEvent->message = NS_MOUSE_LEFT_CLICK;
             }
         }
     }
@@ -4424,21 +4432,37 @@ nsXULElement::Click()
       doc->GetShellAt(i, getter_AddRefs(shell));
       shell->GetPresContext(getter_AddRefs(context));
 
-	    nsEventStatus status = nsEventStatus_eIgnore;
-	    nsMouseEvent event;
-	    event.eventStructType = NS_GUI_EVENT;
-	    event.message = NS_MOUSE_LEFT_CLICK;
-      event.isShift = PR_FALSE;
-      event.isControl = PR_FALSE;
-      event.isAlt = PR_FALSE;
-      event.isMeta = PR_FALSE;
-      event.clickCount = 0;
-      event.widget = nsnull;
-      HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+      nsMouseEvent eventDown;
+      eventDown.eventStructType = NS_MOUSE_EVENT;
+      eventDown.message = NS_MOUSE_LEFT_BUTTON_DOWN;
+      eventDown.isShift = PR_FALSE;
+      eventDown.isControl = PR_FALSE;
+      eventDown.isAlt = PR_FALSE;
+      eventDown.isMeta = PR_FALSE;
+      eventDown.clickCount = 0;
+      eventDown.widget = nsnull;
+
+      nsMouseEvent eventUp(eventDown),    // use copy constructor for bit-wise copy
+                   eventClick(eventDown);
+      eventUp.message = NS_MOUSE_LEFT_BUTTON_UP;
+      eventClick.message = NS_XUL_CLICK;
+
+      // send mouse down
+      nsEventStatus status = nsEventStatus_eIgnore;
+      HandleDOMEvent(context, &eventDown,  nsnull, NS_EVENT_FLAG_INIT, &status);
+
+      // send mouse up
+      status = nsEventStatus_eIgnore;  // reset status
+      HandleDOMEvent(context, &eventUp,    nsnull, NS_EVENT_FLAG_INIT, &status);
+
+      // send mouse click
+      status = nsEventStatus_eIgnore;  // reset status
+      HandleDOMEvent(context, &eventClick, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
   }
   
-  return NS_OK;
+  // oncommand is fired when an element is clicked...
+  return DoCommand();
 }
 
 NS_IMETHODIMP
