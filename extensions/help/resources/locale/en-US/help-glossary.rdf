@@ -49,7 +49,7 @@
         <rdf:li> <rdf:Description nc:name="Form Manager" nc:link="glossary.html#Form_Manager"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="helper application" nc:link="glossary.html#helper_application"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="home page" nc:link="glossary.html#home_page"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Hypertext Markup Language (HTML)" nc:link="glossary.html#Hypertext_Markup_Language_(HTML)"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Hypertext Markup Language (HTML)" nc:link="glossary.html#Hypertext_Markup_Language"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="implicit consent" nc:link="glossary.html#implicit_consent"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Internet Message Access Protocol (IMAP)" nc:link="glossary.html#IMAP_glossary"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Internet" nc:link="glossary.html#Internet"/> </rdf:li>
@@ -83,7 +83,7 @@
         <rdf:li> <rdf:Description nc:name="public-key infrastructure (PKI)" nc:link="glossary.html#public-key_infrastructure"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="root CA" nc:link="glossary.html#root_CA"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="search engine" nc:link="glossary.html#search_engine"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Secure Sockets Layer (SSL)" nc:link="glossary.html#SSL"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Secure Sockets Layer (SSL)" nc:link="glossary.html#Secure_Sockets_Layer"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="security certificate" nc:link="glossary.html#security_certificate"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="security device" nc:link="glossary.html#security_device"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="security module" nc:link="glossary.html#security_module"/> </rdf:li>
