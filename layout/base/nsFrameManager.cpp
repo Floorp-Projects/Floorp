@@ -1881,7 +1881,10 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     aResultChange = aMinChange;
 
     if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
-      if (localContent && localContent->IsContentOfType(nsIContent::eELEMENT)) {
+      // Make sure not to do this for pseudo-frames -- those can't have :before
+      // or :after content.
+      if (!pseudoTag && localContent &&
+          localContent->IsContentOfType(nsIContent::eELEMENT)) {
         // Check for a new :before pseudo and an existing :before
         // frame, but only if the frame is the first-in-flow.
         nsIFrame* prevInFlow = nsnull;
@@ -1904,7 +1907,10 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
     
     if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
-      if (localContent && localContent->IsContentOfType(nsIContent::eELEMENT)) {
+      // Make sure not to do this for pseudo-frames -- those can't have :before
+      // or :after content.
+      if (!pseudoTag && localContent &&
+          localContent->IsContentOfType(nsIContent::eELEMENT)) {
         // Check for new :after content, but only if the frame is the
         // first-in-flow.
         nsIFrame* nextInFlow = nsnull;
