@@ -64,7 +64,7 @@ $cwdDist       = GetCwd("dist",     $DEPTH, $cwdBuilder);
 $cwdDistWin    = GetCwd("distwin",  $DEPTH, $cwdBuilder);
 $cwdInstall    = GetCwd("install",  $DEPTH, $cwdBuilder);
 $cwdPackager   = GetCwd("packager", $DEPTH, $cwdBuilder);
-$verPartial    = "1.2b.0.";
+$verPartial    = "1.3a.0.";
 $ver           = $verPartial . GetVersion($DEPTH);
 
 if(-d "$cwdDist\\stage")
