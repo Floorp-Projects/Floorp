@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Ilya Konstantinov <future@galanet.net>
  */
 
 #include <stdio.h>
@@ -2191,6 +2192,8 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     status = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XStdICCTextStyle,
                                        &prop);
     if (status == Success) {
+      const char * utf8_title = NS_ConvertUCS2toUTF8(aTitle).get();
+
 #ifdef DEBUG_TITLE
       g_print("\nXmbTextListToTextProperty succeeded\n  text is %s\n  length is %d\n", prop.value,
               prop.nitems);
@@ -2199,6 +2202,13 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
                        &prop, &prop, NULL, 0, NULL, NULL, NULL);
       if (prop.value)
         XFree(prop.value);
+
+      // Set UTF8_STRING title for NET_WM-supporting window managers
+      XChangeProperty(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
+                    XInternAtom(GDK_DISPLAY(), "_NET_WM_NAME", False),
+                    XInternAtom(GDK_DISPLAY(), "UTF8_STRING", False),
+                    8, PropModeReplace, (const unsigned char *)utf8_title,
+                    strlen(utf8_title)+1);
 
       nsMemory::Free(platformText);
       // free properties list?
