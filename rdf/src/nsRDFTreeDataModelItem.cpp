@@ -17,6 +17,7 @@
  */
 
 #include "nsRDFTreeDataModelItem.h"
+#include "nsRDFTreeDataModel.h"
 
 const PRUint32 nsRDFTreeDataModelItem::kInvalidIndentationLevel = PRUint32(-1);
 
@@ -24,7 +25,7 @@ static NS_DEFINE_IID(kITreeDMItemIID, NS_ITREEDMITEM_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRDFTreeDataModelItem::nsRDFTreeDataModelItem(nsRDFTreeModel& tree, RDF_Resource& resource)
+nsRDFTreeDataModelItem::nsRDFTreeDataModelItem(nsRDFTreeDataModel& tree, RDF_Resource& resource)
     : nsRDFDataModelItem(resource),
       mTree(tree),
       mOpen(PR_FALSE),
