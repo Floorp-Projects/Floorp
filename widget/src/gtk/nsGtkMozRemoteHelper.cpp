@@ -702,9 +702,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBoo
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // load it
-    loader->OpenURI(channel, nsIURILoader::viewUserClick,
-		    nsnull,  /* target */
-		    listenerRef); /* window */
+    loader->OpenURI(channel, nsIURILoader::viewUserClick, listenerRef);
     
   }
   return NS_OK;
