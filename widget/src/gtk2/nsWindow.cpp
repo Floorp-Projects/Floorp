@@ -137,8 +137,6 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
                                            GdkEventWindowState *event);
 static gboolean property_notify_event_cb  (GtkWidget *widget,
                                            GdkEventProperty *event);
-static gboolean client_event_cb           (GtkWidget *widget,
-                                           GdkEventClient *event);
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -386,11 +384,6 @@ nsWindow::Destroy(void)
     // window this isn't going to harm anything.
     mWindowGroup = nsnull;
 
-    if (mDrawingarea) {
-        g_object_unref(mDrawingarea);
-        mDrawingarea = nsnull;
-    }
-
     if (mShell) {
         gtk_widget_destroy(mShell);
         mShell = nsnull;
@@ -401,6 +394,11 @@ nsWindow::Destroy(void)
         mContainer = nsnull;
     }
     
+    if (mDrawingarea) {
+        g_object_unref(mDrawingarea);
+        mDrawingarea = nsnull;
+    }
+
     OnDestroy();
 
 #ifdef ACCESSIBILITY
@@ -1715,57 +1713,6 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
     DispatchEvent(&event, status);
 }
 
-void
-nsWindow::OnClientEvent(GtkWidget *aWidget, GdkEventClient *aEvent)
-{
-    static GdkAtom atom_rcfiles = GDK_NONE;
-    if (!atom_rcfiles)
-        atom_rcfiles = gdk_atom_intern("_GTK_READ_RCFILES", FALSE);
-
-    if (aEvent->message_type == atom_rcfiles)
-        ThemeChanged();
-}
-
-void
-nsWindow::ThemeChanged()
-{
-    nsGUIEvent event(NS_THEMECHANGED, this);
-    nsEventStatus status = nsEventStatus_eIgnore;
-    DispatchEvent(&event, status);
-
-    if (mContainer) {
-        // Dispatch NS_THEMECHANGED to all child windows
-        GSList *areas = moz_container_get_drawing_areas(mContainer);
-        while (areas) {
-            MozDrawingarea *area = MOZ_DRAWINGAREA(areas->data);
-            nsWindow *win;
-
-            win = (nsWindow*)g_object_get_data(G_OBJECT(area->clip_window),
-                                               "nsWindow");
-            
-            nsGUIEvent event(NS_THEMECHANGED, win);
-            status = nsEventStatus_eIgnore;
-            win->DispatchEvent(&event, status);
-
-            areas = areas->next;
-        }
-
-        // Child containers are handled recursively
-        GList *children = mContainer->children;
-        while (children) {
-            if (IS_MOZ_CONTAINER(children->data)) {
-                nsWindow *win =
-                    (nsWindow*) g_object_get_data(G_OBJECT(children->data),
-                                                  "nsWindow");
-
-                win->ThemeChanged();
-            }
-
-            children = children->next;
-        }
-    }
-}
-
 gboolean
 nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
                             GdkDragContext *aDragContext,
@@ -2255,8 +2202,6 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                          G_CALLBACK(window_state_event_cb), NULL);
         g_signal_connect(G_OBJECT(mShell), "property_notify_event",
                          G_CALLBACK(property_notify_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mShell), "client_event",
-                         G_CALLBACK(client_event_cb), NULL);
     }
 
     if (mContainer) {
@@ -3503,19 +3448,6 @@ property_notify_event_cb  (GtkWidget *widget, GdkEventProperty *event)
         return FALSE;
 
     nsGtkMozRemoteHelper::HandlePropertyChange(widget, event, nswidget);
-
-    return FALSE;
-}
-
-/* static */
-gboolean
-client_event_cb (GtkWidget *widget, GdkEventClient *event)
-{
-    nsWindow *window = get_window_for_gtk_widget(widget);
-    if (!window)
-        return FALSE;
-
-    window->OnClientEvent(widget, event);
 
     return FALSE;
 }
