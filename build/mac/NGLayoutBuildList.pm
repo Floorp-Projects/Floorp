@@ -1118,14 +1118,14 @@ sub MakeLibAliases()
 		#// WasteLib
 		my($wastelibpath) = $appath;
 		$wastelibpath =~ s/[^:]*$/MacOS Support:WASTE 1.3 Distribution:WASTELib/;
-		_MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:", 1);
+		MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:");
 
 		#// ProfilerLib
 		if ($main::DEBUG)
 		{
 			my($profilerlibpath) = $appath;
 			$profilerlibpath =~ s/[^:]*$/MacOS Support:Libraries:Profiler Common:ProfilerLib/;
-			_MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:", 1);
+			MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:");
 		}
 	}
 	else {
