@@ -2687,6 +2687,9 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
          {
              URL_s->content_length = CacheObject_GetContentLength(pObject);
              URL_s->real_content_length = CacheObject_GetSize(pObject); 
+             /* If no Content-Length: header was supplied */
+             if ((0 == URL_s->content_length) && (URL_s->real_content_length>0))
+                URL_s->content_length = URL_s->real_content_length;
          }
 
          URL_s->cache_object = pObject;
