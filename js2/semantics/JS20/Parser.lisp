@@ -355,10 +355,10 @@
        
        (production :for-initializer () for-initializer-empty)
        (production :for-initializer ((:expression no-in)) for-initializer-expression)
-       (production :for-initializer (:variable-definition-kind (:variable-binding-list no-in)) for-initializer-variable-definition)
+       (production :for-initializer (:attributes :variable-definition-kind (:variable-binding-list no-in)) for-initializer-variable-definition)
        
        (production :for-in-binding (:postfix-expression) for-in-binding-expression)
-       (production :for-in-binding (:variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
+       (production :for-in-binding (:attributes :variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
        
        
        (%subsection "With Statement")
@@ -397,7 +397,7 @@
        
        (%subsection "Import Statement")
        (production :import-statement (import :import-list) import-statement-import)
-       (production :import-statement (use import :import-list) import-statement-use-import)
+       (production :import-statement (use :no-line-break import :import-list) import-statement-use-import)
        
        (production :import-list (:import-binding) import-list-one)
        (production :import-list (:import-list \, :import-binding) import-list-more)
@@ -413,7 +413,7 @@
 
        
        (%subsection "Use Statement")
-       (production :use-statement (use namespace :nonassignment-expression-list) use-statement-normal)
+       (production :use-statement (use :no-line-break namespace :nonassignment-expression-list) use-statement-normal)
 
        (production :nonassignment-expression-list ((:non-assignment-expression allow-in)) nonassignment-expression-list-one)
        (production :nonassignment-expression-list (:nonassignment-expression-list \, (:non-assignment-expression allow-in)) nonassignment-expression-list-more)
@@ -480,7 +480,7 @@
        (production (:function-definition :omega) (:function-declaration (:semicolon :omega)) function-definition-declaration)
        
        (production :function-declaration (function :function-name :function-signature) function-declaration-signature-and-body)
-       (production :function-declaration (constructor :identifier :function-signature) function-declaration-constructor)
+       (production :function-declaration (constructor :no-line-break :identifier :function-signature) function-declaration-constructor)
        
        (production :function-name (:qualified-identifier) function-name-function)
        (production :function-name (get :no-line-break (:- \() :qualified-identifier) function-name-getter)
@@ -544,11 +544,11 @@
        
        
        (%subsection "Namespace Definition")
-       (production :namespace-definition (namespace :identifier :extends-list) namespace-definition-normal)
+       (production :namespace-definition (namespace :no-line-break :identifier :extends-list) namespace-definition-normal)
        
        
        (%subsection "Attribute Definition")
-       (production :attribute-definition (attribute :identifier =) attribute-definition-none)
+       (production :attribute-definition (attribute :no-line-break :identifier =) attribute-definition-none)
        (production :attribute-definition (default =) attribute-definition-default)
        (production :attribute-definition (:attribute-definition :attribute) attribute-definition-identifier)
        (production :attribute-definition (:attribute-definition namespace \( (:type-expression allow-in) \)) attribute-definition-namespace)
