@@ -244,6 +244,8 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   mForceCharacterSet = "";
   mAllowPlugins = PR_TRUE;
   mIsFrame = PR_FALSE;
+  mEnableRendering = PR_TRUE;
+
 }
 
 // ISupports implementation...
