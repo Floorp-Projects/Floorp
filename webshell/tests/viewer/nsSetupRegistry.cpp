@@ -48,7 +48,6 @@
 #include "nsUCVJACID.h"
 // #include "nsUCVJA2CID.h"
 
-#include "nsIStringBundle.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsIProperties.h"
 #include "nsCollationCID.h"
@@ -261,8 +260,6 @@ static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
 //static NS_DEFINE_IID(kCXULCommandCID,             NS_XULCOMMAND_CID);
 
 
-static NS_DEFINE_IID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
-
 static NS_DEFINE_IID(kUnicharUtilCID,             NS_UNICHARUTIL_CID);
 
 static NS_DEFINE_IID(kCollationCID,               NS_COLLATION_CID);
@@ -405,8 +402,6 @@ NS_SetupRegistry()
 
   nsComponentManager::RegisterComponent(kPlatformCharsetCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
 #endif
-
-  nsComponentManager::RegisterComponent(kStringBundleServiceCID,  NULL, NULL, STRRES_DLL, PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kUnicharUtilCID,          NULL, NULL, UNICHARUTIL_DLL, PR_FALSE, PR_FALSE);
 
