@@ -1093,13 +1093,8 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
 
   // if we're not the toplevel window pass up the cursor request to
   // the toplevel window to handle it.
-  if (!mMozArea) {
-    // find the toplevel mozarea for this widget
-    GtkWidget *top_mozarea = GetOwningWidget();
-    void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
-    nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
-    return mozAreaWindow->SetCursor(aCursor);
-  }
+  if (!mMozArea)
+    return GetOwningWindow()->SetCursor(aCursor);
 
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
@@ -3082,14 +3077,20 @@ nsWindow::GetOwningWidget()
   return (GtkWidget *)mMozAreaClosestParent;
 }
 
-nsWindowType
-nsWindow::GetOwningWindowType(void)
+nsWindow *
+nsWindow::GetOwningWindow(void) 
 {
   GtkWidget *widget = GetOwningWidget();
 
+  return NS_STATIC_CAST(nsWindow *, gtk_object_get_data(GTK_OBJECT(widget),
+                                                        "nsWindow"));
+}
+
+nsWindowType
+nsWindow::GetOwningWindowType(void)
+{
   nsWindow *owningWindow;
-  owningWindow = (nsWindow *)gtk_object_get_data(GTK_OBJECT(widget),
-                                                 "nsWindow");
+  owningWindow = GetOwningWindow();
 
   nsWindowType retval;
   owningWindow->GetWindowType(retval);
@@ -4246,16 +4247,6 @@ NS_IMETHODIMP nsWindow::ResetInputState()
   return NS_OK;
 }
 
-nsWindow* nsWindow::FindTopLevelWindow() {
-  if (!mShell) {
-    GtkWidget *top_mozarea = GetOwningWidget();
-    void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
-    return data == this ? nsnull : NS_STATIC_CAST(nsWindow *, data);
-  } else {
-    return nsnull;
-  }
-}
-
 static void
 gdk_wmspec_change_state (gboolean   add,
                          GdkWindow *window,
@@ -4287,10 +4278,8 @@ void nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight) {
 }
 #else
 NS_IMETHODIMP nsWindow::SetWindowTranslucency(PRBool aTranslucent) {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->SetWindowTranslucency(aTranslucent);
-  }
+  if (!mMozArea)
+    return GetOwningWindow()->SetWindowTranslucency(aTranslucent);
 
   if (!mShell) {
     // we must be embedded
@@ -4315,10 +4304,8 @@ NS_IMETHODIMP nsWindow::SetWindowTranslucency(PRBool aTranslucent) {
 }
 
 NS_IMETHODIMP nsWindow::GetWindowTranslucency(PRBool& aTranslucent) {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->GetWindowTranslucency(aTranslucent);
-  }
+  if (!mMozArea)
+    return GetOwningWindow()->GetWindowTranslucency(aTranslucent);
 
   aTranslucent = mIsTranslucent;
   return NS_OK;
@@ -4410,11 +4397,11 @@ void nsWindow::ApplyTransparencyBitmap() {
   gdk_bitmap_unref(maskBitmap);
 }
 
-NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas) {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->UpdateTranslucentWindowAlpha(aRect, aAlphas);
-  }
+NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect,
+                                                     PRUint8* aAlphas)
+{
+  if (!mMozArea)
+    return GetOwningWindow()->UpdateTranslucentWindowAlpha(aRect, aAlphas);
 
   NS_ASSERTION(mIsTranslucent, "Window is not transparent");
 
@@ -4447,10 +4434,8 @@ NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint
 NS_IMETHODIMP
 nsWindow::HideWindowChrome(PRBool aShouldHide)
 {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->HideWindowChrome(aShouldHide);
-  }
+  if (!mMozArea)
+    return GetOwningWindow()->HideWindowChrome(aShouldHide);
 
   if (!mShell) {
     // we must be embedded
@@ -4489,10 +4474,8 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
 NS_IMETHODIMP
 nsWindow::MakeFullScreen(PRBool aFullScreen)
 {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->MakeFullScreen(aFullScreen);
-  }
+  if (!mMozArea)
+    return GetOwningWindow()->MakeFullScreen(aFullScreen);
 
   if (!mShell) {
     // we must be embedded

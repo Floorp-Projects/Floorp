@@ -115,7 +115,6 @@ public:
   NS_IMETHOD           SetFocus(PRBool aRaise);
   NS_IMETHOD           GetAttention(void);
   NS_IMETHOD           Destroy();
-  nsWindow*            FindTopLevelWindow(); // returns nsnull if WE are top level
   void                 ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
   void                 ApplyTransparencyBitmap();
 #ifdef INCLUDE_XUL
@@ -163,6 +162,9 @@ public:
 
   // Return the GtkMozArea that is the nearest parent of this widget
   virtual GtkWidget *GetOwningWidget();
+
+  // Get the owning window for this window
+  nsWindow *GetOwningWindow();
 
   // Return the type of the window that is the toplevel mozilla window
   // for this (possibly) inner window
