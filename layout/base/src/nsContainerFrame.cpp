@@ -518,15 +518,6 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     availBand.width = 0;
   }
 
-  if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
-    nsStyleSpacing* spacing;
-    aKidFrame->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)spacing);
-    nsMargin  margin;
-    spacing->CalcMarginFor(this, margin);
-    // Reduce the available width by the kid's left/right margin
-    availSize.width -= margin.left + margin.right;
-  }
-
   // Does the child frame support interface nsIRunaround?
   if (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID,
                                          (void**)&reflowRunaround)) {
