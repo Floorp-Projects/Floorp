@@ -28,9 +28,7 @@
 
 #include "nsIStringBundle.h"
 
-extern nsresult NS_InitEmbedding(const char *aPath);
-extern nsresult NS_TermEmbedding();
-
+#include "nsEmbedAPI.h"
 
 static nsIServiceManager *sServiceManager = nsnull;
 static PRBool             sRegistryInitializedFlag = PR_FALSE;
