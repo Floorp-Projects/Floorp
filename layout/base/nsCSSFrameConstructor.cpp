@@ -3074,6 +3074,22 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
   return rv;
 }
 
+PRBool 
+NeedFrameFor(nsIFrame*   aParentFrame,
+             nsIContent* aChildContent) 
+{
+  // don't create a whitespace frame if aParentFrame doesn't want it
+  nsFrameState state;
+  aParentFrame->GetFrameState(&state);
+  if (NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE & state) {
+    if (IsOnlyWhiteSpace(aChildContent)) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
+
 nsresult
 nsCSSFrameConstructor::TableProcessChildren(nsIPresShell*            aPresShell, 
                                             nsIPresContext*          aPresContext,
@@ -3102,7 +3118,7 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresShell*            aPresShell,
   while (iterator.HasMoreChildren()) {
     nsCOMPtr<nsIContent> childContent;
     iterator.NextChild(getter_AddRefs(childContent));
-    if (childContent.get()) {
+    if (childContent.get() && NeedFrameFor(aParentFrame, childContent.get())) {
       rv = TableProcessChild(aPresShell, aPresContext, aState, *childContent.get(), aParentFrame,
                              parentFrameType.get(), parentStyleContext.get(),
                              aTableCreator, aChildItems, aCaption);
@@ -4644,8 +4660,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
                                            nsIAtom*                 aTag,
                                            PRInt32                  aNameSpaceID,
                                            nsIStyleContext*         aStyleContext,
-                                           nsFrameItems&            aFrameItems,
-                                           PRBool*                  aWhiteSpaceContent)
+                                           nsFrameItems&            aFrameItems)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   PRBool    isAbsolutelyPositioned = PR_FALSE;
@@ -4661,35 +4676,17 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
   PRBool    isPositionedContainingBlock = PR_FALSE;
   nsresult  rv = NS_OK;
 
-  if (aWhiteSpaceContent) {
-    *aWhiteSpaceContent = PR_FALSE;
-  }
-
   if (nsLayoutAtoms::textTagName == aTag) {
     PRBool isWhitespace = IsOnlyWhiteSpace(aContent);
     // process pending pseudo frames. whitespace doesn't have an effect.
     if (!aState.mPseudoFrames.IsEmpty() && !isWhitespace) { 
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
     }
-    // exclude whitespace from table and math elements in as efficient manner as possible
-    PRBool createFrame = PR_TRUE;
-    if (isWhitespace) {
-      nsFrameState state;
-      aParentFrame->GetFrameState(&state);
-      if (NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE & state) {
-        createFrame = PR_FALSE;
-        if (aWhiteSpaceContent) {
-          *aWhiteSpaceContent = PR_TRUE;
-        }
-      }
-    }
-    if (createFrame) {
-      rv = NS_NewTextFrame(aPresShell, &newFrame);
-      // Text frames don't go in the content->frame hash table, because
-      // they're anonymous. This keeps the hash table smaller
-      addToHashTable = PR_FALSE;
-      isReplaced = PR_TRUE;   // XXX kipp: temporary
-    }
+    rv = NS_NewTextFrame(aPresShell, &newFrame);
+    // Text frames don't go in the content->frame hash table, because
+    // they're anonymous. This keeps the hash table smaller
+    addToHashTable = PR_FALSE;
+    isReplaced = PR_TRUE;   // XXX kipp: temporary
   }
   else {
     // Ignore the tag if it's not HTML content
@@ -6093,7 +6090,7 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell,
 } 
 
 nsresult
-nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell, 
+nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPresShell, 
                                                    nsIPresContext*          aPresContext,
                                                    nsFrameConstructorState& aState,
                                                    const nsStyleDisplay*    aDisplay,
@@ -7050,7 +7047,12 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell,
 {
   NS_PRECONDITION(nsnull != aParentFrame, "no parent frame");
 
-  nsresult  rv;
+  nsresult rv = NS_OK;
+
+  // don't create a whitespace frame if aParent doesn't want it
+  if (!NeedFrameFor(aParentFrame, aContent)) {
+    return rv;
+  }
 
   // Get the element's tag
   nsCOMPtr<nsIAtom>  tag;
@@ -7161,9 +7163,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   nsIFrame* lastChild = aFrameItems.lastChild;
 
   // Handle specific frame types
-  PRBool whiteSpaceContent = PR_FALSE;
   nsresult rv = ConstructFrameByTag(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                                    aTag, aNameSpaceID, styleContext, aFrameItems, &whiteSpaceContent);
+                                    aTag, aNameSpaceID, styleContext, aFrameItems);
 
 #ifdef INCLUDE_XUL
   // Failing to find a matching HTML frame, try creating a specialized
@@ -7198,8 +7199,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   }
 #endif
 
-  if (NS_SUCCEEDED(rv) && !whiteSpaceContent &&
-                          ((nsnull == aFrameItems.childList) ||
+  if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                            (lastChild == aFrameItems.lastChild))) {
     // When there is no explicit frame to create, assume it's a
     // container and let display style dictate the rest
