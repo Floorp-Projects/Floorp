@@ -1,0 +1,7 @@
+#ifndef ICAL_VERSION_H
+#define ICAL_VERSION_H
+
+#define ICAL_PACKAGE "@PACKAGE@"
+#define ICAL_VERSION "@VERSION@"
+
+#endif

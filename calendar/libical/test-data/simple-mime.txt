@@ -1,0 +1,27 @@
+From: foo1@example.com
+MIME-Version: 1.0
+To: foo2@example.com,foo3@example.com
+Subject: REQUEST - Phone Conference
+Content-Type:text/calendar; method=REQUEST; charset=US-ASCII;
+  Component=vevent
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="event.vcs"
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+VERSION:2.0
+METHOD:REQUEST
+BEGIN:VEVENT
+ORGANIZER:foo1@example.com
+ATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:MAILTO:employee-A@host.com
+ATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:mailto:Employee-B@HOST.com
+ATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:MailTo:Eric@agony.busboom.org
+DTSTAMP:19970611T190000Z
+DTSTART:19970621T170000Z
+DTEND:19970621T173000Z
+SUMMARY:Let's discuss the attached document
+UID:calsvr.example.com-873970198738777-8aa
+SEQUENCE:0
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR

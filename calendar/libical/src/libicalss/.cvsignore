@@ -1,0 +1,6 @@
+Makefile
+.deps
+.libs
+*.lo
+*.la
+icalss.h

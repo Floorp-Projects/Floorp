@@ -1,0 +1,59 @@
+From: foo1@example.com
+MIME-Version: 1.0
+To: foo2@example.com,foo3@example.com
+Subject: REQUEST - Phone Conference
+Content-Type:multipart/related;boundary="--FEE3790DC7E35189CA67CE2C"
+
+----FEE3790DC7E35189CA67CE2C
+Content-Type: multipart/alternat;
+  boundary="--00FEE3790DC7E35189CA67CE2C00"
+
+----00FEE3790DC7E35189CA67CE2C00
+ Content-Type: text/plain; charset=us-ascii
+
+Content-Transfer-Encoding: 7bit
+
+When: 7/1/1997 10:00PM PDT- 7/1/97 10:30 PM PDT
+Where:
+Organizer: foo1@example.com
+Summary: Let's discuss the attached document
+
+
+----00FEE3790DC7E35189CA67CE2C00
+
+Content-Type:text/calendar; method=REQUEST; charset=US-ASCII;
+  Component=vevent
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="event.vcs"
+
+BEGIN:VCALENDAR
+PRODID:-//ACME/DesktopCalendar//EN
+VERSION:2.0
+BEGIN:VEVENT
+ORGANIZER:foo1@example.com
+ATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:MAILTO:employee-A@host.com
+ATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:mailto:Employee-B@HOST.com
+ATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:MailTo:Eric@Agony.Qualcomm.com
+DTSTAMP:19970611T190000Z
+DTSTART:19970621T170000Z
+DTEND:199706211T173000Z
+SUMMARY:Let's discuss the attached document
+UID:calsvr.example.com-873970198738777-8aa
+SEQUENCE:0
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
+
+00FEE3790DC7E35189CA67CE2C00--
+
+----FEE3790DC7E35189CA67CE2C
+Content-Type: application/msword; name="FieldReport
+Content-Transfer-Encoding: base64
+Content-Disposition: inline; filename="FieldReport.doc"
+Content-ID: <calsvr.example.com-12345aaa>
+
+
+R0lGODdhTAQZAJEAAFVVVd3d3e4AAP///ywAAAAATAQZAAAC/5yPOSLhD6OctNqLs94XqAG
+4kiW5omm6sq27gvH8kzX9o1y+s73/g8MCofEovGITCoxKMbyCR16cNSq9YrNarfcrvdriIH
+5LL5jE6rxc3G+v2cguf0uv2Oz+v38L7/DxgoOKjURnjIIbe3yNjo+AgZWYVIWWl5iZnJY6J.
+
