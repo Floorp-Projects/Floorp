@@ -124,6 +124,8 @@ NS_NewPluginPostDataStream(nsIInputStream **result,
       sis->AdoptData(buf, contentLength);  // let the string stream manage our data
       rv = CallQueryInterface(sis, result);
     }
+    else if (headers)
+      nsMemory::Free(buf); // Cleanup the memory if the data was copied.
   } else {
     nsCOMPtr<nsILocalFile> file; // tmp file will be deleted on release of stream
     nsCOMPtr<nsIInputStream> fileStream;
