@@ -39,6 +39,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "jsapi.h"
+#include "jsdbgapi.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsHashtable.h"
 #include "nsDOMPropEnums.h"
@@ -124,6 +125,20 @@ private:
 
     NS_IMETHOD
     CheckXPCPermissions(JSContext *cx);
+
+    NS_IMETHOD
+    GetFramePrincipal(JSContext *cx, JSStackFrame *fp, nsIPrincipal **result);
+                                                     
+    NS_IMETHOD
+    GetScriptPrincipal(JSContext *cx, JSScript *script, nsIPrincipal **result);
+
+    NS_IMETHOD
+    GetFunctionObjectPrincipal(JSContext *cx, JSObject *obj, 
+                               nsIPrincipal **result);
+
+    NS_IMETHOD
+    GetPrincipalAndFrame(JSContext *cx, nsIPrincipal **result, 
+                         JSStackFrame **frameResult);
 
     NS_IMETHOD
     InitFromPrefs();

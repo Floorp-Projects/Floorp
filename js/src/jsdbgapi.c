@@ -339,8 +339,23 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	    ok = wp->handler(cx, obj, js_IdToValue(sym_id(sym)),
 			     OBJ_GET_SLOT(cx, obj, wp->sprop->slot), vp,
 			     wp->closure);
-	    if (ok)
+            if (ok) {
+                /*
+                 * Create pseudo-frame for call to setter so that any 
+                 * stackwalking security code in the setter will correctly
+                 * identify the guilty party.
+                 */
+                JSObject *funobj = (JSObject *) wp->closure;
+                JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, funobj);
+                JSStackFrame frame;
+                memset(&frame, 0, sizeof(frame));
+                frame.script = fun->script;
+                frame.fun = fun;
+                frame.down = cx->fp;
+                cx->fp = &frame;
 		ok = wp->setter(cx, obj, id, vp);
+                cx->fp = frame.down;
+            }
 	    DropWatchPoint(cx, wp);
 	    return ok;
 	}
@@ -642,6 +657,12 @@ JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
 {
     return fp->fun;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
+{
+    return fp->argv && fp->fun ? JSVAL_TO_OBJECT(fp->argv[-2]) : NULL;
 }
 
 JS_PUBLIC_API(JSBool)

@@ -391,20 +391,23 @@ NS_IMETHODIMP
 LocationImpl::GetPathname(nsString& aPathname)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsIURI *uri;
   nsresult result = NS_OK;
   
   result = GetHref(href);
   if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
+    result = NS_NewURI(&uri, href);
     if (NS_OK == result) {
-      char* file;
-      result = url->GetPath(&file);
-      if (result == NS_OK) {
-        aPathname.AssignWithConversion(file);
-        nsCRT::free(file);
+      nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+      if (url) {
+        char* file;
+        result = url->GetFilePath(&file);
+        if (result == NS_OK) {
+          aPathname.AssignWithConversion(file);
+          nsCRT::free(file);
+        }
       }
-      NS_IF_RELEASE(url);
+      NS_IF_RELEASE(uri);
     }
   }
 

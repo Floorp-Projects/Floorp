@@ -84,6 +84,23 @@ GetCurrentContext() {
     return cx;
 }
 
+static JSContext *
+GetSafeContext() {
+    // Get the "safe" JSContext: our JSContext of last resort
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+                    &rv);
+    if (NS_FAILED(rv))
+        return nsnull;
+    nsCOMPtr<nsIThreadJSContextStack> tcs = do_QueryInterface(stack);
+    JSContext *cx;
+    if (NS_FAILED(tcs->GetSafeJSContext(&cx)))
+        return nsnull;
+    return cx;
+}
+
+
+
 static nsDOMProp 
 findDomProp(const char *propName, int n);
 
@@ -655,20 +672,74 @@ nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
 
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CanExecuteFunction(void *jsFunc,
+nsScriptSecurityManager::CanExecuteFunction(void *jsFuncObj,
                                             PRBool *result)
 {
-    // norris TODO: figure out JSContext strategy, replace nsnulls below
-    // JavaScript is disabled, but we must still execute system JavaScript
-    JSScript *script = JS_GetFunctionScript(nsnull, (JSFunction *) jsFunc);
-    if (!script)
-        return NS_ERROR_FAILURE;
-    JSPrincipals *jsprin = JS_GetScriptPrincipals(nsnull, script);
-    if (!jsprin)
-        return NS_ERROR_FAILURE;
-    nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) jsprin;
+    JSContext *cx = GetCurrentContext();
+    if (!cx) {
+        cx = GetSafeContext();
+    }
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = GetFunctionObjectPrincipal(cx, (JSObject *) jsFuncObj, 
+                                             getter_AddRefs(principal));
+    if (NS_FAILED(rv))
+        return rv;
+    if (!principal) {
+        *result = PR_FALSE;
+        return NS_OK;
+    }
+    return CanExecuteScripts(principal, result);
+}
 
-    return CanExecuteScripts(nsJSPrin->nsIPrincipalPtr, result);
+NS_IMETHODIMP
+nsScriptSecurityManager::GetScriptPrincipal(JSContext *cx, 
+                                            JSScript *script,
+                                            nsIPrincipal **result) 
+{
+    if (!script) {
+        *result = nsnull;
+        return NS_OK;
+    }
+    JSPrincipals *jsp = JS_GetScriptPrincipals(cx, script);
+    if (!jsp) {
+        // Script didn't have principals -- shouldn't happen.
+        return NS_ERROR_FAILURE;
+    }
+    nsJSPrincipals *nsJSPrin = NS_STATIC_CAST(nsJSPrincipals *, jsp);
+    *result = nsJSPrin->nsIPrincipalPtr;
+    if (!result)
+        return NS_ERROR_FAILURE;
+    NS_ADDREF(*result);
+    return NS_OK;
+
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx, 
+                                                    JSObject *obj,
+                                                    nsIPrincipal **result) 
+{
+    JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    if (JS_GetFunctionObject(fun) != obj) {
+        // Function has been cloned; get principals from scope
+        return GetObjectPrincipal(cx, obj, result);
+    }
+    JSScript *script = JS_GetFunctionScript(cx, fun);
+    return GetScriptPrincipal(cx, script, result);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetFramePrincipal(JSContext *cx, 
+                                           JSStackFrame *fp,
+                                           nsIPrincipal **result) 
+{
+    JSObject *obj = JS_GetFrameFunctionObject(cx, fp);
+    if (!obj) {
+        // Must be in a top-level script. Get principal from the script.
+        JSScript *script = JS_GetFrameScript(cx, fp);
+        return GetScriptPrincipal(cx, script, result);
+    } 
+    return GetFunctionObjectPrincipal(cx, obj, result);
 }
 
 
@@ -685,42 +756,36 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         *result = PR_TRUE;
         return NS_OK;
     }
-    while (fp) {
-        JSScript *script = JS_GetFrameScript(cx, fp);
-        if (script) {
-            JSPrincipals *principals = JS_GetScriptPrincipals(cx, script);
-            if (!principals) {
-                // Script didn't have principals!
-                return NS_ERROR_FAILURE;
-            }
-
-            // First check if the principal is even able to enable the 
-            // given capability. If not, don't look any further.
-            nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) principals;
-            PRInt16 canEnable;
-            rv = nsJSPrin->nsIPrincipalPtr->CanEnableCapability(capability, 
-                                                                &canEnable);
-            if (NS_FAILED(rv))
-                return rv;
-            if (canEnable != nsIPrincipal::ENABLE_GRANTED &&
-                canEnable != nsIPrincipal::ENABLE_WITH_USER_PERMISSION) 
-            {
-                *result = PR_FALSE;
-                return NS_OK;
-            }
-
-            // Now see if the capability is enabled.
-            void *annotation = JS_GetFrameAnnotation(cx, fp);
-            rv = nsJSPrin->nsIPrincipalPtr->IsCapabilityEnabled(capability, 
-                                                                annotation, 
-                                                                result);
-            if (NS_FAILED(rv))
-                return rv;
-            if (*result)
-                return NS_OK;
+    do {
+        nsCOMPtr<nsIPrincipal> principal;
+        if (NS_FAILED(GetFramePrincipal(cx, fp, getter_AddRefs(principal)))) {
+            return NS_ERROR_FAILURE;
         }
-        fp = JS_FrameIterator(cx, &fp);
-    }
+        if (!principal)
+            continue;
+
+        // First check if the principal is even able to enable the 
+        // given capability. If not, don't look any further.
+        PRInt16 canEnable;
+        rv = principal->CanEnableCapability(capability, &canEnable);
+        if (NS_FAILED(rv))
+            return rv;
+        if (canEnable != nsIPrincipal::ENABLE_GRANTED &&
+            canEnable != nsIPrincipal::ENABLE_WITH_USER_PERMISSION) 
+        {
+            *result = PR_FALSE;
+            return NS_OK;
+        }
+
+        // Now see if the capability is enabled.
+        void *annotation = JS_GetFrameAnnotation(cx, fp);
+        rv = principal->IsCapabilityEnabled(capability, annotation, 
+                                            result);
+        if (NS_FAILED(rv))
+            return rv;
+        if (*result)
+            return NS_OK;
+    } while ((fp = JS_FrameIterator(cx, &fp)) != nsnull);
     *result = PR_FALSE;
     return NS_OK;
 }
@@ -847,28 +912,21 @@ CheckConfirmDialog(const PRUnichar *szMessage, const PRUnichar *szCheckMessage,
     return (buttonPressed == 0);
 }
 
-static nsresult
-GetPrincipalAndFrame(JSContext *cx, nsIPrincipal **result, 
-                     JSStackFrame **frameResult) 
+NS_IMETHODIMP
+nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx, 
+                                              nsIPrincipal **result, 
+                                              JSStackFrame **frameResult) 
 {
     // Get principals from innermost frame of JavaScript or Java.
     JSStackFrame *fp = nsnull; // tell JS_FrameIterator to start at innermost
-    fp = JS_FrameIterator(cx, &fp);
-    while (fp) {
-        JSScript *script = JS_GetFrameScript(cx, fp);
-        if (script) {
-            JSPrincipals *principals = JS_GetScriptPrincipals(cx, script);
-            if (!principals) {
-                // Script didn't have principals!
-                return NS_ERROR_FAILURE;
-            }
-            nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) principals;
-            *result = nsJSPrin->nsIPrincipalPtr;
-            NS_ADDREF(*result);
+    for (fp = JS_FrameIterator(cx, &fp); fp; fp = JS_FrameIterator(cx, &fp)) {
+        if (NS_FAILED(GetFramePrincipal(cx, fp, result))) {
+            return NS_ERROR_FAILURE;
+        }
+        if (*result) {
             *frameResult = fp;
             return NS_OK;
         }
-        fp = JS_FrameIterator(cx, &fp);
     }
     *result = nsnull;
     return NS_OK;

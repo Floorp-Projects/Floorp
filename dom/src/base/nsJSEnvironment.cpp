@@ -703,11 +703,8 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  jsval funval = OBJECT_TO_JSVAL(aHandler);
-  JSFunction* fun = ::JS_ValueToFunction(mContext, funval);
-
   PRBool ok;
-  rv = securityManager->CanExecuteFunction(fun, &ok);
+  rv = securityManager->CanExecuteFunction(aHandler, &ok);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -726,6 +723,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
 
   jsval val;
   if (ok) {
+    jsval funval = OBJECT_TO_JSVAL(aHandler);
     ok = ::JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
                                 argc, (jsval *)argv, &val);
   }

@@ -105,7 +105,7 @@ interface nsIScriptSecurityManager : nsISupports
     boolean CanExecuteScripts(in nsIPrincipal principal);
 
 	/**
-	 * Return true if the given JavaScript function was compiled with
+	 * Return true if the given JavaScript function object was compiled with
 	 * a principal that is allowed to execute scripts.
 	 */
     boolean CanExecuteFunction(in voidStar jsFunction);
