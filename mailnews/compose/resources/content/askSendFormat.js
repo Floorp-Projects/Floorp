@@ -128,21 +128,21 @@ function Startup()
         if (recommended_as_default)
         {
           group.selectedItem = element;
-          group.data = element.data;
+          group.value = element.value;
         }
       }
       if (!haveRecommendation || !recommended_as_default)
       {
         group.selectedItem = defaultElement;
-        group.data = defaultElement.data;
+        group.value = defaultElement.value;
       }
 
       //change the button label
       var buttonlabels = document.getElementById("okCancelButtons");
       element = document.getElementById("ok");
-      element.setAttribute("value", buttonlabels.getAttribute("button1Label"));
+      element.setAttribute("label", buttonlabels.getAttribute("button1Label"));
       element = document.getElementById("cancel");
-      element.setAttribute("value", buttonlabels.getAttribute("button2Label"));
+      element.setAttribute("label", buttonlabels.getAttribute("button2Label"));
 /*
       element = document.getElementById("Button2");
       element.setAttribute("value", buttonlabels.getAttribute("button3Label"));
@@ -167,7 +167,7 @@ function Send()
 {
   if (param)
   {
-    switch (document.getElementById("mailDefaultHTMLAction").data)
+    switch (document.getElementById("mailDefaultHTMLAction").value)
     {
       case "0": param.action = msgCompSendFormat.Both;    break;
       case "1": param.action = msgCompSendFormat.PlainText;  break;
