@@ -112,6 +112,8 @@ void HandleKeyDown(EventRecord* evt)
 	{		
 		case '\r':
 		case '\3':
+			if (gControls->nextB)
+				TrackControl(gControls->nextB, evt->where, NULL);
 			switch(gCurrWin)
 			{
 				case kLicenseID:
