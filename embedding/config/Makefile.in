@@ -97,6 +97,6 @@ mre:: embed_chrome
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(MOZILLA_DIR)/embedding/config/mre-win-supp.tmp -o $(_PLATFORM) -v
 	-$(RM) -f $(MOZILLA_DIR)/embedding/config/mre-win-supp.tmp
 	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/mre_app_support/chrome
-	mkdir $(DIST)/mre_app_support/plugins
-	mkdir $(DIST)/mre_app_support/components
+	test -d $(DIST)/mre_app_support/plugins || mkdir $(DIST)/mre_app_support/plugins
+	test -d $(DIST)/mre_app_support/components || mkdir $(DIST)/mre_app_support/components
 endif # WINNT
