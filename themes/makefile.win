@@ -21,6 +21,6 @@
 
 DEPTH=..
 
-DIRS= modern classic
+DIRS= modern classic blue
 
 include <$(DEPTH)\config\rules.mak>
