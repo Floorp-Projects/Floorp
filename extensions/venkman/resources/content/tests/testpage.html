@@ -31,7 +31,21 @@
       else if (current < recurse)
         c(recurse, ++current);
       else
-        doDebugger();
+        debugger;
+    }
+
+    function scriptObject(foo)
+    {
+       this.foo = foo;
+       this.bar = "baz";
+    }
+
+    function makeObj()
+    {
+       var nativeObj = new Object();
+       var jsObj     = new scriptObject(12345);
+
+       debugger;
     }
   </script>
   </head>
@@ -41,6 +55,7 @@
 
     <h2>Choose your poison...</h2>
     <button onclick="doDebugger();">debugger keyword, small stack</button><br>
-    <button onclick="a();">debugger keyword, interesting stack</button> 
+    <button onclick="a();">debugger keyword, interesting stack</button><br>
+    <button onclick="makeObj();">debugger keyword, two objects</button> 
   </body>
 </html>
