@@ -33,7 +33,7 @@
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
-#define SHOW_VIEW_BORDERS
+//#define SHOW_VIEW_BORDERS
 //#define HIDE_ALL_WIDGETS
 
 //
