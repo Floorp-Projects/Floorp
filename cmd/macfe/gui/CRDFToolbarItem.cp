@@ -240,8 +240,8 @@ CRDFPushButton :: CalcTitleFrame ( )
 	::GetFontInfo(&theInfo);
 	mCachedTitleFrame.top = mCachedButtonFrame.top;
 	mCachedTitleFrame.left = mCachedButtonFrame.left;		
-	mCachedTitleFrame.right = mCachedTitleFrame.left + ::StringWidth(LStr255(title));;
-	mCachedTitleFrame.bottom = mCachedTitleFrame.top + theInfo.ascent + theInfo.descent + theInfo.leading;;
+	mCachedTitleFrame.right = mCachedTitleFrame.left + UGraphicGizmos::GetUTF8TextWidth(title, strlen(title));
+	mCachedTitleFrame.bottom = mCachedTitleFrame.top + theInfo.ascent + theInfo.descent + theInfo.leading;
 
 	if (mCurrentMode != eTOOLBAR_TEXT)
 	{
@@ -405,7 +405,7 @@ CRDFPushButton::GetPlacement( placement& outPlacement, SDimension16 space_availa
 //				minChars = atoi(minChars);
 			if ( minChars < itemText.length() )
 				itemText[minChars] = '\0';
-			UInt16 textWidth = ::StringWidth(LStr255(itemText.c_str()));
+			UInt16 textWidth = UGraphicGizmos::GetUTF8TextWidth(itemText.c_str(), itemText.length()) ;
 			
 			outPlacement.max_horizontal_shrink = outPlacement.natural_size.width - 
 													(graphicWidth + textWidth + kBullshitSpacingConstant);	
@@ -569,7 +569,7 @@ CRDFPushButton :: DrawButtonTitle ( )
 	}		
 		
 	char* title = HT_GetNodeName(HTNode());
-	UGraphicGizmos::PlaceStringInRect(LStr255(title), mCachedTitleFrame, teCenter, teCenter);
+	UGraphicGizmos::PlaceUTF8TextInRect(title, strlen(title), mCachedTitleFrame, teCenter, teCenter);
 
 } // DrawButtonTitle
 
