@@ -56,10 +56,10 @@ function WizardHandlerSet( sMgr, wMgr )
 function DEF_onNext()
 {
   var oParent = this.WHANDLER;
- if( oParent.nextButton.getAttribute("disabled") == "true" )
+  if( oParent.nextButton.getAttribute("disabled") == "true" )
     return;
-	oParent.SM.SavePageData( this.currentPageTag );      // persist data
- var nextPageTag = this.wizardMap[this.currentPageTag].next;
+	oParent.SM.SavePageData( this.currentPageTag, null, null, null );      // persist data
+  var nextPageTag = this.wizardMap[this.currentPageTag].next;
 	this.LoadPage( nextPageTag, false );     // load the next page
   this.ProgressUpdate( ++this.currentPageNumber );
 }
@@ -68,10 +68,10 @@ function DEF_onBack()
 {
   var oParent = this.WHANDLER;
 	if( oParent.backButton.getAttribute("disabled") == "true" )
- 	return;
-	oParent.SM.SavePageData( this.currentPageTag );      // persist data
+ 	  return;
+	oParent.SM.SavePageData( this.currentPageTag, null, null, null );      // persist data
 	previousPageTag = this.wizardMap[this.currentPageTag].previous;
- this.LoadPage( previousPageTag, false ); // load the preivous page
+  this.LoadPage( previousPageTag, false ); // load the preivous page
   this.ProgressUpdate( --this.currentPageNumber );
 }
 // default handler for cancelling wizard
@@ -86,14 +86,14 @@ function DEF_onFinish()
   var oParent = this.WHANDLER;
   if( !this.wizardMap[this.currentPageTag].finish )
     return;
-  oParent.SM.SavePageData( this.currentPageTag );
+  oParent.SM.SavePageData( this.currentPageTag, null, null, null );
   dump("WizardButtonHandlerSet Warning:\n");
   dump("===============================\n");
   dump("You must provide implementation for onFinish, or else your data will be lost!\n");
 }
 
 // default button enabling ** depends on map, see doc
-function DEF_DoEnabling()
+function DEF_DoEnabling( nextButton, backButton, finishButton )
 {
   var oParent = this.WHANDLER;
   // make sure we're on a valid page
@@ -101,21 +101,27 @@ function DEF_DoEnabling()
     return;
   // "next" button enabling
 	nextTag = this.wizardMap[this.currentPageTag].next;
- if( nextTag && oParent.nextButton.getAttribute("disabled") )
+  if( nextTag && oParent.nextButton.getAttribute("disabled") ||
+    ( arguments.length && nextButton ) )
     oParent.nextButton.removeAttribute( "disabled" );
-  else if( !nextTag && !oParent.nextButton.getAttribute("disabled"))
+  else if( !nextTag && !oParent.nextButton.getAttribute("disabled") ||
+    ( arguments.length && !nextButton ) )
     oParent.nextButton.setAttribute( "disabled", "true" );
   // "finish" button enabling
   finishTag = this.wizardMap[this.currentPageTag].finish;
-  if( finishTag && oParent.finishButton.getAttribute("disabled") )
+  if( finishTag && oParent.finishButton.getAttribute("disabled") ||
+    ( arguments.length && finishButton ) )
     oParent.finishButton.removeAttribute( "disabled" );
-  else if(!finishTag && !oParent.finishButton.getAttribute("disabled") )
+  else if(!finishTag && !oParent.finishButton.getAttribute("disabled") ||
+    ( arguments.length && !finishButton ) )
     oParent.finishButton.setAttribute( "disabled", "true" );
   // "back" button enabling
  prevTag = this.wizardMap[this.currentPageTag].previous;
-	if( prevTag && oParent.backButton.getAttribute("disabled") )
+	if( prevTag && oParent.backButton.getAttribute("disabled") ||
+    ( arguments.length && backButton ) )
  	oParent.backButton.removeAttribute("disabled");
-	else if( !prevTag && !oParent.backButton.getAttribute("disabled") )
+	else if( !prevTag && !oParent.backButton.getAttribute("disabled") ||
+    ( arguments.length && !backButton ) )
  	oParent.backButton.setAttribute("disabled", "true"); 
 }
 
@@ -133,7 +139,7 @@ function DEF_onPageLoad( tag )
   if( this.DoButtonEnabling )              // if provided, call user-defined button
     this.DoButtonEnabling();               // enabling function
   if( this.content_frame )
-    oParent.SM.SetPageData( tag );          // set page data in content frame
+    oParent.SM.SetPageData( tag, false );  // set page data in content frame
   else {
     dump("Widget Data Manager Error:\n"); 
     dump("==========================\n");
