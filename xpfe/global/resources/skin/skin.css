@@ -1002,10 +1002,10 @@ window html|textarea {
 
 window html|input[type=text] {
   border: 1px inset rgb(192, 192, 192);
-  padding-top: 3px;
-  padding-bottom: 2px;
-  padding-left: 4px;
-  padding-right: 3px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 1px;
+  padding-right: 1px;
   margin-top: 0px;
   margin-bottom: 2px;
   margin-left: 4px;
