@@ -53,6 +53,7 @@
 //#include "nsTextTokenizer.h"
 #include "nsElementTable.h"
 #include "nsParserService.h"
+#include "nsScanner.h"
 
 #ifdef NS_DEBUG
 #include "nsLoggingSink.h"
@@ -118,6 +119,8 @@ Shutdown(nsIModule* aSelf)
     DeleteElementTable();
     CNewlineToken::FreeNewline();
     gInitialized = PR_FALSE;
+    delete nsScanner::gAllocator;
+    nsScanner::gAllocator = nsnull;
   }
 }
 
