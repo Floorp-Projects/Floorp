@@ -21,6 +21,7 @@
 window { 
  display: block; 
  background-color:white;
+ overflow: visible;
 } 
 
 tree { 
