@@ -36,6 +36,9 @@ public:
   friend nsresult NS_NewMathMLmoFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
+  GetFrameType(nsIAtom** aType) const;
+
+  NS_IMETHOD
   SetAdditionalStyleContext(PRInt32          aIndex, 
                             nsIStyleContext* aStyleContext);
   NS_IMETHOD

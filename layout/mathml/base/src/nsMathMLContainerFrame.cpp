@@ -1345,18 +1345,23 @@ nsMathMLContainerFrame::GetFrameType(nsIAtom** aType) const
 {
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
   // see if this is an embellished operator (mapped to 'Op' in TeX)
-  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
-    *aType = nsMathMLAtoms::operatorMathMLFrame;
+  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) &&
+      mEmbellishData.coreFrame) {
+    return mEmbellishData.coreFrame->GetFrameType(aType);
   }
   else {
     nsCOMPtr<nsIAtom> tag;
     mContent->GetTag(*getter_AddRefs(tag));
-    // see if this a token element (mapped to 'Ord'in TeX)
-    if (tag.get() == nsMathMLAtoms::mi_ ||
-        tag.get() == nsMathMLAtoms::mn_ ||
-        tag.get() == nsMathMLAtoms::ms_ ||
-        tag.get() == nsMathMLAtoms::mtext_) {
+    // see if this is a token element (mapped to 'Ord'in TeX)
+    if (tag == nsMathMLAtoms::mi_ ||
+        tag == nsMathMLAtoms::mn_ ||
+        tag == nsMathMLAtoms::ms_ ||
+        tag == nsMathMLAtoms::mtext_) {
       *aType = nsMathMLAtoms::ordinaryMathMLFrame;
+    }
+    else if (tag == nsMathMLAtoms::mo_ ) {
+      // this is an empty <mo></mo> that wasn't treated as embellished above
+      *aType = nsMathMLAtoms::operatorInvisibleMathMLFrame;
     }
     else {
       // everything else is a schematta element (mapped to 'Inner' in TeX)
@@ -1370,63 +1375,105 @@ nsMathMLContainerFrame::GetFrameType(nsIAtom** aType) const
 enum eMathMLFrameType {
   eMathMLFrameType_UNKNOWN = -1,
   eMathMLFrameType_Ordinary,
-  eMathMLFrameType_Operator,
-  eMathMLFrameType_Punctuation,
+  eMathMLFrameType_OperatorVisible,
+  eMathMLFrameType_OperatorInvisible,
   eMathMLFrameType_Inner
 };
 
 // see spacing table in Chapter 18, TeXBook (p.170)
-static PRInt32 interFrameSpacingTable[4][4] =
+// Our table isn't quite identical to TeX because operators have 
+// built-in values for lspace & rspace in the Operator Dictionary.
+static PRInt32 kInterFrameSpacingTable[4][4] =
 {
   // in units of muspace.
   // upper half of the byte is set if the
   // spacing is not to be used for scriptlevel > 0
-  /*          Ord   Op    Punc  Inner */
-  /*Ord  */  {0x01, 0x00, 0x00, 0x01},
-  /*Op   */  {0x00, 0x00, 0x00, 0x00},
-  /*Punc */  {0x11, 0x00, 0x11, 0x11},
-  /*Inner*/  {0x01, 0x00, 0x11, 0x01}
+  /*          Ord   OpVis OpInv Inner */
+  /*Ord  */  {0x01, 0x00, 0x01, 0x01},
+  /*OpVis*/  {0x00, 0x00, 0x00, 0x00},
+  /*OpInv*/  {0x01, 0x00, 0x00, 0x01},
+  /*Inner*/  {0x01, 0x00, 0x01, 0x01}
 };
 
-// XXX more tuning of the result as in TeX, maybe depending on fence:true, etc
+#define GET_INTERSPACE(_scriptlevel_, _frametype1, _frametype2, _space) \
+   /* no space if there is a frame that we know nothing about */        \
+   if (_frametype1 == eMathMLFrameType_UNKNOWN ||                       \
+       _frametype2 == eMathMLFrameType_UNKNOWN)                         \
+    _space = 0;                                                         \
+  else {                                                                \
+    _space = kInterFrameSpacingTable[_frametype1][_frametype2];         \
+    _space = (_scriptlevel_ > 0 && (_space & 0xF0))                     \
+      ? 0 /* spacing is disabled */                                     \
+      : _space & 0x0F;                                                  \
+  }                                                                     \
+
+#define MAP_FRAMETYPE(_atomtype, _enumtype)                             \
+  if (_atomtype == nsMathMLAtoms::ordinaryMathMLFrame)                  \
+    _enumtype = eMathMLFrameType_Ordinary;                              \
+  else if (_atomtype == nsMathMLAtoms::schemataMathMLFrame)             \
+    _enumtype = eMathMLFrameType_Inner;                                 \
+  else if (_atomtype == nsMathMLAtoms::operatorVisibleMathMLFrame)      \
+    _enumtype = eMathMLFrameType_OperatorVisible;                       \
+  else if (_atomtype == nsMathMLAtoms::operatorInvisibleMathMLFrame)    \
+    _enumtype = eMathMLFrameType_OperatorInvisible;                     \
+  else                                                                  \
+    _enumtype = eMathMLFrameType_UNKNOWN;
+
+// This function computes the inter-space between two frames. However, 
+// since invisible operators need special treatment, the inter-space may
+// be delayed when an invisible operator is encountered. In this case,
+// the function will carry the inter-space forward until it is determined
+// that it can be applied properly (i.e., until we encounter a visible
+// frame where to decide whether to accept or reject the inter-space).
+// aFromFrameType: remembers the frame when the carry-forward initiated.
+// aCarrySpace: keeps track of the inter-space that is delayed.
+// @returns: current inter-space (which is 0 when the true inter-space is
+// delayed -- and thus has no effect since the frame is invisible anyway).
 static nscoord
-GetInterFrameSpacing(PRInt32  aScriptLevel,
-                     nsIAtom* aFirstFrameType,
-                     nsIAtom* aSecondFrameType)
+GetInterFrameSpacing(PRInt32           aScriptLevel,
+                     nsIAtom*          aFirstFrameType,
+                     nsIAtom*          aSecondFrameType,
+                     eMathMLFrameType* aFromFrameType, // IN/OUT
+                     PRInt32*          aCarrySpace)    // IN/OUT
 {
-  eMathMLFrameType firstType = eMathMLFrameType_UNKNOWN;
-  eMathMLFrameType secondType = eMathMLFrameType_UNKNOWN;
+  eMathMLFrameType firstType, secondType;
+  MAP_FRAMETYPE(aFirstFrameType, firstType);
+  MAP_FRAMETYPE(aSecondFrameType, secondType);
 
-  // do the mapping for the first frame
-  if (aFirstFrameType == nsMathMLAtoms::ordinaryMathMLFrame)
-    firstType = eMathMLFrameType_Ordinary;
-  else if (aFirstFrameType == nsMathMLAtoms::operatorMathMLFrame)
-    firstType = eMathMLFrameType_Operator;
-  else if (aFirstFrameType == nsMathMLAtoms::schemataMathMLFrame)
-    firstType = eMathMLFrameType_Inner;
+  PRInt32 space;
+  GET_INTERSPACE(aScriptLevel, firstType, secondType, space);
 
-  // do the mapping for the second frame
-  if (aSecondFrameType == nsMathMLAtoms::ordinaryMathMLFrame)
-    secondType = eMathMLFrameType_Ordinary;
-  else if (aSecondFrameType == nsMathMLAtoms::operatorMathMLFrame)
-    secondType = eMathMLFrameType_Operator;
-  else if (aSecondFrameType == nsMathMLAtoms::schemataMathMLFrame)
-    secondType = eMathMLFrameType_Inner;
+  // feedback control to avoid the inter-space to be added when not necessary
+  if (secondType == eMathMLFrameType_OperatorInvisible) {
+    // see if we should start to carry the space forward until we
+    // encounter a visible frame
+    if (*aFromFrameType == eMathMLFrameType_UNKNOWN) {
+      *aFromFrameType = firstType;
+      *aCarrySpace = space;
+    }
+    // keep carrying *aCarrySpace forward, while returning 0 for this stage
+    space = 0;
+  }
+  else if (*aFromFrameType != eMathMLFrameType_UNKNOWN) {
+    // no carry-forward anymore, get the real inter-space between
+    // the two frames of interest
+    GET_INTERSPACE(aScriptLevel, *aFromFrameType, secondType, space);
 
-  // return 0 if there is a frame that we know nothing about
-  if (firstType == eMathMLFrameType_UNKNOWN ||
-      secondType == eMathMLFrameType_UNKNOWN) {
-    return 0;
+    // Now, we have two values: the computed space and the space that
+    // has been carried forward until now. Which value do we pick?
+    // If the second type is an operator (e.g., fence), it already has
+    // built-in lspace & rspace, so we let them win. Otherwise we pick
+    // the max between the two values that we have.
+    if (secondType != eMathMLFrameType_OperatorVisible &&
+        space < *aCarrySpace)
+      space = *aCarrySpace;
+
+    // reset everything now that the carry-forward is done
+    *aFromFrameType = eMathMLFrameType_UNKNOWN;
+    *aCarrySpace = 0;
   }
 
-  PRInt32 space = interFrameSpacingTable[firstType][secondType];
-  if (aScriptLevel > 0 && (space & 0xF0)) {
-    // spacing is disabled
-    return 0;
-  }
-  else {
-    return (space & 0x0F);
-  }
+  return space;
 }
 
 NS_IMETHODIMP
@@ -1446,6 +1493,8 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
   nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
 
   PRInt32 count = 0;
+  PRInt32 carrySpace = 0;
+  eMathMLFrameType fromFrameType = eMathMLFrameType_UNKNOWN;
   nsHTMLReflowMetrics childSize (nsnull);
   nsBoundingMetrics bmChild;
   nscoord leftCorrection = 0, italicCorrection = 0;
@@ -1477,7 +1526,7 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
         aDesiredSize.ascent = childSize.ascent;
       // add inter frame spacing
       nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
-        prevFrameType, childFrameType);
+        prevFrameType, childFrameType, &fromFrameType, &carrySpace);
       mBoundingMetrics.width += space * thinSpace;
       // add the child size
       mBoundingMetrics += bmChild;
@@ -1510,6 +1559,8 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
     count = 0;
     nscoord dx = 0, dy = 0;
     italicCorrection = 0;
+    carrySpace = 0;
+    fromFrameType = eMathMLFrameType_UNKNOWN;
     childFrame = mFrames.FirstChild();
     while (childFrame) {
       nsCOMPtr<nsIAtom> childFrameType;
@@ -1527,7 +1578,7 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       else {
         // add inter frame spacing
         nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
-          prevFrameType, childFrameType);
+          prevFrameType, childFrameType, &fromFrameType, &carrySpace);
         dx += space * thinSpace;
       }
       count++;
@@ -1544,8 +1595,48 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
   return NS_OK;
 }
 
-// helper to fix the inter-spacing when <math> is the only parent
+// helpers to fix the inter-spacing when <math> is the only parent
 // e.g., it fixes <math> <mi>f</mi> <mo>q</mo> <mi>f</mi> <mo>I</mo> </math>
+
+static nscoord
+GetInterFrameSpacingFor(nsIPresContext* aPresContext,
+                        PRInt32         aScriptLevel,
+                        nsIFrame*       aParentFrame,
+                        nsIFrame*       aChildFrame)
+{
+  nsIFrame* childFrame;
+  aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  if (!childFrame || aChildFrame == childFrame)
+    return 0;
+
+  PRInt32 carrySpace = 0;
+  eMathMLFrameType fromFrameType = eMathMLFrameType_UNKNOWN;
+  nsCOMPtr<nsIAtom> childFrameType;
+  nsCOMPtr<nsIAtom> prevFrameType;
+  childFrame->GetFrameType(getter_AddRefs(childFrameType));
+  childFrame->GetNextSibling(&childFrame);
+  while (childFrame) {
+    prevFrameType = childFrameType;
+    childFrame->GetFrameType(getter_AddRefs(childFrameType));
+    nscoord space = GetInterFrameSpacing(aScriptLevel,
+      prevFrameType, childFrameType, &fromFrameType, &carrySpace);
+    if (aChildFrame == childFrame) {
+      // get thinspace
+      nsCOMPtr<nsIStyleContext> parentContext;
+      aParentFrame->GetStyleContext(getter_AddRefs(parentContext));
+      const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+        parentContext->GetStyleData(eStyleStruct_Font));
+      nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
+      // we are done
+      return space * thinSpace;
+    }
+    childFrame->GetNextSibling(&childFrame);
+  }
+
+  NS_NOTREACHED("child not in the childlist of its parent");
+  return 0;
+}
+
 nsresult
 nsMathMLContainerFrame::FixInterFrameSpacing(nsIPresContext*      aPresContext,
                                              nsHTMLReflowMetrics& aDesiredSize)
@@ -1554,38 +1645,17 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsIPresContext*      aPresContext,
   nsCOMPtr<nsIContent> parentContent;
   mParent->GetContent(getter_AddRefs(parentContent));
   parentContent->GetTag(*getter_AddRefs(parentTag));
-  if (parentTag.get() == nsMathMLAtoms::math) {
-    nsIFrame* childFrame;
-    mParent->FirstChild(aPresContext, nsnull, &childFrame);
-    nsFrameList frameList(childFrame);
-    nsIFrame* prevSibling = frameList.GetPrevSiblingFor(this);
-    nscoord gap = 0, leftCorrection, italicCorrection;
-    if (prevSibling) {
-      nsIMathMLFrame* mathMLFrame;
-      prevSibling->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-      if (mathMLFrame) {
-        // get thinspace
-        nsCOMPtr<nsIStyleContext> parentContext;
-        mParent->GetStyleContext(getter_AddRefs(parentContext));
-        const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-          parentContext->GetStyleData(eStyleStruct_Font));
-        nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
-        // add inter frame spacing to our width
-        nsCOMPtr<nsIAtom> frameType;
-        GetFrameType(getter_AddRefs(frameType));
-        nsCOMPtr<nsIAtom> prevFrameType;
-        prevSibling->GetFrameType(getter_AddRefs(prevFrameType));
-        nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
-          prevFrameType, frameType);
-        gap += space * thinSpace;
-      }
-    }
+  if (parentTag == nsMathMLAtoms::math ||
+      parentTag == nsMathMLAtoms::mtd_) {
+    nscoord gap = GetInterFrameSpacingFor(aPresContext,
+      mPresentationData.scriptLevel, mParent, this);
     // add our own italic correction
+    nscoord leftCorrection = 0, italicCorrection = 0;
     GetItalicCorrection(mBoundingMetrics, leftCorrection, italicCorrection);
     gap += leftCorrection;
     // see if we should shift our children to account for the correction
     if (gap) {
-      childFrame = mFrames.FirstChild();
+      nsIFrame* childFrame = mFrames.FirstChild();
       while (childFrame) {
         nsPoint origin;
         childFrame->GetOrigin(origin);

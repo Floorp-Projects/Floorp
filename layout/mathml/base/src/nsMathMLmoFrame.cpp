@@ -71,6 +71,38 @@ nsMathMLmoFrame::~nsMathMLmoFrame()
 {
 }
 
+static const PRUnichar kInvisibleComma = PRUnichar(0x200B); // a.k.a. ZERO WIDTH SPACE
+static const PRUnichar kApplyFunction  = PRUnichar(0x2061);
+static const PRUnichar kInvisibleTimes = PRUnichar(0x2062);
+static const PRUnichar kNullCh         = PRUnichar('\0');
+
+NS_IMETHODIMP
+nsMathMLmoFrame::GetFrameType(nsIAtom** aType) const
+{
+  if (mFrames.GetLength() > 1) {
+    *aType = nsMathMLAtoms::operatorVisibleMathMLFrame;
+    NS_ADDREF(*aType);
+    return NS_OK;
+  }
+
+  nsAutoString data;
+  ((nsMathMLChar&)mMathMLChar).GetData(data); // VC++ insists for this cast :-(
+  PRInt32 length = data.Length();
+  PRUnichar ch = (length == 0) ? kNullCh : data[0];
+  if (length > 1)
+    *aType = nsMathMLAtoms::operatorVisibleMathMLFrame;
+  else if (ch == kInvisibleComma || 
+           ch == kApplyFunction  ||
+           ch == kInvisibleTimes ||
+           ch == kNullCh)
+    *aType = nsMathMLAtoms::operatorInvisibleMathMLFrame;
+  else
+    *aType = nsMathMLAtoms::operatorVisibleMathMLFrame;
+
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
 // since a mouse click implies selection, we cannot just rely on the
 // frame's state bit in our child text frame. So we will first check
 // its selected state bit, and use this little helper to double check.
