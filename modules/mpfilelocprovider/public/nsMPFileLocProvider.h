@@ -80,6 +80,7 @@ class nsMPFileLocProvider: public nsIDirectoryServiceProvider
    static nsIAtom*   sApp_UsersPanels50;
    static nsIAtom*   sApp_UsersMimeTypes50;
    static nsIAtom*   sApp_BookmarksFile50;
+   static nsIAtom*   sApp_DownloadsFile50;
    static nsIAtom*   sApp_SearchFile50;
    static nsIAtom*   sApp_MailDirectory50;
    static nsIAtom*   sApp_ImapMailDirectory50;

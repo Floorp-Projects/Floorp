@@ -56,6 +56,7 @@ nsIAtom*   nsMPFileLocProvider::sApp_History50;
 nsIAtom*   nsMPFileLocProvider::sApp_UsersPanels50;
 nsIAtom*   nsMPFileLocProvider::sApp_UsersMimeTypes50;
 nsIAtom*   nsMPFileLocProvider::sApp_BookmarksFile50;
+nsIAtom*   nsMPFileLocProvider::sApp_DownloadsFile50;
 nsIAtom*   nsMPFileLocProvider::sApp_SearchFile50;
 nsIAtom*   nsMPFileLocProvider::sApp_MailDirectory50;
 nsIAtom*   nsMPFileLocProvider::sApp_ImapMailDirectory50;
@@ -85,6 +86,7 @@ nsMPFileLocProvider::~nsMPFileLocProvider()
     NS_IF_RELEASE(sApp_UsersPanels50);
     NS_IF_RELEASE(sApp_UsersMimeTypes50);
     NS_IF_RELEASE(sApp_BookmarksFile50);
+    NS_IF_RELEASE(sApp_DownloadsFile50);
     NS_IF_RELEASE(sApp_SearchFile50);
     NS_IF_RELEASE(sApp_MailDirectory50);
     NS_IF_RELEASE(sApp_ImapMailDirectory50);
@@ -124,6 +126,9 @@ nsresult nsMPFileLocProvider::Initialize(nsIFile* profileParentDir, const char *
     // Bookmarks:
     sApp_BookmarksFile50          = NS_NewAtom(NS_APP_BOOKMARKS_50_FILE);
 
+    // Downloads
+    sApp_DownloadsFile50          = NS_NewAtom(NS_APP_DOWNLOADS_50_FILE);
+
     // Search
     sApp_SearchFile50             = NS_NewAtom(NS_APP_SEARCH_50_FILE);
 
@@ -159,6 +164,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMPFileLocProvider, nsIDirectoryServiceProvider)
 #define PANELS_FILE_50_NAME         "panels.rdf"
 #define MIME_TYPES_FILE_50_NAME     "mimeTypes.rdf"
 #define BOOKMARKS_FILE_50_NAME      "bookmarks.html"
+#define DOWNLOADS_FILE_50_NAME      "downloads.rdf"
 #define SEARCH_FILE_50_NAME         "search.rdf" 
 #define MAIL_DIR_50_NAME            "Mail"
 #define IMAP_MAIL_DIR_50_NAME       "ImapMail"
@@ -238,6 +244,12 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
         rv = mProfileDir->Clone(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->Append(BOOKMARKS_FILE_50_NAME);
+    }
+    else if (inAtom == sApp_DownloadsFile50)
+    {
+        rv = mProfileDir->Clone(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(DOWNLOADS_FILE_50_NAME);
     }
     else if (inAtom == sApp_SearchFile50)
     {

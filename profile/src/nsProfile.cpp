@@ -169,6 +169,7 @@ static nsIAtom* sApp_History50                = nsnull;
 static nsIAtom* sApp_UsersPanels50            = nsnull;
 static nsIAtom* sApp_UsersMimeTypes50         = nsnull;
 static nsIAtom* sApp_BookmarksFile50          = nsnull;
+static nsIAtom* sApp_DownloadsFile50          = nsnull;
 static nsIAtom* sApp_SearchFile50             = nsnull;
 static nsIAtom* sApp_MailDirectory50          = nsnull;
 static nsIAtom* sApp_ImapMailDirectory50      = nsnull;
@@ -300,6 +301,9 @@ nsProfile::nsProfile()
        // Bookmarks:
          sApp_BookmarksFile50          = NS_NewAtom(NS_APP_BOOKMARKS_50_FILE);
          
+       // Downloads:
+         sApp_DownloadsFile50          = NS_NewAtom(NS_APP_DOWNLOADS_50_FILE);
+         
        // Search
          sApp_SearchFile50             = NS_NewAtom(NS_APP_SEARCH_50_FILE);
          
@@ -338,6 +342,7 @@ nsProfile::~nsProfile()
       NS_IF_RELEASE(sApp_UsersPanels50);
       NS_IF_RELEASE(sApp_UsersMimeTypes50);
       NS_IF_RELEASE(sApp_BookmarksFile50);
+      NS_IF_RELEASE(sApp_DownloadsFile50);
       NS_IF_RELEASE(sApp_SearchFile50);
       NS_IF_RELEASE(sApp_MailDirectory50);
       NS_IF_RELEASE(sApp_ImapMailDirectory50);
@@ -2020,6 +2025,7 @@ nsresult nsProfile::UndefineFileLocations()
     (void) directoryService->Undefine(NS_APP_USER_PANELS_50_FILE);
     (void) directoryService->Undefine(NS_APP_USER_MIMETYPES_50_FILE);
     (void) directoryService->Undefine(NS_APP_BOOKMARKS_50_FILE);
+    (void) directoryService->Undefine(NS_APP_DOWNLOADS_50_FILE);
     (void) directoryService->Undefine(NS_APP_SEARCH_50_FILE);
     (void) directoryService->Undefine(NS_APP_MAIL_50_DIR);
     (void) directoryService->Undefine(NS_APP_IMAP_MAIL_50_DIR);
@@ -2358,6 +2364,7 @@ nsProfile::IsRegStringSet(const PRUnichar *profileName, char **regString)
 #define PANELS_FILE_50_NAME         "panels.rdf"
 #define MIME_TYPES_FILE_50_NAME     "mimeTypes.rdf"
 #define BOOKMARKS_FILE_50_NAME      "bookmarks.html"
+#define DOWNLOADS_FILE_50_NAME      "downloads.rdf"
 #define SEARCH_FILE_50_NAME         "search.rdf" 
 #define MAIL_DIR_50_NAME            "Mail"
 #define IMAP_MAIL_DIR_50_NAME       "ImapMail"
@@ -2459,6 +2466,12 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
             if (NS_SUCCEEDED(rv))
                 rv = EnsureProfileFileExists(localFile);
         }
+    }
+    else if (inAtom == sApp_DownloadsFile50)
+    {
+        rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(DOWNLOADS_FILE_50_NAME);
     }
     else if (inAtom == sApp_SearchFile50)
     {
