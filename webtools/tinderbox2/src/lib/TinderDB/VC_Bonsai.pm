@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.56 $ 
-# $Date: 2002/05/07 20:36:26 $ 
+# $Revision: 1.57 $ 
+# $Date: 2002/05/07 22:51:21 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.56 $ )[1];
+$VERSION = ( qw $Revision: 1.57 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -663,9 +663,8 @@ sub status_table_row {
                      "tree: $tree, ".
                      "additional_skips: ".
                      ($NEXT_ROW{$tree} -  $row_index).", ".
-                     "previous_end: ".localtime($current_rec->{'timenow'}).", ".
                      " -->\n");
-   return @outrow;
+      return @outrow;
   }
 
   
@@ -699,40 +698,37 @@ sub status_table_row {
                                 $maxdate,
                                 );
       return @html;
-  } else {
-
-      # Create a multi-row dummy cell for missing data.
-      # Cell stops if there is author data in the following cell or the
-      # treestate changes.
-      
-      my $rowspan = 0;
-      my ($next_db_index, $next_treestate, $next_authors);
-      $next_db_index = $db_index;
-
-      while (
-             !(%{$next_authors}) &&
-             (
-              !defined($next_treestate) ||
-              ($last_treestate eq $next_treestate)
-              )
-             ) {
-
-          $db_index = $next_db_index;
-          $rowspan++ ;
-
-          ($next_db_index, $next_treestate, $next_authors) =
-              cell_data($tree, $db_index, $row_times->[$row_index+$rowspan]);
-          
-      }
-
-      $NEXT_ROW{$tree} = $row_index + $rowspan;
-      $NEXT_DB{$tree} = $db_index;
-
-      my @html= render_empty_cell($LAST_TREESTATE{$tree}, $rowspan);
-      return @html;
   }
 
-  # not reached
+  # Create a multi-row dummy cell for missing data.
+  # Cell stops if there is author data in the following cell or the
+  # treestate changes.
+  
+  my $rowspan = 0;
+  my ($next_db_index, $next_treestate, $next_authors);
+  $next_db_index = $db_index;
+  
+  while (
+         !(%{$next_authors}) &&
+         (
+          !defined($next_treestate) ||
+          ($last_treestate eq $next_treestate)
+          )
+         ) {
+      
+      $db_index = $next_db_index;
+      $rowspan++ ;
+      
+      ($next_db_index, $next_treestate, $next_authors) =
+          cell_data($tree, $db_index, $row_times->[$row_index+$rowspan]);
+      
+  }
+  
+  $NEXT_ROW{$tree} = $row_index + $rowspan;
+  $NEXT_DB{$tree} = $db_index;
+  
+  my @html= render_empty_cell($LAST_TREESTATE{$tree}, $rowspan);
+  return @html;
 }
 
 
