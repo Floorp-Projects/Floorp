@@ -22,7 +22,6 @@
 
 require 'CGI.pl';
 
-use diagnostics;
 use strict;
 
 sub StupidFuncToShutUpWarningsByUsingVarsAgain {

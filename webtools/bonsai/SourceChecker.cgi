@@ -29,7 +29,6 @@
 #               ...
 #
 
-use diagnostics;
 use strict;
 
 use CGI;

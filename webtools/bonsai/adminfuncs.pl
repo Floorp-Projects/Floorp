@@ -20,7 +20,6 @@
 # Contributor(s): 
 
 use strict;
-use diagnostics;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.

@@ -23,7 +23,6 @@
 # Query the CVS database.
 #
 
-use diagnostics;
 use strict;
 
 require 'CGI.pl';

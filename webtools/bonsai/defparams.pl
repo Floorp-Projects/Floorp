@@ -23,7 +23,6 @@
 # This file defines all the parameters that we have a GUI to edit within
 # Bonsai.
 
-use diagnostics;
 use strict;
 
 

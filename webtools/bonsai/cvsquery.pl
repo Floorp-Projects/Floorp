@@ -22,7 +22,6 @@
 require 'globals.pl';
 require 'get_line.pl';
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just

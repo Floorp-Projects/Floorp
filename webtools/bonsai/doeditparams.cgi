@@ -20,7 +20,6 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-use diagnostics;
 use strict;
 
 require "CGI.pl";

@@ -22,7 +22,6 @@
 
 
 use strict;
-use diagnostics;
 
 require 'CGI.pl';
 require 'adminfuncs.pl';

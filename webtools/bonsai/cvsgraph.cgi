@@ -19,7 +19,6 @@
 #
 # Contributor(s): Jacob Steenhagen <jake@acutex.net>
 
-use diagnostics;
 use strict;
 
 use vars qw{ $revision_ctime $revision_author };

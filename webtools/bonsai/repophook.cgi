@@ -22,7 +22,6 @@
 
 require 'CGI.pl';
 
-use diagnostics;
 use strict;
 
 print "Content-type: text/html

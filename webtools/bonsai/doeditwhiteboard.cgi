@@ -20,7 +20,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 require 'CGI.pl';

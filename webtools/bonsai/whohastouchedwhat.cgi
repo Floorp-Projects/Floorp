@@ -23,7 +23,6 @@
 require 'lloydcgi.pl';
 require 'utils.pl';
 
-# use diagnostics;
 # use strict;
 
 my $db = ConnectToDatabase();

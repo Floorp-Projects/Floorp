@@ -19,7 +19,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 if( $ARGV[0] eq '' ){

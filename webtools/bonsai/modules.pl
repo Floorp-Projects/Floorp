@@ -19,7 +19,6 @@
 #
 # Contributor(s): 
 
-use diagnostics;
 use strict;
 
 require 'get_line.pl';

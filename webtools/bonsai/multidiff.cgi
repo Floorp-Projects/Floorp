@@ -25,7 +25,6 @@
 # Multi file diff cgi
 #
 
-use diagnostics;
 use strict;
 
 require 'CGI.pl';

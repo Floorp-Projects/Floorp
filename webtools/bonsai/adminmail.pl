@@ -24,7 +24,6 @@ require 'globals.pl';
 require 'adminfuncs.pl';
 
 use strict;
-use diagnostics;
 
 
 sub GetDate {

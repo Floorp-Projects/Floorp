@@ -23,7 +23,6 @@
 
 $::TreeID = "default";
 
-use diagnostics;
 use strict;
 use DBI;
 use File::Path;

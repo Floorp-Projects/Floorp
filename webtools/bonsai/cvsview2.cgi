@@ -39,7 +39,6 @@
 # SRCROOTS is an array of repository roots under which to look for CVS files.
 #
 
-use diagnostics;
 use strict;
 
 use CGI;
