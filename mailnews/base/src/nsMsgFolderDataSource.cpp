@@ -1948,7 +1948,15 @@ nsMsgFolderDataSource::GetFolderSizeNode(PRInt32 aFolderSize, nsIRDFNode **aNode
     folderSize /= 1024;  // normalize into k;
     PRBool sizeInMB = (folderSize > 1024);
     sizeString.AppendInt((sizeInMB) ? folderSize / 1024 : folderSize);
-    sizeString.Append((sizeInMB) ? NS_LITERAL_STRING(" MB") : NS_LITERAL_STRING(" kb"));
+    /* On OS/2, we have an issue where temporaries get destructed in */
+    /* conditionals. Solution is to break it out */
+    nsAutoString units;
+    if (sizeInMB) {
+      units = NS_LITERAL_STRING(" MB");
+    } else {
+      units = NS_LITERAL_STRING(" kb");
+    }
+    sizeString.Append(units);
     createNode(sizeString.get(), aNode, getRDFService());
   }
   return NS_OK;
