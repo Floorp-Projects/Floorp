@@ -65,7 +65,8 @@ WriteWhiteboard
 
 Unlock
 
-puts "
+puts "Content-type: text/html
+
 <TITLE>Where's my blue marker?</TITLE>
 <H1>The whiteboard has been changed.</H1>
 The whiteboard now reads:
