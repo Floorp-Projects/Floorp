@@ -355,7 +355,8 @@ function Startup()
     }
 
     // Focus the content area if the caller instructed us to.
-    if ("arguments" in window && window.arguments.length >= 3 && window.arguments[2] == true)
+    if ("arguments" in window && window.arguments.length >= 3 && window.arguments[2] == true ||
+        !window.locationbar.visible)
       _content.focus();
     else
       gURLBar.focus();
