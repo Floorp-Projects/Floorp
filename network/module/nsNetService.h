@@ -51,6 +51,8 @@ public:
 
     NS_IMETHOD GetProxyHTTP(nsString& aProxyHTTP);
     NS_IMETHOD SetProxyHTTP(nsString& aProxyHTTP);
+    NS_IMETHOD GetHTTPOneOne(PRBool& aOneOne);
+    NS_IMETHOD SetHTTPOneOne(PRBool aSendOneOne);
 
 protected:
     virtual ~nsNetlibService();

@@ -119,6 +119,24 @@ struct nsINetService : public nsISupports
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */
     NS_IMETHOD SetProxyHTTP(nsString& aProxyHTTP)=0;
+
+   /**
+     * Get the http version number setting.
+     *
+     * @param aOneOne If true, the client is sending HTTP/1.1, if false HTTP/1.0
+     *  is being sent.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetHTTPOneOne(PRBool& aOneOne)=0;
+
+   /**
+     * Set the http version number setting.
+     *
+     * @param aSendOneOne True if you want the http version number sent out
+     *  to be 1.1, false if you want it to be 1.0.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD SetHTTPOneOne(PRBool aSendOneOne)=0;
 };
 
 
