@@ -191,6 +191,16 @@ PK11_ImportDERPrivateKeyInfo(PK11SlotInfo *slot, SECItem *derPKI,
 	SECItem *nickname, SECItem *publicValue, PRBool isPerm, 
 	PRBool isPrivate, unsigned int keyUsage, void *wincx) 
 {
+    return PK11_ImportDERPrivateKeyAndReturnKey(slot, derPKI,
+	nickname, publicValue, isPerm, isPrivate, keyUsage, NULL, wincx);
+}
+
+SECStatus
+PK11_ImportDERPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, SECItem *derPKI, 
+	SECItem *nickname, SECItem *publicValue, PRBool isPerm, 
+	PRBool isPrivate, unsigned int keyUsage, SECKEYPrivateKey** privk,
+	void *wincx) 
+{
     SECKEYPrivateKeyInfo *pki = NULL;
     PRArenaPool *temparena = NULL;
     SECStatus rv = SECFailure;
@@ -204,8 +214,8 @@ PK11_ImportDERPrivateKeyInfo(PK11SlotInfo *slot, SECItem *derPKI,
 	goto finish;
     }
 
-    rv = PK11_ImportPrivateKeyInfo(slot, pki, nickname, publicValue,
-			isPerm, isPrivate, keyUsage, wincx);
+    rv = PK11_ImportPrivateKeyInfoAndReturnKey(slot, pki, nickname,
+		publicValue, isPerm, isPrivate, keyUsage, privk, wincx);
 
 finish:
     if( pki != NULL ) {
@@ -217,13 +227,11 @@ finish:
     return rv;
 }
         
-/*
- * import a private key info into the desired slot
- */
 SECStatus
-PK11_ImportPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk, 
+PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk, 
 	SECItem *nickname, SECItem *publicValue, PRBool isPerm, 
-	PRBool isPrivate, unsigned int keyUsage, void *wincx) 
+	PRBool isPrivate, unsigned int keyUsage, SECKEYPrivateKey **privk,
+	void *wincx) 
 {
     CK_BBOOL cktrue = CK_TRUE;
     CK_BBOOL ckfalse = CK_FALSE;
@@ -377,6 +385,14 @@ PK11_ImportPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
 
     rv = PK11_CreateNewObject(slot, CK_INVALID_SESSION,
 			theTemplate, templateCount, isPerm, &objectID);
+
+    /* create and return a SECKEYPrivateKey */
+    if( rv == SECSuccess && privk != NULL) {
+	*privk = PK11_MakePrivKey(slot, lpk->keyType, !isPerm, objectID, wincx);
+	if( *privk == NULL ) {
+	    rv = SECFailure;
+	}
+    }
 loser:
     if (ck_id) {
 	SECITEM_ZfreeItem(ck_id, PR_TRUE);
@@ -384,13 +400,20 @@ loser:
     return rv;
 }
 
-/*
- * import a private key info into the desired slot
- */
 SECStatus
-PK11_ImportPrivateKeyInfo(PK11SlotInfo *slot, SECKEYPrivateKeyInfo *pki, 
+PK11_ImportPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk, 
 	SECItem *nickname, SECItem *publicValue, PRBool isPerm, 
 	PRBool isPrivate, unsigned int keyUsage, void *wincx) 
+{
+    return PK11_ImportAndReturnPrivateKey(slot, lpk, nickname, publicValue,
+	isPerm, isPrivate, keyUsage, NULL, wincx);
+}
+
+SECStatus
+PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
+	SECKEYPrivateKeyInfo *pki, SECItem *nickname, SECItem *publicValue,
+	PRBool isPerm, PRBool isPrivate, unsigned int keyUsage,
+	SECKEYPrivateKey **privk, void *wincx) 
 {
     CK_KEY_TYPE keyType = CKK_RSA;
     SECStatus rv = SECFailure;
@@ -462,8 +485,8 @@ PK11_ImportPrivateKeyInfo(PK11SlotInfo *slot, SECKEYPrivateKeyInfo *pki,
 	}
     }
 
-    rv = PK11_ImportPrivateKey(slot,lpk,nickname,publicValue, isPerm, 
-	isPrivate,  keyUsage, wincx);
+    rv = PK11_ImportAndReturnPrivateKey(slot,lpk,nickname,publicValue, isPerm, 
+	isPrivate,  keyUsage, privk, wincx);
 
 
 loser:
@@ -472,5 +495,15 @@ loser:
     }
 
     return rv;
+}
+
+SECStatus
+PK11_ImportPrivateKeyInfo(PK11SlotInfo *slot, SECKEYPrivateKeyInfo *pki, 
+	SECItem *nickname, SECItem *publicValue, PRBool isPerm, 
+	PRBool isPrivate, unsigned int keyUsage, void *wincx) 
+{
+    return PK11_ImportPrivateKeyInfoAndReturnKey(slot, pki, nickname,
+	publicValue, isPerm, isPrivate, keyUsage, NULL, wincx);
+
 }
 

@@ -310,10 +310,18 @@ SECStatus PK11_ImportPrivateKeyInfo(PK11SlotInfo *slot,
 		SECKEYPrivateKeyInfo *pki, SECItem *nickname,
 		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
 		unsigned int usage, void *wincx);
+SECStatus PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, 
+		SECKEYPrivateKeyInfo *pki, SECItem *nickname,
+		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
+		unsigned int usage, SECKEYPrivateKey** privk, void *wincx);
 SECStatus PK11_ImportDERPrivateKeyInfo(PK11SlotInfo *slot, 
 		SECItem *derPKI, SECItem *nickname,
 		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
 		unsigned int usage, void *wincx);
+SECStatus PK11_ImportDERPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, 
+		SECItem *derPKI, SECItem *nickname,
+		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
+		unsigned int usage, SECKEYPrivateKey** privk, void *wincx);
 SECStatus PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, 
 		SECKEYEncryptedPrivateKeyInfo *epki, SECItem *pwitem, 
 		SECItem *nickname, SECItem *publicValue, PRBool isPerm,
