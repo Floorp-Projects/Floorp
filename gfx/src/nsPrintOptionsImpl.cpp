@@ -840,8 +840,7 @@ NS_IMETHODIMP nsPrintOptions::GetNativeData(PRInt16 aDataType, void * *_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIPrintSettings CreatePrintSettings (); */
-NS_IMETHODIMP nsPrintOptions::CreatePrintSettings(nsIPrintSettings **_retval)
+nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   nsresult rv = NS_OK;
   nsPrintSettings* printSettings = new nsPrintSettings(); // does not initially ref count
@@ -853,6 +852,12 @@ NS_IMETHODIMP nsPrintOptions::CreatePrintSettings(nsIPrintSettings **_retval)
   InitPrintSettingsFromPrefs(*_retval, PR_FALSE, nsIPrintSettings::kInitSaveAll); // ignore return value
 
   return rv;
+}
+
+/* nsIPrintSettings CreatePrintSettings (); */
+NS_IMETHODIMP nsPrintOptions::CreatePrintSettings(nsIPrintSettings **_retval)
+{
+  return _CreatePrintSettings(_retval);
 }
 
 //-----------------------------------------------------

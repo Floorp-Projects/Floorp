@@ -783,7 +783,7 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle, PRUnichar*
     docinfo.lpszDocName = title != nsnull?title:"Mozilla Document";
 
 #ifdef DEBUG_rods
-    docinfo.lpszOutput = "p.ps";
+    docinfo.lpszOutput = "\\p.ps";
 #else
     docinfo.lpszOutput = docName;
 #endif

@@ -59,20 +59,12 @@ nsPrintSettingsWin::nsPrintSettingsWin() :
  *  See documentation in nsPrintSettingsWin.h
  *	@update 
  */
-nsPrintSettingsWin::nsPrintSettingsWin(const nsPrintSettingsWin* aPS) :
-  nsPrintSettings(aPS),
+nsPrintSettingsWin::nsPrintSettingsWin(const nsPrintSettingsWin& aPS) :
   mDeviceName(nsnull),
   mDriverName(nsnull),
   mDevMode(nsnull)
 {
-  if (aPS->mDeviceName) mDeviceName = nsCRT::strdup(aPS->mDeviceName);
-  if (aPS->mDriverName) mDriverName = nsCRT::strdup(aPS->mDriverName);
-
-  if (aPS->mDevMode) {
-    size_t size = sizeof(*aPS->mDevMode);
-    mDevMode = (LPDEVMODE)malloc(size);
-    memcpy(mDevMode, aPS->mDevMode, size);
-  }
+  *this = aPS;
 }
 
 /** ---------------------------------------------------
@@ -81,8 +73,8 @@ nsPrintSettingsWin::nsPrintSettingsWin(const nsPrintSettingsWin* aPS) :
  */
 nsPrintSettingsWin::~nsPrintSettingsWin()
 {
-  if (mDeviceName) nsCRT::free(mDeviceName);
-  if (mDriverName) nsCRT::free(mDriverName);
+  if (mDeviceName) nsMemory::Free(mDeviceName);
+  if (mDriverName) nsMemory::Free(mDriverName);
   if (mDevMode) free(mDevMode);
 }
 
@@ -90,7 +82,7 @@ nsPrintSettingsWin::~nsPrintSettingsWin()
 NS_IMETHODIMP nsPrintSettingsWin::SetDeviceName(char * aDeviceName)
 {
   if (mDeviceName) {
-    nsCRT::free(mDeviceName);
+    nsMemory::Free(mDeviceName);
   }
   mDeviceName = aDeviceName?nsCRT::strdup(aDeviceName):nsnull;
   return NS_OK;
@@ -106,7 +98,7 @@ NS_IMETHODIMP nsPrintSettingsWin::GetDeviceName(char * *aDeviceName)
 NS_IMETHODIMP nsPrintSettingsWin::SetDriverName(char * aDriverName)
 {
   if (mDriverName) {
-    nsCRT::free(mDriverName);
+    nsMemory::Free(mDriverName);
   }
   mDriverName = aDriverName?nsCRT::strdup(aDriverName):nsnull;
   return NS_OK;
@@ -132,6 +124,7 @@ NS_IMETHODIMP nsPrintSettingsWin::GetDevMode(DEVMODE * *aDevMode)
   }
   return NS_OK;
 }
+
 NS_IMETHODIMP nsPrintSettingsWin::SetDevMode(DEVMODE * aDevMode)
 {
   if (mDevMode) {
@@ -147,10 +140,127 @@ NS_IMETHODIMP nsPrintSettingsWin::SetDevMode(DEVMODE * aDevMode)
   return NS_OK;
 }
 
-/* nsIPrintSettings clone (); */
+//-------------------------------------------
 nsresult 
-nsPrintSettingsWin::CloneObj(nsIPrintSettings **_retval)
+nsPrintSettingsWin::_Clone(nsIPrintSettings **_retval)
 {
-  nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(this);
+  nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(*this);
   return printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
 }
+
+//-------------------------------------------
+nsPrintSettingsWin& nsPrintSettingsWin::operator=(const nsPrintSettingsWin& rhs)
+{
+  if (this == &rhs) {
+    return *this;
+  }
+
+  ((nsPrintSettings&) *this) = rhs;
+
+  if (mDeviceName) {
+    nsCRT::free(mDeviceName);
+  }
+
+  if (mDriverName) {
+    nsCRT::free(mDriverName);
+  }
+
+  // Use free because we used the native malloc to create the memory
+  if (mDevMode) {
+    free(mDevMode);
+  }
+
+  mDeviceName = rhs.mDeviceName?nsCRT::strdup(rhs.mDeviceName):nsnull;
+  mDriverName = rhs.mDriverName?nsCRT::strdup(rhs.mDriverName):nsnull;
+
+  if (rhs.mDevMode) {
+    size_t size = sizeof(*rhs.mDevMode);
+    mDevMode = (LPDEVMODE)malloc(size);
+    memcpy(mDevMode, rhs.mDevMode, size);
+  } else {
+    mDevMode = nsnull;
+  }
+
+  return *this;
+}
+
+//-------------------------------------------
+/* void assign (in nsIPrintSettings aPS); */
+nsresult 
+nsPrintSettingsWin::_Assign(nsIPrintSettings *aPS)
+{
+  nsPrintSettingsWin *psWin = NS_STATIC_CAST(nsPrintSettingsWin*, aPS);
+  *this = *psWin;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// Testing of assign and clone
+// This define turns on the testing module below
+// so at start up it writes and reads the prefs.
+#ifdef DEBUG_rodsX
+#include "nsIPrintOptions.h"
+#include "nsIServiceManager.h"
+class Tester {
+public:
+  Tester();
+};
+Tester::Tester()
+{
+  nsCOMPtr<nsIPrintSettings> ps;
+  nsresult rv;
+  nsCOMPtr<nsIPrintOptions> printService = do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = printService->CreatePrintSettings(getter_AddRefs(ps));
+  }
+
+  if (ps) {
+    ps->SetPrintOptions(nsIPrintSettings::kPrintOddPages,  PR_TRUE);
+    ps->SetPrintOptions(nsIPrintSettings::kPrintEvenPages,  PR_FALSE);
+    ps->SetMarginTop(1.0);
+    ps->SetMarginLeft(1.0);
+    ps->SetMarginBottom(1.0);
+    ps->SetMarginRight(1.0);
+    ps->SetScaling(0.5);
+    ps->SetPrintBGColors(PR_TRUE);
+    ps->SetPrintBGImages(PR_TRUE);
+    ps->SetPrintRange(15);
+    ps->SetHeaderStrLeft(NS_ConvertUTF8toUCS2("Left").get());
+    ps->SetHeaderStrCenter(NS_ConvertUTF8toUCS2("Center").get());
+    ps->SetHeaderStrRight(NS_ConvertUTF8toUCS2("Right").get());
+    ps->SetFooterStrLeft(NS_ConvertUTF8toUCS2("Left").get());
+    ps->SetFooterStrCenter(NS_ConvertUTF8toUCS2("Center").get());
+    ps->SetFooterStrRight(NS_ConvertUTF8toUCS2("Right").get());
+    ps->SetPaperName(NS_ConvertUTF8toUCS2("Paper Name").get());
+    ps->SetPaperSizeType(10);
+    ps->SetPaperData(1);
+    ps->SetPaperWidth(100.0);
+    ps->SetPaperHeight(50.0);
+    ps->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
+    ps->SetPrintReversed(PR_TRUE);
+    ps->SetPrintInColor(PR_TRUE);
+    ps->SetPaperSize(5);
+    ps->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
+    ps->SetPrintCommand(NS_ConvertUTF8toUCS2("Command").get());
+    ps->SetNumCopies(2);
+    ps->SetPrinterName(NS_ConvertUTF8toUCS2("Printer Name").get());
+    ps->SetPrintToFile(PR_TRUE);
+    ps->SetToFileName(NS_ConvertUTF8toUCS2("File Name").get());
+    ps->SetPrintPageDelay(1000);
+
+    nsCOMPtr<nsIPrintSettings> ps2;
+    if (NS_SUCCEEDED(rv)) {
+      rv = printService->CreatePrintSettings(getter_AddRefs(ps2));
+    }
+
+    ps2->Assign(ps);
+
+    nsCOMPtr<nsIPrintSettings> psClone;
+    ps2->Clone(getter_AddRefs(psClone));
+
+  }
+
+}
+Tester gTester;
+#endif
+

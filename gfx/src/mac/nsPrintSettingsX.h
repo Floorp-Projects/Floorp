@@ -43,6 +43,12 @@ public:
   nsresult Init();
 
 protected:
+  nsPrintSettingsX(const nsPrintSettingsX& src);
+  nsPrintSettingsX& operator=(const nsPrintSettingsX& rhs);
+
+  nsresult _Clone(nsIPrintSettings **_retval);
+  nsresult _Assign(nsIPrintSettings *aPS);
+
   PMPageFormat mPageFormat;
   PMPrintSettings mPrintSettings;
 };
