@@ -37,6 +37,7 @@
 #include "nsHashtable.h"
 #include "nsILanguageAtomService.h"
 #include "nsIServiceManager.h"
+#include "nsUnicharUtils.h"
 
 
 NS_IMPL_ISUPPORTS1(DeviceContextImpl, nsIDeviceContext)
@@ -368,7 +369,7 @@ public:
   virtual PRBool Equals(const nsHashKey *aKey) const;
   virtual nsHashKey *Clone(void) const;
 
-  nsAutoString  mString;
+  nsString  mString;
 };
 
 PRUint32 FontAliasKey::HashCode(void) const
@@ -378,7 +379,7 @@ PRUint32 FontAliasKey::HashCode(void) const
   PRUnichar ch;
   while ((ch = *string++) != 0) {
     // FYI: hash = hash*37 + ch
-    ch = nsCRT::ToUpper(ch);
+    ch = ToUpperCase(ch);
     hash = ((hash << 5) + (hash << 2) + hash) + ch;
   }
   return hash;

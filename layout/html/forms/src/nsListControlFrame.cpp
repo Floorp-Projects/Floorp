@@ -38,6 +38,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsListControlFrame.h"
 #include "nsFormControlFrame.h" // for COMPARE macro
 #include "nsFormControlHelper.h"
@@ -4136,7 +4137,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
     default: { // Select option with this as the first character
                // XXX Not I18N compliant
-      code = (PRUint32)nsCRT::ToLower((PRUnichar)code);
+      code = (PRUint32)ToLowerCase((PRUnichar)code);
       PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1) % numOptions;
       PRInt32 startedAtIndex    = selectedIndex;
       PRBool  loopedAround  = PR_FALSE;
