@@ -50,12 +50,16 @@ ERR_MESSAGE=$(ERR_MESSAGE)^
 Cannot specify both MOZ_BRANCH and MOZ_DATE
 !endif
 
+!if "$(MOZ_CVS_FLAGS)" != ""
+CVS_FLAGS=$(MOZ_CVS_FLAGS)
+!endif
+
 # let's be explicit about CVSROOT... some windows cvs clients
 # are too stupid to correctly work without the -d option 
 !if defined(CVSROOT)
-CVSCO = cvs -d $(CVSROOT) -q co $(CVS_BRANCH) -P
+CVSCO = cvs -d $(CVSROOT) -q $(CVS_FLAGS) co $(CVS_BRANCH) -P
 !else
-CVSCO = cvs -q co $(CVS_BRANCH) -P
+CVSCO = cvs -q $(CVS_FLAGS) co $(CVS_BRANCH) -P
 !endif
 
 CVSCO_TAG = cvs -q co -P
