@@ -250,11 +250,6 @@ public:
   NS_IMETHOD AddPrincipal(nsIPrincipal *aPrincipal);
 
   /**
-   * Return the content (mime) type of this document.
-   */
-  NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
-
-  /**
    * Return the content language of this document.
    */
   NS_IMETHOD GetContentLanguage(nsAWritableString& aContentLanguage) const;
@@ -596,6 +591,7 @@ protected:
   nsWeakPtr mFocusController;
 
   nsString mContentLanguage;
+  nsString mContentType;
 
 private:
   // These are not implemented and not supported.

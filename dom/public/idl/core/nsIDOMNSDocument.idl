@@ -39,6 +39,8 @@ interface nsIDOMNSDocument : nsISupports
 
            attribute DOMString            title;
 
+  readonly attribute DOMString            contentType;
+
   nsIBoxObject              getBoxObjectFor(in nsIDOMElement elt);
   void                      setBoxObjectFor(in nsIDOMElement elt,
                                             in nsIBoxObject boxObject);
