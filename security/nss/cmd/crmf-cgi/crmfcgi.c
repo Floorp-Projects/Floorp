@@ -286,6 +286,7 @@ initNSS(CGIVarTable *varTable)
   PK11_SetPasswordFunc(passwordCallback);
   keySlot = PK11_GetInternalKeySlot();
   rv = PK11_Authenticate(keySlot, PR_FALSE, varTable);
+  PK11_FreeSlot(keySlot);
   if (rv != SECSuccess) {
     return AUTH_FAILED;
   }
