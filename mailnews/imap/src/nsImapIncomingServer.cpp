@@ -1305,6 +1305,37 @@ NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 
 }
 
+NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aFolder, PRBool *interrupted)
+{
+	nsresult rv = NS_OK;
+	PRBool canRunUrl = PR_FALSE;
+    PRBool hasToWait = PR_FALSE;
+	nsCOMPtr<nsIImapProtocol> connection;
+    nsCOMPtr<nsIImapProtocol> freeConnection;
+    PRBool isBusy = PR_FALSE;
+    PRBool isInboxConnection = PR_FALSE;
+
+    PR_CEnterMonitor(this);
+
+	// iterate through the connection cache for a connection that is loading
+	// a message in this folder and should be pseudo-interrupted.
+	PRUint32 cnt;
+    nsCOMPtr<nsISupports> aSupport;
+
+    rv = m_connectionCache->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt && !canRunUrl && !hasToWait; i++) 
+	{
+        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+        connection = do_QueryInterface(aSupport);
+		if (connection)
+			rv = connection->PseudoInterruptMsgLoad(aFolder, interrupted);
+	}
+    
+    PR_CExitMonitor(this);
+	return rv;
+}
+
 NS_IMETHODIMP nsImapIncomingServer::ResetNamespaceReferences()
 {
 	return NS_ERROR_NOT_IMPLEMENTED;

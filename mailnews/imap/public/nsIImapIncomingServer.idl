@@ -24,6 +24,7 @@ interface nsIImapUrl;
 interface nsIEventQueue;
 interface nsIImapProtocol;
 interface nsISupportsArray;
+interface nsIMsgFolder;
 
 [scriptable, uuid(3d2e7e38-f9d8-11d2-af8f-001083002da8)]
 interface nsIImapIncomingServer : nsISupports {
@@ -53,4 +54,5 @@ interface nsIImapIncomingServer : nsISupports {
 
   void RemoveConnection(in nsIImapProtocol aImapConnection);
   void ResetNamespaceReferences();
+  void PseudoInterruptMsgLoad(in nsIMsgFolder folder, out boolean interrupted);
 };

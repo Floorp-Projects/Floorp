@@ -111,6 +111,8 @@ public:
     NS_IMETHOD TellThreadToDie(PRBool isSafeToClose);
     // Get last active time stamp
     NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp);
+
+	NS_IMETHOD PseudoInterruptMsgLoad(nsIMsgFolder *aFolder, PRBool *interrupted);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////

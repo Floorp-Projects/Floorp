@@ -780,6 +780,14 @@ nsImapProtocol::GetLastActiveTimeStamp(PRTime* aTimeStamp)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImapProtocol::PseudoInterruptMsgLoad(nsIMsgFolder *aFolder, PRBool *interrupted)
+{
+	// this should check if the protocol instance is currently running a msg fetch
+	// url for the passed folder, and if so, pseudo interrupt it.
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void
 nsImapProtocol::ImapThreadMainLoop()
 {
