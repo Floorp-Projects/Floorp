@@ -1145,6 +1145,10 @@ public class ScriptRuntime {
     }
 
     public static Object initEnum(Object value, Scriptable scope) {
+        if (value == null || value == Undefined.instance) {
+            // Empty enumeration
+            return new IdEnumeration(null);
+        }
         Scriptable m = toObject(scope, value);
         return new IdEnumeration(m);
     }
