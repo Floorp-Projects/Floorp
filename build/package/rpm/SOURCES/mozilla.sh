@@ -82,22 +82,14 @@ function set_jvm_vars() {
 
     JVM_BASE=`basename $JVM_LINK`
     JVM_DIR=`echo $JVM_LINK | sed -e s/$JVM_BASE//g`
-    JVM_DIR=${JVM_DIR}../../../bin/
-
-    # make sure it was found
-    if [ -z "$JVM_DIR" ]; then
-        return
-    fi
-
-    # does it exist?
-    if [ ! -d "$JVM_DIR" ]; then
-        return
-    fi
-
     JVM_COMMAND=$JVM_DIR/java
-    # does the command exist?
-    if [ ! -r "$JVM_COMMAND" ]; then
-	return
+    if [ ! -r $JVM_COMMAND ]; then
+       JVM_DIR=${JVM_DIR}../../../bin/
+       JVM_COMMAND=$JVM_DIR/java
+       # does the command exist?
+       if [ ! -r "$JVM_COMMAND" ]; then
+           return
+       fi
     fi
 
     # export this temporarily - it seems to work with old and new
