@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.6 $ $Date: 2002/04/04 20:00:23 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.7 $ $Date: 2002/04/15 15:22:01 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -50,7 +50,6 @@ MODULE = security
 CSRCS =		        \
 	devmod.c        \
 	devslot.c       \
-	devobject.c     \
 	devtoken.c      \
 	devutil.c       \
 	ckhelper.c      \

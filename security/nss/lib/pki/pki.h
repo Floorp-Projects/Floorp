@@ -35,18 +35,46 @@
 #define PKI_H
 
 #ifdef DEBUG
-static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.10 $ $Date: 2002/03/07 22:07:56 $ $Name:  $";
+static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.11 $ $Date: 2002/04/15 15:22:09 $ $Name:  $";
 #endif /* DEBUG */
-
-#ifndef PKIT_H
-#include "pkit.h"
-#endif /* PKIT_H */
 
 #ifndef NSSDEVT_H
 #include "nssdevt.h"
 #endif /* NSSDEVT_H */
 
+#ifndef NSSPKI_H
+#include "nsspki.h"
+#endif /* NSSPKI_H */
+
+#ifndef PKIT_H
+#include "pkit.h"
+#endif /* PKIT_H */
+
 PR_BEGIN_EXTERN_C
+
+NSS_EXTERN NSSCallback *
+nssTrustDomain_GetDefaultCallback
+(
+  NSSTrustDomain *td,
+  PRStatus *statusOpt
+);
+
+NSS_EXTERN NSSCertificate **
+nssTrustDomain_FindCertificatesBySubject
+(
+  NSSTrustDomain *td,
+  NSSDER *subject,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+);
+
+NSS_EXTERN NSSTrust *
+nssTrustDomain_FindTrustForCertificate
+(
+  NSSTrustDomain *td,
+  NSSCertificate *c
+);
 
 NSS_EXTERN NSSCertificate *
 nssCertificate_AddRef
@@ -54,11 +82,101 @@ nssCertificate_AddRef
   NSSCertificate *c
 );
 
+NSS_EXTERN PRStatus
+nssCertificate_Destroy
+(
+  NSSCertificate *c
+);
+
+NSS_EXTERN NSSDER *
+nssCertificate_GetEncoding
+(
+  NSSCertificate *c
+);
+
+NSS_EXTERN NSSDER *
+nssCertificate_GetIssuer
+(
+  NSSCertificate *c
+);
+
+NSS_EXTERN NSSDER *
+nssCertificate_GetSerialNumber
+(
+  NSSCertificate *c
+);
+
+NSS_EXTERN NSSDER *
+nssCertificate_GetSubject
+(
+  NSSCertificate *c
+);
+
 NSS_EXTERN NSSUTF8 *
-NSSCertificate_GetNickname
+nssCertificate_GetNickname
 (
   NSSCertificate *c,
   NSSToken *tokenOpt
+);
+
+NSS_EXTERN NSSASCII7 *
+nssCertificate_GetEmailAddress
+(
+  NSSCertificate *c
+);
+
+NSS_EXTERN PRBool
+nssCertificate_IssuerAndSerialEqual
+(
+  NSSCertificate *c1,
+  NSSCertificate *c2
+);
+
+NSS_EXTERN NSSPrivateKey *
+nssPrivateKey_AddRef
+(
+  NSSPrivateKey *vk
+);
+
+NSS_EXTERN PRStatus
+nssPrivateKey_Destroy
+(
+  NSSPrivateKey *vk
+);
+
+NSS_EXTERN NSSItem *
+nssPrivateKey_GetID
+(
+  NSSPrivateKey *vk
+);
+
+NSS_EXTERN NSSUTF8 *
+nssPrivateKey_GetNickname
+(
+  NSSPrivateKey *vk,
+  NSSToken *tokenOpt
+);
+
+NSS_EXTERN PRStatus
+nssPublicKey_Destroy
+(
+  NSSPublicKey *bk
+);
+
+NSS_EXTERN NSSItem *
+nssPublicKey_GetID
+(
+  NSSPublicKey *vk
+);
+
+NSS_EXTERN NSSCertificate **
+nssCryptoContext_FindCertificatesBySubject
+(
+  NSSCryptoContext *cc,
+  NSSDER *subject,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt, /* 0 for no max */
+  NSSArena *arenaOpt
 );
 
 /* putting here for now, needs more thought */

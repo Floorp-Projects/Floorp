@@ -35,7 +35,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.15 $ $Date: 2002/04/05 15:19:37 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.16 $ $Date: 2002/04/15 15:22:01 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -144,7 +144,7 @@ typedef enum {
     NSSCertificateType_PKIX = 1
 } NSSCertificateType;
 
-#ifdef NSS_3_4_CODE
+#ifdef nodef
 /* the current definition of NSSTrust depends on this value being CK_ULONG */
 typedef CK_ULONG nssTrustLevel;
 #else
@@ -175,7 +175,8 @@ typedef struct nssTokenCertSearchStr nssTokenCertSearch;
 typedef enum {
     nssTokenSearchType_AllObjects = 0,
     nssTokenSearchType_SessionOnly = 1,
-    nssTokenSearchType_TokenOnly = 2
+    nssTokenSearchType_TokenOnly = 2,
+    nssTokenSearchType_TokenForced = 3
 } nssTokenSearchType;
 
 struct nssTokenCertSearchStr

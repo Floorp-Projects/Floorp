@@ -32,35 +32,58 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.9 $ $Date: 2002/02/06 19:58:54 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.10 $ $Date: 2002/04/15 15:22:08 $ $Name:  $";
 #endif /* DEBUG */
-
-#ifndef NSSPKI_H
-#include "nsspki.h"
-#endif /* NSSPKI_H */
-
-#ifndef PKIM_H
-#include "pkim.h"
-#endif /* PKIM_H */
-
-#ifndef PKIT_H
-#include "pkit.h"
-#endif /* PKIT_H */
 
 #ifndef DEV_H
 #include "dev.h"
 #endif /* DEV_H */
 
+#ifndef PKIM_H
+#include "pkim.h"
+#endif /* PKIM_H */
+
 #ifndef PKISTORE_H
 #include "pkistore.h"
 #endif /* PKISTORE_H */
 
-#ifdef NSS_3_4_CODE
-#include "pk11func.h"
-#include "dev3hack.h"
+#include "pki1t.h"
+
+#ifdef PURE_STAN_BUILD
+struct NSSCryptoContextStr
+{
+    PRInt32 refCount;
+    NSSArena *arena;
+    NSSTrustDomain *td;
+    NSSToken *token;
+    nssSession *session;
+    nssCertificateStore *certStore;
+};
 #endif
 
 extern const NSSError NSS_ERROR_NOT_FOUND;
+
+NSS_IMPLEMENT NSSCryptoContext *
+nssCryptoContext_Create
+(
+  NSSTrustDomain *td,
+  NSSCallback *uhhOpt
+)
+{
+    NSSArena *arena;
+    NSSCryptoContext *rvCC;
+    arena = NSSArena_Create();
+    if (!arena) {
+	return NULL;
+    }
+    rvCC = nss_ZNEW(arena, NSSCryptoContext);
+    if (!rvCC) {
+	return NULL;
+    }
+    rvCC->td = td;
+    rvCC->arena = arena;
+    return rvCC;
+}
 
 NSS_IMPLEMENT PRStatus
 NSSCryptoContext_Destroy
@@ -177,9 +200,11 @@ nssCryptoContext_ImportTrust
 	}
     }
     nssrv = nssCertificateStore_AddTrust(cc->certStore, trust);
+#if 0
     if (nssrv == PR_SUCCESS) {
 	trust->object.cryptoContext = cc;
     }
+#endif
     return nssrv;
 }
 
@@ -198,9 +223,11 @@ nssCryptoContext_ImportSMIMEProfile
 	}
     }
     nssrv = nssCertificateStore_AddSMIMEProfile(cc->certStore, profile);
+#if 0
     if (nssrv == PR_SUCCESS) {
 	profile->object.cryptoContext = cc;
     }
+#endif
     return nssrv;
 }
 
@@ -214,36 +241,22 @@ NSSCryptoContext_FindBestCertificateByNickname
   NSSPolicies *policiesOpt /* NULL for none */
 )
 {
-    PRIntn i;
-    NSSCertificate *c;
-    NSSCertificate **nickCerts;
-    nssBestCertificateCB best;
+    NSSCertificate **certs;
+    NSSCertificate *rvCert = NULL;
     if (!cc->certStore) {
 	return NULL;
     }
-    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
-    /* This could be improved by querying the store with a callback */
-    nickCerts = nssCertificateStore_FindCertificatesByNickname(cc->certStore,
-                                                               name,
-                                                               NULL,
-                                                               0,
-                                                               NULL);
-    if (nickCerts) {
-	PRStatus nssrv;
-	for (i=0, c = *nickCerts; c != NULL; c = nickCerts[++i]) {
-	    nssrv = nssBestCertificate_Callback(c, &best);
-	    NSSCertificate_Destroy(c);
-	    if (nssrv != PR_SUCCESS) {
-		if (best.cert) {
-		    NSSCertificate_Destroy(best.cert);
-		    best.cert = NULL;
-		}
-		break;
-	    }
-	}
-	nss_ZFreeIf(nickCerts);
+    certs = nssCertificateStore_FindCertificatesByNickname(cc->certStore,
+                                                           name,
+                                                           NULL, 0, NULL);
+    if (certs) {
+	rvCert = nssCertificateArray_FindBestCertificate(certs,
+	                                                 timeOpt,
+	                                                 usage,
+	                                                 policiesOpt);
+	nssCertificateArray_Destroy(certs);
     }
-    return best.cert;
+    return rvCert;
 }
 
 NSS_IMPLEMENT NSSCertificate **
@@ -295,39 +308,26 @@ NSSCryptoContext_FindBestCertificateBySubject
   NSSPolicies *policiesOpt
 )
 {
-    PRIntn i;
-    NSSCertificate *c;
-    NSSCertificate **subjectCerts;
-    nssBestCertificateCB best;
+    NSSCertificate **certs;
+    NSSCertificate *rvCert = NULL;
     if (!cc->certStore) {
 	return NULL;
     }
-    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
-    subjectCerts = nssCertificateStore_FindCertificatesBySubject(cc->certStore,
-                                                                 subject,
-                                                                 NULL,
-                                                                 0,
-                                                                 NULL);
-    if (subjectCerts) {
-	PRStatus nssrv;
-	for (i=0, c = *subjectCerts; c != NULL; c = subjectCerts[++i]) {
-	    nssrv = nssBestCertificate_Callback(c, &best);
-	    NSSCertificate_Destroy(c);
-	    if (nssrv != PR_SUCCESS) {
-		if (best.cert) {
-		    NSSCertificate_Destroy(best.cert);
-		    best.cert = NULL;
-		}
-		break;
-	    }
-	}
-	nss_ZFreeIf(subjectCerts);
+    certs = nssCertificateStore_FindCertificatesBySubject(cc->certStore,
+                                                          subject,
+                                                          NULL, 0, NULL);
+    if (certs) {
+	rvCert = nssCertificateArray_FindBestCertificate(certs,
+	                                                 timeOpt,
+	                                                 usage,
+	                                                 policiesOpt);
+	nssCertificateArray_Destroy(certs);
     }
-    return best.cert;
+    return rvCert;
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSCryptoContext_FindCertificatesBySubject
+nssCryptoContext_FindCertificatesBySubject
 (
   NSSCryptoContext *cc,
   NSSDER *subject,
@@ -346,6 +346,21 @@ NSSCryptoContext_FindCertificatesBySubject
                                                             maximumOpt,
                                                             arenaOpt);
     return rvCerts;
+}
+
+NSS_IMPLEMENT NSSCertificate **
+NSSCryptoContext_FindCertificatesBySubject
+(
+  NSSCryptoContext *cc,
+  NSSDER *subject,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt, /* 0 for no max */
+  NSSArena *arenaOpt
+)
+{
+    return nssCryptoContext_FindCertificatesBySubject(cc, subject,
+                                                      rvOpt, maximumOpt,
+                                                      arenaOpt);
 }
 
 NSS_IMPLEMENT NSSCertificate *
@@ -401,35 +416,22 @@ NSSCryptoContext_FindBestCertificateByEmail
   NSSPolicies *policiesOpt
 )
 {
-    PRIntn i;
-    NSSCertificate *c;
-    NSSCertificate **emailCerts;
-    nssBestCertificateCB best;
+    NSSCertificate **certs;
+    NSSCertificate *rvCert = NULL;
     if (!cc->certStore) {
 	return NULL;
     }
-    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
-    emailCerts = nssCertificateStore_FindCertificatesByEmail(cc->certStore,
-                                                             email,
-                                                             NULL,
-                                                             0,
-                                                             NULL);
-    if (emailCerts) {
-	PRStatus nssrv;
-	for (i=0, c = *emailCerts; c != NULL; c = emailCerts[++i]) {
-	    nssrv = nssBestCertificate_Callback(c, &best);
-	    NSSCertificate_Destroy(c);
-	    if (nssrv != PR_SUCCESS) {
-		if (best.cert) {
-		    NSSCertificate_Destroy(best.cert);
-		    best.cert = NULL;
-		}
-		break;
-	    }
-	}
-	nss_ZFreeIf(emailCerts);
+    certs = nssCertificateStore_FindCertificatesByEmail(cc->certStore,
+                                                        email,
+                                                        NULL, 0, NULL);
+    if (certs) {
+	rvCert = nssCertificateArray_FindBestCertificate(certs,
+	                                                 timeOpt,
+	                                                 usage,
+	                                                 policiesOpt);
+	nssCertificateArray_Destroy(certs);
     }
-    return best.cert;
+    return rvCert;
 }
 
 NSS_IMPLEMENT NSSCertificate **
@@ -649,31 +651,6 @@ struct token_session_str {
     nssSession *session;
 };
 
-#ifdef nodef
-static nssSession *
-get_token_session(NSSCryptoContext *cc, NSSToken *tok)
-{
-    struct token_session_str *ts;
-    for (ts  = (struct token_session_str *)nssListIterator_Start(cc->sessions);
-         ts != (struct token_session_str *)NULL;
-         ts  = (struct token_session_str *)nssListIterator_Next(cc->sessions))
-    {
-	if (ts->token == tok) { /* will this need to be more general? */
-	    break;
-	}
-    }
-    nssListIterator_Finish(cc->sessions);
-    if (!ts) {
-	/* need to create a session for this token. */
-	ts = nss_ZNEW(NULL, struct token_session_str);
-	ts->token = nssToken_AddRef(tok);
-	ts->session = nssSlot_CreateSession(tok->slot, cc->arena, PR_FALSE);
-	nssList_AddElement(cc->sessionList, (void *)ts);
-    }
-    return ts->session;
-}
-#endif
-
 NSS_IMPLEMENT NSSItem *
 NSSCryptoContext_Decrypt
 (
@@ -685,58 +662,7 @@ NSSCryptoContext_Decrypt
   NSSArena *arenaOpt
 )
 {
-#if 0
-    NSSToken *tok;
-    nssSession *session;
-    NSSItem *rvData;
-    PRUint32 dataLen;
-    NSSAlgorithmAndParameters *ap;
-    CK_RV ckrv;
-    ap = (apOpt) ? apOpt : cc->defaultAlgorithm;
-    /* Get the token for this operation */
-    tok = nssTrustDomain_GetCryptoToken(cc->trustDomain, ap);
-    if (!tok) {
-	return (NSSItem *)NULL;
-    }
-    /* Get the local session for this token */
-    session = get_token_session(cc, tok);
-    /* Get the key needed to decrypt */
-    keyHandle = get_decrypt_key(cc, ap);
-    /* Set up the decrypt operation */
-    ckrv = CKAPI(tok)->C_DecryptInit(session->handle,
-                                     &ap->mechanism, keyHandle);
-    if (ckrv != CKR_OK) {
-	/* handle PKCS#11 error */
-	return (NSSItem *)NULL;
-    }
-    /* Get the length of the output buffer */
-    ckrv = CKAPI(tok)->C_Decrypt(session->handle,
-                                 (CK_BYTE_PTR)encryptedData->data,
-                                 (CK_ULONG)encryptedData->size,
-                                 (CK_BYTE_PTR)NULL,
-                                 (CK_ULONG_PTR)&dataLen);
-    if (ckrv != CKR_OK) {
-	/* handle PKCS#11 error */
-	return (NSSItem *)NULL;
-    }
-    /* Alloc return value memory */
-    rvData = nssItem_Create(NULL, NULL, dataLen, NULL);
-    if (!rvItem) {
-	return (NSSItem *)NULL;
-    }
-    /* Do the decryption */
-    ckrv = CKAPI(tok)->C_Decrypt(cc->session->handle,
-                                 (CK_BYTE_PTR)encryptedData->data,
-                                 (CK_ULONG)encryptedData->size,
-                                 (CK_BYTE_PTR)rvData->data,
-                                 (CK_ULONG_PTR)&dataLen);
-    if (ckrv != CKR_OK) {
-	/* handle PKCS#11 error */
-	nssItem_ZFreeIf(rvData);
-	return (NSSItem *)NULL;
-    }
-    return rvData;
-#endif
+    nss_SetError(NSS_ERROR_NOT_FOUND);
     return NULL;
 }
 

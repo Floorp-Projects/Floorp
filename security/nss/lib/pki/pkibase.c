@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.1 $ $Date: 2002/04/04 21:15:27 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.2 $ $Date: 2002/04/15 15:22:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -42,6 +42,10 @@ static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.1 $ $Dat
 #ifndef PKIM_H
 #include "pkim.h"
 #endif /* PKIM_H */
+
+#ifdef NSS_3_4_CODE
+#include "pki3hack.h"
+#endif
 
 NSS_IMPLEMENT nssPKIObject *
 nssPKIObject_Create
@@ -100,9 +104,13 @@ nssPKIObject_Destroy
   nssPKIObject *object
 )
 {
+    PRUint32 i;
     PR_ASSERT(object->refCount > 0);
     PR_AtomicDecrement(&object->refCount);
     if (object->refCount == 0) {
+	for (i=0; i<object->numInstances; i++) {
+	    nssCryptokiObject_Destroy(object->instances[i]);
+	}
 	PZ_DestroyLock(object->lock);
 	nssArena_Destroy(object->arena);
 	return PR_TRUE;
@@ -225,6 +233,7 @@ nssPKIObject_DeleteStoredObject
     PZ_Lock(object->lock);
     for (i=0; i<object->numInstances; i++) {
 	nssCryptokiObject *instance = object->instances[i];
+#ifndef NSS_3_4_CODE
 	NSSSlot *slot = nssToken_GetSlot(instance->token);
 	/* If both the operation and the slot are friendly, login is
 	 * not required.  If either or both are not friendly, it is
@@ -240,6 +249,9 @@ nssPKIObject_DeleteStoredObject
 		status = nssToken_DeleteStoredObject(instance);
 	    }
 	}
+#else
+	status = nssToken_DeleteStoredObject(instance);
+#endif
 	object->instances[i] = NULL;
 	if (status == PR_SUCCESS) {
 	    nssCryptokiObject_Destroy(instance);
@@ -303,6 +315,31 @@ nssPKIObject_GetNicknameForToken
     return nickname;
 }
 
+#ifdef NSS_3_4_CODE
+NSS_IMPLEMENT nssCryptokiObject **
+nssPKIObject_GetInstances
+(
+  nssPKIObject *object
+)
+{
+    nssCryptokiObject **instances = NULL;
+    PRUint32 i;
+    if (object->numInstances == 0) {
+	return (nssCryptokiObject **)NULL;
+    }
+    PZ_Lock(object->lock);
+    instances = nss_ZNEWARRAY(NULL, nssCryptokiObject *, 
+                              object->numInstances + 1);
+    if (instances) {
+	for (i=0; i<object->numInstances; i++) {
+	    instances[i] = nssCryptokiObject_Clone(object->instances[i]);
+	}
+    }
+    PZ_Unlock(object->lock);
+    return instances;
+}
+#endif
+
 NSS_IMPLEMENT void
 nssCertificateArray_Destroy
 (
@@ -312,6 +349,13 @@ nssCertificateArray_Destroy
     if (certs) {
 	NSSCertificate **certp;
 	for (certp = certs; *certp; certp++) {
+#ifdef NSS_3_4_CODE
+	    if ((*certp)->decoding) {
+		CERTCertificate *cc = STAN_GetCERTCertificate(*certp);
+		CERT_DestroyCertificate(cc);
+		continue;
+	    }
+#endif
 	    nssCertificate_Destroy(*certp);
 	}
 	nss_ZFreeIf(certs);
@@ -337,7 +381,7 @@ nssCertificateArray_Join
     if (certs1 && certs2) {
 	NSSCertificate **certs, **cp;
 	PRUint32 count = 0;
-	PRUint32 count1;
+	PRUint32 count1 = 0;
 	cp = certs1;
 	while (*cp++) count1++;
 	count = count1;
@@ -349,8 +393,9 @@ nssCertificateArray_Join
 	    nss_ZFreeIf(certs2);
 	    return (NSSCertificate **)NULL;
 	}
-	cp = certs2;
-	while (*cp++) certs[count1++] = *cp;
+	for (cp = certs2; *cp; cp++, count1++) {
+	    certs[count1] = *cp;
+	}
 	nss_ZFreeIf(certs2);
 	return certs;
     } else if (certs1) {
@@ -655,36 +700,50 @@ add_object_instance
     PRUint32 i;
     PRStatus status;
     pkiObjectCollectionNode *node;
+    nssArenaMark *mark = NULL;
     NSSItem uid[MAX_ITEMS_FOR_UID];
     nsslibc_memset(uid, 0, sizeof uid);
     /* The list is traversed twice, first (here) looking to match the
      * { token, handle } tuple, and if that is not found, below a search
-     * for unique identifier is done.  Here, a match means this exact
-     * object instance is already in the collection, and we have nothing to
-     * do.  Later, it means the object exists in the collection, but does
-     * not have this instance, so the instance needs to be added.
+     * for unique identifier is done.  Here, a match means this exact object
+     * instance is already in the collection, and we have nothing to do.
      */
     node = find_instance_in_collection(collection, instance);
     if (node) {
+	/* The collection is assumed to take over the instance.  Since we
+	 * are not using it, it must be destroyed.
+	 */
+	nssCryptokiObject_Destroy(instance);
 	return PR_SUCCESS;
+    }
+    mark = nssArena_Mark(collection->arena);
+    if (!mark) {
+	goto loser;
     }
     status = (*collection->getUIDFromInstance)(instance, uid, 
                                                collection->arena);
     if (status != PR_SUCCESS) {
 	goto loser;
     }
-    /* search for unique identifier */
+    /* Search for unique identifier.  A match here means the object exists 
+     * in the collection, but does not have this instance, so the instance 
+     * needs to be added.
+     */
     node = find_object_in_collection(collection, uid);
     if (node) {
 	/* This is a object with multiple instances */
 	status = nssPKIObject_AddInstance(node->object, instance);
     } else {
+	/* This is a completely new object.  Create a node for it. */
 	node = nss_ZNEW(collection->arena, pkiObjectCollectionNode);
 	if (!node) {
 	    goto loser;
 	}
 	node->object = nssPKIObject_Create(NULL, instance, 
 	                                   collection->td, collection->cc);
+	if (!node->object) {
+	    goto loser;
+	}
 	for (i=0; i<MAX_ITEMS_FOR_UID; i++) {
 	    node->uid[i] = uid[i];
 	}
@@ -694,8 +753,13 @@ add_object_instance
 	collection->size++;
 	status = PR_SUCCESS;
     }
+    nssArena_Unmark(collection->arena, mark);
     return status;
 loser:
+    if (mark) {
+	nssArena_Release(collection->arena, mark);
+    }
+    nssCryptokiObject_Destroy(instance);
     return PR_FAILURE;
 }
 
@@ -710,16 +774,26 @@ nssPKIObjectCollection_AddInstances
     PRStatus status = PR_SUCCESS;
     PRUint32 i = 0;
     if (instances) {
-	for (; *instances; instances++) {
-	    status = add_object_instance(collection, *instances);
-	    if (status != PR_SUCCESS ||
-	        (numInstances > 0 && ++i == numInstances))
-	    {
+	for (; *instances; instances++, i++) {
+	    if (numInstances > 0 && i == numInstances) {
 		break;
+	    }
+	    status = add_object_instance(collection, *instances);
+	    if (status != PR_SUCCESS) {
+		goto loser;
 	    }
 	}
     }
     return status;
+loser:
+    /* free the remaining instances */
+    for (; *instances; instances++, i++) {
+	if (numInstances > 0 && i == numInstances) {
+	    break;
+	}
+	nssCryptokiObject_Destroy(*instances);
+    }
+    return PR_FAILURE;
 }
 
 static PRStatus
@@ -795,6 +869,13 @@ static void
 cert_destroyObject(nssPKIObject *o)
 {
     NSSCertificate *c = (NSSCertificate *)o;
+#ifdef NSS_3_4_CODE
+    if (c->decoding) {
+	CERTCertificate *cc = STAN_GetCERTCertificate(c);
+	CERT_DestroyCertificate(cc);
+	return;
+    }
+#endif
     nssCertificate_Destroy(c);
 }
 
@@ -831,6 +912,17 @@ cert_createObject(nssPKIObject *o)
 {
     NSSCertificate *cert;
     cert = nssCertificate_Create(o);
+#ifdef NSS_3_4_CODE
+    (void)STAN_GetCERTCertificate(cert);
+    /* In 3.4, have to maintain uniqueness of cert pointers by caching all
+     * certs.  Cache the cert here, before returning.  If it is already
+     * cached, take the cached entry.
+     */
+    {
+	NSSTrustDomain *td = o->trustDomain;
+	nssTrustDomain_AddCertsToCache(td, &cert, 1);
+    }
+#endif
     return (nssPKIObject *)cert;
 }
 
@@ -897,6 +989,7 @@ nssPKIObjectCollection_GetCertificates
     return rvOpt;
 }
 
+#ifdef PURE_STAN_BUILD
 /*
  * PrivateKey collections
  */
@@ -1102,6 +1195,7 @@ nssPKIObjectCollection_GetPublicKeys
     }
     return rvOpt;
 }
+#endif /* PURE_STAN_BUILD */
 
 /* how bad would it be to have a static now sitting around, updated whenever
  * this was called?  would avoid repeated allocs...

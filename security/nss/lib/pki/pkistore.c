@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.15 $ $Date: 2002/03/07 22:07:58 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.16 $ $Date: 2002/04/15 15:22:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -435,7 +435,7 @@ static void match_nickname(const void *k, void *v, void *a)
     nssList *subjectList = (nssList *)v;
     struct nickname_template_str *nt = (struct nickname_template_str *)a;
     nssrv = nssList_GetArray(subjectList, (void **)&c, 1);
-    nickname = NSSCertificate_GetNickname(c, NULL);
+    nickname = nssCertificate_GetNickname(c, NULL);
     if (nssrv == PR_SUCCESS && 
          nssUTF8_Equal(nickname, nt->nickname, &nssrv)) 
     {

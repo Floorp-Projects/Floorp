@@ -35,12 +35,16 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.16 $ $Date: 2002/02/08 02:51:38 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.17 $ $Date: 2002/04/15 15:22:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
 #include "base.h"
 #endif /* BASE_H */
+
+#ifndef PKI_H
+#include "pki.h"
+#endif /* PKI_H */
 
 #ifndef PKITM_H
 #include "pkitm.h"
@@ -48,10 +52,441 @@ static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.16 $ $
 
 PR_BEGIN_EXTERN_C
 
-NSS_EXTERN NSSToken *
-STAN_GetDefaultCryptoToken
+/* nssPKIObject
+ *
+ * This is the base object class, common to all PKI objects defined in
+ * in this module.  Each object can be safely 'casted' to an nssPKIObject,
+ * then passed to these methods.
+ *
+ * nssPKIObject_Create
+ * nssPKIObject_Destroy
+ * nssPKIObject_AddRef
+ * nssPKIObject_AddInstance
+ * nssPKIObject_HasInstance
+ * nssPKIObject_GetTokens
+ * nssPKIObject_GetNicknameForToken
+ * nssPKIObject_RemoveInstanceForToken
+ * nssPKIObject_DeleteStoredObject
+ */
+
+/* nssPKIObject_Create
+ *
+ * A generic PKI object.  It must live in a trust domain.  It may be
+ * initialized with a token instance, or alternatively in a crypto context.
+ */
+NSS_EXTERN nssPKIObject *
+nssPKIObject_Create
 (
-  void
+  NSSArena *arenaOpt,
+  nssCryptokiObject *instanceOpt,
+  NSSTrustDomain *td,
+  NSSCryptoContext *ccOpt
+);
+
+/* nssPKIObject_AddRef
+ */
+NSS_EXTERN nssPKIObject *
+nssPKIObject_AddRef
+(
+  nssPKIObject *object
+);
+
+/* nssPKIObject_Destroy
+ *
+ * Returns true if object was destroyed.  This notifies the subclass that
+ * all references are gone and it should delete any members it owns.
+ */
+NSS_EXTERN PRBool
+nssPKIObject_Destroy
+(
+  nssPKIObject *object
+);
+
+/* nssPKIObject_AddInstance
+ *
+ * Add a token instance to the object, if it does not have it already.
+ */
+NSS_EXTERN PRStatus
+nssPKIObject_AddInstance
+(
+  nssPKIObject *object,
+  nssCryptokiObject *instance
+);
+
+/* nssPKIObject_HasInstance
+ *
+ * Query the object for a token instance.
+ */
+NSS_EXTERN PRBool
+nssPKIObject_HasInstance
+(
+  nssPKIObject *object,
+  nssCryptokiObject *instance
+);
+
+/* nssPKIObject_GetTokens
+ *
+ * Get all tokens which have an instance of the object.
+ */
+NSS_EXTERN NSSToken **
+nssPKIObject_GetTokens
+(
+  nssPKIObject *object,
+  PRStatus *statusOpt
+);
+
+/* nssPKIObject_GetNicknameForToken
+ *
+ * tokenOpt == NULL means take the first available, otherwise return the
+ * nickname for the specified token.
+ */
+NSS_EXTERN NSSUTF8 *
+nssPKIObject_GetNicknameForToken
+(
+  nssPKIObject *object,
+  NSSToken *tokenOpt
+);
+
+/* nssPKIObject_RemoveInstanceForToken
+ *
+ * Remove the instance of the object on the specified token.
+ */
+NSS_EXTERN PRStatus
+nssPKIObject_RemoveInstanceForToken
+(
+  nssPKIObject *object,
+  NSSToken *token
+);
+
+/* nssPKIObject_DeleteStoredObject
+ *
+ * Delete all token instances of the object, as well as any crypto context
+ * instances (TODO).  If any of the instances are read-only, or if the
+ * removal fails, the object will keep those instances.  'isFriendly' refers
+ * to the object -- can this object be removed from a friendly token without
+ * login?  For example, certificates are friendly, private keys are not.
+ * Note that if the token is not friendly, authentication will be required
+ * regardless of the value of 'isFriendly'.
+ */
+NSS_EXTERN PRStatus
+nssPKIObject_DeleteStoredObject
+(
+  nssPKIObject *object,
+  NSSCallback *uhh,
+  PRBool isFriendly
+);
+
+#ifdef NSS_3_4_CODE
+NSS_EXTERN nssCryptokiObject **
+nssPKIObject_GetInstances
+(
+  nssPKIObject *object
+);
+#endif
+
+NSS_EXTERN NSSCertificate **
+nssTrustDomain_FindCertificatesByID
+(
+  NSSTrustDomain *td,
+  NSSItem *id,
+  NSSCertificate **rvOpt,
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+);
+
+/* module-private nsspki methods */
+
+NSS_EXTERN NSSCryptoContext *
+nssCryptoContext_Create
+(
+  NSSTrustDomain *td,
+  NSSCallback *uhhOpt
+);
+
+/* XXX for the collection */
+NSS_EXTERN NSSCertificate *
+nssCertificate_Create
+(
+  nssPKIObject *object
+);
+
+NSS_EXTERN PRStatus
+nssCertificate_SetCertTrust
+(
+  NSSCertificate *c,
+  NSSTrust *trust
+);
+
+NSS_EXTERN nssDecodedCert *
+nssCertificate_GetDecoding
+(
+  NSSCertificate *c
+);
+
+NSS_EXTERN nssDecodedCert *
+nssDecodedCert_Create
+(
+  NSSArena *arenaOpt,
+  NSSDER *encoding,
+  NSSCertificateType type
+);
+
+NSS_EXTERN PRStatus
+nssDecodedCert_Destroy
+(
+  nssDecodedCert *dc
+);
+
+NSS_EXTERN NSSTrust *
+nssTrust_Create
+(
+  nssPKIObject *object
+);
+
+NSS_EXTERN NSSPrivateKey *
+nssPrivateKey_Create
+(
+  nssPKIObject *o
+);
+
+NSS_EXTERN NSSPublicKey *
+nssPublicKey_Create
+(
+  nssPKIObject *object
+);
+
+/* nssCertificateArray
+ *
+ * These are being thrown around a lot, might as well group together some
+ * functionality.
+ *
+ * nssCertificateArray_Destroy
+ * nssCertificateArray_Join
+ * nssCertificateArray_FindBestCertificate
+ * nssCertificateArray_Traverse
+ */
+
+/* nssCertificateArray_Destroy
+ *
+ * Will destroy the array and the certs within it.  If the array was created
+ * in an arena, will *not* (of course) destroy the arena.  However, is safe
+ * to call this method on an arena-allocated array.
+ */
+NSS_EXTERN void
+nssCertificateArray_Destroy
+(
+  NSSCertificate **certs
+);
+
+/* nssCertificateArray_Join
+ *
+ * Join two arrays into one.  The two arrays, certs1 and certs2, should
+ * be considered invalid after a call to this function (they may be destroyed
+ * as part of the join).  certs1 and/or certs2 may be NULL.  Safe to
+ * call with arrays allocated in an arena, the result will also be in the
+ * arena.
+ */
+NSS_EXTERN NSSCertificate **
+nssCertificateArray_Join
+(
+  NSSCertificate **certs1,
+  NSSCertificate **certs2
+);
+
+/* nssCertificateArray_FindBestCertificate
+ *
+ * Use the usual { time, usage, policies } to find the best cert in the
+ * array.
+ */
+NSS_EXTERN NSSCertificate * 
+nssCertificateArray_FindBestCertificate
+(
+  NSSCertificate **certs, 
+  NSSTime *timeOpt,
+  NSSUsage *usage,
+  NSSPolicies *policiesOpt
+);
+
+/* nssCertificateArray_Traverse
+ *
+ * Do the callback for each cert, terminate the traversal if the callback
+ * fails.
+ */
+NSS_EXTERN PRStatus
+nssCertificateArray_Traverse
+(
+  NSSCertificate **certs,
+  PRStatus (* callback)(NSSCertificate *c, void *arg),
+  void *arg
+);
+
+/* nssPKIObjectCollection
+ *
+ * This is a handy way to group objects together and perform operations
+ * on them.  It can also handle "proto-objects"-- references to
+ * objects instances on tokens, where the actual object hasn't 
+ * been formed yet.
+ *
+ * nssCertificateCollection_Create
+ * nssPrivateKeyCollection_Create
+ * nssPublicKeyCollection_Create
+ *
+ * If this was a language that provided for inheritance, each type would
+ * inherit all of the following methods.  Instead, there is only one
+ * type (nssPKIObjectCollection), shared among all.  This may cause
+ * confusion; an alternative would be to define all of the methods
+ * for each subtype (nssCertificateCollection_Destroy, ...), but that doesn't
+ * seem worth the code bloat..  It is left up to the caller to remember 
+ * what type of collection he/she is dealing with.
+ *
+ * nssPKIObjectCollection_Destroy
+ * nssPKIObjectCollection_Count
+ * nssPKIObjectCollection_AddObject
+ * nssPKIObjectCollection_AddInstances
+ * nssPKIObjectCollection_Traverse
+ *
+ * Back to type-specific methods.
+ *
+ * nssPKIObjectCollection_GetCertificates
+ * nssPKIObjectCollection_GetPrivateKeys
+ * nssPKIObjectCollection_GetPublicKeys
+ */
+
+/* nssCertificateCollection_Create
+ *
+ * Create a collection of certificates in the specified trust domain.
+ * Optionally provide a starting set of certs.
+ */
+NSS_EXTERN nssPKIObjectCollection *
+nssCertificateCollection_Create
+(
+  NSSTrustDomain *td,
+  NSSCertificate **certsOpt
+);
+
+/* nssPrivateKeyCollection_Create
+ *
+ * Create a collection of private keys in the specified trust domain.
+ * Optionally provide a starting set of keys.
+ */
+NSS_EXTERN nssPKIObjectCollection *
+nssPrivateKeyCollection_Create
+(
+  NSSTrustDomain *td,
+  NSSPrivateKey **pvkOpt
+);
+
+/* nssPublicKeyCollection_Create
+ *
+ * Create a collection of public keys in the specified trust domain.
+ * Optionally provide a starting set of keys.
+ */
+NSS_EXTERN nssPKIObjectCollection *
+nssPublicKeyCollection_Create
+(
+  NSSTrustDomain *td,
+  NSSPublicKey **pvkOpt
+);
+
+/* nssPKIObjectCollection_Destroy
+ */
+NSS_EXTERN void
+nssPKIObjectCollection_Destroy
+(
+  nssPKIObjectCollection *collection
+);
+
+/* nssPKIObjectCollection_Count
+ */
+NSS_EXTERN PRUint32
+nssPKIObjectCollection_Count
+(
+  nssPKIObjectCollection *collection
+);
+
+NSS_EXTERN PRStatus
+nssPKIObjectCollection_AddObject
+(
+  nssPKIObjectCollection *collection,
+  nssPKIObject *object
+);
+
+/* nssPKIObjectCollection_AddInstances
+ *
+ * Add a set of object instances to the collection.  The instances
+ * will be sorted into any existing certs/proto-certs that may be in
+ * the collection.  The instances will be absorbed by the collection,
+ * the array should not be used after this call (except to free it).
+ *
+ * Failure means the collection is in an invalid state.
+ *
+ * numInstances = 0 means the array is NULL-terminated
+ */
+NSS_EXTERN PRStatus
+nssPKIObjectCollection_AddInstances
+(
+  nssPKIObjectCollection *collection,
+  nssCryptokiObject **instances,
+  PRUint32 numInstances
+);
+
+/* nssPKIObjectCollection_Traverse
+ */
+NSS_EXTERN PRStatus
+nssPKIObjectCollection_Traverse
+(
+  nssPKIObjectCollection *collection,
+  nssPKIObjectCallback *callback
+);
+
+/* nssPKIObjectCollection_GetCertificates
+ *
+ * Get all of the certificates in the collection. 
+ */
+NSS_EXTERN NSSCertificate **
+nssPKIObjectCollection_GetCertificates
+(
+  nssPKIObjectCollection *collection,
+  NSSCertificate **rvOpt,
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+);
+
+NSS_EXTERN NSSPrivateKey **
+nssPKIObjectCollection_GetPrivateKeys
+(
+  nssPKIObjectCollection *collection,
+  NSSPrivateKey **rvOpt,
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+);
+
+NSS_EXTERN NSSPublicKey **
+nssPKIObjectCollection_GetPublicKeys
+(
+  nssPKIObjectCollection *collection,
+  NSSPublicKey **rvOpt,
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+);
+
+NSS_EXTERN NSSTime *
+NSSTime_Now
+(
+  NSSTime *timeOpt
+);
+
+NSS_EXTERN NSSTime *
+NSSTime_SetPRTime
+(
+  NSSTime *timeOpt,
+  PRTime prTime
+);
+
+NSS_EXTERN PRTime
+NSSTime_GetPRTime
+(
+  NSSTime *time
 );
 
 NSS_EXTERN nssHash *
@@ -61,78 +496,14 @@ nssHash_CreateCertificate
   PRUint32 numBuckets
 );
 
-/* Token ordering routines */
+/* 3.4 Certificate cache routines */
 
-/*
- * Given a crypto algorithm, return the preferred token for performing
- * the crypto operation.
- */
-NSS_EXTERN NSSToken *
-nssTrustDomain_GetCryptoToken
+NSS_EXTERN PRStatus
+nssTrustDomain_InitializeCache
 (
   NSSTrustDomain *td,
-  NSSAlgorithmAndParameters *ap
+  PRUint32 cacheSize
 );
-
-/* The following routines are used to obtain the preferred token on which 
- * to store particular objects.
- */
-
-/*
- * Find the preferred token for storing user certificates.
- */
-NSS_EXTERN NSSToken *
-nssTrustDomain_GetUserCertToken
-(
-  NSSTrustDomain *td
-);
-
-/*
- * Find the preferred token for storing email certificates.
- */
-NSS_EXTERN NSSToken *
-nssTrustDomain_GetEmailCertToken
-(
-  NSSTrustDomain *td
-);
-
-/*
- * Find the preferred token for storing SSL certificates.
- */
-NSS_EXTERN NSSToken *
-nssTrustDomain_GetSSLCertToken
-(
-  NSSTrustDomain *td
-);
-
-/*
- * Find the preferred token for storing root certificates.
- */
-NSS_EXTERN NSSToken *
-nssTrustDomain_GetRootCertToken
-(
-  NSSTrustDomain *td
-);
-
-/*
- * Find the preferred token for storing private keys. 
- */
-NSS_EXTERN NSSToken *
-nssTrustDomain_GetPrivateKeyToken
-(
-  NSSTrustDomain *td
-);
-
-/*
- * Find the preferred token for storing symmetric keys. 
- */
-NSS_EXTERN NSSToken *
-nssTrustDomain_GetSymmetricKeyToken
-(
-  NSSTrustDomain *td
-);
-
-/* Certificate cache routines */
 
 NSS_EXTERN PRStatus
 nssTrustDomain_AddCertsToCache
@@ -238,54 +609,11 @@ nssTrustDomain_GetCertsFromCache
   nssList *certListOpt
 );
 
-NSS_EXTERN PRStatus
-nssCertificate_SetCertTrust
+NSS_EXTERN void
+nssTrustDomain_DumpCacheInfo
 (
-  NSSCertificate *c,
-  NSSTrust *trust
-);
-
-NSS_EXTERN nssDecodedCert *
-nssCertificate_GetDecoding
-(
-  NSSCertificate *c
-);
-
-NSS_EXTERN nssDecodedCert *
-nssDecodedCert_Create
-(
-  NSSArena *arenaOpt,
-  NSSDER *encoding,
-  NSSCertificateType type
-);
-
-NSS_EXTERN PRStatus
-nssDecodedCert_Destroy
-(
-  nssDecodedCert *dc
-);
-
-NSS_EXTERN void 
-nssBestCertificate_SetArgs
-(
-  nssBestCertificateCB *best,
-  NSSTime *timeOpt,
-  NSSUsage *usage,
-  NSSPolicies *policies
-);
-
-NSS_EXTERN PRStatus 
-nssBestCertificate_Callback
-(
-  NSSCertificate *c, 
-  void *arg
-);
-
-NSS_EXTERN PRStatus
-nssCertificateList_DoCallback
-(
-  nssList *certList, 
-  PRStatus (* callback)(NSSCertificate *c, void *arg),
+  NSSTrustDomain *td,
+  void (* cert_dump_iter)(const void *, void *, void *),
   void *arg
 );
 
@@ -293,54 +621,6 @@ NSS_EXTERN void
 nssCertificateList_AddReferences
 (
   nssList *certList
-);
-
-NSS_EXTERN PRStatus
-nssPKIObject_Initialize
-(
-  struct nssPKIObjectBaseStr *object,
-  NSSArena *arena,
-  NSSTrustDomain *td,
-  NSSCryptoContext *cc
-);
-
-NSS_EXTERN void
-nssPKIObject_AddRef
-(
-  struct nssPKIObjectBaseStr *object
-);
-
-NSS_EXTERN PRBool
-nssPKIObject_Destroy
-(
-  struct nssPKIObjectBaseStr *object
-);
-
-NSS_EXTERN NSSTime *
-NSSTime_Now
-(
-  NSSTime *timeOpt
-);
-
-NSS_EXTERN NSSTime *
-NSSTime_SetPRTime
-(
-  NSSTime *timeOpt,
-  PRTime prTime
-);
-
-NSS_EXTERN PRTime
-NSSTime_GetPRTime
-(
-  NSSTime *time
-);
-
-NSS_EXTERN void
-nssTrustDomain_DumpCacheInfo
-(
-  NSSTrustDomain *td,
-  void (* cert_dump_iter)(const void *, void *, void *),
-  void *arg
 );
 
 PR_END_EXTERN_C

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.10 $ $Date: 2002/04/04 20:00:26 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.11 $ $Date: 2002/04/15 15:22:04 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -173,6 +173,15 @@ nssSlot_IsPermanent
     return slot->pk11slot->isPerm;
 }
 
+NSS_IMPLEMENT PRBool
+nssSlot_IsFriendly
+(
+  NSSSlot *slot
+)
+{
+    return PK11_IsFriendly(slot->pk11slot);
+}
+
 NSS_IMPLEMENT PRStatus
 nssToken_Refresh(NSSToken *token)
 {
@@ -201,6 +210,19 @@ nssSlot_Refresh
 	return PR_FAILURE;
     }
     return nssToken_Refresh(slot->token);
+}
+
+NSS_IMPLEMENT PRStatus
+nssToken_GetTrustOrder
+(
+  NSSToken *tok
+)
+{
+    PK11SlotInfo *slot;
+    SECMODModule *module;
+    slot = tok->pk11slot;
+    module = PK11_GetModule(slot);
+    return module->trustOrder;
 }
 
 

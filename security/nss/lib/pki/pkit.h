@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.11 $ $Date: 2002/03/07 22:07:59 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.12 $ $Date: 2002/04/15 15:22:10 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -71,13 +71,6 @@ static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.11 $ $
 
 PR_BEGIN_EXTERN_C
 
-typedef struct nssDecodedCertStr nssDecodedCert;
-
-typedef struct nssCertificateStoreStr nssCertificateStore;
-
-/* How wide is the scope of this? */
-typedef struct nssSMIMEProfileStr nssSMIMEProfile;
-
 /*
  * A note on ephemeral certs
  *
@@ -93,17 +86,25 @@ typedef struct nssSMIMEProfileStr nssSMIMEProfile;
  * for each object.
  */
 
-/* The common data from which all objects inherit */
-struct nssPKIObjectBaseStr 
+/* nssPKIObject
+ *
+ * This is the base object class, common to all PKI objects defined in
+ * nsspkit.h
+ */
+struct nssPKIObjectStr 
 {
     /* The arena for all object memory */
     NSSArena *arena;
-    /* Thread-safe reference counting */
-    PZLock *lock;
+    /* Atomically incremented/decremented reference counting */
     PRInt32 refCount;
-    /* List of nssCryptokiInstance's of the object */
-    nssList *instanceList;
-    nssListIterator *instances;
+    /* lock protects the array of nssCryptokiInstance's of the object */
+    PZLock *lock;
+    /* XXX with LRU cache, this cannot be guaranteed up-to-date.  It cannot
+     * be compared against the update level of the trust domain, since it is
+     * also affected by import/export.  Where is this array needed?
+     */
+    nssCryptokiObject **instances;
+    PRUint32 numInstances;
     /* The object must live in a trust domain */
     NSSTrustDomain *trustDomain;
     /* The object may live in a crypto context */
@@ -112,9 +113,18 @@ struct nssPKIObjectBaseStr
     NSSUTF8 *tempName;
 };
 
+typedef struct nssDecodedCertStr nssDecodedCert;
+
+typedef struct nssCertificateStoreStr nssCertificateStore;
+
+/* How wide is the scope of this? */
+typedef struct nssSMIMEProfileStr nssSMIMEProfile;
+
+typedef struct nssPKIObjectStr nssPKIObject;
+
 struct NSSTrustStr 
 {
-    struct nssPKIObjectBaseStr object;
+    nssPKIObject object;
     NSSCertificate *certificate;
     nssTrustLevel serverAuth;
     nssTrustLevel clientAuth;
@@ -124,7 +134,7 @@ struct NSSTrustStr
 
 struct nssSMIMEProfileStr
 {
-    struct nssPKIObjectBaseStr object;
+    nssPKIObject object;
     NSSCertificate *certificate;
     NSSASCII7 *email;
     NSSDER *subject;
@@ -134,7 +144,7 @@ struct nssSMIMEProfileStr
 
 struct NSSCertificateStr
 {
-    struct nssPKIObjectBaseStr object;
+    nssPKIObject object;
     NSSCertificateType type;
     NSSItem id;
     NSSBER encoding;
@@ -156,7 +166,7 @@ typedef struct nssTDCertificateCacheStr nssTDCertificateCache;
 struct NSSTrustDomainStr {
     PRInt32 refCount;
     NSSArena *arena;
-    NSSCallback defaultCallback;
+    NSSCallback *defaultCallback;
     nssList *tokenList;
     nssListIterator *tokens;
     nssTDCertificateCache *cache;

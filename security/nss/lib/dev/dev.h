@@ -41,7 +41,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.22 $ $Date: 2002/04/04 20:00:21 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.23 $ $Date: 2002/04/15 15:22:00 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -421,7 +421,6 @@ nssToken_NeedsPINInitialization
   NSSToken *token
 );
 
-#ifdef PURE_STAN_BUILD
 NSS_EXTERN nssCryptokiObject *
 nssToken_ImportCertificate
 (
@@ -602,8 +601,6 @@ nssToken_FindPublicKeyByID
   nssSession *sessionOpt,
   NSSItem *keyID
 );
-
-#endif /* PURE_STAN_BUILD */
 
 NSS_EXTERN NSSItem *
 nssToken_Digest
@@ -903,26 +900,18 @@ nssSlotList_GetBestSlotForAlgorithmsAndParameters
   NSSAlgorithmAndParameters **ap
 );
 
-#ifndef PURE_STAN_BUILD
-/* XXX the following remain while merging new work */
+#ifdef NSS_3_4_CODE
 
-NSS_EXTERN PRStatus
-nssToken_ImportCertificate
+NSS_EXTERN PRBool
+nssToken_IsPresent
 (
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  NSSCertificate *cert,
-  NSSUTF8 *nickname,
-  PRBool asTokenObject
+  NSSToken *token
 );
- 
-NSS_EXTERN PRStatus
-nssToken_ImportTrust
+
+NSS_EXTERN nssSession *
+nssToken_GetDefaultSession
 (
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  NSSTrust *trust,
-  PRBool asTokenObject
+  NSSToken *token
 );
 
 NSS_EXTERN PRStatus
@@ -949,96 +938,13 @@ nssToken_SetHasCrls
   NSSToken *tok
 );
 
-/* Permanently remove an object from the token. */
 NSS_EXTERN PRStatus
-nssToken_DeleteStoredObject
+nssToken_GetTrustOrder
 (
-  nssCryptokiInstance *instance
+  NSSToken *tok
 );
 
-NSS_EXTERN NSSTrust *
-nssToken_FindTrustForCert
-(
-  NSSToken *token,
-  nssSession *sessionOpt,
-  NSSCertificate *c,
-  nssTokenSearchType searchType
-);
-
-NSS_EXTERN PRStatus
-nssToken_TraverseCertificates
-(
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  nssTokenCertSearch *search
-);
-
-NSS_EXTERN PRStatus
-nssToken_TraverseCertificatesBySubject
-(
-  NSSToken *token,
-  nssSession *sessionOpt,
-  NSSDER *subject,
-  nssTokenCertSearch *search
-);
-
-NSS_EXTERN PRStatus
-nssToken_TraverseCertificatesByNickname
-(
-  NSSToken *token,
-  nssSession *sessionOpt,
-  NSSUTF8 *name,
-  nssTokenCertSearch *search
-);
-
-NSS_EXTERN PRStatus
-nssToken_TraverseCertificatesByEmail
-(
-  NSSToken *token,
-  nssSession *sessionOpt,
-  NSSASCII7 *email,
-  nssTokenCertSearch *search
-);
-
-NSS_EXTERN NSSCertificate *
-nssToken_FindCertificateByIssuerAndSerialNumber
-(
-  NSSToken *token,
-  nssSession *sessionOpt,
-  NSSDER *issuer,
-  NSSDER *serial,
-  nssTokenSearchType searchType
-);
-
-NSS_EXTERN NSSCertificate *
-nssToken_FindCertificateByEncodedCertificate
-(
-  NSSToken *token,
-  nssSession *sessionOpt,
-  NSSBER *encodedCertificate,
-  nssTokenSearchType searchType
-);
-
-NSS_EXTERN NSSTrust *
-nssToken_FindTrustForCert
-(
-  NSSToken *token,
-  nssSession *session,
-  NSSCertificate *c,
-  nssTokenSearchType searchType
-);
-
-/* exposing this for the smart card cache code */
-NSS_EXTERN nssCryptokiInstance *
-nssCryptokiInstance_Create
-(
-  NSSArena *arena,
-  NSSToken *t, 
-  CK_OBJECT_HANDLE h,
-  PRBool isTokenObject
-);
-
-#endif /* !PURE_STAN_BUILD */
+#endif
 
 PR_END_EXTERN_C
 
