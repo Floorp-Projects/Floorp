@@ -424,7 +424,7 @@ REbool parseTerm(REParseState *parseState)
                 break;
             case 'b':
                 parseState->result = newRENode(parseState, REOP_UNWBND);
-                if (parseState->result) return false;
+                if (!parseState->result) return false;
                 break;
             /* Decimal escape */
             case '0':
@@ -1223,25 +1223,25 @@ lexHex:
             case 'D':
                 addCharacterRangeToCharSet(charSet, 0, '0' - 1);
                 addCharacterRangeToCharSet(charSet, (REchar)('9' + 1),
-                                            (REchar)(charSet->length));
+                                            (REchar)(charSet->length - 1));
                 break;
             case 's':
-                for (i = (REint32)(charSet->length); i >= 0; i--)
+                for (i = (REint32)(charSet->length - 1); i >= 0; i--)
                     if (RE_ISWS(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
                 break;
             case 'S':
-                for (i = (REint32)(charSet->length); i >= 0; i--)
+                for (i = (REint32)(charSet->length - 1); i >= 0; i--)
                     if (!RE_ISWS(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
                 break;
             case 'w':
-                for (i = (REint32)(charSet->length); i >= 0; i--)
+                for (i = (REint32)(charSet->length - 1); i >= 0; i--)
                     if (RE_ISLETDIG(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
                 break;
             case 'W':
-                for (i = (REint32)(charSet->length); i >= 0; i--)
+                for (i = (REint32)(charSet->length - 1); i >= 0; i--)
                     if (!RE_ISLETDIG(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
                 break;
@@ -1682,11 +1682,12 @@ static REState *executeRENode(RENode *t, REGlobalData *globalData, REState *x)
                 }
             }
             else {
-                recoverState(x, backTrackStack[backTrackStackTop].state);
                 if (result == NULL)
                     result = x;
-                else
+                else {
+		    recoverState(x, backTrackStack[backTrackStackTop].state);
                     result = NULL;
+		}
             }
             currentContinuation = t->continuation;
             break;
