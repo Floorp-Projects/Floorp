@@ -114,7 +114,6 @@ public:
 
     nsresult AutoMigrate();
 
-    nsresult CreateDefaultProfile(void);
     nsresult ShowProfileWizard(void);
 };
 
