@@ -30,8 +30,11 @@ static gint             sBrowseBtnID;
 static GtkWidget        *sFolder;
 static GSList           *sGroup;
 static GtkWidget        *sCreateDestDlg;
+static GtkWidget        *sDelInstDlg;
 static int              sFilePickerUp = FALSE;
 static int              sConfirmCreateUp = FALSE;
+static int              sDelInstUp = FALSE;
+static nsLegacyCheck    *sLegacyChecks = NULL;
 
 nsSetupTypeDlg::nsSetupTypeDlg() :
     mMsg0(NULL),
@@ -42,9 +45,9 @@ nsSetupTypeDlg::nsSetupTypeDlg() :
 nsSetupTypeDlg::~nsSetupTypeDlg()
 {
     FreeSetupTypeList();
+    FreeLegacyChecks();
 
-    if (mMsg0)
-        free (mMsg0);
+    XI_IF_FREE(mMsg0)
 }
 
 void
@@ -83,11 +86,15 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
     }
 
     // creation confirmation dlg still up
-    if (sConfirmCreateUp)
+    if (sConfirmCreateUp || sDelInstUp)
         return;
 
     // verify selected destination directory exists
     if (OK != nsSetupTypeDlg::VerifyDestination())
+        return;
+
+    // old installation may exist: delete it
+    if (OK != nsSetupTypeDlg::DeleteOldInst())
         return;
 
     // hide this notebook page
@@ -117,7 +124,10 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     if (!currSec) return E_MEM;
     char *currKey = (char *) malloc(1 + 3); // e.g. C0, C1, C12
     if (!currKey) return E_MEM;
+    char *currLCSec = (char *) malloc(strlen(LEGACY_CHECKd) + 3);
+    if (!currLCSec) return E_MEM;
     char *currVal = NULL;
+    nsLegacyCheck *currLC = NULL, *lastLC= NULL, *nextLC = NULL;
     nsComponent *currComp = NULL;
     nsComponent *currCompDup = NULL;
     int currIndex;
@@ -154,6 +164,58 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     if (err != OK && err != nsINIParser::E_NO_KEY) goto BAIL; else err = OK;
     if (bufsize == 0)
             XI_IF_FREE(mTitle); 
+
+    /* legacy check */
+    sLegacyChecks = new nsLegacyCheck();
+    currLC = sLegacyChecks;
+    for (i = 0; i < MAX_LEGACY_CHECKS; i++)
+    {
+        // construct section name based on index
+        memset(currLCSec, 0, (strlen(LEGACY_CHECKd) + 3));
+        sprintf(currLCSec, LEGACY_CHECKd, i);
+
+        // get "Filename" and "Message" keys
+        bufsize = 0;
+        err = aParser->GetStringAlloc(currLCSec, FILENAME, &currVal, &bufsize);
+        if (err != OK) 
+        { 
+            if (err != nsINIParser::E_NO_SEC &&
+                err != nsINIParser::E_NO_KEY) goto BAIL; 
+            else 
+            {
+                err = OK; 
+                XI_IF_DELETE(currLC);
+                if (lastLC)
+                    lastLC->InitNext();
+                break; 
+            } 
+        }
+        currLC->SetFilename(currVal);
+
+        bufsize = 0;
+        err = aParser->GetStringAlloc(currLCSec, MSG, &currVal, &bufsize);
+        if (err != OK)
+        {
+            if (err != nsINIParser::E_NO_SEC &&
+                err != nsINIParser::E_NO_KEY) goto BAIL; 
+            else 
+            {
+                err = OK; 
+                XI_IF_DELETE(currLC);
+                if (lastLC)
+                    lastLC->InitNext();
+                break; 
+            } 
+        }
+        currLC->SetMessage(currVal);
+
+        nextLC = new nsLegacyCheck();
+        currLC->SetNext(nextLC);
+        lastLC = currLC;
+        currLC = nextLC;
+    }
+    if (i == 0) // none found
+        XI_IF_DELETE(sLegacyChecks);
 
     /* setup types */
     for (i=0; i<MAX_SETUP_TYPES; i++)
@@ -217,12 +279,13 @@ fin_iter:
         XI_IF_DELETE(currST);
     }
 
-    XI_IF_FREE(currSec);
-    XI_IF_FREE(currKey);
-
-    return err;
+    err = OK;
 
 BAIL:
+    XI_IF_FREE(currSec);
+    XI_IF_FREE(currKey);
+    XI_IF_FREE(currLCSec);
+
     return err;
 }
 
@@ -522,6 +585,26 @@ nsSetupTypeDlg::FreeSetupTypeList()
 }
 
 void
+nsSetupTypeDlg::FreeLegacyChecks()
+{
+    nsLegacyCheck *curr = NULL;
+    nsLegacyCheck *last = NULL;
+
+    if (sLegacyChecks)
+    {
+        curr = sLegacyChecks;
+
+        while(curr)
+        {
+            last = curr;
+            curr = last->GetNext();
+
+            XI_IF_DELETE(last);
+        }
+    }
+}
+
+void
 nsSetupTypeDlg::SelectFolder(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("SelectFolder");
@@ -646,7 +729,7 @@ nsSetupTypeDlg::CreateDestYes(GtkWidget *aWidget, gpointer aData)
     gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
     gtk_signal_disconnect(GTK_OBJECT(sBrowseBtn), sBrowseBtnID);
 
-    // show the last dlg
+    // show the final dlg
     if (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1))
         gCtx->cdlg->Show(nsXInstallerDlg::FORWARD_MOVE);
     else
@@ -660,4 +743,141 @@ nsSetupTypeDlg::CreateDestNo(GtkWidget *aWidget, gpointer aData)
 
     gtk_widget_destroy(sCreateDestDlg);
     sConfirmCreateUp = FALSE;
+}
+
+int
+nsSetupTypeDlg::DeleteOldInst()
+{
+    DUMP("DeleteOldInst");
+
+    int err = OK;
+    struct stat dummy;
+    char path[1024];
+    GtkWidget *label = NULL;
+    GtkWidget *deleteBtn = NULL; /* delete button */
+    GtkWidget *cancelBtn = NULL; /* cancel button */
+    int numLines = 0, i;
+    char *msg = NULL, *msgPtr = NULL, *msgChunkPtr = NULL;
+    char msgChunk[65];
+
+    memset(path, 0, 1024);
+    ConstructPath(path, gCtx->opt->mDestination, sLegacyChecks->GetFilename());
+    DUMP(path);
+
+    // XXX implement multiple legacy checks (currently only LegacyCheck0 used)
+
+    // check if old installation exists
+    if (0 == stat(path, &dummy))
+    {
+        // throw up delete dialog 
+        sDelInstDlg = gtk_dialog_new();
+
+        deleteBtn = gtk_button_new_with_label(DELETE_LABEL);
+        cancelBtn = gtk_button_new_with_label(CANCEL_LABEL);
+
+        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sDelInstDlg)->action_area), 
+            deleteBtn);
+        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sDelInstDlg)->action_area),
+            cancelBtn);
+        gtk_signal_connect(GTK_OBJECT(deleteBtn), "clicked",
+                       GTK_SIGNAL_FUNC(DeleteInstDelete), sDelInstDlg);
+        gtk_signal_connect(GTK_OBJECT(cancelBtn), "clicked",
+                       GTK_SIGNAL_FUNC(DeleteInstCancel), sDelInstDlg);
+
+        // wrap message at 64 columns, and truncate at 20 rows
+        msg = sLegacyChecks->GetMessage();
+        msgPtr = msg;
+        numLines = strlen(msg)/64;
+        for (i = 0; i <= numLines && i < 20; i++)
+        {
+            memset(msgChunk, 0, 65);
+            strncpy(msgChunk, msgPtr, 64);
+
+            // pad by a line but don't allow overflow
+            if (msgPtr > msg + strlen(msg))
+                break;
+
+            // find last space
+            msgChunkPtr = strrchr(msgChunk, ' ');
+            if (64 != msgChunkPtr - msgChunk + 1)
+            {
+                msgChunk[msgChunkPtr - msgChunk] = 0;
+                msgPtr = msgPtr + (msgChunkPtr - msgChunk + 1);
+            }
+            label = gtk_label_new(msgChunk);
+            gtk_box_pack_start(GTK_BOX(GTK_DIALOG(sDelInstDlg)->vbox), label,
+                FALSE, FALSE, 0);
+        }
+        gtk_widget_show_all(sDelInstDlg);
+        sDelInstUp = TRUE;
+    
+        err = E_OLD_INST;
+    }
+    
+    return err;
+}
+
+void         
+nsSetupTypeDlg::DeleteInstDelete(GtkWidget *aWidget, gpointer aData)
+{
+    DUMP("DeleteInstDelete");
+
+    char cwd[1024];
+    memset(cwd, 0, 1024);
+
+    sDelInstUp = FALSE;
+
+    getcwd(cwd, 1024);
+    chdir(gCtx->opt->mDestination);
+    system("rm -rf *");
+    chdir(cwd);
+
+    // hide this notebook page
+    gCtx->sdlg->Hide(nsXInstallerDlg::FORWARD_MOVE);
+
+    // disconnect this dlg's nav btn signal handlers
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+    gtk_signal_disconnect(GTK_OBJECT(sBrowseBtn), sBrowseBtnID);
+
+    // show the final dlg
+    if (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1))
+        gCtx->cdlg->Show(nsXInstallerDlg::FORWARD_MOVE);
+    else
+        gCtx->idlg->Show(nsXInstallerDlg::FORWARD_MOVE);
+
+    gtk_widget_destroy(sDelInstDlg);
+}
+
+void         
+nsSetupTypeDlg::DeleteInstCancel(GtkWidget *aWidget, gpointer aData)
+{
+    DUMP("DeleteInstCancel");
+
+    sDelInstUp = FALSE;
+    gtk_widget_destroy(sDelInstDlg);
+}
+
+int
+nsSetupTypeDlg::ConstructPath(char *aDest, char *aTrunk, char *aLeaf)
+{
+    int err = OK;
+    int trunkLen;
+    char *lastSlash = NULL;
+    
+    if (!aDest || !aTrunk || !aLeaf)
+        return E_PARAM;
+
+    trunkLen = strlen(aTrunk);
+    lastSlash = strrchr(aTrunk, '/');
+    
+    strcpy(aDest, aTrunk);
+    if (lastSlash != aTrunk + (trunkLen - 1))
+    {
+        // need to tack on a slash
+        strcat(aDest, "/");
+    }
+    strcat(aDest, aLeaf);
+
+    return err;
 }

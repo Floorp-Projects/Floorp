@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include "nsXInstallerDlg.h"
 #include "nsSetupType.h"
+#include "nsLegacyCheck.h"
 
 class nsSetupTypeDlg : public nsXInstallerDlg
 {
@@ -55,6 +56,10 @@ public:
     static int          VerifyDestination();
     static void         CreateDestYes(GtkWidget *aWidget, gpointer aData);
     static void         CreateDestNo(GtkWidget *aWidget, gpointer aData);
+    static int          DeleteOldInst();
+    static void         DeleteInstDelete(GtkWidget *aWidget, gpointer aData);
+    static void         DeleteInstCancel(GtkWidget *aWidget, gpointer aData);
+    static int          ConstructPath(char *aDest, char *aTrunk, char *aLeaf);
 
 /*---------------------------------------------------------------------*
  *   INI Properties
@@ -69,9 +74,10 @@ public:
 
 private:
     void                FreeSetupTypeList();
+    void                FreeLegacyChecks();
 
-    char                *mMsg0;
-    nsSetupType         *mSetupTypeList;
+    char                    *mMsg0;
+    nsSetupType             *mSetupTypeList;
 };
 
 #endif /* _NS_SETUPTYPEDLG_H_ */

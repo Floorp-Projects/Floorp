@@ -45,6 +45,8 @@
 #define YES_LABEL "Yes"
 #define NO_LABEL "No"
 #define OK_LABEL "OK"
+#define DELETE_LABEL "Delete"
+#define CANCEL_LABEL "Cancel"
 #define ERROR "Error [%d]: %s\n" 
 #define FATAL_ERROR "Fatal error [%d]: %s\n"
 #define WARNING "Warning [%d]: %s\n"
@@ -66,6 +68,7 @@
 #define MAX_URL_LEN 1024
 #define MAX_DEPENDEE_KEY_LEN 16
 #define MAX_TMP_DIRS 1024
+#define MAX_LEGACY_CHECKS 32
 
 
 /*--------------------------------------------------------------------*
@@ -99,6 +102,10 @@
 #define SETUP_TYPEd         "Setup Type%d"
 #define DESC_SHORT          "Description Short"
 #define DESC_LONG           "Description Long"
+
+#define LEGACY_CHECKd       "LegacyCheck%d"
+#define FILENAME            "Filename"
+#define MSG                 "Message"
 
 #define DLG_COMPONENTS      "Dialog Select Components"
 #define COMPONENT           "Component"
@@ -177,6 +184,16 @@ do {                                                    \
         return ErrorHandler(E_INVALID_PTR);             \
 } while (0);
      
+#if defined(DEBUG_sgehani) || defined(DEBUG_druidd) || defined(DEBUG_root)
+#define XI_ASSERT(_expr, _msg)                                              \
+do {                                                                        \
+    if (!(_expr))                                                           \
+        printf("%s %d: Assertion failed! %s \n", __FILE__, __LINE__, _msg); \
+} while(0);
+#else
+#define XI_ASSERT(_expr, _msg)
+#endif
+
 
 #ifndef TRUE
 #define TRUE 1
