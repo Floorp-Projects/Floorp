@@ -43,9 +43,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
-PROGRAM = mozbrowser$(BIN_SUFFIX)
+PROGRAM = phoenix$(BIN_SUFFIX)
 else
-PROGRAM = mozbrowser-bin$(BIN_SUFFIX)
+PROGRAM = phoenix-bin$(BIN_SUFFIX)
 endif
 
 REQUIRES = \
