@@ -1357,7 +1357,7 @@ AC_ARG_WITH(pthreads,
 dnl
 dnl Do the platform specific pthread hackery
 dnl
-if test "$USE_PTHREADS"x = x
+if test "$USE_PTHREADS"x != x
 then
 	case "$target" in
 	    *-*-solaris*) 
