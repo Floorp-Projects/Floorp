@@ -572,6 +572,7 @@ PK11_RawPBEKeyGen;
 __CERT_AddTempCertToPerm;
 CERT_AddOKDomainName;
 CERT_CopyName;
+CERT_CreateSubjectCertList;
 CERT_DecodeAVAValue;
 ;+#CERT_DecodeCertFromPackage;
 cert_DecodeGeneralName;
