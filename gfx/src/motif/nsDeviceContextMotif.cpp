@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#include "nsDeviceContextUnix.h"
-#include "nsRenderingContextUnix.h"
+#include "nsDeviceContextMotif.h"
+#include "nsRenderingContextMotif.h"
 #include "../nsGfxCIID.h"
 
 #include "math.h"
@@ -56,7 +56,7 @@ nsReservedColor sReservedColors[] = {
                      { 166, 202, 240 } };
 
 
-nsDeviceContextUnix :: nsDeviceContextUnix()
+nsDeviceContextMotif :: nsDeviceContextMotif()
 {
   mSurface = nsnull;
   mTwipsToPixels = 1.0;
@@ -83,7 +83,7 @@ nsDeviceContextUnix :: nsDeviceContextUnix()
   mDisplay = 0;
 }
 
-nsDeviceContextUnix :: ~nsDeviceContextUnix()
+nsDeviceContextMotif :: ~nsDeviceContextMotif()
 {
   if (mSurface) {
     delete mSurface;
@@ -97,11 +97,11 @@ nsDeviceContextUnix :: ~nsDeviceContextUnix()
     delete mDeviceColors;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextUnix, kDeviceContextIID)
-NS_IMPL_ADDREF(nsDeviceContextUnix)
-NS_IMPL_RELEASE(nsDeviceContextUnix)
+NS_IMPL_QUERY_INTERFACE(nsDeviceContextMotif, kDeviceContextIID)
+NS_IMPL_ADDREF(nsDeviceContextMotif)
+NS_IMPL_RELEASE(nsDeviceContextMotif)
 
-NS_IMETHODIMP nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
+NS_IMETHODIMP nsDeviceContextMotif :: Init(nsNativeWidget aNativeWidget)
 {
   NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
 
@@ -126,7 +126,7 @@ NS_IMETHODIMP nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
 }
 
 
-NS_IMETHODIMP nsDeviceContextUnix :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
+NS_IMETHODIMP nsDeviceContextMotif :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   // XXX Should we push this to widget library
   aWidth = 240.0;
@@ -134,13 +134,13 @@ NS_IMETHODIMP nsDeviceContextUnix :: GetScrollBarDimensions(float &aWidth, float
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
+NS_IMETHODIMP nsDeviceContextMotif :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
   aContext.CreateDrawingSurface(nsnull, 0, aSurface);
   return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
-Display *nsDeviceContextUnix::GetDisplay()
+Display *nsDeviceContextMotif::GetDisplay()
 {
   if (mDisplay)
     return(mDisplay);
@@ -159,7 +159,7 @@ Display *nsDeviceContextUnix::GetDisplay()
 // aCanAlloc is PR_TRUE. If all else fails try and find the closest match to
 // an existing color. 
 
-uint8 nsDeviceContextUnix :: AllocColor(uint8 aRed, uint8 aGreen, uint8 aBlue, PRBool aCanAlloc)
+uint8 nsDeviceContextMotif :: AllocColor(uint8 aRed, uint8 aGreen, uint8 aBlue, PRBool aCanAlloc)
 {
   Display* display = GetDisplay();
 
@@ -224,7 +224,7 @@ uint8 nsDeviceContextUnix :: AllocColor(uint8 aRed, uint8 aGreen, uint8 aBlue, P
 }
 
 
-NS_IMETHODIMP nsDeviceContextUnix :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
+NS_IMETHODIMP nsDeviceContextMotif :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   PRUint32 newcolor = 0;
 
@@ -255,7 +255,7 @@ NS_IMETHODIMP nsDeviceContextUnix :: ConvertPixel(nscolor aColor, PRUint32 & aPi
 }
 
 
-void nsDeviceContextUnix :: InstallColormap()
+void nsDeviceContextMotif :: InstallColormap()
 {
 
   /*  
@@ -286,7 +286,7 @@ void nsDeviceContextUnix :: InstallColormap()
 }
 
 
-void nsDeviceContextUnix :: InstallColormap(Display* aDisplay, Drawable aDrawable)
+void nsDeviceContextMotif :: InstallColormap(Display* aDisplay, Drawable aDrawable)
 {
 
   XWindowAttributes wa;
@@ -386,14 +386,14 @@ void nsDeviceContextUnix :: InstallColormap(Display* aDisplay, Drawable aDrawabl
   
 }
 
-nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface()
+nsDrawingSurface nsDeviceContextMotif :: GetDrawingSurface()
 {
   return mSurface;
 }
 
 
 
-NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const nsString& aFontName)
+NS_IMETHODIMP nsDeviceContextMotif :: CheckFontExistence(const nsString& aFontName)
 {
   char        **fnames = nsnull;
   PRInt32     namelen = aFontName.Length() + 1;
@@ -433,7 +433,7 @@ NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const nsString& aFontNam
   return rv;
 }
 
-void nsDeviceContextUnix::AllocColors()
+void nsDeviceContextMotif::AllocColors()
 {
     uint8* index = new uint8[256];
 
@@ -485,7 +485,7 @@ void nsDeviceContextUnix::AllocColors()
 
 }
 
-NS_IMETHODIMP nsDeviceContextUnix::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
+NS_IMETHODIMP nsDeviceContextMotif::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 {
   aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
   aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
@@ -495,7 +495,7 @@ NS_IMETHODIMP nsDeviceContextUnix::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 }
 
 
-NS_IMETHODIMP nsDeviceContextUnix::GetILColorSpace(IL_ColorSpace*& aColorSpace)
+NS_IMETHODIMP nsDeviceContextMotif::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   InstallColormap();
 

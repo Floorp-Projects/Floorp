@@ -21,11 +21,11 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "../nsGfxCIID.h"
-#include "nsFontMetricsUnix.h"
-#include "nsRenderingContextUnix.h"
-#include "nsImageUnix.h"
-#include "nsDeviceContextUnix.h"
-#include "nsRegionUnix.h"
+#include "nsFontMetricsMotif.h"
+#include "nsRenderingContextMotif.h"
+#include "nsImageMotif.h"
+#include "nsDeviceContextMotif.h"
+#include "nsRegionMotif.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
@@ -36,7 +36,7 @@ static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-class nsGfxFactoryUnix : public nsIFactory
+class nsGfxFactoryMotif : public nsIFactory
 {   
   public:   
     // nsISupports methods   
@@ -52,26 +52,26 @@ class nsGfxFactoryUnix : public nsIFactory
 
     NS_IMETHOD LockFactory(PRBool aLock);   
 
-    nsGfxFactoryUnix(const nsCID &aClass);   
-    ~nsGfxFactoryUnix();   
+    nsGfxFactoryMotif(const nsCID &aClass);   
+    ~nsGfxFactoryMotif();   
 
   private:   
     nsrefcnt  mRefCnt;   
     nsCID     mClassID;
 };   
 
-nsGfxFactoryUnix::nsGfxFactoryUnix(const nsCID &aClass)   
+nsGfxFactoryMotif::nsGfxFactoryMotif(const nsCID &aClass)   
 {   
   mRefCnt = 0;
   mClassID = aClass;
 }   
 
-nsGfxFactoryUnix::~nsGfxFactoryUnix()   
+nsGfxFactoryMotif::~nsGfxFactoryMotif()   
 {   
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
-nsresult nsGfxFactoryUnix::QueryInterface(const nsIID &aIID,   
+nsresult nsGfxFactoryMotif::QueryInterface(const nsIID &aIID,   
                                          void **aResult)   
 {   
   if (aResult == NULL) {   
@@ -95,12 +95,12 @@ nsresult nsGfxFactoryUnix::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsGfxFactoryUnix::AddRef()   
+nsrefcnt nsGfxFactoryMotif::AddRef()   
 {   
   return ++mRefCnt;   
 }   
 
-nsrefcnt nsGfxFactoryUnix::Release()   
+nsrefcnt nsGfxFactoryMotif::Release()   
 {   
   if (--mRefCnt == 0) {   
     delete this;   
@@ -109,7 +109,7 @@ nsrefcnt nsGfxFactoryUnix::Release()
   return mRefCnt;   
 }  
 
-nsresult nsGfxFactoryUnix::CreateInstance(nsISupports *aOuter,  
+nsresult nsGfxFactoryMotif::CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
@@ -122,19 +122,19 @@ nsresult nsGfxFactoryUnix::CreateInstance(nsISupports *aOuter,
   nsISupports *inst = nsnull;
 
   if (mClassID.Equals(kCFontMetrics)) {
-    inst = (nsISupports *)new nsFontMetricsUnix();
+    inst = (nsISupports *)new nsFontMetricsMotif();
   }
   else if (mClassID.Equals(kCDeviceContext)) {
-    inst = (nsISupports *)new nsDeviceContextUnix();
+    inst = (nsISupports *)new nsDeviceContextMotif();
   }
   else if (mClassID.Equals(kCRenderingContext)) {
-    inst = (nsISupports *)new nsRenderingContextUnix();
+    inst = (nsISupports *)new nsRenderingContextMotif();
   }
   else if (mClassID.Equals(kCImage)) {
-    inst = (nsISupports *)new nsImageUnix();
+    inst = (nsISupports *)new nsImageMotif();
   }
   else if (mClassID.Equals(kCRegion)) {
-    inst = (nsISupports *)new nsRegionUnix();
+    inst = (nsISupports *)new nsRegionMotif();
   }
 
   if (inst == NULL) {  
@@ -154,7 +154,7 @@ nsresult nsGfxFactoryUnix::CreateInstance(nsISupports *aOuter,
   return res;  
 }  
 
-nsresult nsGfxFactoryUnix::LockFactory(PRBool aLock)  
+nsresult nsGfxFactoryMotif::LockFactory(PRBool aLock)  
 {  
   // Not implemented in simplest case.  
   return NS_OK;
@@ -167,7 +167,7 @@ extern "C" NS_GFXNONXP nsresult NSGetFactory(const nsCID &aClass, nsIFactory **a
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aFactory = new nsGfxFactoryUnix(aClass);
+  *aFactory = new nsGfxFactoryMotif(aClass);
 
   if (nsnull == aFactory) {
     return NS_ERROR_OUT_OF_MEMORY;

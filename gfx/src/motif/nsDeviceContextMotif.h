@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsDeviceContextUnix_h___
-#define nsDeviceContextUnix_h___
+#ifndef nsDeviceContextMotif_h___
+#define nsDeviceContextMotif_h___
 
 #include "nsDeviceContext.h"
 #include "nsUnitConversion.h"
@@ -35,7 +35,7 @@
 #endif
 
 /* nsDrawingSurface is actually the following struct */
-struct nsDrawingSurfaceUnix {
+struct nsDrawingSurfaceMotif {
   Display *display ;
   Drawable drawable ;
   GC       gc ;
@@ -48,10 +48,10 @@ struct nsDrawingSurfaceUnix {
 };
 
 
-class nsDeviceContextUnix : public DeviceContextImpl 
+class nsDeviceContextMotif : public DeviceContextImpl 
 {
 public:
-  nsDeviceContextUnix();
+  nsDeviceContextMotif();
 
   NS_DECL_ISUPPORTS
 
@@ -73,7 +73,7 @@ public:
 
 
 protected:
-  ~nsDeviceContextUnix();
+  ~nsDeviceContextMotif();
   void AllocColors();
   uint8 AllocColor(uint8 aRed, uint8 aGreen, 
                    uint8 aBlue, PRBool aCanAlloc);
@@ -81,7 +81,7 @@ protected:
   Display *GetDisplay();
 
 
-  nsDrawingSurfaceUnix * mSurface ;
+  nsDrawingSurfaceMotif * mSurface ;
 
   PRUint32      mDepth;
   Visual      * mVisual;
@@ -97,7 +97,7 @@ protected:
 public:
   void InstallColormap(void);
   void InstallColormap(Display* aDisplay, Drawable aDrawable);
-  void SetDrawingSurface(nsDrawingSurfaceUnix * aSurface) { mSurface = aSurface; }
+  void SetDrawingSurface(nsDrawingSurfaceMotif * aSurface) { mSurface = aSurface; }
   nsDrawingSurface GetDrawingSurface();
 
 private:
@@ -113,4 +113,4 @@ private:
 
 };
 
-#endif /* nsDeviceContextUnix_h___ */
+#endif /* nsDeviceContextMotif_h___ */

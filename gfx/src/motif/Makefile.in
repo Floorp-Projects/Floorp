@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = gfxunix
+LIBRARY_NAME = gfxmotif
 
 MODULE=raptor 
 
@@ -44,8 +44,8 @@ EXTRA_DSO_LDOPTS+=\
 EXTRA_DSO_LDOPTS+= $(XLDFLAGS) $(XLIBS)
 
 
-CPPSRCS=nsDeviceContextUnix.cpp nsFontMetricsUnix.cpp nsGfxFactoryUnix.cpp \
-	nsRenderingContextUnix.cpp nsRegionUnix.cpp nsImageUnix.cpp
+CPPSRCS=nsDeviceContextMotif.cpp nsFontMetricsMotif.cpp nsGfxFactoryMotif.cpp \
+	nsRenderingContextMotif.cpp nsRegionMotif.cpp nsImageMotif.cpp
 
 include $(topsrcdir)/config/rules.mk
 

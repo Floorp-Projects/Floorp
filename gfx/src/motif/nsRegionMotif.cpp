@@ -16,11 +16,11 @@
  * Reserved.
  */
 
-#include "nsRegionUnix.h"
+#include "nsRegionMotif.h"
 
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
-nsRegionUnix :: nsRegionUnix()
+nsRegionMotif :: nsRegionMotif()
 {
   NS_INIT_REFCNT();
 
@@ -28,18 +28,18 @@ nsRegionUnix :: nsRegionUnix()
   mRegionType = eRegionType_empty;
 }
 
-nsRegionUnix :: ~nsRegionUnix()
+nsRegionMotif :: ~nsRegionMotif()
 {
   if (mRegion)
     ::XDestroyRegion(mRegion);
   mRegion = nsnull;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRegionUnix, kRegionIID)
-NS_IMPL_ADDREF(nsRegionUnix)
-NS_IMPL_RELEASE(nsRegionUnix)
+NS_IMPL_QUERY_INTERFACE(nsRegionMotif, kRegionIID)
+NS_IMPL_ADDREF(nsRegionMotif)
+NS_IMPL_RELEASE(nsRegionMotif)
 
-nsresult nsRegionUnix :: Init(void)
+nsresult nsRegionMotif :: Init(void)
 {
   mRegion = ::XCreateRegion();
   mRegionType = eRegionType_empty;
@@ -47,9 +47,9 @@ nsresult nsRegionUnix :: Init(void)
   return NS_OK;
 }
 
-void nsRegionUnix :: SetTo(const nsIRegion &aRegion)
+void nsRegionMotif :: SetTo(const nsIRegion &aRegion)
 {
-  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+  nsRegionMotif * pRegion = (nsRegionMotif *)&aRegion;
 
   SetRegionEmpty();
 
@@ -58,7 +58,7 @@ void nsRegionUnix :: SetTo(const nsIRegion &aRegion)
   SetRegionType();
 }
 
-void nsRegionUnix :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsRegionMotif :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
 
   SetRegionEmpty();
@@ -75,16 +75,16 @@ void nsRegionUnix :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
   SetRegionType();
 }
 
-void nsRegionUnix :: Intersect(const nsIRegion &aRegion)
+void nsRegionMotif :: Intersect(const nsIRegion &aRegion)
 {
-  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+  nsRegionMotif * pRegion = (nsRegionMotif *)&aRegion;
 
   ::XIntersectRegion(mRegion, pRegion->mRegion, mRegion);
 
   SetRegionType();
 }
 
-void nsRegionUnix :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsRegionMotif :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
 
@@ -96,9 +96,9 @@ void nsRegionUnix :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 a
 
 }
 
-void nsRegionUnix :: Union(const nsIRegion &aRegion)
+void nsRegionMotif :: Union(const nsIRegion &aRegion)
 {
-  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+  nsRegionMotif * pRegion = (nsRegionMotif *)&aRegion;
 
   ::XUnionRegion(mRegion, pRegion->mRegion, mRegion);
 
@@ -106,7 +106,7 @@ void nsRegionUnix :: Union(const nsIRegion &aRegion)
 
 }
 
-void nsRegionUnix :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsRegionMotif :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
 
   Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
@@ -119,9 +119,9 @@ void nsRegionUnix :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
 
 }
 
-void nsRegionUnix :: Subtract(const nsIRegion &aRegion)
+void nsRegionMotif :: Subtract(const nsIRegion &aRegion)
 {
-  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+  nsRegionMotif * pRegion = (nsRegionMotif *)&aRegion;
 
   ::XSubtractRegion(mRegion, pRegion->mRegion, mRegion);
 
@@ -129,7 +129,7 @@ void nsRegionUnix :: Subtract(const nsIRegion &aRegion)
 
 }
 
-void nsRegionUnix :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsRegionMotif :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   Region tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
   
@@ -141,7 +141,7 @@ void nsRegionUnix :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aH
 
 }
 
-PRBool nsRegionUnix :: IsEmpty(void)
+PRBool nsRegionMotif :: IsEmpty(void)
 {
   if (mRegionType == eRegionType_empty)
     return PR_TRUE;
@@ -149,15 +149,15 @@ PRBool nsRegionUnix :: IsEmpty(void)
   return PR_FALSE;
 }
 
-PRBool nsRegionUnix :: IsEqual(const nsIRegion &aRegion)
+PRBool nsRegionMotif :: IsEqual(const nsIRegion &aRegion)
 {
-  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+  nsRegionMotif * pRegion = (nsRegionMotif *)&aRegion;
 
   return(::XEqualRegion(mRegion, pRegion->mRegion));
 
 }
 
-void nsRegionUnix :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
+void nsRegionMotif :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
   XRectangle rect;
 
@@ -169,12 +169,12 @@ void nsRegionUnix :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, P
   *aHeight = rect.height;
 }
 
-void nsRegionUnix :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
+void nsRegionMotif :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 {
   ::XOffsetRegion(mRegion, aXOffset, aYOffset);
 }
 
-PRBool nsRegionUnix :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+PRBool nsRegionMotif :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   PRInt32 containment;
 
@@ -187,18 +187,18 @@ PRBool nsRegionUnix :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 
 }
 
-PRBool nsRegionUnix :: ForEachRect(nsRectInRegionFunc *func, void *closure)
+PRBool nsRegionMotif :: ForEachRect(nsRectInRegionFunc *func, void *closure)
 {
   return PR_FALSE;
 }
 
 
-Region nsRegionUnix :: GetXRegion(void)
+Region nsRegionMotif :: GetXRegion(void)
 {
   return (mRegion);
 }
 
-void nsRegionUnix :: SetRegionType()
+void nsRegionMotif :: SetRegionType()
 {
   if (::XEmptyRegion(mRegion) == True)
     mRegionType = eRegionType_empty;
@@ -206,13 +206,13 @@ void nsRegionUnix :: SetRegionType()
     mRegionType = eRegionType_rect ;
 }
 
-void nsRegionUnix :: SetRegionEmpty()
+void nsRegionMotif :: SetRegionEmpty()
 {
   ::XDestroyRegion(mRegion);
   mRegion = ::XCreateRegion();
 }
 
-Region nsRegionUnix :: CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+Region nsRegionMotif :: CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   Region r = ::XCreateRegion();
 

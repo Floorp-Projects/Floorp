@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsFontMetricsUnix_h__
-#define nsFontMetricsUnix_h__
+#ifndef nsFontMetricsMotif_h__
+#define nsFontMetricsMotif_h__
 
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
@@ -28,11 +28,11 @@
 
 #include "X11/Xlib.h"
 
-class nsFontMetricsUnix : public nsIFontMetrics
+class nsFontMetricsMotif : public nsIFontMetrics
 {
 public:
-  nsFontMetricsUnix();
-  ~nsFontMetricsUnix();
+  nsFontMetricsMotif();
+  ~nsFontMetricsMotif();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];

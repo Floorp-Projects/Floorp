@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsRegionUnix_h___
-#define nsRegionUnix_h___
+#ifndef nsRegionMotif_h___
+#define nsRegionMotif_h___
 
 #include "nsIRegion.h"
 
@@ -32,11 +32,11 @@ enum nsRegionType {
 };
 
 
-class nsRegionUnix : public nsIRegion
+class nsRegionMotif : public nsIRegion
 {
 public:
-  nsRegionUnix();
-  ~nsRegionUnix();
+  nsRegionMotif();
+  ~nsRegionMotif();
 
   NS_DECL_ISUPPORTS
 
@@ -70,4 +70,4 @@ private:
 
 };
 
-#endif  // nsRegionUnix_h___ 
+#endif  // nsRegionMotif_h___ 
