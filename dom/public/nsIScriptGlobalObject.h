@@ -101,6 +101,11 @@ public:
    */
 
   NS_IMETHOD OnFinalize(JSObject *aJSObject) = 0;
+
+  /**
+   * Called when scripts are enabled/disabled.
+   */
+  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled) = 0;
 };
 
 #endif

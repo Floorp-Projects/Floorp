@@ -41,6 +41,7 @@ public:
                             nsEventStatus* aEventStatus);
   NS_IMETHOD_(JSObject *) GetGlobalJSObject();
   NS_IMETHOD OnFinalize(JSObject *aObject);
+  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled);
 
   // nsIScriptObjectPrincipal methods
   NS_IMETHOD GetPrincipal(nsIPrincipal** aPrincipal);
@@ -236,6 +237,15 @@ nsXBLDocGlobalObject::OnFinalize(JSObject *aObject)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsXBLDocGlobalObject::SetScriptsEnabled(PRBool aEnabled)
+{
+    // We don't care...
+
+    return NS_OK;
+}
+
 
 //----------------------------------------------------------------------
 //
