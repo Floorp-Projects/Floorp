@@ -33,6 +33,7 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <window id="certmanager" 
+	windowtype="mozilla:certmanager"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&certmgr.title;"
         onload="LoadCerts();">
