@@ -338,13 +338,13 @@ BEGIN {
       # What Changed
       #
       # Only add the "C" link if there have been changes since the last build.
-      if ($br->{previousstarttime}) {
+      if ($br->{previousbuildtime}) {
         my $previous_br = $build_table->[$tt+$rowspan][$build_index];
         my $previous_rowspan = $previous_br->{rowspan};
         if (&has_who_list($tt+$rowspan,
                           $tt+$rowspan+$previous_rowspan-1)) {
           print "\n", &query_ref($br->{td}, 
-                                 $br->{previousstarttime},
+                                 $br->{previousbuildtime},
                                  $br->{starttime} - 1);
           print "C</a>";
         }
