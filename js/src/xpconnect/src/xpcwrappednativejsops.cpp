@@ -415,6 +415,8 @@ WrappedNative_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
     }
     // else fall through and silently ignore
+    NS_ASSERTION(vp, "hey the engine gave me a null pointer");
+    *vp = JSVAL_FALSE;
     return JS_TRUE;
 }
 
