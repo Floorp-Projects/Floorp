@@ -119,18 +119,18 @@ toolbar titledbutton {
   font: 2.5mm sans-serif;
 }
 
-toolbar titledbutton[pseudoclass~="hover"] {
+toolbar titledbutton:hover {
   border: 1px outset white;
 	color:blue;
 	//text-decoration:underline;
   padding: 1px;
 }
  
-toolbar titledbutton[pseudoclass~="hover"]:-moz-outline {
+toolbar titledbutton:hover:-moz-outline {
    border : 1px solid black;
 }
  
-toolbar titledbutton[pseudoclass~="active"] {
+toolbar titledbutton:active {
 
   text-decoration:none;
   border: 1px inset;
@@ -141,7 +141,7 @@ toolbar titledbutton[pseudoclass~="active"] {
   padding-bottom: 0px;
 }
 
-toolbar titledbutton[pseudoclass~="active"]:-moz-outline {
+toolbar titledbutton:active:-moz-outline {
    border : 1px solid black;
 }
  
@@ -162,7 +162,7 @@ titledbutton[class=push] {
   padding: 1px;
 }
 
-titledbutton[class=push][pseudoclass~="active"] {
+titledbutton[class=push]:active {
   border-style: inset;
 
   padding-left: 2px;
@@ -171,19 +171,23 @@ titledbutton[class=push][pseudoclass~="active"] {
   padding-bottom: 0px;
 }
 
-titledbutton[class=push][pseudoclass~="hover"] {
+titledbutton[class=push]:hover {
 }
 
-titledbutton[class=push][pseudoclass~="active"]:-moz-outline {
+titledbutton[class=push]:active:-moz-outline {
    border : 1px solid black;
 }
 
-titledbutton[class=push][pseudoclass~="hover"]:-moz-outline {
+titledbutton[class=push]:hover:-moz-outline {
    border : 1px solid black;
 }
 
 titledbutton[class=push][disabled] {
    border-style: solid;
+}
+
+titledbutton[class=push][disabled]:active {
+  padding: 1px;
 }
 
 titledbutton[class=push]:-moz-focus-inner {
@@ -194,7 +198,7 @@ titledbutton[class=push]:-moz-focus-inner {
    margin: 0px;
 }
 
-titledbutton[class=push][pseudoclass~="focus"]:-moz-focus-inner {
+titledbutton[class=push]:focus:-moz-focus-inner {
    padding-left  : 1px;
    padding-right : 1px;
    padding-top   : 0px;
@@ -275,7 +279,7 @@ tabcontrol[align="horizontal"] tabpanel + tabbox[align="vertical"]  tab {
 }
 
 
-tab[pseudoclass~="hover"] { 
+tab:hover { 
  background-color: rgb(230, 207, 206);
 }
 

@@ -33,17 +33,8 @@
 class nsButtonFrameRenderer {
 public:
 
-	enum ButtonState {
-		active,
-		hover,
-		normal
-	};
 	  nsButtonFrameRenderer();
       virtual ~nsButtonFrameRenderer();
-
-	  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
-						 nsGUIEvent* aEvent,
-						 nsEventStatus& aEventStatus);
 
 
 	 virtual void PaintButton(nsIPresContext& aPresContext,
@@ -67,15 +58,10 @@ public:
 	virtual void SetNameSpace(PRInt32 aNameSpace);
 	virtual void SetFrame(nsFrame* aFrame, nsIPresContext& aPresContext);
  
-	virtual void SetActive(PRBool aActive, PRBool notify);
-	virtual void SetHover(PRBool aHover, PRBool notify);
-	virtual void SetFocus(PRBool aFocus, PRBool notify);
 	virtual void SetDisabled(PRBool aDisabled, PRBool notify);
 
 	PRBool isActive();
-	PRBool isHover();
 	PRBool isDisabled();
-	PRBool isFocus();
 
 	virtual void GetButtonOutlineRect(const nsRect& aRect, nsRect& aResult);
 	virtual void GetButtonOuterFocusRect(const nsRect& aRect, nsRect& aResult);
@@ -92,24 +78,9 @@ public:
 
 	virtual void ReResolveStyles(nsIPresContext& aPresContext);
 
-	/**
-	* Subroutine to add in borders and padding
-	*/
-	virtual void AddFocusBordersAndPadding(nsIPresContext& aPresContext,
-							const nsHTMLReflowState& aReflowState,
-							nsHTMLReflowMetrics& aDesiredSize,
-							nsMargin& aBorderPadding);
-
   virtual void Redraw();
 
 protected:
-
-    virtual nsString GetPseudoClassAttribute();
-    virtual void SetPseudoClassAttribute(const nsString& value, PRBool notify);
-    virtual void ToggleClass(PRBool aEnabled, const nsString& c, PRBool notify);
-    virtual void AddClass(nsString& pseudoclass, const nsString newClass);
-    virtual void RemoveClass(nsString& pseudoclass, const nsString newClass);
-    virtual PRInt32 IndexOfClass(nsString& pseudoclass, const nsString& c);
 
 private:
 

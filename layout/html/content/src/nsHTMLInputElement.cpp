@@ -423,6 +423,11 @@ nsHTMLInputElement::Focus()
 NS_IMETHODIMP
 nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 {
+  // first see if we are disabled or not. If disabled then do nothing.
+  nsAutoString disabled;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled))
+      return NS_OK;
+ 
   nsIEventStateManager* esm;
   if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);

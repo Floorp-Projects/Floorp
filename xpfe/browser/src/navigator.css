@@ -54,7 +54,7 @@ toolbar#taskbar titledbutton{
   color:#CCCCFF; 
 }
 
-toolbar#taskbar titledbutton[pseudoclass~="active"] {
+toolbar#taskbar titledbutton:active {
 
   text-decoration:none;
   border: 1px inset;
@@ -65,7 +65,7 @@ toolbar#taskbar titledbutton[pseudoclass~="active"] {
   padding-bottom: 0px;
 }
 
-toolbar#taskbar titledbutton[pseudoclass~="hover"] {
+toolbar#taskbar titledbutton:active {
   border: 1px outset #666699;
 	color:white;
 	//text-decoration:underline;
@@ -107,7 +107,7 @@ titledbutton[class=insecure] {
   display: none;
 }
  
-toolbar#taskbar titledbutton[pseudoclass~="active"] {
+toolbar#taskbar titledbutton:active {
 
 	text-decoration:none;
   border: 1px inset;
