@@ -36,8 +36,6 @@
 
 #import <PreferencePanes/PreferencePanes.h>
 #import "MVPreferencesController.h"
-#import "MVPreferencesMultipleIconView.h"
-#import "MVPreferencesGroupedIconView.h"
 #import "ToolbarAdditions.h"
 
 #include "nsCOMPtr.h"
@@ -45,11 +43,8 @@
 #include "nsIPref.h"
 #include "CHBrowserService.h"
 
-// #import "Defines.h"
-
 static MVPreferencesController *sharedInstance = nil;
 
-NSString *MVToolbarShowAllItemIdentifier = @"MVToolbarShowAllItem";
 NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
 @interface NSToolbar (NSToolbarPrivate)
@@ -61,7 +56,6 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 - (IBAction) _selectPreferencePane:(id) sender;
 - (void) _resizeWindowForContentView:(NSView *) view;
 - (NSImage *) _imageForPaneBundle:(NSBundle *) bundle;
-- (NSString *) _paletteLabelForPaneBundle:(NSBundle *) bundle;
 - (NSString *) _labelForPaneBundle:(NSBundle *) bundle;
 @end
 
@@ -83,8 +77,9 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
     for ( i = 0; i < [panes count]; i++ ) {
       bundle = [NSBundle bundleWithPath:[NSString stringWithFormat:@"%@/%@", bundlePath, [panes objectAtIndex:i]]];
       [bundle load];
-      if( bundle ) [panes replaceObjectAtIndex:i withObject:bundle];
-      else {
+      if (bundle) {
+        [panes replaceObjectAtIndex:i withObject:bundle];
+      } else {
         [panes removeObjectAtIndex:i];
         i--;
       }
@@ -114,27 +109,17 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 - (void) awakeFromNib
 {
   NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:@"preferences.toolbar"] autorelease];
-  NSArray *groups = [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"MVPreferencePaneGroups" ofType:@"plist"]];
-
-  if( groups ) {
-    [groupView setPreferencePanes:panes];
-    [groupView setPreferencePaneGroups:groups];
-    mainView = groupView;
-  } else {
-    [multiView setPreferencePanes:panes];
-    mainView = multiView;
-  }
 
   [window setDelegate:self];
+  [window setFrameAutosaveName:@"CaminoPreferenceWindowFrame"];
 
-  [toolbar setAllowsUserCustomization:YES];
-  [toolbar setAutosavesConfiguration:YES];
+  [toolbar setAllowsUserCustomization:NO];
+  [toolbar setAutosavesConfiguration:NO];
   [toolbar setDelegate:self];
-  [toolbar setAlwaysCustomizableByDrag:YES];
+  [toolbar setAlwaysCustomizableByDrag:NO];
   [toolbar setShowsContextMenu:NO];
   [window setToolbar:toolbar];
   [toolbar setDisplayMode:NSToolbarDisplayModeIconAndLabel];
-  [toolbar setIndexOfFirstMovableItem:2];
 }
 
 - (NSWindow *) window
@@ -151,38 +136,10 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
     // the window visible. Too bad cocoa doesn't give us any notifications of this.
     CHBrowserService::InitEmbedding();
   }
-  // If neither a pref pane nor the group pane is showing, then show the group pane
+  // If a pref pane is not showing, then show the general pane
   if (!currentPaneIdentifier && (![[window contentView] isEqual:mainView]))
-    [self showAll:nil];
+    [self selectPreferencePaneByIdentifier:@"org.mozilla.chimera.preference.navigation"];
   [window makeKeyAndOrderFront:nil];
-}
-
-- (IBAction) showAll:(id) sender
-{
-  if ( [[window contentView] isEqual:mainView] ) return;
-  if ( currentPaneIdentifier && [[loadedPanes objectForKey:currentPaneIdentifier] shouldUnselect] != NSUnselectNow ) {
-    /* more to handle later */
-#if DEBUG
-    NSLog(@"can't unselect current preferences pane");
-#endif
-    return;
-  }
-  [window setContentView:[[[NSView alloc] initWithFrame:[mainView frame]] autorelease]];
-
-  [window setTitle:[NSString stringWithFormat:NSLocalizedString( @"PrefsWindowTitleFormat", @"" ), [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"]]];
-  [self _resizeWindowForContentView:mainView];
-
-  [[loadedPanes objectForKey:currentPaneIdentifier] willUnselect];
-  [window setContentView:mainView];
-  [[loadedPanes objectForKey:currentPaneIdentifier] didUnselect];
-
-  [currentPaneIdentifier autorelease];
-  currentPaneIdentifier = nil;
-
-  [window setInitialFirstResponder:mainView];
-  [window makeFirstResponder:mainView];
-  if ([NSToolbar instancesRespondToSelector:@selector(setSelectedItemIdentifier:)])
-    [[window toolbar] setSelectedItemIdentifier:MVToolbarShowAllItemIdentifier];
 }
 
 - (void) selectPreferencePaneByIdentifier:(NSString *) identifier
@@ -284,30 +241,19 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
     willBeInsertedIntoToolbar:(BOOL) flag
 {
   NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
-  if ( [itemIdentifier isEqualToString:MVToolbarShowAllItemIdentifier] ) {
-    [toolbarItem setLabel:NSLocalizedString( @"ShowAllPrefItems", @"" )];
-    [toolbarItem setImage:[NSImage imageNamed:@"NSApplicationIcon"]];
+  NSBundle *bundle = [NSBundle bundleWithIdentifier:itemIdentifier];
+  if (bundle) {
+    [toolbarItem setLabel:[self _labelForPaneBundle:bundle]];
+    [toolbarItem setImage:[self _imageForPaneBundle:bundle]];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector( showAll: )];
-  } else {
-    NSBundle *bundle = [NSBundle bundleWithIdentifier:itemIdentifier];
-    if( bundle ) {
-      [toolbarItem setLabel:[self _labelForPaneBundle:bundle]];
-      [toolbarItem setPaletteLabel:[self _paletteLabelForPaneBundle:bundle]];
-      [toolbarItem setImage:[self _imageForPaneBundle:bundle]];
-      [toolbarItem setTarget:self];
-      [toolbarItem setAction:@selector( _selectPreferencePane: )];
-    } else toolbarItem = nil;
-  }
+    [toolbarItem setAction:@selector( _selectPreferencePane: )];
+  } else toolbarItem = nil;
   return toolbarItem;
 }
 
 - (NSArray *) toolbarDefaultItemIdentifiers:(NSToolbar *) toolbar
 {
-  NSMutableArray *fixed = [NSMutableArray arrayWithObjects:MVToolbarShowAllItemIdentifier, NSToolbarSeparatorItemIdentifier, nil];
-  NSArray *defaults = [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"MVPreferencePaneDefaults" ofType:@"plist"]];
-  [fixed addObjectsFromArray:defaults];
-  return fixed;
+  return [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"MVPreferencePaneDefaults" ofType:@"plist"]];
 }
 
 - (NSArray *) toolbarAllowedItemIdentifiers:(NSToolbar *) toolbar
@@ -317,8 +263,6 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   id item = nil;
   while ( ( item = [enumerator nextObject] ) )
     [items addObject:[item bundleIdentifier]];
-  //[items addObject:MVToolbarShowAllItemIdentifier];
-  [items addObject:NSToolbarSeparatorItemIdentifier];
   return items;
 }
 
@@ -330,7 +274,6 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   id item = nil;
   while ( ( item = [enumerator nextObject] ) )
     [items addObject:[item bundleIdentifier]];
-  [items addObject:MVToolbarShowAllItemIdentifier];
   return items;
 }
 
@@ -375,26 +318,6 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
     if ( image ) [cache setObject:image forKey:@"MVPreferencePaneImage"];
   }
   return image;
-}
-
-- (NSString *) _paletteLabelForPaneBundle:(NSBundle *) bundle
-{
-  NSString *label = nil;
-  NSMutableDictionary *cache = [paneInfo objectForKey:[bundle bundleIdentifier]];
-  label = [[[cache objectForKey:@"MVPreferencePanePaletteLabel"] retain] autorelease];
-  if ( ! label ) {
-    NSDictionary *info = [bundle infoDictionary];
-    label = NSLocalizedStringFromTableInBundle(@"PreferencePanelLabel", nil, bundle, nil);
-    if ( [label isEqualToString:@"PreferencePanelLabel"] ) label = NSLocalizedStringFromTableInBundle( @"NSPrefPaneIconLabel", @"InfoPlist", bundle, nil );
-    if ( [label isEqualToString:@"NSPrefPaneIconLabel"] ) label = [info objectForKey:@"NSPrefPaneIconLabel"];
-    if ( ! label ) label = NSLocalizedStringFromTableInBundle( @"CFBundleName", @"InfoPlist", bundle, nil );
-    if ( [label isEqualToString:@"CFBundleName"] ) label = [info objectForKey:@"CFBundleName"];
-    if ( ! label ) label = [bundle bundleIdentifier];
-    if ( ! cache ) [paneInfo setObject:[NSMutableDictionary dictionary] forKey:[bundle bundleIdentifier]];
-    cache = [paneInfo objectForKey:[bundle bundleIdentifier]];
-    if ( label ) [cache setObject:label forKey:@"MVPreferencePanePaletteLabel"];
-  }
-  return label;
 }
 
 - (NSString *) _labelForPaneBundle:(NSBundle *) bundle

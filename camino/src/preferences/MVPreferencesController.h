@@ -38,14 +38,9 @@
 
 extern NSString *MVPreferencesWindowNotification;
 
-@class MVPreferencesMultipleIconView;
-@class MVPreferencesGroupedIconView;
-
 @interface MVPreferencesController : NSObject {
 	IBOutlet NSWindow *window;
 	IBOutlet NSView *loadingView;
-	IBOutlet MVPreferencesMultipleIconView *multiView;
-	IBOutlet MVPreferencesGroupedIconView *groupView;
 	IBOutlet NSImageView *loadingImageView;
 	IBOutlet NSTextField *loadingTextFeld;
 	NSView *mainView;
@@ -56,7 +51,6 @@ extern NSString *MVPreferencesWindowNotification;
 }
 + (MVPreferencesController *) sharedInstance;
 - (NSWindow *) window;
-- (void) showAll:(id) sender;
 - (void) showPreferences:(id) sender;
 - (void) selectPreferencePaneByIdentifier:(NSString *) identifier;
 @end
