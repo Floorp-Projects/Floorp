@@ -47,3 +47,12 @@ ipcMessage_DWORD_STR::ipcMessage_DWORD_STR(const nsID &target,
     SetData(0, (char *) &first, sizeof(first));
     SetData(sizeof(first), second, sLen + 1);
 }
+
+ipcMessage_DWORD_ID::ipcMessage_DWORD_ID(const nsID &target,
+                                         PRUint32    first,
+                                         const nsID &second)
+{
+    Init(target, NULL, sizeof(first) + sizeof(nsID));
+    SetData(0, (char *) &first, sizeof(first));
+    SetData(sizeof(first), (char *) &second, sizeof(nsID));
+}

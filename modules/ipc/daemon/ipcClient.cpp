@@ -56,7 +56,6 @@ int
 ipcClient::Init()
 {
     mID = ++gLastID;
-    mName = NULL;
     mInMsg = new ipcMessage();
 
     mSendOffset = 0;
@@ -71,11 +70,10 @@ ipcClient::Init()
 int
 ipcClient::Finalize()
 {
-    if (mName)
-        PL_strfree(mName);
     if (mInMsg)
         delete mInMsg;
     mOutMsgQ.DeleteAll();
+    mNames.DeleteAll();
     return 0;
 }
 
@@ -152,13 +150,22 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
 }
 
 void
-ipcClient::SetName(const char *name)
+ipcClient::AddName(const char *name)
 {
-    LOG(("setting client name to \"%s\"\n", name));
+    LOG(("adding client name: %s\n", name));
 
-    if (mName)
-        PL_strfree(mName);
-    mName = PL_strdup(name);
+    if (HasName(name))
+        return;
+
+    mNames.Append(name);
+}
+
+void
+ipcClient::DelName(const char *name)
+{
+    LOG(("deleting client name: %s\n", name));
+
+    mNames.FindAndDelete(name);
 }
 
 //

@@ -75,6 +75,11 @@ const PRUint32 ipcmMessagePing::MSG_TYPE = IPCM_MSG_TYPE_PING;
 const PRUint32 ipcmMessageError::MSG_TYPE = IPCM_MSG_TYPE_ERROR;
 const PRUint32 ipcmMessageClientHello::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_HELLO;
 const PRUint32 ipcmMessageClientID::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_ID;
+//const PRUint32 ipcmMessageClientInfo::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_INFO;
+const PRUint32 ipcmMessageClientAddName::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_ADD_NAME;
+const PRUint32 ipcmMessageClientDelName::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_DEL_NAME;
+const PRUint32 ipcmMessageClientAddTarget::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_ADD_TARGET;
+const PRUint32 ipcmMessageClientDelTarget::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_DEL_TARGET;
 const PRUint32 ipcmMessageQueryClientByName::MSG_TYPE = IPCM_MSG_TYPE_QUERY_CLIENT_BY_NAME;
 const PRUint32 ipcmMessageForward::MSG_TYPE = IPCM_MSG_TYPE_FORWARD;
 

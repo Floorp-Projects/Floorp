@@ -205,13 +205,25 @@ ipcService::GetClientID(PRUint32 *clientID)
 NS_IMETHODIMP
 ipcService::AddClientAlias(const nsACString &alias)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_TRUE(mTransport, NS_ERROR_NOT_INITIALIZED);
+
+    ipcMessage *msg = new ipcmMessageClientAddName(PromiseFlatCString(alias).get());
+    if (!msg)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return mTransport->SendMsg(msg);
 }
 
 NS_IMETHODIMP
 ipcService::RemoveClientAlias(const nsACString &alias)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_TRUE(mTransport, NS_ERROR_NOT_INITIALIZED);
+
+    ipcMessage *msg = new ipcmMessageClientDelName(PromiseFlatCString(alias).get());
+    if (!msg)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return mTransport->SendMsg(msg);
 }
 
 NS_IMETHODIMP
@@ -262,19 +274,33 @@ ipcService::SetClientObserver(PRUint32 clientID,
 NS_IMETHODIMP
 ipcService::SetMessageObserver(const nsID &target, ipcIMessageObserver *observer)
 {
+    NS_ENSURE_TRUE(mTransport, NS_ERROR_NOT_INITIALIZED);
+
     nsIDKey key(target);
+    PRBool sendAdd = PR_TRUE;
 
     ipcIMessageObserver *cobs = (ipcIMessageObserver *) mObserverDB.Get(&key);
     if (cobs) {
         NS_RELEASE(cobs);
         if (!observer) {
             mObserverDB.Remove(&key);
+            //
+            // send CLIENT_DEL_TARGET
+            //
+            mTransport->SendMsg(new ipcmMessageClientDelTarget(target));
             return NS_OK;
         }
+        sendAdd = PR_FALSE;
     }
     if (observer) {
         NS_ADDREF(observer);
         mObserverDB.Put(&key, observer);
+        if (sendAdd) {
+            //
+            // send CLIENT_ADD_TARGET
+            //
+            mTransport->SendMsg(new ipcmMessageClientAddTarget(target));
+        }
     }
     return NS_OK;
 }

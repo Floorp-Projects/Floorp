@@ -404,7 +404,7 @@ ipcClient *IPC_GetClientByName(const char *name)
 {
     // linear search OK since number of clients should be small
     for (int i = 1; i < poll_fd_count; ++i) {
-        if (strcmp(clients[i].Name(), name) == 0)
+        if (clients[i].HasName(name))
             return &clients[i];
     }
     return NULL;

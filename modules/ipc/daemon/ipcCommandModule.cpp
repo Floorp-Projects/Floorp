@@ -70,9 +70,43 @@ public:
         ipcMessageCast<ipcmMessageClientHello> msg(rawMsg);
         const char *name = msg->PrimaryName();
         if (name)
-            client->SetName(name);
+            client->AddName(name);
 
         IPC_SendMsg(client, new ipcmMessageClientID(client->ID()));
+    }
+
+    void OnClientAddName(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got CLIENT_ADD_NAME\n"));
+
+        ipcMessageCast<ipcmMessageClientAddName> msg(rawMsg);
+        const char *name = msg->Name();
+        if (name)
+            client->AddName(name);
+    }
+
+    void OnClientDelName(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got CLIENT_DEL_NAME\n"));
+
+        ipcMessageCast<ipcmMessageClientDelName> msg(rawMsg);
+        const char *name = msg->Name();
+        if (name)
+            client->DelName(name);
+    }
+
+    void OnClientAddTarget(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got CLIENT_ADD_TARGET\n"));
+
+        // XXX implement me
+    }
+
+    void OnClientDelTarget(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        LOG(("got CLIENT_DEL_TARGET\n"));
+
+        // XXX implement me
     }
 
     void OnQueryClientByName(ipcClient *client, const ipcMessage *rawMsg)
@@ -127,13 +161,12 @@ public:
             &ipcCommandModule::OnClientHello,
             NULL, // CLIENT_ID
             NULL, // CLIENT_INFO
-            NULL, // CLIENT_ADD_NAME
-            NULL, // CLIENT_DEL_NAME
-            NULL, // CLIENT_ADD_TARGET
-            NULL, // CLIENT_DEL_TARGET
+            &ipcCommandModule::OnClientAddName,
+            &ipcCommandModule::OnClientDelName,
+            &ipcCommandModule::OnClientAddTarget,
+            &ipcCommandModule::OnClientDelTarget,
             &ipcCommandModule::OnQueryClientByName,
             NULL, // QUERY_CLIENT_INFO
-            NULL, // QUERY_FAILED
             &ipcCommandModule::OnForward,
         };
 

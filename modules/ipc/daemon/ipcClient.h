@@ -38,8 +38,9 @@
 #ifndef ipcClient_h__
 #define ipcClient_h__
 
-#include "ipcMessageQ.h"
 #include "prio.h"
+#include "ipcMessageQ.h"
+#include "ipcStringList.h"
 
 class ipcMessage;
 
@@ -58,10 +59,12 @@ public:
     int Finalize();
     int Process(PRFileDesc *fd, int poll_flags);
 
-    int         ID()   const { return mID; }
-    const char *Name() const { return mName; }
+    int ID() const { return mID; }
 
-    void SetName(const char *name);
+    void   AddName(const char *name);
+    void   DelName(const char *name);
+    PRBool HasName(const char *name) const { return mNames.Find(name) != NULL; }
+
     void EnqueueOutboundMsg(ipcMessage *msg) { mOutMsgQ.Append(msg); }
 
 private:
@@ -69,13 +72,14 @@ private:
 
     static int gLastID;
 
-    int             mID;
-    char           *mName;
-    ipcMessage     *mInMsg;    // buffer for incoming message
-    ipcMessageQ     mOutMsgQ;  // outgoing message queue
+    int                       mID;
+    ipcStringList             mNames;
+    //ipcList<ipcClientTarget>  mTargets;
+    ipcMessage               *mInMsg;    // buffer for incoming message
+    ipcMessageQ               mOutMsgQ;  // outgoing message queue
 
     // keep track of the amount of the first message sent
-    PRUint32        mSendOffset;
+    PRUint32                  mSendOffset;
 };
 
 #endif // !ipcClient_h__
