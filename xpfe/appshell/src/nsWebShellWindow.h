@@ -87,6 +87,7 @@ protected:
   void UpdateButtonStatus(PRBool aIsBusy);
   void SetCommandEnabled(const nsString & aCmdName, PRBool aState);
   void LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aDOMDoc);
+  void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
   nsIXULCommand *  FindCommandByName(const nsString & aCmdName);
   nsIDOMNode *     FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName);
   nsIDOMNode *     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
