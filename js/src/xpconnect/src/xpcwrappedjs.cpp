@@ -161,12 +161,23 @@ do_decrement:
                 JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
         }
 
-        // If we are not being used from a weak reference, then this extra
-        // ref is not needed and we can let ourself be deleted.
-        if(!mRoot->HasWeakReferences())
+        // If we are not the root wrapper or if we are not being used from a 
+        // weak reference, then this extra ref is not needed and we can let 
+        // ourself be deleted.
+        // Note: HasWeakReferences() could only return true for the root.
+        if(!HasWeakReferences())
             goto do_decrement;
     }
     return cnt;
+}
+
+NS_IMETHODIMP
+nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr)
+{
+    if(mRoot != this)
+        return mRoot->GetWeakReference(aInstancePtr);
+
+    return nsSupportsWeakReference::GetWeakReference(aInstancePtr);
 }
 
 NS_IMETHODIMP

@@ -772,6 +772,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDJS
+    NS_DECL_NSISUPPORTSWEAKREFERENCE
 
     // Note that both nsXPTCStubBase and nsIXPConnectWrappedJS declare
     // GetInterfaceInfo methods with the same sig. So, the declaration
