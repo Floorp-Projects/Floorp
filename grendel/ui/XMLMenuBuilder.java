@@ -130,10 +130,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
       tree = new TreeWalker(current);
 
       // get the link tag for this file
-      node = tree.getNextElement("head");
-      // get into head and get the first element
-      node = node.getFirstChild();
-      node = node.getNextSibling();
+      node = tree.getNextElement("head").getFirstChild().getNextSibling();
 
       // set the configuration contained in this node
       setConfiguration((Element)node);

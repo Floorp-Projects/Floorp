@@ -57,7 +57,6 @@ import org.w3c.dom.Node;
 import com.sun.xml.parser.Resolver;
 import com.sun.xml.parser.Parser;
 import com.sun.xml.tree.XmlDocument;
-// import com.sun.xml.tree.XmlDocumentBuilder;
 import com.sun.xml.tree.TreeWalker;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -79,6 +78,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   static final String dialog_tag = "dialog";
   static final String panel_tag = "panel";
   static final String input_tag = "input";
+  static final String label_tag = "label";
   static final String layout_attr = "layout";
   
   PageUI component;
@@ -87,36 +87,6 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   String attr;
   PageModel model;
   Hashtable group = new Hashtable();
-  
-  /**
-   * Build a menu builder which operates on XML formatted data
-   * 
-   * @param attr attribute
-   * @param id the value of the attribute to have a match
-   * @param model the page model for the page to be created
-   * @param panel the PageUI to be used as the basis for this builder
-   * @param reference the reference point used to find urls
-   */
-  public XMLPageBuilder(String attr, String id, PageModel model, 
-                        PageUI panel, Class reference) {
-    this(attr, id, model, panel);
-    setReference(reference);
-  }
-  
-  
-  /**
-   * Build a menu builder which operates on XML formatted data
-   * 
-   * @param attr attribute
-   * @param id the value of the attribute to have a match
-   * @param model the page model for the page to be created
-   * @param panel the PageUI to be used as the basis for this builder
-   */
-  public XMLPageBuilder(String attr, String id, PageModel model, 
-                        PageUI panel) {
-    this(attr, id, model);
-    component = panel;
-  }
   
   /**
    * Build a menu builder which operates on XML formatted data
@@ -136,7 +106,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
    * 
    * @param stream the stream containing the XML data
    */
-  public void buildFrom(InputStream stream) {
+  public JComponent buildFrom(InputStream stream) {
     XmlDocument doc;
     TreeWalker tree;
     Node node;
@@ -148,99 +118,95 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       current = doc.getDocumentElement();
       tree = new TreeWalker(current);
       
+      // get the link tag for this file
+      // get into head and get the first element
       node = 
-        tree.getNextElement("head").getElementsByTagName("link").item(0);
+        tree.getNextElement("head").getFirstChild().getNextSibling();
       
       // set the configuration contained in this node
       setConfiguration((Element)node);
       
-      // skip to the body
-      buildFrom(new TreeWalker(tree.getNextElement("body")));
+      // skip to the body and find the element 
+      current = findTargetElement(tree.getNextElement("body"));
+
+      if (current != null) {
+        component = (PageUI)buildFrom(current);
+      }
     } catch (Throwable t) {
       t.printStackTrace();
     }
+
+    return component;
   }
   
   /**
-   * Build a menu bar from the data in the tree
-   *
-   * @param tree the tree containing the full set of a menubar tag
+   * Locates the element targeted.
+   * @param element the element that contains all nodes to search
+   * @return the element matching the target description
    */
-  public void buildFrom(TreeWalker tree) {
-    Element current  ;
-    Node node;
+  private Element findTargetElement(Element element) {
+    Node node = element.getFirstChild().getNextSibling();
     
-    node = tree.getCurrent();
-    current = (Element)node;
-    
-    // iterate through every node
-    node = node.getFirstChild();
-    node = node.getNextSibling();
-    
-    // at the very first menu tag
     while (node != null) {
-      if (conditionMatch(node)) {
-	processNode(node, component);
-	break;
+      // make sure we're looking at an ELEMENT_NODE
+      if (node.getNodeType() == Node.ELEMENT_NODE) {
+        element = (Element)node;
+
+        // found it
+        if (element.getAttribute(attr).equals(id)) break;
       }
+
+      // proceed to the next node in the tree
       node = node.getNextSibling();
     }
-  }
-  
-  boolean conditionMatch(Node node) {
-    boolean match = false;
-    if (node.getNodeType() == Node.ELEMENT_NODE) {
-      Element current = (Element)node;
-      String id_str = current.getAttribute(attr);
-      
-      // is the id the same as the on we're looking for?
-      match = id_str.equals(id); 
-    }
-    
-    return match;
-  }
-  
-  /**
-   * Process the node, extracting a widget and adding it as necessary.
-   *
-   * @param node the node to be processed
-   * @param parent widget to parent node's extracted widget
-   */
-  protected void processNode(Node node, JComponent parent) {
-    JComponent item = null;
-    Element current;
-    
-    if (node == null) return;
-    
-    if (node.getNodeType() != Node.ELEMENT_NODE) {
-      processNode(node.getNextSibling(), parent);
-      return;
-    }
-    
-    current = (Element)node;
-    String tag = current.getTagName();
-    
-    if (tag.equals(dialog_tag)) { // dialog tag .. this gets us title
-      title = getReferencedLabel(current, "title");
-      node = node.getFirstChild().getNextSibling();
-      processNode(node, component);
-    } else if (tag.equals(panel_tag)) { // panel tag ... meat!
-      PageUI panel = new PageUI();
 
-      // first panel
-      if (component == null) {
-	component = panel;
+    // we didn't find it otherwise we wouldn't be here.
+    return element;
+  }
+
+  /**
+   * Build a page from this element.
+   * @param element figure it out you twit
+   * @return the component built
+   */
+  public JComponent buildFrom(Element element) {
+    Node node;
+    PageUI my_component = buildPanel(element);
+    title = getReferencedLabel(element, "title");
+
+    return my_component;
+  }
+
+  /**
+   * Build a panel.
+   * @param element the panel element 
+   * @return the panel object as a PageUI type
+   */
+  public PageUI buildPanel(Element element) {
+    Node node = element.getFirstChild().getNextSibling().getFirstChild().getNextSibling();
+    
+    PageUI my_component = new PageUI();
+
+    // every pageui in a dialog shares the same model. pageui just 
+    // spec the layout. 
+    my_component.setModel(model);
+
+    // in the future, we'll determine what the layout manager is. for now,
+    // the only one we support is GridBagLayout
+    my_component.setLayout(new GridBagLayout());
+
+    while (node != null) {
+      if (node.getNodeType() == Node.ELEMENT_NODE) {
+        element = (Element)node;
+        JComponent child = buildComponent(element);
+        GridBagConstraints cons = buildConstraints(element);
+        my_component.addCtrl(element.getAttribute("ID"), child, cons);
       }
 
-      panel.setLayout(new GridBagLayout());
-      node = node.getFirstChild().getNextSibling();
-      processNode(node, panel);
-    } else {
-      item = buildComponent(current, parent);
-      
-      // move on to the next item
-      processNode(node.getNextSibling(), parent);
+      node = node.getNextSibling();
     }
+
+    return my_component;
   }
   
   private int parseGridConstant(String data) {
@@ -319,10 +285,12 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     JComponent item = null;
     String tag = current.getTagName();
     
-    if (tag.equals("input")) { // input tag
+    if (tag.equals(input_tag)) { // input tag
       item = buildInput(current);
-    } else if (tag.equals("label")) {
+    } else if (tag.equals(label_tag)) {
       item = buildLabel(current);
+    } else if (tag.equals(panel_tag)) {
+      item = buildPanel(current);
     }
     
     return item;
@@ -347,28 +315,24 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   }
   
   protected JTextField buildTextField(Element current) {
-    JTextField item = null;
-    
-    item = new JTextField();
+    JTextField item = new JTextField();
     textFieldAdjustments(item, current);
     
     return item;
   }
   
   protected JRadioButton buildRadioButton(Element current) {
-    JRadioButton item = null;
+    JRadioButton item = new JRadioButton();
     String label = getReferencedLabel(current, "title");
     String group_str = current.getAttribute("group");
     
-    // the label
-    item = new JRadioButton();
-    if (label != null) {
+    if (label.length() > 0) {
       item.setText(label);
     }
     
     // button group matters
-    if (group_str != null) {
-      ButtonGroup bg = null;
+    if (group_str.length() > 0) {
+      ButtonGroup bg;
       if (group.containsKey(group_str)) {
         bg = (ButtonGroup)group.get(group_str);
       } else {
@@ -381,7 +345,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     return item;
   }
   
-  protected JComponent buildInput(Element current) {
+  private JComponent buildInput(Element current) {
     JComponent item = null;
     String type = current.getAttribute("type");
     
@@ -427,28 +391,6 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   
   public JPanel getComponent() {
     return component;
-  }
-  
-  protected JComponent buildComponent(Element current, JComponent parent) {
-    JComponent item = buildComponent(current);
-    
-    // item could be null if we don't know about the "type" tag for
-    // example
-    if (item != null) {
-      GridBagConstraints cons = null;
-      if (parent.getLayout() instanceof GridBagLayout) {
-	cons = buildConstraints(current);
-      }
-      
-      if (parent instanceof PageUI) {
-        ((PageUI)parent).addCtrl(current.getAttribute("ID"), item, cons);
-      }
-      else {
-        parent.add(item, cons);
-      }
-    }
-    
-    return item;
   }
   
   public String getTitle() {

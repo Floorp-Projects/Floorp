@@ -63,26 +63,12 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-
 public class PageUI extends JPanel {
   Hashtable table = new Hashtable();
   PageModel model;
   String title;
 
   public PageUI() {
-  }
-
-  public PageUI(URL url, String attribute, String id, PageModel model, 
-                Class reference) {
-    XMLPageBuilder pb = 
-      new XMLPageBuilder(attribute, id, model, this, reference);
-    build(pb, url, model);
-  }
-
-  public PageUI(URL url, String attribute, String id, PageModel model) {
-    XMLPageBuilder pb = 
-      new XMLPageBuilder(attribute, id, model, this);
-    build(pb, url, model);
   }
 
   private void build(XMLPageBuilder pb, URL url, PageModel model) {
@@ -121,7 +107,7 @@ public class PageUI extends JPanel {
   }
 
   public void addCtrl(String name, JComponent component, 
-			   Object constraints) {
+                      Object constraints) {
     if (name != null) table.put(name, component);
     if (component instanceof JList) {
       component = new JScrollPane(component);
