@@ -17,6 +17,7 @@
  */
 
 #include "nsRenderingContextXlib.h"
+#include "prmem.h"
 
 static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
@@ -258,6 +259,15 @@ nsRenderingContextXlib::DestroyDrawingSurface(nsDrawingSurface aDS)
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface)
+    return NS_ERROR_FAILURE;
+
+  mTMatrix->TransformCoord(&aX0,&aY0);
+  mTMatrix->TransformCoord(&aX1,&aY1);
+
+  ::XDrawLine(gDisplay, mRenderingSurface->GetDrawable(),
+              mRenderingSurface->GetGC(), aX0, aY0, aX1, aY1);
+
   return NS_OK;
 }
 
@@ -266,103 +276,277 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawLine2(PRInt32 aX0, PRInt32 aY0,
                                   PRInt32 aX1, PRInt32 aY1)
 {
-  DrawLine(aX0, aY0, aX1, aY1);
-  return NS_OK;
+  return DrawLine(aX0, aY0, aX1, aY1);
 }
 
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  PRInt32 i ;
+  XPoint * xpoints;
+  XPoint * thispoint;
+
+  xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
+
+  for (i = 0; i < aNumPoints; i++){
+    thispoint = (xpoints+i);
+    thispoint->x = aPoints[i].x;
+    thispoint->y = aPoints[i].y;
+    mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
+  }
+
+  ::XDrawLines(gDisplay,
+               mRenderingSurface->GetDrawable(),
+               mRenderingSurface->GetGC(),
+               xpoints, aNumPoints, CoordModeOrigin);
+
+  PR_Free((void *)xpoints);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawRect(const nsRect& aRect)
 {
-  return NS_OK;
+  return DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nscoord x,y,w,h; 
+  
+  x = aX;
+  y = aY; 
+  w = aWidth;
+  h = aHeight;
+    
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+    
+  ::XDrawRectangle(gDisplay,
+                   mRenderingSurface->GetDrawable(),
+                   mRenderingSurface->GetGC(),
+                   x,y,w,h);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::FillRect(const nsRect& aRect)
 {
-  return NS_OK;
+  return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  ::XFillRectangle(gDisplay,
+                   mRenderingSurface->GetDrawable(),
+                   mRenderingSurface->GetGC(),
+                   x,y,w,h);
+  
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  return NS_OK;
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  PRInt32 i ;
+  XPoint * xpoints;
+  XPoint * thispoint;
+  
+  xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
+  
+  for (i = 0; i < aNumPoints; i++){
+    thispoint = (xpoints+i);
+    thispoint->x = aPoints[i].x;
+    thispoint->y = aPoints[i].y;
+    mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
+  }
+  
+  ::XDrawLines(gDisplay,
+               mRenderingSurface->GetDrawable(),
+               mRenderingSurface->GetGC(),
+               xpoints, aNumPoints, CoordModeOrigin);
+
+  PR_Free((void *)xpoints);
+  
+  return NS_OK;    
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  return NS_OK;
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  PRInt32 i ;
+  XPoint * xpoints;
+  XPoint * thispoint;
+  nscoord x,y;
+   
+  xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
+  
+  for (i = 0; i < aNumPoints; i++){
+    thispoint = (xpoints+i);
+    x = aPoints[i].x;
+    y = aPoints[i].y;
+    mTMatrix->TransformCoord(&x,&y);
+    thispoint->x = x;
+    thispoint->y = y;
+  } 
+    
+  ::XFillPolygon(gDisplay,
+                 mRenderingSurface->GetDrawable(),
+                 mRenderingSurface->GetGC(),
+                 xpoints, aNumPoints, Convex, CoordModeOrigin);
+               
+  PR_Free((void *)xpoints);
+
+  return NS_OK; 
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawEllipse(const nsRect& aRect)
 {
-  return NS_OK;
+  return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  return NS_OK;
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+   
+  x = aX; 
+  y = aY;
+  w = aWidth; 
+  h = aHeight;
+    
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+    
+  ::XDrawArc(gDisplay,
+             mRenderingSurface->GetDrawable(),
+             mRenderingSurface->GetGC(),
+             x,y,w,h, 0, 360 * 64);
+  
+  return NS_OK;  
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::FillEllipse(const nsRect& aRect)
 {
-  return NS_OK;
+  return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  return NS_OK;
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+   
+  x = aX; 
+  y = aY;
+  w = aWidth; 
+  h = aHeight;
+    
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+    
+  ::XFillArc(gDisplay,
+             mRenderingSurface->GetDrawable(),
+             mRenderingSurface->GetGC(),
+             x,y,w,h, 0, 360 * 64);
+  
+  return NS_OK;  
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawArc(const nsRect& aRect,
                                 float aStartAngle, float aEndAngle)
 {
-  return NS_OK;
+  return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle); 
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                 float aStartAngle, float aEndAngle)
 {
-  return NS_OK;
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+   
+  x = aX; 
+  y = aY;
+  w = aWidth; 
+  h = aHeight;
+    
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+    
+  ::XDrawArc(gDisplay,
+             mRenderingSurface->GetDrawable(),
+             mRenderingSurface->GetGC(),
+             x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
+             NSToIntRound(aEndAngle * 64.0f));
+  
+  return NS_OK;  
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::FillArc(const nsRect& aRect,
                                 float aStartAngle, float aEndAngle)
 {
-  return NS_OK;
+  return FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                 float aStartAngle, float aEndAngle)
 {
-  return NS_OK;
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+   
+  x = aX; 
+  y = aY;
+  w = aWidth; 
+  h = aHeight;
+    
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+    
+  ::XFillArc(gDisplay,
+             mRenderingSurface->GetDrawable(),
+             mRenderingSurface->GetGC(),
+             x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
+             NSToIntRound(aEndAngle * 64.0f));
+  
+  return NS_OK;  
 }
 
 NS_IMETHODIMP
