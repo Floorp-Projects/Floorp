@@ -290,7 +290,7 @@ radiogroup
   }
 
 button, button.left {
-  user-focus: normal;
+  /* user-focus: normal; */
   behavior: url(resource:/chrome/xulBindings.xml#buttonleft);
 }
 
