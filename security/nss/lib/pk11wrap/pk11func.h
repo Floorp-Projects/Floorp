@@ -386,6 +386,9 @@ SECStatus PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
 		unsigned int usage, void *wincx);
 SECKEYPrivateKeyInfo *PK11_ExportPrivateKeyInfo(
 		CERTCertificate *cert, void *wincx);
+SECKEYEncryptedPrivateKeyInfo *PK11_ExportEncryptedPrivKeyInfo(
+		PK11SlotInfo *slot, SECOidTag algTag, SECItem *pwitem,
+		SECKEYPrivateKey *pk, int iteration, void *wincx);
 SECKEYEncryptedPrivateKeyInfo *PK11_ExportEncryptedPrivateKeyInfo(
 		PK11SlotInfo *slot, SECOidTag algTag, SECItem *pwitem,
 		CERTCertificate *cert, int iteration, void *wincx);

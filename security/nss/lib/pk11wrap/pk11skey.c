@@ -4749,59 +4749,64 @@ pk11_private_key_encrypt_buffer_length(SECKEYPrivateKey *key)
 }
 
 SECKEYEncryptedPrivateKeyInfo * 
-PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
-   SECItem *pwitem, CERTCertificate *cert, int iteration, void *wincx)
+PK11_ExportEncryptedPrivKeyInfo(
+   PK11SlotInfo     *slot,      /* optional, encrypt key in this slot */
+   SECOidTag         algTag,    /* encrypt key with this algorithm */
+   SECItem          *pwitem,    /* password for PBE encryption */
+   SECKEYPrivateKey *pk,        /* encrypt this private key */
+   int               iteration, /* interations for PBE alg */
+   void             *wincx)     /* context for password callback ? */
 {
-    SECKEYEncryptedPrivateKeyInfo *epki = NULL;
-    SECKEYPrivateKey *pk = NULL;
-    PRArenaPool *arena = NULL;
-    SECAlgorithmID *algid;
-    CK_MECHANISM_TYPE mechanism;
-    SECItem *pbe_param = NULL, crypto_param;
-    PK11SymKey *key = NULL;
-    SECStatus rv = SECSuccess;
-    CK_MECHANISM pbeMech, cryptoMech;
-    CK_ULONG encBufLenPtr;
-    CK_RV crv;
-    SECItem encryptedKey = {siBuffer,NULL,0};
-    int encryptBufLen;
+    SECKEYEncryptedPrivateKeyInfo *epki      = NULL;
+    PRArenaPool                   *arena     = NULL;
+    SECAlgorithmID                *algid;
+    SECItem                       *pbe_param = NULL;
+    PK11SymKey                    *key       = NULL;
+    SECStatus                      rv        = SECSuccess;
+    int                            encryptBufLen;
+    CK_RV                          crv;
+    CK_ULONG                       encBufLenPtr;
+    CK_MECHANISM_TYPE              mechanism;
+    CK_MECHANISM                   pbeMech;
+    CK_MECHANISM                   cryptoMech;
+    SECItem                        crypto_param;
+    SECItem                        encryptedKey = {siBuffer, NULL, 0};
 
-    if(!pwitem)
+    if (!pwitem || !pk) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
+    }
+
+    algid = SEC_PKCS5CreateAlgorithmID(algTag, NULL, iteration);
+    if (algid == NULL) {
+	return NULL;
+    }
 
     crypto_param.data = NULL;
 
     arena = PORT_NewArena(2048);
-    epki = (SECKEYEncryptedPrivateKeyInfo *)PORT_ArenaZAlloc(arena, 
-    		sizeof(SECKEYEncryptedPrivateKeyInfo));
+    if (arena)
+	epki = PORT_ArenaZNew(arena, SECKEYEncryptedPrivateKeyInfo);
     if(epki == NULL) {
 	rv = SECFailure;
 	goto loser;
     }
     epki->arena = arena;
 
-    pk = PK11_FindKeyByAnyCert(cert, wincx);
-    if(pk == NULL) {
+    mechanism = PK11_AlgtagToMechanism(SECOID_FindOIDTag(&algid->algorithm));
+    pbe_param = PK11_ParamFromAlgid(algid);
+    if (!pbe_param) {
 	rv = SECFailure;
 	goto loser;
     }
+    pbeMech.mechanism = mechanism;
+    pbeMech.pParameter = pbe_param->data;
+    pbeMech.ulParameterLen = pbe_param->len;
 
     /* if we didn't specify a slot, use the slot the private key was in */
     if (!slot) {
 	slot = pk->pkcs11Slot;
     }
-
-    algid = SEC_PKCS5CreateAlgorithmID(algTag, NULL, iteration);
-    if(algid == NULL) {
-	rv = SECFailure;
-	goto loser;
-    }
-
-    mechanism = PK11_AlgtagToMechanism(SECOID_FindOIDTag(&algid->algorithm));
-    pbe_param = PK11_ParamFromAlgid(algid);
-    pbeMech.mechanism = mechanism;
-    pbeMech.pParameter = pbe_param->data;
-    pbeMech.ulParameterLen = pbe_param->len;
 
     /* if we specified a different slot, and the private key slot can do the
      * pbe key gen, generate the key in the private key slot so we don't have 
@@ -4899,10 +4904,7 @@ loser:
     if(key != NULL) {
     	PK11_FreeSymKey(key);
     }
-
-    if (pk != NULL) {
-	SECKEY_DestroyPrivateKey(pk);
-    }
+    SECOID_DestroyAlgorithmID(algid, PR_TRUE);
 
     if(rv == SECFailure) {
 	if(arena != NULL) {
@@ -4911,6 +4913,25 @@ loser:
 	epki = NULL;
     }
 
+    return epki;
+}
+
+SECKEYEncryptedPrivateKeyInfo * 
+PK11_ExportEncryptedPrivateKeyInfo(
+   PK11SlotInfo    *slot,      /* optional, encrypt key in this slot */
+   SECOidTag        algTag,    /* encrypt key with this algorithm */
+   SECItem         *pwitem,    /* password for PBE encryption */
+   CERTCertificate *cert,      /* wrap priv key for this user cert */
+   int              iteration, /* interations for PBE alg */
+   void            *wincx)     /* context for password callback ? */
+{
+    SECKEYEncryptedPrivateKeyInfo *epki = NULL;
+    SECKEYPrivateKey              *pk   = PK11_FindKeyByAnyCert(cert, wincx);
+    if (pk != NULL) {
+	epki = PK11_ExportEncryptedPrivKeyInfo(slot, algTag, pwitem, pk, 
+	                                       iteration, wincx);
+	SECKEY_DestroyPrivateKey(pk);
+    }
     return epki;
 }
 
