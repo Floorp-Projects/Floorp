@@ -784,7 +784,7 @@ function GetMessagePane()
 function GetMessagePaneFrame()
 {
     if (gMessagePaneFrame) return gMessagePaneFrame;
-    gMessagePaneFrame = top.frames['messagepane'];
+    gMessagePaneFrame = document.getElementById("messagepane");
     return gMessagePaneFrame;
 }
 
@@ -871,9 +871,9 @@ function ClearMessagePane()
 	{	
     gHaveLoadedMessage = false;
 		gCurrentDisplayedMessage = null;
-		if (window.frames["messagepane"].location != "about:blank")
-		    window.frames["messagepane"].location = "about:blank";
-		// hide the message header view AND the message pane...
+		if (GetMessagePaneFrame().currentURI != "about:blank")
+		  GetMessagePaneFrame().loadURI("about:blank");		
+    // hide the message header view AND the message pane...
 		HideMessageHeaderPane();
 	}
 }
@@ -1260,3 +1260,4 @@ function GetFolderAttribute(tree, source, attribute)
         target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     return target;
 }
+

@@ -110,13 +110,13 @@ function setTitleFromFolder(msgfolder, subject)
     else
       title = "";
 
-    if (msgfolder.isServer) 
+    if (msgfolder.isServer)
     {
-       if (server.type == "none")
-         title += server.prettyName;
-       else
-         // <hostname>
-         title += server.hostName;
+      if (server.type == "none")
+        title += server.prettyName;
+      else
+       // <hostname>
+        title += server.hostName;
     }
     else {
         var middle;
@@ -712,6 +712,7 @@ function FolderPaneSelectionChange()
               if (searchInput) 
                 searchInput.value = "";
             }
+            ClearMessagePane();
             ChangeFolderByURI(folderResource.Value, viewType, viewFlags, sortType, sortOrder);
         }
     }
@@ -725,10 +726,8 @@ function FolderPaneSelectionChange()
       UpdateMailToolbar("gAccountCentralLoaded");
     else if (gFakeAccountPageLoaded)
       UpdateMailToolbar("gFakeAccountPageLoaded");
-    else {
+    else
       document.getElementById('advancedButton').setAttribute("disabled" , !(IsCanSearchMessagesEnabled()));
-      ClearMessagePane();
-    }
 
     if (gDisplayStartupPage)
     {
