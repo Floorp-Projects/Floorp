@@ -199,8 +199,8 @@ nsHTMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
 PRBool
 nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& aValueString)
 {
-  if (aAttrNameAtom == nsHTMLAtoms::href
-  || aAttrNameAtom == nsHTMLAtoms::src) {
+  if (aAttrNameAtom == nsHTMLAtoms::href ||
+      aAttrNameAtom == nsHTMLAtoms::src) {
     static const char kJavaScript[] = "javascript";
     PRInt32 pos = aValueString.FindChar(':');
     if ( pos < (PRInt32)(sizeof kJavaScript - 1) )
