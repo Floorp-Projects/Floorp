@@ -24,11 +24,19 @@
 #include "nsIAllocator.h"
 #include "nsCRT.h"
 #include "prprf.h"
+#include "prmem.h"
 #include "nsIPSMComponent.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
+#include "nsIThreadManager.h"
 #include "nsJSUtils.h"
+#include "nsJSPrincipals.h"
+#include "nsIPrincipal.h"
 #include "jsapi.h"
+#include "jsdbgapi.h"
+#include "jscntxt.h"
 #include "cmtcmn.h"
 #include "cmtjs.h"
 #include <ctype.h>
@@ -57,6 +65,15 @@ typedef struct CRYPTO_KeyPairInfoStr {
     SSMKeyGenType keyGenType; /* What type of key gen are we doing.*/
 } CRYPTO_KeyPairInfo;
 
+struct RunnableEvent : PLEvent {
+        RunnableEvent(nsIRunnable* runnable);
+        ~RunnableEvent();
+
+        nsIRunnable* mRunnable;
+};
+
+
+
 /*
  * The structure passed back between the plugin event handler
  * and the handler function which waits on termination.
@@ -65,26 +82,42 @@ typedef struct CRYPTO_KeyGenContextHandlerStr {
   CMUint32              numRequests;
   CMUint32              keyGenContext;
   void               *context; //This is for UI info.
-  char               *jsCallback;
   CRYPTO_KeyPairInfo *keyids;
   CMTItem             reqDN, regToken, authenticator, eaCert;
   nsCRMFObject       *crmfObject;
   JSContext          *cx;
   PCMT_CONTROL        control;
   nsCrypto           *cryptoObject;
+  JSObject           *scope;
+  char               *jsCallback;
+  const char         *fileName;
+  PRUint32            lineNo;
+  nsIPrincipal       *principals;
+  CMTStatus           result;
 } CRYPTO_KeyGenContextHandler;
+
+//
+// This is the class we'll use to run the keygen done code
+// as an nsIRunnable object;
+//
+class nsCryptoRunnable : public nsIRunnable {
+public:
+  nsCryptoRunnable(CRYPTO_KeyGenContextHandler *handlerInfo);
+  virtual ~nsCryptoRunnable();
+
+  NS_IMETHOD Run ();
+  NS_DECL_ISUPPORTS
+private:
+  CRYPTO_KeyGenContextHandler *mHandlerInfo;
+};
 
 const char * nsCrypto::kPSMComponentProgID = PSM_COMPONENT_PROGID;
 
-static JSClass global_class = {
-  "crypto_global", 0,
-  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-  JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
-};
-
 NS_IMPL_ISUPPORTS2(nsCrypto, nsIDOMCrypto,nsIScriptObjectOwner)
 NS_IMPL_ISUPPORTS2(nsCRMFObject, nsIDOMCRMFObject,nsIScriptObjectOwner)
+NS_IMPL_ISUPPORTS2(nsCryptoRunnable, nsIRunnable,nsISupports);
 
+nsIEventQueue* getUIEventQueue();
 
 nsCrypto::nsCrypto()
 {
@@ -360,18 +393,20 @@ cryptojs_ReadArgsAndGenerateKey(PCMT_CONTROL control, JSContext *cx,
         goto loser;
     }
     keySize = JSVAL_TO_INT(argv[0]);
-    jsString = (JSVAL_IS_NULL(argv[1]))?NULL:JSVAL_TO_STRING(argv[1]);
-    params = (jsString == NULL) ? NULL : JS_GetStringBytes(jsString);
+    if (JSVAL_IS_NULL(argv[1])) {
+      params = nsnull;
+    } else {
+      jsString = JS_ValueToString(cx,argv[1]);
+      params   = JS_GetStringBytes(jsString);
+    }
 
-    jsString = (JSVAL_IS_NULL(argv[2]))?NULL:JSVAL_TO_STRING(argv[2]);
-    if (jsString == NULL) {
+    if (JSVAL_IS_NULL(argv[2])) {
         JS_ReportError(cx,"%s%s\n", JS_ERROR,
                        "key generation type not specified");
         goto loser;
     }
-
+    jsString = JS_ValueToString(cx, argv[2]);
     keyGenAlg = JS_GetStringBytes(jsString);
-    jsString = JSVAL_TO_STRING(argv[1]);
     *keyGenType = cryptojs_interpret_key_gen_type(keyGenAlg);
     if (*keyGenType == invalidKeyGen) {
         JS_ReportError(cx, "%s%s%s", JS_ERROR,
@@ -380,11 +415,11 @@ cryptojs_ReadArgsAndGenerateKey(PCMT_CONTROL control, JSContext *cx,
         goto loser;
     }
     rv = cryptojs_generateOneKeyPair(control,
-                                   keyGenContext,
-                                   *keyGenType,
-                                   keySize,
-                                   params,
-                                   keyid);
+                                     keyGenContext,
+                                     *keyGenType,
+                                     keySize,
+                                     params,
+                                     keyid);
 
     if (rv != CMTSuccess) {
         JS_ReportError(cx,"%s%s%s", JS_ERROR,
@@ -450,7 +485,8 @@ cryptojs_CreateNewCRMFReqForKey(PCMT_CONTROL control, JSContext *cx,
                                 CMUint32 keyid, SSMKeyGenType keyGenType,
                                 CMUint32 *reqId, CMTItem *dnValue, 
                                 CMTItem *regTokenValue, CMTItem *eaCertValue,
-                                CMTItem *authenticatorValue)
+                                CMTItem *authenticatorValue, 
+                                PRBool reportErrors)
 {
   CMUint32               currId;
   CMTStatus              rv;
@@ -460,7 +496,9 @@ cryptojs_CreateNewCRMFReqForKey(PCMT_CONTROL control, JSContext *cx,
   rv = CMT_CreateNewCRMFRequest(control, keyid, keyGenType, reqId);
     
   if (rv != CMTSuccess) {
-    JS_ReportError(cx, "%s", JS_ERROR_INTERNAL);
+    if (reportErrors) {
+      JS_ReportError(cx, "%s", JS_ERROR_INTERNAL);
+    }
     goto loser;
   }
   
@@ -469,15 +507,19 @@ cryptojs_CreateNewCRMFReqForKey(PCMT_CONTROL control, JSContext *cx,
   rv = CMT_SetStringAttribute(control, currId, SSM_FID_CRMFREQ_DN, dnValue);
   
   if (rv != CMTSuccess) {
-    JS_ReportError(cx, "%s", JS_ERROR_INTERNAL);
+    if (reportErrors) {
+      JS_ReportError(cx, "%s", JS_ERROR_INTERNAL);
+    }
     goto loser;
   }
   if (authenticatorValue->data != NULL) {
     rv = CMT_SetStringAttribute(control, currId, SSM_FID_CRMFREQ_AUTHENTICATOR,
                                 authenticatorValue);
     if (rv != CMTSuccess) {
-	    JS_ReportError(cx, "%s%s\n", JS_ERROR, 
-                     "could not set authenticator control");
+      if (reportErrors) {
+        JS_ReportError(cx, "%s%s\n", JS_ERROR, 
+                       "could not set authenticator control");
+      }
 	    goto loser;
     }
   }
@@ -485,7 +527,10 @@ cryptojs_CreateNewCRMFReqForKey(PCMT_CONTROL control, JSContext *cx,
     rv = CMT_SetStringAttribute(control, currId, SSM_FID_CRMFREQ_REGTOKEN,
                                      regTokenValue);
     if (rv != CMTSuccess) {
-	    JS_ReportError(cx, "%s%s\n", JS_ERROR, "could not set regToken control");
+      if (reportErrors) {
+        JS_ReportError(cx, "%s%s\n", JS_ERROR, 
+                                     "could not set regToken control");
+      }
 	    goto loser;
     }
   }
@@ -516,6 +561,22 @@ cryptojs_DestroyCRMFRequests(PCMT_CONTROL control, CMUint32 *rsrcids,
     for (i=0; i<numRequests; i++) {
       CMT_DestroyResource(control, rsrcids[i], SSM_RESTYPE_CRMF_REQUEST);
     }
+}
+
+nsIEventQueue* getUIEventQueue()
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
+                  NS_EVENTQUEUESERVICE_PROGID, &rv);
+  if (NS_FAILED(rv)) 
+    return nsnull;
+  
+  nsIEventQueue* result = nsnull;
+  rv = eventQService->GetThreadEventQueue(NS_UI_THREAD, &result);
+  if (NS_FAILED(rv)) 
+    return nsnull;
+  
+  return result;
 }
 
 /*
@@ -568,7 +629,6 @@ cryptojs_DestroyCRMFRequests(PCMT_CONTROL control, CMUint32 *rsrcids,
  * NS_OK if creating the CRMF request(s) is successful.  Any other return
  * value indicates an error in generating the requests.
  */
-
 nsresult
 cryptojs_CreateCRMFRequests(PCMT_CONTROL control, void *window, 
                             JSContext *cx,
@@ -578,15 +638,18 @@ cryptojs_CreateCRMFRequests(PCMT_CONTROL control, void *window,
                             CMTItem *authenticatorValue,
                             CMTItem *eaCertValue,  
                             nsCRMFObject *crmfObject,
-                            char *jsCallback, nsCrypto *cryptoObject)
+                            CRYPTO_KeyGenContextHandler *handlerInfo,
+                            nsCrypto *cryptoObject, PRBool reportErrors)
 {
     int                 i;
     CMUint32           *rsrcids;
     nsresult            rv;
     char               *der;
     CMTStatus           crv;
+    nsIEventQueue      *uiQueue=nsnull;
+    RunnableEvent      *event = nsnull;
+    JSPrincipals       *principals;
     jsval               retVal;
-    JSObject           *object;
 
     rsrcids = new CMUint32[numRequests];
     if (rsrcids == nsnull) {
@@ -597,7 +660,7 @@ cryptojs_CreateCRMFRequests(PCMT_CONTROL control, void *window,
                                            keyids[i].keyGenType,
                                            &rsrcids[i], dnValue, 
                                            regTokenValue, eaCertValue, 
-                                           authenticatorValue);
+                                           authenticatorValue, reportErrors);
       if (rv != NS_OK) {
         goto loser;
       }
@@ -607,23 +670,33 @@ cryptojs_CreateCRMFRequests(PCMT_CONTROL control, void *window,
     cryptojs_DestroyCRMFRequests(control, rsrcids, numRequests);
     delete []rsrcids;
     if (crv != CMTSuccess || der == NULL) {
-      JS_ReportError(cx, "%s%s\n", JS_ERROR, 
-                     "could not encode requests");
+      if (reportErrors) {
+        JS_ReportError(cx, "%s%s\n", JS_ERROR, 
+                       "could not encode requests");
+      }
       goto loser;
     }
-    object = JS_NewObject(cx, &global_class, nsnull, nsnull);
-    if (object == nsnull) {
+    crmfObject->SetCRMFRequest(der);
+    rv = handlerInfo->principals->GetJSPrincipals(&principals);
+    if (NS_FAILED(rv)) {
       goto loser;
     }
-    if (JS_EvaluateScript(cx, object, 
-                          jsCallback, PL_strlen(jsCallback),
-                          nsnull, 0, &retVal) != JS_TRUE) {
-      JS_ReportError(cx, "%s%s", JS_ERROR, "execution of callback failed");
-      goto loser;
+    if (JS_EvaluateScriptForPrincipals(cx, handlerInfo->scope,  principals, 
+                                       handlerInfo->jsCallback, 
+                                       PL_strlen(handlerInfo->jsCallback),
+                                       handlerInfo->fileName, 
+                                       handlerInfo->lineNo,
+                                       &retVal) != JS_TRUE) {
+      if (reportErrors) {
+        JS_ReportError(cx, "%s%s", JS_ERROR, 
+                       "execution of callback failed");
+      }
+      rv = NS_ERROR_FAILURE;
     }
-    
- loser:
+    JS_RemoveRoot(cx, &handlerInfo->scope);
     return NS_OK;
+ loser:
+    return NS_ERROR_FAILURE;
 }
 
 /*
@@ -654,7 +727,7 @@ cryptojs_DestroyKeys(PCMT_CONTROL control, CRYPTO_KeyPairInfo *keyids,
 
 /*
  * FUNCTION: cryptojs_KeyGencontextEventHandler
- * ----------------------------------------
+ * --------------------------------------------
  * INPUTS:
  *    rsrcid
  *        The rsrcid for the resource that this handler is being called for.
@@ -688,42 +761,105 @@ cryptojs_KeyGenContextEventHandler(CMUint32 rsrcid, CMUint32 numProcessed,
                                    CMUint32 result, void *data)
 {
     CRYPTO_KeyGenContextHandler *handlerInfo;
-
     handlerInfo = (CRYPTO_KeyGenContextHandler*)data;
-    nsCrypto *cryptoObject;
+    nsCryptoRunnable *cryptoRunnable = nsnull;
+    RunnableEvent    *runnable = nsnull;
+    nsIEventQueue    *uiQueue  = nsnull;
 
     if (rsrcid == handlerInfo->keyGenContext) {
-        if (result != CMTSuccess) {
-            JS_ReportError(handlerInfo->cx, "%s%s\n", JS_ERROR,
-                           "generation of key(s) failed");
-        }
         if (numProcessed == handlerInfo->numRequests) {
-          cryptoObject = handlerInfo->cryptoObject;
-          CMT_UnregisterEventHandler(handlerInfo->control, 
-                                     SSM_TASK_COMPLETED_EVENT,
-                                     handlerInfo->keyGenContext);
-          cryptojs_CreateCRMFRequests(handlerInfo->control,
-                                      handlerInfo->context, 
-                                      handlerInfo->cx,
-                                      handlerInfo->keyids,
-                                      handlerInfo->numRequests,
-                                      &handlerInfo->reqDN,
-                                      &handlerInfo->regToken,
-                                      &handlerInfo->authenticator,
-                                      &handlerInfo->eaCert,
-                                      handlerInfo->crmfObject,
-                                      handlerInfo->jsCallback,
-                                      cryptoObject);
-            cryptojs_DestroyKeys(handlerInfo->control, handlerInfo->keyids, 
-                                 handlerInfo->numRequests);
-            CMT_DestroyResource(handlerInfo->control,
-                                handlerInfo->keyGenContext,
-                                SSM_RESTYPE_KEYGEN_CONTEXT);
-            delete []handlerInfo->keyids;
+          // Do all processing on the main thread.
+          handlerInfo->result = (CMTStatus)result;
+          cryptoRunnable = new nsCryptoRunnable(handlerInfo);
+          if (cryptoRunnable == nsnull) {
+            goto loser;
+          }
+          runnable = new RunnableEvent(cryptoRunnable);
+          if (runnable == nsnull) {
+            goto loser;
+          }
+          uiQueue = getUIEventQueue();
+          uiQueue->PostEvent(runnable);
         }
     }
+    return;
+ loser:
+    // Do some clean up in case of error.
+    return;
 }
 
+nsresult
+cryptojs_GetScriptPrincipal(JSContext *cx, JSScript *script, 
+                            nsIPrincipal **result)
+{
+  if (!script) {
+    *result = nsnull;
+    return NS_OK;
+  }
+  JSPrincipals *jsp = JS_GetScriptPrincipals(cx, script);
+  if (!jsp) {
+    return NS_ERROR_FAILURE;
+  }
+  nsJSPrincipals *nsJSPrin = NS_STATIC_CAST(nsJSPrincipals *, jsp);
+  *result = nsJSPrin->nsIPrincipalPtr;
+  if (!result) {
+    return NS_ERROR_FAILURE;
+  }
+  NS_ADDREF(*result);
+  return NS_OK;
+}
+
+nsresult
+cryptojs_GetFunctionObjectPrincipal(JSContext *cx, JSObject *obj, 
+                                    nsIPrincipal **result)
+{
+  JSObject *parent = obj;
+  do {
+    JSClass *jsClass = JS_GetClass(cx, parent);
+    const uint32 privateNsISupports = JSCLASS_HAS_PRIVATE | 
+                                      JSCLASS_PRIVATE_IS_NSISUPPORTS;
+    if (jsClass && (jsClass->flags & (privateNsISupports)) == 
+        privateNsISupports)
+      {
+        nsISupports *supports = (nsISupports *) JS_GetPrivate(cx, parent);
+        nsCOMPtr<nsIScriptObjectPrincipal> objPrin = 
+          do_QueryInterface(supports);
+        if (objPrin && NS_SUCCEEDED(objPrin->GetPrincipal(result)))
+          return NS_OK;
+      }
+    parent = JS_GetParent(cx, parent);
+  } while (parent);
+  
+  // Couldn't find a principal for this object.
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+cryptojs_GetFramePrincipal(JSContext *cx, JSStackFrame *fp, 
+                           nsIPrincipal **principal)
+{
+  JSObject *obj = JS_GetFrameFunctionObject(cx, fp);
+  if (!obj) {
+    JSScript *script = JS_GetFrameScript(cx, fp);
+    return cryptojs_GetScriptPrincipal(cx, script, principal);
+  }
+  return cryptojs_GetFunctionObjectPrincipal(cx, obj, principal);
+}
+
+nsIPrincipal*
+nsCrypto::GetScriptPrincipal(JSContext *cx)
+{
+  JSStackFrame *fp = nsnull;
+  nsIPrincipal *principal=nsnull;
+
+  for (fp = JS_FrameIterator(cx, &fp); fp; fp = JS_FrameIterator(cx, &fp)) {
+    cryptojs_GetFramePrincipal(cx, fp, &principal);
+    if (principal != nsnull) {
+      break;
+    }
+  }
+  return principal;
+}
 
 NS_IMETHODIMP
 nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc, 
@@ -746,7 +882,10 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
   nsCRMFObject       *newObject;
   CRYPTO_KeyGenContextHandler *keyGenHandler;
   CRYPTO_KeyPairInfo          *keyids;
-    
+  const char         *fileName;
+  PRUint32            lineNo;
+  nsIPrincipal       *principals;
+
   /*
    * Get all of the parameters.
    */
@@ -762,46 +901,46 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
     JS_ReportError(cx, "%s\n", JS_ERROR_INTERNAL);
     goto loser;
   }
-  jsString = JSVAL_TO_STRING(argv[0]);
-  if (jsString == NULL) {
+  if (JSVAL_IS_NULL(argv[0])) {
     JS_ReportError(cx, "%s%s\n", JS_ERROR, "no DN specified");
     goto loser;
   }
+  jsString = JS_ValueToString(cx,argv[0]);
   
   reqDN = JS_GetStringBytes(jsString);
-  jsString = JSVAL_TO_STRING(argv[1]);
-  if (jsString == NULL) {
+  if (JSVAL_IS_NULL(argv[1])) {
     regToken           = NULL;
     regTokenValue.data = NULL;
   } else {
+    jsString = JS_ValueToString(cx, argv[1]);
     regToken = JS_GetStringBytes(jsString);
     regTokenValue.data = (unsigned char*)regToken;
     regTokenValue.len  = PL_strlen(regToken)+1;
   }
-  jsString = JSVAL_TO_STRING(argv[2]);
-  if (jsString == NULL) {
+  if (JSVAL_IS_NULL(argv[2])) {
     authenticator           = NULL;
     authenticatorValue.data = NULL;
   } else {
+    jsString = JS_ValueToString(cx, argv[2]);
     authenticator = JS_GetStringBytes(jsString);
     authenticatorValue.data = (unsigned char*)authenticator;
     authenticatorValue.len  = PL_strlen(authenticator)+1;
   }
-  jsString = JSVAL_TO_STRING(argv[3]);
-  if (jsString == NULL) {
+  if (JSVAL_IS_NULL(argv[3])) {
     eaCert           = NULL;
     eaCertValue.data = NULL;
   } else {
+    jsString = JS_ValueToString(cx, argv[3]);
     eaCert           = JS_GetStringBytes(jsString);
     eaCertValue.data = (unsigned char*)eaCert;
     eaCertValue.len  = PL_strlen(eaCert)+1;
   }
-  jsString = JSVAL_TO_STRING(argv[4]);
-  if (jsString == NULL) {
+  if (JSVAL_IS_NULL(argv[4])) {
     JS_ReportError(cx, "%s%s\n", JS_ERROR, "no completion "
                    "function specified");
     goto loser;        
   }
+  jsString = JS_ValueToString(cx, argv[4]);
   jsCallback = JS_GetStringBytes(jsString);
   dnValue.data = (unsigned char*)reqDN;
   dnValue.len  = PL_strlen(reqDN) + 1;
@@ -827,10 +966,13 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
   if(keyGenHandler == nsnull) {
     goto loser;
   }
+  nsJSUtils::nsGetCallingLocation(cx, &fileName, &lineNo);
+  principals = GetScriptPrincipal(cx);
+
+  keyGenHandler->result        = CMTFailure;
   keyGenHandler->numRequests   = numRequests;
   keyGenHandler->keyGenContext = localKeyGenContext;
   keyGenHandler->context       = nsnull;
-  keyGenHandler->jsCallback    = jsCallback;
   keyGenHandler->keyids        = keyids;
   keyGenHandler->reqDN         = dnValue;
   keyGenHandler->regToken      = regTokenValue;
@@ -840,7 +982,12 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
   keyGenHandler->control       = control;
   keyGenHandler->cryptoObject  = this;
   keyGenHandler->cx            = cx;
-  
+  keyGenHandler->scope         = JS_GetParent(cx, (JSObject*)mScriptObject);
+  keyGenHandler->jsCallback    = PL_strdup(jsCallback);
+  keyGenHandler->principals    = principals;
+  keyGenHandler->fileName      = fileName;
+  keyGenHandler->lineNo        = lineNo;
+
   
   rv = CMT_RegisterEventHandler(control, SSM_TASK_COMPLETED_EVENT, 
                                 localKeyGenContext,
@@ -1031,3 +1178,116 @@ nsCRMFObject::SetCRMFRequest(char *inRequest)
   mBase64Request.AssignWithConversion(inRequest);  
   return NS_OK;
 }
+
+static void PR_CALLBACK
+handleRunnableEvent(RunnableEvent* aEvent)
+{
+  aEvent->mRunnable->Run();
+}
+
+static void PR_CALLBACK
+destroyRunnableEvent(RunnableEvent* aEvent)
+{
+  delete aEvent;
+}
+
+RunnableEvent::RunnableEvent(nsIRunnable* runnable)
+  :  mRunnable(runnable)
+{
+  NS_ADDREF(mRunnable);
+  PL_InitEvent(this, nsnull, PLHandleEventProc(handleRunnableEvent), 
+               PLDestroyEventProc(&destroyRunnableEvent));
+}
+
+RunnableEvent::~RunnableEvent()
+{
+  NS_RELEASE(mRunnable);
+}
+
+nsCryptoRunnable::nsCryptoRunnable(CRYPTO_KeyGenContextHandler *handlerInfo)
+{
+  NS_INIT_REFCNT();
+  mHandlerInfo = handlerInfo;
+  JS_AddNamedRoot(mHandlerInfo->cx, &mHandlerInfo->scope,
+                  "nsCryptoRunnable::mScope");
+}
+
+nsCryptoRunnable::~nsCryptoRunnable() {
+  NS_IF_RELEASE(mHandlerInfo->principals);
+  PR_FREEIF(mHandlerInfo->jsCallback);
+  delete mHandlerInfo;
+}
+
+NS_IMETHODIMP
+nsCryptoRunnable::Run() {
+  char              msg[512]; 
+  nsIScriptContext *scriptCx;
+  nsresult          rv;
+  PRBool            reportErrors = PR_FALSE;
+  JSObject         *obj;
+  JSStackFrame     *fp=nsnull;
+  nsCrypto         *cryptoObject;
+#if 0 
+  PR_snprintf(msg, 512, "Javi's test of JS_ReportError from a separate thread.\n");
+  if (mHandlerInfo->cx->fp == nsnull) {
+    rv = nsJSUtils::nsGetDynamicScriptContext(mHandlerInfo->cx, &scriptCx);
+    if (NS_FAILED(rv)){
+      reportErrors = PR_FALSE;
+    } else {
+      rv = mHandlerInfo->cryptoObject->GetScriptObject(scriptCx,
+                                                       (void**)&obj);
+      if (NS_FAILED(rv)) {
+        reportErrors = PR_FALSE;
+      } else {
+        fp = (JSStackFrame*)JS_GetPrivate(mHandlerInfo->cx,obj);
+      }
+    }
+  }
+  
+  JS_ReportError(mHandlerInfo->cx, msg);
+#endif
+  if (mHandlerInfo->result != CMTSuccess) {
+    if (reportErrors) {
+      JS_ReportError(mHandlerInfo->cx, "%s%s\n", JS_ERROR,
+                     "generation of key(s) failed");
+    }
+    goto loser;
+  }
+  
+  cryptoObject = mHandlerInfo->cryptoObject;
+  CMT_UnregisterEventHandler(mHandlerInfo->control, 
+                             SSM_TASK_COMPLETED_EVENT,
+                             mHandlerInfo->keyGenContext);
+  rv = cryptojs_CreateCRMFRequests(mHandlerInfo->control,
+                                   mHandlerInfo->context, 
+                                   mHandlerInfo->cx,
+                                   mHandlerInfo->keyids,
+                                   mHandlerInfo->numRequests,
+                                   &mHandlerInfo->reqDN,
+                                   &mHandlerInfo->regToken,
+                                   &mHandlerInfo->authenticator,
+                                   &mHandlerInfo->eaCert,
+                                   mHandlerInfo->crmfObject,
+                                   mHandlerInfo, cryptoObject, reportErrors);
+  if (fp) {
+    mHandlerInfo->cx->fp = nsnull;
+  }
+  cryptojs_DestroyKeys(mHandlerInfo->control, mHandlerInfo->keyids, 
+                       mHandlerInfo->numRequests);
+  CMT_DestroyResource(mHandlerInfo->control,
+                      mHandlerInfo->keyGenContext,
+                      SSM_RESTYPE_KEYGEN_CONTEXT);
+  delete []mHandlerInfo->keyids;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return NS_OK;
+ loser:
+  if (fp) {
+    mHandlerInfo->cx->fp = nsnull;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+
