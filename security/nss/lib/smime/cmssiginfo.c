@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.6 2002/01/18 03:38:29 relyea%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.7 2002/01/31 02:19:43 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -109,6 +109,9 @@ NSS_CMSSignerInfo_Destroy(NSSCMSSignerInfo *si)
 {
     if (si->cert != NULL)
 	CERT_DestroyCertificate(si->cert);
+
+    if (si->certList != NULL) 
+	CERT_DestroyCertList(si->certList);
 
     /* XXX storage ??? */
 }
@@ -853,6 +856,12 @@ NSS_CMSSignerInfo_IncludeCerts(NSSCMSSignerInfo *signerinfo, NSSCMSCertChainMode
 {
     if (signerinfo->cert == NULL)
 	return SECFailure;
+
+    /* don't leak if we get called twice */
+    if (signerinfo->certList != NULL) {
+	CERT_DestroyCertList(signerinfo->certList);
+	signerinfo->certList = NULL;
+    }
 
     switch (cm) {
     case NSSCMSCM_None:
