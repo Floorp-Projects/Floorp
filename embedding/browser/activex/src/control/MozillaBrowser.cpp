@@ -25,12 +25,16 @@
 #include <string.h>
 #include <string>
 #include <objidl.h>
-#include <comdef.h>
+//#include <comdef.h>
 
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 #include "IEHtmlDocument.h"
+
+#include "nsFileSpec.h"
+#include "nsILocalFile.h"
 #include "nsIContentViewerFile.h"
+#include "nsIWebNavigation.h"
 
 static const TCHAR *c_szInvalidArg = _T("Invalid parameter");
 static const TCHAR *c_szUninitialized = _T("Method called while control is uninitialized");
@@ -59,11 +63,13 @@ static const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVers
 
 BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
 
-const GUID CGID_IWebBrowser =
+// Some recent SDKs define these IOleCommandTarget groups, so they're
+// postfixed with _Moz to prevent linker errors.
+
+GUID CGID_IWebBrowser_Moz =
 	{ 0xED016940L, 0xBD5B, 0x11cf, {0xBA, 0x4E, 0x00, 0xC0, 0x4F, 0xD7, 0x08, 0x16} };
 
-// TODO
-const GUID CGID_MSHTML =
+GUID CGID_MSHTML_Moz =
 	{ 0xED016940L, 0xBD5B, 0x11cf, {0xBA, 0x4E, 0x00, 0xC0, 0x4F, 0xD7, 0x08, 0x16} };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -79,7 +85,7 @@ CMozillaBrowser::CMozillaBrowser()
 
 	// Initialize layout interfaces
     m_pIWebShell = nsnull;
-
+	m_pIWebShellWin = nsnull;
 	m_pIPref = nsnull;
     m_pIServiceManager = nsnull;
 
@@ -105,9 +111,6 @@ CMozillaBrowser::CMozillaBrowser()
 	// Open registry keys
 	m_SystemKey.Create(HKEY_LOCAL_MACHINE, MOZ_CONTROL_REG_KEY);
 	m_UserKey.Create(HKEY_CURRENT_USER, MOZ_CONTROL_REG_KEY);
-
-	// Component path and file
-	m_pBinDirPath = NULL;
 
 	// Initialise the web shell
 	InitWebShell();
@@ -227,9 +230,14 @@ LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
  	}
 
     // Destroy layout...
+	if (m_pIWebShellWin != nsnull)
+	{
+		m_pIWebShellWin->Destroy();
+		NS_RELEASE(m_pIWebShellWin);
+	}
+
     if (m_pIWebShell != nsnull)
 	{
-		m_pIWebShell->Destroy();
         NS_RELEASE(m_pIWebShell);
 	}
 
@@ -254,10 +262,11 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	NG_TRACE_METHOD(CMozillaBrowser::OnSize);
 
     // Pass resize information down to the WebShell...
-    if (m_pIWebShell)
+    if (m_pIWebShellWin)
 	{
-		m_pIWebShell->SetBounds(0, 0, LOWORD(lParam), HIWORD(lParam));
-    }
+		m_pIWebShellWin->SetPosition(0, 0);
+		m_pIWebShellWin->SetSize(LOWORD(lParam), HIWORD(lParam), PR_TRUE);
+	}
 	return 0;
 }
 
@@ -300,10 +309,10 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	{
 		nsIContentViewer *pContentViewer = nsnull;
 		res = m_pIWebShell->GetContentViewer(&pContentViewer);
-		if ( NS_SUCCEEDED(res) )
+		if (NS_SUCCEEDED(res))
 		{
-            nsCOMPtr<nsIContentViewerFile> ContentViewerFile = do_QueryInterface(pContentViewer);
-			ContentViewerFile->Print();
+            nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer);
+			spContentViewerFile->Print(PR_TRUE, nsnull);
 			NS_RELEASE(pContentViewer);
 		}
 	}
@@ -347,9 +356,10 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
 
 	//Get the title of the current web page to set as the default filename.
+	USES_CONVERSION;
 	char szTmp[256];
 	get_LocationName(&pageName);
-	strcpy(szTmp, _bstr_t(pageName));
+	strcpy(szTmp, OLE2A(pageName));
 	
 	int j = 0;									//The SaveAs dialog will fail if szFile contains any "bad" characters.
 	for (int i=0; szTmp[i]!='\0'; i++) {		//This hunk of code attempts to mimick the IE way of replacing "bad"
@@ -572,10 +582,10 @@ HRESULT CMozillaBrowser::InitWebShell()
 	if (m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath) == ERROR_SUCCESS)
 	{
 		USES_CONVERSION;
-		
-		m_pBinDirPath = new nsFileSpec(T2A(szBinDirPath));
-
-		NS_InitXPCOM(&m_pIServiceManager, m_pBinDirPath);
+		nsILocalFile *pBinDirPath = nsnull;
+		nsresult res = NS_NewLocalFile(T2A(szBinDirPath), &pBinDirPath);
+		NS_InitXPCOM(&m_pIServiceManager, pBinDirPath);
+		NS_RELEASE(pBinDirPath);
 	}
 	else
 	{
@@ -616,12 +626,6 @@ HRESULT CMozillaBrowser::TermWebShell()
 	NS_ShutdownXPCOM(m_pIServiceManager);
 	m_pIServiceManager = nsnull;
 
-	if (m_pBinDirPath)
-	{
-		delete m_pBinDirPath;
-		m_pBinDirPath = NULL;
-	}
-
 	return S_OK;
 }
 
@@ -657,10 +661,9 @@ HRESULT CMozillaBrowser::CreateWebShell()
 		m_sErrorMessage = _T("Error - could not create preference object");
 		return E_FAIL;
 	}
-	else {
-		rv = m_pIPref->StartUp();		//Initialize the preference service
-		rv = m_pIPref->ReadUserPrefs();	//Reads from default_prefs.js
-	}
+
+	rv = m_pIPref->StartUp();		//Initialize the preference service
+	rv = m_pIPref->ReadUserPrefs();	//Reads from default_prefs.js
 	
 	// Create the web shell object
 	rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
@@ -673,6 +676,8 @@ HRESULT CMozillaBrowser::CreateWebShell()
 		m_sErrorMessage = _T("Error - could not create web shell, check PATH settings");
 		return E_FAIL;
 	}
+
+	m_pIWebShell->QueryInterface(kIBaseWindowIID, (void **) &m_pIWebShellWin);
 
 	// Register the cookie service
 	NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
@@ -695,7 +700,6 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	rv = m_pIWebShell->Init(m_hWnd, 
 					r.x, r.y,
 					r.width, r.height,
-					nsScrollPreference_kAuto,
 					aAllowPlugins,
 					aIsSunkenBorder);
 	
@@ -705,13 +709,13 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	m_pWebShellContainer = new CWebShellContainer(this);
 	m_pWebShellContainer->AddRef();
 
-	m_pIWebShell->SetPrefs(m_pIPref);
+//	m_pIWebShell->SetPrefs(m_pIPref);
 	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
 ///	m_pIWebShell->SetObserver((nsIStreamObserver*) m_pWebShellContainer);
 	m_pIWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
-	m_pIWebShell->SetWebShellType(nsWebShellContent);
+//	m_pIWebShell->SetWebShellType(nsWebShellContent);
 
-	m_pIWebShell->Show();
+	m_pIWebShellWin->SetVisibility(PR_TRUE);
 
 	return S_OK;
 }
@@ -1356,6 +1360,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	}
 
 	// Extract the post data parameter
+	m_vLastPostData.Clear();
+	if (PostData)
+	{
+		m_vLastPostData.Copy(PostData);
+	}
+
 	nsIPostData *pIPostData = nsnull;
 	if (PostData && PostData->vt == VT_BSTR)
 	{
@@ -1489,7 +1499,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 		RETURN_E_UNEXPECTED();
 	}
 
-	m_pIWebShell->Reload(type);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIWebShell);
+	if (spIWebNavigation)
+	{
+		spIWebNavigation->Reload(type);
+	}
 	
 	return S_OK;
 }
@@ -1505,7 +1519,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
 		RETURN_E_UNEXPECTED();
 	}
 
-	m_pIWebShell->Stop();
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIWebShell);
+	if (spIWebNavigation)
+	{
+		spIWebNavigation->Stop();
+	}
 	
 	return S_OK;
 }
@@ -1848,7 +1866,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 
 	// Get the url from the web shell
 	nsXPIDLString szLocationName;
-	m_pIWebShell->GetTitle(getter_Copies(szLocationName));
+	m_pIWebShellWin->GetTitle(getter_Copies(szLocationName));
 	if (nsnull == (const PRUnichar *) szLocationName)
 	{
 		RETURN_E_UNEXPECTED();

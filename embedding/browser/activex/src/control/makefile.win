@@ -41,7 +41,7 @@ OBJS =                                 \
 	.\$(OBJDIR)\MozillaControl.obj     \
 	.\$(OBJDIR)\nsSetupRegistry.obj    \
 	.\$(OBJDIR)\MozillaBrowser.obj     \
-        .\$(OBJDIR)\WebShellContainer.obj  \
+  .\$(OBJDIR)\WebShellContainer.obj  \
 	.\$(OBJDIR)\IEHtmlNode.obj         \
 	.\$(OBJDIR)\IEHtmlElementCollection.obj \
 	.\$(OBJDIR)\IEHtmlElement.obj      \
@@ -52,27 +52,27 @@ OBJS =                                 \
 
 # most of these have to be here for nsSetupRegistry.cpp...
 
-LINCS=  \
-  -I$(PUBLIC)\raptor \
-  -I$(PUBLIC)\xpcom \
-  -I$(PUBLIC)\dom \
-  -I$(PUBLIC)\js \
-  -I$(PUBLIC)\netlib \
-  -I$(PUBLIC)\java \
-  -I$(PUBLIC)\plugin \
-  -I$(PUBLIC)\caps \
-  -I$(PUBLIC)\oji \
-  -I$(PUBLIC)\editor \
-  -I$(PUBLIC)\uconv \
-  -I$(PUBLIC)\intl \
-  -I$(PUBLIC)\locale \
-  -I$(PUBLIC)\lwbrk \
-  -I$(PUBLIC)\unicharutil \
-  -I$(PUBLIC)\pref \
-  -I$(PUBLIC)\wallet \
-  -I$(PUBLIC)\rdf \
-  -I$(PUBLIC)\profile \
-  $(NULL) 
+#LINCS=  \
+#  -I$(PUBLIC)\raptor \
+#  -I$(PUBLIC)\xpcom \
+#  -I$(PUBLIC)\dom \
+#  -I$(PUBLIC)\js \
+#  -I$(PUBLIC)\netlib \
+#  -I$(PUBLIC)\java \
+#  -I$(PUBLIC)\plugin \
+#  -I$(PUBLIC)\caps \
+#  -I$(PUBLIC)\oji \
+#  -I$(PUBLIC)\editor \
+#  -I$(PUBLIC)\uconv \
+#  -I$(PUBLIC)\intl \
+#  -I$(PUBLIC)\locale \
+#  -I$(PUBLIC)\lwbrk \
+#  -I$(PUBLIC)\unicharutil \
+#  -I$(PUBLIC)\pref \
+#  -I$(PUBLIC)\wallet \
+#  -I$(PUBLIC)\rdf \
+#  -I$(PUBLIC)\profile \
+#  $(NULL) 
 
 LLIBS=                         \
  $(DIST)\lib\gkgfxwin.lib   \
@@ -94,6 +94,8 @@ LCFLAGS = /D "WIN32" /GX /FR /U "ClientWallet"
 LLFLAGS = -SUBSYSTEM:windows /DLL
 
 include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\config.mak>
+
 
 !ifdef MOZ_NO_DEBUG_RTL
 LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
