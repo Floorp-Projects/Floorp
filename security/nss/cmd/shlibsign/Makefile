@@ -54,35 +54,11 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
-
-#######################################################################
-# (5) Execute "global" rules. (OPTIONAL)                              #
-#######################################################################
-
-include $(CORE_DEPTH)/coreconf/rules.mk
-
-#######################################################################
-# (6) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
-
-
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
-
-
-include ../platrules.mk
-
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
     IS_WINDOWS="YES"
 else
     IS_WINDOWS="NO"
 endif
-
-
-
-%.chk: %.$(DLL_SUFFIX) 
-	@sh ./sign.sh $(DIST) $(OBJDIR) $(IS_WINDOWS) $<
 
 #
 # we really should have this driven from a list file made during the normal
@@ -108,5 +84,28 @@ endif
 CHECKLOC=$(addprefix $(DIST)/lib/$(LIB_PREFIX), $(CHECKFILES))
 
 ALL_TRASH += $(CHECKLOC)
+
+
+#######################################################################
+# (5) Execute "global" rules. (OPTIONAL)                              #
+#######################################################################
+
+include $(CORE_DEPTH)/coreconf/rules.mk
+
+#######################################################################
+# (6) Execute "component" rules. (OPTIONAL)                           #
+#######################################################################
+
+
+#######################################################################
+# (7) Execute "local" rules. (OPTIONAL).                              #
+#######################################################################
+
+
+include ../platrules.mk
+
+%.chk: %.$(DLL_SUFFIX) 
+	@sh ./sign.sh $(DIST) $(OBJDIR) $(IS_WINDOWS) $<
+
 libs install :: $(CHECKLOC)
 
