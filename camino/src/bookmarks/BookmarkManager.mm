@@ -791,15 +791,19 @@ static unsigned gFirstUserCollection = 0;
           currentItem = [currentArray addBookmark];
           [(Bookmark *)currentItem setUrl:[tempItem stringByRemovingAmpEscapes]];
           [tokenScanner scanUpToString:@">" intoString:&tempItem];
-          [currentItem setTitle:[[tokenString substringFromIndex:([tokenScanner scanLocation]+1)] stringByRemovingAmpEscapes]];
-          justSetTitle = YES;
+          if (![tokenScanner isAtEnd]) {     // protect against malformed files
+            [currentItem setTitle:[[tokenString substringFromIndex:([tokenScanner scanLocation]+1)] stringByRemovingAmpEscapes]];
+            justSetTitle = YES;
+          }
           // see if we had a keyword
           if (isNetscape) {
             tempRange = [tempItem rangeOfString:@"SHORTCUTURL=\"" options: NSCaseInsensitiveSearch];
             if (tempRange.location != NSNotFound) {
-              // throw everything to next " into keyword
+              // throw everything to next " into keyword. A malformed bookmark might not have a closing " which
+              // will throw things out of whack slightly, but it's better than crashing.
               keyRange = [tempItem rangeOfString:@"\"" options:0 range:NSMakeRange(tempRange.location+tempRange.length,[tempItem length]-(tempRange.location+tempRange.length))];
-              [currentItem setKeyword:[tempItem substringWithRange:NSMakeRange(tempRange.location+tempRange.length,keyRange.location - (tempRange.location+tempRange.length))]];
+              if (keyRange.location != NSNotFound)
+                [currentItem setKeyword:[tempItem substringWithRange:NSMakeRange(tempRange.location+tempRange.length,keyRange.location - (tempRange.location+tempRange.length))]];
             }
           }
         }
