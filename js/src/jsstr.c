@@ -1060,16 +1060,6 @@ str_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 /*
  * Perl-inspired string functions.
  */
-#if !JS_HAS_MORE_PERL_FUN || !JS_HAS_REGEXPS
-static JSBool
-str_nyi(JSContext *cx, const char *what)
-{
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_NO_STRING_PROTO, what);
-    return JS_FALSE;
-}
-#endif
-
 #if JS_HAS_REGEXPS
 typedef struct GlobData {
     uintN       flags;          /* inout: mode and flag bits, see below */
@@ -1235,12 +1225,10 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
     v = STRING_TO_JSVAL(matchstr);
     return js_SetProperty(cx, arrayobj, INT_TO_JSVAL(count), &v);
 }
-#endif /* JS_HAS_REGEXPS */
 
 static JSBool
 str_match(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-#if JS_HAS_REGEXPS
     MatchData mdata;
     JSBool ok;
 
@@ -1252,26 +1240,18 @@ str_match(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (ok && !JSVAL_IS_NULL(*mdata.arrayval))
         *rval = *mdata.arrayval;
     return ok;
-#else
-    return str_nyi(cx, "match");
-#endif
 }
 
 static JSBool
 str_search(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-#if JS_HAS_REGEXPS
     GlobData data;
 
     data.flags = MODE_SEARCH;
     data.optarg = 1;
     return match_or_replace(cx, obj, argc, argv, NULL, &data, rval);
-#else
-    return str_nyi(cx, "search");
-#endif
 }
 
-#if JS_HAS_REGEXPS
 typedef struct ReplaceData {
     GlobData    base;           /* base struct state */
     JSObject    *lambda;        /* replacement function object or null */
@@ -1297,7 +1277,7 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
 
     /*
      * Allow a real backslash (literal "\\" before "$1") to escape "$1", e.g.
-     * Do this for versions less than 1.5 (ECMA 3) only
+     * Do this only for versions strictly less than ECMAv3.
      */
     if (cx->version != JSVERSION_DEFAULT && cx->version <= JSVERSION_1_4) {
         if (dp > JSSTRING_CHARS(rdata->repstr) && dp[-1] == '\\')
@@ -1563,12 +1543,10 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
     do_replace(cx, rdata, chars);
     return JS_TRUE;
 }
-#endif /* JS_HAS_REGEXPS */
 
 static JSBool
 str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-#if JS_HAS_REGEXPS
     JSObject *lambda;
     JSString *repstr, *str;
     ReplaceData rdata;
@@ -1665,10 +1643,8 @@ out:
     if (rdata.base.flags & KEEP_REGEXP)
         js_DestroyRegExp(cx, rdata.base.regexp);
     return ok;
-#else
-    return str_nyi(cx, "replace");
-#endif
 }
+#endif /* JS_HAS_REGEXPS */
 
 /*
  * Subroutine used by str_split to find the next split point in str, starting
@@ -1788,7 +1764,7 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
         JS_ASSERT((size_t)i >= sep->length);
         return i - sep->length;
     }
-#endif
+#endif /* JS_HAS_REGEXPS */
 
     /*
      * Deviate from ECMA by never splitting an empty string by any separator
@@ -1954,10 +1930,10 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return ok;
 }
 
+#if JS_HAS_PERL_SUBSTR
 static JSBool
 str_substr(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-#if JS_HAS_MORE_PERL_FUN
     JSString *str;
     jsdouble d;
     jsdouble length, begin, end;
@@ -1999,10 +1975,8 @@ str_substr(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
-#else
-    return str_nyi(cx, "substr");
-#endif
 }
+#endif /* JS_HAS_PERL_SUBSTR */
 
 #if JS_HAS_SEQUENCE_OPS
 /*
@@ -2086,6 +2060,7 @@ str_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 #endif /* JS_HAS_SEQUENCE_OPS */
 
+#if JS_HAS_STR_HTML_HELPERS
 /*
  * HTML composition aids.
  */
@@ -2244,6 +2219,7 @@ str_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     return tagify(cx, obj, argv, "sub", NULL, NULL, rval);
 }
+#endif /* JS_HAS_STR_HTML_HELPERS */
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
@@ -2266,11 +2242,15 @@ static JSFunctionSpec string_methods[] = {
     {"localeCompare",       str_localeCompare,      1,0,0},
 
     /* Perl-ish methods (search is actually Python-esque). */
+#if JS_HAS_REGEXPS
     {"match",               str_match,              1,0,2},
     {"search",              str_search,             1,0,0},
     {"replace",             str_replace,            2,0,0},
     {"split",               str_split,              2,0,0},
+#endif
+#if JS_HAS_PERL_SUBSTR
     {"substr",              str_substr,             2,0,0},
+#endif
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
@@ -2279,6 +2259,7 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* HTML string methods. */
+#if JS_HAS_STR_HTML_HELPERS
     {"bold",                str_bold,               0,0,0},
     {"italics",             str_italics,            0,0,0},
     {"fixed",               str_fixed,              0,0,0},
@@ -2292,6 +2273,8 @@ static JSFunctionSpec string_methods[] = {
     {"blink",               str_blink,              0,0,0},
     {"sup",                 str_sup,                0,0,0},
     {"sub",                 str_sub,                0,0,0},
+#endif
+
     {0,0,0,0,0}
 };
 

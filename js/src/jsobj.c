@@ -290,7 +290,14 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
         if (obj2 == obj) {
             SET_SLOT_DONE(rt);
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_CYCLIC_VALUE, object_props[slot].name);
+                                 JSMSG_CYCLIC_VALUE,
+#if JS_HAS_OBJ_PROTO_PROP
+                                 object_props[slot].name
+#else
+                                 (slot == JSSLOT_PROTO) ? js_proto_str
+                                                        : js_parent_str
+#endif
+                                 );
             return JS_FALSE;
         }
         obj2 = JSVAL_TO_OBJECT(OBJ_GET_SLOT(cx, obj2, slot));
@@ -2144,7 +2151,9 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (SPROP_HAS_VALID_SLOT(sprop, scope))
         LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
 
+#if JS_HAS_GETTER_SETTER
 out:
+#endif
     if (propp)
         *propp = (JSProperty *) sprop;
     else

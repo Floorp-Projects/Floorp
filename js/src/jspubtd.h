@@ -51,12 +51,18 @@ typedef jsword    jsval;
 typedef jsword    jsid;
 typedef int32     jsrefcount;   /* PRInt32 if JS_THREADSAFE, see jslock.h */
 
+/*
+ * Run-time version enumeration.  See jsconfig.h for compile-time counterparts
+ * to these values that may be selected by the JS_VERSION macro, and tested by
+ * #if expressions.
+ */
 typedef enum JSVersion {
     JSVERSION_1_0     = 100,
     JSVERSION_1_1     = 110,
     JSVERSION_1_2     = 120,
     JSVERSION_1_3     = 130,
     JSVERSION_1_4     = 140,
+    JSVERSION_ECMA_3  = 148,
     JSVERSION_1_5     = 150,
     JSVERSION_DEFAULT = 0,
     JSVERSION_UNKNOWN = -1
