@@ -194,8 +194,6 @@ Rights Reserved.
 <!ENTITY pageSourceCmd.label "Message Source">
 <!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.key "u">
-<!ENTITY folderCharset.label "Folder Character Coding...">
-<!ENTITY folderCharset.accesskey "F">
 <!ENTITY translateMenu.label ".Translate">
 <!ENTITY dcharMenu.label "Character Set  ISO">
 <!ENTITY dcharMenu1.label "Character Set  Multibyte">
@@ -401,8 +399,8 @@ Rights Reserved.
 <!ENTITY totalColumn.label "Total">
 
 <!-- Toolbar items -->
-<!ENTITY getMsgButton.label "Get Msg">
-<!ENTITY newMsgButton.label "New Msg">
+<!ENTITY getMsgButton.label "Get Msgs">
+<!ENTITY newMsgButton.label "Compose">
 <!ENTITY replyButton.label "Reply">
 <!ENTITY replyAllButton.label "Reply All">
 <!ENTITY forwardButton.label "Forward">

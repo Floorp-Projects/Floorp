@@ -1009,7 +1009,6 @@ Rights Reserved.
       <menuseparator/>
       <menuitem label="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
       <menuseparator/>
-      <menuitem label="&folderCharset.label;" accesskey="&folderCharset.accesskey;" observes="cmd_setFolderCharset"/>
       <menu id = "mailviewCharsetMenu" />
     </menupopup>
   </menu>
