@@ -2675,14 +2675,13 @@ NS_IMETHODIMP nsDocShell::ShouldPersistInSessionHistory(nsIURI* aURI,
    nsXPIDLCString scheme;
    NS_ENSURE_SUCCESS(aURI->GetScheme(getter_Copies(scheme)), NS_ERROR_FAILURE);
    
-   nsAutoString schemeStr(scheme);
+   nsAutoString schemeStr; schemeStr.AssignWithConversion(scheme);
 
-   if(schemeStr.Equals("about"))
+   if(schemeStr.EqualsWithConversion("about"))
       {
       nsXPIDLCString path;
       NS_ENSURE_SUCCESS(aURI->GetPath(getter_Copies(path)), NS_ERROR_FAILURE);
-      nsAutoString pathStr(path);
-      if(pathStr.Equals("blank"))
+      if(nsCAutoString(path).Equals("blank"))
          return NS_OK;
       }
 

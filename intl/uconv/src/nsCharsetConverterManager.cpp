@@ -637,7 +637,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration(
     nsCOMPtr<nsISupports> base;
     nsCOMPtr<nsIRegistryNode> node;
     char * name = NULL;
-    nsAutoString fullName(aAddPrefix);
+    nsAutoString fullName; fullName.AssignWithConversion(aAddPrefix);
     nsCOMPtr<nsIAtom> atom;
 
     res = components->CurrentItem(getter_AddRefs(base));
@@ -649,7 +649,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration(
     res = node->GetNameUTF8(&name);
     if (NS_FAILED(res)) goto done1;
 
-    fullName.Append(name);
+    fullName.AppendWithConversion(name);
     res = GetCharsetAtom(fullName.GetUnicode(), getter_AddRefs(atom));
     if (NS_FAILED(res)) goto done1;
 
@@ -736,7 +736,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration2(
 
     if (aDecoder) {
       if (!strcmp(dest, "Unicode")) {
-        fullName.Assign(src);
+        fullName.AssignWithConversion(src);
         res = GetCharsetAtom(fullName.GetUnicode(), getter_AddRefs(atom));
         if (NS_FAILED(res)) goto done1;
 
@@ -745,7 +745,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration2(
       }
     } else {
       if (!strcmp(src, "Unicode")) {
-        fullName.Assign(dest);
+        fullName.AssignWithConversion(dest);
         res = GetCharsetAtom(fullName.GetUnicode(), getter_AddRefs(atom));
         if (NS_FAILED(res)) goto done1;
 
@@ -923,7 +923,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
   res = ((nsIAtom *) aCharset)->GetUnicode(&name);
   if (NS_FAILED(res)) return res;
 
-  nsAutoString progID(NS_UNICODEDECODER_PROGID_BASE);
+  nsAutoString progID; progID.AssignWithConversion(NS_UNICODEDECODER_PROGID_BASE);
   progID.Append(name);
   char buff[256];
   progID.ToCString(buff, 256);
@@ -948,7 +948,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
   res = ((nsIAtom *) aCharset)->GetUnicode(&name);
   if (NS_FAILED(res)) return res;
 
-  nsAutoString progID(NS_UNICODEENCODER_PROGID_BASE);
+  nsAutoString progID; progID.AssignWithConversion(NS_UNICODEENCODER_PROGID_BASE);
   progID.Append(name);
   char buff[256];
   progID.ToCString(buff, 256);
@@ -1043,7 +1043,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(
   *aResult = NULL;
 
   nsresult res = NS_OK;
-  nsAutoString prop(".title");
+  nsAutoString prop; prop.AssignWithConversion(".title");
 
   if (mTitleBundle == NULL) {
     res = LoadExtensibleBundle(NS_TITLE_BUNDLE_REGISTRY_KEY, &mTitleBundle);
@@ -1103,7 +1103,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
   *aResult = NULL;
 
   nsresult res = NS_OK;
-  nsAutoString prop(".LangGroup");
+  nsAutoString prop; prop.AssignWithConversion(".LangGroup");
 
   if (mDataBundle == NULL) {
     res = LoadExtensibleBundle(NS_DATA_BUNDLE_REGISTRY_KEY, &mDataBundle);
