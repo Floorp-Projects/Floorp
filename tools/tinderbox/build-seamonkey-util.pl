@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.122 $ ';
+$::UtilsVersion = '$Revision: 1.123 $ ';
 
 package TinderUtils;
 
@@ -1686,21 +1686,32 @@ sub BloatTest {
       $testname_prefix = "$bloatdiff_label" . "_";
     }
 
+    # Figure out testname prefix
+    my $leaks_testname = "refcnt_leaks";
+    my $bloat_testname = "refcnt_bloat";
+    unless($bloatdiff_label eq "") {
+      $leaks_testname = "$bloatdiff_label" . "_" . "refcnt_leaks";
+      $bloat_testname = "$bloatdiff_label" . "_" . "refcnt_bloat";
+    }
+
+
     if($Settings::TestsPhoneHome) {
       # Generate and print tbox output strings for leak, bloat.
-      my $leaks_string = "\n\nTinderboxPrint:<a title=\"refcnt Leaks\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $testname_prefix . "refcnt_leaks&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Lk:" . PrintSize($leaks) . "B</a>\n\n";
+      my $leaks_string = "\n\nTinderboxPrint:<a title=\"refcnt Leaks\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Lk:" . PrintSize($leaks) . "B</a>\n\n";
       print_log $leaks_string;
       
-      my $bloat_string = "\n\nTinderboxPrint:<a title=\"refcnt Bloat\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $testname_prefix . "refcnt_bloat&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Bl:" . PrintSize($bloat) . "B</a>\n\n";
+      my $bloat_string = "\n\nTinderboxPrint:<a title=\"refcnt Bloat\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Bl:" . PrintSize($bloat) . "B</a>\n\n";
       print_log $bloat_string;
       
       # Report numbers to server.
-      send_results_to_server($leaks, "--", "refcnt_leaks", ::hostname() );
-      send_results_to_server($bloat, "--", "refcnt_bloat", ::hostname() );
+
+
+      send_results_to_server($leaks, "--", $leaks_testname, ::hostname() );
+      send_results_to_server($bloat, "--", $bloat_testname, ::hostname() );
 
     } else {
-      print_log "TinderboxPrint:Lk:" . PrintSize($leaks) . "B\n\n";
-      print_log "TinderboxPrint:Bl:" . PrintSize($bloat) . "B\n\n";
+      print_log "TinderboxPrint:Lk:<a title=\"refcnt Leaks\">" . PrintSize($leaks) . "B</a>\n\n";
+      print_log "TinderboxPrint:Bl:<a title=\"refcnt Bloat\">" . PrintSize($bloat) . "B</a>\n\n";
     }
 
     return 'success';
