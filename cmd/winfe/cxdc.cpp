@@ -1619,7 +1619,6 @@ CDCCX::DisplayTableBorder(LTRB& Rect, LO_TableStruct *pTable)
     COLORREF    	rgbBorder = ResolveLOColor(&pTable->border_color);
 	COLORREF		rgbLight, rgbDark;
     HDC         	hDC;
-    int         	nStrokeWidth;
     RECT        	r = {CASTINT(Rect.left), CASTINT(Rect.top), CASTINT(Rect.right), CASTINT(Rect.bottom)};
     LTRB        	insetRect;
 	LTRB	borderWidths(pTable->border_left_width, pTable->border_top_width,

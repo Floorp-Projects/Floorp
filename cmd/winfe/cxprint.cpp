@@ -1960,7 +1960,6 @@ void CPrintCX::CopyOffscreenBitmap(NI_Pixmap* image, int32 x, int32 y, int32 x_o
 		pAttrDC = theApp.m_pMainWnd->GetDC();
 		HDC tempDC = ::CreateCompatibleDC(pAttrDC->GetSafeHdc());
 		lpBmi->biBitCount = nBitCount;
-		HPALETTE hOldPal;
 		// Ask the driver to tell us the number of bits we need to allocate
 		BITMAPINFO lpbmi;
 		lpbmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);

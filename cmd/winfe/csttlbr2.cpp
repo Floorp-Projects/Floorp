@@ -1324,7 +1324,6 @@ void CCustToolbar::OnPaint()
 
 	HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
 
-	HPALETTE hOldPalette;
 	HDC hMemDC = ::CreateCompatibleDC(hSrcDC);
 	HBITMAP hbmMem = CreateCompatibleBitmap(hSrcDC,
                                     rcClient.Width(),

@@ -3623,7 +3623,6 @@ HDDEDATA CDDEWrapper::CancelProgress(HSZ& hszItem, HDDEDATA& hData)
 
 	//	Go through all contexts, searching for the one with the specific
 	//		transaction ID.
-	int iTraverseIndex;
 	MWContext *pTraverseContext = NULL;
 	CAbstractCX *pTraverseCX = NULL;
 	XP_List *pTraverse = XP_GetGlobalContextList();
