@@ -50,6 +50,8 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 
+#include "nsInt64.h"
+
 struct nsCookieAttributes;
 struct nsListIter;
 struct nsEnumerationData;
@@ -62,7 +64,6 @@ class nsIURI;
 class nsIChannel;
 class nsITimer;
 class nsIFile;
-class nsInt64;
 
 // hash entry class
 class nsCookieEntry : public PLDHashEntryHdr
