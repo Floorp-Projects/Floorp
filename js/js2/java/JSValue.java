@@ -147,6 +147,10 @@ class JSValue extends ExpressionNode {
         return toJSObject(theEnv).getProp(theEnv, id);
     }
     
+    boolean hasProp(Environment theEnv, JSString id) {
+        return toJSObject(theEnv).hasProp(theEnv, id);
+    }
+
     JSValue putProp(Environment theEnv, JSString id, JSValue rV) {
         return toJSObject(theEnv).putProp(theEnv, id, rV);
     }

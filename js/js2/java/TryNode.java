@@ -30,7 +30,7 @@ class TryNode extends ControlNode {
             int count = catchExpr.size();
             for (int i = 0; i < count; i++) {
                 ExpressionNode e = (ExpressionNode)(catchExpr.elementAt(i));
-                String id = ((JSObject)e).value;
+                String id = ((JSObject)e).oClass;
                 theEnv.scope.contents.put(id, x.getValue());    // XXX YAARGH !!!
                 return (ControlNode)(catchCode.elementAt(i));
             }

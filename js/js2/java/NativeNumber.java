@@ -1,7 +1,7 @@
 class NativeNumber extends JSObject {
     
     NativeNumber(double p) {
-        super("Number", null);
+        super("Number");
         d = p;
     }
     

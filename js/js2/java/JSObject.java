@@ -3,21 +3,27 @@ import java.util.Hashtable;
 
 class JSObject extends JSValue {
     
-    static JSObject JSUndefined = new JSObject("undefined", null);
+    static JSObject objectPrototype = new JSObject("Object");
+    static JSObject JSUndefined = new JSObject("undefined");
     
-    JSObject(String aValue, JSObject aPrototype)
+    JSObject(String aClass)
     {
-        value = aValue;
+        oClass = aClass;
+        prototype = objectPrototype;
+    }
+    
+    void setPrototype(JSObject aPrototype)
+    {
         prototype = aPrototype;
     }
     
     String print(String indent)
     {
-        return indent + "JSObject : " + value + "\n";
+        return indent + "JSObject : " + oClass + "\n";
     }
 
     public String toString() {
-        return value + contents.toString();
+        return oClass + contents.toString();
     }
         
     JSValue eval(Environment theEnv)
@@ -52,6 +58,18 @@ class JSObject extends JSValue {
             return (JSValue)v;
     }
         
+    boolean hasProp(Environment theEnv, JSString id)
+    {
+        Object v = contents.get(id.s);
+        if (v == null)
+            if (prototype == null)
+                return false;
+            else
+                return prototype.hasProp(theEnv, id);
+        else
+            return true;
+    }
+        
     JSValue putProp(Environment theEnv, JSString id, JSValue rV) {
         contents.put(id.s, rV);
         return rV;
@@ -60,7 +78,7 @@ class JSObject extends JSValue {
         
     Hashtable contents = new Hashtable();
         
-    String value;
+    String oClass;
     
     JSObject prototype;
 }

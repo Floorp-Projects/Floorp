@@ -3,11 +3,19 @@ import java.util.Hashtable;
 
 class Environment {
 
-    JSObject scope = new JSObject("globals", null);
+    JSScope scope = new JSScope("globals");
+    JSScope globalScope = scope;
+    
 
-    void enterNewScope(JSObject newScope)
+    void enterNewScope(JSScope newScope)
     {
-        
+        newScope.parent = scope;
+        scope = newScope;
+    }
+    
+    void leaveScope()
+    {
+        scope = scope.parent;
     }
 
     String print()
