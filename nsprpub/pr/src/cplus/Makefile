@@ -38,7 +38,7 @@ OBJS = $(addprefix $(OBJDIR)/,$(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
 TARGETS	= $(OBJS)
 
-INCLUDES = -I$(DIST)/include/private -I$(DIST)/include
+INCLUDES = -I$(DIST)/include
 
 include $(MOD_DEPTH)/config/rules.mk
 

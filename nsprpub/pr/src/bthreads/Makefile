@@ -21,7 +21,7 @@ CSRCS += $(BTCSRCS)
 
 TARGETS	= $(OBJS)
 
-INCLUDES = -I$(DIST)/include/private -I$(DIST)/include
+INCLUDES = -I$(DIST)/include -I$(MOD_DEPTH)/pr/include -I$(MOD_DEPTH)/pr/include/private
 
 include $(MOD_DEPTH)/config/rules.mk
 
