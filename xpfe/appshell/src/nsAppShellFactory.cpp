@@ -64,7 +64,7 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kProtocolHelperCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
    	nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kSessionHistoryCID, NULL, NS_ISESSIONHISTORY_PROGID, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kSessionHistoryCID, "sessionhistory", NS_ISESSIONHISTORY_PROGID, path, PR_TRUE, PR_TRUE);
 
     nsComponentManager::RegisterComponent(kWindowMediatorCID,
                                          "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",

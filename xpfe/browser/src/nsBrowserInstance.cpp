@@ -127,7 +127,6 @@ static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
-static NS_DEFINE_IID(kISessionHistoryIID,       NS_ISESSIONHISTORY_IID);
 static NS_DEFINE_IID(kIWebShellIID,              NS_IWEB_SHELL_IID);
 
 #ifdef DEBUG                                                           
@@ -246,16 +245,18 @@ nsBrowserAppCore::Init()
   nsresult rv = NS_OK;
 
   // Create session history.
-  rv = nsComponentManager::CreateInstance( kCSessionHistoryCID,
-                                           nsnull,
-                                           kISessionHistoryIID,
-                                           (void **)&mSHistory );
+  
+  rv = nsComponentManager::CreateInstance(kCSessionHistoryCID,
+                                          nsnull,
+                                          nsISessionHistory::GetIID(),
+                                          (void **)&mSHistory );
 
   if ( NS_SUCCEEDED( rv ) ) {
 	  printf("Successfully created instance of session history\n");
       // Add this object of observer of various events.
-      BeginObserving();
+      BeginObserving(); 
   }
+ 
   
   return rv;
 }
@@ -333,9 +334,7 @@ nsBrowserAppCore::Stop()
   mContentAreaWebShell->Stop();
 
   if (mIsLoadingHistory) {
-	  mIsLoadingHistory = PR_FALSE;
-	  if (mSHistory)
-		  mSHistory->ClearLoadingFlags();
+	  SetLoadingFlag(PR_FALSE);
   }
   nsAutoString v( "false" );
   // XXX: The throbber should be turned off when the OnStopDocumentLoad 
@@ -417,13 +416,14 @@ nsBrowserAppCore::BackButtonPopup()
      i  = indix-SHISTORY_POPUP_LIST;
 
   for (PRInt32 j=indix-1;j>=i;j--) {
-      PRUnichar * url=nsnull, *title=nsnull;
+      PRUnichar *title=nsnull;
+	  char * url=nsnull;
 	  
         mSHistory->GetURLForIndex(j, &url);
         nsAutoString  histURL(url);
         mSHistory->GetTitleForIndex(j, &title);
         nsAutoString  histTitle(title);
-        rv = CreateMenuItem(menu, j, url);
+        rv = CreateMenuItem(menu, j, title);
 	    if (!NS_SUCCEEDED(rv)) 
 		  printf("nsBrowserAppCore:;BackButtonpopup ERROR while creating menu item\n");
 		Recycle(title);
@@ -580,13 +580,13 @@ nsBrowserAppCore::ForwardButtonPopup()
 	 i = length;
 
   for (PRInt32 j=indix+1;j<i;j++) {
-      PRUnichar * url=nsnull, *title=nsnull;
+      PRUnichar *title=nsnull;
+	  char * url=nsnull;
 
       mSHistory->GetURLForIndex(j, &url);
-      nsAutoString  histURL(url);
       mSHistory->GetTitleForIndex(j, &title);
       nsAutoString  histTitle(title);      
-      rv = CreateMenuItem(menu, j, url);
+      rv = CreateMenuItem(menu, j, title);
 	  if (!NS_SUCCEEDED(rv)) 
 		  printf("nsBrowserAppCore::ForwardbuttonPopup, Error while creating history menu items\n");
 	  Recycle(title);
@@ -709,7 +709,8 @@ nsBrowserAppCore::UpdateGoMenu()
      i  = length-SHISTORY_POPUP_LIST;
 
   for (PRInt32 j=length-1;j>=i;j--) {
-      PRUnichar * url=nsnull, *title=nsnull;
+      PRUnichar  *title=nsnull;
+	  char * url=nsnull;
 
       mSHistory->GetURLForIndex(j, &url);
       nsAutoString  histURL(url);
@@ -977,10 +978,7 @@ nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
   nsresult rv = NS_OK;
 
   if (mIsLoadingHistory) {
-     mIsLoadingHistory = PR_FALSE;
-	 if (mSHistory) {
-       mSHistory->ClearLoadingFlags();
-	 }
+     SetLoadingFlag(PR_FALSE);
   }
   /* Ask nsWebShell to load the URl */
   if ( mIsViewSource ) {
@@ -1476,12 +1474,12 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
   PRBool result=PR_TRUE;
   // Check with sessionHistory if you can go forward
-  CanForward(&result);
+  CanGoForward(&result);
   setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
 
 
     // Check with sessionHistory if you can go back
-  CanBack(&result);
+  CanGoBack(&result);
   setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
 
 
@@ -1571,9 +1569,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
     mSHistory->UpdateStatus(webshell, (PRInt32) aStatus); 
   }
   if (mIsLoadingHistory) {
-      if (mSHistory)
-		  mSHistory->ClearLoadingFlags();
-	  mIsLoadingHistory=PR_FALSE;
+      SetLoadingFlag(PR_FALSE);
   }
 
   /* If this is a frame, don't do any of the Global History
@@ -1809,9 +1805,7 @@ NS_IMETHODIMP
 nsBrowserAppCore::GoBack(nsIWebShell * aPrev)
 {
   if (mIsLoadingHistory) {
-	  mIsLoadingHistory = PR_FALSE;
-	  if (mSHistory)
-		  mSHistory->ClearLoadingFlags();
+	  SetLoadingFlag(PR_FALSE);
   }
   mIsLoadingHistory = PR_TRUE;
   if (mSHistory) {
@@ -1825,9 +1819,7 @@ NS_IMETHODIMP
 nsBrowserAppCore::GoForward(nsIWebShell * aPrev)
 {
   if (mIsLoadingHistory) {
-     mIsLoadingHistory = PR_FALSE;
-	 if (mSHistory)
-	   mSHistory->ClearLoadingFlags();
+     SetLoadingFlag(PR_FALSE);
   }
   mIsLoadingHistory = PR_TRUE;
   if (mSHistory) {
@@ -1845,9 +1837,7 @@ nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
 #endif // NECKO
 {
   if (mIsLoadingHistory) {
-     mIsLoadingHistory = PR_FALSE;
-	 if (mSHistory)
-	   mSHistory->ClearLoadingFlags();
+     SetLoadingFlag(PR_FALSE);
   }
   mIsLoadingHistory = PR_TRUE;
   if (mSHistory) {
@@ -1879,16 +1869,11 @@ nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev, PRBool aIsReload
    return rv;
 }
 
-NS_IMETHODIMP
-nsBrowserInstance::ClearLoadingFlags()
-{
-   mIsLoadingHistory = PR_FALSE;
-   return NS_OK;
-}
 
 NS_IMETHODIMP
 nsBrowserAppCore::SetLoadingFlag(PRBool aFlag)
 {
+  mIsLoadingHistory = aFlag;
   if (mSHistory)
 	mSHistory->SetLoadingFlag(aFlag);
   return NS_OK;
@@ -1918,21 +1903,21 @@ nsBrowserAppCore::GetLoadingFlag(PRBool *aFlag)
 
 
 NS_IMETHODIMP
-nsBrowserAppCore::CanForward(PRBool * aResult)
+nsBrowserAppCore::CanGoForward(PRBool * aResult)
 {
 
    if (mSHistory) {
-     mSHistory->CanForward(aResult);
+     mSHistory->CanGoForward(aResult);
    }
    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::CanBack(PRBool * aResult)
+nsBrowserAppCore::CanGoBack(PRBool * aResult)
 {
 
    if (mSHistory)
-     mSHistory->CanBack(aResult);
+     mSHistory->CanGoBack(aResult);
    return NS_OK;
 }
 
@@ -1957,7 +1942,7 @@ nsBrowserAppCore::GetCurrentIndex(PRInt32 * aResult)
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::GetURLForIndex(PRInt32 aIndex,  PRUnichar** aURL)
+nsBrowserAppCore::GetURLForIndex(PRInt32 aIndex,  char** aURL)
 {
    if (mSHistory)
      return  mSHistory->GetURLForIndex(aIndex, aURL);
@@ -1965,7 +1950,7 @@ nsBrowserAppCore::GetURLForIndex(PRInt32 aIndex,  PRUnichar** aURL)
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::SetURLForIndex(PRInt32 aIndex, const PRUnichar* aURL)
+nsBrowserAppCore::SetURLForIndex(PRInt32 aIndex, const char* aURL)
 {
    if (mSHistory)
       mSHistory->SetURLForIndex(aIndex, aURL);

@@ -3678,7 +3678,6 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
   const PRUnichar * title=nsnull;
   PRInt32     curIndex=0;
   nsresult rv;
-  nsAutoString newURL;
 
   /* Get current history index and url for it */
   rv = mSHist->GetCurrentIndex(&curIndex);
@@ -3686,9 +3685,7 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
   /* Get the url that netlib passed us */
   char* spec;
   aURL->GetSpec(&spec);
-  newURL = (spec);
-  nsCRT::free(spec);
-
+ 
   //Get the title from webshell
   rv = GetTitle(&title);
 
@@ -3697,8 +3694,9 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
     nsString titleStr(title);
     mSHist->SetTitleForIndex(curIndex, title);
     // Replace the top most history entry with the new url
-    mSHist->SetURLForIndex(curIndex, newURL.GetUnicode());
+    mSHist->SetURLForIndex(curIndex, spec);
   }
+  nsCRT::free(spec);
 
 
   return NS_OK;
