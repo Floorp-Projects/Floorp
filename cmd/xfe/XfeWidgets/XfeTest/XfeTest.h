@@ -58,10 +58,6 @@
 #include <Xfe/ToolItem.h>
 #include <Xfe/ToolScroll.h>
 
-#if defined(XFE_WIDGETS_BUILD_DEMO)
-#include <Xfe/TempTwo.h>
-#endif /* XFE_WIDGETS_BUILD_DEMO */
-
 #if defined(XFE_WIDGETS_BUILD_UNUSED)
 #include <Xfe/BypassShell.h>
 #include <Xfe/FontChooser.h>

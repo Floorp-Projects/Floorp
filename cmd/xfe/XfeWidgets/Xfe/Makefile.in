@@ -36,23 +36,6 @@ MODULE			= XfeWidgets/Xfe
 
 LIBRARY_NAME	= XfeWidgets
 
-# The XfeTempTwo widget is a demo.  It has all the possible bells and
-# whistles for a subclass of XfeManager.  It can be used as a template
-# when creating new XfeManager widgets.  Its not built by default
-ifdef XFE_WIDGETS_BUILD_DEMO
-
-XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_DEMO
-
-DEMO_CSRCS		= \
-				TempTwo.c \
-				$(NULL)
-
-DEMO_EXPORTS	= \
-				TempTwo.h \
-				TempTwoP.h \
-				$(NULL)
-endif
-
 # There are unused widgets.  They are currently not needed to build Mozilla.
 # Some of them are works in progress for new features.  Some of them are
 # ideas partially implemented, but never used.  Most of them are likely to
