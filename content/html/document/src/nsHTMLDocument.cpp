@@ -1247,10 +1247,20 @@ NS_IMETHODIMP
 nsHTMLDocument::ContentAppended(nsIContent* aContainer,
                                 PRInt32 aNewIndexInContainer)
 {
-  nsresult rv = RegisterNamedItems(aContainer);
+  // Register new content. That is the content numbered from
+  // aNewIndexInContainer and upwards.
+  PRInt32 i, count;
+  nsCOMPtr<nsIContent> newChild;
 
-  if (NS_FAILED(rv)) {
-    return rv;
+  aContainer->ChildCount(count);
+  for (i = aNewIndexInContainer; i < count; ++i) {
+    aContainer->ChildAt(i, *getter_AddRefs(newChild));
+    if (!newChild) {
+      // We should never get here.
+      NS_ERROR("Got a null child when registering named items!");
+      continue;
+    }
+    RegisterNamedItems(newChild);
   }
 
   return nsDocument::ContentAppended(aContainer, aNewIndexInContainer);
