@@ -484,32 +484,39 @@ nsEventStatus nsMenu::MenuConstruct(
 {
    //printf("nsMenu::MenuConstruct called \n");
    // Begin menuitem inner loop
-    nsCOMPtr<nsIDOMNode> menuitemNode;
-    ((nsIDOMNode*)mDOMNode)->GetFirstChild(getter_AddRefs(menuitemNode));
+
+  // Open the node.
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement)
+    domElement->SetAttribute("open", "true");
+
+  // Now get the kids
+  nsCOMPtr<nsIDOMNode> menuitemNode;
+  mDOMNode->GetFirstChild(getter_AddRefs(menuitemNode));
 
 	unsigned short menuIndex = 0;
 
-    while (menuitemNode) {
-      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
-      if (menuitemElement) {
-        nsString menuitemNodeType;
-        nsString menuitemName;
-        menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType.Equals("menuitem")) {
-          // LoadMenuItem
-          LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
-        } else if (menuitemNodeType.Equals("separator")) {
-          AddSeparator();
-        } else if (menuitemNodeType.Equals("menu")) {
-          // Load a submenu
-          LoadSubMenu(this, menuitemElement, menuitemNode);
-        }
+  while (menuitemNode) {
+    nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+    if (menuitemElement) {
+      nsString menuitemNodeType;
+      nsString menuitemName;
+      menuitemElement->GetNodeName(menuitemNodeType);
+      if (menuitemNodeType.Equals("menuitem")) {
+        // LoadMenuItem
+        LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
+      } else if (menuitemNodeType.Equals("separator")) {
+        AddSeparator();
+      } else if (menuitemNodeType.Equals("menu")) {
+        // Load a submenu
+        LoadSubMenu(this, menuitemElement, menuitemNode);
       }
-	  ++menuIndex;
-      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
-      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
-    } // end menu item innner loop
-    
+    }
+	++menuIndex;
+    nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
+    oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+  } // end menu item innner loop
+  
   return nsEventStatus_eIgnore;
 }
 
@@ -520,6 +527,12 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
   // We cannot call RemoveAll() yet because menu item selection may need it
   //RemoveAll();
   
+  // Close the node.
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement)
+    domElement->RemoveAttribute("open");
+
+  // Now remove the kids
   while (PR_TRUE) {
     PRUint32 cnt;
     nsresult rv = mItems->Count(&cnt);
