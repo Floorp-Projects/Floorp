@@ -33,6 +33,7 @@
 #endif
 #include "nsIUnicharInputStream.h"
 #include "nsIUnicharStreamLoader.h"
+#include "nsISupportsArray.h"
 
 class nsIDocument;
 class nsIScriptObjectOwner;
@@ -175,7 +176,7 @@ protected:
   nsIContent* mDocElement;
   XMLContentSinkState mState;
 
-  nsVoidArray* mContentStack;
+  nsCOMPtr<nsISupportsArray> mContentStack;
   nsVoidArray* mNameSpaceStack;
 
   nsScrollPreference mOriginalScrollPreference;
