@@ -397,7 +397,7 @@ Rights Reserved.
 <!ENTITY contextReplySender.label "Reply to Sender Only">
 <!ENTITY contextReplySender.accesskey "r">
 <!ENTITY contextReplyNewsgroup.label "Reply to Newsgroup">
-<!ENTITY contextReplyNewsgroup.accesskey "g">
+<!ENTITY contextReplyNewsgroup.accesskey "y">
 <!ENTITY contextReplyAll.label "Reply to All">
 <!ENTITY contextReplyAll.accesskey "p">
 <!ENTITY contextForward.label "Forward">
