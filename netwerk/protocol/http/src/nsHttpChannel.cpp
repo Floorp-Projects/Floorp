@@ -3050,7 +3050,8 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
 {
     // block socket status event after OnStopRequest has been fired.
     if (mProgressSink && mIsPending && !(mLoadFlags & LOAD_BACKGROUND)) {
-        LOG(("sending status notification [status=%x]\n", status));
+        LOG(("sending status notification [this=%x status=%x progress=%u/%u]\n",
+            this, status, progress, progressMax));
 
         NS_ConvertASCIItoUCS2 host(mConnectionInfo->Host());
         mProgressSink->OnStatus(this, nsnull, status, host.get());
@@ -3063,8 +3064,8 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
     }
 #ifdef DEBUG
     else
-        LOG(("skipping status notification [sink=%x pending=%u background=%x]\n",
-            mProgressSink.get(), mIsPending, (mLoadFlags & LOAD_BACKGROUND)));
+        LOG(("skipping status notification [this=%x sink=%x pending=%u background=%x]\n",
+            this, mProgressSink.get(), mIsPending, (mLoadFlags & LOAD_BACKGROUND)));
 #endif
 
     return NS_OK;

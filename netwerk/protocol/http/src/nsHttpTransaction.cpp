@@ -271,11 +271,15 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint32 progress)
             mTransportProgress = mContentRead;
             mTransportProgressMax = mContentLength;
         }
-        else {
+        else if (status == nsISocketTransport::STATUS_SENDING_TO) {
             // when uploading, we include the request headers in the progress
             // notifications.
             mTransportProgress = progress;
             mTransportProgressMax = mRequestSize;
+        }
+        else {
+            mTransportProgress = 0;
+            mTransportProgressMax = 0;
         }
 
         postEvent = !mTransportStatusInProgress;
