@@ -36,13 +36,13 @@ static NS_DEFINE_CID(kMimeEmitterCID, NS_RAW_MIME_EMITTER_CID);
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
 
-class nsMsgFactory : public nsIFactory
+class nsRawEmitterFactory : public nsIFactory
 {   
 public:
 	// nsISupports methods
 	NS_DECL_ISUPPORTS 
 
-  nsMsgFactory(const nsCID &aClass,
+  nsRawEmitterFactory(const nsCID &aClass,
                const char* aClassName,
                const char* aProgID,
                nsISupports*);
@@ -52,7 +52,7 @@ public:
   NS_IMETHOD LockFactory(PRBool aLock);   
 
 protected:
-  virtual ~nsMsgFactory();   
+  virtual ~nsRawEmitterFactory();   
 
   nsCID mClassID;
   char* mClassName;
@@ -60,7 +60,7 @@ protected:
   nsIServiceManager* mServiceManager;
 };   
 
-nsMsgFactory::nsMsgFactory(const nsCID &aClass,
+nsRawEmitterFactory::nsRawEmitterFactory(const nsCID &aClass,
                            const char* aClassName,
                            const char* aProgID,
                            nsISupports *compMgrSupports)
@@ -75,7 +75,7 @@ nsMsgFactory::nsMsgFactory(const nsCID &aClass,
                                   (void **)&mServiceManager);
 }   
 
-nsMsgFactory::~nsMsgFactory()   
+nsRawEmitterFactory::~nsRawEmitterFactory()   
 {
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
   
@@ -85,7 +85,7 @@ nsMsgFactory::~nsMsgFactory()
 }   
 
 nsresult
-nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)   
+nsRawEmitterFactory::QueryInterface(const nsIID &aIID, void **aResult)   
 {   
   if (aResult == NULL)  
     return NS_ERROR_NULL_POINTER;  
@@ -106,11 +106,11 @@ nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)
   return NS_OK;   
 }   
 
-NS_IMPL_ADDREF(nsMsgFactory)
-NS_IMPL_RELEASE(nsMsgFactory)
+NS_IMPL_ADDREF(nsRawEmitterFactory)
+NS_IMPL_RELEASE(nsRawEmitterFactory)
 
 nsresult
-nsMsgFactory::CreateInstance(nsISupports *aOuter,
+nsRawEmitterFactory::CreateInstance(nsISupports *aOuter,
                              const nsIID &aIID,
                              void **aResult)  
 {  
@@ -150,7 +150,7 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 }  
 
 nsresult
-nsMsgFactory::LockFactory(PRBool aLock)  
+nsRawEmitterFactory::LockFactory(PRBool aLock)  
 {  
 	if (aLock)
 		PR_AtomicIncrement(&g_LockCount); 
@@ -172,7 +172,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID, aServMgr);
+  *aFactory = new nsRawEmitterFactory(aClass, aClassName, aProgID, aServMgr);
   if (aFactory)
     return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
                                        (void**)aFactory);
@@ -190,51 +190,27 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kMimeEmitterCID,
                                        "RFC822 Parser",
                                        nsnull,
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-
-#ifdef NS_DEBUG
-  printf("*** Register RAW MIME Emitter...\n");
-#endif
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kMimeEmitterCID, path);
-  if (NS_FAILED(rv)) goto done;
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
