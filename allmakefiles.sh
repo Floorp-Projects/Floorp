@@ -785,7 +785,7 @@ if [ ! "$SYSTEM_PNG" ]; then
     MAKEFILES_libimg="$MAKEFILES_libimg modules/libimg/png/Makefile"
 fi
 
-if [ "$SYSTEM_MNG" ]; then
+if [ ! "$SYSTEM_MNG" ]; then
     MAKEFILES_libimg="$MAKEFILES_libimg modules/libimg/mng/Makefile"
 fi
 
