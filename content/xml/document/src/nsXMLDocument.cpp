@@ -33,6 +33,7 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocumentLoader.h"
 #include "nsIHTMLContent.h"
@@ -75,7 +76,6 @@
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
@@ -249,7 +249,6 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
-  nsIWebShell* webShell = nsnull;
   nsAutoString charset("UTF-8");
   PRBool bIsHTML = PR_FALSE; 
   char* aContentType;
@@ -317,13 +316,14 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   if (NS_OK == rv) {
     nsIXMLContentSink* sink;
     
-    if (aContainer)
-      rv = aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
+    nsCOMPtr<nsIDocShell> docShell;
+    if(aContainer)
+      docShell = do_QueryInterface(aContainer, &rv);
     else rv = NS_NewXMLContentSink(&sink, this, aUrl, nsnull);
 
-    if(NS_SUCCEEDED(rv) && (nsnull != webShell)) {
+    if(NS_SUCCEEDED(rv) && (docShell)) {
       nsCOMPtr<nsIContentViewer> cv;
-      webShell->GetContentViewer(getter_AddRefs(cv));
+      docShell->GetContentViewer(getter_AddRefs(cv));
       if (cv) {
         nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);            
         if (muCV) {
@@ -362,18 +362,18 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 					// get user default charset
 	    			if(kCharsetFromUserDefault > charsetSource) 
 					{
-						PRUnichar* defaultCharsetFromWebShell = NULL;
+						PRUnichar* defaultCharsetFromDocShell = NULL;
 						if (muCV) {
-  							rv = muCV->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
+  							rv = muCV->GetDefaultCharacterSet(&defaultCharsetFromDocShell);
 							if(NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_charset
-   									nsAutoString d(defaultCharsetFromWebShell);
+   									nsAutoString d(defaultCharsetFromDocShell);
  									char* cCharset = d.ToNewCString();
  									printf("From default charset, charset = %s\n", cCharset);
  									Recycle(cCharset);
 #endif
-							charset = defaultCharsetFromWebShell;
-							Recycle(defaultCharsetFromWebShell);
+							charset = defaultCharsetFromDocShell;
+							Recycle(defaultCharsetFromDocShell);
 							charsetSource = kCharsetFromUserDefault;
 						}
 					}//user default
@@ -399,20 +399,20 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 					//charset from previous loading
 					if(kCharsetFromPreviousLoading > charsetSource)
 					{
-						PRUnichar* forceCharsetFromWebShell = NULL;
+						PRUnichar* forceCharsetFromDocShell = NULL;
 						if (muCV) {
-						rv = muCV->GetForceCharacterSet(&forceCharsetFromWebShell);
+						rv = muCV->GetForceCharacterSet(&forceCharsetFromDocShell);
 						}
-						if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) 
+						if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromDocShell)) 
 						{
 #ifdef DEBUG_charset
-								nsAutoString d(forceCharsetFromWebShell);
+								nsAutoString d(forceCharsetFromDocShell);
 								char* cCharset = d.ToNewCString();
 								printf("From force, charset = %s \n", cCharset);
 								Recycle(cCharset);
 #endif
-							charset = forceCharsetFromWebShell;
-							Recycle(forceCharsetFromWebShell);
+							charset = forceCharsetFromDocShell;
+							Recycle(forceCharsetFromDocShell);
 							//TODO: we should define appropriate constant for force charset
 							charsetSource = kCharsetFromPreviousLoading;  
 						}
@@ -445,7 +445,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 					{
 						// we could do charset detection
 						nsICharsetDetector *cdet = nsnull;
-						nsIWebShellServices *wss = nsnull;
+                  nsCOMPtr<nsIWebShellServices> wss;
 						nsICharsetDetectionAdaptor *adp = nsnull;
 
 						if(NS_SUCCEEDED( rv_detect = 
@@ -462,9 +462,10 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 											cdetflt->QueryInterface(
 											NS_GET_IID(nsICharsetDetectionAdaptor),(void**) &adp)))
 												{
-													if( NS_SUCCEEDED( rv_detect=
-															webShell->QueryInterface(
-															NS_GET_IID(nsIWebShellServices),(void**) &wss)))
+                                       wss = do_QueryInterface(docShell, 
+                                          &rv_detect);
+                                          
+													if( NS_SUCCEEDED(rv_detect))
 																{
 																	rv_detect = adp->Init(wss, cdet, (nsIDocument*)this, 
 																						   mParser, charset.GetUnicode(),aCommand);													
@@ -485,7 +486,6 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 							gPlugDetector = PR_FALSE;
 						}
 
-						NS_IF_RELEASE(wss);
 						NS_IF_RELEASE(cdet);
 						NS_IF_RELEASE(adp);
 						// NO NS_IF_RELEASE(cdetflt); here, do it after mParser->SetParserFilter
@@ -497,8 +497,10 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
         }
       }
       if(NS_SUCCEEDED(rv))
+        {
+        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
         rv = NS_NewXMLContentSink(&sink, this, aUrl, webShell);
-      NS_IF_RELEASE(webShell);
+        }
     }
 
     if (NS_OK == rv) {      
