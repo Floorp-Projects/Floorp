@@ -66,8 +66,10 @@ public:
   NS_IMETHOD  GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom, PRBool &aResult) const;
   NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
   NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const;
-  NS_IMETHOD  SetZIndex(PRInt32 zindex);
+  NS_IMETHOD  SetZIndex(PRInt32 aZIndex);
   NS_IMETHOD  GetZIndex(PRInt32 &aZIndex) const;
+  NS_IMETHOD  SetAutoZIndex(PRBool aAutoZIndex);
+  NS_IMETHOD  GetAutoZIndex(PRBool &aAutoZIndex) const;
   NS_IMETHOD  SetParent(nsIView *aParent);
   NS_IMETHOD  GetParent(nsIView *&aParent) const;
   NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const;
