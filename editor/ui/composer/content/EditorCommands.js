@@ -54,8 +54,8 @@ function EditorStartup()
 function EditorShutdown()
 {
   dump("In EditorShutdown..\n");
-
-  appCore = XPAppCoresManager.Remove(editorName);
+  // this fires at all the wrong times, so I can't do this here
+  //appCore = XPAppCoresManager.Remove(appCore);
 }
 
 
