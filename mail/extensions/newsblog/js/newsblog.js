@@ -116,7 +116,8 @@ var nsNewsBlogFeedDownloader =
           if (index != -1)
             feeds.RemoveElementAt(index, false);
           removeAssertions(ds, id);
-        }
+        }  
+        else
           ds.Change(id, FZ_DESTFOLDER, node, rdf.GetResource(aFolder.URI));
       }
     } // for each feed url in the folder property
