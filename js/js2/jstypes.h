@@ -105,7 +105,7 @@ namespace JSTypes {
             f32_tag, f64_tag,
             integer_tag,
             object_tag, array_tag, function_tag, string_tag, boolean_tag, type_tag,
-            undefined_tag,
+            undefined_tag, null_tag,
             uninitialized_tag
         } Tag;
         Tag tag;
@@ -145,7 +145,7 @@ namespace JSTypes {
 
         bool isInitialized() const                      { return (tag != uninitialized_tag); }
         bool isUndefined() const                        { return (tag == undefined_tag); }
-        bool isNull() const                             { return ((tag == object_tag) && (this->object == NULL)); }
+        bool isNull() const                             { return (tag == null_tag); }
         bool isNaN() const;
         bool isNegativeInfinity() const;
         bool isPositiveInfinity() const;
@@ -173,6 +173,16 @@ namespace JSTypes {
 
 
         const JSType *getType() const;                  // map from tag type to JS2 type
+        bool isSameType(const JSValue &other) const
+        {
+            const JSType *thisType = getType();
+            const JSType *otherType = other.getType();
+            if (thisType == otherType)
+                return true;
+            if (isNumber() && other.isNumber())
+                return true;
+            return false;
+        }
 
         int operator==(const JSValue& value) const;
     };

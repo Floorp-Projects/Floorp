@@ -372,7 +372,7 @@ static JSValue less_Default(const JSValue& r1, const JSValue& r2)
         lv = lv.toNumber();
         rv = rv.toNumber();
         if (lv.isNaN() || rv.isNaN())
-            return JSValue();
+            return kFalseValue;
         else
             return JSValue(lv.f64 < rv.f64);
     }
@@ -388,26 +388,48 @@ static JSValue lessOrEqual_Default(const JSValue& r1, const JSValue& r2)
         lv = lv.toNumber();
         rv = rv.toNumber();
         if (lv.isNaN() || rv.isNaN())
-            return JSValue();
+            return kFalseValue;
         else
             return JSValue(lv.f64 <= rv.f64);
     }
 }
 static JSValue equal_Default(const JSValue& r1, const JSValue& r2)
 {
-    JSValue lv = r1.toPrimitive(JSValue::Number);
-    JSValue rv = r2.toPrimitive(JSValue::Number);
-    if (lv.isString() && rv.isString()) {
-        return JSValue(bool(lv.string->compare(*rv.string) == 0));
+    if (r1.isSameType(r2)) {
+        if (r1.isUndefined()) return kTrueValue;
+        if (r1.isNull()) return kTrueValue;
+        if (r1.isNumber()) {
+            JSValue lv = r1.toNumber(); // make sure we have f64's
+            JSValue rv = r2.toNumber();
+            if (lv.isNaN() || rv.isNaN())
+                return kFalseValue;
+            else
+                return JSValue(lv.f64 == rv.f64);   // does the right thing for +/- 0
+        }
+        if (r1.isString())
+            return JSValue(bool(r1.string->compare(*r2.string) == 0));
+        if (r1.isBoolean())
+            return JSValue(bool(r1.boolean == r2.boolean));
+        if (r1.isObject())
+            return JSValue(bool(r1.object == r2.object));
     }
-    else {
-        lv = lv.toNumber();
-        rv = rv.toNumber();
-        if (lv.isNaN() || rv.isNaN())
-            return JSValue();
-        else
-            return JSValue(lv.f64 == rv.f64);
+    else {  // different types
+        if (r1.isNull() && r2.isUndefined()) return kTrueValue;
+        if (r2.isNull() && r1.isUndefined()) return kTrueValue;
+        if (r1.isNumber() && r2.isString())
+            return equal_Default(r1, r2.toNumber());
+        if (r2.isNumber() && r1.isString())
+            return equal_Default(r1.toNumber(), r2);
+        if (r1.isBoolean())
+            return equal_Default(r1.toNumber(), r2);
+        if (r2.isBoolean())
+            return equal_Default(r1, r2.toNumber());
+        if ((r1.isString() || r1.isNumber()) && r2.isObject())
+            return equal_Default(r1, r2.toPrimitive());
+        if ((r2.isString() || r2.isNumber()) && r1.isObject())
+            return equal_Default(r1.toPrimitive(), r2);
     }
+    return kFalseValue;
 }
 static JSValue identical_Default(const JSValue& r1, const JSValue& r2)
 {

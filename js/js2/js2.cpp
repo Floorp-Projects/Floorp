@@ -347,7 +347,8 @@ static void testCompile()
             icg.genStmt(s);
             s = s->next;
         }
-        cx.interpret(icg.complete(&Void_Type), JSValues());
+        JSValue result = cx.interpret(icg.complete(&Void_Type), JSValues());
+        stdOut << "result = " << result << "\n";
     }
 }
 
