@@ -138,10 +138,6 @@ static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kMsgPrintEngineCID,		NS_MSG_PRINTENGINE_CID);
 
-
-/* This is the next generation string retrieval call */
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_) || defined(DEBUG_jefft)
 #define DEBUG_MESSENGER
 #endif
@@ -1893,7 +1889,7 @@ nsMessenger::InitStringBundle()
 		const char propertyURL[] = MESSENGER_STRING_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
-		         do_GetService(kStringBundleServiceCID, &res);
+		         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res);
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL,

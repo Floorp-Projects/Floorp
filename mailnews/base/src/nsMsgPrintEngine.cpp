@@ -59,8 +59,6 @@
 // nsMsgPrintEngine implementation
 /////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 nsMsgPrintEngine::nsMsgPrintEngine()
 {
   mCurrentlyPrintingURI = -1;
@@ -520,7 +518,7 @@ nsMsgPrintEngine::GetString(const PRUnichar *aStringName)
 		static const char propertyURL[] = MESSENGER_STRING_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
-		         do_GetService(kStringBundleServiceCID, &res); 
+		         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mStringBundle));

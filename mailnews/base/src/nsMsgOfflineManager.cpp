@@ -58,7 +58,6 @@
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsMsgOfflineManager,
                               nsIMsgOfflineManager,
@@ -281,7 +280,7 @@ nsresult nsMsgOfflineManager::ShowStatus(const char *statusMsgName)
     static const char propertyURL[] = MESSENGER_STRING_URL;
 
     nsCOMPtr<nsIStringBundleService> sBundleService = 
-             do_GetService(kStringBundleServiceCID, &res);
+             do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
     {
       res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mStringBundle));

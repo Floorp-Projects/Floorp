@@ -64,8 +64,6 @@
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
 
-/* Implementation file */
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 
 nsrefcnt nsMsgDBView::gInstanceCount	= 0;
@@ -372,7 +370,7 @@ PRUnichar * nsMsgDBView::GetString(const PRUnichar *aStringName)
 	if (!mMessengerStringBundle)
 	{
 		static const char propertyURL[] = MESSENGER_STRING_URL;
-    nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(kStringBundleServiceCID, &res);
+    nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res);
 		if (NS_SUCCEEDED(res) && sBundleService) 
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mMessengerStringBundle));
 	}

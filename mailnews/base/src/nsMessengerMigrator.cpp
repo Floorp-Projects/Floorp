@@ -99,7 +99,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
 static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
 static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define IMAP_SCHEMA "imap:/"
 #define IMAP_SCHEMA_LENGTH 6
@@ -447,7 +446,7 @@ nsMessengerMigrator::initializeStrings()
 {
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(kStringBundleServiceCID, &rv);
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsCOMPtr<nsIStringBundle> bundle;
