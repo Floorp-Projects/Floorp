@@ -99,6 +99,7 @@ nsHelperAppLauncherDialog.prototype= {
             }
             this.appLauncher.launchWithApplication( this.chosenApp, dontAskNextTime );
         } else {
+            this.appLauncher.MIMEInfo.preferredAction = this.nsIHelperAppLauncher.saveToDisk;
             this.appLauncher.saveToDisk( null, dontAskNextTime );
         }
     

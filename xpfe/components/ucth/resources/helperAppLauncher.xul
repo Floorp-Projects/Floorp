@@ -38,7 +38,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="window.dialog = new nsHelperAppLauncherDialog()"
-        onunload="window.dialog.onCancel()"
         style="width: 40em;"
         class="dialog"
         align="vertical"
