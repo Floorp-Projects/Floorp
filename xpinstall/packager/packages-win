@@ -33,11 +33,9 @@ bin\raptorview.dll
 bin\raptorweb.dll
 bin\raptorwidget.dll
 bin\xpcom.dll
-bin\xppref32.dll
 bin\xpistub.dll
 bin\zlib.dll
 bin\plugins\*
-bin\components\all.js
 bin\components\appshell.xpt
 bin\components\bookmarks.dll
 bin\components\bookmarks.xpt
@@ -46,7 +44,6 @@ bin\components\caps.dll
 bin\components\caps.xpt
 bin\components\chardet.dll
 bin\components\chrome.dll
-bin\components\config.js
 bin\components\cookie.dll
 bin\components\cookieviewer.xpt
 bin\components\directory.dll
@@ -54,7 +51,6 @@ bin\components\dom.xpt
 bin\components\eventloop.dll
 bin\components\history.dll
 bin\components\history.xpt
-bin\components\initpref.js
 bin\components\intl.xpt
 bin\components\jar.xpt
 bin\components\jar50.dll
@@ -93,11 +89,12 @@ bin\components\nsxpi.xpt
 bin\components\oji.dll
 bin\components\oji.xpt
 bin\components\pics.dll
-bin\components\pm_progress.xpt
 bin\components\pref.xpt
 bin\components\prefwind.dll
 bin\components\prefwindow.xpt
+bin\components\profidl.xpt
 bin\components\profile.dll
+bin\components\profile.xpt
 bin\components\proxyObjInst.xpt
 bin\components\raptorhtml.dll
 bin\components\rdf.dll
@@ -122,15 +119,13 @@ bin\components\ucvtw2.dll
 bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
 bin\components\widget.xpt
-bin\components\winpref.js
 bin\components\xpc3250.dll
-bin\components\xpcom.xpt
 bin\components\xpcom_base.xpt
 bin\components\xpcom_ds.xpt
 bin\components\xpcom_io.xpt
 bin\components\xpconnect.xpt
 bin\components\xpiflash.dll
-bin\components\xpinstall.js
+bin\components\xppref32.dll
 bin\chrome\bookmarks\*
 bin\chrome\content\*
 bin\chrome\directory\*
@@ -141,7 +136,11 @@ bin\chrome\pref\*
 bin\chrome\registry.rdf
 bin\chrome\related\*
 bin\chrome\sidebar\*
-bin\defaults\bookmarks.html
+bin\defaults\pref\all.js
+bin\defaults\pref\config.js
+bin\defaults\pref\initpref.js
+bin\defaults\pref\winpref.js
+bin\defaults\pref\xpinstall.js
 bin\res\profile\*
 bin\res\toolbar\*
 bin\res\throbber\*
@@ -155,7 +154,6 @@ bin\msgbsutl.dll
 bin\components\addrbook.dll
 bin\components\addrbook.xpt
 bin\components\emitter.dll
-bin\components\mailnews.js
 bin\components\mailnewspublic.xpt
 bin\components\mime.dll
 bin\components\mime.xpt
@@ -176,12 +174,13 @@ bin\components\vcard.dll
 bin\chrome\addressbook\*
 bin\chrome\messenger\*
 bin\chrome\messengercompose\*
+bin\defaults\pref\mailnews.js
 bin\help\mailhelp\*
 
 [editor]
-bin\components\editor.js
 bin\components\editor.xpt
 bin\components\ender.dll
 bin\components\txmgr.dll
 bin\components\txtsvc.dll
 bin\chrome\editor\*
+bin\defaults\pref\editor.js
