@@ -1122,7 +1122,6 @@ NS_IMETHODIMP nsMsgNewsFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags
 				{
 					nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
 					listener->OnItemRemoved(this, msgSupports);
-					NS_RELEASE(listener);
 				}
 				NS_IF_RELEASE(msgSupports);
 			}

@@ -1360,7 +1360,7 @@ NS_IMETHODIMP nsImapMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged,
 				{
 					nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
 					listener->OnItemRemoved(this, msgSupports);
-					NS_RELEASE(listener);
+//					NS_RELEASE(listener);	// since mListeners is NOT an nsISupportsArray, don't release, eh?
 				}
 				NS_IF_RELEASE(msgSupports);
 			}
