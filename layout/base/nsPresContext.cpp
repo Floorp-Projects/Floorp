@@ -440,6 +440,15 @@ nsPresContext::RemapStyleAndReflow()
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
+  // XXX for WM_FONTCHANGE messages, only flush the font cache (bug=89493)
+ //     because nsObjectFrame can't handle a reframe at this time              
+  if (strcmp(aPrefName,"font.internaluseonly.changed") == 0) {
+    if (mDeviceContext) {
+      mDeviceContext->FlushFontCache();
+    }
+    return;
+  }
+
   // Initialize our state from the user preferences
   GetUserPreferences();
 
