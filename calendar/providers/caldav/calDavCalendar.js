@@ -57,7 +57,7 @@
 
 function calDavCalendar() {
     this.wrappedJSObject = this;
-    this.mObservers = { };
+    this.mObservers = [ ];
     this.mItems = { };
 }
 
@@ -647,25 +647,25 @@ calDavCalendar.prototype = {
     observeBatchChange: function (aNewBatchMode) {
         for (var i = 0; i < this.mObservers.length; i++) {
             if (aNewBatchMode)
-                this.mObservers[i].onStartBatch ();
+                this.mObservers[i].observer.onStartBatch ();
             else
-                this.mObservers[i].onEndBatch ();
+                this.mObservers[i].observer.onEndBatch ();
         }
     },
 
     observeAddItem: function (aItem) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].onAddItem (aItem);
+            this.mObservers[i].observer.onAddItem (aItem);
     },
 
     observeModifyItem: function (aOldItem, aNewItem) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].onModifyItem (aOldItem, aNewItem);
+            this.mObservers[i].observer.onModifyItem (aOldItem, aNewItem);
     },
 
     observeDeleteItem: function (aDeletedItem) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].onDeleteItem (aDeletedItem);
+            this.mObservers[i].observer.onDeleteItem (aDeletedItem);
     }
 };
 
