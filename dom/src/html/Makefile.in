@@ -41,6 +41,7 @@ CPPSRCS =			\
 	nsJSHTMLDivElement.cpp \
 	nsJSHTMLDocument.cpp \
 	nsJSHTMLElement.cpp \
+	nsJSHTMLEmbedElement.cpp \
 	nsJSHTMLFieldSetElement.cpp \
 	nsJSHTMLFontElement.cpp \
 	nsJSHTMLFormElement.cpp \
