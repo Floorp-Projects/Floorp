@@ -26,6 +26,7 @@
 #include "nsIDOMDragListener.h"
 #include "nsIDOMCompositionListener.h"
 #include "nsITextEditor.h"
+#include "nsIDataFlavor.h"
 #include "nsCOMPtr.h"
 
 /** The nsTextEditorKeyListener public nsIDOMKeyListener
@@ -186,17 +187,20 @@ public:
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-/*BEGIN implementations of mouseevent handler interface*/
+/*BEGIN implementations of dragevent handler interface*/
     virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 public:
   virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
   virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
   virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
   virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
-/*END implementations of mouseevent handler interface*/
+/*END implementations of dragevent handler interface*/
 
 protected:
   nsCOMPtr<nsITextEditor> mEditor;
+
+  nsCOMPtr<nsIDataFlavor> mTextDataFlavor;
+  nsCOMPtr<nsIDataFlavor> mImageDataFlavor;
 
 };
 

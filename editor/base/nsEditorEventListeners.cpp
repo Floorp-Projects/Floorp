@@ -46,25 +46,17 @@ static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsIDragService.h"
+#include "nsIDragSession.h"
 #include "nsITransferable.h"
 #include "nsIGenericTransferable.h"
 #include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
-static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
-static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
-
-static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
-static NS_DEFINE_CID(kCDragServiceCID,   NS_DRAGSERVICE_CID);
-
-static NS_DEFINE_IID(kIGenericTransferableIID,  NS_IGENERICTRANSFERABLE_IID);
-static NS_DEFINE_CID(kCGenericTransferableCID,  NS_GENERICTRANSFERABLE_CID);
-static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
-static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
-
-static NS_DEFINE_IID(kCXIFFormatConverterCID,    NS_XIFFORMATCONVERTER_CID);
-static NS_DEFINE_IID(kIFormatConverterIID, NS_IFORMATCONVERTER_IID);
+static NS_DEFINE_CID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
+static NS_DEFINE_CID(kCGenericTransferableCID, NS_GENERICTRANSFERABLE_CID);
+static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
+static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
 
 /*
@@ -873,31 +865,6 @@ nsTextEditorTextListener::~nsTextEditorTextListener()
 {
 }
 
-
-/*
- * nsTextEditorDragListener implementation
- */
-
-
-
-NS_IMPL_ADDREF(nsTextEditorDragListener)
-
-NS_IMPL_RELEASE(nsTextEditorDragListener)
-
-
-nsTextEditorDragListener::nsTextEditorDragListener() 
-{
-  NS_INIT_REFCNT();
-}
-
-
-
-nsTextEditorDragListener::~nsTextEditorDragListener() 
-{
-}
-
-
-
 nsresult
 nsTextEditorTextListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -945,6 +912,37 @@ nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
 }
 
 
+/*
+ * nsTextEditorDragListener implementation
+ */
+
+NS_IMPL_ADDREF(nsTextEditorDragListener)
+
+NS_IMPL_RELEASE(nsTextEditorDragListener)
+
+
+nsTextEditorDragListener::nsTextEditorDragListener() 
+{
+  NS_INIT_REFCNT();
+  
+  nsresult rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, 
+                                                   nsIDataFlavor::GetIID(), 
+                                                   (void**) getter_AddRefs(mTextDataFlavor));
+  if (NS_OK == rv) {
+    mTextDataFlavor->Init(kTextMime, "");
+  }
+
+  /*rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, 
+                                                   nsIDataFlavor::GetIID(), (void**) getter_AddRefs(mImageDataFlavor));
+  if (NS_OK == rv) {
+    mImageDataFlavor->Init(kJPEGImageMime, "");
+  }*/
+}
+
+nsTextEditorDragListener::~nsTextEditorDragListener() 
+{
+}
+
 nsresult
 nsTextEditorDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -988,10 +986,15 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 #ifdef NEW_DRAG_AND_DROP
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                           kIDragServiceIID,
-                                           (nsISupports **)&dragService);
+                                             nsIDragService::GetIID(),
+                                             (nsISupports **)&dragService);
   if (NS_OK == rv) {
-    dragService->SetCanDrop(PR_TRUE);
+    nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
+
+    if (dragSession && (NS_OK == dragSession->IsDataFlavorSupported(mTextDataFlavor))) {
+      dragSession->SetCanDrop(PR_TRUE);
+    }
+    
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
 #endif
@@ -1005,10 +1008,15 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
 #ifdef NEW_DRAG_AND_DROP
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                           kIDragServiceIID,
+                                           nsIDragService::GetIID(),
                                            (nsISupports **)&dragService);
   if (NS_OK == rv) {
-    dragService->SetCanDrop(PR_TRUE);
+    nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
+
+    if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(mTextDataFlavor)) {
+      dragSession->SetCanDrop(PR_TRUE);
+    } 
+    
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
 #endif
@@ -1029,36 +1037,53 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
 
 #ifdef NEW_DRAG_AND_DROP
+  // String for doing paste
   nsString stuffToPaste;
+
+  // Create drag service for getting state of drag
   nsIDragService* dragService;
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             kIDragServiceIID,
+                                             nsIDragService::GetIID(),
                                              (nsISupports **)&dragService);
   if (NS_OK == rv) {
-    nsCOMPtr<nsIGenericTransferable> genericTrans;
-    rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
-                                            kIGenericTransferableIID, (void**) getter_AddRefs(genericTrans));
-    if (NS_OK == rv) {
-      nsCOMPtr<nsIDataFlavor> flavor;
-      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) getter_AddRefs(flavor));
+    nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
+  
+    if (dragSession) {
+
+      // Create transferable for getting the drag data
+      nsCOMPtr<nsIGenericTransferable> genericTrans;
+      rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
+                                              nsIGenericTransferable::GetIID(), 
+                                              (void**) getter_AddRefs(genericTrans));
       if (NS_OK == rv) {
-        flavor->Init(kTextMime, "Text");
+        // Add the text Flavor to the transferable, 
+        // because that is the only type of data we are looking for at the moment
+        genericTrans->AddDataFlavor(mTextDataFlavor);
+        //genericTrans->AddDataFlavor(mImageDataFlavor);
 
-        genericTrans->AddDataFlavor(flavor);
-
+        // Query to get the standard interface that the drag service knows about
         nsCOMPtr<nsITransferable> trans (do_QueryInterface(genericTrans));
         if (trans) {
 
-          dragService->GetData(trans);
+          // Fill the transferable with our requested data flavor
+          dragSession->GetData(trans);
 
+          // Get the string data out of the transferable
+          // Note: the transferable owns the pointer to the data
           char *str = 0;
           PRUint32 len;
-          trans->GetTransferData(flavor, (void **)&str, &len);
+          trans->GetTransferData(mTextDataFlavor, (void **)&str, &len);
 
+          // If the string was not empty then paste it in
           if (str) {
             stuffToPaste.SetString(str, len);
             mEditor->InsertText(stuffToPaste);
           }
+
+          // XXX This is where image support might go
+          //void * data;
+          //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
+
         }
       }
     }
@@ -1067,9 +1092,9 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 
 #endif  
   
-  //mEditor->InsertText(nsAutoString("hello"));
   return NS_OK;
 }
+
 
 nsTextEditorCompositionListener::nsTextEditorCompositionListener()
 {
