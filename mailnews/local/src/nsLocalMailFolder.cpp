@@ -69,14 +69,8 @@
 #include "nsMsgUtils.h"
 #include "nsLocalUtils.h"
 #include "nsIPop3IncomingServer.h"
-#ifdef HAVE_MOVEMAIL
-#include "nsMovemailIncomingServer.h"
-#endif /* HAVE_MOVEMAIL */
 #include "nsILocalMailIncomingServer.h"
 #include "nsIPop3Service.h"
-#ifdef HAVE_MOVEMAIL
-#include "nsIMovemailService.h"
-#endif /* HAVE_MOVEMAIL */
 #include "nsIMsgIncomingServer.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
@@ -108,9 +102,6 @@ static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
-#ifdef HAVE_MOVEMAIL
-static NS_DEFINE_CID(kCMovemailServiceCID, NS_MOVEMAILSERVICE_CID);
-#endif /* HAVE_MOVEMAIL */
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -2163,7 +2154,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrl
   if (NS_FAILED(rv)) return rv;
   if (!localMailServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
   
-  //GGGGGGG
   nsCOMPtr<nsIMsgFolder> inbox;
   nsCOMPtr<nsIMsgFolder> rootFolder;
   rv = GetRootFolder(getter_AddRefs(rootFolder));
