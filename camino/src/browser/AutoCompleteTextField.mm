@@ -472,8 +472,15 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // need to use one of its routines to update the autocomplete status or
   // we could find ourselves with stale results and the popup still open. If
   // it doesn't have focus, we can bypass all that and just use normal routines.
-  if ( [[self window] firstResponder] == [self fieldEditor] )
+  if ( [[self window] firstResponder] == [self fieldEditor] ) {
     [self setStringUndoably:aURI fromLocation:0];		// updates autocomplete correctly
+
+    // set insertion point to the end of the url. setStringUndoably:fromLocation:
+    // will leave it at the beginning of the text field for this case and
+    // that really looks wrong.
+    int len = [[[self fieldEditor] string] length];
+    [[self fieldEditor] setSelectedRange:NSMakeRange(len, len)];
+  }
   else
     [self setStringValue:aURI];
 }
@@ -498,7 +505,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // sanity check and don't update the highlight if we're starting from the
   // beginning of the string. There's no need for that since no autocomplete
   // result would ever replace the string from location 0.
-	if ( aLocation > [[fieldEditor string] length] || !aLocation )
+  if ( aLocation > [[fieldEditor string] length] || !aLocation )
     return;
   range = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
   [fieldEditor setSelectedRange:range];
