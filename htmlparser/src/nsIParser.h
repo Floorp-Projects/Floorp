@@ -219,8 +219,20 @@ class nsIParser : public nsISupports {
      *  until you wind up being emitted to the given contentsink (which may or may not
 	   *  be a proxy for the NGLayout content model).
      ******************************************************************************************/
-    virtual nsresult  EnableParser(PRBool aState) = 0;
-    virtual PRBool    IsParserEnabled() = 0;
+    
+    // This method enables the parser ( by calling UnblockParser() ) and resumes parsing.
+    virtual nsresult  ResumeParsing()   =0;
+    
+    // Stops parsing temporarily.
+    virtual void      BlockParser()     =0;
+    
+    // Open up the parser for tokenization, building up content 
+    // model..etc. However, this method does not resume parsing 
+    // automatically. It's the callers' responsibility to restart
+    // the parsing engine.
+    virtual void      UnblockParser()   =0;
+
+    virtual PRBool    IsParserEnabled() =0;
     
     virtual nsresult  Parse(nsIURI* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     virtual nsresult	Parse(nsIInputStream& aStream, const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;

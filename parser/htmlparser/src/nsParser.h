@@ -213,7 +213,9 @@ class nsParser : public nsIParser,
      *  @param   aState determines whether we parse/tokenize or just cache.
      *  @return  current state
      */
-    virtual nsresult  EnableParser(PRBool aState);
+    virtual nsresult  ResumeParsing();
+    virtual void      BlockParser();
+    virtual void      UnblockParser();
     virtual nsresult  Terminate(void);
 
     /**
@@ -407,7 +409,7 @@ protected:
     CObserverService    mObserverService;
     PRBool              mObserversEnabled;
     nsString            mCommandStr;
-    
+    PRBool              mParserEnabled;
     nsParserBundle*     mBundle;
     nsTokenAllocator    mTokenAllocator;
 

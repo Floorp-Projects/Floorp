@@ -237,6 +237,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
   mInternalState=NS_OK;
   mObserversEnabled=PR_TRUE;
   mCommand=eViewNormal;
+  mParserEnabled=PR_TRUE; 
   mBundle=nsnull;
 
   MOZ_TIMER_DEBUGLOG(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
@@ -1413,10 +1414,12 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
   //One last thing...close any open containers.
   nsresult result=anErrorCode;
 
-  if((mParserContext) && mParserContext->mParserEnabled) {
-    if((!mParserContext->mPrevContext) && (mParserContext->mDTD)) {
+  if(mParserEnabled && mParserContext && !mParserContext->mPrevContext) {
+    if(mParserContext->mDTD) {
       result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
     }
+    //Ref. to bug 61462.
+    NS_IF_RELEASE(mBundle); 
   }//if
 
   return result;
@@ -1432,9 +1435,6 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
  */
 void nsParser::PushContext(CParserContext& aContext) {
   aContext.mPrevContext=mParserContext;  
-  if (mParserContext) { 
-     aContext.mParserEnabled = mParserContext->mParserEnabled;
-  } 
   mParserContext=&aContext;
 }
 
@@ -1453,7 +1453,6 @@ CParserContext* nsParser::PopContext() {
     // back to the new one. Also, propagate the stream listener state
     // but don't override onStop state to guarantee the call to DidBuildModel().
     if (mParserContext) {
-      mParserContext->mParserEnabled = oldContext->mParserEnabled;
       if(mParserContext->mStreamListenerState!=eOnStop) {
         mParserContext->mStreamListenerState = oldContext->mStreamListenerState;
       }
@@ -1499,47 +1498,62 @@ nsresult nsParser::Terminate(void){
   return mInternalState;
 }
 
+
 /**
- *  Call this when you want control whether or not the parser will parse
- *  and tokenize input (TRUE), or whether it just caches input to be 
- *  parsed later (FALSE).
+ *  Call this when you want to toggle from the blocked state and resume parsing
  *  
  *  @update  gess 1/29/99
  *  @param   aState determines whether we parse/tokenize or just cache.
  *  @return  current state
  */
-nsresult nsParser::EnableParser(PRBool aState){
-
+nsresult nsParser::ResumeParsing(){
+    
   // If the stream has already finished, there's a good chance
   // that we might start closing things down when the parser
   // is reenabled. To make sure that we're not deleted across
   // the reenabling process, hold a reference to ourselves.
   nsresult result=NS_OK;
-  nsIParser* me = this;
-  NS_ADDREF(me);
+  nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
 
-  // If we're reenabling the parser
-  if(mParserContext) {
-    mParserContext->mParserEnabled=aState;
-    if(aState) {
+  // Enable the parser
+  UnblockParser();
 
-      //printf("  Re-enable parser\n");
-      PRBool isFinalChunk=(mParserContext->mStreamListenerState==eOnStop)? PR_TRUE:PR_FALSE;
-      
-      result=ResumeParse(PR_TRUE,isFinalChunk); // Ref. bug 57999
-      
-      if(result!=NS_OK) 
-        result=mInternalState;
-    }
-    else {
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::EnableParser(), this=%p\n", this));
-      MOZ_TIMER_STOP(mParseTime);
-    }  
-  }
+  PRBool isFinalChunk=(mParserContext && mParserContext->mStreamListenerState==eOnStop)? PR_TRUE:PR_FALSE;
+  
+  result=ResumeParse(PR_TRUE,isFinalChunk); // Ref. bug 57999
+  
+  if(result!=NS_OK) 
+    result=mInternalState;
 
-  // Release reference if we added one at the top of this routine
-  NS_IF_RELEASE(me);
   return result;
+}
+
+/**
+ *  Stops parsing temporarily. That's it will prevent the
+ *  parser from building up content model.
+ *
+ *  @update  
+ *  @return  
+ */
+void nsParser::BlockParser() {
+  mParserEnabled=PR_FALSE;
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::BlockParser(), this=%p\n", this));
+  MOZ_TIMER_STOP(mParseTime);
+}
+
+/**
+ *  Open up the parser for tokenization, building up content 
+ *  model..etc. However, this method does not resume parsing 
+ *  automatically. It's the callers' responsibility to restart
+ *  the parsing engine.
+ *
+ *  @update  
+ *  @return  
+ */
+void nsParser::UnblockParser() {
+  mParserEnabled=PR_TRUE;
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::UnblockParser(), this=%p\n", this));
+  MOZ_TIMER_START(mParseTime);
 }
 
 /**
@@ -1549,7 +1563,7 @@ nsresult nsParser::EnableParser(PRBool aState){
  *  @return  current state
  */
 PRBool nsParser::IsParserEnabled() {
-  return mParserContext->mParserEnabled;
+  return mParserEnabled;
 }
 
 
@@ -1863,7 +1877,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
 
   nsresult result=NS_OK;
 
-  if(mParserContext->mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
+  if(mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
 
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
@@ -1904,8 +1918,8 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
         if(NS_ERROR_HTMLPARSER_BLOCK==result) {
               //BLOCK == 2152596464
            mParserContext->mDTD->WillInterruptParse();
-           result=EnableParser(PR_FALSE);
-           return result;
+           BlockParser();
+           return NS_OK;
         }
         
         else if (NS_ERROR_HTMLPARSER_STOPPARSING==result) {
@@ -2392,7 +2406,7 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
     gOutFile=0;
   }
 #endif
-  NS_IF_RELEASE(mBundle);
+
   return result;
 }
 
