@@ -1232,7 +1232,7 @@ enum {
 };
 
 PRUint16*
-nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset)
+nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFontType, PRUint8& aCharset)
 {
   PRUint32 map[UCS2_MAP_LEN];
 
@@ -1274,25 +1274,16 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFont
         // a non-unicode font.
         nsAutoString encoding;
         if (NS_SUCCEEDED(GetEncoding(aShortName, encoding))) {
-          if (aCharset) {
-            *aCharset = DEFAULT_CHARSET;
-          }
-          if (aFontType) {
-            *aFontType = eFontType_NonUnicode;
-          }
-
+          aCharset = DEFAULT_CHARSET;
+          aFontType = eFontType_NonUnicode;
           nsMemory::Free(buf);
           return GetCCMapThroughConverter(aShortName);
         } // if GetEncoding();
         break;  // break out from for(;;) loop
       } // if (encodingID == eTTMicrosoftEncodingUnicode) 
       else if (encodingID == eTTMicrosoftEncodingSymbol) { // symbol
-        if (aCharset) {
-          *aCharset = SYMBOL_CHARSET;
-        }
-        if (aFontType) {
-          *aFontType = eFontType_NonUnicode;
-        }
+        aCharset = SYMBOL_CHARSET;
+        aFontType = eFontType_NonUnicode;
         nsMemory::Free(buf);
         return GetCCMapThroughConverter(aShortName);
       }
@@ -1385,13 +1376,9 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFont
   nsMemory::Free(buf);
   nsMemory::Free(isSpace);
 
-  if (aCharset) {
-    *aCharset = DEFAULT_CHARSET;
-  }
-  if (aFontType) {
-    *aFontType = eFontType_Unicode;
-  }
-  
+  aCharset = DEFAULT_CHARSET;
+  aFontType = eFontType_Unicode;
+ 
   return MapToCCMap(map);
 }
 
@@ -1417,6 +1404,8 @@ nsFontMetricsWin::GetCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType
       return nsnull;
     }
   }
+  eFontType fontType = eFontType_Unicode;
+  PRUint8 charset = DEFAULT_CHARSET;
   nsString* name = new nsString(); // deleted by fontmap_FreeEntry
   if (!name) {
     return nsnull;
@@ -1446,7 +1435,7 @@ nsFontMetricsWin::GetCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType
   // GDIError occurs when we have raster font (not TrueType)
   else if (ret == eGetName_GDIError) {
     delete name;
-    int charset = GetTextCharset(aDC);
+    charset = GetTextCharset(aDC);
     if (charset & (~0xFF)) {
       return gEmptyCCMap;
     }
@@ -1478,7 +1467,16 @@ nsFontMetricsWin::GetCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType
     return gEmptyCCMap;
   }
 
-  PRUint16* ccmap = GetFontCCMAP(aDC, aShortName, aFontType, aCharset);
+  if (aFontType)
+    fontType = *aFontType;
+  if (aCharset)
+    charset = *aCharset;
+  PRUint16* ccmap = GetFontCCMAP(aDC, aShortName, fontType, charset);
+  if (aFontType)
+    *aFontType = fontType; 
+  if (aCharset)
+    *aCharset = charset;
+
   if (!ccmap) {
     delete name;
     return gEmptyCCMap;
@@ -1490,6 +1488,8 @@ nsFontMetricsWin::GetCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType
   if (he) {
     info = NS_STATIC_CAST(nsFontInfo*, he);
     he->value = info;    // so PL_HashTableLookup returns an nsFontInfo*
+    info->mType = fontType;
+    info->mCharset = charset;
     info->mCCMap = ccmap;
     return ccmap;
   }
