@@ -80,17 +80,6 @@ protected:
     PRUint32 mChildIndex;
 };
 
-class wsRDFGetChildCountEvent : public nsActionEvent {
-public:
-    wsRDFGetChildCountEvent(WebShellInitContext *yourInitContext, 
-                            PRUint32 yourNativeRDFNode);
-    void * handleEvent(void);
-
-protected:
-    WebShellInitContext *mInitContext;
-    PRUint32 mNativeRDFNode;
-};
-
 class wsRDFGetChildIndexEvent : public nsActionEvent {
 public:
     wsRDFGetChildIndexEvent(WebShellInitContext *yourInitContext, 
@@ -102,17 +91,6 @@ protected:
     WebShellInitContext *mInitContext;
     PRUint32 mNativeRDFNode;
     PRUint32 mChildRDFNode;
-};
-
-class wsRDFToStringEvent : public nsActionEvent {
-public:
-    wsRDFToStringEvent(WebShellInitContext *yourInitContext, 
-                       PRUint32 yourNativeRDFNode);
-    void * handleEvent(void);
-
-protected:
-    WebShellInitContext *mInitContext;
-    PRUint32 mNativeRDFNode;
 };
 
 class wsRDFInsertElementAtEvent : public nsActionEvent {

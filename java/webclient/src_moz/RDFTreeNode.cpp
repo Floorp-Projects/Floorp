@@ -29,6 +29,7 @@
 #include "ns_util.h"
 
 #include "nsIServiceManager.h"
+#include "nsString.h" // for nsCAutoString
 
 #include "prlog.h" // for PR_ASSERT
 
@@ -57,15 +58,19 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_RDFTreeNod
         ::util_ThrowExceptionToJava(env, "Exception: can't getChildAt");
         return result;
     }
-    wsRDFGetChildCountEvent *actionEvent = 
-        new wsRDFGetChildCountEvent(initContext,
-                                    (PRUint32) nativeRDFNode);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
 
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
+    PRInt32 count;
+    nsresult rv;
+    // PENDING(edburns): assert rdf_InitRDFUtils()
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) nativeRDFNode;
 
-    childCount = (jint) voidResult;
-    result = (childCount == 0) ? JNI_TRUE : JNI_FALSE;
+    rv = rdf_getChildCount(parent, &count);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeGetChildCount: Can't get child count.");
+        return nsnull;
+    }
+    result = (count == 0) ? JNI_TRUE : JNI_FALSE;
+
 
     return result;
 }
@@ -145,13 +150,17 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildCount
         ::util_ThrowExceptionToJava(env, "Exception: can't getChildAt");
         return result;
     }
-    wsRDFGetChildCountEvent *actionEvent = 
-        new wsRDFGetChildCountEvent(initContext,
-                                    (PRUint32) nativeRDFNode);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
-    
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    result = (jint) voidResult;
+    PRInt32 count;
+    nsresult rv;
+    // PENDING(edburns): assert rdf_InitRDFUtils()
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) nativeRDFNode;
+
+    rv = rdf_getChildCount(parent, &count);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeGetChildCount: Can't get child count.");
+        return result;
+    }
+    result = (jint) count;
 
     return result;
 }
@@ -203,13 +212,95 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
         ::util_ThrowExceptionToJava(env, "Exception: can't toString");
         return result;
     }
-    wsRDFToStringEvent *actionEvent = 
-        new wsRDFToStringEvent(initContext,
-                               (PRUint32) nativeRDFNode);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
+
+    nsCOMPtr<nsIRDFResource> currentResource = 
+        (nsIRDFResource *) nativeRDFNode;
+    nsCOMPtr<nsIRDFNode> node;
+    nsCOMPtr<nsIRDFLiteral> literal;
+    PRBool isContainer = PR_FALSE;
+    nsresult rv;
+    const PRUnichar *textForNode = nsnull;
+
+    rv = gRDFCU->IsContainer(gBookmarksDataSource, currentResource, 
+                             &isContainer);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeToString: Can't tell if RDFResource is container.");
+        return nsnull;
+    }
     
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    result = (jstring) voidResult;
+    if (isContainer) {
+        // It's a bookmarks folder
+        rv = gBookmarksDataSource->GetTarget(currentResource,
+                                             kNC_Name, PR_TRUE, 
+                                             getter_AddRefs(node));
+        // get the name of the folder
+        if (rv == 0) {
+            // if so, make sure it's an nsIRDFLiteral
+            rv = node->QueryInterface(NS_GET_IID(nsIRDFLiteral), 
+                                      getter_AddRefs(literal));
+            if (NS_SUCCEEDED(rv)) {
+                rv = literal->GetValueConst(&textForNode);
+            }
+            else {
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("nativeToString: node is not an nsIRDFLiteral.\n"));
+                }
+            }
+        }
+    }
+    else {
+        // It's a bookmark or a Separator
+        rv = gBookmarksDataSource->GetTarget(currentResource,
+                                             kNC_URL, PR_TRUE, 
+                                             getter_AddRefs(node));
+        // See if it has a Name
+        if (0 != rv) {
+            rv = gBookmarksDataSource->GetTarget(currentResource,
+                                                 kNC_Name, PR_TRUE, 
+                                                 getter_AddRefs(node));
+        }
+        
+        if (0 == rv) {
+            rv = node->QueryInterface(NS_GET_IID(nsIRDFLiteral), 
+                                      getter_AddRefs(literal));
+            if (NS_SUCCEEDED(rv)) {
+                // get the value of the literal
+                rv = literal->GetValueConst(&textForNode);
+                if (NS_FAILED(rv)) {
+                    if (prLogModuleInfo) {
+                        PR_LOG(prLogModuleInfo, 3, 
+                               ("nativeToString: node doesn't have a value.\n"));
+                    }
+                }
+            }
+            else {
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("nativeToString: node is not an nsIRDFLiteral.\n"));
+                }
+            }
+        }
+        else {
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("nativeToString: node doesn't have a URL.\n"));
+            }
+        }
+    }
+
+    if (nsnull != textForNode) {
+        nsString * string = new nsString(textForNode);
+        int length = 0;
+        if (nsnull != string) {
+            length = string->Length();
+        }
+
+        result = ::util_NewString(env, (const jchar *) textForNode, length);
+    }
+    else {
+        result = ::util_NewStringUTF(env, "");
+    }
 
     return result;
 }

@@ -466,6 +466,9 @@ static void event_processor_callback(gpointer data,
 void DoMozInitialization(WebShellInitContext * initContext)
 {    
     if (gFirstTime) {
+        // PENDING(edburns): figure out why we need this
+        PR_SetEnv("XPCOM_CHECK_THREADSAFE=0");
+        
         nsILocalFile * pathFile = nsnull;
         nsresult rv = nsnull;
         JNIEnv *   env = initContext->env;
