@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.11 2003/02/28 23:32:29 relyea%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.12 2003/03/03 19:46:22 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -380,7 +380,7 @@ NSS_CMSRecipientInfo_Destroy(NSSCMSRecipientInfo *ri)
 	if (extra->pubKey)
 	    SECKEY_DestroyPublicKey(extra->pubKey);
     }
-    if (ri->cmsg->contentInfo.contentTypeTag == &fakeContent) {
+    if (ri->cmsg && ri->cmsg->contentInfo.contentTypeTag == &fakeContent) {
 	NSS_CMSMessage_Destroy(ri->cmsg);
     }
 
