@@ -31,10 +31,19 @@ export::
 	-mkdir $(CCKDIST)
 	-mkdir $(CCKDIST)\CCKTool
 	-mkdir $(CCKDIST)\CCKTool\Configs
-	-mkdir $(CCKDIST)\CCKTool\NCIFiles
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Autorun
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell\bmps
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell\nsetup32
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\CD
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Network
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\AnimLogo
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell\bmps
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell\nsetup32
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Bkmarks
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\CustInst
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Installer
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup\NCIFiles
+
 	-mkdir $(CCKDIST)\CCKTool\Shell
