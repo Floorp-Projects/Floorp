@@ -403,3 +403,22 @@ function removeOverride(aMIMEType)
     }
   }
 }
+
+function checkInput() {
+  var result = true;
+  // Check for empty MIME type field.
+  if ( gMIMEField.value == "" ) {
+    // Input is not OK.
+    result = false;
+
+    // Focus the mime type field.
+    gMIMEField.focus();
+
+    // Put up alert.  Title is same as parent dialog's.
+    var title    = window.document.documentElement.getAttribute( "title" );
+    var text     = gPrefApplicationsBundle.getString("emptyMIMEType");
+    var prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    prompter.alert(window, title, text);
+  }
+  return result;
+}
