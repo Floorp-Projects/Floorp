@@ -19,6 +19,23 @@ built
 Mozilla from source and your environment is currently set up for such a build -
 see the <a href="http://www.mozilla.org/build/">Mozilla build documentation</a>
 for more information.</p>
+<h2>Windows Instructions</h2>
+<p>Windows builds now use the standard Mozilla build process.&nbsp; You can
+build them by performing the following steps</p>
+<ul>
+  <li>Ensure your machine is setup to build Mozilla and XPCOM itself.</li>
+  <li>Set PYTHON_SRC to point to your Python source root directory.&nbsp; This
+    can either be the root of a &quot;binary&quot; install (with headers and
+    libraries) or a Python source tree.</li>
+  <li>Change to the <i>mozilla/extensions/python/xpcom</i> directory.</li>
+  <li>Run <i>nmake -f makefile.win</i>.&nbsp; This should build the extensions
+    and install them into the <i>{mozilla-dist-directory}/bin/Python</i>
+    directory.</li>
+  <li>Change to the xpcom/test directory, and run python <i>regrtest.py</i> (or <i>python_d
+    regrtest.py</i> for debug builds)</li>
+</ul>
+<h2>Linux Instructions</h2>
+<p>These instructions apply to Linux, and hopefully soon they will die!</p>
 <p>This section covers:</p>
 <ul>
   <li>
@@ -66,29 +83,6 @@ happens, perform the following steps:</p>
   <li>As per the instructions at the top of the makefile, edit the MOZ_SRC,
     INSTALLDIR and PYTHON_SRC definitions appropriately.</li>
 </ul>
-<h3>Build Example: Building on Windows</h3>
-<p>For this example, we will assume that the source-code for Mozilla is in C:\src\mozilla,
-the source-code for the PyXPCOM package is in <i>c:\src\pyxpcom</i>. Further, we assume
-that you have Python 2.0 installed in <i>C:\Python20</i>, and wish to install
-the built Python XPCOM package so it exists in <i>C:\Python20\xpcom</i>.</p>
-<p>To build the package in this environment, you would perform the following
-steps:</p>
-<ul>
-  <li>Unpack the PyXPCOM package source-code into the appropriate directory</li>
-  <li>Edit makefile.stupid.win with the following changes:<br>
-    <i>MOZ_SRC=c:\src<br>
-    INSTALLDIR=C:\Python20<br>
-    PYTHON_SRC=C:\Python20</i></li>
-  <li>&nbsp;From the top-level Python xpcom source directory (i.e., the
-    directory with <i>makefile.stupid.win</i>), execute the command:<br>
-    <i>nmake -f makefile.stupid.win install</i></li>
-</ul>
-<p>NOTE: To build a Debug version of the Python XPCOM library, you can add <i>DEBUG=1</i>
-to the nmake command-line.</p>
-<p>If everything appears to work and you are brave, you may also like to execute
-<i>make -f makefile.stupid.win test</i> to execute the test script.&nbsp;
-Otherwise, continue to the following section where we confirm the installation
-step-by-step.</p>
 <h3>Build Example: Building on Linux</h3>
 <p>For this example, we will assume that the source-code for Mozilla is in ~/src/mozilla,
 the source-code for the PyXPCOM package is in ~/src/pyxpcom. Further, we assume
