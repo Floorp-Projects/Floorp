@@ -1855,7 +1855,7 @@ NET_GetCookie(MWContext * context, char * address)
      *    permission to be sent the cookie.
      */
     if (PL_strstr(address, "iiop/BRPROF")) {
-      extern PRBrool BP_GetProfile(char* *aProfileCookie);
+      extern PRBool BP_GetProfile(char* *aProfileCookie);
       char* profile;
       if (BP_GetProfile(&profile)) {
         if (! first)
