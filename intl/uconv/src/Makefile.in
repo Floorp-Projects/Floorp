@@ -72,6 +72,10 @@ EXPORT_RESOURCE		+= $(srcdir)/os2charset.properties
 else
 CPPSRCS			+= nsUNIXCharset.cpp
 EXPORT_RESOURCE		+= $(srcdir)/unixcharset.properties
+# add platform charset remapping properties files here if necessary
+# (see unixcharset.sample.properties for an example file)
+# eg: if we needed a charset remap for OSARCH=Linux then add the following line:
+#EXPORT_RESOURCE		+= $(srcdir)/unixcharset.Linux.properties
 endif
 
 EXTRA_DSO_LDOPTS = $(MOZ_NECKO_UTIL_LIBS) \
