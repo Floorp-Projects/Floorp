@@ -1704,10 +1704,15 @@ nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosit
     aView->SetZIndex(kMaxZ);
     widgetData.mWindowType  = eWindowType_popup;
     widgetData.mBorderStyle = eBorderStyle_default;
-    static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-    aView->CreateWidget(kCChildCID,
-                       &widgetData,
-                       nsnull);
+    
+    
+#ifdef XP_MAC
+    static NS_DEFINE_IID(kCPopUpCID,  NS_POPUP_CID);
+    aView->CreateWidget(kCPopUpCID, &widgetData, nsnull);
+#else
+   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
+   aView->CreateWidget(kCChildCID, &widgetData, nsnull);
+#endif   
     return NS_OK;
   } else {
     return nsScrollFrame::CreateScrollingViewWidget(aView, aPosition);
