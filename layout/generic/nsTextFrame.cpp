@@ -686,15 +686,7 @@ TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 }
 
 
-//
-// This should be commented out, but some gfx changes on the weekend of
-// 4/20-21/1999 broke caret rendering on Unix, so in a vain effort to
-// get any cursor at all visible, I've uncommented this for Unix. :-(
-// See http://bugzilla.mozilla.org/show_bug.cgi?id=4202 for status.
-//
-#ifdef XP_UNIX
-#define SHOW_SELECTION_CURSOR			// should be turned off when the caret code is activated
-#endif
+//#define SHOW_SELECTION_CURSOR			// should be turned off when the caret code is activated
 
 #ifdef SHOW_SELECTION_CURSOR
 
