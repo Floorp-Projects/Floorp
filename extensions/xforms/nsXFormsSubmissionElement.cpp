@@ -1341,24 +1341,24 @@ nsXFormsSubmissionElement::SendData(PRUint32 format,
 
   nsresult rv;
 
-  // We require same-origin for XML submission or for replace="instance"
-  // since those could be abused otherwise.
-  //
-  // NOTE: there may not be a JS context!
-  
   nsAutoString replace;
   mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
-  if (format & (ENCODING_XML | ENCODING_MULTIPART_RELATED) ||
-      replace.EqualsLiteral("instance"))
+  if (replace.IsEmpty() || replace.EqualsLiteral("all"))
   {
     // check to see if we're allowed to load this URI
     nsCOMPtr<nsIScriptSecurityManager> secMan =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
     NS_ENSURE_STATE(secMan);
 
-    rv = secMan->CheckSameOriginURI(doc->GetDocumentURI(), uri);
+    rv = secMan->CheckConnect(nsnull, uri, "XForms", "submission");
     if (NS_FAILED(rv))
-      return rv;
+    {
+      // We need to return success here so that JS will get a proper
+      // exception thrown later. Native calls should always result in
+      // CheckConnect() succeeding, but in case JS calls C++ which calls
+      // this code the exception might be lost.
+      return NS_OK;
+    } 
   }
 
   // wrap the entire upload stream in a buffered input stream, so that
