@@ -206,24 +206,17 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
         // we need to tell the emitter that this is the case for use in in any
         // possible reply or forward operation.
         //
-        PRBool isAlternativeOrRelated;
+        PRBool isAlternativeOrRelated = PR_FALSE;
         PRBool isBody = MimeObjectChildIsMessageBody(obj, &isAlternativeOrRelated);
-        if (isBody)
+        if ( (isAlternativeOrRelated || isBody) && obj->options)
         {
-      	  MimeContainer *container = (MimeContainer*) obj;
-          // If we have only one child and this is the message body object,
-          // this we should check for a special charset and notify the emitter 
-          // if one exists!
-      	  if ( (container->children) && (container->nchildren == 1) && (obj->options) )
-          {
-            char *ct = MimeHeaders_get(mult->hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
-            if (ct)
-            {
-              char *cset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
-              if (cset)
-              {
+           char *ct = MimeHeaders_get(mult->hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+           if (ct)
+           {
+             char *cset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
+             if (cset)
+             {
                 mimeEmitterUpdateCharacterSet(obj->options, cset);
-
                 if (!(obj->options->override_charset))
                 {
                   // Also set this charset to msgWindow
@@ -237,9 +230,8 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
               PR_FREEIF(ct);
               PR_FREEIF(cset);
             }
-          } 
+          }
         }
-      }
       break;
     }
 
