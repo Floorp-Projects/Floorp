@@ -285,15 +285,17 @@
       border-bottom: 1px solid #E6EFEE;
     }
 
-  menulist > menupopup > menuitem 
+  menulist > menupopup > menuitem,
+  menulist > menupopup > menu 
     {
       padding-right       : 12px;
       padding-top         : 1px;
       padding-bottom      : 1px;
       min-width           : 0px;
-      max-width           : none;
+      max-width           : none !important;
       color				        : #000000;
     }
+
 
   menulist > menupopup > menuitem[menuactive="true"]
     {

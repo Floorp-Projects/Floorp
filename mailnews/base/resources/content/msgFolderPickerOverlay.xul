@@ -306,7 +306,13 @@ Rights Reserved.
       <template>
         <rule iscontainer="true" isempty="false">
           <menupopup>
-            <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+            <menu uri="..." 
+              class="folderMenuItem menu-iconic"
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+              value="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup>
                 <menuitem uri="..." data="..." value="&filemessageschoosethis.label;"/>
                 <menuseparator/>
@@ -316,8 +322,13 @@ Rights Reserved.
         </rule>
         <rule>
           <menupopup>
-            <menuitem uri="..." data="..."
-                      value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            <menuitem uri="..." data="..." 
+               class="folderMenuItem menuitem-iconic"
+               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+               value="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </menupopup>
         </rule>
       </template>
@@ -332,9 +343,21 @@ Rights Reserved.
         </rule>
          <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <menupopup>
-              <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menu uri="..." 
+                class="folderMenuItem menu-iconic"
+                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                value="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
-                  <menuitem hidden="true" uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                  <menuitem hidden="true" uri="..." data="..." 
+                    class="folderMenuItem menuitem-iconic" 
+                    SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                    BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                    value="rdf:http://home.netscape.com/NC-rdf#Name"/>
                   <!-- <menuseparator/> -->
                 </menupopup>
               </menu>
@@ -342,9 +365,21 @@ Rights Reserved.
         </rule>
           <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
           <menupopup>
-              <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menu uri="..." 
+                class="folderMenuItem menu-iconic"
+                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                value="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
-                  <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                  <menuitem uri="..." data="..."
+                    class="folderMenuItem menuitem-iconic"
+                    SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                    BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                    value="rdf:http://home.netscape.com/NC-rdf#Name"/>
                   <menuseparator/>
                 </menupopup>
               </menu>
@@ -352,12 +387,24 @@ Rights Reserved.
         </rule>
        <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <menupopup>
-             <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+             <menu uri="..."
+               class="folderMenuItem menu-iconic"
+               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+               value="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </menupopup>
         </rule>
         <rule nc:CanFileMessages="true">
           <menupopup>
-             <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+             <menuitem uri="..." data="..."  
+              class="folderMenuItem menuitem-iconic"
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+              value="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </menupopup>
         </rule>
       </template>
