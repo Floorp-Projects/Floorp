@@ -41,7 +41,10 @@
             <tr>
               <td align="right" valign="middle">
 
-                <label class="enabled" for="image.srcInput"> &locationEditField.label; </label>
+                <label class="enabled" 
+                    for="image.srcInput">
+                  &locationEditField.label; 
+                </label>
 
               </td>
               <td valign="middle">
@@ -49,11 +52,24 @@
                 <input type="text" size="30" length="30"
                     id="image.srcInput" 
                     onkeypress="OnChangeSrc()" 
-                    onchange="OnChangeSrc()"/>
+                    onkeyup   = "checkForImage( this.id ); doValueChanged()"
+                    onmouseup = "checkForImage( this.id ); doValueChanged()"
+                    onblur    = "checkForImage( this.id ); doValueChanged()"
+                    onfocus   = "checkForImage( this.id ); doValueChanged()"
+                    onchange  = "OnChangeSrc(); doOverallEnabling()" />
+                    <!-- onmouseup checks for a paste
+                         onkeyup checks for typing
+                         onblur is for good luck
+                    -->
+
+
 		          </td>
 		          <td>
 
-                <button id="ChooseFile" onclick="chooseFile()"> &chooseButton.label; </button>
+                <button id="ChooseFile" 
+                    onclick="chooseFile(); checkForImage( 'image.srcInput' );">
+                  &chooseButton.label; 
+                </button>
 
               </td>
             </tr>
@@ -70,7 +86,9 @@
               </td>
               <td>
               
-                <input type="text" size="30" id="image.altTextInput" onchange="doValueChanged()"/>
+                <input type="text" size="30" 
+                    id="image.altTextInput" 
+                    onchange="doValueChanged()"/>
               
               </td>
               <td/>
@@ -99,7 +117,13 @@
    <table>
     <tr>
       <td>
-        <fieldset id="imagedimensionsFieldset" ><legend align="left"> &dimensionsFieldset.label; </legend>
+        <fieldset id="imagedimensionsFieldset" >
+          <legend id = "dimensionsLegend"
+              class  = "disabled"
+              align="left"> 
+            &dimensionsFieldset.label; 
+          </legend>
+
           <table cellspacing="0" cellpadding="0">
             <tr>
               <td>
@@ -259,7 +283,13 @@
 	          onchange="doValueChanged()" />
 
 
-        <fieldset id="spacing.fieldset"><legend align="left"> &spacingFieldset.label; </legend>
+        <fieldset id="spacing.fieldset">
+          <legend id ="spacingLegend"
+              class  = "disabled"
+              align  = "left"> 
+            &spacingFieldset.label; 
+          </legend>
+
           <table cellspacing="0" cellpadding="0">
             <tr valign="middle">
               <td align="right">
@@ -276,6 +306,7 @@
                     id="imageleftrightInput" 
                 		onkeyup="forceInteger(this.id)" 
                 		onchange="doValueChanged()"/>
+
               </td>
               <td valign="middle">
 
@@ -357,6 +388,7 @@
 <table>
     <tr align="right">
       <td align="right">
+
         <button id="OK" 
             class="disabled"
             onclick="onOK()"> 
@@ -383,8 +415,12 @@
 
 <xul:popup id="PixelOrPercentMenu1">
   <xul:menu>
-    <xul:menuitem value="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('widthunitSelect', '')"/>
-    <xul:menuitem value="&percentPopup.value;" onclick="SetPixelOrPercentByID('widthunitSelect', '%')"/>
+    <xul:menuitem 
+        value="&pixelsPopup.value;" 
+        onclick="SetPixelOrPercentByID('widthunitSelect', '')" />
+    <xul:menuitem 
+        value="&percentPopup.value;" 
+        onclick="SetPixelOrPercentByID('widthunitSelect', '%')" />
   </xul:menu>
 </xul:popup>
 
@@ -392,8 +428,12 @@
 
 <xul:popup id="PixelOrPercentMenu2">
   <xul:menu>
-    <xul:menuitem value="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('heightunitSelect', '')"/>
-    <xul:menuitem value="&percentPopup.value;" onclick="SetPixelOrPercentByID('heightunitSelect', '%')"/>
+    <xul:menuitem 
+        value="&pixelsPopup.value;" 
+        onclick="SetPixelOrPercentByID('heightunitSelect', '')" />
+    <xul:menuitem 
+        value="&percentPopup.value;" 
+        onclick="SetPixelOrPercentByID('heightunitSelect', '%')" />
   </xul:menu>
 </xul:popup>
 
