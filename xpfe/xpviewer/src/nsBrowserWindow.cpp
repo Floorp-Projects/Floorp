@@ -3217,7 +3217,7 @@ nsIMenu * CreateMenu(nsIMenu * aMenu, const nsString &  aName, char aMneu)
                        nsnull,
                        kIMenuIID,
                        (void**)&menu);
-  if (nsnull == menu) {
+  if (NS_OK == rv) {
   menu->Create(aMenu, aName);
   }
 
