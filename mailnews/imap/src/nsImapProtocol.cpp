@@ -271,7 +271,7 @@ nsImapProtocol::nsImapProtocol() :
   m_chunkAddSize = 0;
   m_chunkStartSize = 0;
   m_maxChunkSize = 0;
-  m_fetchByChunks = PR_FALSE;
+  m_fetchByChunks = PR_TRUE;
   m_chunkSize = 0;
   m_chunkThreshold = 0;
   m_fromHeaderSeen = PR_FALSE;
