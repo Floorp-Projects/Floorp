@@ -949,7 +949,7 @@ nsFormFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder)
 
   // convert to CRLF breaks
   char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(inBuf,
-                           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakNet);
+                           nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakNet);
   delete [] inBuf;
   
   char* outBuf = nsEscape(convertedBuf, url_XPAlphas);
