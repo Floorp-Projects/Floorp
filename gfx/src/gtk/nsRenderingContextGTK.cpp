@@ -245,7 +245,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetDeviceContext(nsIDeviceContext *&aContex
   aContext = mContext;
   return NS_OK;
 }
-
+#if 0
 NS_IMETHODIMP nsRenderingContextGTK::PushState(PRInt32 aFlags)
 {
   //  Get a new GS
@@ -291,7 +291,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(PRInt32 aFlags)
   
   return NS_OK;
 }
-
+#endif
 NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
 {
   //  Get a new GS
