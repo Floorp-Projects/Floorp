@@ -46,12 +46,11 @@
 #include "nsCollationCID.h"
 #include "nsUnicharUtilCIID.h"
 #include "prmem.h"
+#include "nsReadableUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 NS_IMPL_ISUPPORTS1(nsCollationFactory, nsICollationFactory);
 
@@ -62,7 +61,7 @@ nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** i
   nsICollation *inst;
   nsresult res;
   
-  res = nsComponentManager::CreateInstance(kCollationCID, NULL, NS_GET_IID(nsICollation), (void**) &inst);
+  res = CallCreateInstance(kCollationCID, &inst);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -75,24 +74,19 @@ nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** i
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
-
 nsCollation::nsCollation()
 {
-  mCaseConversion = NULL;
-  nsresult res = nsComponentManager::CreateInstance(kUnicharUtilCID, NULL, kCaseConversionIID, (void**) &mCaseConversion);
+  nsresult res;
+  mCaseConversion = do_CreateInstance(NS_UNICHARUTIL_CONTRACTID, &res);
   NS_ASSERTION(NS_SUCCEEDED(res), "CreateInstance failed for kCaseConversionIID");
 }
 
 nsCollation::~nsCollation()
 {
-  if (mCaseConversion != NULL)
-    mCaseConversion->Release();
 }
 
 nsresult nsCollation::CompareString(nsICollation *inst, const nsCollationStrength strength, 
-                                    const nsString& string1, const nsString& string2, PRInt32* result)
+                                    const nsAString& string1, const nsAString& string2, PRInt32* result)
 {
   PRUint32 aLength1, aLength2;
   PRUint8 *aKey1, *aKey2;
@@ -166,34 +160,35 @@ PRInt32 nsCollation::CompareRawSortKey(const PRUint8* key1, const PRUint32 len1,
   return result;
 }
 
-nsresult nsCollation::NormalizeString(nsString& stringInOut)
+nsresult nsCollation::NormalizeString(const nsAString& stringIn, nsAString& stringOut)
 {
-  if (mCaseConversion == NULL) {
-    stringInOut.ToLowerCase();
+  if (!mCaseConversion) {
+    stringOut = stringIn;
+    ToLowerCase(stringOut); // XXXjag Can this ever happen in a normal situation?
   }
   else {
-    PRInt32 aLength = stringInOut.Length();
+    PRInt32 aLength = stringIn.Length();
 
     if (aLength <= 64) {
-      PRUnichar conversionBuf[64];
-      mCaseConversion->ToLower(stringInOut.get(), conversionBuf, aLength);
-      stringInOut.Assign(conversionBuf, aLength);
+      PRUnichar conversionBuffer[64];
+      mCaseConversion->ToLower(PromiseFlatString(stringIn).get(), conversionBuffer, aLength);
+      stringOut.Assign(conversionBuffer, aLength);
     }
     else {
-      PRUnichar *aBuffer;
-      aBuffer = new PRUnichar[aLength];
-      if (aBuffer == NULL) {
+      PRUnichar* conversionBuffer;
+      conversionBuffer = new PRUnichar[aLength];
+      if (!conversionBuffer) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      mCaseConversion->ToLower(stringInOut.get(), aBuffer, aLength);
-      stringInOut.Assign(aBuffer, aLength);
-      delete [] aBuffer;
+      mCaseConversion->ToLower(PromiseFlatString(stringIn).get(), conversionBuffer, aLength);
+      stringOut.Assign(conversionBuffer, aLength);
+      delete [] conversionBuffer;
     }
   }
   return NS_OK;
 }
 
-nsresult nsCollation::UnicodeToChar(const nsString& src, char** dst, const nsString& aCharset)
+nsresult nsCollation::UnicodeToChar(const nsAString& aSrc, char** dst, const nsAString& aCharset)
 {
   NS_ENSURE_ARG_POINTER(dst);
 
@@ -204,13 +199,14 @@ nsresult nsCollation::UnicodeToChar(const nsString& src, char** dst, const nsStr
 
   if (NS_SUCCEEDED(res)) {
     nsCOMPtr <nsIAtom>  charsetAtom;
-    res = mCharsetConverterManager->GetCharsetAtom(aCharset.get(), getter_AddRefs(charsetAtom));
+    res = mCharsetConverterManager->GetCharsetAtom(PromiseFlatString(aCharset).get(), getter_AddRefs(charsetAtom));
     if (NS_SUCCEEDED(res)) {
       if (charsetAtom != mEncoderCharsetAtom) {
         mEncoderCharsetAtom = charsetAtom;
         res = mCharsetConverterManager->GetUnicodeEncoder(mEncoderCharsetAtom, getter_AddRefs(mEncoder));
       }
       if (NS_SUCCEEDED(res)) {
+        const nsPromiseFlatString& src = PromiseFlatString(aSrc);
         const PRUnichar *unichars = src.get();
         PRInt32 unicharLength = src.Length();
         PRInt32 dstLength;

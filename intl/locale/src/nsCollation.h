@@ -55,7 +55,7 @@ public:
   // compare two strings
   // result is same as strcmp
   nsresult CompareString(nsICollation *inst, const nsCollationStrength strength, 
-                         const nsString& string1, const nsString& string2, PRInt32* result);
+                         const nsAString& string1, const nsAString& string2, PRInt32* result);
 
   // compare two sort keys
   // length is a byte length, result is same as strcmp
@@ -63,14 +63,14 @@ public:
                             const PRUint8* key2, const PRUint32 len2);
 
   // normalize string before collation key generation
-  nsresult NormalizeString(nsString& stringInOut);
+  nsresult NormalizeString(const nsAString& stringIn, nsAString& stringOut);
 
   // charset conversion util, C string buffer is allocate by PR_Malloc, caller should call PR_Free
-  nsresult UnicodeToChar(const nsString& src, char** dst, const nsString& aCharset);
+  nsresult UnicodeToChar(const nsAString& aSrc, char** dst, const nsAString& aCharset);
 
 
 protected:
-  nsICaseConversion*  mCaseConversion;
+  nsCOMPtr <nsICaseConversion>            mCaseConversion;
   nsCOMPtr <nsIUnicodeEncoder>            mEncoder;
   nsCOMPtr <nsIAtom>                      mEncoderCharsetAtom;
   nsCOMPtr <nsICharsetConverterManager2>  mCharsetConverterManager;

@@ -180,15 +180,18 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
  
 
 nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength, 
-                           const nsString& stringIn, PRUint32* outLen)
+                                        const nsAString& stringIn,
+                                        PRUint32* outLen)
 {
   nsresult res = NS_OK;
 
   // this may not necessary because collation key length 
   // probably will not change by this normalization
-  nsString stringNormalized = stringIn;
+  nsAutoString stringNormalized;
   if (strength != kCollationCaseSensitive) {
-    res = mCollation->NormalizeString(stringNormalized);
+    res = mCollation->NormalizeString(stringIn, stringNormalized);
+  } else {
+    stringNormalized = stringIn;
   }
 
   // convert unicode to charset
@@ -213,13 +216,16 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
 }
 
 nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength, 
-                           const nsString& stringIn, PRUint8* key, PRUint32* outLen)
+                                           const nsAString& stringIn,
+                                           PRUint8* key, PRUint32* outLen)
 {
   nsresult res = NS_OK;
 
-  nsString stringNormalized = stringIn;
+  nsAutoString stringNormalized;
   if (strength != kCollationCaseSensitive) {
-    res = mCollation->NormalizeString(stringNormalized);
+    res = mCollation->NormalizeString(stringIn, stringNormalized);
+  } else {
+    stringNormalized = stringIn;
   }
   // convert unicode to charset
   char *str;

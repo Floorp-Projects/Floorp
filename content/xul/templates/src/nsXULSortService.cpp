@@ -929,17 +929,19 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 				nsresult rv = NS_ERROR_FAILURE;
 				bothValid = PR_TRUE;
 				sortOrder = 0;  
-				if(collationService) 
+				nsDependentString uni1Str(uni1);
+				nsDependentString uni2Str(uni2);
+				if (collationService) 
 				{
-					nsAutoString v1(uni1);
-					nsAutoString v2(uni2);
 					rv = collationService->CompareString(
 						kCollationCaseInSensitive,
-						v1,v2,&sortOrder);
+						uni1Str,
+						uni2Str,
+						&sortOrder);
 				}
 				if (NS_FAILED(rv)) {
-				    sortOrder = Compare(nsDependentString(uni1),
-							nsDependentString(uni2),
+				    sortOrder = Compare(uni1Str,
+							uni2Str,
 							nsCaseInsensitiveStringComparator());
 				}
 			}
