@@ -1,40 +1,3 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-# 
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-# 
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-# 
-# The Original Code is Mozilla.org Code.
-# 
-# The Initial Developer of the Original Code is
-# Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2001
-# the Initial Developer. All Rights Reserved.
-# 
-# Contributor(s):
-#   Ben Goodger <ben@bengoodger.com>
-# 
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-# 
-# ***** END LICENSE BLOCK *****
-
 var gRDF;    
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,20 +68,6 @@ function HelperApps()
   this._valueArc          = gRDF.GetResource(NC_URI("value"));
   this._handlerPropArc    = gRDF.GetResource(NC_URI("handlerProp"));
   this._externalAppArc    = gRDF.GetResource(NC_URI("externalApplication"));
-  
-#if PLUGIN_TYPE_MANAGER
-  // Initialize Plugins
-  var plugins = { };
-  
-  var catman = Components.classes["@mozilla.org/categorymanager;1"].getService(Components.interfaces.nsICategoryManager);
-  var types = catman.enumerateCategory("Gecko-Content-Viewers");
-  while (types.hasMoreElements()) {
-    var currType = types.getNext().QueryInterface(Components.interfaces.nsISupportsCString).data;
-    var contractid = catman.getCategoryEntry("Gecko-Content-Viewers", currType);
-    if (contractid == "@mozilla.org/content/plugin/document-loader-factory;1") 
-      plugins[currType] = "@mozilla.org/content/plugin/document-loader-factory;1";
-  }
-#endif
 }
 
 HelperApps.prototype = {
@@ -236,7 +185,12 @@ HelperApps.prototype = {
         else if (aProperty.EqualsNode(this._fileTypeArc)) {
           if (typeInfo.Description == "") {
             // XXXben LOCALIZE!
-            return gRDF.GetLiteral(typeInfo.primaryExtension.toUpperCase() + " file");
+            try {
+              return gRDF.GetLiteral(typeInfo.primaryExtension.toUpperCase() + " file");
+            }
+            catch (e) { 
+              return gRDF.GetLiteral(typeInfo.MIMEType);
+            }
           }
           return gRDF.GetLiteral(typeInfo.Description);
         }
@@ -262,10 +216,21 @@ HelperApps.prototype = {
           // XXXben LOCALIZE!
           return gRDF.GetLiteral("Open with " + typeInfo.defaultDescription);
         }
-        else if (aProperty.EqualsNode(this._fileIconArc))
-          return gRDF.GetLiteral("moz-icon://goat." + typeInfo.primaryExtension + "?size=16");
-        else if (aProperty.EqualsNode(this._fileExtensionArc))
-          return gRDF.GetLiteral(typeInfo.primaryExtension.toUpperCase());
+        else if (aProperty.EqualsNode(this._fileIconArc)) {
+          try {
+            return gRDF.GetLiteral("moz-icon://goat." + typeInfo.primaryExtension + "?size=16");
+          }
+          catch (e) {
+            return gRDF.GetLiteral("moz-icon://goat?size=16&contentType=" + typeInfo.MIMEType);
+          }
+        }
+        else if (aProperty.EqualsNode(this._fileExtensionArc)) {
+          try {
+            return gRDF.GetLiteral(typeInfo.primaryExtension.toUpperCase());
+          }
+          catch (e) { }
+          return gRDF.GetLiteral("");
+        }
         else if (aProperty.EqualsNode(this._fileExtensionsArc)) {
           var extns = typeInfo.getFileExtensions();
           
