@@ -1711,7 +1711,8 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 }
 
 #ifndef OPEN_DEFAULT
-#define OPEN_DEFAULT 0
+#define OPEN_DEFAULT       0
+#define OPEN_CONTENTS      1
 #endif
 
 
@@ -1735,7 +1736,8 @@ nsLocalFile::Reveal()
   }
 
   HOBJECT hobject = WinQueryObject(path.get());
-  WinOpenObject( hobject, OPEN_DEFAULT, TRUE);
+  WinSetFocus(HWND_DESKTOP, HWND_DESKTOP);
+  WinOpenObject( hobject, OPEN_CONTENTS, TRUE);
 
   // we don't care if it succeeded or failed.
   return NS_OK;
@@ -1746,6 +1748,7 @@ NS_IMETHODIMP
 nsLocalFile::Launch()
 {
   HOBJECT hobject = WinQueryObject(mWorkingPath.get());
+  WinSetFocus(HWND_DESKTOP, HWND_DESKTOP);
   WinOpenObject( hobject, OPEN_DEFAULT, TRUE);
 
   // we don't care if it succeeded or failed.
