@@ -2,4 +2,5 @@ toolkit.jar:
   content/global/platformGlobalOverlay.xul
   content/global/platformDialogOverlay.xul
   content/global/platformXUL.css
+  content/global/platformDialog.xml
 

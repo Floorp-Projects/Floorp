@@ -30,20 +30,18 @@ Contributor(s):
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://global/locale/finddialog.dtd">
 
-<window id="findDialog"
+<dialog id="findDialog"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  buttons="accept,cancel" buttonpack="center"
+  ondialogaccept="return onAccept(event);"
   windowtype="findInPage"
   onload="onLoad();"
   onunload="onUnload();"
   style="width: 30em;"
   title="&findDialog.title;"
-  class="dialog"
-  orient="vertical"
   persist="screenX screenY">
 
   <script type="application/x-javascript" src="chrome://global/content/finddialog.js"/>
@@ -77,10 +75,4 @@ Contributor(s):
   <!-- used to store the find text -->
   <foo style="display:none;" id="fBLT" label="&findButton.label;"/>
 
-  <separator/>
-
-  <!-- Places to overlay common dialog buttons and keyset -->
-  <hbox id="okCancelButtons"/>
-  <keyset id="dialogKeys"/>
-
-</window>
+</dialog>

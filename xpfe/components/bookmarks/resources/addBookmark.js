@@ -100,7 +100,6 @@ var gCreateInFolder = "NC:NewBookmarkFolder";
 
 function Startup()
 {
-  doSetOKCancel(onOK);
   gFld_Name = document.getElementById("name");
   gFld_URL = document.getElementById("url");
   gFolderTree = document.getElementById("folders");
@@ -120,8 +119,8 @@ function Startup()
       document.getElementById("createinseparator").setAttribute("hidden", "true");
       document.getElementById("nameseparator").setAttribute("hidden", "true");
       sizeToContent();
-      var windowNode = document.getElementById("newBookmarkWindow");
-      windowNode.setAttribute("title", windowNode.getAttribute("title-selectFolder"));
+      var dialogNode = document.getElementById("newBookmarkDialog");
+      dialogNode.setAttribute("title", windowNode.getAttribute("title-selectFolder"));
       shouldSetOKButton = false;
       folderItem = document.getElementById(window.arguments[2]);
       if (folderItem)
@@ -170,7 +169,7 @@ function setupFields()
 
 function onLocationInput ()
 {
-  var ok = document.getElementById("ok");
+  var ok = document.getElementById("newBookmarkDialog").getButton("accept");
   ok.disabled = gFld_URL.value == "";
 }
 
@@ -217,7 +216,6 @@ function onOK()
     
     kBMS.AddBookmarkToFolder(url, rFolder, gFld_Name.value, gBookmarkCharset);
   }
-  close();
 }
 
 function onTreeSelect ()

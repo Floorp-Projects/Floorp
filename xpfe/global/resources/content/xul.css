@@ -647,9 +647,17 @@ stringbundle {
 }
 
 /********** resourcebundle **********/
+
 resourcebundle {
   visibility: collapse;
 }  
+
+/********** dialog **********/
+
+dialog {
+  -moz-binding: url("chrome://global/content/bindings/dialog.xml#dialog");
+  -moz-box-orient: vertical;
+}
 
 /********** wizard **********/
 
