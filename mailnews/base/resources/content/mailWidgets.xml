@@ -3,6 +3,7 @@
 <bindings   id="mailBindings"
             xmlns="http://www.mozilla.org/xbl"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            xmlns:nc="http://home.netscape.com/NC-rdf#"
             xmlns:xbl="http://www.mozilla.org/xbl">
 
   <!-- dummy widget to force this file to load -->
@@ -681,7 +682,8 @@
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup ref="moz-abdirectory://" class="search-value-popup" datasources="rdf:addressdirectory">
           <xul:template>
-            <xul:rule>
+            <xul:rule nc:IsRemote="true"/>
+            <xul:rule nc:IsMailList="false">
               <xul:menuitem uri="..."
                     label="rdf:http://home.netscape.com/NC-rdf#DirName"
                     value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
