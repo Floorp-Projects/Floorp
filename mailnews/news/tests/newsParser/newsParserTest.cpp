@@ -37,8 +37,6 @@
 #include "nsParseMailbox.h"
 #include "nsXPComCIID.h"
 
-// sspitzer 
-
 #include "nsNewsDatabase.h"
 #include "nsMsgDBCID.h"
 #include "nsCRT.h"
@@ -53,9 +51,9 @@ public:
 	nsresult RunDriver(nsFileSpec &folder); 
 
 protected:
-	nsIMessage		*m_newMsgHdr;		
-	nsNewsDatabase	*m_newsDB;
-    char            *m_newsgroupName;
+        nsIMessage      *m_newMsgHdr;		
+        nsNewsDatabase  *m_newsDB;
+        char            *m_newsgroupName;
 };
 
 newsTestDriver::newsTestDriver()
@@ -103,7 +101,7 @@ int main()
     newsTestDriver * driver = new newsTestDriver();
 	if (driver)
 	{
-        nsFileSpec foo("/u/sspitzer/foobar");
+        nsFileSpec foo("/tmp/mozillanews/foo");
 		driver->RunDriver(foo);
 		// when it kicks out...it is done....so delete it...
 		delete driver;
