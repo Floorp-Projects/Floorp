@@ -119,7 +119,7 @@ public:
 	                                             nsNativeWidget aNativeParent = nsnull);
 
 	NS_IMETHOD              Destroy();
-	virtual nsIWidget*      GetParent(void);
+	virtual nsIWidget*        GetParent(void);
 	NS_IMETHOD              Show(PRBool bState);
  	NS_IMETHOD              CaptureMouse(PRBool aCapture);
 	NS_IMETHOD              CaptureRollupEvents(nsIRollupListener *aListener,
@@ -168,11 +168,11 @@ public:
 	NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 	NS_IMETHOD              EnableFileDrop(PRBool aEnable);
 
-	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
+	virtual void             ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 
 
 	// nsSwitchToUIThread interface
-	virtual bool            CallMethod(MethodInfo *info);
+	virtual bool             CallMethod(MethodInfo *info);
 	virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, 
 	                                           nsPoint aPoint, 
 	                                           PRUint32 clicks, 
@@ -180,9 +180,8 @@ public:
 
 
 	virtual PRBool          AutoErase();
-	void                    InitEvent(nsGUIEvent& event, 
-	                                  nsPoint* aPoint = nsnull);
-
+	void                   InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);
+	
 protected:
 
 	static PRBool           EventIsInsideWindow(nsWindow* aWindow, nsPoint pos) ;
@@ -191,7 +190,7 @@ protected:
 	// Allow Derived classes to modify the height that is passed
 	// when the window is created or resized.
 	virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
-	virtual void            OnDestroy();
+	virtual void             OnDestroy();
 	virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
 	virtual PRBool          OnPaint(nsRect &r);
 	virtual PRBool          OnResize(nsRect &aWindowRect);
@@ -211,7 +210,7 @@ protected:
 	virtual PRBool          DispatchFocus(PRUint32 aEventType);
 	virtual PRBool          OnScroll();
 	static PRBool           ConvertStatus(nsEventStatus aStatus);
-	PRBool                  DispatchStandardEvent(PRUint32 aMsg);
+	PRBool                DispatchStandardEvent(PRUint32 aMsg);
 
 	virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
 	virtual BView          *CreateBeOSView();
@@ -262,7 +261,7 @@ public:	// public on BeOS to allow BViews to access it
 	    BTNCLICK,
 	    ONACTIVATE,
 	    ONMOVE,
-	    ONWORKSPACE
+	    ONWORKSPACE,
 	};
 	nsToolkit *GetToolkit() { return (nsToolkit *)nsBaseWidget::GetToolkit(); }
 };
@@ -304,13 +303,13 @@ public:
 	virtual void            WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace);
 
 
-	void                    ResizeToWithoutEvent(float width, float height);
+	void                  ResizeToWithoutEvent(float width, float height);
 
 private:
-	void                    DoFrameResized();
+	void                  DoFrameResized();
 
 	float            lastWidth, lastHeight;
-	BPoint           lastpoint;
+	BPoint          lastpoint;
 	BMessageRunner  *resizeRunner;
 };
 
@@ -330,17 +329,20 @@ public:
 
 	virtual void            AttachedToWindow();
 	virtual void            Draw(BRect updateRect);
+	virtual void            DrawAfterChildren(BRect updateRect);
 	virtual void            MouseDown(BPoint point);
 	virtual void            MouseMoved(BPoint point, 
 	                                   uint32 transit, 
 	                                   const BMessage *message);
 	virtual void            MouseUp(BPoint point);
-	bool                    GetPaintRect(nsRect &r);
-	void                    KeyDown(const char *bytes, int32 numBytes);
-	void                    KeyUp(const char *bytes, int32 numBytes);
+	bool                  GetPaintRegion(/*nsRect &r*/BRegion *breg);
+	void                  KeyDown(const char *bytes, int32 numBytes);
+	void                  KeyUp(const char *bytes, int32 numBytes);
 	virtual void            MakeFocus(bool focused);
 	virtual void            MessageReceived(BMessage *msg);
 	virtual void            FrameResized(float width, float height);
+private:
+	void                  DoDraw(BRect updateRect);
 };
 
 //
