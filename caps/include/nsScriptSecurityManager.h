@@ -84,7 +84,7 @@ struct ClassPolicy;
 // PrincipalKey //
 /////////////////////
 
-class NS_COM PrincipalKey : public PLDHashEntryHdr
+class PrincipalKey : public PLDHashEntryHdr
 {
 public:
     typedef const nsIPrincipal* KeyType;
