@@ -1,4 +1,3 @@
-<<<<<<< preftree.xul
 <?xml version="1.0"?>
 
 <!--
@@ -91,7 +90,5 @@
     </treeitem>
   </treechildren>
 </tree>
-
-
 
 </overlay>

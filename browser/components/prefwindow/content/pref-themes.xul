@@ -105,7 +105,21 @@
 
   <vbox flex="1">
     
-    <listbox id="extensionsList" datasources="rdf:chrome" 
+    <listbox id="extList" datasources="rdf:chrome" 
+          onselect=""
+          ref="urn:mozilla:packages:root" rows="3">
+      <template xmlns:chrome="http://www.mozilla.org/rdf/chrome">
+        <rule chrome:extension="true">
+          <listitem uri="..."
+                    label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                    author="rdf:http://www.mozilla.org/rdf/chrome#author"
+                    displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                    name="rdf:http://www.mozilla.org/rdf/chrome#name"
+                    description="rdf:http://www.mozilla.org/rdf/chrome#description"
+                    image="rdf:http://www.mozilla.org/rdf/chrome#image"
+                    loctype="rdf:http://www.mozilla.org/rdf/chrome#locType"/>
+        </rule>
+      </template>
     </listbox>
 
     <separator class="thin"/>
