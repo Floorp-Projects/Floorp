@@ -1365,3 +1365,4 @@ nsMimeXULEmitter::GetStatusObjForProgID(nsString aProgID)
   else
     return returnObj;
 }
+
