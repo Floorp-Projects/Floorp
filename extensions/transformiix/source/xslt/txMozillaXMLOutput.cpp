@@ -355,6 +355,11 @@ void txMozillaXMLOutput::startElement(const String& aName,
     }
 
     if (element) {
+        nsCOMPtr<nsIContent> cont = do_QueryInterface(element);
+        if (cont) {
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+            cont->SetDocument(doc, PR_FALSE, PR_TRUE);
+        }
         mParentNode = mCurrentNode;
         mCurrentNode = do_QueryInterface(element);
     }
