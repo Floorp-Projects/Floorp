@@ -414,7 +414,7 @@ function refreshFolderPane()
 {
     var folderTree = GetFolderTree();
     if (folderTree) {
-        tree.clearItemSelection();
+        folderTree.clearItemSelection();
         var root = folderTree.getAttribute('ref');
         folderTree.setAttribute('ref', root);
     }
