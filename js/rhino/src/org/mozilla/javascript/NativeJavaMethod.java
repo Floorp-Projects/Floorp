@@ -178,14 +178,21 @@ public class NativeJavaMethod extends BaseFunction
             javaObject = null;  // don't need an object
         } else {
             Scriptable o = thisObj;
-            while (!(o instanceof Wrapper)) {
-                o = o.getPrototype();
+            Class c = meth.getDeclaringClass();
+            for (;;) {
                 if (o == null) {
-                    throw Context.reportRuntimeError1(
-                        "msg.nonjava.method", functionName);
+                    throw Context.reportRuntimeError3(
+                        "msg.nonjava.method", functionName,
+                        ScriptRuntime.toString(thisObj), c.getName());
                 }
+                if (o instanceof Wrapper) {
+                    javaObject = ((Wrapper)o).unwrap();
+                    if (c.isInstance(javaObject)) {
+                        break;
+                    }
+                }
+                o = o.getPrototype();
             }
-            javaObject = ((Wrapper) o).unwrap();
         }
         if (debug) {
             printDebug("Calling ", meth, args);
