@@ -312,8 +312,13 @@ js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
 
     JS_ASSERT(cx->runtime->gcDisabled);
 
+    /*
+     * Push a compiler frame if we have no frames, or if the top frame is a
+     * lightweight function activation, or if its scope chain doesn't match
+     * the one passed to us.
+     */
     fp = cx->fp;
-    if (!fp || fp->scopeChain != chain) {
+    if (!fp || !fp->varobj || fp->scopeChain != chain) {
         memset(&frame, 0, sizeof frame);
         frame.varobj = frame.scopeChain = chain;
         if (cx->options & JSOPTION_VAROBJFIX) {
@@ -357,8 +362,13 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
     void *sbrk(ptrdiff_t), *before = sbrk(0);
 #endif
 
+    /*
+     * Push a compiler frame if we have no frames, or if the top frame is a
+     * lightweight function activation, or if its scope chain doesn't match
+     * the one passed to us.
+     */
     fp = cx->fp;
-    if (!fp || fp->scopeChain != chain) {
+    if (!fp || !fp->varobj || fp->scopeChain != chain) {
         memset(&frame, 0, sizeof frame);
         frame.varobj = frame.scopeChain = chain;
         if (cx->options & JSOPTION_VAROBJFIX) {
@@ -1811,7 +1821,20 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn->pn_extra = JS_FALSE;            /* assume no JSOP_POP needed */
     PN_INIT_LIST(pn);
 
-    fp = cx->fp;
+    /*
+     * Skip eval and debugger frames when looking for the function whose code
+     * is being compiled.  If we are called from FunctionBody, TCF_IN_FUNCTION
+     * will be set in tc->flags, and we can be sure fp->fun is the function to
+     * use.  But if a function calls eval, the string argument is treated as a
+     * Program (per ECMA), so TCF_IN_FUNCTION won't be set.
+     *
+     * What's more, when the following code is reached from eval, cx->fp->fun
+     * is eval's JSFunction (a native function), so we need to skip its frame.
+     * We should find the scripted caller's function frame just below it, but
+     * we code a loop out of paranoia.
+     */
+    for (fp = cx->fp; fp->special && fp->down; fp = fp->down)
+        continue;
     obj = fp->varobj;
     fun = fp->fun;
     clasp = OBJ_GET_CLASS(cx, obj);
@@ -2105,7 +2128,7 @@ CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif /* JS_HAS_IN_OPERATOR */
         pn2 = AssignExpr(cx, ts, tc);
 #if JS_HAS_IN_OPERATOR
-        tc->flags = oldflags;
+        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
 #endif /* JS_HAS_IN_OPERATOR */
 
         if (!pn2)
@@ -2811,7 +2834,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
         pn2 = Expr(cx, ts, tc);
 #if JS_HAS_IN_OPERATOR
-        tc->flags = oldflags;
+        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
 #endif
         if (!pn2)
             return NULL;
