@@ -43,22 +43,32 @@ var $ = new Array(); /* array to store results from evals in debug frames */
 
 console._scriptHook = {
     onScriptCreated: function scripthook (script) {
+        /*
+        dd("created: "  + script.functionName + " from " + script.fileName +
+           " (" + script.baseLineNumber + ", " + script.lineExtent + ")");
+        */
+        
         addScript (script);
 
-        /* if this script's line extent is 0, the file containing this script is
-         * fully loaded, check to see if we need to set any breakpoints */
-        if (script.lineExtent == 0)
+        /* only toplevel scripts should have an empty function name, all others
+         * should have a legitimate name, or "anonymous"
+         */
+        if (script.functionName)
         {
-            if (script.fileName)
-                console._scriptsOutlinerView.setScripts(console._scripts);
+            var fn = script.fileName;
             for (var i = 0; i < console._futureBreaks.length; ++i)
-                if (script.fileName.search(console._futureBreaks[i].filePattern)
-                    != -1)
+            {
+                var fbreak = console._futureBreaks[i];
+                if (fn.search(fbreak.filePattern)!= -1 && 
+                    script.baseLineNumber <= fbreak.line &&
+                    script.lineExtent > fbreak.line)
                 {
-                    setBreakpoint (script.fileName,
-                                   console._futureBreaks[i].line);
+                    setBreakpoint (fn, fbreak.line);
                 }
+            }
         }
+
+        console.onScriptCreated (script);
                 
     },
 
@@ -560,10 +570,13 @@ function setSourceFunctionMarks (url)
     
     for (var i = 0; i < scriptArray.length; ++i)
     {
-        if (i > 0 || scriptArray[i].baseLineNumber > 1)
+        /* the only scripts with empty filenames *should* be top level scripts,
+         * and we don't show function marks for them, because the whole file
+         * would end up being marked. */
+        if (scriptArray[i].functionName && scriptArray[i].baseLineNumber > 1)
         {
             var j = scriptArray[i].baseLineNumber - 1;
-            var stop = j + scriptArray[i].lineExtent;
+            var stop = j + scriptArray[i].lineExtent - 1;
             if (!source[j] || !source[stop])
             {
                 dd ("Script " + scriptArray[i].functionName + "(" +
@@ -756,7 +769,7 @@ function setBreakpoint (fileName, line)
     for (var i = 0; i < ary.length; ++i)
     {
         if (ary[i].baseLineNumber <= line && 
-            ary[i].baseLineNumber + ary[i].lineExtent >= line)
+            ary[i].baseLineNumber + ary[i].lineExtent > line)
         {
             var pc = ary[i].lineToPc(line);
             ary[i].setBreakpoint(pc);
