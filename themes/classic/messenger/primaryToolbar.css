@@ -243,5 +243,6 @@
 }
 
 #junkIcon {
+  margin-left: 0.5ex;
   list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
 }
