@@ -190,6 +190,10 @@
 	#define REINTERPRET_CAST(T,x)	((T)(x))
 #endif
 
+#ifdef NO_MEMBER_USING_DECLARATIONS
+#include "prtypes.h"
+#endif
+
 
 template <class T>
 class derived_safe : public T
@@ -206,21 +210,21 @@ class derived_safe : public T
 			using T::AddRef;
 			using T::Release;
 #else
-			unsigned long AddRef();
-			unsigned long Release();
+			PRUint32 AddRef();
+			PRUint32 Release();
 #endif
 	};
 
 #if defined(NO_MEMBER_USING_DECLARATIONS) && defined(NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS)
 template <class T>
-unsigned long
+PRUint32
 derived_safe<T>::AddRef()
 	{
 		return 0;
 	}
 
 template <class T>
-unsigned long
+PRUint32
 derived_safe<T>::Release()
 	{
 		return 0;
