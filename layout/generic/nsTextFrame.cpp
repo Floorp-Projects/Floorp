@@ -489,6 +489,57 @@ public:
     }
   };
 
+  struct TextReflowData {
+    PRInt32             mX;                   // OUT
+    PRInt32             mOffset;              // IN/OUT How far along we are in the content
+    PRInt32             mPrevOffset;          // OUT
+    PRInt32             mColumn;              // IN/OUT
+    PRInt32             mPrevColumn;          // IN/OUT
+    PRInt32             mLastWordLen;         // OUT
+    PRInt32             mLastWordWidth;       // OUT
+    nscoord             mMaxWordWidth;        // OUT
+    nscoord             mPrevMaxWordWidth;    // OUT
+    PRPackedBool        mWrapping;            // IN
+    PRPackedBool        mSkipWhitespace;      // IN
+    PRPackedBool        mMeasureText;         // IN
+    PRPackedBool        mInWord;              // IN
+    PRPackedBool        mFirstLetterOK;       // IN
+    PRPackedBool        mJustDidFirstLetter;  // OUT
+    PRPackedBool        mIsBreakable;         // IN/OUT
+    PRPackedBool        mTextStartsWithNBSP;  // OUT
+    PRPackedBool        mEndsInWhitespace;    // OUT
+    PRPackedBool        mEndsInNewline;       // OUT
+  
+    TextReflowData(PRInt32 aStartingOffset,
+                   PRInt32 aColumn,
+                   PRBool  aWrapping,
+                   PRBool  aSkipWhitespace,
+                   PRBool  aMeasureText,
+                   PRBool  aInWord,
+                   PRBool  aFirstLetterOK,
+                   PRBool  aIsBreakable)
+      : mX(0),
+        mOffset(aStartingOffset),
+        mPrevOffset(-1),
+        mColumn(aColumn),
+        mPrevColumn(aColumn),
+        mLastWordLen(0),
+        mLastWordWidth(0),
+        mMaxWordWidth(0),
+        mPrevMaxWordWidth(0),
+        mWrapping(aWrapping),
+        mSkipWhitespace(aSkipWhitespace),
+        mMeasureText(aMeasureText),
+        mInWord(aInWord),
+        mFirstLetterOK(aFirstLetterOK),
+        mJustDidFirstLetter(PR_FALSE),
+        mIsBreakable(aIsBreakable),
+        mTextStartsWithNBSP(PR_FALSE),
+        mEndsInWhitespace(PR_FALSE),
+        mEndsInNewline(PR_FALSE)
+    {}
+  };
+
   nsIDocument* GetDocument(nsIPresContext* aPresContext);
 
   PRIntn PrepareUnicodeText(nsTextTransformer& aTransformer,
@@ -525,6 +576,12 @@ public:
                             PRUnichar* aWord,
                             PRInt32 aWordLength,
                             nscoord* aWidthResult);
+
+  void MeasureIndividualWords(nsIPresContext*          aPresContext,
+                              const nsHTMLReflowState& aReflowState,
+                              nsTextTransformer&       aTx,
+                              TextStyle&               aTs,
+                              TextReflowData&          aTextData);
 
   void GetWidth(nsIRenderingContext& aRenderingContext,
                 TextStyle& aStyle,
@@ -2802,6 +2859,132 @@ nsTextFrame::GetOffsets(PRInt32 &start, PRInt32 &end) const
   end = mContentOffset+mContentLength;
   return NS_OK;
 }
+  
+void
+nsTextFrame::MeasureIndividualWords(nsIPresContext*          aPresContext,
+                                    const nsHTMLReflowState& aReflowState,
+                                    nsTextTransformer&       aTx,
+                                    TextStyle&               aTs,
+                                    TextReflowData&          aTextData)
+{
+  PRBool firstThing = PR_TRUE;
+  nscoord maxWidth = aReflowState.availableWidth;
+
+  aTextData.mX = 0;
+  aTextData.mTextStartsWithNBSP = PR_FALSE;
+  for (;;) {
+    // Get next word/whitespace from the text
+    PRBool isWhitespace;
+    PRInt32 wordLen, contentLen;
+    PRUnichar* bp = aTx.GetNextWord(aTextData.mInWord, &wordLen, &contentLen, &isWhitespace);
+    if (nsnull == bp) {
+      // Advance the offset in case we just consumed a bunch of
+      // discarded characters. Otherwise, if this is the first piece
+      // of content for this frame we will attempt to break-before it.
+      aTextData.mOffset += contentLen;
+      break;
+    }
+    aTextData.mLastWordLen = wordLen;
+    aTextData.mInWord = PR_FALSE;
+
+    // Measure the word/whitespace
+    nscoord width;
+    if (isWhitespace) {
+      if ('\n' == bp[0]) {
+        // We hit a newline. Stop looping.
+        NS_WARN_IF_FALSE(aTs.mPreformatted, "newline w/o ts.mPreformatted");
+        aTextData.mPrevOffset = aTextData.mOffset;
+        aTextData.mOffset++;
+        aTextData.mEndsInWhitespace = PR_TRUE;
+        aTextData.mEndsInNewline = PR_TRUE;
+        break;
+      }
+      if (aTextData.mSkipWhitespace) {
+        aTextData.mOffset += contentLen;
+        aTextData.mSkipWhitespace = PR_FALSE;
+
+        // Only set flag when we actually do skip whitespace
+        mState |= TEXT_SKIP_LEADING_WS;
+        firstThing = PR_FALSE;
+        continue;
+      }
+      if ('\t' == bp[0]) {
+        // Expand tabs to the proper width
+        wordLen = 8 - (7 & aTextData.mColumn);
+        width = aTs.mSpaceWidth * wordLen;
+      }
+      else {
+        width = (wordLen * aTs.mSpaceWidth) + aTs.mWordSpacing;// XXX simplistic
+      }
+      aTextData.mIsBreakable = PR_TRUE;
+      aTextData.mFirstLetterOK = PR_FALSE;
+    } else {
+      if (aTextData.mFirstLetterOK) {
+        // XXX need a lookup function here; plus look ahead using the
+        // text-runs
+        if ((bp[0] == '\'') || (bp[0] == '\"')) {
+          wordLen = 2;
+          contentLen = 2;
+        }
+        else {
+          wordLen = 1;
+          contentLen = 1;
+        }
+        aTextData.mJustDidFirstLetter = PR_TRUE;
+      }
+      
+      if (aTextData.mMeasureText) {
+        if (aTs.mSmallCaps) {
+          MeasureSmallCapsText(aReflowState, aTs, bp, wordLen, &width);
+        }
+        else {
+          aReflowState.rendContext->GetWidth(bp, wordLen, width);
+          if (aTs.mLetterSpacing) {
+            width += aTs.mLetterSpacing * wordLen;
+          }
+        }
+        aTextData.mLastWordWidth = width;
+      }
+
+      // See if the first thing in the section of text is a
+      // non-breaking space (html nbsp entity). If it is then make
+      // note of that fact for the line layout logic.
+      if (aTextData.mWrapping && firstThing && (bp[0] == ' ')) {
+        aTextData.mTextStartsWithNBSP = PR_TRUE;
+      }
+      aTextData.mSkipWhitespace = PR_FALSE;
+    }
+    firstThing = PR_FALSE;
+
+    // See if there is room for the text
+    if (aTextData.mMeasureText) {
+      if ((0 != aTextData.mX) && aTextData.mWrapping && (aTextData.mX + width > maxWidth)) {
+        // The text will not fit.
+#ifdef NOISY_REFLOW
+        ListTag(stdout);
+        printf(": won't fit (at offset=%d) x=%d width=%d maxWidth=%d\n",
+               offset, x, width, maxWidth);
+#endif
+        break;
+      }
+      aTextData.mX += width;
+      aTextData.mPrevMaxWordWidth = aTextData.mMaxWordWidth;
+      if (width > aTextData.mMaxWordWidth) {
+        aTextData.mMaxWordWidth = width;
+      }
+    }
+
+    aTextData.mPrevColumn = aTextData.mColumn;
+    aTextData.mColumn += wordLen;
+    aTextData.mEndsInWhitespace = isWhitespace;
+    aTextData.mPrevOffset = aTextData.mOffset;
+    aTextData.mOffset += contentLen;
+    if (!isWhitespace && aTextData.mJustDidFirstLetter) {
+      // Time to stop
+      break;
+    }
+  }
+}
 
 NS_IMETHODIMP
 nsTextFrame::Reflow(nsIPresContext* aPresContext,
@@ -2874,8 +3057,6 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
 
   PRBool wrapping = (NS_STYLE_WHITESPACE_NORMAL == ts.mText->mWhiteSpace) ||
     (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == ts.mText->mWhiteSpace);
-  PRBool firstLetterOK = lineLayout.GetFirstLetterStyleOK();
-  PRBool justDidFirstLetter = PR_FALSE;
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
@@ -2885,12 +3066,7 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
     }
   }
 
-  nscoord x = 0;
   nscoord maxWidth = aReflowState.availableWidth;
-  nscoord maxWordWidth = 0;
-  nscoord prevMaxWordWidth = 0;
-  PRBool endsInWhitespace = PR_FALSE;
-  PRBool endsInNewline = PR_FALSE;
 
   // Setup text transformer to transform this frames text content
   nsCOMPtr<nsIDocument> doc;
@@ -2907,30 +3083,20 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   }
   PRInt32 contentLength = tx.GetContentLength();
 
-  // Offset tracks how far along we are in the content
-  PRInt32 offset = startingOffset;
-  PRInt32 prevOffset = -1;
-  nscoord lastWordWidth = 0;
-
   // Loop over words and whitespace in content and measure. Set inWord
   // to true if we are part of a previous piece of text's word. This
   // is only valid for one pass through the measuring loop.
-  PRBool inWord = lineLayout.InWord() ||
-    ((nsnull != prevInFlow) &&
-     (((nsTextFrame*)prevInFlow)->mState & TEXT_FIRST_LETTER));
+  PRBool inWord = lineLayout.InWord() || ((nsnull != prevInFlow) && (((nsTextFrame*)prevInFlow)->mState & TEXT_FIRST_LETTER));
   if (inWord) {
     mState |= TEXT_IN_WORD;
   }
   mState &= ~TEXT_FIRST_LETTER;
-
+  
   PRInt32 column = lineLayout.GetColumn();
-  PRInt32 prevColumn = column;
+  PRInt32 prevColumn = mColumn;
   mColumn = column;
-  PRBool breakable = lineLayout.LineIsBreakable();
-  PRInt32 lastWordLen;
-  PRUnichar* bp = nsnull;
   PRBool measureText = PR_TRUE;
-
+  
   // We can avoid actually measuring the text if:
   // - this is a resize reflow
   // - we're not dirty (see ContentChanged() function)
@@ -2971,120 +3137,14 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
     }
   }
 
-  PRBool firstThing = PR_TRUE;
-  PRBool textStartsWithNBSP = PR_FALSE;
-  for (;;) {
-    // Get next word/whitespace from the text
-    PRBool isWhitespace;
-    PRInt32 wordLen, contentLen;
-    bp = tx.GetNextWord(inWord, &wordLen, &contentLen, &isWhitespace);
-    if (nsnull == bp) {
-      // Advance the offset in case we just consumed a bunch of
-      // discarded characters. Otherwise, if this is the first piece
-      // of content for this frame we will attempt to break-before it.
-      offset += contentLen;
-      break;
-    }
-    lastWordLen = wordLen;
-    inWord = PR_FALSE;
+  // Local state passed to the routines that do the actual text measurement
+  TextReflowData  textData(startingOffset, column, wrapping, skipWhitespace, 
+                           measureText, inWord, lineLayout.GetFirstLetterStyleOK(),
+                           lineLayout.LineIsBreakable());
+  
+  // Measure the inidvidual words
+  MeasureIndividualWords(aPresContext, aReflowState, tx, ts, textData);
 
-    // Measure the word/whitespace
-    nscoord width;
-    if (isWhitespace) {
-      if ('\n' == bp[0]) {
-        // We hit a newline. Stop looping.
-        NS_WARN_IF_FALSE(ts.mPreformatted, "newline w/o ts.mPreformatted");
-        prevOffset = offset;
-        offset++;
-        endsInWhitespace = PR_TRUE;
-        endsInNewline = PR_TRUE;
-        break;
-      }
-      if (skipWhitespace) {
-        offset += contentLen;
-        skipWhitespace = PR_FALSE;
-
-        // Only set flag when we actually do skip whitespace
-        mState |= TEXT_SKIP_LEADING_WS;
-        firstThing = PR_FALSE;
-        continue;
-      }
-      if ('\t' == bp[0]) {
-        // Expand tabs to the proper width
-        wordLen = 8 - (7 & column);
-        width = ts.mSpaceWidth * wordLen;
-      }
-      else {
-        width = (wordLen * ts.mSpaceWidth) + ts.mWordSpacing;// XXX simplistic
-      }
-      breakable = PR_TRUE;
-      firstLetterOK = PR_FALSE;
-    } else {
-      if (firstLetterOK) {
-        // XXX need a lookup function here; plus look ahead using the
-        // text-runs
-        if ((bp[0] == '\'') || (bp[0] == '\"')) {
-          wordLen = 2;
-          contentLen = 2;
-        }
-        else {
-          wordLen = 1;
-          contentLen = 1;
-        }
-        justDidFirstLetter = PR_TRUE;
-      }
-      
-      if (measureText) {
-        if (ts.mSmallCaps) {
-          MeasureSmallCapsText(aReflowState, ts, bp, wordLen, &width);
-        }
-        else {
-          aReflowState.rendContext->GetWidth(bp, wordLen, width);
-          if (ts.mLetterSpacing) {
-            width += ts.mLetterSpacing * wordLen;
-          }
-        }
-        lastWordWidth = width;
-      }
-
-      // See if the first thing in the section of text is a
-      // non-breaking space (html nbsp entity). If it is then make
-      // note of that fact for the line layout logic.
-      if (wrapping && firstThing && (bp[0] == ' ')) {
-        textStartsWithNBSP = PR_TRUE;
-      }
-      skipWhitespace = PR_FALSE;
-    }
-    firstThing = PR_FALSE;
-
-    // See if there is room for the text
-    if (measureText) {
-      if ((0 != x) && wrapping && (x + width > maxWidth)) {
-        // The text will not fit.
-#ifdef NOISY_REFLOW
-        ListTag(stdout);
-        printf(": won't fit (at offset=%d) x=%d width=%d maxWidth=%d\n",
-               offset, x, width, maxWidth);
-#endif
-        break;
-      }
-      x += width;
-      prevMaxWordWidth = maxWordWidth;
-      if (width > maxWordWidth) {
-        maxWordWidth = width;
-      }
-    }
-
-    prevColumn = column;
-    column += wordLen;
-    endsInWhitespace = isWhitespace;
-    prevOffset = offset;
-    offset += contentLen;
-    if (!isWhitespace && justDidFirstLetter) {
-      // Time to stop
-      break;
-    }
-  }
   if (tx.HasMultibyte()) {
     mState |= TEXT_HAS_MULTIBYTE;
   }
@@ -3092,10 +3152,10 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   // If we didn't actually measure any text, then make sure it looks
   // like we did
   if (!measureText) {
-    x = mRect.width;
+    textData.mX = mRect.width;
     if (mState & TEXT_TRIMMED_WS) {
       // Add back in the width of a space since it was trimmed away last time
-      x += ts.mSpaceWidth;
+      textData.mX += ts.mSpaceWidth;
     }
   }
   mState &= ~TEXT_TRIMMED_WS;
@@ -3117,21 +3177,21 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   if (!lineLayout.InWord()) {
     // There is no currently active word. This frame may contain the
     // start of one.
-    if (endsInWhitespace) {
+    if (textData.mEndsInWhitespace) {
       // Nope, this frame doesn't start a word.
       lineLayout.ForgetWordFrames();
     }
-    else if ((offset == contentLength) && (prevOffset >= 0)) {
+    else if ((textData.mOffset == contentLength) && (textData.mPrevOffset >= 0)) {
       // Force breakable to false when we aren't wrapping (this
       // guarantees that the combined word will stay together)
       if (!wrapping) {
-        breakable = PR_FALSE;
+        textData.mIsBreakable = PR_FALSE;
       }
 
       // This frame does start a word. However, there is no point
       // messing around with it if we are already out of room. We
       // always have room if we are not breakable.
-      if (!breakable || (x <= maxWidth)) {
+      if (!textData.mIsBreakable || (textData.mX <= maxWidth)) {
         // There is room for this word fragment. It's possible that
         // this word fragment is the end of the text-run. If it's not
         // then we continue with the look-ahead processing.
@@ -3156,37 +3216,37 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
           if (!measureText) {
             // We didn't measure any text so we don't know lastWordWidth.
             // We have to compute it now
-            if (prevOffset == startingOffset) {
+            if (textData.mPrevOffset == startingOffset) {
               // There's only one word, so we don't have to measure after all
-              lastWordWidth = x;
+              textData.mLastWordWidth = textData.mX;
             }
             else if (ts.mSmallCaps) {
               MeasureSmallCapsText(aReflowState, ts, tx.GetWordBuffer(),
-                                   lastWordLen, &lastWordWidth);
+                                   textData.mLastWordLen, &textData.mLastWordWidth);
             }
             else {
               aReflowState.rendContext->GetWidth(tx.GetWordBuffer(),
-                                                 lastWordLen, lastWordWidth);
+                                                 textData.mLastWordLen, textData.mLastWordWidth);
               if (ts.mLetterSpacing) {
-                lastWordWidth += ts.mLetterSpacing * lastWordLen;
+                textData.mLastWordWidth += ts.mLetterSpacing * textData.mLastWordLen;
               }
             }
           }
           nscoord wordWidth = ComputeTotalWordWidth(aPresContext, lb,
                                                     lineLayout,
                                                     aReflowState, next,
-                                                    lastWordWidth,
+                                                    textData.mLastWordWidth,
                                                     pWordBuf,
-                                                    lastWordLen,
+                                                    textData.mLastWordLen,
                                                     wordBufLen);
-          if (!breakable || (x - lastWordWidth + wordWidth <= maxWidth)) {
+          if (!textData.mIsBreakable || (textData.mX - textData.mLastWordWidth + wordWidth <= maxWidth)) {
             // The fully joined word has fit. Account for the joined
             // word's affect on the max-element-size here (since the
             // joined word is large than it's pieces, the right effect
             // will occur from the perspective of the container
             // reflowing this frame)
-            if (wordWidth > maxWordWidth) {
-              maxWordWidth = wordWidth;
+            if (wordWidth > textData.mMaxWordWidth) {
+              textData.mMaxWordWidth = wordWidth;
             }
           }
           else {
@@ -3197,13 +3257,13 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
 #endif
             // The fully joined word won't fit. We need to reduce our
             // size by the lastWordWidth.
-            x -= lastWordWidth;
-            maxWordWidth = prevMaxWordWidth;
-            offset = prevOffset;
-            column = prevColumn;
+            textData.mX -= textData.mLastWordWidth;
+            textData.mMaxWordWidth = textData.mPrevMaxWordWidth;
+            textData.mOffset = textData.mPrevOffset;
+            textData.mColumn = textData.mPrevColumn;
 #ifdef DEBUG_WORD_WRAPPING
-            printf("  x=%d maxWordWidth=%d len=%d\n", x, maxWordWidth,
-                   offset - startingOffset);
+            printf("  x=%d maxWordWidth=%d len=%d\n", textData.mX, textData.mMaxWordWidth,
+                   textData.mOffset - startingOffset);
 #endif
             lineLayout.ForgetWordFrames();
           }
@@ -3218,19 +3278,19 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   // text object collapsed into nothingness which means it shouldn't
   // effect the current setting of the ends-in-whitespace flag.
   lineLayout.SetUnderstandsWhiteSpace(PR_TRUE);
-  lineLayout.SetTextStartsWithNBSP(textStartsWithNBSP);
-  if (0 != x) {
-    lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
+  lineLayout.SetTextStartsWithNBSP(textData.mTextStartsWithNBSP);
+  if (0 != textData.mX) {
+    lineLayout.SetEndsInWhiteSpace(textData.mEndsInWhitespace);
   }
-  if (justDidFirstLetter) {
+  if (textData.mJustDidFirstLetter) {
     lineLayout.SetFirstLetterFrame(this);
     lineLayout.SetFirstLetterStyleOK(PR_FALSE);
     mState |= TEXT_FIRST_LETTER;
   }
 
   // Setup metrics for caller; store final max-element-size information
-  aMetrics.width = x;
-  if ((0 == x) && !ts.mPreformatted) {
+  aMetrics.width = textData.mX;
+  if ((0 == textData.mX) && !ts.mPreformatted) {
     aMetrics.height = 0;
     aMetrics.ascent = 0;
     aMetrics.descent = 0;
@@ -3241,16 +3301,16 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
     ts.mNormalFont->GetMaxDescent(aMetrics.descent);
   }
   if (!wrapping) {
-    maxWordWidth = x;
+    textData.mMaxWordWidth = textData.mX;
   }
   if (nsnull != aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width = maxWordWidth;
+    aMetrics.maxElementSize->width = textData.mMaxWordWidth;
     aMetrics.maxElementSize->height = aMetrics.height;
   }
 
   // Set content offset and length
   mContentOffset = startingOffset;
-  mContentLength = offset - startingOffset;
+  mContentLength = textData.mOffset - startingOffset;
 
 #ifdef MOZ_MATHML
   // Simple minded code to also return the bounding metrics if the caller wants it...
@@ -3300,13 +3360,13 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
     Invalidate(aPresContext, mRect);
   }
 
-  nsReflowStatus rs = (offset == contentLength)
+  nsReflowStatus rs = (textData.mOffset == contentLength)
     ? NS_FRAME_COMPLETE
     : NS_FRAME_NOT_COMPLETE;
-  if (endsInNewline) {
+  if (textData.mEndsInNewline) {
     rs = NS_INLINE_LINE_BREAK_AFTER(rs);
   }
-  else if ((offset != contentLength) && (offset == startingOffset)) {
+  else if ((textData.mOffset != contentLength) && (textData.mOffset == startingOffset)) {
     // Break-before a long-word that doesn't fit here
     rs = NS_INLINE_LINE_BREAK_BEFORE();
   }
