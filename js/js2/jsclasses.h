@@ -73,7 +73,6 @@ namespace JSClasses {
      */
     class JSClass : public JSType {
     protected:
-        JSClass* mSuperClass;
         JSScope* mScope;        
         uint32 mSlotCount;
         JSSlots mSlots;
@@ -86,7 +85,6 @@ namespace JSClasses {
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
             :   JSType(name, superClass),
-                mSuperClass(superClass),
                 mScope(new JSScope(scope)),
                 mSlotCount(superClass ? superClass->mSlotCount : 0),
                 mStaticCount(0),
@@ -100,7 +98,7 @@ namespace JSClasses {
         
         JSClass* getSuperClass()
         {
-            return mSuperClass;
+            return static_cast<JSClass*>(mBaseType);
         }
         
         JSScope* getScope()
@@ -179,13 +177,25 @@ namespace JSClasses {
         {
             return mStaticData[index];
         }
+        
+        virtual void printProperties(Formatter& f)
+        {
+            f << "Properties:\n";
+            JSObject::printProperties(f);
+            f << "Statics:\n";
+            printStatics(f);
+        }
+
+        void printStatics(Formatter& f)
+        {
+            JSClass* superClass = getSuperClass();
+            if (superClass) superClass->printStatics(f);
+            for (JSSlots::iterator i = mStaticSlots.begin(), end = mStaticSlots.end(); i != end; ++i) {
+                f << i->first << " : " << mStaticData[i->second.mIndex]  << "\n";
+            }
+        }
     };
 
-    inline Formatter& operator<<(Formatter &f, JSClass &c)
-    {
-        return f << c.getName();
-    }
-    
     /**
      * Represents an instance of a JSClass.
      */
