@@ -3565,14 +3565,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       if (NS_FAILED(rv)) {
         return rv;
       }
-
-      // Mark next line dirty in case SplitLine didn't end up
-      // pushing any frames.
-      nsLineBox* next = aLine->mNext;
-      if ((nsnull != next) && !next->IsBlock()) {
-        next->MarkDirty();
-      }
-
     }
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
@@ -5493,8 +5485,26 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
     nsLineBox* line = FindLineFor(aChild, &prevLine, &isFloater);
     
     if (!isFloater) {
-      if (line)
+      if (line) {
         MarkLineDirty(line, prevLine);
+
+        // If aChild has any continuing frames, we'll need to be sure
+        // to dirty those lines, too.
+        do {
+          line->MarkDirty();
+          line = line->mNext;
+
+          aChild->GetNextInFlow(&aChild);
+
+          // If there's a continuing frame, then we should have a next line
+          NS_ASSERTION(!aChild || line, "continuing frame with no next line");
+
+          // If there's a continuing frame, then the next line should
+          // contain the continuing frame
+          NS_ASSERTION(!aChild || FindLineFor(aChild, &prevLine, &isFloater) == line,
+                       "continuing frame not on the next line");
+        } while (line && aChild);
+      }
     }
     else {
       line = mLines;
