@@ -140,6 +140,9 @@ interface nsIMsgIncomingServer : nsISupports {
   wstring toString();
 
   attribute boolean isSecure;
+
+  /* used for comparing nsIMsgIncomingServers */
+  boolean equals(in nsIMsgIncomingServer server);
 };
 
 %{C++

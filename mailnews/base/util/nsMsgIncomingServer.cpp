@@ -707,6 +707,33 @@ nsMsgIncomingServer::GetLocalStoreType(char **aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::Equals(nsIMsgIncomingServer *server, PRBool *_retval)
+{
+    nsresult rv;
+
+    NS_ENSURE_ARG_POINTER(server);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    nsXPIDLCString key1;
+    nsXPIDLCString key2;
+
+    rv = GetKey(getter_Copies(key1));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = server->GetKey(getter_Copies(key2));
+    if (NS_FAILED(rv)) return rv;
+
+    // compare the server keys
+    if (PL_strcmp((const char *)key1,(const char *)key2)) {
+        *_retval = PR_FALSE;
+    }
+    else {
+        *_retval = PR_TRUE;
+    }
+    return rv;
+}
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, Port, "port");
