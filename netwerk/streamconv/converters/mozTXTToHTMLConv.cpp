@@ -978,7 +978,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
       case ':':
       case '@':
       case '.':
-        if (aInString[i - 1] != ' ' && aInString[i + 1] != ' ') // Performance increase
+        if ( (i == 0 || ((i > 0) && aInString[i - 1] != ' ')) && aInString[i +1] != ' ') // Performance increase
         {
           PRInt32 replaceBefore;
           PRInt32 replaceAfter;
