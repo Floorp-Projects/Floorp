@@ -35,6 +35,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
+#include "prmon.h"
 
 class nsIFileChannel;
 
