@@ -281,14 +281,15 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // build the main native window
   if (aNativeParent == nsnull)
   {
-    nsWindowType windowType;
     if (aInitData) {
       mWindowType = aInitData->mWindowType;
       // if a toplevel window was requested without a titlebar, use a dialog windowproc
       if (aInitData->mWindowType == eWindowType_toplevel &&
-        (aInitData->mBorderStyle == eBorderStyle_none ||
-         aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
-        windowType = eWindowType_dialog;
+          (aInitData->mBorderStyle == eBorderStyle_none ||
+           aInitData->mBorderStyle != eBorderStyle_all &&
+           aInitData->mBorderStyle != eBorderStyle_default &&
+           !(aInitData->mBorderStyle & eBorderStyle_title)))
+        mWindowType = eWindowType_dialog;
     } 
     else
       mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
@@ -437,7 +438,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
     {
       if (aInitData->mBorderStyle == eBorderStyle_none ||
           aInitData->mBorderStyle == eBorderStyle_default &&
-          windowType == eWindowType_dialog ||
+          mWindowType == eWindowType_dialog ||
           !(aInitData->mBorderStyle & eBorderStyle_close))
         goAwayFlag = false;
     }
