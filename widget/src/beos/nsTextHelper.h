@@ -23,7 +23,7 @@
 #include "nsITextAreaWidget.h"
 #include "nsWindow.h"
 
-#include <TextView.h>
+class BTextView;
 
 /**
  * Base class for nsTextAreaWidget and nsTextWidget

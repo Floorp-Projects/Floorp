@@ -82,7 +82,7 @@ class nsScrollbarBeOS : public BScrollBar, public nsIWidgetStore
     nsScrollbarBeOS( nsIWidget *aWidgetWindow, BRect aFrame, const char *aName,
         BView *aTarget, float aMin, float aMax, orientation aOrientation );
 	void	ValueChanged(float newValue);
-	bool	nsScrollbarBeOS::GetPosition(int32 &p);
+	bool	GetPosition(int32 &p);
 };
 
 #endif // nsButton_h__

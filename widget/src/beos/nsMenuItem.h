@@ -92,7 +92,7 @@ protected:
   void Create(nsIWidget * aMBParent, BMenu *aParent,
               const nsString &aLabel, PRUint32 aCommand);
   nsIWidget * GetMenuBarParent(nsISupports * aParent);
-  BMenu *nsMenuItem::GetNativeParent();
+  BMenu *GetNativeParent();
 
   BMenuItem	*mMenuItem;
 
