@@ -7,44 +7,33 @@ function goPageSetup()
 
 function goQuitApplication()
 {
-	// since RDF in the task menu is broken we seem to crash (occasionally) when closing windows. So just call appShell shutdown
-	// until the RDF is back working. I sure hope that it  fixes this problem
+	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+	var enumerator = windowManagerInterface.GetEnumerator( null );
 	
-//	var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
-//	editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-//	
-//	if ( editorShell )
-//		editorShell.Exit();
-//	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
-
-//	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-//	do
-//	{
-		
-//		var topWindow = windowManagerInterface.GetMostRecentWindow( null );
-//		if ( topWindow == null )
-//			break;
-//		dump("closing window: "+ topWindow.title+"\n"); 
-	
-	
-	//	if ( topWindow.tryToClose == null )
-	//	{
-//			topWindow.close();
-	//	}
-	//	else
-	//	{
-	//		// Make sure topMostWindow is visibile
-	//		// stop closing windows if tryToClose returns false
-	//		topWindow.focus();
-	//		if ( !topWindow.tryToClose() )
-	//			break;
-	//	}
-//	} while( 1 );
+	while ( enumerator.HasMoreElements()  )
+	{
+		var  windowToClose = enumerator.GetNext();
+		var domWindow = windowManagerInterface.ConvertISupportsToDOMWindow( windowToClose );
+		domWindow.focus();
+		if ( domWindow.tryToClose == null )
+		{
+			// dump(" window.close \n");
+			domWindow.close();
+		}
+		else
+		{
+			// dump(" try to close \n" );
+			if ( !domWindow.tryToClose() )
+				return false;
+		}
+	};
 	
 	// call appshell exit
 	var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
 	appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
 	appShell.Quit();
+	return true;
 }
 
 
