@@ -65,7 +65,12 @@
           <b>
             [% bug_ids_string = bug_ids.join(',') %]
             <a href="duplicates.cgi?sortby=[% column.name %]
-              [% "&reverse=1" IF NOT reverse AND sortby == column.name %]
+              [% IF sortby == column.name %]
+                [% "&reverse=1" IF NOT reverse %]
+              [% ELSE %]
+                [%-# Some columns start off reversed %]
+                [% "&reverse=1" IF column.name.match('delta|count') %]
+              [% END %]
               [% "&maxrows=$maxrows" IF maxrows %]
               [% "&changedsince=$changedsince" IF changedsince %]
               [% "&openonly=1" IF openonly %]
