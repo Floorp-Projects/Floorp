@@ -692,7 +692,7 @@ CWebBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags, nsIWebBrowser **_retval)
+CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
 {
 	return NS_ERROR_FAILURE;
 }

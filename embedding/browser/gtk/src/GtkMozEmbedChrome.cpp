@@ -389,7 +389,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetChromeFlags(PRUint32 aChromeFlags)
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::CreateBrowserWindow(PRUint32 chromeMask, 
-					       nsIWebBrowser **_retval)
+     PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetNewBrowser\n"));
   return NS_ERROR_FAILURE;
