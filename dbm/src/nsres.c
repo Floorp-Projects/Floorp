@@ -4,11 +4,7 @@
 
 #include <stdio.h>
 
-#if defined(BSDI)||defined(RHAPSODY)
 #include <stdlib.h>
-#else
-#include <malloc.h>
-#endif
 
 #include <string.h>
 
