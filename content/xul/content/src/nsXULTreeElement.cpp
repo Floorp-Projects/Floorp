@@ -63,9 +63,6 @@
 #include "nsITreeBoxObject.h"
 #include "nsGUIEvent.h"
 
-static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
-static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-
 nsIAtom*             nsXULTreeElement::kSelectedAtom;
 nsIAtom*             nsXULTreeElement::kOpenAtom;
 nsIAtom*             nsXULTreeElement::kTreeRowAtom;
