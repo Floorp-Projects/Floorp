@@ -371,9 +371,23 @@ nsMenuPopupFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
 }
 
 void
-nsMenuPopupFrame::Escape()
+nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
 {
+  if (!mCurrentMenu)
+    return;
 
+  // See if our menu is open.
+  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+  if (menuFrame->IsOpen()) {
+    // Let the child menu handle this.
+    menuFrame->Escape(aHandledFlag);
+    if (!aHandledFlag) {
+      // We should close up.
+      menuFrame->OpenMenu(PR_FALSE);
+      aHandledFlag = PR_TRUE;
+    }
+    return;
+  }
 }
 
 nsIFrame*

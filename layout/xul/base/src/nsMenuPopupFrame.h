@@ -46,7 +46,9 @@ public:
   NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem);
   NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult);
   NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult);
-  NS_IMETHOD SetActive() { return NS_OK; }; // We don't care.
+  NS_IMETHOD SetActive(PRBool aActiveFlag) { return NS_OK; }; // We don't care.
+  NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = PR_FALSE; return NS_OK; };
+  NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_FALSE; return NS_OK; };
 
   // Overridden methods
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
@@ -68,7 +70,7 @@ public:
   void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
   nsIFrame* FindMenuWithShortcut(PRUint32 aLetter);
 
-  void Escape();
+  void Escape(PRBool& aHandledFlag);
 
 protected:
   nsIFrame* mCurrentMenu; // The current menu that is active.
