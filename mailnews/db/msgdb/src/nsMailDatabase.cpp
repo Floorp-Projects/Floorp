@@ -228,7 +228,7 @@ int msg_UnHex(char C)
 void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet, 
 							  MsgFlags flag, nsIOFileStream **ppFileStream)
 {
-	static char buf[30];
+	static char buf[50];
 	nsIOFileStream *fileStream = (m_folderStream) ? m_folderStream : *ppFileStream;
 //#ifdef GET_FILE_STUFF_TOGETHER
 #ifdef XP_MAC
@@ -293,6 +293,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 					// We are filing out old Cheddar flags here
 					PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT, flags);
 					fileStream->write(buf, PL_strlen(buf));
+					fileStream->flush();
 
 					// time to upate x-mozilla-status2
 					position = fileStream->tell();
@@ -309,6 +310,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 							fileStream->seek(position + MSG_LINEBREAK_LEN);
 							PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT, dbFlags);
 							fileStream->write(buf, PL_strlen(buf));
+							fileStream->flush();
 						}
 					}
 				} else 
