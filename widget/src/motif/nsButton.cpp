@@ -28,28 +28,30 @@
 
 #include <Xm/PushB.h>
 
-#define DBG 0
+NS_IMPL_ADDREF(nsButton)
+NS_IMPL_RELEASE(nsButton)
+
 //-------------------------------------------------------------------------
 //
 // nsButton constructor
 //
 //-------------------------------------------------------------------------
-nsButton::nsButton(nsISupports *aOuter) : nsWindow(aOuter)
+nsButton::nsButton() : nsWindow() , nsIButton()
 {
+  NS_INIT_REFCNT();
 }
 
-void nsButton::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
+
+void nsButton::Create(nsIWidget        *aParent,
+                      const nsRect     &aRect,
+                      EVENT_CALLBACK    aHandleEventFunction,
                       nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
+                      nsIAppShell      *aAppShell,
+                      nsIToolkit       *aToolkit,
                       nsWidgetInitData *aInitData) 
 {
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
-
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
 
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
@@ -59,8 +61,6 @@ void nsButton::Create(nsIWidget *aParent,
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   mWidget = ::XtVaCreateManagedWidget("button",
                                     xmPushButtonWidgetClass, 
@@ -72,8 +72,6 @@ void nsButton::Create(nsIWidget *aParent,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y, 
                                     nsnull);
-
-  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
@@ -101,21 +99,29 @@ nsButton::~nsButton()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
-{
-  static NS_DEFINE_IID(kIButtonIID,    NS_IBUTTON_IID);
 
-  if (aIID.Equals(kIButtonIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @modify gpk 8/4/98
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ * 
+*/ 
+nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
+    if (aIID.Equals(kIButton)) {
+        *aInstancePtr = (void*) ((nsIButton*)this);
+        AddRef();
+        return NS_OK;
+    }
+
+    return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
 
@@ -124,7 +130,7 @@ nsresult nsButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsButton::SetLabel(const nsString& aText)
+NS_METHOD nsButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   XmString str;
@@ -140,7 +146,7 @@ void nsButton::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsButton::GetLabel(nsString& aBuffer)
+NS_METHOD nsButton::GetLabel(nsString& aBuffer)
 {
   XmString str;
   XtVaGetValues(mWidget, XmNlabelString, &str, nsnull);
@@ -160,32 +166,20 @@ void nsButton::GetLabel(nsString& aBuffer)
 // paint message. Don't send the paint out
 //
 //-------------------------------------------------------------------------
+PRBool nsButton::OnMove(PRInt32, PRInt32)
+{
+  return PR_FALSE;
+}
+
 PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
 {
   //printf("** nsButton::OnPaint **\n");
   return PR_FALSE;
 }
 
-PRBool nsButton::OnResize(nsSizeEvent &aEvent)
+PRBool nsButton::OnResize(nsRect &aWindowRect)
 {
     return PR_FALSE;
 }
-
-
-#define GET_OUTER() ((nsButton*) ((char*)this - nsButton::GetOuterOffset()))
-
-void nsButton::AggButton::GetLabel(nsString& aBuffer)
-{
-  GET_OUTER()->GetLabel(aBuffer);
-}
-
-void nsButton::AggButton::SetLabel(const nsString& aText)
-{
-  GET_OUTER()->SetLabel(aText);
-}
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsButton, AggButton);
 
 
