@@ -63,6 +63,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  xremoteservice \
 		  profile \
+		  cookie \
 		  $(NULL)
 # for jprof
 REQUIRES	+= jprof

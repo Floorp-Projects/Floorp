@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  profile \
 		  unicharutil \
+		  embed_base \
 		  $(NULL)
 
 CPPSRCS		= \
