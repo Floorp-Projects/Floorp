@@ -378,8 +378,7 @@ AC_PATH_PROG(AUTOCONF, autoconf, :)
 AC_PATH_PROG(UNZIP, unzip, :)
 AC_PATH_PROGS(ZIP, zip)
 if test -z "$ZIP" || test "$ZIP" = ":"; then
-    AC_MSG_WARN([zip not found in \$PATH. Disabling jar packaging])
-    MOZ_DISABLE_JAR_PACKAGING=1
+    AC_MSG_ERROR([zip not found in \$PATH .])
 fi
 AC_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
 AC_PATH_PROG(XARGS, xargs)
@@ -3507,7 +3506,15 @@ if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
 fi
 
 dnl ========================================================
+dnl Dependency options
+dnl ========================================================
 
+AUTO_DEPENDENCIES=1
+MOZ_ARG_DISABLE_BOOL(auto-deps,
+[ --disable-auto-deps      Do not automatically generate build dependencies],
+    AUTO_DEPENDENCIES=)
+
+if test "$AUTO_DEPENDENCIES"; then
 _cpp_md_flag=
 MOZ_ARG_DISABLE_BOOL(md,
 [  --disable-md            Do not use compiler-based dependencies ],
@@ -3521,9 +3528,16 @@ if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
   _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
 fi
+fi
+
 MDDEPDIR='.deps'
+AC_SUBST(AUTO_DEPENDENCIES)
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
+
+dnl ========================================================
+dnl Compiler options
+dnl ========================================================
 
 MOZ_ARG_DISABLE_BOOL(pedantic,
 [  --disable-pedantic      Issue all warnings demanded by strict ANSI C ],
