@@ -6,8 +6,8 @@
 # gettree_header(), ).
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/07/20 19:05:17 $ 
+# $Revision: 1.7 $ 
+# $Date: 2001/08/13 19:52:34 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/BasicTxtHeader.pm,v $ 
 # $Name:  $ 
@@ -51,7 +51,7 @@ use lib '#tinder_libdir#';
 use FileStructure;
 use Persistence;
 
-$VERSION = ( qw $Revision: 1.6 $ )[1];
+$VERSION = ( qw $Revision: 1.7 $ )[1];
 
 
 sub new {
@@ -90,8 +90,9 @@ sub savetree_header {
 
   my ($filename) = $self->db_file($tree);
   my ($name_space) = ref($self);
+  my ($value_ref) = \$value;
 
-  Persistence::save_structure($value, $filename);
+  Persistence::save_structure($value_ref, $filename);
 
   return ;
 }
@@ -107,9 +108,10 @@ sub gettree_header {
   (-r $filename) || 
     return ;
   
-  my ($value) = Persistence::load_structure($filename);
+  my ($value_ref) = Persistence::load_structure($filename);
+  my ($value) = ${ $value_ref };
 
-  return $value
+  return $value;
 }
 
 1;
