@@ -37,6 +37,7 @@
 
 #include <os2.h>
 #include <string.h>
+#include <assert.h>
 
 #include "npnulos2.h"
 
