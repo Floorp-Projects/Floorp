@@ -609,6 +609,8 @@ function commandUntil()
 function commandAllDay()
 {
    updateStartEndItemEnabled();
+
+   updateOKButton();
 }
 
 /**

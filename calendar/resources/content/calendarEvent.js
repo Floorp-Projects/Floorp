@@ -489,10 +489,35 @@ CalendarEventDataSource.prototype.getICalLib = function()
    return this.gICalLib;
 }
 
+/** PUBLIC
+*
+*   CalendarEventDataSource/makeNewEvent.
+*
+* RETURN
+*      new event, not SAVED yet, use addEvent to save it.
+*/
+
+CalendarEventDataSource.prototype.makeNewEvent = function( date )
+{
+   var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
+   var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+   
+   if( date )
+   {
+       iCalEvent.start.setTime( date );
+   }
+   
+   return iCalEvent;
+}
+
+
 /* TO DO STUFF */
 CalendarEventDataSource.prototype.getAllToDos = function()
 {
-   var Checked = document.getElementById( "only-completed-checkbox" ).checked;
+   if( document.getElementById( "only-completed-checkbox" ) )
+      var Checked = document.getElementById( "only-completed-checkbox" ).checked;
+   else
+      var Checked = false;
 
    if( Checked )
    {
@@ -622,14 +647,16 @@ CalendarAlarmObserver.prototype.firePendingAlarms = function( observer )
 {
     this.addToPending = false;
     
-    for( var i in this.pendingAlarmList )
+    if( this.pendingAlarmList )
     {
-        this.fireAlarm( this.pendingAlarmList[ i ] );
-        
-        observer.onAlarm( this.pendingAlarmList[ i ] ); 
+      for( var i in this.pendingAlarmList )
+      {
+         this.fireAlarm( this.pendingAlarmList[ i ] );
+
+         observer.onAlarm( this.pendingAlarmList[ i ] ); 
+      }
     }
-    
-    this.pendingAlarmList = null;
+   this.pendingAlarmList = null;
     
     
 }

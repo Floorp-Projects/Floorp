@@ -81,31 +81,24 @@
 var gDateMade = "2002052213-cal"
 
 // turn on debuging
-
 var gDebugCalendar = false;
 
 // ICal Library
-
 var gICalLib = null;
 
 // calendar event data source see penCalendarEvent.js
-
 var gEventSource = null;
 
 // single global instance of CalendarWindow
-
 var gCalendarWindow;
 
 //an array of indexes to boxes for the week view
-
 var gHeaderDateItemArray = null;
 
 var gClockId;
 
 // Show event details on mouseover
-
 var showEventDetails = true;
-
 
 // DAY VIEW VARIABLES
 var kDayViewHourHeight = 50;
@@ -138,7 +131,7 @@ var rootPrefNode = prefService.getBranch(null); // preferences root node
 function calendarInit() 
 {
 	// get the calendar event data source
-   gEventSource = new CalendarEventDataSource(  );
+   gEventSource = new CalendarEventDataSource();
    
    // get the Ical Library
    gICalLib = gEventSource.getICalLib();
@@ -153,11 +146,11 @@ function calendarInit()
 
    // set up the unifinder
    
-   prepareCalendarUnifinder( );
+   prepareCalendarUnifinder();
 
-   prepareCalendarToDoUnifinder( );
+   prepareCalendarToDoUnifinder();
    
-   update_date( );
+   update_date();
    	
 	checkForMailNews();
 }
@@ -165,7 +158,7 @@ function calendarInit()
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
 // next minute ticks over
 
-function update_date( )
+function update_date()
 {
    // get the current time
    var now = new Date();
@@ -176,7 +169,7 @@ function update_date( )
    
    gCalendarWindow.currentView.hiliteTodaysDate();
 
-   gClockId = setTimeout( "update_date( )", milliSecsTillTomorrow ); 
+   gClockId = setTimeout( "update_date()", milliSecsTillTomorrow ); 
 }
 
 /** 
@@ -185,16 +178,16 @@ function update_date( )
 
 function calendarFinish()
 {
-   finishCalendarUnifinder( );
+   finishCalendarUnifinder();
    
-   finishCalendarToDoUnifinder( );
+   finishCalendarToDoUnifinder();
 
-   gCalendarWindow.close( );
+   gCalendarWindow.close();
 }
 
 function launchPreferences()
 {
-   goPreferences("advancedItem", "chrome://calendar/content/pref/calendarPref.xul", "calendar");
+   goPreferences( "advancedItem", "chrome://calendar/content/pref/calendarPref.xul", "calendar" );
 }
 
 
@@ -295,7 +288,6 @@ function weekEventItemClick( eventBox, event )
    {
       event.stopPropagation();
    }
-   
 }
 
 
@@ -388,7 +380,7 @@ function monthEventBoxClickEvent( eventBox, event )
 
 function monthEventBoxDoubleClickEvent( eventBox, event )
 {
-   gCalendarWindow.monthView.clearSelectedDate( );
+   gCalendarWindow.monthView.clearSelectedDate();
    
    editEvent( eventBox.calendarEventDisplay.event );
 
@@ -396,7 +388,6 @@ function monthEventBoxDoubleClickEvent( eventBox, event )
    {
       event.stopPropagation();
    }
-   
 }
    
 
@@ -793,4 +784,9 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
    }
 
    return ( HolderBox );
+}
+
+function reloadApplication()
+{
+	gCalendarWindow.currentView.refreshEvents();
 }

@@ -124,7 +124,7 @@
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newtodo.startdate.label;"/>
                         </hbox>
-                        <hbox  id="start-date-box" align="center">
+                        <hbox id="start-date-box" align="center">
                             <textbox class="date-text-class" id="start-date-text" readonly="true" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start"/>
                             <image id="start-date-button" class="event-date-button-class"         onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
                         </hbox>

@@ -162,6 +162,8 @@
 
 
 <!-- Pop up menus -->
+<tooltip id="savetip"/>
+
 <popup id="context-menu">
    <menuitem label="&calendar.context.newevent.label;" accesskey="&calendar.context.newevent.accesskey;" observes="new_command"/>
    <menuitem label="&calendar.context.newtodo.label;" accesskey="&calendar.context.newtodo.accesskey;" observes="new_todo_command"/>
@@ -201,7 +203,7 @@
    <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar" persist="collapsed" 
           grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
           tbalign="stretch">
-          
+          <!--<toolbarbutton class="toolbarbutton-1" id="calendar-new-task-button"      label="&calendar.newtask.button.label;"          tooltiptext="&calendar.newtask.button.tooltip;"      observes="new_todo_command"/>-->
           <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltiptext="&calendar.newevent.button.tooltip;"     observes="new_command"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-edit-event-button"     label="&calendar.edit.button.label;"            tooltiptext="&calendar.edit.button.tooltip;"         observes="modify_command"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-delete-event-button"   label="&calendar.delete.button.label;"          tooltiptext="&calendar.delete.button.tooltip;"       observes="delete_command"/>
