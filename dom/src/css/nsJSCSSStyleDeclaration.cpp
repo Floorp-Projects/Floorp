@@ -227,7 +227,7 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_GETPROPERTYVALUE,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_GETPROPERTYVALUE, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -277,7 +277,7 @@ CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_GETPROPERTYPRIORITY,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_GETPROPERTYPRIORITY, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -328,7 +328,7 @@ CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_SETPROPERTY,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_SETPROPERTY, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -380,7 +380,7 @@ CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_ITEM,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_ITEM, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }

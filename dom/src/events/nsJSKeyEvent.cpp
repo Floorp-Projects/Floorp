@@ -487,7 +487,7 @@ KeyEventInitKeyEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_KEYEVENT_INITKEYEVENT,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_KEYEVENT_INITKEYEVENT, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -554,8 +554,9 @@ KeyEventInitKeyEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 PR_STATIC_CALLBACK(JSBool)
 MouseEventInitMouseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMKeyEvent *privateThis = (nsIDOMKeyEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsIDOMMouseEvent *nativeThis = nsnull;
+  nsIDOMKeyEventPtr nativeThis = nsnull;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIKeyEventIID, (void **)&nativeThis)) {
   nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kIMouseEventIID, (void **)&nativeThis)) {
     return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
@@ -582,7 +583,7 @@ MouseEventInitMouseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_INITMOUSEEVENT,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_INITMOUSEEVENT, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }

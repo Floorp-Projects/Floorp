@@ -160,7 +160,7 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTIONLISTENER_NOTIFYSELECTIONCHANGED,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTIONLISTENER_NOTIFYSELECTIONCHANGED, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
