@@ -4212,6 +4212,26 @@ static struct MidasCommand gMidasCommandTable[] = {
 
 #define MidasCommandCount ((sizeof(gMidasCommandTable) / sizeof(struct MidasCommand)) - 1)
 
+struct MidasParam {
+  const char*  incomingParamString;
+  const char*  internalParamString;
+};
+
+static struct MidasParam gMidasParamTable[] = {
+  { "Heading 1",          "H1" },
+  { "Heading 2",          "H2" },
+  { "Heading 3",          "H3" },
+  { "Heading 4",          "H4" },
+  { "Heading 5",          "H5" },
+  { "Heading 6",          "H6" },
+#if 0
+// Not sure how to do this yet
+  { "Normal",             "" },
+#endif
+  { NULL, NULL }
+};
+
+#define MidasParamCount ((sizeof(gMidasParamTable) / sizeof(struct MidasParam)) - 1)
 
 // this function will return false if the command is not recognized
 // inCommandID will be converted as necessary for internal operations
@@ -4224,7 +4244,7 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
                                               nsACString& outParam)
 {
   nsCAutoString convertedCommandID = NS_ConvertUCS2toUTF8(inCommandID);
-  PRUint32 i;
+  PRUint32 i, j;
   for (i = 0; i < MidasCommandCount; ++i) {
     if (convertedCommandID.Equals(gMidasCommandTable[i].incomingCommandString,
                                   nsCaseInsensitiveCStringComparator())) {
@@ -4236,10 +4256,20 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
         outParam.Assign(gMidasCommandTable[i].internalParamString);
       }
       else {
+        nsCAutoString convertedParam = NS_ConvertUCS2toUTF8(inParam);
+        // check to see if we need to convert the parameter
+        for (j = 0; j < MidasParamCount; ++j) {
+          if (convertedParam.Equals(gMidasParamTable[j].incomingParamString,
+                                    nsCaseInsensitiveCStringComparator())) {
+            outParam.Assign(gMidasParamTable[j].internalParamString);
+            break;
+          }
+        }
+        // if we didn't convert the parameter, just
         // pass through the parameter that was passed to us
-        outParam.Assign(NS_ConvertUCS2toUTF8(inParam));
+	     if (j == MidasParamCount)
+          outParam.Assign(convertedParam);
       }
-
       return PR_TRUE;
     }
   }
