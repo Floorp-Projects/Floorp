@@ -112,16 +112,16 @@ also accepts command line options to change some default variables.
 Please look at the configure source code for variable details, but the
 most common changes are:
 
-	prefix: the directory for most of the tinderbox files,
+	--prefix: the directory for most of the tinderbox files,
 		defaults to /home/tinderbox2
 
-	cgibin_prefix: The directory where cgi scripts will be
+	--cgibin-prefix: The directory where cgi scripts will be
 		run. This depends on how your webserver is configured.  
 		For security you may wish to ensure that this
 		directory is disjoint from the prefix directory.  This
 		defaults to /var/www/cgi-bin/tinderbox.
 
-	html_prefix: The directory where html files should be
+	--html-prefix: The directory where html files should be
 		written. This depends on how your webserver is configured. 
 		This is where the webserver will pick up tinderbox2
 		output.  This defaults to /home/httpd/html/tinderbox.
@@ -143,7 +143,7 @@ information on how the tests work.
 *) run make install, to install Tinderbox on your system.  You may
 wish to run this with a different 'prefix'
 
-	make install prefix=/opt/tinderbox
+	make install --prefix=/opt/tinderbox
 
 It is currently assumed that the bin directory of your installation
 will be where the webserver will run the tinderbox cgi's from.  You
