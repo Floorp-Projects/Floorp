@@ -185,4 +185,4 @@ static nsModuleComponentInfo components[] =
     nsFileSpecWithUIImplConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsWidgetPhModule", components)
+NS_IMPL_NSGETMODULE(nsWidgetPhModule, components)

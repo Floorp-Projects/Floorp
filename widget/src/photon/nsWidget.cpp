@@ -289,10 +289,10 @@ NS_METHOD nsWidget::Show( PRBool bState ) {
 		  PtDamageWidget(mWidget);
 			}
 		else {
-			EnableDamage( mWidget, PR_FALSE );
 			PtWidgetToFront( mWidget );
+//			EnableDamage( mWidget, PR_FALSE );
 			if( !mShown || !( mWidget->flags & Pt_REALIZED ) ) PtRealizeWidget( mWidget );
-			EnableDamage( mWidget, PR_TRUE );
+//			EnableDamage( mWidget, PR_TRUE );
 			}
   	}
   else {
