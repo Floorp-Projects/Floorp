@@ -320,7 +320,7 @@ WindowPtr nsWindowUtils::GetIndexedWindowOfKind(TWindowKind windowKind, TAEListI
 	ThrowErrIfNil(windowMediator, paramErr);
 	
 	nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-	if (NS_FAILED(windowMediator->GetXULWindowEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
+	if (NS_FAILED(windowMediator->GetZOrderXULWindowEnumerator(nsnull, PR_TRUE, getter_AddRefs(windowEnumerator))))
 		ThrowOSErr(paramErr);			// need a better error
    
   WindowPtr windowPtr = NULL;
@@ -367,7 +367,7 @@ TAEListIndex nsWindowUtils::GetWindowIndex(TWindowKind windowKind, WindowPtr the
 	ThrowErrIfNil(windowMediator, paramErr);
 
 	nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-	if (NS_FAILED(windowMediator->GetXULWindowEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
+	if (NS_FAILED(windowMediator->GetZOrderXULWindowEnumerator(nsnull, PR_TRUE, getter_AddRefs(windowEnumerator))))
 		ThrowOSErr(paramErr);			// need a better error
 
 	TAEListIndex index = 0L;
