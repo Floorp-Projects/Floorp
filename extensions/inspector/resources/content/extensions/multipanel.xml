@@ -42,10 +42,10 @@
         <setter><![CDATA[
           this.setAttribute("open", val);
           if (val) {
-            this.mContentBox.removeAttribute("hidden");
+            this.mContentBox.removeAttribute("collapsed");
             this.setAttribute("flex", "1");
           } else {
-            this.mContentBox.setAttribute("hidden", "true");
+            this.mContentBox.setAttribute("collapsed", "true");
             this.removeAttribute("flex");
           }
           
