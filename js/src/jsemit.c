@@ -3373,13 +3373,27 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_MINUS:
       case TOK_STAR:
       case TOK_DIVOP:
-        /* Binary operators that evaluate both operands unconditionally. */
-        if (!js_EmitTree(cx, cg, pn->pn_left))
-            return JS_FALSE;
-        if (!js_EmitTree(cx, cg, pn->pn_right))
-            return JS_FALSE;
-        if (js_Emit1(cx, cg, pn->pn_op) < 0)
-            return JS_FALSE;
+        if (pn->pn_arity == PN_LIST) {
+            /* Left-associative operator chain: avoid too much recursion. */
+            pn2 = pn->pn_head;
+            if (!js_EmitTree(cx, cg, pn2))
+                return JS_FALSE;
+            op = pn->pn_op;
+            while ((pn2 = pn2->pn_next) != NULL) {
+                if (!js_EmitTree(cx, cg, pn2))
+                    return JS_FALSE;
+                if (js_Emit1(cx, cg, op) < 0)
+                    return JS_FALSE;
+            }
+        } else {
+            /* Binary operators that evaluate both operands unconditionally. */
+            if (!js_EmitTree(cx, cg, pn->pn_left))
+                return JS_FALSE;
+            if (!js_EmitTree(cx, cg, pn->pn_right))
+                return JS_FALSE;
+            if (js_Emit1(cx, cg, pn->pn_op) < 0)
+                return JS_FALSE;
+        }
         break;
 
 #if JS_HAS_EXCEPTIONS

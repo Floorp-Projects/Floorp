@@ -311,8 +311,6 @@ js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
     JSTreeContext tc;
     JSParseNode *pn;
 
-    JS_ASSERT(cx->runtime->gcDisabled);
-
     /*
      * Push a compiler frame if we have no frames, or if the top frame is a
      * lightweight function activation, or if its scope chain doesn't match
@@ -330,6 +328,13 @@ js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
         cx->fp = &frame;
     }
 
+    /*
+     * Prevent GC activation (possible if out of memory when atomizing,
+     * or from pre-ECMAv2 switch case expr eval in the unlikely case of a
+     * branch-callback -- unlikely because it means the switch case must
+     * have called a function).
+     */
+    JS_DISABLE_GC(cx->runtime);
     TREE_CONTEXT_INIT(&tc);
     pn = Statements(cx, ts, &tc);
     if (pn) {
@@ -345,6 +350,7 @@ js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
     }
 
     TREE_CONTEXT_FINISH(&tc);
+    JS_ENABLE_GC(cx->runtime);
     cx->fp = fp;
     return pn;
 }
@@ -380,12 +386,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
         cx->fp = &frame;
     }
 
-    /*
-     * Prevent GC activation (possible if out of memory when atomizing,
-     * or from pre-ECMAv2 switch case expr eval in the unlikely case of a
-     * branch-callback -- unlikely because it means the switch case must
-     * have called a function).
-     */
+    /* Prevent GC activation while compiling. */
     JS_DISABLE_GC(cx->runtime);
 
     pn = Statements(cx, ts, &cg->treeContext);
@@ -3256,6 +3257,32 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         break;
 
       default:;
+    }
+
+    /*
+     * Flatten a left-associative (left-heavy) tree of a given operator into
+     * a list, to reduce js_EmitTree recursion.
+     */
+    if (pn->pn_arity == PN_BINARY &&
+        pn1 &&
+        pn1->pn_type == pn->pn_type &&
+        pn1->pn_op == pn->pn_op &&
+        (js_CodeSpec[pn->pn_op].format & JOF_LEFTASSOC)) {
+        if (pn1->pn_arity == PN_LIST) {
+            /* We already flattened pn1, so move it to pn and append pn2. */
+            PN_MOVE_NODE(pn, pn1);
+            PN_APPEND(pn, pn2);
+        } else {
+            /* Convert pn into a list containing pn1's kids followed by pn2. */
+            pn->pn_arity = PN_LIST;
+            PN_INIT_LIST_1(pn, pn1->pn_left);
+            PN_APPEND(pn, pn1->pn_right);
+            PN_APPEND(pn, pn2);
+
+            /* Clear pn1 so it can be recycled by itself, without its kids. */
+            PN_CLEAR_NODE(pn1);
+        }
+        RecycleTree(pn1, tc);
     }
 
     return JS_TRUE;
