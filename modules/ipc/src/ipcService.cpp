@@ -151,11 +151,15 @@ ipcService::SetMessageObserver(const nsID &target, ipcIMessageObserver *observer
 }
 
 NS_IMETHODIMP
-ipcService::SendMessage(const nsID &target,
+ipcService::SendMessage(PRUint32 clientID,
+                        const nsID &target,
                         const char *data,
                         PRUint32 dataLen)
 {
     NS_ENSURE_TRUE(mTransport, NS_ERROR_NOT_INITIALIZED);
+
+    if (clientID != 0)
+        return NS_ERROR_NOT_IMPLEMENTED;
 
     ipcMessage *msg = new ipcMessage();
     if (!msg)
@@ -165,15 +169,6 @@ ipcService::SendMessage(const nsID &target,
 
     mTransport->SendMsg(msg);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-ipcService::ForwardMessage(PRUint32 clientID,
-                           const nsID &target,
-                           const char *data,
-                           PRUint32 dataLen)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-----------------------------------------------------------------------------
