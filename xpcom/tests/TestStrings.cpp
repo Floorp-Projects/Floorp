@@ -515,6 +515,70 @@ PRBool test_appendint64()
     return PR_TRUE;
   }
 
+PRBool test_findcharinset()
+  {
+    nsCString buf("hello, how are you?");
+
+    PRInt32 index = buf.FindCharInSet(",?", 5);
+    if (index != 5)
+      return PR_FALSE;
+
+    index = buf.FindCharInSet("helo", 0);
+    if (index != 0)
+      return PR_FALSE;
+
+    index = buf.FindCharInSet("z?", 6);
+    if (index != (PRInt32) buf.Length()-1)
+      return PR_FALSE;
+
+    return PR_TRUE;
+  }
+
+PRBool test_rfindcharinset()
+  {
+    nsCString buf("hello, how are you?");
+
+    PRInt32 index = buf.RFindCharInSet(",?", 5);
+    if (index != 5)
+      return PR_FALSE;
+
+    index = buf.RFindCharInSet("helo", 0);
+    if (index != 0)
+      return PR_FALSE;
+
+    index = buf.RFindCharInSet("z?", 6);
+    if (index != kNotFound)
+      return PR_FALSE;
+
+    index = buf.RFindCharInSet("l", 5);
+    if (index != 3)
+      return PR_FALSE;
+
+    buf.Assign("abcdefghijkabc");
+
+    index = buf.RFindCharInSet("ab");
+    if (index != 12)
+      return PR_FALSE;
+
+    index = buf.RFindCharInSet("ab", 11);
+    if (index != 11)
+      return PR_FALSE;
+
+    index = buf.RFindCharInSet("ab", 10);
+    if (index != 1)
+      return PR_FALSE;
+
+    index = buf.RFindCharInSet("ab", 0);
+    if (index != 0)
+      return PR_FALSE;
+
+    index = buf.RFindCharInSet("cd", 1);
+    if (index != kNotFound)
+      return PR_FALSE;
+
+    return PR_TRUE;
+  }
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -550,6 +614,8 @@ tests[] =
     { "test_set_length", test_set_length },
     { "test_substring", test_substring },
     { "test_appendint64", test_appendint64 },
+    { "test_findcharinset", test_findcharinset },
+    { "test_rfindcharinset", test_rfindcharinset },
     { nsnull, nsnull }
   };
 
@@ -565,7 +631,7 @@ int main(int argc, char **argv)
       {
         for (const Test* t = tests; t->name != nsnull; ++t)
           {
-            printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
+            printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE <--");
           }
       }
     
