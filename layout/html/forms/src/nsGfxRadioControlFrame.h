@@ -46,6 +46,7 @@ public:
    //nsIRadioControlFrame methods
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext);
+  NS_IMETHOD SetIsInClickEvent(PRBool aVal);
 
 
   virtual PRBool GetChecked();
@@ -111,6 +112,7 @@ protected:
 	virtual void 		SetRadioState(nsIPresContext* aPresContext, PRBool aValue);
 
     //GFX-rendered state variables
+  PRBool           mInClickEvent;
   PRBool           mChecked;
   nsIStyleContext* mRadioButtonFaceStyle;
   PRBool           mRestoredChecked;
