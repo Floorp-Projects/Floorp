@@ -394,7 +394,9 @@ function onOKCommand()
     
     if (getFieldValue("repeat-checkbox", "checked")) {
         recurrenceInfo = createRecurrenceInfo();
+        dump ("RECURRENCE INFO: " + recurrenceInfo + "\n");
         recurUnits    = getFieldValue("repeat-length-units", "value");
+        dump ("rECUR UNITS: " + recurUnits + "\n");
         recurInterval = getFieldValue("repeat-length-field");
 
         recurrenceInfo.recurStart = event.startDate;
@@ -412,12 +414,13 @@ function onOKCommand()
 
         recurrenceInfo.interval = recurInterval;
         
-        var typeMap = { "days"  : Components.interfaces.calIAttendee.CAL_RECUR_DAILY,
-                        "weeks"   : Components.interfaces.calIAttendee.CAL_RECUR_WEEKLY,
-                        "months" : Components.interfaces.calIAttendee.CAL_RECUR_MONTHLY,
-                        "years"  : Components.interfaces.calIAttendee.CAL_RECUR_YEARLY
+        var typeMap = { "days"  : Components.interfaces.calIRecurrenceInfo.CAL_RECUR_DAILY,
+                        "weeks"   : Components.interfaces.calIRecurrenceInfo.CAL_RECUR_WEEKLY,
+                        "months" : Components.interfaces.calIRecurrenceInfo.CAL_RECUR_MONTHLY,
+                        "years"  : Components.interfaces.calIRecurrenceInfo.CAL_RECUR_YEARLY
                       }
         recurrenceInfo.recurType = typeMap[recurUnits];
+        dump ("recurType: " + recurrenceInfo.recurType + "\n");
         // XXX need to do extra work for weeks here and for months incase extra things are checked
 
 
@@ -438,6 +441,7 @@ function onOKCommand()
         event.recurrenceInfo = recurrenceInfo;
     }
 
+    dump ("RECURRENCE INFO ON EVENT: " + event.recurrenceInfo + "\n");
 
 
     // other properties

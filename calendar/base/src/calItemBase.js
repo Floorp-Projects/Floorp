@@ -22,8 +22,8 @@ calItemBase.prototype = {
             throw Components.results.NS_ERROR_FAILURE;
 
 
-        if (this.mCreationDate)
-            this.mCreationDate.makeImmutable();
+        this.mCreationDate.makeImmutable();
+
         if (this.mRecurrenceInfo)
             this.mRecurrenceInfo.makeImmutable();
         if (this.mAlarmTime)
@@ -48,9 +48,7 @@ calItemBase.prototype = {
 
         this.mAttendees = [];
 
-
-        this.mRecurrenceInfo = Components.classes["@mozilla.org/calendar/recurrence-info;1"].
-                               createInstance(Components.interfaces.calIRecurrenceInfo);
+        this.mRecurrenceInfo = null;
 
         this.mAttachments = null;
     },
@@ -69,17 +67,26 @@ calItemBase.prototype = {
         m.mStatus = this.mStatus;
         m.mHasAlarm = this.mHasAlarm;
 
-        m.mRecurrenceInfo = this.mRecurrenceInfo.clone();
+        m.mCreationDate = this.mCreationDate.clone();
 
-        if (this.mCreationDate)
-            m.mCreationDate = this.mCreationDate.clone();
+        if (this.mRecurrenceInfo) {
+            m.mRecurrenceInfo = this.mRecurrenceInfo.clone();
+            dump ("old recurType: " + this.mRecurrenceInfo.recurType + " new type: " + m.mRecurrenceInfo.recurType + "\n");
+        }
         if (this.mAlarmTime)
             m.mAlarmTime = this.mAlarmTime.clone();
 
 
         m.mAttachments = this.mAttachments;
 
+        m.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
+                        createInstance(Components.interfaces.nsIWritablePropertyBag);
 
+        var e = this.mProperties.enumerator;
+        while (e.hasMoreElements()) {
+            var prop = e.getNext().QueryInterface(Components.interfaces.nsIProperty);
+            m.mProperties.setProperty (prop.name, prop.value);
+        }
 
         return m;
     },

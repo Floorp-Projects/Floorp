@@ -65,6 +65,10 @@ const kCalItemOccurrenceContractID = "@mozilla.org/calendar/item-occurrence;1";
 const kCalIItemOccurrence = Components.interfaces.calIItemOccurrence;
 const CalItemOccurrence = new Components.Constructor(kCalItemOccurrenceContractID, kCalIItemOccurrence);
 
+const kCalRecurrenceInfoContractID = "@mozilla.org/calendar/recurrence-info;1";
+const kCalIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
+const CalRecurrenceInfo = new Components.Constructor(kCalRecurrenceInfoContractID, kCalIRecurrenceInfo);
+
 const kMozStorageStatementWrapperContractID = "@mozilla.org/storage/statement-wrapper;1";
 const kMozStorageStatementWrapperIID = Components.interfaces.mozIStorageStatementWrapper;
 if (kMozStorageStatementWrapperIID) {
@@ -110,8 +114,8 @@ function makeOccurrence(item, start, end)
     var occ = CalItemOccurrence();
     // XXX poor form
     occ.wrappedJSObject.item = item;
-    occ.wrappedJSObject.occurrenceStartDate = item.startDate;
-    occ.wrappedJSObject.occurrenceEndDate = item.endDate;
+    occ.wrappedJSObject.occurrenceStartDate = start;
+    occ.wrappedJSObject.occurrenceEndDate = end;
     return occ;
 }
 
@@ -225,12 +229,13 @@ calStorageCalendar.prototype = {
             }
         }
 
-        newItem = aItem.clone();
+        var newItem = aItem.clone();
         newItem.parent = this;
         newItem.generation = 1;
         newItem.makeImmutable();
 
         dump ("about to flushItem\n");
+        dump ("newitem.recurrenceInfo: " + newItem.recurrenceInfo + " aItem.recurrenceInfo: " + aItem.recurrenceInfo + "\n");
         this.flushItem (newItem, null);
         dump ("after flushItem\n");
 
@@ -410,11 +415,14 @@ calStorageCalendar.prototype = {
         sp.todo_start = startTime;
         sp.todo_end = endTime;
 
+        dump ("SELECT ITEMS: start: " + startTime + " end: " + endTime + "\n");
+
+/*
         if (asOccurrences) {
             sp.event_start2 = startTime;
             sp.event_end2 = endTime;
         }
-
+*/
         var count = 0;
         while (stmt.step()) {
             var iid;
@@ -431,32 +439,38 @@ calStorageCalendar.prototype = {
                 dump ("***** Unknown item type in db: " + stmt.row.item_type + "\n");
                 continue;
             }
-            var item = this.getItemFromRow(stmt.row);
+            var flags = {};
+            var item = this.getItemFromRow(stmt.row, flags);
             // uses mDBTwo, so can be interleaved
-            this.getAdditionalDataForItem(item);
+            this.getAdditionalDataForItem(item, flags.value);
 
             item.makeImmutable();
 
             var items = null;
 
-            dump ("type: " + item.recurrenceInfo.recurType + "\n");
-            if (item.recurrenceInfo.recurType != 0) {
-                dump ("getOccurrencesBetween\n");
+            dump ("RINFO: " + item.recurrenceInfo + "\n");
+            if (item.recurrenceInfo && item.recurrenceInfo.recurType != 0) {
+                dump ("GETOCCURRENCESBETWEEN\n");
+                iid = kCalIItemOccurrence;
                 items = item.recurrenceInfo.getOccurrencesBetween (item, aRangeStart, aRangeEnd, {});
+                dump ("items: " + items + "\n");
+                dump ("GOT : " + items.length + "\n");
+                for (var i = 0; i < items.length; i++) {
+                    var q = items[i];
+                    dump ("item " + i + " " + q.item.title + ": " + q.occurrenceStartDate.jsDate + " -> " + q.occurrenceEndDate + "\n");
+                }
             } else {
                 if (asOccurrences) {
                     if (iid == kCalIEvent) {
-                        item = makeOccurrence(iid, item.startDate, item.endDate);
+                        item = makeOccurrence(item, item.startDate, item.endDate);
                     } else if (iid == kCalITodo) {
-                        item = makeOccurrence(iid, item.entryTime, item.entryTime);
+                        item = makeOccurrence(item, item.entryTime, item.entryTime);
                     }
                     iid = kCalIItemOccurrence;
                 }
                 items = [ item ];
-                dump ("length: " + items.length + "\n");
             }
             
-            dump ("items: " + items + "\n");
             aListener.onGetResult (this,
                                    Components.results.NS_OK,
                                    iid, null,
@@ -551,15 +565,15 @@ calStorageCalendar.prototype = {
             this.mDB,
             "SELECT * FROM cal_items " +
             "WHERE (item_type = 0 AND (event_end >= :event_start AND event_start <= :event_end)) " +
-            "   OR (item_type = 1 AND (flags & 16 == 0) AND todo_entry >= :todo_start AND todo_entry <= :todo_end) " +
+            "   OR (item_type = 1 AND (todo_entry >= :todo_start AND todo_entry <= :todo_end)) " +
             "  AND cal_id = :cal_id"
             );
 
         this.mSelectItemsByRangeWithRecurrence = createStatement(
             this.mDB,
             "SELECT * FROM cal_items " +
-            "WHERE (item_type = 0 AND (((flags & 16 == 0) AND event_end >= :event_start AND event_start <= :event_end) " +
-            "                          OR ((flags & 16 == 1) AND recur_end >= :event_start2 AND event_start <= :event_end2)))" +
+            "WHERE (item_type = 0 AND ((flags & 16 == 0) AND (event_end >= :event_start AND event_start <= :event_end) " +
+            "                          OR (flags & 16 == 16)))" +
             "   OR (item_type = 1 AND (flags & 16 == 0) AND todo_entry >= :todo_start AND todo_entry <= :todo_end) " +
             "  AND cal_id = :cal_id"
             );
@@ -616,8 +630,8 @@ calStorageCalendar.prototype = {
         this.mInsertRecurrence = createStatement (
             this.mDB,
             "INSERT INTO cal_recurrence " +
-            "  (item_id, recur_type, count, second, minute, hour, day, monthday, yearday, weekno, month, setpos) " +
-            "VALUES (:item_id, :recur_type, :count, :second, :minute, :hour, :day, :monthday, :yearday, :weekno, :month, :setpos)"
+            "  (item_id, recur_type, count, interval, second, minute, hour, day, monthday, yearday, weekno, month, setpos) " +
+            "VALUES (:item_id, :recur_type, :count, :interval, :second, :minute, :hour, :day, :monthday, :yearday, :weekno, :month, :setpos)"
             );
 
         // delete statements
@@ -644,7 +658,7 @@ calStorageCalendar.prototype = {
 
     // read in the common ItemBase attributes from aDBRow, and stick
     // them on aItemBase
-    getItemFromRow: function (row) {
+    getItemFromRow: function (row, flags) {
         var item;
 
         if (row.cal_id != this.mCalId) {
@@ -686,6 +700,9 @@ calStorageCalendar.prototype = {
         // we need a way to do this without using wrappedJSObject
         item.wrappedJSObject.storage_calendar_id = row.id;
 
+        if (flags)
+            flags.value = row.flags;
+
         return item;
     },
 
@@ -696,8 +713,8 @@ calStorageCalendar.prototype = {
     // select is executing; don't use any statements that aren't
     // against mDBTwo in here!
     
-    getAdditionalDataForItem: function (item) {
-        if (item.flags & CAL_ITEM_FLAG_HAS_ATTENDEES) {
+    getAdditionalDataForItem: function (item, flags) {
+        if (flags & CAL_ITEM_FLAG_HAS_ATTENDEES) {
             this.mSelectAttendeesForItem.params.event_id = item.id;
             while (this.mSelectAttendeesForItem.step()) {
                 var attendee = this.mNewAttendeeFromRow(this.mSelectAttendeesForItem.row);
@@ -706,29 +723,36 @@ calStorageCalendar.prototype = {
             this.mSelectAttendeesForItem.reset();
         }
 
-        if (item.flags & CAL_ITEM_FLAG_HAS_PROPERTIES) {
+        if (flags & CAL_ITEM_FLAG_HAS_PROPERTIES) {
             this.mSelectPropertiesForItem.params.item_id = item.id;
             // ...
         }
 
-        if (item.flags & CAL_ITEM_FLAG_HAS_RECURRENCE) {
+        if (flags & CAL_ITEM_FLAG_HAS_RECURRENCE) {
+            dump ("item " + item.id + " has recurrence\n");
             this.mSelectRecurrenceForItem.params.item_id = item.id;
             if (this.mSelectRecurrenceForItem.step()) {
                 var row = this.mSelectRecurrenceForItem.row;
-                var rec = item.rec;
+                var rec = new CalRecurrenceInfo();
 
-                rec.recur_type = row.recur_type;
-                rec.count = row.count;
+                rec.recurType = row.recur_type;
+                rec.recurCount = row.count;
+                rec.interval = row.interval;
 
-                var rtypes = [calIRecurrenceInfo.CAL_RECUR_BYSECOND, "second",
-                              calIRecurrenceInfo.CAL_RECUR_BYMINUTE, "minute",
-                              calIRecurrenceInfo.CAL_RECUR_BYHOUR, "hour",
-                              calIRecurrenceInfo.CAL_RECUR_BYDAY, "day",
-                              calIRecurrenceInfo.CAL_RECUR_BYMONTHDAY, "monthday",
-                              calIRecurrenceInfo.CAL_RECUR_BYYEARDAY, "yearday",
-                              calIRecurrenceInfo.CAL_RECUR_BYWEEKNO, "weekno",
-                              calIRecurrenceInfo.CAL_RECUR_BYMONTH, "month",
-                              calIRecurrenceInfo.CAL_RECUR_BYSETPOS, "setpos"];
+                if (item instanceof kCalIEvent)
+                    rec.recurStart = item.startDate;
+                else if (item instanceof kCalITodo)
+                    rec.recurStart = item.entryTime;
+
+                var rtypes = [kCalIRecurrenceInfo.CAL_RECUR_BYSECOND, "second",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYMINUTE, "minute",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYHOUR, "hour",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYDAY, "day",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYMONTHDAY, "monthday",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYYEARDAY, "yearday",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYWEEKNO, "weekno",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYMONTH, "month",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYSETPOS, "setpos"];
 
                 for (var i = 0; i < rtypes.length; i += 2) {
                     if (row[rtypes[i+1]]) {
@@ -741,6 +765,8 @@ calStorageCalendar.prototype = {
                         rec.setComponent (rtypes[i], rarray.length, rarray);
                     }
                 }
+
+                item.recurrenceInfo = rec;
             } else {
                 dump ("+++ Expected to find recurrence for item " + item.id + ", but found none\n");
             }
@@ -779,10 +805,11 @@ calStorageCalendar.prototype = {
             return null;
         }
 
-        var item = this.getItemFromRow(this.mSelectItem.row);
+        var flags = {};
+        var item = this.getItemFromRow(this.mSelectItem.row, flags);
         this.mSelectItem.reset();
 
-        this.getAdditionalDataForItem(item);
+        this.getAdditionalDataForItem(item, flags.value);
 
         item.makeImmutable();
 
@@ -872,22 +899,26 @@ calStorageCalendar.prototype = {
             }
 
             var rec = item.recurrenceInfo;
+            dump ("+++++++++++ REC: " + rec + "\n");
+            if (rec)
+                dump ("++++++++++ type: " + rec.recurType + "\n");
             if (rec && rec.recurType != 0) {
                 flags |= CAL_ITEM_FLAG_HAS_RECURRENCE;
                 var ap = this.mInsertRecurrence.params;
                 ap.item_id = item.id;
-                ap.recur_type = rec.recur_type;
-                ap.count = rec.count;
+                ap.recur_type = rec.recurType;
+                ap.count = rec.recurCount;
+                ap.interval = rec.interval;
 
-                var rtypes = [calIRecurrenceInfo.CAL_RECUR_BYSECOND, "second",
-                              calIRecurrenceInfo.CAL_RECUR_BYMINUTE, "minute",
-                              calIRecurrenceInfo.CAL_RECUR_BYHOUR, "hour",
-                              calIRecurrenceInfo.CAL_RECUR_BYDAY, "day",
-                              calIRecurrenceInfo.CAL_RECUR_BYMONTHDAY, "monthday",
-                              calIRecurrenceInfo.CAL_RECUR_BYYEARDAY, "yearday",
-                              calIRecurrenceInfo.CAL_RECUR_BYWEEKNO, "weekno",
-                              calIRecurrenceInfo.CAL_RECUR_BYMONTH, "month",
-                              calIRecurrenceInfo.CAL_RECUR_BYSETPOS, "setpos"];
+                var rtypes = [kCalIRecurrenceInfo.CAL_RECUR_BYSECOND, "second",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYMINUTE, "minute",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYHOUR, "hour",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYDAY, "day",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYMONTHDAY, "monthday",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYYEARDAY, "yearday",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYWEEKNO, "weekno",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYMONTH, "month",
+                              kCalIRecurrenceInfo.CAL_RECUR_BYSETPOS, "setpos"];
                 for (var i = 0; i < rtypes.length; i += 2) {
                     var comps = rec.getComponent(rtypes[i], {});
                     if (comps && comps.length > 0) {
@@ -1047,6 +1078,7 @@ var sqlTables = {
     "	item_id		STRING," +
     "	recur_type	INTEGER, " +
     "	count		INTEGER," +
+    "	interval		INTEGER," +
     "	second		STRING," +
     "	minute		STRING," +
     "	hour		STRING," +

@@ -127,7 +127,7 @@ interface calIItemBase : nsISupports
   //
   // recurrence
   //
-  readonly attribute calIRecurrenceInfo recurrenceInfo;
+  attribute calIRecurrenceInfo recurrenceInfo;
 
   // attachments
   // array of nsIMsgAttachment

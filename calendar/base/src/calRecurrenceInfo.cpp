@@ -93,6 +93,8 @@ calRecurrenceInfo::Clone(calIRecurrenceInfo **aResult)
     rec->mRecurStart = mRecurStart;
     *(rec->mIcalRecur) = *mIcalRecur;
 
+    NS_ADDREF (*aResult = rec);
+
     return NS_OK;
 }
 
@@ -420,10 +422,23 @@ calRecurrenceInfo::GetOccurrencesBetween(calIItemBase *aItem,
 
     nsCOMArray<calIItemOccurrence> items;
 
-    struct icaltimetype dtstart, dtend;
-    aStartTime->ToIcalTime(&dtstart);
+    char* ss = icalrecurrencetype_as_string(mIcalRecur);
+    nsCAutoString tst, tend;
+    mRecurStart->ToString(tst);
+    aEndTime->ToString(tend);
+    fprintf (stderr, "RULE: [%s -> %s]: %s\n", tst.get(), tend.get(), ss);
+
+    struct icaltimetype rangestart, dtstart, dtend;
+    aStartTime->ToIcalTime(&rangestart);
+    mRecurStart->ToIcalTime(&dtstart);
     if (aEndTime)
         aEndTime->ToIcalTime(&dtend);
+
+    if (icaltime_compare (dtstart, dtend) > 0) {
+        *aItems = nsnull;
+        *aCount = 0;
+        return NS_OK;
+    }
 
     icalrecur_iterator* recur_iter;
     recur_iter = icalrecur_iterator_new (*mIcalRecur,
