@@ -1191,12 +1191,34 @@ GlobalWindowImpl::GetContent(nsIDOMWindow** aContent)
 {
   *aContent = nsnull;
 
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  GetTreeOwner(getter_AddRefs(treeOwner));
-  NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsIDocShellTreeItem> primaryContent;
-  treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryContent));
+
+  if (!IsCallerChrome()) {
+    // If we're called by non-chrome code, make sure we don't return
+    // the primary content window if the calling tab is hidden. In
+    // such a case we return the same-type root in the hidden tab,
+    // which is "good enough", for now.
+    nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(mDocShell));
+
+    if (baseWin) {
+      PRBool visible = PR_FALSE;
+      baseWin->GetVisibility(&visible);
+
+      if (!visible) {
+        nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
+
+        treeItem->GetSameTypeRootTreeItem(getter_AddRefs(primaryContent));
+      }
+    }
+  }
+
+  if (!primaryContent) {
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    GetTreeOwner(getter_AddRefs(treeOwner));
+    NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
+
+    treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryContent));
+  }
 
   nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(primaryContent));
   NS_IF_ADDREF(*aContent = domWindow);
