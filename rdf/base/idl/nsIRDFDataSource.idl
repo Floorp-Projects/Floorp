@@ -58,8 +58,8 @@ interface nsIRDFDataSource : nsISupports
      * to a valid (but possibly empty) cursor.
      */
     nsISimpleEnumerator GetSources(in nsIRDFResource aProperty,
-                                in nsIRDFNode     aTarget,
-                                in boolean        aTruthValue);
+                                   in nsIRDFNode     aTarget,
+                                   in boolean        aTruthValue);
 
     /**
      * Find a child of that is related to the source by the given arc
@@ -81,8 +81,8 @@ interface nsIRDFDataSource : nsISupports
      * to a valid (but possibly empty) cursor.
      */
     nsISimpleEnumerator GetTargets(in nsIRDFResource aSource,
-                                in nsIRDFResource aProperty,
-                                in boolean aTruthValue);
+                                   in nsIRDFResource aProperty,
+                                   in boolean aTruthValue);
 
     /**
      * Add an assertion to the graph.
