@@ -19,7 +19,6 @@
 #include "nsFileTransport.h"
 #include "nsFileTransportService.h"
 #include "nsIStreamListener.h"
-#include "nsIProtocolConnection.h"
 #include "nsCRT.h"
 #include "nscore.h"
 #include "nsIFileStream.h"
@@ -32,7 +31,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 // nsFileTransport methods:
 
 nsFileTransport::nsFileTransport()
-    : mPath(nsnull), mListener(nsnull), mCanceled(PR_FALSE)
+    : mContext(nsnull), mPath(nsnull), mListener(nsnull), mCanceled(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -42,21 +41,22 @@ nsFileTransport::~nsFileTransport()
     if (mPath)
         delete mPath;
     NS_IF_RELEASE(mListener);
+    NS_IF_RELEASE(mContext);
 }
 
 nsresult
 nsFileTransport::Init(const char* path,
                       nsIStreamListener* listener,
                       PLEventQueue* appEventQueue,
-                      nsIProtocolConnection* connection)
+                      nsISupports* context)
 {
     nsresult rv;
     mPath = nsCRT::strdup(path);
     if (mPath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     
-    mConnection = connection;
-    NS_ADDREF(mConnection);
+    mContext = context;
+    NS_IF_ADDREF(mContext);
 
     rv = NS_NewMarshalingStreamListener(appEventQueue, listener, &mListener);
     if (NS_FAILED(rv)) return rv;
@@ -117,14 +117,16 @@ nsFileTransport::Run(void)
 {
     nsresult rv;
     nsISupports* fs;
-    nsFileSpec spec(mPath);
     nsIInputStream* fileStr = nsnull;
     nsIByteBufferInputStream* bufStr = nsnull;
+    nsFileSpec spec(mPath);
 
-    rv = mListener->OnStartBinding(mConnection);  // always send the start notification
+    rv = mListener->OnStartBinding(mContext);  // always send the start notification
+    if (NS_FAILED(rv)) goto done;       // XXX should this abort the transfer?
 
     rv = NS_NewTypicalInputFileStream(&fs, spec);
     if (NS_FAILED(rv)) goto done;
+
     rv = fs->QueryInterface(nsIInputStream::GetIID(), (void**)&fileStr);
     NS_RELEASE(fs);
     if (NS_FAILED(rv)) goto done;
@@ -135,14 +137,14 @@ nsFileTransport::Run(void)
     while (PR_TRUE) {
         PRUint32 amt;
         rv = bufStr->Fill(fileStr, &amt);
-        if (rv == NS_BASE_STREAM_EOF || amt == 0) {
+        if (rv == NS_BASE_STREAM_EOF) {
             rv = NS_OK;
             break;
         }
         if (NS_FAILED(rv)) break;
 
         // and feed the buffer to the application via the byte buffer stream:
-        rv = mListener->OnDataAvailable(mConnection, bufStr, amt);      // XXX maybe amt should be bufStr->GetLength()
+        rv = mListener->OnDataAvailable(mContext, bufStr, amt);      // XXX maybe amt should be bufStr->GetLength()
         if (NS_FAILED(rv)) break;
     }
 
@@ -151,7 +153,7 @@ nsFileTransport::Run(void)
     NS_IF_RELEASE(fileStr);
 
     // XXX where do we get the error message?
-    rv = mListener->OnStopBinding(mConnection, rv, nsnull);
+    rv = mListener->OnStopBinding(mContext, rv, nsnull);
     return rv;
 }
 

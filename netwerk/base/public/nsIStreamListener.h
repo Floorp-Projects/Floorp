@@ -48,7 +48,7 @@ public:
      * @return The return value is currently ignored.  In the future it may be
      * used to cancel the URL load..
      */
-    NS_IMETHOD OnStartBinding(nsIProtocolConnection* connection) = 0;
+    NS_IMETHOD OnStartBinding(nsISupports* context) = 0;
 
     /**
      * Notify the client that data is available in the input stream.  This
@@ -60,7 +60,7 @@ public:
      * @param length    The amount of data that was just pushed into the stream.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnDataAvailable(nsIProtocolConnection* connection,
+    NS_IMETHOD OnDataAvailable(nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aLength) = 0;
 
@@ -75,7 +75,7 @@ public:
      * @param msg   A text string describing the error.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnStopBinding(nsIProtocolConnection* connection,
+    NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
                              nsIString* aMsg) = 0;
 
