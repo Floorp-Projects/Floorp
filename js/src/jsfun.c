@@ -931,7 +931,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       case FUN_CALLER:
-        if (fp && fp->down && fp->down->fun)
+        if (fp && fp->down && fp->down->fun && fp->down->argv)
             *vp = fp->down->argv[-2];
         else
             *vp = JSVAL_NULL;
