@@ -20,6 +20,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsICSSParser.h"
+#include "nsICSSLoader.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
 #include "nsIDocument.h"
@@ -515,9 +516,21 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
       }
     }
     if (isCSS) {
-      nsICSSParser* css;
-      result = NS_NewCSSParser(&css);
-      if (NS_OK != result) {
+      nsICSSLoader* cssLoader = nsnull;
+      nsICSSParser* cssParser = nsnull;
+      nsIHTMLContentContainer* htmlContainer;
+      result = mDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer);
+      if (NS_SUCCEEDED(result)) {
+        result = htmlContainer->GetCSSLoader(cssLoader);
+        if (cssLoader) {
+          result = cssLoader->GetParserFor(nsnull, &cssParser);
+        }
+        else {
+          result = NS_NewCSSParser(&cssParser);
+        }
+        NS_RELEASE(htmlContainer);
+      }
+      if (NS_FAILED(result)) {
         return result;
       }
 
@@ -527,7 +540,14 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
       }
 
       nsIStyleRule* rule;
-      result = css->ParseDeclarations(aValue, docURL, rule);
+      result = cssParser->ParseDeclarations(aValue, docURL, rule);
+      if (cssLoader) {
+        cssLoader->RecycleParser(cssParser);
+        NS_RELEASE(cssLoader);
+      }
+      else {
+        NS_RELEASE(cssParser);
+      }
       NS_IF_RELEASE(docURL);
       if ((NS_OK == result) && (nsnull != rule)) {
         result = SetHTMLAttribute(aAttribute, nsHTMLValue(rule), aNotify);
@@ -536,7 +556,6 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
       else {
         result = SetHTMLAttribute(aAttribute, nsHTMLValue(aValue), aNotify);
       }
-      NS_RELEASE(css);
       return NS_OK;
     }
   }
