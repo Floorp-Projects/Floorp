@@ -29,7 +29,6 @@
 #include "nsIDOMNode.h"
 
 #include "nsEditRules.h"
-#include "TypeInState.h"
 
 /** Object that encapsulates HTML text-specific editing rules.
   *  
@@ -94,11 +93,9 @@ protected:
                             PRBool          *aHandled,
                             const nsString  *inString,
                             nsString        *outString,
-                            TypeInState      typeInState,
                             PRInt32          aMaxLength);
   nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
-  nsresult CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
 
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
@@ -144,46 +141,6 @@ protected:
 
   // helper functions
   
-  /** insert aNode into a new style node of type aTag.
-    * aSelection is optional.  If provided, aSelection is set to (aNode, 0)
-    * if aNode was successfully placed in a new style node
-    * @param aNewStyleNode   [OUT] The newly created style node, if result is successful
-    *                              undefined if result is a failure.
-    */
-  nsresult InsertStyleNode(nsIDOMNode      *aNode, 
-                           nsIAtom         *aTag, 
-                           nsIDOMSelection *aSelection,
-                           nsIDOMNode     **aNewStyleNode);
-
-  /** inserts a new <FONT> node and sets the aAttr attribute to aValue */
-  nsresult CreateFontStyleForInsertText(nsIDOMNode      *aNewTextNode,
-                                        const nsString  &aAttr, 
-                                        const nsString  &aValue, 
-                                        nsIDOMSelection *aInOutSelection);
-
-  /** create a new style node of type aTag in aParentNode at aOffset, 
-    * and create a new text node in the new style node.  
-    *
-    * @param aParentNode   the node that will be the parent of the new style node
-    * @param aOffset       the positoin in aParentNode to put the new style node
-    * @param aTag          the type of style node to create
-    *                      no validation of aTag is done, caller is responsible 
-    *                      for passing in a reasonable tag name
-    * @param aAttr         optional attribute to set on new style node
-    *                      ignored if it is an empty string
-    * @param aValue        optional value for aAttr.  Ignored if aAttr is an empty string
-    * @param aInOutSelection    optional.  If provided and if it is collapsed to a text node, 
-    *                           we use the text node and wrap a style node around it.
-    *                           If provided, aSelection is collapsed to (newTextNode, 0)
-    * if newTextNode was successfully created.
-    */
-  nsresult InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, 
-                                     PRInt32     aOffset,
-                                     nsIAtom    *aTag,
-                                     const nsString  &aAttr,
-                                     const nsString  &aValue,
-                                     nsIDOMSelection *aSelection);
-
   /** replaces newllines with breaks, if needed.  acts on doc portion in aRange */
   nsresult ReplaceNewlines(nsIDOMRange *aRange);
   
@@ -200,26 +157,6 @@ protected:
   /** Echo's the insertion text into the password buffer, and converts
       insertion text to '*'s */                                        
   nsresult EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsString *aOutString);
-
-  /** do the actual text insertion */
-  nsresult DoTextInsertion(nsIDOMSelection *aSelection, 
-                           PRBool          *aCancel,
-                           const nsString  *aInString,
-                           TypeInState      aTypeInState);
-  
-  nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
-
-  nsresult IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst);
-  nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
-  nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
-  nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
 
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
@@ -248,7 +185,6 @@ class nsTextRulesInfo : public nsRulesInfo
     inString(0),
     outString(0),
     outputFormat(0),
-    typeInState(),
     maxLength(-1),
     collapsedAction(nsIEditor::eNext),
     bOrdered(PR_FALSE),
@@ -263,7 +199,6 @@ class nsTextRulesInfo : public nsRulesInfo
   const nsString *inString;
   nsString *outString;
   const nsString *outputFormat;
-  TypeInState typeInState;
   PRInt32 maxLength;
   
   // kDeleteSelection

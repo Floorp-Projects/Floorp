@@ -24,6 +24,9 @@
 
 #include "TypeInState.h"
 
+/********************************************************************
+ *                     XPCOM cruft 
+ *******************************************************************/
 
 NS_IMPL_ADDREF(TypeInState)
 NS_IMPL_RELEASE(TypeInState)
@@ -47,12 +50,282 @@ TypeInState::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
+/********************************************************************
+ *                   public methods
+ *******************************************************************/
+ 
+TypeInState::TypeInState() :
+ mSetArray()
+,mClearedArray()
+{
+  NS_INIT_REFCNT();
+  Reset();
+}
+
 TypeInState::~TypeInState()
 {
-};
+}
 
 NS_IMETHODIMP TypeInState::NotifySelectionChanged()
 { 
   Reset(); 
   return NS_OK;
-};
+}
+
+void TypeInState::Reset()
+{
+  PRInt32 count;
+  PropItem *propItemPtr;
+  
+  while ((count = mClearedArray.Count()))
+  {
+    // go backwards to keep nsVoidArray from memmoving everything each time
+    count--; // nsVoidArray is zero based
+    propItemPtr = (PropItem*)mClearedArray.ElementAt(count);
+    mClearedArray.RemoveElementAt(count);
+    if (propItemPtr) delete propItemPtr;
+  }
+  while ((count = mSetArray.Count()))
+  {
+    // go backwards to keep nsVoidArray from memmoving everything each time
+    count--; // nsVoidArray is zero based
+    propItemPtr = (PropItem*)mSetArray.ElementAt(count);
+    mSetArray.RemoveElementAt(count);
+    if (propItemPtr) delete propItemPtr;
+  }
+}
+
+
+nsresult TypeInState::SetProp(nsIAtom *aProp)
+{
+  return SetProp(aProp,nsAutoString(),nsAutoString());
+}
+
+nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr)
+{
+  return SetProp(aProp,aAttr,nsAutoString());
+}
+
+nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue)
+{
+  // if it's already set we are done
+  if (IsPropSet(aProp,aAttr,aValue)) return NS_OK;
+  
+  // make a new propitem
+  PropItem *item = new PropItem(aProp,aAttr,aValue);
+  if (!item) return NS_ERROR_OUT_OF_MEMORY;
+  
+  // remove it from the list of cleared properties, if we have a match
+  RemovePropFromClearedList(aProp,aAttr,aValue);
+  
+  // add it to the list of set properties
+  mSetArray.AppendElement((void*)item);
+  
+  return NS_OK;
+}
+
+
+nsresult TypeInState::ClearProp(nsIAtom *aProp)
+{
+  return ClearProp(aProp,nsAutoString(),nsAutoString());
+}
+
+nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr)
+{
+  return ClearProp(aProp,aAttr,nsAutoString());
+}
+
+nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue)
+{
+  // if it's already cleared we are done
+  if (IsPropCleared(aProp,aAttr,aValue)) return NS_OK;
+  
+  // make a new propitem
+  PropItem *item = new PropItem(aProp,aAttr,aValue);
+  if (!item) return NS_ERROR_OUT_OF_MEMORY;
+  
+  // remove it from the list of set properties, if we have a match
+  RemovePropFromSetList(aProp,aAttr,aValue);
+  
+  // add it to the list of cleared properties
+  mClearedArray.AppendElement((void*)item);
+  
+  return NS_OK;
+}
+
+
+  
+nsresult TypeInState::ProcessClearProperty(PropItem **outPropItem)
+{
+  if (!outPropItem) return NS_ERROR_NULL_POINTER;
+  *outPropItem = nsnull;
+  PRInt32 count = mClearedArray.Count();
+  if (count) // go backwards to keep nsVoidArray from memmoving everything each time
+  {
+    count--; // nsVoidArray is zero based
+    *outPropItem = (PropItem*)mClearedArray[count];
+    mClearedArray.RemoveElementAt(count);
+  }
+  return NS_OK;
+}
+
+
+nsresult TypeInState::ProcessSetProperty(PropItem **outPropItem)
+{
+  if (!outPropItem) return NS_ERROR_NULL_POINTER;
+  *outPropItem = nsnull;
+  PRInt32 count = mSetArray.Count();
+  if (count) // go backwards to keep nsVoidArray from memmoving everything each time
+  {
+    count--; // nsVoidArray is zero based
+    *outPropItem = (PropItem*)mSetArray[count];
+    mSetArray.RemoveElementAt(count);
+  }
+  return NS_OK;
+}
+
+nsresult TypeInState::GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp)
+{
+  return GetTypingState(isSet, theSetting, aProp, nsAutoString(), nsAutoString());
+}
+
+nsresult TypeInState::GetTypingState(PRBool &isSet, 
+                                     PRBool &theSetting, 
+                                     nsIAtom *aProp, 
+                                     const nsString &aAttr)
+{
+  return GetTypingState(isSet, theSetting, aProp, aAttr, nsAutoString());
+}
+
+
+nsresult TypeInState::GetTypingState(PRBool &isSet, 
+                                     PRBool &theSetting, 
+                                     nsIAtom *aProp,
+                                     const nsString &aAttr, 
+                                     const nsString &aValue)
+{
+  if (IsPropSet(aProp, aAttr, aValue))
+  {
+    isSet = PR_TRUE;
+    theSetting = PR_TRUE;
+  }
+  else if (IsPropCleared(aProp, aAttr, aValue))
+  {
+    isSet = PR_TRUE;
+    theSetting = PR_FALSE;
+  }
+  else
+  {
+    isSet = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+
+
+/********************************************************************
+ *                   protected methods
+ *******************************************************************/
+ 
+nsresult TypeInState::RemovePropFromSetList(nsIAtom *aProp, 
+                                            const nsString &aAttr,
+                                            const nsString &aValue)
+{
+  PRInt32 index;
+  if (IsPropSet(aProp, aAttr, aValue, index))
+  {
+    PropItem *item = (PropItem*)mSetArray.ElementAt(index);
+    mSetArray.RemoveElementAt(index);
+    if (item) delete item;
+  }
+  return NS_OK;
+}
+
+
+nsresult TypeInState::RemovePropFromClearedList(nsIAtom *aProp, 
+                                            const nsString &aAttr,
+                                            const nsString &aValue)
+{
+  PRInt32 index;
+  if (IsPropCleared(aProp, aAttr, aValue, index))
+  {
+    PropItem *item = (PropItem*)mClearedArray.ElementAt(index);
+    mClearedArray.RemoveElementAt(index);
+    if (item) delete item;
+  }
+  return NS_OK;
+}
+
+
+PRBool TypeInState::IsPropSet(nsIAtom *aProp, 
+                              const nsString &aAttr,
+                              const nsString &aValue)
+{
+  PRInt32 i;
+  return IsPropSet(aProp, aAttr, aValue, i);
+}
+
+
+PRBool TypeInState::IsPropSet(nsIAtom *aProp, 
+                              const nsString &aAttr,
+                              const nsString &aValue,
+                              PRInt32 &outIndex)
+{
+  PRInt32 i, count = mSetArray.Count();
+  for (i=0; i<count; i++)
+  {
+    PropItem *item = (PropItem*)mSetArray[i];
+    if ( (item->tag == aProp) &&
+         (item->attr == aAttr) )
+    {
+      outIndex = i;
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+
+PRBool TypeInState::IsPropCleared(nsIAtom *aProp, 
+                                  const nsString &aAttr,
+                                  const nsString &aValue)
+{
+  PRInt32 i;
+  return IsPropCleared(aProp, aAttr, aValue, i);
+}
+
+
+PRBool TypeInState::IsPropCleared(nsIAtom *aProp, 
+                                  const nsString &aAttr,
+                                  const nsString &aValue,
+                                  PRInt32 &outIndex)
+{
+  PRInt32 i, count = mSetArray.Count();
+  for (i=0; i<count; i++)
+  {
+    PropItem *item = (PropItem*)mSetArray[i];
+    if ( (item->tag == aProp) &&
+         (item->attr == aAttr) )
+    {
+      outIndex = i;
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+
+/********************************************************************
+ *    PropItem: helper struct for TypeInState
+ *******************************************************************/
+
+PropItem::PropItem(nsIAtom *aTag, const nsString &aAttr, const nsString &aValue) :
+ tag(aTag)
+,attr(aAttr)
+,value(aValue)
+{
+}
+
+PropItem::~PropItem()
+{
+}

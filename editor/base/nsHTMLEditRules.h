@@ -85,7 +85,6 @@ protected:
                             PRBool          *aHandled,
                             const nsString  *inString,
                             nsString        *outString,
-                            TypeInState      typeInState,
                             PRInt32          aMaxLength);
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aAction, 
@@ -107,6 +106,7 @@ protected:
   nsresult ReturnInParagraph(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
   nsresult ReturnInListItem(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   
+  nsresult CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDocument *aDoc);
   nsresult IsEmptyBlock(nsIDOMNode *aNode, 
                         PRBool *outIsEmptyBlock, 
                         PRBool aMozBRDoesntCount = PR_FALSE,
