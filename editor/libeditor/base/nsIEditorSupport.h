@@ -65,6 +65,8 @@ public:
                                  nsIDOMNode  *aNodeToJoin,
                                  nsIDOMNode  *aParent,
                                  PRBool       aNodeToKeepIsFirst)=0;
+
+  static nsresult GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset);
   
 
 

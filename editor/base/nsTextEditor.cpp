@@ -17,6 +17,7 @@
  */
 
 #include "nsTextEditor.h"
+#include "nsIEditorSupport.h"
 #include "nsEditorEventListeners.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h" 
@@ -167,9 +168,6 @@ nsresult nsTextEditor::InsertText(const nsString& aStringToInsert)
   if (mEditor)
   {
     result = mEditor->InsertText(aStringToInsert);
-    if (NS_SUCCEEDED(result)) {
-      mEditor->ScrollIntoView(PR_TRUE);
-    }
   }
   return result;
 }
@@ -207,7 +205,7 @@ nsresult nsTextEditor::InsertBreak(PRBool aCtrlKey)
       result = node->GetParentNode(getter_AddRefs(parentNode));
       result = mEditor->SplitNode(node, offset);
       // now get the node's offset in it's parent, and insert the new BR there
-      result = GetChildOffset(node, parentNode, offset);
+      result = nsIEditorSupport::GetChildOffset(node, parentNode, offset);
       nsAutoString tag("BR");
       result = mEditor->CreateNode(tag, parentNode, offset);
       selection->Collapse(parentNode, offset);
@@ -232,12 +230,8 @@ nsresult nsTextEditor::EnableUndo(PRBool aEnable)
 nsresult nsTextEditor::Undo(PRUint32 aCount)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
+  if (mEditor) {
     result = mEditor->Undo(aCount);
-    if (NS_SUCCEEDED(result)) {
-      mEditor->ScrollIntoView(PR_TRUE);
-    }
   }
   return result;
 }
@@ -258,9 +252,6 @@ nsresult nsTextEditor::Redo(PRUint32 aCount)
   if (mEditor)
   {
     result = mEditor->Redo(aCount);
-    if (NS_SUCCEEDED(result)) {
-      mEditor->ScrollIntoView(PR_TRUE);
-    }
   }
   return result;
 }
@@ -440,37 +431,3 @@ nsTextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-// utility methods
-
-nsresult nsTextEditor::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
-{
-  NS_ASSERTION((aChild && aParent), "bad args");
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if (aChild && aParent)
-  {
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    result = aParent->GetChildNodes(getter_AddRefs(childNodes));
-    if ((NS_SUCCEEDED(result)) && (childNodes))
-    {
-      PRInt32 i=0;
-      for ( ; NS_SUCCEEDED(result); i++)
-      {
-        nsCOMPtr<nsIDOMNode> childNode;
-        result = childNodes->Item(i, getter_AddRefs(childNode));
-        if ((NS_SUCCEEDED(result)) && (childNode))
-        {
-          if (childNode.get()==aChild)
-          {
-            aOffset = i;
-            break;
-          }
-        }
-        else if (!childNode)
-          result = NS_ERROR_NULL_POINTER;
-      }
-    }
-    else if (!childNodes)
-      result = NS_ERROR_NULL_POINTER;
-  }
-  return result;
-}

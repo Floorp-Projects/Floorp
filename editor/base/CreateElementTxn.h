@@ -20,7 +20,7 @@
 #define CreateElementTxn_h__
 
 #include "EditTxn.h"
-#include "nsIDOMDocument.h"
+#include "nsIEditor.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsCOMPtr.h"
@@ -40,13 +40,13 @@ public:
   enum { eAppend=-1 };
 
   /** Initialize the transaction.
-    * @param aDoc    the document containing aParent
+    * @param aEditor the provider of basic editing functionality
     * @param aTag    the tag (P, HR, TABLE, etc.) for the new element
     * @param aParent the node into which the new element will be inserted
     * @param aOffsetInParent the location in aParent to insert the new element
     *                        if eAppend, the new element is appended as the last child
     */
-  virtual nsresult Init(nsIDOMDocument *aDoc,
+  virtual nsresult Init(nsIEditor *aEditor,
                         const nsString& aTag,
                         nsIDOMNode *aParent,
                         PRUint32 aOffsetInParent);
@@ -75,7 +75,7 @@ public:
 protected:
   
   /** the document into which the new node will be inserted */
-  nsCOMPtr<nsIDOMDocument> mDoc;
+  nsCOMPtr<nsIEditor> mEditor;
   
   /** the tag (mapping to object type) for the new element */
   nsString mTag;

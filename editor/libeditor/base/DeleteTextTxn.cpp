@@ -18,6 +18,7 @@
 
 #include "DeleteTextTxn.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIDOMSelection.h"
 
 
 DeleteTextTxn::DeleteTextTxn()
@@ -25,10 +26,13 @@ DeleteTextTxn::DeleteTextTxn()
 {
 }
 
-nsresult DeleteTextTxn::Init(nsIDOMCharacterData *aElement,
+nsresult DeleteTextTxn::Init(nsIEditor *aEditor,
+                             nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              PRUint32 aNumCharsToDelete)
 {
+  NS_ASSERTION(aEditor&&aElement, "bad arg");
+  mEditor = do_QueryInterface(aEditor);
   mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
   mNumCharsToDelete = aNumCharsToDelete;
@@ -38,15 +42,49 @@ nsresult DeleteTextTxn::Init(nsIDOMCharacterData *aElement,
 
 nsresult DeleteTextTxn::Do(void)
 {
-  // get the text that we're about to delete
-  nsresult result = mElement->SubstringData(mOffset, mNumCharsToDelete, mDeletedText);
-  NS_ASSERTION(NS_SUCCEEDED(result), "could not get text to delete.");
-  return (mElement->DeleteData(mOffset, mNumCharsToDelete));
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (mEditor && mElement)
+  {
+    // get the text that we're about to delete
+    result = mElement->SubstringData(mOffset, mNumCharsToDelete, mDeletedText);
+    NS_ASSERTION(NS_SUCCEEDED(result), "could not get text to delete.");
+    result = mElement->DeleteData(mOffset, mNumCharsToDelete);
+    if (NS_SUCCEEDED(result))
+    {
+      nsCOMPtr<nsIDOMSelection> selection;
+      nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
+      if (NS_SUCCEEDED(selectionResult) && selection) {
+        selection->StartBatchChanges();
+        selectionResult = selection->Collapse(mElement, mOffset);
+        NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
+        selection->EndBatchChanges();
+      }
+    }
+  }
+  return result;
 }
 
+//XXX: we may want to store the selection state and restore it properly
+//     was it an insertion point or an extended selection?
 nsresult DeleteTextTxn::Undo(void)
 {
-  return (mElement->InsertData(mOffset, mDeletedText));
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (mEditor && mElement)
+  {
+    result = mElement->InsertData(mOffset, mDeletedText);
+    if (NS_SUCCEEDED(result))
+    {
+      nsCOMPtr<nsIDOMSelection> selection;
+      nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
+      if (NS_SUCCEEDED(selectionResult) && selection) {
+        selection->StartBatchChanges();
+        selectionResult = selection->Collapse(mElement, mOffset);
+        NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
+        selection->EndBatchChanges();
+      }
+    }
+  }
+  return result;
 }
 
 nsresult DeleteTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)

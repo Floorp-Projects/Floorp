@@ -17,21 +17,25 @@
  */
 
 #include "CreateElementTxn.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMSelection.h"
+#include "nsIEditorSupport.h"
 
 CreateElementTxn::CreateElementTxn()
   : EditTxn()
 {
 }
 
-nsresult CreateElementTxn::Init(nsIDOMDocument *aDoc,
+nsresult CreateElementTxn::Init(nsIEditor *aEditor,
                                 const nsString& aTag,
                                 nsIDOMNode *aParent,
                                 PRUint32 aOffsetInParent)
 {
-  if ((nsnull!=aDoc) && (nsnull!=aParent))
+  NS_ASSERTION(aEditor&&aParent, "null args");
+  if (aEditor && aParent)
   {
-    mDoc = do_QueryInterface(aDoc);
+    mEditor = do_QueryInterface(aEditor);
     mTag = aTag;
     mParent = do_QueryInterface(aParent);
     mOffsetInParent = aOffsetInParent;
@@ -57,28 +61,50 @@ CreateElementTxn::~CreateElementTxn()
 
 nsresult CreateElementTxn::Do(void)
 {
-  // create a new node
-  nsresult result = mDoc->CreateElement(mTag, getter_AddRefs(mNewNode));
-  NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
-
-  if ((NS_SUCCEEDED(result)) && (mNewNode))
+  NS_ASSERTION(mEditor, "bad state -- null editor");
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (mEditor)
   {
-    // insert the new node
-    nsCOMPtr<nsIDOMNode> resultNode;
-    if (CreateElementTxn::eAppend==mOffsetInParent)
+    // create a new node
+    nsCOMPtr<nsIDOMDocument>doc;
+    result = mEditor->GetDocument(getter_AddRefs(doc));
+    if ((NS_SUCCEEDED(result)) && (doc))
     {
-      result = mParent->AppendChild(mNewNode, getter_AddRefs(resultNode));
-    }
-    else
-    {
-      nsCOMPtr<nsIDOMNodeList> childNodes;
-      result = mParent->GetChildNodes(getter_AddRefs(childNodes));
-      if ((NS_SUCCEEDED(result)) && (childNodes))
+      result = doc->CreateElement(mTag, getter_AddRefs(mNewNode));
+      NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
+      if ((NS_SUCCEEDED(result)) && (mNewNode))
       {
-        result = childNodes->Item(mOffsetInParent, getter_AddRefs(mRefNode));
-        if ((NS_SUCCEEDED(result)) && (mRefNode))
+        // insert the new node
+        nsCOMPtr<nsIDOMNode> resultNode;
+        if (CreateElementTxn::eAppend==mOffsetInParent)
         {
-          result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
+          result = mParent->AppendChild(mNewNode, getter_AddRefs(resultNode));
+        }
+        else
+        {
+          nsCOMPtr<nsIDOMNodeList> childNodes;
+          result = mParent->GetChildNodes(getter_AddRefs(childNodes));
+          if ((NS_SUCCEEDED(result)) && (childNodes))
+          {
+            result = childNodes->Item(mOffsetInParent, getter_AddRefs(mRefNode));
+            if ((NS_SUCCEEDED(result)) && (mRefNode))
+            {
+              result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
+              if (NS_SUCCEEDED(result))
+              {
+                nsCOMPtr<nsIDOMSelection> selection;
+                nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
+                if (NS_SUCCEEDED(selectionResult) && selection) {
+                  selection->StartBatchChanges();
+                  PRInt32 offset=0;
+                  nsIEditorSupport::GetChildOffset(mNewNode, mParent, offset);
+                  selectionResult = selection->Collapse(mParent, offset);
+                  NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
+                  selection->EndBatchChanges();
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -90,6 +116,19 @@ nsresult CreateElementTxn::Undo(void)
 {
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->RemoveChild(mNewNode, getter_AddRefs(resultNode));
+  if (NS_SUCCEEDED(result))
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(selectionResult) && selection) {
+      selection->StartBatchChanges();
+      PRInt32 offset=0;
+      nsIEditorSupport::GetChildOffset(mRefNode, mParent, offset);
+      selectionResult = selection->Collapse(mParent, offset);
+      NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
+      selection->EndBatchChanges();
+    }
+  }
   return result;
 }
 
@@ -97,6 +136,19 @@ nsresult CreateElementTxn::Redo(void)
 {
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
+  if (NS_SUCCEEDED(result))
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result) && selection) {
+      selection->StartBatchChanges();
+      PRInt32 offset=0;
+      nsIEditorSupport::GetChildOffset(mNewNode, mParent, offset);
+      nsresult selectionResult = selection->Collapse(mParent, offset);
+      NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
+      selection->EndBatchChanges();
+    }
+  }
   return result;
 }
 
