@@ -45,7 +45,9 @@ sub setupInstall {
     my $self = shift;
     my($app) = @_;
     $self->dump(9, 'about to configure main application...');
+    $app->output->setupProgress('configuration');
     my $userDataSource = $app->getService('dataSource.user');
     $userDataSource->addRight($app, 'hello');
     $self->dump(9, 'done configuring main application');
+    return;
 }
