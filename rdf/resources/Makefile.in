@@ -68,5 +68,5 @@ FILES := $(addprefix $(srcdir)/, $(FILES))
 
 
 install::
-	for FILE in "$(FILES)" do ; $(INSTALL) \$FILE $(DIST)/bin/res/rdf ; done
+	$(INSTALL) $(FILES) $(DIST)/bin/res/rdf
 
