@@ -44,6 +44,8 @@ EXPORTS=    nsSmtpUrl.h             \
 			      nsMsgRecipientArray.h \
 			      nsURLFetcher.h \
 			      nsSmtpServer.h	\
+			      nsSmtpDataSource.h	\
+			      nsSmtpDelegateFactory.h	\
             nsMsgComposeStringBundle.h \
             $(NULL)
 
@@ -73,7 +75,9 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj             \
                         .\$(OBJDIR)\nsMsgQuote.obj \
                         .\$(OBJDIR)\nsMsgRecipientArray.obj \
                         .\$(OBJDIR)\nsURLFetcher.obj \
-						.\$(OBJDIR)\nsSmtpServer.obj	\
+                        .\$(OBJDIR)\nsSmtpServer.obj \
+                        .\$(OBJDIR)\nsSmtpDataSource.obj \
+						.\$(OBJDIR)\nsSmtpDelegateFactory.obj \
             $(NULL)
 
 
