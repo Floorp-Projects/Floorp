@@ -75,7 +75,7 @@ class nsListEventListener;
  * Frame-based listbox.
  */
 
-class nsListControlFrame : public nsGfxScrollFrame,
+class nsListControlFrame : public nsHTMLScrollFrame,
                            public nsIFormControlFrame, 
                            public nsIListControlFrame,
                            public nsIStatefulFrame,

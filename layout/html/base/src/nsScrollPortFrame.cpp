@@ -71,7 +71,10 @@ nsScrollPortFrame::NeedsClipWidget()
 
   // Scrollports that don't ever show associated scrollbars don't get
   // widgets, because they will seldom actually be scrolled.
-  nsGfxScrollFrame* scrollFrame = nsGfxScrollFrame::GetScrollFrameForPort(this);
+  nsIFrame* parent = GetParent();
+  if (!parent)
+    return nsnull;
+  nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(parent);
   if (scrollFrame) {
     nsGfxScrollFrameInner::ScrollbarStyles scrollbars
       = scrollFrame->GetScrollbarStyles();

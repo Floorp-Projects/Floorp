@@ -434,7 +434,7 @@ nsSelectUpdateTimer::~nsSelectUpdateTimer()
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame(nsIPresShell* aShell,
   nsIDocument* aDocument)
-  : nsGfxScrollFrame(aShell, PR_FALSE)
+  : nsHTMLScrollFrame(aShell, PR_FALSE)
 {
   mComboboxFrame      = nsnull;
   mButtonDown         = PR_FALSE;
@@ -502,7 +502,7 @@ nsListControlFrame::Destroy(nsIPresContext *aPresContext)
                                      NS_GET_IID(nsIDOMKeyListener));
 
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-  return nsGfxScrollFrame::Destroy(aPresContext);
+  return nsHTMLScrollFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -559,7 +559,7 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
       }
     }
 
-    return nsGfxScrollFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    return nsHTMLScrollFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   }
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame", &aRenderingContext);
@@ -725,14 +725,14 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
       NS_STATIC_CAST(void*,NS_STATIC_CAST(nsIStatefulFrame*,this));
     return NS_OK;
   }
-  return nsGfxScrollFrame::QueryInterface(aIID, aInstancePtr);
+  return nsHTMLScrollFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 //----------------------------------------------------------------------
 // nsIStatefulFrame
 // These methods were originally in the nsScrollFrame superclass,
 // but were moved here when nsListControlFrame switched to use
-// nsGfxScrollFrame.
+// nsHTMLScrollFrame.
 //----------------------------------------------------------------------
 NS_IMETHODIMP
 nsListControlFrame::SaveState(nsIPresContext* aPresContext,
@@ -1086,10 +1086,10 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       firstPassState.reason = eReflowReason_StyleChange;
       firstPassState.path = nsnull;
     } else {
-      nsresult res = nsGfxScrollFrame::Reflow(aPresContext, 
-                                              scrolledAreaDesiredSize,
-                                              aReflowState, 
-                                              aStatus);
+      nsresult res = nsHTMLScrollFrame::Reflow(aPresContext, 
+                                               scrolledAreaDesiredSize,
+                                               aReflowState, 
+                                               aStatus);
       if (NS_FAILED(res)) {
         NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
         NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
@@ -1102,10 +1102,10 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   if (mPassId == 0 || mPassId == 1) {
-    nsresult res = nsGfxScrollFrame::Reflow(aPresContext, 
-                                            scrolledAreaDesiredSize,
-                                            firstPassState, 
-                                            aStatus);
+    nsresult res = nsHTMLScrollFrame::Reflow(aPresContext, 
+                                             scrolledAreaDesiredSize,
+                                             firstPassState, 
+                                             aStatus);
     if (NS_FAILED(res)) {
       NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
       NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
@@ -1124,7 +1124,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // Compute the bounding box of the contents of the list using the area 
   // calculated by the first reflow as a starting point.
   //
-  // The nsGfxScrollFrame::Reflow adds border and padding to the
+  // The nsHTMLScrollFrame::Reflow adds border and padding to the
   // maxElementWidth, so these need to be subtracted
   nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.width -
     (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
@@ -1323,7 +1323,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (mPassId == 0 || mPassId == 2 || visibleHeight != scrolledAreaHeight ||
       visibleWidth != scrolledAreaWidth) {
-    nsGfxScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
+    nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
     if (aReflowState.mComputedHeight == 0) {
       aDesiredSize.ascent  = 0;
       aDesiredSize.descent = 0;
@@ -1735,7 +1735,7 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
   if (nsFormControlHelper::GetDisabled(mContent))
     return NS_OK;
 
-  return nsGfxScrollFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsHTMLScrollFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 
@@ -1751,7 +1751,7 @@ nsListControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
     mIsAllFramesHere    = PR_FALSE;
     mHasBeenInitialized = PR_FALSE;
   }
-  nsresult rv = nsGfxScrollFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  nsresult rv = nsHTMLScrollFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   // If all the content is here now check
   // to see if all the frames have been created
@@ -1791,8 +1791,8 @@ nsListControlFrame::Init(nsIPresContext*  aPresContext,
 {
   mPresContext = aPresContext;
   NS_ADDREF(mPresContext);
-  nsresult result = nsGfxScrollFrame::Init(aPresContext, aContent, aParent, aContext,
-                                           aPrevInFlow);
+  nsresult result = nsHTMLScrollFrame::Init(aPresContext, aContent, aParent, aContext,
+                                            aPrevInFlow);
 
   // get the receiver interface from the browser button's content node
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
@@ -2594,12 +2594,12 @@ nsListControlFrame::DidReflow(nsIPresContext*           aPresContext,
   {
     //SyncViewWithFrame();
     mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-    nsresult rv = nsGfxScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
+    nsresult rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
     mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
     SyncViewWithFrame(aPresContext);
     return rv;
   } else {
-    nsresult rv = nsGfxScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
+    nsresult rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
     PRInt32 selectedIndex = mEndSelectionIndex;
     if (selectedIndex == kNothingSelected) {
       GetSelectedIndex(&selectedIndex);
