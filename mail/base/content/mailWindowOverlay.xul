@@ -21,7 +21,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowExtrasOverlay.xul"?>
 
 <!DOCTYPE overlay [
@@ -43,10 +42,10 @@
 <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgViewPickerOverlay.js"/>
+<script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/> 
-  <stringbundle id="bundle_viewZoom"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 </stringbundleset>
  
@@ -117,7 +116,10 @@
    <command id="cmd_viewWatchedThreadsWithUnread" oncommand="goDoCommand('cmd_viewWatchedThreadsWithUnread')" disabled="true"/>
    <command id="cmd_viewIgnoredThreads" oncommand="goDoCommand('cmd_viewIgnoredThreads')" disabled="true"/>
    <command id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
-   <commandset id="viewZoomCommands"/>
+   <commandset id="viewZoomCommands">
+     <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
+     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+   </commandset>
 </commandset>
 
 <commandset id="mailEditMenuItems"
@@ -339,7 +341,13 @@
   <key keycode="&findAgainCmd.key2;"   oncommand="goDoCommand('cmd_findAgain')"/>
   <key keycode="&findPrevCmd.key2;"    oncommand="goDoCommand('cmd_findPrev')"  modifiers="shift"/>
   <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
-  <keyset id="viewZoomKeys"/>
+
+  <keyset id="viewZoomKeys">
+    <key id="key_textZoomReduce" key="&textZoomReduceCmd.commandkey;" command="cmd_textZoomReduce"  modifiers="accel"/>
+    <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;" command="cmd_textZoomEnlarge" modifiers="accel"/>
+    <key key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
+    <key key="&textZoomResetCmd.commandkey;" oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
+  </keyset>
 
   <!-- Tab/F6 Keys -->
   <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control,shift"/>
@@ -1222,8 +1230,10 @@
             oncommand="ToggleInlineAttachment(event.target)" type="checkbox" checked="true"/>
           <menuseparator/>
 
-          <!-- overlayed from viewZoomOverlay.xul -->
-          <menu id="menu_textZoom"/>
+          <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
+                    command="cmd_textZoomEnlarge"/>
+          <menuitem key="key_textZoomReduce" label="&textZoomReduceCmd.label;" accesskey="&textZoomReduceCmd.accesskey;"
+                    command="cmd_textZoomReduce"/>
           <menu id="mailviewCharsetMenu" />
           <menuseparator/>
           <menuitem id="pageSourceMenuItem" label="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
