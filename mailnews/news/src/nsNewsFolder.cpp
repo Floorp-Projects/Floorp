@@ -1600,6 +1600,8 @@ nsMsgNewsFolder::GetNntpServer(nsINntpIncomingServer **result)
 // it removes the cancelled message from the db
 NS_IMETHODIMP nsMsgNewsFolder::RemoveMessage(nsMsgKey key)
 {
+  nsresult rv = GetDatabase(nsnull);
+  NS_ENSURE_SUCCESS(rv, rv); // if GetDatabase succeeds, mDatabase will be non-null
   return mDatabase->DeleteMessage(key, nsnull, PR_TRUE);
 }
 
