@@ -114,6 +114,8 @@ public:
 
 
   static nsWidget        * GetWidgetForWindow(Window aWindow);
+  void                     SetVisibility(int aState); // using the X constants here
+  void                     SetMapStatus(PRBool aState);
 
 protected:
 
@@ -127,6 +129,8 @@ protected:
   virtual void CreateNative(Window aParent, nsRect aRect);
   virtual void DestroyNative(void);
   void         CreateGC(void);
+  void         Map(void);
+  void         Unmap(void);
 
   // Let each sublclass set the event mask according to their needs
   virtual long GetEventMask();
@@ -151,7 +155,8 @@ protected:
   PRUint32       mScrollY;
 
   PRBool         mIsShown;
-
+  PRBool         mIsMapped;
+  int            mVisibility; // this is an int because that's the way X likes it
   PRUint32       mPreferredWidth;
   PRUint32       mPreferredHeight;
 
