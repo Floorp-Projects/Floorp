@@ -51,3 +51,4 @@ install:: $(DLL)
 clobber::
     $(RM) $(DIST)\bin\$(DLL_NAME).dll
     $(RM) $(DIST)\lib\$(DLL_NAME).lib
+    $(RM) $(DIST)\lib\$(DLL_NAME).res
