@@ -33,77 +33,90 @@
 class nsButtonFrameRenderer {
 public:
 
+	enum ButtonState {
+		active,
+		hover,
+		normal
+	};
 	  nsButtonFrameRenderer();
+      virtual ~nsButtonFrameRenderer();
 
-	  NS_IMETHOD HandleEvent(nsFrame* aFrame,
-		                 nsIPresContext& aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+	  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+						 nsGUIEvent* aEvent,
+						 nsEventStatus& aEventStatus);
 
 
-	 virtual void PaintButton(nsFrame* aFrame,nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect,
-                            nsFramePaintLayer aWhichLayer,
-							const nsString& aLabel,
-							const nsRect& aRect);
+	 virtual void PaintButton(nsIPresContext& aPresContext,
+							  nsIRenderingContext& aRenderingContext,
+							  const nsRect& aDirtyRect,
+							  nsFramePaintLayer aWhichLayer,
+							  const nsRect& aRect);
 
-	 virtual void PaintButtonBorder(nsFrame* aFrame,
-										nsIPresContext& aPresContext,
-										nsIRenderingContext& aRenderingContext,
-										const nsRect& aDirtyRect,
-										nsFramePaintLayer aWhichLayer,
-										const nsRect& aRect);
+	 virtual void PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
+						  nsIRenderingContext& aRenderingContext,
+						  const nsRect& aDirtyRect,
+						  nsFramePaintLayer aWhichLayer,
+						  const nsRect& aRect);
 
-	 virtual void PaintButtonContents(nsFrame* aFrame,nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect,
-                            nsFramePaintLayer aWhichLayer,
-							const nsString& aLabel,
-							const nsRect& aRect);
+	 virtual void PaintBorderAndBackground(nsIPresContext& aPresContext,
+						  nsIRenderingContext& aRenderingContext,
+						  const nsRect& aDirtyRect,
+						  nsFramePaintLayer aWhichLayer,
+						  const nsRect& aRect);
 
-	virtual nscoord GetVerticalInsidePadding(const nsFrame* aFrame, float aPixToTwip,
-                                           nscoord aInnerHeight) const;
+	virtual void SetNameSpace(PRInt32 aNameSpace);
+	virtual void SetFrame(nsIFrame* aFrame, nsIPresContext& aPresContext);
+    virtual void Update(PRBool notify);
 
-    virtual nscoord GetHorizontalInsidePadding(const nsFrame* aFrame, 
-		                                       nsIPresContext& aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerWidth,
-                                             nscoord aCharWidth) const;
-  
-
-	static void MarginUnion(const nsMargin& a, const nsMargin& b, nsMargin& ab);
-
-	virtual void ResetButtonStyles();
-
-    virtual void UpdateButtonStyles(nsFrame* aFrame, nsIPresContext& aPresContext);
-
-	virtual void GetButtonMargin(nsFrame* aFrame, nsMargin& aMargin);
-
-	virtual void SetDisabled(PRBool disabled);
-
+	virtual void SetState(ButtonState state);
 	virtual void SetFocus(PRBool focus);
+	virtual void SetEnabled(PRBool enabled);
 
-	virtual void SetNameSpace(PRInt32 aNameSpaceID);
+	ButtonState GetState()  { return mState; }
+	PRBool isEnabled()      { return mEnabled; }
+	PRBool isFocus()        { return mFocus;    }
+
+	virtual void GetButtonOutlineRect(const nsRect& aRect, nsRect& aResult);
+	virtual void GetButtonOuterFocusRect(const nsRect& aRect, nsRect& aResult);
+	virtual void GetButtonRect(const nsRect& aRect, nsRect& aResult);
+	virtual void GetButtonInnerFocusRect(const nsRect& aRect, nsRect& aResult);
+	virtual void GetButtonContentRect(const nsRect& aRect, nsRect& aResult);
+    virtual nsMargin GetButtonOuterFocusBorderAndPadding();
+    virtual nsMargin GetButtonBorderAndPadding();
+    virtual nsMargin GetButtonInnerFocusMargin();
+    virtual nsMargin GetButtonInnerFocusBorderAndPadding();
+    virtual nsMargin GetButtonOutlineBorderAndPadding();
+
+	virtual void UpdateStyles(nsIPresContext& aPresContext);
+
+	/**
+	* Subroutine to add in borders and padding
+	*/
+	virtual void AddBordersAndPadding(nsIPresContext* aPresContext,
+							const nsHTMLReflowState& aReflowState,
+							nsHTMLReflowMetrics& aDesiredSize,
+							nsMargin& aBorderPadding);
 
 
-  PRBool mGotFocus;
-  PRBool mPressed;
-  PRBool mMouseInside;
-  PRBool mDisabledChanged;
-
-  // cached styles for focus and outline.
-  nsCOMPtr<nsIStyleContext> mFocusStyle;
-  nsCOMPtr<nsIStyleContext> mOutlineStyle;
-
-  // KLUDGE variable to make sure disabling works.
-  PRBool mDisabled;
-  PRInt32 mNameSpace;
+protected:
 
 private:
 
-  void CheckDisabled(nsIContent* content);
+    ButtonState mState;
+
+	PRBool      mFocus;
+	PRBool      mEnabled;
+
+	// cached styles for focus and outline.
+	nsCOMPtr<nsIStyleContext> mBorderStyle;
+	nsCOMPtr<nsIStyleContext> mInnerFocusStyle;
+	nsCOMPtr<nsIStyleContext> mOuterFocusStyle;
+	nsCOMPtr<nsIStyleContext> mOutlineStyle;
+
+	PRInt32 mNameSpace;
+	nsIFrame* mFrame;
 };
+
 
 #endif
 
