@@ -887,7 +887,16 @@ static nsFontCharSetInfo ISO88591 =
 #define JAPANESE
 #ifdef JAPANESE
 
+/*
+** BSDi BSD/OS with shlicc2 is unable to read all of u2j208.h:
+** ../../../../gfx/src/gtk/u2j208.h:1018: virtual memory exhausted
+** so don't include it for that platform.  (96M RAM, 256M swap)
+** This needs to be handled in a better way, IMO.  --briano.
+*/
+#ifndef __bsdi__
 #define TEMPORARY_CONVERTERS
+#endif
+
 #ifdef TEMPORARY_CONVERTERS
 
 #include "u2j208.h"
