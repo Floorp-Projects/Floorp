@@ -2671,23 +2671,17 @@ nsBookmarksService::AddBookmark(const char *aURI,
 
 
 
-NS_IMETHODIMP
-nsBookmarksService::IsBookmarked(const char *aURI, PRBool *isBookmarkedFlag)
+nsresult
+nsBookmarksService::IsBookmarkedInternal(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag)
 {
-	if (!aURI)		return(NS_ERROR_UNEXPECTED);
+	if (!bookmark)		return(NS_ERROR_UNEXPECTED);
 	if (!isBookmarkedFlag)	return(NS_ERROR_UNEXPECTED);
 	if (!mInner)		return(NS_ERROR_UNEXPECTED);
 
 	*isBookmarkedFlag = PR_FALSE;
 
-	nsresult			rv;
-	nsCOMPtr<nsIRDFResource>	bookmark;
-
-	// check if it has the proper type
-	if (NS_FAILED(rv = gRDF->GetResource(aURI, getter_AddRefs(bookmark))))
-		return(rv);
-
 	// make sure it is referred to by an ordinal (i.e. is contained in a rdf seq)
+	nsresult rv;
 	nsCOMPtr<nsISimpleEnumerator>	enumerator;
 	if (NS_FAILED(rv = mInner->ArcLabelsIn(bookmark, getter_AddRefs(enumerator))))
 		return(rv);
@@ -2710,6 +2704,26 @@ nsBookmarksService::IsBookmarked(const char *aURI, PRBool *isBookmarkedFlag)
 			break;
 		}
 	}
+	return(rv);
+}
+
+
+
+NS_IMETHODIMP
+nsBookmarksService::IsBookmarked(const char *aURI, PRBool *isBookmarkedFlag)
+{
+	if (!aURI)		return(NS_ERROR_UNEXPECTED);
+	if (!isBookmarkedFlag)	return(NS_ERROR_UNEXPECTED);
+	if (!mInner)		return(NS_ERROR_UNEXPECTED);
+
+	*isBookmarkedFlag = PR_FALSE;
+
+	nsresult			rv;
+	nsCOMPtr<nsIRDFResource>	bookmark;
+	if (NS_FAILED(rv = gRDF->GetResource(aURI, getter_AddRefs(bookmark))))
+		return(rv);
+
+	rv = IsBookmarkedInternal(bookmark, isBookmarkedFlag);
 	return(rv);
 }
 
@@ -2905,12 +2919,13 @@ nsBookmarksService::GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType
     }
     else
     {
-      // only return bookmark type for nodes that actually exist,
-      // so check for a required attribute (such as "add date")
-      nsCOMPtr<nsIRDFNode> val;
-      if (NS_FAILED(rv = mInner->GetTarget(aNode, kNC_BookmarkAddDate,
-        PR_TRUE, getter_AddRefs(val))) || (rv == NS_RDF_NO_VALUE))
+      // only return bookmark type for nodes that actually exist
+      PRBool isBookmarkedFlag = PR_FALSE;
+      rv = IsBookmarkedInternal(aNode, &isBookmarkedFlag);
+      if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))
         return(rv);
+      if (isBookmarkedFlag == PR_FALSE)
+        return(NS_RDF_NO_VALUE);
 
       *aType = kNC_Bookmark;
       NS_ADDREF(*aType);
