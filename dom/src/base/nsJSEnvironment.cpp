@@ -186,6 +186,9 @@ NS_ScriptErrorReporter(JSContext *cx,
   char *errorStr = error.ToNewCString();
   if (errorStr) {
     fprintf(stderr, "%s\n", errorStr);
+#ifdef DEBUG
+    fflush(stderr)
+#endif
     nsMemory::Free(errorStr);
   }
 
