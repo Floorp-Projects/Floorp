@@ -20,7 +20,6 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
 #include "MacInstallWizard.h"
 
 
@@ -65,10 +64,9 @@ ParseConfig(void)
 	OSErr	err;
 	char 	*cfgText;
 
-	gControls->cfg = (Config*) NewPtrClear(sizeof(Config));		
-//dougt: what happens when allocation fails!		
+	gControls->cfg = (Config*) NewPtrClear(sizeof(Config));			
 
-	if(!ReadConfigFile(&cfgText))
+	if(!gControls->cfg || !ReadConfigFile(&cfgText))
 	{
 			ErrorHandler();
 			return;
@@ -88,15 +86,14 @@ ParseConfig(void)
 Boolean
 ReadConfigFile(char **text)
 {
-//dougt: nitpick, I would have the initial bSuccess set to false, and only change to true when this function really
-//       succeeds.  If you also set text to null from the get go, you can return the else statement during the read
-//       of the file.
-    Boolean				bSuccess = true;
+    Boolean				bSuccess = false;
 	OSErr 				err;
 	FSSpec 				cfgFile;
 	long				dirID, dataSize;
-	short				vRefNum;
+	short				vRefNum, fileRefNum;
 	Str255 				fname;
+	
+	*text = nil;
 	
 	ERR_CHECK_RET(GetCWD(&dirID, &vRefNum), false);
 	
@@ -104,27 +101,27 @@ ReadConfigFile(char **text)
 	GetIndString(fname, rStringList, sConfigFName);
 	if (err = FSMakeFSSpec(vRefNum, dirID, fname, &cfgFile) )
 		return false;
-	if (err = FSpOpenDF( &cfgFile, fsRdPerm, &vRefNum))
+	if (err = FSpOpenDF( &cfgFile, fsRdPerm, &fileRefNum))
 		return false;
 		
 	/* read in entire text */
-	if (err = GetEOF(vRefNum, &dataSize))
+	if (err = GetEOF(fileRefNum, &dataSize))
 		bSuccess = false;
 	if (dataSize > 0)
 	{
 		*text = (char*) NewPtrClear(dataSize);
-//dougt: what happens when allocation fails!	
-        if (err = FSRead(vRefNum, &dataSize, *text))
-			bSuccess = false;
+		if (!(*text))
+		{
+			ErrorHandler();
+			return false;
+		}
+			
+        if ((err = FSRead(fileRefNum, &dataSize, *text)) == noErr)
+			bSuccess = true;
 	}
-	else
-	{
-		*text = nil;
-		bSuccess = false;
-	}
-		
+	
 	/* close file */
-	if (err = FSClose(vRefNum))
+	if (!bSuccess || (err = FSClose(fileRefNum)))   
 		return false;
 
 	return bSuccess;
@@ -137,7 +134,12 @@ PopulateLicWinKeys(char *cfgText)
 	
 	/* LicenseWin: license file name */
 	gControls->cfg->licFileName = NewHandleClear(kValueMaxLen);
-//dougt: what happens when allocation fails!	
+	if (!gControls->cfg->licFileName)
+	{
+		ErrorHandler();
+		return eParseFailed;
+	}
+	
 	if (!FillKeyValueUsingResID(sLicDlg, sLicFile, gControls->cfg->licFileName, cfgText))
 		err = eParseFailed;
 	
@@ -151,21 +153,41 @@ PopulateWelcWinKeys(char *cfgText)
 	
 	/* WelcomeWin: message strings */
 	gControls->cfg->welcMsg[0] = NewHandleClear(kValueMaxLen);
-//dougt: what happens when allocation fails!	
+	if (!gControls->cfg->welcMsg[0])
+	{
+		ErrorHandler();
+		return eParseFailed;
+	}
+		
 	if (!FillKeyValueUsingResID(sWelcDlg, sMsg0, gControls->cfg->welcMsg[0], cfgText))
-		err = eParseFailed;  //dougt: shouldn't you return now?
+	{
+		ErrorHandler();
+		return eParseFailed;
+	}
 		
 	gControls->cfg->welcMsg[1] = NewHandleClear(kValueMaxLen);
-//dougt: what happens when allocation fails!	
+	if (!gControls->cfg->welcMsg[1])
+	{
+		ErrorHandler();
+		return eParseFailed;
+	}	
 
-//dougt: why don;t you care about the error in this case?
     FillKeyValueUsingResID(sWelcDlg, sMsg1, gControls->cfg->welcMsg[1], cfgText);
 		
 	gControls->cfg->welcMsg[2] = NewHandleClear(kValueMaxLen);
-//dougt: what happens when allocation fails!	
+	if (!gControls->cfg->welcMsg[2])
+	{
+		ErrorHandler();
+		return eParseFailed;
+	}
 
-//dougt: why don;t you care about the error in this case?
-FillKeyValueUsingResID(sWelcDlg, sMsg2, gControls->cfg->welcMsg[2], cfgText);
+	FillKeyValueUsingResID(sWelcDlg, sMsg2, gControls->cfg->welcMsg[2], cfgText);
+	/*
+	** NOTE:
+	** We don't care if the second and third messages are not filled since by
+	** definition we require only one message string to be specified in the INI
+	** file. Msgs 2 and 3 are optional.
+	*/
 		
 	return err;
 }
@@ -498,14 +520,17 @@ FillKeyValueUsingName(char *sectionName, char *keyName, Handle dest, char *cfgTe
 	Boolean		bFound = false;
 	
 	value = (char*) NewPtrClear(kValueMaxLen);
-//dougt: what happens when allocation fails!		
+	if (!value)
+	{
+		ErrorHandler();
+		return false;
+	}
+			
 	if (FindKeyValue(cfgText, sectionName, keyName, value))
 	{
 		HLock(dest);
 		len = strlen(value);
 		strncpy(*dest, value, len);
-//dougt: would it be better here to do the accual allocation, PtrToHandle()?  
-// This way we could reduce the mem footprint by not having to allocate the max each time.
 		HUnlock(dest);
 		bFound = true;
 	}
@@ -519,27 +544,27 @@ FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char
 {
 	char 	*sectionName, *section, *key, *cfgPtr[1], *sectionPtr[1];
 	
-	*cfgPtr = cfg;
+	*cfgPtr = (char*) cfg;
 	
 	sectionName = 	(char *) NewPtrClear( kSNameMaxLen );
 	section = 		(char *) NewPtrClear( kSectionMaxLen ); 
 	key = 			(char *) NewPtrClear( kKeyMaxLen );
-//dougt: what happens when allocation fails!	
+	if (!sectionName || !section || !key)
+	{
+		ErrorHandler();
+		return false;
+	}	
     
 	/* find next section   [cfgPtr moved past next section per iteration] */
-//dougt: you are passing a pointer (cfgPtr) to a function that wants a char**.  evil
     while(GetNextSection(cfgPtr, sectionName, section))
-	{
-//dougt: why not use strcmp here?  
+	{ 
         if (strncmp(sectionName, inSectionName, strlen(inSectionName)) == 0)	
 		{
 			*sectionPtr = section;
 			
 			/* find next key   [sectionPtr moved past next key per iteration] */
-//dougt: you are passing a pointer (sectionPtr) to a function that wants a char**.  evil
             while(GetNextKeyVal(sectionPtr, key, outValue))
 			{
-//dougt: why not use strcmp here?
 				if (strncmp(key, inKey, strlen(key)) == 0)
 				{
 					if(key) 
@@ -697,9 +722,6 @@ GetNextKeyVal(char **inSection, char *outKey, char *outVal)
  * Makes a copy of the C string, converts the copy to a Pascal string,
  * and returns the Pascal string copy
  */
-
-//dougt: can you use the toolbox routines?  what about double bite chars?
-
 unsigned char *CToPascal(char *str)
 {
 	register char *p,*q;
@@ -725,6 +747,8 @@ char *PascalToC(unsigned char *str)
 	unsigned char * cpy; 
 	
 	cpy = (unsigned char*)NewPtrClear( ((long)*str+1) ); 
+	if (!cpy)
+		return 0;
 	strncpy((char*)cpy, (char*) str, (long)*str+1);
 	end = cpy + *cpy;
 	q = (p=cpy) + 1;

@@ -32,11 +32,12 @@ pascal void* Install(void* unused)
 	short			vRefNum;
 	long			dirID;
 	OSErr 			err;
-	FSSpec			idiSpec, xpiSpec, tgtDirSpec, coreFileSpec;
+	FSSpec			idiSpec, coreFileSpec;
 	SDISTRUCT		sdistruct;
 	Str255			pIDIfname;
 	StringPtr		coreFile;
-
+	THz				ourHZ;
+	
 	ERR_CHECK_RET( GetCWD(&dirID, &vRefNum), (void*)0 );
 	
 	GetIndString(pIDIfname, rStringList, sTempIDIName);
@@ -65,11 +66,17 @@ pascal void* Install(void* unused)
 	sdistruct.hwndOwner    	= NULL;
 	
 	/* call SDI_NetInstall */
+	gSDDlg = true;
+	// YieldToAnyThread();	/* force gSDDlg to be picked up by Main Thread */
+	ourHZ = GetZone();
 #if SDINST_IS_DLL == 1
 	gInstFunc(&sdistruct);
 #else
 	SDI_NetInstall(&sdistruct);
 #endif
+	SetZone(ourHZ);
+	gSDDlg = false;
+	
 	FSpDelete(&idiSpec);
 	
 	/* check if coreFile was downloaded */
@@ -82,21 +89,25 @@ pascal void* Install(void* unused)
 		err = FSMakeFSSpec(vRefNum, dirID, coreFile, &coreFileSpec);
 		if (err==noErr) /* core file was downloaded */
 		{
+			/* extract contents of downloaded core file */
 			err = ExtractCoreFile();
-			if (err!=noErr) SysBeep(10);
-			
-#if 0		// XXX commented out for QA buid: LoadXPIStub crashes still...
-			sleep(15);
-		
-			/* call XPInstall */
-			err = FSMakeFSSpec(vRefNum, dirID, "\pmozilla.jar", &xpiSpec);
-			err = FSMakeFSSpec(vRefNum, dirID, 0, &tgtDirSpec);
-			if (err==noErr)
-				err = RunXPI(xpiSpec, tgtDirSpec);
-			elsesss
+			if (err!=noErr) 
+			{
 				ErrorHandler();
-#endif
+				return (void*) nil;
+			}
+					
+			sleep(1);
+		
+			/* run all .xpi's through XPInstall */
+			err = RunAllXPIs(vRefNum, dirID);
+			if (err!=noErr)
+				ErrorHandler();
 		}
+	
+		CleanupExtractedFiles();
+		if (coreFile)
+			DisposePtr((Ptr)coreFile);
 	}
 	
 	/* wind down app */

@@ -43,7 +43,7 @@ ShowComponentsWin(void)
 		
 	SetPort(gWPtr);
 	
-	gCurrWin = COMPONENTS; 
+	gCurrWin = kComponentsID; 
 	/* gControls->cw = (CompWin *) NewPtrClear(sizeof(CompWin)); */
 	
 	GetIndString(next, rStringList, sNextBtn);
@@ -51,16 +51,16 @@ ShowComponentsWin(void)
 
 	// get controls
 	listBoxRect = Get1Resource('RECT', rCompListBox);
-	reserr = ResError();  //dougt: this does not do what you think
-	if (reserr == noErr)
+	reserr = ResError(); 
+	if (reserr == noErr && listBoxRect != NULL)
 	{
-		HLockHi((Handle)listBoxRect);  //dougt: no hi.
+		HLock((Handle)listBoxRect);
 		gControls->cw->compListBox = (Rect) **((Rect **)listBoxRect);
 		HUnlock((Handle)listBoxRect);
-		ErrorHandler();
 	}
 	else
 	{
+		ErrorHandler();
 		return;
 	}
 	gControls->cw->compDescBox = GetNewControl(rCompDescBox, gWPtr);
@@ -68,8 +68,8 @@ ShowComponentsWin(void)
 	gControls->cw->compListBox.right -= kScrollBarWidth;
 	SetRect(&dataBounds, 0, 0, 1, gControls->cfg->numComps);
 	SetPt( &cSize, 0, 0);
-	gControls->cw->compList = lnew(&gControls->cw->compListBox, &dataBounds,    //dougt: what is this call!! it should be LNew()??
-									&cSize, 0, gWPtr, TRUE, FALSE, FALSE, TRUE);
+	gControls->cw->compList = LNew((const Rect*)&gControls->cw->compListBox, (const Rect*)&dataBounds,
+									cSize, 0, gWPtr, true, false, false, true);
 	
 	// populate controls
 	bCellSelected = PopulateCompInfo();

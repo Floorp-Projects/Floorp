@@ -22,14 +22,17 @@
 
 #include "MacInstallWizard.h"
 
+
 /*-----------------------------------------------------------*
  *   globals
  *-----------------------------------------------------------*/
-//dougt: maybe you should init these here to null
-Boolean 	gDone;
-WindowPtr 	gWPtr;
-short		gCurrWin;
-InstWiz		*gControls;
+
+Boolean 	gDone = false;
+Boolean 	gSDDlg = false;
+WindowPtr 	gWPtr = NULL;
+short		gCurrWin = 0;
+InstWiz		*gControls = NULL;
+static Boolean bInShutdown = false; 
 
 EventProc 			gSDIEvtHandler;  /* SDI */
 SDI_NETINSTALL 		gInstFunc;
@@ -51,12 +54,10 @@ void Init(void)
 	Str255		 	winTitle;
 	ThreadID		tid;
 	ThreadState		state;
-	OSErr			err;
 	
 	gDone = false;
 	InitManagers();
 	InitControlsObject();	
-	InitOptObject();
 
 #ifdef SDINST_IS_DLL
 	if (!InitSDLib())
@@ -72,7 +73,6 @@ void Init(void)
 		ErrorHandler();
 		return;
 	}
-//dougt: will sd put up some ui while the main thread blocks?
 
 	/* block/busy wait till download finishes */
 	while (1)
@@ -90,11 +90,12 @@ void Init(void)
 
 	gWPtr = GetNewCWindow(rRootWin, NULL, (WindowPtr) -1);	
     GetIndString( winTitle, rStringList, sNSInstTitle);
-	//pstrcpy(winTitle, "\pNetscape Installer Dude");
 	SetWTitle( gWPtr, winTitle );	
+	SetWRefCon(gWPtr, kMIWMagic);
 	MakeMenus();
 
 	ParseConfig(); 
+	InitOptObject();
 	
 	ShowLicenseWin();	
 	ShowWindow(gWPtr);
@@ -133,11 +134,22 @@ InitOptObject(void)
 	OSErr	err=noErr;
 	
 	gControls->opt = (Options*)NewPtrClear(sizeof(Options));
-//dougt: what happens when allocation fails!	
+
+	if (!gControls->opt)
+	{
+		ErrorHandler();
+		return;
+	}
+	
 	/* SetupTypeWin options */
 	gControls->opt->instChoice = 1;		
 	gControls->opt->folder = (unsigned char *)NewPtrClear(64*sizeof(unsigned char));
-//dougt: what happens when allocation fails!	
+	if (!gControls->opt->folder)
+	{
+		ErrorHandler();
+		return;
+	}
+	
 	ERR_CHECK(GetCWD(&gControls->opt->dirID, &gControls->opt->vRefNum));
 	ERR_CHECK(FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, NULL, &tmp));
 	
@@ -145,19 +157,37 @@ InitOptObject(void)
 	
 	/* ComponentsWin options */
 	for (i=0; i<kMaxComponents; i++)
-		gControls->opt->compSelected[i] = kNotSelected;
+	{
+		if (gControls->cfg->st[0].comp[i] == kNotInSetupType)
+			gControls->opt->compSelected[i] = kNotSelected;
+		else if (gControls->cfg->st[0].comp[i] == kInSetupType)
+			gControls->opt->compSelected[i] = kSelected;
+	}	
 }
 
 void
 InitControlsObject(void)
 {	
 	gControls 		= (InstWiz *) 		NewPtrClear(sizeof(InstWiz));
+	if (!gControls)
+	{
+		ErrorHandler();
+		return;
+	}
+	
 	gControls->lw 	= (LicWin *) 		NewPtrClear(sizeof(LicWin));
 	gControls->ww 	= (WelcWin *) 		NewPtrClear(sizeof(WelcWin));
 	gControls->stw 	= (SetupTypeWin *) 	NewPtrClear(sizeof(SetupTypeWin));	
 	gControls->cw 	= (CompWin *) 		NewPtrClear(sizeof(CompWin));
 	gControls->tw 	= (TermWin*) 		NewPtrClear(sizeof(TermWin));
-//dougt: what happens when allocation fails!
+
+	if (!gControls->lw || !gControls->ww || !gControls->stw || 
+		!gControls->cw || !gControls->tw)
+	{
+		ErrorHandler();
+	}
+	
+	return;
 }
 
 void InitManagers(void)
@@ -178,14 +208,17 @@ void InitManagers(void)
 
 void MakeMenus(void)
 {
-//dougt: the use of ErrorHandler is wrong here.  Since it will not 'exit to shell', execution will continue which is not desired.
     Handle 		mbarHdl;
 	MenuHandle	menuHdl;
 	OSErr		err;
 	
 	if ( !(mbarHdl = GetNewMBar( rMBar)) )
+	{
 		ErrorHandler();
-	SetMenuBar(mbarHdl);   //dougt: if mbarHdl allocation failes above, poof.
+		return;
+	}
+	
+	SetMenuBar(mbarHdl);
 	
 	if (menuHdl = GetMenuHandle(mApple)) 
 	{
@@ -215,20 +248,30 @@ void MainEventLoop(void)
 {
 	EventRecord evt;
 	Boolean		notHandled = true;
+	THz			ourHZ;
 	
 	while (!gDone) 
-	{				
-		YieldToAnyThread();  /* SmartDownload dialog thread */
+	{	
+		if (gSDDlg)			
+			YieldToAnyThread();  /* SmartDownload dialog thread */
 		
-		if (!gDone)	 /* after cx switch back ensure not done */
+		if (!gDone && !bInShutdown)	 /* after cx switch back ensure not done */
 		{
 			if(WaitNextEvent(everyEvent, &evt, 0, NULL))
 			{
+				if (gSDDlg)
+				{
+					ourHZ = GetZone();
 #ifdef SDINST_IS_DLL
-				notHandled = gSDIEvtHandler(&evt);
+					notHandled = gSDIEvtHandler(&evt);
 #else			
-				notHandled = SDI_HandleEvent(&evt);	
+					notHandled = SDI_HandleEvent(&evt);	
 #endif
+					SetZone(ourHZ);
+				}
+				else
+					notHandled = true;
+					
 				if (notHandled)
 					HandleNextEvent(&evt);
 			}
@@ -247,6 +290,12 @@ void ErrorHandler(void)
 
 void Shutdown(void)
 {
+	WindowPtr	frontWin;
+	long 		MIWMagic = 0;
+		
+	bInShutdown = true;
+	UnloadSDLib(&gConnID);
+	
 /* deallocate config object */
 	// TO DO	
 	
@@ -254,17 +303,37 @@ void Shutdown(void)
 	// TO DO
 		
 /* deallocate all controls */	
-//dougt: check for null before deleting!
-	DisposePtr( (char*) gControls->lw);
-	// DisposeControl(gControls->nextB);  
-	// DisposeControl(gControls->backB);
-	DisposePtr( (char*) gControls->ww);
-	DisposePtr( (char*) gControls->stw);
-	DisposePtr( (char*) gControls->cw);
-	DisposePtr( (char*) gControls->tw);
+
+#if 0
+/* XXX gets dispose by DisposeWindow() ? */
+	if (gControls->nextB)
+		DisposeControl(gControls->nextB);  
+	if (gControls->backB)
+		DisposeControl(gControls->backB);
+#endif
 	
-	DisposePtr( (char*) gControls);
-	DisposeWindow(gWPtr);
+	if (gControls->lw)
+		DisposePtr( (char*) gControls->lw);
+	if (gControls->ww)
+		DisposePtr( (char*) gControls->ww);
+	if (gControls->stw)
+		DisposePtr( (char*) gControls->stw);
+	if (gControls->cw)
+		DisposePtr( (char*) gControls->cw);
+	if (gControls->tw)
+		DisposePtr( (char*) gControls->tw);
 	
-	UnloadSDLib(&gConnID);
+	if (gControls)
+		DisposePtr( (char*) gControls);
+		
+	frontWin = FrontWindow();
+	MIWMagic = GetWRefCon(frontWin);
+	if (MIWMagic != kMIWMagic)
+		if (gWPtr)
+			BringToFront(gWPtr);
+	if (gWPtr)
+	{
+		HideWindow(gWPtr);
+		DisposeWindow(gWPtr);
+	}
 }

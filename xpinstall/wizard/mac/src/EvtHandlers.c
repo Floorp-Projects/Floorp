@@ -79,7 +79,7 @@ void HandleMouseDown(EventRecord* evt)
 				SelectWindow(wCurrPtr);
 			}
 			else
-				React2InContent(evt, wCurrPtr);  //dougt: what does this do?  
+				React2InContent(evt, wCurrPtr);
 			break;
 		
 		case inDrag:
@@ -99,21 +99,23 @@ void HandleKeyDown(EventRecord* evt)
 	ThreadID		tid;
 	
 	keyPressed = evt->message & charCodeMask;
+#ifdef DEBUG
 	if ( (keyPressed == 'z') || (keyPressed == 'Z'))
-		gDone = true;	// backdoor exit      //dougt:  Get rid of this.  (or make it debug only)
+		gDone = true;	// backdoor exit
+#endif
 	if (keyPressed == '\r')                   //dougt: what about tab, esc, arrows, doublebyte?
 	{		
 		switch(gCurrWin)
 		{
-			case LICENSE:
+			case kLicenseID:
 				KillControls(gWPtr);
 				ShowWelcomeWin();
 				return;
-			case WELCOME:				
+			case kWelcomeID:				
 				KillControls(gWPtr);
 				ShowSetupTypeWin();
 				return;
-			case SETUP_TYPE:
+			case kSetupTypeID:
 				KillControls(gWPtr);
 				
 				/* treat last setup type selection as custom */
@@ -122,11 +124,11 @@ void HandleKeyDown(EventRecord* evt)
 				else
 					ShowTerminalWin();
 				return;				
-			case COMPONENTS:
+			case kComponentsID:
 				KillControls(gWPtr);
 				ShowTerminalWin();
 				return;
-			case TERMINAL:
+			case kTerminalID:
 				SpawnSDThread(Install, &tid);
 				return;
 			default:
@@ -137,54 +139,53 @@ void HandleKeyDown(EventRecord* evt)
 
 void HandleUpdateEvt(EventRecord* evt)
 {
-	WindowPtr	wCurrPtr;
-	SInt16		cntlPartCode;
 	Rect		bounds;
 	
 	GrafPtr	oldPort;
 	GetPort(&oldPort);
 	
 	SetPort( gWPtr );
-		
-	cntlPartCode = FindWindow( evt->where, &wCurrPtr );
-	//dougt: check for null
-	BeginUpdate( gWPtr );
-	DrawControls( gWPtr );
-	ShowLogo();
-	
-	switch(gCurrWin)
+
+	if (gWPtr != NULL)
 	{
-		case LICENSE:
-		case WELCOME:
-			ShowTxt();
-			break;
-		case SETUP_TYPE:
-			ShowSetupDescTxt();
-			break;
-		case COMPONENTS:
-			UpdateCompWin();
-			break;
-		case TERMINAL:
-			UpdateTerminalWin();
-			break;
-		default:
-			break;
-	}
+		BeginUpdate( gWPtr );
+		DrawControls( gWPtr );
+		ShowLogo();
+	
+		switch(gCurrWin)
+		{
+			case kLicenseID:
+			case kWelcomeID:
+				ShowTxt();
+				break;
+			case kSetupTypeID:
+				ShowSetupDescTxt();
+				break;
+			case kComponentsID:
+				UpdateCompWin();
+				break;
+			case kTerminalID:
+				UpdateTerminalWin();
+				break;
+			default:
+				break;
+		}
 		
-	if (gControls->nextB)
-	{
-		HLockHi( (Handle) gControls->nextB);
+		if (gControls->nextB)
+		{
+			HLockHi( (Handle) gControls->nextB);
 	
-		bounds = (*(gControls->nextB))->contrlRect;
-		PenMode(patCopy);
-		ForeColor(blackColor);
-		InsetRect( &bounds, -4, -4 );
-		FrameGreyButton( &bounds );
+			bounds = (*(gControls->nextB))->contrlRect;
+			PenMode(patCopy);
+			ForeColor(blackColor);
+			InsetRect( &bounds, -4, -4 );
+			FrameGreyButton( &bounds );
 	
-		HUnlock( (Handle)gControls->nextB );	
+			HUnlock( (Handle)gControls->nextB );	
+		}
+	
+		EndUpdate( gWPtr );
 	}
-	
-	EndUpdate( gWPtr );
 	
 	SetPort(oldPort);
 }
@@ -196,26 +197,26 @@ void HandleActivateEvt(EventRecord* evt)
 
 void HandleOSEvt(EventRecord* evt)
 {
-	switch ( (evt->message >> 24) & 0x000000FF)  //dougt: Okay, what is this?
+	switch ( (evt->message >> 24) & 0x000000FF)
 	{
 		case suspendResumeMessage:
 			if ((evt->message & resumeFlag) == 1)
 			{
 				switch(gCurrWin)
 				{
-					case LICENSE:
+					case kLicenseID:
 						EnableLicenseWin();
 						break;
-					case WELCOME:
+					case kWelcomeID:
 						EnableWelcomeWin();
 						break;
-					case SETUP_TYPE:
+					case kSetupTypeID:
 						EnableSetupTypeWin();
 						break;
-					case COMPONENTS:
+					case kComponentsID:
 						EnableComponentsWin();
 						break;
-					case TERMINAL:
+					case kTerminalID:
 						EnableTerminalWin();
 						break;
 				}
@@ -226,19 +227,19 @@ void HandleOSEvt(EventRecord* evt)
 			{
 				switch(gCurrWin)
 				{
-					case LICENSE:
+					case kLicenseID:
 						DisableLicenseWin();
 						break;
-					case WELCOME:
+					case kWelcomeID:
 						DisableWelcomeWin();
 						break;
-					case SETUP_TYPE:
+					case kSetupTypeID:
 						DisableSetupTypeWin();
 						break;
-					case COMPONENTS:
+					case kComponentsID:
 						DisableComponentsWin();
 						break;
-					case TERMINAL:
+					case kTerminalID:
 						DisableTerminalWin();
 						break;
 				}
@@ -252,28 +253,28 @@ void React2InContent(EventRecord* evt, WindowPtr wCurrPtr)
 {	
 	switch (gCurrWin)
 	{
-		case LICENSE:
+		case kLicenseID:
 			InLicenseContent(evt, gWPtr);
 			break;
 			
-		case WELCOME:
+		case kWelcomeID:
 			InWelcomeContent(evt, gWPtr);
 			break;
 			
-		case SETUP_TYPE:
+		case kSetupTypeID:
 			InSetupTypeContent(evt, gWPtr);
 			break;
 			
-		case COMPONENTS:
+		case kComponentsID:
 			InComponentsContent(evt, gWPtr);
 			break;
 		
-		case TERMINAL:
+		case kTerminalID:
 			InTerminalContent(evt, gWPtr);
 			break;
 			
 		default:
-			gDone = true;  //dougt: are you sure you want to do this?
+			gDone = true;
 			break;
 	}
 }

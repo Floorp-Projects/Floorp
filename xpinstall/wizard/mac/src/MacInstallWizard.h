@@ -78,11 +78,13 @@ if (err) 								\
 											
 									
 #define NUM_WINS 		5
-#define LICENSE			0		/* window object ids */
-#define WELCOME			1
-#define SETUP_TYPE		2
-#define COMPONENTS		3
-#define	TERMINAL		4
+#define kLicenseID		0		/* window object ids */
+#define kWelcomeID		1
+#define kSetupTypeID	2
+#define kComponentsID	3
+#define	kTerminalID		4
+
+#define kMIWMagic		0x0F00BAA0
 
 #define	NGINST			1		/* event handling modes */
 #define	SDI				2
@@ -120,7 +122,8 @@ if (err) 								\
 #define kNotSelected	0
 #define	kSelected		1
 #define kNotInSetupType 0	
-#define kInSetupType	1	/* end constants */
+#define kInSetupType	1	
+#define kMaxCoreFiles	256		/* end constants */
 
 
 #define rRootWin 		128		/* widget rsrc ids */
@@ -369,6 +372,7 @@ extern WindowPtr 	gWPtr;
 extern short 		gCurrWin;
 extern InstWiz		*gControls;
 extern Boolean 		gDone;
+extern Boolean		gSDDlg;
 
 extern EventProc		 gSDIEvtHandler;
 extern SDI_NETINSTALL 	 gInstFunc;
@@ -509,10 +513,12 @@ OSErr		ExtractCoreFile(void);
 OSErr		AppleSingleDecode(FSSpecPtr, FSSpecPtr);
 void		ResolveDirs(char *, char*);
 OSErr		ForceMoveFile(short, long, ConstStr255Param, long);
+OSErr		CleanupExtractedFiles(void);
 
 /*-----------------------------------------------------------*
  *   XPInstallGlue
  *-----------------------------------------------------------*/
+OSErr		RunAllXPIs(short vRefNum, long dirID);
 OSErr		RunXPI(FSSpec&, FSSpec&);
 /* NB:
 ** See XPInstallGlue.c for rest of prototypes

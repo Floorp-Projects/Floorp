@@ -22,6 +22,7 @@
 
 #include "MacInstallWizard.h"
 
+
 #define XP_MAC 1
 #include "xpistub.h"
 
@@ -50,16 +51,16 @@ void 		xpicbStart(const char *URL, const char* UIName);
 void	 	xpicbProgress(const char* msg, PRInt32 val, PRInt32 max);
 void 		xpicbFinal(const char *URL, PRInt32 finalStatus);
 
-//dougt: has nothing to do with xpcom.  Use the one in MacInstallWizard.h.
-#define XPCOM_ERR_CHECK(_call) 	\
+#define XPI_ERR_CHECK(_call) 	\
 rv = _call;						\
 if (NS_FAILED(rv))				\
 {								\
 	ErrorHandler();				\
 	return rv;						\
 }
-//dougt: should be pulled from an ini file.  This file may have a different name.
-#define XPISTUB_DLL "\pxpistubDebug.shlb";
+
+/* XXX temporary... */
+#define XPISTUB_DLL "\pxpistubDebug.shlb"	
  
 
 void 		
@@ -87,6 +88,25 @@ xpicbFinal(const char *URL, PRInt32 finalStatus)
 }
 
 OSErr
+RunAllXPIs(short vRefNum, long dirID)
+{
+	OSErr 	err = noErr;
+	FSSpec	tgtDirSpec, xpiSpec;
+	
+	// TO DO
+	//		enumerate through all .xpi's
+	
+	err = FSMakeFSSpec(vRefNum, dirID, "\pmozilla.jar", &xpiSpec);
+	err = FSMakeFSSpec(vRefNum, dirID, 0, &tgtDirSpec);
+	if (err==noErr)
+		err = RunXPI(xpiSpec, tgtDirSpec);
+	else
+		ErrorHandler();
+		
+	return err;
+}
+
+OSErr
 RunXPI(FSSpec& aXPI, FSSpec& aTargetDir)
 {	
 	nsresult			rv;
@@ -99,9 +119,9 @@ RunXPI(FSSpec& aXPI, FSSpec& aTargetDir)
 	
 	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, aTargetDir), err);
 	
-	XPCOM_ERR_CHECK(xpi_initProc( aTargetDir, xpicbStart, xpicbProgress, xpicbFinal ));
+	XPI_ERR_CHECK(xpi_initProc( aTargetDir, xpicbStart, xpicbProgress, xpicbFinal ));
 
-	XPCOM_ERR_CHECK(xpi_installProc( aXPI, "", flags ));
+	XPI_ERR_CHECK(xpi_installProc( aXPI, "", flags ));
 	
 	xpi_exitProc();
 	UnloadXPIStub(&connID);
@@ -134,8 +154,8 @@ LoadXPIStub(XPI_InitProc* pfnInit, XPI_InstallProc* pfnInstall, XPI_ExitProc* pf
 	err = FSMakeFSSpec(currVRefNum, currDirID, fragName, &fslib);
 	if (err!=noErr)
 		return err;
-		//dougt: verify the use of the constant kPrivateCFragCopy.
-	err = GetDiskFragment(&fslib, kWholeFork, kCFragGoesToEOF, nil, kPrivateCFragCopy/*kReferenceCFrag*/, connID, &mainAddr, errName);
+		
+	err = GetDiskFragment(&fslib, 0, kCFragGoesToEOF, nil, /*kPrivateCFragCopy*/kReferenceCFrag, connID, &mainAddr, errName);
 										   
 	if ( err == noErr && *connID != NULL)
 	{
@@ -155,12 +175,11 @@ LoadXPIStub(XPI_InitProc* pfnInit, XPI_InstallProc* pfnInstall, XPI_ExitProc* pf
 Boolean
 UnloadXPIStub(CFragConnectionID* connID)
 {
-//dougt: what happens if connID is null... evil
-    if (*connID != NULL)
+    if ((connID != NULL) && (*connID != NULL))
 	{
 		CloseConnection(connID);
 		*connID = NULL;
-        return true;
+   	    return true;
 	}
 	
 	return false; 
