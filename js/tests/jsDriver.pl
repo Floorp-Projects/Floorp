@@ -138,9 +138,9 @@ sub main {
         if (!$opt_user_output_file) {
             $opt_output_file = &get_tempfile_name;
         }
-    
+
         &write_results;
-        
+
     }
 }
 
@@ -165,28 +165,28 @@ sub execute_tests {
         if ($user_exit) {
             return;
         }
-        
+
         # Append the shell.js files to the shell_command if they're there.
         # (only check for their existance if the suite or test_dir has changed
         # since the last time we looked.)
         if ($last_suite ne $suite || $last_test_dir ne $test_dir) {
             $shell_command = &xp_path($engine_command);
-            
+
             if (-f &xp_path($opt_suite_path . $suite . "/shell.js")) {
                 $shell_command .= $file_param . &xp_path($opt_suite_path .
                                                          $suite . "/shell.js");
             }
-            if (-f &xp_path($opt_suite_path . $suite . "/" . $test_dir . 
+            if (-f &xp_path($opt_suite_path . $suite . "/" . $test_dir .
                             "/shell.js")) {
                 $shell_command .= $file_param .
                   &xp_path($opt_suite_path . $suite . "/" . $test_dir .
                            "/shell.js");
             }
-            
+
             $last_suite = $suite;
             $last_test_dir = $test_dir;
         }
-        
+
         &dd ("executing: " . $shell_command . $file_param .
              &xp_path($opt_suite_path . $test));
 
@@ -194,7 +194,7 @@ sub execute_tests {
               &xp_path($opt_suite_path . $test) . $redirect_command . " |");
         @output = <OUTPUT>;
         close (OUTPUT);
-        
+
         @output = grep (!/js\>/, @output);
 
         if ($opt_exit_munge == 1) {
@@ -239,7 +239,7 @@ sub execute_tests {
             }
 
         }
-        
+
         if (!@output) {
             @output = ("Testcase produced no output!");
         }
@@ -257,7 +257,7 @@ sub execute_tests {
                              "Failure messages were:\n$failure_lines",
                              $bug_number);
         }
-        
+
         &dd ("exit code $got_exit, exit signal $exit_signal.");
 
         $tests_completed++;
@@ -286,7 +286,7 @@ sub write_results {
     } else {
         $neglist_name = "($#opt_neg_list_files skip files specified)";
     }
-    
+
     open (OUTPUT, "> $opt_output_file") ||
       die ("Could not create output file $opt_output_file");
 
@@ -313,7 +313,7 @@ sub write_results {
         print OUTPUT "<BR>";
         close (JAVAOUTPUT);
     }
-     
+
     print OUTPUT 
       ("Testcase execution time: $exec_time_string.<br>\n" .
        "Tests completed on $completion_date.<br><br>\n");
@@ -346,7 +346,7 @@ sub write_results {
         print OUTPUT 
           ("<h1>Whoop-de-doo, nothing failed!</h1>\n");
     }
-    
+
     print OUTPUT "</body>";
 
     close (OUTPUT);
@@ -358,25 +358,25 @@ sub write_results {
     }
 
 }
- 
+
 sub parse_args {
     my ($option, $value, $lastopt);
-    
+
     &dd ("checking command line options.");
-    
+
     Getopt::Mixed::init ($options);
     $Getopt::Mixed::order = $Getopt::Mixed::RETURN_IN_ORDER;
-    
+
     while (($option, $value) = nextOption()) {
 
         if ($option eq "b") {
             &dd ("opt: setting bugurl to '$value'.");
             $opt_bug_url = $value;
-            
+
         } elsif ($option eq "c") {
             &dd ("opt: setting classpath to '$value'.");
             $opt_classpath = $value;
-            
+
         } elsif (($option eq "e") || (($option eq "") && ($lastopt eq "e"))) {
             &dd ("opt: adding engine $value.");
             push (@opt_engine_list, $value);
@@ -388,7 +388,7 @@ sub parse_args {
             &dd ("opt: setting output file to '$value'.");
             $opt_user_output_file = 1;
             $opt_output_file = $value;
-            
+
         } elsif ($option eq "h") {
             &usage;
 
@@ -398,7 +398,7 @@ sub parse_args {
             }
             &dd ("opt: setting java path to '$value'.");
             $opt_java_path = $value;
-            
+
         } elsif ($option eq "k") {
             &dd ("opt: displaying failures on console.");
             $opt_console_failures=1;
@@ -416,7 +416,7 @@ sub parse_args {
         } elsif ($option eq "o") {
             $opt_engine_params = $value;
             &dd ("opt: setting engine params to '$opt_engine_params'.");
-            
+
         } elsif ($option eq "p") {
             $opt_suite_path = $value;
 
@@ -435,20 +435,20 @@ sub parse_args {
         } elsif ($option eq "s") {
             $opt_shell_path = $value;
             &dd ("opt: setting shell path to '$opt_shell_path'.");
-            
+
         } elsif ($option eq "t") {
             &dd ("opt: tracing output.  (console failures at no extra charge.)");
             $opt_console_failures = 1;
             $opt_trace = 1;
-            
+
         } elsif ($option eq "u") {
             &dd ("opt: setting lxr url to '$value'.");
             $opt_lxr_url = $value;
-            
+
         } elsif ($option eq "x") {
             &dd ("opt: turning off exit munging.");
             $opt_exit_munge = 0;
-            
+
         } else {
             &usage;
         }
@@ -456,9 +456,9 @@ sub parse_args {
         $lastopt = $option;
 
     }
-    
+
     Getopt::Mixed::cleanup();
-    
+
     if ($#opt_engine_list == -1) {
         die "You must select a shell to test in.\n";
     }
@@ -497,16 +497,16 @@ sub usage {
        "                          seems like your exit codes are turning up\n" .
        "                          as exit signals.)\n");
     exit (1);
-    
+
 }
 
 #
 # get the shell command used to start the (either) engine
 #
 sub get_engine_command {
-    
+
     my $retval;
-    
+
     if ($opt_engine_type eq "rhino") {
         &dd ("getting rhino engine command.");
         $opt_rhino_opt = 0;
@@ -552,45 +552,45 @@ sub get_engine_command {
     } else {
         die ("Unknown engine type selected, '$opt_engine_type'.\n");
     }
-    
+
     $retval .= " $opt_engine_params";
 
     &dd ("got '$retval'");
-    
+
     return $retval;
-    
+
 }
 
 #
 # get the shell command used to run rhino
 #
-sub get_rhino_engine_command {    
+sub get_rhino_engine_command {
     my $retval = $opt_java_path . ($opt_rhino_ms ? "jview " : "java ");
-    
+
     if ($opt_shell_path) {
         $opt_classpath = ($opt_classpath) ?
           $opt_classpath . ":" . $opt_shell_path :
             $opt_shell_path;
     }
-    
+
     if ($opt_classpath) {
         $retval .= ($opt_rhino_ms ? "/cp:p" : "-classpath") . " $opt_classpath ";
     }
-    
+
     $retval .= "org.mozilla.javascript.tools.shell.Main";
 
     if ($opt_rhino_opt) {
         $retval .= " -opt $opt_rhino_opt";
     }
-    
+
     return $retval;
-    
+
 }
 
 #
 # get the shell command used to run xpcshell
 #
-sub get_xpc_engine_command {    
+sub get_xpc_engine_command {
     my $m5_home = @ENV{"MOZILLA_FIVE_HOME"} ||
       die ("You must set MOZILLA_FIVE_HOME to use the xpcshell" ,
            (!$unixish) ? "." : ", also " .
@@ -601,9 +601,13 @@ sub get_xpc_engine_command {
         print STDERR "-#- WARNING: LD_LIBRARY_PATH is not set, xpcshell may " .
           "not be able to find the required components.\n";
     }
-    
+
     if (!($m5_home =~ /[\/\\]$/)) {
         $m5_home .= "/";
+    }
+
+    if ($os_type eq "WIN") {
+        $retval =~ s/\//\\/g;
     }
 
     return $m5_home . "xpcshell";
@@ -615,7 +619,7 @@ sub get_xpc_engine_command {
 #
 sub get_sm_engine_command {
     my $retval;
-    
+
     # Look for Makefile.ref style make first.
     # (On Windows, spidermonkey can be made by two makefiles, each putting the
     # executable in a diferent directory, under a different name.)
@@ -633,11 +637,11 @@ sub get_sm_engine_command {
             opendir (SRC_DIR_FILES, $retval);
             my @src_dir_files = readdir(SRC_DIR_FILES);
             closedir (SRC_DIR_FILES);
-            
+
             my ($dir, $object_dir);
             my $pattern = ($opt_engine_type eq "smdebug") ?
               'DBG.OBJ' : 'OPT.OBJ';
-        
+
             # scan for the first directory matching
             # the pattern expected to hold this type (debug or opt) of engine
             foreach $dir (@src_dir_files) {
@@ -646,13 +650,13 @@ sub get_sm_engine_command {
                     last;
                 }
             }
-            
+
             if (!$object_dir && $os_type ne "WIN") {
                 die ("Could not locate an object directory in $retval " .
                      "matching the pattern *$pattern.  Have you built the " .
                      "engine?\n");
             }
-            
+
             if (!(-x $retval . $object_dir . "/js.exe") && ($os_type eq "WIN")) {
                 # On windows, you can build with js.mak as well as Makefile.ref
                 # (Can you say WTF boys and girls?  I knew you could.)
@@ -670,14 +674,14 @@ sub get_sm_engine_command {
                         $retval = "../src/Debug/";
                     }
                 }
-                
+
                 $retval .= "jsshell.exe";
-            
+
             } else {
                 $retval .= $object_dir . "/js";
                 if ($os_type eq "WIN") {
                     $retval .= ".exe";
-                }       
+                }
             }
         } # mac/ not mac
 
@@ -687,9 +691,13 @@ sub get_sm_engine_command {
         # mac doesn't seem to deal with -x correctly
         die (&xp_path($retval) . " is not a valid executable on this system.\n");
     }
-  
+
+    if ($os_type eq "WIN") {
+        $retval =~ s/\//\\/g;
+    }
+
     return $retval;
-    
+
 }
 
 #
@@ -745,6 +753,10 @@ sub get_dd_engine_command {
         }
     }
 
+    if ($os_type eq "WIN") {
+        $retval =~ s/\//\\/g;
+    }
+
     return $retval;
 }
 
@@ -752,8 +764,8 @@ sub get_dd_engine_command {
 # get the shell command used to run the liveconnect shell
 #
 sub get_lc_engine_command {
-    my $retval;    
-        
+    my $retval;
+
     if ($opt_shell_path) {
         $retval = $opt_shell_path;
     } else {
@@ -764,26 +776,26 @@ sub get_lc_engine_command {
             opendir (SRC_DIR_FILES, $retval);
             my @src_dir_files = readdir(SRC_DIR_FILES);
             closedir (SRC_DIR_FILES);
-            
+
             my ($dir, $object_dir);
             my $pattern = ($opt_engine_type eq "lcdebug") ?
               'DBG.OBJ' : 'OPT.OBJ';
-            
+
             foreach $dir (@src_dir_files) {
                 if ($dir =~ $pattern) {
                     $object_dir = $dir;
                     last;
                 }
             }
-            
+
             if (!$object_dir) {
                 die ("Could not locate an object directory in $retval " .
                      "matching the pattern *$pattern.  Have you built the " .
                      "engine?\n");
             }
-            
+
             $retval .= $object_dir . "/";
-            
+
             if ($os_type eq "WIN") {
                 $retval .= "lcshell.exe";
             } else {
@@ -791,14 +803,17 @@ sub get_lc_engine_command {
             }
         } # mac/ not mac
     }
-    
 
     if (!(-x &xp_path($retval))) {
         die ("$retval is not a valid executable on this system.\n");
     }
-    
+
+    if ($os_type eq "WIN") {
+        $retval =~ s/\//\\/g;
+    }
+
     return $retval;
-    
+
 }
 
 sub get_os_type {
@@ -808,16 +823,16 @@ sub get_os_type {
     }
 
     my $uname = `uname -a`;
-    
+
     if ($uname =~ /WIN/) {
         $uname = "WIN";
     } else {
         chop $uname;
     }
-    
+
     &dd ("get_os_type returning '$uname'.");
     return $uname;
-    
+
 }
 
 sub get_test_list {
@@ -860,9 +875,9 @@ sub get_test_list {
 
 
     }
-    
+
     return @test_list;
-    
+
 }
 
 #
@@ -893,9 +908,9 @@ sub expand_user_test_list {
 
     } else {
 
-        open (TESTLIST, $list_file) || 
+        open (TESTLIST, $list_file) ||
           die("Error opening test list file '$list_file': $!\n");
-    
+
         while (<TESTLIST>) {
             s/\r*\n*$//;
             if (!(/\s*\#/)) {
@@ -907,9 +922,9 @@ sub expand_user_test_list {
         close (TESTLIST);
 
     }
-    
+
     return @retval;
-    
+
 }
 
 
@@ -935,33 +950,34 @@ sub expand_test_list_entry {
         my @test_files = &get_js_files ($opt_suite_path . 
                                         $suite_and_test_dir);
         my $i;
-        
+
         foreach $i (0 .. $#test_files) {
-            $test_files[$i] = &xp_path($suite_and_test_dir . "/" . $test_files[$i]);
+            $test_files[$i] = &xp_path($suite_and_test_dir . "/" .
+                                       $test_files[$i]);
         }
-        
+
         splice (@retval, $#retval + 1, 0, @test_files);
-        
+
     } elsif ($entry =~ /([^\*][^$path_sep]*)$path_sep?\*?$/) {
         # Entry is in the form suite_dir[/*]
         # so iterate all test dirs and tests under it
         my $suite = $1;
         my @test_dirs = &get_subdirs ($opt_suite_path . $suite);
         my $test_dir;
-        
+
         foreach $test_dir (@test_dirs) {
-            my @test_files = &get_js_files ($opt_suite_path . $suite . $path_sep .
-                                               $test_dir);
+            my @test_files = &get_js_files ($opt_suite_path . $suite .
+                                            $path_sep . $test_dir);
             my $i;
-            
+
             foreach $i (0 .. $#test_files) {
-                $test_files[$i] = $suite . $path_sep . $test_dir . $path_sep . 
+                $test_files[$i] = $suite . $path_sep . $test_dir . $path_sep .
                   $test_files[$i];
             }
-            
+
             splice (@retval, $#retval + 1, 0, @test_files);
         }
-        
+
     } else {
         die ("Dont know what to do with list entry '$entry'.\n");
     }
@@ -983,20 +999,21 @@ sub get_default_test_list {
     foreach $suite (@suite_list) {
         my @test_dir_list = get_subdirs ($suite_path . $suite);
         my $test_dir;
-        
+
         foreach $test_dir (@test_dir_list) {
             my @test_list = get_js_files ($suite_path . $suite . $path_sep .
                                           $test_dir);
             my $test;
-            
+
             foreach $test (@test_list) {
-                $retval[$#retval + 1] = $suite . $path_sep . $test_dir . $path_sep . $test;
+                $retval[$#retval + 1] = $suite . $path_sep . $test_dir .
+                  $path_sep . $test;
             }
         }
     }
-    
+
     return @retval;
-    
+
 }
 
 #
@@ -1006,21 +1023,21 @@ sub get_tempfile_name {
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
       &get_padded_time (localtime);
     my $rv;
-    
+
     if ($os_type ne "MAC") {
-        $rv = "results-" . $year . "-" . $mon . "-" . $mday . "-" . $hour . 
+        $rv = "results-" . $year . "-" . $mon . "-" . $mday . "-" . $hour .
           $min . $sec . "-" . $opt_engine_type;
     } else {
         $rv = "res-" . $year . $mon . $mday . $hour . $min . $sec . "-" .
           $opt_engine_type
     }
-    
+
     return $rv . ".html";
 }
 
 sub get_padded_time {
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = @_;
-    
+
     $mon++;
     $mon = &zero_pad($mon);
     $year += 1900;
@@ -1028,14 +1045,14 @@ sub get_padded_time {
     $sec = &zero_pad($sec);
     $min = &zero_pad($min);
     $hour = &zero_pad($hour);
-    
+
     return ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
-    
+
 }
 
 sub zero_pad {
     my ($string) = @_;
-    
+
     $string = ($string < 10) ? "0" . $string : $string;
     return $string;
 }
@@ -1047,7 +1064,7 @@ sub subtract_arrays {
     my $line;
 
     foreach $line (@part) {
-        @whole = grep (!/$line/, @whole); 
+        @whole = grep (!/$line/, @whole);
     }
 
     return @whole;
@@ -1081,7 +1098,7 @@ sub unix_to_mac {
     }
 
     $rv =~ s/\:$//;
-       
+
     return $rv;
 }
 
@@ -1104,7 +1121,7 @@ sub xp_path {
 sub get_subdirs {
     my ($dir)  = @_;
     my @subdirs;
-    
+
     if ($os_type ne "MAC") {
         if (!($dir =~ /\/$/)) {
             $dir = $dir . "/";
@@ -1113,12 +1130,11 @@ sub get_subdirs {
         if (!($dir =~ /\:$/)) {
             $dir = $dir . ":";
         }
-    }        
-        
+    }
     opendir (DIR, $dir) || die ("couldn't open directory $dir: $!");
     my @testdir_contents = readdir(DIR);
     closedir(DIR);
-    
+
     foreach (@testdir_contents) {
         if ((-d ($dir . $_)) && ($_ ne 'CVS') && ($_ ne '.') && ($_ ne '..')) {
             @subdirs[$#subdirs + 1] = $_;
@@ -1134,18 +1150,18 @@ sub get_subdirs {
 sub get_js_files {
     my ($test_subdir) = @_;
     my (@js_file_array, @subdir_files);
-    
+
     opendir (TEST_SUBDIR, $test_subdir) || die ("couldn't open directory " .
                                                 "$test_subdir: $!");
     @subdir_files = readdir(TEST_SUBDIR);
     closedir( TEST_SUBDIR );
-    
+
     foreach (@subdir_files) {
         if ($_ =~ /\.js$/) {
             $js_file_array[$#js_file_array+1] = $_;
         }
     }
-    
+
     return @js_file_array;
 }
 
@@ -1185,7 +1201,7 @@ sub report_failure {
         $html .= "<dd><b>".
           "Testcase $test failed</b> $bug_line<br>\n";
     }
-    
+
     $html .= " [ ";
     if ($failures_reported > 1) {
         $html .= "<a href='#failure" . ($failures_reported - 1) . "'>" .
@@ -1202,17 +1218,17 @@ sub report_failure {
 }
 
 sub dd {
-    
+
     if ($opt_trace) {
         print ("-*- ", @_ , "\n");
     }
-    
+
 }
 
 sub status {
-    
+
     print ("-#- ", @_ , "\n");
-    
+
 }
 
 sub int_handler {
