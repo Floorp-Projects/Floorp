@@ -74,7 +74,13 @@
 #include "prmem.h"
 #include "rdfutil.h"
 #include "nsIXULChildDocument.h"
+#include "nsIXULDocumentInfo.h"
+#include "nsIXULParentDocument.h"
 #include "nsIHTMLContentContainer.h"
+
+#include "nsIDocumentLoader.h"
+#include "nsIWebShell.h"
+#include "nsIContentViewerContainer.h"
 
 #include "nsHTMLTokens.h" // XXX so we can use nsIParserNode::GetTokenType()
 
@@ -113,6 +119,9 @@ static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentSinkIID,      NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIXULContentSinkIID,      NS_IXULCONTENTSINK_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
+
+static NS_DEFINE_CID(kXULDocumentInfoCID,         NS_XULDOCUMENTINFO_CID);
+static NS_DEFINE_IID(kIXULDocumentInfoIID,        NS_IXULDOCUMENTINFO_IID);
 
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
@@ -255,6 +264,8 @@ protected:
     
     nsIRDFResource*  mFragmentRoot;
 
+	nsVoidArray*  mOverlayArray;
+	
     nsString      mPreferredStyle;
     PRInt32       mStyleSheetCount;
     nsICSSLoader* mCSSLoader;
@@ -286,6 +297,7 @@ XULContentSinkImpl::XULContentSinkImpl()
       mDocument(nsnull),
       mParser(nsnull),
       mFragmentRoot(nsnull),
+	  mOverlayArray(nsnull),
       mStyleSheetCount(0),
       mCSSLoader(nsnull)
 {
@@ -427,6 +439,17 @@ XULContentSinkImpl::~XULContentSinkImpl()
         NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kXUL_element);
     }
+
+	// Delete all the elements from our overlay array
+	if (mOverlayArray) {
+	  PRInt32 count = mOverlayArray->Count();
+	  for (PRInt32 i = 0; i < count; i++) {
+		nsString* element = (nsString*)(mOverlayArray->ElementAt(i));
+		delete element;
+	  }
+	  
+	  delete mOverlayArray;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -601,7 +624,7 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
@@ -663,11 +686,26 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
     }
 
     PRInt32 nestLevel = mContextStack->Count();
-    if (nestLevel == 0)
-        mState = eXULContentSinkState_InEpilog;
+    if (nestLevel == 0) {
+		mState = eXULContentSinkState_InEpilog;
+		
+		// We're about to finish parsing. Now we want to kick off the processing
+		// of our child overlays.
+		PRInt32 count;
+		if (mOverlayArray && (count = mOverlayArray->Count())) {
+			for (PRInt32 i = 0; i < count; i++) {
+		        nsString* href = (nsString*)mOverlayArray->ElementAt(i);
+				ProcessOverlay(*href);
+			}
+			
+			// Block the parser. It will only be unblocked after all
+			// of our child overlays have finished parsing.
+            rv = NS_ERROR_HTMLPARSER_BLOCK;
+		}   
+    }
 
     PopNameSpaces();
-    return NS_OK;
+    return rv;
 }
 
 
@@ -734,10 +772,56 @@ XULContentSinkImpl::ProcessOverlay(const nsString& aHref)
   // Synchronously load the overlay.
   nsresult result = NS_OK;
   
-  // XXX Kick off the load 
+  // Kick off the load 
+  nsCOMPtr<nsIContentViewerContainer> container;
+  nsCOMPtr<nsIXULParentDocument> xulParentDocument;
+  xulParentDocument = do_QueryInterface(mDocument);
+  if (xulParentDocument == nsnull) {
+      NS_ERROR("Unable to turn document into a XUL parent document.");
+      return result;
+  }
+
+  if (NS_FAILED(result = xulParentDocument->GetContentViewerContainer(getter_AddRefs(container)))) {
+      NS_ERROR("Unable to retrieve content viewer container from parent document.");
+      return result;
+  }
+
+  nsAutoString command;
+  if (NS_FAILED(result = xulParentDocument->GetCommand(command))) {
+      NS_ERROR("Unable to retrieve the command from parent document.");
+      return result;
+  }
   
-  // Block the parser.
-  result = NS_ERROR_HTMLPARSER_BLOCK;
+  nsCOMPtr<nsIXULDocumentInfo> docInfo;
+  if (NS_FAILED(result = nsComponentManager::CreateInstance(kXULDocumentInfoCID,
+                                                        nsnull,
+                                                        kIXULDocumentInfoIID,
+                                                        (void**) getter_AddRefs(docInfo)))) {
+      NS_ERROR("unable to create document info object");
+      return result;
+  }
+  
+  if (NS_FAILED(result = docInfo->Init(mDocument, nsnull))) {
+      NS_ERROR("unable to initialize doc info object.");
+      return result;
+  }
+
+  // Turn the content viewer into a webshell
+  nsCOMPtr<nsIWebShell> webshell;
+  webshell = do_QueryInterface(container);
+  if (webshell == nsnull) {
+      NS_ERROR("this isn't a webshell. we're in trouble.");
+      return result;
+  }
+
+  nsCOMPtr<nsIDocumentLoader> docLoader;
+  if (NS_FAILED(result = webshell->GetDocumentLoader(*getter_AddRefs(docLoader)))) {
+      NS_ERROR("unable to obtain the document loader to kick off the load.");
+      return result;
+  }
+
+  docLoader->LoadSubDocument(aHref,
+                             docInfo.get());
   return result;
 }
 
@@ -817,7 +901,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 {
 
     static const char kStyleSheetPI[] = "<?xml-stylesheet";
-    static const char kOverlayPI[] = "<?xml-xuloverlay";
+    static const char kOverlayPI[] = "<?xul-overlay";
 
     nsresult rv;
     FlushText();
@@ -840,8 +924,13 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
       if (0 == href.Length())
           return NS_OK;
 
-      return ProcessOverlay(href);
-    }
+	  // Add the overlay to our list of overlays that need to be processed.
+	  if (mOverlayArray == nsnull)
+		mOverlayArray = new nsVoidArray();
+		
+	  nsString* overlayItem = new nsString(href);
+	  mOverlayArray->AppendElement(overlayItem);
+	}
     // If it's a stylesheet PI...
     else if (text.Find(kStyleSheetPI) == 0) {
         nsAutoString href;
