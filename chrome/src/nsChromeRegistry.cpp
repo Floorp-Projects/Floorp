@@ -83,6 +83,10 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, name);
 void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, char** o_remaining);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// XXX Both overlayEnumerator and chromeEntryEnumerator must take two sets of
+// arcs rather than one, and they must be able to move to the second set after
+// finishing the first.
 class nsOverlayEnumerator : public nsISimpleEnumerator
 {
 public:
@@ -157,6 +161,98 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
   return NS_OK;
 }
 
+class nsChromeEntryEnumerator : public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    nsChromeEntryEnumerator(nsISimpleEnumerator *aProfileArcs,
+                            nsISimpleEnumerator *aInstallArcs);
+    virtual ~nsChromeEntryEnumerator();
+
+private:
+    nsCOMPtr<nsISimpleEnumerator> mProfileArcs;
+    nsCOMPtr<nsISimpleEnumerator> mInstallArcs;
+    nsCOMPtr<nsISimpleEnumerator> mCurrentArcs;
+};
+
+NS_IMPL_ISUPPORTS1(nsChromeEntryEnumerator, nsISimpleEnumerator)
+
+nsChromeEntryEnumerator::nsChromeEntryEnumerator(nsISimpleEnumerator *aProfileArcs,
+                                                 nsISimpleEnumerator *aInstallArcs)
+{
+  NS_INIT_REFCNT();
+  mProfileArcs = aProfileArcs;
+  mInstallArcs = aInstallArcs;
+  mCurrentArcs = mProfileArcs;
+}
+
+nsChromeEntryEnumerator::~nsChromeEntryEnumerator()
+{
+}
+
+NS_IMETHODIMP nsChromeEntryEnumerator::HasMoreElements(PRBool *aIsTrue)
+{
+  *aIsTrue = PR_FALSE;
+
+  if (!mProfileArcs) {
+    if (!mInstallArcs)
+      return NS_OK; // Default value of FALSE for no arcs in either places
+    return mInstallArcs->HasMoreElements(aIsTrue); // No profile arcs means check install
+  }
+  else {
+    nsresult rv = mProfileArcs->HasMoreElements(aIsTrue);
+    if (*aIsTrue || !mInstallArcs) // Have profile elts or no install arcs means bail.
+      return rv;
+
+    return mInstallArcs->HasMoreElements(aIsTrue); // Otherwise just use install arcs.
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeEntryEnumerator::GetNext(nsISupports **aResult)
+{
+  nsresult rv;
+  *aResult = nsnull;
+
+  if (!mCurrentArcs) {
+    mCurrentArcs = mInstallArcs;
+    if (!mInstallArcs)
+      return NS_ERROR_FAILURE;
+  }
+  else if (mCurrentArcs == mProfileArcs) {
+    PRBool hasMore;
+    mProfileArcs->HasMoreElements(&hasMore);
+    if (!hasMore)
+      mCurrentArcs = mInstallArcs;
+    if (!mInstallArcs)
+      return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsISupports> supports;
+  mCurrentArcs->GetNext(getter_AddRefs(supports));
+
+  nsCOMPtr<nsIRDFLiteral> value = do_QueryInterface(supports, &rv);
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  const PRUnichar* valueStr;
+  rv = value->GetValueConst(&valueStr);
+  if (NS_FAILED(rv))
+    return rv;
+/*
+  nsCOMPtr<nsISupports> sup;
+  sup = do_QueryInterface(url, &rv);
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  *aResult = sup;
+  NS_ADDREF(*aResult);
+*/
+  return NS_OK;
+}
 
 class nsChromeRegistry : public nsIChromeRegistry
 {
@@ -203,6 +299,8 @@ protected:
                               nsAutoString aProvider,
                               nsIRDFContainer *aContainer,
                               nsIRDFDataSource *aDataSource);
+
+    NS_IMETHOD GetEnumeratorForType(const nsCAutoString& type, nsISimpleEnumerator** aResult);
 
 private:
     NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
@@ -1263,22 +1361,103 @@ nsChromeRegistry::ReloadChrome()
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::GetSkins(nsISupportsArray** aResult)
+nsChromeRegistry::GetEnumeratorForType(const nsCAutoString& type, nsISimpleEnumerator** aResult)
 {
-	// XXX Fill in.
-	return NS_OK;
-}
+  // Load the data source.
+  nsCAutoString chromeFile("chrome/");
+  chromeFile += type;
+  chromeFile += ".rdf";
 
-NS_IMETHODIMP
-nsChromeRegistry::GetPackages(nsISupportsArray** aResult)
-{
-	// XXX Fill in.
+  // Get the profile root for the first set of arcs.
+  nsCAutoString profileKey;
+  GetProfileRoot(profileKey);
+  profileKey += chromeFile;
+
+  // Use the install root for the second set of arcs.
+  nsCAutoString installKey("resource:/");
+  installKey += chromeFile;
+
+  nsCOMPtr<nsIRDFDataSource> profileDataSource;
+  nsCOMPtr<nsIRDFDataSource> installDataSource;
+
+  nsresult rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
+                                                     nsnull,
+                                                     NS_GET_IID(nsIRDFDataSource),
+                                                     (void**) getter_AddRefs(profileDataSource));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
+                                                     nsnull,
+                                                     NS_GET_IID(nsIRDFDataSource),
+                                                     (void**) getter_AddRefs(installDataSource));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIRDFRemoteDataSource> remoteProfile = do_QueryInterface(profileDataSource);
+  nsCOMPtr<nsIRDFRemoteDataSource> remoteInstall = do_QueryInterface(installDataSource);
+   
+  nsCAutoString fileURL;
+  nsCOMPtr<nsIFileLocator> fl;
+  
+  rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
+                                          nsnull,
+                                          NS_GET_IID(nsIFileLocator),
+                                          getter_AddRefs(fl));
+
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  // Build a fileSpec that points to the destination
+  // (profile dir + chrome + package + provider + chrome.rdf)
+  nsCOMPtr<nsIFileSpec> chromeFileInterface;
+  fl->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(chromeFileInterface));
+  nsFileSpec fileSpec;
+
+  PRBool exists = PR_FALSE;
+  if (chromeFileInterface) {
+    // Read in the profile data source (or try to anyway)
+    chromeFileInterface->GetFileSpec(&fileSpec);
+    fileSpec += "/";
+    fileSpec += (const char*)chromeFile;
+
+    nsFileURL fileURL(fileSpec);
+    const char* fileStr = fileURL.GetURLString();
+    nsCAutoString fileURLStr = fileStr;
+    fileURLStr += chromeFile;
+
+    remoteProfile->Init(fileURLStr);
+    remoteProfile->Refresh(PR_TRUE);
+  }
+
+  // Read in the install data source.
+  nsCAutoString fileURLStr = "resource:/";
+  fileURLStr += chromeFile;
+  remoteInstall->Init(fileURLStr);
+  remoteInstall->Refresh(PR_TRUE);
+
+  // Get some arcs from each data source.
+  
+  // Build an nsChromeEntryEnumerator and return it.
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::GetLocales(nsISupportsArray** aResult)
+nsChromeRegistry::GetSkins(nsISimpleEnumerator** aResult)
 {
-	// XXX Fill in.
-  return NS_OK;
+	nsCAutoString type("skins");
+  return GetEnumeratorForType(type, aResult);
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetPackages(nsISimpleEnumerator** aResult)
+{
+  nsCAutoString type("packages");
+  return GetEnumeratorForType(type, aResult);
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetLocales(nsISimpleEnumerator** aResult)
+{
+  nsCAutoString type("locales");
+	return GetEnumeratorForType(type, aResult);
 }
