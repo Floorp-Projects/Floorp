@@ -396,32 +396,29 @@ int main(int argc, char *argv[])
                                              (void **) &pMsgCompFields); 
     if (rv == NS_OK && pMsgCompFields)
     { 
-		nsAutoString2 from(", rhp@netscape.com, ", eTwoByte);
-		nsAutoString2 newsgroup("news://news.mozilla.org./netscape.test", eTwoByte);
-		nsAutoString2 subject("[spam] test", eTwoByte);
-		nsAutoString2 body(email, eTwoByte);
-		nsAutoString2 charSet("us-ascii", eTwoByte);
-      pMsgCompFields->SetFrom(from.GetUnicode());
-      //pMsgCompFields->SetTo("rhp@netscape.com", NULL);
-      pMsgCompFields->SetNewsgroups(newsgroup.GetUnicode());
-      pMsgCompFields->SetSubject(subject.GetUnicode());
+      pMsgCompFields->SetFrom(nsAutoString(", rhp@netscape.com, ").GetUnicode());
+      //pMsgCompFields->SetTo(nsAutoString("rhp@netscape.com").GetUnicode());
+      pMsgCompFields->SetNewsgroups(nsAutoString("news://news.mozilla.org./netscape.test").GetUnicode());
+      pMsgCompFields->SetSubject(nsAutoString("[spam] test").GetUnicode());
       // pMsgCompFields->SetTheForcePlainText(PR_TRUE, &rv);
-      pMsgCompFields->SetBody(body.GetUnicode());
-      pMsgCompFields->SetCharacterSet(charSet.GetUnicode());
+      pMsgCompFields->SetBody(nsAutoString(email).GetUnicode());
+      pMsgCompFields->SetCharacterSet(nsAutoString("us-ascii").GetUnicode());
 
       PRInt32 nBodyLength;
-      PRUnichar    *pBody;
+      PRUnichar    *pUnicharBody;
+      char    *pBody;
 
-	    pMsgCompFields->GetBody(&pBody);
+	    pMsgCompFields->GetBody(&pUnicharBody);
+		pBody =  nsAutoString(pUnicharBody).ToNewCString();
 	    if (pBody)
-			nBodyLength = nsCRT::strlen(pBody);
+		    nBodyLength = PL_strlen(pBody);
 	    else
 		    nBodyLength = 0;
 
       nsMsgAttachedFile *ptr = NULL;
       nsMsgAttachmentData *newPtr = NULL;
 
-      nsAutoString2 charBody(pBody, eOneByte);
+      
       newPtr = GetRemoteAttachments();      
       //ptr = GetAttachments();
 
@@ -436,7 +433,7 @@ int main(int argc, char *argv[])
 		nsMsgQueueForLater,				    // nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
 		nsnull, // nsIMessage *msgToReplace
 						    TEXT_HTML, //TEXT_PLAIN,       // const char                        *attachment1_type,
-						    charBody.GetBuffer(),            // const char                        *attachment1_body,
+						    pBody,            // const char                        *attachment1_body,
 						    nBodyLength,      // PRUint32                          attachment1_body_length,
 						    newPtr,           // const struct nsMsgAttachmentData   *attachments,
 						    ptr,              // const struct nsMsgAttachedFile     *preloaded_attachments,
