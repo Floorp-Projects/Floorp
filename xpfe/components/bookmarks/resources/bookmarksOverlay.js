@@ -322,7 +322,7 @@ BookmarksUIElement.prototype = {
     case "bm_fileBookmark":
       var rv = { selectedFolder: null };      
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                 "centerscreen,chrome,modal=yes,dialog=no,resizable=yes", null, null, folder, null, "selectFolder", rv);
+                 "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, folder, null, "selectFolder", rv);
       if (rv.selectedFolder) {
         var additiveFlag = false;
         var selectedItems = [].concat(this.getSelection())
@@ -344,7 +344,7 @@ BookmarksUIElement.prototype = {
     case "newbookmark":
       var folder = this.getSelectedFolder();
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                 "centerscreen,chrome,modal=yes,dialog=no,resizable=no", null, null, folder, null, "newBookmark");
+                 "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, folder, null, "newBookmark");
       break;
     case "newseparator":
       nfseln = this.getBestItem();
@@ -841,7 +841,7 @@ var BookmarksUtils = {
   
     if (aShowDialog)
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                 "centerscreen,chrome,dialog=no,resizable,dependent", aTitle, aURL, null, aCharset);
+                 "centerscreen,chrome,dialog=yes,resizable,dependent", aTitle, aURL, null, aCharset);
     else {
       // User has elected to override the file dialog and always file bookmarks
       // into the default bookmark folder. 
