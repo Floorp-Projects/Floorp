@@ -351,8 +351,11 @@ function Startup()
 
   // set home button tooltip text
   var homePage = getHomePage();
-  if (homePage)
-    document.getElementById("home-button").setAttribute("tooltiptext", homePage);
+  if (homePage) {
+    var homeButton = document.getElementById("home-button");
+    if (homeButton)
+      homeButton.setAttribute("tooltiptext", homePage);
+  }
 
   // initialize observers and listeners
   window.XULBrowserWindow = new nsBrowserStatusHandler();
@@ -3551,6 +3554,9 @@ function BrowserToolbarChanged()
   gProxyButton = document.getElementById("page-proxy-button");
   gProxyFavIcon = document.getElementById("page-proxy-favicon");
   gProxyDeck = document.getElementById("page-proxy-deck");
+  var homeButton = document.getElementById("home-button");
+  if (homeButton)
+    homeButton.setAttribute("tooltiptext", homePage);
 }
 
 function BrowserCustomizeToolbar()
