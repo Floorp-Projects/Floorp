@@ -90,13 +90,14 @@ protected:
   static PRBool IsBlockquote(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);
 
-  static PRBool IsFirstNode(nsIDOMNode *aNode);
-  static PRBool IsLastNode(nsIDOMNode *aNode);
-  static nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
-                                  PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
-  static nsresult GetPromotedRanges(nsIDOMSelection *inSelection, 
-                                   nsCOMPtr<nsISupportsArray> *outArrayOfRanges, 
-                                   PRInt32 inOperationType);
+  PRBool IsFirstNode(nsIDOMNode *aNode);
+  PRBool IsLastNode(nsIDOMNode *aNode);
+  nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
+                            PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
+
+  nsresult GetPromotedRanges(nsIDOMSelection *inSelection, 
+                             nsCOMPtr<nsISupportsArray> *outArrayOfRanges, 
+                             PRInt32 inOperationType);
   static nsresult GetNodesForOperation(nsISupportsArray *inArrayOfRanges, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes, 
                                    PRInt32 inOperationType);

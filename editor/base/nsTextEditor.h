@@ -22,6 +22,7 @@
 #include "nsITextEditor.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMElement.h"
 #include "nsEditor.h"
 #include "nsTextEditRules.h"
 #include "TypeInState.h"
