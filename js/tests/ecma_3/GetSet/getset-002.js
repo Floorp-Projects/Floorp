@@ -21,40 +21,36 @@
  * Contributor(s): 
  * Rob Ginda rginda@netscape.com
  */
-    
-function TestObject ()
-{
-    /* A warm, dry place for properties and methods to live */
+
+var t = {    
+    _y: "<initial y>",
+
+    y getter: function get_y ()
+    {
+        var rv;
+        if (typeof this._y == "string")
+            rv = "got " + this._y;
+        else
+            rv = this._y;
+
+        return rv;
+    },
+
+    y setter: function set_y (newVal)
+    {
+        this._y = newVal;
+    }
 }
 
-TestObject.prototype._y = "<initial y>";
-    
-TestObject.prototype.y getter =
-function get_y ()
-{
-    var rv;
-    
-    if (typeof this._y == "string")
-        rv = "got " + this._y;
-    else
-        rv = this._y;
-    
-    return rv;
-}
 
-TestObject.prototype.y setter =
-function set_y (newVal)
-{
-    this._y = newVal;
-}
-
-test(new TestObject());
+test(t);
 
 function test(t)
 {
     enterFunc ("test");
     
-    printStatus ("Basic Getter/ Setter test");
+    printStatus ("Basic Getter/ Setter test (object literal notation)");
+
     reportCompare ("<initial y>", t._y, "y prototype check");
 
     reportCompare ("got <initial y>", t.y, "y getter, before set");
@@ -69,4 +65,4 @@ function test(t)
     t.y = d;
     reportCompare (d, t.y, "y getter, after date set");
 
-}
+}        
