@@ -410,6 +410,10 @@ nsInlineReflow::ComputeAvailableSize()
     mFrameAvailSize.height = mBottomEdge - pfd->mBounds.y -
       pfd->mMargin.bottom;
   }
+  if (mOuterReflowState.mNoWrap) {
+    mFrameAvailSize.width = mOuterReflowState.maxSize.width;
+    return PR_TRUE;
+  }
 
   // Give up now if there is no chance. Note that we allow a reflow if
   // the available space is zero because that way things that end up
