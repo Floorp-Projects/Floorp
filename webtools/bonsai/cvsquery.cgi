@@ -183,6 +183,10 @@ if (defined $form{'generateBackoutCVSCommands'}) {
 
 ";
     foreach my $ci (@{$result}) {
+        if ($ci->[$CI_REV] eq "") {
+            print "echo 'Changes made to $ci->[$CI_DIR]/$ci->[$CI_FILE] need to be backed out by hand'\n";
+            next;
+        }
         my $prev_revision = PrevRev($ci->[$CI_REV]);
         print "cvs update -j$ci->[$CI_REV] -j$prev_revision $ci->[$CI_DIR]/$ci->[$CI_FILE]\n";
     }
@@ -671,4 +675,3 @@ sub query_to_english {
     }
     return $english . ":";
 }
-
