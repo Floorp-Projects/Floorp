@@ -1590,10 +1590,6 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
     nsresult rv = NS_OK;
 
     if (! mScriptObject) {
-        NS_ASSERTION(mDocument != nsnull, "element has no document");
-        if (! mDocument)
-            return NS_ERROR_NOT_INITIALIZED;
-
         // The actual script object that we create will depend on our
         // tag...
         nsresult (*fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
