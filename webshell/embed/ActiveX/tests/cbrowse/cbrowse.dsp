@@ -223,6 +223,14 @@ SOURCE=.\res\testfailed.ico
 SOURCE=.\res\testpassed.ico
 # End Source File
 # End Group
+# Begin Group "Scripts"
+
+# PROP Default_Filter "js;vbs"
+# Begin Source File
+
+SOURCE=.\Scripts\Basic.vbs
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\Cbrowse.rgs
