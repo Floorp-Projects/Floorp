@@ -224,6 +224,10 @@ NS_METHOD nsBaseWidget::Destroy()
     parent->RemoveChild(this);
     NS_RELEASE(parent);
   }
+  // disconnect listeners.
+  NS_IF_RELEASE(mMouseListener);
+  NS_IF_RELEASE(mEventListener);
+  NS_IF_RELEASE(mMenuListener);
   return NS_OK;
 }
 
@@ -605,6 +609,8 @@ NS_METHOD nsBaseWidget::SetTitle(const nsString& aTitle)
 NS_METHOD nsBaseWidget::AddMouseListener(nsIMouseListener * aListener)
 {
   NS_PRECONDITION(mMouseListener == nsnull, "Null mouse listener");
+  NS_IF_RELEASE(mMouseListener);
+  NS_ADDREF(aListener);
   mMouseListener = aListener;
   return NS_OK;
 }
@@ -616,6 +622,8 @@ NS_METHOD nsBaseWidget::AddMouseListener(nsIMouseListener * aListener)
 NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
 {
   NS_PRECONDITION(mEventListener == nsnull, "Null mouse listener");
+  NS_IF_RELEASE(mEventListener);
+  NS_ADDREF(aListener);
   mEventListener = aListener;
   return NS_OK;
 }
