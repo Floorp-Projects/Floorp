@@ -40,6 +40,17 @@
 
 #include "npplat.h"
 
+struct nsPluginCreateData
+{
+  NPP instance;
+  NPMIMEType type; 
+  uint16 mode; 
+  int16 argc; 
+  char** argn; 
+  char** argv; 
+  NPSavedData* saved;
+};
+
 class nsPluginInstanceBase
 {
 public:
@@ -70,7 +81,7 @@ public:
 // functions that should be implemented for each specific plugin
 
 // creation and destruction of the object of the derived class
-nsPluginInstanceBase * NS_NewPluginInstance(NPP aInstance);
+nsPluginInstanceBase * NS_NewPluginInstance(nsPluginCreateData * aCreateDataStruct);
 void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin);
 
 // global plugin initialization and shutdown
