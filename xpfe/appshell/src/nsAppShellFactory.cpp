@@ -47,8 +47,8 @@
 #include "nsDialogParamBlock.h"
 #include "nsFileLocations.h"
 
-/* right now, only unix has user info, but mac and windows implementations are coming soon */
-#ifdef XP_UNIX
+/* right now, only unix and windows have implementations of nsIUserInfo.  mac is coming soon. */
+#if defined(XP_UNIX) || defined(XP_PC)
 #define HAVE_USER_INFO 1
 #endif /* XP_UNIX */
 

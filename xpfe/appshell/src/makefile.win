@@ -46,6 +46,7 @@ CPPSRCS=                                \
  nsDialogParamBlock.cpp \
  nsCommonDialogs.cpp \
  nsAbout.cpp \
+ nsUserInfoWin.cpp \
  $(NULL)
 
 CPP_OBJS=                               \
@@ -67,6 +68,7 @@ CPP_OBJS=                               \
     .\$(OBJDIR)\nsDialogParamBlock.obj \
 	.\$(OBJDIR)\nsCommonDialogs.obj \
 	.\$(OBJDIR)\nsAbout.obj \
+	.\$(OBJDIR)\nsUserInfoWin.obj \
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
