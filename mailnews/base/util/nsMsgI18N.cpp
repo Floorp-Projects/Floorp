@@ -120,6 +120,9 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
           currentSrcPtr += srcLength;
           consumedLen = currentSrcPtr - originalSrcPtr; // src length used so far
         }
+        res = encoder->Finish(localbuf, &dstLength);
+        if (NS_SUCCEEDED(res))
+          outString.Append(localbuf, dstLength);
       }
     }    
   }
