@@ -3943,6 +3943,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_PAINT:
             result = OnPaint();
             break;
+
+        case WM_PRINTCLIENT:
+            result = OnPaint((HDC) wParam);
+            break;
+			
 	case WM_SYSCHAR:
 	case WM_CHAR: 
         {
@@ -5177,7 +5182,7 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 // Paint
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::OnPaint()
+PRBool nsWindow::OnPaint(HDC aDC)
 {
     nsRect    bounds;
     PRBool result = PR_TRUE;
@@ -5196,11 +5201,17 @@ PRBool nsWindow::OnPaint()
     }
 #endif // NS_DEBUG
 
-    HDC hDC = ::BeginPaint(mWnd, &ps);
-
-    // XXX What is this check doing? If it's trying to check for an empty
-    // paint rect then use the IsRectEmpty() function...
-    if (ps.rcPaint.left || ps.rcPaint.right || ps.rcPaint.top || ps.rcPaint.bottom) {
+    HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
+    RECT paintRect;
+    if (aDC) {
+      ::GetClientRect(mWnd, &paintRect);
+    }
+    else {
+      paintRect = ps.rcPaint;
+    }
+			
+    if (!IsRectEmpty(&paintRect))
+    {
         // call the event callback 
         if (mEventCallback) 
         {
@@ -5209,10 +5220,10 @@ PRBool nsWindow::OnPaint()
 
             InitEvent(event, NS_PAINT);
 
-            nsRect rect(ps.rcPaint.left, 
-                        ps.rcPaint.top, 
-                        ps.rcPaint.right - ps.rcPaint.left, 
-                        ps.rcPaint.bottom - ps.rcPaint.top);
+            nsRect rect(paintRect.left, 
+                        paintRect.top, 
+                        paintRect.right - paintRect.left, 
+                        paintRect.bottom - paintRect.top);
             event.eventStructType = NS_PAINT_EVENT;
             event.region = nsnull;
             event.rect = &rect;
@@ -5259,7 +5270,9 @@ PRBool nsWindow::OnPaint()
         }
     }
 
-    ::EndPaint(mWnd, &ps);
+    if (!aDC) {
+      ::EndPaint(mWnd, &ps);
+    }
 
 #ifdef NS_DEBUG
     if (debug_WantPaintFlashing())
