@@ -387,3 +387,88 @@ nsIOService::SetOffline(PRBool offline)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// URL parsing utilities
+
+NS_IMETHODIMP
+nsIOService::Escape(const char *str, PRInt16 mask, char **result)
+{
+    // XXX Andreas
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsIOService::Unescape(const char *str, char **result)
+{
+    // XXX Andreas
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsIOService::ExtractPort(const char *str, PRInt32 *result)
+{
+    // XXX Andreas
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsIOService::ResolveRelativePath(const char *relativePath, const char* basePath,
+                                 char **result)
+{
+    nsCAutoString name;
+    nsCAutoString path(basePath);
+
+    PRUnichar last = path.Last();
+    PRBool needsDelim = !(last == '/' || last == '\\' || last == '\0');
+
+    PRBool end = PR_FALSE;
+    char c;
+    while (!end) {
+        c = *relativePath++;
+        switch (c) {
+          case '\0':
+          case '#':
+          case ';':
+          case '?':
+            end = PR_TRUE;
+            // fall through...
+          case '/':
+          case '\\':
+            // delimiter found
+            if (name.Equals("..")) {
+                // pop path
+                PRInt32 pos = path.RFind("/");
+                if (pos > 0) {
+                    path.Truncate(pos + 1);
+                    path += name;
+                }
+                else {
+                    return NS_ERROR_MALFORMED_URI;
+                }
+            }
+            else if (name.Equals(".") || name.Equals("")) {
+                // do nothing
+            }
+            else {
+                // append name to path
+                if (needsDelim)
+                    path += "/";
+                path += name;
+                needsDelim = PR_TRUE;
+            }
+            name = "";
+            break;
+
+          default:
+            // append char to name
+            name += c;
+        }
+    }
+    // append anything left on relativePath (e.g. #..., ;..., ?...)
+    if (c != '\0')
+        path += --relativePath;
+
+    *result = path.ToNewCString();
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
