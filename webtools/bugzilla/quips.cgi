@@ -27,6 +27,7 @@ use strict;
 
 use vars qw(
   %FORM
+  $userid
   $template
   $vars
 );
@@ -68,7 +69,7 @@ if ($action eq "add") {
         exit();
     }
 
-    SendSQL("INSERT INTO quips (userid, quip) VALUES (". $::userid . ", " . SqlQuote($comment) . ")");
+    SendSQL("INSERT INTO quips (userid, quip) VALUES (". $userid . ", " . SqlQuote($comment) . ")");
 
     $vars->{'added_quip'} = $comment;
 }
