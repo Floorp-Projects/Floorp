@@ -832,6 +832,8 @@ JSValue JSValue::convert(JSType *toType)
         return *this;
     else if (toType == &Integer_Type)
         return valueToInteger(*this);
+    else if (toType == &String_Type)
+        return valueToString(*this);
     else {
         JSClass *toClass = dynamic_cast<JSClass *>(toType);
         if (toClass) {
