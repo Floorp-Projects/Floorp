@@ -192,18 +192,6 @@ int main(int argc, char* argv[])
       fprintf(stderr, "URL to load is %s\n", urlstr);
 
 
-  // Check if -iconic was set
-  rv = cmdLineArgs->GetCmdLineValue("-iconic", &iconic_state);
-  if (NS_FAILED(rv)) {
-     goto done;
-  }
-  if (nsnull == iconic_state) {
-    fprintf(stderr, "iconic  state not set\n");
-  } else {
-    fprintf(stderr, "iconic state set \n");
-  }
-  
- 
   // Get the value of -width option
   rv = cmdLineArgs->GetCmdLineValue("-width", &width);
   if (NS_FAILED(rv)) {
