@@ -345,30 +345,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
  */
 nsresult nsImagePh :: Optimize(nsIDeviceContext* aContext)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Optimize - Not Implemented\n" ));
-
-#if 0
-  // REVISIT - we only need to fix images for the screen device (not printers, etc)
-  // Fix the RGB ordering for 24-bit images (swap red and blue values)...
-
-  if( mImageBits && ( mNumBytesPixel == 3 ))
-  {
-    int x,off,off2,xm;
-    char c;
-    xm = mWidth*3;
-    for(off=0;off<mSizeImage;off+=mRowBytes)
-    {
-      off2 = off+2;
-      for(x=0;x<xm;x+=3)
-      {
-        c = mImageBits[off+x];
-        mImageBits[off+x] = mImageBits[off2+x];
-        mImageBits[off2+x] = c;
-      }
-    }
-    mIsOptimized = PR_TRUE;
-  }
-#endif
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Optimize\n" ));
 
   return NS_OK;
 }
