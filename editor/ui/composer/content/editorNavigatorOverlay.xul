@@ -28,7 +28,7 @@
     <menuitem id="context-editpage"
               label="&editPageCmd.label;"
               accesskey="&editPageCmd.accesskey;"
-              oncommand="overlay_editPage(gContextMenu.target.ownerDocument);"
+              oncommand="editDocument(gContextMenu.target.ownerDocument);"
               insertafter="context-sep-save"/>
     <menuitem id="context-editlink"
               label="&editLinkCmd.label;"

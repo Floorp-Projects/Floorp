@@ -37,28 +37,6 @@
 
 /* Implementations of nsIControllerCommand for composer commands */
 
-function editLink(aLinkURL)
-{
-  urlSecurityCheck(aLinkURL, window.document);  // XXX what is this? Why do we pass the chrome doc?
-  editPage(aLinkURL, window, false);
-}
-
-// XXX Cleanup needed here! Specifically:
-//     1) rename this function to |editPage|
-//     2) move |editPage| from utilityOverlay.js into this file, as well as any UI that uses it
-//        (which, at time of writing, is:
-//         * view source "edit page" menu item
-//         * navigator "edit page" menu item
-//         * "Open in Composer" item in Open Location dialog
-//        |editPage| should be renamed |editURL|
-function overlay_editPage(aDocument)      
-{
-  if (!aDocument)
-    aDocument = window._content.document;
-  
-  editPage(aDocument.URL, window, false); 
-}
-
 function initEditorContextMenuItems(aEvent)
 {
   var shouldShowEditPage = !gContextMenu.onImage && !gContextMenu.onLink && !gContextMenu.onTextInput && !gContextMenu.inDirList;
@@ -78,6 +56,20 @@ function initEditorContextMenuListener(aEvent)
 }
 
 addEventListener("load", initEditorContextMenuListener, false);
+
+function editLink(aLinkURL)
+{
+  urlSecurityCheck(aLinkURL, window.document);  // XXX what is this? Why do we pass the chrome doc?
+  editPage(aLinkURL, window, false);
+}
+
+function editDocument(aDocument)      
+{
+  if (!aDocument)
+    aDocument = window._content.document;
+  
+  editPage(aDocument.URL, window, false); 
+}
 
 function editPageOrFrame()
 {
