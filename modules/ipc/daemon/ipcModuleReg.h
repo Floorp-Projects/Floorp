@@ -61,8 +61,6 @@ void IPC_ShutdownModuleReg();
 //
 ipcModuleMethods *IPC_GetModuleByTarget(const nsID &target);
 
-// XXX "handle msg for target" instead
-
 //
 // notifies all modules of client connect/disconnect
 //

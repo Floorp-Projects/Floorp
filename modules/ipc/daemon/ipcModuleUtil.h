@@ -46,7 +46,8 @@ extern const ipcDaemonMethods *gIPCDaemonMethods;
 //-----------------------------------------------------------------------------
 // inline wrapper functions
 // 
-// XXX only usable inside module.. blah
+// these functions may only be called by a module that uses the
+// IPC_IMPL_GETMODULES macro.
 //-----------------------------------------------------------------------------
 
 inline PRStatus
@@ -89,13 +90,6 @@ IPC_GetClientID(ipcClientHandle client)
 {
     PR_ASSERT(gIPCDaemonMethods);
     return gIPCDaemonMethods->getClientID(client);
-}
-
-inline const char *
-IPC_GetPrimaryClientName(ipcClientHandle client)
-{
-    PR_ASSERT(gIPCDaemonMethods);
-    return gIPCDaemonMethods->getPrimaryClientName(client);
 }
 
 inline PRBool
@@ -143,14 +137,15 @@ IPC_SendMsg(PRUint32 clientID, const nsID &target, const void *data, PRUint32 da
 // module factory macros
 //-----------------------------------------------------------------------------
 
-#define IPC_IMPL_GETMODULES(_modName, _modEntries)                                \
-    const ipcDaemonMethods *gIPCDaemonMethods;                                    \
-    IPC_EXPORT int                                                                \
-    IPC_GetModules(const ipcDaemonMethods *dmeths, const ipcModuleEntry **ents) { \
-        /* XXX do version checking */                                             \
-        gIPCDaemonMethods = dmeths;                                               \
-        *ents = _modEntries;                                                      \
-        return sizeof(_modEntries) / sizeof(ipcModuleEntry);                      \
+#define IPC_IMPL_GETMODULES(_modName, _modEntries)                  \
+    const ipcDaemonMethods *gIPCDaemonMethods;                      \
+    IPC_EXPORT int                                                  \
+    IPC_GetModules(const ipcDaemonMethods *dmeths,                  \
+                   const ipcModuleEntry **ents) {                   \
+        /* XXX do version checking */                               \
+        gIPCDaemonMethods = dmeths;                                 \
+        *ents = _modEntries;                                        \
+        return sizeof(_modEntries) / sizeof(ipcModuleEntry);        \
     }
 
 #endif // !ipcModuleUtil_h__

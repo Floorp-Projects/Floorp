@@ -40,9 +40,6 @@
 
 #include "nsID.h"
 
-// XXX cruft
-#define IPC_EXPORT extern "C" NS_EXPORT
-
 class ipcMessage;
 
 //
@@ -122,6 +119,9 @@ struct ipcModuleMethods
 //
 #define IPC_DAEMON_METHODS_VERSION (1<<16) // 1.0
 
+//
+// enumeration functions may return FALSE to stop enumeration.
+//
 typedef PRBool (* ipcClientEnumFunc)       (void *closure, ipcClientHandle client, PRUint32 clientID);
 typedef PRBool (* ipcClientNameEnumFunc)   (void *closure, ipcClientHandle client, const char *name);
 typedef PRBool (* ipcClientTargetEnumFunc) (void *closure, ipcClientHandle client, const nsID &target);
@@ -197,12 +197,6 @@ struct ipcDaemonMethods
     PRUint32 (* getClientID) (ipcClientHandle client);
 
     //
-    // returns the primary client name (NULL if the client did not specify a
-    // name).  this is the first element returned via |enumClientNames|.
-    //
-    const char * (* getPrimaryClientName) (ipcClientHandle client);
-
-    //
     // functions for inspecting the names and targets defined for a particular
     // client instance.
     //
@@ -228,6 +222,10 @@ struct ipcModuleEntry
     //
     ipcModuleMethods *methods;
 };
+
+//-----------------------------------------------------------------------------
+
+#define IPC_EXPORT extern "C" NS_EXPORT
 
 //
 // IPC_EXPORT int IPC_GetModules(const ipcDaemonMethods *, const ipcModuleEntry **);

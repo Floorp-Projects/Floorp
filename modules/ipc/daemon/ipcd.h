@@ -54,7 +54,6 @@ ipcClientHandle IPC_GetClientByID        (PRUint32 id);
 ipcClientHandle IPC_GetClientByName      (const char *name);
 void            IPC_EnumClients          (ipcClientEnumFunc func, void *closure);
 PRUint32        IPC_GetClientID          (ipcClientHandle client);
-const char     *IPC_GetPrimaryClientName (ipcClientHandle client);
 PRBool          IPC_ClientHasName        (ipcClientHandle client, const char *name);
 PRBool          IPC_ClientHasTarget      (ipcClientHandle client, const nsID &target);
 void            IPC_EnumClientNames      (ipcClientHandle client, ipcClientNameEnumFunc func, void *closure);
