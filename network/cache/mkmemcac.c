@@ -2049,6 +2049,7 @@ NET_InitMemCacProtocol(void)
     NET_RegisterProtocolImplementation(&mem_cac_proto_impl, MEMORY_CACHE_TYPE_URL);
 }
 
+#ifdef NU_CACHE
 typedef struct _NuCacheConData {
     void*           cache_object;
     NET_StreamClass *stream;
@@ -2208,5 +2209,5 @@ NET_InitNuCacheProtocol(void)
 
     NET_RegisterProtocolImplementation(&nu_cache_proto_impl, NU_CACHE_TYPE_URL);
 }
-
+#endif /* NU_CACHE */
 #endif /* MOZILLA_CLIENT */
