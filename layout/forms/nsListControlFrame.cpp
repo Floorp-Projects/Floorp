@@ -51,6 +51,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsILookAndFeel.h"
+#include "nsLayoutAtoms.h"
 
 #include "nsISelectElement.h"
 
@@ -72,7 +73,8 @@ const PRInt32 kNoSizeSpecified          = -1;
 //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
 // -moz-option-selected in the ua.css style sheet. This will not be needed when
 //The event state manager is functional. KMM
-const char * kMozSelected = "-moz-option-selected";
+//const char * kMozSelected = "-moz-option-selected";
+// it is now using "nsLayoutAtoms::optionSelectedPseudo"
 
 //---------------------------------------------------------
 nsresult
@@ -93,18 +95,15 @@ NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame()
 {
-  mHitFrame           = nsnull;
   mSelectedIndex      = kNothingSelected;
   mComboboxFrame      = nsnull;
   mFormFrame          = nsnull;
   mButtonDown         = PR_FALSE;
-  mLastFrame          = nsnull;
   mMaxWidth           = 0;
   mMaxHeight          = 0;
   mPresContext        = nsnull;
   mEndExtendedIndex   = kNothingSelected;
   mStartExtendedIndex = kNothingSelected;
-  mIgnoreMouseUp      = PR_FALSE;
   mIsCapturingMouseEvents = PR_FALSE;
   mSelectionCache     = nsnull;
   mSelectionCacheLength = -1;
@@ -429,8 +428,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     padding.SizeTo(0, 0, 0, 0);
   }
 
-  mBorderOffsetY = border.top;
-
   scrolledAreaWidth  -= (border.left + border.right + padding.left + padding.right);
   scrolledAreaHeight -= (border.top + border.bottom);
 
@@ -672,14 +669,12 @@ nsListControlFrame::DisplaySelected(nsIContent* aContent)
    // -moz-option-selected in the ua.css style sheet. This will not be needed when
    // The event state manager supports selected states. KMM
   
-  nsIAtom * selectedAtom = NS_NewAtom(kMozSelected);
   if (PR_TRUE == mIsAllFramesHere) {
-    aContent->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_TRUE);
+    aContent->SetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, "", PR_TRUE);
     //ForceRedraw();
   } else {
-    aContent->SetAttribute(kNameSpaceID_None, selectedAtom, "", PR_FALSE);
+    aContent->SetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, "", PR_FALSE);
   }
-  NS_RELEASE(selectedAtom);
 }
 
 //---------------------------------------------------------
@@ -689,15 +684,12 @@ nsListControlFrame::DisplayDeselected(nsIContent* aContent)
    //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
    // -moz-option-selected in the ua.css style sheet. This will not be needed when
    // The event state manager is functional. KMM
-
-  nsIAtom * selectedAtom = NS_NewAtom(kMozSelected);
   if (PR_TRUE == mIsAllFramesHere) {
-    aContent->UnsetAttribute(kNameSpaceID_None, selectedAtom, PR_TRUE);
+    aContent->UnsetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, PR_TRUE);
     //ForceRedraw();
   } else {
-    aContent->UnsetAttribute(kNameSpaceID_None, selectedAtom, PR_FALSE);
+    aContent->UnsetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, PR_FALSE);
   }
-  NS_RELEASE(selectedAtom);
 
 }
 
@@ -1095,7 +1087,6 @@ nsListControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
       mHasBeenInitialized = PR_FALSE;
     }
   }
-  mContentFrame = aChildList;
   nsresult rv = nsScrollFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   // If all the content is here now check
@@ -1365,10 +1356,8 @@ PRBool
 nsListControlFrame::IsContentSelected(nsIContent* aContent)
 {
   nsString value; 
-  nsIAtom * selectedAtom = NS_NewAtom(kMozSelected);
   //nsIAtom * selectedAtom = NS_NewAtom("selected");
-  nsresult result = aContent->GetAttribute(kNameSpaceID_None, selectedAtom, value);
-  NS_RELEASE(selectedAtom);
+  nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, value);
 
   return (NS_CONTENT_ATTR_NOT_THERE == result ? PR_FALSE : PR_TRUE);
 }

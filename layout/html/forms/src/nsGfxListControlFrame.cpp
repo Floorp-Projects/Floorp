@@ -95,18 +95,15 @@ NS_NewGfxListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 //---------------------------------------------------------
 nsGfxListControlFrame::nsGfxListControlFrame()
 {
-  mHitFrame           = nsnull;
   mSelectedIndex      = kNothingSelected;
   mComboboxFrame      = nsnull;
   mFormFrame          = nsnull;
   mButtonDown         = PR_FALSE;
-  mLastFrame          = nsnull;
   mMaxWidth           = 0;
   mMaxHeight          = 0;
   mPresContext        = nsnull;
   mEndExtendedIndex   = kNothingSelected;
   mStartExtendedIndex = kNothingSelected;
-  mIgnoreMouseUp      = PR_FALSE;
   mIsCapturingMouseEvents = PR_FALSE;
   mSelectionCache     = nsnull;
   mSelectionCacheLength = -1;
@@ -447,9 +444,6 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
     NS_NOTYETIMPLEMENTED("percentage padding");
     padding.SizeTo(0, 0, 0, 0);
   }
-
-  mBorderOffsetY = border.top;
-
 
   // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
   // wide and high enough to enclose their contents
@@ -1121,7 +1115,6 @@ nsGfxListControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
     }
   }
 
-  mContentFrame = aChildList;
   nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   // If all the content is here now check

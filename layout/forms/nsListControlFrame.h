@@ -221,31 +221,24 @@ protected:
   nsresult SelectionChanged(nsIContent* aContent);
   
   // Data Members
-  nscoord      mBorderOffsetY;
   nsFormFrame* mFormFrame;
   PRInt32      mSelectedIndex;
   PRInt32      mOldSelectedIndex;
   PRInt32      mSelectedIndexWhenPoppedDown;
   PRInt32      mStartExtendedIndex;
   PRInt32      mEndExtendedIndex;
-  nsIFrame*    mHitFrame;
   PRBool       mIsInitializedFromContent;
-  nsIFrame*    mContentFrame;
   nsIComboboxControlFrame *mComboboxFrame;
   PRBool       mButtonDown;
-  nsIFrame*    mLastFrame;
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
   PRBool       mIsCapturingMouseEvents;
-  PRBool       mIgnoreMouseUp;             
   PRBool*      mSelectionCache;
   PRInt32      mSelectionCacheLength;
 
   PRBool       mIsAllContentHere;
   PRBool       mIsAllFramesHere;
   PRBool       mHasBeenInitialized;
-
-  nsIFrame *   mMainChild;
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
