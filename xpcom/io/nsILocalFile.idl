@@ -170,8 +170,3 @@ interface nsILocalFile : nsIFile
     void setRelativeDescriptor(in nsILocalFile fromFile, in ACString relativeDesc);    
 };
 
-%{C++
-#define NS_LOCAL_FILE_CONTRACTID "@mozilla.org/file/local;1"
-#define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
-
-%}

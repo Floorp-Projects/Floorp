@@ -351,7 +351,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT_SUPPORTS(INTERFACE_POINTER, InterfacePointer),
 
 #undef COMPONENT_SUPPORTS
-
+#define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
     COMPONENT(LOCAL_FILE, nsLocalFile::nsLocalFileConstructor),
 #define NS_DIRECTORY_SERVICE_CLASSNAME  "nsIFile Directory Service"
     COMPONENT(DIRECTORY_SERVICE, nsDirectoryService::Create),

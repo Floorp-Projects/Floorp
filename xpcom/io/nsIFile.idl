@@ -317,8 +317,6 @@ interface nsIFile : nsISupports
 };
 
 %{C++
-#define NS_FILE_CONTRACTID "@mozilla.org/file;1"
-#define NS_FILE_CLASSNAME "File Specification"
 #ifndef MOZILLA_STRICT_API
 #include "nsDirectoryServiceUtils.h" 
 #endif

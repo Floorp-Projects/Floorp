@@ -24,7 +24,7 @@
 #include "nsAString.h"
 #include "nsDependentSubstring.h"
 #include "nsDependentString.h"
-#include "nsCRT.h"
+#include "plstr.h"
 
 
 int
@@ -520,7 +520,12 @@ nsDefaultCStringComparator::operator()( char_type lhs, char_type rhs ) const
 int
 nsCaseInsensitiveCStringComparator::operator()( const char_type* lhs, const char_type* rhs, PRUint32 aLength ) const
   {
-    return nsCRT::strncasecmp(lhs, rhs, aLength);
+    PRInt32 result=PRInt32(PL_strncasecmp(lhs, rhs, aLength));
+    //Egads. PL_strncasecmp is returning *very* negative numbers.
+    //Some folks expect -1,0,1, so let's temper its enthusiasm.
+    if (result<0) 
+      result=-1;
+    return result;
   }
 
 PRBool
