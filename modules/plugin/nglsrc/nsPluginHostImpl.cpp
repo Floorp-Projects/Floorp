@@ -3038,12 +3038,12 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
   if (NS_SUCCEEDED(rv)) {
     // All done! Create the new nsPluginTag info and send it back.
     nsPluginTag* tag
-      = new nsPluginTag(name,
-                        description,
-                        filename,
-                        mimetypes,
-                        mimedescriptions,
-                        extensions,
+      = new nsPluginTag(name.get(),
+                        description.get(),
+                        filename.get(),
+                        (const char* const*)mimetypes,
+                        (const char* const*)mimedescriptions,
+                        (const char* const*)extensions,
                         count);
 
     if (! tag)
