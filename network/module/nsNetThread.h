@@ -22,6 +22,9 @@
 
 #include "nspr.h"
 #include "plevent.h"
+#include "net.h" /* needed for net_CallExitRoutineProxy prototype below */
+#include "nsIStreamListener.h" /* needed for ns_NewStreamListenerProxy prototype below */
+#include "nsINetService.h" /* needed for NS_InitializeHttpURLFactory prototype below */
 
 class nsNetlibThread
 {
@@ -41,6 +44,20 @@ private:
     PREventQueue* mNetlibEventQueue;
     PRThread* mThread;
 };
+
+extern "C" void NET_ClientProtocolInitialize();
+nsresult NS_InitNetlib(void);
+nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener);
+
+extern "C" MODULE_PRIVATE void
+net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
+                         URL_Struct*         URL_s,
+                         int                 status,
+                         FO_Present_Types    format_out,
+                         MWContext*          window_id);
+
+extern "C" NS_NET nsresult
+NS_InitializeHttpURLFactory(nsINetService* inet);
 
 #endif /* nsNetThread_h__ */
 
