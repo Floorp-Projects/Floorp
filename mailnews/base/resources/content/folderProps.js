@@ -102,7 +102,7 @@ var gFolderPropsSink = {
 };
 
 
-function folderPropsOKButtonCallback()
+function folderPropsOKButton()
 {
   if (gMsgFolder)
   {
@@ -123,13 +123,12 @@ function folderPropsOKButtonCallback()
     else
       gMsgFolder.clearFlag(MSG_FOLDER_FLAG_CHECK_NEW);
   }
-  window.close();
+  return true;
 }
 
 function folderPropsOnLoad()
 {
   dump("folder props loaded"+'\n');
-  doSetOKCancel(folderPropsOKButtonCallback);
 
   RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 

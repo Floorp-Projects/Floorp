@@ -23,17 +23,16 @@
                      Lorenzo Colitti         <lorenzo@colitti.com> 
 -->
 
-<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/folderProps.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/folderProps.dtd">
-
-<window
+<dialog
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&folderProps.windowtitle.label;"
+  buttons="accept,cancel"
   onload="folderPropsOnLoad()" style="width: 36em;"
-  class="dialog">
+  ondialogaccept="return folderPropsOKButton();">
  
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
@@ -44,8 +43,6 @@
     observerService.notifyObservers(null, "charsetmenu-selected", "other");
   ]]>
   </script>
-
-<keyset id="dialogKeys"/>  
 
 <tabbox>
   <tabs>
@@ -139,5 +136,4 @@
   </tabpanels>
 </tabbox>
 
-<hbox align="right" id="okCancelButtonsRight"/>
-</window>
+</dialog>
