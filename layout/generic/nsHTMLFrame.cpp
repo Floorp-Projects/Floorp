@@ -299,13 +299,6 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       kidFrame->SetRect(rect);
     }
 
-    // If this is a resize reflow or the initial reflow, then do a repaint
-    if ((eReflowReason_Initial == aReflowState.reason) ||
-        (eReflowReason_Resize == aReflowState.reason)) {
-      nsRect  damageRect(0, 0, aReflowState.availableWidth, aReflowState.availableHeight);
-      Invalidate(damageRect, PR_FALSE);
-    }
-
     // Return our desired size
     aDesiredSize.width = kidDesiredSize.width + kidReflowState.mComputedMargin.left +
       kidReflowState.mComputedMargin.right;
