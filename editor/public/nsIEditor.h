@@ -208,9 +208,11 @@ public:
   /**
    * Output methods flags:
    */
-  const PRUint32 EditorOutputSelectionOnly = 1;
-  const PRUint32 EditorOutputFormatted = 2;
-  const PRUint32 EditorOutputNoDoctype = 4;
+  enum {
+    EditorOutputSelectionOnly = 1,
+    EditorOutputFormatted     = 2,
+    EditorOutputNoDoctype     = 4
+  };
 
   /**
    * Output methods:
