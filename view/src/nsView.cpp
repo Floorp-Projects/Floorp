@@ -994,6 +994,10 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
   while (PR_TRUE) {
     const nsView* zParent = view->GetZParent();
     const nsView* parentView = view->GetParent();
+#if 0
+    // For now, we're disabling this code. This means that we only honor clipping
+    // set by parent elements which are containing block ancestors of this content.
+
     if (zParent) {
       // This view was reparented. We need to continue collecting clip
       // rects from the zParent.
@@ -1020,6 +1024,7 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
       parentView = zParent;
       // Now start again at zParent to collect all its clip information
     }
+#endif
     
     if (!parentView) {
       break;
