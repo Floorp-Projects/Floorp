@@ -76,6 +76,9 @@ PRUint32 nsWidget::sWidgetCount = 0;
 // this is the nsWindow with the focus
 nsWidget *nsWidget::focusWindow = NULL;
 
+// this is the last time that an event happened.  we keep this
+// around so that we can synth drag events properly
+guint32 nsWidget::sLastEventTime = 0;
 
 PRBool nsWidget::OnInput(nsInputEvent &aEvent)
 {
@@ -99,6 +102,18 @@ PRBool nsWidget::OnInput(nsInputEvent &aEvent)
     NS_RELEASE(widget);
 
   return ret;
+}
+
+
+void nsWidget::SetLastEventTime(guint32 aTime)
+{
+  sLastEventTime = aTime;
+}
+
+void nsWidget::GetLastEventTime(guint32 *aTime)
+{
+  if (aTime)
+    *aTime = sLastEventTime;
 }
 
 nsresult nsWidget::KillICSpotTimer ()
@@ -169,6 +184,7 @@ nsCOMPtr<nsIRollupListener> nsWidget::gRollupListener;
 nsCOMPtr<nsIWidget>         nsWidget::gRollupWidget;
 PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
 PRBool             nsWidget::mGDKHandlerInstalled = PR_FALSE;
+PRBool             nsWidget::mTimeCBSet = PR_FALSE;
 
 #ifdef NS_DEBUG
 // debugging window
@@ -262,6 +278,24 @@ nsWidget::nsWidget()
     // It is most convenient for us to intercept our events after
     // they have been converted to GDK, but before GTK+ gets them
     gdk_event_handler_set (handle_gdk_event, NULL, NULL);
+  }
+  if (mTimeCBSet == PR_FALSE) {
+    mTimeCBSet = PR_TRUE;
+    nsCOMPtr<nsIDragService> dragService;
+    nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
+                                               nsIDragService::GetIID(),
+                                               (nsISupports **)&dragService);
+    if (NS_FAILED(rv)) {
+      g_print("*** warning: failed to get the drag service. this is a _bad_ thing.\n");
+      mTimeCBSet = PR_FALSE;
+    }
+    nsCOMPtr<nsIDragSessionGTK> dragServiceGTK;
+    dragServiceGTK = do_QueryInterface(dragService);
+    if (!dragServiceGTK) {
+      mTimeCBSet = PR_FALSE;
+      return;
+    }
+    dragServiceGTK->SetTimeCallback(nsWidget::GetLastEventTime);
   }
 #ifdef NS_DEBUG
   // see if we need to set up the debugging window
@@ -3150,6 +3184,25 @@ void nsWidget::UpdateDragContext(GtkWidget *aWidget, GdkDragContext *aGdkDragCon
 
 }
 
+/* virtual */
+void nsWidget::UpdateDragStatus(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime)
+{
+  // make sure that we tell the drag manager what the hell is going on.
+  nsCOMPtr<nsIDragService> dragService;
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
+                                             nsIDragService::GetIID(),
+                                             (nsISupports **)&dragService);
+  if (NS_FAILED(rv)) {
+    g_print("*** warning: failed to get the drag service. this is a _bad_ thing.\n");
+    return;
+  }
+  nsCOMPtr<nsIDragSessionGTK> dragServiceGTK;
+  dragServiceGTK = do_QueryInterface(dragService);
+  if (!dragServiceGTK) {
+    return;
+  }
+  dragServiceGTK->UpdateDragStatus(aWidget, aGdkDragContext, aTime);
+}
 
 #ifdef NS_DEBUG
 

@@ -852,6 +852,10 @@ handle_gdk_event (GdkEvent *event, gpointer data)
 {
   GtkObject *object = nsnull;
 
+  guint32 event_time = gdk_event_get_time(event);
+  if (event_time)
+    nsWidget::SetLastEventTime(event_time);
+
   if (event->any.window)
     gdk_window_get_user_data (event->any.window, (void **)&object);
 

@@ -29,6 +29,7 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsString.h"
 #include <gtk/gtkinvisible.h>
+#include <gdk/gdkx.h>
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
@@ -71,6 +72,7 @@ nsDragService::nsDragService()
   mDoingDrag = PR_FALSE;
   // reset everything
   ResetDragState();
+  mTimeCB = nsnull;
 }
 
 nsDragService::~nsDragService()
@@ -84,6 +86,9 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransf
                                                 nsIScriptableRegion * aRegion,
                                                 PRUint32 aActionType)
 {
+#ifdef DEBUG_DD
+  g_print("InvokeDragSession\n");
+#endif
   // make sure that we have an array of transferables to use
   if (!anArrayTransferables)
     return NS_ERROR_INVALID_ARG;
@@ -96,12 +101,34 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransf
   // create a target list from the list of transferables
   GtkTargetList *targetList = targetListFromTransArr(anArrayTransferables);
   if (targetList) {
+    // get the last time event.  we do this because if we don't then
+    // gdk_drag_begin() will use the current time as the arg for the
+    // grab.  if you happen to do a drag really quickly and release
+    // the mouse button before the drag begins ( really easy to do, by
+    // the way ) then the server ungrab from the mouse button release
+    // will actually have a time that is _before_ the server grab that
+    // we are about to cause and it will leave the server in a grabbed
+    // state after the drag has ended.
+    guint32 last_event_time = 0;
+    mTimeCB(&last_event_time);
     // synth an event so that that fun bug in the gtk dnd code doesn't
     // rear its ugly head
     GdkEvent gdk_event;
-    gdk_event.type = GDK_NOTHING;
-    gdk_event.any.window = 0;
-    gdk_event.any.send_event = 0;
+    gdk_event.type = GDK_BUTTON_PRESS;
+    gdk_event.button.window = mHiddenWidget->window;
+    gdk_event.button.send_event = 0;
+    gdk_event.button.time = last_event_time;
+    gdk_event.button.x = 0;
+    gdk_event.button.y = 0;
+    gdk_event.button.pressure = 0;
+    gdk_event.button.xtilt = 0;
+    gdk_event.button.ytilt = 0;
+    gdk_event.button.state = 0;
+    gdk_event.button.button = 0;
+    gdk_event.button.source = (GdkInputSource)0;
+    gdk_event.button.deviceid = 0;
+    gdk_event.button.x_root = 0;
+    gdk_event.button.y_root = 0;
 
     // start our drag.
     GdkDragContext *context = gtk_drag_begin(mHiddenWidget,
@@ -112,6 +139,8 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransf
     // make sure to set our default icon
     gtk_drag_set_icon_default (context);
     gtk_target_list_unref(targetList);
+    // set our last context as this context
+    SetLastContext(mHiddenWidget, context, gdk_time_get());
   }
 
   return NS_OK;
@@ -129,7 +158,6 @@ NS_IMETHODIMP nsDragService::EndDragSession()
 {
   // a drag just ended.  reset everything.
   ResetDragState();
-  mDoingDrag = PR_FALSE;
   return NS_OK;
 }
 
@@ -139,12 +167,6 @@ NS_IMETHODIMP nsDragService::SetCanDrop            (PRBool           aCanDrop)
 #ifdef DEBUG_DD
   g_print("can drop: %d\n", aCanDrop);
 #endif
-  if (aCanDrop) {
-    gdk_drag_status(mLastContext, GDK_ACTION_COPY, mLastTime);
-  }
-  else {
-    gdk_drag_status(mLastContext, (GdkDragAction)0, mLastTime);
-  }
   mCanDrop = aCanDrop;
   return NS_OK;
 }
@@ -319,6 +341,20 @@ NS_IMETHODIMP nsDragService::SetLastContext  (GtkWidget          *aWidget,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDragService::UpdateDragStatus(GtkWidget          *aWidget,
+                                              GdkDragContext     *aContext,
+                                              guint               aTime)
+{
+#ifdef DEBUG_DD
+  g_print("UpdateDragStatus: %d\n", mCanDrop);
+#endif
+  if (mCanDrop) 
+    gdk_drag_status(aContext, GDK_ACTION_COPY, aTime);
+  else
+    gdk_drag_status(aContext, (GdkDragAction)0, mLastTime);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDragService::SetDataReceived (GtkWidget          *aWidget,
                                               GdkDragContext     *context,
                                               gint                x,
@@ -424,6 +460,15 @@ NS_IMETHODIMP nsDragService::DataGetSignal         (GtkWidget          *widget,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDragService::SetTimeCallback (nsIDragSessionGTKTimeCB aCallback)
+{
+#ifdef DEBUG_DD
+  g_print("SetTimeCallback %p\n", aCallback);
+#endif
+  mTimeCB = aCallback;
+  return NS_OK;
+}
+
 void nsDragService::ResetDragState(void)
 {
   // make sure that all of our last state is set
@@ -440,6 +485,8 @@ void nsDragService::ResetDragState(void)
     mDragData = NULL;
   }
   mDragDataLen = 0;
+  mCanDrop = PR_FALSE;
+  mDoingDrag = PR_FALSE;
 }
 
 void nsDragService::SetDataItems(nsISupportsArray *anArray)
@@ -475,10 +522,6 @@ static void invisibleDragEnd     (GtkWidget        *widget,
   // apparently, the drag is over.  make sure to tell the drag service
   // about it.
   nsCOMPtr<nsIDragService> dragService;
-
-  gdk_pointer_ungrab(GDK_CURRENT_TIME);
-  gdk_keyboard_ungrab(GDK_CURRENT_TIME);
-
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                              NS_GET_IID(nsIDragService),
                                              (nsISupports **)&dragService);
