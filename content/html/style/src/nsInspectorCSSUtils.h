@@ -42,6 +42,9 @@
 
 #include "nsIInspectorCSSUtils.h"
 
+class nsIPresShell;
+class nsIStyleContext;
+
 class nsInspectorCSSUtils : public nsIInspectorCSSUtils {
 
 public:
@@ -57,10 +60,15 @@ public:
     NS_IMETHOD GetRuleNodeRule(nsRuleNode *aNode, nsIStyleRule **aRule);
     NS_IMETHOD IsRuleNodeRoot(nsRuleNode *aNode, PRBool *aIsRoot);
     NS_IMETHOD AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect);
-    NS_IMETHOD GetStyleContextForFrame(nsIFrame* aFrame,
+    NS_IMETHOD GetRuleNodeForContent(nsIContent* aContent,
+                                     nsRuleNode** aRuleNode);
+
+private:
+    nsresult GetStyleContextForContent(nsIContent* aContent,
+                                       nsIPresShell* aPresShell,
                                        nsIStyleContext** aStyleContext);
-    NS_IMETHOD IsWhiteSpaceSignificant(nsIStyleContext* aStyleContext,
-                                       PRBool *aIsSignificant);
+    nsresult GetStyleContextForFrame(nsIFrame* aFrame,
+                                     nsIStyleContext** aStyleContext);
 };
 
 #endif /* nsInspectorCSSUtils_h___ */

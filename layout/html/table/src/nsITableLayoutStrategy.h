@@ -42,7 +42,6 @@
 #include "nsSize.h"
 
 class nsIPresContext;
-class nsIStyleContext;
 struct nsHTMLReflowState;
 struct nsMargin;
 class nsTableCellFrame;

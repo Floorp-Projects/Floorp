@@ -341,7 +341,7 @@ protected:
 
 #ifdef DEBUG
   void  List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets);
-  void  ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent);
+  void  ListContexts(nsIFrame* aRootFrame, FILE* out, PRInt32 aIndent);
 #endif
 
   nsCOMPtr<nsISupportsArray> mOverrideSheets;  // most significant first
@@ -1762,9 +1762,12 @@ void StyleSetImpl::List(FILE* out, PRInt32 aIndent)
 }
 
 
-void StyleSetImpl::ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent)
+void StyleSetImpl::ListContexts(nsIFrame* aRootFrame, FILE* out, PRInt32 aIndent)
 {
-  aRootContext->List(out, aIndent);
+  nsCOMPtr<nsIStyleContext> sc;
+  aRootFrame->GetStyleContext(getter_AddRefs(sc));
+  if (sc)
+    sc->List(out, aIndent);
 }
 #endif
 

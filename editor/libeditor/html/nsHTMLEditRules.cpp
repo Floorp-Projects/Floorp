@@ -52,6 +52,7 @@
 #include "TypeInState.h"
 
 #include "nsIServiceManager.h"
+#include "nsCRT.h"
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -66,7 +67,6 @@
 #include "nsIDOMNSRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
-#include "nsIStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutCID.h"
 #include "nsIPrefBranch.h"

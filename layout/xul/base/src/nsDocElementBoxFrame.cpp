@@ -39,7 +39,6 @@
 #include "nsCSSRendering.h"
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
 #include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"

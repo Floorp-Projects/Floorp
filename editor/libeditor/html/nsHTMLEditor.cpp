@@ -85,8 +85,6 @@
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
 
-#include "nsIStyleContext.h"
-
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -133,6 +131,7 @@
 // Misc
 #include "TextEditorTest.h"
 #include "nsEditorUtils.h"
+#include "nsIStyleSet.h"
 #include "nsIPref.h"
 #include "nsParserCIID.h"
 #include "nsITextContent.h"
@@ -4494,27 +4493,6 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
     }
   }
 }
-
-void nsHTMLEditor::IsTextStyleSet(nsIStyleContext *aSC, 
-                                  nsIAtom *aProperty, 
-                                  const nsAString *aAttribute,  
-                                  PRBool &aIsSet) const
-{
-  aIsSet = PR_FALSE;
-  if (aSC && aProperty)
-  {
-    nsStyleFont* font = (nsStyleFont*)aSC->GetStyleData(eStyleStruct_Font);
-    if (nsIEditProperty::i==aProperty)
-    {
-      aIsSet = PRBool(font->mFont.style & NS_FONT_STYLE_ITALIC);
-    }
-    else if (nsIEditProperty::b==aProperty)
-    { // XXX: check this logic with Peter
-      aIsSet = PRBool(font->mFont.weight > NS_FONT_WEIGHT_NORMAL);
-    }
-  }
-}
-
 
 #ifdef XP_MAC
 #pragma mark -

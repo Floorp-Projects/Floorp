@@ -45,7 +45,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsReflowPath.h"
 #include "nsBoxFrame.h"
-#include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsIContent.h"

@@ -71,6 +71,8 @@ class nsIIOService;
 class nsICSSPseudoComparator;
 class nsILanguageAtom;
 class nsITheme;
+struct nsStyleStruct;
+struct nsStyleBackground;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -193,6 +195,19 @@ public:
   NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
                                     nsIStyleContext* aParentContext,
                                     nsIStyleContext** aResult) = 0;
+
+  /**
+   * Resolve the given style struct for a content node.
+   * This is probably NOT what you're looking for to find out the style
+   * properties of an element.  From inside layout, you should use the style
+   * context directly; from outside layout you should use GetStyleData
+   * for a frame or the DOM computed style interfaces for content nodes.
+   * aSID should be a nsStyleStructID but isn't due to include ordering
+   * problems.
+   */
+  NS_IMETHOD ResolveStyleContextAndGetStyleData(nsIContent* aContent,
+                                                int aSID,
+                                                const nsStyleStruct*& aStyleStruct) = 0;
 
   /**
    * Resolve style for a non-element content node (i.e., one that is
@@ -533,6 +548,16 @@ public:
    * Notify the pres context that a system color has changed
    */
   NS_IMETHOD SysColorChanged() = 0;
+
+  /*
+   * Fill in an nsStyleBackground to be used to paint the background for an
+   * element.  This applies the rules for propagating backgrounds between
+   * BODY, the root element, and the canvas.
+   */
+  NS_IMETHOD FindFrameBackground(nsIFrame* aFrame,
+                                 const nsStyleBackground** aBackground,
+                                 PRBool* aIsCanavs,
+                                 PRBool* aFoundBackground) = 0;
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;

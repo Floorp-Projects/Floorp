@@ -123,3 +123,4 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../base/public \
 		$(NULL)
 
+DEFINES += -D_IMPL_NS_LAYOUT

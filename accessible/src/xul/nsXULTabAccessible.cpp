@@ -49,7 +49,6 @@
 #include "nsIFrame.h"
 #include "nsIPluginViewer.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIStyleContext.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsplugindefs.h"

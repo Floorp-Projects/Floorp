@@ -58,3 +58,5 @@ libs::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_CONTENT) $(DESTDIR)$(mozappdir)/res/dtd
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/mathml.css $(DESTDIR)$(mozappdir)/res
+
+DEFINES += -D_IMPL_NS_LAYOUT

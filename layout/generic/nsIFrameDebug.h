@@ -140,6 +140,9 @@ public:
   static void ShowEventTargetFrameBorder(PRBool aEnable);
   static PRBool GetShowEventTargetFrameBorder();
 
+  virtual void SizeOfStyleContext(nsISizeOfHandler* aSizeOfHandler,
+                                  PRUint32& aSize) = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

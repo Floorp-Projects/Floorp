@@ -44,7 +44,6 @@
 //
 
 #include "nsStackLayout.h"
-#include "nsIStyleContext.h"
 #include "nsCOMPtr.h"
 #include "nsBoxLayoutState.h"
 #include "nsBox.h"

@@ -579,12 +579,22 @@ public:
   /**
    * Get the style data associated with this frame.
    */
+  NS_IMETHOD GetStyleDataExternal(nsStyleStructID aSID,
+                                  const nsStyleStruct*& aStyleStruct) = 0;
+
+#ifdef _IMPL_NS_LAYOUT
   nsresult GetStyleData(nsStyleStructID       aSID,
                         const nsStyleStruct*& aStyleStruct) const {
     NS_ASSERTION(mStyleContext, "No style context found!");
     aStyleStruct = mStyleContext->GetStyleData(aSID);
     return NS_OK;
   }
+#else
+  nsresult GetStyleData(nsStyleStructID       aSID,
+                        const nsStyleStruct*& aStyleStruct) {
+    return GetStyleDataExternal(aSID, aStyleStruct);
+  }
+#endif
 
   // Fill a style struct with data
   nsresult GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct) const {

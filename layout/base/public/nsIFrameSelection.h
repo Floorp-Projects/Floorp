@@ -51,7 +51,6 @@
 #include "nsISelection.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
-#include "nsIStyleContext.h"
 #include "nsISelectionController.h"
 
 

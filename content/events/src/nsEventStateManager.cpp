@@ -44,7 +44,6 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIWidget.h"
-#include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsDOMEvent.h"

@@ -205,8 +205,6 @@ protected:
     *         an error if some serious error occurs
     */
   NS_IMETHOD GetLayoutObject(nsIDOMNode *aInNode, nsISupports **aOutLayoutObject);
-  NS_IMETHOD GetBodyStyleContext(nsIStyleContext** aStyleContext);
-
   // Helpers for output routines
   NS_IMETHOD GetAndInitDocEncoder(const nsAString& aFormatType,
                                   PRUint32 aFlags,

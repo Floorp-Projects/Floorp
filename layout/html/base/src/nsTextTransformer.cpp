@@ -39,7 +39,6 @@
 #include "nsTextTransformer.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsIStyleContext.h"
 #include "nsITextContent.h"
 #include "nsStyleConsts.h"
 #include "nsILineBreaker.h"

@@ -41,7 +41,6 @@
 #include "nsIPresContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 

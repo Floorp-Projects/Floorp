@@ -164,3 +164,4 @@ install::
 	$(SYSINSTALL) $(IFLAGS1) $(RESOURCES_HTML) $(DESTDIR)$(mozappdir)/res/html
 	$(SYSINSTALL) $(IFLAGS1) $(RESOURCES) $(DESTDIR)$(mozappdir)/res
 
+DEFINES += -D_IMPL_NS_LAYOUT

@@ -113,7 +113,6 @@
 #include "nsIFrameSelection.h"
 #include "nsISidebar.h"         // XXX for sidebar HACK, see bug 20721
 #include "nsIPrompt.h"
-#include "nsIStyleContext.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"

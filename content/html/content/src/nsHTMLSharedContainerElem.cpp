@@ -44,7 +44,6 @@
 #include "nsIDOMHTMLQuoteElement.h"
 #include "nsIDOMHTMLTableCaptionElem.h"
 #include "nsHTMLAtoms.h"
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLAttributes.h"

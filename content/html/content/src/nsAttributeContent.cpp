@@ -66,15 +66,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsITextContent.h"
 
-class nsIDOMAttr;
-class nsIDOMNodeList;
-class nsIFrame;
-class nsIStyleContext;
-class nsIStyleRule;
-class nsISupportsArray;
-class nsIDOMText;
-
-
 // XXX share all id's in this dir
 
 

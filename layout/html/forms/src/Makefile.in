@@ -83,3 +83,4 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../xul/base/src \
 		$(NULL)
 
+DEFINES += -D_IMPL_NS_LAYOUT

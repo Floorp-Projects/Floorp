@@ -46,7 +46,6 @@
 
 #include "nsBoxLayoutState.h"
 #include "nsSprocketLayout.h"
-#include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"

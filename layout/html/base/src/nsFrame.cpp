@@ -2781,6 +2781,15 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
   aResult.Append(NS_ConvertASCIItoUCS2(buf));
   return NS_OK;
 }
+
+void
+nsFrame::SizeOfStyleContext(nsISizeOfHandler* aSizeOfHandler,
+                            PRUint32& aSize)
+{
+  if (mStyleContext)
+    mStyleContext->SizeOf(aSizeOfHandler, aSize);
+}
+
 #endif
 
 void
@@ -4703,6 +4712,19 @@ nsFrame::GetProperty(nsIPresContext* aPresContext,
   }
 
   return value;
+}
+
+NS_IMETHODIMP
+nsFrame::GetStyleDataExternal(nsStyleStructID aSID,
+                              const nsStyleStruct*& aStyleStruct)
+{
+  if (!mStyleContext) {
+    aStyleStruct = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  aStyleStruct = mStyleContext->GetStyleData(aSID);
+  return NS_OK;
 }
 
 #ifdef IBMBIDI

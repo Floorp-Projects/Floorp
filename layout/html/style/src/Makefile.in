@@ -84,3 +84,5 @@ ifdef MOZ_SVG
 LOCAL_INCLUDES += \
         -I$(srcdir)/../../../svg/base/src
 endif
+
+DEFINES += -D_IMPL_NS_LAYOUT

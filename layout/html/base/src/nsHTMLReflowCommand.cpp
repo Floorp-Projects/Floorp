@@ -41,7 +41,6 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsFrame.h"
 #include "nsContainerFrame.h"

@@ -44,7 +44,6 @@
 //
 
 #include "nsBox.h"
-#include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"

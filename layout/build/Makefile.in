@@ -124,3 +124,4 @@ ifdef MOZ_MATHML
 INCLUDES += -I$(srcdir)/../mathml/content/src
 endif
 
+DEFINES += -D_IMPL_NS_LAYOUT

@@ -25,7 +25,6 @@
 #include "nsFrame.h"
 #include "nsIPresContext.h"
 #include "nsUnitConversion.h"
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"

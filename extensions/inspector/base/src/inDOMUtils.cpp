@@ -49,7 +49,6 @@
 #include "nsITextContent.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIXBLBinding.h" 
-#include "nsIStyleContext.h"
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
 #include "nsICSSStyleRule.h"
@@ -73,49 +72,6 @@ NS_IMPL_ISUPPORTS1(inDOMUtils, inIDOMUtils);
 
 ///////////////////////////////////////////////////////////////////////////////
 // inIDOMUtils
-
-// Helper to get a style context for the node, recursively resolving if needed.
-nsresult
-inDOMUtils::GetStyleContextForContent(nsIContent* aContent,
-                                      nsIPresShell* aPresShell,
-                                      nsIStyleContext** aStyleContext)
-{
-  NS_PRECONDITION(aContent, "Gotta have a content");
-  NS_PRECONDITION(aPresShell, "Need a PresShell");
-  NS_PRECONDITION(aStyleContext, "Need somewhere to put the result");
-  
-  *aStyleContext = nsnull;
-
-  nsIFrame* frame;
-  aPresShell->GetPrimaryFrameFor(aContent, &frame);
-  if (frame) {
-    return mCSSUtils->GetStyleContextForFrame(frame, aStyleContext);
-  }
-
-  // No frame.  Do this the hard way.
-  // Get the parent style context
-  nsCOMPtr<nsIStyleContext> parentContext;
-  nsCOMPtr<nsIContent> parent;
-  aContent->GetParent(*getter_AddRefs(parent));
-  if (parent) {
-    nsresult rv = GetStyleContextForContent(parent, aPresShell,
-                                            getter_AddRefs(parentContext));
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  nsCOMPtr<nsIPresContext> presContext;
-  aPresShell->GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
-
-  if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
-    return presContext->ResolveStyleContextFor(aContent, parentContext,
-                                               aStyleContext);
-  }
-
-  return presContext->ResolveStyleContextForNonElement(parentContext,
-                                                       aStyleContext);
-}
 
 NS_IMETHODIMP
 inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
@@ -148,20 +104,15 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(win);
   NS_ASSERTION(presShell, "No pres shell!");
 
-  nsCOMPtr<nsIStyleContext> styleContext;
-  GetStyleContextForContent(textContent, presShell,
-                            getter_AddRefs(styleContext));
-
-  if (styleContext) {
-    PRBool significant = PR_FALSE;
-    mCSSUtils->IsWhiteSpaceSignificant(styleContext, &significant);
-
-    *aReturn = !significant;
-  }
-  else {
-    // No style context.  Let's just assume the default value of
-    // white-space: normal, which we can safely ignore.
-    *aReturn = PR_TRUE;
+  nsIFrame* frame;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aDataNode);
+  presShell->GetPrimaryFrameFor(content, &frame);
+  if (frame) {
+    const nsStyleText* text;
+    ::GetStyleData(frame, &text);
+    if (text)
+      *aReturn = (text->mWhiteSpace != NS_STYLE_WHITESPACE_PRE &&
+		  text->mWhiteSpace != NS_STYLE_WHITESPACE_MOZ_PRE_WRAP);
   }
 
   return NS_OK;
@@ -170,28 +121,17 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
 NS_IMETHODIMP
 inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
 {
+  if (!aElement) return NS_ERROR_NULL_POINTER;
+
   *_retval = nsnull;
 
   nsCOMPtr<nsISupportsArray> rules;
   NS_NewISupportsArray(getter_AddRefs(rules));
   if (!rules) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIDOMWindowInternal> win(inLayoutUtils::GetWindowFor(aElement));
-  if (!win) return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIPresShell> shell(inLayoutUtils::GetPresShellFor(win));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-  nsCOMPtr<nsIStyleContext> styleContext;
-
-  GetStyleContextForContent(content, shell,
-                            getter_AddRefs(styleContext));
-  if (!styleContext) {
-    NS_ERROR("no StyleContext");
-    return NS_ERROR_UNEXPECTED;
-  }
-
   nsRuleNode* ruleNode = nsnull;
-  styleContext->GetRuleNode(&ruleNode);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  mCSSUtils->GetRuleNodeForContent(content, &ruleNode);
 
   nsCOMPtr<nsIStyleRule> srule;
   for (PRBool isRoot;

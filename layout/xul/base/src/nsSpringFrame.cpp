@@ -43,7 +43,6 @@
 //
 
 #include "nsSpringFrame.h"
-#include "nsIStyleContext.h"
 
 nsresult
 NS_NewSpringFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )

@@ -39,7 +39,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIContent.h"
-#include "nsIStyleContext.h"
 #include "nsListControlFrame.h"
 
 nsresult
