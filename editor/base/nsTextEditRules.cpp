@@ -194,7 +194,8 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
       return WillInsertBreak(aSelection, aCancel, aHandled);
     case kInsertText:
     case kInsertTextIME:
-      return WillInsertText(aSelection, 
+      return WillInsertText(info->action,
+                            aSelection, 
                             aCancel,
                             aHandled, 
                             info->inString,
@@ -487,7 +488,8 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 }
 
 nsresult
-nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
+nsTextEditRules::WillInsertText(PRInt32          aAction,
+                                nsIDOMSelection *aSelection, 
                                 PRBool          *aCancel, 
                                 PRBool          *aHandled,
                                 const nsString  *aInString,
@@ -498,6 +500,18 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   if (!aSelection || !aCancel || !aHandled || !aInString || !aOutString) 
     {return NS_ERROR_NULL_POINTER;}
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+
+  if (aInString->IsEmpty() && (aAction != kInsertTextIME))
+  {
+    // HACK: this is a fix for bug 19395
+    // I can't outlaw all empty insertions
+    // because IME transaction depend on them
+    // There is more work to do to make the 
+    // world safe for IME.
+    *aCancel = PR_TRUE;
+    *aHandled = PR_FALSE;
+    return NS_OK;
+  }
 
   nsresult res;
 
@@ -544,11 +558,22 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
     aOutString->ReplaceChar(CRLF, ' ');
   }
   
-  // do text insertion
+  // time to do actual text insertion ------------------------------
+
   PRBool bCancel;
   char newlineChar[] = {'\n',0};
   nsString theString(*aOutString);  // copy instring for now
 
+  // do the text insertion (IME case)
+  if(aAction == kInsertTextIME) 
+  { 
+     // special case for IME. We need this to 
+     // handle null strings, which are meaningful for IME
+     res = DoTextInsertion(aSelection, &bCancel, &theString, aTypeInState);
+     return res;
+  }
+
+  // do text insertion (non-IME case)
   while (theString.Length())
   {
     nsString partialString;

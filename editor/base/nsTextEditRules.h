@@ -87,13 +87,14 @@ public:
 protected:
 
   // nsTextEditRules implementation methods
-  nsresult WillInsertText(nsIDOMSelection  *aSelection, 
-                            PRBool         *aCancel,
-                            PRBool         *aHandled,
-                            const nsString *inString,
-                            nsString       *outString,
-                            TypeInState    typeInState,
-                            PRInt32         aMaxLength);
+  nsresult WillInsertText(  PRInt32          aAction,
+                            nsIDOMSelection *aSelection, 
+                            PRBool          *aCancel,
+                            PRBool          *aHandled,
+                            const nsString  *inString,
+                            nsString        *outString,
+                            TypeInState      typeInState,
+                            PRInt32          aMaxLength);
   nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
   nsresult CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
