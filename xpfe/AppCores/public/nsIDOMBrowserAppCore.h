@@ -68,6 +68,8 @@ public:
   NS_IMETHOD    Close()=0;
 
   NS_IMETHOD    Exit()=0;
+  
+  NS_IMETHOD    LoadInitialPage()=0;
 };
 
 
