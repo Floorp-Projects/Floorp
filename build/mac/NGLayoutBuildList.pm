@@ -1543,6 +1543,7 @@ sub BuildClientDist()
     if ($main::options{xmlextras})
     {
         _InstallFromManifest(":mozilla:extensions:xmlextras:base:public:MANIFEST_IDL", "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:extensions:xmlextras:soap:public:MANIFEST_IDL", "$distdirectory:idl:");
     }
 
     print("--- Client Dist export complete ----\n");
