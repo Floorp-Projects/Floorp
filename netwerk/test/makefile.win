@@ -40,6 +40,7 @@ LINCS =                     \
 
 LLIBS=					\
  $(DIST)\lib\xpcom.lib		\
+ $(DIST)\lib\raptorgfxwin.lib		\
  $(LIBNSPR)				\
  $(DIST)\lib\plc3.lib
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
