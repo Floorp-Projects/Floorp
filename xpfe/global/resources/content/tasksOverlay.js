@@ -224,16 +224,7 @@ function CheckForWallet()
   try {
     if (!this.pref.GetBoolPref("wallet.enabled")) {
       var element;
-      element = document.getElementById("walletSafeFill");
-      element.setAttribute("style","display: none;" );
-      element.setAttribute("disabled","true" );
-      element = document.getElementById("walletQuickFill");
-      element.setAttribute("style","display: none;" );
-      element.setAttribute("disabled","true" );
-      element = document.getElementById("walletCapture");
-      element.setAttribute("style","display: none;" );
-      element.setAttribute("disabled","true" );
-      element = document.getElementById("walletSeparator");
+      element = document.getElementById("wallet");
       element.setAttribute("style","display: none;" );
       element.setAttribute("disabled","true" );
       element = document.getElementById("walleteditor");
