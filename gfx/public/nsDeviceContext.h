@@ -118,11 +118,6 @@ public:
   NS_IMETHOD  SetTextZoom(float aTextZoom);
   NS_IMETHOD  GetTextZoom(float &aTextZoom) const;
 
-  NS_IMETHOD  GetGamma(float &aGamma);
-  NS_IMETHOD  SetGamma(float aGamma);
-
-  NS_IMETHOD  GetGammaTable(PRUint8 *&aGammaTable);
-
   NS_IMETHOD FirstExistingFont(const nsFont& aFont, nsString& aFaceName);
 
   NS_IMETHOD GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
@@ -150,7 +145,6 @@ protected:
   virtual ~DeviceContextImpl();
 
   void CommonInit(void);
-  void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
   nsresult CreateIconILGroupContext();
   virtual nsresult CreateFontAliasTable();
   nsresult AliasFont(const nsString& aFont, 
@@ -166,8 +160,6 @@ protected:
   nsCOMPtr<nsIAtom> mLocaleLangGroup; // XXX temp fix for performance bug - erik
   float             mZoom;
   float             mTextZoom;
-  float             mGammaValue;
-  PRUint8           *mGammaTable;
   nsHashtable*      mFontAliasTable;
   float             mCPixelScale;
 

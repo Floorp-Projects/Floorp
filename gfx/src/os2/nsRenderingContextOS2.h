@@ -256,7 +256,6 @@ protected:
   nscolor              mCurrFillColor;   // currently selected fill color
   PRBool               mPreservedInitialClipRegion;
   PRBool               mPaletteMode;     // GPI colors are indexes into selected palette
-  PRUint8             *mGammaTable;
   HPS                  mPS;              // GPI presentation space of current drawing surface
   nsIWidget           *mDCOwner;         // Parent widget
   FATTRS               mCurrFont;

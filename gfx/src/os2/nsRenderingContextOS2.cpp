@@ -328,8 +328,6 @@ nsresult nsRenderingContextOS2::CommonInit()
    mTranMatrix->AddScale( app2dev, app2dev);
    mContext->GetDevUnitsToAppUnits( mP2T);
 
-   mContext->GetGammaTable(mGammaTable);
-
    return SetupPS ();
 }
 
@@ -890,9 +888,9 @@ NS_IMETHODIMP nsRenderingContextOS2::DestroyDrawingSurface( nsDrawingSurface aDS
 
 LONG nsRenderingContextOS2::GetGPIColor (void)
 {
-   LONG gcolor = MK_RGB (mGammaTable [NS_GET_R (mColor)],
-                         mGammaTable [NS_GET_G (mColor)],
-                         mGammaTable [NS_GET_B (mColor)]);
+   LONG gcolor = MK_RGB (NS_GAMMA_CORRECT_COMPONENT(NS_GET_R (mColor)),
+                         NS_GAMMA_CORRECT_COMPONENT(NS_GET_G (mColor)),
+                         NS_GAMMA_CORRECT_COMPONENT(NS_GET_B (mColor));
 
    return (mPaletteMode) ? GFX (::GpiQueryColorIndex (mPS, 0, gcolor), GPI_ALTERROR) :
                            gcolor ;

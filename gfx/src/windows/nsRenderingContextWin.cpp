@@ -507,8 +507,6 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mInitialized = PR_TRUE;
 #endif
 
-  mContext->GetGammaTable(mGammaTable);
-
   return SetupDC(nsnull, mDC);
 }
 
@@ -964,9 +962,9 @@ NS_IMETHODIMP nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
 NS_IMETHODIMP nsRenderingContextWin :: SetColor(nscolor aColor)
 {
   mCurrentColor = aColor;
-  mColor = RGB(mGammaTable[NS_GET_R(aColor)],
-               mGammaTable[NS_GET_G(aColor)],
-               mGammaTable[NS_GET_B(aColor)]);
+  mColor = RGB(NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(aColor)),
+               NS_GAMMA_CORRECT_COMPONENT(NG_GET_G(aColor)),
+               NS_GAMMA_CORRECT_COMPONENT(NG_GET_B(aColor)));
   return NS_OK;
 }
 

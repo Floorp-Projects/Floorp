@@ -30,9 +30,7 @@ EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMNGDecoderModule
 
-ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS	= gkgfx
-endif
 
 REQUIRES	= string \
 		  xpcom \

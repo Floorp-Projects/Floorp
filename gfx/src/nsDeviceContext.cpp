@@ -42,9 +42,7 @@ DeviceContextImpl::DeviceContextImpl()
   mFontCache = nsnull;
   mDevUnitsToAppUnits = 1.0f;
   mAppUnitsToDevUnits = 1.0f;
-  mGammaValue = 1.0f;
   mCPixelScale = 1.0f;
-  mGammaTable = new PRUint8[256];
   mZoom = 1.0f;
   mTextZoom = 1.0f;
   mWidget = nsnull;
@@ -74,12 +72,6 @@ DeviceContextImpl::~DeviceContextImpl()
   {
     delete mFontCache;
     mFontCache = nsnull;
-  }
-
-  if (nsnull != mGammaTable)
-  {
-    delete[] mGammaTable;
-    mGammaTable = nsnull;
   }
 
   if (nsnull != mFontAliasTable) {
@@ -113,9 +105,6 @@ void DeviceContextImpl::CommonInit(void)
   NS_ASSERTION(!mInitialized, "device context is initialized twice!");
   mInitialized = PR_TRUE;
 #endif
-
-  for (PRInt32 cnt = 0; cnt < 256; cnt++)
-    mGammaTable[cnt] = cnt;
 
   // register as a memory-pressure observer to free font resources
   // in low-memory situations.
@@ -345,43 +334,6 @@ NS_IMETHODIMP DeviceContextImpl::GetTextZoom(float &aTextZoom) const
 {
   aTextZoom = mTextZoom;
   return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::GetGamma(float &aGamma)
-{
-  aGamma = mGammaValue;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::SetGamma(float aGamma)
-{
-  if (aGamma != mGammaValue)
-  {
-    //we don't need to-recorrect existing images for this case
-    //so pass in 1.0 for the current gamma regardless of what it
-    //really happens to be. existing images will get a one time
-    //re-correction when they're rendered the next time. MMP
-
-    SetGammaTable(mGammaTable, 1.0f, aGamma);
-
-    mGammaValue = aGamma;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::GetGammaTable(PRUint8 *&aGammaTable)
-{
-  //XXX we really need to ref count this somehow. MMP
-  aGammaTable = mGammaTable;
-  return NS_OK;
-}
-
-void DeviceContextImpl::SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma)
-{
-  double fgval = (1.0f / aCurrentGamma) * (1.0f / aNewGamma);
-
-  for (PRInt32 cnt = 0; cnt < 256; cnt++)
-    aTable[cnt] = (PRUint8)(pow((double)cnt * (1. / 256.), fgval) * 255.99999999);
 }
 
 NS_IMETHODIMP DeviceContextImpl::GetDepth(PRUint32& aDepth)

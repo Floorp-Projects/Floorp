@@ -381,13 +381,6 @@ public:
   //in the device context for re-use.
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface) = 0;
 
-  //functions for handling gamma correction of output device
-  NS_IMETHOD  GetGamma(float &aGamms) = 0;
-  NS_IMETHOD  SetGamma(float aGamma) = 0;
-
-  //XXX the return from this really needs to be ref counted somehow. MMP
-  NS_IMETHOD  GetGammaTable(PRUint8 *&aGammaTable) = 0;
-
   /**
    * Check to see if a particular named font exists.
    * @param aFontName character string of font face name

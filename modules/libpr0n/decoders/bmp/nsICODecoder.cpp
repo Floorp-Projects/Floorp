@@ -77,13 +77,13 @@ inline nsresult nsICODecoder::SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8
   *aDecoded++ = 0; // Mac needs this padding byte
 #endif
 #ifdef USE_RGBA1
- *aDecoded++ = aRed;
- *aDecoded++ = aGreen;
- *aDecoded++ = aBlue;
+  *aDecoded++ = NS_GAMMA_CORRECT_COMPONENT(aRed);
+  *aDecoded++ = NS_GAMMA_CORRECT_COMPONENT(aGreen);
+  *aDecoded++ = NS_GAMMA_CORRECT_COMPONENT(aBlue);
 #else
- *aDecoded++ = aBlue;
- *aDecoded++ = aGreen;
- *aDecoded++ = aRed;
+  *aDecoded++ = NS_GAMMA_CORRECT_COMPONENT(aBlue);
+  *aDecoded++ = NS_GAMMA_CORRECT_COMPONENT(aGreen);
+  *aDecoded++ = NS_GAMMA_CORRECT_COMPONENT(aRed);
 #endif
   return NS_OK;
 }

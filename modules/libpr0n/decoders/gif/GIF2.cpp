@@ -78,6 +78,7 @@ mailing address.
 #include "nsCRT.h"
 #include "nsRecyclingAllocator.h"
 #include "nsAutoLock.h"
+#include "nsColor.h"
 
 /*******************************************************************************
  * Gif decoder allocator
@@ -951,9 +952,9 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 #endif /* M12N */
             for (int i=0; i < gs->global_colormap_size; i++, map++) 
             {
-                map->red = *q++;
-                map->green = *q++;
-                map->blue = *q++;
+                map->red   = NS_GAMMA_CORRECT_COMPONENT(*q++);
+                map->green = NS_GAMMA_CORRECT_COMPONENT(*q++);
+                map->blue  = NS_GAMMA_CORRECT_COMPONENT(*q++);
             }
 
             GETN(1,gif_image_start);
@@ -1334,9 +1335,9 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 
             for (int i=0; i < gs->local_colormap_size; i++, map++) 
             {
-                map->red   = *q++;
-                map->green = *q++;
-                map->blue  = *q++;
+                map->red   = NS_GAMMA_CORRECT_COMPONENT(*q++);
+                map->green = NS_GAMMA_CORRECT_COMPONENT(*q++);
+                map->blue  = NS_GAMMA_CORRECT_COMPONENT(*q++);
             }
 
             GETN(1,gif_lzw_start);

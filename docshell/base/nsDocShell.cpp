@@ -3930,7 +3930,6 @@ nsDocShell::EnsureDeviceContext()
     float twip2dev;
     mDeviceContext->GetTwipsToDevUnits(twip2dev);
     mDeviceContext->SetAppUnitsToDevUnits(twip2dev);
-    mDeviceContext->SetGamma(1.0f);
 
     return NS_OK;
 }
