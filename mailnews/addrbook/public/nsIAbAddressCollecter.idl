@@ -38,8 +38,9 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(fe04c8e6-501e-11d3-a527-0060b0fc04b7)]
+interface nsIAbCard;
 
+[scriptable, uuid(fe04c8e6-501e-11d3-a527-0060b0fc04b7)]
 interface nsIAbAddressCollecter : nsISupports {
   [noscript] void collectAddress(in string address, in boolean aCreateCard);
 
@@ -49,5 +50,9 @@ interface nsIAbAddressCollecter : nsISupports {
      the address is in (UTF-8??).
   */
   void collectUnicodeAddress(in wstring address, in boolean aCreateCard);
+
+  // get the first card with this name / value in the collected ab, 
+  // which is determined by the mail.collect_addressbook pref
+  nsIAbCard getCardFromAttribute(in string aName, in string aValue);
 };
 

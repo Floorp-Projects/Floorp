@@ -53,7 +53,6 @@
 
 [scriptable, uuid(C5339441-303F-11d3-9E13-00A0C92B5F0D)]
 interface nsIAddrBookSession : nsISupports {
-
   void addAddressBookListener(in nsIAbListener listener, in abListenerNotifyFlagValue notifyFlags);
   void removeAddressBookListener(in nsIAbListener listener);
   void notifyItemPropertyChanged(in nsISupports item,

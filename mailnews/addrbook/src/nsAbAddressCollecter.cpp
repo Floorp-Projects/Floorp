@@ -81,17 +81,24 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAdd
   return rv;
 }
 
+NS_IMETHODIMP nsAbAddressCollecter::GetCardFromAttribute(const char *aName, const char *aValue, nsIAbCard **aCard)
+{
+  NS_ENSURE_ARG_POINTER(aCard);
+
+  nsresult rv = m_database->GetCardFromAttribute(m_directory, aName, aValue, PR_FALSE /* retain case */, aCard);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
 NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool aCreateCard)
 {
-  nsresult rv = OpenDatabase();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // note that we're now setting the whole recipient list,
   // not just the pretty name of the first recipient.
   PRUint32 numAddresses;
   char *names;
   char *addresses;
 
+  nsresult rv;
   nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -111,8 +118,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool a
 
     // Please DO NOT change the 3rd param of GetCardFromAttribute() call to 
     // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
-    rv = m_database->GetCardFromAttribute(m_directory, kPriEmailColumn, curAddress, PR_FALSE /* retain case */, getter_AddRefs(existingCard));
-
+    rv = GetCardFromAttribute(kPriEmailColumn, curAddress, getter_AddRefs(existingCard));
     if (!existingCard && aCreateCard)
     {
       nsCOMPtr<nsIAbCard> senderCard = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID, &rv);
@@ -204,34 +210,6 @@ nsresult nsAbAddressCollecter::AutoCollectScreenName(nsIAbCard *aCard, const cha
   return rv;
 }
 
-nsresult nsAbAddressCollecter::OpenDatabase()
-{
-  // check if already open
-  if (m_database)
-    return NS_OK;
-
-  nsresult rv;
-  nsCOMPtr<nsIAddrBookSession> abSession = 
-           do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAddressBook> addressBook = do_GetService(NS_ADDRESSBOOK_CONTRACTID
-, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = addressBook->GetAbDatabaseFromURI(m_abURI.get(), getter_AddRefs(m_database));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource(m_abURI.get(), getter_AddRefs(resource));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  m_directory = do_QueryInterface(resource, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return rv;
-}
 
 nsresult 
 nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char *fullName, PRBool *aModifiedCard)
@@ -340,6 +318,11 @@ nsresult nsAbAddressCollecter::AddCardToAddressBook(nsIAbCard *card)
 
 nsresult nsAbAddressCollecter::SetAbURI(const char *aURI)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  if (!strcmp(aURI,m_abURI.get()))
+    return NS_OK;
+
   if (m_database) {
     m_database->Commit(nsAddrDBCommitType::kSessionCommit);
     m_database->Close(PR_FALSE);
@@ -349,7 +332,23 @@ nsresult nsAbAddressCollecter::SetAbURI(const char *aURI)
   m_directory = nsnull;
   m_abURI = aURI;
 
-  nsresult rv = OpenDatabase();
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsresult rv;
+  nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAddressBook> addressBook = do_GetService(NS_ADDRESSBOOK_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = addressBook->GetAbDatabaseFromURI(m_abURI.get(), getter_AddRefs(m_database));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr <nsIRDFResource> resource;
+  rv = rdfService->GetResource(m_abURI.get(), getter_AddRefs(resource));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  m_directory = do_QueryInterface(resource, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   return rv;
 }

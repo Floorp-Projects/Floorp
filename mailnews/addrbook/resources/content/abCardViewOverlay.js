@@ -35,6 +35,7 @@ var gProfile = Components.classes["@mozilla.org/profile/manager;1"].getService(C
 
 var gProfileDirURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
 gProfileDirURL.file = gProfile.getProfileDir(gProfile.currentProfile);
+var gIconFileURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
 
 var gMapItURLFormat = gPrefs.getComplexValue("mail.addr_book.mapit_url.format", 
                                               Components.interfaces.nsIPrefLocalizedString).data;
@@ -273,44 +274,22 @@ function DisplayCardViewPane(card)
     cvSetVisible(data.cvbOther, false);
   }
   else {
-	// Other section
-	visible = cvSetNodeWithLabel(data.cvCustom1, zCustom1, card.custom1);
-	visible = cvSetNodeWithLabel(data.cvCustom2, zCustom2, card.custom2) || visible;
-	visible = cvSetNodeWithLabel(data.cvCustom3, zCustom3, card.custom3) || visible;
-	visible = cvSetNodeWithLabel(data.cvCustom4, zCustom4, card.custom4) || visible;
-	visible = cvSetNode(data.cvNotes, card.notes) || visible;
+	  // Other section
+	  visible = cvSetNodeWithLabel(data.cvCustom1, zCustom1, card.custom1);
+	  visible = cvSetNodeWithLabel(data.cvCustom2, zCustom2, card.custom2) || visible;
+	  visible = cvSetNodeWithLabel(data.cvCustom3, zCustom3, card.custom3) || visible;
+	  visible = cvSetNodeWithLabel(data.cvCustom4, zCustom4, card.custom4) || visible;
+	  visible = cvSetNode(data.cvNotes, card.notes) || visible;
+    visible = setBuddyIcon(card, data.cvBuddyIcon) || visible;
 
-        var iconURLStr = "";
-        try {
-          var myScreenName = gPrefs.getCharPref("aim.session.screenname");
-          if (myScreenName && card.aimScreenName) {
-            iconURLStr = gProfileDirURL.spec + "/NIM/" + myScreenName + "/picture/" + card.aimScreenName + ".gif";
+    cvSetVisible(data.cvhOther, visible);
+    cvSetVisible(data.cvbOther, visible);
 
-            // check if the file exists
-            var iconFileURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
-            iconFileURL.spec = iconURLStr;
-            
-            if (iconFileURL.file.exists()) {
-              data.cvBuddyIcon.setAttribute("src", iconURLStr);
-              visible = true;
-            }
-            else {
-              data.cvBuddyIcon.setAttribute("src", "");
-            }
-          }
-        }
-        catch (ex) {
-          dump("ex = " + ex + "\n");
-        }
+    // hide description section, not show for non-mailing lists
+    cvSetVisible(data.cvbDescription, false);
 
-        cvSetVisible(data.cvhOther, visible);
-        cvSetVisible(data.cvbOther, visible);
-
-        // hide description section, not show for non-mailing lists
-        cvSetVisible(data.cvbDescription, false);
-
-        // hide addresses section, not show for non-mailing lists
-        cvSetVisible(data.cvbAddresses, false);
+    // hide addresses section, not show for non-mailing lists
+    cvSetVisible(data.cvbAddresses, false);
   }
 
 	// Phone section
@@ -353,6 +332,30 @@ function DisplayCardViewPane(card)
 
 	// make the card view box visible
 	cvSetVisible(top.cvData.CardViewBox, true);
+}
+
+function setBuddyIcon(card, buddyIcon)
+{
+  try {
+    var myScreenName = gPrefs.getCharPref("aim.session.screenname");
+    if (myScreenName && card.primaryEmail) {
+      var iconURLStr = gProfileDirURL.spec + "/NIM/" + myScreenName + "/picture/" + card.aimScreenName + ".gif";
+
+      // check if the file exists
+      gIconFileURL.spec = iconURLStr;
+            
+      if (gIconFileURL.file.exists()) {
+        buddyIcon.setAttribute("src", iconURLStr);
+        return true;
+      }
+    }
+  }
+  catch (ex) {
+    // can get here if no screenname
+  }
+  
+  buddyIcon.setAttribute("src", "");
+  return false;
 }
 
 function ClearCardViewPane()

@@ -54,8 +54,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIABADDRESSCOLLECTER
 
-  nsresult SetAbURI(const char *aURI);
-  nsresult OpenDatabase();
   nsresult Init();
 
 private:
@@ -64,6 +62,7 @@ private:
   nsresult AutoCollectScreenName(nsIAbCard *aCard, const char *aEmail, PRBool *aModifiedCard);
   nsresult SetNamesForCard(nsIAbCard *senderCard, const char *fullName, PRBool *aModifiedCard);
   nsresult SplitFullName (const char *fullName, char **firstName, char **lastName);
+  nsresult SetAbURI(const char *aURI);
   nsCOMPtr <nsIAddrDatabase> m_database;
   nsCOMPtr <nsIAbDirectory> m_directory;
   nsCString m_abURI;
