@@ -114,6 +114,7 @@ nsIAtom* nsHTMLAtoms::input;
 nsIAtom* nsHTMLAtoms::ismap;
 nsIAtom* nsHTMLAtoms::label;
 nsIAtom* nsHTMLAtoms::lang;
+nsIAtom* nsHTMLAtoms::layout;
 nsIAtom* nsHTMLAtoms::li;
 nsIAtom* nsHTMLAtoms::link;
 nsIAtom* nsHTMLAtoms::left;
@@ -321,6 +322,7 @@ void nsHTMLAtoms::AddrefAtoms()
     ismap = NS_NewAtom("ISMAP");
     label = NS_NewAtom("LABEL");
     lang = NS_NewAtom("LANG");
+    layout = NS_NewAtom("LAYOUT");
     li = NS_NewAtom("LI");
     link = NS_NewAtom("LINK");
     left = NS_NewAtom("LEFT");
@@ -521,6 +523,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(ismap);
     NS_RELEASE(label);
     NS_RELEASE(lang);
+    NS_RELEASE(layout);
     NS_RELEASE(li);
     NS_RELEASE(link);
     NS_RELEASE(left);

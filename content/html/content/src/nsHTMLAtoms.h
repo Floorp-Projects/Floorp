@@ -142,6 +142,7 @@ public:
 
   static nsIAtom* label;
   static nsIAtom* lang;
+  static nsIAtom* layout;
   static nsIAtom* li;
   static nsIAtom* link;
   static nsIAtom* left;

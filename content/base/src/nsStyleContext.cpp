@@ -537,6 +537,7 @@ struct StyleTableImpl: public nsStyleTable {
 
 StyleTableImpl::StyleTableImpl()
 { 
+  mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
   ResetFrom(nsnull, nsnull);
 }
 
@@ -549,6 +550,9 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
   mCellPadding.Reset();
   mCellSpacing.Reset();
   mSpan=0;
+  // values inherited
+  if (nsnull!=aParent)
+    mLayoutStrategy = aParent->mLayoutStrategy;
 }
 
 
