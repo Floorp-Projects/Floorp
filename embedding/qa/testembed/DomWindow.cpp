@@ -201,7 +201,8 @@ void CDomWindow::RunAllTests()
 	rv = oDomWindow->GetTextZoom(&fTextZoom);
 	    RvTestResult(rv, "nsIDOMWindow::GetTextZoom()' rv test", 1);
 
-	fTextZoom = 12.0 ;
+	rv = oDomWindow->SetTextZoom(12.0);
+	//fTextZoom = 4.0 ;
 	rv = oDomWindow->SetTextZoom(fTextZoom);
 	    RvTestResult(rv, "nsIDOMWindow::SetTextZoom()' rv test", 1);
 
