@@ -184,10 +184,11 @@ public:
   virtual nsIStyleContext*  GetParent(void) const = 0;
   virtual nsISupportsArray* GetStyleRules(void) const = 0;
   virtual PRInt32 GetStyleRuleCount(void) const = 0;
-  virtual PRInt32 GetBackstopStyleRuleCount(void) const = 0;
-  virtual void SetBackstopStyleRuleCount(PRInt32 aCount) = 0;
+  NS_IMETHOD GetPseudoType(nsIAtom*& aPseudoTag) const = 0;
 
-  virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules) = 0;
+  NS_IMETHOD FindChildWithRules(const nsIAtom* aPseudoTag, 
+                                const nsISupportsArray* aRules,
+                                nsIStyleContext*& aResult) = 0;
 
   // get a style data struct by ID, may return null 
   virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID) = 0;
@@ -203,11 +204,6 @@ public:
   // call if you change style data after creation
   virtual void    RecalcAutomaticData(nsIPresContext* aPresContext) = 0;
 
-  // Change the parent of the context, only to be used for 
-  // inserting or removing pseudo contexts
-  virtual void  ReParent(nsIStyleContext* aNewParentContext,
-                         nsIPresContext* aPresContext) = 0;
-
   // debugging
   virtual void  List(FILE* out, PRInt32 aIndent) = 0;
 };
@@ -216,6 +212,7 @@ public:
 extern NS_LAYOUT nsresult
   NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                      nsIStyleContext* aParentContext,
+                     nsIAtom* aPseudoType,
                      nsISupportsArray* aRules,
                      nsIPresContext* aPresContext);
 
