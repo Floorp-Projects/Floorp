@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * David Smith <david@igelaus.com.au>
  */
 
 #ifndef nsDeviceContextXlib_h__
@@ -67,6 +68,7 @@ public:
   Screen * GetScreen() { return mScreen; }
   Visual * GetVisual() { return mVisual; }
   int      GetDepth() { return mDepth; }
+	NS_IMETHOD GetDepth( PRUint32 &depth ) { depth=(PRUint32)mDepth;return NS_OK; }
 
 protected:
 

@@ -18,174 +18,161 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Hartshorn <peter@igelaus.com.au>
  */
 
-#include "nscore.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
+#include "nsCOMPtr.h"
 #include "nsGfxCIID.h"
-// our local includes for different interfaces
+
+#include "nsBlender.h"
 #include "nsFontMetricsXlib.h"
+#include "nsRenderingContextXlib.h"
+// aka    nsDeviceContextSpecXlib.h
+#include "nsDeviceContextSpecXlib.h"
+// aka    nsDeviceContextSpecFactoryXlib.h
+#include "nsDeviceContextSpecFactoryX.h"
+#include "nsScreenManagerXlib.h"
+#include "nsScriptableRegion.h"
+#include "nsIImageManager.h"
 #include "nsDeviceContextXlib.h"
 #include "nsImageXlib.h"
-#include "nsRegionXlib.h"
-#include "nsDrawingSurfaceXlib.h"
-#include "nsDeviceContextSpecXlib.h"
-#include "nsRenderingContextXlib.h"
-#include "nsDeviceContextSpecFactoryX.h"
 
-static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
-static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
-static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
-static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
-static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
-static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
-static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
-static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
+// objects that just require generic constructors
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryXlib)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerXlib)
 
-class nsGfxFactoryXlib : public nsIFactory
+// our custom constructors
+
+static nsresult nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFACTORY
+  nsresult rv;
 
-  nsGfxFactoryXlib(const nsCID &aClass);
-  virtual ~nsGfxFactoryXlib();
-private:
-  nsCID    mClassID;
+  nsIScriptableRegion *inst;
+
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  // create an nsRegionXlib and get the scriptable region from it
+  nsCOMPtr <nsIRegion> rgn;
+  NS_NEWXPCOM(rgn, nsRegionXlib);
+  if (rgn != nsnull)
+  {
+    nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
+    inst = scriptableRgn;
+  }
+  if (NULL == inst)
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    return rv;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
+
+static nsresult nsImageManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsresult rv;
+
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  // this will return an image manager with a count of 1
+  rv = NS_NewImageManager((nsIImageManager **)aResult);
+  return rv;
+}
+
+static nsModuleComponentInfo components[] =
+{
+  { "Xlib Font Metrics",
+    NS_FONT_METRICS_CID,
+    //    "mozilla.gfx.font_metrics.xlib.1",
+    "component://netscape/gfx/fontmetrics",
+    nsFontMetricsXlibConstructor },
+  { "Xlib Device Context",
+    NS_DEVICE_CONTEXT_CID,
+    //    "mozilla.gfx.device_context.xlib.1",
+    "component://netscape/gfx/devicecontext",
+    nsDeviceContextXlibConstructor },
+  { "Xlib Rendering Context",
+    NS_RENDERING_CONTEXT_CID,
+    //    "mozilla.gfx.rendering_context.xlib.1",
+    "component://netscape/gfx/renderingcontext",
+    nsRenderingContextXlibConstructor },
+  { "Xlib Image",
+    NS_IMAGE_CID,
+    //    "mozilla.gfx.image.xlib.1",
+    "component://netscape/gfx/image",
+    nsImageXlibConstructor },
+  { "Xlib Region",
+    NS_REGION_CID,
+    "mozilla.gfx.region.xlib.1",
+    nsRegionXlibConstructor },
+  { "Scriptable Region",
+    NS_SCRIPTABLE_REGION_CID,
+    //    "mozilla.gfx.scriptable_region.1",
+    "component://netscape/gfx/region",
+    nsScriptableRegionConstructor },
+  { "Blender",
+    NS_BLENDER_CID,
+    //    "mozilla.gfx.blender.1",
+    "component://netscape/gfx/blender",
+    nsBlenderConstructor },
+  { "Xlib Device Context Spec",
+    NS_DEVICE_CONTEXT_SPEC_CID,
+    //    "mozilla.gfx.device_context_spec.xlib.1",
+    "component://netscape/gfx/devicecontextspec",
+    nsDeviceContextSpecXlibConstructor },
+  { "Xlib Device Context Spec Factory",
+    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
+    //    "mozilla.gfx.device_context_spec_factory.xlib.1",
+    "component://netscape/gfx/devicecontextspecfactory",
+    nsDeviceContextSpecFactoryXlibConstructor },
+  { "Image Manager",
+    NS_IMAGEMANAGER_CID,
+    //    "mozilla.gfx.image_manager.1",
+    "component://netscape/gfx/imagemanager",
+    nsImageManagerConstructor },
+  //{ "Xlib Font Enumerator",
+    //NS_FONT_ENUMERATOR_CID,
+    //    "mozilla.gfx.font_enumerator.xlib.1",
+    //"component://netscape/gfx/fontenumerator",
+    //nsFontEnumeratorXlibConstructor },
+  { "Xlib Screen Manager",
+    NS_SCREENMANAGER_CID,
+    //    "mozilla.gfx.screenmanager.xlib.1",
+    "component://netscape/gfx/screenmanager",
+    nsScreenManagerXlibConstructor }
 };
 
-nsGfxFactoryXlib::nsGfxFactoryXlib(const nsCID &aClass)
-{
-  NS_INIT_REFCNT();
-  mClassID = aClass;
-}
+NS_IMPL_NSGETMODULE("nsGfxXlibModule", components)
 
-nsGfxFactoryXlib::~nsGfxFactoryXlib()
-{
-}
-
-nsresult nsGfxFactoryXlib::QueryInterface(const nsIID &aIID,
-                                          void **aResult)
-{
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  // always set this to zero, in case of a failure
-  *aResult = NULL;
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports*)this;
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = (void *)(nsIFactory*)this;
-  }
-
-  if (*aResult == NULL) {
-    return NS_NOINTERFACE;
-  }
-  AddRef();  // increase reference count for caller
-  return NS_OK;
-}
-
-NS_IMPL_ADDREF(nsGfxFactoryXlib);
-NS_IMPL_RELEASE(nsGfxFactoryXlib);
-
-nsresult nsGfxFactoryXlib::CreateInstance(nsISupports *aOuter,
-                                          const nsIID &aIID,
-                                          void **aResult)
-{
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  } 
-  
-  *aResult = NULL;
-
-  nsISupports *inst = nsnull;
-
-  if (mClassID.Equals(kCFontMetrics)) {
-    nsFontMetricsXlib* fm;
-    NS_NEWXPCOM(fm, nsFontMetricsXlib);
-    inst = (nsISupports *)fm;
-  }
-  else if (mClassID.Equals(kCDeviceContext)) {
-    nsDeviceContextXlib* dc;
-    NS_NEWXPCOM(dc, nsDeviceContextXlib);
-    inst = (nsISupports *)dc;
-  }
-  else if (mClassID.Equals(kCRenderingContext)) {
-    nsRenderingContextXlib*  rc;
-    NS_NEWXPCOM(rc, nsRenderingContextXlib);
-    inst = (nsISupports *)((nsIRenderingContext*)rc);
-  }
-  else if (mClassID.Equals(kCImage)) {
-    nsImageXlib* image;
-    NS_NEWXPCOM(image, nsImageXlib);
-    inst = (nsISupports *)image;
-  }
-  else if (mClassID.Equals(kCRegion)) {
-    nsRegionXlib*  region;
-    NS_NEWXPCOM(region, nsRegionXlib);
-    inst = (nsISupports *)region;
-  }
-  // XXX blender doesn't exist yet for xlib...
-  //  else if (mClassID.Equals(kCBlender)) {
-  //    nsBlenderXlib* blender;
-  //    NS_NEWXPCOM(blender, nsBlenderXlib);
-  //    inst = (nsISupports *)blender;
-  //  }
-  else if (mClassID.Equals(kCBlender)) {
-    nsDrawingSurfaceXlib* ds;
-    NS_NEWXPCOM(ds, nsDrawingSurfaceXlib);
-    inst = (nsISupports *)((nsIDrawingSurface *)ds);
-  }
-  else if (mClassID.Equals(kCDeviceContextSpec)) {
-    nsDeviceContextSpecXlib* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecXlib);
-    inst = (nsISupports *)dcs;
-  }
-  else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
-    nsDeviceContextSpecFactoryXlib* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryXlib);
-    inst = (nsISupports *)dcs;
-  }
-
-  if (inst == NULL) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult res = inst->QueryInterface(aIID, aResult);
-
-  if (res != NS_OK) {
-    // We didn't get the right interface, so clean up  
-    delete inst;
-  }
-//  else {
-//    inst->Release();
-//  }
-
-  return res;
-}
-
-nsresult nsGfxFactoryXlib::LockFactory(PRBool aLock)
-{
-  return NS_OK;
-}
-
-extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports *servMgr,
-                                             const nsCID &aClass,
-                                             const char *aClassName,
-                                             const char *aProgID,
-                                             nsIFactory **aFactory)
-{
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aFactory = new nsGfxFactoryXlib(aClass);
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void **)aFactory);
-}
