@@ -525,6 +525,9 @@ static nsresult main1(int argc, char* argv[])
       nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoresManager);
 		}
   }
+#ifdef DEBUG
+  printf("started appcores\n");
+#endif
   
     
   // Create the Application Shell instance...
@@ -536,6 +539,9 @@ static nsresult main1(int argc, char* argv[])
   rv = appShell->Initialize( cmdLineArgs );
   if ( NS_FAILED(rv) ) 
   	return rv; 
+#ifdef DEBUG
+  printf("initialized appshell\n");
+#endif
 
   NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
   if (NS_SUCCEEDED(rv))
