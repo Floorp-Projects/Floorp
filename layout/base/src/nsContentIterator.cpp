@@ -612,7 +612,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   if (!aRange) 
     return NS_ERROR_NULL_POINTER; 
 
-  mRange = do_QueryInterface(aRange);
+  mRange = aRange;
   
   // get the start node and offset, convert to nsIContent
   nsCOMPtr<nsIDOMNode> commonParent;
