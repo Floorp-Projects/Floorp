@@ -175,12 +175,12 @@ ContentClickListener::MouseDown(nsIDOMEvent* aEvent)
       PRUint32 contentID;
       nsCOMPtr<nsIContent> content(do_QueryInterface(node));
       content->GetContentID(&contentID);
-      nsAutoString text;
       nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(node));
+      nsAutoString text;
       option->GetLabel(text);
       if (text.IsEmpty())
         option->GetText(text);
-      NSString* title = [NSString stringWith_nsString: &text];
+      NSString* title = [NSString stringWith_nsAString: text];
       NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle: title action: NULL keyEquivalent: @""] autorelease];
       [menu addItem: menuItem];
       [menuItem setTag: contentID];
@@ -281,7 +281,7 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
   mouseEvent->GetShiftKey(&shiftKey);
   mouseEvent->GetAltKey(&altKey);
 
-  NSString* hrefStr = [NSString stringWithCharacters: href.get() length: href.Length()];
+  NSString* hrefStr = [NSString stringWith_nsAString: href];
   
   // Hack to determine specific protocols handled by Chimera in the frontend
   // until I can determine why the general unknown protocol handler handoff
@@ -317,8 +317,7 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
     CHGeckoUtils::GatherTextUnder(content, text);
 
     [mBrowserController saveURL: nil filterList: nil
-              url: hrefStr suggestedFilename: [NSString stringWithCharacters: text.get()
-                                                                      length: nsCRT::strlen(text.get())]];
+              url: hrefStr suggestedFilename: [NSString stringWith_nsAString: text]];
   }
 
   return NS_OK;

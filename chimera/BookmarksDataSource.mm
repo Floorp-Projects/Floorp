@@ -148,14 +148,14 @@
 
     // If no URL and title were specified, get them from the current page.
     if (aURL && aTitle) {
-      [aURL assignTo_nsString:&href];
-      [aTitle assignTo_nsString:&title];
+      [aURL assignTo_nsAString:href];
+      [aTitle assignTo_nsAString:title];
     } else {
       BookmarksService::GetTitleAndHrefForBrowserView([[mBrowserWindowController getBrowserWrapper] getBrowserView],
                                                       title, href);
     }
 
-    mCachedHref = [NSString stringWithCharacters: href.get() length: href.Length()];
+    mCachedHref = [NSString stringWith_nsAString: href];
     [mCachedHref retain];
 
   } else {   // Folder
@@ -164,7 +164,7 @@
   }
   
   NSTextField* textField  = [mBrowserWindowController getAddBookmarkTitle];
-  NSString* bookmarkTitle = [NSString stringWithCharacters: title.get() length: title.Length()];
+  NSString* bookmarkTitle = [NSString stringWith_nsAString: title];
   NSString* cleanedTitle  = [bookmarkTitle stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
 
   [textField setStringValue: cleanedTitle];
@@ -214,7 +214,7 @@
   }
   
   nsAutoString title;
-  [[[mBrowserWindowController getAddBookmarkTitle] stringValue] assignTo_nsString:&title];
+  [[[mBrowserWindowController getAddBookmarkTitle] stringValue] assignTo_nsAString:title];
 
   nsAutoString tagName;
   if (mCachedHref)
@@ -232,7 +232,7 @@
 
   if (mCachedHref) {
     nsAutoString href;
-    [mCachedHref assignTo_nsString:&href];
+    [mCachedHref assignTo_nsAString:href];
     [mCachedHref release];
     elt->SetAttribute(NS_LITERAL_STRING("href"), href);
   }
@@ -418,7 +418,7 @@
     nsAutoString href;
     content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
     if (!href.IsEmpty()) {
-      NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
+      NSString* url = [NSString stringWith_nsAString: href];
       [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI: url referrer:nil flags: NSLoadFlagsNone];
       // Focus and activate our content area.
       [[[mBrowserWindowController getBrowserWrapper] getBrowserView] setActive: YES];
@@ -521,7 +521,7 @@
         content->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, nameAttr);
         
         //Set cell's textual contents
-        [cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWithCharacters: nameAttr.get() length: nameAttr.Length()]];
+        [cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWith_nsAString: nameAttr]];
         
         //Create an attributed string to hold the empty attachment, then release the components.
         attachmentAttrString = [[NSMutableAttributedString attributedStringWithAttachment:textAttachment] retain];
@@ -682,7 +682,7 @@
 
   content->GetAttr(kNameSpaceID_None, BookmarksService::gDescriptionAtom, value);
   if (value.Length())
-    descStr = [NSString stringWithCharacters:value.get() length:value.Length()];
+    descStr = [NSString stringWith_nsAString:value];
 
   // Only description for folders
   if ([item isFolder])
@@ -691,7 +691,7 @@
   // Extract the URL from the item
   content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, value);
   if (value.Length())
-    hrefStr = [NSString stringWithCharacters:value.get() length:value.Length()];
+    hrefStr = [NSString stringWith_nsAString:value];
 
   if (!hrefStr)
     return descStr;
@@ -735,7 +735,7 @@
     [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, hrefAttr);
   
     // stuff it into the string
-    NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
+    NSString* hrefStr = [NSString stringWith_nsAString:hrefAttr];
 
     PRBool loadInBackground;
     pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
@@ -759,7 +759,7 @@
     [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, hrefAttr);
   
     // stuff it into the string
-    NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
+    NSString* hrefStr = [NSString stringWith_nsAString:hrefAttr];
 
     PRBool loadInBackground;
     pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
@@ -865,7 +865,7 @@
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(item));
   nsAutoString href;
   element->GetAttribute(NS_LITERAL_STRING("name"), href);
-  NSString* info = [NSString stringWithCharacters: href.get() length: href.Length()];
+  NSString* info = [NSString stringWith_nsAString: href];
   return [NSString stringWithFormat:@"<BookmarkItem, name = \"%@\">", info];
 }
 
@@ -875,7 +875,7 @@
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(item));
   nsAutoString href;
   element->GetAttribute(NS_LITERAL_STRING("href"), href);
-  return [NSString stringWithCharacters: href.get() length: href.Length()];
+  return [NSString stringWith_nsAString: href];
 }
 
 -(void)setContentNode: (nsIContent*)aContentNode

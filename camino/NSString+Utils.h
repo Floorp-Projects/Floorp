@@ -36,14 +36,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Foundation/Foundation.h>
+#import "nscore.h"
 
 class nsAString;
 
 // a category to extend NSString
 @interface NSString (ChimeraStringUtils)
 
-+ (id)stringWith_nsString:(const nsAString*)inString;
-- (void)assignTo_nsString:(nsAString*)ioString;
++ (id)stringWithPRUnichars:(const PRUnichar*)inString;
++ (id)stringWith_nsAString:(const nsAString&)inString;
+- (void)assignTo_nsAString:(nsAString&)ioString;
 
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
 - (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;

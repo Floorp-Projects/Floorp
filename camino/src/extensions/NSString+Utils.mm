@@ -43,26 +43,29 @@
 
 @implementation NSString (ChimeraStringUtils)
 
-+ (id)stringWith_nsString:(const nsAString *)inString
+
++ (id)stringWithPRUnichars:(const PRUnichar*)inString
 {
   if (inString)
-  {
-    nsPromiseFlatString flatString = PromiseFlatString(*inString);
-    return [NSString stringWithCharacters:flatString.get() length:flatString.Length()];
-  }
+    return [NSString stringWithCharacters:inString length:nsCRT::strlen(inString)];
   else
     return [NSString string];
 }
 
++ (id)stringWith_nsAString:(const nsAString&)inString
+{
+  nsPromiseFlatString flatString = PromiseFlatString(inString);
+  return [NSString stringWithCharacters:flatString.get() length:flatString.Length()];
+}
+
 #define ASSIGN_STACK_BUFFER_CHARACTERS	256
 
-- (void)assignTo_nsString:(nsAString*)ioString
+- (void)assignTo_nsAString:(nsAString&)ioString
 {
-  if (!ioString) return;
-  
   PRUnichar			stackBuffer[ASSIGN_STACK_BUFFER_CHARACTERS];
   PRUnichar*		buffer = stackBuffer;
   
+  // XXX maybe fix this to use SetLength(0), SetLength(len), and a writing iterator.
   unsigned int len = [self length];
   
   if (len + 1 > ASSIGN_STACK_BUFFER_CHARACTERS)
@@ -73,7 +76,7 @@
   }
 
   [self getCharacters: buffer];		// does not null terminate
-  ioString->Assign(buffer, len);
+  ioString.Assign(buffer, len);
   
   if (buffer != stackBuffer)
     free(buffer);

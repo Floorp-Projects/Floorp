@@ -247,7 +247,7 @@ nsCocoaBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inCon
 NS_IMETHODIMP
 nsCocoaBrowserService::PromptForSaveToFile(nsISupports *aWindowContext, const PRUnichar *aDefaultFile, const PRUnichar *aSuggestedFileExtension, nsILocalFile **_retval)
 {
-  NSString* filename = [NSString stringWithCharacters:aDefaultFile length:nsCRT::strlen(aDefaultFile)];
+  NSString* filename = [NSString stringWithPRUnichars:aDefaultFile];
   NSSavePanel *thePanel = [NSSavePanel savePanel];
   
   // Note: although the docs for NSSavePanel specifically state "path and filename can be empty strings, but

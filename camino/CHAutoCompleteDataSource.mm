@@ -22,6 +22,8 @@
 *   
 */
 
+#import "NSString+Utils.h"
+
 #import <AppKit/AppKit.h>
 #import "CHAutoCompleteTextField.h"
 #include "nsString.h"
@@ -101,11 +103,11 @@
   } else if ([aColumn isEqualToString:@"col1"]) {
     nsAutoString value;
     item->GetValue(value);
-    result = [NSString stringWithCharacters:value.get() length:value.Length()];
+    result = [NSString stringWith_nsAString:value];
   } else if ([aColumn isEqualToString:@"col2"]) {
-    PRUnichar *comment;
-    item->GetComment(&comment);
-    result = [NSString stringWithCharacters:comment length:nsCRT::strlen(comment)];
+    nsXPIDLString commentStr;
+    item->GetComment(getter_Copies(commentStr));
+    result = [NSString stringWith_nsAString:commentStr];
   }
 
   return result;

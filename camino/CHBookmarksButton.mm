@@ -67,7 +67,7 @@
   mElement->GetAttribute(NS_LITERAL_STRING("href"), href);
   if (href.IsEmpty())
     return;
-  NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
+  NSString* url = [NSString stringWith_nsAString: href];
 
   // Now load the URL in the window.
   [[[self window] windowController] loadURL: url referrer:nil];
@@ -85,7 +85,7 @@
   // Get the href attribute.  This is the URL we want to load.
   nsAutoString hrefAttr;
   mElement->GetAttribute(NS_LITERAL_STRING("href"), hrefAttr);
-  NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
+  NSString* hrefStr = [NSString stringWith_nsAString:hrefAttr];
 
   PRBool loadInBackground;
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
@@ -102,7 +102,7 @@
   // Get the href attribute.  This is the URL we want to load.
   nsAutoString hrefAttr;
   mElement->GetAttribute(NS_LITERAL_STRING("href"), hrefAttr);
-  NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
+  NSString* hrefStr = [NSString stringWith_nsAString:hrefAttr];
 
   PRBool loadInBackground;
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
@@ -218,13 +218,13 @@
     [self setTarget: self];
     nsAutoString href;
     mElement->GetAttribute(NS_LITERAL_STRING("href"), href);
-    NSString* helpText = [NSString stringWith_nsString:&href];
+    NSString* helpText = [NSString stringWith_nsAString:href];
     [self setToolTip: helpText];
   }
   
   nsAutoString name;
   mElement->GetAttribute(NS_LITERAL_STRING("name"), name);
-  [self setTitle: [NSString stringWith_nsString: &name]];
+  [self setTitle: [NSString stringWith_nsAString: name]];
   
   nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
   mBookmarkItem = BookmarksService::GetWrapperFor(content);

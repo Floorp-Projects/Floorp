@@ -866,12 +866,11 @@ static NSArray* sToolbarDefaults = nil;
 {
   nsCOMPtr<nsIDOMElement> linkContent;
   nsAutoString href;
-  CHGeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs\
-                                               (linkContent), href);
+  CHGeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
   nsAutoString linkText;
   CHGeckoUtils::GatherTextUnder(linkContent, linkText);
-  NSString* urlStr = [NSString stringWithCharacters:href.get() length:href.Length()];
-  NSString* titleStr = [NSString stringWithCharacters:linkText.get() length:linkText.Length()];
+  NSString* urlStr = [NSString stringWith_nsAString:href];
+  NSString* titleStr = [NSString stringWith_nsAString:linkText];
   [self addBookmarkExtended:YES isFolder:NO URL:urlStr title:titleStr];
 }
 
@@ -1294,7 +1293,7 @@ static NSArray* sToolbarDefaults = nil;
   if (!pref)
     return; // Something bad happened if we can't get prefs.
 
-  NSString* hrefStr = [NSString stringWith_nsString:&href];
+  NSString* hrefStr = [NSString stringWith_nsAString:href];
 
   PRBool loadInBackground;
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
@@ -1323,14 +1322,14 @@ static NSArray* sToolbarDefaults = nil;
   if (!linkContent || href.IsEmpty())
     return;
 
-  NSString* hrefStr = [NSString stringWith_nsString: &href];
+  NSString* hrefStr = [NSString stringWith_nsAString: href];
 
   // The user wants to save this link.
   nsAutoString text;
   CHGeckoUtils::GatherTextUnder(mContextMenuNode, text);
 
   [self saveURL: nil filterList: nil
-            url: hrefStr suggestedFilename: [NSString stringWith_nsString: &text]];
+            url: hrefStr suggestedFilename: [NSString stringWith_nsAString: text]];
 }
 
 - (IBAction)saveImageAs:(id)aSender
@@ -1342,10 +1341,10 @@ static NSArray* sToolbarDefaults = nil;
       nsAutoString url;
       imgElement->GetSrc(url);
 
-      NSString* hrefStr = [NSString stringWith_nsString: &url];
+      NSString* hrefStr = [NSString stringWith_nsAString: url];
 
       [self saveURL: nil filterList: nil
-                url: hrefStr suggestedFilename: [NSString stringWith_nsString: &text]];
+                url: hrefStr suggestedFilename: [NSString stringWith_nsAString: text]];
   }
 }
 
@@ -1371,7 +1370,7 @@ static NSArray* sToolbarDefaults = nil;
     nsAutoString url;
     imgElement->GetSrc(url);
 
-    NSString* urlStr = [NSString stringWith_nsString: &url];
+    NSString* urlStr = [NSString stringWith_nsAString: url];
     NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
     
     [self loadURL: urlStr referrer:referrer];

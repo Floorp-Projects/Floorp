@@ -169,23 +169,23 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   nsAutoString value;
   
   [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, value);
-  NSString* bookmarkName = [NSString stringWithCharacters: value.get() length: value.Length()];
+  NSString* bookmarkName = [NSString stringWith_nsAString: value];
   [mNameField setStringValue: bookmarkName];
   NSString* infoForString = [NSString stringWithFormat:NSLocalizedString(@"BookmarkInfoTitle",@"Info for "), bookmarkName];
   [[self window] setTitle: infoForString];
 
   if (!isGroup && !isFolder) {
     [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, value);
-    [mLocationField setStringValue: [NSString stringWithCharacters: value.get() length: value.Length()]];
+    [mLocationField setStringValue: [NSString stringWith_nsAString: value]];
   }
     
   if (!isFolder) {
     [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gKeywordAtom, value);
-    [mKeywordField setStringValue: [NSString stringWithCharacters: value.get() length: value.Length()]];
+    [mKeywordField setStringValue: [NSString stringWith_nsAString: value]];
   }
     
   [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gDescriptionAtom, value);
-  [mDescriptionField setStringValue: [NSString stringWithCharacters: value.get() length: value.Length()]];
+  [mDescriptionField setStringValue: [NSString stringWith_nsAString: value]];
   
   mBookmarkItem = aBookmark;  
 }

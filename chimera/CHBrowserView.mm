@@ -224,7 +224,7 @@ nsCocoaBrowserListener::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const 
 {
   NSPoint where;
   where.x = aXCoords; where.y = aYCoords;
-  [mContainer onShowTooltip:where withText:[NSString stringWithCharacters:aTipText length:nsCRT::strlen(aTipText)]];
+  [mContainer onShowTooltip:where withText:[NSString stringWithPRUnichars:aTipText]];
   return NS_OK;
 }
 
@@ -246,7 +246,7 @@ nsCocoaBrowserListener::SetStatus(PRUint32 statusType, const PRUnichar *status)
 
   NSString* str = nsnull;
   if (status && (*status != PRUnichar(0))) {
-    str = [NSString stringWithCharacters:status length:nsCRT::strlen(status)];
+    str = [NSString stringWithPRUnichars:status];
   }
 
   [mContainer setStatus:str ofType:(NSStatusType)statusType];
@@ -537,7 +537,7 @@ nsCocoaBrowserListener::SetTitle(const PRUnichar * aTitle)
     return NS_ERROR_FAILURE;
   }
 
-  NSString* str = [NSString stringWithCharacters:aTitle length:nsCRT::strlen(aTitle)];
+  NSString* str = [NSString stringWithPRUnichars:aTitle];
   [mContainer setTitle:str];
 
   return NS_OK;
@@ -629,7 +629,7 @@ NS_IMETHODIMP
 nsCocoaBrowserListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, 
                                         const PRUnichar *aMessage)
 {
-  NSString* str = [NSString stringWithCharacters:aMessage length:nsCRT::strlen(aMessage)];
+  NSString* str = [NSString stringWithPRUnichars:aMessage];
   
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<NSBrowserListener> obj; 
@@ -1079,7 +1079,7 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
     return @"";
   nsAutoString urlStr;
   location->GetHref(urlStr);
-  return [NSString stringWithCharacters: urlStr.get() length: urlStr.Length()];
+  return [NSString stringWith_nsAString: urlStr];
 }
 
 - (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
@@ -1270,11 +1270,10 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
     nsDoc->GetLocation(getter_AddRefs(location));
     if (!location)
         return empty;
+
     nsAutoString urlStr;
     location->GetHref(urlStr);
-    nsCAutoString urlCStr; urlCStr.AssignWithConversion(urlStr);
-    
-    return [NSString stringWithCharacters: urlStr.get() length: urlStr.Length()];
+    return [NSString stringWith_nsAString: urlStr];
 }
 
 - (void)setActive: (BOOL)aIsActive
