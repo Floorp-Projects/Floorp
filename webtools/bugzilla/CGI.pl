@@ -118,7 +118,7 @@ sub ParseUrlString {
             $isnull{$name} = 1;
         }
     }
-    if (defined %isnull) {
+    if (%isnull) {
         foreach my $name (keys(%isnull)) {
             if (!defined $f->{$name}) {
                 $f->{$name} = "";

@@ -471,9 +471,9 @@ sub NewProcessOneBug {
     for my $person (@personlist) {
         $count++;
 
-        NewProcessOnePerson($person, $count, \@headerlist, \%values,
-                            \%defmailhead, \%fielddescription, $difftext, 
-                            $newcomments, $start, $id, 1);
+        &NewProcessOnePerson($person, $count, \@headerlist, \%values,
+                             \%defmailhead, \%fielddescription, $difftext, 
+                             $newcomments, $start, $id, 1);
     }
 
     SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = delta_ts " .
@@ -510,7 +510,7 @@ sub NewProcessOnePerson ($$\@\%\%\%$$$$) {
 
       foreach my $watcher ( $watcherSet->toArray() ) {
         
-        NewProcessOnePerson(DBID_to_name($watcher), 
+        &NewProcessOnePerson(DBID_to_name($watcher), 
                             $count, \@headerlist, \%values,
                             \%defmailhead, \%fielddescription, $difftext, 
                             $newcomments, $start, $id, 0);
