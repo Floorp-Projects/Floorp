@@ -17,6 +17,6 @@
 
 DEPTH=..\..\..
 
-DIRS=mailbox
+DIRS=pop3
 
 include <$(DEPTH)\config\rules.mak>
