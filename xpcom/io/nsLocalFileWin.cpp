@@ -1953,7 +1953,7 @@ nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
     if ( NS_FAILED(inFile->GetNativeTarget(inFilePath)))
         inFile->GetNativePath(inFilePath);
 
-    if ( PL_strncasecmp( myFilePath.get(), inFilePath.get(), myFilePathLen) == 0)
+    if ( strnicmp( myFilePath.get(), inFilePath.get(), myFilePathLen) == 0)
     {
         // now make sure that the |inFile|'s path has a trailing
         // separator.
