@@ -256,7 +256,7 @@ for fe in $fe_list; do
     if [ test -d $srcdir/cmd/${fe}fe ]; then
 	MOZ_FE="$MOZ_FE $fe"
     else
-    	AC_MSG_WARN(FE directory ${fe}fe does not exist...removing)
+    	AC_MSG_ERROR(FE directory $srcdir/cmd/${fe}fe does not exist.)
     fi
 done
 
