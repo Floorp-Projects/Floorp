@@ -2105,7 +2105,7 @@ nsEnderSelectionListener::NotifySelectionChanged()
     nsGUIEvent event;
     event.eventStructType = NS_GUI_EVENT;
     event.widget = nsnull;
-    event.message = NS_CONTROL_CHANGE;      //XXX: this is probably the wrong type
+    event.message = NS_FORM_SELECTED;
     event.flags = NS_EVENT_FLAG_INIT;
 
     // Have the content handle the event.
