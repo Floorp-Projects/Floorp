@@ -43,6 +43,7 @@
 // decls for stuff from other files
 interface nsIURI;
 interface calIItemBase;
+interface nsIVariant;
 
 // forward decls for this file
 interface calIObserver;
@@ -53,42 +54,92 @@ interface calIDateTime;
 [scriptable, uuid(4c352774-2c4f-11d9-9c63-00045ace3b8d)]
 interface calICalendar : nsISupports
 {
-  attribute boolean batchMode; // XXX use start/end methods instead of attr?
-  attribute nsIURI uri; // XXX is this heavier weight than we need?
-  attribute boolean suppressAlarms;
-
+  /** 
+   * In combination with the other parameters to getItems(), these
+   * constants provide for a very basic filtering mechanisms for use
+   * in getting and observing items.  At some point fairly soon, we're
+   * going to need to generalize this mechanism significantly (so we
+   * can allow boolean logic, categories, etc.).
+   */
   const unsigned long ITEM_FILTER_COMPLETED_YES = 1 << 0; 
   const unsigned long ITEM_FILTER_COMPLETED_NO = 1 << 1; 
   const unsigned long ITEM_FILTER_COMPLETED_ALL = 
     (ITEM_FILTER_COMPLETED_YES | ITEM_FILTER_COMPLETED_NO);
 
+  const unsigned long ITEM_FILTER_TYPE_TODO = 1 << 2;
+  const unsigned long ITEM_FILTER_TYPE_EVENT = 1 << 3;
+  const unsigned long ITEM_FILTER_TYPE_JOURNAL = 1 << 4;
+  const unsigned long ITEM_FILTER_TYPE_ALL = 
+    (ITEM_FILTER_TYPE_TODO | ITEM_FILTER_TYPE_EVENT |
+     ITEM_FILTER_TYPE_JOURNAL);
+
   void addObserver( in calIObserver observer, in unsigned long aItemFilter );
   void removeObserver( in calIObserver observer );
 
+  /**
+   * The following five "Item" functions are all asynchronous, and get 
+   * their results called back through an calIOperationListener object.
+   *
+   * @param aItem	The item to add or modify
+   * @param aListener 	Where to call back the results
+   * @param aId		UUID of the event in question
+   */
   void addItem( in calIItemBase aItem, in calIOperationListener aListener );
   void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
-  void deleteItem( in string id, in calIOperationListener aListener );
-  void getItem( in string id, in calIOperationListener aListener );
+  void deleteItem( in string aId, in calIOperationListener aListener );
+  void getItem( in string aId, in calIOperationListener aListener );
 
   /**
-   * getItems() has a very basic filtering mechanism for retrieving data to
-   * get us started.  At some point fairly soon, we're going to need to 
-   * generalize this.
-   *
-   * XXX what do we guarantee about item ordering, especially w.r.t.
+   * XXX As mentioned above, this method isn't suitably general.  We need to
+   * do better than this.
+   * 
+   * XXX what do we guarantee about item ordering, especially regarding
    * which items are returned when aCount != 0
+   *
+   * @param aItemType	The interface that we want returned.  This could be 
+   * 			either something that inherits from calIItemBase,
+   * 			or it could be calIOccurence.
+   *
+   * @param aRangeStart Items starting at this time or after should be 
+   *                    returned.  If invalid, assume "since the beginning
+   *                    of time".
+   * @param aRangeEnd   Items starting at this time or before should be
+   *			returned.  If invalid, assume "until the end of time".
+   * @param aCount	Maximum number of items to return.  
    */
   void getItems( in nsIIDRef aItemType, in unsigned long aItemFilter, 
                  in unsigned long aCount, in calIDateTime aRangeStart,
                  in calIDateTime aRangeEnd, 
 		 in calIOperationListener aListener );
 
+  /** 
+   * Remaining stuff is holdovers from oeIICal.idl; doxygen comments required
+   * (assuming we keep all these).
+   */
+
   void reportError( in unsigned long errorid, in AUTF8String aMessage );
+
+  attribute boolean batchMode; // XXX use start/end methods instead of attr?
+  attribute nsIURI uri; // XXX is this heavier weight than we need?
+  attribute boolean suppressAlarms;
 };
 
-// XXX improve nsIObserver and friends to support nsISupports data and use
-// that?
-//
+/** 
+ * Used to allow multiple calendars (eg work and home) to be easily queried
+ * and displayed as a single unit.
+ */
+[scriptable, uuid(1f6dba37-8ce4-4c51-bc10-6892d3e6f5ed)]
+interface calICompositeCalendar : calICalendar
+{
+  void addCalendar( in string server, in string type );
+  void removeCalendar( in string server );
+  calICalendar getCalendar( in string server );
+};
+
+/**
+ * Make a more general nsIObserverService2 and friends to support
+ * nsISupports data and use that instead?
+ */
 [scriptable, uuid(2953c9b2-2c73-11d9-80b6-00045ace3b8d)]
 interface calIObserver : nsISupports
 {
@@ -99,27 +150,53 @@ interface calIObserver : nsISupports
   void onModifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem );
   void onDeleteItem( in calIItemBase aDeletedItem );
   void onAlarm( in calIItemBase aAlarmItem );
-  void onError( in unsigned long aErrNo, in AUTF8String aMessage );
+  void onError( in nsresult aErrNo, in AUTF8String aMessage );
 };
 
+
+/**
+ * Async operations are called back via this interface.  If you know that your
+ * object is not going to get called back for either of these methods, having
+ * them return NS_ERROR_NOT_IMPLEMENTED is reasonable.
+ */
 [scriptable, uuid(ed3d87d8-2c77-11d9-8f5f-00045ace3b8d)]
 interface calIOperationListener : nsISupports
 {
   /**
-   * for add, modify, delete
+   * For add, modify, and delete.
+   *
+   * @param aOperationType 	type of operation that was completed
+   * @param aId			UUID of element that was changed
+   * @param aStatus		status code summarizing what happened
+   * @param aDetail		Not yet fully specified.  If aStatus is an
+   * 				error result, this will probably be any 
+   *                            extended error string (eg one returned by
+   * 				a server).
    */
+  void onOperationComplete(in unsigned long aOperationType,
+			   in string aId,
+			   in nsresult aStatus,
+			   in nsIVariant aDetail);
   const unsigned long ADD = 1;
   const unsigned long MOVE = 2;
   const unsigned long DELETE = 3;
-  void onOperationComplete(in nsresult aStatus,
-			   in string aId,
-			   in unsigned long aOperation,
-			   in nsIVariant aDetail);
+
   /**
-   * for getItem and getItems
+   * For getItem and getItems.
+   * 
+   * @param aStatus	status code summarizing what happened.
+   * @param aItemType	type of interface returned in the array (@see
+   *			calICalendar::GetItems).
+   * @param aDetail	Not yet fully specified.  If aStatus is an
+   * 			error result, this will probably be any 
+   *                    extended error string (eg one returned by
+   * 			a server).
+   * @param aCount      size of array returned, in items
+   * @param aItems	array of item interfaces
+   *			
    */
   void onGetComplete(in nsresult aStatus, in nsIIDRef aItemType, 
-		     in nsISupports aDetail, in PRUint32 aCount, 
+		     in nsIVariant aDetail, in PRUint32 aCount, 
 		     [array, size_is(aCount), iid_is(aItemType)] 
 		     in nsQIResult aItems ); 
 };
