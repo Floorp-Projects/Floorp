@@ -250,9 +250,9 @@ pref("mail.default_sendlater_uri","mailbox://nobody@Local Folders/Unsent Message
 
 pref("mail.server.default.port", -1);
 pref("mail.server.default.leave_on_server", false);
-pref("mail.server.default.download_on_biff", true);
+pref("mail.server.default.download_on_biff", false);
 pref("mail.server.default.check_time", 10);
-pref("mail.server.default.check_new_mail", false);
+pref("mail.server.default.check_new_mail", true);
 pref("mail.server.default.dot_fix", true);
 pref("mail.server.default.limit_message_size", false);
 pref("mail.server.default.max_size", 50);
