@@ -100,7 +100,9 @@ PRBool nsHTMLEditor::IsOnlyRowInTable(nsCOMPtr<nsIDOMElement> &aRow, nsCOMPtr<ns
   do {
     nsCOMPtr<nsIDOMNode> resultNode;
     // Scan through all nodes starting at the row we are interested in
-    nsresult res = GetNextNode(aTable, PR_TRUE, getter_AddRefs(resultNode));
+
+    nsCOMPtr<nsIDOMElement> tmpTable = aTable;
+    nsresult res = GetNextNode(tmpTable, PR_TRUE, getter_AddRefs(resultNode));
     if (NS_SUCCEEDED(res))
     {
       //Test if it's a row and parent is same as table we are in
