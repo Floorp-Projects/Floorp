@@ -29,7 +29,7 @@
 #define     APPLICATION_LANGUAGE    "en"
 
 #define		VERSION_MAJOR_STR		"5.0"
-#define		VERSION_MINOR_STR		"m4"
+#define		VERSION_MINOR_STR		"m4 Gecko"
 #define		VERSION_STRING			VERSION_MAJOR_STR VERSION_MINOR_STR
 #define 	VERSION_LANG			"en"	// e.g. en, ja, de, fr
 #define 	VERSION_COUNTRY			"_US"		// e.g.,  _JP, _DE, _FR, _US
