@@ -115,7 +115,8 @@ public:
   IsOnlyWhitespace(nsIFrame* aFrame);
   
   static void
-  ReflowEmptyChild(nsIFrame* aFrame);
+  ReflowEmptyChild(nsIPresContext& aPresContext,
+                   nsIFrame*       aFrame);
 
 protected:
 
