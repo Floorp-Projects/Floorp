@@ -99,6 +99,7 @@ public:
         // Toplevel variables/parameters
         // Output specifier (xsl:output)
     };
+    friend class ImportFrame;
 
     /*
      * Adds the given attribute set to the list of available named attribute
