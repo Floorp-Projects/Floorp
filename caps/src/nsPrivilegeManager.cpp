@@ -358,9 +358,6 @@ PRBool nsPrivilegeManager::enablePrincipalPrivilegeHelper(void *context,
   if (isPermissionGranted(target, callerPrinArray, data))
     return PR_TRUE;
 
-  // Do a user dialog
-  nsPrivilege *newPrivilege;
-
   //
   // before we do the user dialog, we need to figure out which principal
   // gets the user's blessing.  The applet is allowed to bias this
@@ -382,63 +379,10 @@ PRBool nsPrivilegeManager::enablePrincipalPrivilegeHelper(void *context,
     useThisPrin = (nsPrincipal *)callerPrinArray->Get(0);
   }
 
-
-  /* Get the Lock to display the dialog */
-  nsCaps_lock();
-
-  PRBool ret_val=PR_FALSE;
-
-  if (PR_TRUE == isPermissionGranted(target, callerPrinArray, data)) {
-    ret_val = PR_TRUE;
-    goto done;
-  }
-
-  newPrivilege = target->enablePrivilege(useThisPrin, data);
-
-  // Forbidden for session is equivelent to decide later.
-  // If the privilege is DECIDE_LATER then throw exception.
-  // That is user should be prompted again when this applet 
-  // performs the same privileged operation
-  //
-  if ((!newPrivilege->isAllowed()) &&
-      (newPrivilege->getDuration() == nsDurationState_Session)) {
-    // "User didn't grant the " + target->getName() + " privilege.";
-    ret_val = PR_FALSE;
-    goto done;
-  }
-
-  registerPrincipalAndSetPrivileges(useThisPrin, target, newPrivilege);
-
-  //System.out.println("Privilege table modified for: " + 
-  // 		useThisPrin.toVerboseString() + " for target " + 
-  //		target + " Privilege " + newPrivilege);
-
-  // Save the signed applet's ACL to the persistence store
-  err = useThisPrin->savePrincipalPermanently();
-  if ((err == NULL) && 
-      (newPrivilege->getDuration() == nsDurationState_Forever)) {
-
-    //XXX: How do we save permanent access for unsigned principals
-    ///
-    if (!useThisPrin->equals(theUnsignedPrincipal)) {
-      save(useThisPrin, target, newPrivilege);
-    }
-  }
-
-  // if newPrivilege is FORBIDDEN then throw an exception
-  if (newPrivilege->isForbidden()) {
-    // "User didn't grant the " + target->getName() + " privilege.";
-    ret_val = PR_FALSE;
-    goto done;
-  }
-
-  ret_val = PR_TRUE;
-
-done:
-  nsCaps_unlock();
-  return PR_TRUE;
-
+  // Do a user dialog
+  return AskPermission(useThisPrin, target, data);
 }
+
 
 nsPrivilegeTable *
 nsPrivilegeManager::enableScopePrivilegeHelper(nsTarget *target, 
@@ -449,7 +393,7 @@ nsPrivilegeManager::enableScopePrivilegeHelper(nsTarget *target,
 {
   return enableScopePrivilegeHelper(NULL, target, callerDepth, data, 
                                     helpingSetScopePrivilege, prefPrin);
-  }
+}
 
 
 nsPrivilegeTable *
@@ -488,6 +432,82 @@ nsPrivilegeManager::enableScopePrivilegeHelper(void* context, nsTarget *target,
                                             nsDurationState_Scope);
   updatePrivilegeTable(target, privTable, allowedScope);
   return privTable;
+}
+
+
+PRBool nsPrivilegeManager::AskPermission(nsPrincipal* useThisPrin,
+                                         nsTarget* target, 
+                                         void* data)
+{
+  PRBool ret_val = PR_FALSE;
+  nsPrivilege* newPrivilege = NULL;
+
+  /* Get the Lock to display the dialog */
+  nsCaps_lock();
+
+  nsPrincipalArray* callerPrinArray = new nsPrincipalArray();
+  callerPrinArray->Add(useThisPrin);
+  
+  if (PR_TRUE == isPermissionGranted(target, callerPrinArray, data)) {
+    ret_val = PR_TRUE;
+    goto done;
+  }
+
+  // Do a user dialog
+  newPrivilege = target->enablePrivilege(useThisPrin, data);
+
+  // Forbidden for session is equivelent to decide later.
+  // If the privilege is DECIDE_LATER then throw exception.
+  // That is user should be prompted again when this applet 
+  // performs the same privileged operation
+  //
+  if ((!newPrivilege->isAllowed()) &&
+      (newPrivilege->getDuration() == nsDurationState_Session)) {
+    // "User didn't grant the " + target->getName() + " privilege.";
+    ret_val = PR_FALSE;
+    goto done;
+  }
+
+  SetPermission(useThisPrin, target, newPrivilege);
+
+  // if newPrivilege is FORBIDDEN then throw an exception
+  if (newPrivilege->isForbidden()) {
+    // "User didn't grant the " + target->getName() + " privilege.";
+    ret_val = PR_FALSE;
+    goto done;
+  }
+
+  ret_val = PR_TRUE;
+
+done:
+  delete callerPrinArray;
+  nsCaps_unlock();
+  return PR_TRUE;
+
+}
+
+void 
+nsPrivilegeManager::SetPermission(nsPrincipal *useThisPrin, 
+                                  nsTarget *target, 
+                                  nsPrivilege *newPrivilege)
+{
+  registerPrincipalAndSetPrivileges(useThisPrin, target, newPrivilege);
+
+  //System.out.println("Privilege table modified for: " + 
+  // 		useThisPrin.toVerboseString() + " for target " + 
+  //		target + " Privilege " + newPrivilege);
+
+  // Save the signed applet's ACL to the persistence store
+  char* err = useThisPrin->savePrincipalPermanently();
+  if ((err == NULL) && 
+      (newPrivilege->getDuration() == nsDurationState_Forever)) {
+
+    //XXX: How do we save permanent access for unsigned principals
+    ///
+    if (!useThisPrin->equals(theUnsignedPrincipal)) {
+      save(useThisPrin, target, newPrivilege);
+    }
+  }
 }
 
 
@@ -761,7 +781,8 @@ PRBool nsPrivilegeManager::checkMatchPrincipal(void* context, nsPrincipal *prin,
 {
   nsPrincipalArray *prinArray = new nsPrincipalArray();
   prinArray->Add(prin);
-  nsPrincipalArray *classPrinArray = getClassPrincipalsFromStack(context, callerDepth);
+  nsPrincipalArray *classPrinArray = getClassPrincipalsFromStack(context, 
+                                                                 callerDepth);
   return (comparePrincipalArray(prinArray, classPrinArray) != nsSetComparisonType_NoSubset) ? PR_TRUE : PR_FALSE;
 }
 
@@ -960,8 +981,8 @@ PRBool nsPrivilegeManager::enablePrivilegePrivate(void* context, nsTarget *targe
   }
 
   // default "data" as null
-  if (NULL == enableScopePrivilegeHelper(context, target, callerDepth, NULL, PR_FALSE, 
-                                         prefPrin))
+  if (NULL == enableScopePrivilegeHelper(context, target, callerDepth, NULL, 
+                                         PR_FALSE, prefPrin))
     return PR_FALSE;
   return PR_TRUE;
 }
@@ -1014,7 +1035,8 @@ nsPrivilege *nsPrivilegeManager::getPrincipalPrivilege(nsTarget *target,
   }
 
   PrincipalKey prinKey(prin);
-  nsPrivilegeTable *privTable = (nsPrivilegeTable *) itsPrinToPrivTable->Get(&prinKey);
+  nsPrivilegeTable *privTable = 
+    (nsPrivilegeTable *) itsPrinToPrivTable->Get(&prinKey);
   if (privTable == NULL) {
     // the principal isn't registered, so ignore it
     return NULL;
@@ -1111,8 +1133,10 @@ nsPrivilegeManager::checkPrivilegeEnabled(void *context,
               goto done;
             }
 
-            annotation = (nsPrivilegeTable *) (*nsCapsGetAnnotationCallback)(wrapper);
-            prinArray = (nsPrincipalArray *) (*nsCapsGetPrincipalArrayCallback)(wrapper);
+            annotation = 
+              (nsPrivilegeTable *) (*nsCapsGetAnnotationCallback)(wrapper);
+            prinArray = 
+              (nsPrincipalArray *) (*nsCapsGetPrincipalArrayCallback)(wrapper);
             /*
              * frame->annotation holds a PrivilegeTable, describing
              * the scope privileges of this frame.  We'll check
@@ -1218,7 +1242,8 @@ nsPrivilegeManager::getClassPrincipalsFromStack(void* context, PRInt32 callerDep
        ) {
     if ((*nsCapsIsValidFrameCallback)(wrapper)) {
       if (depth >= callerDepth) {
-        principalArray = (nsPrincipalArray *) (*nsCapsGetPrincipalArrayCallback)(wrapper);
+        principalArray = 
+          (nsPrincipalArray *) (*nsCapsGetPrincipalArrayCallback)(wrapper);
 	break;
       }
     }

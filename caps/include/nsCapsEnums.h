@@ -53,7 +53,11 @@ typedef enum nsPrincipalType {
   nsPrincipalType_CodebaseRegexp,
   nsPrincipalType_Cert,
   nsPrincipalType_CertFingerPrint,
-  nsPrincipalType_CertKey
+  nsPrincipalType_CertKey,
+  /* CertChain principal is being added for Javasoft's JVM. They will pass the 
+   * whole chain to the nsPrincipal constructor. 
+   */
+  nsPrincipalType_CertChain
 } nsPrincipalType;
 
 #endif /* _NS_CAPS_ENUMS_H_ */

@@ -156,12 +156,30 @@ nsPrincipal::nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, cha
   itsString = stringRep;
 }
 
+nsPrincipal::nsPrincipal(nsPrincipalType type, 
+                         void **certChain, 
+                         PRUint32 *certChainLengths, 
+                         PRUint32 noOfCerts)
+{
+  /* We will store the signers certificate as the key */
+  init(type, certChain[0], certChainLengths[0]);
+  for (PRUint32 i = noOfCerts; i < noOfCerts; i--) {
+    void* cert = certChain[i];
+    PRUint32 cert_len = certChainLengths[i];
+    /* 
+       SOB_ImportCert(cert, cert_len);
+       SOB_ValidateCert(cert, cert_len);
+       SOB_GetCertAttributes(cert, cert_len);
+    */
+  }
+}
+
 nsPrincipal::~nsPrincipal(void)
 {
+  if (itsKey) {
 #ifdef DEBUG_raman
   fprintf(stderr, "Deleting principal %s\n", itsKey);
 #endif /* DEBUG_raman */
-  if (itsKey) {
     delete []itsKey;
   }
   if (itsCompanyName) {
@@ -189,8 +207,8 @@ PRBool nsPrincipal::equals(nsPrincipal *prin)
   if (prin == this) 
     return PR_TRUE;
 
-  if ((itsKeyLen != prin->itsKeyLen) ||
-      (itsType != prin->itsType))
+  if ((itsType != prin->itsType) ||
+      (itsKeyLen != prin->itsKeyLen))
     return PR_FALSE;
 
   if (0 == memcmp(itsKey, prin->itsKey, itsKeyLen))
@@ -204,6 +222,7 @@ char * nsPrincipal::getVendor(void)
   case nsPrincipalType_Cert:
   case nsPrincipalType_CertKey:
   case nsPrincipalType_CertFingerPrint:
+  case nsPrincipalType_CertChain:
     return getNickname();
 
   default:
@@ -276,6 +295,7 @@ char * nsPrincipal::getFingerPrint(void)
     return toString();
 
   case nsPrincipalType_CertKey:
+  case nsPrincipalType_CertChain:
     if (itsAsciiFingerPrint == NULL)
       itsAsciiFingerPrint = getCertAttribute(ZIG_C_FP);
     return itsAsciiFingerPrint;
@@ -297,6 +317,11 @@ char * nsPrincipal::getNickname(void)
       (this == nsPrivilegeManager::getUnknownPrincipal())) {
     /* XXX: The following needs to i18n */
     return "Classes for whom we don't the principal";
+  }
+
+  if (nsPrincipalType_CertChain == itsType) {
+    /* XXX: We should get the first certificate's nickname */
+    return "Javasoft's principal";
   }
 
   if (nsPrincipalType_CertKey != itsType)
@@ -360,6 +385,8 @@ PRBool nsPrincipal::isSecurePrincipal(void)
   if (!isCodebase()) 
     return PR_TRUE;
 
+  PR_ASSERT(itsKey != NULL);
+
   if ((0 == memcmp("https:", itsKey, strlen("https:"))) ||
       (0 == memcmp("file:", itsKey, strlen("file:"))))
     return PR_TRUE;
@@ -384,7 +411,8 @@ PRBool nsPrincipal::isCert(void)
 PRBool nsPrincipal::isCertFingerprint(void)
 {
   if ((itsType == nsPrincipalType_CertFingerPrint) ||
-      (itsType == nsPrincipalType_CertKey))
+      (itsType == nsPrincipalType_CertKey) ||
+      (itsType == nsPrincipalType_CertChain))
     return PR_TRUE;
   return PR_FALSE;
 }
@@ -396,16 +424,19 @@ char * nsPrincipal::toString(void)
 
   switch(itsType) {
   case nsPrincipalType_CertKey:
+  case nsPrincipalType_CertChain:
     str = getNickname();
     break;
 
   case nsPrincipalType_Cert:
   case nsPrincipalType_CertFingerPrint:
   case nsPrincipalType_CodebaseExact:
-    if (itsString != NULL)
+    if (itsString != NULL) {
       str = itsString;
-    else
+    } else {
+      PR_ASSERT(itsKey != NULL);
       str = itsKey;
+    }
     break;
   default:
     str =  "Unknown Principal";
@@ -499,6 +530,7 @@ void nsPrincipal::init(nsPrincipalType type, void * key, PRUint32 key_len)
   switch(type) {
   case nsPrincipalType_Cert:
   case nsPrincipalType_CertKey:
+  case nsPrincipalType_CertChain:
   case nsPrincipalType_CertFingerPrint:
   case nsPrincipalType_CodebaseExact:
     break;
@@ -546,6 +578,7 @@ PRInt32 nsPrincipal::computeHashCode(void)
   case nsPrincipalType_Cert:
   case nsPrincipalType_CertFingerPrint:
   case nsPrincipalType_CertKey:
+  case nsPrincipalType_CertChain:
   case nsPrincipalType_CodebaseExact:
     return computeHashCode(itsKey, itsKeyLen);
   default:
@@ -557,7 +590,8 @@ PRInt32 nsPrincipal::computeHashCode(void)
 char * nsPrincipal::saveCert(void)
 {
   int result;
-  if ((!itsZig)) {
+  /* XXX: Implement CertChain principal */
+  if ((!itsZig) || (!itsKey)) {
     return NULL;
   }
 
@@ -579,6 +613,11 @@ nsPrincipal::getCertAttribute(int attrib)
 
     if (itsZig != NULL) {
       zig = (ZIG *)itsZig;
+    }
+
+    if (itsType == nsPrincipalType_CertChain) {
+      /* XXX: Implement CertChain Principal */
+      return "Javasoft's cert chain principal";
     }
     
     if (SOB_cert_attribute(attrib, zig, 
