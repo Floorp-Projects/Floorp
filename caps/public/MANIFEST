@@ -4,3 +4,4 @@ nsICodebasePrincipal.h
 nsICodeSourcePrincipal.h
 nsIPrincipal.h
 nsCapsPublicEnums.h
+nsICapsSecurityCallbacks.h

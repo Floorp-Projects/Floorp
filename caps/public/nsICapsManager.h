@@ -25,6 +25,7 @@
 #include "nsCapsPublicEnums.h"
 
 class nsITarget;
+class nsICapsSecurityCallbacks;
 
 #define NS_ALL_PRIVILEGES         ((nsITarget*)NULL)
 
@@ -133,6 +134,14 @@ public:
     Initialize(PRBool *result) = 0;
 
     /**
+     * Initializes the capabilities frame walking code.
+     *
+     * @param aInterface - interface for calling frame walking code.
+     */
+    NS_IMETHOD
+    InitializeFrameWalker(nsICapsSecurityCallbacks* aInterface) = 0;
+
+    /**
      * Registers the given Principal with the system.
      *
      * @param prin   - is either certificate principal or codebase principal
@@ -227,6 +236,9 @@ public:
 
     NS_IMETHOD
     NewPrincipalArray(PRUint32 count, void* *result) = 0;
+
+    NS_IMETHOD
+    CreateMixedPrincipalArray(void *zig, char* name, const char* codebase, void** result) = 0;
 
     NS_IMETHOD
     FreePrincipalArray(void *prinArray) = 0;
