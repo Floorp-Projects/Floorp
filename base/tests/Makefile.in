@@ -28,6 +28,7 @@ CPPSRCS		= TestAtoms.cpp TestCRT.cpp FilesTest.cpp
 LIBS		= \
 	-lraptorbase \
 	-lxpcom \
+	$(NSPR_LIBS) \
 	$(NULL)
 
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
