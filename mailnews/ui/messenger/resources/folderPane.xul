@@ -36,9 +36,12 @@
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
     <treeitem id="msgaccounts:/" open="true">
-      <treecell style="background-color: blue"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&accounts.img;"/>&accounts.label;</treecell>
-      <treecell style="background-color: green"/>
-      <treecell style="background-color: red"/>
+      <treecell>
+        <treeindentation/>
+        <html:img hspace="2" style="vertical-align: bottom" src="&accounts.img;"/>&accounts.label;
+      </treecell>
+      <treecell/>
+      <treecell/>
     </treeitem>
   </treebody>
 
