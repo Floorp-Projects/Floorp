@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
 
@@ -96,13 +97,15 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
 //
-// nsMenuPopupFrame cntr
+// nsMenuPopupFrame ctor
 //
 nsMenuPopupFrame::nsMenuPopupFrame()
-:mCurrentMenu(nsnull), mTimerMenu(nsnull), mCloseTimer(nsnull)
+  : mCurrentMenu(nsnull), mTimerMenu(nsnull), mCloseTimer(nsnull)
 {
+  SetIsContextMenu(PR_FALSE);   // we're not a context menu by default
 
-} // cntr
+} // ctor
+
 
 NS_IMETHODIMP
 nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,

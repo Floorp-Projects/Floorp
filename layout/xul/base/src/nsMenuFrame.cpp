@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Michael Lowe <michael.lowe@bigfoot.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
 #include "nsXULAtoms.h"
@@ -296,8 +297,14 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
       }
     }
   }
-  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() &&
-           mMenuParent) {
+  else if ( aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP && mMenuParent ) {
+    // if this menu is a context menu it accepts right-clicks...fire away!
+    PRBool isContextMenu = PR_FALSE;
+    mMenuParent->GetIsContextMenu(isContextMenu);
+    if ( isContextMenu )
+      Execute();
+  }
+  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() && mMenuParent) {
     // First, flip "checked" state if we're a checkbox menu, or
     // an un-checked radio menu
     if (mType == eMenuType_Checkbox ||

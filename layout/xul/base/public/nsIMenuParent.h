@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
 #ifndef nsIMenuParent_h___
@@ -62,6 +63,9 @@ public:
   // Called to execute a menu item.
   NS_IMETHOD Enter() = 0;
 
+  NS_IMETHOD SetIsContextMenu(PRBool aIsContextMenu) = 0;
+  NS_IMETHOD GetIsContextMenu(PRBool& aIsContextMenu) = 0;
+  
 };
 
 #endif
