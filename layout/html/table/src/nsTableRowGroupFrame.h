@@ -153,18 +153,6 @@ protected:
                                RowGroupReflowState& aState,
                                nsSize*              aMaxElementSize);
 
-  /**
-   * Create new frames for content we haven't yet mapped
-   *
-   * @param   aPresContext presentation context to use
-   * @param   aState current inline state
-   * @return  frComplete if all content has been mapped and frNotComplete
-   *            if we should be continued
-   */
-  nsReflowStatus  ReflowUnmappedChildren(nsIPresContext*      aPresContext,
-                                         RowGroupReflowState& aState,
-                                         nsSize*              aMaxElementSize);
-
 private:
   nsIAtom *mType;
 
