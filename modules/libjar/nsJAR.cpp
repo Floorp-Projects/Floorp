@@ -651,7 +651,7 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
 
     //-- Lines to look for:
     // (1) Digest:
-    if (lineName.Compare("SHA1-Digest",PR_TRUE) == 0) 
+    if (lineName.CompareWithConversion("SHA1-Digest",PR_TRUE) == 0) 
     //-- This is a digest line, save the data in the appropriate place 
     {
       if(aFileType == JAR_MF)
@@ -667,7 +667,7 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
     }
     
     // (2) Name: associates this manifest section with a file in the jar.
-    if (!foundName && lineName.Compare("Name", PR_TRUE) == 0) 
+    if (!foundName && lineName.CompareWithConversion("Name", PR_TRUE) == 0) 
     {
       curItemName = lineData;
       foundName = PR_TRUE;
@@ -677,9 +677,9 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
     // (3) Magic: this may be an inline Javascript. 
     //     We can't do any other kind of magic.
     if ( aFileType == JAR_MF &&
-         lineName.Compare("Magic", PR_TRUE) == 0) 
+         lineName.CompareWithConversion("Magic", PR_TRUE) == 0) 
     {
-      if(lineData.Compare("javascript", PR_TRUE) == 0)
+      if(lineData.CompareWithConversion("javascript", PR_TRUE) == 0)
         curItemMF->mType = JAR_EXTERNAL;
       else
         curItemMF->mType = JAR_INVALID;
@@ -735,34 +735,34 @@ nsJAR::VerifyEntry(const char* aEntryName, char* aEntryData,
 void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
 {
   //-- Generate error message
-  nsAutoString message("Signature Verification Error: the signature on ");
+  nsAutoString message; message.AssignWithConversion("Signature Verification Error: the signature on ");
   if (aFilename)
-    message += aFilename;
+    message.AppendWithConversion(aFilename);
   else
-    message += "this .jar archive";
-  message += " is invalid because ";
+    message.AppendWithConversion("this .jar archive");
+  message.AppendWithConversion(" is invalid because ");
   switch(errorCode)
   {
   case nsIZipReader::NOT_SIGNED:
-    message += "the archive did not contain a valid PKCS7 signature.";
+    message.AppendWithConversion("the archive did not contain a valid PKCS7 signature.");
     break;
   case nsIZipReader::INVALID_SIG:
-    message += "the digital signature (*.RSA) file is not a valid signature of ";
-    message += "the signature instruction file (*.SF).";
+    message.AppendWithConversion("the digital signature (*.RSA) file is not a valid signature of ");
+    message.AppendWithConversion("the signature instruction file (*.SF).");
     break;
   case nsIZipReader::INVALID_UNKNOWN_CA:
-    message += "the certificate used to sign this file has an unrecognized issuer.";
+    message.AppendWithConversion("the certificate used to sign this file has an unrecognized issuer.");
     break;
   case nsIZipReader::INVALID_MANIFEST:
-    message += "the signature instruction file (*.SF) does not contain a valid hash ";
-    message += "of the MANIFEST.MF file.";
+    message.AppendWithConversion("the signature instruction file (*.SF) does not contain a valid hash ");
+    message.AppendWithConversion("of the MANIFEST.MF file.");
     break;
   case nsIZipReader::INVALID_ENTRY:
-    message += "the MANIFEST.MF file does not contain a valid hash of the file ";
-    message += "being verified.";
+    message.AppendWithConversion("the MANIFEST.MF file does not contain a valid hash of the file ");
+    message.AppendWithConversion("being verified.");
     break;
   default:
-    message += "of an unknown problem.";
+    message.AppendWithConversion("of an unknown problem.");
   }
   
   // Report error in JS console
