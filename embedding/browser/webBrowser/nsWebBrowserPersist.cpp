@@ -44,6 +44,8 @@
 #include "nsIDOMHTMLBaseElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLDocument.h"
 
 #include "nsWebBrowserPersist.h"
 
@@ -234,7 +236,6 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
 {
     NS_ENSURE_ARG_POINTER(aDocument);
     NS_ENSURE_ARG_POINTER(aFileName);
-    NS_ENSURE_ARG_POINTER(aDataPath);
     NS_ENSURE_TRUE(mFirstAndOnlyUse, NS_ERROR_FAILURE);
 
     mFirstAndOnlyUse = PR_FALSE; // Stop people from reusing this object!
@@ -248,13 +249,12 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
     mURI = do_QueryInterface(doc->GetDocumentURL());
 
+    // Store the base URI
+    doc->GetBaseURL(*getter_AddRefs(mBaseURI));
+
     // Does the caller want to fixup the referenced URIs and save those too?
     if (aDataPath)
     {
-        // Store the base URI
-        nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
-        doc->GetBaseURL(*getter_AddRefs(mBaseURI));
-
         // Sanity check & create the specified data path
         nsCOMPtr<nsILocalFile> dataPath;
         rv = NS_NewLocalFile(aDataPath, PR_FALSE, getter_AddRefs(dataPath));
@@ -292,6 +292,10 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
         nodeFixup = new nsEncoderNodeFixup;
         nodeFixup->mWebBrowserPersist = this;
 
+        // Set the document base to ensure relative links still work
+        SetDocumentBase(aDocument, mBaseURI);
+ 
+        // Save the document, fixing up the links as it goes out
         rv = SaveDocumentToFileWithFixup(
             doc,
             nodeFixup,
@@ -307,6 +311,10 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
     }
     else
     {
+        // Set the document base to ensure relative links still work
+        SetDocumentBase(aDocument, mBaseURI);
+
+        // Save the document
         nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(docAsNode);
         nsString contentType; contentType.AssignWithConversion("text/html"); // TODO
         nsString charType; // Empty
@@ -545,13 +553,6 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMHTMLBaseElement> nodeAsBase = do_QueryInterface(aNode);
-    if (nodeAsBase)
-    {
-        // TODO remove or fix this element
-        return NS_OK;
-    }
-
     nsCOMPtr<nsIDOMHTMLFrameElement> nodeAsFrame = do_QueryInterface(aNode);
     if (nodeAsFrame)
     {
@@ -579,6 +580,13 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
         {
             SaveSubframeContent(content, filename);
         }
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMHTMLInputElement> nodeAsInput = do_QueryInterface(aNode);
+    if (nodeAsInput)
+    {
+        StoreURIAttribute(aNode, "src");
         return NS_OK;
     }
 
@@ -621,13 +629,6 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(nsIDOMNode *aNodeIn, nsID
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMHTMLBaseElement> nodeAsBase = do_QueryInterface(aNodeIn);
-    if (nodeAsBase)
-    {
-        // TODO remove or fix this element
-        return NS_OK;
-    }
-
     nsCOMPtr<nsIDOMHTMLFrameElement> nodeAsFrame = do_QueryInterface(aNodeIn);
     if (nodeAsFrame)
     {
@@ -638,6 +639,14 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(nsIDOMNode *aNodeIn, nsID
 
     nsCOMPtr<nsIDOMHTMLIFrameElement> nodeAsIFrame = do_QueryInterface(aNodeIn);
     if (nodeAsIFrame)
+    {
+        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
+        FixupNodeAttribute(*aNodeOut, "src");
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMHTMLInputElement> nodeAsInput = do_QueryInterface(aNodeIn);
+    if (nodeAsInput)
     {
         aNodeIn->CloneNode(PR_FALSE, aNodeOut);
         FixupNodeAttribute(*aNodeOut, "src");
@@ -958,6 +967,68 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsIChannel *aChannel, nsS
     return NS_OK;
 }
 
+nsresult
+nsWebBrowserPersist::SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI)
+{
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
+    if (!htmlDoc)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    nsXPIDLCString uriSpec;
+    aBaseURI->GetSpec(getter_Copies(uriSpec));
+
+    // Find the head element
+    nsCOMPtr<nsIDOMElement> headElement;
+    nsCOMPtr<nsIDOMNodeList> headList;
+    aDocument->GetElementsByTagName(NS_ConvertASCIItoUCS2("head"), getter_AddRefs(headList));
+    if (headList)
+    {
+        nsCOMPtr<nsIDOMNode> headNode;
+        headList->Item(0, getter_AddRefs(headNode));
+        headElement = do_QueryInterface(headNode);
+    }
+    if (!headElement)
+    {
+        // Create head and insert as first element
+        nsCOMPtr<nsIDOMNode> firstChildNode;
+        nsCOMPtr<nsIDOMNode> newNode;
+        aDocument->CreateElement(NS_ConvertASCIItoUCS2("head"), getter_AddRefs(headElement));
+        aDocument->GetFirstChild(getter_AddRefs(firstChildNode));
+        aDocument->InsertBefore(headElement, firstChildNode, getter_AddRefs(newNode));
+    }
+    if (!headElement)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    // Find or create the BASE element
+    nsCOMPtr<nsIDOMElement> baseElement;
+    nsCOMPtr<nsIDOMNodeList> baseList;
+    headElement->GetElementsByTagName(NS_ConvertASCIItoUCS2("base"), getter_AddRefs(baseList));
+    if (baseList)
+    {
+        nsCOMPtr<nsIDOMNode> baseNode;
+        baseList->Item(0, getter_AddRefs(baseNode));
+        baseElement = do_QueryInterface(baseNode);
+    }
+    if (!baseElement)
+    {
+        nsCOMPtr<nsIDOMNode> newNode;
+        aDocument->CreateElement(NS_ConvertASCIItoUCS2("base"), getter_AddRefs(baseElement));
+        headElement->AppendChild(baseElement, getter_AddRefs(newNode));
+    }
+    if (!baseElement)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    nsString href; href.AssignWithConversion(uriSpec);
+    baseElement->SetAttribute(NS_ConvertASCIItoUCS2("href"), href);
+
+    return NS_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

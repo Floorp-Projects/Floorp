@@ -570,7 +570,7 @@ NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, const char *
     persist->AddRef();
     persist->SetProgressListener(mProgressListener);
     nsresult rv = persist->SaveDocument(doc, aFileName, aDataPath);
-//    persist->Release(); // TODO memory leak
+    persist->Release();
     return rv;
 }
 

@@ -81,6 +81,7 @@ private:
         const nsString& aSaveCharset,
         PRUint32        aFlags);
     nsresult SaveSubframeContent(nsIDOMDocument *aFrameContent, const nsString &aFilename);
+    nsresult SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI);
 
     void OnBeginDownload();
     void OnEndDownload();
