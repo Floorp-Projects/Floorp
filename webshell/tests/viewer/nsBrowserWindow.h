@@ -24,6 +24,7 @@
 
 // Local Includes
 #include "nsWebBrowserChrome.h"
+#include "nsThrobber.h"
 
 // Helper Classes
 

@@ -57,9 +57,19 @@ protected:
    void BrowserWindow(nsBrowserWindow* aBrowserWindow);
    nsBrowserWindow* BrowserWindow();
 
+   // Status Change Handling
+   void OnLoadStart(nsIChannel* aChannel);
+   void OnLoadFinished(nsIChannel* aChannel, PRInt32 aProgressStatusFlags);
+   void OnStatusDNS(nsIChannel* aChannel);
+   void OnStatusConnecting(nsIChannel* aChannel);
+   void OnStatusRedirecting(nsIChannel* aChannel);
+   void OnStatusNegotiating(nsIChannel* aChannel);
+   void OnStatusTransferring(nsIChannel* aChannel);
+   void OnWindowActivityStart();
+   void OnWindowActivityFinished();
+
 protected:
    nsBrowserWindow*  mBrowserWindow;
-   PRInt32           mProgressStatusFlags;
 };
 
 #endif /* nsWebBrowserChrome_h__ */
