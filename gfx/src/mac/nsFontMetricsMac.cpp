@@ -20,7 +20,8 @@
  * Contributor(s): 
  */
 
-#include <Fonts.h>		// for FetchFontInfo
+#include <Fonts.h>		// for FetchFontInfo 
+#include "nsCarbonHelpers.h"
 
 #include "nsFontMetricsMac.h"
 #include "nsDeviceContextMac.h"
@@ -97,15 +98,9 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
 		return NS_ERROR_FAILURE;
 	}
 
-#if TARGET_CARBON
-	short saveFont = GetPortTextFont(thePort);
- 	short saveFace = GetPortTextFace(thePort);
- 	short saveSize = GetPortTextSize(thePort);		
-#else
-	short saveFont = thePort->txFont;
-	short saveSize = thePort->txSize;
-	short saveFace = thePort->txFace;
-#endif
+	short saveFont = ::GetPortTextFont(thePort);
+ 	short saveFace = ::GetPortTextFace(thePort);
+ 	short saveSize = ::GetPortTextSize(thePort);		
 	::TextFont(theStyle.tsFont);
 	::TextSize(theStyle.tsSize);
 	::TextFace(theStyle.tsFace);

@@ -96,6 +96,42 @@ inline void GetPortVisibleRegion(GrafPtr port, RgnHandle visRgn)
 	::CopyRgn(port->visRgn, visRgn);
 }
 
+inline void GetPortClipRegion(GrafPtr port, RgnHandle clipRgn)
+{
+	::CopyRgn(port->clipRgn, clipRgn);
+}
+
+inline short GetPortTextFace ( GrafPtr port )
+{
+	return port->txFace;
+}
+
+inline short GetPortTextFont ( GrafPtr port )
+{
+	return port->txFont;
+}
+
+inline short GetPortTextSize ( GrafPtr port )
+{
+	return port->txSize;
+}
+
+inline Rect* GetPortBounds(GrafPtr port, Rect* portRect)
+{
+	*portRect = port->portRect;
+	return portRect;
+}
+
+inline PixMapHandle GetPortPixMap ( CGrafPtr port )
+{
+	return port->portPixMap;
+}
+
+inline Boolean IsRegionRectangular ( RgnHandle rgn )
+{
+	return (**rgn).rgnSize == 10;
+}
+
 
 #endif /* !TARGET_CARBON */
 
