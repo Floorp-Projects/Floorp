@@ -1615,3 +1615,10 @@ NS_IMETHODIMP nsAccessible::GetXULAccName(nsAString& _retval)
   _retval.Assign(label);
   return NS_OK;
 }
+
+NS_IMETHODIMP nsAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)
+{
+  nsCOMPtr<nsIAccessible> parent;
+  GetAccParent(getter_AddRefs(parent));
+  return parent ? parent->HandleEvent(aEvent, aTarget, aData) : NS_ERROR_NOT_IMPLEMENTED;
+}

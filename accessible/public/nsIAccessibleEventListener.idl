@@ -25,15 +25,6 @@
 #include "nsISupports.idl"
 #include "nsIAccessible.idl"
 
-%{ C++
-// extra event data (currently used by ATK)
-struct AccessibleEventData {
-  PRUint32 aUnused;
-};
-%}
-
-[ptr] native AccessibleEventData(AccessibleEventData);
-
 [scriptable, uuid(BEE49E7D-9D06-49bf-8984-1694C697D74F)]
 interface nsIAccessibleEventListener : nsISupports
 {
@@ -94,6 +85,6 @@ interface nsIAccessibleEventListener : nsISupports
   const unsigned long EVENT_ATK_TABLE_COLUMN_REORDER   = 0x0116;
   
   [noscript]
-  void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget, in AccessibleEventData aData);
+  void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
 };
 

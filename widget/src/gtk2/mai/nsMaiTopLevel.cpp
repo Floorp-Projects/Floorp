@@ -178,7 +178,7 @@ MaiTopLevel::CreateAndCache(nsIAccessible *aAcc)
 
 NS_IMETHODIMP
 MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
-                         AccessibleEventData * aEventData)
+                         void * aEventData)
 {
     nsresult rv = NS_ERROR_FAILURE;
     MaiWidget *pMaiObject = NULL;

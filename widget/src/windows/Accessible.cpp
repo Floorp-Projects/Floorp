@@ -1240,7 +1240,7 @@ STDMETHODIMP RootAccessible::get_accChild(
   return Accessible::get_accChild(varChild, ppdispChild);
 }
   
-NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible, AccessibleEventData* aData)
+NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
 {
   if (!mIsActive) {
     return NS_ERROR_FAILURE;

@@ -110,6 +110,7 @@ protected:
   NS_IMETHOD AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
   NS_IMETHOD GetFocusedNode(nsIDOMNode **aFocusedNode);
   NS_IMETHOD CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList);
+  NS_IMETHOD HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData);
   // helper method to verify frames
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);

@@ -248,12 +248,20 @@ NS_IMETHODIMP nsGenericAccessible::GetAccExtState(PRUint32 *_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* nsIDOMNode accGetDOMNode (); */
 NS_IMETHODIMP nsGenericAccessible::AccGetDOMNode(nsIDOMNode **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* [noscript] void CacheOptimizations (in nsIAccessible aParent, in PRInt32 aSiblingIndex, in nsIDOMNodeList aSiblingList); */
 NS_IMETHODIMP nsGenericAccessible::CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript] void handleEvent (in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData); */
+NS_IMETHODIMP nsGenericAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
