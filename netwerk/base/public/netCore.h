@@ -48,7 +48,16 @@
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 15)
 
 // internal unknown content-type
-#define UNKNOWN_MIME "application/x-unknown-content-type"
+//
+// XXX: These definitions are duplicated in 
+//      mozilla/mailnews/mime/src/nsMimeTypes.h.  But this file is *only*
+//      available when mail is part of the mozilla build, so they cannot
+//      be used from the netwerk directory :-(
+//
+#define UNKNOWN_MIME                  "application/x-unknown-content-type"
+#define TEXT_PLAIN_MIME               "text/plain"
+#define TEXT_HTML_MIME                "text/html"
+#define APPLICATION_OCTET_STREAM_MIME "application/octet-stream"
 
 #undef NS_NET
 #ifdef _IMPL_NS_NET
