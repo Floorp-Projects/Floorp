@@ -206,11 +206,6 @@ nsEventStateManager::Shutdown()
     mPrefService = null_nsCOMPtr();
   }
 
-  if(mInstanceCount == 1) {
-    NS_IF_RELEASE(gLastFocusedContent);
-    NS_IF_RELEASE(gLastFocusedDocument);
-  }
-
   m_haveShutdown = PR_TRUE;
   return NS_OK;
 }
