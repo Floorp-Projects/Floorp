@@ -37,7 +37,6 @@
 #include "nsDeviceContextSpecFactoryX.h"
 #include "nsScreenManagerXlib.h"
 #include "nsScriptableRegion.h"
-#include "nsIImageManager.h"
 #include "nsDeviceContextXlib.h"
 #include "nsImageXlib.h"
 #include "nsFontList.h"
@@ -97,26 +96,6 @@ static nsresult nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID
   return rv;
 }
 
-static nsresult nsImageManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    nsresult rv;
-
-  if ( NULL == aResult )
-  {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
-  }
-  *aResult = NULL;
-  if (NULL != aOuter)
-  {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-  // this will return an image manager with a count of 1
-  rv = NS_NewImageManager((nsIImageManager **)aResult);
-  return rv;
-}
-
 static nsModuleComponentInfo components[] =
 {
   { "Xlib Font Metrics",
@@ -163,11 +142,6 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/device_context_spec_factory/xlib;1",
     "@mozilla.org/gfx/devicecontextspecfactory;1",
     nsDeviceContextSpecFactoryXlibConstructor },
-  { "Image Manager",
-    NS_IMAGEMANAGER_CID,
-    //    "@mozilla.org/gfx/image_manager;1",
-    "@mozilla.org/gfx/imagemanager;1",  
-    nsImageManagerConstructor },
   { "Print Options",
      NS_PRINTOPTIONS_CID,
      //    "@mozilla.org/gfx/printoptions;1",
