@@ -1205,46 +1205,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                 
                 rv = QueryInterface(nsIMsgFolder::GetIID(),
                                     getter_AddRefs(srcFolder));
-                if (NS_SUCCEEDED(rv))
-                    srcSupport = do_QueryInterface(srcFolder, &rv);
-                
-                rv = InitCopyState(srcSupport, messages, PR_TRUE, PR_TRUE,
-                                   nsnull); 
-                if (NS_FAILED(rv)) return rv;
-                nsCOMPtr<nsISupports> copySupport =
-                    do_QueryInterface(m_copyState); 
-                m_copyState->m_curIndex = m_copyState->m_totalCount;
-                NS_WITH_SERVICE(nsIImapService, imapService, kCImapService,
-                                &rv); 
-                if (NS_SUCCEEDED(rv) && imapService)
-                    rv = imapService->OnlineMessageCopy(
-                        m_eventQueue, this, messageIds.GetBuffer(),
-                        trashFolder, PR_TRUE, PR_TRUE, this, nsnull,
-                        copySupport);
-
-                if (NS_SUCCEEDED(rv))
-                {
-                    nsImapMoveCopyMsgTxn* undoMsgTxn = new
-                        nsImapMoveCopyMsgTxn( 
-                            this, &srcKeyArray, messageIds.GetBuffer(),
-                            trashFolder, PR_TRUE, PR_TRUE, m_eventQueue, this);
-
-                    if (undoMsgTxn)
-                        rv = undoMsgTxn->QueryInterface(
-                            nsCOMTypeInfo<nsImapMoveCopyMsgTxn>::GetIID(), 
-                            getter_AddRefs(m_copyState->m_undoMsgTxn) );
-                    if (undoMsgTxn)
-                    {
-                        nsString undoString = count > 1 ? 
-                            "Undo Delete Messages" :
-                            "Undo Delete Message";
-                        nsString redoString = count > 1 ? 
-                            "Redo Delete Messages" :
-                            "Redo Delete Message";
-                        rv = undoMsgTxn->SetUndoString(&undoString);
-                        rv = undoMsgTxn->SetRedoString(&redoString);
-                    }
-                }
+				rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, nsnull);
             }
         }
     }
@@ -2048,8 +2009,6 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
                                                   nsnull, msgIds, flags,
                                                   PR_TRUE);
             }
-            // force to update the thread pane view
-            rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull, nsnull);
         }
 	}
 	else
@@ -2731,6 +2690,10 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 {
                     if (NS_SUCCEEDED(aExitCode))
                     {
+						if (folderOpen)
+							UpdateFolder(aWindow);
+						else
+							UpdatePendingCounts(PR_TRUE, PR_FALSE);
                         if (m_copyState->m_isMove)
                         {
                             nsCOMPtr<nsIMsgFolder> srcFolder;
@@ -2755,10 +2718,6 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         if (m_transactionManager)
                             m_transactionManager->Do(m_copyState->m_undoMsgTxn);
                     }
-					if (folderOpen)
-						UpdateFolder(aWindow);
-					else
-						UpdatePendingCounts(PR_TRUE, PR_FALSE);
                     ClearCopyState(aExitCode);
                 }
                 break;
