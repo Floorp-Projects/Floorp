@@ -766,7 +766,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -1386,8 +1386,8 @@ PRBool nsHTMLElement::IsContainer(eHTMLTags aChild) {
       eHTMLTag_unknown,
       eHTMLTag_area,    eHTMLTag_base,      eHTMLTag_basefont,
       eHTMLTag_br,      eHTMLTag_col,       eHTMLTag_embed,
-      eHTMLTag_frame,   eHTMLTag_hr,        
-      eHTMLTag_img,     eHTMLTag_image,     eHTMLTag_input,   
+      eHTMLTag_frame,   eHTMLTag_hr,        eHTMLTag_img,     
+      eHTMLTag_image,     eHTMLTag_input,   eHTMLTag_keygen,
       eHTMLTag_link,    eHTMLTag_isindex,   eHTMLTag_meta,    
       eHTMLTag_newline, eHTMLTag_param,     eHTMLTag_plaintext, 
       eHTMLTag_style,   eHTMLTag_spacer,    eHTMLTag_text,    
