@@ -803,8 +803,8 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
         else if (aProperty == kRDF_type) {
             // We shouldn't ever see this: if we do, there ain't much we
             // can do.
-            NS_ERROR("attempt to change tag type after-the-fact");
-            return NS_ERROR_UNEXPECTED;
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+                   ("xulbuilder on-assert: attempt to change tag type after-the-fact ignored"));
         }
         else {
             // Add the thing as a vanilla attribute to the element.
@@ -906,8 +906,8 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSource,
         else if (aProperty == kRDF_type) {
             // We shouldn't ever see this: if we do, there ain't much we
             // can do.
-            NS_ERROR("attempt to remove tag type");
-            return NS_ERROR_UNEXPECTED;
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+                   ("xulbuilder on-unassert: attempt to remove tag type ignored"));
         }
         else {
             // Remove this attribute from the element.
