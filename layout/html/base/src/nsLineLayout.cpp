@@ -216,6 +216,16 @@ nsLineLayout::TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
   return PR_FALSE;
 }
 
+PRBool
+nsLineLayout::TreatFrameAsBlock(nsIFrame* aFrame)
+{
+  const nsStyleDisplay* display;
+  const nsStylePosition* position;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  aFrame->GetStyleData(eStyleStruct_Position,(const nsStyleStruct*&) position);
+  return TreatFrameAsBlock(display, position);
+}
+
 void
 nsLineLayout::UpdateInlines(nscoord aX, nscoord aY,
                             nscoord aWidth, nscoord aHeight,
