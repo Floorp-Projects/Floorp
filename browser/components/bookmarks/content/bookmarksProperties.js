@@ -206,7 +206,8 @@ function Init()
   var url = Bookmarks.GetTarget(resource, RDF.GetResource(gProperties[1]), true);
   if (url) {
     url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-    if (url.substr(0, 7).toLowerCase() == "http://" ||
+    if (!url                                        || 
+        url.substr(0, 7).toLowerCase() == "http://" ||
         url.substr(0, 8).toLowerCase() == "https://") {
       showScheduling = true;
     }
@@ -258,9 +259,9 @@ function Commit()
         newvalue = newvalue.toLowerCase();
       }
       else if (newvalue && gProperties[i] == (NC_NS + "URL")) {
-        // we're dealing with the URL attribute;
-        // if a scheme isn't specified, use "http://"
         if (newvalue.indexOf(":") < 0)
+          // we're dealing with the URL attribute;
+          // if a scheme isn't specified, use "http://"
           newvalue = "http://" + newvalue;
       }
 

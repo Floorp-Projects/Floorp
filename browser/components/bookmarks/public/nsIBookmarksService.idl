@@ -54,11 +54,8 @@ interface nsIBookmarksService : nsISupports
     const unsigned long BOOKMARK_FIND_TYPE      = 2;
 
     boolean readBookmarks();
-    boolean isBookmarked(in string aURL);
-    boolean isBookmarkedInternal(in nsIRDFResource aSource);
+    boolean isBookmarkedResource(in nsIRDFResource aSource);
 
-    void addBookmarkImmediately(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
-        
     nsIRDFResource createFolder(in wstring aName);
     nsIRDFResource createFolderInContainer(in wstring aName, in nsIRDFResource aParentFolder, 
                                            in long aIndex);
@@ -87,8 +84,6 @@ interface nsIBookmarksService : nsISupports
     
     string resolveKeyword(in wstring aName);
     
-    wstring getLastCharset(in string aURL);
-
     void importSystemBookmarks(in nsIRDFResource aParentFolder);
 
     readonly attribute nsITransactionManager transactionManager;

@@ -98,7 +98,6 @@ nsIRDFResource      *kNC_BookmarkSeparator;
 nsIRDFResource      *kNC_BookmarkAddDate;
 nsIRDFResource      *kNC_BookmarksTopRoot;
 nsIRDFResource      *kNC_BookmarksRoot;
-nsIRDFResource      *kNC_ID;
 nsIRDFResource      *kNC_Description;
 nsIRDFResource      *kNC_Folder;
 nsIRDFResource      *kNC_FolderType;
@@ -227,8 +226,6 @@ bm_AddRefGlobals()
                           &kNC_BookmarkSeparator);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkAddDate"),
                           &kNC_BookmarkAddDate);
-        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "ID"),
-                          &kNC_ID);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Description"),
                           &kNC_Description);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Folder"),
@@ -336,7 +333,6 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_BookmarkAddDate);
         NS_IF_RELEASE(kNC_BookmarksTopRoot);
         NS_IF_RELEASE(kNC_BookmarksRoot);
-        NS_IF_RELEASE(kNC_ID);
         NS_IF_RELEASE(kNC_Description);
         NS_IF_RELEASE(kNC_Folder);
         NS_IF_RELEASE(kNC_FolderType);
@@ -1685,22 +1681,22 @@ nsBookmarksService::Init()
     if (NS_SUCCEEDED(useProfile))
     {
         nsXPIDLString        currentProfileName;
-
-    useProfile = profileService->GetCurrentProfile(getter_Copies(currentProfileName));
-    if (NS_SUCCEEDED(useProfile))
-    {
-        const PRUnichar *param[1] = {currentProfileName.get()};
-        useProfile = mBundle->FormatStringFromName(NS_LITERAL_STRING("bookmarks_root").get(),
-                                                 param, 1, getter_Copies(mBookmarksRootName));
+    
+        useProfile = profileService->GetCurrentProfile(getter_Copies(currentProfileName));
         if (NS_SUCCEEDED(useProfile))
         {
-            PRInt32 profileCount;
-            useProfile = profileService->GetProfileCount(&profileCount);
-            if (NS_SUCCEEDED(useProfile) && profileCount == 1)
+            const PRUnichar *param[1] = {currentProfileName.get()};
+            useProfile = mBundle->FormatStringFromName(NS_LITERAL_STRING("bookmarks_root").get(),
+                                                    param, 1, getter_Copies(mBookmarksRootName));
+            if (NS_SUCCEEDED(useProfile))
             {
-                ToLowerCase(currentProfileName);
-                if (currentProfileName.Equals(NS_LITERAL_STRING("default")))
-                    useProfile = NS_ERROR_FAILURE;
+                PRInt32 profileCount;
+                useProfile = profileService->GetProfileCount(&profileCount);
+                if (NS_SUCCEEDED(useProfile) && profileCount == 1)
+                {
+                    ToLowerCase(currentProfileName);
+                    if (currentProfileName.Equals(NS_LITERAL_STRING("default")))
+                        useProfile = NS_ERROR_FAILURE;
                 }
             }
         }
@@ -2783,12 +2779,11 @@ nsBookmarksService::CreateSeparator(nsIRDFResource** aResult)
 }
 
 NS_IMETHODIMP
-nsBookmarksService::CloneResource(nsIRDFResource* aSource, nsIRDFResource** aResult)
+nsBookmarksService::CloneResource(nsIRDFResource* aSource,
+                                  nsIRDFResource** aResult)
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFResource> resource;
-    rv = gRDF->GetAnonymousResource(getter_AddRefs(resource));
+    nsCOMPtr<nsIRDFResource> newResource;
+    nsresult rv = gRDF->GetAnonymousResource(getter_AddRefs(newResource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISimpleEnumerator> arcs;
@@ -2797,73 +2792,51 @@ nsBookmarksService::CloneResource(nsIRDFResource* aSource, nsIRDFResource** aRes
 
     PRBool hasMore;
     while (NS_SUCCEEDED(arcs->HasMoreElements(&hasMore)) && hasMore) {
-        nsCOMPtr<nsISupports> isupports;
-        arcs->GetNext(getter_AddRefs(isupports));
+        nsCOMPtr<nsISupports> supports;
+        rv = arcs->GetNext(getter_AddRefs(supports));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports, &rv);
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(supports, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
       
-        nsCOMPtr<nsIRDFNode> targetNode;
-        rv = mInner->GetTarget(aSource, property, PR_TRUE, getter_AddRefs(targetNode));
+        // Don't duplicate the folder type.
+        // (NC:PersonalToolbarFolder, NC:NewBookmarkFolder, etc...)
+        PRBool isFolderType;
+        rv = property->EqualsNode(kNC_FolderType, &isFolderType);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (isFolderType)
+            continue;
+
+        nsCOMPtr<nsIRDFNode> target;
+        rv = mInner->GetTarget(aSource, property, PR_TRUE, getter_AddRefs(target));
         NS_ENSURE_SUCCESS(rv, rv);
  
-        // test if the arc points to a children
+        // Test if the arc points to a child.
         PRBool isOrdinal;
         rv = gRDFC->IsOrdinalProperty(property, &isOrdinal);
-        if (NS_SUCCEEDED(rv) && isOrdinal) {
-            nsCOMPtr<nsIRDFResource> oldTargetResource = do_QueryInterface(targetNode);
-            nsCOMPtr<nsIRDFResource> newTargetResource;
-            rv = CloneResource(oldTargetResource, getter_AddRefs(newTargetResource));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (isOrdinal) {
+            nsCOMPtr<nsIRDFResource> oldChild = do_QueryInterface(target);
+            nsCOMPtr<nsIRDFResource> newChild;
+            rv = CloneResource(oldChild, getter_AddRefs(newChild));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            mInner->Assert(resource, property, newTargetResource, PR_TRUE);
-        } else {
-            mInner->Assert(resource, property, targetNode, PR_TRUE);
+            rv = mInner->Assert(newResource, property, newChild, PR_TRUE);
+        }
+        else {
+            rv = mInner->Assert(newResource, property, target, PR_TRUE);
         }
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // correctly assert cloned ID
-    mInner->Change(resource, kNC_ID, aSource, resource);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *aResult = resource;
-    NS_ADDREF(*aResult);
+    NS_ADDREF(*aResult = newResource);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBookmarksService::AddBookmarkImmediately(const char *aURI,
-                                           const PRUnichar *aTitle, 
-                                           PRInt32 aBookmarkType, 
-                                           const PRUnichar *aCharset)
-{
-    nsresult rv;
-
-    // Figure out where to add the new bookmark
-    nsCOMPtr<nsIRDFResource> bookmarkFolder = kNC_NewBookmarkFolder;
-
-    switch(aBookmarkType)
-    {
-    case BOOKMARK_SEARCH_TYPE:
-    case BOOKMARK_FIND_TYPE:
-        bookmarkFolder = kNC_NewSearchFolder;
-        break;
-    }
-
-    nsCOMPtr<nsIRDFResource> destinationFolder;
-    rv = getFolderViaHint(bookmarkFolder, PR_TRUE, getter_AddRefs(destinationFolder));
-    if (NS_FAILED(rv)) 
-        return rv;
-
-    nsCOMPtr<nsIRDFResource> bookmark;
-    return CreateBookmarkInContainer(aTitle, aURI, nsnull, nsnull, aCharset, destinationFolder, -1, 
-                                     getter_AddRefs(bookmark));
-}
-
-NS_IMETHODIMP
-nsBookmarksService::IsBookmarkedInternal(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag)
+nsBookmarksService::IsBookmarkedResource(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag)
 {
     if (!bookmark)      return NS_ERROR_UNEXPECTED;
     if (!isBookmarkedFlag)  return NS_ERROR_UNEXPECTED;
@@ -2903,79 +2876,6 @@ nsBookmarksService::IsBookmarkedInternal(nsIRDFResource *bookmark, PRBool *isBoo
         }
     }
     return rv;
-}
-
-NS_IMETHODIMP
-nsBookmarksService::IsBookmarked(const char* aURL, PRBool* aIsBookmarked)
-{
-    NS_ENSURE_ARG(aURL);
-    NS_ENSURE_ARG_POINTER(aIsBookmarked);
-
-    if (!mInner)
-        return NS_ERROR_UNEXPECTED;
-
-    *aIsBookmarked = PR_FALSE;
-
-    nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
-                                   getter_AddRefs(urlLiteral));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIRDFResource> bookmark;
-    rv = GetSource(kNC_URL, urlLiteral, PR_TRUE, getter_AddRefs(bookmark));
-    if (NS_FAILED(rv))
-        return rv;
-
-    return IsBookmarkedInternal(bookmark, aIsBookmarked);
-}
-
-NS_IMETHODIMP
-nsBookmarksService::GetLastCharset(const char* aURL, PRUnichar** aLastCharset)
-{
-    NS_PRECONDITION(aURL != nsnull, "null ptr");
-    if (! aURL)
-        return NS_ERROR_NULL_POINTER;
-    NS_ENSURE_ARG_POINTER(aLastCharset);
-
-    if (!mInner)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
-                                   getter_AddRefs(urlLiteral));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIRDFResource> bookmark;
-    rv = GetSource(kNC_URL, urlLiteral, PR_TRUE, getter_AddRefs(bookmark));
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (bookmark) {
-        // Always use mInner! Otherwise, could get into an infinite loop
-        // due to Assert/Change calling UpdateBookmarkLastModifiedDate().
-
-        nsCOMPtr<nsIRDFNode> nodeType;
-        GetSynthesizedType(bookmark, getter_AddRefs(nodeType));
-        if (nodeType == kNC_Bookmark) {
-            nsCOMPtr<nsIRDFNode>  charsetNode;
-            rv = mInner->GetTarget(bookmark, kWEB_LastCharset, PR_TRUE,
-                                   getter_AddRefs(charsetNode));
-            if (NS_FAILED(rv))
-                return rv;
-
-            if (charsetNode) {
-                nsCOMPtr<nsIRDFLiteral> charsetLiteral = do_QueryInterface(charsetNode);
-                if (charsetLiteral) {
-                    return charsetLiteral->GetValue(aLastCharset);
-                }
-            }
-        }
-    }
-
-    *aLastCharset = nsnull;
-    return NS_RDF_NO_VALUE;
 }
 
 NS_IMETHODIMP
@@ -3180,9 +3080,9 @@ nsBookmarksService::GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType
 
         if (isContainer)
         {
-            *aType =  kNC_Folder;
+            *aType = kNC_Folder;
         }
-        else if (NS_SUCCEEDED(rv = IsBookmarkedInternal(aNode,
+        else if (NS_SUCCEEDED(rv = IsBookmarkedResource(aNode,
                                                         &isBookmarkedFlag)) && (isBookmarkedFlag == PR_TRUE))
         {
             *aType = kNC_Bookmark;
@@ -3547,7 +3447,7 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 {
     *aTarget = nsnull;
 
-    nsresult    rv;
+    nsresult rv;
 
     if (aTruthValue && (aProperty == kRDF_type))
     {
@@ -4212,12 +4112,10 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
             continue;
     }
 
-    // if not setting a new Personal Toolbar Folder, just assert new type, and then done
-
-    if (objType != kNC_PersonalToolbarFolder)
-    {
-        if (NS_SUCCEEDED(rv = mInner->Assert(newSource, kNC_FolderType, objType, PR_TRUE)))
-        { }
+    // If not setting a new Personal Toolbar Folder, just assert new type, and
+    // then done.
+    if (objType != kNC_PersonalToolbarFolder) {
+        rv = mInner->Assert(newSource, kNC_FolderType, objType, PR_TRUE);
 
         mDirty = PR_TRUE;
         return rv;
@@ -4251,7 +4149,7 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
     mDirty = PR_TRUE;
     Flush();
 
-    return rv;
+    return NS_OK;
 }
 
 nsresult
@@ -4268,16 +4166,10 @@ nsBookmarksService::getFolderViaHint(nsIRDFResource *objType, PRBool fallbackFla
 
     if ((rv != NS_RDF_NO_VALUE) && (oldSource))
     {
-        const   char        *uri = nsnull;
-        oldSource->GetValueConst(&uri);
-        if (uri)
-        {
-            PRBool  isBookmarkedFlag = PR_FALSE;
-            if (NS_SUCCEEDED(rv = IsBookmarked(uri, &isBookmarkedFlag)) &&
-                (isBookmarkedFlag == PR_TRUE))
-            {
-                *folder = oldSource;
-            }
+        PRBool isBookmarkedFlag = PR_FALSE;
+        if (NS_SUCCEEDED(rv = IsBookmarkedResource(oldSource, &isBookmarkedFlag)) &&
+            isBookmarkedFlag) {
+            *folder = oldSource;
         }
     }
 
@@ -4797,7 +4689,6 @@ nsBookmarksService::LoadBookmarks()
             }
         }
 
-    
       // Sets the default bookmarks root name.
       nsCOMPtr<nsIRDFLiteral> brNameLiteral;
       rv = gRDF->GetLiteral(mBookmarksRootName.get(), getter_AddRefs(brNameLiteral));
@@ -5047,9 +4938,9 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
 static const char kBookmarkIntro[] = "<DL><p>" NS_LINEBREAK;
 static const char kIndent[] = "    ";
 static const char kContainerIntro[] = "<DT><H3";
-static const char kSpace[] = " ";
+static const char kSpaceStr[] = " ";
 static const char kTrueEnd[] = "true\"";
-static const char kQuote[] = "\"";
+static const char kQuoteStr[] = "\"";
 static const char kCloseAngle[] = ">";
 static const char kCloseH3[] = "</H3>" NS_LINEBREAK;
 static const char kHROpen[] = "<HR";
@@ -5151,7 +5042,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_NewBookmarkFolder,
                                                                PR_TRUE, &hasType)) && (hasType == PR_TRUE))
                     {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                        rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                         rv |= strm->Write(kNewBookmarkFolderEquals, sizeof(kNewBookmarkFolderEquals)-1, &dummy);
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
@@ -5159,7 +5050,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_NewSearchFolder,
                                                                PR_TRUE, &hasType)) && (hasType == PR_TRUE))
                     {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                        rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                         rv |= strm->Write(kNewSearchFolderEquals, sizeof(kNewSearchFolderEquals)-1, &dummy);
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
@@ -5167,7 +5058,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_PersonalToolbarFolder,
                                                                PR_TRUE, &hasType)) && (hasType == PR_TRUE))
                     {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                        rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                         rv |= strm->Write(kPersonalToolbarFolderEquals, sizeof(kPersonalToolbarFolderEquals)-1, &dummy);
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
@@ -5178,10 +5069,10 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     rv = child->GetValueConst(&id);
                     if (NS_SUCCEEDED(rv) && (id))
                     {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                        rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                         rv |= strm->Write(kIDEquals, sizeof(kIDEquals)-1, &dummy);
                         rv |= strm->Write(id, strlen(id), &dummy);
-                        rv |= strm->Write(kQuote, sizeof(kQuote)-1, &dummy);
+                        rv |= strm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
                         if (NS_FAILED(rv)) break;
                     }
           
@@ -5279,10 +5170,10 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                             rv = child->GetValueConst(&id);
                             if (NS_SUCCEEDED(rv) && (id))
                             {
-                                rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                                rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                                 rv |= strm->Write(kIDEquals, sizeof(kIDEquals)-1, &dummy);
                                 rv |= strm->Write(id, strlen(id), &dummy);
-                                rv |= strm->Write(kQuote, sizeof(kQuote)-1, &dummy);
+                                rv |= strm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
                                 if (NS_FAILED(rv)) break;
                             }
 
@@ -5464,7 +5355,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds,
             {
                 if (isFirst == PR_FALSE)
                 {
-                    rv |= strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                    rv |= strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                 }
 
                 if (property == kNC_Description)
@@ -5487,7 +5378,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds,
                 {
                     rv |= strm->Write(htmlAttrib, strlen(htmlAttrib), &dummy);
                     rv |= strm->Write(attribute, strlen(attribute), &dummy);
-                    rv |= strm->Write(kQuote, sizeof(kQuote)-1, &dummy);
+                    rv |= strm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
                 }
                 nsCRT::free(attribute);
                 attribute = nsnull;
@@ -5508,7 +5399,7 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
     nsresult    rv;
     PRBool      isBookmarkedFlag = PR_FALSE, canAcceptFlag = PR_FALSE, isOrdinal;
 
-    if (NS_SUCCEEDED(rv = IsBookmarkedInternal(aSource, &isBookmarkedFlag)) &&
+    if (NS_SUCCEEDED(rv = IsBookmarkedResource(aSource, &isBookmarkedFlag)) &&
         (isBookmarkedFlag == PR_TRUE) &&
         (NS_SUCCEEDED(rv = gRDFC->IsOrdinalProperty(aProperty, &isOrdinal))))
     {
@@ -5547,7 +5438,6 @@ nsBookmarksService::OnAssert(nsIRDFDataSource* aDataSource,
                  nsIRDFNode* aTarget)
 {
     if (mUpdateBatchNest != 0)  return NS_OK;
-
 
     PRInt32 count = mObservers.Count();
     for (PRInt32 i = 0; i < count; ++i)
@@ -5628,12 +5518,9 @@ nsBookmarksService::OnBeginUpdateBatch(nsIRDFDataSource* aDataSource)
 NS_IMETHODIMP
 nsBookmarksService::OnEndUpdateBatch(nsIRDFDataSource* aDataSource)
 {
-    if (mUpdateBatchNest > 0)
-    {
-        --mUpdateBatchNest;
-    }
+    NS_ASSERTION(mUpdateBatchNest > 0, "badly nested update batch");
 
-    if (mUpdateBatchNest == 0)
+    if (--mUpdateBatchNest == 0)
     {
         PRInt32 count = mObservers.Count();
         for (PRInt32 i = 0; i < count; ++i) {

@@ -36,7 +36,7 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-var NC_NS, RDF_NS, XUL_NS, NC_NS_CMD;
+var NC_NS, WEB_NS, RDF_NS, XUL_NS, NC_NS_CMD;
 
 // definition of the services frequently used for bookmarks
 var kRDFContractID;
@@ -69,10 +69,15 @@ var kWINDOWContractID;
 var kWINDOWIID;
 var WINDOWSVC;
 
+var kDSContractID;
+var kDSIID;
+var DS;
+
 // should be moved in a separate file
 function initServices()
 {
   NC_NS     = "http://home.netscape.com/NC-rdf#";
+  WEB_NS    = "http://home.netscape.com/WEB-rdf#";
   RDF_NS    = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
   XUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   NC_NS_CMD = NC_NS + "command?cmd=";
@@ -85,7 +90,7 @@ function initServices()
 
   kRDFCContractID  = "@mozilla.org/rdf/container;1";
   kRDFCIID         = Components.interfaces.nsIRDFContainer;
-  RDFC             = Components.classes[kRDFCContractID].getService(kRDFCIID);
+  RDFC             = Components.classes[kRDFCContractID].createInstance(kRDFCIID);
 
   kRDFCUContractID = "@mozilla.org/rdf/container-utils;1";
   kRDFCUIID        = Components.interfaces.nsIRDFContainerUtils;
@@ -104,6 +109,10 @@ function initServices()
   kWINDOWIID        = Components.interfaces.nsIWindowMediator;
   WINDOWSVC         = Components.classes[kWINDOWContractID].getService(kWINDOWIID);
 
+  kDSContractID     = "@mozilla.org/widget/dragservice;1";
+  kDSIID            = Components.interfaces.nsIDragService;
+  DS                = Components.classes[kDSContractID].getService(kDSIID);
+
 }
 
 function initBMService()
@@ -111,12 +120,8 @@ function initBMService()
   kBMSVCIID = Components.interfaces.nsIBookmarksService;
   BMDS  = RDF.GetDataSource("rdf:bookmarks");
   BMSVC = BMDS.QueryInterface(kBMSVCIID);
-  BookmarkInsertTransaction.prototype.RDFC = RDFC;
-  BookmarkInsertTransaction.prototype.BMDS = BMDS;
-  BookmarkRemoveTransaction.prototype.RDFC = RDFC;
-  BookmarkRemoveTransaction.prototype.BMDS = BMDS;
-  BookmarkImportTransaction.prototype.RDFC = RDFC;
-  BookmarkImportTransaction.prototype.BMDS = BMDS;
+  BookmarkTransaction.prototype.RDFC = RDFC;
+  BookmarkTransaction.prototype.BMDS = BMDS;
 }
 
 /**
@@ -634,36 +639,53 @@ var BookmarksCommand = {
     }
   },
 
+  createNewBookmark: function (aTarget)
+  {
+    var name     = BookmarksUtils.getLocaleString("ile_newbookmark");
+    var resource = BMSVC.createBookmark(name, "", "", "", "");
+    this.createNewResource(resource, aTarget, "newbookmark");
+  },
+
   createNewFolder: function (aTarget)
   {
-    var name      = BookmarksUtils.getLocaleString("ile_newfolder");
-    var rFolder   = BMSVC.createFolder(name);
-    
-    var selection = BookmarksUtils.getSelectionFromResource(rFolder, aTarget.parent);
-    var ok        = BookmarksUtils.insertSelection("newfolder", selection, aTarget);
+    var name     = BookmarksUtils.getLocaleString("ile_newfolder");
+    var resource = BMSVC.createFolder(name);
+    this.createNewResource(resource, aTarget, "newfolder");
+  },
+
+  createNewSeparator: function (aTarget)
+  {
+    var resource = BMSVC.createSeparator();
+    this.createNewResource(resource, aTarget, "newseparator");
+  },
+
+  createNewResource: function(aResource, aTarget, aTxnType)
+  {
+    var selection = BookmarksUtils.getSelectionFromResource(aResource, aTarget.parent);
+    // XXXpch: ugly ugly ugly temporary hack, getsynthesizeType says a bookmark
+    // is not a bookmark when it's not a child of sth.
+    if (aTxnType == "newbookmark") {
+      selection.type[0] = "Bookmark";
+      selection.isImmutable[0] = false;
+      selection.containsImmutable = false;
+    }
+    var ok        = BookmarksUtils.insertSelection(aTxnType, selection, aTarget);
     if (ok) {
       var propWin = this.openBookmarkProperties(selection);
       
-      function canceledNewFolder()
+      function canceledNewResource()
       {
         BookmarksCommand.deleteBookmark(selection);
-        propWin.document.documentElement.removeEventListener("dialogcancel", canceledNewFolder, false);
+        propWin.document.documentElement.removeEventListener("dialogcancel", canceledNewResource, false);
         propWin.removeEventListener("load", propertiesWindowLoad, false);
       }
       
       function propertiesWindowLoad()
       {
-        propWin.document.documentElement.addEventListener("dialogcancel", canceledNewFolder, false);
+        propWin.document.documentElement.addEventListener("dialogcancel", canceledNewResource, false);
       }
       propWin.addEventListener("load", propertiesWindowLoad, false);
     }
-  },
-
-  createNewSeparator: function (aTarget)
-  {
-    var rSeparator  = BMSVC.createSeparator();
-    var selection   = BookmarksUtils.getSelectionFromResource(rSeparator);
-    BookmarksUtils.insertSelection("newseparator", selection, aTarget);
   },
 
   importBookmarks: function ()
@@ -784,9 +806,6 @@ var BookmarksController = {
 
   isCommandEnabled: function (aCommand, aSelection, aTarget)
   {
-    if (aTarget.parent.Value == "NC:BookmarksTopRoot")
-      return false;
-
     var item0, type0;
     var length = aSelection.length;
     if (length != 0) {
@@ -797,10 +816,11 @@ var BookmarksController = {
 
     switch(aCommand) {
     case "cmd_undo":
-    case "cmd_redo":
     case "cmd_bm_undo":
+      return BMSVC.transactionManager.numberOfUndoItems > 0;
+    case "cmd_redo":
     case "cmd_bm_redo":
-      return true;
+      return BMSVC.transactionManager.numberOfRedoItems > 0;
     case "cmd_bm_paste":
       if (!BookmarksUtils.isValidTargetContainer(aTarget.parent))
         return false;
@@ -824,9 +844,8 @@ var BookmarksController = {
     case "cmd_bm_copy":
       return length > 0;
     case "cmd_bm_cut":
-      return true;
     case "cmd_bm_delete":
-      return length > 0 && aSelection.containsMutable && !aSelection.containsPTF;
+      return length > 0 && !aSelection.containsImmutable && !aSelection.containsPTF;
     case "cmd_bm_selectAll":
       return true;
     case "cmd_bm_open":
@@ -868,14 +887,15 @@ var BookmarksController = {
     case "cmd_bm_setpersonaltoolbarfolder":
       if (length != 1)
         return false;
-      return item0 != "NC:PersonalToolbarFolder" && type0 == "Folder";
+      return item0 != "NC:PersonalToolbarFolder" &&
+             item0 != "NC:BookmarksRoot" && type0 == "Folder";
     case "cmd_bm_setnewsearchfolder":
       if (length != 1)
         return false;
       return item0 != "NC:NewSearchFolder"       && 
              (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_movebookmark":
-      return length > 0;
+      return length > 0 && !aSelection.containsImmutable;
     default:
       return false;
     }
@@ -931,14 +951,11 @@ var BookmarksController = {
     case "cmd_bm_movebookmark":
       BookmarksCommand.moveBookmark(aSelection);
       break;
+    case "cmd_bm_newbookmark":
+      BookmarksCommand.createNewBookmark(aTarget);
+      break;
     case "cmd_bm_newfolder":
       BookmarksCommand.createNewFolder(aTarget);
-      break;
-    case "cmd_bm_newbookmark":
-      var folder = aTarget.parent.Value;
-      var rv = { newBookmark: null };
-      openDialog("chrome://browser/content/bookmarks/addBookmark.xul", "", 
-                 "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, folder, null, "newBookmark", rv);
       break;
     case "cmd_bm_newseparator":
       BookmarksCommand.createNewSeparator(aTarget);
@@ -957,12 +974,10 @@ var BookmarksController = {
 
   onCommandUpdate: function (aSelection, aTarget)
   {
-    var commands = ["cmd_bm_newbookmark", "cmd_bm_newfolder", "cmd_bm_newseparator", 
-                    "cmd_bm_properties", "cmd_bm_rename", 
+    var commands = ["cmd_bm_newbookmark", "cmd_bm_newfolder", "cmd_bm_newseparator",
+                    "cmd_undo", "cmd_redo", "cmd_bm_properties", "cmd_bm_rename", 
                     "cmd_bm_copy", "cmd_bm_paste", "cmd_bm_cut", "cmd_bm_delete",
-                    "cmd_bm_setpersonaltoolbarfolder", 
-                    "cmd_bm_setnewbookmarkfolder",
-                    "cmd_bm_setnewsearchfolder", "cmd_bm_movebookmark", 
+                    "cmd_bm_setpersonaltoolbarfolder", "cmd_bm_movebookmark", 
                     "cmd_bm_openfolder", "cmd_bm_managefolder"];
     for (var i = 0; i < commands.length; ++i) {
       var enabled = this.isCommandEnabled(commands[i], aSelection, aTarget);
@@ -1076,6 +1091,17 @@ var BookmarksUtils = {
     }    
   },
 
+  getResource: function (aName)
+  {
+    if (aName == "LastModifiedDate" ||
+        aName == "LastVisitDate") {
+      return RDF.GetResource(WEB_NS + aName);
+    }
+    else {
+      return RDF.GetResource(NC_NS + aName);
+    }
+  },
+
   /////////////////////////////////////////////////////////////////////////////
   // Determine the rdf:type property for the given resource.
   resolveType: function (aResource)
@@ -1147,13 +1173,13 @@ var BookmarksUtils = {
     if (aSelection.length == 0)
       return;
 
-    aSelection.type            = new Array(aSelection.length);
-    aSelection.protocol        = new Array(aSelection.length);
-    aSelection.isContainer     = new Array(aSelection.length);
-    aSelection.isImmutable     = new Array(aSelection.length);
-    aSelection.isValid         = new Array(aSelection.length);
-    aSelection.containsMutable = false;
-    aSelection.containsPTF     = false;
+    aSelection.type        = new Array(aSelection.length);
+    aSelection.protocol    = new Array(aSelection.length);
+    aSelection.isContainer = new Array(aSelection.length);
+    aSelection.isImmutable = new Array(aSelection.length);
+    aSelection.isValid     = new Array(aSelection.length);
+    aSelection.containsPTF = false;
+    aSelection.containsImmutable = false;
     var index, item, parent, type, protocol, isContainer, isImmutable, isValid;
     for (var i=0; i<aSelection.length; ++i) {
       item        = aSelection.item[i];
@@ -1164,8 +1190,9 @@ var BookmarksUtils = {
                     protocol == "find" || protocol == "file";
       isValid     = true;
       isImmutable = false;
-      if (item == "NC:BookmarksRoot")
+      if (item.Value == "NC:BookmarksRoot") {
         isImmutable = true;
+      }
       else if (type != "Bookmark" && type != "BookmarkSeparator" && 
                type != "Folder"   && type != "PersonalToolbarFolder")
         isImmutable = true;
@@ -1174,8 +1201,8 @@ var BookmarksUtils = {
         if (parentProtocol == "find" || parentProtocol == "file")
           aSelection.parent[i] = null;
       }
-      if (!isImmutable && aSelection.parent[i])
-        aSelection.containsMutable = true;
+      if (isImmutable)
+        aSelection.containsImmutable = true;
 
       aSelection.type       [i] = type;
       aSelection.protocol   [i] = protocol;
@@ -1233,6 +1260,8 @@ var BookmarksUtils = {
   isValidTargetContainer: function (aFolder, aSelection)
   {
     if (!aFolder)
+      return false;
+    if (aFolder.Value == "NC:BookmarksTopRoot")
       return false;
     if (aFolder.Value == "NC:BookmarksRoot")
       return true;
@@ -1318,7 +1347,7 @@ var BookmarksUtils = {
       var rSource = aSelection.item[i];
       
       if (transaction.isValid[i]) {
-        if (BMSVC.isBookmarkedInternal(rSource))
+        if (BMSVC.isBookmarkedResource(rSource))
           rSource = BMSVC.cloneResource(rSource);
         transaction.item  [i] = rSource;
         transaction.parent[i] = aTarget.parent;
@@ -1491,6 +1520,35 @@ var BookmarksUtils = {
   }
 }
 
+function BookmarkTransaction()
+{
+}
+
+BookmarkTransaction.prototype = {
+  BATCH_LIMIT : 8,
+  RDFC        : null,
+  BMDS        : null,
+
+  beginUpdateBatch: function()
+  {
+    if (this.item.length > this.BATCH_LIMIT) {
+      this.BMDS.beginUpdateBatch();
+    }
+  },
+
+  endUpdateBatch: function()
+  {
+    if (this.item.length > this.BATCH_LIMIT) {
+      this.BMDS.endUpdateBatch();
+    }
+  },
+  merge               : function (aTxn)   {return false},
+  QueryInterface      : function (aUID)   {return this},
+  getHelperForLanguage: function (aCount) {return null},
+  getInterfaces       : function (aCount) {return null},
+  canCreateWrapper    : function (aIID)   {return "AllAccess"}
+}
+
 function BookmarkInsertTransaction (aAction)
 {
   this.wrappedJSObject = this;
@@ -1504,42 +1562,40 @@ function BookmarkInsertTransaction (aAction)
 
 BookmarkInsertTransaction.prototype =
 {
+  __proto__: BookmarkTransaction.prototype,
 
   isTransient: false,
-  RDFC       : RDFC,
-  BMDS       : BMDS,
 
   doTransaction: function ()
   {
+    this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);
         this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
       }
     }
+    this.endUpdateBatch();
   },
 
   undoTransaction: function ()
   {
+    this.beginUpdateBatch();
+    // XXXvarga Can't use |RDFC| here because it's being "reused" elsewhere.
+    var container = Components.classes[kRDFCContractID].createInstance(kRDFCIID);
     for (var i=this.item.length-1; i>=0; i--) {
       if (this.isValid[i]) {
-        this.RDFC.Init(this.BMDS, this.parent[i]);
-        this.RDFC.RemoveElementAt(this.index[i], true);
+        container.Init(this.BMDS, this.parent[i]);
+        container.RemoveElementAt(this.index[i], true);
       }
     }
+    this.endUpdateBatch();
   },
    
   redoTransaction: function ()
   {
     this.doTransaction();
-  },
-
-  merge               : function (aTransaction) {return false},
-  QueryInterface      : function (aUID)         {return this},
-  getHelperForLanguage: function (aCount)       {return null},
-  getInterfaces       : function (aCount)       {return null},
-  canCreateWrapper    : function (aIID)         {return "AllAccess"}
-
+  }
 }
 
 function BookmarkRemoveTransaction (aAction)
@@ -1555,42 +1611,38 @@ function BookmarkRemoveTransaction (aAction)
 
 BookmarkRemoveTransaction.prototype =
 {
+  __proto__: BookmarkTransaction.prototype,
 
   isTransient: false,
-  RDFC       : RDFC,
-  BMDS       : BMDS,
 
   doTransaction: function ()
   {
+    this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);
         this.RDFC.RemoveElementAt(this.index[i], false);
       }
     }
+    this.endUpdateBatch();
   },
 
   undoTransaction: function ()
   {
+    this.beginUpdateBatch();
     for (var i=this.item.length-1; i>=0; i--) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);
         this.RDFC.InsertElementAt(this.item[i], this.index[i], false);
       }
     }
+    this.endUpdateBatch();
   },
    
   redoTransaction: function ()
   {
     this.doTransaction();
-  },
-
-  merge               : function (aTransaction) {return false},
-  QueryInterface      : function (aUID)         {return this},
-  getHelperForLanguage: function (aCount)       {return null},
-  getInterfaces       : function (aCount)       {return null},
-  canCreateWrapper    : function (aIID)         {return "AllAccess"}
-
+  }
 }
 
 function BookmarkMoveTransaction (aAction, aSelection, aTarget)
@@ -1605,23 +1657,34 @@ function BookmarkMoveTransaction (aAction, aSelection, aTarget)
 
 BookmarkMoveTransaction.prototype =
 {
+  __proto__: BookmarkTransaction.prototype,
 
   isTransient: false,
 
-  doTransaction: function ()
+  beginUpdateBatch: function()
   {
-    BookmarksUtils.removeSelection("move", this.selection);
-    BookmarksUtils.insertSelection("move", this.selection, this.target);
+    if (this.selection.length > this.BATCH_LIMIT) {
+      this.BMDS.beginUpdateBatch();
+    }
   },
 
-  undoTransaction     : function () {},
-  redoTransaction     : function () {},
-  merge               : function (aTransaction) {return false},
-  QueryInterface      : function (aUID)         {return this},
-  getHelperForLanguage: function (aCount)       {return null},
-  getInterfaces       : function (aCount)       {return null},
-  canCreateWrapper    : function (aIID)         {return "AllAccess"}
+  endUpdateBatch: function()
+  {
+    if (this.selection.length > this.BATCH_LIMIT) {
+      this.BMDS.endUpdateBatch();
+    }
+  },
 
+  doTransaction: function ()
+  {
+    this.beginUpdateBatch();
+    BookmarksUtils.removeSelection("move", this.selection);
+    BookmarksUtils.insertSelection("move", this.selection, this.target);
+    this.endUpdateBatch();
+  },
+
+  undoTransaction: function () {},
+  redoTransaction: function () {}
 }
 
 function BookmarkImportTransaction (aAction)
@@ -1637,10 +1700,9 @@ function BookmarkImportTransaction (aAction)
 
 BookmarkImportTransaction.prototype =
 {
+  __proto__: BookmarkTransaction.prototype,
 
   isTransient: false,
-  RDFC       : RDFC,
-  BMDS       : BMDS,
 
   doTransaction: function ()
   {
@@ -1648,30 +1710,27 @@ BookmarkImportTransaction.prototype =
 
   undoTransaction: function ()
   {
+    this.beginUpdateBatch();
     for (var i=this.item.length-1; i>=0; i--) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);
         this.RDFC.RemoveElementAt(this.index[i], true);
       }
     }
+    this.endUpdateBatch();
   },
    
   redoTransaction: function ()
   {
+    this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);
         this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
       }
     }
-  },
-
-  merge               : function (aTransaction) {return false},
-  QueryInterface      : function (aUID)         {return this},
-  getHelperForLanguage: function (aCount)       {return null},
-  getInterfaces       : function (aCount)       {return null},
-  canCreateWrapper    : function (aIID)         {return "AllAccess"}
-
+    this.endUpdateBatch();
+  }
 }
 
 var BookmarkEditMenuTxnListener =
@@ -1713,10 +1772,8 @@ var BookmarkEditMenuTxnListener =
     transactionNumber = aTxmgr.numberOfUndoItems;
     dump("N UNDO: "+transactionNumber+"\n")
     if (transactionNumber == 0) {
-      node.setAttribute("disabled", "true");
       transactionLabel = BookmarksUtils.getLocaleString("cmd_bm_undo");
     } else {
-      node.removeAttribute("disabled");
       transactionList  = aTxmgr.getUndoList();
       action           = transactionList.getItem(transactionNumber-1).wrappedJSObject.action;
       transactionLabel = BookmarksUtils.getLocaleString("cmd_bm_"+action+"_undo")
@@ -1727,17 +1784,14 @@ var BookmarkEditMenuTxnListener =
     transactionNumber = aTxmgr.numberOfRedoItems;
     dump("N REDO: "+transactionNumber+"\n")
     if (transactionNumber == 0) {
-      node.setAttribute("disabled", "true");
       transactionLabel = BookmarksUtils.getLocaleString("cmd_bm_redo");
     } else {
-      node.removeAttribute("disabled");
       transactionList  = aTxmgr.getRedoList();
       action           = transactionList.getItem(transactionNumber-1).wrappedJSObject.action;
       transactionLabel = BookmarksUtils.getLocaleString("cmd_bm_"+action+"_redo")
     }
     node.setAttribute("label", transactionLabel);
   }
-
 }
 
 function dumpOBJ (aObj) 
@@ -1805,4 +1859,3 @@ function dumpTXN(aTxn)
     }
   }
 }
-  
