@@ -430,6 +430,7 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 
   PRInt64 maxOrig, limOrig, testOrig;
   PRInt32 testLine, thisLine;
+  PRInt64 tmp64;
 
   maxOrig = LL_MININT;
   aFrame->GetRect(tempRect);
@@ -437,16 +438,20 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   if (NS_FAILED(result) || thisLine < 0)
     return nsnull;
 
-  LL_SHL(limOrig, thisLine, 32);
-  LL_OR2(limOrig, tempRect.x);
+  LL_I2L(tmp64, thisLine);
+  LL_SHL(limOrig, tmp64, 32);
+  LL_I2L(tmp64, tempRect.x);
+  LL_OR2(limOrig, tmp64);
 
   while (frame) {
     if (NS_SUCCEEDED(iter->FindLineContaining(frame, &testLine))
         && testLine >= 0
         && (testLine == thisLine || testLine == thisLine - 1)) {
       frame->GetRect(tempRect);
-      LL_SHL(testOrig, testLine, 32);
-      LL_OR2(testOrig, tempRect.x);
+      LL_I2L(tmp64, testLine);
+      LL_SHL(testOrig, tmp64, 32);
+      LL_I2L(tmp64, tempRect.x);
+      LL_OR2(testOrig, tmp64);
       if (LL_CMP(testOrig, >, maxOrig) && LL_CMP(testOrig, <, limOrig)) { // we are looking for the highest value less than the current one
         maxOrig = testOrig;
         furthestFrame = frame;
@@ -513,16 +518,22 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   if (NS_FAILED(result) || thisLine < 0)
     return nsnull;
 
-  LL_SHL(limOrig, thisLine, 32);
-  LL_OR2(limOrig, tempRect.x);
+  PRInt64 tmp64;
+
+  LL_I2L(tmp64, thisLine);
+  LL_SHL(limOrig, tmp64, 32);
+  LL_I2L(tmp64, tempRect.x);
+  LL_OR2(limOrig, tmp64);
 
   while (frame) {
     if (NS_SUCCEEDED(iter->FindLineContaining(frame, &testLine))
         && testLine >= 0
         && (testLine == thisLine || testLine == thisLine + 1)) {
       frame->GetRect(tempRect);
-      LL_SHL(testOrig, testLine, 32);
-      LL_OR2(testOrig, tempRect.x);
+      LL_I2L(tmp64, testLine);
+      LL_SHL(testOrig, tmp64, 32);
+      LL_I2L(tmp64, tempRect.x);
+      LL_OR2(testOrig, tmp64);
       if (LL_CMP(testOrig, <, minOrig) && LL_CMP(testOrig, >, limOrig)) { // we are looking for the lowest value greater than the current one
         minOrig = testOrig;
         nearestFrame = frame;
