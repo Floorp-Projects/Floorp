@@ -155,7 +155,7 @@ CSRCS += $(HPUX_CSRCS)
 endif
 ifeq ($(OS_ARCH),OSF1)
 CSRCS += $(OSF1_CSRCS)
-endi:
+endif
 ifeq ($(OS_ARCH),OpenVMS)
 CSRCS += $(OPENVMS_CSRCS)
 endif
