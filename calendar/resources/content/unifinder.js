@@ -53,48 +53,7 @@ function calendarUnifinderInit( )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         /* 
-         This no longer works since we moved to a tree 
-         */
-         
-         var SearchTree = document.getElementById( "unifinder-search-results-listbox" );
-         
-         SearchTree.setAttribute( "suppressonselect", "true" );
-
-         SearchTree.treeBoxObject.selection.clearSelection();
-         
-         if( EventSelectionArray.length > 0 )
-         {
-            for( i = 0; i < EventSelectionArray.length; i++ )
-            {
-               var SearchTreeItem = document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id );
-               
-               if( SearchTreeItem )
-               {
-                  var Index = SearchTree.contentView.getIndexOfItem( SearchTreeItem );
-                  
-                  SearchTree.treeBoxObject.ensureRowIsVisible( Index );
-      
-                  SearchTree.treeBoxObject.selection.toggleSelect( Index );
-               }
-            }
-         }
-         /*SearchTree.clearSelection();
-         
-         if( EventSelectionArray.length > 0 )
-         {
-            for( i = 0; i < EventSelectionArray.length; i++ )
-            {
-               var SearchTreeItem = document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id );
-               
-               //you need this for when an event is added. It doesn't yet exist.
-               if( SearchTreeItem )
-                  SearchTree.addItemToSelection( SearchTreeItem );
-            }
-         }
-         dump( "\nAllow on select now!" );
-         SearchTree.removeAttribute( "suppressonselect" );
-         */
+         selectSelectedEvents( );
       }
    }
       
@@ -132,6 +91,8 @@ var unifinderEventDataSourceObserver =
             if( calendarEvent )
             {
                 unifinderRefesh();
+
+                setTimeout( "selectSelectedEvents()", 1000 );
             }
         }
    },
@@ -141,6 +102,8 @@ var unifinderEventDataSourceObserver =
         if( !gICalLib.batchMode )
         {
             unifinderRefesh();
+
+            setTimeout( "selectSelectedEvents()", 1000 );
         }
    },
 
@@ -149,6 +112,8 @@ var unifinderEventDataSourceObserver =
         if( !gICalLib.batchMode )
         {
             unifinderRefesh();
+
+            setTimeout( "selectSelectedEvents()", 1000 );
         }
    },
 
@@ -159,7 +124,35 @@ var unifinderEventDataSourceObserver =
 
 };
 
+function selectSelectedEvents( )
+{
+   EventSelectionArray = gCalendarWindow.EventSelection.selectedEvents;
 
+   var SearchTree = document.getElementById( "unifinder-search-results-listbox" );
+         
+   SearchTree.setAttribute( "suppressonselect", "true" );
+
+   SearchTree.treeBoxObject.selection.clearSelection();
+   
+   if( EventSelectionArray.length > 0 )
+   {
+      dump( "Selected event is "+EventSelectionArray.length );
+
+      for( i = 0; i < EventSelectionArray.length; i++ )
+      {
+         var SearchTreeItem = document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id );
+         
+         if( SearchTreeItem )
+         {
+            var Index = SearchTree.contentView.getIndexOfItem( SearchTreeItem );
+            
+            SearchTree.treeBoxObject.ensureRowIsVisible( Index );
+
+            SearchTree.treeBoxObject.selection.toggleSelect( Index );
+         }
+      }
+   }
+}
 /**
 *   Called when the calendar is loaded
 */
