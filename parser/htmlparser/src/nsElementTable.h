@@ -92,8 +92,9 @@ static const int kAllTags       = 0xffffff;
 //*********************************************************************************************
 
 
-extern void InitializeElementTable(void);
-extern void DeleteElementTable(void);
+#ifdef NS_DEBUG
+extern void CheckElementTable();
+#endif
 
 typedef PRBool (*ContainFunc)(eHTMLTags aTag,nsDTDContext &aContext);
 
@@ -132,42 +133,42 @@ struct nsHTMLElement {
   static  PRBool  IsFlowEntity(eHTMLTags aTag);
   static  PRBool  IsBlockCloser(eHTMLTags aTag);
 
-  inline  PRBool  IsBlock(void) { 
+  inline  PRBool  IsBlock(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kBlock);
                     } 
                     return PR_FALSE;
                   }
 
-  inline  PRBool  IsBlockEntity(void) { 
+  inline  PRBool  IsBlockEntity(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kBlockEntity);
                     } 
                     return PR_FALSE;
                   }
 
-  inline  PRBool  IsSpecialEntity(void) { 
+  inline  PRBool  IsSpecialEntity(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kSpecial);
                     } 
                     return PR_FALSE;
                   }
 
-  inline  PRBool  IsPhraseEntity(void) { 
+  inline  PRBool  IsPhraseEntity(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kPhrase);
                     } 
                     return PR_FALSE;
                   }
 
-  inline  PRBool  IsFontStyleEntity(void) { 
+  inline  PRBool  IsFontStyleEntity(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kFontStyle);
                     } 
                     return PR_FALSE;
                   }
   
-  inline  PRBool  IsTableElement(void) {  //return yes if it's a table or child of a table...
+  inline  PRBool  IsTableElement(void) const {  //return yes if it's a table or child of a table...
                     PRBool result=PR_FALSE;
 
                     switch(mTagID) {
@@ -216,10 +217,10 @@ struct nsHTMLElement {
   PRBool          HasSpecialProperty(PRInt32 aProperty) const;
   PRBool          IsSpecialParent(eHTMLTags aTag) const;
   PRBool          IsExcludableParent(eHTMLTags aParent) const;
-  PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch);
-  PRBool          ShouldVerifyHierarchy();
+  PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch) const;
+  PRBool          ShouldVerifyHierarchy() const;
 
-  PRBool          CanBeContained(eHTMLTags aParentTag,nsDTDContext &aContext); //default version
+  PRBool          CanBeContained(eHTMLTags aParentTag,nsDTDContext &aContext) const; //default version
 
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild,nsDTDMode aMode);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
@@ -253,7 +254,7 @@ struct nsHTMLElement {
   ContainFunc     mCanBeContained;
 }; 
 
-extern nsHTMLElement* gHTMLElements;
+extern const nsHTMLElement gHTMLElements[];
 
 //special property bits...
 static const int kDiscardTag       = 0x0001; //tells us to toss this tag

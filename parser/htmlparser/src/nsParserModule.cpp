@@ -112,7 +112,9 @@ Initialize(nsIModule* aSelf)
       nsHTMLTags::ReleaseTable();
       return rv;
     }
-    InitializeElementTable();
+#ifdef NS_DEBUG
+    CheckElementTable();
+#endif
     CNewlineToken::AllocNewline();
     gInitialized = PR_TRUE;
   }
@@ -128,7 +130,6 @@ Shutdown(nsIModule* aSelf)
     nsHTMLEntities::ReleaseTable();
     nsDTDContext::ReleaseGlobalObjects();
     nsParser::Shutdown();
-    DeleteElementTable();
     CNewlineToken::FreeNewline();
     gInitialized = PR_FALSE;
   }
