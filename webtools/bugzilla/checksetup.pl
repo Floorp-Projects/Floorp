@@ -4281,5 +4281,7 @@ $dbh->do("UPDATE components SET initialowner = $adminuid WHERE initialowner = 0"
 
 unlink "$datadir/versioncache";
 
-print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n" unless $silent;
+if ($^O !~ /MSWin32/i) {
+    print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n" unless $silent;
+}
 
