@@ -1,4 +1,4 @@
-LIBRARY		"zlib"
+LIBRARY		"mozz"
 
 DESCRIPTION	'"""zlib data compression library"""'
 
