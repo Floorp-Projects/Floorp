@@ -572,7 +572,7 @@ NS_IMETHODIMP nsAccessible::GetAccChildCount(PRInt32 *aAccChildCount)
   return NS_OK;  
 }
 
-nsresult nsAccessible::GetTranslatedString(PRUnichar *aKey, nsAWritableString *aStringOut)
+nsresult nsAccessible::GetTranslatedString(const nsAReadableString& aKey, nsAWritableString& aStringOut)
 {
   static nsCOMPtr<nsIStringBundle> stringBundle;
   static PRBool firstTime = PR_TRUE;
@@ -582,7 +582,6 @@ nsresult nsAccessible::GetTranslatedString(PRUnichar *aKey, nsAWritableString *a
     nsresult rv;
     nsCOMPtr<nsIStringBundleService> stringBundleService = 
              do_GetService(kStringBundleServiceCID, &rv);
-    // nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID, &rv));
     if (!stringBundleService) { 
       NS_WARNING("ERROR: Failed to get StringBundle Service instance.\n");
       return NS_ERROR_FAILURE;
@@ -592,10 +591,10 @@ nsresult nsAccessible::GetTranslatedString(PRUnichar *aKey, nsAWritableString *a
 
   nsXPIDLString xsValue;
   if (!stringBundle || 
-    NS_FAILED(stringBundle->GetStringFromName(aKey, getter_Copies(xsValue)))) 
+    NS_FAILED(stringBundle->GetStringFromName(PromiseFlatString(aKey).get(), getter_Copies(xsValue)))) 
     return NS_ERROR_FAILURE;
 
-  aStringOut->Assign(xsValue);
+  aStringOut.Assign(xsValue);
   return NS_OK;
 }
 
@@ -709,33 +708,22 @@ NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState)
   /* readonly attribute boolean accFocused; */
 NS_IMETHODIMP nsAccessible::GetAccFocused(nsIAccessible * *aAccFocused) 
 { 
+  *aAccFocused = nsnull;
+
+  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+
   nsCOMPtr<nsIDOMElement> focusedElement;
-  nsIFrame *frame = nsnull;
-
-  if (NS_SUCCEEDED(GetFocusedElement(getter_AddRefs(focusedElement)))) {
-    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-    if (!shell) {
-       *aAccFocused = nsnull;
-       return NS_OK;  
-    }
-
-    nsCOMPtr<nsIContent> content(do_QueryInterface(focusedElement));
-    if (shell && content)
-      shell->GetPrimaryFrameFor(content, &frame);
-  }
-
-  if (frame) {
-    nsCOMPtr<nsIAccessible> acc(do_QueryInterface(frame));
-    if (acc) { 
-      *aAccFocused = acc;
+  if (accService && NS_SUCCEEDED(GetFocusedElement(getter_AddRefs(focusedElement)))) {
+    nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(focusedElement));
+    nsCOMPtr<nsIAccessible> accessible;
+    if (NS_SUCCEEDED(accService->GetAccessibleFor(focusedNode, getter_AddRefs(accessible)))) {
+      *aAccFocused = accessible;
       NS_ADDREF(*aAccFocused);
       return NS_OK;
     }
   }
  
-  *aAccFocused = nsnull;
-
-  return NS_OK;  
+  return NS_ERROR_FAILURE;  
 }
 
   /* nsIAccessible accGetChildAt (in long x, in long y); */

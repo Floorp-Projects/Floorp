@@ -162,7 +162,7 @@ NS_IMETHODIMP nsRadioButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 NS_IMETHODIMP nsRadioButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
 {
   if (index == eAction_Click) {
-    _retval = NS_LITERAL_STRING("select");
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;

@@ -88,7 +88,7 @@ NS_IMETHODIMP nsXULButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 NS_IMETHODIMP nsXULButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
 {
   if (index == eAction_Click) {
-    _retval = NS_LITERAL_STRING("press");
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
