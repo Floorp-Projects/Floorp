@@ -273,7 +273,7 @@ PRBool nsScanner::UngetReadable(const nsAReadableString& aBuffer) {
  * @update  gess4/3/98
  * @return  error code 
  */
-PRBool nsScanner::Append(const nsAReadableString& aBuffer) {
+nsresult nsScanner::Append(const nsAReadableString& aBuffer) {
   
   PRUnichar* buffer = ToNewUnicode(aBuffer);
   PRUint32 bufLen = aBuffer.Length();
@@ -281,7 +281,7 @@ PRBool nsScanner::Append(const nsAReadableString& aBuffer) {
 
   AppendToBuffer(buffer, buffer+bufLen, buffer+bufLen);
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
 /**
@@ -291,11 +291,10 @@ PRBool nsScanner::Append(const nsAReadableString& aBuffer) {
  *  @param   
  *  @return  
  */
-PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
+nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen){
+  nsresult res=NS_OK;
   PRUnichar* unichars;
   if(mUnicodeDecoder) {
-  
-    nsresult res;
 	  do {
       PRInt32 unicharBufLen = 0;
       mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
@@ -337,7 +336,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
     mTotalRead+=aLen;
   }
 
-  return PR_TRUE;
+  return res;
 }
 
 

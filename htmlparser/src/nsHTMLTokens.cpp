@@ -1176,7 +1176,7 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMo
   
   switch(aMode) {
 
-#if 0 //set to 1 if you want strict comments...  bug 53011...
+#if 1 //set to 1 if you want strict comments. Bug 53011 and  2749 contradicts!!!!
     case eDTDMode_strict:
       result=ConsumeStrictComment(aChar,aScanner,mTextValue);
       break;
@@ -1473,19 +1473,23 @@ void CAttributeToken::AppendSource(nsString& anOutputString){
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScanner){
+nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScanner,PRBool aRetainQuote=PR_FALSE){
   nsresult result=NS_OK;
   nsReadingIterator<PRUnichar> theOffset;
   aScanner.CurrentPosition(theOffset);
 
+  if(aRetainQuote) {
+    aString.Append(aChar);
+  }
+
   switch(aChar) {
     case kQuote:
-      result=aScanner.ReadUntil(aString,kQuote,PR_TRUE);
+      result=aScanner.ReadUntil(aString,kQuote,aRetainQuote);
       if(NS_OK==result)
         result=aScanner.SkipOver(kQuote);  //this code is here in case someone mistakenly adds multiple quotes...
       break;
     case kApostrophe:
-      result=aScanner.ReadUntil(aString,kApostrophe,PR_TRUE);
+      result=aScanner.ReadUntil(aString,kApostrophe,aRetainQuote);
       if(NS_OK==result)
         result=aScanner.SkipOver(kApostrophe); //this code is here in case someone mistakenly adds multiple apostrophes...
       break;
@@ -1496,16 +1500,11 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
   // Ref: Bug 35806
   // A back up measure when disaster strikes...
   // Ex <table> <tr d="><td>hello</td></tr></table>
-  PRUnichar ch=aString.Last();
-  if(ch!=aChar) {
-    if(!aScanner.IsIncremental() && result==kEOF) {
-      aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
-      aString.Assign(aChar);
-      result=kBadStringLiteral; 
-    }
-    else {
-        aString+=aChar;
-    }
+  if(!aString.IsEmpty() && aString.Last()!=aChar &&
+     !aScanner.IsIncremental() && result==kEOF) {
+    aString.Assign(aChar);
+    aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
+    result=kBadStringLiteral; 
   }
   return result;
 }
@@ -1547,18 +1546,18 @@ nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScann
  *  @update  rickg 03.23.2000
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
- *  @param   aRetainWhitespace -- 0=discard, 1=retain
+ *  @param   aRetain -- 0=discard, 1=retain
  *  @return  error result
  */
-nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aRetainWhitespace) {
+nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aRetain) {
 
   nsresult result;
  
-  //I changed a bit of this method to use aRetainWhitespace so that we do the right
+  //I changed a bit of this method to use aRetain so that we do the right
   //thing in viewsource. The ws/cr/lf sequences are now maintained, and viewsource looks good.
 
   nsReadingIterator<PRUnichar> wsstart, wsend;
-  result=(aRetainWhitespace) ? aScanner.ReadWhitespace(wsstart, wsend) : aScanner.SkipWhitespace();
+  result=(aRetain) ? aScanner.ReadWhitespace(wsstart, wsend) : aScanner.SkipWhitespace();
 
   if(NS_OK==result) {
     result=aScanner.Peek(aChar);
@@ -1573,14 +1572,14 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
         static nsAutoString theTerminals = NS_ConvertASCIItoUCS2("\b\t\n\r \"=>"); // XXXjag
         result=aScanner.ReadUntil(start,end,theTerminals,PR_FALSE);
       }
-      if (!aRetainWhitespace) {
+      if (!aRetain) {
         aScanner.BindSubstring(mTextKey, start, end);
       }
 
         //now it's time to Consume the (optional) value...
       if(NS_OK==result) {
 
-        if (aRetainWhitespace) {
+        if (aRetain) {
           aScanner.ReadWhitespace(start, wsend);
           aScanner.BindSubstring(mTextKey, wsstart, wsend);
         }
@@ -1595,15 +1594,14 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
               result=aScanner.GetChar(aChar);  //skip the equal sign...
               if(NS_OK==result) {
 
-                result=(aRetainWhitespace) ? aScanner.ReadWhitespace(mTextValue) : aScanner.SkipWhitespace();
+                result=(aRetain) ? aScanner.ReadWhitespace(mTextValue) : aScanner.SkipWhitespace();
 
                 if(NS_OK==result) {
                   result=aScanner.Peek(aChar);  //and grab the next char.    
                   if(NS_OK==result) {
                     if((kQuote==aChar) || (kApostrophe==aChar)) {
                       aScanner.GetChar(aChar);
-                      mTextValue.Append(aChar);
-                      result=ConsumeQuotedString(aChar,mTextValue,aScanner);
+                      result=ConsumeQuotedString(aChar,mTextValue,aScanner,aRetain);
                       if(result==kBadStringLiteral) {
                         result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
                       }
@@ -1612,7 +1610,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                       // Ref. to bug 15204.  Okay, so the spec. told us to ignore linefeeds,
                       // bug then what about bug 47535 ? Should we preserve everything then?
                       // Well, let's make it so! Commenting out the next two lines..
-                      /*if(!aRetainWhitespace)
+                      /*if(!aRetain)
                         mTextValue.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
                       */
                     }
@@ -1623,7 +1621,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                       // XXX - Discard script entity for now....except in
                       // view-source
                       aScanner.GetChar(aChar);
-                      PRBool discard=!aRetainWhitespace; 
+                      PRBool discard=!aRetain; 
                       mTextValue.Append(aChar);
                       result=aScanner.GetChar(aChar);
                       if(NS_OK==result) {
@@ -1639,7 +1637,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                     } 
                   }//if
                   if(NS_OK==result) {
-                    result=(aRetainWhitespace) ? aScanner.ReadWhitespace(mTextValue) : aScanner.SkipWhitespace();
+                    result=(aRetain) ? aScanner.ReadWhitespace(mTextValue) : aScanner.SkipWhitespace();
                   }
                 }//if
               }//if
@@ -2140,7 +2138,7 @@ const char* GetTagName(PRInt32 aTag) {
  *  @param   
  *  @return  
  */
-CInstructionToken::CInstructionToken() : CHTMLToken(eHTMLTag_unknown) {
+CInstructionToken::CInstructionToken() : CHTMLToken(eHTMLTag_instruction) {
 }
 
 /**
