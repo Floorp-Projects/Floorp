@@ -101,8 +101,10 @@ int ReplaceXPIFiles()
 
 int ReplaceINIFile()
 {
-	CString command;
+	CString command1,command2;
+	CString zipName("N6Setup.zip");
 	CString exeName("N6Setup.exe");
+	CString copyb = "copy /b ";
 	char	olddir[1024];
 
 	GetCurrentDirectory(sizeof(olddir), olddir);
@@ -110,12 +112,28 @@ int ReplaceINIFile()
 	if(SetCurrentDirectory((char *)(LPCTSTR) xpiDstPath) == FALSE)
 		return FALSE;
 
-	CString Src = nscpxpiPath + "\\" +exeName;
-	CString Dst = xpiDstPath + "\\" + exeName;
+	CString Src = nscpxpiPath + "\\" +zipName;
+	CString Dst = xpiDstPath + "\\" + zipName;
 	if (!CopyFile(Src, Dst, FALSE))
 		DWORD e = GetLastError();
-	command = quotes + rootPath + "nszip.exe " + quotes + spaces + exeName + spaces + "config.ini";
-	ExecuteCommand((char *)(LPCTSTR) command, SW_SHOW, INFINITE);
+//	command = quotes + rootPath + "nszip.exe " + quotes + spaces + exeName + spaces + "config.ini";
+	command1 = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + zipName + spaces + "config.ini";
+	ExecuteCommand((char *)(LPCTSTR) command1, SW_SHOW, INFINITE);
+	command2 = copyb + quotes + rootPath + "unzipsfx.exe" + quotes + " + N6Setup.zip N6Setup.exe";
+//	copy /b unzipsfx.exe+letters.zip letters.exe
+	///////////////////////////////////////////////////////
+
+	CString copycat = "copycat.bat";
+	ofstream cc(copycat);
+	cc << command2 <<"\n";
+	cc.close();
+	CString command3 ="copycat.bat";
+
+	///////////////////////////////////////////////////////
+	ExecuteCommand((char *)(LPCTSTR) command3, SW_SHOW, INFINITE);
+
+	DeleteFile("copycat.bat");
+	DeleteFile(zipName);
 
 	SetCurrentDirectory(olddir);
 
