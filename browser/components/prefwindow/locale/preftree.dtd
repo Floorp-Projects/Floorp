@@ -10,5 +10,5 @@
 <!ENTITY advance.label "Advanced">
 <!ENTITY connection.label "Connection">
 <!ENTITY popups.label "Popup Windows">
-<!ENTITY scriptsAndWindows.label "Javascript Settings">
+<!ENTITY scriptsAndWindows.label "Javascript">
 <!ENTITY tabs.label "Tabbed Browsing">
