@@ -5486,7 +5486,35 @@ char * EDT_GetFilename(char * pURL, XP_Bool bMustHaveExtension)
     return pResult;        
 }
 
-char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char **ppUserName, char **ppPassword)
+#if defined(SingleSignon)
+static XP_Bool GetSingleSignonData(MWContext * pMWContext, char *pLocation, char **ppUsername, char **ppPassword)
+{
+    if( !pLocation )
+        return FALSE;
+
+    char *pUsernameSingleSignon = NULL;
+    char *pPasswordSingleSignon = NULL;
+    SI_RestoreOldSignonDataFromBrowser(pMWContext, pLocation, FALSE, 
+                                       &pUsernameSingleSignon, &pPasswordSingleSignon);
+    if (pUsernameSingleSignon)
+    {
+        if( ppUsername )
+            *ppUsername = pUsernameSingleSignon;
+        else
+            XP_FREE(pUsernameSingleSignon);
+
+        if( ppPassword )
+            *ppPassword = pPasswordSingleSignon;
+        else if( pPasswordSingleSignon )
+            XP_FREE(pPasswordSingleSignon);
+
+        return TRUE;
+    }
+    return FALSE;
+}
+#endif
+
+char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char **ppUsername, char **ppPassword)
 {
     XP_ASSERT(pMWContext);
     char * pURL = LO_GetBaseURL(pMWContext);
@@ -5520,21 +5548,11 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
 
 #if defined(SingleSignon)
     // Check if we saved a username/password for this URL
-    char * pUserNameSingleSignon = NULL;
-    char * pPasswordSingleSignon = NULL;
-    SI_RestoreOldSignonDataFromBrowser(
-        pMWContext, pURL, FALSE, &pUserNameSingleSignon, &pPasswordSingleSignon);
-    if (pUserNameSingleSignon)
-    {
-        if( ppUserName )
-            *ppUserName = pUserNameSingleSignon;
-        if( ppPassword )
-            *ppPassword = pPasswordSingleSignon;
-
+    // (We will find it only if we are editing a remote URL)
+    if( GetSingleSignonData(pMWContext, pURL, ppUsername, ppPassword) )
         // If we found a name, we assume the location part of 
         //   URL is correct, so just return that
         return EDT_ReplaceFilename(pURL, NULL, TRUE);
-    }
 #endif
 
     if( !bLastPublishFailed && !EDT_IS_NEW_DOCUMENT(pMWContext) ){
@@ -5550,7 +5568,6 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
     }
 
     char *pPrefURL = NULL;
-    XP_Bool bUseDefault = FALSE;
 
     if( bLastPublishFailed ){
         // use the last location saved - this will be the location we failed at before
@@ -5564,30 +5581,19 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
         XP_FREEIF(pPrefURL);
         // No last-used location -- use the default location
 		PREF_CopyCharPref("editor.publish_location", &pPrefURL);
-        bUseDefault = TRUE;
     }   
 
     char * pLocation = 0;
-    char * pUserName = ppUserName ? *ppUserName : 0;
-    NET_ParseUploadURL( pPrefURL, &pLocation, &pUserName, NULL );
+    char * pUsername = ppUsername ? *ppUsername : 0;
+    NET_ParseUploadURL( pPrefURL, &pLocation, &pUsername, NULL );
 
-	if (ppUserName)
-		*ppUserName = pUserName;
-
-    if( ppPassword ){
-        // Get the corrsponding password saved
-        char * pPassword = NULL;
-        if( bLastPublishFailed ){
-        } else if( bUseDefault ){
-            PREF_CopyCharPref("editor.publish_password", &pPassword);
-        } else {
-            PREF_CopyCharPref("editor.publish_password_0", &pPassword);
-        }
-
-        if( pPassword && *pPassword ){
-            *ppPassword = HG99879(pPassword);
-            XP_FREE(pPassword);
-        }
+#if defined(SingleSignon)
+    // Check if we saved a username/password for the pref location
+    if(! GetSingleSignonData(pMWContext, pLocation, ppUsername, ppPassword) )
+#endif
+	{
+        if (ppUsername)
+		    *ppUsername = pUsername;
     }
     XP_FREEIF(pPrefURL);
 
@@ -5646,18 +5652,7 @@ EDT_GetPublishingHistory(unsigned n,
 #ifdef XP_WIN
 #if defined(SingleSignon)
         // Check if we saved a username/password for this URL via SingleSignon
-        char * pUserNameSingleSignon = NULL;
-        char * pPasswordSingleSignon = NULL;
-        SI_RestoreOldSignonDataFromBrowser(
-                    pMWContext, *ppLocation, FALSE, &pUserNameSingleSignon, &pPasswordSingleSignon);
-
-        if (pUserNameSingleSignon)
-        {
-            if( ppUsername )
-                *ppUsername = pUserNameSingleSignon;
-            if( ppPassword )
-                *ppPassword = pPasswordSingleSignon;
-        }
+        GetSingleSignonData(pMWContext, *ppLocation, ppUsername, ppPassword);
 #endif
 #endif
 	}
@@ -5714,6 +5709,43 @@ void edt_SyncPublishingHistory(MWContext *pMWContext)
 	 */
 	PREF_SetCharPref("editor.publish_history_0", pLastLoc);
     XP_FREEIF(pLastLoc);
+}
+
+XP_Bool EDT_GetUserDefaultPublishData(MWContext *pMWContext, char **ppLocation, char **ppUsername, char **ppPassword)
+{
+    char * pDefaultLocation = NULL;
+	PREF_CopyCharPref("editor.publish_location", &pDefaultLocation);
+    if( !pDefaultLocation){
+        return FALSE;
+    }
+    char *pLocation = NULL;
+    char *pUsername = NULL;
+
+    // Parse the preference string to extract Username
+    NET_ParseUploadURL( pDefaultLocation, &pLocation, &pUsername, NULL );
+
+#if defined(SingleSignon)
+    // Check if we saved a username/password for the pref location
+    if( !GetSingleSignonData(pMWContext, *ppLocation, ppUsername, ppPassword) )
+#endif
+    {
+	    if (ppUsername)
+		    *ppUsername = pUsername;
+        else
+            XP_FREEIF(pUsername);
+    }
+    if( ppLocation )
+        *ppLocation = pLocation;
+    else
+        XP_FREEIF(pLocation);
+
+    return TRUE;
+}
+
+XP_Bool EDT_GetNetcenterPublishData(MWContext *pMWContext, char **ppLocation, char **ppUsername, char **ppPassword)
+{
+    //TODO: FINISH THIS
+    return FALSE;
 }
 
 // Cache the Edit History data

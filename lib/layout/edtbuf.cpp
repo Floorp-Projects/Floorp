@@ -9921,7 +9921,7 @@ void CEditBuffer::ForceDocCharSetID(int16 csid){
 ED_FileError CEditBuffer::PublishFile( ED_SaveFinishedOption finishedOpt,
                            char *pSourceURL,
                            char **ppIncludedFiles,
-                           char *pDestURL, /* Directories must have trailing slash, ie after HEAD call */
+                           char *pDestURL, // This includes the filename
                            char *pUsername,
                            char *pPassword,
                            XP_Bool   bKeepImagesWithDoc,
@@ -9938,6 +9938,19 @@ ED_FileError CEditBuffer::PublishFile( ED_SaveFinishedOption finishedOpt,
       }
       return ED_ERROR_FILE_OPEN;
     }
+
+#if defined(SingleSignon)
+    // Prompt to remember the username and password for this location
+    // It doesn't matter if its bad, because it will be saved again
+    //   after getting correct values from the user via the username/password dialog
+    // Strip filename off of the destination
+    char *pLocation = EDT_ReplaceFilename(pDestURL, NULL, TRUE);
+    if( pLocation )
+    {
+        SI_RememberSignonDataFromBrowser(m_pContext, pLocation, pUsername, pPassword);
+        XP_FREE(pLocation);
+    }
+#endif 
 
     // Create Abstract file system to write to remote server.
     ITapeFileSystem *tapeFS = 

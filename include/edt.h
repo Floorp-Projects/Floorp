@@ -1353,6 +1353,15 @@ XP_Bool EDT_GetEditHistory(MWContext * pMWContext, unsigned n, char** pUrl, char
  */
 void EDT_SyncEditHistory(MWContext * pMWContext);
 
+/* Called from NET_AskForAuthString in mkaccess.c to tell us the correct 
+   username after the dialog to enter it was used
+*/
+void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername);
+
+/* Get location, username, and password from the user prefs or the Netcenter publishing data */
+XP_Bool EDT_GetUserDefaultPublishData(MWContext *pMWContext, char **ppLocation, char **ppUserName, char **ppPassword);
+XP_Bool EDT_GetNetcenterPublishData(MWContext *pMWContext, char **ppLocation, char **ppUserName, char **ppPassword);
+
 /* Construct a page title from supplied filename,
  * Extracts the filename part WITHOUT extension
  * Stuff starting with "#" or "?" is ommited
@@ -1435,12 +1444,6 @@ PRBool EDT_EncryptState(MWContext *pContext);
 
 /* Used for QA only - Ctrl+Alt+Shift+N accelerator for automated testing */
 void EDT_SelectNextNonTextObject(MWContext *pContext);
-
-/* Called from NET_AskForAuthString in mkaccess.c to tell us the correct 
-   username after the dialog to enter it was used
-*/
-void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername);
-
 
 XP_END_PROTOS
 
