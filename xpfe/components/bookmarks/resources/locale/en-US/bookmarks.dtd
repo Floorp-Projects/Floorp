@@ -36,7 +36,7 @@
 <!ENTITY menuitem.delete.label          "Delete">
 <!ENTITY menuitem.selectAll.label       "Select All">
 <!ENTITY menuitem.find.label            "Search in Bookmarks...">
-<!ENTITY menuitem.properties.label      "Bookmark Properties...">
+<!ENTITY menuitem.properties.label      "Properties...">
 <!ENTITY tree.header.name.label         "Name">
 <!-- LOCALIZATION NOTE (tree.header.url.label) : DONT_TRANSLATE -->
 <!ENTITY tree.header.url.label          "URL">
