@@ -35,6 +35,15 @@
 #include "nsWidgetsCID.h"
 #include "nsMenuFrame.h"
 #include "nsIPopupSetFrame.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptContextOwner.h"
+#include "nsIDOMScreen.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIPresShell.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIDocument.h"
+#include "nsIDeviceContext.h"
+#include "nsRect.h"
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -241,19 +250,117 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext& aPresContext,
     view->SetVisibility(nsViewVisibility_kHide);
   }
 
+  float p2t, t2p;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+
+  nsCOMPtr<nsIDeviceContext> dx;
+  viewManager->GetDeviceContext(*getter_AddRefs(dx));
+  dx->GetAppUnitsToDevUnits(t2p);
+  
+  PRInt32 xpos;
+  PRInt32 ypos;
   viewManager->ResizeView(view, mRect.width, mRect.height);
   if (aXPos != -1 || aYPos != -1) {
     // Convert the screen coords to twips
-    float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
-    PRInt32 xpos = NSIntPixelsToTwips(aXPos, p2t);
-    PRInt32 ypos = NSIntPixelsToTwips(aYPos, p2t);
-    viewManager->MoveViewTo(view, xpos, ypos);
+    xpos = NSIntPixelsToTwips(aXPos, p2t);
+    ypos = NSIntPixelsToTwips(aYPos, p2t);
+    xpos += offset.x;
+    ypos += offset.y;
+  } else if (aOnMenuBar) {
+    xpos = parentPos.x + offset.x;
+    ypos = parentPos.y + parentRect.height + offset.y;
+  } else {
+    xpos = parentPos.x + parentRect.width + offset.x;
+    ypos = parentPos.y + offset.y;
+  }
+  viewManager->MoveViewTo(view, xpos, ypos);
+
+  // Check if we fit on the screen, if not, resize and/or move so we do
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext.GetShell(getter_AddRefs(presShell));
+  
+  nsCOMPtr<nsIDocument> document;
+  presShell->GetDocument(getter_AddRefs(document));
+  
+  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner = getter_AddRefs(document->GetScriptContextOwner());
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+  scriptContextOwner->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+  
+  nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
+  nsCOMPtr<nsIDOMScreen> screen;
+  window->GetScreen(getter_AddRefs(screen));
+  PRInt32 screenWidth;
+  PRInt32 screenHeight;
+  screen->GetAvailWidth(&screenWidth);
+  screen->GetAvailHeight(&screenHeight);
+   
+  PRInt32 screenLeft; // May be negative on MacOS!
+  PRInt32 screenTop;  // May be negative on MacOS!
+  screen->GetAvailLeft(&screenLeft);
+  screen->GetAvailTop(&screenTop);
+  
+  PRInt32 screenRight;
+  if(screenLeft<0)
+    screenRight = screenWidth + screenLeft;
+  else
+    screenRight = screenWidth - screenLeft;
+   
+  PRInt32 screenBottom;
+  if(screenTop<0)
+    screenBottom = screenHeight + screenTop;
+  else
+    screenBottom = screenHeight - screenTop;
+  
+  screenWidth  = NSIntPixelsToTwips(screenWidth, p2t);
+  screenHeight = NSIntPixelsToTwips(screenHeight, p2t);
+  screenRight  = NSIntPixelsToTwips(screenRight, p2t);
+  screenBottom = NSIntPixelsToTwips(screenBottom, p2t);
+  
+  if(mRect.width > screenWidth || mRect.height > screenHeight) {
+    if(mRect.width > screenWidth) mRect.width = screenWidth;
+    
+    if(mRect.height > screenHeight) mRect.height = screenHeight;
+    
+    viewManager->ResizeView(view, mRect.width, mRect.height);
+  }
+  
+  // Get pixel distance from popup widget 0,0 to screen 0,0
+  nsCOMPtr<nsIWidget> widget;
+  view->GetWidget(*getter_AddRefs(widget));
+  
+  nsRect inRect, outRect;
+  inRect.x = 0;
+  inRect.y = 0;
+  widget->WidgetToScreen(inRect, outRect);
+  
+  if(outRect.x < screenLeft || outRect.y < screenTop) {
+    if(outRect.x < screenLeft) {
+      PRInt32 diff = NSIntPixelsToTwips(screenLeft - outRect.x,p2t);
+      if(diff>0)
+        xpos += diff;
+      else
+        xpos -= diff;
+    }
+    if(outRect.y < screenTop) {
+      PRInt32 diff = NSIntPixelsToTwips(screenTop - outRect.y,p2t);
+      if(diff>0)
+        ypos += diff;
+      else
+        ypos -= diff;
+    }
+    
+    viewManager->MoveViewTo(view, xpos, ypos); 
   }
 
-  else if (aOnMenuBar)
-    viewManager->MoveViewTo(view, parentPos.x + offset.x, parentPos.y + parentRect.height + offset.y );
-  else viewManager->MoveViewTo(view, parentPos.x + parentRect.width + offset.x, parentPos.y + offset.y );
+  if ((NSIntPixelsToTwips(outRect.x,p2t) + mRect.width) > screenRight) {
+    xpos -= (NSIntPixelsToTwips(outRect.x,p2t) + mRect.width) - screenRight;
+    viewManager->MoveViewTo(view, xpos, ypos); 
+  }
+  
+  if ((NSIntPixelsToTwips(outRect.y,p2t) + mRect.height) > screenBottom) {
+    ypos -= (NSIntPixelsToTwips(outRect.y,p2t) + mRect.height) - screenBottom;
+    viewManager->MoveViewTo(view, xpos, ypos); 
+  }
 
   if ((! viewWasVisible) && viewIsVisible) {
     view->SetVisibility(nsViewVisibility_kShow);
