@@ -447,7 +447,9 @@ nsSVGGDIPlusPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_re
     nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT_TYPE;
   
   nsCOMPtr<nsISVGRendererRegion> before;
-  GetCoveredRegion(getter_AddRefs(before));
+  // only obtain the 'before' region if we have built a path before:
+  if (mFill || mStroke)
+    GetCoveredRegion(getter_AddRefs(before));
 
   if ((updatemask & pathmask)!=0)
     ClearPath();
