@@ -42,21 +42,13 @@ class nsIMsgFilter;
 class MSG_FolderInfoMail;
 class nsIMsgFilterList;
 
-/*
-struct MSG_Rule;
-class MailMessageHdr;
-class MSG_UrlQueue;
-class TImapFlagAndUidState;
-class MSG_FolderInfoContainer;
-class MSG_IMAPHost;
-*/
 
 /* Used for the various things that parse RFC822 headers...
  */
 typedef struct message_header
 {
   const char *value; /* The contents of a header (after ": ") */
-  int32 length;      /* The length of the data (it is not NULL-terminated.) */
+  PRInt32 length;      /* The length of the data (it is not NULL-terminated.) */
 } message_header;
 
 

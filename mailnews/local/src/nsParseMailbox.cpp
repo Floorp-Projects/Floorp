@@ -100,7 +100,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
 	// available for another url if there is one....
-#ifdef DEBUG
+#ifdef DEBUG1
 	// let's dump out the contents of our db, if possible.
 	if (m_mailDB)
 	{
