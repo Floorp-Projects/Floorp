@@ -81,6 +81,9 @@ class nsIAtom;
 -(IBAction)cancelRenameBookmarkSheet:(id)sender;
 -(IBAction)doRenameBookmarkSheet:(id)sender;
 
+-(IBAction)openBookmarkInNewTab:(id)aSender;
+-(IBAction)openBookmarkInNewWindow:(id)aSender;
+
 // Datasource methods.
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
 - (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item;

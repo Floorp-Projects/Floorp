@@ -45,6 +45,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIPrefBranch.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
@@ -633,6 +634,49 @@
   nsXPIDLString buff; buff.Adopt(buffer);
   [item contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, buff, PR_TRUE);
   mBookmarks->BookmarkChanged([item contentNode]);
+}
+
+-(IBAction)openBookmarkInNewTab:(id)aSender
+{
+  int index = [mOutlineView selectedRow];
+  if (index == -1)
+    return;
+  if ([mOutlineView numberOfSelectedRows] == 1) {
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+    if (!pref)
+        return; // Something bad happened if we can't get prefs.
+
+    BookmarkItem* item = [mOutlineView itemAtRow: index];
+    nsAutoString hrefAttr;
+    [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, hrefAttr);
+  
+    // stuff it into the string
+    NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
+    NSURL* urlToLoad = [NSURL URLWithString: hrefStr];
+
+    PRBool loadInBackground;
+    pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+
+    [mBrowserWindowController openNewTabWithURL: urlToLoad loadInBackground: loadInBackground];
+  }
+}
+
+-(IBAction)openBookmarkInNewWindow:(id)aSender
+{
+  int index = [mOutlineView selectedRow];
+  if (index == -1)
+    return;
+  if ([mOutlineView numberOfSelectedRows] == 1) {
+    BookmarkItem* item = [mOutlineView itemAtRow: index];
+    nsAutoString hrefAttr;
+    [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, hrefAttr);
+  
+    // stuff it into the string
+    NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
+    NSURL* urlToLoad = [NSURL URLWithString: hrefStr];
+
+    [mBrowserWindowController openNewWindowWithURL: urlToLoad loadInBackground: NO];
+  }
 }
 
 @end

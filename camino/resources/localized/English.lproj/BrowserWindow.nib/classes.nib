@@ -9,6 +9,8 @@
                 cancelRenameBookmarkSheet = id; 
                 deleteBookmarks = id; 
                 doRenameBookmarkSheet = id; 
+                openBookmarkInNewTab = id; 
+                openBookmarkInNewWindow = id; 
             }; 
             CLASS = BookmarksDataSource; 
             LANGUAGE = ObjC; 
