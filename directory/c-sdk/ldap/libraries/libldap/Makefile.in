@@ -217,6 +217,10 @@ ifeq ($(OS_ARCH), NetBSD)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME)
 endif
 
+ifeq ($(OS_ARCH), OpenBSD)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) -lc_r
+endif
+
 ###########################################################################
 
 ifeq ($(USE_DLL_EXPORTS_FILE), 1)
@@ -261,7 +265,7 @@ $(LIBLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS) $(DEF_FILE)
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
 endif
-ifneq (,$(filter AIX Linux HP-UX Darwin BeOS QNX NetBSD OSF1, $(OS_ARCH)))
+ifneq (,$(filter AIX Linux HP-UX Darwin BeOS QNX NetBSD OSF1 OpenBSD, $(OS_ARCH)))
 	$(LINK_LIB) ../liblber/$(OBJDIR_NAME)/*.a
 else
 ifeq ($(OS_ARCH),OS2)
