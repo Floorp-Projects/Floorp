@@ -11,15 +11,24 @@ CCKBuild.bat - Build automation file for this whole build processs.  Paths, in t
 to updated to work on a machine other than mine.  I plan to move this to PERL to better script the
 build process for portability.
 
-ReadMe.txt - Um, uh, well....  DUH!
+CCKBuild.pl - The PERL build script for CCK.  This must also have PERLBuild.bat and PERLUpload.bat
+in the same folder to work.
 
 date.pl - PERL script that creates a the date that is used to name the repository folder.  Called
 by CCKBuild.bat.
 
+PERLUpload.bat - Creates repoitory folders,  moves the wizardmachine.exe and associated ini's to the 
+repository folders.   Called by CCKBuild.pl.
+
+PERLBuild.bat - Issues the commands to set the Env vars and start the build.   Called by CCKBuild.pl.
+
+ReadMe.txt - Um, uh, well....  DUH!
+
 WizardMachine.mak - Make file for WizardMachine.  Details below.....
 
 WizardMachine.dep - The dependancy file for WizardMachine.mak.  Put both WizardMachine.mak 
-and WizardMachine.dep in the mozilla/cck/driver folder to build the WizardMachine project. 
+and WizardMachine.dep in the mozilla/cck/driver folder to build the WizardMachine project(They
+should already be there). 
 To build this project issue the commands:
 
 NMAKE /f "WizardMachine.mak" CFG="WizardMachine - Win32 Debug"
@@ -34,7 +43,7 @@ files. When complete, you should end up with nice shiny new .exe, .obj's, .pch a
 
 
 
-Doc Omner:
+Doc Owner:
 
 Frank (petitta@netscape.com)
 X6378
