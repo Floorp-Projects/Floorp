@@ -260,9 +260,9 @@ var bookmarksDNDObserver = {
     */
 
     var sourceID = [], parentID = [], nameRequired = [], name = [];
-    
+    var flavourData;
     for (i = 0; i < numObjects; ++i) {
-      var flavourData = aXferData.dataList[i].first;
+      flavourData = aXferData.dataList[i].first;
       nameRequired[i] = false;
       name[i] = null;
       var data = flavourData.data;
@@ -308,9 +308,9 @@ var bookmarksDNDObserver = {
     }
 
     for (i = 0; i < numObjects; ++i) {
-      var flavourData = aXferData.dataList[i].first;
-      var rSource = this.getResource(sourceID[i]);
-      var rParent = parentID[i] ? this.getResource(parentID[i]) : null;
+      flavourData = aXferData.dataList[i].first;
+      rSource = this.getResource(sourceID[i]);
+      rParent = parentID[i] ? this.getResource(parentID[i]) : null;
 
       // XXX if any of the following fails, the nodes are gone for good!
       const kDSIID = Components.interfaces.nsIDragService;
