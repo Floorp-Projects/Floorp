@@ -9,7 +9,8 @@
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
 #include "nsID.h" /* interface nsID */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
-
+#include "nsIDOMNodeList.h" /*interface nsIDOMNodeList*/
+#include "nsIDOMXULTreeElement.h" /*interface nsIDOMXULTreeElement*/
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
@@ -40,6 +41,9 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
 
   /* void OpenURL (in string str); */
   NS_IMETHOD OpenURL(const char *str) = 0;
+
+  /* void DeleteMessage (in string str); */
+  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
