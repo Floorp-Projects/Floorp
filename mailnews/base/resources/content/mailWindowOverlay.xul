@@ -114,10 +114,10 @@ Rights Reserved.
 	<broadcaster id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
 	<broadcaster id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
 	<broadcaster id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
-	<broadcaster id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead')" disabled="true"/>
-	<broadcaster id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead')" disabled="true"/>
-	<broadcaster id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead')" disabled="true"/>
-	<broadcaster id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged')" disabled="true"/>
+	<broadcaster id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.preventBubble()" disabled="true"/>
+	<broadcaster id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
+	<broadcaster id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
+	<broadcaster id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
 	<broadcaster id="cmd_file" disabled="true"/>
 	<broadcaster id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
 	<broadcaster id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
