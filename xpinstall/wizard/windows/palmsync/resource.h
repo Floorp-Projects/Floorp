@@ -52,5 +52,7 @@
 #define IDS_CONFIRM_INSTALL             117
 #define IDS_CONFIRM_UNINSTALL           118
 #define IDS_SUCCESS_UNINSTALL           119
+#define IDS_ERR_REGISTERING_MOZ_DLL     120
+#define IDS_ERR_UNREGISTERING_MOZ_DLL   121
 #define IDS_ERR_MAX			140
 

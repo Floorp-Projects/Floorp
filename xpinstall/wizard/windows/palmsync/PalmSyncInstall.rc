@@ -84,6 +84,8 @@ BEGIN
     IDS_SUCCESS_UNINSTALL   "Mozilla Address Book Palm Sync Conduit has been successfully Uninstalled. The Palm Desktop configuration has been restored for you to enable synchronization of your Address Book on the handheld with Palm Desktop."
     IDS_CONFIRM_INSTALL     "Click Yes to Install the Mozilla Address Book PalmSync Conduit, which will enable address book synchronization between Mozilla Address Book and Palm handheld Address Book. Note this will replace the synchronization with Palm Desktop."
     IDS_CONFIRM_UNINSTALL   "Click Yes to Un-Install the Mozilla Address Book PalmSync Conduit. Note this will restore the synchronization with Palm Desktop."
+    IDS_ERR_REGISTERING_MOZ_DLL 
+                            "Failed to register the Mozilla's Palm Sync Support Proxy Dll while installing the Mozilla Address Book Palm Sync Conduit."
 END
 
 #endif    // English (U.S.) resources
