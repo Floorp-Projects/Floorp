@@ -31,7 +31,7 @@
 #include "PascalString.h"
 #include "CWindowMediator.h"
 #ifndef MOZ_NGLAYOUT
-#include "CSimpleTextView.h"
+//#include "CSimpleTextView.h"
 #endif
 
 class LTextEngine;
@@ -172,6 +172,7 @@ void CreateMenuString( CStr255& itemName );
 
 // ¥ converts TextEdit handle to text handle that has hard carriage returns. 
 #ifndef MOZ_NGLAYOUT
+class CSimpleTextView;
 Handle TextHandleToHardLineBreaks(CSimpleTextView &inTextView);
 #endif
 
@@ -321,8 +322,8 @@ public:
 							LArrowControl( const SPaneInfo& inPaneInfo, MessageT valueMessage );
 	void					HotSpotAction( Int16 inHotSpot, Boolean inCurrInside, Boolean inPrevInside );
 	void					HiliteControl( Int16 inHotSpot, Boolean inCurrInside );
-	Boolean					PointInHotSpot( Point inPoint, Int16 inHotSpot );
-	Int16					FindHotSpot( Point inPoint );
+	Boolean					PointInHotSpot( Point inPoint, Int16 inHotSpot ) const;
+	Int16					FindHotSpot( Point inPoint ) const;
 	void					HotSpotResult( Int16 inHotSpot );
 
 	void					DrawSelf();
