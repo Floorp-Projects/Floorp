@@ -817,6 +817,16 @@ nsHttpChannel::CheckCache()
     }
     buf.Adopt(0);
 
+    // We'll need this value in later computations...
+    PRUint32 lastModifiedTime;
+    rv = mCacheEntry->GetLastModified(&lastModifiedTime);
+    if (NS_FAILED(rv)) return rv;
+
+    // Determine if this is the first time that this cache entry
+    // has been accessed during this session.
+    PRBool fromPreviousSession =
+            (nsHttpHandler::get()->SessionStartTime() > lastModifiedTime);
+
     // Get the cached HTTP response headers
     rv = mCacheEntry->GetMetaDataElement("response-head", getter_Copies(buf));
     if (NS_FAILED(rv)) return rv;
@@ -911,21 +921,33 @@ nsHttpChannel::CheckCache()
             rv = mCachedResponseHead->ComputeFreshnessLifetime(&time);
             if (NS_FAILED(rv)) return rv;
 
-            if (time == 0) {
+            if (time == 0)
                 doValidation = PR_TRUE;
-            } 
-            else {
-                rv = mCacheEntry->GetLastModified(&time);
-                if (NS_FAILED(rv)) return rv;
-                // Determine if this is the first time that this cache entry
-                // has been accessed in this session, and validate if so.
-                doValidation = (nsHttpHandler::get()->SessionStartTime() > time);
-            }
+            else
+                doValidation = fromPreviousSession;
         }
         else
             doValidation = PR_TRUE;
 
         LOG(("%salidating based on expiration time\n", doValidation ? "V" : "Not v"));
+    }
+
+    if (!doValidation) {
+        //
+        // Check the authorization headers used to generate the cache entry.
+        // We must validate the cache entry if:
+        //
+        // 1) the cache entry was generated prior to this session w/
+        //    credentials (see bug 103402).
+        // 2) the cache entry was generated w/o credentials, but would now
+        //    require credentials (see bug 96705).
+        //
+        // NOTE: this does not apply to proxy authentication.
+        //
+        mCacheEntry->GetMetaDataElement("auth", getter_Copies(buf));
+        doValidation =
+            (fromPreviousSession && !buf.IsEmpty()) ||
+            (buf.IsEmpty() && mRequestHead.PeekHeader(nsHttp::Authorization));
     }
 
     mCachedContentIsValid = !doValidation;
@@ -1081,11 +1103,28 @@ nsHttpChannel::InitCacheEntry()
     rv = mCacheEntry->SetMetaDataElement("request-method", mRequestHead.Method().get());
     if (NS_FAILED(rv)) return rv;
 
+    // Store the HTTP authorization scheme used if any...
+    rv = StoreAuthorizationMetaData();
+    if (NS_FAILED(rv)) return rv;
+
     // Store the received HTTP head with the cache entry as an element of
     // the meta data.
     nsCAutoString head;
     mResponseHead->Flatten(head, PR_TRUE);
     return mCacheEntry->SetMetaDataElement("response-head", head.get());
+}
+
+nsresult
+nsHttpChannel::StoreAuthorizationMetaData()
+{
+    // Not applicable to proxy authorization...
+    const char *val = mRequestHead.PeekHeader(nsHttp::Authorization);
+    if (val) {
+        // eg. [Basic realm="wally world"]
+        nsCAutoString buf(Substring(val, strchr(val, ' ')));
+        return mCacheEntry->SetMetaDataElement("auth", buf.get());
+    }
+    return NS_OK;
 }
 
 // Finalize the cache entry
