@@ -235,6 +235,7 @@ void				refreshItemList (HT_Resource node, HT_Event whatHappened);
 void				refreshPanes();
 HT_Pane				paneFromResource(RDF_Resource resource, HT_Notification notify, PRBool autoFlushFlag, PRBool autoOpenFlag);
 RDF				newHTPaneDB();
+RDF				HTRDF_GetDB();
 PRBool				initViews (HT_Pane pane);
 void				htNewWorkspace(HT_Pane pane, char *id, char *optionalTitle, uint32 workspacePos);
 HT_PaneStruct *			HT_GetHTPaneList ();

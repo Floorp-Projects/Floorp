@@ -925,20 +925,28 @@ gNavCenterDataSources1[15] =
 	"rdf:columns",  NULL
 };
 
-RDF HTRDF_GetDB () {
-  RDF ans;
-  char* navCenterURL;
- PREF_SetDefaultCharPref("browser.NavCenter", "http://rdf.netscape.com/rdf/navcntr.rdf");
- PREF_CopyCharPref("browser.NavCenter", &navCenterURL);
-  if (!strchr(navCenterURL, ':')) {
-    navCenterURL = makeDBURL(navCenterURL);
-  } else {
-    copyString(navCenterURL);
-  }
-  *(gNavCenterDataSources1 + 1) = copyString(navCenterURL);
-  ans = RDF_GetDB(gNavCenterDataSources1);
-  freeMem(navCenterURL);
-  return ans;
+
+
+RDF
+HTRDF_GetDB()
+{
+	RDF		ans;
+	char		*navCenterURL;
+
+	PREF_SetDefaultCharPref("browser.NavCenter", "http://rdf.netscape.com/rdf/navcntr.rdf");
+	PREF_CopyCharPref("browser.NavCenter", &navCenterURL);
+	if (!strchr(navCenterURL, ':'))
+	{
+		navCenterURL = makeDBURL(navCenterURL);
+	}
+	else
+	{
+		copyString(navCenterURL);
+	}
+	*(gNavCenterDataSources1 + 1) = copyString(navCenterURL);
+	ans = RDF_GetDB(gNavCenterDataSources1);
+	freeMem(navCenterURL);
+	return(ans);
 }
 
 

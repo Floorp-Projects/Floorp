@@ -29,7 +29,9 @@
 #include "rdf-int.h"
 #include "bmk2mcf.h"
 
+
 	/* globals */
+PLHashTable	*RDFFileDBHash = NULL;
 
 
 
@@ -55,13 +57,16 @@ MakeRemoteStore (char* url)
   } else return NULL;
 }
 
-PLHashTable* RDFFileDBHash = 0;
 
-RDFT existingRDFFileDB (char* url) {  
-  if (RDFFileDBHash == 0) 
-    RDFFileDBHash = PL_NewHashTable(100, PL_HashString, PL_CompareStrings, PL_CompareValues, NULL, NULL);
-  return  PL_HashTableLookup(RDFFileDBHash, url);
+
+RDFT
+existingRDFFileDB (char* url)
+{
+	if (RDFFileDBHash == 0) 
+		RDFFileDBHash = PL_NewHashTable(100, PL_HashString, PL_CompareStrings, PL_CompareValues, NULL, NULL);
+	return  PL_HashTableLookup(RDFFileDBHash, url);
 }
+
 
 
 RDFT
@@ -501,7 +506,10 @@ possiblyRefreshRDFFiles ()
 }
 
 
-void  SCookPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) {
+
+void
+SCookPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
+{
 	if ((resourceType(u) == RDF_RT) && (strcmp(rdf->url, "rdf:ht") ==0) &&
 	  (strstr(resourceID(u), ".rdf") || strstr(resourceID(u), ".mcf")) &&
 	     (s == gCoreVocab->RDF_parent) && 
@@ -510,6 +518,7 @@ void  SCookPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool 
     if(newFile) newFile->lastReadTime = PR_Now();
   }
 }
+
 
 
 RDFT
@@ -529,5 +538,3 @@ MakeSCookDB (char* url)
     return ntr;
   } else return NULL;
 }
-
-

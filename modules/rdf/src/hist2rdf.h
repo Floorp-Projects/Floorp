@@ -86,6 +86,7 @@ PRBool		displayHistoryItem (char* url);
 RDF_Resource	HistCreate (char* url, PRBool createp);
 Assertion	histAddParent (RDF_Resource child, RDF_Resource parent);
 PRBool		historyUnassert (RDFT hst,  RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
+void		HistPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep);
 RDF_Cursor	historyStoreGetSlotValuesInt (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PRBool inversep, PRBool tv);
 PRBool		historyStoreHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 RDFT		MakeHistoryStore (char* url);

@@ -40,6 +40,7 @@
 XP_BEGIN_PROTOS
 
 RDFT		MakeRemoteStore (char* url);
+RDFT		existingRDFFileDB (char* url);
 RDFT		MakeFileDB (char* url);
 void		freeAssertion (Assertion as);
 PRBool		remoteAssert3 (RDFFile fi, RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
@@ -54,8 +55,10 @@ RDF_Cursor	remoteStoreGetSlotValues (RDFT mcf, RDF_Resource u, RDF_Resource s, R
 void *		remoteStoreNextValue (RDFT mcf, RDF_Cursor c);
 RDF_Error	remoteStoreDisposeCursor (RDFT mcf, RDF_Cursor c);
 void		gcRDFFile (RDFFile f);
-void RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) ;
+void		RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep);
 void		possiblyRefreshRDFFiles ();
+void		SCookPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep);
+RDFT		MakeSCookDB (char* url);
 
 static PRBool	fileReadp (RDFT rdf, char* url, PRBool mark);
 static void	possiblyAccessFile (RDFT mcf, RDF_Resource u, RDF_Resource s, PRBool inversep);
