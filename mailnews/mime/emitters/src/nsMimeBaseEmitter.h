@@ -55,6 +55,7 @@ typedef struct {
   char      *displayName;
   char      *urlSpec;
   char      *contentType;
+  PRBool    notDownloaded;
 } attachmentInfoType;
 
 //

@@ -149,7 +149,10 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
     if ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
          (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) )
     {
-      s = nsCRT::strdup(strs[0]);
+      if (obj->options->wrap_long_lines_p)
+        s = nsCRT::strdup(strs[2]);
+      else
+        s = nsCRT::strdup(strs[0]);
     }
     else
     {

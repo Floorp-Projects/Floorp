@@ -215,7 +215,8 @@ nsMimeHtmlDisplayEmitter::EndHeader()
 }
 
 nsresult
-nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
+nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentType, const char *url,
+                                          PRBool aNotDownloaded)
 {
 
   nsresult rv = NS_OK;
@@ -246,7 +247,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     }
 
     if (NS_SUCCEEDED(rv))
-      headerSink->HandleAttachment(escapedUrl, unicodeHeaderValue, uriString);
+      headerSink->HandleAttachment(escapedUrl, unicodeHeaderValue, uriString, aNotDownloaded);
     nsCRT::free(escapedUrl);
     mSkipAttachment = PR_TRUE;
   }

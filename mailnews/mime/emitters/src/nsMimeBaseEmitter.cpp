@@ -311,7 +311,8 @@ nsMimeBaseEmitter::SetOutputListener(nsIStreamListener *listener)
 
 // Attachment handling routines
 nsresult
-nsMimeBaseEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
+nsMimeBaseEmitter::StartAttachment(const char *name, const char *contentType, const char *url,
+                                   PRBool aNotDownloaded)
 {
   // Ok, now we will setup the attachment info 
   mCurrentAttachment = (attachmentInfoType *) PR_NEWZAP(attachmentInfoType);
@@ -322,6 +323,7 @@ nsMimeBaseEmitter::StartAttachment(const char *name, const char *contentType, co
     mCurrentAttachment->displayName = nsCRT::strdup(name);
     mCurrentAttachment->urlSpec = nsCRT::strdup(url);
     mCurrentAttachment->contentType = nsCRT::strdup(contentType);
+    mCurrentAttachment->notDownloaded = aNotDownloaded;
   }
 
   return NS_OK;

@@ -115,6 +115,7 @@ struct mime_stream_data {           /* This struct is the state we pass around
   MimeHeaders         *headers;     /* Copy of outer most mime header */
 
   nsIMimeEmitter      *output_emitter;  /* Output emitter engine for libmime */
+  PRBool              firstCheck;   /* Is this the first look at the stream data */
 };
 
 ////////////////////////////////////////////////////////////////
@@ -137,7 +138,8 @@ extern "C" nsIMimeEmitter   *GetMimeEmitter(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeSetNewURL(nsMIMESession *stream, char *url);
 extern "C" nsresult     mimeEmitterAddAttachmentField(MimeDisplayOptions *opt, const char *field, const char *value); 
 extern "C" nsresult     mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const char *field, const char *value);
-extern "C" nsresult     mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url);
+extern "C" nsresult     mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url,
+                                                   PRBool aNotDownloaded);
 extern "C" nsresult     mimeEmitterEndAttachment(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeEmitterStartBody(MimeDisplayOptions *opt, PRBool bodyOnly, const char *msgID, const char *outCharset);
 extern "C" nsresult     mimeEmitterEndBody(MimeDisplayOptions *opt);

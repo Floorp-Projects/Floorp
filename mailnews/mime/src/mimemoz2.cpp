@@ -163,8 +163,12 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
       tmpURL = mime_set_url_imap_part(url, id_imap, id);
       rv = nsMimeNewURI(&(tmp->url), tmpURL, nsnull);
 
+      tmp->notDownloaded = PR_TRUE;
+
+      // RICHIE RICHIE 
       // If we get here, we should really add some type of string
       // onto the name to show its not downloaded
+      /********************
       nsString  tName(tmp->real_name);
       
       char *msgString = MimeGetStringByID(MIME_MSG_NOT_DOWNLOADED);
@@ -172,6 +176,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
       tName.Append(msgString);
       PR_FREEIF(tmp->real_name);
       tmp->real_name = tName.ToNewCString();
+      *********************/
     }
     else
     {
@@ -380,15 +385,22 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
 
     if (isIMAPPart)
     {
+      // If we get here, we should mark this attachment as not being
+      // downloaded. 
+      tmp->notDownloaded = PR_TRUE;
+
+      // RICHIE RICHIE RICHIE
+      //
       // If we get here, we should really add some type of string
       // onto the name to show its not downloaded
+      /**
       nsString  tName(tmp->real_name);
-      
       char *msgString = MimeGetStringByID(MIME_MSG_NOT_DOWNLOADED);
       tName.Append(" ");
       tName.Append(msgString);
       PR_FREEIF(tmp->real_name);
       tmp->real_name = tName.ToNewCString();
+      ***/
     }
   }
 
@@ -486,7 +498,7 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
     if ( tmp->url ) 
       tmp->url->GetSpec(&spec);
 
-    mimeEmitterStartAttachment(opt, tmp->real_name, tmp->real_type, spec);
+    mimeEmitterStartAttachment(opt, tmp->real_name, tmp->real_type, spec, tmp->notDownloaded);
     mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, spec);
 
 	  if (spec)
@@ -711,7 +723,6 @@ mime_display_stream_write (nsMIMESession *stream,
                            PRInt32 size)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) ((nsMIMESession *)stream)->data_object;
-  static PRBool   firstCheck = PR_TRUE;
 
   MimeObject *obj = (msd ? msd->obj : 0);  
   if (!obj) return -1;
@@ -720,7 +731,7 @@ mime_display_stream_write (nsMIMESession *stream,
   // Ok, now check to see if this is a display operation for a MIME Parts on Demand
   // enabled call.
   //
-  if (firstCheck)
+  if (msd->firstCheck)
   {
     if (msd->channel)
     {
@@ -740,7 +751,7 @@ mime_display_stream_write (nsMIMESession *stream,
       }
     }
 
-    firstCheck = PR_FALSE;
+    msd->firstCheck = PR_FALSE;
   }
 
   return obj->clazz->parse_buffer((char *) buf, size, obj);
@@ -1196,6 +1207,7 @@ mime_bridge_create_display_stream(
 
   // Assign the new mime emitter - will handle output operations
   msd->output_emitter = newEmitter;
+  msd->firstCheck = PR_TRUE;
 
   // Store the URL string for this decode operation
   char *urlString;
@@ -1483,7 +1495,8 @@ mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const char *field, const char
 }
 
 extern "C" nsresult     
-mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url)
+mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url,
+                           PRBool aNotDownloaded)
 {
   // Check for draft processing...
   if (NoEmitterProcessing(opt->format_out))
@@ -1496,7 +1509,7 @@ mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char
   if (msd->output_emitter)
   {
     nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
-    return emitter->StartAttachment(name, contentType, url);
+    return emitter->StartAttachment(name, contentType, url, aNotDownloaded);
   }
 
   return NS_ERROR_FAILURE;

@@ -164,11 +164,16 @@ var messageHeaderSink = {
       }
     },
 
-    handleAttachment: function(url, displayName, uri) 
+    handleAttachment: function(url, displayName, uri, notDownloaded) 
     {
         // be sure to escape the display name before we insert it into the
         // method
       var commandString = "OpenAttachURL('" + url + "', '" + escape(displayName) + "', '" + uri + "')";
+      if (notDownloaded)
+      {
+        displayName += " " + Bundle.GetStringFromName("notDownloaded");
+      }
+
       AddAttachmentToMenu(displayName, commandString);
     }
 };

@@ -77,7 +77,7 @@ typedef nsresult (*nsMsgSendUnsentMessagesCallback) (nsresult aExitCode, PRUint3
 // Attachment file/URL structures
 struct nsMsgAttachmentData
 {
-  nsIURI  *url;			        // The URL to attach. This should be 0 to signify "end of list".
+  nsIURI  *url;			      // The URL to attach. This should be 0 to signify "end of list".
 
   char *desired_type;	    // The type to which this document should be
 						              // converted.  Legal values are NULL, TEXT_PLAIN
@@ -100,6 +100,7 @@ struct nsMsgAttachmentData
 
   char *x_mac_type, *x_mac_creator; // Mac-specific data that should show up as optional parameters
 						                        // to the content-type header.
+  PRBool  notDownloaded;  // Flag for IMAP parts on demand status
 };
 
 

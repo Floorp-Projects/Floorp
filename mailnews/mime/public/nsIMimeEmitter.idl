@@ -61,7 +61,7 @@ interface nsIMimeEmitter : nsISupports{
 
     // Attachment handling routines
     void    StartAttachment([const] in string name, [const] in string contentType, 
-                            [const] in string url);
+                            [const] in string url, in PRBool aNotDownloaded);
     void    AddAttachmentField([const] in string field, [const] in string value);
     void    EndAttachment();
 
