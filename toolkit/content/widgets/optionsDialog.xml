@@ -28,7 +28,12 @@
        </xul:vbox>
 #endif
      </content>
+     
+     <implementation>
+     
+     
+     </implementation>
                      
-  </binding>                
+  </binding>
           
 </bindings>
