@@ -78,8 +78,8 @@ static void event_processor_callback(gpointer data,
                                      gint source,
                                      GdkInputCondition condition)
 {
-  PLEventQueue *event = (PLEventQueue*)data;
-  PR_ProcessPendingEvents(event);
+  nsIEventQueue *eventQueue = (nsIEventQueue*)data;
+  eventQueue->ProcessPendingEvents();
 }
 
 //-------------------------------------------------------------------------
@@ -162,7 +162,7 @@ NS_METHOD nsAppShell::Run()
 {
 
   nsresult   rv = NS_OK;
-  PLEventQueue * EQueue = nsnull;
+  nsIEventQueue * EQueue = nsnull;
 
   // Get the event queue service 
   NS_WITH_SERVICE(nsIEventQueueService, mEventQService, kEventQueueServiceCID, &rv);
@@ -176,7 +176,7 @@ NS_METHOD nsAppShell::Run()
   rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
 
   // If a queue already present use it.
-  if (nsnull != EQueue)
+  if (EQueue)
      goto done;
 
   // Create the event queue for the thread
@@ -195,13 +195,14 @@ NS_METHOD nsAppShell::Run()
 
 done:
   printf("Calling gdk_input with event queue\n");
-  gdk_input_add(PR_GetEventQueueSelectFD(EQueue),
+  gdk_input_add(EQueue->GetEventQueueSelectFD(),
                 GDK_INPUT_READ,
                 event_processor_callback,
                 EQueue);
 
   gtk_main();
 
+  NS_IF_RELEASE(EQueue);
   return NS_OK;
 }
 

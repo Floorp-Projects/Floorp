@@ -115,7 +115,7 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 nsresult nsAppShell::Run()
 {
   nsresult rv = NS_OK;
-  PLEventQueue *EQueue = nsnull;
+  nsIEventQueue *EQueue = nsnull;
   int xlib_fd = -1;
   int queue_fd = -1;
   int max_fd;
@@ -132,7 +132,7 @@ nsresult nsAppShell::Run()
   }
   rv = mEventQueueService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
   // If a queue already present use it.
-  if (nsnull != EQueue)
+  if (EQueue)
      goto done;
 
   // Create the event queue for the thread
@@ -150,7 +150,7 @@ nsresult nsAppShell::Run()
  done:
   printf("Getting the xlib connection number.\n");
   xlib_fd = ConnectionNumber(gDisplay);
-  queue_fd = PR_GetEventQueueSelectFD(EQueue);
+  queue_fd = EQueue->GetEventQueueSelectFD();
   if (xlib_fd >= queue_fd) {
     max_fd = xlib_fd + 1;
   } else {
@@ -193,7 +193,7 @@ nsresult nsAppShell::Run()
     // check to see if there's data avilable for the queue
     if (FD_ISSET(queue_fd, &select_set)) {
       //printf("queue data available.\n");
-      PR_ProcessPendingEvents(EQueue);
+      EQueue->ProcessPendingEvents();
     }
     // check to see if there's data avilable for
     // xlib
@@ -206,6 +206,8 @@ nsresult nsAppShell::Run()
       NS_ProcessTimeouts();
     }
   }
+
+	NS_IF_RELEASE(EQueue);
   return rv;
 }
 

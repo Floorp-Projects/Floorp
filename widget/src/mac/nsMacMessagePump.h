@@ -36,10 +36,10 @@
 
 #include <Events.h>
 #include "prtypes.h"
+#include "nsIEventQueueService.h"
 
 class nsToolkit;
 class nsMacMessageSink;
-struct PLEventQueue;
 
 //================================================
 
@@ -53,7 +53,7 @@ private:
 	PRBool					mInBackground;
 	nsToolkit*				mToolkit;
 	nsMacMessageSink*       mMessageSink;
-	PLEventQueue*			mEventQueue;
+	nsIEventQueue*			mEventQueue;
 
 	// CLASS METHODS
 		    	    
@@ -66,6 +66,8 @@ public:
 	void			DispatchEvent(PRBool aRealEvent, EventRecord *anEvent);
 	void			StartRunning() {mRunning = PR_TRUE;}
 	void			StopRunning() {mRunning = PR_FALSE;}
+
+	void			SetEventQueue(nsIEventQueue* aNewQueue);
 
 private:
 	void 			DoMouseDown(EventRecord &anEvent);
