@@ -632,6 +632,7 @@ nsresult nsCalendarShell::LoadPreferences()
   pLayer->Init();
   pLayer->SetCurl(curl.GetCurl());
   mpLoggedInUser->SetLayer(pLayer);
+  NS_RELEASE(pLayer);
 
   /*****************************************************************/
 
