@@ -132,6 +132,8 @@ bin\components\ucvlatin.dll
 bin\components\ucvtw.dll
 bin\components\ucvtw2.dll
 bin\components\unicharutil.xpt
+bin\components\urildr.dll
+bin\components\uriloader.xpt
 bin\components\wallet.dll
 bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
