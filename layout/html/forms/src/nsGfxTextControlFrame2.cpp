@@ -2861,19 +2861,9 @@ nsGfxTextControlFrame2::SubmitAttempt()
       nsCOMPtr<nsIPresContext> context;
       if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
       {
-        mFormFrame->GetContent(&formContent);
-        if (nsnull != formContent) {
-          nsEvent event;
-          event.eventStructType = NS_EVENT;
-          event.message = NS_FORM_SUBMIT;
-
-          formContent->HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-          NS_RELEASE(formContent);
-        }
-
-        if (nsEventStatus_eConsumeNoDefault != status) {
-          mFormFrame->OnSubmit(context, this);
-        }
+        // do Submit & Frame processing of event
+        nsFormControlHelper::DoManualSubmitOrReset(context, presShell, mFormFrame, 
+                                                   this, PR_TRUE, PR_FALSE); 
       }
     }
   }
