@@ -84,7 +84,6 @@ class RelatedLinksStreamListener : public nsIStreamListener
 {
 private:
 	nsCOMPtr<nsIRDFDataSource> 	mDataSource;
-	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
 	nsVoidArray			mParentArray;
 
 	// pseudo-constants
@@ -98,6 +97,7 @@ private:
 	static nsIRDFResource		*kNC_BookmarkSeparator;
 	static nsIRDFResource		*kNC_RelatedLinksTopic;
 	static nsIRDFResource		*kRDF_type;
+	static nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
 
 	nsAutoString			mBuffer;
 
@@ -130,7 +130,7 @@ nsIRDFResource		*RelatedLinksStreamListener::kNC_RelatedLinksRoot;
 nsIRDFResource		*RelatedLinksStreamListener::kNC_BookmarkSeparator;
 nsIRDFResource		*RelatedLinksStreamListener::kNC_RelatedLinksTopic;
 nsIRDFResource		*RelatedLinksStreamListener::kRDF_type;
-
+nsCOMPtr<nsIUnicodeDecoder>	RelatedLinksStreamListener::mUnicodeDecoder;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -180,6 +180,7 @@ RelatedLinksStreamListener::~RelatedLinksStreamListener()
 		 NS_IF_RELEASE(kNC_RelatedLinksTopic);
 		 NS_IF_RELEASE(kRDF_type);
 		 NS_IF_RELEASE(kNC_RelatedLinksRoot);
+		 mUnicodeDecoder = nsnull;
 
 		 nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
 	 }
