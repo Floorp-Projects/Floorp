@@ -167,7 +167,7 @@ endif
 ifeq ($(OS_ARCH),SCOOS)
 CSRCS += $(SCOOS_CSRCS)
 endif
-ifeq ($(OS_ARCH),dgux)
+ifeq ($(OS_ARCH),DGUX)
 CSRCS += $(DGUX_CSRCS)
 endif
 
