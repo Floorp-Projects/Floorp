@@ -42,6 +42,12 @@ class nsICaret: public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICARET_IID; return iid; }
 
+  typedef enum EViewCoordinates {
+      eTopLevelWindowCoordinates,
+      eRenderingViewCoordinates,
+      eClosestViewCoordinates
+    } EViewCoordinates;
+
   NS_IMETHOD Init(nsIPresShell *inPresShell) = 0;
   
   NS_IMETHOD SetCaretDOMSelection(nsISelection *aDOMSel) = 0;
@@ -62,14 +68,14 @@ public:
    */
   NS_IMETHOD SetCaretReadOnly(PRBool inMakeReadonly) = 0;
 
-  /** GetWindowRelativeCoordinates
-   *  Get the position of the caret in (top-level) window coordinates.
+  /** GetCaretCoordinates
+   *  Get the position of the caret in coordinates relative to the typed specified (aRelativeToType).
    *  If the selection is collapsed, this returns the caret location
    *    and true in outIsCollapsed.
    *  If the selection is not collapsed, this returns the location of the focus pos,
    *    and false in outIsCollapsed.
    */
-  NS_IMETHOD GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsISelection *aDOMSel) = 0;
+  NS_IMETHOD GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *aDOMSel, nsRect *outCoordinates, PRBool *outIsCollapsed) = 0;
 
   /** ClearFrameRefs
    *  The caret stores a reference to the frame that the caret was last drawn in.
