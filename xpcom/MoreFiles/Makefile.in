@@ -26,13 +26,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= macmorefiles
+REQUIRES	= 
+
 # ifeq for standalone builds
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-MODULE		= macmorefiles
+
 LIBRARY_NAME	= macmorefiles_s
-
-
-REQUIRES	= 
 
 CSRCS		=				\
 		MoreFilesX.c		\

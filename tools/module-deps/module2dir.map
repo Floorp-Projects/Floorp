@@ -15,6 +15,7 @@ js: :
 js/src/fdlibm: js:
 js/src: js:
 xpcom: xpcom:
+xpcom/MoreFiles: macmorefiles:
 xpcom/typelib: xpcom:
 xpcom/typelib/xpt: xpcom:
 xpcom/typelib/xpt/public: xpcom:
@@ -148,9 +149,10 @@ modules/libutil/src: util: xpcom
 netwerk: necko:
 netwerk/base: :
 netwerk/base/public: necko:
-netwerk/base/src: necko: xpcom string exthandler mimetype uconv locale pref
+netwerk/base/src: necko: xpcom string mimetype uconv locale pref
 netwerk/cookie: :
 netwerk/cookie/public: necko:
+netwerk/cookie/src: necko: xpcom string necko pref
 netwerk/dns: :
 netwerk/dns/public: necko:
 netwerk/dns/src: necko: xpcom string pref unicharutil
@@ -184,7 +186,7 @@ netwerk/protocol/file/public: necko:
 netwerk/protocol/file/src: necko: xpcom string mimetype pref uconv
 netwerk/protocol/jar: :
 netwerk/protocol/jar/public: necko:
-netwerk/protocol/jar/src: necko: xpcom string jar exthandler mimetype caps js pref xpconnect
+netwerk/protocol/jar/src: necko: xpcom string jar mimetype caps js pref xpconnect
 netwerk/protocol/http: :
 netwerk/protocol/http/public: necko:
 netwerk/protocol/http/src: necko: xpcom string pref nkcache mimetype intl caps xpconnect js uconv
@@ -301,10 +303,10 @@ dom/public/idl/svg: dom:
 dom/public/coreEvents: dom:
 dom/public/base: dom:
 dom/src: :
-dom/src/base: dom: xpcom string webbrwsr commandhandler js widget gfx layout content caps docshell xpconnect pref oji necko mimetype java locale uriloader sidebar xuldoc webshell view uconv shistory plugin windowwatcher chardet find appshell intl unicharutil rdf xultmpl
+dom/src/base: dom: xpcom string webbrwsr commandhandler js widget gfx layout content caps docshell xpconnect pref oji necko mimetype java locale uriloader xuldoc webshell view uconv shistory plugin windowwatcher chardet find appshell intl unicharutil rdf xultmpl
 dom/src/jsurl: jsurl: xpcom string js dom necko caps widget appshell xpconnect jsconsole uconv docshell
 dom/src/events: dom: xpcom string js caps xpconnect content widget gfx
-dom/src/build: dom: xpcom string js xpconnect widget gfx layout content caps webbrwsr commandhandler xuldoc docshell sidebar plugin necko jsurl uconv
+dom/src/build: dom: xpcom string js xpconnect widget gfx layout content caps webbrwsr commandhandler xuldoc docshell plugin necko jsurl uconv
 view: view:
 view/public: view:
 view/src: view: xpcom string gfx layout content widget dom locale pref necko
@@ -320,14 +322,14 @@ widget/src/xremoteclient: widget: xpcom string
 content: content:
 content/base: :
 content/base/public: content:
-content/base/src: content: xpcom string dom gfx layout widget view locale htmlparser js webshell necko caps lwbrk uconv chrome docshell pref xpconnect util unicharutil xuldoc intl windowwatcher webbrowserpersist imglib2 uriloader webbrwsr plugin
+content/base/src: content: xpcom string dom gfx layout widget view locale htmlparser js webshell necko caps lwbrk uconv chrome docshell pref xpconnect util unicharutil xuldoc intl windowwatcher webbrowserpersist imglib2 uriloader webbrwsr plugin prefetch
 content/html: :
 content/html/content: :
 content/html/content/public: content:
 content/html/content/src: content: xpcom string gfx layout widget dom js locale unicharutil webshell uriloader htmlparser necko view pref docshell xpconnect xuldoc caps editor imglib2 mimetype exthandler uconv intl
 content/html/document: :
 content/html/document/public: content:
-content/html/document/src: content: xpcom string gfx layout widget dom necko htmlparser locale view js intl webshell docshell caps util uconv pref uriloader prefetch rdf chardet nkcache lwbrk imglib2 xpconnect unicharutil commandhandler composer plugin
+content/html/document/src: content: xpcom string gfx layout widget dom necko htmlparser locale view js intl webshell docshell caps util uconv pref uriloader rdf chardet nkcache lwbrk imglib2 xpconnect unicharutil commandhandler composer plugin
 content/html/style: :
 content/html/style/public: content:
 content/html/style/src: content: xpcom string dom gfx layout widget caps locale unicharutil js necko mimetype webshell htmlparser uconv xuldoc xpconnect view intl pref
@@ -512,6 +514,18 @@ directory/xpcom/base: mozldap:
 directory/xpcom/base/public: mozldap:
 directory/xpcom/base/src: mozldap: xpcom string necko
 directory/xpcom/base/resources: mozldap:
+security/manager: :
+security/manager/boot: pipboot:
+security/manager/boot/public: pipboot:
+security/manager/boot/src: pipboot: nspr xpcom string necko uriloader dom intl docshell widget layout content pref
+security/manager/ssl: pipnss:
+security/manager/ssl/resources: :
+security/manager/ssl/src: pipnss: nspr xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js widget layout content xpconnect jar unicharutil pipboot
+security/manager/ssl/public: pipnss:
+security/manager/pki: pippki:
+security/manager/pki/public: pippki:
+security/manager/pki/resources: :
+security/manager/pki/src: pippki: nspr xpcom string dom pref intl locale windowwatcher necko pipnss layout
 xpfe: :
 xpfe/browser: browser:
 xpfe/browser/src: browser: xpcom string webshell necko shistory widget gfx content docshell appshell dom js uriloader pref appcomps webbrwsr windowwatcher history
@@ -567,8 +581,6 @@ xpfe/components/prefwindow/resources/locale/en-US/win: :
 xpfe/components/shistory: shistory:
 xpfe/components/shistory/public: shistory:
 xpfe/components/shistory/src: shistory: xpcom string necko dom layout docshell pref
-xpfe/components/timebomb: appcomps: xpcom string pref appshell necko webbrwsr
-xpfe/components/timebomb/tools: timebombgen :
 xpfe/components/console: :
 xpfe/components/updates: :
 xpfe/components/updates/src: :
@@ -660,7 +672,7 @@ extensions/transformiix/source/xpath: transformiix: string xpcom dom content wid
 extensions/transformiix/source/xslt: transformiix: string xpcom dom content widget necko unicharutil xpconnect js htmlparser webshell docshell layout uconv caps windowwatcher mimetype intl
 extensions/transformiix/source/xslt/functions: transformiix: string xpcom dom content widget unicharutil
 extensions/transformiix/source/xslt/util: transformiix: string xpcom dom content widget locale unicharutil
-extensions/transformiix/build: transformiix: xpcom string dom content widget necko js xpconnect caps locale unicharutil htmlparser webshell docshell layout uconv
+extensions/transformiix/build: transformiix: xpcom string dom content widget necko js xpconnect caps locale unicharutil htmlparser webshell docshell layout uconv windowwatcher mimetype intl
 extensions/transformiix/resources: :
 extensions/venkman: :
 extensions/venkman/resources: :
@@ -717,18 +729,6 @@ extensions/cview/resources: :
 extensions/layout-debug: layout_debug:
 extensions/layout-debug/src: layout_debug: xpcom string windowwatcher docshell dom gfx content necko layout widget locale view pref appshell
 extensions/layout-debug/ui: :
-security/manager: :
-security/manager/boot: pipboot:
-security/manager/boot/public: pipboot:
-security/manager/boot/src: pipboot: nspr xpcom string necko uriloader dom intl docshell widget layout content pref
-security/manager/ssl: pipnss:
-security/manager/ssl/resources: :
-security/manager/ssl/src: pipnss: nspr xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js widget layout content xpconnect jar unicharutil pipboot
-security/manager/ssl/public: pipnss:
-security/manager/pki: pippki:
-security/manager/pki/public: pippki:
-security/manager/pki/resources: :
-security/manager/pki/src: pippki: nspr xpcom string dom pref intl locale windowwatcher necko pipnss layout
 mailnews: :
 mailnews/public: mailnews:
 mailnews/base: msgbase:
@@ -760,7 +760,7 @@ mailnews/mime/emitters/src: mimeemitter: xpcom xpcom_obsolete string mime msgbas
 mailnews/mime/emitters/build: mimeemitter: xpcom xpcom_obsolete string mime necko pref intl locale msgbase
 mailnews/mime/cthandlers: :
 mailnews/mime/cthandlers/glue: mime: xpcom string pref uconv necko msgbase
-mailnews/mime/cthandlers/vcard: vcard: xpcom xpcom_obsolete string mime msgbase msgbaseutil uconv necko intl pref mailnews msgdb
+mailnews/mime/cthandlers/vcard: vcard: xpcom xpcom_obsolete string mime msgbase msgbaseutil uconv necko intl pref mailnews msgdb addrbook
 mailnews/mime/cthandlers/resources: :
 mailnews/mime/build: mime: xpcom string necko msgbase pref uconv
 mailnews/compose: msgcompose:
@@ -773,8 +773,8 @@ mailnews/imap/src: msgimap: xpcom xpcom_obsolete string mailnews rdf msgbase msg
 mailnews/imap/build: msgimap: xpcom xpcom_obsolete string mailnews msgbase msgbaseutil rdf rdfutil necko msgdb txmgr mime pref intl msglocal nkcache uriloader
 mailnews/addrbook: : mozldap necko
 mailnews/addrbook/public: addrbook:
-mailnews/addrbook/src: addrbook: xpcom xpcom_obsolete string rdf rdfutil appshell dom layout widget mork docshell pref necko locale unicharutil uconv msgbase msgbaseutil mime appcomps intl import windowwatcher mozldap uriloader
-mailnews/addrbook/build: addrbook: xpcom xpcom_obsolete string necko mime rdf msgbase msgbaseutil rdfutil docshell appshell dom widget locale mork appcomps layout intl mozldap uriloader
+mailnews/addrbook/src: addrbook: xpcom xpcom_obsolete string rdf rdfutil appshell dom layout widget mork docshell pref necko locale unicharutil uconv msgbase msgbaseutil mime appcomps intl import windowwatcher uriloader mozldap
+mailnews/addrbook/build: addrbook: xpcom xpcom_obsolete string necko mime rdf msgbase msgbaseutil rdfutil docshell appshell dom widget locale mork appcomps layout intl uriloader mozldap
 mailnews/import: import:
 mailnews/import/public: import:
 mailnews/import/src: import: xpcom xpcom_obsolete string mailnews addrbook uconv msgbase msgbaseutil intl necko rdf msgdb unicharutil
@@ -794,7 +794,7 @@ mailnews/extensions/mailviews/resources: :
 mailnews/extensions/mailviews/resources/content: :
 mailnews/extensions/mailviews/build: mailview: xpcom string msgbase mailnews necko msgbaseutil msgdb mime
 mailnews/extensions/bayesian-spam-filter: bayesflt:
-mailnews/extensions/bayesian-spam-filter/src: bayesflt: xpcom string msgbase necko mailnews msgbaseutil msgdb profile lwbrk
+mailnews/extensions/bayesian-spam-filter/src: bayesflt: xpcom string msgbase necko mailnews msgbaseutil msgdb lwbrk
 mailnews/extensions/bayesian-spam-filter/build: bayesflt: xpcom mailnews msgbase lwbrk
 mailnews/extensions/smime: msgsmime:
 mailnews/extensions/smime/public: msgsmime:
