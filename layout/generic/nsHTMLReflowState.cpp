@@ -1925,7 +1925,8 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
   nscoord availMarginSpace = aAvailWidth - aComputedWidth -
     mComputedBorderPadding.left - mComputedBorderPadding.right;
 
-  if (mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
+  if ((mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) ||
+      (mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION))  {
     // Special rules for tables. In general, tables will stick to the
     // left edge when they are too large otherwise they behave like
     // blocks.
