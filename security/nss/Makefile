@@ -95,6 +95,8 @@ build_dbm:
 
 moz_import::
 ifeq ($(OS_ARCH),WINNT)
+	$(NSINSTALL) -D $(DIST)/include/nspr
+	cp $(DIST)/../include/nspr/*.h $(DIST)/include/nspr
 	cp $(DIST)/../include/* $(DIST)/include
 ifdef BUILD_OPT
 	cp $(DIST)/../WIN32_O.OBJ/lib/* $(DIST)/lib
