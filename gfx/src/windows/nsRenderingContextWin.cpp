@@ -45,7 +45,9 @@
   #define VERIFY(exp)                 (exp)
 #endif  // !_DEBUG
 
-#define  ARABIC_HEBREW_RENDERING
+//comment this out so we won't do arabic and hebrew buggy reordering untill
+// it get fixed 
+//#define  ARABIC_HEBREW_RENDERING
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static NS_DEFINE_IID(kIRenderingContextWinIID, NS_IRENDERING_CONTEXT_WIN_IID);
@@ -1396,6 +1398,8 @@ NS_IMETHODIMP nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord a
 #define HAS_ARABIC_PRESENTATION_FORM_B(font) (FONT_HAS_GLYPH((font)->mMap, 0xFE81))
 #define HAS_HEBREW_GLYPH(font)               (FONT_HAS_GLYPH((font)->mMap, 0x05D0))
 
+// the following code assume all the aString is from right to left without
+// mixing with left to right characters
 static void HebrewReordering(const PRUnichar *aString, PRUint32 aLen,
         PRUnichar* aBuf, PRUint32 &aBufLen)
 {
