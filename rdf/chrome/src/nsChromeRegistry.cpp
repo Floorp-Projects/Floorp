@@ -39,7 +39,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
