@@ -52,8 +52,8 @@
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 #define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
 #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
-#define MIME_DLL  "libmime.dll"MOZ_DLL_SUFFIX
-#define PREF_DLL  "libxppref32"MOZ_DLL_SUFFIX
+#define MIME_DLL  "libmime"MOZ_DLL_SUFFIX
+#define PREF_DLL  "libpref"MOZ_DLL_SUFFIX
 #define UNICHAR_DLL  "libunicharutil"MOZ_DLL_SUFFIX
 #elif defined(XP_MAC)
 #define NETLIB_DLL "NETLIB_DLL"
