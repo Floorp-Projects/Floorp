@@ -51,6 +51,7 @@ XPIDLSRCS	= calIDateTime.idl   \
 		  calIEvent.idl      \
 		  calICalendar.idl   \
 		  calIICSService.idl \
+		  calIRecurrenceInfo.idl \
 		  $(NULL)
 
 EXPORTS		= calBaseCID.h

@@ -38,9 +38,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIArray;
-interface nsIMutableArray;
-
+interface calIItemBase;
 interface calIDateTime;
 interface calIItemOccurrence;
 
@@ -59,21 +57,46 @@ interface calIRecurrenceInfo : nsISupports
   calIItemBase clone();
 
   //
-  //
   // recurrence
   //
-  const long CAL_ITEM_RECUR_TYPE_NONE = 0;
-  const long CAL_ITEM_RECUR_TYPE_MINUTELY = 1;
-  const long CAL_ITEM_RECUR_TYPE_HOURLY = 2;
-  const long CAL_ITEM_RECUR_TYPE_DAILY = 3;
-  const long CAL_ITEM_RECUR_TYPE_MONTHLY = 4;
-  const long CAL_ITEM_RECUR_TYPE_YEARLY = 5;
+
+  const long CAL_RECUR_INVALID = 0;
+  const long CAL_RECUR_SECONDLY = 1;
+  const long CAL_RECUR_MINUTELY = 2;
+  const long CAL_RECUR_HOURLY = 3;
+  const long CAL_RECUR_DAILY = 4;
+  const long CAL_RECUR_WEEKLY = 5;
+  const long CAL_RECUR_MONTHLY = 6;
+  const long CAL_RECUR_YEARLY = 7;
 
   attribute long recurType;
-  attribute calIDateTime recurEnd; // if null, then forever
-  // array of calIDateTime
-  attribute nsIArray recurrenceExceptions;
-  // rest of recurrence in properties (?)
+
+  // setting either of these attributes calculates the other.
+  // recurCount of -1 or null recurEnd means "forever"
+  attribute long recurCount;
+  attribute calIDateTime recurEnd;
+
+  // skip every N 
+  attribute long interval;
+
+  // the components defining the recurrence
+  const long CAL_RECUR_BYSECOND = 8;
+  const long CAL_RECUR_BYMINUTE = 9;
+  const long CAL_RECUR_BYHOUR = 10;
+  const long CAL_RECUR_BYDAY = 11;
+  const long CAL_RECUR_BYMONTHDAY = 12;
+  const long CAL_RECUR_BYWEEKNO = 13;
+  const long CAL_RECUR_BYMONTH = 14;
+  const long CAL_RECUR_BYSETPOS = 15;
+
+  void getComponent (in long aComponentType,
+                     out unsigned long aCount, [array,size_is(aCount),retval] out long aValues);
+  void setComponent (in long aComponentType,
+                     in unsigned long aCount, [array,size_is(aCount)] in long aValues);
+
+  // exceptions
+  void getExceptions (out unsigned long aCount, [array,size_is(aCount),retval] out calIDateTime aDates);
+  void setExceptions (in unsigned long aCount, [array, size_is(aCount)] in calIDateTime aDates);
 
   // return the next display item for this event,
   // where the start time is >= aStartTime
@@ -84,8 +107,12 @@ interface calIRecurrenceInfo : nsISupports
   calIItemOccurrence getPreviousOccurrence (in calIDateTime aStartTime);
 
   // return array of calIItemOccurrence representing all
-  // occurances of this event between start and end.
-  nsIArray getAllOccurrences (in calIDateTime aStartTime,
-                              in calIDateTime aEndTime);
-};
+  // occurrences of this event between start and end.
+  void getOccurrences (in calIDateTime aStartTime,
+                       in calIDateTime aEndTime,
+                       out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
 
+  // return array of calIItemOccurrence representing all
+  // occurrences of this event.
+  void getAllOccurrences (out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
+};
