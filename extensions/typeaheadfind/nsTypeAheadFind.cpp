@@ -129,7 +129,7 @@ nsTypeAheadFind::nsTypeAheadFind():
 
 #ifdef DEBUG
   // There should only ever be one instance of us
-  static gInstanceCount;
+  static PRInt32 gInstanceCount;
   ++gInstanceCount;
   NS_ASSERTION(gInstanceCount == 1, "There should be only 1 instance of nsTypeAheadFind, someone is creating more than 1.");
 #endif
@@ -701,7 +701,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
       if (!returnRange)
         break;
       // ------- Test resulting found range for success conditions ------
-      PRBool isInsideLink, isStartingLink, isInsideViewPort = PR_TRUE;
+      PRBool isInsideLink, isStartingLink;
       RangeStartsInsideLink(returnRange, presShell, &isInsideLink, &isStartingLink);
 
       if (!IsRangeVisible(presShell, presContext, returnRange, aIsFirstVisiblePreferred, getter_AddRefs(startPointRange)) ||
