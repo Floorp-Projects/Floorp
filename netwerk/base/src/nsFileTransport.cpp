@@ -23,7 +23,7 @@
 #include "nscore.h"
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
-#include "nsIByteBufferInputStream.h"
+#include "nsIBuffer.h"
 #include "prcmon.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -33,8 +33,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsFileTransport::nsFileTransport()
     : mPath(nsnull), mContext(nsnull), mListener(nsnull), mState(ENDED),
-      mSuspended(PR_FALSE), mFileStream(nsnull), mBufferStream(nsnull), 
-      mStatus(NS_OK), mService(nsnull), mSourceOffset(0)
+      mSuspended(PR_FALSE), mFileStream(nsnull), mBuffer(nsnull),
+      mBufferStream(nsnull), mStatus(NS_OK), mService(nsnull), mSourceOffset(0)
 {
     NS_INIT_REFCNT();
 }
@@ -46,6 +46,7 @@ nsFileTransport::~nsFileTransport()
     NS_IF_RELEASE(mContext);
     NS_IF_RELEASE(mService);
     NS_IF_RELEASE(mFileStream);
+    NS_IF_RELEASE(mBuffer);
     NS_IF_RELEASE(mBufferStream);
 }
 
@@ -241,7 +242,11 @@ nsFileTransport::Process(void)
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
-          mStatus = NS_NewByteBufferInputStream(&mBufferStream, PR_FALSE, NS_FILE_TRANSPORT_BUFFER_SIZE);
+          mStatus = NS_NewBuffer(&mBuffer, NS_FILE_TRANSPORT_BUFFER_SIZE,
+                                 NS_FILE_TRANSPORT_BUFFER_SIZE);
+          if (NS_FAILED(mStatus)) goto error;
+
+          mStatus = NS_NewBufferInputStream(&mBufferStream, mBuffer, PR_FALSE);
           if (NS_FAILED(mStatus)) goto error;
 
           mState = READING;
@@ -251,7 +256,7 @@ nsFileTransport::Process(void)
           if (NS_FAILED(mStatus)) goto error;
 
           PRUint32 amt;
-          mStatus = mBufferStream->Fill(NS_STATIC_CAST(nsIInputStream*, mFileStream), &amt);
+          mStatus = mBuffer->Write(NS_STATIC_CAST(nsIInputStream*, mFileStream), &amt);
           if (mStatus == NS_BASE_STREAM_EOF) goto error; 
           if (NS_FAILED(mStatus)) goto error;
 
@@ -279,7 +284,11 @@ nsFileTransport::Process(void)
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
-          mStatus = NS_NewByteBufferInputStream(&mBufferStream, PR_FALSE, NS_FILE_TRANSPORT_BUFFER_SIZE);
+          mStatus = NS_NewBuffer(&mBuffer, NS_FILE_TRANSPORT_BUFFER_SIZE,
+                                 NS_FILE_TRANSPORT_BUFFER_SIZE);
+          if (NS_FAILED(mStatus)) goto error;
+
+          mStatus = NS_NewBufferInputStream(&mBufferStream, mBuffer, PR_FALSE);
           if (NS_FAILED(mStatus)) goto error;
 
           mState = WRITING;

@@ -26,7 +26,8 @@
 class nsFileTransportService;
 class nsIBaseStream;
 class nsIString;
-class nsIByteBufferInputStream;
+class nsIBuffer;
+class nsIInputStream;
 
 class nsFileTransport : public nsITransport, public nsIRunnable
 {
@@ -82,7 +83,8 @@ protected:
 
     // state variables:
     nsIBaseStream*              mFileStream;    // cast to nsIInputStream/nsIOutputStream for reading/writing
-    nsIByteBufferInputStream*   mBufferStream;
+    nsIBuffer*                  mBuffer;
+    nsIInputStream*             mBufferStream;
     nsresult                    mStatus;
     PRUint32                    mSourceOffset;
 };
