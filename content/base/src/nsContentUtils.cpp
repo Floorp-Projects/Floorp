@@ -38,7 +38,7 @@
 
 #include "jsapi.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -63,6 +63,7 @@ static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
 nsIDOMScriptObjectFactory *nsContentUtils::sDOMScriptObjectFactory = nsnull;
 nsIXPConnect *nsContentUtils::sXPConnect = nsnull;
 nsIScriptSecurityManager *nsContentUtils::sSecurityManager = nsnull;
+nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack = nsnull;
 
 // static
 nsresult
@@ -70,16 +71,18 @@ nsContentUtils::Init()
 {
   NS_ENSURE_TRUE(!sXPConnect, NS_ERROR_ALREADY_INITIALIZED);
 
-  nsresult rv = nsServiceManager::GetService(nsIXPConnect::GetCID(),
-                                             nsIXPConnect::GetIID(),
-                                             (nsISupports **)&sXPConnect);
+  nsresult rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsServiceManager::GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                                    nsIScriptSecurityManager::GetIID(),
-                                    (nsISupports **)&sSecurityManager);
+  rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                      &sSecurityManager);
   if (NS_FAILED(rv)) {
     sSecurityManager = nsnull;
+  }
+
+  rv = CallGetService(sJSStackContractID, &sThreadJSContextStack);
+  if (NS_FAILED(rv)) {
+    sThreadJSContextStack = nsnull;
   }
 
   return rv;
@@ -342,6 +345,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sDOMScriptObjectFactory);
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecurityManager);
+  NS_IF_RELEASE(sThreadJSContextStack);
 }
 
 // static
@@ -761,6 +765,27 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
                                   obj);
 }
 
+void
+nsContentUtils::GetDocShellFromCaller(nsIDocShell** aDocShell)
+{
+  *aDocShell = nsnull;
+  if (!sThreadJSContextStack) {
+    return;
+  }
+
+  JSContext *cx = nsnull;
+  sThreadJSContextStack->Peek(&cx);
+
+  if (cx) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo;
+    GetDynamicScriptGlobal(cx, getter_AddRefs(sgo));
+
+    if (sgo) {
+      sgo->GetDocShell(aDocShell);
+    }
+  }
+}
+
 PRBool
 nsContentUtils::IsCallerChrome()
 {
@@ -1030,4 +1055,97 @@ nsContentUtils::TrimCharsInSet(const char* aSet,
 
   // valueEnd should point to the char after the last to copy
   return Substring(valueCurrent, valueEnd);
+}
+
+void
+nsCxPusher::Push(nsISupports *aCurrentTarget)
+{
+  if (mScx) {
+    NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
+
+    return;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentTarget));
+  nsCOMPtr<nsIDocument> document;
+
+  if (content) {
+    content->GetDocument(*getter_AddRefs(document));
+  }
+
+  if (!document) {
+    document = do_QueryInterface(aCurrentTarget);
+  }
+
+  if (document) {
+    document->GetScriptGlobalObject(getter_AddRefs(sgo));
+  }
+
+  if (!document && !sgo) {
+    sgo = do_QueryInterface(aCurrentTarget);
+  }
+
+  JSContext *cx = nsnull;
+
+  if (sgo) {
+    sgo->GetContext(getter_AddRefs(mScx));
+
+    if (mScx) {
+      cx = (JSContext *)mScx->GetNativeContext();
+    }
+  }
+
+  if (cx) {
+    if (!mStack) {
+      mStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    }
+
+    if (mStack) {
+      JSContext *current = nsnull;
+      mStack->Peek(&current);
+
+      if (current) {
+        // If there's a context on the stack, that means that a script
+        // is running at the moment.
+
+        mScriptIsRunning = PR_TRUE;
+      }
+
+      mStack->Push(cx);
+    }
+  } else {
+    // If there's no native context in the script context it must be
+    // in the process or being torn down. We don't want to notify the
+    // script context about scripts having been evaluated in such a
+    // case, so null out mScx.
+
+    mScx = nsnull;
+  }
+}
+
+void
+nsCxPusher::Pop()
+{
+  if (!mScx || !mStack) {
+    mScx = nsnull;
+
+    NS_ASSERTION(!mScriptIsRunning, "Huh, this can't be happening, "
+                 "mScriptIsRunning can't be set here!");
+
+    return;
+  }
+
+  JSContext *unused;
+  mStack->Pop(&unused);
+
+  if (!mScriptIsRunning) {
+    // No JS is running, but executing the event handler might have
+    // caused some JS to run. Tell the script context that it's done.
+
+    mScx->ScriptEvaluated(PR_TRUE);
+  }
+
+  mScx = nsnull;
+  mScriptIsRunning = PR_FALSE;
 }

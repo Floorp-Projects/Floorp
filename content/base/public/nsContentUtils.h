@@ -41,13 +41,16 @@
 #include "nsAString.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsIJSContextStack.h"
+#include "nsIScriptContext.h"
 
-class nsIScriptContext;
 class nsIScriptGlobalObject;
 class nsIXPConnect;
 class nsIContent;
 class nsIDocument;
+class nsIDocShell;
 class nsIScriptSecurityManager;
+class nsIThreadJSContextStack;
 
 
 class nsContentUtils
@@ -181,6 +184,8 @@ public:
   // Check if the (JS) caller can access aNode.
   static PRBool CanCallerAccess(nsIDOMNode *aNode);
 
+  static void GetDocShellFromCaller(nsIDocShell** aDocShell);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
@@ -194,7 +199,36 @@ private:
   static nsIXPConnect *sXPConnect;
 
   static nsIScriptSecurityManager *sSecurityManager;
+
+  static nsIThreadJSContextStack *sThreadJSContextStack;
 };
+
+
+class nsCxPusher
+{
+public:
+  nsCxPusher(nsISupports *aCurrentTarget)
+    : mScriptIsRunning(PR_FALSE)
+  {
+    if (aCurrentTarget) {
+      Push(aCurrentTarget);
+    }
+  }
+
+  ~nsCxPusher()
+  {
+    Pop();
+  }
+
+  void Push(nsISupports *aCurrentTarget);
+  void Pop();
+
+private:
+  nsCOMPtr<nsIJSContextStack> mStack;
+  nsCOMPtr<nsIScriptContext> mScx;
+  PRBool mScriptIsRunning;
+};
+
 
 #define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(_class)                      \
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \

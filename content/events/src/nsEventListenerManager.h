@@ -45,7 +45,6 @@
 #include "nsIPrincipal.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsHashtable.h"
-#include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
 
 class nsIDOMEvent;
@@ -322,29 +321,6 @@ protected:
 //nsIDOMContextMenuListener
 #define NS_EVENT_BITS_CONTEXT_NONE  0x00
 #define NS_EVENT_BITS_CONTEXT_MENU  0x01
-
-class nsCxPusher
-{
-public:
-  nsCxPusher(nsISupports *aCurrentTarget)
-    : mScriptIsRunning(PR_FALSE)
-  {
-    Push(aCurrentTarget);
-  }
-
-  ~nsCxPusher()
-  {
-    Pop();
-  }
-
-  void Push(nsISupports *aCurrentTarget);
-  void Pop();
-
-private:
-  nsCOMPtr<nsIJSContextStack> mStack;
-  nsCOMPtr<nsIScriptContext> mScx;
-  PRBool mScriptIsRunning;
-};
 
 
 #endif // nsEventListenerManager_h__
