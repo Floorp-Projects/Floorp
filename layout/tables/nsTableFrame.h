@@ -360,8 +360,6 @@ public:
 
 // end methods for collapsing borders
 
-  void    RecalcLayoutData(nsIPresContext& aPresContext);
-
   // Get cell margin information
   NS_IMETHOD GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin& aMargin);
 

@@ -189,10 +189,6 @@ public:
     */
   virtual void SetPass1MaxElementSize(const nsSize & aMaxElementSize);
 
-  void RecalcLayoutData(nsMargin& aMargin);
-  
-  NS_IMETHOD GetMargin(nsMargin& aMargin);
-
   PRBool GetContentEmpty();
   void SetContentEmpty(PRBool aContentEmpty);
 
@@ -224,7 +220,7 @@ protected:
   // Subclass hook for style post processing
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
 
-  void      MapBorderMarginPadding(nsIPresContext* aPresContext);
+  void      MapBorderPadding(nsIPresContext* aPresContext);
 
   void      MapHTMLBorderStyle(nsIPresContext* aPresContext,
                                nsStyleSpacing& aSpacingStyle,
@@ -251,7 +247,6 @@ protected:
   nsSize       mPass1DesiredSize;
   nsSize       mPass1MaxElementSize;
 
-  nsMargin     mMargin;
   nsPoint      mCollapseOffset;
 
 public:
@@ -311,12 +306,6 @@ inline void nsTableCellFrame::SetPass1DesiredSize(const nsHTMLReflowMetrics & aD
 
 inline nsSize nsTableCellFrame::GetPass1MaxElementSize() const
 { return mPass1MaxElementSize; }
-
-inline NS_METHOD nsTableCellFrame::GetMargin(nsMargin& aMargin)
-{
-  aMargin = mMargin;
-  return NS_OK;
-}
 
 inline PRBool nsTableCellFrame::GetContentEmpty()
 {
