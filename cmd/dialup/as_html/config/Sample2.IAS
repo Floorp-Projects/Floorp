@@ -24,7 +24,7 @@ Description=Internet Account Server (Old UI)
 SiteName=Internet Account Server (Old UI)
 
 [IP]
-RegCGI=https://reggie.netscape.com/DUK1/reg.cgi
+RegCGI=https://205.217.225.10/DUK1/reg.cgi
 DNSAddress2=205.217.225.20
 DNSAddress=205.217.225.10
 DomainName=netscape.com

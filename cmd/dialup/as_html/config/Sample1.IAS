@@ -25,7 +25,7 @@ SiteName=Internet Account Server (New UI)
 LocalMode=yes
 
 [IP]
-RegCGI=https://reggie.netscape.com/IAS5/docs/reg.cgi
+RegCGI=https://205.217.225.10/IAS5/docs/reg.cgi
 DNSAddress2=205.217.225.20
 DNSAddress=205.217.225.10
 DomainName=netscape.com
