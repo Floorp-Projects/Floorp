@@ -151,8 +151,6 @@ public:
     void SetPREGInfo(const char* pregInfo);
     void CheckRegString(const PRUnichar *profileName, char** regString);
     void FreeProfileMembers(nsVoidArray *aProfile, PRInt32 numElems);
-    nsresult GetMozRegDataMovedFlag(PRBool *regDataMoved);
-    nsresult SetMozRegDataMovedFlag(nsIFile* regName);
     nsresult ResetProfileMembers();
     nsresult DetermineForceMigration(PRBool *forceMigration);
 };
