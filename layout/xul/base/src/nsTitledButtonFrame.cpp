@@ -73,6 +73,7 @@
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
 #include "nsBoxLayoutState.h"
+#include "nsMenuBarListener.h"
 
 #include "nsFormControlHelper.h"
 
@@ -303,27 +304,31 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
   PRBool a,b,c;
   UpdateAttributes(aPresContext, nsnull, a, b, c  /* all */);
 
+  PRInt32 menuAccessKey = -1;
+  nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
+  if (menuAccessKey) {
+
 // the following block is to append the accesskey to to mTitle if there is an accesskey 
 // but the mTitle doesn't have the character 
-  // XXX Should this code first check to see if there's a menuAccessKey?
 
-  mAccesskeyIndex = -1;
-  nsAutoString accesskey;
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
-                         accesskey);
-  if (!accesskey.IsEmpty()) {    
+      mAccesskeyIndex = -1;
+      nsAutoString accesskey;
+      mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
+                             accesskey);
+      if (!accesskey.IsEmpty()) {    
 	  mAccesskeyIndex = mTitle.Find(accesskey, PR_TRUE);
 	  if (mAccesskeyIndex == -1) {
-		  nsString tmpstring; tmpstring.AssignWithConversion("(");
-		  accesskey.ToUpperCase();
-		  tmpstring += accesskey;
-		  tmpstring.AppendWithConversion(")");
-		  PRUint32 offset = mTitle.RFind("...");
-		  if ( offset != kNotFound)
-			mTitle.Insert(tmpstring,offset);
-		  else
-		  	mTitle += tmpstring;
+              nsString tmpstring; tmpstring.AssignWithConversion("(");
+              accesskey.ToUpperCase();
+              tmpstring += accesskey;
+              tmpstring.AppendWithConversion(")");
+              PRUint32 offset = mTitle.RFind("...");
+              if ( offset != (PRUint32)kNotFound)
+                  mTitle.Insert(tmpstring,offset);
+              else
+                  mTitle += tmpstring;
 	  }
+      }
   }
 
   return rv;
@@ -819,8 +824,9 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRen
 void
 nsTitledButtonFrame::UpdateAccessUnderline()
 {
-    mAccesskeyIndex = -1;
-#ifndef XP_UNIX
+  PRInt32 menuAccessKey = -1;
+  nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
+  if (menuAccessKey) {
     nsAutoString accesskey;
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                            accesskey);
@@ -829,7 +835,7 @@ nsTitledButtonFrame::UpdateAccessUnderline()
     
     mAccesskeyIndex = mCroppedTitle.Find(accesskey, PR_TRUE);
     mNeedsAccessUpdate = PR_TRUE;
-#endif
+  }
 }
 
 NS_IMETHODIMP

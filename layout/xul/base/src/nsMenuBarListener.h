@@ -60,16 +60,18 @@ public:
   virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
+
+  static nsresult GetMenuAccessKey(PRInt32* aAccessKey);
   
   NS_DECL_ISUPPORTS
 
 protected:
-  void InitAccessKey();
+  static void InitAccessKey();
 
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
   PRBool mAccessKeyDown;         // Whether or not the ALT key is currently down.
-  PRBool mAccessKeyFocuses;      // Does the access key by itself focus the menubar?
-  PRInt32 mAccessKey;            // See nsIDOMKeyEvent.h for sample values
+  static PRBool mAccessKeyFocuses; // Does the access key by itself focus the menubar?
+  static PRInt32 mAccessKey;     // See nsIDOMKeyEvent.h for sample values
 };
 
 

@@ -39,6 +39,7 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsBoxLayoutState.h"
+#include "nsMenuBarListener.h"
 
 #define ELIPSIS "..."
 
@@ -134,32 +135,35 @@ nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
 
 // the following block is to append the accesskey to to mTitle if there is an accesskey 
 // but the mTitle doesn't have the character
-  // XXX Should this code first check to see if there's a menuAccessKey?
 
-  nsAutoString accesskey;
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
-                         accesskey);
-  if (!accesskey.IsEmpty()) {   
-      if (!mAccessKeyInfo)
-          mAccessKeyInfo = new nsAccessKeyInfo();
+  PRInt32 menuAccessKey;
+  nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
+  if (menuAccessKey) {
+      nsAutoString accesskey;
+      mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
+                             accesskey);
+      if (!accesskey.IsEmpty()) {   
+          if (!mAccessKeyInfo)
+              mAccessKeyInfo = new nsAccessKeyInfo();
 
-      mAccessKeyInfo->mAccesskeyIndex = -1;
-      mAccessKeyInfo->mAccesskeyIndex = mTitle.Find(accesskey, PR_TRUE);
+          mAccessKeyInfo->mAccesskeyIndex = -1;
+          mAccessKeyInfo->mAccesskeyIndex = mTitle.Find(accesskey, PR_TRUE);
 	  if (mAccessKeyInfo->mAccesskeyIndex == -1) {
-		  nsAutoString tmpstring; tmpstring.AssignWithConversion("(");
-		  accesskey.ToUpperCase();
-		  tmpstring += accesskey;
-		  tmpstring.AppendWithConversion(")");
-		  PRUint32 offset = mTitle.RFind("...");
-		  if ( offset != kNotFound)
-			mTitle.Insert(tmpstring,offset);
-		  else
-		  	mTitle += tmpstring;
+              nsAutoString tmpstring; tmpstring.AssignWithConversion("(");
+              accesskey.ToUpperCase();
+              tmpstring += accesskey;
+              tmpstring.AppendWithConversion(")");
+              PRUint32 offset = mTitle.RFind("...");
+              if ( offset != (PRUint32)kNotFound)
+                  mTitle.Insert(tmpstring,offset);
+              else
+                  mTitle += tmpstring;
 	  }
-  } else {
-      if (mAccessKeyInfo) {
-          delete mAccessKeyInfo;
-          mAccessKeyInfo = nsnull;
+      } else {
+          if (mAccessKeyInfo) {
+              delete mAccessKeyInfo;
+              mAccessKeyInfo = nsnull;
+          }
       }
   }
 
@@ -535,7 +539,9 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
 void
 nsTextBoxFrame::UpdateAccessUnderline()
 {
-#ifndef XP_UNIX
+  PRInt32 menuAccessKey = -1;
+  nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
+  if (menuAccessKey) {
     nsAutoString accesskey;
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                            accesskey);
@@ -552,7 +558,7 @@ nsTextBoxFrame::UpdateAccessUnderline()
 
     mAccessKeyInfo->mAccesskeyIndex = -1;
     mAccessKeyInfo->mAccesskeyIndex = mCroppedTitle.Find(accesskey, PR_TRUE);
-#endif
+  }
 }
 
 
