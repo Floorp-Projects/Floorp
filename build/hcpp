@@ -30,6 +30,7 @@ CC_SRC="${DUMMY}"
 CPP_SRC="${DUMMY}"
 S_SRC="${DUMMY}"
 OBJECT="${DUMMY}"
+PLATFORM=`uname -s`
 
 for i in $*
 do
@@ -77,7 +78,11 @@ do
 			;;
 		*.cpp)
 			CPP_SRC="$i"
-			OPTS="${OPTS} $i"
+			if [ "${PLATFORM}" = "SCO_SV" ]; then
+				OPTS="${OPTS} +.cpp $i"
+			else
+				OPTS="${OPTS} $i"
+			fi
 # cc always creates the .o from the .cpp name
 			OBJ=`basename ${CPP_SRC} .cpp`.o
 			;;
