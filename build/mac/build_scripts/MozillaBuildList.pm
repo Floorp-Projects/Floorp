@@ -864,6 +864,9 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST_IDL",          "$distdirectory:idl:");
     InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",                 "$distdirectory:mailnews:");
     InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",               "$distdirectory:mailnews:");
+    if ($main::options{smime} && $main::options{psm}) {
+    	InstallFromManifest(":mozilla:mailnews:extensions:smime:public:MANIFEST_IDL", "$distdirectory:idl:");
+    }
     
     #TRANSFORMIIX
     if ($main::options{transformiix})
