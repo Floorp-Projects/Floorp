@@ -447,11 +447,21 @@ namespace MetaData {
                     case Attribute::Virtual:
                     case Attribute::Final:
                         {
-                    // XXX Here the spec. has ???, so the following is tentative
                             FunctionInstance *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
                             JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
                             Multiname *mn = new Multiname(f->function.name, a->namespaces);
-                            InstanceMember *m = new InstanceMethod(mn, fObj, (memberMod == Attribute::Final), true);
+                            InstanceMember *m;
+                            switch (f->function.prefix) {
+                            case FunctionName::normal:
+                                m = new InstanceMethod(mn, fObj, (memberMod == Attribute::Final), true);
+                                break;
+                            case FunctionName::Set:
+                                m = new InstanceSetter(mn, fObj, objectClass, (memberMod == Attribute::Final), true);
+                                break;
+                            case FunctionName::Get:
+                                m = new InstanceGetter(mn, fObj, objectClass, (memberMod == Attribute::Final), true);
+                                break;
+                            }                            
                             defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, m, p->pos);
                         }
                         break;
@@ -639,6 +649,67 @@ namespace MetaData {
                 break;
             case StmtNode::empty:
                 break;
+            case StmtNode::Package:
+                {
+                    PackageStmtNode *ps = checked_cast<PackageStmtNode *>(p);
+	            String packageName = getPackageName(ps->packageIdList);
+	            Package *package = new Package(packageName, new Namespace(&world.identifiers["internal"]));
+                    package->status = Package::InTransit;                    
+	            packages.push_back(package);
+                    env->addFrame(package);
+                    ValidateStmt(cxt, env, pl, ps->body);
+                    env->removeTopFrame();
+                    package->status = Package::InHand;
+                }
+                break;
+            case StmtNode::Import:
+                {
+                    ImportStmtNode *i = checked_cast<ImportStmtNode *>(p);
+	            String packageName;
+	            if (i->packageIdList)
+		        packageName = getPackageName(i->packageIdList);
+                    else
+                        packageName = *i->packageString;
+
+                    if (!checkForPackage(packageName, i->pos))
+                        loadPackage(packageName, packageName + ".js");
+
+                    Multiname mn(&packageName, publicNamespace);
+                    js2val packageValue;
+                    env->lexicalRead(this, &mn, CompilePhase, &packageValue, NULL);
+                    if (JS2VAL_IS_VOID(packageValue) || JS2VAL_IS_NULL(packageValue) || !JS2VAL_IS_OBJECT(packageValue)
+                            || (JS2VAL_TO_OBJECT(packageValue)->kind != PackageKind))
+                        reportError(Exception::badValueError, "Package expected in Import directive", i->pos);
+#if 0
+
+                    Package *package = checked_cast<Package *>(JS2VAL_TO_OBJECT(packageValue));
+            
+                    if (i->varName)
+                        // defineVariable(m_cx, *i->varName, NULL, Package_Type, JSValue::newPackage(package));
+            
+                    // scan all local bindings in 'package' and handle the alias-ing issue...
+                    for (PropertyIterator it = package->mProperties.begin(), end = package->mProperties.end();
+                                (it != end); it++)
+                    {
+                        ASSERT(PROPERTY_KIND(it) == ValuePointer);
+                        bool makeAlias = true;
+                        if (i->includeExclude) {
+                            makeAlias = i->exclude;
+                            IdentifierList *idList = i->includeExclude;
+                            while (idList) {
+                                if (idList->name.compare(PROPERTY_NAME(it)) == 0) {
+                                    makeAlias = !makeAlias;
+                                    break;
+                                }
+                                idList = idList->next;
+                            }
+                        }
+                        if (makeAlias)
+                            defineAlias(m_cx, PROPERTY_NAME(it), PROPERTY_NAMESPACELIST(it), PROPERTY_ATTR(it), PROPERTY_TYPE(it), PROPERTY_VALUEPOINTER(it));
+                    }
+#endif
+                }
+                break;
             default:
                 NOT_REACHED("Not Yet Implemented");
             }   // switch (p->getKind())
@@ -649,6 +720,49 @@ namespace MetaData {
         }
     }
 
+    /*
+        Build a name for the package from the identifier list
+    */
+    String JS2Metadata::getPackageName(IdentifierList *packageIdList)
+    {
+        String packagePath;
+        IdentifierList *idList = packageIdList;
+        while (idList) {
+	    packagePath += idList->name;
+	    idList = idList->next;
+	    if (idList)
+	        packagePath += '/'; // XXX how to get path separator for OS?
+        }
+        return packagePath;
+    }
+
+    /*
+        See if the specified package is already loaded - return true
+        Throw an exception if the package is being loaded already
+    */
+    bool JS2Metadata::checkForPackage(const String &packageName, size_t pos)
+    {
+        // XXX linear search 
+        for (PackageList::iterator pi = packages.begin(), end = packages.end(); (pi != end); pi++) {
+            if ((*pi)->name.compare(packageName) == 0) {
+                if ((*pi)->status == Package::InTransit)
+                    reportError(Exception::referenceError, "Package circularity", pos);
+                else
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /*
+        Load the specified package from the file
+    */
+    void JS2Metadata::loadPackage(const String & /*packageName*/, const String &filename)
+    {
+        // XXX need some rules for search path
+        // XXX need to extract just the target package from the file
+        readEvalFile(filename);
+    }
 
     JS2Class *JS2Metadata::getVariableType(Variable *v, Phase phase, size_t pos)
     {
@@ -3406,7 +3520,7 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Mu
         engine(new JS2Engine(world)),
         publicNamespace(new Namespace(engine->public_StringAtom)),
         bCon(new BytecodeContainer()),
-        glob(new Package(new Namespace(&world.identifiers["internal"]))),
+        glob(new Package(widenCString("global"), new Namespace(&world.identifiers["internal"]))),
         env(new Environment(new MetaData::SystemFrame(), glob)),
         flags(JS1),
         showTrees(false),
@@ -4409,7 +4523,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         JS2Object *obj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
         DEFINE_ROOTKEEPER(rk2, obj);
 
-        meta->createDynamicProperty(this, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(obj), ReadWriteAccess, false, true);
+        meta->createDynamicProperty(this, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(obj), ReadWriteAccess, true, false);
     }
 
 

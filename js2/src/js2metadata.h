@@ -559,9 +559,9 @@ public:
 
 class InstanceGetter : public InstanceMember {
 public:
-    InstanceGetter(Multiname *multiname, Invokable *code, JS2Class *type, bool final, bool enumerable)
-        : InstanceMember(InstanceGetterMember, multiname, final, enumerable), code(code), type(type) { }
-    Invokable *code;                // A callable object which does the read or write; null if this method is abstract
+    InstanceGetter(Multiname *multiname, FunctionInstance *fInst, JS2Class *type, bool final, bool enumerable)
+        : InstanceMember(InstanceGetterMember, multiname, final, enumerable), fInst(fInst), type(type) { }
+    FunctionInstance *fInst;        // A callable object which does the read or write; null if this method is abstract
     JS2Class *type;                 // Type of values that may be stored in this variable
 
     virtual Access instanceMemberAccess()   { return ReadAccess; }
@@ -569,9 +569,9 @@ public:
 
 class InstanceSetter : public InstanceMember {
 public:
-    InstanceSetter(Multiname *multiname, Invokable *code, JS2Class *type, bool final, bool enumerable) 
-        : InstanceMember(InstanceSetterMember, multiname, final, enumerable), code(code), type(type) { }
-    Invokable *code;                // A callable object which does the read or write; null if this method is abstract
+    InstanceSetter(Multiname *multiname, FunctionInstance *fInst, JS2Class *type, bool final, bool enumerable) 
+        : InstanceMember(InstanceSetterMember, multiname, final, enumerable), fInst(fInst), type(type) { }
+    FunctionInstance *fInst;        // A callable object which does the read or write; null if this method is abstract
     JS2Class *type;                 // Type of values that may be stored in this variable
 
     virtual Access instanceMemberAccess()   { return WriteAccess; }
@@ -772,10 +772,15 @@ public:
 
 class Package : public NonWithFrame {
 public:
-    Package(Namespace *internal) : NonWithFrame(PackageKind), super(JS2VAL_VOID), sealed(false), internalNamespace(internal) { }
+    typedef enum { InTransit, InHand } PackageStatus;
+
+    Package(const String &name, Namespace *internal) : NonWithFrame(PackageKind), super(JS2VAL_VOID), sealed(false), internalNamespace(internal), name(name) { }
     js2val super;
     bool sealed;
     Namespace *internalNamespace;               // This Package's internal namespace
+    PackageStatus status;
+    String name;
+    
     virtual void markChildren();
     virtual ~Package()            { }
 };
@@ -1458,7 +1463,14 @@ public:
 
     bool showTrees;                 // debug only, causes parse tree dump 
 
-    Arena *referenceArena;
+    Arena *referenceArena;          // allocation arena for all reference objects
+
+    typedef std::vector<Package *> PackageList;
+    PackageList packages;           // the currently loaded packages, packages.back() is the current package
+
+    bool checkForPackage(const String &packageName, size_t pos);    // return true if loaded, throw exception if loading
+    void loadPackage(const String &packageName, const String &filename);  // load package from file
+    String getPackageName(IdentifierList *packageIdList);
 
 };
 
