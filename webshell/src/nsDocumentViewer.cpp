@@ -536,7 +536,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         ps->Init(mDocument, cx, vm, ss);
 
         //lay it out...
-        dx->BeginDocument();
+        newdx->BeginDocument();
         ps->InitialReflow(width, height);
 
         // Ask the page sequence frame to print all the pages
@@ -547,7 +547,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         ps->GetPageSequenceFrame(pageSequence);
         NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
         pageSequence->Print(*cx, options, nsnull);
-        dx->EndDocument();
+        newdx->EndDocument();
 
         NS_RELEASE(ps);
         NS_RELEASE(vm);
