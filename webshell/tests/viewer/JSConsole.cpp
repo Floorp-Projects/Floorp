@@ -929,7 +929,7 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                 }
 
                 // clean up a bit
-                JS_GC(mContext->GetContext());
+                JS_GC((JSContext *)mContext->GetNativeContext());
             }
             else {
                 ::MessageBox(mMainWindow, 
