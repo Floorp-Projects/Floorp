@@ -142,12 +142,12 @@ PRInt32 nsEditor::gInstanceCount = 0;
 //class implementations are in order they are declared in nsEditor.h
 
 nsEditor::nsEditor()
-:  mPresShell(nsnull)
+:  mPresShellWeak(nsnull)
 ,  mViewManager(nsnull)
 ,  mUpdateCount(0)
 ,  mActionListeners(nsnull)
 ,  mDocDirtyState(-1)
-,  mDoc(nsnull)
+,  mDocWeak(nsnull)
 ,  mPrefs(nsnull)
 {
   //initialize member variables here
@@ -232,12 +232,14 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
     return NS_ERROR_NULL_POINTER;
 
   mFlags = aFlags;
-  mDoc = aDoc;
-  mPresShell = aPresShell;		// we don't addref the pres shell
+  mDocWeak = getter_AddRefs( NS_GetWeakReference(aDoc) );  // weak reference to doc
+  mPresShellWeak = getter_AddRefs( NS_GetWeakReference(aPresShell) );   // weak reference to pres shell
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
   // disable links
   nsCOMPtr<nsIPresContext> context;
-  mPresShell->GetPresContext(getter_AddRefs(context));
+  ps->GetPresContext(getter_AddRefs(context));
   if (!context) return NS_ERROR_NULL_POINTER;
   context->SetLinkHandler(0);  
 
@@ -251,11 +253,11 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
   if (NS_FAILED(result)) { return result; }
   if (!mEditProperty) {return NS_ERROR_NULL_POINTER;}
 
-  mPresShell->GetViewManager(&mViewManager);
+  ps->GetViewManager(&mViewManager);
   if (!mViewManager) {return NS_ERROR_NULL_POINTER;}
   mViewManager->Release(); //we want a weak link
 
-  mPresShell->SetDisplayNonTextSelection(PR_TRUE);//we want to see all the selection reflected to user
+  ps->SetDisplayNonTextSelection(PR_TRUE);//we want to see all the selection reflected to user
   mUpdateCount=0;
   InsertTextTxn::ClassInit();
 
@@ -269,11 +271,11 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
   /* Show the caret */
   // XXX: I suppose it's legal to fail to get a caret, so don't propogate the
   //      result of GetCaret
-  nsCOMPtr<nsICaret>	caret;
-  if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret))) && caret)
+  nsCOMPtr<nsICaret>  caret;
+  if (NS_SUCCEEDED(ps->GetCaret(getter_AddRefs(caret))) && caret)
   {
-  	caret->SetCaretVisible(PR_TRUE);
-  	caret->SetCaretReadOnly(PR_FALSE);
+    caret->SetCaretVisible(PR_TRUE);
+    caret->SetCaretReadOnly(PR_FALSE);
   }
 
   // NOTE: We don't fail if we can't get prefs or string bundles
@@ -317,7 +319,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
   // Set the selection to the beginning:
   BeginningOfDocument();
 
-  NS_POSTCONDITION(mDoc && mPresShell, "bad state");
+  NS_POSTCONDITION(mDocWeak && mPresShellWeak, "bad state");
 
   return NS_OK;
 }
@@ -339,10 +341,11 @@ nsEditor::GetDocument(nsIDOMDocument **aDoc)
   if (!aDoc)
     return NS_ERROR_NULL_POINTER;
   *aDoc = nsnull; // init out param
-  NS_PRECONDITION(mDoc, "bad state, null mDoc");
-  if (!mDoc)
-    return NS_ERROR_NOT_INITIALIZED;
-  return mDoc->QueryInterface(nsIDOMDocument::GetIID(), (void **)aDoc);
+  NS_PRECONDITION(mDocWeak, "bad state, mDocWeak weak pointer not initialized");
+  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  return doc->QueryInterface(nsIDOMDocument::GetIID(), (void **)aDoc);
 }
 
 
@@ -352,10 +355,11 @@ nsEditor::GetPresShell(nsIPresShell **aPS)
   if (!aPS)
     return NS_ERROR_NULL_POINTER;
   *aPS = nsnull; // init out param
-  NS_PRECONDITION(mPresShell, "bad state, null mPresShell");
-  if (!mPresShell)
-    return NS_ERROR_NOT_INITIALIZED;
-  return mPresShell->QueryInterface(nsIPresShell::GetIID(), (void **)aPS);
+  NS_PRECONDITION(mPresShellWeak, "bad state, null mPresShellWeak");
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  return ps->QueryInterface(nsIPresShell::GetIID(), (void **)aPS);
 }
 
 
@@ -365,7 +369,10 @@ nsEditor::GetSelection(nsIDOMSelection **aSelection)
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
   *aSelection = nsnull;
-  nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, aSelection);  // does an addref
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = ps->GetSelection(SELECTION_NORMAL, aSelection);  // does an addref
   return result;
 }
 
@@ -373,8 +380,8 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 
 NS_IMETHODIMP nsEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
 {
-	nsresult rv = NS_OK;
-	
+  nsresult rv = NS_OK;
+  
   // get the document
   nsCOMPtr<nsIDOMDocument> doc;
   rv = GetDocument(getter_AddRefs(doc));
@@ -389,29 +396,29 @@ NS_IMETHODIMP nsEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
   // dialog.
   
   // find out if the doc already has a fileSpec associated with it.
-  nsFileSpec		docFileSpec;
+  nsFileSpec    docFileSpec;
   PRBool mustShowFileDialog = saveAs || (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
   PRBool replacing = !saveAs;
   
   if (mustShowFileDialog)
   {
-  	nsCOMPtr<nsIFileWidget>	fileWidget;
+    nsCOMPtr<nsIFileWidget>  fileWidget;
     rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
     if (NS_SUCCEEDED(rv) && fileWidget)
     {
-      nsAutoString  promptString("Save this document as:");			// XXX i18n, l10n
-  	  nsFileDlgResults dialogResult;
-  	  dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
-  	  if (dialogResult == nsFileDlgResults_Cancel)
-  	    return NS_OK;
-  	    
-  	  replacing = (dialogResult == nsFileDlgResults_Replace);
-  	}
-  	else
-  	{
-   		NS_ASSERTION(0, "Failed to get file widget");
-  		return rv;
-  	}
+      nsAutoString  promptString("Save this document as:");      // XXX i18n, l10n
+      nsFileDlgResults dialogResult;
+      dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
+      if (dialogResult == nsFileDlgResults_Cancel)
+        return NS_OK;
+        
+      replacing = (dialogResult == nsFileDlgResults_Replace);
+    }
+    else
+    {
+       NS_ASSERTION(0, "Failed to get file widget");
+      return rv;
+    }
   }
 
   nsAutoString useDocCharset("");
@@ -520,7 +527,7 @@ nsEditor::Undo(PRUint32 aCount)
 
       if (NS_SUCCEEDED(result))
         result = DoAfterUndoTransaction();
-	        
+          
       if (NS_FAILED(result))
         break;
     }
@@ -622,10 +629,13 @@ nsEditor::EndTransaction()
 // XXX: the rule system should tell us which node to select all on (ie, the root, or the body)
 NS_IMETHODIMP nsEditor::SelectAll()
 {
-  if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
+  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     result = SelectEntireDocument(selection);
@@ -635,15 +645,20 @@ NS_IMETHODIMP nsEditor::SelectAll()
 
 NS_IMETHODIMP nsEditor::BeginningOfDocument()
 {
-  if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
+  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
     nsAutoString bodyTag = "body";
-    result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+    if (!doc) return NS_ERROR_NOT_INITIALIZED;
+    result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
     if ((NS_SUCCEEDED(result)) && nodeList)
     {
       PRUint32 count;
@@ -668,15 +683,20 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
 
 NS_IMETHODIMP nsEditor::EndOfDocument()
 {
-  if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
+  if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
     nsAutoString bodyTag = "body";
-    result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+    if (!doc) return NS_ERROR_NOT_INITIALIZED;
+    result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
     if ((NS_SUCCEEDED(result)) && nodeList)
     {
       PRUint32 count;
@@ -741,10 +761,10 @@ nsEditor::GetDocumentCharacterSet(PRUnichar** characterSet)
   {
     presShell->GetDocument(getter_AddRefs(doc));
     if (doc ) {
-		rv = doc->GetDocumentCharacterSet(character_set);
-		if (NS_SUCCEEDED(rv)) *characterSet=character_set.ToNewUnicode();
-		return rv;
-	}
+    rv = doc->GetDocumentCharacterSet(character_set);
+    if (NS_SUCCEEDED(rv)) *characterSet=character_set.ToNewUnicode();
+    return rv;
+  }
   }
 
   return rv;
@@ -766,8 +786,8 @@ nsEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
   {
     presShell->GetDocument(getter_AddRefs(doc));
     if (doc ) {
-		return doc->SetDocumentCharacterSet(character_set);
-	}
+    return doc->SetDocumentCharacterSet(character_set);
+  }
   }
 
   return rv;
@@ -1140,7 +1160,9 @@ nsEditor::DebugDumpContent() const
   nsCOMPtr<nsIContent>content;
   nsCOMPtr<nsIDOMNodeList>nodeList;
   nsAutoString bodyTag = "body";
-  mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
   if (nodeList)
   {
     PRUint32 count;
@@ -1179,97 +1201,103 @@ NS_IMETHODIMP
 nsEditor::BeginComposition(void)
 {
 #ifdef DEBUG_tague
-	printf("nsEditor::StartComposition\n");
+  printf("nsEditor::StartComposition\n");
 #endif
-	nsresult result;
-	PRInt32 offset;
-	nsCOMPtr<nsIDOMSelection> selection;
-	nsCOMPtr<nsIDOMCharacterData> nodeAsText;
-	
-	result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-	if ((NS_SUCCEEDED(result)) && selection)
-	{
-		result = NS_ERROR_UNEXPECTED; 
-		nsCOMPtr<nsIEnumerator> enumerator;
+  nsresult result;
+  PRInt32 offset;
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsIDOMCharacterData> nodeAsText;
+  
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
+  {
+    result = NS_ERROR_UNEXPECTED; 
+    nsCOMPtr<nsIEnumerator> enumerator;
     result = selection->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_SUCCEEDED(result) && enumerator)
-		{
-			enumerator->First(); 
-			nsCOMPtr<nsISupports> currentItem;
+    {
+      enumerator->First(); 
+      nsCOMPtr<nsISupports> currentItem;
       result = enumerator->CurrentItem(getter_AddRefs(currentItem));
-			if ((NS_SUCCEEDED(result)) && (currentItem))
-			{
-				result = NS_ERROR_UNEXPECTED; 
-				nsCOMPtr<nsIDOMRange> range(do_QueryInterface(currentItem));
-				if (range)
-				{
-					nsCOMPtr<nsIDOMNode> node;
-					result = range->GetStartParent(getter_AddRefs(node));
-					if ((NS_SUCCEEDED(result)) && (node))
-					{
-						nodeAsText = do_QueryInterface(node);
-						range->GetStartOffset(&offset);
-						if (!nodeAsText) {
-							result = NS_ERROR_EDITOR_NO_TEXTNODE;
-						} 
-					}		
-				}		
-			}
-			else
-			{
-				result = NS_ERROR_EDITOR_NO_SELECTION;
-			}
-		}
-	}
+      if ((NS_SUCCEEDED(result)) && (currentItem))
+      {
+        result = NS_ERROR_UNEXPECTED; 
+        nsCOMPtr<nsIDOMRange> range(do_QueryInterface(currentItem));
+        if (range)
+        {
+          nsCOMPtr<nsIDOMNode> node;
+          result = range->GetStartParent(getter_AddRefs(node));
+          if ((NS_SUCCEEDED(result)) && (node))
+          {
+            nodeAsText = do_QueryInterface(node);
+            range->GetStartOffset(&offset);
+            if (!nodeAsText) {
+              result = NS_ERROR_EDITOR_NO_TEXTNODE;
+            } 
+          }    
+        }    
+      }
+      else
+      {
+        result = NS_ERROR_EDITOR_NO_SELECTION;
+      }
+    }
+  }
 
-	if (NS_SUCCEEDED(result) && nodeAsText)
-	{
-		//
-		// store the information needed to construct IME transactions for this composition
-		//
-		mIMETextNode = nodeAsText;
-		mIMETextOffset = offset;
-		mIMEBufferLength = 0;
-	}
+  if (NS_SUCCEEDED(result) && nodeAsText)
+  {
+    //
+    // store the information needed to construct IME transactions for this composition
+    //
+    mIMETextNode = nodeAsText;
+    mIMETextOffset = offset;
+    mIMEBufferLength = 0;
+  }
 
-	return result;
+  return result;
 }
 
 NS_IMETHODIMP
 nsEditor::EndComposition(void)
 {
-	nsresult result;
-	IMECommitTxn *commitTxn;
-	
-	//
-	// create the commit transaction..we can do it directly from the transaction mgr
-	//
+  nsresult result;
+  IMECommitTxn *commitTxn;
+  
+  //
+  // create the commit transaction..we can do it directly from the transaction mgr
+  //
   result = TransactionFactory::GetNewTransaction(IMECommitTxn::GetCID(), (EditTxn**)&commitTxn);
-	if (NS_SUCCEEDED(result) && commitTxn!=nsnull)
-	{
-		commitTxn->Init();
-		result = Do(commitTxn);
-	}
+  if (NS_SUCCEEDED(result) && commitTxn!=nsnull)
+  {
+    commitTxn->Init();
+    result = Do(commitTxn);
+  }
 
-	/* reset the data we need to construct a transaction */
-	mIMETextNode = do_QueryInterface(nsnull);
-	mIMETextOffset = 0;
-	mIMEBufferLength = 0;
+  /* reset the data we need to construct a transaction */
+  mIMETextNode = do_QueryInterface(nsnull);
+  mIMETextOffset = 0;
+  mIMEBufferLength = 0;
 
-	return result;
+  return result;
 }
 
 NS_IMETHODIMP
 nsEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
-	nsCOMPtr<nsICaret>	caretP;
-	nsresult	result = SetInputMethodText(aCompositionString,aTextRangeList);
-	mIMEBufferLength = aCompositionString.Length();
+  nsCOMPtr<nsICaret>  caretP;
+  nsresult  result = SetInputMethodText(aCompositionString,aTextRangeList);
+  mIMEBufferLength = aCompositionString.Length();
 
-	mPresShell->GetCaret(getter_AddRefs(caretP));
-	caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  ps->GetCaret(getter_AddRefs(caretP));
+  caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
 
-	return result;
+  return result;
 }
 
 #ifdef XP_MAC
@@ -1292,14 +1320,16 @@ nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
 
   *aBodyElement = 0;
   
-  NS_PRECONDITION(mDoc, "bad state, null mDoc");
-  if (!mDoc)
+  NS_PRECONDITION(mDocWeak, "bad state, null mDocWeak");
+  if (!mDocWeak)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNodeList>nodeList; 
   nsString bodyTag = "body"; 
 
-  result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
 
   if (NS_FAILED(result))
     return result;
@@ -1474,7 +1504,7 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
               newTextNode->SetData(placeholderText);
               selection->Collapse(newNode, 0);
               selection->Extend(newNode, 1);
-              result = InsertTextImpl(aStringToInsert);		// this really recurses, right?
+              result = InsertTextImpl(aStringToInsert);    // this really recurses, right?
             }
           }
         }
@@ -1591,7 +1621,7 @@ NS_IMETHODIMP
 nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationType)
 {
   if (!mDocStateListeners)
-    return NS_OK;		// maybe there just aren't any.
+    return NS_OK;    // maybe there just aren't any.
  
   PRUint32 numListeners;
   nsresult rv = mDocStateListeners->Count(&numListeners);
@@ -1677,7 +1707,10 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
   else
   {
     nsCOMPtr<nsIDOMSelection> selection;
-    result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    if (!ps) return NS_ERROR_NOT_INITIALIZED;
+    result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
     if ((NS_SUCCEEDED(result)) && selection)
     {
 #if 0
@@ -1734,7 +1767,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
   {
     result = TransactionFactory::GetNewTransaction(InsertTextTxn::GetCID(), (EditTxn **)aTxn);
     if (nsnull!=*aTxn) {
-      result = (*aTxn)->Init(nodeAsText, offset, aStringToInsert, mPresShell);
+      result = (*aTxn)->Init(nodeAsText, offset, aStringToInsert, mPresShellWeak);
     }
     else {
       result = NS_ERROR_OUT_OF_MEMORY;
@@ -1760,13 +1793,15 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
 
 NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
 {
-  if (!mDoc) {
+  if (!mDocWeak) {
     return NS_ERROR_NOT_INITIALIZED;
   }
   
   nsCOMPtr<nsIDOMNodeList>nodeList;
   nsAutoString bodyTag = "body";
-  nsresult result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
   if ((NS_SUCCEEDED(result)) && nodeList)
   {
     PRUint32 count;
@@ -2758,9 +2793,11 @@ nsEditor::CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount)
 
 NS_IMETHODIMP nsEditor::IncDocModCount(PRInt32 inNumMods)
 {
-  if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
+  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
   
-  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
   if (diskDoc)
     diskDoc->IncrementModCount(inNumMods);
 
@@ -2771,9 +2808,11 @@ NS_IMETHODIMP nsEditor::IncDocModCount(PRInt32 inNumMods)
 
 NS_IMETHODIMP nsEditor::GetDocModCount(PRInt32 &outModCount)
 {
-  if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
+  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
   
-  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
   if (diskDoc)
     diskDoc->GetModCount(&outModCount);
 
@@ -2783,9 +2822,11 @@ NS_IMETHODIMP nsEditor::GetDocModCount(PRInt32 &outModCount)
 
 NS_IMETHODIMP nsEditor::ResetDocModCount()
 {
-  if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
+  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
   
-  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(mDoc);
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
   if (diskDoc)
     diskDoc->ResetModCount();
 
@@ -2914,110 +2955,112 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
 NS_IMETHODIMP 
 nsEditor::SetInputMethodText(const nsString& aStringToInsert, nsIPrivateTextRangeList *aTextRangeList)
 {
-	IMETextTxn			*txn;
-	
-	nsresult result = CreateTxnForIMEText(aStringToInsert,aTextRangeList,&txn); // insert at the current selection
-	if ((NS_SUCCEEDED(result)) && txn)  {
-		BeginUpdateViewBatch();
-		result = Do(txn);
-		EndUpdateViewBatch();
-	}
-	else if (NS_ERROR_EDITOR_NO_SELECTION==result)  {
-		result = DoInitialInputMethodInsert(aStringToInsert,aTextRangeList);
-	}
-	else if (NS_ERROR_EDITOR_NO_TEXTNODE==result) 
-	{
-		BeginTransaction();
-		nsCOMPtr<nsIDOMSelection> selection;
-		result = GetSelection(getter_AddRefs(selection));
-		if ((NS_SUCCEEDED(result)) && selection)
-		{
-			nsCOMPtr<nsIDOMNode> selectedNode;
-			PRInt32 offset;
-			result = selection->GetAnchorNode(getter_AddRefs(selectedNode));
-			if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
-			{
-				nsCOMPtr<nsIDOMNode> newNode;
-				result = CreateNode(GetTextNodeTag(), selectedNode, offset+1,getter_AddRefs(newNode));
-				if (NS_SUCCEEDED(result) && newNode)
-				{
-					nsCOMPtr<nsIDOMCharacterData>newTextNode;
-					newTextNode = do_QueryInterface(newNode);
-					if (newTextNode)
-					{
-						nsAutoString placeholderText(" ");
-						newTextNode->SetData(placeholderText);
-						selection->Collapse(newNode, 0);
-						selection->Extend(newNode, 1);
-						result = SetInputMethodText(aStringToInsert,aTextRangeList);
-					}
-				}
-			}
-		}
-		
-		EndTransaction();
-	}
+  IMETextTxn      *txn;
+  
+  nsresult result = CreateTxnForIMEText(aStringToInsert,aTextRangeList,&txn); // insert at the current selection
+  if ((NS_SUCCEEDED(result)) && txn)  {
+    BeginUpdateViewBatch();
+    result = Do(txn);
+    EndUpdateViewBatch();
+  }
+  else if (NS_ERROR_EDITOR_NO_SELECTION==result)  {
+    result = DoInitialInputMethodInsert(aStringToInsert,aTextRangeList);
+  }
+  else if (NS_ERROR_EDITOR_NO_TEXTNODE==result) 
+  {
+    BeginTransaction();
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = GetSelection(getter_AddRefs(selection));
+    if ((NS_SUCCEEDED(result)) && selection)
+    {
+      nsCOMPtr<nsIDOMNode> selectedNode;
+      PRInt32 offset;
+      result = selection->GetAnchorNode(getter_AddRefs(selectedNode));
+      if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
+      {
+        nsCOMPtr<nsIDOMNode> newNode;
+        result = CreateNode(GetTextNodeTag(), selectedNode, offset+1,getter_AddRefs(newNode));
+        if (NS_SUCCEEDED(result) && newNode)
+        {
+          nsCOMPtr<nsIDOMCharacterData>newTextNode;
+          newTextNode = do_QueryInterface(newNode);
+          if (newTextNode)
+          {
+            nsAutoString placeholderText(" ");
+            newTextNode->SetData(placeholderText);
+            selection->Collapse(newNode, 0);
+            selection->Extend(newNode, 1);
+            result = SetInputMethodText(aStringToInsert,aTextRangeList);
+          }
+        }
+      }
+    }
+    
+    EndTransaction();
+  }
 
-	return result;
+  return result;
 }
 
 
 
 NS_IMETHODIMP nsEditor::DoInitialInputMethodInsert(const nsString & aStringToInsert, nsIPrivateTextRangeList* aTextRangeList)
 {
-	if (!mDoc) {
-		return NS_ERROR_NOT_INITIALIZED;
-	}
+  if (!mDocWeak) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   
-	nsCOMPtr<nsIDOMNodeList>nodeList;
-	nsAutoString bodyTag = "body";
-	nsresult result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
-	if ((NS_SUCCEEDED(result)) && nodeList)
-	{
-		PRUint32 count;
-		nodeList->GetLength(&count);
-		NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
-		nsCOMPtr<nsIDOMNode>node;
-		result = nodeList->Item(0, getter_AddRefs(node));
-		if ((NS_SUCCEEDED(result)) && node)
-		{	// now we've got the body tag.
-			// create transaction to insert the text node, 
-			// and create a transaction to insert the text
-			CreateElementTxn *txn;
-			result = CreateTxnForCreateElement(GetTextNodeTag(), node, 0, &txn);
-			if ((NS_SUCCEEDED(result)) && txn)
-			{
-				result = Do(txn);
-				if (NS_SUCCEEDED(result))
-				{
-					nsCOMPtr<nsIDOMNode>newNode;
-					txn->GetNewNode(getter_AddRefs(newNode));
-					if ((NS_SUCCEEDED(result)) && newNode)
-					{
-						nsCOMPtr<nsIDOMCharacterData>newTextNode;
-						newTextNode = do_QueryInterface(newNode);
-						if (newTextNode)
-						{
-							mIMETextNode = newTextNode;
-							mIMETextOffset = 0;
-							mIMEBufferLength = 0;
+  nsCOMPtr<nsIDOMNodeList>nodeList;
+  nsAutoString bodyTag = "body";
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  if ((NS_SUCCEEDED(result)) && nodeList)
+  {
+    PRUint32 count;
+    nodeList->GetLength(&count);
+    NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
+    nsCOMPtr<nsIDOMNode>node;
+    result = nodeList->Item(0, getter_AddRefs(node));
+    if ((NS_SUCCEEDED(result)) && node)
+    {  // now we've got the body tag.
+      // create transaction to insert the text node, 
+      // and create a transaction to insert the text
+      CreateElementTxn *txn;
+      result = CreateTxnForCreateElement(GetTextNodeTag(), node, 0, &txn);
+      if ((NS_SUCCEEDED(result)) && txn)
+      {
+        result = Do(txn);
+        if (NS_SUCCEEDED(result))
+        {
+          nsCOMPtr<nsIDOMNode>newNode;
+          txn->GetNewNode(getter_AddRefs(newNode));
+          if ((NS_SUCCEEDED(result)) && newNode)
+          {
+            nsCOMPtr<nsIDOMCharacterData>newTextNode;
+            newTextNode = do_QueryInterface(newNode);
+            if (newTextNode)
+            {
+              mIMETextNode = newTextNode;
+              mIMETextOffset = 0;
+              mIMEBufferLength = 0;
 
-							IMETextTxn *IMETxn;
-							result = CreateTxnForIMEText(aStringToInsert,aTextRangeList,&IMETxn);
-							if (NS_SUCCEEDED(result)) {
-								result = Do(IMETxn);
-							}
-						}
-						else {
-							result = NS_ERROR_UNEXPECTED;
-						}
-					}
-				}
-			}
-		}
-	}
+              IMETextTxn *IMETxn;
+              result = CreateTxnForIMEText(aStringToInsert,aTextRangeList,&IMETxn);
+              if (NS_SUCCEEDED(result)) {
+                result = Do(IMETxn);
+              }
+            }
+            else {
+              result = NS_ERROR_UNEXPECTED;
+            }
+          }
+        }
+      }
+    }
+  }
 
-	return result;
+  return result;
 }
 ///////////////////////////////////////////////////////////////////////////
 // GetTag: digs out the atom for the tag of this node
@@ -3286,7 +3329,7 @@ nsEditor::NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir)
   
   while (NS_COMFALSE == iter->IsDone())
   {
-  	if (NS_FAILED(iter->CurrentNode(getter_AddRefs(content)))) return nullNode;
+    if (NS_FAILED(iter->CurrentNode(getter_AddRefs(content)))) return nullNode;
     // ignore nodes that aren't elements or text, or that are the block parent 
     node = do_QueryInterface(content);
     if (node && IsTextOrElementNode(node) && (node != blockParent) && (node.get() != aNode))
@@ -3388,12 +3431,14 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   
   if (!aResult || !content) return NS_ERROR_NULL_POINTER;
   
-  if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
-  result = mPresShell->GetPrimaryFrameFor(content, &frame);
+  result = ps->GetPrimaryFrameFor(content, &frame);
   if (NS_FAILED(result)) return result;
   
-  result = mPresShell->GetStyleContextFor(frame, getter_AddRefs(styleContext));
+  result = ps->GetStyleContextFor(frame, getter_AddRefs(styleContext));
   if (NS_FAILED(result)) return result;
 
   styleText = (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
@@ -3760,7 +3805,7 @@ nsEditor::DoAfterDoTransaction(nsITransaction *aTxn)
     if (modCount < 0)
       modCount = -modCount;
         
-    rv = IncDocModCount(1);		// don't count transient transactions
+    rv = IncDocModCount(1);    // don't count transient transactions
   }
   
   return rv;
@@ -3772,7 +3817,7 @@ nsEditor::DoAfterUndoTransaction()
 {
   nsresult rv = NS_OK;
 
-  rv = IncDocModCount(-1);		// all undoable transactions are non-transient
+  rv = IncDocModCount(-1);    // all undoable transactions are non-transient
 
   return rv;
 }
@@ -3782,7 +3827,7 @@ nsEditor::DoAfterRedoTransaction()
 {
   nsresult rv = NS_OK;
 
-  rv = IncDocModCount(1);		// all redoable transactions are non-transient
+  rv = IncDocModCount(1);    // all redoable transactions are non-transient
 
   return rv;
 }
@@ -3898,7 +3943,10 @@ NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, 
     // Get current selection and setup txn to delete it,
     //  but only if selection exists (is not a collapsed "caret" state)
     nsCOMPtr<nsIDOMSelection> selection;
-    result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    if (!ps) return NS_ERROR_NOT_INITIALIZED;
+    result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection)
     {
       PRBool collapsed;
@@ -3918,22 +3966,22 @@ NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, 
 
 NS_IMETHODIMP 
 nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
-							  nsIPrivateTextRangeList*	aTextRangeList,
+                              nsIPrivateTextRangeList*  aTextRangeList,
                               IMETextTxn ** aTxn)
 {
-	nsresult	result;
+  nsresult  result;
 
-	if (mIMETextNode==nsnull) 
-		BeginComposition();
+  if (mIMETextNode==nsnull) 
+    BeginComposition();
 
   result = TransactionFactory::GetNewTransaction(IMETextTxn::GetCID(), (EditTxn **)aTxn);
-	if (nsnull!=*aTxn) {
-		result = (*aTxn)->Init(mIMETextNode,mIMETextOffset,mIMEBufferLength,aTextRangeList,aStringToInsert,mPresShell);
-	}
-	else {
-		result = NS_ERROR_OUT_OF_MEMORY;
-	}
-	return result;
+  if (nsnull!=*aTxn) {
+    result = (*aTxn)->Init(mIMETextNode,mIMETextOffset,mIMEBufferLength,aTextRangeList,aStringToInsert,mPresShellWeak);
+  }
+  else {
+    result = NS_ERROR_OUT_OF_MEMORY;
+  }
+  return result;
 }
 
 
@@ -3976,7 +4024,10 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::ESelectionCollapseDirection aAc
 
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
-  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
     // Check whether the selection is collapsed and we should do nothing:
