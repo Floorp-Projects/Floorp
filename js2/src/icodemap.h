@@ -33,28 +33,32 @@
 
 /* most of this file will get auto-generated from the icode metadata */
 
-#include "vmtypes.h"
-
 enum OperandType {
     otNone = 0,
-    otRegister,
-    otRegisterList,
-    otLabel,
-    otDouble,
+    otArgumentList,
+    otBinaryOp,
     otBool,
-    otString
+    otICodeModule,
+    otJSClass,
+    otJSString,
+    otJSFunction,
+    otJSType,
+    otLabel,
+    otUInt32,
+    otRegister,
+    otStringAtom
 };
         
-static uint icodemap_size = 4;
+static uint icodemap_size = 5;
 
 static struct {
     char *name;
-    OperandType otype1, otype2, otype3, otype4;
+    OperandType otype[3];
 } icode_map [icodemap_size] =
 {
-    {"LOAD_STRING", otRegister, otString},
-    {"CAST", otRegister, otRegister, otType},
-    {"SAVE_NAME", otString, otRegister},
-    {"CALL", otRegister, otRegister, otRegister, otRegisterList},
-    {"RETURN", otRegister}
+    {"LOAD_STRING", {otRegister, otString}},
+    {"CAST", {otRegister, otRegister, otType}},
+    {"SAVE_NAME", {otString, otRegister}},
+    {"CALL", {otRegister, otRegister, otRegister, otRegisterList}},
+    {"RETURN", {otRegister}}
 };

@@ -32,84 +32,27 @@
  */
 
 #include <stdio.h>
-#include <string>
-#include <iterator>
 
+#include "icodeasm.h"
 #include "icodemap.h"
-
-#define iter string::iterator
-//std::iterator<std::random_access_iterator_tag, char, ptrdiff_t>
 
 namespace JavaScript {
 namespace ICodeASM {
-    enum TokenEstimation {
-        /* guess at tokentype, based on first character of token */
-        teEOF,
-        teUnknown,
-        teIllegal,
-        teComma,
-        teNumeric,
-        teAlpha,
-        teString,
-        teNotARegister
-    };
-
-    enum TokenType {
-        /* verified token type */
-        ttUndetermined,
-        ttLabel,
-        ttInstruction,
-        ttRegister,
-        ttRegisterList,
-        ttNotARegister,
-        ttString,
-        ttNumber,
-        ttOffsetKeyword
-    };
-
-    struct ICodeParserException {
-        ICodeParserException (string aMsg, iter aPos = 0)
-                : msg(aMsg), pos(aPos) {}
-        string msg;
-        iter aPos;
-    };
-        
-    struct TokenLocation {
-        TokenLocation () : begin(0), end(0), estimate(teIllegal),
-                           type(ttUndetermined) {}
-        iter begin, end;
-        TokenEstimation estimate;
-        TokenType type;
-    };
-    
-    class ICodeParser 
-    {
-    private:
-        uint mMaxRegister;
-        
-    public:
-        void ParseSourceFromString (string source);
-        TokenLocation SeekTokenStart (iter begin, iter end);
-        iter ParseLine (iter begin, iter end);
-        void ParseLabelOrInstruction (TokenLocation tl, iter end);
-        iter ParseOperands (uint icodeID, iter start, iter end);
-        void ParseRegisterOperand (TokenLocation tl, iter end);
-        void ParseDoubleOperand (TokenLocation tl, iter end);
-    };
 
     void
     ICodeParser::ParseSourceFromString (string source)
     {
-        uint lineNo = 0;
+        uint statementNo = 0;
         
         try
         {
-            ++lineNo;
-            ParseLine (source.begin(), source.end());
+            ++statementNo;
+            ParseStatement (source.begin(), source.end());
         }
-        catch (ICodeParserException e)
+        catch (ICodeParseException e)
         {
-            fprintf (stderr, "Parse Error: %s at %u\n", e.msg.c_str(), lineNo);
+            fprintf (stderr, "Parse Error: %s at statement %u\n", e.msg.c_str(),
+                     statementNo);
             return;
         }
     }
@@ -133,11 +76,12 @@ namespace ICodeASM {
 
                 case 'a'...'z':
                 case 'A'...'Z':
+                case '_':
                     tl.estimate = teAlpha;
                     tl.begin = curpos;
                     return tl;
 
-                case '0'...'1':
+                case '0'...'9':
                     tl.estimate = teNumeric;
                     tl.begin = curpos;
                     return tl;
@@ -171,62 +115,85 @@ namespace ICodeASM {
     }
 
     iter
-    ICodeParser::ParseLine (iter begin, iter end)
+    ICodeParser::ParseStatement (iter begin, iter end)
     {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teAlpha)
-            throw new ICodeParserException ("Expected an alphanumeric token (like maybe an instruction or an opcode.)");
+            throw new ICodeParseException ("Expected an alphanumeric token (like maybe an instruction or an opcode.)");
 
-        ParseLabelOrInstruction (tl, end);
-
-        if (tl.type = ttLabel) {
-            /* XXX Do label-like things */
-            return tl.end;
-        } else {
-            string icode_str (tl.begin, tl.end);
-            for (uint i = 0; i <= icodemap_size; ++i)
-                if (icode_str.compare (icode_map[i]) == 0)
-                    return ParseOperands (i, tl.end, end);
-            
-            throw new ICodeParserException ("Unknown ICode " + icode_str);
-        }
-    }
-
-    void
-    ICodeParser::ParseLabelOrInstruction (TokenLocation tl, iter end)
-    {
-        iter curpos;
-        
-        for (curpos = tl.begin; curpos < end; ++curpos) {
+    scan_loop:
+        for (iter curpos = tl.begin; curpos < end; ++curpos) {
             switch (*curpos)
             {
                 case ':':
                     tl.type = ttLabel;
                     tl.end = ++curpos;
-                    return;
+                    break scan_loop;
 
                 case 'a'...'z':
                 case 'A'...'Z':
                 case '0'...'9':
+                case '_':
                     break;
 
                 default:
                     tl.type = ttInstruction;
                     tl.end = curpos;
-                    return;
+                    break scan_loop;
             }
         }
 
-        tl.type = ttInstruction;
-        tl.end = curpos;
-        return;
+        if (tl.type = ttUndetermined) {
+            tl.type = ttInstruction;
+            tl.end = end;
+        }
+        
+        if (tl.type == ttLabel) {
+            string label_str(tl.begin, tl.end - 1);  /* ignore the trailing : */
+            mLabels[label_str] = mStatementNodes.end();
+            return tl.end;
+        } else if (tl.type == ttInstruction) {
+            string icode_str(tl.begin, tl.end);
+            for (uint i = 0; i < icodemap_size; ++i)
+                if (icode_str.compare(icodemap[i]) == 0)
+                    return ParseInstruction (i, tl.end, end);
+            throw ("Unknown ICode " + icode_str);
+        }
     }
 
-    iter ICodeParser::ParseOperands (uint icodeID, iter start, iter end)
+    iter ICodeParser::ParseInstruction (uint icodeID, iter start, iter end)
     {
-        iter pos = start;
+        iter curpos = start;
+        StatementNode *node = new StatementNode();
+        node->icodeID = icodeID;
         
-        if (icode_map[icodeID].otype1 != otNone)
+#       define CASE_TYPE(T)                                                \
+           case ot##T:                                                     \
+           {                                                               \
+              curpos = Parse##T##Operand (curpos, end, &node->operand[i]); \
+              break;                                                       \
+           }
+ 
+        for (uint i = 0; i < 4; ++i)
+        {
+            switch (icodemap[icodeID].otype[i])
+            {
+                CASE_TYPE(ArgumentList);
+                CASE_TYPE(BinaryOp);
+                CASE_TYPE(Bool);
+                CASE_TYPE(Double);
+                CASE_TYPE(ICodeModule);
+                CASE_TYPE(JSClass);
+                CASE_TYPE(JSString);
+                CASE_TYPE(JSFunction);
+                CASE_TYPE(JSType);
+                CASE_TYPE(Label);
+                CASE_TYPE(UInt32);
+                CASE_TYPE(Register);
+                CASE_TYPE(StringAtom);
+            }
+        }
+    }
 }
 }
