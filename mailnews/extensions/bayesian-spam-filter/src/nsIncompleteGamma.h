@@ -14,6 +14,8 @@
 
   The Original Code is bayesian spam filter
 
+  The Initial Developer of the Original Code is
+  Scott MacGregor.
   Portions created by the Initial Developer are Copyright (C) 2004
   the Initial Developer. All Rights Reserved.
 

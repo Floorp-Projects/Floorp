@@ -14,6 +14,10 @@
  *
  * The Original Code is the virtual folder properties dialog
  *
+ * The Initial Developer of the Original Code is
+ * David Bienvenu.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *  David Bienvenu <bienvenu@nventure.com> 

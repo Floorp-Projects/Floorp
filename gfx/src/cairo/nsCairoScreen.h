@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,13 +14,14 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is mozilla.org.
- * Portions created by the Initial Developer are
- * Copyright (C) 2004 the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is
+ * mozilla.org.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Stuart Parmenter <pavlov@pavlov.net>
- *    Joe Hewitt <hewitt@netscape.com>
+ *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -32,7 +34,8 @@
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
- */
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 #ifndef NSCAIROSCREEN__H__
 #define NSCAIROSCREEN__H__

@@ -14,11 +14,12 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code mozilla.org code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code Christopher Blizzard
- * <blizzard@mozilla.org>.  Portions created by the Initial Developer
- * are Copyright (C) 2001 the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is 
+ * Christopher Blizzard <blizzard@mozilla.org>.  
+ * Portions created by the Initial Developer are Copyright (C) 2001 
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
