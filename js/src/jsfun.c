@@ -747,8 +747,14 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         /* If resolving "prototype" in a clone, clone the parent's prototype. */
         if (proto)
             proto = js_NewObject(cx, OBJ_GET_CLASS(cx, proto), proto, NULL);
-        else
-            proto = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+        else {
+            /*
+             * Handle the wacky case of a user function Object() - trying to
+             * build a prototype for that will recur back here ad perniciem.
+             */
+            if (fun->atom != cx->runtime->atomState.ObjectAtom)
+                proto = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+        }
         if (!proto)
             return JS_FALSE;
 
