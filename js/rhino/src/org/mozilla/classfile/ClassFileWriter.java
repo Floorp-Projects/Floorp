@@ -23,42 +23,53 @@ import org.mozilla.javascript.*;
 import java.io.*;
 import java.util.*;
 
+/**
+ * ClassFileWriter
+ * 
+ * A ClassFileWriter is used to write a Java class file. Methods are 
+ * provided to create fields and methods, and within methods to write 
+ * Java bytecodes.
+ * 
+ * @author Roger Lawrence
+ */
 public class ClassFileWriter extends LabelTable {
 
-    public ClassFileWriter(String thisClass, String superClass, 
+    /**
+     * Construct a ClassFileWriter for a class.
+     * 
+     * @param className the name of the class to write, including
+     *        full package qualification. 
+     * @param superClassName the name of the superclass of the class 
+     *        to write, including full package qualification. 
+     * @param sourceFileName the name of the source file to use for 
+     *        producing debug information, or null if debug information
+     *        is not desired
+     */
+    public ClassFileWriter(String className, String superClassName, 
                            String sourceFileName)
     {
         itsConstantPool = new ConstantPool();
-        itsThisClassIndex = itsConstantPool.addClass(thisClass);
-        itsSuperClassIndex = itsConstantPool.addClass(superClass);
+        itsThisClassIndex = itsConstantPool.addClass(className);
+        itsSuperClassIndex = itsConstantPool.addClass(superClassName);
         if (sourceFileName != null)
             itsSourceFileNameIndex = itsConstantPool.addUtf8(sourceFileName);
         itsFlags = ACC_PUBLIC;
     }
     
-    public void setFlags(short flags)
-    {
-        itsFlags = flags;
-    }
-
-    public static String fullyQualifiedForm(String name)
-    {
-    	return name.replace('.', '/');
-    }
-    
-    public void addInterface(String interfaceName)
-    {
+    /**
+     * Add an interface implemented by this class.
+     * 
+     * This method may be called multiple times for classes that 
+     * implement multiple interfaces.
+     * 
+     * @param interfaceName a name of an interface implemented 
+     *        by the class being written, including full package 
+     *        qualification. 
+     */
+    public void addInterface(String interfaceName) {
         short interfaceIndex = itsConstantPool.addClass(interfaceName);
         itsInterfaces.addElement(new Short(interfaceIndex));
     }
-
-
-    private final static long FileHeaderConstant = 0xCAFEBABE0003002DL;
-    private static final boolean DEBUG = true;
-    private static final boolean DEBUGSTACK = false;
-    private static final boolean DEBUGLABELS = false;
-    private static final boolean DEBUGCODE = false;
-    private static final int CodeBufferSize = 128;
 
     public static final short
         ACC_PUBLIC = 0x0001,
@@ -72,597 +83,123 @@ public class ClassFileWriter extends LabelTable {
         ACC_NATIVE = 0x0100,
         ACC_ABSTRACT = 0x0400;
 
-    public void add(byte theOpCode)
-    {
-        if (DEBUGCODE)
-            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF));
-        if (DEBUG) {
-            if (ByteCode.opcodeCount[theOpCode & 0xFF] != 0)
-                throw new RuntimeException("Expected operands");
-        }
-        addToCodeBuffer(theOpCode);
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
-        if (DEBUGSTACK) {
-            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
-        }
-        if (DEBUG) {
-            if (itsStackTop < 0)
-                throw new RuntimeException("Stack underflow");
-        }
-        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+    /**
+     * Set the class's flags.
+     * 
+     * Flags must be a set of the following flags, bitwise or'd 
+     * together:
+     *      ACC_PUBLIC
+     *      ACC_PRIVATE
+     *      ACC_PROTECTED
+     *      ACC_FINAL
+     *      ACC_ABSTRACT
+     * TODO: check that this is the appropriate set
+     * @param flags the set of class flags to set
+     */
+    public void setFlags(short flags) {
+        itsFlags = flags;
     }
 
-    public void add(byte theOpCode, int theOperand)
-    {
-        if (DEBUGCODE)
-            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF) + ", " + Integer.toHexString(theOperand) );
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
-        if (DEBUGSTACK) {
-            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
-        }
-        if (DEBUG) {
-            if (itsStackTop < 0)
-                throw new RuntimeException("Stack underflow");
-        }
-        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+    public static String fullyQualifiedForm(String name) {
+    	return name.replace('.', '/');
+    }  
 
-        switch (theOpCode) {
-            case ByteCode.GOTO :
-                // fallthru...
-            case ByteCode.IFEQ :
-            case ByteCode.IFNE :
-            case ByteCode.IFLT :
-            case ByteCode.IFGE :
-            case ByteCode.IFGT :
-            case ByteCode.IFLE :
-            case ByteCode.IF_ICMPEQ :
-            case ByteCode.IF_ICMPNE :
-            case ByteCode.IF_ICMPLT :
-            case ByteCode.IF_ICMPGE :
-            case ByteCode.IF_ICMPGT :
-            case ByteCode.IF_ICMPLE :
-            case ByteCode.IF_ACMPEQ :
-            case ByteCode.IF_ACMPNE :
-            case ByteCode.JSR :
-            case ByteCode.IFNULL :
-            case ByteCode.IFNONNULL : {
-                    if (DEBUG) {
-                        if ((theOperand & 0x80000000) != 0x80000000) {
-                            if ((theOperand < 0) || (theOperand > 65535))
-                                throw new RuntimeException("Bad label for branch");
-                        }
-                    }
-                    int branchPC = itsCodeBufferTop;
-                    addToCodeBuffer(theOpCode);
-                    if ((theOperand & 0x80000000) != 0x80000000) {
-                            // hard displacement
-                        int temp_Label = acquireLabel();
-                        int theLabel = temp_Label & 0x7FFFFFFF;
-                        itsLabelTable[theLabel].setPC(
-                                            (short)(branchPC + theOperand));
-                        addToCodeBuffer((byte)(theOperand >> 8));
-                        addToCodeBuffer((byte)theOperand);
-                    }
-                    else {  // a label
-                        int theLabel = theOperand & 0x7FFFFFFF;
-                        int targetPC = itsLabelTable[theLabel].getPC();
-        if (DEBUGLABELS) {
-            System.out.println("Fixing branch to " + theLabel + " at " + targetPC + " from " + branchPC);
-        }
-                        if (targetPC != -1) {
-                            short offset = (short)(targetPC - branchPC);
-                            addToCodeBuffer((byte)(offset >> 8));
-                            addToCodeBuffer((byte)offset);
-                        }
-                        else {
-                            itsLabelTable[theLabel].addFixup(branchPC + 1);
-                            addToCodeBuffer((byte)0);
-                            addToCodeBuffer((byte)0);
-                        }
-                    }
-                }
-                break;
-
-            case ByteCode.BIPUSH :
-                if (DEBUG) {
-                    if ((theOperand < -128) || (theOperand > 127))
-                        throw new RuntimeException("out of range byte");
-                }
-                addToCodeBuffer(theOpCode);
-                addToCodeBuffer((byte)theOperand);
-                break;
-
-            case ByteCode.SIPUSH :
-                if (DEBUG) {
-                    if ((theOperand < -32768) || (theOperand > 32767))
-                        throw new RuntimeException("out of range short");
-                }
-                addToCodeBuffer(theOpCode);
-                addToCodeBuffer((byte)(theOperand >> 8));
-                addToCodeBuffer((byte)theOperand);
-                break;
-
-            case ByteCode.NEWARRAY :
-                if (DEBUG) {
-                    if ((theOperand < 0) || (theOperand > 255))
-                        throw new RuntimeException("out of range index");
-                }
-                addToCodeBuffer(theOpCode);
-                addToCodeBuffer((byte)theOperand);
-                break;
-
-            case ByteCode.GETFIELD :
-            case ByteCode.PUTFIELD :
-                if (DEBUG) {
-                    if ((theOperand < 0) || (theOperand > 65535))
-                        throw new RuntimeException("out of range field");
-                }
-                addToCodeBuffer(theOpCode);
-                addToCodeBuffer((byte)(theOperand >> 8));
-                addToCodeBuffer((byte)theOperand);
-                break;
-
-            case ByteCode.LDC :
-            case ByteCode.LDC_W :
-            case ByteCode.LDC2_W :
-                if (DEBUG) {
-                    if ((theOperand < 0) || (theOperand > 65535))
-                        throw new RuntimeException("out of range index");
-                }
-                if ((theOperand >= 256)
-                            || (theOpCode == ByteCode.LDC_W)
-                            || (theOpCode == ByteCode.LDC2_W)) {
-                    if (theOpCode == ByteCode.LDC)
-                        addToCodeBuffer(ByteCode.LDC_W);
-                    else
-                        addToCodeBuffer(theOpCode);
-                    addToCodeBuffer((byte)(theOperand >> 8));
-                    addToCodeBuffer((byte)theOperand);
-                }
-                else {
-                    addToCodeBuffer(theOpCode);
-                    addToCodeBuffer((byte)theOperand);
-                }
-                break;
-
-            case ByteCode.RET :
-            case ByteCode.ILOAD :
-            case ByteCode.LLOAD :
-            case ByteCode.FLOAD :
-            case ByteCode.DLOAD :
-            case ByteCode.ALOAD :
-            case ByteCode.ISTORE :
-            case ByteCode.LSTORE :
-            case ByteCode.FSTORE :
-            case ByteCode.DSTORE :
-            case ByteCode.ASTORE :
-                if (DEBUG) {
-                    if ((theOperand < 0) || (theOperand > 65535))
-                        throw new RuntimeException("out of range variable");
-                }
-                if (theOperand >= 256) {
-                    addToCodeBuffer(ByteCode.WIDE);
-                    addToCodeBuffer(theOpCode);
-                    addToCodeBuffer((byte)(theOperand >> 8));
-                    addToCodeBuffer((byte)theOperand);
-                }
-                else {
-                    addToCodeBuffer(theOpCode);
-                    addToCodeBuffer((byte)theOperand);
-                }
-                break;
-
-            default :
-                throw new RuntimeException("Unexpected opcode for 1 operand");
-        }
-    }
-    
-    public void addLoadConstant(int k)
-    {
-        add(ByteCode.LDC, itsConstantPool.addConstant(k));
-    }
-    
-    public void addLoadConstant(long k)
-    {
-        add(ByteCode.LDC2_W, itsConstantPool.addConstant(k));
-    }
-    
-    public void addLoadConstant(float k)
-    {
-        add(ByteCode.LDC, itsConstantPool.addConstant(k));
-    }
-    
-    public void addLoadConstant(double k)
-    {
-        add(ByteCode.LDC2_W, itsConstantPool.addConstant(k));
-    }
-
-    public void addLoadConstant(String k)
-    {
-        add(ByteCode.LDC, itsConstantPool.addConstant(k));
-    }
-
-    public void add(byte theOpCode, int theOperand1, int theOperand2)
-    {
-        if (DEBUGCODE)
-            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
-                                    + ", " + Integer.toHexString(theOperand1)
-                                     + ", " + Integer.toHexString(theOperand2));
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
-        if (DEBUGSTACK) {
-            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
-        }
-        if (DEBUG) {
-            if (itsStackTop < 0)
-                throw new RuntimeException("Stack underflow");
-        }
-        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
-
-        if (theOpCode == ByteCode.IINC) {
-            if (DEBUG) {
-                if ((theOperand1 < 0) || (theOperand1 > 65535))
-                    throw new RuntimeException("out of range variable");
-                if ((theOperand2 < -32768) || (theOperand2 > 32767))
-                    throw new RuntimeException("out of range increment");
-            }
-            if ((theOperand1 > 255)
-                    || (theOperand2 < -128) || (theOperand2 > 127)) {
-                addToCodeBuffer(ByteCode.WIDE);
-                addToCodeBuffer(ByteCode.IINC);
-                addToCodeBuffer((byte)(theOperand1 >> 8));
-                addToCodeBuffer((byte)theOperand1);
-                addToCodeBuffer((byte)(theOperand2 >> 8));
-                addToCodeBuffer((byte)theOperand2);
-            }
-            else {
-                addToCodeBuffer(ByteCode.WIDE);
-                addToCodeBuffer(ByteCode.IINC);
-                addToCodeBuffer((byte)theOperand1);
-                addToCodeBuffer((byte)theOperand2);
-            }
-        }
-        else {
-            if (theOpCode == ByteCode.MULTIANEWARRAY) {
-                if (DEBUG) {
-                    if ((theOperand1 < 0) || (theOperand1 > 65535))
-                        throw new RuntimeException("out of range index");
-                    if ((theOperand2 < 0) || (theOperand2 > 255))
-                        throw new RuntimeException("out of range dimensions");
-                }
-                addToCodeBuffer(ByteCode.MULTIANEWARRAY);
-                addToCodeBuffer((byte)(theOperand1 >> 8));
-                addToCodeBuffer((byte)theOperand1);
-                addToCodeBuffer((byte)theOperand2);
-            }
-            else {
-                throw new RuntimeException("Unexpected opcode for 2 operands");
-            }
-        }
-    }
-
-    public void add(byte theOpCode, String className)
-    {
-        if (DEBUGCODE)
-            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
-                                    + ", " + className);
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
-        if (DEBUGSTACK) {
-            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
-        }
-        if (DEBUG) {
-            if (itsStackTop < 0)
-                throw new RuntimeException("Stack underflow");
-        }
-        switch (theOpCode) {
-            case ByteCode.NEW :
-            case ByteCode.ANEWARRAY :
-            case ByteCode.CHECKCAST :
-            case ByteCode.INSTANCEOF : {
-                    short classIndex = itsConstantPool.addClass(className);
-                    addToCodeBuffer(theOpCode);
-                    addToCodeBuffer((byte)(classIndex >> 8));
-                    addToCodeBuffer((byte)classIndex);
-                }
-                break;
-
-            default :
-                throw new RuntimeException("bad opcode for class reference");
-        }
-        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
-    }
-    
-
-    public void add(byte theOpCode, String className,
-                                String fieldName, String fieldType)
-    {
-        if (DEBUGCODE)
-            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
-                                    + ", " + className + ", " + fieldName + ", " + fieldType);
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
-        if (DEBUG) {
-            if (itsStackTop < 0)
-                throw new RuntimeException("After " + Integer.toHexString(theOpCode & 0xFF) + " Stack underflow");
-        }
-        char fieldTypeChar = fieldType.charAt(0);
-        int fieldSize = ((fieldTypeChar == 'J')
-                                || (fieldTypeChar == 'D')) ? 2 : 1;
-        switch (theOpCode) {
-            case ByteCode.GETFIELD :
-            case ByteCode.GETSTATIC :
-                itsStackTop += fieldSize;
-                break;
-            case ByteCode.PUTSTATIC :
-            case ByteCode.PUTFIELD :
-                itsStackTop -= fieldSize;
-                break;
-            default :
-                throw new RuntimeException("bad opcode for field reference");
-        }
-        short fieldRefIndex = itsConstantPool.addFieldRef(className,
-                                             fieldName, fieldType);
-        addToCodeBuffer(theOpCode);
-        addToCodeBuffer((byte)(fieldRefIndex >> 8));
-        addToCodeBuffer((byte)fieldRefIndex);
-
-        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
-        if (DEBUGSTACK) {
-            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
-        }
-    }
-    
-    /*
-        Really weird. Returns an int with # parameters in hi 16 bits, and
-        # slots occupied by parameters in the low 16 bits. If Java really
-        supported references we wouldn't have to be this perverted.
-    */
-    public int sizeOfParameters(String pString)
-    {
-        if (DEBUG) {
-            if (pString.charAt(0) != '(')
-                throw new RuntimeException("Bad parameter signature");
-        }
-        int index = 1;
-        int size = 0;
-        int count = 0;
-        while (pString.charAt(index) != ')') {
-            switch (pString.charAt(index)) {
-                case 'J' :
-                case 'D' :
-                    size++;
-                    // fall thru
-                case 'B' :
-                case 'S' :
-                case 'C' :
-                case 'I' :
-                case 'Z' :
-                case 'F' :
-                    size++;
-                    count++;
-                    index++;
-                    break;
-                case '[' :
-                    while (pString.charAt(index) == '[') index++;
-                    if (pString.charAt(index) != 'L') {
-                        size++;
-                        count++;
-                        index++;
-                        break;
-                    }
-                        // fall thru
-                case 'L' :
-                    size++;
-                    count++;
-                    while (pString.charAt(index++) != ';') ;
-                    break;
-                default :
-                    throw new RuntimeException("Bad signature character");
-            }
-        }
-        return ((count << 16) | size);
-    }
-
-    public void add(byte theOpCode, String className, String methodName,
-                    String parametersType, String returnType)
-    {
-        if (DEBUGCODE)
-            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
-                                    + ", " + className + ", " + methodName + ", " + parametersType + ", " + returnType);
-        int parameterInfo = sizeOfParameters(parametersType);
-        itsStackTop -= (parameterInfo & 0xFFFF);
-        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];     // adjusts for 'this'
-        if (DEBUG) {
-            if (itsStackTop < 0)
-                throw new RuntimeException("After " + Integer.toHexString(theOpCode & 0xFF) + " Stack underflow");
-        }
-        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
-
-        switch (theOpCode) {
-            case ByteCode.INVOKEVIRTUAL :
-            case ByteCode.INVOKESPECIAL :
-            case ByteCode.INVOKESTATIC :
-            case ByteCode.INVOKEINTERFACE : {
-                    char returnTypeChar = returnType.charAt(0);
-                    if (returnTypeChar != 'V')
-                        if ((returnTypeChar == 'J') || (returnTypeChar == 'D'))
-                            itsStackTop += 2;
-                        else
-                            itsStackTop++;
-                    addToCodeBuffer(theOpCode);
-                    if (theOpCode == ByteCode.INVOKEINTERFACE) {
-                        short ifMethodRefIndex
-                                    = itsConstantPool.addInterfaceMethodRef(
-                                               className, methodName,
-                                               parametersType + returnType);
-                        addToCodeBuffer((byte)(ifMethodRefIndex >> 8));
-                        addToCodeBuffer((byte)ifMethodRefIndex);
-                        addToCodeBuffer((byte)((parameterInfo >> 16) + 1));
-                        addToCodeBuffer((byte)0);
-                    }
-                    else {
-                        short methodRefIndex = itsConstantPool.addMethodRef(
-                                               className, methodName,
-                                               parametersType + returnType);
-                        addToCodeBuffer((byte)(methodRefIndex >> 8));
-                        addToCodeBuffer((byte)methodRefIndex);
-                    }
-                }
-                break;
-
-            default :
-                throw new RuntimeException("bad opcode for method reference");
-        }
-        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
-        if (DEBUGSTACK) {
-            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
-        }
-    }
-    
-    public int markLabel(int theLabel) {
-        return super.markLabel(theLabel, (short)itsCodeBufferTop);
-    }
-
-    public int markLabel(int theLabel, short stackTop) {
-        itsStackTop = stackTop;
-        return super.markLabel(theLabel, (short)itsCodeBufferTop);
-    }
-
-    public int markHandler(int theLabel) {
-        itsStackTop = 1;
-        return markLabel(theLabel);
-    }
-
-    public short getStackTop() {
-        return itsStackTop;
-    }
-
-    public void adjustStackTop(int delta) {
-        itsStackTop += delta;
-        if (DEBUGSTACK) {
-            System.out.println("After " + "adjustStackTop("+delta+")" + " stack = " + itsStackTop);
-        }
-        if (DEBUG) {
-            if (itsStackTop < 0)
-                throw new RuntimeException("Stack underflow");
-        }
-        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
-    }
-
-
-    public void addToCodeBuffer(byte b)
-    {
-        if (DEBUG) {
-            if (itsCurrentMethod == null)
-                throw new RuntimeException("No method to add to");
-        }
-        if (itsCodeBuffer == null) {
-            itsCodeBuffer = new byte[CodeBufferSize];
-            itsCodeBuffer[0] = b;
-            itsCodeBufferTop = 1;
-        }
-        else {
-            if (itsCodeBufferTop == itsCodeBuffer.length) {
-                byte currentBuffer[] = itsCodeBuffer;
-                itsCodeBuffer = new byte[itsCodeBufferTop * 2];
-                System.arraycopy(currentBuffer, 0, itsCodeBuffer,
-                                                0, itsCodeBufferTop);
-            }
-            itsCodeBuffer[itsCodeBufferTop++] = b;
-        }
-    }
-        
-    public void addField(String fieldName, String type, short flags)
-    {
+    /**
+     * Add a field to the class.
+     * 
+     * @param fieldName the name of the field
+     * @param type the type of the field using ...
+     * @param flags the attributes of the field, such as ACC_PUBLIC, etc. 
+     *        bitwise or'd together
+     */
+    public void addField(String fieldName, String type, short flags) {
         short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
         short typeIndex = itsConstantPool.addUtf8(type);
         itsFields.addElement(
                 new ClassFileField(fieldNameIndex, typeIndex, flags));
     }
     
-    public void addField(String fieldName, String type, short flags, int value)
-    {
-        short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
-        short typeIndex = itsConstantPool.addUtf8(type);
-        short cvAttr[] = new short[4];
-        cvAttr[0] = itsConstantPool.addUtf8("ConstantValue");
-        cvAttr[1] = 0;
-        cvAttr[2] = 2;
-        cvAttr[3] = itsConstantPool.addConstant(value);
-        itsFields.addElement(
-                new ClassFileField(fieldNameIndex, typeIndex, flags, cvAttr));
-    }
-    
-    public void addField(String fieldName, String type, short flags, long value)
-    {
-        short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
-        short typeIndex = itsConstantPool.addUtf8(type);
-        short cvAttr[] = new short[4];
-        cvAttr[0] = itsConstantPool.addUtf8("ConstantValue");
-        cvAttr[1] = 0;
-        cvAttr[2] = 2;
-        cvAttr[3] = itsConstantPool.addConstant(value);
-        itsFields.addElement(
-                new ClassFileField(fieldNameIndex, typeIndex, flags, cvAttr));
-    }
-    
-    public void addField(String fieldName, String type, short flags, double value)
-    {
-        short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
-        short typeIndex = itsConstantPool.addUtf8(type);
-        short cvAttr[] = new short[4];
-        cvAttr[0] = itsConstantPool.addUtf8("ConstantValue");
-        cvAttr[1] = 0;
-        cvAttr[2] = 2;
-        cvAttr[3] = itsConstantPool.addConstant(value);
-        itsFields.addElement(
-                new ClassFileField(fieldNameIndex, typeIndex, flags, cvAttr));
-    }
-    
-    static final int ExceptionTableSize = 4;
-    
-    public void addExceptionHandler(int startLabel, int endLabel,
-                        int handlerLabel, String catchClassName)
-    {
-        if ((startLabel & 0x80000000) != 0x80000000)
-            throw new RuntimeException("Bad startLabel");
-        if ((endLabel & 0x80000000) != 0x80000000)
-            throw new RuntimeException("Bad endLabel");
-        if ((handlerLabel & 0x80000000) != 0x80000000)
-            throw new RuntimeException("Bad handlerLabel");
-        
-    /*
-     * if catchClassName is null, use 0 for the catch_type_index; which means
-     * catch everything.  (Even when the verifier has let you throw something other
-     * than a Throwable.)
+    /**
+     * Add a field to the class.
+     * 
+     * @param fieldName the name of the field
+     * @param type the type of the field using ...
+     * @param flags the attributes of the field, such as ACC_PUBLIC, etc. 
+     *        bitwise or'd together
+     * @param value an initial integral value
      */
-        ExceptionTableEntry newEntry
-                        = new ExceptionTableEntry(
-                                    startLabel,
-                                    endLabel,
-                                    handlerLabel,
-                                    catchClassName == null
-                                        ? 0
-                                        : itsConstantPool.addClass(catchClassName));
-        
-        if (itsExceptionTable == null) {
-            itsExceptionTable = new ExceptionTableEntry[ExceptionTableSize];
-            itsExceptionTable[0] = newEntry;
-            itsExceptionTableTop = 1;
-        }
-        else {
-            if (itsExceptionTableTop == itsExceptionTable.length) {
-                ExceptionTableEntry oldTable[] = itsExceptionTable;
-                itsExceptionTable = new ExceptionTableEntry
-                                            [itsExceptionTableTop * 2];
-                System.arraycopy(oldTable, 0, itsExceptionTable,
-                                                0, itsExceptionTableTop);
-            }
-            itsExceptionTable[itsExceptionTableTop++] = newEntry;
-        }
-    
-    }
-
-    public void startMethod(String methodName, String type, short flags)
+    public void addField(String fieldName, String type, short flags, 
+                         int value)
     {
+        short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
+        short typeIndex = itsConstantPool.addUtf8(type);
+        short cvAttr[] = new short[4];
+        cvAttr[0] = itsConstantPool.addUtf8("ConstantValue");
+        cvAttr[1] = 0;
+        cvAttr[2] = 2;
+        cvAttr[3] = itsConstantPool.addConstant(value);
+        itsFields.addElement(
+                new ClassFileField(fieldNameIndex, typeIndex, flags, cvAttr));
+    }
+    
+    /**
+     * Add a field to the class.
+     * 
+     * @param fieldName the name of the field
+     * @param type the type of the field using ...
+     * @param flags the attributes of the field, such as ACC_PUBLIC, etc. 
+     *        bitwise or'd together
+     * @param value an initial long value
+     */
+    public void addField(String fieldName, String type, short flags, 
+                         long value)
+    {
+        short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
+        short typeIndex = itsConstantPool.addUtf8(type);
+        short cvAttr[] = new short[4];
+        cvAttr[0] = itsConstantPool.addUtf8("ConstantValue");
+        cvAttr[1] = 0;
+        cvAttr[2] = 2;
+        cvAttr[3] = itsConstantPool.addConstant(value);
+        itsFields.addElement(
+                new ClassFileField(fieldNameIndex, typeIndex, flags, cvAttr));
+    }
+    
+    /**
+     * Add a field to the class.
+     * 
+     * @param fieldName the name of the field
+     * @param type the type of the field using ...
+     * @param flags the attributes of the field, such as ACC_PUBLIC, etc. 
+     *        bitwise or'd together
+     * @param value an initial double value
+     */
+    public void addField(String fieldName, String type, short flags, 
+                         double value)
+    {
+        short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
+        short typeIndex = itsConstantPool.addUtf8(type);
+        short cvAttr[] = new short[4];
+        cvAttr[0] = itsConstantPool.addUtf8("ConstantValue");
+        cvAttr[1] = 0;
+        cvAttr[2] = 2;
+        cvAttr[3] = itsConstantPool.addConstant(value);
+        itsFields.addElement(
+                new ClassFileField(fieldNameIndex, typeIndex, flags, cvAttr));
+    }      
+
+    /**
+     * Add a method and begin adding code.
+     * 
+     * This method must be called before other methods for adding code,
+     * exception tables, etc. can be invoked.
+     * 
+     * @param methodName the name of the method
+     * @param type a string representing the type
+     * @param flags the attributes of the field, such as ACC_PUBLIC, etc. 
+     *        bitwise or'd together
+     */
+    public void startMethod(String methodName, String type, short flags) {
         short methodNameIndex = itsConstantPool.addUtf8(methodName);
         short typeIndex = itsConstantPool.addUtf8(type);
         itsCurrentMethod = new ClassFileMethod(methodNameIndex, typeIndex, 
@@ -670,8 +207,18 @@ public class ClassFileWriter extends LabelTable {
         itsMethods.addElement(itsCurrentMethod);
     }
     
-    public void stopMethod(short maxLocals, VariableTable vars)
-    {
+    /**
+     * Complete generation of the method.
+     * 
+     * After this method is called, no more code can be added to the 
+     * method begun with <code>startMethod</code>.
+     * 
+     * @param maxLocals the maximum number of local variable slots
+     *        (a.k.a. Java registers) used by the method
+     * @param vars the VariableTable of the variables for the method,
+     *        or null if none
+     */
+    public void stopMethod(short maxLocals, VariableTable vars) {
         if (DEBUG) {
             if (itsCurrentMethod == null)
                 throw new RuntimeException("No method to stop");
@@ -842,10 +389,540 @@ public class ClassFileWriter extends LabelTable {
         itsStackTop = 0;
     }
 
-    private static final int LineNumberTableSize = 16;
+    /**
+     * Add the single-byte opcode to the current method.
+     * 
+     * @param theOpCode the opcode of the bytecode
+     */
+    public void add(byte theOpCode) {
+        if (DEBUGCODE)
+            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF));
+        if (DEBUG) {
+            if (ByteCode.opcodeCount[theOpCode & 0xFF] != 0)
+                throw new RuntimeException("Expected operands");
+        }
+        addToCodeBuffer(theOpCode);
+        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        if (DEBUGSTACK) {
+            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
+        }
+        if (DEBUG) {
+            if (itsStackTop < 0)
+                throw new RuntimeException("Stack underflow");
+        }
+        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+    }
 
-    public void addLineNumberEntry(short lineNumber)
+    /**
+     * Add a single-operand opcode to the current method.
+     * 
+     * @param theOpCode the opcode of the bytecode
+     * @param theOperand the operand of the bytecode
+     */
+    public void add(byte theOpCode, int theOperand) {
+        if (DEBUGCODE)
+            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF) + ", " + Integer.toHexString(theOperand) );
+        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        if (DEBUGSTACK) {
+            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
+        }
+        if (DEBUG) {
+            if (itsStackTop < 0)
+                throw new RuntimeException("Stack underflow");
+        }
+        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+
+        switch (theOpCode) {
+            case ByteCode.GOTO :
+                // fallthru...
+            case ByteCode.IFEQ :
+            case ByteCode.IFNE :
+            case ByteCode.IFLT :
+            case ByteCode.IFGE :
+            case ByteCode.IFGT :
+            case ByteCode.IFLE :
+            case ByteCode.IF_ICMPEQ :
+            case ByteCode.IF_ICMPNE :
+            case ByteCode.IF_ICMPLT :
+            case ByteCode.IF_ICMPGE :
+            case ByteCode.IF_ICMPGT :
+            case ByteCode.IF_ICMPLE :
+            case ByteCode.IF_ACMPEQ :
+            case ByteCode.IF_ACMPNE :
+            case ByteCode.JSR :
+            case ByteCode.IFNULL :
+            case ByteCode.IFNONNULL : {
+                    if (DEBUG) {
+                        if ((theOperand & 0x80000000) != 0x80000000) {
+                            if ((theOperand < 0) || (theOperand > 65535))
+                                throw new RuntimeException("Bad label for branch");
+                        }
+                    }
+                    int branchPC = itsCodeBufferTop;
+                    addToCodeBuffer(theOpCode);
+                    if ((theOperand & 0x80000000) != 0x80000000) {
+                            // hard displacement
+                        int temp_Label = acquireLabel();
+                        int theLabel = temp_Label & 0x7FFFFFFF;
+                        itsLabelTable[theLabel].setPC(
+                                            (short)(branchPC + theOperand));
+                        addToCodeBuffer((byte)(theOperand >> 8));
+                        addToCodeBuffer((byte)theOperand);
+                    }
+                    else {  // a label
+                        int theLabel = theOperand & 0x7FFFFFFF;
+                        int targetPC = itsLabelTable[theLabel].getPC();
+                        if (DEBUGLABELS) {
+                            System.out.println("Fixing branch to " + 
+                                               theLabel + " at " + targetPC + 
+                                               " from " + branchPC);
+                        }
+                        if (targetPC != -1) {
+                            short offset = (short)(targetPC - branchPC);
+                            addToCodeBuffer((byte)(offset >> 8));
+                            addToCodeBuffer((byte)offset);
+                        }
+                        else {
+                            itsLabelTable[theLabel].addFixup(branchPC + 1);
+                            addToCodeBuffer((byte)0);
+                            addToCodeBuffer((byte)0);
+                        }
+                    }
+                }
+                break;
+
+            case ByteCode.BIPUSH :
+                if (DEBUG) {
+                    if ((theOperand < -128) || (theOperand > 127))
+                        throw new RuntimeException("out of range byte");
+                }
+                addToCodeBuffer(theOpCode);
+                addToCodeBuffer((byte)theOperand);
+                break;
+
+            case ByteCode.SIPUSH :
+                if (DEBUG) {
+                    if ((theOperand < -32768) || (theOperand > 32767))
+                        throw new RuntimeException("out of range short");
+                }
+                addToCodeBuffer(theOpCode);
+                addToCodeBuffer((byte)(theOperand >> 8));
+                addToCodeBuffer((byte)theOperand);
+                break;
+
+            case ByteCode.NEWARRAY :
+                if (DEBUG) {
+                    if ((theOperand < 0) || (theOperand > 255))
+                        throw new RuntimeException("out of range index");
+                }
+                addToCodeBuffer(theOpCode);
+                addToCodeBuffer((byte)theOperand);
+                break;
+
+            case ByteCode.GETFIELD :
+            case ByteCode.PUTFIELD :
+                if (DEBUG) {
+                    if ((theOperand < 0) || (theOperand > 65535))
+                        throw new RuntimeException("out of range field");
+                }
+                addToCodeBuffer(theOpCode);
+                addToCodeBuffer((byte)(theOperand >> 8));
+                addToCodeBuffer((byte)theOperand);
+                break;
+
+            case ByteCode.LDC :
+            case ByteCode.LDC_W :
+            case ByteCode.LDC2_W :
+                if (DEBUG) {
+                    if ((theOperand < 0) || (theOperand > 65535))
+                        throw new RuntimeException("out of range index");
+                }
+                if ((theOperand >= 256)
+                            || (theOpCode == ByteCode.LDC_W)
+                            || (theOpCode == ByteCode.LDC2_W)) {
+                    if (theOpCode == ByteCode.LDC)
+                        addToCodeBuffer(ByteCode.LDC_W);
+                    else
+                        addToCodeBuffer(theOpCode);
+                    addToCodeBuffer((byte)(theOperand >> 8));
+                    addToCodeBuffer((byte)theOperand);
+                }
+                else {
+                    addToCodeBuffer(theOpCode);
+                    addToCodeBuffer((byte)theOperand);
+                }
+                break;
+
+            case ByteCode.RET :
+            case ByteCode.ILOAD :
+            case ByteCode.LLOAD :
+            case ByteCode.FLOAD :
+            case ByteCode.DLOAD :
+            case ByteCode.ALOAD :
+            case ByteCode.ISTORE :
+            case ByteCode.LSTORE :
+            case ByteCode.FSTORE :
+            case ByteCode.DSTORE :
+            case ByteCode.ASTORE :
+                if (DEBUG) {
+                    if ((theOperand < 0) || (theOperand > 65535))
+                        throw new RuntimeException("out of range variable");
+                }
+                if (theOperand >= 256) {
+                    addToCodeBuffer(ByteCode.WIDE);
+                    addToCodeBuffer(theOpCode);
+                    addToCodeBuffer((byte)(theOperand >> 8));
+                    addToCodeBuffer((byte)theOperand);
+                }
+                else {
+                    addToCodeBuffer(theOpCode);
+                    addToCodeBuffer((byte)theOperand);
+                }
+                break;
+
+            default :
+                throw new RuntimeException("Unexpected opcode for 1 operand");
+        }
+    }
+    
+    /**
+     * Generate the load constant bytecode for the given integer.
+     * 
+     * @param k the constant
+     */
+    public void addLoadConstant(int k) {
+        add(ByteCode.LDC, itsConstantPool.addConstant(k));
+    }
+    
+    /**
+     * Generate the load constant bytecode for the given long.
+     * 
+     * @param k the constant
+     */
+    public void addLoadConstant(long k) {
+        add(ByteCode.LDC2_W, itsConstantPool.addConstant(k));
+    }
+    
+    /**
+     * Generate the load constant bytecode for the given float.
+     * 
+     * @param k the constant
+     */
+    public void addLoadConstant(float k) {
+        add(ByteCode.LDC, itsConstantPool.addConstant(k));
+    }
+    
+    /**
+     * Generate the load constant bytecode for the given double.
+     * 
+     * @param k the constant
+     */
+    public void addLoadConstant(double k) {
+        add(ByteCode.LDC2_W, itsConstantPool.addConstant(k));
+    }
+
+    /**
+     * Generate the load constant bytecode for the given string.
+     * 
+     * @param k the constant
+     */
+    public void addLoadConstant(String k) {
+        add(ByteCode.LDC, itsConstantPool.addConstant(k));
+    }
+
+    /**
+     * Add the given two-operand bytecode to the current method.
+     * 
+     * @param theOpCode the opcode of the bytecode
+     * @param theOperand1 the first operand of the bytecode
+     * @param theOperand2 the second operand of the bytecode
+     */
+    public void add(byte theOpCode, int theOperand1, int theOperand2) {
+        if (DEBUGCODE)
+            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
+                                    + ", " + Integer.toHexString(theOperand1)
+                                     + ", " + Integer.toHexString(theOperand2));
+        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        if (DEBUGSTACK) {
+            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
+        }
+        if (DEBUG) {
+            if (itsStackTop < 0)
+                throw new RuntimeException("Stack underflow");
+        }
+        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+
+        if (theOpCode == ByteCode.IINC) {
+            if (DEBUG) {
+                if ((theOperand1 < 0) || (theOperand1 > 65535))
+                    throw new RuntimeException("out of range variable");
+                if ((theOperand2 < -32768) || (theOperand2 > 32767))
+                    throw new RuntimeException("out of range increment");
+            }
+            if ((theOperand1 > 255)
+                    || (theOperand2 < -128) || (theOperand2 > 127)) {
+                addToCodeBuffer(ByteCode.WIDE);
+                addToCodeBuffer(ByteCode.IINC);
+                addToCodeBuffer((byte)(theOperand1 >> 8));
+                addToCodeBuffer((byte)theOperand1);
+                addToCodeBuffer((byte)(theOperand2 >> 8));
+                addToCodeBuffer((byte)theOperand2);
+            }
+            else {
+                addToCodeBuffer(ByteCode.WIDE);
+                addToCodeBuffer(ByteCode.IINC);
+                addToCodeBuffer((byte)theOperand1);
+                addToCodeBuffer((byte)theOperand2);
+            }
+        }
+        else {
+            if (theOpCode == ByteCode.MULTIANEWARRAY) {
+                if (DEBUG) {
+                    if ((theOperand1 < 0) || (theOperand1 > 65535))
+                        throw new RuntimeException("out of range index");
+                    if ((theOperand2 < 0) || (theOperand2 > 255))
+                        throw new RuntimeException("out of range dimensions");
+                }
+                addToCodeBuffer(ByteCode.MULTIANEWARRAY);
+                addToCodeBuffer((byte)(theOperand1 >> 8));
+                addToCodeBuffer((byte)theOperand1);
+                addToCodeBuffer((byte)theOperand2);
+            }
+            else {
+                throw new RuntimeException("Unexpected opcode for 2 operands");
+            }
+        }
+    }
+
+    public void add(byte theOpCode, String className) {
+        if (DEBUGCODE)
+            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
+                                    + ", " + className);
+        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        if (DEBUGSTACK) {
+            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
+        }
+        if (DEBUG) {
+            if (itsStackTop < 0)
+                throw new RuntimeException("Stack underflow");
+        }
+        switch (theOpCode) {
+            case ByteCode.NEW :
+            case ByteCode.ANEWARRAY :
+            case ByteCode.CHECKCAST :
+            case ByteCode.INSTANCEOF : {
+                    short classIndex = itsConstantPool.addClass(className);
+                    addToCodeBuffer(theOpCode);
+                    addToCodeBuffer((byte)(classIndex >> 8));
+                    addToCodeBuffer((byte)classIndex);
+                }
+                break;
+
+            default :
+                throw new RuntimeException("bad opcode for class reference");
+        }
+        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+    }
+    
+
+    public void add(byte theOpCode, String className, String fieldName, 
+                    String fieldType)
     {
+        if (DEBUGCODE)
+            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
+                                    + ", " + className + ", " + fieldName + ", " + fieldType);
+        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];
+        if (DEBUG) {
+            if (itsStackTop < 0)
+                throw new RuntimeException("After " + Integer.toHexString(theOpCode & 0xFF) + " Stack underflow");
+        }
+        char fieldTypeChar = fieldType.charAt(0);
+        int fieldSize = ((fieldTypeChar == 'J')
+                                || (fieldTypeChar == 'D')) ? 2 : 1;
+        switch (theOpCode) {
+            case ByteCode.GETFIELD :
+            case ByteCode.GETSTATIC :
+                itsStackTop += fieldSize;
+                break;
+            case ByteCode.PUTSTATIC :
+            case ByteCode.PUTFIELD :
+                itsStackTop -= fieldSize;
+                break;
+            default :
+                throw new RuntimeException("bad opcode for field reference");
+        }
+        short fieldRefIndex = itsConstantPool.addFieldRef(className,
+                                             fieldName, fieldType);
+        addToCodeBuffer(theOpCode);
+        addToCodeBuffer((byte)(fieldRefIndex >> 8));
+        addToCodeBuffer((byte)fieldRefIndex);
+
+        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+        if (DEBUGSTACK) {
+            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
+        }
+    }
+    
+    public void add(byte theOpCode, String className, String methodName,
+                    String parametersType, String returnType)
+    {
+        if (DEBUGCODE)
+            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF)
+                                    + ", " + className + ", " + methodName + ", " + parametersType + ", " + returnType);
+        int parameterInfo = sizeOfParameters(parametersType);
+        itsStackTop -= (parameterInfo & 0xFFFF);
+        itsStackTop += ByteCode.stackChange[theOpCode & 0xFF];     // adjusts for 'this'
+        if (DEBUG) {
+            if (itsStackTop < 0)
+                throw new RuntimeException("After " + Integer.toHexString(theOpCode & 0xFF) + " Stack underflow");
+        }
+        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+
+        switch (theOpCode) {
+            case ByteCode.INVOKEVIRTUAL :
+            case ByteCode.INVOKESPECIAL :
+            case ByteCode.INVOKESTATIC :
+            case ByteCode.INVOKEINTERFACE : {
+                    char returnTypeChar = returnType.charAt(0);
+                    if (returnTypeChar != 'V')
+                        if ((returnTypeChar == 'J') || (returnTypeChar == 'D'))
+                            itsStackTop += 2;
+                        else
+                            itsStackTop++;
+                    addToCodeBuffer(theOpCode);
+                    if (theOpCode == ByteCode.INVOKEINTERFACE) {
+                        short ifMethodRefIndex
+                                    = itsConstantPool.addInterfaceMethodRef(
+                                               className, methodName,
+                                               parametersType + returnType);
+                        addToCodeBuffer((byte)(ifMethodRefIndex >> 8));
+                        addToCodeBuffer((byte)ifMethodRefIndex);
+                        addToCodeBuffer((byte)((parameterInfo >> 16) + 1));
+                        addToCodeBuffer((byte)0);
+                    }
+                    else {
+                        short methodRefIndex = itsConstantPool.addMethodRef(
+                                               className, methodName,
+                                               parametersType + returnType);
+                        addToCodeBuffer((byte)(methodRefIndex >> 8));
+                        addToCodeBuffer((byte)methodRefIndex);
+                    }
+                }
+                break;
+
+            default :
+                throw new RuntimeException("bad opcode for method reference");
+        }
+        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+        if (DEBUGSTACK) {
+            System.out.println("After " + Integer.toHexString(theOpCode & 0xFF) + " stack = " + itsStackTop);
+        }
+    }
+    
+    public int markLabel(int theLabel) {
+        return super.markLabel(theLabel, (short)itsCodeBufferTop);
+    }
+
+    public int markLabel(int theLabel, short stackTop) {
+        itsStackTop = stackTop;
+        return super.markLabel(theLabel, (short)itsCodeBufferTop);
+    }
+
+    public int markHandler(int theLabel) {
+        itsStackTop = 1;
+        return markLabel(theLabel);
+    }
+
+    /**
+     * Get the current offset into the code of the current method.
+     * 
+     * @return an integer representing the offset
+     */
+    public int getCurrentCodeOffset() {
+        return itsCodeBufferTop;
+    }
+
+    public short getStackTop() {
+        return itsStackTop;
+    }
+
+    public void adjustStackTop(int delta) {
+        itsStackTop += delta;
+        if (DEBUGSTACK) {
+            System.out.println("After " + "adjustStackTop("+delta+")" + " stack = " + itsStackTop);
+        }
+        if (DEBUG) {
+            if (itsStackTop < 0)
+                throw new RuntimeException("Stack underflow");
+        }
+        if (itsStackTop > itsMaxStack) itsMaxStack = itsStackTop;
+    }
+
+
+    public void addToCodeBuffer(byte b) {
+        if (DEBUG) {
+            if (itsCurrentMethod == null)
+                throw new RuntimeException("No method to add to");
+        }
+        if (itsCodeBuffer == null) {
+            itsCodeBuffer = new byte[CodeBufferSize];
+            itsCodeBuffer[0] = b;
+            itsCodeBufferTop = 1;
+        }
+        else {
+            if (itsCodeBufferTop == itsCodeBuffer.length) {
+                byte currentBuffer[] = itsCodeBuffer;
+                itsCodeBuffer = new byte[itsCodeBufferTop * 2];
+                System.arraycopy(currentBuffer, 0, itsCodeBuffer,
+                                                0, itsCodeBufferTop);
+            }
+            itsCodeBuffer[itsCodeBufferTop++] = b;
+        }
+    }
+        
+    public void addExceptionHandler(int startLabel, int endLabel,
+                                    int handlerLabel, String catchClassName)
+    {
+        if ((startLabel & 0x80000000) != 0x80000000)
+            throw new RuntimeException("Bad startLabel");
+        if ((endLabel & 0x80000000) != 0x80000000)
+            throw new RuntimeException("Bad endLabel");
+        if ((handlerLabel & 0x80000000) != 0x80000000)
+            throw new RuntimeException("Bad handlerLabel");
+        
+        /*
+         * If catchClassName is null, use 0 for the catch_type_index; which 
+         * means catch everything.  (Even when the verifier has let you throw
+         * something other than a Throwable.)
+         */
+        ExceptionTableEntry newEntry
+                        = new ExceptionTableEntry(
+                                    startLabel,
+                                    endLabel,
+                                    handlerLabel,
+                                    catchClassName == null
+                                        ? 0
+                                        : itsConstantPool.addClass(catchClassName));
+        
+        if (itsExceptionTable == null) {
+            itsExceptionTable = new ExceptionTableEntry[ExceptionTableSize];
+            itsExceptionTable[0] = newEntry;
+            itsExceptionTableTop = 1;
+        }
+        else {
+            if (itsExceptionTableTop == itsExceptionTable.length) {
+                ExceptionTableEntry oldTable[] = itsExceptionTable;
+                itsExceptionTable = new ExceptionTableEntry
+                                            [itsExceptionTableTop * 2];
+                System.arraycopy(oldTable, 0, itsExceptionTable,
+                                                0, itsExceptionTableTop);
+            }
+            itsExceptionTable[itsExceptionTableTop++] = newEntry;
+        }
+    
+    }
+
+    public void addLineNumberEntry(short lineNumber) {
         if (DEBUG) {
             if (itsCurrentMethod == null)
                 throw new RuntimeException("No method to stop");
@@ -868,7 +945,14 @@ public class ClassFileWriter extends LabelTable {
         }
     }
 
-    public void write(OutputStream oStream) throws IOException
+    /**
+     * Write the class file to the OutputStream.
+     * 
+     * @param oStream the stream to write to
+     * @throws IOException if writing to the stream produces an exception
+     */
+    public void write(OutputStream oStream) 
+        throws IOException
     {
     	DataOutputStream out = new DataOutputStream(oStream);
         
@@ -905,11 +989,66 @@ public class ClassFileWriter extends LabelTable {
     }
     
     /*
-    TODO: fix reference
-    public void saveStartPC(OptLocalVariable var) {
-        var.setStartPC(itsCodeBufferTop);
-    }
+        Really weird. Returns an int with # parameters in hi 16 bits, and
+        # slots occupied by parameters in the low 16 bits. If Java really
+        supported references we wouldn't have to be this perverted.
     */
+    private int sizeOfParameters(String pString)
+    {
+        if (DEBUG) {
+            if (pString.charAt(0) != '(')
+                throw new RuntimeException("Bad parameter signature");
+        }
+        int index = 1;
+        int size = 0;
+        int count = 0;
+        while (pString.charAt(index) != ')') {
+            switch (pString.charAt(index)) {
+                case 'J' :
+                case 'D' :
+                    size++;
+                    // fall thru
+                case 'B' :
+                case 'S' :
+                case 'C' :
+                case 'I' :
+                case 'Z' :
+                case 'F' :
+                    size++;
+                    count++;
+                    index++;
+                    break;
+                case '[' :
+                    while (pString.charAt(index) == '[') index++;
+                    if (pString.charAt(index) != 'L') {
+                        size++;
+                        count++;
+                        index++;
+                        break;
+                    }
+                        // fall thru
+                case 'L' :
+                    size++;
+                    count++;
+                    while (pString.charAt(index++) != ';') ;
+                    break;
+                default :
+                    throw new RuntimeException("Bad signature character");
+            }
+        }
+        return ((count << 16) | size);
+    }
+
+    private static final int LineNumberTableSize = 16;
+    private static final int ExceptionTableSize = 4;
+
+    private final static long FileHeaderConstant = 0xCAFEBABE0003002DL;
+    // Set DEBUG flags to true to get better checking and progress info.
+    private static final boolean DEBUG = false;
+    private static final boolean DEBUGSTACK = false;
+    private static final boolean DEBUGLABELS = false;
+    private static final boolean DEBUGCODE = false;
+    private static final int CodeBufferSize = 128;
 
     private ExceptionTableEntry itsExceptionTable[];
     private int itsExceptionTableTop;

@@ -18,6 +18,9 @@
 
 package org.mozilla.classfile;
 
+/**
+ * Operand values expected by the JVM in Java class files.
+ */
 public class ByteCode {
 
     public static final byte
