@@ -37,6 +37,7 @@
 #include "nsPIXPIManagerCallbacks.h"    
 
 #include "nsIDocument.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 
