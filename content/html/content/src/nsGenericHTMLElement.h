@@ -574,13 +574,14 @@ protected:
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAWritableString& aValue)                    \
   {                                                                  \
-    NS_STATIC_CAST(nsIHTMLContent *, this)->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue);     \
+    GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue);          \
     return NS_OK;                                                    \
   }                                                                  \
   NS_IMETHODIMP                                                      \
   _class::Set##_method(const nsAReadableString& aValue)              \
   {                                                                  \
-    return NS_STATIC_CAST(nsIHTMLContent *, this)->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue, PR_TRUE); \
+    return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue,    \
+                   PR_TRUE);                                         \
   }
 
 /**
@@ -594,7 +595,7 @@ protected:
   {                                                                   \
     nsHTMLValue val;                                                  \
     nsresult rv;                                                      \
-    rv = NS_STATIC_CAST(nsIHTMLContent *, this)->GetHTMLAttribute(nsHTMLAtoms::_atom, val); \
+    rv = GetHTMLAttribute(nsHTMLAtoms::_atom, val);                   \
     *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;                        \
     return NS_OK;                                                     \
   }                                                                   \
@@ -603,10 +604,10 @@ protected:
   {                                                                   \
     nsHTMLValue empty(eHTMLUnit_Empty);                               \
     if (aValue) {                                                     \
-      return NS_STATIC_CAST(nsIHTMLContent *, this)->SetHTMLAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE); \
+      return SetHTMLAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE);    \
     }                                                                 \
     else {                                                            \
-      NS_STATIC_CAST(nsIHTMLContent *, this)->UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, PR_TRUE);  \
+      UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, PR_TRUE);      \
       return NS_OK;                                                   \
     }                                                                 \
   }
@@ -623,7 +624,7 @@ protected:
     nsHTMLValue value;                                              \
     *aValue = -1;                                                   \
     if (NS_CONTENT_ATTR_HAS_VALUE ==                                \
-        NS_STATIC_CAST(nsIHTMLContent *, this)->GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {       \
+        GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {              \
       if (value.GetUnit() == eHTMLUnit_Integer) {                   \
         *aValue = value.GetIntValue();                              \
       }                                                             \
@@ -634,7 +635,7 @@ protected:
   _class::Set##_method(PRInt32 aValue)                              \
   {                                                                 \
     nsHTMLValue value(aValue, eHTMLUnit_Integer);                   \
-    return NS_STATIC_CAST(nsIHTMLContent *, this)->SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE); \
+    return SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE);    \
   }
 
 
