@@ -48,8 +48,7 @@ clobber::
 
 $(PROG1): $(OBJDIR) TestJarCache.cpp
 
-ZIPS=   $(MOZ_SRC)\$(MOZ_TOP)mozilla\dist\$(OBJDIR)\bin\chrome\blue.jar       \
-	$(MOZ_SRC)\$(MOZ_TOP)mozilla\dist\$(OBJDIR)\bin\chrome\chatzilla.jar  \
+ZIPS=   $(MOZ_SRC)\$(MOZ_TOP)mozilla\dist\$(OBJDIR)\bin\chrome\chatzilla.jar  \
 	$(MOZ_SRC)\$(MOZ_TOP)mozilla\dist\$(OBJDIR)\bin\chrome\classic.jar    \
 	$(MOZ_SRC)\$(MOZ_TOP)mozilla\dist\$(OBJDIR)\bin\chrome\comm.jar       \
 	$(MOZ_SRC)\$(MOZ_TOP)mozilla\dist\$(OBJDIR)\bin\chrome\en-US.jar      \

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= classic blue modern 
+DIRS		= classic modern 
 
 include $(topsrcdir)/config/rules.mk
 

@@ -32,14 +32,6 @@ install::
 		$(MAKE_INSTALL) classic\P3PPrivacyBroken.gif      $(DIST)\bin\chrome\classic\skin\classic\communicator
 		$(MAKE_INSTALL) classic\P3PPrivacyInProgress.gif  $(DIST)\bin\chrome\classic\skin\classic\communicator
 		$(MAKE_INSTALL) classic\privacyOverlay.css        $(DIST)\bin\chrome\classic\skin\classic\communicator
-		$(MAKE_INSTALL) blue\P3PDefault.gif               $(DIST)\bin\chrome\blue\skin\blue\communicator
-		$(MAKE_INSTALL) blue\P3PNoPrivacy.gif             $(DIST)\bin\chrome\blue\skin\blue\communicator
-		$(MAKE_INSTALL) blue\P3PPrivate.gif               $(DIST)\bin\chrome\blue\skin\blue\communicator
-		$(MAKE_INSTALL) blue\P3PNotPrivate.gif            $(DIST)\bin\chrome\blue\skin\blue\communicator
-		$(MAKE_INSTALL) blue\P3PPartialPrivacy.gif        $(DIST)\bin\chrome\blue\skin\blue\communicator
-		$(MAKE_INSTALL) blue\P3PPrivacyBroken.gif         $(DIST)\bin\chrome\blue\skin\blue\communicator
-		$(MAKE_INSTALL) blue\P3PPrivacyInProgress.gif     $(DIST)\bin\chrome\blue\skin\blue\communicator
-		$(MAKE_INSTALL) blue\privacyOverlay.css           $(DIST)\bin\chrome\blue\skin\blue\communicator
 		$(MAKE_INSTALL) modern\P3PDefault.gif             $(DIST)\bin\chrome\modern\skin\modern\communicator
 		$(MAKE_INSTALL) modern\P3PNoPrivacy.gif           $(DIST)\bin\chrome\modern\skin\modern\communicator
 		$(MAKE_INSTALL) modern\P3PPrivate.gif             $(DIST)\bin\chrome\modern\skin\modern\communicator

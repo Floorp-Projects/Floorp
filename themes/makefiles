@@ -1,5 +1,4 @@
 themes/Makefile
-themes/blue/Makefile
 themes/modern/Makefile
 themes/classic/communicator/win/Makefile
 themes/classic/communicator/sidebar/Makefile

@@ -30,8 +30,6 @@ embed_chrome: embed-jar.mn
 !else
 	nsinstall -D $(DIST)\Embed\tmpchrome\US
 	unzip -d $(DIST)\Embed\tmpchrome\US $(DIST)\bin\chrome\US.jar
-	nsinstall -D $(DIST)\Embed\tmpchrome\blue
-	unzip -d $(DIST)\Embed\tmpchrome\blue $(DIST)\bin\chrome\blue.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\chatzilla
 	unzip -d $(DIST)\Embed\tmpchrome\chatzilla $(DIST)\bin\chrome\chatzilla.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\classic

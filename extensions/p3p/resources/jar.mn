@@ -33,16 +33,6 @@ classic.jar:
         skin/classic/communicator/P3PPrivacyInProgress.gif   (skin/classic/P3PPrivacyInProgress.gif)
         skin/classic/communicator/privacyOverlay.css         (skin/classic/privacyOverlay.css)
 
-blue.jar:
-        skin/blue/communicator/P3PDefault.gif                (skin/blue/P3PDefault.gif)
-        skin/blue/communicator/P3PNoPrivacy.gif              (skin/blue/P3PNoPrivacy.gif)
-        skin/blue/communicator/P3PPrivate.gif                (skin/blue/P3PPrivate.gif)
-        skin/blue/communicator/P3PNotPrivate.gif             (skin/blue/P3PNotPrivate.gif)
-        skin/blue/communicator/P3PPartialPrivacy.gif         (skin/blue/P3PPartialPrivacy.gif)
-        skin/blue/communicator/P3PPrivacyBroken.gif          (skin/blue/P3PPrivacyBroken.gif)
-        skin/blue/communicator/P3PPrivacyInProgress.gif      (skin/blue/P3PPrivacyInProgress.gif)
-        skin/blue/communicator/privacyOverlay.css            (skin/blue/privacyOverlay.css)
-
 modern.jar:
         skin/modern/communicator/P3PDefault.gif              (skin/modern/P3PDefault.gif)
         skin/modern/communicator/P3PNoPrivacy.gif            (skin/modern/P3PNoPrivacy.gif)
