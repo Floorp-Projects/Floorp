@@ -564,6 +564,15 @@ endif # MOZ_OPTIMIZE == 1
 LDFLAGS		+= $(MOZ_OPTIMIZE_LDFLAGS)
 endif # MOZ_OPTIMIZE
 
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+ifdef USE_STATIC_LIBS
+RTL_FLAGS += /Gd-
+else # !USE_STATIC_LIBS
+RTL_FLAGS += /Gd+
+endif
+endif
+
+
 ifeq ($(OS_ARCH),WINNT)
 #// Currently, unless USE_STATIC_LIBS is defined, the multithreaded
 #// DLL version of the RTL is used...
