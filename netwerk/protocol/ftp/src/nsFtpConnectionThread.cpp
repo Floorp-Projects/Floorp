@@ -962,11 +962,15 @@ nsFtpState::S_pass() {
     mResponseMsg = "";
 
     if (mAnonymous) {
-        char* anonPassword;
-        nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
-        if (NS_SUCCEEDED(rv) || pPref) 
-            rv = pPref->CopyCharPref("network.ftp.anonymous_password", &anonPassword);
-        if (NS_SUCCEEDED(rv) && anonPassword && *anonPassword != '\0') {
+        char* anonPassword = nsnull;
+        PRBool useRealEmail = PR_FALSE;
+        nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv));
+        if (NS_SUCCEEDED(rv) && pPref) {
+            rv = pPref->GetBoolPref("advanced.mailftp", &useRealEmail);
+            if (NS_SUCCEEDED(rv) && useRealEmail)
+                rv = pPref->CopyCharPref("network.ftp.anonymous_password", &anonPassword);
+        }
+        if (NS_SUCCEEDED(rv) && useRealEmail && anonPassword && *anonPassword != '\0') {
             passwordStr.Append(anonPassword);
             nsMemory::Free(anonPassword);
         }
