@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.22 $ 
-# $Date: 2002/05/09 03:09:52 $ 
+# $Revision: 1.23 $ 
+# $Date: 2002/12/10 19:28:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -343,7 +343,7 @@ sub status2header_background_gif {
 
   for ($i=0; $i <= $#latest_status; $i++) {
     my ($status) = $latest_status[$i];
-    my ($out) = $STATUS{$status}{'header_background_gif'};
+    my ($out) = $STATUS{$status}{'header_background_gif'} || '';
     push @out, $out;
   }
 
