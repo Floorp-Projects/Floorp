@@ -27,18 +27,6 @@
 { 0x4804d230, 0x703a, 0x11d2,    \
 { 0x8d, 0xbc, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
 
-typedef enum
-{
-  nsMIMEEncoding_default            = 0,
-  nsMIMEEncoding_quoted_printable   = 1,
-  nsMIMEEncoding_base_64            = 2,
-  nsMIMEEncoding_binary             = 3,
-  nsMIMEEncoding_e7bit              = 4,
-  nsMIMEEncoding_e8bit              = 5,
-  nsMIMEEncoding_none               = 6
-} nsMIMEEncoding;
-
-
 class nsIMIMEBodyPart : public nsISupports
 {
 

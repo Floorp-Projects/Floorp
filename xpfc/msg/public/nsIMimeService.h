@@ -21,11 +21,14 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsIMIMEMessage.h"
 
 //08d3c0f0-6f90-11d2-8dbc-00805f8a7ab6
 #define NS_IMIME_SERVICE_IID   \
 { 0x08d3c0f0, 0x6f90, 0x11d2,    \
 { 0x8d, 0xbc, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
+
+
 
 class nsIMIMEService : public nsISupports
 {

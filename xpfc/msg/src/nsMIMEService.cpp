@@ -18,6 +18,8 @@
 
 #include "nsMIMEService.h"
 #include "nsxpfcCIID.h"
+#include "mime.h"
+#include "nsMIMEMessage.h"
 
 static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kMIMEServiceIID,   NS_IMIME_SERVICE_IID);
