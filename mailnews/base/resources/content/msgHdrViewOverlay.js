@@ -58,7 +58,6 @@ var abAddressCollector = Components.classes[abAddressCollectorContractID].getSer
 var numOfEmailsInEnumerator;
 var numOfEmailsInToField = 0;
 var numOfEmailsInCcField = 0;
-var numOfEmailsInFromField = 0;
 
 // var used to determine whether to show the toggle button at the
 // beginning or at the end of a list of emails in to/cc fields.
@@ -368,10 +367,6 @@ function ClearEmailFieldWithButton(parentDiv, headerName)
         if (numOfEmailsInCcField < gNumOfEmailsToShowToggleButtonInFront)
             delIndex = 0;
     }
-    else {
-        if (numOfEmailsInFromField < gNumOfEmailsToShowToggleButtonInFront)
-            delIndex = 0;
-    }
 
     while (parentDiv.childNodes.length > 1)
       parentDiv.removeChild(parentDiv.childNodes[delIndex]);
@@ -441,8 +436,6 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
         numOfEmailsInToField = numOfEmailsInEnumerator;
     else if (currentHeaderName == "cc")
         numOfEmailsInCcField = numOfEmailsInEnumerator;
-    else if (currentHeaderName == "from") 
-        numOfEmailsInFromField = numOfEmailsInEnumerator;
 
     var enumerator = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
     enumerator = enumerator.QueryInterface(Components.interfaces.nsISimpleEnumerator);
@@ -576,6 +569,11 @@ function UpdateMessageHeaders()
     OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData["cc"].headerValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon, "cc");
   else
     OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, "", true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon, "");
+
+  if (currentHeaderData["reply-to"])
+    OutputEmailAddresses(msgPaneData.ReplyToBox, msgPaneData.ReplyToValue, currentHeaderData["reply-to"].headerValue, false, "", "", "reply-to"); 
+  else
+    OutputEmailAddresses(msgPaneData.ReplyToBox, msgPaneData.ReplyToValue, "", false, "", "", ""); 
   
   if (currentHeaderData["newsgroups"])
     OutputNewsgroups(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData, "newsgroups");
@@ -781,7 +779,7 @@ function ProcessHeaderValue(containingBox, containerNode, header, boxPartOfPopup
     
     var headerName = header.headerName;
     headerName = headerName.toLowerCase();
-    if (!boxPartOfPopup && (headerName == "cc" || headerName == "from" || headerName == "to"))
+    if (!boxPartOfPopup && (headerName == "cc" || headerName == "from" || headerName == "to" || headerName == "reply-to"))
     {
       OutputEmailAddresses(containingBox, containerNode, header.headerValue, false, "", "", headerName)
       return;
