@@ -72,6 +72,7 @@
 #define APPLICATION_JAVAARCHIVE             "application/java-archive"
 #define APPLICATION_MARIMBA                 "application/marimba"
 #define APPLICATION_XMARIMBA                "application/x-marimba"
+#define APPLICATION_XPINSTALL               "application/x-xpinstall"
 
 #define AUDIO_BASIC                         "audio/basic"
 
