@@ -343,7 +343,6 @@ il_scale_CI_row(
  *---------------------------------------------------------------------------*/
 static void
 il_alpha_mask(
-    int HasAlphaCh,            /* flag */
     uint8 *src,                 /* RGBa, input data */
     int src_len,                /* Number of pixels in source row */
     int x_offset,               /* Destination offset from left edge */
@@ -373,16 +372,16 @@ il_alpha_mask(
         return;
 
 /* Add a bit to the row of mask bits.  Flush accumulator to memory if full. */
-#define SHIFT_IMAGE_MASK(not_transparent_flag)								  \
+#define SHIFT_IMAGE_MASK(not_transparent_flag)			  \
     {																		  \
         fgmask32 |=  ((uint32)not_transparent_flag    ) << M32(mask_bit);     \
         bgmask32 |=  ((uint32)not_transparent_flag ^ 1) << M32(mask_bit);     \
 																			  \
-        /* Filled up 32-bit mask word.  Write it to memory. */				  \
+        /* Filled up 32-bit mask word.  Write it to memory. */		  \
         if (mask_bit-- == 0) {                                                \
             uint32 mtmp = *m;                                                 \
             mtmp |= fgmask32;                                                 \
-         	if (draw_mode == ilErase)                                         \
+         	if (draw_mode == ilErase)                                     \
                 mtmp &= ~bgmask32;                                            \
             *m++ = mtmp;                                                      \
             mask_bit = 31;													  \
@@ -391,7 +390,6 @@ il_alpha_mask(
         }																	  \
         output_bits_remaining--;                                              \
     }
- 
 
     /* Two cases */
     /* Scaling down ? (or source and dest same size) ... */   
@@ -515,10 +513,95 @@ il_generate_scaled_transparency_mask(
         *m = mtmp; 
     }
 
-#undef SHIFT_IMAGE_MASK    
+ 
 }
-
-
+ 
+ /*-----------------------------------------------------------------------------
+  * Scale 1-bit transparency mask:
+  * Perform horizontal scaling if requested using a Bresenham algorithm.
+  * Accumulate the mask in 32-bit chunks for efficiency.
+  *---------------------------------------------------------------------------*/
+ static void
+ il_scale_mask(
+     uint8 *src,                 /* input mask data */
+     int src_len,                /* Number of pixels in source row */
+     int x_offset,               /* Destination offset from left edge */
+     uint8 XP_HUGE *maskp,       /* Output pointer, left-justified bitmask */
+     int mask_len,               /* Number of pixels in output row */
+     il_draw_mode draw_mode)     /* ilOverlay or ilErase */
+ {
+ 
+     int not_transparent,n = 0;
+     int output_bits_remaining = mask_len;
+ 
+     uint32 bgmask32 = 0;        /* 32-bit temporary mask accumulators */
+     uint32 fgmask32 = 0;
+ 
+     uint8 src_bit;              /* next bit to read in setmask32 */
+     int mask_bit;               /* next bit to write in setmask32 */
+     
+     uint32 *m = ((uint32*)maskp) + (x_offset >> 5);
+     mask_bit = ~x_offset & 0x1f;
+ 
+     src_bit = 0x07;
+ 
+     PR_ASSERT(mask_len);
+     /* Handle case in which we have a mask for a non-transparent
+        image.  This can happen when we have a LOSRC that is a transparent
+        GIF and a SRC that is a JPEG.  For now, we avoid crashing.  Later
+        we should fix that case so it does the right thing and gets rid
+        of the mask. */
+     if (!src)
+         return;
+ 
+     /* Three cases */
+ //	if (src_len == mask_len)
+     /* No scaling (source and dest same size) ... */   
+ //		XP_MEMCPY(maskp, src, src_len);
+ //    else
+ 	if (src_len >= mask_len)     /* Scaling down */   
+  {      
+      while (output_bits_remaining ) {
+ 			   not_transparent = ((*src & ((uint8)1 << src_bit)) != 0);
+ 
+         SHIFT_IMAGE_MASK(not_transparent);
+         n += src_len;
+ 
+         while ( n >= mask_len){
+ 				   if (src_bit-- == 0){                                                
+ 	           src ++;
+ 				  	 src_bit = 7;													  
+           }
+           n -= mask_len;
+         }
+      }
+  } else /* Scaling up */
+  {
+     while (output_bits_remaining){
+        n += mask_len;
+ 			  not_transparent = ((*src & ((uint8)1 << src_bit)) != 0);
+ 
+        while (n >= src_len){
+ 				   SHIFT_IMAGE_MASK(not_transparent);
+           n -= src_len;
+        }
+ 
+ 			  if (src_bit-- == 0){                                                
+ 	         src ++;
+ 				   src_bit = 7;													  
+        }
+     }
+  }
+     /* End of scan line. Write out any remaining mask bits. */ 
+  if (mask_bit < 31){
+         uint32 mtmp = *m;
+         mtmp |= fgmask32;
+         if (draw_mode == ilErase)
+             mtmp &= ~bgmask32; 
+         *m = mtmp; 
+   }
+}
+#undef SHIFT_IMAGE_MASK   
 /*-----------------------------------------------------------------------------
  * When color quantization (possibly accompanied by dithering) takes
  * place, the background pixels in a transparent image that overlays a
@@ -582,6 +665,8 @@ il_reset_background_pixels(
         }
     }
 }
+
+
 
 static void
 il_generate_byte_mask(
@@ -675,19 +760,20 @@ il_emit_row(
                            in which case ranges from 1-n. */
 {
     IL_GroupContext *img_cx = ic->img_cx;
-	IL_Pixmap *image = ic->image;
+	  IL_Pixmap *image = ic->image;
     IL_Pixmap *mask = ic->mask;
     NI_PixmapHeader *src_header = ic->src_header;
     NI_PixmapHeader *img_header = &image->header;
     NI_PixmapHeader *mask_header = 0;
     NI_ColorSpace *src_color_space = src_header->color_space;
     NI_ColorSpace *img_color_space = img_header->color_space;
-	uint8 XP_HUGE *out;
+	  uint8 XP_HUGE *out;
     uint8 XP_HUGE *dp;
     uint8 XP_HUGE *mp;
-	uint8 XP_HUGE *maskp = NULL;
+	  uint8 XP_HUGE *maskp = NULL;
+    uint8 XP_HUGE *alphabits = NULL;
     uint8 *byte_mask = NULL;
-	uint8 XP_HUGE *srcbuf = rgbbuf;
+	  uint8 XP_HUGE *srcbuf = rgbbuf;
     uint8 *p = cbuf;
     uint8 *pl = cbuf+len;
 	int drow_start, drow_end, row_count, color_index, dup, do_dither;
@@ -763,8 +849,52 @@ il_emit_row(
     row_count = drow_end - drow_start + 1;
     column_count = dcolumn_end - dcolumn_start + 1;
 
-    /* If a transparent image appears over a background image ... */
-    if (mask) {
+    /* If an alphamask (8 or 1 bit) exists......*/
+    if(img_header->alpha_bits) {  
+       mask_header = &mask->header;
+       img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
+                                          IL_LOCK_BITS);
+
+#ifdef _USD
+        alphabits = (uint8 XP_HUGE *)mask->bits + 
+            (mask_header->height - drow_start - 1) * mask_header->widthBytes;
+#else
+        alphabits = (uint8 XP_HUGE *)mask->bits +
+            drow_start * mask_header->widthBytes;
+#endif
+       if(img_header->alpha_bits == 1)
+       {
+         il_alpha_mask(rgbbuf, (int)len, dcolumn_start, 
+                alphabits, column_count,draw_mode);  
+
+         uint8 *tmpbuf;
+         int i;
+
+         tmpbuf = rgbbuf;
+         for(i=0; i < column_count; i++){
+                *rgbbuf++ = *tmpbuf++;
+                *rgbbuf++ = *tmpbuf++;
+                *rgbbuf++ = *tmpbuf++;
+                tmpbuf++;  /* strip off alpha channel */
+            }
+       }
+       else{ /* alpha_bits=8*/
+
+          uint8 *tmpbuf;
+          int i;
+
+          tmpbuf = rgbbuf;
+            for(i=0; i < column_count; i++){
+                *rgbbuf++ = *tmpbuf++;
+                *rgbbuf++ = *tmpbuf++;
+                *rgbbuf++ = *tmpbuf++;
+                *alphabits++ = *tmpbuf++;  /* put alpha channel in separate buffer */
+            }
+       } /* else */
+       img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
+                                          IL_UNLOCK_BITS);
+    } else if(mask){/* If a mask not attributed to an alpha channel exists..ie:
+                       a transparent image appears over a background image ... */
         mask_header = &mask->header;
 
         /* Bug, we retain the mask from a transparent
@@ -780,33 +910,34 @@ il_emit_row(
 		maskp = (uint8 XP_HUGE *)mask->bits +
             drow_start * mask_header->widthBytes;
 #endif
-       
-        if(!ic->image->header.is_interleaved_alpha){
-            il_generate_scaled_transparency_mask(src_header->transparent_pixel,
+
+               /* We know this mask is prescaled: */
+         if (ic->type == IL_ART){
+                       /* No scaling needed*/
+              if (len == column_count)
+                 XP_MEMCPY(maskp, cbuf, mask_header->widthBytes);
+              else /* Scale */
+                 il_scale_mask(cbuf, (int)len,
+                               dcolumn_start,
+                               maskp, column_count,
+                               draw_mode);
+
+                  /* Set to NULL, don't let anyone use it by mistake. */
+                  cbuf = NULL;
+
+               }else{
+
+               il_generate_scaled_transparency_mask(src_header->transparent_pixel,
                                              cbuf, (int)len,
                                              dcolumn_start,
                                              maskp, column_count,
-                                             draw_mode);                
-        }else{ /* is alpha */
+                                             draw_mode);  
 
-            uint8 *tmpbuf;
-            int i;
-            il_alpha_mask(1,rgbbuf, (int)len, dcolumn_start, 
-                maskp, column_count,draw_mode);                
-
-            tmpbuf = rgbbuf;
-            for(i=0; i<column_count; i++){
-                *rgbbuf++ = *tmpbuf++;
-                *rgbbuf++ = *tmpbuf++;
-                *rgbbuf++ = *tmpbuf++;
-                tmpbuf++;  /* strip off alpha channel */
-            }
-      
-        }
+               }
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
                                           IL_UNLOCK_BITS);
-    }
-
+   }
+    
 	if (!ic->converter) {
 
 #ifdef M12N
