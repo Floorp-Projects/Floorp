@@ -3016,7 +3016,7 @@ nsGfxListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
   if (mouseEvent) {
     PRUint16 whichButton;
     if (NS_SUCCEEDED(mouseEvent->GetButton(&whichButton))) {
-      return whichButton != 1?PR_FALSE:PR_TRUE;
+      return whichButton != 0?PR_FALSE:PR_TRUE;
     }
   }
   return PR_FALSE;
