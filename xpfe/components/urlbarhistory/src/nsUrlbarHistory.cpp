@@ -31,6 +31,9 @@
 #include "nsIGenericFactory.h"
 #include "nsString.h"
 #include "nsIAutoCompleteResults.h"
+#include "nsISimpleEnumerator.h"
+
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 static char * ignoreArray[] = {
 		"http://",
@@ -39,6 +42,11 @@ static char * ignoreArray[] = {
 		"http://www.",
         "keyword:"
 	};
+static nsIRDFResource * kNC_CHILD;
+static nsIRDFResource * kNC_URLBARHISTORY;
+static nsIRDFService * gRDFService;
+
+
 //*****************************************************************************
 //***    nsUrlbarHistory: Object Management
 //*****************************************************************************
@@ -50,18 +58,40 @@ nsUrlbarHistory::nsUrlbarHistory():mLength(0)
    for(PRInt32 i=0; i< cnt; i++) 
      mIgnoreArray.AppendElement((void *) new nsString(NS_ConvertASCIItoUCS2(ignoreArray[i])));
    
+   nsresult res;
+
+   //nsIRDFService* rdfService;
+   res = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService),
+	                                            (nsISupports **)&gRDFService);
+   if (gRDFService) {
+	   //printf("$$$$ Got RDF SERVICE $$$$\n");
+     res = gRDFService->GetDataSource("rdf:localstore", getter_AddRefs(mDataSource));
+
+	 res = gRDFService->GetResource("http://home.netscape.com/NC-rdf#child", &kNC_CHILD);
+	 res = gRDFService->GetResource("nc:urlbar-history", &kNC_URLBARHISTORY);
+   }
+
 }
 
 
 nsUrlbarHistory::~nsUrlbarHistory()
 {
-    ClearHistory();
+	//Entries are now in RDF
+    //ClearHistory();
 	PRInt32 cnt = sizeof(ignoreArray)/sizeof(char *);
     for(PRInt32 j=0; j< cnt; j++)  {
 		nsString * ignoreEntry = (nsString *) mIgnoreArray.ElementAt(j);
 	    delete ignoreEntry;
 	}
 	mIgnoreArray.Clear();
+	if (gRDFService)
+    {
+        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+        gRDFService = nsnull;
+    }
+	mDataSource = nsnull;
+	NS_IF_RELEASE(kNC_URLBARHISTORY);
+	NS_IF_RELEASE(kNC_CHILD);
 }
 
 //*****************************************************************************
@@ -83,82 +113,61 @@ NS_INTERFACE_MAP_END
 	NS_IMETHODIMP
 nsUrlbarHistory::ClearHistory()
 {
-  // This procedure should clear all of the entries out of the structure, but
-  // not delete the structure itself.
-  // 
-  // This loop takes each existing entry in the list and replaces it with
-  // a blank string, decrementing the size of the list by one each time.
-  // Eventually, we should end up with a zero sized list.
- 
+     nsCOMPtr<nsISimpleEnumerator>    entries;
+  	 nsresult rv = mDataSource->GetTargets(kNC_URLBARHISTORY,
+                                    kNC_CHILD,
+                                    true,
+									getter_AddRefs(entries));
+     NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
 
-  for (PRInt32 i=0; i<=mLength; i++) 
-  {
-     nsString * entry = nsnull;
-     entry = (nsString *)mArray.ElementAt(i);
-     delete entry;
-     mLength--;
-  }
-  mLength = 0;   // just to make sure
-  mArray.Clear();
-  return NS_OK;
+	 PRBool moreElements = PR_FALSE;
+
+     while (NS_SUCCEEDED(entries->HasMoreElements(&moreElements)) && (moreElements == PR_TRUE)) {
+	  // printf("nsUrlbarHistory::ClearHistory Entries has more elements\n");
+       nsCOMPtr<nsISupports> baseNode;
+	   nsCOMPtr<nsIRDFNode> node;
+    
+	   entries->GetNext(getter_AddRefs(baseNode));
+       if (baseNode) {
+		 //printf("Got a node\n");
+         node = do_QueryInterface(baseNode);
+		 if (node) {
+		    rv = mDataSource->Unassert(kNC_URLBARHISTORY,
+			                        kNC_CHILD,
+									node);
 }
-
-
-/* Add an entry to the History list at mIndex and 
- * increment the index to point to the new entry
- */
-NS_IMETHODIMP
-nsUrlbarHistory::AddEntry(const char * aURL)
-{
-   NS_ENSURE_ARG(aURL);   
-
-   PRInt32 i = mArray.Count();
-   nsCString newEntry(aURL);
-   for (i=0; i<mArray.Count(); i++)
-   {
-       nsString * entry = (nsString *)mArray.ElementAt(i);
-	   if ( (*entry).EqualsWithConversion(newEntry)) //Entry already in the list
-		   return NS_OK;
-
    }
-   nsString * entry = nsnull;
-   entry = new nsString(NS_ConvertASCIItoUCS2(aURL));
-   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
-   if (entry->Length() == 0) {
-	   //Don't add null strings in to the list
-       delete entry;
+	 } // while
 	   return NS_OK;
    }
-   nsresult rv = mArray.AppendElement((void *) entry);
-   if (NS_SUCCEEDED(rv))
-	   mLength++;             //Increase the count 
 
-   return rv;
-}
 
 /* Get size of the history list */
 NS_IMETHODIMP
 nsUrlbarHistory::GetCount(PRInt32 * aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-	*aResult = mLength;
-	return NS_OK;
-}
+	PRInt32   ubhCount = 0;
 
+	printf("In nsUrlbarHistory::GetCount\n");
+	nsCOMPtr<nsISimpleEnumerator>    entries;
+  	nsresult rv = mDataSource->GetTargets(kNC_URLBARHISTORY,
+                                    kNC_CHILD,
+                                    true,
+									getter_AddRefs(entries));
+    NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
 
-/* Get the entry at a given index */
-NS_IMETHODIMP
-nsUrlbarHistory::GetEntryAtIndex(PRInt32 aIndex, char ** aResult)
-{
+	PRBool moreElements = PR_FALSE;
+
+    while (NS_SUCCEEDED(entries->HasMoreElements(&moreElements)) && (moreElements == PR_TRUE)) {
+		nsCOMPtr<nsISupports>   entry;
+		entries->GetNext(getter_AddRefs(entry));
+		ubhCount ++;
+	 }  // while
    
-	NS_ENSURE_ARG_POINTER(aResult);
-	NS_ENSURE_TRUE((aIndex>=0 && aIndex<mLength), NS_ERROR_FAILURE);
-   
-	nsString * entry = nsnull;
-	entry = (nsString *) mArray.ElementAt(aIndex);
-    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
-	*aResult = entry->ToNewCString();
+	printf("In nsUrlbarHistory:: Out of the while loop\n");
 
+	*aResult = ubhCount;
     return NS_OK;
 }
 
@@ -190,7 +199,6 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
         return NS_ERROR_NULL_POINTER;
       
 
-
     if (uSearchString[0] == 0)
     {
         listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
@@ -212,7 +220,7 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
 	}  //for
     
     nsCOMPtr<nsIAutoCompleteResults> results;
-	/*
+	/* Don't call SearchPreviousResults. It is buggy 
     if (NS_FAILED(SearchPreviousResults(uSearchString, previousSearchResult)))
     {
         results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_PROGID);
@@ -332,22 +340,39 @@ NS_IMETHODIMP
 nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults* results)
 {
     nsresult rv = NS_OK;
-
+	nsCOMPtr<nsISimpleEnumerator>  entries;
+    PRUnichar * rdfValue = nsnull;
     nsAutoString searchAutoStr(searchStr);
-
-	PRInt32 cnt = mArray.Count();
-	for(PRInt32 i=cnt-1; i>=0; i--)
-	{
-       nsString * item = nsnull;
+	char * searchCSTR = searchAutoStr.ToNewCString();
 	   PRUnichar * match = nsnull;
 	   PRInt32 index = -1;
-	   item = (nsString*) mArray.ElementAt(i);
 	   
+//	printf("In SEARCHCACHE searching for %s\n", searchCSTR);
+	if (!gRDFService || !kNC_URLBARHISTORY || !kNC_CHILD || !mDataSource)
+		return NS_ERROR_FAILURE;
 
-	   if (item) {
-		// printf("SearchCache::Comparing %s with %s\n", searchAutoStr.ToNewCString(),item->ToNewCString());
-	     index = item->Find(searchStr, PR_TRUE);
-	     match = item->ToNewUnicode();
+	rv = mDataSource->GetTargets(kNC_URLBARHISTORY,
+                                 kNC_CHILD,
+                                 true,
+								 getter_AddRefs(entries));
+     NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
+
+	 PRBool moreElements = PR_FALSE;
+     while (NS_SUCCEEDED(entries->HasMoreElements(&moreElements)) && moreElements) {
+	    nsCOMPtr<nsISupports>  entry;
+		nsCOMPtr<nsIRDFLiteral>  literal;
+		nsAutoString rdfAStr;
+
+		rv = entries->GetNext(getter_AddRefs(entry));
+		if (entry) {
+           literal = do_QueryInterface(entry);
+           literal->GetValue(&rdfValue);
+		}
+		if (rdfValue) {
+		    rdfAStr = (rdfValue);
+			index = rdfAStr.Find(searchStr, PR_TRUE);
+			match = rdfAStr.ToNewUnicode();
+			//  printf("SearchCache Round I-found item %s in rdf\n", rdfAStr.ToNewCString());
 	   }
 	   if (index < 0) {
 		   // strip off any http:// ftp:// and see if that matches.
@@ -358,14 +383,16 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 			 if (searchSubStr) {
 			   searchSubStr++;searchSubStr++;
 		  //     printf("SearchCache::Comparing %s with %s\n", searchSubStr, item->ToNewCString());
-		       index = item->Find(searchSubStr, PR_TRUE);
+		        index = rdfAStr.Find(searchSubStr, PR_TRUE);
 		       if (match)
 			     Recycle(match);
-		       match = item->ToNewUnicode();
+		        match = rdfAStr.ToNewUnicode();
+			    //printf("SearchCache Round II-found item %s in rdf\n", rdfAStr.ToNewCString());
 			 }
 		   }
 		   Recycle(searchCString);
 	   }
+
 	   if (index >=0) {
            // Item found. Create an AutoComplete Item 
 		   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_PROGID));
@@ -380,8 +407,10 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
                 array->AppendElement((nsISupports*)newItem);
 		   }		  
 	   }
+	   Recycle(rdfValue);
 	   Recycle(match);
-	}  //for    
+	}  //while
+
     return rv;
 }
 

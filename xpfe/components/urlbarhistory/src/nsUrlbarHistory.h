@@ -30,6 +30,9 @@
 #include "nsIUrlbarHistory.h"
 #include "nsIAutoCompleteSession.h"
 #include "nsVoidArray.h"
+#include "nsIRDFService.h"
+#include "nsIRDFDataSource.h"
+#include "nsRDFCID.h"
 
 class nsUrlbarHistory: public nsIUrlbarHistory,
                        public nsIAutoCompleteSession
@@ -51,6 +54,7 @@ private:
     nsVoidArray   mArray;
 	PRInt32 mLength;
 	nsVoidArray  mIgnoreArray;
+	nsCOMPtr<nsIRDFDataSource> mDataSource;
 };
 
 

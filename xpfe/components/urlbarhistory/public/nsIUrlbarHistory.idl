@@ -39,21 +39,9 @@
 interface nsIUrlbarHistory: nsISupports
 {
   /**
-    * Add a new Entry to the urlbar History List
-	* @param aEntry - The entry to add
-	* addEntry will make sure the entry is not already present in the list
-   */
-   void  addEntry(in string  aEntry);
-
-  /**
    * Get the size of the History list
    */
    readonly attribute long count;
-
-  /**
-   * Get the entry at a given index
-   */
-   string getEntryAtIndex(in long aIndex);
 
   /**
    * print the History contents
