@@ -278,13 +278,13 @@ js_list_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop
     }
 
     if (nsyms >= HASH_THRESHOLD) {
-	JSScopePrivate *priv = JS_malloc(cx, sizeof(JSScopePrivate));
-	if (!priv) return NULL;
-	priv->context = cx;
-	priv->scope = scope;
+	JSScopePrivate *new_priv = JS_malloc(cx, sizeof(JSScopePrivate));
+	if (!new_priv) return NULL;
+	new_priv->context = cx;
+	new_priv->scope = scope;
 	table = JS_NewHashTable(nsyms, js_hash_id,
 				JS_CompareValues, JS_CompareValues,
-				&hash_scope_alloc_ops, priv);
+				&hash_scope_alloc_ops, new_priv);
 	if (table) {
 	    for (sym = list; sym; sym = next) {
 		/* Save next for loop update, before it changes in lookup. */
