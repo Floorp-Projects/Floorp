@@ -257,7 +257,7 @@ function SetWidgetsForMisspelledWord()
 function CheckWord()
 {
   word = dialog.ReplaceWordInput.value;
-  if (!word) {
+  if (word) {
     isMisspelled = spellChecker.CheckCurrentWord(word);
     if (isMisspelled) {
       MisspelledWord = word;
