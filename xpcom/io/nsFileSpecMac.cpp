@@ -1131,10 +1131,13 @@ const char* nsFileSpec::GetCString() const
 {
     if (mPath.IsEmpty())
     {
-        const_cast<nsFileSpec*>(this)->mPath
-            = MacFileHelpers::PathNameFromFSSpec(mSpec, true);
-        if (mPath.IsEmpty())
+        char* path = MacFileHelpers::PathNameFromFSSpec(mSpec, true);
+        if (path != NULL) {
+	        const_cast<nsFileSpec*>(this)->mPath = path;	// operator =() copies the string!!!
+	        delete[] path;
+	    } else {
             const_cast<nsFileSpec*>(this)->mError = NS_ERROR_OUT_OF_MEMORY;
+        }
     }
     return mPath;
 }
