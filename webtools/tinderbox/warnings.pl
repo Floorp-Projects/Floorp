@@ -292,8 +292,8 @@ sub find_build_record {
   tb_load_data();
   print STDERR "done\n";
 
-  for (my $ii=1; $ii <= $name_count; $ii++) {
-    for (my $tt=1; $tt <= $time_count; $tt++) {
+  for (my $ii=0; $ii <= $name_count; $ii++) {
+    for (my $tt=0; $tt <= $time_count; $tt++) {
       if (defined($br = $build_table->[$tt][$ii])
           and $br->{logfile} eq $log_file) {
         return $br;
