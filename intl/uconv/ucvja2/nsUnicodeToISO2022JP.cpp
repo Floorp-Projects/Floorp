@@ -111,12 +111,12 @@ nsresult nsUnicodeToISO2022JP::ChangeCharset(PRInt32 aCharset,
     case 2:
       aDest[0] = 0x1b;
       aDest[1] = '$';
-      aDest[2] = '@';
+      aDest[2] = 'B';
       break;
     case 3:
       aDest[0] = 0x1b;
       aDest[1] = '$';
-      aDest[2] = 'B';
+      aDest[2] = '@';
       break;
   }
 
