@@ -284,11 +284,9 @@ endif
 	cp $(topsrcdir)/dist/bin/components/proxyObj*.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)jsd*$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/docshell*.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/downloadmanager.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/extensions.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/migration.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsBackgroundUpdateService.js ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/nsDownloadProgressListener.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsExtensionManager.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsSetDefaultBrowser.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/passwordmgr.xpt ./MozillaSunbird/components
