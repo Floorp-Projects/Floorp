@@ -545,7 +545,7 @@ float nsString::ToFloat(PRInt32* aErrorCode) const
  * @update	gess 10/01/98
  * @param   aErrorCode will contain error if one occurs
  * @param   aRadix tells us what base to expect the string in.
- * @return  int rep of string value
+ * @return  int rep of string value; aErrorCode gets set too: NS_OK, NS_ERROR_ILLEGAL_VALUE
  */
 PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
   PRInt32     result = 0;
@@ -554,6 +554,8 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
   PRUnichar   theChar;
   PRInt32     theShift=0;
   PRInt32     theMult=1;
+
+  *aErrorCode = (0<mLength) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
 
   // Skip trailing non-numeric...
   while (cp >= mStr) {
@@ -587,13 +589,14 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
       break;
     }
     else{
+      *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
+      result=0;
       break;
     }
     result+=digit*theMult;
     theMult*=aRadix;
   }
   
-  *aErrorCode = NS_OK;
   return result;
 }
 
