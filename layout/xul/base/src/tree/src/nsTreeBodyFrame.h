@@ -370,6 +370,11 @@ protected: // Data Members
         : mValueArray(~PRInt32(0)) {
       };
 
+      ~Slots() {
+        if (mTimer)
+          mTimer->Cancel();
+      };
+
       friend class nsTreeBodyFrame;
 
     protected:
