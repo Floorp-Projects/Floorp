@@ -367,7 +367,9 @@ nsNNTPProtocol::~nsNNTPProtocol()
 	NS_IF_RELEASE(m_outputConsumer);
 	NS_IF_RELEASE(m_transport);
 
-	// free our local state
+	// free our local state 
+	if (m_lineStreamBuffer)
+		delete m_lineStreamBuffer;
 }
 
 void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
@@ -430,6 +432,8 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
+
+	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE);
 
 	m_nextState = SEND_FIRST_NNTP_COMMAND;
 	m_nextStateAfterResponse = NNTP_CONNECT;
@@ -1016,55 +1020,6 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 // End of nsIStreamListenerSupport
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-PRInt32 nsNNTPProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line)
-{
-	// I haven't looked into writing this yet. We have a couple of possibilities:
-	// (1) insert NET_BufferedReadLine *yuck* into here or better yet into the nsIInputStream
-	// then we can just turn around and call it here. 
-	// OR
-	// (2) we write "protocol" specific code for news which looks for a CRLF in the incoming
-	// stream. If it finds it, that's our new line that we put into @param line. We'd
-	// need a buffer (m_dataBuf) to store extra info read in from the stream.....
-
-	// read out everything we've gotten back and return it in line...this won't work for much but it does
-	// get us going...
-
-	// XXX: please don't hold this quick "algorithm" against me. I just want to read just one
-	// line for the stream. I promise this is ONLY temporary to test out NNTP. We need a generic
-	// way to read one line from a stream. For now I'm going to read out one character at a time.
-	// (I said it was only temporary =)) and test for newline...
-
-	PRUint32 numBytesToRead = 0;  // MAX # bytes to read from the stream
-	PRUint32 numBytesRead = 0;	  // total number bytes we have read from the stream during this call
-	inputStream->GetLength(&length); // refresh the length in case it has changed...
-
-	if (length > OUTPUT_BUFFER_SIZE)
-		numBytesToRead = OUTPUT_BUFFER_SIZE;
-	else
-		numBytesToRead = length;
-
-	m_dataBuf[0] = '\0';
-	PRUint32 numBytesLastRead = 0;  // total number of bytes read in the last cycle...
-	do
-	{
-		inputStream->Read(m_dataBuf+numBytesRead /* offset into m_dataBuf */, 1 /* read just one byte */, &numBytesLastRead);
-		numBytesRead += numBytesLastRead;
-	} while (numBytesRead <= numBytesToRead && numBytesLastRead > 0 && m_dataBuf[numBytesRead-1] != LF);
-
-	m_dataBuf[numBytesRead] = '\0'; // null terminate the string.
-
-	// oops....we also want to eat up the '\n' and the \r'...
-	if (numBytesRead > 1 && m_dataBuf[numBytesRead-2] == '\r')
-		m_dataBuf[numBytesRead-2] = '\0'; // hit both cr and lf...
-	else
-		if (numBytesRead > 0 && (m_dataBuf[numBytesRead-1] == '\r' || m_dataBuf[numBytesRead-1] == '\n'))
-			m_dataBuf[numBytesRead-1] = '\0';
-
-	if (line)
-		*line = m_dataBuf;
-	return numBytesRead;
-}
-
 /*
  * Writes the data contained in dataBuffer into the current output stream. It also informs
  * the transport layer that this data is now available for transmission.
@@ -1112,14 +1067,19 @@ PRInt32 nsNNTPProtocol::SendData(const char * dataBuffer)
  */
 PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char * line;
+	char * line = nsnull;
 	PRInt32 status;
 
 	NS_PRECONDITION(nsnull != inputStream, "invalid input stream");
+	
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
 
-	status = (PRInt32) ReadLine(inputStream, length, &line);
-
-	NNTP_LOG_READ(m_dataBuf);
+	NNTP_LOG_READ(line);
 
     if(status == 0)
 	{
@@ -1210,6 +1170,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 #ifdef UNREADY_CODE
 		return net_display_html_error_state(ce);
 #else
+		PR_FREEIF(line);
 		return (0);
 #endif
 	}
@@ -1217,6 +1178,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	else
     	m_nextState = m_nextStateAfterResponse;
 
+	PR_FREEIF(line);
     return(0);  /* everything ok */
 }
 
@@ -1293,9 +1255,14 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 
 	if (MK_NNTP_RESPONSE_TYPE(m_responseCode) == MK_NNTP_RESPONSE_TYPE_OK)
 	{
-		char *line = NULL;
+		char *line = nsnull;
 
-		status = ReadLine(inputStream, length, &line);
+		PRBool pauseForMoreData = PR_FALSE;
+		line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+		if (pauseForMoreData)
+			status = 0; // record error
+		else
+			status = 1;
 
 		if(status == 0)
 		{
@@ -1365,11 +1332,19 @@ PRInt32 nsNNTPProtocol::SendListSearches()
 
 PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line = NULL;
+	char *line = nsnull;
 	PRInt32 status = 0;
 
 	NS_PRECONDITION(inputStream, "invalid input stream");
-	status = ReadLine(inputStream, length, &line);
+	
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
+
+	NNTP_LOG_READ(line);
 
 	if(status == 0)
 	{
@@ -1400,6 +1375,7 @@ PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, P
 		ClearFlag(NNTP_PAUSE_FOR_READ); 
 	}
 
+	PR_FREEIF(line);
 	return status;
 }
 
@@ -1416,9 +1392,15 @@ PRInt32 nsNNTPProtocol::SendListSearchHeaders()
 
 PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line = NULL;
+	char *line = nsnull;
 	PRInt32 status = 0; 
-	status = ReadLine(inputStream, length, &line);
+
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
 
 	if(status == 0)
 	{
@@ -1445,6 +1427,7 @@ PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStre
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	}
 
+	PR_FREEIF(line);
 	return status;
 }
 
@@ -1476,13 +1459,19 @@ PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUi
 	char *line = NULL;
 	PRInt32 status = 0;
 
-	status = ReadLine(inputStream, length, &line);
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
 
 	if(status == 0)
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
+		PR_FREEIF(line);
 		return MK_NNTP_SERVER_ERROR;
 	}
 	if (!line)
@@ -1517,6 +1506,7 @@ PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUi
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	}
 
+	PR_FREEIF(line);
 	return status;
 }
 
@@ -1552,13 +1542,19 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 	char *line = NULL;
 	PRInt32 status = 0;
 
-	status = ReadLine(inputStream, length, &line);
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
 
 	if(status == 0)
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
+		PR_FREEIF(line);
 		return MK_NNTP_SERVER_ERROR;
 	}
 	if (!line)
@@ -1587,6 +1583,7 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	}
 
+	PR_FREEIF(line);
 	return status;
 }
 
@@ -1996,12 +1993,20 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	PRInt32 status = 0;
 	nsresult rv = NS_OK;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
-	status = ReadLine(inputStream, length, &line);
+	
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
+
 	if(status == 0)
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
+		PR_FREEIF(line);
 		return(MK_NNTP_SERVER_ERROR);
 	}
 
@@ -2021,6 +2026,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	if (m_typeWanted == CANCEL_WANTED && m_responseCode != MK_NNTP_RESPONSE_ARTICLE_HEAD)
 	{
 		/* HEAD command failed. */
+		PR_FREEIF(line);
 		return MK_NNTP_CANCEL_ERROR;
 	}
 
@@ -2082,6 +2088,8 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 				PR_Write(m_tempArticleFile,(void *) outputBuffer,PL_strlen(outputBuffer));
 		}
 	}
+
+	PR_FREEIF(line);
 
 	return 0;
 }
@@ -2480,9 +2488,15 @@ PRInt32 nsNNTPProtocol::BeginNewsgroups()
 PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line, *s, *s1=NULL, *s2=NULL, *flag=NULL;
-	PRInt32 oldest, youngest;
+	PRInt32 oldest, youngest, status = 0;
 
-	PRInt32 status = ReadLine(inputStream, length, &line);
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
+
     if(status == 0)
     {
         m_nextState = NNTP_ERROR;
@@ -2524,6 +2538,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 #ifdef DEBUG_bienvenu1
 				PR_LogPrint("listing xactive for %s\n", m_groupName);
 #endif
+				PR_FREEIF(line);
 				return 0;
 		  }
 		}
@@ -2536,6 +2551,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 		}
 #endif
 
+		PR_FREEIF(line);
 		if(status > 0)
         	return MK_DATA_LOADED;
 		else
@@ -2590,6 +2606,8 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 	{
       m_newsHost->SetGroupNeedsExtraInfo(line, PR_TRUE);
 	}
+
+	PR_FREEIF(line);
     return(status);
 }
 
@@ -2618,7 +2636,15 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     char * line;
     char * description;
     int i=0;
-	PRInt32 status = ReadLine(inputStream, length, &line);
+	PRInt32 status = 1;
+	
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else 
+		status = 1;
+
     if(status == 0)
     {
         m_nextState = NNTP_ERROR;
@@ -2649,6 +2675,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 		else
 			m_nextState = DISPLAY_NEWSGROUPS;
         ClearFlag(NNTP_PAUSE_FOR_READ);
+		PR_FREEIF(line);
         return 0;  
     }
 	else if (line [0] == '.' && line [1] == '.')
@@ -2679,6 +2706,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 	/* store all the group names 
 	 */
     m_newsHost->AddNewNewsgroup(line, 0, 0, "", PR_FALSE);
+	PR_FREEIF(line);
     return(status);
 }
 
@@ -2888,8 +2916,14 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 {
     char *line;
     nsresult rv;
+	PRInt32 status = 1;
 
-    PRInt32 status = ReadLine(inputStream, length, &line);
+    PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
 
     if(status == 0)
     {
@@ -2901,9 +2935,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
     }
 
     if(!line)
-	{
 		return(status);  /* no line yet or TCP error */
-	}
 
 	if(status<0) 
 	{
@@ -2912,12 +2944,13 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
         /* return TCP error
          */
         return MK_TCP_READ_ERROR;
-	  }
+	}
 
     if(line[0] == '.' && line[1] == '\0')
     {
 		m_nextState = NNTP_FIGURE_NEXT_CHUNK;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
+		PR_FREEIF(line);
 		return(0);
     }
 	else if (line [0] == '.' && line [1] == '.')
@@ -2940,6 +2973,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 
 	m_numArticlesLoaded++;
 
+	PR_FREEIF(line);
     return status; /* keep going */
 }
 
@@ -3019,8 +3053,14 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 {
   char *line;
   nsresult rv;
+  PRInt32 status = 1;
 
-  PRInt32 status = ReadLine(inputStream, length, &line); 
+  PRBool pauseForMoreData = PR_FALSE;
+  line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+  if (pauseForMoreData)
+	  status = 0; // record error
+  else
+	  status = 1;
 
   if(status == 0)
   {
@@ -3057,6 +3097,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 
   rv = m_newsgroupList->ProcessNonXOVER(line);
   /* convert nsresult->status */
+  PR_FREEIF(line);
   return !NS_SUCCEEDED(rv);
 }
 
@@ -3621,7 +3662,7 @@ PRInt32 nsNNTPProtocol::XPATSend()
 PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line;
-	PRInt32 status = 0; 
+	PRInt32 status = 1; 
 
 	if (m_responseCode != MK_NNTP_RESPONSE_XPAT_OK)
 	{
@@ -3633,7 +3674,13 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 		return MK_NNTP_SERVER_ERROR;
 	}
 
-	status = ReadLine(inputStream, length, &line);
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+	  status = 1;
+
 	NNTP_LOG_READ(line);
 
 	if(status == 0)
@@ -3668,9 +3715,11 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 
 			m_nextState = NNTP_XPAT_SEND;
 			ClearFlag(NNTP_PAUSE_FOR_READ);
+			PR_FREEIF(line);
 			return 0;
 		}
 	}
+	PR_FREEIF(line);
 	return 0;
 }
 
@@ -3711,7 +3760,12 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 		return 0;
 	}
 
-	status = ReadLine(inputStream, length, &line);
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1; // mscott -- ????
 
 	NNTP_LOG_READ(line);
 
@@ -3749,9 +3803,11 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 			m_nextState = DISPLAY_NEWSGROUPS;	/* this assumes we were doing a list */
 /*			m_nextState = NEWS_DONE;	 */ /* ### dmb - don't really know */
 			ClearFlag(NNTP_PAUSE_FOR_READ);
+			PR_FREEIF(line);
 			return 0;
 		}
 	}
+	PR_FREEIF(line);
 	return 0;
 }
 
@@ -3790,7 +3846,13 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 		return MK_DATA_LOADED;
 	}
 
-	status = ReadLine(inputStream, length, &line);
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1; 
+
 	NNTP_LOG_READ(line);
 
 	if(status == 0)
@@ -3870,6 +3932,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 #endif
 					m_nextState = NNTP_LIST_XACTIVE;
 			        ClearFlag(NNTP_PAUSE_FOR_READ); 
+					PR_FREEIF(line);
 					return 0;
 				}
 				else
@@ -3886,9 +3949,11 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 				m_nextState = DISPLAY_NEWSGROUPS;	/* this assumes we were doing a list - who knows? */
 /*			m_nextState = NEWS_DONE;	 */ /* ### dmb - don't really know */
 			ClearFlag(NNTP_PAUSE_FOR_READ);
+			PR_FREEIF(line);
 			return 0;
 		}
 	}
+	PR_FREEIF(line);
 	return 0;
 }
 
@@ -3928,7 +3993,13 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 		return MK_DATA_LOADED;
 	}
 
-	status = ReadLine(inputStream, length, &line);
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
+
 	NNTP_LOG_READ(line);
 
 	if(status == 0)
@@ -3953,9 +4024,11 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 		{
 			m_nextState = NEWS_DONE;	 /* ### dmb - don't really know */
 			ClearFlag(NNTP_PAUSE_FOR_READ); 
+			PR_FREEIF(line);
 			return 0;
 		}
 	}
+	PR_FREEIF(line);
 	return 0;
 }
 
@@ -3979,7 +4052,14 @@ PRInt32 nsNNTPProtocol::SearchResponse()
 PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 length)
 {
 	char *line = NULL;
-	PRInt32 status = ReadLine(inputStream, length, &line);
+	PRInt32 status = 1;
+
+	PRBool pauseForMoreData = PR_FALSE;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
+	if (pauseForMoreData)
+		status = 0; // record error
+	else
+		status = 1;
 
 	if(status == 0)
 	{
@@ -4010,7 +4090,7 @@ PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 leng
 		m_nextState = NEWS_DONE;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	}
-
+	PR_FREEIF(line);
 	return status;
 }
 

@@ -35,6 +35,8 @@
 #include "nsINNTPNewsgroup.h"
 #include "nsIMsgOfflineNewsState.h"
 
+#include "nsMsgLineBuffer.h"
+
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
 
@@ -214,6 +216,8 @@ private:
 	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
 	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
 	nsIWebShell				* m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
+
+	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
 
 	// the nsINntpURL that is currently running
 	nsINntpUrl				* m_runningURL;
