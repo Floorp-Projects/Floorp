@@ -3989,8 +3989,8 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 #define WALLET_DONT_CACHE_ALL_PASSWORDS
 #ifdef WALLET_DONT_CACHE_ALL_PASSWORDS
                   // Do not store this form element if the 'autocomplete = off' attibute is present, 
-                  // unless both wallet encryption and 'wallet.crypto.autocompleteoverride' are enabled.
-                  if (isPassword && !(SI_GetBoolPref(pref_Crypto, PR_FALSE) && SI_GetBoolPref(pref_AutoCompleteOverride, PR_FALSE))) {
+                  // unless 'wallet.crypto.autocompleteoverride' is enabled.
+                  if (isPassword && !SI_GetBoolPref(pref_AutoCompleteOverride, PR_FALSE)) {
                     nsAutoString val;
                     (void) inputElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), val);
                     if (val.EqualsIgnoreCase("off")) {
