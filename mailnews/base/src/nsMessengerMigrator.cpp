@@ -558,23 +558,24 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   if (!dirExists) {
     mailDir->CreateDir();
   }
-
-  // set the local path for this "none" server
-  //
-  // we need to set this to <profile>/Mail/Local Folders, because that's where
-  // the 4.x "Local Mail" (when using imap) got copied.
-  // it would be great to use the server key, but we don't know it
-  // when we are copying of the mail.
-  rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
-  if (NS_FAILED(rv)) return rv; 
-  rv = server->SetLocalPath(mailDir);
-  if (NS_FAILED(rv)) return rv;
+ 
+  if (migrating) {
+  	// set the local path for this "none" server
+	//
+	// we need to set this to <profile>/Mail/Local Folders, because that's where
+	// the 4.x "Local Mail" (when using imap) got copied.
+	// it would be great to use the server key, but we don't know it
+	// when we are copying of the mail.
+	rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
+	if (NS_FAILED(rv)) return rv; 
+	rv = server->SetLocalPath(mailDir);
+	if (NS_FAILED(rv)) return rv;
     
-  rv = mailDir->Exists(&dirExists);
-  if (!dirExists) {
-    mailDir->CreateDir();
+	rv = mailDir->Exists(&dirExists);
+	if (!dirExists) {
+	    mailDir->CreateDir();
+	}
   }
-  
   return NS_OK;
 }
 

@@ -359,11 +359,18 @@ function verifyLocalFoldersAccount(account) {
 	defaultCopiesAndFoldersPrefsToServer = protocolinfo.defaultCopiesAndFoldersPrefsToServer;
 
 	if (!localMailServer) {
-        // dump("Creating local mail account\n");
+        	// dump("Creating local mail account\n");
 		// creates a copy of the identity you pass in
-        messengerMigrator = Components.classes["component://netscape/messenger/migrator"].getService(Components.interfaces.nsIMessengerMigrator);
+        	messengerMigrator = Components.classes["component://netscape/messenger/migrator"].getService(Components.interfaces.nsIMessengerMigrator);
 		messengerMigrator.createLocalMailAccount(false /* false, since we are not migrating */);
-    }
+		try {
+			localMailServer = am.FindServer("","","none");
+		}
+		catch (ex) {
+			dump("error!  we should have found the local mail server after we created it.\n");
+			localMailServer = null;
+		}	
+    	}
 
 	var copiesAndFoldersServer = null;
 	if (defaultCopiesAndFoldersPrefsToServer) {
@@ -371,7 +378,7 @@ function verifyLocalFoldersAccount(account) {
 	}
 	else {
 		if (!localMailServer) {
-			dump("error!  we should have a local mail server at this point");
+			dump("error!  we should have a local mail server at this point\n");
 			return;
 		}
 		copiesAndFoldersServer = localMailServer;
