@@ -69,8 +69,13 @@ var nsDragAndDrop = {
    **/  
   startDrag: function (aEvent, aDragDropObserver)
     {
+      var flavourList = null;
+
       if (aDragDropObserver.onDragStart)
         flavourList = aDragDropObserver.onDragStart(aEvent);
+
+      if (! flavourList || flavourList.length < 1)
+        return;
 
       var trans = nsTransferable.set(flavourList);
       trans = trans ? trans.QueryInterface(Components.interfaces.nsISupports) : trans;
