@@ -42,14 +42,14 @@
 
     testcases[testcases.length] = new TestCase( SECTION,
         "var o = new Object(); o.toString()",
-        "({})",
+        "{}",
         o.toString() );
 
     o = {};
 
     testcases[testcases.length] = new TestCase( SECTION,
         "o = {}; o.toString()",
-        "({})",
+        "{}",
         o.toString() );
 
     o = { name:"object", length:0, value:"hello" }
