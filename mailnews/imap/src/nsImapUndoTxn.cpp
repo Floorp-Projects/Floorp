@@ -25,7 +25,6 @@
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
 nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
-    m_srcMsgIdString(""), m_dstMsgIdString(""),
     m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
 {
 }
@@ -35,7 +34,6 @@ nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn(
 	const char* srcMsgIdString, nsIMsgFolder* dstFolder,
 	PRBool idsAreUids, PRBool isMove,
 	nsIEventQueue* eventQueue, nsIUrlListener* urlListener) :
-	m_srcMsgIdString("", eOneByte), m_dstMsgIdString("", eOneByte),
     m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
 {
     Init(srcFolder, srcKeyArray, srcMsgIdString, dstFolder, idsAreUids,
@@ -162,7 +160,7 @@ nsImapMoveCopyMsgTxn::Undo(void)
                 do_QueryInterface(m_srcFolder, &rv);
             rv = imapService->SubtractMessageFlags(
                 m_eventQueue, m_srcFolder, srcListener, nsnull,
-                m_srcMsgIdString.GetBuffer(), kImapMsgDeletedFlag,
+                m_srcMsgIdString, kImapMsgDeletedFlag,
                 m_idsAreUids);
             if (NS_SUCCEEDED(rv))
                 rv = imapService->SelectFolder(m_eventQueue, m_srcFolder,
@@ -204,7 +202,7 @@ nsImapMoveCopyMsgTxn::Redo(void)
                 do_QueryInterface(m_srcFolder, &rv); 
             rv = imapService->AddMessageFlags(m_eventQueue, m_srcFolder,
                                               srcListener, nsnull,
-                                              m_srcMsgIdString.GetBuffer(),
+                                              m_srcMsgIdString,
                                               kImapMsgDeletedFlag,
                                               m_idsAreUids);
             if (NS_SUCCEEDED(rv))

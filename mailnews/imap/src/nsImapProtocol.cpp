@@ -174,7 +174,7 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
 }
 
 nsImapProtocol::nsImapProtocol() : 
-    m_currentCommand(""),m_parser(*this), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
+    m_parser(*this), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
 {
 	NS_INIT_REFCNT();
 	m_flags = 0;
@@ -6006,8 +6006,7 @@ nsImapProtocol::GetDeleteIsMoveToTrash()
     return rv;
 }
 
-nsIMAPMailboxInfo::nsIMAPMailboxInfo(const char *name, char delimiter) :
-    m_mailboxName("")
+nsIMAPMailboxInfo::nsIMAPMailboxInfo(const char *name, char delimiter)
 {
 	m_mailboxName = name;
 	m_delimiter = delimiter;

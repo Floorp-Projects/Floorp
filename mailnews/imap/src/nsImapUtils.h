@@ -48,7 +48,7 @@ extern nsresult
 nsURI2ProtocolType(const char* uriStr, nsString& type);
 
 extern nsresult
-nsParseImapMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
+nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key);
 
 extern nsresult 
 nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char **uri);

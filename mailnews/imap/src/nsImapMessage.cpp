@@ -66,10 +66,10 @@ nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
 	if(NS_SUCCEEDED( rv = QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
 	{
 		resource->GetValue( getter_Copies(uri) );
-		nsString messageFolderURIStr;
+		nsCAutoString messageFolderURIStr;
 		nsMsgKey key;
 		nsParseImapMessageURI(uri, messageFolderURIStr, &key);
-		nsString folderOnly, folderURIStr;
+		nsCAutoString folderOnly, folderURIStr;
 
 		if (messageFolderURIStr.Find(kImapRootURI) != ((PRInt32)-1))
 		{
@@ -77,7 +77,7 @@ nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
 			folderURIStr = kImapRootURI;
 			folderURIStr+= folderOnly;
 			nsIRDFResource *folderResource;
-			char *folderURI = folderURIStr.ToNewCString();
+			const char *folderURI = folderURIStr.GetBuffer();
 
 			NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
 			if (NS_SUCCEEDED(rv))   // always check this before proceeding 
@@ -89,9 +89,6 @@ nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
 					NS_RELEASE(folderResource);
 				}
 			}
-
-
-			delete[] folderURI;
 		}
 
 		NS_RELEASE(resource);

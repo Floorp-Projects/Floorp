@@ -249,13 +249,13 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
 
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
 
-	nsString	folderURI ("",eOneByte);
+	nsCAutoString	folderURI;
 	nsMsgKey	msgKey;
 	rv = nsParseImapMessageURI(aMessageURI, folderURI, &msgKey);
 	if (NS_SUCCEEDED(rv))
 	{
 		nsIRDFResource* res;
-		rv = rdf->GetResource(folderURI.GetBuffer(), &res);
+		rv = rdf->GetResource(folderURI, &res);
 		if (NS_FAILED(rv))
 			return rv;
 		nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
@@ -265,12 +265,12 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
                 imapMessageSink(do_QueryInterface(res, &rv));
 			if (NS_SUCCEEDED(rv))
 			{
-				nsCString messageIdString;
+				nsCAutoString messageIdString;
 
 				messageIdString.Append(msgKey, 10);
 				rv = FetchMessage(queue, folder, imapMessageSink,
                                   aUrlListener, aURL, aDisplayConsumer,
-                                  messageIdString.GetBuffer(), PR_TRUE);
+                                  messageIdString, PR_TRUE);
 			}
 		}
 	}
@@ -302,13 +302,13 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
     if (NS_FAILED(rv)) return rv;
 
-	nsString	folderURI ("",eOneByte);
+	nsCAutoString	folderURI;
 	nsMsgKey	msgKey;
 	rv = nsParseImapMessageURI(aSrcMailboxURI, folderURI, &msgKey);
 	if (NS_SUCCEEDED(rv))
 	{
 		nsIRDFResource* res;
-		rv = rdf->GetResource(folderURI.GetBuffer(), &res);
+		rv = rdf->GetResource(folderURI, &res);
 		if (NS_FAILED(rv))
 			return rv;
 		nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
@@ -323,14 +323,14 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
 				messageIdString.Append(msgKey, 10);
 				rv = FetchMessage(queue, folder, imapMessageSink,
                                   aUrlListener, aURL, streamSupport,
-                                  messageIdString.GetBuffer(), PR_TRUE);
+                                  messageIdString, PR_TRUE);
                 if (NS_SUCCEEDED(rv) && moveMessage)
                 {
                     // ** jt -- this really isn't an optimal way of deleting a
                     // list of messages but I don't have a better way at this
                     // moment
                     rv = AddMessageFlags(queue, folder, aUrlListener, nsnull,
-                                         messageIdString.GetBuffer(),
+                                         messageIdString,
                                          kImapMsgDeletedFlag,
                                          PR_TRUE);
                     // ** jt -- force to update the folder

@@ -232,19 +232,19 @@ nsURI2ProtocolType(const char* uriStr, nsString& type)
 }
 
 /* parses ImapMessageURI */
-nsresult nsParseImapMessageURI(const char* uri, nsString& folderURI, PRUint32 *key)
+nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key)
 {
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
 
-	nsAutoString uriStr = uri;
+	nsCAutoString uriStr = uri;
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
 		nsAutoString folderPath;
 		uriStr.Left(folderURI, keySeparator);
 		folderURI.Cut(4, 8);	// cut out the _message part of imap_message:
-		nsAutoString keyStr;
+		nsCAutoString keyStr;
 		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
 		PRInt32 errorCode;
 		*key = keyStr.ToInteger(&errorCode);

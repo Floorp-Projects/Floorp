@@ -73,10 +73,10 @@ private:
 
     nsCOMPtr<nsIMsgFolder> m_srcFolder;
     nsMsgKeyArray m_srcKeyArray;
-    nsString m_srcMsgIdString;
+    nsCString m_srcMsgIdString;
     nsCOMPtr<nsIMsgFolder> m_dstFolder;
     nsMsgKeyArray m_dstKeyArray;
-    nsString m_dstMsgIdString;
+    nsCString m_dstMsgIdString;
     nsCOMPtr<nsIEventQueue> m_eventQueue;
     nsCOMPtr<nsIUrlListener> m_urlListener;
     nsString m_undoString;
