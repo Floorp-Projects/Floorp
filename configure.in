@@ -497,28 +497,16 @@ dnl AC_MSG_ERROR([Compiler is too old.  Get a new one: http://www.unix.digital.c
 dnl AC_LANG_RESTORE
 
 dnl ========================================================
-dnl Check which style vtables we're using on Solaris
-dnl Options current are:
-dnl   * gcc style - used by gcc (duh) and SUNWspro4.2 (and
-dnl     later versions of workshop with the -compat=4 flag)
-dnl   * SUNWspro5.0 style, also used by 6.0b
+dnl Check for an old version of SUNWspro
 dnl ========================================================
+case "$target" in
+*-solaris*)
+	if test ! "$GNU_CC" && test ! -z "`${CC} -V 2>&1 | head -1 | grep '4.2'`"; then
+		AC_MSG_ERROR([SUNWspro4.2 is too old.  Use a newer version or gcc.])
+	fi
+    ;;
+esac
 
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-AC_TRY_RUN([
-int main(int argc, char **argv) {
-#ifdef __SUNPRO_CC_COMPAT
-	return (__SUNPRO_CC_COMPAT==4);
-#else
-	return 1;
-#endif
-}],
-SUNWSPRO5_VTABLE=1,
-SUNWSPRO5_VTABLE=,
-SUNWSPRO5_VTABLE=)
-AC_LANG_RESTORE
-AC_SUBST(SUNWSPRO5_VTABLE)
 
 dnl ========================================================
 dnl System overrides of the defaults for target
@@ -1862,19 +1850,14 @@ AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
 if test ! "$GNU_CXX"; then
 
-    dnl The C++ compiler in Workshop 5.0+ uses standard iostreams by
-    dnl default. -library=iostream will force use of classic iostreams.
-    dnl The test is here because we need -liostream to be inserted before
-    dnl the standard C++ library (which isn't -lC on Workshop5+, but is
-    dnl a set of libraries).  Aurgh.
     case $target in
     *-solaris*)
-	if test ! -z "`${CC} -V 2>&1 | head -1 | grep -v '4.2'`" && test "$SUNWSPRO5_VTABLE"; then
-	    CXX="$CXX -library=iostream"
-	    LIBS="-liostream -lCrun $LIBS"
-	else
-	    AC_CHECK_LIB(C, demangle)
-	fi
+	dnl The C++ compiler in Workshop 5.0+ uses standard iostreams by
+	dnl default. -library=iostream will force use of classic iostreams.
+	dnl We need -liostream to be inserted before the standard C++ library
+	dnl (which isn't -lC on Workshop5+, but is dnl a set of libraries).
+	CXX="$CXX -library=iostream"
+	LIBS="-liostream -lCrun $LIBS"
 	;;
     *-aix*)
 	AC_CHECK_LIB(C_r, demangle)
