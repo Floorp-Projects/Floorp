@@ -2853,6 +2853,18 @@ HRESULT DecriptVariable(LPSTR szVariable, DWORD dwVariableSize)
       exit(1);
     }
   }
+  else if(lstrcmpi(szVariable, "JRE BIN PATH") == 0)
+  {
+    /* Locate the "c:\Program Files\JavaSoft\JRE\1.3\Bin" directory */
+    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\javaw.Exe", NULL, szVariable, dwVariableSize);
+    if(*szVariable == '\0')
+      return(FALSE);
+    else
+    {
+      ParsePath(szVariable, szBuf, MAX_BUF, PP_PATH_ONLY);
+      lstrcpy(szVariable, szBuf);
+    }
+  }
   else if(lstrcmpi(szVariable, "SETUP PATH") == 0)
   {
     lstrcpy(szVariable, sgProduct.szPath);

@@ -334,6 +334,7 @@ BEGIN
     IDS_ERROR_XPI_INSTALL   "Error ocurred during installation"
     IDS_ERROR_SETUP_REQUIREMENT 
                             "Windows95 or greater Operating System is required!  Exiting setup..."
+    IDS_DLG_EXTRACTING_TITLE "Installing %s"
 END
 
 #endif    // English (U.S.) resources
