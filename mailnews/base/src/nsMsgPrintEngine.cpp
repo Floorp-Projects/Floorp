@@ -427,7 +427,7 @@ nsMsgPrintEngine::ShowProgressDialog(PRBool aIsForPrinting, PRBool& aDoNotify)
           if (msg) 
           {
             mPrintProgressParams->SetDocTitle(msg);
-            nsCRT:free(msg);
+            nsCRT::free(msg);
           }
         }
       }
