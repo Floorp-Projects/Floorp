@@ -23,6 +23,15 @@
 #include "nsIPresContext.h"
 #include "nsIFontMetrics.h"
 
+nsTextRun::nsTextRun()
+{
+  mNext = nsnull;
+}
+
+nsTextRun::~nsTextRun()
+{
+}
+
 void
 nsTextRun::List(FILE* out, PRInt32 aIndent)
 {
@@ -97,6 +106,32 @@ nsLineLayout::AddText(nsIFrame* aTextFrame)
   }
   mNewTextRun->mArray.AppendElement(aTextFrame);
   return NS_OK;/* XXX */
+}
+
+nsTextRun*
+nsLineLayout::FindTextRunFor(nsIFrame* aFrame)
+{
+  // Only the first-in-flows are present in the text run list so
+  // backup from the argument frame to its first-in-flow.
+  for (;;) {
+    nsIFrame* prevInFlow;
+    aFrame->GetPrevInFlow(prevInFlow);
+    if (nsnull == prevInFlow) {
+      break;
+    }
+    aFrame = prevInFlow;
+  }
+
+  // Now look for the frame in each run
+  nsTextRun* run = mReflowTextRuns;
+  while (nsnull != run) {
+    PRInt32 ix = run->mArray.IndexOf(aFrame);
+    if (ix >= 0) {
+      return run;
+    }
+    run = run->mNext;
+  }
+  return nsnull;
 }
 
 nsIFrame*
