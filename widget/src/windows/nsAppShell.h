@@ -40,10 +40,12 @@ class nsAppShell : public nsIAppShell, public nsObject
 
     // nsIAppShellInterface
   
-    virtual void            Create();
+    virtual void            Create(int* argc, char ** argv);
     virtual nsresult        Run(); 
     virtual void            SetDispatchListener(nsDispatchListener* aDispatchListener);
     virtual void            Exit();
+    virtual void* GetNativeData(PRUint32 aDataType);
+
   private:
     nsDispatchListener*     mDispatchListener;
 };
