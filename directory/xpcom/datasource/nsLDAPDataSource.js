@@ -47,6 +47,10 @@ const NS_RDF_NO_VALUE = NS_ERROR_RDF_BASE + 2;
 const NS_RDF_ASSERTION_ACCEPTED = Components.results.NS_OK;
 const NS_RDF_ASSERTION_REJECTED = NS_ERROR_RDF_BASE + 3;
 
+// some stuff from ldap.h
+//
+const LDAP_RES_BIND = 0x61;
+
 // ArrayEnumerator courtesy of Brendan Eich <brendan@mozilla.org>
 //
 function ArrayEnumerator(array) {
@@ -56,11 +60,8 @@ function ArrayEnumerator(array) {
 ArrayEnumerator.prototype = {
     hasMoreElements: function() { return this.index < this.array.length; },
     getNext: function () { return (this.index < this.array.length) ?
-			           this.array[index++] : null; }
+			           this.array[this.index++] : null; }
 }
-
-	 function boundCallback() {}
-
 
 // the datasource object itself
 //
@@ -90,11 +91,6 @@ nsLDAPDataSource.prototype = {
     kRDF_instanceOf: {},
     kNC_child: {},
 
-    // debugging cruft
-    //
-    kRasputin: {},
-    kElvis: {},
- 		       
     // since we implement multiple interfaces, we have to provide QI
     //
     QueryInterface: function(iid) {
@@ -133,13 +129,6 @@ nsLDAPDataSource.prototype = {
 	this.kNC_child = rdfSvc.GetResource( NC_NAMESPACE_URI + "child");
         this.kNC_Folder = rdfSvc.GetResource( NC_NAMESPACE_URI + "Folder");
 
-	// XXXdmose debugging cruft
-	//
-	if (DEBUG) {
-	    this.kRasputin = rdfSvc.GetResource("ldap://memberdir.netscape.com:389/ou=member_directory,o=netcenter.com??sub?(sn=Rasputin)");
-	    this.kElvis = rdfSvc.GetResource("ldap://memberdir.netscape.com:389/ou=member_directory,o=netcenter.com??sub?(sn=Elvis)");
-	}
-
 	return;
     },
 
@@ -172,18 +161,9 @@ nsLDAPDataSource.prototype = {
 	// spew debugging info
 	//
 	if (DEBUG) {
-
 	    dump("HasAssertion() called with args: \n\t" + aSource.Value +
 		 "\n\t" + aProperty.Value + "\n\t" + aTarget.Value + "\n\t" +
 		 aTruthValue + "\n\n");
-
-	    // XXXdmose debugging cruft
-	    if (aSource.EqualsNode(this.kRasputin) && 
-		aProperty.EqualsNode(this.kNC_child) &&
-		aTarget.EqualsNode(this.kElvis) &&
-		aTruthValue) {
-		return true;
-	    }
 	}
 
 	// the datasource doesn't currently use any sort of containers
@@ -240,24 +220,57 @@ nsLDAPDataSource.prototype = {
 
      GetTargets: function(aSource, aProperty, aTruthValue) {
 
-	 function generateBoundCallback() {
+	 function generateGetTargetsBoundCallback() {
 
-	     boundCallback.prototype.onLDAPMessage = function() {
+	     function getTargetsBoundCallback() {}
 
-		 // netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+	     getTargetsBoundCallback.prototype.onLDAPMessage = 
 
-		 if (DEBUG) {
-		     dump("in the closure\n");
+	         function(aMessage, aRetVal) {
 
-		     dump("boundCallback() called with scope: \n\t" + 
-		     aSource.Value + "\n\t" + aProperty.Value + 
-		     "\n\t" + aTruthValue + "\n\n");
+		     if (DEBUG) {
+			 dump("boundCallback() called with scope: \n\t" +
+			      aSource.Value + "\n\t" + aProperty.Value + 
+			      "\n\t" + aTruthValue + "\n");
+			 dump("\taRetVal = " + aRetVal + "\n\n");
+		     }
+
+		     // XXX how do we deal with this in release builds?
+		     // XXX deal with already bound case
+		     //
+		     if (aRetVal != LDAP_RES_BIND) {
+			 dump("bind failed\n");
+		     }
+
+		     // kick off a search
+		     //
+		     var searchOp = Components.classes[
+			 "mozilla.network.ldapoperation"].
+		             createInstance(Components.interfaces.
+			         nsILDAPOperation);
+		     // XXX err handling
+		     searchOp.init(connection, 
+				   generateGetTargetsSearchCallback());
+		     // XXX err handling (also for url. accessors)
+		     // XXX constipate this
+		     // XXX real timeout
+		     searchOp.searchExt(url.dn, url.scope, url.filter, 0, -1);
 		 }
-	     }
 
-	     cb = new boundCallback();
+	     return new getTargetsBoundCallback();
+	 }
 
-	     return cb;
+	 function generateGetTargetsSearchCallback() {
+
+	     function getTargetsSearchCallback() {}
+
+	     getTargetsSearchCallback.prototype.onLDAPMessage = 
+
+	         function(aMessage, aRetVal ) {
+		     dump("getTargetsSearchCallback() called with aRetVal=" +
+			  aRetVal + "\n\n");
+		 }
+	     return new getTargetsSearchCallback();
 	 }
 
 	 if (DEBUG) {
@@ -268,8 +281,25 @@ nsLDAPDataSource.prototype = {
 	 var url = Components.classes["mozilla.network.ldapurl"]
 	                        .getService(Components.interfaces.nsILDAPURL);
 	 url.spec = aSource.Value;
+	 
+	 // get a connection object
+	 //
+	 var connection = Components.classes
+	                   ["mozilla.network.ldapconnection"].createInstance(
+			   Components.interfaces.nsILDAPConnection);
+	 connection.init(url.host, url.port, null);
 
-	 this.getConnection(url.host, url.port, generateBoundCallback());
+	 // get and initialize an operation object
+	 //
+	 var operation = Components.classes["mozilla.network.ldapoperation"].
+	                     createInstance(Components.interfaces.
+					    nsILDAPOperation);
+	 operation.init(connection, generateGetTargetsBoundCallback());
+
+	 // bind to the server.  we'll get a callback when this finishes.
+	 // XXX handle a password
+	 //
+	 operation.simpleBind(null);
 
 	 return new ArrayEnumerator(new Array());
      },
@@ -292,61 +322,6 @@ nsLDAPDataSource.prototype = {
 	}
 
 	return new ArrayEnumerator(new Array());
-    },
-    
-    // XXXdmose debugging cruft not part of any interface; should be removed
-    //
-    forceAssert: function() {
-	dump("forceAssert() called\n");
-	for ( var i = 0 ; i < this.mObserverList.length ; i++) {
-	    this.mObserverList[i].onAssert(this.kRasputin, this.kNC_child, 
-					   this.kElvis);
-	}
-    },
-
-    // XXX need to support non-null passwords & bind names
-    //
-    getConnection : function(aServer, aPort, aCallback)
-    {
-
-	// initialize our connection
-	//
-	this.mConnection = Components.classes
-	                   ["mozilla.network.ldapconnection"].createInstance(
-			   Components.interfaces.nsILDAPConnection);
-	this.mConnection.init(aServer, aPort, null);
-	this.mOperation = Components.classes["mozilla.network.ldapoperation"].
-                          createInstance(Components.interfaces.
-					 nsILDAPOperation);
-	this.mOperation.init(this.mConnection, aCallback);
-
-	// bind to the server.  we'll get a callback when this finishes.
-	//
-	this.mOperation.simpleBind(null);
-
-    },
-
-    // from nsILDAPMessageListener
-    //
-    onLDAPMessage: function (aMsg, aRetVal)
-    {
-	// XXXdmose constipate this; make it do real error-handling
-	//
-	if (aRetVal == 0x61) {
-	    if (DEBUG) {
-     	        dump("onLDAPMessage called with LDAP_RES_BIND\n");
-	    }
-	} else if (aRetVal == 0x64) {
-	    if (DEBUG) {
-		dump("onLDAPMessage called with LDAP_RES_SEARCH_ENTRY\n");
-	    }
-	} else if (aRetVal == 065 ) {
-	    if (DEBUG) {
-		dump("onLDAPMessage called with LDAP_RES_SEARCH_RESULT\n");
-	    }
-	} else {
-	    dump("onLDAPMessage called with unexpected aRetVal\n");
-	}
     }
 }
 
