@@ -247,7 +247,7 @@ nsNetDiskCache::Init(void)
 	if ( NS_FAILED( rv ) )
 		return rv;
 	
-	folderChanged(CACHE_DIR_PREF , this );	
+	rv = folderChanged(CACHE_DIR_PREF , this );	
 	enableChanged(CACHE_ENABLE_PREF , this );
 	
 	return rv;
