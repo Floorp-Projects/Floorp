@@ -131,11 +131,9 @@ public:
    * @param aSurface  the surface to blit to
    * @param aX The destination horizontal location
    * @param aY The destination vertical location
-   * @param aWidth The destination width of the pixelmap
-   * @param aHeight The destination height of the pixelmap
    * @return if TRUE, no errors
    */
-  PRBool  PatBltTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
+  PRBool  PatBltTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1);
 
 
   /** 
