@@ -157,6 +157,12 @@ sub InstallDefaultsFiles()
     }
     }
 
+    {
+    my($default_autoconfig_dir) = "$defaults_dir"."autoconfig:";
+    mkdir($default_autoconfig_dir, 0);
+    InstallResources(":mozilla:extensions:pref:autoconfig:src:MANIFEST", "$default_autoconfig_dir");
+    }
+
     print("--- Defaults copying complete ----\n");
 }
 
@@ -662,7 +668,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:netwerk:mime:public:MANIFEST",                   "$distdirectory:netwerk:");
 
     #EXTENSIONS
-    InstallFromManifest(":mozilla:extensions:cookie:MANIFEST_IDL",          			 "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:extensions:cookie:MANIFEST_IDL",                 "$distdirectory:idl:");
     InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",                     "$distdirectory:cookie:");
     InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",              "$distdirectory:wallet:");
 
@@ -1132,7 +1138,8 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:embedding:browser:macbuild:browserIDL.xml",           "embeddingbrowser");
     BuildIDLProject(":mozilla:embedding:components:build:macbuild:EmbedComponentsIDL.xml", "EmbedComponents");
 
-    BuildIDLProject(":mozilla:extensions:cookie:macbuild:cookieIDL.xml",						"cookie");
+    BuildIDLProject(":mozilla:extensions:cookie:macbuild:cookieIDL.xml",            "cookie");
+    BuildIDLProject(":mozilla:extensions:pref:macbuild:prefextrasIDL.xml",          "prefextras");
     BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.xml","wallet");
     BuildIDLProject(":mozilla:extensions:xml-rpc:macbuild:xml-rpcIDL.xml","xml-rpc");
     BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.xml", "bookmarks");
@@ -1539,6 +1546,7 @@ sub BuildBrowserUtilsProjects()
     BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.xml", "prefm$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
     BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.xml",           "Cookie$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:extensions:pref:macbuild:prefextras.xml",         "prefExtras$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.xml",           "Wallet$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.xml",    "WalletViewers$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:extensions:universalchardet:macbuild:Universalchardet.xml", "Universalchardet$D.$S", 1, $main::ALIAS_SYM_FILES, 1);

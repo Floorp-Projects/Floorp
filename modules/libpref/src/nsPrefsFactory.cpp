@@ -40,7 +40,6 @@
 #include "nsPrefService.h"
 #include "nsPrefBranch.h"
 #include "nsIPref.h"
-#include "nsAutoConfig.h"
 
 // remove this when nsPref goes away
 extern NS_IMETHODIMP nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -48,9 +47,6 @@ extern NS_IMETHODIMP nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefLocalizedString, Init)
-  // Factory constructor for nsAutoConfig. nsAutoConfig doesn't have a 
-  //separate module so it is bundled with pref module.
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAutoConfig,Init)
  
 // The list of components we register
 static nsModuleComponentInfo components[] = 
@@ -74,12 +70,6 @@ static nsModuleComponentInfo components[] =
     NS_PREF_CID,
     NS_PREF_CONTRACTID, 
     nsPrefConstructor
-  },
-  { 
-    NS_AUTOCONFIG_CLASSNAME, 
-    NS_AUTOCONFIG_CID, 
-    NS_AUTOCONFIG_CONTRACTID, 
-    nsAutoConfigConstructor
   },
 };
 

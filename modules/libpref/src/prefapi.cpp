@@ -103,8 +103,6 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
 
 PR_STATIC_CALLBACK(JSBool) pref_NativeDefaultPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 PR_STATIC_CALLBACK(JSBool) pref_NativeUserPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-PR_STATIC_CALLBACK(JSBool) pref_NativeLockPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-PR_STATIC_CALLBACK(JSBool) pref_NativeUnlockPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 PR_STATIC_CALLBACK(JSBool) pref_NativeSetConfig(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 PR_STATIC_CALLBACK(JSBool) pref_NativeGetPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 /*----------------------------------------------------------------------------------------*/
@@ -150,8 +148,6 @@ static JSFunctionSpec autoconf_methods[] = {
                     { "pref",               pref_NativeDefaultPref, 2,0,0 },
                     { "defaultPref",        pref_NativeDefaultPref, 2,0,0 },
                     { "user_pref",          pref_NativeUserPref,    2,0,0 },
-                    { "lockPref",           pref_NativeLockPref,    2,0,0 },
-                    { "unlockPref",         pref_NativeUnlockPref,  1,0,0 },
                     { "config",             pref_NativeSetConfig,   2,0,0 },
                     { "getPref",            pref_NativeGetPref,     1,0,0 },
                     { "localPref",          pref_NativeDefaultPref, 1,0,0 },
@@ -1053,30 +1049,6 @@ PR_STATIC_CALLBACK(JSBool) pref_NativeUserPref
     return pref_HashJSPref(argc, argv, PREF_SETUSER);
 }
 
-PR_STATIC_CALLBACK(JSBool) pref_NativeLockPref
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-    return pref_HashJSPref(argc, argv, PREF_LOCK);
-}
-
-PR_STATIC_CALLBACK(JSBool) pref_NativeUnlockPref
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-    if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
-    {
-        const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        PrefHashEntry* pref = pref_HashTableLookup(key);
-        
-        if (pref && PREF_IS_LOCKED(pref))
-        {
-            pref->flags &= ~PREF_LOCKED;
-            if (gCallbacksEnabled)
-                pref_DoCallback(key);
-        }
-    }
-    return JS_TRUE;
-}
-
 PR_STATIC_CALLBACK(JSBool) pref_NativeSetConfig
     (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
@@ -1391,8 +1363,6 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
     pref        -> pref_NativeDefaultPref
     defaultPref -> "
     userPref    -> pref_NativeUserPref
-    lockPref    -> pref_NativeLockPref
-    unlockPref  -> pref_NativeUnlockPref
     getPref     -> pref_NativeGetPref
     config      -> pref_NativeSetConfig
  *--------------------------------------------------------------------------------------*/

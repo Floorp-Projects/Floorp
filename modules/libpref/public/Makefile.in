@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= pref
 
 XPIDLSRCS	= \
-              nsIAutoConfig.idl \
               nsIPref.idl \
               nsIPrefBranch.idl \
               nsIPrefBranchInternal.idl \
@@ -37,8 +36,6 @@ XPIDLSRCS	= \
               nsIPrefService.idl \
               nsISecurityPref.idl \
               $(NULL)
-
-EXPORTS		= prefldap.h
 
 include $(topsrcdir)/config/rules.mk
 

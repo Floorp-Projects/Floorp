@@ -38,7 +38,6 @@ REQUIRES	= xpcom \
 		  caps \
 		  intl \
 		  necko \
-		  profile \
 		  $(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -47,7 +46,6 @@ CPPSRCS		= nsPref.cpp \
 			  nsPrefBranch.cpp	\
 			  nsPrefService.cpp	\
 			  nsPrefsFactory.cpp	\
-			  nsAutoConfig.cpp      \
 			  prefapi.cpp \
 			 $(NULL)
 
