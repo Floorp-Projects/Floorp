@@ -47,6 +47,7 @@ namespace JavaScript {
         {
             Register* e = rl.end();
 
+            f << "(";
             for (RegisterList::iterator r = rl.begin(); r != e; r++) {
                 f << "R" << (*r); 
                 if ((r + 1) != e)
