@@ -305,8 +305,17 @@ js_ValueToXMLListObject(JSContext *cx, jsval v);
 extern JSObject *
 js_CloneXMLObject(JSContext *cx, JSObject *obj);
 
-extern JSBool
+extern JSObject *
 js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
-                       JSString *value, JSObject **objp);
+                       JSString *value);
+
+extern JSString *
+js_MakeXMLCDATAString(JSContext *cx, JSString *str);
+
+extern JSString *
+js_MakeXMLCommentString(JSContext *cx, JSString *str);
+
+extern JSString *
+js_MakeXMLPIString(JSContext *cx, JSString *name, JSString *str);
 
 #endif /* jsxml_h___ */
