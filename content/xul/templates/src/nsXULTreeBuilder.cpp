@@ -1459,8 +1459,9 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
     nsCOMPtr<nsIContent> row;
     GetTemplateActionRowFor(aRow, getter_AddRefs(row));
     if (row) {
-        PRInt32 colIndex;
-        mBoxObject->GetColumnIndex(aColID, &colIndex);
+        PRInt32 colIndex = -1;
+        if (mBoxObject)
+            mBoxObject->GetColumnIndex(aColID, &colIndex);
 
         PRInt32 count;
         row->ChildCount(count);

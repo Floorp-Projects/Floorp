@@ -62,8 +62,6 @@ public:
   NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
   NS_IMETHOD SetDocument(nsIDocument* aDocument);
   NS_IMETHOD InvalidatePresentationStuff();
-
-  nsITreeBoxObject* mTreeBody;
 };
 
 /* Implementation file */
@@ -84,8 +82,6 @@ nsTreeBoxObject::SetDocument(nsIDocument* aDocument)
   if (treeView)
     treeView->SetTree(nsnull); // Break the circular ref between the view and us.
 
-  mTreeBody = nsnull;
-
   return nsBoxObject::SetDocument(aDocument);
 }
 
@@ -100,7 +96,6 @@ nsTreeBoxObject::InvalidatePresentationStuff()
 }
   
 nsTreeBoxObject::nsTreeBoxObject()
-:mTreeBody(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
