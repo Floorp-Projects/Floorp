@@ -2884,23 +2884,60 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
           // XXX necko isn't going to process headers coming in from the parser
           //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
           
-          // parse out the content
+          // see if we have a refresh "header".
           if (!header.Compare("refresh", PR_TRUE)) {
-              nsIRefreshURI *reefer = nsnull;
-              rv = mWebShell->QueryInterface(nsCOMTypeInfo<nsIRefreshURI>::GetIID(), (void**)&reefer);
+              // Refresh haders are parsed with the following format in mind
+              // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
+              // By the time we are here, the following is true:
+              // header = "REFRESH"
+              // result = "5; URL=http://uri" // note the URL attribute is optional, if it
+              //   is absent, the currently loaded url is used.
+              const PRUnichar *uriCStr = nsnull;
+              nsAutoString uriAttribStr;
+
+              // first get our baseURI
+              rv = mWebShell->GetURL(&uriCStr);
               if (NS_FAILED(rv)) return rv;
-          
-              const PRUnichar *uriStr = nsnull;
-              rv = mWebShell->GetURL(&uriStr);
+
+              nsIURI *baseURI = nsnull;
+              rv = NS_NewURI(&baseURI, uriCStr, nsnull);
               if (NS_FAILED(rv)) return rv;
+
+              // next get any uri provided as an attribute in the tag.
+              PRInt32 urlLoc = result.Find("url", PR_TRUE);
+              if (urlLoc > -1) {
+                  // there is a url attribute, let's use it.
+                  urlLoc += 3; 
+                  // go past the '=' sign
+                  urlLoc = result.Find("=", PR_TRUE, urlLoc);
+                  if (urlLoc > -1) {
+                      urlLoc++; // leading/trailign spaces get trimmed in url creating code.
+                      result.Mid(uriAttribStr, urlLoc, result.Length() - urlLoc);
+                      uriCStr = uriAttribStr.GetUnicode();
+                  }
+              }
 
               nsIURI *uri = nsnull;
-              rv = NS_NewURI(&uri, uriStr, nsnull);
+              rv = NS_NewURI(&uri, uriCStr, baseURI);
+              NS_RELEASE(baseURI);
               if (NS_FAILED(rv)) return rv;
 
-              PRInt32 error;
-              PRInt32 millis = result.ToInteger(&error) * 1000;
+              // the units of the numeric value contained in the result are seconds.
+              // we need them in milliseconds before handing off to the refresh interface.
+              // NOTE: we're no longer using the urlLoc variable, just stick it in here
+              //   as the error argument to ::ToInteger() as an optimization.
+              PRInt32 millis = result.ToInteger(&urlLoc) * 1000;
+
+              nsIRefreshURI *reefer = nsnull;
+              rv = mWebShell->QueryInterface(nsCOMTypeInfo<nsIRefreshURI>::GetIID(), (void**)&reefer);
+              if (NS_FAILED(rv)) {
+                  NS_RELEASE(uri);
+                  return rv;
+              };
+
               rv = reefer->RefreshURI(uri, millis, PR_FALSE);
+              NS_RELEASE(uri);
+              NS_RELEASE(reefer);
               if (NS_FAILED(rv)) return rv;
           }
 #else
