@@ -354,20 +354,10 @@ nsInlineReflow::ApplyTopLeftMargins()
       indent = text->mTextIndent.GetCoordValue();
     }
     else if (eStyleUnit_Percent == unit) {
-      nscoord width;
-      if (mOuterReflowState.HaveFixedContentWidth()) {
-        width = mOuterReflowState.minWidth;
+      nscoord width = mOuterReflowState.GetContainingBlockContentWidth();
+      if (0 != width) {
+        indent = nscoord(text->mTextIndent.GetPercentValue() * width);
       }
-      else if (NS_UNCONSTRAINEDSIZE == mOuterReflowState.maxSize.width) {
-        // We are unconstrained only when a table cell is reflowing
-        // the block. Therefore don't bother with the indent until
-        // the next reflow.
-        width = 0;
-      }
-      else {
-        width = mOuterReflowState.maxSize.width;
-      }
-      indent = nscoord(text->mTextIndent.GetPercentValue() * width);
     }
   }
 
