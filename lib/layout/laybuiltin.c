@@ -607,7 +607,6 @@ LO_GetBuiltInAttribute (LO_BuiltinStruct *pBuiltin_struct, char* att)
   int n = 0;
   if (!pBuiltin_struct || !att)
     return NULL;
-#ifdef OJI
   while (n < pBuiltin_struct->attributes.n) {
     char* attName = *(pBuiltin_struct->attributes.names + n);
     char* attValue = *(pBuiltin_struct->attributes.values + n);
@@ -616,16 +615,6 @@ LO_GetBuiltInAttribute (LO_BuiltinStruct *pBuiltin_struct, char* att)
     }
     n++;
   }
-#else
-  while (n < pBuiltin_struct->attribute_cnt) {
-    char* attName = *(pBuiltin_struct->attribute_list + n);
-    char* attValue = *(pBuiltin_struct->value_list + n);
-    if (attName && (XP_FILENAMECMP(attName, att) == 0)) {
-      return attValue; 
-    }
-    n++;
-  }
-#endif
   return NULL;
 }
 
