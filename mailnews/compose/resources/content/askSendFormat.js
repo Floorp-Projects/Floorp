@@ -21,6 +21,7 @@ function Startup()
 		    element.setAttribute("value", labels.getAttribute("button1Label"));
 		    element = document.getElementById("cancel");
 		    element.setAttribute("value", labels.getAttribute("button2Label"));
+/*
 		    element = document.getElementById("Button2");
 		    element.setAttribute("value", labels.getAttribute("button3Label"));
             element.removeAttribute("hidden");
@@ -29,7 +30,7 @@ function Startup()
 		    element.setAttribute("value", labels.getAttribute("button4Label"));
             element.removeAttribute("hidden");
 		    element.setAttribute("disabled", "true");
-		    
+*/		    
 		    //set buttons action
 		    doSetOKCancel(Send, DontSend, Recipients, Help);
 
