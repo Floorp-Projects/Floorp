@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/param.h>
+#include "prenv.h"
 #endif
 
 #include "plstr.h"
