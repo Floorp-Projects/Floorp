@@ -1301,8 +1301,11 @@ else
 	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
 endif
 
+# no need to link together if XPIDLSRCS contains only XPIDL_MODULE
+ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) Makefile.in Makefile
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) 
+endif # XPIDL_MODULE.xpt != XPIDLSRCS
 
 libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
