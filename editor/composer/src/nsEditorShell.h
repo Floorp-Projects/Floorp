@@ -203,8 +203,6 @@ class nsEditorShell :   public nsIEditorShell,
                                     nsIChannel *aChannel,
                                     nsresult aStatus);
 
-    PRBool          IsSupportedTextType(const char* aMIMEType);
-    
     // Check a preference and call NormalizeTable if pref is true
     // Use after deleting or inserting table cells to automatically 
     //  fix rowspan, colspan, and missing cells problems
