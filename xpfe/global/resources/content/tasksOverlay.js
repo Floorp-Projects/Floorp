@@ -17,16 +17,7 @@ function toAddressBook()
 
 function toHistory()
 {
-	var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("toolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("chrome://history/content/",window);
-    }
+    window.open( "chrome://history/content/", "_blank", "chrome,dependent=yes,all" );
 }
 
 function toJavaConsole()
@@ -183,32 +174,18 @@ function CycleWindow( inType, inChromeURL )
 
 function toEditor()
 {
-	var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-	if (!toolkitCore) {
-	  toolkitCore = new ToolkitCore();
-	  if (toolkitCore) {
-	    toolkitCore.Init("ToolkitCore");
-	  }
-	}
-	if (toolkitCore) {
-	  toolkitCore.ShowWindowWithArgs("chrome://editor/content/EditorAppShell.xul",null,"chrome://editor/content/EditorInitPage.html");
-	}
+    window.openDialog( "chrome://editor/content/EditorAppShell.xul",
+                       "_blank",
+                       "chrome,dialog=no,all",
+                       "chrome://editor/content/EditorInitPage.html" );
 }
 
 function toNewTextEditorWindow()
 {
-	core = XPAppCoresManager.Find("toolkitCore");
-	if ( !core ) {
-	    core = new ToolkitCore();
-	    if ( core ) {
-	        core.Init("toolkitCore");
-	    }
-	}
-	if ( core ) {
-	    core.ShowWindowWithArgs( "chrome://editor/content/TextEditorAppShell.xul", null, "chrome://editor/content/EditorInitPagePlain.html" );
-	} else {
-	    dump("Error; can't create toolkitCore\n");
-	}
+    window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
+                       "_blank",
+                       "chrome,dialog=no,all",
+                       "chrome://editor/content/EditorInitPagePlain.html" );
 }
 
 function ShowWindowFromResource( node )
