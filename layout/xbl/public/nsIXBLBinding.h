@@ -64,6 +64,8 @@ public:
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aBinding) = 0;
   NS_IMETHOD InstallProperties(nsIContent* aBoundElement) = 0;
 
+  NS_IMETHOD HasStyleSheets(PRBool* aResolveStyle) = 0;
+
   NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
   // Called when an attribute changes on a binding.

@@ -58,6 +58,8 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aBinding);
   NS_IMETHOD InstallProperties(nsIContent* aBoundElement);
 
+  NS_IMETHOD HasStyleSheets(PRBool* aResolveStyle);
+  
   NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
