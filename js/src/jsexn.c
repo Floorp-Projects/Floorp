@@ -66,7 +66,7 @@ static void
 exn_finalize(JSContext *cx, JSObject *obj);
 
 static JSClass ExceptionClass = {
-    "Exception",
+    "Error",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize,
