@@ -105,7 +105,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 /////////////////////////////////////////////////////////////////////////////////
 
 #define DEFAULT_URL_TYPE  "mailbox://"	
-#define	DEFAULT_MAILBOX_PATH "F|/mozilla/mozilla/client.mak"
+#define	DEFAULT_MAILBOX_PATH "/c|/raptor/mozilla/bugsplat"
 
 #ifdef XP_UNIX
 extern "C" char *fe_GetConfigDir(void) {
@@ -331,15 +331,14 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 {
 	nsresult rv = NS_OK; 
 	char * displayString = nsnull;
-	nsFilePath filePath("");
-	
+
 	PL_strcpy(m_userData, DEFAULT_MAILBOX_PATH);
 
 	displayString = PR_smprintf("Location of mailbox [%s]: ", m_userData);
 	rv = PromptForUserDataAndBuildUrl(displayString);
 	PR_FREEIF(displayString);
 
-	filePath = m_userData;
+	nsFilePath filePath(m_userData);
 	// now ask the mailbox service to parse this mailbox...
 	nsIMailboxService * mailboxService = nsnull;
 	rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::IID(), (nsISupports **) &mailboxService);
