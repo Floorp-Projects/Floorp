@@ -484,7 +484,6 @@ sub MakeResourceAliases()
 	my($navigator_chrome_dir) = "$chrome_dir" . "navigator:";
 	my($navigator_content_chrome_dir) = "$navigator_chrome_dir" . "content:";
 	my($navigator_locale_chrome_dir) = "$navigator_chrome_dir" . "locale:";
-	my($navigator_skin_chrome_dir) = "$navigator_chrome_dir" . "skin:";
 
 	my($necko_chrome_dir) = "$chrome_dir" . "necko:";
 	my($necko_content_chrome_dir) = "$necko_chrome_dir" . "content:";
@@ -493,12 +492,10 @@ sub MakeResourceAliases()
 	my($global_chrome_dir) = "$chrome_dir" . "global:";
 	my($global_content_chrome_dir) = "$global_chrome_dir" . "content:";
 	my($global_locale_chrome_dir) = "$global_chrome_dir" . "locale:";
-	my($global_skin_chrome_dir) = "$global_chrome_dir" . "skin:";
 
 	my($communicator_chrome_dir) = "$chrome_dir" . "communicator:";
 	my($communicator_content_chrome_dir) = "$communicator_chrome_dir" . "content:";
 	my($communicator_locale_chrome_dir) = "$communicator_chrome_dir" . "locale:";
-	my($communicator_skin_chrome_dir) = "$communicator_chrome_dir" . "skin:";
 
 	my($messenger_chrome_dir) = "$chrome_dir" . "messenger:";
 	my($messenger_content_chrome_dir) = "$messenger_chrome_dir" . "content:";
@@ -650,7 +647,6 @@ sub MakeResourceAliases()
 	{
 		my($bookmarks_content_chrome_dir) = "$communicator_content_chrome_dir"."bookmarks:";
 		my($bookmarks_locale_chrome_dir) = "$communicator_locale_chrome_dir"."bookmarks:";
-		my($bookmarks_skin_chrome_dir) = "$communicator_skin_chrome_dir"."bookmarks:";
 
 		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-content",	"$bookmarks_content_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:en-US:MANIFEST", "$bookmarks_locale_chrome_dir");
@@ -658,7 +654,6 @@ sub MakeResourceAliases()
 	{
 		my($directory_content_chrome_dir) = "$communicator_content_chrome_dir"."directory:";
 		my($directory_locale_chrome_dir) = "$communicator_locale_chrome_dir"."directory:";
-		my($directory_skin_chrome_dir) = "$communicator_skin_chrome_dir"."directory:";
 
 		_InstallResources(":mozilla:xpfe:components:directory:MANIFEST-content",			"$directory_content_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:directory:locale:en-US:MANIFEST",				"$directory_locale_chrome_dir");
@@ -666,7 +661,6 @@ sub MakeResourceAliases()
 	{
 		my($regviewer_content_chrome_dir) = "$communicator_content_chrome_dir"."regviewer:";
 		my($regviewer_locale_chrome_dir) = "$communicator_locale_chrome_dir"."regviewer:";
-		my($regviewer_skin_chrome_dir) = "$communicator_skin_chrome_dir"."regviewer:";
 
 		_InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-content",			"$regviewer_content_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:regviewer:locale:en-US:MANIFEST",				"$regviewer_locale_chrome_dir");
@@ -674,7 +668,6 @@ sub MakeResourceAliases()
 	{
 		my($history_content_chrome_dir) = "$communicator_content_chrome_dir"."history:";
 		my($history_locale_chrome_dir) = "$communicator_locale_chrome_dir"."history:";
-		my($history_skin_chrome_dir) = "$communicator_skin_chrome_dir"."history:";
 
 		_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",	"$history_content_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:history:resources:locale:en-US:MANIFEST",		"$history_locale_chrome_dir");
@@ -682,7 +675,6 @@ sub MakeResourceAliases()
 	{
 		my($related_content_chrome_dir) = "$communicator_content_chrome_dir"."related:";
 		my($related_locale_chrome_dir) = "$communicator_locale_chrome_dir"."related:";
-		my($related_skin_chrome_dir) = "$communicator_skin_chrome_dir"."related:";
 
 		_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-content",	"$related_content_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:related:resources:locale:en-US:MANIFEST",		"$related_locale_chrome_dir");
@@ -690,7 +682,6 @@ sub MakeResourceAliases()
 	{
 		my($search_content_chrome_dir) = "$communicator_content_chrome_dir"."search:";
 		my($search_locale_chrome_dir) = "$communicator_locale_chrome_dir"."search:";
-		my($search_skin_chrome_dir) = "$communicator_skin_chrome_dir"."search:";
 
 		_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-content",		"$search_content_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:search:resources:locale:en-US:MANIFEST",		"$search_locale_chrome_dir");
@@ -701,7 +692,6 @@ sub MakeResourceAliases()
 	{
 		my($sidebar_content_chrome_dir) = "$communicator_content_chrome_dir"."sidebar:";
 		my($sidebar_locale_chrome_dir) = "$communicator_locale_chrome_dir"."sidebar:";
-		my($sidebar_skin_chrome_dir) = "$communicator_skin_chrome_dir"."sidebar:";
 
 		_InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",	"$sidebar_content_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:en-US:MANIFEST",		"$sidebar_locale_chrome_dir");
@@ -710,7 +700,6 @@ sub MakeResourceAliases()
 	{
 		my($timebomb_content_chrome_dir) = "$communicator_content_chrome_dir"."timebomb:";
 		my($timebomb_locale_chrome_dir) = "$communicator_locale_chrome_dir"."timebomb:";
-		my($timebomb_skin_chrome_dir) = "$communicator_skin_chrome_dir"."timebomb:";
 
 		_InstallResources(":mozilla:xpfe:components:timebomb:resources:content:MANIFEST",	"$timebomb_content_chrome_dir");
 		_InstallResources(":mozilla:xpfe:components:timebomb:resources:locale:en-US:MANIFEST",	"$timebomb_locale_chrome_dir");
@@ -724,7 +713,6 @@ sub MakeResourceAliases()
 	{
 		my($pref_content_chrome_dir) = "$communicator_content_chrome_dir"."pref:";
 		my($pref_locale_chrome_dir) = "$communicator_locale_chrome_dir"."pref:";
-		my($pref_skin_chrome_dir) = "$communicator_skin_chrome_dir"."pref:";
 
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",		"$pref_content_chrome_dir", 0);
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",	"$pref_locale_chrome_dir", 0);
@@ -740,7 +728,6 @@ sub MakeResourceAliases()
 	{
 		my($wallet_content_chrome_dir) = "$communicator_content_chrome_dir"."wallet:";
 		my($wallet_locale_chrome_dir) = "$communicator_locale_chrome_dir"."wallet:";
-		my($wallet_skin_chrome_dir) = "$communicator_skin_chrome_dir"."wallet:";
 
 		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",				"$wallet_content_chrome_dir", 0);
 		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",				"$wallet_content_chrome_dir", 0);
@@ -757,7 +744,6 @@ sub MakeResourceAliases()
 	{
 		my($security_content_chrome_dir) = "$communicator_content_chrome_dir"."security:";
 		my($security_locale_chrome_dir) = "$communicator_locale_chrome_dir"."security:";
-		my($security_skin_chrome_dir) = "$communicator_skin_chrome_dir"."security:";
 		_InstallResources(":mozilla:caps:src:MANIFEST_PROPERTIES",	"$security_locale_chrome_dir", 0);
 	}
 
