@@ -248,7 +248,10 @@
  */
 #define PT_PRIO_MIN            1
 #define PT_PRIO_MAX            127
-#elif defined(NETBSD) || defined(OPENBSD) \
+#elif defined(OPENBSD)
+#define PT_PRIO_MIN            0
+#define PT_PRIO_MAX            31
+#elif defined(NETBSD) \
 	|| defined(BSDI) || defined(DARWIN) || defined(UNIXWARE) /* XXX */
 #define PT_PRIO_MIN            0
 #define PT_PRIO_MAX            126
