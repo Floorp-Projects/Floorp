@@ -5308,7 +5308,7 @@ constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType)
 			temp1 = PR_smprintf(html, tokenName, resourceID((RDF_Resource)token), (data) ? data:"");
 		}
 	}
-	else if ((data != NULL) && ((*data) != NULL))
+	else if ((data != NULL) && ((*data) != '\0'))
 	{
 		html=XP_GetString(RDF_HTML_STR_3);
 		temp1 = PR_smprintf(html, tokenName, (data) ? data:"");
