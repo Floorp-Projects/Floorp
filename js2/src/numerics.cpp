@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <cfloat>
-#include <algorithm>
 #include "numerics.h"
 
 namespace JS = JavaScript;
@@ -2735,10 +2734,22 @@ size_t JS::doubleToBaseStr(char *buffer, double value, uint base)
 
 
 // A version of doubleToStr that appends to the end of String dst.
-void JS::printDouble(String &dst, double value, DToStrMode mode, int precision)
+// precision should not exceed 101.
+void JS::appendDouble(String &dst, double value, DToStrMode mode, int precision)
 {
 	char buffer[dtosVariableBufferSize(101)];
 	ASSERT(uint(precision) <= 101);
 	
 	dst += doubleToStr(buffer, sizeof buffer, value, mode, precision);
+}
+
+
+// A version of doubleToStr that prints to Formatter f.
+// precision should not exceed 101.
+void JS::printDouble(Formatter &f, double value, DToStrMode mode, int precision)
+{
+	char buffer[dtosVariableBufferSize(101)];
+	ASSERT(uint(precision) <= 101);
+	
+	f << doubleToStr(buffer, sizeof buffer, value, mode, precision);
 }

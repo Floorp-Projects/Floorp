@@ -22,8 +22,6 @@
 // JS2 shell.
 //
 
-#include <algorithm>
-
 #include "world.h"
 #include "interpreter.h"
 
@@ -31,80 +29,7 @@ namespace JS = JavaScript;
 using namespace JavaScript;
 
 
-#ifdef XP_MAC
-#ifdef XP_MAC_MPW
-/* Macintosh MPW replacements for the ANSI routines.  These translate LF's to CR's because
-   the MPW libraries supplied by Metrowerks don't do that for some reason.  */
-static void translateLFtoCR(char *str, int length)
-{
-    char *limit = str + length;
-    while (str != limit) {
-        if (*str == '\n')
-            *str = '\r';
-        str++;
-    }
-}
-
-int fputc(int c, FILE *file)
-{
-    char buffer = c;
-    if (buffer == '\n')
-        buffer = '\r';
-    return fwrite(&buffer, 1, 1, file);
-}
-
-int fputs(const char *s, FILE *file)
-{
-    char buffer[4096];
-    int n = strlen(s);
-    int extra = 0;
-    
-    while (n > sizeof buffer) {
-        memcpy(buffer, s, sizeof buffer);
-        translateLFtoCR(buffer, sizeof buffer);
-        extra += fwrite(buffer, 1, sizeof buffer, file);
-        n -= sizeof buffer;
-        s += sizeof buffer;
-    }
-    memcpy(buffer, s, n);
-    translateLFtoCR(buffer, n);
-    return extra + fwrite(buffer, 1, n, file);
-}
-
-int fprintf(FILE* file, const char *format, ...)
-{
-    va_list args;
-    char smallBuffer[4096];
-    int n;
-    int bufferSize = sizeof smallBuffer;
-    char *buffer = smallBuffer;
-    int result;
-
-    va_start(args, format);
-    n = vsnprintf(buffer, bufferSize, format, args);
-    va_end(args);
-    while (n < 0) {
-        if (buffer != smallBuffer)
-            free(buffer);
-        bufferSize <<= 1;
-        buffer = malloc(bufferSize);
-        if (!buffer) {
-            ASSERT(false);
-            return 0;
-        }
-        va_start(args, format);
-        n = vsnprintf(buffer, bufferSize, format, args);
-        va_end(args);
-    }
-    translateLFtoCR(buffer, n);
-    result = fwrite(buffer, 1, n, file);
-    if (buffer != smallBuffer)
-        free(buffer);
-    return result;
-}
-
-
-#else /* XP_MAC_MPW */
+#if defined(XP_MAC) && !defined(XP_MAC_MPW)
 #include <SIOUX.h>
 #include <MacTypes.h>
 
@@ -118,65 +43,69 @@ static void initConsole(StringPtr consoleName, const char* startupMessage, int &
     // Set up a buffer for stderr (otherwise it's a pig).
     setvbuf(stderr, new char[BUFSIZ], _IOLBF, BUFSIZ);
 
-    std::cout << startupMessage;
+    stdOut << startupMessage;
 
     argc = 1;
     argv = mac_argv;
 }
-#endif /* XP_MAC_MPW */
-#endif /* XP_MAC */
+#endif
 
 
 // Interactively read a line from the input stream in and put it into s.
-static bool promptLine(istream &in, string &s, const char *prompt)
+// Return false if reached the end of input before reading anything.
+static bool promptLine(LineReader &inReader, string &s, const char *prompt)
 {
-    std::cout << prompt;
-#ifdef XP_MAC_MPW
-    /* Print a CR after the prompt because MPW grabs the entire line when entering an interactive command */
-    std::cout << std::endl;
-#endif
-#ifndef _WIN32
-	return std::getline(in, s) != 0;
-#else
-	char buffer[256];
-	bool result = fgets(buffer, sizeof(buffer), stdin) != 0;
-	s = buffer;
-	return result;
-#endif
+	if (prompt) {
+	    stdOut << prompt;
+	  #ifdef XP_MAC_MPW
+	    // Print a CR after the prompt because MPW grabs the entire line when entering an interactive command.
+	    stdOut << '\n';
+	  #endif
+	}
+	return inReader.readLine(s) != 0;
 }
 
 
-static void readEvalPrint(istream &in, World &world)
+const bool showTokens = true;
+
+static void readEvalPrint(FILE *in, World &world)
 {
 	String buffer;
 	string line;
 	String sourceLocation = widenCString("console");
+	LineReader inReader(in);
 
-	while (promptLine(in, line, buffer.empty() ? "js> " : "")) {
-		if (!buffer.empty())
-			buffer += uni::lf;
+	while (promptLine(inReader, line, buffer.empty() ? "js> " : 0)) {
 		appendChars(buffer, line.data(), line.size());
-		if (!buffer.empty()) {
-			try {
-				Lexer l(world, buffer, sourceLocation);
+		try {
+			Arena a;
+			Parser p(world, a, buffer, sourceLocation);
+
+			if (showTokens) {
+				Lexer &l = p.lexer;
 				while (true) {
 					const Token &t = l.get(true);
 					if (t.hasKind(Token::end))
 						break;
-					String out;
-					out += ' ';
-					t.print(out, true);
-					showString(std::cout, out);
+					stdOut << ' ';
+					t.print(stdOut, true);
 				}
-			} catch (Exception &e) {
-				std::cout << std::endl;
-				showString(std::cout, e.fullMessage());
+			} else {
+				ExprNode *parseTree = p.parsePostfixExpression();
 			}
-			std::cout << std::endl;
 			clear(buffer);
+			stdOut << '\n';
+		} catch (Exception &e) {
+			// If we got a syntax error on the end of input, then wait for a continuation
+			// of input rather than printing the error message.
+			if (!(e.hasKind(Exception::syntaxError) && e.lineNum && e.pos == buffer.size() &&
+				  e.sourceFile == sourceLocation)) {
+				stdOut << '\n' << e.fullMessage();
+				clear(buffer);
+			}
 		}
 	}
-    std::cout << std::endl;
+    stdOut << '\n';
 #if 0	
     do {
         bufp = buffer;
@@ -276,7 +205,7 @@ static int ProcessInputFile(JSContext *cx, JSObject *obj, char *filename)
 static int
 usage(void)
 {
-    std::cerr << "usage: js [-s] [-w] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n";
+    stdErr << "usage: js [-s] [-w] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n";
     return 2;
 }
 
@@ -474,7 +403,7 @@ int main(int argc, char **argv)
     testInterpreter(5);
     testICG(world);
   #endif
-	readEvalPrint(std::cin, world);
+	readEvalPrint(stdin, world);
     return 0;
 
     //return ProcessArgs(argv + 1, argc - 1);

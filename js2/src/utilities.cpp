@@ -20,7 +20,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <iomanip>
-#include <algorithm>
 #include "utilities.h"
 
 #ifdef WIN32
@@ -1563,7 +1562,7 @@ struct JS::Arena::DestructorEntry: JS::ArenaObject {
 
 
 // Construct an Arena that allocates memory in chunks of the given size.
-JS::Arena::Arena(size_t blockSize): blockSize(blockSize), freeBegin(0), freeEnd(0)
+JS::Arena::Arena(size_t blockSize): freeBegin(0), freeEnd(0), blockSize(blockSize), destructorEntries(0)
 {
 	ASSERT(blockSize && !(blockSize & basicAlignment-1));
 	rootDirectory.next = 0;
@@ -1691,56 +1690,300 @@ JS::String &JS::newArenaString(Arena &arena, const String &str)
 
 
 //
-// C++ I/O
+// Output
 //
 
-#ifdef __GNUC__
-JS::SaveFormat::SaveFormat(ostream &) {}
-
-JS::SaveFormat::~SaveFormat() {}
-#else
-JS::SaveFormat::SaveFormat(ostream &out): o(out), flags(out.flags()), fill(out.fill()) {}
-
-JS::SaveFormat::~SaveFormat()
-{
-	o.flags(flags);
-	o.fill(fill);
-}
-#endif
-
-
-// Quotes for printing non-ASCII characters on an ASCII stream
-#ifdef XP_MAC
- const char beginUnprintable = char(0xC7);
- const char endUnprintable = char(0xC8);
-#else
- const char beginUnprintable = '{';
- const char endUnprintable = '}';
-#endif
-
-void JS::showChar(ostream &out, char16 ch)
-{
 #ifdef XP_MAC_MPW
-	if (ch == '\n')
-		out << '\r';
-	else
-#endif
-	if (uchar16(ch) <= 0x7E && (uchar16(ch) >= ' ' || ch == '\n' || ch == '\t'))
-		out << static_cast<char>(ch);
-	else {
-		SaveFormat sf(out);
-#ifdef __GNUC__
-		out << beginUnprintable << std::hex << std::setw(4) << std::setfill('0') << (uint16)ch << endUnprintable;
-#else
-		out << beginUnprintable << std::hex << std::uppercase << std::setw(4) << std::setfill('0') << (uint16)ch << endUnprintable;
-#endif
+// Macintosh MPW replacements for the ANSI routines.  These translate LF's to CR's because
+// the MPW libraries supplied by Metrowerks don't do that for some reason.
+static void translateLFtoCR(char *begin, char *end)
+{
+	while (begin != end) {
+		if (*begin == '\n')
+			*begin = '\r';
+		++begin;
+	}
+}
+
+size_t JS::printChars(FILE *file, const char *begin, const char *end)
+{
+	ASSERT(end >= begin);
+	size_t n = static_cast<size_t>(end - begin);
+	size_t extra = 0;
+	char buffer[1024];
+
+	while (n > sizeof buffer) {
+		memcpy(buffer, s, sizeof buffer);
+		translateLFtoCR(buffer, buffer + sizeof buffer);
+		extra += fwrite(buffer, 1, sizeof buffer, file);
+		n -= sizeof buffer;
+		s += sizeof buffer;
+	}
+	memcpy(buffer, s, n);
+	translateLFtoCR(buffer, buffer + n);
+	return extra + fwrite(buffer, 1, n, file);
+}
+
+int std::fputc(int c, FILE *file)
+{
+	char buffer = c;
+	if (buffer == '\n')
+		buffer = '\r';
+	return fwrite(&buffer, 1, 1, file);
+}
+
+int std::fputs(const char *s, FILE *file)
+{
+	return static_cast<int>(printChars(file, s, s + strlen(s)));
+}
+
+int std::fprintf(FILE* file, const char *format, ...)
+{
+	Buffer<char, 1024> b;
+
+	while (true) {
+		va_list args;
+		va_start(args, format);
+		int n = vsnprintf(b.buffer, b.size, format, args);
+		va_end(args);
+		if (n >= 0 && n < b.size) {
+			translateLFtoCR(b.buffer, b.buffer + n);
+			return static_cast<int>(fwrite(b.buffer, 1, n, file));
+		}
+		b.expand(b.size*2);
+	}
+}
+#endif // XP_MAC_MPW
+
+
+
+static const printCharBufferSize = 64;
+
+// Print ch count times.
+void JS::printChar(Formatter &f, char ch, int count)
+{
+	char str[printCharBufferSize];
+	
+	while (count > 0) {
+		int c = count;
+		if (c > printCharBufferSize)
+			c = printCharBufferSize;
+		count -= c;
+		STD::memset(str, ch, static_cast<size_t>(count));
+		printString(f, str, str+c);
 	}
 }
 
 
-void JS::showString(ostream &out, const String &str)
+// Print ch count times.
+void JS::printChar(Formatter &f, char16 ch, int count)
 {
-	showString(out, str.begin(), str.end());
+	char16 str[printCharBufferSize];
+	
+	while (count > 0) {
+		int c = count;
+		if (c > printCharBufferSize)
+			c = printCharBufferSize;
+		count -= c;
+		char16 *strEnd = str + c;
+		std::fill(str, strEnd, ch);
+		printString(f, str, strEnd);
+	}
+}
+
+
+// Print i using the given formatting string, padding on the left with pad characters
+// to use at least nDigits characters.
+void JS::printNum(Formatter &f, uint32 i, int nDigits, char pad, const char *format)
+{
+	char str[20];
+	int n = sprintf(str, format, i);
+	if (n < nDigits)
+		printChar(f, pad, nDigits - n);
+	printString(f, str, str+n);
+}
+
+
+// Print p as a pointer.
+void JS::printPtr(Formatter &f, void *p)
+{
+	char str[20];
+	int n = sprintf(str, "%p", p);
+	printString(f, str, str+n);
+}
+
+
+// printf formats for printing non-ASCII characters on an ASCII stream
+#ifdef XP_MAC
+ static const char unprintableFormat[] = "\xC7%.4X\xC8";	// Use angle quotes
+#elif defined _WIN32
+ static const char unprintableFormat[] = "\xAB%.4X\xBB";	// Use angle quotes
+#else
+ static const char unprintableFormat[] = "<%.4X>";
+#endif
+
+
+static const uint16 defaultFilterRanges[] = {
+	0x00, 0x09,		// Filter all control characters except \t and \n
+	0x0B, 0x20,
+	0x7F, 0x100,	// Filter all non-ASCII characters
+	0, 0
+};
+
+JS::BitSet<256> JS::AsciiFileFormatter::defaultFilter(defaultFilterRanges);
+
+
+// Construct an AsciiFileFormatter using the given file and filter.
+// If the filter is nil, use the default filter.
+JS::AsciiFileFormatter::AsciiFileFormatter(FILE *file, BitSet<256> *filter):
+	file(file), filter(filter ? *filter : defaultFilter)
+{
+	filterEmpty = AsciiFileFormatter::filter.none();
+}
+
+
+// Write ch, escaping non-ASCII characters.
+void JS::AsciiFileFormatter::printChar8(char ch)
+{
+	if (filterChar(ch))
+		fprintf(file, unprintableFormat, static_cast<uchar>(ch));
+	else
+		fputc(ch, file);
+}
+
+
+// Write ch, escaping non-ASCII characters.
+void JS::AsciiFileFormatter::printChar16(char16 ch)
+{
+	if (filterChar(ch))
+		fprintf(file, unprintableFormat, char16Value(ch));
+	else
+		fputc(static_cast<char>(ch), file);
+}
+
+
+// Write the null-terminated string str, escaping non-ASCII characters.
+void JS::AsciiFileFormatter::printZStr8(const char *str)
+{
+	if (filterEmpty)
+		fputs(str, file);
+	else
+		printStr8(str, str + strlen(str));
+}
+
+
+// Write the string between strBegin and strEnd, escaping non-ASCII characters.
+void JS::AsciiFileFormatter::printStr8(const char *strBegin, const char *strEnd)
+{
+	if (filterEmpty)
+		printChars(file, strBegin, strEnd);
+	else {
+		ASSERT(strEnd >= strBegin);
+		const char *p = strBegin;
+		while (strBegin != strEnd) {
+			char ch = *strBegin;
+			if (filterChar(ch)) {
+				if (p != strBegin) {
+					printChars(file, p, strBegin);
+					p = strBegin;
+				}
+				fprintf(file, unprintableFormat, static_cast<uchar>(ch));
+			}
+			++strBegin;
+		}
+		if (p != strBegin)
+			printChars(file, p, strBegin);
+	}
+}
+
+
+// Write the string between strBegin and strEnd, escaping non-ASCII characters.
+void JS::AsciiFileFormatter::printStr16(const char16 *strBegin, const char16 *strEnd)
+{
+	char buffer[512];
+
+	ASSERT(strEnd >= strBegin);
+	char *q = buffer;
+	while (strBegin != strEnd) {
+		char16 ch = *strBegin++;
+		if (filterChar(ch)) {
+			if (q != buffer) {
+				printChars(file, buffer, q);
+				q = buffer;
+			}
+			fprintf(file, unprintableFormat, char16Value(ch));
+		} else {
+			*q++ = static_cast<char>(ch);
+			if (q == buffer + sizeof buffer) {
+				printChars(file, buffer, buffer + sizeof buffer);
+				q = buffer;
+			}
+		}
+	}
+	if (q != buffer)
+		printChars(file, buffer, q);
+}
+
+
+// Write the String s, escaping non-ASCII characters.
+void JS::AsciiFileFormatter::printString16(const String &s)
+{
+	const char16 *begin = s.data();
+	printStr16(begin, begin + s.size());
+}
+
+
+// Write the printf format using the supplied args, escaping non-ASCII characters.
+void JS::AsciiFileFormatter::printVFormat8(const char *format, va_list args)
+{
+	Buffer<char, 1024> b;
+
+	while (true) {
+		int n = vsnprintf(b.buffer, b.size, format, args);
+		if (n >= 0 && n < b.size) {
+			printStr8(b.buffer, b.buffer + n);
+			return;
+		}
+		b.expand(b.size*2);
+	}
+}
+
+JS::AsciiFileFormatter JS::stdOut(stdout);
+JS::AsciiFileFormatter JS::stdErr(stderr);
+
+
+//
+// Input
+//
+
+
+// Read a line from the input file, including the trailing line break character.
+// Return the total number of characters read, which is str's length.
+// Translate <CR> and <CR><LF> sequences to <LF> characters; a <CR><LF> sequence
+// only counts as one character.
+size_t JS::LineReader::readLine(string &str)
+{
+	int ch;
+	bool oldCRWasLast = crWasLast;
+	crWasLast = false;
+
+	str.resize(0);
+	while ((ch = getc(in)) != EOF) {
+		if (ch == '\n') {
+			if (!str.size() && oldCRWasLast)
+				continue;
+			str += '\n';
+			break;
+		}
+		if (ch == '\r') {
+			crWasLast = true;
+			str += '\n';
+			break;
+		}
+		str += static_cast<char>(ch);
+	}
+	
+	return str.size();
 }
 
 
@@ -1750,7 +1993,8 @@ void JS::showString(ostream &out, const String &str)
 
 
 static const char *const kindStrings[] = {
-	"Syntax error"				// SyntaxError
+	"Syntax error",				// syntaxError
+	"Stack overflow"			// stackOverflow
 };
 
 // Return a null-terminated string describing the exception's kind.
@@ -1763,7 +2007,8 @@ const char *JS::Exception::kindString() const
 // Return the full error message.
 JS::String JS::Exception::fullMessage() const
 {
-	String m(sourceFile);
+	String m(widenCString("In "));
+	m += sourceFile;
 	if (lineNum) {
 		char b[32];
 		sprintf(b, ", line %d:\n", lineNum);
@@ -1779,6 +2024,7 @@ JS::String JS::Exception::fullMessage() const
 	m += kindString();
 	m += ": ";
 	m += message;
+	m += '\n';
 	return m;
 }
 
