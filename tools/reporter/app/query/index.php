@@ -88,7 +88,9 @@ if (isset($_GET['count'])){
 	$_GET['count'] = 'host_id'; // XXX we just hardcode this (just easier for now, and all people will be doing);
 
 	//Sort by
-	$orderby = 'count';
+	if($orderby == ''){
+		$orderby = 'count';
+	}
 }
 
 // Build SELECT clause of SQL
@@ -172,29 +174,36 @@ else if ($_GET['submit_query']){
 	
 	$sql_where .= 'host.host_id = report_host_id AND ';
 	$sql_where = substr($sql_where, 0, -5);
+
+	if ($orderby != 'report_file_date'){
+		$subOrder = ', report.report_file_date DESC';
+	}
 } else {
 	?><h1>No Query</h1><?php
 	exit;
 }
 
-// Security note:  we escapeSimple() $select as we generate it above (escape each $key), so it would be redundant to do so here.  
+// Security note:  we escapeSimple() $select as we generate it above (escape each $key), so it would be redundant to do so here.
 //					Not to mention it would break things
 
 
 $start = ($_GET['page']-1)*$_GET['show'];
 
-print "<!-- SELECT $sql_select
-                      FROM `report`, `host`
-                      WHERE $sql_where
-                      ORDER BY ".$db->escapeSimple($orderby)." ".$db->escapeSimple($ascdesc).
-                      " LIMIT $start, ".$db->escapeSimple($_GET['show'])."-->";
+if($config['debug'] == true){
+	print "<!-- SELECT $sql_select
+			FROM `report`, `host`
+			WHERE $sql_where
+			$group_by
+			ORDER BY ".$db->escapeSimple($orderby)." ".$db->escapeSimple($ascdesc).$subOrder.
+			" LIMIT $start, ".$db->escapeSimple($_GET['show'])."-->";
+}
 $result = $db->query("SELECT $sql_select
                       FROM `report`, `host`
                       WHERE $sql_where
-					  $group_by
-                      ORDER BY ".$db->escapeSimple($orderby)." ".$db->escapeSimple($ascdesc).
+                      $group_by
+                      ORDER BY ".$db->escapeSimple($orderby)." ".$db->escapeSimple($ascdesc).$subOrder.
                       " LIMIT $start, ".$db->escapeSimple($_GET['show']));
-$numresults	= $result->numRows();
+$numresults = $result->numRows();
 
 if (isset($_GET['count'])){
 	$totalresults = 2;
@@ -208,37 +217,39 @@ $totalresults = $totalresults[0];
 ?><table id="query_table">
   <?php /*  RESULTS LIST HEADER */ ?>
 	<tr>
-  	<?php 
-		  // Continuity params
-          reset($_GET);
-          while (list($param, $val) = each($_GET)) {	
-          if (($param != 'orderby') && ($param != 'ascdesc'))
-            $continuity_params .= $param.'='.$val.'&amp;';
-          }
+  	<?php
+	// Continuity params
+	reset($_GET);
+	while (list($param, $val) = each($_GET)) {
+	if (($param != 'orderby') && ($param != 'ascdesc'))
+		$continuity_params .= $param.'='.rawurlencode($val).'&amp;';
+	}
 
-          reset($selected); 
-  	      while (list($key, $title) = each($selected)) { ?>
-		<th><a href="<?php print $config['self']; ?>?orderby=<?php print $key; ?>&amp;ascdesc=<?php 
-		if ($orderby == $key) {
-			if ($ascdesc == 'asc'){
-				print 'desc';
+	reset($selected);
+	while (list($key, $title) = each($selected)) { ?>
+		<th>
+                <?PHP if ($key != 'report_id'){ ?>
+                <a href="<?php print $config['self']; ?>?orderby=<?php print $key; ?>&amp;ascdesc=<?php
+			if ($orderby == $key) {
+				if ($ascdesc == 'asc'){
+					print 'desc';
+				}
+				else if ($ascdesc == 'desc'){
+					print 'asc';
+				}
+			} else {
+				print $ascdesc;
 			}
-			else if ($ascdesc == 'desc'){
-				print 'asc';
-			}
-		} else {
-			print $ascdesc;
-		}
-    // Always print continuity params:
-	$continuity_params = substr($continuity_params, 0, -1);
-
-    print '&'.$continuity_params;
-    ?>"><?php print $title; ?></a></th>
+		// Always print continuity params:
+		$continuity_params = substr($continuity_params, 0, -1);
+		print '&'.$continuity_params;
+		?>">
+		<?PHP } ?>
+                <?php print $title; ?><?PHP if ($key != 'report_id'){ ?></a><?PHP } ?></th>
 	<?php } ?>
-	
 	</tr>
 	<?php if ($numresults < 1){ ?>
-		<tr><td colspan="<?php print sizeof($selected); ?>"><h3>No Results found</h3></td></tr>		
+		<tr><td colspan="<?php print sizeof($selected); ?>"><h3>No Results found</h3></td></tr>
 	<?php } else { ?>
 		<?php for ($i=0; $row = $result->fetchRow(DB_FETCHMODE_ASSOC); $i++) { ?>
 			<tr <?PHP if ($i % 2 == 1){ ?>class="alt" <?PHP } ?> >
@@ -283,7 +294,7 @@ $totalresults = $totalresults[0];
     reset($_GET);
     while (list($param, $val) = each($_GET)) {	
 	if (($param != 'page') && ($param != 'show'))
-		$paginate_params .= $param.'='.$val.'&amp;';
+		$paginate_params .= $param.'='.rawurlencode($val).'&amp;';
 	}
 	$paginate_params = substr($paginate_params, 0, -5);
 ?>
