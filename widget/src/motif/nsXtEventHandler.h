@@ -34,6 +34,7 @@ void nsXtWidget_FSBCancel_Callback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data);
 
 //----------------------------------------------------
+void nsXtWidget_Focus_Callback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Toggle_Callback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data);

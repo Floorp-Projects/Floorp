@@ -93,7 +93,7 @@ typedef struct COLLAPSE_INFO {
 //==============================================================
 static void expandDamageRect(nsRect *drect, XEvent *xev, Boolean debug, char*str)
 {
-    int x1 = xev->xexpose.x;
+/*    int x1 = xev->xexpose.x;
     int y1 = xev->xexpose.y;
     int x2 = x1 + xev->xexpose.width;
     int y2 = y1 + xev->xexpose.height;
@@ -112,7 +112,7 @@ static void expandDamageRect(nsRect *drect, XEvent *xev, Boolean debug, char*str
     if (debug) {
         printf("(%d,%d %dx%d) %s\n",
                drect->x, drect->y, drect->width - drect->x, drect->height - drect->y);
-    }
+    }*/
 }
 
 //==============================================================
@@ -307,6 +307,20 @@ void nsXtWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Bo
   nsMouseEvent mevent;
   nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_EXIT);
   widgetWindow->DispatchMouseEvent(mevent);
+}
+
+//==============================================================
+void nsXtWidget_Focus_Callback(Widget w, XtPointer p, XtPointer call_data)
+{
+  nsWindow * widgetWindow = (nsWindow *) p ;
+
+  XmAnyCallbackStruct * cbs = (XmAnyCallbackStruct*)call_data;
+
+  nsGUIEvent event;
+  nsXtWidget_InitNSEvent(cbs->event, p, event, 
+                         cbs->reason == XmCR_FOCUS?NS_GOTFOCUS:NS_LOSTFOCUS);
+  widgetWindow->DispatchFocus(event);
+  
 }
 
 //==============================================================
@@ -595,7 +609,7 @@ void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
 
 
       if (! widgetWindow->GetResized()) {
-        printf("Adding timeout for %d\n", widgetWindow);
+        //printf("Adding timeout for %d\n", widgetWindow);
         XtAppAddTimeOut(gAppContext, 250, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, widgetWindow);
       }
 
@@ -620,7 +634,6 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
   if (DBG) fprintf(stderr, "In nsXtWidget_Text_Callback\n");
   nsWindow * widgetWindow = (nsWindow *) p ;
-  char * newStr;
   int len;
 
   XmTextVerifyCallbackStruct *cbs = (XmTextVerifyCallbackStruct *) call_data;
@@ -636,8 +649,8 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
     return;
   }
 
-  printf("start %d  insert %d  len %d  end %d  ptr [%s]\n", 
-         cbs->startPos, cbs->currInsert, cbs->text->length, cbs->endPos, cbs->text->ptr);
+  //printf("start %d  insert %d  len %d  end %d  ptr [%s]\n", 
+         //cbs->startPos, cbs->currInsert, cbs->text->length, cbs->endPos, cbs->text->ptr);
 
   if (cbs->startPos < cbs->currInsert) {   /* backspace */
       cbs->endPos = data->mPassword.Length();       /* delete from here to end */
@@ -652,7 +665,7 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
   //}
 
   if (cbs->startPos == cbs->currInsert && cbs->currInsert < data->mPassword.Length()) {
-    printf("Inserting [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
+    //printf("Inserting [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
     nsString insStr(cbs->text->ptr);
     data->mPassword.Insert(insStr, cbs->currInsert, strlen(cbs->text->ptr));
   } else if (cbs->startPos == cbs->currInsert && cbs->endPos != cbs->startPos) {
@@ -660,7 +673,7 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
     printf("Setting Length [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
   } else if (cbs->startPos == cbs->currInsert) {   /* backspace */
     data->mPassword.Append(cbs->text->ptr);
-    printf("Appending [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
+    //printf("Appending [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
   } else {
     printf("Shouldn't be here!\n");
   }
