@@ -165,7 +165,7 @@ PRLogModuleInfo* nsCachedChromeChannel::gLog;
 
 NS_IMPL_ISUPPORTS2(nsCachedChromeChannel,
                    nsIChannel,
-                   nsIRequest);
+                   nsIRequest)
 
 nsresult
 nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
@@ -512,7 +512,7 @@ nsChromeProtocolHandler::~nsChromeProtocolHandler()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsChromeProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsChromeProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference)
 
 NS_METHOD
 nsChromeProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

@@ -109,7 +109,7 @@ nsSSLStatus::nsSSLStatus()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSSLStatus, nsISSLStatus);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSSLStatus, nsISSLStatus)
 
 nsSSLStatus::~nsSSLStatus()
 {

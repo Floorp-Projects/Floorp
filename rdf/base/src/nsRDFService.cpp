@@ -580,8 +580,8 @@ LiteralImpl::~LiteralImpl()
     NS_RELEASE2(gRDFService, refcnt);
 }
 
-NS_IMPL_THREADSAFE_ADDREF(LiteralImpl);
-NS_IMPL_THREADSAFE_RELEASE(LiteralImpl);
+NS_IMPL_THREADSAFE_ADDREF(LiteralImpl)
+NS_IMPL_THREADSAFE_RELEASE(LiteralImpl)
 
 nsresult
 LiteralImpl::QueryInterface(REFNSIID iid, void** result)
@@ -682,8 +682,8 @@ DateImpl::~DateImpl()
     NS_RELEASE2(gRDFService, refcnt);
 }
 
-NS_IMPL_ADDREF(DateImpl);
-NS_IMPL_RELEASE(DateImpl);
+NS_IMPL_ADDREF(DateImpl)
+NS_IMPL_RELEASE(DateImpl)
 
 nsresult
 DateImpl::QueryInterface(REFNSIID iid, void** result)
@@ -788,8 +788,8 @@ IntImpl::~IntImpl()
     NS_RELEASE2(gRDFService, refcnt);
 }
 
-NS_IMPL_ADDREF(IntImpl);
-NS_IMPL_RELEASE(IntImpl);
+NS_IMPL_ADDREF(IntImpl)
+NS_IMPL_RELEASE(IntImpl)
 
 nsresult
 IntImpl::QueryInterface(REFNSIID iid, void** result)

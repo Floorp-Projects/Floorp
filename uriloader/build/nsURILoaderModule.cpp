@@ -57,7 +57,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefetchService, Init)
 // Define the constructor functions for the Mac specific objects
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsInternetConfigService.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService)
 #endif
 
 ////////////////////////////////////////////////////////////////////////

@@ -124,8 +124,8 @@ protected:
   PRBool mIsContentPreferred;
 };
 
-NS_IMPL_THREADSAFE_ADDREF(nsDocumentOpenInfo);
-NS_IMPL_THREADSAFE_RELEASE(nsDocumentOpenInfo);
+NS_IMPL_THREADSAFE_ADDREF(nsDocumentOpenInfo)
+NS_IMPL_THREADSAFE_RELEASE(nsDocumentOpenInfo)
 
 NS_INTERFACE_MAP_BEGIN(nsDocumentOpenInfo)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequestObserver)
@@ -531,8 +531,8 @@ nsURILoader::~nsURILoader()
 {
 }
 
-NS_IMPL_ADDREF(nsURILoader);
-NS_IMPL_RELEASE(nsURILoader);
+NS_IMPL_ADDREF(nsURILoader)
+NS_IMPL_RELEASE(nsURILoader)
 
 NS_INTERFACE_MAP_BEGIN(nsURILoader)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURILoader)

@@ -180,4 +180,4 @@ static const nsModuleComponentInfo components[] =
       NS_LOCALSTORE_CONTRACTID, NS_NewLocalStore },
 };
 
-NS_IMPL_NSGETMODULE(nsRDFModule, components);
+NS_IMPL_NSGETMODULE(nsRDFModule, components)

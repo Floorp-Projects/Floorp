@@ -33,7 +33,7 @@ nsSSLSocketProvider::~nsSSLSocketProvider()
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsSSLSocketProvider, nsISocketProvider,
-                              nsISSLSocketProvider);
+                              nsISSLSocketProvider)
 
 NS_IMETHODIMP
 nsSSLSocketProvider::NewSocket(const char *host,

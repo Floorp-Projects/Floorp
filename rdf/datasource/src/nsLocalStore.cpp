@@ -281,8 +281,8 @@ NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 // nsISupports interface
 
-NS_IMPL_ADDREF(LocalStoreImpl);
-NS_IMPL_RELEASE(LocalStoreImpl);
+NS_IMPL_ADDREF(LocalStoreImpl)
+NS_IMPL_RELEASE(LocalStoreImpl)
 
 NS_IMETHODIMP
 LocalStoreImpl::QueryInterface(REFNSIID aIID, void** aResult)

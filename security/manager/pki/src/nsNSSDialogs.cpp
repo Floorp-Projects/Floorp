@@ -73,7 +73,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS8(nsNSSDialogs, nsITokenPasswordDialogs,
                                             nsICertPickDialogs,
                                             nsITokenDialogs,
                                             nsIDOMCryptoDialogs,
-                                            nsIGeneratingKeypairInfoDialogs);
+                                            nsIGeneratingKeypairInfoDialogs)
 
 nsresult
 nsNSSDialogs::Init()

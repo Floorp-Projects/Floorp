@@ -163,7 +163,7 @@ NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
                    nsIFormSubmitObserver,
                    nsIObserver,
                    nsISupportsWeakReference,
-                   nsISSLStatusProvider);
+                   nsISSLStatusProvider)
 
 
 NS_IMETHODIMP
