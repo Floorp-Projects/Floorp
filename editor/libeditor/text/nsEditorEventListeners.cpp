@@ -194,46 +194,50 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // so look for special keys using keyCode
     if (0 != keyCode)
     {
-      if (nsIDOMKeyEvent::DOM_VK_SHIFT==keyCode
-          || nsIDOMKeyEvent::DOM_VK_CONTROL==keyCode
-          || nsIDOMKeyEvent::DOM_VK_ALT==keyCode)
-        return NS_ERROR_BASE; // consumed
-      if (nsIDOMKeyEvent::DOM_VK_BACK_SPACE==keyCode) 
+      switch (keyCode)
       {
-        mEditor->DeleteSelection(nsIEditor::ePrevious);
-        ScrollSelectionIntoView(mEditor);
-        return NS_ERROR_BASE; // consumed
-      }   
-      if (nsIDOMKeyEvent::DOM_VK_DELETE==keyCode)
-      {
-        mEditor->DeleteSelection(nsIEditor::eNext);
-        ScrollSelectionIntoView(mEditor);
-        return NS_ERROR_BASE; // consumed
-      }   
-      if (nsIDOMKeyEvent::DOM_VK_TAB==keyCode)
-      {
-        if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
-          return NS_OK; // let it be used for focus switching
+        // we should be handling DOM_VK_META here too but it doesn't exist at the moment
+        case nsIDOMKeyEvent::DOM_VK_SHIFT:
+        case nsIDOMKeyEvent::DOM_VK_CONTROL:
+        case nsIDOMKeyEvent::DOM_VK_ALT:
+          aKeyEvent->PreventDefault(); // consumed
+          return NS_OK;
+          break;
 
-        // else we insert the tab straight through
-        htmlEditor->EditorKeyPress(keyEvent);
-        ScrollSelectionIntoView(mEditor);
-        return NS_ERROR_BASE; // "I handled the event, don't do default processing"
-      }
-      if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode
-          || nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
-      {
-        if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
-        {
-          //htmlEditor->InsertBreak();
+        case nsIDOMKeyEvent::DOM_VK_BACK_SPACE: 
+          mEditor->DeleteSelection(nsIEditor::ePrevious);
+          ScrollSelectionIntoView(mEditor);
+          aKeyEvent->PreventDefault(); // consumed
+          return NS_OK;
+          break;
+   
+        case nsIDOMKeyEvent::DOM_VK_DELETE:
+          mEditor->DeleteSelection(nsIEditor::eNext);
+          ScrollSelectionIntoView(mEditor);
+          aKeyEvent->PreventDefault(); // consumed
+          return NS_OK; 
+          break;
+   
+        case nsIDOMKeyEvent::DOM_VK_TAB:
+          if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
+            return NS_OK; // let it be used for focus switching
+
+          // else we insert the tab straight through
           htmlEditor->EditorKeyPress(keyEvent);
           ScrollSelectionIntoView(mEditor);
-          return NS_ERROR_BASE; // consumed
-        }
-        else 
-        {
+          aKeyEvent->PreventDefault(); // consumed
+          return NS_OK; 
+
+        case nsIDOMKeyEvent::DOM_VK_RETURN:
+        case nsIDOMKeyEvent::DOM_VK_ENTER:
+          if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
+          {
+            //htmlEditor->InsertBreak();
+            htmlEditor->EditorKeyPress(keyEvent);
+            ScrollSelectionIntoView(mEditor);
+            aKeyEvent->PreventDefault(); // consumed
+          }
           return NS_OK;
-        }
       }
     }
 
@@ -243,8 +247,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   else
     ScrollSelectionIntoView(mEditor);
 
-  return NS_ERROR_BASE; // consumed
-  
+  return NS_OK; // we don't PreventDefault() here or keybindings like control-x won't work 
 }
 
 
@@ -266,7 +269,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
   if (NS_SUCCEEDED(keyEvent->GetCharCode(&charCode)))
   {
     // Figure out the modifier key, different on every platform
-    PRBool isOnlyPlatformModifierKey = PR_FALSE;;
+    PRBool isOnlyPlatformModifierKey = PR_FALSE;
     PRBool isCtrlKey, isAltKey, isMetaKey, isShiftKey;
     if (NS_SUCCEEDED(keyEvent->GetAltKey(&isAltKey)) &&
         NS_SUCCEEDED(keyEvent->GetMetaKey(&isMetaKey)) &&
@@ -504,13 +507,13 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
 
         if (!nsuiEvent)
-          return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+          return NS_ERROR_NULL_POINTER;
         nsCOMPtr<nsIDOMNode> parent;
         if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
-          return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+          return NS_ERROR_NULL_POINTER;
         PRInt32 offset = 0;
         if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
-          return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+          return NS_ERROR_NULL_POINTER;
 
         nsCOMPtr<nsIDOMSelection> selection;
         if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
@@ -530,17 +533,17 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         else
           editor->Paste(nsIClipboard::kSelectionClipboard);
 
-     // Prevent the event from bubbling up to be possibly handled
+        // Prevent the event from bubbling up to be possibly handled
         // again by the containing window:
         mouseEvent->PreventBubble();
         mouseEvent->PreventDefault();
 
-        // We processed the event, whether paste succeeded or not:
-        return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+        // We processed the event, whether drop/paste succeeded or not
+        return NS_OK;
       }
     }
    }
-   return NS_OK;   // did not process the event
+   return NS_OK;
 }
 
 nsresult
@@ -739,33 +742,7 @@ nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
-  nsresult rv;
-  NS_WITH_SERVICE ( nsIDragService, dragService, "component://netscape/widget/dragservice", &rv );
-  if ( NS_SUCCEEDED(rv) ) {
-    nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
-    if ( dragSession ) {
-      PRUint32 flags;
-      if (NS_SUCCEEDED(mEditor->GetFlags(&flags))) {
-        if ((flags & nsIHTMLEditor::eEditorDisabledMask) || 
-            (flags & nsIHTMLEditor::eEditorReadonlyMask)) {
-          dragSession->SetCanDrop(PR_FALSE);
-          return NS_OK;
-        }
-      }
-      PRBool flavorSupported = PR_FALSE;
-      dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
-      if ( !flavorSupported ) 
-        dragSession->IsDataFlavorSupported(kHTMLMime, &flavorSupported);
-      if ( !flavorSupported ) 
-        dragSession->IsDataFlavorSupported(kFileMime, &flavorSupported);
-      if ( !flavorSupported ) 
-        dragSession->IsDataFlavorSupported(kJPEGImageMime, &flavorSupported);
-      if ( flavorSupported ) 
-        dragSession->SetCanDrop(PR_TRUE);
-    }
-  }
-
-  return NS_OK;
+  return DragOver(aDragEvent);
 }
 
 
