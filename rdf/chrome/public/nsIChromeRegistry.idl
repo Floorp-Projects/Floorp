@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  * 
  * Contributor(s): pav
+ *                 Blake Ross (blaker@netscape.com)
  */
 
 #include "nsISupports.idl"
@@ -31,6 +32,10 @@ interface nsIDocShell;
 [scriptable, uuid(D8C7D8A1-E84C-11d2-BF87-00105A1B0627)]
 interface nsIChromeRegistry : nsISupports
 {
+  const PRInt32 NONE = 0;
+  const PRInt32 PARTIAL = 1;
+  const PRInt32 FULL = 2;
+
   /**
    * Convert a chrome URL into a canonical representation; specifically,
    *
@@ -73,8 +78,8 @@ interface nsIChromeRegistry : nsISupports
   void selectLocale(in wstring localeName, in boolean useProfile);
 	void deselectSkin(in wstring skinName, in boolean useProfile);
   void deselectLocale(in wstring localeName, in boolean useProfile);
-  boolean isSkinSelected(in wstring skinName, in boolean useProfile);
-	boolean isLocaleSelected(in wstring localeName, in boolean useProfile);
+  PRInt32 isSkinSelected(in wstring skinName, in boolean useProfile);
+  PRInt32 isLocaleSelected(in wstring localeName, in boolean useProfile);
  
   /* Apply skin/locale to a specific package */
 	void selectSkinForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
