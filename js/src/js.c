@@ -407,8 +407,23 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-s] [-w] [-W] [-c stackchunksize] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-s] [-w] [-W] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
+}
+
+static uint32 gBranchCount;
+static uint32 gBranchLimit;
+
+static JSBool
+my_BranchCallback(JSContext *cx, JSScript *script)
+{
+    if (++gBranchCount == gBranchLimit) {
+        fprintf(gErrFile, "too much branching (%lu branch callbacks)\n",
+                gBranchLimit);
+        gBranchCount = 0;
+        return JS_FALSE;
+    }
+    return JS_TRUE;
 }
 
 static int
@@ -444,9 +459,14 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 		JS_ToggleOptions(cx, JSOPTION_STRICT);
 		break;
 
+            case 'b':
+                gBranchLimit = atoi(argv[++i]);
+                JS_SetBranchCallback(cx, my_BranchCallback);
+		break;
+
             case 'c':
                 /* set stack chunk size */
-                gStackChunkSize = atoi (argv[++i]);
+                gStackChunkSize = atoi(argv[++i]);
                 break;
 
 	    case 'f':
@@ -692,13 +712,13 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     js_DumpGCHeap = NULL;
 #endif
     fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
-	   (unsigned long)preBytes, (unsigned long)rt->gcBytes,
+	    (unsigned long)preBytes, (unsigned long)rt->gcBytes,
 #ifdef XP_UNIX
-	   (unsigned long)sbrk(0)
+	    (unsigned long)sbrk(0)
 #else
-	   0
+	    0
 #endif
-	   );
+	    );
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
@@ -943,7 +963,7 @@ TryNotes(JSContext *cx, JSScript *script)
     fprintf(gOutFile, "\nException table:\nstart\tend\tcatch\n");
     while (tn->start && tn->catchStart) {
 	fprintf(gOutFile, "  %d\t%d\t%d\n",
-	       tn->start, tn->length, tn->catchStart);
+	       tn->start, tn->start + tn->length, tn->catchStart);
 	tn++;
     }
     return JS_TRUE;
@@ -1689,16 +1709,6 @@ my_LoadErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     my_ErrorReporter(cx, message, report);
 }
 
-static uint32 branch_count;
-
-static JSBool
-my_BranchCallback(JSContext *cx, JSScript *script)
-{
-    if ((++branch_count & 0x3fffff) == 0)
-        return JS_FALSE;
-    return JS_TRUE;
-}
-
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
@@ -1978,7 +1988,6 @@ main(int argc, char **argv)
     cx = JS_NewContext(rt, gStackChunkSize);
     if (!cx)
 	return 1;
-    JS_SetBranchCallback(cx, my_BranchCallback);
     JS_SetErrorReporter(cx, my_ErrorReporter);
 
     glob = JS_NewObject(cx, &global_class, NULL, NULL);
