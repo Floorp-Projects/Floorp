@@ -150,7 +150,7 @@ function showDeckPage(deckBoxId) {
     if (children[i] == deckBox) break;
   }
 
-  deck.setAttribute("value", i);
+  deck.setAttribute("index", i);
 
 }
 
