@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 BUILD_DATE = gbdate.h
+BUILD_DATE_TS = gbdate.tstamp
 
 MODULE		= layout
 LIBRARY_NAME	= gklayout
@@ -215,7 +216,7 @@ endif
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
-GARBAGE += $(BUILD_DATE)
+GARBAGE += $(BUILD_DATE) $(BUILD_DATE_TS)
 
 ifeq ($(OS_ARCH),IRIX)
 ifeq ($(GNU_CXX),1)
@@ -226,6 +227,13 @@ endif
 
 export:: $(BUILD_DATE)
 
-$(BUILD_DATE):: gbdate.pl $(wildcard $(SHARED_LIBRARY_LIBS))
+$(BUILD_DATE_TS): FORCE
+	@for f in $(SHARED_LIBRARY_LIBS); do \
+		if [ $$f -nt $@ ]; then \
+			touch $@; \
+		fi; \
+	done
+
+$(BUILD_DATE):: gbdate.pl $(BUILD_DATE_TS)
 	$(RM) $@
 	$(PERL) $(srcdir)/gbdate.pl > $@
