@@ -6037,3 +6037,25 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   return NS_OK;
 }
 
+nsresult
+nsHTMLEditor::EndUpdateViewBatch()
+{
+  nsresult res = nsEditor::EndUpdateViewBatch();
+  if (NS_FAILED(res)) return res;
+
+  // We may need to show resizing handles or update existing ones after
+  // all transactions are done. This way of doing is preferred to DOM
+  // mutation events listeners because all the changes the user can apply
+  // to a document may result in multiple events, some of them quite hard
+  // to listen too (in particular when an ancestor of the selection is
+  // changed but the selection itself is not changed).
+  if (mUpdateCount == 0) {
+    nsCOMPtr<nsISelection> selection;
+    res = GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+    if (!selection) return NS_ERROR_NOT_INITIALIZED;
+    res = CheckResizingState(selection);
+  }
+  return res;
+}
+

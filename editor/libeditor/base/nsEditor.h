@@ -534,7 +534,7 @@ public:
   nsresult GetString(const nsAString& name, nsAString& value);
 
   nsresult BeginUpdateViewBatch(void);
-  nsresult EndUpdateViewBatch(void);
+  virtual nsresult EndUpdateViewBatch(void);
 
   PRBool GetShouldTxnSetSelection();
 

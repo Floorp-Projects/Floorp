@@ -48,6 +48,7 @@
 #include "nsITableEditor.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
+#include "nsIDocumentObserver.h"
 
 #include "nsEditor.h"
 #include "nsIDOMElement.h"
@@ -376,6 +377,8 @@ public:
                                 PRInt32 *outOffset = 0);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
+
+  nsresult EndUpdateViewBatch();
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
@@ -865,7 +868,6 @@ protected:
   nsCOMPtr<nsIDOMElement> mResizedObject;
 
   nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
-  nsCOMPtr<nsIDOMEventListener>  mMutationListenerP;
   nsCOMPtr<nsISelectionListener> mSelectionListenerP;
   nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
 
@@ -900,7 +902,9 @@ protected:
   PRInt32  GetNewResizingHeight(PRInt32 aX, PRInt32 aY);
   void     HideShadowAndInfo();
   void     SetFinalSize(PRInt32 aX, PRInt32 aY);
-  void     DeleteRefToAnonymousNode(nsIDOMNode * aNode);
+  void     DeleteRefToAnonymousNode(nsIDOMElement* aElement,
+                                    nsIContent * aParentContent,
+                                    nsIDocumentObserver * aDocObserver);
   void     SetResizeIncrements(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH, PRBool aPreserveRatio);
   nsresult GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 & aY);
 public:
