@@ -71,7 +71,7 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
 
     if (aContext) {
         rv = aContext->QueryInterface(nsIHTTPChannel::GetIID(), 
-                                        (void**)pHTTPConnection);
+                                        (void**)&pHTTPConnection);
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
@@ -137,7 +137,7 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
 
     if (aContext) {
         rv = aContext->QueryInterface(nsIHTTPChannel::GetIID(), 
-                                        (void**)pHTTPConnection);
+                                        (void**)&pHTTPConnection);
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
