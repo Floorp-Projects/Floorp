@@ -90,6 +90,7 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
     if (aData != gCtx->sdlg) return;
 
     GSList *s = gCtx->sdlg->mRadioGroup;
+    gCtx->opt->mSetupType = 0;
     while (s) {
       if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->data)))
         break;
