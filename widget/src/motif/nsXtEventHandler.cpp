@@ -635,6 +635,7 @@ printf("After %d %d %d %d\n", rect.x, rect.y, rect.width, rect.height);
 //==============================================================
 void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
+printf("XXXXXXX RESIZE CALLBACK\n");
 
   //if (DBG) 
 //fprintf(stderr, "In nsXtWidget_Resize_Callback 0x%x", p);
@@ -858,6 +859,7 @@ void nsXtWidget_Refresh_Callback(XtPointer call_data)
     event.windowSize = &bounds;
 
     widgetWindow->SetBounds(bounds); 
+printf("this %d REFRESH w %d h %d\n",widgetWindow,bounds.width, bounds.height);
     widgetWindow->OnResize(event);
 //    widgetWindow->SetResized(PR_FALSE);
 

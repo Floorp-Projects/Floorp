@@ -59,7 +59,8 @@ CPPSRCS= \
 	nsWindow.cpp \
 	nsXtEventHandler.cpp \
 	nsLookAndFeel.cpp \
-	nsToolkit.cpp
+	nsToolkit.cpp \
+        nsXtManageWidget.cpp
 
 CPP_OBJS=				\
  ./$(OBJDIR)/nsComboBox.o		\
