@@ -142,8 +142,7 @@ public:
   virtual void BeginUpdate();
   virtual void EndUpdate();
   virtual void ContentChanged(nsIContent* aContent,
-                              nsISubContent* aSubContent,
-                              PRInt32 aChangeType);
+                              nsISupports* aSubContent);
   virtual void ContentAppended(nsIContent* aContainer);
   virtual void ContentInserted(nsIContent* aContainer,
                                nsIContent* aChild,
@@ -468,9 +467,18 @@ void PresShell::ProcessReflowCommands()
 }
 
 void PresShell::ContentChanged(nsIContent* aContent,
-                               nsISubContent* aSubContent,
-                               PRInt32 aChangeType)
+                               nsISupports* aSubContent)
 {
+#if 0
+  NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
+
+  // Notify the first frame that maps the content. It will generate a reflow
+  // command
+  nsIFrame* frame = FindFrameWithContent(aContent);
+  NS_PRECONDITION(nsnull != frame, "null frame");
+  frame->ContentChanged(this, mPresContext, aContent, aSubContent, aChangeType);
+  ProcessReflowCommands();
+#endif
 }
 
 void PresShell::ContentAppended(nsIContent* aContainer)
