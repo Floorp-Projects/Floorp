@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.49 $ $Date: 2002/04/18 17:30:03 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.50 $ $Date: 2002/04/18 17:50:40 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -530,14 +530,15 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
 	    return NULL;
 	}
 	nssTrust_Destroy(t);
+    } else {
+	rvTrust = PORT_ArenaAlloc(cc->arena, sizeof(CERTCertTrust));
+	if (!rvTrust) {
+	    return NULL;
+	}
+	memset(rvTrust, 0, sizeof(*rvTrust));
     }
     if (is_user_cert(c, cc)) {
 	if (!rvTrust) {
-	    rvTrust = PORT_ArenaAlloc(cc->arena, sizeof(CERTCertTrust));
-	    if (!rvTrust) {
-		return NULL;
-	    }
-	    memset(rvTrust, 0, sizeof(*rvTrust));
 	}
 	rvTrust->sslFlags |= CERTDB_USER;
 	rvTrust->emailFlags |= CERTDB_USER;
