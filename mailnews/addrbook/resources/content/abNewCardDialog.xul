@@ -36,7 +36,11 @@ Rights Reserved.
 
   <stringbundleset id="stringbundleset"/>
 
-  <keyset id="dialogKeys"/>
+  <keyset id="newCardDialogKeys">
+    <key keycode="VK_ENTER" oncommand="OnNewCardEnter();"/>
+    <key keycode="VK_RETURN" oncommand="OnNewCardEnter();"/>
+    <key keycode="VK_ESCAPE" oncommand="window.close();"/>
+  </keyset>
 
   <hbox align="center" valign="center">
 

@@ -140,7 +140,7 @@ var abDirTreeObserver = {
       }
       
       var row = {}, col = {}, obj = {};
-      dirTree.view.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
+      dirTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
       if (row.value >= dirTree.view.rowCount || row.value < 0) return;
       
       var item = dirTree.contentView.getItemAtIndex(row.value);

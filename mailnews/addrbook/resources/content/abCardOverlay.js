@@ -153,9 +153,23 @@ function EditCardOKButton()
 }
 
 
+function OnNewCardEnter()
+{
+  if (NewCardOKButton()) 
+    window.close();
+}
+
+function OnEditCardEnter()
+{
+  if (EditCardOKButton()) 
+    window.close();
+}
+
 function OnLoadEditCard()
 {
   InitEditCard();
+
+  doSetOKCancel(EditCardOKButton, 0);
 
   editCard.titleProperty = "editCardTitle";
 
