@@ -22,7 +22,10 @@
 #include "nsweb.h"
 #include "nsISupports.h"
 
+class nsIAppShell;
 class nsIFactory;
+class nsString;
+struct nsRect;
 
 #define NS_IBROWSER_WINDOW_IID \
  { 0xa6cf905c, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
@@ -31,8 +34,10 @@ class nsIFactory;
  { 0xa6cf905d, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 // Chrome mask
-#define NS_CHROME_TOOL_BAR_ON   0x1
-#define NS_CHROME_STATUS_BAR_ON 0x2
+#define NS_CHROME_WINDOW_BORDERS_ON 0x1
+#define NS_CHROME_WINDOW_CLOSE_ON   0x2
+#define NS_CHROME_TOOL_BAR_ON       0x4
+#define NS_CHROME_STATUS_BAR_ON     0x8
 
 /**
  * API to a "browser window". A browser window contains a toolbar, a web shell
@@ -41,7 +46,13 @@ class nsIFactory;
  */
 class nsIBrowserWindow : public nsISupports {
 public:
-  NS_IMETHOD Init(PRUint32 aChromeMask) = 0;
+  NS_IMETHOD Init(nsIAppShell* aAppShell,
+                  const nsRect& aBounds,
+                  PRUint32 aChromeMask) = 0;
+
+  NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
+
+  NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight) = 0;
 
   NS_IMETHOD Show() = 0;
 
@@ -50,6 +61,12 @@ public:
   NS_IMETHOD ChangeChrome(PRUint32 aNewChromeMask) = 0;
 
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult) = 0;
+
+  NS_IMETHOD LoadURL(const nsString& aURL) = 0;
+
+  NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
+
+  NS_IMETHOD GetTitle(nsString& aResult) = 0;
 
   // XXX minimize, maximize
   // XXX event control: enable/disable window close box, stick to glass, modal
