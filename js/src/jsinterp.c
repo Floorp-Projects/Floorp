@@ -1532,11 +1532,9 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_TOOBJECT:
             SAVE_SP(fp);
-            obj = js_ValueToNonNullObject(cx, FETCH_OPND(-1));
-            if (!obj) {
-                ok = JS_FALSE;
+            ok = js_ValueToObject(cx, FETCH_OPND(-1), &obj);
+            if (!ok)
                 goto out;
-            }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             break;
 
