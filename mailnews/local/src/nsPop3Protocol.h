@@ -134,9 +134,7 @@ enum Pop3StatesEnum {
     POP3_SEND_GURL,                             // 35
 
     POP3_GURL_RESPONSE,                         // 36
-#ifdef POP_ALWAYS_USE_UIDL_FOR_DUPLICATES
     POP3_QUIT_RESPONSE,
-#endif
     POP3_INTERRUPTED
 };
 
