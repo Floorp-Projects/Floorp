@@ -649,7 +649,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     if (canFileMessagesOnServer) 
     {
       rv = server->ConfigureTemporaryFilters(m_filterList);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add MDN filter");
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add temp filters");
     }
   }
   
