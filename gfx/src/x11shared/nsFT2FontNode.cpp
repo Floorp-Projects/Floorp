@@ -177,7 +177,7 @@ nsFT2FontNode::GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
           LoadNode(fce, charSetName, aNodes);
         }
       }
-      if (!(foundryName.get()) && familyName.get() && flags&FCE_FLAGS_SYMBOL) {
+      if (foundryName.IsEmpty() && !familyName.IsEmpty() && flags&FCE_FLAGS_SYMBOL) {
         // the "registry-encoding" is not used but LoadNode will fail without
         // some value for this
         LoadNode(fce, "symbol-fontspecific", aNodes);
