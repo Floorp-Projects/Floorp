@@ -50,7 +50,7 @@
 *          etc.
 *
 *
-* When the global flag is set, |lastIndex| is incremented every time
+* So when the global flag is set, |lastIndex| is incremented every time
 * there is a match; not from i to i+1, but from i to "endIndex" e:
 *
 * e = (index of last input character matched so far by the pattern) + 1
@@ -87,7 +87,7 @@ status = inSection(2);
 string = '12345678';
 pattern = /\d\d\d/g;
 actualmatch = string.match(pattern);
-expectedmatch = ['123','456']; // see above explanation -
+expectedmatch = ['123','456'];
 addThis();
 
 
