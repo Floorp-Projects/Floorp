@@ -44,7 +44,6 @@ function filterEditorOnLoad()
     initializeFilterWidgets();
 
     gFilterBundle = document.getElementById("bundle_filter");
-
     if ("arguments" in window && window.arguments[0]) {
         var args = window.arguments[0];
         if ("filter" in args) {
@@ -59,19 +58,20 @@ function filterEditorOnLoad()
             onMore(null);
         }
     }
-
-    var stub = gFilterBundle.getString("untitledFilterName");
-    var count = 1;
-    var name = stub;
-
-    // Set the default filter name to be "untitled filter"
-    while (duplicateFilterNameExists(name)) 
+    if (!gFilter)
     {
+      var stub = gFilterBundle.getString("untitledFilterName");
+      var count = 1;
+      var name = stub;
+
+      // Set the default filter name to be "untitled filter"
+      while (duplicateFilterNameExists(name)) 
+      {
         count++;
         name = stub + " " + count.toString();
+      }
+      gFilterNameElement.value = name;
     }
-    gFilterNameElement.value = name;
-
     gFilterNameElement.focus();
     doSetOKCancel(onOk, null);
     moveToAlertPosition();
@@ -112,7 +112,17 @@ function onOk()
 
 function duplicateFilterNameExists(filterName)
 {
-    return (gFilterList.getFilterNamed(filterName)) ? true : false;
+    var args = window.arguments[0];
+    var filterList;
+    if ("filterList" in args)
+      filterList = args.filterList;
+    if (filterList)
+      for (var i = 0; i < filterList.filterCount; i++)
+     {
+       if (filterName == filterList.getFilterAt(i).filterName)
+         return true;
+     }
+    return false;   
 }
 
 function getScopeFromFilterList(filterList)
