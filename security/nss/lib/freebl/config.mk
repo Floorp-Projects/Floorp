@@ -68,14 +68,12 @@ endif
 # - (1) LIBRARY: a static (archival) library
 # - (2) SHARED_LIBRARY: a shared (dynamic link) library
 # - (3) IMPORT_LIBRARY: an import library, used only on Windows
-# - (4) PURE_LIBRARY: a library for Purify
-# - (5) PROGRAM: an executable binary
+# - (4) PROGRAM: an executable binary
 #
 # override these variables to prevent building a DSO/DLL.
   TARGETS        = $(LIBRARY)
   SHARED_LIBRARY =
   IMPORT_LIBRARY =
-  PURE_LIBRARY   =
   PROGRAM        =
 
 else
@@ -83,7 +81,6 @@ else
 
 TARGETS	     = $(SHARED_LIBRARY)
 LIBRARY      =
-PURE_LIBRARY =
 PROGRAM      =
 
 #ifeq ($(OS_ARCH), HP-UX)
