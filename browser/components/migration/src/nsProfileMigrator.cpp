@@ -68,11 +68,13 @@ nsProfileMigrator::Migrate()
                                &needsActiveProfile);
 
   nsresult rv = NS_OK;
-  if (!needsActiveProfile)
-    rv = OpenMigrationWizard();
-  else {
-    nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
-    rv = obs->AddObserver(this, "browser-window-before-show", PR_FALSE);
+  if (mMigrator && mSourceKey) {
+    if (!needsActiveProfile)
+      rv = OpenMigrationWizard();
+    else {
+      nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
+      rv = obs->AddObserver(this, "browser-window-before-show", PR_FALSE);
+    }
   }
   return rv;
 }
@@ -151,7 +153,7 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsIBrowserProfileMigrator** aMig
   *aMigrator = nsnull;
   *aKey = nsnull;
 
-#ifdef XP_WIN
+#if XP_WIN
   HKEY hkey;
 
   const char* kCommandKey = "SOFTWARE\\Classes\\HTTP\\shell\\open\\command";
@@ -252,11 +254,19 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsIBrowserProfileMigrator** aMig
   }
 #else
   // XXXben - until we figure out what to do here with default browsers on MacOS and
-  // GNOME, simply copy data from a previous Phoenix install. 
+  // GNOME, simply copy data from a previous Phoenix or Seamonkey install. 
   *aNeedsActiveProfile = PR_FALSE;
   nsCOMPtr<nsISupportsString> key(do_CreateInstance("@mozilla.org/supports-string;1"));
   key->SetData(NS_LITERAL_STRING("phoenix"));
-  nsCOMPtr<nsIBrowserProfileMigrator> bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
+  nsCOMPtr<nsIBrowserProfileMigrator> bpm(do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix"));
+  PRBool exists;
+  bpm->GetSourceExists(&exists);
+  if (!exists) {
+    bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
+    bpm->GetSourceExists(&exists);
+    if (!exists)
+      bpm = nsnull;
+  }
   
   NS_IF_ADDREF(*aKey = key);
   NS_IF_ADDREF(*aMigrator = bpm);
