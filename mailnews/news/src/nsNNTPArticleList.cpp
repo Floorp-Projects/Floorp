@@ -84,7 +84,7 @@ nsNNTPArticleList::Initialize(const nsIMsgNewsHost * newsHost,
 #ifdef HAVE_NEWSDB
 	m_newsDB = NULL;
 #endif
-	m_idsOnServer.set = msg_NewsArtSet::Create();
+	m_idsOnServer.set = nsNNTPArticleSet::Create();
 #ifdef HAVE_PANES
 	MSG_FolderInfoNews *newsFolder = m_pane->GetMaster()->FindNewsFolder(host, groupName, FALSE);
 	if (newsFolder)
@@ -148,7 +148,7 @@ nsNNTPArticleList::FinishAddingArticleKeys()
 	// make sure none of the deleted turned up on the idsOnServer list
 #ifdef DEBUG_bienvenu
 	for (PRInt32 i = 0; i < m_idsDeleted.GetSize(); i++)
-		XP_ASSERT (!m_idsOnServer.set->IsMember(m_idsDeleted.GetAt(i)));
+		PR_ASSERT (!m_idsOnServer.set->IsMember(m_idsDeleted.GetAt(i)));
 #endif
 	return 0;
 }
