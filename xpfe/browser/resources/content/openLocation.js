@@ -45,7 +45,7 @@ function onLoad()
       {
         // No browser supplied - we are calling from Composer
         dialog.openAppList.selectedItem = dialog.openEditWindow;
-        dialog.openTopWindow.disabled = true;
+        dialog.openTopWindow.setAttribute("disabled", "true");
       } 
     else
       dialog.openAppList.selectedItem = dialog.openTopWindow;
@@ -125,13 +125,9 @@ function onChooseFile()
       fp.setFilters(nsIFilePicker.filterAll);
 
     fp.show();
-    if (fp.file.path && fp.file.path.length > 0)
+    if (fp.fileURL.spec && fp.fileURL.spec.length > 0)
     {
-      // Hack to get a file: url from an nsIFile
-      var tempFileSpec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
-      tempFileSpec.nativePath = fp.file.path;
-      
-      dialog.input.value = tempFileSpec.URLString;
+      dialog.input.value = fp.fileURL.spec;
     }
 
   } catch(ex) { }

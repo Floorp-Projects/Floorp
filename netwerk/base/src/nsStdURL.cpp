@@ -197,7 +197,8 @@ nsStdURL::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         *aInstancePtr = GetInner();
     else if (aIID.Equals(kThisStdURLImplementationCID) ||   // used by Equals
             aIID.Equals(NS_GET_IID(nsIURL)) ||
-            aIID.Equals(NS_GET_IID(nsIURI)))
+            aIID.Equals(NS_GET_IID(nsIURI)) ||
+            aIID.Equals(NS_GET_IID(nsIFileURL)))
         *aInstancePtr = NS_STATIC_CAST(nsIURL*, this);
      else {
         *aInstancePtr = nsnull;

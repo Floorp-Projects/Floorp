@@ -33,6 +33,7 @@
 #undef NS_IMPL_IDS
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
+#include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include <windows.h>
 #include <SHLOBJ.H>
@@ -230,6 +231,22 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
   file->InitWithPath(nsCAutoString(mFile));
 
   NS_ADDREF(*aFile = file);
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
+{
+  nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
+  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+  file->InitWithPath(nsCAutoString(mFile));
+
+  nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance("component://netscape/network/standard-url"));
+  NS_ENSURE_TRUE(fileURL, NS_ERROR_FAILURE);
+  fileURL->SetFile(file);
+
+  NS_ADDREF(*aFileURL = fileURL);
 
   return NS_OK;
 }

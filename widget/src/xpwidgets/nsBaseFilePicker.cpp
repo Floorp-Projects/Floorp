@@ -96,6 +96,8 @@ NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
 
   if (NS_SUCCEEDED(rv)) {
     return InitNative(widget, aTitle, aMode);
+  } else {
+    return InitNative(nsnull, aTitle, aMode);
   }
 
   return rv;
