@@ -100,6 +100,7 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_COMMAND(ID_FILE_PRINT, OnFilePrint)
 	ON_COMMAND(ID_DEBUG_VISIBLE, OnDebugVisible)
 	ON_UPDATE_COMMAND_UI(ID_DEBUG_VISIBLE, OnUpdateDebugVisible)
+	ON_COMMAND(ID_DEBUG_POSTDATATEST, OnDebugPostDataTest)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDB_BOLD, OnEditBold)
 	ON_COMMAND(IDB_ITALIC, OnEditItalic)
@@ -919,4 +920,40 @@ void CBrowseDlg::OnUpdateDebugVisible(CCmdUI* pCmdUI)
 	}
 
     pCmdUI->SetCheck(visible == VARIANT_TRUE ? 1 : 0);
+}
+
+void CBrowseDlg::OnDebugPostDataTest() 
+{
+	IWebBrowser *pIWebBrowser = NULL;
+	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	{
+       	CIPtr(IWebBrowser2) cpWebBrowser = pIWebBrowser;
+
+        CComVariant vURL(L"http://www.mozilla.org/htdig-cgi/htsearch");
+        const char *szPostData="config=htdig&restrict=&exclude=&words=embedding&method=and&format=builtin-long";
+
+        size_t nSize = strlen(szPostData);
+        SAFEARRAY *psa = SafeArrayCreateVector(VT_UI1, 0, nSize);
+        
+        LPSTR pPostData;
+        SafeArrayAccessData(psa, (LPVOID*) &pPostData);
+        memcpy(pPostData, szPostData, nSize);
+        SafeArrayUnaccessData(psa);
+
+        CComVariant vPostData;
+        vPostData.vt = VT_ARRAY | VT_UI1;
+        vPostData.parray = psa;
+
+        CComVariant vHeaders(L"Content-Type: application/x-www-form-urlencoded\r\n");
+
+        cpWebBrowser->Navigate2(
+            &vURL,
+            NULL, // Flags
+            NULL, // Target
+            &vPostData,
+            &vHeaders  // Headers
+        );
+
+		pIWebBrowser->Release();
+	}
 }
