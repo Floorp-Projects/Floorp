@@ -3126,30 +3126,7 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
 
 
 #ifdef SH_IN_FRAMES
-	   if (!LSHE && updateHistory && (mItemType == typeContent)) { // Page load not from SH
-      /* If no LSHE by this time, then this page load was not initiated 
-	   * from SH. Now check, if you 
-	   * can get your SHEntry from your parent's LSHE. This will help
-	   * determine if we are in the middle of restoring a sub-frame
-	   * after the page load was originally initiated by SH. ie., you clicked
-	   * on back/forward and went to a  frameset page. and currently,
-	   * a subframe in that page is being loaded.
-	   */
-		   /*
-	   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-       GetSameTypeParent(getter_AddRefs(parentAsItem));
-	    
-	   nsCOMPtr<nsIWebNavigation> parent;
-	   // Get your SHEntry from your parent
-	   if (parentAsItem) {
-	      parent = do_QueryInterface(parentAsItem);
-	      if (!parent)
-		     return NS_ERROR_FAILURE;
-          parent->GetSHEForChild(mChildOffset, getter_AddRefs(entry));
-	   }
-	   
-	   if (!entry) { // Parent didn't have any SHEntry for you
-	   */
+	   if (!LSHE && updateHistory && (mItemType == typeContent)) {
 		   /* This is  a fresh page getting loaded for the first time
 		    *. Create a Entry for it and add it to SH, if this is the
 			* rootDocShell
@@ -3200,9 +3177,6 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
             if (NS_SUCCEEDED(rv)) {
               LSHE = entry;
             }
-	   //}  //!she
-	   // Set the LSHE for non-SH initiated loads.
-	   //LSHE = entry;    
    } //!LSHE
 
 
@@ -3228,6 +3202,15 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
     }
 #endif /* SH_IN_FRAMES */
 
+    if(updateHistory)
+    {
+        PRBool shouldAdd = PR_FALSE;
+        ShouldAddToGlobalHistory(aURI, &shouldAdd);
+        if(shouldAdd)
+        {
+            AddToGlobalHistory(aURI);
+        }
+    }
 
    SetCurrentURI(aURI);
    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
