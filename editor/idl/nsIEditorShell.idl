@@ -303,6 +303,11 @@ interface nsIEditorShell : nsISupports
     * selects all cells (not TR in the case of rows)
     */
   void SelectTableCell();
+  /** Select a rectangular block of cells:
+    *  all cells falling within the row/column index of startCell
+    *  to through the row/column index of the endCell
+    */
+  void SelectBlockOfCells(in nsIDOMElement startCell, in nsIDOMElement endCell);
   void SelectTableRow();
   void SelectTableColumn();
   void SelectTable();

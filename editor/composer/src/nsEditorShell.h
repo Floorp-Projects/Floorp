@@ -138,7 +138,7 @@ class nsEditorShell :   public nsIEditorShell,
 
     nsCOMPtr<nsISupports>   mSearchContext;		// context used for search and replace. Owned by the appshell.
     
-    nsInterfaceState*    mStateMaintainer;    // we hold the owning ref to this.
+    nsInterfaceState*         mStateMaintainer;           // we hold the owning ref to this.
 
     PRInt32 mWrapColumn;      // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
 
