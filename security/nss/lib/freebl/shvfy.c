@@ -33,7 +33,7 @@
  *
  * shvfy.c - routines to verify signature on a shared library.
  *
- * $Id: shvfy.c,v 1.2 2003/02/07 19:22:42 relyea%netscape.com Exp $
+ * $Id: shvfy.c,v 1.3 2003/02/13 17:41:45 relyea%netscape.com Exp $
  */
 
 #include "shsign.h"
@@ -50,7 +50,7 @@ freebl_GetLibraryFilePathname(const char *name, PRFuncPtr addr);
 #define freebl_GetLibraryFilePathname NSPR_GetLibraryFilePathname
 #endif
 
-#define DEBUG_SHVERIFY 1
+/* #define DEBUG_SHVERIFY 1 */
 
 static char *
 mkCheckFileName(const char *libName)
