@@ -112,35 +112,35 @@ struct nsHTMLElement {
   static  PRBool  IsBlockCloser(eHTMLTags aTag);
 
   inline  PRBool  IsBlock(void) { 
-                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kBlock);
                     } 
                     return PR_FALSE;
                   }
 
   inline  PRBool  IsBlockEntity(void) { 
-                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kBlockEntity);
                     } 
                     return PR_FALSE;
                   }
 
   inline  PRBool  IsSpecialEntity(void) { 
-                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kSpecial);
                     } 
                     return PR_FALSE;
                   }
 
   inline  PRBool  IsPhraseEntity(void) { 
-                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kPhrase);
                     } 
                     return PR_FALSE;
                   }
 
   inline  PRBool  IsFontStyleEntity(void) { 
-                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kFontStyle);
                     } 
                     return PR_FALSE;

@@ -99,7 +99,7 @@ protected:
   PRBool  mPlainText;
 };
 
-extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult);
+extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,PRInt32 aMode,PRBool aPlaintext);
 
 #endif
 

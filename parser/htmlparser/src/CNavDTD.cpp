@@ -1494,7 +1494,7 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsDTDContext& aCont
                 2. Is it in the rootTag list? If so, then we're gated by it
                 3. Otherwise its non-specified and we simply presume we can close it.
           */
-
+ 
         TagList* theCloseTags=gHTMLElements[aCurrentTag].GetAutoCloseEndTags();
         TagList* theRootTags=gHTMLElements[aCurrentTag].GetEndRootTags();
       
@@ -3401,7 +3401,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
 nsresult CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
-    result=NS_NewHTMLTokenizer(&mTokenizer);
+    result=NS_NewHTMLTokenizer(&mTokenizer,mParseMode,PR_FALSE);
   }
   aTokenizer=mTokenizer;
   return result;
