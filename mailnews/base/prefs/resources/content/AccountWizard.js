@@ -74,7 +74,7 @@ var contentWindow;
 
 var smtpService;
 var am;
-var accountm = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
+var accountm = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
 var accounts = accountm.accounts;
 
