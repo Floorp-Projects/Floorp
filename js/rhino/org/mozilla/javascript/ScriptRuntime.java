@@ -760,10 +760,9 @@ public class ScriptRuntime {
 
     public static Object getProp(Object obj, String id, Scriptable scope) {
         Scriptable start;
-        try {
+        if (obj instanceof Scriptable) {
             start = (Scriptable) obj;
-        }
-        catch (ClassCastException e) {
+        } else {
             start = toObject(scope, obj);
         }
         if (start == null || start == Undefined.instance) {
@@ -802,10 +801,9 @@ public class ScriptRuntime {
 
     public static Scriptable getProto(Object obj, Scriptable scope) {
         Scriptable s;
-        try {
+        if (obj instanceof Scriptable) {
             s = (Scriptable) obj;
-        }
-        catch (ClassCastException e) {
+        } else {
             s = toObject(scope, obj);
         }
         if (s == null) {
@@ -833,10 +831,9 @@ public class ScriptRuntime {
 
    public static Scriptable getParent(Object obj, Scriptable scope) {
         Scriptable s;
-        try {
+        if (obj instanceof Scriptable) {
             s = (Scriptable) obj;
-        }
-        catch (ClassCastException e) {
+        } else {
             s = toObject(scope, obj);
         }
         if (s == null) {
@@ -850,10 +847,9 @@ public class ScriptRuntime {
 
     public static Object setProto(Object obj, Object value, Scriptable scope) {
         Scriptable start;
-        try {
+        if (obj instanceof Scriptable) {
             start = (Scriptable) obj;
-        }
-        catch (ClassCastException e) {
+        } else {
             start = toObject(scope, obj);
         }
         Scriptable result = value == null ? null : toObject(scope, value);
@@ -878,10 +874,9 @@ public class ScriptRuntime {
 
     public static Object setParent(Object obj, Object value, Scriptable scope) {
         Scriptable start;
-        try {
+        if (obj instanceof Scriptable) {
             start = (Scriptable) obj;
-        }
-        catch (ClassCastException e) {
+        } else {
             start = toObject(scope, obj);
         }
         Scriptable result = value == null ? null : toObject(scope, value);
@@ -908,10 +903,9 @@ public class ScriptRuntime {
                                  Scriptable scope)
     {
         Scriptable start;
-        try {
+        if (obj instanceof Scriptable) {
             start = (Scriptable) obj;
-        }
-        catch (ClassCastException e) {
+        } else {
             start = toObject(scope, obj);
         }
         if (start == null) {
@@ -1291,10 +1285,9 @@ public class ScriptRuntime {
         }
 
         Scriptable thisObj;
-        try {
+        if (thisArg instanceof Scriptable) {
             thisObj = (Scriptable) thisArg;
-        }
-        catch (ClassCastException e) {
+        } else {
             thisObj = ScriptRuntime.toObject(scope, thisArg);
         }
         return function.call(cx, function.getParentScope(), thisObj, args);
@@ -1475,10 +1468,9 @@ public class ScriptRuntime {
 
     public static Object postIncrement(Object obj, String id, Scriptable scope) {
         Scriptable start;
-        try {
+        if (obj instanceof Scriptable) {
             start = (Scriptable) obj;
-        }
-        catch (ClassCastException e) {
+        } else {
             start = toObject(scope, obj);
         }
         if (start == null) {
@@ -1573,10 +1565,9 @@ public class ScriptRuntime {
 
     public static Object postDecrement(Object obj, String id, Scriptable scope) {
         Scriptable start;
-        try {
+        if (obj instanceof Scriptable) {
             start = (Scriptable) obj;
-        }
-        catch (ClassCastException e) {
+        } else {
             start = toObject(scope, obj);
         }
         if (start == null) {
