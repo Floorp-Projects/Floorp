@@ -27,6 +27,7 @@
 #include "nsFontMetricsMac.h"
 #include "nsGraphicState.h"
 #include "prprf.h"
+#include "nsCarbonHelpers.h"
 
 #define BAD_FONT_NUM -1
 #define BAD_SCRIPT 0x7F
@@ -281,17 +282,13 @@ PRBool nsUnicodeRenderingToolkit :: QuestionMarkFallbackGetWidth(
 	const PRUnichar *aCharPt, 
 	short& oWidth)
 {
-	  GrafPtr thePort;
-	  ::GetPort(&thePort);
-#if TARGET_CARBON
-  	short saveSize = GetPortTextSize(thePort);		
-#else
-  	short saveSize = thePort->txSize;
-#endif
-	  ::TextSize(QUESTION_FALLBACKSIZE);
-	  GetScriptTextWidth(question, 3,oWidth);
-	  ::TextSize(saveSize);
-	  return PR_TRUE;
+  GrafPtr thePort;
+  ::GetPort(&thePort);
+  short saveSize = ::GetPortTextSize(thePort);		
+  ::TextSize(QUESTION_FALLBACKSIZE);
+  GetScriptTextWidth(question, 3,oWidth);
+  ::TextSize(saveSize);
+  return PR_TRUE;
 }
 //------------------------------------------------------------------------
 
@@ -301,17 +298,13 @@ PRBool nsUnicodeRenderingToolkit :: QuestionMarkFallbackDrawChar(
 	PRInt32 y, 
 	short& oWidth)
 {
-	  GrafPtr thePort;
-	  ::GetPort(&thePort);
-#if TARGET_CARBON
-   	short saveSize = GetPortTextSize(thePort);		
-#else
-  	short saveSize = thePort->txSize;
-#endif
-	  ::TextSize(QUESTION_FALLBACKSIZE);
-	  DrawScriptText(question, 3, x, y, oWidth);
-	  ::TextSize(saveSize);
-	  return PR_TRUE;
+  GrafPtr thePort;
+  ::GetPort(&thePort);
+  short saveSize = ::GetPortTextSize(thePort);		
+  ::TextSize(QUESTION_FALLBACKSIZE);
+  DrawScriptText(question, 3, x, y, oWidth);
+  ::TextSize(saveSize);
+  return PR_TRUE;
 }
 //------------------------------------------------------------------------
 
@@ -319,20 +312,16 @@ PRBool nsUnicodeRenderingToolkit :: UPlusFallbackGetWidth(
 	const PRUnichar *aCharPt, 
 	short& oWidth)
 {
-	  GrafPtr thePort;
-	  ::GetPort(&thePort);
-#if TARGET_CARBON
-   	short saveSize = GetPortTextSize(thePort);		
-#else
-  	short saveSize = thePort->txSize;
-#endif	  
-		char buf[16];
-	  PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
-	  ::TextSize(UPLUS_FALLBACKSIZE);
-	  if(len != -1) 
-		  GetScriptTextWidth(buf, len, oWidth);
-	  ::TextSize(saveSize);
-	  return (-1 != len);
+  GrafPtr thePort;
+  ::GetPort(&thePort);
+  short saveSize = ::GetPortTextSize(thePort);		
+  char buf[16];
+  PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
+  ::TextSize(UPLUS_FALLBACKSIZE);
+  if(len != -1) 
+    GetScriptTextWidth(buf, len, oWidth);
+  ::TextSize(saveSize);
+  return (-1 != len);
 }
 //------------------------------------------------------------------------
 
@@ -342,20 +331,16 @@ PRBool nsUnicodeRenderingToolkit :: UPlusFallbackDrawChar(
 	PRInt32 y, 
 	short& oWidth)
 {
-	  GrafPtr thePort;
-	  ::GetPort(&thePort);
-#if TARGET_CARBON
-   	short saveSize = GetPortTextSize(thePort);		
-#else
-  	short saveSize = thePort->txSize;
-#endif	  
-		char buf[16];
-	  PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
-	  ::TextSize(UPLUS_FALLBACKSIZE);
-	  if(len != -1) 
-		  DrawScriptText(buf, len, x, y, oWidth);
-	  ::TextSize(saveSize);
-	  return (-1 != len);
+  GrafPtr thePort;
+  ::GetPort(&thePort);
+  short saveSize = ::GetPortTextSize(thePort);		
+  char buf[16];
+  PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
+  ::TextSize(UPLUS_FALLBACKSIZE);
+  if(len != -1) 
+    DrawScriptText(buf, len, x, y, oWidth);
+  ::TextSize(saveSize);
+  return (-1 != len);
 }
 
 //------------------------------------------------------------------------

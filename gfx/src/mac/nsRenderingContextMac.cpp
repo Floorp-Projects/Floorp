@@ -38,31 +38,10 @@
 
 #include <FixMath.h>
 #include <Gestalt.h>
+#include "nsCarbonHelpers.h"
 
 #define STACK_TREASHOLD 1000
 
-//------------------------------------------------------------------------
-// Carbon compatible accessor functions
-//------------------------------------------------------------------------
-
-#if !TARGET_CARBON
-
-inline void GetPortClipRegion(GrafPtr port, RgnHandle clipRgn)
-{
-	::CopyRgn(port->clipRgn, clipRgn);
-}
-
-inline void GetPortBounds(GrafPtr port, Rect* portRect)
-{
-	*portRect = port->portRect;
-}
-
-inline void SetPortWindowPort(WindowRef window)
-{
-	::SetPort(window);
-}
-
-#endif
 
 //------------------------------------------------------------------------
 // utility port setting class
@@ -666,11 +645,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetClipRect(nsRect &aRect, PRBool &aClipVal
 	Rect	cliprect;
 
 	if (mGS->mClipRegion != nsnull) {
-#if TARGET_CARBON
 		::GetRegionBounds(mGS->mClipRegion, &cliprect);
-#else
-		cliprect = (**mGS->mClipRegion).rgnBBox;
-#endif
 		aRect.SetRect(cliprect.left, cliprect.top, cliprect.right - cliprect.left, cliprect.bottom - cliprect.top);
 		aClipValid = PR_TRUE;
  	} else {
