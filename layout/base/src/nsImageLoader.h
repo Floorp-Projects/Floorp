@@ -46,7 +46,7 @@ public:
   void Destroy();
 
   nsIFrame *GetFrame() { return mFrame; }
-  void GetRequest(imgIRequest **aRequest) { *aRequest = mRequest; NS_IF_ADDREF(*aRequest); }
+  imgIRequest *GetRequest() { return mRequest; }
 
 private:
   void RedrawDirtyFrame(const nsRect* aDamageRect);

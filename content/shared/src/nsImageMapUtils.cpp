@@ -48,20 +48,19 @@
 #include "nsImageMapUtils.h"
 
 /*static*/
-nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument, 
-                                       const nsAString &aUsemap, 
-                                       nsIDOMHTMLMapElement **aMap)
+already_AddRefed<nsIDOMHTMLMapElement>
+nsImageMapUtils::FindImageMap(nsIDocument *aDocument, 
+                                                    const nsAString &aUsemap)
 {
-  NS_ENSURE_ARG_POINTER(aDocument);
-  NS_ENSURE_ARG_POINTER(aMap);
-  *aMap = nsnull;
+  if (!aDocument)
+    return nsnull;
 
   // We used to strip the whitespace from the usemap value as a Quirk,
   // but it was too quirky and didn't really work correctly - see bug
   // 87050
 
   if (aUsemap.IsEmpty())
-    return NS_OK;
+    return nsnull;
 
   nsAString::const_iterator start, end;
   aUsemap.BeginReading(start);
@@ -73,7 +72,7 @@ nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
     start.advance(hash + 1);
 
     if (start == end) {
-      return NS_OK; // aUsemap == "#"
+      return nsnull; // aUsemap == "#"
     }
   }
 
@@ -81,8 +80,9 @@ nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
 
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(aDocument));
   if (htmlDoc) {
-    *aMap = htmlDoc->GetImageMap(usemap);
-    NS_IF_ADDREF(*aMap);
+    nsIDOMHTMLMapElement* map = htmlDoc->GetImageMap(usemap);
+    NS_IF_ADDREF(map);
+    return map;
   } else {
     // For XHTML elements embedded in non-XHTML documents we get the
     // map by id since XHTML requires that where a "name" attribute
@@ -96,10 +96,12 @@ nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
       domDoc->GetElementById(usemap, getter_AddRefs(element));
 
       if (element) {
-        CallQueryInterface(element, aMap);
+        nsIDOMHTMLMapElement* map;
+        CallQueryInterface(element, &map);
+        return map;
       }
     }
   }
   
-  return NS_OK;
+  return nsnull;
 }

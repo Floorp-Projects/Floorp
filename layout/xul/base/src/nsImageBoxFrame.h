@@ -70,7 +70,6 @@ public:
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD NeedsRecalc();
 
   friend nsresult NS_NewImageBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
@@ -97,8 +96,24 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw);
-  void UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize);
+  /**
+   * Update internal state when a given attribute changes. Does not reload the
+   * image.
+   * @return Whether the size of the image (possibly) changed
+   */
+  PRBool UpdateAttributes(nsIAtom* aAttribute);
+
+  /** 
+   * Load the image to which mURI points, or throw away the current image if
+   * mURI is nsnull. Usually, this is preceded by a call to GetImageSource.
+   * @return PR_TRUE if the image is (possibly) of a different size
+   * */
+  PRBool UpdateImage();
+
+  /**
+   * Update mLoadFlags from content attributes. Does not attempt to reload the
+   * image using the new load flags.
+   */
   void UpdateLoadFlags();
 
   NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
@@ -107,13 +122,7 @@ public:
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0);
 
-  NS_IMETHOD OnStartDecode(imgIRequest *request);
   NS_IMETHOD OnStartContainer(imgIRequest *request, imgIContainer *image);
-  NS_IMETHOD OnStartFrame(imgIRequest *request, gfxIImageFrame *frame);
-  NS_IMETHOD OnDataAvailable(imgIRequest *request,
-                             gfxIImageFrame *frame,
-                             const nsRect * rect);
-  NS_IMETHOD OnStopFrame(imgIRequest *request, gfxIImageFrame *frame);
   NS_IMETHOD OnStopContainer(imgIRequest *request, imgIContainer *image);
   NS_IMETHOD OnStopDecode(imgIRequest *request,
                           nsresult status,
@@ -125,42 +134,44 @@ public:
   virtual ~nsImageBoxFrame();
 protected:
 
-  void CacheImageSize(nsBoxLayoutState& aBoxLayoutState);
-
-
-  NS_IMETHOD  PaintImage(nsIPresContext* aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect,
-                         nsFramePaintLayer aWhichLayer);
+  void  PaintImage(nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   nsImageBoxFrame(nsIPresShell* aShell);
 
+  /**
+   * Update mURI and mUseSrcAttr from appropriate content attributes or from
+   * style. Does not reload the image.
+   */
   void GetImageSource();
 
-  void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **group);
+  /**
+   * Get the load group for the current document, that should be used for
+   * network requests.
+   */
+  already_AddRefed<nsILoadGroup> GetLoadGroup();
 
-  virtual void GetImageSize(nsIPresContext* aPresContext);
+  virtual void GetImageSize();
 
 private:
 
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mListener;
 
-  nsCOMPtr<nsIURI> mURI; // The URI of the image.
+  nsCOMPtr<nsIURI> mURI; ///< The URI of the image.
 
-  PRPackedBool mUseSrcAttr; // Whether or not the image src comes from an attribute.
+  PRPackedBool mUseSrcAttr; ///< Whether or not the image src comes from an attribute.
   PRPackedBool mSizeFrozen;
   PRPackedBool mHasImage;
   PRPackedBool mSuppressStyleCheck;
   
-  nsRect mSubRect; // If set, indicates that only the portion of the image specified by the rect should be used.
+  nsRect mSubRect; ///< If set, indicates that only the portion of the image specified by the rect should be used.
 
   nsSize mIntrinsicSize;
   PRInt32 mLoadFlags;
 
   nsSize mImageSize;
-
-  nsIPresContext* mPresContext; // weak ptr
 }; // class nsImageBoxFrame
 
 #endif /* nsImageBoxFrame_h___ */

@@ -60,12 +60,10 @@ public:
    *
    * @param aDocument [in]  The document to be searched.
    * @param aUsemap   [in]  The value of the usemap attribute.
-   * @param aMap      [out] The first found (if any) map element.
-   * @return          XPCOM return values.
+   * @return          The first found (if any) map element, addrefed.
    */
-  static nsresult FindImageMap(nsIDocument *aDocument, 
-                               const nsAString &aUsemap, 
-                               nsIDOMHTMLMapElement **aMap);
+  static already_AddRefed<nsIDOMHTMLMapElement>
+         FindImageMap(nsIDocument *aDocument, const nsAString &aUsemap);
 };
 
 #endif
