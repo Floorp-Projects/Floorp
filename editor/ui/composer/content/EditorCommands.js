@@ -1,7 +1,6 @@
 /* Main Composer window UI control */
 
   /*the editor type, i.e. "text" or "html" */
-  var editorType = "html";   
   /* the name of the editor. Must be unique to this window clique */
   var editorName = "EditorAppCoreHTML";
   var appCore = null;  
@@ -19,8 +18,8 @@
       appCore = new EditorAppCore();
       if (appCore) {
         dump("EditorAppCore has been created.\n");
-				appCore.Init(editorName);
-				appCore.setEditorType(editorType);
+		appCore.Init(editorName);
+		appCore.setEditorType("html");
         appCore.setContentWindow( window.frames[0] );
         appCore.setWebShellWindow(window);
         appCore.setToolbarWindow(window);
