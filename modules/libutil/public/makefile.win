@@ -20,6 +20,9 @@
 
 MODULE=util 
 DEPTH=..\..\.. 
-EXPORTS=xp_obs.h
+EXPORTS=xp_obs.h \
+!if defined(MOZ_PERF)
+stopwatch.h
+!endif
 
 !include $(DEPTH)\config\rules.mak

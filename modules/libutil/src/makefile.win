@@ -18,9 +18,14 @@
 MODULE=util 
 DEPTH=..\..\.. 
 CSRCS=obs.c 
+!if defined(MOZ_PERF)
+CPPSRCS=stopwatch.cpp
+CPP_OBJS=.\$(OBJDIR)\stopwatch.obj
+!endif
 REQUIRES=nspr util 
 LIBRARY_NAME=util 
 C_OBJS=.\$(OBJDIR)\obs.obj 
+
 
 !include $(DEPTH)\config\rules.mak
 
