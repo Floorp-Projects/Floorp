@@ -735,13 +735,8 @@ nsCookieService::DoLazyWrite(nsITimer *aTimer,
 void
 nsCookieService::NotifyRejected(nsIURI *aHostURI)
 {
-  if (mObserverService) {
+  if (mObserverService)
     mObserverService->NotifyObservers(aHostURI, "cookie-rejected", nsnull);
-    // the cookieIcon notification is now deprecated, in favor of cookie-rejected.
-    // we still need this until consumers can be switched over.
-    mObserverService->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
-  }
-  mCookieIconVisible = PR_TRUE;
 }
 
 // notify observers that the cookie list changed. there are four possible
@@ -756,17 +751,16 @@ nsCookieService::NotifyChanged(nsICookie2      *aCookie,
 {
   mCookieChanged = PR_TRUE;
 
-  if (mObserverService) {
+  if (mObserverService)
     mObserverService->NotifyObservers(aCookie, "cookie-changed", aData);
-    // the cookieChanged notification is now deprecated. use cookie-changed instead.
-    mObserverService->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
-  }
 
-  // the cookieIcon notification is now deprecated, but we still need
+  // fire a cookieIcon notification if the cookie was downgraded or flagged
+  // by p3p. the cookieIcon notification is now deprecated, but we still need
   // this until consumers can be fixed. to see if cookies have been
   // downgraded or flagged, listen to cookie-changed directly.
-  if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("added").get()) ||
-      !nsCRT::strcmp(aData, NS_LITERAL_STRING("changed").get())) {
+  if (mCookiesPermissions == BEHAVIOR_P3P &&
+      (!nsCRT::strcmp(aData, NS_LITERAL_STRING("added").get()) ||
+       !nsCRT::strcmp(aData, NS_LITERAL_STRING("changed").get()))) {
     nsCookieStatus status;
     aCookie->GetStatus(&status);
     if (status == nsICookie::STATUS_DOWNGRADED ||

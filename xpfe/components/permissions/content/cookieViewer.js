@@ -152,12 +152,12 @@ function Startup() {
 
   // be prepared to reload the display if anything changes
   kObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  kObserverService.addObserver(cookieReloadDisplay, "cookieChanged", false);
+  kObserverService.addObserver(cookieReloadDisplay, "cookie-changed", false);
   kObserverService.addObserver(cookieReloadDisplay, "perm-changed", false);
 }
 
 function Shutdown() {
-  kObserverService.removeObserver(cookieReloadDisplay, "cookieChanged");
+  kObserverService.removeObserver(cookieReloadDisplay, "cookie-changed");
   kObserverService.removeObserver(cookieReloadDisplay, "perm-changed");
 }
 
@@ -165,14 +165,12 @@ var cookieReloadDisplay = {
   observe: function(subject, topic, state) {
     if (topic == gUpdatingBatch)
       return;
-    if (topic == "cookieChanged") {
-      if (state == "cookies") {
-        cookies.length = 0;
-        if (lastCookieSortColumn == "rawHost") {
-          lastCookieSortAscending = !lastCookieSortAscending; // prevents sort from being reversed
-        }
-        loadCookies();
+    if (topic == "cookie-changed") {
+      cookies.length = 0;
+      if (lastCookieSortColumn == "rawHost") {
+        lastCookieSortAscending = !lastCookieSortAscending; // prevents sort from being reversed
       }
+      loadCookies();
     } else if (topic == "perm-changed") {
       permissions.length = 0;
       if (lastPermissionSortColumn == "rawHost") {
@@ -427,7 +425,7 @@ function DeleteAllCookies() {
 }
 
 function FinalizeCookieDeletions() {
-  gUpdatingBatch = "cookieChanged";
+  gUpdatingBatch = "cookie-changed";
   for (var c=0; c<deletedCookies.length; c++) {
     cookiemanager.remove(deletedCookies[c].host,
                          deletedCookies[c].name,
