@@ -40,7 +40,7 @@
 
 int main()
 {
-    char buffer[128];
+    char buffer[256];
     PRTime now;
     PRExplodedTime tod;
 
