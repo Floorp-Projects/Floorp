@@ -34,7 +34,7 @@
 <?xml-stylesheet href="chrome://browser/skin/customizeToolbar.css" type="text/css"?>
 
 <dialog id="main-window"
-        title="&window.title"
+        title="&window.title;"
         onload="buildDialog()"
         ondialogaccept="updateToolbar()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
