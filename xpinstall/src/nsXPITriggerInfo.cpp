@@ -34,12 +34,15 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 //
 // nsXPITriggerItem
 //
+MOZ_DECL_CTOR_COUNTER(nsXPITriggerItem);
 
 nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName, 
                                     const PRUnichar* aURL, 
                                     PRInt32 aFlags )
   : mName(aName), mFlags(aFlags)
 {
+    MOZ_COUNT_CTOR(nsXPITriggerItem);
+
     nsString URL(aURL);
 
     PRInt32 pos = URL.FindChar('?');
@@ -55,14 +58,23 @@ nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
     }
 }
 
+nsXPITriggerItem::~nsXPITriggerItem()
+{
+    MOZ_COUNT_DTOR(nsXPITriggerItem);
+}
+
 
 //
 // nsXPITriggerInfo
 //
 
+MOZ_DECL_CTOR_COUNTER(nsXPITriggerInfo);
+
 nsXPITriggerInfo::nsXPITriggerInfo() 
   : mCx(0), mGlobal(JSVAL_NULL), mCbval(JSVAL_NULL)
-{}
+{
+    MOZ_COUNT_CTOR(nsXPITriggerInfo);
+}
 
 nsXPITriggerInfo::~nsXPITriggerInfo()
 {
@@ -81,6 +93,8 @@ nsXPITriggerInfo::~nsXPITriggerInfo()
 
     if ( mCx && !JSVAL_IS_NULL(mCbval) )
         JS_RemoveRoot( mCx, &mCbval );
+
+    MOZ_COUNT_DTOR(nsXPITriggerInfo);
 }
 
 void nsXPITriggerInfo::SaveCallback( JSContext *aCx, jsval aVal )

@@ -61,6 +61,7 @@ CPPSRCS		= \
 		nsXPITriggerInfo.cpp \
 		nsXPInstallManager.cpp \
 		nsInstallFileOpItem.cpp \
+		nsJSFileSpecObj.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public

@@ -41,17 +41,20 @@
         inFinalFileSpec	- final	location on disk
 */
 
+MOZ_DECL_CTOR_COUNTER(nsInstallFile);
 
 nsInstallFile::nsInstallFile(nsInstall* inInstall,
                              const nsString& inComponentName,
                              const nsString& inVInfo,
                              const nsString& inJarLocation,
-                             const nsString& folderSpec,
+                             nsInstallFolder *folderSpec,
                              const nsString& inPartialPath,
                              PRBool forceInstall,
                              PRInt32 *error) 
 : nsInstallObject(inInstall)
 {
+    MOZ_COUNT_CTOR(nsInstallFile);
+
     mVersionRegistryName = nsnull;
     mJarLocation         = nsnull;
     mExtracedFile        = nsnull;
@@ -60,7 +63,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 
     mUpgradeFile = PR_FALSE;
     
-    if ((folderSpec.Equals("")) || (inInstall == NULL)) 
+    if ((folderSpec == nsnull) || (inInstall == NULL))
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
@@ -122,14 +125,20 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 
     Recycle(qualifiedRegNameString);
 
-    mFinalFile = new nsFileSpec(folderSpec);
-    
+    nsFileSpec* tmp = folderSpec->GetFileSpec();
+    if (!tmp)
+    {
+        *error = nsInstall::INVALID_ARGUMENTS;
+        return;
+    }
+
+    mFinalFile = new nsFileSpec(*tmp);
     if (mFinalFile == nsnull)
     {
         *error = nsInstall::OUT_OF_MEMORY;
         return;
     }
-    
+
     if ( mFinalFile->Exists() )
     {
         // is there a file with the same name as the proposed folder?
@@ -222,6 +231,8 @@ nsInstallFile::~nsInstallFile()
   
     if (mVersionInfo)
       delete mVersionInfo;
+
+    MOZ_COUNT_DTOR(nsInstallFile);
 }
 
 /* Prepare

@@ -42,7 +42,7 @@ class nsInstallDelete : public nsInstallObject
     public:
 
         nsInstallDelete(  nsInstall* inInstall,
-                          const nsString& folderSpec,
+                          nsInstallFolder* folderSpec,
                           const nsString& inPartialPath,
                           PRInt32 *error);
 

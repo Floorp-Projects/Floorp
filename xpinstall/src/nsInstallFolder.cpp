@@ -82,15 +82,17 @@ struct DirectoryTable DirectoryTable[] =
 };
 
 
+MOZ_DECL_CTOR_COUNTER(nsInstallFolder);
 
 nsInstallFolder::nsInstallFolder(const nsString& aFolderID)
 {
-    mFileSpec = nsnull;
-    SetDirectoryPath( aFolderID, "");
+    nsInstallFolder( aFolderID, "" );
 }
 
 nsInstallFolder::nsInstallFolder(const nsString& aFolderID, const nsString& aRelativePath)
 {
+    MOZ_COUNT_CTOR(nsInstallFolder);
+
     mFileSpec = nsnull;
 
     /*
@@ -132,12 +134,29 @@ nsInstallFolder::nsInstallFolder(const nsString& aFolderID, const nsString& aRel
 }
 
 
+nsInstallFolder::nsInstallFolder(nsInstallFolder& inFolder, const nsString& subString)
+{
+    MOZ_COUNT_CTOR(nsInstallFolder);
+
+    mFileSpec = new nsFileSpec();
+    if (mFileSpec != nsnull)
+    {
+        *mFileSpec = *inFolder.mFileSpec;
+
+        if (subString != "")
+            *mFileSpec += subString;
+    }
+}
+
+
 nsInstallFolder::~nsInstallFolder()
 {
     if (mFileSpec != nsnull)
         delete mFileSpec;
+
+    MOZ_COUNT_DTOR(nsInstallFolder);
 }
-        
+
 void 
 nsInstallFolder::GetDirectoryPath(nsString& aDirectoryPath)
 {
@@ -166,6 +185,8 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
     }
     else if ( aFolderID.EqualsIgnoreCase("Installed") )
     {   
+        // XXX block from users or remove "Installed"
+        // XXX the filespec creation will fail due to unix slashes on Mac
         mFileSpec = new nsFileSpec(aRelativePath, PR_TRUE);  // creates the directories to the relative path.
         return;
     }
@@ -425,4 +446,22 @@ nsInstallFolder::SetAppShellDirectory(PRUint32 value)
         fs->GetFileSpec(mFileSpec);
 	    NS_RELEASE(fs);
     }
+}
+
+nsFileSpec*
+nsInstallFolder::GetFileSpec()
+{
+  if (mFileSpec == nsnull)
+    return nsnull;
+  return mFileSpec;
+}
+
+PRInt32
+nsInstallFolder::ToString(nsAutoString* outString)
+{
+  //XXX: May need to fix. Native charset paths will be converted into Unicode when the get to JS
+  //     This will appear to work on Latin-1 charsets but won't work on Mac or other charsets.
+
+  *outString = mFileSpec->GetCString();
+  return NS_OK;
 }

@@ -27,8 +27,12 @@
 
 /* Public Methods */
 
+MOZ_DECL_CTOR_COUNTER(nsWinProfile);
+
 nsWinProfile::nsWinProfile( nsInstall* suObj, const nsString& folder, const nsString& file )
 {
+  MOZ_COUNT_CTOR(nsWinProfile);
+
   mFilename = new nsString(folder);
     
   if (mFilename)
@@ -47,6 +51,9 @@ nsWinProfile::~nsWinProfile()
 {
   if (mFilename)
       delete mFilename;
+
+  MOZ_COUNT_DTOR(nsWinProfile);
+
 }
 
 PRInt32

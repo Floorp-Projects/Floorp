@@ -37,6 +37,8 @@
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
 
+MOZ_DECL_CTOR_COUNTER(nsInstallExecute);
+
 nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
                                       const nsString& inJarLocation,
                                       const nsString& inArgs,
@@ -44,6 +46,8 @@ nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
 
 : nsInstallObject(inInstall)
 {
+    MOZ_COUNT_CTOR(nsInstallExecute);
+
     if ((inInstall == nsnull) || (inJarLocation.Equals("")) )
     {
         *error = nsInstall::INVALID_ARGUMENTS;
@@ -61,6 +65,8 @@ nsInstallExecute::~nsInstallExecute()
 {
     if (mExecutableFile)
         delete mExecutableFile;
+
+    MOZ_COUNT_DTOR(nsInstallExecute);
 }
 
 

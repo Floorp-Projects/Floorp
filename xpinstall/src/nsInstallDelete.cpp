@@ -36,14 +36,18 @@
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
 
+MOZ_DECL_CTOR_COUNTER(nsInstallDelete);
+
 nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
-                                  const nsString& folderSpec,
+                                  nsInstallFolder* folderSpec,
                                   const nsString& inPartialPath,
                                   PRInt32 *error)
 
 : nsInstallObject(inInstall)
 {
-    if ((folderSpec.Equals("")) || (inInstall == NULL)) 
+    MOZ_COUNT_CTOR(nsInstallDelete);
+
+    if ((folderSpec == nsnull) || (inInstall == nsnull)) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
@@ -53,15 +57,20 @@ nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
     mFinalFile      = nsnull;
     mRegistryName   = "";
     
+    nsFileSpec* tmp = folderSpec->GetFileSpec();
+    if (!tmp)
+    {
+        *error = nsInstall::INVALID_ARGUMENTS;
+        return;
+    }
 
-    mFinalFile = new nsFileSpec(folderSpec);
-
+    mFinalFile = new nsFileSpec(*tmp);
     if (mFinalFile == nsnull)
     {
         *error = nsInstall::OUT_OF_MEMORY;
         return;
     }
-
+    
     *mFinalFile += inPartialPath;
 
     *error = ProcessInstallDelete();
@@ -73,6 +82,8 @@ nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
 
 : nsInstallObject(inInstall)
 {
+    MOZ_COUNT_CTOR(nsInstallDelete);
+
     if (inInstall == NULL) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
@@ -91,6 +102,8 @@ nsInstallDelete::~nsInstallDelete()
 {
     if (mFinalFile == nsnull)
         delete mFinalFile;
+
+    MOZ_COUNT_DTOR(nsInstallDelete);
 }
 
 

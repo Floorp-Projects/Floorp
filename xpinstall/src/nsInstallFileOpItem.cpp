@@ -39,6 +39,8 @@
 
 /* Public Methods */
 
+MOZ_DECL_CTOR_COUNTER(nsInstallFileOpItem);
+
 nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32        aCommand,
                                          nsFileSpec&    aTarget,
@@ -46,18 +48,20 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	*aReturn    = nsInstall::SUCCESS;
-  mIObj       = aInstallObj;
-	mCommand    = aCommand;
-	mFlags      = aFlags;
-	mSrc        = nsnull;
-  mParams     = nsnull;
-	mStrTarget  = nsnull;
+    MOZ_COUNT_CTOR(nsInstallFileOpItem);
 
-  mTarget     = new nsFileSpec(aTarget);
-    
-  if(mTarget == nsnull)
-    *aReturn = nsInstall::OUT_OF_MEMORY;
+    *aReturn    = nsInstall::SUCCESS;
+    mIObj       = aInstallObj;
+    mCommand    = aCommand;
+    mFlags      = aFlags;
+    mSrc        = nsnull;
+    mParams     = nsnull;
+    mStrTarget  = nsnull;
+
+    mTarget     = new nsFileSpec(aTarget);
+
+    if(mTarget == nsnull)
+        *aReturn = nsInstall::OUT_OF_MEMORY;
 }
 
 nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
@@ -67,17 +71,19 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	*aReturn    = nsInstall::SUCCESS;
+  MOZ_COUNT_CTOR(nsInstallFileOpItem);
+
+  *aReturn    = nsInstall::SUCCESS;
   mIObj       = aInstallObj;
-	mCommand    = aCommand;
-	mFlags      = 0;
-	mParams     = nsnull;
-	mStrTarget  = nsnull;
+  mCommand    = aCommand;
+  mFlags      = 0;
+  mParams     = nsnull;
+  mStrTarget  = nsnull;
   mAction     = ACTION_NONE;
-    
+
   mSrc        = new nsFileSpec(aSrc);
   mTarget     = new nsFileSpec(aTarget);
-    
+
   if(mTarget == nsnull  || mSrc == nsnull)
     *aReturn = nsInstall::OUT_OF_MEMORY;
 }
@@ -88,7 +94,9 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	*aReturn    = nsInstall::SUCCESS;
+  MOZ_COUNT_CTOR(nsInstallFileOpItem);
+
+  *aReturn    = nsInstall::SUCCESS;
   mIObj       = aInstallObj;
 	mCommand    = aCommand;
 	mFlags      = 0;
@@ -111,30 +119,32 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
+    MOZ_COUNT_CTOR(nsInstallFileOpItem);
+
   *aReturn    = nsInstall::SUCCESS;
   mIObj       = aInstallObj;
-	mCommand    = aCommand;
-	mFlags      = 0;
+  mCommand    = aCommand;
+  mFlags      = 0;
   mAction     = ACTION_NONE;
 
     switch(mCommand)
     {
         case NS_FOP_DIR_RENAME:
         case NS_FOP_FILE_RENAME:
-    	    mSrc        = new nsFileSpec(a1);
-	        mTarget     = nsnull;
+            mSrc        = new nsFileSpec(a1);
+            mTarget     = nsnull;
             mParams     = nsnull;
             mStrTarget  = new nsString(a2);
-        
+
             if (mSrc == nsnull || mStrTarget == nsnull)
                 *aReturn = nsInstall::OUT_OF_MEMORY;
-            
+
             break;
 
         case NS_FOP_FILE_EXECUTE:
         default:
-    	    mSrc        = nsnull;
-	        mTarget     = new nsFileSpec(a1);
+            mSrc        = nsnull;
+            mTarget     = new nsFileSpec(a1);
             mParams     = new nsString(a2);
             mStrTarget  = nsnull;
 
@@ -156,7 +166,9 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	*aReturn    = nsInstall::SUCCESS;
+    MOZ_COUNT_CTOR(nsInstallFileOpItem);
+
+  *aReturn    = nsInstall::SUCCESS;
   mIObj       = aInstallObj;
   mCommand    = aCommand;
   mIconId     = aIconId;
@@ -208,6 +220,8 @@ nsInstallFileOpItem::~nsInstallFileOpItem()
     delete mWorkingPath;
   if(mIcon)
     delete mIcon;
+
+  MOZ_COUNT_DTOR(nsInstallFileOpItem);
 }
 
 #ifdef XP_MAC

@@ -41,7 +41,7 @@ nsTopProgressNotifier::~nsTopProgressNotifier()
         for (; i < mNotifiers->Count(); i++) 
         {
             nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
-            delete element;
+            NS_IF_RELEASE(element);
         }
 
         mNotifiers->Clear();

@@ -34,6 +34,7 @@
 extern "C" NS_EXPORT PRInt32 SU_Uninstall(char *regPackageName);
 REGERR su_UninstallProcessItem(char *component_path);
 
+MOZ_DECL_CTOR_COUNTER(nsInstallUninstall);
 
 nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
                                         const nsString& regName,
@@ -41,6 +42,8 @@ nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
 
 : nsInstallObject(inInstall)
 {
+    MOZ_COUNT_CTOR(nsInstallUninstall);
+
     if (regName.Equals("")) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
@@ -67,6 +70,7 @@ nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
 
 nsInstallUninstall::~nsInstallUninstall()
 {
+    MOZ_COUNT_CTOR(nsInstallUninstall);
 }
 
 

@@ -32,13 +32,17 @@
 /*----------------------------------------------------------------------*
  *   Constructors/Destructor
  *----------------------------------------------------------------------*/
+MOZ_DECL_CTOR_COUNTER(nsAppleSingleDecoder);
+
 nsAppleSingleDecoder::nsAppleSingleDecoder(FSSpec *inSpec, FSSpec *outSpec)
 : mInSpec(NULL), 
   mOutSpec(NULL),
   mInRefNum(0),
   mRenameReqd(false)
 {
-	if (inSpec && outSpec)
+    MOZ_COUNT_CTOR(nsAppleSingleDecoder);
+
+    if (inSpec && outSpec)
 	{
 		/* merely point to FSSpecs, not own 'em */
 		mInSpec = inSpec;
@@ -52,11 +56,13 @@ nsAppleSingleDecoder::nsAppleSingleDecoder()
   mInRefNum(0),
   mRenameReqd(false)
 {
+    MOZ_COUNT_CTOR(nsAppleSingleDecoder);
 }
 
 nsAppleSingleDecoder::~nsAppleSingleDecoder()
 {
 	/* not freeing FSSpecs since we don't own 'em */
+    MOZ_COUNT_DTOR(nsAppleSingleDecoder);
 }
 
 
