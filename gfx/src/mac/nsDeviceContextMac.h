@@ -43,6 +43,7 @@ public:
 
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
   NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHODIMP GetILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHOD GetDepth(PRUint32& aDepth);
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
