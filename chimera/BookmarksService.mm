@@ -814,7 +814,7 @@ void BookmarksService::EnsureToolbarRoot()
 }
 
 static
-void RecursiveAddBookmarkConstruct(NSPopUpButton* aPopup, NSMenu* aMenu, int aTagToMatch)
+void RecursiveAddBookmarkConstruct(NSPopUpButton* aPopup, NSMenu* aMenu, int aTagToMatch, int depth = 0)
 {
   // Get the menu item children.
   NSArray* children = [aMenu itemArray];
@@ -823,18 +823,23 @@ void RecursiveAddBookmarkConstruct(NSPopUpButton* aPopup, NSMenu* aMenu, int aTa
     startPosition = 3;
 
   int count = [children count];
-  for (int i = startPosition; i < count; i++) {
+  for (int i = startPosition; i < count; ++i) {
     NSMenuItem* menuItem = [children objectAtIndex: i];
     NSMenu* submenu = [menuItem submenu];
     if (submenu) {
-      // This is a folder.  Add it to our list and then recur.
-      [aPopup addItemWithTitle: [menuItem title]];
+      // This is a folder.  Add it to our list and then recur. Indent it
+      // the apropriate depth for readability in the menu.
+      NSMutableString *title = [NSMutableString stringWithString:[menuItem title]];
+      for (int j = 0; j <= depth; ++j) 
+        [title insertString:@"    " atIndex: 0];
+	  
+      [aPopup addItemWithTitle: title];
       NSMenuItem* lastItem = [aPopup lastItem];
       if ([menuItem tag] == aTagToMatch)
         [aPopup selectItem: lastItem];
       
       [lastItem setTag: [menuItem tag]];
-      RecursiveAddBookmarkConstruct(aPopup, submenu, aTagToMatch);
+      RecursiveAddBookmarkConstruct(aPopup, submenu, aTagToMatch, depth+1);
     }
   }
 }
