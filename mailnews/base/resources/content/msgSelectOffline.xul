@@ -86,7 +86,7 @@ Contributors:
     </template>
 
     <treecolgroup>		
-        <treecol persist="hidden width" id="SyncColumn" resource="http://home.netscape.com/NC-rdf#Synchronize"/>
+        <treecol persist="hidden width" flex="5" id="SyncColumn" resource="http://home.netscape.com/NC-rdf#Synchronize"/>
         <splitter class="tree-splitter"/>		  
         <treecol persist="hidden width" flex="1" id="FolderColumn" resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
     </treecolgroup>
