@@ -35,7 +35,8 @@ LOCAL_INCLUDES = \
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
-        nsProgressMeterFrame.cpp \
+    nsBoxFrame.cpp \
+    nsProgressMeterFrame.cpp \
 	nsTitledButtonFrame.cpp \
 	nsToolbarFrame.cpp			\
 	nsToolboxFrame.cpp			\

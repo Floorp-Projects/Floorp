@@ -48,6 +48,8 @@ nsIAtom* nsXULAtoms::progressmeter;
 nsIAtom* nsXULAtoms::titledbutton;
 nsIAtom* nsXULAtoms::mode;
 
+nsIAtom* nsXULAtoms::box;
+nsIAtom* nsXULAtoms::flex;
 
 nsIAtom* nsXULAtoms::widget;
 nsIAtom* nsXULAtoms::window;
@@ -91,6 +93,8 @@ void nsXULAtoms::AddrefAtoms() {
 	titledbutton = NS_NewAtom("titledbutton");
 
 	mode = NS_NewAtom("mode");
+	box = NS_NewAtom("box");
+	flex = NS_NewAtom("flex");
 
     widget = NS_NewAtom("widget");
     window = NS_NewAtom("window");
@@ -123,6 +127,10 @@ void nsXULAtoms::ReleaseAtoms() {
 
     NS_RELEASE(progressmeter);
 	NS_RELEASE(mode);
+
+	NS_RELEASE(box);
+	NS_RELEASE(flex);
+
 
 	NS_RELEASE(widget);
     NS_RELEASE(window);

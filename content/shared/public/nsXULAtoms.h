@@ -66,6 +66,9 @@ public:
   static nsIAtom* titledbutton;
   static nsIAtom* mode; 
 
+  static nsIAtom* box; 
+  static nsIAtom* flex; 
+
   static nsIAtom* widget;
   static nsIAtom* window;
 };
