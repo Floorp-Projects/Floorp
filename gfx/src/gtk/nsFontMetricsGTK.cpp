@@ -29,9 +29,6 @@
 #include "nsICharsetConverterManager2.h"
 #include "nsISaveAsCharset.h"
 #include "nsIPref.h"
-#include "nsILocale.h"
-#include "nsILocaleService.h"
-#include "nsLocaleCID.h"
 #include "nsCOMPtr.h"
 #include "nspr.h"
 #include "nsHashtable.h"
@@ -143,7 +140,6 @@ struct nsFontWeight
 };
 
 static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
@@ -791,61 +787,9 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  static double factor = 1.0;
-  static PRUint16 minimum = 1;
-  static int init = 0;
-  if (!init) {
-    init = 1;
-    gchar* factorStr = g_getenv("GECKO_FONT_SIZE_FACTOR");
-    if (factorStr) {
-      factor = atof(factorStr);
-    }
-    else {
-      factor = 1.0;
-    }
-
-    /*
-     * XXX This is a temporary solution for the large CJK font problem.
-     * On Unix, East Asian fonts are large, and ugly when scaled. So we try
-     * to avoid scaling them, but then any adjacent English text looks too
-     * small. The proper solution is to get the layout engine to ask for
-     * the font heights for a string, rather than the height of the ASCII
-     * font only. (nsIFontMetrics::GetHeight only measures the ASCII font
-     * currently, and we don't want to load all of the fonts just to get a
-     * height.) Until we get the proper solution in the layout engine, we
-     * apply this temporary solution, based on the East Asian locale.
-     */
-    res = NS_ERROR_FAILURE;
-    NS_WITH_SERVICE(nsILocaleService, service, kLocaleServiceCID, &res);
-    if (NS_SUCCEEDED(res) && service) {
-      nsCOMPtr<nsILocale> locale = nsnull;
-      res = service->GetApplicationLocale(getter_AddRefs(locale));
-      if (NS_SUCCEEDED(res) && locale) {
-        PRUnichar* str = nsnull;
-        res = locale->GetCategory(nsAutoString(NS_ConvertASCIItoUCS2(NSILOCALE_CTYPE)).GetUnicode(),
-                                  &str);
-        if (NS_SUCCEEDED(res) && str) {
-          nsAutoString loc(str);
-          loc.Truncate(2);
-          loc.ToLowerCase();
-          if ((loc.Equals(NS_ConvertASCIItoUCS2("ja"))) || 
-              (loc.Equals(NS_ConvertASCIItoUCS2("ko"))) || 
-              (loc.Equals(NS_ConvertASCIItoUCS2("zh")))) {
-            // In CJK environments, we want the minimum request to be 16px,
-            // since the smallest font for some of those langs is 16.
-            minimum = 16;
-          }
-          Recycle(str);
-        }
-      }
-    }
-  }
   float textZoom = 1.0;
   mDeviceContext->GetTextZoom(textZoom);
-  mPixelSize = NSToIntRound(app2dev * textZoom * factor * mFont->size);
-  if (mPixelSize < minimum) {
-    mPixelSize = minimum;
-  }
+  mPixelSize = NSToIntRound(app2dev * textZoom * mFont->size);
   mStretchIndex = 4; // normal
   mStyleIndex = mFont->style;
 
@@ -862,6 +806,31 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       mDefaultFont = "serif";
     }
     mGeneric = &mDefaultFont;
+  }
+
+  if (mLangGroup) {
+    nsCAutoString name("font.min-size.");
+    if (mGeneric->Equals("monospace")) {
+      name.Append("fixed");
+    }
+    else {
+      name.Append("variable");
+    }
+    name.Append(char('.'));
+    const PRUnichar* langGroup = nsnull;
+    mLangGroup->GetUnicode(&langGroup);
+    name.AppendWithConversion(langGroup);
+    PRInt32 minimum = 0;
+    res = gPref->GetIntPref(name.GetBuffer(), &minimum);
+    if (NS_FAILED(res)) {
+      gPref->GetDefaultIntPref(name.GetBuffer(), &minimum);
+    }
+    if (minimum < 0) {
+      minimum = 0;
+    }
+    if (mPixelSize < minimum) {
+      mPixelSize = minimum;
+    }
   }
 
   if (mLangGroup.get() == gUserDefined) {
@@ -892,7 +861,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
     nsCAutoString name("font.name.");
     name.Append(*mGeneric);
-    name.Append('.');
+    name.Append(char('.'));
     name.Append(USER_DEFINED);
     gPref->CopyCharPref(name.GetBuffer(), &value);
     if (value) {
