@@ -161,7 +161,7 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
 {
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
-    // No, create a column pseudo frame
+    // No, create a body pseudo frame
     nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
     mChildCount = 1;
 
@@ -306,8 +306,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
              this, kidSize.width, kidSize.height);
   }
 
-  SetFirstContentOffset(mFirstChild);
-  SetLastContentOffset(mFirstChild);
+  // Set our last content offset based on the pseudo-frame
+  nsBodyFrame* bodyPseudoFrame = (nsBodyFrame*)mFirstChild;
+  mLastContentOffset = bodyPseudoFrame->GetLastContentOffset();
 
   // Place the child
   mFirstChild->SetRect(nsRect(leftInset, topInset,

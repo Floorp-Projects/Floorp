@@ -879,7 +879,9 @@ nsCSSInlineFrame::PullOneChild(nsCSSInlineFrame* aNextInFlow,
     kidFrame->GetNextSibling(aNextInFlow->mFirstChild);
     aNextInFlow->mChildCount--;
     if (nsnull != aNextInFlow->mFirstChild) {
-      aNextInFlow->SetFirstContentOffset(aNextInFlow->mFirstChild);
+      PRInt32 contentIndex;
+      aNextInFlow->mFirstChild->GetContentIndex(contentIndex);
+      aNextInFlow->SetFirstContentOffset(contentIndex);
     }
   }
 
@@ -894,7 +896,9 @@ nsCSSInlineFrame::PullOneChild(nsCSSInlineFrame* aNextInFlow,
   // Add the frame on our list
   if (nsnull == aLastChild) {
     mFirstChild = kidFrame;
-    SetFirstContentOffset(kidFrame);
+    PRInt32 contentIndex;
+    kidFrame->GetContentIndex(contentIndex);
+    SetFirstContentOffset(contentIndex);
   } else {
     NS_ASSERTION(IsLastChild(aLastChild), "bad last child");
     aLastChild->SetNextSibling(kidFrame);

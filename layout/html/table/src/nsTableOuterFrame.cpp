@@ -761,7 +761,9 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
   if (parent->mFirstChild == nextInFlow) {
     nextInFlow->GetNextSibling(parent->mFirstChild);
     if (nsnull != parent->mFirstChild) {
-      parent->SetFirstContentOffset(parent->mFirstChild);
+      PRInt32 contentIndex;
+      parent->mFirstChild->GetContentIndex(contentIndex);
+      parent->SetFirstContentOffset(contentIndex);
       if (parent->IsPseudoFrame()) {
         // Tell the parent's parent to update its content offsets
         nsContainerFrame* pp = (nsContainerFrame*) parent->mGeometricParent;
