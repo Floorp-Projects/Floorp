@@ -57,7 +57,7 @@
 #define HEADER_LAST             HEADER_MESSAGEID
 
 
-class nsNNTPNewsgroupPost : nsINNTPNewsgroupPost {
+class nsNNTPNewsgroupPost : public nsINNTPNewsgroupPost {
     
 public:
     nsNNTPNewsgroupPost();

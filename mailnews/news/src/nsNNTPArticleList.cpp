@@ -26,7 +26,7 @@
 
 typedef PRUint32 nsMsgKey;
 
-class nsNNTPArticleList : nsINNTPArticleList
+class nsNNTPArticleList : public nsINNTPArticleList
 #ifdef HAVE_CHANGELISTENER
  : public ChangeListener
 #endif
