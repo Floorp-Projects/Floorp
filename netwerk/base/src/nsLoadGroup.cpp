@@ -30,6 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "prlog.h"
+#include "nsCRT.h"
 
 #if defined(PR_LOGGING)
 //
