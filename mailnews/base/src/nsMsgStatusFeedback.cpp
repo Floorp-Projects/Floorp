@@ -205,7 +205,7 @@ nsMsgStatusFeedback::StartMeteors()
 	if (!m_meteorsSpinning)
 	{
 		// meteors are horribly slow, so turn them off for now
-//		setAttribute( mWebShell, "Messenger:Throbber", "busy", "true" );
+		setAttribute( mWebShell, "Messenger:Throbber", "busy", "true" );
 		m_meteorsSpinning = PR_TRUE;
 	}
 	return NS_OK;
@@ -218,7 +218,7 @@ nsMsgStatusFeedback::StopMeteors()
 	if (m_meteorsSpinning)
 	{
 		// meteors are horribly slow, so turn them off for now
-//		setAttribute( mWebShell, "Messenger:Throbber", "busy", "false" );
+		setAttribute( mWebShell, "Messenger:Throbber", "busy", "false" );
 		m_meteorsSpinning = PR_FALSE;
 	}
 	return NS_OK;
