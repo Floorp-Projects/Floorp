@@ -185,6 +185,7 @@ private:
     PRUint32                        mResponseIsComplete : 1;
     PRUint32                        mDidContentStart    : 1;
     PRUint32                        mNoContent          : 1; // expecting an empty entity body
+    PRUint32                        mSentData           : 1;
     PRUint32                        mReceivedData       : 1;
     PRUint32                        mStatusEventPending : 1;
 
