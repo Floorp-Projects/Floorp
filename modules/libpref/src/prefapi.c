@@ -897,12 +897,13 @@ PrefResult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool ge
     if (pref && (pref->flags & PREF_INT))
     {
         if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
-                {
-                        *return_int = pref->defaultPref.intVal;
-                        /* check to see if we even had a default */
-                        if(*return_int == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE))
-                                return PREF_DEFAULT_VALUE_NOT_INITIALIZED;
-                }
+        {
+            PRInt32 tempInt = pref->defaultPref.intVal;
+            /* check to see if we even had a default */
+            if (tempInt == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE))
+                return PREF_DEFAULT_VALUE_NOT_INITIALIZED;
+            *return_int = tempInt;
+        }
         else
             *return_int = pref->userPref.intVal;
         result = PREF_OK;
@@ -922,12 +923,13 @@ PrefResult PREF_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool
     if (pref && (pref->flags & PREF_BOOL))
     {
         if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
-                {
-                        *return_value = pref->defaultPref.boolVal;
-                        /* check to see if we even had a default */
-                        if(*return_value == ((PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE))
-                                return PREF_DEFAULT_VALUE_NOT_INITIALIZED;
-                }
+        {
+            PRBool tempBool = pref->defaultPref.boolVal;
+            /* check to see if we even had a default */
+            if (tempBool == ((PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE))
+                return PREF_DEFAULT_VALUE_NOT_INITIALIZED;
+            *return_value = tempBool;
+        }
         else
             *return_value = pref->userPref.boolVal;
         result = PREF_OK;
