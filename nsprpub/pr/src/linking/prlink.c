@@ -33,9 +33,7 @@
 #elif defined(USE_HPSHL)
 #include <dl.h>
 #elif defined(USE_RLD)
-#include <fcntl.h>
-#include <streams/streams.h>
-#include <mach-o/rld.h>
+#include <mach-o/dyld.h>
 #endif
 
 /* Define this on systems which don't have it (AIX) */
@@ -67,8 +65,7 @@ struct PRLibrary {
 #if defined(USE_HPSHL)
     shl_t			dlh;
 #elif defined(USE_RLD)
-    NXStream*			dlh;
-    int				rld_fd;
+    NSModule			dlh;
 #else
     void*			dlh;
 #endif 
@@ -642,10 +639,12 @@ PR_LoadLibrary(const char *name)
      */
     shl_t h = shl_load(name, BIND_IMMEDIATE | DYNAMIC_PATH, 0L);
 #elif defined(USE_RLD)
-    int fd = open(name, O_RDONLY);
-    NXStream *h = NXOpenFile(fd, NX_READONLY);
-
-    lm->rld_fd = fd;
+    NSObjectFileImage ofi;
+    NSModule h = NULL;
+    if (NSCreateObjectFileImageFromFile(name, &ofi)
+            == NSObjectFileImageSuccess) {
+        h = NSLinkModule(ofi, name, TRUE);
+    }
 #else
 #error Configuration error
 #endif
@@ -713,9 +712,7 @@ PR_UnloadLibrary(PRLibrary *lib)
 #elif defined(USE_HPSHL)
     result = shl_unload(lib->dlh);
 #elif defined(USE_RLD)
-    result = rld_unload(lib->dlh);
-    NXClose(lib->dlh);
-    close(lib->rld_fd);
+    result = NSUnLinkModule(lib->dlh, FALSE);
 #else
 #error Configuration error
 #endif
@@ -827,8 +824,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
     if (shl_findsym(&lm->dlh, name, TYPE_PROCEDURE, &f) == -1)
 	f = NULL;
 #elif defined(USE_RLD)
-    if (rld_lookup(lm->dlh, name, (unsigned long*)&f) == -1)
-	f = NULL;
+    f = NSAddressOfSymbol(NSLookupAndBindSymbol(name));
 #endif
 #endif /* HAVE_DLL */
 #endif /* XP_UNIX */
@@ -854,7 +850,7 @@ PR_FindSymbol(PRLibrary *lib, const char *raw_name)
     /*
     ** Mangle the raw symbol name in any way that is platform specific.
     */
-#if defined(SUNOS4)
+#if defined(SUNOS4) || defined(RHAPSODY)
     /* Need a leading _ */
     name = PR_smprintf("_%s", raw_name);
 #elif defined(AIX)
@@ -899,7 +895,7 @@ PR_FindSymbolAndLibrary(const char *raw_name, PRLibrary* *lib)
     /*
     ** Mangle the raw symbol name in any way that is platform specific.
     */
-#if defined(SUNOS4)
+#if defined(SUNOS4) || defined(RHAPSODY)
     /* Need a leading _ */
     name = PR_smprintf("_%s", raw_name);
 #elif defined(AIX)
