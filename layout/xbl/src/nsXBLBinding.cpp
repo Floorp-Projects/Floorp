@@ -993,9 +993,10 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
 NS_IMETHODIMP
 nsXBLBinding::GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult)
 {
-  if (mNextBinding)
+  mPrototypeBinding->GetBaseTag(aNameSpaceID, aResult);
+  if (!*aResult && mNextBinding)
     return mNextBinding->GetBaseTag(aNameSpaceID, aResult);
-  return mPrototypeBinding->GetBaseTag(aNameSpaceID, aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1464,6 +1465,27 @@ NS_IMETHODIMP
 nsXBLBinding::MarkedForDeath(PRBool* aResult)
 {
   *aResult = mMarkedForDeath;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::ImplementsInterface(REFNSIID aIID, PRBool* aResult)
+{
+  mPrototypeBinding->ImplementsInterface(aIID, aResult);
+  if (!*aResult && mNextBinding)
+    return mNextBinding->ImplementsInterface(aIID, aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::ShouldBuildChildFrames(PRBool* aResult)
+{
+  *aResult = PR_TRUE;
+  if (mContent)
+    return mPrototypeBinding->ShouldBuildChildFrames(aResult);
+  else if (mNextBinding) 
+    return mNextBinding->ShouldBuildChildFrames(aResult);
+
   return NS_OK;
 }
 

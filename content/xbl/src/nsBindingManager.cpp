@@ -62,6 +62,8 @@
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIWeakReference.h"
 
+#include "nsIXPConnect.h"
+
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
@@ -203,6 +205,9 @@ public:
   NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult);
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding);
 
+  NS_IMETHOD GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult);
+  NS_IMETHOD SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
+
   NS_IMETHOD ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
                                nsIDocument* aNewDocument);
 
@@ -234,11 +239,15 @@ public:
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD FlushChromeBindings();
 
+  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult);
+
   // nsIStyleRuleSupplier
   NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
                        nsISupportsArrayEnumFunc aFunc, void* aData,
                        nsIContent* aContent);
+
+  NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
 
 protected:
   void GetEnclosingScope(nsIContent* aContent, nsIContent** aParent);
@@ -250,6 +259,7 @@ protected:
 // MEMBER VARIABLES
 protected: 
   nsSupportsHashtable* mBindingTable;
+  nsSupportsHashtable* mWrapperTable;
   nsSupportsHashtable* mDocumentTable;
   nsSupportsHashtable* mLoadingDocTable;
 
@@ -269,7 +279,7 @@ nsBindingManager::nsBindingManager(void)
   NS_INIT_REFCNT();
 
   mBindingTable = nsnull;
-  
+  mWrapperTable = nsnull;
   mDocumentTable = nsnull;
   mLoadingDocTable = nsnull;
 
@@ -279,6 +289,7 @@ nsBindingManager::nsBindingManager(void)
 nsBindingManager::~nsBindingManager(void)
 {
   delete mBindingTable;
+  delete mWrapperTable;
   delete mDocumentTable;
   delete mLoadingDocTable;
 }
@@ -312,8 +323,42 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding )
   if (aBinding) {
     mBindingTable->Put(&key, aBinding);
   }
-  else
+  else {
     mBindingTable->Remove(&key);
+
+    // The death of the bindings means the death of the JS wrapper.
+    SetWrappedJS(aContent, nsnull);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult) 
+{ 
+  if (mWrapperTable) {
+    nsISupportsKey key(aContent);
+    *aResult = NS_STATIC_CAST(nsIXPConnectWrappedJS*, mWrapperTable->Get(&key));
+  }
+  else {
+    *aResult = nsnull;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWrappedJS)
+{
+  if (!mWrapperTable)
+    mWrapperTable = new nsSupportsHashtable;
+
+  nsISupportsKey key(aContent);
+  if (aWrappedJS) {
+    mWrapperTable->Put(&key, aWrappedJS);
+  }
+  else
+    mWrapperTable->Remove(&key);
 
   return NS_OK;
 }
@@ -670,6 +715,69 @@ nsBindingManager::FlushChromeBindings()
 }
 
 NS_IMETHODIMP
+nsBindingManager::GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult)
+{
+  *aResult = nsnull;
+  nsCOMPtr<nsIXBLBinding> binding;
+  GetBinding(aContent, getter_AddRefs(binding));
+  if (binding) {
+    PRBool supportsInterface;
+    binding->ImplementsInterface(aIID, &supportsInterface);
+    if (supportsInterface) {
+      nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS;
+      GetWrappedJS(aContent, getter_AddRefs(wrappedJS));
+
+      if (wrappedJS)
+        return wrappedJS->AggregatedQueryInterface(aIID, aResult);
+
+      // We have never made a wrapper for this implementation.
+      // Create an XPC wrapper for the script object and hand it back.
+      JSObject* jsobj = (JSObject*)aScriptObject;
+
+      nsCOMPtr<nsIDocument> doc;
+      aContent->GetDocument(*getter_AddRefs(doc));
+      if (!doc)
+        return NS_NOINTERFACE;
+
+      nsCOMPtr<nsIScriptGlobalObject> global;
+      doc->GetScriptGlobalObject(getter_AddRefs(global));
+      if (!global)
+        return NS_NOINTERFACE;
+
+      nsCOMPtr<nsIScriptContext> context;
+      global->GetContext(getter_AddRefs(context));
+      if (!context)
+        return NS_NOINTERFACE;
+
+      JSContext* jscontext = (JSContext*)context->GetNativeContext();
+      if (!jscontext)
+        return NS_NOINTERFACE;
+
+      nsCOMPtr<nsIXPConnect> xpConnect = do_GetService("@mozilla.org/js/xpc/XPConnect;1");
+      if (!xpConnect)
+        return NS_NOINTERFACE;
+
+      nsISupports* nativeThis = (nsISupports*)JS_GetPrivate(jscontext, jsobj);
+      nsresult rv = xpConnect->WrapJSAggregatedToNative(nativeThis, jscontext, jsobj, aIID, aResult);
+      if (NS_FAILED(rv))
+        return rv;
+
+      // We successfully created a wrapper.  We will own this wrapper for as long as the binding remains
+      // alive.  At the time the binding is cleared out of the bindingManager, we will remove the wrapper
+      // from the bindingManager as well.
+      nsISupports* supp = NS_STATIC_CAST(nsISupports*, *aResult);
+      wrappedJS = do_QueryInterface(supp);
+      SetWrappedJS(aContent, wrappedJS);
+
+      return rv;
+    }
+  }
+  
+  *aResult = nsnull;
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
 nsBindingManager::InheritsStyle(nsIContent* aContent, PRBool* aResult)
 {
   // Get our enclosing parent.
@@ -781,6 +889,19 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBindingManager::ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult)
+{
+  *aResult = PR_TRUE;
+
+  nsCOMPtr<nsIXBLBinding> binding;
+  GetBinding(aContent, getter_AddRefs(binding));
+
+  if (binding)
+    return binding->ShouldBuildChildFrames(aResult);
+
+  return NS_OK;
+}
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

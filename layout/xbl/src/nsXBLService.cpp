@@ -502,6 +502,7 @@ JSCList  nsXBLService::gClassLRUList = JS_INIT_STATIC_CLIST(&nsXBLService::gClas
 PRUint32 nsXBLService::gClassLRUListLength = 0;
 PRUint32 nsXBLService::gClassLRUListQuota = 64;
 
+nsIAtom* nsXBLService::kDisplayAtom = nsnull;
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
 nsIAtom* nsXBLService::kEventAtom = nsnull;
 nsIAtom* nsXBLService::kScrollbarAtom = nsnull;
@@ -542,6 +543,7 @@ nsXBLService::nsXBLService(void)
     if (NS_FAILED(rv)) return;
 
     // Create our atoms
+    kDisplayAtom = NS_NewAtom("display");
     kExtendsAtom = NS_NewAtom("extends");
     kEventAtom = NS_NewAtom("event");
     kScrollbarAtom = NS_NewAtom("scrollbar");
@@ -573,6 +575,7 @@ nsXBLService::~nsXBLService(void)
     NS_IF_RELEASE(gNameSpaceManager);
     
     // Release our atoms
+    NS_RELEASE(kDisplayAtom);
     NS_RELEASE(kExtendsAtom);
     NS_RELEASE(kEventAtom);
     NS_RELEASE(kScrollbarAtom);
@@ -1027,49 +1030,70 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
     }
   }
   else if (hasBase) {
-    // Check for the presence of an extends attribute
-    nsAutoString extends;
+    // Check for the presence of a 'extends' and 'display' attributes
+    nsAutoString display, extends;
+    child->GetAttribute(kNameSpaceID_None, kDisplayAtom, display);
     child->GetAttribute(kNameSpaceID_None, kExtendsAtom, extends);
+    PRBool hasDisplay = !display.IsEmpty();
+    PRBool hasExtends = !extends.IsEmpty();
+    
     nsAutoString value(extends);
-    if (extends.IsEmpty())
+
+    PRBool prefixIsDisplay = PR_FALSE;
+            
+    if (!hasDisplay && !hasExtends) 
       protoBinding->SetHasBasePrototype(PR_FALSE);
     else {
       nsAutoString prefix;
-      PRInt32 offset = extends.FindChar(':');
-      if (-1 != offset) {
-        extends.Left(prefix, offset);
-        extends.Cut(0, offset+1);
+      PRInt32 offset;
+      if (hasDisplay) {
+        prefixIsDisplay = PR_TRUE;
+        offset = display.FindChar(':');
+        if (-1 != offset) {
+          display.Left(prefix, offset);
+          display.Cut(0, offset+1);
+        }
       }
+      else if (hasExtends) {
+        offset = extends.FindChar(':');
+        if (-1 != offset) {
+          extends.Left(prefix, offset);
+          extends.Cut(0, offset+1);
+          display = extends;
+        }
+      }
+
+      nsCOMPtr<nsINameSpace> tagSpace;
       if (prefix.Length() > 0) {
-        // Look up the prefix.
         nsCOMPtr<nsIAtom> prefixAtom = getter_AddRefs(NS_NewAtom(prefix));
         nsCOMPtr<nsINameSpace> nameSpace;
         nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(child));
         if (xmlContent) {
           xmlContent->GetContainingNameSpace(*getter_AddRefs(nameSpace));
           if (nameSpace) {
-            nsCOMPtr<nsINameSpace> tagSpace;
             nameSpace->FindNameSpace(prefixAtom, *getter_AddRefs(tagSpace));
             if (tagSpace) {
               // We extend some widget/frame. We don't really have a base binding.
               protoBinding->SetHasBasePrototype(PR_FALSE);
               PRInt32 nameSpaceID;
               tagSpace->GetNameSpaceID(nameSpaceID);
-              nsCOMPtr<nsIAtom> tagName = getter_AddRefs(NS_NewAtom(extends));
+              nsCOMPtr<nsIAtom> tagName = getter_AddRefs(NS_NewAtom(display));
               protoBinding->SetBaseTag(nameSpaceID, tagName);
             }
-            else {
-              // We have a base class binding. Load it right now.
-              nsCAutoString urlCString; urlCString.AssignWithConversion(value);
-              if (NS_FAILED(GetBindingInternal(aBoundElement, urlCString, aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
-                return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
-              if (!aPeekOnly) {
-                // Make sure to set the base prototype.
-                baseBinding->GetPrototypeBinding(getter_AddRefs(baseProto));
-                protoBinding->SetBasePrototype(baseProto);
-              }
-            }
           }
+        }
+      }
+
+      if (hasExtends && (hasDisplay || (!hasDisplay && !tagSpace))) {
+        // Look up the prefix.
+        // We have a base class binding. Load it right now.
+        nsCAutoString urlCString; urlCString.AssignWithConversion(value);
+        if (NS_FAILED(GetBindingInternal(aBoundElement, urlCString, aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
+          return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
+        if (!aPeekOnly) {
+          // Make sure to set the base prototype.
+          baseBinding->GetPrototypeBinding(getter_AddRefs(baseProto));
+          protoBinding->SetBasePrototype(baseProto);
         }
       }
     }

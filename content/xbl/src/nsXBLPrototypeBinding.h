@@ -84,6 +84,10 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding
   NS_IMETHOD GetBaseTag(PRInt32* aNamespaceID, nsIAtom** aTag);
   NS_IMETHOD SetBaseTag(PRInt32 aNamespaceID, nsIAtom* aTag);
 
+  NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult);
+
+  NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult);
+
 public:
   nsXBLPrototypeBinding(const nsAReadableCString& aRef, nsIContent* aElement, 
                         nsIXBLDocumentInfo* aInfo);
@@ -99,7 +103,10 @@ public:
   static nsIAtom* kInheritsAtom;
   static nsIAtom* kHTMLAtom;
   static nsIAtom* kValueAtom;
-  
+  static nsIAtom* kXBLTextAtom;
+  static nsIAtom* kImplementationAtom;
+  static nsIAtom* kImplementsAtom;
+
   static nsFixedSizeAllocator kPool;
 
 // Internal member functions
@@ -112,8 +119,33 @@ protected:
   void ConstructHandlers();
   void ConstructAttributeTable(nsIContent* aElement);
   void ConstructInsertionTable(nsIContent* aElement);
+  void ConstructInterfaceTable(nsIContent* aElement);
   void GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, nsISupportsArray** aList);
   
+protected:
+  // Internal helper class for managing our IID table.
+  class nsIIDKey : public nsHashKey {
+    protected:
+      nsIID mKey;
+  
+    public:
+      nsIIDKey(REFNSIID key) : mKey(key) {}
+      ~nsIIDKey(void) {}
+
+      PRUint32 HashCode(void) const {
+        // Just use the 32-bit m0 field.
+        return mKey.m0;
+      }
+
+      PRBool Equals(const nsHashKey *aKey) const {
+        return mKey.Equals( ((nsIIDKey*) aKey)->mKey);
+      }
+
+      nsHashKey *Clone(void) const {
+        return new nsIIDKey(mKey);
+      }
+  };
+
 // MEMBER VARIABLES
 protected:
   nsCString mID;
@@ -133,6 +165,8 @@ protected:
 
   nsSupportsHashtable* mInsertionPointTable; // A table of insertion points for placing explicit content
                                              // underneath anonymous content.
+
+  nsSupportsHashtable* mInterfaceTable; // A table of cached interfaces that we support.
 
   PRInt32 mBaseNameSpaceID;    // If we extend a tagname/namespace, then that information will
   nsCOMPtr<nsIAtom> mBaseTag;  // be stored in here.

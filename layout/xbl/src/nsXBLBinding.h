@@ -34,6 +34,7 @@ class nsISupportsArray;
 class nsSupportsHashtable;
 class nsIXBLService;
 class nsFixedSizeAllocator;
+class nsXBLEventHandler;
 
 // *********************************************************************/
 // The XBLBinding class
@@ -92,6 +93,10 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD MarkForDeath();
   NS_IMETHOD MarkedForDeath(PRBool* aResult);
+
+  NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult);
+
+  NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult);
 
 public:
   nsXBLBinding(nsIXBLPrototypeBinding* aProtoBinding);
