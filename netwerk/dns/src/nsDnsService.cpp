@@ -23,11 +23,10 @@
 #include "nsDnsService.h"
 #include "nsIDNSListener.h"
 #include "nsIRequest.h"
-#include "nsISupportsArray.h"
 #include "nsError.h"
 #include "prnetdb.h"
 #include "nsString.h"
-#include "nsIIOService.h"
+//#include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "netCore.h"
 #include "nsAutoLock.h"
@@ -39,7 +38,7 @@
 #endif
 #include "prsystem.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+//static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Platform specific defines and includes
