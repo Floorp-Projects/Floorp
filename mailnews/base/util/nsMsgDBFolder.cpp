@@ -1136,9 +1136,9 @@ nsMsgDBFolder::MarkAllMessagesRead(void)
   
   if(NS_SUCCEEDED(rv))
   {
-    EnableNotifications(allMessageCountNotifications, PR_FALSE);
+    EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
     rv = mDatabase->MarkAllRead(nsnull);
-    EnableNotifications(allMessageCountNotifications, PR_TRUE);
+    EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
     mDatabase->SetSummaryValid(PR_TRUE);
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
@@ -1592,4 +1592,31 @@ nsMsgDBFolder::MatchOrChangeFilterDestination(nsIMsgFolder *newFolder, PRBool ca
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsMsgDBFolder::GetDBTransferInfo(nsIDBFolderInfo **aTransferInfo)
+{
+  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+  nsCOMPtr <nsIMsgDatabase> db;
+  GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
+  if (dbFolderInfo)
+    dbFolderInfo->GetTransferInfo(aTransferInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBFolder::SetDBTransferInfo(nsIDBFolderInfo *aTransferInfo)
+{
+  NS_ENSURE_ARG(aTransferInfo);
+  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+  nsCOMPtr <nsIMsgDatabase> db;
+  GetMsgDatabase(nsnull, getter_AddRefs(db));
+  if (db)
+  {
+    db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    if(dbFolderInfo)
+      dbFolderInfo->InitFromTransferInfo(aTransferInfo);
+  }
+  return NS_OK;
 }

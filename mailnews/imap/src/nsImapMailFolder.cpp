@@ -1161,20 +1161,10 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
           }
           return rv;
         }
-        nsCOMPtr<nsIDBFolderInfo> trashDBFolderInfo;
         nsCOMPtr <nsIDBFolderInfo> transferInfo;
-        rv = trashFolder->GetDBFolderInfoAndDB(getter_AddRefs(trashDBFolderInfo), getter_AddRefs(trashDB));
-        if (trashDBFolderInfo)
-          trashDBFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
-        trashDBFolderInfo = nsnull;
+        rv = trashFolder->GetDBTransferInfo(getter_AddRefs(transferInfo));
         rv = trashFolder->Delete(); // delete summary spec
-        rv = trashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(trashDB));
-        if (transferInfo && trashDB)
-        {
-          trashDB->GetDBFolderInfo(getter_AddRefs(trashDBFolderInfo));
-          if (trashDBFolderInfo)
-            trashDBFolderInfo->InitFromTransferInfo(transferInfo);
-        }
+        trashFolder->SetDBTransferInfo(transferInfo);
 
         nsCOMPtr<nsIImapService> imapService = 
                  do_GetService(kCImapService, &rv);
@@ -1635,9 +1625,9 @@ nsImapMailFolder::MarkAllMessagesRead(void)
   if(NS_SUCCEEDED(rv))
   {
     nsMsgKeyArray thoseMarked;
-    EnableNotifications(allMessageCountNotifications, PR_FALSE);
+    EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
     rv = mDatabase->MarkAllRead(&thoseMarked);
-    EnableNotifications(allMessageCountNotifications, PR_TRUE);
+    EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
     if (NS_SUCCEEDED(rv))
     {
       rv = StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, thoseMarked.GetArray(), thoseMarked.GetSize());
@@ -2008,9 +1998,9 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
         }
         else
         {
-          EnableNotifications(allMessageCountNotifications, PR_FALSE);  //"remove it immediately" model
+          EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);  //"remove it immediately" model
           mDatabase->DeleteMessages(&srcKeyArray,nsnull);
-          EnableNotifications(allMessageCountNotifications, PR_TRUE);
+          EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
           NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);            
         }    
       }   
@@ -2363,12 +2353,9 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       }
       else if (NS_SUCCEEDED(rv) && mDatabase)
       {
-        if (transferInfo && mDatabase)
-        {
-          rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-          if (dbFolderInfo)
-            dbFolderInfo->InitFromTransferInfo(transferInfo);
-        }
+        if (transferInfo)
+          SetDBTransferInfo(transferInfo);
+
         SummaryChanged();
         rv = NS_ERROR_UNEXPECTED;
         if (mDatabase) 
@@ -4211,14 +4198,14 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                   else
                     MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, srcDB);
                 }
-                srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
+                srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE/* dbBatching*/);
                 // even if we're showing deleted messages, 
                 // we still need to notify FE so it will show the imap deleted flag
                 srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);      
               }
               else
               {
-                srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
+                srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE/* dbBatching*/);
                 srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);  
               }
                 
@@ -5044,7 +5031,7 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
   }
   
   if (ourUserName && 
-    (!strcmp(ourUserName, myUserName) || !strcmp(ourUserName, IMAP_ACL_ANYONE_STRING)))
+    (!strcmp(ourUserName, myUserName.get()) || !strcmp(ourUserName, IMAP_ACL_ANYONE_STRING)))
   {
     // if this is setting an ACL for me, cache it in the folder pref flags
     UpdateACLCache();
@@ -6083,7 +6070,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   m_copyState->m_curIndex = m_copyState->m_totalCount;
 
   if (isMove)
-    srcFolder->EnableNotifications(allMessageCountNotifications, PR_FALSE);  //disable message count notification 
+    srcFolder->EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE/* dbBatching*/);  //disable message count notification 
 
   copySupport = do_QueryInterface(m_copyState);
   if (imapService)
@@ -6123,7 +6110,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
 done:
     if (NS_FAILED(rv) && isMove)
     {
-      srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);  //enable message count notification 
+      srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE/* dbBatching*/);  //enable message count notification 
       NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
     }
     return rv;

@@ -388,16 +388,11 @@ nsFolderCompactState::FinishCompact()
 
   nsLocalFolderSummarySpec newSummarySpec(m_fileSpec);
 
-  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
   nsCOMPtr <nsIDBFolderInfo> transferInfo;
-  nsCOMPtr <nsIMsgDatabase> db;
-  m_folder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
-  if (dbFolderInfo)
-    dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
-  db=nsnull;
-    // close down database of the original folder and remove the folder node
-    // and all it's message node from the tree
-  dbFolderInfo=nsnull;
+  m_folder->GetDBTransferInfo(getter_AddRefs(transferInfo));
+
+  // close down database of the original folder and remove the folder node
+  // and all it's message node from the tree
   m_folder->ForceDBClosed();
     // remove the old folder and database
   fileSpec.Delete(PR_FALSE);
@@ -409,13 +404,7 @@ nsFolderCompactState::FinishCompact()
  
   rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
-  m_folder->GetMsgDatabase(m_window, getter_AddRefs(db));
-  if (transferInfo && db)
-  {
-    db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-    if(dbFolderInfo)
-      dbFolderInfo->InitFromTransferInfo(transferInfo);
-  }
+  m_folder->SetDBTransferInfo(transferInfo);
 
   m_folder->NotifyCompactCompleted();
 

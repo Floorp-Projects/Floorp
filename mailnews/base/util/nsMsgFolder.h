@@ -193,7 +193,7 @@ public:
   NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
 
   NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, PRBool caseInsensitive, nsIMsgFolder **_retval); 
-  NS_IMETHOD EnableNotifications(PRInt32 notificationType, PRBool enable);
+  NS_IMETHOD EnableNotifications(PRInt32 notificationType, PRBool enable, PRBool dbBatching);
   NS_IMETHOD NotifyCompactCompleted();
   NS_IMETHOD ConfirmFolderDeletionForFilter(nsIMsgWindow *msgWindow, PRBool *confirmed);
   NS_IMETHOD AlertFilterChanged(nsIMsgWindow *msgWindow);

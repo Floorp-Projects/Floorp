@@ -239,20 +239,18 @@ nsresult nsMailDatabase::OnNewPath (nsFileSpec &newPath)
 // cache m_folderStream to make updating mozilla status flags fast
 NS_IMETHODIMP nsMailDatabase::StartBatch()
 {
-#ifndef XP_MAC
   if (!m_folderStream)  //only if we create a stream, set m_ownFolderStream to true.
   {
     m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
     m_ownFolderStream = PR_TRUE;
   }
-#endif  
-return NS_OK;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMailDatabase::EndBatch()
 {
-#ifndef XP_MAC  //only if we own the stream, then we should close it
-  if (m_ownFolderStream)
+  if (m_ownFolderStream)   //only if we own the stream, then we should close it
   {
     if (m_folderStream)
     {
@@ -262,7 +260,6 @@ NS_IMETHODIMP nsMailDatabase::EndBatch()
     m_folderStream = nsnull;
     m_ownFolderStream = PR_FALSE;
   }
-#endif
   return NS_OK;
 }
 
@@ -455,12 +452,8 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
     }
   }
   //#endif // GET_FILE_STUFF_TOGETHER
-#ifdef XP_MAC
-  if (!m_folderStream /*&& fid != gIncorporateFID*/)	/* ducarroz: Do we still need this ?? */
-#else
-    if (!m_folderStream)
-#endif
-      *ppFileStream = fileStream; // This tells the caller that we opened the file, and please to close it.
+  if (!m_folderStream)
+    *ppFileStream = fileStream; // This tells the caller that we opened the file, and please to close it.
 }
 
 NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)

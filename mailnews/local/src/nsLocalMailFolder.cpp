@@ -572,11 +572,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
           return rv;
         }
         else if (transferInfo && mDatabase)
-        {
-          mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-          if (dbFolderInfo)
-            dbFolderInfo->InitFromTransferInfo(transferInfo);
-        }
+           SetDBTransferInfo(transferInfo);
       }
       
     }
@@ -962,13 +958,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
         rv = trashFolder->GetParentMsgFolder(getter_AddRefs(parentFolder));
         if (NS_SUCCEEDED(rv) && parentFolder)
         {
-          nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
           nsCOMPtr <nsIDBFolderInfo> transferInfo;
-          nsCOMPtr <nsIMsgDatabase> db;
-          trashFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
-          if (dbFolderInfo)
-            dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
-          dbFolderInfo = nsnull;
+          trashFolder->GetDBTransferInfo(getter_AddRefs(transferInfo)); 
 
           trashFolder->SetParent(nsnull);
           parentFolder->PropagateDelete(trashFolder, PR_TRUE, msgWindow);
@@ -976,14 +967,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
           nsCOMPtr<nsIMsgFolder> newTrashFolder;
           rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
           if (NS_SUCCEEDED(rv) && newTrashFolder)
-            newTrashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(db));
-            
-          if (transferInfo && db)
-          {
-            db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-            if (dbFolderInfo)
-              dbFolderInfo->InitFromTransferInfo(transferInfo);
-          }
+            newTrashFolder->SetDBTransferInfo(transferInfo);
         }
     }
     return rv;
@@ -1581,7 +1565,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           MarkMsgsOnPop3Server(messages, PR_TRUE);
 
           if (NS_FAILED(rv)) return rv;
-          EnableNotifications(allMessageCountNotifications, PR_FALSE);
+          EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
           for(PRUint32 i = 0; i < messageCount; i++)
           {
             msgSupport = getter_AddRefs(messages->ElementAt(i));
@@ -1591,11 +1575,11 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           // we are the source folder here for a move or shift delete
           //enable notifications first, because that will close the file stream
           // we've been caching, and truly make the summary valid.
-          EnableNotifications(allMessageCountNotifications, PR_TRUE);
+          EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
           mDatabase->SetSummaryValid(PR_TRUE);
           mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
-		  if(!isMove)
-        NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+		      if(!isMove)
+            NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
   }
   return rv;
@@ -1789,7 +1773,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   if (NS_FAILED(rv)) return rv;
   
   // don't update the counts in the dest folder until it is all over
-  EnableNotifications(allMessageCountNotifications, PR_FALSE);
+  EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_FALSE /*dbBatching*/);  //dest folder doesn't need db batching
   
   rv = InitCopyState(srcSupport, messages, isMove, listener, msgWindow, isFolder, allowUndo);
   if (NS_FAILED(rv)) return rv;
@@ -1867,7 +1851,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   {
     if (isMove)
       srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
-    EnableNotifications(allMessageCountNotifications, PR_TRUE);
+    EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/);  //dest folder doesn't need db batching
   }
   return rv;
 }
@@ -2202,11 +2186,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrl
     nsCOMPtr <nsIMsgDatabase> db;
     rv = inbox->GetMsgDatabase(aWindow, getter_AddRefs(db));
     if (NS_SUCCEEDED(rv) && db)
+    {
       rv = db->GetSummaryValid(&valid);
-    if (valid)
-      rv = localMailServer->GetNewMail(aWindow, aListener, inbox, nsnull); 
-    else
-      rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+      if (valid)
+        rv = localMailServer->GetNewMail(aWindow, aListener, inbox, nsnull); 
+      else
+        rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+    }
   }
   return rv;
 }
@@ -2429,9 +2415,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     if (mCopyState->m_fileStream)
       mCopyState->m_fileStream->close();
 
-    if (mDatabase)
-      mDatabase->EndBatch();  //will close the stream so that truncation is successful.
-
     nsCOMPtr <nsIFileSpec> pathSpec;
     rv = GetPath(getter_AddRefs(pathSpec));
 
@@ -2447,7 +2430,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       ClearCopyState(PR_TRUE);
 
       // enable the dest folder
-      EnableNotifications(allMessageCountNotifications, PR_TRUE);
+      EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
     }
     return NS_OK;
   }
@@ -2599,7 +2582,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       }
       
       // enable the dest folder
-      EnableNotifications(allMessageCountNotifications, PR_TRUE);
+      EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
     }
   }
   return rv;
@@ -2613,7 +2596,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
   {
     //Notify that a completion finished.
     nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
-    srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
     srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
 
     /*passing PR_TRUE because the messages that have been successfully copied have their corressponding
@@ -2623,7 +2605,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
     ClearCopyState(PR_TRUE);
 
     // enable the dest folder
-    EnableNotifications(allMessageCountNotifications, PR_TRUE);
+    EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/ );  //dest folder doesn't need db batching
    
     return NS_OK;
   }
@@ -2640,12 +2622,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
       {
         // lets delete these all at once - much faster that way
         result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
-        srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
       
       // enable the dest folder
-      EnableNotifications(allMessageCountNotifications, PR_TRUE);
+      EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
       
       if (mCopyState->m_msgWindow && mCopyState->m_undoMsgTxn)
       {

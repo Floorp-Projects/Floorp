@@ -387,7 +387,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    *  allMessageCountNotifications which refers to both total and unread message counts.
    */
   const unsigned long allMessageCountNotifications    = 0;
-  void enableNotifications(in long notificationType, in boolean enable);
+  void enableNotifications(in long notificationType, in boolean enable, in boolean dbBatching);
   boolean isCommandEnabled(in string command);
   boolean matchOrChangeFilterDestination(in nsIMsgFolder folder, in boolean caseInsensitive);
   boolean confirmFolderDeletionForFilter(in nsIMsgWindow msgWindow);
@@ -413,5 +413,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   /* handy accessor when we want a msg folder */
   readonly attribute nsIMsgFolder parentMsgFolder;
+
+  attribute nsIDBFolderInfo dBTransferInfo;
 
 };

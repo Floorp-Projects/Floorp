@@ -2562,7 +2562,7 @@ nsMsgFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 }
 
 /* void enableNotifications (in long notificationType, in boolean enable); */
-NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool enable)
+NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool enable, PRBool dbBatching)
 {
   if(notificationType == nsIMsgFolder::allMessageCountNotifications)
   {
@@ -2576,11 +2576,11 @@ NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool 
     GetMsgDatabase(nsnull, getter_AddRefs(database));
     if(enable)
     {
-      if (database)
+      if (database && dbBatching)
         database->EndBatch();
       UpdateSummaryTotals(PR_TRUE);
     }
-    else if (database)
+    else if (database && dbBatching)
       database->StartBatch();
     
     return NS_OK;
