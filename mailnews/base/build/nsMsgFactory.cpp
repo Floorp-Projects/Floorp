@@ -311,32 +311,36 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                        "component://netscape/messenger",
                                        path,
                                        PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMsgAppCoreCID,
                                   "Messenger AppCore",
                                   "component://netscape/appcores/messenger",
                                   path,
                                   PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMsgAccountManagerCID,
                                   "Messenger Account Manager",
                                   "component://netscape/messenger/account-manager",
                                   path,
                                   PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMsgAccountCID,
                                   "Messenger User Account",
                                   "component://netscape/messenger/account",
                                   path,
                                   PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMsgIdentityCID,
                                   "Messenger User Identity",
                                   "component://netscape/messenger/identity",
                                   path,
                                   PR_TRUE, PR_TRUE);
-  
   if (NS_FAILED(rv)) goto done;
+  
 #if 0
   rv = compMgr->RegisterComponent(kCMsgGroupRecordCID,
                                        nsnull,
@@ -352,7 +356,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-	rv = compMgr->RegisterComponent(kCMessageViewDataSourceCID, 
+  rv = compMgr->RegisterComponent(kCMessageViewDataSourceCID, 
                                   "Mail/News Message View Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "mail-messageview",
                                   path, PR_TRUE, PR_TRUE);
