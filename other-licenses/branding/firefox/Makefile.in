@@ -24,7 +24,10 @@ export::
 	$(NSINSTALL) -D $(DIST)/branding
 	cp $(addprefix $(srcdir)/, $(BROWSER_APP_FILES)) $(DIST)/branding/
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-	cp $(srcdir)/document.png $(DIST)/branding/document.png
+	cp $(srcdir)/document.png  $(DIST)/branding/document.png
+	$(NSINSTALL) -D $(DIST)/install
+	cp $(srcdir)/header.png    $(DIST)/install/header.png
+	cp $(srcdir)/watermark.png $(DIST)/install/watermark.png
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/firefox.icns  $(DIST)/branding/firefox.icns

@@ -143,21 +143,26 @@ nsWelcomeDlg::Show(int aDirection)
 
     GtkWidget *wmbox = gtk_event_box_new();
     if (mPixmap) {
-      GdkPixmap *pm = gdk_pixmap_create_from_xpm(GDK_ROOT_PARENT(),
-                                                 NULL, NULL, mPixmap);
+      GdkPixbuf *pb = gdk_pixbuf_new_from_file(mPixmap, NULL);
+      if (pb) {
+        GdkPixmap *pm = NULL;
+        gdk_pixbuf_render_pixmap_and_mask(pb, &pm, NULL, 0);
+        if (pm) {
+          GtkStyle *newStyle = gtk_style_copy(gtk_widget_get_style(wmbox));
+          newStyle->bg_pixmap[GTK_STATE_NORMAL] = pm;
+          gtk_widget_set_style(wmbox, newStyle);
 
-      if (pm) {
-        GtkStyle *newStyle = gtk_style_copy(gtk_widget_get_style(wmbox));
-        newStyle->bg_pixmap[GTK_STATE_NORMAL] = pm;
-        gtk_widget_set_style(wmbox, newStyle);
+          // newStyle now owns the pixmap, so we don't unref it.
+          g_object_unref(newStyle);
 
-        // newStyle now owns the pixmap, so we don't unref it.
-        g_object_unref(newStyle);
+          // Make the watermark box the width of the pixmap.
+          gint width, height;
+          gdk_drawable_get_size(pm, &width, &height);
+          gtk_widget_set_size_request(wmbox, width, -1);
+        }
 
-        // Make the watermark box the width of the pixmap.
-        gint width, height;
-        gdk_drawable_get_size(pm, &width, &height);
-        gtk_widget_set_size_request(wmbox, width, -1);
+        // We're done with rendering the pixbuf, so we can destroy it.
+        gdk_pixbuf_unref(pb);
       }
     }
 
