@@ -2204,7 +2204,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
         nsCOMPtr<nsIAtom> currentContentTag;
         currentContent->GetTag(*getter_AddRefs(currentContentTag));
         // <BR> divides block content ranges.  We can achieve this by nulling out lastRange
-        if (nsIEditProperty::br==currentContentTag)
+        if (nsIEditProperty::br==currentContentTag.get())
         {
           lastRange = do_QueryInterface(nsnull);
         }
