@@ -52,6 +52,8 @@ char *cmt_UnpackBlob(char *buf, CMTItem **blob);
 CMTStatus CMT_SendMessage(PCMT_CONTROL control, CMTItem* message);
 CMTStatus CMT_TransmitMessage(PCMT_CONTROL control, CMTItem * message);
 CMTStatus CMT_ReceiveMessage(PCMT_CONTROL control, CMTItem * response);
+CMTStatus CMT_ReadMessageDispatchEvents(PCMT_CONTROL control, 
+					CMTItem* message);
 CMUint32 CMT_ReadThisMany(PCMT_CONTROL control, CMTSocket sock, 
 			  void * buffer, CMUint32 thisMany);
 CMUint32 CMT_WriteThisMany(PCMT_CONTROL control, CMTSocket sock, 
