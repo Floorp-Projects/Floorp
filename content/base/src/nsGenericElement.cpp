@@ -61,6 +61,9 @@
 #include "nsDOMError.h"
 #include "nsScriptSecurityManager.h"
 
+#include "nsIBindingManager.h"
+#include "nsIXBLBinding.h"
+
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutUtils.h"
@@ -925,6 +928,22 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
       }
     }
     
+    if (mDocument) {
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      nsCOMPtr<nsIXBLBinding> binding;
+      bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+      if (binding) {
+        binding->ChangeDocument(mDocument, aDocument);
+        bindingManager->SetBinding(mContent, nsnull);
+        if (aDocument) {
+          nsCOMPtr<nsIBindingManager> otherManager;
+          aDocument->GetBindingManager(getter_AddRefs(otherManager));
+          otherManager->SetBinding(mContent, binding);
+        }
+      }
+    }
+
     mDocument = aDocument;
     
     // If we already have a script object and now we're being added
