@@ -33,6 +33,27 @@
 #endif
 
 /*
+	Public things defined in this file:
+
+																												T* rawTptr;
+		class nsCOMPtr<T>																		nsCOMPtr<T> smartTptr;
+
+		null_nsCOMPtr()																			smartTptr = null_nsCOMPtr();
+
+		do_QueryInterface( nsISupports* )										smartTptr = do_QueryInterface(other_ptr);
+		do_QueryInterface( nsISupports*, nsresult* )				smartTptr = do_QueryInterface(other_ptr, &status);
+
+		dont_QueryInterface( T* )														smartTptr = dont_QueryInterface(rawTptr);
+
+		getter_AddRefs( nsCOMPtr<T>& )
+		getter_AddRefs( T* )
+		dont_AddRef( T* )
+
+		CallQueryInterface( nsISupports*, T** )
+		CallQueryInterface( nsISupports*, nsCOMPtr<T>* )
+*/
+
+/*
 	Having problems?
 	
   See the User Manual at:
@@ -46,8 +67,6 @@
 /*
   TO DO...
   
-  	+ make StartAssignment optionally inlined
-    + make constructor for |nsQueryInterface| explicit (suddenly construct/assign from raw pointer becomes illegal)
     + Improve internal documentation
       + mention *&
       + alternatives for comparison
@@ -136,7 +155,7 @@ class nsDerivedSafe : public T
     /*
       No client should ever see or have to type the name of this class.  It is the
       artifact that makes it a compile-time error to call |AddRef| and |Release|
-      on a |nsCOMPtr|.
+      on a |nsCOMPtr|.  DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.
 
       See |nsCOMPtr::operator->|, |nsCOMPtr::operator*|, et al.
     */
@@ -181,6 +200,8 @@ template <class T>
 struct nsDontQueryInterface
     /*
       ...
+
+			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |dont_QueryInterface()| instead.
     */
   {
     explicit
@@ -195,7 +216,7 @@ struct nsDontQueryInterface
 
 template <class T>
 inline
-nsDontQueryInterface<T>
+const nsDontQueryInterface<T>
 dont_QueryInterface( T* aRawPtr )
   {
     return nsDontQueryInterface<T>(aRawPtr);
@@ -205,6 +226,11 @@ dont_QueryInterface( T* aRawPtr )
 
 
 struct nsQueryInterface
+    /*
+      ...
+
+			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |do_QueryInterface()| instead.
+    */
   {
     explicit
     nsQueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
@@ -219,11 +245,24 @@ struct nsQueryInterface
   };
 
 inline
-nsQueryInterface
+const nsQueryInterface
 do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
   {
     return nsQueryInterface(aRawPtr, error);
   }
+
+inline
+const nsQueryInterface
+null_nsCOMPtr()
+		/*
+			You can use this to assign |NULL| into an |nsCOMPtr|, e.g.,
+
+        myPtr = null_nsCOMPtr();
+		*/
+	{
+		typedef nsISupports* nsISupports_Ptr;
+		return nsQueryInterface(nsISupports_Ptr(0));
+	}
 
 
 
@@ -235,6 +274,8 @@ struct nsDontAddRef
       |AddRef|ing it.  You would rarely use this directly, but rather through the
       machinery of |getter_AddRefs| in the argument list to functions that |AddRef|
       their results before returning them to the caller.
+
+			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| instead.
 
       See also |getter_AddRefs()| and |class nsGetterAddRefs|.
     */
@@ -249,30 +290,33 @@ struct nsDontAddRef
     T* mRawPtr;
   };
 
-	// This call is now deprecated.  Use |getter_AddRefs()| instead.
 template <class T>
 inline
-nsDontAddRef<T>
-dont_AddRef( T* aRawPtr )
+const nsDontAddRef<T>
+getter_AddRefs( T* aRawPtr )
     /*
       ...makes typing easier, because it deduces the template type, e.g., 
       you write |dont_AddRef(fooP)| instead of |nsDontAddRef<IFoo>(fooP)|.
     */
-  {
-    return nsDontAddRef<T>(aRawPtr);
-  }
-
-template <class T>
-inline
-nsDontAddRef<T>
-getter_AddRefs( T* aRawPtr )
 	{
 		return nsDontAddRef<T>(aRawPtr);
 	}
 
+	// This call is now deprecated.  Use |getter_AddRefs()| instead.
+template <class T>
+inline
+const nsDontAddRef<T>
+dont_AddRef( T* aRawPtr )
+  {
+    return nsDontAddRef<T>(aRawPtr);
+  }
+
 
 
 class nsCOMPtr_base
+		/*
+			...factors implementation for all template versions of |nsCOMPtr|.
+		*/
   {
     public:
 
@@ -436,8 +480,9 @@ class nsGetterAddRefs
       argument list of calls that return COM interface pointers, e.g.,
 
         nsCOMPtr<IFoo> fooP;
-        ...->QueryInterface(iid, nsGetterAddRefs<IFoo>(fooP))
         ...->QueryInterface(iid, getter_AddRefs(fooP))
+
+			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| instead.
 
       When initialized with a |nsCOMPtr|, as in the example above, it returns
       a |void**| (or |T**| if needed) that the outer call (|QueryInterface| in this
@@ -454,20 +499,17 @@ class nsGetterAddRefs
 
       operator void**()
         {
-          // NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
           return NSCAP_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
         }
 
       T*&
       operator*()
         {
-          // NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
           return *(mTargetSmartPtr.StartAssignment());
         }
 
       operator T**()
         {
-          // NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
           return mTargetSmartPtr.StartAssignment();
         }
 
@@ -487,6 +529,19 @@ getter_AddRefs( nsCOMPtr<T>& aSmartPtr )
     return nsGetterAddRefs<T>(aSmartPtr);
   }
 
+
+
+template <class T>
+inline
+nsresult
+CallQueryInterface( nsISupports* aSource, nsCOMPtr<T>* aDestination )
+		// a type-safe shortcut for calling the |QueryInterface()| member function
+	{
+		NS_PRECONDITION(aSource, "null parameter");
+		NS_PRECONDITION(aDestination, "null parameter");
+
+		return aSource->QueryInterface(T::GetIID(), getter_AddRefs(*aDestination));
+	}
 
 
 
