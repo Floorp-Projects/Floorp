@@ -215,6 +215,20 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
         return PR_TRUE;
     }
 
+    // Check whether the subject principal is the system principal.
+    // For performance, we will avoid calling SubjectPrincipalIsChrome()
+    // since it calls GetSubjectPrincipal() which causes us to walk
+    // the JS frame stack.  We already did that above, so just get the
+    // system principal from the security manager, and do a raw comparison.
+    nsCOMPtr<nsIPrincipal> systemPrincipal;
+    gTxSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+
+    if (subjectPrincipal == systemPrincipal) {
+        // we're running as system, grant access to the node.
+
+        return PR_TRUE;
+    }
+
     // Make sure that this is a real node. We do this by first QI'ing to
     // nsIContent (which is important performance wise) and if that QI
     // fails we QI to nsIDocument. If both those QI's fail we won't let
