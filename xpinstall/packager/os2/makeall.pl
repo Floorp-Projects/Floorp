@@ -137,7 +137,8 @@ if(!(-d "$inStagePath"))
                    "langenus",
                    "regus",
                    "venkman",
-                   "inspector");
+                   "inspector",
+                   "typeaheadfind");
 
 if(VerifyComponents()) # return value of 0 means no errors encountered
 {
@@ -225,6 +226,16 @@ if(system("cp $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\setup\\license.txt"))
 {
   die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\setup\\license.txt\n";
 }
+
+# copy readme for the installer
+#if(system("cp $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\readme.txt"))
+#{
+#  die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\readme.txt\n";
+#}
+#if(system("cp $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\setup\\readme.txt"))
+#{
+#  die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\README.TXT $inDistPath\\setup\\readme.txt\n";
+#}
 
 # copy the icons
 #if(system("cp $inDistPath\\mozilla.ico $inDistPath\\setup\\mozilla.ico"))

@@ -120,7 +120,7 @@ Title=$ProductName$ Setup - Setup Type
 ;*** LOCALIZE ME BABY ***
 Message0=Click the type of setup you prefer, then click Next.
 Readme Filename=readme.txt
-Readme App=notepad.exe
+Readme App=e.exe
 
 ; at least one Setup Type needs to be set, and up to 4 can be
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
@@ -163,10 +163,11 @@ C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
 C9=Component DOM Inspector
-;C10=Component Uninstaller
+C10=Component Type Ahead Find
+;C11=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-;C11=Component QFA
+;C12=Component QFA
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -189,10 +190,11 @@ C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
 C9=Component DOM Inspector
-;C10=Component Uninstaller
+C10=Component Type Ahead Find
+;C11=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-;C11=Component QFA
+;C12=Component QFA
 
 
 
@@ -210,10 +212,8 @@ Title=$ProductName$ Setup - Select Additional Components
 ;*** LOCALIZE ME BABY ***
 Message0=Select or clear the additional components you want to install.
 
-;*** DO NOT LOCALIZE - BEGIN ***
-; do not localize this part because it is not currently being used
 [Dialog OS/2 Integration]
-Show Dialog=FALSE
+Show Dialog=TRUE
 Title=$ProductName$ Setup - OS/2 Integration
 Message0=Check the options you would like Setup to perform.
 Message1=These settings allow you to set default operating system preferences for browsing.
@@ -222,16 +222,18 @@ Message1=These settings allow you to set default operating system preferences fo
 ; shows up as a checkbox in the OS/2 Integration dialog.
 [OS/2 Integration-Item0]
 CheckBoxState=FALSE
-;Would you like to change your default browser for desktop URL objects to $ProductName$?
 Description=Make $ProductName$ my default Internet browser
 Archive=
 
 [OS/2 Integration-Item1]
 CheckBoxState=FALSE
-;Would you like to associate HTML files with $ProductName$?
 Description=Associate HTML files with $ProductName$
 Archive=
-;*** DO NOT LOCALIZE - END ***
+
+[OS/2 Integration-Item2]
+CheckBoxState=FALSE
+Description=Update CONFIG.SYS
+Archive=
 
 [Dialog Additional Options]
 Show Dialog=TRUE
@@ -504,6 +506,17 @@ $InstallSizeArchive$:inspector.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Chrome\inspector.jar
 
+[Component Type Ahead Find]
+Description Short=Type Ahead Find
+;*** LOCALIZE ME BABY ***
+Description Long=Type Ahead Find
+Archive=typeaheadfind.xpi
+$InstallSize$:typeaheadfind
+$InstallSizeSystem$
+$InstallSizeArchive$:inspector.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\Chrome\typeaheadfind.jar
+
 [Component US English Profile Defaults]
 Description Short=US English profile defaults
 ;*** LOCALIZE ME BABY ***
@@ -737,15 +750,21 @@ Program Folder=[Default Folder]
 [Program Folder0-Object0]
 ClassName=WPProgram
 Title=$ProductName$
-SetupString=EXENAME=[SETUP PATH]\$MainExeFile$
+File=[SETUP PATH]\$MainExeFile$
+Working Dir=[SETUP PATH]
 Location=[Default Folder]
+Association Filters=*.HTM,*.HTML
+Association Types=HTML,text/html
+Object ID=<MOZILLA>
 
 [Program Folder0-Object1]
 ClassName=WPProgram
-;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Profile Manager
-SetupString=EXENAME=[SETUP PATH]\$MainExeFile$;PARAMETERS=-ProfileManager
+Title=Mozilla Profile Manager
+File=[SETUP PATH]\$MainExeFile$
+Parameters=-ProfileManager
+Working Dir=[SETUP PATH]
 Location=[Default Folder]
+Object ID=<MOZILLA_PROFMGR>
 
 ;[Program Folder0-Shortcut0]
 ;File=[SETUP PATH]\Uninstall\$UninstallFile$
