@@ -512,10 +512,10 @@ DBGetSTCursor::Advance(void)
         if (NS_FAILED(result)) return result;
 
         while (NS_RDF_CURSOR_EMPTY != result) {
-            nsCOMPtr<nsIRDFResource> src;
-            nsCOMPtr<nsIRDFNode>     trg;            
-            mCurrentCursor->GetSource(getter_AddRefs(src));
-            mCurrentCursor->GetTarget(getter_AddRefs(trg));
+            nsIRDFResource* src;
+            nsIRDFNode*     trg;            
+            mCurrentCursor->GetSource(&src);
+            mCurrentCursor->GetTarget(&trg);
             if (!mCompositeDataSourceImpl->HasAssertionN(mCount-1, src, mLabel, trg, !mTruthValue)) {
                 return NS_OK;
             } else {
