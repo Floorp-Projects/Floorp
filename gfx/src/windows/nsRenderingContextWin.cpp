@@ -2061,12 +2061,16 @@ nsRenderingContextWin::GetTextDimensions(const PRUnichar*  aString,
   aLastWordDimensions.Clear();
   aLastWordDimensions.width = -1;
 
+  PRInt32 count = fonts.Count();
+  if (!count)
+    return NS_OK;
   nsFontWin* fontWin = (nsFontWin*)fonts[0];
+  NS_ASSERTION(fontWin, "internal error in do_BreakGetTextDimensions");
   aDimensions.ascent = fontWin->mMaxAscent;
   aDimensions.descent = fontWin->mMaxDescent;
 
   // fast path - normal case, quick return if there is only one font
-  if (fonts.Count() == 1)
+  if (count == 1)
     return NS_OK;
 
   // get the last break index.
