@@ -291,6 +291,8 @@ struct nsHTMLReflowState : nsReflowState {
                                 nsIRenderingContext* aRenderingContext,
                                 nsIFrame* aFrame);
 
+  static PRBool UseComputedHeight();
+
   static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame);
 
   void ComputeContainingBlockRectangle(const nsHTMLReflowState* aContainingBlockRS,
