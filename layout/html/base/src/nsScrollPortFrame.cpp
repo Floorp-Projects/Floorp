@@ -450,7 +450,7 @@ nsScrollPortFrame::Reflow(nsIPresContext*          aPresContext,
  
  
   ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-              border.left, border.top, 0, aStatus);
+              border.left, border.top, NS_FRAME_NO_MOVE_VIEW, aStatus);
 
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   CalculateChildTotalSize(kidFrame, kidDesiredSize);
@@ -481,7 +481,7 @@ nsScrollPortFrame::Reflow(nsIPresContext*          aPresContext,
 
   aDesiredSize.height += border.top + border.bottom;
 
-  FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, x, y, 0);
+  FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, x, y, NS_FRAME_NO_MOVE_VIEW);
   //printf("width=%d, height=%d\n", kidDesiredSize.width, kidDesiredSize.height);
 
 
