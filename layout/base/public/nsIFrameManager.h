@@ -158,7 +158,7 @@ public:
   NS_IMETHOD HasAttributeDependentStyle(nsIContent *aContent,
                                         nsIAtom *aAttribute,
                                         PRInt32 aModType,
-                                        PRBool *aResult) = 0;
+                                        nsReStyleHint *aResult) = 0;
 
   /**
    * Capture/restore frame state for the frame subtree rooted at aFrame.

@@ -44,6 +44,7 @@
 #include "nsIPresContext.h" // for nsCompatability
 #include "nsILinkHandler.h"
 #include "nsString.h"
+#include "nsChangeHint.h"
 
 class nsIStyleSheet;
 class nsIPresContext;
@@ -190,11 +191,11 @@ public:
   // Test if style is dependent on content state
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsIAtom* aMedium,
-                                    PRBool* aResult) = 0;
+                                    nsReStyleHint* aResult) = 0;
   // Test if style is dependent on attribute
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsIAtom* aMedium,
-                                        PRBool* aResult) = 0;
+                                        nsReStyleHint* aResult) = 0;
 };
 
 #endif /* nsIStyleRuleProcessor_h___ */

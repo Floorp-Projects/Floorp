@@ -105,4 +105,16 @@ inline PRBool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
 #define NS_STYLE_HINT_RECONSTRUCT_ALL \
   nsChangeHint(NS_STYLE_HINT_FRAMECHANGE | nsChangeHint_ReconstructDoc)
 
+
+/**
+ * |nsReStyleHint| is a bitfield for the result of |HasStateDependentStyle|
+ * and |HasAttributeDependentStyle|.  All values have an implied "and
+ * descendants."  When no restyling is necesary, use |nsReStyleHint(0)|.
+ */
+enum nsReStyleHint {
+  eReStyle_Self = 0x1,
+  eReStyle_LaterSiblings = 0x2
+};
+
+
 #endif /* nsChangeHint_h___ */

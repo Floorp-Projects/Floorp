@@ -131,15 +131,15 @@ class nsStyleSet
                          nsStyleContext* aNewParentContext);
 
   // Test if style is dependent on content state
-  PRBool HasStateDependentStyle(nsIPresContext* aPresContext,
-                                nsIContent*     aContent,
-                                PRInt32         aStateMask);
+  nsReStyleHint HasStateDependentStyle(nsIPresContext* aPresContext,
+                                       nsIContent*     aContent,
+                                       PRInt32         aStateMask);
 
   // Test if style is dependent on the presence of an attribute.
-  PRBool HasAttributeDependentStyle(nsIPresContext* aPresContext,
-                                    nsIContent*     aContent,
-                                    nsIAtom*        aAttribute,
-                                    PRInt32         aModType);
+  nsReStyleHint HasAttributeDependentStyle(nsIPresContext* aPresContext,
+                                           nsIContent*     aContent,
+                                           nsIAtom*        aAttribute,
+                                           PRInt32         aModType);
 
   // APIs for registering objects that can supply additional
   // rules during processing.

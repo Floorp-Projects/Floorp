@@ -546,11 +546,11 @@ public:
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsIAtom* aMedium,
-                                    PRBool* aResult);
+                                    nsReStyleHint* aResult);
 
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsIAtom* aMedium,
-                                        PRBool* aResult);
+                                        nsReStyleHint* aResult);
 
   // nsIHTMLStyleSheet api
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument);
@@ -798,14 +798,17 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
 NS_IMETHODIMP
 HTMLStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
                                            nsIAtom* aMedium,
-                                           PRBool* aResult)
+                                           nsReStyleHint* aResult)
 {
-  *aResult = mActiveRule &&
-             (aData->mStateMask & NS_EVENT_STATE_ACTIVE) &&
-             aData->mStyledContent &&
-             aData->mIsHTMLContent &&
-             aData->mIsHTMLLink &&
-             aData->mContentTag == nsHTMLAtoms::a;
+  if (mActiveRule &&
+      (aData->mStateMask & NS_EVENT_STATE_ACTIVE) &&
+      aData->mStyledContent &&
+      aData->mIsHTMLContent &&
+      aData->mIsHTMLLink &&
+      aData->mContentTag == nsHTMLAtoms::a)
+    *aResult = eReStyle_Self;
+  else
+    *aResult = nsReStyleHint(0);
 
   return NS_OK;
 }
@@ -813,7 +816,7 @@ HTMLStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
 NS_IMETHODIMP
 HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                                nsIAtom* aMedium,
-                                               PRBool* aResult)
+                                               nsReStyleHint* aResult)
 {
   // Result is true for |href| changes on HTML links if we have link rules.
   nsIStyledContent *styledContent = aData->mStyledContent;
@@ -822,7 +825,7 @@ HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
       styledContent &&
       styledContent->IsContentOfType(nsIContent::eHTML) &&
       aData->mContentTag == nsHTMLAtoms::a) {
-    *aResult = PR_TRUE;
+    *aResult = eReStyle_Self;
     return NS_OK;
   }
 
@@ -832,12 +835,12 @@ HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // Handle the content style rules.
   if (styledContent) {
     if (styledContent->HasAttributeDependentStyle(aData->mAttribute)) {
-      *aResult = PR_TRUE;
+      *aResult = eReStyle_Self;
       return NS_OK;
     }
   }
 
-  *aResult = PR_FALSE;
+  *aResult = nsReStyleHint(0);
   return NS_OK;
 }
 

@@ -444,37 +444,30 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 }
 
 // Enumerate all the rules in a way that doesn't care about the order
-// of the rules and break out if the enumeration is halted.
+// of the rules and doesn't walk !important-rules.
 void
 nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
                                RuleProcessorData* aData)
 {
   // Walk the agent rules first.
-  if (mRuleProcessors[eAgentSheet].Count() &&
-      !mRuleProcessors[eAgentSheet].EnumerateForwards(aFunc, aData))
-    return;
+  mRuleProcessors[eAgentSheet].EnumerateForwards(aFunc, aData);
 
   // Walk the user rules next.
-  if (mRuleProcessors[eUserSheet].Count() &&
-      !mRuleProcessors[eUserSheet].EnumerateForwards(aFunc, aData))
-    return;
+  mRuleProcessors[eUserSheet].EnumerateForwards(aFunc, aData);
 
   PRBool useRuleProcessors = PR_TRUE;
   if (mStyleRuleSupplier) {
     // We can supply additional document-level sheets that should be walked.
-    // XXX We ignore whether the enumerator wants to halt here!
     mStyleRuleSupplier->WalkRules(this, aFunc, aData);
     mStyleRuleSupplier->UseDocumentRules(aData->mContent, &useRuleProcessors);
   }
 
   // Now walk the doc rules.
-  if (mRuleProcessors[eDocSheet].Count() && useRuleProcessors &&
-      !mRuleProcessors[eDocSheet].EnumerateForwards(aFunc, aData))
-    return;
+  if (useRuleProcessors)
+    mRuleProcessors[eDocSheet].EnumerateForwards(aFunc, aData);
   
   // Walk the override rules last.
-  if (mRuleProcessors[eOverrideSheet].Count())
-    mRuleProcessors[eOverrideSheet].EnumerateForwards(aFunc, aData);
+  mRuleProcessors[eOverrideSheet].EnumerateForwards(aFunc, aData);
 }
 
 PRBool nsStyleSet::BuildDefaultStyleData(nsIPresContext* aPresContext)
@@ -773,37 +766,29 @@ struct StatefulData : public StateRuleProcessorData {
                nsIContent* aContent, PRInt32 aStateMask)
     : StateRuleProcessorData(aPresContext, aContent, aStateMask),
       mMedium(aMedium),
-      mHasStyle(PR_FALSE)
+      mHint(nsReStyleHint(0))
   {}
   nsIAtom*        mMedium;
-  PRBool          mHasStyle;
+  nsReStyleHint   mHint;
 }; 
 
 static PRBool SheetHasStatefulStyle(nsIStyleRuleProcessor* aProcessor,
                                     void *aData)
 {
   StatefulData* data = (StatefulData*)aData;
-  PRBool hasStyle;
-  aProcessor->HasStateDependentStyle(data, data->mMedium, &hasStyle);
-  if (hasStyle) {
-    data->mHasStyle = PR_TRUE;
-    // Stop iteration.  Note that nsStyleSet::WalkRuleProcessors uses
-    // this to stop its own iteration in some cases, but not all (the
-    // style rule supplier case).  Since this optimization is only for
-    // the case where we have a lot more work to do, it's not worth the
-    // code needed to make the stopping perfect.
-    return PR_FALSE;
-  }
+  nsReStyleHint hint;
+  aProcessor->HasStateDependentStyle(data, data->mMedium, &hint);
+  data->mHint = nsReStyleHint(data->mHint | hint);
   return PR_TRUE; // continue
 }
 
 // Test if style is dependent on content state
-PRBool
+nsReStyleHint
 nsStyleSet::HasStateDependentStyle(nsIPresContext* aPresContext,
                                    nsIContent*     aContent,
                                    PRInt32         aStateMask)
 {
-  PRBool result = PR_FALSE;
+  nsReStyleHint result = nsReStyleHint(0);
 
   if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
       (mRuleProcessors[eAgentSheet].Count() ||
@@ -814,7 +799,7 @@ nsStyleSet::HasStateDependentStyle(nsIPresContext* aPresContext,
     aPresContext->GetMedium(getter_AddRefs(medium));
     StatefulData data(aPresContext, medium, aContent, aStateMask);
     WalkRuleProcessors(SheetHasStatefulStyle, &data);
-    result = data.mHasStyle;
+    result = data.mHint;
   }
 
   return result;
@@ -825,38 +810,30 @@ struct AttributeData : public AttributeRuleProcessorData {
                nsIContent* aContent, nsIAtom* aAttribute, PRInt32 aModType)
     : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType),
       mMedium(aMedium),
-      mHasStyle(PR_FALSE)
+      mHint(nsReStyleHint(0))
   {}
   nsIAtom*        mMedium;
-  PRBool          mHasStyle;
+  nsReStyleHint   mHint;
 }; 
 
 static PRBool
 SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 {
   AttributeData* data = (AttributeData*)aData;
-  PRBool hasStyle;
-  aProcessor->HasAttributeDependentStyle(data, data->mMedium, &hasStyle);
-  if (hasStyle) {
-    data->mHasStyle = PR_TRUE;
-    // Stop iteration.  Note that nsStyleSet::WalkRuleProcessors uses
-    // this to stop its own iteration in some cases, but not all (the
-    // style rule supplier case).  Since this optimization is only for
-    // the case where we have a lot more work to do, it's not worth the
-    // code needed to make the stopping perfect.
-    return PR_FALSE;
-  }
+  nsReStyleHint hint;
+  aProcessor->HasAttributeDependentStyle(data, data->mMedium, &hint);
+  data->mHint = nsReStyleHint(data->mHint | hint);
   return PR_TRUE; // continue
 }
 
 // Test if style is dependent on content state
-PRBool
+nsReStyleHint
 nsStyleSet::HasAttributeDependentStyle(nsIPresContext* aPresContext,
                                        nsIContent*     aContent,
                                        nsIAtom*        aAttribute,
                                        PRInt32         aModType)
 {
-  PRBool result = PR_FALSE;
+  nsReStyleHint result = nsReStyleHint(0);
 
   if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
       (mRuleProcessors[eAgentSheet].Count() ||
@@ -867,7 +844,7 @@ nsStyleSet::HasAttributeDependentStyle(nsIPresContext* aPresContext,
     aPresContext->GetMedium(getter_AddRefs(medium));
     AttributeData data(aPresContext, medium, aContent, aAttribute, aModType);
     WalkRuleProcessors(SheetHasAttributeStyle, &data);
-    result = data.mHasStyle;
+    result = data.mHint;
   }
 
   return result;

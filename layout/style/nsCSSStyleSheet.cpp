@@ -742,11 +742,11 @@ public:
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsIAtom* aMedium,
-                                    PRBool* aResult);
+                                    nsReStyleHint* aResult);
 
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsIAtom* aMedium,
-                                        PRBool* aResult);
+                                        nsReStyleHint* aResult);
 
 protected:
   RuleCascadeData* GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium);
@@ -3975,23 +3975,41 @@ CSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData,
   return NS_OK;
 }
 
+inline PRBool
+IsSiblingOperator(PRUnichar oper)
+{
+  return oper == PRUnichar('+') || oper == PRUnichar('~');
+}
+
+struct StateEnumData {
+  StateEnumData(StateRuleProcessorData *aData)
+    : data(aData), change(nsReStyleHint(0)) {}
+
+  StateRuleProcessorData *data;
+  nsReStyleHint change;
+};
 
 PR_STATIC_CALLBACK(PRBool) StateEnumFunc(void* aSelector, void* aData)
 {
-  StateRuleProcessorData* data =
-      NS_STATIC_CAST(StateRuleProcessorData*, aData);
+  StateEnumData *enumData = NS_STATIC_CAST(StateEnumData*, aData);
+  StateRuleProcessorData *data = enumData->data;
   nsCSSSelector* selector = NS_STATIC_CAST(nsCSSSelector*, aSelector);
 
-  // Return whether we want to halt the enumeration, which is the
-  // negation of whether we find a match (ignoring the event state mask).
-  return !( SelectorMatches(*data, selector, data->mStateMask, nsnull, 0) &&
-            SelectorMatchesTree(*data, selector->mNext) );
+  if (SelectorMatches(*data, selector, data->mStateMask, nsnull, 0) &&
+      SelectorMatchesTree(*data, selector->mNext)) {
+    if (IsSiblingOperator(selector->mOperator))
+      enumData->change = nsReStyleHint(enumData->change | eReStyle_LaterSiblings);
+    else
+      enumData->change = nsReStyleHint(enumData->change | eReStyle_Self);
+  }
+
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
 CSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
                                          nsIAtom* aMedium,
-                                         PRBool* aResult)
+                                         nsReStyleHint* aResult)
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
@@ -4006,34 +4024,48 @@ CSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
   // "body > p:hover" will be in |cascade->mStateSelectors|).  Note that
   // |IsStateSelector| below determines which selectors are in
   // |cascade->mStateSelectors|.
-  // The enumeration function signals the presence of state by stopping
-  // the enumeration, which is reflected in the return value from
-  // |EnumerateForwards|.
-  *aResult = cascade &&
-             !cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, aData);
-
+  StateEnumData data(aData);
+  if (cascade)
+    cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, &data);
+  *aResult = data.change;
   return NS_OK;
 }
 
+struct AttributeEnumData {
+  AttributeEnumData(AttributeRuleProcessorData *aData)
+    : data(aData), change(nsReStyleHint(0)) {}
+
+  AttributeRuleProcessorData *data;
+  nsReStyleHint change;
+};
+
+
 PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
 {
-  AttributeRuleProcessorData* data =
-      NS_STATIC_CAST(AttributeRuleProcessorData*, aData);
+  AttributeEnumData *enumData = NS_STATIC_CAST(AttributeEnumData*, aData);
+  AttributeRuleProcessorData *data = enumData->data;
   nsCSSSelector* selector = NS_STATIC_CAST(nsCSSSelector*, aSelector);
 
-  // Return whether we want to halt the enumeration, which is the
-  // negation of whether we find a match (ignoring the event state mask).
-  return !( SelectorMatches(*data, selector, 0, data->mAttribute, 0) &&
-            SelectorMatchesTree(*data, selector->mNext) );
+  if (SelectorMatches(*data, selector, 0, data->mAttribute, 0) &&
+      SelectorMatchesTree(*data, selector->mNext)) {
+    if (IsSiblingOperator(selector->mOperator))
+      enumData->change = nsReStyleHint(enumData->change | eReStyle_LaterSiblings);
+    else
+      enumData->change = nsReStyleHint(enumData->change | eReStyle_Self);
+  }
+
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
 CSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                              nsIAtom* aMedium,
-                                             PRBool* aResult)
+                                             nsReStyleHint* aResult)
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
+
+  AttributeEnumData data(aData);
 
   // Since we always have :-moz-any-link (and almost always have :link
   // and :visited rules from prefs), rather than hacking AddRule below
@@ -4043,8 +4075,7 @@ CSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
       (aData->mContentTag == nsHTMLAtoms::a ||
        aData->mContentTag == nsHTMLAtoms::area ||
        aData->mContentTag == nsHTMLAtoms::link)) {
-    *aResult = PR_TRUE;
-    return NS_OK;
+    data.change = nsReStyleHint(data.change | eReStyle_Self);
   }
   // XXX What about XLinks?
 
@@ -4054,17 +4085,16 @@ CSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
   // (see HasStateDependentStyle), except that instead of one big list
   // we have a hashtable with a per-attribute list.
 
-  *aResult = PR_FALSE;
   if (cascade) {
     AttributeSelectorEntry *entry = NS_STATIC_CAST(AttributeSelectorEntry*,
         PL_DHashTableOperate(&cascade->mAttributeSelectors, aData->mAttribute,
                              PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      *aResult =
-        !entry->mSelectors->EnumerateForwards(AttributeEnumFunc, aData);
+      entry->mSelectors->EnumerateForwards(AttributeEnumFunc, &data);
     }
   }
 
+  *aResult = data.change;
   return NS_OK;
 }
 

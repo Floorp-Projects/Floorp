@@ -134,6 +134,10 @@ public:
                                   nsIContent*     aContent2,
                                   PRInt32         aStateMask);
 
+  nsresult DoContentStateChanged(nsIPresContext* aPresContext,
+                                 nsIContent*     aContent,
+                                 PRInt32         aStateMask);
+
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aContent,
                               PRInt32         aNameSpaceID,
@@ -142,6 +146,9 @@ public:
 
   NS_IMETHOD ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
                                    nsIPresContext*    aPresContext);
+
+  void RestyleLaterSiblings(nsIPresContext* aPresContext,
+                            nsIContent*     aContent);
 
   // Notification that we were unable to render a replaced element.
   NS_IMETHOD CantRenderReplacedElement(nsIPresShell*    aPresShell, 
