@@ -311,13 +311,16 @@ case "$target" in
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(DSO_LDOPTS)'
     MKCSHLIB='$(CC) $(DSO_LDOPTS)'
-    dnl I think this will probably break builds using both gcc and GNU ld.
-    MKSHLIB_FORCE_ALL='-Wl,-all'
-    MKSHLIB_UNFORCE_ALL='-Wl,-none'
+    AS='$(CC)'
+    ASFLAGS='$(CFLAGS)'
     if test "$GNU_CC"; then
+       MKSHLIB_FORCE_ALL='-Wl,-all'
+       MKSHLIB_UNFORCE_ALL='-Wl,-none'
        _WARNINGS_CFLAGS="-Wall"
        _WARNINGS_CXXFLAGS="-Wall"
     else
+       MKSHLIB_FORCE_ALL='-all'
+       MKSHLIB_UNFORCE_ALL='-none'
        CFLAGS="$CFLAGS -woff 3262"
        CXXFLAGS="$CXXFLAGS -woff 3262"
     fi
