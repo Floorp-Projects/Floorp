@@ -1452,23 +1452,28 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 #ifdef XP_WIN
     /* We need to see whether the file we've got here could be
      * executable.  If it could, we had better not try to open it!
+     * We can skip this check, though, if we have a setting to open in a
+     * helper app.
      * This code mirrors the code in
      * nsExternalAppHandler::LaunchWithApplication so that what we
      * test here is as close as possible to what will really be
      * happening if we decide to execute
      */
-    nsCOMPtr<nsIFile> fileToTest;
-    GetTargetFile(getter_AddRefs(fileToTest));
-    if (fileToTest) {
-      PRBool isExecutable;
-      rv = fileToTest->IsExecutable(&isExecutable);
-      if ((NS_SUCCEEDED(rv) && isExecutable) ||
-          NS_FAILED(rv)) {  // Paranoia is good
+    nsCOMPtr<nsIFile> prefApp;
+    mMimeInfo->GetPreferredApplication(getter_AddRefs(prefApp));
+    if (action != nsIMIMEInfo::useHelperApp || !prefApp) {
+      nsCOMPtr<nsIFile> fileToTest;
+      GetTargetFile(getter_AddRefs(fileToTest));
+      if (fileToTest) {
+        PRBool isExecutable;
+        rv = fileToTest->IsExecutable(&isExecutable);
+        if (NS_FAILED(rv) || isExecutable) {  // checking NS_FAILED, because paranoia is good
+          action = nsIMIMEInfo::saveToDisk;
+        }
+      } else {   // Paranoia is good here too, though this really should not happen
+        NS_WARNING("GetDownloadInfo returned a null file after the temp file has been set up! ");
         action = nsIMIMEInfo::saveToDisk;
       }
-    } else {   // Paranoia is good here too, though this really should not happen
-      NS_WARNING("GetDownloadInfo returned a null file after the temp file has been set up! ");
-      action = nsIMIMEInfo::saveToDisk;
     }
 
 #endif
