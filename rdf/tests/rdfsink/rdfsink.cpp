@@ -52,9 +52,9 @@
 #define XPCOM_DLL  "xpcom32.dll"
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
-#define LAYOUT_DLL "libraptorhtml"MOZ_DLL_SUFFIX
-#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
-#define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
+#define LAYOUT_DLL "libgklayout"MOZ_DLL_SUFFIX
+#define NETLIB_DLL "libnecko"MOZ_DLL_SUFFIX
+#define PARSER_DLL "libhtmlpars"MOZ_DLL_SUFFIX
 #define RDF_DLL    "librdf"MOZ_DLL_SUFFIX
 #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
 #elif defined(XP_MAC)

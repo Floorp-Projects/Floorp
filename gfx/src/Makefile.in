@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor
-LIBRARY_NAME	= raptorgfx
+MODULE		= layout
+LIBRARY_NAME	= gkgfx
 SHORT_LIBNAME	= nggfx
 
 

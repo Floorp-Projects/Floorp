@@ -33,7 +33,7 @@ CPPSRCS		= test.cpp
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS	= nggfx msgbutil
 else
-EXTRA_DSO_LIBS	= raptorgfx msgbaseutil
+EXTRA_DSO_LIBS	= gkgfx msgbaseutil
 endif
 
 LIBS		= \

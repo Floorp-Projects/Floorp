@@ -34,8 +34,8 @@ EXTRA_DSO_LIBS	= nggfx
 WEBSHELL_LIB	= $(DIST)/lib/webshell.$(LIB_SUFFIX)
 else
 PROGRAM		= mozilla-bin
-EXTRA_DSO_LIBS	= raptorgfx
-WEBSHELL_LIB	= -lraptorwebwidget
+EXTRA_DSO_LIBS	= gkgfx
+WEBSHELL_LIB	= -lwebshell
 endif
 
 CPPSRCS		= \

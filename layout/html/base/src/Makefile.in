@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= raptorhtmlbase_s
+LIBRARY_NAME	= gkhtmlbase_s
 
 
 CPPSRCS		= \

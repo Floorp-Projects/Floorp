@@ -26,15 +26,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor
-LIBRARY_NAME	= raptorview
+MODULE		= view
+LIBRARY_NAME	= gkview
 SHORT_LIBNAME	= ngview
 IS_COMPONENT    = 1
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = nggfx
 else
-EXTRA_DSO_LIBS = raptorgfx
+EXTRA_DSO_LIBS = gkgfx
 endif
 
 CPPSRCS		= \

@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 #LIBRARY_NAME	= gfxunix
-MODULE		= raptor
+MODULE		= layout
 
 #CPPSRCS	= \
 #		nsDeviceContextUnix.cpp \

@@ -37,7 +37,7 @@ LIBS		= \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_WIDGET_SUPPORT_LIBS) \
-		-lraptorgfx \
+		-lgkgfx \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

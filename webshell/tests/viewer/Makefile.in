@@ -101,7 +101,7 @@ JSJ_LIB			= -ljsj
 endif
 
 XP_DIST_LIBS		= \
-			-lraptorgfx \
+			-lgkgfx \
 			$(MOZ_JS_LIBS) \
 			$(XPCOM_LIBS) \
 			$(JSJ_LIB) \

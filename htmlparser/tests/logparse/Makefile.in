@@ -31,7 +31,7 @@ PROGRAM		= logparse
 CPPSRCS		= logparse.cpp
 
 LIBS		= \
-		-lraptorhtmlpars \
+		-lhtmlpars \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

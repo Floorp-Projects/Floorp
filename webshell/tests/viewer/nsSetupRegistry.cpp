@@ -87,10 +87,10 @@
     #define LIVECONNECT_DLL "LIVECONNECT_DLL"
     #define OJI_DLL        "OJI_DLL"
 #else
-    #define VIEW_DLL   "libraptorview"MOZ_DLL_SUFFIX
-    #define WEB_DLL    "libraptorwebwidget"MOZ_DLL_SUFFIX
+    #define VIEW_DLL   "libgkview"MOZ_DLL_SUFFIX
+    #define WEB_DLL    "libwebshell"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
-    #define PLUGIN_DLL "libraptorplugin"MOZ_DLL_SUFFIX
+    #define PLUGIN_DLL "libgkplugin"MOZ_DLL_SUFFIX
     #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
     #define LIVECONNECT_DLL "libliveconnect"MOZ_DLL_SUFFIX
     #define OJI_DLL    "liboji"MOZ_DLL_SUFFIX

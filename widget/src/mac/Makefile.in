@@ -62,9 +62,9 @@ CPPSRCS         = nsAppShell.cpp \
 include $(topsrcdir)/config/rules.mk
 
 EXTRA_DSO_LDOPTS += \
-                $(DIST)/lib/libraptorbasewidget_s.a \
+                $(DIST)/lib/libxpwidgets_s.a \
                 $(TK_LIBS) \
-                -lraptorgfx \
+                -lgkgfx \
                 $(MOZ_COMPONENT_LIBS) \
                 $(NULL)
 

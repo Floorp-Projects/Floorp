@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor
-LIBRARY_NAME	= raptorwebwidget
+MODULE		= webshell
+LIBRARY_NAME	= webshell
 SHORT_LIBNAME	= webshell
 EXTRA_DSO_LIBS	= jsdom docshell
 

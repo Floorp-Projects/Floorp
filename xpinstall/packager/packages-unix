@@ -45,9 +45,9 @@ bin/libjpeg.so
 bin/libjsj.so
 bin/libmsgbaseutil.so
 bin/libprotocol.so
-bin/libraptorgfx.so
-bin/libraptorplugin.so
-bin/libraptorwebwidget.so
+bin/libgkgfx.so
+bin/libgkplugin.so
+bin/libwebshell.so
 bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
@@ -91,9 +91,9 @@ bin/components/liboji.so
 bin/components/libpsmglue.so
 bin/components/libpref.so
 bin/components/libprofile.so
-bin/components/libraptorhtml.so
-bin/components/libraptorhtmlpars.so
-bin/components/libraptorview.so
+bin/components/libgklayout.so
+bin/components/libhtmlpars.so
+bin/components/libgkview.so
 bin/components/librdf.so
 bin/components/librelated.so
 bin/components/libshistory.so

@@ -54,11 +54,11 @@ CPPSRCS		= \
 		nsGtkMozRemoteHelper.cpp \
 		$(NULL)
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
-		-lraptorgfx \
+		-lgkgfx \
 		$(NULL)
 
 ifndef MOZ_MONOLITHIC_TOOLKIT

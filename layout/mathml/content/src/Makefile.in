@@ -30,7 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = raptormathmlcontent_s
+LIBRARY_NAME = gkmathmlcon_s
 
 DEFINES += -D_IMPL_NS_HTML
 

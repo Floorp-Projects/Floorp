@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor
+MODULE		= layout
 LIBRARY_NAME	= gfxps
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS = img_s mozutil_s
@@ -34,7 +34,7 @@ EXTRA_DSO_LIBS = img_s mozutil_s
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS += nggfx
 else
-EXTRA_DSO_LIBS += raptorgfx
+EXTRA_DSO_LIBS += gkgfx
 endif
 
 CSRCS		= font_metrics.c
@@ -70,6 +70,4 @@ DEFINES         += -D_BSD_SOURCE
 endif
 CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
-
-LLIBS		+= $(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorgfx.a
 

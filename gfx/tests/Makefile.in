@@ -37,7 +37,7 @@ SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS	= nggfx
 else
-EXTRA_DSO_LIBS	= raptorgfx
+EXTRA_DSO_LIBS	= gkgfx
 endif
 
 LIBS		= \

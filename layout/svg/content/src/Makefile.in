@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= raptorsvgcontent_s
+LIBRARY_NAME	= gksvgcon_s
 
 
 CPPSRCS		= nsSVGAtoms.cpp
@@ -40,5 +40,5 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
 
-INCLUDES	+= -I$(srcdir)/../../../base/src -I$(DIST)/public/raptor
+INCLUDES	+= -I$(srcdir)/../../../base/src
 

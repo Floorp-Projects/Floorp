@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 
 LIBRARY_NAME	= gfx_mac
-MODULE		= raptor
+MODULE		= layout
 IS_COMPONENT	= 1
 
 
@@ -51,7 +51,7 @@ EXTRA_DSO_LDOPTS = \
                 $(MKSHLIB_FORCE_ALL) \
                 $(DIST)/lib/libimg_s.a \
                 $(DIST)/lib/libmozutil_s.a \
-		-lraptorgfx \
+		-lgkgfx \
                 $(MKSHLIB_UNFORCE_ALL) \
 		$(TK_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \

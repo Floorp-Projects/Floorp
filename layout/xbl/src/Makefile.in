@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= raptorxbl_s
+LIBRARY_NAME	= gkxbl_s
 
 CPPSRCS		= \
     nsXBLBinding.cpp \

@@ -32,7 +32,7 @@
 #ifdef XP_MAC
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
-#define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
+#define PARSER_DLL "libhtmlpars"MOZ_DLL_SUFFIX
 #endif
 
 // Class IID's
