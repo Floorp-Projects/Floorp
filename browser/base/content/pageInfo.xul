@@ -45,7 +45,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/pageInfo.js"/>
 
-  <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
+  <stringbundle id="pageinfobundle" src="chrome://browser/locale/pageInfo.properties"/>
 
   <commandset>
     <command id="cmd_close"     oncommand="window.close();"/>
@@ -95,7 +95,7 @@
             <row>
               <label value="&generalURL;"/>
               <separator/>
-              <textbox readonly="true" crop="right" id="urltext" class="text-link"/>
+              <textbox readonly="true" crop="right" id="urltext"/>
             </row>
             <row>
               <separator class="thin"/>
