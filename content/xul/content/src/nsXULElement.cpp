@@ -2184,26 +2184,22 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElem
 	// We need to sync up the initial attribute value.
   nsCOMPtr<nsIContent> listener( do_QueryInterface(anElement) );
 
-  // Retrieve our namespace
-  PRInt32 namespaceID;
-  GetNameSpaceID(namespaceID);
-
   // Find out if the attribute is even present at all.
   nsString attrValue;
   nsIAtom* kAtom = NS_NewAtom(attr);
-	nsresult result = GetAttribute(namespaceID, kAtom, attrValue);
+	nsresult result = GetAttribute(kNameSpaceID_None, kAtom, attrValue);
 	PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
                         result == NS_CONTENT_ATTR_HAS_VALUE);
 
 	if (attrPresent)
   {
     // Set the attribute 
-    listener->SetAttribute(namespaceID, kAtom, attrValue, PR_TRUE);
+    anElement->SetAttribute(attr, attrValue);
   }
   else
   {
     // Unset the attribute
-    listener->UnsetAttribute(namespaceID, kAtom, PR_FALSE);
+    anElement->RemoveAttribute(attr);
   }
 
   NS_RELEASE(kAtom);
