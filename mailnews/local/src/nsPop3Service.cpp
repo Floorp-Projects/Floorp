@@ -18,10 +18,6 @@
 
 #include "msgCore.h"    // precompiled header...
 
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
 #include "nsINetService.h"
 #include "nsPop3Service.h"
 #include "nsIMsgIncomingServer.h"
