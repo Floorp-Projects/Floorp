@@ -241,50 +241,6 @@ nsEditorShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   return NS_ERROR_NO_INTERFACE;
 }
 
-#if 0
-NS_IMETHODIMP 
-nsEditorShell::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  NS_PRECONDITION(nsnull != aScriptObject, "null arg");
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) 
-  {
-      res = NS_NewScriptEditorAppCore(aContext, 
-                                (nsISupports *)(nsIEditorShell*)this, 
-                                nsnull, 
-                                &mScriptObject);
-  }
-
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-#endif
-
-nsIScriptContext *    
-nsEditorShell::GetScriptContext(nsIDOMWindow * aWin)
-{
-  nsIScriptContext * scriptContext = nsnull;
-  if (nsnull != aWin) {
-    nsIDOMDocument * domDoc;
-    aWin->GetDocument(&domDoc);
-    if (nsnull != domDoc) {
-      nsIDocument * doc;
-      if (NS_OK == domDoc->QueryInterface(nsIDocument::GetIID(),(void**)&doc)) {
-        nsIScriptContextOwner * owner = doc->GetScriptContextOwner();
-        if (nsnull != owner) {
-          owner->GetScriptContext(&scriptContext);
-          NS_RELEASE(owner);
-        }
-        NS_RELEASE(doc);
-      }
-      NS_RELEASE(domDoc);
-    }
-  }
-  return scriptContext;
-}
-
-
 NS_IMETHODIMP    
 nsEditorShell::Init()
 {  
@@ -435,8 +391,6 @@ nsEditorShell::SetToolbarWindow(nsIDOMWindow* aWin)
       return NS_ERROR_NULL_POINTER;
 
   mToolbarWindow = aWin;
-  //NS_ADDREF(aWin);
-  //mToolbarScriptContext = GetScriptContext(aWin);
 
   return NS_OK;
 }
@@ -449,7 +403,6 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
       return NS_ERROR_NULL_POINTER;
 
   mContentWindow = aWin;
-  //mContentScriptContext = GetScriptContext(mContentWindow);    // XXX does this AddRef?
 
   nsresult  rv;
   nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(mContentWindow, &rv);
@@ -473,9 +426,6 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
   if (!aWin)
       return NS_ERROR_NULL_POINTER;
 
-//  if (!mContentWindow) {
-//    return NS_ERROR_FAILURE;
-//  }
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) {
     return NS_ERROR_FAILURE;
@@ -1208,16 +1158,6 @@ static nsresult OpenWindow( const char *chrome, const PRUnichar *url )
     return rv;
 }
 
-NS_IMETHODIMP
-nsEditorShell::CreateWindowWithURL(const char* urlStr)
-{
-  nsresult rv = NS_OK;
-  
-  rv = OpenWindow( urlStr, nsString("chrome://editor/content/EditorInitPage.html").GetUnicode() );
-
-  return rv;
-}
-
 // this will AddRef the returned window, if any.
 NS_IMETHODIMP
 nsEditorShell::FindOpenWindowForFile(const PRUnichar* inFileURL, nsIDOMWindow** outFoundWindow)
@@ -1640,27 +1580,6 @@ nsEditorShell::Print()
     }
   }
   return NS_OK;
-}
-
-// NO LONGER CALLED Global JS method goQuitApplication() is called instead
-NS_IMETHODIMP    
-nsEditorShell::Exit()
-{  
-  PRBool result;
-  nsresult rv = CheckAndSaveDocument(GetString("BeforeClosing").GetUnicode(),&result);
-  // Don't shutdown if there was an error saving file or 
-  //   user canceled an action along the way
-  if (NS_SUCCEEDED(rv) && result)
-  {
-
-    /*
-     * Create the Application Shell instance...
-     */
-    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-    if (NS_FAILED(rv)) { return rv; }
-    appShell->Quit();
-  }
-  return NS_OK; //Why not return rv?
 }
 
 NS_IMETHODIMP
@@ -2907,7 +2826,6 @@ nsEditorShell::CreateElementWithDefaults(const PRUnichar *aInTagName, nsIDOMElem
 
   return result;
 }
-
 
 NS_IMETHODIMP
 nsEditorShell::DeleteElement(nsIDOMElement *element)

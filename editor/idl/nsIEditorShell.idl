@@ -130,7 +130,6 @@ interface nsIEditorShell : nsISupports
 
   boolean CloseWindow();
   void Print();
-  void Exit();
   
   void Undo();
   void Redo();
