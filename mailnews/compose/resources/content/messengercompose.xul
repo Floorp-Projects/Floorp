@@ -44,6 +44,11 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
 <html:script language="JavaScript" src="chrome://messengercompose/content/addressAutoComplete.js"/>
 
+<commands id="commands">
+	<commandset id="globalEditMenuItems"/>
+	<commandset id="selectEditMenuItems"/>
+	<commandset id="undoEditMenuItems"/>
+</commands>
 
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
