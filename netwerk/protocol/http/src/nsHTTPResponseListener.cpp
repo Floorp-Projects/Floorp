@@ -588,7 +588,8 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
            ("nsHTTPServerListener::OnStopRequest [this=%x]."
             "\tStatus = %x, mDataReceived=%d\n", this, i_Status, mDataReceived));
 
-    if (NS_SUCCEEDED (channelStatus) && NS_SUCCEEDED (i_Status) && !mDataReceived)
+    if (NS_SUCCEEDED (channelStatus) && !mDataReceived
+        && (NS_SUCCEEDED (i_Status) || i_Status == NS_ERROR_FAILURE))   // EOF or not a well-known error, like timeout
     {
         // no data has been received from the channel at all - must be due to the fact that the
         // server has dropped the connection on keep-alive

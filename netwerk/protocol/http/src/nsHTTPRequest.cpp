@@ -833,12 +833,13 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
 nsresult
 nsHTTPPipelinedRequest::RestartRequest ()
 {
-    nsresult rv = NS_ERROR_FAILURE;
+    nsresult rval = NS_ERROR_FAILURE;
 
     PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPPipelinedRequest::RestartRequest () [this=%x], mTotalProcessed=%u\n", this, mTotalProcessed));
 
     if (mTotalProcessed == 0)
     {
+        nsresult rv;
         // the pipeline just started - we still can attempt to recover
 
         nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (mTransport, &rv);
@@ -864,7 +865,7 @@ nsHTTPPipelinedRequest::RestartRequest ()
 
         if (wasKeptAlive && mAttempts == 0 && NS_SUCCEEDED (channelStatus))
         {
-            rv = NS_OK;
+            rval = NS_OK;
             mListener = nsnull;
 
             if (mOnStopDone)
@@ -876,11 +877,11 @@ nsHTTPPipelinedRequest::RestartRequest ()
                 mHandler   -> ReleaseTransport (mTransport, nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES, PR_TRUE);
                 mTransport = null_nsCOMPtr ();
 
-                rv = WriteRequest ();
+                rval = WriteRequest ();
             }
         }
     }
-    return rv;
+    return rval;
 }
 
 nsresult
