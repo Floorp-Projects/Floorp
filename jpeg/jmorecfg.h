@@ -105,6 +105,11 @@ typedef short JSAMPLE;
 
 typedef short JCOEF;
 
+/* Defines for MMX support. */
+
+#if defined(XP_WIN32) && defined(_M_IX86)
+#define HAVE_MMX_INTEL_MNEMONICS 
+#endif
 
 /* Compressed datastreams are represented as arrays of JOCTET.
  * These must be EXACTLY 8 bits wide, at least once they are written to
