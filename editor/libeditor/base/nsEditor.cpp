@@ -159,7 +159,8 @@ nsIAtom *nsEditor::gIMETxnName;
 nsIAtom *nsEditor::gDeleteTxnName;
 
 nsEditor::nsEditor()
-:  mPresShellWeak(nsnull)
+:  mModCount(0)
+,  mPresShellWeak(nsnull)
 ,  mViewManager(nsnull)
 ,  mUpdateCount(0)
 ,  mPlaceHolderTxn(nsnull)
