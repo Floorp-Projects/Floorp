@@ -41,7 +41,7 @@
 <tree id="prefsTree" seltype="single" hidecolumnpicker="true"
           onselect="if( hPrefWindow ) hPrefWindow.switchPage();">
   <treecols>
-    <treecol id="categoryCol" label="&category.label;" flex="1" primary="true"/>
+    <treecol id="categoryCol" flex="1" hideheader="true" primary="true"/>
   </treecols>
 
   <treechildren id="panelChildren">
