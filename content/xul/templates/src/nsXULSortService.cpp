@@ -175,6 +175,7 @@ private:
 	static nsIAtom		*kTreeChildrenAtom;
 	static nsIAtom		*kTreeColAtom;
 	static nsIAtom		*kTreeItemAtom;
+	static nsIAtom		*kContainerAtom;
 	static nsIAtom		*kResourceAtom;
 	static nsIAtom		*kResource2Atom;
 	static nsIAtom		*kSortActiveAtom;
@@ -205,7 +206,6 @@ nsresult	SetSortHints(nsIContent *tree, const nsString &sortResource, const nsSt
 nsresult	NodeHasSortInfo(nsIContent *node, nsString &sortResource, nsString &sortDirection, nsString &sortResource2, PRBool &inbetweenSeparatorSort, PRBool &found);
 nsresult	GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection, nsString &sortResource2, PRBool &inbetweenSeparatorSort);
 nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
-nsresult	RemoveAllChildren(nsIContent *node);
 nsresult	SortTreeChildren(nsIContent *container, sortPtr sortInfo);
 nsresult	DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
 
@@ -242,6 +242,7 @@ nsIAtom* XULSortServiceImpl::kTreeCellAtom;
 nsIAtom* XULSortServiceImpl::kTreeChildrenAtom;
 nsIAtom* XULSortServiceImpl::kTreeColAtom;
 nsIAtom* XULSortServiceImpl::kTreeItemAtom;
+nsIAtom* XULSortServiceImpl::kContainerAtom;
 nsIAtom* XULSortServiceImpl::kResourceAtom;
 nsIAtom* XULSortServiceImpl::kResource2Atom;
 nsIAtom* XULSortServiceImpl::kSortActiveAtom;
@@ -274,6 +275,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		kTreeChildrenAtom    		= NS_NewAtom("treechildren");
 		kTreeColAtom         		= NS_NewAtom("treecol");
 		kTreeItemAtom        		= NS_NewAtom("treeitem");
+		kContainerAtom			= NS_NewAtom("container");
 		kResourceAtom        		= NS_NewAtom("resource");
 		kResource2Atom        		= NS_NewAtom("resource2");
 		kSortActiveAtom			= NS_NewAtom("sortActive");
@@ -379,6 +381,7 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 	        NS_IF_RELEASE(kTreeChildrenAtom);
 	        NS_IF_RELEASE(kTreeColAtom);
 	        NS_IF_RELEASE(kTreeItemAtom);
+	        NS_IF_RELEASE(kContainerAtom);
 	        NS_IF_RELEASE(kResourceAtom);
 	        NS_IF_RELEASE(kResource2Atom);
 	        NS_IF_RELEASE(kSortActiveAtom);
@@ -789,26 +792,6 @@ XULSortServiceImpl::GetNodeTextValue(sortPtr sortInfo, nsIContent *node, nsStrin
 		}
 	}
 	return((found == PR_TRUE) ? NS_OK : NS_ERROR_FAILURE);
-}
-
-
-
-nsresult
-XULSortServiceImpl::RemoveAllChildren(nsIContent *container)
-{
-        nsCOMPtr<nsIContent>	child;
-	PRInt32			childIndex, numChildren;
-	nsresult		rv;
-
-	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
-	if (numChildren == 0)	return(NS_OK);
-
-	for (childIndex=numChildren-1; childIndex >= 0; childIndex--)
-	{
-		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	break;
-		container->RemoveChildAt(childIndex, PR_FALSE);
-	}
-	return(rv);
 }
 
 
@@ -1291,146 +1274,136 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 nsresult
 XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 {
-	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
+	PRInt32			childIndex = 0, numChildren = 0, numElements = 0, currentElement, nameSpaceID;
+	PRUint32		loop;
         nsCOMPtr<nsIContent>	child;
 	nsresult		rv;
 
 	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
 	if (numChildren < 1)	return(NS_OK);
 
-	nsCOMPtr<nsISupportsArray> childArray;
-	rv = NS_NewISupportsArray(getter_AddRefs(childArray));
-	if (NS_FAILED(rv))	return(rv);
+	// Note: This is a straight allocation (not a COMPtr) so we
+	// can't return out of this routine until/unless we free it!
+	nsIContent ** flatArray = new nsIContent*[numChildren + 1];
+	if (!flatArray)	return(NS_ERROR_OUT_OF_MEMORY);
 
-	for (childIndex=0; childIndex < numChildren; childIndex++)
+	// Note: walk backwards (and add nodes into the array backwards) because
+	// we also remove the nodes in this loop [via RemoveChildAt()] and if we
+	// were to do this in a forward-looking manner it would be harder
+	// (since we also skip over non XUL:treeitem nodes)
+
+	nsCOMPtr<nsIAtom> tag;
+	currentElement = numChildren;
+	for (childIndex=numChildren-1; childIndex >= 0; childIndex--)
 	{
-		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
-		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return(rv);
+		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	continue;
+		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	continue;
 		if (nameSpaceID == kNameSpaceID_XUL)
 		{
-			nsCOMPtr<nsIAtom> tag;
-			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	return(rv);
+			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	continue;
 			if (tag.get() == kTreeItemAtom)
 			{
-				childArray->AppendElement(child);
+				--currentElement;
+				flatArray[currentElement] = child;
+				NS_ADDREF(flatArray[currentElement]);		// Note: addref it here
+
+				// Bug 6665. This is a hack to "addref" the resources
+				// before we remove them from the content model. This
+				// keeps them from getting released, which causes
+				// performance problems for some datasources.
+				nsIRDFResource	*resource;
+				gXULUtils->GetElementResource(flatArray[currentElement], &resource);
+				// Note: we don't release; see part deux below...
+
+				++numElements;
+
+				// immediately remove the child node, and ignore any errors
+				container->RemoveChildAt(childIndex, PR_FALSE);
 			}
 		}
 	}
-	PRUint32 cnt = 0;
-	rv = childArray->Count(&cnt);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-	PRUint32 numElements = cnt;
 	if (numElements > 0)
 	{
-		nsIContent ** flatArray = new nsIContent*[numElements];
-		if (flatArray)
+		/* smart sorting (sort within separators) on name column */
+		if (sortInfo->inbetweenSeparatorSort == PR_TRUE)
 		{
-			// flatten array of resources, sort them, then add as tree elements
-			PRUint32	loop;
-		        for (loop=0; loop<numElements; loop++)
-		        {
-				flatArray[loop] = (nsIContent *)childArray->ElementAt(loop);
-			}
-
-			/* smart sorting (sort within separators) on name column */
-			if (sortInfo->inbetweenSeparatorSort == PR_TRUE)
-//			if (sortInfo->sortProperty.get() == kNC_Name)
+			PRUint32	startIndex=currentElement;
+			nsAutoString	type;
+			for (loop=currentElement; loop< currentElement + numElements; loop++)
 			{
-				PRUint32	startIndex=0;
-				for (loop=0; loop<numElements; loop++)
+				if (NS_SUCCEEDED(rv = flatArray[loop]->GetAttribute(kNameSpaceID_None, kRDF_type, type))
+					&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 				{
-					nsAutoString	type;
-					if (NS_SUCCEEDED(rv = flatArray[loop]->GetAttribute(kNameSpaceID_None, kRDF_type, type))
-						&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
+					if (type.Equals(kURINC_BookmarkSeparator))
 					{
-						if (type.EqualsIgnoreCase(kURINC_BookmarkSeparator))
+						if (loop > startIndex+1)
 						{
-							if (loop > startIndex+1)
-							{
-								NS_QuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
-									inplaceSortCallback, (void *)sortInfo);
-								startIndex = loop+1;
-							}
+							NS_QuickSort((void *)&flatArray[startIndex], loop-startIndex,
+								sizeof(nsIContent *), inplaceSortCallback, (void *)sortInfo);
+							startIndex = loop+1;
 						}
 					}
 				}
-				if (loop > startIndex+1)
-				{
-					NS_QuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
-						inplaceSortCallback, (void *)sortInfo);
-					startIndex = loop+1;
-				}
 			}
-			else
+			if (loop > startIndex+1)
 			{
-				NS_QuickSort((void *)flatArray, numElements, sizeof(nsIContent *),
+				NS_QuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
 					inplaceSortCallback, (void *)sortInfo);
+				startIndex = loop+1;
 			}
+		}
+		else
+		{
+			NS_QuickSort((void *)(&flatArray[currentElement]), numElements, sizeof(nsIContent *),
+				inplaceSortCallback, (void *)sortInfo);
+		}
 
-			// Bug 6665. This is a hack to "addref" the resources
-			// before we remove them from the content model. This
-			// keeps them from getting released, which causes
-			// performance problems for some datasources.
-			for (loop = 0; loop < numElements; loop++)
-			{
-				nsIRDFResource	*resource;
-				gXULUtils->GetElementResource(flatArray[loop], &resource);
-				// Note that we don't release; see part deux below...
-			}
+		numChildren = 0;
+		for (loop=currentElement; loop < currentElement + numElements; loop++)
+		{
+			container->InsertChildAt((nsIContent *)flatArray[loop], numChildren++, PR_FALSE);
+		}
 
-			RemoveAllChildren(container);
-			
-			// insert sorted children			
-			numChildren = 0;
-			for (loop=0; loop<numElements; loop++)
-			{
-				container->InsertChildAt((nsIContent *)flatArray[loop], numChildren++, PR_FALSE);
-			}
-
+		nsCOMPtr<nsIContent>	parentNode;
+		nsAutoString		value;
+		// recurse on grandchildren
+		for (loop=currentElement; loop < currentElement + numElements; loop++)
+		{
 			// Bug 6665, part deux. The Big Hack.
-			for (loop = 0; loop < numElements; loop++)
-			{
-				nsIRDFResource	*resource;
-				gXULUtils->GetElementResource(flatArray[loop], &resource);
-				nsrefcnt	refcnt;
-				NS_RELEASE2(resource, refcnt);
-				NS_RELEASE(resource);
-			}
+			nsIRDFResource	*resource;
+			gXULUtils->GetElementResource(flatArray[loop], &resource);
+			nsrefcnt	refcnt;
+			NS_RELEASE2(resource, refcnt);
+			NS_RELEASE(resource);
 
-			// recurse on grandchildren
-			for (loop=0; loop<numElements; loop++)
-			{
-				container =  (nsIContent *)flatArray[loop];
-				if (NS_FAILED(rv = container->ChildCount(numChildren)))	continue;
-				for (childIndex=0; childIndex<numChildren; childIndex++)
-				{
-					if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))
-						continue;
-					if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	continue;
-					if (nameSpaceID == kNameSpaceID_XUL)
-					{
-						nsCOMPtr<nsIAtom> tag;
-						if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))
-							continue;
-						if (tag.get() == kTreeChildrenAtom)
-						{
-							sortInfo->parentContainer = container;
-							SortTreeChildren(child, sortInfo);
-						}
-					}
-				}
-			}
+			parentNode = (nsIContent *)flatArray[loop];
+			NS_RELEASE(flatArray[loop]);			// Note: release it here
 
-			delete [] flatArray;
-			flatArray = nsnull;
+			// if its a container, find its treechildren node, and sort those
+			if (NS_FAILED(rv = parentNode->GetAttribute(kNameSpaceID_None, kContainerAtom, value)) ||
+				(rv != NS_CONTENT_ATTR_HAS_VALUE) || (!value.EqualsIgnoreCase(trueStr)))
+				continue;
+			if (NS_FAILED(rv = parentNode->ChildCount(numChildren)))	continue;
+
+			for (childIndex=0; childIndex<numChildren; childIndex++)
+			{
+				if (NS_FAILED(rv = parentNode->ChildAt(childIndex, *getter_AddRefs(child))))
+					continue;
+				if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	continue;
+				if (nameSpaceID != kNameSpaceID_XUL)	continue;
+
+				nsCOMPtr<nsIAtom> tag;
+				if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	continue;
+				if (tag.get() != kTreeChildrenAtom)	continue;
+
+				sortInfo->parentContainer = parentNode;
+				SortTreeChildren(child, sortInfo);
+			}
 		}
 	}
-	rv = childArray->Count(&cnt);
-	if (NS_FAILED(rv)) return rv;
-	for (int i = cnt - 1; i >= 0; i--)
-	{
-		childArray->RemoveElementAt(i);
-	}
+	delete [] flatArray;
+	flatArray = nsnull;
+
 	return(NS_OK);
 }
 
