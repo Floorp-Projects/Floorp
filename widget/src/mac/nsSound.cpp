@@ -161,17 +161,15 @@ protected:
   OSErr             TaskActiveMovies(PRBool *outAllMoviesDone);
 
   static PRBool     TaskOneMovie(Movie inMovie);    // return true if done
-
+  
 protected:
-
-  nsCOMPtr<nsISound>        mSound;       // back ptr, owned and released when play done  
-  nsCOMPtr<nsITimer>        mTimer;
   
   Movie                     mMovie;       // the original movie, kept around as long as this request is cached
   Handle                    mDataHandle;  // data handle, has to persist for the lifetime of any movies
                                           // depending on it
   
   nsVoidArray               mMovies;      // list of playing movie clones, which are transient.
+
 };
 
 #pragma mark -
@@ -638,6 +636,58 @@ nsSystemSoundRequest::SoundCallback(SndChannelPtr chan, SndCommand *theCmd)
 
 #pragma mark -
 
+// This class should only ever be instantiated once, statically.
+// Its job is to create, own and destroy the singleton GWorld.
+class nsMoviePortOwner
+{
+public:
+
+  static GWorldPtr	GetSingletonMoviePort();
+  
+private:
+
+              // private ctor and dtor. Only GetSingletonMoviePort() can instantiate us.
+              nsMoviePortOwner() {}
+              
+              ~nsMoviePortOwner()
+              {
+                if (sMoviePort)
+                {
+                  ::DisposeGWorld(sMoviePort);
+                  sMoviePort = nsnull;
+                }
+              }
+
+  void        EnsureMoviePort()
+              {
+                if (!sMoviePort)
+                {
+                  Rect        gWorldBounds = {0, 0, 12, 12};
+                  (void)::NewGWorld(&sMoviePort, 8, &gWorldBounds, nil, nil, 0);
+                }
+              }
+
+  GWorldPtr   GetMoviePort()
+              {
+                EnsureMoviePort();
+                return sMoviePort;
+              }
+
+private:
+
+  static GWorldPtr    sMoviePort;
+
+};
+
+GWorldPtr nsMoviePortOwner::sMoviePort = nsnull;
+
+GWorldPtr nsMoviePortOwner::GetSingletonMoviePort()
+{
+  static nsMoviePortOwner   sMoviePortOwner;
+  return sMoviePortOwner.GetMoviePort();
+}
+
+
 NS_IMPL_ISUPPORTS_INHERITED1(nsMovieSoundRequest, nsSoundRequest, nsIStreamLoaderObserver);
 
 ////////////////////////////////////////////////////////////////////////
@@ -792,7 +842,7 @@ nsMovieSoundRequest::PlaySound()
   nsresult rv;
 
   // we'll have a timer already if the sound is still playing from a previous
-  // request. In that case, we cloen the movie into a new one, so we can play it
+  // request. In that case, we clone the movie into a new one, so we can play it
   // again from the start.
   if (!mTimer)
   {  
@@ -874,9 +924,13 @@ nsMovieSoundRequest::Notify(nsITimer *timer)
 OSErr
 nsMovieSoundRequest::ImportMovie(Handle inDataHandle, long inDataSize, const nsACString& contentType)
 {
+  GWorldPtr               moviePort = nsMoviePortOwner::GetSingletonMoviePort();
   Handle                  dataRef = nil;
   OSErr                   err = noErr;
   OSType                  fileFormat;
+  
+  if (!moviePort)
+    return memFullErr;
   
   {
     StHandleLocker  locker(inDataHandle);
@@ -893,6 +947,11 @@ nsMovieSoundRequest::ImportMovie(Handle inDataHandle, long inDataSize, const nsA
     TimeValue             addedDuration = 0;
     long                  outFlags = 0;
     ComponentResult       compErr = noErr;
+
+    // set the port to our singleton GWorld before creating
+    // the movie. This will ensure that the movie uses this port, and
+    // not one of our (transient) windows.
+    StGWorldPortSetter    gWorldSetter(moviePort);
 
     if (!miComponent) {
       err = paramErr;
@@ -932,7 +991,7 @@ nsMovieSoundRequest::ImportMovie(Handle inDataHandle, long inDataSize, const nsA
     }
     
     ::GoToEndOfMovie(mMovie);   // simplifies the logic in PlaySound()
-    
+        
   bail:
     if (miComponent)
       ::CloseComponent(miComponent);
@@ -950,7 +1009,7 @@ nsMovieSoundRequest::DisposeMovieData()
   for (PRInt32 i = 0; i < mMovies.Count(); i ++)
   {
     Movie   thisMovie = (Movie)mMovies.ElementAt(i);
-    ::DisposeMovie(mMovie);
+    ::DisposeMovie(thisMovie);
   }
   
   mMovies.Clear();
@@ -993,11 +1052,11 @@ nsMovieSoundRequest::TaskActiveMovies(PRBool *outAllMoviesDone)
   PRBool    allMoviesDone = PR_FALSE;
 
   allMoviesDone = TaskOneMovie(mMovie);
-
+  
   PRInt32 initMovieCount = mMovies.Count();
   PRInt32 curIndex = 0;
-  
-  for (PRInt32 i = 0; i < initMovieCount; i ++)
+
+  while (curIndex < mMovies.Count())
   {
     Movie   thisMovie     = (Movie)mMovies.ElementAt(curIndex);
     PRBool  thisMovieDone = TaskOneMovie(thisMovie);
@@ -1043,4 +1102,5 @@ nsMovieSoundRequest::HaveQuickTime()
   OSErr err = Gestalt (gestaltQuickTime, &gestResult);
   return (err == noErr) && ((long)EnterMovies != kUnresolvedCFragSymbolAddress);
 }
+
 
