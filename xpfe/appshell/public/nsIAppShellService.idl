@@ -22,12 +22,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include "nscore.h"
-#include "nsCom.h"
-#include "nsINativeAppSupport.h"
-%}
-
 interface nsIXULWindow;
 interface nsIURI;
 interface nsICmdLineService;
@@ -37,17 +31,7 @@ interface nsIDOMWindowInternal;
 [ptr] native JSContext(JSContext);
 
 %{C++
-/* Forward declarations... */
-struct PRThread;
-class nsIFactory;
 struct JSContext;
-
-#define NS_SIZETOCONTENT -1
-
-// e5e5af70-8a38-11d2-9938-0080c7cb1080
-#define NS_IAPPSHELL_SERVICE_IID \
-{ 0xe5e5af70, 0x8a38, 0x11d2, \
-	{0x99, 0x38, 0x00, 0x80, 0xc7, 0xcb, 0x10, 0x80} }
 %}
 
 [scriptable, uuid(E5E5AF70-8A38-11D2-9938-0080C7CB1080)]
@@ -58,11 +42,13 @@ interface nsIAppShellService : nsISupports
    * Required initialization routine.
    * @param aCmdLineService is stored and passed to appshell components as
    *                        they are initialized.
-   * @param aNativeAppSupportOrSplashScreen is an object that can be QI'd to
-   *                        either an nsINativeAppSupport or nsISplashScreen;
-   *                        this object will be used to implement HideSplashScreen.
+   * @param aNativeAppSupportOrSplashScreen is an object that can be
+   *                        QI'd to either an nsINativeAppSupport or
+   *                        nsISplashScreen; this object will be used to
+   *                        implement HideSplashScreen.
    */
-  void Initialize(in nsICmdLineService aCmdLineService, in nsISupports nativeAppSupportOrSplashScreen );
+  void initialize(in nsICmdLineService aCmdLineService,
+                  in nsISupports nativeAppSupportOrSplashScreen);
 
   /**
    * Starts up the profile manager with the given arguments
@@ -80,16 +66,18 @@ interface nsIAppShellService : nsISupports
    * Runs an application event loop: normally the main event pump which
    * defines the lifetime of the application.
    */
-  void Run();
+  void run();
 
+  /**
+   * Exit the event loop
+   */
+  void quit();
 
-// Exit the event loop
-  void Quit();
   /**
    * Required exit routine.  Cleanly shuts down
    * the appshell components.
    */
-  void Shutdown();
+  void shutdown();
 
   /**
    * Create a window.
@@ -111,25 +99,28 @@ interface nsIAppShellService : nsISupports
    * @param aInitialHeight like aInitialWidth, but subtly different.
    * @param aResult the newly created window is returned here.
    */
-  void CreateTopLevelWindow(in nsIXULWindow aParent,
-                            in nsIURI aUrl, 
-                            in boolean aShowWindow, 
-                            in boolean aLoadDefaultPage,
-                            in PRUint32 aChromeMask,
-                            in long aInitialWidth, in long aInitialHeight,
-                            out nsIXULWindow aResult);
+  const long SIZE_TO_CONTENT = -1;
+  nsIXULWindow createTopLevelWindow(in nsIXULWindow aParent,
+                                    in nsIURI aUrl, 
+                                    in boolean aShowWindow, 
+                                    in boolean aLoadDefaultPage,
+                                    in PRUint32 aChromeMask,
+                                    in long aInitialWidth,
+                                    in long aInitialHeight);
 
-  // Apply Initialize function  to each app shell component.
-  void EnumerateAndInitializeComponents();
+  /**
+   * Apply Initialize function  to each app shell component.
+   */
+  void enumerateAndInitializeComponents();
 
   /**
    * Close a window.
    * @param aWindow a window.
    */
-  void CloseTopLevelWindow(in nsIXULWindow aWindow);
+  void closeTopLevelWindow(in nsIXULWindow aWindow);
 
   [noscript]
-  void CreateHiddenWindow();
+  void createHiddenWindow();
 
   /**
    * Return the (singleton) application hidden window, automatically created
@@ -137,7 +128,7 @@ interface nsIAppShellService : nsISupports
    * @param aResult the hidden window.  Do not unhide hidden window.
    *                Do not taunt hidden window.
    */
-  void GetHiddenWindow(out nsIXULWindow aResult);
+  readonly attribute nsIXULWindow hiddenWindow;
 
   /**
    * Return the (singleton) application hidden window, automatically created
@@ -145,7 +136,7 @@ interface nsIAppShellService : nsISupports
    * @param aResult the hidden window.  Do not unhide hidden window.
    *                Do not taunt hidden window.
    */
-  nsIDOMWindowInternal getHiddenDOMWindow();
+  readonly attribute nsIDOMWindowInternal hiddenDOMWindow;
 
 
   /**
@@ -156,7 +147,7 @@ interface nsIAppShellService : nsISupports
    * @aJSContext       the corresponding JavaScript context
    */
   [noscript]
-  void GetHiddenWindowAndJSContext(out nsIDOMWindowInternal aHiddenDOMWindow,
+  void getHiddenWindowAndJSContext(out nsIDOMWindowInternal aHiddenDOMWindow,
                                    out JSContext aJSContext);
 
   /**
@@ -165,25 +156,25 @@ interface nsIAppShellService : nsISupports
    * knows it can't quit until it's out of registered windows.
    * @param aWindow yes
    */
-  void RegisterTopLevelWindow(in nsIXULWindow aWindow);
+  void registerTopLevelWindow(in nsIXULWindow aWindow);
 
   /**
    * Remove a window from the application's window registry.
    * @param aWindow you see the pattern
    */
-  void UnregisterTopLevelWindow(in nsIXULWindow aWindow);
+  void unregisterTopLevelWindow(in nsIXULWindow aWindow);
 
   /**
    * Remove the splash screen (if visible).  This need be called
    * only once per application session.
    */
-  void HideSplashScreen();
+  void hideSplashScreen();
   
   /**
    * We may need to show a XUL dialog before there are any other windows.
    * In this case we don't nescesarily want to quit when it is closed.
    * Use with extreme caution.
    */
-   
   attribute boolean quitOnLastWindowClosing;
+
 };

@@ -55,19 +55,19 @@ static nsresult DisplayURI(const char *urlStr, PRBool block)
 
     nsCOMPtr<nsIXULWindow>  window;
     rv = appShell->CreateTopLevelWindow(nsnull, 
-                                        URL,
-                                        PR_TRUE, 
-                                        PR_TRUE,
-                                        nsIWebBrowserChrome::CHROME_ALL, 
-						                NS_SIZETOCONTENT,           // width 
-						                NS_SIZETOCONTENT,           // height
-                                        getter_AddRefs(window));
+                                URL,
+                                PR_TRUE, 
+                                PR_TRUE,
+                                nsIWebBrowserChrome::CHROME_ALL, 
+                                nsIAppShellService::SIZE_TO_CONTENT, // width 
+                                nsIAppShellService::SIZE_TO_CONTENT, // height
+                                getter_AddRefs(window));
 
     if (NS_FAILED(rv)) return rv;
 
     /*
      * Start up the main event loop...
-     */	
+     */
     if (block)
         rv = appShell->Run();
     
@@ -92,7 +92,7 @@ nsTimeBomb::Init()
 
     rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), getter_AddRefs(mPrefs));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs");
-	if (NS_FAILED(rv))
+    if (NS_FAILED(rv))
         return rv;
 
     PRTime time = LL_Zero();

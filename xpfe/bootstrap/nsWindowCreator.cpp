@@ -100,8 +100,8 @@ nsWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
   
   nsCOMPtr<nsIXULWindow> newWindow;
   appShell->CreateTopLevelWindow(0, 0, PR_FALSE, PR_FALSE,
-    aChromeFlags, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
-    getter_AddRefs(newWindow));
+    aChromeFlags, nsIAppShellService::SIZE_TO_CONTENT,
+    nsIAppShellService::SIZE_TO_CONTENT, getter_AddRefs(newWindow));
 
   nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newWindow));
   if (thing)
