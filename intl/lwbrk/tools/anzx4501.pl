@@ -55,7 +55,7 @@ open ( UNICODATA , "< ../../unicharutil/tools/UnicodeData-Latest.txt")
 
 ######################################################################
 #
-# Open the JIS x4501 Class file
+# Open the JIS X 4051 Class file
 #
 ######################################################################
 open ( CLASS , "< jisx4501class.txt") 
@@ -63,7 +63,7 @@ open ( CLASS , "< jisx4501class.txt")
 
 ######################################################################
 #
-# Open the JIS x4501 Class simplified mapping
+# Open the JIS X 4051 Class simplified mapping
 #
 ######################################################################
 open ( SIMP , "< jisx4501simp.txt") 
@@ -94,12 +94,12 @@ $hthmlheader = <<END_OF_HTML;
 <HTML>
 <HEAD>
 <TITLE>
-Analysis of JIS x4501 to Unicode General Category Mapping
+Analysis of JIS X 4051 to Unicode General Category Mapping
 </TITLE>
 </HEAD>
 <BODY>
 <H1>
-Analysis of JIS x4501 to Unicode General Category Mapping
+Analysis of JIS X 4051 to Unicode General Category Mapping
 </H1>
 END_OF_HTML
 print OUT $hthmlheader;

@@ -41,14 +41,14 @@
 
 #include "nsILineBreaker.h"
 
-class nsJISx4501LineBreaker : public nsILineBreaker
+class nsJISx4051LineBreaker : public nsILineBreaker
 {
   NS_DECL_ISUPPORTS
 
 public:
-  nsJISx4501LineBreaker(const PRUnichar *aNoBegin, PRInt32 aNoBeginLen, 
+  nsJISx4051LineBreaker(const PRUnichar *aNoBegin, PRInt32 aNoBeginLen, 
                         const PRUnichar* aNoEnd, PRInt32 aNoEndLen);
-  virtual ~nsJISx4501LineBreaker();
+  virtual ~nsJISx4051LineBreaker();
 
   NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
                             const PRUnichar* aText2 , PRUint32 aTextLen2,
