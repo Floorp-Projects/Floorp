@@ -46,16 +46,6 @@
 
 JS_BEGIN_EXTERN_C
 
-/***********************************************************************
-** FUNCTION:	JS_MALLOC()
-** DESCRIPTION:
-**   JS_NEW() allocates an untyped item of size _size from the heap.
-** INPUTS:  _size: size in bytes of item to be allocated
-** OUTPUTS:	untyped pointer to the node allocated
-** RETURN:	pointer to node or error returned from malloc().
-***********************************************************************/
-#define JS_MALLOC(_bytes) (malloc((_bytes)))
-
 #ifdef DEBUG
 
 extern JS_PUBLIC_API(void)
