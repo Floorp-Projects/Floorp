@@ -695,8 +695,8 @@ function switchCalendar( event )
 function deleteCalendar( )
 {
    var IdToDelete = gCalendarWindow.calendarManager.getSelectedCalendarId()
-
-   var calendarObjectToDelete = this.rdf.getNode( IdToDelete );
+   
+   var calendarObjectToDelete = gCalendarWindow.calendarManager.rdf.getNode( IdToDelete );
 
    gCalendarWindow.calendarManager.deleteCalendar( calendarObjectToDelete );
 
