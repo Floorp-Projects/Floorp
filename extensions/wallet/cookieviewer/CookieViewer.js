@@ -269,7 +269,7 @@ function CookieSelected() {
     } else {
       value = props[i].value;
     }
-    field.setAttribute("value", value);
+    field.value = value;
   }
   return true;
 }
@@ -278,7 +278,7 @@ function ClearCookieProperties() {
   var properties = 
     ["ifl_name","ifl_value","ifl_host","ifl_path","ifl_isSecure","ifl_expires","ifl_policy"];
   for (var prop=0; prop<properties.length; prop++) {
-    document.getElementById(properties[prop]).setAttribute("value","");
+    document.getElementById(properties[prop]).value = "";
   }
 }
 
