@@ -2709,7 +2709,7 @@ MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_s.a'
 # Beos needs to link the timer in dynamically
 case "$target" in
     *-beos*)
-        MOZ_TIMER_LIBS=-ltimer_beos
+        MOZ_TIMER_LIBS=$(DIST)/lib/libtimer_beos.so
 	;;
 esac
 
