@@ -1347,7 +1347,7 @@ if ($order) {
             last ORDER;
         };
         /Assign/ && do {
-            $order = "map_assigned_to.login_name, bugs.bug_status, priority, bugs.bug_id";
+            $order = "map_assigned_to.login_name, bugs.bug_status, bugs.priority, bugs.bug_id";
             last ORDER;
         };
         /Changed/ && do {
