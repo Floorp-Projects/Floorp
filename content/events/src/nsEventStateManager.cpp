@@ -4298,7 +4298,7 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
   nsresult ret = NS_OK;
 
   nsCOMPtr<nsIPrivateDOMEvent> privEvt(do_QueryInterface(aEvent));
-  if (aEvent) {
+  if (privEvt) {
     nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aTarget));
     privEvt->SetTarget(eventTarget);
 
