@@ -1684,11 +1684,14 @@ static int jar_validate_pkcs7
            (jar_catch_bytes, NULL /*cb_arg*/, NULL /*getpassword*/, jar->mw,
             NULL, NULL, NULL);
 
-  if (dcx != NULL) 
+  if (dcx == NULL) 
     {
-    SEC_PKCS7DecoderUpdate (dcx, data, length);
-    cinfo = SEC_PKCS7DecoderFinish (dcx);
+    /* strange pkcs7 failure */
+    return JAR_ERR_PK7;
     }
+
+  SEC_PKCS7DecoderUpdate (dcx, data, length);
+  cinfo = SEC_PKCS7DecoderFinish (dcx);
 
   if (cinfo == NULL)
     {
