@@ -77,6 +77,7 @@
 #include "nsTimer.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellContainer.h"
 #include "nsCURILoader.h"
 
 #include "nsILocaleService.h"
@@ -167,7 +168,8 @@ class nsWebShell : public nsIWebShell,
                    public nsIClipboardCommands,
                    public nsIInterfaceRequestor,
                    public nsIBaseWindow,
-                   public nsIDocShell
+                   public nsIDocShell, 
+                   public nsIDocShellContainer
 {
 public:
   nsWebShell();
@@ -369,6 +371,9 @@ public:
   // nsIDocShell
   NS_DECL_NSIDOCSHELL
 
+  // nsIDocShellContainer
+  NS_DECL_NSIDOCSHELLCONTAINER
+
   // nsWebShell
   nsIEventQueue* GetEventQueue(void);
   void HandleLinkClickEvent(nsIContent *aContent,
@@ -479,13 +484,6 @@ protected:
   static nsIPluginManager *mPluginManager;
   static PRUint32          mPluginInitCnt;
   PRBool mProcessedEndDocumentLoad;
-
-  // XXX store mHintCharset and mHintCharsetSource here untill we find out a good cood path
-  /*
-  nsString mHintCharset;
-  nsCharsetSource mHintCharsetSource;
-  nsString mForceCharacterSet;
-  */
 
   PRBool mViewSource;
   
@@ -774,6 +772,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIDocShell)
+   NS_INTERFACE_MAP_ENTRY(nsIDocShellContainer)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -1360,8 +1359,7 @@ nsWebShell::GetReferrer(nsIURI **aReferrer)
 NS_IMETHODIMP
 nsWebShell::GetChildCount(PRInt32& aResult)
 {
-  aResult = mChildren.Count();
-  return NS_OK;
+   return GetChildCount(&aResult);
 }
 
 NS_IMETHODIMP
@@ -1370,36 +1368,7 @@ nsWebShell::AddChild(nsIWebShell* aChild)
    NS_ENSURE_ARG(aChild);
 
    nsCOMPtr<nsIDocShell> docShellChild(do_QueryInterface(aChild));
-
-  mChildren.AppendElement(docShellChild);
-  docShellChild->SetParent(this);
-  PRUnichar *defaultCharset=nsnull;
-  PRUnichar *forceCharset=nsnull;
-  nsCOMPtr<nsIContentViewer> cv;
-  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
-  if (cv)
-  {
-    nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
-    if (muDV)
-    {
-      NS_ENSURE_SUCCESS(muDV->GetDefaultCharacterSet (&defaultCharset), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(muDV->GetForceCharacterSet (&forceCharset), NS_ERROR_FAILURE);
-    }
-    nsCOMPtr<nsIContentViewer> childCV;
-    NS_ENSURE_SUCCESS(docShellChild->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
-    if (childCV)
-    {
-      nsCOMPtr<nsIMarkupDocumentViewer> childmuDV = do_QueryInterface(cv);
-      if (childmuDV)
-      {
-        childmuDV->SetDefaultCharacterSet(defaultCharset);
-        childmuDV->SetForceCharacterSet(forceCharset);
-      }
-    }
-  }
-  NS_ADDREF(aChild);
-
-  return NS_OK;
+   return AddChild(docShellChild);
 }
 
 NS_IMETHODIMP
@@ -1407,25 +1376,20 @@ nsWebShell::RemoveChild(nsIWebShell* aChild)
 {
    NS_ENSURE_ARG(aChild);
    nsCOMPtr<nsIDocShell> docShellChild(do_QueryInterface(aChild));
-  mChildren.RemoveElement(docShellChild);
-  docShellChild->SetParent(nsnull);
-  NS_RELEASE(aChild);
-
-  return NS_OK;
+   return RemoveChild(docShellChild);
 }
 
 NS_IMETHODIMP
 nsWebShell::ChildAt(PRInt32 aIndex, nsIWebShell*& aResult)
 {
-   nsIDocShell*   element;
-  if (PRUint32(aIndex) >= PRUint32(mChildren.Count())) {
-    aResult = nsnull;
-  }
-  else {
-    element = (nsIDocShell*) mChildren.ElementAt(aIndex);
-    element->QueryInterface(NS_GET_IID(nsIWebShell), (void**)&aResult);
-  }
-  return NS_OK;
+   nsCOMPtr<nsIDocShell> child;
+
+   NS_ENSURE_SUCCESS(GetChildAt(aIndex, getter_AddRefs(child)),
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(CallQueryInterface(child.get(), &aResult), 
+      NS_ERROR_FAILURE);
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4498,6 +4462,112 @@ nsWebShell::SetMarginHeight(PRInt32 aHeight)
   return NS_OK;
 }
 
+//*****************************************************************************
+// nsWebShell::nsIDocShellContainer
+//*****************************************************************************   
+
+NS_IMETHODIMP nsWebShell::GetChildCount(PRInt32 *aChildCount)
+{
+  NS_ENSURE_ARG_POINTER(aChildCount);
+  *aChildCount = mChildren.Count();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::AddChild(nsIDocShell *aChild)
+{
+  NS_ENSURE_ARG_POINTER(aChild);
+
+  NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
+  mChildren.AppendElement(aChild);
+  NS_ADDREF(aChild);
+
+  PRUnichar *defaultCharset=nsnull;
+  PRUnichar *forceCharset=nsnull;
+  nsCOMPtr<nsIContentViewer> cv;
+  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
+  if (cv)
+  {
+    nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
+    if (muDV)
+    {
+      NS_ENSURE_SUCCESS(muDV->GetDefaultCharacterSet (&defaultCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(muDV->GetForceCharacterSet (&forceCharset), NS_ERROR_FAILURE);
+    }
+    nsCOMPtr<nsIContentViewer> childCV;
+    NS_ENSURE_SUCCESS(aChild->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+    if (childCV)
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> childmuDV = do_QueryInterface(cv);
+      if (childmuDV)
+      {
+        NS_ENSURE_SUCCESS(childmuDV->SetDefaultCharacterSet(defaultCharset), NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(childmuDV->SetForceCharacterSet(forceCharset), NS_ERROR_FAILURE);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+// tiny semantic change from webshell.  aChild is only effected if it was actually a child of this docshell
+NS_IMETHODIMP nsWebShell::RemoveChild(nsIDocShell *aChild)
+{
+  NS_ENSURE_ARG_POINTER(aChild);
+
+  PRBool childRemoved = mChildren.RemoveElement(aChild);
+  if (PR_TRUE==childRemoved)
+  {
+    NS_ENSURE_SUCCESS(aChild->SetParent(nsnull), NS_ERROR_FAILURE);
+    NS_RELEASE(aChild);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetChildAt(PRInt32 aIndex, nsIDocShell** aDocShell)
+{
+   NS_ENSURE_ARG_POINTER(aDocShell);
+   NS_ENSURE_ARG_RANGE(aIndex, 0, mChildren.Count() - 1);
+
+   *aDocShell = (nsIDocShell*) mChildren.ElementAt(aIndex);
+   NS_IF_ADDREF(*aDocShell);
+
+   return NS_OK;
+}
+
+/* depth-first search for a child shell with aName */
+NS_IMETHODIMP nsWebShell::FindChildWithName(const PRUnichar *aName, nsIDocShell **_retval)
+{
+  NS_ENSURE_ARG_POINTER(aName);
+  NS_ENSURE_ARG_POINTER(_retval);
+  
+  *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
+  nsAutoString name(aName);
+  PRUnichar *childName;
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) 
+  {
+    nsIDocShell* child = (nsIDocShell*) mChildren.ElementAt(i); // doesn't addref the result
+    if (nsnull != child) {
+      child->GetName(&childName);
+      if (name.Equals(childName)) {
+        *_retval = child;
+        NS_ADDREF(child);
+        break;
+      }
+
+      // See if child contains the shell with the given name
+      nsCOMPtr<nsIDocShellContainer> childAsContainer = do_QueryInterface(child);
+      if (child)
+      {
+        NS_ENSURE_SUCCESS(childAsContainer->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+      }
+      if (_retval) {  // found it
+        break;
+      }
+    }
+  }
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 
@@ -4509,10 +4579,7 @@ public:
   nsWebShellFactory();
   virtual ~nsWebShellFactory();
 
-  // nsISupports methods
-  NS_IMETHOD QueryInterface(const nsIID &aIID, void **aResult);
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_DECL_ISUPPORTS
 
   // nsIFactory methods
   NS_IMETHOD CreateInstance(nsISupports *aOuter,
@@ -4520,30 +4587,11 @@ public:
                             void **aResult);
 
   NS_IMETHOD LockFactory(PRBool aLock);
-
-private:
-  // XXX TEMPORARY placeholder for starting up some
-  // services in lieu of a service manager.
-  static void StartServices();
-
-  static PRBool mStartedServices;
-  nsrefcnt  mRefCnt;
 };
-
-PRBool nsWebShellFactory::mStartedServices = PR_FALSE;
-
-void
-nsWebShellFactory::StartServices()
-{
-  mStartedServices = PR_TRUE;
-}
 
 nsWebShellFactory::nsWebShellFactory()
 {
-  if (!mStartedServices) {
-    StartServices();
-  }
-  mRefCnt = 0;
+   NS_INIT_REFCNT();
 }
 
 nsWebShellFactory::~nsWebShellFactory()
@@ -4566,26 +4614,17 @@ nsWebShellFactory::CreateInstance(nsISupports *aOuter,
   nsresult rv;
   nsWebShell *inst;
 
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_NO_AGGREGATION(aOuter);
   *aResult = NULL;
-  if (nsnull != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    goto done;
-  }
 
   NS_NEWXPCOM(inst, nsWebShell);
-  if (inst == NULL) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
+  NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(inst);
   rv = inst->QueryInterface(aIID, aResult);
   NS_RELEASE(inst);
 
-done:
   return rv;
 }
 
