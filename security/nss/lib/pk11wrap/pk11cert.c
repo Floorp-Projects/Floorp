@@ -2447,7 +2447,7 @@ PK11_FindCertFromDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
     c = NSSTrustDomain_FindCertificateByEncodedCertificate(
                                                   STAN_GetDefaultTrustDomain(),
                                                   &derCert);
-    if (cert) {
+    if (c) {
 	rvCert = STAN_GetCERTCertificate(c);
     }
     return rvCert;
