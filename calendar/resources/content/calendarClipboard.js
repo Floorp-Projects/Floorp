@@ -68,19 +68,19 @@ function createSupportsArray()
 }
 
 
-// Should we use WString only, or no WStrings for compatibility?
-function createSupportsString()
+// Should we use (wide)String only, or no (wide)Strings for compatibility?
+function createSupportsCString()
 {
-   const kSuppStringContractID = "@mozilla.org/supports-string;1";
-   const kSuppStringIID = Components.interfaces.nsISupportsString;
+   const kSuppStringContractID = "@mozilla.org/supports-cstring;1";
+   const kSuppStringIID = Components.interfaces.nsISupportsCString;
    return Components.classes[kSuppStringContractID].createInstance(kSuppStringIID);
 }
 
 
-function createSupportsWString()
+function createSupportsString()
 {
-   const kSuppStringContractID = "@mozilla.org/supports-wstring;1";
-   const kSuppStringIID = Components.interfaces.nsISupportsWString;
+   const kSuppStringContractID = "@mozilla.org/supports-string;1";
+   const kSuppStringIID = Components.interfaces.nsISupportsString;
    return Components.classes[kSuppStringContractID].createInstance(kSuppStringIID);
 }
 
@@ -100,7 +100,7 @@ function canPaste()
    
    for (var i = 0; i < flavours.length; ++i)
    {
-      const kSuppString = createSupportsString();
+      const kSuppString = createSupportsCString();
       kSuppString.data = flavours[i];
       flavourArray.AppendElement(kSuppString);
    }
@@ -164,9 +164,9 @@ function copyToClipboard( calendarEventArray )
       trans.addDataFlavor("text/html");
 
       // 4. create the data objects
-      var icalWrapper = createSupportsWString();
-      var textWrapper = createSupportsWString();
-      var htmlWrapper = createSupportsWString();
+      var icalWrapper = createSupportsString();
+      var textWrapper = createSupportsString();
+      var htmlWrapper = createSupportsString();
 
       if ( icalWrapper && textWrapper && htmlWrapper ) {
          // get the data
@@ -219,7 +219,7 @@ function pasteFromClipboard()
 	 var data = { };
 	 var length = { };
 	 trans.getAnyTransferData(flavour, data, length);
-	 data = data.value.QueryInterface(Components.interfaces.nsISupportsWString).data;
+	 data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
 	 //DEBUG alert("clipboard type: " + flavour.value);
     var calendarEventArray;
     var startDate;
