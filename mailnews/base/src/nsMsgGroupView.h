@@ -54,6 +54,7 @@ public:
 
   NS_IMETHOD LoadMessageByViewIndex(nsMsgViewIndex aViewIndex);
   NS_IMETHOD GetCellProperties(PRInt32 aRow, nsITreeColumn *aCol, nsISupportsArray *aProperties);
+  NS_IMETHOD GetRowProperties(PRInt32 aRow, nsISupportsArray *aProperties);
   NS_IMETHOD GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue);
 
 protected:
@@ -68,4 +69,11 @@ protected:
                                             PRUint32 *pFlags = NULL);
 
   nsHashtable  m_groupsTable;
+
+  static PRUnichar* kTodayString;
+  static PRUnichar* kYesterdayString;
+  static PRUnichar* kLastWeekString;
+  static PRUnichar* kTwoWeeksAgoString;
+  static PRUnichar* kOldMailString;
 };
+

@@ -420,10 +420,16 @@ function UpdateSortIndicators(sortType, sortOrder)
     if (currCol && subjectCol)
       threadTree._reorderColumn(currCol, subjectCol, true);
     gGroupColumn = currCol;
+
+    // hide the threaded column when in grouped view since you can't do 
+    // threads inside of a group.
+    document.getElementById("threadCol").collapsed = true;
   }
   // clear primary attribute from group column if going to a non-grouped view.
   if (gGroupColumn && !(gDBView.viewFlags & nsMsgViewFlagsType.kGroupBySort))
   {
+    document.getElementById("threadCol").collapsed = false;
+
     if (gGroupColumn != currCol)
       gGroupColumn.removeAttribute("primary");
     if (gOldPrevColumn)

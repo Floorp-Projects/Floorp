@@ -43,12 +43,36 @@
 #define MSGHDR_CACHE_MAX_SIZE         8192  // Max msghdr cache entries.
 #define MSGHDR_CACHE_DEFAULT_SIZE     100
 
+PRUnichar * nsMsgGroupView::kTodayString = nsnull;
+PRUnichar * nsMsgGroupView::kYesterdayString = nsnull;
+PRUnichar * nsMsgGroupView::kLastWeekString = nsnull;
+PRUnichar * nsMsgGroupView::kTwoWeeksAgoString = nsnull;
+PRUnichar * nsMsgGroupView::kOldMailString = nsnull;
+
 nsMsgGroupView::nsMsgGroupView()
 {
+  if (!kTodayString) 
+  {
+    // priority strings
+    kTodayString = GetString(NS_LITERAL_STRING("today").get());
+    kYesterdayString = GetString(NS_LITERAL_STRING("yesterday").get());
+    kLastWeekString = GetString(NS_LITERAL_STRING("lastWeek").get());
+    kTwoWeeksAgoString = GetString(NS_LITERAL_STRING("twoWeeksAgo").get());
+    kOldMailString = GetString(NS_LITERAL_STRING("older").get());
+  }
 }
 
 nsMsgGroupView::~nsMsgGroupView()
 {
+  // release our global strings
+  if (gInstanceCount <= 1) 
+  {
+    nsCRT::free(kTodayString);
+    nsCRT::free(kYesterdayString);
+    nsCRT::free(kLastWeekString);
+    nsCRT::free(kTwoWeeksAgoString);
+    nsCRT::free(kOldMailString);
+  }
 }
 
 NS_IMETHODIMP nsMsgGroupView::Open(nsIMsgFolder *aFolder, nsMsgViewSortTypeValue aSortType, nsMsgViewSortOrderValue aSortOrder, nsMsgViewFlagsTypeValue aViewFlags, PRInt32 *aCount)
@@ -386,6 +410,16 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
   return rv;
 }
 
+NS_IMETHODIMP nsMsgGroupView::GetRowProperties(PRInt32 aRow, nsISupportsArray *aProperties)
+{
+  if (!IsValidIndex(aRow))
+    return NS_MSG_INVALID_DBVIEW_INDEX; 
+
+  if (m_flags[aRow] & MSG_VIEW_FLAG_DUMMY)
+    return aProperties->AppendElement(kDummyMsgAtom);
+  return nsMsgDBView::GetRowProperties(aRow, aProperties);
+}
+
 NS_IMETHODIMP nsMsgGroupView::GetCellProperties(PRInt32 aRow, nsITreeColumn *aCol, nsISupportsArray *aProperties)
 {
   if (m_flags[aRow] & MSG_VIEW_FLAG_DUMMY)
@@ -414,19 +448,19 @@ NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsA
       switch (((nsPRUint32Key *)hashKey)->GetValue())
       {
       case 1:
-        aValue.Assign(NS_LITERAL_STRING("today"));
+        aValue.Assign(kTodayString);
         break;
       case 2:
-        aValue.Assign(NS_LITERAL_STRING("yesterday"));
+        aValue.Assign(kYesterdayString);
         break;
       case 3:
-        aValue.Assign(NS_LITERAL_STRING("last week"));
+        aValue.Assign(kLastWeekString);
         break;
       case 4:
-        aValue.Assign(NS_LITERAL_STRING("two weeks ago"));
+        aValue.Assign(kTwoWeeksAgoString);
         break;
       case 5:
-        aValue.Assign(NS_LITERAL_STRING("older..."));
+        aValue.Assign(kOldMailString);
         break;
       default:
         NS_ASSERTION(PR_FALSE, "bad age thread");

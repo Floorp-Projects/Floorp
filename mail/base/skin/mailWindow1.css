@@ -186,6 +186,24 @@ treechildren::-moz-tree-cell-text(folderNameCol, noSelect-true) {
 
 /* ::::: thread decoration ::::: */
 
+treechildren::-moz-tree-row(dummy)  {
+  background-color:  #F0F0F0;
+  margin-bottom: 1px;
+  padding-left: 2px;
+}
+
+treechildren::-moz-tree-row(dummy, selected) {
+  background-color: -moz-Dialog;
+}
+
+treechildren::-moz-tree-row(dummy, selected, focus)  {
+  background-color: Highlight;
+}
+
+treechildren::-moz-tree-cell-text(dummy) {
+  font-weight: bold;
+}
+
 treechildren::-moz-tree-cell-text(read) {
   font-weight: normal;
 }
