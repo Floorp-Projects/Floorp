@@ -149,16 +149,17 @@ sub GetBug {
     my $bug = {};
     if (Bugzilla->user->can_see_bug($id)) {
         SendSQL("SELECT 1, 
-                                  bug_status, 
-                                  short_desc, 
-                                  $milestone_column, 
-                                  assignee.userid, 
-                                  assignee.login_name
-                             FROM bugs, profiles AS assignee
-                            WHERE bugs.bug_id = $id
-                              AND bugs.assigned_to = assignee.userid");
-    
-    
+                        bug_status, 
+                        short_desc, 
+                        $milestone_column, 
+                        assignee.userid, 
+                        assignee.login_name
+                 FROM   bugs
+             INNER JOIN profiles AS assignee
+                     ON bugs.assigned_to = assignee.userid
+                  WHERE bugs.bug_id = $id");
+
+
         ($bug->{'exists'}, 
          $bug->{'status'}, 
          $bug->{'summary'}, 

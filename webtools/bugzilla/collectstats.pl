@@ -275,9 +275,9 @@ sub regenerate_stats {
     my $from_product = "";
                     
     if ($product ne '-All-') {
-        $and_product = "AND bugs.product_id = products.id " .
-                       "AND products.name = " . SqlQuote($product) . " ";
-        $from_product = ", products";                       
+        $and_product = " AND products.name = " . SqlQuote($product);
+        $from_product = "INNER JOIN products " .
+                        "ON bugs.product_id = products.id";
     }          
               
     # Determine the start date from the date the first bug in the
@@ -287,9 +287,9 @@ sub regenerate_stats {
                         $dbh->sql_to_days('current_date') . " AS end, " .
                         $dbh->sql_to_days("'1970-01-01'") . 
             " FROM bugs $from_product WHERE " .
-            $dbh->sql_to_days('creation_ts') . " != 'NULL' " .
+            $dbh->sql_to_days('creation_ts') . " != 'NULL'" .
             $and_product .
-            "ORDER BY start " . $dbh->sql_limit(1));
+            " ORDER BY start " . $dbh->sql_limit(1));
     
     my ($start, $end, $base) = FetchSQLData();
     if (!defined $start) {
@@ -350,12 +350,13 @@ FIN
             for my $bug (@bugs) {
                 # First, get information on various bug states.
                 SendSQL("SELECT bugs_activity.removed " .
-                        "FROM bugs_activity,fielddefs " .
-                        "WHERE bugs_activity.fieldid = fielddefs.fieldid " .
-                        "AND fielddefs.name = 'bug_status' " .
-                        "AND bugs_activity.bug_id = $bug " .
-                        "AND bugs_activity.bug_when >= from_days($day) " .
-                        "ORDER BY bugs_activity.bug_when " .
+                        "  FROM bugs_activity " .
+                    "INNER JOIN fielddefs " .
+                        "    ON bugs_activity.fieldid = fielddefs.fieldid " .
+                        " WHERE fielddefs.name = 'bug_status' " .
+                        "   AND bugs_activity.bug_id = $bug " .
+                        "   AND bugs_activity.bug_when >= from_days($day) " .
+                      "ORDER BY bugs_activity.bug_when " .
                         $dbh->sql_limit(1));
                 
                 my $status;
@@ -372,12 +373,13 @@ FIN
 
                 # Next, get information on various bug resolutions.
                 SendSQL("SELECT bugs_activity.removed " .
-                        "FROM bugs_activity,fielddefs " .
-                        "WHERE bugs_activity.fieldid = fielddefs.fieldid " .
-                        "AND fielddefs.name = 'resolution' " .
-                        "AND bugs_activity.bug_id = $bug " .
-                        "AND bugs_activity.bug_when >= from_days($day) " .
-                        "ORDER BY bugs_activity.bug_when " . 
+                        "  FROM bugs_activity " .
+                    "INNER JOIN fielddefs " .
+                        "    ON bugs_activity.fieldid = fielddefs.fieldid " .
+                        " WHERE fielddefs.name = 'resolution' " .
+                        "   AND bugs_activity.bug_id = $bug " .
+                        "   AND bugs_activity.bug_when >= from_days($day) " .
+                      "ORDER BY bugs_activity.bug_when " . 
                         $dbh->sql_limit(1));
                         
                 if (@row = FetchSQLData()) {

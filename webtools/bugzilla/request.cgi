@@ -92,33 +92,34 @@ sub queue {
     # so we can display product and component names, and the bug_group_map
     # and user_group_map tables to help us weed out secure bugs to which
     # the user should not have access.
-    " FROM      flags 
-                LEFT JOIN attachments ON ($attach_join_clause), 
-                flagtypes, 
-                profiles AS requesters
-                LEFT JOIN profiles AS requestees 
-                  ON flags.requestee_id  = requestees.userid, 
-                bugs 
-                LEFT JOIN products ON bugs.product_id = products.id
-                LEFT JOIN components ON bugs.component_id = components.id
-                LEFT JOIN bug_group_map AS bgmap 
-                  ON bgmap.bug_id = bugs.bug_id 
-                LEFT JOIN user_group_map AS ugmap 
-                  ON bgmap.group_id = ugmap.group_id 
-                  AND ugmap.user_id = $::userid 
+    " FROM      flags
+                LEFT JOIN attachments
+                  ON ($attach_join_clause)
+                INNER JOIN flagtypes
+                  ON flags.type_id = flagtypes.id
+                INNER JOIN profiles AS requesters
+                  ON flags.setter_id = requesters.userid
+                LEFT JOIN profiles AS requestees
+                  ON flags.requestee_id  = requestees.userid
+                INNER JOIN bugs
+                  ON flags.bug_id = bugs.bug_id
+                LEFT JOIN products
+                  ON bugs.product_id = products.id
+                LEFT JOIN components
+                  ON bugs.component_id = components.id
+                LEFT JOIN bug_group_map AS bgmap
+                  ON bgmap.bug_id = bugs.bug_id
+                LEFT JOIN user_group_map AS ugmap
+                  ON bgmap.group_id = ugmap.group_id
+                  AND ugmap.user_id = $::userid
                   AND ugmap.isbless = 0
-                LEFT JOIN cc AS ccmap 
-                ON ccmap.who = $::userid AND ccmap.bug_id = bugs.bug_id 
-    " . 
-    # All of these are inner join clauses.  Actual match criteria are added
-    # in the code below.
-    " WHERE     flags.type_id       = flagtypes.id
-      AND       flags.setter_id     = requesters.userid
-      AND       flags.bug_id        = bugs.bug_id
+                LEFT JOIN cc AS ccmap
+                  ON ccmap.who = $::userid
+                  AND ccmap.bug_id = bugs.bug_id
     ";
     
     # Non-deleted flags only
-    $query .= " AND flags.is_active = 1 ";
+    $query .= " WHERE flags.is_active = 1 ";
     
     # Limit query to pending requests.
     $query .= " AND flags.status = '?' " unless $cgi->param('status');

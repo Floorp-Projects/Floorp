@@ -79,9 +79,10 @@ sub TestMilestone ($$)
     # does the product exist?
     my $sth = $dbh->prepare_cached("
              SELECT products.name, value
-             FROM milestones, products
-             WHERE milestones.product_id = products.id
-               AND products.name = ?
+             FROM milestones
+             INNER JOIN products
+                ON milestones.product_id = products.id
+             WHERE products.name = ?
                AND value = ?");
 
     trick_taint($product);

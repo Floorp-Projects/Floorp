@@ -546,9 +546,11 @@ if (defined $cgi->param('rebuildkeywordcache')) {
 }
 
 SendSQL("SELECT keywords.bug_id, keyworddefs.name " .
-        "FROM keywords, keyworddefs, bugs " .
-        "WHERE keyworddefs.id = keywords.keywordid " .
-        "  AND keywords.bug_id = bugs.bug_id " .
+        "FROM keywords " .
+        "INNER JOIN keyworddefs " .
+        "   ON keyworddefs.id = keywords.keywordid " .
+        "INNER JOIN bugs " .
+        "   ON keywords.bug_id = bugs.bug_id " .
         "ORDER BY keywords.bug_id, keyworddefs.name");
 
 my $lastb = 0;
@@ -629,9 +631,8 @@ sub BugCheck ($$) {
 
 Status("Checking resolution/duplicates");
 
-BugCheck("bugs, duplicates WHERE " .
-         "bugs.resolution != 'DUPLICATE' AND " .
-         "bugs.bug_id = duplicates.dupe",
+BugCheck("bugs INNER JOIN duplicates ON bugs.bug_id = duplicates.dupe " .
+         "WHERE bugs.resolution != 'DUPLICATE'",
          "Bug(s) found on duplicates table that are not marked duplicate");
 
 BugCheck("bugs LEFT JOIN duplicates ON bugs.bug_id = duplicates.dupe WHERE " .
@@ -662,10 +663,8 @@ BugCheck("bugs WHERE bug_status IN ('NEW', 'ASSIGNED', 'REOPENED') AND everconfi
 
 Status("Checking votes/everconfirmed");
 
-BugCheck("bugs, products WHERE " .
-         "bugs.product_id = products.id AND " .
-         "everconfirmed = 0 AND " .
-         "votestoconfirm <= votes",
+BugCheck("bugs INNER JOIN products ON bugs.product_id = products.id " .
+         "WHERE everconfirmed = 0 AND votestoconfirm <= votes",
          "Bugs that have enough votes to be confirmed but haven't been");
 
 ###########################################################################
@@ -711,20 +710,26 @@ if ($c) {
 
 Status("Checking for bugs with groups violating their product's group controls");
 BugCheck("bugs
-         INNER JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id
-         INNER JOIN groups ON bug_group_map.group_id = groups.id
-         LEFT JOIN group_control_map ON bugs.product_id = group_control_map.product_id
-                                     AND bug_group_map.group_id = group_control_map.group_id
+         INNER JOIN bug_group_map
+            ON bugs.bug_id = bug_group_map.bug_id
+         INNER JOIN groups
+            ON bug_group_map.group_id = groups.id
+          LEFT JOIN group_control_map
+            ON bugs.product_id = group_control_map.product_id
+            AND bug_group_map.group_id = group_control_map.group_id
          WHERE groups.isactive != 0
          AND ((group_control_map.membercontrol = " . CONTROLMAPNA . ")
          OR (group_control_map.membercontrol IS NULL))",
          "Have groups not permitted for their products");
 
 BugCheck("bugs
-         INNER JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id
-         INNER JOIN groups ON bug_group_map.group_id = groups.id
-         LEFT JOIN group_control_map ON bugs.product_id = group_control_map.product_id
-                                     AND bug_group_map.group_id = group_control_map.group_id
+         INNER JOIN bug_group_map
+            ON bugs.bug_id = bug_group_map.bug_id
+         INNER JOIN groups
+            ON bug_group_map.group_id = groups.id
+          LEFT JOIN group_control_map
+            ON bugs.product_id = group_control_map.product_id
+            AND bug_group_map.group_id = group_control_map.group_id
          WHERE groups.isactive != 0
          AND group_control_map.membercontrol = " . CONTROLMAPMANDATORY . "
          AND bug_group_map.group_id IS NULL",

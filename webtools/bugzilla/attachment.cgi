@@ -265,9 +265,10 @@ sub validateCanChangeAttachment
 {
     my ($attachid) = @_;
     SendSQL("SELECT product_id
-             FROM attachments, bugs 
-             WHERE attach_id = $attachid
-             AND bugs.bug_id = attachments.bug_id");
+             FROM attachments
+             INNER JOIN bugs
+             ON bugs.bug_id = attachments.bug_id
+             WHERE attach_id = $attachid");
     my $productid = FetchOneColumn();
     CanEditProductId($productid)
       || ThrowUserError("illegal_attachment_edit",
@@ -993,9 +994,11 @@ sub insert
       my @fields = ("assigned_to", "bug_status", "resolution", "login_name");
       
       # Get the old values, for the bugs_activity table
-      SendSQL("SELECT " . join(", ", @fields) . " FROM bugs, profiles " .
-              "WHERE bugs.bug_id = $::FORM{'bugid'} " .
-              "AND   profiles.userid = bugs.assigned_to");
+      SendSQL("SELECT " . join(", ", @fields) . " " .
+              "FROM bugs " .
+              "INNER JOIN profiles " .
+              "ON profiles.userid = bugs.assigned_to " .
+              "WHERE bugs.bug_id = $::FORM{'bugid'}");
       
       my @oldvalues = FetchSQLData();
       my @newvalues = ($::userid, "ASSIGNED", "", DBID_to_name($::userid));

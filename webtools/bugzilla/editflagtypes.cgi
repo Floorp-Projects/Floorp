@@ -329,12 +329,14 @@ sub update {
     # the list of inclusions or that have been added to the list of exclusions.
     SendSQL("
         SELECT flags.id 
-        FROM flags, bugs LEFT OUTER JOIN flaginclusions AS i
-        ON (flags.type_id = i.type_id 
+        FROM flags
+        INNER JOIN bugs
+          ON flags.bug_id = bugs.bug_id
+        LEFT OUTER JOIN flaginclusions AS i
+          ON (flags.type_id = i.type_id 
             AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
             AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
         WHERE flags.type_id = $::FORM{'id'} 
-        AND flags.bug_id = bugs.bug_id
         AND flags.is_active = 1
         AND i.type_id IS NULL
     ");
@@ -342,10 +344,12 @@ sub update {
     
     SendSQL("
         SELECT flags.id 
-        FROM flags, bugs, flagexclusions AS e
+        FROM flags
+        INNER JOIN bugs 
+           ON flags.bug_id = bugs.bug_id
+        INNER JOIN flagexclusions AS e
+           ON flags.type_id = e.type_id
         WHERE flags.type_id = $::FORM{'id'}
-        AND flags.bug_id = bugs.bug_id
-        AND flags.type_id = e.type_id 
         AND flags.is_active = 1
         AND (bugs.product_id = e.product_id OR e.product_id IS NULL)
         AND (bugs.component_id = e.component_id OR e.component_id IS NULL)

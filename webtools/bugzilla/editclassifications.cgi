@@ -374,9 +374,11 @@ if ($action eq 'reclassify') {
                                  products.name,
                                  classifications.name,
                                  classifications.id > 1 as unknown
-                           FROM products,classifications
-                           WHERE classifications.id=products.classification_id
-                           ORDER BY unknown, products.name, classifications.name");
+                           FROM products
+                           INNER JOIN classifications
+                           ON classifications.id = products.classification_id
+                           ORDER BY unknown, products.name,
+                                    classifications.name");
     $sth->execute();
     while ( my ($clid, $name, $clname) = $sth->fetchrow_array() ) {
         if ($clid == $classification_id) {

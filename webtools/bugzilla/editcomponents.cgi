@@ -81,9 +81,10 @@ sub TestComponent ($$)
 
     # does the product/component combination exist?
     SendSQL("SELECT components.name
-             FROM components, products
-             WHERE products.id = components.product_id
-             AND products.name = " . SqlQuote($prod) . "
+             FROM components
+             INNER JOIN products
+                ON products.id = components.product_id
+             WHERE products.name = " . SqlQuote($prod) . "
              AND components.name = " . SqlQuote($comp));
     return FetchOneColumn();
 }

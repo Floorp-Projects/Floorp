@@ -176,7 +176,7 @@ sub ValidateBugID {
 
 sub PasswordForLogin {
     my ($login) = (@_);
-    SendSQL("select cryptpassword from profiles where login_name = " .
+    SendSQL("SELECT cryptpassword FROM profiles WHERE login_name = " .
             SqlQuote($login));
     my $result = FetchOneColumn();
     if (!defined $result) {
@@ -223,8 +223,8 @@ sub CheckIfVotedConfirmed {
     PushGlobalSQLState();
     SendSQL("SELECT bugs.votes, bugs.bug_status, products.votestoconfirm, " .
             "       bugs.everconfirmed, NOW() " .
-            "FROM bugs, products " .
-            "WHERE bugs.bug_id = $id AND products.id = bugs.product_id");
+            "FROM bugs INNER JOIN products ON products.id = bugs.product_id " .
+            "WHERE bugs.bug_id = $id");
     my ($votes, $status, $votestoconfirm, $everconfirmed, $timestamp) = (FetchSQLData());
     my $sql_timestamp = SqlQuote($timestamp);
     my $ret = 0;
@@ -298,7 +298,7 @@ sub GetBugActivity {
     die "Invalid id: $id" unless $id=~/^\s*\d+\s*$/;
 
     if (defined $starttime) {
-        $datepart = "and bugs_activity.bug_when > " . SqlQuote($starttime);
+        $datepart = "AND bugs_activity.bug_when > " . SqlQuote($starttime);
     }
     my $suppjoins = "";
     my $suppwhere = "";
@@ -309,17 +309,19 @@ sub GetBugActivity {
     }
     my $query = "
         SELECT COALESCE(fielddefs.description, bugs_activity.fieldid),
-                fielddefs.name,
-                bugs_activity.attach_id, " .
-                $dbh->sql_date_format('bugs_activity.bug_when', '%Y.%m.%d %H:%i:%s') .
-                ", bugs_activity.removed, bugs_activity.added,
-                profiles.login_name
-        FROM bugs_activity $suppjoins LEFT JOIN fielddefs ON 
-                                     bugs_activity.fieldid = fielddefs.fieldid,
-             profiles
-        WHERE bugs_activity.bug_id = $id $datepart
-              AND profiles.userid = bugs_activity.who $suppwhere
-        ORDER BY bugs_activity.bug_when";
+               fielddefs.name, bugs_activity.attach_id, " .
+        $dbh->sql_date_format('bugs_activity.bug_when', '%Y.%m.%d %H:%i:%s') .
+            ", bugs_activity.removed, bugs_activity.added, profiles.login_name
+          FROM bugs_activity
+               $suppjoins
+     LEFT JOIN fielddefs
+            ON bugs_activity.fieldid = fielddefs.fieldid
+    INNER JOIN profiles
+            ON profiles.userid = bugs_activity.who
+         WHERE bugs_activity.bug_id = $id
+               $datepart
+               $suppwhere
+      ORDER BY bugs_activity.bug_when";
 
     SendSQL($query);
     

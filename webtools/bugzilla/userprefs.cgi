@@ -177,8 +177,9 @@ sub DoEmail {
     ###########################################################################
     if (Param("supportwatchers")) {
         my $watched_ref = $dbh->selectcol_arrayref(
-            "SELECT profiles.login_name FROM watch, profiles"
-          . " WHERE watcher = ? AND watch.watched = profiles.userid",
+            "SELECT profiles.login_name FROM watch INNER JOIN profiles" .
+            " ON watch.watched = profiles.userid" .
+            " WHERE watcher = ?",
             undef, $userid);
         $vars->{'watchedusers'} = join(',', @$watched_ref);
 
@@ -307,9 +308,10 @@ sub SaveEmail {
 sub DoPermissions {
     my (@has_bits, @set_bits);
     
-    SendSQL("SELECT DISTINCT name, description FROM groups, user_group_map " .
-            "WHERE user_group_map.group_id = groups.id " .
-            "AND user_id = $::userid " .
+    SendSQL("SELECT DISTINCT name, description FROM groups " .
+            "INNER JOIN user_group_map " .
+            "ON user_group_map.group_id = groups.id " .
+            "WHERE user_id = $::userid " .
             "AND isbless = 0 " .
             "ORDER BY name");
     while (MoreSQLData()) {

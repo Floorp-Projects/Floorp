@@ -4090,7 +4090,7 @@ if (@admins) {
 
 
 my @groups = ();
-$sth = $dbh->prepare("select id from groups");
+$sth = $dbh->prepare("SELECT id FROM groups");
 $sth->execute();
 while ( my @row = $sth->fetchrow_array() ) {
     push (@groups, $row[0]);
@@ -4099,8 +4099,8 @@ while ( my @row = $sth->fetchrow_array() ) {
 #  Prompt the user for the email address and name of an administrator.  Create
 #  that login, if it doesn't exist already, and make it a member of all groups.
 
-$sth = $dbh->prepare("SELECT user_id FROM groups, user_group_map " .
-                     "WHERE name = 'admin' AND id = group_id");
+$sth = $dbh->prepare("SELECT user_id FROM groups INNER JOIN user_group_map " .
+                     "ON id = group_id WHERE name = 'admin'");
 $sth->execute;
 # when we have no admin users, prompt for admin email address and password ...
 if ($sth->rows == 0) {
@@ -4285,9 +4285,9 @@ if ($sth->rows == 0) {
 # Final checks...
 
 $sth = $dbh->prepare("SELECT user_id " .
-                       "FROM groups, user_group_map " .
-                      "WHERE groups.name = 'admin' " .
-                        "AND groups.id = user_group_map.group_id");
+                       "FROM groups INNER JOIN user_group_map " .
+                       "ON groups.id = user_group_map.group_id " .
+                      "WHERE groups.name = 'admin'");
 $sth->execute;
 my ($adminuid) = $sth->fetchrow_array;
 if (!$adminuid) { die "No administrator!" } # should never get here

@@ -494,9 +494,10 @@ if (($action eq 'remove_all_regexp') || ($action eq 'remove_all')) {
     $dbh->bz_lock_tables('groups WRITE', 'profiles READ',
                          'user_group_map WRITE');
     $sth = $dbh->prepare("SELECT user_group_map.user_id, profiles.login_name
-                             FROM user_group_map, profiles
-                             WHERE user_group_map.user_id = profiles.userid
-                             AND user_group_map.group_id = ?
+                            FROM user_group_map
+                      INNER JOIN profiles
+                              ON user_group_map.user_id = profiles.userid
+                           WHERE user_group_map.group_id = ?
                              AND grant_type = ?
                              AND isbless = 0");
     $sth->execute($gid, GRANT_DIRECT);

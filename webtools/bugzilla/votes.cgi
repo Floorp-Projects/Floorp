@@ -95,9 +95,9 @@ sub show_bug {
     my @users;
     
     SendSQL("SELECT profiles.login_name, votes.who, votes.vote_count 
-             FROM votes, profiles 
-             WHERE votes.bug_id = $bug_id 
-               AND profiles.userid = votes.who");
+               FROM votes INNER JOIN profiles 
+                 ON profiles.userid = votes.who
+              WHERE votes.bug_id = $bug_id");
                    
     while (MoreSQLData()) {
         my ($name, $userid, $count) = (FetchSQLData());
@@ -170,10 +170,10 @@ sub show_user {
         
         SendSQL("SELECT votes.bug_id, votes.vote_count, bugs.short_desc,
                         bugs.bug_status 
-                  FROM  votes, bugs, products
+                  FROM  votes
+                  INNER JOIN bugs ON votes.bug_id = bugs.bug_id
+                  INNER JOIN products ON bugs.product_id = products.id 
                   WHERE votes.who = $who 
-                    AND votes.bug_id = bugs.bug_id 
-                    AND bugs.product_id = products.id 
                     AND products.name = " . SqlQuote($product) . 
                  "ORDER BY votes.bug_id");        
         
@@ -280,9 +280,10 @@ sub record_votes {
     # the ballot box.
     if (scalar(@buglist)) {
         SendSQL("SELECT bugs.bug_id, products.name, products.maxvotesperbug
-                 FROM bugs, products
-                 WHERE products.id = bugs.product_id
-                   AND bugs.bug_id IN (" . join(", ", @buglist) . ")");
+                   FROM bugs
+             INNER JOIN products
+                     ON products.id = bugs.product_id
+                  WHERE bugs.bug_id IN (" . join(", ", @buglist) . ")");
 
         my %prodcount;
 

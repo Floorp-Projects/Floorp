@@ -307,9 +307,11 @@ sub GetGroupsByUserId {
     # the columns for that row.
     my $groups = $dbh->selectall_arrayref(
        "SELECT DISTINCT  groups.id, name, description, isactive
-                   FROM  groups, user_group_map
-                  WHERE  user_id = ? AND isbless = 0
-                    AND  user_group_map.group_id = groups.id
+                   FROM  groups
+             INNER JOIN  user_group_map
+                     ON  user_group_map.group_id = groups.id
+                  WHERE  user_id = ?
+                    AND  isbless = 0
                     AND  isbuggroup = 1
                ORDER BY  description "
                , {Slice => {}}, ($userid));
@@ -873,14 +875,15 @@ while (my @row = $buglist_sth->fetchrow_array()) {
 # or because of human choice
 my %min_membercontrol;
 if (@bugidlist) {
-    my $sth = $dbh->prepare("SELECT DISTINCT bugs.bug_id, " .
-            "MIN(group_control_map.membercontrol) " .
-            "FROM bugs, bug_group_map " .
-            "LEFT JOIN group_control_map " .
-            "ON group_control_map.product_id=bugs.product_id " .
-            "AND group_control_map.group_id=bug_group_map.group_id " .
-            "WHERE bugs.bug_id = bug_group_map.bug_id " .
-            "AND bugs.bug_id IN (" . join(',',@bugidlist) . ") " .
+    my $sth = $dbh->prepare(
+        "SELECT DISTINCT bugs.bug_id, MIN(group_control_map.membercontrol) " .
+          "FROM bugs " .
+    "INNER JOIN bug_group_map " .
+            "ON bugs.bug_id = bug_group_map.bug_id " .
+     "LEFT JOIN group_control_map " .
+            "ON group_control_map.product_id = bugs.product_id " .
+           "AND group_control_map.group_id = bug_group_map.group_id " .
+         "WHERE bugs.bug_id IN (" . join(',',@bugidlist) . ") " .
             $dbh->sql_group_by('bugs.bug_id'));
     $sth->execute();
     while (my ($bug_id, $min_membercontrol) = $sth->fetchrow_array()) {

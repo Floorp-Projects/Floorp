@@ -34,11 +34,13 @@ require "globals.pl";
 use Bugzilla::BugMail;
 
 my $dbh = Bugzilla->dbh;
-SendSQL("SELECT bug_id, short_desc, login_name FROM bugs, profiles WHERE " .
-        "(bug_status = 'NEW' OR bug_status = 'REOPENED') AND " . 
-        $dbh->sql_to_days('NOW()') . " - " .
-        $dbh->sql_to_days('delta_ts') . " > " . Param('whinedays') .
-        " AND userid = assigned_to ORDER BY bug_id");
+SendSQL("SELECT bug_id, short_desc, login_name " .
+        "FROM bugs INNER JOIN profiles ON userid = assigned_to " .
+        "WHERE (bug_status = 'NEW' OR bug_status = 'REOPENED') " .
+        "AND " . $dbh->sql_to_days('NOW()') . " - " .
+                 $dbh->sql_to_days('delta_ts') . " > " .
+                 Param('whinedays') . " " .
+        "ORDER BY bug_id");
 
 my %bugs;
 my %desc;

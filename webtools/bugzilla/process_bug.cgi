@@ -227,8 +227,8 @@ sub CheckonComment( $ ) {
 # and make the user verify the version, component, target milestone,
 # and bug groups if so.
 if ( $::FORM{'id'} ) {
-    SendSQL("SELECT name FROM products, bugs " .
-            "WHERE products.id = bugs.product_id AND bug_id = $::FORM{'id'}");
+    SendSQL("SELECT name FROM products INNER JOIN bugs " .
+            "ON products.id = bugs.product_id WHERE bug_id = $::FORM{'id'}");
     $::oldproduct = FetchSQLData();
 }
 if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
@@ -673,10 +673,10 @@ sub ChangeResolution {
 my @groupAdd = ();
 my @groupDel = ();
 
-SendSQL("SELECT groups.id, isactive FROM groups, user_group_map WHERE " .
-        "groups.id = user_group_map.group_id AND " .
-        "user_group_map.user_id = $whoid AND " .
-        "isbless = 0 AND isbuggroup = 1");
+SendSQL("SELECT groups.id, isactive FROM groups INNER JOIN user_group_map " .
+        "ON groups.id = user_group_map.group_id " .
+        "WHERE user_group_map.user_id = $whoid " .
+        "AND isbless = 0 AND isbuggroup = 1");
 while (my ($b, $isactive) = FetchSQLData()) {
     # The multiple change page may not show all groups a bug is in
     # (eg product groups when listing more than one product)
@@ -1099,8 +1099,8 @@ my $delta_ts;
 
 sub SnapShotBug {
     my ($id) = (@_);
-    SendSQL("select delta_ts, " . join(',', @::log_columns) .
-            " from bugs where bug_id = $id");
+    SendSQL("SELECT delta_ts, " . join(',', @::log_columns) .
+            " FROM bugs WHERE bug_id = $id");
     my @row = FetchSQLData();
     $delta_ts = shift @row;
 
@@ -1110,7 +1110,7 @@ sub SnapShotBug {
 
 sub SnapShotDeps {
     my ($i, $target, $me) = (@_);
-    SendSQL("select $target from dependencies where $me = $i order by $target");
+    SendSQL("SELECT $target FROM dependencies WHERE $me = $i ORDER BY $target");
     my @list;
     while (MoreSQLData()) {
         push(@list, FetchOneColumn());
@@ -1344,7 +1344,7 @@ foreach my $id (@idlist) {
             my @stack = @{$deps{$target}};
             while (@stack) {
                 my $i = shift @stack;
-                SendSQL("select $target from dependencies where $me = " .
+                SendSQL("SELECT $target FROM dependencies WHERE $me = " .
                         SqlQuote($i));
                 while (MoreSQLData()) {
                     my $t = FetchOneColumn();
@@ -1435,9 +1435,9 @@ foreach my $id (@idlist) {
         }
         if ($changed) {
             SendSQL("SELECT keyworddefs.name 
-                     FROM keyworddefs, keywords
+                     FROM keyworddefs INNER JOIN keywords
+                       ON keyworddefs.id = keywords.keywordid
                      WHERE keywords.bug_id = $id
-                         AND keyworddefs.id = keywords.keywordid
                      ORDER BY keyworddefs.name");
             my @list;
             while (MoreSQLData()) {

@@ -149,11 +149,12 @@ sub include_tt_details {
 
     my $q = qq{SELECT bugs.bug_id, profiles.login_name, bugs.deadline,
                       bugs.estimated_time, bugs.remaining_time
-               FROM   longdescs, bugs, profiles
-               WHERE  longdescs.bug_id in ($buglist) AND
-                      longdescs.bug_id = bugs.bug_id AND
-                      longdescs.who = profiles.userid
-                      $date_bits};
+               FROM   longdescs
+               INNER JOIN bugs
+                  ON longdescs.bug_id = bugs.bug_id
+               INNER JOIN profiles
+                  ON longdescs.who = profiles.userid
+               WHERE  longdescs.bug_id in ($buglist) $date_bits};
 
     my %res = %{$res};
     my $sth = $dbh->prepare($q);
@@ -232,10 +233,12 @@ sub query_work_by_buglist {
                       longdescs.bug_id,
                       bugs.short_desc,
                       bugs.bug_status
-               FROM   longdescs, profiles, bugs
-               WHERE  longdescs.bug_id IN ($buglist) AND 
-                      longdescs.who = profiles.userid AND
-                      bugs.bug_id = longdescs.bug_id 
+               FROM   longdescs
+               INNER JOIN profiles
+                   ON longdescs.who = profiles.userid
+               INNER JOIN bugs
+                   ON bugs.bug_id = longdescs.bug_id
+               WHERE  longdescs.bug_id IN ($buglist)
                       $date_bits } .
             $dbh->sql_group_by('longdescs.bug_id, profiles.login_name',
                 'bugs.short_desc, bugs.bug_status, longdescs.bug_when') . qq{
@@ -296,9 +299,10 @@ sub get_inactive_bugs {
     # them in %res here and then remove them below.
     my $q = qq{SELECT DISTINCT bugs.bug_id, bugs.short_desc ,
                                bugs.bug_status
-               FROM   longdescs, bugs
-               WHERE  longdescs.bug_id in ($buglist) AND
-                      longdescs.bug_id = bugs.bug_id};
+               FROM   longdescs
+               INNER JOIN bugs
+                    ON longdescs.bug_id = bugs.bug_id
+               WHERE  longdescs.bug_id in ($buglist)};
     my $sth = $dbh->prepare($q);
     $sth->execute();
     while (my $row = $sth->fetch) {
@@ -312,9 +316,10 @@ sub get_inactive_bugs {
                    longdescs.bug_id,
                    bugs.short_desc,
                    bugs.bug_status
-            FROM   longdescs, bugs
-            WHERE  longdescs.bug_id IN ($buglist) AND 
-                   bugs.bug_id = longdescs.bug_id 
+            FROM   longdescs
+            INNER JOIN bugs
+                ON bugs.bug_id = longdescs.bug_id 
+            WHERE  longdescs.bug_id IN ($buglist)
                    $date_bits } .
          $dbh->sql_group_by('longdescs.bug_id',
                             'bugs.short_desc, bugs.bug_status') . qq{
