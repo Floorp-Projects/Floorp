@@ -678,12 +678,16 @@ BEGIN
 		POPUP "&Privacy Tools"
 		BEGIN
 			MENUITEM "&Anonymous Mode",             ID_PRIVACY_ANONYMOUS
+#ifdef TRANSACTION_RECEIPTS
 			MENUITEM "&Make Receipt",               ID_PRIVACY_RECEIPT
+#endif
 			MENUITEM SEPARATOR
 			MENUITEM "Display Privacy &Policy",     ID_PRIVACY_DISPLAY_POLICY
 			MENUITEM "Display &Cookies",            ID_PRIVACY_DISPLAY_COOKIES
 			MENUITEM "Display &Signons",            ID_PRIVACY_DISPLAY_SIGNONS
+#ifdef TRANSACTION_RECEIPTS
 			MENUITEM "Display &Receipts",           ID_PRIVACY_DISPLAY_RECEIPTS
+#endif
 			MENUITEM SEPARATOR
 			MENUITEM "&Tutorial",                   ID_PRIVACY_DISPLAY_TUTORIAL
 		END
