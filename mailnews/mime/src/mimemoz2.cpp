@@ -146,15 +146,12 @@ mime_convert_charset (const char *input_line, PRInt32 input_length,
                       char **output_ret, PRInt32 *output_size_ret,
                       void *stream_closure)
 {
-extern PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
-                            const char* inBuffer, const PRInt32 inLength,
-                            char** outBuffer);
-
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
 
   // Now do conversion to UTF-8 for output
   char  *convertedString = NULL;
-  PRInt32 res = INTL_ConvertCharset(input_charset, "UTF-8", input_line, input_length, &convertedString);
+  PRInt32 convertedStringLen;
+  PRInt32 res = MIME_ConvertCharset(input_charset, "UTF-8", input_line, input_length, &convertedString, &convertedStringLen);
 
   if (res != 0)
   {
@@ -164,7 +161,7 @@ extern PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
   else
   {
     *output_ret = (char *) convertedString;
-    *output_size_ret = PL_strlen((char *) convertedString);
+    *output_size_ret = convertedStringLen;
   }  
 
   return 0;

@@ -62,6 +62,7 @@ char *MIME_EncodeMimePartIIStr(const char *header, const char* mailCharset, cons
 /**
  * Apply charset conversion to a given string. The conversion is done by an unicode round trip.
  * This is a replacement for INTL_ConvertLineWithoutAutoDetect.
+ * The caller should instanticate converters by XPCOM for that purpose.
  *
  * Note the caller cannot call this muliple times for a large buffer (of multi byte text)
  * since this will not save a state info (i.e. converter instance will be created/destroyed for every call).
@@ -70,10 +71,28 @@ char *MIME_EncodeMimePartIIStr(const char *header, const char* mailCharset, cons
  * @param to_charset  [IN] A charset name in C string.
  * @param inCstring   [IN] Input buffer (in C string) to convert.
  * @param outCstring  [OUT] Converted buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
- * @return            nsresult, 0 is success, otherwise error.
+ * @return            0 is success, otherwise error.
+ */
+PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
+                             const char* inCstring, char** outCstring);
+
+/**
+ * Apply charset conversion to a given buffer. The conversion is done by an unicode round trip.
+ *
+ * Note the caller cannot call this muliple times for a large buffer (of multi byte text)
+ * since this will not save a state info (i.e. converter instance will be created/destroyed for every call).
+ * The caller should instanticate converters by XPCOM for that purpose.
+ *
+ * @param from_charset[IN] A charset name in C string.
+ * @param to_charset  [IN] A charset name in C string.
+ * @param inBuffer    [IN] Input buffer to convert.
+ * @param inLength    [IN] Input buffer length.
+ * @param outBuffer   [OUT] Converted buffer is set. Allocated buffer should be freed by PR_FREE.
+ * @param outLength   [OUT] Converted buffer length is set.
+ * @return            0 is success, otherwise error.
  */
 PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
-                             const char* inCstring, char** outCstring);
+                            const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength);
 
 /**
  * Convert an input string with a charset into unicode.
@@ -85,7 +104,7 @@ PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
  * @param inCstring    [IN] Input buffer (in C string) to convert.
  * @param uniBuffer    [OUT] Output unicode buffer is set. Allocated buffer should be freed by PR_FREE.
  * @param uniLength    [OUT] Output unicode buffer character length is set.
- * @return             nsresult, 0 is success, otherwise error.
+ * @return             0 is success, otherwise error.
  */
 PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
                                void** uniBuffer, PRInt32* uniLength);
@@ -98,7 +117,7 @@ PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
  * @param uniBuffer    [IN] Input unicode buffer to convert.
  * @param uniLength    [IN] Input unicode buffer character length.
  * @param outCstring   [OUT] Output buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
- * @return             nsresult, 0 is success, otherwise error.
+ * @return             0 is success, otherwise error.
  */
 PRInt32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
                                  char** outCstring);

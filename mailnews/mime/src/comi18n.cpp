@@ -24,6 +24,7 @@
 #include "prmem.h"
 #include "prlog.h"
 #include "plstr.h"
+#include "nsCRT.h"
 #include "comi18n.h"
 
 #define NS_IMPL_IDS
@@ -32,20 +33,11 @@
 
 // BEGIN EXTERNAL DEPENDANCY
 
-#define CS_UNKNOWN -1
-#define TAB '\t'
-#define CR '\015'
-#define LF '\012'
-
 extern "C"  char * MIME_StripContinuations(char *original);
 /* RICHIE - These are needed by other libmime functions */
 extern "C" PRInt16 INTL_DefaultWinCharSetID(char a) { return a; }
 extern "C" char   *INTL_CsidToCharsetNamePt(PRInt16 id) { return "iso-8859-1"; }
 extern "C" PRInt16 INTL_CharSetNameToID(char *charset) { return 0; }
-
-
-typedef void* CCCDataObject;
-typedef unsigned char *(*CCCFunc)(CCCDataObject, const unsigned char*,PRInt32);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,11 +287,8 @@ static PRBool stateful_encoding(const char* charset)
 /*
         Prototype for Private Function
 */
-static void    intlmime_init_csidmap();
 static PRBool  intlmime_only_ascii_str(const char *s);
-static char *   intlmime_encode_mail_address(char *name, const char *src, CCCDataObject obj, int maxLineLen);
 static char *   intlmime_encode_next8bitword(char *src);
-#define intlmime_get_outgoing_mime_csid(a) 0
 
 /*      we should consider replace this base64 decodeing and encoding
 function with a better one */
@@ -319,10 +308,24 @@ static  char *  intl_decode_mime_part2_str(const char *, int , char* );
 static char *DecodeBase64Buffer(char *subject);
 static char *EncodeBase64Buffer(char *subject, size_t size);
 
-PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
+static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
                                     const char* inBuffer, const PRInt32 inLength,
                                     char** outBuffer);
 
+////////////////////////////////////////////////////////////////////////////////
+
+static PRBool NeedCharsetConversion(const char* from_charset, const char* to_charset)
+{
+  if (!PL_strcasecmp(from_charset, to_charset)) {
+    return PR_FALSE;
+  }
+  else if ((!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(to_charset, "utf-8")) ||
+      (!PL_strcasecmp(from_charset, "utf-8") && !PL_strcasecmp(to_charset, "us-ascii")))
+  {
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
 
 /* 4.0: Made Encode & Decode public for use by libpref; added size param.
  */
@@ -1176,7 +1179,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
+static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
                                     const char* inBuffer, const PRInt32 inLength,
                                     char** outBuffer)
 {
@@ -1305,7 +1308,6 @@ static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBu
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
 ////////////////////////////////////////////////////////////////////////////////
-
 // BEGIN PUBLIC INTERFACE
 extern "C" {
 #define PUBLIC
@@ -1329,16 +1331,36 @@ PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, XP_Bo
   return PL_strdup(subject);
 }
 
-PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
-                             const char* inCstring, char** outCstring)
+PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
+                           const char* inCstring, char** outCstring)
 {
-  // optimization for the special case
-  if ((!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(to_charset, "utf-8")) ||
-      (!PL_strcasecmp(from_charset, "utf-8") && !PL_strcasecmp(to_charset, "us-ascii"))) {
+  if (!NeedCharsetConversion(from_charset, to_charset)) {
     *outCstring = PL_strdup(inCstring);
     return (outCstring != NULL) ? 0 : -1;
   }
   return INTL_ConvertCharset(from_charset, to_charset, inCstring, PL_strlen(inCstring), outCstring);
+}
+
+PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
+                            const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
+{
+  if (!NeedCharsetConversion(from_charset, to_charset)) {
+    char *newbuf = (char *) PR_Malloc(inLength);
+    if (newbuf != NULL) {
+      nsCRT::memcpy(newbuf, inBuffer, inLength);
+      *outBuffer = newbuf;
+      *outLength = inLength;
+      return 0;
+    }
+    else {
+      return -1;
+    }
+  }
+  PRInt32 res = INTL_ConvertCharset(from_charset, to_charset, inBuffer, inLength, outBuffer);
+  if (res == 0) {
+    *outLength = PL_strlen(*outBuffer);
+  }
+  return res;
 }
 
 PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
