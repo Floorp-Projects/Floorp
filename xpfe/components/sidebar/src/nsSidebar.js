@@ -41,12 +41,14 @@ const SIDEBAR_PROGID   = "component://mozilla/sidebar";
 const SIDEBAR_CID      = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
 const CONTAINER_PROGID = "component://netscape/rdf/container";
 const LOCATOR_PROGID   = "component://netscape/filelocator";
+const NETSEARCH_PROGID = "component://netscape/rdf/datasource?name=internetsearch"
 const nsISupports      = Components.interfaces.nsISupports;
 const nsIFactory       = Components.interfaces.nsIFactory;
 const nsISidebar       = Components.interfaces.nsISidebar;
 const nsIRDFContainer  = Components.interfaces.nsIRDFContainer;
 const nsIFileLocator   = Components.interfaces.nsIFileLocator;
 const nsIRDFRemoteDataSource = Components.interfaces.nsIRDFRemoteDataSource;
+const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
 
 function nsSidebar()
 {
@@ -110,11 +112,12 @@ function (aTitle, aContentURL, aCustomizeURL)
     var panel_index = container.IndexOf(panel_resource);
     if (panel_index != -1)
     {
-        this.window.alert(aContentURL + " already exists in your sidebar.");
+        this.window.alert(aContentURL + " already exists in My Sidebar.");
         return;
     }
     
-    var rv = this.window.confirm("Add " + aContentURL + " to your sidebar?");
+    var rv = this.window.confirm("Add " + aTitle + " to My Sidebar?\n\n" +
+                                 "Source: " + aContentURL);
     if (!rv)
         return;
 
@@ -165,42 +168,33 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     try
     {
 	    // make sure using HTTP (for both engine as well as icon URLs)
-	    var protocolOffset = engineURL.indexOf("http://");
-	    if (protocolOffset != 0)
+
+	    if (engineURL.search(/^http:\/\//i) == -1)
 	    {
 	        debug ("must use HTTP to fetch search engine file");
 	        throw Components.results.NS_ERROR_INVALID_ARG;
 	    }
-	    protocolOffset = iconURL.indexOf("http://");
-	    if (protocolOffset != 0)
+
+	    if (iconURL.search(/^http:\/\//i) == -1)
 	    {
 	        debug ("must use HTTP to fetch search icon file");
 	        throw Components.results.NS_ERROR_INVALID_ARG;
 	    }
 
 	    // make sure engineURL refers to a .src file
-	    var len = engineURL.length;
-	    var extensionOffset = engineURL.lastIndexOf(".src", len-4);
-	    if (extensionOffset != len-4)
+	    if (engineURL.search(/\.src$/i) == -1)
 	    {
 	        debug ("engineURL doesn't reference a .src file");
 	        throw Components.results.NS_ERROR_INVALID_ARG;
 	    }
 
 	    // make sure iconURL refers to a .gif/.jpg/.jpeg/.png file
-	    extensionOffset = iconURL.lastIndexOf(".");
-	    if (extensionOffset < 0)
-	    {
-	        debug ("unable to determine iconURL extension");
-	        throw Components.results.NS_ERROR_INVALID_ARG;
-	    }
-	    var iconType = iconURL.substr(extensionOffset);
-	    iconType = iconType.toLowerCase();
-	    if (iconType != ".gif" && iconType != ".jpg" && iconType != ".jpeg" && iconType != ".png")
+	    if (iconURL.search(/\.(gif|jpg|jpeg|png)$/i) == -1)
 	    {
 	        debug ("iconURL doesn't reference a supported image file");
 	        throw Components.results.NS_ERROR_INVALID_ARG;
 	    }
+
     }
     catch(ex)
     {
@@ -208,15 +202,20 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         throw Components.results.NS_ERROR_INVALID_ARG;
     }
 
-    var rv = this.window.confirm("Add the following search engine?\n\nName:\n'" + suggestedTitle + "'\n\nSearch Category:\n'" + suggestedCategory + "'\n\nDownload URL:\n'" + engineURL + "'");
+    var rv = this.window.confirm("Add the following search engine?\n\n" +
+                                 "Name:\n'" + suggestedTitle + "'\n\n" +
+                                 "Search Category:\n'" + suggestedCategory +
+                                 "'\n\nDownload URL:\n'" + engineURL + "'");
     if (!rv)
         return;
 
-    var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-    if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
+    var internetSearch = Components.classes[NETSEARCH_PROGID].getService();
+    if (internetSearch)	
+        internetSearch = internetSearch.QueryInterface(nsIInternetSearchService);
     if (internetSearch)
     {
-    	internetSearch.AddSearchEngine(engineURL, iconURL, suggestedTitle, suggestedCategory);
+    	internetSearch.AddSearchEngine(engineURL, iconURL, suggestedTitle,
+                                       suggestedCategory);
     }
 }
 
