@@ -260,11 +260,11 @@ void OutputTitle(HDC hDC, LPSTR szString)
                         0,
                         0,
                         0,
-                        BALTIC_CHARSET,
+                        DEFAULT_CHARSET,
                         OUT_DEFAULT_PRECIS,
                         0,
                         PROOF_QUALITY,
-                        VARIABLE_PITCH | FF_DECORATIVE,
+                        DEFAULT_PITCH | FF_DONTCARE,
                         "");
   if(hfontTmp)
   {
