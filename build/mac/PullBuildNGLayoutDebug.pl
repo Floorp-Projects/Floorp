@@ -121,7 +121,7 @@ if ($USE_TIMESTAMPED_LOGS)
 else
 {
 	OpenErrorLog("NGLayoutBuildLog");		# Release build
-#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
+	#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
 }
 
 Moz::StopForErrors();
@@ -132,8 +132,8 @@ if ($pull{all}) {
 }
 
 if ($build{dist}) {
-chdir($MOZ_SRC);
-BuildDist();
+	chdir($MOZ_SRC);
+	BuildDist();
 }
 
 chdir($MOZ_SRC);

@@ -35,7 +35,7 @@ $CARBON = 0;				# turn on to build with TARGET_CARBON
 # The following two options will delete all files, but leave the directory structure intact.
 $CLOBBER_DIST_ALL = 0;      # turn on to clobber all files inside dist (headers, xsym and libs)
 $CLOBBER_DIST_LIBS = 0;     # turn on to clobber the aliases to libraries and sym files in dist
-$USE_XPIDL = 0;             # turn on to use the XPIDL plugin to generate files.
+$USE_XPIDL = 1;             # turn on to use the XPIDL plugin to generate files.
 
 $pull{all} = 1;
 $pull{lizard} = 0;
