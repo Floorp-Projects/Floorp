@@ -102,4 +102,12 @@ function ShowWindowFromResource( node )
     toOpenWindow(desiredWindow);
   }
 }
+
+function zoomWindow()
+{
+  if (window.windowState == STATE_NORMAL)
+    window.maximize();
+  else
+    window.restore();
+}
 #endif
