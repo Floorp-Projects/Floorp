@@ -1,16 +1,16 @@
-# 
+#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
 # the License at http://www.mozilla.org/MPL/
-# 
+#
 # Software distributed under the License is distributed on an "AS
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-# 
+#
 # The Original Code is Mozilla page-loader test, released Aug 5, 2001
-# 
+#
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 2001 Netscape Communications Corporation. All
@@ -18,8 +18,9 @@
 #
 # Contributor(s):
 #    John Morrison <jrgm@netscape.com>, original author
-#    
-#    
+#    Heikki Toivonen <heikki@netscape.com>
+#
+#
 package PageData;
 use strict;
 use vars qw($MagicString $ClientJS); # defined at end of file
@@ -71,18 +72,20 @@ sub _init {
             # each of the remaining lines are: 
             #   (1) the subdirectory containing the content for this URL,
             #   (2) the name of the top-level document [optional, default='index.html']
-            #   (3) a character set for this document [optional, default is none]
+            #   (3) mime type for this document [optional, default is text/html]
+            #   (4) a character set for this document [optional, default is none]
             # e.g., 
             #  home.netscape.com
             #  www.mozilla.org      index.html
-            #  www.aol.com          default.html
-            #  www.jp.aol.com       index.html       Shift_JIS
+            #  www.aol.com          default.xml      text/xml
+            #  www.jp.aol.com       index.html       text/html   Shift_JIS
             #
             my @ary = split(/\s+/, $_);
             $ary[1] ||= 'index.html';
             push @{$self->{PageList}}, { Name    => $ary[0], 
                                          URL     => $ary[0] . '/' . $ary[1],
-                                         CharSet => $ary[2] || ''
+                                         MimeType => $ary[2] || "text/html",
+                                         CharSet => $ary[3] || ''
                                          };
         }
     }
@@ -144,6 +147,18 @@ sub charset {
 }
 
 
+sub mimetype {
+    # get the mimetype for this URL, by index
+    my $self = shift;
+    my $arg  = shift;
+    if ($arg =~ /^\d+$/) {
+        return $self->_checkIndex($arg) ? $self->{PageList}[$arg]{MimeType} : "";
+    } else {
+        die "$arg' is not a numeric index";
+    }
+}
+
+
 sub name {
     my $self = shift;
     my $arg  = shift;
@@ -190,6 +205,8 @@ sub _checkIndex {
 #
 $MagicString = '<!-- MOZ_INSERT_CONTENT_HOOK -->';
 $ClientJS    =<<"ENDOFJS";
+
+//<![CDATA[
 
 function moztest_tokenizeQuery() {
   var query = {};
@@ -260,6 +277,8 @@ function moztest_safetyValve() {
 
 // normal processing is to calculate load time and fetch another URL
 window.onload = moztest_onDocumentLoad;
+
+//]]>
 
 ENDOFJS
 

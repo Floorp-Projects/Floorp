@@ -40,12 +40,12 @@
 #
 #
 
-HTTPBASE: http://somehost.somedomain.sometld/content/base/
+HTTPBASE: http://somehost.somedomain.sometld/content/base/ 	
 FILEBASE: /var/www/html/content/base/
 
-home.netscape.com       index.html                  # optionally specify a filename
-my.netscape.com         index.html    iso-8859-1    # optionally specify a filename and charset 
-www.aol.com
+home.netscape.com       index.html                               # optionally specify a filename
+my.netscape.com         index.html    text/html    iso-8859-1    # optionally specify a filename, mime type and charset 
+www.aol.com             index.html    text/html                  # optionally specify a filename and mime type
 www.mapquest.com
 www.moviefone.com
 www.digitalcity.com
