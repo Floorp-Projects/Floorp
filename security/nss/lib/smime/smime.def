@@ -185,7 +185,6 @@ SEC_PKCS7Encode;
 ;+};
 ;+NSS_3.4 {     # NSS 3.4 release
 ;+    global:
-;+# FOR PSM
 CERT_DecodeCertFromPackage;
 NSS_CMSMessage_IsSigned;
 NSS_CMSSignedData_SetDigestValue;
