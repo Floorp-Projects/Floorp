@@ -29,7 +29,7 @@ CPPSRCS = \
 	nsZipArchive.cpp \
 	$(NULL)
 
-EXPORTS = zipfile.h
+EXPORTS = zipfile.h nsIZipArchive.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
