@@ -89,12 +89,14 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
+
 #ifdef XP_PC
 #include <windows.h>
 #endif
 
 #include "nsIIOService.h"
 #include "nsIURL.h"
+#include "nsIProtocolHandler.h"
 
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
@@ -1938,7 +1940,9 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsISupports * aHistoryState,
                     const PRUnichar* aReferrer)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
+  PRBool isMail= PR_FALSE; // XXX mailto: hack
+  PRBool keywordsEnabled = PR_FALSE;
 
   /* 
      TODO This doesnt belong here... The app should be doing all this
@@ -1960,26 +1964,63 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     convertFileToURL(urlStr, urlSpec);
     rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
     if (NS_FAILED(rv)) {
-      // KEYWORDS
-      // keyword failover
-      // we kick the following cases to the keyword server:
-      //   * starts with a '?'
-      //   * contains a space
-      //   * (windows only) is a single word (contains no dots or scheme) XXX: this breaks
-      //     intranet host lookups. This latter case needs to be handled by
-      //     dns notifications rather than string interrogation.
-      if (
+      NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
+
+      rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
+      if (NS_FAILED(rv)) return rv;
+
+      PRInt32 qMarkLoc = -1, spaceLoc = -1;
+
+      if (keywordsEnabled) {
+          // These are keyword formatted strings
+          // "what is mozilla"
+          // "what is mozilla?"
+          // "?mozilla"
+          // "?What is mozilla"
+
+          // These are not keyword formatted strings
+          // "www.blah.com" - anything with a dot in it 
+          // "nonQualifiedHost:80" - anything with a colon in it
+          // "nonQualifiedHost?"
+          // "nonQualifiedHost?args"
+          // "nonQualifiedHost?some args"
+
+          if (urlStr.FindChar('.') == -1 && urlStr.FindChar(':') == -1) {
+              qMarkLoc = urlStr.FindChar('?');
+              spaceLoc = urlStr.FindChar(' ');
+
+              PRBool keyword = PR_FALSE;
+              if ( (qMarkLoc == 0)
 #ifdef XP_PC
-          // This is windows only because windows is the only platform that utilizes
-          // WINS resolution (a DNS fallback) which can take several minutes to
-          // fail a resolve call if the host does not exist. Thus, this forces us
-          // to bypass DNS/WINS altogether on windows.
-          (urlStr.FindChar('.') == -1) || 
-#endif // XP_PC
-          (urlStr.First() == '?') || (urlStr.FindChar(' ') > -1) ) {
-          nsAutoString keywordSpec("keyword:");
-          keywordSpec.Append(aURLSpec);
-          rv = NS_NewURI(getter_AddRefs(uri), keywordSpec, nsnull);
+                  // This is windows only because windows is the
+                  // only platform that utilizes WINS resolution 
+                  // (a DNS fallback) which can take several minutes to
+                  // fail a resolve call if the host does not exist. 
+                  // Thus, this forces us to bypass DNS/WINS altogether
+                  // on windows; for nonQualifiedHosts *only*.
+
+                  // "nonQualifiedHost"
+                    || ( (qMarkLoc == -1) && (spaceLoc == -1) )
+#endif // XP_PC      
+                  ) {
+                  keyword = PR_TRUE;
+              } else if ( (spaceLoc > 0) && 
+                          ( (qMarkLoc == -1) || (spaceLoc < qMarkLoc) )) {
+                    keyword = PR_TRUE;
+              }
+
+              if (keyword) {
+                  nsAutoString keywordSpec("keyword:");
+                  keywordSpec.Append(aURLSpec);
+                  rv = NS_NewURI(getter_AddRefs(uri), keywordSpec, nsnull);
+              } else {
+                  rv = NS_ERROR_FAILURE;
+              }
+          } else {
+              rv = NS_ERROR_FAILURE;
+          }
+      } else {
+          rv = NS_ERROR_FAILURE;
       }
 
       PRInt32 colon = -1;
@@ -2009,56 +2050,45 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
               urlSpec.Insert("http://", 0, 7);
             }
           } // end if colon
-          rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
-          if (NS_FAILED(rv)) {
-              // we weren't able to find a protocol handler
-              rv = InitDialogVars();
-              if (NS_FAILED(rv)) return rv;
 
-              NS_ASSERTION(mPrompter && mStringBundle, "webshell is unable to throw dialogs");
+          // XXX mailto: hack
+          if ((urlSpec.Find("mailto:", PR_TRUE)) >= 0)
+              isMail = PR_TRUE;
 
-              nsXPIDLString messageStr;
-              nsAutoString name("protocolNotFound");
-              rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
-              if (NS_FAILED(rv)) return rv;
+          if (!isMail) {
+              rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
+              if (NS_ERROR_UNKNOWN_PROTOCOL == rv) {
+                  // we weren't able to find a protocol handler
+                  rv = InitDialogVars();
+                  if (NS_FAILED(rv)) return rv;
 
-              NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
+                  nsXPIDLString messageStr;
+                  nsAutoString name("protocolNotFound");
+                  rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+                  if (NS_FAILED(rv)) return rv;
 
-              // extract the scheme
-              nsAutoString scheme;
-              urlSpec.Left(scheme, colon);
+                  NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
 
-              nsAutoString dnsMsg(messageStr);
-              dnsMsg.Insert(' ', 0);
-              dnsMsg.Insert(scheme, 0);
+                  // extract the scheme
+                  nsAutoString scheme;
+                  urlSpec.Left(scheme, colon);
 
-              mPrompter->Alert(dnsMsg.GetUnicode());
-          }
+                  nsAutoString dnsMsg(messageStr);
+                  dnsMsg.Insert(' ', 0);
+                  dnsMsg.Insert(scheme, 0);
 
-	      nsAutoString  url(aURLSpec);
-	      if (((url.Find("mailto:", PR_TRUE))<0) && (NS_FAILED(rv))) {
-            // no dice, even more tricks?
-            return rv;
-          }
+                  (void)mPrompter->Alert(dnsMsg.GetUnicode());
+              } // end unknown protocol
+          } // end !isMail
       }
-    }
-
+   }
   }
 
-  if (!uri) // we were unable to create a uri
-      return rv;
+  if (!uri) return rv;
+
+   rv = uri->GetSpec(getter_Copies(spec));
+   if (NS_FAILED(rv)) return rv;
   
-  //Take care of mailto: url
-  PRBool  isMail= PR_FALSE;
-  rv = uri->GetSpec(getter_Copies(spec));
-  if (NS_FAILED(rv))
-	   return rv;
-
-  nsAutoString urlAStr(spec);
-  if ((urlAStr.Find("mailto", PR_TRUE)) >= 0) {
-     isMail = PR_TRUE;
-  }
-
   // Get hold of Root webshell
   nsCOMPtr<nsIWebShell>  root;
   nsCOMPtr<nsISessionHistory> shist;
@@ -3087,76 +3117,61 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
     }
 
     if ( (mDocLoader == loader) && (aStatus == NS_ERROR_UNKNOWN_HOST) ) {
-        // KEYWORDS
-        // if a lookup failed, check to see if it was non-qualified.
-        // if it was, kick it to the keyword server. the keyword server
-        // now handles the www.*.com trick.
-        char *host = nsnull;
-        rv = aURL->GetHost(&host);
+        nsXPIDLCString host;
+        rv = aURL->GetHost(getter_Copies(host));
         if (NS_FAILED(rv)) return rv;
 
-        if(!host) return NS_ERROR_OUT_OF_MEMORY;
-        
-        char *tmp = host;
-        while (*tmp && (*tmp != '.')) tmp++;
-        if (!*tmp) {
+        CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
+        nsCAutoString hostStr(buf);
+        PRInt32 dotLoc = hostStr.FindChar('.');
+
+        NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
+        PRBool keywordsEnabled = PR_FALSE;
+        rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
+        if (NS_FAILED(rv)) return rv;
+
+        if (keywordsEnabled && (-1 == dotLoc)) {
+            // only send non-qualified hosts to the keyword server
             nsAutoString keywordSpec("keyword:");
             keywordSpec.Append(host);
-            rv = LoadURL(keywordSpec.GetUnicode(), "view");
-            if (NS_FAILED(rv)) {
-                // if we couldn't load the keyword munged URL do
-                // our own www.*.com trick.
-                nsAllocator::Free(host);
-                nsCAutoString hostStr;
-                rv = aURL->GetHost(&host);
-                if (NS_FAILED(rv)) return rv;
-     
-                hostStr.SetString(host);
-                PRInt32 dotLoc = -1;
-                dotLoc = hostStr.FindChar('.');
-                PRBool retry = PR_FALSE;
-                if (-1 == dotLoc) {
-                    hostStr.Insert("www.", 0, 4);
-                    hostStr.Append(".com");
-                    retry = PR_TRUE;
-                } else if ( (hostStr.Length() - dotLoc) == 3) {
-                    hostStr.Insert("www.", 0, 4);
-                    retry = PR_TRUE;
-                }
-    
-                if (retry) {
-                    rv = aURL->SetHost(hostStr.GetBuffer());
-                    if (NS_FAILED(rv)) return rv;
-                    char *aSpec = nsnull;
-                    rv = aURL->GetSpec(&aSpec);
-                    if (NS_FAILED(rv)) return rv;
-                    nsAutoString newURL(aSpec);
-                    nsAllocator::Free(aSpec);
-                    // reload the url
-                    rv = LoadURL(newURL.GetUnicode(), "view");
-                } // retry
-            } // end keyword load failure
-        } else {
-            rv = InitDialogVars();
-            if (NS_FAILED(rv)) {
-                nsAllocator::Free(host);
-                return rv;
-            }
+            return LoadURL(keywordSpec.GetUnicode(), "view");
+        } // end keywordsEnabled
 
-            NS_ASSERTION(mPrompter && mStringBundle, "webshell is unable to throw dialogs");
+        nsCAutoString retryHost;
+        if (-1 == dotLoc) {
+            retryHost = "www.";
+            retryHost += hostStr;
+            retryHost += ".com";
+        } else if ( (hostStr.Length() - dotLoc) == 3) {
+            retryHost = "www.";
+            retryHost += hostStr;
+        }
 
-            nsXPIDLString messageStr;
-            nsAutoString name("dnsNotFound");
-            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+        if (!retryHost.IsEmpty()) {
+            rv = aURL->SetHost(retryHost.GetBuffer());
             if (NS_FAILED(rv)) return rv;
+            nsXPIDLCString aSpec;
+            rv = aURL->GetSpec(getter_Copies(aSpec));
+            if (NS_FAILED(rv)) return rv;
+            nsAutoString newURL(aSpec);
+            // reload the url
+            return LoadURL(newURL.GetUnicode(), "view");
+        } // retry
 
-            nsAutoString dnsMsg(messageStr);
-            dnsMsg.Insert(' ', 0);
-            dnsMsg.Insert(host, 0);
+        // throw a DNS failure dialog
+        rv = InitDialogVars();
+        if (NS_FAILED(rv)) return rv;
 
-            mPrompter->Alert(dnsMsg.GetUnicode());
-        } // end !*tmp
-        nsAllocator::Free(host);
+        nsXPIDLString messageStr;
+        nsAutoString name("dnsNotFound");
+        rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString dnsMsg(messageStr);
+        dnsMsg.Insert(' ', 0);
+        dnsMsg.Insert(host, 0);
+
+        (void)mPrompter->Alert(dnsMsg.GetUnicode());
     } // unknown host
   } //!mProcessedEndDocumentLoad
   else {
