@@ -72,24 +72,32 @@ interface nsIFastLoadService : nsISupports
     readonly attribute PRInt32      direction;
 
     /**
+     * These methods associate a URI object with its spec, for faster select
+     * using the object pointer as a key, rather than the spec string.  The
+     * selectMuxedDocument method returns the previously selected URI object,
+     * in case a caller needs to reselect the previous after muxing data for
+     * a given URI synchronously.  For the non-blocking or "asynchronous" i/o
+     * case, the caller must select the source URI from the FastLoad multiplex
+     * before writing a new burst of data parsed from the slow-loaded source.
+     *
      * Clients of inputStream and outputStream should try to demultiplex data
      * from the input stream only if fastLoadService->StartMuxedDocument(uri,
      * urispec, NS_FASTLOAD_READ) succeeds.  If StartMuxedDocument fails with
      * NS_ERROR_NOT_AVAILABLE, callers should slow-load the documents, muxing
      * their data to the current output stream.
      */
-    void   startMuxedDocument(in nsISupports aURI,
-                              in string aURISpec,
-                              in PRInt32 aDirectionFlags);
-    void   selectMuxedDocument(in nsISupports aURI);
-    void   endMuxedDocument(in nsISupports aURI);
+    void        startMuxedDocument(in nsISupports aURI,
+                                   in string aURISpec,
+                                   in PRInt32 aDirectionFlags);
+    nsISupports selectMuxedDocument(in nsISupports aURI);
+    void        endMuxedDocument(in nsISupports aURI);
 
-    void   addDependency(in nsIFile aFile);
+    void        addDependency(in nsIFile aFile);
 
-    PRUint32 computeChecksum(in nsIFile aFile,
-                             in nsIFastLoadReadControl aControl);
-    void     cacheChecksum(in nsIFile aFile,
-                           in nsIObjectOutputStream aStream);
+    PRUint32    computeChecksum(in nsIFile aFile,
+                                in nsIFastLoadReadControl aControl);
+    void        cacheChecksum(in nsIFile aFile,
+                              in nsIObjectOutputStream aStream);
 
     [noscript] void getFastLoadReferent(inout nsISupports aPtr);
 
