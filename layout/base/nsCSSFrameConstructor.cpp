@@ -8533,7 +8533,7 @@ nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
   PRUint32 numOptions = 0;
   nsresult result = aSelectElement->GetLength(&numOptions);
   if (NS_SUCCEEDED(result)) {
-    if (1 == numOptions) { 
+    if (0 == numOptions) { 
       nsIFrame* parentFrame;
       nsIFrame* childFrame;
       // Get the childFrame for the added child (option)
