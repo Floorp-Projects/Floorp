@@ -38,41 +38,4 @@
 ifeq ($(OS_ARCH), HP-UX)
 	DEFINES += -D_ILP32
 endif
-
-#######################################################################
-# Set the LD_LIBS value to encompass all static JSS, security, and    #
-# dbm libraries                                                       #
-#######################################################################
-
-LD_LIBS	+=	$(LIBJSSUTIL)		\
-		$(LIBJSSHCLHACKS)	\
-		$(LIBJSSPKCS11)		\
-		$(LIBJSSCRYPTO)		\
-		$(LIBJSSPOLICY)		\
-		$(LIBSSL)		\
-		$(LIBSECMOD)		\
-		$(LIBCERT)		\
-		$(LIBKEY)		\
-		$(LIBCRYPTO)		\
-		$(LIBHASH)		\
-		$(LIBSECUTIL)		\
-		$(LIBDBM)		\
-		$(NULL)
-
-#######################################################################
-# Append additional LD_LIBS value to encompass all dynamic NSPR 2.0,  #
-# java, and system libraries                                          #
-#######################################################################
-
-ifeq ($(OS_ARCH), WINNT)
-	LD_LIBS += $(DLLPLDS) $(DLLPLC) $(DLLPR) $(DLLSYSTEM)
-else
-	LD_LIBS += -L$(SOURCE_LIB_DIR) -lplds3 -lplc3 -lnspr3 $(DLLSYSTEM)
-endif
-
-#######################################################################
-# Turn off any Export Control Policy for these libraries              #
-#######################################################################
-
-POLICY = 
-
+SHARED_LIBRARY=

@@ -90,9 +90,9 @@ public class SSLClient
   
   String values[] = {
     "/index",    	 // filename
-    "4004",	         // port to connect to
+    "443",	         // port to connect to
     "",			 // ipaddr (use hostname instead)
-    "meatpie.red.iplanet.com", // hostname to connect to
+    "www.amazon.com", // hostname to connect to
     "1024",		 // filesize
     "2",	       	 // status, 2 means ???
     "128",		 // expected session key size
@@ -144,7 +144,7 @@ public class SSLClient
 	  results.println(htmlHeader);
 	results.println("SSL Client Tester");
 	results.println(
-			"$Id: SSLClient.java,v 1.1 2000/12/21 22:58:57 nicolson%netscape.com Exp $ " + 
+			"$Id: SSLClient.java,v 1.2 2001/02/09 11:26:09 nicolson%netscape.com Exp $ " + 
 			versionStr );
 	
 	SSLSocket s;
@@ -216,6 +216,8 @@ public class SSLClient
 	
 	listener = new ClientHandshakeCB(this);
 	s.addHandshakeCompletedListener(listener);
+
+    //s.forceHandshake();
 	
 	OutputStream o = s.getOutputStream();
 	
@@ -401,12 +403,19 @@ public class SSLClient
   public static void main(String argv[]) 
     {
       int i;
-      
+
       try {
 	CryptoManager.InitializationValues vals =
 		new CryptoManager.InitializationValues
                     ("secmod.db", "key3.db", "cert7.db");
 	CryptoManager.initialize(vals);
+
+        try {
+            System.out.println("Sleeping...");
+            Thread.currentThread().sleep(5000);
+            System.out.println("Awake.");
+        } catch(Throwable t) { }
+      
 
 //	NSSInit.initialize("secmod.db", "key3.db", "cert7.db");
       }
@@ -431,7 +440,9 @@ public class SSLClient
       for (i = SSLSocket.SSL2_RC4_128_WITH_MD5;
 	   i <= SSLSocket.SSL2_DES_192_EDE3_CBC_WITH_MD5; ++i) {
 //	SSLSocket.setPermittedByPolicy(i, SSLSocket.SSL_ALLOWED);
-	SSLSocket.setCipherPreference( i, true);
+        if( i != 0xFF05 ) {
+            SSLSocket.setCipherPreference( i, true);
+        }
       }
       
       /* enable all the SSL3 cipher suites */
@@ -455,8 +466,14 @@ class ClientHandshakeCB implements SSLHandshakeCompletedListener {
   }
   
   public void handshakeCompleted(SSLHandshakeCompletedEvent event) {
+  try {
     sc.handshakeEventHappened = true;
-    sc.results.println("handshake happened");
+    SSLSecurityStatus status = event.getStatus();
+    sc.results.println("handshake happened\n" + status);
+    System.out.println("Cert is " + status.getPeerCertificate());
+  } catch(Exception e) {
+        e.printStackTrace();
+  }
   }
 }
 

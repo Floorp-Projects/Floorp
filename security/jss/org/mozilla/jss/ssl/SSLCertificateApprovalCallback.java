@@ -49,15 +49,6 @@ import org.mozilla.jss.crypto.X509Certificate;
  * This interface is what you should implement if you want to
  * be able to decide whether or not you want to approve the peer's cert,
  * instead of having NSS do that.
-
- * This doesn't work quite as well as the browser code. With the browser,
- * you can, say, return 'false', to cause an error on the server, then
- * mark the server cert as trusted, then restart the handshake (this is what
- * happens when you see those dialogs
- *
- * Here, I don't provide a facility to restart the handshake - you'll have
- * to reconnect instead.
- *
  */
 public interface SSLCertificateApprovalCallback {
 

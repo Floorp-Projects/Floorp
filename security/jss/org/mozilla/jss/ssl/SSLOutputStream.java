@@ -13,7 +13,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
- * Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
  * Contributor(s):
@@ -30,50 +30,32 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-#include "cert.h"
-#include "certt.h"
-#include "base64.h"
-#include "nspr.h"
-#include "private/pprthred.h"
-#include "ssl.h"
-#include "sslproto.h"
-#include "pk11func.h"
-#include "key.h"
-#include "secrng.h"
-#include "secmod.h"
-#include "jssl.h"
 
-#include <jni.h>
+package org.mozilla.jss.ssl;
 
-#include <jssutil.h>
+import java.io.IOException;
 
-#define throwException(x)	/* do nothing */
+public class SSLOutputStream extends java.io.OutputStream {
 
-static int cipherSuites[] = {
-    SSL_RSA_WITH_RC4_128_MD5,
-    SSL_RSA_WITH_3DES_EDE_CBC_SHA,
-    SSL_RSA_WITH_DES_CBC_SHA,
-    SSL_RSA_EXPORT_WITH_RC4_40_MD5,
-    SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
-    SSL_RSA_WITH_NULL_MD5,
-    0
-};
-
-static void 
-JSSL_SetSSLPolicies()
-{
-    int i;
-
-    /* enable all the SSL2 cipher suites */
-    for (i = SSL_EN_RC4_128_WITH_MD5;
-         i <= SSL_EN_DES_192_EDE3_CBC_WITH_MD5; ++i) {
-        SSL_SetPolicy(   i, SSL_ALLOWED);
-        SSL_EnableCipher(i, SSL_ALLOWED);
+    SSLOutputStream(SSLSocket sock) {
+        this.sock = sock;
     }
 
-    /* enable all the SSL3 cipher suites */
-    for (i = 0; cipherSuites[i] != 0;  ++i) {
-        SSL_SetPolicy(   cipherSuites[i], SSL_ALLOWED);
-        SSL_EnableCipher(cipherSuites[i], SSL_ALLOWED);
+    public void write(int b) throws IOException {
+        write( new byte[] {(byte)b}, 0, 1 );
     }
+
+    public void write(byte[] b) throws IOException {
+        write( b, 0, b.length);
+    }
+
+    public void write(byte[] b, int off, int len) throws IOException {
+        sock.write(b, off, len);
+    }       
+
+    public void close() throws IOException {
+        sock.close();
+    }
+
+    private SSLSocket sock;
 }

@@ -60,7 +60,7 @@ public class SSLHandshakeCompletedEvent extends EventObject {
      * get security information about this socket, including
      * cert data
      */
-    public SSLSecurityStatus getStatus() {
+    public SSLSecurityStatus getStatus() throws SocketException {
 	return getSocket().getStatus();
     }
     

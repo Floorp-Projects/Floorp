@@ -33,66 +33,57 @@
 
 CORE_DEPTH = ../../../../..
 
-MODULE = ninja
+MODULE = jss
 
 NS_USE_JDK = 1
 
-REQUIRES =      nspr20 dbm security
+REQUIRES = security
 
 PACKAGE =       org/mozilla/jss/ssl
 
-JNI_GEN =	org.mozilla.jss.ssl.SSLInputStream \
-		org.mozilla.jss.ssl.SSLOutputStream \
-		org.mozilla.jss.ssl.SSLSecurityStatus \
-		org.mozilla.jss.ssl.SSLSocketImpl \
+JNI_GEN = org.mozilla.jss.ssl.SSLSocket \
 		$(NULL)
 
 JSRCS =	        SSLHandshakeCompletedEvent.java \
 		SSLSecurityStatus.java          \
 		SSLHandshakeCompletedListener.java \
-		SSLServerSocket.java            \
-		SSLInputStream.java             \
 		SSLSocket.java                  \
-		SSLOutputStream.java            \
-		SSLSocketImpl.java		\
+        SSLInputStream.java             \
+        SSLOutputStream.java             \
 		PrintOutputStreamWriter.java    \
 		SSLCertificateApprovalCallback.java    \
 		SSLClientCertificateSelectionCallback.java    \
 		$(NULL)
 
-PRIVATE_JSRCS = SSLServer.java     \
-		SSLClient.java     \
+PRIVATE_JSRCS = SSLClient.java     \
 		TestCertApprovalCallback.java \
 		TestClientCertificateSelectionCallback.java \
-		$(NULL)
+        $(NULL)
+
+#PRIVATE_JSRCS = SSLServer.java     \
+		#SSLClient.java     \
+		#TestCertApprovalCallback.java \
+		#TestClientCertificateSelectionCallback.java \
+		#$(NULL)
 
 CLASSES =	SSLHandshakeCompletedEvent    \
 		SSLSecurityStatus             \
 		SSLHandshakeCompletedListener \
-		SSLServerSocket               \
-		SSLInputStream                \
 		SSLSocket                     \
-		SSLOutputStream               \
-		SSLSocketImpl		      \
 		PrintOutputStreamWriter       \
 		SSLCallbackNotifier           \
 		SSLCertificateApprovalCallback   \
 		SSLClientCertificateSelectionCallback \
 		$(NULL)
 
-PRIVATE_CLASSES =	SSLServer         \
-			SSLClient         \
-			ServerHandshakeCB \
-			ClientHandshakeCB \
-			$(NULL)
+#PRIVATE_CLASSES =	SSLServer         \
+			#SSLClient         \
+			#ServerHandshakeCB \
+			#ClientHandshakeCB \
+			#$(NULL)
 
-CSRCS =	sslimpl.c \
-	sslmozx.c \
-	stubs.c \
-	testhelp.c \
-	sslerror.c \
-	client.c \
+CSRCS =	SSLSocket.c \
+        callbacks.c \
 	$(NULL)
 
 LIBRARY_NAME = jssssl
-

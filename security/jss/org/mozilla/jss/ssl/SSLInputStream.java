@@ -13,7 +13,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
- * Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
  * Contributor(s):
@@ -31,14 +31,58 @@
  * GPL.
  */
 
+package org.mozilla.jss.ssl;
 
-/* new header file for JNI SSL functions */
+import java.io.IOException;
 
-/*
- * SSLSocketImpl
- */
-#define SSLSOCKETIMPL_CLASS_NAME  "org/mozilla/jss/ssl/SSLSocketImpl"
-#define SSLSOCKETIMPL_CERT_APPROVAL_CALLBACK_FIELD_NAME  "certApprovalCallback"
-#define SSLSOCKETIMPL_CERT_APPROVAL_CALLBACK_FIELD_SIG   "Lorg/mozilla/jss/ssl/SSLCertificateApprovalCallback;"
-#define SSLSOCKETIMPL_CERT_SELECTION_CALLBACK_FIELD_NAME "certSelectionCallback"
-#define SSLSOCKETIMPL_CERT_SELECTION_CALLBACK_FIELD_SIG  "Lorg/mozilla/jss/ssl/SSLClientCertificateSelectionCallback;"
+public class SSLInputStream extends java.io.InputStream {
+
+    SSLInputStream(SSLSocket sock) {
+        this.sock = sock;
+    }
+
+    public int available() throws IOException {
+        return sock.socketAvailable();
+    }
+
+    public void close() throws IOException {
+        sock.close();
+    }
+
+    public int read() throws IOException {
+        byte[] b = new byte[1];
+        int nread = read(b, 0, 1);
+        if( nread == -1 ) {
+            return nread;
+        } else {
+            return ((int) b[0]) & (0xff);
+        }
+    }
+
+    public int read(byte[] b) throws IOException {
+        return read(b, 0, b.length);
+    }
+
+    public int read(byte[] b, int off, int len) throws IOException {
+        return sock.read(b, off, len);
+    }
+
+    public long skip(long n) throws IOException {
+        long numSkipped = 0;
+
+        int size = (int) (n < 2048 ? n : 2048);
+        byte[] trash = new byte[size];
+        while( n > 0) {
+            size = (int) (n < 2048 ? n : 2048);
+            int nread = read(trash, 0, size);
+            if( nread <= 0 ) {
+                break;
+            }
+            numSkipped += nread;
+            n -= nread;
+        }
+        return numSkipped;
+    }
+
+    private SSLSocket sock;
+}

@@ -13,7 +13,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
- * Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
  * Contributor(s):
@@ -31,56 +31,15 @@
  * GPL.
  */
 
-#ifndef __jssl_h__
-#define __jssl_h__
-#include "seccomon.h"
-#include "nspr.h"
-#include "cert.h"
-#include "key.h"
+#ifndef ORG_MOZILLA_JSS_SSL_JSSL_H
+#define ORG_MOZILLA_JSS_SSL_JSSL_H
 
-#include "jni.h"
+struct JSSL_SocketData {
+    PRFileDesc *fd;
+    jobject socketObject; /* weak global ref */
+    jobject certApprovalCallback; /* global ref */
+    jobject clientCertSelectionCallback; /* global ref */
+};
+typedef struct JSSL_SocketData JSSL_SocketData;
 
-
-PR_EXTERN( JNIEnv * ) jni_GetCurrentEnv(void);
-
-
-/*
- * Callback from SSL for checking certificate of the server
- */
-PR_EXTERN( int ) JSSL_ConfirmPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
-		                PRBool isServer);
-	
-
-/*
- * Callback from SSL for checking certificate of the server (but ignore expired status of cert)
- */
-PR_EXTERN( int ) JSSL_ConfirmExpiredPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
-		                PRBool isServer);	         
-/* 
- * Expected return values:
- *	0		SECSuccess
- *	-1		SECFailure - No suitable certificate found.
- *	-2 		SECWouldBlock (we're waiting while we ask the user).
- */
-PR_EXTERN( int )
-JSSL_GetClientAuthData(	void *              arg,
-			PRFileDesc *        fd,
-			CERTDistNames *     caNames,
-			CERTCertificate **  pRetCert,
-			SECKEYPrivateKey ** pRetKey);
-
-PR_EXTERN( int ) JSSL_SetupSecureSocket(PRFileDesc *fd, char *url, JNIEnv *cx, jobject obj);
-
-PR_EXTERN( void ) JSSL_Shutdown(void);
-
-PR_EXTERN( SECStatus ) JSSL_ConfigSecureServerNickname(PRFileDesc *fd, 
-                                                 const char *nickName);
-
-PR_EXTERN( const ) char * JSSL_Strerror(PRErrorCode errNum);
-
-#if defined(DEBUG_nelsonb)
-
-PR_EXTERN( void ) JSSL_Init(void);
-
-#endif
 #endif
