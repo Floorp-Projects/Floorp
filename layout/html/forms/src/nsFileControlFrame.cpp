@@ -53,6 +53,7 @@
 #include "nsIComponentManager.h"
 #include "nsIDOMWindow.h"
 #include "nsIFilePicker.h"
+#include "nsIDOMMouseEvent.h"
 
 
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
@@ -236,6 +237,18 @@ nsFileControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 nsresult 
 nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
+  // only allow the left button
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  if (mouseEvent) {
+    PRUint16 whichButton;
+    if (NS_SUCCEEDED(mouseEvent->GetButton(&whichButton))) {
+      if (whichButton != 1) {
+        return NS_OK;
+      }
+    }
+  }
+
+
   nsresult result;
 
   // Get parent nsIDOMWindow object.
