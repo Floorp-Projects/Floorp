@@ -381,8 +381,8 @@ separated by a comma (with duplication removed, if they're the same
 person).  %cc% gets replaced by the list of people on the CC list,
 separated by commas.  %bugid% gets replaced by the bug number.
 %diffs% gets replaced by the diff text from the old version to the new
-version of this bug.  %neworchanged% is either "New" or "Changed",
-depending on whether this mail is reporting a new bug or changes made
+version of this bug.  %neworchanged% is "New: " if this mail is
+reporting a new bug or empty if changes were made
 to an existing one.  %summary% gets replaced by the summary of this
 bug.  %<i>anythingelse</i>% gets replaced by the definition of that
 parameter (as defined on this page).},
@@ -390,7 +390,7 @@ parameter (as defined on this page).},
 "From: bugzilla-daemon
 To: %to%
 Cc: %cc%
-Subject: [Bug %bugid%] %neworchanged% - %summary%
+Subject: [Bug %bugid%] %neworchanged%%summary%
 
 %urlbase%show_bug.cgi?id=%bugid%
 
@@ -418,7 +418,7 @@ q{The same as 'changedmail', but used for the newemailtech stuff.},
 "From: bugzilla-daemon
 To: %to%
 Cc: %cc%
-Subject: [Bug %bugid%] %neworchanged% - %summary%
+Subject: [Bug %bugid%] %neworchanged%%summary%
 
 %urlbase%show_bug.cgi?id=%bugid%
 

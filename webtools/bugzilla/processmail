@@ -949,7 +949,7 @@ sub NewProcessOnePerson ($$$$$$$$$$) {
 # since if the bug didn't change, you wouldn't be getting mail
 # in the first place! see http://bugzilla.mozilla.org/show_bug.cgi?id=29820 
 # for details.
-    $substs{"neworchanged"} = $isnew ? "New" : "";
+    $substs{"neworchanged"} = $isnew ? 'New: ' : '';
     $substs{"to"} = $person;
     $substs{"cc"} = '';
     $substs{"bugid"} = $id;
@@ -1042,7 +1042,7 @@ sub ProcessOneBug {
                 $substs{"diffs"} .= $_;
             }
             close DIFFS;
-            $substs{"neworchanged"} = $verb;
+            $substs{"neworchanged"} = ($verb eq "New") ? "New: " : "";
             $substs{"summary"} = $::bug{'short_desc'};
             my $msg = PerformSubsts(Param("changedmail"), \%substs);
 
