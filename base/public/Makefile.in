@@ -36,6 +36,9 @@ EXPORTS =		\
     nsIFileStream.h     \
     nsIStringStream.h   \
     nsSpecialSystemDirectory.h \
+    nsIObserverService.h    \
+    nsIObserverList.h       \
+    nsIObserver.h           \
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
