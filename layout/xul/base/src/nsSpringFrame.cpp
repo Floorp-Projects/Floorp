@@ -54,6 +54,7 @@ NS_IMETHODIMP  nsSpringFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   if (!mRect.Contains(aPoint)) 
     return NS_ERROR_FAILURE;
 
+  /*
   // see if it is in our border, padding, or inset
   nsRect r(mRect);
   nsMargin m;
@@ -62,9 +63,12 @@ NS_IMETHODIMP  nsSpringFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   GetBorderAndPadding(m);
   r.Deflate(m);
   if (!r.Contains(aPoint)) {
+  */
     *aFrame = this;
+    /*
     return NS_OK;
   }
+  */
 
-  return NS_ERROR_FAILURE;  
+  return NS_OK;
 }

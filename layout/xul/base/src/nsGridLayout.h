@@ -21,40 +21,33 @@
  */
 
 /**
-
-  Eric D Vaughan
-  A frame that can have multiple children. Only one child may be displayed at one time. So the
-  can be flipped though like a deck of cards.
  
+  Author:
+  Eric D Vaughan
+
 **/
 
-#ifndef nsStackLayout_h___
-#define nsStackLayout_h___
+#ifndef nsGridLayout_h___
+#define nsGridLayout_h___
 
-#include "nsBoxLayout.h"
+#include "nsStackLayout.h"
 #include "nsCOMPtr.h"
+class nsTempleLayout;
+class nsMonumentLayout;
+class nsBoxSizeList;
 
-class nsStackLayout : public nsBoxLayout
+class nsGridLayout : public nsStackLayout
 {
 public:
 
-  friend nsresult NS_NewStackLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
+  friend nsresult NS_NewGridLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
 
-  nsStackLayout();
+  NS_IMETHOD GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsBoxSizeList** aList, nsMonumentLayout* aRequestor = nsnull);
+  NS_IMETHOD GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTempleLayout, nsIBox** aTempleBox, nsMonumentLayout* aRequestor = nsnull);
 
-  NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
-
-  NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
-
-private:
-  static nsCOMPtr<nsIBoxLayout> gInstance;
-
-}; // class nsStackLayout
-
-
+protected:
+  nsGridLayout(nsIPresShell* aShell);
+}; // class nsGridLayout
 
 #endif
 

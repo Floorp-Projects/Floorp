@@ -156,15 +156,19 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoele
       // ok we got a box is it the target?
       if (incrementalChild == target) {
 
-        if (!aCoelesce) {
-          nsFrameState state;
-          nsIFrame* frame;
-          aBox->GetFrame(&frame);
-          frame->GetFrameState(&state);
+        nsFrameState state;
+        nsIFrame* frame;
+        aBox->GetFrame(&frame);
+        frame->GetFrameState(&state);
+
+        if (aCoelesce) 
+          state &= ~NS_FRAME_HAS_DIRTY_CHILDREN;
+        else
           state |= NS_FRAME_HAS_DIRTY_CHILDREN;
-          frame->SetFrameState(state);
-        }
-         // the target is a box?
+
+        frame->SetFrameState(state);
+
+        // the target is a box?
          // mark it dirty generating a new reflow command targeted
          // at us and coelesce out this one.
          ibox->MarkDirty(*this);      
@@ -175,7 +179,7 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoele
             nsIBox* parent;
             ibox->GetParentBox(&parent);
             parent->MarkDirty(*this);
-            //DirtyAllChildren(*this, box);
+            DirtyAllChildren(*this, ibox);
          } 
 
          // yes we coelesed

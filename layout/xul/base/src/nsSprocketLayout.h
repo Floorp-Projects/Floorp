@@ -27,6 +27,7 @@
 #define nsSprocketLayout_h___
 
 #include "nsBoxLayout.h"
+#include "nsCOMPtr.h"
 
 class nsBoxSize
 {
@@ -87,6 +88,7 @@ class nsSprocketLayout : public nsBoxLayout {
 
 public:
 
+  friend nsresult NS_NewSprocketLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
 
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
 
@@ -97,7 +99,7 @@ public:
   NS_IMETHOD GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
   NS_IMETHOD IsCollapsed(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed);
 
-  nsSprocketLayout(nsIPresShell* aShell);
+  nsSprocketLayout();
 
 protected:
 
@@ -147,6 +149,10 @@ protected:
 
   virtual void GetFrameState(nsIBox* aBox, nsFrameState& aState);
   virtual void SetFrameState(nsIBox* aBox, nsFrameState aState);
+
+  // because the sprocket layout manager has no instance variables. We 
+  // can make a static on and reuse it everywhere.
+  static nsCOMPtr<nsIBoxLayout> gInstance;
 
 };
 

@@ -56,12 +56,18 @@ class nsHTMLInfo;
 #define NS_STATE_SET_TO_DEBUG            0x04000000
 #define NS_STATE_DEBUG_WAS_SET           0x08000000
 #define NS_STATE_IS_COLLAPSED            0x10000000
+#define NS_STATE_DEFAULT_HORIZONTAL      0x20000000
 
 class nsBoxFrame : public nsHTMLContainerFrame, public nsContainerBox
 {
 public:
 
-  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot = PR_FALSE);
+  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, 
+                                 nsIFrame** aNewFrame, 
+                                 PRBool aIsRoot = PR_FALSE,
+                                 nsIBoxLayout* aLayoutManager = nsnull,
+                                 PRBool aDefaultHorizontal = PR_TRUE);
+
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
 
@@ -159,8 +165,9 @@ public:
 
   virtual nsresult GetContentOf(nsIContent** aContent);
 
+  nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
+ 
 protected:
-    nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = PR_FALSE);
 
     virtual void PropagateDebug(nsBoxLayoutState& aState);
 

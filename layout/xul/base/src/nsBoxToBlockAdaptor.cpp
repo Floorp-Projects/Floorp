@@ -170,9 +170,6 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
       if (currentSize) {
         desiredSize.maxElementSize = nsnull;
 
-        if (size.width > currentSize->width)
-           currentSize->width = size.width;
-
         if (size.height > currentSize->height)
            currentSize->height = size.height;
       }
@@ -315,10 +312,7 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
       desiredSize.maxElementSize = nsnull;
 
       if (size.width > currentSize->width)
-         currentSize->width = size.width;
-  
-      if (size.height > currentSize->height)
-         currentSize->height = size.height;
+         currentSize->width = size.width;  
     }
 
      mAscent = desiredSize.ascent;

@@ -47,29 +47,34 @@
 #include "nsStackLayout.h"
 
 nsresult
-NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsStackFrame* it = new (aPresShell) nsStackFrame(aPresShell);
+  nsStackFrame* it = new (aPresShell) nsStackFrame(aPresShell, aLayoutManager);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aNewFrame = it;
+
   return NS_OK;
   
 } // NS_NewStackFrame
 
 nsCOMPtr<nsIBoxLayout> nsStackFrame::gLayout = nsnull;
 
-nsStackFrame::nsStackFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell)
+nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager):nsBoxFrame(aPresShell)
 {
- if (!gLayout)
-    gLayout = new nsStackLayout(aPresShell);
+    // if no layout manager specified us the stack layout
+  nsCOMPtr<nsIBoxLayout> layout = aLayoutManager;
 
-  SetLayoutManager(gLayout);
+  if (layout == nsnull) {
+    NS_NewStackLayout(aPresShell, layout);
+  }
+
+  SetLayoutManager(layout);
 }
 
 
