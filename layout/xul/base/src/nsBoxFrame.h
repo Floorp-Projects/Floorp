@@ -144,6 +144,9 @@ protected:
 
     virtual void GetInset(nsMargin& margin); 
 
+    nsresult GenerateDirtyReflowCommand(nsIPresContext& aPresContext,
+                                        nsIPresShell&   aPresShell);
+
     PRBool mHorizontal;
     nsCalculatedBoxInfo mSprings[100];
     nscoord mSpringCount;

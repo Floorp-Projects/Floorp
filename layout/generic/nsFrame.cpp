@@ -264,29 +264,8 @@ nsFrame::AppendFrames(nsIPresContext& aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aFrameList)
 {
-#if 0
+  NS_PRECONDITION(PR_FALSE, "not a container");
   return NS_ERROR_UNEXPECTED;
-#else
-#ifdef NS_DEBUG
-  nsFrameList tmp(aFrameList);
-  tmp.VerifyParent(this);
-#endif
-  // XXX temporary code until frame containers stop using the old
-  // reflow command api's
-  nsIReflowCommand* reflowCmd = nsnull;
-  nsresult rv;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                               nsIReflowCommand::FrameAppended,
-                               aFrameList);
-  if (NS_SUCCEEDED(rv)) {
-    if (nsnull != aListName) {
-      reflowCmd->SetChildListName(aListName);
-    }
-    aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
-  }
-  return rv;
-#endif
 }
 
 NS_IMETHODIMP
@@ -296,37 +275,8 @@ nsFrame::InsertFrames(nsIPresContext& aPresContext,
                       nsIFrame*       aPrevFrame,
                       nsIFrame*       aFrameList)
 {
-#if 0
+  NS_PRECONDITION(PR_FALSE, "not a container");
   return NS_ERROR_UNEXPECTED;
-#else
-#ifdef NS_DEBUG
-  nsFrameList tmp(aFrameList);
-  tmp.VerifyParent(this);
-#endif
-
-  // XXX temporary code until frame containers stop using the old
-  // reflow command api's
-
-  // By default, the reflow command is aimed at the first-in-flow. We
-  // map that to the flow block that contains aPrevFrame for
-  // compatability.
-  nsIFrame* target = this;
-  if (nsnull != aPrevFrame) {
-    aPrevFrame->GetParent(&target);
-  }
-
-  nsIReflowCommand* reflowCmd = nsnull;
-  nsresult rv;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, target, aFrameList, aPrevFrame);
-  if (NS_SUCCEEDED(rv)) {
-    if (nsnull != aListName) {
-      reflowCmd->SetChildListName(aListName);
-    }
-    aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
-  }
-  return rv;
-#endif
 }
 
 NS_IMETHODIMP
@@ -335,40 +285,8 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
 {
-#if 0
+  NS_PRECONDITION(PR_FALSE, "not a container");
   return NS_ERROR_UNEXPECTED;
-#else
-#ifdef NS_DEBUG
-  nsIFrame* parent;
-  aOldFrame->GetParent(&parent);
-  NS_ASSERTION(parent == this, "bad child parent");
-#endif
-
-  // XXX temporary code until frame containers stop using the old
-  // reflow command api's
-
-  // By default, the reflow command is aimed at the first-in-flow. We
-  // map that to the flow block that contains aPrevFrame for
-  // compatability.
-  nsIFrame* target = this;
-  if (nsnull != aOldFrame) {
-    aOldFrame->GetParent(&target);
-  }
-
-  nsIReflowCommand* reflowCmd = nsnull;
-  nsresult rv;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, target,
-                               nsIReflowCommand::FrameRemoved,
-                               aOldFrame);
-  if (NS_SUCCEEDED(rv)) {
-    if (nsnull != aListName) {
-      reflowCmd->SetChildListName(aListName);
-    }
-    aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
-  }
-  return rv;
-#endif
 }
 
 NS_IMETHODIMP
@@ -378,6 +296,7 @@ nsFrame::ReplaceFrame(nsIPresContext& aPresContext,
                       nsIFrame*       aOldFrame,
                       nsIFrame*       aNewFrame)
 {
+  NS_PRECONDITION(PR_FALSE, "not a container");
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -1060,6 +979,40 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
       mView->GetViewManager(vm);
       vm->ResizeView(mView, mRect.width, mRect.height);
       vm->MoveViewTo(mView, origin.x, origin.y);
+
+      // Clip applies to block-level and replaced elements with overflow
+      // set to other than 'visible'
+      const nsStyleDisplay* display =
+        (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+      if (display->IsBlockLevel()) {
+        if (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN) {
+          nscoord left, top, right, bottom;
+          
+          // Start with the 'auto' values and then factor in user
+          // specified values
+          left = top = 0;
+          right = mRect.width;
+          bottom = mRect.height;
+
+          if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
+            top += display->mClip.top;
+          }
+          if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
+            right -= display->mClip.right;
+          }
+          if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
+            bottom -= display->mClip.bottom;
+          }
+          if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
+            left += display->mClip.left;
+          }
+          mView->SetClip(left, top, right, bottom);
+
+        } else {
+          // Make sure no clip is set
+          mView->SetClip(0, 0, 0, 0);
+        }
+      }
       NS_RELEASE(vm);
     }
   }

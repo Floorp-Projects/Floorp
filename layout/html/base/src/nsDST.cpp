@@ -25,11 +25,14 @@
 /////////////////////////////////////////////////////////////////////////////
 // Structure that represents a node in the DST
 
+// Constructor
 inline nsDST::Node::Node(void* aKey, void* aValue)
   : mKey(aKey), mValue(aValue), mLeft(0), mRight(0)
 {
 }
 
+// Helper function that returns TRUE if the node is a leaf (i.e., no left or
+// right child), and FALSE otherwise
 inline int nsDST::Node::IsLeaf() const
 {
   return !mLeft && !mRight;
@@ -47,18 +50,23 @@ inline void* nsDST::Node::operator new(size_t aSize, NodeArena& aArena)
 
 #define NS_DST_ARENA_BLOCK_SIZE   1024
 
+// Constructor
 nsDST::NodeArena::NodeArena()
   : mFreeList(0)
 {
   PL_INIT_ARENA_POOL(&mPool, "DSTNodeArena", NS_DST_ARENA_BLOCK_SIZE);
 }
 
+// Destructor
 nsDST::NodeArena::~NodeArena()
 {
   // Free the arena in the pool and finish using it
   PL_FinishArenaPool(&mPool);
 }
 
+// Called by the nsDST::Node's overloaded placement operator when allocating
+// a new node. First checks the free list. If the free list is empty, then
+// it allocates memory from the arena
 void*
 nsDST::NodeArena::AllocNode(size_t aSize)
 {
@@ -74,6 +82,8 @@ nsDST::NodeArena::AllocNode(size_t aSize)
   return p;
 }
 
+// Called by the DST's DestroyNode() function. Adds the node to the head
+// of the free list where it can be reused by AllocateNode()
 void
 nsDST::NodeArena::FreeNode(void* p)
 {
@@ -85,26 +95,33 @@ nsDST::NodeArena::FreeNode(void* p)
   mFreeList = (Node*)p;
 }
 
+// Called by the DST's Clear() function when we want to free the memory
+// in the arena pool, but continue using the arena
 void
 nsDST::NodeArena::FreeArenaPool()
 {
   // Free the arena in the pool, but continue using it
   PL_FreeArenaPool(&mPool);
+
+  // Clear the free list
   mFreeList = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // Digital search tree for doing a radix-search of pointer-based keys
 
+// Constructor
 nsDST::nsDST(PtrBits aLevelZeroBit)
   : mRoot(0), mLevelZeroBit(aLevelZeroBit)
 {
 }
 
+// Destructor
 nsDST::~nsDST()
 {
 }
 
+// Removes all nodes from the tree
 void
 nsDST::Clear()
 {
@@ -112,6 +129,9 @@ nsDST::Clear()
   mRoot = 0;
 }
 
+// Adds a new key to the tree. If the specified key is already in the
+// tree, then the existing value is replaced by the new value. Returns
+// the old value, or NULL if this is a new key
 void*
 nsDST::Insert(void* aKey, void* aValue)
 {
@@ -160,6 +180,8 @@ keepLooking:
   }
 }
 
+// Called by Remove() to destroy a node. Explicitly calls the destructor
+// and then asks the memory arena to free the memory
 inline void
 nsDST::DestroyNode(Node* aNode)
 {
@@ -167,6 +189,8 @@ nsDST::DestroyNode(Node* aNode)
   mArena.FreeNode(aNode);  // free memory
 }
 
+// Removes a key from the tree. Returns the current value, or NULL if
+// the key is not in the tree
 void*
 nsDST::Remove(void* aKey)
 {
@@ -209,6 +233,8 @@ nsDST::Remove(void* aKey)
   return 0;
 }
 
+// Searches the tree for a node with the specified key. Return the value
+// or NULL if the key is not in the tree
 void*
 nsDST::Search(void* aKey) const
 {
@@ -226,7 +252,7 @@ nsDST::Search(void* aKey) const
 }
 
 // Non-recursive search function. Returns a pointer to the pointer to the
-// node
+// node. Called by Search(), Insert(), and Remove()
 nsDST::Node**
 nsDST::SearchTree(void* aKey) const
 {
@@ -248,6 +274,7 @@ nsDST::SearchTree(void* aKey) const
     } else {
       result = &(*result)->mRight;
     }
+    // Move to the next bit in the key
     bitMask <<= 1;
   }
 
@@ -256,6 +283,9 @@ nsDST::SearchTree(void* aKey) const
 }
 
 #ifdef NS_DEBUG
+// Helper function used to verify the integrity of the tree. Does a
+// depth-first search of the tree looking for a node with the specified
+// key. Called by Search() if we don't find the key using the radix-search
 nsDST::Node*
 nsDST::DepthFirstSearch(Node* aNode, void* aKey) const
 {
@@ -274,7 +304,8 @@ nsDST::DepthFirstSearch(Node* aNode, void* aKey) const
   }
 }
 
-// Helper function that verifies the integrity of the tree
+// Helper function that verifies the integrity of the tree. Called
+// by Insert() and Remove()
 void
 nsDST::VerifyTree(Node* aNode, int aLevel, PtrBits aLevelKeyBits) const
 {

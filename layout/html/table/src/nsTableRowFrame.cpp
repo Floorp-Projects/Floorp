@@ -1373,26 +1373,29 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     // size.
     // XXX It would be nice if we could skip this step and the next step if the
     // column width isn't dependent on the max cell width...
-    kidReflowState.reason = eReflowReason_Initial;
-    kidReflowState.reflowCommand = nsnull;
-    kidReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
-    rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
-    if (gsDebug) 
-        printf ("TR %p for cell %p Incremental Reflow: desired=%d, MES=%d\n", 
-               this, aNextFrame, desiredSize.width, kidMaxElementSize.width);
-    // Update the cell layout data.
-    //XXX: this is a hack, shouldn't it be the case that a min size is 
-    //     never larger than a desired size?
-    if (kidMaxElementSize.width>desiredSize.width)
-      desiredSize.width = kidMaxElementSize.width;
-    if (kidMaxElementSize.height>desiredSize.height)
-      desiredSize.height = kidMaxElementSize.height;
-    ((nsTableCellFrame *)aNextFrame)->SetPass1DesiredSize(desiredSize);
-    ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
-    // Now reflow the cell again this time constraining the width
-    // XXX Ignore for now the possibility that the column width has changed...
-    kidReflowState.availableWidth = availWidth;
-    rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+    if (aReflowState.tableFrame->RequiresPass1Layout()) {
+      kidReflowState.reason = eReflowReason_Initial;
+      kidReflowState.reflowCommand = nsnull;
+      kidReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
+      rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+      if (gsDebug) 
+          printf ("TR %p for cell %p Incremental Reflow: desired=%d, MES=%d\n", 
+                 this, aNextFrame, desiredSize.width, kidMaxElementSize.width);
+      // Update the cell layout data.
+      //XXX: this is a hack, shouldn't it be the case that a min size is 
+      //     never larger than a desired size?
+      if (kidMaxElementSize.width>desiredSize.width)
+        desiredSize.width = kidMaxElementSize.width;
+      if (kidMaxElementSize.height>desiredSize.height)
+        desiredSize.height = kidMaxElementSize.height;
+      ((nsTableCellFrame *)aNextFrame)->SetPass1DesiredSize(desiredSize);
+      ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
+      
+      // Now reflow the cell again this time constraining the width
+      // XXX Ignore for now the possibility that the column width has changed...
+      kidReflowState.availableWidth = availWidth;
+      rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+    }
   
     // Place the child after taking into account it's margin and attributes
     // XXX We need to ask the table (or the table layout strategy) if the column
@@ -1434,6 +1437,12 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
 
     SetMaxChildHeight(aReflowState.maxCellHeight, maxCellTopMargin, maxCellBottomMargin);
 
+    // If the column widths have changed, then tell the table to rebalance
+    // the column widths
+    if (aReflowState.tableFrame->RequiresPass1Layout()) {
+      aReflowState.tableFrame->InvalidateColumnWidths();
+    }
+    
     // Return our desired size. Note that our desired width is just whatever width
     // we were given by the row group frame
     aDesiredSize.width = aReflowState.availSize.width;

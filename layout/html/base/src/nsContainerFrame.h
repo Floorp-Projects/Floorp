@@ -122,11 +122,6 @@ protected:
    */
   void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
 
-  /**
-   */
-  nsresult AddFrame(const nsHTMLReflowState& aReflowState,
-                    nsIFrame *               aAddedFrame);
-
   nsFrameList mFrames;
   nsFrameList mOverflowFrames;
 };

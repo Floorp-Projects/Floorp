@@ -95,6 +95,20 @@ public:
   /** @see nsIFrame::Destroy */
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
+  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+
   /** helper method to find the table parent of any table frame object */
   // TODO: today, this depends on display types.  This should be changed to rely
   // on stronger criteria, like an inner table frame atom
@@ -439,6 +453,14 @@ protected:
     * @return  PR_TRUE if this table is nested inside another table.
     */
   PRBool IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const;
+  
+  // Sets the starting column index for aColGroupFrame and the siblings frames that
+  // follow
+  void SetStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame,
+                                 PRInt32 aIndex);
+
+  // Calculate the starting column index to use for the specified col group frame
+  PRInt32 CalculateStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame);
 
 public:
   /** first pass of ResizeReflow.  
@@ -462,6 +484,9 @@ public:
 
   NS_IMETHOD GetTableSpecifiedHeight(nscoord& aHeight, const nsHTMLReflowState& aReflowState);
   virtual PRBool RowGroupsShouldBeConstrained() { return PR_FALSE; }
+  
+  /** do I need to do a reflow? */
+  virtual PRBool NeedsReflow(const nsHTMLReflowState& aReflowState);
   
 protected:
   /** second pass of ResizeReflow.
@@ -509,72 +534,6 @@ protected:
                            InnerTableReflowState& aReflowState,
                            nsReflowStatus&        aStatus);
 
-  /** process a colgroup inserted notification 
-    * @param aInsertedFrame  the new colgroup frame
-    * @param aReplace        PR_TRUE if aInsertedFrame is replacing an existing frame
-    *                        Not Yet Implemented.
-    * @see nsIFrameReflow::Reflow
-    */
-  NS_IMETHOD IR_ColGroupInserted(nsIPresContext&        aPresContext,
-                                 nsHTMLReflowMetrics&   aDesiredSize,
-                                 InnerTableReflowState& aReflowState,
-                                 nsReflowStatus&        aStatus,
-                                 nsTableColGroupFrame * aInsertedFrame,
-                                 PRBool                 aReplace);
-
-  /** process a colgroup appended notification. This method is optimized for append.
-    * @param aAppendedFrame  the new colgroup frame
-    * @see nsIFrameReflow::Reflow
-    */
-  NS_IMETHOD IR_ColGroupAppended(nsIPresContext&        aPresContext,
-                                 nsHTMLReflowMetrics&   aDesiredSize,
-                                 InnerTableReflowState& aReflowState,
-                                 nsReflowStatus&        aStatus,
-                                 nsTableColGroupFrame * aAppendedFrame); 
-
-  /** process a colgroup removed notification.
-    * @param aDeletedFrame  the colgroup frame to remove
-    * @see nsIFrameReflow::Reflow
-    */
-  NS_IMETHOD IR_ColGroupRemoved(nsIPresContext&        aPresContext,
-                                nsHTMLReflowMetrics&   aDesiredSize,
-                                InnerTableReflowState& aReflowState,
-                                nsReflowStatus&        aStatus,
-                                nsTableColGroupFrame * aDeletedFrame);
-
-  /** process a rowgroup inserted notification 
-    * @param aInsertedFrame  the new rowgroup frame
-    * @param aReplace        PR_TRUE if aInsertedFrame is replacing an existing frame
-    *                        Not Yet Implemented.
-    * @see nsIFrameReflow::Reflow
-    */
-  NS_IMETHOD IR_RowGroupInserted(nsIPresContext&        aPresContext,
-                                 nsHTMLReflowMetrics&   aDesiredSize,
-                                 InnerTableReflowState& aReflowState,
-                                 nsReflowStatus&        aStatus,
-                                 nsTableRowGroupFrame * aInsertedFrame,
-                                 PRBool                 aReplace);
-
-  /** process a rowgroup appended notification. This method is optimized for append.
-    * @param aAppendedFrame  the new rowgroup frame
-    * @see nsIFrameReflow::Reflow
-    */
-  NS_IMETHOD IR_RowGroupAppended(nsIPresContext&        aPresContext,
-                                 nsHTMLReflowMetrics&   aDesiredSize,
-                                 InnerTableReflowState& aReflowState,
-                                 nsReflowStatus&        aStatus,
-                                 nsTableRowGroupFrame * aAppendedFrame);
-
-  /** process a rowgroup removed notification.
-    * @param aDeletedFrame  the rowgroup frame to remove
-    * @see nsIFrameReflow::Reflow
-    */
-  NS_IMETHOD IR_RowGroupRemoved(nsIPresContext&        aPresContext,
-                                nsHTMLReflowMetrics&   aDesiredSize,
-                                InnerTableReflowState& aReflowState,
-                                nsReflowStatus&        aStatus,
-                                nsTableRowGroupFrame * aDeletedFrame);
-
   /** process a style chnaged notification.
     * @see nsIFrameReflow::Reflow
     * TODO: needs to be optimized for which attribute was actually changed.
@@ -588,6 +547,9 @@ protected:
                                        InnerTableReflowState& aReflowState,
                                        nsIFrame*              aKidFrame,
                                        nscoord                aDeltaY);
+  
+  nsresult RecoverState(InnerTableReflowState& aReflowState,
+                        nsIFrame*              aKidFrame);
 
   NS_METHOD AdjustForCollapsingRowGroup(nsIFrame* aRowGroupFrame, 
                                         PRInt32& aRowX);
@@ -675,10 +637,6 @@ protected:
 
   /** sets the width of the table according to the computed widths of each column. */
   virtual void SetTableWidth(nsIPresContext&  aPresContext);
-
-  /** given the new parent size, do I really need to do a reflow? */
-  virtual PRBool NeedsReflow(const nsHTMLReflowState& aReflowState, 
-                             const nsSize&            aMaxSize);
 
   /** returns PR_TRUE if the cached pass 1 data is still valid */
   virtual PRBool IsFirstPassValid() const;

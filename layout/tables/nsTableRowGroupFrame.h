@@ -44,9 +44,6 @@ struct RowGroupReflowState {
   // Flag used to set maxElementSize to my first row
   PRBool  firstRow;
 
-  // Remember the height of the first row, because it's our maxElementHeight (plus header/footers)
-  nscoord firstRowHeight;
-
   nsTableFrame *tableFrame;
 
   RowGroupReflowState(nsIPresContext&          aPresContext,
@@ -61,7 +58,6 @@ struct RowGroupReflowState {
     unconstrainedWidth = PRBool(reflowState.availableWidth == NS_UNCONSTRAINEDSIZE);
     unconstrainedHeight = PRBool(reflowState.availableHeight == NS_UNCONSTRAINEDSIZE);
     firstRow = PR_TRUE;
-    firstRowHeight=0;
     tableFrame = aTableFrame;
   }
 
@@ -245,6 +241,9 @@ protected:
                                      RowGroupReflowState& aReflowState,
                                      nsIFrame*            aKidFrame,
                                      nscoord              aDeltaY);
+  
+  nsresult RecoverState(RowGroupReflowState& aReflowState,
+                        nsIFrame*            aKidFrame);
 
   /**
    * Reflow the frames we've already created

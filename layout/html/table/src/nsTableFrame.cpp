@@ -2090,7 +2090,7 @@ nsTableFrame::GetSkipSides() const
   return skip;
 }
 
-PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState, const nsSize& aMaxSize)
+PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
 {
   PRBool result = PR_TRUE;
 
@@ -2115,48 +2115,59 @@ PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState, const ns
 //
 // Slides all the row groups following aKidFrame by the specified
 // amount
+//
+// XXX This is kind of klunky because the InnerTableReflowState::y
+// data member does not include the table's border/padding...
 nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
                                                  InnerTableReflowState& aReflowState,
                                                  nsIFrame*              aKidFrame,
                                                  nscoord                aDeltaY)
 {
   NS_PRECONDITION(NS_UNCONSTRAINEDSIZE == aReflowState.reflowState.availableHeight,
-                  "not in galley mode");
-  nsIFrame* lastKidFrame = aKidFrame;
+                  "we're not in galley mode");
 
-  if (aDeltaY != 0) {
-    // Move the frames that follow aKidFrame by aDeltaY
+  // If it's the footer that was reflowed, then we don't need to adjust any of
+  // the frames, because the footer is the bottom most frame
+  if (aKidFrame != aReflowState.footerFrame) {
     nsIFrame* kidFrame;
-
-    aKidFrame->GetNextSibling(&kidFrame);
-    while (nsnull != kidFrame) {
-      nsPoint        origin;
-      nsIHTMLReflow* htmlReflow;
+    nsRect    kidRect;
+    PRBool    movedFooter = PR_FALSE;
   
-      // XXX We can't just slide the child if it has a next-in-flow
-      kidFrame->GetOrigin(origin);
-      origin.y += aDeltaY;
-  
-      // XXX We need to send move notifications to the frame...
-      if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-        htmlReflow->WillReflow(aPresContext);
+    // Move the frames that follow aKidFrame by aDeltaY, and update the running
+    // y-offset
+    for (aKidFrame->GetNextSibling(&kidFrame); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
+      // See if it's the footer we're moving
+      if (kidFrame == aReflowState.footerFrame) {
+        movedFooter = PR_TRUE;
       }
-      kidFrame->MoveTo(origin.x, origin.y);
-
-      // Get the next frame
-      lastKidFrame = kidFrame;
-      kidFrame->GetNextSibling(&kidFrame);
+  
+      // Get the frame's bounding rect
+      kidFrame->GetRect(kidRect);
+  
+      // Adjust the running y-offset
+      aReflowState.y += kidRect.height;
+  
+      // Adjust the y-origin if its position actually changed
+      if (aDeltaY != 0) {
+        kidRect.y += aDeltaY;
+        kidFrame->MoveTo(kidRect.x, kidRect.y);
+      }
     }
-
-  } else {
-    // Get the last frame
-    lastKidFrame = mFrames.LastChild();
+  
+    // We also need to move the footer if there is one and we haven't already
+    // moved it
+    if (aReflowState.footerFrame && !movedFooter) {
+      aReflowState.footerFrame->GetRect(kidRect);
+      
+      // Adjust the running y-offset
+      aReflowState.y += kidRect.height;
+  
+      if (aDeltaY != 0) {
+        kidRect.y += aDeltaY;
+        aReflowState.footerFrame->MoveTo(kidRect.x, kidRect.y);
+      }
+    }
   }
-
-  // Update our running y-offset to reflect the bottommost child
-  nsRect  rect;
-  lastKidFrame->GetRect(rect);
-  aReflowState.y = rect.YMost();
 
   return NS_OK;
 }
@@ -2253,7 +2264,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   // NeedsReflow and IsFirstPassValid take into account reflow type = Initial_Reflow
-  if (PR_TRUE==NeedsReflow(aReflowState, nsSize(aReflowState.availableWidth, aReflowState.availableHeight)))
+  if (PR_TRUE==NeedsReflow(aReflowState))
   {
     PRBool needsRecalc=PR_FALSE;
     if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: needs reflow\n");
@@ -2938,6 +2949,240 @@ NS_METHOD nsTableFrame::GetBorderPlusMarginPadding(nsMargin& aResult)
   return NS_OK;
 }
 
+// Sets the starting column index for aColGroupFrame and the siblings frames that
+// follow
+void
+nsTableFrame::SetStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame,
+                                        PRInt32 aIndex)
+{
+  while (aColGroupFrame) {
+    aIndex += aColGroupFrame->SetStartColumnIndex(aIndex);
+    aColGroupFrame->GetNextSibling((nsIFrame**)&aColGroupFrame);
+  }
+}
+
+// Calculate the starting column index to use for the specified col group frame
+PRInt32
+nsTableFrame::CalculateStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame)
+{
+  PRInt32 index = 0;
+  for (nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame*)mColGroups.FirstChild();
+       colGroupFrame && (colGroupFrame != aColGroupFrame);
+       colGroupFrame->GetNextSibling((nsIFrame**)&colGroupFrame))
+  {
+    index += colGroupFrame->GetColumnCount();
+  }
+
+  return index;
+}
+
+NS_IMETHODIMP
+nsTableFrame::AppendFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList)
+{
+  PRInt32 startingColIndex = -1;
+
+  // Because we actually have two child lists, one for col group frames and one
+  // for everything else, we need to look at each frame individually
+  nsIFrame* f = aFrameList;
+  while (f) {
+    nsIFrame* next;
+
+    // Get the next frame and disconnect this frame from its sibling
+    f->GetNextSibling(&next);
+    f->SetNextSibling(nsnull);
+
+    // See what kind of frame we have
+    const nsStyleDisplay *display;
+    f->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
+      // Append the new col group frame
+      mColGroups.AppendFrame(nsnull, f);
+
+      // Set its starting column index
+      if (-1 == startingColIndex) {
+        startingColIndex = CalculateStartingColumnIndexFor((nsTableColGroupFrame*)f);
+      }
+      ((nsTableColGroupFrame*)f)->SetStartColumnIndex(startingColIndex);
+      startingColIndex += ((nsTableColGroupFrame *)f)->GetColumnCount();
+    
+    } else if (IsRowGroup(display->mDisplay)) {
+      // Append the new row group frame
+      mFrames.AppendFrame(nsnull, f);
+      
+      // Add the content of the row group to the cell map
+      DidAppendRowGroup((nsTableRowGroupFrame*)f);
+
+    } else {
+      // Nothing special to do, just add the frame to our child list
+      mFrames.AppendFrame(nsnull, f);
+    }
+
+    // Move to the next frame
+    f = next;
+  }
+
+  // We'll need to do a pass-1 layout of all cells in all the rows of the
+  // rowgroup
+  InvalidateFirstPassCache();
+  
+  // If we've added any columns, we need to rebuild the column cache.
+  InvalidateColumnCache();
+  
+  // Because the number of columns may have changed invalidate the column
+  // cache. Note that this has the side effect of recomputing the column
+  // widths, so we don't need to call InvalidateColumnWidths()
+  InvalidateColumnWidths();  
+
+  // Mark the table as dirty and generate a reflow command targeted at the
+  // outer table frame
+  nsIReflowCommand* reflowCmd;
+  nsresult          rv;
+  
+  mState |= NS_FRAME_IS_DIRTY;
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, mParent, nsIReflowCommand::ReflowDirty);
+  if (NS_SUCCEEDED(rv)) {
+    // Add the reflow command
+    rv = aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTableFrame::InsertFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aPrevFrame,
+                           nsIFrame*       aFrameList)
+{
+  // Asssume there's only one frame being inserted. The problem is that
+  // row group frames and col group frames go in separate child lists and
+  // so if there's more than one this gets messy...
+  // XXX The frame construction code should be separating out child frames
+  // based on the type...
+  nsIFrame* nextSibling;
+  aFrameList->GetNextSibling(&nextSibling);
+  NS_PRECONDITION(!nextSibling, "expected only one child frame");
+
+  // See what kind of frame we have
+  const nsStyleDisplay *display=nsnull;
+  aFrameList->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+
+  if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
+    // Insert the column group frame
+    mColGroups.InsertFrame(nsnull, aPrevFrame, aFrameList);
+
+    // Set its starting column index and adjust the index of the
+    // col group frames that follow
+    SetStartingColumnIndexFor((nsTableColGroupFrame*)aFrameList,
+                              CalculateStartingColumnIndexFor((nsTableColGroupFrame*)aFrameList));
+  
+  } else if (IsRowGroup(display->mDisplay)) {
+    // Insert the frame
+    mFrames.InsertFrame(nsnull, aPrevFrame, aFrameList);
+
+    // We'll need to do a pass-1 layout of all cells in all the rows of the
+    // rowgroup
+    InvalidateFirstPassCache();
+
+    // We need to rebuild the cell map, because currently we can't insert
+    // new frames except at the end (append)
+    InvalidateCellMap();
+
+  } else {
+    // Just insert the frame and don't worry about reflowing it
+    mFrames.InsertFrame(nsnull, aPrevFrame, aFrameList);
+    return NS_OK;
+  }
+
+  // If we've added any columns, we need to rebuild the column cache.
+  InvalidateColumnCache();
+  
+  // Because the number of columns may have changed invalidate the column
+  // cache. Note that this has the side effect of recomputing the column
+  // widths, so we don't need to call InvalidateColumnWidths()
+  InvalidateColumnWidths();  
+  
+  // Mark the table as dirty and generate a reflow command targeted at the
+  // outer table frame
+  nsIReflowCommand* reflowCmd;
+  nsresult          rv;
+  
+  mState |= NS_FRAME_IS_DIRTY;
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, mParent, nsIReflowCommand::ReflowDirty);
+  if (NS_SUCCEEDED(rv)) {
+    // Add the reflow command
+    rv = aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTableFrame::RemoveFrame(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame)
+{
+  // See what kind of frame we have
+  const nsStyleDisplay *display=nsnull;
+  aOldFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+
+  if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
+    nsIFrame* nextColGroupFrame;
+    aOldFrame->GetNextSibling(&nextColGroupFrame);
+
+    // Remove the col group frame
+    mColGroups.DestroyFrame(aPresContext, aOldFrame);
+
+    // Adjust the starting column index of the frames that follow
+    SetStartingColumnIndexFor((nsTableColGroupFrame*)nextColGroupFrame,
+                              CalculateStartingColumnIndexFor((nsTableColGroupFrame*)nextColGroupFrame));
+
+  } else if (IsRowGroup(display->mDisplay)) {
+    mFrames.DestroyFrame(aPresContext, aOldFrame);
+
+    // We need to rebuild the cell map, because currently we can't incrementally
+    // remove rows
+    InvalidateCellMap();
+
+  } else {
+    // Just remove the frame
+    mFrames.DestroyFrame(aPresContext, aOldFrame);
+    return NS_OK;
+  }
+
+  // Because the number of columns may have changed invalidate the column
+  // cache. Note that this has the side effect of recomputing the column
+  // widths, so we don't need to call InvalidateColumnWidths()
+  InvalidateColumnCache();
+  
+  // Because the number of columns may have changed invalidate the column
+  // cache. Note that this has the side effect of recomputing the column
+  // widths, so we don't need to call InvalidateColumnWidths()
+  InvalidateColumnWidths();  
+  
+  // Mark the table as dirty and generate a reflow command targeted at the
+  // outer table frame
+  nsIReflowCommand* reflowCmd;
+  nsresult          rv;
+  
+  mState |= NS_FRAME_IS_DIRTY;
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, mParent, nsIReflowCommand::ReflowDirty);
+  if (NS_SUCCEEDED(rv)) {
+    // Add the reflow command
+    rv = aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+
+  return rv;
+}
+
 NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext& aPresContext,
                                           nsHTMLReflowMetrics& aDesiredSize,
                                           const nsHTMLReflowState& aReflowState,
@@ -2946,13 +3191,23 @@ NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext& aPresContext,
   if (PR_TRUE==gsDebugIR) printf("\nTIF IR: IncrementalReflow\n");
   nsresult  rv = NS_OK;
 
+  // Constrain our reflow width to the computed table width. Note: this is
+  // based on the width of the first-in-flow
+  nsHTMLReflowState reflowState(aReflowState);
+  PRInt32 pass1Width = mRect.width;
+  if (mPrevInFlow) {
+    nsTableFrame* table = (nsTableFrame*)GetFirstInFlow();
+    pass1Width = table->mRect.width;
+  }
+  reflowState.availableWidth = pass1Width;
+
   nsMargin borderPadding;
   GetBorderPlusMarginPadding(borderPadding);
-  InnerTableReflowState state(aPresContext, aReflowState, borderPadding);
+  InnerTableReflowState state(aPresContext, reflowState, borderPadding);
 
   // determine if this frame is the target or not
   nsIFrame *target=nsnull;
-  rv = aReflowState.reflowCommand->GetTarget(target);
+  rv = reflowState.reflowCommand->GetTarget(target);
   if ((PR_TRUE==NS_SUCCEEDED(rv)) && (nsnull!=target))
   {
     // this is the target if target is either this or the outer table frame containing this inner frame
@@ -2964,10 +3219,9 @@ NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext& aPresContext,
     {
       // Get the next frame in the reflow chain
       nsIFrame* nextFrame;
-      aReflowState.reflowCommand->GetNext(nextFrame);
+      reflowState.reflowCommand->GetNext(nextFrame);
 
       // Recover our reflow state
-      //RecoverState(state, nextFrame);
       rv = IR_TargetIsChild(aPresContext, aDesiredSize, state, aStatus, nextFrame);
     }
   }
@@ -2991,73 +3245,6 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   if (PR_TRUE==gsDebugIR) printf("TIF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type)
   {
-  case nsIReflowCommand::FrameInserted :
-    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
-    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
-    {
-      rv = IR_ColGroupInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                               (nsTableColGroupFrame*)objectFrame, PR_FALSE);
-    }
-    else if (IsRowGroup(childDisplay->mDisplay))
-    {
-      rv = IR_RowGroupInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                               GetRowGroupFrameFor(objectFrame, childDisplay), PR_FALSE);
-    }
-    else
-    {
-      rv = AddFrame(aReflowState.reflowState, objectFrame);
-    }
-    break;
-  
-  case nsIReflowCommand::FrameAppended :
-    if (!objectFrame)
-      break;
-    
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
-    {
-      rv = IR_ColGroupAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              (nsTableColGroupFrame*)objectFrame);
-    }
-    else if (IsRowGroup(childDisplay->mDisplay))
-    {
-      rv = IR_RowGroupAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              GetRowGroupFrameFor(objectFrame, childDisplay));
-    }
-    else
-    { // no optimization to be done for Unknown frame types, so just reuse the Inserted method
-      rv = AddFrame(aReflowState.reflowState, objectFrame);
-    }
-    break;
-
-  /*
-  case nsIReflowCommand::FrameReplaced :
-    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
-    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
-
-  */
-
-  case nsIReflowCommand::FrameRemoved :
-    if (!objectFrame)
-      break;
-
-    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
-    {
-      rv = IR_ColGroupRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              (nsTableColGroupFrame*)objectFrame);
-    }
-    else if (IsRowGroup(childDisplay->mDisplay))
-    {
-      rv = IR_RowGroupRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              GetRowGroupFrameFor(objectFrame, childDisplay));
-    }
-    else
-    {
-      rv = mFrames.DestroyFrame(aPresContext, objectFrame);
-    }
-    break;
-
   case nsIReflowCommand::StyleChanged :
     rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
@@ -3067,198 +3254,13 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     rv = NS_ERROR_ILLEGAL_VALUE;
     break;
   
-  case nsIReflowCommand::PullupReflow:
-  case nsIReflowCommand::PushReflow:
-  case nsIReflowCommand::CheckPullupReflow :
-  case nsIReflowCommand::UserDefined :
   default:
-    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
+    NS_NOTYETIMPLEMENTED("unexpected reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
     if (PR_TRUE==gsDebugIR) printf("TIF IR: reflow command not implemented.\n");
     break;
   }
 
-  return rv;
-}
-
-NS_METHOD nsTableFrame::IR_ColGroupInserted(nsIPresContext&        aPresContext,
-                                            nsHTMLReflowMetrics&   aDesiredSize,
-                                            InnerTableReflowState& aReflowState,
-                                            nsReflowStatus&        aStatus,
-                                            nsTableColGroupFrame * aInsertedFrame,
-                                            PRBool                 aReplace)
-{
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_ColGroupInserted for frame %p\n", aInsertedFrame);
-  nsresult rv=NS_OK;
-  PRBool adjustStartingColIndex=PR_FALSE;
-  PRInt32 startingColIndex=0;
-  // find out what frame to insert aInsertedFrame after
-  nsIFrame *frameToInsertAfter=nsnull;
-  rv = aReflowState.reflowState.reflowCommand->GetPrevSiblingFrame(frameToInsertAfter); 
-  // insert aInsertedFrame as the first child.  Set its start col index to 0
-  if (nsnull==frameToInsertAfter)
-  {
-    mColGroups.InsertFrame(nsnull, nsnull, aInsertedFrame);
-    startingColIndex += aInsertedFrame->SetStartColumnIndex(0);
-    adjustStartingColIndex=PR_TRUE;
-  }
-  nsIFrame *childFrame=mColGroups.FirstChild();
-  nsIFrame *prevSib=nsnull;
-  while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
-  {
-    if ((nsnull!=frameToInsertAfter) && (childFrame==frameToInsertAfter))
-    {
-      nsIFrame *nextSib=nsnull;
-      frameToInsertAfter->GetNextSibling(&nextSib);
-      aInsertedFrame->SetNextSibling(nextSib);
-      frameToInsertAfter->SetNextSibling(aInsertedFrame);
-      // account for childFrame being a COLGROUP now
-      if (PR_FALSE==adjustStartingColIndex) // we haven't gotten to aDeletedFrame yet
-        startingColIndex += ((nsTableColGroupFrame *)childFrame)->GetColumnCount();
-      // skip ahead to aInsertedFrame, since we just handled the frame we inserted after
-      childFrame=aInsertedFrame;
-      adjustStartingColIndex=PR_TRUE; // now that we've inserted aInsertedFrame, 
-                                      // start adjusting subsequent col groups' starting col index including aInsertedFrame
-    }
-    if (PR_FALSE==adjustStartingColIndex) // we haven't gotten to aDeletedFrame yet
-      startingColIndex += ((nsTableColGroupFrame *)childFrame)->GetColumnCount();
-    else // we've removed aDeletedFrame, now adjust the starting col index of all subsequent col groups
-      startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
-    prevSib=childFrame;
-    rv = childFrame->GetNextSibling(&childFrame);
-  }
-
-  InvalidateColumnCache();
-  //XXX: what we want to do here is determine if the new COL information changes anything about layout
-  //     if not, skip invalidating the first passs
-  //     if so, and we can fix the first pass info
-  return rv;
-
-}
-
-NS_METHOD nsTableFrame::IR_ColGroupAppended(nsIPresContext&        aPresContext,
-                                            nsHTMLReflowMetrics&   aDesiredSize,
-                                            InnerTableReflowState& aReflowState,
-                                            nsReflowStatus&        aStatus,
-                                            nsTableColGroupFrame * aAppendedFrame)
-{
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_ColGroupAppended for frame %p\n", aAppendedFrame);
-  nsresult rv=NS_OK;
-  PRInt32 startingColIndex=0;
-  nsIFrame *childFrame=mColGroups.FirstChild();
-  nsIFrame *lastChild=childFrame;
-  while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
-  {
-    startingColIndex += ((nsTableColGroupFrame *)childFrame)->GetColumnCount();
-    lastChild=childFrame;
-    rv = childFrame->GetNextSibling(&childFrame);
-  }
-
-  // append aAppendedFrame
-  if (nsnull!=lastChild)
-    lastChild->SetNextSibling(aAppendedFrame);
-  else
-    mColGroups.SetFrames(aAppendedFrame);
-
-  aAppendedFrame->SetStartColumnIndex(startingColIndex);
-  
-#if 0
-
-we would only want to do this if manufactured col groups were invisible to the DOM.  Since they 
-currently are visible, they should behave just as if they were content-backed "real" colgroups
-If this decision is changed, the code below is a half-finished attempt to rationalize the situation.
-It requires having built a list of the colGroups before we get to this point.
-
-  // look at the last col group.  If it is implicit, and it's cols are implicit, then
-  // it and its cols were manufactured for table layout.  
-  // Delete it if possible, otherwise move it to the end of the list 
-  
-  if (0<colGroupCount)
-  {
-    nsTableColGroupFrame *colGroup = (nsTableColGroupFrame *)(colGroupList.ElementAt(colGroupCount-1));
-    if (PR_TRUE==colGroup->IsManufactured())
-    { // account for the new COLs that were added in aAppendedFrame
-      // first, try to delete the implicit colgroup
-      
-      // if we couldn't delete it, move the implicit colgroup to the end of the list
-      // and adjust it's col indexes
-      nsIFrame *colGroupNextSib;
-      colGroup->GetNextSibling(colGroupNextSib);
-      childFrame=mColGroups.FirstChild();
-      nsIFrame * prevSib=nsnull;
-      rv = NS_OK;
-      while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
-      {
-        if (childFrame==colGroup)
-        {
-          if (nsnull!=prevSib) // colGroup is in the middle of the list, remove it
-            prevSib->SetNextSibling(colGroupNextSib);
-          else  // colGroup was the first child, so set it's next sib to first child
-            mColGroups.SetFrames(colGroupNextSib);
-          aAppendedFrame->SetNextSibling(colGroup); // place colGroup at the end of the list
-          colGroup->SetNextSibling(nsnull);
-          break;
-        }
-        prevSib=childFrame;
-        rv = childFrame->GetNextSibling(childFrame);
-      }
-    }
-  }
-#endif
-
-
-  InvalidateColumnCache();
-  //XXX: what we want to do here is determine if the new COL information changes anything about layout
-  //     if not, skip invalidating the first passs
-  //     if so, and we can fix the first pass info
-  return rv;
-}
-
-
-NS_METHOD nsTableFrame::IR_ColGroupRemoved(nsIPresContext&        aPresContext,
-                                           nsHTMLReflowMetrics&   aDesiredSize,
-                                           InnerTableReflowState& aReflowState,
-                                           nsReflowStatus&        aStatus,
-                                           nsTableColGroupFrame * aDeletedFrame)
-{
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_ColGroupRemoved for frame %p\n", aDeletedFrame);
-  nsresult rv=NS_OK;
-  PRBool adjustStartingColIndex=PR_FALSE;
-  PRInt32 startingColIndex=0;
-  nsIFrame *childFrame=mColGroups.FirstChild();
-  nsIFrame *prevSib=nsnull;
-  while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
-  {
-    if (childFrame==aDeletedFrame)
-    {
-      nsIFrame *deleteFrameNextSib=nsnull;
-      aDeletedFrame->GetNextSibling(&deleteFrameNextSib);
-      if (nsnull!=prevSib)
-        prevSib->SetNextSibling(deleteFrameNextSib);
-      else
-        mColGroups.SetFrames(deleteFrameNextSib);
-      childFrame=deleteFrameNextSib;
-      if (nsnull==childFrame)
-        break;
-      adjustStartingColIndex=PR_TRUE; // now that we've removed aDeletedFrame, start adjusting subsequent col groups' starting col index
-    }
-    const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
-    {
-      if (PR_FALSE==adjustStartingColIndex) // we haven't gotten to aDeletedFrame yet
-        startingColIndex += ((nsTableColGroupFrame *)childFrame)->GetColumnCount();
-      else // we've removed aDeletedFrame, now adjust the starting col index of all subsequent col groups
-        startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
-    }
-    prevSib=childFrame;
-    rv = childFrame->GetNextSibling(&childFrame);
-  }
-
-  InvalidateColumnCache();
-  //XXX: what we want to do here is determine if the new COL information changes anything about layout
-  //     if not, skip invalidating the first passs
-  //     if so, and we can fix the first pass info
   return rv;
 }
 
@@ -3277,84 +3279,68 @@ NS_METHOD nsTableFrame::IR_StyleChanged(nsIPresContext&        aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableFrame::IR_RowGroupInserted(nsIPresContext&        aPresContext,
-                                            nsHTMLReflowMetrics&   aDesiredSize,
-                                            InnerTableReflowState& aReflowState,
-                                            nsReflowStatus&        aStatus,
-                                            nsTableRowGroupFrame * aInsertedFrame,
-                                            PRBool                 aReplace)
+// Recovers the reflow state to what it should be if aKidFrame is about
+// to be reflowed. Restores the following:
+// - availSize
+// - y
+// - footerFrame
+// - firstBodySection
+//
+// In the case of the footer frame the y-offset is set to its current
+// y-offset. Note that this is different from resize reflow when the
+// footer is positioned higher up and then moves down as each row
+// group frame is relowed
+//
+// XXX This is kind of klunky because the InnerTableReflowState::y
+// data member does not include the table's border/padding...
+nsresult
+nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
+                           nsIFrame*              aKidFrame)
 {
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupInserted for frame %p\n", aInsertedFrame);
-  nsresult rv = AddFrame(aReflowState.reflowState, aInsertedFrame);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  // do a pass-1 layout of all the cells in all the rows of the rowgroup
-  rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState.reflowState, aStatus, 
-                         aInsertedFrame, eReflowReason_Initial, PR_FALSE);
-  if (NS_FAILED(rv))
-    return rv;
+  // Walk the list of children looking for aKidFrame
+  for (nsIFrame* frame = mFrames.FirstChild(); frame; frame->GetNextSibling(&frame)) {
+    // If this is a footer row group, remember it
+    const nsStyleDisplay *display;
+    frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
 
-  InvalidateCellMap();
-  InvalidateColumnCache();
+    // We only allow a single footer frame, and the footer frame must occur before
+    // any body section row groups
+    if ((NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay) &&
+        !aReflowState.footerFrame && !aReflowState.firstBodySection) {
+      aReflowState.footerFrame = frame;
+    
+    } else if ((NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay) &&
+               !aReflowState.firstBodySection) {
+      aReflowState.firstBodySection = frame;
+    }
+    
+    // See if this is the frame we're looking for
+    if (frame == aKidFrame) {
+      // If it's the footer, then keep going because the footer is at the
+      // very bottom
+      if (frame != aReflowState.footerFrame) {
+        break;
+      }
+    }
 
-  return rv;
+    // Get the frame's height
+    nsSize  kidSize;
+    frame->GetSize(kidSize);
+    
+    // If our height is constrained then update the available height. Do
+    // this for all frames including the footer frame
+    if (PR_FALSE == aReflowState.unconstrainedHeight) {
+      aReflowState.availSize.height -= kidSize.height;
+    }
+
+    // Update the running y-offset. Don't do this for the footer frame
+    if (frame != aReflowState.footerFrame) {
+      aReflowState.y += kidSize.height;
+    }
+  }
+
+  return NS_OK;
 }
-
-// since we know we're doing an append here, we can optimize
-NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
-                                            nsHTMLReflowMetrics&   aDesiredSize,
-                                            InnerTableReflowState& aReflowState,
-                                            nsReflowStatus&        aStatus,
-                                            nsTableRowGroupFrame * aAppendedFrame)
-{
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupAppended for frame %p\n", aAppendedFrame);
-  // hook aAppendedFrame into the child list
-  nsresult rv = AddFrame(aReflowState.reflowState, aAppendedFrame);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // account for the cells in the rows that are children of aAppendedFrame
-  // this will add the content of the rowgroup to the cell map
-  rv = DidAppendRowGroup(aAppendedFrame);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // do a pass-1 layout of all the cells in all the rows of the rowgroup
-  rv = ResizeReflowPass1(aPresContext, aDesiredSize, aReflowState.reflowState, aStatus, 
-                         aAppendedFrame, eReflowReason_Initial, PR_TRUE);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // if we've added any columns, we need to rebuild the column cache
-  // XXX: it would be nice to have a mechanism to just extend the column cache, rather than rebuild it completely
-  InvalidateColumnCache();
-
-  // if any column widths have to change due to this, rebalance column widths
-  //XXX need to calculate this, but for now just do it
-  InvalidateColumnWidths();  
-
-  return rv;
-}
-
-NS_METHOD nsTableFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
-                                           nsHTMLReflowMetrics&   aDesiredSize,
-                                           InnerTableReflowState& aReflowState,
-                                           nsReflowStatus&        aStatus,
-                                           nsTableRowGroupFrame * aDeletedFrame)
-{
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupRemoved for frame %p\n", aDeletedFrame);
-  nsresult rv = mFrames.DestroyFrame(aPresContext, aDeletedFrame);
-  InvalidateCellMap();
-  InvalidateColumnCache();
-
-  // if any column widths have to change due to this, rebalance column widths
-  //XXX need to calculate this, but for now just do it
-  InvalidateColumnWidths();
-
-  return rv;
-}
-
 
 NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
                                          nsHTMLReflowMetrics&   aDesiredSize,
@@ -3365,6 +3351,8 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
 {
   nsresult rv;
   if (PR_TRUE==gsDebugIR) printf("\nTIF IR: IR_TargetIsChild\n");
+  // Recover the state as if aNextFrame is about to be reflowed
+  RecoverState(aReflowState, aNextFrame);
 
   // Remember the old rect
   nsRect  oldKidRect;
@@ -3372,24 +3360,31 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
 
   // Pass along the reflow command
   nsHTMLReflowMetrics desiredSize(nsnull);
-  // XXX Correctly compute the available space...
-  nsSize  availSpace(aReflowState.reflowState.availableWidth, aReflowState.reflowState.availableHeight);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
-                                   aNextFrame, availSpace);
+                                   aNextFrame, aReflowState.availSize);
 
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
 
-  // Resize the row group frame
-  nsRect  kidRect;
-  aNextFrame->GetRect(kidRect);
-  aNextFrame->SizeTo(desiredSize.width, desiredSize.height);
+  // Place the row group frame. Don't use PlaceChild(), because it moves
+  // the footer frame as well. We'll adjust the footer frame later on in
+  // AdjustSiblingsAfterReflow()
+  nscoord x = aReflowState.mBorderPadding.left;
+  nscoord y = aReflowState.mBorderPadding.top + aReflowState.y;
+  nsRect  kidRect(x, y, desiredSize.width, desiredSize.height);
+  aNextFrame->SetRect(kidRect);
+
+  // Adjust the running y-offset
+  aReflowState.y += kidRect.height;
+
+  // If our height is constrained, then update the available height
+  if (PR_FALSE == aReflowState.unconstrainedHeight) {
+    aReflowState.availSize.height -= kidRect.height;
+  }
 
   // If the column width info is valid, then adjust the row group frames
   // that follow. Otherwise, return and we'll recompute the column widths
   // and reflow all the row group frames
-  if (!NeedsReflow(aReflowState.reflowState,
-                   nsSize(aReflowState.reflowState.availableWidth,
-                          aReflowState.reflowState.availableHeight))) {
+  if (!NeedsReflow(aReflowState.reflowState)) {
     // Adjust the row groups that follow
     AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame, desiredSize.height -
                               oldKidRect.height);

@@ -38,6 +38,7 @@
 #include "nsSpaceManager.h"
 #include "nsHTMLParts.h"
 #include "nsIViewManager.h"
+#include "nsIPresShell.h"
 
 #define CONSTANT float(0.0)
 #define DEBUG_REFLOW 0
@@ -1137,6 +1138,25 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
         }
 }
 
+// Marks the frame as dirty and generates an incremental reflow
+// command targeted at this frame
+nsresult
+nsBoxFrame::GenerateDirtyReflowCommand(nsIPresContext& aPresContext,
+                                       nsIPresShell&   aPresShell)
+{
+  nsCOMPtr<nsIReflowCommand>  reflowCmd;
+  nsresult                    rv;
+  
+  mState |= NS_FRAME_IS_DIRTY;
+  rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                               nsIReflowCommand::ReflowDirty);
+  if (NS_SUCCEEDED(rv)) {
+    // Add the reflow command
+    rv = aPresShell.AppendReflowCommand(reflowCmd);
+  }
+
+  return rv;
+}
 
 NS_IMETHODIMP
 nsBoxFrame::RemoveFrame(nsIPresContext& aPresContext,
@@ -1149,9 +1169,10 @@ nsBoxFrame::RemoveFrame(nsIPresContext& aPresContext,
              mSprings[i].clear();
       
       // remove the child frame
-      nsresult rv = nsHTMLContainerFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
       mFrames.DestroyFrame(aPresContext, aOldFrame);
-      return rv;
+
+      // mark us dirty and generate a reflow command
+      return GenerateDirtyReflowCommand(aPresContext, aPresShell);
 }
 
 NS_IMETHODIMP
@@ -1166,7 +1187,9 @@ nsBoxFrame::InsertFrames(nsIPresContext& aPresContext,
          mSprings[i].clear();
 
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
-  return nsHTMLContainerFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList); 
+  
+  // mark us dirty and generate a reflow command
+  return GenerateDirtyReflowCommand(aPresContext, aPresShell);
 }
 
 NS_IMETHODIMP
@@ -1181,7 +1204,9 @@ nsBoxFrame::AppendFrames(nsIPresContext& aPresContext,
       mSprings[i].clear();
 
    mFrames.AppendFrames(nsnull, aFrameList); 
-   return nsHTMLContainerFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 
+   
+   // mark us dirty and generate a reflow command
+   return GenerateDirtyReflowCommand(aPresContext, aPresShell);
 }
 
 

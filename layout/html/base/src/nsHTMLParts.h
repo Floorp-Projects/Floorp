@@ -357,11 +357,4 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
                         nsIFrame*                    aChildFrame = nsnull,
                         nsIAtom*                     aAttribute = nsnull);
 
-/** Create a new HTML 'FrameInserted' reflow command */
-extern nsresult
-NS_NewHTMLReflowCommand(nsIReflowCommand** aInstancePtrResult,
-                        nsIFrame*          aTargetFrame,
-                        nsIFrame*          aChildFrame,
-                        nsIFrame*          aPrevSiblingFrame);
-
 #endif /* nsHTMLParts_h___ */
