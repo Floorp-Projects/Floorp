@@ -165,40 +165,20 @@ nsresult nsHTTPRequest::WriteRequest ()
     if (mAttempts > 2)
         return NS_ERROR_FAILURE;
 
-    rv = mHandler -> RequestTransport (mURI, mConnection, mBufferSegmentSize, mBufferMaxSize, getter_AddRefs (mTransport), mAttempts ? TRANSPORT_OPEN_ALWAYS : TRANSPORT_REUSE_ALIVE);
+    if (!mTransport)
+    {
+        rv = mHandler -> RequestTransport (mURI, mConnection, mBufferSegmentSize, mBufferMaxSize, getter_AddRefs (mTransport), mAttempts ? TRANSPORT_OPEN_ALWAYS : TRANSPORT_REUSE_ALIVE);
+
+        if (NS_FAILED (rv))
+            return rv;
+        rv = mTransport -> SetNotificationCallbacks (mConnection);
+    }    
 
     if (NS_FAILED (rv))
         return rv;
 
-    rv = mTransport -> SetNotificationCallbacks (mConnection);
-
-    if (NS_FAILED (rv))
-        return rv;
-
-    mAttempts++;
-
-    formHeaders ();
-
-    PRUint32 loadAttributes;
-    mConnection->GetLoadAttributes(&loadAttributes);
-    if (loadAttributes & (nsIChannel::FORCE_VALIDATION | 
-                nsIChannel::FORCE_RELOAD)) {
-
-        // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
-        // no proxy is configured since we might be talking with a transparent
-        // proxy, i.e. one that operates at the network level.  See bug #14772
-        SetHeader(nsHTTPAtoms::Pragma, "no-cache");
-    }
-
-    if (loadAttributes & nsIChannel::FORCE_RELOAD) {
-        // If doing a reload, force end-to-end 
-        SetHeader(nsHTTPAtoms::Cache_Control, "no-cache");
-    } else if (loadAttributes & nsIChannel::FORCE_VALIDATION) {
-        // A "max-age=0" cache-control directive forces each cache along the
-        // path to the origin server to revalidate its own entry, if any, with
-        // the next cache or server.
-        SetHeader(nsHTTPAtoms::Cache_Control, "max-age=0");
-    }
+    if (mAttempts++ == 0)
+        formHeaders ();
 
     //
     // Build up the request into mRequestBuffer...
@@ -490,9 +470,11 @@ nsHTTPRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Context,
         PRUint32 wasKeptAlive = 0;
 
         if (trans)
-            trans -> GetReuseCount (&wasKeptAlive);
+            trans  -> GetReuseCount (&wasKeptAlive);
 
-        mHandler -> ReleaseTransport (mTransport, PR_FALSE);
+        mTransport -> SetNotificationCallbacks (nsnull);
+        mHandler   -> ReleaseTransport (mTransport, PR_FALSE);
+        mTransport = null_nsCOMPtr ();
 
         if (wasKeptAlive)
         {
@@ -513,7 +495,7 @@ nsHTTPRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Context,
     // These resouces are no longer needed...
     //
     mRequestBuffer.Truncate ();
-    mPostDataStream = null_nsCOMPtr();
+    mPostDataStream = null_nsCOMPtr ();
 
     return rv;
 }
@@ -601,6 +583,33 @@ nsHTTPRequest::formHeaders ()
     {
         nsCAutoString uaString ((const PRUnichar*)ua);
         SetHeader (nsHTTPAtoms::User_Agent, uaString.GetBuffer ());
+    }
+
+    PRUint32 loadAttributes;
+    mConnection -> GetLoadAttributes (&loadAttributes);
+    
+    if (loadAttributes & (nsIChannel::FORCE_VALIDATION | 
+                nsIChannel::FORCE_RELOAD))
+    {
+
+        // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
+        // no proxy is configured since we might be talking with a transparent
+        // proxy, i.e. one that operates at the network level.  See bug #14772
+        SetHeader (nsHTTPAtoms::Pragma, "no-cache");
+    }
+
+    if (loadAttributes & nsIChannel::FORCE_RELOAD)
+    {
+        // If doing a reload, force end-to-end 
+        SetHeader (nsHTTPAtoms::Cache_Control, "no-cache");
+    }
+    else
+    if (loadAttributes & nsIChannel::FORCE_VALIDATION)
+    {
+        // A "max-age=0" cache-control directive forces each cache along the
+        // path to the origin server to revalidate its own entry, if any, with
+        // the next cache or server.
+        SetHeader (nsHTTPAtoms::Cache_Control, "max-age=0");
     }
 
     // Send */*. We're no longer chopping MIME-types for acceptance.
