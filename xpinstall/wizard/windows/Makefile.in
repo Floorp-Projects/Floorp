@@ -41,5 +41,9 @@ DIRS	+= \
 	GetShortPathName \
 	$(NULL)
 
+ifdef PALM_CDK_DIR
+DIRS		+= palmsync
+endif
+
 include $(topsrcdir)/config/rules.mk
 
