@@ -274,25 +274,58 @@ mdb_err nsIMdbTable::HasOid( // test for the table position of a row member
 	  return 0;
   }
 
-const char *kStartRowList = "start row list"LINEBREAK;
-const char *kEndRowList = "end row list"LINEBREAK;
+mdb_err nsIMdbTable::Write()
 
-  mdb_err nsIMdbTable::Write()
+{
+	nsIOFileStream *stream = m_owningPort->m_fileStream;
+	*stream << m_kind;
+	*stream << ",";
+	*stream << (long) m_rows.Count();
+	*stream << LINEBREAK;
 
-  {
-	  nsIOFileStream *stream = m_owningPort->m_fileStream;
-	  *stream << m_kind;
-	  *stream << kStartRowList;
-	  PRInt32 i;
+	PRInt32 i;
 
-	  for (i = 0; i < m_rows.Count(); i++)
-	  {
+	for (i = 0; i < m_rows.Count(); i++)
+	{
+		mdb_pos iteratePos;
 
-	  }
+		for (iteratePos = 0; iteratePos  < m_rows.Count(); iteratePos++)
+		{
+			nsIMdbRow *row = (nsIMdbRow *) m_rows.ElementAt(iteratePos);
+			if (row)
+				row->Write(stream);
+		}
+	}
+	return 0;
+}
 
-	  *stream << kEndRowList;
-	  return 0;
-  }
+mdb_err nsIMdbTable::Read()
+
+{
+	char lineBuf[100];
+
+	nsIOFileStream *stream = m_owningPort->m_fileStream;
+
+	stream->readline(lineBuf, sizeof(lineBuf));
+	m_kind = atoi(lineBuf);
+
+	char *p;
+	for (p = lineBuf; *p; p++)
+	{
+		if (*p == ',')
+			break;
+	}
+	PRInt32 numRows = atoi(p + 1);
+
+	for (PRInt32 i = 0; i < numRows; i++)
+	{
+		nsIMdbRow *row = new nsIMdbRow(this, m_owningPort);
+		if (row)
+			row->Read(stream);
+	}
+
+	return 0;
+}
 
  mdb_err nsIMdbTableRowCursor::SetTable(nsIMdbEnv* ev, nsIMdbTable* ioTable) 
  {
@@ -340,10 +373,10 @@ mdb_err nsIMdbTable::AddRow ( // make sure the row with inOid is a table member
 	return 0;
 }
 
-nsIMdbRow::nsIMdbRow(nsIMdbTable *owningTable, nsIMdbStore *owningStore)
+nsIMdbRow::nsIMdbRow(nsIMdbTable *owningTable, nsIMdbPort *owningPort)
 {
 	m_owningTable = owningTable;
-	m_owningStore = owningStore;
+	m_owningPort = owningPort;
 }
 
 mdb_err nsIMdbRow::AddColumn( // make sure a particular column is inside row
@@ -351,14 +384,13 @@ mdb_err nsIMdbRow::AddColumn( // make sure a particular column is inside row
     mdb_column inColumn, // column to add
     const mdbYarn* inYarn)
 {
-	// evilly, I happen to know the column token is a char * const str pointer.
 	char *columnName;
 
-	if (m_owningStore)
+	if (m_owningPort)
 	{
 		nsString columnStr;
 
-		m_owningStore->m_tokenStrings.StringAt(inColumn, columnStr);
+		m_owningPort->m_tokenStrings.StringAt(inColumn, columnStr);
 
 		columnName = columnStr.ToNewCString();
 		printf("adding column %s : %s\n", columnName, inYarn->mYarn_Buf);
@@ -402,9 +434,42 @@ mdb_err nsIMdbRow::GetCell( // find a cell in this row
 	return 0;
 }
 
-mdb_err nsIMdbCollection::GetOid   (nsIMdbEnv* ev,
-    const mdbOid* outOid) 
+mdb_err nsIMdbRow::Write(nsIOFileStream *stream)
 {
+	mdb_pos iteratePos;
+
+	// write out the number of cells.
+	*stream << (long) m_cells.Count();
+	for (iteratePos = 0; iteratePos  < m_cells.Count(); iteratePos++)
+	{
+		mdbCellImpl *cell = (mdbCellImpl *) m_cells.ElementAt(iteratePos);
+		if (cell)
+			cell->Write(stream);
+	}
+	return 0;
+}
+
+mdb_err nsIMdbRow::Read(nsIOFileStream *stream)
+{
+	char	numCellsBuf[30];
+
+	stream->readline(numCellsBuf, sizeof(numCellsBuf));
+
+	PRInt32 numCells = atoi(numCellsBuf);
+	for (PRInt32 i = 0; i < numCells; i++)
+	{
+		mdbCellImpl *cell = new mdbCellImpl;
+		if (cell)
+			cell->Read(stream);
+	}
+
+	return 0;
+}
+
+mdb_err nsIMdbCollection::GetOid   (nsIMdbEnv* ev,
+    mdbOid* outOid) 
+{
+	*outOid = m_Oid;
 	return 0;
 }
 
@@ -491,6 +556,33 @@ PRBool	mdbCellImpl::Equals(const mdbCellImpl& other)
 	return (m_column == other.m_column);
 }
 
+mdb_err mdbCellImpl::Write(nsIOFileStream *stream)
+{
+	*stream << m_column;
+	*stream << "=";
+	*stream << m_cellValue;
+	*stream << LINEBREAK;
+	return 0;
+}
+
+const int kLineBufLength = 400;
+
+mdb_err mdbCellImpl::Read(nsIOFileStream *stream)
+{
+	char line[kLineBufLength];
+
+	stream->readline(line, kLineBufLength);
+	m_column = atoi(line);
+
+	char *p;
+	for (p = line; *p; p++)
+	{
+		if (*p == '=')
+			break;
+	}
+	m_cellValue = strdup(p + 1);
+	return 0;
+}
 
 mdb_err mdbCellImpl::AliasYarn(nsIMdbEnv* ev, 
     mdbYarn* outYarn)
