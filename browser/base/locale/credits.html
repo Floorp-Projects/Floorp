@@ -1,0 +1,372 @@
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Firefox Credits.
+#
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
+#   David Baron <dbaron@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or 
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<html>
+  <head>
+    <title>Mozilla Firefox Credits</title>
+
+    <style>
+    <!--
+      * {
+        cursor: default;
+        -moz-user-select: none;
+      }
+      
+      #titleBox {
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        right: 0px;
+        bottom: auto;
+        z-index: 999;
+      }
+      
+      #footerBox {
+        position: fixed;
+        left: 0px;
+        top: auto;
+        right: 0px;
+        bottom: 0px;
+        z-index: 999;
+      }
+      
+      #creditsBox {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        overflow: hidden;
+        z-index: 1;
+        height: 285px;
+        width: 280px;
+        margin-left: 10px;
+        margin-right: 10px;
+        font-family: Arial, sans-serif;
+        font-size: small;
+      }
+      
+      h3 {
+        font-weight: bold;
+        font-size: small;
+        text-align: center;
+        margin: 15px 0px 5px 0px;
+      }
+      
+      .creditsGroup {
+        margin-bottom: 1px;
+      }
+      
+      .credit {
+        text-align: center;
+      } 
+      
+      .footnote {
+        font-size: x-small;
+        text-align: justify;
+      }
+      
+      h2.title {
+        margin-bottom: 2px;
+      }
+      
+      .motto {
+        font-style: italic;
+        padding-left: 10px;
+      }
+      
+      a {
+        color: blue;
+        text-decoration: underline;
+      }
+    --> 
+    </style>
+    
+    <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
+    <script type="application/x-javascript">
+    <!--
+    
+      var gCreditsInterval = -1;
+
+      function uninit()
+      {
+        if (gCreditsInterval > -1) 
+          clearInterval(gCreditsInterval);
+      }
+
+      function init()
+      {
+        var cb = document.getElementById("creditsBox");
+        cb.scrollTop = 0;
+        setTimeout("runCredits()", 3000);
+      }
+      
+      function runCredits()
+      {
+        gCreditsInterval = setInterval("creditsCallback()", 25);  
+      }
+      
+      function creditsCallback()
+      {
+        var cb = document.getElementById("creditsBox");
+        var newtop = cb.scrollTop + 1;
+        cb.scrollTop = newtop;
+        if (cb.scrollTop != newtop) {
+          // we're at the bottom
+          clearInterval(gCreditsInterval);
+          setTimeout(function() { cb.scrollTop = 0 }, 3000);
+        }
+      }
+    
+    //-->
+    </script>
+  </head>
+  <body onload="init();" onunload="uninit();">
+    <div id="titleBox">
+      <img src="chrome://browser/content/aboutCredits.png">
+    </div>
+    
+    <div id="creditsBox">
+        <br>    
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>
+        <div align="center">
+          <h2 class="title">Mozilla Firefox&trade;</h2>
+          <span class="motto">&nbsp;&nbsp;&nbsp;&nbsp;Insert Motto Here!</span>
+        </div>
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+
+        <div class="creditsGroup">
+          <h3>Engineering Lead</h3>
+          <div class="credit">Ben Goodger</div>
+          
+          <h3>Core Development Posse</h3>
+          <div class="credit">
+            Pierre Chanial<br>
+            David Hyatt<br>
+            Blake Ross<br>
+            Brian Ryner<br>
+          </div>
+          
+          <h3>Special Thanks To</h3>
+          <div class="credit">          
+            David Baron<br>
+            Mike Connor<br>
+            Brendan Eich<br>
+            Darin Fisher<br>
+            Joe Hewitt<br>
+            Ian Hickson<br>
+            Michael Kaply<br>
+            R.J. Keller<br>
+            Will Levine<br>
+            Scott MacGregor<br>
+            Daniel Matejka<br>
+            Noririty<br>
+            Mike Pinkerton<br>
+            Jesse Ruderman<br>
+            Benjamin Smedberg<br>
+            Seth Spitzer<br>
+            Johnny Stenback<br>
+            Dean Tessman<br>
+            Jan Varga<br>
+            Daniel Veditz<br>
+            Steffen Wilberg<br>
+            Boris Zbarsky<br>
+          </div>
+        </div>
+        
+        <div class="creditsGroup">
+          <h3>Visual Design Coordinator</h3>
+          <div class="credit">Steven Garrity</div>
+          
+          <h3>Theme Design</h3>
+          <div class="credit">
+            Arvid Axelsson<br>
+            Kevin Gerich<br>
+            Stephen Horlander<br>
+          </div>
+          
+          <h3>Brand Identity</h3>
+          <div class="credit">
+            Daniel Burka<br>
+            Stephen Desroches<br>
+            Jasper Hauser<br>
+            Jon Hicks<br>
+          </div>
+          
+          <h3>Web Design</h3>
+          <div class="credit">Dave Shea</div>
+          
+          <h3>Special Thanks To</h3>
+          <div class="credit">silverorange</div>
+        </div>
+
+        <div class="creditsGroup">
+          <h3>Quality Assurance Lead</h3>
+          <div class="credit">Asa Dotzler</div>
+          
+          <h3>Quality Assurance</h3>
+          <div class="credit">
+            Mike Connor<br>
+            Erik Fornoff<br>
+            Ian Hickson<br>
+            David P. James<br>
+            Simon Paquet<br>
+          </div>
+
+          <h3>Special Thanks To</h3>
+          <div class="credit">
+            André Dahlqvist<br>
+            Sébastian Delahaye<br>
+            Jeremy Dolan<br>
+            Ali Ebrahim<br>
+            Ed Hume<br>
+            Jesse Ruderman<br>
+            Alan Starr<br>
+            Steffen Wilberg<br>
+          </div>
+                    
+          <h3>Build and Release</h3>
+          <div class="credit">
+            Leaf Nunes<br>
+            Brian Ryner<br>
+          </div>
+          
+          <h3>Infrastructure Support</h3>
+          <div class="credit">Myk Melez</div>
+          
+          <h3>Support Resources</h3>
+          <div class="credit">
+            Jason Kersey<br>
+            David Tenser<br>
+          </div>
+          
+          <h3>Special Thanks To</h3>
+          <div class="credit">
+            MozillaZine Community<br>
+            MozillaZine<br>
+            MozDev<br>
+          </div>
+        </div>
+        
+        <div class="creditsGroup">
+          <h3>Project Management</h3>
+          <div class="credit">
+            Asa Dotzler<br>
+            Brendan Eich<br>
+            Ben Goodger<br>
+            Chris Hofmann<br>
+          </div>
+            
+          <h3>Marketing Lead</h3>
+          <div class="credit">Bart Decrem</div>
+          
+          <h3>Marketing</h3>
+          <div class="credit">
+            Catherine Corre<br>
+            Ben Goodger<br>
+            Ian Hickson<br>
+            Jason Kersey<br>
+            Blake Ross<br>
+          </div>
+        </div>
+        
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <p align="center">Powered by Gecko&trade;
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        
+        <p class="footnote">
+          Mozilla Firefox&trade; is Copyright &copy;1998-2004 by its 
+          <a href="" link="about:credits" onclick="visitLink(event);">contributors</a>, 
+          according to terms set out in the Mozilla Public License and Netscape 
+          Public License. All Rights Reserved. For full Mozilla credits, type
+          "about:credits" into the Location bar.</p>
+
+        <p class="footnote">
+          Portions of this software are Copyright &copy;1994 The Regents of the 
+          University of California. All Rights Reserved.</p>
+
+        <p class="footnote">
+          This software may contain portions that are Copyright &copy;1998-2004 
+          SupportSoft, Inc. All Rights Reserved.</p>
+
+        <p class="footnote">
+          Mozilla Firefox&trade; and the Firefox logo are trademarks of the Mozilla 
+          Foundation. You are not granted rights or licenses to the trademarks 
+          of the Mozilla Foundation or any party, including without limitation the
+          Firefox name or logo.</p>
+        
+        <p class="footnote">
+          <small>U.S. GOVERNMENT END USERS. The Software is a "commercial item," 
+          as that term is defined in 48 C.F.R. 2.101 (Oct. 1995), consisting of 
+          "commercial computer software" and "commercial computer software 
+          documentation," as such terms are used in 48 C.F.R. 12.212 (Sept. 1995). 
+          Consistent with 48 C.F.R. 12.212 and 48 C.F.R. 227.7202-1 through 
+          227.7202-4 (June 1995), all U.S. Government End Users acquire the 
+          Software with only those rights set forth herein.</small></p>
+    </div>
+    
+    <div id="footerBox">
+      <img src="chrome://browser/content/aboutFooter.png">
+    </div>
+  </body>
+</html>
+
