@@ -65,7 +65,7 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
       aMIMEInfo->GetDefaultApplicationHandler(getter_AddRefs(application));
 
     if (!application)
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_FILE_NOT_FOUND;
 
     nsCOMPtr<nsILocalFileMac> app = do_QueryInterface(application, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -176,7 +176,9 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   if (!localFile)
     return NS_ERROR_FAILURE;
   
-  localFile->InitWithPath(nsDependentString(platformAppPath));
+  nsresult rv = localFile->InitWithPath(nsDependentString(platformAppPath));
+  if (NS_FAILED(rv))
+    return rv;
   *aFile = localFile;
   NS_IF_ADDREF(*aFile);
 
