@@ -137,6 +137,7 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
+#include "nsIDOMHTMLObjectElement.h"
 
 // Print Preview
 #include "nsIPrintPreviewContext.h"
@@ -2988,8 +2989,9 @@ DocumentViewerImpl::MapContentForPO(PrintObject*   aRootObject,
           if (frame) {
             po->mFrameType = eFrame;
           } else {
+            nsCOMPtr<nsIDOMHTMLObjectElement> objElement(do_QueryInterface(aContent));
             nsCOMPtr<nsIDOMHTMLIFrameElement> iFrame(do_QueryInterface(aContent));
-            if (iFrame) {
+            if (iFrame || objElement) {
               po->mFrameType = eIFrame;
               po->mPrintAsIs = PR_TRUE;
               if (po->mParent) {
