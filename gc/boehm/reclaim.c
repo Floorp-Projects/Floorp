@@ -107,7 +107,7 @@ register word sz;
 	    } else {
 			FOUND_FREE(hbp, word_no);
 			INCR_WORDS(sz);
-#ifndef FIND_LEAK		
+#if defined(FIND_LEAK) || 1
 			/* object is available - put on list */
 		    obj_link(p) = list;
 		    list = ((ptr_t)p);
@@ -120,7 +120,7 @@ register word sz;
 #else
 			/* let leaks accumulate. */
 			p += sz;
-#endif	    
+#endif
 	    }
 	    word_no += sz;
 	}
