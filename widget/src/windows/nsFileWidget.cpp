@@ -22,9 +22,14 @@
 #endif
 
 #include "nsFileWidget.h"
+#include "nsFileSpec.h"
 #include <windows.h>
 
-NS_IMPL_ISUPPORTS(nsFileWidget, NS_IFILEWIDGET_IID)
+static NS_DEFINE_IID(kIFileWidgetIID,    NS_IFILEWIDGET_IID);
+
+NS_IMPL_ADDREF(nsFileWidget)
+NS_IMPL_RELEASE(nsFileWidget)
+
 
 //-------------------------------------------------------------------------
 //
@@ -37,6 +42,40 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
   mWnd = NULL;
   mNumberOfFilters = 0;
 }
+
+//-------------------------------------------------------------------------
+//
+// nsFileWidget destructor
+//
+//-------------------------------------------------------------------------
+nsFileWidget::~nsFileWidget()
+{
+}
+
+/**
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ * 
+*/ 
+nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsresult rv = NS_NOINTERFACE;
+
+  if (aIID.Equals(kIFileWidgetIID)) {
+    *aInstancePtr = (void*) ((nsIFileWidget*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return rv;
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -139,7 +178,7 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[])
+NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[])
 {
   mNumberOfFilters  = aNumberOfFilters;
   mTitles           = aTitles;
@@ -153,15 +192,23 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString a
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
+NS_IMETHODIMP  nsFileWidget::GetFile(nsString& aFile)
 {
   aFile.SetLength(0);
   aFile.Append(mFile);
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
+  Show();
+  nsFilePath filePath(mFile);
+  nsFileSpec fileSpec(filePath);
+
+  aFile = filePath;
   return NS_OK;
 }
 
@@ -171,7 +218,7 @@ NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
+NS_IMETHODIMP  nsFileWidget::SetDefaultString(nsString& aString)
 {
   mDefault = aString;
   return NS_OK;
@@ -183,7 +230,7 @@ NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
 // Set the display directory
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
+NS_IMETHODIMP  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
 {
   mDisplayDirectory = aDirectory;
   return NS_OK;
@@ -195,7 +242,7 @@ NS_METHOD  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
 // Get the display directory
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
+NS_IMETHODIMP  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
 {
   aDirectory = mDisplayDirectory;
   return NS_OK;
@@ -203,29 +250,19 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
 
 
 //-------------------------------------------------------------------------
-NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
-                           nsString& aTitle,
-                           nsMode aMode,
-                           nsIDeviceContext *aContext,
-                           nsIAppShell *aAppShell,
-                           nsIToolkit *aToolkit,
-                           void *aInitData)
+NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
+                                   nsString& aTitle,
+                                   nsMode aMode,
+                                   nsIDeviceContext *aContext,
+                                   nsIAppShell *aAppShell,
+                                   nsIToolkit *aToolkit,
+                                   void *aInitData)
 {
   mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
   mMode = aMode;
   return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// nsFileWidget destructor
-//
-//-------------------------------------------------------------------------
-nsFileWidget::~nsFileWidget()
-{
 }
 
 
