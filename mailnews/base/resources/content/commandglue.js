@@ -222,6 +222,11 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
 	SortThreadPane("DateColumn", "http://home.netscape.com/NC-rdf#Date", "", false, null);
 
   SetSentFolderColumns(IsSpecialFolder(newFolder, "Sent"));
+
+  // Since SetSentFolderColumns() may alter the template's structure,
+  // we need to explicitly force the builder to recompile its rules.
+  folder.builder.rebuild();
+
   folder.setAttribute('ref', uri);
     msgNavigationService.EnsureDocumentIsLoaded(document);
 
