@@ -35,7 +35,7 @@
  * The mail data source.
  */
 class nsMessageViewDataSource : public nsIRDFCompositeDataSource, public nsIMessageView,
-								public nsIRDFObserver, nsIMsgWindowData
+								public nsIRDFObserver, public nsIMsgWindowData
 {
 private:
 	nsCOMPtr<nsISupportsArray> mObservers;
