@@ -12,6 +12,9 @@
 
 // Portions Copyright 1999 by Jim Nance
 
+// Additional contributors:
+//  L. David Baron - JP_REALTIME, JPROF_PTHREAD_HACK, and SIGUSR1 handling
+
 // The linux glibc hides part of sigaction if _POSIX_SOURCE is defined
 #if defined(linux)
 #undef _POSIX_SOURCE
