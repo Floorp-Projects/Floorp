@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.5 $ $Date: 2002/02/08 00:10:00 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.6 $ $Date: 2002/03/23 16:10:07 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -2056,8 +2056,8 @@ NSSCKFWC_DestroyObject
     goto loser;
   }
 
-  nssCKFWObject_Destroy(fwObject);
   nssCKFWInstance_DestroyObjectHandle(fwInstance, hObject);
+  nssCKFWObject_Destroy(fwObject);
 
   return CKR_OK;
 
