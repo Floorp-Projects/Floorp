@@ -1350,12 +1350,14 @@ nsXULTreeBuilder::RebuildAll()
     if (!doc)
         return NS_OK;
 
-    if (mBoxObject) {
-        mBoxObject->BeginUpdateBatch();
-    }
-
+    PRInt32 count = mRows.Count();
     mRows.Clear();
     mConflictSet.Clear();
+
+    if (mBoxObject) {
+        mBoxObject->BeginUpdateBatch();
+        mBoxObject->RowCountChanged(0, -count);
+    }
 
     nsresult rv = CompileRules();
     if (NS_FAILED(rv)) return rv;
