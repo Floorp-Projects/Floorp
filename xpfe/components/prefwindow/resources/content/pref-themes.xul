@@ -90,6 +90,6 @@
   <separator/>
   <hbox align="start">
     <html:a class="themesLink" id="themesLink" href="&getNewThemesURL;"
-            style="display: block;" target="_new">&getNewThemes.label;</html:a>
+            style="display: block;" target="_blank">&getNewThemes.label;</html:a>
   </hbox>
 </page>
