@@ -223,3 +223,10 @@ html|p {
 #resultsTree {
   border-left: 1px solid ThreeDShadow;
 }
+
+/* ::::: Search Bar  ::::: */
+
+#searchBox {
+  border-top: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDShadow;
+}
