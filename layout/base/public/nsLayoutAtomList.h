@@ -103,6 +103,7 @@ LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 LAYOUT_ATOM(cellMap, "TableCellMap")
 LAYOUT_ATOM(imageMap, "ImageMap")
 LAYOUT_ATOM(lineBox, "LineBox")
+LAYOUT_ATOM(spaceManager, "SpaceManager")
 LAYOUT_ATOM(tableStrategy, "TableLayoutStrategy")
 LAYOUT_ATOM(textRun, "TextRun")
 #endif

@@ -1196,3 +1196,34 @@ nsSpaceManager::BandRect::Length() const
   return len;
 }
 
+#ifdef DEBUG
+void
+nsSpaceManager::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  *aResult = sizeof(*this);
+
+  // Add in the size of the band data. Don't count the header which has
+  // already been taken into account
+  if (!mBandList.IsEmpty()) {
+    const BandRect* bandRect = mBandList.Head();
+    do {
+      *aResult += sizeof(*bandRect);
+      if (bandRect->mNumFrames > 1) {
+        PRUint32  voidArraySize;
+
+        bandRect->mFrames->SizeOf(aHandler, &voidArraySize);
+        *aResult += voidArraySize;
+      }
+
+      bandRect = bandRect->Next();
+    } while (bandRect != &mBandList);
+  }
+
+  // Add in the size of the hash table
+  if (mFrameInfoMap) {
+    *aResult += sizeof(PLHashTable);
+    *aResult += (1 << (PL_HASH_BITS - mFrameInfoMap->shift)) * sizeof(PLHashEntry*);
+    *aResult += mFrameInfoMap->nentries * sizeof(PLHashEntry);
+  }
+}
+#endif

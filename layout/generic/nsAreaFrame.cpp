@@ -29,6 +29,7 @@
 #include "nsHTMLValue.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
+#include "nsISizeOfHandler.h"
 
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_SPACEMANAGER
@@ -545,6 +546,15 @@ nsAreaFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   }
   nsBlockFrame::SizeOf(aHandler, aResult);
   *aResult += sizeof(*this) - sizeof(nsBlockFrame);
+
+  // Add in space taken up by the space manager
+  if (mSpaceManager) {
+    PRUint32  spaceManagerSize;
+
+    mSpaceManager->SizeOf(aHandler, &spaceManagerSize);
+    aHandler->AddSize(nsLayoutAtoms::spaceManager, spaceManagerSize);
+  }
+
   return NS_OK;
 }
 #endif

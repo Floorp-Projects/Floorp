@@ -56,6 +56,10 @@ public:
   NS_IMETHOD ClearRegions();
   NS_IMETHOD List(FILE* out);
 
+#ifdef DEBUG
+  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
+
 protected:
   // Structure that maintains information about the region associated
   // with a particular frame
