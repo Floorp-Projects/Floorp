@@ -1,5 +1,5 @@
-%define _prefix /export/home/tinderbox2
-%define _cgi_prefix /home/httpd/cgi-bin
+%define _prefix /home/tinderbox2
+%define _cgi_prefix /var/www/cgi-bin
 
 # auto generate the version number based on the output of the date
 # command.
@@ -70,7 +70,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %files
-%defattr(-,tinderbox,root)
+%defattr(-,apache,apache)
 %{_prefix}
 %{_cgi_prefix}/%{name}
 

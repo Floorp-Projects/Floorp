@@ -1,4 +1,4 @@
-%define _prefix /export/home/tinderbox2
+%define _prefix /home/tinderbox2
 
 # auto generate the version number based on the output of the date
 # command.
@@ -41,6 +41,6 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %files
-%defattr(-,tinderbox,root)
+%defattr(-,apache,apache)
 %{_prefix}/local_conf/*
 /var/log/tinderbox2
