@@ -135,7 +135,7 @@
 	}
 	.key-point:after {
 		display: block;
-		clear: both;
+		/* clear: both; */
 		padding-top: 15px;
 		line-height: 0.1;
 		font-size: 1px;

@@ -160,7 +160,7 @@
 	}
 	#nav:after {
 		display: block;
-		clear: both;
+		/* clear: both; */
 		padding-top: 0;
 		line-height: 0.1;
 		font-size: 1px;

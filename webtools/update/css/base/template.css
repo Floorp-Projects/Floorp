@@ -17,7 +17,7 @@
 	}
 	
 	#mBody {
-		clear: both;
+		/* clear: both; */
 		padding: 0 0 1em 0;
 	}
 
@@ -73,7 +73,7 @@
 /* Footer */
 
 	#footer {
-		clear: both;
+		/* clear: both; */
 		margin-top: 1em;
 	}
 		
