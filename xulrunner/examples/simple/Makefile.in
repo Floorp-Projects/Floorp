@@ -75,10 +75,6 @@ BUILD_ID=`date +%""Y%""m%d%H`
 # install stuff
 #
 
-libs:: $(APPNAME).xulapp
-	$(EXIT_ON_ERROR) \
-	cat $< | sed 's|BUILD_ID|'`date +%Y%m%d%H`'|' > $(DIST)/bin/apps/$(APPNAME)/$(APPNAME).xulapp
-
 libs:: $(CONTENT)
 	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/chrome/content/$(APPNAME)
 	echo 'content,profile,url,resource://app/chrome/content/simple/' > $(DIST)/bin/apps/$(APPNAME)/chrome/installed-chrome.txt
@@ -88,3 +84,7 @@ libs:: $(ICONS)
 
 libs:: $(PREFS)
 	$(INSTALL) $^ $(DIST)/bin/apps/$(APPNAME)/defaults/pref
+
+libs:: $(APPNAME).xulapp
+	$(EXIT_ON_ERROR) \
+	cat $< | sed 's|BUILD_ID|'`date +%Y%m%d%H`'|' > $(DIST)/bin/apps/$(APPNAME)/$(APPNAME).xulapp
