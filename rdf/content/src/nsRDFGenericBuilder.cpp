@@ -1774,12 +1774,12 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             rv = CreateElement(nameSpaceID, tag, aChild, getter_AddRefs(realKid));
             if (NS_FAILED(rv)) return rv;
 
-            if (IsContainer(realKid, aChild)) {
+            if (IsContainer(tmplKid, aChild)) {
                 rv = realKid->SetAttribute(kNameSpaceID_None, kContainerAtom, nsAutoString("true"), PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 // test to see if the container has contents
-                nsAutoString isEmpty = IsEmpty(realKid, aChild) ? (const char *)"true" : (const char *)"false";
+                nsAutoString isEmpty = IsEmpty(tmplKid, aChild) ? (const char *)"true" : (const char *)"false";
                 rv = realKid->SetAttribute(kNameSpaceID_None, kEmptyAtom, isEmpty, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
             }
@@ -2379,43 +2379,32 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
     if (isOrdinal)
         return PR_TRUE;
 
-    const char		*propertyURI;
-    if (NS_FAILED(rv = aProperty->GetValueConst( &propertyURI ))) {
-        NS_ERROR("unable to get property URI");
-        return PR_FALSE;
-    }
+    const char* propertyURI;
+    rv = aProperty->GetValueConst(&propertyURI);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property URI");
+    if (NS_FAILED(rv)) return PR_FALSE;
 
-    nsAutoString uri;
+    nsAutoString containment;
 
     // Walk up the content tree looking for the "rdf:containment"
     // attribute, so we can determine if the specified property
     // actually defines containment.
     nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
     while (element) {
-        // Never ever ask an HTML element about non-HTML attributes.
-        PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = element->GetNameSpaceID(nameSpaceID))) {
-            NS_ERROR("unable to get element namespace");
-            return PR_FALSE;
-        }
+        // Is this the "containment" property?
+        rv = element->GetAttribute(kNameSpaceID_None, kContainmentAtom, containment);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get attribute value");
+        if (NS_FAILED(rv)) return PR_FALSE;
 
-        if (nameSpaceID != kNameSpaceID_HTML) {
-            // Is this the "containment" property?
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kContainmentAtom, uri))) {
-                NS_ERROR("unable to get attribute value");
+        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+            // Okay we've found the locally-scoped tree properties,
+            // a whitespace-separated list of property URIs. So we
+            // definitively know whether this is a tree property or
+            // not.
+            if (containment.Find(propertyURI) >= 0)
+                return PR_TRUE;
+            else
                 return PR_FALSE;
-            }
-
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                // Okay we've found the locally-scoped tree properties,
-                // a whitespace-separated list of property URIs. So we
-                // definitively know whether this is a tree property or
-                // not.
-                if (uri.Find(propertyURI) >= 0)
-                    return PR_TRUE;
-                else
-                    return PR_FALSE;
-            }
         }
 
         nsCOMPtr<nsIContent> parent;
@@ -2433,10 +2422,9 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
         (aProperty == kRDF_child)) {
         return PR_TRUE;
     }
-    else
 #endif // defined(TREE_PROPERTY_HACK)
 
-        return PR_FALSE;
+    return PR_FALSE;
 }
 
 
