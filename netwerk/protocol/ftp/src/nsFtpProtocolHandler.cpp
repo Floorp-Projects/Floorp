@@ -23,7 +23,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-static NS_DEFINE_CID(kTypicalUrlCID,            NS_TYPICALURL_CID);
+static NS_DEFINE_CID(kStandardUrlCID,            NS_STANDARDURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,12 +79,12 @@ nsFtpProtocolHandler::NewUrl(const char* aSpec,
 {
     nsresult rv;
 
-    // Ftp URLs (currently) have no additional structure beyond that provided by typical
+    // Ftp URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
 
-    nsITypicalUrl* url;
-    rv = nsComponentManager::CreateInstance(kTypicalUrlCID, nsnull,
-                                            nsITypicalUrl::GetIID(),
+    nsIUrl* url;
+    rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
+                                            nsIUrl::GetIID(),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
 

@@ -16,23 +16,23 @@
  * Reserved.
  */
 
-#include "nsUrl.h"
+#include "nsStandardUrl.h"
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "prmem.h"
 #include "prprf.h"
 
-static NS_DEFINE_CID(kTypicalUrlCID, NS_TYPICALURL_CID);
-static NS_DEFINE_CID(kThisTypicalUrlImplementationCID,
-                     NS_THIS_TYPICALURL_IMPLEMENTATION_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kThisStandardUrlImplementationCID,
+                     NS_THIS_STANDARDURL_IMPLEMENTATION_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsUrl methods:
+// nsStandardUrl methods:
 
-nsUrl::nsUrl(nsISupports* outer)
+nsStandardUrl::nsStandardUrl(nsISupports* outer)
     : mScheme(nsnull),
       mPreHost(nsnull),
       mHost(nsnull),
@@ -45,7 +45,7 @@ nsUrl::nsUrl(nsISupports* outer)
     NS_INIT_AGGREGATED(outer);
 }
 
-nsUrl::~nsUrl()
+nsStandardUrl::~nsStandardUrl()
 {
     if (mScheme)        delete[] mScheme;
     if (mPreHost)       delete[] mPreHost;
@@ -56,27 +56,22 @@ nsUrl::~nsUrl()
 }
 
 NS_IMETHODIMP
-nsUrl::Init(const char* aSpec,
+nsStandardUrl::Init(const char* aSpec,
             nsIUrl* aBaseUrl)
 {
     return Parse(aSpec, aBaseUrl);
 }
 
-NS_IMPL_AGGREGATED(nsUrl);
+NS_IMPL_AGGREGATED(nsStandardUrl);
 
 NS_IMETHODIMP
-nsUrl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
+nsStandardUrl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(kThisTypicalUrlImplementationCID) ||        // used by Equals
+    if (aIID.Equals(kThisStandardUrlImplementationCID) ||        // used by Equals
         aIID.Equals(nsIUrl::GetIID()) ||
         aIID.Equals(kISupportsIID)) {
         *aInstancePtr = NS_STATIC_CAST(nsIUrl*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsITypicalUrl::GetIID())) {
-        *aInstancePtr = NS_STATIC_CAST(nsITypicalUrl*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -87,84 +82,84 @@ nsUrl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsIUrl methods:
 
 NS_IMETHODIMP
-nsUrl::GetScheme(const char* *result)
+nsStandardUrl::GetScheme(const char* *result)
 {
     *result = mScheme;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::SetScheme(const char* scheme)
+nsStandardUrl::SetScheme(const char* scheme)
 {
     mScheme = nsCRT::strdup(scheme);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::GetPreHost(const char* *result)
+nsStandardUrl::GetPreHost(const char* *result)
 {
     *result = mPreHost;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::SetPreHost(const char* preHost)
+nsStandardUrl::SetPreHost(const char* preHost)
 {
     mPreHost = nsCRT::strdup(preHost);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::GetHost(const char* *result)
+nsStandardUrl::GetHost(const char* *result)
 {
     *result = mHost;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::SetHost(const char* host)
+nsStandardUrl::SetHost(const char* host)
 {
     mHost = nsCRT::strdup(host);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::GetPort(PRInt32 *result)
+nsStandardUrl::GetPort(PRInt32 *result)
 {
     *result = mPort;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::SetPort(PRInt32 port)
+nsStandardUrl::SetPort(PRInt32 port)
 {
     mPort = port;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::GetPath(const char* *result)
+nsStandardUrl::GetPath(const char* *result)
 {
     *result = mPath;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::SetPath(const char* path)
+nsStandardUrl::SetPath(const char* path)
 {
     mPath = nsCRT::strdup(path);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUrl::Equals(nsIUrl* other)
+nsStandardUrl::Equals(nsIUrl* other)
 {
     PRBool eq = PR_FALSE;
     if (other) {
 //        NS_LOCK_INSTANCE();
-        nsUrl* otherUrl;
+        nsStandardUrl* otherUrl;
         nsresult rv =
-            other->QueryInterface(kThisTypicalUrlImplementationCID,
+            other->QueryInterface(kThisStandardUrlImplementationCID,
                                   (void**)&otherUrl);
         if (NS_SUCCEEDED(rv)) {
             eq = PRBool((0 == PL_strcmp(mScheme, otherUrl->mScheme)) && 
@@ -179,9 +174,9 @@ nsUrl::Equals(nsIUrl* other)
 }
 
 NS_IMETHODIMP
-nsUrl::Clone(nsIUrl* *result)
+nsStandardUrl::Clone(nsIUrl* *result)
 {
-    nsUrl* url = new nsUrl(nsnull);     // XXX outer?
+    nsStandardUrl* url = new nsStandardUrl(nsnull);     // XXX outer?
     if (url == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     url->mScheme = nsCRT::strdup(mScheme);
@@ -210,7 +205,7 @@ nsUrl::Clone(nsIUrl* *result)
 }
 
 NS_IMETHODIMP
-nsUrl::ToNewCString(char* *result)
+nsStandardUrl::ToNewCString(char* *result)
 {
     nsAutoString string;
 //    NS_LOCK_INSTANCE();
@@ -257,7 +252,7 @@ nsUrl::ToNewCString(char* *result)
 // XXX don't bother with ref's
 // XXX null pointer checks are incomplete
 nsresult
-nsUrl::Parse(const char* spec, nsIUrl* aBaseUrl)
+nsStandardUrl::Parse(const char* spec, nsIUrl* aBaseUrl)
 {
     // XXX hack!
     nsString specStr(spec);
@@ -550,7 +545,7 @@ nsUrl::Parse(const char* spec, nsIUrl* aBaseUrl)
 }
 
 void
-nsUrl::ReconstructSpec()
+nsStandardUrl::ReconstructSpec()
 {
     PR_FREEIF(mSpec);
 

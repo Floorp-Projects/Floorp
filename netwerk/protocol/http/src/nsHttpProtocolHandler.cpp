@@ -26,7 +26,7 @@
 #include "nsITransport.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kTypicalUrlCID,             NS_TYPICALURL_CID);
+static NS_DEFINE_CID(kStandardUrlCID,            NS_STANDARDURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,12 +93,12 @@ nsHttpProtocolHandler::NewUrl(const char* aSpec,
 {
     nsresult rv;
 
-    // http URLs (currently) have no additional structure beyond that provided by typical
+    // http URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
 
-    nsITypicalUrl* url;
-    rv = nsComponentManager::CreateInstance(kTypicalUrlCID, nsnull,
-                                            nsITypicalUrl::GetIID(),
+    nsIUrl* url;
+    rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
+                                            nsIUrl::GetIID(),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
 
