@@ -1337,3 +1337,6 @@ viewsource|end:after {content: ">"; color: black;}
 viewsource|viewsource { font-family: monospace; font-weight:normal; color:black; white-space:pre; font-size:10pt; padding-top:8px; margin-left:8px;} 
 
 viewsource|txt {font-weight: normal; }
+
+viewsource|error {background-color:#FFFFCC; font-weight:bold;} 
+viewsource|summary  {display:block; background-color:#FFFFCC; width:90%; border:solid; border-width:1pt; font-family: Sans-serif;} 
