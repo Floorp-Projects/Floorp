@@ -141,6 +141,7 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mJiggleLayout = PR_FALSE;
   mPostExit = PR_FALSE;
   mDelay = 0;
+  mMaxPages = -1;
   mRecord = nsnull;
   mLinkTag = NS_NewAtom("A");
   mFrameTag = NS_NewAtom("FRAME");
@@ -473,13 +474,18 @@ nsWebCrawler::LoadNextURL()
     mTimer->Init(TimerCallBack, (void *)this, mDelay * 1000);
   }
 
-  while (0 != mPendingURLs.Count()) {
-    nsString* url = (nsString*) mPendingURLs.ElementAt(0);
-    mPendingURLs.RemoveElementAt(0);
-    if (OkToLoad(*url)) {
-      RecordLoadedURL(*url);
-      mBrowser->LoadURL(*url);
-      return;
+  if ((mMaxPages < 0) || (mMaxPages > 0)) {
+    while (0 != mPendingURLs.Count()) {
+      nsString* url = (nsString*) mPendingURLs.ElementAt(0);
+      mPendingURLs.RemoveElementAt(0);
+      if (OkToLoad(*url)) {
+        RecordLoadedURL(*url);
+        mBrowser->LoadURL(*url);
+        if (mMaxPages > 0) {
+          --mMaxPages;
+        }
+        return;
+      }
     }
   }
 
