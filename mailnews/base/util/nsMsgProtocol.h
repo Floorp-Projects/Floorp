@@ -32,10 +32,12 @@
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIStreamProvider.h"
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
 class nsIPrompt;
 class nsIMsgMailNewsUrl;
+class nsMsgFilePostHelper;
 
 // This is a helper class used to encapsulate code shared between all of the
 // mailnews protocol objects (imap, news, pop, smtp, etc.) In particular,
@@ -112,11 +114,12 @@ protected:
 
   virtual nsresult InitFromURI(nsIURI *aUrl);
 
+	// Ouput stream for writing commands to the socket	
+	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
+
 	// Ouput stream for writing commands to the socket
 	nsCOMPtr<nsITransport>		m_transport; 
 	nsCOMPtr<nsIRequest>        m_request;
-
-    nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
 
 	PRBool	  m_socketIsOpen; // mscott: we should look into keeping this state in the nsSocketTransport...
 							  // I'm using it to make sure I open the socket the first time a URL is loaded into the connection
@@ -145,6 +148,60 @@ protected:
   // if a url isn't going to result in any content then we want to suppress calls to
   // OnStartRequest, OnDataAvailable and OnStopRequest
   PRBool mSuppressListenerNotifications;
+};
+
+
+// This is is a subclass of nsMsgProtocol extends the parent class with AsyncWrite support. Protocols like smtp
+// and news want to leverage aysnc write. We don't want everyone who inherits from nsMsgProtocol to have to
+// pick up the extra overhead.
+class NS_MSG_BASE nsMsgAsyncWriteProtocol : public nsMsgProtocol
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsMsgAsyncWriteProtocol(nsIURI * aURL);
+  virtual ~nsMsgAsyncWriteProtocol(); 
+  
+  // temporary over ride...
+  virtual nsresult PostMessage(nsIURI* url, nsIFileSpec *fileSpec);
+  
+  // over ride the following methods from the base class
+  virtual nsresult SetupTransportState();
+  virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
+   
+  // if we suspended the asynch write while waiting for more data to write then this will be TRUE
+  PRBool mSuspendedWrite;
+  nsCOMPtr<nsIRequest>     m_WriteRequest;
+
+  // because we are reading the post data in asychronously, it's possible that we aren't sending it 
+  // out fast enough and the reading gets blocked. The following set of state variables are used to 
+  // track this.
+  PRBool                    mSuspendedRead;
+  PRBool                    mInsertPeriodRequired; // do we need to insert a '.' as part of the unblocking process
+   
+  nsresult ProcessIncomingPostData(nsIInputStream *inStr, PRUint32 count);
+  nsresult UnblockPostReader();
+  nsresult UpdateSuspendedReadBytes(PRUint32 aNewBytes, PRBool aAddToPostPeriodByteCount);
+  nsresult PostDataFinished(); // this is so we'll send out a closing '.' and release any state related to the post
+
+
+  // these two routines are used to pause and resume our loading of the file containing the contents
+  // we are trying to post. We call these routines when we aren't sending the bits out fast enough
+  // to keep up with the file read. 
+  nsresult SuspendPostFileRead();
+  nsresult ResumePostFileRead(); 
+  nsresult UpdateSuspendedReadBytes(PRUint32 aNewBytes); 
+  nsMsgFilePostHelper * mFilePostHelper; // needs to be a weak reference
+protected:
+  // the streams for the pipe used to queue up data for the async write calls to the server.
+  // we actually re-use the same mOutStream variable in our parent class for the output
+  // stream to the socket channel. So no need for a new variable here.
+  nsCOMPtr<nsIInputStream> mInStream;    
+  nsCOMPtr<nsIInputStream>  mPostDataStream;
+  PRUint32                  mSuspendedReadBytes;   // remaining # of bytes we need to read before   
+                                                   // the input stream becomes unblocked
+  PRUint32                  mSuspendedReadBytesPostPeriod; // # of bytes which need processed after we insert a '.' before 
+                                                           // the input stream becomes unblocked.
 };
 
 #endif /* nsMsgProtocol_h__ */
