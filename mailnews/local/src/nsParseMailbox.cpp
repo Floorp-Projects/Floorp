@@ -105,6 +105,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 		nsString		author;
 		nsString		subject;
 
+		m_mailDB->PrePopulate();
 		m_mailDB->ListAllKeys(keys);
 		for (PRInt32 index = 0; index < keys.GetSize(); index++)
 		{
