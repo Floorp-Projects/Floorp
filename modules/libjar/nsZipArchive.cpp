@@ -1091,7 +1091,7 @@ PRInt32 nsZipArchive::BuildFileList()
     }
 
     //-- make sure we've read enough
-    if ( (PRUint32)bufsize < pos + ZIPCENTRAL_SIZE )
+    if ( bufsize < pos + ZIPCENTRAL_SIZE )
     {
       status = ZIP_ERR_CORRUPT;
       break;
@@ -1101,7 +1101,7 @@ PRInt32 nsZipArchive::BuildFileList()
 #if defined(DEBUG)
   if (status != ZIP_OK) {
     const char* msgs[] = { "ZIP_OK", "ZIP_ERR_GENERAL", "ZIP_ERR_MEMORY", "ZIP_ERR_DISK", "ZIP_ERR_CORRUPT", "ZIP_ERR_PARAM", "ZIP_ERR_FNF", "ZIP_ERR_UNSUPPORTED", "ZIP_ERR_SMALLBUF", "UNKNOWN" };
-    printf("nsZipArchive::BuildFileList  status = %d '%s'\n", status, msgs[(status <= 0 && status >= -8) ? -status : 9]);
+    printf("nsZipArchive::BuildFileList  status = %d '%s'\n", (int)status, msgs[(status <= 0 && status >= -8) ? -status : 9]);
   }
 #endif
 
