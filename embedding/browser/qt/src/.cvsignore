@@ -1,2 +1,6 @@
 .deps
 Makefile
+ui_*.h
+ui_*.cpp
+moc_ui_*.cpp
+moc_*.cpp
