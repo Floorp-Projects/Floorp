@@ -78,6 +78,7 @@
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.html"
 #define HISTORY_FILE_NAME_IN_4x "history.dat"
 #define NEWSRC_PREFIX_IN_4x ".newsrc-"
+#define SNEWSRC_PREFIX_IN_4x ".snewsrc-"
 #define POPSTATE_FILE_IN_4x "popstate"
 #elif defined(XP_MAC)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
@@ -1336,12 +1337,12 @@ nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
     folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
     fileOrDirNameStr = folderName;
 
-    if (nsStringStartsWith(fileOrDirNameStr, NEWSRC_PREFIX_IN_4x)) {
+    if (nsStringStartsWith(fileOrDirNameStr, NEWSRC_PREFIX_IN_4x) || nsStringStartsWith(fileOrDirNameStr, SNEWSRC_PREFIX_IN_4x)) {
 #ifdef DEBUG_seth
-	printf("rc file == %s\n",folderName);
+	    printf("newsrc file == %s\n",folderName);
 #endif /* DEBUG_seth */
 
-	fileOrDirName.CopyToDir(newPath);
+	    fileOrDirName.CopyToDir(newPath);
 
         nsFileSpec newFile = newPath;
         newFile += fileOrDirNameStr;
