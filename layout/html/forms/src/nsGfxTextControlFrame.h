@@ -394,6 +394,7 @@ public:
        // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
 
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 

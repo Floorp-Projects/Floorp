@@ -57,6 +57,13 @@ public:
    */
   virtual nsresult Change(nsIDOMEvent* aEvent) = 0;
 
+  /**
+   * Processes a form select event
+   * @param aEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  virtual nsresult Select(nsIDOMEvent* aEvent) = 0;
+
 };
 
 #endif // nsIDOMFormListener_h__

@@ -1219,6 +1219,8 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
     return NS_OK;
   }
 
+  nsIContent* targetBeforeEvent = mCurrentTargetContent;
+
   if (mCurrentFocus) {
     ChangeFocus(mCurrentFocus, PR_FALSE);
 
@@ -1228,9 +1230,14 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
     event.eventStructType = NS_EVENT;
     event.message = NS_BLUR_CONTENT;
 
+    mCurrentTargetContent = mCurrentFocus;
+    NS_ADDREF(mCurrentTargetContent);
+
     if (nsnull != mPresContext) {
       mCurrentFocus->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
     }
+
+    NS_RELEASE(mCurrentTargetContent);
   }
 
   if (nsnull != aContent) {
@@ -1240,9 +1247,17 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
     event.eventStructType = NS_EVENT;
     event.message = NS_FOCUS_CONTENT;
 
+    mCurrentTargetContent = aContent;
+    NS_ADDREF(mCurrentTargetContent);
+
     if (nsnull != mPresContext) {
       aContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
     }
+
+    NS_RELEASE(mCurrentTargetContent);
+
+    //reset mCurretTargetContent to what it was
+    mCurrentTargetContent = targetBeforeEvent;
 
     nsAutoString tabIndex;
     aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndex);

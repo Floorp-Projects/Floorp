@@ -1118,7 +1118,8 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
-      else if (propName == "onsubmit" || propName == "onreset" || propName == "onchange") {
+      else if (propName == "onsubmit" || propName == "onreset" || propName == "onchange" ||
+               propName == "onselect") {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMFormListenerIID)) {

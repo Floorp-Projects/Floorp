@@ -2511,7 +2511,8 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
       }
     }
   }
-  else if (aPropName == "onsubmit" || aPropName == "onreset" || aPropName == "onchange") {
+  else if (aPropName == "onsubmit" || aPropName == "onreset" || aPropName == "onchange" ||
+           aPropName == "onselect") {
     if (NS_OK == GetListenerManager(&mManager)) {
       nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
       if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFormListenerIID)) {

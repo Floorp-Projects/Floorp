@@ -330,6 +330,10 @@ nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, ns
     aIID = kIDOMFormListenerIID;
     *aFlags = NS_EVENT_BITS_FORM_CHANGE;
   }
+  else if (aType == "select") {
+    aIID = kIDOMFormListenerIID;
+    *aFlags = NS_EVENT_BITS_FORM_SELECT;
+  }
   else if (aType == "load") {
     aIID = kIDOMLoadListenerIID;
     *aFlags = NS_EVENT_BITS_LOAD_LOAD;
@@ -851,6 +855,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_FORM_SUBMIT:
     case NS_FORM_RESET:
     case NS_FORM_CHANGE:
+    case NS_FORM_SELECTED:
       if (nsnull != mFormListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
@@ -874,6 +879,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                   case NS_FORM_CHANGE:
                     ret = mFormListener->Change(*aDOMEvent);
                     break;
+                  case NS_FORM_SELECTED:
+                    ret = mFormListener->Select(*aDOMEvent);
+                    break;
                   default:
                     break;
                 }
@@ -894,6 +902,11 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                     break;
                   case NS_FORM_CHANGE:
                     if (ls->mSubType & NS_EVENT_BITS_FORM_CHANGE) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_FORM_SELECTED:
+                    if (ls->mSubType & NS_EVENT_BITS_FORM_SELECT) {
                       correctSubType = PR_TRUE;
                     }
                     break;

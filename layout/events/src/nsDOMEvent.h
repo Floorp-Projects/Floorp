@@ -57,6 +57,7 @@ public:
     eDOMEvents_submit,
     eDOMEvents_reset,
     eDOMEvents_change,
+    eDOMEvents_select,
     eDOMEvents_paint,
 	  eDOMEvents_text,
     eDOMEvents_create,
