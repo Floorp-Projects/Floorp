@@ -19,6 +19,12 @@ a.venkman-link:hover {
     width: 100%;
 }
 
+.spacer-node {                      /* this image is inserted between the     */
+    border: none;                   /* characters in long words, in order to  */
+    height: 0px;                    /* break them up to allow word wrapping   */
+    width: 0px;
+}
+
 .msg {                                      /* .msg = a single message in the */
     width: 100%;                            /* output window                  */
     font-size: 10pt;
@@ -44,6 +50,14 @@ a.venkman-link:hover {
 
 .msg-data[msg-type="USAGE"]:before {
     content: "?";
+}
+
+.msg-data[msg-type="SOURCE"]:before {
+    content: ":";
+}
+
+.msg-data[msg-type="STEP"]:before {
+    content: "|";
 }
 
 .msg-data[msg-type="USAGE"] {
