@@ -108,14 +108,14 @@
                 <hbox align="center" pack="end">
                     <label id="sourceLabel" value="&savingSource;"/>
                 </hbox>
-                <textbox id="source" class="scrollfield" readonly="" flex="1"/>
+                <textbox id="source" class="scrollfield" readonly="true" flex="1"/>
             </row>
             <separator class="thin"/>
             <row id="targetRow">
                 <hbox align="center" pack="end">
                     <label id="targetLabel" value="&savingTarget;"/>
                 </hbox>
-                <textbox id="target" class="scrollfield" readonly="" flex="1"/>
+                <textbox id="target" class="scrollfield" readonly="true" flex="1"/>
             </row>
             <separator id="targetRowSeparator" class="thin"/>
             <row>
