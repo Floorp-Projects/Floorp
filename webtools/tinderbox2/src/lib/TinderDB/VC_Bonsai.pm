@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.57 $ 
-# $Date: 2002/05/07 22:51:21 $ 
+# $Revision: 1.58 $ 
+# $Date: 2002/05/08 17:43:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.57 $ )[1];
+$VERSION = ( qw $Revision: 1.58 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -110,7 +110,7 @@ $VC_NAME = $TinderConfig::VC_NAME || "CVS";
 
 # how we recoginise bug number in the checkin comments.
 $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
-    "(\d\d\d+)";
+    '(\d\d\d+)';
 
 $EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL;
 
@@ -311,7 +311,7 @@ sub status_table_legend {
     my ($cell_color) = TreeData::TreeState2color($state);
     my ($char) = TreeData::TreeState2char($state);
     my ($description) = TreeData::TreeStates2descriptions($state);
-    my $description = "$state: $description";
+    $description = "$state: $description";
     my $text_browser_color_string = 
       HTMLPopUp::text_browser_color_string($cell_color, $char);
 
@@ -360,7 +360,6 @@ sub cell_data {
  
         ($db_index >= $#DB_TIMES) && last;
 
-       
         $db_index++;
         
         if (defined($DATABASE{$tree}{$time}{'treestate'})) {

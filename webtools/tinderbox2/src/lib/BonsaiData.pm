@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.11 $ 
-# $Date: 2002/05/03 04:40:08 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/05/08 17:42:59 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -179,20 +179,23 @@ sub get_tree_state {
     (-d $dir) ||
         return 'Open';
 
+    my ($file);
+
     # find the current batch file
-    my ($file) = "$dir/batchid.pl";
+    $file = "$dir/batchid.pl";
     (-f $file) ||
         return 'Open';
 
     # find the current batch file
 
-    $current_batchid = get_file_variable($file, 'BatchID');
+    my $current_batchid = get_file_variable($file, 'BatchID');
 
     # get the tree state
-    my ($file) = "$dir/batch-${current_batchid}.pl";
+    $file = "$dir/batch-${current_batchid}.pl";
     (-f $file) ||
         return 'Open';
-    $is_tree_open = get_file_variable($file, 'TreeOpen');
+
+    my $is_tree_open = get_file_variable($file, 'TreeOpen');
 
     my ($tree_state) = ($is_tree_open ? 'Open' : 'Closed');
     return $tree_state;
