@@ -64,7 +64,7 @@ enum ePathTypes{
 
 static void GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
 static void TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight);
-
+static PRBool GetBGColorForHTMLElement(nsIPresContext *aPresContext,const nsStyleColor *&aBGColor);
 
 // Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
 // This services fieldset legends and only works for coords defining horizontal lines.
