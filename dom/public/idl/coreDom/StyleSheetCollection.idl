@@ -1,0 +1,6 @@
+
+    interface StyleSheetCollection {
+      readonly attribute unsigned long length;
+      StyleSheet item(in unsigned long index);
+    };
+

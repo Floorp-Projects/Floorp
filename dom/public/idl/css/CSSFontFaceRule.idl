@@ -1,0 +1,4 @@
+
+   interface FontFaceRuleSimple : CSSStyleRule {
+     attribute CSSStyleDeclaration style;
+   };
