@@ -214,7 +214,8 @@ public class JavaAdapter extends ScriptableObject {
                 Scriptable p = (Scriptable) f;
                 if (!(p instanceof Function))
                     continue;
-                length = (int) Context.toNumber(getProperty(p, "length"));
+                length = (int) Context.toNumber(
+                            ScriptableObject.getProperty(p, "length"));
             } else if (f instanceof FunctionNode) {
                 length = ((FunctionNode) f).getVariableTable().getParameterCount();
             } else {
@@ -769,24 +770,6 @@ public class JavaAdapter extends ScriptableObject {
             sb.append(';');
         }
         return sb;
-    }
-    
-	/**
-	 * Looks up a property of a scriptable object, searching the entire prototype
-	 * chain. Works like FlattenedObject.getProperty() without the overhead.
-	 */
-    private static Object getProperty(Scriptable obj, String id) {
-        Scriptable m = obj;
-        Object result = null;
-        for(;;) {
-            result = m.get(id, obj);
-            if (result != Scriptable.NOT_FOUND)
-                break;
-            m = m.getPrototype();
-            if (m == null)
-                return Undefined.instance;
-        }
-        return result;
     }
     
     static final class MyClassLoader extends ClassLoader {

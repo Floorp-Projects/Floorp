@@ -183,8 +183,6 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                 // Just abandon conversion from JSObject
             }
         }
-        if (cls == ScriptRuntime.ClassClass)
-            return NativeJavaClass.wrap(scope, (Class) obj);
         return new NativeJavaObject(scope, obj, staticType);
     }
 

@@ -34,8 +34,6 @@
  * file under either the NPL or the GPL.
  */
 
-// API class
-
 package org.mozilla.javascript;
 
 import java.util.Hashtable;
@@ -44,19 +42,13 @@ import java.util.Enumeration;
 /**
  * Manipulate a Scriptable object as if its prototype chain were flattened.
  * <p>
- * Compared to the Scriptable interface, FlattenedObject provides a view of
- * Scriptable objects that is easier to use and more closely matches a script
- * writer's view of a JavaScript object. <p>
+ * This class has been deprecated in favor of the static methods 
+ * <code>getProperty</code>, <code>putProperty</code>, and 
+ * <code>deleteProperty</code>. Those methods provide the
+ * same functionality without the confusing and inefficient need to construct
+ * a new object instance.
  *
- * A FlattenedObject is "flattened" in the sense that multiple objects in a
- * prototype chain appear to have their properties all appear in the
- * FlattenedObject. <p>
- *
- * Another convenience provided by Flattened object is the ability to access
- * properties by a single java.lang.Object id. This id is then converted into
- * a String or an int before methods of the Scriptable object are called.
- *
- * @see org.mozilla.javascript.Scriptable
+ * @see org.mozilla.javascript.ScriptableObject
  *
  * @author Norris Boyd
  */
@@ -67,6 +59,7 @@ public class FlattenedObject {
      * Construct a new FlattenedObject.
      *
      * @param object the object to be viewed with flattened properties
+     * @deprecated
      */
     public FlattenedObject(Scriptable object) {
         this.obj = object;
@@ -74,6 +67,7 @@ public class FlattenedObject {
 
     /**
      * Get the associated Scriptable object.
+     * @deprecated
      */
     public Scriptable getObject() {
         return obj;
@@ -93,6 +87,7 @@ public class FlattenedObject {
      * @return true if and only if the property exists in the prototype
      *         chain
      * @see org.mozilla.javascript.Scriptable#has
+     * @deprecated As of 1.5R2, replaced by ScriptableObject.getProperty
      */
     public boolean hasProperty(Object id) {
         String stringId = ScriptRuntime.toString(id);
@@ -119,6 +114,7 @@ public class FlattenedObject {
      * @return the value of the property or the undefined value
      * @see org.mozilla.javascript.Scriptable#get
      * @see org.mozilla.javascript.Context#getUndefinedValue
+     * @deprecated As of 1.5R2, replaced by ScriptableObject.getProperty
      */
     public Object getProperty(Object id) {
         String s = ScriptRuntime.getStringId(id);
@@ -149,6 +145,7 @@ public class FlattenedObject {
      *           a Number
      * @param value the value of the property
      * @see org.mozilla.javascript.Scriptable#put
+     * @deprecated As of 1.5R2, replaced by ScriptableObject.putProperty
      */
     public void putProperty(Object id, Object value) {
         String s = ScriptRuntime.getStringId(id);
@@ -179,6 +176,7 @@ public class FlattenedObject {
      *           a Number
      * @return true if the property didn't exist, or existed and was removed
      * @see org.mozilla.javascript.Scriptable#delete
+     * @deprecated as of 1.5R2, replaced by ScriptableObject.deleteProperty
      */
     public boolean deleteProperty(Object id) {
         String s = ScriptRuntime.getStringId(id);
@@ -208,6 +206,7 @@ public class FlattenedObject {
      * array will be unique respective to equals().)
      *
      * @see org.mozilla.javascript.Scriptable#getIds
+     * @deprecated
      */
     public Object[] getIds() {
         Hashtable h = new Hashtable(11);
@@ -241,6 +240,7 @@ public class FlattenedObject {
      * @exception JavaScriptException if an uncaught JavaScript exception
      *            occurred while executing the function
      * @see org.mozilla.javascript.Function#call
+     * @deprecated
      */
     public Object call(Context cx, Scriptable thisObj, Object[] args)
         throws NotAFunctionException,
@@ -263,6 +263,7 @@ public class FlattenedObject {
      * @exception JavaScriptException if an uncaught JavaScript exception
      *            occurred while executing the constructor
      * @see org.mozilla.javascript.Function#construct
+     * @deprecated
      */
     public Scriptable construct(Context cx, Object[] args)
         throws NotAFunctionException,
@@ -297,6 +298,7 @@ public class FlattenedObject {
      * @exception JavaScriptException if an uncaught JavaScript exception
      *            occurred while executing the method
      * @see org.mozilla.javascript.Function#call
+     * @deprecated
      */
     public Object callMethod(Object id, Object[] args)
         throws PropertyException,

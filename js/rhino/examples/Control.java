@@ -72,36 +72,31 @@ public class Control {
             // ignore
         }
 
-        FlattenedObject global = new FlattenedObject(scope);
-
-        FlattenedObject f = (FlattenedObject) global.getProperty("obj");
+        Scriptable obj = (Scriptable) scope.get("obj", scope);
 
         // Should print "obj == result" (Since the result of an assignment
         // expression is the value that was assigned)
-        System.out.println("obj " + (f.getObject() == result ? "==" : "!=") +
+        System.out.println("obj " + (obj == result ? "==" : "!=") +
                            " result");
 
-        // Should print "f.a == 1"
-        System.out.println("f.a == " + f.getProperty("a"));
+        // Should print "obj.a == 1"
+        System.out.println("obj.a == " + obj.get("a", obj));
 
-        FlattenedObject b = (FlattenedObject) f.getProperty("b");
+        Scriptable b = (Scriptable) obj.get("b", obj);
 
-        // Should print "f.b[0] == x"
-        System.out.println("f.b[0] == " + b.getProperty(new Integer(0)));
+        // Should print "obj.b[0] == x"
+        System.out.println("obj.b[0] == " + b.get(0, b));
 
-        // Should print "f.b[1] == y"
-        System.out.println("f.b[1] == " + b.getProperty(new Integer(1)));
+        // Should print "obj.b[1] == y"
+        System.out.println("obj.b[1] == " + b.get(1, b));
 
         try {
             // Should print {a:1, b:["x", "y"]}
-            System.out.println(f.callMethod("toString", new Object[0]));
-        } catch (PropertyException e) {
-            // ignore
-        } catch (NotAFunctionException e) {
-            // ignore
+            Function fn = (Function) ScriptableObject.getProperty(obj, "toString");
+            System.out.println(fn.call(cx, scope, obj, new Object[0]));
         } catch (JavaScriptException e) {
             // ignore
-        }
+        } 
 
         cx.exit();
     }

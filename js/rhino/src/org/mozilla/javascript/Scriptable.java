@@ -45,12 +45,12 @@ package org.mozilla.javascript;
  * Host system implementors may find it easier to extend the ScriptableObject
  * class rather than implementing Scriptable when writing host objects.
  * <p>
- * There are many convenience methods defined in FlattenedObject that make 
- * accessing objects easier.
+ * There are many static methods defined in ScriptableObject that perform
+ * the multiple calls to the Scriptable interface needed in order to  
+ * manipulate properties in prototype chains.
  * <p>
  *
  * @see org.mozilla.javascript.ScriptableObject
- * @see org.mozilla.javascript.FlattenedObject
  * @author Norris Boyd
  * @author Nick Thompson
  * @author Brendan Eich
@@ -137,7 +137,7 @@ public interface Scriptable {
      * @param start the object in which the lookup began
      * @return true if and only if the named property is found in the object
      * @see org.mozilla.javascript.Scriptable#get
-     * @see org.mozilla.javascript.FlattenedObject#hasProperty
+     * @see org.mozilla.javascript.ScriptableObject#getProperty
      */
     public boolean has(String name, Scriptable start);
 
@@ -153,7 +153,7 @@ public interface Scriptable {
      * @param start the object in which the lookup began
      * @return true if and only if the indexed property is found in the object
      * @see org.mozilla.javascript.Scriptable#get
-     * @see org.mozilla.javascript.FlattenedObject#hasProperty
+     * @see org.mozilla.javascript.ScriptableObject#getProperty
      */
     public boolean has(int index, Scriptable start);
 
@@ -167,8 +167,8 @@ public interface Scriptable {
      * <code>get</code>. A class that implements this method may choose
      * to ignore calls to set certain properties, in which case those
      * properties are effectively read-only.<p>
-     * For a more convenient (and less efficient) form of this method,
-     * see <code>putProperty</code> in FlattenedObject. <p>
+     * For properties defined in a prototype chain,
+     * use <code>putProperty</code> in ScriptableObject. <p>
      * Note that if a property <i>a</i> is defined in the prototype <i>p</i>
      * of an object <i>o</i>, then evaluating <code>o.a = 23</code> will cause
      * <code>set</code> to be called on the prototype <i>p</i> with
@@ -198,7 +198,7 @@ public interface Scriptable {
      * @param value value to set the property to
      * @see org.mozilla.javascript.Scriptable#has
      * @see org.mozilla.javascript.Scriptable#get
-     * @see org.mozilla.javascript.FlattenedObject#putProperty
+     * @see org.mozilla.javascript.ScriptableObject#putProperty
      */
     public void put(String name, Scriptable start, Object value);
 
@@ -217,7 +217,7 @@ public interface Scriptable {
      * @see org.mozilla.javascript.Scriptable#has
      * @see org.mozilla.javascript.Scriptable#get
      * @see org.mozilla.javascript.Scriptable#put(String,Scriptable,Object)
-     * @see org.mozilla.javascript.FlattenedObject#putProperty
+     * @see org.mozilla.javascript.ScriptaleObject#putProperty
      */
     public void put(int index, Scriptable start, Object value);
 
@@ -235,11 +235,11 @@ public interface Scriptable {
      * The property is specified by a String name
      * as defined for <code>get</code>.
      * <p>
-     * For a more convenient form of this method,
-     * see deleteProperty in FlattenedObject.
+     * To delete properties defined in a prototype chain,
+     * see deleteProperty in ScriptableObject.
      * @param name the identifier for the property
      * @see org.mozilla.javascript.Scriptable#get
-     * @see org.mozilla.javascript.FlattenedObject#deleteProperty
+     * @see org.mozilla.javascript.ScriptableObject#deleteProperty
      */
     public void delete(String name);
 
@@ -249,15 +249,15 @@ public interface Scriptable {
      * The property is specified by an integral index
      * as defined for <code>get</code>.
      * <p>
-     * For a more convenient form of this method,
-     * see deleteProperty in FlattenedObject.
+     * To delete properties defined in a prototype chain,
+     * see deleteProperty in ScriptableObject.
      *
      * Identical to <code>delete(String)</code> except that
      * an integral index is used to select the property.
      *
      * @param index the numeric index for the property
      * @see org.mozilla.javascript.Scriptable#get
-     * @see org.mozilla.javascript.FlattenedObject#deleteProperty
+     * @see org.mozilla.javascript.ScriptableObject#deleteProperty
      */
     public void delete(int index);
 

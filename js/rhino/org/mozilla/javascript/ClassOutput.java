@@ -34,7 +34,7 @@
  */
 package org.mozilla.javascript;
 
-// API Class
+// API class
 
 import java.io.*;
 

@@ -524,17 +524,17 @@ public abstract class ScriptableObject implements Scriptable {
      */
     public Object getDefaultValue(Class typeHint) {
         Object val;
-        FlattenedObject f = new FlattenedObject(this);
         Context cx = null;
         try {
             for (int i=0; i < 2; i++) {
                 if (typeHint == ScriptRuntime.StringClass ? i == 0 : i == 1) {
-                    Function fun = getFunctionProperty(f, "toString");
-                    if (fun == null)
+                    Object v = getProperty(this, "toString");
+                    if (!(v instanceof Function))
                         continue;
+                    Function fun = (Function) v;
                     if (cx == null)
                         cx = Context.getContext();
-                    val = fun.call(cx, fun.getParentScope(), f.getObject(),
+                    val = fun.call(cx, fun.getParentScope(), this,
                                    ScriptRuntime.emptyArgs);
                 } else {
                     String hint;
@@ -566,14 +566,14 @@ public abstract class ScriptableObject implements Scriptable {
                         throw Context.reportRuntimeError(
                             Context.getMessage("msg.invalid.type", args));
                     }
-                    Function fun = getFunctionProperty(f, "valueOf");
-                    if (fun == null)
+                    Object v = getProperty(this, "valueOf");
+                    if (!(v instanceof Function))
                         continue;
+                    Function fun = (Function) v;
                     Object[] args = { hint };
                     if (cx == null)
                         cx = Context.getContext();
-                    val = fun.call(cx, fun.getParentScope(), f.getObject(), 
-                                   args);
+                    val = fun.call(cx, fun.getParentScope(), this, args);
                 }
                 if (val != null && (val == Undefined.instance ||
                                     !(val instanceof Scriptable) ||
@@ -1326,7 +1326,146 @@ public abstract class ScriptableObject implements Scriptable {
     public boolean isSealed() {
         return count == -1;
     }
-        
+    
+    /**
+     * Gets a named property from an object or any object in its prototype chain.
+     * <p>
+     * Searches the prototype chain for a property named <code>name</code>.
+     * <p>
+     * @param obj a JavaScript object 
+     * @param name a property name 
+     * @return the value of a property with name <code>name</code> found in 
+     *         <code>obj</code> or any object in its prototype chain, or 
+     *         <code>Scriptable.NOT_FOUND</code> if not found
+     */
+    public static Object getProperty(Scriptable obj, String name) {
+        Scriptable start = obj;
+        Object result;
+        do {
+            result = obj.get(name, start);
+            if (result != Scriptable.NOT_FOUND)
+                break;
+            obj = obj.getPrototype();
+        } while (obj != null);
+        return result;
+    }
+    
+    /**
+     * Gets an indexed property from an object or any object in its prototype chain.
+     * <p>
+     * Searches the prototype chain for a property with integral index 
+     * <code>index</code>. Note that if you wish to look for properties with numerical
+     * but non-integral indicies, you should use getProperty(Scriptable,String) with
+     * the string value of the index.
+     * <p>
+     * @param obj a JavaScript object 
+     * @param index an integral index 
+     * @return the value of a property with index <code>index</code> found in 
+     *         <code>obj</code> or any object in its prototype chain, or 
+     *         <code>Scriptable.NOT_FOUND</code> if not found
+     */
+    public static Object getProperty(Scriptable obj, int index) {
+        Scriptable start = obj;
+        Object result;
+        do {
+            result = obj.get(index, start);
+            if (result != Scriptable.NOT_FOUND)
+                break;
+            obj = obj.getPrototype();
+        } while (obj != null);
+        return result;
+    }
+
+    /**
+     * Puts a named property in an object or in an object in its prototype chain.
+     * <p>
+     * Seaches for the named property in the prototype chain. If it is found,
+     * the value of the property is changed. If it is not found, a new
+     * property is added in <code>obj</code>.
+     * @param obj a JavaScript object 
+     * @param name a property name
+     * @param value any JavaScript value accepted by Scriptable.put 
+     */
+    public static void putProperty(Scriptable obj, String name, Object value) {
+        Scriptable base = getBase(obj, name);
+        if (base == null)
+            base = obj;
+        base.put(name, obj, value);
+    }
+
+    /**
+     * Puts an indexed property in an object or in an object in its prototype chain.
+     * <p>
+     * Seaches for the indexed property in the prototype chain. If it is found,
+     * the value of the property is changed. If it is not found, a new
+     * property is added in <code>obj</code>.
+     * @param obj a JavaScript object 
+     * @param index a property index
+     * @param value any JavaScript value accepted by Scriptable.put 
+     */
+    public static void putProperty(Scriptable obj, int index, Object value) {
+        Scriptable base = getBase(obj, index);
+        if (base == null)
+            base = obj;
+        base.put(index, obj, value);
+    }
+
+    /**
+     * Removes the property from an object or its prototype chain.
+     * <p>
+     * Searches for a property with <code>name</code> in obj or
+     * its prototype chain. If it is found, the object's delete
+     * method is called. 
+     * @param obj a JavaScript object
+     * @param name a property name
+     * @return true if the property doesn't exist or was successfully removed
+     */
+    public static boolean deleteProperty(Scriptable obj, String name) {
+        Scriptable base = getBase(obj, name);
+        if (base == null)
+            return true;
+        base.delete(name);
+        return base.get(name, obj) == NOT_FOUND;
+    }
+                
+    /**
+     * Removes the property from an object or its prototype chain.
+     * <p>
+     * Searches for a property with <code>index</code> in obj or
+     * its prototype chain. If it is found, the object's delete
+     * method is called. 
+     * @param obj a JavaScript object
+     * @param index a property index
+     * @return true if the property doesn't exist or was successfully removed
+     */
+    public static boolean deleteProperty(Scriptable obj, int index) {
+        Scriptable base = getBase(obj, index);
+        if (base == null)
+            return true;
+        base.delete(index);
+        return base.get(index, obj) == NOT_FOUND;
+    }
+                
+    private static Scriptable getBase(Scriptable obj, String s) {
+        Scriptable m = obj;
+        while (m != null) {
+            if (m.has(s, obj))
+                return m;
+            m = m.getPrototype();
+        }
+        return null;
+    }
+
+    private static Scriptable getBase(Scriptable obj, int index) {
+        Scriptable m = obj;
+        while (m != null) {
+            if (m.has(index, obj))
+                return m;
+            m = m.getPrototype();
+        }
+        return null;
+    }
+    
     /**
      * Adds a property attribute to all properties.
      */
@@ -1474,16 +1613,6 @@ public abstract class ScriptableObject implements Scriptable {
             newSlots[k] = slot;
         }
         slots = newSlots;
-    }
-
-    private Function getFunctionProperty(FlattenedObject f, String name) {
-        Object val = f.getProperty(name);
-        if (val == null || !(val instanceof FlattenedObject))
-            return null;
-        Scriptable s = ((FlattenedObject) val).getObject();
-        if (s instanceof Function)
-            return (Function) s;
-        return null;
     }
 
     private static Hashtable getExclusionList() {

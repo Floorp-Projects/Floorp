@@ -1059,10 +1059,11 @@ public class ScriptRuntime {
      * method doesn't return a value.
      */
     public static Object delete(Object obj, Object id) {
-        if (!(obj instanceof Scriptable))
-            return Boolean.TRUE;
-        FlattenedObject f = new FlattenedObject((Scriptable) obj);
-        return f.deleteProperty(id) ? Boolean.TRUE : Boolean.FALSE;
+        String s = getStringId(id);
+        boolean result = s != null
+            ? ScriptableObject.deleteProperty((Scriptable) obj, s)
+            : ScriptableObject.deleteProperty((Scriptable) obj, getIntId(id));
+        return result ? Boolean.TRUE : Boolean.FALSE;
     }
 
     /**
@@ -1730,9 +1731,11 @@ public class ScriptRuntime {
                 Context.getContext(), "TypeError",
                 ScriptRuntime.getMessage("msg.instanceof.not.object", null), a);
         }
-        // OPT do it here rather than making a new FlattenedObject.
-        FlattenedObject rhs = new FlattenedObject((Scriptable)b);
-        return rhs.hasProperty(a);
+        String s = getStringId(a);
+        Object result = s != null
+            ? ScriptableObject.getProperty((Scriptable) b, s)
+            : ScriptableObject.getProperty((Scriptable) b, getIntId(a));
+        return result != Scriptable.NOT_FOUND;
     }
 
     public static Boolean cmp_LTB(Object val1, Object val2) {
