@@ -36,9 +36,9 @@ namespace JavaScript {
 
 	class StringAtom: public String {
 	  public:
-		Token::Kind tokenKind;			// Token::Kind if this is a keyword; Token::Id if not
+		Token::Kind tokenKind;			// Token::Kind if this is a keyword; Token::identifier if not
 
-		explicit StringAtom(const String &s): String(s), tokenKind(Token::Id) {}
+		explicit StringAtom(const String &s): String(s), tokenKind(Token::identifier) {}
 	  private:
 	    StringAtom(const StringAtom&);		// No copy constructor
 	    void operator=(const StringAtom&);	// No assignment operator
