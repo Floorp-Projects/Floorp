@@ -398,7 +398,7 @@ nsresult nsTextEncoder::QueryInterface(REFNSIID aIID,
 NS_IMETHODIMP
 nsTextEncoder::PrettyPrint(PRBool aYes)
 {
-  mPrettyPrint = PR_TRUE;
+  mPrettyPrint = aYes;
   return NS_OK;
 }
 
