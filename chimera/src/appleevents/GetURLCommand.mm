@@ -41,8 +41,11 @@
   if ( prefService )
     prefService->GetBoolPref("browser.always_reuse_window", &reuseWindow);
   
+  // reuse the main window if there is one. The user may have closed all of 
+  // them or we may get this event at startup before we've had time to load
+  // our window.
   BrowserWindowController* controller = nsnull;
-  if ( reuseWindow ) {
+  if ( reuseWindow && [NSApp mainWindow] ) {
     controller = [[NSApp mainWindow] windowController];
     [controller loadURLString:[self directParameter]];
     [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
