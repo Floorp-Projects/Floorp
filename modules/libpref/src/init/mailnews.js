@@ -225,6 +225,8 @@ pref("mailnews.confirm.moveFoldersToTrash", true);
 pref("mailnews.start_page.url", "chrome://messenger/locale/messenger.properties");
 pref("mailnews.start_page.enabled", true);
 
+pref("mailnews.account_central_page.url", "chrome://messenger/locale/messenger.properties");
+
 /* default prefs for Mozilla 5.0 */
 pref("mail.identity.default.compose_html", true);
 pref("mail.identity.default.valid", true);
@@ -273,7 +275,7 @@ pref("mail.server.default.empty_trash_on_exit", false);
 pref("mail.server.default.using_subscription", true);
 pref("mail.server.default.dual_use_folders", true);
 pref("mail.server.default.canDelete", false);
-pref("mail.server.default.login_at_startup", true);
+pref("mail.server.default.login_at_startup", false);
 
 pref("mail.smtpserver.default.auth_method", 2); // auth login
 
