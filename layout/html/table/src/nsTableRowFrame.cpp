@@ -505,7 +505,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
   nscoord   maxTopMargin = 0;
   nscoord   maxBottomMargin = 0;
   nscoord   x = 0;
-  nsresult  result;
+  nsresult  result = NS_OK;
 
   for (;;) {
     // Get the next content object
@@ -638,7 +638,7 @@ nsresult nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
   // Walk the list of children looking for aKidFrame. While we're at
   // it get the maxCellHeight and maxVertCellSpace for all the
   // frames except aKidFrame
-  nsIFrame* prevKidFrame = nsnull;
+//  nsIFrame* prevKidFrame = nsnull;
   for (nsIFrame* frame = mFirstChild; nsnull != frame;) {
     if (frame != aKidFrame) {
       // Update the max top and bottom margins
@@ -699,7 +699,7 @@ nsresult nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
     }
 
     // Remember the frame that precedes aKidFrame
-    prevKidFrame = frame;
+//    prevKidFrame = frame;
     frame->GetNextSibling(frame);
   }
 

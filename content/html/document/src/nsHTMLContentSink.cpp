@@ -1574,7 +1574,6 @@ nsresult HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
     nsAutoString shape, coords, href, target(mBaseTarget), alt;
     PRInt32 ac = aNode.GetAttributeCount();
     PRBool suppress = PR_FALSE;
-    PRBool setTarget = PR_TRUE;
     for (PRInt32 i = 0; i < ac; i++) {
       // Get upper-cased key
       const nsString& key = aNode.GetKeyAt(i);

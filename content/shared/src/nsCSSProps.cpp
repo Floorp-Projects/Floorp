@@ -656,19 +656,16 @@ const char* nsCSSProps::LookupProperty(PRInt32 aProp, PRInt32 aIndex)
   case PROP_BORDER_RIGHT_STYLE:
   case PROP_BORDER_TOP_STYLE:
     return SearchKeywordTable(aIndex,kBorderStyleKTable);
-  break;
 
   case PROP_BORDER_BOTTOM_WIDTH:
   case PROP_BORDER_LEFT_WIDTH:
   case PROP_BORDER_RIGHT_WIDTH:
   case PROP_BORDER_TOP_WIDTH:
     return SearchKeywordTable(aIndex,kBorderWidthKTable);
-    break;
   
   case PROP_BORDER_WIDTH:
   case PROP_CLEAR:
     return SearchKeywordTable(aIndex,kClearKTable);  
-  break;
     
   case PROP_CLIP:
   case PROP_COLOR:
@@ -676,7 +673,6 @@ const char* nsCSSProps::LookupProperty(PRInt32 aProp, PRInt32 aIndex)
 
   case PROP_CURSOR:
     return SearchKeywordTable(aIndex,kCursorKTable);  
-    break;
 
   case PROP_DIRECTION:
     return SearchKeywordTable(aIndex,kDirectionKTable);  
@@ -696,7 +692,6 @@ const char* nsCSSProps::LookupProperty(PRInt32 aProp, PRInt32 aIndex)
 
   case PROP_FONT_SIZE:
       return SearchKeywordTable(aIndex,kFontSizeKTable);  
-    break;
 
   case PROP_FONT_STYLE:
     return SearchKeywordTable(aIndex,kFontStyleKTable);  
@@ -728,7 +723,6 @@ const char* nsCSSProps::LookupProperty(PRInt32 aProp, PRInt32 aIndex)
   case PROP_MARGIN_RIGHT:
   case PROP_MARGIN_TOP:
     return SearchKeywordTable(aIndex, kMarginSizeKTable);
-  break;
 
   case PROP_PADDING:
   case PROP_PADDING_BOTTOM:
@@ -745,7 +739,6 @@ const char* nsCSSProps::LookupProperty(PRInt32 aProp, PRInt32 aIndex)
   
   case PROP_POSITION:
     return SearchKeywordTable(aIndex, kPositionKTable);
-    break;
   
   case PROP_TEXT_ALIGN:
     return SearchKeywordTable(aIndex, kTextAlignKTable);
@@ -762,7 +755,6 @@ const char* nsCSSProps::LookupProperty(PRInt32 aProp, PRInt32 aIndex)
 
   case PROP_VERTICAL_ALIGN:
     return SearchKeywordTable(aIndex, kVerticalAlignKTable);
-  break;
   
   case PROP_VISIBILITY:
     return SearchKeywordTable(aIndex, kVisibilityKTable);

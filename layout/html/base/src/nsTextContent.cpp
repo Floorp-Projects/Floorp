@@ -91,8 +91,6 @@
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXTCONTENT_IID);
 #endif
 
-static NS_DEFINE_IID(kIScriptObjectOwner, NS_ISCRIPTOBJECTOWNER_IID);
-
 class TextFrame;
 
 class TextTimer : public nsITimerCallback {
@@ -625,10 +623,9 @@ char * TextFrame::CompressWhiteSpace(char            * aBuffer,
       // whitespace; translating whitespace to literal spaces;
       // eliminating trailing whitespace.
       char* s = aBuffer;
-      char* s0 = s;
       PRInt32 maxLen = end - cp;
       if (maxLen > aBufSize) {
-        s0 = s = new char[maxLen];
+        s = new char[maxLen];
         aShouldDeleteStr = PR_TRUE;
       }
 
@@ -1212,7 +1209,7 @@ TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
   nscoord maxWidth = aReflowState.maxSize.width;
   nscoord maxWordWidth = 0;
   const PRUnichar* lastWordEnd = cpStart;
-  const PRUnichar* lastWordStart = cpStart;
+//  const PRUnichar* lastWordStart = cpStart;
   PRBool hasMultibyte = PR_FALSE;
   PRBool endsInWhitespace = PR_FALSE;
 
@@ -1246,7 +1243,7 @@ TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
         hasMultibyte = PR_TRUE;
       }
       const PRUnichar* wordStart = cp - 1;
-      lastWordStart = wordStart;
+//      lastWordStart = wordStart;
       while (cp < end) {
         ch = *cp;
         if (ch >= 256) {
@@ -1486,7 +1483,6 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
 
   nsIFontMetrics* fm   = aCX.GetMetricsFor(font->mFont);
 
-  nscoord x            = 0;
   nscoord width        = 0;
 
   PRUint16        indexes[1024];
@@ -1497,9 +1493,9 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
 
   compressedStr = CompressWhiteSpace(buf, sizeof(buf), indexes, compressedStrLen, shouldDelete);
 
-  PRUint32 i;
+  PRInt32 i;
   char buffer[1024];
-  for (i=1;i<compressedStrLen;i++) {
+  for (i=1;i<PRInt32(compressedStrLen);i++) {
     strncpy(buffer, compressedStr, i);
 	  buffer[i] = 0;
     width = fm->GetWidth(buffer);
@@ -2013,14 +2009,8 @@ NS_IMETHODIMP
 Text::Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData)
 {
   // sanitize arguments
-  if (aOffset < 0) {
-    aOffset = 0;
-  }
   if (aOffset > (PRUint32)mLength) {
     aOffset = mLength;
-  }
-  if (aCount < 0) {
-    aCount = 0;
   }
 
   // Allocate new buffer

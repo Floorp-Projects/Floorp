@@ -629,9 +629,7 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
  
 
 
-  PRInt32  offset       = 0;
   PRUint32 actualOffset = 0;
-  PRInt32  width        = 0;
 
   mDoingSelection = PR_TRUE;
   mDidDrag        = PR_FALSE;
@@ -830,8 +828,6 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
   nsIContent * startContent = mSelectionRange->GetStartContent();
   nsIContent * endContent   = mSelectionRange->GetEndContent();
 
-  PRBool isNewFrame = PR_FALSE; // for testing (rcs)
-
   mDidDrag = PR_TRUE;
 
   if (aFrame != nsnull) {
@@ -839,7 +835,6 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
     // Check to see if we have changed frame
     if (aFrame != mCurrentFrame) {
-      isNewFrame = PR_TRUE;
       // We are in a new Frame!
       if (SELECTION_DEBUG) printf("HandleDrag::Different Frame in selection!\n");
 

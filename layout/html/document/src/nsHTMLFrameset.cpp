@@ -41,19 +41,6 @@
 #include "nsHTMLBase.h"
 #include "nsIDocumentLoader.h"
 class nsHTMLIFrame;
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIWebFrameIID, NS_IWEBFRAME_IID);
-static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
-
-static NS_DEFINE_IID(kIContentViewerContainerIID,
-                     NS_ICONTENT_VIEWER_CONTAINER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
 
 /*******************************************************************************
@@ -419,7 +406,6 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString& aSpec, PRInt32 aMaxNumValues,
 
     // Note: If end == start then it means that the token has no
     // data in it other than a terminating comma (or the end of the spec)
-    PRInt32 value = 1;
     aSpecs[i].mUnit = eFramesetUnit_Pixel;
     if (end > start) {
       PRInt32 numberEnd = end - 1;

@@ -424,7 +424,6 @@ BulletFrame::GetListItemText(nsIPresContext* aCX,
     PRIntn           len=decStr.Length();
     PRIntn           romanPos=len;
     PRIntn           n;
-    PRBool           negative=PRBool(ordinal<0);
 
     const char* achars;
     const char* bchars;

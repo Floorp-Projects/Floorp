@@ -275,8 +275,9 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
                                           (void**)&runAround))) {
     nsRect r;
     mLineLayout.mSpaceManager->Translate(x, y);
-    runAround->Reflow(*mLineLayout.mPresContext, mLineLayout.mSpaceManager,
-                      aMetrics, aReflowState, r, rv);
+    runAround->ReflowAround(*mLineLayout.mPresContext,
+                            mLineLayout.mSpaceManager,
+                            aMetrics, aReflowState, r, rv);
     mLineLayout.mSpaceManager->Translate(-x, -y);
 
     aMetrics.width = r.width;

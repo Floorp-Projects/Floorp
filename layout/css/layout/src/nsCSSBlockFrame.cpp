@@ -143,12 +143,12 @@ public:
   // XXX implement regular reflow method too!
 
   // nsIRunaround
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsISpaceManager*     aSpaceManager,
-                    nsReflowMetrics&     aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsRect&              aDesiredRect,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD ReflowAround(nsIPresContext&      aPresContext,
+                          nsISpaceManager*     aSpaceManager,
+                          nsReflowMetrics&     aDesiredSize,
+                          const nsReflowState& aReflowState,
+                          nsRect&              aDesiredRect,
+                          nsReflowStatus&      aStatus);
 
   // nsIFloaterContainer
   virtual PRBool AddFloater(nsIPresContext*      aPresContext,
@@ -849,8 +849,6 @@ nsCSSBlockReflowState::~nsCSSBlockReflowState()
 void
 nsCSSBlockReflowState::GetAvailableSpace()
 {
-  nsresult rv = NS_OK;
-
   nsISpaceManager* sm = mSpaceManager;
 
   // Fill in band data for the specific Y coordinate. Note: We don't
@@ -1214,12 +1212,12 @@ nsCSSBlockFrame::GetLastContentOffset() const
 #endif
 
 NS_IMETHODIMP
-nsCSSBlockFrame::Reflow(nsIPresContext&      aPresContext,
-                        nsISpaceManager*     aSpaceManager,
-                        nsReflowMetrics&     aMetrics,
-                        const nsReflowState& aReflowState,
-                        nsRect&              aDesiredRect,
-                        nsReflowStatus&      aStatus)
+nsCSSBlockFrame::ReflowAround(nsIPresContext&      aPresContext,
+                              nsISpaceManager*     aSpaceManager,
+                              nsReflowMetrics&     aMetrics,
+                              const nsReflowState& aReflowState,
+                              nsRect&              aDesiredRect,
+                              nsReflowStatus&      aStatus)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsCSSBlockFrame::Reflow: maxSize=%d,%d reason=%d [%d,%d,%c]",
@@ -2028,7 +2026,6 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
 
   // Pull frames from the next line until we can't
   while (nsnull != aLine->mNext) {
-    LineData** linep = &aLine->mNext;
     keepGoing = PullFrame(aState, aLine, &aLine->mNext,
                           PR_FALSE, aReflowResult);
     if (!keepGoing) {
@@ -2224,8 +2221,8 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     reflowState.reason = reason;
     nsRect r;
     aState.mSpaceManager->Translate(x, y);
-    rv = runAround->Reflow(*aState.mPresContext, aState.mSpaceManager,
-                           metrics, reflowState, r, reflowStatus);
+    rv = runAround->ReflowAround(*aState.mPresContext, aState.mSpaceManager,
+                                 metrics, reflowState, r, reflowStatus);
     aState.mSpaceManager->Translate(-x, -y);
     metrics.width = r.width;
     metrics.height = r.height;
@@ -3201,7 +3198,6 @@ nsCSSBlockFrame::ContentDeleted(nsIPresShell*   aShell,
 
   // Remove frame and its continuations
   PRBool pseudos = flow->IsPseudoFrame();
-  nsIFrame* flowParent = flow->mGeometricParent;
   while (nsnull != deadFrame) {
     while ((nsnull != line) && (nsnull != deadFrame)) {
 #ifdef NS_DEBUG

@@ -210,8 +210,8 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     mFirstChild->WillReflow(aPresContext);
     mFirstChild->MoveTo(borderPadding.left, borderPadding.top);
     mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
-    reflowRunaround->Reflow(aPresContext, mSpaceManager, aDesiredSize,
-                            reflowState, desiredRect, aStatus);
+    reflowRunaround->ReflowAround(aPresContext, mSpaceManager, aDesiredSize,
+                                  reflowState, desiredRect, aStatus);
 
     // If the frame is complete, then check whether there's a next-in-flow that
     // needs to be deleted
