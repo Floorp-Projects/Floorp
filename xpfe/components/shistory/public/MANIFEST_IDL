@@ -2,4 +2,6 @@ nsIShEntry.idl   \
 nsISHTransaction.idl \
 nsISHContainer.idl  \
 nsISHistory.idl \
-nsISHistoryListener.idl
+nsISHistoryListener.idl \
+nsIHistoryEntry.idl \
+nsISHistoryInternal.idl

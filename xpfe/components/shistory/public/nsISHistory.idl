@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,34 +19,30 @@
  *
  * Contributor(s): Radha Kulkarni (radha@netscape.com)
  */
+
+/**
+ * Interface to Session History
+ *
+ * @status FROZEN
+ */
  
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
-#include "nsISHEntry.idl"
-#include "nsISHTransaction.idl"
-#include "nsIDocShell.idl"
+#include "nsIHistoryEntry.idl"
 #include "nsISHistoryListener.idl"
 
+interface nsISimpleEnumerator;
 
 %{C++
 #define NS_SHISTORY_CID \
-{0xdd335421, 0xb8b8, 0x11d3, {0xbd, 0xc8, 0x00, 0x50, 0x04, 0x0a, 0x9b, 0x44}}
+{0x7294fe9c, 0x14d8, 0x11d5, {0x98, 0x82, 0x00, 0xC0, 0x4f, 0xa0, 0x2f, 0x40}}
 
 #define NS_SHISTORY_CONTRACTID "@mozilla.org/browser/shistory;1"
 %}
 
-[scriptable, uuid(DD335421-B8B8-11d3-BDC8-0050040A9B44)]
+[scriptable, uuid(7294FE9B-14D8-11D5-9882-00C04FA02F40)]
 interface nsISHistory: nsISupports
 {
-  /**
-   * Add a new Entry to the History List
-	 * @param aEntry - The entry to add
-	 * @param aPersist - If true this specifies that the entry should persist
-	 * in the list.  If false, this means that when new entries are added
-	 * this element will not appear in the session history list.
-   */
-   void  addEntry(in nsISHEntry aEntry, in boolean aPersist);
-
   /**
    * Get the size of the History list
    */
@@ -57,35 +53,16 @@ interface nsISHistory: nsISupports
    */
    readonly attribute long index;
 
-  /** 
-   * Get Previous Entry
-   */
-   nsISHEntry getPreviousEntry(in boolean modifyIndex);
-
-  /**
-   * Get the next entry
-   */
-   nsISHEntry getNextEntry(in boolean modifyIndex);
-
-  /**
-   * Get the entry at a given index
-   */
-   nsISHEntry getEntryAtIndex(in long index, in boolean modifyIndex);
-
-  /**
-   * Get the root transaction
-   */
-   readonly attribute nsISHTransaction rootTransaction;
-
-  /**
-   * The toplevel docshell object to which this SHistory object belongs to.
-   */
-   attribute nsIDocShell rootDocShell;
-
   /**
    * Get/Set the Max entries Session History will hold per window
    */
    attribute long maxLength;
+
+  /**
+   * Get the entry at a given index
+   */
+   nsIHistoryEntry getEntryAtIndex(in long index, in boolean modifyIndex);
+
 
   /**
    * Purge the oldest numEntries from history list
@@ -102,4 +79,8 @@ interface nsISHistory: nsISupports
    */
    void removeSHistoryListener(in nsISHistoryListener aListener);
 
+  /**
+   * Get a enumerator to access all the entries in SH
+   */
+   readonly attribute nsISimpleEnumerator SHistoryEnumerator;
 };
