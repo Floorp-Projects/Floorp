@@ -100,7 +100,7 @@ class MessageDialogWrapper {
 
 class EvalTextArea extends JTextArea implements KeyListener,
 DocumentListener {
-    DebugGui debugGui;
+    SwingGui debugGui;
     private java.util.Vector history;
     private int historyIndex = -1;
     private int outputMark = 0;
@@ -110,7 +110,7 @@ DocumentListener {
         super.select(start, end);
     }
 
-    public EvalTextArea(DebugGui debugGui) {
+    public EvalTextArea(SwingGui debugGui) {
         super();
         this.debugGui = debugGui;
         history = new java.util.Vector();
@@ -275,7 +275,7 @@ implements ActionListener {
         evalTextArea.setEnabled(b);
     }
 
-    public EvalWindow(String name, DebugGui debugGui) {
+    public EvalWindow(String name, SwingGui debugGui) {
         super(name, true, false, true, true);
         evalTextArea = new EvalTextArea(debugGui);
         evalTextArea.setRows(24);
@@ -612,7 +612,7 @@ class MoreWindows extends JDialog implements ActionListener {
 class FindFunction extends JDialog implements ActionListener {
     private String value = null;
     private JList list;
-    DebugGui debugGui;
+    SwingGui debugGui;
     JButton setButton;
     JButton refreshButton;
     JButton cancelButton;
@@ -679,7 +679,7 @@ class FindFunction extends JDialog implements ActionListener {
         }
     };
 
-    FindFunction(DebugGui debugGui, String title, String labelText)
+    FindFunction(SwingGui debugGui, String title, String labelText)
     {
         super(debugGui, title, true);
         this.debugGui = debugGui;
@@ -877,7 +877,7 @@ class FileHeader extends JPanel implements MouseListener {
 
 class FileWindow extends JInternalFrame implements ActionListener {
 
-    DebugGui debugGui;
+    SwingGui debugGui;
     Dim.SourceInfo sourceInfo;
     FileTextArea textArea;
     FileHeader fileHeader;
@@ -945,8 +945,8 @@ class FileWindow extends JInternalFrame implements ActionListener {
         }
     }
 
-    FileWindow(DebugGui debugGui, Dim.SourceInfo sourceInfo) {
-        super(DebugGui.getShortName(sourceInfo.url()),
+    FileWindow(SwingGui debugGui, Dim.SourceInfo sourceInfo) {
+        super(SwingGui.getShortName(sourceInfo.url()),
               true, true, true, true);
         this.debugGui = debugGui;
         this.sourceInfo = sourceInfo;
@@ -1014,11 +1014,11 @@ class FileWindow extends JInternalFrame implements ActionListener {
 
 class MyTableModel extends AbstractTableModel
 {
-    DebugGui debugGui;
+    SwingGui debugGui;
     Vector expressions;
     Vector values;
 
-    MyTableModel(DebugGui debugGui) {
+    MyTableModel(SwingGui debugGui) {
         this.debugGui = debugGui;
         expressions = new Vector();
         values = new Vector();
@@ -1102,7 +1102,7 @@ class MyTableModel extends AbstractTableModel
 
 class Evaluator extends JTable {
     MyTableModel tableModel;
-    Evaluator(DebugGui debugGui) {
+    Evaluator(SwingGui debugGui) {
         super(new MyTableModel(debugGui));
         tableModel = (MyTableModel)getModel();
     }
@@ -1397,7 +1397,7 @@ class MyTreeTable extends JTreeTable {
 
 class ContextWindow extends JPanel implements ActionListener
 {
-    DebugGui debugGui;
+    SwingGui debugGui;
 
     JComboBox context;
     Vector toolTips;
@@ -1410,7 +1410,7 @@ class ContextWindow extends JPanel implements ActionListener
     EvalTextArea cmdLine;
     JSplitPane split;
     boolean enabled;
-    ContextWindow(final DebugGui debugGui) {
+    ContextWindow(final SwingGui debugGui) {
         super();
         this.debugGui = debugGui;
         enabled = false;
@@ -1480,7 +1480,7 @@ class ContextWindow extends JPanel implements ActionListener
         split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                                p1, p2);
         split.setOneTouchExpandable(true);
-        DebugGui.setResizeWeight(split, 0.5);
+        SwingGui.setResizeWeight(split, 0.5);
         setLayout(new BorderLayout());
         add(split, BorderLayout.CENTER);
 
@@ -1689,7 +1689,7 @@ class Menubar extends JMenuBar implements ActionListener
     private Vector interruptOnlyItems = new Vector();
     private Vector runOnlyItems = new Vector();
 
-    DebugGui debugGui;
+    SwingGui debugGui;
     JMenu windowMenu;
     JCheckBoxMenuItem breakOnExceptions;
     JCheckBoxMenuItem breakOnEnter;
@@ -1699,7 +1699,7 @@ class Menubar extends JMenuBar implements ActionListener
         return getMenu(2);
     }
 
-    Menubar(DebugGui debugGui) {
+    Menubar(SwingGui debugGui) {
         super();
         this.debugGui = debugGui;
         String[] fileItems  = {"Open...", "Run...", "", "Exit"};
@@ -1865,7 +1865,7 @@ class Menubar extends JMenuBar implements ActionListener
                 count--;
                 windowMenu.remove(lastItem);
             }
-            String shortName = DebugGui.getShortName(url);
+            String shortName = SwingGui.getShortName(url);
 
             windowMenu.add(item = new JMenuItem((char)('0' + (count-4)) + " " + shortName, '0' + (count - 4)));
             if (hasMoreWin) {
@@ -1904,7 +1904,7 @@ class RunProxy implements Runnable
     static final int UPDATE_SOURCE_TEXT = 3;
     static final int ENTER_INTERRUPT = 4;
 
-    private DebugGui debugGui;
+    private SwingGui debugGui;
     private int type;
 
     String fileName;
@@ -1916,7 +1916,7 @@ class RunProxy implements Runnable
     String threadTitle;
     String alertMessage;
 
-    RunProxy(DebugGui debugGui, int type)
+    RunProxy(SwingGui debugGui, int type)
     {
         this.debugGui = debugGui;
         this.type = type;
@@ -1970,7 +1970,7 @@ class RunProxy implements Runnable
 
 }
 
-class DebugGui extends JFrame implements GuiCallback
+class SwingGui extends JFrame implements GuiCallback
 {
     Dim dim;
     Runnable exitAction;
@@ -1992,7 +1992,7 @@ class DebugGui extends JFrame implements GuiCallback
 
     private static EventQueue awtEventQueue;
 
-    DebugGui(Dim dim, String title) {
+    SwingGui(Dim dim, String title) {
         super(title);
         this.dim = dim;
         init();
@@ -2108,7 +2108,7 @@ class DebugGui extends JFrame implements GuiCallback
         split1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, desk,
                                           context);
         split1.setOneTouchExpandable(true);
-        DebugGui.setResizeWeight(split1, 0.66);
+        SwingGui.setResizeWeight(split1, 0.66);
         contentPane.add(split1, BorderLayout.CENTER);
         statusBar = new JLabel();
         statusBar.setText("Thread: ");

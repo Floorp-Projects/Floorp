@@ -48,7 +48,7 @@ public class Main implements ContextListener
     // The class implements ContextListener only for compatibility!
 
     Dim dim;
-    DebugGui debugGui;
+    SwingGui debugGui;
 
     /**
      * Class to consolidate all internal implementations of interfaces
@@ -86,7 +86,7 @@ public class Main implements ContextListener
     public Main(String title)
     {
         dim = new Dim();
-        debugGui = new DebugGui(dim, title);
+        debugGui = new SwingGui(dim, title);
         dim.callback = debugGui;
     }
 
