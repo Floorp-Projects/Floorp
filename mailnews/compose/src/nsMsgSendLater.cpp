@@ -116,14 +116,14 @@ nsMsgSendLater::nsMsgSendLater()
 nsMsgSendLater::~nsMsgSendLater()
 {
   NS_IF_RELEASE(mTempIFileSpec);
-  PR_FREEIF(m_to);
-  PR_FREEIF(m_fcc);
-  PR_FREEIF(m_bcc);
-  PR_FREEIF(m_newsgroups);
-  PR_FREEIF(m_newshost);
-  PR_FREEIF(m_headers);
-  PR_FREEIF(mLeftoverBuffer);
-  PR_FREEIF(mIdentityKey);
+  PR_Free(m_to);
+  PR_Free(m_fcc);
+  PR_Free(m_bcc);
+  PR_Free(m_newsgroups);
+  PR_Free(m_newshost);
+  PR_Free(m_headers);
+  PR_Free(mLeftoverBuffer);
+  PR_Free(mIdentityKey);
 }
 
 // Stream is done...drive on!
@@ -296,10 +296,8 @@ nsMsgSendLater::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInput
     startBuf = lineEnd+1;
   }
 
-  if (newbuf)
-    PR_FREEIF(newbuf);
-
-  PR_FREEIF(aBuf);
+  PR_Free(newbuf);
+  PR_Free(aBuf);
   return rv;
 }
 
@@ -376,7 +374,7 @@ nsresult
 SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
                                      nsIFileSpec *returnFileSpec)
 {
-  nsresult                    rv = NS_OK;
+  nsresult rv = NS_OK;
 
   if (mSendLater)
   {
@@ -401,6 +399,13 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
       }
 
       ++(mSendLater->mTotalSentSuccessfully);
+    }
+    else if (mSendLater) 
+    {
+      mSendLater->NotifyListenersOnStopSending(aStatus, nsnull,
+                                               mSendLater->mTotalSendCount, 
+                                               mSendLater->mTotalSentSuccessfully);
+      NS_RELEASE(mSendLater);
     }
   }
 
@@ -438,7 +443,8 @@ SendOperationListener::GetMessageId(nsCString * aMessageId)
 nsresult
 SendOperationListener::OnStopCopy(nsresult aStatus)
 {
-  if (mSendLater) {
+  if (mSendLater) 
+  {
     // Regardless of the success of the copy we will still keep trying
     // to send the rest...
     nsresult rv;
@@ -655,7 +661,7 @@ nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *aIdentity, nsIMsgFolder 
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = LocateMessageFolder(aIdentity, nsIMsgSend::nsMsgQueueForLater, uri, folder);
-  PR_FREEIF(uri);
+  PR_Free(uri);
   return rv;
 }
 
@@ -925,7 +931,7 @@ SEARCH_NEWLINE:
         if ((requestForReturnReceipt == 2 || requestForReturnReceipt == 3))
           mRequestReturnReceipt = PR_TRUE;
       }
-      PR_FREEIF(draftInfo);
+      PR_Free(draftInfo);
     }
 
     if (*buf == nsCRT::CR || *buf == nsCRT::LF)
