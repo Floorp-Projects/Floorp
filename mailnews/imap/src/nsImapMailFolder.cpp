@@ -501,6 +501,11 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     }
     rv = GetDatabase(msgWindow);
 
+  PRBool noSelect = PR_FALSE;
+  GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
+
+  if (noSelect) 
+    selectFolder = PR_FALSE;
   // don't run select if we're already running a url/select...
   if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
   {
@@ -512,6 +517,11 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     rv = imapService->SelectFolder(eventQ, this, this, msgWindow, nsnull);
     m_urlRunning = PR_TRUE;
   }
+  else if (NS_SUCCEEDED(rv))  // tell the front end that the folder is loaded if we're not going to 
+  {                           // actually run a url.
+    NotifyFolderEvent(mFolderLoadedAtom);
+  }
+
   return rv;
 }
 
