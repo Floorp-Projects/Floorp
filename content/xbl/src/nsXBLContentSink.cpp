@@ -250,6 +250,7 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
                                          "UnexpectedElement",
                                          params, NS_ARRAY_LENGTH(params),
                                          mDocumentURI,
+                                         EmptyString() /* source line */,
                                          aLineNumber, 0 /* column number */,
                                          nsIScriptError::errorFlag,
                                          "XBL Content Sink");

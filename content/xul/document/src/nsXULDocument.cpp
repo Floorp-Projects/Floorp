@@ -3018,6 +3018,7 @@ nsXULDocument::ReportMissingOverlay(nsIURI* aURI)
                                     "MissingOverlay",
                                     params, NS_ARRAY_LENGTH(params),
                                     mDocumentURI,
+                                    EmptyString(), /* source line */
                                     0, /* line number */
                                     0, /* column number */
                                     nsIScriptError::warningFlag,

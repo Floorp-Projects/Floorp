@@ -779,7 +779,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
       nsContentUtils::ReportToConsole(nsContentUtils::eCSS_PROPERTIES,
                                       errorMessage,
                                       strings, NS_ARRAY_LENGTH(strings),
-                                      referrer, 0, 0, errorFlag,
+                                      referrer, EmptyString(), 0, 0, errorFlag,
                                       "CSS Loader");
     }
   }
