@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */  
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */   
 /*                                
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -17,15 +17,15 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.  
  *   
- * Contributor(s): rickg@netscape.com
+ * Contributor(s): rickg@netscape.com 
  */          
-      
-//#define ENABLE_CRC            
-//#define RICKG_DEBUG          
+       
+//#define ENABLE_CRC              
+//#define RICKG_DEBUG           
      
-        
+          
 #include "nsDebug.h"   
-#include "nsIDTDDebug.h"    
+#include "nsIDTDDebug.h"      
 #include "COtherDTD.h" 
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"     
@@ -148,7 +148,6 @@ COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
   mHadFrameset=PR_FALSE;
   mHadBody=PR_FALSE;
   mHasOpenScript=PR_FALSE;
-  mTokenRecycler=0;
   mParserCommand=eViewNormal;
 
 #if 1 //set this to 1 if you want strictDTD to be based on the environment setting.
@@ -205,67 +204,6 @@ nsCParserNode* COtherDTD::CreateNode(void) {
   return result;
 } 
 
-
-/**
- * This method recycles a given node
- * @update  gess1/8/99
- * @param  
- * @return   
- */
-void COtherDTD::RecycleNode(nsCParserNode* aNode) {
-  if(aNode && (!aNode->mUseCount)) {
-
-    if(aNode->mToken) {
-      if(!aNode->mToken->mUseCount) { 
-        mTokenRecycler->RecycleToken(aNode->mToken); 
-      }
-    } 
-
-    CToken* theToken=0;
-    while((theToken=(CToken*)aNode->PopAttributeToken())){
-      if(!theToken->mUseCount) { 
-        mTokenRecycler->RecycleToken(theToken); 
-      }
-    }
-
-    mSharedNodes.Push(aNode);
-  }
-}
-
-/**
- * This method recycles the nodes on a nodestack.
- * NOTE: Unlike recycleNode(), we force the usecount
- *       to 0 of all nodes, then force them to recycle.
- * @update  gess1/8/99
- * @param   aNodeStack
- * @return  nothing
- */
-void COtherDTD::RecycleNodes(nsEntryStack *aNodeStack) {
-  if(aNodeStack) {
-    PRInt32 theCount=aNodeStack->mCount;
-    PRInt32 theIndex=0;
-
-    for(theIndex=0;theIndex<theCount;theIndex++) {
-      nsCParserNode* theNode=(nsCParserNode*)aNodeStack->NodeAt(theIndex);
-      if(theNode) {
-
-        theNode->mUseCount=0;
-        if(theNode->mToken) {
-          theNode->mToken->mUseCount=0;
-          mTokenRecycler->RecycleToken(theNode->mToken); 
-        } 
-
-        CToken* theToken=0;
-        while((theToken=(CToken*)theNode->PopAttributeToken())){
-          theNode->mToken->mUseCount=0;
-          mTokenRecycler->RecycleToken(theToken); 
-        }
-
-        mSharedNodes.Push(theNode);
-      } //if
-    } //while
-  } //if
-}
 
 /**
  * 
@@ -476,10 +414,10 @@ nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsICon
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::WillBuildModel(), this=%p\n", this));
 
-    mTokenRecycler=0;
-
     mDocType=aParserContext.mDocType;
     mBodyContext->mTransitional=PRBool(aParserContext.mDTDMode==eDTDMode_transitional);
+    mBodyContext->GetTokenRecycler();
+
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
     }
@@ -521,12 +459,11 @@ nsresult COtherDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITo
 
     if(mTokenizer) {
 
-      mTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
       if(mSink) {
 
         if(!mBodyContext->GetCount()) {
             //if the content model is empty, then begin by opening <html>...
-          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
+          CStartToken *theToken=(CStartToken*)mBodyContext->gTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
           HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
         }
 
@@ -593,11 +530,13 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
  
             nsEntryStack *theChildStyles=0;
             nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyles);
-            theNode->mUseCount=0;
-            RecycleNode(theNode);
-            if(theChildStyles) {
-              delete theChildStyles;
-            } 
+            if(theNode) {
+              theNode->mUseCount=0;
+              mBodyContext->RecycleNode(theNode);
+              if(theChildStyles) {
+                delete theChildStyles;
+              } 
+            }
           }    
         }    
   
@@ -653,7 +592,7 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
     if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
       if(0>=theToken->mUseCount)
-        mTokenRecycler->RecycleToken(theToken);
+        mBodyContext->gTokenRecycler->RecycleToken(theToken);
     }
     else if(result==NS_ERROR_HTMLPARSER_STOPPARSING)
       mDTDState=result; 
@@ -796,7 +735,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
  *                  to be stored in
  *               2) close the top container, and add this to
  *                  whatever container ends up on top.
- *  
+ *   
  *  @update  gess 1/04/99
  *  @param   aToken -- next (start) token to be handled
  *  @param   aNode -- CParserNode representing this start token
@@ -809,49 +748,54 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
 
   //Begin by gathering up attributes...  
  
+  nsresult  result=NS_OK;
   nsCParserNode* theNode=CreateNode();
-  theNode->Init(aToken,mLineNumber,mTokenRecycler);
+  if(theNode) {
+    theNode->Init(aToken,mLineNumber,mBodyContext->gTokenRecycler);
    
-  eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
-  PRInt16       attrCount=aToken->GetAttributeCount();
-  eHTMLTags     theParent=mBodyContext->Last();
-  nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(*theNode,theChildTag,attrCount);
+    eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
+    PRInt16       attrCount=aToken->GetAttributeCount();
+    eHTMLTags     theParent=mBodyContext->Last();
+    
+    result=(0==attrCount) ? NS_OK : CollectAttributes(*theNode,theChildTag,attrCount);
  
-  if(NS_OK==result) {
-    result=WillHandleStartTag(aToken,theChildTag,*theNode);
     if(NS_OK==result) {
+      result=WillHandleStartTag(aToken,theChildTag,*theNode);
+      if(NS_OK==result) {
  
-      mLineNumber += aToken->mNewlineCount;
+        mLineNumber += aToken->mNewlineCount;
  
-      PRBool theTagWasHandled=PR_FALSE; 
+        PRBool theTagWasHandled=PR_FALSE; 
  
-      switch(theChildTag) {       
+        switch(theChildTag) {        
             
-        case eHTMLTag_html:  
-          if(!mBodyContext->HasOpenContainer(theChildTag)){
-            mSink->OpenHTML(*theNode);
-            mBodyContext->Push(theNode,0);
-          }
-          theTagWasHandled=PR_TRUE;   
-          break;       
-                
-        default:    
-          CElement* theElement=gElementTable->mElements[theParent];
-          if(theElement) {
-            result=theElement->HandleStartToken(theNode,theChildTag,mBodyContext,mSink);  
-            theTagWasHandled=PR_TRUE;  
-          }    
-          break;   
-      }//switch          
-       
-      if(theTagWasHandled) {
-        DidHandleStartTag(*theNode,theChildTag);  
-      }
+          case eHTMLTag_html:  
+            if(!mBodyContext->HasOpenContainer(theChildTag)){
+              mSink->OpenHTML(*theNode);
+              mBodyContext->Push(theNode,0);
+            } 
+            theTagWasHandled=PR_TRUE;   
+            break;         
+                 
+          default:    
+            CElement* theElement=gElementTable->mElements[theParent];
+            if(theElement) {
+              result=theElement->HandleStartToken(theNode,theChildTag,mBodyContext,mSink);  
+              theTagWasHandled=PR_TRUE;  
+            }    
+            break;   
+        }//switch              
+         
+        if(theTagWasHandled) {
+          DidHandleStartTag(*theNode,theChildTag);  
+        }
    
-    } //if          
-  }//if          
-      
-  RecycleNode(theNode);          
+      } //if             
+    }//if           
+    mBodyContext->RecycleNode(theNode);          
+  }
+  else result=NS_ERROR_OUT_OF_MEMORY;
+          
   return result;        
 }      
   
@@ -872,18 +816,18 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
   nsresult    result=NS_OK;
   eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
  
-  #ifdef  RICKG_DEBUG   
+  #ifdef  RICKG_DEBUG    
     WriteTokenToLog(aToken); 
-  #endif 
+  #endif  
   
   switch(theChildTag) {    
  
     case eHTMLTag_body: //we intentionally don't let the user close HTML or BODY
     case eHTMLTag_html:   
-      break;   
+      break;    
         
-    case eHTMLTag_script:    
-      mHasOpenScript=PR_FALSE;        
+    case eHTMLTag_script:       
+      mHasOpenScript=PR_FALSE;         
       
     default: 
       PRInt32 theCount=mBodyContext->GetCount();
@@ -898,10 +842,10 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
       }   
       break; 
   }     
- 
-  return result;          
-}         
-        
+   
+  return result;            
+}          
+          
 /**
  * Retrieve the attributes for this node, and add then into
  * the node.
@@ -955,11 +899,12 @@ nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
 
   nsString& theStr=aToken->GetStringValueXXX();
   PRUnichar theChar=theStr.CharAt(0);
+  CToken    *theToken=0;
+
   if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
 
     //before we just toss this away as a bogus entity, let's check...
     CNamedEntity *theEntity=mBodyContext->GetEntity(theStr);
-    CToken *theToken=0;
     if(theEntity) {
       theToken=new CTextToken(theEntity->mValue);
     }
@@ -971,6 +916,16 @@ nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
       theToken=new CTextToken(temp);
     }
     result=HandleStartToken(theToken);
+  }
+  else {
+
+    //add this code to fix bug 42629 (entities were getting dropped).
+    eHTMLTags theParent=mBodyContext->Last();
+    CElement* theElement=gElementTable->mElements[theParent];
+    if(theElement) {
+      nsCParserNode theNode(aToken,mLineNumber,0);
+      result=theElement->HandleStartToken(&theNode,eHTMLTag_text,mBodyContext,mSink);  
+    }
   }
   return result;
 } 
@@ -1084,22 +1039,6 @@ nsresult COtherDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
   return result;
 }
  
-
-/**
- * 
- * @update  gess8/4/98
- * @param  
- * @return
- */
-nsITokenRecycler* COtherDTD::GetTokenRecycler(void){
-  if(!mTokenRecycler) {
-    nsresult result=GetTokenizer(mTokenizer);
-    if (NS_SUCCEEDED(result)) {
-      mTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
-    }
-  } 
-  return mTokenRecycler;
-}
  
 /**
  * 

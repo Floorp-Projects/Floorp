@@ -900,7 +900,7 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
           
           while((NS_OK==result)) {
             theCurrOffset=theBuffer.FindChar(kGreaterThan,PR_TRUE,theCurrOffset);
-            if(theCurrOffset>kNotFound) {
+            if(kNotFound!=theCurrOffset) {
               theCurrOffset++;
               aChar=theBuffer[theCurrOffset-3];
               if(kMinus==aChar) {
@@ -955,7 +955,7 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
  *  Consume the identifier portion of the comment. 
  *  Note that we've already eaten the "<!" portion.
  *  
- *  @update  gess 1/27/99
+ *  @update  gess 16June2000
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
@@ -965,11 +965,11 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMo
   
   switch(aMode) {
     case eDTDMode_strict:
-      ConsumeStrictComment(aChar,aScanner,mTextValue);
+      result=ConsumeStrictComment(aChar,aScanner,mTextValue);
       break;
     case eDTDMode_transitional:
     default:
-      ConsumeComment(aChar,aScanner,mTextValue);
+      result=ConsumeComment(aChar,aScanner,mTextValue);
       break;
   } //switch
 
@@ -977,7 +977,7 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMo
 }
 
 
-/*
+/* 
  *  
  *  
  *  @update  gess 3/25/98

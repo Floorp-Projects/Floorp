@@ -225,12 +225,13 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
     NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer);
     
     /**
-     * 
-     * @update	gess12/28/98
-     * @param 
-     * @return
+     * Note that the otherDTD get's it's recycler from
+     * the body context.
+     *
+     * @update	rickg 16June2000
+     * @return  always 0
      */
-    virtual  nsITokenRecycler* GetTokenRecycler(void);
+    virtual  nsITokenRecycler* GetTokenRecycler(void) {return 0;}
 
     /**
      * If the parse process gets interrupted, this method gets called
@@ -318,8 +319,6 @@ protected:
     nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
     nsresult        DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
     nsCParserNode*  CreateNode(void);
-    void            RecycleNode(nsCParserNode* aNode);
-    void            RecycleNodes(nsEntryStack *aNodeStack);
 
     nsIHTMLContentSink* mSink;
 
@@ -335,7 +334,6 @@ protected:
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
-    CTokenRecycler*     mTokenRecycler;
     PRBool              mHasOpenScript;
     eHTMLTags           mSkipTarget;
     nsDeque             mSharedNodes;

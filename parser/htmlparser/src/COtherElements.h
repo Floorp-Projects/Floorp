@@ -161,7 +161,7 @@ public:
 
   static PRBool HasOptionalEndTag(CElement* anElement) {
     static eHTMLTags gContainersWithOptionalEndTag[]={eHTMLTag_body,eHTMLTag_colgroup,eHTMLTag_dd,eHTMLTag_dt,
-                                                      eHTMLTag_head,eHTMLTag_html,eHTMLTag_li,eHTMLTag_option,
+                                                      eHTMLTag_head,eHTMLTag_li,eHTMLTag_option,
                                                       eHTMLTag_p,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_tfoot,
                                                       eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr,eHTMLTag_unknown};
     if(anElement) {
@@ -174,8 +174,28 @@ public:
   inline CElement*  GetDefaultContainerFor(CElement* anElement);
 
   virtual PRBool    CanContain(CElement* anElement,nsDTDContext* aContext);
-  virtual PRBool    CanBeClosedByStartTag(CElement* anElement,nsDTDContext* aContext);
+  virtual PRInt32   FindAutoCloseIndexForStartTag(CElement* anElement,PRInt32 aParentIndex,nsDTDContext* aContext);
   virtual PRBool    CanBeClosedByEndTag(CElement* anElement,nsDTDContext* aContext);
+
+    //This tells us whether this tag can potentially close other blocks.
+    //That DOES NOT mean that this tag is necessarily a block itself (condsider TBODY,TR,TD...)
+  virtual PRBool    IsBlockCloser(void) {
+    PRBool result=IsBlockElement(eHTMLTag_body);
+    if(!result) {
+      if(IsInlineElement(eHTMLTag_body) ||
+         mGroup.mBits.mHead || 
+         mGroup.mBits.mHeadMisc || 
+         mGroup.mBits.mFormControl || 
+         mGroup.mBits.mFrame || 
+         mGroup.mBits.mLeaf || 
+         mGroup.mBits.mComment || 
+         mGroup.mBits.mTextContainer || 
+         mGroup.mBits.mWhiteSpace)
+         result=PR_FALSE;
+      else result=PR_TRUE;
+    }
+    return result;
+  }
 
     //this tells us whether this tag is a block tag within the given parent
   virtual PRBool    IsBlockElement(eHTMLTags aParentID);
@@ -305,11 +325,13 @@ public:
     this gets called to close a tag in the given context
    **********************************************************/
   virtual nsresult  CloseContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
-    nsEntryStack* theStack=0;
-    aContext->Pop(theStack);
+    nsEntryStack  *theStack=0;
+    nsIParserNode *theNode=aContext->Pop(theStack);
 
     CElement *theElement=(aTag==mTag) ? this : GetElement(aTag);
-    theElement->NotifyClose(aNode,aTag,aContext,aSink);
+    theElement->NotifyClose(theNode,aTag,aContext,aSink);
+
+    aContext->RecycleNode((nsCParserNode*)theNode);
 
     return NS_OK;
   }
@@ -585,6 +607,13 @@ public:
     return result;
   }
 
+  /**********************************************************
+   this gets called after each tag is opened in the given context
+   **********************************************************/
+  virtual nsresult  OpenContainer(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+    nsresult result=aSink->OpenForm(*aNode);
+    return result;
+  }
 
 
 };
@@ -671,6 +700,39 @@ public:
 
   CTableElement(eHTMLTags aTag=eHTMLTag_table) : CElement(aTag) {
     CElement::Initialize(*this,aTag,CBlockElement::GetGroup(),CTableElement::GetContainedGroups());
+  }
+
+  PRBool CanContain(CElement* anElement,nsDTDContext* aContext) {
+    PRBool result=PR_FALSE;
+
+    switch(anElement->mTag) {
+
+      case eHTMLTag_caption:
+        result=(aContext->mTableStates && aContext->mTableStates->CanOpenCaption()); 
+        break;
+
+      case eHTMLTag_colgroup:
+        result=(aContext->mTableStates && aContext->mTableStates->CanOpenCols());
+        break;
+
+      case eHTMLTag_thead:      //nothing to do for these empty tags...      
+        result=(aContext->mTableStates && aContext->mTableStates->CanOpenTHead());
+        break;
+
+      case eHTMLTag_tfoot:
+        result=(aContext->mTableStates && aContext->mTableStates->CanOpenTFoot());
+        break;
+
+      case eHTMLTag_tr:
+      case eHTMLTag_th:
+        result=(aContext->mTableStates && aContext->mTableStates->CanOpenTBody());
+        break;
+
+      default:
+        result=CElement::CanContain(anElement,aContext);
+        break;
+    }
+    return result; 
   }
 
   /**********************************************************
@@ -806,7 +868,8 @@ public:
     end tags, can't deal with the given tag, and want you
     to handle it.
    **********************************************************/
-  virtual PRInt32   FindAutoCloseTargetForEndTag(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink, PRInt32& anIndex) {
+  virtual PRInt32 FindAutoCloseTargetForEndTag(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink, PRInt32& anIndex) {
+    PRInt32 result=kNotFound;
 
     switch(aTag) {
       case eHTMLTag_table:
@@ -818,14 +881,20 @@ public:
       case eHTMLTag_tbody:      
       case eHTMLTag_tr:      
       case eHTMLTag_td:     
-        return anIndex;
+        {
+          PRInt32 theTablePos=aContext->LastOf(eHTMLTag_table);
+          PRInt32 theTagPos=aContext->LastOf(aTag);
+          if((kNotFound!=theTagPos) && (theTablePos<=theTagPos)) {
+            result=theTagPos;
+          }
+        }
         break;
 
       default:
         break;
     } //switch
 
-    return -1;
+    return result;
   }
 
 };
@@ -846,6 +915,7 @@ public:
 
   CTableRowElement(eHTMLTags aTag=eHTMLTag_tr) : CElement(aTag) {
     CTableRowElement::Initialize(*this,aTag);
+    mContainsGroups.mBits.mSelf=0;
   }
 
   virtual nsresult  HandleEndTokenForChild(CElement *aChild,nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
@@ -923,6 +993,11 @@ public:
     }
 
     return CElement::HandleStartToken(aNode,aTag,aContext,aSink);
+  }
+
+  virtual PRBool CanContain(CElement* anElement,nsDTDContext* aContext) {
+    PRBool result=(mTag==anElement->mTag) ? result=PR_FALSE : CElement::CanContain(anElement,aContext);
+    return result;
   }
 
   /**********************************************************
@@ -1051,11 +1126,13 @@ public:
 
   static void Initialize(CElement& anElement,eHTMLTags aTag){
     anElement.mProperties.mIsContainer=1;
+    anElement.mProperties.mIsSinkContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=0;
     anElement.mGroup.mBits.mFrame=1;
     anElement.mContainsGroups.mAllBits=0;
     anElement.mContainsGroups.mBits.mFrame=1;
+    anElement.mContainsGroups.mBits.mSelf=1;
   }
 
   CFrameElement(eHTMLTags aTag) : CElement(aTag) {
@@ -1167,11 +1244,16 @@ public:
   virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
     if(aNode) {
+#if 0
       CStartToken   theToken(aTag);
       PRInt32 theLineNumber=0;
       nsCParserNode theNode(&theToken,theLineNumber);
       theNode.SetSkippedContent(mText);
       result=aSink->AddLeaf(theNode);
+#endif
+      nsCParserNode *theNode=(nsCParserNode*)aNode;
+      theNode->SetSkippedContent(mText);
+      result=aSink->AddLeaf(*theNode);
     }
     mText.Truncate(0);
     return result;
@@ -1334,6 +1416,19 @@ public:
   }
 
   /**********************************************************
+    this gets called to close a tag in the given context
+   **********************************************************/
+  virtual nsresult  CloseContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+    nsEntryStack* theStack=0;
+    nsIParserNode *theNode=aContext->Pop(theStack);
+
+    CElement *theElement=(aTag==mTag) ? this : GetElement(aTag);
+    theElement->NotifyClose(theNode,aTag,aContext,aSink);
+
+    return NS_OK;
+  }
+
+  /**********************************************************
     Call this for each element as it get's closed
    **********************************************************/
   virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
@@ -1345,7 +1440,9 @@ public:
       PRInt32 theLineNumber=0;
       nsCParserNode theNode(&theToken,theLineNumber);
       theNode.SetSkippedContent(mText);
-      result=aSink->AddLeaf(theNode);
+      //result=aSink->AddLeaf(theNode);
+
+      result=aSink->AddLeaf(*aNode);
     }
     else {
         //add it to the head...
@@ -1363,14 +1460,14 @@ public:
 /**********************************************************
   This defines the preformatted element group, (PRE).
  **********************************************************/
-class CPreformattedElement: public CInlineElement {
+class CPreformattedElement: public CBlockElement {
 public:
 
   static void Initialize(CElement& anElement,eHTMLTags aTag){
-    CInlineElement::Initialize(anElement,aTag);
+    CBlockElement::Initialize(anElement,aTag);
   }
 
-  CPreformattedElement(eHTMLTags aTag) : CInlineElement(aTag) {
+  CPreformattedElement(eHTMLTags aTag) : CBlockElement(aTag) {
     mGroup=GetGroup();
     mContainsGroups=GetContainedGroups();
     mProperties.mIsContainer=1;
@@ -1810,7 +1907,10 @@ public:
                                       nsDTDContext* aContext,
                                       nsIHTMLContentSink* aSink) {
     //for now, let's drop other elements onto the floor.
+
     nsresult result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);
+
+    CElement *theElement=GetElement(aTag);    
     if(NS_SUCCEEDED(result)) {
       nsCParserNode *theNode=(nsCParserNode*)aNode;
       CStartToken *theToken=(CStartToken*)theNode->mToken;
@@ -1879,8 +1979,8 @@ public:
     memset(mElements,0,sizeof(mElements));
     InitializeElements();
 
-    //DebugDumpBlockElements();
-    //DebugDumpInlineElements();
+    //DebugDumpBlockElements("test");
+    //DebugDumpInlineElements("test");
 
     //DebugDumpContainment("all elements");
   }
@@ -2053,7 +2153,7 @@ void CElementTable::InitializeElements() {
 
   CFrameElement::Initialize(        mDfltElements[eHTMLTag_frameset],   eHTMLTag_frameset);
   mDfltElements[eHTMLTag_frameset].mIncludeKids=kFramesetKids;
-  
+
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_h1],         eHTMLTag_h1);
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_h2],         eHTMLTag_h2);
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_h3],         eHTMLTag_h3);
@@ -2174,7 +2274,7 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_tfoot].mIncludeKids=kTBodyKids;
   mDfltElements[eHTMLTag_tfoot].mContainsGroups.mBits.mSelf=0;
 
-  CTableRowElement::Initialize(     mDfltElements[eHTMLTag_th],         eHTMLTag_th);
+  CElement::Initialize(             mDfltElements[eHTMLTag_th],         eHTMLTag_th,      CElement::GetEmptyGroup(), CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_th].mContainsGroups.mBits.mSelf=0;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_thead],      eHTMLTag_thead,   CTableElement::GetGroup(), CLeafElement::GetContainedGroups());
@@ -2388,27 +2488,35 @@ void CElementTable::DebugDumpContainment(const char* aTitle){
   Yes, I know it's inconvenient to find this methods here, but it's easier
   for the compiler -- and making it's life easier is my top priority.
  ******************************************************************************/
-PRBool CElement::CanBeClosedByStartTag(CElement* anElement,nsDTDContext* aContext) {
-  PRBool result=PR_FALSE;
+PRInt32 CElement::FindAutoCloseIndexForStartTag(CElement* anElement,PRInt32 aParentIndex,nsDTDContext* aContext) {
+  PRInt32 result=kNotFound;
 
-    //first, let's see if we can contain the given tag based on group info...
   if(anElement) {
-    if(ListContainsTag(mAutoClose,anElement->mTag)) {
-      return PR_TRUE;
-    }
-    else if((this==anElement) && (!mContainsGroups.mBits.mSelf)){
-      return PR_TRUE;
-    }
-    else {
-      eHTMLTags theTag=aContext->Last();
-      CElement* theElement=gElementTable->mElements[theTag];
-      if(HasOptionalEndTag(theElement)) {
-        if(anElement->CanContain(theElement,aContext)){
-          result=PR_TRUE;
+    eHTMLTags theParentTag=aContext->TagAt(aParentIndex);
+    if(eHTMLTag_unknown!=theParentTag) {
+
+      CElement* theParent=gElementTable->mElements[theParentTag];
+
+      if(!theParent->CanContain(anElement,aContext)) {
+        if(HasOptionalEndTag(theParent)) {
+
+          if(ListContainsTag(theParent->mAutoClose,anElement->mTag)) {
+            result=theParent->FindAutoCloseIndexForStartTag(anElement,aParentIndex-1,aContext);
+          }
+          else if((theParent->mTag==anElement->mTag) && (!theParent->mContainsGroups.mBits.mSelf)){
+            result=aParentIndex;
+          }
+          else if(eHTMLTag_body!=theParent->mTag) {
+            result=theParent->FindAutoCloseIndexForStartTag(anElement,aParentIndex-1,aContext);
+          }
+          else result=aParentIndex+1;
         }
-      }
+        else result=kNotFound;
+      } 
+      else result=aParentIndex+1;
     }
   }
+
   return result;
 }
 
@@ -2473,7 +2581,7 @@ PRBool CElement::CanContain(CElement* anElement,nsDTDContext* aContext) {
        ***************************************************/
     
     if((!result) && (aContext->mTransitional)) {
-      switch(anElement->mTag) {
+      switch(mTag) {
         case eHTMLTag_address:
           if(eHTMLTag_p==anElement->mTag)
             result=PR_TRUE;
@@ -2540,29 +2648,43 @@ nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
           result=aSink->AddLeaf(*aNode); 
         }
       }
-      else if(theElement->IsContainer()){
+      else if(theElement->IsBlockCloser()){
 
         //Ok, so we have a start token that is misplaced. Before handing this off
         //to a default container (parent), let's check the autoclose condition.
-        if(ListContainsTag(mAutoClose,theElement->mTag) || (aTag==mTag)) {
-          if(HasOptionalEndTag(theElement)) {
-            //aha! We have a case where this tag is autoclosed by anElement.
-            //Let's close this container, then try to open theElement.
-            eHTMLTags theParentTag=aContext->Last();
-            CElement* theParent=gElementTable->mElements[theParentTag];
-            while(NS_SUCCEEDED(result) && theParent->CanBeClosedByStartTag(this,aContext)) {
-              result=theParent->HandleEndToken(aNode,theParentTag,aContext,aSink);
+        if(HasOptionalEndTag(this)) {
+
+          //aha! We have a case where this tag is autoclosed by anElement.
+          //Let's close this container, then try to open theElement.
+          PRInt32 theCount=aContext->GetCount();
+          PRInt32 theIndex=FindAutoCloseIndexForStartTag(theElement,theCount-2,aContext);
+
+          //continue ripping code out here...
+
+          if(kNotFound!=theIndex) {
+            eHTMLTags theParentTag=eHTMLTag_unknown;
+            CElement* theParent=0;
+
+            while(NS_SUCCEEDED(result) && (theCount>theIndex)) {
+
               theParentTag=aContext->Last();
               theParent=gElementTable->mElements[theParentTag];
+
+              nsIParserNode *theNode=aContext->PeekNode(); //this will get popped later...
+              if(theParent->IsSinkContainer()) {
+                CloseContainerInContext(theNode,theParentTag,aContext,aSink);
+              }
+              else CloseContext(theNode,theParentTag,aContext,aSink);
+              theCount--;
             }
 
             if(NS_SUCCEEDED(result)){
               theParentTag=aContext->Last();
               theParent=gElementTable->mElements[theParentTag];
-              return theParent->HandleStartToken(aNode,aTag,aContext,aSink);
+              result=theParent->HandleStartToken(aNode,aTag,aContext,aSink);
             }
-            else return result;
           }
+          return result;
         }
         else {
           
@@ -2630,7 +2752,7 @@ nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDConte
       result=theGrandParent->HandleEndToken(aNode,theTag,aContext,aSink);
       theCount--;
     }
-    return result;
+    //return result;
   }
   return result;
 }
