@@ -19,29 +19,21 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  */
 
+#include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsAVLTree.h"
+#include "nsHashtable.h"
+#include "nsVoidArray.h"
+
+#include "nsIComponentManager.h"
+#include "nsIPersistentProperties2.h"
+#include "nsNetUtil.h"
+#include "nsIURI.h"
 
 #include "nsMathMLOperators.h"
 
-
-// get the actual value generated for NS_MATHML_OPERATOR_COUNT
-#define WANT_MATHML_OPERATOR_COUNT
-#include "nsMathMLOperatorList.h"
-#undef WANT_MATHML_OPERATOR_COUNT
-
-
-// define a zero-separated linear array of all MathML Operators in Unicode
-const PRUnichar kMathMLOperator[] = {
-#define MATHML_OPERATOR(_i,_operator,_flags,_lspace,_rspace) _operator, 0x0000,
-#include "nsMathMLOperatorList.h"
-#undef MATHML_OPERATOR
-};
-
-
 // operator dictionary entry
-struct OperatorNode {
-  OperatorNode(void)
+struct OperatorData {
+  OperatorData(void)
     : mStr(),
       mFlags(0),
       mLeftSpace(0.0f),
@@ -50,7 +42,7 @@ struct OperatorNode {
     nsStr::Initialize(mStr, eTwoByte); // with MathML, we are two-byte by default
   }
 
-  OperatorNode(const nsStr& aStringValue, const nsOperatorFlags aFlags)
+  OperatorData(const nsStr& aStringValue, const nsOperatorFlags aFlags)
     : mStr(),
       mFlags(aFlags),
       mLeftSpace(0.0f),
@@ -60,16 +52,6 @@ struct OperatorNode {
     nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity,
                       aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
   }
-  
-  void
-  Init(const nsOperatorFlags aFlags, 
-       const float           aLeftSpace, 
-       const float           aRightSpace)
-  {
-    mFlags      = aFlags;
-    mLeftSpace  = aLeftSpace;
-    mRightSpace = aRightSpace;
-  };
 
   // member data
   nsString        mStr;
@@ -79,78 +61,332 @@ struct OperatorNode {
 };
 
 /*
-  The MathML REC says: 
+  The MathML REC says:
   "If the operator does not occur in the dictionary with the specified form,
-  the renderer should use one of the forms which is available there, in the 
+  the renderer should use one of the forms which is available there, in the
   order of preference: infix, postfix, prefix."
-  
+
   The following variable will be used to keep track of all possible forms
-  encountered in the Operator Dictionary. 
+  encountered in the Operator Dictionary.
 */
-static OperatorNode* gOperatorFound[4];
+static OperatorData*   gOperatorFound[4];
 
-// index comparitor: based on the string of the operator and its form bits
-class OperatorComparitor: public nsAVLNodeComparitor {
-public:
-  virtual ~OperatorComparitor(void) {}
-  virtual PRInt32 operator()(void* aItem1, void* aItem2) {
-    OperatorNode* one = (OperatorNode*)aItem1;
-    OperatorNode* two = (OperatorNode*)aItem2;
+static PRInt32         gTableRefCount = 0;
+static PRInt32         gOperatorCount = 0;
+static OperatorData*   gOperatorArray = nsnull;
+static nsHashtable*    gOperatorTable = nsnull;
+static nsVoidArray*    gStretchyOperatorArray = nsnull;
+static PRBool          gInitialized   = PR_FALSE;
 
-    PRInt32 rv;
-    rv = one->mStr.CompareWithConversion(two->mStr, PR_FALSE);
-    if (0 == rv) {
-      nsOperatorFlags form1 = NS_MATHML_OPERATOR_GET_FORM(one->mFlags);
-      nsOperatorFlags form2 = NS_MATHML_OPERATOR_GET_FORM(two->mFlags);
-      if (form1 == form2) return 0;
-      else {
-        rv = (form1 < form2) ? -1 : 1;
-
-        // Record that the operator was found in a different form.
-        // We don't know which is the input, we grab both of them and 
-        // we check later (see below).
-        gOperatorFound[form1] = one;
-        gOperatorFound[form2] = two;
-      }
-    }
-    return rv;
-  }
-};
-
-
-
-static PRInt32             gTableRefCount = 0;
-static OperatorNode*       gOperatorArray;
-static nsAVLTree*          gOperatorTree;
-static OperatorComparitor* gComparitor;
-
+static const PRUnichar kNullCh  = PRUnichar('\0');
+static const PRUnichar kDashCh  = PRUnichar('#');
+static const PRUnichar kEqualCh = PRUnichar('=');
+static const PRUnichar kColonCh = PRUnichar(':');
 
 void
-nsMathMLOperators::AddRefTable(void)
+SetProperty(OperatorData* aOperatorData,
+            nsString      aName,
+            nsString      aValue)
 {
-  if (0 == gTableRefCount++) {
-    if (!gOperatorArray) {
-      gOperatorArray = new OperatorNode[NS_MATHML_OPERATOR_COUNT];
-      gComparitor = new OperatorComparitor();
-      if (gComparitor) {
-        gOperatorTree = new nsAVLTree(*gComparitor, nsnull);
+  if (!aName.Length() || !aValue.Length())
+    return;
+
+  // XXX These ones are not kept in the dictionary
+  // Support for these requires nsString member variables 
+  // maxsize (default: infinity)
+  // minsize (default: 1)
+
+  if (aValue.EqualsWithConversion("true")) {
+    // see if we should enable flags with default value=false
+    if (aName.EqualsWithConversion("fence"))
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_FENCE;
+    else if (aName.EqualsWithConversion("accent"))
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_ACCENT;
+    else if (aName.EqualsWithConversion("largeop"))
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_LARGEOP;
+    else if (aName.EqualsWithConversion("separator"))
+      aOperatorData->mFlags |=  NS_MATHML_OPERATOR_SEPARATOR;
+    else if (aName.EqualsWithConversion("movablelimits"))
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_MOVABLELIMITS;
+  }
+  else if (aValue.EqualsWithConversion("false")) {
+    // see if we should disable flags with default value=true
+    if (aName.EqualsWithConversion("symmetric"))
+      aOperatorData->mFlags &= ~NS_MATHML_OPERATOR_SYMMETRIC;
+  }
+  else if (aName.EqualsWithConversion("stretchy") &&
+          (1 == aOperatorData->mStr.Length())) {
+    if (aValue.EqualsWithConversion("vertical"))
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY_VERT;
+    else if (aValue.EqualsWithConversion("horizontal"))
+      aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY_HORIZ;
+    else return; // invalid value
+    if (kNotFound == nsMathMLOperators::FindStretchyOperator(aOperatorData->mStr[0])) {
+      gStretchyOperatorArray->AppendElement(aOperatorData);
+    }
+  }
+  else {
+    PRInt32 i = 0;
+    float space = 0.0f;
+    PRBool isLeftSpace;
+    if (aName.EqualsWithConversion("lspace"))
+      isLeftSpace = PR_TRUE;
+    else if (aName.EqualsWithConversion("rspace"))
+      isLeftSpace = PR_FALSE;
+    else return;  // input is not applicable
+
+    // See if it is a numeric value (unit is assumed to be 'em')
+    if (nsCRT::IsAsciiDigit(aValue[0])) {
+      PRInt32 error = 0;
+      space = aValue.ToFloat(&error);
+      if (error) return;
+    }
+    // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
+    else if (aValue.EqualsWithConversion("veryverythinmathspace"))  i = 1;
+    else if (aValue.EqualsWithConversion("verythinmathspace"))      i = 2;
+    else if (aValue.EqualsWithConversion("thinmathspace"))          i = 3;
+    else if (aValue.EqualsWithConversion("mediummathspace"))        i = 4;
+    else if (aValue.EqualsWithConversion("thickmathspace"))         i = 5;
+    else if (aValue.EqualsWithConversion("verythickmathspace"))     i = 6;
+    else if (aValue.EqualsWithConversion("veryverythickmathspace")) i = 7;
+
+    if (0 != i) // it was a namedspace value
+      space = float(i)/float(18);
+
+    if (isLeftSpace)
+      aOperatorData->mLeftSpace = space;
+    else
+      aOperatorData->mRightSpace = space;
+  }
+}
+
+PRBool
+SetOperator(OperatorData*   aOperatorData,
+            nsOperatorFlags aForm,
+            nsString        aOperator,
+            nsString        aAttributes)
+
+{
+  // aOperator is in the expanded format \uNNNN\uNNNN ...
+  // First compress these Unicode points to the internal nsString format
+  PRInt32 i = 0;
+  nsAutoString name, value;
+  PRInt32 len = aOperator.Length();
+  PRUnichar c = aOperator[i++];
+  PRUint32 state  = 0;
+  PRUnichar uchar = 0;
+  while (i <= len) {
+    if (0 == state) {
+      if (c != '\\')
+        return PR_FALSE;
+      if (i < len)
+        c = aOperator[i];
+      i++;
+      if (('u' != c) && ('U' != c))
+        return PR_FALSE;
+      if (i < len)
+        c = aOperator[i];
+      i++;
+      state++;
+    }
+    else {
+      if (('0' <= c) && (c <= '9'))
+         uchar = (uchar << 4) | (c - '0');
+      else if (('a' <= c) && (c <= 'f'))
+         uchar = (uchar << 4) | (c - 'a' + 0x0a);
+      else if (('A' <= c) && (c <= 'F'))
+         uchar = (uchar << 4) | (c - 'A' + 0x0a);
+      else return PR_FALSE;
+      if (i < len)
+        c = aOperator[i];
+      i++;
+      state++;
+      if (5 == state) {
+        value.Append(uchar);
+        uchar = 0;
+        state = 0;
       }
-      if (gOperatorArray && gOperatorTree) {
-#define MATHML_OPERATOR(_i,_operator,_flags,_lspace,_rspace) \
-gOperatorArray[_i].Init(nsOperatorFlags(_flags),float(_lspace),float(_rspace));
-#include "nsMathMLOperatorList.h"
-#undef MATHML_OPERATOR
-        const PRUnichar* cp = &kMathMLOperator[0];
-        PRInt32 i = -1;
-        while (++i < PRInt32(NS_MATHML_OPERATOR_COUNT)) {
-          gOperatorArray[i].mStr = *cp++;
-          while (*cp) { gOperatorArray[i].mStr.Append(*cp++); }
-          cp++; // skip null separator
-          gOperatorTree->AddItem(&(gOperatorArray[i]));
+    }
+  }
+  if (0 != state) return PR_FALSE;
+
+  // Quick return when the caller doesn't care about the attributes and just wants
+  // to know if this is a valid operator (this is the case at the first pass of the
+  // parsing of the dictionary in InitOperators())
+  if (!aForm) return PR_TRUE;
+
+  // Add operator to hash table (symmetric="true" by default for all operators)
+  aOperatorData->mFlags |= aForm | NS_MATHML_OPERATOR_SYMMETRIC;
+  aOperatorData->mStr.Assign(value);
+  value.AppendInt(aForm, 10);
+  nsStringKey key(value);
+  gOperatorTable->Put(&key, aOperatorData);
+
+#ifdef NS_DEBUG
+  char str[200];
+  aAttributes.ToCString(str, sizeof(str));
+#endif
+  // Loop over the space-delimited list of attributes to get the name:value pairs
+  aAttributes.Append(kNullCh);  // put an extra null at the end
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)aAttributes.GetUnicode();
+  PRUnichar* end   = start;
+  while ((kNullCh != *start) && (kDashCh != *start)) {
+    name.SetLength(0);
+    value.SetLength(0);
+    // skip leading space, the dash amounts to the end of the line
+    while ((kNullCh!=*start) && (kDashCh!=*start) && nsCRT::IsAsciiSpace(*start)) {
+      ++start;
+    }
+    end = start;
+    // look for ':' or '='
+    while ((kNullCh!=*end) && (kDashCh!=*end) && (kColonCh!=*end) && (kEqualCh!=*end)) {
+      ++end;
+    }
+    if ((kColonCh!=*end) && (kEqualCh!=*end)) {
+#ifdef NS_DEBUG
+      printf("Bad MathML operator: %s\n", str);
+#endif
+      return PR_TRUE;
+    }
+    *end = kNullCh; // end segment here
+    // this segment is the name
+    if (start < end) {
+      name.Assign(start);
+    }
+    start = ++end;
+    // look for space or end of line
+    while ((kNullCh!=*end) && (kDashCh!=*start) && !nsCRT::IsAsciiSpace(*end)) {
+      ++end;
+    }
+    *end = kNullCh; // end segment here
+    // this segment is the value
+    if (start < end) {
+      value.Assign(start);
+    }
+    SetProperty(aOperatorData, name, value);
+    start = ++end;
+  }
+  return PR_TRUE;
+}
+
+nsresult
+InitOperators(void)
+{
+  // Load the property file containing the Operator Dictionary
+  nsresult rv;
+  nsAutoString uriStr;
+  nsCOMPtr<nsIURI> uri;
+  uriStr.AssignWithConversion("resource:/res/fonts/mathfont.properties");
+  rv = NS_NewURI(getter_AddRefs(uri), uriStr);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIInputStream> in;
+  rv = NS_OpenURI(getter_AddRefs(in), uri);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIPersistentProperties> mathfontProp;
+  rv = nsComponentManager::
+       CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
+                      NS_GET_IID(nsIPersistentProperties),
+                      getter_AddRefs(mathfontProp));
+  if NS_FAILED(rv) return rv;
+  rv = mathfontProp->Load(in);
+  if NS_FAILED(rv) return rv;
+
+  // Parse the Operator Dictionary in two passes.
+  // The first pass is to count the number of operators; the second pass is to
+  // allocate the necessary space for them and to add them in the hash table.
+  for (PRInt32 pass = 1; pass <= 2; pass++) {
+    OperatorData dummyData;
+    OperatorData* operatorData = &dummyData;
+    nsCOMPtr<nsISimpleEnumerator> iterator;
+    if (NS_SUCCEEDED(mathfontProp->SimpleEnumerateProperties(getter_AddRefs(iterator)))) {
+      PRBool more;
+      PRInt32 index = 0;
+      nsAutoString name, attributes;
+      while ((NS_SUCCEEDED(iterator->HasMoreElements(&more))) && more) {
+        nsCOMPtr<nsIPropertyElement> element;
+        if (NS_SUCCEEDED(iterator->GetNext(getter_AddRefs(element)))) {
+          nsXPIDLString xkey, xvalue;
+          if (NS_SUCCEEDED(element->GetKey(getter_Copies(xkey))) &&
+              NS_SUCCEEDED(element->GetValue(getter_Copies(xvalue)))) {
+            name.Assign(xkey);
+            attributes.Assign(xvalue);
+            // expected key: operator.\uNNNN.{infix,postfix,prefix}
+            if ((21 <= name.Length()) && (0 == name.Find("operator.\\u"))) {
+              name.Cut(0, 9); // 9 is the length of "operator.";
+              PRInt32 len = name.Length();
+              nsOperatorFlags form = 0;
+              if (kNotFound != name.RFind(".infix")) {
+                form = NS_MATHML_OPERATOR_FORM_INFIX;
+                len -= 6;  // 6 is the length of ".infix";
+              }
+              else if (kNotFound != name.RFind(".postfix")) {
+                form = NS_MATHML_OPERATOR_FORM_POSTFIX;
+                len -= 8; // 8 is the length of ".postfix";
+              }
+              else if (kNotFound != name.RFind(".prefix")) {
+                form = NS_MATHML_OPERATOR_FORM_PREFIX;
+                len -= 7; // 7 is the length of ".prefix";
+              }
+              else continue; // input is not applicable
+              name.SetLength(len);
+              if (2 == pass) { // allocate space and start the storage
+                if (!gOperatorArray) {
+                  if (0 == gOperatorCount) return NS_ERROR_UNEXPECTED;
+                  gOperatorArray = new OperatorData[gOperatorCount];
+                  if (!gOperatorArray) return NS_ERROR_OUT_OF_MEMORY;
+                }
+                operatorData = &gOperatorArray[index];
+              }
+              else {
+                form = 0; // to quickly return from SetOperator() at pass 1
+              }
+              // See if the operator should be retained
+              if (SetOperator(operatorData, form, name, attributes)) {
+                index++;
+                if (1 == pass) gOperatorCount = index;
+              }
+            }
+          }
         }
       }
     }
   }
+  return NS_OK;
+}
+
+nsresult
+InitGlobals()
+{
+  gInitialized = PR_TRUE;
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+  gStretchyOperatorArray = new nsVoidArray();
+  if (gStretchyOperatorArray) {
+    gOperatorTable = new nsHashtable();
+    if (gOperatorTable) {
+      rv = InitOperators();
+    }
+  }
+  if (NS_FAILED(rv)) {
+    if (gOperatorArray) {
+      delete[] gOperatorArray;
+      gOperatorArray = nsnull;
+    }
+    if (gStretchyOperatorArray) {
+      delete gStretchyOperatorArray;
+      gStretchyOperatorArray = nsnull;
+    }
+    if (gOperatorTable) {
+      delete gOperatorTable;
+      gOperatorTable = nsnull;
+    }
+  }
+  return rv;
+}
+
+void
+nsMathMLOperators::AddRefTable(void)
+{
+  gTableRefCount++;
 }
 
 void
@@ -161,50 +397,76 @@ nsMathMLOperators::ReleaseTable(void)
       delete[] gOperatorArray;
       gOperatorArray = nsnull;
     }
-    if (gOperatorTree) {
-      delete gOperatorTree;
-      gOperatorTree = nsnull;
+    if (gStretchyOperatorArray) {
+      delete gStretchyOperatorArray;
+      gStretchyOperatorArray = nsnull;
     }
-    if (gComparitor) {
-      delete gComparitor;
-      gComparitor = nsnull;
+    if (gOperatorTable) {
+      delete gOperatorTable;
+      gOperatorTable = nsnull;
     }
   }
 }
 
-
 PRBool
-nsMathMLOperators::LookupOperator(const nsString&       aOperator, 
+nsMathMLOperators::LookupOperator(const nsString&       aOperator,
                                   const nsOperatorFlags aForm,
                                   nsOperatorFlags*      aFlags,
                                   float*                aLeftSpace,
                                   float*                aRightSpace)
 {
-  NS_ASSERTION(aFlags && aLeftSpace && aRightSpace, "bad usage");
-  NS_ASSERTION(gOperatorTree, "no lookup table, needs addref");
-  if (gOperatorTree) {
+  if (!gInitialized) {
+    InitGlobals();
+  }
+  if (gOperatorTable) {
+    NS_ASSERTION(aFlags && aLeftSpace && aRightSpace, "bad usage");
+    NS_ASSERTION(aForm>=0 && aForm<4, "*** invalid call ***");
 
+    OperatorData* found;
+    PRInt32 form = NS_MATHML_OPERATOR_GET_FORM(aForm);
     gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX] = nsnull;
     gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX] = nsnull;
     gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX] = nsnull;
 
-    OperatorNode node(aOperator, aForm);
-    OperatorNode* found = (OperatorNode*)gOperatorTree->FindItem(&node);
+    nsAutoString key(aOperator);
+    key.AppendInt(form, 10);
+    nsStringKey hashkey(key);
+    gOperatorFound[form] = found = (OperatorData*)gOperatorTable->Get(&hashkey);
 
-    // Check if the operator was perhaps found in a different form.
-    // This is where we check that we are not referring to the input itself.
-    if (!found) found = gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX];
-    if (found == &node) found = nsnull;
-    if (!found) found = gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX];
-    if (found == &node) found = nsnull;
-    if (!found) found = gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX]; 
-    if (found == &node) found = nsnull;
-
+    // If not found, check if the operator exists perhaps in a different form,
+    // in the order of preference: infix, postfix, prefix
+    if (!found) {
+      if (form != NS_MATHML_OPERATOR_FORM_INFIX) {
+        form = NS_MATHML_OPERATOR_FORM_INFIX;
+        key.Assign(aOperator);
+        key.AppendInt(form, 10);
+        nsStringKey hashkey(key);
+        gOperatorFound[form] = found = (OperatorData*)gOperatorTable->Get(&hashkey);
+      }
+      if (!found) {
+        if (form != NS_MATHML_OPERATOR_FORM_POSTFIX) {
+          form = NS_MATHML_OPERATOR_FORM_POSTFIX;
+          key.Assign(aOperator);
+          key.AppendInt(form, 10);
+          nsStringKey hashkey(key);
+          gOperatorFound[form] = found = (OperatorData*)gOperatorTable->Get(&hashkey);
+        }
+        if (!found) {
+          if (form != NS_MATHML_OPERATOR_FORM_PREFIX) {
+            form = NS_MATHML_OPERATOR_FORM_PREFIX;
+            key.Assign(aOperator);
+            key.AppendInt(form, 10);
+            nsStringKey hashkey(key);
+            gOperatorFound[form] = found = (OperatorData*)gOperatorTable->Get(&hashkey);
+          }
+        }
+      }
+    }
     if (found) {
-      NS_ASSERTION(found->mStr.Equals(aOperator), "bad tree");
+      NS_ASSERTION(found->mStr.Equals(aOperator), "bad setup");
       *aLeftSpace = found->mLeftSpace;
       *aRightSpace = found->mRightSpace;
-      *aFlags &= 0xFFFFFFFC; // (= ~0x3) clear the form bits
+      *aFlags &= ~NS_MATHML_OPERATOR_FORM; // clear the form bits
       *aFlags |= found->mFlags; // just add bits without overwriting
       return PR_TRUE;
     }
@@ -215,38 +477,34 @@ nsMathMLOperators::LookupOperator(const nsString&       aOperator,
 PRBool
 nsMathMLOperators::IsMutableOperator(const nsString& aOperator)
 {
-  NS_ASSERTION(gOperatorTree, "no lookup table, needs addref");
-  if (gOperatorTree) {
-
-    gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX] = nsnull;
-    gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX] = nsnull;
-    gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX] = nsnull;
-
-    OperatorNode node(aOperator, 0);
-    OperatorNode* found = (OperatorNode*)gOperatorTree->FindItem(&node);
-
-    // if the operator was found, gOperatorFound contains all the variants 
+  if (!gInitialized) {
+    InitGlobals();
+  }
+  if (gOperatorTable) {
+    // Lookup with form=0 will put all the variants in gOperatorFound[]
+    float dummy;
+    nsOperatorFlags flags;
+    LookupOperator(aOperator, 0, &flags, &dummy, &dummy);
+    // if the operator was found, gOperatorFound contains all the variants
     // of the operator. check if there is one that meets the criteria
-
+    OperatorData* found;
     found = gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX];
-    if (found && 
-        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) || 
+    if (found &&
+        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) ||
          NS_MATHML_OPERATOR_IS_LARGEOP(found->mFlags)))
     {
       return PR_TRUE;
     }
-
     found = gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX];
-    if (found && 
-        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) || 
+    if (found &&
+        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) ||
          NS_MATHML_OPERATOR_IS_LARGEOP(found->mFlags)))
     {
       return PR_TRUE;
     }
-
     found = gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX];
-    if (found && 
-        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) || 
+    if (found &&
+        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) ||
          NS_MATHML_OPERATOR_IS_LARGEOP(found->mFlags)))
     {
       return PR_TRUE;
@@ -255,109 +513,55 @@ nsMathMLOperators::IsMutableOperator(const nsString& aOperator)
   return PR_FALSE;
 }
 
-
-#if 0
-// DEBUG
-// BEGIN TEST CODE: 
-// code used to test the dictionary
-//#include <stdio.h>
-
-void DEBUG_PrintString(const nsString aString) 
+nsMathMLOperators::CountStretchyOperator()
 {
-  for (PRInt32 i = 0; i<aString.Length(); i++) {
-    PRUnichar ch = aString.CharAt(i);
-    if (ch < 0x00FF)
-      printf("%c", char(ch));
-    else
-      printf("[0x%04X]", ch);
+  if (!gInitialized) {
+    InitGlobals();
   }
+  return (gStretchyOperatorArray) ? gStretchyOperatorArray->Count() : 0;
 }
 
-static const char* kJunkOperator[] = {
-  nsnull,
-  "",
-  ")(",
-  "#",
-  "<!",
-  "<@>"
-};
-
-// define an array of all the flags
-#define MATHML_OPERATOR(_i,_operator,_flags,_lspace,_rspace) nsOperatorFlags(_flags),
-const nsOperatorFlags kMathMLOperatorFlags[] = {
-#include "nsMathMLOperatorList.h"
-};
-#undef MATHML_OPERATOR
-
-int 
-TestOperators() {
-  AddRefTable();
-  	
-  int rv = 0;
-
-  // First make sure we can find all of the operators that are supposed to
-  // be in the table.
-  extern const PRUnichar kMathMLOperator[];
-
-  PRBool found;
-
-  nsOperatorFlags flags, form;
-  float lspace, rspace;
-
-  printf("\nChecking the operator dictionary...\n");
-    
-  nsAutoString aOperator;
-  nsStr::Initialize(aOperator, eTwoByte);
-
-  int i = 0;
-  const PRUnichar* cp = &kMathMLOperator[0];
-  while (i < NS_MATHML_OPERATOR_COUNT) {
-
-    aOperator = *cp++;
-    while (*cp) { aOperator.Append(*cp++); }
-    cp++; // skip null separator
-
-    form = NS_MATHML_OPERATOR_GET_FORM(kMathMLOperatorFlags[i]);
-    found = nsMathMLOperators::LookupOperator(aOperator, form, 
-                               &flags, &lspace, &rspace);       
-
-    if (!found) {
-      printf("bug: can't find operator="); DEBUG_PrintString(aOperator);
-      rv = -1;
-    }
-    if (flags != kMathMLOperatorFlags[i]) {
-      printf("bug: operator="); DEBUG_PrintString(aOperator);
-      printf(" .... flags are wrong\n");
-      getchar();
-      rv = -1;
-    }
-    i++;
-
-    if (i<10) { 
-      DEBUG_PrintString(aOperator);
-      printf(" tested. Press return to continue...");
-      getchar();
-    }
-
+PRInt32
+nsMathMLOperators::FindStretchyOperator(PRUnichar aOperator)
+{
+  if (!gInitialized) {
+    InitGlobals();
   }
-
-  // Now make sure we don't find some garbage
-  for (int j = 0; j < (int) (sizeof(kJunkOperator) / sizeof(const char*)); j++) {
-    const char* name = kJunkOperator[j];    
-    found = nsMathMLOperators::LookupOperator(nsCAutoString(name), form, 
-                               &flags, &lspace, &rspace);
-    if (found) {
-      printf("bug: found '%s'\n", name ? name : "(null)");
-      rv = -1;
+  if (gStretchyOperatorArray) {
+    for (PRInt32 k = 0; k < gStretchyOperatorArray->Count(); k++) {
+      OperatorData* data = (OperatorData*)gStretchyOperatorArray->ElementAt(k);
+      if (data && (aOperator == data->mStr[0])) {
+        return k;
+      }
     }
   }
-
-  printf("%d operators.",i);
-  printf((rv == 0)? " All tests passed!\n" : " ERROR *** Corrupted Dictionary\n");
-
-  ReleaseTable();
-  return rv;
+  return kNotFound;
 }
-// END TEST CODE
-#endif
 
+nsStretchDirection
+nsMathMLOperators::GetStretchyDirectionAt(PRInt32 aIndex)
+{
+  NS_ASSERTION(gStretchyOperatorArray, "invalid call");
+  if (gStretchyOperatorArray) {
+    NS_ASSERTION(aIndex < gStretchyOperatorArray->Count(), "invalid call");
+    OperatorData* data = (OperatorData*)gStretchyOperatorArray->ElementAt(aIndex);
+    if (data) {
+      if (NS_MATHML_OPERATOR_IS_STRETCHY_VERT(data->mFlags))
+        return NS_STRETCH_DIRECTION_VERTICAL;
+      else if (NS_MATHML_OPERATOR_IS_STRETCHY_HORIZ(data->mFlags))
+        return NS_STRETCH_DIRECTION_HORIZONTAL;
+      NS_ASSERTION(PR_FALSE, "*** bad setup ***");
+    }
+  }
+  return NS_STRETCH_DIRECTION_UNSUPPORTED;
+}
+
+void
+nsMathMLOperators::DisableStretchyOperatorAt(PRInt32 aIndex)
+{
+  NS_ASSERTION(gStretchyOperatorArray, "invalid call");
+  if (gStretchyOperatorArray) {
+    NS_ASSERTION(aIndex < gStretchyOperatorArray->Count(), "invalid call");
+    gStretchyOperatorArray->ReplaceElementAt(nsnull, aIndex);
+  }
+}
