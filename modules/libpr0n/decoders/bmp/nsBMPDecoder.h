@@ -63,8 +63,8 @@ struct BMPFILEHEADER {
 };
 
 struct BMPINFOHEADER {
-    PRUint32 width;
-    PRUint32 height;
+    PRInt32 width;
+    PRInt32 height;
     PRUint16 planes; // =1
     PRUint16 bpp; // Bits per pixel.
     // The rest of the header is not available in OS/2 BMP Files

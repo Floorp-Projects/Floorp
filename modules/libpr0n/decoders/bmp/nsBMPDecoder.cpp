@@ -148,10 +148,11 @@ nsresult nsBMPDecoder::SetData(PRUint8* aData)
     rv = mFrame->GetImageBytesPerRow(&bpr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mFrame->SetImageData(aData, bpr, mCurLine * bpr);
+    PRUint32 line = (mBIH.height < 0) ? (-mBIH.height - mCurLine - 1) : mCurLine;
+    rv = mFrame->SetImageData(aData, bpr, line * bpr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRect r(0, mCurLine, mBIH.width, 1);
+    nsRect r(0, line, mBIH.width, 1);
     rv = mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -229,7 +230,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
     }
     if (mPos == mLOH) {
         ProcessInfoHeader();
-        PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP image is %lux%lux%lu. compression=%lu\n",
+        PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP image is %lix%lix%lu. compression=%lu\n",
             mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));
         if (mBIH.compression && mBIH.compression != BI_BITFIELDS) {
             PR_LOG(gBMPLog, PR_LOG_DEBUG, ("Don't yet support compressed BMPs\n"));
@@ -264,12 +265,16 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             mBitFields.blue  = 0x001F;
             CalcBitShift();
         }
+        // BMPs with negative width are invalid
+        if (mBIH.width < 0)
+            return NS_ERROR_FAILURE;
 
-        rv = mImage->Init(mBIH.width, mBIH.height, mObserver);
+        PRUint32 real_height = (mBIH.height > 0) ? mBIH.height : -mBIH.height;
+        rv = mImage->Init(mBIH.width, real_height, mObserver);
         NS_ENSURE_SUCCESS(rv, rv);
         rv = mObserver->OnStartContainer(nsnull, nsnull, mImage);
         NS_ENSURE_SUCCESS(rv, rv);
-        mCurLine = (mBIH.height - 1);
+        mCurLine = real_height - 1;
 
         mRow = new PRUint8[(mBIH.width * mBIH.bpp)/8 + 4];
         // +4 because the line is padded to a 4 bit boundary, but I don't want
@@ -278,7 +283,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         if (!mRow) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        rv = mFrame->Init(0, 0, mBIH.width, mBIH.height, BMP_GFXFORMAT, 24);
+        rv = mFrame->Init(0, 0, mBIH.width, real_height, BMP_GFXFORMAT, 24);
         NS_ENSURE_SUCCESS(rv, rv);
         rv = mImage->AppendFrame(mFrame);
         NS_ENSURE_SUCCESS(rv, rv);
