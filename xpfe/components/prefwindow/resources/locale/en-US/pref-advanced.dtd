@@ -23,6 +23,6 @@
 <!ENTITY description.label            "Checked items are automatically enabled when you visit web pages that use them. If you uncheck an item, pages may load faster but some functionality will be limited.">
 
 <!ENTITY perfTitle.label              "Enable features that affect performance">
-<!ENTITY enableTurbo.label            "Enable Quick Launch (effective after restarting your computer)">
+<!ENTITY enableTurbo.label            "Enable Quick Launch">
 <!ENTITY enableTurboCheck.accesskey   "t">
 
