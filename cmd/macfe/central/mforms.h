@@ -24,7 +24,7 @@
 #include <LPane.h>
 #include <LStdControl.h>
 #include <LListBox.h>
-#include <LTextEdit.h>
+#include <LTextEditView.h>
 #include <LGARadioButton.h>
 #include <LGACheckbox.h>
 #include <LGAPushButton.h>

@@ -25,6 +25,7 @@
 #include "mimages.h"
 #include "uerrmgr.h"
 #include "macutil.h"
+
 	// Netscape
 #include "client.h"
 #include "ntypes.h"
@@ -814,7 +815,7 @@ CGAEditBroadcaster::BroadcastValueMessage()
  * LTextEdit that keeps track if it has been modified
  *****************************************************************************/
 
-CTextEdit::CTextEdit(LStream *inStream) : LTextEdit(inStream)
+CTextEdit::CTextEdit(LStream *inStream) : LTextEditView(inStream)
 {
 	fModified = FALSE;
 }
@@ -822,7 +823,7 @@ CTextEdit::CTextEdit(LStream *inStream) : LTextEdit(inStream)
 void CTextEdit::UserChangedText()
 {
 	fModified = TRUE;
-	LTextEdit::UserChangedText();
+	LTextEditView::UserChangedText();
 }
 
 /*****************************************************************************

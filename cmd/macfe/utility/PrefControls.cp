@@ -265,12 +265,12 @@ public:
 class CPrefTextEdit
 //======================================
 :	public CValidEditField
-,	public MPreference<LTextEdit,char*>
+,	public MPreference<LTextEditView,char*>
 {
 public:
 	CPrefTextEdit(LStream* inStream)
 		:	CValidEditField(inStream)
-		,	MPreference<LTextEdit,char*>((LTextEdit*)this, inStream)
+		,	MPreference<LTextEditView,char*>((LTextEditView*)this, inStream)
 		{
 		}
 	virtual ~CPrefTextEdit()
@@ -295,13 +295,13 @@ class CIntPrefTextEdit
 // // Note: use CPrefTextEdit template in constructor, just change the class ID to 'Iedt'.
 //======================================
 :	public CValidEditField
-,	public MPreference<LTextEdit,int32>
+,	public MPreference<LTextEditView,int32>
 {
 public:
 	enum { class_ID = 'Iedt' };
 	CIntPrefTextEdit(LStream* inStream)
 		:	CValidEditField(inStream)
-		,	MPreference<LTextEdit,int32>((LTextEdit*)this, inStream)
+		,	MPreference<LTextEditView,int32>((LTextEditView*)this, inStream)
 		{
 		}
 	virtual ~CIntPrefTextEdit()
