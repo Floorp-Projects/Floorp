@@ -19,7 +19,6 @@
 
 #include <fstream.h>
 #include "nsTokenizer.h"
-#include "nsITokenizerDelegate.h"
 #include "nsToken.h"
 #include "nsScanner.h"
 #include "nsIURL.h"
@@ -33,10 +32,11 @@
  *  @param  aDelegate -- ref to delegate to be used to tokenize
  *  @return 
  *------------------------------------------------------*/
-CTokenizer::CTokenizer(nsIURL* aURL,ITokenizerDelegate& aDelegate) :
-  mDelegate(aDelegate),
+CTokenizer::CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMode) :
   mTokenDeque() {
-  mScanner= new CScanner(aURL);
+  mDelegate=aDelegate;
+  mScanner=new CScanner(aURL,aMode);
+  mParseMode=aMode;
 }
 
 
@@ -48,6 +48,20 @@ CTokenizer::CTokenizer(nsIURL* aURL,ITokenizerDelegate& aDelegate) :
  *  @return  
  *------------------------------------------------------*/
 CTokenizer::~CTokenizer() {
+  delete mScanner;
+  delete mDelegate;
+  mScanner=0;
+}
+
+
+/**
+ * Retrieve a reference to the internal token deque.
+ *
+ * @update	gess 4/20/98
+ * @return  deque reference
+ */
+nsDeque& CTokenizer::GetDeque(void) {
+  return mTokenDeque;
 }
 
 /**-------------------------------------------------------
@@ -59,7 +73,7 @@ CTokenizer::~CTokenizer() {
  *  @return  new token or null
  *------------------------------------------------------*/
 CToken* CTokenizer::GetToken(PRInt32& anError) {
-	CToken* nextToken=mDelegate.GetToken(mScanner,anError);
+	CToken* nextToken=mDelegate->GetToken(*mScanner,anError);
   return nextToken;
 }
 
@@ -86,7 +100,7 @@ PRInt32 CTokenizer::GetSize(void) {
  *------------------------------------------------------*/
 PRBool CTokenizer::WillTokenize(){
   PRBool result=PR_TRUE;
-  result=mDelegate.WillTokenize();
+  result=mDelegate->WillTokenize();
   return result;
 }
 
@@ -110,7 +124,7 @@ PRInt32 CTokenizer::Tokenize(void) {
 #ifdef VERBOSE_DEBUG
         nextToken->DebugDumpToken(cout);
 #endif
-        if(mDelegate.WillAddToken(*nextToken)) {
+        if(mDelegate->WillAddToken(*nextToken)) {
 	        mTokenDeque.Push(nextToken);
         }
       }
@@ -131,7 +145,12 @@ PRInt32 CTokenizer::Tokenize(void) {
  *  @return  TRUE if all went well
  *------------------------------------------------------*/
 PRBool CTokenizer::DidTokenize() {
-	PRBool result=mDelegate.DidTokenize();
+	PRBool result=mDelegate->DidTokenize();
+
+#ifdef VERBOSE_DEBUG
+    DebugDumpTokens(cout);
+#endif
+
   return result;
 }
 
@@ -145,12 +164,12 @@ PRBool CTokenizer::DidTokenize() {
  *  @return  
  *------------------------------------------------------*/
 void CTokenizer::DebugDumpTokens(ostream& out) {
-  CDequeIterator b=mTokenDeque.Begin();
-  CDequeIterator e=mTokenDeque.End();
+  nsDequeIterator b=mTokenDeque.Begin();
+  nsDequeIterator e=mTokenDeque.End();
 
   CToken* theToken;
   while(b!=e) {
-    theToken=(b++);
+    theToken=(CToken*)(b++);
     theToken->DebugDumpToken(out);
   }
 }
@@ -166,12 +185,12 @@ void CTokenizer::DebugDumpTokens(ostream& out) {
  *  @return  
  *------------------------------------------------------*/
 void CTokenizer::DebugDumpSource(ostream& out) {
-  CDequeIterator b=mTokenDeque.Begin();
-  CDequeIterator e=mTokenDeque.End();
+  nsDequeIterator b=mTokenDeque.Begin();
+  nsDequeIterator e=mTokenDeque.End();
 
   CToken* theToken;
   while(b!=e) {
-    theToken=(b++);
+    theToken=(CToken*)(b++);
     theToken->DebugDumpSource(out);
   }
 

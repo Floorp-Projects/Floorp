@@ -39,6 +39,7 @@
 #define	ITOKENIZERDELEGATE
 
 #include "prtypes.h"
+#include "nsParserTypes.h"
 
 class CScanner;
 class CToken;
@@ -49,8 +50,10 @@ class ITokenizerDelegate {
       virtual	PRBool		  WillTokenize()=0;
   		virtual	PRBool      DidTokenize()=0;
 
-		  virtual	CToken*	    GetToken(CScanner* aScanner,PRInt32& anErrorCode)=0;
+		  virtual	CToken*	    GetToken(CScanner& aScanner,PRInt32& anErrorCode)=0;
       virtual PRBool      WillAddToken(CToken& aToken)=0;
+
+      virtual eParseMode  GetParseMode() const=0;
 };
 
 #endif

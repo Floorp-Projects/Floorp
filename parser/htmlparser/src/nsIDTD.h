@@ -77,10 +77,11 @@ class nsIDTD : public nsISupports {
      *  tag can contain newlines. Most do not.
      *  
      *  @update  gess 3/25/98
-     *  @param   aTag -- tag to test for containership
+     *  @param   aParent -- tag type of parent
+     *  @param   aChild -- tag type of child
      *  @return  PR_TRUE if given tag can contain other tags
      */ //----------------------------------------------------
-    virtual PRBool CanDisregard(PRInt32 aParent,PRInt32 aChild)const=0;
+    virtual PRBool CanOmit(PRInt32 aParent,PRInt32 aChild)const=0;
 
     /** -------------------------------------------------------
      * This method does two things: 1st, help construct
@@ -92,6 +93,18 @@ class nsIDTD : public nsISupports {
      */ //----------------------------------------------------
     virtual PRInt32 GetDefaultParentTagFor(PRInt32 aTag) const=0;
 
+    /** -------------------------------------------------------
+     * This method tries to design a context map (without actually
+     * changing our parser state) from the parent down to the
+     * child. 
+     *
+     * @update	gess4/6/98
+     * @param   aParent -- tag type of parent
+     * @param   aChild -- tag type of child
+     * @return  Non zero count of intermediate nodes; 
+     *          0 if unable to comply
+     */ //----------------------------------------------------
+    virtual PRInt32 CreateContextMapBetween(PRInt32 aParent,PRInt32 aChild) const=0;
 
 };
 

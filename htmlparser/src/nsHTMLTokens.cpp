@@ -355,27 +355,25 @@ PRBool CStartToken::IsAttributed(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CStartToken::Consume(PRUnichar aChar, CScanner* aScanner) {
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
 	//if you're here, we've already Consumed the < char, and are
    //ready to Consume the rest of the open tag identifier.
    //Stop consuming as soon as you see a space or a '>'.
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
-  PRInt32 result=kNoError;
  	mTextValue=aChar;
-  result=aScanner->ReadWhile(mTextValue,gIdentChars,PR_FALSE);
+  PRInt32 result=aScanner.ReadWhile(mTextValue,gIdentChars,PR_FALSE);
 
    //Good. Now, let's skip whitespace after the identifier,
    //and see if the next char is ">". If so, we have a complete
    //tag without attributes.
 
-   aScanner->SkipWhite();
-   result=aScanner->GetChar(aChar);
+   aScanner.SkipWhite();
+   result=aScanner.GetChar(aChar);
    if(kGreaterThan!=aChar) { //look for '>' 
    	//push that char back, since we apparently have attributes...
-      aScanner->PutBack(aChar);
+      aScanner.PutBack(aChar);
       mAttributed=PR_TRUE;
    }
    return result;
@@ -417,21 +415,17 @@ CEndToken::CEndToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CEndToken::Consume(PRUnichar aChar, CScanner* aScanner) {
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
 	//if you're here, we've already Consumed the <! chars, and are
    //ready to Consume the rest of the open tag identifier.
    //Stop consuming as soon as you see a space or a '>'.
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
-  PRInt32 result=kNotFound;
-  if(aScanner) {
-    mTextValue="";
-    static nsAutoString terminals(">");
-    result=aScanner->ReadUntil(mTextValue,terminals,PR_FALSE);
-    aScanner->GetChar(aChar); //eat the closing '>;
-  }
+  mTextValue="";
+  static nsAutoString terminals(">");
+  PRInt32 result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
+  aScanner.GetChar(aChar); //eat the closing '>;
   return result;
 };
 
@@ -528,21 +522,17 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CTextToken::Consume(PRUnichar aChar, CScanner* aScanner) {
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
-  PRInt32 result=kNotFound;
-  if(aScanner) {
 #ifdef TOKENIZE_CRLF
     static nsAutoString terminals("&<\r\n");
 #else
     static nsAutoString terminals("&<");
 #endif
-    result=aScanner->ReadUntil(mTextValue,terminals,PR_FALSE);
+    PRInt32 result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
 #ifndef TOKENIZE_CRLF
     mTextValue.StripChars("\r");
 #endif
-  }
   return result;
 };
 
@@ -567,37 +557,31 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner* aScanner) {
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
-  PRInt32   result=kNotFound;
   PRUnichar ch,ch2;
   
   static nsAutoString terminals(">");
   
-  if(aScanner) {
-    aScanner->GetChar(ch);
-    result=aScanner->GetChar(ch);
-    mTextValue="<!";
-    if(kMinus==ch) {
-      aScanner->GetChar(ch2);
-      if(kMinus==ch2) {
-   	  	  //in this case, we're reading a long-form comment <-- xxx -->
-			  mTextValue+="--";
-        PRInt32 findpos=-1;
-        while((findpos==kNotFound) && (!result)) {
-          result=aScanner->ReadUntil(mTextValue,terminals,PR_TRUE);
-          findpos=mTextValue.RFind("-->");
-        }
-        return result;
+  aScanner.GetChar(ch);
+  PRInt32 result=aScanner.GetChar(ch);
+  mTextValue="<!";
+  if(kMinus==ch) {
+    aScanner.GetChar(ch2);
+    if(kMinus==ch2) {
+   	  	//in this case, we're reading a long-form comment <-- xxx -->
+			mTextValue+="--";
+      PRInt32 findpos=-1;
+      while((findpos==kNotFound) && (!result)) {
+        result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
+        findpos=mTextValue.RFind("-->");
       }
+      return result;
     }
-
- 	  //if you're here, we're consuming a "short-form" comment
-
-    mTextValue+=ch;
-    result=aScanner->ReadUntil(mTextValue,terminals,PR_TRUE);
   }
+ 	  //if you're here, we're consuming a "short-form" comment
+  mTextValue+=ch;
+  result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
   return result;
 };
 
@@ -665,16 +649,11 @@ PRInt32 CNewlineToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CNewlineToken::Consume(PRUnichar aChar, CScanner* aScanner) {
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
-  PRInt32 result=kNotFound;
-
-  if(aScanner) {
-    mTextValue=aChar;
-    static nsAutoString crlfChars("\r\n");
-    result=aScanner->ReadWhile(mTextValue,crlfChars,PR_FALSE);
-    mTextValue.StripChars("\r");
-  }
+PRInt32 CNewlineToken::Consume(PRUnichar aChar, CScanner& aScanner) {
+  mTextValue=aChar;
+  static nsAutoString crlfChars("\r\n");
+  PRInt32 result=aScanner.ReadWhile(mTextValue,crlfChars,PR_FALSE);
+  mTextValue.StripChars("\r");
   return result;
 };
 #endif /* TOKENIZE_CRLF */
@@ -739,27 +718,24 @@ void CAttributeToken::DebugDumpToken(ostream& out) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner* aScanner){
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner){
   static nsAutoString terminals1(">'");
   static nsAutoString terminals2(">\"");
 
   PRInt32 result=kNotFound;
-  if(aScanner) {
-    switch(aChar) {
-      case kQuote:
-        result=aScanner->ReadUntil(aString,terminals2,PR_TRUE);
-        break;
-      case kApostrophe:
-        result=aScanner->ReadUntil(aString,terminals1,PR_TRUE);
-        break;
-      default:
-        break;
-    }
-    PRUnichar ch=aString.Last();
-    if(ch!=aChar)
-      aString+=aChar;
+  switch(aChar) {
+    case kQuote:
+      result=aScanner.ReadUntil(aString,terminals2,PR_TRUE);
+      break;
+    case kApostrophe:
+      result=aScanner.ReadUntil(aString,terminals1,PR_TRUE);
+      break;
+    default:
+      break;
   }
+  PRUnichar ch=aString.Last();
+  if(ch!=aChar)
+    aString+=aChar;
   return result;
 }
 
@@ -772,14 +748,11 @@ PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner* aScanner
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 ConsumeAttributeValueText(PRUnichar aChar,nsString& aString,CScanner* aScanner){
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 ConsumeAttributeValueText(PRUnichar aChar,nsString& aString,CScanner& aScanner){
 
   PRInt32 result=kNotFound;
-  if(aScanner){
-    static nsAutoString terminals(" \t\b\r\n>");
-    result=aScanner->ReadUntil(aString,terminals,PR_FALSE);
-  }
+  static nsAutoString terminals(" \t\b\r\n>");
+  result=aScanner.ReadUntil(aString,terminals,PR_FALSE);
   return result;
 }
 
@@ -792,55 +765,51 @@ PRInt32 ConsumeAttributeValueText(PRUnichar aChar,nsString& aString,CScanner* aS
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner* aScanner) {
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
-  PRInt32 result=kNotFound;
-  if(aScanner) {
-    aScanner->SkipWhite();             //skip leading whitespace                                      
-    result=aScanner->Peek(aChar);
-    if(kEOF!=result) {
-      if(kQuote==aChar) {               //if you're here, handle quoted key...
-   	    aScanner->GetChar(aChar);        //skip the quote sign...
-        mTextKey=aChar;
-        result=ConsumeQuotedString(aChar,mTextKey,aScanner);
-      }
-      else if(kHashsign==aChar) {
-   	    aScanner->GetChar(aChar);        //skip the hash sign...
-        mTextKey=aChar;
-        result=aScanner->ReadWhile(mTextKey,gDigits,PR_TRUE);
-      }
-      else {
-          //If you're here, handle an unquoted key.
-          //Don't forget to reduce entities inline!
-        static nsAutoString terminals(" >=\t\b\r\n\"");
-        result=aScanner->ReadUntil(mTextKey,terminals,PR_FALSE);
-      }
+  aScanner.SkipWhite();             //skip leading whitespace                                      
+  PRInt32 result=aScanner.Peek(aChar);
+  if(kEOF!=result) {
+    if(kQuote==aChar) {               //if you're here, handle quoted key...
+   	  aScanner.GetChar(aChar);        //skip the quote sign...
+      mTextKey=aChar;
+      result=ConsumeQuotedString(aChar,mTextKey,aScanner);
+    }
+    else if(kHashsign==aChar) {
+   	  aScanner.GetChar(aChar);        //skip the hash sign...
+      mTextKey=aChar;
+      result=aScanner.ReadWhile(mTextKey,gDigits,PR_TRUE);
+    }
+    else {
+        //If you're here, handle an unquoted key.
+        //Don't forget to reduce entities inline!
+      static nsAutoString terminals(" >=\t\b\r\n\"");
+      result=aScanner.ReadUntil(mTextKey,terminals,PR_FALSE);
+    }
 
-        //now it's time to Consume the (optional) value...
-      if(!(result=aScanner->SkipWhite())) { 
-        if(!(result=aScanner->Peek(aChar))) {
-          if(kEqual==aChar){
-            aScanner->GetChar(aChar);  //skip the equal sign...
-            aScanner->SkipWhite();     //now skip any intervening whitespace
-   	        aScanner->GetChar(aChar);  //and grab the next char.    
-    
-            if((kQuote==aChar) || (kApostrophe==aChar)) {
-              mTextValue=aChar;
-              result=ConsumeQuotedString(aChar,mTextValue,aScanner);
-            }
-            else {      
-              mTextValue=aChar;       //it's an alphanum attribute...
-              result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
-            } 
-
-            aScanner->SkipWhite();     
+      //now it's time to Consume the (optional) value...
+    if(!(result=aScanner.SkipWhite())) { 
+      if(!(result=aScanner.Peek(aChar))) {
+        if(kEqual==aChar){
+          aScanner.GetChar(aChar);  //skip the equal sign...
+          aScanner.SkipWhite();     //now skip any intervening whitespace
+   	      aScanner.GetChar(aChar);  //and grab the next char.    
+  
+          if((kQuote==aChar) || (kApostrophe==aChar)) {
+            mTextValue=aChar;
+            result=ConsumeQuotedString(aChar,mTextValue,aScanner);
           }
+          else {      
+            mTextValue=aChar;       //it's an alphanum attribute...
+            result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
+          } 
+
+          aScanner.SkipWhite();     
         }
       }
-      aScanner->Peek(aChar);
-      mLastAttribute= PRBool((kGreaterThan==aChar) || (kEOF==result));
     }
+    aScanner.Peek(aChar);
+    mLastAttribute= PRBool((kGreaterThan==aChar) || (kEOF==result));
   }
   return result;
 };
@@ -908,15 +877,11 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CWhitespaceToken::Consume(PRUnichar aChar, CScanner* aScanner) {
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
-  PRInt32 result=kNotFound;
-  if(aScanner) {
-    mTextValue=aChar;
-    aScanner->ReadWhile(mTextValue,gWhitespace,PR_FALSE);
-    mTextValue.StripChars("\r");
-  }
+  mTextValue=aChar;
+  PRInt32 result=aScanner.ReadWhile(mTextValue,gWhitespace,PR_FALSE);
+  mTextValue.StripChars("\r");
   return result;
 };
 #endif /* TOKENIZE_WHITESPACE */
@@ -931,8 +896,9 @@ PRInt32 CWhitespaceToken::Consume(PRUnichar aChar, CScanner* aScanner) {
 CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_entity;
 #ifdef VERBOSE_DEBUG
-  if(!VerifyEntityTable()) 
+  if(!VerifyEntityTable())  {
     cout<<"Entity table is invalid!" << endl;
+  }
 #endif
 }
 
@@ -944,14 +910,10 @@ CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CEntityToken::Consume(PRUnichar aChar, CScanner* aScanner) {
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 CEntityToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
-  PRInt32 result=kNotFound;
-  if(aScanner) {
-    mTextValue=aChar;
-    result=ConsumeEntity(aChar,mTextValue,aScanner);
-  }
+  mTextValue=aChar;
+  PRInt32 result=ConsumeEntity(aChar,mTextValue,aScanner);
   return result;
 };
 
@@ -987,30 +949,27 @@ PRInt32 CEntityToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner* aScanner){
-  NS_PRECONDITION(0!=aScanner,kNullScanner);
+PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& aScanner){
 
   PRInt32 result=kNotFound;
-  if(aScanner) {
-    aScanner->Peek(aChar);
-    if(kLeftBrace==aChar) {
-      //you're consuming a script entity...
-      static nsAutoString terminals("}>");
-      result=aScanner->ReadUntil(aString,terminals,PR_FALSE);
-      aScanner->Peek(aChar);
-      if(kRightBrace==aChar) {
-        aString+=kRightBrace;   //append rightbrace, and...
-        aScanner->GetChar(aChar);//yank the closing right-brace
-      }
+  aScanner.Peek(aChar);
+  if(kLeftBrace==aChar) {
+    //you're consuming a script entity...
+    static nsAutoString terminals("}>");
+    result=aScanner.ReadUntil(aString,terminals,PR_FALSE);
+    aScanner.Peek(aChar);
+    if(kRightBrace==aChar) {
+      aString+=kRightBrace;   //append rightbrace, and...
+      aScanner.GetChar(aChar);//yank the closing right-brace
     }
-    else
-    {
-      result=aScanner->ReadWhile(aString,gIdentChars,PR_FALSE);
-      aScanner->Peek(aChar);
-      if (kSemicolon == aChar) {
-        // consume semicolon that stopped the scan
-        aScanner->GetChar(aChar);
-      }
+  }
+  else
+  {
+    result=aScanner.ReadWhile(aString,gIdentChars,PR_FALSE);
+    aScanner.Peek(aChar);
+    if (kSemicolon == aChar) {
+      // consume semicolon that stopped the scan
+      aScanner.GetChar(aChar);
     }
   }
   return result;
@@ -1236,14 +1195,14 @@ PRInt32 CSkippedContentToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  *------------------------------------------------------*/
-PRInt32 CSkippedContentToken::Consume(PRUnichar aChar,CScanner* aScanner) {
+PRInt32 CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
   PRBool      done=PR_FALSE;
   PRInt32     result=kNoError;
   nsString    temp;
 
-  while((!done) && (!aScanner->Eof())) {
+  while((!done) && (!aScanner.Eof())) {
     static nsAutoString terminals(">");
-    result=aScanner->ReadUntil(temp,terminals,PR_TRUE);
+    result=aScanner.ReadUntil(temp,terminals,PR_TRUE);
     done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE));
   }
   mTextValue=temp;

@@ -32,11 +32,12 @@ const char* kBadHTMLText2="</BODY></HTML>";
  *  @param   aURL -- pointer to URL to be loaded
  *  @return  
  *------------------------------------------------------*/
-CScanner::CScanner(nsIURL* aURL) : mBuffer("") {
+CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
   NS_ASSERTION(0!=aURL,"Error: Null URL!");
   mOffset=0;
   mStream=0;
   mTotalRead=0;
+  mParseMode=aMode;
   if(aURL) {
     PRInt32 error;
     gURLRef=aURL->GetSpec();

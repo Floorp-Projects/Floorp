@@ -50,13 +50,13 @@ class nsIURL;
 
 class  CTokenizer {
 	public:
-				                CTokenizer(nsIURL* aURL,ITokenizerDelegate& aDelegate);
+				                CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMode);
 		      				      ~CTokenizer();
     
     PRInt32   			    Tokenize(void);
     CToken*			        GetToken(PRInt32& anErrorCode);
     PRInt32             GetSize(void);
-    CDeque&             GetDeque(void) {return mTokenDeque;}
+    nsDeque&            GetDeque(void);
 
     void			          DebugDumpSource(ostream& out);
     void			          DebugDumpTokens(ostream& out);
@@ -67,9 +67,10 @@ class  CTokenizer {
 		PRBool				      WillTokenize();
 		PRBool			        DidTokenize();
 
-    ITokenizerDelegate&	mDelegate;
+    ITokenizerDelegate*	mDelegate;
     CScanner*           mScanner;
-    CDeque              mTokenDeque;
+    nsDeque             mTokenDeque;
+    eParseMode          mParseMode;
 };
 
 #endif

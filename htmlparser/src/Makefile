@@ -22,17 +22,20 @@ LIBRARY_NAME = raptorhtmlpars
 DEFINES = -D_IMPL_NS_HTMLPARS
 
 CPPSRCS =			\
-	nsDeque.cpp		\
 	nsHTMLContentSink.cpp	\
-	nsHTMLDelegate.cpp	\
-	nsHTMLParser.cpp	\
-	nsHTMLTokens.cpp	\
 	nsParserNode.cpp	\
 	nsScanner.cpp		\
 	nsToken.cpp		\
 	nsTokenizer.cpp		\
-	nsDefaultTokenHandler.cpp \
+	nsTokenHandler.cpp \
+	nsHTMLParser.cpp	\
+	nsHTMLTokens.cpp	\
+	nsHTMLDelegate.cpp	\
 	nsHTMLDTD.cpp \
+	CNavDelegate.cpp	\
+	CNavDTD.cpp \
+	COtherDelegate.cpp	\
+	COtherDTD.cpp \
 	$(NULL)
 
 EXPORTS =			\

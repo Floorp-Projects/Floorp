@@ -520,7 +520,7 @@ PRBool nsHTMLDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */ //----------------------------------------------------
-PRBool nsHTMLDTD::CanDisregard(PRInt32 aParent,PRInt32 aChild) const {
+PRBool nsHTMLDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
   PRBool result=PR_FALSE;
 
   switch((eHTMLTags)aParent) {
@@ -671,4 +671,19 @@ PRBool nsHTMLDTD::VerifyContextStack(eHTMLTags aStack[],PRInt32 aCount) const {
   return result;
 }
 
+/** -------------------------------------------------------
+ * This method tries to design a context map (without actually
+ * changing our parser state) from the parent down to the
+ * child. 
+ *
+ * @update	gess4/6/98
+ * @param   aParent -- tag type of parent
+ * @param   aChild -- tag type of child
+ * @return  Non zero count of intermediate nodes; 
+ *          0 if unable to comply
+ */ //----------------------------------------------------
+PRInt32 nsHTMLDTD::CreateContextMapBetween(PRInt32 aParent,PRInt32 aChild) const {
+  PRInt32 result=0;
+  return result;
+}
 
