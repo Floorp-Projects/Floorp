@@ -243,6 +243,8 @@ public:
 
   nsBlockBandData mCurrentBand;
   nsRect mAvailSpaceRect;
+
+  nscoord mMinLineHeight;
 };
 
 // XXX This is vile. Make it go away
@@ -852,10 +854,18 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   }
   lineLayout->Init(&state);
 
-  // Prepare inline-reflow engine
+  // Prepare inline-reflow engine. Note that we will almost always use
+  // the inline reflow engine so this setup is not wasted work:
+  // because most content has compressed white-space in it, we will
+  // use the inline reflow engine to get rid of it.
   nsInlineReflow inlineReflow(*lineLayout, state, this, PR_TRUE);
   state.mInlineReflow = &inlineReflow;
   lineLayout->PushInline(&inlineReflow);
+
+  // Compute the blocks minimum line-height the first time that its
+  // needed (which is now).
+  nscoord minLineHeight = state.CalcLineHeight(aPresContext, this);
+  inlineReflow.SetMinLineHeight(minLineHeight);
 
   nsresult rv = NS_OK;
   nsIFrame* target;
