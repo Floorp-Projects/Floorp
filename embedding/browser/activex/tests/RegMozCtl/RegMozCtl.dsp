@@ -102,6 +102,14 @@ SOURCE=.\RegMozCtlDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RegTask.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RegTaskManager.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -116,6 +124,14 @@ SOURCE=.\RegMozCtl.h
 # Begin Source File
 
 SOURCE=.\RegMozCtlDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\RegTask.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\RegTaskManager.h
 # End Source File
 # Begin Source File
 

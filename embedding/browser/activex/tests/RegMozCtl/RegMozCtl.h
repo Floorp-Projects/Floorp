@@ -40,6 +40,7 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
+static const TCHAR *c_szValueBinDirPath = _T("BinDirPath");
 
 /////////////////////////////////////////////////////////////////////////////
 

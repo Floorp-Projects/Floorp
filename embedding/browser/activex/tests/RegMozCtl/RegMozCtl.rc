@@ -26,32 +26,24 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_REGMOZCTL_DIALOG DIALOGEX 0, 0, 210, 199
+IDD_REGMOZCTL_DIALOG DIALOGEX 0, 0, 270, 241
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "RegMozCtl"
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDI_MOZILLA,IDC_STATIC,7,7,20,20
-    LTEXT           "This application registers/deregisters the Mozilla Control and ensures that its dependent DLLs are listed as SHARED so that they can be found when the control is used by other applications.",
-                    IDC_STATIC,34,7,169,35
+    ICON            IDI_MOZILLA,IDC_STATIC,7,7,21,20
+    LTEXT           "This application registers/deregisters the Mozilla Control and ensures that Mozilla path and registry values are set so the control can be used by other applications.",
+                    IDC_STATIC,35,7,228,30
     LTEXT           "You must choose the directory containing the Mozilla control and click on the Register or Deregister as appropriate.",
-                    IDC_STATIC,7,47,196,17
-    EDITTEXT        IDC_MOZILLADIR,7,70,182,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_PICKDIR,190,70,13,14
-    LTEXT           "Now choose the component registry file and component directory the control uses or let RegMozCtl try to guess correct values for you.",
-                    IDC_STATIC,7,89,196,27
-    EDITTEXT        IDC_COMPONENTFILE,7,134,182,14,ES_AUTOHSCROLL | 
-                    WS_DISABLED
-    PUSHBUTTON      "...",IDC_PICKCOMPONENTFILE,190,134,13,14,WS_DISABLED
-    EDITTEXT        IDC_COMPONENTPATH,7,157,182,14,ES_AUTOHSCROLL | 
-                    WS_DISABLED
-    PUSHBUTTON      "...",IDC_PICKCOMPONENTPATH,190,157,13,14,WS_DISABLED
-    DEFPUSHBUTTON   "&Register",IDC_REGISTER,7,178,50,14
-    PUSHBUTTON      "&Unregister",IDC_UNREGISTER,80,178,50,14
-    PUSHBUTTON      "&Close",IDCANCEL,153,178,50,14
-    CONTROL         "Automatic",IDC_AUTOMATIC,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,119,46,10
+                    IDC_STATIC,7,36,256,17
+    EDITTEXT        IDC_MOZILLADIR,7,55,242,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_PICKDIR,250,55,13,14
+    DEFPUSHBUTTON   "&Register",IDC_REGISTER,7,220,50,14
+    PUSHBUTTON      "&Unregister",IDC_UNREGISTER,80,220,50,14
+    PUSHBUTTON      "&Close",IDCANCEL,213,220,50,14
+    CONTROL         "List1",IDC_TASKLIST,"SysListView32",LVS_REPORT | 
+                    WS_BORDER | WS_TABSTOP,7,75,256,134
 END
 
 
@@ -109,9 +101,9 @@ BEGIN
     IDD_REGMOZCTL_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 203
+        RIGHTMARGIN, 263
         TOPMARGIN, 7
-        BOTTOMMARGIN, 192
+        BOTTOMMARGIN, 234
     END
 END
 #endif    // APSTUDIO_INVOKED
