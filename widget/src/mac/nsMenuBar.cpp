@@ -624,7 +624,7 @@ NS_METHOD nsMenuBar::Paint()
       menu->IsHelpMenu(&isHelpMenu);
     if (isHelpMenu)
     {
-      MenuHandle helpMenuHandle;
+      MenuHandle helpMenuHandle = nil;
 #if !TARGET_CARBON
       ::HMGetHelpMenuHandle(&helpMenuHandle);
       menu->SetNativeData((void*)helpMenuHandle);
