@@ -232,9 +232,9 @@ sub execute_tests {
             # XXX modified to allow for multiple.
             if ($line =~ /bugnumber\s*\:?\s*(.*)/i) {
                 $1 =~ /(\n+)/;
+                $bug_number = "Bug Number $1";
                 $bug_line = "<a href='$opt_bug_url$1' target='other_window'>" .
-                  "Bug Number $1</a>";
-                $bug_number = "Bug $1";
+                  "$bug_number</a>";
             }
 
             # and watch for status
@@ -254,11 +254,11 @@ sub execute_tests {
                              "$expected_exit, got $got_exit\n" .
                              "Testcase terminated with signal $exit_signal\n" .
                              "Complete testcase output was:\n" .
-                             join ("\n",@output), $bug_line);
+                             join ("\n",@output), $bug_number, $bug_line);
         } elsif ($failure_lines) {
             # only offending lines if exit codes matched
-            &report_failure ($test, "$bug_number\n$status_lines\nFailure messages were:\n$failure_lines",
-                             $bug_line);
+            &report_failure ($test, "$status_lines\nFailure messages were:\n$failure_lines",
+                             $bug_number, $bug_line);
         }        
         
         &dd ("exit code $got_exit, exit signal $exit_signal.");
@@ -1087,7 +1087,7 @@ sub get_js_files {
 }
 
 sub report_failure {
-    my ($test, $message, $bug_line) = @_;
+    my ($test, $message, $bug_number, $bug_line) = @_;
 
     $failures_reported++;
 
@@ -1095,7 +1095,11 @@ sub report_failure {
     $test =~ s/\:/\//g;
     
      if ($opt_console_failures) {
-        print STDERR ("*-* Testcase $test failed:\n$message\n");
+        if($bug_number) {
+            print STDERR ("*-* Testcase $test failed:\n$bug_number\n$message\n");
+        } else {
+            print STDERR ("*-* Testcase $test failed:\n$message\n");
+        }
     }
 
     $message =~ s/\n/<br>\n/g;
