@@ -18,7 +18,6 @@
  * 
  * Contributor(s):
  *  Ian McGreer <mcgreer@netscape.com>
- *  Javier Delgadillo <javi@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -34,58 +33,54 @@
  *
  */
 
-#ifndef _NS_NSSCERTIFICATE_H_
-#define _NS_NSSCERTIFICATE_H_
+#ifndef _NS_CERTOUTLINER_H_
+#define _NS_CERTOUTLINER_H_
 
-#include "nsIX509Cert.h"
-#include "nsIX509CertDB.h"
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsICertOutliner.h"
+#include "nsIOutlinerView.h"
+#include "nsIOutlinerBoxObject.h"
+#include "nsIOutlinerSelection.h"
+#include "nsISupportsArray.h"
 
-#include "prtypes.h"
-#include "cert.h"
-#include "secitem.h"
+typedef struct outlinerArrayElStr outlinerArrayEl;
 
-/* Certificate */
-class nsNSSCertificate : public nsIX509Cert 
+class nsCertOutliner : public nsICertOutliner
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIX509CERT
+  NS_DECL_NSICERTOUTLINER
+  NS_DECL_NSIOUTLINERVIEW
 
-  nsNSSCertificate(char *certDER, int derLen);
-  nsNSSCertificate(CERTCertificate *cert);
-  /* from a request? */
-  virtual ~nsNSSCertificate();
-  CERTCertificate *GetCert();
+  nsCertOutliner();
+  virtual ~nsCertOutliner();
 
-private:
-  CERTCertificate *mCert;
-
-  PRBool verifyFailed(PRUint32 *_verified);
-
-  nsresult GetUsageArray(char     *suffix,
-                         PRUint32 *_verified,
-                         PRUint32 *_count,
-                         PRUnichar **tmpUsages);
-};
-
-class nsNSSCertificateDB : public nsIX509CertDB
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIX509CERTDB
-
-  nsNSSCertificateDB(); 
-  virtual ~nsNSSCertificateDB();
+protected:
+  static PRInt32 CmpByToken(nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpByOrg(nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpByName(nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpByTok_Org_Name(nsIX509Cert *a, nsIX509Cert *b);
+  PRInt32 CountOrganizations();
 
 private:
+  nsCOMPtr<nsISupportsArray>      mCertArray;
+  nsCOMPtr<nsIOutlinerBoxObject>  mOutliner;
+  nsCOMPtr<nsIOutlinerSelection>  mSelection;
+  outlinerArrayEl                *mOutlinerArray;
+  PRInt32                         mNumOrgs;
+  PRInt32                         mNumRows;
 
-  void getCertNames(CERTCertList *certList,
-                    PRUint32      type, 
-                    PRUint32     *_count,
-                    PRUnichar  ***_certNameList);
+  outlinerArrayEl *GetThreadDescAtIndex(PRInt32 _index);
+  nsIX509Cert *GetCertAtIndex(PRInt32 _index);
 
-  PRUint32 getCertType(CERTCertificate *cert);
+  void FreeCertArray();
 
+#ifdef DEBUG_CERT_OUTLINER
+  /* for debugging purposes */
+  void dumpMap();
+#endif
 };
 
-#endif /* _NS_NSSCERTIFICATE_H_ */
+#endif /* _NS_CERTOUTLINER_H_ */
+

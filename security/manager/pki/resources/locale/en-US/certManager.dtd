@@ -56,8 +56,20 @@
 <!ENTITY certmgr.editcert.trustemail "This certificate can identify mail users.">
 <!ENTITY certmgr.editcert.trustobjsign "This certificate can identify software makers.">
 
+<!ENTITY certmgr.deletecert.title "Delete Certificate">
+<!ENTITY certmgr.deletecert.beforename "You have requested to delete this certificate:">
+<!ENTITY certmgr.deletecert.aftername "Are you sure you want to delete this certificate?">
+<!ENTITY certmgr.deleteusercert.title "Delete Your Certificate">
+<!ENTITY certmgr.deleteusercert.beforename "You have requested to delete the certificate:">
+<!ENTITY certmgr.deleteusercert.aftername "Once you have deleted this certificate, you will not be able to read mail that has been encrypted with it.">
+
 <!ENTITY certmgr.certname "Certificate Name">
 <!ENTITY certmgr.tokenname "Token Name">
+<!ENTITY certmgr.verified "Verified">
+<!ENTITY certmgr.purpose "Purpose">
+<!ENTITY certmgr.issued "Issued On">
+<!ENTITY certmgr.expires "Expires On">
+
 <!ENTITY certmgr.help.label "Help">
 <!ENTITY certmgr.ok.label "Ok">
 <!ENTITY certmgr.close.label "Close">

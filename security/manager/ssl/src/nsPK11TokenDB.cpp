@@ -93,6 +93,7 @@ NS_IMETHODIMP
 nsPK11Token::Login(PRBool force)
 {
   nsresult rv;
+  SECStatus srv;
   PRBool test;
   rv = this->NeedsLogin(&test);
   if (NS_FAILED(rv)) return rv;
@@ -102,8 +103,8 @@ nsPK11Token::Login(PRBool force)
   }
   rv = setPassword(mSlot, mUIContext);
   if (NS_FAILED(rv)) return rv;
-  PK11_Authenticate(mSlot, PR_TRUE, mUIContext);
-  return NS_OK;
+  srv = PK11_Authenticate(mSlot, PR_TRUE, mUIContext);
+  return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /* void logout (); */

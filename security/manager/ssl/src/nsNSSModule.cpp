@@ -37,6 +37,7 @@
 
 #include "nsPK11TokenDB.h"
 #include "nsNSSCertificate.h"
+#include "nsCertOutliner.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSComponent, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
@@ -46,6 +47,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecretDecoderRing)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPK11TokenDB)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(CertContentListener, init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSCertificateDB)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertOutliner)
 
 static nsModuleComponentInfo components[] =
 {
@@ -145,6 +147,13 @@ static nsModuleComponentInfo components[] =
     NS_X509CERTDB_CID,
     NS_X509CERTDB_CONTRACTID,
     nsNSSCertificateDBConstructor
+  },
+
+  {
+    "Certificate Outliner",
+    NS_CERTOUTLINER_CID,
+    NS_CERTOUTLINER_CONTRACTID,
+    nsCertOutlinerConstructor
   }
 
 };

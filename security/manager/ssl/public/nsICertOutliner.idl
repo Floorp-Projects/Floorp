@@ -18,12 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *  Javier Delgadillo <javi@netscape.com>
+ *   Ian McGreer <mcgreer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
- * "GPL"), in which case the provisions of the GPL are applicable 
- * instead of those above.  If you wish to allow use of your 
+ * "GPL"), in which case the provisions of the GPL are applicable
+ * instead of those above.  If you wish to allow use of your
  * version of this file only under the terms of the GPL and not to
  * allow others to use your version of this file under the MPL,
  * indicate your decision by deleting the provisions above and
@@ -33,26 +33,25 @@
  * GPL.
  */
 
-function onLoad()
-{
-  parent.initPanel('chrome://pippki/content/pref-security.xul');
-  var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
-  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+#include "nsISupports.idl"
+#include "nsIOutlinerView.idl"
+#include "nsIX509Cert.idl"
 
-  var brandName = gBundleBrand.GetStringFromName("brandShortName");
-  var resetPrefs = bundle.formatStringFromName("resetPreferences",
-                                               [ brandName ],
-                                               1);
-  setText("resetsettings.text", resetPrefs);
-}
+[scriptable, uuid(4ea60761-31d6-491d-9e34-4b53a26c416c)]
+interface nsICertOutliner : nsIOutlinerView {
 
-function openCertManager()
-{
-//  var windowReference = document.getElementById("certmanager");
-//  if (windowReference != null) {
-//    windowReference.focus();
-//  } else {
-    window.open('chrome://pippki/content/certManager.xul',  "",
-                'chrome,width=500,height=400,resizable=1');
-//  }
-}
+  void loadCerts(in unsigned long type);
+
+  nsIX509Cert getCert(in unsigned long index);
+
+};
+
+%{C++
+
+#define NS_CERTOUTLINER_CID { 0x4ea60761, 0x31d6, 0x491d, \
+                         { 0x9e, 0x34, 0x4b, 0x53, 0xa2, 0x6c, 0x41, 0x6c } }
+
+#define NS_CERTOUTLINER_CONTRACTID "@mozilla.org/security/nsCertOutliner;1"
+
+%}
+

@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.h,v 1.3 2001/03/30 19:55:00 mcgreer%netscape.com Exp $
+ * $Id: nsPKCS12Blob.h,v 1.4 2001/05/01 23:23:23 mcgreer%netscape.com Exp $
  */
 
 #ifndef _NS_PKCS12BLOB_H_
@@ -84,7 +84,7 @@ private:
   nsresult newPKCS12FilePassword(SECItem *);
   nsresult inputToDecoder(SEC_PKCS12DecoderContext *, nsILocalFile *);
   void unicodeToItem(PRUnichar *, SECItem *);
-  PRBool handleError();
+  PRBool handleError(int myerr = 0);
 
   // NSPR file I/O for temporary digest file
   PRFileDesc *mTmpFile;
