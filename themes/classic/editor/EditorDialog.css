@@ -84,7 +84,7 @@ titledbox {
   width:20px;
   height: 16px; 
   border: 1px inset #CCCCCC;
-  margin: 4px;
+  margin: 3px 1px 5px 8px;
 }
 
 .color-well[default="true"] {
@@ -93,6 +93,10 @@ titledbox {
 }
 
 .color-button {
+  /* shouldn't have to do this!
+     but can't get sizing in stack to work!
+  */
+  width: 38px;
   background: transparent;
 }
 
