@@ -136,9 +136,9 @@
         <a href="[% Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]">
           [% bug.bug_id %]</a>
           [% IF Param("usebugaliases") %]
-            <label title="a name for the [% terms.bug %] that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
+            <label for="alias" title="a name for the [% terms.bug %] that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
               <b>alias:</b>
-              <input name="alias" value="[% bug.alias FILTER html %]" size="20" maxlength="20">
+              <input id="alias" name="alias" value="[% bug.alias FILTER html %]" size="20" maxlength="20">
             </label>
           [% END %]
       </td>
@@ -486,8 +486,8 @@
 
   [% IF NOT bug.cc || NOT bug.cc.contains(user.login) %]
     <br>
-    <label>
-      <input type="checkbox" name="addselfcc">
+    <label for="addselfcc">
+      <input type="checkbox" id="addselfcc" name="addselfcc">
       Add [% user.login FILTER html %] to CC list
     </label>
   [% END %]
