@@ -22,8 +22,18 @@
  */
 
 #include "gfxImageFrame.h"
-
 #include "nsIServiceManager.h"
+
+
+/* Limit the width and height of images to (2^15 - 1) to avoid any overflows.
+   We know that (width * height * alpha) needs to be under 2^32.
+   In the event of padding being needed, we do -1 to save some extra space.
+   
+   therefore, the maxium image buffer imagelib will create is:
+   ((2^15 - 1) * (2^15 - 1) * 4) == 4294705156
+   This is less than 2^32 so we're safe.
+ */
+#define SIZE_LIMIT 32767
 
 NS_IMPL_ISUPPORTS2(gfxImageFrame, gfxIImageFrame, nsIInterfaceRequestor)
 
@@ -54,6 +64,11 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
 
   if (aWidth <= 0 || aHeight <= 0) {
     NS_ASSERTION(0, "error - negative image size\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aWidth > SIZE_LIMIT || aHeight > SIZE_LIMIT) {
+    NS_ASSERTION(0, "width or height too large\n");
     return NS_ERROR_FAILURE;
   }
 
