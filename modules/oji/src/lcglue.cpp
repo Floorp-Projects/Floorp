@@ -107,11 +107,11 @@ JVMContext* GetJVMContext()
 // LiveConnect callbacks
 ////////////////////////////////////////////////////////////////////////////////
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 #include "jscntxt.h"
 
-static JSContext* PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(JSContext*)
 map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_obj, JNIEnv *env, char **errp)
 {
 #if 0
@@ -150,7 +150,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_
 #endif
 }
 
-static void PR_CALLBACK detach_jsjava_thread_state(void* env)
+JS_STATIC_DLL_CALLBACK(void) detach_jsjava_thread_state(void* env)
 {
     JSJavaThreadState *jsj_env = NS_REINTERPRET_CAST(JSJavaThreadState*, env);
     JSJ_DetachCurrentThreadFromJava(jsj_env);
@@ -162,7 +162,7 @@ static void PR_CALLBACK detach_jsjava_thread_state(void* env)
 ** to a java thread. JSJ_AttachCurrentThreadToJava just calls AttachCurrentThread
 ** on the java vm.
 */
-static JSJavaThreadState* PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(JSJavaThreadState*)
 map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 {
 	*errp = NULL;
@@ -206,7 +206,7 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 ** to get to the javascript JSObject.
 */
 
-static JSObject* PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(JSObject*)
 map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *errp)
 {
 	JSObject        *window = NULL;
@@ -323,7 +323,7 @@ ConvertNSIPrincipalArrayToObject(JNIEnv *pJNIEnv, JSContext *pJSContext, void  *
 #endif //0
 
 
-static JSPrincipals* PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(JSPrincipals*)
 get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext)
 {
     nsISupports* credentials = NS_REINTERPRET_CAST(nsISupports*, pNSISecurityContext);
@@ -359,7 +359,7 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, v
     return NULL;
 }
 
-static jobject PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(jobject)
 get_java_wrapper_impl(JNIEnv *pJNIEnv, jint a_jsobject)
 {
     nsresult       err    = NS_OK;
@@ -380,7 +380,7 @@ get_java_wrapper_impl(JNIEnv *pJNIEnv, jint a_jsobject)
     return pJSObjectWrapper;
 }
 
-static jint PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(jint)
 unwrap_java_wrapper_impl(JNIEnv *pJNIEnv, jobject java_wrapper)
 {
     jint obj = 0;
@@ -401,7 +401,7 @@ unwrap_java_wrapper_impl(JNIEnv *pJNIEnv, jobject java_wrapper)
     return obj;
 }
 
-static JSBool PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(JSBool)
 enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
                         void **pNSIPrincipaArray, int numPrincipals, 
                         void *pNSISecurityContext,
@@ -490,7 +490,7 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 	return PR_TRUE;
 }
 
-static void PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(void)
 exit_js_impl(JNIEnv *jEnv)
 {
     //TODO:  
@@ -522,7 +522,7 @@ exit_js_impl(JNIEnv *jEnv)
     return;
 }
 
-static PRBool PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(PRBool)
 create_java_vm_impl(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
 {
     // const char* classpath = (const char*)initargs;
@@ -534,7 +534,7 @@ create_java_vm_impl(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
     return (*jvm != NULL && *initialEnv != NULL);
 }
 
-static PRBool PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(PRBool)
 destroy_java_vm_impl(SystemJavaVM* jvm, JNIEnv* initialEnv)
 {
     JVM_ReleaseJNIEnv(initialEnv);
@@ -542,20 +542,20 @@ destroy_java_vm_impl(SystemJavaVM* jvm, JNIEnv* initialEnv)
     return PR_TRUE;
 }
 
-static JNIEnv* PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(JNIEnv*)
 attach_current_thread_impl(SystemJavaVM* jvm)
 {
     return JVM_GetJNIEnv();
 }
 
-static PRBool PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(PRBool)
 detach_current_thread_impl(SystemJavaVM* jvm, JNIEnv* env)
 {
     JVM_ReleaseJNIEnv(env);
     return PR_TRUE;
 }
 
-static SystemJavaVM* PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(SystemJavaVM*)
 get_java_vm_impl(JNIEnv* env)
 {
     // only one SystemJavaVM for the whole browser, so it doesn't depend on env
@@ -566,7 +566,7 @@ get_java_vm_impl(JNIEnv* env)
     return jvm;
 }
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 static JSJCallbacks jsj_callbacks = {
     map_jsj_thread_to_js_context_impl,
