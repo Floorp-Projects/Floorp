@@ -247,7 +247,7 @@ void InitializeElementTable(void) {
 	      /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,		
         /*autoclose starttags and endtags*/ 0,0,0,0,
         /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-        /*special props, prop-range*/       kOmitWS, 10,
+        /*special props, prop-range*/       kOmitWS|kNonContainer, 10,
         /*special parents,kids,skip*/       0,&gUnknownKids,eHTMLTag_unknown);       
 
     /*************************************************
@@ -307,7 +307,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gAreaParent,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kInlineEntity, kSelf,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       &gAreaParent,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -325,7 +325,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInHead,	&gRootTags,
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       0, kNoPropRange,
+      /*special props, prop-range*/       kNonContainer, kNoPropRange,
       /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -334,7 +334,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE, kNone,	
-      /*special props, prop-range*/       0, kNoPropRange,
+      /*special props, prop-range*/       kNonContainer, kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -397,7 +397,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
-      /*special props, prop-range*/       0, kNoPropRange,
+      /*special props, prop-range*/       kNonContainer, kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -451,7 +451,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gColParents,&gColParents,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       kNoPropagate|kOmitWS,kDefaultPropRange,
+      /*special props, prop-range*/       kNoPropagate|kOmitWS|kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       &gColParents,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -541,7 +541,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlockEntity, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown);
 
     Initialize( 
@@ -586,7 +586,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInFrameset,&gInFrameset,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kNoPropRange,
+      /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn|kNonContainer, kNoPropRange,
       /*special parents,kids,skip*/       &gInFrameset,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -668,7 +668,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ &gHRAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -713,7 +713,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -722,7 +722,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -731,7 +731,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFormControl, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -749,7 +749,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          (kBlock|kHeadContent), kFlowEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -767,7 +767,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -812,7 +812,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -848,7 +848,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
-      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special props, prop-range*/       kNoStyleLeaksIn|kNonContainer, kDefaultPropRange,
       /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -956,7 +956,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gParamParents,	&gParamParents,	
       /*autoclose starttags and endtags*/ &gPAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       0, kNoPropRange,
+      /*special props, prop-range*/       kNonContainer, kNoPropRange,
       /*special parents,kids,skip*/       &gParamParents,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -974,7 +974,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kExtensions, kFlowEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_html);
 
     Initialize( 
@@ -1075,7 +1075,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1115,7 +1115,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kHeadMisc, kPCDATA, kNone,	
-      /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+      /*special props, prop-range*/       kNoStyleLeaksIn|kNonContainer, kNoPropRange,
       /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_style);
 
     Initialize( 
@@ -1260,7 +1260,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
-      /*special props, prop-range*/       0,kNoPropRange,
+      /*special props, prop-range*/       kNonContainer,kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1269,7 +1269,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kPreformatted, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_xmp);
 
     Initialize( 
@@ -1278,7 +1278,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-      /*special props, prop-range*/       0,kNoPropRange,
+      /*special props, prop-range*/       kNonContainer,kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1287,7 +1287,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-      /*special props, prop-range*/       0,kNoPropRange,
+      /*special props, prop-range*/       kNonContainer,kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1296,7 +1296,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-      /*special props, prop-range*/       0, kNoPropRange,
+      /*special props, prop-range*/       kNonContainer, kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1382,20 +1382,7 @@ PRBool nsHTMLElement::IsContainer(eHTMLTags aChild) {
   PRBool result=(eHTMLTag_unknown==aChild);
 
   if(!result){
-    static eHTMLTags gNonContainers[]={
-      eHTMLTag_unknown,
-      eHTMLTag_area,    eHTMLTag_base,      eHTMLTag_basefont,
-      eHTMLTag_br,      eHTMLTag_col,       eHTMLTag_embed,
-      eHTMLTag_frame,   eHTMLTag_hr,        eHTMLTag_img,     
-      eHTMLTag_image,     eHTMLTag_input,   eHTMLTag_keygen,
-      eHTMLTag_link,    eHTMLTag_isindex,   eHTMLTag_meta,    
-      eHTMLTag_newline, eHTMLTag_param,     eHTMLTag_plaintext, 
-      eHTMLTag_style,   eHTMLTag_spacer,    eHTMLTag_text,    
-      eHTMLTag_unknown, eHTMLTag_wbr,       eHTMLTag_whitespace,
-      eHTMLTag_xmp};
-
-
-    result=!FindTagInSet(aChild,gNonContainers,sizeof(gNonContainers)/sizeof(eHTMLTag_unknown));
+    result=!gHTMLElements[aChild].HasSpecialProperty(kNonContainer);
   }
   return result;
 }
