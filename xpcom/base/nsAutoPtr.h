@@ -406,7 +406,7 @@ inline
 NSCAP_BOOL
 operator==( const nsAutoPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(U*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) == NS_CONST_CAST(const U*, rhs);
   }
 
 template <class T, class U>
@@ -414,7 +414,7 @@ inline
 NSCAP_BOOL
 operator==( U* lhs, const nsAutoPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return NS_CONST_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
   }
 
 template <class T, class U>
@@ -422,7 +422,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsAutoPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(U*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) != NS_CONST_CAST(const U*, rhs);
   }
 
 template <class T, class U>
@@ -430,7 +430,7 @@ inline
 NSCAP_BOOL
 operator!=( U* lhs, const nsAutoPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return NS_CONST_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
   }
 #endif
 
@@ -849,7 +849,7 @@ inline
 NSCAP_BOOL
 operator==( const nsAutoArrayPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(U*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) == NS_CONST_CAST(const U*, rhs);
   }
 
 template <class T, class U>
@@ -857,7 +857,7 @@ inline
 NSCAP_BOOL
 operator==( U* lhs, const nsAutoArrayPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return NS_CONST_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
   }
 
 template <class T, class U>
@@ -865,7 +865,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsAutoArrayPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(U*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) != NS_CONST_CAST(const U*, rhs);
   }
 
 template <class T, class U>
@@ -873,7 +873,7 @@ inline
 NSCAP_BOOL
 operator!=( U* lhs, const nsAutoArrayPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return NS_CONST_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
   }
 #endif
 
@@ -1315,7 +1315,7 @@ inline
 NSCAP_BOOL
 operator==( const nsRefPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(U*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) == NS_CONST_CAST(const U*, rhs);
   }
 
 template <class T, class U>
@@ -1323,7 +1323,7 @@ inline
 NSCAP_BOOL
 operator==( U* lhs, const nsRefPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
+    return NS_CONST_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
   }
 
 template <class T, class U>
@@ -1331,7 +1331,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsRefPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(U*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) != NS_CONST_CAST(const U*, rhs);
   }
 
 template <class T, class U>
@@ -1339,7 +1339,7 @@ inline
 NSCAP_BOOL
 operator!=( U* lhs, const nsRefPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
+    return NS_CONST_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
   }
 #endif
 
