@@ -888,11 +888,11 @@ PRBool SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI, PRBool aD
 {
   nsCAutoString targetScheme;
   nsresult rv = aTargetURI->GetScheme(targetScheme);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
   nsCAutoString originScheme;
   rv = aOriginURI->GetScheme(originScheme);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
   if (strcmp(targetScheme.get(), originScheme.get()))
     return PR_FALSE; // Different schemes - check fails
@@ -908,11 +908,11 @@ PRBool SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI, PRBool aD
     // Each message is a distinct trust domain; use the whole spec for comparison
     nsCAutoString targetSpec;
     rv =aTargetURI->GetAsciiSpec(targetSpec);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
     nsCAutoString originSpec;
     rv = aOriginURI->GetAsciiSpec(originSpec);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
     return (! strcmp(targetSpec.get(), originSpec.get())); // True if full spec is same, false otherwise
   }
@@ -920,10 +920,10 @@ PRBool SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI, PRBool aD
   // Compare ports.
   int targetPort, originPort;
   rv = aTargetURI->GetPort(&targetPort);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
   rv = aOriginURI->GetPort(&originPort);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
   if (targetPort != originPort)
     return PR_FALSE; // Different port - check fails
@@ -931,11 +931,11 @@ PRBool SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI, PRBool aD
   // Need to check the hosts
   nsCAutoString targetHost;
   rv = aTargetURI->GetHost(targetHost);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
   nsCAutoString originHost;
   rv = aOriginURI->GetHost(originHost);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
   if (!strcmp(targetHost.get(), originHost.get()))
     return PR_TRUE; // Hosts are the same - check passed
