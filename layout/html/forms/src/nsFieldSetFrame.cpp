@@ -190,24 +190,24 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
       const nsStyleSpacing* spacing =
         (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
-//XXX      nsRect backgroundRect(0, 0, mRect.width, mRect.height);
+      // XXX      nsRect backgroundRect(0, 0, mRect.width, mRect.height);
       // XXX our parent doesn't account for top and bottom margins yet, if we are inline
-      if (mInline) {
-        nsMargin margin;
-        spacing->CalcMarginFor(this, margin); 
-        nsRect rect(0, mTopBorderOffset, mRect.width, mRect.height - margin.top - 
-                    margin.bottom - mTopBorderOffset);
-        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, *spacing, 0, 0);
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *spacing, mStyleContext, skipSides, &mTopBorderGap);
-      } else {
+      //if (mInline) {
+      //  nsMargin margin;
+      //  spacing->CalcMarginFor(this, margin); 
+      //  nsRect rect(0, mTopBorderOffset, mRect.width, mRect.height - margin.top - 
+      //              margin.bottom - mTopBorderOffset);
+      //  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+      //                                  aDirtyRect, rect, *color, *spacing, 0, 0);
+      //  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+      //                              aDirtyRect, rect, *spacing, mStyleContext, skipSides, &mTopBorderGap);
+      //} else {
         nsRect rect(0, mTopBorderOffset, mRect.width, mRect.height - mTopBorderOffset);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *color, *spacing, 0, 0);
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *spacing, mStyleContext, skipSides, &mTopBorderGap);
-      } 
+      //} 
     }
   }
 
@@ -270,7 +270,9 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
                         nsReflowStatus&          aStatus)
 {
   // XXX remove the following when the reflow state is fixed
+#ifndef bug4534_not_fixed
   FieldSetHack((nsHTMLReflowState&)aReflowState, "fieldset", PR_TRUE);
+#endif
   // availSize could have unconstrained values, don't perform any addition on them
   nsSize availSize(aReflowState.computedWidth, aReflowState.computedHeight);
   
@@ -281,8 +283,8 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   const nsStyleSpacing* spacing =
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
-  nsMargin margin;
-  spacing->CalcMarginFor(this, margin); 
+  //nsMargin margin;
+  //spacing->CalcMarginFor(this, margin); 
 
   nsMargin border;
   nsMargin padding;
@@ -290,7 +292,7 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   spacing->CalcPaddingFor(this, padding);
   nsMargin borderPadding = border + padding;
 
-  nsMargin legendMargin;
+  nsMargin legendMargin(0,0,0,0);
   if (mLegendFrame) {
     nsIStyleContext* legendSC = nsnull;
     mLegendFrame->GetStyleContext(&legendSC);
@@ -304,7 +306,7 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
 
   // reduce available space by border, padding, etc. if we're in a constrained situation
   nscoord horTaken = borderPadding.left + borderPadding.right + legendMargin.left + legendMargin.right;
-  nscoord verTaken = padding.top + borderPadding.bottom + legendMargin.top + legendMargin.bottom;
+  nscoord verTaken = borderPadding.top + borderPadding.bottom + legendMargin.top + legendMargin.bottom;
 
   if (NS_INTRINSICSIZE != availSize.width) {
     availSize.width -= horTaken;
@@ -324,7 +326,9 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
     nsHTMLReflowState legendReflowState(aPresContext, aReflowState,
                                         mLegendFrame, availSize);
     // XXX remove when reflow state is fixed
+#ifndef bug4534_not_fixed
     FieldSetHack((nsHTMLReflowState&)legendReflowState, "fieldset's legend", PR_FALSE);
+#endif
     ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState, aStatus);
 
     legendSize.width  = aDesiredSize.width;
@@ -354,7 +358,9 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   nsHTMLReflowState contentReflowState(aPresContext, aReflowState,
                                        mContentFrame, availSize);
   // XXX remove when reflow state is fixed
+#ifndef bug4534_not_fixed
   FieldSetHack(contentReflowState, "fieldset's area", PR_FALSE);
+#endif
 
   nscoord contentTopOffset = (legendSize.height > border.top) 
                                 ? legendSize.height + padding.top
@@ -381,7 +387,9 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
     nsHTMLReflowState legendReflowState(aPresContext, aReflowState,
                                         mLegendFrame, availSize);
     // XXX remove when reflow state is fixed
+#ifndef bug4534_not_fixed
     FieldSetHack(legendReflowState, "fieldset's legend frame", PR_FALSE);
+#endif
     ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState, aStatus);
 
     legendSize.width  = aDesiredSize.width;
@@ -396,10 +404,10 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.width = (legendWidth > contentWidth) ? legendWidth : contentWidth;
 
   // if we are constrained and the child is smaller, use the constrained values
-  //if ((NS_INTRINSICSIZE != aReflowState.computedWidth) &&
-  //    (aReflowState.computedWidth > aDesiredSize.width)) {
-  //  aDesiredSize.width = aReflowState.computedWidth;
-  //}
+  if ((NS_INTRINSICSIZE != aReflowState.computedWidth) &&
+      (aReflowState.computedWidth > aDesiredSize.width)) {
+    aDesiredSize.width = aReflowState.computedWidth;
+  }
   
   if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) && 
       ( (legendWidth + (2 * desiredLegendOffset)) > aDesiredSize.width) ) {
@@ -464,9 +472,9 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.height  = contentTopOffset + legendSize.height + contentSize.height + borderPadding.bottom;
 
   // if we are constrained and the child is smaller, use the constrained values
-  //if ((NS_AUTOHEIGHT != aReflowState.computedHeight) && (aReflowState.computedHeight > aDesiredSize.height)) {
-  //  aDesiredSize.height = aReflowState.computedHeight;
-  //}
+  if ((NS_AUTOHEIGHT != aReflowState.computedHeight) && (aReflowState.computedHeight > aDesiredSize.height)) {
+    aDesiredSize.height = aReflowState.computedHeight;
+  }
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
   if (nsnull != aDesiredSize.maxElementSize) {
