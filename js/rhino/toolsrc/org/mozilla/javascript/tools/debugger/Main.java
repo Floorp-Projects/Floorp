@@ -2081,7 +2081,11 @@ class StackFrame implements DebugFrame {
     public void onLineChange(Context cx, int lineno) {
         this.lineNumber = lineno;
 
+      checks:
         if (sourceInfo == null || !sourceInfo.hasBreakpoint(lineno)) {
+            if (db.breakFlag) {
+                break checks;
+            }
             if (!contextData.breakNextLine) {
                 return;
             }
@@ -2324,46 +2328,21 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     /* ContextListener interface */
 
-    ObjToIntMap contexts = new ObjToIntMap();
-
     public void contextCreated(Context cx) {
 
-        synchronized (contexts) {
-            ContextData contextData = new ContextData();
-            cx.setDebugger(this, contextData);
-            cx.setGeneratingDebug(true);
-            cx.setOptimizationLevel(-1);
-            // if the user pressed "Break" or if this thread is the shell's
-            // Main then set the break flag so that when the debugger is run
-            // with a file argument on the command line it will
-            // break at the start of the file
-            if (breakFlag) {
-                contextData.breakNextLine = true;
-            }
-        }
+        ContextData contextData = new ContextData();
+        cx.setDebugger(this, contextData);
+        cx.setGeneratingDebug(true);
+        cx.setOptimizationLevel(-1);
     }
 
     public void contextEntered(Context cx) {
-        // If the debugger is attached to cx
-        // keep a reference to it even if it was detached
-        // from its thread (we cause that to happen below
-        // in interrupted)
-        synchronized (contexts) {
-            if (!contexts.has(cx)) {
-                if (cx.getDebugger() == this) {
-                    contexts.put(cx, 1);
-                }
-            }
-        }
     }
 
     public void contextExited(Context cx) {
     }
 
     public void contextReleased(Context cx) {
-        synchronized (contexts) {
-            contexts.remove(cx);
-        }
     }
 
     /* end ContextListener interface */
@@ -2372,13 +2351,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     public void doBreak() {
         breakFlag = true;
-        synchronized (contexts) {
-            ObjToIntMap.Iterator iter = contexts.newIterator();
-            for (iter.start(); !iter.done(); iter.next()) {
-                Context cx = (Context)iter.getKey();
-                ContextData.get(cx).breakNextLine = true;
-            }
-        }
     }
 
     public void setVisible(boolean b) {
