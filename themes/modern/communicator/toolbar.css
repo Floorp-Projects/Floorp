@@ -23,7 +23,7 @@ toolbargrippy:hover:active
 
 .collapsed-tray-holder
   {
-  	background-color	  : #394B6E; //#B0BFD4;
+  	background-color	  : #394B6E;
   	border-bottom		  : 1px solid #11151F;
 	border-top			  : 1px solid #A9B7D8;
   }
@@ -82,19 +82,20 @@ toolbar[collapsed="true"] > toolbargrippy
 .toolbar-primary-image-left
   {
     background		      : url("chrome://global/skin/navbar-bg-leftcap.png") no-repeat;
-    width				  : 41px;
+    width				  : 24px;
     max-height			  : 43px;
   }
 
 .toolbar-primary-image-middle
   {
     background            : url("chrome://global/skin/navbar-bg.png") repeat-x;
+    max-height			  : 43px;
   }
 
 .toolbar-primary-image-right
   {
   	background			  : url("chrome://global/skin/navbar-bg-rightcap.png") no-repeat;
-  	width				  : 25px;
+  	width				  : 24px;
   	max-height			  : 43px;
   }
 

@@ -50,13 +50,13 @@
     user-focus            : ignore;
   }
 
-.taskbar-image-left
+/*.taskbar-image-left
   {
 	background			  : url(chrome://global/skin/taskbar-bg-left.png) no-repeat;
-	width				  : 8px;
+	width				  : 12px;
 	height				  : 17px;
   }
-
+*/
 .taskbar-image-middle
   {
 	background			  : url(chrome://global/skin/taskbar-bg.png) repeat-x;
@@ -66,7 +66,7 @@
 .taskbar-image-right
   {
 	background			  : url(chrome://global/skin/taskbar-bg-right.png) no-repeat;
-	width				  : 8px;
+	width				  : 12px;
 	height				  : 17px;  
   }
 
@@ -106,7 +106,7 @@
 .taskbar-mb-image-right
   {
 	background			  : url(chrome://global/skin/taskbar-groove-right.png) no-repeat;
-	width				  : 6px;
+	width				  : 7px;
 	height				  : 17px;
   }
   
