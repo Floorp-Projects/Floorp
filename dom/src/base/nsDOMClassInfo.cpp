@@ -2960,27 +2960,23 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // Map window._content to window.content for backwards
       // compatibility, this should spit out an message on the JS
       // console.
-
-      nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(native));
-      NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
-
-      nsCOMPtr<nsIDOMWindow> content;
-      rv = window->GetContent(getter_AddRefs(content));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      jsval v;
-
-      rv = WrapNative(cx, obj, content, NS_GET_IID(nsIDOMWindow), &v);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                 ::JS_GetStringLength(str), v, nsnull,
-                                 nsnull, 0)) {
-        return NS_ERROR_FAILURE;
-      }
-
+      JSObject* getterObj;
+      rv = my_context->CompileFunction(obj,
+                                       nsCAutoString("_content"),
+                                       0,
+                                       nsnull,
+                                       NS_LITERAL_STRING("return this.content;"), 
+                                       "",
+                                       0,
+                                       PR_FALSE,
+                                       (void **) &getterObj);
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+      if (getterObj)
+        if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                   ::JS_GetStringLength(str), JSVAL_VOID, (JSPropertyOp)getterObj, nsnull,
+                                   JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED))
+          return NS_ERROR_FAILURE;
       *objp = obj;
-
       return NS_OK;
     }
 
