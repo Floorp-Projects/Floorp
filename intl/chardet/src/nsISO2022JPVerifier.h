@@ -60,7 +60,7 @@ PCK4BITS(2,2,2,2,2,2,2,2)   // f8 - ff
 
 
 static PRUint32 ISO2022JP_st [ 2] = {
-PCK4BITS(eStart,eError,eItsMe,eError,eError,eError,eItsMe,eItsMe),//00-07 
+PCK4BITS(eStart,eItsMe,eError,eError,eError,eError,eItsMe,eItsMe),//00-07 
 PCK4BITS(eItsMe,eStart,eStart,eStart,eStart,eStart,eStart,eStart) //08-0f 
 };
 
