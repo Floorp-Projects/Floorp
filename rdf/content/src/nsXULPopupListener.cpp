@@ -386,11 +386,11 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
 {
   nsresult rv = NS_OK;
 
-  nsAutoString type("popup");
+  nsAutoString type; type.AssignWithConversion("popup");
   if ( popupType == eXULPopupType_context )
-    type = "context";
+    type.AssignWithConversion("context");
   else if ( popupType == eXULPopupType_tooltip )
-    type = "tooltip";
+    type.AssignWithConversion("tooltip");
 
   nsAutoString identifier;
   mElement->GetAttribute(type, identifier);
@@ -437,11 +437,11 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
       if (domWindow != nsnull) {
         // Find out if we're anchored.
-        nsAutoString anchorAlignment("none");
-        mElement->GetAttribute("popupanchor", anchorAlignment);
+        nsAutoString anchorAlignment; anchorAlignment.AssignWithConversion("none");
+        mElement->GetAttribute(NS_ConvertASCIItoUCS2("popupanchor"), anchorAlignment);
 
-        nsAutoString popupAlignment("topleft");
-        mElement->GetAttribute("popupalign", popupAlignment);
+        nsAutoString popupAlignment; popupAlignment.AssignWithConversion("topleft");
+        mElement->GetAttribute(NS_ConvertASCIItoUCS2("popupalign"), popupAlignment);
 
         PRInt32 xPos = aClientX, yPos = aClientY;
         
@@ -484,8 +484,8 @@ XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
       if ( element ) {
         // check that node is enabled before showing tooltip
         nsAutoString disabledState;
-        element->GetAttribute ( "disabled", disabledState );
-        if ( !disabledState.Equals("true") ) {
+        element->GetAttribute ( NS_ConvertASCIItoUCS2("disabled"), disabledState );
+        if ( !disabledState.EqualsWithConversion("true") ) {
           doc->SetTooltipNode ( element );        
           self->LaunchPopup (self->mMouseClientX, self->mMouseClientY+16);
         } // if node enabled

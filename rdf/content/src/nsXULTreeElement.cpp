@@ -261,7 +261,7 @@ nsXULTreeElement::AddItemToSelectionInternal(nsIDOMXULElement* aTreeItem)
 
   // Without clearing the selection, perform the add.
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
-  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, nsAutoString("true"), PR_TRUE);
+  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -294,7 +294,7 @@ nsXULTreeElement::AddCellToSelectionInternal(nsIDOMXULElement* aTreeCell)
 {
   // Without clearing the selection, perform the add.
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeCell);
-  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, nsAutoString("true"), PR_TRUE);
+  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -327,13 +327,13 @@ nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
   mSelectedItems->GetLength(&length);
   
   nsAutoString multiple;
-  mOuter->GetAttribute("multiple", multiple);
+  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("multiple"), multiple);
 
   nsAutoString isSelected;
-  aTreeItem->GetAttribute("selected", isSelected);
-  if (isSelected.Equals("true"))
+  aTreeItem->GetAttribute(NS_ConvertASCIItoUCS2("selected"), isSelected);
+  if (isSelected.EqualsWithConversion("true"))
     RemoveItemFromSelectionInternal(aTreeItem);
-  else if (multiple.Equals("true") || length == 0)
+  else if (multiple.EqualsWithConversion("true") || length == 0)
     AddItemToSelectionInternal(aTreeItem);
   else 
     return NS_OK;
@@ -351,13 +351,13 @@ nsXULTreeElement::ToggleCellSelection(nsIDOMXULElement* aTreeCell)
   mSelectedCells->GetLength(&length);
   
   nsAutoString multiple;
-  mOuter->GetAttribute("multiple", multiple);
+  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("multiple"), multiple);
 
   nsAutoString isSelected;
-  aTreeCell->GetAttribute("selected", isSelected);
-  if (isSelected.Equals("true"))
+  aTreeCell->GetAttribute(NS_ConvertASCIItoUCS2("selected"), isSelected);
+  if (isSelected.EqualsWithConversion("true"))
     RemoveCellFromSelectionInternal(aTreeCell);
-  else if (multiple.Equals("true") || length == 0)
+  else if (multiple.EqualsWithConversion("true") || length == 0)
     AddCellToSelectionInternal(aTreeCell);
   else 
     return NS_OK;
@@ -374,9 +374,9 @@ NS_IMETHODIMP
 nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)
 {
   nsAutoString multiple;
-  mOuter->GetAttribute("multiple", multiple);
+  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("multiple"), multiple);
 
-  if (!multiple.Equals("true")) {
+  if (!multiple.EqualsWithConversion("true")) {
     // We're a single selection tree only. This
     // is not allowed.
     return NS_OK;
@@ -439,7 +439,7 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
     return result;
 
 	// Iterate and select
-	nsAutoString trueString("true", 4);
+	nsAutoString trueString; trueString.AssignWithConversion("true", 4);
 	nsCOMPtr<nsIContent> content;
 	nsCOMPtr<nsIAtom> tag;
 
@@ -534,7 +534,7 @@ nsXULTreeElement::FireOnSelectHandler()
   nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
   nsAutoString value;
   content->GetAttribute(kNameSpaceID_None, kSuppressSelectChange, value);
-  if (value.Equals("true"))
+  if (value.EqualsWithConversion("true"))
     return NS_OK;
 
   PRInt32 count = document->GetNumberOfShells();
@@ -755,7 +755,7 @@ nsXULTreeElement::IndexOfContent(nsIContent* aRoot,
       nsAutoString isOpen;
       rv = child->GetAttribute(kNameSpaceID_None, kOpenAtom, isOpen);
 
-      if (!isOpen.Equals("true"))
+      if (!isOpen.EqualsWithConversion("true"))
         parentIsOpen=PR_FALSE;
     }
 
@@ -793,7 +793,7 @@ nsXULTreeElement::SetCurrentItem(nsIDOMXULElement* aCurrentItem)
 {
   mCurrentItem = aCurrentItem;
   nsCOMPtr<nsIContent> current = do_QueryInterface(mCurrentItem);
-  current->SetAttribute(kNameSpaceID_None, kCurrentAtom, "true", PR_TRUE);
+  current->SetAttribute(kNameSpaceID_None, kCurrentAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
 }
 
 void
@@ -801,7 +801,7 @@ nsXULTreeElement::SetCurrentCell(nsIDOMXULElement* aCurrentCell)
 {
   mCurrentCell = aCurrentCell;
   nsCOMPtr<nsIContent> current = do_QueryInterface(mCurrentCell);
-  current->SetAttribute(kNameSpaceID_None, kCurrentAtom, "true", PR_TRUE);
+  current->SetAttribute(kNameSpaceID_None, kCurrentAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
 }
 
 

@@ -374,7 +374,7 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
         if (NS_FAILED(rv)) return;
 
 
-        rv = gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+        rv = gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
         if (NS_FAILED(rv)) return;
 
@@ -431,7 +431,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
                     }
                 else
                     {
-                        prefix = "<default>";
+                        prefix.AssignWithConversion("<default>");
                     }
 
                 char* prefixStr = prefix.ToNewCString();
@@ -810,7 +810,7 @@ XULContentSinkImpl::AddComment(const nsIParserNode& aNode)
     nsAutoString text;
     nsresult result = NS_OK;
 
-    text = aNode.GetText();
+    text.Assign( aNode.GetText() );
 
     // XXX add comment here...
 
@@ -940,7 +940,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     if (text.Find(kOverlayPI) == 0) {
         // Load a XUL overlay.
         nsAutoString href;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "href", href);
+        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
         if (NS_FAILED(rv)) return rv;
 
         // If there was an error or there's no href, we can't do
@@ -961,7 +961,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     // If it's a stylesheet PI...
     else if (text.Find(kStyleSheetPI) == 0) {
         nsAutoString href;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "href", href);
+        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
         if (NS_FAILED(rv)) return rv;
 
         // If there was an error or there's no href, we can't do
@@ -970,27 +970,27 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
             return NS_OK;
 
         nsAutoString type;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "type", type);
+        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString title;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "title", title);
+        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
         if (NS_FAILED(rv)) return rv;
 
         title.CompressWhitespace();
 
         nsAutoString media;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "media", media);
+        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
         if (NS_FAILED(rv)) return rv;
 
         media.ToLowerCase();
 
         nsAutoString alternate;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "alternate", alternate);
+        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
         if (NS_FAILED(rv)) return rv;
 
         rv = ProcessStyleLink(nsnull /* XXX need a node here */,
-                              href, alternate.Equals("yes"),  /* XXX ignore case? */
+                              href, alternate.EqualsWithConversion("yes"),  /* XXX ignore case? */
                               title, type, media);
 
         if (NS_FAILED(rv)) return rv;
@@ -1214,7 +1214,7 @@ nsresult
 XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode, nsString& aID)
 {
     for (PRInt32 i = aNode.GetAttributeCount(); i >= 0; --i) {
-        if (aNode.GetKeyAt(i).Equals("id")) {
+        if (aNode.GetKeyAt(i).EqualsWithConversion("id")) {
             aID = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(aID);
             return NS_OK;
@@ -1241,7 +1241,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
         generateIDAttr = PR_TRUE;
 
         for (PRInt32 i = 0; i < count; i++) {
-            if (aNode.GetKeyAt(i).Equals("id")) {
+            if (aNode.GetKeyAt(i).EqualsWithConversion("id")) {
                 generateIDAttr = PR_FALSE;
                 break;
             }
@@ -1266,8 +1266,8 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
     if (generateIDAttr) {
         // Deal with generating an ID attribute for stuff inside a XUL
         // template
-        nsAutoString id = "$";
-        id.Append(PRInt32(aElement), 16);
+        nsAutoString id; id.AssignWithConversion("$");
+        id.AppendInt(PRInt32(aElement), 16);
 
         attrs->mNameSpaceID = kNameSpaceID_None;
         attrs->mName        = kIdAtom;
@@ -1576,7 +1576,7 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
     for (PRInt32 i = 0; i < ac; i++) {
         const nsString& key = aNode.GetKeyAt(i);
         if (key.EqualsIgnoreCase("src")) {
-            src = aNode.GetValueAt(i);
+            src.Assign(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(src);
         }
         else if (key.EqualsIgnoreCase("type")) {

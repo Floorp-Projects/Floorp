@@ -553,7 +553,7 @@ nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
             const PRUnichar *unicodeString;
             prefix->GetUnicode(&unicodeString);
             aQualifiedName.Append(unicodeString);
-            aQualifiedName.Append(':');
+            aQualifiedName.AppendWithConversion(':');
             NS_RELEASE(prefix);
         }
     }

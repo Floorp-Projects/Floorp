@@ -1091,7 +1091,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
 
     // Nope. So go to the repository to try to create it.
     nsCOMPtr<nsIRDFDataSource> ds;
-	nsAutoString rdfName(aURI);
+	nsAutoString rdfName; rdfName.AssignWithConversion(aURI);
     static const char kRDFPrefix[] = "rdf:";
     PRInt32 pos = rdfName.Find(kRDFPrefix);
     if (pos == 0) {
@@ -1099,7 +1099,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
         nsAutoString dataSourceName;
         rdfName.Right(dataSourceName, rdfName.Length() - (pos + sizeof(kRDFPrefix) - 1));
 
-        nsAutoString progIDStr(NS_RDF_DATASOURCE_PROGID_PREFIX);
+        nsAutoString progIDStr; progIDStr.AssignWithConversion(NS_RDF_DATASOURCE_PROGID_PREFIX);
         progIDStr.Append(dataSourceName);
 
         // Safely convert it to a C-string for the XPCOM APIs

@@ -644,7 +644,7 @@ RDFContainerImpl::SetNextValue(PRInt32 aIndex)
     }
 
     nsAutoString s;
-    s.Append(aIndex, 10);
+    s.AppendInt(aIndex, 10);
 
     nsCOMPtr<nsIRDFLiteral> nextVal;
     if (NS_FAILED(rv = gRDFService->GetLiteral(s.GetUnicode(), getter_AddRefs(nextVal)))) {
@@ -704,7 +704,7 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
     nsCAutoString nextValStr(CBufDescriptor(buf, PR_TRUE, sizeof(buf), 0));
     nextValStr = kRDFNameSpaceURI;
     nextValStr.Append("_");
-    nextValStr.Append(nextVal, 10);
+    nextValStr.AppendInt(nextVal, 10);
 
     rv = gRDFService->GetResource((const char*) nextValStr, aResult);
     if (NS_FAILED(rv)) return rv;
@@ -715,7 +715,7 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
 
     ++nextVal;
     nextValStr.Truncate();
-    nextValStr.Append(nextVal, 10);
+    nextValStr.AppendInt(nextVal, 10);
 
     rv = gRDFService->GetLiteral(nsAutoString(nextValStr).GetUnicode(), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;

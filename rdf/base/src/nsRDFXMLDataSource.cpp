@@ -475,7 +475,7 @@ RDFXMLDataSourceImpl::Init()
     // should've defined the RDF namespace to be _something_, and we
     // should just look at _that_ and use it. Oh well.
     nsIAtom* rdfPrefix = NS_NewAtom("RDF");
-    AddNameSpace(rdfPrefix, RDF_NAMESPACE_URI);
+    AddNameSpace(rdfPrefix, NS_ConvertASCIItoUCS2(RDF_NAMESPACE_URI));
     NS_IF_RELEASE(rdfPrefix);
 
     if (gRefCnt++ == 0) {
@@ -903,8 +903,7 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
                                             getter_AddRefs(parser));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString utf8("UTF-8");
-    parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
+    parser->SetDocumentCharset(NS_ConvertASCIItoUCS2("UTF-8"), kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink);
 
     rv = parser->QueryInterface(NS_GET_IID(nsIStreamListener), getter_AddRefs(mParser));
@@ -1145,7 +1144,7 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
 {
     nsXPIDLCString s;
     resource->GetValue(getter_Copies(s));
-    nsAutoString uri((const char*) s);
+    nsAutoString uri; uri.AssignWithConversion(NS_STATIC_CAST(const char*, s));
 
     for (NameSpaceMap* entry = mNameSpaces; entry != nsnull; entry = entry->Next) {
         if (uri.Find(entry->URI) == 0) {
@@ -1188,8 +1187,8 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
 
     // Just generate a random prefix
     static PRInt32 gPrefixID = 0;
-    nameSpacePrefix = "NS";
-    nameSpacePrefix.Append(++gPrefixID, 10);
+    nameSpacePrefix.AssignWithConversion("NS");
+    nameSpacePrefix.AppendInt(++gPrefixID, 10);
     return PR_FALSE;
 }
 
@@ -1221,12 +1220,12 @@ rdf_EscapeAngleBrackets(nsString& s)
     PRInt32 i;
     while ((i = s.FindChar('<')) != -1) {
         s.SetCharAt('&', i);
-        s.Insert(nsAutoString("lt;"), i + 1);
+        s.Insert(NS_ConvertASCIItoUCS2("lt;"), i + 1);
     }
 
     while ((i = s.FindChar('>')) != -1) {
         s.SetCharAt('&', i);
-        s.Insert(nsAutoString("gt;"), i + 1);
+        s.Insert(NS_ConvertASCIItoUCS2("gt;"), i + 1);
     }
 }
 
@@ -1236,7 +1235,7 @@ rdf_EscapeAmpersands(nsString& s)
     PRInt32 i = 0;
     while ((i = s.FindChar('&', PR_FALSE,i)) != -1) {
         s.SetCharAt('&', i);
-        s.Insert(nsAutoString("amp;"), i + 1);
+        s.Insert(NS_ConvertASCIItoUCS2("amp;"), i + 1);
         i += 4;
     }
 }
@@ -1255,7 +1254,7 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
 
     if (nameSpacePrefix.Length()) {
         tag.Append(nameSpacePrefix);
-        tag.Append(':');
+        tag.AppendWithConversion(':');
     }
     tag.Append(property);
 
@@ -1279,8 +1278,8 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
 
         nsXPIDLCString docURI;
 
-        nsAutoString uri(s);
-        rdf_MakeRelativeRef(mURLSpec, uri);
+        nsAutoString uri; uri.AssignWithConversion(NS_STATIC_CAST(const char*, s));
+        rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
         rdf_EscapeAmpersands(uri);
 
 static const char kRDFResource1[] = " resource=\"";
@@ -1368,8 +1367,8 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     rv = aResource->GetValue(getter_Copies(s));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString uri(s);
-    rdf_MakeRelativeRef(mURLSpec, uri);
+    nsAutoString uri; uri.AssignWithConversion(s);
+    rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
     rdf_EscapeAmpersands(uri);
 
     rdf_BlockingWrite(aStream, kRDFDescription1, sizeof(kRDFDescription1) - 1);
@@ -1439,8 +1438,8 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
 static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
-            nsAutoString uri(s);
-            rdf_MakeRelativeRef(mURLSpec, uri);
+            nsAutoString uri; uri.AssignWithConversion(s);
+            rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
             rdf_EscapeAmpersands(uri);
 
             rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
@@ -1497,7 +1496,7 @@ static const char kRDFAlt[] = "RDF:Alt";
     }
 
     rdf_BlockingWrite(aStream, "  <", 3);
-    rdf_BlockingWrite(aStream, tag);
+    rdf_BlockingWrite(aStream, NS_ConvertASCIItoUCS2(tag));
 
 
     // Unfortunately, we always need to print out the identity of the
@@ -1507,8 +1506,8 @@ static const char kRDFAlt[] = "RDF:Alt";
 
     nsXPIDLCString s;
     if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
-        nsAutoString uri(s);
-        rdf_MakeRelativeRef(mURLSpec, uri);
+        nsAutoString uri; uri.AssignWithConversion(s);
+        rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
 
         rdf_EscapeAmpersands(uri);
 
@@ -1564,7 +1563,7 @@ static const char kRDFAlt[] = "RDF:Alt";
 
     // close the container tag
     rdf_BlockingWrite(aStream, "  </", 4);
-    rdf_BlockingWrite(aStream, tag);
+    rdf_BlockingWrite(aStream, NS_ConvertASCIItoUCS2(tag));
     rdf_BlockingWrite(aStream, ">\n", 2);
 
 
@@ -1639,7 +1638,7 @@ RDFXMLDataSourceImpl::SerializeEpilogue(nsIOutputStream* aStream)
 {
 static const char kCloseRDF[] = "</RDF:RDF>\n";
 
-    rdf_BlockingWrite(aStream, kCloseRDF);
+    rdf_BlockingWrite(aStream, NS_ConvertASCIItoUCS2(kCloseRDF));
     return NS_OK;
 }
 

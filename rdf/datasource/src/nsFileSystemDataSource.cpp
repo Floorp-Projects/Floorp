@@ -426,9 +426,8 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 	{
 		if (property == kNC_pulse)
 		{
-			nsAutoString	pulse("12");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), &pulseLiteral);
 			*target = pulseLiteral;
 			return NS_OK;
 		}
@@ -484,7 +483,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 			}
 #endif
 
-			nsAutoString	url(type);
+			nsAutoString	url; url.AssignWithConversion(type);
 			nsIRDFLiteral	*literal;
 			gRDFService->GetLiteral(url.GetUnicode(), &literal);
 			rv = literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
@@ -493,9 +492,8 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (property == kNC_pulse)
 		{
-			nsAutoString	pulse("12");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), &pulseLiteral);
 			rv = pulseLiteral->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 			NS_RELEASE(pulseLiteral);
 			return rv;
@@ -559,9 +557,8 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (property == kNC_pulse)
 		{
-			nsAutoString	pulse("12");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), &pulseLiteral);
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
 			NS_RELEASE(pulseLiteral);
 
@@ -613,7 +610,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 			rv = kNC_FileSystemObject->GetValue( getter_Copies(uri) );
 			if (NS_FAILED(rv)) return rv;
 
-			nsAutoString	url(uri);
+			nsAutoString	url; url.AssignWithConversion(uri);
 			nsIRDFLiteral	*literal;
 
 			rv = gRDFService->GetLiteral(url.GetUnicode(), &literal);
@@ -631,9 +628,8 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (property == kNC_pulse)
 		{
-			nsAutoString	pulse("12");
 			nsIRDFLiteral	*pulseLiteral;
-			rv = gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
+			rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), &pulseLiteral);
 			if (NS_FAILED(rv)) return rv;
 
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
@@ -1258,7 +1254,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	const char		*uri;
 	rv = source->GetValueConst(&uri);
 	if (NS_FAILED(rv)) return(rv);
-	nsAutoString		url(uri);
+	nsAutoString		url; url.AssignWithConversion(uri);
 
 	nsIRDFLiteral		*literal = nsnull;
 
