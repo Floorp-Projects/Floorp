@@ -34,9 +34,11 @@ public class FunctionObject extends NativeFunction {
      *
      * The first form is a member with zero or more parameters
      * of the following types: Object, String, boolean, Scriptable,
-     * byte, short, int, long, float, or double. If the member is
-     * a Method, the return value must be void or one of the types
-     * allowed for parameters.<p>
+     * byte, short, int, float, or double. The Long type is not supported
+     * because the double representation of a long (which is the 
+     * EMCA-mandated storage type for Numbers) may lose precision.
+     * If the member is a Method, the return value must be void or one 
+     * of the types allowed for parameters.<p>
      *
      * The runtime will perform appropriate conversions based
      * upon the type of the parameter. A parameter type of
@@ -168,7 +170,9 @@ public class FunctionObject extends NativeFunction {
                 } else if (type == Double.TYPE) {
                     hasConversions = true;
                     types[i] = ScriptRuntime.DoubleClass;
-                } else {
+                } 
+                // Note that long is not supported; see comments above
+                else {
                     Object[] errArgs = { methodName };
                     throw Context.reportRuntimeError(
                         Context.getMessage("msg.bad.parms", errArgs));
@@ -333,7 +337,7 @@ public class FunctionObject extends NativeFunction {
     }
 
     static public Object convertArg(Scriptable scope,
-                                        Object arg, Class desired)
+                                    Object arg, Class desired)
     {
         if (desired == ScriptRuntime.BooleanClass 
                                     || desired == Boolean.TYPE)
@@ -349,6 +353,8 @@ public class FunctionObject extends NativeFunction {
             return new Double(ScriptRuntime.toNumber(arg));
         else if (desired == ScriptRuntime.ScriptableClass)
             return ScriptRuntime.toObject(scope, arg);
+        // Note that the long type is not supported; see the javadoc for
+        // the constructor for this class
         else {
             Object[] errArgs = { desired.getName() };
             throw Context.reportRuntimeError(
