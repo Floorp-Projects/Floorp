@@ -2811,8 +2811,6 @@ nsresult nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCSt
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_FAILED(rv)) return rv;
-  rv = url->SetSpec(aURL);
-  if (NS_FAILED(rv)) return rv;
 
   rv = LoadStyleSheetWithURL(uri, aSheet);
   return rv;
