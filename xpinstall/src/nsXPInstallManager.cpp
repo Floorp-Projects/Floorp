@@ -52,6 +52,7 @@
 #include "nsProxyObjectManager.h"
 
 #include "nsIAppShellComponentImpl.h"
+#include "nsIPrompt.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -120,12 +121,32 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
     if ( !mTriggers || mTriggers->Size() == 0 )
         rv = NS_ERROR_INVALID_POINTER;
 
-    //
-    // XXX Need modal confirmation dialog here...
-    //
+    //-----------------------------------------------------
+    // confirm that install is OK... use stock Confirm()
+    // dialog for now, later we'll want a fancier one.
+    //-----------------------------------------------------
+    PRBool OKtoInstall = PR_FALSE;
+
+    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
+    if ( NS_SUCCEEDED( rv ) ) 
+    {
+        nsCOMPtr<nsIWebShellWindow> wbwin;
+        rv = appShell->GetHiddenWindow(getter_AddRefs(wbwin));
+        if ( NS_SUCCEEDED(rv) )
+        {
+            nsCOMPtr<nsIPrompt> prompt( do_QueryInterface(wbwin, &rv) );
+            if ( NS_SUCCEEDED(rv) && prompt )
+            {
+                nsString msg("Attempting to download and install software. "
+                             "Do you feel lucky, punk?");
+                prompt->Confirm( msg.GetUnicode(), &OKtoInstall);
+            }
+        }
+    }
+
 
     // --- create and open the progress dialog
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && OKtoInstall)
     {
         nsInstallProgressDialog* dlg;
         nsCOMPtr<nsISupports>    Idlg;
@@ -144,7 +165,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // --- start the first download (or clean up on error)
+    // --- clean up on error
     if (!NS_SUCCEEDED(rv))
         NS_RELEASE_THIS();
 
