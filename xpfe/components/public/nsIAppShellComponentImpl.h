@@ -169,7 +169,7 @@ className::Shutdown() { \
     nsresult rv = NS_OK; \
     if ( mServiceMgr ) { \
         if ( Is_Service() ) { \
-            rv = mServiceMgr->ReleaseService( progId, this ); \
+            rv = mServiceMgr->UnregisterService( progId ); \
         } \
         mServiceMgr->Release(); \
         mServiceMgr = 0; \
