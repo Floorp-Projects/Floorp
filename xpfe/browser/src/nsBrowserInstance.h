@@ -92,6 +92,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
     
     nsresult GetFocussedContentWindow(nsIDOMWindowInternal** outFocussedWindow);
     
+    void ReinitializeContentWindow();
     void ReinitializeContentVariables();
 
     nsresult InitializeSearch(nsIDOMWindowInternal* windowToSearch, nsIFindComponent *finder );
