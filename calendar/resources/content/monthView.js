@@ -215,7 +215,7 @@ MonthView.prototype.refreshEvents = function( )
    }
    
    // clear calendarEvent counts, we only display 3 events per day 
-   // so to count them by adding a property to the dayItem, which is zeroed here
+   // count them by adding a property to the dayItem, which is zeroed here
       
    for( var dayItemIndex = 0; dayItemIndex < this.dayBoxItemArray.length; ++dayItemIndex )
    {
