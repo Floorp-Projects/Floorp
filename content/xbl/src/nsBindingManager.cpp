@@ -450,6 +450,7 @@ protected:
   // A queue of binding attached event handlers that are awaiting
   // execution.
   nsCOMPtr<nsISupportsArray> mAttachedQueue;
+  PRBool mProcessingAttachedQueue;
 };
 
 // Implementation /////////////////////////////////////////////////////////////////
@@ -461,15 +462,13 @@ NS_IMPL_ISUPPORTS3(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier, ns
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
+: mProcessingAttachedQueue(PR_FALSE)
 {
-
   mBindingTable.ops = nsnull;
   mContentListTable.ops = nsnull;
   mAnonymousNodesTable.ops = nsnull;
   mInsertionParentTable.ops = nsnull;
   mWrapperTable.ops = nsnull;
-
-  mAttachedQueue = nsnull;
 }
 
 nsBindingManager::~nsBindingManager(void)
@@ -941,12 +940,13 @@ nsBindingManager::ClearAttachedQueue()
 NS_IMETHODIMP
 nsBindingManager::ProcessAttachedQueue()
 {
-  if (!mAttachedQueue)
+  if (!mAttachedQueue || mProcessingAttachedQueue)
     return NS_OK;
 
+  mProcessingAttachedQueue = PR_TRUE;
+
   PRUint32 count;
-  mAttachedQueue->Count(&count);
-  for (PRUint32 i = 0; i < count; i++) {
+  while (NS_SUCCEEDED(mAttachedQueue->Count(&count)) && count) {
     nsCOMPtr<nsISupports> supp;
     mAttachedQueue->GetElementAt(0, getter_AddRefs(supp));
     mAttachedQueue->RemoveElementAt(0);
@@ -956,6 +956,7 @@ nsBindingManager::ProcessAttachedQueue()
       binding->ExecuteAttachedHandler();
   }
 
+  mProcessingAttachedQueue = PR_FALSE;
   ClearAttachedQueue();
   return NS_OK;
 }
