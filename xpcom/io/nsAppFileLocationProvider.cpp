@@ -72,7 +72,7 @@ static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
 #define DEFAULTS_PROFILE_DIR_NAME   "Profile"
 #define RES_DIR_NAME                "Res"
 #define CHROME_DIR_NAME             "Chrome"
-#define PLUGINS_DIR_NAME            "Plugins"
+#define PLUGINS_DIR_NAME            "Plug-ins"
 #define SEARCH_DIR_NAME             "Search Plugins" 
 #else
 #define DEFAULTS_DIR_NAME           "defaults"
