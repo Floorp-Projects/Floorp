@@ -408,3 +408,14 @@ NS_IMETHODIMP nsImapFlagAndUidState::GetCustomFlags(PRUint32 uid, char **customF
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapFlagAndUidState::ClearCustomFlags(PRUint32 uid)
+{
+  nsAutoCMonitor(this);
+  if (m_customFlagsHash)
+  {
+    nsPRUint32Key hashKey(uid);
+    m_customFlagsHash->Remove(&hashKey);
+  }
+  return NS_OK;
+}
+

@@ -1526,6 +1526,13 @@ void nsImapServerResponseParser::flags()
 {
   imapMessageFlagsType messageFlags = kNoImapMsgFlag;
   fCustomFlags.Clear();
+
+  // clear the custom flags for this message
+  // otherwise the old custom flags will stay around
+  // see bug #191042
+  if (fFlagState && CurrentResponseUID() != nsMsgKey_None)
+    fFlagState->ClearCustomFlags(CurrentResponseUID());
+
   // eat the opening '('
   fNextToken++;
   while (ContinueParse() && (*fNextToken != ')'))

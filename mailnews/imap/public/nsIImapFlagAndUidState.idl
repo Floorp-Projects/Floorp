@@ -50,5 +50,6 @@ interface nsIImapFlagAndUidState : nsISupports
   string getCustomFlags(in unsigned long uid); // returns space-separated keywords
   void Reset(in unsigned long howManyLeft);
   void SetSupportedUserFlags(in unsigned short flags);
+  void clearCustomFlags(in unsigned long uid);
 };
 
