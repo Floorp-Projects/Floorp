@@ -4,15 +4,21 @@
 <?xul-overlay href="chrome://global/content/wizardOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/createProfileWizard.dtd">
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % profileDTD SYSTEM "chrome://communicator/locale/profile/createProfileWizard.dtd">
+%profileDTD;
+]>
+
 
 <window title="&newprofile.title;" align="vertical"
-  class="color-dialog"
-	xmlns:html="http://www.w3.org/TR/REC-html40"
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onclose="onCancel();"
-	onload="Startup('newProfile1_1','content');">
+        class="color-dialog"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onclose="onCancel();"
+        onload="Startup('newProfile1_1','content');">
 
 	<script language="javascript" src="chrome://global/content/strres.js"></script>
 	<script language="javascript" src="chrome://communicator/content/profile/createProfileWizard.js"></script>

@@ -31,13 +31,19 @@
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/profileSelection.dtd" >
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % profileDTD SYSTEM "chrome://communicator/locale/profile/profileSelection.dtd">
+%profileDTD;
+]>
+
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   width="475" height="335"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-	class="color-dialog profile"
-	title="&windowtitle.label;"
+  class="color-dialog profile"
+  title="&windowtitle.label;"
   align="vertical"
   onclose="onExit();"
   onload="StartUp();"> 
