@@ -1038,13 +1038,15 @@
 		3F2CF8CB042A88B7005FD42F = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = ImageAndTextCell.h;
+			name = ImageAndTextCell.h;
+			path = src/extensions/ImageAndTextCell.h;
 			refType = 2;
 		};
 		3F2CF8CC042A88B7005FD42F = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = ImageAndTextCell.m;
+			name = ImageAndTextCell.m;
+			path = src/extensions/ImageAndTextCell.m;
 			refType = 2;
 		};
 		3F2CF8CD042A88B7005FD42F = {
