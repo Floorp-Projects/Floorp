@@ -515,7 +515,7 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 
 void CWizardUI::CreateControls() 
 {
-	int rv;
+	int rv = TRUE;
 
 	m_pFont = new CFont; 
 	m_pFont->CreateFont(8, 0, 0, 0, FW_NORMAL,
@@ -605,7 +605,8 @@ void CWizardUI::CreateControls()
 			//int newLineIndex = theVal.ReverseFind('\n');
 			//if (newLineIndex > -1)
 				//theVal.SetAt(newLineIndex, '\0');
-
+//			if (rv)
+//			AfxMessageBox(theVal+curWidget->group,MB_OK);
 			theVal.TrimRight();
 
 
@@ -707,7 +708,7 @@ void CWizardUI::CreateControls()
 		if (!rv)
 		{
 			CWnd myWnd;
-			myWnd.MessageBox("Create failed on a widget.", "Error", MB_OK);
+			myWnd.MessageBox("Create failed on a widget.", widgetType, MB_OK);
 		}
 		else
 
