@@ -121,6 +121,19 @@ function (index)
   return this.get_panel_from_header_node(this.node.childNodes.item(index));
 }
 
+sbPanelList.prototype.find_first =
+function (panels)
+{
+  debug("pick_default_panel: length=" + this.node.childNodes.length);
+  for (var ii = 2; ii < this.node.childNodes.length; ii += 2) {
+    var panel = this.get_panel_from_header_index(ii);
+    if (!panel.is_excluded()) {
+      return panel;
+    }
+  }
+  return null;
+}
+
 sbPanelList.prototype.find_last =
 function (panels)
 {
@@ -787,6 +800,40 @@ function SidebarGetLastSelectedPanel()
 {
   return (sidebarObj.panels && 
           sidebarObj.panels.node.getAttribute('last-selected-panel'));
+}
+
+function SidebarGetRelativePanel(direction)
+{
+  // direction == 1 to view next panel, -1 to view prev panel
+
+  if (sidebar_is_hidden())
+    SidebarShowHide();
+  if (sidebar_is_collapsed())
+    SidebarExpandCollapse();
+
+  var currentPanel = sidebarObj.panels.get_panel_from_id(SidebarGetLastSelectedPanel());
+  if (!currentPanel) {
+    sidebarObj.panels.select_default_panel();
+    return;
+  }
+
+  var newPanel = currentPanel;
+
+  do {
+    var newPanelIndex = newPanel.index + (direction * 2);
+    if (newPanelIndex < 2 || newPanelIndex >= sidebarObj.panels.node.childNodes.length)
+      newPanel = (direction == 1)? sidebarObj.panels.find_first(): sidebarObj.panels.find_last();
+    else 
+      newPanel = sidebarObj.panels.get_panel_from_header_index(newPanelIndex);
+
+    if (!newPanel)
+      break;
+
+    if (!newPanel.is_excluded()) {
+      SidebarSelectPanel(newPanel.header, true, true);  // found a panel that's not excluded to select -- do it
+      break;
+    }
+  } while (newPanel != currentPanel);  // keep looking for a panel, but don't loop infinitely
 }
 
 function SidebarStopPanelLoad(header) {
