@@ -22,6 +22,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+include $(topsrcdir)/config/config.mk
+
 MODULE=mailnews
 LIBRARY_NAME=msgnews
 IS_COMPONENT=1
@@ -36,25 +38,35 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libnntp.a	\
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL)	\
-		$(SHARED_LIBRARY_LIBS)	\
-		$(MKSHLIB_UNFORCE_ALL)	\
-		-lmozjs			\
-		-ljsdom			\
-		-lxp			\
-		-lraptorbase		\
-		-lxpcom			\
-		-lreg			\
-		-lmsgbaseutil		\
-		$(NSPR_LIBS)		\
-		-L$(DIST)/bin		\
-		-L$(DIST)/lib		\
-		$(NULL)
-
-$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
-
-include $(topsrcdir)/config/config.mk
+ifeq ($(OS_ARCH),HP-UX)
+EXTRA_DSO_LDOPTS = -c objs/objslist
+else
+EXTRA_DSO_LDOPTS =	       \
+	$(MKSHLIB_FORCE_ALL)   \
+	$(SHARED_LIBRARY_LIBS) \
+	$(MKSHLIB_UNFORCE_ALL) \
+	-L$(DIST)/bin		\
+	-lmozjs			\
+	-ljsdom			\
+	-lxp			\
+	-lraptorbase		\
+	-lxpcom			\
+	-lreg			\
+	-lmsgbaseutil		\
+	$(NSPR_LIBS)		\
+	$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),HP-UX)
+shared_library_objs: $(SHARED_LIBRARY_LIBS)
+	rm -rf objs
+	mkdir objs
+	(cd objs; for lib in $(SHARED_LIBRARY_LIBS); do ar xv ../$$lib; done) \
+	 | awk '{ print "objs/"$$3 }' > objs/objslist
+
+$(LIBRARY) $(SHARED_LIBRARY): shared_library_objs Makefile
+else
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+endif
