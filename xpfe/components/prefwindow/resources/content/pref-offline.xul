@@ -1,26 +1,31 @@
 <?xml version="1.0"?> 
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY title.label "Offline">
-<!ENTITY header "Offline">
-<!ENTITY header1 "Startup State">
-<!ENTITY descipt1 "Communicator can start in either online or offline modes. When online you have full 
-access to your network.  When offline you can only read messages that you have previously downloaded.">
-<!ENTITY prevRadio.label "Remember Previous State">
-<!ENTITY communRemember "Communticator will remember the state it was in last and start in that mode.">
-<!ENTITY askOfflineRadio.label "Ask Me">
-<!ENTITY offlineStartAskEach "Communicator will ask you each time you start the program.">
-<!ENTITY heaeder2 "When Going Online">
-<!ENTITY unsentAskRadio.label "Ask me if I want to send my unsent messages">
-<!ENTITY unsentAutoRadio.label "Automatically send my unsent messages">
-<!ENTITY unsentDoNotRadio.label "Do not send my unsent messages">
-<!ENTITY header3 "When Exiting Communicator">
-<!ENTITY promptSynchCheck.label "Prompt me to synchronize my messages">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-offline.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('offline');"  title="&title.label;">

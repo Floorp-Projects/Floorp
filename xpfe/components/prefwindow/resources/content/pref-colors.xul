@@ -1,24 +1,28 @@
 <?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY  window.title "Colors">
-<!ENTITY  lHeader "Colors">
-<!ENTITY  rHeader "Change the colors in your display">
-<!ENTITY  color "Colors">
-<!ENTITY  text "Text:">
-<!ENTITY  colorPick "Color Picker">
-<!ENTITY  background "Background:">
-<!ENTITY  useWinColorsCheck.label "Use Windows colors">
-<!ENTITY  underLinksCheck.label "Underline links">
-<!ENTITY  links "Links">
-<!ENTITY  unvisit "Unvisited Links:">
-<!ENTITY  visit "Visited Links:">
-<!ENTITY  someProvColors "Sometimes a document will provide its own colors and background.">
-<!ENTITY  alwaysOverCheck.label "Always use my colors, overriding document">
-]> 
-
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-colors.dtd" >
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="StartUp('Colors')"  title="&window.title;" align="vertical">

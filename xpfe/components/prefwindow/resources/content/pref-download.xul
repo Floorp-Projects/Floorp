@@ -1,37 +1,80 @@
 <?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window [
-<!ENTITY  title.label "Download">
-<!ENTITY  download "Download">
-<!ENTITY  downOnlyCheck "Download only unread messages">
-<!ENTITY  downDateCheck "Download by date">
-<!ENTITY  newmes "Newsgroup Messages">
-<!ENTITY  downUnread "Download only unread messages">
-<!ENTITY  downloadDate "Download by date">
-<!ENTITY  fromRadio.label "from">
-<!ENTITY  one.select "1 week ago">
-<!ENTITY  two.select "2 weeks ago">
-<!ENTITY  oneM.select "1 month ago">
-<!ENTITY  sixM.select "6 months ago">
-<!ENTITY  oneY.select "1 year ago">
-<!ENTITY  sinceRadio.label "since">
-<!ENTITY  daysAgo "days ago">
-<!ENTITY  Allmsg "All Messages">
-<!ENTITY  offlineMsgs "In order to read mail and newsgroup messages offline, you must
-          first select them for downloading.  Use the Select... button to 
-		      select items for dowloading.">
-<!ENTITY  select "Select...">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-download.dtd" >
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Download');"  title="&title.label;">
+        onload="return StartUp('Download');" align="vertical" title="&title.label;">
 
-<html:script language="JavaScript" src="PrefsWindow.js"/>
+<html:script language="JavaScript" src="chrome://pref/content/PrefsWindow.js"/>
+
+	<box id="header" style="width:100%" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/>
+		  <html:div>&rHeader;</html:div><spring style="width:5px"/>
+	</box>
+	
+	<box align="vertical" flex="100%" style="width: 100%;">
+<!--		<html:fieldset style="width: 100%;">
+					<html:legend align="left"> 
+			<html:div>&newmes;</html:div> 
+					</html:legend>
+	<html:div>
+		<html:input type="checkbox" id="pref:0:bool:offline.news.download.unread_only" />
+		<html:label for="pref:0:bool:offline.news.download.unread_only" accesskey="" tabindex="0">
+		&downOnlyCheck;			
+		</html:label>
+	</html:div>
+	<html:div>
+		<html:input type="checkbox" id="pref:0:bool:offline.news.download.by_date" />
+		<html:label for="pref:0:bool:offline.news.download.by_date" accesskey="" tabindex="0">			
+		&downDateCheck;
+		</html:label>
+	</html:div>
+	<html:div>
+		<html:input  type="radio" name="offline" id="pref:0:int:offline.news.download.use_days" val="checked" />
+		<html:label for="pref:0:int:offline.news.download.use_days" accesskey="" tabindex="0">			
+		&fromRadio.label;
+		</html:label>
+	</html:div>
+	<html:div>
+		<html:input  type="radio" name="offline" id="pref:0:int:offline.news.download.use_days" val="checked" />
+		<html:label for="pref:0:int:offline.news.download.use_days" accesskey="" tabindex="0">			
+		&fromRadio.label;
+		</html:label>
+	</html:div>  
+  </html:fieldset> -->
+  </box>  
+
+<!--
 <html:div flex="100%">
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&download;</html:SPAN>
@@ -39,11 +82,16 @@
 
 &newmes;
 <html:table>
-	<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:offline.news.download.unread_only" />&downOnlyCheck;</html:label></html:td></html:tr>
-	<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:offline.news.download.by_date" />&downDateCheck;</html:label></html:td></html:tr>
+	<html:tr><html:td><html:label>
+	<html:input type="checkbox" id="pref:0:bool:offline.news.download.unread_only" />
+	&downOnlyCheck;</html:label></html:td></html:tr>
+	<html:tr><html:td><html:label>
+	<html:input type="checkbox" id="pref:0:bool:offline.news.download.by_date" />
+	&downDateCheck;</html:label></html:td></html:tr>
 	<html:tr><html:td>
 	    <html:label>
-		<html:input  type="radio" name="offline" id="pref:0:int:offline.news.download.use_days" val="checked" />&fromRadio.label;
+		<html:input  type="radio" name="offline" id="pref:0:int:offline.news.download.use_days" val="checked" />
+		&fromRadio.label;
 		<html:select  id="pref:0:">
 						   <html:OPTION />&one.select;
 		                   <html:OPTION />&two.select;
@@ -64,6 +112,8 @@
 	<html:tr><html:td>&offlineMsgs;</html:td></html:tr>
 	<html:tr><html:td><html:input  type="button" value="&select;" id="pref:2:offline" /></html:td></html:tr>
 </html:table>
+
+-->
 
 </html:div>
 </xul:window>

@@ -1,34 +1,31 @@
 <?xml version="1.0"?> 
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window [
-<!ENTITY  title.label "Navigator">
-<!ENTITY  header1.label "Navigator">
-<!ENTITY  navRadio "Navigator starts with">
-<!ENTITY  blankRadio "Blank page">
-<!ENTITY  header2.label "Home page">
-<!ENTITY  lastPageRadio "Last page visited">
-<!ENTITY  homepageRadio "Homepage">
-<!ENTITY  clickRadio "Clicking the Home button will take you to this page.">
-<!ENTITY  location "Location:">
-<!ENTITY  useCurrent "Use Current Page">
-<!ENTITY  browseFile "Select File...">
-
-<!ENTITY  header3.label "History">
-<!ENTITY  historyPages "History is a list of the pages you have previously visited.">
-<!ENTITY  histDay "9">
-<!ENTITY  daysRadio "days">
-<!ENTITY  homepageRadio "Homepage">
-<!ENTITY  pagesHis "Pages in history expire after:">
-<!ENTITY  clearRadio "Clear the list of sites on the location bar: ">
-<!ENTITY  clearHis "clear history">
-<!ENTITY  header4.label "Location Bar History">
-<!ENTITY  clearBar "Clear the list of sites on the location bar:">
-<!ENTITY  clearLoc "Clear Location Bar">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-navigator.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('Navigator');"  title="&title.label;">

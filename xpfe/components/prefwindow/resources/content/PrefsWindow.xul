@@ -1,18 +1,31 @@
 <?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 
-<!DOCTYPE window
-[
-<!ENTITY categoryHeader "Category">
-<!ENTITY window.title "Preferences">
-<!ENTITY helpButton.label "Help">
-<!ENTITY cancelButton.label "Cancel">
-<!ENTITY okButton.label "OK">
-]> 
-
+<!DOCTYPE window SYSTEM "chrome://pref/locale/PrefsWindow.dtd" >
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="StartUp('Top')"  title="&window.title;">
@@ -23,7 +36,7 @@
 <html:br />
 <html:iframe name="preftree" id="preftree" src="preftree.xul" scrolling="auto" resize="yes" width="72%" height="326"/>
 <html:iframe name="pref-appearance" id="pref-appearance"
-	src="pref-appearance.xul" width="72%" height="326" resize="yes" scrolling="no"/>
+	src="pref-appearance.xul" width="72%" height="326" resize="yes" scrolling="auto"/>
 <html:table border="0" width="100%" cellpadding="0" cellspacing="0">
 	<html:tr>
 		<html:td valign="right" width="200">
