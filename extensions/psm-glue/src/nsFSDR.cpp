@@ -371,17 +371,17 @@ Wallet_RandomName(char* suffix)
 }
 
 void
-Wallet_Put(nsOutputFileStream strm, PRUnichar c) {
+Wallet_Put(nsOutputFileStream& strm, PRUnichar c) {
     strm.put((char)c);
 }
 
 PRUnichar
-Wallet_Get(nsInputFileStream strm) {
+Wallet_Get(nsInputFileStream& strm) {
   return (strm.get() & 0xFF);
 }
 
 PRInt32
-wallet_GetLine(nsInputFileStream strm, nsAutoString& line) {
+wallet_GetLine(nsInputFileStream& strm, nsAutoString& line) {
 
   /* read the line */
   line.SetLength(0);
@@ -406,7 +406,7 @@ wallet_GetLine(nsInputFileStream strm, nsAutoString& line) {
 }
 
 void
-wallet_PutLine(nsOutputFileStream strm, const nsAutoString& line)
+wallet_PutLine(nsOutputFileStream& strm, const nsAutoString& line)
 {
   for (PRUint32 i=0; i<line.Length(); i++) {
     Wallet_Put(strm, line.CharAt(i));
