@@ -1348,7 +1348,7 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
             
             if (gs->images_decoded == 0)
             {
-                //gs->progressive_display = ic->img_cx->progressive_display;
+                gs->progressive_display = PR_TRUE;
             } else {
 
                 /* Overlaying interlaced, transparent GIFs over
@@ -1359,6 +1359,7 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
                    images progressively */
                 //gs->progressive_display = ic->img_cx->progressive_display &&
                 //    !(gs->interlaced && gs->is_transparent);
+                gs->progressive_display = PR_FALSE;
             }
 
             /* Clear state from last image */
