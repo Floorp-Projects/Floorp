@@ -134,6 +134,8 @@ bin/components/xpinstall.xpt
 bin/components/oji.xpt
 bin/components/pref.xpt
 bin/components/proxyObjInst.xpt
+bin/components/psmglue.so
+bin/components/psmglue.xpt
 bin/components/rdf.xpt
 bin/components/related.xpt
 bin/components/sidebar.xpt
