@@ -604,7 +604,7 @@ nsresult nsInternetConfigService::GetICKeyPascalString(PRUint32 inIndex, const u
     case eICString_FTPProxyUser:       outICKey = kICFTPProxyUser;       break;
     case eICString_FTPProxyAccount:    outICKey = kICFTPProxyAccount;    break;
     case eICString_FTPProxyHost:       outICKey = kICFTPProxyHost;       break;
-    case eICString_FTPProxyPassword:   outICKey = kICWWWHomePage;        break;
+    case eICString_FTPProxyPassword:   outICKey = kICFTPProxyPassword;   break;
     case eICString_HTTPProxyHost:      outICKey = kICHTTPProxyHost;      break;
     case eICString_LDAPSearchbase:     outICKey = kICLDAPSearchbase;     break;
     case eICString_LDAPServer:         outICKey = kICLDAPServer;         break;
