@@ -8,9 +8,9 @@ The idea is to simplify the build steps to...
 
 Where the 'webconfig' target loads config.cgi in a web browser via
 "netscape -remote". The cgi presents a form of build options. The user
-submits it and gets a shell script, myconfig.sh, as a result. That shell
+submits it and gets a shell script, mozconfig, as a result. That shell
 script defines all the options that the user selected. The user then
-saves the script as $HOME/.mozmyconfig.sh. client.mk and configure, both
+saves the script as $HOME/.mozconfig. client.mk and configure, both
 use that file to configure the build.
 
 While this tool could be adapted to any configure'd project, it is
@@ -20,29 +20,29 @@ currently designed to only handle the mozilla build system.
  Files
 =======
 
-   ./config.cgi - cgi form for configure options. Produces myconfig.sh.
+   ./config.cgi - cgi form for configure options. Produces mozconfig.
    ./webify-configure.m4 - Parses configure.in and prints a list of options.
 
 -------------
 Related files
 -------------
 
-   $HOME/.mozmyconfig.sh - Script that defines build options.
+   $HOME/.mozconfig - Script that defines build options.
        Here is a sample script,
           #! sh
           mk_add_options MOZ_OBJDIR=@TOPSRCDIR@
           ac_add_options --enable-debug --with-pthreads --enable-editor
           ac_add_options --with-nspr=/tools/contrib/nsprpub
 
-   $TOPSRCDIR/myconfig.sh - Alternate location for the script.
+   $TOPSRCDIR/mozconfig - Alternate location for the script.
 
-   mozilla/client.mk - Read myconfig.sh by converting it to .client-defs.mk
-     (generates mozilla/.client-defs.mk via myconfig2defs.sh)
+   mozilla/client.mk - Read mozconfig by converting it to .client-defs.mk
+     (generates mozilla/.client-defs.mk via mozconfig2defs.sh)
    mozilla/configure.in - Uses macros in altoptions.m4 to define options.
    mozilla/build/autoconf/altoptions.m4 - Set of option macros.
-   mozilla/build/autoconf/load-myconfig.sh - Used by configure to push
-     myconfig.sh options onto the command line.
-   mozilla/build/autoconf/myconfig2defs.sh - Convert myconfig.sh to
+   mozilla/build/autoconf/load-mozconfig.sh - Used by configure to push
+     mozconfig options onto the command line.
+   mozilla/build/autoconf/mozconfig2defs.sh - Convert mozconfig to
      a makefile format.
 
 
