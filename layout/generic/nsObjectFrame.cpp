@@ -507,7 +507,11 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
 
         GetOffsetFromView(origin, parentWithView);
 
+#if 0
         parentWithView->GetScrollOffset(&offx, &offy);
+#else
+        offx = offy = 0;
+#endif
 
 //        window->x = NSTwipsToIntPixels(origin.x, t2p);
 //        window->y = NSTwipsToIntPixels(origin.y, t2p);

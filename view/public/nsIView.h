@@ -387,13 +387,6 @@ public:
   NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget) = 0;
 
   /**
-   * Get the visible offset of scrollable view (if any) that contains this view
-   * @param aDx out parameter for x offset
-   * @param aDy out parameter for y offset
-   */
-  NS_IMETHOD  GetScrollOffset(nscoord *aDx, nscoord *aDy) = 0;
-
-  /**
    * Gets the dirty region associated with this view. Used by the view
    * manager.
    */

@@ -236,22 +236,6 @@ NS_IMETHODIMP nsViewManager :: SetWindowDimensions(nscoord width, nscoord height
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: GetWindowOffsets(nsIView *aView, nscoord *xoffset, nscoord *yoffset) const
-{
-  if (nsnull != mRootView)
-  {
-    nsIScrollableView *scroller;
-
-    if (NS_OK == aView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
-      scroller->GetVisibleOffset(xoffset, yoffset);
-    else
-      *xoffset = *yoffset = 0;
-  }
-  else
-    *xoffset = *yoffset = 0;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsViewManager :: ResetScrolling(void)
 {
   if (nsnull != mRootView)
@@ -274,7 +258,6 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 {
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
-  nscoord             xoff, yoff;
   float               scale;
 
   if (PR_FALSE == mRefreshEnabled)
@@ -316,12 +299,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
   mContext->GetAppUnitsToDevUnits(scale);
 
-  GetWindowOffsets(aView, &xoff, &yoff);
-
-  region->Offset(NSTwipsToIntPixels(-xoff, scale), NSTwipsToIntPixels(-yoff, scale));
-//  localcx->SetClipRegion(*region, nsClipCombine_kIntersect);
   localcx->SetClipRegion(*region, nsClipCombine_kReplace);
-  region->Offset(NSTwipsToIntPixels(xoff, scale), NSTwipsToIntPixels(yoff, scale));
 
   nsRect  trect;
   float   p2t;
@@ -361,7 +339,6 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 {
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
-  nscoord             xoff, yoff;
 
   if (PR_FALSE == mRefreshEnabled)
     return;
@@ -402,11 +379,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
     localcx->SelectOffScreenDrawingSurface(ds);
   }
 
-  GetWindowOffsets(aView, &xoff, &yoff);
-
   nsRect trect = *rect;
 
-  trect.MoveBy(-xoff, -yoff);
   localcx->SetClipRect(trect, nsClipCombine_kReplace);
 
   PRBool  result;
@@ -548,13 +522,6 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
     while ((nsnull != par) && (par != widgetView));
   }
 
-  nscoord xoffset, yoffset;
-  GetWindowOffsets(widgetView, &xoffset, &yoffset);
-  trect.MoveBy(-xoffset, -yoffset);
-  if (trect.y < 0) {
-    trect.y = 0;
-  }
-
   // Add this rect to the widgetView's dirty region.
   AddRectToDirtyRegion(widgetView, trect);
 
@@ -647,10 +614,6 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
         float   p2t;
         mContext->GetDevUnitsToAppUnits(p2t);
         trect.ScaleRoundOut(p2t);
-
-        nscoord xoffset, yoffset;
-        GetWindowOffsets(view, &xoffset, &yoffset);
-        trect.MoveBy(xoffset, yoffset);
 
         // Add the rect to the existing dirty region
         AddRectToDirtyRegion(view, trect);

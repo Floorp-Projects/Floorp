@@ -651,15 +651,11 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
     for (PRInt32 cnt = 0; cnt < numkids; cnt++)
     {
       nsIView *pKid;
-      nscoord lx, ly;
 
       GetChild(cnt, pKid);
       pKid->GetBounds(trect);
 
-      lx = x - trect.x;
-      ly = y - trect.y;
-
-      if (trect.Contains(lx, ly))
+      if (trect.Contains(x, y))
       {
         //the x, y position of the event in question
         //is inside this child view, so give it the
@@ -686,18 +682,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 
     if (NS_OK == mViewManager->GetViewObserver(obs))
     {
-      nscoord xoff, yoff;
-
-      GetScrollOffset(&xoff, &yoff);
-
-      event->point.x += xoff;
-      event->point.y += yoff;
-
       obs->HandleEvent((nsIView *)this, event, aStatus);
-
-      event->point.x -= xoff;
-      event->point.y -= yoff;
-
       NS_RELEASE(obs);
     }
   }
@@ -712,22 +697,19 @@ NS_IMETHODIMP nsView :: SetPosition(nscoord x, nscoord y)
   if (nsnull != mWindow)
   {
     nsIDeviceContext  *dx;
-    nscoord           offx, offy, parx = 0, pary = 0;
     float             scale;
     nsIWidget         *pwidget = nsnull;
+    nscoord           parx = 0, pary = 0;
   
     mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(scale);
-
-    GetScrollOffset(&offx, &offy);
+    NS_RELEASE(dx);
 
     GetOffsetFromWidget(&parx, &pary, pwidget);
     NS_IF_RELEASE(pwidget);
     
-    mWindow->Move(NSTwipsToIntPixels((x + parx - offx), scale),
-                  NSTwipsToIntPixels((y + pary - offy), scale));
-
-    NS_RELEASE(dx);
+    mWindow->Move(NSTwipsToIntPixels((x + parx), scale),
+                  NSTwipsToIntPixels((y + pary), scale));
   }
 
   return NS_OK;
@@ -760,7 +742,13 @@ NS_IMETHODIMP nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
 
     static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
 
-    if (NS_OK == mParent->QueryInterface(kscroller, (void **)&scroller))
+    // XXX The scrolled view is a child of the clip view which is a child of
+    // the scrolling view. It's kind of yucky the way this works. A parent
+    // notification that the child's size changed would be cleaner.
+    nsIView *grandParent;
+    mParent->GetParent(grandParent);
+    if ((nsnull != grandParent) &&
+        (NS_OK == grandParent->QueryInterface(kscroller, (void **)&scroller)))
     {
       scroller->ComputeContainerSize();
     }
@@ -1051,18 +1039,11 @@ NS_IMETHODIMP nsView :: GetClientData(void *&aData)
 //
 nsresult nsView :: LoadWidget(const nsCID &aClassIID)
 {
-  nsISupports*  window;
-  nsresult      rv;
+  nsresult rv;
 
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  rv = nsRepository::CreateInstance(aClassIID, nsnull, kISupportsIID, (void**)&window);
-
+  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+  rv = nsRepository::CreateInstance(aClassIID, nsnull, kIWidgetIID, (void**)&mWindow);
   if (NS_OK == rv) {
-    // get a pointer to the nsIWidget* interface
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-    rv = window->QueryInterface(kIWidgetIID, (void**)&mWindow);
-    window->Release();
-
     // Set the widget's client data
     mWindow->SetClientData((void*)this);
   }
@@ -1125,31 +1106,6 @@ NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidge
   }
 
   aWidget = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView :: GetScrollOffset(nscoord *aDx, nscoord *aDy)
-{
-  nsIWidget *window = nsnull;
-  nsIView   *ancestor;
-   
-  GetParent(ancestor);
-  while (nsnull != ancestor)
-  {
-    nsIScrollableView *sview;
-
-    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
-
-    if (NS_OK == ancestor->QueryInterface(kscroller, (void **)&sview))
-    {
-      sview->GetVisibleOffset(aDx, aDy);
-      return NS_OK;
-    }
-
-    ancestor->GetParent(ancestor);
-  }
-
-  *aDx = *aDy = 0;
   return NS_OK;
 }
 
