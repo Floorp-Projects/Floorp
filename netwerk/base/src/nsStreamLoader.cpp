@@ -40,6 +40,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsProxiedService.h"
 
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
@@ -50,12 +51,29 @@ nsStreamLoader::Init(nsIURI* aURL,
                      nsISupports* context,
                      nsILoadGroup* aGroup,
                      nsIInterfaceRequestor* notificationCallbacks,
-                     nsLoadFlags loadAttributes)
+                     nsLoadFlags loadAttributes,
+                     nsIURI *referrer,
+                     PRUint32 referrerFlags)
 {
   nsresult rv = NS_OK;
   
-  rv = NS_OpenURI(this, nsnull, aURL, nsnull, aGroup, notificationCallbacks,
-                  loadAttributes);
+  nsCOMPtr<nsIChannel> channel;
+
+  rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull, aGroup,
+                  notificationCallbacks, loadAttributes);
+  if (NS_FAILED(rv)) return rv;
+
+  if (referrer) {
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+
+    if (httpChannel) {
+      rv = httpChannel->SetReferrer(referrer, referrerFlags);
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+
+  rv = channel->AsyncOpen(this, context);
+
   if (NS_FAILED(rv) && observer) {
     // don't callback synchronously as it puts the caller
     // in a recursive situation and breaks the asynchronous
