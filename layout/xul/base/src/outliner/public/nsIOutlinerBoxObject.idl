@@ -70,6 +70,13 @@ interface nsIOutlinerBoxObject : nsISupports
 
   // A hit test that can tell you what cell the mouse is over.
   void getCellAt(in long x, in long y, out long row, out wstring colID);
+
+  // The store is responsible for calling these notification methods when
+  // nodes are added or removed.  Index is the position at which the new
+  // rows start.  count is the number of new contiguous rows added.  For
+  // non-contiguous additions, this method should be called multiple times.
+  void rowsAdded(in long index, in long count);
+  void rowsRemoved(in long index, in long count);
 };
 
 %{C++
