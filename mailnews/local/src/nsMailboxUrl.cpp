@@ -38,6 +38,9 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
+// helper function for parsing the search field of a url
+char * extractAttributeValue(const char * searchString, const char * attributeName);
+
 nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
     NS_INIT_REFCNT();
@@ -59,7 +62,9 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 
 	m_mailboxAction = nsMailboxActionParseMailbox;
 	m_filePath = nsnull;
-	m_messageID = 0;
+	m_messageID = nsnull;
+	m_messageKey = 0;
+	m_messageSize = 0;
 
 	m_runningUrl = PR_FALSE;
 
@@ -81,6 +86,7 @@ nsMailboxUrl::~nsMailboxUrl()
 	if (m_filePath)
 		delete m_filePath;
 
+	PR_FREEIF(m_messageID);
     PR_FREEIF(m_spec);
     PR_FREEIF(m_protocol);
     PR_FREEIF(m_host);
@@ -187,6 +193,18 @@ nsresult nsMailboxUrl::SetFilePath(const nsFilePath& aFilePath)
     return NS_OK;	
 }
 
+nsresult nsMailboxUrl::GetMessageKey(nsMsgKey& aMessageKey)
+{
+	aMessageKey = m_messageKey;
+	return NS_OK;
+}
+
+nsresult nsMailboxUrl::SetMessageSize(PRUint32 aMessageSize)
+{
+	m_messageSize = aMessageSize;
+	return NS_OK;
+}
+
 nsresult nsMailboxUrl::SetErrorMessage (char * errorMessage)
 {
 	NS_LOCK_INSTANCE();
@@ -271,7 +289,8 @@ NS_METHOD nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
 	if (m_mailboxAction == nsMailboxActionDisplayMessage)
 	{
 		// set the byte field range for the url struct...
-
+		char * byteRange = PR_smprintf("bytes=%d-%d", m_messageKey, m_messageKey+m_messageSize);
+		m_URL_s->range_header = byteRange;
 	}
 
     return result;
@@ -296,30 +315,22 @@ NS_METHOD nsMailboxUrl::GetURLInfo(URL_Struct_** aResult) const
 // End nsINetlibURL support
 ////////////////////////////////////////////////////////////////////////////////////
 
-
 ////////////////////////////////////////////////////////////////////////////////
+
+// possible search part phrases include: MessageID=id&number=MessageKey
 
 nsresult nsMailboxUrl::ParseSearchPart()
 {
 	// add code to this function to decompose everything past the '?'.....
 	if (m_search)
 	{
-		// right now ?id= is the only valid search part we support...this will grow
-		// as we add more...
-		if (PL_strncmp(m_search, "id=", 3) == 0) 
-		{
-			char * id = PL_strdup(m_search + 3); // make a copy so we can unescape the copy
-			id = nsUnescape(m_search+3);
-			if (id)
-			{
-				m_messageID = atoi(id);
-				PR_Free(id);
-			}
-			
+		char * messageKey = extractAttributeValue(m_search, "number=");
+		m_messageID = extractAttributeValue(m_search,"messageid=");
+		if (messageKey)
+			m_messageKey = atol(messageKey); // convert to a long...
+		if (messageKey || m_messageID)
 			// the action for this mailbox must be a display message...
 			m_mailboxAction = nsMailboxActionDisplayMessage;
-		}
-
 	}
 
 	return NS_OK;
@@ -360,8 +371,10 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     PR_FREEIF(m_ref);
     PR_FREEIF(m_search);
 
-    if (nsnull == cSpec) {
-        if (nsnull == aURL) {
+    if (nsnull == cSpec) 
+	{
+        if (nsnull == aURL) 
+		{
             NS_UNLOCK_INSTANCE();
             return NS_ERROR_ILLEGAL_VALUE;
         }
@@ -373,16 +386,6 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         return NS_OK;
     }
 
-    // Strip out the ? stuff....
-    char* search = strpbrk(cSpec, "?");
-    if (nsnull != search)
-	{
-        search++; // advance past the question mark
-        // The rest is the search..copy it so we can parse it later...
-		if (search)
-			m_search = PL_strdup(search);
-    }
-
     // The URL is considered absolute if and only if it begins with a
     // protocol spec. A protocol spec is an alphanumeric string of 1 or
     // more characters that is terminated with a colon.
@@ -390,14 +393,17 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     char* cp=NULL;
     char* ap = cSpec;
     char ch;
-    while (0 != (ch = *ap)) {
+    while (0 != (ch = *ap)) 
+	{
         if (((ch >= 'a') && (ch <= 'z')) ||
             ((ch >= 'A') && (ch <= 'Z')) ||
-            ((ch >= '0') && (ch <= '9'))) {
+            ((ch >= '0') && (ch <= '9'))) 
+		{
             ap++;
             continue;
         }
-        if ((ch == ':') && (ap - cSpec >= 2)) {
+        if ((ch == ':') && (ap - cSpec >= 2)) 
+		{
             isAbsolute = PR_TRUE;
             cp = ap;
             break;
@@ -405,119 +411,36 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         break;
     }
 
-    if (!isAbsolute) {
-        // relative spec
-        if (nsnull == aURL) {
-            delete cSpec;
+	PR_FREEIF(m_spec);
+    PRInt32 slen = aSpec.Length();
+    m_spec = (char *) PR_Malloc(slen + 1);
+    aSpec.ToCString(m_spec, slen+1);
 
-            NS_UNLOCK_INSTANCE();
-            return NS_ERROR_ILLEGAL_VALUE;
-        }
+    // get protocol first
+    PRInt32 plen = cp - cSpec;
+    m_protocol = (char*) PR_Malloc(plen + 1);
+    PL_strncpy(m_protocol, cSpec, plen);
+    m_protocol[plen] = 0;
+    cp++;                               // eat : in protocol
 
-        // keep protocol and host
-        m_protocol = (nsnull != uProtocol) ? PL_strdup(uProtocol) : nsnull;
-        m_host = (nsnull != uHost) ? PL_strdup(uHost) : nsnull;
-
-        // figure out file name
-        PRInt32 len = PL_strlen(cSpec) + 1;
-        if ((len > 1) && (cSpec[0] == '/')) {
-            // Relative spec is absolute to the server
-            m_file = PL_strdup(cSpec);
-        } else {
-            if (cSpec[0] != '\0') {
-                // Strip out old tail component and put in the new one
-                char* dp = PL_strrchr(uFile, '/');
-                if (!dp) {
-                    delete cSpec;
-                    NS_UNLOCK_INSTANCE();
-                    return NS_ERROR_ILLEGAL_VALUE;
-                }
-                PRInt32 dirlen = (dp + 1) - uFile;
-                m_file = (char*) PR_Malloc(dirlen + len);
-                PL_strncpy(m_file, uFile, dirlen);
-                PL_strcpy(m_file + dirlen, cSpec);
-            }
-            else {
-                m_file = PL_strdup(uFile);
-            }
-        }
-
-        /* Stolen from netlib's mkparse.c.
-         *
-         * modifies a url of the form   /foo/../foo1  ->  /foo1
-         *                       and    /foo/./foo1   ->  /foo/foo1
-         */
-        char *fwdPtr = m_file;
-        char *urlPtr = m_file;
-    
-        for(; *fwdPtr != '\0'; fwdPtr++)
-        {
-    
-            if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/')
-            {
-                /* remove ./ 
-                 */	
-                fwdPtr += 1;
-            }
-            else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
-                    (*(fwdPtr+3) == '/' || *(fwdPtr+3) == '\0'))
-            {
-                /* remove foo/.. 
-                 */	
-                /* reverse the urlPtr to the previous slash
-                 */
-                if(urlPtr != m_file) 
-                    urlPtr--; /* we must be going back at least one */
-                for(;*urlPtr != '/' && urlPtr != m_file; urlPtr--)
-                    ;  /* null body */
-        
-                /* forward the fwd_prt past the ../
-                 */
-                fwdPtr += 2;
-            }
-            else
-            {
-                /* copy the url incrementaly 
-                 */
-                *urlPtr++ = *fwdPtr;
-            }
-        }
-    
-        *urlPtr = '\0';  /* terminate the url */
-
-        // Now that we've resolved the relative URL, we need to reconstruct
-        // a URL spec from the components.
-        ReconstructSpec();
-    } else {
-        // absolute spec
-
-        PR_FREEIF(m_spec);
-        PRInt32 slen = aSpec.Length();
-        m_spec = (char *) PR_Malloc(slen + 1);
-        aSpec.ToCString(m_spec, slen+1);
-
-        // get protocol first
-        PRInt32 plen = cp - cSpec;
-        m_protocol = (char*) PR_Malloc(plen + 1);
-        PL_strncpy(m_protocol, cSpec, plen);
-        m_protocol[plen] = 0;
-        cp++;                               // eat : in protocol
-
-        // skip over one, two or three slashes
-        if (*cp == '/') {
+    // skip over one, two or three slashes
+    if (*cp == '/') 
+	{
+        cp++;
+        if (*cp == '/') 
+		{
             cp++;
-            if (*cp == '/') {
+            if (*cp == '/')
                 cp++;
-                if (*cp == '/') {
-                    cp++;
-                }
-            }
-        } else {
-            delete cSpec;
-
-            NS_UNLOCK_INSTANCE();
-            return NS_ERROR_ILLEGAL_VALUE;
         }
+    } 
+	else 
+	{
+        delete cSpec;
+
+        NS_UNLOCK_INSTANCE();
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
 
 
 #if defined(XP_UNIX) || defined (XP_MAC)
@@ -536,33 +459,47 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 #endif /* XP_UNIX */
 
         const char* cp0 = cp;
-		// mailbox urls do not have a host...
-        // The remainder of the string is the file name
-        PRInt32 flen = PL_strlen(cp);
-        m_file = (char*) PR_Malloc(flen + 1);
-        PL_strcpy(m_file, cp);
+        // The remainder of the string is the file name and the search path....
+		// Strip out the ? stuff....
+		char* search = strpbrk(cSpec, "?");
+		if (nsnull != search)
+		{
+			search++; // advance past the question mark
+			// The rest is the search..copy it so we can parse it later...
+			if (search)
+				m_search = PL_strdup(search);
+
+			if (search - cp - 1 > 0)
+				m_file = PL_strndup(cp, search - cp -1);
+			else
+				m_file = nsnull;
+		}
+		else // the rest of the rl is the file part....
+		{
+			m_file = PL_strdup(cp);
+		}
       
 #ifdef NS_WIN32
        // If the filename starts with a "x|" where is an single
        // character then we assume it's a drive name and change the
        // vertical bar back to a ":"
-       if ((flen >= 2) && (m_file[1] == '|')) 
+       if ((PL_strlen(m_file) >= 2) && (m_file[1] == '|')) 
 		   m_file[1] = ':';
 #endif /* NS_WIN32 */
-    }
-
-    delete cSpec;
+ 
+	delete cSpec;
 
 	if (m_filePath)
 		delete m_filePath;
-
+	ParseSearchPart();
 	m_filePath = new nsFilePath(m_file);
 
 	// we need to set the mailbox action type that this url represented....
 	// if we had a search field then we parsed it and it set the mailbox state...
 	// otherwise there was no search part to the urlSpec so we should manually set the
 	// parse mailbox action (which is the default)
-	m_mailboxAction = nsMailboxActionParseMailbox;
+	if (m_search == nsnull)
+		m_mailboxAction = nsMailboxActionParseMailbox;
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;
@@ -572,26 +509,10 @@ void nsMailboxUrl::ReconstructSpec(void)
 {
     PR_FREEIF(m_spec);
 
-    PRInt32 plen = PL_strlen(m_protocol) + PL_strlen(m_host) + PL_strlen(m_file) + 4;
-    if (m_ref) {
-        plen += 1 + PL_strlen(m_ref);
-    }
-    if (m_search) {
-        plen += 1 + PL_strlen(m_search);
-    }
-
-    m_spec = (char *) PR_Malloc(plen + 1);
-    PR_snprintf(m_spec, plen, "%s://%s%s%s", 
-                m_protocol, ((nsnull != m_host) ? m_host : ""), m_file);
-
-    if (m_ref) {
-        PL_strcat(m_spec, "#");
-        PL_strcat(m_spec, m_ref);
-    }
-    if (m_search) {
-        PL_strcat(m_spec, "?");
-        PL_strcat(m_spec, m_search);
-    }
+	if (m_search)
+		m_spec = PR_smprintf("%s://%s?%s", m_protocol, m_file, m_search);
+	else
+		m_spec = PR_smprintf("%s://%s", m_protocol, m_file);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -835,3 +756,40 @@ nsresult nsMailboxUrl::ToString(PRUnichar* *aString) const
 ////////////////////////////////////////////////////////////////////////////////////
 // End of functions which should be made obsolete after modifying nsIURL
 ////////////////////////////////////////////////////////////////////////////////////
+
+// takes a string like ?messageID=fooo&number=MsgKey and returns a new string 
+// containing just the attribute value. i.e you could pass in this string with
+// an attribute name of messageID and I'll return fooo. Use PR_Free to delete
+// this string...
+
+// Assumption: attribute pairs in the string are separated by '&'.
+char * extractAttributeValue(const char * searchString, const char * attributeName)
+{
+	char * attributeValue = nsnull;
+
+	if (searchString && attributeName)
+	{
+		// search the string for attributeName
+		PRUint32 attributeNameSize = PL_strlen(attributeName);
+		char * startOfAttribute = PL_strcasestr(searchString, attributeName);
+		if (startOfAttribute)
+		{
+			startOfAttribute += attributeNameSize; // skip over the attributeName
+			if (startOfAttribute) // is there something after the attribute name
+			{
+				char * endofAttribute = startOfAttribute ? PL_strchr(startOfAttribute, '&') : nsnull;
+				if (startOfAttribute && endofAttribute) // is there text after attribute value
+					attributeValue = PL_strndup(startOfAttribute, endofAttribute - startOfAttribute);
+				else // there is nothing left so eat up rest of line.
+					attributeValue = PL_strdup(startOfAttribute);
+
+				// now unescape the string...
+				if (attributeValue)
+					attributeValue = nsUnescape(attributeValue); // unescape the string...
+			} // if we have a attribute value
+
+		} // if we have a attribute name
+	} // if we got non-null search string and attribute name values
+
+	return attributeValue;
+}

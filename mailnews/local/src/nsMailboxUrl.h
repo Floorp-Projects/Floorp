@@ -68,7 +68,8 @@ public:
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer);
 	NS_IMETHOD SetFilePath(const nsFilePath& aFilePath);
 	NS_IMETHOD GetFilePath(const nsFilePath ** aFilePath);
-//	NS_IMPL_CLASS_GETSET(MessageID, PRUint32, m_messageID);
+	NS_IMETHOD GetMessageKey(nsMsgKey& aMessageKey);
+	NS_IMETHOD SetMessageSize(PRUint32 aMessageSize);
 	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
 
 	// from nsIMsgMailNewsUrl:
@@ -116,7 +117,9 @@ protected:
 
 	nsMailboxAction m_mailboxAction; // the action this url represents...parse mailbox, display messages, etc.
 	nsFilePath	*m_filePath; 
-	PRUint32	m_messageID;
+	char		*m_messageID;
+	PRUint32	m_messageSize;
+	nsMsgKey	m_messageKey;
 
 	void ReconstructSpec(void);
 	nsresult ParseSearchPart();
