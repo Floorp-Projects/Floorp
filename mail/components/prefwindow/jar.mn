@@ -12,7 +12,9 @@ messenger.jar:
 
 comm.jar:
 +   content/communicator/pref/pref.xul                                 (content/pref.xul)
-*+   content/communicator/pref/nsPrefWindow.js                         (content/nsPrefWindow.js)
+*+  content/communicator/pref/nsPrefWindow.js                          (content/nsPrefWindow.js)
++   content/communicator/pref/pref-themes.xul                          (content/pref-themes.xul)
++   content/communicator/pref/pref-themes.js                           (content/pref-themes.js)
 
 en-US.jar:
 +   locale/en-US/communicator/pref/pref-fonts.dtd                      (locale/pref-fonts.dtd)
@@ -24,6 +26,7 @@ en-US.jar:
 +   locale/en-US/messenger/AccountManager.dtd                          (locale/AccountManager.dtd)
     locale/en-US/messenger/pref-privacy.dtd                            (locale/pref-privacy.dtd)
 +   locale/en-US/messenger/pref-advanced.dtd                           (locale/pref-advanced.dtd)
++   locale/en-US/communicator/pref/pref-themes.dtd                     (locale/pref-themes.dtd)
 
 
 classic.jar:
