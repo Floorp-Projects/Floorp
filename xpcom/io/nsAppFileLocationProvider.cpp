@@ -43,7 +43,7 @@
 #define INCL_DOSPROCESS
 #define INCL_DOSMODULEMGR
 #include <os2.h>
-#elif defined(XP_PC)
+#elif defined(XP_WIN)
 #include <windows.h>
 #include <shlobj.h>
 #elif defined(XP_UNIX)
@@ -353,7 +353,7 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     if (NS_FAILED(rv)) return rv;
     rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
-#elif defined(XP_PC)
+#elif defined(XP_WIN)
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -416,7 +416,7 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
     rv = GetProductDirectory(getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
 
-#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_PC)
+#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_WIN)
     // These 3 platforms share this part of the path - do them as one
     rv = localDir->AppendRelativeNativePath(NS_LITERAL_CSTRING("Profiles"));
     if (NS_FAILED(rv)) return rv;

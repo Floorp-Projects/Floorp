@@ -92,7 +92,7 @@ char * strdup(const char *src)
     #include <sys/stat.h>
     #include <limits.h>
     #include <unistd.h>
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
     #include <io.h>
 #endif
 

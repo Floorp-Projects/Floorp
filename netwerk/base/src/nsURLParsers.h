@@ -76,7 +76,7 @@ protected:
 class nsNoAuthURLParser : public nsBaseURLParser
 {
 public: 
-#if defined(XP_PC)
+#if defined(XP_WIN) || defined(XP_OS2)
     NS_IMETHOD ParseFilePath(const char *, PRInt32,
                              PRUint32 *, PRInt32 *,
                              PRUint32 *, PRInt32 *,

@@ -573,11 +573,11 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   // need for capturing result on each doc and sub-doc that is printed
   gDumpFileNameCnt   = 0;
   gDumpLOFileNameCnt = 0;
-#if defined(XP_PC)
+#if defined(XP_WIN) || defined(XP_OS2)
   if (kPrintingLogMod && kPrintingLogMod->level == DUMP_LAYOUT_LEVEL) {
     RemoveFilesInDir(".\\");
   }
-#endif // XP_PC
+#endif // XP_WIN || XP_OS2
 #endif // EXTENDED_DEBUG_PRINTING
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -1043,7 +1043,7 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
     return NS_ERROR_FAILURE;
   }
 
-#if defined(XP_PC) && defined(EXTENDED_DEBUG_PRINTING)
+#if (defined(XP_WIN) || defined(XP_OS2)) && defined(EXTENDED_DEBUG_PRINTING)
   if (!mIsDoingPrintPreview) {
     if (kPrintingLogMod && kPrintingLogMod->level == DUMP_LAYOUT_LEVEL) {
       RemoveFilesInDir(".\\");
@@ -2427,7 +2427,7 @@ nsPrintEngine::SetupToPrintContent(nsIDeviceContext*     aDContext,
         po->DestroyPresentation();
       }
 
-#if defined(XP_PC) && defined(EXTENDED_DEBUG_PRINTING)
+#if (defined(XP_WIN) || defined(XP_OS2)) && defined(EXTENDED_DEBUG_PRINTING)
       // We need to clear all the output files here
       // because they will be re-created with second reflow of the docs
       if (kPrintingLogMod && kPrintingLogMod->level == DUMP_LAYOUT_LEVEL) {
@@ -4694,7 +4694,7 @@ nsPrintEngine::FirePrintCompletionEvent()
 //-- Debug helper routines
 //---------------------------------------------------------------
 //---------------------------------------------------------------
-#if defined(XP_PC) && defined(EXTENDED_DEBUG_PRINTING)
+#if (defined(XP_WIN) || defined(XP_OS2)) && defined(EXTENDED_DEBUG_PRINTING)
 #include "windows.h"
 #include "process.h"
 #include "direct.h"

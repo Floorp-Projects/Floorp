@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; -*- */
 /*
- *  npapi.h $Revision: 1.1 $
+ *  npapi.h $Revision: 1.2 $
  *  Netscape client plug-in API spec
  */
 
@@ -26,8 +26,8 @@
 #   undef NULL
 #   ifndef XP_WIN
 #     define XP_WIN 1
-#   endif /* __INTEL__ */
-# endif /* XP_PC */
+#   endif /* XP_WIN */
+# endif /* __INTELL__ */
 #endif /* __MWERKS__ */
 
 #ifdef XP_MAC

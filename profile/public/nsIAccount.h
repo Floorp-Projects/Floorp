@@ -92,7 +92,7 @@ public:
 
 	//	NS_IMETHOD PEPluginFunc( long selectorCode, void* paramBlock, void* returnData )=0;
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 	OSVERSIONINFO *lpOsVersionInfo;    
 #endif
 

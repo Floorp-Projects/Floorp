@@ -505,7 +505,7 @@ struct PLEvent {
 ** Returns the event queue associated with the main thread.
 ** 
 */
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 /* -----------------------------------------------------------------------
 ** FUNCTION: PL_GetNativeEventReceiverWindow()
 ** 
@@ -527,7 +527,7 @@ PR_EXTERN(HWND)
     PL_GetNativeEventReceiverWindow( 
         PLEventQueue *eqp 
     );
-#endif /* XP_PC */
+#endif /* XP_WIN || XP_OS2 */
 
 #ifdef XP_UNIX
 /* -----------------------------------------------------------------------

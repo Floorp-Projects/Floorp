@@ -138,7 +138,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
         if(*aURI)
             return NS_OK;
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
         // Not a file URL, so translate '\' to '/' for convenience in the common protocols
         // e.g. catch
         //
@@ -414,7 +414,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsAString& aIn,
 {
     PRBool attemptFixup = PR_FALSE;
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     // Check for \ in the url-string or just a drive (PC)
     if(kNotFound != aIn.FindChar(PRUnichar('\\')) || ((aIn.Length() == 2 ) && (aIn.Last() == PRUnichar(':') || aIn.Last() == PRUnichar('|'))))
     {

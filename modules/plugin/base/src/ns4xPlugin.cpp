@@ -1249,7 +1249,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_GENERIC_ERROR;
 #endif
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
   case NPNVnetscapeWindow: {
     if (!npp || !npp->ndata)
       return NPERR_INVALID_INSTANCE_ERROR;

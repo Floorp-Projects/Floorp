@@ -124,7 +124,7 @@
 #define PSM_CERT7_DB "Certificates7"
 #define PSM_KEY3_DB "Key Database3"
 #define PSM_SECMODULE_DB "Security Modules"
-#else /* XP_PC */
+#else /* XP_WIN || XP_OS2 */
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define MAIL_SUMMARY_SUFFIX_IN_4x ".snm"

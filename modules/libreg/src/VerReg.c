@@ -271,7 +271,7 @@ done:
 
 
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #define VR_FILE_SEP '\\'
 #endif
 #if defined(XP_MAC) || defined(XP_MACOSX)

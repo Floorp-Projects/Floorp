@@ -42,7 +42,7 @@
 
 #include "plstr.h"
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #if defined(XP_OS2)
 #include <stdlib.h>
 #define MAX_PATH _MAX_PATH
@@ -111,7 +111,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     rv = NS_NewLocalFileWithFSSpec((FSSpec*)&aXPIStubDir, PR_FALSE, getter_AddRefs(compDir));
     if (NS_FAILED(rv)) return rv;
 
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 
  #ifdef XP_OS2_EMX
     char componentPath[MAX_PATH];

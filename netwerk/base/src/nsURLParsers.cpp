@@ -401,7 +401,7 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
             const char *p = nsnull;
             if (specLen > 2) {
                 // looks like there is an authority section
-#if defined(XP_PC)
+#if defined(XP_WIN) || defined(XP_OS2)
                 // if the authority looks like a drive number then we
                 // really want to treat it as part of the path
                 if ((specLen > 3) && (spec[3] == ':' || spec[3] == '|') &&
@@ -431,7 +431,7 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
     SET_RESULT(path, pos, specLen - pos);
 }
 
-#if defined(XP_PC)
+#if defined(XP_WIN) || defined(XP_OS2)
 NS_IMETHODIMP
 nsNoAuthURLParser::ParseFilePath(const char *filepath, PRInt32 filepathLen,
                                  PRUint32 *directoryPos, PRInt32 *directoryLen,

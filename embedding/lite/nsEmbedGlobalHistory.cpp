@@ -493,7 +493,7 @@ nsresult writeEntry(FILE *outStm, nsCStringKey *url, HistoryEntry *entry)
   fputs(url->GetString(), outStm);
   entry->SetIsWritten();
 
-#if defined (XP_PC)
+#if defined (XP_WIN) || defined(XP_OS2)
   fputc('\r', outStm);
   fputc('\n', outStm);
 #elif defined(XP_UNIX)

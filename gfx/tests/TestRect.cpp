@@ -38,7 +38,7 @@
 
 #include "nsRect.h"
 #include <stdio.h>
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
 #include <windows.h>
 #endif
 

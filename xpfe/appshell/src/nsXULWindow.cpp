@@ -392,7 +392,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    if (mWindow)
      mWindow->Show(PR_FALSE);
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
   // We need to explicitly set the focus on Windows
   nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
   if (parent) {

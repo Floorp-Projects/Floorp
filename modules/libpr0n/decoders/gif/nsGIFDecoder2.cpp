@@ -378,7 +378,7 @@ int nsGIFDecoder2::HaveDecodedRow(
       format = gfxIFormats::RGB_A1;
     }
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
     // XXX this works...
     format += 1; // RGB to BGR
 #endif
@@ -490,7 +490,7 @@ int nsGIFDecoder2::HaveDecodedRow(
         if (cmap) {// cmap could have null value if the global color table flag is 0
             for (PRUint32 x=0; x<iwidth; x++) {
                 if (*rowBufIndex != decoder->mGIFStruct->tpixel) {
-        #if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+        #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
                 *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
                 *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
                 *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;

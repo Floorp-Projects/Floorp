@@ -361,7 +361,7 @@ int main(void)
     NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
     registrar->AutoRegister(nsnull);
   
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     InitTest("c:\\temp\\", "sub1/sub2/");
     InitTest("d:\\temp\\", "sub1\\sub2\\");
 
@@ -394,6 +394,6 @@ int main(void)
     CopyTest("/tmp/test.txt", "/tmp/foo");
 
 #endif /* XP_UNIX */
-#endif /* XP_PC */
+#endif /* XP_WIN || XP_OS2 */
     return 0;
 }

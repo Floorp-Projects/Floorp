@@ -1062,7 +1062,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
     rv = GetPlatformCharset(charSet);
     if (NS_FAILED(rv)) return rv;
 
-#if defined(XP_PC) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC) || defined(XP_MACOSX)
     NS_ASSERTION(registryName, "Invalid registryName");
 
     nsCOMPtr<nsILocalFile> registryFile;

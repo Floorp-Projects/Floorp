@@ -87,7 +87,7 @@
 #include "nsITimerInternal.h"
 #define NS_MENU_POPUP_LIST_INDEX   0
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #define NSCONTEXTMENUISMOUSEUP 1
 #endif
 

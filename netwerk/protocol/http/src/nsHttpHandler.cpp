@@ -61,7 +61,7 @@
 #include <sys/utsname.h>
 #endif
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include <windows.h>
 #endif
 
@@ -699,7 +699,7 @@ nsHttpHandler::InitUserAgentComponents()
     else if (os2ver == 45)
         mOscpu.Adopt(nsCRT::strdup("Warp 4.5"));
 
-#elif defined(XP_PC)
+#elif defined(XP_WIN)
     OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
     if (GetVersionEx(&info)) {
         if (info.dwPlatformId == VER_PLATFORM_WIN32_NT) {

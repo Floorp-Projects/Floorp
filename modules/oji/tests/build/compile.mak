@@ -35,9 +35,9 @@ INCLUDES = $(INCLUDES) \
 
 
 !if defined(MOZ_DEBUG)
-DEFINES=-DXP_PC -DXP_WIN -DDEBUG
+DEFINES=-DXP_WIN -DDEBUG
 !else
-DEFINES=-DXP_PC -DXP_WIN
+DEFINES=-DXP_WIN
 !endif
 
 CC_OBJ=@cl $(DEFINES) /Zi /nologo $(INCLUDES) /c /Fo$(OBJ_DIR)\ /Fd$(OBJ_DIR)/default.pdb

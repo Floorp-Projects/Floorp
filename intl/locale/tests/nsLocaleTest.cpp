@@ -42,7 +42,7 @@
 #include "nsIComponentManager.h"
 #include "nsILocaleService.h"
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #include "nsIWin32Locale.h"
 #include <windows.h>
 #endif
@@ -62,7 +62,7 @@ NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 
@@ -358,7 +358,7 @@ factory_get_locale(void)
 }
 
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 
 void
 win32factory_create_interface(void)
@@ -1090,7 +1090,7 @@ main(int argc, char** argv)
 	factory_get_locale();
 	factory_new_locale();
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 
 	//
 	// run the nsIWin32LocaleFactory tests

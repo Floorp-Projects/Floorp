@@ -104,7 +104,7 @@
 #define DIALOG_FONT_SIZE 10
 
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
 #include "JSConsole.h"
 #ifdef NGPREFS
 #include "ngprefs.h"
@@ -403,7 +403,7 @@ static void
 AddTestDocsFromFile(nsWebCrawler* aCrawler, const nsString& aFileName)
 {
   NS_LossyConvertUCS2toASCII cfn(aFileName);
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
   FILE* fp = fopen(cfn.get(), "rb");
 #else
   FILE* fp = fopen(cfn.get(), "r");
@@ -766,7 +766,7 @@ nsViewerApp::AfterDispatch()
 #include "nsIDocument.h"
 #include "nsIURL.h"
 
-#ifndef XP_PC
+#if !defined(XP_WIN) && !defined(XP_OS2)
 #ifndef XP_MAC
 #define _MAX_PATH 512
 #endif
@@ -825,7 +825,7 @@ static void* GetWidgetNativeData(nsISupports* aObject)
 
 
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
 extern JSConsole *gConsole;
 // XXX temporary robot code until it's made XP
 extern HINSTANCE gInstance, gPrevInstance;
@@ -1117,7 +1117,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
             tempStr->Assign(NS_ConvertUTF8toUCS2(str));
           gWorkList->AppendElement(tempStr);
         }
-#if defined(XP_PC) && defined(NS_DEBUG) && !defined(XP_OS2)
+#if defined(XP_WIN) && defined(NS_DEBUG)
         DebugRobot( 
           gWorkList, 
           gVisualDebug ? aWindow->mDocShell : nsnull, 
@@ -1552,7 +1552,7 @@ nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
 //----------------------------------------
 
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
 #include "jsconsres.h"
 
 static void DestroyConsole()
@@ -1600,7 +1600,7 @@ static void ShowConsole(nsBrowserWindow* aWindow)
 NS_IMETHODIMP
 nsViewerApp::CreateJSConsole(nsBrowserWindow* aWindow)
 {
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
   if (nsnull == gConsole) {
     ShowConsole(aWindow);
   }
@@ -1611,7 +1611,7 @@ nsViewerApp::CreateJSConsole(nsBrowserWindow* aWindow)
 NS_IMETHODIMP
 nsViewerApp::DoPrefs(nsBrowserWindow* aWindow)
 {
-#if defined(XP_PC) && defined(NGPREFS) && !defined(XP_OS2)
+#if defined(XP_WIN) && defined(NGPREFS)
 
   INGLayoutPrefs *pPrefs;
   CoInitialize(NULL);

@@ -1764,7 +1764,7 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 
 // XXX letter-spacing
 // XXX word-spacing
-#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_UNIX) || defined(XP_MAC)
 #define USE_INVERT_FOR_SELECTION
 #endif
 

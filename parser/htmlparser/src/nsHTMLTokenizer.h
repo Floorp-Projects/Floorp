@@ -64,7 +64,7 @@
   Notes: 
  ***************************************************************/
 
-#if defined(XP_PC)
+#ifdef _MSC_VER
 #pragma warning( disable : 4275 )
 #endif
 

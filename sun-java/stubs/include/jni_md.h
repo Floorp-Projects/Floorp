@@ -93,8 +93,8 @@
 #     define JNICALL
 #     define JNIEXPORT
 #  endif
-/* PC */
-#elif defined(XP_PC) || defined(_WINDOWS) || defined(WIN32) || defined(_WIN32)
+/* Win32 */
+#elif defined(XP_WIN) || defined(_WINDOWS) || defined(WIN32) || defined(_WIN32)
 #	include <windows.h>
 #	if defined(_MSC_VER) || defined(__GNUC__)
 #		if defined(WIN32) || defined(_WIN32)

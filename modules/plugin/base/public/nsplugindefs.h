@@ -60,7 +60,7 @@
 #   include <X11/Xutil.h>
 #endif
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #   include <windef.h>
 #endif
 
@@ -240,7 +240,7 @@ struct nsPluginPort {
 typedef RgnHandle       nsPluginRegion;
 typedef WindowRef       nsPluginPlatformWindowRef;
 
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 
 struct nsPluginPort;
 typedef HRGN            nsPluginRegion;
@@ -309,7 +309,7 @@ struct nsPluginEvent {
     uint32      wParam;
     uint32      lParam;
 
-#elif defined(XP_PC)
+#elif defined(XP_WIN)
     uint16      event;
     uint32      wParam;
     uint32      lParam;

@@ -41,7 +41,7 @@
 #include "npapi.h"
 #include "nsIPluginHost.h"
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_WIN
 #define CALL_SAFETY_ON
 #endif
 

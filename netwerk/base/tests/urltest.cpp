@@ -59,7 +59,7 @@
 #include "nsNetCID.h"
 #include "nsIURL.h"
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #else
