@@ -249,6 +249,8 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
         rv = GetTypeFromExtension(ext, aContentType);
         nsAllocator::Free(ext);
     }
+    else
+        return NS_ERROR_FAILURE;
     return rv;
 }
 
