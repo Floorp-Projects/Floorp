@@ -151,10 +151,10 @@ COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
   mTokenRecycler=0;
   mParserCommand=eViewNormal;
 
-#if 0 //set this to 1 if you want strictDTD to be based on the environment setting.
-  char* theEnvString = PR_GetEnv("ENABLE_STRICT"); 
-  mEnableStrict=PRBool(theEnvString!=0);
-else
+#if 1 //set this to 1 if you want strictDTD to be based on the environment setting.
+  char* theEnvString = PR_GetEnv("MOZ_DISABLE_STRICT"); 
+  mEnableStrict=PRBool(0==theEnvString);
+#else
   mEnableStrict=PR_TRUE;
 #endif
 

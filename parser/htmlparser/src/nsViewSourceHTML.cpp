@@ -28,7 +28,7 @@
  */
  
 
-#define ENABLE_ERROR_OUTPUT   //debug only for now...
+//#define ENABLE_ERROR_OUTPUT   //debug only for now...
 
 
 #ifdef RAPTOR_PERF_METRICS
