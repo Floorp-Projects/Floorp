@@ -849,11 +849,10 @@ void nsClipboard::SelectionClearCB(GtkWidget *aWidget,
   printf("  nsClipboard::SelectionClearCB\n");
 #endif /* DEBUG_CLIPBOARD */
 
+  nsClipboard *cb = (nsClipboard *)gtk_object_get_data(GTK_OBJECT(aWidget),
+                                                       "cb");
 
-  /* we need to remove the contents of the clipboard here */
-
-  // Is this what we want here?
-  // nsBaseClipboard::EmptyClipboard();
+  cb->EmptyClipboard();
 }
 
 
