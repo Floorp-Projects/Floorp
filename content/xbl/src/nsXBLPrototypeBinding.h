@@ -73,7 +73,7 @@ public:
 
   nsresult GetBindingURI(nsCString& aResult);
   nsresult GetDocURI(nsCString& aResult);
-  nsresult GetID(nsCString& aResult) { aResult = mID; }
+  nsresult GetID(nsCString& aResult) { aResult = mID; return NS_OK; }
 
   nsresult GetAllowScripts(PRBool* aResult);
 
