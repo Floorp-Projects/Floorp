@@ -40,8 +40,8 @@ public:
 	void GetResponseStatusTest(nsIHttpChannel *, PRInt16);
 	void GetResponseStatusTextTest(nsIHttpChannel *, PRInt16);
 	void GetRequestSucceededTest(nsIHttpChannel *, PRInt16);
-	void GetResponseHeaderTest(nsIHttpChannel *, PRInt16);
-	void SetResponseHeaderTest(nsIHttpChannel *, PRInt16);
+	void GetResponseHeaderTest(nsIHttpChannel *, const char *, PRInt16);
+	void SetResponseHeaderTest(nsIHttpChannel *, const char *, const char *, PRBool, PRInt16);
 	void IsNoStoreResponseTest(nsIHttpChannel *, PRInt16);
 	void IsNoCacheResponseTest(nsIHttpChannel *, PRInt16);
 public:

@@ -547,15 +547,20 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 	CBrowserImpl *aBrowserImpl = new CBrowserImpl();
 	CnsIChannelTests  *obj = new CnsIChannelTests(mWebBrowser, aBrowserImpl);
 	CnsIHttpChannelTests *httpObj = new CnsIHttpChannelTests(mWebBrowser, aBrowserImpl);
-	if (obj && ctxt && channel)
+	if (obj && ctxt && channel) {
+		QAOutput("  nsIChannel tests:");
 		obj->PostAsyncTests(channel, 1);
+	}
 	else if (!obj && ctxt)
 		QAOutput("No object to run PostAsyncTests().", 1);
 
 	if (!httpObj)
 		QAOutput("No object to run GetResponseStatusTest().", 1);
 	else
+	{
+		QAOutput("  nsIHttpChannel response tests:");
 		httpObj->CallResponseTests(httpChannel, 1);
+	}
 
 	if (!ctxt)
 		QAOutput("OnStartRequest():We didn't get the nsISupports object.", 1);
