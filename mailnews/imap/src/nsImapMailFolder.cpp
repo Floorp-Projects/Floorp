@@ -739,7 +739,7 @@ NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
     if (NS_SUCCEEDED(rv)) 
           rv = server->GetUsername(userName);
 #else  // **** for the future
-    nsCOMPtr<nsIFolder> aFolder(do_QueryInterface((nsIMsgFolder*) this, &rv));
+    nsCOMPtr<nsIFolder> aFolder = do_QueryInterface(this, &rv);
     if (NS_FAILED(rv)) return rv;
     char *uri = nsnull;
     rv = aFolder->GetURI(&uri);
@@ -778,7 +778,7 @@ NS_IMETHODIMP nsImapMailFolder::GetHostName(char** hostName)
     else
         *hostName = nsnull;
 
-    nsCOMPtr<nsIFolder> aFolder(do_QueryInterface((nsIMsgFolder*)this, &rv));
+    nsCOMPtr<nsIFolder> aFolder = do_QueryInterface((nsIMsgFolder *) this, &rv);
     if (NS_FAILED(rv)) return rv;
     char *uri = nsnull;
     rv = aFolder->GetURI(&uri);
@@ -960,8 +960,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                     "Undo Delete Message";
                 nsString redoString = count > 1 ? "Redo Delete Messages" :
                     "Redo Delete Message";
-                nsCOMPtr<nsImapMoveCopyMsgTxn>
-                    msgTxn(do_QueryInterface(m_pendingUndoTxn, &rv));
+                nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn = do_QueryInterface(m_pendingUndoTxn, &rv);
                 if (NS_SUCCEEDED(rv))
                 {
                     rv = msgTxn->SetUndoString(&undoString);
