@@ -64,6 +64,23 @@ nsXIFConverter::~nsXIFConverter()
 }
 
 
+void nsXIFConverter::SetSelection(nsIDOMSelection* aSelection) {
+  mSelection = aSelection;
+  
+  BeginStartTag("encode");
+  if (mSelection == nsnull)
+  {
+    AddAttribute("selection","0");
+  }
+  else
+  {
+    AddAttribute("selection","1");
+  }
+  FinishStartTag("encode",PR_TRUE,PR_TRUE);
+}
+
+
+
 
 void nsXIFConverter::BeginStartTag(const nsString& aTag)
 {

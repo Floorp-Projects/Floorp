@@ -114,9 +114,8 @@ public:
   // Output routines
   void Write();
 
-  void    SetSelection(nsIDOMSelection* aSelection) {
-    mSelection = aSelection;
-  }
+  void    SetSelection(nsIDOMSelection* aSelection);
+
   nsIDOMSelection*  GetSelection() {
     return mSelection;
   }
