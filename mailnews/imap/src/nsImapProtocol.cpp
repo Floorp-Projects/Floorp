@@ -1261,7 +1261,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   {
     Log("ProcessCurrentURL", nsnull, "creating nsInputStreamPump");
 
-    rv = NS_NewInputStreamPump(getter_AddRefs(m_pump), m_inputStream);
+    rv = NS_NewInputStreamPump(getter_AddRefs(m_pump), m_inputStream, -1, -1, 0x4000, 16);
     if (NS_SUCCEEDED(rv))
     {
       rv = m_pump->AsyncRead(this /* stream listener */, nsnull);
@@ -2565,7 +2565,7 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
   nsresult rv = NS_OK;
   char *sizeString = PR_smprintf("OPEN Size: %ld", total_message_size);
   Log("STREAM",sizeString,"Begin Message Download Stream");
-  PR_FREEIF(sizeString);
+  PR_Free(sizeString);
   //total_message_size)); 
   if (content_type)
   {
@@ -2606,8 +2606,16 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
     }
     if (m_imapMailFolderSink && m_runningUrl)
     {
-      nsCOMPtr<nsIMsgMailNewsUrl> mailurl = do_QueryInterface(m_runningUrl);
-      m_imapMailFolderSink->StartMessage(mailurl);
+      nsCOMPtr <nsISupports> copyState;
+      if (m_runningUrl)
+      {
+        m_runningUrl->GetCopyState(getter_AddRefs(copyState));
+        if (copyState) // only need this notification during copy
+        {
+          nsCOMPtr<nsIMsgMailNewsUrl> mailurl = do_QueryInterface(m_runningUrl);
+          m_imapMailFolderSink->StartMessage(mailurl);
+        }
+      }
     }
     
   }
@@ -3410,8 +3418,13 @@ void nsImapProtocol::NormalMessageEndDownload()
   
     if (m_runningUrl && m_imapMailFolderSink)
     {
-      nsCOMPtr<nsIMsgMailNewsUrl> mailUrl (do_QueryInterface(m_runningUrl));
-      m_imapMailFolderSink->EndMessage(mailUrl, m_downloadLineCache.CurrentUID());
+      nsCOMPtr <nsISupports> copyState;
+      m_runningUrl->GetCopyState(getter_AddRefs(copyState));
+      if (copyState) // only need this notification during copy
+      {
+        nsCOMPtr<nsIMsgMailNewsUrl> mailUrl (do_QueryInterface(m_runningUrl));
+        m_imapMailFolderSink->EndMessage(mailUrl, m_downloadLineCache.CurrentUID());
+      }
     }
   }
 }
@@ -4169,6 +4182,7 @@ char* nsImapProtocol::CreateNewLineFromSocket()
   PRBool needMoreData = PR_FALSE;
   char * newLine = nsnull;
   PRUint32 numBytesInLine = 0;
+  PRUint32 sleepInterval = 0;
   do
   {
     m_eventQueue->ProcessPendingEvents();
@@ -4195,7 +4209,11 @@ char* nsImapProtocol::CreateNewLineFromSocket()
       {
         // if we didn't get any data, wait for 50 milliseconds to avoid hogging cpu
         if (!numBytesInLine)
-          PR_Sleep(PR_MillisecondsToInterval(50)); 
+        {
+          PR_Sleep(PR_MillisecondsToInterval(50 /* sleepInterval */)); 
+//          if (sleepInterval < 50)
+//            sleepInterval += 10;
+        }
         // now that we are awake...process some events
         m_eventQueue->ProcessPendingEvents();
       } while (TestFlag(IMAP_WAITING_FOR_DATA) && !DeathSignalReceived());

@@ -88,7 +88,7 @@
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
 
-#define kDownLoadCacheSize 1536
+#define kDownLoadCacheSize 16000 // was 1536 - try making it bigger
 
 
 typedef struct _msg_line_info {
