@@ -57,18 +57,19 @@ class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgMessa
 {
 public:
 
-	NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS_INHERITED
 
-	// nsIURI override
-	NS_IMETHOD SetSpec(const char * aSpec);
+  // nsIURI override
+  NS_IMETHOD SetSpec(const char * aSpec);
+  NS_IMETHOD SetQuery(const char * aQuery);
 
-	/////////////////////////////////////////////////////////////////////////////// 
-	// we support the nsIImapUrl interface
-	///////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////// 
+  // we support the nsIImapUrl interface
+  //////////////////////////////////////////////////////////////////////////////
   NS_DECL_NSIIMAPURL
 
   // nsIMsgMailNewsUrl overrides
-	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
+  NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
   NS_IMETHOD SetMsgWindow(nsIMsgWindow *aMsgWindow);
 
   // nsIMsgMessageUrl

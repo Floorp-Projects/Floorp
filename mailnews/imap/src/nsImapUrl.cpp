@@ -318,10 +318,18 @@ NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
 
 NS_IMETHODIMP nsImapUrl::SetSpec(const char * aSpec)
 {
-	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
-	if (NS_SUCCEEDED(rv))
-		rv = ParseUrl();
-	return rv;
+  nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
+  if (NS_SUCCEEDED(rv))
+    rv = ParseUrl();
+  return rv;
+}
+
+NS_IMETHODIMP nsImapUrl::SetQuery(const char *aQuery)
+{
+  nsresult rv = nsMsgMailNewsUrl::SetQuery(aQuery);
+  if (NS_SUCCEEDED(rv))
+    rv = ParseUrl();
+  return rv;
 }
 
 nsresult nsImapUrl::ParseUrl()

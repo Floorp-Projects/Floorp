@@ -419,10 +419,18 @@ nsresult nsMailboxUrl::ParseUrl()
 
 NS_IMETHODIMP nsMailboxUrl::SetSpec(const char * aSpec)
 {
-	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
-	if (NS_SUCCEEDED(rv))
-		rv = ParseUrl();
-	return rv;
+  nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
+  if (NS_SUCCEEDED(rv))
+    rv = ParseUrl();
+  return rv;
+}
+
+NS_IMETHODIMP nsMailboxUrl::SetQuery(const char *aQuery)
+{
+  nsresult rv = nsMsgMailNewsUrl::SetQuery(aQuery);
+  if (NS_SUCCEEDED(rv))
+    rv = ParseUrl();
+  return rv;
 }
 
 // takes a string like ?messageID=fooo&number=MsgKey and returns a new string 
