@@ -13,6 +13,7 @@
 <p>This section describes how to use various windows displayed at different times by Certificate Manager. The additional information given here appears when you click the Help button in one of those windows. </P>
 
 
+
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
 <td class="inthissection">
@@ -33,7 +34,20 @@
 <h2>Certificate Details</h2>
 
 
-<p>The Certificate Details window displays information about a certificate you selected in one of the Certificate Manager tabs. For most people, the General tab provides sufficient information. The Details tab provides complete details on the certificate's contents&#151;information normally of interest to IS professionals only.
+<p>The Certificate Details window displays information about a certificate you selected in one of the Certificate Manager tabs. For most people, the General tab provides sufficient information. The Details tab provides complete details on the certificate's contents&#151;information normally of interest to IS professionals only.</p>
+
+
+
+<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<tr>
+<td class="inthissection">
+<p>In this section:</p>
+<p><a href="#General_Tab">General Tab</a></p>
+<p><a href="#Details_Tab">Details Tab</a></p>
+</td>
+</tr>
+</table>
+
 
 <p>&nbsp;</p>
 <a NAME="General_Tab"></a>
@@ -156,7 +170,7 @@
 <h2>Web Site Certificates</h2>
 
 
-<p>One of the windows listed here may appear when you attempt to go to a web site that supports the use of <a href="glossary.html#Secure_Sockets_Layer_(SSL)">SSL</a> for <a href="glossary.html#authentication">authentication</a> and <a href="glossary.html#9encryption">encryption</a>.</P>
+<p>One of the windows listed here may appear when you attempt to go to a web site that supports the use of <a href="glossary.html#Secure_Sockets_Layer_(SSL)">SSL</a> for <a href="glossary.html#authentication">authentication</a> and <a href="glossary.html#encryption">encryption</a>.</P>
 
 
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
@@ -177,15 +191,37 @@
 <h3>New Web Site Certificate</h3>
 
 
-<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays a window that allows you to examine the new web site certificate and decide how to accept it. You can perform the following actions:</P>
+<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays an alert that allows you to examine the new web site certificate and decide what to do. 
 
-<p>To examine the certificate, click View Certificate. If you suspect that the web site is not what it claims to be, you can close the Certificate Details window and click Cancel (in which case you will not connect to the web site).
-	<p>If you decide not to cancel, you need to decide how long you are willing to trust this certificate, if at all:
-	<ul>
-	<LI><B>Accept this certificate permanently.</B> This means that Certificate Manager will recognize this certificate as legitimate identification until it expires. You should not select this option unless you are absolutely sure that you trust the web site identified by the certificate.</LI><P>
-	<LI><B>Accept this certificate temporarily for this session.</B> This means that Certificate Manager will recognize this certificate as legitimate identification for this session only. If you select this option, Certificate Manager will connect with the web site this time, but will display the New Web Site Certificate window again the next time you visit the web site.</LI>
-	<LI><B>Do not accept this certificate and do not connect to the web site. </B> This means that Certificate Manager will not accept this certificate. If you select this option, Certificate Manager will not connect with this web site this time and will display the same window again the next time you visit the web site.</LI>
+<p>To examine the certificate, click View Certificate. 
+
+<p>You can take any of these actions:
+
+<ul>
+
+	<li>If you suspect that the web site is not what it claims to be, click Cancel. Certificate Manager will not connect with this web site this time and will display the same window again the next time you visit the web site.
+
+	<p>Canceling might be appropriate, for example, if you perform financial transactions at the web site. In this case you might want to report the problem to the bank or other organization that runs the site and confirm that the site's certificate is valid before you go any further.
+
+	<li>If you wish to view the web site despite the problem, click Continue and proceed with caution. Certificate Manager will recognize this certificate as legitimate identification for this session only. You'll see the same alert the next time you visit the site.
+
+	<li>If you're sure that the certificate is valid, select "Remember this certificate permanently" and then click Continue. Certificate Manager will recognize this certificate as legitimate identification until it expires.
+
 </ul>
+
+<p>Selecting "Remember this certifidate permanently" solves the problem for this web site certificate, but you'll see the same alert for any other web site whose certificate was issued by the same CA. To ensure that the Certificate Manager will trust all certificates issued by a given CA, you must edit the trust settings for the the corresponding CA certificate. To do so, follow these steps:
+
+<ol>
+   <li>Open the Edit menu and choose Preferences.
+   <li>Under the Privacy and Security category, click Certificates. (If no subcategories are visible, double-click to expand the list.) 
+   <li>Click Manage Certificates.
+   <li>Click the Authorities tab.
+   <li>Select the CA certificate whose trust settings you want to edit.
+   <li>Click the Edit button and select the appropriate trust settings.
+</ol>
+
+<p>For help deciding which trust settings you should select, click the Help button in the Edit dialog box or see <a href="certs_help.html#Edit_CA_Certificate_Settings">Edit CA Certificate Settings.
+
 
 <p>&nbsp;</p>
 <a NAME="Expired_Web_Site_Certificate"></a>
@@ -236,7 +272,7 @@
 
 
 <hr>
-<p><i>7/11/2001</i></p>
+<p><i>8/20/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
