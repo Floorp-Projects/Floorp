@@ -50,7 +50,7 @@ public class PageModel {
    */
   protected Hashtable values;
 
-  void setStore(Hashtable values) {
+  protected void setStore(Hashtable values) {
     this.values = values;
   }
 
