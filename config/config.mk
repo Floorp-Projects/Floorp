@@ -158,24 +158,32 @@ FINAL_LINK_LIBS = $(DEPTH)/config/final-link-libs
 FINAL_LINK_COMPS = $(DEPTH)/config/final-link-comps
 FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 
+# The use of LIB_PREFIX for OS/2 VA builds is inconsistent 
+# due to bug 114748, so use _NSS_LIB_PREFIX instead
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+NSS_LIB_PREFIX=lib
+else
+NSS_LIB_PREFIX=$(LIB_PREFIX)
+endif
+
 # 
 # NSS libs needed for final link in static build
 # 
 NSS_LIBS	= \
-	$(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)nss.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)certhi.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)cryptohi.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pk11wrap.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)certdb.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)softoken.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkcs12.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkcs7.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)smime.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)ssl.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)nss.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)certhi.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)cryptohi.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)pk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)certdb.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)softoken.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)pkcs12.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)pkcs7.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)freebl.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)secutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX) \
 	$(NULL)
 
 MOZ_UNICHARUTIL_LIBS = $(DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)

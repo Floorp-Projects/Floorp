@@ -76,9 +76,11 @@ depend dependclean export::
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
+# The use of LIB_PREFIX for OS/2 VA builds is inconsistent 
+# due to bug 114748, so use _NSS_LIB_PREFIX instead
 libs::
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
-	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
+	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX)
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
