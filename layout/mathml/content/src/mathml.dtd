@@ -35,12 +35,9 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- handy alias for the MathML namespace -->
-<!ENTITY mathml "http://www.w3.org/1998/Math/MathML">
-
 <!-- MathML 2.0 entities - Auto-generated from the:
      "XHTML plus Math 1.1 DTD" as of:
-     "Revision: $Id: mathml.dtd,v 1.5 2004/07/16 19:30:10 gerv%gerv.net Exp $"
+     "Revision: $Id: mathml.dtd,v 1.6 2005/03/29 17:12:17 timeless%mozdev.org Exp $"
 
      This is a *customized* list for Mozilla: characters originally specified 
      as combined pairs and plane 1 characters have been remapped to internal
