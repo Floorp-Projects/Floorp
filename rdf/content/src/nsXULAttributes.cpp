@@ -770,6 +770,30 @@ nsXULAttributes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     return NS_OK;
 }
 
+nsresult
+nsXULAttributes::GetNamedItemNS(const nsString& aNamespaceURI, 
+                                const nsString& aLocalName,
+                                nsIDOMNode** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsXULAttributes::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsXULAttributes::RemoveNamedItemNS(const nsString& aNamespaceURI, 
+                                   const nsString&aLocalName,
+                                   nsIDOMNode** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 
 

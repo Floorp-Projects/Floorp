@@ -649,10 +649,13 @@
     "mouseevent.screenx", \
     "mouseevent.screeny", \
     "namednodemap.getnameditem", \
+    "namednodemap.getnameditemns", \
     "namednodemap.item", \
     "namednodemap.length", \
     "namednodemap.removenameditem", \
+    "namednodemap.removenameditemns", \
     "namednodemap.setnameditem", \
+    "namednodemap.setnameditemns", \
     "navigator.appcodename", \
     "navigator.appname", \
     "navigator.appversion", \

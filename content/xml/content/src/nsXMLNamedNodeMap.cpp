@@ -53,6 +53,13 @@ public:
   NS_IMETHOD    SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn);
   NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+  NS_IMETHOD    GetNamedItemNS(const nsString& aNamespaceURI,
+                               const nsString& aLocalName,
+                               nsIDOMNode** aReturn);
+  NS_IMETHOD    SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn);
+  NS_IMETHOD    RemoveNamedItemNS(const nsString& aNamespaceURI,
+                                  const nsString&aLocalName,
+                                  nsIDOMNode** aReturn);
 
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -270,6 +277,28 @@ nsXMLNamedNodeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     *aReturn = 0;
 
   return NS_OK;
+}
+
+nsresult
+nsXMLNamedNodeMap::GetNamedItemNS(const nsString& aNamespaceURI, 
+                                  const nsString& aLocalName,
+                                  nsIDOMNode** aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsXMLNamedNodeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsXMLNamedNodeMap::RemoveNamedItemNS(const nsString& aNamespaceURI, 
+                                     const nsString&aLocalName,
+                                     nsIDOMNode** aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 

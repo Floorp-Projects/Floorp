@@ -475,6 +475,29 @@ nsDOMAttributeMap::GetLength(PRUint32 *aLength)
   return rv;
 }
 
+nsresult
+nsDOMAttributeMap::GetNamedItemNS(const nsString& aNamespaceURI, 
+                                  const nsString& aLocalName,
+                                  nsIDOMNode** aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMAttributeMap::RemoveNamedItemNS(const nsString& aNamespaceURI, 
+                                     const nsString&aLocalName,
+                                     nsIDOMNode** aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 #ifdef DEBUG
 PR_STATIC_CALLBACK (PRIntn)
 SizeAttributes(PLHashEntry* he, PRIntn i, void* arg)
