@@ -1,3 +1,25 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+ * Common IDL-processing code.
+ */
+
 #include "xpidl.h"
 
 FILE *typelib_file = NULL;
@@ -134,6 +156,8 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 	     * What if the last char in this block is '/' and the first in the
 	     * next block is '*'?  I'm not sure it matters, because I don't
 	     * think there are any legal IDL syntaxes with '/' in them.
+	     *
+	     * XXX what about "/* " appearing in the IDL?
 	     */
 	    if (!comment_start)
 		comment_start = strstr(data->buf, "/*");
