@@ -31,11 +31,9 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
-#include "nsISupportsArray.h"
 #include "nsIStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutCID.h"
-#include "nsISupportsArray.h"
 
 class nsIFrame;
 
