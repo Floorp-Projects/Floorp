@@ -33,12 +33,6 @@ CSRCS		= \
 	mkmemcac.c	\
 	$(NULL)
 
-ifdef NU_CACHE
-CSRCS += \
-	nucacheproto.c	\
-	$(NULL)
-endif
-
 EXPORTS= netcache.h mkcache.h mkmemcac.h extcache.h
 EXPORTS:= $(addprefix $(srcdir)/, $(EXPORTS))
 
