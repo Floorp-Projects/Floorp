@@ -27,21 +27,21 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
-LIBRARY_NAME	= necko
+LIBRARY_NAME	= necko2
 IS_COMPONENT	= 1
 
-CPPSRCS		= nsNetModule.cpp
+CPPSRCS		= nsNetModule2.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libneckobase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libneckodns_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libneckosocket_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkftp_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkfinger_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkdatetm_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
-		-I$(srcdir)/../base/src \
-		-I$(srcdir)/../dns/src \
-		-I$(srcdir)/../socket/base \
+		-I$(srcdir)/../protocol/ftp/src \
+		-I$(srcdir)/../protocol/finger/src \
+		-I$(srcdir)/../protocol/datetime/src \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
