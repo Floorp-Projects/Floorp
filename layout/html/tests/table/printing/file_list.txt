@@ -6,7 +6,14 @@ file:///s|/mozilla/layout/html/tests/table/printing/bug123983.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug125543.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug124041.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug126118.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug138349-1.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug138349-2.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug145842.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug153785-1.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug153785-2.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug153785-3.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug153785-4.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug153785-5.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug24000-1.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug24000-2.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug53690.html
