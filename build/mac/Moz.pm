@@ -1,29 +1,27 @@
 =head1 NAME
 
-Moz
+B<Moz> - routines for automating CodeWarrior builds, and some extra-curricular activities related to building Mozilla
+
+=head1 SYNOPSIS
+
+    use Moz;
+
+    OpenErrorLog(":::BuildLog");
+    StopForErrors();
+
+    BuildProjectClean(":projects:SomeProject.mcp", "SomeTarget");
+    MakeAlias(":projects:SomeProject.shlb", $dist_dir);
+
+    DontStopForErrors();
+
+    BuildProject(":projects:SomeOtherProject.mcp", "SomeTarget");
 
 =head1 DESCRIPTION
 
-...
-
-=head1 COPYRIGHT
-
-The contents of this file are subject to the Netscape Public License
-Version 1.0 (the "NPL"); you may not use this file except in
-compliance with the NPL.  You may obtain a copy of the NPL at
-http://www.mozilla.org/NPL/
-
-Software distributed under the NPL is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
-for the specific language governing rights and limitations under the
-NPL.
-
-The Initial Developer of this code under the NPL is Netscape
-Communications Corporation.  Portions created by Netscape are
-Copyright (C) 1998 Netscape Communications Corporation.  All Rights
-Reserved.
+B<Moz> comprises the routines needed to slap CodeWarrior around, force it to build a sequence of projects, report the results, and a few other things.
 
 =cut
+
 
 
 
@@ -60,6 +58,16 @@ sub full_path_to($)
 		return $path;
 	}
 
+=head2 Setup
+
+Pretty much, everything is taken care of for you.
+  However, B<Moz> does use a little compiled AppleScript library (the file CodeWarriorLib) for some of its communcication with CodeWarrior.
+  If this library isn't in the same directory as "Moz.pm", then you need to tell B<Moz> where to find it.
+  Call C<UseCodeWarriorLib($path_to_CodeWarriorLib)>.
+  This routine is not exported by default, nor are you likely to need it.
+
+=cut
+
 sub UseCodeWarriorLib($)
 	{
 		($CodeWarriorLib) = @_;
@@ -83,14 +91,33 @@ $logging								= 0;
 $recent_errors_file			= "";
 $stop_on_1st_error			= 1;
 
+
+
+
+=head2 Logging all the errors and warnings - C<OpenErrorLog($log_file)>, C<CloseErrorLog()>
+
+The warnings and errors generated in the course of building projects can be logged to a file.
+Tinderbox uses this facility to show why a remote build failed.
+
+Logging is off by default.
+  Start logging at any point in your build process with C<OpenErrorLog($log_file)>.
+  Stop with C<CloseErrorLog()>.
+  You never need to close the log explicitly, unless you want to just log a couple of projects in the middle of a big list.
+  C<CloseErrorLog()> is not exported by default. 
+
+=cut
+
 sub CloseErrorLog()
 	{
 		if ( $logging )
 			{
 				close(ERROR_LOG);
 				$logging = 0;
+				StopForErrors() if $stop_on_1st_error;
 			}
 	}
+
+
 
 sub OpenErrorLog($)
 	{
@@ -108,6 +135,16 @@ sub OpenErrorLog($)
 				$logging = 1;
 			}
 	}
+
+
+=head2 Stopping before it's too late - C<StopForErrors()>, C<DontStopForErrors()>
+
+When building a long list of projects, you decide whether to continue building subsequent projects when one fails.
+  By default, your build script will C<die> after the first project that generates an error while building.
+  Change this behavior with C<DontStopForErrors()>.
+  Re-enable it with C<StopForErrors()>.
+
+=cut
 
 sub StopForErrors()
 	{
@@ -198,6 +235,14 @@ END_OF_APPLESCRIPT
 			}
 	}
 
+=head2 Getting CodeWarrior to build projects - C<BuildProject($project, $opt_target)>, C<BuildProjectClean($project, $opt_target)>
+
+C<BuildProject()> and C<BuildProjectClean()> are identical, except that the latter first removes object code.
+  In both, CodeWarrior opens the project if it wasn't already open; builds the given (or else current) target; and finally closes
+ the project, if it wasn't already open.
+
+=cut
+
 sub BuildProject($;$)
 	{
 		my ($project_path, $target_name) = @_;
@@ -210,7 +255,14 @@ sub BuildProjectClean($;$)
 		build_project($project_path, $target_name, "true");
 	}
 
-sub MakeAlias($;$)
+
+=head2 Miscellaneous
+
+C<MakeAlias($old_file, $new_file)> functions like C<symlink()>, except with better argument defaulting and more explicit error messages.
+
+=cut
+
+sub MakeAlias($$)
 	{
 		my ($old_file, $new_file) = @_;
 
@@ -236,3 +288,30 @@ sub MakeAlias($;$)
 
 
 1;
+
+=head1 AUTHORS
+
+Scott Collins <scc@netscape.com>, Simon Fraser <sfraser@netscape.com>
+
+=head1 SEE ALSO
+
+BuildMozillaDebug.pl (et al), BuildList.pm, CodeWarriorLib (an AppleScript library)
+
+=head1 COPYRIGHT
+
+The contents of this file are subject to the Netscape Public License
+Version 1.0 (the "NPL"); you may not use this file except in
+compliance with the NPL.  You may obtain a copy of the NPL at
+http://www.mozilla.org/NPL/
+
+Software distributed under the NPL is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+for the specific language governing rights and limitations under the
+NPL.
+
+The Initial Developer of this code under the NPL is Netscape
+Communications Corporation.  Portions created by Netscape are
+Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+Reserved.
+
+=cut
