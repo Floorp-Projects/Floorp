@@ -1269,6 +1269,60 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderTy
           installContainer->AppendElement(kid);
           seqKids->HasMoreElements(&moreKids);
         }
+
+        // See if we're a packages seq.  If so, we need to set up the baseURL and
+        // the package arcs.
+        if (val.Find(":packages") != -1 && aProviderType != nsCAutoString("package")) {
+          // Get the literal for our base URL.
+          nsAutoString unistr(aBaseURL);
+          nsCOMPtr<nsIRDFLiteral> literal;
+          mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(literal));
+
+          // Iterate over our kids a second time.
+          nsCOMPtr<nsISimpleEnumerator> seqKids;
+          installContainer->GetElements(getter_AddRefs(seqKids));
+          PRBool moreKids;
+          seqKids->HasMoreElements(&moreKids);
+          while (moreKids) {
+            nsCOMPtr<nsISupports> supp;
+            seqKids->GetNext(getter_AddRefs(supp));
+            nsCOMPtr<nsIRDFResource> entry(do_QueryInterface(supp));
+            if (entry) {
+              nsCOMPtr<nsIRDFNode> retVal;
+              installSource->GetTarget(entry, mBaseURL, PR_TRUE, getter_AddRefs(retVal));
+              if (retVal)
+                installSource->Change(entry, mBaseURL, retVal, literal);
+              else
+                installSource->Assert(entry, mBaseURL, literal, PR_TRUE);
+
+              // Now set up the package arc.
+              const char* val;
+              entry->GetValueConst(&val);
+              nsCAutoString value(val);
+              PRInt32 index = value.RFind(":");
+              if (index != -1) {
+                // Peel off the package name.
+                nsCAutoString packageName;
+                value.Right(packageName, value.Length() - index - 1);
+
+                nsCAutoString resourceName = "urn:mozilla:package:";
+                resourceName += packageName;
+                nsCOMPtr<nsIRDFResource> packageResource;
+                GetResource(resourceName, getter_AddRefs(packageResource));
+                if (packageResource) {
+                  retVal = nsnull;
+                  installSource->GetTarget(entry, mPackage, PR_TRUE, getter_AddRefs(retVal));
+                  if (retVal)
+                    installSource->Change(entry, mPackage, retVal, packageResource);
+                  else
+                    installSource->Assert(entry, mPackage, packageResource, PR_TRUE);
+                }
+              }
+            }
+
+            seqKids->HasMoreElements(&moreKids);
+          }
+        }
       }
       else {
         // We're not a seq. Get all of the arcs that go out.
