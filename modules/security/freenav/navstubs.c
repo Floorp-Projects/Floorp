@@ -19,6 +19,9 @@
 #include "prlink.h"
 #include "prinrval.h"
 
+void SSL_DataPending() {}
+
+
 int
 SSL_SetSockPeerID(PRFileDesc *fd, char *peerID)
 {
