@@ -211,8 +211,22 @@ nsresult nsRenderingContextXlib::CommonInit(void)
   unsigned int width, height, border, depth;
   Window root_win;
 
-  XGetGeometry(mDisplay, mRenderingSurface->GetDrawable(), &root_win,
-               &x, &y, &width, &height, &border, &depth);
+  Drawable drawable = mRenderingSurface->GetDrawable();
+
+  printf("XGetGeometry(display=%p,drawable=%p)\n",
+         mDisplay,
+         drawable);
+
+  XGetGeometry(mDisplay, 
+               drawable, 
+               &root_win,
+               &x, 
+               &y, 
+               &width, 
+               &height, 
+               &border, 
+               &depth);
+
   mClipRegion = new nsRegionXlib();
   mClipRegion->Init();
   mClipRegion->SetTo(0, 0, width, height);
